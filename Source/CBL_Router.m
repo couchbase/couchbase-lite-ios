@@ -54,7 +54,8 @@
         _local = YES;
         _processRanges = YES;
         if (0) { // assignments just to appease static analyzer so it knows these ivars are used
-            _longpoll = _changesIncludeDocs = _changesIncludeConflicts = NO;
+            _changesIncludeDocs = _changesIncludeConflicts = NO;
+            _changesMode = kNormalFeed;
             _changesFilter = NULL;
             _changesFilterParams = nil;
         }
@@ -136,18 +137,6 @@
     return result;
 }
 
-- (NSMutableDictionary*) jsonQueries {
-    NSMutableDictionary* queries = $mdict();
-    [self.queries enumerateKeysAndObjectsUsingBlock: ^(NSString* param, NSString* value, BOOL *stop) {
-        id parsed = [CBLJSON JSONObjectWithData: [value dataUsingEncoding: NSUTF8StringEncoding]
-                                       options: CBLJSONReadingAllowFragments
-                                         error: nil];
-        if (parsed)
-            queries[param] = parsed;
-    }];
-    return queries;
-}
-
 
 - (BOOL) cacheWithEtag: (NSString*)etag {
     NSString* eTag = $sprintf(@"\"%@\"", etag);
@@ -189,9 +178,9 @@
 }
 
 
-- (BOOL) getQueryOptions: (CBLQueryOptions*)options {
+- (CBLQueryOptions*) getQueryOptions {
     // http://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
-    *options = kDefaultCBLQueryOptions;
+    CBLQueryOptions* options = [CBLQueryOptions new];
     options->skip = [self intQuery: @"skip" defaultValue: options->skip];
     options->limit = [self intQuery: @"limit" defaultValue: options->limit];
     options->groupLevel = [self intQuery: @"group_level" defaultValue: options->groupLevel];
@@ -206,6 +195,10 @@
     options->updateSeq = [self boolQuery: @"update_seq"];
     if ([self query: @"inclusive_end"])
         options->inclusiveEnd = [self boolQuery: @"inclusive_end"];
+    if ([self query: @"inclusive_start"])
+        options->inclusiveStart = [self boolQuery: @"inclusive_start"]; // nonstandard
+    options->prefixMatchLevel = [self intQuery: @"prefix_match_level" // nonstandard
+                                  defaultValue: options->prefixMatchLevel];
     options->reduceSpecified = [self query: @"reduce"] != nil;
     options->reduce =  [self boolQuery: @"reduce"];
     options->group = [self boolQuery: @"group"];
@@ -215,35 +208,35 @@
     NSError* error = nil;
     id keys = [self jsonQuery: @"keys" error: &error];
     if (error || (keys && ![keys isKindOfClass: [NSArray class]]))
-        return NO;
+        return nil;
     if (!keys) {
         id key = [self jsonQuery: @"key" error: &error];
         if (error)
-            return NO;
+            return nil;
         if (key)
             keys = @[key];
     }
     
     if (keys) {
-        options->keys = [self retainQuery: keys];
+        options.keys = [self retainQuery: keys];
     } else {
         // Handle 'startkey' and 'endkey':
-        options->startKey = [self retainQuery: [self jsonQuery: @"startkey" error: &error]];
+        options.startKey = [self retainQuery: [self jsonQuery: @"startkey" error: &error]];
         if (error)
-            return NO;
-        options->endKey = [self retainQuery: [self jsonQuery: @"endkey" error: &error]];
+            return nil;
+        options.endKey = [self retainQuery: [self jsonQuery: @"endkey" error: &error]];
         if (error)
-            return NO;
-        options->startKeyDocID = [self retainQuery: [self jsonQuery: @"startkey_docid" error: &error]];
+            return nil;
+        options.startKeyDocID = [self retainQuery: [self jsonQuery: @"startkey_docid" error: &error]];
         if (error)
-            return NO;
-        options->endKeyDocID = [self retainQuery: [self jsonQuery: @"endkey_docid" error: &error]];
+            return nil;
+        options.endKeyDocID = [self retainQuery: [self jsonQuery: @"endkey_docid" error: &error]];
         if (error)
-            return NO;
+            return nil;
     }
 
     // Nonstandard full-text search options 'full_text', 'snippets', 'ranking':
-    options->fullTextQuery = [self retainQuery: [self query: @"full_text"]];
+    options.fullTextQuery = [self retainQuery: [self query: @"full_text"]];
     options->fullTextSnippets = [self boolQuery: @"snippets"];
     if ([self query: @"ranking"])
         options->fullTextRanking = [self boolQuery: @"ranking"];
@@ -253,13 +246,25 @@
     if (bboxString) {
         CBLGeoRect bbox;
         if (!CBLGeoCoordsStringToRect(bboxString, &bbox))
-            return NO;
+            return nil;
         NSData* savedBbox = [NSData dataWithBytes: &bbox length: sizeof(bbox)];
         [_queryRetainer addObject: savedBbox];
         options->bbox = savedBbox.bytes;
     }
 
-    return YES;
+    return options;
+}
+
+
+- (void) parseChangesMode {
+    NSString* feed = [self query: @"feed"];
+    _changesMode = kNormalFeed;
+    if ([feed isEqualToString: @"longpoll"])
+        _changesMode = kLongPollFeed;
+    else if ([feed isEqualToString: @"continuous"])
+        _changesMode = kContinuousFeed;
+    else if ([feed isEqualToString: @"eventsource"])
+        _changesMode = kEventSourceFeed;
 }
 
 
@@ -415,7 +420,27 @@ static NSArray* splitPath( NSURL* url ) {
              _request.HTTPMethod, _request.URL.path, message);
         Assert([self respondsToSelector: @selector(do_GETRoot)],
                @"CBL_Router(Handlers) is missing -- app may be linked without -ObjC linker flag.");
-        sel = @selector(do_UNKNOWN);
+
+        // Check if there is an alternative method:
+        BOOL hasAltMethod = NO;
+        NSString* curDoMethod = [NSString stringWithFormat: @"do_%@", method];
+        for (NSString* aMethod in @[@"GET", @"POST", @"PUT", @"DELETE"]) {
+            if (![aMethod isEqualToString: method]) {
+                NSString* altDoMethod = [NSString stringWithFormat: @"do_%@", aMethod];
+                NSString* altMessage = [message stringByReplacingOccurrencesOfString: curDoMethod
+                                                                          withString: altDoMethod];
+                SEL altSel = NSSelectorFromString(altMessage);
+                if (altSel && [self respondsToSelector: altSel]) {
+                    LogTo(CBLRouter,
+                          @"Found an alternative request type: %@"
+                          " for the mapped selector: %@", aMethod, message);
+                    hasAltMethod = YES;
+                    break;
+                }
+            }
+        }
+
+        sel = hasAltMethod ? @selector(do_METHOD_NOT_ALLOWED) : @selector(do_UNKNOWN);
     }
     
     if (_onAccessCheck) {
@@ -574,23 +599,48 @@ static NSArray* splitPath( NSURL* url ) {
             _response.internalStatus = kCBLStatusNotAcceptable;
         }
     }
-
-    if (_response.body.isValidJSON)
+    
+    // When response body is not nil and there is no content-type given,
+    // set default value to 'application/json'.
+    if (_response.body && !_response[@"Content-Type"]) {
         _response[@"Content-Type"] = @"application/json";
-
+    }
+    
     if (_response.status == 200 && ($equal(_request.HTTPMethod, @"GET") ||
                                     $equal(_request.HTTPMethod, @"HEAD"))) {
         if (!_response[@"Cache-Control"])
             _response[@"Cache-Control"] = @"must-revalidate";
     }
 
-    for (NSString *key in [_server.customHTTPHeaders allKeys])
-    {
+    for (NSString *key in [_server.customHTTPHeaders allKeys]) {
         _response[key] = _server.customHTTPHeaders[key];
     }
-
+    
     if (_onResponseReady)
         _onResponseReady(_response);
+}
+
+
+// Send a JSON object followed by a newline without closing the connection.
+// Used by the continuous mode of _changes and _active_tasks.
+- (void) sendContinuousLine: (NSDictionary*)changeDict {
+    NSMutableData* json = [[CBLJSON dataWithJSONObject: changeDict
+                                               options: 0 error: NULL] mutableCopy];
+    if (_changesMode == kEventSourceFeed) {
+        // https://developer.mozilla.org/en-US/docs/Server-sent_events/Using_server-sent_events#Event_stream_format
+        [json replaceBytesInRange: NSMakeRange(0, 0) withBytes: "data: " length: 5];
+        [json appendBytes: "\n\n" length: 2];
+    } else {
+        [json appendBytes: "\n" length: 1];
+    }
+    [self sendData: json];
+}
+
+
+// Send data without closing the connection.
+- (void) sendData: (NSData*)data {
+    if (_onDataAvailable)
+        _onDataAvailable(data, NO);
 }
 
 
@@ -621,6 +671,7 @@ static NSArray* splitPath( NSURL* url ) {
 
 - (void) stopNow {
     _running = NO;
+    [self stopHeartbeat];
     self.onResponseReady = nil;
     self.onDataAvailable = nil;
     self.onFinished = nil;
@@ -650,7 +701,12 @@ static NSArray* splitPath( NSURL* url ) {
 
 
 - (CBLStatus) do_UNKNOWN {
-    return kCBLStatusBadRequest;
+    return kCBLStatusNotFound;
+}
+
+
+- (CBLStatus) do_METHOD_NOT_ALLOWED {
+    return kCBLStatusMethodNotAllowed;
 }
 
 
@@ -661,6 +717,35 @@ static NSArray* splitPath( NSURL* url ) {
         [self sendResponseHeaders];
     }
     [self finished];
+}
+
+#pragma mark - Heartbeat
+
+- (void) sendHeartbeatResponse: (NSTimer*)timer {
+    if (_onDataAvailable) {
+        _onDataAvailable(timer.userInfo, NO);
+    }
+}
+
+
+- (void) startHeartbeat: (NSString*)response interval: (NSTimeInterval)interval {
+    if (interval <= 0)
+        return;
+
+    NSData* responseData = [response dataUsingEncoding:NSUTF8StringEncoding];
+    
+    [_heartbeatTimer invalidate];
+    _heartbeatTimer = [NSTimer scheduledTimerWithTimeInterval: interval
+                                                       target: self
+                                                     selector: @selector(sendHeartbeatResponse:)
+                                                     userInfo: responseData
+                                                      repeats: YES];
+}
+
+
+- (void) stopHeartbeat {
+    [_heartbeatTimer invalidate];
+    _heartbeatTimer = nil;
 }
 
 

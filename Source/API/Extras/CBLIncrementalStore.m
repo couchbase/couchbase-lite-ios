@@ -71,6 +71,17 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 @synthesize observingManagedObjectContexts = _observingManagedObjectContexts;
 
 
+static CBLManager* sCBLManager;
+
++ (void) setCBLManager: (CBLManager*)manager {
+    sCBLManager = manager;
+}
+
++ (CBLManager*) CBLManager {
+    return sCBLManager;
+}
+
+
 #pragma mark - Convenience Method
 
 + (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel
@@ -260,14 +271,9 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     
     NSString *databaseName = [self.URL lastPathComponent];
     
-    CBLManager *manager = [CBLManager sharedInstance];
+    CBLManager *manager = [[self class] CBLManager];
     if (!manager) {
-        if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                                      code:CBLIncrementalStoreErrorCBLManagerSharedInstanceMissing
-                                                  userInfo:@{
-                                                             NSLocalizedDescriptionKey: @"No CBLManager shared instance available"
-                                                             }];
-        return NO;
+        manager = [CBLManager sharedInstance];
     }
     
     self.database = [manager databaseNamed:databaseName error:&error];
@@ -280,7 +286,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                                                              }];
         return NO;
     }
-    
+
     [self _initializeViews];
     
     
@@ -730,7 +736,7 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                     
                     NSString *viewName = CBLISToManyViewNameForRelationship(rel);
                     NSString *destEntityName = rel.destinationEntity.name;
-                    NSString *inverseRelNameLower = [rel.inverseRelationship.name lowercaseString];
+                    NSString *inverseRelNameLower = rel.inverseRelationship.name;
                     if (entityNames.count == 0) {
                         CBLView *view = [self.database viewNamed:viewName];
                         [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
@@ -1180,6 +1186,8 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
                         value = [NSNumber numberWithLong:CBLISIsNull(value) ? 0 : [value longValue]];
                         break;
                     case NSDecimalAttributeType:
+                        value = [NSDecimalNumber numberWithDouble:CBLISIsNull(value) ? 0.0 : [value doubleValue]];
+                        break;
                     case NSDoubleAttributeType:
                     case NSFloatAttributeType:
                         value = [NSNumber numberWithDouble:CBLISIsNull(value) ? 0.0 : [value doubleValue]];
@@ -1542,7 +1550,17 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kCBLISObjectHasBeenChangedInStoreNotification
                                                         object:self userInfo:userInfo];
-    
+}
+
+- (void) stop {
+#if !CBLIS_NO_CHANGE_COALESCING
+    [NSThread cancelPreviousPerformRequestsWithTarget:self
+                                             selector:@selector(_processCouchbaseLiteChanges)
+                                               object:nil];
+    if (_coalescedChanges.count > 0) {
+        [self _processCouchbaseLiteChanges];
+    }
+#endif
 }
 
 #pragma mark - Conflicts handling

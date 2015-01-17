@@ -27,9 +27,6 @@
 #import "MYURLUtils.h"
 
 
-#define RUN_IN_BACKGROUND 1
-
-
 NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
@@ -47,6 +44,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 @implementation CBLReplication
 {
+    NSSet* _pendingDocIDs;
     bool _started;
     CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
 }
@@ -58,7 +56,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 @synthesize headers=_headers, OAuth=_OAuth, customProperties=_customProperties;
 @synthesize running = _running, completedChangesCount=_completedChangesCount;
 @synthesize changesCount=_changesCount, lastError=_lastError, status=_status;
-@synthesize authenticator=_authenticator;
+@synthesize authenticator=_authenticator, serverCertificate=_serverCertificate;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -79,6 +77,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 - (void) dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
+    cfrelease(_serverCertificate);
 }
 
 
@@ -225,7 +224,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
-
 + (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese {
     [CBL_Replicator setAnchorCerts: certs onlyThese: onlyThese];
 }
@@ -270,15 +268,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
-- (void) tellDatabaseManager: (void (^)(CBLManager*))block {
-#if RUN_IN_BACKGROUND
-    [_database.manager.backgroundServer tellDatabaseManager: block];
-#else
-    block(_database.manager);
-#endif
-}
-
-
 - (void) start {
     if (!_database.isOpen)  // Race condition: db closed before replication starts
         return;
@@ -288,13 +277,14 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
         NSDictionary* properties= self.properties;
         id<CBLAuthorizer> auth = (id<CBLAuthorizer>)_authenticator;
-        [self tellDatabaseManager: ^(CBLManager* bgManager) {
+        [_database.manager.backgroundServer tellDatabaseManager: ^(CBLManager* bgManager) {
             // This runs on the server thread:
             [self bg_startReplicator: bgManager properties: properties auth: auth];
         }];
 
         // Initialize the status to something other than kCBLReplicationStopped:
-        [self updateStatus: kCBLReplicationOffline error: nil processed: 0 ofTotal: 0];
+        [self updateStatus: kCBLReplicationOffline error: nil processed: 0 ofTotal: 0
+                serverCert: NULL];
 
         [_database addReplication: self];
     }
@@ -302,9 +292,9 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 - (void) stop {
-    [self tellDatabaseManager:^(CBLManager* dbmgr) {
+    [self tellReplicator: ^(CBL_Replicator* bgReplicator) {
         // This runs on the server thread:
-        [self bg_stopReplicator];
+        [bgReplicator stop];
     }];
     _started = NO;
     [_database forgetReplication: self];
@@ -320,16 +310,16 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 - (BOOL) suspended {
-    NSNumber* result = [_database.manager.backgroundServer waitForDatabaseManager: ^(CBLManager* m){
-        return @(_bg_replicator.suspended);
+    NSNumber* result = [self tellReplicatorAndWait: ^(CBL_Replicator* bgReplicator) {
+        return @(bgReplicator.suspended);
     }];
     return result.boolValue;
 }
 
 
 - (void) setSuspended: (BOOL)suspended {
-    [self tellDatabaseManager:^(CBLManager* dbmgr) {
-        _bg_replicator.suspended = suspended;
+    [self tellReplicator: ^(CBL_Replicator* bgReplicator) {
+        bgReplicator.suspended = suspended;
     }];
 }
 
@@ -338,6 +328,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
                 error: (NSError*)error
             processed: (NSUInteger)changesProcessed
               ofTotal: (NSUInteger)changesTotal
+           serverCert: (SecCertificateRef)serverCert
 {
     if (!_started)
         return;
@@ -345,6 +336,8 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         _started = NO;
         [_database forgetReplication: self];
     }
+
+    _pendingDocIDs = nil; // forget cached IDs
 
     BOOL changed = NO;
     if (!$equal(error, _lastError)) {
@@ -371,6 +364,8 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         changed = YES;
     }
 
+    cfSetObj(&_serverCertificate, serverCert);
+
     if (changed) {
         static const char* kStatusNames[] = {"stopped", "offline", "idle", "active"};
         LogTo(Sync, @"%@: %s, progress = %u / %u, err: %@",
@@ -382,7 +377,40 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
+#pragma mark - PUSH REPLICATION ONLY:
+
+
+- (NSSet*) pendingDocumentIDs {
+    if (!_pendingDocIDs && _started && !_pull) {
+        _pendingDocIDs = [self tellReplicatorAndWait: ^(CBL_Replicator* bgReplicator) {
+            CBL_RevisionList* revs = ($castIf(CBL_Pusher, bgReplicator)).unpushedRevisions;
+            return revs ? [NSSet setWithArray: revs.allDocIDs] : nil;
+        }];
+    }
+    return _pendingDocIDs;
+}
+
+- (BOOL) isDocumentPending: (CBLDocument*)doc {
+    return doc && [self.pendingDocumentIDs containsObject: doc.documentID];
+    //OPT: It may be cheaper to do this by fetching the replicator's checkpoint sequence and
+    // comparing the doc's sequence to it.
+}
+
+
 #pragma mark - BACKGROUND OPERATIONS:
+
+
+- (void) tellReplicator: (void (^)(CBL_Replicator*))block {
+    [_database.manager.backgroundServer tellDatabaseManager: ^(CBLManager* _) {
+        block(_bg_replicator);
+    }];
+}
+
+- (id) tellReplicatorAndWait: (id (^)(CBL_Replicator*))block {
+    return [_database.manager.backgroundServer waitForDatabaseManager: ^(CBLManager* _) {
+        return block(_bg_replicator);
+    }];
+}
 
 
 // CAREFUL: This is called on the server's background thread!
@@ -406,14 +434,14 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
                  properties: (NSDictionary*)properties
                        auth: (id<CBLAuthorizer>)auth
 {
-    // The setup should use properties, not ivars, because the ivars may change on the main thread.
+    // The setup must use properties, not ivars, because the ivars may change on the main thread.
     CBLStatus status;
     CBL_Replicator* repl = [server_dbmgr replicatorWithProperties: properties status: &status];
     if (!repl) {
         [_database doAsync: ^{
             [self updateStatus: kCBLReplicationStopped
                          error: CBLStatusToNSError(status, nil)
-                     processed: 0 ofTotal: 0];
+                     processed: 0 ofTotal: 0 serverCert: NULL];
         }];
         return;
     }
@@ -446,12 +474,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 // CAREFUL: This is called on the server's background thread!
-- (void) bg_stopReplicator {
-    [_bg_replicator stop];
-}
-
-
-// CAREFUL: This is called on the server's background thread!
 - (void) bg_replicationProgressChanged: (NSNotification*)n
 {
     AssertEq(n.object, _bg_replicator);
@@ -473,8 +495,12 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     NSError* error = _bg_replicator.error;
     NSUInteger changes = _bg_replicator.changesProcessed;
     NSUInteger total = _bg_replicator.changesTotal;
+    SecCertificateRef serverCert = _bg_replicator.serverCert;
+    cfretain(serverCert);
     [_database doAsync: ^{
-        [self updateStatus: status error: error processed: changes ofTotal: total];
+        [self updateStatus: status error: error processed: changes ofTotal: total
+                serverCert: serverCert];
+        cfrelease(serverCert);
     }];
     
     if (status == kCBLReplicationStopped) {

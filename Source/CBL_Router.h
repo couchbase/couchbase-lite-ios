@@ -8,13 +8,21 @@
 
 #import "CBLDatabase+Internal.h"
 #import "CBLManager+Internal.h"
-@class CBL_Server, CBLResponse, CBL_Body, CBLMultipartWriter;
+@class CBL_Server, CBLResponse, CBL_Body, CBLMultipartWriter, CBLQueryOptions;
 
 
 typedef CBLStatus (^OnAccessCheckBlock)(CBLDatabase*, NSString *docID, SEL action);
 typedef void (^OnResponseReadyBlock)(CBLResponse*);
 typedef void (^OnDataAvailableBlock)(NSData* data, BOOL finished);
 typedef void (^OnFinishedBlock)();
+
+
+typedef enum : NSUInteger {
+    kNormalFeed,
+    kLongPollFeed,
+    kContinuousFeed,
+    kEventSourceFeed,
+} CBLChangesFeedMode;
 
 
 @interface CBL_Router : NSObject
@@ -37,11 +45,12 @@ typedef void (^OnFinishedBlock)();
     OnDataAvailableBlock _onDataAvailable;
     OnFinishedBlock _onFinished;
     BOOL _running;
-    BOOL _longpoll;
+    CBLChangesFeedMode _changesMode;
     CBLFilterBlock _changesFilter;
     NSDictionary* _changesFilterParams;
     BOOL _changesIncludeDocs;
     BOOL _changesIncludeConflicts;
+    NSTimer *_heartbeatTimer;
 }
 
 - (instancetype) initWithServer: (CBL_Server*)server
@@ -69,17 +78,22 @@ typedef void (^OnFinishedBlock)();
 - (BOOL) boolQuery: (NSString*)param;
 - (int) intQuery: (NSString*)param defaultValue: (int)defaultValue;
 - (id) jsonQuery: (NSString*)param error: (NSError**)outError;
-- (NSMutableDictionary*) jsonQueries;
+@property NSDictionary* queries;
+- (void) parseChangesMode;
 - (BOOL) cacheWithEtag: (NSString*)etag;
 - (CBLContentOptions) contentOptions;
-- (BOOL) getQueryOptions: (struct CBLQueryOptions*)options;
+- (CBLQueryOptions*) getQueryOptions;
 - (BOOL) explicitlyAcceptsType: (NSString*)mimeType;
 @property (readonly) NSDictionary* bodyAsDictionary;
 @property (readonly) NSString* ifMatch;
 - (CBLStatus) openDB;
 - (void) sendResponseHeaders;
+- (void) sendData: (NSData*)data;
+- (void) sendContinuousLine: (NSDictionary*)changeDict;
 - (void) sendResponseBodyAndFinish: (BOOL)finished;
 - (void) finished;
+- (void) startHeartbeat: (NSString*)response interval: (NSTimeInterval)interval;
+- (void) stopHeartbeat;
 @end
 
 

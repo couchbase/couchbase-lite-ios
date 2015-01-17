@@ -16,9 +16,9 @@
 #import "CBLRemoteRequest.h"
 #import "CBLAuthorizer.h"
 #import "CBLMisc.h"
+#import "CBLStatus.h"
 #import "CBL_BlobStore.h"
 #import "CBLDatabase.h"
-#import "CBL_Router.h"
 #import "CBL_Replicator.h"
 #import "CollectionUtils.h"
 #import "Logging.h"
@@ -70,6 +70,10 @@
         [_request setValue: [[self class] userAgentHeader] forHTTPHeaderField:@"User-Agent"];
         [requestHeaders enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL *stop) {
             [_request setValue:value forHTTPHeaderField:key];
+            // If app explicitly wants to set a cookie, we have to stop NSURLRequest from using its
+            // default cookie handling, else it overwrites "Cookie:" header with its own. (#532)
+            if ([key caseInsensitiveCompare: @"Cookie"] == 0)
+                _request.HTTPShouldHandleCookies = NO;
         }];
         
         [self setupRequest: _request withBody: body];
@@ -232,7 +236,7 @@
 #pragma mark - NSURLCONNECTION DELEGATE:
 
 
-static void WarnUntrustedCert(NSString* host, SecTrustRef trust) {
+void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     Warn(@"CouchbaseLite: SSL server <%@> not trusted; cert chain follows:", host);
 #if TARGET_OS_IPHONE
     for (CFIndex i = 0; i < SecTrustGetCertificateCount(trust); ++i) {
@@ -300,9 +304,9 @@ static void WarnUntrustedCert(NSString* host, SecTrustRef trust) {
             [sender useCredential: [NSURLCredential credentialForTrust: trust]
                     forAuthenticationChallenge: challenge];
         } else {
-            WarnUntrustedCert(space.host, trust);
-            LogTo(RemoteRequest, @"    challenge: cancel");
-            [sender cancelAuthenticationChallenge: challenge];
+            CBLWarnUntrustedCert(space.host, trust);
+            LogTo(RemoteRequest, @"    challenge: fail (untrusted cert)");
+            [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
         }
     } else {
         LogTo(RemoteRequest, @"    challenge: performDefaultHandling");

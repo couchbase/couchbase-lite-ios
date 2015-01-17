@@ -35,7 +35,7 @@
 
 
 // NOTE: This file contains mostly just public-API method implementations.
-// The lower-level stuff is in CBLDatabase.m, etc.
+// The lower-level stuff is in CBLDatabase+Internal.m, etc.
 
 
 // Size of document cache: max # of otherwise-unreferenced docs that will be kept in memory.
@@ -53,8 +53,6 @@ static id<CBLFilterCompiler> sFilterCompiler;
 @implementation CBLDatabase
 {
     CBLCache* _docCache;
-    CBLModelFactory* _modelFactory;  // used in category method in CBLModelFactory.m
-    NSMutableSet* _unsavedModelsMutable;   // All CBLModels that have unsaved changes
     NSMutableSet* _allReplications;
 }
 
@@ -83,8 +81,6 @@ static id<CBLFilterCompiler> sFilterCompiler;
                                                      name: UIApplicationDidEnterBackgroundNotification
                                                    object: nil];
 #endif
-        if (0)
-            _modelFactory = nil;  // appeases static analyzer
     }
     return self;
 }
@@ -92,8 +88,8 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 - (void)dealloc {
     if (_isOpen) {
-        //Warn(@"%@ dealloced without being closed first!", self);
-        [self close];
+        Assert(!_manager);
+        [self _close];
     }
     [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
@@ -114,24 +110,15 @@ static id<CBLFilterCompiler> sFilterCompiler;
     NSNotification* n = [NSNotification notificationWithName: kCBLDatabaseChangeNotification
                                                       object: self
                                                     userInfo: userInfo];
-    if (_dispatchQueue) {
-        // NSNotificationQueue is runloop-based, doesn't work on dispatch queues. (#364)
-        [self doAsync:^{
-            [[NSNotificationCenter defaultCenter] postNotification: n];
-        }];
-    } else {
-        NSNotificationQueue* queue = [NSNotificationQueue defaultQueue];
-        [queue enqueueNotification: n
-                      postingStyle: NSPostASAP 
-                      coalesceMask: NSNotificationNoCoalescing
-                          forModes: @[NSRunLoopCommonModes]];
-    }
+    [self postNotification:n];
 }
 
 
 #if TARGET_OS_IPHONE
 - (void) appBackgrounding: (NSNotification*)n {
-    [self autosaveAllModels: nil];
+    [self doAsync: ^{
+        [self autosaveAllModels: nil];
+    }];
 }
 #endif
 
@@ -149,10 +136,14 @@ static void catchInBlock(void (^block)()) {
 
 
 - (void) doAsync: (void (^)())block {
+    block = ^{
+        if (_isOpen)
+            catchInBlock(block);
+    };
     if (_dispatchQueue)
-        dispatch_async(_dispatchQueue, ^{catchInBlock(block);});
+        dispatch_async(_dispatchQueue, block);
     else
-        MYOnThread(_thread, ^{catchInBlock(block);});
+        MYOnThreadInModes(_thread, CBL_RunloopModes, NO, block);
 }
 
 
@@ -160,18 +151,31 @@ static void catchInBlock(void (^block)()) {
     if (_dispatchQueue)
         dispatch_sync(_dispatchQueue, ^{catchInBlock(block);});
     else
-        MYOnThreadSynchronously(_thread, ^{catchInBlock(block);});
+        MYOnThreadInModes(_thread, CBL_RunloopModes, YES, ^{catchInBlock(block);});
 }
 
 
 - (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block {
+    block = ^{
+        if (_isOpen)
+            catchInBlock(block);
+    };
     if (_dispatchQueue) {
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC));
         dispatch_after(popTime, _dispatchQueue, block);
     } else {
         //FIX: This schedules on the _current_ thread, not _thread!
-        MYAfterDelay(delay, ^{catchInBlock(block);});
+        MYAfterDelay(delay, block);
     }
+}
+
+
+- (BOOL) waitFor: (BOOL (^)())block {
+    if (_dispatchQueue) {
+        Warn(@"-[CBLDatabase waitFor:] cannot be used with dispatch queues, only runloops");
+        return NO;
+    }
+    return MYWaitFor(CBL_PrivateRunloopMode, block);
 }
 
 
@@ -187,37 +191,25 @@ static void catchInBlock(void (^block)()) {
 }
 
 
-- (BOOL) close {
-    (void)[self saveAllModels: NULL];  // ?? Or should I return NO if this fails?
-
-    if (![self closeInternal])
+- (BOOL) close: (NSError**)outError {
+    if (![self saveAllModels: outError])
         return NO;
-
-    [self _clearDocumentCache];
-    _modelFactory = nil;
-    return YES;
-}
-
-
-- (BOOL) closeForDeletion {
-    // There is no need to save any changes!
-    for (CBLModel* model in _unsavedModelsMutable.copy)
-        model.needsSave = false;
-    _unsavedModelsMutable = nil;
-    [self close];
-    [_manager _forgetDatabase: self];
+    for (CBLReplication* repl in self.allReplications)
+        [repl stop];
+    [self _close];
     return YES;
 }
 
 
 - (BOOL) deleteDatabase: (NSError**)outError {
     LogTo(CBLDatabase, @"Deleting %@", _path);
-    [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillBeDeletedNotification
+    [[NSNotificationCenter defaultCenter] postNotificationName:CBL_DatabaseWillBeDeletedNotification
                                                         object: self];
-    if (_isOpen && ![self closeForDeletion])
-        return NO;
-    [_manager _forgetDatabase: self];
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
+    [self _close];
+
+    // Wait for all threads to close this database file:
+    [_manager.shared forgetDatabaseNamed: _name];
+
     if (!self.exists) {
         return YES;
     }

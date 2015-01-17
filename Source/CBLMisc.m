@@ -30,9 +30,12 @@
 
 #if DEBUG
 NSString* CBLPathToTestFile(NSString* name) {
-    NSString* path = [[[@(__FILE__) stringByDeletingLastPathComponent]
-                stringByDeletingLastPathComponent] stringByAppendingPathComponent: @"TestData"];
-    return [path stringByAppendingPathComponent: name];
+    // The iOS and Mac test apps have the TestData folder copied into their Resources dir.
+    NSString* path =  [[NSBundle mainBundle] pathForResource: name.stringByDeletingPathExtension
+                                                      ofType: name.pathExtension
+                                                 inDirectory: @"TestData"];
+    Assert(path, @"Can't find test file \"%@\"", name);
+    return path;
 }
 
 NSData* CBLContentsOfTestFile(NSString* name) {
@@ -42,6 +45,43 @@ NSData* CBLContentsOfTestFile(NSString* name) {
     return data;
 }
 #endif
+
+
+BOOL CBLWithStringBytes(UU NSString* str, void (^block)(const char*, size_t)) {
+    // First attempt: Get a C string directly from the CFString if it's in the right format:
+    const char* cstr = CFStringGetCStringPtr((CFStringRef)str, kCFStringEncodingUTF8);
+    if (cstr) {
+        block(cstr, strlen(cstr));
+        return YES;
+    }
+
+    NSUInteger byteCount;
+    if (str.length < 256) {
+        // First try to copy the UTF-8 into a smallish stack-based buffer:
+        char stackBuf[256];
+        NSRange remaining;
+        BOOL ok = [str getBytes: stackBuf maxLength: sizeof(stackBuf) usedLength: &byteCount
+                       encoding: NSUTF8StringEncoding options: 0
+                          range: NSMakeRange(0, str.length) remainingRange: &remaining];
+        if (ok && remaining.length == 0) {
+            block(stackBuf, byteCount);
+            return YES;
+        }
+    }
+
+    // Otherwise malloc a buffer to copy the UTF-8 into:
+    NSUInteger maxByteCount = [str maximumLengthOfBytesUsingEncoding: NSUTF8StringEncoding];
+    char* buf = malloc(maxByteCount);
+    if (!buf)
+        return NO;
+    BOOL ok = [str getBytes: buf maxLength: maxByteCount usedLength: &byteCount
+                   encoding: NSUTF8StringEncoding options: 0
+                      range: NSMakeRange(0, str.length) remainingRange: NULL];
+    if (ok)
+        block(buf, byteCount);
+    free(buf);
+    return ok;
+}
 
 
 NSString* CBLCreateUUID() {
@@ -105,6 +145,23 @@ NSString* CBLHexFromBytes( const void* bytes, size_t length) {
                                    encoding: NSASCIIStringEncoding];
 }
 
+NSData* CBLDataFromHex(NSString* hex) {
+    const char* chars = hex.UTF8String;
+    NSUInteger len = strlen(chars);
+    if (len % 2)
+        return nil;
+    NSMutableData* data = [NSMutableData dataWithLength: len/2];
+    uint8_t *bytes = data.mutableBytes;
+    NSUInteger bytePos = 0;
+    for (NSUInteger i = 0; i < len; i += 2) {
+        int d1 = chars[i], d2 = chars[i+1];
+        if (!ishexnumber(d1) || !ishexnumber(d2))
+            return nil;
+        bytes[bytePos++] = (uint8_t)(16 * digittoint(d1) + digittoint(d2));
+    }
+    return data;
+}
+
 
 NSData* CBLHMACSHA1(NSData* key, NSData* data) {
     UInt8 hmac[SHA_DIGEST_LENGTH];
@@ -125,37 +182,41 @@ NSComparisonResult CBLSequenceCompare( SequenceNumber a, SequenceNumber b) {
 }
 
 
-NSString* CBLEscapeID( NSString* docOrRevID ) {
-#ifdef GNUSTEP
-    docOrRevID = [docOrRevID stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
-    docOrRevID = [docOrRevID stringByReplacingOccurrencesOfString: @"&" withString: @"%26"];
-    docOrRevID = [docOrRevID stringByReplacingOccurrencesOfString: @"/" withString: @"%2F"];
-    return docOrRevID;
-#else
-    CFStringRef escaped = CFURLCreateStringByAddingPercentEscapes(NULL,
-                                                                  (CFStringRef)docOrRevID,
-                                                                  NULL, (CFStringRef)@"?&/",
-                                                                  kCFStringEncodingUTF8);
-    #ifdef __OBJC_GC__
-    return NSMakeCollectable(escaped);
-    #else
-    return (__bridge_transfer NSString *)escaped;
-    #endif
-
-#endif
+NSString* CBLJSONString( id object ) {
+    if (!object)
+        return nil;
+    return [CBLJSON stringWithJSONObject: object
+                                 options: CBLJSONWritingAllowFragments
+                                   error: NULL];
 }
 
 
 NSString* CBLEscapeURLParam( NSString* param ) {
+    // Escape all of the reserved characters according to section 2.2 in rfc3986
+    // http://tools.ietf.org/html/rfc3986#section-2.2
 #ifdef GNUSTEP
     param = [param stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
+    param = [param stringByReplacingOccurrencesOfString: @":" withString: @"%3A"];
+    param = [param stringByReplacingOccurrencesOfString: @"/" withString: @"%2F"];
+    param = [param stringByReplacingOccurrencesOfString: @"?" withString: @"%3F"];
+    param = [param stringByReplacingOccurrencesOfString: @"@" withString: @"%40"];
+    param = [param stringByReplacingOccurrencesOfString: @"!" withString: @"%21"];
+    param = [param stringByReplacingOccurrencesOfString: @"$" withString: @"%24"];
     param = [param stringByReplacingOccurrencesOfString: @"&" withString: @"%26"];
+    param = [param stringByReplacingOccurrencesOfString: @"'" withString: @"%27"];
+    param = [param stringByReplacingOccurrencesOfString: @"(" withString: @"%28"];
+    param = [param stringByReplacingOccurrencesOfString: @")" withString: @"%29"];
+    param = [param stringByReplacingOccurrencesOfString: @"*" withString: @"%2A"];
     param = [param stringByReplacingOccurrencesOfString: @"+" withString: @"%2B"];
+    param = [param stringByReplacingOccurrencesOfString: @"," withString: @"%2C"];
+    param = [param stringByReplacingOccurrencesOfString: @";" withString: @"%3B"];
+    param = [param stringByReplacingOccurrencesOfString: @"=" withString: @"%3D"];
     return param;
 #else
     CFStringRef escaped = CFURLCreateStringByAddingPercentEscapes(NULL,
                                                                   (CFStringRef)param,
-                                                                  NULL, (CFStringRef)@"&+",
+                                                                  NULL,
+                                                                  (CFStringRef)@":/?@!$&'()*+,;=",
                                                                   kCFStringEncodingUTF8);
     #ifdef __OBJC_GC__
     return NSMakeCollectable(escaped);
@@ -273,7 +334,12 @@ BOOL CBLIsPermanentError( NSError* error ) {
     NSString* domain = error.domain;
     NSInteger code = error.code;
     if ($equal(domain, NSURLErrorDomain)) {
-        return code == NSURLErrorBadURL || code == NSURLErrorUnsupportedURL;
+        return code == NSURLErrorBadURL
+            || code == NSURLErrorUnsupportedURL
+            || code == NSURLErrorUserCancelledAuthentication
+            || code == NSURLErrorUserAuthenticationRequired
+            || (code <= NSURLErrorSecureConnectionFailed &&
+                code >= NSURLErrorClientCertificateRequired);
     } else if ($equal(domain, CBLHTTPErrorDomain)) {
         return code >= 400 && code <= 499;
     } else {
@@ -294,6 +360,47 @@ BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) {
             *outError = error;
         return NO;
     }
+}
+
+BOOL CBLRemoveFileIfExistsAsync(NSString* path, NSError** outError) {
+    NSString* renamedPath = [NSTemporaryDirectory()
+                             stringByAppendingPathComponent: CBLCreateUUID()];
+    NSError* error;
+    BOOL result = [[NSFileManager defaultManager] moveItemAtPath: path
+                                                          toPath: renamedPath
+                                                           error: &error];
+    if (result) {
+        LogTo(CBLDatabase, @"Renamed file %@ to %@ for async delete", renamedPath, renamedPath);
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            NSError* outError;
+            if (CBLRemoveFileIfExists(renamedPath, &outError))
+                LogTo(CBLDatabase, @"Deleted file %@", renamedPath);
+            else
+                Warn(@"Failed to delete an attachment folder at %@ with error: %@",
+                     renamedPath, outError);
+        });
+        return YES;
+    } else if (CBLIsFileNotFoundError(error)) {
+        return YES;
+    } else {
+        if (outError)
+            *outError = error;
+        return NO;
+    }
+}
+
+NSString* CBLGetHostName() {
+    // From <http://stackoverflow.com/a/16902907/98077>
+    char baseHostName[256];
+    if (gethostname(baseHostName, 255) != 0)
+        return nil;
+    baseHostName[255] = '\0';
+    NSString* hostName = [NSString stringWithUTF8String: baseHostName];
+#if TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
+    if (![hostName hasSuffix: @".local"])
+        hostName = [hostName stringByAppendingString: @".local"];
+#endif
+    return hostName;
 }
 
 
@@ -336,34 +443,4 @@ NSURL* CBLAppendToURL(NSURL* baseURL, NSString* toAppend) {
         [urlStr appendString: @"/"];
     [urlStr appendString: toAppend];
     return [NSURL URLWithString: urlStr];
-}
-
-
-TestCase(CBLQuoteString) {
-    CAssertEqual(CBLQuoteString(@""), @"\"\"");
-    CAssertEqual(CBLQuoteString(@"foo"), @"\"foo\"");
-    CAssertEqual(CBLQuoteString(@"f\"o\"o"), @"\"f\\\"o\\\"o\"");
-    CAssertEqual(CBLQuoteString(@"\\foo"), @"\"\\\\foo\"");
-    CAssertEqual(CBLQuoteString(@"\""), @"\"\\\"\"");
-    CAssertEqual(CBLQuoteString(@""), @"\"\"");
-
-    CAssertEqual(CBLUnquoteString(@""), @"");
-    CAssertEqual(CBLUnquoteString(@"\""), nil);
-    CAssertEqual(CBLUnquoteString(@"\"\""), @"");
-    CAssertEqual(CBLUnquoteString(@"\"foo"), nil);
-    CAssertEqual(CBLUnquoteString(@"foo\""), @"foo\"");
-    CAssertEqual(CBLUnquoteString(@"foo"), @"foo");
-    CAssertEqual(CBLUnquoteString(@"\"foo\""), @"foo");
-    CAssertEqual(CBLUnquoteString(@"\"f\\\"o\\\"o\""), @"f\"o\"o");
-    CAssertEqual(CBLUnquoteString(@"\"\\foo\""), @"foo");
-    CAssertEqual(CBLUnquoteString(@"\"\\\\foo\""), @"\\foo");
-    CAssertEqual(CBLUnquoteString(@"\"foo\\\""), nil);
-}
-
-TestCase(TDEscapeID) {
-    CAssertEqual(CBLEscapeID(@"foobar"), @"foobar");
-    CAssertEqual(CBLEscapeID(@"<script>alert('ARE YOU MY DADDY?')</script>"),
-                            @"%3Cscript%3Ealert('ARE%20YOU%20MY%20DADDY%3F')%3C%2Fscript%3E");
-    CAssertEqual(CBLEscapeID(@"foo/bar"), @"foo%2Fbar");
-    CAssertEqual(CBLEscapeID(@"foo&bar"), @"foo%26bar");
 }

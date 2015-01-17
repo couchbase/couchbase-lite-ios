@@ -109,6 +109,10 @@ static NSCharacterSet* kIllegalNameChars;
         _EnableLogTo(type, YES);
 }
 
++ (void) redirectLogging: (void (^)(NSString* type, NSString* message))callback {
+    MYLoggingCallback = callback;
+}
+
 
 + (NSString*) defaultDirectory {
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
@@ -157,10 +161,7 @@ static CBLManager* sInstance;
                            options: options
                             shared: [[CBL_Shared alloc] init]];
     if (self) {
-        if ([NSThread isMainThread])
-            _dispatchQueue = dispatch_get_main_queue();
-        else
-            _thread = [NSThread currentThread];
+        _thread = [NSThread currentThread];
         // Create the directory but don't fail if it already exists:
         NSError* error;
         if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
@@ -206,6 +207,10 @@ static CBLManager* sInstance;
                                                 error: &error];
     Assert(dbm, @"Failed to create db manager at %@: %@", path, error);
     AssertEqual(dbm.directory, path);
+    AfterThisTest(^{
+        [dbm close];
+        [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
+    });
     return dbm;
 }
 
@@ -217,7 +222,7 @@ static CBLManager* sInstance;
 
 - (id) copyWithZone: (NSZone*)zone {
     CBLManager *managerCopy = [[[self class] alloc] initWithDirectory: self.directory
-                                           options: &_options
+                                                              options: &_options
                                                                shared: _shared];
     
     managerCopy.customHTTPHeaders = [self.customHTTPHeaders copy];
@@ -234,7 +239,7 @@ static CBLManager* sInstance;
     Assert(self != sInstance, @"Please don't close the sharedInstance!");
     LogTo(CBLDatabase, @"CLOSING %@ ...", self);
     for (CBLDatabase* db in _databases.allValues) {
-        [db close];
+        [db _close];
     }
     [_databases removeAllObjects];
     _shared = nil;
@@ -414,6 +419,7 @@ static CBLManager* sInstance;
         if (![db deleteDatabase: outError])
             return nil;
     } else {
+        AssertEq([_shared countForOpenedDatabase: name], 0u);
         if (![CBLDatabase deleteDatabaseFilesAtPath: [self pathForDatabaseNamed: name]
                                               error: outError])
             return nil;
@@ -440,6 +446,7 @@ static CBLManager* sInstance;
                                                toPath: dstAttachmentsPath
                                                 error: outError]) &&
             [db open: outError] &&
+            [db createLocalCheckpointDocument: outError] &&
             [db replaceUUIDs: outError];
 }
 
@@ -489,15 +496,14 @@ static CBLManager* sInstance;
 }
 
 
+// Called when a database is being closed
 - (void) _forgetDatabase: (CBLDatabase*)db {
     NSString* name = db.name;
     [_replications my_removeMatching: ^int(CBLReplication* repl) {
         return [repl localDatabase] == db;
     }];
     [_databases removeObjectForKey: name];
-    CBL_Shared* shared = _shared;
-    [shared closedDatabase: name];
-    [shared forgetDatabaseNamed: name];
+    [_shared closedDatabase: name];
 }
 
 
@@ -542,6 +548,8 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         if (targetIsLocal) {
             // This is a local-to-local replication. Turn the remote into a full URL to keep the
             // replicator happy:
+            if (!NSClassFromString(@"CBL_URLProtocol"))
+                return kCBLStatusServerError;  // Listener/router framework not installed
             NSError* error;
             CBLDatabase* targetDb;
             if (*outCreateTarget)
@@ -552,7 +560,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
                 return CBLStatusFromNSError(error, kCBLStatusBadRequest);
             NSURL* targetURL = targetDb.internalURL;
             if (!targetURL)
-                return kCBLStatusServerError;   // Listener/router framework not installed
+                return kCBLStatusServerError;
             NSMutableDictionary* nuTarget = [targetDict mutableCopy];
             nuTarget[@"url"] = targetURL.absoluteString;
             targetDict = nuTarget;
@@ -697,38 +705,3 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 
 @end
-
-
-
-
-#pragma mark - TESTS
-#if DEBUG
-
-TestCase(CBLManager) {
-    RequireTestCase(CBLDatabase);
-
-    for (NSString* name in @[@"f", @"foo123", @"foo/($12)", @"f+-_00/"])
-        CAssert([CBLManager isValidDatabaseName: name]);
-    NSMutableString* longName = [@"long" mutableCopy];
-    while (longName.length < 240)
-        [longName appendString: @"!"];
-    for (NSString* name in @[@"", @"0", @"123foo", @"Foo", @"/etc/passwd", @"foo ", @"_foo", longName])
-        CAssert(![CBLManager isValidDatabaseName: name], @"Db name '%@' should not be valid", name);
-
-    CBLManager* dbm = [CBLManager createEmptyAtTemporaryPath: @"CBLManagerTest"];
-    CAssertEqual(dbm.allDatabaseNames, @[]);
-    CBLDatabase* db = [dbm existingDatabaseNamed: @"foo" error: NULL];
-    CAssert(db == nil);
-    
-    db = [dbm databaseNamed: @"foo" error: NULL];
-    CAssert(db != nil);
-    CAssertEqual(db.name, @"foo");
-    CAssertEqual(db.path.stringByDeletingLastPathComponent, dbm.directory);
-    CAssert(db.exists);
-    CAssertEqual(dbm.allDatabaseNames, @[@"foo"]);
-
-    CAssertEq([dbm existingDatabaseNamed: @"foo" error: NULL], db);
-    [dbm close];
-}
-
-#endif

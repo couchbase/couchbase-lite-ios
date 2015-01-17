@@ -20,8 +20,7 @@
 #import <JavaScriptCore/JSStringRefCF.h>
 
 
-/* NOTE: JavaScriptCore is not a public system framework on iOS, so you'll need to link your iOS app
-   with your own copy of it. See <https://github.com/phoboslab/JavaScriptCore-iOS>. */
+/* NOTE: If you build this, you'll need to link against JavaScriptCore.framework */
 
 /* NOTE: This source file requires ARC. */
 
@@ -71,20 +70,39 @@ static JSValueRef EmitCallback(JSContextRef ctx, JSObjectRef function, JSObjectR
 }
 
 
+// This is the body of the JavaScript "Log(message)" function.
+static JSValueRef LogCallback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject,
+                               size_t argumentCount, const JSValueRef arguments[],
+                               JSValueRef* exception)
+{
+    id message = nil;
+    if (argumentCount > 0) {
+        message = ValueToID(ctx, arguments[0]);
+        NSLog(@"JS: %@", message);
+    }
+    return JSValueMakeUndefined(ctx);
+}
+
+
 - (instancetype) init {
     self = [super init];
     if (self) {
-        JSGlobalContextRef context = self.context;
-        // Install the "emit" function in the context's namespace:
-        JSStringRef name = JSStringCreateWithCFString(CFSTR("emit"));
-        JSObjectRef fn = JSObjectMakeFunctionWithCallback(context, name, &EmitCallback);
-        JSObjectSetProperty(context, JSContextGetGlobalObject(context),
-                            name, fn,
-                            kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete,
-                            NULL);
-        JSStringRelease(name);
+        [self registerFunctionNamed:@"emit" callback:&EmitCallback];
+        [self registerFunctionNamed:@"log" callback:&LogCallback];
     }
     return self;
+}
+
+
+- (void) registerFunctionNamed: (NSString*)fnName callback: (JSObjectCallAsFunctionCallback)callback {
+    JSGlobalContextRef context = self.context;
+    JSStringRef name = JSStringCreateWithCFString((__bridge CFStringRef)fnName);
+    JSObjectRef fn = JSObjectMakeFunctionWithCallback(context, name, callback);
+    JSObjectSetProperty(context, JSContextGetGlobalObject(context),
+                        name, fn,
+                        kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete,
+                        NULL);
+    JSStringRelease(name);
 }
 
 

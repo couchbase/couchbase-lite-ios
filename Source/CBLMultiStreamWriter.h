@@ -57,6 +57,7 @@
 - (NSData*) allOutput;
 
 // protected:
+- (instancetype) initWithBufferSize: (NSUInteger)bufferSize;
 - (void) addInput: (id)input length: (UInt64)length;
 - (void) opened;
 @end

@@ -26,7 +26,11 @@
 
 @property BOOL createTarget;
 
+/** Returns the database revisions that still need to be pushed to the server, or nil on error. */
+@property (readonly) CBL_RevisionList* unpushedRevisions;
+
 @end
 
 
 CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item);
+int CBLFindCommonAncestor(CBL_Revision* rev, NSArray* possibleRevIDs); // exposed for testing

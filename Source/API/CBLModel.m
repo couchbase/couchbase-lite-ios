@@ -27,13 +27,12 @@
 
 @implementation CBLModel
 
+@dynamic type;
 
-- (instancetype) init {
-    return [self initWithDocument: nil];
-}
 
-- (instancetype) initWithDocument: (CBLDocument*)document
+- (instancetype) initWithDocument: (CBLDocument*)document orDatabase:(CBLDatabase *)database
 {
+    NSParameterAssert(document || database);
     self = [super init];
     if (self) {
         if (document) {
@@ -41,21 +40,29 @@
             self.document = document;
             [self didLoadFromDocument];
         } else {
+            LogTo(CBLModel, @"%@ initWithDatabase: %@", self.class, database);
             _isNew = true;
-            LogTo(CBLModel, @"%@ init", self);
+            self.database = database;
         }
+        [self awakeFromInitializer];
     }
     return self;
 }
 
 
-- (instancetype) initWithNewDocumentInDatabase: (CBLDatabase*)database {
++ (instancetype) modelForNewDocumentInDatabase: (CBLDatabase*)database {
     NSParameterAssert(database);
-    self = [self initWithDocument: nil];
-    if (self) {
-        self.database = database;
+    if (self == [CBLModel class]) {
+        Warn(@"Couldn't create a model object for a new document from the base CBLModel class.");
+        return nil;
     }
-    return self;
+
+    CBLModel *model = [[self alloc] initWithDocument:nil orDatabase:database];
+    NSString *documentType = [database.modelFactory documentTypeForClass:[self class]];
+    if(documentType != nil){
+        model.type = documentType;
+    }
+    return model;
 }
 
 
@@ -68,7 +75,7 @@
                  self, document, model);
     } else if (self != [CBLModel class]) {
         // If invoked on a subclass of CBLModel, create an instance of that subclass:
-        model = [[self alloc] initWithDocument: document];
+        model = [[self alloc] initWithDocument: document orDatabase:nil];
     } else {
         // If invoked on CBLModel itself, ask the factory to instantiate the appropriate class:
         model = [document.database.modelFactory modelForDocument: document];
@@ -110,12 +117,6 @@
 }
 
 
-- (void) detachFromDocument {
-    _document.modelObject = nil;
-    _document = nil;
-}
-
-
 - (NSString*) idForNewDocumentInDatabase: (CBLDatabase*)db {
     return nil;  // subclasses can override this to customize the doc ID
 }
@@ -134,7 +135,6 @@
         LogTo(CBLModel, @"%@ made new document", self);
     } else {
         [self deleteDocument: nil];
-        [self detachFromDocument];  // detach immediately w/o waiting for success
     }
 }
 
@@ -157,7 +157,6 @@
 
     if (![rev createRevisionWithProperties: properties error: outError])
         return NO;
-    [self detachFromDocument];
     return YES;
 }
 
@@ -167,13 +166,17 @@
 }
 
 
+- (void) awakeFromInitializer {
+    // subclasses can override this
+}
+
 - (void) didLoadFromDocument {
     // subclasses can override this
 }
 
 
 // Respond to an external change (likely from sync). This is called by my CBLDocument.
-- (void) CBLDocument: (CBLDocument*)doc didChange:(CBLDatabaseChange*)change {
+- (void) document: (CBLDocument*)doc didChange:(CBLDatabaseChange*)change {
     NSAssert(doc == _document, @"Notified for wrong document");
     if (_saving)
         return;  // this is just an echo from my -justSave: method, below, so ignore it
@@ -182,21 +185,34 @@
     _isNew = false;
     [self markExternallyChanged];
     
-    // Send KVO notifications about all my properties in case they changed:
+    // Prepare to send KVO notifications about all my properties in case they changed:
     NSSet* keys = [[self class] propertyNames];
     for (NSString* key in keys)
         [self willChangeValueForKey: key];
-    
-    // Remove unchanged cached values in _properties:
-    if (_changedNames && _properties) {
-        NSMutableSet* removeKeys = [NSMutableSet setWithArray: [_properties allKeys]];
-        [removeKeys minusSet: _changedNames];
-        [_properties removeObjectsForKeys: removeKeys.allObjects];
-    } else {
+
+    if (doc.isDeleted) {
+        // If doc was deleted, revert any unsaved changes and mark doc as unchanged:
         _properties = nil;
+        _changedNames = nil;
+        _changedAttachments = nil;
+        self.needsSave = NO;
+        // Detach from document:
+        _document.modelObject = nil;
+        _document = nil;
+
+    } else {
+        // Otherwise, remove unchanged cached values in _properties:
+        if (_changedNames && _properties) {
+            NSMutableSet* removeKeys = [NSMutableSet setWithArray: [_properties allKeys]];
+            [removeKeys minusSet: _changedNames];
+            [_properties removeObjectsForKeys: removeKeys.allObjects];
+        } else {
+            _properties = nil;
+        }
+        [self didLoadFromDocument];
     }
-    
-    [self didLoadFromDocument];
+
+    // Send KVO notifications about all my properties:
     for (NSString* key in keys)
         [self didChangeValueForKey: key];
 }
@@ -291,7 +307,6 @@
     if (!_needsSave || (!_changedNames && !_changedAttachments))
         return;
     _isNew = NO;
-    _properties = nil;
     _changedNames = nil;
     _changedAttachments = nil;
     self.needsSave = NO;
@@ -384,6 +399,8 @@
         value = [CBLJSON JSONObjectWithDate: value];
     else if ([value isKindOfClass: [NSDecimalNumber class]])
         value = [value stringValue];
+    else if ([value isKindOfClass: [NSURL class]])
+        value = [value absoluteString];
     else if ([value isKindOfClass: [CBLModel class]])
         value = ((CBLModel*)value).document.documentID;
     else if ([value isKindOfClass: [NSArray class]]) {
@@ -438,6 +455,16 @@
     id value = _properties[property];
     if (!value && !_isNew && ![_changedNames containsObject: property]) {
         value = [_document propertyForKey: property];
+    }
+    return value;
+}
+
+- (id) getValueOfProperty: (NSString*)property ofClass: (Class)klass {
+    id value = _properties[property];
+    if (!value && !_isNew && ![_changedNames containsObject: property]) {
+        value = [_document propertyForKey: property];
+        if (![value isKindOfClass: klass])
+            value = nil;
     }
     return value;
 }

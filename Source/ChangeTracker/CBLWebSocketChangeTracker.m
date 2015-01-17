@@ -7,9 +7,14 @@
 //
 
 #import "CBLWebSocketChangeTracker.h"
+#import "CBLAuthorizer.h"
 #import "WebSocketClient.h"
 #import "CBLMisc.h"
 #import "MYBlockUtils.h"
+#import <libkern/OSAtomic.h>
+
+
+#define kMaxPendingMessages 2
 
 
 @interface CBLWebSocketChangeTracker () <WebSocketDelegate>
@@ -22,14 +27,13 @@
     WebSocketClient* _ws;
     BOOL _running;
     CFAbsoluteTime _startTime;
+    int32_t _pendingMessageCount;   // How many incoming WebSocket messages haven't been parsed yet?
 }
 
 
 - (NSURL*) changesFeedURL {
-    if (self.usePOST)
-        return CBLAppendToURL(_databaseURL, @"_changes?feed=websocket");
-    else
-        return super.changesFeedURL;
+    // The options will be sent in a WebSocket message after opening (see -webSocketDidOpen: below)
+    return CBLAppendToURL(_databaseURL, @"_changes?feed=websocket");
 }
 
 
@@ -51,9 +55,17 @@
         [request setValue: value forHTTPHeaderField: key];
     }];
 
+    if (_authorizer) {
+        // Let the Authorizer add its own credential:
+        NSString* authHeader = [_authorizer authorizeURLRequest: request forRealm: nil];
+        if (authHeader)
+            [request setValue: authHeader forHTTPHeaderField: @"Authorization"];
+    }
+
     LogTo(SyncVerbose, @"%@: %@ %@", self, request.HTTPMethod, url.resourceSpecifier);
     _ws = [[WebSocketClient alloc] initWithURLRequest: request];
     _ws.delegate = self;
+    [_ws useTLS: self.TLSSettings];
     NSError* error;
     if (![_ws connect: &error]) {
         self.error = error;
@@ -64,6 +76,7 @@
     _running = YES;
     _caughtUp = NO;
     _startTime = CFAbsoluteTimeGetCurrent();
+    _pendingMessageCount = 0;
     LogTo(ChangeTracker, @"%@: Started... <%@>", self, url);
     return YES;
 }
@@ -80,23 +93,39 @@
     [super stop];
 }
 
+- (void) setPaused:(BOOL)paused {
+    [super setPaused: paused];
+
+    // Pause the WebSocket if the client paused _or_ there are too many incoming messages:
+    paused = paused || _pendingMessageCount >= kMaxPendingMessages;
+    if (paused != _ws.readPaused)
+        LogTo(ChangeTracker, @"%@: %@ WebSocket", self, (paused ? @"PAUSE" : @"RESUME"));
+    _ws.readPaused = paused;
+}
+
 
 #pragma mark - WEBSOCKET DELEGATE API:
 
 // THESE ARE CALLED ON THE WEBSOCKET'S DISPATCH QUEUE, NOT MY THREAD!!
 
+- (void) webSocket: (WebSocket*)ws didSecureWithTrust: (SecTrustRef)trust atURL:(NSURL *)url {
+    MYOnThread(_thread, ^{
+        [self checkServerTrust: trust forURL: url];
+    });
+}
+
 - (void) webSocketDidOpen: (WebSocket *)ws {
     MYOnThread(_thread, ^{
         LogTo(ChangeTrackerVerbose, @"%@: WebSocket opened", self);
+        _retryCount = 0;
         // Now that the WebSocket is open, send the changes-feed options (the ones that would have
         // gone in the POST body if this were HTTP-based.)
-        if (self.usePOST)
-            [ws sendBinaryMessage: self.changesFeedPOSTBody];
+        [ws sendBinaryMessage: self.changesFeedPOSTBody];
     });
 }
 
 /** Called when a WebSocket receives a textual message from its peer. */
-- (void) webSocket: (WebSocket *)ws
+- (BOOL) webSocket: (WebSocket *)ws
          didReceiveMessage: (NSString *)msg
 {
     MYOnThread(_thread, ^{
@@ -119,27 +148,25 @@
                 [_ws closeWithCode: kWebSocketCloseDataError reason: @"Unparseable change entry"];
             }
         }
+        OSAtomicDecrement32Barrier(&_pendingMessageCount);
+        [self setPaused: self.paused]; // this will resume the WebSocket unless self.paused
     });
+    // Tell the WebSocket to pause its reader if too many messages are waiting to be processed:
+    return (OSAtomicIncrement32Barrier(&_pendingMessageCount) < kMaxPendingMessages);
 }
 
 /** Called after the WebSocket closes, either intentionally or due to an error. */
-- (void) webSocket: (WebSocket *)ws
-  didCloseWithCode: (WebSocketCloseCode)code
-            reason: (NSString*)reason
+- (void) webSocket:(WebSocket *)ws
+         didCloseWithError: (NSError*)error
 {
     MYOnThread(_thread, ^{
         if (ws != _ws)
             return;
         _ws = nil;
-        if (code == kWebSocketCloseNormal) {
+        if (error == nil) {
             LogTo(ChangeTracker, @"%@: closed", self);
             [self stop];
         } else {
-            LogTo(ChangeTracker, @"%@: disconnected with error %d / %@", self, code, reason);
-            NSDictionary* info = $dict({NSLocalizedFailureReasonErrorKey, reason});
-            NSError* error = [NSError errorWithDomain: @"WebSocket"
-                                                 code: code
-                                             userInfo: info];
             [self failedWithError: error];
         }
     });

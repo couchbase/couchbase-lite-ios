@@ -1,0 +1,23 @@
+{
+	"log": ["HTTP+"],
+    "interface": ":4994",
+    "adminInterface": ":4995",
+    "SSLCert": "cert.pem",
+    "SSLKey":  "privkey.pem",
+	"databases": {
+		"public": {
+			"server": "walrus:walrus_data",
+			"bucket": "public_ssl",
+			"users": {
+				"GUEST": {"disabled": false, "admin_channels":["*"]}
+			}
+		},
+		"cbl_auth_test": {
+			"server": "walrus:walrus_data",
+			"bucket": "cbl_auth_test_ssl",
+			"users": {
+				"test": {"admin_channels":["public"],"password":"abc123"}
+			}
+		}
+	}
+}

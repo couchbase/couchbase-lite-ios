@@ -13,14 +13,11 @@
 
 
 /** Standard query options for views. */
-typedef struct CBLQueryOptions {
-    __unsafe_unretained id startKey;
-    __unsafe_unretained id endKey;
-    __unsafe_unretained NSString* startKeyDocID;
-    __unsafe_unretained NSString* endKeyDocID;
-    __unsafe_unretained NSArray* keys;
-    __unsafe_unretained NSString* fullTextQuery;
+@interface CBLQueryOptions : NSObject
+{
+@public
     const struct CBLGeoRect* bbox;
+    unsigned prefixMatchLevel;
     unsigned skip;
     unsigned limit;
     unsigned groupLevel;
@@ -29,6 +26,7 @@ typedef struct CBLQueryOptions {
     BOOL includeDocs;
     BOOL updateSeq;
     BOOL localSeq;
+    BOOL inclusiveStart;
     BOOL inclusiveEnd;
     BOOL reduceSpecified;
     BOOL reduce;                   // Ignore if !reduceSpecified
@@ -37,16 +35,32 @@ typedef struct CBLQueryOptions {
     BOOL fullTextRanking;
     CBLIndexUpdateMode indexUpdateMode;
     CBLAllDocsMode allDocsMode;
-} CBLQueryOptions;
+}
 
-extern const CBLQueryOptions kDefaultCBLQueryOptions;
+@property (copy, nonatomic) id startKey;
+@property (copy, nonatomic) id endKey;
+@property (copy, nonatomic) NSString* startKeyDocID;
+@property (copy, nonatomic) NSString* endKeyDocID;
+@property (copy, nonatomic) NSArray* keys;
+@property (copy, nonatomic) NSPredicate* filter;
+@property (copy, nonatomic) NSString* fullTextQuery;
 
+@end
+
+#define kCBLQueryOptionsDefaultLimit UINT_MAX
+extern NSString* const kCBLViewChangeNotification;
 
 typedef enum {
     kCBLViewCollationUnicode,
     kCBLViewCollationRaw,
     kCBLViewCollationASCII
 } CBLViewCollation;
+
+
+/** Returns YES if the data is meant as a placeholder for the doc's entire data (a "*") */
+BOOL CBLValueIsEntireDoc(NSData* valueData);
+
+BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions* options);
 
 
 @interface CBLView ()
@@ -56,7 +70,6 @@ typedef enum {
     NSString* _name;
     int _viewID;
     uint8_t _collation;
-    CBLContentOptions _mapContentOptions;
 }
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name;
@@ -64,6 +77,8 @@ typedef enum {
 - (void) databaseClosing;
 
 @property (readonly) int viewID;
+@property (readonly) NSUInteger totalRows;
+
 @end
 
 
@@ -73,15 +88,23 @@ typedef enum {
 
 #if DEBUG  // for unit tests only
 - (void) setCollation: (CBLViewCollation)collation;
+- (void) forgetMapBlock;
 #endif
+
+@property (readonly) NSArray* viewsInGroup;
 
 /** Compiles a view (using the registered CBLViewCompiler) from the properties found in a CouchDB-style design document. */
 - (BOOL) compileFromProperties: (NSDictionary*)viewProps
                       language: (NSString*)language;
 
 /** Updates the view's index (incrementally) if necessary.
- @return  200 if updated, 304 if already up-to-date, else an error code */
+    If the index is updated, the other views in the viewGroup will be updated as a bonus.
+    @return  200 if updated, 304 if already up-to-date, else an error code */
 - (CBLStatus) updateIndex;
+
+/** Updates the view's index (incrementally) if necessary. No other groups will be updated.
+    @return  200 if updated, 304 if already up-to-date, else an error code */
+- (CBLStatus) updateIndexAlone;
 
 @end
 
@@ -91,10 +114,16 @@ typedef enum {
 /** Queries the view. Does NOT first update the index.
     @param options  The options to use.
     @return  An array of CBLQueryRow. */
-- (NSArray*) _queryWithOptions: (const CBLQueryOptions*)options
+- (NSArray*) _queryWithOptions: (CBLQueryOptions*)options
                         status: (CBLStatus*)outStatus;
 #if DEBUG
 - (NSArray*) dump;
 #endif
 
+@end
+
+
+@interface CBLDatabase (ViewIndexing)
+- (CBLStatus) updateIndexes: (NSArray*)views
+                    forView: (CBLView*)forView;
 @end

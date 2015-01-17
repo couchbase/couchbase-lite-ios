@@ -26,24 +26,29 @@
 
 
 static inline int cmp(int n1, int n2) {
-    int diff = n1 - n2;
-    return diff > 0 ? 1 : (diff < 0 ? -1 : 0);
+    return (n1>n2) ? 1 : ((n1<n2)? -1 : 0);
 }
 
 static inline int dcmp(double n1, double n2) {
-    double diff = n1 - n2;
-    return diff > 0.0 ? 1 : (diff < 0.0 ? -1 : 0);
+    return (n1>n2) ? 1 : ((n1<n2)? -1 : 0);
 }
 
 
-// Maps an ASCII character to its uppercase equivalent.
-static char kAsciiToUpper[127];
+// Maps an ASCII character to its relative priority in the Unicode collation sequence.
+static uint8_t kCharPriority[128];
+// Same thing but case-insensitive.
+static uint8_t kCharPriorityCaseInsensitive[128];
 
-static void initializeAsciiToUpper(void) {
-    for (int i=0; i<=127; i++)
-        kAsciiToUpper[i] = (char)i;
-    for (int i='a'; i<='z'; i++)
-        kAsciiToUpper[i] = (char)i - 32;
+static void initializeCharPriorityMap(void) {
+    static const char* const kInverseMap = "\t\n\r `^_-,;:!?.'\"()[]{}@*/\\&#%+<=>|~$0123456789aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ";
+    uint8_t priority = 1;
+    for (unsigned i=0; i<strlen(kInverseMap); i++)
+        kCharPriority[(uint8_t)kInverseMap[i]] = priority++;
+
+    // This table gives lowercase letters the same priority as uppercase:
+    memcpy(kCharPriorityCaseInsensitive, kCharPriority, sizeof(kCharPriority));
+    for (uint8_t c = 'a'; c <= 'z'; c++)
+        kCharPriorityCaseInsensitive[c] = kCharPriority[toupper(c)];
 }
 
 
@@ -73,24 +78,32 @@ static SInt8 kRawOrderOfValueType[] = {
 };
 
 
+static uint8_t kTypeOf[256];
+
+static void initializeValueTypes(void) {
+    memset(&kTypeOf, kIllegal, sizeof(kTypeOf));
+    memset(&kTypeOf['0'], kNumber, 10);
+    kTypeOf['n'] = kNull;
+    kTypeOf['f'] = kFalse;
+    kTypeOf['t'] = kTrue;
+    kTypeOf['-'] = kNumber;
+    kTypeOf['"'] = kString;
+    kTypeOf[']'] = kEndArray;
+    kTypeOf['}'] = kEndObject;
+    kTypeOf[','] = kComma;
+    kTypeOf[':'] = kColon;
+    kTypeOf['['] = kArray;
+    kTypeOf['{'] = kObject;
+}
+
+
 static ValueType valueTypeOf(char c) {
-    switch (c) {
-        case 'n':           return kNull;
-        case 'f':           return kFalse;
-        case 't':           return kTrue;
-        case '0' ... '9':
-        case '-':           return kNumber;
-        case '"':           return kString;
-        case ']':           return kEndArray;
-        case '}':           return kEndObject;
-        case ',':           return kComma;
-        case ':':           return kColon;
-        case '[':           return kArray;
-        case '{':           return kObject;
-        default:
-            Warn(@"Unexpected character '%c' parsing JSON", c);
-            return kIllegal;
-    }
+    ValueType v = kTypeOf[(uint8_t)c];
+#if DEBUG
+    if (v == kIllegal)
+        Warn(@"Unexpected character '%c' parsing JSON", c);
+#endif
+    return v;
 }
 
 
@@ -117,7 +130,6 @@ static char convertEscape(const char **in) {
 
 
 static int compareStringsASCII(const char** in1, const char** in2) {
-    TestedBy(CBLCollateASCII);
     const char* str1 = *in1, *str2 = *in2;
     while(true) {
         char c1 = *++str1;
@@ -158,7 +170,6 @@ static int compareStringsASCII(const char** in1, const char** in2) {
 // Basic rule is to compare case-insensitively, but if the strings compare equal, let the one that's
 // higher case-sensitively win (where uppercase is _greater_ than lowercase, unlike in ASCII.)
 static int compareStringsUnicodeFast(const char** in1, const char** in2) {
-    TestedBy(CBLCollateScalars);
     const char* str1 = *in1, *str2 = *in2;
     int resultIfEqual = 0;
     while(true) {
@@ -183,14 +194,15 @@ static int compareStringsUnicodeFast(const char** in1, const char** in2) {
         if ((c1 & 0x80) || (c2 & 0x80))
             return -2; // fail: I only handle ASCII
 
-        // Compare the next characters, case-insensitively:
-        int s = cmp(kAsciiToUpper[(uint8_t)c1], kAsciiToUpper[(uint8_t)c2]);
+        // Compare the next characters, according to case-insensitive Unicode character priority:
+        int s = cmp(kCharPriorityCaseInsensitive[(uint8_t)c1],
+                    kCharPriorityCaseInsensitive[(uint8_t)c2]);
         ifc (s)
             return s;
 
-        // Remember case-sensitive result, i.e. 'A' > 'a'
+        // Remember case-sensitive result too
         ifc (resultIfEqual == 0 && c1 != c2)
-            resultIfEqual = cmp(c2, c1); // opposite of ASCII ordering
+            resultIfEqual = cmp(kCharPriority[(uint8_t)c1], kCharPriority[(uint8_t)c2]);
     }
 
     ifc (resultIfEqual)
@@ -205,7 +217,6 @@ static int compareStringsUnicodeFast(const char** in1, const char** in2) {
 
 static NSString* createStringFromJSON(const char** in) {
     // Scan the JSON string to find its end and whether it contains escapes:
-    TestedBy(CBLCollateJSON);
     const char* start = ++*in;
     unsigned escapes = 0;
     const char* str;
@@ -261,12 +272,11 @@ static int compareStringsUnicode(const char** in1, const char** in2) {
 
 
 static double readNumber(const char* start, const char* end, char** endOfNumber) {
-    TestedBy(CBLCollateScalars);
     CAssert(end > start);
     // First copy the string into a zero-terminated buffer so we can safely call strtod:
     size_t len = end - start;
     char buf[50];
-    char* str = Cover(len < sizeof(buf)) ? buf : malloc(len + 1);
+    char* str = (len < sizeof(buf)) ? buf : malloc(len + 1);
     if (!str)
         return 0.0;
     memcpy(str, start, len);
@@ -286,11 +296,10 @@ int CBLCollateJSONLimited(void *context,
                          int len2, const void * chars2,
                          unsigned arrayLimit)
 {
-    TestedBy(CBLCollateJSON);
-
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        initializeAsciiToUpper();
+        initializeValueTypes();
+        initializeCharPriorityMap();
     });
 
     const char* str1 = chars1;
@@ -385,154 +394,3 @@ int CBLCollateJSON(void *context,
 {
     return CBLCollateJSONLimited(context, len1, chars1, len2, chars2, UINT_MAX);
 }
-
-
-#pragma mark - UNIT TESTS:
-
-
-#if DEBUG
-// encodes an object to a C string in JSON format. JSON fragments are allowed.
-static const char* encode(id obj) {
-    NSString* str = [CBLJSON stringWithJSONObject: obj
-                                         options: CBLJSONWritingAllowFragments error: NULL];
-    CAssert(str);
-    return [str UTF8String];
-}
-
-static void testEscape(const char* source, char decoded) {
-    const char* pos = source;
-    CAssertEq(convertEscape(&pos), decoded);
-    CAssertEq((size_t)pos, (size_t)(source + strlen(source) - 1));
-}
-
-TestCase(CBLCollateConvertEscape) {
-    testEscape("\\\\",    '\\');
-    testEscape("\\t",     '\t');
-    testEscape("\\u0045", 'E');
-    testEscape("\\u0001", 1);
-    testEscape("\\u0000", 0);
-}
-
-static int collateLimited(void *mode, const void * str1, const void * str2, unsigned arrayLimit) {
-    // Be evil and put numeric garbage past the ends of str1 and str2 (see bug #138):
-    size_t len1 = strlen(str1), len2 = strlen(str2);
-    char buf1[len1 + 3], buf2[len2 + 3];
-    strlcpy(buf1, str1, sizeof(buf1));
-    strlcat(buf1, "99", sizeof(buf1));
-    strlcpy(buf2, str2, sizeof(buf2));
-    strlcat(buf2, "88", sizeof(buf2));
-    return CBLCollateJSONLimited(mode, (int)len1, buf1, (int)len2, buf2, arrayLimit);
-}
-
-static int collate(void *mode, const void * str1, const void * str2) {
-    return collateLimited(mode, str1, str2, UINT_MAX);
-}
-
-TestCase(CBLCollateScalars) {
-    RequireTestCase(CBLCollateConvertEscape);
-    void* mode = kCBLCollateJSON_Unicode;
-    CAssertEq(collate(mode, "true", "false"), 1);
-    CAssertEq(collate(mode, "false", "true"), -1);
-    CAssertEq(collate(mode, "null", "17"), -1);
-    CAssertEq(collate(mode, "1", "1"), 0);
-    CAssertEq(collate(mode, "123", "1"), 1);
-    CAssertEq(collate(mode, "123", "0123.0"), 0);
-    CAssertEq(collate(mode, "123", "\"123\""), -1);
-    CAssertEq(collate(mode, "\"1234\"", "\"123\""), 1);
-    CAssertEq(collate(mode, "\"123\"", "\"1234\""), -1);
-    CAssertEq(collate(mode, "\"1234\"", "\"1235\""), -1);
-    CAssertEq(collate(mode, "\"1234\"", "\"1234\""), 0);
-    CAssertEq(collate(mode, "\"12\\/34\"", "\"12/34\""), 0);
-    CAssertEq(collate(mode, "\"\\/1234\"", "\"/1234\""), 0);
-    CAssertEq(collate(mode, "\"1234\\/\"", "\"1234/\""), 0);
-    // Test long numbers, case where readNumber has to malloc a buffer:
-    CAssertEq(collate(mode, "123", "00000000000000000000000000000000000000000000000000123"), 0);
-#ifndef GNUSTEP     // FIXME: GNUstep doesn't support Unicode collation yet
-    CAssertEq(collate(mode, "\"a\"", "\"A\""), -1);
-    CAssertEq(collate(mode, "\"A\"", "\"aa\""), -1);
-    CAssertEq(collate(mode, "\"B\"", "\"aa\""), 1);
-#endif
-}
-
-TestCase(CBLCollateASCII) {
-    RequireTestCase(CBLCollateConvertEscape);
-    void* mode = kCBLCollateJSON_ASCII;
-    CAssertEq(collate(mode, "true", "false"), 1);
-    CAssertEq(collate(mode, "false", "true"), -1);
-    CAssertEq(collate(mode, "null", "17"), -1);
-    CAssertEq(collate(mode, "123", "1"), 1);
-    CAssertEq(collate(mode, "123", "0123.0"), 0);
-    CAssertEq(collate(mode, "123", "\"123\""), -1);
-    CAssertEq(collate(mode, "\"1234\"", "\"123\""), 1);
-    CAssertEq(collate(mode, "\"123\"", "\"1234\""), -1);
-    CAssertEq(collate(mode, "\"1234\"", "\"1235\""), -1);
-    CAssertEq(collate(mode, "\"1234\"", "\"1234\""), 0);
-    CAssertEq(collate(mode, "\"12\\/34\"", "\"12/34\""), 0);
-    CAssertEq(collate(mode, "\"12/34\"", "\"12\\/34\""), 0);
-    CAssertEq(collate(mode, "\"\\/1234\"", "\"/1234\""), 0);
-    CAssertEq(collate(mode, "\"1234\\/\"", "\"1234/\""), 0);
-    CAssertEq(collate(mode, "\"A\"", "\"a\""), -1);
-    CAssertEq(collate(mode, "\"B\"", "\"a\""), -1);
-}
-
-TestCase(CBLCollateRaw) {
-    void* mode = kCBLCollateJSON_Raw;
-    CAssertEq(collate(mode, "false", "17"), 1);
-    CAssertEq(collate(mode, "false", "true"), -1);
-    CAssertEq(collate(mode, "null", "true"), -1);
-    CAssertEq(collate(mode, "[\"A\"]", "\"A\""), -1);
-    CAssertEq(collate(mode, "\"A\"", "\"a\""), -1);
-    CAssertEq(collate(mode, "[\"b\"]", "[\"b\",\"c\",\"a\"]"), -1);
-}
-
-TestCase(CBLCollateArrays) {
-    void* mode = kCBLCollateJSON_Unicode;
-    CAssertEq(collate(mode, "[]", "\"foo\""), 1);
-    CAssertEq(collate(mode, "[]", "[]"), 0);
-    CAssertEq(collate(mode, "[true]", "[true]"), 0);
-    CAssertEq(collate(mode, "[false]", "[null]"), 1);
-    CAssertEq(collate(mode, "[]", "[null]"), -1);
-    CAssertEq(collate(mode, "[123]", "[45]"), 1);
-    CAssertEq(collate(mode, "[123]", "[45,67]"), 1);
-    CAssertEq(collate(mode, "[123.4,\"wow\"]", "[123.40,789]"), 1);
-    CAssertEq(collate(mode, "[5,\"wow\"]", "[5,\"wow\"]"), 0);
-    CAssertEq(collate(mode, "[5,\"wow\"]", "1"), 1);
-    CAssertEq(collate(mode, "1", "[5,\"wow\"]"), -1);
-}
-
-TestCase(CBLCollateNestedArrays) {
-    void* mode = kCBLCollateJSON_Unicode;
-    CAssertEq(collate(mode, "[[]]", "[]"), 1);
-    CAssertEq(collate(mode, "[1,[2,3],4]", "[1,[2,3.1],4,5,6]"), -1);
-}
-
-TestCase(CBLCollateUnicodeStrings) {
-    // Make sure that CBLJSON never creates escape sequences we can't parse.
-    // That includes "\unnnn" for non-ASCII chars, and "\t", "\b", etc.
-    RequireTestCase(CBLCollateConvertEscape);
-    void* mode = kCBLCollateJSON_Unicode;
-    CAssertEq(collate(mode, encode(@"fréd"), encode(@"fréd")), 0);
-    CAssertEq(collate(mode, encode(@"ømø"), encode(@"omo")), 1);
-    CAssertEq(collate(mode, encode(@"\t"), encode(@" ")), -1);
-    CAssertEq(collate(mode, encode(@"\001"), encode(@" ")), -1);
-}
-
-TestCase(CBLCollateLimited) {
-    void* mode = kCBLCollateJSON_Unicode;
-    CAssertEq(collateLimited(mode, "[5,\"wow\"]", "[4,\"wow\"]", 1), 1);
-    CAssertEq(collateLimited(mode, "[5,\"wow\"]", "[5,\"wow\"]", 1), 0);
-    CAssertEq(collateLimited(mode, "[5,\"wow\"]", "[5,\"MOM\"]", 1), 0);
-    CAssertEq(collateLimited(mode, "[5,\"wow\"]", "[5]", 1), 0);
-    CAssertEq(collateLimited(mode, "[5,\"wow\"]", "[5,\"MOM\"]", 2), 1);
-}
-
-TestCase(CBLCollateJSON) {
-    RequireTestCase(CBLCollateScalars);
-    RequireTestCase(CBLCollateASCII);
-    RequireTestCase(CBLCollateRaw);
-    RequireTestCase(CBLCollateArrays);
-    RequireTestCase(CBLCollateNestedArrays);
-    RequireTestCase(CBLCollateUnicodeStrings);
-    RequireTestCase(CBLCollateLimited);
-}
-#endif

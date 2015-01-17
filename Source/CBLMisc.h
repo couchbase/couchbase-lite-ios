@@ -10,7 +10,16 @@
 #import "CBL_Revision.h"
 
 
+// In a method/function implementation (not declaration), declaring an object parameter as
+// __unsafe_unretained avoids the implicit retain at the start of the function and releasse at
+// the end. In a performance-sensitive function, those can be significant overhead. Of course this
+// should never be used if the object might be released during the function.
+#define UU __unsafe_unretained
+
+
 extern NSString* const CBLHTTPErrorDomain;
+
+BOOL CBLWithStringBytes(NSString* str, void (^block)(const char*, size_t));
 
 NSString* CBLCreateUUID( void );
 
@@ -26,11 +35,13 @@ NSData* CBLHMACSHA256(NSData* key, NSData* data) __attribute__((nonnull));
     The result is lowercase. This is important for CouchDB compatibility. */
 NSString* CBLHexFromBytes( const void* bytes, size_t length) __attribute__((nonnull));
 
+/** Parses hex dump to NSData. Returns nil if length is odd or any character is not a hex digit. */
+NSData* CBLDataFromHex(NSString* hex);
+
 NSComparisonResult CBLSequenceCompare( SequenceNumber a, SequenceNumber b);
 
-/** Escapes a document or revision ID for use in a URL.
-    This does the usual %-escaping, but makes sure that '/' is escaped in case the ID appears in the path portion of the URL, and that '&' is escaped in case the ID appears in a query value. */
-NSString* CBLEscapeID( NSString* param ) __attribute__((nonnull));
+/** Convenience function to JSON-encode an object to a string. */
+NSString* CBLJSONString( id object );
 
 /** Escapes a string to be used as the value of a query parameter in a URL.
     This does the usual %-escaping, but makes sure that '&' is also escaped. */
@@ -67,6 +78,13 @@ BOOL CBLIsFileExistsError( NSError* error );
 
 /** Removes a file if it exists; does nothing if it doesn't. */
 BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) __attribute__((nonnull(1)));
+
+/* Remove a file asynchronously if it exists; does nothing if it doesn't.
+   The file will be moved to the temp folder and renamed before it is deleted. */
+BOOL CBLRemoveFileIfExistsAsync(NSString* path, NSError** outError);
+
+/** Returns the hostname of this computer/device (will be of the form "___.local") */
+NSString* CBLGetHostName(void);
 
 /** Returns the input URL without the query string or fragment identifier, just ending with the path. */
 NSURL* CBLURLWithoutQuery( NSURL* url ) __attribute__((nonnull));

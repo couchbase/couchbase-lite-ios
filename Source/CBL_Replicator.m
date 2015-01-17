@@ -23,11 +23,13 @@
 #import "CBLReachability.h"
 #import "CBL_URLProtocol.h"
 #import "CBLInternal.h"
+#import "CouchbaseLitePrivate.h"
 #import "CBLMisc.h"
 #import "CBLBase64.h"
-#import "CBLCanonicalJSON.h"
+#import "CBJSONEncoder.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
+#import "MYAnonymousIdentity.h"
 
 
 #define kProcessDelay 0.5
@@ -77,6 +79,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     CFAbsoluteTime _startTime;
     CBLReachability* _host;
     BOOL _suspended;
+    SecCertificateRef _serverCert;
+    NSData* _pinnedCertData;
 }
 
 @synthesize revisionBodyTransformationBlock=_revisionBodyTransformationBlock;
@@ -128,6 +132,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     [self stop];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     [_host stop];
+    cfrelease(_serverCert);
 }
 
 
@@ -160,6 +165,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 @synthesize remoteCheckpoint=_remoteCheckpoint;
 @synthesize authorizer=_authorizer;
 @synthesize requestHeaders = _requestHeaders;
+@synthesize serverCert=_serverCert;
 
 
 - (BOOL) isPush {
@@ -199,7 +205,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     NSNotification* n = [NSNotification notificationWithName: CBL_ReplicatorProgressChangedNotification
                                                       object: self];
     [[NSNotificationQueue defaultQueue] enqueueNotification: n
-                                               postingStyle: NSPostWhenIdle
+                                               postingStyle: NSPostASAP
                                                coalesceMask: NSNotificationCoalescingOnSender |
                                                              NSNotificationCoalescingOnName
                                                    forModes: nil];
@@ -258,6 +264,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
             LogTo(Sync, @"%@ Progress: %lu / %lu",
                   self, (unsigned long)processed, (unsigned long)_changesTotal);
     }
+    if ((NSInteger)processed < 0)
+        Warn(@"Suspicious changesProcessed value: %llu", (UInt64)processed);
     _changesProcessed = processed;
     [self postProgressChanged];
 }
@@ -267,6 +275,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         LogTo(Sync, @"%@ Progress: %lu / %lu",
               self, (unsigned long)_changesProcessed, (unsigned long)total);
     }
+    if ((NSInteger)total < 0)
+        Warn(@"Suspicious changesTotal value: %llu", (UInt64)total);
     _changesTotal = total;
     [self postProgressChanged];
 }
@@ -279,7 +289,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     {
         LogTo(Sync, @"%@ Progress: set error = %@", self, error.localizedDescription);
         _error = error;
-        [self postProgressChanged];
+        if (CBLIsPermanentError(error))
+            [self stop];
+        else
+            [self postProgressChanged];
     }
 }
 
@@ -296,6 +309,17 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     // Did client request a reset (i.e. starting over from first sequence?)
     if (_options[kCBLReplicatorOption_Reset] != nil) {
         [db setLastSequence: nil withCheckpointID: self.remoteCheckpointDocID];
+    }
+
+    id digest = _options[kCBLReplicatorOption_PinnedCert];
+    if (digest) {
+        if ([digest isKindOfClass: [NSData class]])
+            _pinnedCertData = digest;
+        else if ([digest isKindOfClass: [NSString class]])
+            _pinnedCertData = CBLDataFromHex(digest);
+        if (_pinnedCertData.length != 20)
+            Warn(@"Invalid replicator %@ property value \"%@\"",
+                 kCBLReplicatorOption_PinnedCert, digest);
     }
 
     // Note: This is actually a ref cycle, because the block has a (retained) reference to 'self',
@@ -327,8 +351,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 #endif
     
     _online = NO;
-    if ([NSClassFromString(@"CBL_URLProtocol") handlesURL: _remote]) {
-        [self goOnline];    // local-to-local replication
+    if (!_continuous || [NSClassFromString(@"CBL_URLProtocol") handlesURL: _remote]) {
+        [self goOnline];    // non-continuous or local-to-local replication
     } else {
         // Start reachability checks. (This creates another ref cycle, because
         // the block also retains a ref to self. Cycle is also broken in -stopped.)
@@ -385,9 +409,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 // Called after a continuous replication has gone idle, but it failed to transfer some revisions
-// and so wants to try again in a minute. Should be overridden by subclasses.
+// and so wants to try again in a minute. Can be overridden by subclasses.
 - (void) retry {
     self.error = nil;
+    [self checkSession];
 }
 
 - (void) retryIfReady {
@@ -696,9 +721,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         }
         onCompletion(result, error);
     }];
-    req.delegate = self;
-    req.timeoutInterval = self.requestTimeout;
-    req.authorizer = _authorizer;
 
     if (self.canSendCompressedRequests)
         [req compressBody];
@@ -710,6 +732,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (void) addRemoteRequest: (CBLRemoteRequest*)request {
+    request.delegate = self;
+    request.timeoutInterval = self.requestTimeout;
+    request.authorizer = _authorizer;
+
     if (!_remoteRequests)
         _remoteRequests = [[NSMutableArray alloc] init];
     [_remoteRequests addObject: request];
@@ -749,21 +775,45 @@ static BOOL sOnlyTrustAnchorCerts;
 - (BOOL) checkSSLServerTrust: (SecTrustRef)trust
                      forHost: (NSString*)host port: (UInt16)port
 {
-    @synchronized([self class]) {
-        if (sAnchorCerts.count > 0) {
-            SecTrustSetAnchorCertificates(trust, (__bridge CFArrayRef)sAnchorCerts);
-            SecTrustSetAnchorCertificatesOnly(trust, sOnlyTrustAnchorCerts);
+    SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
+    if (_pinnedCertData) {
+        if (_pinnedCertData.length == CC_SHA1_DIGEST_LENGTH) {
+            NSData* certDigest = MYGetCertificateDigest(cert);
+            if (![certDigest isEqual: _pinnedCertData]) {
+                Warn(@"%@: SSL cert digest %@ doesn't match pinnedCert %@",
+                     self, certDigest, _pinnedCertData);
+                return NO;
+            }
+        } else {
+            NSData* certData = CFBridgingRelease(SecCertificateCopyData(cert));
+            if (![certData isEqual: _pinnedCertData]) {
+                Warn(@"%@: SSL cert does not equal pinnedCert", self);
+                return NO;
+            }
+        }
+    } else {
+        @synchronized([self class]) {
+            if (sAnchorCerts.count > 0) {
+                SecTrustSetAnchorCertificates(trust, (__bridge CFArrayRef)sAnchorCerts);
+                SecTrustSetAnchorCertificatesOnly(trust, sOnlyTrustAnchorCerts);
+            }
+        }
+        SecTrustResultType result;
+        OSStatus err = SecTrustEvaluate(trust, &result);
+        if (err) {
+            Warn(@"%@: SecTrustEvaluate failed with err %d", self, (int)err);
+            return NO;
+        }
+        if (result != kSecTrustResultProceed && result != kSecTrustResultUnspecified) {
+            Warn(@"%@: SSL cert is not trustworthy (result=%d)", self, result);
+            return NO;
         }
     }
-    SecTrustResultType result;
-    OSStatus err = SecTrustEvaluate(trust, &result);
-    if (err) {
-        Warn(@"SecTrustEvaluate failed with err %d for host %@:%d", (int)err, host, port);
-        return NO;
-    }
-    return result == kSecTrustResultProceed || result == kSecTrustResultUnspecified;
-}
 
+    // Server is trusted. Record its cert in case the client wants to pin it:
+    cfSetObj(&_serverCert, cert);
+    return YES;
+}
 
 
 // From CBLRemoteRequestDelegate protocol
@@ -785,21 +835,42 @@ static BOOL sOnlyTrustAnchorCerts;
 /** This is the _local document ID stored on the remote server to keep track of state.
     It's based on the local database UUID (the private one, to make the result unguessable),
     the remote database's URL, and the filter name and parameters (if any). */
+- (NSString*) remoteCheckpointDocIDForLocalUUID: (NSString*)localUUID {
+    // Needs to be consistent with -hasSameSettingsAs: --
+    // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
+    NSMutableDictionary* spec = $mdict({@"localUUID", localUUID},
+                                       {@"remoteURL", _remote.absoluteString},
+                                       {@"push", @(self.isPush)},
+                                       {@"continuous", (self.continuous ? nil : $false)},
+                                       {@"filter", _filterName},
+                                       {@"filterParams", _filterParameters},
+                                       //{@"headers", _requestHeaders}, (removed; see #143)
+                                       {@"docids", _docIDs});
+    NSError *error;
+    NSString *remoteCheckpointDocID = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: spec
+                                                                         error: &error]);
+    Assert(!error);
+    return remoteCheckpointDocID;
+}
+
+
 - (NSString*) remoteCheckpointDocID {
     if (!_remoteCheckpointDocID) {
-        // Needs to be consistent with -hasSameSettingsAs: --
-        // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
-        NSMutableDictionary* spec = $mdict({@"localUUID", _db.privateUUID},
-                                           {@"remoteURL", _remote.absoluteString},
-                                           {@"push", @(self.isPush)},
-                                           {@"continuous", (self.continuous ? nil : $false)},
-                                           {@"filter", _filterName},
-                                           {@"filterParams", _filterParameters},
-                                         //{@"headers", _requestHeaders}, (removed; see #143)
-                                           {@"docids", _docIDs});
-        _remoteCheckpointDocID = CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: spec]);
+        _remoteCheckpointDocID = [self remoteCheckpointDocIDForLocalUUID:_db.privateUUID];
     }
     return _remoteCheckpointDocID;
+}
+
+
+- (NSString*) getLastSequenceFromLocalCheckpointDocument {
+    CBLDatabase* strongDb = _db;
+    NSDictionary* doc = [strongDb getLocalCheckpointDocument];
+    if (doc) {
+        NSString* checkpointID = [self remoteCheckpointDocIDForLocalUUID:
+                                  doc[kCBLDatabaseLocalCheckpoint_LocalUUID]];
+        return [strongDb lastSequenceWithCheckpointID: checkpointID];
+    }
+    return nil;
 }
 
 
@@ -828,6 +899,13 @@ static BOOL sOnlyTrustAnchorCerts;
 
                       if ($equal(remoteLastSequence, localLastSequence)) {
                           _lastSequence = localLastSequence;
+                          if (!_lastSequence) {
+                              // Try to get the last sequence from the local checkpoint document
+                              // created only when importing a database. This allows the
+                              // replicator to continue replicating from the current local checkpoint
+                              // of the imported database after importing.
+                              _lastSequence = [self getLastSequenceFromLocalCheckpointDocument];
+                          }
                           LogTo(Sync, @"%@: Replicating from lastSequence=%@", self, _lastSequence);
                       } else {
                           LogTo(Sync, @"%@: lastSequence mismatch: I had %@, remote had %@ (response = %@)",
@@ -887,52 +965,58 @@ static BOOL sOnlyTrustAnchorCerts;
         return;
     }
     _lastSequenceChanged = _overdueForSave = NO;
-    
-    LogTo(Sync, @"%@ checkpointing sequence=%@", self, _lastSequence);
+
+    id lastSequence = _lastSequence;
+    LogTo(Sync, @"%@ checkpointing sequence=%@", self, lastSequence);
     NSMutableDictionary* body = [_remoteCheckpoint mutableCopy];
     if (!body)
         body = $mdict();
-    [body setValue: _lastSequence.description forKey: @"lastSequence"]; // always save as a string
+    [body setValue: [lastSequence description] forKey: @"lastSequence"]; // always save as a string
     
     _savingCheckpoint = YES;
     NSString* checkpointID = self.remoteCheckpointDocID;
-    [self sendAsyncRequest: @"PUT"
-                      path: [@"_local/" stringByAppendingString: checkpointID]
-                      body: body
-              onCompletion: ^(id response, NSError* error) {
-                  _savingCheckpoint = NO;
-                  if (error)
-                      Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
-                  CBLDatabase* db = _db;
-                  if (!db)
-                      return;
-                  if (error) {
-                      // Failed to save checkpoint:
-                      switch(CBLStatusFromNSError(error, 0)) {
-                          case kCBLStatusNotFound:
-                              self.remoteCheckpoint = nil; // doc deleted or db reset
-                              _overdueForSave = YES; // try saving again
-                              break;
-                          case kCBLStatusConflict:
-                              [self refreshRemoteCheckpointDoc];
-                              break;
-                          default:
-                              break;
-                              // TODO: On 401 or 403, and this is a pull, remember that remote
-                              // is read-only & don't attempt to read its checkpoint next time.
+    CBLRemoteRequest* request =
+        [self sendAsyncRequest: @"PUT"
+                          path: [@"_local/" stringByAppendingString: checkpointID]
+                          body: body
+                  onCompletion: ^(id response, NSError* error) {
+                      _savingCheckpoint = NO;
+                      if (error)
+                          Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
+                      CBLDatabase* db = _db;
+                      if (!db)
+                          return;
+                      if (error) {
+                          // Failed to save checkpoint:
+                          switch(CBLStatusFromNSError(error, 0)) {
+                              case kCBLStatusNotFound:
+                                  self.remoteCheckpoint = nil; // doc deleted or db reset
+                                  _overdueForSave = YES; // try saving again
+                                  break;
+                              case kCBLStatusConflict:
+                                  [self refreshRemoteCheckpointDoc];
+                                  break;
+                              default:
+                                  break;
+                                  // TODO: On 401 or 403, and this is a pull, remember that remote
+                                  // is read-only & don't attempt to read its checkpoint next time.
+                          }
+                      } else {
+                          // Saved checkpoint:
+                          id rev = response[@"rev"];
+                          if (rev)
+                              body[@"_rev"] = rev;
+                          self.remoteCheckpoint = body;
+                          [db setLastSequence: lastSequence withCheckpointID: checkpointID];
+                          LogTo(Sync, @"%@ saved remote checkpoint '%@' (_rev=%@)",
+                                self, lastSequence, rev);
                       }
-                  } else {
-                      // Saved checkpoint:
-                      id rev = response[@"rev"];
-                      if (rev)
-                          body[@"_rev"] = rev;
-                      self.remoteCheckpoint = body;
-                      [db setLastSequence: _lastSequence withCheckpointID: checkpointID];
+                      if (_overdueForSave)
+                          [self saveLastSequence];      // start a save that was waiting on me
                   }
-                  if (_overdueForSave)
-                      [self saveLastSequence];      // start a save that was waiting on me
-              }
-     ];
+         ];
+    // This request should not be canceled when the replication is told to stop:
+    [_remoteRequests removeObject: request];
 }
 
 

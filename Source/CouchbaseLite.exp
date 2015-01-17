@@ -1,44 +1,78 @@
 # Symbols exported by the framework
 
 # Public classes:
+.objc_class_name_CBLAttachment
+.objc_class_name_CBLAuthenticator
 .objc_class_name_CBLDatabase
 .objc_class_name_CBLDatabaseChange
-.objc_class_name_CBLManager
 .objc_class_name_CBLDocument
+.objc_class_name_CBLFullTextQueryRow
+.objc_class_name_CBLGeoQueryRow
+.objc_class_name_CBLJSON
+.objc_class_name_CBLLiveQuery
+.objc_class_name_CBLManager
+.objc_class_name_CBLModel
+.objc_class_name_CBLModelArray
+.objc_class_name_CBLModelFactory
+.objc_class_name_CBLQuery
+.objc_class_name_CBLQueryBuilder
+.objc_class_name_CBLQueryEnumerator
+.objc_class_name_CBLQueryRow
+.objc_class_name_CBLReplication
 .objc_class_name_CBLRevision
 .objc_class_name_CBLSavedRevision
 .objc_class_name_CBLUnsavedRevision
-.objc_class_name_CBLAttachment
 .objc_class_name_CBLView
-.objc_class_name_CBLQuery
-.objc_class_name_CBLQueryEnumerator
-.objc_class_name_CBLQueryRow
-.objc_class_name_CBLFullTextQueryRow
-.objc_class_name_CBLGeoQueryRow
-.objc_class_name_CBLModel
-.objc_class_name_CBLModelFactory
-.objc_class_name_CBLJSON
-.objc_class_name_MYDynamicObject
+
+_OBJC_CLASS_$_CBLAttachment
+_OBJC_CLASS_$_CBLAuthenticator
+_OBJC_CLASS_$_CBLDatabase
+_OBJC_CLASS_$_CBLDatabaseChange
+_OBJC_CLASS_$_CBLDocument
+_OBJC_CLASS_$_CBLFullTextQueryRow
+_OBJC_CLASS_$_CBLGeoQueryRow
+_OBJC_CLASS_$_CBLJSON
+_OBJC_CLASS_$_CBLLiveQuery
+_OBJC_CLASS_$_CBLManager
+_OBJC_CLASS_$_CBLModel
+_OBJC_CLASS_$_CBLModelArray
+_OBJC_CLASS_$_CBLModelFactory
+_OBJC_CLASS_$_CBLQuery
+_OBJC_CLASS_$_CBLQueryBuilder
+_OBJC_CLASS_$_CBLQueryEnumerator
+_OBJC_CLASS_$_CBLQueryRow
+_OBJC_CLASS_$_CBLReplication
+_OBJC_CLASS_$_CBLRevision
+_OBJC_CLASS_$_CBLSavedRevision
+_OBJC_CLASS_$_CBLUnsavedRevision
+_OBJC_CLASS_$_CBLView
+
+# iOS only:
+.objc_class_name_CBLUITableSource
+_OBJC_CLASS_$_CBLUITableSource
 
 # Public string constants:
+_CBLHTTPErrorDomain
 _kCBLDatabaseChangeNotification
 _kCBLDocumentChangeNotification
+_kCBLReplicationChangeNotification
 
 # Public functions:
-_CBLGeoPointToJSON
-_CBLGeoRectToJSON
-_CBLGeoJSONBoundingBox
-_CBLGeoPointToCoordPair
 _CBLGeoCoordPairToPoint
-_CBLGeoCoordsToRect
 _CBLGeoCoordsStringToRect
-_CBLGeoPointKey
-_CBLGeoRectKey
+_CBLGeoCoordsToRect
+_CBLGeoJSONBoundingBox
 _CBLGeoJSONKey
+_CBLGeoPointKey
+_CBLGeoPointToCoordPair
+_CBLGeoPointToJSON
+_CBLGeoRectKey
+_CBLGeoRectToJSON
 _CBLTextKey
 _CBLVersion
 
 # Non-public symbols that are used by CBLRouter and CBLListener:
+.objc_class_name_CBLQueryOptions
 .objc_class_name_CBL_BlobStore
 .objc_class_name_CBL_BlobStoreWriter
 .objc_class_name_CBL_Body
@@ -56,9 +90,28 @@ _CBLVersion
 .objc_class_name_CBLMultipartDocumentReader
 .objc_class_name_CBLMultipartWriter
 
-.objc_class_name_GCDAsyncSocket
-.objc_class_name_WebSocket
+.objc_class_name_CBL_GCDAsyncSocket
+.objc_class_name_CBL_WebSocket
 
+_OBJC_IVAR_$_CBLQueryOptions.skip
+_OBJC_IVAR_$_CBLQueryOptions.groupLevel
+_OBJC_IVAR_$_CBLQueryOptions.descending
+_OBJC_IVAR_$_CBLQueryOptions.updateSeq
+_OBJC_IVAR_$_CBLQueryOptions.inclusiveStart
+_OBJC_IVAR_$_CBLQueryOptions.inclusiveEnd
+_OBJC_IVAR_$_CBLQueryOptions.prefixMatchLevel
+_OBJC_IVAR_$_CBLQueryOptions.includeDocs
+_OBJC_IVAR_$_CBLQueryOptions.reduceSpecified
+_OBJC_IVAR_$_CBLQueryOptions.reduce
+_OBJC_IVAR_$_CBLQueryOptions.limit
+_OBJC_IVAR_$_CBLQueryOptions.content
+_OBJC_IVAR_$_CBLQueryOptions.group
+_OBJC_IVAR_$_CBLQueryOptions.fullTextSnippets
+_OBJC_IVAR_$_CBLQueryOptions.fullTextRanking
+_OBJC_IVAR_$_CBLQueryOptions.allDocsMode
+_OBJC_IVAR_$_CBLQueryOptions.bbox
+
+_CBLGetHostName
 _CBLStatusToHTTPStatus
 _CBLStatusToNSError
 _CBLStatusFromNSError
@@ -71,4 +124,3 @@ _CBL_ReplicatorProgressChangedNotification
 _CBL_ReplicatorStoppedNotification
 
 _kDefaultCBLChangesOptions
-_kDefaultCBLQueryOptions

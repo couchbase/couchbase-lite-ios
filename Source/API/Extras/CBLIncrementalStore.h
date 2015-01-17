@@ -31,6 +31,7 @@ typedef enum
 
 @class CBLDocument;
 @class CBLDatabase;
+@class CBLManager;
 
 
 /** Block that handles conflicts and can merge all conflicting revisions into one, dismiss all conflicts, etc.
@@ -101,6 +102,11 @@ typedef void(^CBLISConflictHandler)(NSArray *conflictingRevisions);
                                          importingDatabaseAtURL:(NSURL*)importUrl
                                                      importType:(NSString*)importType
                                                           error:(NSError**)outError;
+
+/** Configures which CBLManager instance to use. The default value (nil) means to use
+    the shared CBLManager. */
++ (void) setCBLManager: (CBLManager*)manager;
++ (CBLManager*) CBLManager;
 
 /** Register a NSManagedObjectContext to be informed about changes in the CouchbaseLite database. A NSManagedObjectContextObjectsDidChangeNotification is sent
  * to this context on changes.

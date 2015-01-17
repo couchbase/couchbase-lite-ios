@@ -23,15 +23,12 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
-#import "CBLCanonicalJSON.h"
+#import "CBJSONEncoder.h"
 #import "CBLRevision.h"
 #import "CBLDocument.h"
 
 
 #define kMaxBulkDocsObjectSize (5*1000*1000) // Max in-memory size of buffered bulk_docs dictionary
-
-
-static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 
 
 @interface CBL_Pusher ()
@@ -81,7 +78,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"PUT" path: @"" body: nil onCompletion: ^(id result, NSError* error) {
         _creatingTarget = NO;
-        if (error && error.code != kCBLStatusDuplicate) {
+        if (error && error.code != kCBLStatusDuplicate && error.code != kCBLStatusMethodNotAllowed) {
             LogTo(Sync, @"Failed to create remote db: %@", error);
             self.error = error;
             [self stop]; // this is fatal: no db to push to!
@@ -95,6 +92,34 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
 }
 
 
+- (CBL_RevisionList*) unpushedRevisions {
+    CBLDatabase* db = _db;
+    CBLFilterBlock filter = self.filter;
+    if (!filter && self.error)
+        return nil;
+
+    NSString* lastSequence = _lastSequence;
+    if (!lastSequence) {
+        // If replicator hasn't started yet (can happen if this method is being called from a
+        // CBLReplication), get local checkpoint from db:
+        NSString* checkpointID = self.remoteCheckpointDocID;
+        lastSequence = [db lastSequenceWithCheckpointID: checkpointID];
+    }
+
+    // Include conflicts so all conflicting revisions are replicated too
+    CBLChangesOptions options = kDefaultCBLChangesOptions;
+    options.includeConflicts = YES;
+
+    CBL_RevisionList* revs = [db changesSinceSequence: [lastSequence longLongValue]
+                                              options: &options
+                                               filter: filter
+                                               params: _filterParameters];
+    if (!revs)
+        self.error = CBLStatusToNSError(db.lastDbError, nil);
+    return revs;
+}
+
+
 - (void) beginReplicating {
     // If we're still waiting to create the remote db, do nothing now. (This method will be
     // re-invoked after that request finishes; see -maybeCreateRemoteDB above.)
@@ -104,26 +129,19 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
     _pendingSequences = [NSMutableIndexSet indexSet];
     _maxPendingSequence = self.lastSequence.longLongValue;
     
-    CBLFilterBlock filter = self.filter;
-    if (!filter && self.error)
-        return;
-
-    // Include conflicts so all conflicting revisions are replicated too
-    CBLChangesOptions options = kDefaultCBLChangesOptions;
-    options.includeConflicts = YES;
     // Process existing changes since the last push:
-    CBLDatabase* db = _db;
-    [self addRevsToInbox: [db changesSinceSequence: [_lastSequence longLongValue]
-                                           options: &options
-                                            filter: filter
-                                            params: _filterParameters]];
+    CBL_RevisionList* unpushedRevisions = self.unpushedRevisions;
+    if (!unpushedRevisions)
+        return;
+    [self addRevsToInbox: unpushedRevisions];
     [_batcher flush];  // process up to the first 100 revs
     
     // Now listen for future changes (in continuous mode):
     if (_continuous && !_observing) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
-                                                     name: CBL_DatabaseChangesNotification object: db];
+                                                     name: CBL_DatabaseChangesNotification
+                                                   object: _db];
     }
 
 #ifdef GNUSTEP    // TODO: Multipart upload on GNUstep
@@ -139,15 +157,6 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                                                         name: CBL_DatabaseChangesNotification
                                                       object: _db];
     }
-}
-
-
-- (void) retry {
-    // This is called if I've gone idle but some revisions failed to be pushed.
-    // I should start the _changes feed over again, so I can retry all the revisions.
-    [super retry];
-
-    [self beginReplicating];
 }
 
 
@@ -277,7 +286,7 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleIDs);
                         // Strip any attachments already known to the target db:
                         if (properties.cbl_attachments) {
                             // Look for the latest common ancestor and stub out older attachments:
-                            int minRevPos = findCommonAncestor(populatedRev, possibleAncestors);
+                            int minRevPos = CBLFindCommonAncestor(populatedRev, possibleAncestors);
                             [CBLDatabase stubOutAttachmentsIn: populatedRev beforeRevPos: minRevPos + 1
                                             attachmentsFollow: NO];
                             properties = populatedRev.properties;
@@ -400,7 +409,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     // in the JSON, because CouchDB expects the MIME bodies to appear in that same order (see #133).
     CBLMultipartWriter* bodyStream = nil;
     NSDictionary* attachments = rev.attachments;
-    for (NSString* attachmentName in [CBLCanonicalJSON orderedKeys: attachments]) {
+    for (NSString* attachmentName in [CBJSONEncoder orderedKeys: attachments]) {
         NSDictionary* attachment = attachments[attachmentName];
         if (attachment[@"follows"]) {
             if (!bodyStream) {
@@ -410,7 +419,13 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                 [bodyStream setNextPartsHeaders: @{@"Content-Type": @"application/json"}];
                 // Use canonical JSON encoder so that _attachments keys will be written in the
                 // same order that this for loop is processing the attachments.
-                NSData* json = [CBLCanonicalJSON canonicalData: rev.properties];
+                NSError* error;
+                NSData* json = [CBJSONEncoder canonicalEncoding: rev.properties error: &error];
+                if (error) {
+                    Warn(@"%@: Creating canonical JSON data got an error: %@", self, error);
+                    return NO;
+                }
+
                 if (self.canSendCompressedRequests)
                     [bodyStream addGZippedData: json];
                 else
@@ -434,12 +449,12 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     self.changesTotal++;
     [self asyncTaskStarted];
 
-    NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeID(rev.docID));
-    CBLMultipartUploader* uploader = [[CBLMultipartUploader alloc]
+    NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeURLParam(rev.docID));
+    __block CBLMultipartUploader* uploader = [[CBLMultipartUploader alloc]
                                   initWithURL: CBLAppendToURL(_remote, path)
                                      streamer: bodyStream
                                requestHeaders: self.requestHeaders
-                                 onCompletion: ^(CBLMultipartUploader* uploader, NSError *error) {
+                                 onCompletion: ^(CBLMultipartUploader* result, NSError *error) {
                   [self removeRemoteRequest: uploader];
                   if (error) {
                       if ($equal(error.domain, CBLHTTPErrorDomain)
@@ -462,8 +477,6 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                   [self startNextUpload];
               }
      ];
-    uploader.timeoutInterval = self.requestTimeout;
-    uploader.authorizer = _authorizer;
     [self addRemoteRequest: uploader];
     LogTo(SyncVerbose, @"%@: Queuing %@ (multipart, %lldkb)", self, uploader, bodyStream.length/1024);
     if (!_uploaderQueue)
@@ -486,7 +499,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     }
 
     [self asyncTaskStarted];
-    NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeID(rev.docID));
+    NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeURLParam(rev.docID));
     [self sendAsyncRequest: @"PUT"
                       path: path
                       body: rev.properties
@@ -516,7 +529,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
 
 // Given a revision and an array of revIDs, finds the latest common ancestor revID
 // and returns its generation #. If there is none, returns 0.
-static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleRevIDs) {
+int CBLFindCommonAncestor(CBL_Revision* rev, NSArray* possibleRevIDs) {
     if (possibleRevIDs.count == 0)
         return 0;
     NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: rev.properties];
@@ -532,15 +545,3 @@ static int findCommonAncestor(CBL_Revision* rev, NSArray* possibleRevIDs) {
 
 
 @end
-
-
-
-
-TestCase(CBL_Pusher_findCommonAncestor) {
-    NSDictionary* revDict = $dict({@"ids", @[@"second", @"first"]}, {@"start", @2});
-    CBL_Revision* rev = [CBL_Revision revisionWithProperties: $dict({@"_revisions", revDict})];
-    CAssertEq(findCommonAncestor(rev, @[]), 0);
-    CAssertEq(findCommonAncestor(rev, @[@"3-noway", @"1-nope"]), 0);
-    CAssertEq(findCommonAncestor(rev, @[@"3-noway", @"1-first"]), 1);
-    CAssertEq(findCommonAncestor(rev, @[@"3-noway", @"2-second", @"1-first"]), 2);
-}

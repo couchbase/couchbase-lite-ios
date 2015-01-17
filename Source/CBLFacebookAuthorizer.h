@@ -21,4 +21,6 @@
        forEmailAddress: (NSString*)email
                forSite: (NSURL*)site;
 
+- (NSString*) tokenForSite: (NSURL*)site;
+
 @end

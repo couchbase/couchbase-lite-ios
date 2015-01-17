@@ -25,6 +25,10 @@
 - (id) modelForDocument: (CBLDocument*)document                         __attribute__((nonnull));
 
 /** Associates a value of the "type" property with a CBLModel subclass.
+    When a document with this type value is loaded as a model, the given subclass will be
+    instantiated (unless you explicitly instantiate a different CBLModel subclass.)
+    As a bonus, when a model of this class is created with a new document, the document's "type"
+    property will be set to the associated value.
     @param classOrName  Either a CBLModel subclass, or its class name as an NSString.
     @param type  The value value of a document's "type" property that should indicate this class. */
 - (void) registerClass: (id)classOrName
@@ -36,6 +40,10 @@
 
 /** Looks up the CBLModel subclass that's been registered for a document type. */
 - (Class) classForDocumentType: (NSString*)type                         __attribute__((nonnull));
+
+/** Looks up the document type for which the given class has been registered.
+    If it's unregistered, or registered with multiple types, returns nil. */
+- (NSString*) documentTypeForClass: (Class)modelClass                   __attribute__((nonnull));
 
 @end
 

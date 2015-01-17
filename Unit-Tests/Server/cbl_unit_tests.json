@@ -1,0 +1,53 @@
+{
+	"log": ["HTTP+"],
+    "interface": ":4984",
+    "adminInterface": ":4985",
+	"databases": {
+		"public": {
+			"server": "walrus:walrus_data",
+			"users": {
+				"GUEST": {"disabled": false, "admin_channels":["*"]}
+			},
+            "sync": `function(doc) {throw({forbidden: "Immutable test db"});}`
+		},
+		"cbl_replicator_pushpull": {
+			"server": "walrus:",
+			"users": {
+				"GUEST": {"disabled": false, "admin_channels":["*"]}
+			}
+		},
+		"cbl_replicator_scratch": {
+			"server": "walrus:",
+			"users": {
+				"GUEST": {"disabled": false, "admin_channels":["*"]}
+			}
+		},
+		"cbl_replicator_encoding": {
+			"server": "walrus:",
+			"users": {
+				"GUEST": {"disabled": false, "admin_channels":["*"]}
+			}
+		},
+        "attach_test": {
+            "server": "walrus:walrus_data",
+            "users": {
+                "GUEST": {"disabled": false, "admin_channels":["*"]}
+            },
+            "sync": `function(doc) {throw({forbidden: "Immutable test db"});}`
+        },
+		"cbl_auth_test": {
+			"server": "walrus:walrus_data",
+			"users": {
+				"test": {"admin_channels":["public"],"password":"abc123"}
+			},
+            "sync": `function(doc) {throw({forbidden: "Immutable test db"});}`
+		},
+		"beer": {
+			"server": "walrus:walrus_data",
+			"users": {
+				"GUEST": {"disabled": false, "admin_channels":["*"]}
+			},
+            "sync": `function(doc) {throw({forbidden: "Immutable test db"});}`
+		}
+	}
+}

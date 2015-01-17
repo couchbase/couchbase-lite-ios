@@ -42,6 +42,8 @@
     You can call this from your -appendToPart and/or -finishedPart overrides. */
 @property (readonly) NSDictionary* headers;
 
+@property (readonly) NSData* boundary;
+
 @end
 
 

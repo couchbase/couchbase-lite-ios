@@ -12,11 +12,17 @@
 #import "CBLManager+Internal.h"
 #import "CBLView+Internal.h"
 #import "CBL_Server.h"
-#import "CBL_Router.h"
 #import "CBL_Replicator.h"
 #import "CBLRemoteRequest.h"
 #import "CBL_BlobStore.h"
 @class CBL_Attachment, CBL_BlobStoreWriter, CBLDatabaseChange;
+
+
+// In a method/function implementation (not declaration), declaring an object parameter as
+// __unsafe_unretained avoids the implicit retain at the start of the function and releasse at
+// the end. In a performance-sensitive function, those can be significant overhead. Of course this
+// should never be used if the object might be released during the function.
+#define UU __unsafe_unretained
 
 
 @interface CBLDatabase (Insertion_Internal)
@@ -63,15 +69,11 @@
 @end
 
 
-@interface CBL_Router ()
-- (instancetype) initWithDatabaseManager: (CBLManager*)dbManager request: (NSURLRequest*)request;
-@end
-
-
 @interface CBL_Replicator ()
 // protected:
 @property (copy) NSString* lastSequence;
 @property (readwrite, nonatomic) NSUInteger changesProcessed, changesTotal;
+@property (readonly) NSString* remoteCheckpointDocID;
 - (void) maybeCreateRemoteDB;
 - (void) beginReplicating;
 - (void) addToInbox: (CBL_Revision*)rev;
@@ -100,16 +102,3 @@
 @property (readonly) BOOL savingCheckpoint;
 #endif
 @end
-
-
-#if DEBUG
-// For unit tests only: Returns the URL of a named database on the test server.
-// The test server defaults to <http://127.0.0.1:5984> but can be configured by setting the
-// environment variable "CBL_TEST_SERVER" at runtime.
-NSURL* RemoteTestDBURL(NSString* dbName);
-
-void AddTemporaryCredential(NSURL* url, NSString* realm,
-                            NSString* username, NSString* password);
-
-void DeleteRemoteDB(NSURL* dbURL);
-#endif

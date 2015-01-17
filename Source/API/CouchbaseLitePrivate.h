@@ -36,12 +36,18 @@
 @property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
 - (void) removeDocumentFromCache: (CBLDocument*)document;
 - (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block;
+- (BOOL) waitFor: (BOOL (^)())block;
 - (void) addReplication: (CBLReplication*)repl;
 - (void) forgetReplication: (CBLReplication*)repl;
+- (void) _clearDocumentCache;
 #if DEBUG // for testing
 - (CBLDocument*) _cachedDocumentWithID: (NSString*)docID;
-- (void) _clearDocumentCache;
 #endif
+@end
+
+@interface CBLDatabase (Private)
+@property (nonatomic, readonly) NSString* privateUUID;
+@property (nonatomic, readonly) NSString* publicUUID;
 @end
 
 
@@ -122,6 +128,9 @@
                          mapBlock: (CBLMapBlock)mapBlock            __attribute__((nonnull));
 @end
 
+@interface CBLQueryEnumerator ()
++ (NSSortDescriptor*) asNSSortDescriptor: (id)descOrStr; // Converts NSString to NSSortDescriptor
+@end
 
 @interface CBLQueryRow ()
 - (instancetype) initWithDocID: (NSString*)docID
@@ -129,6 +138,7 @@
                            key: (id)key
                          value: (id)value
                  docProperties: (NSDictionary*)docProperties;
+@property (readwrite, nonatomic) CBLDatabase* database;
 @property (readonly, nonatomic) NSDictionary* asJSONDictionary;
 @end
 
@@ -149,6 +159,8 @@
                          value: (NSData*)valueData
                  docProperties: (NSDictionary*)docProperties;
 @end
+
+NSString* CBLKeyPathForQueryRow(NSString* keyPath); // for testing
 
 
 @interface CBLReplication ()

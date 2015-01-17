@@ -9,8 +9,8 @@
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 #import "CBLDatabase.h"
-@class CBL_FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared;
-struct CBLQueryOptions;      // declared in CBLView+Internal.h
+@class CBL_FMDatabase, CBLQueryOptions, CBLView, CBL_BlobStore, CBLDocument, CBLCache;
+@class CBLDatabase, CBLDatabaseChange, CBL_Shared, CBLModelFactory;
 
 
 /** NSNotification posted when one or more documents have been updated.
@@ -24,6 +24,11 @@ extern NSString* const CBL_DatabaseWillCloseNotification;
 extern NSString* const CBL_DatabaseWillBeDeletedNotification;
 
 
+/** A private runloop mode for waiting on. */
+extern NSString* const CBL_PrivateRunloopMode;
+
+/** Runloop modes that events/blocks will be scheduled to run in. Includes CBL_PrivateRunloopMode. */
+extern NSArray* CBL_RunloopModes;
 
 
 /** Options for what metadata to include in document bodies */
@@ -64,7 +69,6 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     CBL_FMDatabase *_fmdb;
     BOOL _readOnly;
     BOOL _isOpen;
-    int _transactionLevel;
     NSThread* _thread;
     dispatch_queue_t _dispatchQueue;    // One and only one of _thread or _dispatchQueue is set
     NSCache* _docIDs;
@@ -75,6 +79,8 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     NSMutableArray* _changesToNotify;
     bool _postingChangeNotifications;
     NSDate* _startTime;
+    CBLModelFactory* _modelFactory;
+    NSMutableSet* _unsavedModelsMutable;   // All CBLModels that have unsaved changes
 #if DEBUG
     CBL_Shared* _debug_shared;
 #endif
@@ -85,8 +91,6 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 @property (nonatomic, readonly) BOOL isOpen;
 
 - (void) postPublicChangeNotification: (NSArray*)changes; // implemented in CBLDatabase.m
-- (BOOL) close;
-- (BOOL) closeForDeletion;
 
 @end
 
@@ -100,12 +104,13 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
                        manager: (CBLManager*)manager
                       readOnly: (BOOL)readOnly;
 + (BOOL) deleteDatabaseFilesAtPath: (NSString*)dbPath error: (NSError**)outError;
+
 #if DEBUG
 + (instancetype) createEmptyDBAtPath: (NSString*)path;
 #endif
 - (BOOL) openFMDB: (NSError**)outError;
 - (BOOL) open: (NSError**)outError;
-- (BOOL) closeInternal;
+- (void) _close; // closes without saving CBLModels.
 
 @property (nonatomic, readonly) CBL_FMDatabase* fmdb;
 @property (nonatomic, readonly) CBL_BlobStore* attachmentStore;
@@ -129,9 +134,6 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (NSString*) infoForKey: (NSString*)key;
 - (CBLStatus) setInfo: (id)info forKey: (NSString*)key;
 
-@property (nonatomic, readonly) NSString* privateUUID;
-@property (nonatomic, readonly) NSString* publicUUID;
-
 /** Executes the block within a database transaction.
     If the block returns a non-OK status, the transaction is aborted/rolled back.
     If the block returns kCBLStatusDBBusy, the block will also be retried after a short delay;
@@ -149,6 +151,11 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
                            status: (CBLStatus*)outStatus;
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
                        revisionID: (NSString*)revID;
+
+// Loads revision given its sequence. Assumes the given docID is valid.
+- (CBL_Revision*) getDocumentWithID: (NSString*)docID
+                           sequence: (SequenceNumber)sequence
+                             status: (CBLStatus*)outStatus;
 
 - (BOOL) existsDocumentWithID: (NSString*)docID
                    revisionID: (NSString*)revID;
@@ -174,13 +181,16 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
                                             options: (CBLContentOptions)options;
 - (NSString*) winningRevIDOfDocNumericID: (SInt64)docNumericID
                                isDeleted: (BOOL*)outIsDeleted
-                              isConflict: (BOOL*)outIsConflict;
+                              isConflict: (BOOL*)outIsConflict
+                                  status: (CBLStatus*)outStatus;
 
 - (CBL_Revision*) getParentRevision: (CBL_Revision*)rev;
 
 /** Returns an array of CBL_Revisions in reverse chronological order,
     starting with the given revision. */
 - (NSArray*) getRevisionHistory: (CBL_Revision*)rev;
+
++ (NSDictionary*) makeRevisionHistoryDict: (NSArray*)history; // exposed for testing
 
 /** Returns the revision history as a _revisions dictionary, as returned by the REST API's ?revs=true option. If 'ancestorRevIDs' is present, the revision history will only go back as far as any of the revision ID strings in that array. */
 - (NSDictionary*) getRevisionHistoryDict: (CBL_Revision*)rev
@@ -207,7 +217,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (CBLStatus) deleteViewNamed: (NSString*)name;
 
 /** Returns the value of an _all_docs query, as an array of CBLQueryRow. */
-- (NSArray*) getAllDocs: (const struct CBLQueryOptions*)options;
+- (NSArray*) getAllDocs: (CBLQueryOptions*)options;
 
 - (CBLView*) makeAnonymousView;
 
@@ -230,5 +240,22 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (BOOL) runFilter: (CBLFilterBlock)filter
             params: (NSDictionary*)filterParams
         onRevision: (CBL_Revision*)rev;
+
+/** Post an NSNotification. handles if the database is running on a separate dispatch_thread
+ (issue #364). */
+- (void) postNotification: (NSNotification*)notification;
+
+/** Create a local checkpoint document. This method is called only when importing or
+    replacing the database. The local checkpoint contains the old localUUID of the database 
+    before importing. The old localUUID is used by replicators to get the local checkpoint 
+    from the imported database in order to start replicating from from the current local 
+    checkpoint of the imported database after importing. */
+- (BOOL) createLocalCheckpointDocument: (NSError**)outError;
+
+/** Returns local checkpoint document if it exists. Otherwise returns nil. */
+- (NSDictionary*) getLocalCheckpointDocument;
+
+// Local checkpoint document keys:
+#define kCBLDatabaseLocalCheckpoint_LocalUUID @"localUUID"
 
 @end

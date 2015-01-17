@@ -8,9 +8,11 @@
 
 #import "MYDynamicObject.h"
 #import "CBLDocument.h"
-@class CBLAttachment, CBLDatabase, CBLDocument;
+
+@class CBLAttachment, CBLDatabase;
 
 
+NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properties in subclasses
 /** Generic model class for CouchbaseLite documents.
     There's a 1::1 mapping between these and CBLDocuments; call +modelForDocument: to get (or create) a model object for a document, and .document to get the document of a model.
     You should subclass this and declare properties in the subclass's @@interface. As with NSManagedObject, you don't need to implement their accessor methods or declare instance variables; simply note them as '@@dynamic' in the class @@implementation. The property value will automatically be fetched from or stored to the document, using the same name.
@@ -26,14 +28,9 @@
     If you call this method on a CBLModel subclass, it will always instantiate an instance of that class; e.g. [MyWidgetModel modelForDocument: doc] always creates a MyWidgetModel. */
 + (instancetype) modelForDocument: (CBLDocument*)document               __attribute__((nonnull));
 
-/** Creates a new "untitled" model with a new unsaved document.
-    The document won't be written to the database until -save is called. */
-- (instancetype) initWithNewDocumentInDatabase: (CBLDatabase*)database  __attribute__((nonnull));
-
-/** Creates a new "untitled" model object with no document or database at all yet.
-    Setting its .database property will cause it to create a CBLDocument.
-    (This method is mostly here so that NSController objects can create CBLModels.) */
-- (instancetype) init;
+/** Returns a new "untitled" CBLModel with a new unsaved document.
+ The document won't be written to the database until -save is called. */
++ (instancetype) modelForNewDocumentInDatabase: (CBLDatabase*)database  __attribute__((nonnull));
 
 /** The document this item is associated with. Will be nil if it's new and unsaved. */
 @property (readonly, retain) CBLDocument* document;
@@ -140,13 +137,11 @@
 
 #pragma mark - PROTECTED (FOR SUBCLASSES TO OVERRIDE)
 
-/** Designated initializer. Do not call directly except from subclass initializers; to create a new instance call +modelForDocument: instead.
-    @param document  The document. Nil if this is created new (-init was called). */
-- (instancetype) initWithDocument: (CBLDocument*)document
-#ifdef NS_DESIGNATED_INITIALIZER
-NS_DESIGNATED_INITIALIZER
-#endif
-;
+
+/* Called when the model's initializer is called when the model object is created. You should override this if you need to initialize
+   any ivars or perform custom initialization when the model object is created.
+ */
+- (void)awakeFromInitializer;
 
 /** The document ID to use when creating a new document.
     Default is nil, which means to assign no ID (the server will assign one). */
@@ -185,6 +180,11 @@ NS_DESIGNATED_INITIALIZER
     In general you'll find it easier to implement the '+propertyItemClass' method(s) rather
     than overriding this one. */
 + (Class) itemClassForArrayProperty: (NSString*)property;
+
+/** The type of document. This is optional, but is commonly used in document databases 
+    to distinguish different types of documents. CBLModelFactory can use this property to 
+    determine what CBLModel subclass to instantiate for a document. */
+@property (copy, nonatomic) NSString* type;
 
 @end
 

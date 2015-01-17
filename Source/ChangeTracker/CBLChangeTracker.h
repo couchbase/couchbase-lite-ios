@@ -91,6 +91,8 @@ typedef enum CBLChangeTrackerMode {
 - (BOOL) start;
 - (void) stop;
 
+@property (nonatomic) BOOL paused;
+
 /** Asks the tracker to retry connecting, _if_ it's currently disconnected but waiting to retry.
     This should be called when the reachability of the remote host changes, or when the
     app is reactivated. */
@@ -100,6 +102,8 @@ typedef enum CBLChangeTrackerMode {
 @property (readonly) NSString* feed;
 @property (readonly) NSString* changesFeedPath;
 @property (readonly) NSData* changesFeedPOSTBody;
+@property (readonly) NSDictionary* TLSSettings;
+- (BOOL) checkServerTrust: (SecTrustRef)sslTrust forURL: (NSURL*)url;
 - (void) retryAfterDelay: (NSTimeInterval)retryDelay;
 - (void) setUpstreamError: (NSString*)message;
 - (void) failedWithError: (NSError*)error;
