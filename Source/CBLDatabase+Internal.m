@@ -16,7 +16,8 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
-#import "CBL_Storage.h"
+#import "CBL_ForestDBStorage.h"
+#import "CBL_SQLiteStorage.h"
 #import "CBLInternal.h"
 #import "CBLModel_Internal.h"
 #import "CBL_Revision.h"
@@ -149,12 +150,14 @@ static BOOL sAutoCompact = YES;
                                                          error: outError])
         return NO;
 
-    // Open the storage (ForestDB or SQLite):
-//    NSString* storageName = @"CBL_ForestDBStorage";
-    NSString* storageName = @"CBL_SQLiteStorage";
-    Class storageClass = NSClassFromString(storageName);
-    Assert(storageClass);
-    _storage = [[storageClass alloc] init];
+    // Instantiate storage. Default to ForestDB unless a SQLite database exists:
+    Class primaryStorage = [CBL_SQLiteStorage class];
+    Class secondaryStorage = [CBL_ForestDBStorage class];
+    id<CBL_Storage> storage = [[secondaryStorage alloc] init];
+    if (![storage databaseExistsIn: _dir])
+        storage = [[primaryStorage alloc] init];
+
+    _storage = storage;
     _storage.delegate = self;
     if (![_storage openInDirectory: _dir
                           readOnly: _readOnly

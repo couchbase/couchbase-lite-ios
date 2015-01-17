@@ -94,6 +94,9 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
 /** Abstraction of database storage. */
 @protocol CBL_Storage <NSObject>
 
+/** Preflight to see if a database file exists in this directory. Called before -open! */
+- (BOOL) databaseExistsIn: (NSString*)directory;
+
 /** Opens storage. Files will be created in the directory, which must already exist. */
 - (BOOL) openInDirectory: (NSString*)directory
                 readOnly: (BOOL)readOnly

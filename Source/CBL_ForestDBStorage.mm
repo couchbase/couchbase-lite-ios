@@ -21,6 +21,8 @@ extern "C" {
 using namespace forestdb;
 
 
+#define kDBFilename @"db.forest"
+
 // Size of ForestDB buffer cache allocated for a database
 #define kDBBufferCacheSize (8*1024*1024)
 
@@ -84,13 +86,19 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 }
 
 
+- (BOOL) databaseExistsIn: (NSString*)directory {
+    NSString* dbPath = [directory stringByAppendingPathComponent: kDBFilename];
+    return [[NSFileManager defaultManager] fileExistsAtPath: dbPath isDirectory: NULL];
+}
+
+
 - (BOOL)openInDirectory: (NSString *)directory
                readOnly: (BOOL)readOnly
                 manager: (CBLManager*)manager
                   error: (NSError**)outError
 {
     _directory = [directory copy];
-    NSString* forestPath = [directory stringByAppendingPathComponent: @"db.forest"];
+    NSString* forestPath = [directory stringByAppendingPathComponent: kDBFilename];
     Database::openFlags options = readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE;
 
     Database::config config = Database::defaultConfig();
