@@ -39,6 +39,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 @implementation CBL_SQLiteStorage
 {
+    __weak CBLManager* _manager;
     BOOL _readOnly;
     NSCache* _docIDs;
 }
@@ -64,6 +65,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 {
     _directory = [directory copy];
     _readOnly = readOnly;
+    _manager = manager;
     NSString* path = [_directory stringByAppendingPathComponent: kDBFilename];
     _fmdb = [[CBL_FMDatabase alloc] initWithPath: path];
     _fmdb.dispatchQueue = manager.dispatchQueue;

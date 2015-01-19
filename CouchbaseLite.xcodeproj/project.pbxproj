@@ -171,13 +171,13 @@
 		27513A251A673F320055DC40 /* CBL_SQLiteStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A221A673F320055DC40 /* CBL_SQLiteStorage.m */; };
 		27513A431A674C9B0055DC40 /* FMDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27513A341A674C9B0055DC40 /* FMDatabase.h */; };
 		27513A441A674C9B0055DC40 /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A351A674C9B0055DC40 /* FMDatabase.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27513A451A674C9B0055DC40 /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A351A674C9B0055DC40 /* FMDatabase.m */; };
+		27513A451A674C9B0055DC40 /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A351A674C9B0055DC40 /* FMDatabase.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27513A461A674C9B0055DC40 /* FMDatabaseAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 27513A361A674C9B0055DC40 /* FMDatabaseAdditions.h */; };
 		27513A471A674C9B0055DC40 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A371A674C9B0055DC40 /* FMDatabaseAdditions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27513A481A674C9B0055DC40 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A371A674C9B0055DC40 /* FMDatabaseAdditions.m */; };
+		27513A481A674C9B0055DC40 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A371A674C9B0055DC40 /* FMDatabaseAdditions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27513A4B1A674C9B0055DC40 /* FMResultSet.h in Headers */ = {isa = PBXBuildFile; fileRef = 27513A391A674C9B0055DC40 /* FMResultSet.h */; };
 		27513A4C1A674C9B0055DC40 /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A3A1A674C9B0055DC40 /* FMResultSet.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27513A4D1A674C9B0055DC40 /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A3A1A674C9B0055DC40 /* FMResultSet.m */; };
+		27513A4D1A674C9B0055DC40 /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A3A1A674C9B0055DC40 /* FMResultSet.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27513A561A6827DF0055DC40 /* CBLCollateJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 27513A541A6827DF0055DC40 /* CBLCollateJSON.h */; };
 		27513A571A6827DF0055DC40 /* CBLCollateJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A551A6827DF0055DC40 /* CBLCollateJSON.m */; };
 		27513A581A6827DF0055DC40 /* CBLCollateJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A551A6827DF0055DC40 /* CBLCollateJSON.m */; };
