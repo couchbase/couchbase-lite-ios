@@ -26,6 +26,8 @@
     __weak CBL_SQLiteStorage* _dbStorage;
     int _viewID;
     CBLViewCollation _collation;
+    NSString* _mapTableName;
+    BOOL _hasFullTextTrigger, _hasGeoTrigger;
 }
 
 @synthesize name=_name, delegate=_delegate;
@@ -64,8 +66,10 @@
           _name, version, @(0)]) {
         return NO;
     }
-    if (fmdb.changes)
+    if (fmdb.changes) {
+        [self createIndex];
         return YES;     // created new view
+    }
     if (![fmdb executeUpdate: @"UPDATE views SET version=?, lastSequence=0, total_docs=0 "
           "WHERE name=? AND version!=?",
           version, _name, version]) {
@@ -75,25 +79,62 @@
 }
 
 
+// The name of the map table is dynamic, based on the ID of the view. This method replaces a '#'
+// with the view ID in a query string.
+- (NSString*) queryString: (NSString*)sql {
+    return [sql stringByReplacingOccurrencesOfString: @"#" withString: self.mapTableName
+                                             options: 0 range:NSMakeRange(0, sql.length)];
+}
+
+
+- (CBLStatus) runStatements: (NSString*)sql error: (NSError**)outError {
+    CBL_SQLiteStorage* db = _dbStorage;
+    return [db inTransaction: ^CBLStatus {
+        if ([_dbStorage runStatements: [self queryString: sql] error: outError])
+            return kCBLStatusOK;
+        else {
+            return db.lastDbStatus;
+        }
+    }] == kCBLStatusOK;
+}
+
+
+- (void) createIndex {
+    NSString* sql = @"\
+        CREATE TABLE IF NOT EXISTS 'maps_#' (\
+            sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE,\
+            key TEXT NOT NULL COLLATE JSON,\
+            value TEXT,\
+            fulltext_id INTEGER, \
+            bbox_id INTEGER, \
+            geokey BLOB);\
+        CREATE INDEX IF NOT EXISTS 'maps_#_keys' on 'maps_#'(key COLLATE JSON);\
+        CREATE INDEX IF NOT EXISTS 'maps_#_sequence' ON 'maps_#'(sequence)";
+    NSError* error;
+    if (![self runStatements: sql error: &error])
+        Warn(@"Couldn't create view index `%@`: %@", _name, error);
+}
+
+
 - (void) deleteIndex {
     if (self.viewID <= 0)
         return;
-    CBL_SQLiteStorage* db = _dbStorage;
-    CBLStatus status = [db inTransaction: ^CBLStatus {
-        if ([db.fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=?",
-                                     @(_viewID)]) {
-            [db.fmdb executeUpdate: @"UPDATE views SET lastsequence=0, total_docs=0 WHERE view_id=?",
-                                     @(_viewID)];
-        }
-        return db.lastDbStatus;
-    }];
-    if (CBLStatusIsError(status))
-        Warn(@"Error status %d removing index of %@", status, self);
+    NSString* sql = @"\
+        DROP TABLE IF EXISTS 'maps_#';\
+        UPDATE views SET total_docs=0 WHERE view_id=#";
+    NSError* error;
+    if (![self runStatements: sql error: &error])
+        Warn(@"Couldn't delete view index `%@`: %@", _name, error);
 }
 
 
 - (void) deleteView {
-    [_dbStorage.fmdb executeUpdate: @"DELETE FROM views WHERE name=?", _name];
+    CBL_SQLiteStorage* db = _dbStorage;
+    [db inTransaction: ^CBLStatus {
+        [self deleteIndex];
+        [db.fmdb executeUpdate: @"DELETE FROM views WHERE name=?", _name];
+        return db.lastDbStatus;
+    }];
     _viewID = 0;
 }
 
@@ -105,12 +146,22 @@
 }
 
 
+- (NSString*) mapTableName {
+    if (!_mapTableName) {
+        [self viewID];
+        Assert(_viewID > 0);
+        _mapTableName = $sprintf(@"%d", _viewID);
+    }
+    return _mapTableName;
+}
+
+
 - (NSUInteger) totalRows {
     CBL_FMDatabase* fmdb = _dbStorage.fmdb;
     NSInteger totalRows = [fmdb intForQuery: @"SELECT total_docs FROM views WHERE name=?", _name];
     if (totalRows == -1) { // means unknown
-        totalRows = [fmdb intForQuery: @"SELECT COUNT(view_id) FROM maps WHERE view_id=?",
-                                        @(self.viewID)];
+        [self createIndex];
+        totalRows = [fmdb intForQuery: [self queryString: @"SELECT COUNT(*) FROM 'maps_#'"]];
         [fmdb executeUpdate: @"UPDATE views SET total_docs=? WHERE view_id=?",
                                 @(totalRows), @(self.viewID)];
     }
@@ -178,18 +229,21 @@
             if (last < 0) {
                 return dbStorage.lastDbError;
             } else if (last < dbMaxSequence) {
+                if (last == 0)
+                    [view createIndex];
                 minLastSequence = MIN(minLastSequence, last);
                 LogTo(ViewVerbose, @"    %@ last indexed at #%lld", view.name, last);
                 BOOL ok;
                 if (last == 0) {
                     // If the lastSequence has been reset to 0, make sure to remove all map results:
-                    ok = [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=?", @(viewID)];
+                    ok = [fmdb executeUpdate: [view queryString: @"DELETE FROM 'maps_#'"]];
                 } else {
                     // Delete all obsolete map results (ones from since-replaced revisions):
-                    ok = [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=? AND sequence IN ("
-                                                    "SELECT parent FROM revs WHERE sequence>? "
-                                                        "AND parent>0 AND parent<=?)",
-                                              @(viewID), @(last), @(last)];
+                    ok = [fmdb executeUpdate:
+                          [view queryString: @"DELETE FROM 'maps_#' WHERE sequence IN ("
+                                                "SELECT parent FROM revs WHERE sequence>? "
+                                                    "AND parent>0 AND parent<=?)"],
+                          @(last), @(last)];
                 }
                 if (!ok)
                     return dbStorage.lastDbError;
@@ -279,8 +333,8 @@
                         // Remove its emitted rows:
                         SequenceNumber oldSequence = [r2 longLongIntForColumnIndex: 1];
                         for (CBL_SQLiteViewStorage* view in views) {
-                            [fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=? AND sequence=?",
-                                                 @(view.viewID), @(oldSequence)];
+                            [fmdb executeUpdate: [view queryString: @"DELETE FROM 'maps_#' WHERE sequence=?"],
+                                                 @(oldSequence)];
                             int changes = fmdb.changes;
                             deleted += changes;
                             viewTotalRows[@(view.viewID)] =
@@ -381,12 +435,34 @@
         if (text) {
             ok = [fmdb executeUpdate: @"INSERT INTO fulltext (content) VALUES (?)", text];
             fullTextID = @(fmdb.lastInsertRowId);
+            if (!_hasFullTextTrigger) {
+                // Create triggers only when needed, because they prevent the SQLite DELETE
+                // 'truncate optimization' <http://sqlite.org/lang_delete.html>
+                [fmdb executeUpdate: [self queryString:
+                                      @"CREATE TRIGGER IF NOT EXISTS 'del_maps_#_fulltext' "
+                                       "DELETE ON 'maps_#' WHEN old.fulltext_id not null BEGIN "
+                                       "DELETE FROM fulltext WHERE rowid=old.fulltext_id; END"]];
+                [fmdb executeUpdate: [self queryString: @"CREATE INDEX IF NOT EXISTS 'maps_#_by_fulltext' "
+                                                         "ON 'maps_#'(fulltext_id)"]];
+                //OPT: Would be nice to use partial indexes but that requires SQLite 3.8 and makes the
+                // db file only readable by SQLite 3.8+, i.e. the file would not be portable to iOS 8
+                // which only has SQLite 3.7 :(
+                // On the above index we could add "WHERE fulltext_id not null".
+                _hasFullTextTrigger = YES;
+            }
         } else {
             CBLGeoRect rect = specialKey.rect;
             ok = [fmdb executeUpdate: @"INSERT INTO bboxes (x0,y0,x1,y1) VALUES (?,?,?,?)",
                   @(rect.min.x), @(rect.min.y), @(rect.max.x), @(rect.max.y)];
             bboxID = @(fmdb.lastInsertRowId);
             geoKey = specialKey.geoJSONData;
+            if (!_hasGeoTrigger) {
+                [fmdb executeUpdate: [self queryString:
+                                      @"CREATE TRIGGER IF NOT EXISTS 'del_maps_#_bbox' "
+                                       "DELETE ON 'maps_#' WHEN old.bbox_id not null BEGIN "
+                                       "DELETE FROM bboxes WHERE rowid=old.bbox_id; END"]];
+                _hasGeoTrigger = YES;
+            }
         }
         if (!ok)
             return dbStorage.lastDbError;
@@ -400,9 +476,9 @@
         keyJSON = [[NSData alloc] initWithBytes: "null" length: 4];
 
     fmdb.bindNSDataAsString = YES;
-    BOOL ok = [fmdb executeUpdate: @"INSERT INTO maps (view_id, sequence, key, value, "
-                                   "fulltext_id, bbox_id, geokey) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                                  @(self.viewID), @(sequence), keyJSON, valueJSON,
+    BOOL ok = [fmdb executeUpdate: [self queryString: @"INSERT INTO 'maps_#' (sequence, key, value, "
+                                   "fulltext_id, bbox_id, geokey) VALUES (?, ?, ?, ?, ?, ?)"],
+                                  @(sequence), keyJSON, valueJSON,
                                   fullTextID, bboxID, geoKey];
     fmdb.bindNSDataAsString = NO;
     return ok ? kCBLStatusOK : dbStorage.lastDbError;
@@ -440,12 +516,13 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
     if (options->includeDocs)
         [sql appendString: @", revid, json"];
     if (options->bbox)
-        [sql appendString: @", bboxes.x0, bboxes.y0, bboxes.x1, bboxes.y1, maps.geokey"];
-    [sql appendString: @" FROM maps, revs, docs"];
+        [sql appendFormat: @", bboxes.x0, bboxes.y0, bboxes.x1, bboxes.y1, maps_%@.geokey",
+                                 self.mapTableName];
+    [sql appendFormat: @" FROM 'maps_%@', revs, docs", self.mapTableName];
     if (options->bbox)
         [sql appendString: @", bboxes"];
-    [sql appendString: @" WHERE maps.view_id=?"];
-    NSMutableArray* args = $marray(@(self.viewID));
+    [sql appendString: @" WHERE 1"];
+    NSMutableArray* args = $marray();
 
     if (options.keys) {
         [sql appendString:@" AND key in ("];
@@ -497,17 +574,17 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
     }
 
     if (options->bbox) {
-        [sql appendString: @" AND (bboxes.x1 > ? AND bboxes.x0 < ?)"
+        [sql appendFormat: @" AND (bboxes.x1 > ? AND bboxes.x0 < ?)"
                             " AND (bboxes.y1 > ? AND bboxes.y0 < ?)"
-                            " AND bboxes.rowid = maps.bbox_id"];
+                            " AND bboxes.rowid = 'maps_%@'.bbox_id", self.mapTableName];
         [args addObject: @(options->bbox->min.x)];
         [args addObject: @(options->bbox->max.x)];
         [args addObject: @(options->bbox->min.y)];
         [args addObject: @(options->bbox->max.y)];
     }
     
-    [sql appendString: @" AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id "
-                        "ORDER BY"];
+    [sql appendFormat: @" AND revs.sequence = 'maps_%@'.sequence AND docs.doc_id = revs.doc_id "
+                        "ORDER BY", self.mapTableName];
     if (options->bbox)
         [sql appendString: @" bboxes.y0, bboxes.x0"];
     else
@@ -647,25 +724,25 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
 - (CBLQueryIteratorBlock) fullTextQueryWithOptions: (const CBLQueryOptions*)options
                                             status: (CBLStatus*)outStatus
 {
-    NSMutableString* sql = [@"SELECT docs.docid, maps.sequence, maps.fulltext_id, maps.value, "
+    NSMutableString* sql = [@"SELECT docs.docid, 'maps_#'.sequence, 'maps_#'.fulltext_id, 'maps_#'.value, "
                              "offsets(fulltext)" mutableCopy];
     if (options->fullTextSnippets)
         [sql appendString: @", snippet(fulltext, '\001','\002','…')"];
-    [sql appendString: @" FROM maps, fulltext, revs, docs "
-                        "WHERE fulltext.content MATCH ? AND maps.fulltext_id = fulltext.rowid "
-                        "AND maps.view_id = ? "
-                        "AND revs.sequence = maps.sequence AND docs.doc_id = revs.doc_id "];
+    [sql appendString: @" FROM 'maps_#', fulltext, revs, docs "
+                        "WHERE fulltext.content MATCH ? AND 'maps_#'.fulltext_id = fulltext.rowid "
+                        "AND revs.sequence = 'maps_#'.sequence AND docs.doc_id = revs.doc_id "];
     if (options->fullTextRanking)
         [sql appendString: @"ORDER BY - ftsrank(matchinfo(fulltext)) "];
     else
-        [sql appendString: @"ORDER BY maps.sequence "];
+        [sql appendString: @"ORDER BY 'maps_#'.sequence "];
     if (options->descending)
         [sql appendString: @" DESC"];
     [sql appendString: @" LIMIT ? OFFSET ?"];
     int limit = (options->limit != kCBLQueryOptionsDefaultLimit) ? options->limit : -1;
 
     CBL_SQLiteStorage* dbStorage = _dbStorage;
-    CBL_FMResultSet* r = [dbStorage.fmdb executeQuery: sql, options.fullTextQuery, @(self.viewID),
+    CBL_FMResultSet* r = [dbStorage.fmdb executeQuery: [self queryString: sql],
+                                                options.fullTextQuery,
                                                 @(limit), @(options->skip)];
     if (!r) {
         *outStatus = dbStorage.lastDbError;
@@ -895,9 +972,9 @@ static CBLQueryIteratorBlock queryIteratorBlockFromArray(NSArray* rows) {
     if (self.viewID <= 0)
         return nil;
 
-    CBL_FMResultSet* r = [_dbStorage.fmdb executeQuery: @"SELECT sequence, key, value FROM maps "
-                                                      "WHERE view_id=? ORDER BY key",
-                                                     @(self.viewID)];
+    CBL_FMResultSet* r = [_dbStorage.fmdb executeQuery:
+                          [self queryString: @"SELECT sequence, key, value FROM 'maps_#' "
+                                                      "ORDER BY key"]];
     if (!r)
         return nil;
     NSMutableArray* result = $marray();

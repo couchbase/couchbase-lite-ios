@@ -16,6 +16,8 @@
 @property (readonly, nonatomic) CBLStatus lastDbStatus;
 @property (readonly, nonatomic) CBLStatus lastDbError;
 
+- (BOOL) runStatements: (NSString*)statements error: (NSError**)outError;
+
 - (NSDictionary*) documentPropertiesFromJSON: (NSData*)json
                                        docID: (NSString*)docID
                                        revID: (NSString*)revID

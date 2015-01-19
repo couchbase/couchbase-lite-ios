@@ -84,19 +84,25 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 }
 
 
-- (BOOL) initialize: (NSString*)statements error: (NSError**)outError {
+- (BOOL) runStatements: (NSString*)statements error: (NSError**)outError {
     for (NSString* quotedStatement in [statements componentsSeparatedByString: @";"]) {
         NSString* statement = [quotedStatement stringByReplacingOccurrencesOfString: @"|"
                                                                          withString: @";"];
         if (statement.length && ![_fmdb executeUpdate: statement]) {
             if (outError) *outError = self.fmdbError;
-            Warn(@"CBLDatabase: Could not initialize schema of %@ -- May be an old/incompatible format. "
-                  "SQLite error: %@", _directory, _fmdb.lastErrorMessage);
-            [_fmdb close];
             return NO;
         }
     }
     return YES;
+}
+
+- (BOOL) initialize: (NSString*)statements error: (NSError**)outError {
+    if ([self runStatements: statements error: outError])
+        return YES;
+    Warn(@"CBLDatabase: Could not initialize schema of %@ -- May be an old/incompatible format. "
+          "SQLite error: %@", _directory, _fmdb.lastErrorMessage);
+    [_fmdb close];
+    return NO;
 }
 
 
@@ -180,205 +186,65 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     if (isNew && ![self initialize: @"BEGIN TRANSACTION" error: outError])
         return NO;
 
-    if (dbVersion < 1) {
+    if (dbVersion < 17) {
         // First-time initialization:
         // (Note: Declaring revs.sequence as AUTOINCREMENT means the values will always be
         // monotonically increasing, never reused. See <http://www.sqlite.org/autoinc.html>)
+        if (!isNew) {
+            Warn(@"CBLDatabase: Database version (%d) is older than I know how to work with", dbVersion);
+            [_fmdb close];
+            if (outError) *outError = [NSError errorWithDomain: @"CouchbaseLite" code: 1 userInfo: nil]; //FIX: Real code
+            return NO;
+        }
         NSString *schema = @"\
-            CREATE TABLE docs ( \
-                doc_id INTEGER PRIMARY KEY, \
-                docid TEXT UNIQUE NOT NULL); \
-            CREATE INDEX docs_docid ON docs(docid); \
-            CREATE TABLE revs ( \
-                sequence INTEGER PRIMARY KEY AUTOINCREMENT, \
-                doc_id INTEGER NOT NULL REFERENCES docs(doc_id) ON DELETE CASCADE, \
-                revid TEXT NOT NULL COLLATE REVID, \
-                parent INTEGER REFERENCES revs(sequence) ON DELETE SET NULL, \
-                current BOOLEAN, \
-                deleted BOOLEAN DEFAULT 0, \
-                json BLOB, \
-                UNIQUE (doc_id, revid)); \
-            CREATE INDEX revs_current ON revs(doc_id, current); \
-            CREATE INDEX revs_parent ON revs(parent); \
-            CREATE TABLE localdocs ( \
-                docid TEXT UNIQUE NOT NULL, \
-                revid TEXT NOT NULL COLLATE REVID, \
-                json BLOB); \
-            CREATE INDEX localdocs_by_docid ON localdocs(docid); \
-            CREATE TABLE views ( \
-                view_id INTEGER PRIMARY KEY, \
+            CREATE TABLE docs (\
+                doc_id INTEGER PRIMARY KEY,\
+                docid TEXT UNIQUE NOT NULL);\
+            CREATE INDEX docs_docid ON docs(docid);\
+            \
+            CREATE TABLE revs (\
+                sequence INTEGER PRIMARY KEY AUTOINCREMENT,\
+                doc_id INTEGER NOT NULL REFERENCES docs(doc_id) ON DELETE CASCADE,\
+                revid TEXT NOT NULL COLLATE REVID,\
+                parent INTEGER REFERENCES revs(sequence) ON DELETE SET NULL,\
+                current BOOLEAN,\
+                deleted BOOLEAN DEFAULT 0,\
+                json BLOB,\
+                no_attachments BOOLEAN,\
+                UNIQUE (doc_id, revid));\
+            CREATE INDEX revs_parent ON revs(parent);\
+            CREATE INDEX revs_by_docid_revid ON revs(doc_id, revid desc, current, deleted);\
+            CREATE INDEX revs_current ON revs(doc_id, current desc, deleted, revid desc);\
+            \
+            CREATE TABLE localdocs (\
+                docid TEXT UNIQUE NOT NULL,\
+                revid TEXT NOT NULL COLLATE REVID,\
+                json BLOB);\
+            CREATE INDEX localdocs_by_docid ON localdocs(docid);\
+            \
+            CREATE TABLE views (\
+                view_id INTEGER PRIMARY KEY,\
                 name TEXT UNIQUE NOT NULL,\
-                version TEXT, \
-                lastsequence INTEGER DEFAULT 0); \
-            CREATE INDEX views_by_name ON views(name); \
-            CREATE TABLE maps ( \
-                view_id INTEGER NOT NULL REFERENCES views(view_id) ON DELETE CASCADE, \
-                sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
-                key TEXT NOT NULL COLLATE JSON, \
-                value TEXT); \
-            CREATE INDEX maps_keys on maps(view_id, key COLLATE JSON); \
-            CREATE TABLE attachments ( \
-                sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE, \
-                filename TEXT NOT NULL, \
-                key BLOB NOT NULL, \
-                type TEXT, \
-                length INTEGER NOT NULL, \
-                revpos INTEGER DEFAULT 0); \
-            CREATE INDEX attachments_by_sequence on attachments(sequence, filename); \
-            CREATE TABLE replicators ( \
-                remote TEXT NOT NULL, \
-                push BOOLEAN, \
-                last_sequence TEXT, \
-                UNIQUE (remote, push)); \
-            PRAGMA user_version = 3";             // at the end, update user_version
+                version TEXT,\
+                lastsequence INTEGER DEFAULT 0,\
+                total_docs INTEGER DEFAULT -1);\
+            CREATE INDEX views_by_name ON views(name);\
+            \
+            CREATE TABLE info (\
+                key TEXT PRIMARY KEY,\
+                value TEXT);\
+            \
+            CREATE VIRTUAL TABLE fulltext USING fts4(content, tokenize=unicodesn);\
+            CREATE VIRTUAL TABLE bboxes USING rtree(rowid, x0, x1, y0, y1);\
+            PRAGMA user_version = 17";             // at the end, update user_version
+        //OPT: Would be nice to use partial indexes but that requires SQLite 3.8 and makes the
+        // db file only readable by SQLite 3.8+, i.e. the file would not be portable to iOS 8
+        // which only has SQLite 3.7 :(
+        // On the revs_parent index we could add "WHERE parent not null".
+
         if (![self initialize: schema error: outError])
             return NO;
-        dbVersion = 3;
-    }
-    
-    if (dbVersion < 2) {
-        // Version 2: added attachments.revpos
-        NSString* sql = @"ALTER TABLE attachments ADD COLUMN revpos INTEGER DEFAULT 0; \
-                          PRAGMA user_version = 2";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 2;
-    }
-    
-    if (dbVersion < 3) {
-        // Version 3: added localdocs table
-        NSString* sql = @"CREATE TABLE IF NOT EXISTS localdocs ( \
-                            docid TEXT UNIQUE NOT NULL, \
-                            revid TEXT NOT NULL, \
-                            json BLOB); \
-                            CREATE INDEX IF NOT EXISTS localdocs_by_docid ON localdocs(docid); \
-                          PRAGMA user_version = 3";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 3;
-    }
-    
-    if (dbVersion < 4) {
-        // Version 4: added 'info' table
-        NSString* sql = $sprintf(@"CREATE TABLE info ( \
-                                     key TEXT PRIMARY KEY, \
-                                     value TEXT); \
-                                   INSERT INTO INFO (key, value) VALUES ('privateUUID', '%@');\
-                                   INSERT INTO INFO (key, value) VALUES ('publicUUID',  '%@');\
-                                   PRAGMA user_version = 4",
-                                 CBLCreateUUID(), CBLCreateUUID());
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 4;
-    }
-
-    if (dbVersion < 5) {
-        // Version 5: added encoding for attachments
-        NSString* sql = @"ALTER TABLE attachments ADD COLUMN encoding INTEGER DEFAULT 0; \
-                          ALTER TABLE attachments ADD COLUMN encoded_length INTEGER; \
-                          PRAGMA user_version = 5";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 5;
-    }
-
-    if (dbVersion < 6) {
-        // Version 6: enable Write-Ahead Log (WAL) <http://sqlite.org/wal.html>
-        NSString* sql = @"PRAGMA journal_mode=WAL; \
-        PRAGMA user_version = 6";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 6;
-    }
-
-    if (dbVersion < 7) {
-        // Version 7: enable full-text search
-        // Note: Apple's SQLite build does not support the icu or unicode61 tokenizers :(
-        // OPT: Could add compress/decompress functions to make stored content smaller
-        NSString* sql = @"CREATE VIRTUAL TABLE fulltext USING fts4(content, tokenize=unicodesn); \
-                          ALTER TABLE maps ADD COLUMN fulltext_id INTEGER; \
-                          CREATE INDEX IF NOT EXISTS maps_by_fulltext ON maps(fulltext_id); \
-                          CREATE TRIGGER del_fulltext DELETE ON maps WHEN old.fulltext_id not null \
-                                BEGIN DELETE FROM fulltext WHERE rowid=old.fulltext_id| END;\
-                          PRAGMA user_version = 7";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 7;
-    }
-
-    // (Version 8 was an older version of the geo index)
-
-    if (dbVersion < 9) {
-        // Version 9: Add geo-query index
-        NSString* sql = @"CREATE VIRTUAL TABLE bboxes USING rtree(rowid, x0, x1, y0, y1); \
-                        ALTER TABLE maps ADD COLUMN bbox_id INTEGER; \
-                        ALTER TABLE maps ADD COLUMN geokey BLOB; \
-                        CREATE TRIGGER del_bbox DELETE ON maps WHEN old.bbox_id not null \
-                        BEGIN DELETE FROM bboxes WHERE rowid=old.bbox_id| END;\
-                        PRAGMA user_version = 9";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 9;
-    }
-
-    if (dbVersion < 10) {
-        // Version 10: Add rev flag for whether it has an attachment
-        NSString* sql = @"ALTER TABLE revs ADD COLUMN no_attachments BOOLEAN; \
-        PRAGMA user_version = 10";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 10;
-    }
-
-    // (Version 11 used to create the index revs_cur_deleted, which is obsoleted in version 16)
-
-    if (dbVersion < 12) {
-        // Version 12: Because of a bug fix that changes JSON collation, invalidate view indexes
-        NSString* sql = @"DELETE FROM maps; UPDATE views SET lastsequence=0; \
-                          PRAGMA user_version = 12";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 12;
-    }
-    
-    if (dbVersion < 13) {
-        // Version 13: Add rows to track number of rows in the views
-        NSString* sql = @"ALTER TABLE views ADD COLUMN total_docs INTEGER DEFAULT -1; \
-                          PRAGMA user_version = 13";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 13;
-    }
-    
-    if (dbVersion < 14) {
-        // Version 14: Add index for getting a document with doc and rev id
-        NSString* sql = @"CREATE INDEX IF NOT EXISTS revs_by_docid_revid ON revs(doc_id, revid desc, current, deleted); \
-        PRAGMA user_version = 14";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 14;
-    }
-
-    if (dbVersion < 15) {
-        // Version 15: Add sequence index on maps and attachments for revs(sequence) on DELETE CASCADE
-        NSString* sql = @"CREATE INDEX maps_sequence ON maps(sequence); \
-                          CREATE INDEX attachments_sequence ON attachments(sequence); \
-                          PRAGMA user_version = 15";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 15;
-    }
-
-    if (dbVersion < 16) {
-        // Version 16: Fix the very suboptimal index revs_cur_deleted.
-        // The new revs_current is an optimal index for finding the winning revision of a doc.
-        NSString* sql = @"DROP INDEX IF EXISTS revs_current; \
-                          DROP INDEX IF EXISTS revs_cur_deleted; \
-                          CREATE INDEX revs_current ON revs(doc_id, current desc, deleted, revid desc);\
-                          PRAGMA user_version = 16";
-        if (![self initialize: sql error: outError])
-            return NO;
-        dbVersion = 16;
+        dbVersion = 17;
     }
 
     if (isNew && ![self initialize: @"END TRANSACTION" error: outError])
