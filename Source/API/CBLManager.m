@@ -89,6 +89,7 @@ static NSString* CBLFullVersionInfo( void ) {
 
 @synthesize dispatchQueue=_dispatchQueue, directory = _dir;
 @synthesize customHTTPHeaders = _customHTTPHeaders;
+@synthesize storageType=_storageType;
 
 
 // http://wiki.apache.org/couchdb/HTTP_database_API#Naming_and_Addressing
@@ -143,11 +144,9 @@ static CBLManager* sInstance;
     self = [self initWithDirectory: [[self class] defaultDirectory]
                            options: NULL
                              error: &error];
-    if (!self)
-        Warn(@"Failed to create CBLManager: %@", error);
-    
-    _customHTTPHeaders = [NSMutableDictionary dictionary];
-    
+    if (self) {
+        _customHTTPHeaders = [NSMutableDictionary dictionary];
+    }
     return self;
 }
 
@@ -193,6 +192,9 @@ static CBLManager* sInstance;
         _strongShared = _shared;
         _databases = [[NSMutableDictionary alloc] init];
         _replications = [[NSMutableArray alloc] init];
+        _storageType = [[NSUserDefaults standardUserDefaults] stringForKey: @"CBLStorageType"];
+        if (!_storageType)
+            _storageType = @"SQLite";
         LogTo(CBLDatabase, @"Created %@", self);
     }
     return self;
@@ -226,9 +228,10 @@ static CBLManager* sInstance;
     CBLManager *managerCopy = [[[self class] alloc] initWithDirectory: self.directory
                                                               options: &_options
                                                                shared: _shared];
-    
-    managerCopy.customHTTPHeaders = [self.customHTTPHeaders copy];
-    
+    if (managerCopy) {
+        managerCopy.customHTTPHeaders = [self.customHTTPHeaders copy];
+        managerCopy.storageType = _storageType;
+    }
     return managerCopy;
 }
 
@@ -471,14 +474,6 @@ static CBLManager* sInstance;
             [db createLocalCheckpointDocument: outError] &&
             [db replaceUUIDs: outError];
 }
-
-
-@end
-
-
-
-
-@implementation CBLManager (Internal)
 
 
 - (NSString*) nameOfDatabaseAtPath: (NSString*)path {

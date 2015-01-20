@@ -150,12 +150,18 @@ static BOOL sAutoCompact = YES;
                                                          error: outError])
         return NO;
 
-    // Instantiate storage. Default to ForestDB unless a SQLite database exists:
-    Class primaryStorage = [CBL_SQLiteStorage class];
+    // Instantiate storage:
+    NSString* storageType = _manager.storageType ?: @"SQLite";
+    Class primaryStorage = NSClassFromString($sprintf(@"CBL_%@Storage", storageType));
+    Assert([primaryStorage conformsToProtocol: @protocol(CBL_Storage)],
+            @"Invalid CBLManager.storageType value '%@'", _manager.storageType);
     Class secondaryStorage = [CBL_ForestDBStorage class];
+    if (primaryStorage == secondaryStorage)
+        secondaryStorage = [CBL_SQLiteStorage class];
     id<CBL_Storage> storage = [[secondaryStorage alloc] init];
     if (![storage databaseExistsIn: _dir])
         storage = [[primaryStorage alloc] init];
+    LogTo(CBLDatabase, @"Using %@ for db at %@", [storage class], _dir);
 
     _storage = storage;
     _storage.delegate = self;
