@@ -479,7 +479,7 @@
 
 
 - (NSDictionary*) changeDictForRev: (CBL_Revision*)rev {
-    return $dict({@"seq", @([_db.storage getRevisionSequence: rev])},
+    return $dict({@"seq", @([_db getRevisionSequence: rev])},
                  {@"id",  rev.docID},
                  {@"changes", $marray($dict({@"rev", rev.revID}))},
                  {@"deleted", rev.deleted ? $true : nil},
@@ -489,7 +489,7 @@
 - (NSDictionary*) responseBodyForChanges: (NSArray*)changes since: (UInt64)since {
     NSArray* results = [changes my_map: ^(id rev) {return [self changeDictForRev: rev];}];
     if (changes.count > 0)
-        since = [_db.storage getRevisionSequence: changes.lastObject];
+        since = [_db getRevisionSequence: changes.lastObject];
     return $dict({@"results", results}, {@"last_seq", @(since)});
 }
 
@@ -555,7 +555,7 @@
                 CBL_MutableRevision* mRev = winningRev.mutableCopy;
                 if (_changesIncludeDocs)
                     [_db loadRevisionBody: mRev options: 0];
-                if ([_db.storage getRevisionSequence: rev] > 0)
+                if ([_db getRevisionSequence: rev] > 0)
                     mRev.sequence = rev.sequence;
                 rev = mRev;
             }

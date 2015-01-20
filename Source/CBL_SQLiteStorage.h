@@ -25,4 +25,9 @@
                                     sequence: (SequenceNumber)sequence
                                      options: (CBLContentOptions)options;
 
+/** Loads revision given its sequence. Assumes the given docID is valid. */
+- (CBL_MutableRevision*) getDocumentWithID: (NSString*)docID
+                                  sequence: (SequenceNumber)sequence
+                                    status: (CBLStatus*)outStatus;
+
 @end

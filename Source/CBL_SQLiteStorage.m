@@ -39,12 +39,13 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 @implementation CBL_SQLiteStorage
 {
+    NSString* _directory;
     __weak CBLManager* _manager;
     BOOL _readOnly;
     NSCache* _docIDs;
 }
 
-@synthesize delegate=_delegate, directory=_directory, autoCompact=_autoCompact,
+@synthesize delegate=_delegate, autoCompact=_autoCompact,
             maxRevTreeDepth=_maxRevTreeDepth, fmdb=_fmdb;
 
 

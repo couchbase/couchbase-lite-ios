@@ -7,113 +7,69 @@
 //
 
 #import "CBL_Revision.h"
-#import "CBLStatus.h"
-#import "CBLQuery.h"
+#import "CBL_StorageTypes.h"
 @class CBLDatabaseChange, CBLManager;
 @protocol CBL_ViewStorage;
-
-
-/** Options for what metadata to include in document bodies */
-typedef unsigned CBLContentOptions;
-enum {
-    kCBLIncludeAttachments = 1,              // adds inline bodies of attachments
-    kCBLIncludeConflicts = 2,                // adds '_conflicts' property (if relevant)
-    kCBLIncludeRevs = 4,                     // adds '_revisions' property
-    kCBLIncludeRevsInfo = 8,                 // adds '_revs_info' property
-    kCBLIncludeLocalSeq = 16,                // adds '_local_seq' property
-    kCBLLeaveAttachmentsEncoded = 32,        // i.e. don't decode
-    kCBLBigAttachmentsFollow = 64,           // i.e. add 'follows' key instead of data for big ones
-    kCBLNoBody = 128,                        // omit regular doc body properties
-    kCBLNoAttachments = 256                  // Omit the _attachments property
-};
-
-
-typedef BOOL (^CBLQueryRowFilter)(CBLQueryRow*);
-
-
-/** Standard query options for views. */
-@interface CBLQueryOptions : NSObject
-{
-    @public
-    const struct CBLGeoRect* bbox;
-    unsigned prefixMatchLevel;
-    unsigned skip;
-    unsigned limit;
-    unsigned groupLevel;
-    CBLContentOptions content;
-    BOOL descending;
-    BOOL includeDocs;
-    BOOL updateSeq;
-    BOOL localSeq;
-    BOOL inclusiveStart;
-    BOOL inclusiveEnd;
-    BOOL reduceSpecified;
-    BOOL reduce;                   // Ignore if !reduceSpecified
-    BOOL group;
-    BOOL fullTextSnippets;
-    BOOL fullTextRanking;
-    CBLIndexUpdateMode indexUpdateMode;
-    CBLAllDocsMode allDocsMode;
-}
-
-@property (copy, nonatomic) id startKey;
-@property (copy, nonatomic) id endKey;
-@property (copy, nonatomic) NSString* startKeyDocID;
-@property (copy, nonatomic) NSString* endKeyDocID;
-@property (copy, nonatomic) NSArray* keys;
-@property (copy, nonatomic) CBLQueryRowFilter filter;
-@property (copy, nonatomic) NSString* fullTextQuery;
-
-@end
-
-#define kCBLQueryOptionsDefaultLimit UINT_MAX
-
-
-/** Options for _changes feed (-changesSinceSequence:). */
-typedef struct CBLChangesOptions {
-    unsigned limit;
-    CBLContentOptions contentOptions;
-    BOOL includeDocs;
-    BOOL includeConflicts;
-    BOOL sortBySequence;
-} CBLChangesOptions;
-
-extern const CBLChangesOptions kDefaultCBLChangesOptions;
-
-
-@class CBLQueryRow;
-typedef CBLQueryRow* (^CBLQueryIteratorBlock)(void);
-typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
-                                               CBL_Revision* prev,
-                                               NSString* parentRevID);
-
-
 @protocol CBL_StorageDelegate;
 
 
-/** Abstraction of database storage. */
+/** Abstraction of database storage. Every CBLDatabase has an instance of this,
+    and acts as that instance's delegate. */
 @protocol CBL_Storage <NSObject>
 
-/** Preflight to see if a database file exists in this directory. Called before -open! */
+// INITIALIZATION AND CONFIGURATION:
+
+/** Preflight to see if a database file exists in this directory. Called _before_ -open! */
 - (BOOL) databaseExistsIn: (NSString*)directory;
 
-/** Opens storage. Files will be created in the directory, which must already exist. */
+/** Opens storage. Files will be created in the directory, which must already exist.
+    @param directory  The existing directory to put data files into. The implementation may
+        create as many files as it wants here. There will be a subdirectory called "attachments"
+        which contains attachments; don't mess with that.
+    @param readOnly  If this is YES, the database is opened read-only and any attempt to modify
+        it must return an error.
+    @param manager  The owning CBLManager; this is provided so the storage can examine its
+        properties.
+    @param error  On failure, store an NSError here if it's non-NULL.
+    @return  YES on success, NO on failure. */
 - (BOOL) openInDirectory: (NSString*)directory
                 readOnly: (BOOL)readOnly
                  manager: (CBLManager*)manager
                    error: (NSError**)error;
+
+/** Closes storage before it's deallocated. */
 - (void) close;
 
+/** The delegate object, which in practice is the CBLDatabase. */
 @property id<CBL_StorageDelegate> delegate;
 
-@property (nonatomic, readonly) NSString* directory;
+/** The maximum depth a document's revision tree should grow to; beyond that, it should be pruned.
+    This will be set soon after the -openInDirectory call. */
+@property unsigned maxRevTreeDepth;
+
+/** Whether the database storage should automatically (periodically) be compacted.
+    This will be set soon after the -openInDirectory call. */
+@property BOOL autoCompact;
+
+
+// DATABASE ATTRIBUTES & OPERATIONS:
+
+/** Stores an arbitrary string under an arbitrary key, persistently. */
+- (CBLStatus) setInfo: (NSString*)info forKey: (NSString*)key;
+
+/** Returns the value assigned to the given key by -setInfo:forKey:. */
+- (NSString*) infoForKey: (NSString*)key;
+
+/** The number of (undeleted) documents in the database. */
 @property (nonatomic, readonly) NSUInteger documentCount;
+
+/** The last sequence number allocated to a revision. */
 @property (nonatomic, readonly) SequenceNumber lastSequence;
 
+/** Is a transaction active? */
 @property (nonatomic, readonly) BOOL inTransaction;
 
-@property unsigned maxRevTreeDepth;
-@property BOOL autoCompact;
+/** Explicitly compacts document storage. */
 - (BOOL) compact: (NSError**)outError;
 
 /** Executes the block within a database transaction.
@@ -123,36 +79,48 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
     Any exception raised by the block will be caught and treated as kCBLStatusException. */
 - (CBLStatus) inTransaction: (CBLStatus(^)())block;
 
+
 // DOCUMENTS:
 
+/** Retrieves a document revision by ID.
+    @param docID  The document ID
+    @param revID  The revision ID; may be nil, meaning "the current revision".
+    @param options  Specifies which data to include in the JSON.
+    @param outStatus  If returning nil, store a CBLStatus error value here.
+    @return  The revision, or nil if not found. */
 - (CBL_MutableRevision*) getDocumentWithID: (NSString*)docID
                                 revisionID: (NSString*)revID
                                    options: (CBLContentOptions)options
                                     status: (CBLStatus*)outStatus;
 
-// Loads revision given its sequence. Assumes the given docID is valid.
-- (CBL_MutableRevision*) getDocumentWithID: (NSString*)docID
-                                  sequence: (SequenceNumber)sequence
-                                    status: (CBLStatus*)outStatus;
-
+/** Loads the body of a revision.
+    On entry, rev.docID and rev.revID will be valid.
+    On success, rev.body will be valid. */
 - (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev
                        options: (CBLContentOptions)options;
 
+/** Looks up the sequence number of a revision.
+    Will only be called on revisions whose .sequence property is not already set.
+    Does not need to set the revision's .sequence property; the caller will take care of that. */
 - (SequenceNumber) getRevisionSequence: (CBL_Revision*)rev;
 
+/** Retrieves the parent revision of a revision, or returns nil if there is no parent. */
 - (CBL_Revision*) getParentRevision: (CBL_Revision*)rev;
 
-/** Returns an array of CBL_Revisions in reverse chronological order,
-    starting with the given revision. */
+/** Returns the given revision's list of direct ancestors (as CBL_Revision objects) in _reverse_
+    chronological order, starting with the revision itself. */
 - (NSArray*) getRevisionHistory: (CBL_Revision*)rev;
 
 /** Returns the revision history as a _revisions dictionary, as returned by the REST API's ?revs=true option. If 'ancestorRevIDs' is present, the revision history will only go back as far as any of the revision ID strings in that array. */
 - (NSDictionary*) getRevisionHistoryDict: (CBL_Revision*)rev
                        startingFromAnyOf: (NSArray*)ancestorRevIDs;
 
-/** Returns all the known revisions (or all current/conflicting revisions) of a document. */
+/** Returns all the known revisions (or all current/conflicting revisions) of a document.
+    @param docID  The document ID
+    @param onlyCurrent  If YES, only leaf revisions (whether or not deleted) should be returned.
+    @return  An array of all available revisions of the document. */
 - (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
-                                    onlyCurrent: (BOOL)onlyCurrent;
+                                      onlyCurrent: (BOOL)onlyCurrent;
 
 /** Returns IDs of local revisions of the same document, that have a lower generation number.
     Does not return revisions whose bodies have been compacted away, or deletion markers.
@@ -161,71 +129,147 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
                                       limit: (unsigned)limit
                             onlyAttachments: (BOOL)onlyAttachments;
 
-/** Returns the most recent member of revIDs that appears in rev's ancestry. */
+/** Returns the most recent member of revIDs that appears in rev's ancestry.
+    In other words: Look at the revID properties of rev, its parent, grandparent, etc.
+    As soon as you find a revID that's in the revIDs array, stop and return that revID.
+    If no match is found, return nil. */
 - (NSString*) findCommonAncestorOf: (CBL_Revision*)rev withRevIDs: (NSArray*)revIDs;
 
+/** Looks for each given revision in the local database, and removes each one found from the list.
+    On return, therefore, `revs` will contain only the revisions that don't exist locally. */
+- (BOOL) findMissingRevisions: (CBL_RevisionList*)revs
+                       status: (CBLStatus*)outStatus;
+
+/** Returns the keys (unique IDs) of all attachments referred to by existing un-compacted
+    Each revision key is an NSData object containing a CBLBlobKey (raw SHA-1 digest) derived from
+    the "digest" property of the attachment's metadata. */
+- (NSSet*) findAllAttachmentKeys: (NSError**)outError;
+
+/** Iterates over all documents in the database, according to the given query options. */
+- (CBLQueryIteratorBlock) getAllDocs: (CBLQueryOptions*)options
+                              status: (CBLStatus*)outStatus;
+
+/** Returns all database changes with sequences greater than `lastSequence`.
+    @param  lastSequence  The sequence number to start _after_
+    @param  options  Options for ordering, document content, etc.
+    @param  filter  If non-nil, will be called on every revision, and those for which it returns NO
+                    will be skipped.
+    @param  outStatus  On nil return, will be set to an error status.
+    @return  The list of CBL_Revisions. */
 - (CBL_RevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
                                    options: (const CBLChangesOptions*)options
                                     filter: (CBL_RevisionFilter)filter
                                     status: (CBLStatus*)outStatus;
 
-- (BOOL) findMissingRevisions: (CBL_RevisionList*)revs
-                       status: (CBLStatus*)outStatus;
+// INSERTION / DELETION:
 
-/** Returns all attachment keys, in the form of an NSData containing a CBLBlobKey (SHA-1 digest). */
-- (NSSet*) findAllAttachmentKeys: (NSError**)outError;
-
-/** Purges specific revisions, which deletes them completely from the local database _without_ adding a "tombstone" revision. It's as though they were never there.
-    @param docsToRevs  A dictionary mapping document IDs to arrays of revision IDs.
-    @param outResult  On success will point to an NSDictionary with the same form as docsToRev, containing the doc/revision IDs that were actually removed. */
-- (CBLStatus) purgeRevisions: (NSDictionary*)docsToRevs
-                      result: (NSDictionary**)outResult;
-
-- (CBLQueryIteratorBlock) getAllDocs: (CBLQueryOptions*)options
-                              status: (CBLStatus*)outStatus;
-
-// LOCAL DOCS / DB INFO:
-
-- (CBL_MutableRevision*) getLocalDocumentWithID: (NSString*)docID
-                                     revisionID: (NSString*)revID;
-- (CBL_Revision*) putLocalRevision: (CBL_Revision*)revision
-                    prevRevisionID: (NSString*)prevRevID
-                          obeyMVCC: (BOOL)obeyMVCC
-                            status: (CBLStatus*)outStatus;
-
-- (NSString*) infoForKey: (NSString*)key;
-- (CBLStatus) setInfo: (NSString*)info forKey: (NSString*)key;
-
-// INSERTION:
-
-- (CBL_Revision*) addDocID: (NSString*)inDocID
-                 prevRevID: (NSString*)inPrevRevID
+/** Creates a new revision of a document.
+    On success, before returning the new CBL_Revision, the implementation will also call the
+    delegate's -databaseStorageChanged: method to give it more details about the change.
+    @param docID  The document ID, or nil if an ID should be generated at random.
+    @param prevRevID  The parent revision ID, or nil if creating a new document.
+    @param properties  The new revision's properties. (Metadata other than "_attachments" ignored.)
+    @param deleting  YES if this revision is a deletion.
+    @param allowConflict  YES if this operation is allowed to create a conflict; otherwise a 409
+                status will be returned if the parent revision is not a leaf.
+    @param validationBlock  If non-nil, this block will be called before the revision is added.
+                It's given the parent revision, with its properties if available, and can reject
+                the operation by returning an error status.
+    @param status  On return a status will be stored here. Note that on success, the
+                status should be 201 for a created revision but 200 for a deletion.
+    @return  The new revision, with its revID and sequence filled in, or nil on error. */
+- (CBL_Revision*) addDocID: (NSString*)docID
+                 prevRevID: (NSString*)prevRevID
                 properties: (NSMutableDictionary*)properties
                   deleting: (BOOL)deleting
              allowConflict: (BOOL)allowConflict
            validationBlock: (CBL_StorageValidationBlock)validationBlock
-                    status: (CBLStatus*)outStatus;
+                    status: (CBLStatus*)status;
 
+/** Inserts an already-existing revision (with its revID), plus its ancestry, into a document.
+    This is called by the pull replicator to add the revisions received from the server.
+    On success, the implementation will also call the
+    delegate's -databaseStorageChanged: method to give it more details about the change.
+    @param inRev  The revision to insert. Its revID will be non-nil.
+    @param history  The revIDs of the revision and its ancestors, in reverse chronological order.
+                    The first item will be equal to inRev.revID.
+    @param validationBlock  If non-nil, this block will be called before the revision is added.
+                It's given the parent revision, with its properties if available, and can reject
+                the operation by returning an error status.
+    @param source  The URL of the remote database this was pulled from, or nil if it's local.
+                (This will be used to create the CBLDatabaseChange object sent to the delegate.)
+    @return  Status code; 200 on success, otherwise an error. */
 - (CBLStatus) forceInsert: (CBL_Revision*)inRev
           revisionHistory: (NSArray*)history
           validationBlock: (CBL_StorageValidationBlock)validationBlock
                    source: (NSURL*)source;
 
+/** Purges specific revisions, which deletes them completely from the local database _without_ adding a "tombstone" revision. It's as though they were never there.
+    @param docsToRevs  A dictionary mapping document IDs to arrays of revision IDs.
+                        The magic revision ID "*" means "all revisions", indicating that the
+                        document should be removed entirely from the database.
+    @param outResult  On success will point to an NSDictionary with the same form as docsToRev, containing the doc/revision IDs that were actually removed. */
+- (CBLStatus) purgeRevisions: (NSDictionary*)docsToRevs
+                      result: (NSDictionary**)outResult;
+
+
 // VIEWS:
 
+/** Instantiates storage for a view.
+    @param name  The name of the view
+    @param create  If YES, the view should be created; otherwise it must already exist
+    @return  Storage for the view, or nil if create=NO and it doesn't exist. */
 - (id<CBL_ViewStorage>) viewStorageNamed: (NSString*)name
                                   create: (BOOL)create;
 
+/** Returns the names of all existing views in the database. */
 @property (readonly) NSArray* allViewNames;
+
+
+// LOCAL DOCS:
+
+/** Returns the contents of a local document. Note that local documents do not have revision
+    histories, so only the current revision exists.
+    @param docID  The document ID, which will begin with "_local/"
+    @param revID  The revision ID, or nil to return the current revision.
+    @return  A revision containing the body of the document, or nil if not found. */
+- (CBL_MutableRevision*) getLocalDocumentWithID: (NSString*)docID
+                                     revisionID: (NSString*)revID;
+
+/** Creates / updates / deletes a local document.
+    @param revision  The new revision to save. Its docID must be set but the revID is ignored.
+                    If its .deleted property is YES, it's a deletion.
+    @param prevRevID  The revision ID to replace
+    @param obeyMVCC  If YES, the prevRevID must match the document's current revID (or nil if the
+                    document doesn't exist) or a 409 error is returned. If NO, the prevRevID is
+                    ignored and the operation always succeeds.
+    @param outStatus  On return the status is always stored here (201 on creation, 200 on deletion,
+                    else an error.)
+    @return  The new revision, with revID filled in, or nil on error. */
+- (CBL_Revision*) putLocalRevision: (CBL_Revision*)revision
+                    prevRevisionID: (NSString*)prevRevID
+                          obeyMVCC: (BOOL)obeyMVCC
+                            status: (CBLStatus*)outStatus;
 
 @end
 
 
 
 
+/** Delegate of a CBL_Storage instance. CBLDatabase implements this. */
 @protocol CBL_StorageDelegate <NSObject>
+
+/** Called whenever the outermost transaction completes.
+    @param committed  YES on commit, NO if the transaction was aborted. */
 - (void) storageExitedTransaction: (BOOL)committed;
+
+/** Called whenever a revision is added to the database (but not for local docs or for purges.) */
 - (void) databaseStorageChanged: (CBLDatabaseChange*)change;
+
+/** Generates a revision ID for a new revision.
+    @param json  The canonical JSON of the revision (with metadata properties removed.)
+    @param deleted  YES if this revision is a deletion
+    @param prevID  The parent's revision ID, or nil if this is a new document. */
 - (NSString*) generateRevIDForJSON: (NSData*)json
                            deleted: (BOOL)deleted
                          prevRevID: (NSString*)prevID;

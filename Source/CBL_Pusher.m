@@ -182,7 +182,7 @@
 
 // Adds a local revision to the "pending" set that are awaiting upload:
 - (void) addPending: (CBL_Revision*)rev {
-    SequenceNumber seq = [_db.storage getRevisionSequence: rev];
+    SequenceNumber seq = [_db getRevisionSequence: rev];
     Assert(seq > 0);
     [_pendingSequences addIndex: (NSUInteger)seq];
     _maxPendingSequence = MAX(_maxPendingSequence, seq);
@@ -221,7 +221,7 @@
             CBL_MutableRevision* nuRev = [rev mutableCopy];
             nuRev.body = nil; // save memory
             LogTo(SyncVerbose, @"%@: Queuing #%lld %@",
-                  self, [db.storage getRevisionSequence: nuRev], nuRev);
+                  self, [db getRevisionSequence: nuRev], nuRev);
             [self addToInbox: nuRev];
         }
     }

@@ -279,15 +279,11 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
 
 - (SequenceNumber) getRevisionSequence: (CBL_Revision*)rev {
-    __block SequenceNumber sequence = rev.sequenceIfKnown;
-    if (sequence > 0)
-        return sequence;
+    __block SequenceNumber sequence = 0;
     [self _withVersionedDoc: rev.docID do: ^(VersionedDocument& doc) {
         const Revision* revNode = doc.get(rev.revID);
         if (revNode)
             sequence = revNode->sequence;
-        if (sequence > 0)
-            rev.sequence = sequence;
         return kCBLStatusOK;
     }];
     return sequence;

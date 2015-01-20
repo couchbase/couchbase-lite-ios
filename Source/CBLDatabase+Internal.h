@@ -112,7 +112,7 @@ extern NSArray* CBL_RunloopModes;
 - (CBL_Revision*) revisionByLoadingBody: (CBL_Revision*)rev
                                 options: (CBLContentOptions)options
                                  status: (CBLStatus*)outStatus;
-
+- (SequenceNumber) getRevisionSequence: (CBL_Revision*)rev;
 
 // VIEWS & QUERIES:
 

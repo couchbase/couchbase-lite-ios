@@ -297,7 +297,7 @@ static BOOL sAutoCompact = YES;
             for (CBLDatabaseChange* change in changes) {
                 if (seqs.length > 0)
                     [seqs appendString: @", "];
-                SequenceNumber seq = [_storage getRevisionSequence: change.addedRevision];
+                SequenceNumber seq = [self getRevisionSequence: change.addedRevision];
                 if (change.echoed)
                     [seqs appendFormat: @"(%lld)", seq];
                 else
@@ -414,6 +414,17 @@ static BOOL sAutoCompact = YES;
     if (CBLStatusIsError(status))
         nuRev = nil;
     return nuRev;
+}
+
+
+- (SequenceNumber) getRevisionSequence: (CBL_Revision*)rev {
+    SequenceNumber sequence = rev.sequenceIfKnown;
+    if (sequence <= 0) {
+        sequence = [_storage getRevisionSequence: rev];
+        if (sequence > 0)
+            rev.sequence = sequence;
+    }
+    return sequence;
 }
 
 
