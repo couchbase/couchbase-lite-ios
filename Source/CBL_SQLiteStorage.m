@@ -1130,15 +1130,14 @@ static NSString* joinQuotedStrings(NSArray* strings) {
 {
     Assert(docNumericID > 0);
     CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, deleted FROM revs"
-                                           " WHERE doc_id=? and current=1"
-                                           " ORDER BY deleted asc, revid desc LIMIT 2",
-                                          @(docNumericID)];
-    NSString* revID = nil;
+                                               " WHERE doc_id=? and current=1"
+                                               " ORDER BY deleted asc, revid desc LIMIT ?",
+                          @(docNumericID), @(outIsConflict ? 2 : 1)];
     if (!r) {
-        *outStatus = self.lastDbStatus;
+        *outStatus = self.lastDbError;
         return nil;
     }
-    *outStatus = kCBLStatusOK;
+    NSString* revID = nil;
     if ([r next]) {
         revID = [r stringForColumnIndex: 0];
         *outIsDeleted = [r boolForColumnIndex: 1];
@@ -1151,6 +1150,7 @@ static NSString* joinQuotedStrings(NSArray* strings) {
             *outIsConflict = NO;
     }
     [r close];
+    *outStatus = kCBLStatusOK;
     return revID;
 }
 
@@ -1500,6 +1500,8 @@ static NSString* joinQuotedStrings(NSArray* strings) {
     CBLStatus status = [self inTransaction: ^CBLStatus {
         // First look up the document's row-id and all locally-known revisions of it:
         CBL_RevisionList* localRevs = nil;
+        NSString* oldWinningRevID = nil;
+        BOOL oldWinnerWasDeletion = NO;
         SInt64 docNumericID = [self getDocNumericID: docID];
         if (docNumericID > 0) {
             localRevs = [self getAllRevisionsOfDocumentID: docID
@@ -1507,6 +1509,15 @@ static NSString* joinQuotedStrings(NSArray* strings) {
                                               onlyCurrent: NO];
             if (!localRevs)
                 return self.lastDbError;
+
+            // Look up which rev is the winner, before this insertion
+            CBLStatus tempStatus;
+            oldWinningRevID = [self winningRevIDOfDocNumericID: docNumericID
+                                                     isDeleted: &oldWinnerWasDeletion
+                                                    isConflict: &inConflict
+                                                        status: &tempStatus];
+            if (CBLStatusIsError(tempStatus))
+                return tempStatus;
         } else {
             docNumericID = [self insertDocumentID: docID];
             if (docNumericID <= 0)
@@ -1527,17 +1538,6 @@ static NSString* joinQuotedStrings(NSArray* strings) {
                 return status;
         }
         
-        // Look up which rev is the winner, before this insertion
-        //OPT: This rev ID could be cached in the 'docs' row
-        BOOL oldWinnerWasDeletion;
-        CBLStatus tempStatus;
-        NSString* oldWinningRevID = [self winningRevIDOfDocNumericID: docNumericID
-                                                           isDeleted: &oldWinnerWasDeletion
-                                                          isConflict: &inConflict
-                                                              status: &tempStatus];
-        if (CBLStatusIsError(tempStatus))
-            return tempStatus;
-
         // Walk through the remote history in chronological order, matching each revision ID to
         // a local revision. When the list diverges, start creating blank local revisions to fill
         // in the local history:
@@ -1596,7 +1596,8 @@ static NSString* joinQuotedStrings(NSArray* strings) {
 
         // Figure out what the new winning rev ID is:
         winningRev = [self winnerWithDocID: docNumericID
-                                 oldWinner: oldWinningRevID oldDeleted: oldWinnerWasDeletion
+                                 oldWinner: oldWinningRevID
+                                oldDeleted: oldWinnerWasDeletion
                                     newRev: rev];
 
         return kCBLStatusCreated;
