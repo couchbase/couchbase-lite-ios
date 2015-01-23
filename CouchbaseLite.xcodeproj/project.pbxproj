@@ -551,6 +551,8 @@
 		27E66B511A730CA80091DA3F /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66B501A730CA80091DA3F /* libsqlite3.dylib */; };
 		27E66B521A730DBF0091DA3F /* libCBLForestDBStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */; };
 		27E66B531A730DC90091DA3F /* libCBLSQLiteStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66ACF1A7305B10091DA3F /* libCBLSQLiteStorage.a */; };
+		27E66B561A7310920091DA3F /* CBLRouter+Changes.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E66B551A7310920091DA3F /* CBLRouter+Changes.m */; };
+		27E66B571A7310920091DA3F /* CBLRouter+Changes.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E66B551A7310920091DA3F /* CBLRouter+Changes.m */; };
 		27E7FAEE155D7F110025F93A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F714ACF2500065964D /* CoreServices.framework */; };
 		27E7FAF0155D8EBA0025F93A /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */; };
 		27E7FAF1155D8ECE0025F93A /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */; };
@@ -1361,6 +1363,7 @@
 		27E66ACF1A7305B10091DA3F /* libCBLSQLiteStorage.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCBLSQLiteStorage.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCBLForestDBStorage.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		27E66B501A730CA80091DA3F /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk/usr/lib/libsqlite3.dylib; sourceTree = DEVELOPER_DIR; };
+		27E66B551A7310920091DA3F /* CBLRouter+Changes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLRouter+Changes.m"; sourceTree = "<group>"; };
 		27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/CFNetwork.framework; sourceTree = DEVELOPER_DIR; };
 		27E7FB02155DBDA20025F93A /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 		27E940651954BB9E00A9732E /* libc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++.dylib"; path = "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk/usr/lib/libc++.dylib"; sourceTree = DEVELOPER_DIR; };
@@ -2094,6 +2097,7 @@
 				27C706431486BE7100F0F099 /* CBL_Router.h */,
 				27C706441486BE7100F0F099 /* CBL_Router.m */,
 				2700BC5B14B64AA600B5B297 /* CBL_Router+Handlers.m */,
+				27E66B551A7310920091DA3F /* CBLRouter+Changes.m */,
 				27C706461487584300F0F099 /* CBL_URLProtocol.h */,
 				27C706471487584300F0F099 /* CBL_URLProtocol.m */,
 			);
@@ -3533,6 +3537,7 @@
 				275315E914ACF1130065964D /* HTTPMessage.m in Sources */,
 				275315E714ACF1130065964D /* HTTPAuthenticationRequest.m in Sources */,
 				275315E814ACF1130065964D /* HTTPConnection.m in Sources */,
+				27E66B561A7310920091DA3F /* CBLRouter+Changes.m in Sources */,
 				275315EC14ACF1130065964D /* HTTPDataResponse.m in Sources */,
 				2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */,
 				27DA435E159230AA00F9E7B5 /* CBL_Router.m in Sources */,
@@ -3763,6 +3768,7 @@
 				27DA435F159230AC00F9E7B5 /* CBL_Router.m in Sources */,
 				27DA4361159230B200F9E7B5 /* CBL_Router+Handlers.m in Sources */,
 				27E2E61715993CB4005B9234 /* CBL_URLProtocol.m in Sources */,
+				27E66B571A7310920091DA3F /* CBLRouter+Changes.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

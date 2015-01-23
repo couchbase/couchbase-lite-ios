@@ -54,7 +54,8 @@
         _local = YES;
         _processRanges = YES;
         if (0) { // assignments just to appease static analyzer so it knows these ivars are used
-            _longpoll = _changesIncludeDocs = _changesIncludeConflicts = NO;
+            _changesIncludeDocs = _changesIncludeConflicts = NO;
+            _changesMode = kNormalFeed;
             _changesFilter = NULL;
             _changesFilterParams = nil;
         }
@@ -252,6 +253,18 @@
     }
 
     return options;
+}
+
+
+- (void) parseChangesMode {
+    NSString* feed = [self query: @"feed"];
+    _changesMode = kNormalFeed;
+    if ([feed isEqualToString: @"longpoll"])
+        _changesMode = kLongPollFeed;
+    else if ([feed isEqualToString: @"continuous"])
+        _changesMode = kContinuousFeed;
+    else if ([feed isEqualToString: @"eventsource"])
+        _changesMode = kEventSourceFeed;
 }
 
 
@@ -608,6 +621,29 @@ static NSArray* splitPath( NSURL* url ) {
 }
 
 
+// Send a JSON object followed by a newline without closing the connection.
+// Used by the continuous mode of _changes and _active_tasks.
+- (void) sendContinuousLine: (NSDictionary*)changeDict {
+    NSMutableData* json = [[CBLJSON dataWithJSONObject: changeDict
+                                               options: 0 error: NULL] mutableCopy];
+    if (_changesMode == kEventSourceFeed) {
+        // https://developer.mozilla.org/en-US/docs/Server-sent_events/Using_server-sent_events#Event_stream_format
+        [json replaceBytesInRange: NSMakeRange(0, 0) withBytes: "data: " length: 5];
+        [json appendBytes: "\n\n" length: 2];
+    } else {
+        [json appendBytes: "\n" length: 1];
+    }
+    [self sendData: json];
+}
+
+
+// Send data without closing the connection.
+- (void) sendData: (NSData*)data {
+    if (_onDataAvailable)
+        _onDataAvailable(data, NO);
+}
+
+
 - (void) sendResponseBodyAndFinish: (BOOL)finished {
     if (_onDataAvailable && _response.body && !$equal(_request.HTTPMethod, @"HEAD")) {
         _onDataAvailable(_response.body.asJSON, finished);
@@ -685,22 +721,24 @@ static NSArray* splitPath( NSURL* url ) {
 
 #pragma mark - Heartbeat
 
-- (void) sendHeartbeatResponse {
+- (void) sendHeartbeatResponse: (NSTimer*)timer {
     if (_onDataAvailable) {
-        _onDataAvailable([@"\r\n" dataUsingEncoding:NSUTF8StringEncoding], NO);
+        _onDataAvailable(timer.userInfo, NO);
     }
 }
 
 
-- (void) startHeartbeat: (NSTimeInterval)interval {
+- (void) startHeartbeat: (NSString*)response interval: (NSTimeInterval)interval {
     if (interval <= 0)
         return;
+
+    NSData* responseData = [response dataUsingEncoding:NSUTF8StringEncoding];
     
     [_heartbeatTimer invalidate];
     _heartbeatTimer = [NSTimer scheduledTimerWithTimeInterval: interval
                                                        target: self
-                                                     selector: @selector(sendHeartbeatResponse)
-                                                     userInfo: nil
+                                                     selector: @selector(sendHeartbeatResponse:)
+                                                     userInfo: responseData
                                                       repeats: YES];
 }
 
