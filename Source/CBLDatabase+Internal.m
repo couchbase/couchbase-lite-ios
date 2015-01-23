@@ -41,6 +41,8 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 NSString* const CBL_PrivateRunloopMode = @"CouchbaseLitePrivate";
 NSArray* CBL_RunloopModes;
 
+const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
+
 static BOOL sAutoCompact = YES;
 
 
@@ -152,12 +154,17 @@ static BOOL sAutoCompact = YES;
 
     // Instantiate storage:
     NSString* storageType = _manager.storageType ?: @"SQLite";
-    Class primaryStorage = NSClassFromString($sprintf(@"CBL_%@Storage", storageType));
+    NSString* storageClassName = $sprintf(@"CBL_%@Storage", storageType);
+    Class primaryStorage = NSClassFromString(storageClassName);
+    Assert(primaryStorage, @"CBLManager.storageType is '%@' but no %@ class found",
+           _manager.storageType, storageClassName);
     Assert([primaryStorage conformsToProtocol: @protocol(CBL_Storage)],
-            @"Invalid CBLManager.storageType value '%@'", _manager.storageType);
-    Class secondaryStorage = [CBL_ForestDBStorage class];
+            @"CBLManager.storageType is '%@' but %@ is not a CBL_Storage implementation",
+            _manager.storageType, storageClassName);
+    Class secondaryStorage = NSClassFromString(@"CBL_ForestDBStorage");
     if (primaryStorage == secondaryStorage)
-        secondaryStorage = [CBL_SQLiteStorage class];
+        secondaryStorage = NSClassFromString(@"CBL_SQLiteStorage");
+    // Use primary unless dir already contains a db created by secondary:
     id<CBL_Storage> storage = [[secondaryStorage alloc] init];
     if (![storage databaseExistsIn: _dir])
         storage = [[primaryStorage alloc] init];

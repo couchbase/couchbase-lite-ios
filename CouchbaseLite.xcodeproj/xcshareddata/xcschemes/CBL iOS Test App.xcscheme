@@ -77,17 +77,21 @@
             argument = "-Log YES"
             isEnabled = "YES">
          </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-CBLStorageType ForestDB"
+            isEnabled = "NO">
+         </CommandLineArgument>
       </CommandLineArguments>
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "CBL_TEST_SERVER"
-            value = "http://jens.local:4984/"
-            isEnabled = "YES">
+            value = "http://localhost:4984/"
+            isEnabled = "NO">
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "CBL_SSL_TEST_SERVER"
-            value = "https://jens.local:4994/"
-            isEnabled = "YES">
+            value = "https://localhost:4994/"
+            isEnabled = "NO">
          </EnvironmentVariable>
       </EnvironmentVariables>
    </TestAction>

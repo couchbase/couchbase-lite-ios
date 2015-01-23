@@ -168,22 +168,16 @@
 		27513A1C1A672C870055DC40 /* CBLDatabase+Replication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA40A014AA8A6600E2A5FF /* CBLDatabase+Replication.m */; };
 		27513A231A673F320055DC40 /* CBL_SQLiteStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27513A211A673F320055DC40 /* CBL_SQLiteStorage.h */; };
 		27513A241A673F320055DC40 /* CBL_SQLiteStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A221A673F320055DC40 /* CBL_SQLiteStorage.m */; };
-		27513A251A673F320055DC40 /* CBL_SQLiteStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A221A673F320055DC40 /* CBL_SQLiteStorage.m */; };
 		27513A431A674C9B0055DC40 /* FMDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27513A341A674C9B0055DC40 /* FMDatabase.h */; };
 		27513A441A674C9B0055DC40 /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A351A674C9B0055DC40 /* FMDatabase.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27513A451A674C9B0055DC40 /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A351A674C9B0055DC40 /* FMDatabase.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27513A461A674C9B0055DC40 /* FMDatabaseAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 27513A361A674C9B0055DC40 /* FMDatabaseAdditions.h */; };
 		27513A471A674C9B0055DC40 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A371A674C9B0055DC40 /* FMDatabaseAdditions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27513A481A674C9B0055DC40 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A371A674C9B0055DC40 /* FMDatabaseAdditions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27513A4B1A674C9B0055DC40 /* FMResultSet.h in Headers */ = {isa = PBXBuildFile; fileRef = 27513A391A674C9B0055DC40 /* FMResultSet.h */; };
 		27513A4C1A674C9B0055DC40 /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A3A1A674C9B0055DC40 /* FMResultSet.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27513A4D1A674C9B0055DC40 /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A3A1A674C9B0055DC40 /* FMResultSet.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27513A561A6827DF0055DC40 /* CBLCollateJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 27513A541A6827DF0055DC40 /* CBLCollateJSON.h */; };
 		27513A571A6827DF0055DC40 /* CBLCollateJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A551A6827DF0055DC40 /* CBLCollateJSON.m */; };
-		27513A581A6827DF0055DC40 /* CBLCollateJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A551A6827DF0055DC40 /* CBLCollateJSON.m */; };
 		27513A601A697CC80055DC40 /* CBL_SQLiteViewStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27513A5E1A697CC80055DC40 /* CBL_SQLiteViewStorage.h */; };
 		27513A611A697CC80055DC40 /* CBL_SQLiteViewStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A5F1A697CC80055DC40 /* CBL_SQLiteViewStorage.m */; };
-		27513A621A697CC80055DC40 /* CBL_SQLiteViewStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A5F1A697CC80055DC40 /* CBL_SQLiteViewStorage.m */; };
 		2751D4E4151BAE7000F7FD57 /* CBLManager+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2751D4E2151BAE7000F7FD57 /* CBLManager+Internal.h */; };
 		2753157214ACEFC90065964D /* DDNumber.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155314ACEFC90065964D /* DDNumber.h */; };
 		2753157614ACEFC90065964D /* DDRange.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155514ACEFC90065964D /* DDRange.h */; };
@@ -363,7 +357,6 @@
 		278E4DD81562B40B00DDCEF9 /* MYURLUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 278E4DD61562B40B00DDCEF9 /* MYURLUtils.h */; };
 		278E4DD91562B40B00DDCEF9 /* MYURLUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 278E4DD71562B40B00DDCEF9 /* MYURLUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		278E4DDA1562B40B00DDCEF9 /* MYURLUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 278E4DD71562B40B00DDCEF9 /* MYURLUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27942C9E195B8319008C8DE9 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27942C9D195B8319008C8DE9 /* libsqlite3.dylib */; };
 		27942CA6195B8991008C8DE9 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27942C9D195B8319008C8DE9 /* libsqlite3.dylib */; };
 		279906E3149A65B8003D4338 /* CBLRemoteRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 279906E1149A65B7003D4338 /* CBLRemoteRequest.h */; };
 		279906E5149A65B8003D4338 /* CBLRemoteRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906E2149A65B8003D4338 /* CBLRemoteRequest.m */; };
@@ -396,7 +389,6 @@
 		27A720A2152B959100C0A0E8 /* CBL_Attachment.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7209F152B959100C0A0E8 /* CBL_Attachment.m */; };
 		27A9D67F1A661ED10074FDD2 /* CBL_ViewStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A9D67D1A661ED10074FDD2 /* CBL_ViewStorage.h */; };
 		27A9D6801A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A9D67E1A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm */; };
-		27A9D6811A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A9D67E1A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm */; };
 		27AA409D14AA86AE00E2A5FF /* CBLDatabase+Insertion.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA409A14AA86AD00E2A5FF /* CBLDatabase+Insertion.m */; };
 		27AA40A314AA8A6600E2A5FF /* CBLDatabase+Replication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA40A014AA8A6600E2A5FF /* CBLDatabase+Replication.m */; };
 		27AD1F8817C29CB00063108F /* libCouchbaseLiteListener.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DA023B6414BCA94C008184BB /* libCouchbaseLiteListener.a */; };
@@ -515,7 +507,6 @@
 		27DA43691592387400F9E7B5 /* CBLModelFactory.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA435515918C8D00F9E7B5 /* CBLModelFactory.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27DADE431A659FCC0075313A /* CBL_Storage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DADE411A659FCC0075313A /* CBL_Storage.h */; };
 		27DADE441A659FCC0075313A /* CBL_ForestDBStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DADE421A659FCC0075313A /* CBL_ForestDBStorage.mm */; };
-		27DADE451A659FCC0075313A /* CBL_ForestDBStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DADE421A659FCC0075313A /* CBL_ForestDBStorage.mm */; };
 		27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DB90D514DB249700FC7118 /* GTMNSData+zlib.h */; };
 		27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -546,6 +537,20 @@
 		27E34773199950A800076EAC /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E3476D19994F5A00076EAC /* Test_Assertions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27E4152F154F6E8500771FC5 /* CBLStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = 274F9807152E6E0C00247C46 /* CBLStatus.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		27E41530154F6E9C00771FC5 /* CBLStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = 274F9807152E6E0C00247C46 /* CBLStatus.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		27E66A741A7305B10091DA3F /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A351A674C9B0055DC40 /* FMDatabase.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27E66A8C1A7305B10091DA3F /* CBL_SQLiteViewStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A5F1A697CC80055DC40 /* CBL_SQLiteViewStorage.m */; };
+		27E66AA91A7305B10091DA3F /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A371A674C9B0055DC40 /* FMDatabaseAdditions.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27E66AAA1A7305B10091DA3F /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A3A1A674C9B0055DC40 /* FMResultSet.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27E66ABD1A7305B10091DA3F /* CBL_SQLiteStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A221A673F320055DC40 /* CBL_SQLiteStorage.m */; };
+		27E66AE81A7307590091DA3F /* CBLForestBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27EF7F9A1912EB5200A327B9 /* CBLForestBridge.mm */; };
+		27E66AEF1A7307590091DA3F /* CBL_ForestDBViewStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A9D67E1A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm */; };
+		27E66B001A7307590091DA3F /* CBL_ForestDBStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DADE421A659FCC0075313A /* CBL_ForestDBStorage.mm */; };
+		27E66B3D1A7307590091DA3F /* libCBForest-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27571E0618F9060100141BDD /* libCBForest-iOS.a */; };
+		27E66B4E1A73088F0091DA3F /* libCBLSQLiteStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66ACF1A7305B10091DA3F /* libCBLSQLiteStorage.a */; };
+		27E66B4F1A73091D0091DA3F /* CBLCollateJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A551A6827DF0055DC40 /* CBLCollateJSON.m */; };
+		27E66B511A730CA80091DA3F /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66B501A730CA80091DA3F /* libsqlite3.dylib */; };
+		27E66B521A730DBF0091DA3F /* libCBLForestDBStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */; };
+		27E66B531A730DC90091DA3F /* libCBLSQLiteStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66ACF1A7305B10091DA3F /* libCBLSQLiteStorage.a */; };
 		27E7FAEE155D7F110025F93A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F714ACF2500065964D /* CoreServices.framework */; };
 		27E7FAF0155D8EBA0025F93A /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */; };
 		27E7FAF1155D8ECE0025F93A /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */; };
@@ -559,7 +564,6 @@
 		27ED9A971639D8D2000C844A /* LiteServ.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ED9A961639D8D2000C844A /* LiteServ.m */; };
 		27EF7F9B1912EB5200A327B9 /* CBLForestBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EF7F991912EB5200A327B9 /* CBLForestBridge.h */; };
 		27EF7F9C1912EB5200A327B9 /* CBLForestBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27EF7F9A1912EB5200A327B9 /* CBLForestBridge.mm */; };
-		27EF7F9D1912EB5200A327B9 /* CBLForestBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27EF7F9A1912EB5200A327B9 /* CBLForestBridge.mm */; };
 		27F08C8B15A7A31B003C3E2B /* CBL_Attachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A7209E152B959100C0A0E8 /* CBL_Attachment.h */; };
 		27F12887156ABE24008465C2 /* OAConsumer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12856156ABE24008465C2 /* OAConsumer.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F12890156ABE24008465C2 /* OAMutableURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285C156ABE24008465C2 /* OAMutableURLRequest.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -859,6 +863,41 @@
 			proxyType = 1;
 			remoteGlobalIDString = 275315D414ACF0A10065964D;
 			remoteInfo = TouchDBListener;
+		};
+		27E66AD21A7307590091DA3F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 27139B9418F8EE3A0021A9A3;
+			remoteInfo = "CBForest-iOS";
+		};
+		27E66B461A73081C0091DA3F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27E66A571A7305B10091DA3F;
+			remoteInfo = "CBL SQLite Storage";
+		};
+		27E66B481A73081C0091DA3F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27E66AD01A7307590091DA3F;
+			remoteInfo = "CBL ForestDB Storage";
+		};
+		27E66B4A1A73082E0091DA3F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27E66A571A7305B10091DA3F;
+			remoteInfo = "CBL SQLite Storage";
+		};
+		27E66B4C1A73082E0091DA3F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27E66AD01A7307590091DA3F;
+			remoteInfo = "CBL ForestDB Storage";
 		};
 		27FA99EF1917FFD000912F96 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1319,6 +1358,9 @@
 		27E2E5CC159533A5005B9234 /* CBLReplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReplication.m; sourceTree = "<group>"; };
 		27E3476D19994F5A00076EAC /* Test_Assertions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Test_Assertions.m; sourceTree = "<group>"; };
 		27E66A411A6ED3F70091DA3F /* CBL_StorageTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBL_StorageTypes.h; sourceTree = "<group>"; };
+		27E66ACF1A7305B10091DA3F /* libCBLSQLiteStorage.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCBLSQLiteStorage.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCBLForestDBStorage.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		27E66B501A730CA80091DA3F /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk/usr/lib/libsqlite3.dylib; sourceTree = DEVELOPER_DIR; };
 		27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/CFNetwork.framework; sourceTree = DEVELOPER_DIR; };
 		27E7FB02155DBDA20025F93A /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 		27E940651954BB9E00A9732E /* libc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++.dylib"; path = "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk/usr/lib/libc++.dylib"; sourceTree = DEVELOPER_DIR; };
@@ -1480,6 +1522,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27E66B4E1A73088F0091DA3F /* libCBLSQLiteStorage.a in Frameworks */,
 				27942CA6195B8991008C8DE9 /* libsqlite3.dylib in Frameworks */,
 				27E940661954BB9E00A9732E /* libc++.dylib in Frameworks */,
 				27E7FB03155DBDA20025F93A /* Security.framework in Frameworks */,
@@ -1515,7 +1558,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27942C9E195B8319008C8DE9 /* libsqlite3.dylib in Frameworks */,
+				27E66B531A730DC90091DA3F /* libCBLSQLiteStorage.a in Frameworks */,
+				27E66B521A730DBF0091DA3F /* libCBLForestDBStorage.a in Frameworks */,
+				27E66B511A730CA80091DA3F /* libsqlite3.dylib in Frameworks */,
 				27E940691954BD4C00A9732E /* libc++.dylib in Frameworks */,
 				AA1776BC1857AE4D00CB01A3 /* CoreData.framework in Frameworks */,
 				27D90B1A15601F8C0000735E /* Security.framework in Frameworks */,
@@ -1538,6 +1583,21 @@
 				27C70698148864BA00F0F099 /* Cocoa.framework in Frameworks */,
 				270B3E26148939BD00E0A926 /* CouchbaseLite.framework in Frameworks */,
 				27E11F1214AD172F0006B340 /* CouchbaseLiteListener.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27E66AC81A7305B10091DA3F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27E66B3C1A7307590091DA3F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27E66B3D1A7307590091DA3F /* libCBForest-iOS.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1622,6 +1682,8 @@
 				27538F5017F13B03004C3BFD /* LiteServ.app */,
 				2700358B1A44E9270015B9F4 /* CBL iOS Unit Tests.xctest */,
 				272AA83F1A48D835004B8D55 /* CBL Mac Unit Tests.xctest */,
+				27E66ACF1A7305B10091DA3F /* libCBLSQLiteStorage.a */,
+				27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2146,6 +2208,7 @@
 		27C70696148864BA00F0F099 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27E66B501A730CA80091DA3F /* libsqlite3.dylib */,
 				27942C9D195B8319008C8DE9 /* libsqlite3.dylib */,
 				27E940651954BB9E00A9732E /* libc++.dylib */,
 				27DD150519354B3F009A367D /* libc++.dylib */,
@@ -2801,6 +2864,8 @@
 			);
 			dependencies = (
 				27B0B7F51492BC5B00A817AD /* PBXTargetDependency */,
+				27E66B4B1A73082E0091DA3F /* PBXTargetDependency */,
+				27E66B4D1A73082E0091DA3F /* PBXTargetDependency */,
 			);
 			name = "CBL iOS";
 			productName = iTouchDB;
@@ -2819,6 +2884,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				27E66B471A73081C0091DA3F /* PBXTargetDependency */,
+				27E66B491A73081C0091DA3F /* PBXTargetDependency */,
 				27AD1F8717C29BE80063108F /* PBXTargetDependency */,
 				270BDD7315645147007D52F6 /* PBXTargetDependency */,
 			);
@@ -2846,6 +2913,41 @@
 			productName = "ToyCouch Demo";
 			productReference = 27C70694148864BA00F0F099 /* Couchbase Lite Demo.app */;
 			productType = "com.apple.product-type.application";
+		};
+		27E66A571A7305B10091DA3F /* CBL SQLite Storage */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 27E66ACC1A7305B10091DA3F /* Build configuration list for PBXNativeTarget "CBL SQLite Storage" */;
+			buildPhases = (
+				27E66A5A1A7305B10091DA3F /* Sources */,
+				27E66AC81A7305B10091DA3F /* Frameworks */,
+				27E66ACB1A7305B10091DA3F /* Build Fat Library */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "CBL SQLite Storage";
+			productName = TouchDBiOS;
+			productReference = 27E66ACF1A7305B10091DA3F /* libCBLSQLiteStorage.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		27E66AD01A7307590091DA3F /* CBL ForestDB Storage */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 27E66B401A7307590091DA3F /* Build configuration list for PBXNativeTarget "CBL ForestDB Storage" */;
+			buildPhases = (
+				27E66AD31A7307590091DA3F /* Sources */,
+				27E66B3C1A7307590091DA3F /* Frameworks */,
+				27E66B3F1A7307590091DA3F /* Build Fat Library */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				27E66AD11A7307590091DA3F /* PBXTargetDependency */,
+			);
+			name = "CBL ForestDB Storage";
+			productName = TouchDBiOS;
+			productReference = 27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */;
+			productType = "com.apple.product-type.library.static";
 		};
 		792867BE178DE01900248AF0 /* CBLJSViewCompiler */ = {
 			isa = PBXNativeTarget;
@@ -2964,6 +3066,8 @@
 				275A29061649A54000B0D8EE /* All */,
 				2700358A1A44E9270015B9F4 /* CBL iOS Unit Tests */,
 				272AA83E1A48D835004B8D55 /* CBL Mac Unit Tests */,
+				27E66A571A7305B10091DA3F /* CBL SQLite Storage */,
+				27E66AD01A7307590091DA3F /* CBL ForestDB Storage */,
 			);
 		};
 /* End PBXProject section */
@@ -3152,6 +3256,38 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "CREATING_UNIVERSAL_DIR=${SYMROOT}/${CONFIGURATION}-${PRODUCT_NAME}-ios-universal\ncp \"${CREATING_UNIVERSAL_DIR}/libCouchbaseLite.a\" \"${CONFIGURATION_BUILD_DIR}/${EXECUTABLE_PATH}\"";
+			showEnvVarsInLog = 0;
+		};
+		27E66ACB1A7305B10091DA3F /* Build Fat Library */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Source/BuildFatLibrary.sh",
+			);
+			name = "Build Fat Library";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
+			showEnvVarsInLog = 0;
+		};
+		27E66B3F1A7307590091DA3F /* Build Fat Library */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Source/BuildFatLibrary.sh",
+			);
+			name = "Build Fat Library";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
 			showEnvVarsInLog = 0;
 		};
 		792867D5178DF10400248AF0 /* Make a Fat Binary */ = {
@@ -3457,17 +3593,13 @@
 				27A073EE14C0BB6200F52FE7 /* CBLMisc.m in Sources */,
 				279CE40214D749A7009F3FA6 /* CBLMultipartReader.m in Sources */,
 				279CE40C14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */,
-				27513A581A6827DF0055DC40 /* CBLCollateJSON.m in Sources */,
 				2733022C18F8572700A488F7 /* CBLAuthenticator.m in Sources */,
-				27EF7F9D1912EB5200A327B9 /* CBLForestBridge.mm in Sources */,
 				2766EFFA14DB7F9F009ECCA8 /* CBLMultipartWriter.m in Sources */,
 				2766EFFF14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */,
 				27C5305614DF3A050078F886 /* CBLMultipartUploader.m in Sources */,
 				27513A1A1A672C7F0055DC40 /* CBLDatabase+Attachments.m in Sources */,
-				27513A451A674C9B0055DC40 /* FMDatabase.m in Sources */,
 				27486F2D1A606C76008D94F0 /* CBLJSONReader.m in Sources */,
 				27103F8514E9CE4400DF7209 /* CBLReachability.m in Sources */,
-				27A9D6811A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm in Sources */,
 				279C7E3014F424090004A1E8 /* CBLSequenceMap.m in Sources */,
 				27ADC07B152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */,
 				27A720A2152B959100C0A0E8 /* CBL_Attachment.m in Sources */,
@@ -3484,11 +3616,9 @@
 				27DA430A158FA35600F9E7B5 /* CBLCache.m in Sources */,
 				27DA4314158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
 				276BA0AE17DD13FA00D367CB /* CBLParseDate.c in Sources */,
-				27DADE451A659FCC0075313A /* CBL_ForestDBStorage.mm in Sources */,
 				27DA4319158FD9B400F9E7B5 /* CBLUITableSource.m in Sources */,
 				27486F3B1A608ABF008D94F0 /* CBLChangeMatcher.m in Sources */,
 				27DA4347159125B500F9E7B5 /* CBLManager.m in Sources */,
-				27513A621A697CC80055DC40 /* CBL_SQLiteViewStorage.m in Sources */,
 				27DA435915918C8E00F9E7B5 /* CBLModel.m in Sources */,
 				27726AAE1889835F00AE6931 /* CBLGeometry.m in Sources */,
 				27DA435C15918C8E00F9E7B5 /* CBLModelFactory.m in Sources */,
@@ -3517,8 +3647,6 @@
 				27846FBB15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */,
 				27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
-				27513A481A674C9B0055DC40 /* FMDatabaseAdditions.m in Sources */,
-				27513A4D1A674C9B0055DC40 /* FMResultSet.m in Sources */,
 				276B23201A3A2BE500CAF010 /* CBLQueryBuilder.m in Sources */,
 				27F12887156ABE24008465C2 /* OAConsumer.m in Sources */,
 				27513A1B1A672C830055DC40 /* CBLDatabase+Insertion.m in Sources */,
@@ -3537,7 +3665,6 @@
 				272401B61860CB4B0080E082 /* WebSocket.m in Sources */,
 				272401C01860CBE00080E082 /* GCDAsyncSocket.m in Sources */,
 				277B5D2E1821A8380088881E /* yajl_alloc.c in Sources */,
-				27513A251A673F320055DC40 /* CBL_SQLiteStorage.m in Sources */,
 				277B5D2A1821A8380088881E /* yajl.c in Sources */,
 				277B5D351821A8380088881E /* yajl_encode.c in Sources */,
 				277B5D311821A8380088881E /* yajl_buf.c in Sources */,
@@ -3580,6 +3707,29 @@
 				27C706D71488679500F0F099 /* ShoppingItem.m in Sources */,
 				279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */,
 				27F94123176F7443007BAEBE /* CBLJSONValidator.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27E66A5A1A7305B10091DA3F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27E66B4F1A73091D0091DA3F /* CBLCollateJSON.m in Sources */,
+				27E66ABD1A7305B10091DA3F /* CBL_SQLiteStorage.m in Sources */,
+				27E66A8C1A7305B10091DA3F /* CBL_SQLiteViewStorage.m in Sources */,
+				27E66A741A7305B10091DA3F /* FMDatabase.m in Sources */,
+				27E66AA91A7305B10091DA3F /* FMDatabaseAdditions.m in Sources */,
+				27E66AAA1A7305B10091DA3F /* FMResultSet.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27E66AD31A7307590091DA3F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27E66B001A7307590091DA3F /* CBL_ForestDBStorage.mm in Sources */,
+				27E66AEF1A7307590091DA3F /* CBL_ForestDBViewStorage.mm in Sources */,
+				27E66AE81A7307590091DA3F /* CBLForestBridge.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3760,6 +3910,31 @@
 			isa = PBXTargetDependency;
 			target = 275315D414ACF0A10065964D /* CBL Listener Mac */;
 			targetProxy = 27E11F1C14AD25570006B340 /* PBXContainerItemProxy */;
+		};
+		27E66AD11A7307590091DA3F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "CBForest-iOS";
+			targetProxy = 27E66AD21A7307590091DA3F /* PBXContainerItemProxy */;
+		};
+		27E66B471A73081C0091DA3F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27E66A571A7305B10091DA3F /* CBL SQLite Storage */;
+			targetProxy = 27E66B461A73081C0091DA3F /* PBXContainerItemProxy */;
+		};
+		27E66B491A73081C0091DA3F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27E66AD01A7307590091DA3F /* CBL ForestDB Storage */;
+			targetProxy = 27E66B481A73081C0091DA3F /* PBXContainerItemProxy */;
+		};
+		27E66B4B1A73082E0091DA3F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27E66A571A7305B10091DA3F /* CBL SQLite Storage */;
+			targetProxy = 27E66B4A1A73082E0091DA3F /* PBXContainerItemProxy */;
+		};
+		27E66B4D1A73082E0091DA3F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27E66AD01A7307590091DA3F /* CBL ForestDB Storage */;
+			targetProxy = 27E66B4C1A73082E0091DA3F /* PBXContainerItemProxy */;
 		};
 		27FA9A461918AE3600912F96 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -4581,6 +4756,122 @@
 			};
 			name = Release;
 		};
+		27E66ACD1A7305B10091DA3F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
+				COPY_PHASE_STRIP = NO;
+				DSTROOT = /tmp/SQLiteStorage.dst;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
+					vendor/CBForest/,
+					vendor/CBForest/vendor/forestdb/include/libforestdb/,
+					"vendor/CBForest/vendor/sqlite3-unicodesn",
+				);
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = CBLSQLiteStorage;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		27E66ACE1A7305B10091DA3F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DSTROOT = /tmp/SQLiteStorage.dst;
+				EXPORTED_SYMBOLS_FILE = Source/CouchbaseLite.exp;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
+					vendor/CBForest/,
+					vendor/CBForest/vendor/forestdb/include/libforestdb/,
+					"vendor/CBForest/vendor/sqlite3-unicodesn",
+				);
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = CBLSQLiteStorage;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		27E66B411A7307590091DA3F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
+				COPY_PHASE_STRIP = NO;
+				DSTROOT = /tmp/CouchbaseLiteiOS.dst;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
+					vendor/CBForest/,
+					vendor/CBForest/vendor/forestdb/include/libforestdb/,
+					"vendor/CBForest/vendor/sqlite3-unicodesn",
+				);
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = CBLForestDBStorage;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		27E66B421A7307590091DA3F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DSTROOT = /tmp/CouchbaseLiteiOS.dst;
+				EXPORTED_SYMBOLS_FILE = Source/CouchbaseLite.exp;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$SRCROOT/vendor/yajl/build/yajl-2.0.5/include",
+					vendor/CBForest/,
+					vendor/CBForest/vendor/forestdb/include/libforestdb/,
+					"vendor/CBForest/vendor/sqlite3-unicodesn",
+				);
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = CBLForestDBStorage;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		27FA59EC179EEACA0043460A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -4921,6 +5212,24 @@
 			buildConfigurations = (
 				27C706B0148864BA00F0F099 /* Debug */,
 				27C706B1148864BA00F0F099 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		27E66ACC1A7305B10091DA3F /* Build configuration list for PBXNativeTarget "CBL SQLite Storage" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27E66ACD1A7305B10091DA3F /* Debug */,
+				27E66ACE1A7305B10091DA3F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		27E66B401A7307590091DA3F /* Build configuration list for PBXNativeTarget "CBL ForestDB Storage" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27E66B411A7307590091DA3F /* Debug */,
+				27E66B421A7307590091DA3F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

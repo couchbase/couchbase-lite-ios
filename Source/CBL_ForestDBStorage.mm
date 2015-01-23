@@ -31,8 +31,6 @@ using namespace forestdb;
 
 #define kDefaultMaxRevTreeDepth 20
 
-const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
-
 
 @implementation CBL_ForestDBStorage
 {
