@@ -188,7 +188,8 @@
     options->descending = _descending,
     options->includeDocs = _prefetch,
     options->updateSeq = YES,
-    options->inclusiveEnd = YES,
+    options->inclusiveStart = _inclusiveStart,
+    options->inclusiveEnd = _inclusiveEnd,
     options->allDocsMode = _allDocsMode,
     options->indexUpdateMode = _indexUpdateMode;
     options.filter = _postFilter;
