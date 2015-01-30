@@ -15,8 +15,8 @@ using namespace forestdb;
 
 
 static NSData* dataOfNode(const Revision* rev) {
-    if (rev->body.buf)
-        return rev->body.uncopiedNSData();
+    if (rev->inlineBody().buf)
+        return rev->inlineBody().uncopiedNSData();
     try {
         return rev->readBody().copiedNSData();
     } catch (...) {
