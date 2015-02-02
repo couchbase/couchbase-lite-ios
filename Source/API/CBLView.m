@@ -77,9 +77,17 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 }
 
 
-- (CBLMapBlock) mapBlock {
+- (CBLMapBlock) registeredMapBlock {
     CBLDatabase* db = _weakDB;
     return [db.shared valueForType: @"map" name: _name inDatabaseNamed: db.name];
+}
+
+- (CBLMapBlock) mapBlock {
+    CBLMapBlock map = self.registeredMapBlock;
+    if (!map)
+        if ([self compileFromDesignDoc] == kCBLStatusOK)
+            map = self.registeredMapBlock;
+    return map;
 }
 
 

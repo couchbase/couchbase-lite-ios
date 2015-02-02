@@ -221,10 +221,9 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 
 - (CBLView*) makeAnonymousView;
 
-/** Returns the view with the given name. If there is none, and the name is in CouchDB
-    format ("designdocname/viewname"), it attempts to load the view properties from the
-    design document and compile them with the CBLViewCompiler. */
-- (CBLView*) compileViewNamed: (NSString*)name status: (CBLStatus*)outStatus;
+- (id) getDesignDocFunction: (NSString*)fnName
+                        key: (NSString*)key
+                   language: (NSString**)outLanguage;
 
 - (NSString*) _indexedTextWithID: (UInt64)fullTextID;
 

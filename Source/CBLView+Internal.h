@@ -79,6 +79,10 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
 @property (readonly) int viewID;
 @property (readonly) NSUInteger totalRows;
 
+/** The map block alredy registered with the view. Unlike the public .mapBlock property, this
+    will not look for a design document or compile a function therein. */
+@property (readonly) CBLMapBlock registeredMapBlock;
+
 @end
 
 
@@ -93,9 +97,11 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
 
 @property (readonly) NSArray* viewsInGroup;
 
+- (CBLStatus) compileFromDesignDoc;
+
 /** Compiles a view (using the registered CBLViewCompiler) from the properties found in a CouchDB-style design document. */
-- (BOOL) compileFromProperties: (NSDictionary*)viewProps
-                      language: (NSString*)language;
+- (CBLStatus) compileFromProperties: (NSDictionary*)viewProps
+                           language: (NSString*)language;
 
 /** Updates the view's index (incrementally) if necessary.
     If the index is updated, the other views in the viewGroup will be updated as a bonus.

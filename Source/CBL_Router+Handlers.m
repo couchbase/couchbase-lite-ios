@@ -880,10 +880,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 
 - (CBLStatus) queryDesignDoc: (NSString*)designDoc view: (NSString*)viewName keys: (NSArray*)keys {
-    NSString* tdViewName = $sprintf(@"%@/%@", designDoc, viewName);
-    CBLStatus status;
-    CBLView* view = [_db compileViewNamed: tdViewName status: &status];
-    if (!view)
+    CBLView* view = [_db viewNamed: $sprintf(@"%@/%@", designDoc, viewName)];
+    CBLStatus status = [view compileFromDesignDoc];
+    if (CBLStatusIsError(status))
         return status;
     
     CBLQueryOptions *options = [self getQueryOptions];
@@ -955,8 +954,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         return kCBLStatusNotModified;
 
     CBLView* view = [_db viewNamed: @"@@TEMPVIEW@@"];
-    if (![view compileFromProperties: props language: @"javascript"])
-        return kCBLStatusBadRequest;
+    CBLStatus status = [view compileFromProperties: props language: @"javascript"];
+    if (CBLStatusIsError(status))
+        return status;
 
     @try {
         CBLStatus status = [view updateIndex];
