@@ -330,5 +330,52 @@ query.prefixMatchLevel = 1;\n");
     AssertEqual(row.value, @(49.5));
 }
 
+/*
+- (void) test00_Sorting {
+    // This case is currently failed in descending sorting case.
+
+    [self createDocuments: 100];
+
+    NSError* error;
+
+    // Ascending:
+    NSArray *orderBy = [NSMutableArray arrayWithObject:
+                        [[NSSortDescriptor alloc] initWithKey:@"sequence" ascending:YES]];
+    CBLQueryBuilder* b = [[CBLQueryBuilder alloc] initWithDatabase: db
+                                                            select: nil
+                                                             where: @"testName=='testDatabase'"
+                                                           orderBy: orderBy
+                                                             error: &error];
+
+    Assert(b, @"Failed to build: %@", error);
+    Log(@"%@", b.explanation);
+
+    CBLQueryEnumerator* e = [b runQueryWithContext: nil error: &error];
+    Assert(e, @"Query failed: %@", error);
+    NSUInteger seq = 0;
+    for (CBLQueryRow* row in e) {
+        AssertEqual(row.document[@"sequence"], @(seq++));
+    }
+
+    // Descending:
+    orderBy = [NSMutableArray arrayWithObject:
+               [[NSSortDescriptor alloc] initWithKey:@"sequence" ascending:NO]];
+    b = [[CBLQueryBuilder alloc] initWithDatabase: db
+                                           select: nil
+                                            where: @"testName=='testDatabase'"
+                                          orderBy: orderBy
+                                            error: &error];
+
+    Assert(b, @"Failed to build: %@", error);
+    Log(@"%@", b.explanation);
+
+    e = [b runQueryWithContext: nil error: &error];
+    Assert(e, @"Query failed: %@", error);
+    seq = 100;
+    for (CBLQueryRow* row in e) {
+        AssertEqual(row.document[@"sequence"], @(--seq));
+    }
+}
+*/
 
 @end
