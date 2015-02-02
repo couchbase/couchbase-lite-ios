@@ -102,7 +102,7 @@ static void test(QueryBuilder_Tests *self,
 }
 
 
-- (void) test00_Plan {
+- (void) test01_Plan {
     test(self, /*select*/ @[@"wingspan"],
          /*where*/ @"name in $NAMES",
          /*order by*/ @"name",
@@ -225,7 +225,7 @@ static void test(QueryBuilder_Tests *self,
 }
 
 
-- (void) test00_IllegalPredicates {
+- (void) test02_IllegalPredicates {
     NSArray* preds = @[ @"price + $DELTA < 100",
                         @"color = $COLOR or color = $OTHER_COLOR",
                         ];
@@ -242,7 +242,7 @@ static void test(QueryBuilder_Tests *self,
 }
 
 
-- (void) test00_ViewGeneration {
+- (void) test03_ViewGeneration {
     NSError* error;
     CBLQueryBuilder* p1 = [[CBLQueryBuilder alloc] initWithDatabase: db
                                                              select: @[@"wingspan"]
@@ -265,7 +265,7 @@ static void test(QueryBuilder_Tests *self,
 }
 
 
-- (void) test00_Explanation {
+- (void) test04_Explanation {
     NSError* error;
     CBLQueryBuilder* b = [[CBLQueryBuilder alloc]
                             initWithDatabase: db
@@ -290,7 +290,7 @@ query.prefixMatchLevel = 1;\n");
 }
 
 
-- (void) test00_StringIn {
+- (void) test05_StringIn {
     [self createDocuments: 100];
 
     NSError* error;
@@ -310,7 +310,7 @@ query.prefixMatchLevel = 1;\n");
 }
 
 
-- (void) test00_Reduce {
+- (void) test06_Reduce {
     [self createDocuments: 100];
 
     NSError* error;
@@ -330,10 +330,8 @@ query.prefixMatchLevel = 1;\n");
     AssertEqual(row.value, @(49.5));
 }
 
-/*
-- (void) test00_Sorting {
-    // This case is currently failed in descending sorting case.
 
+- (void) test07_Sorting {
     [self createDocuments: 100];
 
     NSError* error;
@@ -342,10 +340,10 @@ query.prefixMatchLevel = 1;\n");
     NSArray *orderBy = [NSMutableArray arrayWithObject:
                         [[NSSortDescriptor alloc] initWithKey:@"sequence" ascending:YES]];
     CBLQueryBuilder* b = [[CBLQueryBuilder alloc] initWithDatabase: db
-                                                            select: nil
-                                                             where: @"testName=='testDatabase'"
-                                                           orderBy: orderBy
-                                                             error: &error];
+                                           select: nil
+                                            where: @"testName=='testDatabase'"
+                                          orderBy: orderBy
+                                            error: &error];
 
     Assert(b, @"Failed to build: %@", error);
     Log(@"%@", b.explanation);
@@ -376,6 +374,6 @@ query.prefixMatchLevel = 1;\n");
         AssertEqual(row.document[@"sequence"], @(--seq));
     }
 }
-*/
+
 
 @end

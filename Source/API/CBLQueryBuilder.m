@@ -556,7 +556,7 @@ static NSString* printExpr(NSExpression* expr) {
         [keyPredicates addObject: _equalityKey];
     if (_otherKey)
         [keyPredicates addObject: _otherKey];
-    else {
+    else if (allAscendingSorts(_querySort)) {
         // Add sort descriptors as extra components of the key so the index will sort by them:
         NSUInteger i = 0;
         for (NSSortDescriptor* sortDesc in _querySort) {
@@ -842,6 +842,14 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
         NSDictionary* userInfo = @{NSLocalizedFailureReasonErrorKey: message};
         _error = [NSError errorWithDomain: @"CBLQueryBuilder" code: -1 userInfo: userInfo];
     }
+}
+
+
+static bool allAscendingSorts(NSArray* sortDescriptors) {
+    for (NSSortDescriptor* s in sortDescriptors)
+        if (!s.ascending)
+            return NO;
+    return YES;
 }
 
 
