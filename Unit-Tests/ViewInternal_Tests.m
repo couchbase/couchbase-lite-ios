@@ -299,7 +299,7 @@ static NSArray* rowsToDicts(NSArray* rows) {
 
 // https://github.com/couchbase/couchbase-lite-android/issues/494
 - (void) test_IndexingOlderRevision {
-    // In case conflictWinner was deleted, conflict Looser should be indexed.
+    // In case conflictWinner was deleted, conflict loser should be indexed.
     
     RequireTestCase(Index);
     NSArray* docs = [self putDocs];
@@ -333,16 +333,18 @@ static NSArray* rowsToDicts(NSArray* rows) {
                              $dict({@"key", @"\"one\""},  {@"seq", @3}),
                              $dict({@"key", @"\"three\""},{@"seq", @4}),
                              $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
-    
-    CBL_Revision* leaf3 = [[CBL_Revision alloc]initWithDocID:@"44444" revID:@"1-~~~~~" deleted:true];
-    [db putRevision:leaf3 prevRevisionID:@"1-~~~~~" allowConflict:true status:&status];
+
+    // Delete the new rev, which will make the old one current again:
+    CBL_Revision* leaf3 = [[CBL_Revision alloc]initWithDocID:@"44444" revID:@"" deleted:true];
+    leaf3 = [db putRevision:leaf3 prevRevisionID:@"1-~~~~~" allowConflict:true status:&status];
+    AssertEq(status, kCBLStatusOK);
 
     AssertEq(true, [leaf3 deleted]);
-
     AssertEqual(leaf1.docID, leaf3.docID);
 
     AssertEqual(@"four", [[db documentWithID:@"44444"] propertyForKey:@"key"]);
     
+    // Update the view -- should contain only the key from the old rev, not the new:
     AssertEq([view updateIndex], kCBLStatusOK);
     dump = [view dump];
     Log(@"View dump: %@", dump);
@@ -1145,8 +1147,8 @@ static NSArray* rowsToDicts(NSArray* rows) {
     AssertEq(view.totalRows, totalRows);
     
     // Delete a doc
-    CBL_Revision* del = [[CBL_Revision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
-    [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status];
+    CBL_Revision* del = [[CBL_Revision alloc] initWithDocID: @"33333" revID: @"" deleted: YES];
+    [db putRevision: del prevRevisionID: [docs[3] revID] allowConflict: NO status: &status];
     AssertEq(status, kCBLStatusOK);
     AssertEq([view updateIndex], kCBLStatusOK);
     AssertEq(view.totalRows, totalRows - 1);
