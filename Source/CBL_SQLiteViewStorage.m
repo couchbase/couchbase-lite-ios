@@ -200,7 +200,7 @@
         // and remove obsolete emitted results from the 'maps' table:
         SequenceNumber minLastSequence = dbMaxSequence;
         SequenceNumber viewLastSequence[inputViews.count];
-        unsigned deleted = 0;
+        unsigned deletedCount = 0;
         int i = 0;
         NSMutableDictionary* viewTotalRows = [[NSMutableDictionary alloc] init];
         NSMutableArray* views = [[NSMutableArray alloc] initWithCapacity: inputViews.count];
@@ -250,7 +250,7 @@
                 
                 // Update #deleted rows
                 int changes = fmdb.changes;
-                deleted += changes;
+                deletedCount += changes;
                 
                 // Only count these deletes as changes if this isn't a view reset to 0
                 if (last != 0) {
@@ -270,7 +270,7 @@
         __block NSDictionary* curDoc;
         __block SequenceNumber sequence = minLastSequence;
         __block CBLStatus emitStatus = kCBLStatusOK;
-        __block unsigned inserted = 0;
+        __block unsigned insertedCount = 0;
         CBLMapEmitBlock emit = ^(id key, id value) {
             int status = [curView _emitKey: key
                                      value: value
@@ -280,18 +280,19 @@
                 emitStatus = status;
             else {
                 viewTotalRows[@(curView.viewID)] = @([viewTotalRows[@(curView.viewID)] intValue] + 1);
-                inserted++;
+                insertedCount++;
             }
         };
 
         // Now scan every revision added since the last time the views were indexed:
-        CBL_FMResultSet* r;
-        r = [fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json, no_attachments "
-                                 "FROM revs, docs "
-                                 "WHERE sequence>? AND current!=0 AND deleted=0 "
-                                 "AND revs.doc_id = docs.doc_id "
-                                 "ORDER BY revs.doc_id, revid DESC",
-                                 @(minLastSequence)];
+        NSMutableString* sql = [@"SELECT revs.doc_id, sequence, docid, revid, json, "
+                                "no_attachments, deleted FROM revs, docs "
+                                "WHERE sequence>? AND current!=0 " mutableCopy];
+        if (minLastSequence == 0)
+            [sql appendString: @"AND deleted=0 "];
+        [sql appendString: @"AND revs.doc_id = docs.doc_id "
+                            "ORDER BY revs.doc_id, deleted, revid DESC"];
+        CBL_FMResultSet* r = [fmdb executeQuery: sql, @(minLastSequence)];
         if (!r)
             return dbStorage.lastDbError;
 
@@ -309,6 +310,7 @@
                 NSString* revID = [r stringForColumnIndex: 3];
                 NSData* json = [r dataForColumnIndex: 4];
                 BOOL noAttachments = [r boolForColumnIndex: 5];
+                BOOL deleted = [r boolForColumnIndex: 6];
 
                 // Skip rows with the same doc_id -- these are losing conflicts.
                 while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == doc_id) {
@@ -336,14 +338,15 @@
                             [fmdb executeUpdate: [view queryString: @"DELETE FROM 'maps_#' WHERE sequence=?"],
                                                  @(oldSequence)];
                             int changes = fmdb.changes;
-                            deleted += changes;
+                            deletedCount += changes;
                             viewTotalRows[@(view.viewID)] =
                                 @([viewTotalRows[@(view.viewID)] intValue] - changes);
                         }
-                        if (CBLCompareRevIDs(oldRevID, revID) > 0) {
+                        if (deleted || CBLCompareRevIDs(oldRevID, revID) > 0) {
                             // It still 'wins' the conflict, so it's the one that
                             // should be mapped [again], not the current revision!
                             revID = oldRevID;
+                            deleted = NO;
                             sequence = oldSequence;
                             json = [fmdb dataForQuery: @"SELECT json FROM revs WHERE sequence=?",
                                     @(sequence)];
@@ -351,6 +354,9 @@
                     }
                     [r2 close];
                 }
+
+                if (deleted)
+                    continue;
 
                 // Get the document properties, to pass to the map function:
                 CBLContentOptions contentOptions = kCBLIncludeLocalSeq;
@@ -400,7 +406,7 @@
         }
         
         LogTo(View, @"...Finished re-indexing (%@) to #%lld (deleted %u, added %u)",
-              viewNames(views), dbMaxSequence, deleted, inserted);
+              viewNames(views), dbMaxSequence, deletedCount, insertedCount);
         return kCBLStatusOK;
     }];
     
