@@ -102,7 +102,6 @@
 - (void) createIndex {
     NSString* sql = @"\
         CREATE TABLE IF NOT EXISTS 'maps_#' (\
-            doc_id INTEGER NOT NULL REFERENCES docs(doc_id),\
             sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE,\
             key TEXT NOT NULL COLLATE JSON,\
             value TEXT,\
@@ -110,7 +109,7 @@
             bbox_id INTEGER, \
             geokey BLOB);\
         CREATE INDEX IF NOT EXISTS 'maps_#_keys' on 'maps_#'(key COLLATE JSON);\
-        CREATE INDEX IF NOT EXISTS 'maps_#_docs' ON 'maps_#'(doc_id)";
+        CREATE INDEX IF NOT EXISTS 'maps_#_sequence' ON 'maps_#'(sequence)";
     NSError* error;
     if (![self runStatements: sql error: &error])
         Warn(@"Couldn't create view index `%@`: %@", _name, error);
@@ -241,9 +240,9 @@
                 } else {
                     // Delete all obsolete map results (ones from since-replaced revisions):
                     ok = [fmdb executeUpdate:
-                          [view queryString: @"DELETE FROM 'maps_#' WHERE doc_id IN "
-                                                "(SELECT distinct doc_id FROM revs "
-                                                " WHERE sequence>? AND parent<=?)"],
+                          [view queryString: @"DELETE FROM 'maps_#' WHERE sequence IN ("
+                                                "SELECT parent FROM revs WHERE sequence>? "
+                                                    "AND parent>0 AND parent<=?)"],
                           @(last), @(last)];
                 }
                 if (!ok)
@@ -269,7 +268,6 @@
         // that's called down below.
         __block CBL_SQLiteViewStorage* curView;
         __block NSDictionary* curDoc;
-        __block SInt64 docNumericID;
         __block SequenceNumber sequence = minLastSequence;
         __block CBLStatus emitStatus = kCBLStatusOK;
         __block unsigned inserted = 0;
@@ -277,8 +275,7 @@
             int status = [curView _emitKey: key
                                      value: value
                                 valueIsDoc: (value == curDoc)
-                                    forDoc: docNumericID
-                                  sequence: sequence];
+                               forSequence: sequence];
             if (status != kCBLStatusOK)
                 emitStatus = status;
             else {
@@ -289,11 +286,11 @@
 
         // Now scan every revision added since the last time the views were indexed:
         CBL_FMResultSet* r;
-        r = [fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json, no_attachments, current, deleted "
+        r = [fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json, no_attachments "
                                  "FROM revs, docs "
-                                 "WHERE sequence>? AND current>0 "
+                                 "WHERE sequence>? AND current!=0 AND deleted=0 "
                                  "AND revs.doc_id = docs.doc_id "
-                                 "ORDER BY revs.doc_id, current DESC",
+                                 "ORDER BY revs.doc_id, revid DESC",
                                  @(minLastSequence)];
         if (!r)
             return dbStorage.lastDbError;
@@ -302,7 +299,7 @@
         while (keepGoing) {
             @autoreleasepool {
                 // Get row values now, before the code below advances 'r':
-                docNumericID = [r longLongIntForColumnIndex: 0];
+                int64_t doc_id = [r longLongIntForColumnIndex: 0];
                 sequence = [r longLongIntForColumnIndex: 1];
                 NSString* docID = [r stringForColumnIndex: 2];
                 if ([docID hasPrefix: @"_design/"]) {     // design docs don't get indexed!
@@ -312,35 +309,49 @@
                 NSString* revID = [r stringForColumnIndex: 3];
                 NSData* json = [r dataForColumnIndex: 4];
                 BOOL noAttachments = [r boolForColumnIndex: 5];
-                int current = [r intForColumnIndex: 6];
-                BOOL isDeleted = [r boolForColumnIndex: 7];
 
                 // Skip rows with the same doc_id -- these are losing conflicts.
-                while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == docNumericID) {
+                while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == doc_id) {
                 }
 
                 SequenceNumber realSequence = sequence; // because sequence may be changed, below
-                if (current < 2) {
-                    // The new doc revision is a conflict loser, so find the older winning rev.
-                    // This situation occurs when a branch of a conflict is updated.
+                if (minLastSequence > 0) {
+                    // Find conflicts with documents from previous indexings.
                     CBL_FMResultSet* r2 = [fmdb executeQuery:
-                                    @"SELECT revid, sequence, deleted, json FROM revs "
-                                     "WHERE doc_id=? AND current=2 LIMIT 1", @(docNumericID)];
+                                    @"SELECT revid, sequence FROM revs "
+                                     "WHERE doc_id=? AND sequence<=? AND current!=0 AND deleted=0 "
+                                     "ORDER BY revID DESC "
+                                     "LIMIT 1",
+                                    @(doc_id), @(minLastSequence)];
                     if (!r2) {
                         [r close];
                         return dbStorage.lastDbError;
                     }
-                    Assert([r2 next]);
-                    revID = [r2 stringForColumnIndex:0];
-                    sequence = [r2 longLongIntForColumnIndex: 1];
-                    isDeleted = [r2 boolForColumnIndex: 2];
-                    json = [r2 dataForColumnIndex: 3];
+                    if ([r2 next]) {
+                        NSString* oldRevID = [r2 stringForColumnIndex:0];
+                        // This is the revision that used to be the 'winner'.
+                        // Remove its emitted rows:
+                        SequenceNumber oldSequence = [r2 longLongIntForColumnIndex: 1];
+                        for (CBL_SQLiteViewStorage* view in views) {
+                            [fmdb executeUpdate: [view queryString: @"DELETE FROM 'maps_#' WHERE sequence=?"],
+                                                 @(oldSequence)];
+                            int changes = fmdb.changes;
+                            deleted += changes;
+                            viewTotalRows[@(view.viewID)] =
+                                @([viewTotalRows[@(view.viewID)] intValue] - changes);
+                        }
+                        if (CBLCompareRevIDs(oldRevID, revID) > 0) {
+                            // It still 'wins' the conflict, so it's the one that
+                            // should be mapped [again], not the current revision!
+                            revID = oldRevID;
+                            sequence = oldSequence;
+                            json = [fmdb dataForQuery: @"SELECT json FROM revs WHERE sequence=?",
+                                    @(sequence)];
+                        }
+                    }
                     [r2 close];
                 }
 
-                if (isDeleted)
-                    continue;
-                
                 // Get the document properties, to pass to the map function:
                 CBLContentOptions contentOptions = kCBLIncludeLocalSeq;
                 if (noAttachments)
@@ -403,8 +414,7 @@
 - (CBLStatus) _emitKey: (UU id)key
                  value: (UU id)value
             valueIsDoc: (BOOL)valueIsDoc
-                forDoc: (SInt64)docNumericID
-              sequence: (SequenceNumber)sequence
+           forSequence: (SequenceNumber)sequence
 {
     CBL_SQLiteStorage* dbStorage = _dbStorage;
     CBL_FMDatabase* fmdb = dbStorage.fmdb;
@@ -466,10 +476,9 @@
         keyJSON = [[NSData alloc] initWithBytes: "null" length: 4];
 
     fmdb.bindNSDataAsString = YES;
-    BOOL ok = [fmdb executeUpdate: [self queryString:
-                                    @"INSERT INTO 'maps_#' (doc_id, sequence, key, value, "
-                                     "fulltext_id, bbox_id, geokey) VALUES (?, ?, ?, ?, ?, ?, ?)"],
-               @(docNumericID), @(sequence), keyJSON, valueJSON,
+    BOOL ok = [fmdb executeUpdate: [self queryString: @"INSERT INTO 'maps_#' (sequence, key, value, "
+                                   "fulltext_id, bbox_id, geokey) VALUES (?, ?, ?, ?, ?, ?)"],
+                                  @(sequence), keyJSON, valueJSON,
                fullTextID, bboxID, geoKey];
     fmdb.bindNSDataAsString = NO;
     return ok ? kCBLStatusOK : dbStorage.lastDbError;
