@@ -110,41 +110,54 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 //}
 
 
-- (BOOL) compileFromProperties: (NSDictionary*)viewProps language: (NSString*)language {
+- (CBLStatus) compileFromDesignDoc {
+    if (self.registeredMapBlock != nil)
+        return kCBLStatusOK;
+
+    // see if there's a design doc with a CouchDB-style view definition we can compile:
+    NSString* language;
+    NSDictionary* viewProps = $castIf(NSDictionary, [_weakDB getDesignDocFunction: self.name
+                                                                              key: @"views"
+                                                                         language: &language]);
+    if (!viewProps)
+        return kCBLStatusNotFound;
+    LogTo(View, @"%@: Attempting to compile %@ from design doc", self.name, language);
+    if (![CBLView compiler])
+        return kCBLStatusNotImplemented;
+    return [self compileFromProperties: viewProps language: language];
+}
+
+
+- (CBLStatus) compileFromProperties: (NSDictionary*)viewProps language: (NSString*)language {
     if (!language)
         language = @"javascript";
     NSString* mapSource = viewProps[@"map"];
     if (!mapSource)
-        return NO;
+        return kCBLStatusNotFound;
     CBLMapBlock mapBlock = [[CBLView compiler] compileMapFunction: mapSource language: language];
     if (!mapBlock) {
-        Warn(@"View %@ has unknown map function: %@", _name, mapSource);
-        return NO;
+        Warn(@"View %@ could not compile %@ map fn: %@", _name, language, mapSource);
+        return kCBLStatusCallbackError;
     }
     NSString* reduceSource = viewProps[@"reduce"];
     CBLReduceBlock reduceBlock = NULL;
     if (reduceSource) {
-        reduceBlock =[[CBLView compiler] compileReduceFunction: reduceSource language: language];
+        reduceBlock = [[CBLView compiler] compileReduceFunction: reduceSource language: language];
         if (!reduceBlock) {
-            Warn(@"View %@ has unknown reduce function: %@", _name, reduceSource);
-            return NO;
+            Warn(@"View %@ could not compile %@ map fn: %@", _name, language, reduceSource);
+            return kCBLStatusCallbackError;
         }
     }
 
     // Version string is based on a digest of the properties:
     NSError* error;
     NSString* version = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: viewProps error: &error]);
-    if (error) {
-        Warn(@"View %@ has invalid JSON values: %@", _name, error);
-        return NO;
-    }
-
     [self setMapBlock: mapBlock reduceBlock: reduceBlock version: version];
 
     NSDictionary* options = $castIf(NSDictionary, viewProps[@"options"]);
     _collation = ($equal(options[@"collation"], @"raw")) ? kCBLViewCollationRaw
-                                                             : kCBLViewCollationUnicode;
-    return YES;
+                                                         : kCBLViewCollationUnicode;
+    return kCBLStatusOK;
 }
 
 
@@ -267,7 +280,7 @@ static inline NSData* toJSONData( UU id object ) {
         // and remove obsolete emitted results from the 'maps' table:
         SequenceNumber minLastSequence = dbMaxSequence;
         SequenceNumber viewLastSequence[inputViews.count];
-        unsigned deleted = 0;
+        unsigned deletedCount = 0;
         int i = 0;
         NSMutableDictionary* viewTotalRows = [[NSMutableDictionary alloc] init];
         NSMutableArray* views = [[NSMutableArray alloc] initWithCapacity: inputViews.count];
@@ -314,7 +327,7 @@ static inline NSData* toJSONData( UU id object ) {
                 
                 // Update #deleted rows
                 int changes = _fmdb.changes;
-                deleted += changes;
+                deletedCount += changes;
                 
                 // Only count these deletes as changes if this isn't a view reset to 0
                 if (last != 0) {
@@ -334,7 +347,7 @@ static inline NSData* toJSONData( UU id object ) {
         __block NSDictionary* curDoc;
         __block SequenceNumber sequence = minLastSequence;
         __block CBLStatus emitStatus = kCBLStatusOK;
-        __block unsigned inserted = 0;
+        __block unsigned insertedCount = 0;
         CBLMapEmitBlock emit = ^(id key, id value) {
             int status = [curView _emitKey: key value: value
                                 valueIsDoc: (value == curDoc)
@@ -343,18 +356,20 @@ static inline NSData* toJSONData( UU id object ) {
                 emitStatus = status;
             else {
                 viewTotalRows[@(curView.viewID)] = @([viewTotalRows[@(curView.viewID)] intValue] + 1);
-                inserted++;
+                insertedCount++;
             }
         };
 
         // Now scan every revision added since the last time the views were indexed:
+        NSMutableString* sql = [@"SELECT revs.doc_id, sequence, docid, revid, json, "
+                                "no_attachments, deleted FROM revs, docs "
+                                "WHERE sequence>? AND current!=0 " mutableCopy];
+        if (minLastSequence == 0)
+            [sql appendString: @"AND deleted=0 "];
+        [sql appendString: @"AND revs.doc_id = docs.doc_id "
+                            "ORDER BY revs.doc_id, deleted, revid DESC"];
         CBL_FMResultSet* r;
-        r = [_fmdb executeQuery: @"SELECT revs.doc_id, sequence, docid, revid, json, no_attachments "
-                                 "FROM revs, docs "
-                                 "WHERE sequence>? AND current!=0 AND deleted=0 "
-                                 "AND revs.doc_id = docs.doc_id "
-                                 "ORDER BY revs.doc_id, revid DESC",
-                                 @(minLastSequence)];
+        r = [_fmdb executeQuery: sql, @(minLastSequence)];
         if (!r)
             return self.lastDbError;
 
@@ -372,6 +387,7 @@ static inline NSData* toJSONData( UU id object ) {
                 NSString* revID = [r stringForColumnIndex: 3];
                 NSData* json = [r dataForColumnIndex: 4];
                 BOOL noAttachments = [r boolForColumnIndex: 5];
+                BOOL deleted = [r boolForColumnIndex: 6];
             
                 // Skip rows with the same doc_id -- these are losing conflicts.
                 while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == doc_id) {
@@ -399,14 +415,15 @@ static inline NSData* toJSONData( UU id object ) {
                             [_fmdb executeUpdate: @"DELETE FROM maps WHERE view_id=? AND sequence=?",
                                                  @(view.viewID), @(oldSequence)];
                             int changes = _fmdb.changes;
-                            deleted += changes;
+                            deletedCount += changes;
                             viewTotalRows[@(view.viewID)] =
                                 @([viewTotalRows[@(view.viewID)] intValue] - changes);
                         }
-                        if (CBLCompareRevIDs(oldRevID, revID) > 0) {
+                        if (deleted || CBLCompareRevIDs(oldRevID, revID) > 0) {
                             // It still 'wins' the conflict, so it's the one that
                             // should be mapped [again], not the current revision!
                             revID = oldRevID;
+                            deleted = NO;
                             sequence = oldSequence;
                             json = [_fmdb dataForQuery: @"SELECT json FROM revs WHERE sequence=?",
                                     @(sequence)];
@@ -414,6 +431,9 @@ static inline NSData* toJSONData( UU id object ) {
                     }
                     [r2 close];
                 }
+
+                if (deleted)
+                    continue;
                 
                 // Get the document properties, to pass to the map function:
                 CBLContentOptions contentOptions = kCBLIncludeLocalSeq;
@@ -463,7 +483,7 @@ static inline NSData* toJSONData( UU id object ) {
         }
         
         LogTo(View, @"...Finished re-indexing (%@) to #%lld (deleted %u, added %u)",
-              viewNames(views), dbMaxSequence, deleted, inserted);
+              viewNames(views), dbMaxSequence, deletedCount, insertedCount);
         return kCBLStatusOK;
     }];
     

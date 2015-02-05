@@ -543,32 +543,6 @@ static BOOL sAutoCompact = YES;
     }
 }
 
-- (CBLView*) compileViewNamed: (NSString*)viewName status: (CBLStatus*)outStatus {
-    CBLView* view = [self existingViewNamed: viewName];
-    if (view && view.mapBlock)
-        return view;
-    
-    // No CouchbaseLite view is defined, or it hasn't had a map block assigned;
-    // see if there's a CouchDB view definition we can compile:
-    NSString* language;
-    NSDictionary* viewProps = $castIf(NSDictionary, [self getDesignDocFunction: viewName
-                                                                           key: @"views"
-                                                                      language: &language]);
-    if (!viewProps) {
-        *outStatus = kCBLStatusNotFound;
-        return nil;
-    } else if (![CBLView compiler]) {
-        *outStatus = kCBLStatusNotImplemented;
-        return nil;
-    }
-    view = [self viewNamed: viewName];
-    if (![view compileFromProperties: viewProps language: language]) {
-        *outStatus = kCBLStatusCallbackError;
-        return nil;
-    }
-    return view;
-}
-
 
 - (CBLQueryIteratorBlock) getAllDocs: (CBLQueryOptions*)options
                               status: (CBLStatus*)outStatus

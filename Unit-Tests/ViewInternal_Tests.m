@@ -357,6 +357,64 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
                               $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
 }
 
+// https://github.com/couchbase/couchbase-lite-android/issues/494
+- (void) test_IndexingOlderRevision {
+    // In case conflictWinner was deleted, conflict loser should be indexed.
+    
+    RequireTestCase(Index);
+    NSArray* docs = [self putDocs];
+    CBL_Revision* leaf1 = docs[1];
+    
+    CBLView* view = [self createView];
+    AssertEq([view updateIndex], kCBLStatusOK);
+    NSArray* dump = [view.storage dump];
+    Log(@"View dump: %@", dump);
+    AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
+                             $dict({@"key", @"\"four\""}, {@"seq", @2}),
+                             $dict({@"key", @"\"one\""},  {@"seq", @3}),
+                             $dict({@"key", @"\"three\""},{@"seq", @4}),
+                             $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
+    
+    // Create a conflict, won by the new revision:
+    NSDictionary* props = $dict({@"_id", @"44444"},
+                                {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
+                                {@"key", @"40ur"});
+    CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
+    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
+    Assert(status < 300);
+    AssertEqual(leaf1.docID, leaf2.docID);
+    
+    // Update the view -- should contain only the key from the new rev, not the old:
+    AssertEq([view updateIndex], kCBLStatusOK);
+    dump = [view.storage dump];
+    Log(@"View dump: %@", dump);
+    AssertEqual(dump, $array($dict({@"key", @"\"40ur\""}, {@"seq", @6}),
+                             $dict({@"key", @"\"five\""}, {@"seq", @5}),
+                             $dict({@"key", @"\"one\""},  {@"seq", @3}),
+                             $dict({@"key", @"\"three\""},{@"seq", @4}),
+                             $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
+
+    // Delete the new rev, which will make the old one current again:
+    CBL_Revision* leaf3 = [[CBL_Revision alloc]initWithDocID:@"44444" revID:@"" deleted:true];
+    leaf3 = [db putRevision: [leaf3 mutableCopy] prevRevisionID:@"1-~~~~~" allowConflict:true status:&status];
+    AssertEq(status, kCBLStatusOK);
+
+    AssertEq(true, [leaf3 deleted]);
+    AssertEqual(leaf1.docID, leaf3.docID);
+
+    AssertEqual(@"four", [[db documentWithID:@"44444"] propertyForKey:@"key"]);
+    
+    // Update the view -- should contain only the key from the old rev, not the new:
+    AssertEq([view updateIndex], kCBLStatusOK);
+    dump = [view.storage dump];
+    Log(@"View dump: %@", dump);
+    AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
+                             $dict({@"key", @"\"four\""}, {@"seq", @2}),
+                             $dict({@"key", @"\"one\""},  {@"seq", @3}),
+                             $dict({@"key", @"\"three\""},{@"seq", @4}),
+                             $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
+}
+
 
 - (void) test07_Index_Persistent {
     // Make sure index is not invalidated on relaunch (see #540)

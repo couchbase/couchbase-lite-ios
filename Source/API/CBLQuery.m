@@ -158,6 +158,8 @@
         [desc appendFormat: @", descending"];
     if (_limit != UINT_MAX)
         [desc appendFormat: @", limit=%lu", (unsigned long)_limit];
+    if (_prefixMatchLevel)
+        [desc appendFormat: @", prefixMatchLevel=%lu", (unsigned long)_prefixMatchLevel];
     if (_groupLevel)
         [desc appendFormat: @", groupLevel=%lu", (unsigned long)_groupLevel];
     if (_mapOnly)

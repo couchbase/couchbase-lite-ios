@@ -17,6 +17,8 @@
 #import "CBLBase64.h"
 
 #import "CollectionUtils.h"
+#import "CBJSONEncoder.h"
+#import "CBLJSON.h"
 
 
 #ifdef GNUSTEP
@@ -177,6 +179,13 @@ NSData* CBLHMACSHA256(NSData* key, NSData* data) {
     UInt8 hmac[SHA256_DIGEST_LENGTH];
     CCHmac(kCCHmacAlgSHA256, key.bytes, key.length, data.bytes, data.length, &hmac);
     return [NSData dataWithBytes: hmac length: sizeof(hmac)];
+}
+
+
+NSString* CBLDigestFromObject(id obj) {
+    NSData* json = [CBJSONEncoder canonicalEncoding: obj error: NULL];
+    Assert(json, @"CBLKeyFromObject got unencodable param");
+    return [CBLJSON base64StringWithData: CBLSHA1Digest(json)];
 }
 
 

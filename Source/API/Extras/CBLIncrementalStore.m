@@ -468,11 +468,12 @@ static CBLManager* sCBLManager;
             }
         }
         
-        
         // Objects that were deleted from the calling context...
         for (NSManagedObject *object in [save deletedObjects]) {
             // doesn't delete the document the normal way, but marks it as deleted to keep the type field needed for notifying Core Data.
-            CBLDocument *doc = [self.database documentWithID:[object.objectID couchbaseLiteIDRepresentation]];
+            CBLDocument *doc = [self.database existingDocumentWithID:[object.objectID couchbaseLiteIDRepresentation]];
+            if (!doc || doc.isDeleted) continue;
+
             NSDictionary *contents = [self _propertiesForDeletingDocument:doc];
             if (![doc putProperties:contents error:&error]) {
                 if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
@@ -490,8 +491,6 @@ static CBLManager* sCBLManager;
         }
         
         return @[];
-        
-        
     } else if (request.requestType == NSFetchRequestType) {
         
         NSFetchRequest *fetch = (NSFetchRequest*)request;
@@ -1403,11 +1402,11 @@ static CBLManager* sCBLManager;
 - (void) _informManagedObjectContext:(NSManagedObjectContext*)context updatedIDs:(NSArray*)updatedIDs deletedIDs:(NSArray*)deletedIDs
 {
     NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithCapacity:3];
-    
+    NSMutableSet *updatedEntities = [NSMutableSet set];
+
     if (updatedIDs.count > 0) {
         NSMutableArray *updated = [NSMutableArray arrayWithCapacity:updatedIDs.count];
         NSMutableArray *inserted = [NSMutableArray arrayWithCapacity:updatedIDs.count];
-        
         for (NSManagedObjectID *mocid in updatedIDs) {
             NSManagedObject *moc = [context objectRegisteredForID:mocid];
             if (!moc) {
@@ -1417,6 +1416,12 @@ static CBLManager* sCBLManager;
                 [context refreshObject:moc mergeChanges:YES];
                 [updated addObject:moc];
             }
+
+            // Ensure that a fault has been fired:
+            [moc willAccessValueForKey:nil];
+            [context refreshObject:moc mergeChanges:YES];
+
+            [updatedEntities addObject:moc.entity.name];
         }
         [userInfo setObject:updated forKey:NSUpdatedObjectsKey];
         if (inserted.count > 0) {
@@ -1429,14 +1434,23 @@ static CBLManager* sCBLManager;
         for (NSManagedObjectID *mocid in deletedIDs) {
             NSManagedObject *moc = [context objectWithID:mocid];
             [context deleteObject:moc];
-            // load object again to get a fault
+
+            // Load object again to get a fault:
             [deleted addObject:[context objectWithID:mocid]];
+
+            [updatedEntities addObject:moc.entity.name];
         }
         [userInfo setObject:deleted forKey:NSDeletedObjectsKey];
     }
-    
+
+    // Clear cache:
+    for (NSString *entity in updatedEntities) {
+        [self _purgeCacheForEntityName:entity];
+    }
+
     NSNotification *didUpdateNote = [NSNotification notificationWithName:NSManagedObjectContextObjectsDidChangeNotification
-                                                                  object:context userInfo:userInfo];
+                                                                  object:context
+                                                                userInfo:userInfo];
     [context mergeChangesFromContextDidSaveNotification:didUpdateNote];
 }
 - (void) _informObservingManagedObjectContextsAboutUpdatedIDs:(NSArray*)updatedIDs deletedIDs:(NSArray*)deletedIDs

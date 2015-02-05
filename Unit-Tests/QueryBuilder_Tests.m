@@ -102,7 +102,7 @@ static void test(QueryBuilder_Tests *self,
 }
 
 
-- (void) test00_Plan {
+- (void) test01_Plan {
     test(self, /*select*/ @[@"wingspan"],
          /*where*/ @"name in $NAMES",
          /*order by*/ @"name",
@@ -225,7 +225,7 @@ static void test(QueryBuilder_Tests *self,
 }
 
 
-- (void) test00_IllegalPredicates {
+- (void) test02_IllegalPredicates {
     NSArray* preds = @[ @"price + $DELTA < 100",
                         @"color = $COLOR or color = $OTHER_COLOR",
                         ];
@@ -242,7 +242,7 @@ static void test(QueryBuilder_Tests *self,
 }
 
 
-- (void) test00_ViewGeneration {
+- (void) test03_ViewGeneration {
     NSError* error;
     CBLQueryBuilder* p1 = [[CBLQueryBuilder alloc] initWithDatabase: db
                                                              select: @[@"wingspan"]
@@ -251,7 +251,11 @@ static void test(QueryBuilder_Tests *self,
                                                               error: &error];
     Assert(p1);
     Log(@"Explanation: %@", p1.explanation);
-//    AssertEqual(p1.view.name, @"builder-IGPag5AW7YUwzzQqgOoqPzyiXGc=");
+    AssertEqual(p1.view.name, @"builder-lb4UFEMGvgMRwJEiC4n677CGXak=");
+    // This assertion is expected to fail if CBLQueryBuilder's internal logic changes such that
+    // the view's expression/predicate/etc. change. If that happens you'll need to replace the
+    // string constant above with the new one. But aside from that, any failure of this assertion
+    // means either the builder isn't creating unique digests, or it's creating the wrong view.
 
     CBLQueryBuilder* p2 = [[CBLQueryBuilder alloc] initWithDatabase: db
                                                              select: @[@"wingspan"]
@@ -260,12 +264,12 @@ static void test(QueryBuilder_Tests *self,
                                                               error: &error];
     Assert(p2);
     Log(@"Explanation: %@", p2.explanation);
-//    AssertEqual(p2.view.name, @"builder-IGPag5AW7YUwzzQqgOoqPzyiXGc=");
+    AssertEqual(p2.view.name, @"builder-lb4UFEMGvgMRwJEiC4n677CGXak="); // See comment above
     AssertEq(p2.view, p1.view);
 }
 
 
-- (void) test00_Explanation {
+- (void) test04_Explanation {
     NSError* error;
     CBLQueryBuilder* b = [[CBLQueryBuilder alloc]
                             initWithDatabase: db
@@ -275,22 +279,20 @@ static void test(QueryBuilder_Tests *self,
                             error: &error];
     NSString* exp = b.explanation;
     Log(@"Explanation = \n%@", exp);
-#if 0 //TEMP
-    AssertEqual(exp,
-@"// view \"builder-NCAd2nwidQmv6GjOVGB+tZ8Wflw=\":\n\
+    AssertEqual(exp, // See comment above regarding view name
+@"// view \"builder-NroYrco50B35DO0HQnJh9AxJZM0=\":\n\
 view.map = {\n\
     if (type == \"post\")\n\
         for (i in tags)\n\
-            emit([i, date], [title, body, author]);\n\
+            emit(i, [title, body, author, date]);\n\
 };\n\
-query.startKey = [$TAG];\n\
-query.endKey = [$TAG];\n\
-query.prefixMatchLevel = 1;\n");
-#endif
+query.startKey = $TAG;\n\
+query.endKey = $TAG;\n\
+query.sortDescriptors = [(value3, descending, compare:)];\n");
 }
 
 
-- (void) test00_StringIn {
+- (void) test05_StringIn {
     [self createDocuments: 100];
 
     NSError* error;
@@ -310,7 +312,7 @@ query.prefixMatchLevel = 1;\n");
 }
 
 
-- (void) test00_Reduce {
+- (void) test06_Reduce {
     [self createDocuments: 100];
 
     NSError* error;
@@ -328,6 +330,51 @@ query.prefixMatchLevel = 1;\n");
     Assert(row, @"Query failed: %@", error);
     Log(@"%@", row);
     AssertEqual(row.value, @(49.5));
+}
+
+
+- (void) test07_Sorting {
+    [self createDocuments: 100];
+
+    NSError* error;
+
+    // Ascending:
+    NSArray *orderBy = [NSMutableArray arrayWithObject:
+                        [[NSSortDescriptor alloc] initWithKey:@"sequence" ascending:YES]];
+    CBLQueryBuilder* b = [[CBLQueryBuilder alloc] initWithDatabase: db
+                                           select: nil
+                                            where: @"testName=='testDatabase'"
+                                          orderBy: orderBy
+                                            error: &error];
+
+    Assert(b, @"Failed to build: %@", error);
+    Log(@"%@", b.explanation);
+
+    CBLQueryEnumerator* e = [b runQueryWithContext: nil error: &error];
+    Assert(e, @"Query failed: %@", error);
+    NSUInteger seq = 0;
+    for (CBLQueryRow* row in e) {
+        AssertEqual(row.document[@"sequence"], @(seq++));
+    }
+
+    // Descending:
+    orderBy = [NSMutableArray arrayWithObject:
+               [[NSSortDescriptor alloc] initWithKey:@"sequence" ascending:NO]];
+    b = [[CBLQueryBuilder alloc] initWithDatabase: db
+                                           select: nil
+                                            where: @"testName=='testDatabase'"
+                                          orderBy: orderBy
+                                            error: &error];
+
+    Assert(b, @"Failed to build: %@", error);
+    Log(@"%@", b.explanation);
+
+    e = [b runQueryWithContext: nil error: &error];
+    Assert(e, @"Query failed: %@", error);
+    seq = 100;
+    for (CBLQueryRow* row in e) {
+        AssertEqual(row.document[@"sequence"], @(--seq));
+    }
 }
 
 

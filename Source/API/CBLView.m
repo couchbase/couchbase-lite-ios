@@ -131,14 +131,17 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 #pragma mark - CONFIGURATION:
 
 
-- (CBLMapBlock) mapBlock {
+- (CBLMapBlock) registeredMapBlock {
     CBLDatabase* db = _weakDB;
     return [db.shared valueForType: @"map" name: _name inDatabaseNamed: db.name];
 }
 
-- (NSString*) mapVersion {
-    CBLDatabase* db = _weakDB;
-    return [db.shared valueForType: @"mapVersion" name: _name inDatabaseNamed: db.name];
+- (CBLMapBlock) mapBlock {
+    CBLMapBlock map = self.registeredMapBlock;
+    if (!map)
+        if ([self compileFromDesignDoc] == kCBLStatusOK)
+            map = self.registeredMapBlock;
+    return map;
 }
 
 - (CBLReduceBlock) reduceBlock {
@@ -146,6 +149,10 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
     return [db.shared valueForType: @"reduce" name: _name inDatabaseNamed: db.name];
 }
 
+- (NSString*) mapVersion {
+    CBLDatabase* db = _weakDB;
+    return [db.shared valueForType: @"mapVersion" name: _name inDatabaseNamed: db.name];
+}
 
 - (BOOL) setMapBlock: (CBLMapBlock)mapBlock
          reduceBlock: (CBLReduceBlock)reduceBlock
@@ -190,41 +197,54 @@ static id<CBLViewCompiler> sCompiler;
 }
 
 
-- (BOOL) compileFromProperties: (NSDictionary*)viewProps language: (NSString*)language {
+- (CBLStatus) compileFromDesignDoc {
+    if (self.registeredMapBlock != nil)
+        return kCBLStatusOK;
+
+    // see if there's a design doc with a CouchDB-style view definition we can compile:
+    NSString* language;
+    NSDictionary* viewProps = $castIf(NSDictionary, [_weakDB getDesignDocFunction: self.name
+                                                                              key: @"views"
+                                                                         language: &language]);
+    if (!viewProps)
+        return kCBLStatusNotFound;
+    LogTo(View, @"%@: Attempting to compile %@ from design doc", self.name, language);
+    if (![CBLView compiler])
+        return kCBLStatusNotImplemented;
+    return [self compileFromProperties: viewProps language: language];
+}
+
+
+- (CBLStatus) compileFromProperties: (NSDictionary*)viewProps language: (NSString*)language {
     if (!language)
         language = @"javascript";
     NSString* mapSource = viewProps[@"map"];
     if (!mapSource)
-        return NO;
+        return kCBLStatusNotFound;
     CBLMapBlock mapBlock = [[CBLView compiler] compileMapFunction: mapSource language: language];
     if (!mapBlock) {
-        Warn(@"View %@ has unknown map function: %@", _name, mapSource);
-        return NO;
+        Warn(@"View %@ could not compile %@ map fn: %@", _name, language, mapSource);
+        return kCBLStatusCallbackError;
     }
     NSString* reduceSource = viewProps[@"reduce"];
     CBLReduceBlock reduceBlock = NULL;
     if (reduceSource) {
-        reduceBlock =[[CBLView compiler] compileReduceFunction: reduceSource language: language];
+        reduceBlock = [[CBLView compiler] compileReduceFunction: reduceSource language: language];
         if (!reduceBlock) {
-            Warn(@"View %@ has unknown reduce function: %@", _name, reduceSource);
-            return NO;
+            Warn(@"View %@ could not compile %@ map fn: %@", _name, language, reduceSource);
+            return kCBLStatusCallbackError;
         }
     }
 
     // Version string is based on a digest of the properties:
     NSError* error;
-    NSString* version = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: viewProps error: NULL]);
-    if (!version) {
-        Warn(@"View %@ has invalid JSON values: %@", _name, error);
-        return NO;
-    }
-
+    NSString* version = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: viewProps error: &error]);
     [self setMapBlock: mapBlock reduceBlock: reduceBlock version: version];
 
     NSDictionary* options = $castIf(NSDictionary, viewProps[@"options"]);
     _collation = ($equal(options[@"collation"], @"raw")) ? kCBLViewCollationRaw
-                                                         : kCBLViewCollationUnicode;
-    return YES;
+    : kCBLViewCollationUnicode;
+    return kCBLStatusOK;
 }
 
 

@@ -79,12 +79,14 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 }
 
 - (void) reopenTestDB {
+    Log(@"---- closing db ----");
     Assert(db != nil);
     NSString* dbName = db.name;
     NSError* error;
     Assert([db close: &error], @"Couldn't close db: %@", error);
     [dbmgr _forgetDatabase: db];
 
+    Log(@"---- reopening db ----");
     CBLDatabase* db2 = [dbmgr databaseNamed: dbName error: &error];
     Assert(db2, @"Couldn't reopen db: %@", error);
     Assert(db2 != db, @"-reopenTestDB couldn't make a new instance");
