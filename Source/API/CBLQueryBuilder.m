@@ -9,6 +9,7 @@
 #import "CBLQueryBuilder.h"
 #import "CBLQueryBuilder+Private.h"
 #import "CBLReduceFuncs.h"
+#import "CBJSONEncoder.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLMisc.h"
 
@@ -641,17 +642,10 @@ static NSString* printExpr(NSExpression* expr) {
         reduceFunctions: (NSArray*)reduceFunctions
 {
     // Compute a map-block version string that's unique to this configuration:
-    NSMutableDictionary* versioned = [NSMutableDictionary dictionary];
-    versioned[@"keyExpression"] = keyExpression;
-    if (mapPredicate)
-        versioned[@"mapPredicate"] = mapPredicate;
-    if (valueExpr)
-        versioned[@"valueExpression"] = valueExpr;
-    if (reduceFunctions)
-        versioned[@"reduceFunctions"] = reduceFunctions;
-    NSData* archive = [NSKeyedArchiver archivedDataWithRootObject: versioned];
-    NSString* version = [CBLJSON base64StringWithData: CBLSHA1Digest(archive)];
-
+    NSString* version = CBLDigestFromObject($dict( {@"key",    keyExpression.description},
+                                                   {@"map",    mapPredicate.predicateFormat},
+                                                   {@"value",  valueExpr.description},
+                                                   {@"reduce", reduceFunctions} ));
     if (!view) {
         NSString* viewID = [NSString stringWithFormat: @"builder-%@", version];
         if (![db existingViewNamed: viewID]) {
@@ -679,7 +673,8 @@ static NSString* printExpr(NSExpression* expr) {
             } else if (![key isKindOfClass: [NSArray class]]) {
                 if ([key isKindOfClass: [NSString class]])
                     Warn(@"CBLQueryBuilder: '%@ contains...' expected %@ to be an array"
-                        " but it's a string; remember not to use 'contains' as a string operation!", keyExpression, keyExpression);
+                        " but it's a string; remember not to use 'contains' as a string operation!",
+                         keyExpression, keyExpression);
                 return;
             } else if (!compoundKey) {
                 // 'contains' test with single key; iterate over key:

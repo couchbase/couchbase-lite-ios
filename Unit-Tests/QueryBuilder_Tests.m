@@ -251,7 +251,11 @@ static void test(QueryBuilder_Tests *self,
                                                               error: &error];
     Assert(p1);
     Log(@"Explanation: %@", p1.explanation);
-//TEMP    AssertEqual(p1.view.name, @"builder-IGPag5AW7YUwzzQqgOoqPzyiXGc=");
+    AssertEqual(p1.view.name, @"builder-lb4UFEMGvgMRwJEiC4n677CGXak=");
+    // This assertion is expected to fail if CBLQueryBuilder's internal logic changes such that
+    // the view's expression/predicate/etc. change. If that happens you'll need to replace the
+    // string constant above with the new one. But aside from that, any failure of this assertion
+    // means either the builder isn't creating unique digests, or it's creating the wrong view.
 
     CBLQueryBuilder* p2 = [[CBLQueryBuilder alloc] initWithDatabase: db
                                                              select: @[@"wingspan"]
@@ -260,7 +264,7 @@ static void test(QueryBuilder_Tests *self,
                                                               error: &error];
     Assert(p2);
     Log(@"Explanation: %@", p2.explanation);
-//TEMP    AssertEqual(p2.view.name, @"builder-IGPag5AW7YUwzzQqgOoqPzyiXGc=");
+    AssertEqual(p2.view.name, @"builder-lb4UFEMGvgMRwJEiC4n677CGXak="); // See comment above
     AssertEq(p2.view, p1.view);
 }
 
@@ -275,18 +279,16 @@ static void test(QueryBuilder_Tests *self,
                             error: &error];
     NSString* exp = b.explanation;
     Log(@"Explanation = \n%@", exp);
-#if 0 //TEMP
-    AssertEqual(exp,
-@"// view \"builder-NCAd2nwidQmv6GjOVGB+tZ8Wflw=\":\n\
+    AssertEqual(exp, // See comment above regarding view name
+@"// view \"builder-NroYrco50B35DO0HQnJh9AxJZM0=\":\n\
 view.map = {\n\
     if (type == \"post\")\n\
         for (i in tags)\n\
-            emit([i, date], [title, body, author]);\n\
+            emit(i, [title, body, author, date]);\n\
 };\n\
-query.startKey = [$TAG];\n\
-query.endKey = [$TAG];\n\
-query.prefixMatchLevel = 1;\n");
-#endif
+query.startKey = $TAG;\n\
+query.endKey = $TAG;\n\
+query.sortDescriptors = [(value3, descending, compare:)];\n");
 }
 
 

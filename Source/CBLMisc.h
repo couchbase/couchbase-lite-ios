@@ -31,6 +31,9 @@ NSString* CBLHexSHA1Digest( NSData* input ) __attribute__((nonnull));
 NSData* CBLHMACSHA1(NSData* key, NSData* data) __attribute__((nonnull));
 NSData* CBLHMACSHA256(NSData* key, NSData* data) __attribute__((nonnull));
 
+/** Generates a digest string from a JSON-encodable object. Equal objects produce equal strings. */
+NSString* CBLDigestFromObject(id obj);
+
 /** Generates a hex dump of a sequence of bytes.
     The result is lowercase. This is important for CouchDB compatibility. */
 NSString* CBLHexFromBytes( const void* bytes, size_t length) __attribute__((nonnull));
