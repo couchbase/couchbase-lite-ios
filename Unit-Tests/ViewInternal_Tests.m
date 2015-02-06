@@ -377,7 +377,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     
     // Create a conflict, won by the new revision:
     NSDictionary* props = $dict({@"_id", @"44444"},
-                                {@"_rev", @"1-~~~~~"},  // higher revID, will win conflict
+                                {@"_rev", @"1-FFFFFFFF"},  // higher revID, will win conflict
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
@@ -396,7 +396,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 
     // Delete the new rev, which will make the old one current again:
     CBL_Revision* leaf3 = [[CBL_Revision alloc]initWithDocID:@"44444" revID:@"" deleted:true];
-    leaf3 = [db putRevision: [leaf3 mutableCopy] prevRevisionID:@"1-~~~~~" allowConflict:true status:&status];
+    leaf3 = [db putRevision: [leaf3 mutableCopy] prevRevisionID: leaf2.revID allowConflict:true status:&status];
     AssertEq(status, kCBLStatusOK);
 
     AssertEq(true, [leaf3 deleted]);
@@ -408,8 +408,9 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     AssertEq([view updateIndex], kCBLStatusOK);
     dump = [view.storage dump];
     Log(@"View dump: %@", dump);
+    SequenceNumber fourSeq = (self.isSQLiteDB ? leaf1 : leaf3).sequence;
     AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
-                             $dict({@"key", @"\"four\""}, {@"seq", @2}),
+                             $dict({@"key", @"\"four\""}, {@"seq", @(fourSeq)}),
                              $dict({@"key", @"\"one\""},  {@"seq", @3}),
                              $dict({@"key", @"\"three\""},{@"seq", @4}),
                              $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
