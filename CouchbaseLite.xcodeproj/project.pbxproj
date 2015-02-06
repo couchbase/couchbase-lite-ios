@@ -240,7 +240,6 @@
 		275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29041649A12B00B0D8EE /* CBLAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5A1159383E9005B9234 /* CBLAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275A29051649A13900B0D8EE /* CBLReplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5CB159533A5005B9234 /* CBLReplication.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		275A7CF21901AE0D00729933 /* libCBForest-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27571E0618F9060100141BDD /* libCBForest-iOS.a */; };
 		2762AB5818D36F1B00649D47 /* CBLReplication+Transformation.h in Headers */ = {isa = PBXBuildFile; fileRef = 2762AB5618D36F1B00649D47 /* CBLReplication+Transformation.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2762AB5918D36F1B00649D47 /* CBLReplication+Transformation.m in Sources */ = {isa = PBXBuildFile; fileRef = 2762AB5718D36F1B00649D47 /* CBLReplication+Transformation.m */; };
 		2762AB5A18D36F1B00649D47 /* CBLReplication+Transformation.m in Sources */ = {isa = PBXBuildFile; fileRef = 2762AB5718D36F1B00649D47 /* CBLReplication+Transformation.m */; };
@@ -402,7 +401,6 @@
 		27B0B797149290AB00A817AD /* CBLChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B791149290AB00A817AD /* CBLChangeTracker.m */; };
 		27B0B79E1492932800A817AD /* CBLBase64.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B79C1492932700A817AD /* CBLBase64.h */; };
 		27B0B79F1492932800A817AD /* CBLBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B79D1492932700A817AD /* CBLBase64.m */; };
-		27B0B7AA1492B83B00A817AD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		27B0B7CF1492B87200A817AD /* CBL_Body.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F074AA11CD5D7A00E9A2AB /* CBL_Body.m */; };
 		27B0B7D01492B87500A817AD /* CBL_Revision.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3814898DF200E0A926 /* CBL_Revision.m */; };
 		27B0B7D11492B87800A817AD /* CBL_Server.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706411486BBD500F0F099 /* CBL_Server.m */; };
@@ -415,8 +413,6 @@
 		27B0B7DF1492B8C100A817AD /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27B0B7E01492B8C100A817AD /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27B0B7E11492B8C100A817AD /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27B0B7F71492BC7A00A817AD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7F61492BC7A00A817AD /* Foundation.framework */; };
-		27B0B7F91492BC8100A817AD /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7F81492BC8000A817AD /* libsqlite3.dylib */; };
 		27B0B7FB1492BDE800A817AD /* CBLDatabase+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F0744611CD4B6D00E9A2AB /* CBLDatabase+Internal.h */; };
 		27B0B7FC1492BDE800A817AD /* CBLView+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* CBLView+Internal.h */; };
 		27B0B7FD1492BDE800A817AD /* CBL_Body.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F074A911CD5D7A00E9A2AB /* CBL_Body.h */; };
@@ -546,11 +542,9 @@
 		27E66AEF1A7307590091DA3F /* CBL_ForestDBViewStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A9D67E1A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm */; };
 		27E66B001A7307590091DA3F /* CBL_ForestDBStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DADE421A659FCC0075313A /* CBL_ForestDBStorage.mm */; };
 		27E66B3D1A7307590091DA3F /* libCBForest-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27571E0618F9060100141BDD /* libCBForest-iOS.a */; };
-		27E66B4E1A73088F0091DA3F /* libCBLSQLiteStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66ACF1A7305B10091DA3F /* libCBLSQLiteStorage.a */; };
 		27E66B4F1A73091D0091DA3F /* CBLCollateJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A551A6827DF0055DC40 /* CBLCollateJSON.m */; };
 		27E66B511A730CA80091DA3F /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66B501A730CA80091DA3F /* libsqlite3.dylib */; };
 		27E66B521A730DBF0091DA3F /* libCBLForestDBStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */; };
-		27E66B531A730DC90091DA3F /* libCBLSQLiteStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66ACF1A7305B10091DA3F /* libCBLSQLiteStorage.a */; };
 		27E66B561A7310920091DA3F /* CBLRouter+Changes.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E66B551A7310920091DA3F /* CBLRouter+Changes.m */; };
 		27E66B571A7310920091DA3F /* CBLRouter+Changes.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E66B551A7310920091DA3F /* CBLRouter+Changes.m */; };
 		27E7FAEE155D7F110025F93A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F714ACF2500065964D /* CoreServices.framework */; };
@@ -582,6 +576,8 @@
 		27F128B7156AC8C5008465C2 /* OAPlaintextSignatureProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285E156ABE24008465C2 /* OAPlaintextSignatureProvider.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F128B8156AC8EC008465C2 /* OAConsumer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12856156ABE24008465C2 /* OAConsumer.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F128B9156AC8F0008465C2 /* OAMutableURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F1285C156ABE24008465C2 /* OAMutableURLRequest.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		27F1B0031A8415C90056DA1E /* libTokenizer-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FA9A441918A7C700912F96 /* libTokenizer-iOS.a */; };
+		27F1B0041A8416010056DA1E /* libCBLSQLiteStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66ACF1A7305B10091DA3F /* libCBLSQLiteStorage.a */; };
 		27F1E4A8169799DA00F0E50F /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
 		27F273C117039D6000CD2B85 /* CBLUICollectionSource.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */; };
 		27F273C217039D6200CD2B85 /* CBLUICollectionSource.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */; };
@@ -900,6 +896,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 27E66AD01A7307590091DA3F;
 			remoteInfo = "CBL ForestDB Storage";
+		};
+		27F1B0051A84160E0056DA1E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27E66A571A7305B10091DA3F;
+			remoteInfo = "CBL SQLite Storage";
 		};
 		27FA99EF1917FFD000912F96 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1525,7 +1528,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27E66B4E1A73088F0091DA3F /* libCBLSQLiteStorage.a in Frameworks */,
 				27942CA6195B8991008C8DE9 /* libsqlite3.dylib in Frameworks */,
 				27E940661954BB9E00A9732E /* libc++.dylib in Frameworks */,
 				27E7FB03155DBDA20025F93A /* Security.framework in Frameworks */,
@@ -1543,8 +1545,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				275A7CF21901AE0D00729933 /* libCBForest-iOS.a in Frameworks */,
-				27B0B7AA1492B83B00A817AD /* Foundation.framework in Frameworks */,
+				27F1B0041A8416010056DA1E /* libCBLSQLiteStorage.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1552,8 +1553,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27B0B7F91492BC8100A817AD /* libsqlite3.dylib in Frameworks */,
-				27B0B7F71492BC7A00A817AD /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1561,7 +1560,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27E66B531A730DC90091DA3F /* libCBLSQLiteStorage.a in Frameworks */,
 				27E66B521A730DBF0091DA3F /* libCBLForestDBStorage.a in Frameworks */,
 				27E66B511A730CA80091DA3F /* libsqlite3.dylib in Frameworks */,
 				27E940691954BD4C00A9732E /* libc++.dylib in Frameworks */,
@@ -1593,6 +1591,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27F1B0031A8415C90056DA1E /* libTokenizer-iOS.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2847,6 +2846,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				27F1B0061A84160E0056DA1E /* PBXTargetDependency */,
 				275A7CEB1901AE0900729933 /* PBXTargetDependency */,
 			);
 			name = "CBL iOS library";
@@ -3941,6 +3941,11 @@
 			isa = PBXTargetDependency;
 			target = 27E66AD01A7307590091DA3F /* CBL ForestDB Storage */;
 			targetProxy = 27E66B4C1A73082E0091DA3F /* PBXContainerItemProxy */;
+		};
+		27F1B0061A84160E0056DA1E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27E66A571A7305B10091DA3F /* CBL SQLite Storage */;
+			targetProxy = 27F1B0051A84160E0056DA1E /* PBXContainerItemProxy */;
 		};
 		27FA9A461918AE3600912F96 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
