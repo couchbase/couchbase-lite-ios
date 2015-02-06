@@ -24,6 +24,9 @@
 #  error This class requires ARC!
 #endif
 
+#define INFO(FMT, ...)  NSLog(@"[CBLIS] INFO " FMT, ##__VA_ARGS__)
+#define WARN(FMT, ...)  NSLog(@"[CBLIS] WARNING " FMT, ##__VA_ARGS__)
+#define ERROR(FMT, ...)  NSLog(@"[CBLIS] ERROR " FMT, ##__VA_ARGS__)
 
 NSString * const kCBLISErrorDomain = @"CBLISErrorDomain";
 NSString * const kCBLISObjectHasBeenChangedInStoreNotification = @"kCBLISObjectHasBeenChangedInStoreNotification";
@@ -36,11 +39,10 @@ static NSString * const kCBLISFetchEntityByPropertyViewNameFormat = @"CBLIS/fetc
 static NSString * const kCBLISFetchEntityToManyViewNameFormat = @"CBLIS/%@_tomany_%@";
 
 
-// utility functions
+// Utility functions
 static BOOL CBLISIsNull(id value);
 static NSString *CBLISToManyViewNameForRelationship(NSRelationshipDescription *relationship);
 static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
-
 
 @interface NSManagedObjectID (CBLIncrementalStore)
 - (NSString*) couchbaseLiteIDRepresentation;
@@ -366,8 +368,8 @@ static CBLManager* sCBLManager;
 - (BOOL)insertOrUpdateObject:(NSManagedObject *)object
                  withContext:(NSManagedObjectContext *)context
                     outError:(NSError**)outError {
-    NSDictionary *contents = [self _couchbaseLiteRepresentationOfManagedObject:object
-                                                           withCouchbaseLiteID:YES];
+    NSDictionary *contents = [self couchbaseLiteRepresentationOfManagedObject:object
+                                                          withCouchbaseLiteID:YES];
     CBLDocument *doc = [self.database documentWithID:
                         [object.objectID couchbaseLiteIDRepresentation]];
     CBLUnsavedRevision *revision = [doc newRevision];
@@ -502,10 +504,10 @@ static CBLManager* sCBLManager;
                              inManagedObjectContext:context];
     }
     
-    NSDictionary *values = [self _coreDataPropertiesOfDocumentWithID:doc.documentID
-                                                          properties:doc.properties
-                                                          withEntity:entity
-                                                           inContext:context];
+    NSDictionary *values = [self coreDataPropertiesOfDocumentWithID:doc.documentID
+                                                         properties:doc.properties
+                                                         withEntity:entity
+                                                          inContext:context];
     NSIncrementalStoreNode *node = [[NSIncrementalStoreNode alloc] initWithObjectID:objectID
                                                                          withValues:values
                                                                             version:1];
@@ -728,7 +730,7 @@ static CBLManager* sCBLManager;
         NSMutableArray *result = [NSMutableArray arrayWithCapacity:[objects count]];
         for (NSManagedObject *object in objects) {
             NSDictionary *properties =
-            [self _couchbaseLiteRepresentationOfManagedObject:object withCouchbaseLiteID:YES];
+            [self couchbaseLiteRepresentationOfManagedObject:object withCouchbaseLiteID:YES];
 
             if (propertiesToFetch) {
                 [result addObject:[properties dictionaryWithValuesForKeys:propertiesToFetch]];
@@ -769,14 +771,14 @@ static CBLManager* sCBLManager;
                                              wherePredicate:compoundPredicate
                                                     orderBy:request.sortDescriptors
                                                       error:outError];
+
+        if (!builder)
+            return nil;
+
+        [self cacheQueryBuilder:builder
+                   forPredicate:compoundPredicate
+                sortDescriptors:request.sortDescriptors];
     }
-
-    if (!builder)
-        return nil;
-
-    [self cacheQueryBuilder:builder
-               forPredicate:compoundPredicate
-            sortDescriptors:request.sortDescriptors];
 
     CBLQuery *query = [builder createQueryWithContext:templateVars];
 
@@ -834,7 +836,7 @@ static CBLManager* sCBLManager;
         keys[@"sortDescriptors"] = sortDesc;
     }
 
-    return [self encodeCacheKey:keys];
+    return [self digestCacheKey:keys];
 }
 
 /*
@@ -1280,7 +1282,7 @@ static CBLManager* sCBLManager;
                     if (!value) break;
 
                     NSAttributeDescription *attr = (NSAttributeDescription *)propertyDesc;
-                    value = [self _couchbaseLiteValueForAttributeValue:value ofType:attr.attributeType];
+                    value =  [self convertCoreDataValue:value toCouchbaseLiteValueOfType:attr.attributeType];
                 } else if ([propertyDesc isKindOfClass:[NSRelationshipDescription class]]) {
                     NSRelationshipDescription *relationDesc = (NSRelationshipDescription*)propertyDesc;
                     if (!relationDesc.isToMany) {
@@ -1384,25 +1386,25 @@ static CBLManager* sCBLManager;
 
 #pragma mark - Misc
 
-- (id) _couchbaseLiteValueForAttributeValue:(id)value ofType:(NSAttributeType)type {
+- (id) convertCoreDataValue:(id)value toCouchbaseLiteValueOfType:(NSAttributeType)type {
     id result = nil;
 
     switch (type) {
         case NSInteger16AttributeType:
         case NSInteger32AttributeType:
         case NSInteger64AttributeType:
-            result = [NSNumber numberWithLong:CBLISIsNull(value) ? 0 : [value longValue]];
+            result = CBLISIsNull(value) ? @(0) : value;
             break;
         case NSDecimalAttributeType:
         case NSDoubleAttributeType:
         case NSFloatAttributeType:
-            result = [NSNumber numberWithDouble:CBLISIsNull(value) ? 0.0 : [value doubleValue]];
+            result = CBLISIsNull(value) ? @(0.0f) : value;
             break;
         case NSStringAttributeType:
             result = CBLISIsNull(value) ? @"" : value;
             break;
         case NSBooleanAttributeType:
-            result = [NSNumber numberWithBool:CBLISIsNull(value) ? NO : [value boolValue]];
+            result = CBLISIsNull(value) ? @(NO) : value;
             break;
         case NSDateAttributeType:
             result = CBLISIsNull(value) ? nil : [CBLJSON JSONObjectWithDate:value];
@@ -1412,14 +1414,84 @@ static CBLManager* sCBLManager;
             result = value;
             break;
         default:
-            NSLog(@"[info] Unsupported attribute type : %d", (int)type);
+            WARN(@"Unsupported attribute type : %d", (int)type);
             break;
     }
+
     return result;
 }
 
-- (id) _couchbaseLiteRepresentationOfManagedObject:(NSManagedObject*)object
-                               withCouchbaseLiteID:(BOOL)withID {
+- (id) convertCouchbaseLiteValue:(id)value toCoreDataValueOfType:(NSAttributeType)type {
+    id result = nil;
+
+    switch (type) {
+        case NSInteger16AttributeType:
+        case NSInteger32AttributeType:
+        case NSInteger64AttributeType:
+            if (CBLISIsNull(value))
+                result = @(0);
+            else if ([value isKindOfClass:[NSNumber class]])
+                result = @([value longValue]);
+            else {
+                WARN(@"Invalid value (%@) for the attribute type : %d", value, (int)type);
+                result = nil;
+            }
+            break;
+        case NSDecimalAttributeType:
+            if (CBLISIsNull(value))
+                result = [NSDecimalNumber numberWithDouble:0.0f];
+            else if ([value isKindOfClass:[NSNumber class]])
+                result = [NSDecimalNumber numberWithDouble:[value doubleValue]];
+            else {
+                WARN(@"Invalid value (%@) for the attribute type : %d", value, (int)type);
+                result = nil;
+            }
+            break;
+        case NSDoubleAttributeType:
+        case NSFloatAttributeType:
+            if (CBLISIsNull(value))
+                result = @(0.0f);
+            else if ([value isKindOfClass:[NSNumber class]])
+                result = @([value doubleValue]);
+            else {
+                WARN(@"Invalid value (%@) for the attribute type : %d", value, (int)type);
+                result = nil;
+            }
+            break;
+        case NSStringAttributeType:
+            if (CBLISIsNull(value))
+                result = @"";
+            else if ([value isKindOfClass:[NSString class]])
+                result = value;
+            else {
+                WARN(@"Invalid value (%@) for the attribute type : %d", value, (int)type);
+                result = nil;
+            } break;
+        case NSBooleanAttributeType:
+            if (CBLISIsNull(value))
+                result = @(NO);
+            else if ([value isKindOfClass:[NSNumber class]])
+                result = @([value boolValue]);
+            else {
+                WARN(@"Invalid value (%@) for the attribute type : %d", value, (int)type);
+                result = nil;
+            } break;
+        case NSDateAttributeType:
+            result = CBLISIsNull(value) ? nil : [CBLJSON dateWithJSONObject:value];
+            break;
+        case NSTransformableAttributeType:
+            result = value;
+            break;
+        default:
+            WARN(@"Unsupported attribute type : %d", (int)type);
+            break;
+    }
+
+    return result;
+}
+
+- (id) couchbaseLiteRepresentationOfManagedObject:(NSManagedObject*)object
+                              withCouchbaseLiteID:(BOOL)withID {
     NSEntityDescription *desc = object.entity;
     NSDictionary *propertyDesc = [desc propertiesByName];
 
@@ -1427,7 +1499,7 @@ static CBLManager* sCBLManager;
 
     [proxy setObject:desc.name
               forKey:kCBLISTypeKey];
-    
+
     if ([propertyDesc objectForKey:kCBLISCurrentRevisionAttributeName]) {
         id rev = [object valueForKey:kCBLISCurrentRevisionAttributeName];
         if (!CBLISIsNull(rev)) {
@@ -1463,9 +1535,9 @@ static CBLManager* sCBLManager;
                 
                 if (attr.valueTransformerName) {
                     NSValueTransformer *transformer = [NSValueTransformer valueTransformerForName:attr.valueTransformerName];
-                    
+
                     if (!transformer) {
-                        NSLog(@"[info] value transformer for attribute %@ with name %@ not found", attr.name, attr.valueTransformerName);
+                        WARN(@"Value transformer for attribute %@ with name %@ not found", attr.name, attr.valueTransformerName);
                         continue;
                     }
                     
@@ -1478,12 +1550,12 @@ static CBLManager* sCBLManager;
                         value = [value base64EncodedStringWithOptions:0];
                         attributeType = NSStringAttributeType;
                     } else {
-                        NSLog(@"[info] unsupported value transformer transformedValueClass: %@", NSStringFromClass(transformedClass));
+                        WARN(@"Unsupported value transformer transformedValueClass: %@", NSStringFromClass(transformedClass));
                         continue;
                     }
                 }
                 
-                value = [self _couchbaseLiteValueForAttributeValue:value ofType:attributeType];
+                value = [self convertCoreDataValue:value toCouchbaseLiteValueOfType:attributeType];
                 if (value) {
                     [proxy setObject:value forKey:property];
                 }
@@ -1505,10 +1577,10 @@ static CBLManager* sCBLManager;
     return proxy;
 }
 
-- (NSDictionary*) _coreDataPropertiesOfDocumentWithID:(NSString*)documentID
-                                           properties:(NSDictionary*)properties
-                                           withEntity:(NSEntityDescription*)entity
-                                            inContext:(NSManagedObjectContext*)context {
+- (NSDictionary*) coreDataPropertiesOfDocumentWithID:(NSString*)documentID
+                                          properties:(NSDictionary*)properties
+                                          withEntity:(NSEntityDescription*)entity
+                                           inContext:(NSManagedObjectContext*)context {
     NSMutableDictionary *result = [NSMutableDictionary dictionaryWithCapacity:properties.count];
     
     NSDictionary *propertyDesc = [entity propertiesByName];
@@ -1552,42 +1624,13 @@ static CBLManager* sCBLManager;
                     } else if (transformedClass == [NSData class]) {
                         value = [transformer reverseTransformedValue:[[NSData alloc]initWithBase64EncodedString:value options:0]];
                     } else {
-                        NSLog(@"[info] unsupported value transformer transformedValueClass: %@", NSStringFromClass(transformedClass));
+                        INFO(@"Unsupported value transformer transformedValueClass: %@", NSStringFromClass(transformedClass));
                         continue;
                     }
                 }
-                
-                switch (attributeType) {
-                    case NSInteger16AttributeType:
-                    case NSInteger32AttributeType:
-                    case NSInteger64AttributeType:
-                        value = [NSNumber numberWithLong:CBLISIsNull(value) ? 0 : [value longValue]];
-                        break;
-                    case NSDecimalAttributeType:
-                        value = [NSDecimalNumber numberWithDouble:CBLISIsNull(value) ? 0.0 : [value doubleValue]];
-                        break;
-                    case NSDoubleAttributeType:
-                    case NSFloatAttributeType:
-                        value = [NSNumber numberWithDouble:CBLISIsNull(value) ? 0.0 : [value doubleValue]];
-                        break;
-                    case NSStringAttributeType:
-                        value = CBLISIsNull(value) ? @"" : value;
-                        break;
-                    case NSBooleanAttributeType:
-                        value = [NSNumber numberWithBool:CBLISIsNull(value) ? NO : [value boolValue]];
-                        break;
-                    case NSDateAttributeType:
-                        value = CBLISIsNull(value) ? nil : [CBLJSON dateWithJSONObject:value];
-                        break;
-                    case NSTransformableAttributeType:
-                        // intentionally do nothing
-                        break;
-                    default:
-                        //NSAssert(NO, @"Unsupported attribute type");
-                        //break;
-                        NSLog(@"[info] CBLIncrementalStore: unsupported attribute %@, type: %lu",  attr, (unsigned long)attributeType);
-                }
-                
+
+                value = [self convertCouchbaseLiteValue:value toCoreDataValueOfType:attributeType];
+
                 if (value) {
                     [result setObject:value forKey:property];
                 }
@@ -1640,9 +1683,18 @@ static CBLManager* sCBLManager;
     return [NSData dataWithBytes: &digest length: sizeof(digest)];
 }
 
-- (NSString *)encodeCacheKey:(id)key {
-    NSData *archive = [NSKeyedArchiver archivedDataWithRootObject:key];
-    NSString *encoded = [CBLJSON base64StringWithData:[self SHA1:archive]];
+- (NSString *)digestCacheKey:(id)key {
+    if (!key) return nil;
+
+    NSError *error;
+    NSData *data = [CBLJSON dataWithJSONObject:key options:0 error:&error];
+    if (!data) {
+#ifdef DEBUG_DETAILS
+        ERROR(@"Invalid cache key : %@", key);
+#endif
+        return nil;
+    }
+    NSString *encoded = [CBLJSON base64StringWithData:data];
     return encoded;
 }
 
@@ -1666,8 +1718,8 @@ static CBLManager* sCBLManager;
     if (request.fetchOffset > 0)
         keys[@"fetchOffset"] = @(request.fetchOffset);
 
-    NSString *encodedKey = [self encodeCacheKey:keys];
-    return [NSString stringWithFormat:@"%@-%@", request.entityName, encodedKey];
+    NSString *digestedKey = [self digestCacheKey:keys];
+    return [NSString stringWithFormat:@"%@-%@", request.entityName, digestedKey];
 }
 
 - (NSArray *)cachedObjectsForFetchRequest:(NSFetchRequest *)request {
@@ -1958,8 +2010,7 @@ static CBLManager* sCBLManager;
 
 @end
 
-
-//// utility methods
+#pragma mark - Utilities
 
 /** Checks if value is nil or NSNull. */
 BOOL CBLISIsNull(id value)
