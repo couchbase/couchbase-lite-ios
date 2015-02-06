@@ -64,7 +64,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
 
 + (void) initialize {
-    if (self == [CBLDatabase class]) {
+    if (self == [CBL_ForestDBStorage class]) {
         forestdb::LogCallback = FDBLogCallback;
         if (WillLogTo(CBLDatabaseVerbose))
             forestdb::LogLevel = kDebug;

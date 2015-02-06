@@ -84,7 +84,6 @@ static id SendBody(Router_Tests* self, NSString* method, NSString* path, id body
                    CBLStatus expectedStatus, id expectedResult) {
     sLastResponse = SendRequest(self, method, path, @{@"Accept": @"application/json"}, bodyObj);
     id result = ParseJSONResponse(self, sLastResponse);
-    Log(@"%@ %@ --> %d", method, path, sLastResponse.status);
     Assert(result != nil);
 
     AssertEq(sLastResponse.internalStatus, expectedStatus);
