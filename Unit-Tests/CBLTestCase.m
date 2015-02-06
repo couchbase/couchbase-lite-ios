@@ -8,6 +8,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLManager+Internal.h"
 #import "MYURLUtils.h"
 #import "CBLRemoteRequest.h"
 
@@ -56,13 +57,27 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 
 
 @implementation CBLTestCaseWithDB
+{
+    BOOL _useForestDB;
+}
+
+
+- (void)invokeTest {
+    // Run each test method twice, once with SQLite storage and once with ForestDB.
+    _useForestDB = NO;
+    [super invokeTest];
+    _useForestDB = YES;
+    [super invokeTest];
+}
 
 
 - (void)setUp {
     [super setUp];
 
     dbmgr = [CBLManager createEmptyAtTemporaryPath: @"CBL_iOS_Unit_Tests"];
+    dbmgr.storageType = _useForestDB ? @"ForestDB" : @"SQLite";
     Assert(dbmgr);
+    Log(@"---- Using %@ ----", dbmgr.storageType);
     NSError* error;
     db = [dbmgr createEmptyDatabaseNamed: @"db" error: &error];
     Assert(db, @"Couldn't create db: %@", error);
