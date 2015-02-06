@@ -806,6 +806,13 @@
 			remoteGlobalIDString = 27139B9418F8EE3A0021A9A3;
 			remoteInfo = "CBForest-iOS";
 		};
+		27A754FF1A8559B6008BCD4D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 27FA99F419180B5F00912F96;
+			remoteInfo = "Tokenizer-iOS";
+		};
 		27AD1F8617C29BE80063108F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
@@ -2929,6 +2936,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				27A755001A8559B6008BCD4D /* PBXTargetDependency */,
 			);
 			name = "CBL SQLite Storage";
 			productName = TouchDBiOS;
@@ -3882,6 +3890,11 @@
 			name = "CBForest-iOS";
 			targetProxy = 275A7CEA1901AE0900729933 /* PBXContainerItemProxy */;
 		};
+		27A755001A8559B6008BCD4D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "Tokenizer-iOS";
+			targetProxy = 27A754FF1A8559B6008BCD4D /* PBXContainerItemProxy */;
+		};
 		27AD1F8717C29BE80063108F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = DA147C1F14BCAC3B0052DA4D /* CBL Listener iOS */;
@@ -4772,7 +4785,6 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
 				COPY_PHASE_STRIP = NO;
-				DSTROOT = /tmp/SQLiteStorage.dst;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
@@ -4801,7 +4813,6 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DSTROOT = /tmp/SQLiteStorage.dst;
 				EXPORTED_SYMBOLS_FILE = Source/CouchbaseLite.exp;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
@@ -4830,7 +4841,6 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
 				COPY_PHASE_STRIP = NO;
-				DSTROOT = /tmp/CouchbaseLiteiOS.dst;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
@@ -4848,7 +4858,6 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CBLForestDBStorage;
 				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
 			};
 			name = Debug;
 		};
@@ -4859,7 +4868,6 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DSTROOT = /tmp/CouchbaseLiteiOS.dst;
 				EXPORTED_SYMBOLS_FILE = Source/CouchbaseLite.exp;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
@@ -4877,7 +4885,6 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CBLForestDBStorage;
 				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
