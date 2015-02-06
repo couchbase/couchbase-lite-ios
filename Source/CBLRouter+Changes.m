@@ -12,8 +12,12 @@
 #import "CBLMisc.h"
 
 
+#if DEBUG
+// Make this configurable for testing purposes
+NSTimeInterval kMinHeartbeat = 5.0;
+#else
 #define kMinHeartbeat 5.0
-
+#endif
 
 @implementation CBL_Router (Changes)
 

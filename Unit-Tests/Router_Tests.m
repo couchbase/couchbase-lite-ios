@@ -29,6 +29,9 @@
 
 
 @implementation Router_Tests
+{
+    NSTimeInterval _savedMinHeartbeat;
+}
 
 
 static CBLResponse* SendRequest(Router_Tests* self, NSString* method, NSString* path,
@@ -107,6 +110,19 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
 
 
 #pragma mark - BASICS
+
+
+- (void) setUp {
+    [super setUp];
+    // Disable minimum heartbeat so that we can test it with short values to make the test quicker
+    _savedMinHeartbeat = kMinHeartbeat;
+    kMinHeartbeat = 0.0;
+}
+
+- (void) tearDown {
+    kMinHeartbeat = _savedMinHeartbeat;
+    [super tearDown];
+}
 
 
 - (void) test_Server {
@@ -507,7 +523,8 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     __block BOOL finished = NO;
     
     __block NSInteger heartbeat = 0;
-    NSURL* url = [NSURL URLWithString: @"cbl:///db/_changes?feed=longpoll&heartbeat=5000"];
+    // Artificially short heartbeat (made possible by -setUp) to speed up the test
+    NSURL* url = [NSURL URLWithString: @"cbl:///db/_changes?feed=longpoll&heartbeat=1000"];
     NSURLRequest* request = [NSURLRequest requestWithURL: url];
     CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: dbmgr request: request];
     router.onResponseReady = ^(CBLResponse* routerResponse) {
@@ -529,7 +546,7 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     [router start];
     Assert(!finished);
     
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10.5];
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.5];
     while ([[NSDate date] compare: timeout] == NSOrderedAscending
            && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
         ;
@@ -593,13 +610,14 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
 
 - (void) test_ContinuousChanges_Heartbeat {
     RequireTestCase(CBL_Router_ContinuousChanges);
-    
+
     __block CBLResponse* response = nil;
     NSMutableData* body = [NSMutableData data];
     __block BOOL finished = NO;
     
     __block NSInteger heartbeat = 0;
-    NSURL* url = [NSURL URLWithString: @"cbl:///db/_changes?feed=continuous&heartbeat=5000"];
+    // Artificially short heartbeat (made possible by -setUp) to speed up the test
+    NSURL* url = [NSURL URLWithString: @"cbl:///db/_changes?feed=continuous&heartbeat=1000"];
     NSURLRequest* request = [NSURLRequest requestWithURL: url];
     CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: dbmgr request: request];
     router.onResponseReady = ^(CBLResponse* routerResponse) {
@@ -626,7 +644,7 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     Assert(body.length == 0);
     Assert(!finished);
 
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10.5];
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.5];
     while ([[NSDate date] compare: timeout] == NSOrderedAscending
            && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
         ;

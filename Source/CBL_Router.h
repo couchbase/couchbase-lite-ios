@@ -11,6 +11,11 @@
 @class CBL_Server, CBLResponse, CBL_Body, CBLMultipartWriter, CBLQueryOptions;
 
 
+#if DEBUG
+extern NSTimeInterval kMinHeartbeat;    // Configurable for testing purposes only
+#endif
+
+
 typedef CBLStatus (^OnAccessCheckBlock)(CBLDatabase*, NSString *docID, SEL action);
 typedef void (^OnResponseReadyBlock)(CBLResponse*);
 typedef void (^OnDataAvailableBlock)(NSData* data, BOOL finished);
