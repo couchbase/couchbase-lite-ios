@@ -395,7 +395,7 @@ static CBLManager* sCBLManager;
                              content:data];
     }
 
-    BOOL result = [revision save:outError];
+    BOOL result = [revision save:outError] != nil;
     if (result) {
         [self notifyNewRevisionForManagedObject:object
                                       withRevId:doc.currentRevisionID
@@ -413,7 +413,7 @@ static CBLManager* sCBLManager;
     if (!doc || doc.isDeleted)
         return YES;
     
-    BOOL result = [doc putProperties:[self _propertiesForDeletingDocument:doc] error:outError];
+    BOOL result = [doc putProperties:[self _propertiesForDeletingDocument:doc] error:outError] != nil;
     if (result) {
         [self purgeCachedObjectsForEntityName:object.entity.name];
     }
