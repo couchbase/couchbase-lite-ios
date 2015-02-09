@@ -811,7 +811,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 
 - (BOOL) sequenceHasAttachments: (SequenceNumber)sequence {
-    return [_fmdb boolForQuery: @"SELECT 1 FROM attachments WHERE sequence=? LIMIT 1", @(sequence)];
+    return [_fmdb boolForQuery: @"SELECT no_attachments=0 FROM revs WHERE sequence=?", @(sequence)];
 }
 
 
