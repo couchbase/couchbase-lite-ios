@@ -189,9 +189,8 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         _indexType = (CBLViewIndexType)-1; // unknown
 
         if (![[NSFileManager defaultManager] fileExistsAtPath: _path isDirectory: NULL]) {
-            if (!create || ![self openIndexWithOptions: FDB_OPEN_FLAG_CREATE])
+            if (!create || ![self openIndexWithOptions: FDB_OPEN_FLAG_CREATE status: NULL])
                 return nil;
-            [self closeIndexSoon];
         }
 
     #if TARGET_OS_IPHONE
@@ -222,57 +221,70 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 
 - (NSUInteger) totalRows {
-    return (NSUInteger) self.index->rowCount();
+    if (![self openIndex: NULL])
+        return 0;
+    return (NSUInteger) _index->rowCount();
 }
 
 
 - (SequenceNumber) lastSequenceIndexed {
-    [self setupIndex]; // in case the _mapVersion changed, invalidating the index
-    return self.index->lastSequenceIndexed();
+    if (![self setupIndex: NULL]) // in case the _mapVersion changed, invalidating the index
+        return -1;
+    return _index->lastSequenceIndexed();
 }
 
 
 - (SequenceNumber) lastSequenceChangedAt {
-    [self setupIndex]; // in case the _mapVersion changed, invalidating the index
-    return self.index->lastSequenceChangedAt();
+    if (![self setupIndex: NULL]) // in case the _mapVersion changed, invalidating the index
+        return -1;
+    return _index->lastSequenceChangedAt();
 }
 
 
 #pragma mark - INDEX MANAGEMENT:
 
 
-- (MapReduceIndex*) index {
-    [self closeIndexSoon];
-    return _index ?: [self openIndexWithOptions: 0];
+// Opens the index. You MUST call this (or a method that calls it) before dereferencing _index.
+- (MapReduceIndex*) openIndex: (CBLStatus*)outStatus {
+    return _index ?: [self openIndexWithOptions: 0 status: outStatus];
 }
 
 
-- (MapReduceIndex*) openIndexWithOptions: (Database::openFlags)options {
-    Assert(!_indexDB);
-    Assert(!_index);
-    auto config = Database::defaultConfig();
-    config.buffercache_size = kViewBufferCacheSize;
-    config.wal_threshold = 8192;
-    config.wal_flush_before_commit = true;
-    config.seqtree_opt = YES;
-    config.compaction_threshold = 50;
-    try {
-        _indexDB = new Database(_path.fileSystemRepresentation, options, config);
-        Database* db = (Database*)_dbStorage.forestDatabase;
-        _index = new MapReduceIndex(_indexDB, "index", *db);
-    } catch (forestdb::error x) {
-        Warn(@"Unable to open index of %@: ForestDB error %d", self, x.status);
-        return nil;
-    } catch (...) {
-        Warn(@"Unable to open index of %@: Unexpected exception", self);
-        return nil;
-    }
+// Opens the index, specifying ForestDB database flags
+- (MapReduceIndex*) openIndexWithOptions: (Database::openFlags)options
+                                  status: (CBLStatus*)outStatus
+{
+    if (!_index) {
+        Assert(!_indexDB);
+        auto config = Database::defaultConfig();
+        config.buffercache_size = kViewBufferCacheSize;
+        config.wal_threshold = 8192;
+        config.wal_flush_before_commit = true;
+        config.seqtree_opt = YES;
+        config.compaction_threshold = 50;
+        try {
+            _indexDB = new Database(_path.fileSystemRepresentation, options, config);
+            Database* db = (Database*)_dbStorage.forestDatabase;
+            _index = new MapReduceIndex(_indexDB, "index", *db);
+        } catch (forestdb::error x) {
+            Warn(@"Unable to open index of %@: ForestDB error %d", self, x.status);
+            if (outStatus)
+                *outStatus = CBLStatusFromForestDBStatus(x.status);
+            return NULL;
+        } catch (...) {
+            Warn(@"Unable to open index of %@: Unexpected exception", self);
+            if (outStatus)
+                *outStatus = kCBLStatusException;
+            return NULL;
+        }
+        [self closeIndexSoon];
 
-//    if (_indexType >= 0)
-//        _index->indexType = _indexType;  // In case it was changed while index was closed
-//    if (_indexType == kCBLFullTextIndex)
-//        _index->textTokenizer = [[CBTextTokenizer alloc] init];
-    LogTo(View, @"%@: Opened index %p (type %d)", self, _index, _index->indexType());
+    //    if (_indexType >= 0)
+    //        _index->indexType = _indexType;  // In case it was changed while index was closed
+    //    if (_indexType == kCBLFullTextIndex)
+    //        _index->textTokenizer = [[CBTextTokenizer alloc] init];
+        LogTo(View, @"%@: Opened index %p (type %d)", self, _index, _index->indexType());
+    }
     return _index;
 }
 
@@ -296,7 +308,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 
 - (void) deleteIndex {
-    if (self.index) {
+    if ([self openIndex: NULL]) {
         Transaction t(_indexDB);
         _index->erase(t);
     }
@@ -309,29 +321,38 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 }
 
 
+/* unused
 - (CBLViewIndexType) indexType {
-    if (_index || _indexType < 0)
-        _indexType = (CBLViewIndexType) self.index->indexType();
+    if (_indexType < 0 && !_index)      // If indexType unknown, load index
+        (void)[self openIndex: NULL];
+    if (_index)
+        _indexType = (CBLViewIndexType) _index->indexType();
     return _indexType;
 }
 
 - (void)setIndexType:(CBLViewIndexType)indexType {
     _indexType = indexType;
-}
+}*/
 
 
-- (void) setupIndex {
+// Opens the index and updates its map block and version string (according to my delegate's)
+- (MapReduceIndex*) setupIndex: (CBLStatus*)outStatus {
     id<CBL_ViewStorageDelegate> delegate = _delegate;
-    if (!delegate)
-        return;
+    if (!delegate) {
+        if (*outStatus)
+            *outStatus = kCBLStatusNotFound;
+        return NULL;
+    }
     _mapReduceBridge.mapBlock = delegate.mapBlock;
     _mapReduceBridge.viewName = _name;
     _mapReduceBridge.indexType = _indexType;
-    (void)self.index; // open db
+    if (![self openIndex: outStatus]) // open db
+        return NULL;
     {
         Transaction t(_indexDB);
         _index->setup(t, _indexType, &_mapReduceBridge, delegate.mapVersion.UTF8String);
     }
+    return _index;
 }
 
 
@@ -343,17 +364,19 @@ static NSString* viewNames(NSArray* views) {
 - (CBLStatus) updateIndexes: (NSArray*)views {
     LogTo(View, @"Checking indexes of (%@) for %@", viewNames(views), _name);
     try {
+        CBLStatus status;
         std::vector<MapReduceIndex*> indexes;
         for (CBL_ForestDBViewStorage* viewStorage in views) {
-            [viewStorage setupIndex];
-            CBLMapBlock mapBlock = viewStorage.delegate.mapBlock;
-            MapReduceIndex* index = viewStorage.index;
-            if (mapBlock && index)
+            MapReduceIndex* index = [viewStorage setupIndex: &status];
+            if (!index)
+                return status;
+            if (viewStorage.delegate.mapBlock)
                 indexes.push_back(index);
             else
                 LogTo(ViewVerbose, @"    %@ has no map block; skipping it", viewStorage.name);
         }
-        (void)self.index;
+        if (![self openIndex: &status])
+            return status;
         bool updated;
         {
             Transaction t(_indexDB);
@@ -375,7 +398,7 @@ static NSString* viewNames(NSArray* views) {
 // This is really just for unit tests & debugging
 #if DEBUG
 - (NSArray*) dump {
-    MapReduceIndex* index = self.index;
+    MapReduceIndex* index = [self openIndex: NULL];
     if (!index)
         return nil;
     NSMutableArray* result = $marray();
@@ -397,8 +420,7 @@ static NSString* viewNames(NSArray* views) {
 /** Starts a view query, returning a CBForest enumerator. */
 - (IndexEnumerator) _runForestQueryWithOptions: (CBLQueryOptions*)options
 {
-    MapReduceIndex* index = self.index;
-    Assert(index);
+    Assert(_index); // caller MUST call -openIndex: first
     DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
     forestOpts.skip = options->skip;
     if (options->limit != kCBLQueryOptionsDefaultLimit)
@@ -410,12 +432,12 @@ static NSString* viewNames(NSArray* views) {
         std::vector<KeyRange> collatableKeys;
         for (id key in options.keys)
             collatableKeys.push_back(Collatable(key));
-        return IndexEnumerator(index,
+        return IndexEnumerator(_index,
                                collatableKeys,
                                forestOpts);
     } else {
         id endKey = keyForPrefixMatch(options.endKey, options->prefixMatchLevel);
-        return IndexEnumerator(index,
+        return IndexEnumerator(_index,
                                Collatable(options.startKey),
                                nsstring_slice(options.startKeyDocID),
                                Collatable(endKey),
@@ -428,10 +450,8 @@ static NSString* viewNames(NSArray* views) {
 - (CBLQueryIteratorBlock) regularQueryWithOptions: (CBLQueryOptions*)options
                                            status: (CBLStatus*)outStatus
 {
-    if (!self.index) {
-        *outStatus = kCBLStatusNotFound;
+    if (![self openIndex: outStatus])
         return nil;
-    }
     CBLQueryRowFilter filter = options.filter;
     __block IndexEnumerator e = [self _runForestQueryWithOptions: options];
 
@@ -540,10 +560,8 @@ static id keyForPrefixMatch(id key, unsigned depth) {
         valuesToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
     }
 
-    if (!self.index) {
-        *outStatus = kCBLStatusNotFound;
+    if (![self openIndex: outStatus])
         return nil;
-    }
     __block IndexEnumerator e = [self _runForestQueryWithOptions: options];
 
     *outStatus = kCBLStatusOK;
@@ -669,9 +687,8 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 - (CBLQueryIteratorBlock) fullTextQueryWithOptions: (CBLQueryOptions*)options
                                             status: (CBLStatus*)outStatus
 {
-    MapReduceIndex* index = self.index;
+    MapReduceIndex* index = [self openIndex: outStatus];
     if (!index) {
-        *outStatus = kCBLStatusNotFound;
         return nil;
 //    } else if (index->indexType() != kCBLFullTextIndex) {
 //        *outStatus = kCBLStatusBadRequest;
@@ -755,7 +772,9 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                        sequence: (SequenceNumber)sequence
                      fullTextID: (UInt64)fullTextID
 {
-    alloc_slice valueSlice = self.index->readFullText((nsstring_slice)docID, sequence, (unsigned)fullTextID);
+    if (![self openIndex: NULL])
+        return nil;
+    alloc_slice valueSlice = _index->readFullText((nsstring_slice)docID, sequence, (unsigned)fullTextID);
     if (valueSlice.size == 0) {
         Warn(@"%@: Couldn't find full text for doc <%@>, seq %llu, fullTextID %llu",
              self, docID, sequence, fullTextID);
