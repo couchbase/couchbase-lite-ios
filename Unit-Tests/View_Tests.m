@@ -241,6 +241,25 @@
     AssertEqual(rows.nextRow.value, @"furry");
     AssertEqual(rows.nextRow.value, @"scaly");
     AssertNil(rows.nextRow);
+
+    // Check that limits work as expected (#574):
+    query = [view createQuery];
+    query.postFilter = [NSPredicate predicateWithFormat: @"value endswith 'y'"];
+    query.limit = 2;
+    rows = [query run: NULL];
+
+    AssertEqual(rows.nextRow.value, @"furry");
+    AssertEqual(rows.nextRow.value, @"scaly");
+    AssertNil(rows.nextRow);
+
+    // Check that skip works as expected (#574):
+    query = [view createQuery];
+    query.postFilter = [NSPredicate predicateWithFormat: @"value endswith 'y'"];
+    query.skip = 1;
+    rows = [query run: NULL];
+
+    AssertEqual(rows.nextRow.value, @"scaly");
+    AssertNil(rows.nextRow);
 }
 
 

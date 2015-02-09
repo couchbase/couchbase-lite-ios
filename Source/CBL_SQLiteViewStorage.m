@@ -628,6 +628,10 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
             status = onRow(keyData, valueData, docID, r);
             if (CBLStatusIsError(status))
                 break;
+            else if (status <= 0) {     // block can return 0 to stop the iteration without an error
+                status = kCBLStatusOK;
+                break;
+            }
         }
     }
     [r close];
@@ -639,6 +643,19 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
                                            status: (CBLStatus*)outStatus
 {
     CBL_SQLiteStorage* db = _dbStorage;
+
+    CBLQueryRowFilter filter = options.filter;
+    __block unsigned limit = UINT_MAX;
+    __block unsigned skip = 0;
+    if (filter) {
+        // #574: Custom post-filter means skip/limit apply to the filtered rows, not to the
+        // underlying query, so handle them specially:
+        limit = options->limit;
+        skip = options->skip;
+        options->limit = kCBLQueryOptionsDefaultLimit;
+        options->skip = 0;
+    }
+
     NSMutableArray* rows = $marray();
     *outStatus = [self _runQueryWithOptions: options
                                       onRow: ^CBLStatus(NSData* keyData, NSData* valueData,
@@ -695,9 +712,20 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
                                        docProperties: docContents
                                              storage: self];
         }
+
+        if (filter) {
+            if (!filter(row))
+                return kCBLStatusOK;
+            if (skip > 0) {
+                --skip;
+                return kCBLStatusOK;
+            }
+        }
         
-        if (!options.filter || options.filter(row))
-            [rows addObject: row];
+        [rows addObject: row];
+
+        if (limit-- == 0)
+            return 0;  // stops the iteration
         return kCBLStatusOK;
     }];
 

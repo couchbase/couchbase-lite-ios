@@ -453,10 +453,23 @@ static NSString* viewNames(NSArray* views) {
     if (![self openIndex: outStatus])
         return nil;
     CBLQueryRowFilter filter = options.filter;
+    __block unsigned limit = UINT_MAX;
+    __block unsigned skip = 0;
+    if (filter) {
+        // #574: Custom post-filter means skip/limit apply to the filtered rows, not to the
+        // underlying query, so handle them specially:
+        limit = options->limit;
+        skip = options->skip;
+        options->limit = kCBLQueryOptionsDefaultLimit;
+        options->skip = 0;
+    }
+
     __block IndexEnumerator e = [self _runForestQueryWithOptions: options];
 
     *outStatus = kCBLStatusOK;
     return ^CBLQueryRow*() {
+        if (limit-- == 0)
+            return nil;
         while (e.next()) {
             id docContents = nil;
             id key = e.key().readNSObject();
@@ -501,8 +514,16 @@ static NSString* viewNames(NSArray* views) {
                                                     value: value
                                             docProperties: docContents
                                                   storage: self];
-            if (!filter || filter(row))
-                return row;
+            if (filter) {
+                if (!filter(row))
+                    continue;
+                if (skip > 0) {
+                    --skip;
+                    continue;
+                }
+            }
+            // Got a row to return!
+            return row;
         }
         return nil;
     };
