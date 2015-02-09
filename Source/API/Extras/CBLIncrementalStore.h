@@ -26,7 +26,9 @@ typedef enum
     CBLIncrementalStoreErrorPersistingDeletedObjectsFailed,
     CBLIncrementalStoreErrorQueryingCouchbaseLiteFailed,
     CBLIncrementalStoreErrorUnsupportedRequestType,
-    CBLIncrementalStoreErrorCreatingQueryFailed
+    CBLIncrementalStoreErrorUnsupportedPredicate,
+    CBLIncrementalStoreErrorPredicateKeyPathNotFoundInEntity,
+    CBLIncrementalStoreErrorUnsupportedFetchRequestResultType
 } CBLIncrementalStoreError;
 
 @class CBLDocument;
@@ -123,6 +125,7 @@ typedef void(^CBLISConflictHandler)(NSArray *conflictingRevisions);
  * @param entityName name of the entity that should be fetched
  * @param propertyName name of the property referencing this entity
  */
-- (void) defineFetchViewForEntity:(NSString*)entityName byProperty:(NSString*)propertyName;
+- (void) defineFetchViewForEntity:(NSString*)entityName byProperty:(NSString*)propertyName
+    __attribute__((deprecated("The method is no longer needed, and calling this method will do nothing.")));
 
 @end
