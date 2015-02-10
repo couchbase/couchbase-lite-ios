@@ -40,9 +40,7 @@
 - (void) addReplication: (CBLReplication*)repl;
 - (void) forgetReplication: (CBLReplication*)repl;
 - (void) _clearDocumentCache;
-#if DEBUG // for testing
 - (CBLDocument*) _cachedDocumentWithID: (NSString*)docID;
-#endif
 @end
 
 @interface CBLDatabase (Private)
