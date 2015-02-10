@@ -70,7 +70,9 @@
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)docID                 __attribute__((nonnull));
 - (CBLSavedRevision*) revisionFromRev: (CBL_Revision*)rev;
-- (void) revisionAdded: (CBLDatabaseChange*)change                 __attribute__((nonnull));
+- (void) revisionAdded: (CBLDatabaseChange*)change
+                notify: (BOOL)notify                                __attribute__((nonnull));
+- (void) forgetCurrentRevision;
 - (void) loadCurrentRevisionFrom: (CBLQueryRow*)row                 __attribute__((nonnull));
 - (CBLSavedRevision*) putProperties: (NSDictionary*)properties
                      prevRevID: (NSString*)prevID

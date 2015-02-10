@@ -158,7 +158,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 
 // Notification from the CBLDatabase that a (current, winning) revision has been added
-- (void) revisionAdded: (CBLDatabaseChange*)change {
+- (void) revisionAdded: (CBLDatabaseChange*)change notify: (BOOL)notify {
     CBL_Revision* rev = change.winningRevision;
     if (!rev)
         return; // current revision didn't change
@@ -172,10 +172,12 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     id<CBLDocumentModel> model = _modelObject; // strong reference to it
     [model document: self didChange: change];
 
-    NSNotification* n = [NSNotification notificationWithName: kCBLDocumentChangeNotification
-                                                      object: self
-                                                    userInfo: @{@"change": change}];
-    [[NSNotificationCenter defaultCenter] postNotification: n];
+    if (notify) {
+        NSNotification* n = [NSNotification notificationWithName: kCBLDocumentChangeNotification
+                                                          object: self
+                                                        userInfo: @{@"change": change}];
+        [[NSNotificationCenter defaultCenter] postNotification: n];
+    }
 }
 
 
