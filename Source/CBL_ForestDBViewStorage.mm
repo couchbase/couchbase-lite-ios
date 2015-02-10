@@ -468,62 +468,68 @@ static NSString* viewNames(NSArray* views) {
 
     *outStatus = kCBLStatusOK;
     return ^CBLQueryRow*() {
-        if (limit-- == 0)
-            return nil;
-        while (e.next()) {
-            id docContents = nil;
-            id key = e.key().readNSObject();
-            id value = nil;
-            NSString* docID = (NSString*)e.docID();
-            SequenceNumber sequence = e.sequence();
+        try{
+            if (limit-- == 0)
+                return nil;
+            while (e.next()) {
+                id docContents = nil;
+                id key = e.key().readNSObject();
+                id value = nil;
+                NSString* docID = (NSString*)e.docID();
+                SequenceNumber sequence = e.sequence();
 
-            if (options->includeDocs) {
-                NSDictionary* valueDict = nil;
-                NSString* linkedID = nil;
-                if (e.value().peekTag() == CollatableReader::kMap) {
-                    value = e.value().readNSObject();
-                    valueDict = $castIf(NSDictionary, value);
-                    linkedID = valueDict.cbl_id;
+                if (options->includeDocs) {
+                    NSDictionary* valueDict = nil;
+                    NSString* linkedID = nil;
+                    if (e.value().peekTag() == CollatableReader::kMap) {
+                        value = e.value().readNSObject();
+                        valueDict = $castIf(NSDictionary, value);
+                        linkedID = valueDict.cbl_id;
+                    }
+                    if (linkedID) {
+                        // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
+                        NSString* linkedRev = valueDict.cbl_rev; // usually nil
+                        CBLStatus linkedStatus;
+                        CBL_Revision* linked = [_dbStorage getDocumentWithID: linkedID
+                                                          revisionID: linkedRev
+                                                             options: options->content
+                                                              status: &linkedStatus];
+                        docContents = linked ? linked.properties : $null;
+                        sequence = linked.sequence;
+                    } else {
+                        CBLStatus status;
+                        CBL_Revision* rev = [_dbStorage getDocumentWithID: docID revisionID: nil
+                                                          options: options->content status: &status];
+                        docContents = rev.properties;
+                    }
                 }
-                if (linkedID) {
-                    // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
-                    NSString* linkedRev = valueDict.cbl_rev; // usually nil
-                    CBLStatus linkedStatus;
-                    CBL_Revision* linked = [_dbStorage getDocumentWithID: linkedID
-                                                      revisionID: linkedRev
-                                                         options: options->content
-                                                          status: &linkedStatus];
-                    docContents = linked ? linked.properties : $null;
-                    sequence = linked.sequence;
-                } else {
-                    CBLStatus status;
-                    CBL_Revision* rev = [_dbStorage getDocumentWithID: docID revisionID: nil
-                                                      options: options->content status: &status];
-                    docContents = rev.properties;
+
+                if (!value)
+                    value = e.value().data().copiedNSData();
+
+                LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
+                      _name, CBLJSONString(key), value, CBLJSONString(docID));
+                auto row = [[CBLQueryRow alloc] initWithDocID: docID
+                                                     sequence: sequence
+                                                          key: key
+                                                        value: value
+                                                docProperties: docContents
+                                                      storage: self];
+                if (filter) {
+                    if (!filter(row))
+                        continue;
+                    if (skip > 0) {
+                        --skip;
+                        continue;
+                    }
                 }
+                // Got a row to return!
+                return row;
             }
-
-            if (!value)
-                value = e.value().data().copiedNSData();
-
-            LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
-                  _name, CBLJSONString(key), value, CBLJSONString(docID));
-            auto row = [[CBLQueryRow alloc] initWithDocID: docID
-                                                 sequence: sequence
-                                                      key: key
-                                                    value: value
-                                            docProperties: docContents
-                                                  storage: self];
-            if (filter) {
-                if (!filter(row))
-                    continue;
-                if (skip > 0) {
-                    --skip;
-                    continue;
-                }
-            }
-            // Got a row to return!
-            return row;
+        } catch (forestdb::error x) {
+            Warn(@"Unexpected ForestDB error iterating query (status %d)", x.status);
+        } catch (...) {
+            Warn(@"Unexpected CBForest exception iterating query");
         }
         return nil;
     };
@@ -587,48 +593,55 @@ static id keyForPrefixMatch(id key, unsigned depth) {
 
     *outStatus = kCBLStatusOK;
     return ^CBLQueryRow*() {
-        CBLQueryRow* row = nil;
-        do {
-            id key = e.next() ? e.key().readNSObject() : nil;
-            if (lastKey && (!key || (group && !groupTogether(lastKey, key, groupLevel)))) {
-                // key doesn't match lastKey; emit a grouped/reduced row for what came before:
-                row = [[CBLQueryRow alloc] initWithDocID: nil
-                                        sequence: 0
-                                             key: (group ? groupKey(lastKey, groupLevel) : $null)
-                                           value: callReduce(reduce, keysToReduce,valuesToReduce)
-                                   docProperties: nil
-                                         storage: self];
-                LogTo(QueryVerbose, @"Query %@: Reduced row with key=%@, value=%@",
-                                    _name, CBLJSONString(row.key), CBLJSONString(row.value));
-                if (filter && !filter(row))
-                    row = nil;
-                [keysToReduce removeAllObjects];
-                [valuesToReduce removeAllObjects];
-            }
-
-            if (key && reduce) {
-                // Add this key/value to the list to be reduced:
-                [keysToReduce addObject: key];
-                CollatableReader collatableValue = e.value();
-                id value;
-                if (collatableValue.peekTag() == CollatableReader::kSpecial) {
-                    CBLStatus status;
-                    CBL_Revision* rev = [_dbStorage getDocumentWithID: (NSString*)e.docID()
-                                                             sequence: e.sequence()
-                                                               status: &status];
-                    if (!rev)
-                        Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
-                    value = rev.properties;
-                } else {
-                    value = collatableValue.readNSObject();
+        try {
+            CBLQueryRow* row = nil;
+            do {
+                id key = e.next() ? e.key().readNSObject() : nil;
+                if (lastKey && (!key || (group && !groupTogether(lastKey, key, groupLevel)))) {
+                    // key doesn't match lastKey; emit a grouped/reduced row for what came before:
+                    row = [[CBLQueryRow alloc] initWithDocID: nil
+                                            sequence: 0
+                                                 key: (group ? groupKey(lastKey, groupLevel) : $null)
+                                               value: callReduce(reduce, keysToReduce,valuesToReduce)
+                                       docProperties: nil
+                                             storage: self];
+                    LogTo(QueryVerbose, @"Query %@: Reduced row with key=%@, value=%@",
+                                        _name, CBLJSONString(row.key), CBLJSONString(row.value));
+                    if (filter && !filter(row))
+                        row = nil;
+                    [keysToReduce removeAllObjects];
+                    [valuesToReduce removeAllObjects];
                 }
-                [valuesToReduce addObject: (value ?: $null)];
-                //TODO: Reduce the keys/values when there are too many; then rereduce at end
-            }
 
-            lastKey = key;
-        } while (!row && lastKey);
-        return row;
+                if (key && reduce) {
+                    // Add this key/value to the list to be reduced:
+                    [keysToReduce addObject: key];
+                    CollatableReader collatableValue = e.value();
+                    id value;
+                    if (collatableValue.peekTag() == CollatableReader::kSpecial) {
+                        CBLStatus status;
+                        CBL_Revision* rev = [_dbStorage getDocumentWithID: (NSString*)e.docID()
+                                                                 sequence: e.sequence()
+                                                                   status: &status];
+                        if (!rev)
+                            Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
+                        value = rev.properties;
+                    } else {
+                        value = collatableValue.readNSObject();
+                    }
+                    [valuesToReduce addObject: (value ?: $null)];
+                    //TODO: Reduce the keys/values when there are too many; then rereduce at end
+                }
+
+                lastKey = key;
+            } while (!row && lastKey);
+            return row;
+        } catch (forestdb::error x) {
+            Warn(@"Unexpected ForestDB error iterating query (status %d)", x.status);
+        } catch (...) {
+            Warn(@"Unexpected CBForest exception iterating query");
+        }
+        return nil;
     };
 }
 
