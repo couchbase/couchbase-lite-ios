@@ -351,9 +351,11 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 #endif
     
     _online = NO;
-    if (!_continuous || [NSClassFromString(@"CBL_URLProtocol") handlesURL: _remote]) {
-        [self goOnline];    // non-continuous or local-to-local replication
-    } else {
+
+    // Always try to go online.
+    [self goOnline];
+
+    if (_continuous && ![NSClassFromString(@"CBL_URLProtocol") handlesURL: _remote]) {
         // Start reachability checks. (This creates another ref cycle, because
         // the block also retains a ref to self. Cycle is also broken in -stopped.)
         _host = [[CBLReachability alloc] initWithHostName: _remote.host];
@@ -416,7 +418,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 - (void) retryIfReady {
-    if (!_running)
+    if (!_running || !_error)
         return;
 
     if (_online) {
@@ -465,8 +467,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
     BOOL reachable = host.reachable && !_suspended;
     if (reachable) {
-    // Parse "network" option. Could be nil or "WiFi" or "!Wifi" or "cell" or "!cell".
-    NSString* network = [$castIf(NSString, _options[kCBLReplicatorOption_Network])
+        // Parse "network" option. Could be nil or "WiFi" or "!Wifi" or "cell" or "!cell".
+        NSString* network = [$castIf(NSString, _options[kCBLReplicatorOption_Network])
                               lowercaseString];
         if (network) {
             BOOL wifi = host.reachableByWiFi;
@@ -477,11 +479,16 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
             else
                 Warn(@"Unrecognized replication option \"network\"=\"%@\"", network);
         }
-    }
 
-    if (reachable)
-        [self goOnline];
-    else if (host.reachabilityKnown || _suspended)
+        if (reachable) {
+            if (_online)
+                [self retryIfReady];
+            else
+                [self goOnline];
+        }
+        else
+            [self goOffline];
+    } else if (_suspended)
         [self goOffline];
 }
 
