@@ -109,7 +109,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
     BOOL external = NO;
     for (CBLDatabaseChange* change in changes) {
         // Notify the corresponding instantiated CBLDocument object (if any):
-        [[self _cachedDocumentWithID: change.documentID] revisionAdded: change];
+        [[self _cachedDocumentWithID: change.documentID] revisionAdded: change notify: YES];
         if (change.source != nil)
             external = YES;
     }

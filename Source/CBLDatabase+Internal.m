@@ -276,7 +276,12 @@ static BOOL sAutoCompact = YES;
     if (!_changesToNotify)
         _changesToNotify = [[NSMutableArray alloc] init];
     [_changesToNotify addObject: change];
-    [self postChangeNotifications];
+    if (![self postChangeNotifications]) {
+        // The notification wasn't posted yet, probably because a transaction is open.
+        // But the CBLDocument, if any, needs to know right away so it can update its
+        // currentRevision.
+        [[self _cachedDocumentWithID: change.documentID] revisionAdded: change notify: NO];
+    }
 }
 
 /** Posts a local NSNotification of multiple new revisions. */
@@ -288,7 +293,8 @@ static BOOL sAutoCompact = YES;
 }
 
 
-- (void) postChangeNotifications {
+- (BOOL) postChangeNotifications {
+    BOOL posted = NO;
     // This is a 'while' instead of an 'if' because when we finish posting notifications, there
     // might be new ones that have arrived as a result of notification handlers making document
     // changes of their own (the replicator manager will do this.) So we need to check again.
@@ -318,15 +324,21 @@ static BOOL sAutoCompact = YES;
                                                             object: self
                                                           userInfo: $dict({@"changes", changes})];
 
+        posted = YES;
         _postingChangeNotifications = false;
     }
+    return posted;
 }
 
 
 // CBL_StorageDelegate method
 - (void) storageExitedTransaction: (BOOL)committed {
-    if (!committed)
+    if (!committed) {
+        // I already told cached CBLDocuments about these new revisions. Back that out:
+        for (CBLDatabaseChange* change in _changesToNotify)
+            [[self _cachedDocumentWithID: change.documentID] forgetCurrentRevision];
         _changesToNotify = nil;
+    }
     [self postChangeNotifications];
 }
 

@@ -308,6 +308,66 @@
 }
 
 
+- (void) test075_UpdateDocInTransaction {
+    // Test for #256, "Conflict error when updating a document multiple times in transaction block"
+    CBLDocument* doc = [self createDocumentWithProperties: @{@"testNumber": @7.5,
+                                                             @"count": @1}];
+
+    __block BOOL notified = NO;
+    id observer = [[NSNotificationCenter defaultCenter]
+                                            addObserverForName: kCBLDocumentChangeNotification
+                                                        object: doc
+                                                         queue: nil
+                                                    usingBlock: ^(NSNotification *note) {
+                                                        notified = YES;
+                                                    }];
+    __block CBLRevision* rev3;
+    [db inTransaction: ^BOOL {
+        // Update doc. The currentRevision should update, but no notification be posted (yet).
+        NSError* error;
+        NSMutableDictionary* props = [doc.properties mutableCopy];
+        props[@"count"] = @2;
+        CBLRevision* rev2 = [doc putProperties: props error: &error];
+        Assert(rev2 != nil, @"1st update failed: %@", error);
+        AssertEqual(doc.currentRevision, rev2);
+        Assert(!notified);
+
+        // Update doc again; this should succeed, in the same manner.
+        props = [doc.properties mutableCopy];
+        props[@"count"] = @3;
+        rev3 = [doc putProperties: props error: &error];
+        Assert(rev3 != nil, @"2nd update failed: %@", error);
+        AssertEqual(doc.currentRevision, rev3);
+        Assert(!notified);
+        return YES;
+    }];
+    AssertEqual(doc.currentRevision, rev3);
+    // Notifications should be posted as soon as the transaction exits:
+    Assert(notified);
+
+    // Now get sneaky and try a failed transaction -- the doc rev change should be backed out:
+    notified = NO;
+    [db inTransaction: ^BOOL {
+        // Update doc. The currentRevision should update, but no notification be posted (yet).
+        NSError* error;
+        NSMutableDictionary* props = [doc.properties mutableCopy];
+        props[@"count"] = @4;
+        CBLRevision* rev4 = [doc putProperties: props error: &error];
+        Assert(rev4 != nil, @"3rd update failed: %@", error);
+        AssertEqual(doc.currentRevision, rev4);
+        Assert(!notified);
+        return NO;
+    }];
+    // No notification should be posted by the aborted transaction:
+    Assert(!notified);
+    // The doc should know that it's back to revision 3:
+    AssertEqual(doc[@"count"], @3);
+    AssertEqual(doc.currentRevision, rev3);
+
+    [[NSNotificationCenter defaultCenter] removeObserver: observer];
+}
+
+
 - (void) test08_SaveDocumentWithNaNProperty {
     NSDictionary* properties = @{@"aNumber": [NSDecimalNumber notANumber]};
     CBLDocument* doc = [db createDocument];
