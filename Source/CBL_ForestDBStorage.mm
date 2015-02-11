@@ -99,9 +99,10 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 {
     _directory = [directory copy];
     NSString* forestPath = [directory stringByAppendingPathComponent: kDBFilename];
-    Database::openFlags options = readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE;
+    fdb_open_flags flags = readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE;
 
     Database::config config = Database::defaultConfig();
+    config.flags = flags;
     config.buffercache_size = kDBBufferCacheSize;
     config.wal_threshold = 4096;
     config.wal_flush_before_commit = true;
@@ -114,7 +115,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     }
 
     try {
-        _forest = new Database(std::string(forestPath.UTF8String), options, config);
+        _forest = new Database(std::string(forestPath.fileSystemRepresentation), config);
     } catch (forestdb::error err) {
         return ReturnNSErrorFromCBLStatus(CBLStatusFromForestDBStatus(err.status), outError);
     } catch (...) {

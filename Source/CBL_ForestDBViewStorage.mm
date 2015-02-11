@@ -251,19 +251,20 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 
 // Opens the index, specifying ForestDB database flags
-- (MapReduceIndex*) openIndexWithOptions: (Database::openFlags)options
+- (MapReduceIndex*) openIndexWithOptions: (fdb_open_flags)options
                                   status: (CBLStatus*)outStatus
 {
     if (!_index) {
         Assert(!_indexDB);
         auto config = Database::defaultConfig();
+        config.flags = options;
         config.buffercache_size = kViewBufferCacheSize;
         config.wal_threshold = 8192;
         config.wal_flush_before_commit = true;
         config.seqtree_opt = YES;
         config.compaction_threshold = 50;
         try {
-            _indexDB = new Database(_path.fileSystemRepresentation, options, config);
+            _indexDB = new Database(_path.fileSystemRepresentation, config);
             Database* db = (Database*)_dbStorage.forestDatabase;
             _index = new MapReduceIndex(_indexDB, "index", *db);
         } catch (forestdb::error x) {
