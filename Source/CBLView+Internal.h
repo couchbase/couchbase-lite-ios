@@ -85,3 +85,15 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
                                      status: (CBLStatus*)outStatus;
 
 @end
+
+
+@interface CBLQueryEnumerator ()
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                             view: (CBLView*)view
+                   sequenceNumber: (SequenceNumber)sequenceNumber
+                         iterator: (CBLQueryIteratorBlock)iterator;
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                             view: (CBLView*)view
+                   sequenceNumber: (SequenceNumber)sequenceNumber
+                             rows: (NSArray*)rows;
+@end

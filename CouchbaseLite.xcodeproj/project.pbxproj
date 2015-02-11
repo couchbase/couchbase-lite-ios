@@ -386,6 +386,10 @@
 		27A720A0152B959100C0A0E8 /* CBL_Attachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A7209E152B959100C0A0E8 /* CBL_Attachment.h */; };
 		27A720A1152B959100C0A0E8 /* CBL_Attachment.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7209F152B959100C0A0E8 /* CBL_Attachment.m */; };
 		27A720A2152B959100C0A0E8 /* CBL_Attachment.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7209F152B959100C0A0E8 /* CBL_Attachment.m */; };
+		27A7552C1A8BD715008BCD4D /* CBLQueryEnumerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7552A1A8BD715008BCD4D /* CBLQueryEnumerator.m */; };
+		27A7552D1A8BD715008BCD4D /* CBLQueryEnumerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7552A1A8BD715008BCD4D /* CBLQueryEnumerator.m */; };
+		27A755311A8BD797008BCD4D /* CBLQueryRow.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7552F1A8BD797008BCD4D /* CBLQueryRow.m */; };
+		27A755321A8BD797008BCD4D /* CBLQueryRow.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7552F1A8BD797008BCD4D /* CBLQueryRow.m */; };
 		27A9D67F1A661ED10074FDD2 /* CBL_ViewStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A9D67D1A661ED10074FDD2 /* CBL_ViewStorage.h */; };
 		27A9D6801A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A9D67E1A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm */; };
 		27AA409D14AA86AE00E2A5FF /* CBLDatabase+Insertion.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA409A14AA86AD00E2A5FF /* CBLDatabase+Insertion.m */; };
@@ -1262,6 +1266,8 @@
 		27A073EB14C0BB6200F52FE7 /* CBLMisc.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLMisc.m; sourceTree = "<group>"; };
 		27A7209E152B959100C0A0E8 /* CBL_Attachment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Attachment.h; sourceTree = "<group>"; };
 		27A7209F152B959100C0A0E8 /* CBL_Attachment.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Attachment.m; sourceTree = "<group>"; };
+		27A7552A1A8BD715008BCD4D /* CBLQueryEnumerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryEnumerator.m; sourceTree = "<group>"; };
+		27A7552F1A8BD797008BCD4D /* CBLQueryRow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryRow.m; sourceTree = "<group>"; };
 		27A9D67D1A661ED10074FDD2 /* CBL_ViewStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_ViewStorage.h; sourceTree = "<group>"; };
 		27A9D67E1A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBL_ForestDBViewStorage.mm; sourceTree = "<group>"; };
 		27AA409A14AA86AD00E2A5FF /* CBLDatabase+Insertion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLDatabase+Insertion.m"; sourceTree = "<group>"; };
@@ -1806,6 +1812,8 @@
 				27DA434915912AFD00F9E7B5 /* CBLView.m */,
 				27DA4310158FB79E00F9E7B5 /* CBLQuery.h */,
 				27DA4311158FB79E00F9E7B5 /* CBLQuery.m */,
+				27A7552A1A8BD715008BCD4D /* CBLQueryEnumerator.m */,
+				27A7552F1A8BD797008BCD4D /* CBLQueryRow.m */,
 				277EF39917F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.h */,
 				277EF39A17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m */,
 				277EF39B17F4DEDD00F7B7F7 /* CBLQuery+Geo.h */,
@@ -3430,6 +3438,7 @@
 				27DA434B15912AFD00F9E7B5 /* CBLView.m in Sources */,
 				27BDA81F181973EF00F27A11 /* CBLBulkDownloader.m in Sources */,
 				27513A241A673F320055DC40 /* CBL_SQLiteStorage.m in Sources */,
+				27A755311A8BD797008BCD4D /* CBLQueryRow.m in Sources */,
 				27DA435815918C8E00F9E7B5 /* CBLModel.m in Sources */,
 				27DA435B15918C8E00F9E7B5 /* CBLModelFactory.m in Sources */,
 				2726D14618FDF44000AACC2A /* CBLSpecialKey.m in Sources */,
@@ -3474,6 +3483,7 @@
 				27486F261A606C76008D94F0 /* CBJSONEncoder.m in Sources */,
 				276F25FC18A3386100A70679 /* DDData.m in Sources */,
 				277B5D291821A8380088881E /* yajl.c in Sources */,
+				27A7552C1A8BD715008BCD4D /* CBLQueryEnumerator.m in Sources */,
 				277B5D341821A8380088881E /* yajl_encode.c in Sources */,
 				277B5D371821A8380088881E /* yajl_gen.c in Sources */,
 				277B5D411821A8380088881E /* yajl_version.c in Sources */,
@@ -3624,6 +3634,7 @@
 				27ED8632157D0FC600712B33 /* CBLDocument.m in Sources */,
 				2762AB5A18D36F1B00649D47 /* CBLReplication+Transformation.m in Sources */,
 				27DA42FA158E66DD00F9E7B5 /* CBLRevision.m in Sources */,
+				27A7552D1A8BD715008BCD4D /* CBLQueryEnumerator.m in Sources */,
 				274C6C271A3F838500F9BDF7 /* CBLReduceFuncs.m in Sources */,
 				27DA42FF158E7D3500F9E7B5 /* CBLDatabase.m in Sources */,
 				27DA430A158FA35600F9E7B5 /* CBLCache.m in Sources */,
@@ -3674,6 +3685,7 @@
 				27F128A9156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
 				27208F8B184D1D5D006ADBEF /* NSString+URLEncoding.m in Sources */,
 				272401C81860D0850080E082 /* WebSocketHTTPLogic.m in Sources */,
+				27A755321A8BD797008BCD4D /* CBLQueryRow.m in Sources */,
 				272401B91860CB4B0080E082 /* WebSocketClient.m in Sources */,
 				272401B61860CB4B0080E082 /* WebSocket.m in Sources */,
 				272401C01860CBE00080E082 /* GCDAsyncSocket.m in Sources */,
