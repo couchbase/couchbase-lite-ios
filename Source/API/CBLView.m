@@ -13,7 +13,6 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-extern "C" {
 #import "CouchbaseLitePrivate.h"
 #import "CBL_ViewStorage.h"
 #import "CBLView+Internal.h"
@@ -23,7 +22,6 @@ extern "C" {
 #import "CBJSONEncoder.h"
 #import "CBLMisc.h"
 #import "ExceptionUtils.h"
-}
 
 
 NSString* const kCBLViewChangeNotification = @"CBLViewChange";
