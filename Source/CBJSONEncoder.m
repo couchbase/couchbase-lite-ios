@@ -78,7 +78,7 @@ NSString* const CBJSONEncoderErrorDomain = @"CBJSONEncoder";
 }
 
 - (NSMutableData*) output {
-    [self encodedData];
+    (void)[self encodedData];
     return _encoded;
 }
 

@@ -289,6 +289,7 @@
 }
 
 @synthesize parentRevisionID=_parentRevID, properties=_properties;
+@dynamic isDeletion, userProperties;     // Necessary because this class redeclares them
 
 - (instancetype) initWithDocument: (CBLDocument*)doc parent: (CBLSavedRevision*)parent {
     Assert(doc != nil);

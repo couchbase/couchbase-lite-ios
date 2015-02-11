@@ -627,6 +627,8 @@
     CBLOnMutateBlock _onMutate;
 }
 
+@dynamic firstName, lastName;     // Necessary because this class redeclares them
+
 - (void) setOnMutate:(CBLOnMutateBlock)onMutate {
     _onMutate = onMutate;
 }

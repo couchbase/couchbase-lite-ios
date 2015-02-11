@@ -239,6 +239,8 @@
 
 @implementation CBL_MutableRevision
 
+@dynamic body, properties, asJSON, missing;     // Necessary because this class redeclares them
+
 - (void) setBody:(UU CBL_Body *)body {
     _body = body;
 }
