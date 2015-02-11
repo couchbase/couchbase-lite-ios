@@ -34,9 +34,6 @@
 
 
 @synthesize path=_path;
-#if TARGET_OS_IPHONE
-@synthesize fileProtection=_fileProtection;
-#endif
 
 
 - (instancetype) initWithPath: (NSString*)dir error: (NSError**)outError {
@@ -139,16 +136,8 @@
     if ([[NSFileManager defaultManager] isReadableFileAtPath: path])
         return YES;
 
-    NSDataWritingOptions options = NSDataWritingAtomic;
-#if TARGET_OS_IPHONE
-    if (_fileProtection != 0)
-        options |= _fileProtection;
-    else
-        options |= NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication; // default
-#endif
-
     NSError* error;
-    if (![blob writeToFile: path options: options error: &error]) {
+    if (![blob writeToFile: path options: NSDataWritingAtomic error: &error]) {
         Warn(@"CBL_BlobStore: Couldn't write to %@: %@", path, error);
         return NO;
     }
@@ -276,28 +265,9 @@
         if (!_tempPath) {
             return nil;
         }
-        NSDictionary* attributes = nil;
-#if TARGET_OS_IPHONE
-        NSString* protection;
-        switch (store.fileProtection) {
-            case NSDataWritingFileProtectionNone:
-                protection = NSFileProtectionNone;
-                break;
-            case NSDataWritingFileProtectionComplete:
-                protection = NSFileProtectionComplete;
-                break;
-            case NSDataWritingFileProtectionCompleteUnlessOpen:
-                protection = NSFileProtectionCompleteUnlessOpen;
-                break;
-            default:
-                protection = NSFileProtectionCompleteUntilFirstUserAuthentication;
-                break;
-        }
-        attributes = @{NSFileProtectionKey: protection};
-#endif
         if (![[NSFileManager defaultManager] createFileAtPath: _tempPath
                                                      contents: nil
-                                                   attributes: attributes]) {
+                                                   attributes: nil]) {
             return nil;
         }
         _out = [NSFileHandle fileHandleForWritingAtPath: _tempPath];

@@ -29,11 +29,6 @@ typedef struct CBLBlobKey {
 
 - (instancetype) initWithPath: (NSString*)dir error: (NSError**)outError;
 
-#if TARGET_OS_IPHONE
-/** Sets iOS file protection. Defaults to CompleteUntilFirstUserAuthentication. */
-@property (nonatomic) NSDataWritingOptions fileProtection;
-#endif
-
 - (BOOL) hasBlobForKey: (CBLBlobKey)key;
 - (NSData*) blobForKey: (CBLBlobKey)key;
 - (NSInputStream*) blobInputStreamForKey: (CBLBlobKey)key

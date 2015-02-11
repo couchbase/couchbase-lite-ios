@@ -782,7 +782,7 @@ static CBL_BlobStoreWriter* blobForData(CBLDatabase* db, NSData* data) {
 }
 
 
-- (void)test_PutEncodedAttachment {
+- (void)test11_PutEncodedAttachment {
     RequireTestCase(CBL_Database_PutAttachment);
     CBL_Revision* rev1 = [self putDoc: nil withAttachment: @"This is the body of attach1" compressed: YES];
     AssertEqual(rev1[@"_attachments"], $dict({@"attach", $dict({@"content_type", @"text/plain"},
@@ -1254,5 +1254,23 @@ static CBL_Revision* mkrev(NSString* revID) {
     Assert(rev != nil);
 }
 
+
+#if TARGET_OS_IPHONE
+#if !TARGET_IPHONE_SIMULATOR
+- (void) test25_FileProtection {
+    // Check that every file has the file protection set for the CBLManager (which defaults to
+    // NSFileProtectionCompleteUnlessOpen.)
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    NSString* dir = db.dir;
+    NSArray* paths = [[fmgr subpathsAtPath: dir] arrayByAddingObject: @"."];
+    for (NSString* path in paths) {
+        NSString* absPath = [dir stringByAppendingPathComponent: path];
+        id prot = [[fmgr attributesOfItemAtPath: absPath error: nil] objectForKey: NSFileProtectionKey];
+        Log(@"Protection of %@ --> %@", path, prot);
+        AssertEqual(prot, NSFileProtectionCompleteUnlessOpen);
+    }
+}
+#endif
+#endif
 
 @end

@@ -164,13 +164,41 @@ static CBLManager* sInstance;
         _thread = [NSThread currentThread];
         // Create the directory but don't fail if it already exists:
         NSError* error;
+        NSDictionary* attributes = nil;
+#if TARGET_OS_IPHONE
+        // Set the iOS file protection mode of the manager's top-level directory.
+        // This mode will be inherited by all files created in that directory.
+        NSString* protection;
+        switch (_options.fileProtection & NSDataWritingFileProtectionMask) {
+            case NSDataWritingFileProtectionNone:
+                protection = NSFileProtectionNone;
+                break;
+            case NSDataWritingFileProtectionComplete:
+                protection = NSFileProtectionComplete;
+                break;
+            case NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication:
+                protection = NSFileProtectionCompleteUntilFirstUserAuthentication;
+                break;
+            default:
+                protection = NSFileProtectionCompleteUnlessOpen;
+                break;
+        }
+        attributes = @{NSFileProtectionKey: protection};
+#endif
         if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
                                        withIntermediateDirectories: YES
-                                                        attributes: nil
+                                                        attributes: attributes
                                                              error: &error]) {
             if (!CBLIsFileExistsError(error)) {
                 if (outError) *outError = error;
                 return nil;
+            }
+            if (attributes) {
+                if (![[NSFileManager defaultManager] setAttributes: attributes
+                                                      ofItemAtPath: _dir
+                                                             error: outError]) {
+                    return nil;
+                }
             }
         }
         [self upgradeOldDatabaseFiles];
@@ -331,13 +359,6 @@ static CBLManager* sInstance;
         Warn(@"%@: -setExcludedFromBackup:%d failed: %@", self, exclude, error);
     }
 }
-
-
-#if TARGET_OS_IPHONE
-- (NSDataWritingOptions) fileProtection {
-    return _options.fileProtection & NSDataWritingFileProtectionMask;
-}
-#endif
 
 
 #pragma mark - BACKGROUND TASKS:
