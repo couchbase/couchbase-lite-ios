@@ -10,6 +10,11 @@
 #import "MYBlockUtils.h"
 
 
+@interface CBLView (Private)
+@property SequenceNumber lastSequenceChangedAt;
+@end
+
+
 @interface TestLiveQueryObserver : NSObject
 @property (copy) NSDictionary*change;
 @property unsigned changeCount;
@@ -116,6 +121,7 @@
     AssertEqual([(CBLQueryRow*)result1[0] value], nil);
     AssertEqual([(CBLQueryRow*)result1[1] key], @2);
     AssertEqual([(CBLQueryRow*)result1[1] value], nil);
+    SequenceNumber query1ChangedAt = view.lastSequenceChangedAt;
 
     // Update doc1
     [doc1 update:^BOOL(CBLUnsavedRevision *rev) {
@@ -123,11 +129,18 @@
         return YES;
     } error: NULL];
 
-    // Query again and verify that the results sets are not considered equal:
+    // Query again
     NSArray* result2 = [[query run: NULL] allObjects];
-    Assert(![result2 isEqual: result1]);
     AssertEqual([(CBLQueryRow*)result2[0] key], @1);
     AssertEqual([(CBLQueryRow*)result2[0] value], nil);
+    if (self.isSQLiteDB) {
+        // SQLite: The result sets are not considered equal:
+        Assert(![result2 isEqual: result1]);
+    } else {
+        // ForestDB: The view index has not changed, making the result sets equal:
+        AssertEq(view.lastSequenceChangedAt, query1ChangedAt);
+        Assert([result2 isEqual: result1]);
+    }
 }
 
 

@@ -349,9 +349,8 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     AssertEq([view updateIndex], kCBLStatusOK);
     dump = [view.storage dump];
     Log(@"View dump: %@", dump);
-    SequenceNumber fourSeq = (self.isSQLiteDB ? leaf1 : leaf2).sequence;
     AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
-                              $dict({@"key", @"\"four\""}, {@"seq", @(fourSeq)}),
+                              $dict({@"key", @"\"four\""}, {@"seq", @(leaf1.sequence)}),
                               $dict({@"key", @"\"one\""},  {@"seq", @3}),
                               $dict({@"key", @"\"three\""},{@"seq", @4}),
                               $dict({@"key", @"\"two\""},  {@"seq", @1}) ));

@@ -55,8 +55,10 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
             break;
         case forestdb::kWarning:
             Warn(@"%s", message);
+            break;
         case forestdb::kError:
             Warn(@"ForestDB error: %s", message);
+            break;
         default:
             break;
     }
