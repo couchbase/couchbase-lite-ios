@@ -36,6 +36,7 @@
 #define kInboxCapacity 100
 
 #define kRetryDelay 60.0
+#define kRetryOnlineDelay 300.0
 
 #define kDefaultRequestTimeout 60.0
 
@@ -418,7 +419,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 - (void) retryIfReady {
-    if (!_running || !_error)
+    if (!_running)
         return;
 
     if (_online) {
@@ -443,8 +444,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     return YES;
 }
 
-
 - (BOOL) goOnline {
+    [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                             selector: @selector(goOnline) object: nil];
+
     if (_online)
         return NO;
     LogTo(Sync, @"%@: Going online", self);
@@ -458,6 +461,12 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         [self postProgressChanged];
     }
     return YES;
+}
+
+- (void) goOnlineAfterDelay {
+    [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                             selector: @selector(goOnline) object: nil];
+    [self performSelector: @selector(goOnline) withObject: nil afterDelay: kRetryOnlineDelay];
 }
 
 
@@ -520,13 +529,18 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
             if (!_continuous) {
                 [self stopped];
             } else if (_error) /*(_revisionsFailed > 0)*/ {
-                LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
-                      self, _revisionsFailed, kRetryDelay);
-                [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                         selector: @selector(retryIfReady)
-                                                           object: nil];
-                [self performSelector: @selector(retryIfReady)
-                           withObject: nil afterDelay: kRetryDelay];
+                if (CBLIsOfflineError(_error)) {
+                    [self goOffline];
+                    [self goOnlineAfterDelay];
+                } else {
+                    LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
+                          self, _revisionsFailed, kRetryDelay);
+                    [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                                             selector: @selector(retryIfReady)
+                                                               object: nil];
+                    [self performSelector: @selector(retryIfReady)
+                               withObject: nil afterDelay: kRetryDelay];
+                }
             }
         }
     }

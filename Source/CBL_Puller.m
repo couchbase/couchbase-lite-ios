@@ -269,9 +269,12 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _changeTracker = nil;
     
     if (error) {
-        if (CBLIsOfflineError(error))
+        if (CBLIsOfflineError(error)) {
             [self goOffline];
-        else if (!self.error)
+            [self goOnlineAfterDelay];
+        }
+        
+        if (!self.error)
             self.error = error;
     }
     
