@@ -1,5 +1,7 @@
 # Couchbase Lite 
 
+[![Join the chat at https://gitter.im/couchbase/couchbase-lite-ios](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/couchbase/couchbase-lite-ios?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 **Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine. 
 
 Get more info and downloads of Couchbase Lite (for iOS and Android) via [the Couchbase mobile portal](http://mobile.couchbase.com)
