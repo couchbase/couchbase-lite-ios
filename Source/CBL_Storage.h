@@ -259,6 +259,9 @@
 /** Delegate of a CBL_Storage instance. CBLDatabase implements this. */
 @protocol CBL_StorageDelegate <NSObject>
 
+/** Optional encryption key registered with this database. Must be NSString or NSData. */
+@property (readonly) id encryptionKey;
+
 /** Called whenever the outermost transaction completes.
     @param committed  YES on commit, NO if the transaction was aborted. */
 - (void) storageExitedTransaction: (BOOL)committed;

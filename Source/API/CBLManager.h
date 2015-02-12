@@ -76,6 +76,16 @@ typedef struct CBLManagerOptions {
 - (nullable CBLDatabase*) existingDatabaseNamed: (NSString*)name
                                           error: (__nullable NSError**)outError;
 
+/** Registers an encryption key for a database. This must be called before opening an encrypted
+    database, or before creating a database that's to be encrypted.
+    If the key is incorrect (or no key is given for an encrypted database), the subsequent call
+    to open the database will fail with an error with code 401.
+    To use this API, the database storage engine must support encryption. In the case of SQLite,
+    this means the application must be linked with SQLCipher <http://sqlcipher.net> instead of
+    regular SQLite. Otherwise opening the database will fail with an error. */
+- (void) registerEncryptionKey: (nullable id)encryptionKey
+              forDatabaseNamed: (NSString*)name;
+
 /** Same as -existingDatabaseNamed:. Enables "[]" access in Xcode 4.4+ */
 - (nullable CBLDatabase*) objectForKeyedSubscript: (NSString*)key;
 

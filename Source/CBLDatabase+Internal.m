@@ -267,6 +267,11 @@ static BOOL sAutoCompact = YES;
 }
 
 
+- (NSData*) encryptionKey {
+    return [_manager.shared valueForType: @"encryptionKey" name: @"" inDatabaseNamed: _name];
+}
+
+
 #pragma mark - TRANSACTIONS & NOTIFICATIONS:
 
 
