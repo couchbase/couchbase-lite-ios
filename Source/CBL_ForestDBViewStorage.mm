@@ -246,7 +246,9 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 // Opens the index. You MUST call this (or a method that calls it) before dereferencing _index.
 - (MapReduceIndex*) openIndex: (CBLStatus*)outStatus {
-    return _index ?: [self openIndexWithOptions: 0 status: outStatus];
+    if (_index)
+        return _index;
+    return [self openIndexWithOptions: 0 status: outStatus];
 }
 
 
@@ -285,6 +287,8 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
     //    if (_indexType == kCBLFullTextIndex)
     //        _index->textTokenizer = [[CBTextTokenizer alloc] init];
         LogTo(View, @"%@: Opened index %p (type %d)", self, _index, _index->indexType());
+        if (!_index)
+            abort(); // appease static analyzer
     }
     return _index;
 }
@@ -340,20 +344,21 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 - (MapReduceIndex*) setupIndex: (CBLStatus*)outStatus {
     id<CBL_ViewStorageDelegate> delegate = _delegate;
     if (!delegate) {
-        if (*outStatus)
+        if (outStatus)
             *outStatus = kCBLStatusNotFound;
         return NULL;
     }
     _mapReduceBridge.mapBlock = delegate.mapBlock;
     _mapReduceBridge.viewName = _name;
     _mapReduceBridge.indexType = _indexType;
-    if (![self openIndex: outStatus]) // open db
+    MapReduceIndex* index = [self openIndex: outStatus]; // open db
+    if (!index)
         return NULL;
     {
         Transaction t(_indexDB);
-        _index->setup(t, _indexType, &_mapReduceBridge, delegate.mapVersion.UTF8String);
+        index->setup(t, _indexType, &_mapReduceBridge, delegate.mapVersion.UTF8String);
     }
-    return _index;
+    return index;
 }
 
 
