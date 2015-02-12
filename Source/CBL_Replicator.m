@@ -434,6 +434,19 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
+- (void) retryOnline {
+    [self goOnline];
+    [self reachabilityChanged:_host];
+}
+
+
+- (void) retryOnlineAfterDelay {
+    [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                             selector: @selector(retryOnline) object: nil];
+    [self performSelector: @selector(retryOnline) withObject: nil afterDelay: kRetryOnlineDelay];
+}
+
+
 - (BOOL) goOffline {
     if (!_online)
         return NO;
@@ -463,17 +476,14 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     return YES;
 }
 
-- (void) goOnlineAfterDelay {
-    [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                             selector: @selector(goOnline) object: nil];
-    [self performSelector: @selector(goOnline) withObject: nil afterDelay: kRetryOnlineDelay];
-}
-
 
 - (void) reachabilityChanged: (CBLReachability*)host {
     LogTo(Sync, @"%@: Reachability state = %@ (%02X), suspended=%d",
           self, host, host.reachabilityFlags, _suspended);
 
+    // As the reachability API sometimes reports false negative status (e.g. The host is not
+    // reachable but actually it's reachable). Hence, we cannot trust unreachable status.
+    // Reference: https://github.com/couchbase/couchbase-lite-ios/issues/536
     BOOL reachable = host.reachable && !_suspended;
     if (reachable) {
         // Parse "network" option. Could be nil or "WiFi" or "!Wifi" or "cell" or "!cell".
@@ -489,16 +499,11 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                 Warn(@"Unrecognized replication option \"network\"=\"%@\"", network);
         }
 
-        if (reachable) {
-            if (_online)
-                [self retryIfReady];
-            else
-                [self goOnline];
-        }
+        if (reachable)
+            [self goOnline];
         else
             [self goOffline];
-    } else if (_suspended)
-        [self goOffline];
+    }
 }
 
 - (BOOL) suspended {
@@ -510,7 +515,13 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (void) setSuspended: (BOOL)suspended {
     if (suspended != _suspended) {
         _suspended = suspended;
-        [self reachabilityChanged: _host];
+
+        if (!_suspended) {
+            // If not suspended, bring the replicator online right away:
+            [self goOnline];
+            [self reachabilityChanged: _host];
+        } else
+            [self goOffline];
     }
 }
 
@@ -530,8 +541,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                 [self stopped];
             } else if (_error) /*(_revisionsFailed > 0)*/ {
                 if (CBLIsOfflineError(_error)) {
+                    LogTo(Sync, @"%@: Receive an offline error; go offline and will retry in %g sec",
+                          self, kRetryOnlineDelay);
                     [self goOffline];
-                    [self goOnlineAfterDelay];
+                    [self retryOnlineAfterDelay];
                 } else {
                     LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
                           self, _revisionsFailed, kRetryDelay);

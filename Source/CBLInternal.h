@@ -86,11 +86,11 @@
 - (void) databaseClosing;
 - (void) revisionFailed;    // subclasses call this if a transfer fails
 - (void) retry;
+- (void) retryOnlineAfterDelay;
 
 - (void) reachabilityChanged: (CBLReachability*)host;
 - (BOOL) goOffline;
 - (BOOL) goOnline;
-- (void) goOnlineAfterDelay;
 - (BOOL) checkSSLServerTrust: (SecTrustRef)trust forHost: (NSString*)host port: (UInt16)port;
 #if DEBUG
 @property (readonly) BOOL savingCheckpoint;
