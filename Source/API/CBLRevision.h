@@ -9,6 +9,13 @@
 #import <Foundation/Foundation.h>
 @class CBLDocument, CBLDatabase, CBLAttachment, CBLSavedRevision, CBLUnsavedRevision;
 
+#if __has_feature(nullability) // Xcode 6.3+
+#pragma clang assume_nonnull begin
+#else
+#define nullable
+#define __nullable
+#endif
+
 
 /** A revision of a CBLDocument.
     This is the abstract base class of CBLSavedRevision (existing revisions) and CBLNewRevision
@@ -30,44 +37,44 @@
 @property (readonly) BOOL isGone;
 
 /** The ID of this revision. Will be nil if this is an unsaved CBLNewRevision. */
-@property (readonly) NSString* revisionID;
+@property (readonly, nullable) NSString* revisionID;
 
 /** The revision this one is a child of. */
-@property (readonly) CBLSavedRevision* parentRevision;
+@property (readonly, nullable) CBLSavedRevision* parentRevision;
 
 /** The ID of the parentRevision. */
-@property (readonly) NSString* parentRevisionID;
+@property (readonly, nullable) NSString* parentRevisionID;
 
 /** Returns the ancestry of this revision as an array of CBLRevisions, in chronological order.
     Older revisions are NOT guaranteed to have their properties available. */
-- (NSArray*) getRevisionHistory: (NSError**)outError;
+- (NSArray*) getRevisionHistory: (__nullable NSError**)outError;
 
 /** The revision's contents as parsed from JSON.
     Keys beginning with "_" are defined and reserved by CouchbaseLite; others are app-specific.
     The first call to this method may need to fetch the properties from disk, but subsequent calls
     are very cheap. */
-@property (readonly) NSDictionary* properties;
+@property (readonly, nullable) NSDictionary* properties;
 
 /** The user-defined properties, without the ones reserved by CouchbaseLite.
     This is based on -properties, with every key whose name starts with "_" removed. */
-@property (readonly, copy) NSDictionary* userProperties;
+@property (readonly, copy, nullable) NSDictionary* userProperties;
 
 /** Shorthand for [self.properties objectForKey: key]. */
-- (id) propertyForKey: (NSString*)key                                   __attribute__((nonnull));
+- (nullable id) propertyForKey: (NSString*)key;
 
 /** Same as -propertyForKey:. Enables "[]" access in Xcode 4.4+ */
-- (id) objectForKeyedSubscript: (NSString*)key                          __attribute__((nonnull));
+- (nullable id) objectForKeyedSubscript: (NSString*)key;
 
 #pragma mark ATTACHMENTS
 
 /** The names of all attachments (an array of strings). */
-@property (readonly) NSArray* attachmentNames;
+@property (readonly, nullable) NSArray* attachmentNames;
 
 /** Looks up the attachment with the given name (without fetching its contents yet). */
-- (CBLAttachment*) attachmentNamed: (NSString*)name                     __attribute__((nonnull));
+- (nullable CBLAttachment*) attachmentNamed: (NSString*)name;
 
 /** All attachments, as CBLAttachment objects. */
-@property (readonly) NSArray* attachments;
+@property (readonly, nullable) NSArray* attachments;
 
 @end
 
@@ -86,11 +93,11 @@
 
 /** Creates and saves a new revision with the given properties.
     This will fail with a 412 error if the receiver is not the current revision of the document. */
-- (CBLSavedRevision*) createRevisionWithProperties: (NSDictionary*)properties
-                                             error: (NSError**)outError;
+- (nullable CBLSavedRevision*) createRevisionWithProperties: (nullable NSDictionary*)properties
+                                                      error: (__nullable NSError**)outError;
 
 /** Deletes the document by creating a new deletion-marker revision. */
-- (CBLSavedRevision*) deleteDocument: (NSError**)outError;
+- (nullable CBLSavedRevision*) deleteDocument: (__nullable NSError**)outError;
 
 @end
 
@@ -101,30 +108,30 @@
 
 // These properties are overridden to be settable:
 @property (readwrite) BOOL isDeletion;
-@property (readwrite, copy) NSMutableDictionary* properties;
-@property (readwrite, copy) NSDictionary* userProperties;
-- (void) setObject: (id)object forKeyedSubscript: (NSString*)key;
+@property (readwrite, copy, nullable) NSMutableDictionary* properties;
+@property (readwrite, copy, nullable) NSDictionary* userProperties;
+- (void) setObject: (nullable id)object forKeyedSubscript: (NSString*)key;
 
 /** Saves the new revision to the database.
     This will fail with a 412 error if its parent (the revision it was created from) is not the current revision of the document.
     Afterwards you should use the returned CBLSavedRevision instead of this object.
     @return  A new CBLSavedRevision representing the saved form of the revision. */
-- (CBLSavedRevision*) save: (NSError**)outError;
+- (nullable CBLSavedRevision*) save: (__nullable NSError**)outError;
 
 /** A special variant of -save: that always adds the revision, even if its parent is not the
     current revision of the document.
     This can be used to resolve conflicts, or to create them. If you're not certain that's what you
     want to do, you should use the regular -save: method instead. */
-- (CBLSavedRevision*) saveAllowingConflict: (NSError**)outError;
+- (nullable CBLSavedRevision*) saveAllowingConflict: (__nullable NSError**)outError;
 
 /** Creates, updates or deletes an attachment.
     The attachment data will be written to the database when the revision is saved.
     @param name  The attachment name. By convention, this looks like a filename.
     @param mimeType  The MIME type of the content.
-    @param content  The body of the attachment. */
+    @param content  The body of the attachment, or nil to remove the attachment. */
 - (void) setAttachmentNamed: (NSString*)name
-            withContentType: (NSString*)mimeType
-                    content: (NSData*)content;
+            withContentType: (nullable NSString*)mimeType
+                    content: (nullable NSData*)content;
 
 /** Creates, updates or deletes an attachment whose body comes from a file.
     (The method takes a URL, but it must be a "file:" URL. Remote resources are not supported.)
@@ -135,8 +142,8 @@
     @param mimeType  The MIME type of the content.
     @param fileURL  The URL of a local file whose contents should be copied into the attachment. */
 - (void) setAttachmentNamed: (NSString*)name
-            withContentType: (NSString*)mimeType
-                 contentURL: (NSURL*)fileURL;
+            withContentType: (nullable NSString*)mimeType
+                 contentURL: (nullable NSURL*)fileURL;
 
 /** Removes the attachment with the given name.
     When this revision is saved, it won't include the attachment. However, the attachment will
@@ -144,3 +151,8 @@
 - (void) removeAttachmentNamed: (NSString*)name;
 
 @end
+
+
+#if __has_feature(nullability)
+#pragma clang assume_nonnull end
+#endif

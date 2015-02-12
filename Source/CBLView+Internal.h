@@ -97,3 +97,8 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
                    sequenceNumber: (SequenceNumber)sequenceNumber
                              rows: (NSArray*)rows;
 @end
+
+
+@interface CBLQueryRow ()
+- (void) _clearDatabase;
+@end

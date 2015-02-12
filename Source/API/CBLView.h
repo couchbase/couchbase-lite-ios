@@ -9,6 +9,14 @@
 #import <Foundation/Foundation.h>
 @class CBLDatabase, CBLQuery;
 
+#if __has_feature(nullability) // Xcode 6.3+
+#pragma clang assume_nonnull begin
+#else
+#define nullable
+#define __nullable
+#define __nonnull
+#endif
+
 
 typedef enum {
     kCBLMapReduceIndex = 1, /**< Regular map/reduce index with JSON keys. */
@@ -17,7 +25,7 @@ typedef enum {
 } CBLViewIndexType;
 
 
-typedef void (^CBLMapEmitBlock)(id key, id value);
+typedef void (^CBLMapEmitBlock)(id key, __nullable id value);
 
 
 /** A "map" function called when a document is to be added to a view.
@@ -30,7 +38,9 @@ typedef void (^CBLMapBlock)(NSDictionary* doc, CBLMapEmitBlock emit);
 	@param values  A parallel array of values to be reduced, corresponding 1::1 with the keys.
 	@param rereduce  YES if the input values are the results of previous reductions.
 	@return  The reduced value; almost always a scalar or small fixed-size object. */
-typedef id (^CBLReduceBlock)(NSArray* keys, NSArray* values, BOOL rereduce);
+typedef __nonnull id (^CBLReduceBlock)(__nonnull NSArray* keys,
+                                       __nonnull NSArray* values,
+                                       BOOL rereduce);
 
 
 #define MAPBLOCK(BLOCK) ^(NSDictionary* doc, void (^emit)(id key, id value)){BLOCK}
@@ -43,8 +53,9 @@ FOUNDATION_EXTERN id CBLTextKey(NSString* text);
 
 /** An external object that knows how to map source code of some sort into executable functions. */
 @protocol CBLViewCompiler <NSObject>
-- (CBLMapBlock) compileMapFunction: (NSString*)mapSource language: (NSString*)language;
-- (CBLReduceBlock) compileReduceFunction: (NSString*)reduceSource language: (NSString*)language;
+- (nullable CBLMapBlock) compileMapFunction: (NSString*)mapSource language: (NSString*)language;
+- (nullable CBLReduceBlock) compileReduceFunction: (NSString*)reduceSource
+                                         language: (NSString*)language;
 @end
 
 
@@ -59,10 +70,10 @@ FOUNDATION_EXTERN id CBLTextKey(NSString* text);
 @property (readonly) NSString* name;
 
 /** The map function that controls how index rows are created from documents. */
-@property (readonly) CBLMapBlock mapBlock;
+@property (readonly, nullable) CBLMapBlock mapBlock;
 
 /** The optional reduce function, which aggregates together multiple rows. */
-@property (readonly) CBLReduceBlock reduceBlock;
+@property (readonly, nullable) CBLReduceBlock reduceBlock;
 
 /** Defines a view's functions.
     The view's definition is given as an Objective-C block (or NULL to delete the view). The body of the block should call the 'emit' block (passed in as a paramter) for every key/value pair it wants to write to the view.
@@ -74,13 +85,13 @@ FOUNDATION_EXTERN id CBLTextKey(NSString* text);
     @param version  An arbitrary string that will be stored persistently along with the index. Usually a string literal like @"1". If you subsequently change the functionality of the map or reduce function, change this string as well: the call will detect that it's different and will clear the index so it can be rebuilt by the new function.
     @return  YES if the view was updated and the index cleared; NO if the version stayed the same. */
 - (BOOL) setMapBlock: (CBLMapBlock)mapBlock
-         reduceBlock: (CBLReduceBlock)reduceBlock
-             version: (NSString*)version                            __attribute__((nonnull(1,3)));
+         reduceBlock: (nullable CBLReduceBlock)reduceBlock
+             version: (NSString*)version;
 
 /** Defines a view that has no reduce function.
     See -setMapBlock:reduceBlock:version: for more details. */
 - (BOOL) setMapBlock: (CBLMapBlock)mapBlock
-             version: (NSString*)version                            __attribute__((nonnull(1,2)));
+             version: (NSString*)version;
 
 /** Is the view's index currently out of date? */
 @property (readonly) BOOL stale;
@@ -101,9 +112,14 @@ FOUNDATION_EXTERN id CBLTextKey(NSString* text);
 + (NSNumber*) totalValues: (NSArray*)values;
 
 /** Registers an object that can compile map/reduce functions from source code. */
-+ (void) setCompiler: (id<CBLViewCompiler>)compiler;
++ (void) setCompiler: (nullable id<CBLViewCompiler>)compiler;
 
 /** The registered object, if any, that can compile map/reduce functions from source code. */
-+ (id<CBLViewCompiler>) compiler;
++ (nullable id<CBLViewCompiler>) compiler;
 
 @end
+
+
+#if __has_feature(nullability)
+#pragma clang assume_nonnull end
+#endif

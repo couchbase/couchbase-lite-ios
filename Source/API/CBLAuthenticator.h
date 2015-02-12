@@ -8,6 +8,13 @@
 
 #import <Foundation/Foundation.h>
 
+#if __has_feature(nullability) // Xcode 6.3+
+#pragma clang assume_nonnull begin
+#else
+#define nullable
+#define __nullable
+#endif
+
 
 /** The CBLAuthenticator protocol defines objects that can authenticate a user to a remote database
     server. An object conforming to this protocol is acquired from the CBLAuthenticator _class_'s
@@ -52,3 +59,9 @@
                                             signatureMethod: (NSString*)signatureMethod;
 
 @end
+
+
+
+#if __has_feature(nullability)
+#pragma clang assume_nonnull end
+#endif

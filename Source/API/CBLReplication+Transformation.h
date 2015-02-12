@@ -7,10 +7,17 @@
 
 #import <CouchbaseLite/CouchbaseLite.h>
 
+#if __has_feature(nullability) // Xcode 6.3+
+#pragma clang assume_nonnull begin
+#else
+#define nullable
+#define __nullable
+#endif
+
 
 /** A callback block for transforming revision bodies during replication.
     See CBLReplication.propertiesTransformationBlock's documentation for details. */
-typedef NSDictionary *(^CBLPropertiesTransformationBlock)(NSDictionary* doc);
+typedef __nonnull NSDictionary *(^CBLPropertiesTransformationBlock)(__nonnull NSDictionary* doc);
 
 
 @interface CBLReplication (Transformation)
@@ -21,6 +28,11 @@ typedef NSDictionary *(^CBLPropertiesTransformationBlock)(NSDictionary* doc);
     The block takes an NSDictionary containing the document's properties (including the "_id" and "_rev" metadata), and returns a dictionary of transformed properties. It may return the input dictionary if it has no changes to make.
     The transformation MUST preserve the values of any keys whose names begin with an underscore ("_")!
     The block will be called on the background replicator thread, NOT on the CBLReplication's thread, so it shouldn't directly access any Couchbase Lite objects. */
-@property (strong) CBLPropertiesTransformationBlock propertiesTransformationBlock;
+@property (strong, nullable) CBLPropertiesTransformationBlock propertiesTransformationBlock;
 
 @end
+
+
+#if __has_feature(nullability)
+#pragma clang assume_nonnull end
+#endif

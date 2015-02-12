@@ -8,6 +8,13 @@
 
 #import <Foundation/Foundation.h>
 
+#if __has_feature(nullability) // Xcode 6.3+
+#pragma clang assume_nonnull begin
+#else
+#define nullable
+#define __nullable
+#endif
+
 
 /** A 2D geometric point. */
 typedef struct CBLGeoPoint {
@@ -84,4 +91,9 @@ id CBLGeoJSONKey(NSDictionary* geoJSON);
 
 #ifdef __cplusplus
 }
+#endif
+
+
+#if __has_feature(nullability)
+#pragma clang assume_nonnull end
 #endif

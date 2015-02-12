@@ -195,7 +195,7 @@
         options.filter = ^(CBLQueryRow* row) {
             row.database = database;    //FIX: What if this is called on another thread??
             BOOL result = [postFilter evaluateWithObject: row];
-            row.database = nil;
+            [row _clearDatabase];
             return result;
         };
     }

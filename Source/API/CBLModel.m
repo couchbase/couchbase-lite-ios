@@ -30,7 +30,8 @@
 @dynamic type;
 
 
-- (instancetype) initWithDocument: (CBLDocument*)document orDatabase:(CBLDatabase *)database
+- (instancetype) initWithDocument: (nullable CBLDocument*)document
+                       orDatabase: (nullable CBLDatabase*)database
 {
     NSParameterAssert(document || database);
     self = [super init];

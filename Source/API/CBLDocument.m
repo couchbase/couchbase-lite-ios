@@ -116,7 +116,11 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 - (CBLSavedRevision*) currentRevision {
     if (!_currentRevision) {
-        _currentRevision = [self revisionWithID: nil];
+        CBLStatus status;
+        _currentRevision =  [self revisionFromRev: [_database getDocumentWithID: _docID
+                                                                     revisionID: nil
+                                                                        options: 0
+                                                                         status: &status]];
     }
     return _currentRevision;
 }
@@ -143,7 +147,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 
 - (CBLSavedRevision*) revisionWithID: (NSString*)revID  {
-    if (revID && $equal(revID, _currentRevision.revisionID))
+    if ($equal(revID, _currentRevision.revisionID))
         return _currentRevision;
     CBLStatus status;
     return [self revisionFromRev: [_database getDocumentWithID: _docID revisionID: revID

@@ -11,6 +11,13 @@
 @class CBLDatabase, CBLDocument;
 @class CBLLiveQuery, CBLQueryEnumerator, CBLQueryRow;
 
+#if __has_feature(nullability) // Xcode 6.3+
+#pragma clang assume_nonnull begin
+#else
+#define nullable
+#define __nullable
+#endif
+
 
 typedef NS_ENUM(unsigned, CBLAllDocsMode) {
     kCBLAllDocs,            /**< Normal behavior for all-docs query */
@@ -45,18 +52,18 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 @property BOOL descending;
 
 /** If non-nil, the key value to start at. */
-@property (copy) id startKey;
+@property (copy, nullable) id startKey;
 
 /** If non-nil, the key value to end after. */
-@property (copy) id endKey;
+@property (copy, nullable) id endKey;
 
 /** If non-nil, the document ID to start at. 
     (Useful if the view contains multiple identical keys, making .startKey ambiguous.) */
-@property (copy) NSString* startKeyDocID;
+@property (copy, nullable) NSString* startKeyDocID;
 
 /** If non-nil, the document ID to end at. 
     (Useful if the view contains multiple identical keys, making .endKey ambiguous.) */
-@property (copy) NSString* endKeyDocID;
+@property (copy, nullable) NSString* endKeyDocID;
 
 /** If YES (the default) the startKey (or startKeyDocID) comparison uses ">=". Else it uses ">". */
 @property BOOL inclusiveStart;
@@ -83,14 +90,14 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     "value" to refer to the value, or "key" to refer to the key.
     A limited form of array indexing is supported, so you can refer to "key[1]" or "value[0]" if
     the key or value are arrays. This only works with indexes from 0 to 3. */
-@property (copy) NSArray* sortDescriptors;
+@property (copy, nullable) NSArray* sortDescriptors;
 
 /** An optional predicate that filters the resulting query rows.
     If present, it's called on every row returned from the query, and if it returns NO
     the row is skipped.
     Key-paths are interpreted relative to a CBLQueryRow, so they should start with
     "value" to refer to the value, or "key" to refer to the key. */
-@property (retain) NSPredicate* postFilter;
+@property (strong, nullable) NSPredicate* postFilter;
 
 /** Determines whether or when the view index is updated. By default, the index will be updated
     if necessary before the query runs -- this guarantees up-to-date results but can cause a
@@ -100,7 +107,7 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 @property CBLIndexUpdateMode indexUpdateMode;
 
 /** If non-nil, the query will fetch only the rows with the given keys. */
-@property (copy) NSArray* keys;
+@property (copy, nullable) NSArray* keys;
 
 /** If set to YES, disables use of the reduce function.
     (Equivalent to setting "?reduce=false" in the REST API.) */
@@ -127,7 +134,7 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 
 /** Sends the query to the server and returns an enumerator over the result rows (Synchronous).
     Note: In a CBLLiveQuery you should access the .rows property instead. */
-- (CBLQueryEnumerator*) run: (NSError**)outError;
+- (nullable CBLQueryEnumerator*) run: (__nullable NSError**)outError;
 
 /** Starts an asynchronous query. Returns immediately, then calls the onComplete block when the
     query completes, passing it the row enumerator (or an error). */
@@ -158,7 +165,7 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 
 /** The current query results; this updates as the database changes, and can be observed using KVO.
     Its value will be nil until the initial asynchronous query finishes. */
-@property (readonly, retain) CBLQueryEnumerator* rows;
+@property (readonly, strong, nullable) CBLQueryEnumerator* rows;
 
 /** Blocks until the intial asynchronous query finishes.
     After this call either .rows or .lastError will be non-nil. */
@@ -166,7 +173,7 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 
 /** If non-nil, the error of the last execution of the query.
     If nil, the last execution of the query was successful. */
-@property (readonly) NSError* lastError;
+@property (readonly, nullable) NSError* lastError;
 
 @end
 
@@ -185,7 +192,7 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 @property (readonly) BOOL stale;
 
 /** The next result row. This is the same as -nextObject but with a checked return type. */
-- (CBLQueryRow*) nextRow;
+- (nullable CBLQueryRow*) nextRow;
 
 /** Random access to a row in the result */
 - (CBLQueryRow*) rowAtIndex: (NSUInteger)index;
@@ -220,12 +227,12 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 
 /** The row's value: this is the second parameter passed to the emit() call that generated the
     row. */
-@property (readonly) id value;
+@property (readonly, nullable) id value;
 
 /** The ID of the document described by this view row.
     This is not necessarily the same as the document that caused this row to be emitted; see the
     discussion of the .sourceDocumentID property for details. */
-@property (readonly) NSString* documentID;
+@property (readonly, nullable) NSString* documentID;
 
 /** The ID of the document that caused this view row to be emitted.
     This is the value of the "id" property of the JSON view row.
@@ -235,7 +242,7 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     document.
     In a reduced or grouped query the value will be nil, since the rows don't correspond to
     individual documents. */
-@property (readonly) NSString* sourceDocumentID;
+@property (readonly, nullable) NSString* sourceDocumentID;
 
 /** The revision ID of the document this row was mapped from. */
 @property (readonly) NSString* documentRevisionID;
@@ -245,22 +252,26 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 /** The document this row was mapped from.
     This will be nil if a grouping was enabled in the query, because then the result rows don't
     correspond to individual documents. */
-@property (readonly) CBLDocument* document;
+@property (readonly, nullable) CBLDocument* document;
 
 /** The properties of the document this row was mapped from.
     To get this, you must have set the .prefetch property on the query; else this will be nil.
     (You can still get the document properties via the .document property, of course. But it
     takes a separate call to the database. So if you're doing it for every row, using
     .prefetch and .documentProperties is faster.) */
-@property (readonly) NSDictionary* documentProperties;
+@property (readonly, nullable) NSDictionary* documentProperties;
 
 /** If this row's key is an array, returns the item at that index in the array.
     If the key is not an array, index=0 will return the key itself.
     If the index is out of range, returns nil. */
-- (id) keyAtIndex: (NSUInteger)index;
+- (nullable id) keyAtIndex: (NSUInteger)index;
 
 /** Convenience for use in keypaths. Returns the key at the given index. */
-@property (readonly) id key0, key1, key2, key3;
+//@property (readonly, nullable) id key0, key1, key2, key3;
+@property (readonly, nullable) id key0;
+@property (readonly, nullable) id key1;
+@property (readonly, nullable) id key2;
+@property (readonly, nullable) id key3;
 
 /** The database sequence number of the associated doc/revision. */
 @property (readonly) UInt64 sequenceNumber;
@@ -270,6 +281,11 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     The first object in the array will be the default "winning" revision that shadows the others.
     This is only valid in an allDocuments query whose allDocsMode is set to kCBLShowConflicts
     or kCBLOnlyConflicts; otherwise it returns nil. */
-@property (readonly) NSArray* conflictingRevisions;
+@property (readonly, nullable) NSArray* conflictingRevisions;
 
 @end
+
+
+#if __has_feature(nullability)
+#pragma clang assume_nonnull end
+#endif

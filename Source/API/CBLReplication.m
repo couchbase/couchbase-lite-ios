@@ -38,7 +38,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 @property (nonatomic, readwrite) BOOL running;
 @property (nonatomic, readwrite) CBLReplicationStatus status;
 @property (nonatomic, readwrite) unsigned completedChangesCount, changesCount;
-@property (nonatomic, readwrite, retain) NSError* lastError;
+@property (nonatomic, readwrite, strong, nullable) NSError* lastError;
 @end
 
 

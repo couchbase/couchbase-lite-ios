@@ -9,6 +9,13 @@
 #import <Foundation/Foundation.h>
 @class CBLModel;
 
+#if __has_feature(nullability) // Xcode 6.3+
+#pragma clang assume_nonnull begin
+#else
+#define nullable
+#define __nullable
+#endif
+
 
 /** An array of CBLModel objects, that's actually backed by document IDs.
     It looks up the model dynamically as each item is accessed.
@@ -32,3 +39,8 @@
 @property (readonly) NSArray* docIDs;
 
 @end
+
+
+#if __has_feature(nullability)
+#pragma clang assume_nonnull end
+#endif

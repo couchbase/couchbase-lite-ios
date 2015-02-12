@@ -11,18 +11,25 @@
 @class CBLManager, CBLDocument, CBLRevision, CBLSavedRevision, CBLView, CBLQuery, CBLReplication;
 @protocol CBLValidationContext;
 
+#if __has_feature(nullability) // Xcode 6.3+
+#pragma clang assume_nonnull begin
+#else
+#define nullable
+#define __nullable
+#endif
+
 
 /** Validation block, used to approve revisions being added to the database.
     The block should call `[context reject]` or `[context rejectWithMessage:]` if the proposed
     new revision is invalid. */
 typedef void (^CBLValidationBlock) (CBLRevision* newRevision,
-                                   id<CBLValidationContext> context);
+                                    id<CBLValidationContext> context);
 
 #define VALIDATIONBLOCK(BLOCK) ^void(CBLRevision* newRevision, id<CBLValidationContext> context)\
                                     {BLOCK}
 
 /** Filter block, used in changes feeds and replication. */
-typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params);
+typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, __nullable NSDictionary* params);
 
 #define FILTERBLOCK(BLOCK) ^BOOL(CBLSavedRevision* revision, NSDictionary* params) {BLOCK}
 
@@ -63,11 +70,11 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params
 /** Closes a database.
     This first stops all replications, and calls -saveAllModels: to save changes to CBLModel
     objects. It returns NO if some models failed to save. */
-- (BOOL) close: (NSError**)error;
+- (BOOL) close: (__nullable NSError**)error;
 
 /** Compacts the database file by purging non-current JSON bodies, pruning revisions older than
     the maxRevTreeDepth, deleting unused attachment files, and vacuuming the SQLite database. */
-- (BOOL) compact: (NSError**)outError;
+- (BOOL) compact: (__nullable NSError**)outError;
 
 /** The maximum depth of a document's revision tree (or, max length of its revision history.)
     Revisions older than this limit will be deleted during a -compact: operation. 
@@ -75,14 +82,14 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params
 @property NSUInteger maxRevTreeDepth;
 
 /** Deletes the database. */
-- (BOOL) deleteDatabase: (NSError**)outError;
+- (BOOL) deleteDatabase: (__nullable NSError**)outError;
 
 /** Changes the database's unique IDs to new random values.
     Ordinarily you should never need to call this method; it's only made public to fix databases
     that are already affected by bug github.com/couchbase/couchbase-lite-ios/issues/145 .
     Make sure you only call this once, to fix that problem, because every call has the side effect
     of resetting all replications, making them run slow the next time. */
-- (BOOL) replaceUUIDs: (NSError**)outError;
+- (BOOL) replaceUUIDs: (__nullable NSError**)outError;
 
 
 #pragma mark - DOCUMENT ACCESS:
@@ -91,17 +98,17 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params
     Doesn't touch the on-disk database; a document with that ID doesn't even need to exist yet.
     CBLDocuments are cached, so there will never be more than one instance (in this database)
     at a time with the same documentID. */
-- (CBLDocument*) documentWithID: (NSString*)docID                       __attribute__((nonnull));
+- (nullable CBLDocument*) documentWithID: (NSString*)docID;
 
 /** Instantiates a CBLDocument object with the given ID.
     Unlike -documentWithID: this method loads the document from the database, and returns nil if
     no such document exists.
     CBLDocuments are cached, so there will never be more than one instance (in this database)
     at a time with the same documentID. */
-- (CBLDocument*) existingDocumentWithID: (NSString*)docID               __attribute__((nonnull));
+- (nullable CBLDocument*) existingDocumentWithID: (NSString*)docID;
 
 /** Same as -documentWithID:. Enables "[]" access in Xcode 4.4+ */
-- (CBLDocument*)objectForKeyedSubscript: (NSString*)key                 __attribute__((nonnull));
+- (CBLDocument*)objectForKeyedSubscript: (NSString*)key;
 
 /** Creates a new CBLDocument object with no properties and a new (random) UUID.
     The document will be saved to the database when you call -putProperties: on it. */
@@ -112,18 +119,18 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params
 
 
 /** Returns the contents of the local document with the given ID, or nil if none exists. */
-- (NSDictionary*) existingLocalDocumentWithID: (NSString*)localDocID         __attribute__((nonnull));
+- (nullable NSDictionary*) existingLocalDocumentWithID: (NSString*)localDocID;
 
 /** Sets the contents of the local document with the given ID. Unlike CouchDB, no revision-ID
     checking is done; the put always succeeds. If the properties dictionary is nil, the document
     will be deleted. */
-- (BOOL) putLocalDocument: (NSDictionary*)properties
+- (BOOL) putLocalDocument: (nullable NSDictionary*)properties
                    withID: (NSString*)localDocID
-                    error: (NSError**)outError                      __attribute__((nonnull(2)));
+                    error: (__nullable NSError**)outError;
 
 /** Deletes the local document with the given ID. */
 - (BOOL) deleteLocalDocumentWithID: (NSString*)localDocID
-                             error: (NSError**)outError             __attribute__((nonnull(1)));
+                             error: (__nullable NSError**)outError ;
 
 
 #pragma mark - VIEWS AND OTHER CALLBACKS:
@@ -136,39 +143,38 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params
     anonymous CBLView and then deleting it immediately after querying it. It may be useful during
     development, but in general this is inefficient if this map will be used more than once,
     because the entire view has to be regenerated from scratch every time. */
-- (CBLQuery*) slowQueryWithMap: (CBLMapBlock)mapBlock                    __attribute__((nonnull));
+- (CBLQuery*) slowQueryWithMap: (CBLMapBlock)mapBlock;
 
 /** Returns a CBLView object for the view with the given name.
     (This succeeds even if the view doesn't already exist, but the view won't be added to the database until the CBLView is assigned a map function.) */
-- (CBLView*) viewNamed: (NSString*)name                                  __attribute__((nonnull));
+- (CBLView*) viewNamed: (NSString*)name;
 
 /** Returns the existing CBLView with the given name, or nil if none. */
-- (CBLView*) existingViewNamed: (NSString*)name                         __attribute__((nonnull));
+- (nullable CBLView*) existingViewNamed: (NSString*)name;
 
 /** Defines or clears a named document validation function.
     Before any change to the database, all registered validation functions are called and given a
     chance to reject it. (This includes incoming changes from a pull replication.) */
-- (void) setValidationNamed: (NSString*)validationName asBlock: (CBLValidationBlock)validationBlock
-                                                                     __attribute__((nonnull(1)));
+- (void) setValidationNamed: (NSString*)validationName
+                    asBlock: (nullable CBLValidationBlock)validationBlock;
 
 /** Returns the existing document validation function (block) registered with the given name.
     Note that validations are not persistent -- you have to re-register them on every launch. */
-- (CBLValidationBlock) validationNamed: (NSString*)validationName    __attribute__((nonnull));
+- (nullable CBLValidationBlock) validationNamed: (NSString*)validationName;
 
 /** Defines or clears a named filter function.
     Filters are used by push replications to choose which documents to send. */
-- (void) setFilterNamed: (NSString*)filterName asBlock: (CBLFilterBlock)filterBlock
-                                                                     __attribute__((nonnull(1)));
+- (void) setFilterNamed: (NSString*)filterName asBlock: (nullable CBLFilterBlock)filterBlock;
 
 /** Returns the existing filter function (block) registered with the given name.
     Note that filters are not persistent -- you have to re-register them on every launch. */
-- (CBLFilterBlock) filterNamed: (NSString*)filterName                   __attribute__((nonnull));
+- (nullable CBLFilterBlock) filterNamed: (NSString*)filterName;
 
 /** Registers an object that can compile source code into executable filter blocks. */
-+ (void) setFilterCompiler: (id<CBLFilterCompiler>)compiler;
++ (void) setFilterCompiler: (nullable id<CBLFilterCompiler>)compiler;
 
 /** Returns the currently registered filter compiler (nil by default). */
-+ (id<CBLFilterCompiler>) filterCompiler;
++ (nullable id<CBLFilterCompiler>) filterCompiler;
 
 
 #pragma mark - TRANSACTIONS / THREADING:
@@ -176,18 +182,18 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params
 /** Runs the block within a transaction. If the block returns NO, the transaction is rolled back.
     Use this when performing bulk write operations like multiple inserts/updates; it saves the 
     overhead of multiple SQLite commits, greatly improving performance. */
-- (BOOL) inTransaction: (BOOL(^)(void))block                        __attribute__((nonnull(1)));
+- (BOOL) inTransaction: (BOOL(^)(void))block;
 
 /** Runs the block asynchronously on the database's dispatch queue or thread.
     Unlike the rest of the API, this can be called from any thread, and provides a limited form
     of multithreaded access to Couchbase Lite. */
-- (void) doAsync: (void (^)())block                                 __attribute__((nonnull(1)));
+- (void) doAsync: (void (^)())block;
 
 /** Runs the block _synchronously_ on the database's dispatch queue or thread: this method does
     not return until after the block has completed.
     Unlike the rest of the API, this can _only_ be called from other threads/queues:  If you call it
     from the same thread or dispatch queue that the database runs on, **it will deadlock!** */
-- (void) doSync: (void (^)())block                                 __attribute__((nonnull(1)));
+- (void) doSync: (void (^)())block;
 
 
 #pragma mark - REPLICATION:
@@ -198,12 +204,12 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* params
 /** Creates a replication that will 'push' this database to a remote database at the given URL.
     This always creates a new replication, even if there is already one to the given URL.
     You must call -start on the replication to start it. */
-- (CBLReplication*) createPushReplication: (NSURL*)url;
+- (nullable CBLReplication*) createPushReplication: (NSURL*)url;
 
 /** Creates a replication that will 'pull' from a remote database at the given URL to this database.
     This always creates a new replication, even if there is already one from the given URL.
     You must call -start on the replication to start it. */
-- (CBLReplication*) createPullReplication: (NSURL*)url;
+- (nullable CBLReplication*) createPullReplication: (NSURL*)url;
 
 
 @end
@@ -220,7 +226,9 @@ extern NSString* const kCBLDatabaseChangeNotification;
 
 
 /** The type of callback block passed to -[CBLValidationContext enumerateChanges:]. */
-typedef BOOL (^CBLChangeEnumeratorBlock) (NSString* key, id oldValue, id newValue);
+typedef BOOL (^CBLChangeEnumeratorBlock) (NSString* key,
+                                          __nullable id oldValue,
+                                          __nullable id newValue);
 
 
 
@@ -228,7 +236,7 @@ typedef BOOL (^CBLChangeEnumeratorBlock) (NSString* key, id oldValue, id newValu
 @protocol CBLValidationContext <NSObject>
 
 /** The contents of the current revision of the document, or nil if this is a new document. */
-@property (readonly) CBLSavedRevision* currentRevision;
+@property (readonly, nullable) CBLSavedRevision* currentRevision;
 
 /** Rejects the proposed new revision. */
 - (void) reject;
@@ -250,3 +258,8 @@ typedef BOOL (^CBLChangeEnumeratorBlock) (NSString* key, id oldValue, id newValu
 - (BOOL) validateChanges: (CBLChangeEnumeratorBlock)enumerator;
 
 @end
+
+
+#if __has_feature(nullability)
+#pragma clang assume_nonnull end
+#endif

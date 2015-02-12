@@ -19,6 +19,14 @@
 #import <UIKit/UIKit.h>
 @class CBLDocument, CBLLiveQuery, CBLQueryRow, RESTOperation;
 
+#if __has_feature(nullability) // Xcode 6.3+
+#pragma clang assume_nonnull begin
+#else
+#define nullable
+#define __nullable
+#endif
+
+
 /** A UICollectionView data source driven by a CBLLiveQuery.
     It populates the collection view from the query rows, and automatically updates the collection
     as the query results change when the database is updated.
@@ -40,19 +48,19 @@
 #pragma mark Row Accessors:
 
 /** The current array of CBLQueryRows being used as the data source for the collection. */
-@property (nonatomic, readonly) NSMutableArray* rows;
+@property (nonatomic, readonly, nullable) NSMutableArray* rows;
 
 /** Convenience accessor to get the row object for a given collection row index. */
-- (CBLQueryRow*) rowAtIndex: (NSUInteger)index;
+- (nullable CBLQueryRow*) rowAtIndex: (NSUInteger)index;
 
 /** Convenience accessor to find the index path of the row with a given document. */
-- (NSIndexPath*) indexPathForDocument: (CBLDocument*)document           __attribute__((nonnull));
+- (nullable NSIndexPath*) indexPathForDocument: (CBLDocument*)document;
 
 /** Convenience accessor to return the query row at a given index path. */
-- (CBLQueryRow*) rowAtIndexPath: (NSIndexPath*)path                     __attribute__((nonnull));
+- (nullable CBLQueryRow*) rowAtIndexPath: (NSIndexPath*)path;
 
 /** Convenience accessor to return the document at a given index path. */
-- (CBLDocument*) documentAtIndexPath: (NSIndexPath*)path                __attribute__((nonnull));
+- (nullable CBLDocument*) documentAtIndexPath: (NSIndexPath*)path;
 
 
 
@@ -60,11 +68,11 @@
 
 /** Deletes the documents at the given row indexes, animating the removal from the collection. */
 - (BOOL) deleteDocumentsAtIndexes: (NSArray*)indexPaths
-                            error: (NSError**)outError;
+                            error: (__nullable NSError**)outError;
 
 /** Deletes the given documents, animating the removal from the collection. */
 - (BOOL) deleteDocuments: (NSArray*)documents
-                   error: (NSError**)outError;
+                   error: (__nullable NSError**)outError;
 
 @end
 
@@ -94,3 +102,8 @@
                        forRow:(CBLQueryRow*)row;
 
 @end
+
+
+#if __has_feature(nullability)
+#pragma clang assume_nonnull end
+#endif

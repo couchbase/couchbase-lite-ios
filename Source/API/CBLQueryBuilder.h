@@ -9,6 +9,13 @@
 #import <Foundation/Foundation.h>
 @class CBLDatabase, CBLView, CBLQuery, CBLQueryEnumerator;
 
+#if __has_feature(nullability) // Xcode 6.3+
+#pragma clang assume_nonnull begin
+#else
+#define nullable
+#define __nullable
+#endif
+
 
 /** A higher-level interface to views and queries that feels more like a traditional query language
     or like Core Data's NSFetchRequest.
@@ -40,28 +47,28 @@
     @param outError  If the builder doesn't know how to handle the input, this will be filled in
                 with an NSError describing the problem.
     @return  The initialized CBLQueryBuilder, or nil on error. */
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                           select: (NSArray*)valueTemplate
+- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
+                           select: (nullable NSArray*)valueTemplate
                             where: (NSString*)predicateStr
-                          orderBy: (NSArray*)sortDescriptors
-                            error: (NSError**)outError;
+                          orderBy: (nullable NSArray*)sortDescriptors
+                            error: (__nullable NSError**)outError;
 
 /** Initializes a CBLQueryBuilder.
     This is an alternate initializer that takes an NSPredicate instead of a predicate template
     string; see the main initializer for details. */
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                           select: (NSArray*)valueTemplate
+- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
+                           select: (nullable NSArray*)valueTemplate
                    wherePredicate: (NSPredicate*)predicate
-                          orderBy: (NSArray*)sortDescriptors
-                            error: (NSError**)outError;
+                          orderBy: (nullable NSArray*)sortDescriptors
+                            error: (__nullable NSError**)outError;
 
 /** Initializes a CBLQueryBuilder, using an explicitly chosen view.
     See the main initializer for details. */
 - (instancetype) initWithView: (CBLView*)view
                        select: (NSArray*)valueTemplate
                wherePredicate: (NSPredicate*)predicate
-                      orderBy: (NSArray*)sortDescriptors
-                        error: (NSError**)outError;
+                      orderBy: (nullable NSArray*)sortDescriptors
+                        error: (__nullable NSError**)outError;
 
 /** The view the query builder is using. */
 @property (readonly, nonatomic) CBLView* view;
@@ -76,10 +83,15 @@
                         the dollar signs used in the predicate string; if a predicate referred to
                         $FOO, the dictionary key should be @"FOO".
     @return  The configured query, ready to run. */
-- (CBLQuery*) createQueryWithContext: (NSDictionary*)context;
+- (CBLQuery*) createQueryWithContext: (nullable NSDictionary*)context;
 
 /** A convenience method that creates a query and runs it. See -createQueryWithContext:. */
-- (CBLQueryEnumerator*) runQueryWithContext: (NSDictionary*)context
-                                      error: (NSError**)outError;
+- (nullable CBLQueryEnumerator*) runQueryWithContext: (nullable NSDictionary*)context
+                                               error: (__nullable NSError**)outError;
 
 @end
+
+
+#if __has_feature(nullability)
+#pragma clang assume_nonnull end
+#endif

@@ -59,6 +59,11 @@ static id fromJSON( NSData* json ) {
 }
 
 
+- (void) _clearDatabase {
+    _database = nil;
+}
+
+
 - (BOOL) isNonMagicValue {
     return _value && !( [_value isKindOfClass: [NSData class]]
                         && [_storage rowValueIsEntireDoc: _value] );

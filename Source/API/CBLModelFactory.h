@@ -9,6 +9,13 @@
 #import "CBLDatabase.h"
 @class CBLDocument;
 
+#if __has_feature(nullability) // Xcode 6.3+
+#pragma clang assume_nonnull begin
+#else
+#define nullable
+#define __nullable
+#endif
+
 
 /** A configurable mapping from CBLDocument to CBLModel.
     It associates a model class with a value of the document's "type" property. */
@@ -36,14 +43,14 @@
 
 /** Returns the appropriate CBLModel subclass for this document.
     The default implementation just passes the document's "type" property value to -classForDocumentType:, but subclasses could override this to use different properties (or even the document ID) to decide. */
-- (Class) classForDocument: (CBLDocument*)document                      __attribute__((nonnull));
+- (nullable Class) classForDocument: (CBLDocument*)document                      __attribute__((nonnull));
 
 /** Looks up the CBLModel subclass that's been registered for a document type. */
 - (Class) classForDocumentType: (NSString*)type                         __attribute__((nonnull));
 
 /** Looks up the document type for which the given class has been registered.
     If it's unregistered, or registered with multiple types, returns nil. */
-- (NSString*) documentTypeForClass: (Class)modelClass                   __attribute__((nonnull));
+- (nullable NSString*) documentTypeForClass: (Class)modelClass                   __attribute__((nonnull));
 
 @end
 
@@ -52,6 +59,11 @@
 
 /** The CBLModel factory object to be used by this database.
     Every database has its own instance by default, but you can set this property to use a different one -- either to use a custom subclass, or to share a factory among multiple databases, or both. */
-@property (retain) CBLModelFactory* modelFactory;
+@property (retain, nullable) CBLModelFactory* modelFactory;
 
 @end
+
+
+#if __has_feature(nullability)
+#pragma clang assume_nonnull end
+#endif

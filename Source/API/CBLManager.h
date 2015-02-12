@@ -9,6 +9,12 @@
 #import <Foundation/Foundation.h>
 @class CBLDatabase;
 
+#if __has_feature(nullability) // Xcode 6.3+
+#pragma clang assume_nonnull begin
+#else
+#define nullable
+#define __nullable
+#endif
 
 /** Option flags for CBLManager initialization. */
 typedef struct CBLManagerOptions {
@@ -28,7 +34,7 @@ typedef struct CBLManagerOptions {
 
 /** Returns YES if the given name is a valid database name.
     (Only the characters in "abcdefghijklmnopqrstuvwxyz0123456789_$()+-/" are allowed.) */
-+ (BOOL) isValidDatabaseName: (NSString*)name                           __attribute__((nonnull));
++ (BOOL) isValidDatabaseName: (NSString*)name;
 
 /** The default directory to use for a CBLManager. This is in the Application Support directory. */
 + (NSString*) defaultDirectory;
@@ -41,8 +47,8 @@ typedef struct CBLManagerOptions {
     @param options  If non-NULL, a pointer to options (read-only and no-replicator).
     @param outError  On return, the error if any. */
 - (instancetype) initWithDirectory: (NSString*)directory
-                           options: (const CBLManagerOptions*)options
-                             error: (NSError**)outError                 __attribute__((nonnull(1)));
+                           options: (__nullable const CBLManagerOptions*)options
+                             error: (__nullable NSError**)outError;
 
 /** Creates a copy of this CBLManager, which can be used on a different thread. */
 - (instancetype) copy;
@@ -62,16 +68,16 @@ typedef struct CBLManagerOptions {
 /** Returns the database with the given name, creating it if it didn't already exist.
     Multiple calls with the same name will return the same CBLDatabase instance.
     NOTE: Database names may not contain capital letters! */
-- (CBLDatabase*) databaseNamed: (NSString*)name
-                         error: (NSError**)outError                     __attribute__((nonnull(1)));
+- (nullable CBLDatabase*) databaseNamed: (NSString*)name
+                                  error: (__nullable NSError**)outError;
 
 /** Returns the database with the given name, or nil if it doesn't exist.
     Multiple calls with the same name will return the same CBLDatabase instance. */
-- (CBLDatabase*) existingDatabaseNamed: (NSString*)name
-                                 error: (NSError**)outError             __attribute__((nonnull(1)));
+- (nullable CBLDatabase*) existingDatabaseNamed: (NSString*)name
+                                          error: (__nullable NSError**)outError;
 
 /** Same as -existingDatabaseNamed:. Enables "[]" access in Xcode 4.4+ */
-- (CBLDatabase*) objectForKeyedSubscript: (NSString*)key __attribute__((nonnull));
+- (nullable CBLDatabase*) objectForKeyedSubscript: (NSString*)key;
 
 /** An array of the names of all existing databases. */
 @property (readonly) NSArray* allDatabaseNames;
@@ -83,8 +89,8 @@ typedef struct CBLManagerOptions {
     @param outError  If an error occurs, it will be stored into this parameter on return.
     @return  YES if the database was copied, NO if an error occurred. */
 - (BOOL) replaceDatabaseNamed: (NSString*)databaseName
-             withDatabaseDir: (NSString*)databaseDir
-                        error: (NSError**)outError                  __attribute__((nonnull(1,2)));
+              withDatabaseDir: (NSString*)databaseDir
+                        error: (__nullable NSError**)outError;
 
 #pragma mark - CONCURRENCY:
 
@@ -93,7 +99,7 @@ typedef struct CBLManagerOptions {
     manager was instantiated. By setting a dispatch queue, you can call the objects from within that
     queue no matter what the underlying thread is, and notifications will be posted on that queue
     as well. */
-@property (strong) dispatch_queue_t dispatchQueue;
+@property (strong, nullable) dispatch_queue_t dispatchQueue;
 
 /** Runs the block asynchronously on the database manager's dispatch queue or thread.
     Unlike the rest of the API, this can be called from any thread, and provides a limited form
@@ -124,10 +130,10 @@ typedef struct CBLManagerOptions {
 
 /** Redirects Couchbase Lite logging: instead of writing to the console/stderr, it will call the
     given block. Passing a nil block restores the default behavior. */
-+ (void) redirectLogging: (void (^)(NSString* type, NSString* message))callback;
++ (void) redirectLogging: (nullable void (^)(NSString* type, NSString* message))callback;
 
 
-@property (readonly, nonatomic) NSMutableDictionary* customHTTPHeaders;
+@property (readonly, nonatomic, nullable) NSMutableDictionary* customHTTPHeaders;
 
 @end
 
@@ -138,3 +144,9 @@ extern NSString* CBLVersion( void );
 /** NSError domain used for HTTP status codes returned by a lot of Couchbase Lite APIs --
     for example code 404 is "not found", 403 is "forbidden", etc. */
 extern NSString* const CBLHTTPErrorDomain;
+
+
+
+#if __has_feature(nullability)
+#pragma clang assume_nonnull end
+#endif
