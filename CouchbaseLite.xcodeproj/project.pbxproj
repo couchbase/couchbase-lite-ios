@@ -136,6 +136,14 @@
 		2733022F18F86C9800A488F7 /* CBLTokenAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2733022D18F86C9800A488F7 /* CBLTokenAuthorizer.h */; };
 		2733023018F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */; };
 		2733023118F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */; };
+		2740D8531A8C240500809EE0 /* Collatable_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D84B1A8C240500809EE0 /* Collatable_Test.mm */; };
+		2740D8541A8C240500809EE0 /* Database_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D84C1A8C240500809EE0 /* Database_Test.mm */; };
+		2740D8551A8C240500809EE0 /* Index_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D84D1A8C240500809EE0 /* Index_Test.mm */; };
+		2740D8561A8C240500809EE0 /* MapReduce_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D84E1A8C240500809EE0 /* MapReduce_Test.mm */; };
+		2740D8571A8C240500809EE0 /* VersionedDocument_Tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D84F1A8C240500809EE0 /* VersionedDocument_Tests.mm */; };
+		2740D8581A8C240500809EE0 /* Tokenizer_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D8501A8C240500809EE0 /* Tokenizer_Test.mm */; };
+		2740D8591A8C240500809EE0 /* GeoHash_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D8511A8C240500809EE0 /* GeoHash_Test.mm */; };
+		2740D85A1A8C240500809EE0 /* GeoIndex_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D8521A8C240500809EE0 /* GeoIndex_Test.mm */; };
 		27411445179744F6005EF2F8 /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
 		27411446179744FE005EF2F8 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
 		2741144717974555005EF2F8 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
@@ -1089,6 +1097,14 @@
 		2733022918F8572700A488F7 /* CBLAuthenticator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLAuthenticator.m; sourceTree = "<group>"; };
 		2733022D18F86C9800A488F7 /* CBLTokenAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLTokenAuthorizer.h; sourceTree = "<group>"; };
 		2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLTokenAuthorizer.m; sourceTree = "<group>"; };
+		2740D84B1A8C240500809EE0 /* Collatable_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Collatable_Test.mm; path = "../vendor/CBForest/CBForest Tests/Collatable_Test.mm"; sourceTree = "<group>"; };
+		2740D84C1A8C240500809EE0 /* Database_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Database_Test.mm; path = "../vendor/CBForest/CBForest Tests/Database_Test.mm"; sourceTree = "<group>"; };
+		2740D84D1A8C240500809EE0 /* Index_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Index_Test.mm; path = "../vendor/CBForest/CBForest Tests/Index_Test.mm"; sourceTree = "<group>"; };
+		2740D84E1A8C240500809EE0 /* MapReduce_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MapReduce_Test.mm; path = "../vendor/CBForest/CBForest Tests/MapReduce_Test.mm"; sourceTree = "<group>"; };
+		2740D84F1A8C240500809EE0 /* VersionedDocument_Tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = VersionedDocument_Tests.mm; path = "../vendor/CBForest/CBForest Tests/VersionedDocument_Tests.mm"; sourceTree = "<group>"; };
+		2740D8501A8C240500809EE0 /* Tokenizer_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Tokenizer_Test.mm; path = "../vendor/CBForest/CBForest Tests/Tokenizer_Test.mm"; sourceTree = "<group>"; };
+		2740D8511A8C240500809EE0 /* GeoHash_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GeoHash_Test.mm; path = "../vendor/CBForest/CBForest Tests/GeoHash_Test.mm"; sourceTree = "<group>"; };
+		2740D8521A8C240500809EE0 /* GeoIndex_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GeoIndex_Test.mm; path = "../vendor/CBForest/CBForest Tests/GeoIndex_Test.mm"; sourceTree = "<group>"; };
 		27486F1D1A606C76008D94F0 /* CBJSONEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBJSONEncoder.h; sourceTree = "<group>"; };
 		27486F1E1A606C76008D94F0 /* CBJSONEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBJSONEncoder.m; sourceTree = "<group>"; };
 		27486F211A606C76008D94F0 /* CBLJSONReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSONReader.h; sourceTree = "<group>"; };
@@ -1725,6 +1741,14 @@
 				270035961A44FE2F0015B9F4 /* CBLTestCase.h */,
 				270035971A44FE890015B9F4 /* CBLTestCase.m */,
 				2700358E1A44E9270015B9F4 /* Info-UnitTests.plist */,
+				2740D84B1A8C240500809EE0 /* Collatable_Test.mm */,
+				2740D84C1A8C240500809EE0 /* Database_Test.mm */,
+				2740D84D1A8C240500809EE0 /* Index_Test.mm */,
+				2740D84E1A8C240500809EE0 /* MapReduce_Test.mm */,
+				2740D84F1A8C240500809EE0 /* VersionedDocument_Tests.mm */,
+				2740D8501A8C240500809EE0 /* Tokenizer_Test.mm */,
+				2740D8511A8C240500809EE0 /* GeoHash_Test.mm */,
+				2740D8521A8C240500809EE0 /* GeoIndex_Test.mm */,
 				274E163119B90F420066CA5E /* TestData */,
 				276E68331A5C4511006D6EEB /* Server */,
 			);
@@ -3382,6 +3406,14 @@
 				272AA81E1A48A8BF004B8D55 /* Replication_Tests.m in Sources */,
 				272AA81C1A48A301004B8D55 /* QueryBuilder_Tests.m in Sources */,
 				272AA8591A48ECD4004B8D55 /* DatabaseInternal_Tests.m in Sources */,
+				2740D8531A8C240500809EE0 /* Collatable_Test.mm in Sources */,
+				2740D8541A8C240500809EE0 /* Database_Test.mm in Sources */,
+				2740D8551A8C240500809EE0 /* Index_Test.mm in Sources */,
+				2740D8561A8C240500809EE0 /* MapReduce_Test.mm in Sources */,
+				2740D8571A8C240500809EE0 /* VersionedDocument_Tests.mm in Sources */,
+				2740D8581A8C240500809EE0 /* Tokenizer_Test.mm in Sources */,
+				2740D8591A8C240500809EE0 /* GeoHash_Test.mm in Sources */,
+				2740D85A1A8C240500809EE0 /* GeoIndex_Test.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4155,6 +4187,12 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Applications/Xcode-Beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
+					vendor/CBForest/CBForest/,
+					vendor/CBForest/vendor/forestdb/include/libforestdb/,
+				);
 				INFOPLIST_FILE = "Unit-Tests/Info-UnitTests.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -4190,6 +4228,12 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Applications/Xcode-Beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
+					vendor/CBForest/CBForest/,
+					vendor/CBForest/vendor/forestdb/include/libforestdb/,
+				);
 				INFOPLIST_FILE = "Unit-Tests/Info-UnitTests.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";

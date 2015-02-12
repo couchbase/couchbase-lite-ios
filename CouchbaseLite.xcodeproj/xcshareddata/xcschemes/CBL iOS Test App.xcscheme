@@ -46,16 +46,6 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "27139BA118F8EE3A0021A9A3"
-               BuildableName = "CBForest-iOS Tests.xctest"
-               BlueprintName = "CBForest-iOS Tests"
-               ReferencedContainer = "container:vendor/CBForest/CBForest.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "2700358A1A44E9270015B9F4"
                BuildableName = "CBL iOS Unit Tests.xctest"
                BlueprintName = "CBL iOS Unit Tests"
@@ -105,7 +95,8 @@
       debugDocumentVersioning = "YES"
       debugXPCServices = "NO"
       allowLocationSimulation = "YES">
-      <BuildableProductRunnable>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "27B0B80A1492C16300A817AD"
@@ -161,7 +152,8 @@
       useCustomWorkingDirectory = "NO"
       buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
-      <BuildableProductRunnable>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "27B0B80A1492C16300A817AD"
