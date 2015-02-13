@@ -385,6 +385,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     [self stopRemoteRequests];
     [NSObject cancelPreviousPerformRequestsWithTarget: self
                                              selector: @selector(retryIfReady) object: nil];
+    [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                             selector: @selector(retryGoOnline) object: nil];
     if (_running && _asyncTaskCount == 0)
         [self stopped];
 }
@@ -435,6 +437,9 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (void) retryGoOnline {
+    [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                             selector: @selector(retryGoOnline) object: nil];
+
     [self goOnline];
     if (_host)
         [self reachabilityChanged:_host];
@@ -461,9 +466,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 - (BOOL) goOnline {
-    [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                             selector: @selector(goOnline) object: nil];
-
     if (_online)
         return NO;
     LogTo(Sync, @"%@: Going online", self);
