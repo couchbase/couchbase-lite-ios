@@ -8,6 +8,7 @@
 
 #import "CBLTestCase.h"
 #import "CBL_BlobStore.h"
+#import "CBLSymmetricKey.h"
 
 
 @interface BlobStore_Tests : XCTestCase
@@ -16,10 +17,19 @@
 
 @implementation BlobStore_Tests
 {
+    BOOL encrypt;
     NSString* storePath;
     CBL_BlobStore* store;
 }
 
+
+- (void)invokeTest {
+    // Run each test method twice, once plain and once encrypted.
+    encrypt = NO;
+    [super invokeTest];
+    encrypt = YES;
+    [super invokeTest];
+}
 
 - (void)setUp {
     [super setUp];
@@ -28,6 +38,10 @@
     NSError* error;
     store = [[CBL_BlobStore alloc] initWithPath: storePath error: &error];
     Assert(store, @"Couldn't create CBL_BlobStore: %@", error);
+    if (encrypt) {
+        Log(@"---- Now enabling attachment encryption ----");
+        store.encryptionKey = [[CBLSymmetricKey alloc] init];
+    }
 }
 
 - (void)tearDown {
@@ -45,6 +59,9 @@
 
     NSData* readItem = [store blobForKey: key];
     AssertEqual(readItem, item);
+
+    NSString* path = [store blobPathForKey: key];
+    AssertEq((path == nil), encrypt);  // path exists IFF not encrypted
 }
 
 

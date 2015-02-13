@@ -196,7 +196,7 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
 }
 
 
-- (NSData*) data {
+- (NSData*) encodedContent {
     if (_data)
         return _data;
     else
@@ -204,8 +204,8 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
 }
 
 
-- (NSData*) decodedData {
-    NSData* data = self.data;
+- (NSData*) content {
+    NSData* data = self.encodedContent;
     switch (encoding) {
         case kCBLAttachmentEncodingNone:
             break;
@@ -218,8 +218,16 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
 }
 
 
-- (NSURL*) dataURL {
-    NSString* path = [_database.attachmentStore pathForKey: _blobKey];
+- (NSInputStream*) contentStream {
+    if (encoding == kCBLAttachmentEncodingNone)
+        return [_database.attachmentStore blobInputStreamForKey: _blobKey length: NULL];
+    else
+        return [NSInputStream inputStreamWithData: self.content];
+}
+
+
+- (NSURL*) contentURL {
+    NSString* path = [_database.attachmentStore blobPathForKey: _blobKey];
     return path ? [NSURL fileURLWithPath: path] : nil;
 }
 

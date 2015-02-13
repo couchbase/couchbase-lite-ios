@@ -695,9 +695,24 @@
     AssertEqual(attach.content, body);
     AssertEq(attach.length, (UInt64)body.length);
 
+    // Look at the attachment's file:
     NSURL* bodyURL = attach.contentURL;
-    Assert(bodyURL.isFileURL);
-    AssertEqual([NSData dataWithContentsOfURL: bodyURL], body);
+    if (self.encryptedAttachmentStore) {
+        AssertNil(bodyURL);
+    } else {
+        Assert(bodyURL.isFileURL);
+        AssertEqual([NSData dataWithContentsOfURL: bodyURL], body);
+    }
+
+    // Read the attachment from a stream:
+    NSInputStream* in = [attach openContentStream];
+    NSMutableData* fromStream = [NSMutableData data];
+    uint8_t buffer[1024];
+    NSInteger bytesRead;
+    while ((bytesRead = [in read: buffer maxLength: sizeof(buffer)]) > 0)
+        [fromStream appendBytes: buffer length: bytesRead];
+    Assert(bytesRead == 0, @"Stream error: %@", in.streamError);
+    AssertEqual(fromStream, body);
 
     CBLUnsavedRevision *newRev = [rev3 createRevision];
     [newRev removeAttachmentNamed: attach.name];
@@ -705,6 +720,12 @@
     Assert(!error);
     Assert(rev4);
     AssertEq([rev4.attachmentNames count], (NSUInteger)0);
+}
+
+
+- (void) test18a_EncryptedAttachments {
+    self.encryptedAttachmentStore = YES;
+    [self test18_Attachments];
 }
 
 

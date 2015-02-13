@@ -16,6 +16,8 @@
 #import <CommonCrypto/CommonDigest.h>
 #endif
 
+@class CBLSymmetricKey;
+
 
 /** Key identifying a data blob. This happens to be a SHA-1 digest. */
 typedef struct CBLBlobKey {
@@ -29,10 +31,15 @@ typedef struct CBLBlobKey {
 
 - (instancetype) initWithPath: (NSString*)dir error: (NSError**)outError;
 
+@property (nonatomic) CBLSymmetricKey* encryptionKey;
+
 - (BOOL) hasBlobForKey: (CBLBlobKey)key;
 - (NSData*) blobForKey: (CBLBlobKey)key;
 - (NSInputStream*) blobInputStreamForKey: (CBLBlobKey)key
                                   length: (UInt64*)outLength;
+
+/** Path to file storing the blob. Returns nil if the blob is encrypted. */
+- (NSString*) blobPathForKey: (CBLBlobKey)key;
 
 - (BOOL) storeBlob: (NSData*)blob
        creatingKey: (CBLBlobKey*)outKey;
@@ -48,10 +55,6 @@ typedef struct CBLBlobKey {
 + (CBLBlobKey) keyForBlob: (NSData*)blob;
 + (NSData*) keyDataForBlob: (NSData*)blob;
 
-/** Returns the path of the file storing the attachment with the given key, or nil.
-    DO NOT MODIFY THIS FILE! */
-- (NSString*) pathForKey: (CBLBlobKey)key;
-
 @end
 
 
@@ -62,17 +65,7 @@ typedef struct {
 
 
 /** Lets you stream a large attachment to a CBL_BlobStore asynchronously, e.g. from a network download. */
-@interface CBL_BlobStoreWriter : NSObject {
-@private
-    CBL_BlobStore* _store;
-    NSString* _tempPath;
-    NSFileHandle* _out;
-    UInt64 _length;
-    SHA_CTX _shaCtx;
-    MD5_CTX _md5Ctx;
-    CBLBlobKey _blobKey;
-    CBLMD5Key _MD5Digest;
-}
+@interface CBL_BlobStoreWriter : NSObject
 
 - (instancetype) initWithStore: (CBL_BlobStore*)store;
 
@@ -91,6 +84,9 @@ typedef struct {
 /** The number of bytes in the blob. */
 @property (readonly) UInt64 length;
 
+/** The contents of the blob. */
+@property (readonly) NSData* blobData;
+
 /** After finishing, this is the key for looking up the blob through the CBL_BlobStore. */
 @property (readonly) CBLBlobKey blobKey;
 
@@ -102,5 +98,8 @@ typedef struct {
 /** The location of the temporary file containing the attachment contents.
     Will be nil after -install is called. */
 @property (readonly) NSString* filePath;
+
+/** A stream for reading the completed blob. */
+- (NSInputStream*) blobInputStream;
 
 @end

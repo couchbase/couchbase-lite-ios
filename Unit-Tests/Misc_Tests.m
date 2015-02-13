@@ -11,6 +11,7 @@
 #import "CBLSequenceMap.h"
 #import "CBLFacebookAuthorizer.h"
 #import "CBLPersonaAuthorizer.h"
+#import "CBLSymmetricKey.h"
 
 
 @interface Misc_Tests : CBLTestCase
@@ -231,6 +232,58 @@ static int collateRevs(const char* rev1, const char* rev2) {
     CBLPersonaAuthorizer* auth = [[CBLPersonaAuthorizer alloc] initWithEmailAddress: email];
     AssertEqual(auth.emailAddress, email);
     AssertEqual([auth assertionForSite: originURL], nil);
+}
+
+
+- (void) test_SymmetricKey {
+    // Generate a key from a password:
+    NSString* password = @"letmein123456";
+    NSData* salt = [@"SaltyMcNaCl" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLSymmetricKey* key = [[CBLSymmetricKey alloc] initWithPassword: password
+                                                                salt: salt
+                                                              rounds: 666667];
+    NSData* keyData = key.keyData;
+    Log(@"Key = %@ data = %@", key, keyData);
+
+    // Encrypt using the key:
+    NSData* cleartext = [@"This is the cleartext" dataUsingEncoding: NSUTF8StringEncoding];
+    NSData* ciphertext = [key encryptData: cleartext];
+    Log(@"Encrypted = %@", ciphertext);
+    Assert(ciphertext != nil);
+
+    // Decrypt using the key:
+    NSData* decrypted = [key decryptData: ciphertext];
+    AssertEqual(decrypted, cleartext);
+
+    // Should be able to create and use a new key object created from the keyData:
+    CBLSymmetricKey* newKey = [[CBLSymmetricKey alloc] initWithKeyData: keyData];
+    decrypted = [newKey decryptData: ciphertext];
+    AssertEqual(decrypted, cleartext);
+
+    // Incremental encryption:
+    CBLCryptorBlock encryptor = [key createEncryptor];
+    Assert(encryptor);
+    NSMutableData* incrementalCiphertext = [NSMutableData data];
+    [incrementalCiphertext appendData: encryptor([@"This is " dataUsingEncoding: NSUTF8StringEncoding])];
+    [incrementalCiphertext appendData: encryptor([@"the cleartext" dataUsingEncoding: NSUTF8StringEncoding])];
+    [incrementalCiphertext appendData: encryptor(nil)];
+    decrypted = [key decryptData: incrementalCiphertext];
+    AssertEqual(decrypted, cleartext);
+
+    // Test stream decryption:
+    NSMutableData* incrementalOutput = [NSMutableData data];
+    NSInputStream* cryptoIn = [NSInputStream inputStreamWithData: incrementalCiphertext];
+    [cryptoIn open];
+    NSInputStream* in = [key decryptStream: cryptoIn];
+    Assert(in != nil);
+    NSInteger bytesRead;
+    do {
+        uint8_t buf[8];
+        bytesRead = [in read: buf maxLength: sizeof(buf)];
+        Assert(bytesRead >= 0);
+        [incrementalOutput appendBytes: buf length: bytesRead];
+    } while (bytesRead > 0);
+    AssertEqual(incrementalOutput, cleartext);
 }
 
 

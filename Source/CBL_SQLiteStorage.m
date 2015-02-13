@@ -14,6 +14,7 @@
 #import "CBL_Attachment.h"
 #import "CBLMisc.h"
 #import "CBJSONEncoder.h"
+#import "CBLSymmetricKey.h"
 #import "CouchbaseLitePrivate.h"
 #import "ExceptionUtils.h"
 
@@ -124,7 +125,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         flags |= SQLITE_OPEN_READONLY;
     else
         flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-    NSData* encryptionKey = _delegate.encryptionKey;
+    CBLSymmetricKey* encryptionKey = _delegate.encryptionKey;
 
     LogTo(CBLDatabase, @"Open %@ (flags=%X%@)",
           _fmdb.databasePath, flags, (encryptionKey ? @", encryption key given" : nil));
@@ -158,39 +159,31 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 
 // Give SQLCipher the encryption key, if provided:
-- (BOOL) decryptWithKey: (id)encryptionKey error: (NSError**)outError {
+- (BOOL) decryptWithKey: (CBLSymmetricKey*)encryptionKey error: (NSError**)outError {
     if (encryptionKey) {
         // http://sqlcipher.net/sqlcipher-api/#key
-        NSString* pragma;
-        if ([encryptionKey isKindOfClass: [NSString class]]) {
-            pragma = $sprintf(@"PRAGMA key = '%@'",
-                              [encryptionKey stringByReplacingOccurrencesOfString: @"'"
-                                                                       withString: @"''"]);
-        } else {
-            Assert([encryptionKey isKindOfClass: [NSData class]]);
-            //Assert([key length] == 32, @"SQLCipher raw key must be exactly 256 bits (32 bytes)");
-            pragma = $sprintf(@"PRAGMA key = \"x'%@'\"",
-                              CBLHexFromBytes([encryptionKey bytes], [encryptionKey length]));
-        }
-        // Unfortunately "pragma key" is simply a no-op if SQLCipher isn't available, so we can't
-        // tell whether it actually did anything.
-        if (![_fmdb executeUpdate: pragma]) {
+        if (![_fmdb executeUpdate: $sprintf(@"PRAGMA key = \"x'%@'\"", encryptionKey.hexData)]) {
             Warn(@"CBL_SQLiteStorage: 'pragma key' failed (SQLite error %d)", self.lastDbStatus);
             if (outError) *outError = self.fmdbError;
             return NO;
         }
+        // Unfortunately "pragma key" is simply a no-op if SQLCipher isn't available, so we can't
+        // tell whether it actually did anything.
     }
 
     // Verify that encryption key is correct (or db is unencrypted, if no key given):
-    if ([_fmdb intForQuery: @"SELECT count(*) FROM sqlite_master"] == 0) {
-        Warn(@"CBL_SQLiteStorage: database is unreadable (err %d)", _fmdb.lastErrorCode);
-        if (outError) {
-            if (_fmdb.lastErrorCode == SQLITE_NOTADB)
-                *outError = CBLStatusToNSError(kCBLStatusUnauthorized, nil);
-            else
-                *outError = self.fmdbError;
+    if ([_fmdb intForQuery:@"SELECT count(*) FROM sqlite_master"] == 0) {
+        int err = _fmdb.lastErrorCode;
+        if (err) {
+            Warn(@"CBL_SQLiteStorage: database is unreadable (err %d)", err);
+            if (outError) {
+                if (err == SQLITE_NOTADB)
+                    *outError = CBLStatusToNSError(kCBLStatusUnauthorized, nil);
+                else
+                    *outError = self.fmdbError;
+            }
+            return NO;
         }
-        return NO;
     }
     return YES;
 }

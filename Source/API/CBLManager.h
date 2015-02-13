@@ -83,7 +83,7 @@ typedef struct CBLManagerOptions {
     To use this API, the database storage engine must support encryption. In the case of SQLite,
     this means the application must be linked with SQLCipher <http://sqlcipher.net> instead of
     regular SQLite. Otherwise opening the database will fail with an error. */
-- (void) registerEncryptionKey: (nullable id)encryptionKey
+- (BOOL) registerEncryptionKey: (nullable id)encryptionKey
               forDatabaseNamed: (NSString*)name;
 
 /** Same as -existingDatabaseNamed:. Enables "[]" access in Xcode 4.4+ */

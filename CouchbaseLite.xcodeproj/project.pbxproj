@@ -75,6 +75,11 @@
 		2711CE0114C7595900505D55 /* CBLDatabase+Insertion.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CDFF14C7595900505D55 /* CBLDatabase+Insertion.h */; };
 		2711CE0314C759BD00505D55 /* CBLDatabase+Replication.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CE0214C759BD00505D55 /* CBLDatabase+Replication.h */; };
 		2711CE0414C759BD00505D55 /* CBLDatabase+Replication.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CE0214C759BD00505D55 /* CBLDatabase+Replication.h */; };
+		271297441A8D597B00F6C5CE /* CBLSymmetricKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 271297421A8D597B00F6C5CE /* CBLSymmetricKey.h */; };
+		271297451A8D597B00F6C5CE /* CBLSymmetricKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 271297431A8D597B00F6C5CE /* CBLSymmetricKey.m */; };
+		271297461A8D597B00F6C5CE /* CBLSymmetricKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 271297431A8D597B00F6C5CE /* CBLSymmetricKey.m */; };
+		271297481A8D7DA400F6C5CE /* DatabaseAttachment_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 271297471A8D7DA300F6C5CE /* DatabaseAttachment_Tests.m */; };
+		271297491A8D7DA400F6C5CE /* DatabaseAttachment_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 271297471A8D7DA300F6C5CE /* DatabaseAttachment_Tests.m */; };
 		271C2AD416FA176300B8C9DB /* CBL_Shared.h in Headers */ = {isa = PBXBuildFile; fileRef = 271C2AD216FA176300B8C9DB /* CBL_Shared.h */; };
 		271C2AD516FA176300B8C9DB /* CBL_Shared.m in Sources */ = {isa = PBXBuildFile; fileRef = 271C2AD316FA176300B8C9DB /* CBL_Shared.m */; };
 		271C2AD616FA176300B8C9DB /* CBL_Shared.m in Sources */ = {isa = PBXBuildFile; fileRef = 271C2AD316FA176300B8C9DB /* CBL_Shared.m */; };
@@ -1062,6 +1067,9 @@
 		2711CDFC14C7590A00505D55 /* CBLDatabase+Attachments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Attachments.h"; sourceTree = "<group>"; };
 		2711CDFF14C7595900505D55 /* CBLDatabase+Insertion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Insertion.h"; sourceTree = "<group>"; };
 		2711CE0214C759BD00505D55 /* CBLDatabase+Replication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Replication.h"; sourceTree = "<group>"; };
+		271297421A8D597B00F6C5CE /* CBLSymmetricKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLSymmetricKey.h; sourceTree = "<group>"; };
+		271297431A8D597B00F6C5CE /* CBLSymmetricKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLSymmetricKey.m; sourceTree = "<group>"; };
+		271297471A8D7DA300F6C5CE /* DatabaseAttachment_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DatabaseAttachment_Tests.m; sourceTree = "<group>"; };
 		2714CF511496AE5B00E03341 /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
 		271C2AD216FA176300B8C9DB /* CBL_Shared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Shared.h; sourceTree = "<group>"; };
 		271C2AD316FA176300B8C9DB /* CBL_Shared.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Shared.m; sourceTree = "<group>"; };
@@ -1726,6 +1734,7 @@
 				272AA8611A49D5B0004B8D55 /* ChangeTracker_Tests.m */,
 				272AA8571A48ECD4004B8D55 /* DatabaseInternal_Tests.m */,
 				2700358F1A44E9270015B9F4 /* Database_Tests.m */,
+				271297471A8D7DA300F6C5CE /* DatabaseAttachment_Tests.m */,
 				2764D2C41A5F1792005AC95A /* IncrementalStore_Tests.m */,
 				2764D2B01A5E240D005AC95A /* JSON_Tests.m */,
 				2764D2BB1A5F1063005AC95A /* JSViewCompiler_Tests.m */,
@@ -2160,6 +2169,8 @@
 				27DA4307158FA35600F9E7B5 /* CBLCache.m */,
 				27A073EA14C0BB6200F52FE7 /* CBLMisc.h */,
 				27A073EB14C0BB6200F52FE7 /* CBLMisc.m */,
+				271297421A8D597B00F6C5CE /* CBLSymmetricKey.h */,
+				271297431A8D597B00F6C5CE /* CBLSymmetricKey.m */,
 				270B3DEE1489359000E0A926 /* CouchbaseLite-Info.plist */,
 				27821BBD14906FB50099B373 /* CouchbaseLitePrefix.h */,
 				27821BBF149078C70099B373 /* CouchbaseLite.exp */,
@@ -2599,6 +2610,7 @@
 				27A073EC14C0BB6200F52FE7 /* CBLMisc.h in Headers */,
 				277B5DC91821A8B60088881E /* yajl_parse.h in Headers */,
 				279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */,
+				271297441A8D597B00F6C5CE /* CBLSymmetricKey.h in Headers */,
 				279CE40014D749A7009F3FA6 /* CBLMultipartReader.h in Headers */,
 				274C6C281A3F838500F9BDF7 /* CBLReduceFuncs.h in Headers */,
 				27B945A91768E63200B2DF2D /* CBLModelArray.h in Headers */,
@@ -3411,6 +3423,7 @@
 				2740D8551A8C240500809EE0 /* Index_Test.mm in Sources */,
 				2740D8561A8C240500809EE0 /* MapReduce_Test.mm in Sources */,
 				2740D8571A8C240500809EE0 /* VersionedDocument_Tests.mm in Sources */,
+				271297481A8D7DA400F6C5CE /* DatabaseAttachment_Tests.m in Sources */,
 				2740D8581A8C240500809EE0 /* Tokenizer_Test.mm in Sources */,
 				2740D8591A8C240500809EE0 /* GeoHash_Test.mm in Sources */,
 				2740D85A1A8C240500809EE0 /* GeoIndex_Test.mm in Sources */,
@@ -3440,6 +3453,7 @@
 				27B945AB1768E63200B2DF2D /* CBLModelArray.m in Sources */,
 				274C391E149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */,
 				27AA409D14AA86AE00E2A5FF /* CBLDatabase+Insertion.m in Sources */,
+				271297451A8D597B00F6C5CE /* CBLSymmetricKey.m in Sources */,
 				27AA40A314AA8A6600E2A5FF /* CBLDatabase+Replication.m in Sources */,
 				27A073ED14C0BB6200F52FE7 /* CBLMisc.m in Sources */,
 				279CE40114D749A7009F3FA6 /* CBLMultipartReader.m in Sources */,
@@ -3559,6 +3573,7 @@
 				2764D2C71A5F18A0005AC95A /* IncrementalStore_Tests.m in Sources */,
 				27486F3E1A608BC7008D94F0 /* CBLJSONValidator.m in Sources */,
 				2764D2BF1A5F10E6005AC95A /* JSViewCompiler_Tests.m in Sources */,
+				271297491A8D7DA400F6C5CE /* DatabaseAttachment_Tests.m in Sources */,
 				272AA8521A48DA0F004B8D55 /* CBLTestCase.m in Sources */,
 				272AA8631A49D5B0004B8D55 /* ChangeTracker_Tests.m in Sources */,
 				272AA84E1A48DA0F004B8D55 /* Model_Tests.m in Sources */,
@@ -3693,6 +3708,7 @@
 				27B0B7DE1492B8C100A817AD /* ExceptionUtils.m in Sources */,
 				27B0B7DF1492B8C100A817AD /* Logging.m in Sources */,
 				27513A1C1A672C870055DC40 /* CBLDatabase+Replication.m in Sources */,
+				271297461A8D597B00F6C5CE /* CBLSymmetricKey.m in Sources */,
 				27B0B7E01492B8C100A817AD /* CollectionUtils.m in Sources */,
 				27B0B7E11492B8C100A817AD /* Test.m in Sources */,
 				27E347721999502400076EAC /* Test_Assertions.m in Sources */,

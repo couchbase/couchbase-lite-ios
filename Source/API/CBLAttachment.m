@@ -17,6 +17,7 @@
 #import "CouchbaseLitePrivate.h"
 
 #import "CBLDatabase+Attachments.h"
+#import "CBL_Attachment.h"
 #import "CBL_BlobStore.h"
 #import "CBLInternal.h"
 
@@ -100,6 +101,12 @@
 #pragma mark - BODY
 
 
+- (CBL_Attachment*) _internalAttachment {
+    CBLStatus status;
+    return [_rev.database attachmentForDict: _metadata named: _name status: &status];
+}
+
+
 - (NSData*) bodyIfNew {
     return _body ? self.content : nil;
 }
@@ -114,10 +121,10 @@
                                          options: NSDataReadingMappedIfSafe | NSDataReadingUncached
                                            error: nil];
         }
-    } else if (_rev.revisionID) {
-        return [_rev.database dataForAttachmentDict: _metadata];
+        return nil;
+    } else {
+        return self._internalAttachment.content;
     }
-    return nil;
 }
 
 
@@ -125,10 +132,25 @@
     if (_body) {
         if ([_body isKindOfClass: [NSURL class]] && [_body isFileURL])
             return _body;
-    } else if (_rev.revisionID) {
-        return [_rev.database fileForAttachmentDict: _metadata];
+        return nil;
+    } else {
+        return self._internalAttachment.contentURL;
     }
-    return nil;
+}
+
+
+- (NSInputStream*) openContentStream {
+    NSInputStream* stream = nil;
+    if (_body) {
+        if ([_body isKindOfClass: [NSData class]])
+            stream = [NSInputStream inputStreamWithData: _body];
+        else if ([_body isKindOfClass: [NSURL class]] && [_body isFileURL])
+            stream = [NSInputStream inputStreamWithURL: _body];
+    } else {
+        stream = self._internalAttachment.contentStream;
+    }
+    [stream open];
+    return stream;
 }
 
 

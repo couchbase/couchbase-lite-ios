@@ -621,18 +621,18 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         return status;
 
     if ($equal(_request.HTTPMethod, @"HEAD")) {
-        NSURL* fileURL = attachment.dataURL;
         if (_local) {
             // Let in-app clients know the location of the attachment file:
-            _response[@"Location"] = fileURL.absoluteString;
+            _response[@"Location"] = attachment.contentURL.absoluteString;
         }
         UInt64 length = attachment->length;
-        if (acceptEncoded && attachment->encoding == kCBLAttachmentEncodingGZIP && attachment->encodedLength)
+        if (acceptEncoded && attachment->encoding == kCBLAttachmentEncodingGZIP
+                          && attachment->encodedLength)
             length = attachment->encodedLength;
         _response[@"Content-Length"] = $sprintf(@"%llu", length);
         
     } else {
-        NSData* contents = acceptEncoded ? attachment.data : attachment.decodedData;
+        NSData* contents = acceptEncoded ? attachment.encodedContent : attachment.content;
         if (!contents)
             return kCBLStatusNotFound;
         _response.body = [CBL_Body bodyWithJSON: contents];   //FIX: This is a lie, it's not JSON
