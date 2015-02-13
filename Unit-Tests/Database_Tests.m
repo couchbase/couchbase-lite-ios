@@ -859,4 +859,13 @@
 }
 
 
+- (void) test22_EncryptionFailsGracefully {
+    Assert([dbmgr registerEncryptionKey: @"123456" forDatabaseNamed: @"seekrit"]);
+    NSError* error;
+    CBLDatabase* seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
+    if (seekrit == nil)
+        AssertEq(error.code, 501 /*Not Implemented*/);
+}
+
+
 @end

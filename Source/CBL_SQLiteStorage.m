@@ -50,6 +50,33 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
             maxRevTreeDepth=_maxRevTreeDepth, fmdb=_fmdb;
 
 
++ (void) initialize {
+    // Test the features of the actual SQLite implementation at runtime. This is necessary because
+    // the app might be linked with a custom version of SQLite (like SQLCipher) instead of the
+    // system library, so the actual version/features may differ from what was declared in
+    // sqlite3.h at compile time.
+    if (self == [CBL_SQLiteStorage class]) {
+        Log(@"Couchbase Lite using SQLite version %s (%s)",
+            sqlite3_libversion(), sqlite3_sourceid());
+#if 0
+        for (int i=0; true; i++) {
+            const char* opt = sqlite3_compileoption_get(i);
+            if (!opt)
+                break;
+            Log(@"SQLite option '%s'", opt);
+        }
+#endif
+        Assert(sqlite3_libversion_number() >= SQLITE_VERSION_NUMBER,
+               @"SQLite library is too old; needs to be at least %s", SQLITE_VERSION);
+        Assert(sqlite3_compileoption_used("SQLITE_ENABLE_FTS3")
+                    || sqlite3_compileoption_used("SQLITE_ENABLE_FTS4"),
+               @"SQLite isn't built with full-text indexing (FTS3 or FTS4)");
+        Assert(sqlite3_compileoption_used("SQLITE_ENABLE_RTREE"),
+               @"SQLite isn't built with geo-indexing (R-tree)");
+    }
+}
+
+
 #pragma mark - OPEN/CLOSE:
 
 
@@ -161,14 +188,16 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 // Give SQLCipher the encryption key, if provided:
 - (BOOL) decryptWithKey: (CBLSymmetricKey*)encryptionKey error: (NSError**)outError {
     if (encryptionKey) {
+        if (!sqlite3_compileoption_used("SQLITE_HAS_CODEC")) {
+            Warn(@"CBL_SQLiteStorage: encryption not available (app not built with SQLCipher)");
+            return ReturnNSErrorFromCBLStatus(kCBLStatusNotImplemented,  outError);
+        }
         // http://sqlcipher.net/sqlcipher-api/#key
         if (![_fmdb executeUpdate: $sprintf(@"PRAGMA key = \"x'%@'\"", encryptionKey.hexData)]) {
             Warn(@"CBL_SQLiteStorage: 'pragma key' failed (SQLite error %d)", self.lastDbStatus);
             if (outError) *outError = self.fmdbError;
             return NO;
         }
-        // Unfortunately "pragma key" is simply a no-op if SQLCipher isn't available, so we can't
-        // tell whether it actually did anything.
     }
 
     // Verify that encryption key is correct (or db is unencrypted, if no key given):
