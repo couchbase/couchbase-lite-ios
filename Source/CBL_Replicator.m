@@ -36,7 +36,7 @@
 #define kInboxCapacity 100
 
 #define kRetryDelay 60.0
-#define kRetryOnlineDelay 300.0
+#define kRetryGoOnlineDelay 300.0
 
 #define kDefaultRequestTimeout 60.0
 
@@ -434,16 +434,19 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
-- (void) retryOnline {
+- (void) retryGoOnline {
     [self goOnline];
-    [self reachabilityChanged:_host];
+    if (_host)
+        [self reachabilityChanged:_host];
 }
 
 
-- (void) retryOnlineAfterDelay {
+- (void) retryGoOnlineAfterDelay {
+    LogTo(SyncVerbose, @"%@: Schedule to go online in %g sec",
+          self, kRetryGoOnlineDelay);
     [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                             selector: @selector(retryOnline) object: nil];
-    [self performSelector: @selector(retryOnline) withObject: nil afterDelay: kRetryOnlineDelay];
+                                             selector: @selector(retryGoOnline) object: nil];
+    [self performSelector: @selector(retryGoOnline) withObject: nil afterDelay: kRetryGoOnlineDelay];
 }
 
 
@@ -518,8 +521,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
         if (!_suspended) {
             // If not suspended, bring the replicator online right away:
-            [self goOnline];
-            [self reachabilityChanged: _host];
+            [self retryGoOnline];
         } else
             [self goOffline];
     }
@@ -541,10 +543,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                 [self stopped];
             } else if (_error) /*(_revisionsFailed > 0)*/ {
                 if (CBLIsOfflineError(_error)) {
-                    LogTo(Sync, @"%@: Receive an offline error; go offline and will retry in %g sec",
-                          self, kRetryOnlineDelay);
+                    LogTo(Sync, @"%@: Received an offline error; go offline and will retry in %g sec",
+                          self, kRetryGoOnlineDelay);
                     [self goOffline];
-                    [self retryOnlineAfterDelay];
+                    [self retryGoOnlineAfterDelay];
                 } else {
                     LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
                           self, _revisionsFailed, kRetryDelay);
