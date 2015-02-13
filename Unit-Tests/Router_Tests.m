@@ -356,6 +356,64 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
                {@"total_rows", @4}));
 }
 
+- (void) test_Views_Stale {
+    // PUT:
+    SendBody(self, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kCBLStatusCreated, nil);
+
+    CBLView* view = [db viewNamed: @"design/view"];
+    [view setMapBlock:  MAPBLOCK({
+        if (doc[@"message"])
+            emit(doc[@"message"], nil);
+    }) reduceBlock: NULL version: @"1"];
+
+    // Query the view and check the result:
+
+    // No stale (upate_before):
+    Send(self, @"GET", @"/db/_design/design/_view/view", kCBLStatusOK,
+         $dict({@"offset", @0},
+               {@"rows", $array($dict({@"id", @"doc1"}, {@"key", @"hello"}) )},
+               {@"total_rows", @1}));
+
+    // Update database:
+    SendBody(self, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), kCBLStatusCreated, nil);
+
+    // Stale = ok:
+    Send(self, @"GET", @"/db/_design/design/_view/view?stale=ok", kCBLStatusOK,
+         $dict({@"offset", @0},
+               {@"rows", $array($dict({@"id", @"doc1"}, {@"key", @"hello"}) )},
+               {@"total_rows", @1}));
+
+    // Stale = update_after:
+    SequenceNumber prevLastSeqIndexed = view.lastSequenceIndexed;
+    Send(self, @"GET", @"/db/_design/design/_view/view?stale=update_after", kCBLStatusOK,
+         $dict({@"offset", @0},
+               {@"rows", $array($dict({@"id", @"doc1"}, {@"key", @"hello"}) )},
+               {@"total_rows", @1}));
+
+    // Wait until the index is done or timeout:
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 5];
+    while (prevLastSeqIndexed == view.lastSequenceIndexed && timeout.timeIntervalSinceNow > 0.0) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]]) {
+            Warn(@"Runloop exiting unexpectedly!");
+            break;
+        }
+    }
+
+    // Check if the current last sequence indexed has been changed:
+    Assert(prevLastSeqIndexed < view.lastSequenceIndexed);
+
+    // Confirm the result with stale = ok:
+    Send(self, @"GET", @"/db/_design/design/_view/view?stale=ok", kCBLStatusOK,
+         $dict({@"offset", @0},
+               {@"rows", $array($dict({@"id", @"doc2"}, {@"key", @"guten tag"}),
+                                $dict({@"id", @"doc1"}, {@"key", @"hello"}) )},
+               {@"total_rows", @2}));
+
+    // Bad stale value:
+    Send(self, @"GET", @"//db/_design/design/_view/view?stale=no", kCBLStatusBadRequest, nil);
+}
+
 
 - (void) test_JSViews {
     [CBLView setCompiler: [[CBLJSViewCompiler alloc] init]];
