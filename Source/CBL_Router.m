@@ -204,6 +204,17 @@
     options->group = [self boolQuery: @"group"];
     options->content = [self contentOptions];
 
+    // Stale options (ok or update_after):
+    NSString *stale = [self query: @"stale"];
+    if (stale) {
+        if ([stale isEqualToString:@"ok"])
+            options->indexUpdateMode = kCBLUpdateIndexNever;
+        else if ([stale isEqualToString:@"update_after"])
+            options->indexUpdateMode = kCBLUpdateIndexAfter;
+        else
+            return nil;
+    }
+    
     // Handle 'keys' and 'key' options:
     NSError* error = nil;
     id keys = [self jsonQuery: @"keys" error: &error];

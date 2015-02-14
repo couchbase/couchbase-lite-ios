@@ -900,9 +900,16 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if (keys)
         options.keys = keys;
 
-    status = [view updateIndex];
-    if (status >= kCBLStatusBadRequest)
-        return status;
+    if (options->indexUpdateMode == kCBLUpdateIndexBefore || view.lastSequenceIndexed <= 0) {
+        status = [view updateIndex];
+        if (status >= kCBLStatusBadRequest)
+            return status;
+    } else if (options->indexUpdateMode == kCBLUpdateIndexAfter &&
+               view.lastSequenceIndexed < _db.lastSequenceNumber) {
+        [_db doAsync:^{
+            [view updateIndex];
+        }];
+    }
     
     // Check for conditional GET and set response Etag header:
     if (!keys) {
