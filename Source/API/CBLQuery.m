@@ -267,8 +267,9 @@
             NSError* error = nil;
             CBLQueryEnumerator* e = nil;
             if (rows) {
+                // Associate the query rows with this view, not the background-thread one:
                 for (CBLQueryRow* row in rows)
-                    row.database = _database;
+                    [row moveToView: _view];
                 e = [[CBLQueryEnumerator alloc] initWithDatabase: _database
                                                             view: _view
                                                   sequenceNumber: lastSequence

@@ -481,7 +481,7 @@
     RequireTestCase(API_CreateView);
     CBLView* view = [db viewNamed: @"vu"];
     [view setMapBlock: MAPBLOCK({
-        emit(doc[@"sequence"], nil);
+        emit(doc[@"sequence"], doc);        // Emitting doc as value makes trickier things happen
     }) version: @"1"];
 
     static const NSUInteger kNDocs = 50;
@@ -504,6 +504,7 @@
         for (CBLQueryRow* row in rows) {
             AssertEq(row.document.database, db);
             AssertEq([row.key intValue], expectedKey);
+            AssertEqual(row.value, row.document.properties);    // Make sure value is looked up
             ++expectedKey;
         }
         finished = true;

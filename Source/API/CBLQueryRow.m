@@ -64,6 +64,12 @@ static id fromJSON( NSData* json ) {
 }
 
 
+- (void) moveToView: (CBLView*)view {
+    _database = view.database;
+    _storage = [view.storage storageForQueryRow: self];
+}
+
+
 - (BOOL) isNonMagicValue {
     return _value && !( [_value isKindOfClass: [NSData class]]
                         && [_storage rowValueIsEntireDoc: _value] );
