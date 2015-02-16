@@ -789,6 +789,11 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 #pragma mark - CBL_QueryRowStorage API:
 
 
+- (id<CBL_QueryRowStorage>) storageForQueryRow: (CBLQueryRow*)row {
+    return self;
+}
+
+
 - (BOOL) rowValueIsEntireDoc: (NSData*)valueData {
     return valueData.length == 1 && *(uint8_t*)valueData.bytes == CollatableReader::kSpecial;
 }

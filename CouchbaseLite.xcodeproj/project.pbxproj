@@ -1881,10 +1881,10 @@
 			isa = PBXGroup;
 			children = (
 				27DADE411A659FCC0075313A /* CBL_Storage.h */,
+				27A9D67D1A661ED10074FDD2 /* CBL_ViewStorage.h */,
 				27E66A411A6ED3F70091DA3F /* CBL_StorageTypes.h */,
 				27513A161A6728450055DC40 /* CBL_ForestDBStorage.h */,
 				27DADE421A659FCC0075313A /* CBL_ForestDBStorage.mm */,
-				27A9D67D1A661ED10074FDD2 /* CBL_ViewStorage.h */,
 				27513A171A67287A0055DC40 /* CBL_ForestDBViewStorage.h */,
 				27A9D67E1A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm */,
 				27EF7F991912EB5200A327B9 /* CBLForestBridge.h */,

@@ -1026,6 +1026,11 @@ static CBLQueryIteratorBlock queryIteratorBlockFromArray(NSArray* rows) {
 #pragma mark - CBL_QueryRowStorage API:
 
 
+- (id<CBL_QueryRowStorage>) storageForQueryRow: (CBLQueryRow*)row {
+    return self;
+}
+
+
 - (BOOL) rowValueIsEntireDoc: (NSData*)valueData {
     return valueData.length == 1 && *(const char*)valueData.bytes == '*';
 }

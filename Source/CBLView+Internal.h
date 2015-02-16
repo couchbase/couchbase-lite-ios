@@ -100,5 +100,6 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
 
 
 @interface CBLQueryRow ()
+- (void) moveToView: (CBLView*)view;
 - (void) _clearDatabase;
 @end

@@ -8,7 +8,7 @@
 
 #import "CBL_StorageTypes.h"
 #import "CBL_Revision.h"    // defines SequenceNumber
-@protocol CBL_ViewStorageDelegate;
+@protocol CBL_ViewStorageDelegate, CBL_QueryRowStorage;
 
 
 /** Storage for a view. Instances are created by CBL_Storage implementations, and are owned by
@@ -59,6 +59,8 @@
 /** Performs a full-text query as per the options. */
 - (CBLQueryIteratorBlock) fullTextQueryWithOptions: (CBLQueryOptions*)options
                                             status: (CBLStatus*)outStatus;
+
+- (id<CBL_QueryRowStorage>) storageForQueryRow: (CBLQueryRow*)row;
 
 #if DEBUG
 /** Just for unit tests and debugging. Returns every row in the index in order, as an NSDictionary
