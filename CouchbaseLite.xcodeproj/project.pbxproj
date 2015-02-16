@@ -141,6 +141,8 @@
 		2733022F18F86C9800A488F7 /* CBLTokenAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2733022D18F86C9800A488F7 /* CBLTokenAuthorizer.h */; };
 		2733023018F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */; };
 		2733023118F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */; };
+		273FA2BB1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */; };
+		273FA2BC1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */; };
 		2740D8531A8C240500809EE0 /* Collatable_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D84B1A8C240500809EE0 /* Collatable_Test.mm */; };
 		2740D8541A8C240500809EE0 /* Database_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D84C1A8C240500809EE0 /* Database_Test.mm */; };
 		2740D8551A8C240500809EE0 /* Index_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D84D1A8C240500809EE0 /* Index_Test.mm */; };
@@ -1105,6 +1107,7 @@
 		2733022918F8572700A488F7 /* CBLAuthenticator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLAuthenticator.m; sourceTree = "<group>"; };
 		2733022D18F86C9800A488F7 /* CBLTokenAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLTokenAuthorizer.h; sourceTree = "<group>"; };
 		2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLTokenAuthorizer.m; sourceTree = "<group>"; };
+		273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DatabaseEncryption_Tests.m; sourceTree = "<group>"; };
 		2740D84B1A8C240500809EE0 /* Collatable_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Collatable_Test.mm; path = "../vendor/CBForest/CBForest Tests/Collatable_Test.mm"; sourceTree = "<group>"; };
 		2740D84C1A8C240500809EE0 /* Database_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Database_Test.mm; path = "../vendor/CBForest/CBForest Tests/Database_Test.mm"; sourceTree = "<group>"; };
 		2740D84D1A8C240500809EE0 /* Index_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Index_Test.mm; path = "../vendor/CBForest/CBForest Tests/Index_Test.mm"; sourceTree = "<group>"; };
@@ -1734,6 +1737,7 @@
 				272AA8611A49D5B0004B8D55 /* ChangeTracker_Tests.m */,
 				272AA8571A48ECD4004B8D55 /* DatabaseInternal_Tests.m */,
 				2700358F1A44E9270015B9F4 /* Database_Tests.m */,
+				273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */,
 				271297471A8D7DA300F6C5CE /* DatabaseAttachment_Tests.m */,
 				2764D2C41A5F1792005AC95A /* IncrementalStore_Tests.m */,
 				2764D2B01A5E240D005AC95A /* JSON_Tests.m */,
@@ -3421,6 +3425,7 @@
 				2740D8531A8C240500809EE0 /* Collatable_Test.mm in Sources */,
 				2740D8541A8C240500809EE0 /* Database_Test.mm in Sources */,
 				2740D8551A8C240500809EE0 /* Index_Test.mm in Sources */,
+				273FA2BB1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */,
 				2740D8561A8C240500809EE0 /* MapReduce_Test.mm in Sources */,
 				2740D8571A8C240500809EE0 /* VersionedDocument_Tests.mm in Sources */,
 				271297481A8D7DA400F6C5CE /* DatabaseAttachment_Tests.m in Sources */,
@@ -3566,6 +3571,7 @@
 				272AA8601A49D4A9004B8D55 /* BlobStore_Tests.m in Sources */,
 				2764D2B21A5E240D005AC95A /* JSON_Tests.m in Sources */,
 				272AA8661A49D95B004B8D55 /* ReplicatorInternal_Tests.m in Sources */,
+				273FA2BC1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */,
 				27486F191A5F5E57008D94F0 /* CBLJSViewCompiler.m in Sources */,
 				272AA84D1A48DA0F004B8D55 /* Database_Tests.m in Sources */,
 				272AA85D1A48F17D004B8D55 /* ViewInternal_Tests.m in Sources */,

@@ -34,6 +34,12 @@
 
 #define kLocalCheckpointDocId @"CBL_LocalCheckpoint"
 
+#ifdef MOCK_ENCRYPTION
+BOOL CBLEnableMockEncryption = NO;
+#else
+#define CBLEnableMockEncryption NO
+#endif
+
 
 static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal);
 
@@ -66,8 +72,8 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
             Log(@"SQLite option '%s'", opt);
         }
 #endif
-        Assert(sqlite3_libversion_number() >= SQLITE_VERSION_NUMBER,
-               @"SQLite library is too old; needs to be at least %s", SQLITE_VERSION);
+        Assert(sqlite3_libversion_number() >= 3007000,
+               @"SQLite library is too old (%s); needs to be at least 3.7", sqlite3_libversion());
         Assert(sqlite3_compileoption_used("SQLITE_ENABLE_FTS3")
                     || sqlite3_compileoption_used("SQLITE_ENABLE_FTS4"),
                @"SQLite isn't built with full-text indexing (FTS3 or FTS4)");
@@ -187,16 +193,24 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 // Give SQLCipher the encryption key, if provided:
 - (BOOL) decryptWithKey: (CBLSymmetricKey*)encryptionKey error: (NSError**)outError {
+    BOOL hasRealEncryption = sqlite3_compileoption_used("SQLITE_HAS_CODEC") != 0;
+#ifdef MOCK_ENCRYPTION
+    if (!hasRealEncryption && CBLEnableMockEncryption)
+        return [self mockDecryptWithKey: encryptionKey error: outError];
+#endif
+
     if (encryptionKey) {
-        if (!sqlite3_compileoption_used("SQLITE_HAS_CODEC")) {
+        if (!hasRealEncryption) {
             Warn(@"CBL_SQLiteStorage: encryption not available (app not built with SQLCipher)");
             return ReturnNSErrorFromCBLStatus(kCBLStatusNotImplemented,  outError);
-        }
-        // http://sqlcipher.net/sqlcipher-api/#key
-        if (![_fmdb executeUpdate: $sprintf(@"PRAGMA key = \"x'%@'\"", encryptionKey.hexData)]) {
-            Warn(@"CBL_SQLiteStorage: 'pragma key' failed (SQLite error %d)", self.lastDbStatus);
-            if (outError) *outError = self.fmdbError;
-            return NO;
+        } else {
+            // http://sqlcipher.net/sqlcipher-api/#key
+            if (![_fmdb executeUpdate: $sprintf(@"PRAGMA key = \"x'%@'\"",encryptionKey.hexData)]) {
+                Warn(@"CBL_SQLiteStorage: 'pragma key' failed (SQLite error %d)",
+                     self.lastDbStatus);
+                if (outError) *outError = self.fmdbError;
+                return NO;
+            }
         }
     }
 
@@ -216,6 +230,24 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     }
     return YES;
 }
+
+
+#ifdef MOCK_ENCRYPTION
+- (BOOL) mockDecryptWithKey: (CBLSymmetricKey*)encryptionKey error: (NSError**)outError {
+    NSData* givenKeyData = encryptionKey ? encryptionKey.keyData : [NSData data];
+    NSString* keyPath = [_directory stringByAppendingPathComponent: @"mock_key"];
+    NSData* actualKeyData = [NSData dataWithContentsOfFile: keyPath];
+    if (!actualKeyData) {
+        // Save key (which may be empty) the first time:
+        [givenKeyData writeToFile: keyPath atomically: YES];
+    } else {
+        // After that, compare the keys:
+        if (![actualKeyData isEqual: givenKeyData])
+            return ReturnNSErrorFromCBLStatus(kCBLStatusUnauthorized, outError);
+    }
+    return YES;
+}
+#endif
 
 
 - (BOOL) open: (NSError**)outError {

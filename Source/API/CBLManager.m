@@ -445,6 +445,16 @@ static CBLManager* sInstance;
 }
 
 
+- (BOOL) databaseExistsNamed: (NSString*)name {
+    if (_databases[name] != nil)
+        return YES;
+    else if (![[self class] isValidDatabaseName: name])
+        return NO;
+    else
+        return [[NSFileManager defaultManager] fileExistsAtPath: [self pathForDatabaseNamed: name]];
+}
+
+
 - (CBLDatabase*) objectForKeyedSubscript:(NSString*)key {
     return [self existingDatabaseNamed: key error: NULL];
 }

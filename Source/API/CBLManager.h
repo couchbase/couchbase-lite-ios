@@ -76,6 +76,9 @@ typedef struct CBLManagerOptions {
 - (nullable CBLDatabase*) existingDatabaseNamed: (NSString*)name
                                           error: (__nullable NSError**)outError;
 
+/** Returns YES if a database with the given name exists. Does not open the database. */
+- (BOOL) databaseExistsNamed: (NSString*)name;
+
 /** Registers an encryption key for a database. This must be called before opening an encrypted
     database, or before creating a database that's to be encrypted.
     If the key is incorrect (or no key is given for an encrypted database), the subsequent call
