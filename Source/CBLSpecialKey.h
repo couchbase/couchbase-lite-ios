@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 4/15/14.
-//
+//  Copyright (c) 2014-2015 Couchbase, Inc. All rights reserved.
 //
 
 #import "CBLGeometry.h"

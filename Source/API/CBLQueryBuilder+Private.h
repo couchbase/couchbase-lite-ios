@@ -3,7 +3,7 @@
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 8/13/14.
-//
+//  Copyright (c) 2014-2015 Couchbase, Inc. All rights reserved.
 //
 
 #import "CBLQueryBuilder.h"

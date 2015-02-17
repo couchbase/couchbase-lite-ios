@@ -3070,7 +3070,9 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				CLASSPREFIX = CBL;
 				LastUpgradeCheck = 0600;
+				ORGANIZATIONNAME = "Couchbase, Inc";
 				TargetAttributes = {
 					2700358A1A44E9270015B9F4 = {
 						CreatedOnToolsVersion = 6.1.1;
