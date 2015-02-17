@@ -92,7 +92,7 @@ typedef enum : uint8_t {
     The default implementation uses UIAlertController; you can override it to present a custom
     UI.
     @param prompt  The type of password entry to prompt for.
-    @param error  On return, set to the error that prevented the UI from being presented.
+    @param outError  On return, set to the error that prevented the UI from being presented.
     @return YES if the UI will be presented, NO if for some reason it can't be presented. */
 - (BOOL) askForPasswordWithPrompt: (CBLPasswordPrompt)prompt
                             error: (NSError**)outError;

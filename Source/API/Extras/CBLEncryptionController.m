@@ -210,7 +210,8 @@ static NSString* localized(NSString* const table[], unsigned index)
                 // Wait a moment to redisplay alert; if we call this synchronously it doesn't work.
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)),
                                dispatch_get_main_queue(), ^{
-                                   [self askForPasswordWithPrompt: errorPrompt error: NULL];
+                                   [self askForPasswordWithPrompt: (CBLPasswordPrompt)errorPrompt
+                                                            error: NULL];
                 });
                 return;
             }
@@ -289,7 +290,7 @@ static NSString* localized(NSString* const table[], unsigned index)
                             };
     CFTypeRef cfData = NULL;
     if (!checkStatus(SecItemCopyMatching((__bridge CFDictionaryRef)query, &cfData), outError))
-        return NO;
+        return nil;
     return CFBridgingRelease(cfData);
 }
 
