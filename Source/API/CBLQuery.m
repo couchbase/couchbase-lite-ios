@@ -292,7 +292,7 @@
 
 @implementation CBLLiveQuery
 {
-    BOOL _observing, _willUpdate, _updateAgain, _queryOptionsDidChange;
+    BOOL _observing, _willUpdate, _updateAgain;
     SequenceNumber _lastSequence, _isUpdatingAtSequence;
     CFAbsoluteTime _lastUpdatedAt;
     CBLQueryEnumerator* _rows;
@@ -409,7 +409,7 @@
 
 - (void) update {
     SequenceNumber lastSequence = self.database.lastSequenceNumber;
-    if (_rows && _lastSequence >= lastSequence && !_queryOptionsDidChange) {
+    if (_rows && _lastSequence >= lastSequence) {
         return; // db hasn't changed since last query
     }
     if (_isUpdatingAtSequence > 0) {
@@ -421,19 +421,15 @@
         return;
     }
 
-    SequenceNumber rowsLastSeq;
-    if (_queryOptionsDidChange) {
-        rowsLastSeq = 0;
-        _queryOptionsDidChange = NO;
-    } else
-        rowsLastSeq = _rows.sequenceNumber;
-
     _willUpdate = NO;
     _updateAgain = NO;
     _isUpdatingAtSequence = lastSequence;
     _lastUpdatedAt = CFAbsoluteTimeGetCurrent();
 
-    [self runAsyncIfChangedSince: rowsLastSeq
+    // Reset sequence number in the current result's sequence number when
+    // forcing the query to re-run as setting _lastSequence to zero.
+    SequenceNumber curRowsSeq = _lastSequence != 0 ? _rows.sequenceNumber : 0;
+    [self runAsyncIfChangedSince: curRowsSeq
                       onComplete: ^(CBLQueryEnumerator *rows, NSError* error) {
         // Async update finished:
         _isUpdatingAtSequence = 0;
@@ -461,8 +457,7 @@
 
  
 - (void) queryOptionsChanged {
-    _queryOptionsDidChange = YES;
-    [self update];
+    [self viewChanged: nil];
 }
 
 
