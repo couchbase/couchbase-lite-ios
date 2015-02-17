@@ -425,7 +425,11 @@
     _updateAgain = NO;
     _isUpdatingAtSequence = lastSequence;
     _lastUpdatedAt = CFAbsoluteTimeGetCurrent();
-    [self runAsyncIfChangedSince: _rows.sequenceNumber
+
+    // Reset sequence number in the current result's sequence number when
+    // forcing the query to re-run as setting _lastSequence to zero.
+    SequenceNumber curRowsSeq = _lastSequence != 0 ? _rows.sequenceNumber : 0;
+    [self runAsyncIfChangedSince: curRowsSeq
                       onComplete: ^(CBLQueryEnumerator *rows, NSError* error) {
         // Async update finished:
         _isUpdatingAtSequence = 0;
@@ -449,6 +453,11 @@
     [self start];
     return [self.database waitFor: ^BOOL { return _rows != nil || _lastError != nil; }]
         && _rows != nil;
+}
+
+ 
+- (void) queryOptionsChanged {
+    [self viewChanged: nil];
 }
 
 

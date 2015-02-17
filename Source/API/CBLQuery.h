@@ -175,6 +175,10 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     If nil, the last execution of the query was successful. */
 @property (readonly, nullable) NSError* lastError;
 
+/** Call this method to notify that the query parameters have been changed, the CBLLiveQuery object
+    should re-run the query. */
+- (void) queryOptionsChanged;
+
 @end
 
 
