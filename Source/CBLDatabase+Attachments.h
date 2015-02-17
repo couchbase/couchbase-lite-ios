@@ -41,7 +41,9 @@ typedef enum {
 /** Modifies a CBL_Revision's _attachments dictionary by adding the "data" property to all
     attachments (and removing "stub" and "follows".) GZip-encoded attachments will be unzipped
     unless options contains the flag kCBLLeaveAttachmentsEncoded. */
-- (void) expandAttachmentsIn: (CBL_MutableRevision*)rev options: (CBLContentOptions)options;
+- (BOOL) expandAttachmentsIn: (CBL_MutableRevision*)rev
+                     options: (CBLContentOptions)options
+                      status: (CBLStatus*)outStatus;
 
 /** Generates a MIME multipart writer for a revision, with separate body parts for each attachment whose "follows" property is set. */
 - (CBLMultipartWriter*) multipartWriterForRevision: (CBL_Revision*)rev
@@ -52,10 +54,13 @@ typedef enum {
                                     named: (NSString*)filename
                                    status: (CBLStatus*)outStatus;
 
-/** Uses the "digest" field of the attachment dict to look up the attachment in the store and return a file URL to it. DO NOT MODIFY THIS FILE! */
-- (NSURL*) fileForAttachmentDict: (NSDictionary*)attachmentDict;
+/** Uses the "digest" field of the attachment dict to look up the attachment in the store.
+    Input dict must come from an already-saved revision. */
+- (CBL_Attachment*) attachmentForDict: (NSDictionary*)info
+                                named: (NSString*)filename
+                               status: (CBLStatus*)outStatus;
 
-- (NSData*) dataForAttachmentDict: (NSDictionary*)attachmentDict;
+- (NSString*) pathForPendingAttachmentWithDict: (NSDictionary*)attachInfo;
 
 /** Deletes obsolete attachments from the database and blob store. */
 - (BOOL) garbageCollectAttachments: (NSError**)outError;

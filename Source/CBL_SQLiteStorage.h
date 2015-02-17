@@ -31,3 +31,15 @@
                                     status: (CBLStatus*)outStatus;
 
 @end
+
+
+#if DEBUG
+#define MOCK_ENCRYPTION
+#endif
+
+#ifdef MOCK_ENCRYPTION
+// If this is YES, the storage acts as though encryption were supported, but doesn't actually
+// encrypt anything. It just writes the encryption key to a file called "mock_key" in the
+// database directory. Needless to say, this should only be used for testing!
+extern BOOL CBLEnableMockEncryption;
+#endif

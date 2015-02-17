@@ -44,8 +44,17 @@
 /** The data of the attachment. */
 @property (readonly, nullable) NSData* content;
 
-/** The URL of the file containing the contents. (This is always a 'file:' URL.)
-    This file must be treated as read-only! DO NOT MODIFY OR DELETE IT. */
+/** Returns a stream from which you can read the data of the attachment.
+    Remember to close it when you're done. */
+- (NSInputStream*) openContentStream;
+
+/** The (file:) URL of the file containing the contents.
+    This property is somewhat deprecated and is made available only for use with platform APIs that
+    require file paths/URLs, e.g. some media playback APIs. Whenever possible, use the `content`
+    property or the `openContentStream` method instead.
+    The file must be treated as read-only! DO NOT MODIFY OR DELETE IT.
+    If the database is encrypted, attachment files are also encrypted and not directly readable,
+    so this property will return nil. */
 @property (readonly, nullable) NSURL* contentURL;
 
 @end

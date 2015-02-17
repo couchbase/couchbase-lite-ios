@@ -8,7 +8,7 @@
 
 #import "CBL_Revision.h"
 #import "CBL_StorageTypes.h"
-@class CBLDatabaseChange, CBLManager;
+@class CBLDatabaseChange, CBLManager, CBLSymmetricKey;
 @protocol CBL_ViewStorage;
 @protocol CBL_StorageDelegate;
 
@@ -258,6 +258,9 @@
 
 /** Delegate of a CBL_Storage instance. CBLDatabase implements this. */
 @protocol CBL_StorageDelegate <NSObject>
+
+/** Optional encryption key registered with this database. */
+@property (readonly) CBLSymmetricKey* encryptionKey;
 
 /** Called whenever the outermost transaction completes.
     @param committed  YES on commit, NO if the transaction was aborted. */

@@ -14,6 +14,7 @@
 #import "CBL_Attachment.h"
 #import "CBLMisc.h"
 #import "CBJSONEncoder.h"
+#import "CBLSymmetricKey.h"
 #import "CouchbaseLitePrivate.h"
 #import "ExceptionUtils.h"
 
@@ -33,6 +34,12 @@
 
 #define kLocalCheckpointDocId @"CBL_LocalCheckpoint"
 
+#ifdef MOCK_ENCRYPTION
+BOOL CBLEnableMockEncryption = NO;
+#else
+#define CBLEnableMockEncryption NO
+#endif
+
 
 static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal);
 
@@ -47,6 +54,33 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 @synthesize delegate=_delegate, autoCompact=_autoCompact,
             maxRevTreeDepth=_maxRevTreeDepth, fmdb=_fmdb;
+
+
++ (void) initialize {
+    // Test the features of the actual SQLite implementation at runtime. This is necessary because
+    // the app might be linked with a custom version of SQLite (like SQLCipher) instead of the
+    // system library, so the actual version/features may differ from what was declared in
+    // sqlite3.h at compile time.
+    if (self == [CBL_SQLiteStorage class]) {
+        Log(@"Couchbase Lite using SQLite version %s (%s)",
+            sqlite3_libversion(), sqlite3_sourceid());
+#if 0
+        for (int i=0; true; i++) {
+            const char* opt = sqlite3_compileoption_get(i);
+            if (!opt)
+                break;
+            Log(@"SQLite option '%s'", opt);
+        }
+#endif
+        Assert(sqlite3_libversion_number() >= 3007000,
+               @"SQLite library is too old (%s); needs to be at least 3.7", sqlite3_libversion());
+        Assert(sqlite3_compileoption_used("SQLITE_ENABLE_FTS3")
+                    || sqlite3_compileoption_used("SQLITE_ENABLE_FTS4"),
+               @"SQLite isn't built with full-text indexing (FTS3 or FTS4)");
+        Assert(sqlite3_compileoption_used("SQLITE_ENABLE_RTREE"),
+               @"SQLite isn't built with geo-indexing (R-tree)");
+    }
+}
 
 
 #pragma mark - OPEN/CLOSE:
@@ -124,11 +158,17 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         flags |= SQLITE_OPEN_READONLY;
     else
         flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-    LogTo(CBLDatabase, @"Open %@ (flags=%X)", _fmdb.databasePath, flags);
+    CBLSymmetricKey* encryptionKey = _delegate.encryptionKey;
+
+    LogTo(CBLDatabase, @"Open %@ (flags=%X%@)",
+          _fmdb.databasePath, flags, (encryptionKey ? @", encryption key given" : nil));
     if (![_fmdb openWithFlags: flags]) {
         if (outError) *outError = self.fmdbError;
         return NO;
     }
+
+    if (![self decryptWithKey: encryptionKey error: outError])
+        return NO;
 
     // Register CouchDB-compatible JSON collation functions:
     sqlite3* dbHandle = _fmdb.sqliteHandle;
@@ -149,6 +189,65 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         return NO;
     return YES;
 }
+
+
+// Give SQLCipher the encryption key, if provided:
+- (BOOL) decryptWithKey: (CBLSymmetricKey*)encryptionKey error: (NSError**)outError {
+    BOOL hasRealEncryption = sqlite3_compileoption_used("SQLITE_HAS_CODEC") != 0;
+#ifdef MOCK_ENCRYPTION
+    if (!hasRealEncryption && CBLEnableMockEncryption)
+        return [self mockDecryptWithKey: encryptionKey error: outError];
+#endif
+
+    if (encryptionKey) {
+        if (!hasRealEncryption) {
+            Warn(@"CBL_SQLiteStorage: encryption not available (app not built with SQLCipher)");
+            return ReturnNSErrorFromCBLStatus(kCBLStatusNotImplemented,  outError);
+        } else {
+            // http://sqlcipher.net/sqlcipher-api/#key
+            if (![_fmdb executeUpdate: $sprintf(@"PRAGMA key = \"x'%@'\"",encryptionKey.hexData)]) {
+                Warn(@"CBL_SQLiteStorage: 'pragma key' failed (SQLite error %d)",
+                     self.lastDbStatus);
+                if (outError) *outError = self.fmdbError;
+                return NO;
+            }
+        }
+    }
+
+    // Verify that encryption key is correct (or db is unencrypted, if no key given):
+    if ([_fmdb intForQuery:@"SELECT count(*) FROM sqlite_master"] == 0) {
+        int err = _fmdb.lastErrorCode;
+        if (err) {
+            Warn(@"CBL_SQLiteStorage: database is unreadable (err %d)", err);
+            if (outError) {
+                if (err == SQLITE_NOTADB)
+                    *outError = CBLStatusToNSError(kCBLStatusUnauthorized, nil);
+                else
+                    *outError = self.fmdbError;
+            }
+            return NO;
+        }
+    }
+    return YES;
+}
+
+
+#ifdef MOCK_ENCRYPTION
+- (BOOL) mockDecryptWithKey: (CBLSymmetricKey*)encryptionKey error: (NSError**)outError {
+    NSData* givenKeyData = encryptionKey ? encryptionKey.keyData : [NSData data];
+    NSString* keyPath = [_directory stringByAppendingPathComponent: @"mock_key"];
+    NSData* actualKeyData = [NSData dataWithContentsOfFile: keyPath];
+    if (!actualKeyData) {
+        // Save key (which may be empty) the first time:
+        [givenKeyData writeToFile: keyPath atomically: YES];
+    } else {
+        // After that, compare the keys:
+        if (![actualKeyData isEqual: givenKeyData])
+            return ReturnNSErrorFromCBLStatus(kCBLStatusUnauthorized, outError);
+    }
+    return YES;
+}
+#endif
 
 
 - (BOOL) open: (NSError**)outError {
@@ -265,6 +364,8 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
             return kCBLStatusDBBusy;
         case SQLITE_CORRUPT:
             return kCBLStatusCorruptError;
+        case SQLITE_NOTADB:
+            return kCBLStatusUnauthorized; // DB is probably encrypted (SQLCipher)
         default:
             LogTo(CBLDatabase, @"Other _fmdb.lastErrorCode %d", _fmdb.lastErrorCode);
             return kCBLStatusDBError;

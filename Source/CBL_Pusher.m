@@ -19,6 +19,7 @@
 #import "CBL_Storage.h"
 #import "CBL_Revision.h"
 #import "CBLDatabaseChange.h"
+#import "CBL_Attachment.h"
 #import "CBLBatcher.h"
 #import "CBLMultipartUploader.h"
 #import "CouchbaseLitePrivate.h"
@@ -445,7 +446,13 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
             [bodyStream setNextPartsHeaders: $dict({@"Content-Disposition", disposition},
                                                    {@"Content-Type", contentType},
                                                    {@"Content-Encoding", contentEncoding})];
-            [bodyStream addFileURL: [_db fileForAttachmentDict: attachment]];
+            CBLStatus status;
+            CBL_Attachment* attachmentObj = [_db attachmentForDict: attachment
+                                                             named: attachmentName
+                                                            status: &status];
+            if (!attachmentObj)
+                return NO;
+            [bodyStream addStream: [attachmentObj contentStream]];
         }
     }
     if (!bodyStream)
@@ -495,11 +502,12 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
 
 // Fallback to upload a revision if uploadMultipartRevision failed due to the server's rejecting
 // multipart format.
-- (void) uploadJSONRevision: (CBL_Revision*)rev {
+- (void) uploadJSONRevision: (CBL_Revision*)originalRev {
     // Get the revision's properties:
-    NSError* error;
-    if (![_db inlineFollowingAttachmentsIn: rev error: &error]) {
-        self.error = error;
+    CBL_MutableRevision* rev = originalRev.mutableCopy;
+    CBLStatus status;
+    if (![_db expandAttachmentsIn: rev options: kCBLLeaveAttachmentsEncoded status: &status]) {
+        self.error = CBLStatusToNSError(status, nil);
         [self revisionFailed];
         return;
     }

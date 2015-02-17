@@ -11,6 +11,8 @@
 #import "CBLManager+Internal.h"
 #import "MYURLUtils.h"
 #import "CBLRemoteRequest.h"
+#import "CBL_BlobStore.h"
+#import "CBLSymmetricKey.h"
 
 
 // The default remote server URL used by RemoteTestDBURL().
@@ -99,7 +101,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     NSString* dbName = db.name;
     NSError* error;
     Assert([db close: &error], @"Couldn't close db: %@", error);
-    [dbmgr _forgetDatabase: db];
+    db = nil;
 
     Log(@"---- reopening db ----");
     CBLDatabase* db2 = [dbmgr databaseNamed: dbName error: &error];
@@ -115,6 +117,18 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     Assert([db deleteDatabase: &error], @"Couldn't delete test db: %@", error);
     db = [dbmgr createEmptyDatabaseNamed: dbName error: &error];
     Assert(db, @"Couldn't recreate test db: %@", error);
+}
+
+
+- (BOOL) encryptedAttachmentStore {
+    return db.attachmentStore.encryptionKey != nil;
+}
+
+- (void) setEncryptedAttachmentStore: (BOOL)encrypted {
+    if (!encrypted)
+        db.attachmentStore.encryptionKey = nil;
+    else if (db.attachmentStore.encryptionKey == nil)
+        db.attachmentStore.encryptionKey = [[CBLSymmetricKey alloc] init];
 }
 
 

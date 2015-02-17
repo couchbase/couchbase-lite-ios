@@ -267,6 +267,11 @@ static BOOL sAutoCompact = YES;
 }
 
 
+- (CBLSymmetricKey*) encryptionKey {
+    return [_manager.shared valueForType: @"encryptionKey" name: @"" inDatabaseNamed: _name];
+}
+
+
 #pragma mark - TRANSACTIONS & NOTIFICATIONS:
 
 
@@ -382,7 +387,8 @@ static BOOL sAutoCompact = YES;
     CBL_MutableRevision* rev = [_storage getDocumentWithID: docID revisionID: inRevID
                                             options: options status: outStatus];
     if (rev && (options & kCBLIncludeAttachments))
-        [self expandAttachmentsIn: rev options: options];
+        if (![self expandAttachmentsIn: rev options: options status: outStatus])
+            rev = nil;
     return rev;
 }
 
@@ -412,7 +418,7 @@ static BOOL sAutoCompact = YES;
 
     if (status == kCBLStatusOK)
         if (options & kCBLIncludeAttachments)
-            [self expandAttachmentsIn: rev options: options];
+            [self expandAttachmentsIn: rev options: options status: &status];
     return status;
 }
 

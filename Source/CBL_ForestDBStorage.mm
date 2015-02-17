@@ -97,6 +97,9 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
                 manager: (CBLManager*)manager
                   error: (NSError**)outError
 {
+    if (_delegate.encryptionKey)
+        return ReturnNSErrorFromCBLStatus(kCBLStatusNotImplemented, outError);
+
     _directory = [directory copy];
     NSString* forestPath = [directory stringByAppendingPathComponent: kDBFilename];
     fdb_open_flags flags = readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE;

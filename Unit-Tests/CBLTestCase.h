@@ -63,6 +63,9 @@ void AddTemporaryCredential(NSURL* url, NSString* realm,
 // Deletes and re-creates 'db'
 - (void) eraseTestDB;
 
+// Enables encryption in the attachment store
+@property BOOL encryptedAttachmentStore;
+
 /** YES if the underlying data store is SQLite (not ForestDB). */
 @property (readonly) BOOL isSQLiteDB;
 

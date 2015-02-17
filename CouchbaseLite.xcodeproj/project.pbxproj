@@ -75,6 +75,11 @@
 		2711CE0114C7595900505D55 /* CBLDatabase+Insertion.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CDFF14C7595900505D55 /* CBLDatabase+Insertion.h */; };
 		2711CE0314C759BD00505D55 /* CBLDatabase+Replication.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CE0214C759BD00505D55 /* CBLDatabase+Replication.h */; };
 		2711CE0414C759BD00505D55 /* CBLDatabase+Replication.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CE0214C759BD00505D55 /* CBLDatabase+Replication.h */; };
+		271297441A8D597B00F6C5CE /* CBLSymmetricKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 271297421A8D597B00F6C5CE /* CBLSymmetricKey.h */; };
+		271297451A8D597B00F6C5CE /* CBLSymmetricKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 271297431A8D597B00F6C5CE /* CBLSymmetricKey.m */; };
+		271297461A8D597B00F6C5CE /* CBLSymmetricKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 271297431A8D597B00F6C5CE /* CBLSymmetricKey.m */; };
+		271297481A8D7DA400F6C5CE /* DatabaseAttachment_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 271297471A8D7DA300F6C5CE /* DatabaseAttachment_Tests.m */; };
+		271297491A8D7DA400F6C5CE /* DatabaseAttachment_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 271297471A8D7DA300F6C5CE /* DatabaseAttachment_Tests.m */; };
 		271C2AD416FA176300B8C9DB /* CBL_Shared.h in Headers */ = {isa = PBXBuildFile; fileRef = 271C2AD216FA176300B8C9DB /* CBL_Shared.h */; };
 		271C2AD516FA176300B8C9DB /* CBL_Shared.m in Sources */ = {isa = PBXBuildFile; fileRef = 271C2AD316FA176300B8C9DB /* CBL_Shared.m */; };
 		271C2AD616FA176300B8C9DB /* CBL_Shared.m in Sources */ = {isa = PBXBuildFile; fileRef = 271C2AD316FA176300B8C9DB /* CBL_Shared.m */; };
@@ -136,6 +141,8 @@
 		2733022F18F86C9800A488F7 /* CBLTokenAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2733022D18F86C9800A488F7 /* CBLTokenAuthorizer.h */; };
 		2733023018F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */; };
 		2733023118F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */; };
+		273FA2BB1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */; };
+		273FA2BC1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */; };
 		2740D8531A8C240500809EE0 /* Collatable_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D84B1A8C240500809EE0 /* Collatable_Test.mm */; };
 		2740D8541A8C240500809EE0 /* Database_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D84C1A8C240500809EE0 /* Database_Test.mm */; };
 		2740D8551A8C240500809EE0 /* Index_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D84D1A8C240500809EE0 /* Index_Test.mm */; };
@@ -168,7 +175,6 @@
 		274C6C281A3F838500F9BDF7 /* CBLReduceFuncs.h in Headers */ = {isa = PBXBuildFile; fileRef = 274C6C251A3F838500F9BDF7 /* CBLReduceFuncs.h */; };
 		274E163219B90F520066CA5E /* TestData in Resources */ = {isa = PBXBuildFile; fileRef = 274E163119B90F420066CA5E /* TestData */; };
 		274E163319B90F740066CA5E /* TestData in Resources */ = {isa = PBXBuildFile; fileRef = 274E163119B90F420066CA5E /* TestData */; };
-		275072A418E49BEA00A80C5A /* CBLIncrementalStore.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = AA1776B61857ADDB00CB01A3 /* CBLIncrementalStore.h */; };
 		27513A181A672C760055DC40 /* CBLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DA434915912AFD00F9E7B5 /* CBLView.m */; };
 		27513A191A672C7B0055DC40 /* CBLDatabase+Internal.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0744711CD4B6D00E9A2AB /* CBLDatabase+Internal.m */; };
 		27513A1A1A672C7F0055DC40 /* CBLDatabase+Attachments.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C391B149FAE0000A5E89B /* CBLDatabase+Attachments.m */; };
@@ -457,6 +463,7 @@
 		27C5305414DF3A050078F886 /* CBLMultipartUploader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C5305214DF3A050078F886 /* CBLMultipartUploader.h */; };
 		27C5305514DF3A050078F886 /* CBLMultipartUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C5305314DF3A050078F886 /* CBLMultipartUploader.m */; };
 		27C5305614DF3A050078F886 /* CBLMultipartUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C5305314DF3A050078F886 /* CBLMultipartUploader.m */; };
+		27C5BAE91A92ACA5008C357C /* CBLEncryptionController.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C5BADF1A92AC51008C357C /* CBLEncryptionController.m */; };
 		27C70698148864BA00F0F099 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27C70697148864BA00F0F099 /* Cocoa.framework */; };
 		27C706D31488679500F0F099 /* DemoAppController.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706CC1488679500F0F099 /* DemoAppController.m */; };
 		27C706D41488679500F0F099 /* DemoQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706CE1488679500F0F099 /* DemoQuery.m */; };
@@ -593,7 +600,6 @@
 		27F1E4A8169799DA00F0E50F /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
 		27F273C117039D6000CD2B85 /* CBLUICollectionSource.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */; };
 		27F273C217039D6200CD2B85 /* CBLUICollectionSource.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */; };
-		27F273C417039F3700CD2B85 /* README.md in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27F273C317039F3600CD2B85 /* README.md */; };
 		27F3A5D015ED427200263663 /* MYRegexUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FB615D475DF0030122F /* MYRegexUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27F5B176164D74EA00126D0D /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 27F5B175164D74EA00126D0D /* Default-568h@2x.png */; };
 		27F5B18716519F2400126D0D /* CBLUITableSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA4317158FD9B400F9E7B5 /* CBLUITableSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1010,12 +1016,10 @@
 			dstPath = Extras;
 			dstSubfolderSpec = 16;
 			files = (
-				275072A418E49BEA00A80C5A /* CBLIncrementalStore.h in Copy Extras */,
 				792867DE178E0AED00248AF0 /* CBLRegisterJSViewCompiler.h in Copy Extras */,
 				27F273C117039D6000CD2B85 /* CBLUICollectionSource.h in Copy Extras */,
 				27F273C217039D6200CD2B85 /* CBLUICollectionSource.m in Copy Extras */,
 				27486F391A608A8B008D94F0 /* CBLJSONValidator.h in Copy Extras */,
-				27F273C417039F3700CD2B85 /* README.md in Copy Extras */,
 			);
 			name = "Copy Extras";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1062,6 +1066,9 @@
 		2711CDFC14C7590A00505D55 /* CBLDatabase+Attachments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Attachments.h"; sourceTree = "<group>"; };
 		2711CDFF14C7595900505D55 /* CBLDatabase+Insertion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Insertion.h"; sourceTree = "<group>"; };
 		2711CE0214C759BD00505D55 /* CBLDatabase+Replication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Replication.h"; sourceTree = "<group>"; };
+		271297421A8D597B00F6C5CE /* CBLSymmetricKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLSymmetricKey.h; sourceTree = "<group>"; };
+		271297431A8D597B00F6C5CE /* CBLSymmetricKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLSymmetricKey.m; sourceTree = "<group>"; };
+		271297471A8D7DA300F6C5CE /* DatabaseAttachment_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DatabaseAttachment_Tests.m; sourceTree = "<group>"; };
 		2714CF511496AE5B00E03341 /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
 		271C2AD216FA176300B8C9DB /* CBL_Shared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Shared.h; sourceTree = "<group>"; };
 		271C2AD316FA176300B8C9DB /* CBL_Shared.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Shared.m; sourceTree = "<group>"; };
@@ -1097,6 +1104,7 @@
 		2733022918F8572700A488F7 /* CBLAuthenticator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLAuthenticator.m; sourceTree = "<group>"; };
 		2733022D18F86C9800A488F7 /* CBLTokenAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLTokenAuthorizer.h; sourceTree = "<group>"; };
 		2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLTokenAuthorizer.m; sourceTree = "<group>"; };
+		273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DatabaseEncryption_Tests.m; sourceTree = "<group>"; };
 		2740D84B1A8C240500809EE0 /* Collatable_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Collatable_Test.mm; path = "../vendor/CBForest/CBForest Tests/Collatable_Test.mm"; sourceTree = "<group>"; };
 		2740D84C1A8C240500809EE0 /* Database_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Database_Test.mm; path = "../vendor/CBForest/CBForest Tests/Database_Test.mm"; sourceTree = "<group>"; };
 		2740D84D1A8C240500809EE0 /* Index_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Index_Test.mm; path = "../vendor/CBForest/CBForest Tests/Index_Test.mm"; sourceTree = "<group>"; };
@@ -1319,6 +1327,9 @@
 		27BDA81D181973EF00F27A11 /* CBLBulkDownloader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLBulkDownloader.m; sourceTree = "<group>"; };
 		27C5305214DF3A050078F886 /* CBLMultipartUploader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultipartUploader.h; sourceTree = "<group>"; };
 		27C5305314DF3A050078F886 /* CBLMultipartUploader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLMultipartUploader.m; sourceTree = "<group>"; };
+		27C5BADE1A92AC51008C357C /* CBLEncryptionController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLEncryptionController.h; sourceTree = "<group>"; };
+		27C5BADF1A92AC51008C357C /* CBLEncryptionController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLEncryptionController.m; sourceTree = "<group>"; };
+		27C5BAEA1A92AD2A008C357C /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		27C706401486BBD500F0F099 /* CBL_Server.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Server.h; sourceTree = "<group>"; };
 		27C706411486BBD500F0F099 /* CBL_Server.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Server.m; sourceTree = "<group>"; };
 		27C706431486BE7100F0F099 /* CBL_Router.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Router.h; sourceTree = "<group>"; };
@@ -1439,7 +1450,6 @@
 		27F128AF156AC1C8008465C2 /* CBLOAuth1Authorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLOAuth1Authorizer.h; sourceTree = "<group>"; };
 		27F128B0156AC1C9008465C2 /* CBLOAuth1Authorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLOAuth1Authorizer.m; sourceTree = "<group>"; };
 		27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		27F273C317039F3600CD2B85 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; name = README.md; path = Extras/README.md; sourceTree = "<group>"; };
 		27F5B175164D74EA00126D0D /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		27F87BE61558890600F0A416 /* CBLGNUstep.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLGNUstep.h; sourceTree = "<group>"; };
 		27F87BE71558890700F0A416 /* CBLGNUstep.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLGNUstep.m; sourceTree = "<group>"; };
@@ -1475,8 +1485,8 @@
 		792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSViewCompiler.m; sourceTree = "<group>"; };
 		792867D9178E021F00248AF0 /* CBLRegisterJSViewCompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRegisterJSViewCompiler.h; sourceTree = "<group>"; };
 		792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLRegisterJSViewCompiler.m; sourceTree = "<group>"; };
-		AA1776B61857ADDB00CB01A3 /* CBLIncrementalStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLIncrementalStore.h; path = Extras/CBLIncrementalStore.h; sourceTree = "<group>"; };
-		AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLIncrementalStore.m; path = Extras/CBLIncrementalStore.m; sourceTree = "<group>"; };
+		AA1776B61857ADDB00CB01A3 /* CBLIncrementalStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLIncrementalStore.h; sourceTree = "<group>"; };
+		AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLIncrementalStore.m; sourceTree = "<group>"; };
 		AA1776BB1857AE4D00CB01A3 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
 		DA023B6414BCA94C008184BB /* libCouchbaseLiteListener.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCouchbaseLiteListener.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		DA147C3614BCAC3B0052DA4D /* CouchbaseLiteListener.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteListener.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1726,6 +1736,8 @@
 				272AA8611A49D5B0004B8D55 /* ChangeTracker_Tests.m */,
 				272AA8571A48ECD4004B8D55 /* DatabaseInternal_Tests.m */,
 				2700358F1A44E9270015B9F4 /* Database_Tests.m */,
+				273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */,
+				271297471A8D7DA300F6C5CE /* DatabaseAttachment_Tests.m */,
 				2764D2C41A5F1792005AC95A /* IncrementalStore_Tests.m */,
 				2764D2B01A5E240D005AC95A /* JSON_Tests.m */,
 				2764D2BB1A5F1063005AC95A /* JSViewCompiler_Tests.m */,
@@ -1789,13 +1801,16 @@
 			name = Database;
 			sourceTree = "<group>";
 		};
-		271EFF0E185F6AD200142804 /* CoreData */ = {
+		271EFF0E185F6AD200142804 /* Extras */ = {
 			isa = PBXGroup;
 			children = (
+				27C5BAEA1A92AD2A008C357C /* README.md */,
+				27C5BADE1A92AC51008C357C /* CBLEncryptionController.h */,
+				27C5BADF1A92AC51008C357C /* CBLEncryptionController.m */,
 				AA1776B61857ADDB00CB01A3 /* CBLIncrementalStore.h */,
 				AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */,
 			);
-			name = CoreData;
+			path = Extras;
 			sourceTree = "<group>";
 		};
 		272401AD1860CB260080E082 /* WebSockets-Cocoa */ = {
@@ -2160,6 +2175,8 @@
 				27DA4307158FA35600F9E7B5 /* CBLCache.m */,
 				27A073EA14C0BB6200F52FE7 /* CBLMisc.h */,
 				27A073EB14C0BB6200F52FE7 /* CBLMisc.m */,
+				271297421A8D597B00F6C5CE /* CBLSymmetricKey.h */,
+				271297431A8D597B00F6C5CE /* CBLSymmetricKey.m */,
 				270B3DEE1489359000E0A926 /* CouchbaseLite-Info.plist */,
 				27821BBD14906FB50099B373 /* CouchbaseLitePrefix.h */,
 				27821BBF149078C70099B373 /* CouchbaseLite.exp */,
@@ -2334,7 +2351,7 @@
 				27726AA91889835F00AE6931 /* CBLGeometry.m */,
 				27DA431A158FD9BA00F9E7B5 /* iOS */,
 				27DA435D15918C9600F9E7B5 /* Model */,
-				271EFF0E185F6AD200142804 /* CoreData */,
+				271EFF0E185F6AD200142804 /* Extras */,
 			);
 			name = API;
 			path = Source/API;
@@ -2347,7 +2364,6 @@
 				27DA4318158FD9B400F9E7B5 /* CBLUITableSource.m */,
 				27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */,
 				27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */,
-				27F273C317039F3600CD2B85 /* README.md */,
 			);
 			name = iOS;
 			sourceTree = "<group>";
@@ -2599,6 +2615,7 @@
 				27A073EC14C0BB6200F52FE7 /* CBLMisc.h in Headers */,
 				277B5DC91821A8B60088881E /* yajl_parse.h in Headers */,
 				279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */,
+				271297441A8D597B00F6C5CE /* CBLSymmetricKey.h in Headers */,
 				279CE40014D749A7009F3FA6 /* CBLMultipartReader.h in Headers */,
 				274C6C281A3F838500F9BDF7 /* CBLReduceFuncs.h in Headers */,
 				27B945A91768E63200B2DF2D /* CBLModelArray.h in Headers */,
@@ -3389,6 +3406,7 @@
 			files = (
 				272AA85F1A49D4A9004B8D55 /* BlobStore_Tests.m in Sources */,
 				2764D2B11A5E240D005AC95A /* JSON_Tests.m in Sources */,
+				27C5BAE91A92ACA5008C357C /* CBLEncryptionController.m in Sources */,
 				272AA8651A49D95B004B8D55 /* ReplicatorInternal_Tests.m in Sources */,
 				2700359A1A4500160015B9F4 /* View_Tests.m in Sources */,
 				272AA85C1A48F17D004B8D55 /* ViewInternal_Tests.m in Sources */,
@@ -3409,8 +3427,10 @@
 				2740D8531A8C240500809EE0 /* Collatable_Test.mm in Sources */,
 				2740D8541A8C240500809EE0 /* Database_Test.mm in Sources */,
 				2740D8551A8C240500809EE0 /* Index_Test.mm in Sources */,
+				273FA2BB1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */,
 				2740D8561A8C240500809EE0 /* MapReduce_Test.mm in Sources */,
 				2740D8571A8C240500809EE0 /* VersionedDocument_Tests.mm in Sources */,
+				271297481A8D7DA400F6C5CE /* DatabaseAttachment_Tests.m in Sources */,
 				2740D8581A8C240500809EE0 /* Tokenizer_Test.mm in Sources */,
 				2740D8591A8C240500809EE0 /* GeoHash_Test.mm in Sources */,
 				2740D85A1A8C240500809EE0 /* GeoIndex_Test.mm in Sources */,
@@ -3440,6 +3460,7 @@
 				27B945AB1768E63200B2DF2D /* CBLModelArray.m in Sources */,
 				274C391E149FAE0000A5E89B /* CBLDatabase+Attachments.m in Sources */,
 				27AA409D14AA86AE00E2A5FF /* CBLDatabase+Insertion.m in Sources */,
+				271297451A8D597B00F6C5CE /* CBLSymmetricKey.m in Sources */,
 				27AA40A314AA8A6600E2A5FF /* CBLDatabase+Replication.m in Sources */,
 				27A073ED14C0BB6200F52FE7 /* CBLMisc.m in Sources */,
 				279CE40114D749A7009F3FA6 /* CBLMultipartReader.m in Sources */,
@@ -3552,6 +3573,7 @@
 				272AA8601A49D4A9004B8D55 /* BlobStore_Tests.m in Sources */,
 				2764D2B21A5E240D005AC95A /* JSON_Tests.m in Sources */,
 				272AA8661A49D95B004B8D55 /* ReplicatorInternal_Tests.m in Sources */,
+				273FA2BC1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */,
 				27486F191A5F5E57008D94F0 /* CBLJSViewCompiler.m in Sources */,
 				272AA84D1A48DA0F004B8D55 /* Database_Tests.m in Sources */,
 				272AA85D1A48F17D004B8D55 /* ViewInternal_Tests.m in Sources */,
@@ -3559,6 +3581,7 @@
 				2764D2C71A5F18A0005AC95A /* IncrementalStore_Tests.m in Sources */,
 				27486F3E1A608BC7008D94F0 /* CBLJSONValidator.m in Sources */,
 				2764D2BF1A5F10E6005AC95A /* JSViewCompiler_Tests.m in Sources */,
+				271297491A8D7DA400F6C5CE /* DatabaseAttachment_Tests.m in Sources */,
 				272AA8521A48DA0F004B8D55 /* CBLTestCase.m in Sources */,
 				272AA8631A49D5B0004B8D55 /* ChangeTracker_Tests.m in Sources */,
 				272AA84E1A48DA0F004B8D55 /* Model_Tests.m in Sources */,
@@ -3693,6 +3716,7 @@
 				27B0B7DE1492B8C100A817AD /* ExceptionUtils.m in Sources */,
 				27B0B7DF1492B8C100A817AD /* Logging.m in Sources */,
 				27513A1C1A672C870055DC40 /* CBLDatabase+Replication.m in Sources */,
+				271297461A8D597B00F6C5CE /* CBLSymmetricKey.m in Sources */,
 				27B0B7E01492B8C100A817AD /* CollectionUtils.m in Sources */,
 				27B0B7E11492B8C100A817AD /* Test.m in Sources */,
 				27E347721999502400076EAC /* Test_Assertions.m in Sources */,

@@ -35,7 +35,6 @@
 #if DEBUG
 - (id) attachmentWriterForAttachment: (NSDictionary*)attachment;
 #endif
-- (BOOL) inlineFollowingAttachmentsIn: (CBL_Revision*)rev error: (NSError**)outError;
 @end
 
 @interface CBLDatabase (Replication_Internal)

@@ -33,6 +33,7 @@
 #import "CBLMisc.h"
 #import "CBLStatus.h"
 #import "CBLDatabaseUpgrade.h"
+#import "CBLSymmetricKey.h"
 #import "MYBlockUtils.h"
 
 
@@ -444,6 +445,16 @@ static CBLManager* sInstance;
 }
 
 
+- (BOOL) databaseExistsNamed: (NSString*)name {
+    if (_databases[name] != nil)
+        return YES;
+    else if (![[self class] isValidDatabaseName: name])
+        return NO;
+    else
+        return [[NSFileManager defaultManager] fileExistsAtPath: [self pathForDatabaseNamed: name]];
+}
+
+
 - (CBLDatabase*) objectForKeyedSubscript:(NSString*)key {
     return [self existingDatabaseNamed: key error: NULL];
 }
@@ -462,6 +473,29 @@ static CBLManager* sInstance;
         db = nil;
     return db;
 }
+
+
+- (BOOL) registerEncryptionKey: (id)keyOrPassword
+              forDatabaseNamed: (NSString*)name
+{
+    CBLSymmetricKey* realKey = nil;
+    if (keyOrPassword) {
+        if ([keyOrPassword isKindOfClass: [NSString class]]) {
+            realKey = [[CBLSymmetricKey alloc] initWithPassword: keyOrPassword];
+        } else if (keyOrPassword) {
+            Assert([keyOrPassword isKindOfClass: [NSData class]]);
+            realKey = [[CBLSymmetricKey alloc] initWithKeyData: keyOrPassword];
+        }
+        if (!realKey)
+            return NO;
+    }
+    [self.shared setValue: realKey
+                  forType: @"encryptionKey"
+                     name: @""
+          inDatabaseNamed: name];
+    return YES;
+}
+
 
 #if DEBUG
 - (CBLDatabase*) createEmptyDatabaseNamed: (NSString*)name error: (NSError**)outError {

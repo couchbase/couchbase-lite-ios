@@ -165,7 +165,14 @@
         if (!attachments)
             return nil;
     }
-    NSDictionary* info = attachments[filename];
+    return [self attachmentForDict: attachments[filename] named: filename status: outStatus];
+}
+
+
+- (CBL_Attachment*) attachmentForDict: (NSDictionary*)info
+                                named: (NSString*)filename
+                               status: (CBLStatus*)outStatus
+{
     if (!info) {
         *outStatus = kCBLStatusNotFound;
         return nil;
@@ -178,35 +185,14 @@
 }
 
 
-- (NSData*) dataForAttachmentDict: (NSDictionary*)attachmentDict {
-    NSURL* url = [self fileForAttachmentDict: attachmentDict];
-    if (!url)
-        return nil;
-    return [NSData dataWithContentsOfURL: url options: NSDataReadingMappedIfSafe error: NULL];
-}
-
-
-- (NSURL*) fileForAttachmentDict: (NSDictionary*)attachmentDict {
-    NSString* digest = $castIf(NSString, attachmentDict[@"digest"]);
+- (NSString*) pathForPendingAttachmentWithDict: (NSDictionary*)attachInfo {
+    NSString* digest = $castIf(NSString, attachInfo[@"digest"]);
     if (!digest)
         return nil;
-    NSString* path = nil;
-    id pending = _pendingAttachmentsByDigest[digest];
-    if (pending) {
-        if ([pending isKindOfClass: [CBL_BlobStoreWriter class]]) {
-            path = [pending filePath];
-        } else {
-            CBLBlobKey key = *(CBLBlobKey*)[pending bytes];
-            path = [_attachments pathForKey: key];
-        }
-    } else {
-        // If it's an installed attachment, ask the blob-store for it:
-        CBLBlobKey key;
-        if ([CBL_Attachment digest: digest toBlobKey: &key])
-            path = [_attachments pathForKey: key];
-    }
-
-    return path ? [NSURL fileURLWithPath: path] : nil;
+    CBL_BlobStoreWriter* pending = _pendingAttachmentsByDigest[digest];
+    if ([pending isKindOfClass: [CBL_BlobStoreWriter class]])
+        return pending.filePath;
+    return nil;
 }
 
 
@@ -249,67 +235,42 @@
 }
 
 
-- (void) expandAttachmentsIn: (CBL_MutableRevision*)rev options: (CBLContentOptions)options {
+- (BOOL) expandAttachmentsIn: (CBL_MutableRevision*)rev
+                     options: (CBLContentOptions)options
+                      status: (CBLStatus*)outStatus
+{
+    *outStatus = kCBLStatusOK;
     BOOL decodeAttachments = !(options & kCBLLeaveAttachmentsEncoded);
     [rev mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *attachment) {
-        NSString* encoding = attachment[@"encoding"];
-        BOOL decodeIt = decodeAttachments && (encoding != nil);
+        BOOL decodeIt = decodeAttachments && (attachment[@"encoding"] != nil);
         if (decodeIt || attachment[@"stub"] || attachment[@"follows"]) {
+            // Attachment content needs to be loaded from storage, or decoded, or both:
             NSMutableDictionary* expanded = [attachment mutableCopy];
             [expanded removeObjectForKey: @"stub"];
             [expanded removeObjectForKey: @"follows"];
-
-            NSString* base64Data = attachment[@"data"];
-            if (!base64Data || decodeIt) {
-                NSData* data;
-                if (base64Data)
-                    data = [CBLBase64 decode: base64Data];
-                else
-                    data = [self dataForAttachmentDict: attachment];
-                if (!data) {
-                    Warn(@"Can't get binary data of attachment '%@' of %@", name, rev);
-                    return attachment;
-                }
-                if (decodeIt) {
-                    data = [NSData gtm_dataByInflatingData: data];
-                    if (!data) {
-                        Warn(@"Can't unzip attachment '%@' of %@", name, rev);
-                        return attachment;
-                    }
-                    [expanded removeObjectForKey: @"encoding"];
-                    [expanded removeObjectForKey: @"encoded_length"];
-                }
-                expanded[@"data"] = [CBLBase64 encode: data];
+            if (decodeIt) {
+                [expanded removeObjectForKey: @"encoding"];
+                [expanded removeObjectForKey: @"encoded_length"];
             }
-            attachment = expanded;
+
+            CBL_Attachment* attachObj = [self attachmentForDict: attachment named: name
+                                                         status: outStatus];
+            if (!attachObj) {
+                Warn(@"Can't get attachment '%@' of %@ (status %d)", name, rev, *outStatus);
+                return attachment;
+            }
+            NSData* data = decodeIt ? attachObj.content : attachObj.encodedContent;
+            if (data) {
+                expanded[@"data"] = [CBLBase64 encode: data];
+                attachment = expanded;
+            } else {
+                Warn(@"Can't get binary data of attachment '%@' of %@", name, rev);
+                *outStatus = kCBLStatusNotFound;
+            }
         }
         return attachment;
     }];
-}
-
-
-// Replaces the "follows" key with the real attachment data in all attachments to 'doc'.
-- (BOOL) inlineFollowingAttachmentsIn: (CBL_MutableRevision*)rev error: (NSError**)outError {
-    __block NSError *error = nil;
-    [rev mutateAttachments:
-        ^NSDictionary *(NSString *name, NSDictionary *attachment) {
-            if (!attachment[@"follows"])
-                return attachment;
-            NSURL* fileURL = [self fileForAttachmentDict: attachment];
-            NSData* fileData = [NSData dataWithContentsOfURL: fileURL
-                                                     options: NSDataReadingMappedIfSafe
-                                                       error: &error];
-            if (!fileData)
-                return nil;
-            NSMutableDictionary* editedAttachment = [attachment mutableCopy];
-            [editedAttachment removeObjectForKey: @"follows"];
-            editedAttachment[@"data"] = [CBLBase64 encode: fileData];
-            return editedAttachment;
-        }
-     ];
-    if (outError)
-        *outError = error;
-    return (error == nil);
+    return (*outStatus == kCBLStatusOK);
 }
 
 
@@ -340,10 +301,10 @@
                                                                    status: outStatus];
         if (attachment == nil) {
             return nil;
-        } else if (attachment.data) {
+        } else if (attachment.encodedContent) {
             // If there's inline attachment data, decode and store it:
             CBLBlobKey blobKey;
-            if (![_attachments storeBlob: attachment.data creatingKey: &blobKey]) {
+            if (![_attachments storeBlob: attachment.encodedContent creatingKey: &blobKey]) {
                 *outStatus = kCBLStatusAttachmentError;
                 return nil;
             }
@@ -391,7 +352,7 @@
 
 
 - (CBLMultipartWriter*) multipartWriterForRevision: (CBL_Revision*)rev
-                                      contentType: (NSString*)contentType
+                                       contentType: (NSString*)contentType
 {
     CBLMultipartWriter* writer = [[CBLMultipartWriter alloc] initWithContentType: contentType 
                                                                       boundary: nil];
@@ -403,7 +364,17 @@
         if (attachment[@"follows"]) {
             NSString* disposition = $sprintf(@"attachment; filename=%@", CBLQuoteString(attachmentName));
             [writer setNextPartsHeaders: $dict({@"Content-Disposition", disposition})];
-            [writer addFileURL: [self fileForAttachmentDict: attachment]];
+
+            CBLStatus status;
+            CBL_Attachment* attachObj = [self attachmentForDict: attachment named: attachmentName
+                                                         status: &status];
+            if (!attachObj)
+                return nil;
+            NSURL* fileURL = attachObj.contentURL;
+            if (fileURL)
+                [writer addFileURL: fileURL];
+            else
+                [writer addStream: attachObj.contentStream];
         }
     }
     return writer;
