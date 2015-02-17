@@ -608,9 +608,82 @@
 }
 
 
+- (void) test13_LiveQuery_UpdateWhenQueryOptionsChanged {
+    CBLView* view = [db viewNamed: @"vu"];
+
+    [view setMapBlock: MAPBLOCK({
+        emit(doc[@"sequence"], nil);
+    }) version: @"1"];
+
+    [self createDocuments: 5];
+
+    CBLQuery* query = [view createQuery];
+    CBLQueryEnumerator* rows = [query run: NULL];
+    AssertEq(rows.count, (NSUInteger)5);
+
+    int expectedKey = 0;
+    for (CBLQueryRow* row in rows) {
+        AssertEq([row.key intValue], expectedKey++);
+    }
+
+    CBLLiveQuery* liveQuery = [[view createQuery] asLiveQuery];
+    TestLiveQueryObserver* observer = [TestLiveQueryObserver new];
+    [liveQuery addObserver: observer forKeyPath: @"rows" options: NSKeyValueObservingOptionNew context: NULL];
+
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 3.0];
+    bool finished = false;
+    while (!finished && timeout.timeIntervalSinceNow > 0.0) {
+        Log(@"Waiting for live query FIRST update...");
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
+            break;
+
+        if (observer.changeCount == 1) {
+            CBLQueryEnumerator* rows = liveQuery.rows;
+            Log(@"Live query rows = %@", rows);
+            if (rows != nil) {
+                AssertEq(rows.count, (NSUInteger)5);
+
+                int expectedKey = 0;
+                for (CBLQueryRow* row in rows) {
+                    AssertEq([row.key intValue], expectedKey++);
+                }
+                finished = true;
+            }
+        }
+
+    }
+    Assert(finished, @"Live query timed out!");
+
+    liveQuery.startKey = @(2);
+    [liveQuery queryOptionsChanged];
+
+    timeout = [NSDate dateWithTimeIntervalSinceNow: 3.0];
+    finished = false;
+    while (!finished && timeout.timeIntervalSinceNow > 0.0) {
+        Log(@"Waiting for live query FIRST update...");
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
+            break;
+
+        if (observer.changeCount == 2) {
+            CBLQueryEnumerator* rows = liveQuery.rows;
+            Log(@"Live query rows = %@", rows);
+            if (rows != nil) {
+                AssertEq(rows.count, (NSUInteger)3);
+
+                int expectedKey = 2;
+                for (CBLQueryRow* row in rows) {
+                    AssertEq([row.key intValue], expectedKey++);
+                }
+                finished = true;
+            }
+        }
+    }
+    Assert(finished, @"Live query timed out!");
+}
+
 // Make sure that a database's map/reduce functions are shared with the shadow database instance
 // running in the background server.
-- (void) test13_SharedMapBlocks {
+- (void) test14_SharedMapBlocks {
     [db setFilterNamed: @"phil" asBlock: ^BOOL(CBLSavedRevision *revision, NSDictionary *params) {
         return YES;
     }];
