@@ -684,9 +684,79 @@
     [liveQuery removeObserver:observer forKeyPath:@"rows"];
 }
 
+- (void) test14_LiveQuery_AddingNonIndexedDocsPriorCreatingLiveQuery {
+    [CBLManager enableLogging:@"CBLDatabase"];
+    [CBLManager enableLogging:@"Query"];
+    [CBLManager enableLogging:@"View"];
+    [CBLManager enableLogging:@"ViewVerbose"];
+
+    CBLView* view = [db viewNamed: @"vu"];
+
+    [view setMapBlock: MAPBLOCK({
+        if ([doc[@"type"] isEqualToString:@"user"]) {
+            emit(doc[@"name"], nil);
+        }
+    }) version: @"1"];
+
+    // Create a new document which will not get indexed by the created view:
+    [self createDocumentWithProperties: @{@"type": @"settings", @"allows_guest": @(YES)}];
+
+    // Start a new live query object:
+    CBLLiveQuery* liveQuery = [[view createQuery] asLiveQuery];
+    TestLiveQueryObserver* observer = [TestLiveQueryObserver new];
+    [liveQuery addObserver: observer forKeyPath: @"rows" options: NSKeyValueObservingOptionNew context: NULL];
+
+    // Wait for an initial result from the live query which should return zero rows.
+    // Wait until timeout reached to ensure that no pending operation inside the live query
+    // espeically a pending update method call from the databaseChanged: method.
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 1.0];
+    bool finished = false;
+    while (timeout.timeIntervalSinceNow > 0.0) {
+        Log(@"Waiting for live query FIRST update...");
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
+            break;
+
+        if (observer.changeCount == 1) {
+            CBLQueryEnumerator* rows = liveQuery.rows;
+            Log(@"Live query rows = %@", rows);
+            if (rows != nil) {
+                AssertEq(rows.count, (NSUInteger)0);
+                finished = true;
+            }
+        }
+    }
+    Assert(finished, @"Live query timed out!");
+
+    // Create a new document which will get indexed by the created view:
+    [self createDocumentWithProperties: @{@"type": @"user", @"name": @"Peter"}];
+
+    // Wait for the live query to update the result:
+    timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
+    finished = false;
+    while (!finished && timeout.timeIntervalSinceNow > 0.0) {
+        Log(@"Waiting for live query FIRST update...");
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
+            break;
+
+        if (observer.changeCount == 2) {
+            CBLQueryEnumerator* rows = liveQuery.rows;
+            Log(@"Live query rows = %@", rows);
+            if (rows != nil) {
+                AssertEq(rows.count, (NSUInteger)1);
+                AssertEqual(rows.nextRow.key, @"Peter");
+                finished = true;
+            }
+        }
+    }
+    Assert(finished, @"Live query timed out!");
+    
+    [liveQuery stop];
+    [liveQuery removeObserver:observer forKeyPath:@"rows"];
+}
+
 // Make sure that a database's map/reduce functions are shared with the shadow database instance
 // running in the background server.
-- (void) test14_SharedMapBlocks {
+- (void) test15_SharedMapBlocks {
     [db setFilterNamed: @"phil" asBlock: ^BOOL(CBLSavedRevision *revision, NSDictionary *params) {
         return YES;
     }];

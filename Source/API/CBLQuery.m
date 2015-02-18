@@ -408,6 +408,8 @@
 
 
 - (void) update {
+    _willUpdate = NO;
+
     SequenceNumber lastSequence = self.database.lastSequenceNumber;
     if (_rows && _lastSequence >= lastSequence) {
         return; // db hasn't changed since last query
@@ -421,7 +423,6 @@
         return;
     }
 
-    _willUpdate = NO;
     _updateAgain = NO;
     _isUpdatingAtSequence = lastSequence;
     _lastUpdatedAt = CFAbsoluteTimeGetCurrent();
