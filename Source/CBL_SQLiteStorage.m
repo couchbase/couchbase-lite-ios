@@ -54,7 +54,6 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 @implementation CBL_SQLiteStorage
 {
     NSString* _directory;
-    __weak CBLManager* _manager;
     BOOL _readOnly;
     NSCache* _docIDs;
 }
@@ -64,7 +63,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 
 + (void) initialize {
-    // Test the features of the actual SQLite implementation at runtime. This is necessary because
+    // Test the version of the actual SQLite implementation at runtime. Necessary because
     // the app might be linked with a custom version of SQLite (like SQLCipher) instead of the
     // system library, so the actual version/features may differ from what was declared in
     // sqlite3.h at compile time.
@@ -81,11 +80,6 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 #endif
         Assert(sqlite3_libversion_number() >= 3007000,
                @"SQLite library is too old (%s); needs to be at least 3.7", sqlite3_libversion());
-        Assert(sqlite3_compileoption_used("SQLITE_ENABLE_FTS3")
-                    || sqlite3_compileoption_used("SQLITE_ENABLE_FTS4"),
-               @"SQLite isn't built with full-text indexing (FTS3 or FTS4)");
-        Assert(sqlite3_compileoption_used("SQLITE_ENABLE_RTREE"),
-               @"SQLite isn't built with geo-indexing (R-tree)");
     }
 }
 
@@ -107,7 +101,6 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 {
     _directory = [directory copy];
     _readOnly = readOnly;
-    _manager = manager;
     NSString* path = [_directory stringByAppendingPathComponent: kDBFilename];
     _fmdb = [[CBL_FMDatabase alloc] initWithPath: path];
     _fmdb.dispatchQueue = manager.dispatchQueue;
@@ -325,8 +318,6 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
                 key TEXT PRIMARY KEY,\
                 value TEXT);\
             \
-            CREATE VIRTUAL TABLE fulltext USING fts4(content, tokenize=unicodesn);\
-            CREATE VIRTUAL TABLE bboxes USING rtree(rowid, x0, x1, y0, y1);\
             PRAGMA user_version = 17";             // at the end, update user_version
         //OPT: Would be nice to use partial indexes but that requires SQLite 3.8 and makes the
         // db file only readable by SQLite 3.8+, i.e. the file would not be portable to iOS 8

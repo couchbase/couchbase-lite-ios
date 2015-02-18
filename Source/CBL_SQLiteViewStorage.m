@@ -34,7 +34,7 @@
     int _viewID;
     CBLViewCollation _collation;
     NSString* _mapTableName;
-    BOOL _hasFullTextTrigger, _hasGeoTrigger;
+    BOOL _initializedFullTextSchema, _initializedRTreeSchema;
 }
 
 @synthesize name=_name, delegate=_delegate;
@@ -94,7 +94,7 @@
 }
 
 
-- (CBLStatus) runStatements: (NSString*)sql error: (NSError**)outError {
+- (BOOL) runStatements: (NSString*)sql error: (NSError**)outError {
     CBL_SQLiteStorage* db = _dbStorage;
     return [db inTransaction: ^CBLStatus {
         if ([_dbStorage runStatements: [self queryString: sql] error: outError])
@@ -132,6 +132,56 @@
     NSError* error;
     if (![self runStatements: sql error: &error])
         Warn(@"Couldn't delete view index `%@`: %@", _name, error);
+}
+
+
+- (BOOL) createFullTextSchema {
+    if (_initializedFullTextSchema)
+        return YES;
+    if (!sqlite3_compileoption_used("SQLITE_ENABLE_FTS3")
+            && !sqlite3_compileoption_used("SQLITE_ENABLE_FTS4")) {
+        Warn(@"Can't index full text: SQLite isn't built with FTS3 or FTS4 module");
+        return NO;
+    }
+    NSString* sql = @"\
+        CREATE VIRTUAL TABLE IF NOT EXISTS fulltext USING fts4(content, tokenize=unicodesn);\
+        CREATE INDEX IF NOT EXISTS  'maps_#_by_fulltext' ON 'maps_#'(fulltext_id); \
+        CREATE TRIGGER IF NOT EXISTS 'del_maps_#_fulltext' \
+            DELETE ON 'maps_#' WHEN old.fulltext_id not null BEGIN \
+                DELETE FROM fulltext WHERE rowid=old.fulltext_id| END";
+    //OPT: Would be nice to use partial indexes but that requires SQLite 3.8 and makes
+    // the db file only readable by SQLite 3.8+, i.e. the file would not be portable to
+    // iOS 8 which only has SQLite 3.7 :(
+    // On the above index we could add "WHERE fulltext_id not null".
+    NSError* error;
+    if (![self runStatements: sql error: &error]) {
+        Warn(@"Error initializing fts4 schema: %@", error);
+        return NO;
+    }
+    _initializedFullTextSchema = YES;
+    return YES;
+}
+
+
+- (BOOL) createRTreeSchema {
+    if (_initializedRTreeSchema)
+        return YES;
+    if (!sqlite3_compileoption_used("SQLITE_ENABLE_RTREE")) {
+        Warn(@"Can't geo-query: SQLite isn't built with Rtree module");
+        return NO;
+    }
+    NSString* sql = @"\
+        CREATE VIRTUAL TABLE IF NOT EXISTS bboxes USING rtree(rowid, x0, x1, y0, y1);\
+        CREATE TRIGGER IF NOT EXISTS 'del_maps_#_bbox' \
+            DELETE ON 'maps_#' WHEN old.bbox_id not null BEGIN \
+            DELETE FROM bboxes WHERE rowid=old.bbox_id| END";
+    NSError* error;
+    if (![self runStatements: sql error: &error]) {
+        Warn(@"Error initializing rtree schema: %@", error);
+        return NO;
+    }
+    _initializedRTreeSchema = YES;
+    return YES;
 }
 
 
@@ -446,36 +496,18 @@
         BOOL ok;
         NSString* text = specialKey.text;
         if (text) {
+            if (![self createFullTextSchema])
+                return kCBLStatusNotImplemented;
             ok = [fmdb executeUpdate: @"INSERT INTO fulltext (content) VALUES (?)", text];
             fullTextID = @(fmdb.lastInsertRowId);
-            if (!_hasFullTextTrigger) {
-                // Create triggers only when needed, because they prevent the SQLite DELETE
-                // 'truncate optimization' <http://sqlite.org/lang_delete.html>
-                [fmdb executeUpdate: [self queryString:
-                                      @"CREATE TRIGGER IF NOT EXISTS 'del_maps_#_fulltext' "
-                                       "DELETE ON 'maps_#' WHEN old.fulltext_id not null BEGIN "
-                                       "DELETE FROM fulltext WHERE rowid=old.fulltext_id; END"]];
-                [fmdb executeUpdate: [self queryString: @"CREATE INDEX IF NOT EXISTS 'maps_#_by_fulltext' "
-                                                         "ON 'maps_#'(fulltext_id)"]];
-                //OPT: Would be nice to use partial indexes but that requires SQLite 3.8 and makes the
-                // db file only readable by SQLite 3.8+, i.e. the file would not be portable to iOS 8
-                // which only has SQLite 3.7 :(
-                // On the above index we could add "WHERE fulltext_id not null".
-                _hasFullTextTrigger = YES;
-            }
         } else {
+            if (![self createRTreeSchema])
+                return kCBLStatusNotImplemented;
             CBLGeoRect rect = specialKey.rect;
             ok = [fmdb executeUpdate: @"INSERT INTO bboxes (x0,y0,x1,y1) VALUES (?,?,?,?)",
                   @(rect.min.x), @(rect.min.y), @(rect.max.x), @(rect.max.y)];
             bboxID = @(fmdb.lastInsertRowId);
             geoKey = specialKey.geoJSONData;
-            if (!_hasGeoTrigger) {
-                [fmdb executeUpdate: [self queryString:
-                                      @"CREATE TRIGGER IF NOT EXISTS 'del_maps_#_bbox' "
-                                       "DELETE ON 'maps_#' WHEN old.bbox_id not null BEGIN "
-                                       "DELETE FROM bboxes WHERE rowid=old.bbox_id; END"]];
-                _hasGeoTrigger = YES;
-            }
         }
         if (!ok)
             return dbStorage.lastDbError;
@@ -528,9 +560,12 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
     NSMutableString* sql = [NSMutableString stringWithString: @"SELECT key, value, docid, revs.sequence"];
     if (options->includeDocs)
         [sql appendString: @", revid, json"];
-    if (options->bbox)
+    if (options->bbox) {
+        if (![self createRTreeSchema])
+            return kCBLStatusNotImplemented;
         [sql appendFormat: @", bboxes.x0, bboxes.y0, bboxes.x1, bboxes.y1, maps_%@.geokey",
                                  self.mapTableName];
+    }
     [sql appendFormat: @" FROM 'maps_%@', revs, docs", self.mapTableName];
     if (options->bbox)
         [sql appendString: @", bboxes"];
@@ -765,6 +800,10 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
 - (CBLQueryIteratorBlock) fullTextQueryWithOptions: (const CBLQueryOptions*)options
                                             status: (CBLStatus*)outStatus
 {
+    if (![self createFullTextSchema]) {
+        *outStatus = kCBLStatusNotImplemented;
+        return nil;
+    }
     NSMutableString* sql = [@"SELECT docs.docid, 'maps_#'.sequence, 'maps_#'.fulltext_id, 'maps_#'.value, "
                              "offsets(fulltext)" mutableCopy];
     if (options->fullTextSnippets)

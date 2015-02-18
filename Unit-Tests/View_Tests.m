@@ -754,9 +754,104 @@
     [liveQuery removeObserver:observer forKeyPath:@"rows"];
 }
 
+
+#pragma mark - GEO
+
+
+static NSDictionary* mkGeoPoint(double x, double y) {
+    return CBLGeoPointToJSON((CBLGeoPoint){x,y});
+}
+
+static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
+    return CBLGeoRectToJSON((CBLGeoRect){{x0,y0}, {x1,y1}});
+}
+
+- (NSArray*) putGeoDocs {
+    return @[
+        [self createDocumentWithProperties: $dict({@"_id", @"22222"}, {@"key", @"two"})],
+        [self createDocumentWithProperties: $dict({@"_id", @"44444"}, {@"key", @"four"})],
+        [self createDocumentWithProperties: $dict({@"_id", @"11111"}, {@"key", @"one"})],
+        [self createDocumentWithProperties: $dict({@"_id", @"33333"}, {@"key", @"three"})],
+        [self createDocumentWithProperties: $dict({@"_id", @"55555"}, {@"key", @"five"})],
+        [self createDocumentWithProperties: $dict({@"_id", @"pdx"},   {@"key", @"Portland"},
+                                          {@"geoJSON", mkGeoPoint(-122.68, 45.52)})],
+        [self createDocumentWithProperties: $dict({@"_id", @"aus"},   {@"key", @"Austin"},
+                                          {@"geoJSON", mkGeoPoint(-97.75, 30.25)})],
+        [self createDocumentWithProperties: $dict({@"_id", @"mv"},    {@"key", @"Mountain View"},
+                                          {@"geoJSON", mkGeoPoint(-122.08, 37.39)})],
+        [self createDocumentWithProperties: $dict({@"_id", @"hkg"}, {@"geoJSON", mkGeoPoint(-113.91, 45.52)})],
+        [self createDocumentWithProperties: $dict({@"_id", @"diy"}, {@"geoJSON", mkGeoPoint(40.12, 37.53)})],
+        [self createDocumentWithProperties: $dict({@"_id", @"snc"}, {@"geoJSON", mkGeoPoint(-2.205, -80.98)})],
+
+        [self createDocumentWithProperties: $dict({@"_id", @"xxx"}, {@"geoJSON",
+            mkGeoRect(-115,-10, -90, 12)})],
+    ];
+}
+
+- (void) test15_GeoQuery {
+    if (!self.isSQLiteDB)
+        return;     //FIX: Geo support in ForestDB is not complete enough to pass this test
+
+    RequireTestCase(CBLGeometry);
+    RequireTestCase(CBL_View_Index);
+
+    CBLView* view = [db viewNamed: @"geovu"];
+    [view setMapBlock: MAPBLOCK({
+        if (doc[@"key"])
+            emit(doc[@"key"], nil);
+        if (doc[@"geoJSON"])
+            emit(CBLGeoJSONKey(doc[@"geoJSON"]), nil);
+    }) version: @"1"];
+
+    // Query before any docs are indexed:
+    CBLQuery* query = [view createQuery];
+    CBLGeoRect bbox = {{-100, 0}, {180, 90}};
+    query.boundingBox = bbox;
+    NSError* error;
+    NSArray* rows = [[query run: &error] allObjects];
+    AssertEqual(rows, @[]);
+
+    // Create docs:
+    [self putGeoDocs];
+
+    // Bounding-box query:
+    query = [view createQuery];
+    query.boundingBox = bbox;
+    rows = [[query run: &error] allObjects];
+    NSArray* rowsAsDicts = [rows my_map: ^(CBLQueryRow* row) {return row.asJSONDictionary;}];
+    NSArray* expectedRows = @[$dict({@"id", @"xxx"},
+                                    {@"geometry", mkGeoRect(-115, -10, -90, 12)},
+                                    {@"bbox", @[@-115, @-10, @-90, @12]}),
+                               $dict({@"id", @"aus"},
+                                     {@"geometry", mkGeoPoint(-97.75, 30.25)},
+                                     {@"bbox", @[@-97.75, @30.25, @-97.75, @30.25]}),
+                               $dict({@"id", @"diy"},
+                                     {@"geometry", mkGeoPoint(40.12, 37.53)},
+                                     {@"bbox", @[@40.12, @37.53, @40.12, @37.53]})];
+    AssertEqualish(rowsAsDicts, expectedRows);
+
+    CBLGeoQueryRow* row = rows[0];
+    AssertEq(row.boundingBox.min.x, -115);
+    AssertEq(row.boundingBox.min.y,  -10);
+    AssertEq(row.boundingBox.max.x,  -90);
+    AssertEq(row.boundingBox.max.y,   12);
+    AssertEqual(row.geometryType, @"Polygon");
+    AssertEqual(row.geometry, mkGeoRect(-115, -10, -90, 12));
+
+    row = rows[1];
+    AssertEq(row.boundingBox.min.x, -97.75);
+    AssertEq(row.boundingBox.min.y,  30.25);
+    AssertEqual(row.geometryType, @"Point");
+    AssertEqual(row.geometry, mkGeoPoint(-97.75, 30.25));
+}
+
+
+
+#pragma mark - OTHER
+
 // Make sure that a database's map/reduce functions are shared with the shadow database instance
 // running in the background server.
-- (void) test15_SharedMapBlocks {
+- (void) test16_SharedMapBlocks {
     [db setFilterNamed: @"phil" asBlock: ^BOOL(CBLSavedRevision *revision, NSDictionary *params) {
         return YES;
     }];
