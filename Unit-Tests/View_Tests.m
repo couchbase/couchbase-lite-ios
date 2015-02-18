@@ -679,6 +679,9 @@
         }
     }
     Assert(finished, @"Live query timed out!");
+
+    [liveQuery stop];
+    [liveQuery removeObserver:observer forKeyPath:@"rows"];
 }
 
 // Make sure that a database's map/reduce functions are shared with the shadow database instance
