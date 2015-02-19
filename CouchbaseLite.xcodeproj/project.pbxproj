@@ -634,6 +634,11 @@
 		792867D0178DE03E00248AF0 /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
 		792867D2178DE03E00248AF0 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
 		792867DE178E0AED00248AF0 /* CBLRegisterJSViewCompiler.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 792867D9178E021F00248AF0 /* CBLRegisterJSViewCompiler.h */; };
+		93D21AF01A955480000AD9AF /* CBLCookieStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 93D21AEE1A955480000AD9AF /* CBLCookieStorage.h */; };
+		93D21AF11A955480000AD9AF /* CBLCookieStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */; };
+		93D21AF21A958CEC000AD9AF /* CBLCookieStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */; };
+		93D21B021A9857A1000AD9AF /* CookieStorage_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21B011A9857A1000AD9AF /* CookieStorage_Tests.m */; };
+		93D21B031A9857A1000AD9AF /* CookieStorage_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21B011A9857A1000AD9AF /* CookieStorage_Tests.m */; };
 		AA1776BC1857AE4D00CB01A3 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1776BB1857AE4D00CB01A3 /* CoreData.framework */; };
 		AA24F8E4184538AE0091D577 /* CBLDatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A62E16A9BCBC006FF199 /* CBLDatabaseChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DA023B4614BCA94C008184BB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
@@ -1485,6 +1490,9 @@
 		792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSViewCompiler.m; sourceTree = "<group>"; };
 		792867D9178E021F00248AF0 /* CBLRegisterJSViewCompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRegisterJSViewCompiler.h; sourceTree = "<group>"; };
 		792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLRegisterJSViewCompiler.m; sourceTree = "<group>"; };
+		93D21AEE1A955480000AD9AF /* CBLCookieStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLCookieStorage.h; sourceTree = "<group>"; };
+		93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLCookieStorage.m; sourceTree = "<group>"; };
+		93D21B011A9857A1000AD9AF /* CookieStorage_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CookieStorage_Tests.m; sourceTree = "<group>"; };
 		AA1776B61857ADDB00CB01A3 /* CBLIncrementalStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLIncrementalStore.h; sourceTree = "<group>"; };
 		AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLIncrementalStore.m; sourceTree = "<group>"; };
 		AA1776BB1857AE4D00CB01A3 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
@@ -1761,6 +1769,7 @@
 				2740D8501A8C240500809EE0 /* Tokenizer_Test.mm */,
 				2740D8511A8C240500809EE0 /* GeoHash_Test.mm */,
 				2740D8521A8C240500809EE0 /* GeoIndex_Test.mm */,
+				93D21B011A9857A1000AD9AF /* CookieStorage_Tests.m */,
 				274E163119B90F420066CA5E /* TestData */,
 				276E68331A5C4511006D6EEB /* Server */,
 			);
@@ -2408,6 +2417,8 @@
 				27BDA81D181973EF00F27A11 /* CBLBulkDownloader.m */,
 				27103F8114E9CE4400DF7209 /* CBLReachability.h */,
 				27103F8214E9CE4400DF7209 /* CBLReachability.m */,
+				93D21AEE1A955480000AD9AF /* CBLCookieStorage.h */,
+				93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */,
 			);
 			name = Networking;
 			sourceTree = "<group>";
@@ -2594,6 +2605,7 @@
 				27486F2B1A606C76008D94F0 /* CBLJSONReader.h in Headers */,
 				2762AB5818D36F1B00649D47 /* CBLReplication+Transformation.h in Headers */,
 				2753157A14ACEFC90065964D /* HTTPAuthenticationRequest.h in Headers */,
+				93D21AF01A955480000AD9AF /* CBLCookieStorage.h in Headers */,
 				272401BE1860CBE00080E082 /* GCDAsyncSocket.h in Headers */,
 				2753157E14ACEFC90065964D /* HTTPConnection.h in Headers */,
 				2753158214ACEFC90065964D /* HTTPLogging.h in Headers */,
@@ -3422,6 +3434,7 @@
 				272AA81A1A48A023004B8D55 /* Model_Tests.m in Sources */,
 				27486F3D1A608BC6008D94F0 /* CBLJSONValidator.m in Sources */,
 				272AA8751A49EE5D004B8D55 /* Multipart_Tests.m in Sources */,
+				93D21B021A9857A1000AD9AF /* CookieStorage_Tests.m in Sources */,
 				2764D2CA1A5F2418005AC95A /* CBLIncrementalStore.m in Sources */,
 				272AA81E1A48A8BF004B8D55 /* Replication_Tests.m in Sources */,
 				272AA81C1A48A301004B8D55 /* QueryBuilder_Tests.m in Sources */,
@@ -3446,6 +3459,7 @@
 				27EF7F9C1912EB5200A327B9 /* CBLForestBridge.mm in Sources */,
 				270B3E111489382F00E0A926 /* CBLDatabase+Internal.m in Sources */,
 				270B3E121489382F00E0A926 /* CBL_Body.m in Sources */,
+				93D21AF11A955480000AD9AF /* CBLCookieStorage.m in Sources */,
 				2764D2B91A5F054D005AC95A /* CBLChangeMatcher.m in Sources */,
 				27DF57B219C782DE00FFB075 /* MYReadWriteLock.m in Sources */,
 				270B3E131489382F00E0A926 /* CBL_Server.m in Sources */,
@@ -3573,6 +3587,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				272AA8601A49D4A9004B8D55 /* BlobStore_Tests.m in Sources */,
+				93D21B031A9857A1000AD9AF /* CookieStorage_Tests.m in Sources */,
 				2764D2B21A5E240D005AC95A /* JSON_Tests.m in Sources */,
 				272AA8661A49D95B004B8D55 /* ReplicatorInternal_Tests.m in Sources */,
 				273FA2BC1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */,
@@ -3690,6 +3705,7 @@
 				270F5707156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,
 				27ED8632157D0FC600712B33 /* CBLDocument.m in Sources */,
 				2762AB5A18D36F1B00649D47 /* CBLReplication+Transformation.m in Sources */,
+				93D21AF21A958CEC000AD9AF /* CBLCookieStorage.m in Sources */,
 				27DA42FA158E66DD00F9E7B5 /* CBLRevision.m in Sources */,
 				27A7552D1A8BD715008BCD4D /* CBLQueryEnumerator.m in Sources */,
 				274C6C271A3F838500F9BDF7 /* CBLReduceFuncs.m in Sources */,
