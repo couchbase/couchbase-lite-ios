@@ -243,7 +243,7 @@ static BOOL decryptStreamSync(NSInputStream* encryptedStream, NSOutputStream *wr
     [writer open];
 
     NSData* keyData = _keyData;
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         if (!decryptStreamSync(encryptedStream, writer, keyData))
             Warn(@"CBLSymmetricKey: decryptStream failed (bad input?)");
         [writer close];
