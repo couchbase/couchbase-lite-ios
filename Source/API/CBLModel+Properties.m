@@ -182,6 +182,18 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
 }
 
 
++ (BOOL) hasRelation: (NSString*)relation {
+    objc_property_t property = class_getProperty(self, relation.UTF8String);
+    if (!property)
+        return NO;
+    char* dyn = property_copyAttributeValue(property, "D");
+    if (!dyn)
+        return NO;
+    free(dyn);
+    return YES;
+}
+
+
 #pragma mark - DYNAMIC METHOD GENERATORS:
 
 
@@ -208,9 +220,24 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
             };
         } else if ([itemClass isSubclassOfClass: [CBLModel class]]) {
             // Array of models (a to-many relation):
-            impBlock = ^id(CBLModel* receiver) {
-                return [receiver getArrayRelationProperty: property withModelClass: itemClass];
-            };
+            NSString* inverse = [self inverseRelationForArrayProperty: property];
+            if (inverse) {
+                // This is a computed (queried) inverse relation:
+                LogTo(CBLModel, @"%@.%@ is a query-based inverse of %@.%@",
+                      self, property, itemClass, inverse);
+                Assert([itemClass hasRelation: inverse],
+                       @"%@.%@ specified as inverse of %@.%@, which is not a valid relation",
+                       self, property, itemClass, inverse);
+                impBlock = ^id(CBLModel* receiver) {
+                    return [receiver findInverseOfRelation: inverse fromClass: itemClass];
+                };
+            } else {
+                // This is an explicit array of docIDs:
+                LogTo(CBLModel, @"%@.%@ is an explicit array of %@", self, property, itemClass);
+                impBlock = ^id(CBLModel* receiver) {
+                    return [receiver getArrayRelationProperty: property withModelClass: itemClass];
+                };
+            }
         } else {
             // Typed array of scalar class:
             ValueConverter itemConverter = valueConverterToClass(itemClass);
@@ -256,6 +283,8 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
             return [super impForSetterOfProperty: property ofClass: propertyClass];
         } else if ([itemClass isSubclassOfClass: [CBLModel class]]) {
             // Model-valued array (to-many relation):
+            Assert(![self inverseRelationForArrayProperty: property],
+                   @"Inverse relation %@.%@ is not settable", self, property);
             impBlock = ^(CBLModel* receiver, NSArray* value) {
                 [receiver setArray: value forProperty: property ofModelClass: itemClass];
             };

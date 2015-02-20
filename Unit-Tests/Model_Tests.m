@@ -49,6 +49,8 @@
 @property int Capitalized;
 
 @property unsigned reloadCount;
+
+@property NSArray* otherModels; // inverse of TestOtherModel.model
 @end
 
 
@@ -66,6 +68,13 @@
 @interface CBL_TestAwakeInitModel : CBLModel
 @property BOOL didAwake;
 @end
+
+
+@interface TestOtherModel : CBLModel
+@property int number;
+@property TestModel* model;
+@end
+
 
 #pragma mark - TEST CASES:
 
@@ -558,6 +567,41 @@
     Assert([model save: &error], @"Save of new model object failed: %@", error);
 }
 
+
+- (void) test00_InverseRelation {
+    // Create two TestModels as targets for the 'model' relation:
+    [db.modelFactory registerClass: [TestModel class] forDocumentType: @"test"];
+    [db.modelFactory registerClass: [TestOtherModel class] forDocumentType: @"other"];
+    TestModel* model1 = [TestModel modelForNewDocumentInDatabase: db];
+    model1.number = 1;
+    TestModel* model2 = [TestModel modelForNewDocumentInDatabase: db];
+    model2.number = 2;
+
+    // Create 100 TestOtherModels whose 'model' properties point to the above TestModels:
+    for (int i = 0; i < 50; i++) {
+        TestOtherModel* other = [TestOtherModel modelForNewDocumentInDatabase: db];
+        other.number = i;
+        other.model = (i % 2) ? model1 : model2;
+    }
+
+    NSError* error;
+    Assert([db saveAllModels: &error], @"Save failed: %@", error);
+
+    // Now query:
+    NSArray* result1 = model1.otherModels;
+    AssertEq(result1.count, 25u);
+    for (TestOtherModel* m in result1) {
+        AssertEq([m class], [TestOtherModel class]);
+        AssertEq(m.number % 2, 1);
+    }
+    NSArray* result2 = model2.otherModels;
+    AssertEq(result2.count, 25u);
+    for (TestOtherModel* m in result2) {
+        AssertEq([m class], [TestOtherModel class]);
+        AssertEq(m.number % 2, 0);
+    }
+}
+
 @end
 
 
@@ -566,7 +610,7 @@
 @dynamic number, uInt, sInt16, uInt16, sInt8, uInt8, nsInt, nsUInt, sInt32, uInt32;
 @dynamic sInt64, uInt64, boolean, boolObjC, floaty, doubly, dict;
 @dynamic str, data, date, decimal, url, other, strings, dates, others, Capitalized;
-@dynamic subModel, subModels, mutableSubModel;
+@dynamic subModel, subModels, mutableSubModel, otherModels;
 @synthesize reloadCount;
 
 - (void) didLoadFromDocument {
@@ -584,6 +628,14 @@
 
 + (Class) subModelsItemClass {
     return [TestSubModel class];
+}
+
++ (Class) otherModelsItemClass {
+    return [TestOtherModel class];
+}
+
++ (NSString*) otherModelsInverseRelation {
+    return @"model";
 }
 
 @end
@@ -653,6 +705,10 @@
     self.didAwake = YES;
 }
 
+@end
+
+@implementation TestOtherModel
+@dynamic number, model;
 @end
 
 

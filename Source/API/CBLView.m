@@ -346,7 +346,10 @@ static id<CBLViewCompiler> sCompiler;
         iterator = [_storage reducedQueryWithOptions: options status: outStatus];
     else
         iterator = [_storage regularQueryWithOptions: options status: outStatus];
-    LogTo(Query, @"Query %@: Returning iterator", _name);
+    if (iterator)
+        LogTo(Query, @"Query %@: Returning iterator", _name);
+    else
+        LogTo(Query, @"Query %@: Failed with status %d", _name, *outStatus);
     return iterator;
 }
 
