@@ -25,6 +25,7 @@
 #import "CBLBatcher.h"
 #import "CBLMultipartDownloader.h"
 #import "CBLBulkDownloader.h"
+#import "CBLCookieStorage.h"
 #import "CBLSequenceMap.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
@@ -119,6 +120,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _changeTracker.filterParameters = _filterParameters;
     _changeTracker.docIDs = _docIDs;
     _changeTracker.authorizer = _authorizer;
+    _changeTracker.cookieStorage = _cookieStorage;
     _changeTracker.usePOST = [self serverIsSyncGatewayVersion: @"0.93"];
 
     unsigned heartbeat = $castIf(NSNumber, _options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;

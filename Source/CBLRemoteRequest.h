@@ -10,6 +10,8 @@
 @protocol CBLAuthorizer, CBLRemoteRequestDelegate;
 
 
+@class CBLCookieStorage;
+
 /** The signature of the completion block called by a CBLRemoteRequest.
     @param result  On success, a 'result' object; by default this is the CBLRemoteRequest iself, but subclasses may return something else. On failure, this will likely be nil.
     @param error  The error, if any, else nil. */
@@ -29,6 +31,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
     @protected
     NSMutableURLRequest* _request;
     id<CBLAuthorizer> _authorizer;
+    CBLCookieStorage* _cookieStorage;
     id<CBLRemoteRequestDelegate> _delegate;
     CBLRemoteRequestCompletionBlock _onCompletion;
     NSURLConnection* _connection;
@@ -49,6 +52,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 @property NSTimeInterval timeoutInterval;
 @property (strong, nonatomic) id<CBLAuthorizer> authorizer;
 @property (strong, nonatomic) id<CBLRemoteRequestDelegate> delegate;
+@property (strong, nonatomic) CBLCookieStorage* cookieStorage;
 
 /** Applies GZip compression to the request body if appropriate. */
 - (BOOL) compressBody;

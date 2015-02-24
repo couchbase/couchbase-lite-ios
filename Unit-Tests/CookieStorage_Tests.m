@@ -31,15 +31,12 @@
 
 - (void)tearDown {
     [super tearDown];
-
-    [_cookieStore close];
-
+    
     for (NSHTTPCookie *cookie in _appleCookieStore.cookies)
         [_appleCookieStore deleteCookie:cookie];
 }
 
 - (void) reloadCookieStore {
-    [_cookieStore close];
     _cookieStore = [[CBLCookieStorage alloc] initWithDB: db
                                              storageKey: @"cookie_store_unit_test"];
 }

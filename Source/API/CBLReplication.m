@@ -23,6 +23,7 @@
 #import "CBL_Server.h"
 #import "CBLPersonaAuthorizer.h"
 #import "CBLFacebookAuthorizer.h"
+#import "CBLCookieStorage.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
 
@@ -47,6 +48,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     NSSet* _pendingDocIDs;
     bool _started;
     CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
+    NSMutableArray* _pendingCookies;
 }
 
 
@@ -209,16 +211,26 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         Warn(@"%@: Could not create cookie from parameters", self);
         return;
     }
-    [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookie: cookie];
+
+    if (_bg_replicator)
+        [_bg_replicator.cookieStorage setCookie: cookie];
+    else {
+        if (!_pendingCookies)
+            _pendingCookies = [NSMutableArray array];
+        [_pendingCookies addObject: cookie];
+    }
 }
 
 
 -(void) deleteCookieNamed: (NSString*)name {
-    NSArray* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL: _remoteURL];
+    NSArray* cookies = [_bg_replicator.cookieStorage cookiesForURL: _remoteURL];
     for (NSHTTPCookie* cookie in cookies) {
         if ([cookie.name isEqualToString: name]) {
-            [[NSHTTPCookieStorage sharedHTTPCookieStorage] deleteCookie: cookie];
-            return;
+            if (_bg_replicator)
+                [_bg_replicator.cookieStorage deleteCookie: cookie];
+            else
+                [_pendingCookies removeObject: cookie];
+            break;
         }
     }
 }
@@ -447,6 +459,12 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     }
     if (auth)
         repl.authorizer = auth;
+
+    if ([_pendingCookies count] > 0) {
+        for (NSHTTPCookie* cookie in _pendingCookies)
+            [repl.cookieStorage setCookie: cookie];
+        _pendingCookies = nil;
+    }
 
     CBLPropertiesTransformationBlock xformer = self.propertiesTransformationBlock;
     if (xformer) {

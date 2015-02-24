@@ -206,7 +206,7 @@
 }
 
 
-- (void) close {
+- (void) dealloc {
     _db = nil;
     _cookies = nil;
 }
@@ -340,6 +340,28 @@
         props = newProps;
     }
     return props;
+}
+
+@end
+
+@implementation CBLCookieStorage (NSURLRequestResponse)
+
+- (void) addCookieHeaderForRequest: (NSMutableURLRequest*)request {
+    request.HTTPShouldHandleCookies = NO;
+    NSArray* cookies = [self cookiesForURL: request.URL];
+    if ([cookies count] > 0) {
+        NSDictionary* cookieHeaders = [NSHTTPCookie requestHeaderFieldsWithCookies: cookies];
+        [cookieHeaders enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL *stop) {
+            [request setValue:value forHTTPHeaderField:key];
+        }];
+    }
+}
+
+- (void) setCookieForResponse: (NSHTTPURLResponse*)response {
+    NSArray* cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:
+                        response.allHeaderFields forURL: response.URL];
+    for (NSHTTPCookie* cookie in cookies)
+        [self setCookie: cookie];
 }
 
 @end

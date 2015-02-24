@@ -18,6 +18,7 @@
 #import "CBLSocketChangeTracker.h"
 #import "CBLRemoteRequest.h"
 #import "CBLAuthorizer.h"
+#import "CBLCookieStorage.h"
 #import "CBLStatus.h"
 #import "CBLBase64.h"
 #import "MYBlockUtils.h"
@@ -58,7 +59,12 @@
         // Add headers from my .requestHeaders property:
         [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
             _http[key] = value;
+            if ([key caseInsensitiveCompare: @"Cookie"] == 0)
+                urlRequest.HTTPShouldHandleCookies = NO;
         }];
+
+        if (urlRequest.HTTPShouldHandleCookies)
+            [self.cookieStorage addCookieHeaderForRequest: urlRequest];
     }
 
     CFHTTPMessageRef request = [_http newHTTPRequest];

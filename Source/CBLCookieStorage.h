@@ -38,7 +38,13 @@
 /** Deletes all cookies from the cookie storage. */
 - (void) deleteAllCookies;
 
-/** Close the storage, clear reference to the database */
-- (void) close;
+@end
+
+
+@interface CBLCookieStorage (NSURLRequestResponse)
+
+- (void) addCookieHeaderForRequest: (NSMutableURLRequest*)request;
+
+- (void) setCookieForResponse: (NSHTTPURLResponse*)response;
 
 @end
