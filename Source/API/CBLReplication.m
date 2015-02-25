@@ -48,7 +48,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     NSSet* _pendingDocIDs;
     bool _started;
     CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
-    NSMutableArray* _pendingCookies;
+    NSMutableArray* _pendingCookies;        
 }
 
 
@@ -223,15 +223,12 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 -(void) deleteCookieNamed: (NSString*)name {
-    NSArray* cookies = [_bg_replicator.cookieStorage cookiesForURL: _remoteURL];
-    for (NSHTTPCookie* cookie in cookies) {
-        if ([cookie.name isEqualToString: name]) {
-            if (_bg_replicator)
-                [_bg_replicator.cookieStorage deleteCookie: cookie];
-            else
-                [_pendingCookies removeObject: cookie];
-            break;
-        }
+    if (_bg_replicator)
+        [_bg_replicator.cookieStorage deleteCookiesNamed: name];
+    else {
+        if (!_pendingCookies)
+            _pendingCookies = [NSMutableArray array];
+        [_pendingCookies addObject: name];
     }
 }
 
@@ -461,8 +458,12 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         repl.authorizer = auth;
 
     if ([_pendingCookies count] > 0) {
-        for (NSHTTPCookie* cookie in _pendingCookies)
-            [repl.cookieStorage setCookie: cookie];
+        for (id cookie in _pendingCookies) {
+            if ([cookie isKindOfClass: [NSHTTPCookie class]])
+                [repl.cookieStorage setCookie: cookie];
+            else if ([cookie isKindOfClass: [NSString class]])
+                [repl.cookieStorage deleteCookiesNamed: cookie];
+        }
         _pendingCookies = nil;
     }
 

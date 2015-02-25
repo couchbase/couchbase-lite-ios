@@ -8,6 +8,7 @@
 
 #import "CBLTestCase.h"
 #import <CommonCrypto/CommonCryptor.h>
+#import "CBLCookieStorage.h"
 
 
 // This db will get deleted and overwritten during every test.
@@ -33,6 +34,7 @@
 {
     CBLReplication* _currentReplication;
     NSUInteger _expectedChangesCount;
+    NSArray* _changedCookies;
 }
 
 
@@ -76,6 +78,29 @@
 }
 
 
+- (void) runReplication: (CBLReplication*)repl
+   expectedChangesCount: (unsigned)expectedChangesCount
+ expectedChangedCookies: (NSArray*) expectedChangedCookies {
+
+    _changedCookies = nil;
+
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(cookiesChanged:)
+                                                 name: CBLCookieStorageCookiesChangedNotification
+                                               object: nil];
+
+    [self runReplication: repl expectedChangesCount: expectedChangesCount];
+
+    [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                    name: CBLCookieStorageCookiesChangedNotification
+                                                  object: nil];
+
+    Assert (expectedChangedCookies.count == _changedCookies.count);
+    for (NSHTTPCookie* cookie in expectedChangedCookies)
+        Assert([_changedCookies containsObject: cookie]);
+}
+
+
 - (void) replChanged: (NSNotification*)n {
     Assert(n.object == _currentReplication, @"Wrong replication given to notification");
     Log(@"Replication status=%u; completedChangesCount=%u; changesCount=%u",
@@ -88,6 +113,12 @@
             AssertEq(_currentReplication.changesCount, _expectedChangesCount);
         }
     }
+}
+
+
+- (void) cookiesChanged: (NSNotification*)n {
+    CBLCookieStorage* storage = n.object;
+    _changedCookies = storage.cookies;
 }
 
 
@@ -456,34 +487,69 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 
-static NSHTTPCookie* cookieForURL(NSURL* url, NSString* name) {
-    NSArray* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL: url];
-    for (NSHTTPCookie* cookie in cookies) {
-        if ([cookie.name isEqualToString: name])
-            return cookie;
-    }
-    return nil;
-}
-
-
 - (void) test10_ReplicationCookie {
     RequireTestCase(CreateReplicators);
+
     NSURL* remoteDbURL = [self remoteTestDBURL: kCookieTestDBName];
     if (!remoteDbURL)
         return;
 
-    CBLReplication* repl = [db createPullReplication: remoteDbURL];
-    [repl setCookieNamed: @"UnitTestCookie"
-               withValue: @"logmein"
-                    path: remoteDbURL.path
-          expirationDate: [NSDate dateWithTimeIntervalSinceNow: 10]
-                  secure: NO];
-    NSHTTPCookie* cookie = cookieForURL(remoteDbURL, @"UnitTestCookie");
-    AssertEqual(cookie.value, @"logmein");
+    NSHTTPCookie* cookie1 = [NSHTTPCookie cookieWithProperties:
+                                @{ NSHTTPCookieName: @"UnitTestCookie1",
+                                   NSHTTPCookieOriginURL: remoteDbURL,
+                                   NSHTTPCookiePath: remoteDbURL.path,
+                                   NSHTTPCookieValue: @"logmein",
+                                   NSHTTPCookieExpires: [NSDate dateWithTimeIntervalSinceNow: 10]
+                                   }];
 
-    [repl deleteCookieNamed: @"UnitTestCookie"];
-    cookie = cookieForURL(remoteDbURL, @"UnitTestCookie");
-    AssertNil(cookie.value);
+    NSHTTPCookie* cookie2 = [NSHTTPCookie cookieWithProperties:
+                             @{ NSHTTPCookieName: @"UnitTestCookie2",
+                                NSHTTPCookieOriginURL: remoteDbURL,
+                                NSHTTPCookiePath: remoteDbURL.path,
+                                NSHTTPCookieValue: @"logmein",
+                                NSHTTPCookieExpires: [NSDate dateWithTimeIntervalSinceNow: 10]
+                                }];
+
+    NSHTTPCookie* cookie3 = [NSHTTPCookie cookieWithProperties:
+                             @{ NSHTTPCookieName: @"UnitTestCookie3",
+                                NSHTTPCookieOriginURL: remoteDbURL,
+                                NSHTTPCookiePath: remoteDbURL.path,
+                                NSHTTPCookieValue: @"logmein",
+                                NSHTTPCookieExpires: [NSDate dateWithTimeIntervalSinceNow: 10]
+                                }];
+
+    CBLReplication* repl = [db createPullReplication: remoteDbURL];
+
+    [repl setCookieNamed: cookie1.name
+               withValue: cookie1.value
+                    path: cookie1.path
+          expirationDate: cookie1.expiresDate
+                  secure: cookie1.secure];
+
+    [repl setCookieNamed: cookie2.name
+               withValue: cookie2.value
+                    path: cookie2.path
+          expirationDate: cookie2.expiresDate
+                  secure: cookie2.secure];
+
+    [repl setCookieNamed: cookie3.name
+               withValue: cookie3.value
+                    path: cookie3.path
+          expirationDate: cookie3.expiresDate
+                  secure: cookie3.secure];
+
+    [repl deleteCookieNamed: cookie2.name];
+
+    [repl start];
+    [self runReplication: repl expectedChangesCount: 0 expectedChangedCookies: @[cookie1, cookie3]];
+    AssertNil(repl.lastError);
+
+    // Recreate the replicator and delete a cookie:
+    repl = [db createPullReplication: remoteDbURL];
+    [repl deleteCookieNamed: cookie3.name];
+    [repl start];
+    [self runReplication: repl expectedChangesCount: 0 expectedChangedCookies: @[cookie1]];
+    AssertNil(repl.lastError);
 }
 
 - (void) test11_ReplicationWithReplacedDatabase {
