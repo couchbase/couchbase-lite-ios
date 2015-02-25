@@ -1742,6 +1742,7 @@
 			children = (
 				272AA85E1A49D4A9004B8D55 /* BlobStore_Tests.m */,
 				272AA8611A49D5B0004B8D55 /* ChangeTracker_Tests.m */,
+				93D21B011A9857A1000AD9AF /* CookieStorage_Tests.m */,
 				272AA8571A48ECD4004B8D55 /* DatabaseInternal_Tests.m */,
 				2700358F1A44E9270015B9F4 /* Database_Tests.m */,
 				273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */,
@@ -1769,7 +1770,6 @@
 				2740D8501A8C240500809EE0 /* Tokenizer_Test.mm */,
 				2740D8511A8C240500809EE0 /* GeoHash_Test.mm */,
 				2740D8521A8C240500809EE0 /* GeoIndex_Test.mm */,
-				93D21B011A9857A1000AD9AF /* CookieStorage_Tests.m */,
 				274E163119B90F420066CA5E /* TestData */,
 				276E68331A5C4511006D6EEB /* Server */,
 			);

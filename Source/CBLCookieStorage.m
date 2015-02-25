@@ -8,9 +8,13 @@
 
 #import "CBLCookieStorage.h"
 #import "CBLDatabase.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLMisc.h"
 #import "Logging.h"
 
+
+NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCookiesChanged";
+NSString* const CBLCookieStorageAcceptPolicyChangedNotification = @"CookieStorageAcceptPolicyChanged";
 
 #define kLocalDocKeyPrefix @"cbl_cookie_storage"
 #define kLocalDocCookiesKey @"cookies"
@@ -20,9 +24,11 @@
 - (void) loadCookies;
 - (BOOL) deleteCookie: (NSHTTPCookie*)aCookie outIndex: (NSUInteger*)outIndex;
 - (BOOL) saveCookies: (NSError **)error;
+- (void) pruneExpiredCookies;
 - (BOOL) isExpiredCookie: (NSHTTPCookie*)cookie;
 - (BOOL) isDomainMatchedBetweenCookie: (NSHTTPCookie*)cookie andUrl: (NSURL*)url;
 - (BOOL) isPathMatchedBetweenCookie: (NSHTTPCookie*)cookie andUrl: (NSURL*)url;
+- (void) notifyCookiesChanged;
 @end
 
 
@@ -33,7 +39,9 @@
     NSString* _storageKey;
 }
 
+
 @synthesize cookieAcceptPolicy = _cookieAcceptPolicy;
+
 
 - (instancetype) initWithDB: (CBLDatabase*)db storageKey: (NSString*)storageKey {
     self = [super init];
@@ -43,7 +51,6 @@
 
         _db = db;
         _storageKey = storageKey;
-
         self.cookieAcceptPolicy = NSHTTPCookieAcceptPolicyAlways;
 
         [self loadCookies];
@@ -52,156 +59,183 @@
 }
 
 
-- (NSArray*)cookies {
-     NSMutableArray *cookies = [NSMutableArray array];
-    [_cookies enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL* stop) {
-        NSHTTPCookie* cookie = (NSHTTPCookie*)obj;
-        if (![self isExpiredCookie: cookie]) {
-            [cookies addObject: cookie];
+- (void) setCookieAcceptPolicy: (NSHTTPCookieAcceptPolicy)cookieAcceptPolicy {
+    @synchronized(self) {
+        if (cookieAcceptPolicy == NSHTTPCookieAcceptPolicyOnlyFromMainDocumentDomain)
+            Warn(@"%@: Currently NSHTTPCookieAcceptPolicyOnlyFromMainDocumentDomain \
+                 is not supported.", self);
+
+        if (_cookieAcceptPolicy != cookieAcceptPolicy) {
+            _cookieAcceptPolicy = cookieAcceptPolicy;
+            [[NSNotificationCenter defaultCenter] postNotificationName: CBLCookieStorageAcceptPolicyChangedNotification
+                                                                object: self
+                                                              userInfo: nil];
         }
-    }];
-    return cookies;
+    }
+}
+
+
+- (NSHTTPCookieAcceptPolicy) cookieAcceptPolicy {
+    @synchronized(self) {
+        return _cookieAcceptPolicy;
+    }
+}
+
+
+- (NSArray*)cookies {
+    @synchronized(self) {
+        NSMutableArray *cookies = [NSMutableArray array];
+        [_cookies enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL* stop) {
+            NSHTTPCookie* cookie = (NSHTTPCookie*)obj;
+            if (![self isExpiredCookie: cookie]) {
+                [cookies addObject: cookie];
+            }
+        }];
+        return cookies;
+    }
 }
 
 
 - (NSArray*) cookiesForURL: (NSURL*)url {
-    if (!url)
-        return nil;
+    @synchronized(self) {
+        if (!url)
+            return nil;
 
-    NSMutableArray* cookies = [NSMutableArray array];
-    [_cookies enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL* stop) {
-        NSHTTPCookie* cookie = (NSHTTPCookie*)obj;
+        NSMutableArray* cookies = [NSMutableArray array];
+        [_cookies enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL* stop) {
+            NSHTTPCookie* cookie = (NSHTTPCookie*)obj;
 
-        // Check whether the cookie is expired:
-        if ([self isExpiredCookie: cookie])
-            return;
+            // Check whether the cookie is expired:
+            if ([self isExpiredCookie: cookie])
+                return;
 
-        // NOTE:
-        // From https://developer.apple.com/library/ios/documentation/Cocoa/Reference/Foundation/Classes/NSHTTPCookie_Class/index.html :
-        // NSHTTPCookiePort : An NSString object containing comma-separated integer values specifying
-        // the ports for the cookie. Only valid for Version 1 cookies or later. The default value is
-        // an empty string (""). This cookie attribute is optional.
-        //
-        // However, there are a few discrepancies based on a test result as of 02/23/2015:
-        // 1. Setting NSHTTPCookiePort also has effect on cookies version 0.
-        // 2. Setting multiple values with comma-separated doesn't work. Only the first value is
-        //    accepted.
-        // 3. Setting to an empty string ("") results to a port number 0.
-        //
-        // So we are maintaining the same behaviors as what we have seen in the test result.
-        //
-        // If the cookie has no port list this method returns nil and the cookie will be sent
-        // to any port. Otherwise, the cookie is only sent to ports specified in the port list.
-        if ([cookie.portList count] > 0 && ![cookie.portList containsObject: url.port])
-            return;
+            // NOTE:
+            // From https://developer.apple.com/library/ios/documentation/Cocoa/Reference/Foundation/Classes/NSHTTPCookie_Class/index.html :
+            // NSHTTPCookiePort : An NSString object containing comma-separated integer values specifying
+            // the ports for the cookie. Only valid for Version 1 cookies or later. The default value is
+            // an empty string (""). This cookie attribute is optional.
+            //
+            // However, there are a few discrepancies based on a test result as of 02/23/2015:
+            // 1. Setting NSHTTPCookiePort also has effect on cookies version 0.
+            // 2. Setting multiple values with comma-separated doesn't work. Only the first value is
+            //    accepted.
+            // 3. Setting to an empty string ("") results to a port number 0.
+            //
+            // So we are maintaining the same behaviors as what we have seen in the test result.
+            //
+            // If the cookie has no port list this method returns nil and the cookie will be sent
+            // to any port. Otherwise, the cookie is only sent to ports specified in the port list.
+            if ([cookie.portList count] > 0 && ![cookie.portList containsObject: url.port])
+                return;
 
-        // If a cookie is secure, it will be sent to only the secure urls:
-        NSString* urlScheme = [url.scheme lowercaseString];
-        if (cookie.isSecure && ![urlScheme isEqualToString: @"https"])
-            return;
+            // If a cookie is secure, it will be sent to only the secure urls:
+            NSString* urlScheme = [url.scheme lowercaseString];
+            if (cookie.isSecure && ![urlScheme isEqualToString: @"https"])
+                return;
 
-        //
-        // Matching Rules:
-        //
-        // Domain Matching Rules:
-        // 1. Matched if cookie domain == URL Host (Case insensitively).
-        // 2. Or if Cookie domain begins with '.' (global domain cookies), matched if the URL host
-        //    has the same domain as the cookie domain after dot. A url, which is a submodule of
-        //    the cookie domain is also counted.
-        //
-        // Path Matching Rules (After the domain and the host are matched):
-        // 1. Matched if the cookie path is a '/' or '<EMPTY>' string regardless of the url path.
-        // 2. Or matched if the cookie path is a prefix of the url path.
-        //
-        if ([self isDomainMatchedBetweenCookie: cookie andUrl: url] &&
-            [self isPathMatchedBetweenCookie: cookie andUrl: url])
-            [cookies addObject:cookie];
-    }];
-
-    return cookies;
+            //
+            // Matching Rules:
+            //
+            // Domain Matching Rules:
+            // 1. Matched if cookie domain == URL Host (Case insensitively).
+            // 2. Or if Cookie domain begins with '.' (global domain cookies), matched if the URL host
+            //    has the same domain as the cookie domain after dot. A url, which is a submodule of
+            //    the cookie domain is also counted.
+            //
+            // Path Matching Rules (After the domain and the host are matched):
+            // 1. Matched if the cookie path is a '/' or '<EMPTY>' string regardless of the url path.
+            // 2. Or matched if the cookie path is a prefix of the url path.
+            //
+            if ([self isDomainMatchedBetweenCookie: cookie andUrl: url] &&
+                [self isPathMatchedBetweenCookie: cookie andUrl: url])
+                [cookies addObject:cookie];
+        }];
+        
+        return cookies;
+    }
 }
 
 
 - (NSArray*) sortedCookiesUsingDescriptors: (NSArray*)sortOrder {
-    NSMutableArray* cookies = [NSMutableArray array];
-    [_cookies enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL* stop) {
-        NSHTTPCookie* cookie = (NSHTTPCookie*)obj;
-        if (![self isExpiredCookie: cookie]) {
-            [cookies addObject:cookie];
-        }
-    }];
-
-    return [cookies sortedArrayUsingDescriptors: sortOrder];
+    return [self.cookies sortedArrayUsingDescriptors: sortOrder];
 }
 
 
 - (void) setCookie: (NSHTTPCookie*)cookie {
-    if (!cookie)
-        return;
+    @synchronized(self) {
+        if (!cookie)
+            return;
 
-    if (self.cookieAcceptPolicy == NSHTTPCookieAcceptPolicyNever)
-        return;
+        if (self.cookieAcceptPolicy == NSHTTPCookieAcceptPolicyNever)
+            return;
 
-    NSUInteger idx;
-    if ([self deleteCookie: cookie outIndex: &idx])
-        [_cookies insertObject:cookie atIndex:idx];
-    else
-        [_cookies addObject: cookie];
-
-    NSError* error;
-    if (![self saveCookies: &error])
-        Warn(@"%@: Cannot save the cookie %@ with an error : %@", self, cookie, error);
-}
-
-/*
-   The behavior of NSHTTPCookieAcceptPolicyOnlyFromMainDocumentDomain and this method on 
-   NSHTTPCookieStorage are unclear. NSHTTPCookieAcceptPolicyOnlyFromMainDocumentDomain doesn't
-   seem to be taking into consideration.
-- (void) setCookies: (NSArray*)cookies forURL: (NSURL*)theURL mainDocumentURL: (NSURL*)mainDocumentURL {
-    if (self.cookieAcceptPolicy == NSHTTPCookieAcceptPolicyNever)
-        return;
-
-    if (self.cookieAcceptPolicy == NSHTTPCookieAcceptPolicyOnlyFromMainDocumentDomain &&
-        !mainDocumentURL)
-        return;
-
-    for (NSHTTPCookie* cookie in cookies) {
         NSUInteger idx;
         if ([self deleteCookie: cookie outIndex: &idx])
             [_cookies insertObject:cookie atIndex:idx];
         else
             [_cookies addObject: cookie];
-    }
 
-    NSError* error;
-    if (![self saveCookies: &error])
-        Warn(@"%@: Cannot save cookies with an error : %@", self, error);
+        NSError* error;
+        if (![self saveCookies: &error])
+            Warn(@"%@: Cannot save the cookie %@ with an error : %@", self, cookie, error);
+        
+        [self notifyCookiesChanged];
+    }
 }
-*/
 
 
 - (void) deleteCookie: (NSHTTPCookie*)aCookie {
-    if (!aCookie)
-        return;
+    @synchronized(self) {
+        if (!aCookie)
+            return;
 
-    // NOTE: There is discrepancy about path matching when observing NSHTTPCookieStore behaviors:
-    // 1. When adding or deleting a cookie, Comparing the cookie paths is case-insensitive.
-    // 2. When getting cookies for a url, Matching the cookie paths is case-sensitive.
-    [self deleteCookie:aCookie outIndex:nil];
+        // NOTE: There is discrepancy about path matching when observing NSHTTPCookieStore behaviors:
+        // 1. When adding or deleting a cookie, Comparing the cookie paths is case-insensitive.
+        // 2. When getting cookies for a url, Matching the cookie paths is case-sensitive.
+        if (![self deleteCookie:aCookie outIndex: nil])
+            return;
 
-    NSError* error;
-    if (![self saveCookies: &error]) {
-        Warn(@"%@: Cannot save cookies with an error : %@", self, error);
+        NSError* error;
+        if (![self saveCookies: &error]) {
+            Warn(@"%@: Cannot save cookies with an error : %@", self, error);
+        }
+        
+        [self notifyCookiesChanged];
     }
 }
 
 
-- (void) deleteAllCookies {
-    [_cookies removeAllObjects];
+- (void) deleteCookiesNamed: (NSString*)name {
+    @synchronized(self) {
+        for (NSInteger i = [_cookies count] - 1; i >= 0; i--) {
+            NSHTTPCookie* cookie = _cookies[i];
+            if ([cookie.name isEqualToString: name]) {
+                [_cookies removeObjectAtIndex: i];
+            }
+        }
 
-    NSError* error;
-    if (![self saveCookies: &error]) {
-        Warn(@"%@: Cannot save cookies with an error : %@", self, error);
+        NSError* error;
+        if (![self saveCookies: &error]) {
+            Warn(@"%@: Cannot save cookies with an error : %@", self, error);
+        }
+
+        [self notifyCookiesChanged];
+    }
+}
+
+- (void) deleteAllCookies {
+    @synchronized(self) {
+        if ([_cookies count] == 0)
+            return;
+
+        [_cookies removeAllObjects];
+
+        NSError* error;
+        if (![self saveCookies: &error]) {
+            Warn(@"%@: Cannot save cookies with an error : %@", self, error);
+        }
+        
+        [self notifyCookiesChanged];
     }
 }
 
@@ -213,7 +247,6 @@
 
 
 # pragma mark - Private
-
 
 - (NSString*) localDocKey {
     return [NSString stringWithFormat: @"%@_%@", kLocalDocKeyPrefix, _storageKey];
@@ -241,12 +274,12 @@
     return (foundIndex >= 0);
 }
 
-- (void) loadCookies {
-    NSString* key = [self localDocKey];
-    NSDictionary* doc = [_db existingLocalDocumentWithID: key];
-    NSArray* allCookies = [doc objectForKey: kLocalDocCookiesKey];
 
+- (void) loadCookies {
     _cookies = [NSMutableArray array];
+
+    NSString* key = [self localDocKey];
+    NSArray* allCookies = [_db getLocalCheckpointDocumentPropertyValueForKey: key];
     [allCookies enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL* stop) {
         NSDictionary *props = [self cookiePropertiesFromJSONDocument: obj];
         NSHTTPCookie* cookie = [NSHTTPCookie cookieWithProperties: props];
@@ -257,19 +290,32 @@
 
 
 - (BOOL) saveCookies: (NSError **)error {
+    [self pruneExpiredCookies];
+
     NSMutableArray* cookies = [NSMutableArray array];
     [_cookies enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL* stop) {
         NSHTTPCookie* cookie = (NSHTTPCookie*)obj;
-        if ([self shouldSaveCookie:cookie]) {
+        if (!cookie.sessionOnly) {
             NSDictionary *props = [self JSONDocumentFromCookieProperties: cookie.properties];
             [cookies addObject: props];
         }
     }];
 
-    NSString* docKey = [self localDocKey];
-    return [_db putLocalDocument: @{kLocalDocCookiesKey: cookies} withID: docKey error: error];
+    NSString* key = [self localDocKey];
+
+    NSLog(@"KEYYYYYY: %@", key);
+
+    return [_db putLocalCheckpointDocumentWithKey: key value: cookies outError: error];
 }
 
+
+- (void) pruneExpiredCookies {
+    for (NSInteger i = [_cookies count] - 1; i >= 0; i--) {
+        NSHTTPCookie* cookie = _cookies[i];
+        if ([self isExpiredCookie: cookie])
+            [_cookies removeObjectAtIndex: i];
+    }
+}
 
 - (BOOL) isExpiredCookie: (NSHTTPCookie*)cookie {
     NSDate* expDate = cookie.expiresDate;
@@ -278,7 +324,7 @@
 
 
 - (BOOL) shouldSaveCookie: (NSHTTPCookie*)cookie {
-    return !cookie.sessionOnly && cookie.expiresDate && ![self isExpiredCookie: cookie];
+    return !cookie.sessionOnly && ![self isExpiredCookie: cookie];
 }
 
 
@@ -302,6 +348,8 @@
     if (cookiePath.length == 0 || [cookiePath isEqualToString: @"/"])
         return YES;
 
+    // Cannot use url.path as it doesn't preserve a tailing '/'
+    // or percent escaped strings.
 #ifdef GNUSTEP
     NSString* urlPath = [url pathWithEscapes];
 #else
@@ -342,7 +390,15 @@
     return props;
 }
 
+
+- (void) notifyCookiesChanged {
+    [[NSNotificationCenter defaultCenter] postNotificationName: CBLCookieStorageCookiesChangedNotification
+                                                        object: self
+                                                      userInfo: nil];
+}
+
 @end
+
 
 @implementation CBLCookieStorage (NSURLRequestResponse)
 
@@ -356,6 +412,7 @@
         }];
     }
 }
+
 
 - (void) setCookieForResponse: (NSHTTPURLResponse*)response {
     NSArray* cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:

@@ -298,6 +298,60 @@
     AssertEq(_cookieStore.cookies.count, 0u);
 }
 
+- (void) test_DeleteCookiesByName {
+    NSHTTPCookie* cookie1 = [self cookie: @{ NSHTTPCookieName: @"whitechoco",
+                                             NSHTTPCookieDomain: @"mycookie.com",
+                                             NSHTTPCookiePath: @"/",
+                                             NSHTTPCookieValue: @"sweet",
+                                             NSHTTPCookieMaximumAge: @(3600),
+                                             NSHTTPCookieVersion: @"1"
+                                             }];
+    [_cookieStore setCookie: cookie1];
+
+    NSHTTPCookie* cookie2 = [self cookie: @{ NSHTTPCookieName: @"oatmeal_raisin",
+                                             NSHTTPCookieDomain: @"mycookie.com",
+                                             NSHTTPCookiePath: @"/",
+                                             NSHTTPCookieValue: @"sweet",
+                                             NSHTTPCookieMaximumAge: @(3600),
+                                             NSHTTPCookieVersion: @"1"
+                                             }];
+    [_cookieStore setCookie: cookie2];
+
+    NSHTTPCookie* cookie3 = [self cookie: @{ NSHTTPCookieName: @"WhiteChoco",
+                                             NSHTTPCookieDomain: @"mycookie.com",
+                                             NSHTTPCookiePath: @"/supersweet",
+                                             NSHTTPCookieValue: @"sweet",
+                                             NSHTTPCookieMaximumAge: @(3600),
+                                             NSHTTPCookieVersion: @"1"
+                                             }];
+    [_cookieStore setCookie: cookie3];
+
+    AssertEq(_cookieStore.cookies.count, 3u);
+    AssertEqual(_cookieStore.cookies[0], cookie1);
+    AssertEqual(_cookieStore.cookies[1], cookie2);
+    AssertEqual(_cookieStore.cookies[2], cookie3);
+
+    [_cookieStore deleteCookiesNamed: @"WHITECHOCO"];
+    AssertEq(_cookieStore.cookies.count, 3u);
+    AssertEqual(_cookieStore.cookies[0], cookie1);
+    AssertEqual(_cookieStore.cookies[1], cookie2);
+    AssertEqual(_cookieStore.cookies[2], cookie3);
+
+    [_cookieStore deleteCookiesNamed: @"whitechoco"];
+    AssertEq(_cookieStore.cookies.count, 2u);
+    AssertEqual(_cookieStore.cookies[0], cookie2);
+    AssertEqual(_cookieStore.cookies[1], cookie3);
+
+    [_cookieStore deleteCookiesNamed: @"WhiteChoco"];
+    AssertEq(_cookieStore.cookies.count, 1u);
+    AssertEqual(_cookieStore.cookies[0], cookie2);
+
+    [self reloadCookieStore];
+
+    AssertEq(_cookieStore.cookies.count, 1u);
+    AssertEqual(_cookieStore.cookies[0], cookie2);
+}
+
 - (void) test_DeleteAllCookies {
     NSHTTPCookie* cookie1 = [self cookie: @{ NSHTTPCookieName: @"whitechoco",
                                              NSHTTPCookieDomain: @"mycookie.com",

@@ -10,6 +10,14 @@
 
 @class CBLDatabase;
 
+/** NSNotification posted when the cookies stored in the CBLCookieStorage instance have changed. 
+    The notification does not contain a userInfo dictionary */
+extern NSString* const CBLCookieStorageCookiesChangedNotification;
+
+/** NSNotification posted when the acceptance policy of the CBLCookieStorage instance has changed. 
+    The notification does not contain a userInfo dictionary. */
+extern NSString* const CBLCookieStorageAcceptPolicyChangedNotification;
+
 @interface CBLCookieStorage : NSObject
 
 /** All cookies that haven't been expired. */
@@ -29,11 +37,14 @@
 /** Returns an array of cookies orted according to a given set of sort descriptors. */
 - (NSArray*) sortedCookiesUsingDescriptors: (NSArray*)sortOrder;
 
-/** Stores a cookie in the cookie storage */
+/** Stores a cookie in the cookie storage. */
 - (void) setCookie: (NSHTTPCookie*)aCookie;
 
 /** Deletes a specified cookie from the cookie storage. */
 - (void) deleteCookie: (NSHTTPCookie*)aCookie;
+
+/** Deletes all cookies by name case-sensitively. */
+- (void) deleteCookiesNamed: (NSString*)name;
 
 /** Deletes all cookies from the cookie storage. */
 - (void) deleteAllCookies;
