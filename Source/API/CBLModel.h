@@ -107,6 +107,22 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
        ofProperty: (NSString*)property;
 
 
+/** Follows an _inverse_ relationship: returns the other models in the database that have a
+    property named `inverseProperty` that points to this object. For example, if model class
+    ListItem has a property 'list' that's a relation to a List model, then calling this method
+    on a List instance, with relation 'list', will return all the ListItems that refer to this List.
+
+    Specifically, what this does is run a CBLQuery that finds documents whose `relation`
+    property value is equal to the document ID of the receiver. (And if `fromClass` is given,
+    it's restricted to documents whose `type` property is one of the ones mapped to `fromClass`
+    in the CBLModelFactory.)
+    @param relation  The property name to look at
+    @param fromClass  (Optional) The CBLModel subclass to restrict the search to.
+    @return  An array of model objects found, or nil on error. */
+- (NSArray*) findInverseOfRelation: (NSString*)relation
+                         fromClass: (nullable Class)fromClass;
+
+
 /** The names of all attachments (array of strings).
     This reflects unsaved changes made by creating or deleting attachments. */
 @property (readonly, nullable) NSArray* attachmentNames;
@@ -187,6 +203,21 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
     In general you'll find it easier to implement the '+propertyItemClass' method(s) rather
     than overriding this one. */
 + (nullable Class) itemClassForArrayProperty: (NSString*)property;
+
+/** General method for declaring the that an array-of-models-valued property is a computed inverse
+    of a relation from another class.
+    Given the property name, the override should return the name of the relation property in the
+    item class (the one returned by +itemClassForArrayProperty:). If it returns nil, then this
+    property will be interpreted as an explicit JSON property whose value is an array of strings
+    corresponding to the other models.
+ 
+    The default implementation of this method checks for the existence of a class method with
+    selector of the form +propertyInverseRelation where 'property' is replaced by the actual
+    property name. If such a method exists it is called, and must return a string.
+ 
+    In general you'll find it easier to implement the '+propertyInverseRelation' method(s) rather
+    than overriding this one. */
++ (nullable NSString*) inverseRelationForArrayProperty: (NSString*)property;
 
 /** The type of document. This is optional, but is commonly used in document databases 
     to distinguish different types of documents. CBLModelFactory can use this property to 

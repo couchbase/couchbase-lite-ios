@@ -179,3 +179,12 @@ NSString* CBLKeyPathForQueryRow(NSString* keyPath); // for testing
                              pull: (BOOL)pull                       __attribute__((nonnull));
 @property (nonatomic, readonly) NSDictionary* properties;
 @end
+
+
+@interface CBLModelFactory ()
+- (CBLQueryBuilder*) queryBuilderForClass: (Class)klass
+                                 property: (NSString*)property;
+- (void) setQueryBuilder: (CBLQueryBuilder*)builder
+                forClass: (Class)klass
+                property: (NSString*)property;
+@end

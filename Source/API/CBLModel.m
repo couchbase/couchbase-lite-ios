@@ -491,6 +491,15 @@
     return Nil;
 }
 
++ (NSString*) inverseRelationForArrayProperty: (NSString*)property {
+    SEL sel = NSSelectorFromString([property stringByAppendingString: @"InverseRelation"]);
+    if ([self respondsToSelector: sel]) {
+        return (NSString*)objc_msgSend(self, sel);
+    }
+    return nil;
+}
+
+
 
 - (CBLDatabase*) databaseForModelProperty: (NSString*)property {
     // This is a hook for subclasses to override if they need to, i.e. if the property
@@ -520,6 +529,50 @@
                  declaredClass, doc, property, self, _document);
     }
     return value;
+}
+
+
+// Queries to find the value of a model-valued array property that's an inverse relation.
+- (NSArray*) findInverseOfRelation: (NSString*)relation
+                         fromClass: (Class)fromClass
+{
+    CBLModelFactory* factory = self.database.modelFactory;
+    CBLQueryBuilder* builder = [factory queryBuilderForClass: fromClass property: relation];
+    if (!builder) {
+        NSPredicate* pred;
+        if (fromClass) {
+            NSArray* types = [self.database.modelFactory documentTypesForClass: fromClass];
+            Assert(types.count > 0, @"Class %@ is not registered for any document types",
+                   fromClass);
+            pred = [NSPredicate predicateWithFormat: @"type in %@ and %K = $DOCID",
+                                 types, relation];
+        } else {
+            pred = [NSPredicate predicateWithFormat: @"%K = $DOCID", relation];
+        }
+        NSError* error;
+        builder = [[CBLQueryBuilder alloc] initWithDatabase: self.database
+                                                     select: nil
+                                             wherePredicate: pred
+                                                    orderBy: nil
+                                                      error: &error];
+        Assert(builder, @"Couldn't create query builder: %@", error);
+        [factory setQueryBuilder: builder forClass: fromClass property:relation];
+    }
+
+    CBLQuery* q = [builder createQueryWithContext: @{@"DOCID": self.document.documentID}];
+    NSError* error;
+    CBLQueryEnumerator* e = [q run: &error];
+    if (!e) {
+        Warn(@"Querying for inverse of %@.%@ failed: %@", fromClass, relation, error);
+        return nil;
+    }
+    NSMutableArray* docIDs = $marray();
+    for (CBLQueryRow* row in e)
+        [docIDs addObject: row.documentID];
+    return [[CBLModelArray alloc] initWithOwner: self
+                                       property: nil
+                                      itemClass: fromClass
+                                         docIDs: docIDs];
 }
 
 

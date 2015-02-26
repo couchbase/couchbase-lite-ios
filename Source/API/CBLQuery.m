@@ -59,6 +59,7 @@
 
 // A nil view refers to 'all documents'
 - (instancetype) initWithDatabase: (CBLDatabase*)database view: (CBLView*)view {
+    Assert(database);
     self = [super init];
     if (self) {
         _database = database;

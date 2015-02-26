@@ -26,14 +26,14 @@
 /** Initializes a model array from an array of document ID strings.
     Returns nil if docIDs contains items that are non-strings, or invalid document IDs. */
 - (instancetype) initWithOwner: (CBLModel*)owner
-                      property: (NSString*)property
-                     itemClass: (Class)itemClass
+                      property: (nullable NSString*)property
+                     itemClass: (nullable Class)itemClass
                         docIDs: (NSArray*)docIDs;
 
 /** Initializes a model array from an array of CBLModels. */
 - (instancetype) initWithOwner: (CBLModel*)owner
-                      property: (NSString*)property
-                     itemClass: (Class)itemClass
+                      property: (nullable NSString*)property
+                     itemClass: (nullable Class)itemClass
                         models: (NSArray*)models;
 
 @property (readonly) NSArray* docIDs;
