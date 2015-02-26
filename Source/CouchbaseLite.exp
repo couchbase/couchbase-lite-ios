@@ -114,6 +114,7 @@ _OBJC_IVAR_$_CBLQueryOptions.fullTextSnippets
 _OBJC_IVAR_$_CBLQueryOptions.fullTextRanking
 _OBJC_IVAR_$_CBLQueryOptions.allDocsMode
 _OBJC_IVAR_$_CBLQueryOptions.bbox
+_OBJC_IVAR_$_CBLQueryOptions.indexUpdateMode
 
 _CBLGetHostName
 _CBLStatusToHTTPStatus
