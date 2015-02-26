@@ -14,22 +14,9 @@
 
 
 NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCookiesChanged";
-NSString* const CBLCookieStorageAcceptPolicyChangedNotification = @"CookieStorageAcceptPolicyChanged";
 
 #define kLocalDocKeyPrefix @"cbl_cookie_storage"
 #define kLocalDocCookiesKey @"cookies"
-
-@interface CBLCookieStorage ()
-- (NSString*) localDocKey;
-- (void) loadCookies;
-- (BOOL) deleteCookie: (NSHTTPCookie*)aCookie outIndex: (NSUInteger*)outIndex;
-- (BOOL) saveCookies: (NSError **)error;
-- (void) pruneExpiredCookies;
-- (BOOL) isExpiredCookie: (NSHTTPCookie*)cookie;
-- (BOOL) isDomainMatchedBetweenCookie: (NSHTTPCookie*)cookie andUrl: (NSURL*)url;
-- (BOOL) isPathMatchedBetweenCookie: (NSHTTPCookie*)cookie andUrl: (NSURL*)url;
-- (void) notifyCookiesChanged;
-@end
 
 
 @implementation CBLCookieStorage
@@ -64,13 +51,9 @@ NSString* const CBLCookieStorageAcceptPolicyChangedNotification = @"CookieStorag
         if (cookieAcceptPolicy == NSHTTPCookieAcceptPolicyOnlyFromMainDocumentDomain)
             Warn(@"%@: Currently NSHTTPCookieAcceptPolicyOnlyFromMainDocumentDomain \
                  is not supported.", self);
-
-        if (_cookieAcceptPolicy != cookieAcceptPolicy) {
+        
+        if (_cookieAcceptPolicy != cookieAcceptPolicy)
             _cookieAcceptPolicy = cookieAcceptPolicy;
-            [[NSNotificationCenter defaultCenter] postNotificationName: CBLCookieStorageAcceptPolicyChangedNotification
-                                                                object: self
-                                                              userInfo: nil];
-        }
     }
 }
 
@@ -84,14 +67,10 @@ NSString* const CBLCookieStorageAcceptPolicyChangedNotification = @"CookieStorag
 
 - (NSArray*)cookies {
     @synchronized(self) {
-        NSMutableArray *cookies = [NSMutableArray array];
-        [_cookies enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL* stop) {
+        return [_cookies my_map: ^id(id obj) {
             NSHTTPCookie* cookie = (NSHTTPCookie*)obj;
-            if (![self isExpiredCookie: cookie]) {
-                [cookies addObject: cookie];
-            }
+            return ![self isExpiredCookie: cookie] ? cookie : nil;
         }];
-        return cookies;
     }
 }
 
@@ -100,14 +79,13 @@ NSString* const CBLCookieStorageAcceptPolicyChangedNotification = @"CookieStorag
     @synchronized(self) {
         if (!url)
             return nil;
-
-        NSMutableArray* cookies = [NSMutableArray array];
-        [_cookies enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL* stop) {
+        
+        return [_cookies my_map: ^id(id obj) {
             NSHTTPCookie* cookie = (NSHTTPCookie*)obj;
 
             // Check whether the cookie is expired:
             if ([self isExpiredCookie: cookie])
-                return;
+                return nil;
 
             // NOTE:
             // From https://developer.apple.com/library/ios/documentation/Cocoa/Reference/Foundation/Classes/NSHTTPCookie_Class/index.html :
@@ -126,12 +104,12 @@ NSString* const CBLCookieStorageAcceptPolicyChangedNotification = @"CookieStorag
             // If the cookie has no port list this method returns nil and the cookie will be sent
             // to any port. Otherwise, the cookie is only sent to ports specified in the port list.
             if ([cookie.portList count] > 0 && ![cookie.portList containsObject: url.port])
-                return;
+                return nil;
 
             // If a cookie is secure, it will be sent to only the secure urls:
             NSString* urlScheme = [url.scheme lowercaseString];
             if (cookie.isSecure && ![urlScheme isEqualToString: @"https"])
-                return;
+                return nil;
 
             //
             // Matching Rules:
@@ -148,10 +126,10 @@ NSString* const CBLCookieStorageAcceptPolicyChangedNotification = @"CookieStorag
             //
             if ([self isDomainMatchedBetweenCookie: cookie andUrl: url] &&
                 [self isPathMatchedBetweenCookie: cookie andUrl: url])
-                [cookies addObject:cookie];
+                return cookie;
+            else
+                return nil;
         }];
-        
-        return cookies;
     }
 }
 
@@ -254,16 +232,17 @@ NSString* const CBLCookieStorageAcceptPolicyChangedNotification = @"CookieStorag
 
 
 - (BOOL) deleteCookie: (NSHTTPCookie*)aCookie outIndex: (NSUInteger*)outIndex {
-    __block NSInteger foundIndex = -1;
-    [_cookies enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL* stop) {
-        NSHTTPCookie* cookie = (NSHTTPCookie*)obj;
+    NSInteger foundIndex = -1;
+    NSInteger idx = 0;
+    for (NSHTTPCookie* cookie in _cookies) {
         if ([aCookie.name caseInsensitiveCompare: cookie.name] == 0 &&
             [aCookie.domain caseInsensitiveCompare: cookie.domain] == 0 &&
             [aCookie.path caseInsensitiveCompare: cookie.path] == 0) {
             foundIndex = idx;
-            *stop = YES;
+            break;
         }
-    }];
+        idx++;
+    }
 
     if (foundIndex >= 0)
         [_cookies removeObjectAtIndex:foundIndex];
@@ -280,31 +259,27 @@ NSString* const CBLCookieStorageAcceptPolicyChangedNotification = @"CookieStorag
 
     NSString* key = [self localDocKey];
     NSArray* allCookies = [_db getLocalCheckpointDocumentPropertyValueForKey: key];
-    [allCookies enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL* stop) {
-        NSDictionary *props = [self cookiePropertiesFromJSONDocument: obj];
+    for (NSDictionary* doc in allCookies) {
+        NSDictionary *props = [self cookiePropertiesFromJSONDocument: doc];
         NSHTTPCookie* cookie = [NSHTTPCookie cookieWithProperties: props];
         if (cookie)
             [_cookies addObject: cookie];
-    }];
+    }
 }
 
 
 - (BOOL) saveCookies: (NSError **)error {
     [self pruneExpiredCookies];
 
-    NSMutableArray* cookies = [NSMutableArray array];
-    [_cookies enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL* stop) {
+    NSArray* cookies = [_cookies my_map:^id(id obj) {
         NSHTTPCookie* cookie = (NSHTTPCookie*)obj;
-        if (!cookie.sessionOnly) {
-            NSDictionary *props = [self JSONDocumentFromCookieProperties: cookie.properties];
-            [cookies addObject: props];
-        }
+        if (!cookie.sessionOnly)
+            return [self JSONDocumentFromCookieProperties: cookie.properties];
+        else
+            return nil;
     }];
 
     NSString* key = [self localDocKey];
-
-    NSLog(@"KEYYYYYY: %@", key);
-
     return [_db putLocalCheckpointDocumentWithKey: key value: cookies outError: error];
 }
 
@@ -402,7 +377,7 @@ NSString* const CBLCookieStorageAcceptPolicyChangedNotification = @"CookieStorag
 
 @implementation CBLCookieStorage (NSURLRequestResponse)
 
-- (void) addCookieHeaderForRequest: (NSMutableURLRequest*)request {
+- (void) addCookieHeaderToRequest: (NSMutableURLRequest*)request {
     request.HTTPShouldHandleCookies = NO;
     NSArray* cookies = [self cookiesForURL: request.URL];
     if ([cookies count] > 0) {
@@ -414,7 +389,7 @@ NSString* const CBLCookieStorageAcceptPolicyChangedNotification = @"CookieStorag
 }
 
 
-- (void) setCookieForResponse: (NSHTTPURLResponse*)response {
+- (void) setCookieFromResponse: (NSHTTPURLResponse*)response {
     NSArray* cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:
                         response.allHeaderFields forURL: response.URL];
     for (NSHTTPCookie* cookie in cookies)

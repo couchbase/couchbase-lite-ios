@@ -64,7 +64,7 @@
         }
 
         if (urlRequest.HTTPShouldHandleCookies) {
-            [self.cookieStorage addCookieHeaderForRequest: urlRequest];
+            [self.cookieStorage addCookieHeaderToRequest: urlRequest];
         }
 
         _http = [[WebSocketHTTPLogic alloc] initWithURLRequest: urlRequest];

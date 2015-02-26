@@ -109,7 +109,7 @@
     if (_cookieStorage != cookieStorage) {
         _cookieStorage = cookieStorage;
         if (_request.HTTPShouldHandleCookies) {
-            [_cookieStorage addCookieHeaderForRequest: _request];
+            [_cookieStorage addCookieHeaderToRequest: _request];
         }
     }
 }
@@ -330,7 +330,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     _responseHeaders = ((NSHTTPURLResponse*)response).allHeaderFields;
 
     if (_cookieStorage)
-        [_cookieStorage setCookieForResponse: (NSHTTPURLResponse*)response];
+        [_cookieStorage setCookieFromResponse: (NSHTTPURLResponse*)response];
 
     LogTo(RemoteRequest, @"%@: Got response, status %d", self, _status);
     if (_status == 401) {

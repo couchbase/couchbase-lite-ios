@@ -14,10 +14,6 @@
     The notification does not contain a userInfo dictionary */
 extern NSString* const CBLCookieStorageCookiesChangedNotification;
 
-/** NSNotification posted when the acceptance policy of the CBLCookieStorage instance has changed. 
-    The notification does not contain a userInfo dictionary. */
-extern NSString* const CBLCookieStorageAcceptPolicyChangedNotification;
-
 @interface CBLCookieStorage : NSObject
 
 /** All cookies that haven't been expired. */
@@ -54,8 +50,8 @@ extern NSString* const CBLCookieStorageAcceptPolicyChangedNotification;
 
 @interface CBLCookieStorage (NSURLRequestResponse)
 
-- (void) addCookieHeaderForRequest: (NSMutableURLRequest*)request;
+- (void) addCookieHeaderToRequest: (NSMutableURLRequest*)request;
 
-- (void) setCookieForResponse: (NSHTTPURLResponse*)response;
+- (void) setCookieFromResponse: (NSHTTPURLResponse*)response;
 
 @end

@@ -67,7 +67,7 @@
     }];
 
     if (request.HTTPShouldHandleCookies)
-        [self.cookieStorage addCookieHeaderForRequest: request];
+        [self.cookieStorage addCookieHeaderToRequest: request];
 
     if (_authorizer) {
         // Let the Authorizer add its own credential:
