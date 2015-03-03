@@ -209,25 +209,28 @@ static BOOL decryptStreamSync(NSInputStream* encryptedStream, NSOutputStream *wr
                                              header.iv, &cryptor);
     if (status != kCCSuccess)
         return NO;
+    // The CCCryptor docs say it can use a single buffer for input and output, but I found that it
+    // produced garbage output, so I've split it into separate buffers. --jpa 3/2015
     static const size_t kInputBufferSize = 4096;
-    uint8_t buffer[kInputBufferSize+kBlockSize];    // buffer shared for input and output
+    uint8_t inBuffer[kInputBufferSize];
+    uint8_t outBuffer[kInputBufferSize+kBlockSize];
     size_t bytesWritten;
     BOOL ok = YES;
     for(;;) {
-        NSInteger bytesRead = [encryptedStream read: buffer maxLength: kInputBufferSize];
+        NSInteger bytesRead = [encryptedStream read: inBuffer maxLength: sizeof(inBuffer)];
         if (bytesRead == 0) {
             break;
         } else if (bytesRead < 0
-                   || CCCryptorUpdate(cryptor, buffer, bytesRead,
-                                      buffer, sizeof(buffer), &bytesWritten) != kCCSuccess
-                   || !writeFully(writer, buffer, bytesWritten))
+                   || CCCryptorUpdate(cryptor, inBuffer, bytesRead,
+                                      outBuffer, sizeof(outBuffer), &bytesWritten) != kCCSuccess
+                   || !writeFully(writer, outBuffer, bytesWritten))
         {
             ok = NO;
             break;
         }
     };
-    ok = (ok && CCCryptorFinal(cryptor, buffer, sizeof(buffer), &bytesWritten) == kCCSuccess
-             && writeFully(writer, buffer, bytesWritten));
+    ok = (ok && CCCryptorFinal(cryptor, outBuffer, sizeof(outBuffer), &bytesWritten) == kCCSuccess
+             && writeFully(writer, outBuffer, bytesWritten));
     CCCryptorRelease(cryptor);
     return ok;
 }

@@ -263,12 +263,17 @@ static int collateRevs(const char* rev1, const char* rev2) {
     // Incremental encryption:
     CBLCryptorBlock encryptor = [key createEncryptor];
     Assert(encryptor);
+    NSMutableData* incrementalCleartext = [NSMutableData data];
     NSMutableData* incrementalCiphertext = [NSMutableData data];
-    [incrementalCiphertext appendData: encryptor([@"This is " dataUsingEncoding: NSUTF8StringEncoding])];
-    [incrementalCiphertext appendData: encryptor([@"the cleartext" dataUsingEncoding: NSUTF8StringEncoding])];
+    for (int i = 0; i < 100; i++) {
+        NSMutableData* data = [NSMutableData dataWithLength: 5555];
+        SecRandomCopyBytes(kSecRandomDefault, 555, data.mutableBytes);
+        [incrementalCleartext appendData: data];
+        [incrementalCiphertext appendData: encryptor(data)];
+    }
     [incrementalCiphertext appendData: encryptor(nil)];
     decrypted = [key decryptData: incrementalCiphertext];
-    AssertEqual(decrypted, cleartext);
+    AssertEqual(decrypted, incrementalCleartext);
 
     // Test stream decryption:
     NSMutableData* incrementalOutput = [NSMutableData data];
@@ -283,7 +288,7 @@ static int collateRevs(const char* rev1, const char* rev2) {
         Assert(bytesRead >= 0);
         [incrementalOutput appendBytes: buf length: bytesRead];
     } while (bytesRead > 0);
-    AssertEqual(incrementalOutput, cleartext);
+    AssertEqual(incrementalOutput, incrementalCleartext);
 }
 
 
