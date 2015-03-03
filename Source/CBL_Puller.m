@@ -505,6 +505,13 @@ static NSString* joinQuotedEscaped(NSArray* strings);
           ^(CBLBulkDownloader* result, NSError *error) {
               // The entire _bulk_get is finished:
               __strong CBL_Puller *strongSelf = weakSelf;
+
+              // Remove the remote request first to prevent the request from cancellation
+              // when setting the error (a permanent error). If that happens, this block
+              // will be called a second time upon calling cancelling request and result to
+              // a romdom crash and over-decreasing the _asyncTaskCount (#613):
+              [strongSelf removeRemoteRequest:dl];
+
               if (error) {
                   strongSelf.error = error;
                   [strongSelf revisionFailed];
@@ -515,7 +522,6 @@ static NSString* joinQuotedEscaped(NSArray* strings);
               strongSelf.changesProcessed += remainingRevs.count;
               
               // Note that we've finished this task:
-              [strongSelf removeRemoteRequest:dl];
               [strongSelf asyncTasksFinished:1];
               
               --_httpConnectionCount;
