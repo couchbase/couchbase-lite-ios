@@ -185,6 +185,8 @@ static BOOL sAutoCompact = YES;
         [_storage setInfo: CBLCreateUUID() forKey: @"publicUUID"];
     }
 
+    _storage.maxRevTreeDepth = [[_storage infoForKey: @"max_revs"] intValue] ?: kDefaultMaxRevs;
+
     // Open attachment store:
     NSString* attachmentsPath = self.attachmentStorePath;
     _attachments = [[CBL_BlobStore alloc] initWithPath: attachmentsPath error: outError];

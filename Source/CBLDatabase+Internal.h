@@ -12,6 +12,9 @@
        CBLDatabaseChange, CBL_Shared, CBLModelFactory;
 
 
+// Default value for maxRevTreeDepth, the max rev depth to preserve in a prune operation
+#define kDefaultMaxRevs 20
+
 /** NSNotification posted when one or more documents have been updated.
     The userInfo key "changes" contains an array of CBLDatabaseChange objects. */
 extern NSString* const CBL_DatabaseChangesNotification;

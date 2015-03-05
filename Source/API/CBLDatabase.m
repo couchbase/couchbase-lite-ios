@@ -40,9 +40,6 @@
 // Size of document cache: max # of otherwise-unreferenced docs that will be kept in memory.
 #define kDocRetainLimit 50
 
-// Default value for maxRevTreeDepth, the max rev depth to preserve in a prune operation
-#define kDefaultMaxRevs 20
-
 NSString* const kCBLDatabaseChangeNotification = @"CBLDatabaseChange";
 
 
@@ -53,7 +50,6 @@ static id<CBLFilterCompiler> sFilterCompiler;
 {
     CBLCache* _docCache;
     NSMutableSet* _allReplications;
-    NSUInteger _maxRevTreeDepth;
 }
 
 
@@ -239,16 +235,14 @@ static void catchInBlock(void (^block)()) {
 }
 
 - (NSUInteger) maxRevTreeDepth {
-    if (_maxRevTreeDepth == 0)
-        _maxRevTreeDepth = [[_storage infoForKey: @"max_revs"] intValue] ?: kDefaultMaxRevs;
-    return _maxRevTreeDepth;
+    return _storage.maxRevTreeDepth;
 }
 
 - (void) setMaxRevTreeDepth: (NSUInteger)maxRevs {
     if (maxRevs == 0)
         maxRevs = kDefaultMaxRevs;
-    if (maxRevs != self.maxRevTreeDepth) {
-        _maxRevTreeDepth = maxRevs;
+    if (maxRevs != _storage.maxRevTreeDepth) {
+        _storage.maxRevTreeDepth = (unsigned)maxRevs;
         [_storage setInfo: $sprintf(@"%lu", (unsigned long)maxRevs) forKey: @"max_revs"];
     }
 }

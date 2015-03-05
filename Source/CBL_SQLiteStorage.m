@@ -1830,8 +1830,13 @@ static NSString* joinQuotedStrings(NSArray* strings) {
 
 
 - (BOOL) compact: (NSError**)outError {
-    // Can't delete any rows because that would lose revision tree history.
-    // But we can remove the JSON of non-current revisions, which is most of the space.
+    // Start off by pruning each revision tree's depth:
+    NSUInteger nPruned;
+    CBLStatus status = [self pruneRevsToMaxDepth: _maxRevTreeDepth numberPruned: &nPruned];
+    if (status != kCBLStatusOK)
+        return ReturnNSErrorFromCBLStatus(status, outError);
+
+    // Remove the JSON of non-current revisions, which is most of the space.
     Log(@"CBLDatabase: Deleting JSON of old revisions...");
     if (![_fmdb executeUpdate: @"UPDATE revs SET json=null, no_attachments=1 WHERE current=0"])
         return ReturnNSErrorFromCBLStatus(self.lastDbError, outError);
@@ -1852,6 +1857,46 @@ static NSString* joinQuotedStrings(NSArray* strings) {
 
     Log(@"...Finished database compaction.");
     return YES;
+}
+
+
+- (CBLStatus) pruneRevsToMaxDepth: (NSUInteger)maxDepth numberPruned: (NSUInteger*)outPruned {
+    // TODO: This implementation is a bit simplistic. It won't do quite the right thing in
+    // histories with branches, if one branch stops much earlier than another. The shorter branch
+    // will be deleted entirely except for its leaf revision. A more accurate pruning
+    // would require an expensive full tree traversal. Hopefully this way is good enough.
+    if (maxDepth == 0)
+        maxDepth = self.maxRevTreeDepth;
+
+    Log(@"CBLDatabase: Pruning revisions to max depth %ld...", (unsigned long)maxDepth);
+    *outPruned = 0;
+    // First find which docs need pruning, and by how much:
+    NSMutableDictionary* toPrune = $mdict();
+    NSString* sql = @"SELECT doc_id, MIN(revid), MAX(revid) FROM revs GROUP BY doc_id";
+    CBL_FMResultSet* r = [_fmdb executeQuery: sql];
+    while ([r next]) {
+        UInt64 docNumericID = [r longLongIntForColumnIndex: 0];
+        unsigned minGen = [CBL_Revision generationFromRevID: [r stringForColumnIndex: 1]];
+        unsigned maxGen = [CBL_Revision generationFromRevID: [r stringForColumnIndex: 2]];
+        if ((maxGen - minGen + 1) > maxDepth)
+            toPrune[@(docNumericID)] = @(maxGen - maxDepth);
+    }
+    [r close];
+
+    if (toPrune.count == 0)
+        return kCBLStatusOK;
+
+    // Now prune:
+    return [self inTransaction:^CBLStatus{
+        for (id docNumericID in toPrune) {
+            NSString* minIDToKeep = $sprintf(@"%d-", [toPrune[docNumericID] intValue] + 1);
+            if (![_fmdb executeUpdate: @"DELETE FROM revs WHERE doc_id=? AND revid < ? AND current=0",
+                                       docNumericID, minIDToKeep])
+                return self.lastDbError;
+            *outPruned += _fmdb.changes;
+        }
+        return kCBLStatusOK;
+    }];
 }
 
 
