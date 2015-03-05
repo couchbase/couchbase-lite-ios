@@ -332,6 +332,9 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     if (isNew && ![self initialize: @"END TRANSACTION" error: outError])
         return NO;
 
+    if (!isNew)
+        [self optimizeSQLIndexes];          // runs ANALYZE query
+
 #if DEBUG
     _fmdb.crashOnErrors = YES;
 #endif
@@ -1805,6 +1808,25 @@ static NSString* joinQuotedStrings(NSArray* strings) {
 
 
 #pragma mark - HOUSEKEEPING:
+
+
+- (void) optimizeSQLIndexes {
+    SequenceNumber curSequence = self.lastSequence;
+    if (curSequence > 0) {
+        SequenceNumber lastOptimized = [[self infoForKey: @"last_optimized"] longLongValue];
+        if (lastOptimized <= curSequence/10) {
+            [self inTransaction:^CBLStatus{
+                LogTo(CBLDatabase, @"%@: Optimizing SQL indexes (curSeq=%lld, last run at %lld)",
+                      self, curSequence, lastOptimized);
+                [_fmdb executeUpdate: @"ANALYZE"];
+                [_fmdb executeUpdate: @"ANALYZE sqlite_master"];
+                [_fmdb clearCachedStatements];
+                [self setInfo: $sprintf(@"%lld", curSequence) forKey: @"last_optimized"];
+                return kCBLStatusOK;
+            }];
+        }
+    }
+}
 
 
 - (BOOL) compact: (NSError**)outError {

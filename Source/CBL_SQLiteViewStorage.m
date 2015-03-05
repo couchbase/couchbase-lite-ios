@@ -295,11 +295,12 @@
                     // If the lastSequence has been reset to 0, make sure to remove all map results:
                     ok = [fmdb executeUpdate: [view queryString: @"DELETE FROM 'maps_#'"]];
                 } else {
+                    [dbStorage optimizeSQLIndexes]; // ensures query will use the right indexes
                     // Delete all obsolete map results (ones from since-replaced revisions):
                     ok = [fmdb executeUpdate:
                           [view queryString: @"DELETE FROM 'maps_#' WHERE sequence IN ("
                                                 "SELECT parent FROM revs WHERE sequence>? "
-                                                    "AND parent>0 AND parent<=?)"],
+                                                    "AND +parent>0 AND +parent<=?)"],
                           @(last), @(last)];
                 }
                 if (!ok)
