@@ -50,6 +50,7 @@ enum {
     NSComparisonPredicate* _equalityKey;    // Predicate with equality test, used as key
     NSComparisonPredicate* _otherKey;       // Other predicate used as key
     NSArray* _keyPredicates;                // Predicates whose LHS generate the key, at map time
+    NSString* _docType;                     // Document "type" property to restrict to
     NSArray* _valueTemplate;                // Values desired
     NSArray* _reduceFunctions;              // Name of reduce function to apply to each value
     NSMutableArray* _filterPredicates;      // Predicates to go into _queryFilter
@@ -75,6 +76,7 @@ enum {
 @synthesize mapPredicate=_mapPredicate, sortDescriptors=_querySort, filter=_queryFilter;
 @synthesize queryStartKey=_queryStartKey, queryEndKey=_queryEndKey, queryKeys=_queryKeys;
 @synthesize queryInclusiveStart=_queryInclusiveStart, queryInclusiveEnd=_queryInclusiveEnd;
+@synthesize docType=_docType;
 #endif
 
 
@@ -123,6 +125,7 @@ enum {
                             withMapPredicate: _mapPredicate
                                keyExpression: self.keyExpression
                                   explodeKey: _explodeKey
+                                documentType: _docType
                              valueExpression: self.valueExpression
                              reduceFunctions: _reduceFunctions];
         }
@@ -293,6 +296,13 @@ static NSString* printExpr(NSExpression* expr) {
     if ([pred isKindOfClass: [NSComparisonPredicate class]]) {
         // Comparison of expressions, e.g. "a < b":
         NSComparisonPredicate* cp = (NSComparisonPredicate*)pred;
+
+        // Check if cp is of the form `type = "..."`, set _docType to the RHS string.
+        // (Don't factor this term out of the containing predicate by returning nil: it might
+        // turn out we can't use this for _docType, if the containing predicate is an OR or NOT,
+        // and in that case we should leave the predicate alone to be tested at map-type.)
+        [self lookForDocTypeEqualityTest: cp];
+
         ExpressionAttributes lhs = [self expressionAttributes: cp.leftExpression];
         ExpressionAttributes rhs = [self expressionAttributes: cp.rightExpression];
         if (!((lhs|rhs) & kExprUsesVariable))
@@ -331,12 +341,16 @@ static NSString* printExpr(NSExpression* expr) {
         NSArray* subpredicates = [cp.subpredicates my_map: ^NSPredicate*(NSPredicate* sub) {
             return [self scanPredicate: sub anyVariables: &anyVars];
         }];
-        if (anyVars) {
+        if (_error)
+            return nil;
+        if (anyVars)
             *outAnyVariables = YES;
-            if (cp.compoundPredicateType != NSAndPredicateType) {
+        if (cp.compoundPredicateType != NSAndPredicateType) {
+            if (anyVars) {
                 [self fail: @"Sorry, the OR and NOT operators aren't supported with variables yet"];
                 return nil;
             }
+            _docType = nil; // can't use `type="..."` check if it's inside an OR or NOT
         }
         if (subpredicates.count == 0)
             return nil;                 // all terms are variable, so return unknown
@@ -445,6 +459,25 @@ static NSString* printExpr(NSExpression* expr) {
         _reduceFunctions = [reduceFns copy];
     else if (reduceFns.count > 0)
         [self fail: @"Can't have both regular and reduced/aggregate values"];
+}
+
+
+// If this is of the form "type = '...'", returns the string.
+- (BOOL) lookForDocTypeEqualityTest: (NSComparisonPredicate*)cp {
+    if (_docType)
+        return NO;
+    if (cp.predicateOperatorType == NSEqualToPredicateOperatorType) {
+        NSExpression* lhs = cp.leftExpression;
+        NSExpression* rhs = cp.rightExpression;
+        if (lhs.expressionType == NSKeyPathExpressionType
+                && [lhs.keyPath isEqualToString: @"type"]
+                && rhs.expressionType == NSConstantValueExpressionType
+                && [rhs.constantValue isKindOfClass: [NSString class]]) {
+            _docType = rhs.constantValue;
+            return YES;
+        }
+    }
+    return NO;
 }
 
 
@@ -645,6 +678,7 @@ static NSString* printExpr(NSExpression* expr) {
        withMapPredicate: (NSPredicate*)mapPredicate
           keyExpression: (NSExpression*)keyExpression
              explodeKey: (BOOL)explodeKey
+           documentType: (NSString*)docType
         valueExpression: (NSExpression*)valueExpr
         reduceFunctions: (NSArray*)reduceFunctions
 {
@@ -652,7 +686,8 @@ static NSString* printExpr(NSExpression* expr) {
     NSString* version = CBLDigestFromObject($dict( {@"key",    keyExpression.description},
                                                    {@"map",    mapPredicate.predicateFormat},
                                                    {@"value",  valueExpr.description},
-                                                   {@"reduce", reduceFunctions} ));
+                                                   {@"reduce", reduceFunctions},
+                                                   {@"docType", docType} ));
     if (!view) {
         NSString* viewID = [NSString stringWithFormat: @"builder-%@", version];
         if (![db existingViewNamed: viewID]) {
@@ -665,6 +700,8 @@ static NSString* printExpr(NSExpression* expr) {
         }
         view = [db viewNamed: viewID];
     }
+
+    view.documentType = docType;
 
     BOOL compoundKey = (keyExpression.expressionType == NSAggregateExpressionType);
 

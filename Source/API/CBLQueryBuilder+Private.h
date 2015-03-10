@@ -1,5 +1,5 @@
 //
-//  CBLQueryPlanner+Private.h
+//  CBLQueryBuilder+Private.h
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 8/13/14.
@@ -15,6 +15,7 @@
 
 // These properties show the innards of how the view/query are processed. Not usually needed.
 @property (readonly, nonatomic) NSPredicate* mapPredicate;
+@property (readonly, nonatomic) NSString* docType;
 @property (readonly, nonatomic) NSExpression* keyExpression;
 @property (readonly, nonatomic) NSExpression* valueExpression;
 @property (readonly, nonatomic) NSExpression* queryStartKey;

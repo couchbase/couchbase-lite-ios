@@ -277,10 +277,11 @@ static void test(QueryBuilder_Tests *self,
                             where: @"type == 'post' and tags contains $TAG"
                             orderBy: @[@"-date"]
                             error: &error];
+    AssertEqual(b.docType, @"post");
     NSString* exp = b.explanation;
     Log(@"Explanation = \n%@", exp);
     AssertEqual(exp, // See comment above regarding view name
-@"// view \"builder-NroYrco50B35DO0HQnJh9AxJZM0=\":\n\
+@"// view \"builder-pEDpTLj0yE5IbGN7XXS9fcH24L4=\":\n\
 view.map = {\n\
     if (type == \"post\")\n\
         for (i in tags)\n\
@@ -374,6 +375,43 @@ query.sortDescriptors = [(value3, descending, compare:)];\n");
     seq = 100;
     for (CBLQueryRow* row in e) {
         AssertEqual(row.document[@"sequence"], @(--seq));
+    }
+}
+
+
+- (void) test08_DocType {
+    NSArray* preds = @[@"type = 'post'",
+                       @"$X > 7 and type = 'post'",
+                       @"5 = 4 and ($x > 7 and type = 'post')"];
+    for (NSString* pred in preds) {
+        NSError* error;
+        CBLQueryBuilder* b = [[CBLQueryBuilder alloc] initWithDatabase: db
+                                                                select: nil
+                                                                 where: pred
+                                                               orderBy: nil
+                                                                 error: &error];
+        Assert(b, @"Failed to parse: %@", error);
+        AssertEqual(b.docType, @"post", @"Missed docType for predicate %@", pred);
+        AssertEqual(b.view.documentType, @"post");
+    }
+
+    NSArray* nopreds = @[@"type != 'post'",
+                         @"Type = 'post'",
+                         @"type = 42",
+                         @"type > 'post'",
+                         @"type = $TYPE",
+                         @"9 > 7 or type = 'post'",
+                         @"not(type = 'post')"];
+    for (NSString* pred in nopreds) {
+        NSError* error;
+        CBLQueryBuilder* b = [[CBLQueryBuilder alloc] initWithDatabase: db
+                                                                select: nil
+                                                                 where: pred
+                                                               orderBy: nil
+                                                                 error: &error];
+        Assert(b, @"Failed to parse: %@", error);
+        AssertNil(b.docType, @"Shouldn't set docType for predicate %@", pred);
+        AssertNil(b.view.documentType);
     }
 }
 
