@@ -15,6 +15,7 @@
 
 #import <Foundation/Foundation.h>
 @class CBLChangeTracker;
+@class CBLCookieStorage;
 @protocol CBLAuthorizer;
 
 
@@ -59,6 +60,7 @@ typedef enum CBLChangeTrackerMode {
     NSTimeInterval _heartbeat;
     NSDictionary* _requestHeaders;
     id<CBLAuthorizer> _authorizer;
+    CBLCookieStorage* _cookieStorage;
     unsigned _retryCount;
     BOOL _caughtUp;
 }
@@ -79,6 +81,8 @@ typedef enum CBLChangeTrackerMode {
 @property (weak, nonatomic) id<CBLChangeTrackerClient> client;
 @property (strong, nonatomic) NSDictionary *requestHeaders;
 @property (strong, nonatomic) id<CBLAuthorizer> authorizer;
+@property (strong, nonatomic) CBLCookieStorage* cookieStorage;
+
 @property (nonatomic) BOOL usePOST;
 
 @property (nonatomic) CBLChangeTrackerMode mode;

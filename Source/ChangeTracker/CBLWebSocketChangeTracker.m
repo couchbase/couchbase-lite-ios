@@ -15,6 +15,7 @@
 
 #import "CBLWebSocketChangeTracker.h"
 #import "CBLAuthorizer.h"
+#import "CBLCookieStorage.h"
 #import "WebSocketClient.h"
 #import "CBLMisc.h"
 #import "MYBlockUtils.h"
@@ -60,7 +61,13 @@
     // Add headers from my .requestHeaders property:
     [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         [request setValue: value forHTTPHeaderField: key];
+        
+        if ([key caseInsensitiveCompare: @"Cookie"] == 0)
+            request.HTTPShouldHandleCookies = NO;
     }];
+
+    if (request.HTTPShouldHandleCookies)
+        [self.cookieStorage addCookieHeaderToRequest: request];
 
     if (_authorizer) {
         // Let the Authorizer add its own credential:

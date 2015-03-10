@@ -46,7 +46,7 @@
 @synthesize lastSequenceID=_lastSequenceID, databaseURL=_databaseURL, mode=_mode;
 @synthesize limit=_limit, heartbeat=_heartbeat, error=_error, continuous=_continuous;
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
-@synthesize requestHeaders = _requestHeaders, authorizer=_authorizer;
+@synthesize requestHeaders = _requestHeaders, authorizer=_authorizer, cookieStorage=_cookieStorage;
 @synthesize docIDs = _docIDs, pollInterval=_pollInterval, usePOST=_usePOST;
 @synthesize paused=_paused;
 

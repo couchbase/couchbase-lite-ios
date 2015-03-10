@@ -18,6 +18,7 @@
 #import "CBLSocketChangeTracker.h"
 #import "CBLRemoteRequest.h"
 #import "CBLAuthorizer.h"
+#import "CBLCookieStorage.h"
 #import "CBLStatus.h"
 #import "CBLBase64.h"
 #import "MYBlockUtils.h"
@@ -54,7 +55,20 @@
             urlRequest.HTTPBody = self.changesFeedPOSTBody;
             [urlRequest setValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
         }
+
+        for (NSString* key in self.requestHeaders) {
+            if ([key caseInsensitiveCompare: @"Cookie"] == 0) {
+                urlRequest.HTTPShouldHandleCookies = NO;
+                break;
+            }
+        }
+
+        if (urlRequest.HTTPShouldHandleCookies) {
+            [self.cookieStorage addCookieHeaderToRequest: urlRequest];
+        }
+
         _http = [[WebSocketHTTPLogic alloc] initWithURLRequest: urlRequest];
+
         // Add headers from my .requestHeaders property:
         [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
             _http[key] = value;

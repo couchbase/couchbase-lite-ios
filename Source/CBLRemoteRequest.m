@@ -25,6 +25,7 @@
 #import "Test.h"
 #import "MYURLUtils.h"
 #import "GTMNSData+zlib.h"
+#import "CBLCookieStorage.h"
 
 
 // Max number of retry attempts for a transient failure, and the backoff time formula
@@ -35,7 +36,7 @@
 @implementation CBLRemoteRequest
 
 
-@synthesize delegate=_delegate, responseHeaders=_responseHeaders;
+@synthesize delegate=_delegate, responseHeaders=_responseHeaders, cookieStorage=_cookieStorage;
 
 
 + (NSString*) userAgentHeader {
@@ -75,7 +76,7 @@
             if ([key caseInsensitiveCompare: @"Cookie"] == 0)
                 _request.HTTPShouldHandleCookies = NO;
         }];
-        
+
         [self setupRequest: _request withBody: body];
 
     }
@@ -101,6 +102,15 @@
         _authorizer = authorizer;
         [_request setValue: [authorizer authorizeURLRequest: _request forRealm: nil]
         forHTTPHeaderField: @"Authorization"];
+    }
+}
+
+- (void) setCookieStorage:(CBLCookieStorage *)cookieStorage {
+    if (_cookieStorage != cookieStorage) {
+        _cookieStorage = cookieStorage;
+        if (_request.HTTPShouldHandleCookies) {
+            [_cookieStorage addCookieHeaderToRequest: _request];
+        }
     }
 }
 
@@ -318,6 +328,10 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     _status = (int) ((NSHTTPURLResponse*)response).statusCode;
     _responseHeaders = ((NSHTTPURLResponse*)response).allHeaderFields;
+
+    if (_cookieStorage)
+        [_cookieStorage setCookieFromResponse: (NSHTTPURLResponse*)response];
+
     LogTo(RemoteRequest, @"%@: Got response, status %d", self, _status);
     if (_status == 401) {
         // CouchDB says we're unauthorized but it didn't present a 'WWW-Authenticate' header
@@ -325,7 +339,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
         if ([self retryWithCredential])
             return;
     }
-    
+
 #if DEBUG
     if (!CBLStatusIsError(_status)) {
         // By setting the user default "CBLFakeFailureRate" to a number between 0.0 and 1.0,

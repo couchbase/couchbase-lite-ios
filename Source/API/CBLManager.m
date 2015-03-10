@@ -526,7 +526,7 @@ static CBLManager* sInstance;
     return CBLRemoveFileIfExists(db.dir, outError) &&
             [fmgr copyItemAtPath: databaseDir toPath: db.dir error: outError] &&
             [db open: outError] &&
-            [db createLocalCheckpointDocument: outError] &&
+            [db saveLocalUUIDInLocalCheckpointDocument: outError] &&
             [db replaceUUIDs: outError];
 }
 

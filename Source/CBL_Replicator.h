@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class CBLDatabase, CBL_Revision, CBL_RevisionList, CBLBatcher, CBLReachability;
+@class CBLDatabase, CBL_Revision, CBL_RevisionList, CBLBatcher, CBLReachability, CBLCookieStorage;
 @protocol CBLAuthorizer;
 
 typedef CBL_Revision* (^RevisionBodyTransformationBlock)(CBL_Revision*);
@@ -36,6 +36,7 @@ extern NSString* CBL_ReplicatorStoppedNotification;
     NSDictionary* _options;
     NSDictionary* _requestHeaders;
     NSString* _serverType;
+    CBLCookieStorage* _cookieStorage;
 #if TARGET_OS_IPHONE
     NSUInteger /*UIBackgroundTaskIdentifier*/ _bgTask;
 #endif
@@ -56,6 +57,7 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 @property (readonly) NSURL* remote;
 @property (readonly) BOOL isPush;
 @property (readonly) BOOL continuous;
+@property (readonly) CBLCookieStorage* cookieStorage;
 @property (copy) NSString* filterName;
 @property (copy) NSDictionary* filterParameters;
 @property (copy) NSArray *docIDs;
