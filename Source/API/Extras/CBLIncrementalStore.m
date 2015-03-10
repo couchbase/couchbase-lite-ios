@@ -28,21 +28,21 @@
 #define WARN(FMT, ...)  NSLog(@"[CBLIS] WARNING " FMT, ##__VA_ARGS__)
 #define ERROR(FMT, ...)  NSLog(@"[CBLIS] ERROR " FMT, ##__VA_ARGS__)
 
-NSString * const kCBLISErrorDomain = @"CBLISErrorDomain";
-NSString * const kCBLISObjectHasBeenChangedInStoreNotification = @"kCBLISObjectHasBeenChangedInStoreNotification";
+NSString* const kCBLISErrorDomain = @"CBLISErrorDomain";
+NSString* const kCBLISObjectHasBeenChangedInStoreNotification = @"kCBLISObjectHasBeenChangedInStoreNotification";
 
-static NSString * const kCBLISTypeKey = @"CBLIS_type";
-static NSString * const kCBLISCurrentRevisionAttributeName = @"CBLIS_Rev";
-static NSString * const kCBLISManagedObjectIDPrefix = @"CBL";
-static NSString * const kCBLISMetadataDocumentID = @"CBLIS_metadata";
-static NSString * const kCBLISFetchEntityByPropertyViewNameFormat = @"CBLIS/fetch_%@_by_%@";
-static NSString * const kCBLISFetchEntityToManyViewNameFormat = @"CBLIS/%@_tomany_%@";
+static NSString* const kCBLISTypeKey = @"CBLIS_type";
+static NSString* const kCBLISCurrentRevisionAttributeName = @"CBLIS_Rev";
+static NSString* const kCBLISManagedObjectIDPrefix = @"CBL";
+static NSString* const kCBLISMetadataDocumentID = @"CBLIS_metadata";
+static NSString* const kCBLISFetchEntityByPropertyViewNameFormat = @"CBLIS/fetch_%@_by_%@";
+static NSString* const kCBLISFetchEntityToManyViewNameFormat = @"CBLIS/%@_tomany_%@";
 
 
 // Utility functions
 static BOOL CBLISIsNull(id value);
-static NSString *CBLISToManyViewNameForRelationship(NSRelationshipDescription *relationship);
-static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
+static NSString* CBLISToManyViewNameForRelationship(NSRelationshipDescription* relationship);
+static NSString* CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 @interface NSManagedObjectID (CBLIncrementalStore)
 - (NSString*) couchbaseLiteIDRepresentation;
@@ -52,19 +52,19 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 @interface CBLIncrementalStore ()
 
 // TODO: check if there is a better way to not hold strong references on these MOCs
-@property (nonatomic, strong) NSHashTable *observingManagedObjectContexts;
-@property (nonatomic, strong, readwrite) CBLDatabase *database;
-@property (nonatomic, strong)            id changeObserver;
+@property (nonatomic, strong) NSHashTable* observingManagedObjectContexts;
+@property (nonatomic, strong, readwrite) CBLDatabase* database;
+@property (nonatomic, strong) id changeObserver;
 
 @end
 
 @implementation CBLIncrementalStore
 {
-    NSMutableArray *_coalescedChanges;
-    NSCache *_queryBuilderCache;
-    NSMutableDictionary *_fetchRequestResultCache;
-    NSMutableDictionary *_entityAndPropertyToFetchViewName;
-    CBLLiveQuery *_conflictsQuery;
+    NSMutableArray* _coalescedChanges;
+    NSCache* _queryBuilderCache;
+    NSMutableDictionary* _fetchRequestResultCache;
+    NSMutableDictionary* _entityAndPropertyToFetchViewName;
+    CBLLiveQuery* _conflictsQuery;
 }
 
 @synthesize database = _database;
@@ -72,7 +72,6 @@ static NSString *CBLISResultTypeName(NSFetchRequestResultType resultType);
 @synthesize conflictHandler = _conflictHandler;
 
 @synthesize observingManagedObjectContexts = _observingManagedObjectContexts;
-
 
 static CBLManager* sCBLManager;
 
@@ -87,142 +86,141 @@ static CBLManager* sCBLManager;
 
 #pragma mark - Convenience Method
 
-+ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel
-                                                   databaseName:(NSString*)databaseName
-                                                          error:(NSError**)outError {
-    return [self createManagedObjectContextWithModel:managedObjectModel databaseName:databaseName
-                              importingDatabaseAtURL:nil importType:nil error:outError];
++ (NSManagedObjectContext*) createManagedObjectContextWithModel: (NSManagedObjectModel*)managedObjectModel
+                                                   databaseName: (NSString*)databaseName
+                                                          error: (NSError**)outError {
+    return [self createManagedObjectContextWithModel: managedObjectModel databaseName: databaseName
+                              importingDatabaseAtURL: nil importType: nil error: outError];
 }
 
 
-+ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel
-                                                   databaseName:(NSString*)databaseName
-                                         importingDatabaseAtURL:(NSURL*)importUrl
-                                                     importType:(NSString*)importType
-                                                          error:(NSError**)outError {
-    NSManagedObjectModel *model = [managedObjectModel mutableCopy];
++ (NSManagedObjectContext*) createManagedObjectContextWithModel: (NSManagedObjectModel*)managedObjectModel
+                                                   databaseName: (NSString*)databaseName
+                                         importingDatabaseAtURL: (NSURL*)importUrl
+                                                     importType: (NSString*)importType
+                                                          error: (NSError**)outError {
+    NSManagedObjectModel* model = [managedObjectModel mutableCopy];
     
-    [self updateManagedObjectModel:model];
+    [self updateManagedObjectModel: model];
     
-    NSError *error;
+    NSError* error;
     
-    NSPersistentStoreCoordinator *persistentStoreCoordinator =
-        [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:model];
+    NSPersistentStoreCoordinator* persistentStoreCoordinator =
+        [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel: model];
     
-    NSDictionary *options = @{
+    NSDictionary* options = @{
                               NSMigratePersistentStoresAutomaticallyOption : @YES,
                               NSInferMappingModelAutomaticallyOption : @YES
                               };
     
-    CBLIncrementalStore *store = nil;
+    CBLIncrementalStore* store = nil;
     if (importUrl) {
-        NSPersistentStore *oldStore = [persistentStoreCoordinator addPersistentStoreWithType:importType
-                                                                               configuration:nil
-                                                                                         URL:importUrl
-                                                                                     options:options
-                                                                                       error:&error];
+        NSPersistentStore* oldStore = [persistentStoreCoordinator addPersistentStoreWithType: importType
+                                                                               configuration: nil
+                                                                                         URL: importUrl
+                                                                                     options: options
+                                                                                       error: &error];
         if (!oldStore) {
-            if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                                          code:CBLIncrementalStoreErrorMigrationOfStoreFailed
-                                                      userInfo:@{
-                                                                 NSLocalizedDescriptionKey: @"Couldn't open store to import",
-                                                                 NSUnderlyingErrorKey: error
-                                                                 }];
+            if (outError)* outError = [NSError errorWithDomain: kCBLISErrorDomain
+                                                          code: CBLIncrementalStoreErrorMigrationOfStoreFailed
+                                                      userInfo: @{
+                                                                  NSLocalizedDescriptionKey: @"Couldn't open store to import",
+                                                                  NSUnderlyingErrorKey: error
+                                                                  }];
             return nil;
         }
         
-        store = (CBLIncrementalStore*)[persistentStoreCoordinator migratePersistentStore:oldStore
-                                                                                   toURL:[NSURL URLWithString:databaseName]
-                                                                                 options:options
-                                                                                withType:[self type] error:&error];
+        store = (CBLIncrementalStore*)[persistentStoreCoordinator migratePersistentStore: oldStore
+                                                                                   toURL: [NSURL URLWithString: databaseName]
+                                                                                 options: options
+                                                                                withType: [self type] error: &error];
         
         if (!store) {
-            NSString *errorDescription = [NSString stringWithFormat:@"Migration of store at URL %@ failed: %@", importUrl, error.description];
-            if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                                          code:CBLIncrementalStoreErrorMigrationOfStoreFailed
-                                                      userInfo:@{
-                                                                 NSLocalizedDescriptionKey: errorDescription,
-                                                                 NSUnderlyingErrorKey: error
-                                                                 }];
+            NSString* errDesc = [NSString stringWithFormat:@"Migration of store at URL %@ failed: %@", importUrl, error.description];
+            if (outError)* outError = [NSError errorWithDomain: kCBLISErrorDomain
+                                                          code: CBLIncrementalStoreErrorMigrationOfStoreFailed
+                                                      userInfo: @{
+                                                                  NSLocalizedDescriptionKey: errDesc,
+                                                                  NSUnderlyingErrorKey: error
+                                                                  }];
             return nil;
         }
     } else {
-        store = (CBLIncrementalStore*)[persistentStoreCoordinator addPersistentStoreWithType:[self type]
-                                                                               configuration:nil
-                                                                                         URL:[NSURL URLWithString:databaseName]
-                                                                                     options:options
-                                                                                       error:&error];
+        store = (CBLIncrementalStore*)[persistentStoreCoordinator addPersistentStoreWithType: [self type]
+                                                                               configuration: nil
+                                                                                         URL: [NSURL URLWithString:databaseName]
+                                                                                     options: options
+                                                                                       error: &error];
         
         if (!store) {
-            NSString *errorDescription = [NSString stringWithFormat:@"Initialization of store failed: %@", error.description];
-            if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                                          code:CBLIncrementalStoreErrorCreatingStoreFailed
-                                                      userInfo:@{
-                                                                 NSLocalizedDescriptionKey: errorDescription,
-                                                                 NSUnderlyingErrorKey: error
-                                                                 }];
+            NSString* errDesc = [NSString stringWithFormat: @"Initialization of store failed: %@", error.description];
+            if (outError) *outError = [NSError errorWithDomain: kCBLISErrorDomain
+                                                          code: CBLIncrementalStoreErrorCreatingStoreFailed
+                                                      userInfo: @{
+                                                                  NSLocalizedDescriptionKey: errDesc,
+                                                                  NSUnderlyingErrorKey: error
+                                                                  }];
             return nil;
         }
     }
     
-    NSManagedObjectContext *managedObjectContext =
-        [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
-    [managedObjectContext setPersistentStoreCoordinator:persistentStoreCoordinator];
-
-    [store addObservingManagedObjectContext:managedObjectContext];
+    NSManagedObjectContext* managedObjectContext =
+        [[NSManagedObjectContext alloc] initWithConcurrencyType: NSMainQueueConcurrencyType];
+    [managedObjectContext setPersistentStoreCoordinator: persistentStoreCoordinator];
+    
+    [store addObservingManagedObjectContext: managedObjectContext];
     
     return managedObjectContext;
 }
 
 #pragma mark -
 
-+ (void)initialize {
-    if ([[self class] isEqual:[CBLIncrementalStore class]]) {
-        [NSPersistentStoreCoordinator registerStoreClass:self
-                                            forStoreType:[self type]];
++ (void) initialize {
+    if ([[self class] isEqual: [CBLIncrementalStore class]]) {
+        [NSPersistentStoreCoordinator registerStoreClass: self
+                                            forStoreType: [self type]];
     }
 }
 
-- (void)dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver:self.changeObserver];
+- (void) dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver: self.changeObserver];
     
     [_conflictsQuery stop];
-    [_conflictsQuery removeObserver:self forKeyPath:@"rows"];
+    [_conflictsQuery removeObserver: self forKeyPath: @"rows"];
     _conflictsQuery = nil;
     
     self.database = nil;
 }
 
 /**
- * This method has to be called once, before the NSManagedObjectModel is used by 
- * a NSPersistentStoreCoordinator. This method updates the entities in the 
- * managedObjectModel and adds some required properties.
+ *  This method has to be called once, before the NSManagedObjectModel is used by
+ *  a NSPersistentStoreCoordinator. This method updates the entities in the
+ *  managedObjectModel and adds some required properties.
  *
- * @param managedObjectModel the managedObjectModel to use with this store
+ *  @param managedObjectModel the managedObjectModel to use with this store
  */
-+ (void)updateManagedObjectModel:(NSManagedObjectModel *)managedObjectModel {
-    NSArray *entites = managedObjectModel.entities;
-    for (NSEntityDescription *entity in entites) {
-        
++ (void) updateManagedObjectModel: (NSManagedObjectModel*)managedObjectModel {
+    NSArray* entites = managedObjectModel.entities;
+    for (NSEntityDescription* entity in entites) {
         if (entity.superentity) { // only add to super-entities, not the sub-entities
             continue;
         }
         
-        NSMutableArray *properties = [entity.properties mutableCopy];
+        NSMutableArray* properties = [entity.properties mutableCopy];
         
-        for (NSPropertyDescription *prop in properties) {
-            if ([prop.name isEqual:kCBLISCurrentRevisionAttributeName]) {
+        for (NSPropertyDescription* prop in properties) {
+            if ([prop.name isEqual: kCBLISCurrentRevisionAttributeName]) {
                 return;
             }
         }
         
-        NSAttributeDescription *revAttribute = [NSAttributeDescription new];
+        NSAttributeDescription* revAttribute = [NSAttributeDescription new];
         revAttribute.name = kCBLISCurrentRevisionAttributeName;
         revAttribute.attributeType = NSStringAttributeType;
         revAttribute.optional = YES;
         revAttribute.indexed = YES;
         
-        [properties addObject:revAttribute];
+        [properties addObject: revAttribute];
         
         entity.properties = properties;
     }
@@ -230,18 +228,18 @@ static CBLManager* sCBLManager;
 
 #pragma mark - NSPersistentStore
 
-+ (NSString *)type {
++ (NSString*) type {
     return @"CBLIncrementalStore";
 }
 
-- (id)initWithPersistentStoreCoordinator:(NSPersistentStoreCoordinator *)root
-                       configurationName:(NSString *)name
-                                     URL:(NSURL *)url
-                                 options:(NSDictionary *)options {
-    self = [super initWithPersistentStoreCoordinator:root
-                                   configurationName:name
-                                                 URL:url
-                                             options:options];
+- (id) initWithPersistentStoreCoordinator: (NSPersistentStoreCoordinator*)root
+                        configurationName: (NSString*)name
+                                      URL: (NSURL*)url
+                                  options: (NSDictionary*)options {
+    self = [super initWithPersistentStoreCoordinator: root
+                                   configurationName: name
+                                                 URL: url
+                                             options: options];
     if (!self) return nil;
     
     _coalescedChanges = [[NSMutableArray alloc] init];
@@ -249,89 +247,86 @@ static CBLManager* sCBLManager;
     _queryBuilderCache = [[NSCache alloc] init];
     _entityAndPropertyToFetchViewName = [[NSMutableDictionary alloc] init];
     
-    self.conflictHandler = [self _defaultConflictHandler];
+    self.conflictHandler = [self defaultConflictHandler];
     
     return self;
 }
 
 #pragma mark - NSIncrementalStore
 
--(BOOL)loadMetadata:(NSError **)outError {
+-(BOOL) loadMetadata: (NSError**)outError {
     // check data model if compatible with this store
-    NSArray *entites = self.persistentStoreCoordinator.managedObjectModel.entities;
-    for (NSEntityDescription *entity in entites) {
+    NSArray* entites = self.persistentStoreCoordinator.managedObjectModel.entities;
+    for (NSEntityDescription* entity in entites) {
+        NSDictionary* attributesByName = [entity attributesByName];
         
-        NSDictionary *attributesByName = [entity attributesByName];
-        
-        if (![attributesByName objectForKey:kCBLISCurrentRevisionAttributeName]) {
-            if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                                          code:CBLIncrementalStoreErrorDatabaseModelIncompatible
-                                                      userInfo:@{
-                                                                 NSLocalizedFailureReasonErrorKey: @"Database Model not compatible. You need to call +[updateManagedObjectModel:]."
-                                                                 }];
+        if (![attributesByName objectForKey: kCBLISCurrentRevisionAttributeName]) {
+            if (outError) {
+                NSString *errDesc = @"Database Model not compatible. You need to call +[updateManagedObjectModel:].";
+                *outError = [NSError errorWithDomain: kCBLISErrorDomain
+                                                code: CBLIncrementalStoreErrorDatabaseModelIncompatible
+                                            userInfo: @{ NSLocalizedFailureReasonErrorKey: errDesc }];
+            }
             return NO;
         }
     }
+
+    NSString* databaseName = [self.URL lastPathComponent];
     
-    
-    NSError *error;
-    
-    NSString *databaseName = [self.URL lastPathComponent];
-    
-    CBLManager *manager = [[self class] CBLManager];
-    if (!manager) {
+    CBLManager* manager = [[self class] CBLManager];
+    if (!manager)
         manager = [CBLManager sharedInstance];
-    }
-    
-    self.database = [manager databaseNamed:databaseName error:&error];
+
+    NSError* error;
+    self.database = [manager databaseNamed: databaseName error: &error];
     if (!self.database) {
-        if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                                      code:CBLIncrementalStoreErrorCreatingDatabaseFailed
-                                                  userInfo:@{
-                                                             NSLocalizedDescriptionKey: @"Could not create database",
-                                                             NSUnderlyingErrorKey: error
-                                                             }];
+        if (outError) *outError = [NSError errorWithDomain: kCBLISErrorDomain
+                                                      code: CBLIncrementalStoreErrorCreatingDatabaseFailed
+                                                  userInfo: @{
+                                                              NSLocalizedDescriptionKey: @"Could not create database",
+                                                              NSUnderlyingErrorKey: error
+                                                              }];
         return NO;
     }
 
     [self initializeViews];
     
     
-    __weak __typeof(self) _self = self;
-    self.changeObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kCBLDatabaseChangeNotification
-                                                                            object:self.database queue:nil
-                                                                        usingBlock:^(NSNotification *note) {
-                                                                            NSArray *changes = note.userInfo[@"changes"];
-                                                                            [_self _couchDocumentsChanged:changes];
+    __weak __typeof(self) weakSelf = self;
+    self.changeObserver = [[NSNotificationCenter defaultCenter] addObserverForName: kCBLDatabaseChangeNotification
+                                                                            object: self.database queue:nil
+                                                                        usingBlock: ^(NSNotification* note) {
+                                                                            NSArray* changes = note.userInfo[@"changes"];
+                                                                            [weakSelf couchDocumentsChanged:changes];
                                                                         }];
     
-    CBLDocument *doc = [self.database documentWithID:kCBLISMetadataDocumentID];
+    CBLDocument* doc = [self.database documentWithID: kCBLISMetadataDocumentID];
     
     BOOL success = NO;
     
-    NSDictionary *metaData = doc.properties;
-    if (![metaData objectForKey:NSStoreUUIDKey]) {
+    NSDictionary* metaData = doc.properties;
+    if (![metaData objectForKey: NSStoreUUIDKey]) {
         
         metaData = @{
                      NSStoreUUIDKey: [[NSProcessInfo processInfo] globallyUniqueString],
                      NSStoreTypeKey: [[self class] type]
                      };
-        [self setMetadata:metaData];
+        [self setMetadata: metaData];
         
-        NSError *error;
-        success = [doc putProperties:metaData error:&error] != nil;
+        NSError* error;
+        success = [doc putProperties: metaData error: &error] != nil;
         if (!success) {
-            if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                                          code:CBLIncrementalStoreErrorStoringMetadataFailed
-                                                      userInfo:@{
-                                                                 NSLocalizedDescriptionKey: @"Could not store metadata in database",
-                                                                 NSUnderlyingErrorKey: error
-                                                                 }];
+            if (outError) *outError = [NSError errorWithDomain: kCBLISErrorDomain
+                                                          code: CBLIncrementalStoreErrorStoringMetadataFailed
+                                                      userInfo: @{
+                                                                  NSLocalizedDescriptionKey: @"Could not store metadata in database",
+                                                                  NSUnderlyingErrorKey: error
+                                                                  }];
             return NO;
         }
         
     } else {
-        [self setMetadata:doc.properties];
+        [self setMetadata: doc.properties];
         success = YES;
     }
     
@@ -339,8 +334,8 @@ static CBLManager* sCBLManager;
         // create a live-query for conflicting documents
         CBLQuery* query = [self.database createAllDocumentsQuery];
         query.allDocsMode = kCBLOnlyConflicts;
-        CBLLiveQuery *liveQuery = query.asLiveQuery;
-        [liveQuery addObserver:self forKeyPath:@"rows" options:NSKeyValueObservingOptionNew context:nil];
+        CBLLiveQuery* liveQuery = query.asLiveQuery;
+        [liveQuery addObserver: self forKeyPath: @"rows" options: NSKeyValueObservingOptionNew context: nil];
         [liveQuery start];
         
         _conflictsQuery = liveQuery;
@@ -350,94 +345,94 @@ static CBLManager* sCBLManager;
 }
 
 
-- (void)notifyNewRevisionForManagedObject:(NSManagedObject *)object
-                                withRevId:(NSString *)revId
-                              withContext:(NSManagedObjectContext *)context {
-    [object willChangeValueForKey:kCBLISCurrentRevisionAttributeName];
-    [object setPrimitiveValue:revId forKey:kCBLISCurrentRevisionAttributeName];
-    [object didChangeValueForKey:kCBLISCurrentRevisionAttributeName];
+- (void) notifyNewRevisionForManagedObject: (NSManagedObject*)object
+                                 withRevId: (NSString*)revId
+                               withContext: (NSManagedObjectContext*)context {
+    [object willChangeValueForKey: kCBLISCurrentRevisionAttributeName];
+    [object setPrimitiveValue:revId forKey: kCBLISCurrentRevisionAttributeName];
+    [object didChangeValueForKey: kCBLISCurrentRevisionAttributeName];
 
-    [object willChangeValueForKey:@"objectID"];
-    [context obtainPermanentIDsForObjects:@[object] error:nil];
-    [object didChangeValueForKey:@"objectID"];
+    [object willChangeValueForKey: @"objectID"];
+    [context obtainPermanentIDsForObjects: @[object] error: nil];
+    [object didChangeValueForKey: @"objectID"];
 
-    [context refreshObject:object mergeChanges:YES];
+    [context refreshObject: object mergeChanges: YES];
 }
 
 
-- (BOOL)insertOrUpdateObject:(NSManagedObject *)object
-                 withContext:(NSManagedObjectContext *)context
-                    outError:(NSError**)outError {
-    NSDictionary *contents = [self couchbaseLiteRepresentationOfManagedObject:object
-                                                          withCouchbaseLiteID:YES];
-    CBLDocument *doc = [self.database documentWithID:
+- (BOOL) insertOrUpdateObject: (NSManagedObject*)object
+                  withContext: (NSManagedObjectContext*)context
+                     outError: (NSError**)outError {
+    NSDictionary* contents = [self couchbaseLiteRepresentationOfManagedObject: object
+                                                          withCouchbaseLiteID: YES];
+    CBLDocument* doc = [self.database documentWithID:
                         [object.objectID couchbaseLiteIDRepresentation]];
-    CBLUnsavedRevision *revision = [doc newRevision];
-    [revision.properties setValuesForKeysWithDictionary:contents];
+    CBLUnsavedRevision* revision = [doc newRevision];
+    [revision.properties setValuesForKeysWithDictionary: contents];
 
     // add attachments
-    NSDictionary *propertyDesc = [object.entity propertiesByName];
+    NSDictionary* propertyDesc = [object.entity propertiesByName];
 
-    for (NSString *property in propertyDesc) {
-        if ([kCBLISCurrentRevisionAttributeName isEqual:property]) continue;
+    for (NSString* property in propertyDesc) {
+        if ([kCBLISCurrentRevisionAttributeName isEqual: property]) continue;
 
-        NSAttributeDescription *attr = [propertyDesc objectForKey:property];
-        if (![attr isKindOfClass:[NSAttributeDescription class]]) continue;
+        NSAttributeDescription* attr = [propertyDesc objectForKey: property];
+        if (![attr isKindOfClass: [NSAttributeDescription class]]) continue;
 
         if ([attr isTransient]) continue;
         if ([attr attributeType] != NSBinaryDataAttributeType) continue;
 
-        NSData *data = [object valueForKey:attr.name];
+        NSData* data = [object valueForKey: attr.name];
         if (!data) continue;
 
-        [revision setAttachmentNamed:attr.name
-                     withContentType:@"application/binary"
-                             content:data];
+        [revision setAttachmentNamed: attr.name
+                     withContentType: @"application/binary"
+                             content: data];
     }
 
-    BOOL result = [revision save:outError] != nil;
+    BOOL result = [revision save: outError] != nil;
     if (result) {
-        [self notifyNewRevisionForManagedObject:object
-                                      withRevId:doc.currentRevisionID
-                                    withContext:context];
-        [self purgeCachedObjectsForEntityName:object.entity.name];
+        [self notifyNewRevisionForManagedObject: object
+                                      withRevId: doc.currentRevisionID
+                                    withContext: context];
+        [self purgeCachedObjectsForEntityName: object.entity.name];
     }
     return result;
 }
 
 
-- (BOOL)deleteObject:(NSManagedObject *)object
-         withContext:(NSManagedObjectContext *)context
-            outError:(NSError**)outError {
-    CBLDocument *doc = [self.database existingDocumentWithID:[object.objectID couchbaseLiteIDRepresentation]];
+- (BOOL) deleteObject: (NSManagedObject*)object
+          withContext: (NSManagedObjectContext*)context
+             outError: (NSError**)outError {
+    CBLDocument* doc = [self.database existingDocumentWithID: [object.objectID couchbaseLiteIDRepresentation]];
     if (!doc || doc.isDeleted)
         return YES;
     
-    BOOL result = [doc putProperties:[self _propertiesForDeletingDocument:doc] error:outError] != nil;
+    BOOL result = [doc putProperties: [self propertiesForDeletingDocument: doc] error: outError] != nil;
     if (result) {
-        [self purgeCachedObjectsForEntityName:object.entity.name];
+        [self purgeCachedObjectsForEntityName: object.entity.name];
     }
     return result;
 }
 
 
-- (id)executeSaveRequest:(NSSaveChangesRequest *)request
-             withContext:(NSManagedObjectContext *)context
-                outError:(NSError **)outError {
+- (id) executeSaveRequest: (NSSaveChangesRequest*)request
+              withContext: (NSManagedObjectContext*)context
+                 outError: (NSError**)outError {
     //
     // TODO: Execute all of the operations in one transaction once and return
     // the outError in a better way once
     // https://github.com/couchbase/couchbase-lite-ios/issues/256 gets resolved.
     //
-    for (NSManagedObject *object in [request insertedObjects]) {
+    for (NSManagedObject* object in [request insertedObjects]) {
         [self insertOrUpdateObject:object withContext:context outError:outError];
     }
 
-    for (NSManagedObject *object in [request updatedObjects]) {
+    for (NSManagedObject* object in [request updatedObjects]) {
         [self insertOrUpdateObject:object withContext:context outError:outError];
     }
 
-    for (NSManagedObject *object in [request deletedObjects]) {
+    for (NSManagedObject* object in [request deletedObjects]) {
         [self deleteObject:object withContext:context outError:outError];
     }
 
@@ -445,11 +440,11 @@ static CBLManager* sCBLManager;
 }
 
 
-- (id)executeRequest:(NSPersistentStoreRequest *)request
-         withContext:(NSManagedObjectContext*)context
-               error:(NSError **)outError {
+- (id)executeRequest: (NSPersistentStoreRequest*)request
+         withContext: (NSManagedObjectContext*)context
+               error: (NSError**)outError {
     if (request.requestType == NSSaveRequestType) {
-        NSSaveChangesRequest *saveRequest = (NSSaveChangesRequest*)request;
+        NSSaveChangesRequest* saveRequest = (NSSaveChangesRequest*)request;
 #ifdef DEBUG_DETAILS
         NSLog(@"[CBLIS] save request: ---------------- \n"
               "[CBLIS]   inserted:%@\n"
@@ -459,12 +454,12 @@ static CBLManager* sCBLManager;
               "[CBLIS]---------------- ", [save insertedObjects], [save updatedObjects],
               [save deletedObjects], [save lockedObjects]);
 #endif
-        return [self executeSaveRequest:saveRequest withContext:context outError:outError];
+        return [self executeSaveRequest: saveRequest withContext: context outError: outError];
     } else if (request.requestType == NSFetchRequestType) {
         CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
 
-        NSFetchRequest *fetchRequest = (NSFetchRequest*)request;
-        id result = [self executeFetchWithRequest:fetchRequest withContext:context outError:outError];
+        NSFetchRequest* fetchRequest = (NSFetchRequest*)request;
+        id result = [self executeFetchWithRequest: fetchRequest withContext: context outError: outError];
 
         CFAbsoluteTime end = CFAbsoluteTimeGetCurrent();
 #ifndef PROFILE
@@ -484,161 +479,155 @@ static CBLManager* sCBLManager;
 #endif
         return result;
     } else {
-        NSString *desc = [NSString stringWithFormat:@"Unsupported requestType: %d", (int)request.requestType];
-        if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                                      code:CBLIncrementalStoreErrorUnsupportedRequestType
-                                                  userInfo:@{ NSLocalizedFailureReasonErrorKey: desc }];
+        NSString* desc = [NSString stringWithFormat:@"Unsupported requestType: %d", (int)request.requestType];
+        if (outError) *outError = [NSError errorWithDomain: kCBLISErrorDomain
+                                                      code: CBLIncrementalStoreErrorUnsupportedRequestType
+                                                  userInfo: @{ NSLocalizedFailureReasonErrorKey: desc }];
         return nil;
     }
 }
 
 
-- (NSIncrementalStoreNode *)newValuesForObjectWithID:(NSManagedObjectID*)objectID
-                                         withContext:(NSManagedObjectContext*)context
-                                               error:(NSError**)outError {
-    CBLDocument* doc = [self.database documentWithID:[objectID couchbaseLiteIDRepresentation]];
+- (NSIncrementalStoreNode*) newValuesForObjectWithID: (NSManagedObjectID*)objectID
+                                         withContext: (NSManagedObjectContext*)context
+                                               error: (NSError**)outError {
+    CBLDocument* doc = [self.database documentWithID: [objectID couchbaseLiteIDRepresentation]];
     
-    NSEntityDescription *entity = objectID.entity;
-    if (![entity.name isEqual:[doc propertyForKey:kCBLISTypeKey]]) {
-        entity = [NSEntityDescription entityForName:[doc propertyForKey:kCBLISTypeKey]
-                             inManagedObjectContext:context];
+    NSEntityDescription* entity = objectID.entity;
+    if (![entity.name isEqual: [doc propertyForKey: kCBLISTypeKey]]) {
+        entity = [NSEntityDescription entityForName: [doc propertyForKey: kCBLISTypeKey]
+                             inManagedObjectContext: context];
     }
     
-    NSDictionary *values = [self coreDataPropertiesOfDocumentWithID:doc.documentID
-                                                         properties:doc.properties
-                                                         withEntity:entity
-                                                          inContext:context];
-    NSIncrementalStoreNode *node = [[NSIncrementalStoreNode alloc] initWithObjectID:objectID
-                                                                         withValues:values
-                                                                            version:1];
+    NSDictionary* values = [self coreDataPropertiesOfDocumentWithID: doc.documentID
+                                                         properties: doc.properties
+                                                         withEntity: entity
+                                                          inContext: context];
+    NSIncrementalStoreNode* node = [[NSIncrementalStoreNode alloc] initWithObjectID: objectID
+                                                                         withValues: values
+                                                                            version: 1];
     return node;
 }
 
-- (id)newValueForRelationship:(NSRelationshipDescription*)relationship
-              forObjectWithID:(NSManagedObjectID*)objectID
-                  withContext:(NSManagedObjectContext *)context
-                        error:(NSError **)outError {
+- (id) newValueForRelationship: (NSRelationshipDescription*)relationship
+               forObjectWithID: (NSManagedObjectID*)objectID
+                   withContext: (NSManagedObjectContext*)context
+                         error: (NSError**)outError {
     if ([relationship isToMany]) {
-        CBLQueryEnumerator *rows = [self queryToManyRelation:relationship
-                                               forParentKeys:@[[objectID couchbaseLiteIDRepresentation]]
-                                                    prefetch:NO
-                                                    outError:outError];
+        CBLQueryEnumerator* rows = [self queryToManyRelation: relationship
+                                               forParentKeys: @[[objectID couchbaseLiteIDRepresentation]]
+                                                    prefetch: NO
+                                                    outError: outError];
         if (!rows) return nil;
-        NSMutableArray *result = [NSMutableArray arrayWithCapacity:rows.count];
+        NSMutableArray* result = [NSMutableArray arrayWithCapacity: rows.count];
         for (CBLQueryRow* row in rows) {
-            [result addObject:[self newObjectIDForEntity:relationship.destinationEntity
-                                    managedObjectContext:context
-                                                 couchID:row.documentID]];
+            [result addObject: [self newObjectIDForEntity: relationship.destinationEntity
+                                     managedObjectContext: context
+                                                  couchID: row.documentID]];
         }
         return result;
     } else {
-        CBLDocument* doc = [self.database documentWithID:[objectID couchbaseLiteIDRepresentation]];
-        NSString *destinationID = [doc propertyForKey:relationship.name];
+        CBLDocument* doc = [self.database documentWithID: [objectID couchbaseLiteIDRepresentation]];
+        NSString* destinationID = [doc propertyForKey: relationship.name];
         if (destinationID) {
-            return [self newObjectIDForEntity:relationship.destinationEntity referenceObject:destinationID];
+            return [self newObjectIDForEntity: relationship.destinationEntity referenceObject: destinationID];
         } else {
             return [NSNull null];
         }
     }
 }
 
-- (NSArray *)obtainPermanentIDsForObjects:(NSArray *)array error:(NSError **)outError {
-    NSMutableArray *result = [NSMutableArray arrayWithCapacity:array.count];
-    for (NSManagedObject *object in array) {
+- (NSArray*) obtainPermanentIDsForObjects: (NSArray*)array error: (NSError**)outError {
+    NSMutableArray* result = [NSMutableArray arrayWithCapacity: array.count];
+    for (NSManagedObject* object in array) {
         // if you call -[NSManagedObjectContext obtainPermanentIDsForObjects:error:] yourself,
         // this can get called with already permanent ids which leads to mismatch between store.
         if (![object.objectID isTemporaryID]) {
-            
-            [result addObject:object.objectID];
-            
+            [result addObject: object.objectID];
         } else {
-            
-            NSString *uuid = [[NSProcessInfo processInfo] globallyUniqueString];
-            NSManagedObjectID *objectID = [self newObjectIDForEntity:object.entity
-                                                     referenceObject:uuid];
-            [result addObject:objectID];
-            
+            NSString* uuid = [[NSProcessInfo processInfo] globallyUniqueString];
+            NSManagedObjectID* objectID = [self newObjectIDForEntity: object.entity
+                                                     referenceObject: uuid];
+            [result addObject: objectID];
         }
     }
     return result;
 }
 
-- (NSManagedObjectID *)newObjectIDForEntity:(NSEntityDescription *)entity referenceObject:(id)data {
-    NSString *referenceObject = data;
+- (NSManagedObjectID*) newObjectIDForEntity: (NSEntityDescription*)entity referenceObject: (id)data {
+    NSString* referenceObject = data;
     
-    if ([referenceObject hasPrefix:@"p"]) {
-        referenceObject = [referenceObject substringFromIndex:1];
+    if ([referenceObject hasPrefix: @"p"]) {
+        referenceObject = [referenceObject substringFromIndex: 1];
     }
     
     // we need to prefix the refernceObject with a non-numeric prefix, because of a bug where
     // referenceObjects starting with a digit will only use the first digit part. As described here:
     // https://github.com/AFNetworking/AFIncrementalStore/issues/82
-    referenceObject = [kCBLISManagedObjectIDPrefix stringByAppendingString:referenceObject];
-    NSManagedObjectID *objectID = [super newObjectIDForEntity:entity referenceObject:referenceObject];
+    referenceObject = [kCBLISManagedObjectIDPrefix stringByAppendingString: referenceObject];
+    NSManagedObjectID* objectID = [super newObjectIDForEntity: entity referenceObject: referenceObject];
     return objectID;
 }
 
-- (NSManagedObjectID *)newObjectIDForEntity:(NSEntityDescription *)entity
-                       managedObjectContext:(NSManagedObjectContext *)context
-                                    couchID:(NSString *)couchID {
-    NSManagedObjectID *objectID = [self newObjectIDForEntity:entity referenceObject:couchID];
+- (NSManagedObjectID*) newObjectIDForEntity: (NSEntityDescription*)entity
+                       managedObjectContext: (NSManagedObjectContext*)context
+                                    couchID: (NSString*)couchID {
+    NSManagedObjectID* objectID = [self newObjectIDForEntity: entity referenceObject: couchID];
     return objectID;
 }
 
 #pragma mark - Views
 
-/** Initializes the views needed for querying objects by type and for to-many relationships. */
+/** Initializes the views needed for querying objects by type and for to-many relationships.*/
 - (void) initializeViews {
-    NSMutableDictionary *subentitiesToSuperentities = [NSMutableDictionary dictionary];
+    NSMutableDictionary* subentitiesToSuperentities = [NSMutableDictionary dictionary];
 
     // Create a view for each to-many relationship
-    NSArray *entites = self.persistentStoreCoordinator.managedObjectModel.entities;
-    for (NSEntityDescription *entity in entites) {
+    NSArray* entites = self.persistentStoreCoordinator.managedObjectModel.entities;
+    for (NSEntityDescription* entity in entites) {
+        NSArray* properties = [entity properties];
 
-        NSArray *properties = [entity properties];
-
-        for (NSPropertyDescription *property in properties) {
-
+        for (NSPropertyDescription* property in properties) {
             if ([property isKindOfClass:[NSRelationshipDescription class]]) {
-                NSRelationshipDescription *rel = (NSRelationshipDescription*)property;
+                NSRelationshipDescription* rel = (NSRelationshipDescription*)property;
                 if (rel.isToMany && rel.inverseRelationship) {
-                    NSMutableArray *entityNames =
-                        [NSMutableArray arrayWithObject:rel.destinationEntity.name];
-                    for (NSEntityDescription *subentity in rel.destinationEntity.subentities) {
-                        [entityNames addObject:subentity.name];
+                    NSMutableArray* entityNames =
+                        [NSMutableArray arrayWithObject: rel.destinationEntity.name];
+                    for (NSEntityDescription* subentity in rel.destinationEntity.subentities) {
+                        [entityNames addObject: subentity.name];
                     }
 
-                    NSString *viewName = CBLISToManyViewNameForRelationship(rel);
-                    NSRelationshipDescription *invRel = rel.inverseRelationship;
-                    NSString *invertRelPropName = invRel.name;
-                    CBLView *view = [self.database viewNamed:viewName];
-                    [view setMapBlock:^(NSDictionary *doc, CBLMapEmitBlock emit) {
-                        NSString *type = [doc objectForKey:kCBLISTypeKey];
-                        if (type && [entityNames containsObject:type] &&
-                            [doc objectForKey:invertRelPropName]) {
-                            emit([doc objectForKey:invertRelPropName], nil);
+                    NSString* viewName = CBLISToManyViewNameForRelationship(rel);
+                    NSRelationshipDescription* invRel = rel.inverseRelationship;
+                    NSString* invertRelPropName = invRel.name;
+                    CBLView* view = [self.database viewNamed: viewName];
+                    [view setMapBlock:^(NSDictionary* doc, CBLMapEmitBlock emit) {
+                        NSString* type = [doc objectForKey: kCBLISTypeKey];
+                        if (type && [entityNames containsObject: type] &&
+                            [doc objectForKey: invertRelPropName]) {
+                            emit([doc objectForKey: invertRelPropName], nil);
                         }
-                    } version:@"1.0"];
+                    } version: @"1.0"];
 
                     // Remember view for mapping super-entity and all sub-entities:
-                    for (NSString *entityName in entityNames) {
-                        [self _setViewName:viewName
-                       forFetchingProperty:invertRelPropName
-                                fromEntity:entityName];
+                    for (NSString* entityName in entityNames) {
+                        [self setViewName: viewName
+                      forFetchingProperty: invertRelPropName
+                               fromEntity: entityName];
                     }
                 }
             }
         }
         
         if (entity.subentities.count > 0) {
-            for (NSEntityDescription *subentity in entity.subentities) {
-                [subentitiesToSuperentities setObject:entity.name forKey:subentity.name];
+            for (NSEntityDescription* subentity in entity.subentities) {
+                [subentitiesToSuperentities setObject: entity.name forKey: subentity.name];
             }
         }
     }
 }
 
-- (void) defineFetchViewForEntity:(NSString*)entityName byProperty:(NSString*)propertyName {
+- (void) defineFetchViewForEntity: (NSString*)entityName byProperty: (NSString*)propertyName {
     // This method is deprecated as we are now using CBLQueryBuilder
     // which dynamically generats the view based on query parameters
     // including predicate and sort descriptors.
@@ -646,30 +635,29 @@ static CBLManager* sCBLManager;
 
 #pragma mark - Query
 
-- (NSArray *)executeFetchWithRequest:(NSFetchRequest *)request
-                         withContext:(NSManagedObjectContext *)context
-                            outError:(NSError **)outError {
-
-    NSArray *cachedObjects = [self cachedObjectsForFetchRequest:request];
+- (NSArray*) executeFetchWithRequest: (NSFetchRequest*)request
+                         withContext: (NSManagedObjectContext*)context
+                            outError: (NSError**)outError {
+    NSArray* cachedObjects = [self cachedObjectsForFetchRequest: request];
     if (cachedObjects) {
-        NSArray *result = [self fetchResult:cachedObjects
-                              forResultType:request.resultType
-                      withPropertiesToFetch:request.propertiesToFetch
-                                   outError:outError];
+        NSArray* result = [self fetchResult: cachedObjects
+                              forResultType: request.resultType
+                      withPropertiesToFetch: request.propertiesToFetch
+                                   outError: outError];
         return result;
     }
 
     BOOL useQueryBuilder = NO;
-    NSPredicate *proPredicate = nil;
-    NSMutableDictionary *templateVars = [NSMutableDictionary dictionary];
+    NSPredicate* proPredicate = nil;
+    NSMutableDictionary* templateVars = [NSMutableDictionary dictionary];
     if (request.predicate) {
-        NSError *scanError;
+        NSError* scanError;
         BOOL hasNonQueryBuilderExp;
-        proPredicate = [self scanPredicate:request.predicate
-                                withEntity:request.entity
-                           outTemplateVars:templateVars
-                  outHasNonQueryBuilderExp:&hasNonQueryBuilderExp
-                                  outError:&scanError];
+        proPredicate = [self scanPredicate: request.predicate
+                                withEntity: request.entity
+                           outTemplateVars: templateVars
+                  outHasNonQueryBuilderExp: &hasNonQueryBuilderExp
+                                  outError: &scanError];
 
         if (proPredicate) {
             useQueryBuilder = !hasNonQueryBuilderExp;
@@ -679,41 +667,40 @@ static CBLManager* sCBLManager;
         }
     }
 
-    NSArray *objects;
+    NSArray* objects;
     if (useQueryBuilder) {
-        NSError *queryBuilderError;
-        objects = [self fetchByUsingQueryBuilderWithPredicate:proPredicate
-                                          withOriginalRequest:request
-                                             withTemplateVars:templateVars
-                                                  withContext:context
-                                                     outError:&queryBuilderError];
+        NSError* queryBuilderError;
+        objects = [self fetchByUsingQueryBuilderWithPredicate: proPredicate
+                                          withOriginalRequest: request
+                                             withTemplateVars: templateVars
+                                                  withContext: context
+                                                     outError: &queryBuilderError];
         if (!objects) {
-            // TODO: Log Query Builder
             useQueryBuilder = NO;
         }
     }
 
     if (!useQueryBuilder) {
-        objects = [self fetchByEntityAndDoPostFilterWithRequest:request
-                                                    withContext:context
-                                                       outError:outError];
+        objects = [self fetchByEntityAndDoPostFilterWithRequest: request
+                                                    withContext: context
+                                                       outError: outError];
     }
 
     if (!objects) return nil;
 
-    [self cacheObjects:objects forFetchRequest:request];
+    [self cacheObjects: objects forFetchRequest: request];
 
-    NSArray *result = [self fetchResult:objects
-                          forResultType:request.resultType
-                  withPropertiesToFetch:request.propertiesToFetch
-                               outError:outError];
+    NSArray* result = [self fetchResult: objects
+                          forResultType: request.resultType
+                  withPropertiesToFetch: request.propertiesToFetch
+                               outError: outError];
     return result;
 }
 
-- (NSArray *)fetchResult:(NSArray *)objects
-           forResultType:(NSFetchRequestResultType)type
-   withPropertiesToFetch:(NSArray *)propertiesToFetch
-                outError:(NSError **)outError {
+- (NSArray*) fetchResult: (NSArray*)objects
+           forResultType: (NSFetchRequestResultType)type
+   withPropertiesToFetch: (NSArray*)propertiesToFetch
+                outError: (NSError**)outError {
     if ([objects count] == 0) return objects;
 
     if (type == NSManagedObjectResultType)
@@ -721,30 +708,30 @@ static CBLManager* sCBLManager;
     else if (type == NSCountResultType)
         return  @[@([objects count])];
     else if (type == NSManagedObjectIDResultType) {
-        NSMutableArray *result = [NSMutableArray arrayWithCapacity:[objects count]];
-        for (NSManagedObject *object in objects) {
-            [result addObject:object.objectID];
+        NSMutableArray* result = [NSMutableArray arrayWithCapacity: [objects count]];
+        for (NSManagedObject* object in objects) {
+            [result addObject: object.objectID];
         }
         return result;
     } else if (type == NSDictionaryResultType) {
-        NSMutableArray *result = [NSMutableArray arrayWithCapacity:[objects count]];
-        for (NSManagedObject *object in objects) {
-            NSDictionary *properties =
-            [self couchbaseLiteRepresentationOfManagedObject:object withCouchbaseLiteID:YES];
+        NSMutableArray* result = [NSMutableArray arrayWithCapacity: [objects count]];
+        for (NSManagedObject* object in objects) {
+            NSDictionary* properties =
+            [self couchbaseLiteRepresentationOfManagedObject: object withCouchbaseLiteID: YES];
 
             if (propertiesToFetch) {
-                [result addObject:[properties dictionaryWithValuesForKeys:propertiesToFetch]];
+                [result addObject: [properties dictionaryWithValuesForKeys: propertiesToFetch]];
             } else {
-                [result addObject:properties];
+                [result addObject: properties];
             }
         }
         return result;
     } else {
         if (outError) {
-            NSString *desc = [NSString stringWithFormat:@"Unsupported fetch request result type: %d", (int)type];
-            *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                            code:CBLIncrementalStoreErrorUnsupportedFetchRequestResultType
-                                        userInfo:@{ NSLocalizedFailureReasonErrorKey: desc }];
+            NSString* desc = [NSString stringWithFormat: @"Unsupported fetch request result type: %d", (int)type];
+            *outError = [NSError errorWithDomain: kCBLISErrorDomain
+                                            code: CBLIncrementalStoreErrorUnsupportedFetchRequestResultType
+                                        userInfo: @{ NSLocalizedFailureReasonErrorKey: desc }];
         }
         return nil;
     }
@@ -752,35 +739,35 @@ static CBLManager* sCBLManager;
 
 #pragma mark - Query (QueryBuilder)
 
-- (NSArray *)fetchByUsingQueryBuilderWithPredicate:(NSPredicate *)predicate
-                               withOriginalRequest:(NSFetchRequest *)request
-                                  withTemplateVars:(NSDictionary *)templateVars
-                                       withContext:(NSManagedObjectContext *)context
-                                          outError:(NSError **)outError {
-    NSPredicate *typePredicate = [NSPredicate predicateWithFormat:@"%K == %@", kCBLISTypeKey,
+- (NSArray*) fetchByUsingQueryBuilderWithPredicate: (NSPredicate*)predicate
+                               withOriginalRequest: (NSFetchRequest*)request
+                                  withTemplateVars: (NSDictionary*)templateVars
+                                       withContext: (NSManagedObjectContext*)context
+                                          outError: (NSError**)outError {
+    NSPredicate* typePredicate = [NSPredicate predicateWithFormat:@"%K == %@", kCBLISTypeKey,
                                   request.entityName];
 
-    NSPredicate *compoundPredicate = [NSCompoundPredicate
-                                      andPredicateWithSubpredicates:@[typePredicate, predicate]];
+    NSPredicate* compoundPredicate = [NSCompoundPredicate
+                                      andPredicateWithSubpredicates: @[typePredicate, predicate]];
 
-    CBLQueryBuilder *builder = [self cachedQueryBuilderForPredicate:compoundPredicate
-                                                    sortDescriptors:request.sortDescriptors];
+    CBLQueryBuilder* builder = [self cachedQueryBuilderForPredicate: compoundPredicate
+                                                    sortDescriptors: request.sortDescriptors];
     if (!builder) {
-        builder = [[CBLQueryBuilder alloc] initWithDatabase:self.database
-                                                     select:nil
-                                             wherePredicate:compoundPredicate
-                                                    orderBy:request.sortDescriptors
-                                                      error:outError];
+        builder = [[CBLQueryBuilder alloc] initWithDatabase: self.database
+                                                     select: nil
+                                             wherePredicate: compoundPredicate
+                                                    orderBy: request.sortDescriptors
+                                                      error: outError];
 
         if (!builder)
             return nil;
 
-        [self cacheQueryBuilder:builder
-                   forPredicate:compoundPredicate
-                sortDescriptors:request.sortDescriptors];
+        [self cacheQueryBuilder: builder
+                   forPredicate: compoundPredicate
+                sortDescriptors: request.sortDescriptors];
     }
 
-    CBLQuery *query = [builder createQueryWithContext:templateVars];
+    CBLQuery* query = [builder createQueryWithContext: templateVars];
 
     // This may result to fewer rows than expected.
     // https://github.com/couchbase/couchbase-lite-ios/issues/574
@@ -792,81 +779,80 @@ static CBLManager* sCBLManager;
         query.skip = request.fetchOffset;
     }
 
-    CBLQueryEnumerator *rows = [query run:outError];
-    NSMutableArray *result = [NSMutableArray arrayWithCapacity:rows.count];
-    for (CBLQueryRow *row in rows) {
-        NSManagedObjectID *objectID = [self newObjectIDForEntity:request.entity
-                                            managedObjectContext:context
-                                                         couchID:row.documentID];
-        [result addObject:[context objectWithID:objectID]];
+    CBLQueryEnumerator* rows = [query run: outError];
+    NSMutableArray* result = [NSMutableArray arrayWithCapacity: rows.count];
+    for (CBLQueryRow* row in rows) {
+        NSManagedObjectID* objectID = [self newObjectIDForEntity: request.entity
+                                            managedObjectContext: context
+                                                         couchID: row.documentID];
+        [result addObject: [context objectWithID: objectID]];
     }
     return result;
 }
 
-- (CBLQueryBuilder *)cachedQueryBuilderForPredicate:(NSPredicate *)predicate
-                                    sortDescriptors:(NSArray *)sortDescriptors {
-    NSString *key = [self cacheKeyForQueryBuilderWithPredicate:predicate
-                                               sortDescriptors:sortDescriptors];
-    return [_queryBuilderCache objectForKey:key];
+- (CBLQueryBuilder*) cachedQueryBuilderForPredicate: (NSPredicate*)predicate
+                                    sortDescriptors: (NSArray*)sortDescriptors {
+    NSString* key = [self cacheKeyForQueryBuilderWithPredicate: predicate
+                                               sortDescriptors: sortDescriptors];
+    return [_queryBuilderCache objectForKey: key];
 }
 
-- (void)cacheQueryBuilder:(CBLQueryBuilder *)builder
-             forPredicate:(NSPredicate *)predicate
-          sortDescriptors:(NSArray *)sortDescriptors {
+- (void) cacheQueryBuilder: (CBLQueryBuilder*)builder
+              forPredicate: (NSPredicate*)predicate
+           sortDescriptors: (NSArray*)sortDescriptors {
     if (!builder) return;
 
-    NSString *key = [self cacheKeyForQueryBuilderWithPredicate:predicate
-                                               sortDescriptors:sortDescriptors];
+    NSString* key = [self cacheKeyForQueryBuilderWithPredicate: predicate
+                                               sortDescriptors: sortDescriptors];
 
-    [_queryBuilderCache setObject:builder forKey:key];
+    [_queryBuilderCache setObject: builder forKey: key];
 }
 
-- (NSString *)cacheKeyForQueryBuilderWithPredicate:(NSPredicate *)predicate
-                                   sortDescriptors:(NSArray *)sortDescriptors {
-    NSMutableDictionary *keys = [NSMutableDictionary dictionary];
-
+- (NSString*) cacheKeyForQueryBuilderWithPredicate: (NSPredicate*)predicate
+                                   sortDescriptors: (NSArray*)sortDescriptors {
+    NSMutableDictionary* keys = [NSMutableDictionary dictionary];
     if (predicate)
         keys[@"predicate"] = [predicate predicateFormat];
 
     if (sortDescriptors) {
-        NSMutableString *sortDesc = [NSMutableString string];
-        for (NSSortDescriptor *sort in sortDescriptors) {
-            [sortDesc appendFormat:@"%@", sort];
+        NSMutableString* sortDesc = [NSMutableString string];
+        for (NSSortDescriptor* sort in sortDescriptors) {
+            [sortDesc appendFormat: @"%@", sort];
         }
         keys[@"sortDescriptors"] = sortDesc;
     }
 
-    return [self digestCacheKey:keys];
+    return [self digestCacheKey: keys];
 }
 
 /*
- *  Scan thru the predicate and its subpredicates, validate keypaths,
- *  detect non query builder expressions, replace constant values with
- *  template variables, and generate a template variable dictionary.
+ *   Scan thru the predicate and its subpredicates, validate keypaths,
+ *   detect non query builder expressions, replace constant values with
+ *   template variables, and generate a template variable dictionary.
  */
-- (NSPredicate *)scanPredicate:(NSPredicate *)predicate
-                    withEntity:(NSEntityDescription *)entity
-               outTemplateVars:(NSMutableDictionary *)outTemplateVars
-      outHasNonQueryBuilderExp:(BOOL *)outHasNonQueryBuilderExp
-                      outError:(NSError **)outError {
-    NSPredicate *output = nil;
+- (NSPredicate*) scanPredicate: (NSPredicate*)predicate
+                    withEntity: (NSEntityDescription*)entity
+               outTemplateVars: (NSMutableDictionary*)outTemplateVars
+      outHasNonQueryBuilderExp: (BOOL*)outHasNonQueryBuilderExp
+                      outError: (NSError**)outError {
+    NSPredicate* output = nil;
     BOOL hasNonQueryBuilderExp = NO;
 
-    if ([predicate isKindOfClass:[NSCompoundPredicate class]]) {
-        NSCompoundPredicate *compound = (NSCompoundPredicate *)predicate;
-        NSMutableArray *subpredicates = [NSMutableArray arrayWithCapacity:
+    if ([predicate isKindOfClass: [NSCompoundPredicate class]]) {
+        NSCompoundPredicate* compound = (NSCompoundPredicate*)predicate;
+        NSMutableArray* subpredicates = [NSMutableArray arrayWithCapacity:
                                          [compound.subpredicates count]];
         BOOL hasError = NO;
-        for (NSPredicate *subpredicate in compound.subpredicates) {
+        for (NSPredicate* subpredicate in compound.subpredicates) {
             BOOL hasNonQueryBuilderInSubExp;
-            NSPredicate *scanned = [self scanPredicate:subpredicate
-                                              withEntity:entity
-                                         outTemplateVars:outTemplateVars
-                              outHasNonQueryBuilderExp:&hasNonQueryBuilderInSubExp
-                                                outError:outError];
+            NSPredicate* scanned = [self scanPredicate: subpredicate
+                                            withEntity: entity
+                                       outTemplateVars: outTemplateVars
+                              outHasNonQueryBuilderExp: &hasNonQueryBuilderInSubExp
+                                              outError: outError];
             hasNonQueryBuilderExp = hasNonQueryBuilderExp || hasNonQueryBuilderInSubExp;
             if (scanned) {
-                [subpredicates addObject:scanned];
+                [subpredicates addObject: scanned];
             } else {
                 hasError = YES;
                 break;
@@ -874,28 +860,27 @@ static CBLManager* sCBLManager;
         }
 
         if (!hasError) {
-            output = [[NSCompoundPredicate alloc] initWithType:compound.compoundPredicateType
-                                                 subpredicates:subpredicates];
+            output = [[NSCompoundPredicate alloc] initWithType: compound.compoundPredicateType
+                                                 subpredicates: subpredicates];
         }
-    } else if ([predicate isKindOfClass:[NSComparisonPredicate class]]) {
-        NSComparisonPredicate *comparison = (NSComparisonPredicate *)predicate;
-
-        NSExpression *lhs = comparison.leftExpression;
-        NSExpression *rhs = comparison.rightExpression;
+    } else if ([predicate isKindOfClass: [NSComparisonPredicate class]]) {
+        NSComparisonPredicate* comparison = (NSComparisonPredicate*)predicate;
+        NSExpression* lhs = comparison.leftExpression;
+        NSExpression* rhs = comparison.rightExpression;
 
         // Scan the expression with a keypath first to get the current keypath of the expression.
         // We are using the keypath to generate a corresponding template variable name.
-        NSArray *expressions = rhs.expressionType == NSKeyPathExpressionType ?
+        NSArray* expressions = rhs.expressionType == NSKeyPathExpressionType ?
                                                         @[rhs, lhs] : @[lhs, rhs];
         BOOL hasError = NO;
-        NSString *keyPath = nil;
-        for (NSExpression *expression in expressions) {
+        NSString* keyPath = nil;
+        for (NSExpression* expression in expressions) {
             if (expression.expressionType == NSKeyPathExpressionType) {
                 BOOL needJoins;
-                keyPath = [self scanKeyPathExpression:expression
-                                           withEntity:entity
-                                    outNeedJoinsQuery:&needJoins
-                                             outError:outError];
+                keyPath = [self scanKeyPathExpression: expression
+                                           withEntity: entity
+                                    outNeedJoinsQuery: &needJoins
+                                             outError: outError];
                 if (!keyPath) {
                     hasError = YES;
                     break;
@@ -911,48 +896,48 @@ static CBLManager* sCBLManager;
                     break;
                 }
 
-                NSExpression *newExpression = nil;
+                NSExpression* newExpression = nil;
                 id constantValue = expression.constantValue;
 
                 if ([constantValue isKindOfClass:[NSArray class]]) {
                     if (comparison.predicateOperatorType == NSBetweenPredicateOperatorType) {
-                        NSString *lowerVar = [self variableForKeyPath:keyPath
-                                                               suffix:@"_LOWER"
-                                                              current:outTemplateVars];
-                        NSString *uppperVar = [self variableForKeyPath:keyPath
-                                                                suffix:@"_UPPER"
-                                                               current:outTemplateVars];
-                        NSMutableArray *aggrs = [NSMutableArray array];
-                        [aggrs addObject:[NSExpression expressionForVariable:lowerVar]];
-                        [aggrs addObject:[NSExpression expressionForVariable:uppperVar]];
-                        newExpression = [NSExpression expressionForAggregate:aggrs];
+                        NSString* lowerVar = [self variableForKeyPath: keyPath
+                                                               suffix: @"_LOWER"
+                                                              current: outTemplateVars];
+                        NSString* uppperVar = [self variableForKeyPath: keyPath
+                                                                suffix: @"_UPPER"
+                                                               current: outTemplateVars];
+                        NSMutableArray* aggrs = [NSMutableArray array];
+                        [aggrs addObject:[NSExpression expressionForVariable: lowerVar]];
+                        [aggrs addObject:[NSExpression expressionForVariable: uppperVar]];
+                        newExpression = [NSExpression expressionForAggregate: aggrs];
 
-                        id lowerValue = [self scanConstantValue:constantValue[0]];
-                        [outTemplateVars setObject:lowerValue forKey:lowerVar];
+                        id lowerValue = [self scanConstantValue: constantValue[0]];
+                        [outTemplateVars setObject: lowerValue forKey: lowerVar];
 
-                        id upperValue = [self scanConstantValue:constantValue[1]];
-                        [outTemplateVars setObject:upperValue forKey:uppperVar];
+                        id upperValue = [self scanConstantValue: constantValue[1]];
+                        [outTemplateVars setObject: upperValue forKey: uppperVar];
                     } else {
-                        NSMutableArray *values = [NSMutableArray array];
+                        NSMutableArray* values = [NSMutableArray array];
                         for (id value in constantValue) {
-                            id exValue = [self scanConstantValue:value];
-                            [values addObject:exValue];
+                            id exValue = [self scanConstantValue: value];
+                            [values addObject: exValue];
                         }
 
-                        NSString *varName = [self variableForKeyPath:keyPath
-                                                              suffix:@"S"
-                                                             current:outTemplateVars];
-                        newExpression = [NSExpression expressionForVariable:varName];
-                        [outTemplateVars setObject:values forKey:varName];
+                        NSString* varName = [self variableForKeyPath: keyPath
+                                                              suffix: @"S"
+                                                             current: outTemplateVars];
+                        newExpression = [NSExpression expressionForVariable: varName];
+                        [outTemplateVars setObject: values forKey: varName];
                     }
                 } else {
-                    NSString *varName = [self variableForKeyPath:keyPath
-                                                          suffix:nil
-                                                         current:outTemplateVars];
-                    newExpression = [NSExpression expressionForVariable:varName];
+                    NSString* varName = [self variableForKeyPath: keyPath
+                                                          suffix: nil
+                                                         current: outTemplateVars];
+                    newExpression = [NSExpression expressionForVariable: varName];
 
-                    id exValue = [self scanConstantValue:constantValue];
-                    [outTemplateVars setObject:exValue forKey:varName];
+                    id exValue = [self scanConstantValue: constantValue];
+                    [outTemplateVars setObject: exValue forKey: varName];
 
                     if (comparison.predicateOperatorType == NSContainsPredicateOperatorType) {
                         // CBLQueryBuilder doesn't support CONTAINS operation with a non array exp.
@@ -971,11 +956,11 @@ static CBLManager* sCBLManager;
 
         if (!hasError) {
             if  (lhs != comparison.leftExpression || rhs != comparison.rightExpression)
-                output = [NSComparisonPredicate predicateWithLeftExpression:lhs
-                                                            rightExpression:rhs
-                                                                   modifier:comparison.comparisonPredicateModifier
-                                                                       type:comparison.predicateOperatorType
-                                                                    options:comparison.options];
+                output = [NSComparisonPredicate predicateWithLeftExpression: lhs
+                                                            rightExpression: rhs
+                                                                   modifier: comparison.comparisonPredicateModifier
+                                                                       type: comparison.predicateOperatorType
+                                                                    options: comparison.options];
             else
                 output = comparison;
         }
@@ -986,10 +971,10 @@ static CBLManager* sCBLManager;
     }
 
     if (!output && (outError && *outError == nil)) {
-        NSString *desc = [NSString stringWithFormat:@"Unsupported predicate : %@", predicate];
-        *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                        code:CBLIncrementalStoreErrorUnsupportedPredicate
-                                    userInfo:@{ NSLocalizedFailureReasonErrorKey: desc }];
+        NSString* desc = [NSString stringWithFormat:@"Unsupported predicate : %@", predicate];
+        *outError = [NSError errorWithDomain: kCBLISErrorDomain
+                                        code: CBLIncrementalStoreErrorUnsupportedPredicate
+                                    userInfo: @{ NSLocalizedFailureReasonErrorKey: desc }];
         return nil;
     }
 
@@ -997,32 +982,32 @@ static CBLManager* sCBLManager;
 }
 
 /*
- *  Scan an expression, detect if the expression is a joins query, and validate if
- *  the keypath is valid.
+ *   Scan an expression, detect if the expression is a joins query, and validate if
+ *   the keypath is valid.
  */
-- (NSString *)scanKeyPathExpression:(NSExpression *)expression
-                         withEntity:(NSEntityDescription *)entity
-                  outNeedJoinsQuery:(BOOL *)outNeedJoinsQuery
-                           outError:(NSError **)outError {
-    NSString *keyPath = expression.keyPath;
+- (NSString*) scanKeyPathExpression: (NSExpression*)expression
+                         withEntity: (NSEntityDescription*)entity
+                  outNeedJoinsQuery: (BOOL*)outNeedJoinsQuery
+                           outError: (NSError**)outError {
+    NSString* keyPath = expression.keyPath;
 
-    NSDictionary *properties = [entity propertiesByName];
-    id propertyDesc = [properties objectForKey:keyPath];
+    NSDictionary* properties = [entity propertiesByName];
+    id propertyDesc = [properties objectForKey: keyPath];
 
     BOOL hasDotAccess = NO;
     if (!propertyDesc && [keyPath rangeOfString:@"."].location != NSNotFound) {
         hasDotAccess = YES;
-        NSArray *components = [keyPath componentsSeparatedByString:@"."];
-        NSArray *keyComponents = [components subarrayWithRange:
+        NSArray* components = [keyPath componentsSeparatedByString: @"."];
+        NSArray* keyComponents = [components subarrayWithRange:
                                   NSMakeRange(0, components.count - 1)];
-        keyPath = [keyComponents componentsJoinedByString:@"."];
-        propertyDesc = [properties objectForKey:keyPath];
+        keyPath = [keyComponents componentsJoinedByString: @"."];
+        propertyDesc = [properties objectForKey: keyPath];
     }
 
     if (propertyDesc) {
         BOOL needJoins = NO;
         if ([propertyDesc isKindOfClass:[NSRelationshipDescription class]]) {
-            NSRelationshipDescription *rel = (NSRelationshipDescription *)propertyDesc;
+            NSRelationshipDescription* rel = (NSRelationshipDescription*)propertyDesc;
             needJoins = hasDotAccess || rel.toMany;
         }
         if (outNeedJoinsQuery)
@@ -1030,11 +1015,11 @@ static CBLManager* sCBLManager;
     } else {
         keyPath = nil;
         if (outError) {
-            NSString *desc = [NSString stringWithFormat:@"Predicate Keypath '%@' not found in the entity '%@'.",
+            NSString* desc = [NSString stringWithFormat: @"Predicate Keypath '%@' not found in the entity '%@'.",
                               expression.keyPath, entity.name];
-            *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                            code:CBLIncrementalStoreErrorPredicateKeyPathNotFoundInEntity
-                                        userInfo:@{ NSLocalizedFailureReasonErrorKey: desc }];
+            *outError = [NSError errorWithDomain: kCBLISErrorDomain
+                                            code: CBLIncrementalStoreErrorPredicateKeyPathNotFoundInEntity
+                                        userInfo: @{ NSLocalizedFailureReasonErrorKey: desc }];
         }
     }
 
@@ -1042,40 +1027,40 @@ static CBLManager* sCBLManager;
 }
 
 /*
- *  Generate a template variable name based on a given keyp aht and suffix.
- *  The given crrent dictionary contains a current template variable dict
- *  used for detecting variable name collision.
+ *   Generate a template variable name based on a given keyp aht and suffix.
+ *   The given crrent dictionary contains a current template variable dict
+ *   used for detecting variable name collision.
  */
-- (NSString *)variableForKeyPath:(NSString *)keypath
-                          suffix:(NSString *)suffix
-                         current:(NSDictionary *)current {
+- (NSString*) variableForKeyPath: (NSString*)keypath
+                          suffix: (NSString*)suffix
+                         current: (NSDictionary*)current {
     if (!keypath) return nil;
 
     NSUInteger idx = 0u;
-    NSString *base = [NSString stringWithFormat:@"%@%@",
+    NSString* base = [NSString stringWithFormat: @"%@%@",
                       keypath.uppercaseString,
                       (suffix ? suffix.uppercaseString : @"")];
 
-    NSString *variable = [NSString stringWithFormat:@"%@%lu", base, (unsigned long)idx];
-    while ([current objectForKey:variable]) {
-        variable = [NSString stringWithFormat:@"%@%lu", base, (unsigned long)++idx];
+    NSString* variable = [NSString stringWithFormat: @"%@%lu", base, (unsigned long)idx];
+    while ([current objectForKey: variable]) {
+        variable = [NSString stringWithFormat: @"%@%lu", base, (unsigned long)++idx];
     }
 
     return variable;
 }
 
 /*
- *  Scan a constant value, resolve relationship couchbase lite document id if exists,
- *  and extract value within a nested constant value if exists.
+ *   Scan a constant value, resolve relationship couchbase lite document id if exists,
+ *   and extract value within a nested constant value if exists.
  */
-- (id)scanConstantValue:(id)value {
-    if ([value isKindOfClass:[NSManagedObjectID class]])
+- (id) scanConstantValue: (id)value {
+    if ([value isKindOfClass: [NSManagedObjectID class]])
         return [value couchbaseLiteIDRepresentation];
-    else if ([value isKindOfClass:[NSManagedObject class]])
+    else if ([value isKindOfClass: [NSManagedObject class]])
         return [[value objectID] couchbaseLiteIDRepresentation];
-    else if ([value isKindOfClass:[NSExpression class]]) {
+    else if ([value isKindOfClass: [NSExpression class]]) {
         // An aggregate expression can contain constant value exp in its value.
-        NSExpression *expression = (NSExpression *)value;
+        NSExpression* expression = (NSExpression*)value;
         if (expression.expressionType == NSConstantValueExpressionType)
             return expression.constantValue;
         else {
@@ -1088,51 +1073,51 @@ static CBLManager* sCBLManager;
 
 #pragma mark - Query (PostFilter)
 
-- (NSArray *)fetchByEntityAndDoPostFilterWithRequest:(NSFetchRequest *)request
-                                         withContext:(NSManagedObjectContext *)context
-                                            outError:(NSError **)outError {
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%K == %@", kCBLISTypeKey,
+- (NSArray*) fetchByEntityAndDoPostFilterWithRequest: (NSFetchRequest*)request
+                                         withContext: (NSManagedObjectContext*)context
+                                            outError: (NSError**)outError {
+    NSPredicate* predicate = [NSPredicate predicateWithFormat: @"%K == %@", kCBLISTypeKey,
                                 request.entityName];
 
-    CBLQueryBuilder *builder = [self cachedQueryBuilderForPredicate:predicate
-                                                    sortDescriptors:request.sortDescriptors];
+    CBLQueryBuilder* builder = [self cachedQueryBuilderForPredicate: predicate
+                                                    sortDescriptors: request.sortDescriptors];
     if (!builder) {
-        builder = [[CBLQueryBuilder alloc] initWithDatabase:self.database
-                                                     select:nil
-                                             wherePredicate:predicate
-                                                    orderBy:request.sortDescriptors
-                                                      error:outError];
+        builder = [[CBLQueryBuilder alloc] initWithDatabase: self.database
+                                                     select: nil
+                                             wherePredicate: predicate
+                                                    orderBy: request.sortDescriptors
+                                                      error: outError];
     }
 
     if (!builder)
         return nil;
     
-    [self cacheQueryBuilder:builder
-               forPredicate:predicate
-            sortDescriptors:request.sortDescriptors];
+    [self cacheQueryBuilder: builder
+               forPredicate: predicate
+            sortDescriptors: request.sortDescriptors];
 
-    CBLQuery *query = [builder createQueryWithContext:nil];
+    CBLQuery* query = [builder createQueryWithContext: nil];
     query.prefetch = request.predicate != nil;
 
-    CBLQueryEnumerator *rows = [query run:outError];
+    CBLQueryEnumerator* rows = [query run: outError];
     if (!rows) return nil;
 
     // Post filter:
     NSUInteger offset = 0;
-    NSMutableArray *result = [NSMutableArray array];
-    for (CBLQueryRow *row in rows) {
+    NSMutableArray* result = [NSMutableArray array];
+    for (CBLQueryRow* row in rows) {
         if (!request.predicate ||
-            [self evaluatePredicate:request.predicate
-                         withEntity:request.entity
-                     withProperties:row.documentProperties
-                        withContext:context
-                           outError:outError]) {
+            [self evaluatePredicate: request.predicate
+                         withEntity: request.entity
+                     withProperties: row.documentProperties
+                        withContext: context
+                           outError: outError]) {
                 if (offset >= request.fetchOffset) {
-                    NSManagedObjectID *objectID = [self newObjectIDForEntity:request.entity
-                                                        managedObjectContext:context
-                                                                     couchID:row.documentID];
-                    NSManagedObject *object = [context objectWithID:objectID];
-                    [result addObject:object];
+                    NSManagedObjectID* objectID = [self newObjectIDForEntity: request.entity
+                                                        managedObjectContext: context
+                                                                     couchID: row.documentID];
+                    NSManagedObject* object = [context objectWithID: objectID];
+                    [result addObject: object];
                 }
                 if (request.fetchLimit > 0 && result.count == request.fetchLimit) break;
                 offset++;
@@ -1141,13 +1126,13 @@ static CBLManager* sCBLManager;
     return result;
 }
 
-- (BOOL) evaluatePredicate:(NSPredicate*)predicate
-                withEntity:(NSEntityDescription*)entity
-            withProperties:(NSDictionary*)properties
-               withContext:(NSManagedObjectContext *)context
-                  outError:(NSError **)outError {
+- (BOOL) evaluatePredicate: (NSPredicate*)predicate
+                withEntity: (NSEntityDescription*)entity
+            withProperties: (NSDictionary*)properties
+               withContext: (NSManagedObjectContext*)context
+                  outError: (NSError**)outError {
     if ([predicate isKindOfClass:[NSCompoundPredicate class]]) {
-        NSCompoundPredicate *compoundPredicate = (NSCompoundPredicate*)predicate;
+        NSCompoundPredicate* compoundPredicate = (NSCompoundPredicate*)predicate;
         NSCompoundPredicateType type = compoundPredicate.compoundPredicateType;
 
         if (compoundPredicate.subpredicates.count == 0) {
@@ -1165,15 +1150,15 @@ static CBLManager* sCBLManager;
         }
 
         BOOL compoundResult = NO;
-        for (NSPredicate *subpredicate in compoundPredicate.subpredicates) {
-            NSError *error;
-            BOOL result = [self evaluatePredicate:subpredicate
-                                       withEntity:entity
-                                   withProperties:properties
-                                      withContext:context
-                                         outError:&error];
+        for (NSPredicate* subpredicate in compoundPredicate.subpredicates) {
+            NSError* error;
+            BOOL result = [self evaluatePredicate: subpredicate
+                                       withEntity: entity
+                                   withProperties: properties
+                                      withContext: context
+                                         outError: &error];
             if (error) {
-                if (outError) *outError = error;
+                if (outError)* outError = error;
                 return NO;
             }
 
@@ -1195,77 +1180,77 @@ static CBLManager* sCBLManager;
         return compoundResult;
 
     } else if ([predicate isKindOfClass:[NSComparisonPredicate class]]) {
-        NSComparisonPredicate *comparisonPredicate = (NSComparisonPredicate*)predicate;
-        BOOL toManySearch = [self isToManySearchExpression:comparisonPredicate.leftExpression withEntity:entity] ||
-        [self isToManySearchExpression:comparisonPredicate.rightExpression withEntity:entity];
+        NSComparisonPredicate* comparisonPredicate = (NSComparisonPredicate*)predicate;
+        BOOL toManySearch = [self isToManySearchExpression: comparisonPredicate.leftExpression withEntity: entity] ||
+        [self isToManySearchExpression: comparisonPredicate.rightExpression withEntity: entity];
         if (toManySearch && !comparisonPredicate.comparisonPredicateModifier) {
             if (outError) {
-                NSString *desc = [NSString stringWithFormat:@"Unsupported predicate : "
+                NSString* desc = [NSString stringWithFormat:@"Unsupported predicate : "
                                   "%@ (To-many key without ANY or ALL modifier is not allowed here.)", predicate];
-                *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                                code:CBLIncrementalStoreErrorUnsupportedPredicate
-                                            userInfo:@{ NSLocalizedFailureReasonErrorKey: desc }];
+                *outError = [NSError errorWithDomain: kCBLISErrorDomain
+                                                code: CBLIncrementalStoreErrorUnsupportedPredicate
+                                            userInfo: @{ NSLocalizedFailureReasonErrorKey: desc }];
             }
             return NO;
         }
 
-        id leftValue = [self evaluateExpression:comparisonPredicate.leftExpression
-                                     withEntity:entity
-                                 withProperties:properties
-                                    withContext:context];
-        id rightValue = [self evaluateExpression:comparisonPredicate.rightExpression
-                                      withEntity:entity
-                                  withProperties:properties
-                                     withContext:context];
+        id leftValue = [self evaluateExpression: comparisonPredicate.leftExpression
+                                     withEntity: entity
+                                 withProperties: properties
+                                    withContext: context];
+        id rightValue = [self evaluateExpression: comparisonPredicate.rightExpression
+                                      withEntity: entity
+                                  withProperties: properties
+                                     withContext: context];
 
-        NSExpression *leftExpression = [NSExpression expressionForConstantValue:leftValue];
-        NSExpression *rightExpression = [NSExpression expressionForConstantValue:rightValue];
-        NSPredicate *comp = [NSComparisonPredicate predicateWithLeftExpression:leftExpression
-                                                               rightExpression:rightExpression
-                                                                      modifier:comparisonPredicate.comparisonPredicateModifier
-                                                                          type:comparisonPredicate.predicateOperatorType
-                                                                       options:comparisonPredicate.options];
-        BOOL result = [comp evaluateWithObject:nil];
+        NSExpression* leftExpression = [NSExpression expressionForConstantValue: leftValue];
+        NSExpression* rightExpression = [NSExpression expressionForConstantValue: rightValue];
+        NSPredicate* comp = [NSComparisonPredicate predicateWithLeftExpression: leftExpression
+                                                               rightExpression: rightExpression
+                                                                      modifier: comparisonPredicate.comparisonPredicateModifier
+                                                                          type: comparisonPredicate.predicateOperatorType
+                                                                       options: comparisonPredicate.options];
+        BOOL result = [comp evaluateWithObject: nil];
         return result;
     }
 
     return NO;
 }
 
-- (BOOL) isToManySearchExpression:(NSExpression *)expression withEntity:(NSEntityDescription *)entity {
+- (BOOL) isToManySearchExpression: (NSExpression*)expression withEntity: (NSEntityDescription*)entity {
     if (expression.expressionType != NSKeyPathExpressionType)
         return NO;
 
-    NSPropertyDescription *propertyDesc = [entity.propertiesByName objectForKey:expression.keyPath];
+    NSPropertyDescription* propertyDesc = [entity.propertiesByName objectForKey: expression.keyPath];
     if (!propertyDesc) {
-        NSArray *keyProp = [self parseKeyAndPropertyFromKeyPath:expression.keyPath];
+        NSArray* keyProp = [self parseKeyAndPropertyFromKeyPath: expression.keyPath];
         if ([keyProp count] == 2)
-            propertyDesc = [entity.propertiesByName objectForKey:keyProp[0]];
+            propertyDesc = [entity.propertiesByName objectForKey: keyProp[0]];
     }
 
-    return propertyDesc
-    && [propertyDesc isKindOfClass:[NSRelationshipDescription class]]
-    && ((NSRelationshipDescription *)propertyDesc).isToMany;
+    return propertyDesc &&
+           [propertyDesc isKindOfClass:[NSRelationshipDescription class]] &&
+           ((NSRelationshipDescription*)propertyDesc).isToMany;
 }
 
-- (NSArray *) parseKeyAndPropertyFromKeyPath:(NSString *)keyPath {
+- (NSArray*) parseKeyAndPropertyFromKeyPath: (NSString*)keyPath {
     if (!keyPath) return nil;
 
     if ([keyPath rangeOfString:@"."].location != NSNotFound) {
-        NSArray *components = [keyPath componentsSeparatedByString:@"."];
-        NSString *key = [[components subarrayWithRange:NSMakeRange(0, components.count - 1)]
-                         componentsJoinedByString:@"."];
-        NSString *property = [components lastObject];
+        NSArray* components = [keyPath componentsSeparatedByString: @"."];
+        NSString* key = [[components subarrayWithRange: NSMakeRange(0, components.count - 1)]
+                         componentsJoinedByString: @"."];
+        NSString* property = [components lastObject];
         return @[key, property];
     } else {
         return @[keyPath];
     }
 }
 
-- (id) evaluateExpression:(NSExpression*)expression
-               withEntity:(NSEntityDescription*)entity
-           withProperties:(NSDictionary*)properties
-              withContext:(NSManagedObjectContext *)context {
+- (id) evaluateExpression: (NSExpression*)expression
+               withEntity: (NSEntityDescription*)entity
+           withProperties: (NSDictionary*)properties
+              withContext: (NSManagedObjectContext* )context {
     id value = nil;
     switch (expression.expressionType) {
         case NSConstantValueExpressionType:
@@ -1275,38 +1260,38 @@ static CBLManager* sCBLManager;
             value = properties;
             break;
         case NSKeyPathExpressionType: {
-            NSPropertyDescription *propertyDesc = [entity.propertiesByName objectForKey:expression.keyPath];
+            NSPropertyDescription* propertyDesc = [entity.propertiesByName objectForKey: expression.keyPath];
             if (propertyDesc) {
-                value = [properties objectForKey:expression.keyPath];
-                if ([propertyDesc isKindOfClass:[NSAttributeDescription class]]) {
+                value = [properties objectForKey: expression.keyPath];
+                if ([propertyDesc isKindOfClass: [NSAttributeDescription class]]) {
                     if (!value) break;
 
-                    NSAttributeDescription *attr = (NSAttributeDescription *)propertyDesc;
-                    value =  [self convertCoreDataValue:value toCouchbaseLiteValueOfType:attr.attributeType];
-                } else if ([propertyDesc isKindOfClass:[NSRelationshipDescription class]]) {
-                    NSRelationshipDescription *relationDesc = (NSRelationshipDescription*)propertyDesc;
+                    NSAttributeDescription* attr = (NSAttributeDescription* )propertyDesc;
+                    value =  [self convertCoreDataValue: value toCouchbaseLiteValueOfType: attr.attributeType];
+                } else if ([propertyDesc isKindOfClass: [NSRelationshipDescription class]]) {
+                    NSRelationshipDescription* relationDesc = (NSRelationshipDescription*)propertyDesc;
                     if (!relationDesc.isToMany) {
                         if (!value) break;
 
-                        NSString *childDocId = value;
-                        NSManagedObjectID *objectID = [self newObjectIDForEntity:relationDesc.destinationEntity
-                                                                 referenceObject:childDocId];
-                        value = objectID ? [context existingObjectWithID:objectID error:nil] : nil;
+                        NSString* childDocId = value;
+                        NSManagedObjectID* objectID = [self newObjectIDForEntity: relationDesc.destinationEntity
+                                                                 referenceObject: childDocId];
+                        value = objectID ? [context existingObjectWithID: objectID error: nil] : nil;
                     } else {
-                        NSString *parentDocId = [properties objectForKey:@"_id"];
+                        NSString* parentDocId = [properties objectForKey: @"_id"];
                         if (parentDocId) {
-                            CBLQueryEnumerator *rows = [self queryToManyRelation:relationDesc
-                                                                   forParentKeys:@[parentDocId]
-                                                                        prefetch:NO
-                                                                        outError:nil];
+                            CBLQueryEnumerator* rows = [self queryToManyRelation: relationDesc
+                                                                   forParentKeys: @[parentDocId]
+                                                                        prefetch: NO
+                                                                        outError: nil];
                             if (rows) {
-                                NSMutableArray *objects = [NSMutableArray array];
-                                for (CBLQueryRow *row in rows) {
-                                    NSManagedObjectID *objectID = [self newObjectIDForEntity:relationDesc.destinationEntity
-                                                                             referenceObject:row.documentID];
+                                NSMutableArray* objects = [NSMutableArray array];
+                                for (CBLQueryRow* row in rows) {
+                                    NSManagedObjectID* objectID = [self newObjectIDForEntity: relationDesc.destinationEntity
+                                                                             referenceObject: row.documentID];
                                     if (!objectID) continue;
-                                    NSManagedObject *object = [context existingObjectWithID:objectID error:nil];
-                                    if (object) [objects addObject:object];
+                                    NSManagedObject* object = [context existingObjectWithID: objectID error: nil];
+                                    if (object) [objects addObject: object];
                                 }
                                 value = objects;
                             }
@@ -1314,37 +1299,37 @@ static CBLManager* sCBLManager;
                     }
                 }
             } else if ([expression.keyPath rangeOfString:@"."].location != NSNotFound) {
-                NSArray *keyProp = [self parseKeyAndPropertyFromKeyPath:expression.keyPath];
+                NSArray* keyProp = [self parseKeyAndPropertyFromKeyPath: expression.keyPath];
                 if ([keyProp count] < 2) break;
 
-                NSString *srcKeyPath = keyProp[0];
-                NSString *destKeyPath = keyProp[1];
+                NSString* srcKeyPath = keyProp[0];
+                NSString* destKeyPath = keyProp[1];
 
-                propertyDesc = [entity.propertiesByName objectForKey:srcKeyPath];
-                if (![propertyDesc isKindOfClass:[NSRelationshipDescription class]])
+                propertyDesc = [entity.propertiesByName objectForKey: srcKeyPath];
+                if (![propertyDesc isKindOfClass: [NSRelationshipDescription class]])
                     break;
 
-                NSRelationshipDescription *relation = (NSRelationshipDescription*)propertyDesc;
+                NSRelationshipDescription* relation = (NSRelationshipDescription*)propertyDesc;
                 if (!relation.isToMany) {
-                    NSString *childDocId = [properties objectForKey:srcKeyPath];
+                    NSString* childDocId = [properties objectForKey: srcKeyPath];
                     if (childDocId) {
-                        CBLDocument *document = [self.database existingDocumentWithID:childDocId];
+                        CBLDocument* document = [self.database existingDocumentWithID: childDocId];
                         if (document)
-                            value = [document.properties objectForKey:destKeyPath];
+                            value = [document.properties objectForKey: destKeyPath];
                     }
                 } else {
-                    NSString *parentDocId = [properties objectForKey:@"_id"];
+                    NSString* parentDocId = [properties objectForKey: @"_id"];
                     if (parentDocId) {
-                        CBLQueryEnumerator *rows = [self queryToManyRelation:relation
-                                                               forParentKeys:@[parentDocId]
-                                                                    prefetch:YES
-                                                                    outError:nil];
+                        CBLQueryEnumerator* rows = [self queryToManyRelation: relation
+                                                               forParentKeys: @[parentDocId]
+                                                                    prefetch: YES
+                                                                    outError: nil];
                         if (rows) {
-                            NSMutableArray *values = [NSMutableArray array];
-                            for (CBLQueryRow *row in rows) {
+                            NSMutableArray* values = [NSMutableArray array];
+                            for (CBLQueryRow* row in rows) {
                                 id propValue = row.documentProperties[destKeyPath];
                                 if (propValue)
-                                    [values addObject:propValue];
+                                    [values addObject: propValue];
                             }
                             value = values;
                         }
@@ -1370,23 +1355,23 @@ static CBLManager* sCBLManager;
     return value;
 }
 
-- (CBLQueryEnumerator *)queryToManyRelation:(NSRelationshipDescription *)relation
-                              forParentKeys:(NSArray *)parentKeys
-                                   prefetch:(BOOL)prefetch
-                                   outError:(NSError **)outError {
-    CBLView *view = [self.database existingViewNamed:CBLISToManyViewNameForRelationship(relation)];
+- (CBLQueryEnumerator*) queryToManyRelation: (NSRelationshipDescription*)relation
+                              forParentKeys: (NSArray*)parentKeys
+                                   prefetch: (BOOL)prefetch
+                                   outError: (NSError**)outError {
+    CBLView* view = [self.database existingViewNamed: CBLISToManyViewNameForRelationship(relation)];
     if (view) {
         CBLQuery* query = [view createQuery];
         query.keys = parentKeys;
         query.prefetch = prefetch;
-        return [self _queryEnumeratorForQuery:query error:outError];
+        return [self queryEnumeratorForQuery: query error: outError];
     }
     return nil;
 }
 
 #pragma mark - Misc
 
-- (id) convertCoreDataValue:(id)value toCouchbaseLiteValueOfType:(NSAttributeType)type {
+- (id) convertCoreDataValue: (id)value toCouchbaseLiteValueOfType: (NSAttributeType)type {
     id result = nil;
 
     switch (type) {
@@ -1407,7 +1392,7 @@ static CBLManager* sCBLManager;
             result = CBLISIsNull(value) ? @(NO) : value;
             break;
         case NSDateAttributeType:
-            result = CBLISIsNull(value) ? nil : [CBLJSON JSONObjectWithDate:value];
+            result = CBLISIsNull(value) ? nil : [CBLJSON JSONObjectWithDate: value];
             break;
         case NSBinaryDataAttributeType:
         case NSUndefinedAttributeType:
@@ -1421,7 +1406,7 @@ static CBLManager* sCBLManager;
     return result;
 }
 
-- (id) convertCouchbaseLiteValue:(id)value toCoreDataValueOfType:(NSAttributeType)type {
+- (id) convertCouchbaseLiteValue: (id)value toCoreDataValueOfType: (NSAttributeType)type {
     id result = nil;
 
     switch (type) {
@@ -1430,7 +1415,7 @@ static CBLManager* sCBLManager;
         case NSInteger64AttributeType:
             if (CBLISIsNull(value))
                 result = @(0);
-            else if ([value isKindOfClass:[NSNumber class]])
+            else if ([value isKindOfClass: [NSNumber class]])
                 result = @([value longValue]);
             else {
                 WARN(@"Invalid value (%@) for the attribute type : %d", value, (int)type);
@@ -1440,8 +1425,8 @@ static CBLManager* sCBLManager;
         case NSDecimalAttributeType:
             if (CBLISIsNull(value))
                 result = [NSDecimalNumber numberWithDouble:0.0f];
-            else if ([value isKindOfClass:[NSNumber class]])
-                result = [NSDecimalNumber numberWithDouble:[value doubleValue]];
+            else if ([value isKindOfClass: [NSNumber class]])
+                result = [NSDecimalNumber numberWithDouble: [value doubleValue]];
             else {
                 WARN(@"Invalid value (%@) for the attribute type : %d", value, (int)type);
                 result = nil;
@@ -1451,7 +1436,7 @@ static CBLManager* sCBLManager;
         case NSFloatAttributeType:
             if (CBLISIsNull(value))
                 result = @(0.0f);
-            else if ([value isKindOfClass:[NSNumber class]])
+            else if ([value isKindOfClass: [NSNumber class]])
                 result = @([value doubleValue]);
             else {
                 WARN(@"Invalid value (%@) for the attribute type : %d", value, (int)type);
@@ -1461,7 +1446,7 @@ static CBLManager* sCBLManager;
         case NSStringAttributeType:
             if (CBLISIsNull(value))
                 result = @"";
-            else if ([value isKindOfClass:[NSString class]])
+            else if ([value isKindOfClass: [NSString class]])
                 result = value;
             else {
                 WARN(@"Invalid value (%@) for the attribute type : %d", value, (int)type);
@@ -1470,14 +1455,14 @@ static CBLManager* sCBLManager;
         case NSBooleanAttributeType:
             if (CBLISIsNull(value))
                 result = @(NO);
-            else if ([value isKindOfClass:[NSNumber class]])
+            else if ([value isKindOfClass: [NSNumber class]])
                 result = @([value boolValue]);
             else {
                 WARN(@"Invalid value (%@) for the attribute type : %d", value, (int)type);
                 result = nil;
             } break;
         case NSDateAttributeType:
-            result = CBLISIsNull(value) ? nil : [CBLJSON dateWithJSONObject:value];
+            result = CBLISIsNull(value) ? nil : [CBLJSON dateWithJSONObject: value];
             break;
         case NSTransformableAttributeType:
             result = value;
@@ -1490,34 +1475,34 @@ static CBLManager* sCBLManager;
     return result;
 }
 
-- (id) couchbaseLiteRepresentationOfManagedObject:(NSManagedObject*)object
-                              withCouchbaseLiteID:(BOOL)withID {
-    NSEntityDescription *desc = object.entity;
-    NSDictionary *propertyDesc = [desc propertiesByName];
+- (id) couchbaseLiteRepresentationOfManagedObject: (NSManagedObject*)object
+                              withCouchbaseLiteID: (BOOL)withID {
+    NSEntityDescription* desc = object.entity;
+    NSDictionary* propertyDesc = [desc propertiesByName];
 
-    NSMutableDictionary *proxy = [NSMutableDictionary dictionary];
+    NSMutableDictionary* proxy = [NSMutableDictionary dictionary];
 
     [proxy setObject:desc.name
               forKey:kCBLISTypeKey];
 
-    if ([propertyDesc objectForKey:kCBLISCurrentRevisionAttributeName]) {
-        id rev = [object valueForKey:kCBLISCurrentRevisionAttributeName];
+    if ([propertyDesc objectForKey: kCBLISCurrentRevisionAttributeName]) {
+        id rev = [object valueForKey: kCBLISCurrentRevisionAttributeName];
         if (!CBLISIsNull(rev)) {
-            [proxy setObject:rev forKey:@"_rev"];
+            [proxy setObject: rev forKey: @"_rev"];
         }
     }
     
     if (withID) {
-        [proxy setObject:[object.objectID couchbaseLiteIDRepresentation] forKey:@"_id"];
+        [proxy setObject: [object.objectID couchbaseLiteIDRepresentation] forKey: @"_id"];
     }
     
-    for (NSString *property in propertyDesc) {
-        if ([kCBLISCurrentRevisionAttributeName isEqual:property]) continue;
+    for (NSString* property in propertyDesc) {
+        if ([kCBLISCurrentRevisionAttributeName isEqual: property]) continue;
         
-        id desc = [propertyDesc objectForKey:property];
+        id desc = [propertyDesc objectForKey: property];
         
-        if ([desc isKindOfClass:[NSAttributeDescription class]]) {
-            NSAttributeDescription *attr = desc;
+        if ([desc isKindOfClass: [NSAttributeDescription class]]) {
+            NSAttributeDescription* attr = desc;
             
             if ([attr isTransient]) {
                 continue;
@@ -1528,20 +1513,20 @@ static CBLManager* sCBLManager;
                 continue;
             }
             
-            id value = [object valueForKey:property];
+            id value = [object valueForKey: property];
             
             if (value) {
                 NSAttributeType attributeType = [attr attributeType];
                 
                 if (attr.valueTransformerName) {
-                    NSValueTransformer *transformer = [NSValueTransformer valueTransformerForName:attr.valueTransformerName];
+                    NSValueTransformer* transformer = [NSValueTransformer valueTransformerForName: attr.valueTransformerName];
 
                     if (!transformer) {
                         WARN(@"Value transformer for attribute %@ with name %@ not found", attr.name, attr.valueTransformerName);
                         continue;
                     }
                     
-                    value = [transformer transformedValue:value];
+                    value = [transformer transformedValue: value];
                     
                     Class transformedClass = [[transformer class] transformedValueClass];
                     if (transformedClass == [NSString class]) {
@@ -1555,20 +1540,18 @@ static CBLManager* sCBLManager;
                     }
                 }
                 
-                value = [self convertCoreDataValue:value toCouchbaseLiteValueOfType:attributeType];
+                value = [self convertCoreDataValue: value toCouchbaseLiteValueOfType: attributeType];
                 if (value) {
-                    [proxy setObject:value forKey:property];
+                    [proxy setObject: value forKey: property];
                 }
             }
-        } else if ([desc isKindOfClass:[NSRelationshipDescription class]]) {
-            NSRelationshipDescription *rel = desc;
-            
-            id relationshipDestination = [object valueForKey:property];
-            
+        } else if ([desc isKindOfClass: [NSRelationshipDescription class]]) {
+            NSRelationshipDescription* rel = desc;
+            id relationshipDestination = [object valueForKey: property];
             if (relationshipDestination) {
                 if (![rel isToMany]) {
-                    NSManagedObjectID *objectID = [relationshipDestination valueForKey:@"objectID"];
-                    [proxy setObject:[objectID couchbaseLiteIDRepresentation] forKey:property];
+                    NSManagedObjectID* objectID = [relationshipDestination valueForKey: @"objectID"];
+                    [proxy setObject: [objectID couchbaseLiteIDRepresentation] forKey: property];
                 }
             }
         }
@@ -1577,19 +1560,19 @@ static CBLManager* sCBLManager;
     return proxy;
 }
 
-- (NSDictionary*) coreDataPropertiesOfDocumentWithID:(NSString*)documentID
-                                          properties:(NSDictionary*)properties
-                                          withEntity:(NSEntityDescription*)entity
-                                           inContext:(NSManagedObjectContext*)context {
-    NSMutableDictionary *result = [NSMutableDictionary dictionaryWithCapacity:properties.count];
+- (NSDictionary*) coreDataPropertiesOfDocumentWithID: (NSString*)documentID
+                                          properties: (NSDictionary*)properties
+                                          withEntity: (NSEntityDescription*)entity
+                                           inContext: (NSManagedObjectContext*)context {
+    NSMutableDictionary* result = [NSMutableDictionary dictionaryWithCapacity: properties.count];
     
-    NSDictionary *propertyDesc = [entity propertiesByName];
+    NSDictionary* propertyDesc = [entity propertiesByName];
     
-    for (NSString *property in propertyDesc) {
-        id desc = [propertyDesc objectForKey:property];
+    for (NSString* property in propertyDesc) {
+        id desc = [propertyDesc objectForKey: property];
         
-        if ([desc isKindOfClass:[NSAttributeDescription class]]) {
-            NSAttributeDescription *attr = desc;
+        if ([desc isKindOfClass: [NSAttributeDescription class]]) {
+            NSAttributeDescription* attr = desc;
             
             if ([attr isTransient]) {
                 continue;
@@ -1597,56 +1580,54 @@ static CBLManager* sCBLManager;
             
             // handle binary attributes specially
             if ([attr attributeType] == NSBinaryDataAttributeType) {
-                id value = [self _loadDataForAttachmentWithName:property ofDocumentWithID:documentID];
+                id value = [self loadDataForAttachmentWithName: property ofDocumentWithID: documentID];
                 if (value) {
-                    [result setObject:value forKey:property];
+                    [result setObject: value forKey: property];
                 }
                 
                 continue;
             }
             
             id value = nil;
-            if ([kCBLISCurrentRevisionAttributeName isEqual:property]) {
-                value = [properties objectForKey:@"_rev"];
+            if ([kCBLISCurrentRevisionAttributeName isEqual: property]) {
+                value = [properties objectForKey: @"_rev"];
             } else {
-                value = [properties objectForKey:property];
+                value = [properties objectForKey: property];
             }
             
             if (value) {
                 NSAttributeType attributeType = [attr attributeType];
                 
                 if (attr.valueTransformerName) {
-                    NSValueTransformer *transformer = [NSValueTransformer valueTransformerForName:attr.valueTransformerName];
-                    
+                    NSValueTransformer* transformer = [NSValueTransformer valueTransformerForName: attr.valueTransformerName];
                     Class transformedClass = [[transformer class] transformedValueClass];
                     if (transformedClass == [NSString class]) {
-                        value = [transformer reverseTransformedValue:value];
+                        value = [transformer reverseTransformedValue: value];
                     } else if (transformedClass == [NSData class]) {
-                        value = [transformer reverseTransformedValue:[[NSData alloc]initWithBase64EncodedString:value options:0]];
+                        value = [transformer reverseTransformedValue: [[NSData alloc]initWithBase64EncodedString: value options: 0]];
                     } else {
                         INFO(@"Unsupported value transformer transformedValueClass: %@", NSStringFromClass(transformedClass));
                         continue;
                     }
                 }
 
-                value = [self convertCouchbaseLiteValue:value toCoreDataValueOfType:attributeType];
+                value = [self convertCouchbaseLiteValue: value toCoreDataValueOfType: attributeType];
 
                 if (value) {
-                    [result setObject:value forKey:property];
+                    [result setObject: value forKey: property];
                 }
-                
             }
-        } else if ([desc isKindOfClass:[NSRelationshipDescription class]]) {
-            NSRelationshipDescription *rel = desc;
+        } else if ([desc isKindOfClass: [NSRelationshipDescription class]]) {
+            NSRelationshipDescription* rel = desc;
             
             if (![rel isToMany]) { // only handle to-one relationships
-                id value = [properties objectForKey:property];
+                id value = [properties objectForKey: property];
                 
                 if (!CBLISIsNull(value)) {
-                    NSManagedObjectID *destination = [self newObjectIDForEntity:rel.destinationEntity
-                                                                referenceObject:value];
+                    NSManagedObjectID* destination = [self newObjectIDForEntity: rel.destinationEntity
+                                                                referenceObject: value];
                     
-                    [result setObject:destination forKey:property];
+                    [result setObject: destination forKey: property];
                 }
             }
         }
@@ -1655,17 +1636,17 @@ static CBLManager* sCBLManager;
     return result;
 }
 
-/** Convenience method to execute a CouchbaseLite query and build a telling NSError if it fails. */
-- (CBLQueryEnumerator*) _queryEnumeratorForQuery:(CBLQuery*)query error:(NSError**)outError {
-    NSError *error;
-    CBLQueryEnumerator *rows = [query run:&error];
+/** Convenience method to execute a CouchbaseLite query and build a telling NSError if it fails.*/
+- (CBLQueryEnumerator*) queryEnumeratorForQuery: (CBLQuery*)query error: (NSError**)outError {
+    NSError* error;
+    CBLQueryEnumerator* rows = [query run: &error];
     if (!rows) {
-        if (outError) *outError = [NSError errorWithDomain:kCBLISErrorDomain
-                                                      code:CBLIncrementalStoreErrorQueryingCouchbaseLiteFailed
-                                                  userInfo:@{
-                                                             NSLocalizedFailureReasonErrorKey: @"Error querying CouchbaseLite",
-                                                             NSUnderlyingErrorKey: error
-                                                             }];
+        if (outError) *outError = [NSError errorWithDomain: kCBLISErrorDomain
+                                                      code: CBLIncrementalStoreErrorQueryingCouchbaseLiteFailed
+                                                  userInfo: @{
+                                                              NSLocalizedFailureReasonErrorKey: @"Error querying CouchbaseLite",
+                                                              NSUnderlyingErrorKey: error
+                                                              }];
         return nil;
     }
     
@@ -1674,7 +1655,7 @@ static CBLManager* sCBLManager;
 
 #pragma mark - Cache
 
-- (NSData*)SHA1:(NSData *)input  {
+- (NSData*) SHA1: (NSData*)input {
     unsigned char digest[SHA_DIGEST_LENGTH];
     SHA_CTX ctx;
     SHA1_Init(&ctx);
@@ -1683,30 +1664,30 @@ static CBLManager* sCBLManager;
     return [NSData dataWithBytes: &digest length: sizeof(digest)];
 }
 
-- (NSString *)digestCacheKey:(id)key {
+- (NSString*) digestCacheKey: (id)key {
     if (!key) return nil;
 
-    NSError *error;
-    NSData *data = [CBLJSON dataWithJSONObject:key options:0 error:&error];
+    NSError* error;
+    NSData* data = [CBLJSON dataWithJSONObject: key options:0 error: &error];
     if (!data) {
 #ifdef DEBUG_DETAILS
         ERROR(@"Invalid cache key : %@", key);
 #endif
         return nil;
     }
-    NSString *encoded = [CBLJSON base64StringWithData:data];
+    NSString* encoded = [CBLJSON base64StringWithData: data];
     return encoded;
 }
 
-- (NSString *)cacheKeyForFetchRequest:(NSFetchRequest *)request {
-    NSMutableDictionary *keys = [NSMutableDictionary dictionary];
+- (NSString*) cacheKeyForFetchRequest: (NSFetchRequest*)request {
+    NSMutableDictionary* keys = [NSMutableDictionary dictionary];
 
     if (request.predicate)
         keys[@"predicate"] = [request.predicate predicateFormat];
 
     if (request.sortDescriptors) {
-        NSMutableString *sortDesc = [NSMutableString string];
-        for (NSSortDescriptor *sort in request.sortDescriptors) {
+        NSMutableString* sortDesc = [NSMutableString string];
+        for (NSSortDescriptor* sort in request.sortDescriptors) {
             [sortDesc appendFormat:@"%@", sort];
         }
         keys[@"sortDescriptors"] = sortDesc;
@@ -1718,222 +1699,213 @@ static CBLManager* sCBLManager;
     if (request.fetchOffset > 0)
         keys[@"fetchOffset"] = @(request.fetchOffset);
 
-    NSString *digestedKey = [self digestCacheKey:keys];
+    NSString* digestedKey = [self digestCacheKey: keys];
     return [NSString stringWithFormat:@"%@-%@", request.entityName, digestedKey];
 }
 
-- (NSArray *)cachedObjectsForFetchRequest:(NSFetchRequest *)request {
-    NSString *key = [self cacheKeyForFetchRequest:request];
+- (NSArray*) cachedObjectsForFetchRequest: (NSFetchRequest*)request {
+    NSString* key = [self cacheKeyForFetchRequest: request];
     if (!key) return nil;
-    return [_fetchRequestResultCache objectForKey:key];
+    return [_fetchRequestResultCache objectForKey: key];
 }
 
-- (void)cacheObjects:(NSArray *)objects forFetchRequest:(NSFetchRequest *)request {
-    NSString *key = [self cacheKeyForFetchRequest:request];
+- (void) cacheObjects: (NSArray*)objects forFetchRequest: (NSFetchRequest*)request {
+    NSString* key = [self cacheKeyForFetchRequest: request];
     if (!key) return;
-    [_fetchRequestResultCache setObject:objects forKey:key];
+    [_fetchRequestResultCache setObject: objects forKey: key];
 }
 
-- (void)purgeCachedObjectsForEntityName:(NSString *)entity {
-    NSString *prefix = [NSString stringWithFormat:@"%@-", entity];
-    for (NSString *key in [_fetchRequestResultCache allKeys]) {
-        if ([key hasPrefix:prefix]) {
-            [_fetchRequestResultCache removeObjectForKey:key];
+- (void) purgeCachedObjectsForEntityName: (NSString*)entity {
+    NSString* prefix = [NSString stringWithFormat: @"%@-", entity];
+    for (NSString* key in [_fetchRequestResultCache allKeys]) {
+        if ([key hasPrefix: prefix]) {
+            [_fetchRequestResultCache removeObjectForKey: key];
         }
     }
 }
 
 #pragma mark - Views
 
-- (void) _setViewName:(NSString*)viewName forFetchingProperty:(NSString*)propertyName fromEntity:(NSString*)entity
-{
-    [_entityAndPropertyToFetchViewName setObject:viewName
-                                          forKey:[NSString stringWithFormat:@"%@_%@", entity, propertyName]];
+- (void) setViewName: (NSString*)viewName forFetchingProperty: (NSString*)propertyName fromEntity: (NSString*)entity {
+    [_entityAndPropertyToFetchViewName setObject: viewName
+                                          forKey: [NSString stringWithFormat:@"%@_%@", entity, propertyName]];
 }
 
 #pragma mark - Attachments
 
-- (NSData*) _loadDataForAttachmentWithName:(NSString*)name ofDocumentWithID:(NSString*)documentID
-{
-    CBLDocument *document = [self.database documentWithID:documentID];
-    CBLAttachment *attachment = [document.currentRevision attachmentNamed:name];
+- (NSData*) loadDataForAttachmentWithName: (NSString*)name ofDocumentWithID: (NSString*)documentID {
+    CBLDocument* document = [self.database documentWithID: documentID];
+    CBLAttachment* attachment = [document.currentRevision attachmentNamed: name];
     return attachment.content;
 }
 
 #pragma mark - Change Handling
 
-- (void) addObservingManagedObjectContext:(NSManagedObjectContext*)context
-{
+- (void) addObservingManagedObjectContext:(NSManagedObjectContext*)context {
     if (!_observingManagedObjectContexts) {
-        _observingManagedObjectContexts = [[NSHashTable alloc] initWithOptions:NSPointerFunctionsWeakMemory capacity:10];
+        _observingManagedObjectContexts = [[NSHashTable alloc] initWithOptions: NSPointerFunctionsWeakMemory capacity:10];
     }
     [_observingManagedObjectContexts addObject:context];
 }
 
-- (void) removeObservingManagedObjectContext:(NSManagedObjectContext*)context
-{
+- (void) removeObservingManagedObjectContext:(NSManagedObjectContext*)context {
     [_observingManagedObjectContexts removeObject:context];
 }
 
-- (void) _informManagedObjectContext:(NSManagedObjectContext*)context updatedIDs:(NSArray*)updatedIDs deletedIDs:(NSArray*)deletedIDs
-{
-    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithCapacity:3];
-    NSMutableSet *updatedEntities = [NSMutableSet set];
+- (void) informManagedObjectContext: (NSManagedObjectContext*)context updatedIDs: (NSArray*)updatedIDs deletedIDs: (NSArray*)deletedIDs {
+    NSMutableDictionary* userInfo = [NSMutableDictionary dictionaryWithCapacity: 3];
+    NSMutableSet* updatedEntities = [NSMutableSet set];
 
     if (updatedIDs.count > 0) {
-        NSMutableArray *updated = [NSMutableArray arrayWithCapacity:updatedIDs.count];
-        NSMutableArray *inserted = [NSMutableArray arrayWithCapacity:updatedIDs.count];
+        NSMutableArray* updated = [NSMutableArray arrayWithCapacity: updatedIDs.count];
+        NSMutableArray* inserted = [NSMutableArray arrayWithCapacity: updatedIDs.count];
         
-        for (NSManagedObjectID *mocid in updatedIDs) {
-            NSManagedObject *moc = [context objectRegisteredForID:mocid];
+        for (NSManagedObjectID* mocid in updatedIDs) {
+            NSManagedObject* moc = [context objectRegisteredForID: mocid];
             if (!moc) {
-                moc = [context objectWithID:mocid];
-                [inserted addObject:moc];
+                moc = [context objectWithID: mocid];
+                [inserted addObject: moc];
             } else {
-                [context refreshObject:moc mergeChanges:YES];
-                [updated addObject:moc];
+                [context refreshObject: moc mergeChanges: YES];
+                [updated addObject: moc];
             }
 
             // Ensure that a fault has been fired:
-            [moc willAccessValueForKey:nil];
-            [context refreshObject:moc mergeChanges:YES];
+            [moc willAccessValueForKey: nil];
+            [context refreshObject: moc mergeChanges: YES];
 
-            [updatedEntities addObject:moc.entity.name];
+            [updatedEntities addObject: moc.entity.name];
         }
-        [userInfo setObject:updated forKey:NSUpdatedObjectsKey];
+        [userInfo setObject: updated forKey: NSUpdatedObjectsKey];
         if (inserted.count > 0) {
-            [userInfo setObject:inserted forKey:NSInsertedObjectsKey];
+            [userInfo setObject: inserted forKey: NSInsertedObjectsKey];
         }
     }
     
     if (deletedIDs.count > 0) {
-        NSMutableArray *deleted = [NSMutableArray arrayWithCapacity:deletedIDs.count];
-        for (NSManagedObjectID *mocid in deletedIDs) {
-            NSManagedObject *moc = [context objectWithID:mocid];
-            [context deleteObject:moc];
+        NSMutableArray* deleted = [NSMutableArray arrayWithCapacity: deletedIDs.count];
+        for (NSManagedObjectID* mocid in deletedIDs) {
+            NSManagedObject* moc = [context objectWithID: mocid];
+            [context deleteObject: moc];
             // load object again to get a fault
-            [deleted addObject:[context objectWithID:mocid]];
+            [deleted addObject: [context objectWithID: mocid]];
 
-            [updatedEntities addObject:moc.entity.name];
+            [updatedEntities addObject: moc.entity.name];
         }
-        [userInfo setObject:deleted forKey:NSDeletedObjectsKey];
+        [userInfo setObject: deleted forKey: NSDeletedObjectsKey];
     }
 
     // Clear cache:
-    for (NSString *entity in updatedEntities) {
-        [self purgeCachedObjectsForEntityName:entity];
+    for (NSString* entity in updatedEntities) {
+        [self purgeCachedObjectsForEntityName: entity];
     }
 
-    NSNotification *didUpdateNote = [NSNotification notificationWithName:NSManagedObjectContextObjectsDidChangeNotification
-                                                                  object:context userInfo:userInfo];
-    [context mergeChangesFromContextDidSaveNotification:didUpdateNote];
+    NSNotification* didUpdateNote = [NSNotification notificationWithName: NSManagedObjectContextObjectsDidChangeNotification
+                                                                  object: context
+                                                                userInfo: userInfo];
+    [context mergeChangesFromContextDidSaveNotification: didUpdateNote];
 }
 
-- (void) _informObservingManagedObjectContextsAboutUpdatedIDs:(NSArray*)updatedIDs deletedIDs:(NSArray*)deletedIDs
-{
-    for (NSManagedObjectContext *context in self.observingManagedObjectContexts) {
-        [self _informManagedObjectContext:context updatedIDs:updatedIDs deletedIDs:deletedIDs];
+- (void) informObservingManagedObjectContextsAboutUpdatedIDs: (NSArray*)updatedIDs deletedIDs: (NSArray*)deletedIDs {
+    for (NSManagedObjectContext* context in self.observingManagedObjectContexts) {
+        [self informManagedObjectContext: context updatedIDs: updatedIDs deletedIDs: deletedIDs];
     }
 }
 
-- (void) _couchDocumentsChanged:(NSArray*)changes
-{
+- (void) couchDocumentsChanged: (NSArray*)changes {
 #if CBLIS_NO_CHANGE_COALESCING
-    [_coalescedChanges addObjectsFromArray:changes];
-    [self _processCouchbaseLiteChanges];
+    [_coalescedChanges addObjectsFromArray: changes];
+    [self processCouchbaseLiteChanges];
 #else
-    [NSThread cancelPreviousPerformRequestsWithTarget:self selector:@selector(_processCouchbaseLiteChanges) object:nil];
+    [NSThread cancelPreviousPerformRequestsWithTarget: self selector: @selector(processCouchbaseLiteChanges) object: nil];
     
     @synchronized(self) {
-        [_coalescedChanges addObjectsFromArray:changes];
+        [_coalescedChanges addObjectsFromArray: changes];
     }
     
-    [self performSelector:@selector(_processCouchbaseLiteChanges) withObject:nil afterDelay:0.1];
+    [self performSelector: @selector(processCouchbaseLiteChanges) withObject: nil afterDelay: 0.1];
 #endif
 }
 
-- (void) _processCouchbaseLiteChanges
-{
-    NSArray *changes = nil;
+- (void) processCouchbaseLiteChanges {
+    NSArray* changes = nil;
     @synchronized(self) {
         changes = _coalescedChanges;
-        _coalescedChanges = [[NSMutableArray alloc] initWithCapacity:20];
+        _coalescedChanges = [[NSMutableArray alloc] initWithCapacity: 20];
     }
     
-    NSMutableSet *changedEntitites = [NSMutableSet setWithCapacity:changes.count];
+    NSMutableSet* changedEntitites = [NSMutableSet setWithCapacity: changes.count];
+    NSMutableArray* deletedObjectIDs = [NSMutableArray array];
+    NSMutableArray* updatedObjectIDs = [NSMutableArray array];
     
-    NSMutableArray *deletedObjectIDs = [NSMutableArray array];
-    NSMutableArray *updatedObjectIDs = [NSMutableArray array];
-    
-    for (CBLDatabaseChange *change in changes) {
+    for (CBLDatabaseChange* change in changes) {
         if (!change.isCurrentRevision) continue;
-        if ([change.documentID hasPrefix:@"CBLIS"]) continue;
+        if ([change.documentID hasPrefix: @"CBLIS"]) continue;
         
-        CBLDocument *doc = [self.database documentWithID:change.documentID];
-        CBLRevision *rev = [doc revisionWithID:change.revisionID];
+        CBLDocument* doc = [self.database documentWithID: change.documentID];
+        CBLRevision* rev = [doc revisionWithID: change.revisionID];
         
         BOOL deleted = rev.isDeletion;
 
-        NSDictionary *properties = [rev properties];
+        NSDictionary* properties = [rev properties];
         
-        NSString *type = [properties objectForKey:kCBLISTypeKey];
-        NSString *reference = change.documentID;
+        NSString* type = [properties objectForKey: kCBLISTypeKey];
+        NSString* reference = change.documentID;
         
-        NSEntityDescription *entity = [self.persistentStoreCoordinator.managedObjectModel.entitiesByName objectForKey:type];
-        NSManagedObjectID *objectID = [self newObjectIDForEntity:entity referenceObject:reference];
+        NSEntityDescription* entity = [self.persistentStoreCoordinator.managedObjectModel.entitiesByName objectForKey: type];
+        NSManagedObjectID* objectID = [self newObjectIDForEntity: entity referenceObject: reference];
         
         if (deleted) {
-            [deletedObjectIDs addObject:objectID];
+            [deletedObjectIDs addObject: objectID];
         } else {
-            [updatedObjectIDs addObject:objectID];
+            [updatedObjectIDs addObject: objectID];
         }
 
-        [changedEntitites addObject:type];
+        [changedEntitites addObject: type];
     }
     
-    [self _informObservingManagedObjectContextsAboutUpdatedIDs:updatedObjectIDs deletedIDs:deletedObjectIDs];
+    [self informObservingManagedObjectContextsAboutUpdatedIDs: updatedObjectIDs deletedIDs: deletedObjectIDs];
     
-    NSDictionary *userInfo = @{
+    NSDictionary* userInfo = @{
                                NSDeletedObjectsKey: deletedObjectIDs,
                                NSUpdatedObjectsKey: updatedObjectIDs
                                };
     
-    [[NSNotificationCenter defaultCenter] postNotificationName:kCBLISObjectHasBeenChangedInStoreNotification
-                                                        object:self userInfo:userInfo];
+    [[NSNotificationCenter defaultCenter] postNotificationName: kCBLISObjectHasBeenChangedInStoreNotification
+                                                        object: self
+                                                      userInfo: userInfo];
 }
 
 - (void) stop {
 #if !CBLIS_NO_CHANGE_COALESCING
-    [NSThread cancelPreviousPerformRequestsWithTarget:self
-                                             selector:@selector(_processCouchbaseLiteChanges)
-                                               object:nil];
+    [NSThread cancelPreviousPerformRequestsWithTarget: self
+                                             selector: @selector(processCouchbaseLiteChanges)
+                                               object: nil];
     if (_coalescedChanges.count > 0) {
-        [self _processCouchbaseLiteChanges];
+        [self processCouchbaseLiteChanges];
     }
 #endif
 }
 
 #pragma mark - Conflicts handling
 
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
-{
-    if ([@"rows" isEqualToString:keyPath]) {
-        CBLLiveQuery *query = object;
+- (void) observeValueForKeyPath: (NSString*)keyPath ofObject: (id)object change: (NSDictionary*)change context: (void*)context {
+    if ([@"rows" isEqualToString: keyPath]) {
+        CBLLiveQuery* query = object;
         
-        NSError *error;
-        CBLQueryEnumerator *enumerator = [query run:&error];
+        NSError* error;
+        CBLQueryEnumerator* enumerator = [query run: &error];
         
         if (enumerator.count == 0) return;
         
-        [self _resolveConflicts:enumerator];
+        [self resolveConflicts: enumerator];
     }
 }
 
-- (void) _resolveConflicts:(CBLQueryEnumerator*)enumerator
-{
+- (void) resolveConflicts: (CBLQueryEnumerator*)enumerator {
     // resolve conflicts
-    for (CBLQueryRow *row in enumerator) {
-        if ([kCBLISMetadataDocumentID isEqual:row.documentID]) {
+    for (CBLQueryRow* row in enumerator) {
+        if ([kCBLISMetadataDocumentID isEqual: row.documentID]) {
             // TODO: what to do here?
             continue;
         }
@@ -1942,40 +1914,39 @@ static CBLManager* sCBLManager;
     }
 }
 
-- (CBLISConflictHandler) _defaultConflictHandler
-{
-    CBLISConflictHandler handler = ^(NSArray *conflictingRevisions) {
+- (CBLISConflictHandler) defaultConflictHandler {
+    CBLISConflictHandler handler = ^(NSArray* conflictingRevisions) {
         // merges changes by
         // - taking the winning revision
         // - adding missing values from other revisions (starting with biggest version)
-        CBLRevision *winning = conflictingRevisions[0];
-        NSMutableDictionary *properties = [winning.properties mutableCopy];
+        CBLRevision* winning = conflictingRevisions[0];
+        NSMutableDictionary* properties = [winning.properties mutableCopy];
         
         NSRange otherRevisionsRange = NSMakeRange(1, conflictingRevisions.count - 1);
-        NSArray *otherRevisions = [conflictingRevisions subarrayWithRange:otherRevisionsRange];
+        NSArray* otherRevisions = [conflictingRevisions subarrayWithRange: otherRevisionsRange];
         
-        NSArray *desc = @[[NSSortDescriptor sortDescriptorWithKey:@"revisionID"
-                                                        ascending:NO]];
-        NSArray *sortedRevisions = [otherRevisions sortedArrayUsingDescriptors:desc];
+        NSArray* desc = @[[NSSortDescriptor sortDescriptorWithKey: @"revisionID"
+                                                        ascending: NO]];
+        NSArray* sortedRevisions = [otherRevisions sortedArrayUsingDescriptors: desc];
         
         // this solution merges missing keys from other conflicting revisions to not loose any values
-        for (CBLRevision *rev in sortedRevisions) {
-            for (NSString *key in rev.properties) {
-                if ([key hasPrefix:@"_"]) continue;
+        for (CBLRevision* rev in sortedRevisions) {
+            for (NSString* key in rev.properties) {
+                if ([key hasPrefix: @"_"]) continue;
                 
                 if (![properties objectForKey:key]) {
-                    [properties setObject:[rev propertyForKey:key] forKey:key];
+                    [properties setObject:[rev propertyForKey: key] forKey: key];
                 }
             }
         }
         
         // TODO: Attachments
         
-        CBLUnsavedRevision *newRevision = [winning.document newRevision];
-        [newRevision setProperties:properties];
+        CBLUnsavedRevision* newRevision = [winning.document newRevision];
+        [newRevision setProperties: properties];
         
-        NSError *error;
-        [newRevision save:&error];
+        NSError* error;
+        [newRevision save: &error];
     };
     return handler;
 }
@@ -1983,11 +1954,10 @@ static CBLManager* sCBLManager;
 #pragma mark -
 
 /** Returns the properties that are stored for deleting a document. Must contain at least "_rev" and "_deleted" = true for 
- * CouchbaseLite and kCBLISTypeKey for this store. Can be overridden if you need more for filtered syncing, for example.
+ *  CouchbaseLite and kCBLISTypeKey for this store. Can be overridden if you need more for filtered syncing, for example.
  */
-- (NSDictionary*) _propertiesForDeletingDocument:(CBLDocument*)doc
-{
-    NSDictionary *contents = @{
+- (NSDictionary*) propertiesForDeletingDocument: (CBLDocument*)doc {
+    NSDictionary* contents = @{
                                @"_deleted": @YES,
                                @"_rev": [doc propertyForKey:@"_rev"],
                                kCBLISTypeKey: [doc propertyForKey:kCBLISTypeKey]
@@ -2001,10 +1971,9 @@ static CBLManager* sCBLManager;
 @implementation NSManagedObjectID (CBLIncrementalStore)
 
 /** Returns an internal representation of this objectID that is used as _id in Couchbase. */
-- (NSString*) couchbaseLiteIDRepresentation
-{
+- (NSString*) couchbaseLiteIDRepresentation {
     // +1 because of "p" prefix in managed object IDs
-    NSString *uuid = [[self.URIRepresentation lastPathComponent] substringFromIndex:kCBLISManagedObjectIDPrefix.length + 1];
+    NSString* uuid = [[self.URIRepresentation lastPathComponent] substringFromIndex: kCBLISManagedObjectIDPrefix.length + 1];
     return uuid;
 }
 
@@ -2013,22 +1982,19 @@ static CBLManager* sCBLManager;
 #pragma mark - Utilities
 
 /** Checks if value is nil or NSNull. */
-BOOL CBLISIsNull(id value)
-{
-    return value == nil || [value isKindOfClass:[NSNull class]];
+BOOL CBLISIsNull(id value) {
+    return value == nil || [value isKindOfClass: [NSNull class]];
 }
 
-/** Returns name of a view that returns objectIDs for all destination entities of a to-many relationship. */
-NSString *CBLISToManyViewNameForRelationship(NSRelationshipDescription *relationship)
-{
-    NSString *entityName = relationship.entity.name;
-    NSString *destinationName = relationship.destinationEntity.name;
-    return [NSString stringWithFormat:kCBLISFetchEntityToManyViewNameFormat, entityName, destinationName];
+/** Returns name of a view that returns objectIDs for all destination entities of a to-many relationship.*/
+NSString* CBLISToManyViewNameForRelationship(NSRelationshipDescription* relationship) {
+    NSString* entityName = relationship.entity.name;
+    NSString* destinationName = relationship.destinationEntity.name;
+    return [NSString stringWithFormat: kCBLISFetchEntityToManyViewNameFormat, entityName, destinationName];
 }
 
-/** Returns a readable name for a NSFetchRequestResultType */
-NSString *CBLISResultTypeName(NSFetchRequestResultType resultType)
-{
+/** Returns a readable name for a NSFetchRequestResultType*/
+NSString* CBLISResultTypeName(NSFetchRequestResultType resultType) {
     switch (resultType) {
         case NSManagedObjectResultType:
             return @"NSManagedObjectResultType";

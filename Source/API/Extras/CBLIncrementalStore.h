@@ -8,8 +8,8 @@
 
 #import <CoreData/CoreData.h>
 
-extern NSString * const kCBLISErrorDomain;
-extern NSString * const kCBLISObjectHasBeenChangedInStoreNotification;
+extern NSString* const kCBLISErrorDomain;
+extern NSString* const kCBLISObjectHasBeenChangedInStoreNotification;
 
 /** Error codes for CBLIncrementalStore. */
 typedef enum
@@ -42,7 +42,7 @@ typedef enum
  *
  * @parameter conflictingRevisions the conflicting revisions of that document as CBLRevision instances.
  */
-typedef void(^CBLISConflictHandler)(NSArray *conflictingRevisions);
+typedef void(^CBLISConflictHandler)(NSArray* conflictingRevisions);
 
 
 /** NSIncrementalStore implementation that persists the data in a CouchbaseLite database. Before using this store you need to call #updateManagedObjectModel:
@@ -57,7 +57,7 @@ typedef void(^CBLISConflictHandler)(NSArray *conflictingRevisions);
 @interface CBLIncrementalStore : NSIncrementalStore
 
 /** The underlying CouchbaseLite database. */
-@property (nonatomic, strong, readonly) CBLDatabase *database;
+@property (nonatomic, strong, readonly) CBLDatabase* database;
 
 /** Conflict handling block that gets called when conflicts are to be handled. Initialied with a generic conflicts handler, can be set to NULL to not handle conflicts at all. */
 @property (nonatomic, copy) CBLISConflictHandler conflictHandler;
@@ -66,14 +66,14 @@ typedef void(^CBLISConflictHandler)(NSArray *conflictingRevisions);
  *
  * @returns the type of this store.
  */
-+ (NSString *)type;
++ (NSString*) type;
 
 /** Updates the managedObjectModel to be used with this store. Adds a property named `cblisRev` to store the current `_rev`
  * value of the CouchbaseLite representation of that entity. 
  *
  * @param managedObjectModel the NSManagedObjectModel that should be used with this store.
  */
-+ (void) updateManagedObjectModel:(NSManagedObjectModel*)managedObjectModel;
++ (void) updateManagedObjectModel: (NSManagedObjectModel*)managedObjectModel;
 
 /** Convenience method that creates the whole Core Data stack using the given database model and persists the data the given database. 
  * You don't need to run #updateManagedObjectModel: before.
@@ -84,9 +84,9 @@ typedef void(^CBLISConflictHandler)(NSArray *conflictingRevisions);
  * @param outError an optional error reference. Contains an NSError when the return is nil
  * @returns a new NSManagedObjectContext ready to use, or nil if there was an error
  */
-+ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel
-                                                   databaseName:(NSString*)databaseName
-                                                          error:(NSError**)outError;
++ (NSManagedObjectContext*) createManagedObjectContextWithModel: (NSManagedObjectModel*)managedObjectModel
+                                                   databaseName: (NSString*)databaseName
+                                                          error: (NSError**)outError;
 
 /** Convenience method that creates the whole Core Data stack using the given database model, persists the data the given database and
  * imports the data from an existing Core Data database. You don't need to run #updateManagedObjectModel: before.
@@ -99,11 +99,11 @@ typedef void(^CBLISConflictHandler)(NSArray *conflictingRevisions);
  * @param outError an optional error reference. Contains an NSError when the return is nil
  * @returns a new NSManagedObjectContext ready to use, or nil if there was an error
  */
-+ (NSManagedObjectContext*) createManagedObjectContextWithModel:(NSManagedObjectModel*)managedObjectModel
-                                                   databaseName:(NSString*)databaseName
-                                         importingDatabaseAtURL:(NSURL*)importUrl
-                                                     importType:(NSString*)importType
-                                                          error:(NSError**)outError;
++ (NSManagedObjectContext*) createManagedObjectContextWithModel: (NSManagedObjectModel*)managedObjectModel
+                                                   databaseName: (NSString*)databaseName
+                                         importingDatabaseAtURL: (NSURL*)importUrl
+                                                     importType: (NSString*)importType
+                                                          error: (NSError**)outError;
 
 /** Configures which CBLManager instance to use. The default value (nil) means to use
     the shared CBLManager. */
@@ -113,10 +113,10 @@ typedef void(^CBLISConflictHandler)(NSArray *conflictingRevisions);
 /** Register a NSManagedObjectContext to be informed about changes in the CouchbaseLite database. A NSManagedObjectContextObjectsDidChangeNotification is sent
  * to this context on changes.
  */
-- (void) addObservingManagedObjectContext:(NSManagedObjectContext*)context;
+- (void) addObservingManagedObjectContext: (NSManagedObjectContext*)context;
 /** Deregister a NSManagedObjectContext from observing changes.
  */
-- (void) removeObservingManagedObjectContext:(NSManagedObjectContext*)context;
+- (void) removeObservingManagedObjectContext: (NSManagedObjectContext*)context;
 
 /** Creates a view for fetching entities by a property name. Can speed up fetching this entity by this property. If, for example, your entity 
  * "Entity" references an entity "Subentity" by a property named "subentities", you can speed up fetching those entities by calling 
@@ -125,7 +125,7 @@ typedef void(^CBLISConflictHandler)(NSArray *conflictingRevisions);
  * @param entityName name of the entity that should be fetched
  * @param propertyName name of the property referencing this entity
  */
-- (void) defineFetchViewForEntity:(NSString*)entityName byProperty:(NSString*)propertyName
+- (void) defineFetchViewForEntity: (NSString*)entityName byProperty: (NSString*)propertyName
     __attribute__((deprecated("The method is no longer needed, and calling this method will do nothing.")));
 
 @end
