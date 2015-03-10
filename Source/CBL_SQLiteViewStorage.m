@@ -835,10 +835,11 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
             NSString* docID = [r stringForColumnIndex: 0];
             SequenceNumber sequence = [r longLongIntForColumnIndex: 1];
             UInt64 fulltextID = [r longLongIntForColumnIndex: 2];
-//            NSData* valueData = [r dataForColumnIndex: 3];
+            NSData* valueData = [r dataForColumnIndex: 3];
             CBLFullTextQueryRow* row = [[CBLFullTextQueryRow alloc] initWithDocID: docID
                                                                          sequence: sequence
                                                                        fullTextID: fulltextID
+                                                                            value: valueData
                                                                           storage: self];
             // Parse the offsets as a space-delimited list of numbers, into an NSArray.
             // (See http://sqlite.org/fts3.html#section_4_1 )

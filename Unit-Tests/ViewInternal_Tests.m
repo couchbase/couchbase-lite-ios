@@ -1174,6 +1174,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     CBLFullTextQueryRow* row = rows[0];
     AssertEqual(row.documentID, @"33333");
     AssertEqual(row.fullText, @"a dog whøse ñame was “Dog”");
+    AssertEqual(row.value, @"33333");
     Assert(row.matchCount >= 2u);
     if (row.matchCount >= 2u) {
         Assert(NSEqualRanges([row textRangeOfMatch: 0], NSMakeRange(2, 3)));  // first "dog"

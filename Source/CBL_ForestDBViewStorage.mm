@@ -119,13 +119,13 @@ public:
             if (indexType == kCBLFullTextIndex) {
                 Assert([key isKindOfClass: [NSString class]]);
                 LogTo(ViewVerbose, @"    emit(\"%@\", %@)", key, toJSONStr(value));
-                emitFn.emitTextTokens(nsstring_slice(key));
+                emitText(key, value, doc, emitFn);
             } else if ([key isKindOfClass: [CBLSpecialKey class]]) {
                 CBLSpecialKey *specialKey = key;
                 LogTo(ViewVerbose, @"    emit(%@, %@)", specialKey, toJSONStr(value));
                 NSString* text = specialKey.text;
                 if (text) {
-                    emitFn.emitTextTokens(nsstring_slice(text));
+                    emitText(text, value, doc, emitFn);
                 } else {
                     emitGeo(specialKey.rect, value, doc, emitFn);
                 }
@@ -138,6 +138,16 @@ public:
     }
 
 private:
+    // Emit a full-text row
+    void emitText(NSString* text, id value, NSDictionary* doc, EmitFn& emitFn) {
+        Collatable collValue;
+        if (value == doc)
+            collValue.addSpecial(); // placeholder for doc
+        else if (value)
+            collValue << value;
+        emitFn.emitTextTokens(nsstring_slice(text), collValue);
+    }
+
     // Geo-index a rectangle
     void emitGeo(CBLGeoRect rect, id value, NSDictionary* doc, EmitFn& emitFn) {
         geohash::area area(geohash::coord(rect.min.x, rect.min.y),
@@ -800,9 +810,14 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
             id key = fullTextID > 0 ? @[docID, @(fullTextID)] : docID;
             CBLFullTextQueryRow* row = docRows[key];
             if (!row) {
+                alloc_slice valueSlice = index->readFullTextValue(nsstring_slice(docID),
+                                                                  e.sequence(),
+                                                                  fullTextID);
+                NSData* valueData = valueSlice.copiedNSData();
                 row = [[CBLFullTextQueryRow alloc] initWithDocID: docID
                                                         sequence: e.sequence()
                                                       fullTextID: fullTextID
+                                                           value: valueData
                                                          storage: self];
                 docRows[key] = row;
             }
@@ -863,8 +878,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
              self, docID, sequence, fullTextID);
         return nil;
     }
-    CollatableReader value(valueSlice);
-    return value.readString().copiedNSData();
+    return valueSlice.copiedNSData();
 }
 
 

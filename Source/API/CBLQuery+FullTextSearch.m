@@ -43,9 +43,10 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 - (instancetype) initWithDocID: (NSString*)docID
                       sequence: (SequenceNumber)sequence
                     fullTextID: (UInt64)fullTextID
+                         value: (id)value
                        storage: (id<CBL_QueryRowStorage>)storage
 {
-    self = [super initWithDocID: docID sequence: sequence key: $null value: nil
+    self = [super initWithDocID: docID sequence: sequence key: $null value: value
                   docProperties: nil storage: storage];
     if (self) {
         _fullTextID = fullTextID;
