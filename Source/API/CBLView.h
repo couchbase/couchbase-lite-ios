@@ -93,6 +93,12 @@ FOUNDATION_EXTERN id CBLTextKey(NSString* text);
 - (BOOL) setMapBlock: (CBLMapBlock)mapBlock
              version: (NSString*)version;
 
+/** If this property is set, only documents whose "type" property is equal to its value will be
+    passed to the map block and indexed. This can speed up indexing.
+    Just like the map block, this property is not persistent; it needs to be set at runtime before
+    the view is queried. And if its value changes, the view's version also needs to change. */
+@property (copy) NSString* documentType;
+
 /** Is the view's index currently out of date? */
 @property (readonly) BOOL stale;
 

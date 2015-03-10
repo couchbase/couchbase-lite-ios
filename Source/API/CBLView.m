@@ -183,6 +183,20 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 }
 
 
+- (NSString*) documentType {
+    CBLDatabase* db = _weakDB;
+    return [db.shared valueForType: @"docType" name: _name inDatabaseNamed: db.name];
+}
+
+- (void) setDocumentType: (NSString*)type {
+    CBLDatabase* db = _weakDB;
+    [db.shared setValue: type forType: @"docType" name: _name inDatabaseNamed: db.name];
+}
+
+
+#pragma mark - COMPILATION:
+
+
 static id<CBLViewCompiler> sCompiler;
 
 

@@ -32,6 +32,8 @@
 		<string>git://github.com/snej/MYUtilities.git</string>
 		<key>F084A5E79D508F8E5EB6C3DC3C9997CD80515925</key>
 		<string>https://github.com/snej/sqlite3-unicodesn.git</string>
+		<key>FFC69B5F4BB0697F22D5DF55FF5585DDFA3B8BA2</key>
+		<string>github.com:snej/zdelta.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
 	<string>CouchbaseLite.xcodeproj</string>
@@ -59,6 +61,8 @@
 		<string>../..vendor/MYUtilities</string>
 		<key>F084A5E79D508F8E5EB6C3DC3C9997CD80515925</key>
 		<string>../..vendor/CBForest/vendor/sqlite3-unicodesn</string>
+		<key>FFC69B5F4BB0697F22D5DF55FF5585DDFA3B8BA2</key>
+		<string>../../vendor/CBForest/vendor/zdelta</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>github.com:couchbase/couchbase-lite-ios.git</string>
@@ -155,6 +159,14 @@
 			<string>3B6E0836A249709CBC66E3BD2D6E8381049097CC</string>
 			<key>IDESourceControlWCCName</key>
 			<string>WebSockets-Cocoa</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>FFC69B5F4BB0697F22D5DF55FF5585DDFA3B8BA2</string>
+			<key>IDESourceControlWCCName</key>
+			<string>zdelta</string>
 		</dict>
 	</array>
 </dict>

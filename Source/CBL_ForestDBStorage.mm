@@ -501,20 +501,8 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
     return ^CBLQueryRow*() {
         while (e.next()) {
-            VersionedDocument::Flags flags = VersionedDocument::flagsOfDocument(*e);
-            BOOL deleted = (flags & VersionedDocument::kDeleted) != 0;
-            if (deleted && options->allDocsMode != kCBLIncludeDeleted && !options.keys)
-                continue; // skip this doc
-            if (options->allDocsMode == kCBLOnlyConflicts && !(flags & VersionedDocument::kConflicted))
-                continue; // skip this doc
-            if (skip > 0) {
-                --skip;
-                continue;
-            }
-
-            VersionedDocument doc(*_forest, *e);
-            NSString* docID = (NSString*)doc.docID();
-            if (!doc.exists()) {
+            NSString* docID = (NSString*)e.doc().key();
+            if (!e.doc().exists()) {
                 LogTo(QueryVerbose, @"AllDocs: No such row with key=\"%@\"",
                       docID);
                 return [[CBLQueryRow alloc] initWithDocID: nil
@@ -525,6 +513,27 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
                                                   storage: nil];
             }
 
+            bool deleted;
+            {
+                VersionedDocument::Flags flags;
+                revid revID;
+                slice docType;
+                if (!VersionedDocument::readMeta(e.doc(), flags, revID, docType))
+                    if (!options.keys)  // key might be a nonexistent doc
+                        continue;
+                deleted = (flags & VersionedDocument::kDeleted) != 0;
+                if (deleted && options->allDocsMode != kCBLIncludeDeleted && !options.keys)
+                    continue; // skip deleted doc
+                if (!(flags & VersionedDocument::kConflicted)
+                        && options->allDocsMode == kCBLOnlyConflicts)
+                    continue; // skip non-conflicted doc
+                if (skip > 0) {
+                    --skip;
+                    continue;
+                }
+            }
+
+            VersionedDocument doc(*_forest, *e);
             NSString* revID = (NSString*)doc.revID();
             SequenceNumber sequence = doc.sequence();
 
@@ -963,18 +972,16 @@ static void convertRevIDs(NSArray* revIDs,
 
         // Add the revision to the database:
         int status;
-        BOOL isWinner;
+        revidBuffer newrevid(newRevID);
         {
-            const Revision* fdbRev = doc.insert(revidBuffer(newRevID), json,
+            const Revision* fdbRev = doc.insert(newrevid, json,
                                                 deleting,
                                                 (putRev.attachments != nil),
                                                 revNode, allowConflict, status);
             if (!fdbRev && CBLStatusIsError((CBLStatus)status))
                 return (CBLStatus)status;
-            isWinner = (fdbRev == doc.currentRevision());
-        } // prune call will invalidate fdbRev ptr, so let it go out of scope
-        doc.prune((unsigned)_maxRevTreeDepth);
-        doc.save(*_forestTransaction);
+        } // fdbRev ptr will be invalidated soon, so let it go out of scope
+        BOOL isWinner = [self saveForestDoc: doc revID: newrevid properties: properties];
         putRev.sequence = doc.sequence();
 #if DEBUG
         LogTo(CBLDatabase, @"Saved %s", doc.dump().c_str());
@@ -1042,14 +1049,15 @@ static void convertRevIDs(NSArray* revIDs,
         }
 
         // Save updated doc back to the database:
-        doc.prune((unsigned)_maxRevTreeDepth);
-        doc.save(*_forestTransaction);
+        BOOL isWinner = [self saveForestDoc: doc
+                                      revID: historyVector[0]
+                                 properties: inRev.properties];
         inRev.sequence = doc.sequence();
 #if DEBUG
         LogTo(CBLDatabase, @"Saved %s", doc.dump().c_str());
 #endif
         change = [self changeWithNewRevision: inRev
-                                isWinningRev: NO
+                                isWinningRev: isWinner
                                          doc: doc
                                       source: source];
         return kCBLStatusCreated;
@@ -1058,6 +1066,24 @@ static void convertRevIDs(NSArray* revIDs,
     if (change)
         [_delegate databaseStorageChanged: change];
     return status;
+}
+
+
+- (BOOL) saveForestDoc: (VersionedDocument&)doc
+                 revID: (revid)revID
+            properties: (NSDictionary*)properties
+{
+    // Is the new revision the winner?
+    BOOL isWinner = (doc.currentRevision()->revID == revID);
+    // Update the documentType:
+    if (!isWinner)
+        properties = [CBLForestBridge bodyOfNode: doc[0] options: 0];
+    nsstring_slice type(properties[@"type"]);
+    doc.setDocType(type);
+    // Save:
+    doc.prune((unsigned)_maxRevTreeDepth);
+    doc.save(*_forestTransaction);
+    return isWinner;
 }
 
 

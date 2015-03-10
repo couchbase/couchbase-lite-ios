@@ -685,10 +685,10 @@
 }
 
 - (void) test14_LiveQuery_AddingNonIndexedDocsPriorCreatingLiveQuery {
-    [CBLManager enableLogging:@"CBLDatabase"];
-    [CBLManager enableLogging:@"Query"];
-    [CBLManager enableLogging:@"View"];
-    [CBLManager enableLogging:@"ViewVerbose"];
+//    [CBLManager enableLogging:@"CBLDatabase"];
+//    [CBLManager enableLogging:@"Query"];
+//    [CBLManager enableLogging:@"View"];
+//    [CBLManager enableLogging:@"ViewVerbose"];
 
     CBLView* view = [db viewNamed: @"vu"];
 
@@ -885,7 +885,7 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
 }
 
 
-- (void) test_CBLKeyPathForQueryRow {
+- (void) test17_CBLKeyPathForQueryRow {
     AssertEqual(CBLKeyPathForQueryRow(@"value"),           @"value");
     AssertEqual(CBLKeyPathForQueryRow(@"value.foo"),       @"value.foo");
     AssertEqual(CBLKeyPathForQueryRow(@"value[0]"),        @"value0");
@@ -899,6 +899,72 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
     AssertEqual(CBLKeyPathForQueryRow(@"value[0"),         nil);
     AssertEqual(CBLKeyPathForQueryRow(@"value[0}"),        nil);
     AssertEqual(CBLKeyPathForQueryRow(@"value[d]"),        nil);
+}
+
+
+- (void) test18_DocTypes {
+    if (self.isSQLiteDB)
+        return; // ForestDB-only for now
+    CBLView* view1 = [db viewNamed: @"test/peepsNames"];
+    view1.documentType = @"person";
+    [view1 setMapBlock: MAPBLOCK({
+        Log(@"view1 mapping: %@", doc);
+        Assert([doc[@"type"] isEqualToString:@"person"]);
+        emit(doc[@"name"], nil);
+    }) version: @"1"];
+
+    CBLView* view2 = [db viewNamed: @"test/aardvarks"];
+    view2.documentType = @"aardvark";
+    [view2 setMapBlock: MAPBLOCK({
+        Log(@"view2 mapping: %@", doc);
+        Assert([doc[@"type"] isEqualToString:@"aardvark"]);
+        emit(doc[@"name"], nil);
+    }) version: @"1"];
+
+    // Create a new document which will not get indexed by the created view:
+    [self createDocumentWithProperties: @{@"type": @"person", @"name": @"mick"}];
+    [self createDocumentWithProperties: @{@"type": @"person", @"name": @"keef"}];
+    CBLDocument* cerebus;
+    cerebus = [self createDocumentWithProperties: @{@"type": @"aardvark", @"name": @"cerebus"}];
+
+    CBLQuery* query = [view1 createQuery];
+    CBLQueryEnumerator* rows = [query run: NULL];
+    NSArray* allRows = rows.allObjects;
+    AssertEq(allRows.count, 2u);
+    AssertEqual([allRows[0] key], @"keef");
+    AssertEqual([allRows[1] key], @"mick");
+
+    query = [view2 createQuery];
+    rows = [query run: NULL];
+    allRows = rows.allObjects;
+    AssertEq(allRows.count, 1u);
+    AssertEqual([allRows[0] key], @"cerebus");
+
+    // Make sure that documents that are updated to no longer match the view's documentType get
+    // removed from its index:
+    Log(@"---- Update cerebus.type = person ----");
+    CBLRevision* rev = [cerebus update: ^BOOL(CBLUnsavedRevision* rev) {
+        rev[@"type"] = @"person";
+        return YES;
+    } error: NULL];
+    Assert(rev);
+
+    rows = [query run: NULL];
+    allRows = rows.allObjects;
+    AssertEq(allRows.count, 0u);
+
+    // Make sure a view without a docType will coexist:
+    [self createDocumentWithProperties: @{@"type": @"elf", @"name": @"regency elf"}];
+    CBLView* view3 = [db viewNamed: @"test/all"];
+    [view3 setMapBlock: MAPBLOCK({
+        Log(@"view3 mapping: %@", doc);
+        emit(doc[@"name"], nil);
+    }) version: @"1"];
+
+    query = [view3 createQuery];
+    rows = [query run: NULL];
+    allRows = rows.allObjects;
+    AssertEq(allRows.count, 4u);
 }
 
 

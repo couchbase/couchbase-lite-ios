@@ -56,18 +56,33 @@ public:
 
 class CocoaIndexer : public MapReduceIndexer {
 public:
-    CocoaIndexer(std::vector<MapReduceIndex*> indexes, Transaction &t)
-    :MapReduceIndexer(indexes, t),
-     _sourceStore(indexes[0]->sourceStore())
-    { }
+    CocoaIndexer() { }
+
+    void addDocType(const alloc_slice& type) {
+        _docTypes.push_back(type);
+    }
+
+    void clearDocTypes() {
+        _docTypes.clear();
+    }
 
     virtual void addDocument(const Document& cppDoc) {
-        if (VersionedDocument::flagsOfDocument(cppDoc) & VersionedDocument::kDeleted) {
-            CocoaMappable mappable(cppDoc, nil);
-            addMappable(mappable);
-        } else {
+        bool indexIt = true;
+        VersionedDocument::Flags flags;
+        revid revID;
+        slice docType;
+        if (!VersionedDocument::readMeta(cppDoc, flags, revID, docType)) {
+            indexIt = false;
+        } else if (flags & VersionedDocument::kDeleted) {
+            indexIt = false;
+        } else if (_docTypes.size() > 0) {
+            if (std::find(_docTypes.begin(), _docTypes.end(), docType) == _docTypes.end())
+                indexIt = false;
+        }
+
+        if (indexIt) {
             @autoreleasepool {
-                VersionedDocument vdoc(_sourceStore, cppDoc);
+                VersionedDocument vdoc(_indexes[0]->sourceStore(), cppDoc);
                 const Revision* node = vdoc.currentRevision();
                 NSDictionary* body = [CBLForestBridge bodyOfNode: node
                                                          options: kCBLIncludeLocalSeq];
@@ -75,11 +90,15 @@ public:
                 CocoaMappable mappable(cppDoc, body);
                 addMappable(mappable);
             }
+        } else {
+            // Have to at least run a nil doc through addMappable, to remove obsolete old rows
+            CocoaMappable mappable(cppDoc, nil);
+            addMappable(mappable);
         }
     }
 
 private:
-    KeyStore _sourceStore;
+    std::vector<alloc_slice> _docTypes;
 };
 
 
@@ -87,11 +106,14 @@ class MapReduceBridge : public MapFn {
 public:
     CBLMapBlock mapBlock;
     NSString* viewName;
+    NSString* documentType;
     CBLViewIndexType indexType;
 
     virtual void operator() (const Mappable& mappable, EmitFn& emitFn) {
         NSDictionary* doc = ((CocoaMappable&)mappable).body;
         if (!doc)
+            return; // doc is deleted or otherwise not to be indexed
+        if (documentType && ![documentType isEqual: doc[@"type"]])
             return;
         CBLMapEmitBlock emit = ^(id key, id value) {
             if (indexType == kCBLFullTextIndex) {
@@ -358,12 +380,15 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
     _mapReduceBridge.mapBlock = delegate.mapBlock;
     _mapReduceBridge.viewName = _name;
     _mapReduceBridge.indexType = _indexType;
+    _mapReduceBridge.documentType = delegate.documentType;
+    NSString* mapVersion = delegate.mapVersion;
+    Assert(mapVersion, @"No version set for view %@", _name);
     MapReduceIndex* index = [self openIndex: outStatus]; // open db
     if (!index)
         return NULL;
     {
         Transaction t(_indexDB);
-        index->setup(t, _indexType, &_mapReduceBridge, delegate.mapVersion.UTF8String);
+        index->setup(t, _indexType, &_mapReduceBridge, mapVersion.UTF8String);
     }
     return index;
 }
@@ -378,25 +403,31 @@ static NSString* viewNames(NSArray* views) {
     LogTo(View, @"Checking indexes of (%@) for %@", viewNames(views), _name);
     try {
         CBLStatus status;
-        std::vector<MapReduceIndex*> indexes;
+        CocoaIndexer indexer;
+        indexer.triggerOnIndex(_index);
+        BOOL useDocTypes = YES;
         for (CBL_ForestDBViewStorage* viewStorage in views) {
             MapReduceIndex* index = [viewStorage setupIndex: &status];
             if (!index)
                 return status;
-            if (viewStorage.delegate.mapBlock)
-                indexes.push_back(index);
-            else
+            id<CBL_ViewStorageDelegate> delegate = viewStorage.delegate;
+            if (!delegate.mapBlock) {
                 LogTo(ViewVerbose, @"    %@ has no map block; skipping it", viewStorage.name);
+                continue;
+            }
+            indexer.addIndex(index, new Transaction(viewStorage->_indexDB));
+            if (useDocTypes) {
+                NSString* docType = delegate.documentType;
+                if (docType) {
+                    nsstring_slice s(docType);
+                    indexer.addDocType(alloc_slice(s));
+                } else {
+                    indexer.clearDocTypes();
+                    useDocTypes = NO;
+                }
+            }
         }
-        if (![self openIndex: &status])
-            return status;
-        bool updated;
-        {
-            Transaction t(_indexDB);
-            CocoaIndexer indexer(indexes, t);
-            indexer.triggerOnIndex(_index);
-            updated = indexer.run();
-        }
+        bool updated = indexer.run();
         return updated ? kCBLStatusOK : kCBLStatusNotModified;
     } catch (forestdb::error x) {
         Warn(@"Error indexing %@: ForestDB error %d", self, x.status);
