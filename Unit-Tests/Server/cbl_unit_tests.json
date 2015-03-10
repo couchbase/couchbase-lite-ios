@@ -28,6 +28,12 @@
 				"GUEST": {"disabled": false, "admin_channels":["*"]}
 			}
 		},
+        "cbl_replicator_cookies": {
+            "server": "walrus:",
+            "users": {
+                "GUEST": {"disabled": false, "admin_channels":["*"]}
+            }
+        },
         "attach_test": {
             "server": "walrus:walrus_data",
             "users": {
