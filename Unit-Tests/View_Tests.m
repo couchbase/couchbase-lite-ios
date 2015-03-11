@@ -26,6 +26,7 @@
 {
     self.change = change;
     ++_changeCount;
+    Log(@"TestLiveQueryObserver -- change #%u", _changeCount);
 }
 @end
 
@@ -452,6 +453,7 @@
     }) version: @"1"];
 
     [self createDocuments: 10];
+    unsigned i = 10;
 
     CBLLiveQuery* query = [[view createQuery] asLiveQuery];
     query.updateInterval = 0.25;
@@ -463,10 +465,15 @@
 
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
     while (timeout.timeIntervalSinceNow > 0.0) {
-        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.05]])
-            break;
-        [self createDocuments: 1];
+        @autoreleasepool {
+            if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                          beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.05]])
+                break;
+            usleep(50 * 1000); // throttle the loop so we don't add docs too fast
+            NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(i++)};
+            [self createDocumentWithProperties: properties];
+            //Log(@"%% Created doc #%u", i-1);
+        }
     }
     [query stop];
 

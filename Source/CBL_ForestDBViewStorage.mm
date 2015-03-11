@@ -392,11 +392,10 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
     _mapReduceBridge.indexType = _indexType;
     _mapReduceBridge.documentType = delegate.documentType;
     NSString* mapVersion = delegate.mapVersion;
-    Assert(mapVersion, @"No version set for view %@", _name);
     MapReduceIndex* index = [self openIndex: outStatus]; // open db
     if (!index)
         return NULL;
-    {
+    if (mapVersion) {
         Transaction t(_indexDB);
         index->setup(t, _indexType, &_mapReduceBridge, mapVersion.UTF8String);
     }
