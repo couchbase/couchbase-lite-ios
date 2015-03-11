@@ -128,7 +128,7 @@
         return;
     NSString* sql = @"\
         DROP TABLE IF EXISTS 'maps_#';\
-        UPDATE views SET total_docs=0 WHERE view_id=#";
+        UPDATE views SET lastSequence=0, total_docs=0 WHERE view_id=#";
     NSError* error;
     if (![self runStatements: sql error: &error])
         Warn(@"Couldn't delete view index `%@`: %@", _name, error);

@@ -436,8 +436,14 @@ static NSString* viewNames(NSArray* views) {
                 }
             }
         }
-        bool updated = indexer.run();
-        return updated ? kCBLStatusOK : kCBLStatusNotModified;
+        if (indexer.run()) {
+            LogTo(View, @"... Finished re-indexing (%@) to #%lld",
+                  viewNames(views), indexer.latestDbSequence());
+            return kCBLStatusOK;
+        } else {
+            LogTo(View, @"... Nothing to do.");
+            return kCBLStatusNotModified;
+        }
     } catch (forestdb::error x) {
         Warn(@"Error indexing %@: ForestDB error %d", self, x.status);
         return CBLStatusFromForestDBStatus(x.status);
