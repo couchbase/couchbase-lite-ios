@@ -154,6 +154,8 @@
 		27411445179744F6005EF2F8 /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
 		27411446179744FE005EF2F8 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
 		2741144717974555005EF2F8 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
+		27452B311AB0E6AA00327776 /* View_Benchmarks.m in Sources */ = {isa = PBXBuildFile; fileRef = 27452B301AB0E6AA00327776 /* View_Benchmarks.m */; };
+		27452B321AB0E6AA00327776 /* View_Benchmarks.m in Sources */ = {isa = PBXBuildFile; fileRef = 27452B301AB0E6AA00327776 /* View_Benchmarks.m */; };
 		27486F171A5F5E24008D94F0 /* libCBLJSViewCompiler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 792867BF178DE01900248AF0 /* libCBLJSViewCompiler.a */; };
 		27486F191A5F5E57008D94F0 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
 		27486F1A1A5F5E74008D94F0 /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
@@ -1118,6 +1120,7 @@
 		2740D8501A8C240500809EE0 /* Tokenizer_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Tokenizer_Test.mm; path = "../vendor/CBForest/CBForest Tests/Tokenizer_Test.mm"; sourceTree = "<group>"; };
 		2740D8511A8C240500809EE0 /* GeoHash_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GeoHash_Test.mm; path = "../vendor/CBForest/CBForest Tests/GeoHash_Test.mm"; sourceTree = "<group>"; };
 		2740D8521A8C240500809EE0 /* GeoIndex_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GeoIndex_Test.mm; path = "../vendor/CBForest/CBForest Tests/GeoIndex_Test.mm"; sourceTree = "<group>"; };
+		27452B301AB0E6AA00327776 /* View_Benchmarks.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = View_Benchmarks.m; sourceTree = "<group>"; };
 		27486F1D1A606C76008D94F0 /* CBJSONEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBJSONEncoder.h; sourceTree = "<group>"; };
 		27486F1E1A606C76008D94F0 /* CBJSONEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBJSONEncoder.m; sourceTree = "<group>"; };
 		27486F211A606C76008D94F0 /* CBLJSONReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSONReader.h; sourceTree = "<group>"; };
@@ -1759,6 +1762,7 @@
 				27AF0A581A4A1F9D003F51D0 /* Router_Tests.m */,
 				272AA85B1A48F17D004B8D55 /* ViewInternal_Tests.m */,
 				270035991A4500160015B9F4 /* View_Tests.m */,
+				27452B301AB0E6AA00327776 /* View_Benchmarks.m */,
 				270035961A44FE2F0015B9F4 /* CBLTestCase.h */,
 				270035971A44FE890015B9F4 /* CBLTestCase.m */,
 				2700358E1A44E9270015B9F4 /* Info-UnitTests.plist */,
@@ -3430,6 +3434,7 @@
 				2764D2B11A5E240D005AC95A /* JSON_Tests.m in Sources */,
 				27C5BAE91A92ACA5008C357C /* CBLEncryptionController.m in Sources */,
 				272AA8651A49D95B004B8D55 /* ReplicatorInternal_Tests.m in Sources */,
+				27452B311AB0E6AA00327776 /* View_Benchmarks.m in Sources */,
 				2700359A1A4500160015B9F4 /* View_Tests.m in Sources */,
 				272AA85C1A48F17D004B8D55 /* ViewInternal_Tests.m in Sources */,
 				27AF0A591A4A1F9D003F51D0 /* Router_Tests.m in Sources */,
@@ -3613,6 +3618,7 @@
 				2764D2B51A5E29EC005AC95A /* Misc_Tests.m in Sources */,
 				272AA84F1A48DA0F004B8D55 /* QueryBuilder_Tests.m in Sources */,
 				27486F1A1A5F5E74008D94F0 /* CBLJSFunction.m in Sources */,
+				27452B321AB0E6AA00327776 /* View_Benchmarks.m in Sources */,
 				272AA8761A49EE5D004B8D55 /* Multipart_Tests.m in Sources */,
 				2764D2C91A5F2412005AC95A /* CBLIncrementalStore.m in Sources */,
 				272AA8501A48DA0F004B8D55 /* View_Tests.m in Sources */,

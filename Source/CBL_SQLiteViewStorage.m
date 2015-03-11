@@ -259,11 +259,14 @@
         SequenceNumber viewLastSequence[inputViews.count];
         unsigned deletedCount = 0;
         int i = 0;
+        NSMutableSet* docTypes = [NSMutableSet set];
+        NSMutableDictionary* viewDocTypes = nil;
         NSMutableDictionary* viewTotalRows = [[NSMutableDictionary alloc] init];
         NSMutableArray* views = [[NSMutableArray alloc] initWithCapacity: inputViews.count];
         NSMutableArray* mapBlocks = [[NSMutableArray alloc] initWithCapacity: inputViews.count];
         for (CBL_SQLiteViewStorage* view in inputViews) {
-            CBLMapBlock mapBlock = view.delegate.mapBlock;
+            id<CBL_ViewStorageDelegate> delegate = view.delegate;
+            CBLMapBlock mapBlock = delegate.mapBlock;
             if (mapBlock == NULL) {
                 Assert(view != self,
                        @"Cannot index view %@: no map block registered",
@@ -290,6 +293,17 @@
                     [view createIndex];
                 minLastSequence = MIN(minLastSequence, last);
                 LogTo(ViewVerbose, @"    %@ last indexed at #%lld", view.name, last);
+
+                NSString* docType = delegate.documentType;
+                if (docType) {
+                    [docTypes addObject: docType];
+                    if (!viewDocTypes)
+                        viewDocTypes = [NSMutableDictionary dictionary];
+                    viewDocTypes[view.name] = docType;
+                } else {
+                    docTypes = nil; // can't filter by doc_type
+                }
+
                 BOOL ok;
                 if (last == 0) {
                     // If the lastSequence has been reset to 0, make sure to remove all map results:
@@ -344,10 +358,13 @@
 
         // Now scan every revision added since the last time the views were indexed:
         NSMutableString* sql = [@"SELECT revs.doc_id, sequence, docid, revid, json, "
-                                "no_attachments, deleted FROM revs, docs "
+                                "no_attachments, deleted, doc_type FROM revs, docs "
                                 "WHERE sequence>? AND current!=0 " mutableCopy];
         if (minLastSequence == 0)
             [sql appendString: @"AND deleted=0 "];
+        if (docTypes.count > 0)
+            [sql appendFormat: @"AND doc_type IN (%@) ", CBLJoinSQLQuotedStrings(docTypes.allObjects)];
+        BOOL checkDocTypes = docTypes==nil || docTypes.count > 1;
         [sql appendString: @"AND revs.doc_id = docs.doc_id "
                             "ORDER BY revs.doc_id, deleted, revid DESC"];
         CBL_FMResultSet* r = [fmdb executeQuery: sql, @(minLastSequence)];
@@ -369,6 +386,7 @@
                 NSData* json = [r dataForColumnIndex: 4];
                 BOOL noAttachments = [r boolForColumnIndex: 5];
                 BOOL deleted = [r boolForColumnIndex: 6];
+                NSString* docType = checkDocTypes ? [r stringForColumnIndex: 7] : nil;
 
                 // Skip rows with the same doc_id -- these are losing conflicts.
                 while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == doc_id) {
@@ -431,9 +449,15 @@
                 }
                 
                 // Call the user-defined map() to emit new key/value pairs from this revision:
-                int i = 0;
+                int i = -1;
                 for (curView in views) {
+                    ++i;
                     if (viewLastSequence[i] < realSequence) {
+                        if (checkDocTypes) {
+                            NSString* viewDocType = viewDocTypes[curView.name];
+                            if (viewDocType && ![viewDocType isEqualTo: docType])
+                                continue; // skip; view's documentType doesn't match this doc
+                        }
                         LogTo(ViewVerbose, @"#%lld: map \"%@\" for view %@...",
                               sequence, docID, curView.name);
                         @try {
@@ -447,7 +471,6 @@
                             return emitStatus;
                         }
                     }
-                    ++i;
                 }
                 curView = nil;
             }

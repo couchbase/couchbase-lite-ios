@@ -41,7 +41,6 @@
 - (void) stopAndForgetReplicator: (CBL_Replicator*)repl;
 - (NSString*) lastSequenceWithCheckpointID: (NSString*)checkpointID;
 - (BOOL) setLastSequence: (NSString*)lastSequence withCheckpointID: (NSString*)checkpointID;
-+ (NSString*) joinQuotedStrings: (NSArray*)strings;
 @end
 
 

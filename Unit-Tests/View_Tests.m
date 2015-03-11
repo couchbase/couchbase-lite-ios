@@ -910,8 +910,6 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
 
 
 - (void) test18_DocTypes {
-    if (self.isSQLiteDB)
-        return; // ForestDB-only for now
     CBLView* view1 = [db viewNamed: @"test/peepsNames"];
     view1.documentType = @"person";
     [view1 setMapBlock: MAPBLOCK({

@@ -35,6 +35,11 @@
 @end
 
 
+/** Wraps each string in single-quotes (escaping single quotes by doubling them)
+    and separates the strings with commas. */
+NSString* CBLJoinSQLQuotedStrings(NSArray* strings);
+
+
 #if DEBUG
 #define MOCK_ENCRYPTION
 #endif

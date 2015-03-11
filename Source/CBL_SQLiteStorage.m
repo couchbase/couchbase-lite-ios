@@ -329,6 +329,15 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         dbVersion = 17;
     }
 
+    if (dbVersion < 18) {
+        NSString *schema = @"\
+            ALTER TABLE revs ADD COLUMN doc_type TEXT;\
+            PRAGMA user_version = 18";             // at the end, update user_version
+        if (![self initialize: schema error: outError])
+            return NO;
+        dbVersion = 18;
+    }
+
     if (isNew && ![self initialize: @"END TRANSACTION" error: outError])
         return NO;
 
@@ -911,15 +920,15 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     NSString* sql = $sprintf(@"SELECT revid FROM revs "
                               "WHERE doc_id=? and revid in (%@) and revid <= ? "
                               "ORDER BY revid DESC LIMIT 1", 
-                              joinQuotedStrings(revIDs));
+                              CBLJoinSQLQuotedStrings(revIDs));
     _fmdb.shouldCacheStatements = NO;
     NSString* ancestor = [_fmdb stringForQuery: sql, @(docNumericID), rev.revID];
     _fmdb.shouldCacheStatements = YES;
     return ancestor;
 }
-    
 
-static NSString* joinQuotedStrings(NSArray* strings) {
+
+NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     if (strings.count == 0)
         return @"";
     NSMutableString* result = [NSMutableString stringWithString: @"'"];
@@ -999,8 +1008,8 @@ static NSString* joinQuotedStrings(NSArray* strings) {
     NSString* sql = $sprintf(@"SELECT docid, revid FROM revs, docs "
                               "WHERE revid in (%@) AND docid IN (%@) "
                               "AND revs.doc_id == docs.doc_id",
-                             joinQuotedStrings(revs.allRevIDs),
-                             joinQuotedStrings(revs.allDocIDs));
+                             CBLJoinSQLQuotedStrings(revs.allRevIDs),
+                             CBLJoinSQLQuotedStrings(revs.allDocIDs));
     _fmdb.shouldCacheStatements = NO;
     CBL_FMResultSet* r = [_fmdb executeQuery: sql];
     _fmdb.shouldCacheStatements = YES;
@@ -1040,7 +1049,7 @@ static NSString* joinQuotedStrings(NSArray* strings) {
     if (options.keys) {
         if (options.keys.count == 0)
             return ^CBLQueryRow*() { return nil; };
-        [sql appendFormat: @" revs.doc_id IN (SELECT doc_id FROM docs WHERE docid IN (%@)) AND", joinQuotedStrings(options.keys)];
+        [sql appendFormat: @" revs.doc_id IN (SELECT doc_id FROM docs WHERE docid IN (%@)) AND", CBLJoinSQLQuotedStrings(options.keys)];
         cacheQuery = NO; // we've put hardcoded key strings in the query
     }
     [sql appendString: @" docs.doc_id = revs.doc_id AND current=1"];
@@ -1529,7 +1538,8 @@ static NSString* joinQuotedStrings(NSArray* strings) {
                                         parentSequence: parentSequence
                                                current: YES
                                         hasAttachments: (properties.cbl_attachments != nil)
-                                                  JSON: json];
+                                                  JSON: json
+                                               docType: properties[@"type"]];
         if (!sequence) {
             // The insert failed. If it was due to a constraint violation, that means a revision
             // already exists with identical contents and the same parent rev. We can ignore this
@@ -1543,7 +1553,7 @@ static NSString* joinQuotedStrings(NSArray* strings) {
         
         // Make replaced rev non-current:
         if (parentSequence > 0) {
-            if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=?",
+            if (![_fmdb executeUpdate: @"UPDATE revs SET current=0, doc_type=null WHERE sequence=?",
                                        @(parentSequence)])
                 return self.lastDbError;
         }
@@ -1642,6 +1652,7 @@ static NSString* joinQuotedStrings(NSArray* strings) {
                 // This revision isn't known, so add it:
                 CBL_MutableRevision* newRev;
                 NSData* json = nil;
+                NSString* docType = nil;
                 BOOL current = NO;
                 if (i==0) {
                     // Hey, this is the leaf revision we're inserting:
@@ -1649,6 +1660,7 @@ static NSString* joinQuotedStrings(NSArray* strings) {
                     json = [self encodeDocumentJSON: rev];
                     if (!json)
                         return kCBLStatusBadJSON;
+                    docType = rev[@"type"];
                     current = YES;
                 } else {
                     // It's an intermediate parent, so insert a stub:
@@ -1662,7 +1674,8 @@ static NSString* joinQuotedStrings(NSArray* strings) {
                                  parentSequence: sequence
                                         current: current 
                                  hasAttachments: (newRev.attachments != nil)
-                                           JSON: json];
+                                           JSON: json
+                                        docType: docType];
                 if (sequence <= 0)
                     return self.lastDbError;
             }
@@ -1673,7 +1686,8 @@ static NSString* joinQuotedStrings(NSArray* strings) {
 
         // Mark the latest local rev as no longer current:
         if (localParentSequence > 0) {
-            if (![_fmdb executeUpdate: @"UPDATE revs SET current=0 WHERE sequence=? AND current!=0",
+            if (![_fmdb executeUpdate: @"UPDATE revs SET current=0, doc_type=null"
+                                        " WHERE sequence=? AND current!=0",
                   @(localParentSequence)])
                 return self.lastDbError;
             if (_fmdb.changes == 0)
@@ -1717,17 +1731,19 @@ static NSString* joinQuotedStrings(NSArray* strings) {
                           current: (BOOL)current
                    hasAttachments: (BOOL)hasAttachments
                              JSON: (NSData*)json
+                          docType: (NSString*)docType
 {
     if (![_fmdb executeUpdate: @"INSERT INTO revs (doc_id, revid, parent, current, deleted, "
-          "no_attachments, json) "
-          "VALUES (?, ?, ?, ?, ?, ?, ?)",
+          "no_attachments, json, doc_type) "
+          "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
           @(docNumericID),
           rev.revID,
           (parentSequence ? @(parentSequence) : nil ),
           @(current),
           @(rev.deleted),
           @(!hasAttachments),
-          json])
+          json,
+          docType])
         return 0;
     return rev.sequence = _fmdb.lastInsertRowId;
 }
@@ -1838,7 +1854,8 @@ static NSString* joinQuotedStrings(NSArray* strings) {
 
     // Remove the JSON of non-current revisions, which is most of the space.
     Log(@"CBLDatabase: Deleting JSON of old revisions...");
-    if (![_fmdb executeUpdate: @"UPDATE revs SET json=null, no_attachments=1 WHERE current=0"])
+    if (![_fmdb executeUpdate: @"UPDATE revs SET json=null, doc_type=null, no_attachments=1"
+                                " WHERE current=0"])
         return ReturnNSErrorFromCBLStatus(self.lastDbError, outError);
     Log(@"    ... deleted %d revisions", _fmdb.changes);
 
