@@ -197,7 +197,8 @@
                                              NSHTTPCookieValue: @"sweet",
                                              NSHTTPCookieVersion: @"0"
                                              }];
-    AssertEq(cookie1.sessionOnly, YES);
+
+    AssertNil(cookie1.expiresDate);
     [_cookieStore setCookie: cookie1];
 
     // No max age specified for a cookie v1:
@@ -207,7 +208,7 @@
                                              NSHTTPCookieValue: @"sweet",
                                              NSHTTPCookieVersion: @"1"
                                              }];
-    AssertEq(cookie2.sessionOnly, YES);
+    AssertNil(cookie2.expiresDate);
     [_cookieStore setCookie: cookie2];
 
     AssertEq(_cookieStore.cookies.count, 2u);

@@ -18,7 +18,6 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 #define kLocalDocKeyPrefix @"cbl_cookie_storage"
 #define kLocalDocCookiesKey @"cookies"
 
-
 @implementation CBLCookieStorage
 {
     NSMutableArray* _cookies;
@@ -273,7 +272,7 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 
     NSArray* cookies = [_cookies my_map:^id(id obj) {
         NSHTTPCookie* cookie = (NSHTTPCookie*)obj;
-        if (!cookie.sessionOnly)
+        if (![self isSessionOnlyCookie: cookie])
             return [self JSONDocumentFromCookieProperties: cookie.properties];
         else
             return nil;
@@ -292,14 +291,15 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
     }
 }
 
+
 - (BOOL) isExpiredCookie: (NSHTTPCookie*)cookie {
     NSDate* expDate = cookie.expiresDate;
     return (expDate && [expDate compare: [NSDate date]] != NSOrderedDescending);
 }
 
 
-- (BOOL) shouldSaveCookie: (NSHTTPCookie*)cookie {
-    return !cookie.sessionOnly && ![self isExpiredCookie: cookie];
+- (BOOL) isSessionOnlyCookie: (NSHTTPCookie*)cookie {
+    return cookie.expiresDate == nil;
 }
 
 
