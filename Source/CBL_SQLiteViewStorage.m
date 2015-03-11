@@ -455,7 +455,7 @@
                     if (viewLastSequence[i] < realSequence) {
                         if (checkDocTypes) {
                             NSString* viewDocType = viewDocTypes[curView.name];
-                            if (viewDocType && ![viewDocType isEqualTo: docType])
+                            if (viewDocType && ![viewDocType isEqual: docType])
                                 continue; // skip; view's documentType doesn't match this doc
                         }
                         LogTo(ViewVerbose, @"#%lld: map \"%@\" for view %@...",
