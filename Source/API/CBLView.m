@@ -253,9 +253,10 @@ static id<CBLViewCompiler> sCompiler;
     NSString* version = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: viewProps error: &error]);
     [self setMapBlock: mapBlock reduceBlock: reduceBlock version: version];
 
+    self.documentType = $castIf(NSString, viewProps[@"documentType"]);
     NSDictionary* options = $castIf(NSDictionary, viewProps[@"options"]);
     _collation = ($equal(options[@"collation"], @"raw")) ? kCBLViewCollationRaw
-    : kCBLViewCollationUnicode;
+                                                         : kCBLViewCollationUnicode;
     return kCBLStatusOK;
 }
 
