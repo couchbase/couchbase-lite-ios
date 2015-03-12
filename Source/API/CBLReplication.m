@@ -502,6 +502,9 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_updateProgress {
+    // Prevent _processor block from deallocating me (#624)
+    __unused id retainSelf = self;
+
     CBLReplicationStatus status;
     if (!_bg_replicator.running)
         status = kCBLReplicationStopped;
