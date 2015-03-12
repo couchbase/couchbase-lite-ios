@@ -908,6 +908,7 @@ static id keyForPrefixMatch(id key, unsigned depth) {
 }
 
 
+#ifndef MY_DISABLE_LOGGING
 static inline NSString* toJSONString( id object ) {
     if (!object)
         return nil;
@@ -915,6 +916,7 @@ static inline NSString* toJSONString( id object ) {
                                  options: CBLJSONWritingAllowFragments
                                    error: NULL];
 }
+#endif
 
 static inline NSData* toJSONData( id object ) {
     if (!object)

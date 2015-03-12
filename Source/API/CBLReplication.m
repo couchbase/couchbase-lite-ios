@@ -376,10 +376,12 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     cfSetObj(&_serverCertificate, serverCert);
 
     if (changed) {
+#ifndef MY_DISABLE_LOGGING
         static const char* kStatusNames[] = {"stopped", "offline", "idle", "active"};
         LogTo(Sync, @"%@: %s, progress = %u / %u, err: %@",
               self, kStatusNames[status], (unsigned)changesProcessed, (unsigned)changesTotal,
               error.localizedDescription);
+#endif
         [[NSNotificationCenter defaultCenter]
                         postNotificationName: kCBLReplicationChangeNotification object: self];
     }
