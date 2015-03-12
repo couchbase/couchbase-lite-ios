@@ -148,8 +148,14 @@ static id fromJSON( NSData* json ) {
 
 
 - (NSString*) documentID {
-    // _documentProperties may have been 'redirected' from a different document
-    return _documentProperties.cbl_id ?: _sourceDocID;
+    // Get the doc id from either the embedded document contents, or the '_id' value key.
+    // Failing that, there's no document linking, so use the regular old _sourceDocID
+    id docID = _documentProperties.cbl_id;
+    if (!docID)
+        docID = $castIf(NSDictionary, self.value).cbl_id;
+    if (![docID isKindOfClass: [NSString class]])
+        docID = _sourceDocID;
+    return docID;
 }
 
 

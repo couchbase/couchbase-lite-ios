@@ -102,6 +102,23 @@
         CBLDocument* prevDoc = docs[rowNumber-1];
         AssertEqual(row.documentID, prevDoc.documentID);
         AssertEq(row.document, prevDoc);
+        AssertEqual(row.sourceDocumentID, [docs[rowNumber] documentID]);
+        ++rowNumber;
+    }
+
+    // Try again, without using prefetch (include_docs): [#626]
+    query.prefetch = NO;
+    rows = [query run: NULL];
+    Assert(rows);
+    AssertEq(rows.count, (NSUInteger)11);
+
+    rowNumber = 23;
+    for (CBLQueryRow* row in rows) {
+        AssertEq([row.key intValue], rowNumber);
+        CBLDocument* prevDoc = docs[rowNumber-1];
+        AssertEqual(row.documentID, prevDoc.documentID);
+        AssertEq(row.document, prevDoc);
+        AssertEqual(row.sourceDocumentID, [docs[rowNumber] documentID]);
         ++rowNumber;
     }
 }
