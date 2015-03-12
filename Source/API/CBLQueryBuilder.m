@@ -751,8 +751,10 @@ static NSString* printExpr(NSExpression* expr) {
         return nil;
     else if (functions.count == 1)
         return CBLGetReduceFunc(functions[0]);
-    else
+    else {
         Assert(NO, @"Can't handle multiple reduced values yet");
+        return nil;
+    }
 }
 
 

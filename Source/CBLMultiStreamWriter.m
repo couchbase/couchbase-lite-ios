@@ -175,8 +175,10 @@
         return [NSInputStream inputStreamWithFileAtPath: [input path]];
     else if ([input isKindOfClass: [NSInputStream class]])
         return input;
-    else
+    else {
         Assert(NO, @"Invalid input class %@ for CBLMultiStreamWriter", [input class]);
+        return nil;
+    }
 }
 
 

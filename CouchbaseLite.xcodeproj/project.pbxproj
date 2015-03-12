@@ -5658,6 +5658,7 @@
 				27452BCD1AB1180900327776 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		275315E114ACF0A20065964D /* Build configuration list for PBXNativeTarget "CBL Listener Mac" */ = {
 			isa = XCConfigurationList;

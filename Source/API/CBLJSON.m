@@ -106,6 +106,7 @@ static size_t estimate(id object) {
         return kObjectOverhead;
     } else {
         Assert(NO, @"Illegal object type %@ in JSON", [object class]);
+        return 0;
     }
 }
 

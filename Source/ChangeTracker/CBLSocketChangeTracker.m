@@ -99,7 +99,7 @@
     CFDictionaryRef proxySettings = CFNetworkCopySystemProxySettings();
     if (proxySettings) {
         LogTo(ChangeTracker, @"Changes feed using proxy settings %@", proxySettings);
-        Boolean ok = CFReadStreamSetProperty(cfInputStream, kCFStreamPropertyHTTPProxy, proxySettings);
+        __unused Boolean ok = CFReadStreamSetProperty(cfInputStream, kCFStreamPropertyHTTPProxy, proxySettings);
         Assert(ok);
         CFRelease(proxySettings);
     }
