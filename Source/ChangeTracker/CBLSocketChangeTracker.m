@@ -101,8 +101,8 @@
         LogTo(ChangeTracker, @"Changes feed using proxy settings %@", proxySettings);
         Boolean ok = CFReadStreamSetProperty(cfInputStream, kCFStreamPropertyHTTPProxy, proxySettings);
         Assert(ok);
+        CFRelease(proxySettings);
     }
-    CFRelease(proxySettings);
 
     NSDictionary* tls = self.TLSSettings;
     if (tls)
