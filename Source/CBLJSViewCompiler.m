@@ -16,6 +16,7 @@
 #import "CBLJSViewCompiler.h"
 #import "CBLJSFunction.h"
 #import "CBLRevision.h"
+#import "CBLReduceFuncs.h"
 #import <JavaScriptCore/JavaScript.h>
 #import <JavaScriptCore/JSStringRefCF.h>
 
@@ -130,6 +131,10 @@ static JSValueRef LogCallback(JSContextRef ctx, JSObjectRef function, JSObjectRe
 - (CBLReduceBlock) compileReduceFunction: (NSString*)reduceSource language: (NSString*)language {
     if (![language isEqualToString: @"javascript"])
         return nil;
+
+    // Magic built-in reduce functions can be invoked by "_"-prefixed name, like "_count", "_sum"...
+    if ([reduceSource hasPrefix: @"_"])
+        return CBLGetReduceFunc([reduceSource substringFromIndex: 1]);
 
     // Compile the function:
     CBLJSFunction* fn = [[CBLJSFunction alloc] initWithCompiler: self

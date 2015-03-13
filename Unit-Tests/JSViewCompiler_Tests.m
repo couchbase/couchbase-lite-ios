@@ -10,6 +10,7 @@
 #import "CBLTestCase.h"
 #import "CBLJSViewCompiler.h"
 #import "CBL_Revision.h"
+#import "CBLReduceFuncs.h"
 
 
 @interface JSViewCompiler_Tests : CBLTestCase
@@ -50,6 +51,28 @@
     id result = reduceBlock(keys, values, false);
 
     AssertEqual(result, (@[keys, values, @NO]));
+}
+
+
+- (void) test_JSBuiltInReduceFunctions {
+    CBLJSViewCompiler* c = [[CBLJSViewCompiler alloc] init];
+    CBLReduceBlock reduceBlock = [c compileReduceFunction: @"_count"
+                                                 language: @"javascript"];
+    Assert(reduceBlock);
+    AssertEq(reduceBlock, CBLGetReduceFunc(@"count"));
+
+    reduceBlock = [c compileReduceFunction: @"_stats" language: @"javascript"];
+    Assert(reduceBlock);
+    AssertEq(reduceBlock, CBLGetReduceFunc(@"stats"));
+    NSArray* keys = @[@"master", @"schlage", @"medeco"];
+    NSArray* values = @[@19, @-75, @3.1416];
+    id result = reduceBlock(keys, values, false);
+    AssertEqual(result, (@{@"count": @(3), @"sum": @(-52.8584), @"sumsqr": @(5995.86965056),
+                           @"max": @(19), @"min": @(-75)}));
+
+    reduceBlock = [c compileReduceFunction: @"_frob"
+                                  language: @"javascript"];
+    AssertNil(reduceBlock);
 }
 
 

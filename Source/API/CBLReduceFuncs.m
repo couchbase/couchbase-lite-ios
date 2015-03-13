@@ -88,6 +88,22 @@ static NSNumber* withDoubles(NSArray* values, double (*fn)(double[], size_t)) {
 }
 
 
+// https://wiki.apache.org/couchdb/Built-In_Reduce_Functions#A_stats
+static NSDictionary* stats(NSArray* values) {
+    double sum=0, sumsqr=0, min=INFINITY, max=-INFINITY;
+    for (id value in values) {
+        double n = $castIf(NSNumber, value).doubleValue;
+        sum += n;
+        sumsqr += n*n;
+        min = MIN(min, n);
+        max = MAX(max, n);
+    }
+    return @{@"count": @(values.count),
+             @"sum": @(sum), @"sumsqr": @(sumsqr),
+             @"min": @(min), @"max": @(max)};
+}
+
+
 static void initializeReduceFuncs(void) {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -101,6 +117,7 @@ static void initializeReduceFuncs(void) {
         sReduceFuncs[@"average"] =  REDUCEBLOCK(return [values valueForKeyPath: @"@avg.self"];);
         sReduceFuncs[@"median"] =   REDUCEBLOCK(return withDoubles(values, median););
         sReduceFuncs[@"stddev"] =   REDUCEBLOCK(return withDoubles(values, stddev););
+        sReduceFuncs[@"stats"] =    REDUCEBLOCK(return stats(values););
     });
 }
 
