@@ -216,13 +216,6 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
     }
 }
 
-
-- (void) dealloc {
-    _db = nil;
-    _cookies = nil;
-}
-
-
 # pragma mark - Private
 
 - (NSString*) localDocKey {
