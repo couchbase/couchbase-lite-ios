@@ -122,6 +122,7 @@ _CBLStatusToNSError
 _CBLStatusFromNSError
 _CBLURLWithoutQuery
 _CBLSequenceCompare
+_CBLGetReduceFunc
 
 _CBL_DatabaseChangesNotification
 _CBL_DatabaseWillCloseNotification
