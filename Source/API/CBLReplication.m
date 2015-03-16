@@ -495,10 +495,12 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 // CAREFUL: This is called on the server's background thread!
-- (void) bg_replicationProgressChanged: (NSNotification*)n
-{
-    AssertEq(n.object, _bg_replicator);
-    [self bg_updateProgress];
+- (void) bg_replicationProgressChanged: (NSNotification*)n {
+    if (n.object == _bg_replicator)
+        [self bg_updateProgress];
+    else
+        Warn(@"%@: Received replication change notification from "
+             "an unexpected replicator %@ (expected %@)", self, n.object, _bg_replicator);
 }
 
 
