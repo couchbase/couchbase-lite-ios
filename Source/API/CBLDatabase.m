@@ -264,7 +264,7 @@ static void catchInBlock(void (^block)()) {
 #pragma mark - DOCUMENTS:
 
 
-- (CBLDocument*) documentWithID: (NSString*)docID mustExist: (BOOL)mustExist {
+- (CBLDocument*) documentWithID: (NSString*)docID mustExist: (BOOL)mustExist isNew: (BOOL)isNew {
     CBLDocument* doc = (CBLDocument*) [_docCache resourceWithCacheKey: docID];
     if (doc) {
         if (mustExist && doc.currentRevision == nil)  // loads current revision from db
@@ -273,7 +273,9 @@ static void catchInBlock(void (^block)()) {
     }
     if (docID.length == 0)
         return nil;
-    doc = [[CBLDocument alloc] initWithDatabase: self documentID: docID];
+    doc = [[CBLDocument alloc] initWithDatabase: self
+                                     documentID: docID
+                                         exists: !isNew];
     if (!doc)
         return nil;
     if (mustExist && doc.currentRevision == nil)  // loads current revision from db
@@ -286,19 +288,19 @@ static void catchInBlock(void (^block)()) {
 
 
 - (CBLDocument*) documentWithID: (NSString*)docID {
-    return [self documentWithID: docID mustExist: NO];
+    return [self documentWithID: docID mustExist: NO isNew: NO];
 }
 
 - (CBLDocument*) existingDocumentWithID: (NSString*)docID {
-    return [self documentWithID: docID mustExist: YES];
+    return [self documentWithID: docID mustExist: YES isNew: NO];
 }
 
 - (CBLDocument*) objectForKeyedSubscript: (NSString*)key {
-    return [self documentWithID: key mustExist: NO];
+    return [self documentWithID: key mustExist: NO isNew: NO];
 }
 
 - (CBLDocument*) createDocument {
-    return [self documentWithID: [[self class] generateDocumentID] mustExist: NO];
+    return [self documentWithID: [[self class] generateDocumentID] mustExist: NO isNew: YES];
 }
 
 

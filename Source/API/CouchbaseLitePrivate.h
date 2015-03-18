@@ -63,7 +63,8 @@
 
 @interface CBLDocument () <CBLCacheable>
 - (instancetype) initWithDatabase: (CBLDatabase*)database
-                       documentID: (NSString*)docID                 __attribute__((nonnull));
+                       documentID: (NSString*)docID
+                           exists: (BOOL)exists                     __attribute__((nonnull));
 - (CBLSavedRevision*) revisionFromRev: (CBL_Revision*)rev;
 - (void) revisionAdded: (CBLDatabaseChange*)change
                 notify: (BOOL)notify                                __attribute__((nonnull));
