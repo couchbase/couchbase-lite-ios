@@ -18,4 +18,7 @@
 - (CBL_MutableRevision*) getDocumentWithID: (NSString*)docID
                                   sequence: (SequenceNumber)sequence
                                     status: (CBLStatus*)outStatus;
+
+- (CBLStatus) _try: (CBLStatus(^)())block;
+
 @end

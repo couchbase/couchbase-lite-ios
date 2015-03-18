@@ -634,6 +634,10 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
 
 
 - (void) test18_FindMissingRevisions {
+    CBL_RevisionList* revs = [[CBL_RevisionList alloc] initWithArray: @[]];
+    CBLStatus status;
+    Assert([db.storage findMissingRevisions: revs status: &status]);
+
     CBL_Revision* doc1r1 = [self putDoc: $dict({@"_id", @"11111"}, {@"key", @"one"})];
     CBL_Revision* doc2r1 = [self putDoc: $dict({@"_id", @"22222"}, {@"key", @"two"})];
     [self putDoc: $dict({@"_id", @"33333"}, {@"key", @"three"})];
@@ -649,8 +653,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     CBL_Revision* revToFind1 = [[CBL_Revision alloc] initWithDocID: @"11111" revID: @"3-6060" deleted: NO];
     CBL_Revision* revToFind2 = [[CBL_Revision alloc] initWithDocID: @"22222" revID: doc2r2.revID deleted: NO];
     CBL_Revision* revToFind3 = [[CBL_Revision alloc] initWithDocID: @"99999" revID: @"9-4141" deleted: NO];
-    CBL_RevisionList* revs = [[CBL_RevisionList alloc] initWithArray: @[revToFind1, revToFind2, revToFind3]];
-    CBLStatus status;
+    revs = [[CBL_RevisionList alloc] initWithArray: @[revToFind1, revToFind2, revToFind3]];
     Assert([db.storage findMissingRevisions: revs status: &status]);
     AssertEqual(revs.allRevisions, (@[revToFind1, revToFind3]));
     

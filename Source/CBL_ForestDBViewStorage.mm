@@ -110,32 +110,32 @@ public:
     CBLViewIndexType indexType;
 
     virtual void operator() (const Mappable& mappable, EmitFn& emitFn) {
-        NSDictionary* doc = ((CocoaMappable&)mappable).body;
-        if (!doc)
-            return; // doc is deleted or otherwise not to be indexed
-        if (documentType && ![documentType isEqual: doc[@"type"]])
-            return;
-        CBLMapEmitBlock emit = ^(id key, id value) {
-            if (indexType == kCBLFullTextIndex) {
-                Assert([key isKindOfClass: [NSString class]]);
-                LogTo(ViewVerbose, @"    emit(\"%@\", %@)", key, toJSONStr(value));
-                emitText(key, value, doc, emitFn);
-            } else if ([key isKindOfClass: [CBLSpecialKey class]]) {
-                CBLSpecialKey *specialKey = key;
-                LogTo(ViewVerbose, @"    emit(%@, %@)", specialKey, toJSONStr(value));
-                NSString* text = specialKey.text;
-                if (text) {
-                    emitText(text, value, doc, emitFn);
-                } else {
-                    emitGeo(specialKey.rect, value, doc, emitFn);
+            NSDictionary* doc = ((CocoaMappable&)mappable).body;
+            if (!doc)
+                return; // doc is deleted or otherwise not to be indexed
+            if (documentType && ![documentType isEqual: doc[@"type"]])
+                return;
+            CBLMapEmitBlock emit = ^(id key, id value) {
+                if (indexType == kCBLFullTextIndex) {
+                    Assert([key isKindOfClass: [NSString class]]);
+                    LogTo(ViewVerbose, @"    emit(\"%@\", %@)", key, toJSONStr(value));
+                    emitText(key, value, doc, emitFn);
+                } else if ([key isKindOfClass: [CBLSpecialKey class]]) {
+                    CBLSpecialKey *specialKey = key;
+                    LogTo(ViewVerbose, @"    emit(%@, %@)", specialKey, toJSONStr(value));
+                    NSString* text = specialKey.text;
+                    if (text) {
+                        emitText(text, value, doc, emitFn);
+                    } else {
+                        emitGeo(specialKey.rect, value, doc, emitFn);
+                    }
+                } else if (key) {
+                    LogTo(ViewVerbose, @"    emit(%@, %@)  to %@", toJSONStr(key), toJSONStr(value), viewName);
+                    callEmit(key, value, doc, emitFn);
                 }
-            } else if (key) {
-                LogTo(ViewVerbose, @"    emit(%@, %@)  to %@", toJSONStr(key), toJSONStr(value), viewName);
-                callEmit(key, value, doc, emitFn);
-            }
-        };
-        mapBlock(doc, emit);  // Call the apps' map block!
-    }
+            };
+            mapBlock(doc, emit);  // Call the apps' map block!
+        }
 
 private:
     // Emit a full-text row
@@ -410,7 +410,7 @@ static NSString* viewNames(NSArray* views) {
 
 - (CBLStatus) updateIndexes: (NSArray*)views {
     LogTo(View, @"Checking indexes of (%@) for %@", viewNames(views), _name);
-    try {
+    return [_dbStorage _try: ^{
         CBLStatus status;
         CocoaIndexer indexer;
         indexer.triggerOnIndex(_index);
@@ -444,13 +444,7 @@ static NSString* viewNames(NSArray* views) {
             LogTo(View, @"... Nothing to do.");
             return kCBLStatusNotModified;
         }
-    } catch (forestdb::error x) {
-        Warn(@"Error indexing %@: ForestDB error %d", self, x.status);
-        return CBLStatusFromForestDBStatus(x.status);
-    } catch (...) {
-        Warn(@"Unexpected exception indexing %@", self);
-        return kCBLStatusException;
-    }
+    }];
 }
 
 
@@ -587,6 +581,8 @@ static NSString* viewNames(NSArray* views) {
             }
         } catch (forestdb::error x) {
             Warn(@"Unexpected ForestDB error iterating query (status %d)", x.status);
+        } catch (NSException* x) {
+            MYReportException(x, @"CBL_ForestDBViewStorage");
         } catch (...) {
             Warn(@"Unexpected CBForest exception iterating query");
         }
@@ -697,6 +693,8 @@ static id keyForPrefixMatch(id key, unsigned depth) {
             return row;
         } catch (forestdb::error x) {
             Warn(@"Unexpected ForestDB error iterating query (status %d)", x.status);
+        } catch (NSException* x) {
+            MYReportException(x, @"CBL_ForestDBViewStorage");
         } catch (...) {
             Warn(@"Unexpected CBForest exception iterating query");
         }

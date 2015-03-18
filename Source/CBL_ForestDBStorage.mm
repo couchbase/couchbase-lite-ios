@@ -21,6 +21,7 @@ extern "C" {
 #import "CBL_Attachment.h"
 #import "CBLBase64.h"
 #import "CBLMisc.h"
+#import "ExceptionUtils.h"
 }
 #import <CBForest/CBForest.hh>
 #import "CBLForestBridge.h"
@@ -182,7 +183,11 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
         return block();
     } catch (forestdb::error err) {
         return CBLStatusFromForestDBStatus(err.status);
+    } catch (NSException* x) {
+        MYReportException(x, @"CBL_ForestDBStorage");
+        return kCBLStatusException;
     } catch (...) {
+        Warn(@"Unknown C++ exception caught in CBL_ForestDBStorage");
         return kCBLStatusException;
     }
 }
@@ -221,16 +226,12 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 - (CBLStatus) _withVersionedDoc: (NSString*)docID
                              do: (CBLStatus(^)(VersionedDocument&))block
 {
-    try {
+    return [self _try: ^{
         VersionedDocument doc(*_forest, docID);
         if (!doc.exists())
             return kCBLStatusNotFound;
         return block(doc);
-    } catch (forestdb::error err) {
-        return CBLStatusFromForestDBStatus(err.status);
-    } catch (...) {
-        return kCBLStatusException;
-    }
+    }];
 }
 
 
@@ -593,7 +594,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
                 doc = new VersionedDocument(*_forest, lastDocID);
             }
             if (doc && doc->get(rev.revID) != NULL)
-                [revs removeRev: rev];
+                [revs removeObjectAtIndex: i];
         }
         return kCBLStatusOK;
     }];
