@@ -24,25 +24,29 @@
 #  error This class requires ARC!
 #endif
 
-#define INFO(FMT, ...)  NSLog(@"[CBLIS] INFO " FMT, ##__VA_ARGS__)
-#define WARN(FMT, ...)  NSLog(@"[CBLIS] WARNING " FMT, ##__VA_ARGS__)
-#define ERROR(FMT, ...)  NSLog(@"[CBLIS] ERROR " FMT, ##__VA_ARGS__)
+#define INFO(FMT, ...) NSLog(@"[CBLIS] INFO " FMT, ##__VA_ARGS__)
+#define WARN(FMT, ...) NSLog(@"[CBLIS] WARNING " FMT, ##__VA_ARGS__)
+#define ERROR(FMT, ...) NSLog(@"[CBLIS] ERROR " FMT, ##__VA_ARGS__)
 
 NSString* const kCBLISErrorDomain = @"CBLISErrorDomain";
 NSString* const kCBLISObjectHasBeenChangedInStoreNotification = @"kCBLISObjectHasBeenChangedInStoreNotification";
 
-static NSString* const kCBLISTypeKey = @"CBLIS_type";
+static NSString* const kCBLISDefaultTypeKey = @"type";
+static NSString* const kCBLISOldDefaultTypeKey = @"CBLIS_type";
+
+static NSString* const kCBLISMetadata_DefaultTypeKey = @"type_key";
+
 static NSString* const kCBLISCurrentRevisionAttributeName = @"CBLIS_Rev";
 static NSString* const kCBLISManagedObjectIDPrefix = @"CBL";
 static NSString* const kCBLISMetadataDocumentID = @"CBLIS_metadata";
 static NSString* const kCBLISFetchEntityByPropertyViewNameFormat = @"CBLIS/fetch_%@_by_%@";
 static NSString* const kCBLISFetchEntityToManyViewNameFormat = @"CBLIS/%@_tomany_%@";
 
-
 // Utility functions
 static BOOL CBLISIsNull(id value);
 static NSString* CBLISToManyViewNameForRelationship(NSRelationshipDescription* relationship);
 static NSString* CBLISResultTypeName(NSFetchRequestResultType resultType);
+static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
 
 @interface NSManagedObjectID (CBLIncrementalStore)
 - (NSString*) couchbaseLiteIDRepresentation;
@@ -53,7 +57,7 @@ static NSString* CBLISResultTypeName(NSFetchRequestResultType resultType);
 
 // TODO: check if there is a better way to not hold strong references on these MOCs
 @property (nonatomic, strong) NSHashTable* observingManagedObjectContexts;
-@property (nonatomic, strong, readwrite) CBLDatabase* database;
+@property (nonatomic, strong) CBLDatabase* database;
 @property (nonatomic, strong) id changeObserver;
 
 @end
@@ -65,12 +69,12 @@ static NSString* CBLISResultTypeName(NSFetchRequestResultType resultType);
     NSMutableDictionary* _fetchRequestResultCache;
     NSMutableDictionary* _entityAndPropertyToFetchViewName;
     CBLLiveQuery* _conflictsQuery;
+    NSString * _documentTypeKey;
 }
 
 @synthesize database = _database;
 @synthesize changeObserver = _changeObserver;
 @synthesize conflictHandler = _conflictHandler;
-
 @synthesize observingManagedObjectContexts = _observingManagedObjectContexts;
 
 static CBLManager* sCBLManager;
@@ -102,9 +106,7 @@ static CBLManager* sCBLManager;
     NSManagedObjectModel* model = [managedObjectModel mutableCopy];
     
     [self updateManagedObjectModel: model];
-    
-    NSError* error;
-    
+
     NSPersistentStoreCoordinator* persistentStoreCoordinator =
         [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel: model];
     
@@ -112,8 +114,11 @@ static CBLManager* sCBLManager;
                               NSMigratePersistentStoresAutomaticallyOption : @YES,
                               NSInferMappingModelAutomaticallyOption : @YES
                               };
-    
+
+    NSURL *dbURL = [NSURL URLWithString: databaseName];
+    NSError* error;
     CBLIncrementalStore* store = nil;
+
     if (importUrl) {
         NSPersistentStore* oldStore = [persistentStoreCoordinator addPersistentStoreWithType: importType
                                                                                configuration: nil
@@ -121,45 +126,40 @@ static CBLManager* sCBLManager;
                                                                                      options: options
                                                                                        error: &error];
         if (!oldStore) {
-            if (outError)* outError = [NSError errorWithDomain: kCBLISErrorDomain
-                                                          code: CBLIncrementalStoreErrorMigrationOfStoreFailed
-                                                      userInfo: @{
-                                                                  NSLocalizedDescriptionKey: @"Couldn't open store to import",
-                                                                  NSUnderlyingErrorKey: error
-                                                                  }];
+            if (outError)
+                *outError = CBLISError(CBLIncrementalStoreErrorMigrationOfStoreFailed,
+                                       @"Couldn't open store to import",
+                                       error);
             return nil;
         }
-        
+
         store = (CBLIncrementalStore*)[persistentStoreCoordinator migratePersistentStore: oldStore
-                                                                                   toURL: [NSURL URLWithString: databaseName]
+                                                                                   toURL: dbURL
                                                                                  options: options
-                                                                                withType: [self type] error: &error];
+                                                                                withType: [self type]
+                                                                                   error: &error];
         
         if (!store) {
-            NSString* errDesc = [NSString stringWithFormat:@"Migration of store at URL %@ failed: %@", importUrl, error.description];
-            if (outError)* outError = [NSError errorWithDomain: kCBLISErrorDomain
-                                                          code: CBLIncrementalStoreErrorMigrationOfStoreFailed
-                                                      userInfo: @{
-                                                                  NSLocalizedDescriptionKey: errDesc,
-                                                                  NSUnderlyingErrorKey: error
-                                                                  }];
+            if (outError) {
+                NSString* errDesc = [NSString stringWithFormat:@"Migration of store at URL "
+                                     "%@ failed: %@", importUrl, error.description];
+                *outError = CBLISError(CBLIncrementalStoreErrorMigrationOfStoreFailed, errDesc, error);
+            }
             return nil;
         }
     } else {
         store = (CBLIncrementalStore*)[persistentStoreCoordinator addPersistentStoreWithType: [self type]
                                                                                configuration: nil
-                                                                                         URL: [NSURL URLWithString:databaseName]
+                                                                                         URL: dbURL
                                                                                      options: options
                                                                                        error: &error];
         
         if (!store) {
-            NSString* errDesc = [NSString stringWithFormat: @"Initialization of store failed: %@", error.description];
-            if (outError) *outError = [NSError errorWithDomain: kCBLISErrorDomain
-                                                          code: CBLIncrementalStoreErrorCreatingStoreFailed
-                                                      userInfo: @{
-                                                                  NSLocalizedDescriptionKey: errDesc,
-                                                                  NSUnderlyingErrorKey: error
-                                                                  }];
+            if (outError) {
+                NSString* errDesc = [NSString stringWithFormat: @"Initialization of store failed: %@",
+                                     error.description];
+                *outError = CBLISError(CBLIncrementalStoreErrorCreatingStoreFailed, errDesc, error);
+            }
             return nil;
         }
     }
@@ -202,16 +202,13 @@ static CBLManager* sCBLManager;
 + (void) updateManagedObjectModel: (NSManagedObjectModel*)managedObjectModel {
     NSArray* entites = managedObjectModel.entities;
     for (NSEntityDescription* entity in entites) {
-        if (entity.superentity) { // only add to super-entities, not the sub-entities
+        if (entity.superentity) // only add to super-entities, not the sub-entities
             continue;
-        }
         
         NSMutableArray* properties = [entity.properties mutableCopy];
-        
         for (NSPropertyDescription* prop in properties) {
-            if ([prop.name isEqual: kCBLISCurrentRevisionAttributeName]) {
+            if ([prop.name isEqual: kCBLISCurrentRevisionAttributeName])
                 return;
-            }
         }
         
         NSAttributeDescription* revAttribute = [NSAttributeDescription new];
@@ -262,10 +259,10 @@ static CBLManager* sCBLManager;
         
         if (![attributesByName objectForKey: kCBLISCurrentRevisionAttributeName]) {
             if (outError) {
-                NSString *errDesc = @"Database Model not compatible. You need to call +[updateManagedObjectModel:].";
-                *outError = [NSError errorWithDomain: kCBLISErrorDomain
-                                                code: CBLIncrementalStoreErrorDatabaseModelIncompatible
-                                            userInfo: @{ NSLocalizedFailureReasonErrorKey: errDesc }];
+                NSString* errDesc = @"Database Model not compatible. "
+                                     "You need to call +[updateManagedObjectModel:].";
+                *outError = CBLISError(CBLIncrementalStoreErrorDatabaseModelIncompatible,
+                                       errDesc, nil);
             }
             return NO;
         }
@@ -280,68 +277,85 @@ static CBLManager* sCBLManager;
     NSError* error;
     self.database = [manager databaseNamed: databaseName error: &error];
     if (!self.database) {
-        if (outError) *outError = [NSError errorWithDomain: kCBLISErrorDomain
-                                                      code: CBLIncrementalStoreErrorCreatingDatabaseFailed
-                                                  userInfo: @{
-                                                              NSLocalizedDescriptionKey: @"Could not create database",
-                                                              NSUnderlyingErrorKey: error
-                                                              }];
+        if (outError)
+            *outError = CBLISError(CBLIncrementalStoreErrorCreatingDatabaseFailed,
+                                   @"Could not create database", error);
         return NO;
     }
 
     [self initializeViews];
-    
-    
+
     __weak __typeof(self) weakSelf = self;
-    self.changeObserver = [[NSNotificationCenter defaultCenter] addObserverForName: kCBLDatabaseChangeNotification
-                                                                            object: self.database queue:nil
-                                                                        usingBlock: ^(NSNotification* note) {
-                                                                            NSArray* changes = note.userInfo[@"changes"];
-                                                                            [weakSelf couchDocumentsChanged:changes];
-                                                                        }];
-    
-    CBLDocument* doc = [self.database documentWithID: kCBLISMetadataDocumentID];
-    
-    BOOL success = NO;
-    
-    NSDictionary* metaData = doc.properties;
-    if (![metaData objectForKey: NSStoreUUIDKey]) {
-        
-        metaData = @{
-                     NSStoreUUIDKey: [[NSProcessInfo processInfo] globallyUniqueString],
-                     NSStoreTypeKey: [[self class] type]
-                     };
-        [self setMetadata: metaData];
-        
-        NSError* error;
-        success = [doc putProperties: metaData error: &error] != nil;
-        if (!success) {
-            if (outError) *outError = [NSError errorWithDomain: kCBLISErrorDomain
-                                                          code: CBLIncrementalStoreErrorStoringMetadataFailed
-                                                      userInfo: @{
-                                                                  NSLocalizedDescriptionKey: @"Could not store metadata in database",
-                                                                  NSUnderlyingErrorKey: error
-                                                                  }];
-            return NO;
+    self.changeObserver = [[NSNotificationCenter defaultCenter]
+                            addObserverForName: kCBLDatabaseChangeNotification
+                                        object: self.database queue:nil
+                                    usingBlock: ^(NSNotification* note) {
+                                        NSArray* changes = note.userInfo[@"changes"];
+                                        [weakSelf couchDocumentsChanged:changes];
+                                    }];
+
+    NSDictionary *metadata = [self metadataDocument: &error];
+    if (error) {
+        if (outError) *outError = error;
+        return NO;
+    }
+
+    [self setMetadata: @{NSStoreUUIDKey: metadata[NSStoreUUIDKey],
+                         NSStoreTypeKey: metadata[NSStoreTypeKey]}];
+
+    // create a live-query for conflicting documents
+    CBLQuery* query = [self.database createAllDocumentsQuery];
+    query.allDocsMode = kCBLOnlyConflicts;
+
+    CBLLiveQuery* liveQuery = query.asLiveQuery;
+    [liveQuery addObserver: self forKeyPath: @"rows"
+                   options: NSKeyValueObservingOptionNew context: nil];
+    [liveQuery start];
+
+    _conflictsQuery = liveQuery;
+
+    return YES;
+}
+
+
+- (NSDictionary*) metadataDocument: (NSError **)outError {
+    NSDictionary* metaData = [self.database existingLocalDocumentWithID: kCBLISMetadataDocumentID];
+    if (metaData)
+        return metaData;
+
+    NSMutableDictionary *properties = [NSMutableDictionary dictionary];
+
+    CBLDocument* doc = [self.database existingDocumentWithID: kCBLISMetadataDocumentID];
+    if (doc) {
+        // Migration (from v1.0.4 to v1.1.0):
+        // 1. Store metadata in a local document instead of a normal document.
+        // 2. Document type key was changed from 'CBLIS_type' to just 'type'. However
+        // for backward compatibility, the existing apps that already use CBLIS_type key will
+        // continue to use CBLIS_type. Store 'CBLIS_Type as a value of kCBLISMetadata_DefaultTypeKey
+        // in the metadata properties so that it can be referenced by the method -documentTypeKey.
+
+        [properties addEntriesFromDictionary: doc.userProperties];
+        properties[kCBLISMetadata_DefaultTypeKey] = kCBLISOldDefaultTypeKey;
+
+        [doc deleteDocument: nil];
+    }
+
+    if (![properties objectForKey: NSStoreUUIDKey]) {
+        properties[NSStoreUUIDKey] = [[NSProcessInfo processInfo] globallyUniqueString];
+        properties[NSStoreTypeKey] = [[self class] type];
+    }
+
+    NSError* error;
+    if (![self.database putLocalDocument: properties
+                                  withID: kCBLISMetadataDocumentID
+                                   error: &error]) {
+        if (outError) {
+            NSString* errorDesc = @"Could not store metadata in database";
+            *outError = CBLISError(CBLIncrementalStoreErrorStoringMetadataFailed, errorDesc, error);
         }
-        
-    } else {
-        [self setMetadata: doc.properties];
-        success = YES;
     }
-    
-    if (success) {
-        // create a live-query for conflicting documents
-        CBLQuery* query = [self.database createAllDocumentsQuery];
-        query.allDocsMode = kCBLOnlyConflicts;
-        CBLLiveQuery* liveQuery = query.asLiveQuery;
-        [liveQuery addObserver: self forKeyPath: @"rows" options: NSKeyValueObservingOptionNew context: nil];
-        [liveQuery start];
-        
-        _conflictsQuery = liveQuery;
-    }
-    
-    return success;
+
+    return properties;
 }
 
 
@@ -404,11 +418,13 @@ static CBLManager* sCBLManager;
 - (BOOL) deleteObject: (NSManagedObject*)object
           withContext: (NSManagedObjectContext*)context
              outError: (NSError**)outError {
-    CBLDocument* doc = [self.database existingDocumentWithID: [object.objectID couchbaseLiteIDRepresentation]];
+    CBLDocument* doc = [self.database existingDocumentWithID:
+                        [object.objectID couchbaseLiteIDRepresentation]];
     if (!doc || doc.isDeleted)
         return YES;
     
-    BOOL result = [doc putProperties: [self propertiesForDeletingDocument: doc] error: outError] != nil;
+    BOOL result = [doc putProperties:
+                   [self propertiesForDeletingDocument: doc] error: outError] != nil;
     if (result) {
         [self purgeCachedObjectsForEntityName: object.entity.name];
     }
@@ -479,14 +495,14 @@ static CBLManager* sCBLManager;
 #endif
         return result;
     } else {
-        NSString* desc = [NSString stringWithFormat:@"Unsupported requestType: %d", (int)request.requestType];
-        if (outError) *outError = [NSError errorWithDomain: kCBLISErrorDomain
-                                                      code: CBLIncrementalStoreErrorUnsupportedRequestType
-                                                  userInfo: @{ NSLocalizedFailureReasonErrorKey: desc }];
+        if (outError) {
+            NSString* errDesc = [NSString stringWithFormat:@"Unsupported requestType: %d",
+                                 (int)request.requestType];
+            *outError = CBLISError(CBLIncrementalStoreErrorUnsupportedRequestType, errDesc, nil);
+        }
         return nil;
     }
 }
-
 
 - (NSIncrementalStoreNode*) newValuesForObjectWithID: (NSManagedObjectID*)objectID
                                          withContext: (NSManagedObjectContext*)context
@@ -494,8 +510,10 @@ static CBLManager* sCBLManager;
     CBLDocument* doc = [self.database documentWithID: [objectID couchbaseLiteIDRepresentation]];
     
     NSEntityDescription* entity = objectID.entity;
-    if (![entity.name isEqual: [doc propertyForKey: kCBLISTypeKey]]) {
-        entity = [NSEntityDescription entityForName: [doc propertyForKey: kCBLISTypeKey]
+
+    NSString* docTypeKey = [self documentTypeKey];
+    if (![entity.name isEqual: [doc propertyForKey: docTypeKey]]) {
+        entity = [NSEntityDescription entityForName: [doc propertyForKey: docTypeKey]
                              inManagedObjectContext: context];
     }
     
@@ -576,6 +594,21 @@ static CBLManager* sCBLManager;
     return objectID;
 }
 
+#pragma mark - Document Type Key
+
+- (NSString *)documentTypeKey {
+    if (_documentTypeKey)
+        return _documentTypeKey;
+
+    NSDictionary *metadata = [self metadata];
+    if (metadata[kCBLISMetadata_DefaultTypeKey])
+        _documentTypeKey = metadata[kCBLISMetadata_DefaultTypeKey];
+    else
+        _documentTypeKey = kCBLISDefaultTypeKey;
+
+    return _documentTypeKey;
+}
+
 #pragma mark - Views
 
 /** Initializes the views needed for querying objects by type and for to-many relationships.*/
@@ -602,7 +635,7 @@ static CBLManager* sCBLManager;
                     NSString* invertRelPropName = invRel.name;
                     CBLView* view = [self.database viewNamed: viewName];
                     [view setMapBlock:^(NSDictionary* doc, CBLMapEmitBlock emit) {
-                        NSString* type = [doc objectForKey: kCBLISTypeKey];
+                        NSString* type = [doc objectForKey: [self documentTypeKey]];
                         if (type && [entityNames containsObject: type] &&
                             [doc objectForKey: invertRelPropName]) {
                             emit([doc objectForKey: invertRelPropName], nil);
@@ -728,10 +761,10 @@ static CBLManager* sCBLManager;
         return result;
     } else {
         if (outError) {
-            NSString* desc = [NSString stringWithFormat: @"Unsupported fetch request result type: %d", (int)type];
-            *outError = [NSError errorWithDomain: kCBLISErrorDomain
-                                            code: CBLIncrementalStoreErrorUnsupportedFetchRequestResultType
-                                        userInfo: @{ NSLocalizedFailureReasonErrorKey: desc }];
+            NSString* errDesc = [NSString stringWithFormat:
+                                 @"Unsupported fetch request result type: %d", (int)type];
+            *outError = CBLISError(CBLIncrementalStoreErrorUnsupportedFetchRequestResultType,
+                                   errDesc, nil);
         }
         return nil;
     }
@@ -744,7 +777,7 @@ static CBLManager* sCBLManager;
                                   withTemplateVars: (NSDictionary*)templateVars
                                        withContext: (NSManagedObjectContext*)context
                                           outError: (NSError**)outError {
-    NSPredicate* typePredicate = [NSPredicate predicateWithFormat:@"%K == %@", kCBLISTypeKey,
+    NSPredicate* typePredicate = [NSPredicate predicateWithFormat:@"%K == %@", [self documentTypeKey],
                                   request.entityName];
 
     NSPredicate* compoundPredicate = [NSCompoundPredicate
@@ -971,10 +1004,8 @@ static CBLManager* sCBLManager;
     }
 
     if (!output && (outError && *outError == nil)) {
-        NSString* desc = [NSString stringWithFormat:@"Unsupported predicate : %@", predicate];
-        *outError = [NSError errorWithDomain: kCBLISErrorDomain
-                                        code: CBLIncrementalStoreErrorUnsupportedPredicate
-                                    userInfo: @{ NSLocalizedFailureReasonErrorKey: desc }];
+        NSString* errDesc = [NSString stringWithFormat:@"Unsupported predicate : %@", predicate];
+        *outError = CBLISError(CBLIncrementalStoreErrorUnsupportedPredicate, errDesc, nil);
         return nil;
     }
 
@@ -1015,11 +1046,10 @@ static CBLManager* sCBLManager;
     } else {
         keyPath = nil;
         if (outError) {
-            NSString* desc = [NSString stringWithFormat: @"Predicate Keypath '%@' not found in the entity '%@'.",
-                              expression.keyPath, entity.name];
-            *outError = [NSError errorWithDomain: kCBLISErrorDomain
-                                            code: CBLIncrementalStoreErrorPredicateKeyPathNotFoundInEntity
-                                        userInfo: @{ NSLocalizedFailureReasonErrorKey: desc }];
+            NSString* errDesc = [NSString stringWithFormat: @"Predicate Keypath '%@' "
+                                 "not found in the entity '%@'.", expression.keyPath, entity.name];
+            *outError = CBLISError(CBLIncrementalStoreErrorPredicateKeyPathNotFoundInEntity,
+                                   errDesc, nil);
         }
     }
 
@@ -1076,7 +1106,7 @@ static CBLManager* sCBLManager;
 - (NSArray*) fetchByEntityAndDoPostFilterWithRequest: (NSFetchRequest*)request
                                          withContext: (NSManagedObjectContext*)context
                                             outError: (NSError**)outError {
-    NSPredicate* predicate = [NSPredicate predicateWithFormat: @"%K == %@", kCBLISTypeKey,
+    NSPredicate* predicate = [NSPredicate predicateWithFormat: @"%K == %@", [self documentTypeKey],
                                 request.entityName];
 
     CBLQueryBuilder* builder = [self cachedQueryBuilderForPredicate: predicate
@@ -1186,10 +1216,9 @@ static CBLManager* sCBLManager;
         if (toManySearch && !comparisonPredicate.comparisonPredicateModifier) {
             if (outError) {
                 NSString* desc = [NSString stringWithFormat:@"Unsupported predicate : "
-                                  "%@ (To-many key without ANY or ALL modifier is not allowed here.)", predicate];
-                *outError = [NSError errorWithDomain: kCBLISErrorDomain
-                                                code: CBLIncrementalStoreErrorUnsupportedPredicate
-                                            userInfo: @{ NSLocalizedFailureReasonErrorKey: desc }];
+                                  "%@ (To-many key without ANY or ALL modifier "
+                                  "is not allowed here.)", predicate];
+                *outError = CBLISError(CBLIncrementalStoreErrorUnsupportedPredicate, desc, nil);
             }
             return NO;
         }
@@ -1481,9 +1510,7 @@ static CBLManager* sCBLManager;
     NSDictionary* propertyDesc = [desc propertiesByName];
 
     NSMutableDictionary* proxy = [NSMutableDictionary dictionary];
-
-    [proxy setObject:desc.name
-              forKey:kCBLISTypeKey];
+    [proxy setObject: desc.name forKey: [self documentTypeKey]];
 
     if ([propertyDesc objectForKey: kCBLISCurrentRevisionAttributeName]) {
         id rev = [object valueForKey: kCBLISCurrentRevisionAttributeName];
@@ -1522,7 +1549,8 @@ static CBLManager* sCBLManager;
                     NSValueTransformer* transformer = [NSValueTransformer valueTransformerForName: attr.valueTransformerName];
 
                     if (!transformer) {
-                        WARN(@"Value transformer for attribute %@ with name %@ not found", attr.name, attr.valueTransformerName);
+                        WARN(@"Value transformer for attribute %@ with name %@ not found",
+                             attr.name, attr.valueTransformerName);
                         continue;
                     }
                     
@@ -1535,7 +1563,8 @@ static CBLManager* sCBLManager;
                         value = [value base64EncodedStringWithOptions:0];
                         attributeType = NSStringAttributeType;
                     } else {
-                        WARN(@"Unsupported value transformer transformedValueClass: %@", NSStringFromClass(transformedClass));
+                        WARN(@"Unsupported value transformer transformedValueClass: %@",
+                             NSStringFromClass(transformedClass));
                         continue;
                     }
                 }
@@ -1606,7 +1635,8 @@ static CBLManager* sCBLManager;
                     } else if (transformedClass == [NSData class]) {
                         value = [transformer reverseTransformedValue: [[NSData alloc]initWithBase64EncodedString: value options: 0]];
                     } else {
-                        INFO(@"Unsupported value transformer transformedValueClass: %@", NSStringFromClass(transformedClass));
+                        INFO(@"Unsupported value transformer transformedValueClass: %@",
+                             NSStringFromClass(transformedClass));
                         continue;
                     }
                 }
@@ -1641,12 +1671,9 @@ static CBLManager* sCBLManager;
     NSError* error;
     CBLQueryEnumerator* rows = [query run: &error];
     if (!rows) {
-        if (outError) *outError = [NSError errorWithDomain: kCBLISErrorDomain
-                                                      code: CBLIncrementalStoreErrorQueryingCouchbaseLiteFailed
-                                                  userInfo: @{
-                                                              NSLocalizedFailureReasonErrorKey: @"Error querying CouchbaseLite",
-                                                              NSUnderlyingErrorKey: error
-                                                              }];
+        if (outError)
+            *outError = CBLISError(CBLIncrementalStoreErrorQueryingCouchbaseLiteFailed,
+                                   @"Error querying CouchbaseLite", nil);
         return nil;
     }
     
@@ -1849,10 +1876,11 @@ static CBLManager* sCBLManager;
 
         NSDictionary* properties = [rev properties];
         
-        NSString* type = [properties objectForKey: kCBLISTypeKey];
+        NSString* type = [properties objectForKey: [self documentTypeKey]];
         NSString* reference = change.documentID;
-        
-        NSEntityDescription* entity = [self.persistentStoreCoordinator.managedObjectModel.entitiesByName objectForKey: type];
+
+        NSDictionary *entitiesByName = self.persistentStoreCoordinator.managedObjectModel.entitiesByName;
+        NSEntityDescription* entity = entitiesByName[type];
         NSManagedObjectID* objectID = [self newObjectIDForEntity: entity referenceObject: reference];
         
         if (deleted) {
@@ -1864,13 +1892,13 @@ static CBLManager* sCBLManager;
         [changedEntitites addObject: type];
     }
     
-    [self informObservingManagedObjectContextsAboutUpdatedIDs: updatedObjectIDs deletedIDs: deletedObjectIDs];
+    [self informObservingManagedObjectContextsAboutUpdatedIDs: updatedObjectIDs
+                                                   deletedIDs: deletedObjectIDs];
     
     NSDictionary* userInfo = @{
                                NSDeletedObjectsKey: deletedObjectIDs,
                                NSUpdatedObjectsKey: updatedObjectIDs
                                };
-    
     [[NSNotificationCenter defaultCenter] postNotificationName: kCBLISObjectHasBeenChangedInStoreNotification
                                                         object: self
                                                       userInfo: userInfo];
@@ -1889,7 +1917,8 @@ static CBLManager* sCBLManager;
 
 #pragma mark - Conflicts handling
 
-- (void) observeValueForKeyPath: (NSString*)keyPath ofObject: (id)object change: (NSDictionary*)change context: (void*)context {
+- (void) observeValueForKeyPath: (NSString*)keyPath ofObject: (id)object
+                         change: (NSDictionary*)change context: (void*)context {
     if ([@"rows" isEqualToString: keyPath]) {
         CBLLiveQuery* query = object;
         
@@ -1903,13 +1932,10 @@ static CBLManager* sCBLManager;
 }
 
 - (void) resolveConflicts: (CBLQueryEnumerator*)enumerator {
-    // resolve conflicts
+    // Resolve conflicts
     for (CBLQueryRow* row in enumerator) {
-        if ([kCBLISMetadataDocumentID isEqual: row.documentID]) {
-            // TODO: what to do here?
+        if ([kCBLISMetadataDocumentID isEqual: row.documentID]) // For v1.0.4 and below.
             continue;
-        }
-        
         if (self.conflictHandler) self.conflictHandler(row.conflictingRevisions);
     }
 }
@@ -1953,14 +1979,17 @@ static CBLManager* sCBLManager;
 
 #pragma mark -
 
-/** Returns the properties that are stored for deleting a document. Must contain at least "_rev" and "_deleted" = true for 
- *  CouchbaseLite and kCBLISTypeKey for this store. Can be overridden if you need more for filtered syncing, for example.
+/*
+ * Returns the properties that are stored for deleting a document.
+ * Must contain at least "_rev" and "_deleted" = true for CouchbaseLite and type key for this store.
+ * Can be overridden if you need more for filtered syncing.
  */
 - (NSDictionary*) propertiesForDeletingDocument: (CBLDocument*)doc {
+    NSString *typeKey = [self documentTypeKey];
     NSDictionary* contents = @{
                                @"_deleted": @YES,
                                @"_rev": [doc propertyForKey:@"_rev"],
-                               kCBLISTypeKey: [doc propertyForKey:kCBLISTypeKey]
+                               typeKey: [doc propertyForKey: typeKey]
                                };
     return contents;
 }
@@ -1973,7 +2002,8 @@ static CBLManager* sCBLManager;
 /** Returns an internal representation of this objectID that is used as _id in Couchbase. */
 - (NSString*) couchbaseLiteIDRepresentation {
     // +1 because of "p" prefix in managed object IDs
-    NSString* uuid = [[self.URIRepresentation lastPathComponent] substringFromIndex: kCBLISManagedObjectIDPrefix.length + 1];
+    NSString* uuid = [[self.URIRepresentation lastPathComponent]
+                      substringFromIndex: kCBLISManagedObjectIDPrefix.length + 1];
     return uuid;
 }
 
@@ -1990,7 +2020,8 @@ BOOL CBLISIsNull(id value) {
 NSString* CBLISToManyViewNameForRelationship(NSRelationshipDescription* relationship) {
     NSString* entityName = relationship.entity.name;
     NSString* destinationName = relationship.destinationEntity.name;
-    return [NSString stringWithFormat: kCBLISFetchEntityToManyViewNameFormat, entityName, destinationName];
+    return [NSString stringWithFormat:
+                kCBLISFetchEntityToManyViewNameFormat, entityName, destinationName];
 }
 
 /** Returns a readable name for a NSFetchRequestResultType*/
@@ -2008,4 +2039,16 @@ NSString* CBLISResultTypeName(NSFetchRequestResultType resultType) {
             return @"Unknown";
             break;
     }
+}
+
+NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent) {
+    NSMutableDictionary *userInfo = nil;
+    if (desc || parent) {
+        userInfo = [NSMutableDictionary dictionary];
+        if (desc)
+            userInfo[NSLocalizedDescriptionKey] = desc;
+        if (parent)
+            userInfo[NSUnderlyingErrorKey] = parent;
+    }
+    return [NSError errorWithDomain: kCBLISErrorDomain code: code userInfo: userInfo];
 }
