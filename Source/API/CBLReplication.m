@@ -449,10 +449,12 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     CBLStatus status;
     CBL_Replicator* repl = [server_dbmgr replicatorWithProperties: properties status: &status];
     if (!repl) {
+        __weak CBLReplication *weakSelf = self;
         [_database doAsync: ^{
-            [self updateStatus: kCBLReplicationStopped
-                         error: CBLStatusToNSError(status, nil)
-                     processed: 0 ofTotal: 0 serverCert: NULL];
+            CBLReplication *strongSelf = weakSelf;
+            [strongSelf updateStatus: kCBLReplicationStopped
+                               error: CBLStatusToNSError(status, nil)
+                           processed: 0 ofTotal: 0 serverCert: NULL];
         }];
         return;
     }
@@ -523,9 +525,12 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     NSUInteger total = _bg_replicator.changesTotal;
     SecCertificateRef serverCert = _bg_replicator.serverCert;
     cfretain(serverCert);
+
+    __weak CBLReplication *weakSelf = self;
     [_database doAsync: ^{
-        [self updateStatus: status error: error processed: changes ofTotal: total
-                serverCert: serverCert];
+        CBLReplication *strongSelf = weakSelf;
+        [strongSelf updateStatus: status error: error processed: changes ofTotal: total
+                          serverCert: serverCert];
         cfrelease(serverCert);
     }];
     
