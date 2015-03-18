@@ -48,8 +48,11 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 @property (nonatomic, retain) NSNumber * doubleNumber;
 @property (nonatomic, retain) NSSet *subEntries;
 @property (nonatomic, retain) NSSet *files;
-@property (nonatomic, retain) NSSet *articles;
 @property (nonatomic, retain) User *user;
+
+// To-Many relationship without an inverse relationship.
+@property (nonatomic, retain) NSSet *articles;
+
 @end
 
 @interface Entry (CoreDataGeneratedAccessors)
@@ -327,6 +330,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEq(entry.subEntries.count, 1u);
     AssertEqual([entry.subEntries valueForKeyPath:@"text"], [NSSet setWithObject:@"Subentry abc"]);
     AssertEqual([entry.subEntries valueForKeyPath:@"number"], [NSSet setWithObject:@123]);
+
     // Current we do not support to-many-non-inverse-relationship.
     AssertEq(entry.articles.count, 0u);
     Assert([entry.decimalNumber isKindOfClass:[NSDecimalNumber class]], @"decimalNumber must be with type NSDecimalNumber");
@@ -380,7 +384,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     // Current we do not support to-many-non-inverse-relationship.
     AssertEq(entry.articles.count, 0u);
 
-    // tear down and re-init and test with fetch request
+    // Tear down and re-init and test with fetch request
     context = [CBLIncrementalStore createManagedObjectContextWithModel:model
                                                           databaseName:db.name error:&error];
 
@@ -944,6 +948,62 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         if (result.count != 1) return;
         AssertEqual([result[0] valueForKey:@"number"], entry2.number);
     }];
+}
+
+
+- (void)test_DocTypeKey {
+    CBLDatabase *database = store.database;
+
+    Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                 inManagedObjectContext:context];
+    NSString *text = @"Test";
+    entry.text = text;
+
+    NSError *error;
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    CBLDocument *doc = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+    AssertEqual(entry.text, [doc propertyForKey:@"text"]);
+    Assert([[doc.properties allKeys] containsObject:@"type"]);
+    AssertEqual(doc.properties[@"type"], @"Entry");
+}
+
+
+- (void)test_DocTypeKeyBackwardCompat {
+    // Simulate old version (v.1.0.4 and below).
+    NSError* error;
+
+    CBLDatabase *database = store.database;
+    NSDictionary *metadata = [database existingLocalDocumentWithID:@"CBLIS_metadata"];
+    Assert(metadata != nil, @"Cannot find CBLIS_metadata local document");
+    [database deleteLocalDocumentWithID:@"CBLIS_metadata" error: &error];
+    Assert(!error, @"Cannot delete CBLIS_metadata local document");
+
+    // Old version of CBLIncrementalStore stores metadata in a document
+    CBLDocument *metadataDoc = [database documentWithID: @"CBLIS_metadata"];
+    [metadataDoc putProperties:@{metadata[NSStoreUUIDKey]: metadata[NSStoreUUIDKey],
+                                 metadata[NSStoreTypeKey]: metadata[NSStoreTypeKey]
+                                } error:&error];
+    Assert(!error, @"Cannot create CBLIS_metadata document");
+
+    // Tear down and re-init
+    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
+                                                          databaseName:db.name error:&error];
+
+    // The document type key should be 'CBLIS_Type'.
+    Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                 inManagedObjectContext:context];
+    NSString *text = @"Test";
+    entry.text = text;
+
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    CBLDocument *doc = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+    AssertEqual(entry.text, [doc propertyForKey:@"text"]);
+    Assert([[doc.properties allKeys] containsObject:@"CBLIS_type"]);
+    AssertEqual(doc.properties[@"CBLIS_type"], @"Entry");
 }
 
 #pragma mark - UTILITIES

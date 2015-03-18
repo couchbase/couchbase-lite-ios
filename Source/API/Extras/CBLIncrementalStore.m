@@ -252,24 +252,35 @@ static CBLManager* sCBLManager;
 #pragma mark - NSIncrementalStore
 
 -(BOOL) loadMetadata: (NSError**)outError {
-    // check data model if compatible with this store
+    // Check data model if compatible with this store:
     NSArray* entites = self.persistentStoreCoordinator.managedObjectModel.entities;
     for (NSEntityDescription* entity in entites) {
-        NSDictionary* attributesByName = [entity attributesByName];
-        
-        if (![attributesByName objectForKey: kCBLISCurrentRevisionAttributeName]) {
+        // Check if the entity has been updated and includes the *rev* attribute:
+        NSDictionary* attributes = [entity attributesByName];
+        if (![attributes objectForKey: kCBLISCurrentRevisionAttributeName]) {
             if (outError) {
-                NSString* errDesc = @"Database Model not compatible. "
+                NSString* errDesc = @"Database Model is not compatible. "
                                      "You need to call +[updateManagedObjectModel:].";
                 *outError = CBLISError(CBLIncrementalStoreErrorDatabaseModelIncompatible,
                                        errDesc, nil);
             }
             return NO;
         }
+
+        // Check if the entity contains to-many relationship without an inverse relation and warn:
+        NSDictionary* relationship = [entity relationshipsByName];
+        for (NSRelationshipDescription *rel in [relationship allValues]) {
+            if (rel.isToMany && !rel.inverseRelationship) {
+                WARN(@"'%@' entity has a to-many relationship '%@' that has no inverse relationship "
+                      "defined. The inverse relationship is requried by the CBLIncrementalStore for "
+                      "fetching to-many relationship entities.", entity.name, rel.name);
+                break;
+            }
+        }
     }
 
+    // Setup database:
     NSString* databaseName = [self.URL lastPathComponent];
-    
     CBLManager* manager = [[self class] CBLManager];
     if (!manager)
         manager = [CBLManager sharedInstance];
@@ -283,8 +294,10 @@ static CBLManager* sCBLManager;
         return NO;
     }
 
+    // Setup views:
     [self initializeViews];
 
+    // Setup database change notification:
     __weak __typeof(self) weakSelf = self;
     self.changeObserver = [[NSNotificationCenter defaultCenter]
                             addObserverForName: kCBLDatabaseChangeNotification
@@ -294,16 +307,7 @@ static CBLManager* sCBLManager;
                                         [weakSelf couchDocumentsChanged:changes];
                                     }];
 
-    NSDictionary *metadata = [self metadataDocument: &error];
-    if (error) {
-        if (outError) *outError = error;
-        return NO;
-    }
-
-    [self setMetadata: @{NSStoreUUIDKey: metadata[NSStoreUUIDKey],
-                         NSStoreTypeKey: metadata[NSStoreTypeKey]}];
-
-    // create a live-query for conflicting documents
+    // Setup a live-query for conflicting documents
     CBLQuery* query = [self.database createAllDocumentsQuery];
     query.allDocsMode = kCBLOnlyConflicts;
 
@@ -313,6 +317,15 @@ static CBLManager* sCBLManager;
     [liveQuery start];
 
     _conflictsQuery = liveQuery;
+
+    // Set persistent store uuid and type:
+    NSDictionary *metadata = [self metadataDocument: &error];
+    if (error) {
+        if (outError) *outError = error;
+        return NO;
+    }
+    [self setMetadata: @{NSStoreUUIDKey: metadata[NSStoreUUIDKey],
+                         NSStoreTypeKey: metadata[NSStoreTypeKey]}];
 
     return YES;
 }
@@ -600,7 +613,14 @@ static CBLManager* sCBLManager;
     if (_documentTypeKey)
         return _documentTypeKey;
 
-    NSDictionary *metadata = [self metadata];
+    NSError* error;
+    NSDictionary *metadata = [self metadataDocument: &error];
+    if (!metadata) {
+        // This shouldn't happen unless the metadata local doc was unexpectedly deleted.
+        ERROR(@"Cannot get the metadata document while determining the document type key. "
+               "The default 'type' key will be used. (Error: %@)", error);
+    }
+
     if (metadata[kCBLISMetadata_DefaultTypeKey])
         _documentTypeKey = metadata[kCBLISMetadata_DefaultTypeKey];
     else
