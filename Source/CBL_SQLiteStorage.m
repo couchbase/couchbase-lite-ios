@@ -32,6 +32,8 @@
 
 #define kDBFilename @"db.sqlite3"
 
+#define kSQLiteMMapSize (50*1024*1024)
+
 #define kDocIDCacheSize 1000
 
 #define kSQLiteBusyTimeout 5.0 // seconds
@@ -47,6 +49,7 @@ BOOL CBLEnableMockEncryption = NO;
 #define CBLEnableMockEncryption NO
 #endif
 
+static unsigned sSQLiteVersion;
 
 static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal);
 
@@ -62,25 +65,28 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
             maxRevTreeDepth=_maxRevTreeDepth, fmdb=_fmdb;
 
 
-+ (void) initialize {
++ (void) firstTimeSetup {
     // Test the version of the actual SQLite implementation at runtime. Necessary because
     // the app might be linked with a custom version of SQLite (like SQLCipher) instead of the
     // system library, so the actual version/features may differ from what was declared in
     // sqlite3.h at compile time.
-    if (self == [CBL_SQLiteStorage class]) {
-        Log(@"Couchbase Lite using SQLite version %s (%s)",
-            sqlite3_libversion(), sqlite3_sourceid());
+    Log(@"Couchbase Lite using SQLite version %s (%s)",
+        sqlite3_libversion(), sqlite3_sourceid());
 #if 0
-        for (int i=0; true; i++) {
-            const char* opt = sqlite3_compileoption_get(i);
-            if (!opt)
-                break;
-            Log(@"SQLite option '%s'", opt);
-        }
-#endif
-        Assert(sqlite3_libversion_number() >= 3007000,
-               @"SQLite library is too old (%s); needs to be at least 3.7", sqlite3_libversion());
+    for (int i=0; true; i++) {
+        const char* opt = sqlite3_compileoption_get(i);
+        if (!opt)
+            break;
+        Log(@"SQLite option '%s'", opt);
     }
+#endif
+    sSQLiteVersion = sqlite3_libversion_number();
+    Assert(sSQLiteVersion >= 3007000,
+           @"SQLite library is too old (%s); needs to be at least 3.7", sqlite3_libversion());
+
+    // Enable memory-mapped I/O if available
+    if (sqlite3_config(SQLITE_CONFIG_MMAP_SIZE, (SInt64)kSQLiteMMapSize, (SInt64)-1) != SQLITE_OK)
+        Log(@"FYI, couldn't enable SQLite mmap");
 }
 
 
@@ -99,6 +105,11 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
                  manager: (CBLManager*)manager
                    error: (NSError**)error
 {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        [[self class] firstTimeSetup];
+    });
+
     _directory = [directory copy];
     _readOnly = readOnly;
     NSString* path = [_directory stringByAppendingPathComponent: kDBFilename];
@@ -123,6 +134,14 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     for (NSString* quotedStatement in [statements componentsSeparatedByString: @";"]) {
         NSString* statement = [quotedStatement stringByReplacingOccurrencesOfString: @"|"
                                                                          withString: @";"];
+        if (sSQLiteVersion < 3008000) {
+            // No partial index support before SQLite 3.8
+            if ([statement rangeOfString: @"CREATE INDEX "].length > 0) {
+                NSRange where = [statement rangeOfString: @"WHERE"];
+                if (where.length > 0)
+                    statement = [statement substringToIndex: where.location];
+            }
+        }
         if (statement.length && ![_fmdb executeUpdate: statement]) {
             if (outError) *outError = self.fmdbError;
             return NO;
@@ -267,7 +286,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     }
 
     BOOL isNew = (dbVersion == 0);
-    if (isNew && ![self initialize: @"BEGIN TRANSACTION" error: outError])
+    if (isNew && ![self initialize: @"PRAGMA journal_mode=WAL; BEGIN TRANSACTION" error: outError])
         return NO;
 
     if (dbVersion < 17) {
@@ -441,6 +460,11 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     return ok;
 }
 
+// Runs the block inside a transaction. If the block returns an error status, or raises an
+// exception, the transaction is aborted and any changes rolled back. If this was a nested
+// transaction, only its changes are rolled back, not any from the outer transaction.
+// (Also supports retrying the block if it fails with a SQLite "BUSY" error, but this shouldn't
+// occur anymore now that our hacked FMDB uses a mutex to enforce database locking.)
 - (CBLStatus) inTransaction: (CBLStatus(^)())block {
     CBLStatus status;
     int retries = 0;
@@ -467,6 +491,24 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
             [NSThread sleepForTimeInterval: kTransactionRetryDelay];
         }
     } while (status == kCBLStatusDBBusy);
+    return status;
+}
+
+// This is like -inTransaction: except that it will not create _nested_ SQLite transactions,
+// only the outer one. There turns out to be significant overhead in a nested transaction, so in
+// cases where you just need to exclude other threads, and don't need to be able to roll back
+// the change you're making, this method is cheaper.
+- (CBLStatus) inOuterTransaction: (CBLStatus(^)())block {
+    if (!self.inTransaction)
+        return [self inTransaction: block];
+    // Instead of a nested transaction, just run the block and catch exceptions:
+    CBLStatus status;
+    @try {
+        status = block();
+    } @catch (NSException* x) {
+        MYReportException(x, @"CBLDatabase transaction");
+        status = kCBLStatusException;
+    }
     return status;
 }
 
@@ -655,6 +697,42 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         [_docIDs setObject: @(result) forKey: docID];
         return result;
     }
+}
+
+- (SInt64) _getDocNumericID: (NSString*)docID {
+    return [_fmdb longLongForQuery: @"SELECT doc_id FROM docs WHERE docid=?", docID];
+}
+
+- (SInt64) _createDocNumericID: (NSString*)docID {
+    if (![_fmdb executeUpdate: @"INSERT OR IGNORE INTO docs (docid) VALUES (?)", docID])
+        return -1;
+    if (_fmdb.changes == 0)
+        return -1;
+    return _fmdb.lastInsertRowId;
+}
+
+// Registers a docID and returns its numeric row ID in the 'docs' table.
+// On input, *ioIsNew should be YES if the docID is probably not known, NO if it's probably known.
+// On return, *ioIsNew will be YES iff the docID is newly-created (was not known before.)
+// Return value is the positive row ID of this doc, or <= 0 on error.
+- (SInt64) createOrGetDocNumericID: (NSString*)docID isNew: (BOOL*)ioIsNew {
+    NSNumber* cached = [_docIDs objectForKey: docID];
+    if (cached) {
+        *ioIsNew = NO;
+        return cached.longLongValue;
+    }
+
+    SInt64 row = *ioIsNew ? [self _createDocNumericID: docID] : [self _getDocNumericID: docID];
+    if (row < 0)
+        return row;
+    if (row == 0) {
+        *ioIsNew = !*ioIsNew;
+        row = *ioIsNew ? [self _createDocNumericID: docID] : [self _getDocNumericID: docID];
+    }
+
+    if (row > 0)
+        [_docIDs setObject: @(row) forKey: docID];
+    return row;
 }
 
 
@@ -1407,7 +1485,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     __block CBL_Revision* winningRev = nil;
     __block BOOL inConflict = NO;
 
-    *outStatus = [self inTransaction: ^CBLStatus {
+    *outStatus = [self inOuterTransaction: ^CBLStatus {
         // Remember, this block may be called multiple times if I have to retry the transaction.
         newRev = nil;
         winningRev = nil;
@@ -1418,11 +1496,20 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         //// PART I: In which are performed lookups and validations prior to the insert...
 
         // Get the doc's numeric ID (doc_id) and its current winning revision:
-        SInt64 docNumericID = docID ? [self getDocNumericID: docID] : 0;
+        BOOL isNewDoc = (prevRevID == nil);
+        SInt64 docNumericID;
+        if (docID) {
+            docNumericID = [self createOrGetDocNumericID: docID isNew: &isNewDoc];
+            if (docNumericID <= 0)
+                return self.lastDbError;
+        } else {
+            docNumericID = 0;
+            isNewDoc = YES;
+        }
         BOOL oldWinnerWasDeletion = NO;
         BOOL wasConflicted = NO;
         NSString* oldWinningRevID = nil;
-        if (docNumericID > 0) {
+        if (!isNewDoc) {
             // Look up which rev is the winner, before this insertion
             //OPT: This rev ID could be cached in the 'docs' row
             CBLStatus status;
@@ -1437,7 +1524,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         SequenceNumber parentSequence = 0;
         if (prevRevID) {
             // Replacing: make sure given prevRevID is current & find its sequence number:
-            if (docNumericID <= 0)
+            if (isNewDoc)
                 return kCBLStatusNotFound;
             parentSequence = [self getSequenceOfDocument: docNumericID revision: prevRevID
                                              onlyCurrent: !allowConflict];
@@ -1459,27 +1546,20 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
             
             if (docID) {
                 // Inserting first revision, with docID given (PUT):
-                if (docNumericID <= 0) {
-                    // Doc ID doesn't exist at all; create it:
-                    docNumericID = [self insertDocumentID: docID];
-                    if (docNumericID <= 0)
-                        return self.lastDbError;
-                } else {
-                    // Doc ID exists; check whether current winning revision is deleted:
-                    if (oldWinnerWasDeletion) {
-                        prevRevID = oldWinningRevID;
-                        parentSequence = [self getSequenceOfDocument: docNumericID
-                                                            revision: prevRevID
-                                                         onlyCurrent: NO];
-                    } else if (oldWinningRevID) {
-                        // The current winning revision is not deleted, so this is a conflict
-                        return kCBLStatusConflict;
-                    }
+                // Check whether current winning revision is deleted:
+                if (oldWinnerWasDeletion) {
+                    prevRevID = oldWinningRevID;
+                    parentSequence = [self getSequenceOfDocument: docNumericID
+                                                        revision: prevRevID
+                                                     onlyCurrent: NO];
+                } else if (oldWinningRevID) {
+                    // The current winning revision is not deleted, so this is a conflict
+                    return kCBLStatusConflict;
                 }
             } else {
                 // Inserting first revision, with no docID given (POST): generate a unique docID:
                 docID = CBLCreateUUID();
-                docNumericID = [self insertDocumentID: docID];
+                docNumericID = [self createOrGetDocNumericID: docID isNew: &isNewDoc];
                 if (docNumericID <= 0)
                     return self.lastDbError;
             }
@@ -1550,8 +1630,11 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         // Make replaced rev non-current:
         if (parentSequence > 0) {
             if (![_fmdb executeUpdate: @"UPDATE revs SET current=0, doc_type=null WHERE sequence=?",
-                                       @(parentSequence)])
-                return self.lastDbError;
+                                       @(parentSequence)]) {
+                CBLStatus status = self.lastDbError;
+                [_fmdb executeUpdate: @"DELETE FROM revs WHERE sequence=?", @(sequence)];
+                return status;
+            }
         }
 
         if (!sequence)
@@ -1594,8 +1677,11 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         CBL_RevisionList* localRevs = nil;
         NSString* oldWinningRevID = nil;
         BOOL oldWinnerWasDeletion = NO;
-        SInt64 docNumericID = [self getDocNumericID: docID];
-        if (docNumericID > 0) {
+        BOOL isNewDoc = (history.count == 1);
+        SInt64 docNumericID = [self createOrGetDocNumericID: docID isNew: &isNewDoc];
+        if (docNumericID <= 0)
+            return self.lastDbError;
+        if (!isNewDoc) {
             localRevs = [self getAllRevisionsOfDocumentID: docID
                                                 numericID: docNumericID
                                               onlyCurrent: NO];
@@ -1610,10 +1696,6 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                                                         status: &tempStatus];
             if (CBLStatusIsError(tempStatus))
                 return tempStatus;
-        } else {
-            docNumericID = [self insertDocumentID: docID];
-            if (docNumericID <= 0)
-                return self.lastDbError;
         }
 
         // Validate against the latest common ancestor:
@@ -1706,17 +1788,6 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                                                                                  source: source]];
     }
     return status;
-}
-
-
-/** Adds a new document ID to the 'docs' table. */
-- (SInt64) insertDocumentID: (NSString*)docID {
-    if (![_fmdb executeUpdate: @"INSERT INTO docs (docid) VALUES (?)", docID])
-        return -1;
-    SInt64 row = _fmdb.lastInsertRowId;
-    Assert(![_docIDs objectForKey: docID]);
-    [_docIDs setObject: @(row) forKey: docID];
-    return row;
 }
 
 

@@ -35,6 +35,7 @@
     CBLViewCollation _collation;
     NSString* _mapTableName;
     BOOL _initializedFullTextSchema, _initializedRTreeSchema;
+    NSString* _emitSQL;
 }
 
 @synthesize name=_name, delegate=_delegate;
@@ -114,12 +115,19 @@
             value TEXT,\
             fulltext_id INTEGER, \
             bbox_id INTEGER, \
-            geokey BLOB);\
+            geokey BLOB)";
+    NSError* error;
+    if (![self runStatements: sql error: &error])
+        Warn(@"Couldn't create view index `%@`: %@", _name, error);
+}
+
+- (void) finishCreatingIndex {
+    NSString* sql = @"\
         CREATE INDEX IF NOT EXISTS 'maps_#_keys' on 'maps_#'(key COLLATE JSON);\
         CREATE INDEX IF NOT EXISTS 'maps_#_sequence' ON 'maps_#'(sequence)";
     NSError* error;
     if (![self runStatements: sql error: &error])
-        Warn(@"Couldn't create view index `%@`: %@", _name, error);
+        Warn(@"Couldn't create view SQL index `%@`: %@", _name, error);
 }
 
 
@@ -261,6 +269,7 @@
         int i = 0;
         NSMutableSet* docTypes = [NSMutableSet set];
         NSMutableDictionary* viewDocTypes = nil;
+        BOOL allDocTypes = NO;
         NSMutableDictionary* viewTotalRows = [[NSMutableDictionary alloc] init];
         NSMutableArray* views = [[NSMutableArray alloc] initWithCapacity: inputViews.count];
         NSMutableArray* mapBlocks = [[NSMutableArray alloc] initWithCapacity: inputViews.count];
@@ -301,7 +310,7 @@
                         viewDocTypes = [NSMutableDictionary dictionary];
                     viewDocTypes[view.name] = docType;
                 } else {
-                    docTypes = nil; // can't filter by doc_type
+                    allDocTypes = YES; // can't filter by doc_type
                 }
 
                 BOOL ok;
@@ -357,14 +366,15 @@
         };
 
         // Now scan every revision added since the last time the views were indexed:
-        NSMutableString* sql = [@"SELECT revs.doc_id, sequence, docid, revid, json, "
-                                "no_attachments, deleted, doc_type FROM revs, docs "
-                                "WHERE sequence>? AND current!=0 " mutableCopy];
+        BOOL checkDocTypes = docTypes.count > 1 || (allDocTypes && docTypes.count > 0);
+        NSMutableString* sql = [@"SELECT revs.doc_id, sequence, docid, revid, json, deleted " mutableCopy];
+        if (checkDocTypes)
+            [sql appendString: @", doc_type "];
+        [sql appendString: @"FROM revs, docs WHERE sequence>? AND current!=0 "];
         if (minLastSequence == 0)
             [sql appendString: @"AND deleted=0 "];
-        if (docTypes.count > 0)
+        if (!allDocTypes && docTypes.count > 0)
             [sql appendFormat: @"AND doc_type IN (%@) ", CBLJoinSQLQuotedStrings(docTypes.allObjects)];
-        BOOL checkDocTypes = docTypes==nil || docTypes.count > 1;
         [sql appendString: @"AND revs.doc_id = docs.doc_id "
                             "ORDER BY revs.doc_id, deleted, revid DESC"];
         CBL_FMResultSet* r = [fmdb executeQuery: sql, @(minLastSequence)];
@@ -384,9 +394,8 @@
                 }
                 NSString* revID = [r stringForColumnIndex: 3];
                 NSData* json = [r dataForColumnIndex: 4];
-                BOOL noAttachments = [r boolForColumnIndex: 5];
-                BOOL deleted = [r boolForColumnIndex: 6];
-                NSString* docType = checkDocTypes ? [r stringForColumnIndex: 7] : nil;
+                BOOL deleted = [r boolForColumnIndex: 5];
+                NSString* docType = checkDocTypes ? [r stringForColumnIndex: 6] : nil;
 
                 // Skip rows with the same doc_id -- these are losing conflicts.
                 while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == doc_id) {
@@ -476,6 +485,7 @@
         
         // Finally, record the last revision sequence number that was indexed and update #rows:
         for (CBL_SQLiteViewStorage* view in views) {
+            [view finishCreatingIndex];
             int newTotalRows = [viewTotalRows[@(view.viewID)] intValue];
             Assert(newTotalRows >= 0);
             if (![fmdb executeUpdate: @"UPDATE views SET lastSequence=?, total_docs=? WHERE view_id=?",
@@ -541,11 +551,13 @@
     if (!keyJSON)
         keyJSON = [[NSData alloc] initWithBytes: "null" length: 4];
 
+    if (!_emitSQL)
+        _emitSQL = [self queryString: @"INSERT INTO 'maps_#' (sequence, key, value, "
+                                       "fulltext_id, bbox_id, geokey) VALUES (?, ?, ?, ?, ?, ?)"];
+
     fmdb.bindNSDataAsString = YES;
-    BOOL ok = [fmdb executeUpdate: [self queryString: @"INSERT INTO 'maps_#' (sequence, key, value, "
-                                   "fulltext_id, bbox_id, geokey) VALUES (?, ?, ?, ?, ?, ?)"],
-                                  @(sequence), keyJSON, valueJSON,
-               fullTextID, bboxID, geoKey];
+    BOOL ok = [fmdb executeUpdate: _emitSQL, @(sequence), keyJSON, valueJSON,
+                                             fullTextID, bboxID, geoKey];
     fmdb.bindNSDataAsString = NO;
     return ok ? kCBLStatusOK : dbStorage.lastDbError;
 }
