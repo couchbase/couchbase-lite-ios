@@ -435,14 +435,11 @@
                     continue;
 
                 // Get the document properties, to pass to the map function:
-                CBLContentOptions contentOptions = kCBLIncludeLocalSeq;
-                if (noAttachments)
-                    contentOptions |= kCBLNoAttachments;
                 curDoc = [dbStorage documentPropertiesFromJSON: json
                                                     docID: docID revID:revID
                                                   deleted: NO
                                                  sequence: sequence
-                                                  options: contentOptions];
+                                                  options: kCBLIncludeLocalSeq];
                 if (!curDoc) {
                     Warn(@"Failed to parse JSON of doc %@ rev %@", docID, revID);
                     continue;

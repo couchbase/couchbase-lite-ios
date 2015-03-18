@@ -487,7 +487,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
     CBL_MutableRevision* result = nil;
     CBLStatus status;
-    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT revid, deleted, sequence, no_attachments"];
+    NSMutableString* sql = [NSMutableString stringWithString: @"SELECT revid, deleted, sequence"];
     if (!(options & kCBLNoBody))
         [sql appendString: @", json"];
     if (revID)
@@ -510,9 +510,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         if (options != kCBLNoBody) {
             NSData* json = nil;
             if (!(options & kCBLNoBody))
-                json = [r dataNoCopyForColumnIndex: 4];
-            if ([r boolForColumnIndex: 3]) // no_attachments == true
-                options |= kCBLNoAttachments;
+                json = [r dataNoCopyForColumnIndex: 3];
             [self expandStoredJSON: json intoRevision: result options: options];
         }
         status = kCBLStatusOK;
@@ -538,7 +536,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     CBL_MutableRevision* result = nil;
     CBLStatus status;
     CBL_FMResultSet *r = [_fmdb executeQuery:
-                          @"SELECT revid, deleted, no_attachments, json FROM revs WHERE sequence=?",
+                          @"SELECT revid, deleted, json FROM revs WHERE sequence=?",
                           @(sequence)];
     if (!r) {
         status = self.lastDbError;
@@ -549,9 +547,9 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
                                                       revID: [r stringForColumnIndex: 0]
                                                     deleted: [r boolForColumnIndex: 1]];
         result.sequence = sequence;
-        [self expandStoredJSON: [r dataNoCopyForColumnIndex: 3]
+        [self expandStoredJSON: [r dataNoCopyForColumnIndex: 2]
                   intoRevision: result
-                       options: ([r boolForColumnIndex: 2] ? kCBLNoAttachments : 0)];
+                       options: 0];
         status = kCBLStatusOK;
     }
     [r close];
@@ -1109,8 +1107,6 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                 // Fill in the document contents:
                 NSData* json = [r dataNoCopyForColumnIndex: 4];
                 CBLContentOptions contentOptions = options->content;
-                if ([r boolForColumnIndex: 5])
-                    contentOptions |= kCBLNoAttachments; // doc has no attachments
                 docContents = [self documentPropertiesFromJSON: json
                                                          docID: docID
                                                          revID: revID
