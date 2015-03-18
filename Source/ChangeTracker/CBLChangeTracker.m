@@ -236,7 +236,7 @@
     NSInteger code = error.code;
     if ($equal(domain, NSPOSIXErrorDomain)) {
         // Map POSIX errors from CFStream to higher-level NSURLError ones:
-        if (code == ECONNREFUSED)
+        if (code == ECONNREFUSED || code == ENETDOWN || code == ENETUNREACH || code == ENOTCONN)
             error = [NSError errorWithDomain: NSURLErrorDomain
                                         code: NSURLErrorCannotConnectToHost
                                     userInfo: error.userInfo];
@@ -255,7 +255,8 @@
     }
 
     // If the error may be transient (flaky network, server glitch), retry:
-    if (!CBLIsPermanentError(error) && (_continuous || CBLMayBeTransientError(error))) {
+    if (!CBLIsPermanentError(error) && !CBLIsOfflineError(error) &&
+        (_continuous || CBLMayBeTransientError(error))) {
         NSTimeInterval retryDelay = kInitialRetryDelay * (1 << MIN(_retryCount, 16U));
         retryDelay = MIN(retryDelay, kMaxRetryDelay);
         ++_retryCount;

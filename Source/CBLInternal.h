@@ -84,6 +84,7 @@
 - (void) databaseClosing;
 - (void) revisionFailed;    // subclasses call this if a transfer fails
 - (void) retry;
+- (void) retryGoOnlineAfterDelay;
 
 - (void) reachabilityChanged: (CBLReachability*)host;
 - (BOOL) goOffline;

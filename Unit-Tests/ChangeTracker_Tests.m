@@ -139,6 +139,13 @@
 }
 
 
+- (void) test_ReachabilityError {
+    NSURL* url = [NSURL URLWithString: @"https://localhost:5999/db"];
+    CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client: self];
+    [self run: tracker expectingError: [NSError errorWithDomain: NSURLErrorDomain code: NSURLErrorCannotConnectToHost userInfo: nil]];
+}
+
+
 - (void) test_CBLWebSocketChangeTracker_Auth {
     // This Sync Gateway database requires authentication to access at all.
     NSURL* url = [self remoteTestDBURL: @"cbl_auth_test"];
