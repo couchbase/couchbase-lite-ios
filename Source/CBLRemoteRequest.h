@@ -40,6 +40,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
     UInt8 _retryCount;
     bool _dontLog404;
     bool _challenged;
+    bool _autoRetry;
 }
 
 /** Creates a request; call -start to send it on its way. */
@@ -53,6 +54,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 @property (strong, nonatomic) id<CBLAuthorizer> authorizer;
 @property (strong, nonatomic) id<CBLRemoteRequestDelegate> delegate;
 @property (strong, nonatomic) CBLCookieStorage* cookieStorage;
+@property (nonatomic) bool autoRetry;   // Default value is YES
 
 /** Applies GZip compression to the request body if appropriate. */
 - (BOOL) compressBody;
