@@ -85,8 +85,10 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
            @"SQLite library is too old (%s); needs to be at least 3.7", sqlite3_libversion());
 
     // Enable memory-mapped I/O if available
+#ifdef SQLITE_CONFIG_MMAP_SIZE
     if (sqlite3_config(SQLITE_CONFIG_MMAP_SIZE, (SInt64)kSQLiteMMapSize, (SInt64)-1) != SQLITE_OK)
         Log(@"FYI, couldn't enable SQLite mmap");
+#endif
 }
 
 
