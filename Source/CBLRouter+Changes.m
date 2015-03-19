@@ -162,19 +162,22 @@ NSTimeInterval kMinHeartbeat = 5.0;
     NSMutableArray* changes = $marray();
     for (CBLDatabaseChange* change in (n.userInfo)[@"changes"]) {
         CBL_Revision* rev = change.addedRevision;
-        CBL_Revision* winningRev = change.winningRevision;
+        NSString* winningRevID = change.winningRevisionID;
 
         if (!_changesIncludeConflicts) {
-            if (!winningRev)
+            if (!winningRevID)
                 continue;     // this change doesn't affect the winning rev ID, no need to send it
-            else if (!$equal(winningRev, rev)) {
+            else if (!$equal(winningRevID, rev.revID)) {
                 // This rev made a _different_ rev current, so substitute that one.
                 // We need to emit the current sequence # in the feed, so put it in the rev.
                 // This isn't correct internally (this is an old rev so it has an older sequence)
                 // but consumers of the _changes feed don't care about the internal state.
-                CBL_MutableRevision* mRev = winningRev.mutableCopy;
-                if (_changesIncludeDocs)
-                    [_db loadRevisionBody: mRev options: 0];
+                CBLStatus status;
+                CBLContentOptions options = (_changesIncludeDocs ? 0 : kCBLNoBody);
+                CBL_Revision* mRev = [_db getDocumentWithID: rev.docID
+                                                 revisionID: winningRevID
+                                                    options: options
+                                                     status: &status];
                 mRev.sequence = rev.sequence;
                 rev = mRev;
             }

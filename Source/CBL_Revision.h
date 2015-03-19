@@ -39,6 +39,8 @@ typedef SInt64 SequenceNumber;
 /** Adds "_id", "_rev", "_deleted" properties */
 - (CBL_Revision*) revisionByAddingBasicMetadata;
 
+- (CBL_Revision*) copyWithoutBody;
+
 /** Returns the JSON to be stored into the database.
     This has all the special keys like "_id" stripped out, and keys in canonical order. */
 @property (readonly) NSData* asCanonicalJSON;

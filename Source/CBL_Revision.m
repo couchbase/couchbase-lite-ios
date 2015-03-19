@@ -86,6 +86,16 @@
     return rev;
 }
 
+- (CBL_Revision*) copyWithoutBody {
+    if (!_body && self.class == [CBL_Revision class])
+        return self;
+    CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: _docID revID: _revID
+                                                    deleted: _deleted];
+    rev->_sequence = _sequence;
+    rev->_missing = _missing;
+    return rev;
+}
+
 @synthesize docID=_docID, revID=_revID, deleted=_deleted, missing=_missing, body=_body;
 
 - (SequenceNumber) sequenceIfKnown {
@@ -290,6 +300,7 @@
 }
 
 - (id) copyWithZone: (NSZone*)zone {
+    // Overridden because CBL_Revision just returns `self` instead of making a copy
     CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: _docID revID: _revID deleted: _deleted];
     rev->_body = _body;
     rev->_sequence = _sequence;

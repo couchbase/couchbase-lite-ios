@@ -853,18 +853,15 @@ static void convertRevIDs(NSArray* revIDs,
                                          doc: (VersionedDocument&)doc
                                       source: (NSURL*)source
 {
-    CBL_Revision* winningRev = inRev;
-    if (!isWinningRev) {
+    NSString* winningRevID;
+    if (isWinningRev) {
+        winningRevID = inRev.revID;
+    } else {
         const Revision* winningRevision = doc.currentRevision();
-        NSString* winningRevID = (NSString*)winningRevision->revID;
-        if (!$equal(winningRevID, inRev.revID)) {
-            winningRev = [[CBL_Revision alloc] initWithDocID: inRev.docID
-                                                       revID: winningRevID
-                                                     deleted: winningRevision->isDeleted()];
-        }
+        winningRevID = (NSString*)winningRevision->revID;
     }
     return [[CBLDatabaseChange alloc] initWithAddedRevision: inRev
-                                            winningRevision: winningRev
+                                          winningRevisionID: winningRevID
                                                  inConflict: doc.hasConflict()
                                                      source: source];
 }

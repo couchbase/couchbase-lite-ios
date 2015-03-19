@@ -43,6 +43,9 @@ NSArray* CBL_RunloopModes;
 
 const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, 0, NO, NO, YES};
 
+// When this many changes pile up in _changesToNotify, start removing their bodies to save RAM
+#define kManyChangesToNotify 5000
+
 static BOOL sAutoCompact = YES;
 
 
@@ -288,6 +291,16 @@ static BOOL sAutoCompact = YES;
         // But the CBLDocument, if any, needs to know right away so it can update its
         // currentRevision.
         [[self _cachedDocumentWithID: change.documentID] revisionAdded: change notify: NO];
+    }
+
+    // Squish the change objects if too many of them are piling up:
+    if (_changesToNotify.count >= kManyChangesToNotify) {
+        if (_changesToNotify.count == kManyChangesToNotify) {
+            for (CBLDatabaseChange* c in _changesToNotify)
+                [c reduceMemoryUsage];
+        } else {
+            [change reduceMemoryUsage];
+        }
     }
 }
 

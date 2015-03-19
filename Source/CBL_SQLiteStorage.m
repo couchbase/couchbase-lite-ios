@@ -1482,13 +1482,13 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     }
 
     __block CBL_MutableRevision* newRev = nil;
-    __block CBL_Revision* winningRev = nil;
+    __block NSString* winningRevID = nil;
     __block BOOL inConflict = NO;
 
     *outStatus = [self inOuterTransaction: ^CBLStatus {
         // Remember, this block may be called multiple times if I have to retry the transaction.
         newRev = nil;
-        winningRev = nil;
+        winningRevID = nil;
         inConflict = NO;
         NSString* prevRevID = inPrevRevID;
         NSString* docID = inDocID;
@@ -1641,7 +1641,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
             return kCBLStatusOK;  // duplicate rev; see above
 
         // Figure out what the new winning rev ID is:
-            winningRev = [self winnerWithDocID: docNumericID
+            winningRevID = [self winnerWithDocID: docNumericID
                                  oldWinner: oldWinningRevID oldDeleted: oldWinnerWasDeletion
                                         newRev: newRev];
 
@@ -1654,9 +1654,9 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     
     //// EPILOGUE: A change notification is sent...
     [_delegate databaseStorageChanged: [[CBLDatabaseChange alloc] initWithAddedRevision: newRev
-                                                                        winningRevision: winningRev
-                                                                             inConflict: inConflict
-                                                                                 source: nil]];
+                                                              winningRevisionID: winningRevID
+                                                                     inConflict: inConflict
+                                                                         source: nil]];
     return newRev;
 }
 
@@ -1670,7 +1670,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     rev.sequence = 0;
     NSString* docID = rev.docID;
     
-    __block CBL_Revision* winningRev = nil;
+    __block NSString* winningRevID = nil;
     __block BOOL inConflict = NO;
     CBLStatus status = [self inTransaction: ^CBLStatus {
         // First look up the document's row-id and all locally-known revisions of it:
@@ -1773,7 +1773,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         }
 
             // Figure out what the new winning rev ID is:
-            winningRev = [self winnerWithDocID: docNumericID
+            winningRevID = [self winnerWithDocID: docNumericID
                                      oldWinner: oldWinningRevID
                                     oldDeleted: oldWinnerWasDeletion
                                         newRev: rev];
@@ -1783,9 +1783,9 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
 
     if (!CBLStatusIsError(status)) {
         [_delegate databaseStorageChanged: [[CBLDatabaseChange alloc] initWithAddedRevision: rev
-                                                                        winningRevision: winningRev
-                                                                             inConflict: inConflict
-                                                                                 source: source]];
+                                                              winningRevisionID: winningRevID
+                                                                     inConflict: inConflict
+                                                                         source: source]];
     }
     return status;
 }
@@ -1852,20 +1852,20 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
 }
 
 
-- (CBL_Revision*) winnerWithDocID: (SInt64)docNumericID
-                        oldWinner: (NSString*)oldWinningRevID
-                       oldDeleted: (BOOL)oldWinnerWasDeletion
-                           newRev: (CBL_Revision*)newRev
+- (NSString*) winnerWithDocID: (SInt64)docNumericID
+                    oldWinner: (NSString*)oldWinningRevID
+                   oldDeleted: (BOOL)oldWinnerWasDeletion
+                       newRev: (CBL_Revision*)newRev
 {
-    if (!oldWinningRevID)
-        return newRev;
     NSString* newRevID = newRev.revID;
+    if (!oldWinningRevID)
+        return newRevID;
     if (!newRev.deleted) {
         if (oldWinnerWasDeletion || CBLCompareRevIDs(newRevID, oldWinningRevID) > 0)
-            return newRev;   // this is now the winning live revision
+            return newRevID;   // this is now the winning live revision
     } else if (oldWinnerWasDeletion) {
         if (CBLCompareRevIDs(newRevID, oldWinningRevID) > 0)
-            return newRev;  // doc still deleted, but this beats previous deletion rev
+            return newRevID;  // doc still deleted, but this beats previous deletion rev
     } else {
         // Doc was alive. How does this deletion affect the winning rev ID?
         BOOL deleted;
@@ -1875,16 +1875,8 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                                                        isConflict: NULL
                                                            status: &status];
         AssertEq(status, kCBLStatusOK);
-        if (!$equal(winningRevID, oldWinningRevID)) {
-            if ($equal(winningRevID, newRev.revID))
-                return newRev;
-            else {
-                CBL_Revision* winningRev = [[CBL_Revision alloc] initWithDocID: newRev.docID
-                                                                         revID: winningRevID
-                                                                       deleted: NO];
-                return winningRev;
-            }
-        }
+        if (!$equal(winningRevID, oldWinningRevID))
+            return winningRevID;
     }
     return nil; // no change
 }

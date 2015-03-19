@@ -21,20 +21,21 @@
 @implementation CBLDatabaseChange
 
 
-@synthesize addedRevision=_addedRevision, winningRevision=_winningRevision,
+@synthesize addedRevision=_addedRevision, winningRevisionID=_winningRevisionID,
             inConflict=_inConflict, source=_source, echoed=_echoed;
 
 
 - (instancetype) initWithAddedRevision: (CBL_Revision*)addedRevision
-                       winningRevision: (CBL_Revision*)winningRevision
+                     winningRevisionID: (NSString*)winningRevisionID
                             inConflict: (BOOL)maybeConflict
                                 source: (NSURL*)source
 {
+    Assert(addedRevision);
     self = [super init];
     if (self) {
         // Input CBL_Revisions need to be copied in case they are mutable:
         _addedRevision = addedRevision.copy;
-        _winningRevision = winningRevision.copy;
+        _winningRevisionID = winningRevisionID;
         _inConflict = maybeConflict;
         _source = source;
     }
@@ -44,7 +45,7 @@
 
 - (id) copyWithZone:(NSZone *)zone {
     CBLDatabaseChange* change =  [[[self class] alloc] initWithAddedRevision: _addedRevision
-                                                             winningRevision: _winningRevision
+                                                           winningRevisionID: _winningRevisionID
                                                                   inConflict: _inConflict
                                                                       source: _source];
     change->_echoed = true; // Copied changes are echoes
@@ -55,7 +56,7 @@
 - (BOOL) isEqual:(id)object {
     return [object isKindOfClass: [CBLDatabaseChange class]]
         && $equal(_addedRevision, [object addedRevision])
-        && $equal(_winningRevision, [object winningRevision])
+        && $equal(_winningRevisionID, [object winningRevisionID])
         && $equal(_source, [object source]);
 }
 
@@ -65,12 +66,21 @@
 - (NSString*) revisionID {return _addedRevision.revID;}
 
 - (BOOL) isCurrentRevision {
-    return _winningRevision && $equal(_addedRevision.revID, _winningRevision.revID);
+    return _winningRevisionID && $equal(_addedRevision.revID, _winningRevisionID);
+}
+
+- (CBL_Revision*) winningRevisionIfKnown {
+    return self.isCurrentRevision ? _addedRevision : nil;
 }
 
 
 - (NSString*) description {
     return [NSString stringWithFormat: @"%@[%@]", self.class, _addedRevision];
+}
+
+
+- (void) reduceMemoryUsage {
+    _addedRevision = [_addedRevision copyWithoutBody];
 }
 
 

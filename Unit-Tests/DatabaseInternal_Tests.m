@@ -372,7 +372,7 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
 
 
 static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) {
-    return [[CBLDatabaseChange alloc] initWithAddedRevision: rev winningRevision: winner
+    return [[CBLDatabaseChange alloc] initWithAddedRevision: rev winningRevisionID: winner.revID
                                                  inConflict: NO source: nil];
 }
 
