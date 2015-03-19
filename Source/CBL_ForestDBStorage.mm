@@ -1,5 +1,5 @@
 //
-//  CBL_Storage.mm
+//  CBL_ForestDBStorage.mm
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 1/13/15.
@@ -33,6 +33,9 @@ using namespace forestdb;
 
 // Size of ForestDB buffer cache allocated for a database
 #define kDBBufferCacheSize (8*1024*1024)
+
+// ForestDB Write-Ahead Log size (# of records)
+#define kDBWALThreshold 1024
 
 // How often ForestDB should check whether databases need auto-compaction
 #define kAutoCompactInterval (5*60.0)
@@ -115,7 +118,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     Database::config config = Database::defaultConfig();
     config.flags = flags;
     config.buffercache_size = kDBBufferCacheSize;
-    config.wal_threshold = 4096;
+    config.wal_threshold = kDBWALThreshold;
     config.wal_flush_before_commit = true;
     config.seqtree_opt = true;
     config.compress_document_body = true;

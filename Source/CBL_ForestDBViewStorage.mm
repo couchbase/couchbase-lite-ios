@@ -35,8 +35,11 @@ using namespace forestdb;
 
 #define kViewIndexPathExtension @"viewindex"
 
-// Size of ForestDB buffer cache allocated for a view index
-#define kViewBufferCacheSize (8*1024*1024)
+// Size of ForestDB buffer cache allocated for a database
+#define kDBBufferCacheSize (8*1024*1024)
+
+// ForestDB Write-Ahead Log size (# of records)
+#define kDBWALThreshold 1024
 
 // Close the index db after it's inactive this many seconds
 #define kCloseDelay 60.0
@@ -299,10 +302,10 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         Assert(!_indexDB);
         auto config = Database::defaultConfig();
         config.flags = options;
-        config.buffercache_size = kViewBufferCacheSize;
-        config.wal_threshold = 8192;
+        config.buffercache_size = kDBBufferCacheSize;
+        config.wal_threshold = kDBWALThreshold;
         config.wal_flush_before_commit = true;
-        config.seqtree_opt = YES;
+        config.seqtree_opt = NO; // indexes don't need by-sequence ordering
         config.compaction_threshold = 50;
         try {
             _indexDB = new Database(_path.fileSystemRepresentation, config);
