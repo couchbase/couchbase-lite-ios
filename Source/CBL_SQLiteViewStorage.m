@@ -348,7 +348,7 @@
         // This is the emit() block, which gets called from within the user-defined map() block
         // that's called down below.
         __block CBL_SQLiteViewStorage* curView;
-        __block NSDictionary* curDoc;
+        __block NSMutableDictionary* curDoc;
         __block SequenceNumber sequence = minLastSequence;
         __block CBLStatus emitStatus = kCBLStatusOK;
         __block unsigned insertedCount = 0;
@@ -447,13 +447,13 @@
                 curDoc = [dbStorage documentPropertiesFromJSON: json
                                                     docID: docID revID:revID
                                                   deleted: NO
-                                                 sequence: sequence
-                                                  options: kCBLIncludeLocalSeq];
+                                                 sequence: sequence];
                 if (!curDoc) {
                     Warn(@"Failed to parse JSON of doc %@ rev %@", docID, revID);
                     continue;
                 }
-                
+                curDoc[@"_local_seq"] = @(sequence);
+
                 // Call the user-defined map() to emit new key/value pairs from this revision:
                 int i = -1;
                 for (curView in views) {
@@ -750,7 +750,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
                 CBLStatus linkedStatus;
                 CBL_Revision* linked = [db getDocumentWithID: linkedID
                                                   revisionID: linkedRev
-                                                     options: options->content
+                                                     withBody: YES
                                                       status: &linkedStatus];
                 docContents = linked ? linked.properties : $null;
                 sequence = linked.sequence;
@@ -759,8 +759,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
                                                        docID: docID
                                                        revID: [r stringForColumnIndex: 4]
                                                      deleted: NO
-                                                    sequence: sequence
-                                                     options: options->content];
+                                                    sequence: sequence];
             }
         }
         LogTo(ViewVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",

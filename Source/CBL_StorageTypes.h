@@ -11,20 +11,6 @@
 @class CBL_Revision;
 
 
-/** Options for what metadata to include in document bodies */
-typedef unsigned CBLContentOptions;
-enum {
-    kCBLIncludeAttachments = 1,              // adds inline bodies of attachments
-    kCBLIncludeConflicts = 2,                // adds '_conflicts' property (if relevant)
-    kCBLIncludeRevs = 4,                     // adds '_revisions' property
-    kCBLIncludeRevsInfo = 8,                 // adds '_revs_info' property
-    kCBLIncludeLocalSeq = 16,                // adds '_local_seq' property
-    kCBLLeaveAttachmentsEncoded = 32,        // i.e. don't decode
-    kCBLBigAttachmentsFollow = 64,           // i.e. add 'follows' key instead of data for big ones
-    kCBLNoBody = 128,                        // omit regular doc body properties
-};
-
-
 /** Predicate block that can filter rows of a query result. */
 typedef BOOL (^CBLQueryRowFilter)(CBLQueryRow*);
 
@@ -38,7 +24,6 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
                                                NSString* parentRevID);
 
 
-
 /** Standard query options for views. */
 @interface CBLQueryOptions : NSObject
 {
@@ -48,7 +33,6 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
     unsigned skip;
     unsigned limit;
     unsigned groupLevel;
-    CBLContentOptions content;
     BOOL descending;
     BOOL includeDocs;
     BOOL updateSeq;
@@ -81,7 +65,6 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
 /** Options for _changes feed (-changesSinceSequence:). */
 typedef struct CBLChangesOptions {
     unsigned limit;
-    CBLContentOptions contentOptions;
     BOOL includeDocs;
     BOOL includeConflicts;
     BOOL sortBySequence;

@@ -36,11 +36,6 @@
 #endif
 
 
-@interface CBL_Router (Handlers)
-- (CBLStatus) do_GETRoot;
-@end
-
-
 @implementation CBL_Router
 
 
@@ -202,7 +197,6 @@
     options->reduceSpecified = [self query: @"reduce"] != nil;
     options->reduce =  [self boolQuery: @"reduce"];
     options->group = [self boolQuery: @"group"];
-    options->content = [self contentOptions];
 
     // Stale options (ok or update_after):
     NSString *stale = [self query: @"stale"];

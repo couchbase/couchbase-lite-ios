@@ -146,7 +146,7 @@
     CBL_MutableRevision* mrev = [[CBL_MutableRevision alloc] initWithDocID: docID
                                                                      revID: revID
                                                                    deleted: NO];
-    *outStatus = [self loadRevisionBody: mrev options: 0];
+    *outStatus = [self loadRevisionBody: mrev];
     if (CBLStatusIsError(*outStatus))
         return nil;
     return mrev.attachments;
@@ -236,11 +236,10 @@
 
 
 - (BOOL) expandAttachmentsIn: (CBL_MutableRevision*)rev
-                     options: (CBLContentOptions)options
+                      decode: (BOOL)decodeAttachments
                       status: (CBLStatus*)outStatus
 {
     *outStatus = kCBLStatusOK;
-    BOOL decodeAttachments = !(options & kCBLLeaveAttachmentsEncoded);
     [rev mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *attachment) {
         BOOL decodeIt = decodeAttachments && (attachment[@"encoding"] != nil);
         if (decodeIt || attachment[@"stub"] || attachment[@"follows"]) {
@@ -400,10 +399,10 @@
                                                                      deleted: NO];
     if (oldRevID) {
         // Load existing revision if this is a replacement:
-        *outStatus = [self loadRevisionBody: oldRev options: 0];
+        *outStatus = [self loadRevisionBody: oldRev];
         if (CBLStatusIsError(*outStatus)) {
             if (*outStatus == kCBLStatusNotFound
-                    && [self getDocumentWithID: docID revisionID: nil options: kCBLNoBody
+                && [self getDocumentWithID: docID revisionID: nil withBody: NO
                                         status: outStatus] != nil) {
                 *outStatus = kCBLStatusConflict;   // if some other revision exists, it's a conflict
             }

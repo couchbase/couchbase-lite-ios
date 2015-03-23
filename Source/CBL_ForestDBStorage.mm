@@ -240,7 +240,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
 - (CBL_MutableRevision*) getDocumentWithID: (NSString*)docID
                                 revisionID: (NSString*)inRevID
-                                   options: (CBLContentOptions)options
+                                  withBody: (BOOL)withBody
                                     status: (CBLStatus*)outStatus
 {
     __block CBL_MutableRevision* result = nil;
@@ -258,7 +258,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
         result = [CBLForestBridge revisionObjectFromForestDoc: doc
                                                         revID: revID
-                                                      options: options];
+                                                     withBody: withBody];
         return result ? kCBLStatusOK : kCBLStatusNotFound;
     }];
     return result;
@@ -276,18 +276,16 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 #endif
         result = [CBLForestBridge revisionObjectFromForestDoc: doc
                                                      sequence: sequence
-                                                      options: 0];
+                                                     withBody: YES];
         return result ? kCBLStatusOK : kCBLStatusNotFound;
     }];
     return result;
 }
 
 
-- (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev
-                       options: (CBLContentOptions)options
-{
+- (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev {
     return [self _withVersionedDoc: rev.docID do: ^(VersionedDocument& doc) {
-        BOOL ok = [CBLForestBridge loadBodyOfRevisionObject: rev options: options doc: doc];
+        BOOL ok = [CBLForestBridge loadBodyOfRevisionObject: rev doc: doc];
         return ok ? kCBLStatusOK : kCBLStatusNotFound;
     }];
 }
@@ -445,9 +443,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     BOOL includeDocs = options->includeDocs || options->includeConflicts || (filter != NULL);
     if (!includeDocs)
         forestOpts.contentOptions = Database::kMetaOnly;
-    CBLContentOptions contentOptions = kCBLNoBody;
-    if (includeDocs || filter)
-        contentOptions = options->contentOptions;
+    BOOL withBody = (includeDocs || filter);
 
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
     *outStatus = [self _try: ^CBLStatus{
@@ -462,7 +458,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
                 for (NSString* revID in revIDs) {
                     CBL_MutableRevision* rev = [CBLForestBridge revisionObjectFromForestDoc: doc
                                                                                       revID: revID
-                                                                        options: contentOptions];
+                                                                               withBody: withBody];
                     Assert(rev);
                     if (!filter || filter(rev))
                         [changes addRev: rev];
@@ -544,8 +540,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
             NSDictionary* docContents = nil;
             if (includeDocs) {
                 // Fill in the document contents:
-                docContents = [CBLForestBridge bodyOfNode: doc.currentRevision()
-                                                  options: options->content];
+                docContents = [CBLForestBridge bodyOfNode: doc.currentRevision()];
                 if (!docContents)
                     Warn(@"AllDocs: Unable to read body of doc %@", docID);
             }
@@ -1078,7 +1073,7 @@ static void convertRevIDs(NSArray* revIDs,
     BOOL isWinner = (doc.currentRevision()->revID == revID);
     // Update the documentType:
     if (!isWinner)
-        properties = [CBLForestBridge bodyOfNode: doc[0] options: 0];
+        properties = [CBLForestBridge bodyOfNode: doc[0]];
     nsstring_slice type(properties[@"type"]);
     doc.setDocType(type);
     // Save:

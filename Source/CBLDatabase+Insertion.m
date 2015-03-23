@@ -317,7 +317,7 @@
 
 - (CBL_Revision*) current_Revision {
     if (_currentRevision)
-        _currentRevision = [_db revisionByLoadingBody: _currentRevision options: 0 status: NULL];
+        _currentRevision = [_db revisionByLoadingBody: _currentRevision status: NULL];
     return _currentRevision;
 }
 

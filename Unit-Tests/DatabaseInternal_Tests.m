@@ -83,7 +83,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
 
     // Get a nonexistent document:
     CBLStatus status;
-    AssertNil([db getDocumentWithID: @"nonexistent" revisionID: nil options: 0 status: &status]);
+    AssertNil([db getDocumentWithID: @"nonexistent" revisionID: nil withBody: YES status: &status]);
     AssertEq(status, kCBLStatusNotFound);
     
     // Create a document:

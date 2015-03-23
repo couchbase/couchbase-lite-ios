@@ -825,7 +825,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
                                                              {@"deleted", $true})}) ]));
     // Get conflicts:
     options = [CBLQueryOptions new];
-    options->allDocsMode = kCBLIncludeConflicts;
+    options->allDocsMode = kCBLShowConflicts;
     query = [db getAllDocs: options status: &status];
     NSString* curRevID = [docs[1] revID];
     NSDictionary* expectedConflict1 = $dict({@"id",  @"44444"},

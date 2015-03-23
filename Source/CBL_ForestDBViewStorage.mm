@@ -87,8 +87,9 @@ public:
             @autoreleasepool {
                 VersionedDocument vdoc(_indexes[0]->sourceStore(), cppDoc);
                 const Revision* node = vdoc.currentRevision();
-                NSDictionary* body = [CBLForestBridge bodyOfNode: node
-                                                         options: kCBLIncludeLocalSeq];
+                NSMutableDictionary* body = [CBLForestBridge bodyOfNode: node];
+                body[@"_local_seq"] = @(node->sequence);
+
                 LogTo(ViewVerbose, @"Mapping %@ rev %@", body.cbl_id, body.cbl_rev);
                 CocoaMappable mappable(cppDoc, body);
                 addMappable(mappable);
@@ -548,14 +549,14 @@ static NSString* viewNames(NSArray* views) {
                         CBLStatus linkedStatus;
                         CBL_Revision* linked = [_dbStorage getDocumentWithID: linkedID
                                                           revisionID: linkedRev
-                                                             options: options->content
+                                                             withBody: YES
                                                               status: &linkedStatus];
                         docContents = linked ? linked.properties : $null;
                         sequence = linked.sequence;
                     } else {
                         CBLStatus status;
                         CBL_Revision* rev = [_dbStorage getDocumentWithID: docID revisionID: nil
-                                                          options: options->content status: &status];
+                                                          withBody: YES status: &status];
                         docContents = rev.properties;
                     }
                 }

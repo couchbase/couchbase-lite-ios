@@ -85,19 +85,18 @@
 /** Retrieves a document revision by ID.
     @param docID  The document ID
     @param revID  The revision ID; may be nil, meaning "the current revision".
-    @param options  Specifies which data to include in the JSON.
+    @param withBody  If NO, revision's body won't be loaded
     @param outStatus  If returning nil, store a CBLStatus error value here.
     @return  The revision, or nil if not found. */
 - (CBL_MutableRevision*) getDocumentWithID: (NSString*)docID
                                 revisionID: (NSString*)revID
-                                   options: (CBLContentOptions)options
+                                  withBody: (BOOL)withBody
                                     status: (CBLStatus*)outStatus;
 
 /** Loads the body of a revision.
     On entry, rev.docID and rev.revID will be valid.
-    On success, rev.body will be valid. */
-- (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev
-                       options: (CBLContentOptions)options;
+    On success, rev.body and rev.sequence will be valid. */
+- (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev;
 
 /** Looks up the sequence number of a revision.
     Will only be called on revisions whose .sequence property is not already set.

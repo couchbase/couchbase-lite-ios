@@ -212,17 +212,35 @@
     return [self doAllDocs: options];
 }
 
-- (NSArray*) queryIteratorAllRows: (CBLQueryIteratorBlock) iterator {
+- (NSArray*) queryIteratorAllRows: (CBLQueryIteratorBlock) iterator
+{
+    CBLContentOptions options = self.contentOptions;
     NSMutableArray* result = $marray();
     CBLQueryRow* row;
     while (nil != (row = iterator())) {
         row.database = _db;
-        [result addObject: row.asJSONDictionary];
+        NSDictionary* dict = row.asJSONDictionary;
+        if (options != 0) {
+            NSDictionary* doc = dict[@"doc"];
+            if (doc) {
+                // Add content options:
+                CBL_Revision* rev = [CBL_Revision revisionWithProperties: doc];
+                CBLStatus status;
+                rev = [self applyOptions: options toRevision: rev status: &status];
+                if (rev) {
+                    NSMutableDictionary* mdict = [dict mutableCopy];
+                    mdict[@"doc"] = rev.properties;
+                    dict = mdict;
+                }
+            }
+        }
+        [result addObject: dict];
     }
     return result;
 }
 
-- (CBLStatus) doAllDocs: (CBLQueryOptions*)options {
+- (CBLStatus) doAllDocs: (CBLQueryOptions*)options
+{
     CBLStatus status;
     CBLQueryIteratorBlock iterator = [_db getAllDocs: options status: &status];
     if (!iterator)
@@ -513,7 +531,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                     options &= ~kCBLIncludeAttachments;
             }
             CBLStatus status;
-            rev = [db getDocumentWithID: docID revisionID: revID options: options status: &status];
+            rev = [db getDocumentWithID: docID revisionID: revID withBody: YES status: &status];
+            if (rev)
+                rev = [self applyOptions: options toRevision: rev status: &status];
             if (!rev) {
                 if (status == kCBLStatusDeleted)
                     _response.statusReason = @"deleted";
@@ -527,7 +547,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             return kCBLStatusNotFound;
         if ([self cacheWithEtag: rev.revID])        // set ETag and check conditional GET
             return kCBLStatusNotModified;
-        
+
         if (includeAttachments) {
             int minRevPos = 1;
             NSArray* attsSince = parseJSONRevArrayQuery([self query: @"atts_since"]);
@@ -559,8 +579,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                 if (!includeDeleted && rev.deleted)
                     continue;
                 CBLStatus status;
-                CBL_Revision* loadedRev = [_db revisionByLoadingBody: rev options: options
-                                                              status: &status];
+                CBL_Revision* loadedRev = [_db revisionByLoadingBody: rev status: &status];
+                if (loadedRev)
+                    loadedRev = [self applyOptions: options toRevision: loadedRev status: &status];
                 if (loadedRev)
                     [result addObject: $dict({@"ok", loadedRev.properties})];
                 else if (status < kCBLStatusServerError)
@@ -580,7 +601,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                     return kCBLStatusBadID;
                 CBLStatus status;
                 CBL_Revision* rev = [db getDocumentWithID: docID revisionID: revID
-                                                options: options status: &status];
+                                                 withBody: YES status: &status];
+                if (rev)
+                    rev = [self applyOptions: options toRevision: rev status: &status];
                 if (rev)
                     [result addObject: $dict({@"ok", rev.properties})];
                 else
@@ -598,12 +621,59 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
+- (CBL_Revision*) applyOptions: (CBLContentOptions)options
+                    toRevision: (CBL_Revision*)rev
+                        status: (CBLStatus*)outStatus
+{
+    if (options & (kCBLIncludeRevs | kCBLIncludeRevsInfo | kCBLIncludeConflicts |
+                   kCBLIncludeAttachments | kCBLIncludeLocalSeq)) {
+        NSMutableDictionary* dst = [rev.properties mutableCopy];
+        id<CBL_Storage> storage = _db.storage;
+
+        if (options & kCBLIncludeLocalSeq) {
+            dst[@"_local_seq"] = @(rev.sequence);
+        }
+        if (options & kCBLIncludeRevs) {
+            dst[@"_revisions"] = [storage getRevisionHistoryDict: rev startingFromAnyOf: nil];
+        }
+        if (options & kCBLIncludeRevsInfo) {
+            dst[@"_revs_info"] = [[storage getRevisionHistory: rev] my_map: ^id(CBL_Revision* rev) {
+                NSString* status = @"available";
+                if (rev.deleted)
+                    status = @"deleted";
+                else if (rev.missing)
+                    status = @"missing";
+                return $dict({@"rev", [rev revID]}, {@"status", status});
+            }];
+        }
+        if (options & kCBLIncludeConflicts) {
+            CBL_RevisionList* revs = [storage getAllRevisionsOfDocumentID: rev.docID
+                                                                  onlyCurrent: YES];
+            if (revs.count > 1) {
+                dst[@"_conflicts"] = [revs.allRevisions my_map: ^(id aRev) {
+                    return ($equal(aRev, rev) || [(CBL_Revision*)aRev deleted]) ? nil : [aRev revID];
+                }];
+            }
+        }
+        CBL_MutableRevision* nuRev = [CBL_MutableRevision revisionWithProperties: dst];
+        if (options & kCBLIncludeAttachments) {
+            if (![_db expandAttachmentsIn: nuRev
+                                   decode: ![self boolQuery: @"att_encoding_info"]
+                                   status: outStatus])
+                return nil;
+        }
+        rev = nuRev;
+    }
+    return rev;
+}
+
+
 - (CBLStatus) do_GET: (CBLDatabase*)db docID: (NSString*)docID attachment: (NSString*)attachmentName {
     CBLStatus status;
     CBL_Revision* rev = [db getDocumentWithID: docID
                                  revisionID: [self query: @"rev"]  // often nil
-                                    options: kCBLNoBody
-                                     status: &status];        // all we need is revID & sequence
+                                     withBody: NO               // all we need is revID & sequence
+                                       status: &status];
     if (!rev)
         return status;
     if ([self cacheWithEtag: rev.revID])        // set ETag and check conditional GET

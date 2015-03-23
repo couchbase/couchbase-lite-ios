@@ -20,12 +20,11 @@
 
 - (BOOL) runStatements: (NSString*)statements error: (NSError**)outError;
 
-- (NSDictionary*) documentPropertiesFromJSON: (NSData*)json
-                                       docID: (NSString*)docID
-                                       revID: (NSString*)revID
-                                     deleted: (BOOL)deleted
-                                    sequence: (SequenceNumber)sequence
-                                     options: (CBLContentOptions)options;
+- (NSMutableDictionary*) documentPropertiesFromJSON: (NSData*)json
+                                              docID: (NSString*)docID
+                                              revID: (NSString*)revID
+                                            deleted: (BOOL)deleted
+                                           sequence: (SequenceNumber)sequence;
 
 /** Loads revision given its sequence. Assumes the given docID is valid. */
 - (CBL_MutableRevision*) getDocumentWithID: (NSString*)docID

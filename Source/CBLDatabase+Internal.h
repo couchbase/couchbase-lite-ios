@@ -103,17 +103,15 @@ extern NSArray* CBL_RunloopModes;
 
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
                          revisionID: (NSString*)revID
-                            options: (CBLContentOptions)options
+                           withBody: (BOOL)withBody
                              status: (CBLStatus*)outStatus;
 #if DEBUG // convenience method for tests
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
                          revisionID: (NSString*)revID;
 #endif
 
-- (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev
-                       options: (CBLContentOptions)options;
+- (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev;
 - (CBL_Revision*) revisionByLoadingBody: (CBL_Revision*)rev
-                                options: (CBLContentOptions)options
                                  status: (CBLStatus*)outStatus;
 - (SequenceNumber) getRevisionSequence: (CBL_Revision*)rev;
 

@@ -89,8 +89,9 @@
     [itemDict removeObjectForKey: @"stub"];
     itemDict[@"data"] = [CBLBase64 encode: attach1];
     gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
-                            options: kCBLIncludeAttachments
+                           withBody: YES
                              status: &status];
+    gotRev1 = [self expandAttachments: gotRev1];
     AssertEqual(gotRev1[@"_attachments"], attachmentDict);
     
     // Add a second revision that doesn't update the attachment:
@@ -135,6 +136,15 @@
     Assert([db compact: NULL]);  // This clears the body of the first revision
     AssertEq(attachments.count, 1u);
     AssertEqual(attachments.allKeys, @[[CBL_BlobStore keyDataForBlob: attach2]]);
+}
+
+
+- (CBL_Revision*) expandAttachments: (CBL_Revision*)rev {
+    CBL_MutableRevision* mrev = [rev mutableCopy];
+    CBLStatus status;
+    Assert([db expandAttachmentsIn: mrev decode: YES status: &status],
+           @"expandAttachments failed: status %d", status);
+    return mrev;
 }
 
 

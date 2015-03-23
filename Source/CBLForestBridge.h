@@ -18,20 +18,17 @@ CBLStatus CBLStatusFromForestDBStatus(int fdbStatus);
 
 @interface CBLForestBridge : NSObject
 
-/** Gets the parsed body of a revision, including any metadata specified by the content options. */
-+ (NSDictionary*) bodyOfNode: (const forestdb::Revision*)revNode
-                     options: (CBLContentOptions)options;
++ (NSMutableDictionary*) bodyOfNode: (const forestdb::Revision*)revNode;
 
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (forestdb::VersionedDocument&)doc
                                                revID: (NSString*)revID
-                                             options: (CBLContentOptions)options;
+                                            withBody: (BOOL)withBody;
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (forestdb::VersionedDocument&)doc
                                             sequence: (forestdb::sequence)sequence
-                                             options: (CBLContentOptions)options;
+                                            withBody: (BOOL)withBody;
 
 /** Stores the body of a revision (including metadata) into a CBL_MutableRevision. */
 + (BOOL) loadBodyOfRevisionObject: (CBL_MutableRevision*)rev
-                          options: (CBLContentOptions)options
                               doc: (forestdb::VersionedDocument&)doc;
 
 /** Returns the revIDs of all current leaf revisions, in descending order of priority. */

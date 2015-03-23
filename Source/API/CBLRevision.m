@@ -193,7 +193,7 @@
 
 - (bool) loadProperties {
     CBLStatus status;
-    CBL_Revision* rev = [self.database revisionByLoadingBody: _rev options: 0 status: &status];
+    CBL_Revision* rev = [self.database revisionByLoadingBody: _rev status: &status];
     if (!rev) {
         Warn(@"Couldn't load body/sequence of %@: %d", self, status);
         return false;

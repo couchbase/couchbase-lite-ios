@@ -34,7 +34,7 @@ static NSData* dataOfNode(const Revision* rev) {
 
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (VersionedDocument&)doc
                                                revID: (NSString*)revID
-                                             options: (CBLContentOptions)options
+                                            withBody: (BOOL)withBody
 {
     CBL_MutableRevision* rev;
     NSString* docID = (NSString*)doc.docID();
@@ -53,7 +53,7 @@ static NSData* dataOfNode(const Revision* rev) {
                                                  deleted: doc.isDeleted()];
         rev.sequence = doc.sequence();
     }
-    if (![self loadBodyOfRevisionObject: rev options: options doc: doc])
+    if (withBody && ![self loadBodyOfRevisionObject: rev doc: doc])
         return nil;
     return rev;
 }
@@ -61,7 +61,7 @@ static NSData* dataOfNode(const Revision* rev) {
 
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (VersionedDocument&)doc
                                             sequence: (forestdb::sequence)sequence
-                                             options: (CBLContentOptions)options
+                                            withBody: (BOOL)withBody
 {
     const Revision* revNode = doc.getBySequence(sequence);
     if (!revNode)
@@ -69,7 +69,7 @@ static NSData* dataOfNode(const Revision* rev) {
     CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: (NSString*)doc.docID()
                                                                     revID: (NSString*)revNode->revID
                                                                   deleted: revNode->isDeleted()];
-    if (![self loadBodyOfRevisionObject: rev options: options doc: doc])
+    if (withBody && ![self loadBodyOfRevisionObject: rev doc: doc])
         return nil;
     rev.sequence = sequence;
     return rev;
@@ -77,27 +77,19 @@ static NSData* dataOfNode(const Revision* rev) {
 
 
 + (BOOL) loadBodyOfRevisionObject: (CBL_MutableRevision*)rev
-                          options: (CBLContentOptions)options
                               doc: (VersionedDocument&)doc
 {
-    // If caller wants no body and no metadata props, this is a no-op:
-    if (options == kCBLNoBody)
-        return YES;
-
     const Revision* revNode = doc.get(rev.revID);
     if (!revNode)
         return NO;
-    NSData* json = nil;
-    if (!(options & kCBLNoBody)) {
-        json = dataOfNode(revNode);
-        if (!json)
-            return NO;
-    }
+    NSData* json = dataOfNode(revNode);
+    if (!json)
+        return NO;
 
     rev.sequence = revNode->sequence;
 
     NSMutableDictionary* extra = $mdict();
-    [self addContentProperties: options into: extra rev: revNode];
+    [self addContentPropertiesTo: extra fromRev: revNode];
     if (json.length > 0)
         rev.asJSON = [CBLJSON appendDictionary: extra toJSONDictionaryData: json];
     else
@@ -106,80 +98,29 @@ static NSData* dataOfNode(const Revision* rev) {
 }
 
 
-+ (NSDictionary*) bodyOfNode: (const Revision*)rev
-                     options: (CBLContentOptions)options
-{
-    // If caller wants no body and no metadata props, this is a no-op:
-    if (options == kCBLNoBody)
-        return @{};
-
-    NSData* json = nil;
-    if (!(options & kCBLNoBody)) {
-        json = dataOfNode(rev);
-        if (!json)
-            return nil;
-    }
++ (NSMutableDictionary*) bodyOfNode: (const Revision*)rev {
+    NSData* json = dataOfNode(rev);
+    if (!json)
+        return nil;
     NSMutableDictionary* properties = [CBLJSON JSONObjectWithData: json
                                                           options: NSJSONReadingMutableContainers
                                                             error: NULL];
     Assert(properties, @"Unable to parse doc from db: %@", json.my_UTF8ToString);
-    [self addContentProperties: options into: properties rev: rev];
+    [self addContentPropertiesTo: properties fromRev: rev];
     return properties;
 }
 
 
-+ (void) addContentProperties: (CBLContentOptions)options
-                         into: (NSMutableDictionary*)dst
-                         rev: (const Revision*)rev
++ (void) addContentPropertiesTo: (NSMutableDictionary*)dst
+                        fromRev: (const Revision*)rev
 {
     NSString* revID = (NSString*)rev->revID;
     Assert(revID);
     const VersionedDocument* doc = (const VersionedDocument*)rev->owner;
     dst[@"_id"] = (NSString*)doc->docID();
     dst[@"_rev"] = revID;
-
     if (rev->isDeleted())
         dst[@"_deleted"] = $true;
-
-    // Get more optional stuff to put in the properties:
-    if (options & kCBLIncludeLocalSeq)
-        dst[@"_local_seq"] = @(rev->sequence);
-
-    if (options & kCBLIncludeRevs)
-        dst[@"_revisions"] = [self getRevisionHistoryOfNode: rev startingFromAnyOf: nil];
-
-    if (options & kCBLIncludeRevsInfo) {
-        dst[@"_revs_info"] = [self mapHistoryOfNode: rev
-                                            through: ^id(const Revision *rev)
-        {
-            NSString* status = @"available";
-            if (rev->isDeleted())
-                status = @"deleted";
-            else if (!rev->isBodyAvailable())
-                status = @"missing";
-            return $dict({@"rev", (NSString*)rev->revID},
-                         {@"status", status});
-        }];
-    }
-
-    if (options & kCBLIncludeConflicts) {
-        auto revs = doc->currentRevisions();
-        if (revs.size() > 1) {
-            NSMutableArray* conflicts = $marray();
-            for (auto rev = revs.begin(); rev != revs.end(); ++rev) {
-                if (!(*rev)->isDeleted()) {
-                    NSString* revRevID = (NSString*)(*rev)->revID;
-                    if (!$equal(revRevID, revID))
-                        [conflicts addObject: revRevID];
-                }
-            }
-            if (conflicts.count > 0)
-                dst[@"_conflicts"] = conflicts;
-        }
-    }
-
-    if (!options & kCBLIncludeAttachments)
-        [dst removeObjectForKey: @"_attachments"];
 }
 
 
@@ -203,8 +144,7 @@ static NSData* dataOfNode(const Revision* rev) {
 }
 
 
-+ (NSArray*) getRevisionHistory: (const Revision*)revNode
-{
++ (NSArray*) getRevisionHistory: (const Revision*)revNode {
     const VersionedDocument* doc = (const VersionedDocument*)revNode->owner;
     NSString* docID = (NSString*)doc->docID();
     return [self mapHistoryOfNode: revNode

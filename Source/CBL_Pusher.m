@@ -271,12 +271,14 @@
                     // Get the revision's properties:
                     NSDictionary* properties;
                     {
-                        CBLContentOptions options = kCBLIncludeAttachments;
-                        if (!_dontSendMultipart && self.revisionBodyTransformationBlock==nil)
-                            options |= kCBLBigAttachmentsFollow;
                         CBLStatus status;
-                        CBL_Revision* loadedRev = [db revisionByLoadingBody: rev options: options
+                        CBL_Revision* loadedRev = [db revisionByLoadingBody: rev
                                                                      status: &status];
+                        if (status < 300)
+                            [db expandAttachmentsIn: (CBL_MutableRevision*)loadedRev
+                                             decode: NO
+                                             status: &status];
+
                         if (status >= 300) {
                             Warn(@"%@: Couldn't get local contents of %@", self, rev);
                             [self revisionFailed];
@@ -506,7 +508,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     // Get the revision's properties:
     CBL_MutableRevision* rev = originalRev.mutableCopy;
     CBLStatus status;
-    if (![_db expandAttachmentsIn: rev options: kCBLLeaveAttachmentsEncoded status: &status]) {
+    if (![_db expandAttachmentsIn: rev decode: NO status: &status]) {
         self.error = CBLStatusToNSError(status, nil);
         [self revisionFailed];
         return;

@@ -42,7 +42,7 @@ typedef enum {
     attachments (and removing "stub" and "follows".) GZip-encoded attachments will be unzipped
     unless options contains the flag kCBLLeaveAttachmentsEncoded. */
 - (BOOL) expandAttachmentsIn: (CBL_MutableRevision*)rev
-                     options: (CBLContentOptions)options
+                      decode: (BOOL)decodeAttachments
                       status: (CBLStatus*)outStatus;
 
 /** Generates a MIME multipart writer for a revision, with separate body parts for each attachment whose "follows" property is set. */

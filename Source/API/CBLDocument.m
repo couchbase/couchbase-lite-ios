@@ -122,7 +122,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
         CBLStatus status;
         _currentRevision =  [self revisionFromRev: [_database getDocumentWithID: _docID
                                                                      revisionID: nil
-                                                                        options: 0
+                                                                       withBody: YES
                                                                          status: &status]];
         if (!CBLStatusIsError(status))
             _currentRevisionKnown = YES;
@@ -157,7 +157,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
         return _currentRevision;
     CBLStatus status;
     return [self revisionFromRev: [_database getDocumentWithID: _docID revisionID: revID
-                                                       options: 0
+                                                       withBody: YES
                                                         status: &status]];
 }
 

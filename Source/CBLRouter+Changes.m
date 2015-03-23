@@ -42,9 +42,10 @@ NSTimeInterval kMinHeartbeat = 5.0;
     CBLChangesOptions options = kDefaultCBLChangesOptions;
     _changesIncludeDocs = [self boolQuery: @"include_docs"];
     _changesIncludeConflicts = $equal([self query: @"style"], @"all_docs");
+    if (_changesIncludeDocs)
+        _changesContentOptions = self.contentOptions;
     options.includeDocs = _changesIncludeDocs;
     options.includeConflicts = _changesIncludeConflicts;
-    options.contentOptions = [self contentOptions];
     options.sortBySequence = !options.includeConflicts;
     options.limit = [self intQuery: @"limit" defaultValue: options.limit];
     int since = [[self query: @"since"] intValue];
@@ -147,6 +148,15 @@ NSTimeInterval kMinHeartbeat = 5.0;
 
 
 - (NSDictionary*) changeDictForRev: (CBL_Revision*)rev {
+    if (_changesIncludeDocs) {
+        CBLStatus status;
+        CBL_Revision* rev2 = [self applyOptions: _changesContentOptions
+                                     toRevision: rev status: &status];
+        if (rev2) {
+            rev2.sequence = rev.sequence;
+            rev = rev2;
+        }
+    }
     return $dict({@"seq", @(rev.sequence)},
                  {@"id",  rev.docID},
                  {@"changes", $marray($dict({@"rev", rev.revID}))},
@@ -173,10 +183,9 @@ NSTimeInterval kMinHeartbeat = 5.0;
                 // This isn't correct internally (this is an old rev so it has an older sequence)
                 // but consumers of the _changes feed don't care about the internal state.
                 CBLStatus status;
-                CBLContentOptions options = (_changesIncludeDocs ? 0 : kCBLNoBody);
                 CBL_Revision* mRev = [_db getDocumentWithID: rev.docID
                                                  revisionID: winningRevID
-                                                    options: options
+                                                   withBody: _changesIncludeDocs
                                                      status: &status];
                 mRev.sequence = rev.sequence;
                 rev = mRev;

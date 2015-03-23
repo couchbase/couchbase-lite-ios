@@ -30,6 +30,17 @@ typedef enum : NSUInteger {
 } CBLChangesFeedMode;
 
 
+/** Options for what metadata to include in document bodies */
+typedef unsigned CBLContentOptions;
+enum {
+    kCBLIncludeAttachments = 1,              // adds inline bodies of attachments
+    kCBLIncludeConflicts = 2,                // adds '_conflicts' property (if relevant)
+    kCBLIncludeRevs = 4,                     // adds '_revisions' property
+    kCBLIncludeRevsInfo = 8,                 // adds '_revs_info' property
+    kCBLIncludeLocalSeq = 16,                // adds '_local_seq' property
+};
+
+
 @interface CBL_Router : NSObject
 {
     @private
@@ -51,6 +62,7 @@ typedef enum : NSUInteger {
     OnFinishedBlock _onFinished;
     BOOL _running;
     CBLChangesFeedMode _changesMode;
+    CBLContentOptions _changesContentOptions;
     CBLFilterBlock _changesFilter;
     NSDictionary* _changesFilterParams;
     BOOL _changesIncludeDocs;
@@ -99,6 +111,14 @@ typedef enum : NSUInteger {
 - (void) finished;
 - (void) startHeartbeat: (NSString*)response interval: (NSTimeInterval)interval;
 - (void) stopHeartbeat;
+@end
+
+
+@interface CBL_Router (Handlers)
+- (CBLStatus) do_GETRoot;
+- (CBL_Revision*) applyOptions: (CBLContentOptions)options
+                    toRevision: (CBL_Revision*)rev
+                        status: (CBLStatus*)outStatus;
 @end
 
 

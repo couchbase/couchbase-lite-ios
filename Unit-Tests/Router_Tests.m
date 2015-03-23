@@ -192,11 +192,7 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     Log(@"PUT returned %@", result);
     revID = result[@"rev"];
     Assert([revID hasPrefix: @"2-"]);
-    
-    Send(self, @"GET", @"/db/doc1", kCBLStatusOK,
-         $dict({@"_id", @"doc1"}, {@"_rev", revID}, {@"message", @"goodbye"}));
-    CheckCacheable(self, @"/db/doc1");
-    
+
     // Add more docs:
     result = SendBody(self, @"PUT", @"/db/doc3", $dict({@"message", @"hello"}), 
                                     kCBLStatusCreated, nil);
@@ -231,7 +227,28 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
 
 - (void) test_Docs {
     RequireTestCase(Databases);
-    [self populateDocs];
+    NSArray* revIDs = [self populateDocs];
+
+    Send(self, @"GET", @"/db/doc2", kCBLStatusOK,
+         $dict({@"_id", @"doc2"}, {@"_rev", revIDs[1]}, {@"message", @"hello"}));
+    CheckCacheable(self, @"/db/doc2");
+
+    Send(self, @"GET", @"/db/doc2?revs=true", kCBLStatusOK,
+         @{@"_id": @"doc2",
+           @"_rev": revIDs[1],
+           @"_revisions": @{@"ids": @[[revIDs[1] substringFromIndex: 2]], @"start": @1},
+           @"message": @"hello"});
+
+    Send(self, @"GET", @"/db/doc2?revs_info=true", kCBLStatusOK,
+         @{@"_id": @"doc2",
+           @"_rev": revIDs[1],
+           @"_revs_info": @[@{@"rev": revIDs[1], @"status": @"available"}],
+           @"message": @"hello"});
+
+    Send(self, @"GET", @"/db/doc2?conflicts=true", kCBLStatusOK,
+         @{@"_id": @"doc2",
+           @"_rev": revIDs[1],
+           @"message": @"hello"});
 }
 
 
@@ -467,6 +484,34 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     Assert(![db viewNamed: @"design/view"].stale);
     Assert(![db viewNamed: @"design/view2"].stale);
 
+    // Try include_docs
+    Send(self, @"GET", @"/db/_design/design/_view/view2?include_docs=true&limit=1", kCBLStatusOK,
+         $dict({@"offset", @0},
+               {@"rows", $array($dict({@"id", @"doc4"},
+                                      {@"key", @2},
+                                      {@"value", @"hi"},
+                                      {@"doc", @{@"_id": @"doc4",
+                                                 @"_rev": @"1-cfdd78e822bbcbc25c91e9deb9537c4b",
+                                                 @"message": @"hi"}}
+                                      ))},
+               {@"total_rows", @4}));
+
+    // Try include_docs with revs=true
+    Send(self, @"GET", @"/db/_design/design/_view/view2?include_docs=true&revs=true&limit=1", kCBLStatusOK,
+         $dict({@"offset", @0},
+               {@"rows", $array($dict({@"id", @"doc4"},
+                                      {@"key", @2},
+                                      {@"value", @"hi"},
+                                      {@"doc", @{@"_id": @"doc4",
+                                                 @"_rev": @"1-cfdd78e822bbcbc25c91e9deb9537c4b",
+                                                 @"_revisions": @{
+                                                         @"start": @1,
+                                                         @"ids": @[@"cfdd78e822bbcbc25c91e9deb9537c4b"]
+                                                         },
+                                                 @"message": @"hi"}}
+                                      ))},
+               {@"total_rows", @4}));
+
     [CBLView setCompiler: nil];
     [CBLDatabase setFilterCompiler: nil];
 }
@@ -527,6 +572,35 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     Send(self, @"GET", @"/db/_changes?since=5", kCBLStatusOK,
          $dict({@"last_seq", @5},
                {@"results", @[]}));
+
+    // _changes with include_docs:
+    Send(self, @"GET", @"/db/_changes?since=4&include_docs=true", kCBLStatusOK,
+         $dict({@"last_seq", @5},
+               {@"results", $array($dict({@"id", @"doc1"},
+                                         {@"changes", $array($dict({@"rev", revIDs[0]}))},
+                                         {@"seq", @5},
+                                         {@"deleted", $true},
+                                         {@"doc", @{@"_id": @"doc1",
+                                                    @"_rev": revIDs[0],
+                                                    @"_deleted": @YES}}))}));
+    
+
+    // _changes with include_docs and revs=true:
+    Send(self, @"GET", @"/db/_changes?since=4&include_docs=true&revs=true", kCBLStatusOK,
+         $dict({@"last_seq", @5},
+               {@"results", $array($dict({@"id", @"doc1"},
+                                         {@"changes", $array($dict({@"rev", revIDs[0]}))},
+                                         {@"seq", @5},
+                                         {@"deleted", $true},
+                                         {@"doc", @{@"_id": @"doc1",
+                                                    @"_rev": revIDs[0],
+                                                    @"_revisions": @{
+                                                            @"ids": @[@"69e1c04b38d144220169834e4a1d6b65",
+                                                                      @"641a9554032af9bcb2351b2780161a4d",
+                                                                      @"9c7ff8308d0c89a7f1fe0f4b683655c2"],
+                                                            @"start": @3},
+                                                    @"_deleted": @YES}}))}));
+    
 }
 
 
