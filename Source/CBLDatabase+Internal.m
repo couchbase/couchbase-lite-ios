@@ -590,37 +590,6 @@ static BOOL sAutoCompact = YES;
     }];
 }
 
-- (BOOL) saveLocalUUIDInLocalCheckpointDocument: (NSError**)outError {
-    return [self putLocalCheckpointDocumentWithKey: kCBLDatabaseLocalCheckpoint_LocalUUID
-                                             value: self.privateUUID
-                                          outError: outError];
-}
-
-- (BOOL) putLocalCheckpointDocumentWithKey: (NSString*)key
-                                     value:(id)value
-                                  outError: (NSError**)outError {
-    if (key == nil || value == nil)
-        return NO;
-
-    NSMutableDictionary* document = [NSMutableDictionary dictionaryWithDictionary:
-                                        [self getLocalCheckpointDocument]];
-    document[key] = value;
-    BOOL result = [self putLocalDocument: document withID: kLocalCheckpointDocId error: outError];
-    if (!result)
-        Warn(@"CBLDatabase: Could not create a local checkpoint document with an error: %@", *outError);
-    return result;
-}
-
-
-- (NSDictionary*) getLocalCheckpointDocument {
-    return [self existingLocalDocumentWithID: kLocalCheckpointDocId];
-}
-
-
-- (id) getLocalCheckpointDocumentPropertyValueForKey: (NSString*)key {
-    return [[self getLocalCheckpointDocument] objectForKey: key];
-}
-
 
 // CBL_StorageDelegate method. It has to be in this category but the real method is in another one
 - (NSString*) generateRevIDForJSON: (NSData*)json

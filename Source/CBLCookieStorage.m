@@ -8,7 +8,7 @@
 
 #import "CBLCookieStorage.h"
 #import "CBLDatabase.h"
-#import "CBLDatabase+Internal.h"
+#import "CBLDatabase+Replication.h"
 #import "CBLMisc.h"
 #import "Logging.h"
 
