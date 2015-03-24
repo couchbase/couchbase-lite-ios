@@ -306,7 +306,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         [bgReplicator stop];
     }];
     _started = NO;
-    [_database forgetReplication: self];
+    [self forgetReplication];
 }
 
 
@@ -343,7 +343,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         return;
     if (status == kCBLReplicationStopped) {
         _started = NO;
-        [_database forgetReplication: self];
+        [self forgetReplication];
     }
 
     _pendingDocIDs = nil; // forget cached IDs
@@ -385,6 +385,21 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         [[NSNotificationCenter defaultCenter]
                         postNotificationName: kCBLReplicationChangeNotification object: self];
     }
+}
+
+- (void)forgetReplication {
+    // As the progress change notifications are posted and observed in the replicator thread,
+    // removing the observer needs to be done on the same thread to avoid race condition
+    // resulting to crashes due to the CBLReplication object itself gets dealloced after
+    // it was forgot (#624).
+    [self tellReplicatorAndWait: ^(CBL_Replicator* bgReplicator) {
+        if (_bg_replicator)
+            [[NSNotificationCenter defaultCenter] removeObserver: self name: nil
+                                                          object: _bg_replicator];
+        return @(YES);
+    }];
+
+    [_database forgetReplication: self];
 }
 
 
@@ -508,9 +523,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_updateProgress {
-    // Prevent _processor block from deallocating me (#624)
-    __unused id retainSelf = self;
-
     CBLReplicationStatus status;
     if (!_bg_replicator.running)
         status = kCBLReplicationStopped;
