@@ -39,6 +39,7 @@
 #define kRetryDelay 60.0
 
 #define kDefaultRequestTimeout 60.0
+#define kCheckRequestTimeout 10.0
 
 
 NSString* CBL_ReplicatorProgressChangedNotification = @"CBL_ReplicatorProgressChanged";
@@ -79,6 +80,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     NSUInteger _changesProcessed, _changesTotal;
     CFAbsoluteTime _startTime;
     CBLReachability* _host;
+    CBLRemoteRequest* _checkRequest;
     BOOL _suspended;
     SecCertificateRef _serverCert;
     NSData* _pinnedCertData;
@@ -136,6 +138,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     [self stop];
     [[NSNotificationCenter defaultCenter] removeObserver: self];
     [_host stop];
+    [self stopCheckRequest];
     cfrelease(_serverCert);
 }
 
@@ -416,6 +419,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     [_host stop];
     _host = nil;
     _suspended = NO;
+    [self stopCheckRequest];
     self.revisionBodyTransformationBlock = nil;
     [self clearDbRef];  // _db no longer tracks me so it won't notify me when it closes; clear ref now
 }
@@ -476,11 +480,13 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     LogTo(Sync, @"%@: Reachability state = %@ (%02X), suspended=%d",
           self, host, host.reachabilityFlags, _suspended);
 
+    [self stopCheckRequest];
+
     BOOL reachable = host.reachable && !_suspended;
     if (reachable) {
-    // Parse "network" option. Could be nil or "WiFi" or "!Wifi" or "cell" or "!cell".
-    NSString* network = [$castIf(NSString, _options[kCBLReplicatorOption_Network])
-                              lowercaseString];
+        // Parse "network" option. Could be nil or "WiFi" or "!Wifi" or "cell" or "!cell".
+        NSString* network = [$castIf(NSString, _options[kCBLReplicatorOption_Network])
+                             lowercaseString];
         if (network) {
             BOOL wifi = host.reachableByWiFi;
             if ($equal(network, @"wifi") || $equal(network, @"!cell"))
@@ -494,13 +500,68 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
     if (reachable)
         [self goOnline];
-    else if (host.reachabilityKnown || _suspended)
-        [self goOffline];
+    else if (host.reachabilityKnown || _suspended) {
+        if ([self trustReachability])
+            [self goOffline];
+        else
+            [self checkIfOffline];
+    }
 }
+
+
+- (BOOL) trustReachability {
+    // Setting kCBLReplicatorOption_Network results to always trust
+    // reachability result.
+    if (_options[kCBLReplicatorOption_Network])
+        return YES;
+
+    id option = _options[kCBLReplicatorOption_TrustReachability];
+    if (option)
+        return [option boolValue];
+    return YES;
+}
+
+
+- (void) checkIfOffline {
+    // To ensure that the reachability doesn't report false negative, make an attempt
+    // to connect to the remote url (#536).
+    LogTo(Sync, @"%@: Reachability said the host is offline; attempt to connect now.", self);
+    if (_checkRequest)
+        [_checkRequest stop];
+    
+    _checkRequest = [[CBLRemoteRequest alloc] initWithMethod: @"GET"
+                                                         URL: _remote
+                                                        body: nil
+                                              requestHeaders: nil
+                                                onCompletion: ^(id result, NSError* error) {
+        if (error.code == NSURLErrorCancelled) {
+            LogTo(Sync, @"%@: Attempted to connect: cancelled", self);
+        } else if (CBLIsOfflineError(error) ||
+                   error.code == NSURLErrorCannotFindHost ||
+                   error.code == NSURLErrorCannotConnectToHost) {
+            LogTo(Sync, @"%@: Attempted to connect: offline", self);
+            [self goOffline];
+        } else {
+            LogTo(Sync, @"%@: Attempted to connect: online", self);
+            [self goOnline];
+        }
+    }];
+    _checkRequest.timeoutInterval = kCheckRequestTimeout;
+    _checkRequest.autoRetry = NO;
+    [_checkRequest start];
+}
+
+
+- (void) stopCheckRequest {
+    [_checkRequest stop];
+    _checkRequest = nil;
+}
+
 
 - (BOOL) suspended {
     return _suspended;
 }
+
 
 // When suspended, the replicator acts as though it's offline, stopping all network activity.
 // This is used by the iOS backgrounding support (see CBLReplication+Backgrounding.m)

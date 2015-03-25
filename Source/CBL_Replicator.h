@@ -133,3 +133,7 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 #define kCBLReplicatorOption_Network @"network"             // "WiFi" or "Cell"
 #define kCBLReplicatorOption_UseWebSocket @"websocket"      // Boolean; default is YES
 #define kCBLReplicatorOption_PinnedCert @"pinnedCert"       // NSData or (hex) NSString
+
+// Boolean; default is YES. Setting this option will have no effect and result to always 'trust' if
+// the kCBLReplicatorOption_Network option is also set.
+#define kCBLReplicatorOption_TrustReachability @"trust_reachability"

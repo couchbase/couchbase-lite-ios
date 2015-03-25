@@ -37,6 +37,7 @@
 
 
 @synthesize delegate=_delegate, responseHeaders=_responseHeaders, cookieStorage=_cookieStorage;
+@synthesize autoRetry = _autoRetry;
 
 
 + (NSString*) userAgentHeader {
@@ -63,6 +64,7 @@
     self = [super init];
     if (self) {
         _onCompletion = [onCompletion copy];
+        _autoRetry = YES;
         _request = [[NSMutableURLRequest alloc] initWithURL: url];
         _request.HTTPMethod = method;
         _request.cachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
@@ -213,8 +215,7 @@
     // Note: This assumes all requests are idempotent, since even though we got an error back, the
     // request might have succeeded on the remote server, and by retrying we'd be issuing it again.
     // PUT and POST requests aren't generally idempotent, but the ones sent by the replicator are.
-    
-    if (_retryCount >= kMaxRetries)
+    if (!_autoRetry || _retryCount >= kMaxRetries)
         return NO;
     NSTimeInterval delay = RetryDelay(_retryCount);
     ++_retryCount;
@@ -225,7 +226,7 @@
 
 
 - (bool) retryWithCredential {
-    if (_authorizer || _challenged)
+    if (!_autoRetry || _authorizer || _challenged)
         return false;
     _challenged = true;
     NSURLCredential* cred = [_request.URL my_credentialForRealm: nil
