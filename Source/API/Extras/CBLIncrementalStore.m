@@ -797,9 +797,8 @@ static CBLManager* sCBLManager;
                                   withTemplateVars: (NSDictionary*)templateVars
                                        withContext: (NSManagedObjectContext*)context
                                           outError: (NSError**)outError {
-    NSPredicate* typePredicate = [NSPredicate predicateWithFormat:@"%K == %@", [self documentTypeKey],
-                                  request.entityName];
-
+    NSPredicate* typePredicate = [self documentTypePredicateForFetchRequest: request];
+    
     NSPredicate* compoundPredicate = [NSCompoundPredicate
                                       andPredicateWithSubpredicates: @[typePredicate, predicate]];
 
@@ -841,6 +840,25 @@ static CBLManager* sCBLManager;
         [result addObject: [context objectWithID: objectID]];
     }
     return result;
+}
+
+- (NSPredicate*) documentTypePredicateForFetchRequest:(NSFetchRequest *)request {
+    if (request.includesSubentities && request.entity.subentities.count > 0) {
+        NSMutableArray *types = [NSMutableArray arrayWithObject:request.entity.name];
+        [types addObjectsFromArray:[self getSubentityNamesOfEntity:request.entity]];
+        return [NSPredicate predicateWithFormat:@"%K in %@", [self documentTypeKey], types];
+    } else
+        return [NSPredicate predicateWithFormat:@"%K == %@", [self documentTypeKey],
+                request.entityName];
+}
+
+- (NSArray *)getSubentityNamesOfEntity:(NSEntityDescription *)entity {
+    NSMutableArray* subentities = [NSMutableArray array];
+    for (NSEntityDescription* subentity in entity.subentities) {
+        [subentities addObject:subentity.name];
+        [subentities addObject:[self getSubentityNamesOfEntity:subentity]];
+    }
+    return subentities;
 }
 
 - (CBLQueryBuilder*) cachedQueryBuilderForPredicate: (NSPredicate*)predicate
@@ -1126,8 +1144,7 @@ static CBLManager* sCBLManager;
 - (NSArray*) fetchByEntityAndDoPostFilterWithRequest: (NSFetchRequest*)request
                                          withContext: (NSManagedObjectContext*)context
                                             outError: (NSError**)outError {
-    NSPredicate* predicate = [NSPredicate predicateWithFormat: @"%K == %@", [self documentTypeKey],
-                                request.entityName];
+    NSPredicate* predicate = [self documentTypePredicateForFetchRequest:request];
 
     CBLQueryBuilder* builder = [self cachedQueryBuilderForPredicate: predicate
                                                     sortDescriptors: request.sortDescriptors];
@@ -1745,6 +1762,8 @@ static CBLManager* sCBLManager;
 
     if (request.fetchOffset > 0)
         keys[@"fetchOffset"] = @(request.fetchOffset);
+
+    keys[@"includesSubentities"] = @(request.includesSubentities);
 
     NSString* digestedKey = [self digestCacheKey: keys];
     return [NSString stringWithFormat:@"%@-%@", request.entityName, digestedKey];
