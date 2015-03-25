@@ -38,8 +38,8 @@ typedef void (^CBLMapBlock)(NSDictionary* doc, CBLMapEmitBlock emit);
 	@param values  A parallel array of values to be reduced, corresponding 1::1 with the keys.
 	@param rereduce  YES if the input values are the results of previous reductions.
 	@return  The reduced value; almost always a scalar or small fixed-size object. */
-typedef __nonnull id (^CBLReduceBlock)(__nonnull NSArray* keys,
-                                       __nonnull NSArray* values,
+typedef __nonnull id (^CBLReduceBlock)(NSArray* __nonnull keys,
+                                       NSArray* __nonnull values,
                                        BOOL rereduce);
 
 

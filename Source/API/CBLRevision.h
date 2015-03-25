@@ -47,7 +47,7 @@
 
 /** Returns the ancestry of this revision as an array of CBLRevisions, in chronological order.
     Older revisions are NOT guaranteed to have their properties available. */
-- (NSArray*) getRevisionHistory: (__nullable NSError**)outError;
+- (NSArray*) getRevisionHistory: (NSError**)outError;
 
 /** The revision's contents as parsed from JSON.
     Keys beginning with "_" are defined and reserved by CouchbaseLite; others are app-specific.
@@ -94,10 +94,10 @@
 /** Creates and saves a new revision with the given properties.
     This will fail with a 412 error if the receiver is not the current revision of the document. */
 - (nullable CBLSavedRevision*) createRevisionWithProperties: (nullable NSDictionary*)properties
-                                                      error: (__nullable NSError**)outError;
+                                                      error: (NSError**)outError;
 
 /** Deletes the document by creating a new deletion-marker revision. */
-- (nullable CBLSavedRevision*) deleteDocument: (__nullable NSError**)outError;
+- (nullable CBLSavedRevision*) deleteDocument: (NSError**)outError;
 
 @end
 
@@ -116,13 +116,13 @@
     This will fail with a 412 error if its parent (the revision it was created from) is not the current revision of the document.
     Afterwards you should use the returned CBLSavedRevision instead of this object.
     @return  A new CBLSavedRevision representing the saved form of the revision. */
-- (nullable CBLSavedRevision*) save: (__nullable NSError**)outError;
+- (nullable CBLSavedRevision*) save: (NSError**)outError;
 
 /** A special variant of -save: that always adds the revision, even if its parent is not the
     current revision of the document.
     This can be used to resolve conflicts, or to create them. If you're not certain that's what you
     want to do, you should use the regular -save: method instead. */
-- (nullable CBLSavedRevision*) saveAllowingConflict: (__nullable NSError**)outError;
+- (nullable CBLSavedRevision*) saveAllowingConflict: (NSError**)outError;
 
 /** Creates, updates or deletes an attachment.
     The attachment data will be written to the database when the revision is saved.

@@ -17,7 +17,7 @@
 
 /** A callback block for transforming revision bodies during replication.
     See CBLReplication.propertiesTransformationBlock's documentation for details. */
-typedef __nonnull NSDictionary *(^CBLPropertiesTransformationBlock)(__nonnull NSDictionary* doc);
+typedef NSDictionary* __nonnull (^CBLPropertiesTransformationBlock)(NSDictionary* doc);
 
 
 @interface CBLReplication (Transformation)

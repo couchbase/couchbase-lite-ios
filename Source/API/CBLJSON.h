@@ -39,7 +39,7 @@ typedef NSUInteger CBLJSONWritingOptions;
 /** Same as -dataWithJSONObject... but returns an NSString. */
 + (nullable NSString*) stringWithJSONObject:(id)obj
                            options:(CBLJSONWritingOptions)opt
-                             error:(__nullable NSError **)error;
+                             error:(NSError**)error;
 
 /** Given valid JSON data representing a dictionary, inserts the contents of the given NSDictionary into it and returns the resulting JSON data.
     This does not parse or regenerate the JSON, so it's quite fast.

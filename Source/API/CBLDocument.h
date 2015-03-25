@@ -39,11 +39,11 @@
 
 /** Deletes this document by adding a deletion revision.
     This will be replicated to other databases. */
-- (BOOL) deleteDocument: (__nullable NSError**)outError;
+- (BOOL) deleteDocument: (NSError**)outError;
 
 /** Purges this document from the database; this is more than deletion, it forgets entirely about it.
     The purge will NOT be replicated to other databases. */
-- (BOOL) purgeDocument: (__nullable NSError**)outError;
+- (BOOL) purgeDocument: (NSError**)outError;
 
 
 #pragma mark REVISIONS:
@@ -58,15 +58,15 @@
 - (nullable CBLSavedRevision*) revisionWithID: (NSString*)revisionID;
 
 /** Returns the document's history as an array of CBLRevisions. (See CBLRevision's method.) */
-- (nullable NSArray*) getRevisionHistory: (__nullable NSError**)outError;
+- (nullable NSArray*) getRevisionHistory: (NSError**)outError;
 
 /** Returns all the current conflicting revisions of the document. If the document is not
     in conflict, only the single current revision will be returned. */
-- (nullable NSArray*) getConflictingRevisions: (__nullable NSError**)outError;
+- (nullable NSArray*) getConflictingRevisions: (NSError**)outError;
 
 /** Returns all the leaf revisions in the document's revision tree,
     including deleted revisions (i.e. previously-resolved conflicts.) */
-- (nullable NSArray*) getLeafRevisions: (__nullable NSError**)outError;
+- (nullable NSArray*) getLeafRevisions: (NSError**)outError;
 
 /** Creates an unsaved new revision whose parent is the currentRevision,
     or which will be the first revision if the document doesn't exist yet.
@@ -96,7 +96,7 @@
 /** Saves a new revision. The properties dictionary must have a "_rev" property whose ID matches the current revision's (as it will if it's a modified copy of this document's .properties
     property.) */
 - (nullable CBLSavedRevision*) putProperties: (NSDictionary*)properties
-                                       error: (__nullable NSError**)outError;
+                                       error: (NSError**)outError;
 
 /** Saves a new revision by letting the caller update the existing properties.
     This method handles conflicts by retrying (calling the block again).
@@ -110,7 +110,7 @@
     @return  The new saved revision, or nil on error or cancellation.
  */
 - (nullable CBLSavedRevision*) update: (BOOL(^)(CBLUnsavedRevision*))block
-                                error: (__nullable NSError**)outError;
+                                error: (NSError**)outError;
 
 
 #pragma mark MODEL:

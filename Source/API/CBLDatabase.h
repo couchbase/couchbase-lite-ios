@@ -29,7 +29,7 @@ typedef void (^CBLValidationBlock) (CBLRevision* newRevision,
                                     {BLOCK}
 
 /** Filter block, used in changes feeds and replication. */
-typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, __nullable NSDictionary* params);
+typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* __nullable  params);
 
 #define FILTERBLOCK(BLOCK) ^BOOL(CBLSavedRevision* revision, NSDictionary* params) {BLOCK}
 
@@ -70,11 +70,11 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, __nullable NSDiction
 /** Closes a database.
     This first stops all replications, and calls -saveAllModels: to save changes to CBLModel
     objects. It returns NO if some models failed to save. */
-- (BOOL) close: (__nullable NSError**)error;
+- (BOOL) close: (NSError**)error;
 
 /** Compacts the database file by purging non-current JSON bodies, pruning revisions older than
     the maxRevTreeDepth, deleting unused attachment files, and vacuuming the SQLite database. */
-- (BOOL) compact: (__nullable NSError**)outError;
+- (BOOL) compact: (NSError**)outError;
 
 /** The maximum depth of a document's revision tree (or, max length of its revision history.)
     Revisions older than this limit will be deleted during a -compact: operation. 
@@ -82,14 +82,14 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, __nullable NSDiction
 @property NSUInteger maxRevTreeDepth;
 
 /** Deletes the database. */
-- (BOOL) deleteDatabase: (__nullable NSError**)outError;
+- (BOOL) deleteDatabase: (NSError**)outError;
 
 /** Changes the database's unique IDs to new random values.
     Ordinarily you should never need to call this method; it's only made public to fix databases
     that are already affected by bug github.com/couchbase/couchbase-lite-ios/issues/145 .
     Make sure you only call this once, to fix that problem, because every call has the side effect
     of resetting all replications, making them run slow the next time. */
-- (BOOL) replaceUUIDs: (__nullable NSError**)outError;
+- (BOOL) replaceUUIDs: (NSError**)outError;
 
 
 #pragma mark - DOCUMENT ACCESS:
@@ -126,11 +126,11 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, __nullable NSDiction
     will be deleted. */
 - (BOOL) putLocalDocument: (nullable NSDictionary*)properties
                    withID: (NSString*)localDocID
-                    error: (__nullable NSError**)outError;
+                    error: (NSError**)outError;
 
 /** Deletes the local document with the given ID. */
 - (BOOL) deleteLocalDocumentWithID: (NSString*)localDocID
-                             error: (__nullable NSError**)outError ;
+                             error: (NSError**)outError ;
 
 
 #pragma mark - VIEWS AND OTHER CALLBACKS:

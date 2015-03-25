@@ -54,7 +54,7 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
 
 /** Writes any changes to a new revision of the document.
     Returns YES without doing anything, if no changes have been made. */
-- (BOOL) save: (__nullable NSError**)outError;
+- (BOOL) save: (NSError**)outError;
 
 /** Should changes be saved back to the database automatically?
     Defaults to NO, requiring you to call -save manually. */
@@ -76,7 +76,7 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
 
 /** Deletes the document from the database. 
     You can still use the model object afterwards, but it will refer to the deleted revision. */
-- (BOOL) deleteDocument: (__nullable NSError**)outError;
+- (BOOL) deleteDocument: (NSError**)outError;
 
 /** The time interval since the document was last changed externally (e.g. by a "pull" replication.
     This value can be used to highlight recently-changed objects in the UI. */
@@ -90,7 +90,7 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
     @param outError  On return, the error (if the call failed.)
     @return  A RESTOperation that saves all changes, or nil if none of the models need saving. */
 + (BOOL) saveModels: (NSArray*)models
-              error: (__nullable NSError**)outError;
+              error: (NSError**)outError;
 
 /** Resets the timeSinceExternallyChanged property to zero. */
 - (void) markExternallyChanged;
@@ -235,12 +235,12 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
 @property (readonly) NSArray* unsavedModels;
 
 /** Saves changes to all CBLModels associated with this database whose needsSave is true. */
-- (BOOL) saveAllModels: (__nullable NSError**)outError;
+- (BOOL) saveAllModels: (NSError**)outError;
 
 /** Immediately runs any pending autosaves for all CBLModels associated with this database.
     (On iOS, this will automatically be called when the application is about to quit or go into the
     background. On Mac OS it is NOT called automatically.) */
-- (BOOL) autosaveAllModels: (__nullable NSError**)outError;
+- (BOOL) autosaveAllModels: (NSError**)outError;
 
 @end
 

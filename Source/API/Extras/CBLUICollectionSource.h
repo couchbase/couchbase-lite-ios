@@ -68,11 +68,11 @@
 
 /** Deletes the documents at the given row indexes, animating the removal from the collection. */
 - (BOOL) deleteDocumentsAtIndexes: (NSArray*)indexPaths
-                            error: (__nullable NSError**)outError;
+                            error: (NSError**)outError;
 
 /** Deletes the given documents, animating the removal from the collection. */
 - (BOOL) deleteDocuments: (NSArray*)documents
-                   error: (__nullable NSError**)outError;
+                   error: (NSError**)outError;
 
 @end
 

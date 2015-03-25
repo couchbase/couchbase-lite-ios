@@ -134,7 +134,7 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 
 /** Sends the query to the server and returns an enumerator over the result rows (Synchronous).
     Note: In a CBLLiveQuery you should access the .rows property instead. */
-- (nullable CBLQueryEnumerator*) run: (__nullable NSError**)outError;
+- (nullable CBLQueryEnumerator*) run: (NSError**)outError;
 
 /** Starts an asynchronous query. Returns immediately, then calls the onComplete block when the
     query completes, passing it the row enumerator (or an error). */

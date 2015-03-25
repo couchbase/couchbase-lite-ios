@@ -51,7 +51,7 @@
                            select: (nullable NSArray*)valueTemplate
                             where: (NSString*)predicateStr
                           orderBy: (nullable NSArray*)sortDescriptors
-                            error: (__nullable NSError**)outError;
+                            error: (NSError**)outError;
 
 /** Initializes a CBLQueryBuilder.
     This is an alternate initializer that takes an NSPredicate instead of a predicate template
@@ -60,7 +60,7 @@
                            select: (nullable NSArray*)valueTemplate
                    wherePredicate: (NSPredicate*)predicate
                           orderBy: (nullable NSArray*)sortDescriptors
-                            error: (__nullable NSError**)outError;
+                            error: (NSError**)outError;
 
 /** Initializes a CBLQueryBuilder, using an explicitly chosen view.
     See the main initializer for details. */
@@ -68,7 +68,7 @@
                        select: (NSArray*)valueTemplate
                wherePredicate: (NSPredicate*)predicate
                       orderBy: (nullable NSArray*)sortDescriptors
-                        error: (__nullable NSError**)outError;
+                        error: (NSError**)outError;
 
 /** The view the query builder is using. */
 @property (readonly, nonatomic) CBLView* view;
@@ -87,7 +87,7 @@
 
 /** A convenience method that creates a query and runs it. See -createQueryWithContext:. */
 - (nullable CBLQueryEnumerator*) runQueryWithContext: (nullable NSDictionary*)context
-                                               error: (__nullable NSError**)outError;
+                                               error: (NSError**)outError;
 
 @end
 
