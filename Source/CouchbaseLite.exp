@@ -108,7 +108,6 @@ _OBJC_IVAR_$_CBLQueryOptions.includeDocs
 _OBJC_IVAR_$_CBLQueryOptions.reduceSpecified
 _OBJC_IVAR_$_CBLQueryOptions.reduce
 _OBJC_IVAR_$_CBLQueryOptions.limit
-_OBJC_IVAR_$_CBLQueryOptions.content
 _OBJC_IVAR_$_CBLQueryOptions.group
 _OBJC_IVAR_$_CBLQueryOptions.fullTextSnippets
 _OBJC_IVAR_$_CBLQueryOptions.fullTextRanking
