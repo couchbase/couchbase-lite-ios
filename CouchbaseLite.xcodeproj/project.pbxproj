@@ -90,6 +90,8 @@
 		27208F8E184D1D83006ADBEF /* NSURL+Base.h in Headers */ = {isa = PBXBuildFile; fileRef = 27208F8C184D1D83006ADBEF /* NSURL+Base.h */; };
 		27208F8F184D1D83006ADBEF /* NSURL+Base.m in Sources */ = {isa = PBXBuildFile; fileRef = 27208F8D184D1D83006ADBEF /* NSURL+Base.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27208F90184D1D83006ADBEF /* NSURL+Base.m in Sources */ = {isa = PBXBuildFile; fileRef = 27208F8D184D1D83006ADBEF /* NSURL+Base.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		2722195D1AC3757C001469BE /* CouchbaseLiteListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 2722195C1AC3757C001469BE /* CouchbaseLiteListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		272219641AC375EA001469BE /* CouchbaseLiteListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 2722195C1AC3757C001469BE /* CouchbaseLiteListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		272401B31860CB4B0080E082 /* WebSocket_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401AE1860CB4B0080E082 /* WebSocket_Internal.h */; };
 		272401B41860CB4B0080E082 /* WebSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401AF1860CB4B0080E082 /* WebSocket.h */; };
 		272401B51860CB4B0080E082 /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401B01860CB4B0080E082 /* WebSocket.m */; };
@@ -1135,6 +1137,7 @@
 		271EC6A0198C53DD009C9E05 /* CBJSONEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBJSONEncoder.h; sourceTree = "<group>"; };
 		27208F8C184D1D83006ADBEF /* NSURL+Base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURL+Base.h"; sourceTree = "<group>"; };
 		27208F8D184D1D83006ADBEF /* NSURL+Base.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+Base.m"; sourceTree = "<group>"; };
+		2722195C1AC3757C001469BE /* CouchbaseLiteListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CouchbaseLiteListener.h; sourceTree = "<group>"; };
 		272401AE1860CB4B0080E082 /* WebSocket_Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WebSocket_Internal.h; path = "WebSockets-Cocoa/WebSocket/WebSocket_Internal.h"; sourceTree = "<group>"; };
 		272401AF1860CB4B0080E082 /* WebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WebSocket.h; path = "WebSockets-Cocoa/WebSocket/WebSocket.h"; sourceTree = "<group>"; };
 		272401B01860CB4B0080E082 /* WebSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WebSocket.m; path = "WebSockets-Cocoa/WebSocket/WebSocket.m"; sourceTree = "<group>"; };
@@ -2148,6 +2151,7 @@
 			isa = PBXGroup;
 			children = (
 				275315DE14ACF0A20065964D /* CBLListener.h */,
+				2722195C1AC3757C001469BE /* CouchbaseLiteListener.h */,
 				275315DF14ACF0A20065964D /* CBLListener.m */,
 				27E11F0C14ACFFC60006B340 /* CBLHTTPServer.h */,
 				27B678B61804B62500B06D11 /* CBLHTTPServer.m */,
@@ -2860,6 +2864,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2722195D1AC3757C001469BE /* CouchbaseLiteListener.h in Headers */,
 				275315F914ACF2D70065964D /* CBLListener.h in Headers */,
 				2785BE9E16BC87ED00A3E881 /* CBL_Router.h in Headers */,
 				2785BE9D16BC87EA00A3E881 /* CBL_URLProtocol.h in Headers */,
@@ -2921,6 +2926,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				272219641AC375EA001469BE /* CouchbaseLiteListener.h in Headers */,
 				DA147C3E14BCAC9D0052DA4D /* CBLListener.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
