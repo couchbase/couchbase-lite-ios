@@ -301,10 +301,14 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 - (void) stop {
-    [self tellReplicator: ^(CBL_Replicator* bgReplicator) {
+    [self tellReplicatorAndWait:^id(CBL_Replicator * bgReplicator) {
         // This runs on the server thread:
         [bgReplicator stop];
+        [[NSNotificationCenter defaultCenter] removeObserver: self name: nil
+                                                      object: _bg_replicator];
+        return @(YES);
     }];
+
     _started = NO;
     [_database forgetReplication: self];
 }
@@ -508,9 +512,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_updateProgress {
-    // Prevent _processor block from deallocating me (#624)
-    __unused id retainSelf = self;
-
     CBLReplicationStatus status;
     if (!_bg_replicator.running)
         status = kCBLReplicationStopped;
@@ -526,6 +527,10 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     SecCertificateRef serverCert = _bg_replicator.serverCert;
     cfretain(serverCert);
 
+    if (status == kCBLReplicationStopped) {
+        [self bg_setReplicator: nil];
+    }
+
     __weak CBLReplication *weakSelf = self;
     [_database doAsync: ^{
         CBLReplication *strongSelf = weakSelf;
@@ -533,10 +538,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
                           serverCert: serverCert];
         cfrelease(serverCert);
     }];
-    
-    if (status == kCBLReplicationStopped) {
-        [self bg_setReplicator: nil];
-    }
 }
 
 
