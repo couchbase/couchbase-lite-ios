@@ -33,15 +33,18 @@ typedef enum {
                              prevRevID: (NSString*)prevRevID
                                 status: (CBLStatus*)outStatus;
 
-/** Modifies a CBL_Revision's _attachments dictionary by changing all attachments with revpos < minRevPos into stubs; and if 'attachmentsFollow' is true, the remaining attachments will be modified to _not_ be stubs but include a "follows" key instead of a body. */
-+ (void) stubOutAttachmentsIn: (CBL_MutableRevision*)rev
-                 beforeRevPos: (int)minRevPos
-            attachmentsFollow: (BOOL)attachmentsFollow;
-
 /** Modifies a CBL_Revision's _attachments dictionary by adding the "data" property to all
     attachments (and removing "stub" and "follows".) GZip-encoded attachments will be unzipped
-    unless options contains the flag kCBLLeaveAttachmentsEncoded. */
+    unless options contains the flag kCBLLeaveAttachmentsEncoded.
+    @param rev  The revision to operate on. Its _attachments property may be altered.
+    @param minRevPos  Attachments with a "revpos" less than this will remain stubs.
+    @param allowFollows  If YES, non-small attachments will get a "follows" key instead of data.
+    @param decodeAttachments  If YES, attachments with "encoding" properties will be decoded.
+    @param outStatus  On failure, will be set to the error status.
+    @return  YES on success, NO on failure. */
 - (BOOL) expandAttachmentsIn: (CBL_MutableRevision*)rev
+                   minRevPos: (int)minRevPos
+                allowFollows: (BOOL)allowFollows
                       decode: (BOOL)decodeAttachments
                       status: (CBLStatus*)outStatus;
 

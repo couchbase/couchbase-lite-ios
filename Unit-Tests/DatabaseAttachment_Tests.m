@@ -91,8 +91,14 @@
     gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
                            withBody: YES
                              status: &status];
-    gotRev1 = [self expandAttachments: gotRev1];
-    AssertEqual(gotRev1[@"_attachments"], attachmentDict);
+    CBL_MutableRevision* expandedRev = [gotRev1 mutableCopy];
+    Assert([db expandAttachmentsIn: expandedRev
+                         minRevPos: 0
+                      allowFollows: NO
+                            decode: YES
+                            status: &status],
+           @"expandAttachments failed: status %d", status);
+    AssertEqual(expandedRev[@"_attachments"], attachmentDict);
     
     // Add a second revision that doesn't update the attachment:
     props = $dict({@"_id", rev1.docID},
@@ -119,6 +125,15 @@
     AssertEqual(att.content, attach1);
     AssertEqual(att.contentType, @"text/plain");
     AssertEq(att->encoding, kCBLAttachmentEncodingNone);
+
+    expandedRev = [rev2 mutableCopy];
+    Assert([db expandAttachmentsIn: expandedRev
+                         minRevPos: 2
+                      allowFollows: NO
+                            decode: YES
+                            status: &status],
+           @"expandAttachments failed: status %d", status);
+    AssertEqual(expandedRev[@"_attachments"], (@{@"attach": @{@"stub":@YES, @"revpos":@1}}));
     
     // Check the 3rd revision's attachment:
     att = [db attachmentForRevision: rev3 named: @"attach" status: &status];
@@ -127,6 +142,20 @@
     AssertEqual(att.contentType, @"text/html");
     AssertEq(att->encoding, kCBLAttachmentEncodingNone);
     
+    expandedRev = [rev3 mutableCopy];
+    Assert([db expandAttachmentsIn: expandedRev
+                         minRevPos: 2
+                      allowFollows: NO
+                            decode: YES
+                            status: &status],
+           @"expandAttachments failed: status %d", status);
+    attachmentDict = @{@"attach": @{@"content_type": @"text/html",
+                                    @"data":   @"PGh0bWw+QW5kIHRoaXMgaXMgYXR0YWNoMjwvaHRtbD4=",
+                                    @"digest": @"sha1-s14XRTXlwvzYfjo1t1u0rjB+ZUA=",
+                                    @"length": @32,
+                                    @"revpos": @3}};
+    AssertEqual(expandedRev[@"_attachments"], attachmentDict);
+
     // Examine the attachment store:
     AssertEq(attachments.count, 2u);
     NSSet* expected = [NSSet setWithObjects: [CBL_BlobStore keyDataForBlob: attach1],
@@ -136,15 +165,6 @@
     Assert([db compact: NULL]);  // This clears the body of the first revision
     AssertEq(attachments.count, 1u);
     AssertEqual(attachments.allKeys, @[[CBL_BlobStore keyDataForBlob: attach2]]);
-}
-
-
-- (CBL_Revision*) expandAttachments: (CBL_Revision*)rev {
-    CBL_MutableRevision* mrev = [rev mutableCopy];
-    CBLStatus status;
-    Assert([db expandAttachmentsIn: mrev decode: YES status: &status],
-           @"expandAttachments failed: status %d", status);
-    return mrev;
 }
 
 
@@ -264,7 +284,8 @@
 
 - (void)test11_PutEncodedAttachment {
     RequireTestCase(CBL_Database_PutAttachment);
-    CBL_Revision* rev1 = [self putDoc: nil withAttachment: @"This is the body of attach1" compressed: YES];
+    NSString* bodyString = @"This is the body of attach1";
+    CBL_Revision* rev1 = [self putDoc: nil withAttachment: bodyString compressed: YES];
     AssertEqual(rev1[@"_attachments"], $dict({@"attach", $dict({@"content_type", @"text/plain"},
                                                                 {@"digest", @"sha1-Wk8g89eb0Y+5DtvMKkf+/g90Mhc="},
                                                                 {@"length", @(27)},
@@ -286,6 +307,42 @@
                                                          {@"encoding", @"gzip"},
                                                          {@"stub", $true},
                                                          {@"revpos", @1})}));
+    // Expand it without decoding:
+    CBL_MutableRevision* expandedRev = [gotRev1 mutableCopy];
+    CBLStatus status;
+    Assert([db expandAttachmentsIn: expandedRev
+                         minRevPos: 0
+                      allowFollows: NO
+                            decode: NO
+                            status: &status],
+           @"expandAttachments failed: status %d", status);
+
+    NSString* encoded = [CBLBase64 encode: [NSData gtm_dataByGzippingData: [bodyString dataUsingEncoding: NSUTF8StringEncoding]]];
+    AssertEqual(expandedRev[@"_attachments"],
+                $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                        {@"digest", @"sha1-Wk8g89eb0Y+5DtvMKkf+/g90Mhc="},
+                                        {@"length", @(27)},
+                                        {@"encoded_length", @(45)},
+                                        {@"encoding", @"gzip"},
+                                        {@"data", encoded},
+                                        {@"revpos", @1})}));
+
+    // Expand it and decode:
+    expandedRev = [gotRev1 mutableCopy];
+    Assert([db expandAttachmentsIn: expandedRev
+                         minRevPos: 0
+                      allowFollows: NO
+                            decode: YES
+                            status: &status],
+           @"expandAttachments failed: status %d", status);
+
+    encoded = [CBLBase64 encode: [bodyString dataUsingEncoding: NSUTF8StringEncoding]];
+    AssertEqual(expandedRev[@"_attachments"],
+                $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                        {@"digest", @"sha1-Wk8g89eb0Y+5DtvMKkf+/g90Mhc="},
+                                        {@"length", @(27)},
+                                        {@"data", encoded},
+                                        {@"revpos", @1})}));
 }
 
 
@@ -351,117 +408,50 @@
 }
 
 
-#if 0
-- (void) test14_EncodedAttachment {
-    RequireTestCase(CBL_Database_CRUD);
-    // Start with a fresh database in /tmp:
-    CBLDatabase* db = createDB();
+- (void) test14_FollowingAttachments {
+    RequireTestCase(CBL_Database_PutAttachment);
+    NSMutableString* attachStr = [@"boing " mutableCopy];
+    while (attachStr.length < 8000)
+        [attachStr appendString: attachStr];
 
-    // Add a revision and an attachment to it:
-    CBL_Revision* rev1;
-    CBLStatus status;
-    rev1 = [db putRevision: [CBL_Revision revisionWithProperties:$dict({@"foo", @1},
-                                                                     {@"bar", $false})]
-            prevRevisionID: nil allowConflict: NO status: &status];
-    AssertEq(status, kCBLStatusCreated);
-    
-    NSData* attach1 = [@"Encoded! Encoded!Encoded! Encoded! Encoded! Encoded! Encoded! Encoded!"
-                            dataUsingEncoding: NSUTF8StringEncoding];
-    NSData* encoded = [NSData gtm_dataByGzippingData: attach1];
-    insertAttachment(self, encoded,
-                     rev1.sequence,
-                     @"attach", @"text/plain",
-                     kCBLAttachmentEncodingGZIP,
-                     attach1.length,
-                     encoded.length,
-                     rev1.generation);
-    
-    // Read the attachment without decoding it:
-    NSString* type;
-    CBLAttachmentEncoding encoding;
-    AssertEqual([db getAttachmentForSequence: rev1.sequence named: @"attach"
-                                         type: &type encoding: &encoding status: &status], encoded);
-    AssertEq(status, kCBLStatusOK);
-    AssertEqual(type, @"text/plain");
-    AssertEq(encoding, kCBLAttachmentEncodingGZIP);
-    
-    // Read the attachment, decoding it:
-    AssertEqual([db getAttachmentForSequence: rev1.sequence named: @"attach"
-                                         type: &type encoding: NULL status: &status], attach1);
-    AssertEq(status, kCBLStatusOK);
-    AssertEqual(type, @"text/plain");
-    
-    // Check the stub attachment dict:
-    NSMutableDictionary* itemDict = $mdict({@"content_type", @"text/plain"},
-                                           {@"digest", @"sha1-fhfNE/UKv/wgwDNPtNvG5DN/5Bg="},
-                                           {@"length", @(70)},
-                                           {@"encoding", @"gzip"},
-                                           {@"encoded_length", @(37)},
-                                           {@"stub", $true},
-                                           {@"revpos", @1});
-    NSDictionary* attachmentDict = $dict({@"attach", itemDict});
-    AssertEqual([db getAttachmentDictForSequence: rev1.sequence options: 0], attachmentDict);
+    CBL_Revision* rev1 = [self putDoc: nil withAttachment: attachStr compressed: YES];
     CBL_Revision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID];
-    AssertEqual(gotRev1[@"_attachments"], attachmentDict);
 
-    // Check the attachment dict with encoded data:
-    itemDict[@"data"] = [CBLBase64 encode: encoded];
-    [itemDict removeObjectForKey: @"stub"];
-    AssertEqual([db getAttachmentDictForSequence: rev1.sequence
-                                          options: kCBLIncludeAttachments | kCBLLeaveAttachmentsEncoded],
-                 attachmentDict);
-    gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
-                            options: kCBLIncludeAttachments | kCBLLeaveAttachmentsEncoded
-                             status: &status];
-    AssertEqual(gotRev1[@"_attachments"], attachmentDict);
+    // If we force decoding, attachment will follow:
+    CBL_MutableRevision* expandedRev = [gotRev1 mutableCopy];
+    CBLStatus status;
+    Assert([db expandAttachmentsIn: expandedRev
+                         minRevPos: 0
+                      allowFollows: YES
+                            decode: YES
+                            status: &status],
+           @"expandAttachments failed: status %d", status);
+    AssertEqualish(expandedRev[@"_attachments"],
+                $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                        {@"digest", @"sha1-xow/vyonQ4VegLAEKRwLSFfVqNs="},
+                                        {@"length", @(12288)},
+                                        {@"revpos", @1},
+                                        {@"follows", @YES})}));
 
-    // Check the attachment dict with data:
-    itemDict[@"data"] = [CBLBase64 encode: attach1];
-    [itemDict removeObjectForKey: @"encoding"];
-    [itemDict removeObjectForKey: @"encoded_length"];
-    AssertEqual([db getAttachmentDictForSequence: rev1.sequence options: kCBLIncludeAttachments], attachmentDict);
-    gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID
-                            options: kCBLIncludeAttachments
-                             status: &status];
-    AssertEqual(gotRev1[@"_attachments"], attachmentDict);
-}
-#endif
-
-
-- (void) test15_StubOutAttachmentsBeforeRevPos {
-    NSDictionary* hello = $dict({@"revpos", @1}, {@"follows", $true});
-    NSDictionary* goodbye = $dict({@"revpos", @2}, {@"data", @"squeeee"});
-    NSDictionary* attachments = $dict({@"hello", hello}, {@"goodbye", goodbye});
-    
-    CBL_MutableRevision* rev = [CBL_MutableRevision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 3 attachmentsFollow: NO];
-    AssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"stub", $true})},
-                                                               {@"goodbye", $dict({@"revpos", @2}, {@"stub", $true})})}));
-    
-    rev = [CBL_MutableRevision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 2 attachmentsFollow: NO];
-    AssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"stub", $true})},
-                                                               {@"goodbye", goodbye})}));
-    
-    rev = [CBL_MutableRevision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 1 attachmentsFollow: NO];
-    AssertEqual(rev.properties, $dict({@"_attachments", attachments}));
-    
-    // Now test the "follows" mode:
-    rev = [CBL_MutableRevision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 3 attachmentsFollow: YES];
-    AssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"stub", $true})},
-                                                               {@"goodbye", $dict({@"revpos", @2}, {@"stub", $true})})}));
-
-    rev = [CBL_MutableRevision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 2 attachmentsFollow: YES];
-    AssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"stub", $true})},
-                                                               {@"goodbye", $dict({@"revpos", @2}, {@"follows", $true})})}));
-    
-    rev = [CBL_MutableRevision revisionWithProperties: $dict({@"_attachments", attachments})];
-    [CBLDatabase stubOutAttachmentsIn: rev beforeRevPos: 1 attachmentsFollow: YES];
-    AssertEqual(rev.properties, $dict({@"_attachments", $dict({@"hello", $dict({@"revpos", @1}, {@"follows", $true})},
-                                                               {@"goodbye", $dict({@"revpos", @2}, {@"follows", $true})})}));
+    // If we allow attachment to stay encoded, it can be sent inline because it's small:
+    expandedRev = [gotRev1 mutableCopy];
+    Assert([db expandAttachmentsIn: expandedRev
+                         minRevPos: 0
+                      allowFollows: YES
+                            decode: NO
+                            status: &status],
+           @"expandAttachments failed: status %d", status);
+    NSData* zipped = [NSData gtm_dataByGzippingData: [attachStr dataUsingEncoding: NSUTF8StringEncoding]];
+    Assert(zipped.length < 1024); // needs to be short for this test
+    NSString* base64 = [CBLBase64 encode: zipped];
+    AssertEqualish(expandedRev[@"_attachments"],
+                $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                        {@"digest", @"sha1-xow/vyonQ4VegLAEKRwLSFfVqNs="},
+                                        {@"length", @(12288)},
+                                        {@"encoding", @"gzip"},
+                                        {@"encoded_length", @61},
+                                        {@"data", base64},
+                                        {@"revpos", @1})}));
 }
 
 

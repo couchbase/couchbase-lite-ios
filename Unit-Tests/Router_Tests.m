@@ -855,16 +855,17 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
                            @{@"Accept": @"application/json"}, nil);
     AssertEq(response.status, kCBLStatusOK);
     AssertEqual((response.body)[@"_attachments"],
-                 $dict({@"attach", $dict({@"data", [CBLBase64 encode: attach1]}, 
+                $dict({@"attach", $dict({@"data", [CBLBase64 encode: attach1]},
                                         {@"content_type", @"text/plain"},
                                         {@"length", @(attach1.length)},
                                         {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
-                                         {@"revpos", @1})},
-                       {@"path/to/attachment", $dict({@"data", [CBLBase64 encode: attach2]}, 
-                                         {@"content_type", @"text/plain"},
-                                         {@"length", @(attach2.length)},
-                                         {@"digest", @"sha1-IrXQo0jpePvuKPv5nswnenqsIMc="},
-                                         {@"revpos", @1})}));
+                                        {@"revpos", @1})},
+                       {@"path/to/attachment",
+                                  $dict({@"data", [CBLBase64 encode: attach2]},
+                                        {@"content_type", @"text/plain"},
+                                        {@"length", @(attach2.length)},
+                                        {@"digest", @"sha1-IrXQo0jpePvuKPv5nswnenqsIMc="},
+                                        {@"revpos", @1})}));
 
     // Update the document but not the attachments:
     NSDictionary *attachmentDict, *props;
@@ -884,19 +885,13 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     Send(self, @"GET", path, kCBLStatusOK, 
          $dict({@"_id", @"doc1"}, {@"_rev", revID}, {@"message", @"aloha"},
                {@"_attachments", $dict({@"attach", $dict({@"stub", $true}, 
-                                                         {@"content_type", @"text/plain"},
-                                                         {@"length", @(attach1.length)},
-                                                         {@"digest", @"sha1-gOHUOBmIMoDCrMuGyaLWzf1hQTE="},
                                                          {@"revpos", @1})},
                                        {@"path/to/attachment", $dict({@"stub", $true}, 
-                                                                     {@"content_type", @"text/plain"},
-                                                                     {@"length", @(attach2.length)},
-                                                                     {@"digest", @"sha1-IrXQo0jpePvuKPv5nswnenqsIMc="},
                                                                      {@"revpos", @1})})}));
 }
 
 - (void) test_GetJSONAttachment {
-    // Create a document with two json-like attachements. One with be put as 'text/plain' and
+    // Create a document with two json-like attachments. One with be put as 'text/plain' and
     // the other one will be put as 'application/json'.
     NSData* attach1 = [@"{\"name\": \"foo\"}" dataUsingEncoding: NSUTF8StringEncoding];
     NSData* attach2 = [@"{\"name\": \"bar\"}" dataUsingEncoding: NSUTF8StringEncoding];

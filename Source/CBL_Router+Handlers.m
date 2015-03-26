@@ -527,8 +527,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             includeAttachments = (options & kCBLIncludeAttachments) != 0;
             if (includeAttachments) {
                 sendMultipart = !mustSendJSON;
-                if (sendMultipart)
-                    options &= ~kCBLIncludeAttachments;
+                options &= ~kCBLIncludeAttachments;
             }
             CBLStatus status;
             rev = [db getDocumentWithID: docID revisionID: revID withBody: YES status: &status];
@@ -548,16 +547,21 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         if ([self cacheWithEtag: rev.revID])        // set ETag and check conditional GET
             return kCBLStatusNotModified;
 
-        if (includeAttachments) {
+        if (!isLocalDoc && includeAttachments) {
             int minRevPos = 1;
             NSArray* attsSince = parseJSONRevArrayQuery([self query: @"atts_since"]);
             NSString* ancestorID = [_db.storage findCommonAncestorOf: rev withRevIDs: attsSince];
             if (ancestorID)
                 minRevPos = [CBL_Revision generationFromRevID: ancestorID] + 1;
-            CBL_MutableRevision* stubbedRev = rev.mutableCopy;
-            [CBLDatabase stubOutAttachmentsIn: stubbedRev beforeRevPos: minRevPos
-                            attachmentsFollow: sendMultipart];
-            rev = stubbedRev;
+            CBL_MutableRevision* expandedRev = rev.mutableCopy;
+            CBLStatus status;
+            if (![db expandAttachmentsIn: expandedRev
+                               minRevPos: minRevPos
+                            allowFollows: sendMultipart
+                                  decode: ![self boolQuery: @"att_encoding_info"]
+                                  status: &status])
+                return status;
+            rev = expandedRev;
         }
 
         if (sendMultipart)
@@ -658,6 +662,8 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         CBL_MutableRevision* nuRev = [CBL_MutableRevision revisionWithProperties: dst];
         if (options & kCBLIncludeAttachments) {
             if (![_db expandAttachmentsIn: nuRev
+                                minRevPos: 0
+                             allowFollows: NO
                                    decode: ![self boolQuery: @"att_encoding_info"]
                                    status: outStatus])
                 return nil;

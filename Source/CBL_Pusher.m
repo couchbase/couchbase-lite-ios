@@ -274,16 +274,12 @@
                         CBLStatus status;
                         CBL_Revision* loadedRev = [db revisionByLoadingBody: rev
                                                                      status: &status];
-                        if (status < 300)
-                            [db expandAttachmentsIn: (CBL_MutableRevision*)loadedRev
-                                             decode: NO
-                                             status: &status];
-
                         if (status >= 300) {
                             Warn(@"%@: Couldn't get local contents of %@", self, rev);
                             [self revisionFailed];
                             continue;
                         }
+
                         CBL_MutableRevision* populatedRev = [[self transformRevision: loadedRev] mutableCopy];
 
                         // Add the revision history:
@@ -296,8 +292,15 @@
                         if (properties.cbl_attachments) {
                             // Look for the latest common ancestor and stub out older attachments:
                             int minRevPos = CBLFindCommonAncestor(populatedRev, possibleAncestors);
-                            [CBLDatabase stubOutAttachmentsIn: populatedRev beforeRevPos: minRevPos + 1
-                                            attachmentsFollow: NO];
+                            if (![db expandAttachmentsIn: populatedRev
+                                             minRevPos: minRevPos
+                                            allowFollows: !_dontSendMultipart
+                                                  decode: NO
+                                                  status: &status]) {
+                                Warn(@"%@: Couldn't expand attachments of %@", self, populatedRev);
+                                [self revisionFailed];
+                                continue;
+                            }
                             properties = populatedRev.properties;
                             // If the rev has huge attachments, send it under separate cover:
                             if (!_dontSendMultipart && [self uploadMultipartRevision: populatedRev])
@@ -505,10 +508,11 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
 // Fallback to upload a revision if uploadMultipartRevision failed due to the server's rejecting
 // multipart format.
 - (void) uploadJSONRevision: (CBL_Revision*)originalRev {
-    // Get the revision's properties:
+    // Expand all attachments inline:
     CBL_MutableRevision* rev = originalRev.mutableCopy;
     CBLStatus status;
-    if (![_db expandAttachmentsIn: rev decode: NO status: &status]) {
+    if (![_db expandAttachmentsIn: rev minRevPos: 0 allowFollows: NO decode: NO
+                           status: &status]) {
         self.error = CBLStatusToNSError(status, nil);
         [self revisionFailed];
         return;
