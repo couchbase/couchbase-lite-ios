@@ -26,10 +26,10 @@ NSString* const CBJSONEncoderErrorDomain = @"CBJSONEncoder";
     NSMutableData* _encoded;
     yajl_gen _gen;
     yajl_gen_status _status;
+    NSError* _error;
 }
 
-
-@synthesize canonical=_canonical;
+@synthesize canonical=_canonical, keyFilter=_keyFilter;
 
 
 + (NSData*) encode: (UU id)object error: (NSError**)outError {
@@ -182,19 +182,36 @@ NSString* const CBJSONEncoderErrorDomain = @"CBJSONEncoder";
 
 
 - (BOOL) encodeDictionary: (UU NSDictionary*)dict {
+    CBJSONEncoderKeyFilter keyFilter = _keyFilter;
+    if (keyFilter)
+        _keyFilter = nil;   // _keyFilter is only used for top-level dictionary
+    NSError* error = nil;
+
     if (!checkStatus(yajl_gen_map_open(_gen)))
         return NO;
-    id keys = dict;
-    if (_canonical)
-        keys = [[self class] orderedKeys: dict];
-    for (NSString* key in keys)
-        if (![self encodeKey: key value: dict[key]])
-            return NO;
-    return checkStatus(yajl_gen_map_close(_gen));
-}
+    id keys;
+    if (_canonical) {
+        // inlining -orderedKeys: for performance
+        keys = [[dict allKeys] sortedArrayUsingComparator: ^NSComparisonResult(id s1, id s2) {
+            return [s1 compare: s2 options: NSLiteralSearch];
+        }];
+    } else {
+        keys = dict;
+    }
 
-- (BOOL) encodeKey: (UU id)key value: (UU id)value {
-    return [self encodeNestedObject: key] && [self encodeNestedObject: value];
+    for (NSString* key in keys) {
+        if (keyFilter && !keyFilter(key, &error)) {
+            if (error) {
+                _error = error;
+                return NO;
+            } else {
+                continue;
+            }
+        }
+        if (![self encodeString: key] || ![self encodeNestedObject: dict[key]])
+            return NO;
+    }
+    return checkStatus(yajl_gen_map_close(_gen));
 }
 
 + (NSArray*) orderedKeys: (UU NSDictionary*)dict {
@@ -219,9 +236,12 @@ NSString* const CBJSONEncoderErrorDomain = @"CBJSONEncoder";
 
 
 - (NSError*) error {
-    if (_status == yajl_gen_status_ok)
+    if (_error)
+        return _error;
+    else if (_status != yajl_gen_status_ok)
+        return [NSError errorWithDomain: CBJSONEncoderErrorDomain code: _status userInfo: nil];
+    else
         return nil;
-    return [NSError errorWithDomain: CBJSONEncoderErrorDomain code: _status userInfo: nil];
 }
 
 

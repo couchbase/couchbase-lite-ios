@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+typedef BOOL(^CBJSONEncoderKeyFilter)(NSString* key, NSError** outError);
+
 /** Encodes Cocoa objects to JSON. Supports canonical encoding. */
 @interface CBJSONEncoder : NSObject
 
@@ -17,6 +19,9 @@
 
 /** If YES, JSON will be generated in canonical form, with consistently-ordered dictionary keys. */
 @property BOOL canonical;
+
+ /** If set, will be called on keys of the top-level object. Can return NO to skip them. */
+@property (strong) CBJSONEncoderKeyFilter keyFilter;
 
 @property (readonly, nonatomic) NSError* error;
 @property (readonly, nonatomic) NSData* encodedData;
@@ -29,7 +34,6 @@
 
 // PROTECTED:
 @property (readonly, nonatomic) NSMutableData* output;
-- (BOOL) encodeKey: (id)key value: (id)value;
 - (BOOL) encodeNestedObject: (id)object;
 
 @end
