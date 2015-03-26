@@ -301,12 +301,16 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 - (void) stop {
-    [self tellReplicator: ^(CBL_Replicator* bgReplicator) {
+    [self tellReplicatorAndWait:^id(CBL_Replicator * bgReplicator) {
         // This runs on the server thread:
         [bgReplicator stop];
+        [[NSNotificationCenter defaultCenter] removeObserver: self name: nil
+                                                      object: _bg_replicator];
+        return @(YES);
     }];
+
     _started = NO;
-    [self forgetReplication];
+    [_database forgetReplication: self];
 }
 
 
@@ -343,7 +347,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         return;
     if (status == kCBLReplicationStopped) {
         _started = NO;
-        [self forgetReplication];
+        [_database forgetReplication: self];
     }
 
     _pendingDocIDs = nil; // forget cached IDs
@@ -385,21 +389,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         [[NSNotificationCenter defaultCenter]
                         postNotificationName: kCBLReplicationChangeNotification object: self];
     }
-}
-
-- (void)forgetReplication {
-    // As the progress change notifications are posted and observed in the replicator thread,
-    // removing the observer needs to be done on the same thread to avoid race condition
-    // resulting to crashes due to the CBLReplication object itself gets dealloced after
-    // it was forgot (#624).
-    [self tellReplicatorAndWait: ^(CBL_Replicator* bgReplicator) {
-        if (_bg_replicator)
-            [[NSNotificationCenter defaultCenter] removeObserver: self name: nil
-                                                          object: _bg_replicator];
-        return @(YES);
-    }];
-
-    [_database forgetReplication: self];
 }
 
 
@@ -538,6 +527,10 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     SecCertificateRef serverCert = _bg_replicator.serverCert;
     cfretain(serverCert);
 
+    if (status == kCBLReplicationStopped) {
+        [self bg_setReplicator: nil];
+    }
+
     __weak CBLReplication *weakSelf = self;
     [_database doAsync: ^{
         CBLReplication *strongSelf = weakSelf;
@@ -545,10 +538,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
                           serverCert: serverCert];
         cfrelease(serverCert);
     }];
-    
-    if (status == kCBLReplicationStopped) {
-        [self bg_setReplicator: nil];
-    }
 }
 
 
