@@ -21,6 +21,26 @@
 NSString* const CBJSONEncoderErrorDomain = @"CBJSONEncoder";
 
 
+@interface CBJSONEncoder ()
+@property (readwrite, nonatomic) NSError* error;
+@end
+
+
+@interface NSObject (CBJSONEncoder)
+- (yajl_gen_status) cbjson_encodeTo: (yajl_gen)gen canonical: (BOOL)canonical;
+@end
+
+@interface NSDictionary (CBJSONEncoder)
+- (yajl_gen_status) cbjson_encodeTo: (yajl_gen)gen
+                          canonical: (BOOL)canonical
+                          keyFilter: (CBJSONEncoderKeyFilter)keyFilter
+                              error: (NSError**)outError;
+@end
+
+
+
+
+
 @implementation CBJSONEncoder
 {
     NSMutableData* _encoded;
@@ -71,7 +91,17 @@ NSString* const CBJSONEncoderErrorDomain = @"CBJSONEncoder";
 
 
 - (BOOL) encode: (UU id)object {
-    return [self encodeNestedObject: object];
+    if (_keyFilter && [object isKindOfClass: [NSDictionary class]]) {
+        NSError* error = nil;
+        _status = [(NSDictionary*)object cbjson_encodeTo: _gen
+                                               canonical: _canonical
+                                               keyFilter: _keyFilter
+                                                   error: &error];
+        _error = error;
+    } else {
+        _status = [object cbjson_encodeTo: _gen canonical: _canonical];
+    }
+    return _status == yajl_gen_status_ok;
 }
 
 
@@ -90,129 +120,19 @@ NSString* const CBJSONEncoderErrorDomain = @"CBJSONEncoder";
 }
 
 
-#define checkStatus(STATUS) ((_status = (STATUS)) == yajl_gen_status_ok)
-
-
-- (BOOL) encodeNestedObject: (UU id)object {
-    if ([object isKindOfClass: [NSString class]]) {
-        return [self encodeString: object];
-    } else if ([object isKindOfClass: [NSDictionary class]]) {
-        return [self encodeDictionary: object];
-    } else if ([object isKindOfClass: [NSNumber class]]) {
-        return [self encodeNumber: object];
-    } else if ([object isKindOfClass: [NSArray class]]) {
-        return [self encodeArray: object];
-    } else if ([object isKindOfClass: [NSNull class]]) {
-        return [self encodeNull];
-    } else {
-        return NO;
-    }
+- (NSError*) error {
+    if (_error)
+        return _error;
+    else if (_status != yajl_gen_status_ok)
+        return [NSError errorWithDomain: CBJSONEncoderErrorDomain code: _status userInfo: nil];
+    else
+        return nil;
 }
 
-
-- (BOOL) encodeString: (UU NSString*)str {
-    __block yajl_gen_status status = yajl_gen_invalid_string;
-    CBLWithStringBytes(str, ^(const char *chars, size_t len) {
-        status = yajl_gen_string(_gen, (const unsigned char*)chars, len);
-    });
-    return checkStatus(status);
+- (void) setError:(NSError *)error {
+    _error = error;
 }
 
-
-- (BOOL) encodeNumber: (UU NSNumber*)number {
-    yajl_gen_status status;
-    char ctype = number.objCType[0];
-    switch (ctype) {
-        case 'c': {
-            // The only way to tell whether an NSNumber with 'char' type is a boolean is to
-            // compare it against the singleton kCFBoolean objects:
-            if (number == (id)kCFBooleanTrue)
-                status = yajl_gen_bool(_gen, number.boolValue);
-            else if (number == (id)kCFBooleanFalse)
-                status = yajl_gen_bool(_gen, number.boolValue);
-            else
-                status = yajl_gen_integer(_gen, number.longLongValue);
-            break;
-        }
-        case 'f':
-        case 'd': {
-            // Based on yajl_gen_double, except yajl uses too many significant figures (20 not 16)
-            // which causes some numbers to round badly (e.g "8.9900000000000002" for "8.99")
-            double n = number.doubleValue;
-            char str[32];
-            if (isnan(n) || isinf(n))  {
-                status = yajl_gen_invalid_number;
-                break;
-            }
-            unsigned len = sprintf(str, (ctype=='f' ? "%.6g" : "%.16g"), n);
-            if (strspn(str, "0123456789-") == strlen(str)) {
-                strcat(str, ".0");
-                len += 2;
-            }
-            status = yajl_gen_number(_gen, str, len);
-            //status = yajl_gen_double(_gen, number.doubleValue);
-            break;
-        }
-        case 'Q': {
-            char str[32];
-            unsigned len = sprintf(str, "%llu", number.unsignedLongLongValue);
-            status = yajl_gen_number(_gen, str, len);
-            break;
-        }
-        default:
-            status = yajl_gen_integer(_gen, number.longLongValue);
-            break;
-    }
-    return checkStatus(status);
-}
-
-
-- (BOOL) encodeNull {
-    return checkStatus(yajl_gen_null(_gen));
-}
-
-
-- (BOOL) encodeArray: (UU NSArray*)array {
-    yajl_gen_array_open(_gen);
-    for (id item in array)
-        if (![self encodeNestedObject: item])
-            return NO;
-    return checkStatus(yajl_gen_array_close(_gen));
-}
-
-
-- (BOOL) encodeDictionary: (UU NSDictionary*)dict {
-    CBJSONEncoderKeyFilter keyFilter = _keyFilter;
-    if (keyFilter)
-        _keyFilter = nil;   // _keyFilter is only used for top-level dictionary
-    NSError* error = nil;
-
-    if (!checkStatus(yajl_gen_map_open(_gen)))
-        return NO;
-    id keys;
-    if (_canonical) {
-        // inlining -orderedKeys: for performance
-        keys = [[dict allKeys] sortedArrayUsingComparator: ^NSComparisonResult(id s1, id s2) {
-            return [s1 compare: s2 options: NSLiteralSearch];
-        }];
-    } else {
-        keys = dict;
-    }
-
-    for (NSString* key in keys) {
-        if (keyFilter && !keyFilter(key, &error)) {
-            if (error) {
-                _error = error;
-                return NO;
-            } else {
-                continue;
-            }
-        }
-        if (![self encodeString: key] || ![self encodeNestedObject: dict[key]])
-            return NO;
-    }
-    return checkStatus(yajl_gen_map_close(_gen));
-}
 
 + (NSArray*) orderedKeys: (UU NSDictionary*)dict {
     return [[dict allKeys] sortedArrayUsingComparator: ^NSComparisonResult(id s1, id s2) {
@@ -235,14 +155,139 @@ NSString* const CBJSONEncoderErrorDomain = @"CBJSONEncoder";
 }
 
 
-- (NSError*) error {
-    if (_error)
-        return _error;
-    else if (_status != yajl_gen_status_ok)
-        return [NSError errorWithDomain: CBJSONEncoderErrorDomain code: _status userInfo: nil];
-    else
-        return nil;
+@end
+
+
+
+
+@implementation NSString (CBJSONEncoder)
+- (yajl_gen_status) cbjson_encodeTo: (yajl_gen)gen canonical: (BOOL)canonical {
+    __block yajl_gen_status status = yajl_gen_invalid_string;
+    CBLWithStringBytes(self, ^(const char *chars, size_t len) {
+        status = yajl_gen_string(gen, (const unsigned char*)chars, len);
+    });
+    return status;
+}
+@end
+
+@implementation NSNumber (CBJSONEncoder)
+- (yajl_gen_status) cbjson_encodeTo: (yajl_gen)gen canonical: (BOOL)canonical {
+    char ctype = self.objCType[0];
+    switch (ctype) {
+        case 'c': {
+            // The only way to tell whether an NSNumber with 'char' type is a boolean is to
+            // compare it against the singleton kCFBoolean objects:
+            if (self == (id)kCFBooleanTrue)
+                return yajl_gen_bool(gen, true);
+            else if (self == (id)kCFBooleanFalse)
+                return yajl_gen_bool(gen, false);
+            else
+                return yajl_gen_integer(gen, self.longLongValue);
+        }
+        case 'f':
+        case 'd': {
+            // Based on yajl_gen_double, except yajl uses too many significant figures (20 not 16)
+            // which causes some numbers to round badly (e.g "8.9900000000000002" for "8.99")
+            double n = self.doubleValue;
+            char str[32];
+            if (isnan(n) || isinf(n))  {
+                return yajl_gen_invalid_number;
+            }
+            unsigned len = sprintf(str, (ctype=='f' ? "%.6g" : "%.16g"), n);
+            if (strspn(str, "0123456789-") == strlen(str)) {
+                strcat(str, ".0");
+                len += 2;
+            }
+            return yajl_gen_number(gen, str, len);
+        }
+        case 'Q': {
+            char str[32];
+            unsigned len = sprintf(str, "%llu", self.unsignedLongLongValue);
+            return yajl_gen_number(gen, str, len);
+        }
+        default:
+            return yajl_gen_integer(gen, self.longLongValue);
+    }
+}
+@end
+
+@implementation NSNull (CBJSONEncoder)
+- (yajl_gen_status) cbjson_encodeTo: (yajl_gen)gen canonical: (BOOL)canonical {
+    return yajl_gen_null(gen);
+}
+@end
+
+@implementation NSArray (CBJSONEncoder)
+- (yajl_gen_status) cbjson_encodeTo: (yajl_gen)gen canonical: (BOOL)canonical {
+    yajl_gen_array_open(gen);
+    for (id item in self) {
+        yajl_gen_status status = [item cbjson_encodeTo: gen canonical: canonical];
+        if (status)
+            return status;
+    }
+    return yajl_gen_array_close(gen);
+}
+@end
+
+@implementation NSDictionary (CBJSONEncoder)
+- (yajl_gen_status) cbjson_encodeTo: (yajl_gen)gen canonical: (BOOL)canonical {
+    yajl_gen_map_open(gen);
+    id keys;
+    if (canonical && self.count > 1) {
+        // inlining +orderedKeys: for performance
+        keys = [self.allKeys sortedArrayUsingComparator: ^NSComparisonResult(UU id s1, UU id s2) {
+            return [s1 compare: s2 options: NSLiteralSearch];
+        }];
+    } else {
+        keys = self;
+    }
+
+    for (NSString* key in keys) {
+        yajl_gen_status status = [key cbjson_encodeTo: gen canonical: canonical];
+        if (status)
+            return status;
+        status = [self[key] cbjson_encodeTo: gen canonical: canonical];
+        if (status)
+            return status;
+    }
+    return yajl_gen_map_close(gen);
 }
 
+- (yajl_gen_status) cbjson_encodeTo: (yajl_gen)gen
+                          canonical: (BOOL)canonical
+                          keyFilter: (CBJSONEncoderKeyFilter)keyFilter
+                              error: (NSError**)outError
+{
+    NSError* error = nil;
 
+    yajl_gen_map_open(gen);
+    id keys;
+    if (canonical && self.count > 1) {
+        // inlining +orderedKeys: for performance
+        keys = [self.allKeys sortedArrayUsingComparator: ^NSComparisonResult(id s1, id s2) {
+            return [s1 compare: s2 options: NSLiteralSearch];
+        }];
+    } else {
+        keys = self;
+    }
+
+    for (NSString* key in keys) {
+        if (!keyFilter(key, &error)) {
+            if (error) {
+                if (outError)
+                    *outError = error;
+                return -1;
+            } else {
+                continue;
+            }
+        }
+        yajl_gen_status status = [key cbjson_encodeTo: gen canonical: canonical];
+        if (status)
+            return status;
+        status = [self[key] cbjson_encodeTo: gen canonical: canonical];
+        if (status)
+            return status;
+    }
+    return yajl_gen_map_close(gen);
+}
 @end

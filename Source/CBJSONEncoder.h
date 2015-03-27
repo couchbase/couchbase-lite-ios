@@ -34,7 +34,6 @@ typedef BOOL(^CBJSONEncoderKeyFilter)(NSString* key, NSError** outError);
 
 // PROTECTED:
 @property (readonly, nonatomic) NSMutableData* output;
-- (BOOL) encodeNestedObject: (id)object;
 
 @end
 
