@@ -204,6 +204,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
         if (properties) {
             CBL_Revision* rev = [CBL_Revision revisionWithProperties: properties];
             _currentRevision = [[CBLSavedRevision alloc] initWithDocument: self revision: rev];
+            _currentRevisionKnown = YES;
         }
     }
 }
