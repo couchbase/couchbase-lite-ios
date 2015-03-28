@@ -226,8 +226,7 @@
                 return YES;
             } else {
                 Log(@"CBLDatabase: Invalid top-level key '%@' in document to be inserted", key);
-                *outError = CBLStatusToNSError(kCBLStatusBadJSON, nil);
-                return NO;
+                return ReturnNSErrorFromCBLStatus(kCBLStatusBadJSON, outError);
             }
         };
     });
@@ -287,11 +286,12 @@
 }
 
 - (void) setProperties:(UU NSDictionary *)properties {
-    self.body = [[CBL_Body alloc] initWithProperties: properties];
+    _body = [[CBL_Body alloc] initWithProperties: properties];
 }
 
 - (void) setAsJSON:(UU NSData *)asJSON {
-    self.body = [[CBL_Body alloc] initWithJSON: asJSON];
+    _body = [[CBL_Body alloc] initWithJSON: asJSON
+                               addingDocID: _docID revID: _revID deleted: _deleted];
 }
 
 - (void) setObject: (UU id)object forKeyedSubscript: (UU NSString*)key {

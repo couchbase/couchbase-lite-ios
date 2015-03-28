@@ -33,13 +33,13 @@ static id fromJSON( NSData* json ) {
     __weak id _parsedKey, _parsedValue;
     UInt64 _sequence;
     NSString* _sourceDocID;
-    NSDictionary* _documentProperties;
+    CBL_Revision* _documentRevision;
     CBLDatabase* _database;
     __weak id<CBL_QueryRowStorage> _storage;
 }
 
 
-@synthesize documentProperties=_documentProperties, sourceDocumentID=_sourceDocID,
+@synthesize sourceDocumentID=_sourceDocID, documentRevision=_documentRevision,
             database=_database, storage=_storage, sequenceNumber=_sequence;
 
 
@@ -47,7 +47,7 @@ static id fromJSON( NSData* json ) {
                       sequence: (SequenceNumber)sequence
                            key: (id)key
                          value: (id)value
-                 docProperties: (NSDictionary*)docProperties
+                   docRevision: (CBL_Revision*)docRevision
                        storage: (id<CBL_QueryRowStorage>)storage
 {
     self = [super init];
@@ -59,7 +59,7 @@ static id fromJSON( NSData* json ) {
         _sequence = sequence;
         _key = [key copy];
         _value = [value copy];
-        _documentProperties = [docProperties copy];
+        _documentRevision = docRevision;
         _storage = storage;
     }
     return self;
@@ -95,7 +95,7 @@ static id fromJSON( NSData* json ) {
     if (_database == other->_database
             && $equal(_key, other->_key)
             && $equal(_sourceDocID, other->_sourceDocID)
-            && $equal(_documentProperties, other->_documentProperties)) {
+            && $equal(_documentRevision, other->_documentRevision)) {
         // If values were emitted, compare them. Otherwise we have nothing to go on so check
         // if _anything_ about the doc has changed (i.e. the sequences are different.)
         if ([self isNonMagicValue] || [other isNonMagicValue])
@@ -112,7 +112,7 @@ static id fromJSON( NSData* json ) {
     if (!key) {
         key = _key;
         if ([key isKindOfClass: [NSData class]]) {  // _key may start out as unparsed JSON data
-            key = fromJSON(_key);
+            key = fromJSON(key);
             _parsedKey = key;
         }
     }
@@ -130,13 +130,17 @@ static id fromJSON( NSData* json ) {
             if ([storage rowValueIsEntireDoc: _value]) {
                 // Value is a placeholder ("*") denoting that the map function emitted "doc" as
                 // the value. So load the body of the revision now:
-                Assert(_sequence);
-                CBLStatus status;
-                value = [storage documentPropertiesWithID: _sourceDocID
-                                                 sequence: _sequence
-                                                   status: &status];
-                if (!value)
-                    Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
+                if (_documentRevision) {
+                    value = _documentRevision.properties;
+                } else {
+                    Assert(_sequence);
+                    CBLStatus status;
+                    value = [storage documentPropertiesWithID: _sourceDocID
+                                                     sequence: _sequence
+                                                       status: &status];
+                    if (!value)
+                        Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
+                }
             } else {
                 value = [storage parseRowValue: _value];
             }
@@ -147,12 +151,17 @@ static id fromJSON( NSData* json ) {
 }
 
 
+- (NSDictionary*) documentProperties {
+    return _documentRevision.properties;
+}
+
+
 - (NSString*) documentID {
     // Get the doc id from either the embedded document contents, or the '_id' value key.
     // Failing that, there's no document linking, so use the regular old _sourceDocID
-    id docID = _documentProperties.cbl_id;
-    if (!docID)
-        docID = $castIf(NSDictionary, self.value).cbl_id;
+    if (_documentRevision)
+        return _documentRevision.docID;
+    id docID = $castIf(NSDictionary, self.value).cbl_id;
     if (![docID isKindOfClass: [NSString class]])
         docID = _sourceDocID;
     return docID;
@@ -162,14 +171,13 @@ static id fromJSON( NSData* json ) {
 - (NSString*) documentRevisionID {
     // Get the revision id from either the embedded document contents,
     // or the '_rev' or 'rev' value key:
-    NSString* rev = _documentProperties.cbl_rev;
-    if (!rev) {
-        NSDictionary* value = $castIf(NSDictionary, self.value);
-        rev = value.cbl_rev;
-        if (value && !rev)
-            rev = value[@"rev"];
-    }
-    return $castIf(NSString, rev);
+    if (_documentRevision)
+        return _documentRevision.revID;
+    NSDictionary* value = $castIf(NSDictionary, self.value);
+    NSString* rev = value.cbl_rev;
+    if (value && !rev)
+        rev = $castIf(NSString, value[@"rev"]);
+    return rev;
 }
 
 
@@ -233,7 +241,7 @@ static id fromJSON( NSData* json ) {
         return $dict({@"key", self.key},
                      {@"value", self.value},
                      {@"id", _sourceDocID},
-                     {@"doc", _documentProperties});
+                     {@"doc", self.documentProperties});
     } else {
         return $dict({@"key", self.key}, {@"error", @"not_found"});
     }

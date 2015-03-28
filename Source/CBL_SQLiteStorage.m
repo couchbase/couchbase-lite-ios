@@ -551,11 +551,8 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         BOOL deleted = [r boolForColumnIndex: 1];
         result = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID deleted: deleted];
         result.sequence = [r longLongIntForColumnIndex: 2];
-        
-        if (withBody) {
-            NSData* json = [r dataNoCopyForColumnIndex: 3];
-            [self expandStoredJSON: json intoRevision: result];
-        }
+        if (withBody)
+            result.asJSON = [r dataNoCopyForColumnIndex: 3];
         status = kCBLStatusOK;
     }
     [r close];
@@ -586,12 +583,13 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     } else if (![r next]) {
         status = kCBLStatusNotFound;
     } else {
+        NSString* revID = [r stringForColumnIndex: 0];
+        BOOL deleted = [r boolForColumnIndex: 1];
         result = [[CBL_MutableRevision alloc] initWithDocID: docID
-                                                      revID: [r stringForColumnIndex: 0]
-                                                    deleted: [r boolForColumnIndex: 1]];
+                                                      revID: revID
+                                                    deleted: deleted];
         result.sequence = sequence;
-        [self expandStoredJSON: [r dataNoCopyForColumnIndex: 2]
-                  intoRevision: result];
+        result.asJSON =[r dataNoCopyForColumnIndex: 2];
         status = kCBLStatusOK;
     }
     [r close];
@@ -618,38 +616,25 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         // Found the rev. But the JSON still might be null if the database has been compacted.
         status = kCBLStatusOK;
         rev.sequence = [r longLongIntForColumnIndex: 0];
-        [self expandStoredJSON: [r dataNoCopyForColumnIndex: 1] intoRevision: rev];
+        rev.asJSON = [r dataNoCopyForColumnIndex: 1];
     }
     [r close];
     return status;
 }
 
 
-/** Inserts the _id, _rev and _attachments properties into the JSON data and stores it in rev.
- Rev must already have its revID and sequence properties set. */
-- (void) expandStoredJSON: (NSData*)json
-             intoRevision: (CBL_MutableRevision*)rev
+- (CBL_MutableRevision*) revisionWithDocID: (NSString*)docID
+                                     revID: (NSString*)revID
+                                   deleted: (BOOL)deleted
+                                  sequence: (SequenceNumber)sequence
+                                      json: (NSData*)json
 {
-    NSMutableDictionary* extra = $mdict();
-    [self extraPropertiesForRevision: rev into: extra];
-    if (json.length > 0) {
-        rev.asJSON = [CBLJSON appendDictionary: extra toJSONDictionaryData: json];
-    } else {
-        rev.properties = extra;
-        if (json == nil)
-            rev.missing = true;
-    }
-}
-
-
-/** Inserts the _id, _rev, _deleted properties into the dictionary 'dst'. */
-- (void) extraPropertiesForRevision: (CBL_Revision*)rev
-                               into: (NSMutableDictionary*)dst
-{
-    dst[@"_id"] = rev.docID;
-    dst[@"_rev"] = rev.revID;
-    if (rev.deleted)
-        dst[@"_deleted"] = $true;
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
+                                                                  deleted: deleted];
+    rev.sequence = sequence;
+    if (json)
+        rev.asJSON = json;
+    return rev;
 }
 
 
@@ -1019,15 +1004,16 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                     continue;
                 lastDocID = docNumericID;
             }
-            
-            CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: [r stringForColumnIndex: 2]
-                                                          revID: [r stringForColumnIndex: 3]
-                                                        deleted: [r boolForColumnIndex: 4]];
+
+            NSString* docID = [r stringForColumnIndex: 2];
+            NSString* revID = [r stringForColumnIndex: 3];
+            BOOL deleted = [r boolForColumnIndex: 4];
+            CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID
+                                                                            revID: revID
+                                                                          deleted: deleted];
             rev.sequence = [r longLongIntForColumnIndex: 0];
-            if (includeDocs) {
-                [self expandStoredJSON: [r dataNoCopyForColumnIndex: 5]
-                          intoRevision: rev];
-            }
+            if (includeDocs)
+                rev.asJSON = [r dataNoCopyForColumnIndex: 5];
             if (!filter || filter(rev))
                 [changes addRev: rev];
         }
@@ -1146,16 +1132,15 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
             SequenceNumber sequence = [r longLongIntForColumnIndex: 3];
             BOOL deleted = includeDeletedDocs && [r boolForColumn: @"deleted"];
 
-            NSDictionary* docContents = nil;
+            CBL_Revision* docRevision = nil;
             if (includeDocs) {
                 // Fill in the document contents:
-                NSData* json = [r dataNoCopyForColumnIndex: 4];
-                docContents = [self documentPropertiesFromJSON: json
-                                                         docID: docID
-                                                         revID: revID
-                                                       deleted: deleted
-                                                      sequence: sequence];
-                Assert(docContents);
+                docRevision = [self revisionWithDocID: docID
+                                                revID: revID
+                                              deleted: deleted
+                                             sequence: sequence
+                                                 json: [r dataForColumnIndex: 4]];
+                Assert(docRevision);
             }
             
             // Iterate over following rows with the same doc_id -- these are conflicts.
@@ -1178,7 +1163,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                                                          sequence: sequence
                                                               key: docID
                                                             value: value
-                                                    docProperties: docContents
+                                                      docRevision: docRevision
                                                           storage: nil];
             if (options.keys)
                 docs[docID] = row;
@@ -1211,7 +1196,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                                                    sequence: 0
                                                         key: docID
                                                       value: value
-                                              docProperties: nil
+                                                docRevision: nil
                                                     storage: nil];
             }
             if (!options.filter || options.filter(change))
@@ -1249,7 +1234,10 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
             docProperties = $mdict();
         }
     }
-    [self extraPropertiesForRevision: rev into: docProperties];
+    docProperties[@"_id"] = docID;
+    docProperties[@"_rev"] = revID;
+    if (deleted)
+        docProperties[@"_deleted"] = $true;
     return docProperties;
 }
 

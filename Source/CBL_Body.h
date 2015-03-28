@@ -19,6 +19,13 @@
 + (instancetype) bodyWithProperties: (NSDictionary*)properties;
 + (instancetype) bodyWithJSON: (NSData*)json;
 
+ /** Creates a body from JSON data, inserting "_id", _"rev" and "_deleted" properties based on the
+     input parameters. */
+- (instancetype) initWithJSON: (NSData*)json
+                  addingDocID: (NSString*)docID
+                        revID: (NSString*)revID
+                      deleted: (BOOL)deleted;
+
 @property (readonly) BOOL isValidJSON;
 @property (readonly) NSData* asJSON;
 @property (readonly) NSData* asPrettyJSON;

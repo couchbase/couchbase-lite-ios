@@ -145,11 +145,12 @@
                       sequence: (SequenceNumber)sequence
                            key: (id)key
                          value: (id)value
-                 docProperties: (NSDictionary*)docProperties
+                   docRevision: (CBL_Revision*)docRevision
                        storage: (id<CBL_QueryRowStorage>)storage;
 @property (readwrite, nonatomic) CBLDatabase* database;
 @property (readonly, nonatomic) id<CBL_QueryRowStorage> storage;
 @property (readonly, nonatomic) NSDictionary* asJSONDictionary;
+@property (readonly, nonatomic) CBL_Revision* documentRevision;
 @end
 
 
@@ -169,7 +170,7 @@
                    boundingBox: (CBLGeoRect)bbox
                    geoJSONData: (NSData*)geoJSONData
                          value: (NSData*)valueData
-                 docProperties: (NSDictionary*)docProperties
+                   docRevision: (CBL_Revision*)docRevision
                        storage: (id<CBL_QueryRowStorage>)storage;
 @end
 

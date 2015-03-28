@@ -85,8 +85,11 @@ typedef SInt64 SequenceNumber;
 
 @property (readwrite, strong) CBL_Body* body;
 @property (readwrite, copy) NSDictionary* properties;
-@property (readwrite, copy) NSData* asJSON;
 @property (readwrite) bool missing;
+
+/** Overridden to make this settable. When set, the "_id", "_rev" and "_deleted" properties will be
+    added to the JSON data; it MUST NOT already include them! */
+@property (readwrite, copy) NSData* asJSON;
 
 - (void) setDocID:(NSString *)docID
             revID: (NSString*)revID;

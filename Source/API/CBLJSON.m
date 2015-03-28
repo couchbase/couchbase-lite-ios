@@ -16,6 +16,7 @@
 #import "CBLJSON.h"
 #import "CBLParseDate.h"
 #import "CBLBase64.h"
+#import "CBLMisc.h"
 
 
 @implementation CBLJSON
@@ -67,6 +68,12 @@ static NSTimeInterval k1970ToReferenceDate;
     NSData* extraJson = [self dataWithJSONObject: dict options: 0 error: NULL];
     if (!extraJson)
         return nil;
+    return [self appendJSONDictionaryData: (NSData*)extraJson toJSONDictionaryData: json];
+}
+
++ (NSData*) appendJSONDictionaryData: (UU NSData*)extraJson
+                toJSONDictionaryData: (UU NSData*)json
+{
     size_t jsonLength = json.length;
     size_t extraLength = extraJson.length;
     CAssert(jsonLength >= 2);

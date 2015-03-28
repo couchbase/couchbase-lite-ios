@@ -529,7 +529,7 @@ static NSString* viewNames(NSArray* views) {
             if (limit-- == 0)
                 return nil;
             while (e.next()) {
-                id docContents = nil;
+                CBL_Revision* docRevision = nil;
                 id key = e.key().readNSObject();
                 id value = nil;
                 NSString* docID = (NSString*)e.docID();
@@ -547,17 +547,13 @@ static NSString* viewNames(NSArray* views) {
                         // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
                         NSString* linkedRev = valueDict.cbl_rev; // usually nil
                         CBLStatus linkedStatus;
-                        CBL_Revision* linked = [_dbStorage getDocumentWithID: linkedID
-                                                          revisionID: linkedRev
-                                                             withBody: YES
-                                                              status: &linkedStatus];
-                        docContents = linked ? linked.properties : $null;
-                        sequence = linked.sequence;
+                        docRevision = [_dbStorage getDocumentWithID: linkedID revisionID: linkedRev
+                                                           withBody: YES status: &linkedStatus];
+                        sequence = docRevision.sequence;
                     } else {
                         CBLStatus status;
-                        CBL_Revision* rev = [_dbStorage getDocumentWithID: docID revisionID: nil
-                                                          withBody: YES status: &status];
-                        docContents = rev.properties;
+                        docRevision = [_dbStorage getDocumentWithID: docID revisionID: nil
+                                                           withBody: YES status: &status];
                     }
                 }
 
@@ -570,7 +566,7 @@ static NSString* viewNames(NSArray* views) {
                                                      sequence: sequence
                                                           key: key
                                                         value: value
-                                                docProperties: docContents
+                                                  docRevision: docRevision
                                                       storage: self];
                 if (filter) {
                     if (!filter(row))
@@ -659,11 +655,11 @@ static id keyForPrefixMatch(id key, unsigned depth) {
                 if (lastKey && (!key || (group && !groupTogether(lastKey, key, groupLevel)))) {
                     // key doesn't match lastKey; emit a grouped/reduced row for what came before:
                     row = [[CBLQueryRow alloc] initWithDocID: nil
-                                            sequence: 0
-                                                 key: (group ? groupKey(lastKey, groupLevel) : $null)
-                                               value: callReduce(reduce, keysToReduce,valuesToReduce)
-                                       docProperties: nil
-                                             storage: self];
+                                        sequence: 0
+                                             key: (group ? groupKey(lastKey, groupLevel) : $null)
+                                           value: callReduce(reduce, keysToReduce,valuesToReduce)
+                                     docRevision: nil
+                                         storage: self];
                     LogTo(QueryVerbose, @"Query %@: Reduced row with key=%@, value=%@",
                                         _name, CBLJSONString(row.key), CBLJSONString(row.value));
                     if (filter && !filter(row))

@@ -47,7 +47,7 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
                        storage: (id<CBL_QueryRowStorage>)storage
 {
     self = [super initWithDocID: docID sequence: sequence key: $null value: value
-                  docProperties: nil storage: storage];
+                  docRevision: nil storage: storage];
     if (self) {
         _fullTextID = fullTextID;
         _matchOffsets = [[NSMutableArray alloc] initWithCapacity: 4];

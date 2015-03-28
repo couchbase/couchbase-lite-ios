@@ -31,6 +31,11 @@
                                   sequence: (SequenceNumber)sequence
                                     status: (CBLStatus*)outStatus;
 
+- (CBL_MutableRevision*) revisionWithDocID: (NSString*)docID
+                                     revID: (NSString*)revID
+                                   deleted: (BOOL)deleted
+                                  sequence: (SequenceNumber)sequence
+                                      json: (NSData*)json;
 @end
 
 

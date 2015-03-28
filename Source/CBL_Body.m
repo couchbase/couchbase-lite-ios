@@ -15,6 +15,8 @@
 
 #import "CBL_Body.h"
 #import "CBLInternal.h"
+#import "CBLMisc.h"
+#import "yajl_gen.h"
 
 
 @implementation CBL_Body
@@ -51,6 +53,45 @@
 }
 + (instancetype) bodyWithJSON: (NSData*)json {
     return [[self alloc] initWithJSON: json];
+}
+
+- (instancetype) initWithJSON: (NSData*)json
+                  addingDocID: (NSString*)docID
+                        revID: (NSString*)revID
+                      deleted: (BOOL)deleted
+{
+    if (json.length < 2) {
+        return [self initWithProperties: $dict({@"_id", docID},
+                                               {@"_rev", revID},
+                                               {@"_deleted", (deleted ? $true : nil)})];
+    }
+
+    // Generate JSON data for {"_id":docID,"_rev":revID,"_deleted":deleted} :
+    yajl_gen gen = yajl_gen_alloc(NULL);
+    yajl_gen_map_open(gen);
+    yajl_gen_string(gen, (const unsigned char*)"_id", 3);
+    CBLWithStringBytes(docID, ^(const char *chars, size_t len) {
+        yajl_gen_string(gen, (const unsigned char*)chars, len);
+    });
+    yajl_gen_string(gen, (const unsigned char*)"_rev", 4);
+    CBLWithStringBytes(revID, ^(const char *chars, size_t len) {
+        yajl_gen_string(gen, (const unsigned char*)chars, len);
+    });
+    if (deleted) {
+        yajl_gen_string(gen, (const unsigned char*)"_deleted", 8);
+        yajl_gen_bool(gen, true);
+    }
+    yajl_gen_map_close(gen);
+
+    // Append that JSON to the input:
+    const uint8_t* buf;
+    size_t len;
+    yajl_gen_get_buf(gen, &buf, &len);
+    NSData* extra = [[NSData alloc] initWithBytesNoCopy: (void*)buf length: len freeWhenDone: NO];
+    self = [self initWithJSON: [CBLJSON appendJSONDictionaryData: extra
+                                            toJSONDictionaryData: json]];
+    yajl_gen_free(gen);
+    return self;
 }
 
 - (id) copyWithZone: (NSZone*)zone {

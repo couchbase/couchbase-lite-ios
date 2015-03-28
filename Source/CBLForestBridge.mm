@@ -39,7 +39,14 @@ static NSData* dataOfNode(const Revision* rev) {
     CBL_MutableRevision* rev;
     NSString* docID = (NSString*)doc.docID();
     if (doc.revsAvailable()) {
-        const Revision* revNode = doc.get(revID);
+        const Revision* revNode;
+        if (revID)
+            revNode = doc.get(revID);
+        else {
+            revNode = doc.currentRevision();
+            if (revNode)
+                revID = (NSString*)revNode->revID;
+        }
         if (!revNode)
             return nil;
         rev = [[CBL_MutableRevision alloc] initWithDocID: docID
@@ -85,15 +92,8 @@ static NSData* dataOfNode(const Revision* rev) {
     NSData* json = dataOfNode(revNode);
     if (!json)
         return NO;
-
     rev.sequence = revNode->sequence;
-
-    NSMutableDictionary* extra = $mdict();
-    [self addContentPropertiesTo: extra fromRev: revNode];
-    if (json.length > 0)
-        rev.asJSON = [CBLJSON appendDictionary: extra toJSONDictionaryData: json];
-    else
-        rev.properties = extra;
+    rev.asJSON = json;
     return YES;
 }
 
@@ -106,21 +106,15 @@ static NSData* dataOfNode(const Revision* rev) {
                                                           options: NSJSONReadingMutableContainers
                                                             error: NULL];
     Assert(properties, @"Unable to parse doc from db: %@", json.my_UTF8ToString);
-    [self addContentPropertiesTo: properties fromRev: rev];
-    return properties;
-}
-
-
-+ (void) addContentPropertiesTo: (NSMutableDictionary*)dst
-                        fromRev: (const Revision*)rev
-{
     NSString* revID = (NSString*)rev->revID;
     Assert(revID);
+
     const VersionedDocument* doc = (const VersionedDocument*)rev->owner;
-    dst[@"_id"] = (NSString*)doc->docID();
-    dst[@"_rev"] = revID;
+    properties[@"_id"] = (NSString*)doc->docID();
+    properties[@"_rev"] = revID;
     if (rev->isDeleted())
-        dst[@"_deleted"] = $true;
+        properties[@"_deleted"] = $true;
+    return properties;
 }
 
 

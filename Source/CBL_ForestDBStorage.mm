@@ -509,7 +509,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
                                                  sequence: 0
                                                       key: docID
                                                     value: nil
-                                            docProperties: nil
+                                              docRevision: nil
                                                   storage: nil];
             }
 
@@ -537,11 +537,13 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
             NSString* revID = (NSString*)doc.revID();
             SequenceNumber sequence = doc.sequence();
 
-            NSDictionary* docContents = nil;
+            CBL_Revision* docRevision = nil;
             if (includeDocs) {
                 // Fill in the document contents:
-                docContents = [CBLForestBridge bodyOfNode: doc.currentRevision()];
-                if (!docContents)
+                docRevision = [CBLForestBridge revisionObjectFromForestDoc: doc
+                                                                     revID: nil
+                                                                  withBody: YES];
+                if (!docRevision)
                     Warn(@"AllDocs: Unable to read body of doc %@", docID);
             }
 
@@ -561,7 +563,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
                                                  sequence: sequence
                                                       key: docID
                                                     value: value
-                                            docProperties: docContents
+                                              docRevision: docRevision
                                                   storage: nil];
             if (filter && !filter(row)) {
                 LogTo(QueryVerbose, @"   ... on 2nd thought, filter predicate skipped that row");

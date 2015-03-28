@@ -738,7 +738,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
                                                         CBL_FMResultSet *r)
     {
         SequenceNumber sequence = [r longLongIntForColumnIndex:3];
-        id docContents = nil;
+        CBL_Revision* docRevision = nil;
         if (options->includeDocs) {
             NSDictionary* value = nil;
             if (valueData && ![self rowValueIsEntireDoc: valueData])
@@ -748,18 +748,17 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
                 // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
                 NSString* linkedRev = value.cbl_rev; // usually nil
                 CBLStatus linkedStatus;
-                CBL_Revision* linked = [db getDocumentWithID: linkedID
-                                                  revisionID: linkedRev
-                                                     withBody: YES
-                                                      status: &linkedStatus];
-                docContents = linked ? linked.properties : $null;
-                sequence = linked.sequence;
+                docRevision = [db getDocumentWithID: linkedID
+                                         revisionID: linkedRev
+                                           withBody: YES
+                                             status: &linkedStatus];
+                sequence = docRevision.sequence;
             } else {
-                docContents = [db documentPropertiesFromJSON: [r dataNoCopyForColumnIndex: 5]
-                                                       docID: docID
-                                                       revID: [r stringForColumnIndex: 4]
-                                                     deleted: NO
-                                                    sequence: sequence];
+                docRevision = [_dbStorage revisionWithDocID: docID
+                                                      revID: [r stringForColumnIndex: 4]
+                                                    deleted: NO
+                                                   sequence: sequence
+                                                       json: [r dataForColumnIndex: 5]];
             }
         }
         LogTo(ViewVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
@@ -776,14 +775,14 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
                                             boundingBox: bbox
                                             geoJSONData: [r dataForColumn: @"geokey"]
                                                   value: valueData
-                                          docProperties: docContents
+                                            docRevision: docRevision
                                                 storage: self];
         } else {
             row = [[CBLQueryRow alloc] initWithDocID: docID
                                             sequence: sequence
                                                  key: keyData
                                                value: valueData
-                                       docProperties: docContents
+                                         docRevision: docRevision
                                              storage: self];
         }
 
@@ -1023,7 +1022,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                                                              sequence: 0
                                                                   key: key
                                                                 value: reduced
-                                                        docProperties: nil
+                                                          docRevision: nil
                                                               storage: self];
                 if (!options.filter || options.filter(row))
                     [rows addObject: row];
@@ -1062,7 +1061,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                                                      sequence: 0
                                                           key: key
                                                         value: reduced
-                                                docProperties: nil
+                                                  docRevision: nil
                                                       storage: self];
         if (!options.filter || options.filter(row))
             [rows addObject: row];
