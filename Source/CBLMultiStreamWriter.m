@@ -59,7 +59,8 @@
 
 - (void) addInput: (id)input length: (UInt64)length {
     [_inputs addObject: input];
-    _length += length;
+    if (_length >= 0)
+        _length += length;
 }
 
 - (void) addStream: (NSInputStream*)stream length: (UInt64)length {

@@ -457,7 +457,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                                                             status: &status];
             if (!attachmentObj)
                 return NO;
-            [bodyStream addStream: [attachmentObj contentStream]];
+            [bodyStream addStream: attachmentObj.contentStream length: attachmentObj->length];
         }
     }
     if (!bodyStream)

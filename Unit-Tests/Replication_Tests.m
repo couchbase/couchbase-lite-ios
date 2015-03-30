@@ -11,14 +11,17 @@
 #import "CBLCookieStorage.h"
 
 
-// This db will get deleted and overwritten during every test.
+// These dbs will get deleted and overwritten during tests:
 #define kPushThenPullDBName @"cbl_replicator_pushpull"
 #define kNDocuments 1000
 #define kAttSize 1*1024
-// This one too.
 #define kEncodedDBName @"cbl_replicator_encoding"
+#define kScratchDBName @"cbl_replicator_scratch"
+
 // This one's never actually read or written to.
 #define kCookieTestDBName @"cbl_replicator_cookies"
+// This one is read-only
+#define kAttachTestDBName @"attach_test"
 
 
 @interface CBLDatabase (Internal)
@@ -297,6 +300,39 @@
         AssertEqual(doc[@"index"], @(i));
         AssertEqual(doc[@"bar"], $false);
     }
+}
+
+
+- (void) test04_ReplicateAttachments {
+    // First pull the read-only "attach_test" database:
+    NSURL* pullURL = [self remoteTestDBURL: kAttachTestDBName];
+    if (!pullURL)
+        return;
+
+    Log(@"Pulling from %@...", pullURL);
+    CBLReplication* repl = [db createPullReplication: pullURL];
+    [self runReplication: repl expectedChangesCount: 0];
+    AssertNil(repl.lastError);
+
+    Log(@"Verifying documents...");
+    CBLDocument* doc = db[@"oneBigAttachment"];
+    CBLAttachment* att = [doc.currentRevision attachmentNamed: @"IMG_0450.MOV"];
+    Assert(att);
+    AssertEq(att.length, 34120085ul);
+    NSData* content = att.content;
+    AssertEq(content.length, 34120085ul);
+
+    doc = db[@"extrameta"];
+    att = [doc.currentRevision attachmentNamed: @"extra.txt"];
+    AssertEqual(att.content, [NSData dataWithBytes: "hello\n" length: 6]);
+
+    // Now push it to the scratch database:
+    NSURL* pushURL = [self remoteTestDBURL: kScratchDBName];
+    [self eraseRemoteDB: pushURL];
+    Log(@"Pushing to %@...", pushURL);
+    repl = [db createPushReplication: pushURL];
+    [self runReplication: repl expectedChangesCount: 0];
+    AssertNil(repl.lastError);
 }
 
 
