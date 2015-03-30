@@ -1179,10 +1179,6 @@
 		27452B301AB0E6AA00327776 /* View_Benchmarks.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = View_Benchmarks.m; sourceTree = "<group>"; };
 		27452BAD1AB1156F00327776 /* libCouchbaseLiteFat.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCouchbaseLiteFat.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		27452BB81AB1180800327776 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		27452BBB1AB1180900327776 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		27452BBC1AB1180900327776 /* CBL iOS framework.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBL iOS framework.h"; sourceTree = "<group>"; };
-		27452BC81AB1180900327776 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		27452BC91AB1180900327776 /* CBL_iOS_frameworkTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBL_iOS_frameworkTests.m; sourceTree = "<group>"; };
 		27452BE71AB119D500327776 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		27452BE91AB119DC00327776 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.3.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 		27452BEB1AB119E000327776 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.3.sdk/usr/lib/libsqlite3.dylib; sourceTree = DEVELOPER_DIR; };
@@ -1789,8 +1785,6 @@
 				27B0B8111492C16300A817AD /* Test-iOS */,
 				27FA59EE179EFD730043460A /* Documentation */,
 				2753154D14ACEF350065964D /* vendor */,
-				27452BB91AB1180900327776 /* CBL iOS framework */,
-				27452BC61AB1180900327776 /* CBL iOS frameworkTests */,
 				27C70696148864BA00F0F099 /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
@@ -1982,40 +1976,6 @@
 				274C6C251A3F838500F9BDF7 /* CBLReduceFuncs.h */,
 			);
 			name = Views/Queries;
-			sourceTree = "<group>";
-		};
-		27452BB91AB1180900327776 /* CBL iOS framework */ = {
-			isa = PBXGroup;
-			children = (
-				27452BBC1AB1180900327776 /* CBL iOS framework.h */,
-				27452BBA1AB1180900327776 /* Supporting Files */,
-			);
-			path = "CBL iOS framework";
-			sourceTree = "<group>";
-		};
-		27452BBA1AB1180900327776 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				27452BBB1AB1180900327776 /* Info.plist */,
-			);
-			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
-		27452BC61AB1180900327776 /* CBL iOS frameworkTests */ = {
-			isa = PBXGroup;
-			children = (
-				27452BC91AB1180900327776 /* CBL_iOS_frameworkTests.m */,
-				27452BC71AB1180900327776 /* Supporting Files */,
-			);
-			path = "CBL iOS frameworkTests";
-			sourceTree = "<group>";
-		};
-		27452BC71AB1180900327776 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				27452BC81AB1180900327776 /* Info.plist */,
-			);
-			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 		27486F381A606C7D008D94F0 /* JSON */ = {
