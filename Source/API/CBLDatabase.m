@@ -305,7 +305,7 @@ static void catchInBlock(void (^block)()) {
 
 
 - (CBLDocument*) _cachedDocumentWithID: (NSString*)docID {
-    return (CBLDocument*) [_docCache resourceWithCacheKey: docID];
+    return (CBLDocument*) [_docCache resourceWithCacheKeyDontRecache: docID];
 }
 
 - (void) _clearDocumentCache {

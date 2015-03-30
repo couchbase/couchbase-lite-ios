@@ -60,6 +60,9 @@
 /** Looks up a resource given its -cacheKey property. */
 - (id<CBLCacheable>) resourceWithCacheKey: (NSString*)cacheKey;
 
+ /** Same as -resourceWithCacheKey but does not mark the resource as being recently-used. */
+- (id<CBLCacheable>) resourceWithCacheKeyDontRecache: (NSString*)cacheKey;
+
 /** Removes a resource from the cache.
     Does nothing if the resource is not cached.
     An exception is raised if the resource is already in a different cache. */

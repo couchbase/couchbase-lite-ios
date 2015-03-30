@@ -82,6 +82,10 @@ static const NSUInteger kDefaultRetainLimit = 50;
     return doc;
 }
 
+- (id<CBLCacheable>) resourceWithCacheKeyDontRecache: (NSString*)docID {
+    return [_map objectForKey: docID];
+}
+
 
 - (void) forgetResource: (id<CBLCacheable>)resource {
 #if ! CBLCACHE_IS_SMART
