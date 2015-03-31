@@ -691,4 +691,90 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     Assert([importDb deleteDatabase:&error], @"Couldn't delete db: %@", error);
 }
 
+- (void) test12_StopIdlePush {
+    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+
+    // Create a continuous push replicator:
+    CBLReplication* pusher = [db createPushReplication: remoteDbURL];
+    pusher.continuous = YES;
+
+    // Run the replicator:
+    [self runReplication:pusher expectedChangesCount: 0];
+
+    // Make sure the replication is now idle:
+    AssertEq(pusher.status, kCBLReplicationIdle);
+
+    // Setup replication change notification observver:
+    __block BOOL stopped = NO;
+    id observer =
+        [[NSNotificationCenter defaultCenter] addObserverForName: kCBLReplicationChangeNotification
+                                                          object: pusher
+                                                           queue: nil
+        usingBlock: ^(NSNotification *note) {
+            if (pusher.status == kCBLReplicationStopped)
+                stopped = YES;
+    }];
+
+    // Stop the replicator:
+    [pusher stop];
+
+    // Wait to get a notification after the replication is stopped:
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
+    while (!stopped && timeout.timeIntervalSinceNow > 0.0) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
+            break;
+    }
+    [[NSNotificationCenter defaultCenter] removeObserver: observer];
+
+    // Check result:
+    Assert(stopped);
+}
+
+- (void) test13_StopIdlePullReplication {
+    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+
+    // Create a continuous push replicator:
+    CBLReplication* puller = [db createPullReplication: remoteDbURL];
+    puller.continuous = YES;
+
+    // Run the replicator:
+    [self runReplication:puller expectedChangesCount: 0];
+
+    // Make sure the replication is now idle:
+    AssertEq(puller.status, kCBLReplicationIdle);
+
+    // Setup replication change notification observver:
+    __block BOOL stopped = NO;
+    id observer =
+    [[NSNotificationCenter defaultCenter] addObserverForName: kCBLReplicationChangeNotification
+                                                      object: puller
+                                                       queue: nil
+                                                  usingBlock: ^(NSNotification *note) {
+                                                      if (puller.status == kCBLReplicationStopped)
+                                                          stopped = YES;
+                                                  }];
+
+    // Stop the replicator:
+    [puller stop];
+
+    // Wait to get a notification after the replication is stopped:
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
+    while (!stopped && timeout.timeIntervalSinceNow > 0.0) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
+            break;
+    }
+    [[NSNotificationCenter defaultCenter] removeObserver: observer];
+
+    // Check result:
+    Assert(stopped);
+}
+
 @end
