@@ -88,6 +88,16 @@
 #pragma mark - URL CONNECTION CALLBACKS:
 
 
+- (BOOL) retry {
+    if (_docCount > 0) {
+        // Don't retry if we've already read any docs, because we'd get
+        // those docs again and confuse the replicator.
+        return NO;
+    }
+    return [super retry];
+}
+
+
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     CBLStatus status = (CBLStatus) ((NSHTTPURLResponse*)response).statusCode;
     if (status < 300) {
@@ -157,6 +167,7 @@
     Assert(_docReader);
     if (![_docReader finish]) {
         [self cancelWithStatus: _docReader.status];
+        _docReader = nil;
         return NO;
     }
     ++_docCount;

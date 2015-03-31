@@ -78,6 +78,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 - (void) clearConnection;
 - (void) cancelWithStatus: (int)status;
 - (void) respondWithResult: (id)result error: (NSError*)error;
+- (BOOL) retry;
 
 // The value to use for the User-Agent HTTP header.
 + (NSString*) userAgentHeader;

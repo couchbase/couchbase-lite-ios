@@ -214,6 +214,7 @@ static NSData* kCRLFCRLF;
                 NSRange r = [self searchFor: _boundary from: start];
                 if (r.length > 0) {
                     if (_state == kInBody) {
+                        __unused id retainSelf = self;
                         if (![delegate appendToPart: [_buffer subdataWithRange: NSMakeRange(0, r.location)]]
                                 || ![delegate finishedPart]) {
                             [self stop];

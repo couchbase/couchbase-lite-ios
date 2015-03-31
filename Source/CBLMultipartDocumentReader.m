@@ -242,6 +242,11 @@
         LogTo(SyncVerbose, @"%@: Starting attachment #%u...",
               self, (unsigned)_attachmentsByDigest.count + 1);
         _curAttachment = [_database attachmentWriter];
+        if (headers[@"Content-Encoding"]) {
+            Warn(@"Oops, server is trying to send a compressed attachment, I can't do that yet");
+            _status = kCBLStatusUnsupportedType;
+            return NO;
+        }
         
         // See whether the attachment name is in the headers.
         NSString* disposition = headers[@"Content-Disposition"];
