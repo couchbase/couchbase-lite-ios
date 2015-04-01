@@ -455,6 +455,68 @@
 }
 
 
+- (void) test12_AllDocumentsBySequence {
+    static const NSUInteger kNDocs = 10;
+    [self createDocuments: kNDocs];
+
+    // clear the cache so all documents/revisions will be re-fetched:
+    [db _clearDocumentCache];
+
+    CBLQuery* query = [db createAllDocumentsQuery];
+    query.allDocsMode = kCBLBySequence;
+    CBLQueryEnumerator* rows = [query run: NULL];
+    SequenceNumber n = 0;
+    for (CBLQueryRow* row in rows) {
+        n++;
+        CBLDocument* doc = row.document;
+        Assert(doc, @"Couldn't get doc from query");
+        AssertEq(doc.currentRevision.sequence, n);
+    }
+    AssertEq(n, kNDocs);
+
+    query = [db createAllDocumentsQuery];
+    query.allDocsMode = kCBLBySequence;
+    query.startKey = @3;
+    rows = [query run: NULL];
+    n = 2;
+    for (CBLQueryRow* row in rows) {
+        n++;
+        CBLDocument* doc = row.document;
+        Assert(doc, @"Couldn't get doc from query");
+        AssertEq(doc.currentRevision.sequence, n);
+    }
+    AssertEq(n, kNDocs);
+
+    query = [db createAllDocumentsQuery];
+    query.allDocsMode = kCBLBySequence;
+    query.endKey = @6;
+    rows = [query run: NULL];
+    n = 0;
+    for (CBLQueryRow* row in rows) {
+        n++;
+        CBLDocument* doc = row.document;
+        Assert(doc, @"Couldn't get doc from query");
+        AssertEq(doc.currentRevision.sequence, n);
+    }
+    AssertEq(n, 6);
+
+    query = [db createAllDocumentsQuery];
+    query.allDocsMode = kCBLBySequence;
+    query.startKey = @3;
+    query.endKey = @6;
+    query.inclusiveStart = query.inclusiveEnd = NO;
+    rows = [query run: NULL];
+    n = 3;
+    for (CBLQueryRow* row in rows) {
+        n++;
+        CBLDocument* doc = row.document;
+        Assert(doc, @"Couldn't get doc from query");
+        AssertEq(doc.currentRevision.sequence, n);
+    }
+    AssertEq(n, 5);
+}
+
+
 - (void) test13_LocalDocs {
     NSDictionary* props = [db existingLocalDocumentWithID: @"dock"];
     AssertNil(props);

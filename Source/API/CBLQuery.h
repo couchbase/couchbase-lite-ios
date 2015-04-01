@@ -23,7 +23,8 @@ typedef NS_ENUM(unsigned, CBLAllDocsMode) {
     kCBLAllDocs,            /**< Normal behavior for all-docs query */
     kCBLIncludeDeleted,     /**< Will include rows for deleted documents */
     kCBLShowConflicts,      /**< Rows will indicate conflicting revisions */
-    kCBLOnlyConflicts       /**< Will _only_ return rows for docs in conflict */
+    kCBLOnlyConflicts,      /**< Will _only_ return rows for docs in conflict */
+    kCBLBySequence          /**< Order by sequence number (i.e. chronologically) */
 };
 
 
