@@ -565,10 +565,65 @@ static BOOL sAutoCompact = YES;
 }
 
 
+static SequenceNumber keyToSequence(id key, SequenceNumber dflt) {
+    return [key isKindOfClass: [NSNumber class]]? [key longLongValue] : dflt;
+}
+
+
 - (CBLQueryIteratorBlock) getAllDocs: (CBLQueryOptions*)options
                               status: (CBLStatus*)outStatus
 {
-    return [_storage getAllDocs: options status: outStatus];
+    // For regular all-docs, let storage do it all:
+    if (!options || options->allDocsMode != kCBLBySequence)
+        return [_storage getAllDocs: options status: outStatus];
+
+    // For changes feed mode (kCBLBySequence) do more work here:
+    if (options->descending) {
+        *outStatus = kCBLStatusNotImplemented;    //FIX: Implement descending order
+        return nil;
+    }
+    CBLChangesOptions changesOpts = {
+        .limit = options->limit,
+        .includeDocs = options->includeDocs,
+        .includeConflicts = YES,
+        .sortBySequence = YES
+    };
+    SequenceNumber startSeq = keyToSequence(options.startKey, 1);
+    SequenceNumber endSeq = keyToSequence(options.endKey, INT64_MAX);
+    if (!options->inclusiveStart)
+        ++startSeq;
+    if (!options->inclusiveEnd)
+        --endSeq;
+    SequenceNumber minSeq = startSeq, maxSeq = endSeq;
+    if (minSeq > maxSeq) {
+        *outStatus = kCBLStatusOK;
+        return nil;  // empty result
+    }
+    CBL_RevisionList* revs = [_storage changesSinceSequence: minSeq - 1
+                                                    options: &changesOpts
+                                                     filter: nil
+                                                     status: outStatus];
+    if (!revs)
+        return nil;
+
+    NSEnumerator* revEnum = (options->descending) ? revs.allRevisions.reverseObjectEnumerator
+                                                  : revs.allRevisions.objectEnumerator;
+    return ^CBLQueryRow*() {
+        CBL_Revision* rev = revEnum.nextObject;
+        if (!rev)
+            return nil;
+        SequenceNumber seq = rev.sequence;
+        if (seq < minSeq || seq > maxSeq)
+            return nil;
+        NSDictionary* value = $dict({@"rev", rev.revID},
+                                    {@"deleted", (rev.deleted ?$true : nil)});
+        return [[CBLQueryRow alloc] initWithDocID: rev.docID
+                                         sequence: seq
+                                              key: rev.docID
+                                            value: value
+                                      docRevision: rev
+                                          storage: nil];
+    };
 }
 
 
