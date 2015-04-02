@@ -278,11 +278,11 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
                                     properties: nuProperties
                                 prevRevisionID: prevID
                                  allowConflict: allowConflict
-                                        status: &status];
-    if (!newRev) {
-        if (outError) *outError = CBLStatusToNSError(status, nil);
+                                        status: &status
+                                         error: outError];
+    if (!newRev)
         return nil;
-    }
+    
     return [self revisionFromRev: newRev];
 }
 

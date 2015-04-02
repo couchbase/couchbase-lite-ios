@@ -673,11 +673,14 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                       self, rev.docID, [history my_compactDescription]);
 
                 // Insert the revision:
-                int status = [_db forceInsert: rev revisionHistory: history source: _remote];
+                NSError* error;
+                int status = [_db forceInsert: rev revisionHistory: history source: _remote
+                                        error: &error];
                 if (CBLStatusIsError(status)) {
                     if (status == kCBLStatusForbidden) {
                         // Considered a success, since the doc was delivered to the app.
-                        LogTo(Sync, @"%@: Remote rev failed validation: %@", self, rev);
+                        LogTo(Sync, @"%@: Remote rev failed validation: %@ (reason: %@)",
+                              self, rev, error.localizedFailureReason);
                     } else if (status == kCBLStatusDBBusy) {
                         return status;  // abort transaction; _inTransaction will retry
                     } else {

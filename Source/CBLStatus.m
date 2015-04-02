@@ -72,9 +72,11 @@ int CBLStatusToHTTPStatus( CBLStatus status, NSString** outMessage ) {
 }
 
 
-NSError* CBLStatusToNSErrorWithInfo( CBLStatus status, NSURL* url, NSDictionary* extraInfo ) {
-    NSString* reason;
-    status = CBLStatusToHTTPStatus(status, &reason);
+NSError* CBLStatusToNSErrorWithInfo( CBLStatus status, NSString *reason, NSURL* url,
+                                     NSDictionary* extraInfo ) {
+    NSString* statusMessage;
+    status = CBLStatusToHTTPStatus(status, &statusMessage);
+    reason = reason != nil ? reason : statusMessage;
     NSMutableDictionary* info = $mdict({NSURLErrorKey, url},
                                        {NSLocalizedFailureReasonErrorKey, reason},
                                        {NSLocalizedDescriptionKey, $sprintf(@"%i %@", status, reason)});
@@ -85,7 +87,7 @@ NSError* CBLStatusToNSErrorWithInfo( CBLStatus status, NSURL* url, NSDictionary*
 
 
 NSError* CBLStatusToNSError( CBLStatus status, NSURL* url ) {
-    return CBLStatusToNSErrorWithInfo(status, url, nil);
+    return CBLStatusToNSErrorWithInfo(status, nil, url, nil);
 }
 
 
