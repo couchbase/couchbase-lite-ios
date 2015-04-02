@@ -50,11 +50,14 @@ static NSDictionary* userProperties(NSDictionary* dict) {
 - (CBL_Revision*) putDoc: (NSDictionary*) props {
     CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status;
+    NSError* error;
     CBL_Revision* result = [db putRevision: [rev mutableCopy]
-                           prevRevisionID: props[@"_rev"]
-                            allowConflict: NO
-                                   status: &status];
-    Assert(status < 300, @"Status %d from putRevision:", status);
+                            prevRevisionID: props[@"_rev"]
+                             allowConflict: NO
+                                    status: &status
+                                     error: &error];
+    Assert(status < 300, @"Status %d from putRevision: (reason: %@)",
+           status, error.localizedFailureReason);
     Assert(result.revID != nil);
     return result;
 }
@@ -87,12 +90,15 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     AssertEq(status, kCBLStatusNotFound);
     
     // Create a document:
+    NSError* error;
     NSMutableDictionary* props = $mdict({@"foo", @1}, {@"bar", $false});
     CBL_Body* doc = [[CBL_Body alloc] initWithProperties: props];
     CBL_Revision* rev1 = [[CBL_Revision alloc] initWithBody: doc];
     Assert(rev1);
-    rev1 = [db putRevision: [rev1 mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
+    rev1 = [db putRevision: [rev1 mutableCopy] prevRevisionID: nil allowConflict: NO
+                    status: &status error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
     Log(@"Created: %@", rev1);
     Assert(rev1.docID.length >= 10);
     Assert([rev1.revID hasPrefix: @"1-"]);
@@ -108,8 +114,10 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     doc = [CBL_Body bodyWithProperties: props];
     CBL_Revision* rev2 = [[CBL_Revision alloc] initWithBody: doc];
     CBL_Revision* rev2Input = rev2;
-    rev2 = [db putRevision: [rev2 mutableCopy] prevRevisionID: rev1.revID allowConflict: NO status: &status];
+    rev2 = [db putRevision: [rev2 mutableCopy] prevRevisionID: rev1.revID allowConflict: NO
+                    status: &status error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
     Log(@"Updated: %@", rev2);
     AssertEqual(rev2.docID, rev1.docID);
     Assert([rev2.revID hasPrefix: @"2-"]);
@@ -120,8 +128,10 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     AssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
     
     // Try to update the first rev, which should fail:
-    AssertNil([db putRevision: [rev2Input mutableCopy] prevRevisionID: rev1.revID allowConflict: NO status: &status]);
+    AssertNil([db putRevision: [rev2Input mutableCopy] prevRevisionID: rev1.revID allowConflict: NO
+                       status: &status error: &error]);
     AssertEq(status, kCBLStatusConflict);
+    AssertEq(error.code, kCBLStatusConflict);
 
     // Check the changes feed, with and without filters:
     CBL_RevisionList* changes = [db changesSinceSequence: 0 options: NULL filter: NULL params: nil status: &status];
@@ -142,11 +152,17 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     AssertEq(changes.count, 0u);
         
     // Delete it:
+    error = nil;
     CBL_Revision* revD = [[CBL_Revision alloc] initWithDocID: rev2.docID revID: nil deleted: YES];
-    AssertEqual([db putRevision: [revD mutableCopy] prevRevisionID: nil allowConflict: NO status: &status], nil);
+    AssertEqual([db putRevision: [revD mutableCopy] prevRevisionID: nil allowConflict: NO
+                         status: &status error: &error], nil);
     AssertEq(status, kCBLStatusConflict);
-    revD = [db putRevision: [revD mutableCopy] prevRevisionID: rev2.revID allowConflict: NO status: &status];
+
+    error = nil;
+    revD = [db putRevision: [revD mutableCopy] prevRevisionID: rev2.revID allowConflict: NO
+                    status: &status error: &error];
     AssertEq(status, kCBLStatusOK);
+    AssertNil(error);
     AssertEqual(revD.docID, rev2.docID);
     Assert([revD.revID hasPrefix: @"3-"]);
 
@@ -157,9 +173,12 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     AssertEqual(readRev.revID, revD.revID);
 
     // Delete nonexistent doc:
+    error = nil;
     CBL_Revision* revFake = [[CBL_Revision alloc] initWithDocID: @"fake" revID: nil deleted: YES];
-    [db putRevision: [revFake mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
+    [db putRevision: [revFake mutableCopy] prevRevisionID: nil allowConflict: NO
+             status: &status error: &error];
     AssertEq(status, kCBLStatusNotFound);
+    AssertEq(error.code, kCBLStatusNotFound);
 
     // Read it back (should fail):
     readRev = [db getDocumentWithID: revD.docID revisionID: nil];
@@ -191,7 +210,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     AssertEqual(userProperties(readRev.properties), userProperties(rev1.properties));
 
     // Compact the database:
-    NSError* error;
+    error = nil;
     Assert([db compact: &error]);
 
     // Make sure old rev is missing:
@@ -285,20 +304,25 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
     NSMutableDictionary* props = $mdict({@"name", @"Zaphod Beeblebrox"}, {@"towel", @"velvet"});
     CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status;
+    NSError* error;
     validationCalled = NO;
     expectedParentRevID = nil;
-    rev = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
+    rev = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO
+                   status: &status error: &error];
     Assert(validationCalled);
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
 
     // PUT a valid update:
     props[@"head_count"] = @3;
     rev = revBySettingProperties(rev, props);
     validationCalled = NO;
     expectedParentRevID = rev.revID;
-    rev = [db putRevision: [rev mutableCopy] prevRevisionID: rev.revID allowConflict: NO status: &status];
+    rev = [db putRevision: [rev mutableCopy] prevRevisionID: rev.revID allowConflict: NO
+                   status: &status error: &error];
     Assert(validationCalled);
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
 
     // PUT an invalid update:
     [props removeObjectForKey: @"towel"];
@@ -306,46 +330,64 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
     validationCalled = NO;
     expectedParentRevID = rev.revID;
 #pragma unused(rev)
-    rev = [db putRevision: [rev mutableCopy] prevRevisionID: rev.revID allowConflict: NO status: &status];
+    rev = [db putRevision: [rev mutableCopy] prevRevisionID: rev.revID allowConflict: NO
+                   status: &status error: &error];
     Assert(validationCalled);
     AssertEq(status, kCBLStatusForbidden);
+    AssertEq(error.code, kCBLStatusForbidden);
+    AssertEqual(error.localizedDescription, @"403 Where's your towel?");
+
 
     // POST an invalid new document:
     props = $mdict({@"name", @"Vogon"}, {@"poetry", $true});
     rev = [[CBL_Revision alloc] initWithProperties: props];
     validationCalled = NO;
     expectedParentRevID = nil;
-    rev = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
+    error = nil;
+    rev = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO
+                   status: &status error: &error];
     Assert(validationCalled);
     AssertEq(status, kCBLStatusForbidden);
+    AssertEq(error.code, kCBLStatusForbidden);
+    AssertEqual(error.localizedDescription, @"403 Where's your towel?");
 
     // PUT a valid new document with an ID:
     props = $mdict({@"_id", @"ford"}, {@"name", @"Ford Prefect"}, {@"towel", @"terrycloth"});
     rev = [[CBL_Revision alloc] initWithProperties: props];
     validationCalled = NO;
-    rev = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
+    error = nil;
+    rev = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO
+                   status: &status error: &error];
     Assert(validationCalled);
     expectedParentRevID = nil;
     AssertEq(status, kCBLStatusCreated);
     AssertEqual(rev.docID, @"ford");
+    AssertNil(error);
     
     // DELETE a document:
     rev = [[CBL_Revision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
     Assert(rev.deleted);
     validationCalled = NO;
     expectedParentRevID = rev.revID;
-    rev = [db putRevision: [rev mutableCopy] prevRevisionID: rev.revID allowConflict: NO status: &status];
+    error = nil;
+    rev = [db putRevision: [rev mutableCopy] prevRevisionID: rev.revID allowConflict: NO
+                   status: &status error: &error];
     AssertEq(status, kCBLStatusOK);
     Assert(validationCalled);
+    AssertNil(error);
 
     // PUT an invalid new document:
     props = $mdict({@"_id", @"petunias"}, {@"name", @"Pot of Petunias"});
     rev = [[CBL_Revision alloc] initWithProperties: props];
     validationCalled = NO;
     expectedParentRevID = nil;
-    rev = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
+    error = nil;
+    rev = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO
+                   status: &status error: &error];
     Assert(validationCalled);
     AssertEq(status, kCBLStatusForbidden);
+    AssertEq(error.code, kCBLStatusForbidden);
+    AssertEqual(error.localizedDescription, @"403 Where's your towel?");
 }
 
 
@@ -397,8 +439,10 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
     NSArray* history = @[rev.revID, @"3-3333", @"2-2222", @"1-1111"];
     change = nil;
-    CBLStatus status = [db forceInsert: rev revisionHistory: history source: nil];
+    NSError* error;
+    CBLStatus status = [db forceInsert: rev revisionHistory: history source: nil error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
     AssertEq(db.documentCount, 1u);
     [self verifyRev: rev history: history existing: 0];
     AssertEqual(change, announcement(rev, rev));
@@ -410,8 +454,9 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
                                 {@"message", @"yo"});
     NSArray* conflictHistory = @[conflict.revID, @"4-4545", @"3-3030", @"2-2222", @"1-1111"];
     change = nil;
-    status = [db forceInsert: conflict revisionHistory: conflictHistory source: nil];
+    status = [db forceInsert: conflict revisionHistory: conflictHistory source: nil error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
     AssertEq(db.documentCount, 1u);
     [self verifyRev: conflict history: conflictHistory existing: 0];
     AssertEqual(change, announcement(conflict, conflict));
@@ -421,8 +466,9 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     CBL_MutableRevision* other = [[CBL_MutableRevision alloc] initWithDocID: @"AnotherDocID" revID: @"1-1010" deleted: NO];
     other.properties = $dict({@"language", @"jp"});
     change = nil;
-    status = [db forceInsert: other revisionHistory: @[other.revID] source: nil];
+    status = [db forceInsert: other revisionHistory: @[other.revID] source: nil error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
     AssertEqual(change, announcement(other, other));
     Assert(!change.inConflict);
 
@@ -460,8 +506,9 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     CBL_Revision* del1 = [[CBL_Revision alloc] initWithDocID: conflict.docID revID: nil deleted: YES];
     change = nil;
     del1 = [db putRevision: [del1 mutableCopy] prevRevisionID: conflict.revID
-             allowConflict: NO status: &status];
+             allowConflict: NO status: &status error: &error];
     AssertEq(status, 200);
+    AssertNil(error);
     current = [db getDocumentWithID: rev.docID revisionID: nil];
     AssertEqual(current, rev);
     AssertEqual(change, announcement(del1, rev));
@@ -472,8 +519,9 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     CBL_Revision* del2 = [[CBL_Revision alloc] initWithDocID: rev.docID revID: nil deleted: YES];
     change = nil;
     del2 = [db putRevision: [del2 mutableCopy] prevRevisionID: rev.revID
-             allowConflict: NO status: &status];
+             allowConflict: NO status: &status error: &error];
     AssertEq(status, 200);
+    AssertNil(error);
     current = [db getDocumentWithID: rev.docID revisionID: nil];
     AssertEqual(current, nil);
 
@@ -505,8 +553,10 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
     NSArray* history = @[rev.revID];
     change = nil;
-    CBLStatus status = [db forceInsert: rev revisionHistory: history source: nil];
+    NSError* error;
+    CBLStatus status = [db forceInsert: rev revisionHistory: history source: nil error: &error];
     AssertEq(status, 201);
+    AssertNil(error);
     AssertEq(db.documentCount, 1u);
     Assert(!change.inConflict);
     [self verifyRev: rev history: history existing: 0];
@@ -516,8 +566,9 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
     history = @[rev.revID, @"3-3333", @"2-2222", @"1-1111"];
     change = nil;
-    status = [db forceInsert: rev revisionHistory: history source: nil];
+    status = [db forceInsert: rev revisionHistory: history source: nil error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
     AssertEq(db.documentCount, 1u);
     Assert(!change.inConflict);
     [self verifyRev: rev history: history existing: 1];
@@ -547,11 +598,14 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
 
     CBL_Revision* rev2b = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status;
+    NSError* error;
     rev2b = [db putRevision: [rev2b mutableCopy]
              prevRevisionID: rev1.revID
               allowConflict: YES
-                     status: &status];
+                     status: &status
+                      error: &error];
     AssertEq(status, kCBLStatusOK);
+    AssertNil(error);
     AssertEqual(rev2b, rev2a);
 }
 
@@ -711,6 +765,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     // Add a revision and an attachment:
     CBL_Revision* rev1;
     CBLStatus status;
+    NSError* error;
     NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
     NSDictionary* props = @{@"foo": @1,
                             @"bar": $false,
@@ -722,14 +777,14 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
                             }
                            };
     rev1 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
-            prevRevisionID: nil allowConflict: NO status: &status];
+            prevRevisionID: nil allowConflict: NO status: &status error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
 
     NSFileManager* manager = [NSFileManager defaultManager];
     NSString* attachmentStorePath = db.attachmentStorePath;
     AssertEq([manager fileExistsAtPath: attachmentStorePath], YES);
 
-    NSError* error;
     BOOL result = [db deleteDatabase: &error];
     AssertEq(result, YES);
     AssertNil(error);

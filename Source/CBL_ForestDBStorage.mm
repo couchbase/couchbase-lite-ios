@@ -874,9 +874,12 @@ static void convertRevIDs(NSArray* revIDs,
              allowConflict: (BOOL)allowConflict
            validationBlock: (CBL_StorageValidationBlock)validationBlock
                     status: (CBLStatus*)outStatus
+                     error: (NSError **)outError
 {
     if (_forest->isReadOnly()) {
         *outStatus = kCBLStatusForbidden;
+        if (outError)
+            *outError = CBLStatusToNSError(*outStatus, nil);
         return nil;
     }
 
@@ -885,6 +888,8 @@ static void convertRevIDs(NSArray* revIDs,
         json = [CBL_Revision asCanonicalJSON: properties error: NULL];
         if (!json) {
             *outStatus = kCBLStatusBadJSON;
+            if (outError)
+                *outError = CBLStatusToNSError(*outStatus, nil);
             return nil;
         }
     } else {
@@ -963,7 +968,8 @@ static void convertRevIDs(NSArray* revIDs,
                                                         revID: prevRevID
                                                       deleted: revNode->isDeleted()];
             }
-            CBLStatus status = validationBlock(putRev, prevRev, prevRevID);
+
+            CBLStatus status = validationBlock(putRev, prevRev, prevRevID, outError);
             if (CBLStatusIsError(status))
                 return status;
         }
@@ -992,8 +998,11 @@ static void convertRevIDs(NSArray* revIDs,
         return (CBLStatus)status;
     }];
 
-    if (CBLStatusIsError(*outStatus))
+    if (CBLStatusIsError(*outStatus)) {
+        if (outError && !*outError)
+            *outError = CBLStatusToNSError(*outStatus, nil);
         return nil;
+    }
     [_delegate databaseStorageChanged: change];
     return putRev;
 }
@@ -1004,13 +1013,20 @@ static void convertRevIDs(NSArray* revIDs,
           revisionHistory: (NSArray*)history
           validationBlock: (CBL_StorageValidationBlock)validationBlock
                    source: (NSURL*)source
+                    error: (NSError **)outError
 {
-    if (_forest->isReadOnly())
+    if (_forest->isReadOnly()) {
+        if (outError)
+            *outError = CBLStatusToNSError(kCBLStatusForbidden, nil);
         return kCBLStatusForbidden;
+    }
 
     NSData* json = inRev.asCanonicalJSON;
-    if (!json)
+    if (!json) {
+        if (outError)
+            *outError = CBLStatusToNSError(kCBLStatusBadJSON, nil);
         return kCBLStatusBadJSON;
+    }
 
     __block CBLDatabaseChange* change = nil;
 
@@ -1041,7 +1057,7 @@ static void convertRevIDs(NSArray* revIDs,
                                                    deleted: deleted];
             }
             NSString* parentRevID = (history.count > 1) ? history[1] : nil;
-            CBLStatus status = validationBlock(inRev, prev, parentRevID);
+            CBLStatus status = validationBlock(inRev, prev, parentRevID, outError);
             if (CBLStatusIsError(status))
                 return status;
         }
@@ -1063,6 +1079,11 @@ static void convertRevIDs(NSArray* revIDs,
 
     if (change)
         [_delegate databaseStorageChanged: change];
+
+    if (CBLStatusIsError(status)) {
+        if (outError && !*outError)
+            *outError = CBLStatusToNSError(status, nil);
+    }
     return status;
 }
 

@@ -271,20 +271,23 @@
                 NSString* docID = doc.cbl_id;
                 CBL_Revision* rev;
                 CBLStatus status;
+                NSError* error;
                 CBL_Body* docBody = [CBL_Body bodyWithProperties: doc];
                 if (noNewEdits) {
                     rev = [[CBL_Revision alloc] initWithBody: docBody];
                     NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: doc];
-                    status = rev ? [db forceInsert: rev revisionHistory: history source: nil]
-                                 : kCBLStatusBadParam;
+                    status = rev ? [db forceInsert: rev revisionHistory: history source: nil
+                                             error: &error] : kCBLStatusBadParam;
                 } else {
                     status = [self update: db
                                     docID: docID
                                      body: docBody
                                  deleting: NO
                             allowConflict: allOrNothing
-                               createdRev: &rev];
+                               createdRev: &rev
+                                    error: &error];
                 }
+
                 NSDictionary* result = nil;
                 if (status < 300) {
                     Assert(rev.revID);
@@ -293,11 +296,17 @@
                 } else if (status >= 500) {
                     return status;  // abort the whole thing if something goes badly wrong
                 } else if (allOrNothing) {
+                    if (error)
+                        _response.statusReason = error.localizedFailureReason;
                     return status;  // all_or_nothing backs out if there's any error
                 } else {
-                    NSString* error = nil;
-                    status = CBLStatusToHTTPStatus(status, &error);
-                    result = $dict({@"id", docID}, {@"error", error}, {@"status", @(status)});
+                    NSString* errorMessage = nil;
+                    status = CBLStatusToHTTPStatus(status, &errorMessage);
+                    NSString* reason = error.localizedFailureReason;
+                    if (reason)
+                        result = $dict({@"id", docID}, {@"error", errorMessage}, {@"reason", reason}, {@"status", @(status)});
+                    else
+                        result = $dict({@"id", docID}, {@"error", errorMessage}, {@"status", @(status)});
                 }
                 if (result)
                     [results addObject: result];
@@ -723,11 +732,12 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 
 - (CBLStatus) update: (CBLDatabase*)db
-              docID: (NSString*)docID
-               body: (CBL_Body*)body
-           deleting: (BOOL)deleting
-      allowConflict: (BOOL)allowConflict
-         createdRev: (CBL_Revision**)outRev
+               docID: (NSString*)docID
+                body: (CBL_Body*)body
+            deleting: (BOOL)deleting
+       allowConflict: (BOOL)allowConflict
+          createdRev: (CBL_Revision**)outRev
+               error: (NSError**)outError
 {
     if (body && !body.isValidJSON)
         return kCBLStatusBadJSON;
@@ -769,15 +779,22 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     else
         *outRev = [db putRevision: rev prevRevisionID: prevRevID
                     allowConflict: allowConflict
-                           status: &status];
+                           status: &status
+                            error: outError];
+
+    if (CBLStatusIsError(status)) {
+        if (outError && !*outError)
+            *outError = CBLStatusToNSError(status, nil);
+    }
     return status;
 }
 
 
 - (CBLStatus) update: (CBLDatabase*)db
-              docID: (NSString*)docID
-               body: (CBL_Body*)body
-           deleting: (BOOL)deleting
+               docID: (NSString*)docID
+                body: (CBL_Body*)body
+            deleting: (BOOL)deleting
+               error: (NSError**)outError
 {
     if (docID) {
         // On PUT/DELETE, get revision ID from either ?rev= query, If-Match: header, or doc body:
@@ -786,8 +803,12 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         if (ifMatch) {
             if (!revParam)
                 revParam = ifMatch;
-            else if (!$equal(revParam, ifMatch))
-                return 400;
+            else if (!$equal(revParam, ifMatch)) {
+                CBLStatus status = kCBLStatusBadRequest;
+                if (outError)
+                    *outError = CBLStatusToNSError(status, nil);
+                return status;
+            }
         }
         if (revParam && body) {
             id revProp = body.properties.cbl_rev;
@@ -797,7 +818,11 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                 props[@"_rev"] = revParam;
                 body = [CBL_Body bodyWithProperties: props];
             } else if (!$equal(revProp, revParam)) {
-                return 400; // mismatch between _rev and rev
+                // mismatch between _rev and rev
+                CBLStatus status = kCBLStatusBadRequest;
+                if (outError)
+                    *outError = CBLStatusToNSError(status, nil);
+                return status;
             }
         }
     }
@@ -806,7 +831,8 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     CBLStatus status = [self update: db docID: docID body: body
                            deleting: deleting
                       allowConflict: NO
-                         createdRev: &rev];
+                         createdRev: &rev
+                              error: outError];
     if (status < 300) {
         [self cacheWithEtag: rev.revID];        // set ETag
         if (!deleting) {
@@ -871,7 +897,10 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if (CBLStatusIsError(status))
         return status;
     return [self readDocumentBodyThen: ^(CBL_Body *body) {
-        return [self update: db docID: nil body: body deleting: NO];
+        NSError* error;
+        CBLStatus status = [self update: db docID: nil body: body deleting: NO error: &error];
+        _response.statusReason = error.localizedFailureReason;
+        return status;
     }];
 }
 
@@ -880,7 +909,10 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     return [self readDocumentBodyThen: ^CBLStatus(CBL_Body *body) {
         if (![self query: @"new_edits"] || [self boolQuery: @"new_edits"]) {
             // Regular PUT:
-            return [self update: db docID: docID body: body deleting: NO];
+            NSError* error;
+            CBLStatus status = [self update: db docID: docID body: body deleting: NO error: &error];
+            _response.statusReason = error.localizedFailureReason;
+            return status;
         } else {
             // PUT with new_edits=false -- forcible insertion of existing revision:
             CBL_Revision* rev = [[CBL_Revision alloc] initWithBody: body];
@@ -889,12 +921,16 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             if (!$equal(rev.docID, docID) || !rev.revID)
                 return kCBLStatusBadID;
             NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: body.properties];
-            CBLStatus status = [_db forceInsert: rev revisionHistory: history source: nil];
+            NSError* error;
+            CBLStatus status = [_db forceInsert: rev revisionHistory: history source: nil
+                                          error: &error];
             if (!CBLStatusIsError(status)) {
                 _response.bodyObject = $dict({@"ok", $true},
                                              {@"id", rev.docID},
                                              {@"rev", rev.revID});
-            }
+            } else
+                _response.statusReason = error.localizedFailureReason;
+
             return status;
         }
     }];
@@ -902,22 +938,27 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 
 - (CBLStatus) do_DELETE: (CBLDatabase*)db docID: (NSString*)docID {
-    return [self update: db docID: docID body: nil deleting: YES];
+    NSError* error;
+    CBLStatus status = [self update: db docID: docID body: nil deleting: YES error: &error];
+    _response.statusReason = error.localizedFailureReason;
+    return status;
 }
 
 
 - (CBLStatus) updateAttachment: (NSString*)attachment
                         docID: (NSString*)docID
-                         body: (CBL_BlobStoreWriter*)body
+                          body: (CBL_BlobStoreWriter*)body
+                         error: (NSError**)outError
 {
     CBLStatus status;
-    CBL_Revision* rev = [_db updateAttachment: attachment 
-                                       body: body
-                                       type: [_request valueForHTTPHeaderField: @"Content-Type"]
-                                   encoding: kCBLAttachmentEncodingNone
-                                    ofDocID: docID
-                                      revID: ([self query: @"rev"] ?: self.ifMatch)
-                                     status: &status];
+    CBL_Revision* rev = [_db updateAttachment: attachment
+                                         body: body
+                                         type: [_request valueForHTTPHeaderField: @"Content-Type"]
+                                     encoding: kCBLAttachmentEncodingNone
+                                      ofDocID: docID
+                                        revID: ([self query: @"rev"] ?: self.ifMatch)
+                                       status: &status
+                                        error: outError];
     if (status < 300) {
         _response.bodyObject = $dict({@"ok", $true}, {@"id", rev.docID}, {@"rev", rev.revID});
         [self cacheWithEtag: rev.revID];
@@ -952,12 +993,18 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     }
     [blob finish];
 
-    return [self updateAttachment: attachment docID: docID body: blob];
+    NSError* error;
+    CBLStatus status = [self updateAttachment: attachment docID: docID body: blob error: &error];
+    _response.statusReason = error.localizedFailureReason;
+    return status;
 }
 
 
 - (CBLStatus) do_DELETE: (CBLDatabase*)db docID: (NSString*)docID attachment: (NSString*)attachment {
-    return [self updateAttachment: attachment docID: docID body: nil];
+    NSError* error;
+    CBLStatus status = [self updateAttachment: attachment docID: docID body: nil error: &error];
+    _response.statusReason = error.localizedFailureReason;
+    return status;
 }
 
 

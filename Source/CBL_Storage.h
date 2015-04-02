@@ -183,7 +183,8 @@
                   deleting: (BOOL)deleting
              allowConflict: (BOOL)allowConflict
            validationBlock: (CBL_StorageValidationBlock)validationBlock
-                    status: (CBLStatus*)status;
+                    status: (CBLStatus*)status
+                     error: (NSError**)outError;
 
 /** Inserts an already-existing revision (with its revID), plus its ancestry, into a document.
     This is called by the pull replicator to add the revisions received from the server.
@@ -201,7 +202,8 @@
 - (CBLStatus) forceInsert: (CBL_Revision*)inRev
           revisionHistory: (NSArray*)history
           validationBlock: (CBL_StorageValidationBlock)validationBlock
-                   source: (NSURL*)source;
+                   source: (NSURL*)source
+                    error: (NSError**)outError;
 
 /** Purges specific revisions, which deletes them completely from the local database _without_ adding a "tombstone" revision. It's as though they were never there.
     @param docsToRevs  A dictionary mapping document IDs to arrays of revision IDs.

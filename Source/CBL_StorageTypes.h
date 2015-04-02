@@ -21,7 +21,8 @@ typedef CBLQueryRow* (^CBLQueryIteratorBlock)(void);
 /** Document validation callback, passed to the insertion methods. */
 typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
                                                CBL_Revision* prev,
-                                               NSString* parentRevID);
+                                               NSString* parentRevID,
+                                               NSError** outError);
 
 
 /** Standard query options for views. */

@@ -55,8 +55,11 @@
 - (CBL_Revision*) putDoc: (NSDictionary*)props {
     CBL_Revision* rev = [[CBL_Revision alloc] initWithProperties: props];
     CBLStatus status;
-    CBL_Revision* result = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO status: &status];
+    NSError* error;
+    CBL_Revision* result = [db putRevision: [rev mutableCopy] prevRevisionID: nil allowConflict: NO
+                                    status: &status error: &error];
     Assert(status < 300, @"Status %d from putDoc(%@)", status, props);
+    AssertNil(error);
     return result.revisionByAddingBasicMetadata;
 }
 
@@ -171,14 +174,19 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     CBL_MutableRevision* threeUpdated = [[CBL_MutableRevision alloc] initWithDocID: rev3.docID revID: nil deleted:NO];
     threeUpdated.properties = $dict({@"key", @"3hree"});
     CBLStatus status;
-    rev3 = [db putRevision: threeUpdated prevRevisionID: rev3.revID allowConflict: NO status: &status];
+    NSError* error;
+    rev3 = [db putRevision: threeUpdated prevRevisionID: rev3.revID allowConflict: NO
+                    status: &status error: &error];
     Assert(status < 300);
+    AssertNil(error);
 
     CBL_Revision* rev4 = [self putDoc: $dict({@"key", @"four"})];
     
     CBL_Revision* twoDeleted = [[CBL_Revision alloc] initWithDocID: rev2.docID revID: nil deleted:YES];
-    [db putRevision: [twoDeleted mutableCopy] prevRevisionID: rev2.revID allowConflict: NO status: &status];
+    [db putRevision: [twoDeleted mutableCopy] prevRevisionID: rev2.revID allowConflict: NO
+             status: &status error: &error];
     Assert(status < 300);
+    AssertNil(error);
 
     // Reindex again:
     Assert(view.stale);
@@ -296,12 +304,14 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
                               $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
     
     // Create a conflict, won by the new revision:
+    NSError* error;
     NSDictionary* props = $dict({@"_id", @"44444"},
                                 {@"_rev", @"1-ffffff"},  // higher revID, will win conflict
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
-    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
+    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil error: &error];
     Assert(status < 300);
+    AssertNil(error);
     AssertEqual(leaf1.docID, leaf2.docID);
     
     // Update the view -- should contain only the key from the new rev, not the old:
@@ -334,12 +344,14 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
                               $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
     
     // Create a conflict, won by the old revision:
+    NSError* error;
     NSDictionary* props = $dict({@"_id", @"44444"},
                                 {@"_rev", @"1-00"},  // lower revID, will lose conflict
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
-    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
+    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil error: &error];
     Assert(status < 300);
+    AssertNil(error);
     AssertEqual(leaf1.docID, leaf2.docID);
 
     CBL_Revision* winner = [db getDocumentWithID: @"44444" revisionID: nil];
@@ -375,12 +387,14 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
                              $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
     
     // Create a conflict, won by the new revision:
+    NSError* error;
     NSDictionary* props = $dict({@"_id", @"44444"},
                                 {@"_rev", @"1-FFFFFFFF"},  // higher revID, will win conflict
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
-    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
+    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil error: &error];
     Assert(status < 300);
+    AssertNil(error);
     AssertEqual(leaf1.docID, leaf2.docID);
     
     // Update the view -- should contain only the key from the new rev, not the old:
@@ -395,8 +409,10 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 
     // Delete the new rev, which will make the old one current again:
     CBL_Revision* leaf3 = [[CBL_Revision alloc]initWithDocID:@"44444" revID:@"" deleted:true];
-    leaf3 = [db putRevision: [leaf3 mutableCopy] prevRevisionID: leaf2.revID allowConflict:true status:&status];
+    leaf3 = [db putRevision: [leaf3 mutableCopy] prevRevisionID: leaf2.revID allowConflict:true
+                     status: &status error: &error];
     AssertEq(status, kCBLStatusOK);
+    AssertNil(error);
 
     AssertEq(true, [leaf3 deleted]);
     AssertEqual(leaf1.docID, leaf3.docID);
@@ -755,12 +771,14 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     }
 
     // Create a conflict, won by the old revision:
+    NSError* error;
     NSDictionary* props = $dict({@"_id", @"44444"},
                                 {@"_rev", @"1-00"},  // lower revID, will lose conflict
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
-    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil];
+    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil error: &error];
     Assert(status < 300);
+    AssertNil(error);
 
     AssertEqual([db getDocumentWithID: @"44444" revisionID: nil].revID, [docs[1] revID]);
 
@@ -810,8 +828,10 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     // Delete a document:
     CBL_Revision* del = docs[0];
     del = [[CBL_Revision alloc] initWithDocID: del.docID revID: del.revID deleted: YES];
-    del = [db putRevision: [del mutableCopy] prevRevisionID: del.revID allowConflict: NO status: &status];
+    del = [db putRevision: [del mutableCopy] prevRevisionID: del.revID allowConflict: NO
+                   status: &status error: &error];
     AssertEq(status, kCBLStatusOK);
+    AssertNil(error);
 
     // Get deleted doc, and one bogus one:
     options = [CBLQueryOptions new];
@@ -1189,8 +1209,10 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     CBL_Revision* rev = docs[3];
     CBL_MutableRevision* del = [[CBL_MutableRevision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
     CBLStatus status;
-    [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status];
+    NSError* error;
+    [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status error: &error];
     AssertEq(status, kCBLStatusOK);
+    AssertNil(error);
 
     AssertEq([view updateIndex], kCBLStatusOK);
 
@@ -1309,13 +1331,15 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     // Create a conflict, won by the new revision:
     NSDictionary* props;
     CBLStatus status;
+    NSError* error;
     CBL_Revision* rev;
     props = $dict({@"_id", @"44444"},
                   {@"_rev", @"1-ffffff"},  // higher revID, will win conflict
                   {@"key", @"40ur"});
     rev = [[CBL_Revision alloc] initWithProperties: props];
-    status = [db forceInsert: rev revisionHistory: @[] source: nil];
+    status = [db forceInsert: rev revisionHistory: @[] source: nil error: &error];
     Assert(status < 300);
+    AssertNil(error);
     AssertEq([view updateIndex], kCBLStatusOK);
     AssertEq(view.totalRows, totalRows);
     
@@ -1324,8 +1348,9 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
                   {@"_rev", @"1-000000"},  // lower revID, will lose conflict
                   {@"key", @"40ur"});
     rev = [[CBL_Revision alloc] initWithProperties: props];
-    status = [db forceInsert: rev revisionHistory: @[] source: nil];
+    status = [db forceInsert: rev revisionHistory: @[] source: nil error: &error];
     Assert(status < 300);
+    AssertNil(error);
     AssertEq([view updateIndex], kCBLStatusOK);
     AssertEq(view.totalRows, totalRows);
     
@@ -1333,8 +1358,10 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     CBL_MutableRevision* nuRev = [[CBL_MutableRevision alloc] initWithDocID: rev.docID
                                                                       revID: nil deleted:NO];
     nuRev.properties = $dict({@"key", @"F0uR"});
-    rev = [db putRevision: nuRev prevRevisionID: rev.revID allowConflict: NO status: &status];
+    rev = [db putRevision: nuRev prevRevisionID: rev.revID allowConflict: NO
+                   status: &status error: &error];
     Assert(status < 300);
+    AssertNil(error);
     AssertEq([view updateIndex], kCBLStatusOK);
     AssertEq(view.totalRows, totalRows);
     
@@ -1342,8 +1369,9 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     Log(@"Deleting doc 33333...");
     CBL_Revision* doc3 = docs[3];
     CBL_MutableRevision* del = [[CBL_MutableRevision alloc] initWithDocID: doc3.docID revID: nil deleted: YES];
-    [db putRevision: del prevRevisionID: doc3.revID allowConflict: NO status: &status];
+    [db putRevision: del prevRevisionID: doc3.revID allowConflict: NO status: &status error: &error];
     AssertEq(status, kCBLStatusOK);
+    AssertNil(error);
     AssertEq([view updateIndex], kCBLStatusOK);
     AssertEq(view.totalRows, totalRows - 1);
     

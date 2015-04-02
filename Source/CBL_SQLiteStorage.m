@@ -1423,12 +1423,15 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
              allowConflict: (BOOL)allowConflict
            validationBlock: (CBL_StorageValidationBlock)validationBlock
                     status: (CBLStatus*)outStatus
+                     error: (NSError**)outError
 {
     __block NSData* json = nil;
     if (properties) {
         json = [CBL_Revision asCanonicalJSON: properties error: NULL];
         if (!json) {
             *outStatus = kCBLStatusBadJSON;
+            if (outError)
+                *outError = CBLStatusToNSError(*outStatus, nil);
             return nil;
         }
     } else {
@@ -1550,7 +1553,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                                                         revID: prevRevID
                                                       deleted: NO];
             }
-            CBLStatus status = validationBlock(newRev, prevRev, prevRevID);
+            CBLStatus status = validationBlock(newRev, prevRev, prevRevID, outError);
             if (CBLStatusIsError(status))
                 return status;
         }
@@ -1603,8 +1606,11 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         return deleting ? kCBLStatusOK : kCBLStatusCreated;
     }];
     
-    if (CBLStatusIsError(*outStatus)) 
+    if (CBLStatusIsError(*outStatus)) {
+        if (outError && !*outError)
+            *outError = CBLStatusToNSError(*outStatus, nil);
         return nil;
+    }
     
     //// EPILOGUE: A change notification is sent...
     [_delegate databaseStorageChanged: [[CBLDatabaseChange alloc] initWithAddedRevision: newRev
@@ -1619,6 +1625,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
           revisionHistory: (NSArray*)history
           validationBlock: (CBL_StorageValidationBlock)validationBlock
                    source: (NSURL*)source
+                    error: (NSError**)outError
 {
     CBL_MutableRevision* rev = inRev.mutableCopy;
     rev.sequence = 0;
@@ -1664,7 +1671,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                     break;
             }
             NSString* parentRevID = (history.count > 1) ? history[1] : nil;
-            CBLStatus status = validationBlock(rev, oldRev, parentRevID);
+            CBLStatus status = validationBlock(rev, oldRev, parentRevID, outError);
             if (CBLStatusIsError(status))
                 return status;
         }
@@ -1743,7 +1750,11 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                                                               winningRevisionID: winningRevID
                                                                      inConflict: inConflict
                                                                          source: source]];
+    } else {
+        if (outError && !*outError)
+            *outError = CBLStatusToNSError(status, nil);
     }
+
     return status;
 }
 

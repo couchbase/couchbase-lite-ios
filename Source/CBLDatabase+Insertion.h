@@ -24,7 +24,8 @@
                 properties: (NSMutableDictionary*)properties
             prevRevisionID: (NSString*)inPrevRevID
              allowConflict: (BOOL)allowConflict
-                    status: (CBLStatus*)outStatus;
+                    status: (CBLStatus*)outStatus
+                     error: (NSError**)outError;
 
 /** Stores a new (or initial) revision of a document. This is what's invoked by a PUT or POST. As with those, the previous revision ID must be supplied when necessary and the call will fail if it doesn't match.
     @param revision  The revision to add. If the docID is nil, a new UUID will be assigned. Its revID must be nil. It must have a JSON body.
@@ -35,12 +36,14 @@
 - (CBL_Revision*) putRevision: (CBL_MutableRevision*)revision
                prevRevisionID: (NSString*)prevRevID
                 allowConflict: (BOOL)allowConflict
-                       status: (CBLStatus*)outStatus;
+                       status: (CBLStatus*)outStatus
+                        error: (NSError**)outError;
 
 /** Inserts an already-existing revision replicated from a remote database. It must already have a revision ID. This may create a conflict! The revision's history must be given; ancestor revision IDs that don't already exist locally will create phantom revisions with no content. */
 - (CBLStatus) forceInsert: (CBL_Revision*)rev
           revisionHistory: (NSArray*)history
-                   source: (NSURL*)source;
+                   source: (NSURL*)source
+                    error: (NSError**)outError;
 
 /** Parses the _revisions dict from a document into an array of revision ID strings */
 + (NSArray*) parseCouchDBRevisionHistory: (NSDictionary*)docProperties;

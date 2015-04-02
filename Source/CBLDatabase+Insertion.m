@@ -145,9 +145,11 @@
                prevRevisionID: (NSString*)inPrevRevID
                 allowConflict: (BOOL)allowConflict
                        status: (CBLStatus*)outStatus
+                        error: (NSError**)outError
 {
     return [self putDocID: putRev.docID properties: [putRev.properties mutableCopy]
-           prevRevisionID: inPrevRevID allowConflict: allowConflict status: outStatus];
+           prevRevisionID: inPrevRevID allowConflict: allowConflict
+                   status: outStatus error: outError];
 }
 
 
@@ -156,6 +158,7 @@
             prevRevisionID: (NSString*)inPrevRevID
              allowConflict: (BOOL)allowConflict
                     status: (CBLStatus*)outStatus
+                     error: (NSError**)outError
 {
     Assert(outStatus);
     __block NSString* docID = inDocID;
@@ -166,6 +169,8 @@
     if ((prevRevID && !docID) || (deleting && !docID)
             || (docID && ![CBLDatabase isValidDocumentID: docID])) {
         *outStatus = kCBLStatusBadID;
+        if (outError)
+            *outError = CBLStatusToNSError(*outStatus, nil);
         return nil;
     }
 
@@ -185,10 +190,11 @@
 
     CBL_StorageValidationBlock validationBlock = nil;
     if ([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name]) {
-        validationBlock = ^(CBL_Revision* rev, CBL_Revision* prev, NSString* parentRevID) {
+        validationBlock = ^(CBL_Revision* rev, CBL_Revision* prev, NSString* parentRevID, NSError** outError) {
             return [self validateRevision: rev
                          previousRevision: prev
-                              parentRevID: parentRevID];
+                              parentRevID: parentRevID
+                                    error: outError];
         };
     }
 
@@ -198,7 +204,8 @@
                                      deleting: deleting
                                 allowConflict: allowConflict
                               validationBlock: validationBlock
-                                       status: outStatus];
+                                       status: outStatus
+                                        error: outError];
     if (putRev) {
         LogTo(CBLDatabase, @"--> created %@", putRev);
     }
@@ -210,17 +217,24 @@
 - (CBLStatus) forceInsert: (CBL_Revision*)inRev
           revisionHistory: (NSArray*)history  // in *reverse* order, starting with rev's revID
                    source: (NSURL*)source
+                    error: (NSError**)outError
 {
     CBL_MutableRevision* rev = inRev.mutableCopy;
     rev.sequence = 0;
     NSString* revID = rev.revID;
-    if (![CBLDatabase isValidDocumentID: rev.docID] || !revID)
+    if (![CBLDatabase isValidDocumentID: rev.docID] || !revID) {
+        if (outError)
+            *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
         return kCBLStatusBadID;
+    }
     
     if (history.count == 0)
         history = @[revID];
-    else if (!$equal(history[0], revID))
+    else if (!$equal(history[0], revID)) {
+        if (outError)
+            *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
         return kCBLStatusBadID;
+    }
 
     CBLStatus status;
     if (inRev.attachments) {
@@ -235,17 +249,20 @@
 
     CBL_StorageValidationBlock validationBlock = nil;
     if ([self.shared hasValuesOfType: @"validation" inDatabaseNamed: _name]) {
-        validationBlock = ^(CBL_Revision* newRev, CBL_Revision* prev, NSString* parentRevID) {
+        validationBlock = ^(CBL_Revision* newRev, CBL_Revision* prev, NSString* parentRevID,
+                            NSError** outError) {
             return [self validateRevision: newRev
                          previousRevision: prev
-                              parentRevID: parentRevID];
+                              parentRevID: parentRevID
+                                    error: outError];
         };
     }
 
     return [_storage forceInsert: inRev
                  revisionHistory: history
                  validationBlock: validationBlock
-                          source: source];
+                          source: source
+                           error: outError];
 }
 
 
@@ -255,6 +272,7 @@
 - (CBLStatus) validateRevision: (CBL_Revision*)newRev
               previousRevision: (CBL_Revision*)oldRev
                    parentRevID: (NSString*)parentRevID
+                         error: (NSError**)outError
 {
     NSDictionary* validations = [self.shared valuesOfType: @"validation" inDatabaseNamed: _name];
     if (validations.count == 0)
@@ -274,15 +292,20 @@
         } @catch (NSException* x) {
             MYReportException(x, @"validation block '%@'", validationName);
             status = kCBLStatusCallbackError;
+            if (outError)
+                *outError = CBLStatusToNSError(status, nil);
             break;
         }
         if (context.rejectionMessage != nil) {
             LogTo(CBLValidation, @"Failed update of %@: %@:\n  Old doc = %@\n  New doc = %@",
                   oldRev, context.rejectionMessage, oldRev.properties, newRev.properties);
             status = kCBLStatusForbidden;
+            if (outError)
+                *outError = CBLStatusToNSErrorWithInfo(status, context.rejectionMessage, nil, nil);
             break;
         }
     }
+    
     return status;
 }
 
