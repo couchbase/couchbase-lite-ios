@@ -65,9 +65,11 @@
                             @"_attachments": attachmentsDict(attach1, @"attach", @"text/plain", NO)};
     CBL_Revision* rev1;
     CBLStatus status;
+    NSError* error;
     rev1 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
-            prevRevisionID: nil allowConflict: NO status: &status];
+            prevRevisionID: nil allowConflict: NO status: &status error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
 
     CBL_Attachment* att = [db attachmentForRevision: rev1 named: @"attach" status: &status];
     Assert(att, @"Couldn't get attachment: status %d", status);
@@ -106,8 +108,10 @@
                   {@"bazz", $false},
                   {@"_attachments", attachmentsStub(@"attach")});
     CBL_Revision* rev2 = [db putRevision: [CBL_MutableRevision revisionWithProperties:props]
-                          prevRevisionID: rev1.revID allowConflict: NO status: &status];
+                          prevRevisionID: rev1.revID allowConflict: NO
+                                  status: &status error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
 
     // Add a third revision of the same document:
     NSData* attach2 = [@"<html>And this is attach2</html>" dataUsingEncoding: NSUTF8StringEncoding];
@@ -116,8 +120,10 @@
               @"bazz": $false,
               @"_attachments": attachmentsDict(attach2, @"attach", @"text/html", NO)};
     CBL_Revision* rev3 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
-                          prevRevisionID: rev2.revID allowConflict: NO status: &status];
+                          prevRevisionID: rev2.revID allowConflict: NO
+                                  status: &status error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
 
     // Check the 2nd revision's attachment:
     att = [db attachmentForRevision: rev2 named: @"attach" status: &status];
@@ -191,9 +197,11 @@
                                 {@"bar", $false},
                                 {@"_attachments", attachmentDict});
     CBLStatus status;
+    NSError* error;
     CBL_Revision* rev = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
-                         prevRevisionID: nil allowConflict: NO status: &status];
+                         prevRevisionID: nil allowConflict: NO status: &status error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
     return rev;
 }
 
@@ -222,25 +230,34 @@
     
     // Update the attachment directly:
     CBLStatus status;
+    NSError* error;
     NSData* attachv2 = [@"Replaced body of attach" dataUsingEncoding: NSUTF8StringEncoding];
     [db updateAttachment: @"attach" body: blobForData(db, attachv2)
                     type: @"application/foo"
                 encoding: kCBLAttachmentEncodingNone
                  ofDocID: rev1.docID revID: nil
-                  status: &status];
+                  status: &status
+                   error: &error];
     AssertEq(status, kCBLStatusConflict);
+    AssertEq(error.code, kCBLStatusConflict);
+    error = nil;
     [db updateAttachment: @"attach" body: blobForData(db, attachv2)
                     type: @"application/foo"
                 encoding: kCBLAttachmentEncodingNone
                  ofDocID: rev1.docID revID: @"1-deadbeef"
-                  status: &status];
+                  status: &status
+                   error: &error];
     AssertEq(status, kCBLStatusConflict);
+    AssertEq(error.code, kCBLStatusConflict);
+    error = nil;
     CBL_Revision* rev2 = [db updateAttachment: @"attach" body: blobForData(db, attachv2)
-                                        type: @"application/foo"
-                                   encoding: kCBLAttachmentEncodingNone
-                                    ofDocID: rev1.docID revID: rev1.revID
-                                     status: &status];
+                                         type: @"application/foo"
+                                     encoding: kCBLAttachmentEncodingNone
+                                      ofDocID: rev1.docID revID: rev1.revID
+                                       status: &status
+                                        error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
     AssertEqual(rev2.docID, rev1.docID);
     AssertEq(rev2.generation, 2u);
 
@@ -261,18 +278,26 @@
     [db updateAttachment: @"nosuchattach" body: nil type: nil
                 encoding: kCBLAttachmentEncodingNone
                  ofDocID: rev2.docID revID: rev2.revID
-                  status: &status];
+                  status: &status
+                   error: &error];
     AssertEq(status, kCBLStatusAttachmentNotFound);
+    AssertEq(error.code, kCBLStatusNotFound); // The error code is mapped to the HTTP error code.
+    error = nil;
     [db updateAttachment: @"nosuchattach" body: nil type: nil
                 encoding: kCBLAttachmentEncodingNone
                  ofDocID: @"nosuchdoc" revID: @"nosuchrev"
-                  status: &status];
+                  status: &status
+                   error: &error];
     AssertEq(status, kCBLStatusNotFound);
+    AssertEq(error.code, kCBLStatusNotFound);
+    error = nil;
     CBL_Revision* rev3 = [db updateAttachment: @"attach" body: nil type: nil
                                      encoding: kCBLAttachmentEncodingNone
                                       ofDocID: rev2.docID revID: rev2.revID
-                                       status: &status];
+                                       status: &status
+                                        error: &error];
     AssertEq(status, kCBLStatusOK);
+    AssertNil(error);
     AssertEqual(rev3.docID, rev2.docID);
     AssertEq(rev3.generation, 3u);
 
@@ -360,9 +385,11 @@
                                 {@"_attachments", attachmentDict});
     CBL_Revision* rev1;
     CBLStatus status;
+    NSError* error;
     rev1 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
-            prevRevisionID: nil allowConflict: NO status: &status];
+            prevRevisionID: nil allowConflict: NO status: &status error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
 
     AssertEqual((rev1[@"_attachments"])[@"attach"][@"revpos"], @1);
 
@@ -377,8 +404,9 @@
                   {@"_attachments", attachmentDict});
     CBL_Revision* rev2;
     rev2 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
-            prevRevisionID: rev1.revID allowConflict: NO status: &status];
+            prevRevisionID: rev1.revID allowConflict: NO status: &status error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
 
     // The punch line: Did the revpos get incremented to 2?
     AssertEqual((rev2[@"_attachments"])[@"attach"][@"revpos"], @2);
@@ -395,10 +423,11 @@
     }
     for (int i=0; i<40; i++) {
         CBLStatus status;
+        NSError* error;
         revs[i] = [db updateAttachment: @"attach" body: nil type: nil
                               encoding: kCBLAttachmentEncodingNone
                                ofDocID: [revs[i] docID] revID: [revs[i] revID]
-                                status: &status];
+                                status: &status error: &error];
     }
 
     NSError* error;

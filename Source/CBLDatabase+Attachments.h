@@ -71,11 +71,12 @@ typedef enum {
 /** Updates or deletes an attachment, creating a new document revision in the process.
     Used by the PUT / DELETE methods called on attachment URLs. */
 - (CBL_Revision*) updateAttachment: (NSString*)filename
-                            body: (CBL_BlobStoreWriter*)body
-                            type: (NSString*)contentType
-                        encoding: (CBLAttachmentEncoding)encoding
-                         ofDocID: (NSString*)docID
-                           revID: (NSString*)oldRevID
-                          status: (CBLStatus*)outStatus;
+                              body: (CBL_BlobStoreWriter*)body
+                              type: (NSString*)contentType
+                          encoding: (CBLAttachmentEncoding)encoding
+                           ofDocID: (NSString*)docID
+                             revID: (NSString*)oldRevID
+                            status: (CBLStatus*)outStatus
+                             error: (NSError**)outError;
 
 @end
