@@ -238,8 +238,14 @@
 
 
 - (NSArray*) getRevisionHistory: (NSError**)outError {
+    return [self getRevisionHistoryBackToRevisionIDs: nil error: outError];
+}
+
+- (NSArray*) getRevisionHistoryBackToRevisionIDs: (NSArray*)ancestorIDs
+                                           error: (NSError**)outError
+{
     NSMutableArray* history = $marray();
-    for (CBL_Revision* rev in [self.database.storage getRevisionHistory: _rev]) {
+    for (CBL_Revision* rev in [self.database getRevisionHistory: _rev backToRevIDs: ancestorIDs]) {
         CBLSavedRevision* revision;
         if ($equal(rev.revID, _rev.revID))
             revision = self;

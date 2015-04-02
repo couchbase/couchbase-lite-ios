@@ -740,7 +740,9 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 /** Returns an array of CBL_Revisions in reverse chronological order,
     starting with the given revision. */
-- (NSArray*) getRevisionHistory: (CBL_Revision*)rev {
+- (NSArray*) getRevisionHistory: (CBL_Revision*)rev
+                   backToRevIDs: (NSSet*)ancestorRevIDs
+{
     NSString* docID = rev.docID;
     NSString* revID = rev.revID;
     Assert(revID && docID);
@@ -750,7 +752,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         return nil;
     else if (docNumericID == 0)
         return @[];
-    
+
     CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence, parent, revid, deleted, json isnull "
                                            "FROM revs WHERE doc_id=? ORDER BY sequence DESC",
                                           @(docNumericID)];
@@ -776,6 +778,8 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
             [history addObject: rev];
             lastSequence = [r longLongIntForColumnIndex: 1];
             if (lastSequence == 0)
+                break;
+            if ([ancestorRevIDs containsObject: revID])
                 break;
         }
     }

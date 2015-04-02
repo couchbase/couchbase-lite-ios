@@ -106,13 +106,11 @@
 /** Retrieves the parent revision of a revision, or returns nil if there is no parent. */
 - (CBL_Revision*) getParentRevision: (CBL_Revision*)rev;
 
-/** Returns the given revision's list of direct ancestors (as CBL_Revision objects) in _reverse_
-    chronological order, starting with the revision itself. */
-- (NSArray*) getRevisionHistory: (CBL_Revision*)rev;
-
-/** Returns the revision history as a _revisions dictionary, as returned by the REST API's ?revs=true option. If 'ancestorRevIDs' is present, the revision history will only go back as far as any of the revision ID strings in that array. */
-- (NSDictionary*) getRevisionHistoryDict: (CBL_Revision*)rev
-                       startingFromAnyOf: (NSArray*)ancestorRevIDs;
+/** Returns an array of CBL_Revisions giving the revision history in reverse order, starting from
+    `rev` and going back to any of the revision IDs in `ancestorRevIDs` (or all the way back if
+    that array is empty or nil.) */
+- (NSArray*) getRevisionHistory: (CBL_Revision*)rev
+                   backToRevIDs: (NSSet*)ancestorRevIDs;
 
 /** Returns all the known revisions (or all current/conflicting revisions) of a document.
     @param docID  The document ID

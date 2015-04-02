@@ -97,6 +97,8 @@
                               parentRevisionID: (NSString*)parentRevID __attribute__((nonnull));
 @property (readonly) CBL_Revision* rev;
 @property (readonly) BOOL propertiesAreLoaded;
+- (NSArray*) getRevisionHistoryBackToRevisionIDs: (NSArray*)ancestorIDs
+                                           error: (NSError**)outError;
 @end
 
 
