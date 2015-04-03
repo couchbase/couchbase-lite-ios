@@ -32,6 +32,7 @@
     @param prevRevID  The ID of the revision to replace (same as the "?rev=" parameter to a PUT), or nil if this is a new document.
     @param allowConflict  If NO, an error status kCBLStatusConflict will be returned if the insertion would create a conflict, i.e. if the previous revision already has a child.
     @param outStatus  On return, an HTTP status code indicating success or failure.
+    @param outError  On return, an error indicating a reason of the failure.
     @return  A new CBL_Revision with the docID, revID and sequence filled in (but no body). */
 - (CBL_Revision*) putRevision: (CBL_MutableRevision*)revision
                prevRevisionID: (NSString*)prevRevID

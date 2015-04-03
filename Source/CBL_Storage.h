@@ -176,6 +176,7 @@
                 the operation by returning an error status.
     @param status  On return a status will be stored here. Note that on success, the
                 status should be 201 for a created revision but 200 for a deletion.
+    @param outError  On return, an error indicating a reason of the failure
     @return  The new revision, with its revID and sequence filled in, or nil on error. */
 - (CBL_Revision*) addDocID: (NSString*)docID
                  prevRevID: (NSString*)prevRevID
@@ -198,6 +199,7 @@
                 the operation by returning an error status.
     @param source  The URL of the remote database this was pulled from, or nil if it's local.
                 (This will be used to create the CBLDatabaseChange object sent to the delegate.)
+    @param outError  On return, an error indicating a reason of the failure.
     @return  Status code; 200 on success, otherwise an error. */
 - (CBLStatus) forceInsert: (CBL_Revision*)inRev
           revisionHistory: (NSArray*)history
