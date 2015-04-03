@@ -304,13 +304,8 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     [self tellReplicatorAndWait:^id(CBL_Replicator * bgReplicator) {
         // This runs on the server thread:
         [bgReplicator stop];
-        [[NSNotificationCenter defaultCenter] removeObserver: self name: nil
-                                                      object: _bg_replicator];
         return @(YES);
     }];
-
-    _started = NO;
-    [_database forgetReplication: self];
 }
 
 

@@ -398,8 +398,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     [self stopRemoteRequests];
     [NSObject cancelPreviousPerformRequestsWithTarget: self
                                              selector: @selector(retryIfReady) object: nil];
-    if (_running && _asyncTaskCount == 0)
+    if (_running && _asyncTaskCount == 0) {
         [self stopped];
+        [self postProgressChanged];
+    }
 }
 
 
