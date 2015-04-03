@@ -67,7 +67,6 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
     NSMutableArray* _coalescedChanges;
     NSCache* _queryBuilderCache;
     NSMutableDictionary* _fetchRequestResultCache;
-    NSMutableDictionary* _entityAndPropertyToFetchViewName;
     CBLLiveQuery* _conflictsQuery;
     NSString * _documentTypeKey;
 }
@@ -242,7 +241,6 @@ static CBLManager* sCBLManager;
     _coalescedChanges = [[NSMutableArray alloc] init];
     _fetchRequestResultCache = [[NSMutableDictionary alloc] init];
     _queryBuilderCache = [[NSCache alloc] init];
-    _entityAndPropertyToFetchViewName = [[NSMutableDictionary alloc] init];
     
     self.conflictHandler = [self defaultConflictHandler];
     
@@ -270,11 +268,15 @@ static CBLManager* sCBLManager;
         // Check if the entity contains to-many relationship without an inverse relation and warn:
         NSDictionary* relationship = [entity relationshipsByName];
         for (NSRelationshipDescription *rel in [relationship allValues]) {
-            if (rel.isToMany && !rel.inverseRelationship) {
-                WARN(@"'%@' entity has a to-many relationship '%@' that has no inverse relationship "
-                      "defined. The inverse relationship is requried by the CBLIncrementalStore for "
-                      "fetching to-many relationship entities.", entity.name, rel.name);
-                break;
+            if (rel.isToMany) {
+                if (!rel.inverseRelationship)
+                    WARN(@"'%@' entity has a to-many relationship '%@' that has no inverse relationship "
+                         "defined. The inverse relationship is requried by the CBLIncrementalStore for "
+                         "fetching to-many relationship entities.", entity.name, rel.name);
+
+                if (rel.ordered)
+                    WARN(@"'%@' entity has an ordered to-many relationship '%@', which is not supported "
+                         "by the CBLIncrementalStore.", entity.name, rel.name);
             }
         }
     }
@@ -633,8 +635,6 @@ static CBLManager* sCBLManager;
 
 /** Initializes the views needed for querying objects by type and for to-many relationships.*/
 - (void) initializeViews {
-    NSMutableDictionary* subentitiesToSuperentities = [NSMutableDictionary dictionary];
-
     // Create a view for each to-many relationship
     NSArray* entites = self.persistentStoreCoordinator.managedObjectModel.entities;
     for (NSEntityDescription* entity in entites) {
@@ -661,20 +661,7 @@ static CBLManager* sCBLManager;
                             emit([doc objectForKey: invertRelPropName], nil);
                         }
                     } version: @"1.0"];
-
-                    // Remember view for mapping super-entity and all sub-entities:
-                    for (NSString* entityName in entityNames) {
-                        [self setViewName: viewName
-                      forFetchingProperty: invertRelPropName
-                               fromEntity: entityName];
-                    }
                 }
-            }
-        }
-        
-        if (entity.subentities.count > 0) {
-            for (NSEntityDescription* subentity in entity.subentities) {
-                [subentitiesToSuperentities setObject: entity.name forKey: subentity.name];
             }
         }
     }
@@ -1788,13 +1775,6 @@ static CBLManager* sCBLManager;
             [_fetchRequestResultCache removeObjectForKey: key];
         }
     }
-}
-
-#pragma mark - Views
-
-- (void) setViewName: (NSString*)viewName forFetchingProperty: (NSString*)propertyName fromEntity: (NSString*)entity {
-    [_entityAndPropertyToFetchViewName setObject: viewName
-                                          forKey: [NSString stringWithFormat:@"%@_%@", entity, propertyName]];
 }
 
 #pragma mark - Attachments

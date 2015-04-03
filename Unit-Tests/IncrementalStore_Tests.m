@@ -29,6 +29,7 @@ typedef void(^CBLISAssertionBlock)(NSArray *result, NSFetchRequestResultType res
 
 @class Entry;
 @class Subentry;
+@class AnotherSubentry;
 @class File;
 @class Article;
 @class User;
@@ -53,26 +54,50 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 // To-Many relationship without an inverse relationship.
 @property (nonatomic, retain) NSSet *articles;
 
+// To-Many with ordered relationship (not supported by CBLIS)
+@property (nonatomic, retain) NSOrderedSet *anotherSubentries;
+
 @end
 
 @interface Entry (CoreDataGeneratedAccessors)
+// subEntries:
 - (void)addSubEntriesObject:(Subentry *)value;
 - (void)removeSubEntriesObject:(Subentry *)value;
 - (void)addSubEntries:(NSSet *)values;
 - (void)removeSubEntries:(NSSet *)values;
 
+// files:
 - (void)addFilesObject:(File *)value;
 - (void)removeFilesObject:(File *)value;
 - (void)addFiles:(NSSet *)values;
 - (void)removeFiles:(NSSet *)values;
 
+// articles:
 - (void)addArticlesObject:(Article *)value;
 - (void)removeArticlesObject:(Article *)value;
 - (void)addArticles:(NSSet *)values;
 - (void)removeArticles:(NSSet *)values;
+
+// anotherSubentries:
+- (void)insertObject:(NSManagedObject *)value inAnotherSubentriesAtIndex:(NSUInteger)idx;
+- (void)removeObjectFromAnotherSubentriesAtIndex:(NSUInteger)idx;
+- (void)insertAnotherSubentries:(NSArray *)value atIndexes:(NSIndexSet *)indexes;
+- (void)removeAnotherSubentriesAtIndexes:(NSIndexSet *)indexes;
+- (void)replaceObjectInAnotherSubentriesAtIndex:(NSUInteger)idx withObject:(NSManagedObject *)value;
+- (void)replaceAnotherSubentriesAtIndexes:(NSIndexSet *)indexes withAnotherSubentries:(NSArray *)values;
+- (void)addAnotherSubentriesObject:(NSManagedObject *)value;
+- (void)removeAnotherSubentriesObject:(NSManagedObject *)value;
+- (void)addAnotherSubentries:(NSOrderedSet *)values;
+- (void)removeAnotherSubentries:(NSOrderedSet *)values;
 @end
 
 @interface Subentry : NSManagedObject
+@property (nonatomic, retain) NSString * text;
+@property (nonatomic, retain) NSNumber * number;
+@property (nonatomic, retain) Entry *entry;
+@end
+
+@interface AnotherSubentry : NSManagedObject
 @property (nonatomic, retain) NSString * text;
 @property (nonatomic, retain) NSNumber * number;
 @property (nonatomic, retain) Entry *entry;
@@ -346,7 +371,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     RequireTestCase(CBLIncrementalStoreCRUD);
     NSError *error;
 
-    // To-Many with inverse relationship
+    // To-Many with inverse relationship:
     Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                  inManagedObjectContext:context];
     entry.created_at = [NSDate new];
@@ -365,7 +390,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
-    // To-Many without inverse relationship
+    // To-Many without inverse relationship:
     for (NSUInteger i = 0; i < 3; i++) {
         Article *article = [NSEntityDescription insertNewObjectForEntityForName:@"Article"
                                                          inManagedObjectContext:context];
@@ -376,19 +401,30 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
+    // Ordered To-Many relationship:
+    for (NSUInteger i = 0; i < 3; i++) {
+        AnotherSubentry *sub = [NSEntityDescription insertNewObjectForEntityForName:@"AnotherSubentry"
+                                                         inManagedObjectContext:context];
+        sub.text = [NSString stringWithFormat:@"AnotherSub%lu", (unsigned long)i];
+        [entry addAnotherSubentriesObject:sub];
+    }
+
+    success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
     NSManagedObjectID *objectID = entry.objectID;
 
-    // tear down and re-init for checking that data got saved
+    // tear down and re-init for checking that data got saved:
     context = [CBLIncrementalStore createManagedObjectContextWithModel:model
                                                           databaseName:db.name error:&error];
 
     entry = (Entry*)[context existingObjectWithID:objectID error:&error];
     Assert(entry, @"Entry could not be loaded: %@", error);
     AssertEq(entry.subEntries.count, 3u);
-    // Current we do not support to-many-non-inverse-relationship.
+    // We do not support to-many-non-inverse-relationship.
     AssertEq(entry.articles.count, 0u);
 
-    // Tear down and re-init and test with fetch request
+    // Tear down and re-init and test with fetch request:
     context = [CBLIncrementalStore createManagedObjectContextWithModel:model
                                                           databaseName:db.name error:&error];
 
@@ -397,7 +433,11 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEq(result.count, 1u);
     entry = result.firstObject;
     AssertEq(entry.subEntries.count, 3u);
-    // NOTE: Current we do not support to-many-non-inverse-relationship.
+
+    // Not support the order feature but should return the data.
+    AssertEq(entry.anotherSubentries.count, 3u);
+
+    // We do not support to-many-non-inverse-relationship.
     AssertEq(entry.articles.count, 0u);
 }
 
@@ -1183,6 +1223,10 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
     [subentry setName:@"Subentry"];
     [subentry setManagedObjectClassName:@"Subentry"];
 
+    NSEntityDescription *anotherSubentry = [NSEntityDescription new];
+    [anotherSubentry setName:@"AnotherSubentry"];
+    [anotherSubentry setManagedObjectClassName:@"AnotherSubentry"];
+
     NSEntityDescription *article = [NSEntityDescription new];
     [article setName:@"Article"];
     [article setManagedObjectClassName:@"Article"];
@@ -1202,17 +1246,24 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
 
     NSRelationshipDescription *entryFiles = CBLISRelationshipDescription(@"files", YES, YES, NSCascadeDeleteRule, file);
     NSRelationshipDescription *entrySubentries = CBLISRelationshipDescription(@"subEntries", YES, YES, NSCascadeDeleteRule, subentry);
+    NSRelationshipDescription *entryAnotherSubentries = CBLISRelationshipDescription(@"anotherSubentries", YES, YES, NSCascadeDeleteRule, anotherSubentry);
     NSRelationshipDescription *fileEntry = CBLISRelationshipDescription(@"entry", YES, NO, NSNullifyDeleteRule, entry);
     NSRelationshipDescription *subentryEntry = CBLISRelationshipDescription(@"entry", YES, NO, NSNullifyDeleteRule, entry);
+    NSRelationshipDescription *anotherSubentryEntry = CBLISRelationshipDescription(@"entry", YES, NO, NSNullifyDeleteRule, entry);
     NSRelationshipDescription *entryArticles = CBLISRelationshipDescription(@"articles", YES, YES, NSCascadeDeleteRule, article);
     NSRelationshipDescription *entryUser = CBLISRelationshipDescription(@"user", YES, NO, NSNullifyDeleteRule, user);
     NSRelationshipDescription *userEntry = CBLISRelationshipDescription(@"entry", YES, NO, NSNullifyDeleteRule, entry);
 
     [entryFiles setInverseRelationship:fileEntry];
     [entrySubentries setInverseRelationship:subentryEntry];
+    [entryAnotherSubentries setInverseRelationship:anotherSubentryEntry];
     [fileEntry setInverseRelationship:entryFiles];
     [subentryEntry setInverseRelationship:entrySubentries];
+    [anotherSubentryEntry setInverseRelationship:entryAnotherSubentries];
     [userEntry setInverseRelationship:entryUser];
+
+    [entryAnotherSubentries setOrdered:YES];
+    [anotherSubentryEntry setOrdered:YES];
     
     [entry setProperties:@[
                            CBLISAttributeDescription(@"check", YES, NSBooleanAttributeType, nil),
@@ -1224,6 +1275,7 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
                            CBLISAttributeDescription(@"text2", YES, NSStringAttributeType, nil),
                            entryFiles,
                            entrySubentries,
+                           entryAnotherSubentries,
                            entryArticles,
                            entryUser
                            ]];
@@ -1238,6 +1290,12 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
                               CBLISAttributeDescription(@"number", YES, NSInteger32AttributeType, @(0)),
                               CBLISAttributeDescription(@"text", YES, NSStringAttributeType, nil),
                               subentryEntry
+                              ]];
+
+    [anotherSubentry setProperties:@[
+                              CBLISAttributeDescription(@"number", YES, NSInteger32AttributeType, @(0)),
+                              CBLISAttributeDescription(@"text", YES, NSStringAttributeType, nil),
+                              anotherSubentryEntry
                               ]];
 
     [article setProperties:@[
@@ -1257,16 +1315,30 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
                            CBLISAttributeDescription(@"anotherName", YES, NSStringAttributeType, nil)
                            ]];
 
-    [model setEntities:@[entry, file, subentry, article, user, parent, child]];
+    [model setEntities:@[entry, file, subentry, anotherSubentry, article, user, parent, child]];
     
     return model;
 }
 
 @implementation Entry
-@dynamic check, created_at, text, text2, number, decimalNumber, doubleNumber, subEntries, files, articles, user;
+@dynamic check, created_at, text, text2, number, decimalNumber, doubleNumber;
+@dynamic subEntries, files, articles, anotherSubentries;
+@dynamic user;
+
+// Known Core Data Bug:
+// Error: [nsset intersectsset:]: set argument is not an nsset.
+// Workaround: Override and reimplement the method.
+- (void)addAnotherSubentriesObject: (NSManagedObject *)value; {
+    NSMutableOrderedSet* tempSet = [self mutableOrderedSetValueForKey :@"anotherSubentries"];
+    [tempSet addObject:value];
+}
 @end
 
 @implementation Subentry
+@dynamic text, number, entry;
+@end
+
+@implementation AnotherSubentry
 @dynamic text, number, entry;
 @end
 
