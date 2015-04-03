@@ -40,7 +40,7 @@
 - (NSString*) revisionID                             {return nil;}
 - (NSString*) parentRevisionID                       {AssertAbstractMethod();}
 - (CBLSavedRevision*) parentRevision                 {AssertAbstractMethod();}
-- (NSArray*) getRevisionHistory: (NSError**)outError {AssertAbstractMethod();};
+- (NSArray*) getRevisionHistory: (NSError**)outError {AssertAbstractMethod();}
 - (NSDictionary*) properties                         {AssertAbstractMethod();}
 - (SequenceNumber) sequence                          {return 0;}
 
@@ -234,6 +234,15 @@
 
 - (BOOL) propertiesAreLoaded {
     return _rev.properties != nil;
+}
+
+- (NSData*) JSONData {
+    NSData* json = _rev.asJSON;
+    if (!json) {
+        if ([self loadProperties])
+            json = _rev.asJSON;
+    }
+    return json;
 }
 
 
