@@ -33,14 +33,11 @@ NSString* const kCBLISObjectHasBeenChangedInStoreNotification = @"kCBLISObjectHa
 
 static NSString* const kCBLISDefaultTypeKey = @"type";
 static NSString* const kCBLISOldDefaultTypeKey = @"CBLIS_type";
-
 static NSString* const kCBLISMetadata_DefaultTypeKey = @"type_key";
-
 static NSString* const kCBLISCurrentRevisionAttributeName = @"CBLIS_Rev";
 static NSString* const kCBLISManagedObjectIDPrefix = @"CBL";
 static NSString* const kCBLISMetadataDocumentID = @"CBLIS_metadata";
-static NSString* const kCBLISFetchEntityByPropertyViewNameFormat = @"CBLIS/fetch_%@_by_%@";
-static NSString* const kCBLISFetchEntityToManyViewNameFormat = @"CBLIS/%@_tomany_%@";
+static NSString* const kCBLISToManyViewNameFormat = @"CBLIS/%@_%@_%@";
 
 // Utility functions
 static BOOL CBLISIsNull(id value);
@@ -547,23 +544,37 @@ static CBLManager* sCBLManager;
                    withContext: (NSManagedObjectContext*)context
                          error: (NSError**)outError {
     if ([relationship isToMany]) {
-        CBLQueryEnumerator* rows = [self queryToManyRelation: relationship
-                                               forParentKeys: @[[objectID couchbaseLiteIDRepresentation]]
-                                                    prefetch: NO
-                                                    outError: outError];
-        if (!rows) return nil;
-        NSMutableArray* result = [NSMutableArray arrayWithCapacity: rows.count];
-        for (CBLQueryRow* row in rows) {
-            [result addObject: [self newObjectIDForEntity: relationship.destinationEntity
-                                     managedObjectContext: context
-                                                  couchID: row.documentID]];
+        if (relationship.inverseRelationship.toMany) {
+            // many-to-many
+            CBLDocument* doc = [self.database documentWithID: [objectID couchbaseLiteIDRepresentation]];
+            NSArray* destinationIDs = [doc.properties valueForKey: relationship.name];
+            NSMutableArray* result = [NSMutableArray arrayWithCapacity: destinationIDs.count];
+            for (NSString* destinationID in destinationIDs) {
+                [result addObject:[self newObjectIDForEntity: relationship.destinationEntity
+                                             referenceObject: destinationID]];
+            }
+            return result;
+        } else {
+            // one-to-many
+            CBLQueryEnumerator* rows = [self queryToManyRelation: relationship
+                                                   forParentKeys: @[[objectID couchbaseLiteIDRepresentation]]
+                                                        prefetch: NO
+                                                        outError: outError];
+            if (!rows) return nil;
+            NSMutableArray* result = [NSMutableArray arrayWithCapacity: rows.count];
+            for (CBLQueryRow* row in rows) {
+                [result addObject: [self newObjectIDForEntity: relationship.destinationEntity
+                                         managedObjectContext: context
+                                                      couchID: row.documentID]];
+            }
+            return result;
         }
-        return result;
     } else {
         CBLDocument* doc = [self.database documentWithID: [objectID couchbaseLiteIDRepresentation]];
         NSString* destinationID = [doc propertyForKey: relationship.name];
         if (destinationID) {
-            return [self newObjectIDForEntity: relationship.destinationEntity referenceObject: destinationID];
+            return [self newObjectIDForEntity: relationship.destinationEntity
+                              referenceObject: destinationID];
         } else {
             return [NSNull null];
         }
@@ -611,7 +622,7 @@ static CBLManager* sCBLManager;
 
 #pragma mark - Document Type Key
 
-- (NSString *)documentTypeKey {
+- (NSString*)documentTypeKey {
     if (_documentTypeKey)
         return _documentTypeKey;
 
@@ -644,6 +655,9 @@ static CBLManager* sCBLManager;
             if ([property isKindOfClass:[NSRelationshipDescription class]]) {
                 NSRelationshipDescription* rel = (NSRelationshipDescription*)property;
                 if (rel.isToMany && rel.inverseRelationship) {
+                    if (rel.inverseRelationship.toMany) // skip many-to-many
+                        continue;
+
                     NSMutableArray* entityNames =
                         [NSMutableArray arrayWithObject: rel.destinationEntity.name];
                     for (NSEntityDescription* subentity in rel.destinationEntity.subentities) {
@@ -652,13 +666,13 @@ static CBLManager* sCBLManager;
 
                     NSString* viewName = CBLISToManyViewNameForRelationship(rel);
                     NSRelationshipDescription* invRel = rel.inverseRelationship;
-                    NSString* invertRelPropName = invRel.name;
+                    NSString* inverseRelPropName = invRel.name;
                     CBLView* view = [self.database viewNamed: viewName];
                     [view setMapBlock:^(NSDictionary* doc, CBLMapEmitBlock emit) {
                         NSString* type = [doc objectForKey: [self documentTypeKey]];
                         if (type && [entityNames containsObject: type] &&
-                            [doc objectForKey: invertRelPropName]) {
-                            emit([doc objectForKey: invertRelPropName], nil);
+                            [doc objectForKey: inverseRelPropName]) {
+                            emit([doc objectForKey: inverseRelPropName], nil);
                         }
                     } version: @"1.0"];
                 }
@@ -1318,35 +1332,48 @@ static CBLManager* sCBLManager;
                 value = [properties objectForKey: expression.keyPath];
                 if ([propertyDesc isKindOfClass: [NSAttributeDescription class]]) {
                     if (!value) break;
-
                     NSAttributeDescription* attr = (NSAttributeDescription* )propertyDesc;
                     value =  [self convertCoreDataValue: value toCouchbaseLiteValueOfType: attr.attributeType];
                 } else if ([propertyDesc isKindOfClass: [NSRelationshipDescription class]]) {
-                    NSRelationshipDescription* relationDesc = (NSRelationshipDescription*)propertyDesc;
-                    if (!relationDesc.isToMany) {
+                    // Compare whole relationship, return managed object or array of managed objects:
+                    NSRelationshipDescription* relation = (NSRelationshipDescription*)propertyDesc;
+                    if (!relation.isToMany) {
                         if (!value) break;
-
                         NSString* childDocId = value;
-                        NSManagedObjectID* objectID = [self newObjectIDForEntity: relationDesc.destinationEntity
+                        NSManagedObjectID* objectID = [self newObjectIDForEntity: relation.destinationEntity
                                                                  referenceObject: childDocId];
                         value = objectID ? [context existingObjectWithID: objectID error: nil] : nil;
                     } else {
-                        NSString* parentDocId = [properties objectForKey: @"_id"];
-                        if (parentDocId) {
-                            CBLQueryEnumerator* rows = [self queryToManyRelation: relationDesc
-                                                                   forParentKeys: @[parentDocId]
-                                                                        prefetch: NO
-                                                                        outError: nil];
-                            if (rows) {
-                                NSMutableArray* objects = [NSMutableArray array];
-                                for (CBLQueryRow* row in rows) {
-                                    NSManagedObjectID* objectID = [self newObjectIDForEntity: relationDesc.destinationEntity
-                                                                             referenceObject: row.documentID];
-                                    if (!objectID) continue;
-                                    NSManagedObject* object = [context existingObjectWithID: objectID error: nil];
-                                    if (object) [objects addObject: object];
+                        if (relation.inverseRelationship.toMany) {
+                            // many-to-many
+                            NSMutableArray* objects = [NSMutableArray array];
+                            for (NSString* docId in value) {
+                                NSManagedObjectID* objectID = [self newObjectIDForEntity: relation.destinationEntity
+                                                                         referenceObject: docId];
+                                if (!objectID) continue;
+                                NSManagedObject* object = [context existingObjectWithID: objectID error: nil];
+                                if (object) [objects addObject: object];
+                            }
+                            value = objects;
+                        } else {
+                            // one-to-many
+                            NSString* parentDocId = [properties objectForKey: @"_id"];
+                            if (parentDocId) {
+                                CBLQueryEnumerator* rows = [self queryToManyRelation: relation
+                                                                       forParentKeys: @[parentDocId]
+                                                                            prefetch: NO
+                                                                            outError: nil];
+                                if (rows) {
+                                    NSMutableArray* objects = [NSMutableArray array];
+                                    for (CBLQueryRow* row in rows) {
+                                        NSManagedObjectID* objectID = [self newObjectIDForEntity: relation.destinationEntity
+                                                                                 referenceObject: row.documentID];
+                                        if (!objectID) continue;
+                                        NSManagedObject* object = [context existingObjectWithID: objectID error: nil];
+                                        if (object) [objects addObject: object];
+                                    }
+                                    value = objects;
                                 }
-                                value = objects;
                             }
                         }
                     }
@@ -1371,20 +1398,35 @@ static CBLManager* sCBLManager;
                             value = [document.properties objectForKey: destKeyPath];
                     }
                 } else {
-                    NSString* parentDocId = [properties objectForKey: @"_id"];
-                    if (parentDocId) {
-                        CBLQueryEnumerator* rows = [self queryToManyRelation: relation
-                                                               forParentKeys: @[parentDocId]
-                                                                    prefetch: YES
-                                                                    outError: nil];
-                        if (rows) {
-                            NSMutableArray* values = [NSMutableArray array];
-                            for (CBLQueryRow* row in rows) {
-                                id propValue = row.documentProperties[destKeyPath];
-                                if (propValue)
-                                    [values addObject: propValue];
+                    if (relation.inverseRelationship.toMany) {
+                        // many-to-many
+                        value = [properties objectForKey: srcKeyPath];
+                        NSMutableArray* values = [NSMutableArray array];
+                        for (NSString* childDocId in value) {
+                            CBLDocument* document = [self.database existingDocumentWithID: childDocId];
+                            if (document) {
+                                id propValue = [document.properties objectForKey: destKeyPath];
+                                [values addObject: propValue];
                             }
-                            value = values;
+                        }
+                        value = values;
+                    } else {
+                        // one-to-many
+                        NSString* parentDocId = [properties objectForKey: @"_id"];
+                        if (parentDocId) {
+                            CBLQueryEnumerator* rows = [self queryToManyRelation: relation
+                                                                   forParentKeys: @[parentDocId]
+                                                                        prefetch: YES
+                                                                        outError: nil];
+                            if (rows) {
+                                NSMutableArray* values = [NSMutableArray array];
+                                for (CBLQueryRow* row in rows) {
+                                    id propValue = row.documentProperties[destKeyPath];
+                                    if (propValue)
+                                        [values addObject: propValue];
+                                }
+                                value = values;
+                            }
                         }
                     }
                 }
@@ -1599,11 +1641,19 @@ static CBLManager* sCBLManager;
                 }
             }
         } else if ([desc isKindOfClass: [NSRelationshipDescription class]]) {
-            NSRelationshipDescription* rel = desc;
-            id relationshipDestination = [object valueForKey: property];
-            if (relationshipDestination) {
-                if (![rel isToMany]) {
-                    NSManagedObjectID* objectID = [relationshipDestination valueForKey: @"objectID"];
+            id relValue = [object valueForKey: property];
+            if (relValue) {
+                NSRelationshipDescription* rel = desc;
+                if ([rel isToMany]) {
+                    if (rel.inverseRelationship.toMany) {
+                        // many-to-many relationship, embed an array of doc ids:
+                        NSMutableArray* subentities  = [NSMutableArray array];
+                        for (NSManagedObject* subentity in relValue)
+                            [subentities addObject: [subentity.objectID couchbaseLiteIDRepresentation]];
+                        [proxy setObject:subentities forKey:property];
+                    }
+                } else {
+                    NSManagedObjectID* objectID = [relValue valueForKey: @"objectID"];
                     [proxy setObject: [objectID couchbaseLiteIDRepresentation] forKey: property];
                 }
             }
@@ -2039,8 +2089,9 @@ BOOL CBLISIsNull(id value) {
 NSString* CBLISToManyViewNameForRelationship(NSRelationshipDescription* relationship) {
     NSString* entityName = relationship.entity.name;
     NSString* destinationName = relationship.destinationEntity.name;
-    return [NSString stringWithFormat:
-                kCBLISFetchEntityToManyViewNameFormat, entityName, destinationName];
+    NSString* relationshipName = relationship.name;
+    return [NSString stringWithFormat: kCBLISToManyViewNameFormat,
+            entityName, destinationName, relationshipName];
 }
 
 /** Returns a readable name for a NSFetchRequestResultType*/
