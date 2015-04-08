@@ -83,6 +83,8 @@
                      prevRevID: (NSString*)prevID
                  allowConflict: (BOOL)allowConflict
                          error: (NSError**)outError;
+- (NSArray*) getPossibleAncestorsOfRevisionID: (NSString*)revID
+                                        limit: (NSUInteger)limit;
 @end
 
 
@@ -102,6 +104,9 @@
                               parentRevisionID: (NSString*)parentRevID __attribute__((nonnull));
 @property (readonly) CBL_Revision* rev;
 @property (readonly) BOOL propertiesAreLoaded;
+@property (readonly) NSData* JSONData;
+- (NSArray*) getRevisionHistoryBackToRevisionIDs: (NSArray*)ancestorIDs
+                                           error: (NSError**)outError;
 @end
 
 

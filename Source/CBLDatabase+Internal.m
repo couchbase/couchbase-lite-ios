@@ -472,6 +472,50 @@ static BOOL sAutoCompact = YES;
                                    filter: revFilter status: outStatus];
 }
 
+
+#pragma mark - HISTORY:
+
+
+- (NSArray*) getRevisionHistory: (CBL_Revision*)rev
+                   backToRevIDs: (NSArray*)ancestorRevIDs
+{
+    NSSet* ancestors = ancestorRevIDs ? [[NSSet alloc] initWithArray: ancestorRevIDs] : nil;
+    return [_storage getRevisionHistory: rev backToRevIDs: ancestors];
+}
+
+/** Turns an array of CBL_Revisions into a _revisions dictionary, as returned by the REST API's 
+    ?revs=true option. */
++ (NSDictionary*) makeRevisionHistoryDict: (NSArray*)history {
+    if (!history)
+        return nil;
+
+    // Try to extract descending numeric prefixes:
+    NSMutableArray* suffixes = $marray();
+    id start = nil;
+    int lastRevNo = -1;
+    for (CBL_Revision* rev in history) {
+        int revNo;
+        NSString* suffix;
+        if ([CBL_Revision parseRevID: rev.revID intoGeneration: &revNo andSuffix: &suffix]) {
+            if (!start)
+                start = @(revNo);
+            else if (revNo != lastRevNo - 1) {
+                start = nil;
+                break;
+            }
+            lastRevNo = revNo;
+            [suffixes addObject: suffix];
+        } else {
+            start = nil;
+            break;
+        }
+    }
+
+    NSArray* revIDs = start ? suffixes : [history my_map: ^(id rev) {return [rev revID];}];
+    return $dict({@"ids", revIDs}, {@"start", start});
+}
+
+
 #pragma mark - FILTERS:
 
 

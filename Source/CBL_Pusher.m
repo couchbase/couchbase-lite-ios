@@ -283,15 +283,16 @@
                         CBL_MutableRevision* populatedRev = [[self transformRevision: loadedRev] mutableCopy];
 
                         // Add the revision history:
-                        NSArray* possibleAncestors = revResults[@"possible_ancestors"];
-                        populatedRev[@"_revisions"] = [db.storage getRevisionHistoryDict: populatedRev
-                                                               startingFromAnyOf: possibleAncestors];
+                        NSArray* backTo = $castIf(NSArray, revResults[@"possible_ancestors"]);
+                        NSArray* history = [db getRevisionHistory: populatedRev
+                                                     backToRevIDs: backTo];
+                        populatedRev[@"_revisions"] = [CBLDatabase makeRevisionHistoryDict:history];
                         properties = populatedRev.properties;
 
                         // Strip any attachments already known to the target db:
                         if (properties.cbl_attachments) {
                             // Look for the latest common ancestor and stub out older attachments:
-                            int minRevPos = CBLFindCommonAncestor(populatedRev, possibleAncestors);
+                            int minRevPos = CBLFindCommonAncestor(populatedRev, backTo);
                             if (![db expandAttachmentsIn: populatedRev
                                              minRevPos: minRevPos
                                             allowFollows: !_dontSendMultipart

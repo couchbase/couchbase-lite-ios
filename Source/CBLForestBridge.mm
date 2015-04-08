@@ -129,77 +129,34 @@ static NSData* dataOfNode(const Revision* rev) {
 
 
 + (NSArray*) mapHistoryOfNode: (const Revision*)rev
-                      through: (id(^)(const Revision*))block
+                      through: (id(^)(const Revision*, BOOL *stop))block
 {
     NSMutableArray* history = $marray();
-    for (; rev; rev = rev->parent())
-        [history addObject: block(rev)];
+    BOOL stop = NO;
+    for (; rev && !stop; rev = rev->parent())
+        [history addObject: block(rev, &stop)];
     return history;
 }
 
 
-+ (NSArray*) getRevisionHistory: (const Revision*)revNode {
++ (NSArray*) getRevisionHistoryOfNode: (const forestdb::Revision*)revNode
+                         backToRevIDs: (NSSet*)ancestorRevIDs
+{
     const VersionedDocument* doc = (const VersionedDocument*)revNode->owner;
     NSString* docID = (NSString*)doc->docID();
     return [self mapHistoryOfNode: revNode
-                          through: ^id(const Revision *ancestor)
+                          through: ^id(const Revision *ancestor, BOOL *stop)
     {
         CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID
                                                                 revID: (NSString*)ancestor->revID
                                                               deleted: ancestor->isDeleted()];
         rev.missing = !ancestor->isBodyAvailable();
+        if ([ancestorRevIDs containsObject: rev.revID])
+            *stop = YES;
         return rev;
     }];
 }
 
-
-+ (NSDictionary*) getRevisionHistoryOfNode: (const Revision*)rev
-                         startingFromAnyOf: (NSArray*)ancestorRevIDs
-{
-    NSArray* history = [self getRevisionHistory: rev]; // (this is in reverse order, newest..oldest
-    if (ancestorRevIDs.count > 0) {
-        NSUInteger n = history.count;
-        for (NSUInteger i = 0; i < n; ++i) {
-            if ([ancestorRevIDs containsObject: [history[i] revID]]) {
-                history = [history subarrayWithRange: NSMakeRange(0, i+1)];
-                break;
-            }
-        }
-    }
-    return [self makeRevisionHistoryDict: history];
-}
-
-
-+ (NSDictionary*) makeRevisionHistoryDict: (NSArray*)history {
-    if (!history)
-        return nil;
-
-    // Try to extract descending numeric prefixes:
-    NSMutableArray* suffixes = $marray();
-    id start = nil;
-    int lastRevNo = -1;
-    for (CBL_Revision* rev in history) {
-        int revNo;
-        NSString* suffix;
-        if ([CBL_Revision parseRevID: rev.revID intoGeneration: &revNo andSuffix: &suffix]) {
-            if (!start)
-                start = @(revNo);
-            else if (revNo != lastRevNo - 1) {
-                start = nil;
-                break;
-            }
-            lastRevNo = revNo;
-            [suffixes addObject: suffix];
-        } else {
-            start = nil;
-            break;
-        }
-    }
-
-    NSArray* revIDs = start ? suffixes : [history my_map: ^(id rev) {return [rev revID];}];
-    return $dict({@"ids", revIDs}, {@"start", start});
-}
-    
 
 @end
 

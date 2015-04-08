@@ -219,8 +219,12 @@
     
     if (history.count == 0)
         history = @[revID];
-    else if (!$equal(history[0], revID))
-        return kCBLStatusBadID;
+    else if (!$equal(history[0], revID)) {
+        // If inRev's revID doesn't appear in history, add it at the start:
+        NSMutableArray* nuHistory = [history mutableCopy];
+        [nuHistory insertObject: revID atIndex: 0];
+        history = nuHistory;
+    }
 
     CBLStatus status;
     if (inRev.attachments) {
@@ -246,6 +250,22 @@
                  revisionHistory: history
                  validationBlock: validationBlock
                           source: source];
+}
+
+
+- (BOOL) forceInsertRevisionWithJSON: (NSData*)json
+                     revisionHistory: (NSArray*)history
+                              source: (NSURL*)source
+                               error: (NSError**)outError
+{
+    CBLStatus status = kCBLStatusBadJSON;
+    CBL_Body* body = [CBL_Body bodyWithJSON: json];
+    if (body) {
+        CBL_Revision* rev = [[CBL_Revision alloc] initWithBody: body];
+        if (rev)
+            status = [self forceInsert: rev revisionHistory: history source: source];
+    }
+    return ReturnNSErrorFromCBLStatus(status, outError);
 }
 
 

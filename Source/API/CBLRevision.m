@@ -40,7 +40,7 @@
 - (NSString*) revisionID                             {return nil;}
 - (NSString*) parentRevisionID                       {AssertAbstractMethod();}
 - (CBLSavedRevision*) parentRevision                 {AssertAbstractMethod();}
-- (NSArray*) getRevisionHistory: (NSError**)outError {AssertAbstractMethod();};
+- (NSArray*) getRevisionHistory: (NSError**)outError {AssertAbstractMethod();}
 - (NSDictionary*) properties                         {AssertAbstractMethod();}
 - (SequenceNumber) sequence                          {return 0;}
 
@@ -236,10 +236,25 @@
     return _rev.properties != nil;
 }
 
+- (NSData*) JSONData {
+    NSData* json = _rev.asJSON;
+    if (!json) {
+        if ([self loadProperties])
+            json = _rev.asJSON;
+    }
+    return json;
+}
+
 
 - (NSArray*) getRevisionHistory: (NSError**)outError {
+    return [self getRevisionHistoryBackToRevisionIDs: nil error: outError];
+}
+
+- (NSArray*) getRevisionHistoryBackToRevisionIDs: (NSArray*)ancestorIDs
+                                           error: (NSError**)outError
+{
     NSMutableArray* history = $marray();
-    for (CBL_Revision* rev in [self.database.storage getRevisionHistory: _rev]) {
+    for (CBL_Revision* rev in [self.database getRevisionHistory: _rev backToRevIDs: ancestorIDs]) {
         CBLSavedRevision* revision;
         if ($equal(rev.revID, _rev.revID))
             revision = self;

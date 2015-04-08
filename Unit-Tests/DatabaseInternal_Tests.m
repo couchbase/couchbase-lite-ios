@@ -35,11 +35,6 @@ static NSDictionary* userProperties(NSDictionary* dict) {
 }
 
 
-@interface CBLForestBridge : NSObject
-+ (NSDictionary*) makeRevisionHistoryDict: (NSArray*)history; // exposed for testing only
-@end
-
-
 @interface DatabaseInternal_Tests : CBLTestCaseWithDB
 @end
 
@@ -170,7 +165,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     Log(@"Changes = %@", changes);
     AssertEq(changes.count, 1u);
     
-    NSArray* history = [db.storage getRevisionHistory: revD];
+    NSArray* history = [db getRevisionHistory: revD backToRevIDs: nil];
     Log(@"History = %@", history);
     AssertEqual(history, (@[revD, rev2, rev1]));
 
@@ -178,10 +173,12 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     NSString* revDSuffix = [revD.revID substringFromIndex: 2];
     NSString* rev2Suffix = [rev2.revID substringFromIndex: 2];
     NSString* rev1Suffix = [rev1.revID substringFromIndex: 2];
-    AssertEqual(([db.storage getRevisionHistoryDict: revD startingFromAnyOf: @[@"??", rev2.revID]]),
+    history = [db getRevisionHistory: revD backToRevIDs: @[@"??", rev2.revID]];
+    AssertEqual([CBLDatabase makeRevisionHistoryDict: history],
                  (@{@"ids": @[revDSuffix, rev2Suffix],
                     @"start": @3}));
-    AssertEqual(([db.storage getRevisionHistoryDict: revD startingFromAnyOf: nil]),
+    history = [db getRevisionHistory: revD backToRevIDs: nil];
+    AssertEqual([CBLDatabase makeRevisionHistoryDict: history],
                  (@{@"ids": @[revDSuffix, rev2Suffix, rev1Suffix],
                     @"start": @3}));
 
@@ -357,7 +354,7 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
     AssertEqual(gotRev, rev);
     AssertEqual(gotRev.properties, rev.properties);
     
-    NSArray* revHistory = [db.storage getRevisionHistory: gotRev];
+    NSArray* revHistory = [db getRevisionHistory: gotRev backToRevIDs: nil];
     AssertEq(revHistory.count, history.count);
     for (unsigned i=0; i<history.count; i++) {
         CBL_Revision* hrev = revHistory[i];
@@ -762,16 +759,16 @@ static CBL_Revision* mkrev(NSString* revID) {
 
 - (void) test23_MakeRevisionHistoryDict {
     NSArray* revs = @[mkrev(@"4-jkl"), mkrev(@"3-ghi"), mkrev(@"2-def")];
-    AssertEqual([CBLForestBridge makeRevisionHistoryDict: revs],
+    AssertEqual([CBLDatabase makeRevisionHistoryDict: revs],
                  $dict({@"ids", @[@"jkl", @"ghi", @"def"]},
                        {@"start", @4}));
 
     revs = @[mkrev(@"4-jkl"), mkrev(@"2-def")];
-    AssertEqual([CBLForestBridge makeRevisionHistoryDict: revs],
+    AssertEqual([CBLDatabase makeRevisionHistoryDict: revs],
                  $dict({@"ids", @[@"4-jkl", @"2-def"]}));
 
     revs = @[mkrev(@"12345"), mkrev(@"6789")];
-    AssertEqual([CBLForestBridge makeRevisionHistoryDict: revs],
+    AssertEqual([CBLDatabase makeRevisionHistoryDict: revs],
                  $dict({@"ids", @[@"12345", @"6789"]}));
 }
 

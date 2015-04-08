@@ -638,10 +638,12 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             dst[@"_local_seq"] = @(rev.sequence);
         }
         if (options & kCBLIncludeRevs) {
-            dst[@"_revisions"] = [storage getRevisionHistoryDict: rev startingFromAnyOf: nil];
+            NSArray* revs = [_db getRevisionHistory: rev backToRevIDs: nil];
+            dst[@"_revisions"] = [CBLDatabase makeRevisionHistoryDict: revs];
         }
         if (options & kCBLIncludeRevsInfo) {
-            dst[@"_revs_info"] = [[storage getRevisionHistory: rev] my_map: ^id(CBL_Revision* rev) {
+            NSArray* revs = [_db getRevisionHistory: rev backToRevIDs: nil];
+            dst[@"_revs_info"] = [revs my_map: ^id(CBL_Revision* rev) {
                 NSString* status = @"available";
                 if (rev.deleted)
                     status = @"deleted";
