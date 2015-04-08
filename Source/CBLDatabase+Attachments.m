@@ -293,7 +293,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
                 return nil;
             }
             attachment.blobKey = blobKey;
-        } else if ([attachInfo[@"follows"] isEqual: $true]) {
+        } else if ([attachInfo[@"follows"] isEqual: $true] || _pendingAttachmentsByDigest[attachment.digest] != nil) {
             // "follows" means the uploader provided the attachment in a separate MIME part.
             // This means it's already been registered in _pendingAttachmentsByDigest;
             // I just need to look it up by its "digest" property and install it into the store:
@@ -331,7 +331,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
         // Set or validate the revpos:
         if (attachment->revpos == 0) {
             attachment->revpos = generation;
-        } else if (attachment->revpos >= generation) {
+        } else if (attachment->revpos > generation) {
             *outStatus = kCBLStatusBadAttachment;
             return nil;
         }
