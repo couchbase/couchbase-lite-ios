@@ -30,6 +30,7 @@ typedef void(^CBLISAssertionBlock)(NSArray *result, NSFetchRequestResultType res
 @class Entry;
 @class Subentry;
 @class AnotherSubentry;
+@class ManySubentry;
 @class File;
 @class Article;
 @class User;
@@ -56,6 +57,9 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
 // To-Many with ordered relationship (not supported by CBLIS)
 @property (nonatomic, retain) NSOrderedSet *anotherSubentries;
+
+// Many-to-Many relationship
+@property (nonatomic, retain) NSSet *manySubentries;
 
 @end
 
@@ -89,6 +93,12 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 - (void)removeAnotherSubentriesObject:(NSManagedObject *)value;
 - (void)addAnotherSubentries:(NSOrderedSet *)values;
 - (void)removeAnotherSubentries:(NSOrderedSet *)values;
+
+// manySubentries:
+- (void)addManySubentriesObject:(ManySubentry *)value;
+- (void)removeManySubentriesObject:(ManySubentry *)value;
+- (void)addManySubentries:(NSSet *)values;
+- (void)removeManySubentries:(NSSet *)values;
 @end
 
 @interface Subentry : NSManagedObject
@@ -101,6 +111,19 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 @property (nonatomic, retain) NSString * text;
 @property (nonatomic, retain) NSNumber * number;
 @property (nonatomic, retain) Entry *entry;
+@end
+
+@interface ManySubentry : NSManagedObject
+@property (nonatomic, retain) NSString * text;
+@property (nonatomic, retain) NSNumber * number;
+@property (nonatomic, retain) NSSet *entries;
+@end
+
+@interface ManySubentry (CoreDataGeneratedAccessors)
+- (void)addEntriesObject:(Entry *)value;
+- (void)removeEntriesObject:(Entry *)value;
+- (void)addEntries:(NSSet *)values;
+- (void)removeEntries:(NSSet *)values;
 @end
 
 @interface File : NSManagedObject
@@ -141,7 +164,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     CBLIncrementalStore *store;
 }
 
-
 - (void) setUp {
     [super setUp];
 
@@ -164,10 +186,8 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     [super tearDown];
 }
 
-
 /** Test case that tests create, request, update and delete of Core Data objects. */
 - (void) test_CRUD {
-    RequireTestCase(API);
     NSError *error;
     
     CBLDatabase *database = store.database;
@@ -228,7 +248,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
 /** Test case that tests the integration between Core Data and CouchbaseLite. */
 - (void) test_CBLIntegration {
-    RequireTestCase(CBLIncrementalStoreCRUD);
     NSError *error;
     
     CBLDatabase *database = store.database;
@@ -318,7 +337,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
 
 - (void) test_CreateAndUpdate {
-    RequireTestCase(CBLIncrementalStoreCRUD);
     NSError *error;
     
     Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
@@ -366,9 +384,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert([entry.decimalNumber isKindOfClass:[NSDecimalNumber class]], @"decimalNumber must be with type NSDecimalNumber");
 }
 
-
-- (void) test_ToManyRelationship {
-    RequireTestCase(CBLIncrementalStoreCRUD);
+- (void) test_ToMany {
     NSError *error;
 
     // To-Many with inverse relationship:
@@ -441,9 +457,126 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEq(entry.articles.count, 0u);
 }
 
+- (void) test_ToManyDeletion {
+    NSError *error;
+    Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                 inManagedObjectContext:context];
+    entry.created_at = [NSDate new];
+    entry.text = @"Test";
+    entry.check = @NO;
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    for (NSUInteger i = 0; i < 3; i++) {
+        Subentry *sub = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                      inManagedObjectContext:context];
+        sub.text = [NSString stringWithFormat:@"Sub%lu", (unsigned long)i];
+        [entry addSubEntriesObject:sub];
+    }
+
+    success = [context save: &error];
+    Assert(success, @"Could not save context: %@", error);
+
+    // Delete one sub entry:
+    Subentry* aSubentry = [entry.subEntries anyObject];
+    [context deleteObject: aSubentry];
+    success = [context save: &error];
+    Assert(success, @"Could not save context: %@", error);
+
+    // Check the result:
+    NSFetchRequest* fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Subentry"];
+    NSArray* result = [context executeFetchRequest:fetchRequest error:&error];
+    AssertEq(result.count, 2u);
+
+    fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Entry"];
+    result = [context executeFetchRequest:fetchRequest error:&error];
+    AssertEq(result.count, 1u);
+    entry = result.firstObject;
+    AssertEq(entry.subEntries.count, 2u);
+
+    // Delete entry (cascading):
+    [context deleteObject: entry];
+    success = [context save: &error];
+    Assert(success, @"Could not save context: %@", error);
+
+    // Check the result:
+    fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Subentry"];
+    result = [context executeFetchRequest:fetchRequest error:&error];
+    AssertEq(result.count, 0u);
+
+    fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Entry"];
+    result = [context executeFetchRequest:fetchRequest error:&error];
+    AssertEq(result.count, 0u);
+
+    // Tear down and re-init and test with fetch request:
+    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
+                                                          databaseName:db.name error:&error];
+
+    // Recheck the result:
+    fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Subentry"];
+    result = [context executeFetchRequest:fetchRequest error:&error];
+    AssertEq(result.count, 0u);
+
+    fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Entry"];
+    result = [context executeFetchRequest:fetchRequest error:&error];
+    AssertEq(result.count, 0u);
+}
+
+- (void) test_ManyToMany {
+    NSError *error;
+    NSMutableSet *entries = [NSMutableSet set];
+    for (NSUInteger i = 0; i < 3; i++) {
+        Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                     inManagedObjectContext:context];
+        entry.text = [NSString stringWithFormat:@"Entry%lu", i];
+        [entries addObject:entry];
+    }
+
+    for (NSUInteger i = 0; i < 3; i++) {
+        ManySubentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"ManySubentry"
+                                                               inManagedObjectContext:context];
+        subentry.text = [NSString stringWithFormat:@"Subentry%lu", i];
+        [subentry addEntries:entries];
+    }
+
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    // Tear down and re-init and test with fetch request:
+    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
+                                                          databaseName:db.name error:&error];
+
+    // Check the result:
+    NSFetchRequest* fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Entry"];
+    NSArray* result = [context executeFetchRequest:fetchRequest error:&error];
+    AssertEq(result.count, 3u);
+    for (Entry *entry in result) {
+        AssertEq(entry.manySubentries.count, 3u);
+        NSMutableArray *expected = [NSMutableArray arrayWithArray:
+                                        @[@"Subentry0", @"Subentry1", @"Subentry2"]];
+        for (ManySubentry *subentry in entry.manySubentries) {
+            NSString *text = subentry.text;
+            Assert([expected containsObject:text]);
+            [expected removeObject:text];
+        }
+    }
+
+    fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"ManySubentry"];
+    result = [context executeFetchRequest:fetchRequest error:&error];
+    AssertEq(result.count, 3u);
+    for (ManySubentry *subentry in result) {
+        AssertEq(subentry.entries.count, 3u);
+        NSMutableArray *expected = [NSMutableArray arrayWithArray:
+                                    @[@"Entry0", @"Entry1", @"Entry2"]];
+        for (Entry *entry in subentry.entries) {
+            NSString *text = entry.text;
+            Assert([expected containsObject:text]);
+            [expected removeObject:text];
+        }
+    }
+}
 
 - (void) test_FetchRequest {
-    RequireTestCase(CBLIncrementalStoreCRUD);
     NSError *error;
     NSUInteger count;
     NSArray *result;
@@ -607,7 +740,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 }
 
 - (void) test_Attachments {
-    RequireTestCase(CBLIncrementalStoreCRUD);
     NSError *error;
     CBLDatabase *database = store.database;
     
@@ -670,7 +802,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 }
 
 - (void) test_FetchWithPredicates {
-    RequireTestCase(CBLIncrementalStoreCRUD);
     NSError *error;
     
     NSDictionary *entry1 = @{
@@ -934,6 +1065,23 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     entry3.number = @(30);
     entry3.user = user1;
 
+
+    // ManySubentry:
+    for (NSUInteger i = 0; i < 4; i++) {
+        ManySubentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"ManySubentry"
+                                                               inManagedObjectContext:context];
+        subentry.text = [NSString stringWithFormat:@"ManySubentry%lu", i];
+        subentry.number = @(30 + i);
+
+        if (i < 2) {
+            [subentry addEntriesObject:entry1];
+            [subentry addEntriesObject:entry2];
+        } else {
+            [subentry addEntriesObject:entry2];
+            [subentry addEntriesObject:entry3];
+        }
+    }
+
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
@@ -989,8 +1137,37 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         if (result.count != 1) return;
         AssertEqual([result[0] valueForKey:@"number"], entry2.number);
     }];
-}
 
+    // many-to-many
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"ANY manySubentries.number < 32"];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry1.number);
+        AssertEqual(numbers[1], entry2.number);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"ANY manySubentries.number > 32"];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry2.number);
+        AssertEqual(numbers[1], entry3.number);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"ANY manySubentries.number > 40"];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 0);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number < 40 AND ANY manySubentries.number < 32"];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry1.number);
+        AssertEqual(numbers[1], entry2.number);
+    }];
+}
 
 - (void)test_FetchParentChildEntities {
     Parent *p1 = [NSEntityDescription insertNewObjectForEntityForName:@"Parent"
@@ -1084,7 +1261,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     }];
 }
 
-
 - (void)test_DocTypeKey {
     CBLDatabase *database = store.database;
 
@@ -1102,7 +1278,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert([[doc.properties allKeys] containsObject:@"type"]);
     AssertEqual(doc.properties[@"type"], @"Entry");
 }
-
 
 - (void)test_DocTypeKeyBackwardCompat {
     // Simulate old version (v.1.0.4 and below).
@@ -1140,9 +1315,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEqual(doc.properties[@"CBLIS_type"], @"Entry");
 }
 
-
 #pragma mark - UTILITIES
-
 
 - (void)assertFetchRequest:(NSFetchRequest *)fetchRequest
                      block:(CBLISAssertionBlock)assertionBlock {
@@ -1155,7 +1328,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         assertionBlock(result, fetchRequest.resultType);
     }
 }
-
 
 - (void)assertFetchResult:(NSArray *)result key:(NSString *)key
                  expected:(NSArray *)values ordered:(BOOL)ordered {
@@ -1176,10 +1348,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
 @end
 
-
-#pragma mark -
 #pragma mark - Test Core Data Model
-
 
 static NSAttributeDescription *CBLISAttributeDescription(NSString *name, BOOL optional, NSAttributeType type, id defaultValue)
 {
@@ -1227,6 +1396,10 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
     [anotherSubentry setName:@"AnotherSubentry"];
     [anotherSubentry setManagedObjectClassName:@"AnotherSubentry"];
 
+    NSEntityDescription *manySubentry = [NSEntityDescription new];
+    [manySubentry setName:@"ManySubentry"];
+    [manySubentry setManagedObjectClassName:@"ManySubentry"];
+
     NSEntityDescription *article = [NSEntityDescription new];
     [article setName:@"Article"];
     [article setManagedObjectClassName:@"Article"];
@@ -1244,22 +1417,28 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
     [child setManagedObjectClassName:@"Child"];
     [parent setSubentities:@[child]];
 
-    NSRelationshipDescription *entryFiles = CBLISRelationshipDescription(@"files", YES, YES, NSCascadeDeleteRule, file);
     NSRelationshipDescription *entrySubentries = CBLISRelationshipDescription(@"subEntries", YES, YES, NSCascadeDeleteRule, subentry);
+    NSRelationshipDescription *entryFiles = CBLISRelationshipDescription(@"files", YES, YES, NSCascadeDeleteRule, file);
     NSRelationshipDescription *entryAnotherSubentries = CBLISRelationshipDescription(@"anotherSubentries", YES, YES, NSCascadeDeleteRule, anotherSubentry);
-    NSRelationshipDescription *fileEntry = CBLISRelationshipDescription(@"entry", YES, NO, NSNullifyDeleteRule, entry);
-    NSRelationshipDescription *subentryEntry = CBLISRelationshipDescription(@"entry", YES, NO, NSNullifyDeleteRule, entry);
-    NSRelationshipDescription *anotherSubentryEntry = CBLISRelationshipDescription(@"entry", YES, NO, NSNullifyDeleteRule, entry);
+    NSRelationshipDescription *entryUser = CBLISRelationshipDescription(@"user", YES, NO, NSCascadeDeleteRule, user);
     NSRelationshipDescription *entryArticles = CBLISRelationshipDescription(@"articles", YES, YES, NSCascadeDeleteRule, article);
-    NSRelationshipDescription *entryUser = CBLISRelationshipDescription(@"user", YES, NO, NSNullifyDeleteRule, user);
+    NSRelationshipDescription *entryManySubentries = CBLISRelationshipDescription(@"manySubentries", YES, YES, NSNullifyDeleteRule, manySubentry);
+
+    NSRelationshipDescription *subentryEntry = CBLISRelationshipDescription(@"entry", YES, NO, NSNullifyDeleteRule, entry);
+    NSRelationshipDescription *fileEntry = CBLISRelationshipDescription(@"entry", YES, NO, NSNullifyDeleteRule, entry);
+    NSRelationshipDescription *anotherSubentryEntry = CBLISRelationshipDescription(@"entry", YES, NO, NSNullifyDeleteRule, entry);
+    NSRelationshipDescription *manySubentryEntries = CBLISRelationshipDescription(@"entries", YES, YES, NSNullifyDeleteRule, entry);
     NSRelationshipDescription *userEntry = CBLISRelationshipDescription(@"entry", YES, NO, NSNullifyDeleteRule, entry);
 
-    [entryFiles setInverseRelationship:fileEntry];
     [entrySubentries setInverseRelationship:subentryEntry];
+    [entryFiles setInverseRelationship:fileEntry];
     [entryAnotherSubentries setInverseRelationship:anotherSubentryEntry];
+    [entryManySubentries setInverseRelationship:manySubentryEntries];
+
     [fileEntry setInverseRelationship:entryFiles];
     [subentryEntry setInverseRelationship:entrySubentries];
     [anotherSubentryEntry setInverseRelationship:entryAnotherSubentries];
+    [manySubentryEntries setInverseRelationship:entryManySubentries];
     [userEntry setInverseRelationship:entryUser];
 
     [entryAnotherSubentries setOrdered:YES];
@@ -1276,6 +1455,7 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
                            entryFiles,
                            entrySubentries,
                            entryAnotherSubentries,
+                           entryManySubentries,
                            entryArticles,
                            entryUser
                            ]];
@@ -1298,6 +1478,12 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
                               anotherSubentryEntry
                               ]];
 
+    [manySubentry setProperties:@[
+                                  CBLISAttributeDescription(@"number", YES, NSInteger32AttributeType, @(0)),
+                                  CBLISAttributeDescription(@"text", YES, NSStringAttributeType, nil),
+                                  manySubentryEntries
+                                  ]];
+
     [article setProperties:@[
                              CBLISAttributeDescription(@"name", YES, NSStringAttributeType, nil)
                              ]];
@@ -1315,14 +1501,14 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
                            CBLISAttributeDescription(@"anotherName", YES, NSStringAttributeType, nil)
                            ]];
 
-    [model setEntities:@[entry, file, subentry, anotherSubentry, article, user, parent, child]];
+    [model setEntities:@[entry, file, subentry, anotherSubentry, manySubentry, article, user, parent, child]];
     
     return model;
 }
 
 @implementation Entry
 @dynamic check, created_at, text, text2, number, decimalNumber, doubleNumber;
-@dynamic subEntries, files, articles, anotherSubentries;
+@dynamic subEntries, files, articles, anotherSubentries, manySubentries;
 @dynamic user;
 
 // Known Core Data Bug:
@@ -1340,6 +1526,10 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
 
 @implementation AnotherSubentry
 @dynamic text, number, entry;
+@end
+
+@implementation ManySubentry
+@dynamic text, number, entries;
 @end
 
 @implementation File
