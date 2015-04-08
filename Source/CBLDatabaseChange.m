@@ -61,9 +61,10 @@
 }
 
 
-- (NSString*) documentID {return _addedRevision.docID;}
-
-- (NSString*) revisionID {return _addedRevision.revID;}
+- (NSString*) documentID    {return _addedRevision.docID;}
+- (NSString*) revisionID    {return _addedRevision.revID;}
+- (UInt64) sequenceNumber   {return _addedRevision.sequence;}
+- (BOOL) isDeletion         {return _addedRevision.deleted;}
 
 - (BOOL) isCurrentRevision {
     return _winningRevisionID && $equal(_addedRevision.revID, _winningRevisionID);

@@ -196,6 +196,32 @@
 }
 
 
+// might be made public API someday...
+- (BOOL) hasAttachmentWithDigest: (NSString*)digest {
+    CBLBlobKey key;
+    return [CBL_Attachment digest: digest toBlobKey: &key]
+        && [_attachments hasBlobForKey: key];
+}
+
+
+// might be made public API someday...
+- (NSData*) contentOfAttachmentWithDigest: (NSString*)digest {
+    CBLBlobKey key;
+    if (![CBL_Attachment digest: digest toBlobKey: &key])
+        return nil;
+    return [_attachments blobForKey: key];
+}
+
+
+// might be made public API someday...
+- (NSInputStream*) openContentStreamOfAttachmentWithDigest: (NSString*)digest {
+    CBLBlobKey key;
+    if (![CBL_Attachment digest: digest toBlobKey: &key])
+        return nil;
+    return [_attachments blobInputStreamForKey: key length: NULL];
+}
+
+
 #pragma mark - UPDATING _attachments DICTS:
 
 

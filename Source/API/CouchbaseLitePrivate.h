@@ -43,6 +43,9 @@
 @interface CBLDatabase (Private)
 @property (nonatomic, readonly) NSString* privateUUID;
 @property (nonatomic, readonly) NSString* publicUUID;
+- (BOOL) hasAttachmentWithDigest: (NSString*)digest;
+- (NSData*) contentOfAttachmentWithDigest: (NSString*)digest;
+- (NSInputStream*) openContentStreamOfAttachmentWithDigest: (NSString*)digest;
 @end
 
 
@@ -51,6 +54,8 @@
                      winningRevisionID: (NSString*)winningRevisionID
                             inConflict: (BOOL)maybeConflict
                                 source: (NSURL*)source;
+@property (readonly) UInt64 sequenceNumber;
+@property (readonly) BOOL isDeletion;
 /** The revision just added. Guaranteed immutable. */
 @property (nonatomic, readonly) CBL_Revision* addedRevision;
 /** The revID of the default "winning" revision, or nil if it did not change. */
