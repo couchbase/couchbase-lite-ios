@@ -41,6 +41,7 @@
 @property NSArray* dates;
 @property NSArray* others;
 @property NSDictionary* dict;
+@property id untypedObject;
 
 @property TestSubModel* subModel;
 @property TestMutableSubModel* mutableSubModel;
@@ -308,6 +309,7 @@
         model.dates = dates;
         model.decimal = decimal;
         model.url = url;
+        model.untypedObject = @"this is an id";
 
         Assert(model.isNew);
         Assert(model.needsSave);
@@ -320,7 +322,8 @@
                                                 @"dates": @[@"2013-06-12T23:40:52.000Z",
                                                             @"2013-06-13T17:32:01.000Z"],
                                                 @"decimal": @"12345.6789",
-                                                @"url": @"http://bogus"}));
+                                                @"url": @"http://bogus",
+                                                @"untypedObject": @"this is an id"}));
 
         TestModel* model2 = [TestModel modelForNewDocumentInDatabase: db];
         model2ID = model2.document.documentID;
@@ -358,6 +361,7 @@
                                @"dates": @[@"2013-06-12T23:40:52.000Z", @"2013-06-13T17:32:01.000Z"],
                                @"decimal": @"12345.6789",
                                @"url": @"http://bogus",
+                               @"untypedObject": @"this is an id",
                                @"other": model3.document.documentID,
                                @"others": @[model2.document.documentID, model3.document.documentID],
                                @"_id": props[@"_id"],
@@ -608,7 +612,7 @@
 @implementation TestModel
 
 @dynamic number, uInt, sInt16, uInt16, sInt8, uInt8, nsInt, nsUInt, sInt32, uInt32;
-@dynamic sInt64, uInt64, boolean, boolObjC, floaty, doubly, dict;
+@dynamic sInt64, uInt64, boolean, boolObjC, floaty, doubly, dict, untypedObject;
 @dynamic str, data, date, decimal, url, other, strings, dates, others, Capitalized;
 @dynamic subModel, subModels, mutableSubModel, otherModels;
 @synthesize reloadCount;
