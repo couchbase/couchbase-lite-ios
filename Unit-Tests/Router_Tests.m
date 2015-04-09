@@ -316,6 +316,20 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
                                     {@"doc", $dict({@"message", @"bonjour"},
                                                    {@"_id", @"doc3"}, {@"_rev", revID3} )})
                               ));
+
+    // keys:
+    result = SendBody(self, @"POST", @"/db/_all_docs",
+                      $dict({@"keys", $array(@"doc1", @"doc2", @"doc3", @"doc4")}),
+                      kCBLStatusOK, nil);
+    rows = result[@"rows"];
+    AssertEqual(rows, $array($dict({@"id",  @"doc1"}, {@"key", @"doc1"},
+                                   {@"value", $dict({@"rev", revID})}),
+                             $dict({@"id",  @"doc2"}, {@"key", @"doc2"},
+                                   {@"value", $dict({@"rev", revID2})}),
+                             $dict({@"id",  @"doc3"}, {@"key", @"doc3"},
+                                   {@"value", $dict({@"rev", revID3})}),
+                             $dict({@"error",  @"not_found"}, {@"key", @"doc4"})
+                             ));
 }
 
 
