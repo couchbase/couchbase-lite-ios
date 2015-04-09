@@ -314,10 +314,14 @@
         if (![[NSFileManager defaultManager] createFileAtPath: _tempPath
                                                      contents: nil
                                                    attributes: nil]) {
+            Warn(@"CBL_BlobStoreWriter: Unable to create a temp file at %@", _tempPath);
             return nil;
         }
         _out = [NSFileHandle fileHandleForWritingAtPath: _tempPath];
         if (!_out) {
+            BOOL exists = [[NSFileManager defaultManager] fileExistsAtPath: _tempPath];
+            Warn(@"CBL_BlobStoreWriter: Unable to get a file handle for the temp file at "
+                  "%@ (exists: %@)", _tempPath, (exists ? @"yes" : @"no"));
             return nil;
         }
         CBLSymmetricKey* encryptionKey = _store.encryptionKey;
