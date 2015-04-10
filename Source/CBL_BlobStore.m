@@ -118,6 +118,13 @@
 }
 
 
+- (uint64_t) lengthOfBlobForKey: (CBLBlobKey)key {
+    return [[[NSFileManager defaultManager] attributesOfItemAtPath: [self rawPathForKey: key]
+                                                             error: NULL]
+                                                fileSize];
+}
+
+
 - (NSData*) blobForKey: (CBLBlobKey)key {
     NSString* path = [self rawPathForKey: key];
     NSData* blob =  [NSData dataWithContentsOfFile: path options: NSDataReadingMappedIfSafe

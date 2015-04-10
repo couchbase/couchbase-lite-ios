@@ -203,6 +203,13 @@
         && [_attachments hasBlobForKey: key];
 }
 
+// might be made public API someday...
+- (uint64_t) lengthOfAttachmentWithDigest: (NSString*)digest {
+    CBLBlobKey key;
+    if (![CBL_Attachment digest: digest toBlobKey: &key])
+        return 0;
+    return [_attachments lengthOfBlobForKey: key];
+}
 
 // might be made public API someday...
 - (NSData*) contentOfAttachmentWithDigest: (NSString*)digest {
@@ -211,7 +218,6 @@
         return nil;
     return [_attachments blobForKey: key];
 }
-
 
 // might be made public API someday...
 - (NSInputStream*) openContentStreamOfAttachmentWithDigest: (NSString*)digest {
