@@ -371,24 +371,10 @@
     // NOTE: Not setting the revision to the attachment object (attachment.revision = self) as
     // [1] The UnsavedRevision object is not used during save operation
     // [2] Setting the UnsavedRevision object here will cause the circular reference memory leak.
-    // The revision object will be set in the overridden attachmentName: method.
 }
 
 - (void) removeAttachmentNamed: (NSString*)name {
     [self _addAttachment: nil named: name];
 }
-
-- (CBLAttachment*) attachmentNamed: (NSString*)name {
-    CBLAttachment* base = self.attachmentMetadata[name];
-    if (base) {
-        CBLAttachment* attachment = [[CBLAttachment alloc] _initWithContentType: base.contentType
-                                                                           body: base.body];
-        attachment.name = name;
-        attachment.revision = self;
-        return attachment;
-    }
-    return nil;
-}
-
 
 @end
