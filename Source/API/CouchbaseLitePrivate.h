@@ -116,6 +116,7 @@
                              intoDatabase: (CBLDatabase*)database   __attribute__((nonnull(2)));
 @property (readwrite, copy) NSString* name;
 @property (readwrite, retain) CBLRevision* revision;
+@property (readonly) id body;
 @end
 
 

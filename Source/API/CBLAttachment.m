@@ -72,7 +72,7 @@
 }
 
 
-@synthesize revision=_rev, name=_name, metadata=_metadata;
+@synthesize revision=_rev, name=_name, body = _body, metadata=_metadata;
 
 
 - (NSString *)description
