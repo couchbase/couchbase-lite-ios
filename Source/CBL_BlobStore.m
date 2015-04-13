@@ -149,9 +149,10 @@
         }
     }
     NSInputStream* stream = [NSInputStream inputStreamWithFileAtPath: path];
-    [stream open];
-    if (_encryptionKey)
+    if (_encryptionKey) {
+        [stream open];
         stream = [_encryptionKey decryptStream: stream];
+    }
     return stream;
 }
 
