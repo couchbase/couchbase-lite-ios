@@ -118,7 +118,7 @@
             return _body;
         else if ([_body isKindOfClass: [NSURL class]] && [_body isFileURL]) {
             return [NSData dataWithContentsOfURL: _body
-                                         options: NSDataReadingMappedIfSafe | NSDataReadingUncached
+                                         options: NSDataReadingUncached
                                            error: nil];
         }
         return nil;

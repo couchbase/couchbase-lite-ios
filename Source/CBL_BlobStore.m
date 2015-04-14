@@ -120,8 +120,7 @@
 
 - (NSData*) blobForKey: (CBLBlobKey)key {
     NSString* path = [self rawPathForKey: key];
-    NSData* blob =  [NSData dataWithContentsOfFile: path options: NSDataReadingMappedIfSafe
-                                             error: NULL];
+    NSData* blob = [NSData dataWithContentsOfFile: path options: NSDataReadingUncached error: NULL];
     if (_encryptionKey && blob) {
         blob = [_encryptionKey decryptData: blob];
         CBLBlobKey decodedKey = [[self class] keyForBlob: blob];
