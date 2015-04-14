@@ -733,7 +733,8 @@
     AssertEq(rev2.attachments.count, (NSUInteger)1);
     AssertEqual(rev2.attachmentNames, [NSArray arrayWithObject: @"index.html"]);
     CBLAttachment* attach = [rev2 attachmentNamed:@"index.html"];
-    AssertEq(attach.document, doc);
+    AssertNil(attach.revision); // No revision set
+    AssertNil(attach.document); // No revision set
     AssertEqual(attach.name, @"index.html");
     AssertEqual(attach.contentType, @"text/plain; charset=utf-8");
     AssertEqual(attach.content, body);
