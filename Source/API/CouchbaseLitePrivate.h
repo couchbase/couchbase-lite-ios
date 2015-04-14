@@ -140,6 +140,7 @@
                              view: (CBLView*)view                  __attribute__((nonnull(1)));
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                          mapBlock: (CBLMapBlock)mapBlock            __attribute__((nonnull));
+@property (nonatomic, strong) BOOL (^filterBlock)(CBLQueryRow*);
 @end
 
 
