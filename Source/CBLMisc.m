@@ -99,7 +99,7 @@ NSString* CBLCreateUUID() {
     [uuid replaceOccurrencesOfString: @"+" withString: @"-" options: 0 range: NSMakeRange(0, 22)];
     // prefix a '!' to make it more clear where this string came from and prevent having a leading
     // '_' character:
-    [uuid insertString: @"!" atIndex: 0];
+    [uuid insertString: @"-" atIndex: 0];
     return uuid;
 }
 
