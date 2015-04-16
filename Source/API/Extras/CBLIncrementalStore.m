@@ -276,7 +276,7 @@ static CBLManager* sCBLManager;
 
 #if !TARGET_OS_IPHONE
 #if (__MAC_OS_X_VERSION_MIN_REQUIRED >= 1070)
-                if (rel.ordered)
+                if (rel.isOrdered)
                     WARN(@"'%@' entity has an ordered to-many relationship '%@', which is not supported "
                          "by the CBLIncrementalStore.", entity.name, rel.name);
 #endif
@@ -1068,7 +1068,7 @@ static CBLManager* sCBLManager;
         BOOL needJoins = NO;
         if ([propertyDesc isKindOfClass:[NSRelationshipDescription class]]) {
             NSRelationshipDescription* rel = (NSRelationshipDescription*)propertyDesc;
-            needJoins = hasDotAccess || rel.toMany;
+            needJoins = hasDotAccess || rel.isToMany;
         }
         if (outNeedJoinsQuery)
             *outNeedJoinsQuery = needJoins;

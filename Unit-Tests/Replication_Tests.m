@@ -560,19 +560,19 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
                withValue: cookie1.value
                     path: cookie1.path
           expirationDate: cookie1.expiresDate
-                  secure: cookie1.secure];
+                  secure: cookie1.isSecure];
 
     [repl setCookieNamed: cookie2.name
                withValue: cookie2.value
                     path: cookie2.path
           expirationDate: cookie2.expiresDate
-                  secure: cookie2.secure];
+                  secure: cookie2.isSecure];
 
     [repl setCookieNamed: cookie3.name
                withValue: cookie3.value
                     path: cookie3.path
           expirationDate: cookie3.expiresDate
-                  secure: cookie3.secure];
+                  secure: cookie3.isSecure];
 
     [repl deleteCookieNamed: cookie2.name];
 
