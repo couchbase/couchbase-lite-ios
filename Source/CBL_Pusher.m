@@ -414,8 +414,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
         return kCBLStatusUpstreamError;
 }
 
-
-- (BOOL) uploadMultipartRevision: (CBL_Revision*)rev {
+- (CBLMultipartWriter*)multipartWriterForRevision: (CBL_Revision*)rev {
     // Find all the attachments with "follows" instead of a body, and put 'em in a multipart stream.
     // It's important to scan the _attachments entries in the same order in which they will appear
     // in the JSON, because CouchDB expects the MIME bodies to appear in that same order (see #133).
@@ -435,7 +434,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                 NSData* json = [CBJSONEncoder canonicalEncoding: rev.properties error: &error];
                 if (error) {
                     Warn(@"%@: Creating canonical JSON data got an error: %@", self, error);
-                    return NO;
+                    return nil;
                 }
 
                 if (self.canSendCompressedRequests)
@@ -456,10 +455,17 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                                                              named: attachmentName
                                                             status: &status];
             if (!attachmentObj)
-                return NO;
+                return nil;
             [bodyStream addStream: attachmentObj.contentStream length: attachmentObj->length];
         }
     }
+
+    return bodyStream;
+}
+
+- (BOOL) uploadMultipartRevision: (CBL_Revision*)rev {
+    // Pre-creating the body stream and check if it's available or not.
+    __block CBLMultipartWriter* bodyStream = [self multipartWriterForRevision: rev];
     if (!bodyStream)
         return NO;
     
@@ -470,8 +476,16 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeURLParam(rev.docID));
     __block CBLMultipartUploader* uploader = [[CBLMultipartUploader alloc]
                                   initWithURL: CBLAppendToURL(_remote, path)
-                                     streamer: bodyStream
                                requestHeaders: self.requestHeaders
+                              multipartWriter:^CBLMultipartWriter *{
+                                  CBLMultipartWriter* writer = bodyStream;
+                                  // Reset to nil so the writer will get regenerated if the block
+                                  // gets re-called (e.g. when retrying).
+                                  bodyStream = nil;
+                                  if (!writer)
+                                      writer = [self multipartWriterForRevision: rev];
+                                  return writer;
+                              }
                                  onCompletion: ^(CBLMultipartUploader* result, NSError *error) {
                   [self removeRemoteRequest: uploader];
                   if (error) {
