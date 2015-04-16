@@ -274,9 +274,13 @@ static CBLManager* sCBLManager;
                          "defined. The inverse relationship is requried by the CBLIncrementalStore for "
                          "fetching to-many relationship entities.", entity.name, rel.name);
 
+#if !TARGET_OS_IPHONE
+#if (__MAC_OS_X_VERSION_MIN_REQUIRED >= 1070)
                 if (rel.ordered)
                     WARN(@"'%@' entity has an ordered to-many relationship '%@', which is not supported "
                          "by the CBLIncrementalStore.", entity.name, rel.name);
+#endif
+#endif
             }
         }
     }
