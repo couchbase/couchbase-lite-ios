@@ -15,11 +15,9 @@
 		<key>073B5630A41468111630CB02A17BF6B9B89CE1A3</key>
 		<string>github.com:couchbaselabs/forestdb.git</string>
 		<key>1C75F1C5CFCB95B3702F6F632FA05ED5244B519E</key>
-		<string>github.com:robbiehanson/CocoaAsyncSocket.git</string>
+		<string>https://github.com/robbiehanson/CocoaAsyncSocket.git</string>
 		<key>3B6E0836A249709CBC66E3BD2D6E8381049097CC</key>
 		<string>git://github.com/couchbaselabs/WebSockets-Cocoa.git</string>
-		<key>4BAB8F3E22C4829A7272C753E8D316047BC55F8C</key>
-		<string>https://gitorious.org/mdb/mdb.git</string>
 		<key>71CFC0DE1DEFC877B0C5B9F98B971EBA2921D608</key>
 		<string>git://github.com/couchbaselabs/CocoaHTTPServer.git</string>
 		<key>95BD7FD70F525D599BE3B03B349FA96B7F09E4A7</key>
@@ -32,37 +30,31 @@
 		<string>git://github.com/snej/MYUtilities.git</string>
 		<key>F084A5E79D508F8E5EB6C3DC3C9997CD80515925</key>
 		<string>https://github.com/snej/sqlite3-unicodesn.git</string>
-		<key>FFC69B5F4BB0697F22D5DF55FF5585DDFA3B8BA2</key>
-		<string>github.com:snej/zdelta.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
 	<string>CouchbaseLite.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>04101981B66E318109934C9516F88D824BB96459</key>
-		<string>../../vendor/fmdb</string>
+		<string>../..vendor/fmdb/</string>
 		<key>073B5630A41468111630CB02A17BF6B9B89CE1A3</key>
-		<string>../..vendor/CBForest/vendor/forestdb</string>
+		<string>../..vendor/CBForest/vendor/forestdb/</string>
 		<key>1C75F1C5CFCB95B3702F6F632FA05ED5244B519E</key>
-		<string>../..vendor/WebSockets-Cocoa/vendor/CocoaAsyncSocket</string>
+		<string>../..vendor/WebSockets-Cocoa/vendor/CocoaAsyncSocket/</string>
 		<key>3B6E0836A249709CBC66E3BD2D6E8381049097CC</key>
-		<string>../..vendor/WebSockets-Cocoa</string>
-		<key>4BAB8F3E22C4829A7272C753E8D316047BC55F8C</key>
-		<string>../../vendor/CBForest/vendor/lmdb</string>
+		<string>../..vendor/WebSockets-Cocoa/</string>
 		<key>71CFC0DE1DEFC877B0C5B9F98B971EBA2921D608</key>
-		<string>../..vendor/CocoaHTTPServer</string>
+		<string>../..vendor/CocoaHTTPServer/</string>
 		<key>95BD7FD70F525D599BE3B03B349FA96B7F09E4A7</key>
-		<string>../..vendor/CBForest</string>
+		<string>../..vendor/CBForest/</string>
 		<key>9EB8DA420176E66DD13DE995CAB7884E375CF83A</key>
-		<string>../..vendor/oauthconsumer</string>
+		<string>../..vendor/oauthconsumer/</string>
 		<key>A285BCEC7D6D8A0B6D4A852E70EFCD820E12B9FD</key>
 		<string>../..</string>
 		<key>EDD5A95C0B9BA456AC83DA491C4680B9358547CF</key>
-		<string>../..vendor/MYUtilities</string>
+		<string>../..vendor/MYUtilities/</string>
 		<key>F084A5E79D508F8E5EB6C3DC3C9997CD80515925</key>
-		<string>../..vendor/CBForest/vendor/sqlite3-unicodesn</string>
-		<key>FFC69B5F4BB0697F22D5DF55FF5585DDFA3B8BA2</key>
-		<string>../../vendor/CBForest/vendor/zdelta</string>
+		<string>../..vendor/CBForest/vendor/sqlite3-unicodesn/</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>github.com:couchbase/couchbase-lite-ios.git</string>
@@ -124,14 +116,6 @@
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>4BAB8F3E22C4829A7272C753E8D316047BC55F8C</string>
-			<key>IDESourceControlWCCName</key>
-			<string>lmdb</string>
-		</dict>
-		<dict>
-			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
-			<string>public.vcs.git</string>
-			<key>IDESourceControlWCCIdentifierKey</key>
 			<string>EDD5A95C0B9BA456AC83DA491C4680B9358547CF</string>
 			<key>IDESourceControlWCCName</key>
 			<string>MYUtilities</string>
@@ -159,14 +143,6 @@
 			<string>3B6E0836A249709CBC66E3BD2D6E8381049097CC</string>
 			<key>IDESourceControlWCCName</key>
 			<string>WebSockets-Cocoa</string>
-		</dict>
-		<dict>
-			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
-			<string>public.vcs.git</string>
-			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>FFC69B5F4BB0697F22D5DF55FF5585DDFA3B8BA2</string>
-			<key>IDESourceControlWCCName</key>
-			<string>zdelta</string>
 		</dict>
 	</array>
 </dict>
