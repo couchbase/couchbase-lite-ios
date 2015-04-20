@@ -238,7 +238,12 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
                     return [receiver getArrayRelationProperty: property withModelClass: itemClass];
                 };
             }
-        } else {
+        }
+        else if ( [itemClass isSubclassOfClass: [NSObject class]] && ![itemClass isSubclassOfClass:[NSDate class]])
+        {
+            return [super impForGetterOfProperty: property ofClass: propertyClass];
+        }
+        else {
             // Typed array of scalar class:
             ValueConverter itemConverter = valueConverterToClass(itemClass);
             if (itemConverter) {
@@ -253,7 +258,12 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
         impBlock = ^id(CBLModel* receiver) {
             return [receiver getModelProperty: property];
         };
-    } else {
+    }
+    else if ( [propertyClass isSubclassOfClass: [NSObject class]] && ![propertyClass isSubclassOfClass:[NSDate class]])
+    {
+        return [super impForGetterOfProperty: property ofClass: propertyClass];
+    }
+    else {
         // Other property type -- use a ValueConverter if we have one:
         ValueConverter converter = valueConverterToClass(propertyClass);
         if (converter) {
@@ -300,7 +310,13 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
                 }
                 [receiver setValue: value ofProperty: property];
             };
-        } else {
+        }
+        else if ([propertyClass isSubclassOfClass: [NSObject class]])
+        {
+             return [super impForSetterOfProperty: property ofClass: propertyClass];
+        }
+        
+        else {
             // Scalar-valued array:
             impBlock = ^(CBLModel* receiver, NSArray* value) {
                 [receiver setValue: value ofProperty: property];
@@ -316,7 +332,12 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
             }
             [receiver setValue: value ofProperty: property];
         };
-    } else {
+    }
+    else if ([propertyClass isSubclassOfClass: [NSObject class]])
+    {
+        return [super impForSetterOfProperty: property ofClass: propertyClass];
+    }
+    else {
         return [super impForSetterOfProperty: property ofClass: propertyClass];
     }
 
