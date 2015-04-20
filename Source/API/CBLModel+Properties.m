@@ -239,10 +239,6 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
                 };
             }
         }
-        else if ( [itemClass isSubclassOfClass: [NSObject class]] && ![itemClass isSubclassOfClass:[NSDate class]])
-        {
-            return [super impForGetterOfProperty: property ofClass: propertyClass];
-        }
         else {
             // Typed array of scalar class:
             ValueConverter itemConverter = valueConverterToClass(itemClass);
@@ -252,6 +248,10 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
                     return [receiver getProperty: property withConverter: converter];
                 };
             }
+            else if([itemClass isSubclassOfClass: [NSObject class]])
+            {
+                return [super impForGetterOfProperty: property ofClass: itemClass];
+            }
         }
     } else if ([propertyClass isSubclassOfClass: [CBLModel class]]) {
         // Model-valued property:
@@ -259,10 +259,7 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
             return [receiver getModelProperty: property];
         };
     }
-    else if ( [propertyClass isSubclassOfClass: [NSObject class]] && ![propertyClass isSubclassOfClass:[NSDate class]])
-    {
-        return [super impForGetterOfProperty: property ofClass: propertyClass];
-    }
+
     else {
         // Other property type -- use a ValueConverter if we have one:
         ValueConverter converter = valueConverterToClass(propertyClass);
@@ -270,6 +267,10 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
             impBlock = ^id(CBLModel* receiver) {
                 return [receiver getProperty: property withConverter: converter];
             };
+        }
+        else if([propertyClass isSubclassOfClass: [NSObject class]])
+        {
+            return [super impForGetterOfProperty: property ofClass: propertyClass];
         }
     }
 
