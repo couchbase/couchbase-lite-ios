@@ -1425,6 +1425,9 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                     status: (CBLStatus*)outStatus
                      error: (NSError**)outError
 {
+    if (outError)
+        *outError = nil;
+
     __block NSData* json = nil;
     if (properties) {
         json = [CBL_Revision asCanonicalJSON: properties error: NULL];
@@ -1627,6 +1630,9 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                    source: (NSURL*)source
                     error: (NSError**)outError
 {
+    if (outError)
+        *outError = nil;
+
     CBL_MutableRevision* rev = inRev.mutableCopy;
     rev.sequence = 0;
     NSString* docID = rev.docID;

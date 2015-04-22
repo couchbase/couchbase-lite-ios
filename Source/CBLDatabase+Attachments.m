@@ -448,11 +448,6 @@ static UInt64 smallestLength(NSDictionary* attachment) {
     if (!body && *outStatus == kCBLStatusCreated)
         *outStatus = kCBLStatusOK;
 
-    if (CBLStatusIsError(*outStatus)) {
-        if (outError && !*outError)
-            *outError = CBLStatusToNSError(*outStatus, nil);
-    }
-
     return newRev;
 }
 

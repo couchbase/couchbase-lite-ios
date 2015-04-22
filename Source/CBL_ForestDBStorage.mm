@@ -876,6 +876,9 @@ static void convertRevIDs(NSArray* revIDs,
                     status: (CBLStatus*)outStatus
                      error: (NSError **)outError
 {
+    if (outError)
+        *outError = nil;
+
     if (_forest->isReadOnly()) {
         *outStatus = kCBLStatusForbidden;
         if (outError)
@@ -999,6 +1002,7 @@ static void convertRevIDs(NSArray* revIDs,
     }];
 
     if (CBLStatusIsError(*outStatus)) {
+        // Check if the outError has a value to not override the validation error:
         if (outError && !*outError)
             *outError = CBLStatusToNSError(*outStatus, nil);
         return nil;
@@ -1015,6 +1019,9 @@ static void convertRevIDs(NSArray* revIDs,
                    source: (NSURL*)source
                     error: (NSError **)outError
 {
+    if (outError)
+        *outError = nil;
+
     if (_forest->isReadOnly()) {
         if (outError)
             *outError = CBLStatusToNSError(kCBLStatusForbidden, nil);
@@ -1081,6 +1088,7 @@ static void convertRevIDs(NSArray* revIDs,
         [_delegate databaseStorageChanged: change];
 
     if (CBLStatusIsError(status)) {
+        // Check if the outError has a value to not override the validation error:
         if (outError && !*outError)
             *outError = CBLStatusToNSError(status, nil);
     }

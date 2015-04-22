@@ -183,8 +183,11 @@
         tmpRev.properties = properties;
         if (![self processAttachmentsForRevision: tmpRev
                                        prevRevID: prevRevID
-                                          status: outStatus])
+                                          status: outStatus]) {
+            if (outError)
+                *outError = CBLStatusToNSError(*outStatus, nil);
             return nil;
+        }
         properties = [tmpRev.properties mutableCopy];
     }
 
@@ -242,8 +245,11 @@
         NSString* prevRevID = history.count >= 2 ? history[1] : nil;
         if (![self processAttachmentsForRevision: updatedRev
                                        prevRevID: prevRevID
-                                          status: &status])
+                                          status: &status]) {
+            if (outError)
+                *outError = CBLStatusToNSError(status, nil);
             return status;
+        }
         inRev = updatedRev;
     }
 
@@ -274,6 +280,9 @@
                    parentRevID: (NSString*)parentRevID
                          error: (NSError**)outError
 {
+    if (outError)
+        *outError = nil;
+    
     NSDictionary* validations = [self.shared valuesOfType: @"validation" inDatabaseNamed: _name];
     if (validations.count == 0)
         return kCBLStatusOK;

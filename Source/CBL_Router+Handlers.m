@@ -739,8 +739,11 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
           createdRev: (CBL_Revision**)outRev
                error: (NSError**)outError
 {
-    if (body && !body.isValidJSON)
+    if (body && !body.isValidJSON) {
+        if (outError)
+            *outError = CBLStatusToNSError(kCBLStatusBadJSON, nil);
         return kCBLStatusBadJSON;
+    }
     
     NSString* prevRevID;
     
@@ -750,8 +753,11 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         if (!docID) {
             // POST's doc ID may come from the _id field of the JSON body.
             docID = properties.cbl_id;
-            if (!docID && deleting)
+            if (!docID && deleting) {
+                if (outError)
+                    *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
                 return kCBLStatusBadID;
+            }
         }
         // PUT's revision ID comes from the JSON body.
         prevRevID = properties.cbl_rev;
@@ -766,26 +772,29 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
     CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: nil
                                                                   deleted: deleting];
-    if (!rev)
+    if (!rev) {
+        if (outError)
+            *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
         return kCBLStatusBadID;
+    }
     rev.body = body;
     
     CBLStatus status;
-    if ([docID hasPrefix: @"_local/"])
+    if ([docID hasPrefix: @"_local/"]) {
         *outRev = [db.storage putLocalRevision: rev
                                 prevRevisionID: prevRevID
                                       obeyMVCC: YES
                                         status: &status];
-    else
+
+        if (CBLStatusIsError(status)) {
+            if (outError)
+                *outError = CBLStatusToNSError(status, nil);
+        }
+    } else
         *outRev = [db putRevision: rev prevRevisionID: prevRevID
                     allowConflict: allowConflict
                            status: &status
                             error: outError];
-
-    if (CBLStatusIsError(status)) {
-        if (outError && !*outError)
-            *outError = CBLStatusToNSError(status, nil);
-    }
     return status;
 }
 
