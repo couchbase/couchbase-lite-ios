@@ -1629,7 +1629,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     __block BOOL inConflict = NO;
     CBLStatus status = [self inTransaction: ^CBLStatus {
         // First look up the document's row-id and all locally-known revisions of it:
-        CBL_RevisionList* localRevs = nil;
+        NSMutableDictionary* localRevs = nil;
         NSString* oldWinningRevID = nil;
         BOOL oldWinnerWasDeletion = NO;
         BOOL isNewDoc = (history.count == 1);
@@ -1637,11 +1637,14 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         if (docNumericID <= 0)
             return self.lastDbError;
         if (!isNewDoc) {
-            localRevs = [self getAllRevisionsOfDocumentID: docID
-                                                numericID: docNumericID
-                                              onlyCurrent: NO];
-            if (!localRevs)
+            CBL_RevisionList* localRevsList = [self getAllRevisionsOfDocumentID: docID
+                                                                      numericID: docNumericID
+                                                                    onlyCurrent: NO];
+            if (!localRevsList)
                 return self.lastDbError;
+            localRevs = [[NSMutableDictionary alloc] initWithCapacity: localRevsList.count];
+            for (CBL_Revision* rev in localRevsList)
+                localRevs[rev.revID] = rev;
 
             // Look up which rev is the winner, before this insertion
             CBLStatus tempStatus;
@@ -1657,7 +1660,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         if (validationBlock) {
             CBL_Revision* oldRev = nil;
             for (NSUInteger i = 1; i<history.count; ++i) {
-                oldRev = [localRevs revWithDocID: docID revID: history[i]];
+                oldRev = localRevs[history[i]];
                 if (oldRev)
                     break;
             }
@@ -1674,7 +1677,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         SequenceNumber localParentSequence = 0;
         for (NSInteger i = history.count - 1; i>=0; --i) {
             NSString* revID = history[i];
-            CBL_Revision* localRev = [localRevs revWithDocID: docID revID: revID];
+            CBL_Revision* localRev = localRevs[revID];
             if (localRev) {
                 // This revision is known locally. Remember its sequence as the parent of the next one:
                 sequence = localRev.sequence;
