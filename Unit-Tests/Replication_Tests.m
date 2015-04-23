@@ -777,4 +777,131 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     Assert(stopped);
 }
 
+- (void) test14_PullDocWithStubAttachment {
+    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+
+    NSMutableDictionary* properties;
+    CBLUnsavedRevision* newRev;
+
+    NSError* error;
+    CBLDatabase* pushDB = [dbmgr createEmptyDatabaseNamed: @"prepopdb" error: &error];
+
+    // Create a document:
+    CBLDocument* doc = [pushDB documentWithID: @"mydoc"];
+    CBLSavedRevision* rev1 = [doc putProperties: @{@"foo": @"bar"} error: &error];
+    Assert(rev1);
+
+    // Attach an attachment:
+    NSUInteger size = 50 * 1024;
+    unsigned char attachbytes[size];
+    for (NSUInteger i = 0; i < size; i++) {
+        attachbytes[i] = 1;
+    }
+    NSData* attachment = [NSData dataWithBytes: attachbytes length: size];
+    newRev = [doc newRevision];
+    [newRev setAttachmentNamed: @"myattachment"
+               withContentType: @"text/plain; charset=utf-8"
+                       content: attachment];
+    CBLSavedRevision* rev2 = [newRev save: &error];
+    Assert(rev2);
+
+    // Push:
+    CBLReplication* pusher = [pushDB createPushReplication: remoteDbURL];
+    [self runReplication:pusher expectedChangesCount:1];
+
+    // Pull (The db now has a base doc with an attachment.):
+    CBLReplication* puller = [db createPullReplication: remoteDbURL];
+    [self runReplication: puller expectedChangesCount: 1];
+
+    // Create a new revision and push:
+    properties = doc.userProperties.mutableCopy;
+    properties[@"tag"] = @3;
+
+    newRev = [rev2 createRevision];
+    newRev.userProperties = properties;
+    CBLSavedRevision* rev3 = [newRev save: &error];
+    Assert(rev3);
+
+    pusher = [pushDB createPushReplication: remoteDbURL];
+    [self runReplication: pusher expectedChangesCount: 1];
+
+    // Create another revision and push:
+    properties = doc.userProperties.mutableCopy;
+    properties[@"tag"] = @4;
+
+    newRev = [rev3 createRevision];
+    newRev.userProperties = properties;
+    CBLSavedRevision* rev4 = [newRev save: &error];
+    Assert(rev4);
+
+    pusher = [pushDB createPushReplication: remoteDbURL];
+    [self runReplication: pusher expectedChangesCount: 1];
+
+    // Pull without any errors:
+    puller = [db createPullReplication: remoteDbURL];
+    [self runReplication: puller expectedChangesCount: 1];
+
+    Assert([pushDB deleteDatabase: &error], @"Couldn't delete db: %@", error);
+}
+
+- (void) test15_PushShouldNotSendNonModifiedAttachment {
+    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+
+    CBLUnsavedRevision* newRev;
+    NSError* error;
+
+    // Create a document:
+    CBLDocument* doc = [db documentWithID: @"mydoc"];
+    CBLSavedRevision* rev1 = [doc putProperties: @{@"foo": @"bar"} error: &error];
+    Assert(rev1);
+
+    // Attach an attachment:
+    NSUInteger size = 50 * 1024;
+    unsigned char attachbytes[size];
+    for (NSUInteger i = 0; i < size; i++) {
+        attachbytes[i] = 1;
+    }
+    NSData* attachment = [NSData dataWithBytes: attachbytes length: size];
+    newRev = [doc newRevision];
+    [newRev setAttachmentNamed: @"myattachment"
+               withContentType: @"text/plain; charset=utf-8"
+                       content: attachment];
+    CBLSavedRevision* rev2 = [newRev save: &error];
+    Assert(rev2);
+
+    // Push:
+    CBLReplication* pusher = [db createPushReplication: remoteDbURL];
+    [self runReplication:pusher expectedChangesCount:1];
+
+    NSMutableDictionary* properties = doc.userProperties.mutableCopy;
+    properties[@"tag"] = @3;
+
+    newRev = [rev2 createRevision];
+    newRev.userProperties = properties;
+    CBLSavedRevision* rev3 = [newRev save: &error];
+    Assert(rev3);
+
+    pusher = [db createPushReplication: remoteDbURL];
+    [self runReplication: pusher expectedChangesCount: 1];
+
+    // Implicitly verify the result by checking the revpos of the document on the Sync Gateway.
+    NSURL* allDocsURL = [remoteDbURL URLByAppendingPathComponent: @"mydoc"];
+    NSData* data = [NSData dataWithContentsOfURL: allDocsURL];
+    Assert(data);
+    NSDictionary* response = [CBLJSON JSONObjectWithData: data options: 0 error: NULL];
+    NSDictionary* attachments = response[@"_attachments"];
+    Assert(attachments);
+    NSDictionary* myAttachment = attachments[@"myattachment"];
+    Assert(myAttachment);
+    Assert(myAttachment[@"revpos"]);
+    int revpos = [myAttachment[@"revpos"] intValue];
+    AssertEq(revpos, 2);
+}
+
 @end

@@ -228,8 +228,8 @@
         NSString* prevRevID = history.count >= 2 ? history[1] : nil;
         if (![self processAttachmentsForRevision: updatedRev
                                        prevRevID: prevRevID
-                                          status: &status])
-        return status;
+                                          status: &status] && CBLStatusIsError(status))
+            return status;
         inRev = updatedRev;
     }
 
