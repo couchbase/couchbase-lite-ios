@@ -614,9 +614,12 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     CBLStatus status = kCBLStatusNotFound;
     if ([r next]) {
         // Found the rev. But the JSON still might be null if the database has been compacted.
-        status = kCBLStatusOK;
-        rev.sequence = [r longLongIntForColumnIndex: 0];
-        rev.asJSON = [r dataNoCopyForColumnIndex: 1];
+        NSData* json = [r dataNoCopyForColumnIndex: 1];
+        if (json) {
+            status = kCBLStatusOK;
+            rev.sequence = [r longLongIntForColumnIndex: 0];
+            rev.asJSON = json;
+        }
     }
     [r close];
     return status;
