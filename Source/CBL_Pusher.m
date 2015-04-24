@@ -293,7 +293,7 @@
                             // Look for the latest common ancestor and stub out older attachments:
                             int minRevPos = CBLFindCommonAncestor(populatedRev, possibleAncestors);
                             if (![db expandAttachmentsIn: populatedRev
-                                             minRevPos: minRevPos
+                                               minRevPos: minRevPos + 1
                                             allowFollows: !_dontSendMultipart
                                                   decode: NO
                                                   status: &status]) {

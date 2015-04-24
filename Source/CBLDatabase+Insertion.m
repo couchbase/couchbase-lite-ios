@@ -229,7 +229,7 @@
         if (![self processAttachmentsForRevision: updatedRev
                                        prevRevID: prevRevID
                                           status: &status])
-        return status;
+            return status;
         inRev = updatedRev;
     }
 
