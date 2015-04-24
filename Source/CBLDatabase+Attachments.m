@@ -279,7 +279,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
     unsigned generation = [CBL_Revision generationFromRevID: prevRevID] + 1;
     __block NSDictionary* parentAttachments = nil;
 
-    return [rev mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *attachInfo) {
+    [rev mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *attachInfo) {
         CBL_Attachment* attachment = [[CBL_Attachment alloc] initWithName: name
                                                                      info: attachInfo
                                                                    status: outStatus];
@@ -338,6 +338,8 @@ static UInt64 smallestLength(NSDictionary* attachment) {
         Assert(attachment.isValid);
         return attachment.asStubDictionary;
     }];
+
+    return !CBLStatusIsError(*outStatus);
 }
 
 
