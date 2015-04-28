@@ -97,22 +97,22 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 }
 
 
-- (BOOL) databaseExistsIn: (NSString*)directory {
-    NSString* dbPath = [directory stringByAppendingPathComponent: kDBFilename];
+- (BOOL) databaseExistsAtPath: (NSString*)path {
+    NSString* dbPath = [path stringByAppendingPathComponent: kDBFilename];
     return [[NSFileManager defaultManager] fileExistsAtPath: dbPath isDirectory: NULL];
 }
 
 
-- (BOOL)openInDirectory: (NSString *)directory
-               readOnly: (BOOL)readOnly
-                manager: (CBLManager*)manager
-                  error: (NSError**)outError
+- (BOOL)openAtPath: (NSString *)path
+          readOnly: (BOOL)readOnly
+           manager: (CBLManager*)manager
+             error: (NSError**)outError
 {
     if (_delegate.encryptionKey)
         return ReturnNSErrorFromCBLStatus(kCBLStatusNotImplemented, outError);
 
-    _directory = [directory copy];
-    NSString* forestPath = [directory stringByAppendingPathComponent: kDBFilename];
+    _directory = [path copy];
+    NSString* forestPath = [path stringByAppendingPathComponent: kDBFilename];
     fdb_open_flags flags = readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE;
 
     Database::config config = Database::defaultConfig();

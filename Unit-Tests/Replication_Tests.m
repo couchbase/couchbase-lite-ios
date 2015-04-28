@@ -25,7 +25,8 @@
 
 
 @interface CBLDatabase (Internal)
-@property (nonatomic, readonly) NSString* dir;
+@property (nonatomic, readonly) NSString* path;
+@property (readonly) NSString* attachmentStorePath;
 @end
 
 
@@ -603,7 +604,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     NSError* error;
     CBLDatabase* prePopulateDB = [dbmgr createEmptyDatabaseNamed: @"prepopdb" error: &error];
     Assert(prePopulateDB, @"Couldn't create db: %@", error);
-    NSString* oldDbPath = prePopulateDB.dir;
+    NSString* oldDbPath = prePopulateDB.path;
 
     [prePopulateDB inTransaction:^BOOL{
         for (int i = 1; i <= (int)numPrePopulatedDocs; i++) {
@@ -663,12 +664,14 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     AssertEq(pusher.changesCount, numNonPrePopulatedDocs);
 
     // Import pre-populated database to a new database called 'importdb':
-    [dbmgr replaceDatabaseNamed: @"importdb"
-                withDatabaseDir: oldDbPath
-                          error: &error];
+    BOOL replaced = [dbmgr replaceDatabaseNamed: @"importdb"
+                               withDatabaseFile: oldDbPath
+                                withAttachments: [prePopulateDB attachmentStorePath]
+                                          error: &error];
+    Assert(replaced);
 
     CBLDatabase* importDb = [dbmgr databaseNamed:@"importdb" error:&error];
-    
+
     pusher = [importDb createPushReplication: remoteDbURL];
     pusher.createTarget = NO;
     [pusher start];

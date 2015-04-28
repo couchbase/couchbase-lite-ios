@@ -37,7 +37,7 @@ extern NSArray* CBL_RunloopModes;
 @interface CBLDatabase ()
 {
     @private
-    NSString* _dir;
+    NSString* _path;
     NSString* _name;
     CBLManager* _manager;
     id<CBL_Storage> _storage;
@@ -60,7 +60,7 @@ extern NSArray* CBL_RunloopModes;
 }
 
 @property (nonatomic, readwrite, copy) NSString* name;  // make it settable
-@property (nonatomic, readonly) NSString* dir;
+@property (nonatomic, readonly) NSString* path;
 @property (nonatomic, readonly) BOOL isOpen;
 
 - (void) postPublicChangeNotification: (NSArray*)changes; // implemented in CBLDatabase.m
@@ -72,10 +72,10 @@ extern NSArray* CBL_RunloopModes;
 // Internal API
 @interface CBLDatabase (Internal) <CBL_StorageDelegate>
 
-- (instancetype) _initWithDir: (NSString*)dirPath
-                         name: (NSString*)name
-                      manager: (CBLManager*)manager
-                     readOnly: (BOOL)readOnly;
+- (instancetype) _initWithPath: (NSString*)path
+                          name: (NSString*)name
+                       manager: (CBLManager*)manager
+                      readOnly: (BOOL)readOnly;
 + (BOOL) deleteDatabaseFilesAtPath: (NSString*)dbPath error: (NSError**)outError;
 
 #if DEBUG

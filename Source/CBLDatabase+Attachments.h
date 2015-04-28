@@ -20,6 +20,8 @@ typedef enum {
 
 @interface CBLDatabase (Attachments)
 
+// + (NSString*) attachmentStorePath: (NSString*)dbPath;
++ (NSString*) attachmentStorePath: (NSString*)dbPath storageType: (NSString*)storageType;
 @property (readonly) NSString* attachmentStorePath;
 
 + (NSString*) blobKeyToDigest: (CBLBlobKey)key;

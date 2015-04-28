@@ -30,8 +30,6 @@
 #import "sqlite3_unicodesn_tokenizer.h"
 
 
-#define kDBFilename @"db.sqlite3"
-
 #define kSQLiteMMapSize (50*1024*1024)
 
 #define kDocIDCacheSize 1000
@@ -56,7 +54,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 @implementation CBL_SQLiteStorage
 {
-    NSString* _directory;
+    NSString* _path;
     BOOL _readOnly;
     NSCache* _docIDs;
 }
@@ -96,26 +94,26 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 #pragma mark - OPEN/CLOSE:
 
 
-- (BOOL) databaseExistsIn: (NSString*)directory {
-    NSString* dbPath = [directory stringByAppendingPathComponent: kDBFilename];
-    return [[NSFileManager defaultManager] fileExistsAtPath: dbPath isDirectory: NULL];
+- (BOOL) databaseExistsAtPath: (NSString*)dbPath {
+    BOOL isDir;
+    BOOL exists = [[NSFileManager defaultManager] fileExistsAtPath: dbPath isDirectory: &isDir];
+    return exists && !isDir;
 }
 
 
 /** Opens storage. Files will be created in the directory, which must already exist. */
-- (BOOL) openInDirectory: (NSString*)directory
-                readOnly: (BOOL)readOnly
-                 manager: (CBLManager*)manager
-                   error: (NSError**)error
+- (BOOL) openAtPath: (NSString*)path
+           readOnly: (BOOL)readOnly
+            manager: (CBLManager*)manager
+              error: (NSError**)error
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         [[self class] firstTimeSetup];
     });
 
-    _directory = [directory copy];
+    _path = [path copy];
     _readOnly = readOnly;
-    NSString* path = [_directory stringByAppendingPathComponent: kDBFilename];
     _fmdb = [[CBL_FMDatabase alloc] initWithPath: path];
     _fmdb.dispatchQueue = manager.dispatchQueue;
     _fmdb.databaseLock = [manager.shared lockForDatabaseNamed: path];
@@ -157,7 +155,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     if ([self runStatements: statements error: outError])
         return YES;
     Warn(@"CBLDatabase: Could not initialize schema of %@ -- May be an old/incompatible format. "
-          "SQLite error: %@", _directory, _fmdb.lastErrorMessage);
+          "SQLite error: %@", _path, _fmdb.lastErrorMessage);
     [_fmdb close];
     return NO;
 }
@@ -255,9 +253,13 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 
 #ifdef MOCK_ENCRYPTION
+- (NSString*) mockKeyPath {
+    return [[_path stringByDeletingPathExtension] stringByAppendingString: @" mock_key"];
+}
+
 - (BOOL) mockDecryptWithKey: (CBLSymmetricKey*)encryptionKey error: (NSError**)outError {
     NSData* givenKeyData = encryptionKey ? encryptionKey.keyData : [NSData data];
-    NSString* keyPath = [_directory stringByAppendingPathComponent: @"mock_key"];
+    NSString* keyPath = [self mockKeyPath];
     NSData* actualKeyData = [NSData dataWithContentsOfFile: keyPath];
     if (!actualKeyData) {
         // Save key (which may be empty) the first time:
@@ -281,7 +283,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     __unused int dbVersion = self.schemaVersion;
     
     // Incompatible version changes increment the hundreds' place:
-    if (dbVersion >= 100) {
+    if (dbVersion >= 200) {
         Warn(@"CBLDatabase: Database version (%d) is newer than I know how to work with", dbVersion);
         [_fmdb close];
         if (outError) *outError = [NSError errorWithDomain: @"CouchbaseLite" code: 1 userInfo: nil]; //FIX: Real code
@@ -358,6 +360,14 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         if (![self initialize: schema error: outError])
             return NO;
         dbVersion = 18;
+    }
+
+    if (dbVersion < 101) {
+        NSString *schema = @"\
+            PRAGMA user_version = 101";
+        if (![self initialize: schema error: outError])
+            return NO;
+        dbVersion = 101;
     }
 
     if (isNew && ![self initialize: @"END TRANSACTION" error: outError])
