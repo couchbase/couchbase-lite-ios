@@ -165,7 +165,7 @@
 }
 
 + (void) runTestCases {
-#if DEBUG
+#if DEBUG && MY_ENABLE_TESTS
     const char* argv[] = {"Test_All"};
     RunTestCases(1, argv);
 #endif

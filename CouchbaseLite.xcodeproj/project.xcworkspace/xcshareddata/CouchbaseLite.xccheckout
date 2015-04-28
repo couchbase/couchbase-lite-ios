@@ -7,7 +7,7 @@
 	<key>IDESourceControlProjectIdentifier</key>
 	<string>4B393890-8D4C-475A-88CB-075DB995D026</string>
 	<key>IDESourceControlProjectName</key>
-	<string>CouchbaseLite</string>
+	<string>project</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>04101981B66E318109934C9516F88D824BB96459</key>
@@ -32,7 +32,7 @@
 		<string>https://github.com/snej/sqlite3-unicodesn.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>CouchbaseLite.xcodeproj</string>
+	<string>CouchbaseLite.xcodeproj/project.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>04101981B66E318109934C9516F88D824BB96459</key>
