@@ -49,15 +49,8 @@
     return [@"sha1-" stringByAppendingString: [CBLBase64 encode: &key length: sizeof(key)]];
 }
 
-+ (NSString*) attachmentStorePath: (NSString*)dbPath storageType: (NSString*)storageType {
-    if ([storageType isEqualToString: @"ForestDB"] && NSClassFromString(@"CBL_ForestDBStorage"))
-        return [dbPath stringByAppendingPathComponent: @"attachments"];
-    else
-        return [[dbPath stringByDeletingPathExtension] stringByAppendingString: @" attachments"];
-}
-
 - (NSString*) attachmentStorePath {
-    return [[self class] attachmentStorePath: _path storageType: _manager.storageType];
+    return [_storage attachmentStorePath];
 }
 
 

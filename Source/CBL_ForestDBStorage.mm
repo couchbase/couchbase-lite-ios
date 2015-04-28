@@ -108,6 +108,13 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
            manager: (CBLManager*)manager
              error: (NSError**)outError
 {
+    if (![[NSFileManager defaultManager] createDirectoryAtPath: path
+                                   withIntermediateDirectories: YES
+                                                    attributes: nil
+                                                         error: outError]) {
+        return NO;
+    }
+
     if (_delegate.encryptionKey)
         return ReturnNSErrorFromCBLStatus(kCBLStatusNotImplemented, outError);
 
@@ -222,6 +229,12 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     return _transactionLevel > 0;
 }
 
+
+#pragma mark - ATTACHMENT STORE PATH:
+
+- (NSString*) attachmentStorePath {
+    return [_directory stringByAppendingPathComponent: @"attachments"];
+}
 
 #pragma mark - DOCUMENTS:
 

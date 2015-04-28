@@ -95,7 +95,8 @@ static BOOL sAutoCompact = YES;
     if (isDir)
         return CBLRemoveFileIfExists(dbPath, outError);
     else {
-        NSString *attsPath = [self attachmentStorePath: dbPath storageType: @"SQLite"];
+        NSString *attsPath = [[dbPath stringByDeletingPathExtension]
+                              stringByAppendingString: @" attachments"];
         return CBLRemoveFileIfExists(dbPath, outError)
             && CBLRemoveFileIfExists([dbPath stringByAppendingString: @"-wal"], outError)
             && CBLRemoveFileIfExists([dbPath stringByAppendingString: @"-shm"], outError)
@@ -178,14 +179,6 @@ static BOOL sAutoCompact = YES;
     id<CBL_Storage> storage = [[secondaryStorage alloc] init];
     if (![storage databaseExistsAtPath: _path])
         storage = [[primaryStorage alloc] init];
-
-    if ([storage isKindOfClass: NSClassFromString(@"CBL_ForestDBStorage")]) {
-        if (![[NSFileManager defaultManager] createDirectoryAtPath: _path
-                                   withIntermediateDirectories: YES
-                                                    attributes: nil
-                                                         error: outError])
-            return NO;
-    }
 
     LogTo(CBLDatabase, @"Using %@ for db at %@", [storage class], _path);
 

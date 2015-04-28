@@ -320,17 +320,24 @@ static CBLManager* sInstance;
             if (version < 101) {
                 NSLog(@"CouchbaseLite: Upgrading v1.0 database to v1.1 at %@ ...", oldDbPath);
 
+                NSError* error;
+
                 // Rename the old database file for migration:
                 NSString* mgrOldDbPath = [oldDbPath.stringByDeletingPathExtension
                                           stringByAppendingPathExtension:
                                           [kDBExtension stringByAppendingString: @"-mgr"]];
-                [self moveSqliteFile: oldDbPath toFile: mgrOldDbPath];
+
+                if (![self moveSqliteFile: oldDbPath toFile: mgrOldDbPath error: &error]) {
+                    Warn(@"Upgrade failed: Cannot rename the old sqlite files: %@", error);
+                    [self moveSqliteFile: mgrOldDbPath toFile: oldDbPath error: NULL];
+                    continue;
+                }
 
                 // Create and open new CBLDatabase:
-                NSError* error;
                 CBLDatabase* db = [self _databaseNamed: name mustExist: NO error: &error];
                 if (!db) {
                     Warn(@"Upgrade failed: Creating new db failed: %@", error);
+                    [self moveSqliteFile: mgrOldDbPath toFile: oldDbPath error: NULL];
                     continue;
                 }
                 if (!db.exists) {
@@ -342,7 +349,7 @@ static CBLManager* sInstance;
                     if (CBLStatusIsError(status)) {
                         Warn(@"Upgrade failed: status %d", status);
                         [upgrader backOut];
-                        [self moveSqliteFile: mgrOldDbPath toFile: oldDbPath];
+                        [self moveSqliteFile: mgrOldDbPath toFile: oldDbPath error: NULL];
                         continue;
                     }
                 }
@@ -387,16 +394,24 @@ static CBLManager* sInstance;
     return version;
 }
 
-- (void) moveSqliteFile: (NSString*)srcPath toFile: (NSString*)destPath {
+- (BOOL) moveSqliteFile: (NSString*)srcPath toFile: (NSString*)destPath error: (NSError**)outError {
     for (NSString* suffix in @[@"", @"-wal", @"-shm"]) {
-        NSError* error;
-        BOOL ok = [[NSFileManager defaultManager]
-                   moveItemAtPath: [srcPath stringByAppendingString: suffix]
-                   toPath: [destPath stringByAppendingString: suffix]
-                   error: &error];
-        if (!ok)
-            Warn(@"Couldn't move %@: %@", destPath, error);
+        NSString* src = [srcPath stringByAppendingString: suffix];
+        NSFileManager *fmgr = [NSFileManager defaultManager];
+        if ([fmgr fileExistsAtPath:src isDirectory:NULL]) {
+            NSError* error;
+            BOOL ok = [[NSFileManager defaultManager]
+                       moveItemAtPath: src
+                       toPath: [destPath stringByAppendingString: suffix]
+                       error: &error];
+            if (!ok) {
+                if (outError)
+                    *outError = error;
+                return NO;
+            }
+        }
     }
+    return YES;
 }
 
 
@@ -587,8 +602,17 @@ static CBLManager* sInstance;
     if (!db)
         return NO;
     Assert(!db.isOpen, @"Already-open database cannot be replaced");
-    NSString* dstAttachmentsPath = db.attachmentStorePath;
+
     NSFileManager *fmgr = [NSFileManager defaultManager];
+    BOOL isDir;
+    if (![fmgr fileExistsAtPath: databasePath isDirectory: &isDir]) {
+        Warn(@"Database file doesn't exist at path : %@", databasePath);
+        return NO;
+    }
+
+    NSString* dstAttachmentsPath = isDir ?
+        [db.path stringByAppendingPathComponent: @"attachments"] :
+        [[db.path stringByDeletingPathExtension] stringByAppendingString: @" attachments"];
 
     return CBLRemoveFileIfExists(db.path, outError) &&
            CBLRemoveFileIfExists([db.path stringByAppendingString: @"-wal"], outError) &&

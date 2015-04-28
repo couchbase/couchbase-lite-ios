@@ -526,6 +526,12 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 }
 
 
+#pragma mark - ATTACHMENT STORE PATH:
+
+- (NSString*) attachmentStorePath {
+    return [[_path stringByDeletingPathExtension] stringByAppendingString: @" attachments"];
+}
+
 #pragma mark - DOCUMENTS:
 
 

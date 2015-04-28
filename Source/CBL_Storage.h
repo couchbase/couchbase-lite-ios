@@ -80,6 +80,9 @@
 - (CBLStatus) inTransaction: (CBLStatus(^)())block;
 
 
+// ATTACHMENT STORE PATH:
+@property (readonly) NSString* attachmentStorePath;
+
 // DOCUMENTS:
 
 /** Retrieves a document revision by ID.
