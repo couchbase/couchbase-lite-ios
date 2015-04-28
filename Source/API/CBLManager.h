@@ -96,14 +96,16 @@ typedef struct CBLManagerOptions {
 @property (readonly) NSArray* allDatabaseNames;
 
 /** Replaces or installs a database from a file.
-    This is primarily used to install a canned database on first launch of an app, in which case you should first check .exists to avoid replacing the database if it exists already. The canned database would have been copied into your app bundle at build time.
-    @param databaseName  The name of the database to replace.
-    @param databaseDir  Path of the database directory that should replace it.
-    @param outError  If an error occurs, it will be stored into this parameter on return.
-    @return  YES if the database was copied, NO if an error occurred. */
+ This is primarily used to install a canned database on first launch of an app, in which case you should first check .exists to avoid replacing the database if it exists already. The canned database would have been copied into your app bundle at build time.
+ @param databaseName  The name of the database to replace.
+ @param databasePath  Path of the database file that should replace it.
+ @param attachmentsPath  Path of the associated attachments directory, or nil if there are no attachments.
+ @param outError  If an error occurs, it will be stored into this parameter on return.
+ @return  YES if the database was copied, NO if an error occurred. */
 - (BOOL) replaceDatabaseNamed: (NSString*)databaseName
-              withDatabaseDir: (NSString*)databaseDir
-                        error: (NSError**)outError;
+             withDatabaseFile: (NSString*)databasePath
+              withAttachments: (NSString*)attachmentsPath
+                        error: (NSError**)outError                  __attribute__((nonnull(1,2)));
 
 #pragma mark - CONCURRENCY:
 

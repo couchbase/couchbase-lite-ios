@@ -433,7 +433,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     db = nil;
 
     // Re-open database:
-    db = [[CBLDatabase alloc] initWithDir: dbPath name: nil manager: nil readOnly: NO];
+    db = [[CBLDatabase alloc] initWithPath: dbPath name: nil manager: nil readOnly: NO];
     Assert([db open: nil]);
     view = [self createView];
     Assert(!view.stale);

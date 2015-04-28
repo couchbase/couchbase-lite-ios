@@ -87,17 +87,35 @@ static BOOL sAutoCompact = YES;
 }
 
 
-+ (BOOL) deleteDatabaseFilesAtPath: (NSString*)dbDir error: (NSError**)outError {
-    return CBLRemoveFileIfExists(dbDir, outError);
++ (BOOL) deleteDatabaseFilesAtPath: (NSString*)dbPath error: (NSError**)outError {
+    BOOL isDir;
+    if (![[NSFileManager defaultManager] fileExistsAtPath:dbPath isDirectory:&isDir])
+        return YES;
+
+    if (isDir)
+        return CBLRemoveFileIfExists(dbPath, outError);
+    else {
+        NSString *attsPath = [[dbPath stringByDeletingPathExtension]
+                              stringByAppendingString: @" attachments"];
+        return CBLRemoveFileIfExists(dbPath, outError)
+            && CBLRemoveFileIfExists([dbPath stringByAppendingString: @"-wal"], outError)
+            && CBLRemoveFileIfExists([dbPath stringByAppendingString: @"-shm"], outError)
+            && CBLRemoveFileIfExists(attsPath, outError)
+#ifdef MOCK_ENCRYPTION
+            && CBLRemoveFileIfExists([[dbPath stringByDeletingPathExtension]
+                                      stringByAppendingString: @" mock_key"], outError)
+#endif
+        ;
+    }
 }
 
 
 #if DEBUG
-+ (instancetype) createEmptyDBAtPath: (NSString*)dir {
++ (instancetype) createEmptyDBAtPath: (NSString*)path {
     [self setAutoCompact: NO]; // unit tests don't want autocompact
-    if (![self deleteDatabaseFilesAtPath: dir error: NULL])
+    if (![self deleteDatabaseFilesAtPath: path error: NULL])
         return nil;
-    CBLDatabase *db = [[self alloc] initWithDir: dir name: nil manager: nil readOnly: NO];
+    CBLDatabase *db = [[self alloc] initWithPath: path name: nil manager: nil readOnly: NO];
     if (![db open: nil])
         return nil;
     AssertEq(db.lastSequenceNumber, 0); // Sanity check that this is not a pre-existing db
@@ -106,16 +124,16 @@ static BOOL sAutoCompact = YES;
 #endif
 
 
-- (instancetype) _initWithDir: (NSString*)dirPath
-                         name: (NSString*)name
-                      manager: (CBLManager*)manager
-                     readOnly: (BOOL)readOnly
+- (instancetype) _initWithPath: (NSString*)path
+                          name: (NSString*)name
+                       manager: (CBLManager*)manager
+                      readOnly: (BOOL)readOnly
 {
     if (self = [super init]) {
-        Assert([dirPath hasPrefix: @"/"], @"Path must be absolute");
-        _dir = [dirPath copy];
+        Assert([path hasPrefix: @"/"], @"Path must be absolute");
+        _path = [path copy];
         _manager = manager;
-        _name = name ?: [dirPath.lastPathComponent.stringByDeletingPathExtension copy];
+        _name = name ?: [_path.lastPathComponent.stringByDeletingPathExtension copy];
         _readOnly = readOnly;
 
         _dispatchQueue = manager.dispatchQueue;
@@ -131,7 +149,7 @@ static BOOL sAutoCompact = YES;
 }
 
 - (BOOL) exists {
-    return [[NSFileManager defaultManager] fileExistsAtPath: _dir];
+    return [[NSFileManager defaultManager] fileExistsAtPath: _path];
 }
 
 
@@ -144,13 +162,6 @@ static BOOL sAutoCompact = YES;
     if (_isOpen)
         return YES;
     LogTo(CBLDatabase, @"Opening %@", self);
-
-    // Create the database directory:
-    if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
-                                   withIntermediateDirectories: YES
-                                                    attributes: nil
-                                                         error: outError])
-        return NO;
 
     // Instantiate storage:
     NSString* storageType = _manager.storageType ?: @"SQLite";
@@ -166,16 +177,17 @@ static BOOL sAutoCompact = YES;
         secondaryStorage = NSClassFromString(@"CBL_SQLiteStorage");
     // Use primary unless dir already contains a db created by secondary:
     id<CBL_Storage> storage = [[secondaryStorage alloc] init];
-    if (![storage databaseExistsIn: _dir])
+    if (![storage databaseExistsAtPath: _path])
         storage = [[primaryStorage alloc] init];
-    LogTo(CBLDatabase, @"Using %@ for db at %@", [storage class], _dir);
+
+    LogTo(CBLDatabase, @"Using %@ for db at %@", [storage class], _path);
 
     _storage = storage;
     _storage.delegate = self;
-    if (![_storage openInDirectory: _dir
-                          readOnly: _readOnly
-                           manager: _manager
-                             error: outError])
+    if (![_storage openAtPath: _path
+                     readOnly: _readOnly
+                      manager: _manager
+                        error: outError])
         return NO;
     _storage.autoCompact = sAutoCompact;
 
@@ -214,7 +226,7 @@ static BOOL sAutoCompact = YES;
 
 - (void) _close {
     if (_isOpen) {
-        LogTo(CBLDatabase, @"Closing <%p> %@", self, _dir);
+        LogTo(CBLDatabase, @"Closing <%p> %@", self, _path);
         // Don't want any models trying to save themselves back to the db. (Generally there shouldn't
         // be any, because the public -close: method saves changes first.)
         for (CBLModel* model in _unsavedModelsMutable.copy)
@@ -252,10 +264,28 @@ static BOOL sAutoCompact = YES;
 
 
 - (UInt64) totalDataSize {
-    NSDirectoryEnumerator* e = [[NSFileManager defaultManager] enumeratorAtPath: _dir];
+    BOOL isDir;
+    if (![[NSFileManager defaultManager] fileExistsAtPath:_path isDirectory:&isDir])
+        return 0;
+
     UInt64 size = 0;
-    while ([e nextObject])
-        size += e.fileAttributes.fileSize;
+    if (isDir) {
+        // New file layout:
+        NSDirectoryEnumerator* e = [[NSFileManager defaultManager] enumeratorAtPath: _path];
+
+        while ([e nextObject])
+            size += e.fileAttributes.fileSize;
+    } else {
+        for (NSString* suffix in @[@"", @"-wal", @"-shm"]) {
+            NSDictionary* attrs = [[NSFileManager defaultManager]
+                                   attributesOfItemAtPath: [_path stringByAppendingString: suffix]
+                                   error: NULL];
+            if (!attrs)
+                continue;
+            size = size + attrs.fileSize + _attachments.totalDataSize;
+        }
+    }
+    
     return size;
 }
 
@@ -363,7 +393,7 @@ static BOOL sAutoCompact = YES;
 - (void) dbChanged: (NSNotification*)n {
     CBLDatabase* senderDB = n.object;
     // Was this posted by a _different_ CBLDatabase instance on the same database as me?
-    if (senderDB != self && [senderDB.dir isEqualToString: _dir]) {
+    if (senderDB != self && [senderDB.path isEqualToString: _path]) {
         // Careful: I am being called on senderDB's thread, not my own!
         if ([[n name] isEqualToString: CBL_DatabaseChangesNotification]) {
             NSMutableArray* echoedChanges = $marray();

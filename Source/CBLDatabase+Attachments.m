@@ -50,7 +50,7 @@
 }
 
 - (NSString*) attachmentStorePath {
-    return [_dir stringByAppendingPathComponent: @"attachments"];
+    return [_storage attachmentStorePath];
 }
 
 

@@ -19,23 +19,23 @@
 
 // INITIALIZATION AND CONFIGURATION:
 
-/** Preflight to see if a database file exists in this directory. Called _before_ -open! */
-- (BOOL) databaseExistsIn: (NSString*)directory;
+/** Preflight to see if a database file exists in this path. Called _before_ -open! */
+- (BOOL) databaseExistsAtPath: (NSString*)path;
 
 /** Opens storage. Files will be created in the directory, which must already exist.
-    @param directory  The existing directory to put data files into. The implementation may
-        create as many files as it wants here. There will be a subdirectory called "attachments"
-        which contains attachments; don't mess with that.
+    @param path  The existing database path which could be a path to a sqlite file for the 
+        SQLite storage or a bundle directory including database files and an attachments folder
+        for the ForestDB storage.
     @param readOnly  If this is YES, the database is opened read-only and any attempt to modify
         it must return an error.
     @param manager  The owning CBLManager; this is provided so the storage can examine its
         properties.
     @param error  On failure, store an NSError here if it's non-NULL.
     @return  YES on success, NO on failure. */
-- (BOOL) openInDirectory: (NSString*)directory
-                readOnly: (BOOL)readOnly
-                 manager: (CBLManager*)manager
-                   error: (NSError**)error;
+- (BOOL) openAtPath: (NSString*)path
+           readOnly: (BOOL)readOnly
+            manager: (CBLManager*)manager
+              error: (NSError**)error;
 
 /** Closes storage before it's deallocated. */
 - (void) close;
@@ -79,6 +79,9 @@
     Any exception raised by the block will be caught and treated as kCBLStatusException. */
 - (CBLStatus) inTransaction: (CBLStatus(^)())block;
 
+
+// ATTACHMENT STORE PATH:
+@property (readonly) NSString* attachmentStorePath;
 
 // DOCUMENTS:
 

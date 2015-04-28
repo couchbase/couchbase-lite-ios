@@ -54,15 +54,15 @@ static id<CBLFilterCompiler> sFilterCompiler;
 
 
 @synthesize manager=_manager, unsavedModelsMutable=_unsavedModelsMutable;
-@synthesize dir=_dir, name=_name, isOpen=_isOpen;
+@synthesize path=_path, name=_name, isOpen=_isOpen;
 
 
-- (instancetype) initWithDir: (NSString*)dir
-                        name: (NSString*)name
-                     manager: (CBLManager*)manager
-                    readOnly: (BOOL)readOnly
+- (instancetype) initWithPath: (NSString*)path
+                         name: (NSString*)name
+                      manager: (CBLManager*)manager
+                     readOnly: (BOOL)readOnly
 {
-    self = [self _initWithDir: dir name: name manager: manager readOnly: readOnly];
+    self = [self _initWithPath: path name: name manager: manager readOnly: readOnly];
     if (self) {
         _unsavedModelsMutable = [NSMutableSet set];
         _allReplications = [[NSMutableSet alloc] init];
@@ -208,7 +208,7 @@ static void catchInBlock(void (^block)()) {
 
 
 - (BOOL) deleteDatabase: (NSError**)outError {
-    LogTo(CBLDatabase, @"Deleting %@", _dir);
+    LogTo(CBLDatabase, @"Deleting %@", _path);
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillBeDeletedNotification
                                                         object: self];
     [self _close];
@@ -219,7 +219,7 @@ static void catchInBlock(void (^block)()) {
     if (!self.exists) {
         return YES;
     }
-    return [[self class] deleteDatabaseFilesAtPath: _dir error: outError];
+    return [[self class] deleteDatabaseFilesAtPath: _path error: outError];
 }
 
 

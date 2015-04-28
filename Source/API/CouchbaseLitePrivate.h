@@ -26,10 +26,10 @@
 
 
 @interface CBLDatabase ()
-- (instancetype) initWithDir: (NSString*)dir
-                        name: (NSString*)name
-                     manager: (CBLManager*)manager
-                    readOnly: (BOOL)readOnly;
+- (instancetype) initWithPath: (NSString*)path
+                         name: (NSString*)name
+                      manager: (CBLManager*)manager
+                     readOnly: (BOOL)readOnly;
 @property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
 - (void) removeDocumentFromCache: (CBLDocument*)document;
 - (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block;
