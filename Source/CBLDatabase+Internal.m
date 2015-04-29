@@ -473,6 +473,20 @@ static BOOL sAutoCompact = YES;
 }
 
 
+// Used by new replicator
+- (NSArray*) getPossibleAncestorsOfDocID: (NSString*)docID
+                                   revID: (NSString*)revID
+                                   limit: (NSUInteger)limit
+{
+    CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: docID revID: revID deleted: NO];
+    if ([_storage getRevisionSequence: rev] > 0)
+        return @[revID];  // Already have it!
+    return [_storage getPossibleAncestorRevisionIDs: rev
+                                              limit: (unsigned)limit
+                                    onlyAttachments: NO];
+}
+
+
 #pragma mark - HISTORY:
 
 
