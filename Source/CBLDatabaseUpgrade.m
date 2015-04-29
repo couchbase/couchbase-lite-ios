@@ -143,6 +143,13 @@ static int collateRevIDs(void *context,
     NSString* oldAttachmentsPath = [[_path stringByDeletingPathExtension]
                                                         stringByAppendingString: @" attachments"];
     NSString* newAttachmentsPath = _db.attachmentStorePath;
+    
+    if ([oldAttachmentsPath isEqualToString: newAttachmentsPath]) {
+        Log(@"Upgrade: Skip moving the attachments folder as no path change ('%@' vs '%@')."
+              , oldAttachmentsPath, newAttachmentsPath);
+        return kCBLStatusOK;
+    }
+
     if (![fmgr isReadableFileAtPath: oldAttachmentsPath])
         return kCBLStatusOK;
 
