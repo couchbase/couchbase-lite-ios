@@ -22,12 +22,13 @@
 #import "CBLView+Internal.h"
 #import "CBL_Body.h"
 #import "CBLMultipartDocumentReader.h"
+#import "CBLMultipartWriter.h"
 #import "CBL_Revision.h"
 #import "CBLDatabaseChange.h"
 #import "CBL_Server.h"
 #import "CBLPersonaAuthorizer.h"
 #import "CBLFacebookAuthorizer.h"
-#import "CBL_ReplicatorAPI.h"
+#import "CBL_Replicator.h"
 #import "CBL_Attachment.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
@@ -384,7 +385,7 @@
 - (CBLStatus) do_POST_replicate {
     NSDictionary* body = self.bodyAsDictionary;
     CBLStatus status;
-    id<CBL_ReplicatorAPI> repl = [_dbManager replicatorWithProperties: body status: &status];
+    id<CBL_Replicator> repl = [_dbManager replicatorWithProperties: body status: &status];
     if (!repl)
         return status;
 
@@ -413,7 +414,7 @@
 
 // subroutine of -do_POST_replicate
 - (void) replicationStopped: (NSNotification*)n {
-    id<CBL_ReplicatorAPI> repl = n.object;
+    id<CBL_Replicator> repl = n.object;
     _response.status = CBLStatusFromNSError(repl.error, kCBLStatusServerError);
     [self sendResponseHeaders];
     [self.response setBodyObject: $dict({@"ok", (repl.error ?nil :$true)},
@@ -453,7 +454,7 @@
     // Get the current task info of all replicators:
     NSMutableArray* activity = $marray();
     for (CBLDatabase* db in _dbManager.allOpenDatabases) {
-        for (id<CBL_ReplicatorAPI> repl in db.activeReplicators) {
+        for (id<CBL_Replicator> repl in db.activeReplicators) {
             [activity addObject: repl.activeTaskInfo];
         }
     }
@@ -486,7 +487,7 @@
 
 // subroutine of do_GET_active_tasks
 - (void) replicationChanged: (NSNotification*)n {
-    id<CBL_ReplicatorAPI> repl = n.object;
+    id<CBL_Replicator> repl = n.object;
     if (repl.db.manager == _dbManager)
         [self sendContinuousLine: repl.activeTaskInfo];
 }
@@ -564,8 +565,8 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         }
 
         if (sendMultipart)
-            [_response setMultipartBody: [db multipartWriterForRevision: rev
-                                                            contentType: @"multipart/related"]];
+            [_response setMultipartBody: [self multipartWriterForRevision: rev
+                                                              contentType: @"multipart/related"]];
         else
             _response.body = rev.body;
         
@@ -621,6 +622,36 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             [_response setMultipartBody: result type: @"multipart/mixed"];
     }
     return kCBLStatusOK;
+}
+
+
+- (CBLMultipartWriter*) multipartWriterForRevision: (CBL_Revision*)rev
+                                       contentType: (NSString*)contentType
+{
+    CBLMultipartWriter* writer = [[CBLMultipartWriter alloc] initWithContentType: contentType
+                                                                        boundary: nil];
+    [writer setNextPartsHeaders: @{@"Content-Type": @"application/json"}];
+    [writer addData: rev.asJSON];
+    NSDictionary* attachments = rev.attachments;
+    for (NSString* attachmentName in attachments) {
+        NSDictionary* attachment = attachments[attachmentName];
+        if (attachment[@"follows"]) {
+            NSString* disposition = $sprintf(@"attachment; filename=%@", CBLQuoteString(attachmentName));
+            [writer setNextPartsHeaders: $dict({@"Content-Disposition", disposition})];
+
+            CBLStatus status;
+            CBL_Attachment* attachObj = [_db attachmentForDict: attachment named: attachmentName
+                                                        status: &status];
+            if (!attachObj)
+                return nil;
+            NSURL* fileURL = attachObj.contentURL;
+            if (fileURL)
+                [writer addFileURL: fileURL];
+            else
+                [writer addStream: attachObj.contentStream];
+        }
+    }
+    return writer;
 }
 
 

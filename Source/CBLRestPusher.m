@@ -1,5 +1,5 @@
 //
-//  CBL_Pusher.m
+//  CBLRestPusher.m
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/5/11.
@@ -13,8 +13,8 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CBL_Pusher.h"
-#import "CBL_Replicator+Internal.h"
+#import "CBLRestPusher.h"
+#import "CBLRestReplicator+Internal.h"
 #import "CBLDatabase.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBL_Storage.h"
@@ -34,12 +34,12 @@
 #define kMaxBulkDocsObjectSize (5*1000*1000) // Max in-memory size of buffered bulk_docs dictionary
 
 
-@interface CBL_Pusher ()
+@interface CBLRestPusher ()
 - (BOOL) uploadMultipartRevision: (CBL_Revision*)rev;
 @end
 
 
-@implementation CBL_Pusher
+@implementation CBLRestPusher
 
 
 @synthesize createTarget=_createTarget;

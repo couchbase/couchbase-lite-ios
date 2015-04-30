@@ -1,12 +1,12 @@
 //
-//  CBL_Puller.h
+//  CBLRestPuller.h
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/2/11.
 //  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 
-#import "CBL_Replicator.h"
+#import "CBLRestReplicator.h"
 #import "CBL_Revision.h"
 @class CBLChangeTracker, CBLSequenceMap;
 
@@ -16,7 +16,7 @@
 
 
 /** Replicator that pulls from a remote CouchDB. */
-@interface CBL_Puller : CBL_Replicator
+@interface CBLRestPuller : CBLRestReplicator
 {
     @private
     CBLChangeTracker* _changeTracker;   // Watcher of the _changes feed

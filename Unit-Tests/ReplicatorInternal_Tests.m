@@ -8,9 +8,9 @@
 
 #import "CBLTestCase.h"
 #import "CouchbaseLitePrivate.h"
-#import "CBL_Replicator+Internal.h"
-#import "CBL_Puller.h"
-#import "CBL_Pusher.h"
+#import "CBLRestReplicator+Internal.h"
+#import "CBLRestPuller.h"
+#import "CBLRestPusher.h"
 #import "CBLReachability.h"
 #import "CBL_Server.h"
 #import "CBLDatabase+Replication.h"
@@ -183,7 +183,7 @@
     }];
 
     // Start a named document pull replication.
-    CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
+    CBLRestReplicator* repl = [[CBLRestReplicator alloc] initWithDB: db remote: remote
                                                          push: NO continuous: NO];
     repl.authorizer = self.authorizer;
     [repl start];
@@ -553,10 +553,10 @@
                  docIDs: (NSArray*)docIDs
             expectError: (NSError*) expectError
 {
-    CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
+    CBLRestReplicator* repl = [[CBLRestReplicator alloc] initWithDB: db remote: remote
                                                         push: push continuous: NO];
     if (push)
-        ((CBL_Pusher*)repl).createTarget = YES;
+        ((CBLRestPusher*)repl).createTarget = YES;
     repl.filterName = filter;
     repl.docIDs = docIDs;
     repl.authorizer = self.authorizer;
@@ -594,10 +594,10 @@
                           options: (NSDictionary*)options
                       expectError: (NSError*) expectError
 {
-    CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
+    CBLRestReplicator* repl = [[CBLRestReplicator alloc] initWithDB: db remote: remote
                                                          push: push continuous: YES];
     if (push)
-        ((CBL_Pusher*)repl).createTarget = YES;
+        ((CBLRestPusher*)repl).createTarget = YES;
     repl.filterName = filter;
     repl.authorizer = self.authorizer;
     repl.options = options;

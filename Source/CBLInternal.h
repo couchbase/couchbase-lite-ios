@@ -36,7 +36,7 @@
 @end
 
 @interface CBLDatabase (Replication_Internal)
-- (void) stopAndForgetReplicator: (id<CBL_ReplicatorAPI>)repl;
+- (void) stopAndForgetReplicator: (id<CBL_Replicator>)repl;
 - (NSString*) lastSequenceWithCheckpointID: (NSString*)checkpointID;
 - (BOOL) setLastSequence: (NSString*)lastSequence withCheckpointID: (NSString*)checkpointID;
 @end

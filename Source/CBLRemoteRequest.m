@@ -19,7 +19,7 @@
 #import "CBLStatus.h"
 #import "CBL_BlobStore.h"
 #import "CBLDatabase.h"
-#import "CBL_Replicator.h"
+#import "CBLRestReplicator.h"
 #import "CollectionUtils.h"
 #import "Logging.h"
 #import "Test.h"

@@ -22,7 +22,7 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLManager+Internal.h"
-#import "CBL_ReplicatorAPI.h"
+#import "CBL_Replicator.h"
 #import "CBL_Server.h"
 #import "CBL_URLProtocol.h"
 #import "CBLPersonaAuthorizer.h"
@@ -84,7 +84,7 @@ static NSString* CBLFullVersionInfo( void ) {
     dispatch_queue_t _dispatchQueue;
     NSMutableDictionary* _databases;
     NSURL* _internalURL;
-    id<CBL_ReplicatorFactory> _replicatorFactory;
+    Class _replicatorClass;
     NSMutableArray* _replications;
     __weak CBL_Shared *_shared;
     id _strongShared;       // optional strong reference to _shared
@@ -93,7 +93,7 @@ static NSString* CBLFullVersionInfo( void ) {
 
 @synthesize dispatchQueue=_dispatchQueue, directory = _dir;
 @synthesize customHTTPHeaders = _customHTTPHeaders;
-@synthesize storageType=_storageType;
+@synthesize storageType=_storageType, replicatorClassName=_replicatorClassName;
 
 
 // http://wiki.apache.org/couchdb/HTTP_database_API#Naming_and_Addressing
@@ -233,6 +233,10 @@ static CBLManager* sInstance;
         _storageType = [[NSUserDefaults standardUserDefaults] stringForKey: @"CBLStorageType"];
         if (!_storageType)
             _storageType = @"SQLite";
+        _replicatorClassName = [[NSUserDefaults standardUserDefaults]
+                                                            stringForKey: @"CBLReplicatorClass"];
+        if (!_replicatorClassName)
+            _replicatorClassName = @"CBLRestReplicator";
         LogTo(CBLDatabase, @"Created %@", self);
     }
     return self;
@@ -271,6 +275,7 @@ static CBLManager* sInstance;
     if (managerCopy) {
         managerCopy.customHTTPHeaders = [self.customHTTPHeaders copy];
         managerCopy.storageType = _storageType;
+        managerCopy.replicatorClassName = _replicatorClassName;
     }
     return managerCopy;
 }
@@ -742,7 +747,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 }
 
 
-- (id<CBL_ReplicatorAPI>) replicatorWithProperties: (NSDictionary*)properties
+- (id<CBL_Replicator>) replicatorWithProperties: (NSDictionary*)properties
                                             status: (CBLStatus*)outStatus
 {
     // An unfortunate limitation:
@@ -771,17 +776,19 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
     BOOL continuous = [$castIf(NSNumber, properties[@"continuous"]) boolValue];
 
-    if (!_replicatorFactory) {
-        NSString* kReplicatorFactoryClassName = @"CBL_RESTReplicatorFactory";
-        Class replicatorFactoryClass = NSClassFromString(kReplicatorFactoryClassName);
-        Assert(replicatorFactoryClass, @"Couldn't load class %@", kReplicatorFactoryClassName);
-        _replicatorFactory = [[replicatorFactoryClass alloc] init];
+    if (!_replicatorClass) {
+        _replicatorClass = NSClassFromString(_replicatorClassName);
+        Assert(_replicatorClass, @"CBLManager.replicatorClassName is '%@' but no such class found",
+               _replicatorClassName);
+        Assert([_replicatorClass conformsToProtocol: @protocol(CBL_Replicator)],
+               @"CBLManager.replicatorClassName is '%@' but class doesn't implement CBL_Replicator",
+               _replicatorClassName);
     }
 
-    id<CBL_ReplicatorAPI> repl = [_replicatorFactory replicatorWithDB: db
-                                                               remote: remote
-                                                                 push: push
-                                                           continuous: continuous];
+    id<CBL_Replicator> repl = [[_replicatorClass alloc] initWithDB: db
+                                                            remote: remote
+                                                              push: push
+                                                        continuous: continuous];
     if (!repl) {
         if (outStatus)
             *outStatus = kCBLStatusServerError;
@@ -798,7 +805,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         repl.createTarget = createTarget;
 
     // If this is a duplicate, reuse an existing replicator:
-    id<CBL_ReplicatorAPI> existing = [db activeReplicatorLike: repl];
+    id<CBL_Replicator> existing = [db activeReplicatorLike: repl];
     if (existing)
         repl = existing;
 

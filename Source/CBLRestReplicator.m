@@ -1,5 +1,5 @@
 //
-//  CBL_Replicator.m
+//  CBLRestReplicator.m
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/6/11.
@@ -13,9 +13,9 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CBL_Replicator+Internal.h"
-#import "CBL_Pusher.h"
-#import "CBL_Puller.h"
+#import "CBLRestReplicator+Internal.h"
+#import "CBLRestPusher.h"
+#import "CBLRestPuller.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLRemoteRequest.h"
 #import "CBLAuthorizer.h"
@@ -42,12 +42,8 @@
 #define kCheckRequestTimeout 10.0
 
 
-NSString* CBL_ReplicatorProgressChangedNotification = @"CBL_ReplicatorProgressChanged";
-NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
-
-
 #if TARGET_OS_IPHONE
-@interface CBL_Replicator (Backgrounding)
+@interface CBLRestReplicator (Backgrounding)
 - (void) setupBackgrounding;
 - (void) endBackgrounding;
 - (void) okToEndBackgrounding;
@@ -55,7 +51,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 #endif
 
 
-@interface CBL_Replicator () <CBLRemoteRequestDelegate>
+@interface CBLRestReplicator () <CBLRemoteRequestDelegate>
 @property (readwrite, nonatomic) BOOL running, active;
 @property (readwrite, copy) NSDictionary* remoteCheckpoint;
 - (void) updateActive;
@@ -64,20 +60,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 @end
 
 
-@implementation CBL_RESTReplicatorFactory
-
-- (id<CBL_ReplicatorAPI>) replicatorWithDB: (CBLDatabase*)db
-                                    remote: (NSURL*)remote
-                                      push: (BOOL)push
-                                continuous: (BOOL)continuous
-{
-    return [[CBL_Replicator alloc] initWithDB: db remote: remote push: push continuous: continuous];
-}
-
-@end
-
-
-@implementation CBL_Replicator
+@implementation CBLRestReplicator
 {
     BOOL _running, _online, _active;
     BOOL _lastSequenceChanged;
@@ -121,8 +104,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     NSParameterAssert(remote);
     
     // CBL_Replicator is an abstract class; instantiating one actually instantiates a subclass.
-    if ([self class] == [CBL_Replicator class]) {
-        Class klass = push ? [CBL_Pusher class] : [CBL_Puller class];
+    if ([self class] == [CBLRestReplicator class]) {
+        Class klass = push ? [CBLRestPusher class] : [CBLRestPuller class];
         return [[klass alloc] initWithDB: db remote: remote push: push continuous: continuous];
     }
     
@@ -202,7 +185,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
-- (bool) hasSameSettingsAs: (CBL_Replicator*)other {
+- (bool) hasSameSettingsAs: (CBLRestReplicator*)other {
     // Needs to be consistent with -remoteCheckpointDocID:
     // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
     return _db == other->_db && $equal(_remote, other->_remote) && self.isPush == other.isPush
@@ -389,7 +372,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         
         __weak id weakSelf = self;
         _host.onChange = ^{
-            CBL_Replicator *strongSelf = weakSelf;
+            CBLRestReplicator *strongSelf = weakSelf;
             [strongSelf reachabilityChanged:strongSelf->_host];
         };
         [_host start];
@@ -794,14 +777,14 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     onCompletion = [onCompletion copy];
     
     // under ARC, using variable req used directly inside the block results in a compiler error (it could have undefined value).
-    __weak CBL_Replicator *weakSelf = self;
+    __weak CBLRestReplicator *weakSelf = self;
     __block CBLRemoteJSONRequest *req = nil;
     req = [[CBLRemoteJSONRequest alloc] initWithMethod: method
                                                   URL: url
                                                  body: body
                                        requestHeaders: self.requestHeaders
                                          onCompletion: ^(id result, NSError* error) {
-        CBL_Replicator *strongSelf = weakSelf;
+        CBLRestReplicator *strongSelf = weakSelf;
         [strongSelf removeRemoteRequest: req];
         id<CBLAuthorizer> auth = req.authorizer;
         if (auth && auth != _authorizer && error.code != 401) {

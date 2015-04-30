@@ -1,5 +1,5 @@
 //
-//  CBL_Puller.m
+//  CBLRestPuller.m
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/2/11.
@@ -13,9 +13,9 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CBL_Puller.h"
-#import "CBL_Pusher.h"
-#import "CBL_Replicator+Internal.h"
+#import "CBLRestPuller.h"
+#import "CBLRestPusher.h"
+#import "CBLRestReplicator+Internal.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Replication.h"
 #import "CBL_Revision.h"
@@ -51,14 +51,14 @@
 #define kMaxPendingDocs 200u
 
 
-@interface CBL_Puller () <CBLChangeTrackerClient>
+@interface CBLRestPuller () <CBLChangeTrackerClient>
 @end
 
 
 static NSString* joinQuotedEscaped(NSArray* strings);
 
 
-@implementation CBL_Puller
+@implementation CBLRestPuller
 
 
 - (void)dealloc {
@@ -422,14 +422,14 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     
     // Under ARC, using variable dl directly in the block given as an argument to initWithURL:...
     // results in compiler error (could be undefined variable)
-    __weak CBL_Puller *weakSelf = self;
+    __weak CBLRestPuller *weakSelf = self;
     __block CBLMultipartDownloader *dl;
     dl = [[CBLMultipartDownloader alloc] initWithURL: CBLAppendToURL(_remote, path)
                                            database: db
                                      requestHeaders: self.requestHeaders
                                        onCompletion:
         ^(CBLMultipartDownloader* result, NSError *error) {
-            __strong CBL_Puller *strongSelf = weakSelf;
+            __strong CBLRestPuller *strongSelf = weakSelf;
             // OK, now we've got the response revision:
             if (error) {
                 [strongSelf revision: rev failedWithError: error];
@@ -471,7 +471,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     NSMutableArray* remainingRevs = [bulkRevs mutableCopy];
     [self asyncTaskStarted];
     ++_httpConnectionCount;
-    __weak CBL_Puller *weakSelf = self;
+    __weak CBLRestPuller *weakSelf = self;
     __block CBLBulkDownloader *dl;
     dl = [[CBLBulkDownloader alloc] initWithDbURL: _remote
                                          database: _db
@@ -480,7 +480,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                        onDocument:
           ^(NSDictionary* props) {
               // Got a revision!
-              __strong CBL_Puller *strongSelf = weakSelf;
+              __strong CBLRestPuller *strongSelf = weakSelf;
               // Find the matching revision in 'remainingRevs' and get its sequence:
               CBL_Revision* rev;
               if (props.cbl_id)
@@ -507,7 +507,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                    onCompletion:
           ^(CBLBulkDownloader* result, NSError *error) {
               // The entire _bulk_get is finished:
-              __strong CBL_Puller *strongSelf = weakSelf;
+              __strong CBLRestPuller *strongSelf = weakSelf;
 
               // Remove the remote request first to prevent the request from cancellation
               // when setting the error (a permanent error). If that happens, this block

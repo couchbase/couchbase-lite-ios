@@ -8,7 +8,7 @@
 
 #import "CBLDatabase+Internal.h"
 #import "CBL_BlobStore.h"
-@class CBL_Revision, CBLMultipartWriter, CBL_Attachment;
+@class CBL_Revision, CBL_Attachment;
 
 
 /** Types of encoding/compression of stored attachments. */
@@ -47,10 +47,6 @@ typedef enum {
                 allowFollows: (BOOL)allowFollows
                       decode: (BOOL)decodeAttachments
                       status: (CBLStatus*)outStatus;
-
-/** Generates a MIME multipart writer for a revision, with separate body parts for each attachment whose "follows" property is set. */
-- (CBLMultipartWriter*) multipartWriterForRevision: (CBL_Revision*)rev
-                                      contentType: (NSString*)contentType;
 
 /** Returns a CBL_Attachment for an attachment in a stored revision. */
 - (CBL_Attachment*) attachmentForRevision: (CBL_Revision*)rev

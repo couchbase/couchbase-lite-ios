@@ -1,5 +1,5 @@
 //
-//  CBL_Replicator+Backgrounding.m
+//  CBLRestReplicator+Backgrounding.m
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 8/15/13.
@@ -15,7 +15,7 @@
 
 #if TARGET_OS_IPHONE
 
-#import "CBL_Replicator.h"
+#import "CBLRestReplicator.h"
 #import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
 #import "MYBlockUtils.h"
@@ -23,7 +23,7 @@
 #import <UIKit/UIKit.h>
 
 
-@implementation CBL_Replicator (Backgrounding)
+@implementation CBLRestReplicator (Backgrounding)
 
 
 // Called when the replicator starts

@@ -378,36 +378,6 @@ static UInt64 smallestLength(NSDictionary* attachment) {
 #pragma mark - MISC.:
 
 
-- (CBLMultipartWriter*) multipartWriterForRevision: (CBL_Revision*)rev
-                                       contentType: (NSString*)contentType
-{
-    CBLMultipartWriter* writer = [[CBLMultipartWriter alloc] initWithContentType: contentType 
-                                                                      boundary: nil];
-    [writer setNextPartsHeaders: @{@"Content-Type": @"application/json"}];
-    [writer addData: rev.asJSON];
-    NSDictionary* attachments = rev.attachments;
-    for (NSString* attachmentName in attachments) {
-        NSDictionary* attachment = attachments[attachmentName];
-        if (attachment[@"follows"]) {
-            NSString* disposition = $sprintf(@"attachment; filename=%@", CBLQuoteString(attachmentName));
-            [writer setNextPartsHeaders: $dict({@"Content-Disposition", disposition})];
-
-            CBLStatus status;
-            CBL_Attachment* attachObj = [self attachmentForDict: attachment named: attachmentName
-                                                         status: &status];
-            if (!attachObj)
-                return nil;
-            NSURL* fileURL = attachObj.contentURL;
-            if (fileURL)
-                [writer addFileURL: fileURL];
-            else
-                [writer addStream: attachObj.contentStream];
-        }
-    }
-    return writer;
-}
-
-
 /** Replaces or removes a single attachment in a document, by saving a new revision whose only
     change is the value of the attachment. */
 - (CBL_Revision*) updateAttachment: (NSString*)filename

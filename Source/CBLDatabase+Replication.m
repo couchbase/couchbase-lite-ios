@@ -15,7 +15,7 @@
 
 #import "CBLDatabase+Replication.h"
 #import "CBLInternal.h"
-#import "CBL_ReplicatorAPI.h"
+#import "CBL_Replicator.h"
 #import "MYBlockUtils.h"
 
 
@@ -31,7 +31,7 @@
     return _activeReplicators;
 }
 
-- (void) addActiveReplicator: (id<CBL_ReplicatorAPI>)repl {
+- (void) addActiveReplicator: (id<CBL_Replicator>)repl {
     if (!_activeReplicators) {
         _activeReplicators = [[NSMutableArray alloc] init];
         [[NSNotificationCenter defaultCenter] addObserver: self
@@ -44,9 +44,9 @@
 }
 
 
-- (id<CBL_ReplicatorAPI>) activeReplicatorLike: (id<CBL_ReplicatorAPI>)repl {
+- (id<CBL_Replicator>) activeReplicatorLike: (id<CBL_Replicator>)repl {
     CBLDatabase* db = repl.db;
-    for (id<CBL_ReplicatorAPI> activeRepl in _activeReplicators) {
+    for (id<CBL_Replicator> activeRepl in _activeReplicators) {
         if (db == activeRepl.db
                 && $equal(repl.remote, activeRepl.remote)
                 && repl.isPush == activeRepl.isPush
@@ -58,14 +58,14 @@
 }
 
 
-- (void) stopAndForgetReplicator: (id<CBL_ReplicatorAPI>)repl {
+- (void) stopAndForgetReplicator: (id<CBL_Replicator>)repl {
     [repl databaseClosing];
     [_activeReplicators removeObjectIdenticalTo: repl];
 }
 
 
 - (void) replicatorDidStop: (NSNotification*)n {
-    id<CBL_ReplicatorAPI> repl = n.object;
+    id<CBL_Replicator> repl = n.object;
     if (repl.error)     // Leave it around a while so clients can see the error
         MYAfterDelay(kActiveReplicatorCleanupDelay,
                      ^{[_activeReplicators removeObjectIdenticalTo: repl];});

@@ -6,12 +6,12 @@
 //  Copyright (c) 2015 Couchbase, Inc. All rights reserved.
 //
 
-#import "CBL_Replicator.h"
+#import "CBLRestReplicator.h"
 #import "CBLRemoteRequest.h"
 @class CBL_RevisionList, CBLReachability;
 
 
-@interface CBL_Replicator ()
+@interface CBLRestReplicator ()
 - (instancetype) initWithDB: (CBLDatabase*)db
                      remote: (NSURL*)remote
                        push: (BOOL)push
