@@ -644,8 +644,6 @@
 		27F9411C176A5FB9007BAEBE /* CBLModel+Properties.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B945B117692E2000B2DF2D /* CBLModel+Properties.m */; };
 		27F9411D176A5FC2007BAEBE /* CBLModelArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B945A81768E63200B2DF2D /* CBLModelArray.m */; };
 		27F94120176A64BA007BAEBE /* CBLJSONValidator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */; };
-		27F94123176F7443007BAEBE /* CBLJSONValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F9411F176A64BA007BAEBE /* CBLJSONValidator.m */; };
-		27F94126176F7490007BAEBE /* CBLJSONValidatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F94125176F7490007BAEBE /* CBLJSONValidatorTests.m */; };
 		27FA99F31917FFD900912F96 /* libCBForest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FA99F01917FFD000912F96 /* libCBForest.a */; };
 		27FAEEF2164C8A4D00A3C0C2 /* background.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDA164C8A3E00A3C0C2 /* background.jpg */; };
 		27FAEEF3164C8A4D00A3C0C2 /* background~ipad.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDB164C8A3E00A3C0C2 /* background~ipad.jpg */; };
@@ -1530,8 +1528,6 @@
 		27F87BE61558890600F0A416 /* CBLGNUstep.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLGNUstep.h; sourceTree = "<group>"; };
 		27F87BE71558890700F0A416 /* CBLGNUstep.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLGNUstep.m; sourceTree = "<group>"; };
 		27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSONValidator.h; sourceTree = "<group>"; };
-		27F9411F176A64BA007BAEBE /* CBLJSONValidator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSONValidator.m; sourceTree = "<group>"; };
-		27F94125176F7490007BAEBE /* CBLJSONValidatorTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSONValidatorTests.m; sourceTree = "<group>"; };
 		27FA59EF179EFDA20043460A /* build_docs.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = build_docs.sh; sourceTree = "<group>"; };
 		27FA59F0179EFDA20043460A /* Doxyfile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Doxyfile; sourceTree = "<group>"; };
 		27FA59F1179EFDA20043460A /* Doxyfile-DocSet */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = "Doxyfile-DocSet"; sourceTree = "<group>"; };
@@ -4014,10 +4010,8 @@
 			files = (
 				27C706D31488679500F0F099 /* DemoAppController.m in Sources */,
 				27C706D41488679500F0F099 /* DemoQuery.m in Sources */,
-				27F94126176F7490007BAEBE /* CBLJSONValidatorTests.m in Sources */,
 				27C706D71488679500F0F099 /* ShoppingItem.m in Sources */,
 				279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */,
-				27F94123176F7443007BAEBE /* CBLJSONValidator.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

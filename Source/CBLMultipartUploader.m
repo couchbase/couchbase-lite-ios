@@ -15,48 +15,50 @@
 
 #import "CBLMultipartUploader.h"
 
+@interface CBLMultipartUploader ()
+
+@end
 
 @implementation CBLMultipartUploader
 
 - (instancetype) initWithURL: (NSURL *)url
-                    streamer: (CBLMultipartWriter*)writer
               requestHeaders: (NSDictionary *) requestHeaders
-                onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
-{
+             multipartWriter: (CBLMultipartUploaderMultipartWriterBlock)writer
+                onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion {
     Assert(writer);
     self = [super initWithMethod: @"PUT" 
                              URL: url 
-                            body: writer
+                            body: nil
                   requestHeaders: requestHeaders 
                     onCompletion: onCompletion];
     if (self) {
-        _multipartWriter = writer;
-        // It's important to set a Content-Length header -- without this, CFNetwork won't know the
-        // length of the body stream, so it has to send the body chunked. But unfortunately CouchDB
-        // doesn't correctly parse chunked multipart bodies:
-        // https://issues.apache.org/jira/browse/COUCHDB-1403
-        SInt64 length = _multipartWriter.length;
-        Assert(length >= 0, @"HTTP multipart upload body has indeterminate length");
-        [_request setValue: $sprintf(@"%lld", length) forHTTPHeaderField: @"Content-Length"];
+        _writer = [writer copy];
     }
     return self;
 }
 
 
-
-
 - (void) start {
-    [_multipartWriter openForURLRequest: _request];
+    _currentWriter = _writer();
+
+    // It's important to set a Content-Length header -- without this, CFNetwork won't know the
+    // length of the body stream, so it has to send the body chunked. But unfortunately CouchDB
+    // doesn't correctly parse chunked multipart bodies:
+    // https://issues.apache.org/jira/browse/COUCHDB-1403
+    SInt64 length = _currentWriter.length;
+    Assert(length >= 0, @"HTTP multipart upload body has indeterminate length");
+    [_request setValue: $sprintf(@"%lld", length) forHTTPHeaderField: @"Content-Length"];
+
+    [_currentWriter openForURLRequest: _request];
     [super start];
 }
 
 
 - (NSInputStream *)connection:(NSURLConnection *)connection
-            needNewBodyStream:(NSURLRequest *)request
-{
+            needNewBodyStream:(NSURLRequest *)request {
     LogTo(CBLRemoteRequest, @"%@: Needs new body stream, resetting writer...", self);
-    [_multipartWriter close];
-    return [_multipartWriter openForInputStream];
+    [_currentWriter close];
+    return [_currentWriter openForInputStream];
 }
 
 
@@ -64,7 +66,7 @@
     if ($equal(error.domain, NSURLErrorDomain) && error.code == NSURLErrorRequestBodyStreamExhausted) {
         // The connection is complaining that the body input stream closed prematurely.
         // Check whether this is because the multipart writer got an error on _its_ input stream:
-        NSError* writerError = _multipartWriter.error;
+        NSError* writerError = _currentWriter.error;
         if (writerError)
             error = writerError;
     }

@@ -311,7 +311,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
     unsigned generation = [CBL_Revision generationFromRevID: prevRevID] + 1;
     __block NSDictionary* parentAttachments = nil;
 
-    return [rev mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *attachInfo) {
+    [rev mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *attachInfo) {
         CBL_Attachment* attachment = [[CBL_Attachment alloc] initWithName: name
                                                                      info: attachInfo
                                                                    status: outStatus];
@@ -335,11 +335,20 @@ static UInt64 smallestLength(NSDictionary* attachment) {
         } else if ([attachInfo[@"stub"] isEqual: $true]) {
             // "stub" on an incoming revision means the attachment is the same as in the parent.
             if (!parentAttachments && prevRevID) {
+                CBLStatus status;
                 parentAttachments = [self attachmentsForDocID: rev.docID revID: prevRevID
-                                                       status: outStatus];
+                                                       status: &status];
                 if (!parentAttachments) {
-                    if (*outStatus == kCBLStatusOK || *outStatus == kCBLStatusNotFound)
-                        *outStatus = kCBLStatusBadAttachment;
+                    if (status == kCBLStatusNotFound
+                        && [_attachments hasBlobForKey: attachment.blobKey]) {
+                        // Parent revision's body isn't known (we are probably pulling a rev along
+                        // with its entire history) but it's OK, we have the attachment already
+                        *outStatus = kCBLStatusOK;
+                        return attachInfo;
+                    }
+                    if (status == kCBLStatusOK || status == kCBLStatusNotFound)
+                        status = kCBLStatusBadAttachment;
+                    *outStatus = status;
                     return nil;
                 }
             }
@@ -361,6 +370,8 @@ static UInt64 smallestLength(NSDictionary* attachment) {
         Assert(attachment.isValid);
         return attachment.asStubDictionary;
     }];
+
+    return !CBLStatusIsError(*outStatus);
 }
 
 

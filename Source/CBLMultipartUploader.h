@@ -9,16 +9,22 @@
 #import "CBLRemoteRequest.h"
 #import "CBLMultipartWriter.h"
 
+/** The signature of the mulipart writer block called by the CBLMultipartUploader to 
+    get a CBLMultipartWriter object. When the CBLMultipartUploader is doing retry, it
+    will call the block to get a new writer object. It cannot reuse the old writer object
+    as all of the streams have already been opened and cannot be reopened. */
+typedef CBLMultipartWriter* (^CBLMultipartUploaderMultipartWriterBlock)(void);
 
 @interface CBLMultipartUploader : CBLRemoteRequest
 {
     @private
-    CBLMultipartWriter* _multipartWriter;
+    CBLMultipartUploaderMultipartWriterBlock _writer;
+    CBLMultipartWriter* _currentWriter;
 }
 
 - (instancetype) initWithURL: (NSURL *)url
-                    streamer: (CBLMultipartWriter*)streamer
               requestHeaders: (NSDictionary *) requestHeaders
+             multipartWriter: (CBLMultipartUploaderMultipartWriterBlock)writer
                 onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 
 @end

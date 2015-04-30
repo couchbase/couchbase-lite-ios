@@ -382,12 +382,14 @@
     [atts setValue: attachment forKey: name];
     _properties[@"_attachments"] = atts;
     attachment.name = name;
-    attachment.revision = self;
+    
+    // NOTE: Not setting the revision to the attachment object (attachment.revision = self) as
+    // [1] The UnsavedRevision object is not used during save operation
+    // [2] Setting the UnsavedRevision object here will cause the circular reference memory leak.
 }
 
 - (void) removeAttachmentNamed: (NSString*)name {
     [self _addAttachment: nil named: name];
 }
-
 
 @end
