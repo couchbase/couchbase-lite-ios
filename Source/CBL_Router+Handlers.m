@@ -27,8 +27,7 @@
 #import "CBL_Server.h"
 #import "CBLPersonaAuthorizer.h"
 #import "CBLFacebookAuthorizer.h"
-#import "CBL_Replicator.h"
-#import "CBL_Pusher.h"
+#import "CBL_ReplicatorAPI.h"
 #import "CBL_Attachment.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
@@ -385,7 +384,7 @@
 - (CBLStatus) do_POST_replicate {
     NSDictionary* body = self.bodyAsDictionary;
     CBLStatus status;
-    CBL_Replicator* repl = [_dbManager replicatorWithProperties: body status: &status];
+    id<CBL_ReplicatorAPI> repl = [_dbManager replicatorWithProperties: body status: &status];
     if (!repl)
         return status;
 
@@ -414,7 +413,7 @@
 
 // subroutine of -do_POST_replicate
 - (void) replicationStopped: (NSNotification*)n {
-    CBL_Replicator* repl = n.object;
+    id<CBL_ReplicatorAPI> repl = n.object;
     _response.status = CBLStatusFromNSError(repl.error, kCBLStatusServerError);
     [self sendResponseHeaders];
     [self.response setBodyObject: $dict({@"ok", (repl.error ?nil :$true)},
@@ -454,7 +453,7 @@
     // Get the current task info of all replicators:
     NSMutableArray* activity = $marray();
     for (CBLDatabase* db in _dbManager.allOpenDatabases) {
-        for (CBL_Replicator* repl in db.activeReplicators) {
+        for (id<CBL_ReplicatorAPI> repl in db.activeReplicators) {
             [activity addObject: repl.activeTaskInfo];
         }
     }
@@ -487,7 +486,7 @@
 
 // subroutine of do_GET_active_tasks
 - (void) replicationChanged: (NSNotification*)n {
-    CBL_Replicator* repl = n.object;
+    id<CBL_ReplicatorAPI> repl = n.object;
     if (repl.db.manager == _dbManager)
         [self sendContinuousLine: repl.activeTaskInfo];
 }

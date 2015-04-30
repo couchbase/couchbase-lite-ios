@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBL_Pusher.h"
+#import "CBL_Replicator+Internal.h"
 #import "CBLDatabase.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBL_Storage.h"
@@ -121,6 +122,12 @@
     if (!revs)
         self.error = CBLStatusToNSError(status, nil);
     return revs;
+}
+
+- (NSSet*) pendingDocIDs {
+    CBL_RevisionList* revs = self.unpushedRevisions;
+    return revs ? [NSSet setWithArray: revs.allDocIDs] : nil;
+
 }
 
 

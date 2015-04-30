@@ -23,8 +23,7 @@
 #import "CBL_Revision.h"
 #import "CBLDatabaseChange.h"
 #import "CBL_BlobStore.h"
-#import "CBL_Puller.h"
-#import "CBL_Pusher.h"
+#import "CBL_ReplicatorAPI.h"
 #import "CBL_Shared.h"
 #import "CBLMisc.h"
 #import "CBLDatabase.h"
@@ -233,7 +232,7 @@ static BOOL sAutoCompact = YES;
             [view close];
         
         _views = nil;
-        for (CBL_Replicator* repl in _activeReplicators.copy)
+        for (id<CBL_ReplicatorAPI> repl in _activeReplicators.copy)
             [repl databaseClosing];
         
         _activeReplicators = nil;

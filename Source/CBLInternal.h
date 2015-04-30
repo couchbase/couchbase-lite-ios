@@ -12,8 +12,6 @@
 #import "CBLManager+Internal.h"
 #import "CBLView+Internal.h"
 #import "CBL_Server.h"
-#import "CBL_Replicator.h"
-#import "CBLRemoteRequest.h"
 #import "CBL_BlobStore.h"
 @class CBL_Attachment, CBL_BlobStoreWriter, CBLDatabaseChange;
 
@@ -38,7 +36,7 @@
 @end
 
 @interface CBLDatabase (Replication_Internal)
-- (void) stopAndForgetReplicator: (CBL_Replicator*)repl;
+- (void) stopAndForgetReplicator: (id<CBL_ReplicatorAPI>)repl;
 - (NSString*) lastSequenceWithCheckpointID: (NSString*)checkpointID;
 - (BOOL) setLastSequence: (NSString*)lastSequence withCheckpointID: (NSString*)checkpointID;
 @end
@@ -56,40 +54,5 @@
 #if DEBUG
 + (instancetype) createEmptyAtPath: (NSString*)path;  // for testing
 + (instancetype) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
-#endif
-@end
-
-
-@interface CBL_Replicator ()
-// protected:
-@property (copy) NSString* lastSequence;
-@property (readwrite, nonatomic) NSUInteger changesProcessed, changesTotal;
-@property (readonly) NSString* remoteCheckpointDocID;
-- (void) maybeCreateRemoteDB;
-- (void) beginReplicating;
-- (void) addToInbox: (CBL_Revision*)rev;
-- (void) addRevsToInbox: (CBL_RevisionList*)revs;
-- (void) processInbox: (CBL_RevisionList*)inbox;  // override this
-- (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion;
-@property (readonly) BOOL canSendCompressedRequests;
-- (CBLRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
-                                     path: (NSString*)relativePath
-                                     body: (id)body
-                             onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
-- (void) addRemoteRequest: (CBLRemoteRequest*)request;
-- (void) removeRemoteRequest: (CBLRemoteRequest*)request;
-- (void) asyncTaskStarted;
-- (void) asyncTasksFinished: (NSUInteger)numTasks;
-- (void) stopped;
-- (void) databaseClosing;
-- (void) revisionFailed;    // subclasses call this if a transfer fails
-- (void) retry;
-
-- (void) reachabilityChanged: (CBLReachability*)host;
-- (BOOL) goOffline;
-- (BOOL) goOnline;
-- (BOOL) checkSSLServerTrust: (SecTrustRef)trust forHost: (NSString*)host port: (UInt16)port;
-#if DEBUG
-@property (readonly) BOOL savingCheckpoint;
 #endif
 @end

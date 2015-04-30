@@ -7,6 +7,7 @@
 //
 
 #import "CBLAuthenticator.h"
+#import <Security/SecBase.h>
 
 
 /** Internal protocol for authenticating a user to a server.
@@ -67,3 +68,8 @@
 
 @end
 #endif
+
+
+
+void CBLSetAnchorCerts(NSArray* certs, BOOL onlyThese);
+BOOL CBLCheckSSLServerTrust(SecTrustRef trust, NSString* host, UInt16 port);

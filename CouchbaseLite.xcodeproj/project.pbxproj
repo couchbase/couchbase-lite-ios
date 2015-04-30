@@ -1271,6 +1271,8 @@
 		27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrivilegedInstall.m; sourceTree = "<group>"; };
 		27538FA117F1ECE8004C3BFD /* LoggingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoggingMode.h; sourceTree = "<group>"; };
 		27538FA217F1ECE8004C3BFD /* LoggingMode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = LoggingMode.c; sourceTree = "<group>"; };
+		276240AC1AF2AB4B00FFF9DC /* CBL_Replicator+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBL_Replicator+Internal.h"; sourceTree = "<group>"; };
+		276240B31AF2ADDD00FFF9DC /* CBL_ReplicatorAPI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBL_ReplicatorAPI.h; sourceTree = "<group>"; };
 		2762AB5618D36F1B00649D47 /* CBLReplication+Transformation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLReplication+Transformation.h"; sourceTree = "<group>"; };
 		2762AB5718D36F1B00649D47 /* CBLReplication+Transformation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLReplication+Transformation.m"; sourceTree = "<group>"; };
 		2764D2B01A5E240D005AC95A /* JSON_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JSON_Tests.m; sourceTree = "<group>"; };
@@ -2239,7 +2241,9 @@
 		27821BB4148E7D590099B373 /* Replicator */ = {
 			isa = PBXGroup;
 			children = (
+				276240B31AF2ADDD00FFF9DC /* CBL_ReplicatorAPI.h */,
 				27821BB5148E7D6F0099B373 /* CBL_Replicator.h */,
+				276240AC1AF2AB4B00FFF9DC /* CBL_Replicator+Internal.h */,
 				27821BB6148E7D6F0099B373 /* CBL_Replicator.m */,
 				27FFE20817BD28080040AE60 /* CBL_Replicator+Backgrounding.m */,
 				270B3E291489581E00E0A926 /* CBL_Puller.h */,

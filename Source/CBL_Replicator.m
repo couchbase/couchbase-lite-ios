@@ -13,7 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CBL_Replicator.h"
+#import "CBL_Replicator+Internal.h"
 #import "CBL_Pusher.h"
 #import "CBL_Puller.h"
 #import "CBLDatabase+Replication.h"
@@ -61,6 +61,19 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (void) updateActive;
 - (void) fetchRemoteCheckpointDoc;
 - (void) saveLastSequence;
+@end
+
+
+@implementation CBL_RESTReplicatorFactory
+
+- (id<CBL_ReplicatorAPI>) replicatorWithDB: (CBLDatabase*)db
+                                    remote: (NSURL*)remote
+                                      push: (BOOL)push
+                                continuous: (BOOL)continuous
+{
+    return [[CBL_Replicator alloc] initWithDB: db remote: remote push: push continuous: continuous];
+}
+
 @end
 
 
@@ -838,17 +851,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
-static NSArray* sAnchorCerts; // TODO: Add API to set these
-static BOOL sOnlyTrustAnchorCerts;
-
-
-+ (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese {
-    @synchronized(self) {
-        sAnchorCerts = certs.copy;
-        sOnlyTrustAnchorCerts = onlyThese;
-    }
-}
-
 - (BOOL) checkSSLServerTrust: (SecTrustRef)trust
                      forHost: (NSString*)host port: (UInt16)port
 {
@@ -869,22 +871,8 @@ static BOOL sOnlyTrustAnchorCerts;
             }
         }
     } else {
-        @synchronized([self class]) {
-            if (sAnchorCerts.count > 0) {
-                SecTrustSetAnchorCertificates(trust, (__bridge CFArrayRef)sAnchorCerts);
-                SecTrustSetAnchorCertificatesOnly(trust, sOnlyTrustAnchorCerts);
-            }
-        }
-        SecTrustResultType result;
-        OSStatus err = SecTrustEvaluate(trust, &result);
-        if (err) {
-            Warn(@"%@: SecTrustEvaluate failed with err %d", self, (int)err);
+        if (!CBLCheckSSLServerTrust(trust, host, port))
             return NO;
-        }
-        if (result != kSecTrustResultProceed && result != kSecTrustResultUnspecified) {
-            Warn(@"%@: SSL cert is not trustworthy (result=%d)", self, result);
-            return NO;
-        }
     }
 
     // Server is trusted. Record its cert in case the client wants to pin it:

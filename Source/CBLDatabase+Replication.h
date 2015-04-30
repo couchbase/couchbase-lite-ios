@@ -8,16 +8,16 @@
 
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
-@class CBL_Replicator;
+@protocol CBL_ReplicatorAPI;
 
 
 @interface CBLDatabase (Replication)
 
 @property (readonly) NSArray* activeReplicators;
 
-- (CBL_Replicator*) activeReplicatorLike: (CBL_Replicator*)repl;
+- (id<CBL_ReplicatorAPI>) activeReplicatorLike: (id<CBL_ReplicatorAPI>)repl;
 
-- (void) addActiveReplicator: (CBL_Replicator*)repl;
+- (void) addActiveReplicator: (id<CBL_ReplicatorAPI>)repl;
 
 /** Save current local uuid into the local checkpoint document. This method is called only
     when importing or replacing the database. The old localUUID is used by replicators 

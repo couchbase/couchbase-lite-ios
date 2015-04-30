@@ -16,7 +16,7 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLReplication.h"
 
-#import "CBL_Pusher.h"
+#import "CBL_ReplicatorAPI.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLManager+Internal.h"
@@ -47,7 +47,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 {
     NSSet* _pendingDocIDs;
     bool _started;
-    CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
+    id<CBL_ReplicatorAPI> _bg_replicator;       // ONLY used on the server thread
     NSMutableArray* _pendingCookies;        
 }
 
@@ -234,7 +234,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 + (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese {
-    [CBL_Replicator setAnchorCerts: certs onlyThese: onlyThese];
+    CBLSetAnchorCerts(certs, onlyThese);
 }
 
 
@@ -301,7 +301,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 - (void) stop {
-    [self tellReplicatorAndWait:^id(CBL_Replicator * bgReplicator) {
+    [self tellReplicatorAndWait:^id(id<CBL_ReplicatorAPI> bgReplicator) {
         // This runs on the server thread:
         [bgReplicator stop];
         return @(YES);
@@ -318,7 +318,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 - (BOOL) suspended {
-    NSNumber* result = [self tellReplicatorAndWait: ^(CBL_Replicator* bgReplicator) {
+    NSNumber* result = [self tellReplicatorAndWait: ^(id<CBL_ReplicatorAPI> bgReplicator) {
         return @(bgReplicator.suspended);
     }];
     return result.boolValue;
@@ -326,7 +326,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 - (void) setSuspended: (BOOL)suspended {
-    [self tellReplicator: ^(CBL_Replicator* bgReplicator) {
+    [self tellReplicator: ^(id<CBL_ReplicatorAPI> bgReplicator) {
         bgReplicator.suspended = suspended;
     }];
 }
@@ -392,9 +392,11 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 - (NSSet*) pendingDocumentIDs {
     if (!_pendingDocIDs && _started && !_pull) {
-        _pendingDocIDs = [self tellReplicatorAndWait: ^(CBL_Replicator* bgReplicator) {
-            CBL_RevisionList* revs = ($castIf(CBL_Pusher, bgReplicator)).unpushedRevisions;
-            return revs ? [NSSet setWithArray: revs.allDocIDs] : nil;
+        _pendingDocIDs = [self tellReplicatorAndWait: ^NSSet*(id<CBL_ReplicatorAPI> bgReplicator) {
+            if ([_bg_replicator respondsToSelector: @selector(pendingDocIDs)])
+                return _bg_replicator.pendingDocIDs;
+            else
+                return nil;
         }];
     }
     return _pendingDocIDs;
@@ -410,13 +412,13 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 #pragma mark - BACKGROUND OPERATIONS:
 
 
-- (void) tellReplicator: (void (^)(CBL_Replicator*))block {
+- (void) tellReplicator: (void (^)(id<CBL_ReplicatorAPI>))block {
     [_database.manager.backgroundServer tellDatabaseManager: ^(CBLManager* _) {
         block(_bg_replicator);
     }];
 }
 
-- (id) tellReplicatorAndWait: (id (^)(CBL_Replicator*))block {
+- (id) tellReplicatorAndWait: (id (^)(id<CBL_ReplicatorAPI>))block {
     return [_database.manager.backgroundServer waitForDatabaseManager: ^(CBLManager* _) {
         return block(_bg_replicator);
     }];
@@ -424,7 +426,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 // CAREFUL: This is called on the server's background thread!
-- (void) bg_setReplicator: (CBL_Replicator*)repl {
+- (void) bg_setReplicator: (id<CBL_ReplicatorAPI>)repl {
     if (_bg_replicator) {
         [[NSNotificationCenter defaultCenter] removeObserver: self name: nil
                                                       object: _bg_replicator];
@@ -446,7 +448,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 {
     // The setup must use properties, not ivars, because the ivars may change on the main thread.
     CBLStatus status;
-    CBL_Replicator* repl = [server_dbmgr replicatorWithProperties: properties status: &status];
+    id<CBL_ReplicatorAPI> repl = [server_dbmgr replicatorWithProperties: properties status: &status];
     if (!repl) {
         __weak CBLReplication *weakSelf = self;
         [_database doAsync: ^{

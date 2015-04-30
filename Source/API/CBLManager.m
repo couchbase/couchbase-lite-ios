@@ -22,7 +22,7 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLManager+Internal.h"
-#import "CBL_Pusher.h"
+#import "CBL_ReplicatorAPI.h"
 #import "CBL_Server.h"
 #import "CBL_URLProtocol.h"
 #import "CBLPersonaAuthorizer.h"
@@ -84,6 +84,7 @@ static NSString* CBLFullVersionInfo( void ) {
     dispatch_queue_t _dispatchQueue;
     NSMutableDictionary* _databases;
     NSURL* _internalURL;
+    id<CBL_ReplicatorFactory> _replicatorFactory;
     NSMutableArray* _replications;
     __weak CBL_Shared *_shared;
     id _strongShared;       // optional strong reference to _shared
@@ -741,8 +742,8 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 }
 
 
-- (CBL_Replicator*) replicatorWithProperties: (NSDictionary*)properties
-                                      status: (CBLStatus*)outStatus
+- (id<CBL_ReplicatorAPI>) replicatorWithProperties: (NSDictionary*)properties
+                                            status: (CBLStatus*)outStatus
 {
     // An unfortunate limitation:
     Assert(_dispatchQueue==NULL || _dispatchQueue==dispatch_get_main_queue(),
@@ -770,10 +771,17 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
     BOOL continuous = [$castIf(NSNumber, properties[@"continuous"]) boolValue];
 
-    CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db
-                                                       remote: remote
-                                                         push: push
-                                                   continuous: continuous];
+    if (!_replicatorFactory) {
+        NSString* kReplicatorFactoryClassName = @"CBL_RESTReplicatorFactory";
+        Class replicatorFactoryClass = NSClassFromString(kReplicatorFactoryClassName);
+        Assert(replicatorFactoryClass, @"Couldn't load class %@", kReplicatorFactoryClassName);
+        _replicatorFactory = [[replicatorFactoryClass alloc] init];
+    }
+
+    id<CBL_ReplicatorAPI> repl = [_replicatorFactory replicatorWithDB: db
+                                                               remote: remote
+                                                                 push: push
+                                                           continuous: continuous];
     if (!repl) {
         if (outStatus)
             *outStatus = kCBLStatusServerError;
@@ -786,11 +794,11 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     repl.options = properties;
     repl.requestHeaders = headers;
     repl.authorizer = authorizer;
-    if (push)
-        ((CBL_Pusher*)repl).createTarget = createTarget;
+    if (push && [repl respondsToSelector: @selector(setCreateTarget:)])
+        repl.createTarget = createTarget;
 
     // If this is a duplicate, reuse an existing replicator:
-    CBL_Replicator* existing = [db activeReplicatorLike: repl];
+    id<CBL_ReplicatorAPI> existing = [db activeReplicatorLike: repl];
     if (existing)
         repl = existing;
 

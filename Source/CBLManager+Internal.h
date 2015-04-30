@@ -8,7 +8,8 @@
 
 #import "CBLManager.h"
 #import "CBLStatus.h"
-@class CBLDatabase, CBL_Replicator, CBL_Shared;
+@class CBLDatabase, CBL_Shared;
+@protocol CBL_ReplicatorAPI;
 
 
 @interface CBLManager ()
@@ -32,7 +33,7 @@
 - (CBLStatus) validateReplicatorProperties: (NSDictionary*)properties;
 
 /** Creates a new CBL_Replicator, or returns an existing active one if it has the same properties. */
-- (CBL_Replicator*) replicatorWithProperties: (NSDictionary*)body
+- (id<CBL_ReplicatorAPI>) replicatorWithProperties: (NSDictionary*)body
                                     status: (CBLStatus*)outStatus;
 
 @end

@@ -18,7 +18,7 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBL_Router.h"
 #import "CBLListener.h"
-#import "CBL_Pusher.h"
+#import "CBL_Replicator.h"
 #import "CBLManager+Internal.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLMisc.h"
@@ -102,7 +102,7 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
         Log(@"Pushing %@ --> <%@> ...", dbName, remote);
 
     // Actually replicate -- this could probably be cleaned up to use the public API.
-    CBL_Replicator* repl = nil;
+    id<CBL_ReplicatorAPI> repl = nil;
     NSError* error = nil;
     CBLDatabase* db = [dbm existingDatabaseNamed: dbName error: &error];
     if (pull) {

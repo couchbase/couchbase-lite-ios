@@ -8,6 +8,7 @@
 
 #import "CBLTestCase.h"
 #import "CouchbaseLitePrivate.h"
+#import "CBL_Replicator+Internal.h"
 #import "CBL_Puller.h"
 #import "CBL_Pusher.h"
 #import "CBLReachability.h"
@@ -239,9 +240,9 @@
                                 code: NSURLErrorServerCertificateUntrusted userInfo: nil]));
 
     Log(@"Now replicating with root cert installed...");
-    [CBL_Replicator setAnchorCerts: [self remoteTestDBAnchorCerts] onlyThese: NO];
+    CBLSetAnchorCerts([self remoteTestDBAnchorCerts], NO);
     id lastSeq = replic8(db, remoteURL, NO, nil, nil, nil);
-    [CBL_Replicator setAnchorCerts: nil onlyThese: NO];
+    CBLSetAnchorCerts(nil, NO);
     Assert([lastSeq intValue] >= 2);
 
     AssertEq(db.documentCount, 2u);
@@ -261,9 +262,9 @@
                                       userInfo: nil]);
 
     Log(@"Now replicating with root cert installed...");
-    [CBL_Replicator setAnchorCerts: [self remoteTestDBAnchorCerts] onlyThese: NO];
+    CBLSetAnchorCerts([self remoteTestDBAnchorCerts], NO);
     id lastSeq = replic8Continuous(db, remoteURL, NO, nil, nil, nil);
-    [CBL_Replicator setAnchorCerts: nil onlyThese: NO];
+    CBLSetAnchorCerts(nil, NO);
     Assert([lastSeq intValue] >= 2);
 
     AssertEq(db.documentCount, 2u);
@@ -288,7 +289,7 @@
     id lastSeq = replic8Continuous(db, remoteURL, NO, nil,
                                    @{kCBLReplicatorOption_PinnedCert: digest},
                                    nil);
-    [CBL_Replicator setAnchorCerts: nil onlyThese: NO];
+    CBLSetAnchorCerts(nil, NO);
     Assert([lastSeq intValue] >= 2);
 
     AssertEq(db.documentCount, 2u);

@@ -15,6 +15,7 @@
 
 #import "CBL_Puller.h"
 #import "CBL_Pusher.h"
+#import "CBL_Replicator+Internal.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Replication.h"
 #import "CBL_Revision.h"
