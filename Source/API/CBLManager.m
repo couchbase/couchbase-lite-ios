@@ -398,11 +398,13 @@ static CBLManager* sInstance;
 
 - (int) schemaVersionOfSqliteFile: (NSString*)dbPath error: (NSError**)outError {
     int version = -1;
-
     sqlite3* sqlite;
+    // Open the SQLite in the READWRITE mode so that the WAL enabled database from
+    // the -replaceDatabaseNamed: method can be open regardless of the existence of
+    // the -wal and -shm file.
     int err = sqlite3_open_v2(dbPath.fileSystemRepresentation, &sqlite,
-                              SQLITE_OPEN_READONLY, NULL);
-    if (err) {
+                              SQLITE_OPEN_READWRITE, NULL);
+    if (err != SQLITE_OK) {
         NSString* errMesg = [NSString stringWithUTF8String:sqlite3_errmsg(sqlite)];
         Warn(@"Couldn't open sqlite %@ : %@", dbPath, errMesg);
         if (outError) {
@@ -413,14 +415,15 @@ static CBLManager* sInstance;
     }
 
     const char* sql = "PRAGMA user_version";
-    sqlite3_stmt* versionQuery;
-    err = sqlite3_prepare_v2(sqlite, sql, -1, &versionQuery, NULL);
-    if (!err) {
-        while (SQLITE_ROW == sqlite3_step(versionQuery)) {
+    sqlite3_stmt* stmt;
+    err = sqlite3_prepare_v2(sqlite, sql, -1, &stmt, NULL);
+    if (err == SQLITE_OK) {
+        if (SQLITE_ROW == sqlite3_step(stmt)) {
             @autoreleasepool {
-                version = sqlite3_column_int(versionQuery, 0);
+                version = sqlite3_column_int(stmt, 0);
             }
-        }
+        } else
+            Warn(@"Couldn't query user_version : %@", dbPath);
     } else {
         NSString* errMesg = [NSString stringWithUTF8String:sqlite3_errmsg(sqlite)];
         Warn(@"Couldn't compile SQL `%s` : %@", sql, errMesg);
@@ -430,7 +433,7 @@ static CBLManager* sInstance;
         }
     }
 
-    sqlite3_finalize(versionQuery);
+    sqlite3_finalize(stmt);
     sqlite3_close(sqlite);
 
     return version;
