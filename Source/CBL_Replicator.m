@@ -161,6 +161,9 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (void) databaseClosing {
+    if (!_db)
+        return; // The database has already been closed and cleared.
+    
     [self saveLastSequence];
     [self stop];
     [self clearDbRef];

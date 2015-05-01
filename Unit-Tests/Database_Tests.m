@@ -7,6 +7,7 @@
 //
 
 #import "CBLTestCase.h"
+#import "CBLManager+Internal.h"
 
 
 @interface Database_Tests : CBLTestCaseWithDB
@@ -919,6 +920,75 @@
     dispatch_sync(readingQueue, ^{  });
     dispatch_sync(readingQueue2, ^{  });
     dispatch_sync(writingQueue, ^{  });
+}
+
+
+- (void) test22_Close {
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    NSString* dbPath = [dbmgr pathForDatabaseNamed: db.name];
+    NSString *dbWALPath = [dbPath stringByAppendingString:@"-wal"];
+
+    // Add some documents:
+    for (NSUInteger i = 0; i < 10; i++) {
+        NSError* error;
+        CBLDocument* doc = [db createDocument];
+        CBLSavedRevision* rev = [doc putProperties:@{@"foo":@"bar"} error:&error];
+        Assert(rev, @"Error creating a new document: %@", error);
+    }
+
+    // Close Database:
+    NSError* error;
+    BOOL success = [db close: &error];
+    Assert(success, @"Couldn't close database: %@", error);
+
+    // If the WAL file exists, the size of the file should be zero:
+    if ([fmgr fileExistsAtPath:dbWALPath]) {
+        NSDictionary* attrs = [fmgr attributesOfItemAtPath: dbWALPath error: NULL];
+        Assert(attrs.fileSize == 0);
+    }
+}
+
+
+- (void) test23_Close_AsyncQuery {
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    NSString* dbPath = [dbmgr pathForDatabaseNamed: db.name];
+    NSString *dbWALPath = [dbPath stringByAppendingString:@"-wal"];
+
+    // Add some documents:
+    for (NSUInteger i = 0; i < 10; i++) {
+        NSError* error;
+        CBLDocument* doc = [db createDocument];
+        CBLSavedRevision* rev = [doc putProperties:@{@"foo":@"bar"} error:&error];
+        Assert(rev, @"Error creating a new document: %@", error);
+    }
+
+    // Run an async query:
+    CBLQuery* query = [db createAllDocumentsQuery];
+    __block bool finished = false;
+    [query runAsync: ^(CBLQueryEnumerator *rows, NSError* error) {
+        Log(@"Async query finished!");
+        AssertEq(rows.count, (NSUInteger)10);
+        finished = true;
+    }];
+
+    Log(@"Waiting for async query to finish...");
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 5.0];
+    while (!finished) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
+            break;
+    }
+    Assert(finished);
+
+    // Close Database:
+    NSError* error;
+    BOOL success = [db close: &error];
+    Assert(success, @"Couldn't close database: %@", error);
+
+    // If the WAL file exists, the size of the file should be zero:
+    if ([fmgr fileExistsAtPath:dbWALPath]) {
+        NSDictionary* attrs = [fmgr attributesOfItemAtPath: dbWALPath error: NULL];
+        Assert(attrs.fileSize == 0);
+    }
 }
 
 

@@ -261,6 +261,11 @@
             }
         }
 
+        NSError* error;
+        LogTo(Query, @"%@: Close background database: %@", self, bgdb);
+        if (![bgdb close: &error])
+            Warn(@"Failed to close background database: %@", error);
+
         [_database doAsync: ^{
             // Back on original thread, call the onComplete block:
             LogTo(Query, @"%@: ...async query finished (%u rows, status %d)",

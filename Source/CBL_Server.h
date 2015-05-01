@@ -24,6 +24,7 @@
 
 @property (readonly) NSString* directory;
 @property (readonly) NSDictionary *customHTTPHeaders;
+@property (readonly) CBLManager* manager;
 
 - (void) queue: (void(^)())block;
 - (void) tellDatabaseManager: (void (^)(CBLManager*))block;

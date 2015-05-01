@@ -306,6 +306,17 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         [bgReplicator stop];
         return @(YES);
     }];
+
+    // Wait to make sure that the replicator goes into stopped state.
+    // This fixes the issue that the updateStatus: method is not called to
+    // update the stopped status when this -stop method is called from the
+    // CBLDatabase's -close: method as the database has already been closed.
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 30.0];
+    while (self.status != kCBLReplicationStopped)
+        [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout];
+
+    if (self.status != kCBLReplicationStopped)
+        Warn(@"%@ : The replicator could not stop gracefully.", self);
 }
 
 
@@ -505,6 +516,18 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
+- (void) bg_closeDatabase {
+    CBLDatabase *bgdb = [_database.manager.backgroundServer.manager
+                         existingDatabaseNamed:_database.name error: nil];
+    if (bgdb.isOpen) {
+        LogTo(SyncVerbose, @"%@: Close background database: %@", self, bgdb);
+        NSError* error;
+        if (![bgdb close: &error])
+            Warn(@"%@: Couldn't close background database: %@", self, error);
+    }
+}
+
+
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_updateProgress {
     CBLReplicationStatus status;
@@ -524,6 +547,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
     if (status == kCBLReplicationStopped) {
         [self bg_setReplicator: nil];
+        [self bg_closeDatabase];
     }
 
     __weak CBLReplication *weakSelf = self;
