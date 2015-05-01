@@ -25,6 +25,7 @@
 
 @implementation CBL_Server
 
+@synthesize manager = _manager;
 @dynamic customHTTPHeaders;
 
 #if DEBUG

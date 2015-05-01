@@ -9,6 +9,7 @@
 #import "CBLTestCase.h"
 #import <CommonCrypto/CommonCryptor.h>
 #import "CBLCookieStorage.h"
+#import "CBLManager+Internal.h"
 
 
 // These dbs will get deleted and overwritten during tests:
@@ -663,6 +664,9 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     AssertEq(pusher.completedChangesCount, numNonPrePopulatedDocs);
     AssertEq(pusher.changesCount, numNonPrePopulatedDocs);
 
+    // Close pre-populated db before replacing:
+    Assert([prePopulateDB close: &error], @"Couldn't close db: %@", error);
+
     // Import pre-populated database to a new database called 'importdb':
     BOOL replaced = [dbmgr replaceDatabaseNamed: @"importdb"
                                withDatabaseFile: oldDbPath
@@ -906,5 +910,124 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     int revpos = [myAttachment[@"revpos"] intValue];
     AssertEq(revpos, 2);
 }
+
+
+- (void) test26_CloseDabaseOneTimeReplication {
+    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    NSString* dbPath = [dbmgr pathForDatabaseNamed: db.name];
+    NSString *dbWALPath = [dbPath stringByAppendingString:@"-wal"];
+
+    // Add some documents:
+    for (NSUInteger i = 0; i < 10; i++) {
+        NSError* error;
+        CBLDocument* doc = [db createDocument];
+        CBLSavedRevision* rev = [doc putProperties:@{@"foo":@"bar"} error:&error];
+        Assert(rev, @"Error creating a new document: %@", error);
+    }
+
+    // Push documents:
+    CBLReplication* pusher = [db createPushReplication: remoteDbURL];
+    pusher.continuous = NO;
+    [self runReplication:pusher expectedChangesCount:10];
+
+    // Close Database:
+    NSError* error;
+    BOOL success = [db close: &error];
+    Assert(success, @"Couldn't close database: %@", error);
+
+    Assert([[db allReplications] count] == 0);
+
+    // If the WAL file exists, the size of the file should be zero:
+    if ([fmgr fileExistsAtPath:dbWALPath]) {
+        NSDictionary* attrs = [fmgr attributesOfItemAtPath: dbWALPath error: NULL];
+        Assert(attrs.fileSize == 0);
+    }
+
+    // Erase test db:
+    [self eraseTestDB];
+
+    // Pull documents:
+    CBLReplication* pull = [db createPullReplication: remoteDbURL];
+    pull.continuous = NO;
+    [self runReplication:pull expectedChangesCount:10];
+
+    // Close Database:
+    success = [db close: &error];
+    Assert(success, @"Couldn't close database: %@", error);
+
+    Assert([[db allReplications] count] == 0);
+
+    // If the WAL file exists, the size of the file should be zero:
+    if ([fmgr fileExistsAtPath:dbWALPath]) {
+        NSDictionary* attrs = [fmgr attributesOfItemAtPath: dbWALPath error: NULL];
+        Assert(attrs.fileSize == 0);
+    }
+}
+
+
+- (void) test27_CloseDataseContinuousReplication {
+    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    NSString* dbPath = [dbmgr pathForDatabaseNamed: db.name];
+    NSString *dbWALPath = [dbPath stringByAppendingString:@"-wal"];
+
+    // Add some documents:
+    for (NSUInteger i = 0; i < 10; i++) {
+        NSError* error;
+        CBLDocument* doc = [db createDocument];
+        CBLSavedRevision* rev = [doc putProperties:@{@"foo":@"bar"} error:&error];
+        Assert(rev, @"Error creating a new document: %@", error);
+    }
+
+    // Push documents:
+    CBLReplication* pusher = [db createPushReplication: remoteDbURL];
+    pusher.continuous = YES;
+    [self runReplication:pusher expectedChangesCount:10];
+
+    // Close Database:
+    NSError* error;
+    BOOL success = [db close: &error];
+    Assert(success, @"Couldn't close database: %@", error);
+
+    Assert(pusher.status == kCBLReplicationStopped);
+    Assert([[db allReplications] count] == 0);
+
+    // If the WAL file exists, the size of the file should be zero:
+    if ([fmgr fileExistsAtPath:dbWALPath]) {
+        NSDictionary* attrs = [fmgr attributesOfItemAtPath: dbWALPath error: NULL];
+        Assert(attrs.fileSize == 0);
+    }
+
+    // Erase test db:
+    [self eraseTestDB];
+
+    // Pull documents:
+    CBLReplication* pull = [db createPullReplication: remoteDbURL];
+    pull.continuous = YES;
+    [self runReplication:pull expectedChangesCount:10];
+
+    // Close Database:
+    success = [db close: &error];
+    Assert(success, @"Couldn't close database: %@", error);
+
+    Assert(pusher.status == kCBLReplicationStopped);
+    Assert([[db allReplications] count] == 0);
+
+    // If the WAL file exists, the size of the file should be zero:
+    if ([fmgr fileExistsAtPath:dbWALPath]) {
+        NSDictionary* attrs = [fmgr attributesOfItemAtPath: dbWALPath error: NULL];
+        Assert(attrs.fileSize == 0);
+    }
+}
+
 
 @end
