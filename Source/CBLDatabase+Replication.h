@@ -39,4 +39,8 @@
 // Local checkpoint document keys:
 #define kCBLDatabaseLocalCheckpoint_LocalUUID @"localUUID"
 
+- (void) stopAndForgetReplicator: (id<CBL_Replicator>)repl;
+- (NSString*) lastSequenceWithCheckpointID: (NSString*)checkpointID;
+- (BOOL) setLastSequence: (NSString*)lastSequence withCheckpointID: (NSString*)checkpointID;
+
 @end

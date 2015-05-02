@@ -15,6 +15,7 @@
 
 #import "CBLQuery.h"
 #import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 #import "CBLView+Internal.h"
 
 

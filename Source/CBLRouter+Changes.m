@@ -16,6 +16,7 @@
 #import "CBL_Router.h"
 #import "CBLDatabase.h"
 #import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 #import "CBLMisc.h"
 
 

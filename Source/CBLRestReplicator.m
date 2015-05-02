@@ -78,11 +78,11 @@
     CBLReachability* _host;
     CBLRemoteRequest* _checkRequest;
     BOOL _suspended;
-    SecCertificateRef _serverCert;
     NSData* _pinnedCertData;
 }
 
-@synthesize revisionBodyTransformationBlock=_revisionBodyTransformationBlock;
+@synthesize db=_db, settings=_settings, cookieStorage=_cookieStorage, serverCert=_serverCert;
+
 
 + (NSString *)progressChangedNotification
 {
@@ -95,26 +95,22 @@
 }
 
 
-- (instancetype) initWithDB: (CBLDatabase*)db
-                     remote: (NSURL*)remote
-                       push: (BOOL)push
-                 continuous: (BOOL)continuous
+- (id<CBL_Replicator>) initWithDB: (CBLDatabase*)db
+                         settings: (CBL_ReplicatorSettings*)settings
 {
     NSParameterAssert(db);
-    NSParameterAssert(remote);
+    NSParameterAssert(settings);
     
     // CBL_Replicator is an abstract class; instantiating one actually instantiates a subclass.
     if ([self class] == [CBLRestReplicator class]) {
-        Class klass = push ? [CBLRestPusher class] : [CBLRestPuller class];
-        return [[klass alloc] initWithDB: db remote: remote push: push continuous: continuous];
+        Class klass = settings.isPush ? [CBLRestPusher class] : [CBLRestPuller class];
+        return [[klass alloc] initWithDB: db settings: settings];
     }
     
     self = [super init];
     if (self) {
         _db = db;
-        _remote = remote;
-        _continuous = continuous;
-        Assert(push == self.isPush);
+        _settings = settings;
 
         _cookieStorage = [[CBLCookieStorage alloc] initWithDB: db
                                                    storageKey: self.remoteCheckpointDocID];
@@ -165,31 +161,18 @@
 
 
 - (NSString*) description {
-    return $sprintf(@"%@[%@]", [self class], _remote.my_sanitizedString);
+    return $sprintf(@"%@[%@]", [self class], _settings.remote.my_sanitizedString);
 }
 
 
-@synthesize db=_db, remote=_remote, filterName=_filterName, filterParameters=_filterParameters, docIDs = _docIDs;
-@synthesize running=_running, online=_online, active=_active, continuous=_continuous;
-@synthesize error=_error, sessionID=_sessionID, options=_options;
+@synthesize running=_running, online=_online, active=_active;
+@synthesize error=_error, sessionID=_sessionID;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpoint=_remoteCheckpoint;
-@synthesize authorizer=_authorizer;
-@synthesize requestHeaders = _requestHeaders;
-@synthesize serverCert=_serverCert;
-@synthesize cookieStorage = _cookieStorage;
-
-
-- (BOOL) isPush {
-    return NO;  // guess who overrides this?
-}
 
 
 - (bool) hasSameSettingsAs: (CBLRestReplicator*)other {
-    // Needs to be consistent with -remoteCheckpointDocID:
-    // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
-    return _db == other->_db && $equal(_remote, other->_remote) && self.isPush == other.isPush
-        && $equal(self.remoteCheckpointDocID, other.remoteCheckpointDocID);
+    return _db == other.db && [_settings isEqual: other.settings];
 }
 
 
@@ -226,9 +209,9 @@
 
 - (NSDictionary*) activeTaskInfo {
     // For schema, see http://wiki.apache.org/couchdb/HttpGetActiveTasks
-    NSString* source = self.remote.absoluteString;
+    NSString* source = _settings.remote.absoluteString;
     NSString* target = _db.name;
-    if (self.isPush) {
+    if (_settings.isPush) {
         NSString* temp = source;
         source = target;
         target = temp;
@@ -261,7 +244,7 @@
                  {@"task", self.sessionID},
                  {@"source", source},
                  {@"target", target},
-                 {@"continuous", (self.continuous ? $true : nil)},
+                 {@"continuous", (_settings.continuous ? $true : nil)},
                  {@"status", status},
                  {@"progress", progress},
                  {@"x_active_requests", activeRequests},
@@ -319,11 +302,11 @@
     [db addActiveReplicator: self];
 
     // Did client request a reset (i.e. starting over from first sequence?)
-    if (_options[kCBLReplicatorOption_Reset] != nil) {
+    if (_settings.options[kCBLReplicatorOption_Reset] != nil) {
         [db setLastSequence: nil withCheckpointID: self.remoteCheckpointDocID];
     }
 
-    id digest = _options[kCBLReplicatorOption_PinnedCert];
+    id digest = _settings.options[kCBLReplicatorOption_PinnedCert];
     if (digest) {
         if ([digest isKindOfClass: [NSData class]])
             _pinnedCertData = digest;
@@ -350,7 +333,7 @@
 
     // If client didn't set an authorizer, use basic auth if credential is available:
     if (!_authorizer) {
-        _authorizer = [[CBLBasicAuthorizer alloc] initWithURL: _remote];
+        _authorizer = [[CBLBasicAuthorizer alloc] initWithURL: _settings.remote];
         if (_authorizer)
             LogTo(SyncVerbose, @"%@: Found credential, using %@", self, _authorizer);
     }
@@ -363,12 +346,12 @@
 #endif
     
     _online = NO;
-    if (!_continuous || [NSClassFromString(@"CBL_URLProtocol") handlesURL: _remote]) {
+    if (!_settings.continuous || [NSClassFromString(@"CBL_URLProtocol") handlesURL: _settings.remote]) {
         [self goOnline];    // non-continuous or local-to-local replication
     } else {
         // Start reachability checks. (This creates another ref cycle, because
         // the block also retains a ref to self. Cycle is also broken in -stopped.)
-        _host = [[CBLReachability alloc] initWithHostName: _remote.host];
+        _host = [[CBLReachability alloc] initWithHostName: _settings.remote.host];
         
         __weak id weakSelf = self;
         _host.onChange = ^{
@@ -390,7 +373,7 @@
     if (!_running)
         return;
     [_batcher clear];   // no sense processing any pending changes
-    _continuous = NO;
+    _settings.continuous = NO;
     [self stopRemoteRequests];
     [NSObject cancelPreviousPerformRequestsWithTarget: self
                                              selector: @selector(retryIfReady) object: nil];
@@ -418,7 +401,7 @@
     _host = nil;
     _suspended = NO;
     [self stopCheckRequest];
-    self.revisionBodyTransformationBlock = nil;
+    _settings.revisionBodyTransformationBlock = nil;
     [self clearDbRef];  // _db no longer tracks me so it won't notify me when it closes; clear ref now
 }
 
@@ -483,7 +466,7 @@
     BOOL reachable = host.reachable && !_suspended;
     if (reachable) {
         // Parse "network" option. Could be nil or "WiFi" or "!Wifi" or "cell" or "!cell".
-        NSString* network = [$castIf(NSString, _options[kCBLReplicatorOption_Network])
+        NSString* network = [$castIf(NSString, _settings.options[kCBLReplicatorOption_Network])
                              lowercaseString];
         if (network) {
             BOOL wifi = host.reachableByWiFi;
@@ -510,10 +493,10 @@
 - (BOOL) trustReachability {
     // Setting kCBLReplicatorOption_Network results to always trust
     // reachability result.
-    if (_options[kCBLReplicatorOption_Network])
+    if (_settings.options[kCBLReplicatorOption_Network])
         return YES;
 
-    id option = _options[kCBLReplicatorOption_TrustReachability];
+    id option = _settings.options[kCBLReplicatorOption_TrustReachability];
     if (option)
         return [option boolValue];
     return YES;
@@ -528,7 +511,7 @@
         [_checkRequest stop];
     
     _checkRequest = [[CBLRemoteRequest alloc] initWithMethod: @"GET"
-                                                         URL: _remote
+                                                         URL: _settings.remote
                                                         body: nil
                                               requestHeaders: nil
                                                 onCompletion: ^(id result, NSError* error) {
@@ -582,7 +565,7 @@
 #if TARGET_OS_IPHONE
             [self okToEndBackgrounding];
 #endif
-            if (!_continuous) {
+            if (!_settings.continuous) {
                 [self stopped];
             } else if (_error) /*(_revisionsFailed > 0)*/ {
                 LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
@@ -639,9 +622,9 @@
 
 
 - (CBL_Revision *) transformRevision:(CBL_Revision *)rev {
-    if(_revisionBodyTransformationBlock) {
+    if(_settings.revisionBodyTransformationBlock) {
         @try {
-            CBL_Revision* xformed = _revisionBodyTransformationBlock(rev);
+            CBL_Revision* xformed = _settings.revisionBodyTransformationBlock(rev);
             if (xformed == nil)
                 return nil;
             if (xformed != rev) {
@@ -712,14 +695,14 @@
 
 // If there is no login session, attempt to log in, if the authorizer knows the parameters.
 - (void) login {
-    NSDictionary* loginParameters = [_authorizer loginParametersForSite: _remote];
+    NSDictionary* loginParameters = [_authorizer loginParametersForSite: _settings.remote];
     if (loginParameters == nil) {
         LogTo(Sync, @"%@: %@ has no login parameters, so skipping login", self, _authorizer);
         [self fetchRemoteCheckpointDoc];
         return;
     }
 
-    NSString* loginPath = [_authorizer loginPathForSite: _remote];
+    NSString* loginPath = [_authorizer loginPathForSite: _settings.remote];
     LogTo(Sync, @"%@: Logging in with %@ at %@ ...", self, _authorizer.class, loginPath);
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"POST"
@@ -743,7 +726,7 @@
 
 
 - (NSTimeInterval) requestTimeout {
-    id timeoutObj = _options[kCBLReplicatorOption_Timeout];
+    id timeoutObj = _settings.options[kCBLReplicatorOption_Timeout];
     if (!timeoutObj)
         return kDefaultRequestTimeout;
     NSTimeInterval timeout = [timeoutObj doubleValue] / 1000.0;
@@ -770,9 +753,9 @@
     LogTo(SyncVerbose, @"%@: %@ %@", self, method, path);
     NSURL* url;
     if ([path hasPrefix: @"/"]) {
-        url = [[NSURL URLWithString: path relativeToURL: _remote] absoluteURL];
+        url = [[NSURL URLWithString: path relativeToURL: _settings.remote] absoluteURL];
     } else {
-        url = CBLAppendToURL(_remote, path);
+        url = CBLAppendToURL(_settings.remote, path);
     }
     onCompletion = [onCompletion copy];
     
@@ -782,7 +765,7 @@
     req = [[CBLRemoteJSONRequest alloc] initWithMethod: method
                                                   URL: url
                                                  body: body
-                                       requestHeaders: self.requestHeaders
+                                       requestHeaders: _settings.requestHeaders
                                          onCompletion: ^(id result, NSError* error) {
         CBLRestReplicator *strongSelf = weakSelf;
         [strongSelf removeRemoteRequest: req];
@@ -880,31 +863,9 @@
 }
 
 
-/** This is the _local document ID stored on the remote server to keep track of state.
-    It's based on the local database UUID (the private one, to make the result unguessable),
-    the remote database's URL, and the filter name and parameters (if any). */
-- (NSString*) remoteCheckpointDocIDForLocalUUID: (NSString*)localUUID {
-    // Needs to be consistent with -hasSameSettingsAs: --
-    // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
-    NSMutableDictionary* spec = $mdict({@"localUUID", localUUID},
-                                       {@"remoteURL", _remote.absoluteString},
-                                       {@"push", @(self.isPush)},
-                                       {@"continuous", (self.continuous ? nil : $false)},
-                                       {@"filter", _filterName},
-                                       {@"filterParams", _filterParameters},
-                                       //{@"headers", _requestHeaders}, (removed; see #143)
-                                       {@"docids", _docIDs});
-    NSError *error;
-    NSString *remoteCheckpointDocID = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: spec
-                                                                         error: &error]);
-    Assert(!error);
-    return remoteCheckpointDocID;
-}
-
-
 - (NSString*) remoteCheckpointDocID {
     if (!_remoteCheckpointDocID) {
-        _remoteCheckpointDocID = [self remoteCheckpointDocIDForLocalUUID:_db.privateUUID];
+        _remoteCheckpointDocID = [_settings remoteCheckpointDocIDForLocalUUID:_db.privateUUID];
     }
     return _remoteCheckpointDocID;
 }
@@ -914,7 +875,7 @@
     CBLDatabase* strongDb = _db;
     NSDictionary* doc = [strongDb getLocalCheckpointDocument];
     if (doc) {
-        NSString* checkpointID = [self remoteCheckpointDocIDForLocalUUID:
+        NSString* checkpointID = [_settings remoteCheckpointDocIDForLocalUUID:
                                   doc[kCBLDatabaseLocalCheckpoint_LocalUUID]];
         return [strongDb lastSequenceWithCheckpointID: checkpointID];
     }

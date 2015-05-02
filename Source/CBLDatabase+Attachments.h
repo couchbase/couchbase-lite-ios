@@ -74,4 +74,10 @@ typedef enum {
                            revID: (NSString*)oldRevID
                           status: (CBLStatus*)outStatus;
 
+- (void) rememberAttachmentWriter: (CBL_BlobStoreWriter*)writer;
+- (void) rememberAttachmentWritersForDigests: (NSDictionary*)writersByDigests;
+#if DEBUG
+- (id) attachmentWriterForAttachment: (NSDictionary*)attachment;
+#endif
+
 @end

@@ -13,7 +13,7 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 #import "CBLReplication.h"
 
 #import "CBL_Replicator.h"
@@ -464,7 +464,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         return;
     }
     if (auth)
-        repl.authorizer = auth;
+        repl.settings.authorizer = auth;
 
     if ([_pendingCookies count] > 0) {
         for (id cookie in _pendingCookies) {
@@ -478,7 +478,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
     CBLPropertiesTransformationBlock xformer = self.propertiesTransformationBlock;
     if (xformer) {
-        repl.revisionBodyTransformationBlock = ^(CBL_Revision* rev) {
+        repl.settings.revisionBodyTransformationBlock = ^(CBL_Revision* rev) {
             NSDictionary* properties = rev.properties;
             NSDictionary* xformedProperties = xformer(properties);
             if (xformedProperties == nil) {

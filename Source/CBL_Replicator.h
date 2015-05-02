@@ -21,25 +21,17 @@ extern NSString* CBL_ReplicatorProgressChangedNotification;
 extern NSString* CBL_ReplicatorStoppedNotification;
 
 
-/** Protocol that replicator implementations must implement. */
-@protocol CBL_Replicator <NSObject>
-
-- (id<CBL_Replicator>) initWithDB: (CBLDatabase*)db
-                           remote: (NSURL*)remote
-                             push: (BOOL)push
-                       continuous: (BOOL)continuous;
-
-@property (weak, readonly) CBLDatabase* db;
+@interface CBL_ReplicatorSettings : NSObject
+- (instancetype) initWithRemote: (NSURL*)remote
+                           push: (BOOL)push;
 @property (readonly) NSURL* remote;
 @property (readonly) BOOL isPush;
-@property (readonly) BOOL continuous;
-@property (readonly) CBLCookieStorage* cookieStorage;
+@property BOOL continuous;
+@property BOOL createTarget;
 @property (copy) NSString* filterName;
 @property (copy) NSDictionary* filterParameters;
 @property (copy) NSArray *docIDs;
 @property (copy) NSDictionary* options;
-
-@property (readonly) NSString* remoteCheckpointDocID;
 
 /** Optional dictionary of headers to be added to all requests to remote servers. */
 @property (copy) NSDictionary* requestHeaders;
@@ -48,6 +40,26 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 
 /** Hook for transforming document body, e.g., encryption and decryption during replication */
 @property (strong, nonatomic) RevisionBodyTransformationBlock revisionBodyTransformationBlock;
+
+- (NSString*) remoteCheckpointDocIDForLocalUUID: (NSString*)localUUID;
+
+@end
+
+
+
+/** Protocol that replicator implementations must implement. */
+@protocol CBL_Replicator <NSObject>
+
+- (id<CBL_Replicator>) initWithDB: (CBLDatabase*)db
+                         settings: (CBL_ReplicatorSettings*)settings;
+
+@property (readonly, nonatomic) CBL_ReplicatorSettings* settings;
+
+@property (readonly, nonatomic) CBLDatabase* db;
+
+@property (readonly) CBLCookieStorage* cookieStorage;
+
+@property (readonly) NSString* remoteCheckpointDocID;
 
 /** Is the replicator running? (Observable) */
 @property (readonly, nonatomic) BOOL running;
@@ -73,10 +85,10 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 /** JSON-compatible dictionary of task info, as seen in _active_tasks REST API */
 @property (readonly) NSDictionary* activeTaskInfo;
 
-@property (readonly) SecCertificateRef serverCert;
-
 /** A unique-per-process string identifying this replicator instance. */
 @property (copy, nonatomic) NSString* sessionID;
+
+@property (readonly) SecCertificateRef serverCert;
 
 /** Starts the replicator.
     Replicators run asynchronously so nothing will happen until later.
@@ -95,7 +107,6 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 - (void) databaseClosing;
 
 @optional
-@property BOOL createTarget;
 @property (readonly) NSSet* pendingDocIDs;
 @end
 

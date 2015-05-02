@@ -81,7 +81,6 @@ _CBLVersion
 .objc_class_name_CBL_RevisionList
 .objc_class_name_CBJSONEncoder
 
-.objc_class_name_CBLAuthorizer
 .objc_class_name_CBLBasicAuthorizer
 .objc_class_name_CBLFacebookAuthorizer
 .objc_class_name_CBLOAuth1Authorizer

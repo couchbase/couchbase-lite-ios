@@ -15,7 +15,7 @@
 
 
 #import "CBLReplication+Transformation.h"
-#import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 
 
 @implementation CBLReplication (Transformation)

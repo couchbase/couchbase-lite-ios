@@ -748,12 +748,12 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 
 
 - (id<CBL_Replicator>) replicatorWithProperties: (NSDictionary*)properties
-                                            status: (CBLStatus*)outStatus
+                                         status: (CBLStatus*)outStatus
 {
     // An unfortunate limitation:
     Assert(_dispatchQueue==NULL || _dispatchQueue==dispatch_get_main_queue(),
            @"CBLReplicators need a thread not a dispatch queue");
-    
+
     // Extract the parameters from the JSON request body:
     // http://wiki.apache.org/couchdb/Replication
     CBLDatabase* db;
@@ -774,7 +774,16 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         return nil;
     }
 
-    BOOL continuous = [$castIf(NSNumber, properties[@"continuous"]) boolValue];
+    CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remote
+                                                                                 push: push];
+    settings.continuous = [$castIf(NSNumber, properties[@"continuous"]) boolValue];
+    settings.filterName = $castIf(NSString, properties[@"filter"]);
+    settings.filterParameters = $castIf(NSDictionary, properties[@"query_params"]);
+    settings.docIDs = $castIf(NSArray, properties[@"doc_ids"]);
+    settings.options = properties;
+    settings.requestHeaders = headers;
+    settings.authorizer = authorizer;
+    settings.createTarget = push && createTarget;
 
     if (!_replicatorClass) {
         _replicatorClass = NSClassFromString(_replicatorClassName);
@@ -785,24 +794,12 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
                _replicatorClassName);
     }
 
-    id<CBL_Replicator> repl = [[_replicatorClass alloc] initWithDB: db
-                                                            remote: remote
-                                                              push: push
-                                                        continuous: continuous];
+    id<CBL_Replicator> repl = [[_replicatorClass alloc] initWithDB: db settings: settings];
     if (!repl) {
         if (outStatus)
             *outStatus = kCBLStatusServerError;
         return nil;
     }
-
-    repl.filterName = $castIf(NSString, properties[@"filter"]);
-    repl.filterParameters = $castIf(NSDictionary, properties[@"query_params"]);
-    repl.docIDs = $castIf(NSArray, properties[@"doc_ids"]);
-    repl.options = properties;
-    repl.requestHeaders = headers;
-    repl.authorizer = authorizer;
-    if (push && [repl respondsToSelector: @selector(setCreateTarget:)])
-        repl.createTarget = createTarget;
 
     // If this is a duplicate, reuse an existing replicator:
     id<CBL_Replicator> existing = [db activeReplicatorLike: repl];

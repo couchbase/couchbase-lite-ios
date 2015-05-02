@@ -16,7 +16,7 @@
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase.h"
-#import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 #import "CBLDocument.h"
 #import "CBL_Revision.h"
 #import "CBL_Attachment.h"

@@ -17,7 +17,7 @@
 #import "CBLModelFactory.h"
 #import "CBLModelArray.h"
 #import "CBLDatabase+Attachments.h"
-#import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLBase64.h"
 

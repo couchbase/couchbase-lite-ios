@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDatabase;
+@class CBLDatabase, CBLDocument;
 @protocol CBLAuthenticator;
 
 #if __has_feature(nullability) // Xcode 6.3+

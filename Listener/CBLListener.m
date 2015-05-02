@@ -16,7 +16,7 @@
 #import "CBLListener.h"
 #import "CBLHTTPServer.h"
 #import "CBLHTTPConnection.h"
-#import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 #import "CBL_Server.h"
 #import "CBLMisc.h"
 #import "Logging.h"

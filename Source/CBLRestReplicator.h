@@ -15,19 +15,12 @@
 @interface CBLRestReplicator : NSObject <CBL_Replicator>
 {
     @protected
+    CBL_ReplicatorSettings* _settings;
     CBLDatabase* __weak _db;
-    NSURL* _remote;
-    BOOL _continuous;
-    NSString* _filterName;
-    NSDictionary* _filterParameters;
-    NSArray* _docIDs;
     NSString* _lastSequence;
     CBLBatcher* _batcher;
     id<CBLAuthorizer> _authorizer;
-    NSDictionary* _options;
-    NSDictionary* _requestHeaders;
     NSString* _serverType;
-    CBLCookieStorage* _cookieStorage;
 #if TARGET_OS_IPHONE
     NSUInteger /*UIBackgroundTaskIdentifier*/ _bgTask;
 #endif

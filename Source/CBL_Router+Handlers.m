@@ -398,7 +398,7 @@
     } else {
         // Start replication:
         [repl start];
-        if (repl.continuous || [$castIf(NSNumber, body[@"async"]) boolValue]) {
+        if (repl.settings.continuous || [$castIf(NSNumber, body[@"async"]) boolValue]) {
             _response.bodyObject = $dict({@"session_id", repl.sessionID});
             return kCBLStatusOK;
         } else {

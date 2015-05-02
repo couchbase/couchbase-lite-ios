@@ -16,6 +16,7 @@
 #import "CBLRestPusher.h"
 #import "CBLRestReplicator+Internal.h"
 #import "CBLDatabase.h"
+#import "CBLDatabase+Replication.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBL_Storage.h"
 #import "CBL_Revision.h"
@@ -51,19 +52,20 @@
 
 
 - (CBLFilterBlock) filter {
+    NSString* filterName = _settings.filterName;
     CBLFilterBlock filter = nil;
-    if (_filterName) {
+    NSArray* docIDs = _settings.docIDs;
+    if (filterName) {
         CBLStatus status;
-        filter = [_db compileFilterNamed: _filterName status: &status];
+        filter = [_db compileFilterNamed: filterName status: &status];
         if (!filter) {
-            Warn(@"%@: No filter '%@' (err %d)", self, _filterName, status);
+            Warn(@"%@: No filter '%@' (err %d)", self, filterName, status);
             if (!self.error) {
                 self.error = CBLStatusToNSError(status, nil);
             }
             [self stop]; // this is fatal; don't know what to push
         }
-    } else if (_docIDs) {
-        NSArray* docIDs = _docIDs;
+    } else if (docIDs) {
         filter = FILTERBLOCK({
             return [docIDs containsObject: revision.document.documentID];
         });
@@ -74,7 +76,7 @@
 
 // This is called before beginReplicating, if the target db might not exist
 - (void) maybeCreateRemoteDB {
-    if (!_createTarget)
+    if (!_settings.createTarget)
         return;
     LogTo(Sync, @"Remote db might not exist; creating it...");
     _creatingTarget = YES;
@@ -117,7 +119,7 @@
     CBL_RevisionList* revs = [db changesSinceSequence: [lastSequence longLongValue]
                                               options: &options
                                                filter: filter
-                                               params: _filterParameters
+                                               params: _settings.filterParameters
                                                status: &status];
     if (!revs)
         self.error = CBLStatusToNSError(status, nil);
@@ -148,7 +150,7 @@
     [_batcher flush];  // process up to the first 100 revs
     
     // Now listen for future changes (in continuous mode):
-    if (_continuous && !_observing) {
+    if (_settings.continuous && !_observing) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
                                                      name: CBL_DatabaseChangesNotification
@@ -221,10 +223,10 @@
     NSArray* changes = (n.userInfo)[@"changes"];
     for (CBLDatabaseChange* change in changes) {
         // Skip revisions that originally came from the database I'm syncing to:
-        if (![change.source isEqual: _remote]) {
+        if (![change.source isEqual: _settings.remote]) {
             CBL_Revision* rev = change.addedRevision;
             CBLFilterBlock filter = self.filter;
-            if (filter && ![db runFilter: filter params: _filterParameters onRevision: rev])
+            if (filter && ![db runFilter: filter params: _settings.filterParameters onRevision: rev])
                 continue;
             CBL_MutableRevision* nuRev = [rev mutableCopy];
             nuRev.body = nil; // save memory
@@ -373,7 +375,7 @@
                               if (status != kCBLStatusForbidden && status != kCBLStatusUnauthorized) {
                                   NSString* docID = item[@"id"];
                                   [failedIDs addObject: docID];
-                                  NSURL* url = docID ? [_remote URLByAppendingPathComponent: docID]
+                                  NSURL* url = docID ? [_settings.remote URLByAppendingPathComponent: docID]
                                                      : nil;
                                   error = CBLStatusToNSError(status, url);
                               }
@@ -483,8 +485,8 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
 
     NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeURLParam(rev.docID));
     __block CBLMultipartUploader* uploader = [[CBLMultipartUploader alloc]
-                                  initWithURL: CBLAppendToURL(_remote, path)
-                               requestHeaders: self.requestHeaders
+                                  initWithURL: CBLAppendToURL(_settings.remote, path)
+                               requestHeaders: _settings.requestHeaders
                               multipartWriter:^CBLMultipartWriter *{
                                   CBLMultipartWriter* writer = bodyStream;
                                   // Reset to nil so the writer will get regenerated if the block

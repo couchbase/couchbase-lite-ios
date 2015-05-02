@@ -22,6 +22,7 @@
 #import "CBLMisc.h"
 #import "CBJSONEncoder.h"
 #import "CBLSymmetricKey.h"
+#import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
 #import "ExceptionUtils.h"
 

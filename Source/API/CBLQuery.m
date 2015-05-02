@@ -20,6 +20,7 @@
 #import "CBLDatabase.h"
 #import "CBL_Server.h"
 #import "CBLMisc.h"
+#import "CBLInternal.h"
 #import "MYBlockUtils.h"
 
 

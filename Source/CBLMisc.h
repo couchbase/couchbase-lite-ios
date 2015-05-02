@@ -7,7 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBL_Revision.h"
+
+
+/** Database sequence ID */
+typedef SInt64 SequenceNumber;
 
 
 // In a method/function implementation (not declaration), declaring an object parameter as

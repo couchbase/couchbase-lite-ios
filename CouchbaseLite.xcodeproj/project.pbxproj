@@ -266,7 +266,6 @@
 		27538FA017F1DC98004C3BFD /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
 		27538FA317F1ECE8004C3BFD /* LoggingMode.c in Sources */ = {isa = PBXBuildFile; fileRef = 27538FA217F1ECE8004C3BFD /* LoggingMode.c */; };
 		275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29041649A12B00B0D8EE /* CBLAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5A1159383E9005B9234 /* CBLAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275A29051649A13900B0D8EE /* CBLReplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5CB159533A5005B9234 /* CBLReplication.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275D38D01AF3E1340013B9A9 /* DDData.m in Sources */ = {isa = PBXBuildFile; fileRef = 276F25FA18A3386100A70679 /* DDData.m */; };
@@ -306,6 +305,11 @@
 		275D394F1AF3E4490013B9A9 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 278097551A32817A00876DE6 /* MYAnonymousIdentity.m */; };
 		275D39501AF3E9590013B9A9 /* CBL_Replicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 276240B31AF2ADDD00FFF9DC /* CBL_Replicator.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275D39511AF3E9620013B9A9 /* CBL_Replicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 276240B31AF2ADDD00FFF9DC /* CBL_Replicator.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		275D39541AF4186E0013B9A9 /* noop.m in Sources */ = {isa = PBXBuildFile; fileRef = 27452C221AB20BD500327776 /* noop.m */; };
+		275D39691AF437700013B9A9 /* CBL_Replicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 275D39681AF437700013B9A9 /* CBL_Replicator.m */; };
+		275D396A1AF437700013B9A9 /* CBL_Replicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 275D39681AF437700013B9A9 /* CBL_Replicator.m */; };
+		275D396B1AF5337E0013B9A9 /* CBLMisc.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A073EA14C0BB6200F52FE7 /* CBLMisc.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		275D396C1AF5348B0013B9A9 /* CBL_BlobStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 27731EFD1493FA3100815D67 /* CBL_BlobStore.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		276240C21AF2C51100FFF9DC /* CBLCookieStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */; };
 		276240C61AF2C51100FFF9DC /* CBLRestPuller.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E2A1489581E00E0A926 /* CBLRestPuller.m */; };
 		276240C91AF2C51100FFF9DC /* CBLRestPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3D148D7F0000E0A926 /* CBLRestPusher.m */; };
@@ -350,7 +354,6 @@
 		276241441AF2C51100FFF9DC /* CBLQuery+FullTextSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF39917F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		276241451AF2C51100FFF9DC /* CBLQuery+Geo.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF39B17F4DEDD00F7B7F7 /* CBLQuery+Geo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		276241461AF2C51100FFF9DC /* CBLJSONValidator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27486F231A606C76008D94F0 /* CBLJSONValidator.h */; };
-		276241471AF2C51100FFF9DC /* CBL_BlobStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 27731EFD1493FA3100815D67 /* CBL_BlobStore.h */; };
 		276241481AF2C51100FFF9DC /* CBLRemoteRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 279906E1149A65B7003D4338 /* CBLRemoteRequest.h */; };
 		276241491AF2C51100FFF9DC /* CBLBatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 279906EC149ABFC1003D4338 /* CBLBatcher.h */; };
 		2762414A1AF2C51100FFF9DC /* yajl_parser.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5C8B1821A8370088881E /* yajl_parser.h */; };
@@ -410,7 +413,6 @@
 		276241801AF2C51100FFF9DC /* CBLBulkDownloader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27BDA81C181973EF00F27A11 /* CBLBulkDownloader.h */; };
 		276241811AF2C51100FFF9DC /* DDLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315B714ACF0330065964D /* DDLog.h */; };
 		276241821AF2C51100FFF9DC /* CBLJSONValidator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */; };
-		276241831AF2C51100FFF9DC /* CBLMisc.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A073EA14C0BB6200F52FE7 /* CBLMisc.h */; };
 		276241841AF2C51100FFF9DC /* yajl_parse.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5DC41821A8B60088881E /* yajl_parse.h */; };
 		276241851AF2C51100FFF9DC /* MYBlockUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 279CE3B614D4A885009F3FA6 /* MYBlockUtils.h */; };
 		276241861AF2C51100FFF9DC /* CBLSymmetricKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 271297421A8D597B00F6C5CE /* CBLSymmetricKey.h */; };
@@ -455,7 +457,6 @@
 		276241AD1AF2C51100FFF9DC /* MYReadWriteLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DF57AF19C782DE00FFB075 /* MYReadWriteLock.h */; };
 		276241AE1AF2C51100FFF9DC /* CBLSocketChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 270D6FBF164484190081812D /* CBLSocketChangeTracker.h */; };
 		276241AF1AF2C51100FFF9DC /* NSURL+Base.h in Headers */ = {isa = PBXBuildFile; fileRef = 27208F8C184D1D83006ADBEF /* NSURL+Base.h */; };
-		276241B01AF2C51100FFF9DC /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		276241B11AF2C51100FFF9DC /* CBLPersonaAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A58F16A0C3A6006FF199 /* CBLPersonaAuthorizer.h */; };
 		276241B21AF2C51100FFF9DC /* CBLJSONReader.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5DCC1821AE990088881E /* CBLJSONReader.h */; };
 		276241B31AF2C51100FFF9DC /* WebSocketHTTPLogic.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401C41860D0850080E082 /* WebSocketHTTPLogic.h */; };
@@ -495,7 +496,7 @@
 		27726AB11889835F00AE6931 /* CBLJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 27726AAB1889835F00AE6931 /* CBLJSON.m */; };
 		27726AB2188983AE00AE6931 /* CBLJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 27726AAA1889835F00AE6931 /* CBLJSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27726AB3188983B800AE6931 /* CBLGeometry.h in Headers */ = {isa = PBXBuildFile; fileRef = 27726AA81889835F00AE6931 /* CBLGeometry.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		27731EFF1493FA3100815D67 /* CBL_BlobStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 27731EFD1493FA3100815D67 /* CBL_BlobStore.h */; };
+		27731EFF1493FA3100815D67 /* CBL_BlobStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 27731EFD1493FA3100815D67 /* CBL_BlobStore.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		27731F001493FA3100815D67 /* CBL_BlobStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 27731EFE1493FA3100815D67 /* CBL_BlobStore.m */; };
 		27731F061495335B00815D67 /* CBL_BlobStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 27731EFE1493FA3100815D67 /* CBL_BlobStore.m */; };
 		27731F1E1495CFEF00815D67 /* libCouchbaseLite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7A91492B83B00A817AD /* libCouchbaseLite.a */; };
@@ -566,7 +567,7 @@
 		279EB2CE149140DE00E74185 /* CBLView+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* CBLView+Internal.h */; };
 		279EB2D11491442500E74185 /* CBLInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D01491442500E74185 /* CBLInternal.h */; };
 		279EB2DB1491C34300E74185 /* CBLCollateJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2D91491C34300E74185 /* CBLCollateJSON.h */; };
-		27A073EC14C0BB6200F52FE7 /* CBLMisc.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A073EA14C0BB6200F52FE7 /* CBLMisc.h */; };
+		27A073EC14C0BB6200F52FE7 /* CBLMisc.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A073EA14C0BB6200F52FE7 /* CBLMisc.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		27A073ED14C0BB6200F52FE7 /* CBLMisc.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A073EB14C0BB6200F52FE7 /* CBLMisc.m */; };
 		27A073EE14C0BB6200F52FE7 /* CBLMisc.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A073EB14C0BB6200F52FE7 /* CBLMisc.m */; };
 		27A720A0152B959100C0A0E8 /* CBL_Attachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A7209E152B959100C0A0E8 /* CBL_Attachment.h */; };
@@ -682,7 +683,6 @@
 		27CB11891AF2E8E4008C8CF2 /* CBLModelFactory.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA435515918C8D00F9E7B5 /* CBLModelFactory.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27CB118A1AF2E8E4008C8CF2 /* CBLUITableSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA4317158FD9B400F9E7B5 /* CBLUITableSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27CB118B1AF2E8E4008C8CF2 /* MYDynamicObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434E15918C0200F9E7B5 /* MYDynamicObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		27CB118C1AF2E8E4008C8CF2 /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		27CB11A71AF2EA22008C8CF2 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27452BB81AB1180800327776 /* CouchbaseLite.framework */; };
 		27CB11AA1AF2EADD008C8CF2 /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27CB11AB1AF2EADD008C8CF2 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -1505,6 +1505,7 @@
 		27538FA117F1ECE8004C3BFD /* LoggingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoggingMode.h; sourceTree = "<group>"; };
 		27538FA217F1ECE8004C3BFD /* LoggingMode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = LoggingMode.c; sourceTree = "<group>"; };
 		275D393C1AF3E1340013B9A9 /* libCouchbaseLiteReplicator.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCouchbaseLiteReplicator.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		275D39681AF437700013B9A9 /* CBL_Replicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Replicator.m; sourceTree = "<group>"; };
 		276240AC1AF2AB4B00FFF9DC /* CBLRestReplicator+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLRestReplicator+Internal.h"; sourceTree = "<group>"; };
 		276240B31AF2ADDD00FFF9DC /* CBL_Replicator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBL_Replicator.h; sourceTree = "<group>"; };
 		276241BC1AF2C51100FFF9DC /* CouchbaseLiteReplicator.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLiteReplicator.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2518,6 +2519,7 @@
 			isa = PBXGroup;
 			children = (
 				276240B31AF2ADDD00FFF9DC /* CBL_Replicator.h */,
+				275D39681AF437700013B9A9 /* CBL_Replicator.m */,
 				27821BB5148E7D6F0099B373 /* CBLRestReplicator.h */,
 				276240AC1AF2AB4B00FFF9DC /* CBLRestReplicator+Internal.h */,
 				27821BB6148E7D6F0099B373 /* CBLRestReplicator.m */,
@@ -2532,9 +2534,9 @@
 				279CE40914D8AA23009F3FA6 /* CBLMultipartDownloader.m */,
 				27C5305214DF3A050078F886 /* CBLMultipartUploader.h */,
 				27C5305314DF3A050078F886 /* CBLMultipartUploader.m */,
+				27CB11401AF2CA8C008C8CF2 /* Replicator.exp */,
 				27B0B78F149290AB00A817AD /* ChangeTracker */,
 				27E2E62E159A26A1005B9234 /* Networking */,
-				27CB11401AF2CA8C008C8CF2 /* Replicator.exp */,
 			);
 			name = Replicator;
 			path = Source;
@@ -3070,7 +3072,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				27452BD41AB1187E00327776 /* CouchbaseLite.h in Headers */,
+				275D396C1AF5348B0013B9A9 /* CBL_BlobStore.h in Headers */,
 				27452BD51AB1187E00327776 /* CBLManager.h in Headers */,
+				275D396B1AF5337E0013B9A9 /* CBLMisc.h in Headers */,
 				27452BD61AB1187E00327776 /* CBLDatabase.h in Headers */,
 				27452BD71AB1187E00327776 /* CBLDatabaseChange.h in Headers */,
 				27452BD81AB1187E00327776 /* CBLDocument.h in Headers */,
@@ -3127,7 +3131,6 @@
 				276241441AF2C51100FFF9DC /* CBLQuery+FullTextSearch.h in Headers */,
 				276241451AF2C51100FFF9DC /* CBLQuery+Geo.h in Headers */,
 				276241461AF2C51100FFF9DC /* CBLJSONValidator.h in Headers */,
-				276241471AF2C51100FFF9DC /* CBL_BlobStore.h in Headers */,
 				276241481AF2C51100FFF9DC /* CBLRemoteRequest.h in Headers */,
 				276241491AF2C51100FFF9DC /* CBLBatcher.h in Headers */,
 				2762414A1AF2C51100FFF9DC /* yajl_parser.h in Headers */,
@@ -3187,7 +3190,6 @@
 				276241801AF2C51100FFF9DC /* CBLBulkDownloader.h in Headers */,
 				276241811AF2C51100FFF9DC /* DDLog.h in Headers */,
 				276241821AF2C51100FFF9DC /* CBLJSONValidator.h in Headers */,
-				276241831AF2C51100FFF9DC /* CBLMisc.h in Headers */,
 				276241841AF2C51100FFF9DC /* yajl_parse.h in Headers */,
 				276241851AF2C51100FFF9DC /* MYBlockUtils.h in Headers */,
 				276241861AF2C51100FFF9DC /* CBLSymmetricKey.h in Headers */,
@@ -3232,7 +3234,6 @@
 				276241AD1AF2C51100FFF9DC /* MYReadWriteLock.h in Headers */,
 				276241AE1AF2C51100FFF9DC /* CBLSocketChangeTracker.h in Headers */,
 				276241AF1AF2C51100FFF9DC /* NSURL+Base.h in Headers */,
-				276241B01AF2C51100FFF9DC /* CouchbaseLitePrivate.h in Headers */,
 				276241B11AF2C51100FFF9DC /* CBLPersonaAuthorizer.h in Headers */,
 				276241B21AF2C51100FFF9DC /* CBLJSONReader.h in Headers */,
 				276241B31AF2C51100FFF9DC /* WebSocketHTTPLogic.h in Headers */,
@@ -3262,7 +3263,6 @@
 				27DA43691592387400F9E7B5 /* CBLModelFactory.h in Headers */,
 				275A29051649A13900B0D8EE /* CBLReplication.h in Headers */,
 				27F5B18716519F2400126D0D /* CBLUITableSource.h in Headers */,
-				275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */,
 				27B945AA1768E63200B2DF2D /* CBLModelArray.h in Headers */,
 				27F5B18916519F8F00126D0D /* MYDynamicObject.h in Headers */,
 				27726AB2188983AE00AE6931 /* CBLJSON.h in Headers */,
@@ -3314,7 +3314,6 @@
 				27CB11891AF2E8E4008C8CF2 /* CBLModelFactory.h in Headers */,
 				27CB118A1AF2E8E4008C8CF2 /* CBLUITableSource.h in Headers */,
 				27CB118B1AF2E8E4008C8CF2 /* MYDynamicObject.h in Headers */,
-				27CB118C1AF2E8E4008C8CF2 /* CouchbaseLitePrivate.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4209,6 +4208,7 @@
 				27A9D6801A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm in Sources */,
 				27846FBA15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27846FBD15D475DF0030122F /* MYStreamUtils.m in Sources */,
+				275D39691AF437700013B9A9 /* CBL_Replicator.m in Sources */,
 				275315FF14ACF9330065964D /* ExceptionUtils.m in Sources */,
 				2753160014ACF9330065964D /* Logging.m in Sources */,
 				2753160114ACF9330065964D /* CollectionUtils.m in Sources */,
@@ -4299,6 +4299,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				275D39541AF4186E0013B9A9 /* noop.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4513,6 +4514,7 @@
 				27F12890156ABE24008465C2 /* OAMutableURLRequest.m in Sources */,
 				27208F90184D1D83006ADBEF /* NSURL+Base.m in Sources */,
 				27F12893156ABE24008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
+				275D396A1AF437700013B9A9 /* CBL_Replicator.m in Sources */,
 				2726D14718FDF44000AACC2A /* CBLSpecialKey.m in Sources */,
 				27F12899156ABE24008465C2 /* OARequestParameter.m in Sources */,
 				27F128A1156ABE24008465C2 /* OAToken.m in Sources */,

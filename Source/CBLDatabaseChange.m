@@ -16,6 +16,7 @@
 #import "CBLDatabaseChange.h"
 #import "CBL_Revision.h"
 #import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 
 
 @implementation CBLDatabaseChange

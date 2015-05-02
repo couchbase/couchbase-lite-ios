@@ -12,11 +12,6 @@
 
 
 @interface CBLRestReplicator ()
-- (instancetype) initWithDB: (CBLDatabase*)db
-                     remote: (NSURL*)remote
-                       push: (BOOL)push
-                 continuous: (BOOL)continuous;
-// protected:
 @property (copy) NSString* lastSequence;
 @property (readwrite, nonatomic) NSUInteger changesProcessed, changesTotal;
 - (void) maybeCreateRemoteDB;

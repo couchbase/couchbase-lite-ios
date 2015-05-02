@@ -9,6 +9,7 @@
 #import "CBLTestCase.h"
 #import <CommonCrypto/CommonCryptor.h>
 #import "CBLCookieStorage.h"
+#import "CBL_Body.h"
 
 
 // These dbs will get deleted and overwritten during tests:

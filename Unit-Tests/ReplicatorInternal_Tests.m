@@ -183,9 +183,9 @@
     }];
 
     // Start a named document pull replication.
-    CBLRestReplicator* repl = [[CBLRestReplicator alloc] initWithDB: db remote: remote
-                                                         push: NO continuous: NO];
-    repl.authorizer = self.authorizer;
+    CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remote push: NO];
+    settings.authorizer = self.authorizer;
+    CBLRestReplicator* repl = [[CBLRestReplicator alloc] initWithDB: db settings: settings];
     [repl start];
 
     // Let the replicator run.
@@ -553,13 +553,12 @@
                  docIDs: (NSArray*)docIDs
             expectError: (NSError*) expectError
 {
-    CBLRestReplicator* repl = [[CBLRestReplicator alloc] initWithDB: db remote: remote
-                                                        push: push continuous: NO];
-    if (push)
-        ((CBLRestPusher*)repl).createTarget = YES;
-    repl.filterName = filter;
-    repl.docIDs = docIDs;
-    repl.authorizer = self.authorizer;
+    CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remote push: push];
+    settings.createTarget = push;
+    settings.filterName = filter;
+    settings.docIDs = docIDs;
+    settings.authorizer = self.authorizer;
+    CBLRestReplicator* repl = [[CBLRestReplicator alloc] initWithDB: db settings: settings];
     [repl start];
     
     Assert(repl.running);
@@ -594,13 +593,13 @@
                           options: (NSDictionary*)options
                       expectError: (NSError*) expectError
 {
-    CBLRestReplicator* repl = [[CBLRestReplicator alloc] initWithDB: db remote: remote
-                                                         push: push continuous: YES];
-    if (push)
-        ((CBLRestPusher*)repl).createTarget = YES;
-    repl.filterName = filter;
-    repl.authorizer = self.authorizer;
-    repl.options = options;
+    CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remote push: push];
+    settings.continuous = YES;
+    settings.createTarget = push;
+    settings.authorizer = self.authorizer;
+    settings.filterName = filter;
+    settings.options = options;
+    CBLRestReplicator* repl = [[CBLRestReplicator alloc] initWithDB: db settings: settings];
     [repl start];
 
     // Start the replicator and wait for it to go active, then inactive:

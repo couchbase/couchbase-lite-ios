@@ -94,8 +94,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 - (void) startChangeTracker {
     Assert(!_changeTracker);
     NSTimeInterval pollInterval = 0.0;
-    if (_continuous) {
-        NSNumber* pollObj = $castIf(NSNumber, _options[kCBLReplicatorOption_PollInterval]);
+    if (_settings.continuous) {
+        NSNumber* pollObj = $castIf(NSNumber, _settings.options[kCBLReplicatorOption_PollInterval]);
         if (pollObj) {
             pollInterval = pollObj.doubleValue / 1000.0;
             if (pollInterval < 30.0) {
@@ -107,31 +107,31 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     }
 
     CBLChangeTrackerMode mode = kOneShot;
-    if (_continuous && pollInterval == 0.0 && self.canUseWebSockets)
+    if (_settings.continuous && pollInterval == 0.0 && self.canUseWebSockets)
         mode = kWebSocket;
     LogTo(SyncVerbose, @"%@ starting ChangeTracker: mode=%d, since=%@", self, mode, _lastSequence);
-    _changeTracker = [[CBLChangeTracker alloc] initWithDatabaseURL: _remote
+    _changeTracker = [[CBLChangeTracker alloc] initWithDatabaseURL: _settings.remote
                                                               mode: mode
                                                          conflicts: YES
                                                       lastSequence: _lastSequence
                                                             client: self];
     // Limit the number of changes to return, so we can parse the feed in parts:
-    _changeTracker.continuous = _continuous;
-    _changeTracker.filterName = _filterName;
-    _changeTracker.filterParameters = _filterParameters;
-    _changeTracker.docIDs = _docIDs;
+    _changeTracker.continuous = _settings.continuous;
+    _changeTracker.filterName = _settings.filterName;
+    _changeTracker.filterParameters = _settings.filterParameters;
+    _changeTracker.docIDs = _settings.docIDs;
     _changeTracker.authorizer = _authorizer;
-    _changeTracker.cookieStorage = _cookieStorage;
+    _changeTracker.cookieStorage = self.cookieStorage;
     _changeTracker.usePOST = [self serverIsSyncGatewayVersion: @"0.93"];
 
-    unsigned heartbeat = $castIf(NSNumber, _options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;
+    unsigned heartbeat = $castIf(NSNumber, _settings.options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;
     if (heartbeat >= 15000)
         _changeTracker.heartbeat = heartbeat / 1000.0;
     if (pollInterval > 0.0)
         _changeTracker.pollInterval = pollInterval;
 
     NSMutableDictionary* headers = $mdict({@"User-Agent", [CBLRemoteRequest userAgentHeader]});
-    [headers addEntriesFromDictionary: _requestHeaders];
+    [headers addEntriesFromDictionary: _settings.requestHeaders];
     _changeTracker.requestHeaders = headers;
     
     [_changeTracker start];
@@ -141,11 +141,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 
 - (BOOL) canUseWebSockets {
-    id option = _options[kCBLReplicatorOption_UseWebSocket];
+    id option = _settings.options[kCBLReplicatorOption_UseWebSocket];
     if (option)
         return [option boolValue];
     return [self serverIsSyncGatewayVersion: @"0.91"]
-        && self.remote.my_proxySettings == nil;    // WebSocket class doesn't support proxies yet
+        && _settings.remote.my_proxySettings == nil;    // WebSocket class doesn't support proxies yet
 }
 
 
@@ -424,9 +424,9 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // results in compiler error (could be undefined variable)
     __weak CBLRestPuller *weakSelf = self;
     __block CBLMultipartDownloader *dl;
-    dl = [[CBLMultipartDownloader alloc] initWithURL: CBLAppendToURL(_remote, path)
+    dl = [[CBLMultipartDownloader alloc] initWithURL: CBLAppendToURL(_settings.remote, path)
                                            database: db
-                                     requestHeaders: self.requestHeaders
+                                     requestHeaders: _settings.requestHeaders
                                        onCompletion:
         ^(CBLMultipartDownloader* result, NSError *error) {
             __strong CBLRestPuller *strongSelf = weakSelf;
@@ -473,9 +473,9 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     ++_httpConnectionCount;
     __weak CBLRestPuller *weakSelf = self;
     __block CBLBulkDownloader *dl;
-    dl = [[CBLBulkDownloader alloc] initWithDbURL: _remote
+    dl = [[CBLBulkDownloader alloc] initWithDbURL: _settings.remote
                                          database: _db
-                                   requestHeaders: self.requestHeaders
+                                   requestHeaders: _settings.requestHeaders
                                         revisions: bulkRevs
                                        onDocument:
           ^(NSDictionary* props) {
@@ -617,7 +617,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // This invokes the tranformation block if one is installed and queues the resulting CBL_Revision
 - (void) queueDownloadedRevision: (CBL_Revision*)rev {
-    if (self.revisionBodyTransformationBlock) {
+    if (_settings.revisionBodyTransformationBlock) {
         // Add 'file' properties to attachments pointing to their bodies:
         [rev[@"_attachments"] enumerateKeysAndObjectsUsingBlock:^(NSString* name,
                                                                   NSMutableDictionary* attachment,
@@ -674,7 +674,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                       self, rev.docID, [history my_compactDescription]);
 
                 // Insert the revision:
-                int status = [_db forceInsert: rev revisionHistory: history source: _remote];
+                int status = [_db forceInsert: rev revisionHistory: history source: _settings.remote];
                 if (CBLStatusIsError(status)) {
                     if (status == kCBLStatusForbidden) {
                         // Considered a success, since the doc was delivered to the app.
