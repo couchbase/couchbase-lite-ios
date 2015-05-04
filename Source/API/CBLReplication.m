@@ -48,7 +48,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     NSSet* _pendingDocIDs;
     bool _started;
     CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
-    NSMutableArray* _pendingCookies;        
+    NSMutableArray* _bg_pendingCookies;
 }
 
 
@@ -212,24 +212,30 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         return;
     }
 
-    if (_bg_replicator)
-        [_bg_replicator.cookieStorage setCookie: cookie];
-    else {
-        if (!_pendingCookies)
-            _pendingCookies = [NSMutableArray array];
-        [_pendingCookies addObject: cookie];
-    }
+    [self tellReplicatorAndWait:^id(CBL_Replicator * bgReplicator) {
+        if (bgReplicator)
+            [bgReplicator.cookieStorage setCookie: cookie];
+        else {
+            if (!_bg_pendingCookies)
+                _bg_pendingCookies = [NSMutableArray array];
+            [_bg_pendingCookies addObject: cookie];
+        }
+        return @(YES);
+    }];
 }
 
 
 -(void) deleteCookieNamed: (NSString*)name {
-    if (_bg_replicator)
-        [_bg_replicator.cookieStorage deleteCookiesNamed: name];
-    else {
-        if (!_pendingCookies)
-            _pendingCookies = [NSMutableArray array];
-        [_pendingCookies addObject: name];
-    }
+    [self tellReplicatorAndWait:^id(CBL_Replicator * bgReplicator) {
+        if (_bg_replicator)
+            [_bg_replicator.cookieStorage deleteCookiesNamed: name];
+        else {
+            if (!_bg_pendingCookies)
+                _bg_pendingCookies = [NSMutableArray array];
+            [_bg_pendingCookies addObject: name];
+        }
+        return @(YES);
+    }];
 }
 
 
@@ -460,14 +466,14 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     if (auth)
         repl.authorizer = auth;
 
-    if ([_pendingCookies count] > 0) {
-        for (id cookie in _pendingCookies) {
+    if ([_bg_pendingCookies count] > 0) {
+        for (id cookie in _bg_pendingCookies) {
             if ([cookie isKindOfClass: [NSHTTPCookie class]])
                 [repl.cookieStorage setCookie: cookie];
             else if ([cookie isKindOfClass: [NSString class]])
                 [repl.cookieStorage deleteCookiesNamed: cookie];
         }
-        _pendingCookies = nil;
+        _bg_pendingCookies = nil;
     }
 
     CBLPropertiesTransformationBlock xformer = self.propertiesTransformationBlock;
