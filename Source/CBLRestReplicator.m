@@ -38,7 +38,6 @@
 
 #define kRetryDelay 60.0
 
-#define kDefaultRequestTimeout 60.0
 #define kCheckRequestTimeout 10.0
 
 
@@ -52,7 +51,7 @@
 
 
 @interface CBLRestReplicator () <CBLRemoteRequestDelegate>
-@property (readwrite, nonatomic) BOOL running, active;
+@property (readwrite) CBL_ReplicatorStatus status;
 @property (readwrite, copy) NSDictionary* remoteCheckpoint;
 - (void) updateActive;
 - (void) fetchRemoteCheckpointDoc;
@@ -62,7 +61,6 @@
 
 @implementation CBLRestReplicator
 {
-    BOOL _running, _online, _active;
     BOOL _lastSequenceChanged;
     NSString* _sessionID;
     unsigned _revisionsFailed;
@@ -78,21 +76,12 @@
     CBLReachability* _host;
     CBLRemoteRequest* _checkRequest;
     BOOL _suspended;
-    NSData* _pinnedCertData;
 }
 
 @synthesize db=_db, settings=_settings, cookieStorage=_cookieStorage, serverCert=_serverCert;
-
-
-+ (NSString *)progressChangedNotification
-{
-    return CBL_ReplicatorProgressChangedNotification;
-}
-
-+ (NSString *)stoppedNotification
-{
-    return CBL_ReplicatorStoppedNotification;
-}
+#if DEBUG
+@synthesize running=_running, active=_active;
+#endif
 
 
 - (id<CBL_Replicator>) initWithDB: (CBLDatabase*)db
@@ -101,7 +90,7 @@
     NSParameterAssert(db);
     NSParameterAssert(settings);
     
-    // CBL_Replicator is an abstract class; instantiating one actually instantiates a subclass.
+    // CBLRestReplicator is an abstract class; instantiating one actually instantiates a subclass.
     if ([self class] == [CBLRestReplicator class]) {
         Class klass = settings.isPush ? [CBLRestPusher class] : [CBLRestPuller class];
         return [[klass alloc] initWithDB: db settings: settings];
@@ -165,8 +154,7 @@
 }
 
 
-@synthesize running=_running, online=_online, active=_active;
-@synthesize error=_error, sessionID=_sessionID;
+@synthesize status=_status, error=_error, sessionID=_sessionID;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpoint=_remoteCheckpoint;
 
@@ -207,48 +195,10 @@
 }
 
 
-- (NSDictionary*) activeTaskInfo {
-    // For schema, see http://wiki.apache.org/couchdb/HttpGetActiveTasks
-    NSString* source = _settings.remote.absoluteString;
-    NSString* target = _db.name;
-    if (_settings.isPush) {
-        NSString* temp = source;
-        source = target;
-        target = temp;
-    }
-    NSString* status;
-    id progress = nil;
-    if (!self.running) {
-        status = @"Stopped";
-    } else if (!self.online) {
-        status = @"Offline";        // nonstandard
-    } else if (!self.active) {
-        status = @"Idle";           // nonstandard
-    } else {
-        NSUInteger processed = self.changesProcessed;
-        NSUInteger total = self.changesTotal;
-        status = $sprintf(@"Processed %u / %u changes",
-                          (unsigned)processed, (unsigned)total);
-        progress = (total>0) ? @(lroundf(100*(processed / (float)total))) : nil;
-    }
-    NSArray* error = nil;
-    NSError* errorObj = self.error;
-    if (errorObj)
-        error = @[@(errorObj.code), errorObj.localizedDescription];
-
-    NSArray* activeRequests = [_remoteRequests my_map: ^id(CBLRemoteRequest* request) {
+- (NSArray*) activeTasksInfo {
+    return [_remoteRequests my_map: ^id(CBLRemoteRequest* request) {
         return request.statusInfo;
     }];
-    
-    return $dict({@"type", @"Replication"},
-                 {@"task", self.sessionID},
-                 {@"source", source},
-                 {@"target", target},
-                 {@"continuous", (_settings.continuous ? $true : nil)},
-                 {@"status", status},
-                 {@"progress", progress},
-                 {@"x_active_requests", activeRequests},
-                 {@"error", error});
 }
 
 
@@ -306,17 +256,6 @@
         [db setLastSequence: nil withCheckpointID: self.remoteCheckpointDocID];
     }
 
-    id digest = _settings.options[kCBLReplicatorOption_PinnedCert];
-    if (digest) {
-        if ([digest isKindOfClass: [NSData class]])
-            _pinnedCertData = digest;
-        else if ([digest isKindOfClass: [NSString class]])
-            _pinnedCertData = CBLDataFromHex(digest);
-        if (_pinnedCertData.length != 20)
-            Warn(@"Invalid replicator %@ property value \"%@\"",
-                 kCBLReplicatorOption_PinnedCert, digest);
-    }
-
     // Note: This is actually a ref cycle, because the block has a (retained) reference to 'self',
     // and _batcher retains the block, and of course I retain _batcher.
     // The cycle is broken in -stopped when I release _batcher.
@@ -338,14 +277,15 @@
             LogTo(SyncVerbose, @"%@: Found credential, using %@", self, _authorizer);
     }
 
-    self.running = YES;
+    _running = YES;
+    _online = NO;
+    [self updateStatus];
     _startTime = CFAbsoluteTimeGetCurrent();
     
 #if TARGET_OS_IPHONE
     [self setupBackgrounding];
 #endif
     
-    _online = NO;
     if (!_settings.continuous || [NSClassFromString(@"CBL_URLProtocol") handlesURL: _settings.remote]) {
         [self goOnline];    // non-continuous or local-to-local replication
     } else {
@@ -358,7 +298,7 @@
             CBLRestReplicator *strongSelf = weakSelf;
             [strongSelf reachabilityChanged:strongSelf->_host];
         };
-        [_host start];
+        [_host startOnRunLoop: CFRunLoopGetCurrent()];
         [self reachabilityChanged: _host];
     }
 }
@@ -391,7 +331,8 @@
 #if TARGET_OS_IPHONE
     [self endBackgrounding];
 #endif
-    self.running = NO;
+    _running = NO;
+    [self updateStatus];
     [[NSNotificationCenter defaultCenter]
         postNotificationName: CBL_ReplicatorStoppedNotification object: self];
     [self saveLastSequence];
@@ -434,6 +375,7 @@
         return NO;
     LogTo(Sync, @"%@: Going offline", self);
     _online = NO;
+    [self updateStatus];
     [self stopRemoteRequests];
     [self postProgressChanged];
     return YES;
@@ -445,6 +387,7 @@
         return NO;
     LogTo(Sync, @"%@: Going online", self);
     _online = YES;
+    [self updateStatus];
 
     if (_running) {
         _lastSequence = nil;
@@ -463,43 +406,14 @@
 
     [self stopCheckRequest];
 
-    BOOL reachable = host.reachable && !_suspended;
-    if (reachable) {
-        // Parse "network" option. Could be nil or "WiFi" or "!Wifi" or "cell" or "!cell".
-        NSString* network = [$castIf(NSString, _settings.options[kCBLReplicatorOption_Network])
-                             lowercaseString];
-        if (network) {
-            BOOL wifi = host.reachableByWiFi;
-            if ($equal(network, @"wifi") || $equal(network, @"!cell"))
-                reachable = wifi;
-            else if ($equal(network, @"cell") || $equal(network, @"!wifi"))
-                reachable = !wifi;
-            else
-                Warn(@"Unrecognized replication option \"network\"=\"%@\"", network);
-        }
-    }
-
-    if (reachable)
+    if (!_suspended && [_settings isHostReachable: host]) {
         [self goOnline];
-    else if (host.reachabilityKnown || _suspended) {
-        if ([self trustReachability])
+    } else if (host.reachabilityKnown || _suspended) {
+        if (_settings.trustReachability)
             [self goOffline];
         else
             [self checkIfOffline];
     }
-}
-
-
-- (BOOL) trustReachability {
-    // Setting kCBLReplicatorOption_Network results to always trust
-    // reachability result.
-    if (_settings.options[kCBLReplicatorOption_Network])
-        return YES;
-
-    id option = _settings.options[kCBLReplicatorOption_TrustReachability];
-    if (option)
-        return [option boolValue];
-    return YES;
 }
 
 
@@ -558,7 +472,8 @@
     BOOL active = _batcher.count > 0 || _asyncTaskCount > 0;
     if (active != _active) {
         LogTo(Sync, @"%@ Progress: set active = %d", self, active);
-        self.active = active;
+        _active = active;
+        [self updateStatus];
         [self postProgressChanged];
         if (!_active) {
             // Replicator is now idle. If it's not continuous, stop.
@@ -578,6 +493,21 @@
             }
         }
     }
+}
+
+
+- (void) updateStatus {
+    CBL_ReplicatorStatus status;
+    if (!_running)
+        status = kCBLReplicatorStopped;
+    else if (_active)
+        status = kCBLReplicatorActive;
+    else if (_online)
+        status = kCBLReplicatorIdle;
+    else
+        status = kCBLReplicatorOffline;
+    if (status != _status)
+        self.status = status;
 }
 
 
@@ -620,38 +550,6 @@
     ++_revisionsFailed;
 }
 
-
-- (CBL_Revision *) transformRevision:(CBL_Revision *)rev {
-    if(_settings.revisionBodyTransformationBlock) {
-        @try {
-            CBL_Revision* xformed = _settings.revisionBodyTransformationBlock(rev);
-            if (xformed == nil)
-                return nil;
-            if (xformed != rev) {
-                AssertEqual(xformed.docID, rev.docID);
-                AssertEqual(xformed.revID, rev.revID);
-                AssertEqual(xformed[@"_revisions"], rev[@"_revisions"]);
-                if (xformed[@"_attachments"]) {
-                    // Insert 'revpos' properties into any attachments added by the callback:
-                    CBL_MutableRevision* mx = xformed.mutableCopy;
-                    xformed = mx;
-                    [mx mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *info) {
-                        if (info[@"revpos"])
-                            return info;
-                        Assert(info[@"data"], @"Transformer added attachment without adding data");
-                        NSMutableDictionary* nuInfo = info.mutableCopy;
-                        nuInfo[@"revpos"] = @(rev.generation);
-                        return nuInfo;
-                    }];
-                }
-                rev = xformed;
-            }
-        }@catch (NSException* x) {
-            Warn(@"%@: Exception transforming a revision of doc '%@': %@", self, rev.docID, x);
-        }
-    }
-    return rev;
-}
 
 // Before doing anything else, determine whether we have an active login session.
 - (void) checkSession {
@@ -725,15 +623,6 @@
 #pragma mark - HTTP REQUESTS:
 
 
-- (NSTimeInterval) requestTimeout {
-    id timeoutObj = _settings.options[kCBLReplicatorOption_Timeout];
-    if (!timeoutObj)
-        return kDefaultRequestTimeout;
-    NSTimeInterval timeout = [timeoutObj doubleValue] / 1000.0;
-    return timeout > 0.0 ? timeout : kDefaultRequestTimeout;
-}
-
-
 - (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion {
     return [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
         && [[_serverType substringFromIndex: 23] compare: minVersion] >= 0;
@@ -788,7 +677,7 @@
 
 - (void) addRemoteRequest: (CBLRemoteRequest*)request {
     request.delegate = self;
-    request.timeoutInterval = self.requestTimeout;
+    request.timeoutInterval = _settings.requestTimeout;
     request.authorizer = _authorizer;
     request.cookieStorage = _cookieStorage;
 
@@ -820,29 +709,10 @@
 - (BOOL) checkSSLServerTrust: (SecTrustRef)trust
                      forHost: (NSString*)host port: (UInt16)port
 {
-    SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
-    if (_pinnedCertData) {
-        if (_pinnedCertData.length == CC_SHA1_DIGEST_LENGTH) {
-            NSData* certDigest = MYGetCertificateDigest(cert);
-            if (![certDigest isEqual: _pinnedCertData]) {
-                Warn(@"%@: SSL cert digest %@ doesn't match pinnedCert %@",
-                     self, certDigest, _pinnedCertData);
-                return NO;
-            }
-        } else {
-            NSData* certData = CFBridgingRelease(SecCertificateCopyData(cert));
-            if (![certData isEqual: _pinnedCertData]) {
-                Warn(@"%@: SSL cert does not equal pinnedCert", self);
-                return NO;
-            }
-        }
-    } else {
-        if (!CBLCheckSSLServerTrust(trust, host, port))
-            return NO;
-    }
-
+    if (![_settings checkSSLServerTrust: trust forHost: host port: port])
+        return NO;
     // Server is trusted. Record its cert in case the client wants to pin it:
-    cfSetObj(&_serverCert, cert);
+    cfSetObj(&_serverCert, SecTrustGetCertificateAtIndex(trust, 0));
     return YES;
 }
 

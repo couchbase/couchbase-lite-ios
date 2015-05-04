@@ -280,7 +280,6 @@
 		275D38E21AF3E1340013B9A9 /* CBLMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFF714DB7F9F009ECCA8 /* CBLMultipartWriter.m */; };
 		275D38E31AF3E1340013B9A9 /* CBLMultiStreamWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* CBLMultiStreamWriter.m */; };
 		275D38E41AF3E1340013B9A9 /* CBLMultipartUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C5305314DF3A050078F886 /* CBLMultipartUploader.m */; };
-		275D38E71AF3E1340013B9A9 /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27103F8214E9CE4400DF7209 /* CBLReachability.m */; };
 		275D38E81AF3E1340013B9A9 /* CBLSequenceMap.m in Sources */ = {isa = PBXBuildFile; fileRef = 279C7E2D14F424090004A1E8 /* CBLSequenceMap.m */; };
 		275D38E91AF3E1340013B9A9 /* CBLMultipartDocumentReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ADC078152502EE001ABC1D /* CBLMultipartDocumentReader.m */; };
 		275D38FB1AF3E1340013B9A9 /* CBLChangeMatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 2764D2B71A5F054D005AC95A /* CBLChangeMatcher.m */; };
@@ -295,22 +294,30 @@
 		275D39431AF3E3110013B9A9 /* libCouchbaseLiteReplicator.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 275D393C1AF3E1340013B9A9 /* libCouchbaseLiteReplicator.a */; };
 		275D39441AF3E33B0013B9A9 /* libCouchbaseLiteReplicator.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 275D393C1AF3E1340013B9A9 /* libCouchbaseLiteReplicator.a */; };
 		275D39471AF3E3D20013B9A9 /* CBLJSONReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27486F221A606C76008D94F0 /* CBLJSONReader.m */; };
-		275D39481AF3E3EF0013B9A9 /* CBLCookieStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */; };
 		275D39491AF3E4180013B9A9 /* yajl.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C7D1821A8370088881E /* yajl.c */; };
 		275D394A1AF3E4180013B9A9 /* yajl_alloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C801821A8370088881E /* yajl_alloc.c */; };
 		275D394B1AF3E4180013B9A9 /* yajl_buf.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C821821A8370088881E /* yajl_buf.c */; };
 		275D394C1AF3E4180013B9A9 /* yajl_lex.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C881821A8370088881E /* yajl_lex.c */; };
 		275D394D1AF3E4180013B9A9 /* yajl_parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C8A1821A8370088881E /* yajl_parser.c */; };
 		275D394E1AF3E4300013B9A9 /* yajl_encode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C851821A8370088881E /* yajl_encode.c */; };
-		275D394F1AF3E4490013B9A9 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 278097551A32817A00876DE6 /* MYAnonymousIdentity.m */; };
 		275D39501AF3E9590013B9A9 /* CBL_Replicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 276240B31AF2ADDD00FFF9DC /* CBL_Replicator.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275D39511AF3E9620013B9A9 /* CBL_Replicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 276240B31AF2ADDD00FFF9DC /* CBL_Replicator.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275D39541AF4186E0013B9A9 /* noop.m in Sources */ = {isa = PBXBuildFile; fileRef = 27452C221AB20BD500327776 /* noop.m */; };
-		275D39691AF437700013B9A9 /* CBL_Replicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 275D39681AF437700013B9A9 /* CBL_Replicator.m */; };
-		275D396A1AF437700013B9A9 /* CBL_Replicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 275D39681AF437700013B9A9 /* CBL_Replicator.m */; };
+		275D39691AF437700013B9A9 /* CBL_ReplicatorSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = 275D39681AF437700013B9A9 /* CBL_ReplicatorSettings.m */; };
+		275D396A1AF437700013B9A9 /* CBL_ReplicatorSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = 275D39681AF437700013B9A9 /* CBL_ReplicatorSettings.m */; };
 		275D396B1AF5337E0013B9A9 /* CBLMisc.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A073EA14C0BB6200F52FE7 /* CBLMisc.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275D396C1AF5348B0013B9A9 /* CBL_BlobStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 27731EFD1493FA3100815D67 /* CBL_BlobStore.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		276240C21AF2C51100FFF9DC /* CBLCookieStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */; };
+		275D396E1AF676F90013B9A9 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 278097551A32817A00876DE6 /* MYAnonymousIdentity.m */; };
+		275D396F1AF677230013B9A9 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 278097551A32817A00876DE6 /* MYAnonymousIdentity.m */; };
+		275D39721AF677B50013B9A9 /* CBL_ReplicatorSettings.h in Headers */ = {isa = PBXBuildFile; fileRef = 275D39701AF677B50013B9A9 /* CBL_ReplicatorSettings.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		275D39751AF6795F0013B9A9 /* CBLReachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 27103F8114E9CE4400DF7209 /* CBLReachability.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		275D39761AF679690013B9A9 /* CBLReachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 27103F8114E9CE4400DF7209 /* CBLReachability.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		275D39771AF679720013B9A9 /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27103F8214E9CE4400DF7209 /* CBLReachability.m */; };
+		275D39791AF6797B0013B9A9 /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27103F8214E9CE4400DF7209 /* CBLReachability.m */; };
+		275D397A1AF685190013B9A9 /* CBL_ReplicatorSettings.h in Headers */ = {isa = PBXBuildFile; fileRef = 275D39701AF677B50013B9A9 /* CBL_ReplicatorSettings.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		275D397B1AF7FF030013B9A9 /* CBLCookieStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 93D21AEE1A955480000AD9AF /* CBLCookieStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		275D397C1AF7FF080013B9A9 /* CBLCookieStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 93D21AEE1A955480000AD9AF /* CBLCookieStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		275D397D1AF800050013B9A9 /* CBLCookieStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */; };
 		276240C61AF2C51100FFF9DC /* CBLRestPuller.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E2A1489581E00E0A926 /* CBLRestPuller.m */; };
 		276240C91AF2C51100FFF9DC /* CBLRestPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3D148D7F0000E0A926 /* CBLRestPusher.m */; };
 		276240CA1AF2C51100FFF9DC /* CBLRestReplicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB6148E7D6F0099B373 /* CBLRestReplicator.m */; };
@@ -321,7 +328,6 @@
 		276240D81AF2C51100FFF9DC /* CBLMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFF714DB7F9F009ECCA8 /* CBLMultipartWriter.m */; };
 		276240D91AF2C51100FFF9DC /* CBLMultiStreamWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* CBLMultiStreamWriter.m */; };
 		276240DA1AF2C51100FFF9DC /* CBLMultipartUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C5305314DF3A050078F886 /* CBLMultipartUploader.m */; };
-		276240DD1AF2C51100FFF9DC /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27103F8214E9CE4400DF7209 /* CBLReachability.m */; };
 		276240DF1AF2C51100FFF9DC /* CBLWebSocketChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401CA1860D39B0080E082 /* CBLWebSocketChangeTracker.m */; };
 		276240E01AF2C51100FFF9DC /* CBLMultipartDocumentReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ADC078152502EE001ABC1D /* CBLMultipartDocumentReader.m */; };
 		276240E41AF2C51100FFF9DC /* CBLRestReplicator+Backgrounding.m in Sources */ = {isa = PBXBuildFile; fileRef = 27FFE20817BD28080040AE60 /* CBLRestReplicator+Backgrounding.m */; };
@@ -394,7 +400,6 @@
 		2762416D1AF2C51100FFF9DC /* CBLJSONReader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27486F211A606C76008D94F0 /* CBLJSONReader.h */; };
 		2762416E1AF2C51100FFF9DC /* CBLReplication+Transformation.h in Headers */ = {isa = PBXBuildFile; fileRef = 2762AB5618D36F1B00649D47 /* CBLReplication+Transformation.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2762416F1AF2C51100FFF9DC /* HTTPAuthenticationRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155714ACEFC90065964D /* HTTPAuthenticationRequest.h */; };
-		276241701AF2C51100FFF9DC /* CBLCookieStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 93D21AEE1A955480000AD9AF /* CBLCookieStorage.h */; };
 		276241711AF2C51100FFF9DC /* GCDAsyncSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401BC1860CBE00080E082 /* GCDAsyncSocket.h */; };
 		276241721AF2C51100FFF9DC /* HTTPConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155914ACEFC90065964D /* HTTPConnection.h */; };
 		276241731AF2C51100FFF9DC /* HTTPLogging.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753155B14ACEFC90065964D /* HTTPLogging.h */; };
@@ -426,7 +431,6 @@
 		2762418E1AF2C51100FFF9DC /* CBLMultipartWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 2766EFF614DB7F9F009ECCA8 /* CBLMultipartWriter.h */; };
 		2762418F1AF2C51100FFF9DC /* CBLMultiStreamWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 2766EFFB14DC7B37009ECCA8 /* CBLMultiStreamWriter.h */; };
 		276241901AF2C51100FFF9DC /* CBLMultipartUploader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C5305214DF3A050078F886 /* CBLMultipartUploader.h */; };
-		276241911AF2C51100FFF9DC /* CBLReachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 27103F8114E9CE4400DF7209 /* CBLReachability.h */; };
 		276241921AF2C51100FFF9DC /* CBLSequenceMap.h in Headers */ = {isa = PBXBuildFile; fileRef = 279C7E2C14F424090004A1E8 /* CBLSequenceMap.h */; };
 		276241931AF2C51100FFF9DC /* CBLMultipartDocumentReader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27ADC077152502EE001ABC1D /* CBLMultipartDocumentReader.h */; };
 		276241941AF2C51100FFF9DC /* yajl_common.h in Headers */ = {isa = PBXBuildFile; fileRef = 277B5DC21821A8B60088881E /* yajl_common.h */; };
@@ -539,7 +543,6 @@
 		277EF49017F4EA0000F7B7F7 /* CBLQuery+FullTextSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF39917F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		277EF49117F4EA0000F7B7F7 /* CBLQuery+Geo.h in Headers */ = {isa = PBXBuildFile; fileRef = 277EF39B17F4DEDD00F7B7F7 /* CBLQuery+Geo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		278097561A32817A00876DE6 /* MYAnonymousIdentity.h in Headers */ = {isa = PBXBuildFile; fileRef = 278097541A32817A00876DE6 /* MYAnonymousIdentity.h */; };
-		278097571A32817A00876DE6 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 278097551A32817A00876DE6 /* MYAnonymousIdentity.m */; };
 		27821BB7148E7D6F0099B373 /* CBLRestReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BB5148E7D6F0099B373 /* CBLRestReplicator.h */; };
 		27821BBE14906FB60099B373 /* CouchbaseLitePrefix.h in Headers */ = {isa = PBXBuildFile; fileRef = 27821BBD14906FB50099B373 /* CouchbaseLitePrefix.h */; };
 		27846FB915D475DF0030122F /* MYRegexUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 27846FB515D475DF0030122F /* MYRegexUtils.h */; };
@@ -651,7 +654,6 @@
 		27CB115A1AF2CEA9008C8CF2 /* yajl_encode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C851821A8370088881E /* yajl_encode.c */; };
 		27CB115B1AF2CED3008C8CF2 /* CBLSequenceMap.m in Sources */ = {isa = PBXBuildFile; fileRef = 279C7E2D14F424090004A1E8 /* CBLSequenceMap.m */; };
 		27CB115C1AF2CFDA008C8CF2 /* CBLBatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906ED149ABFC2003D4338 /* CBLBatcher.m */; };
-		27CB115D1AF2D010008C8CF2 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 278097551A32817A00876DE6 /* MYAnonymousIdentity.m */; };
 		27CB115E1AF2D0AA008C8CF2 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27CB115F1AF2D0E3008C8CF2 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		27CB11621AF2D159008C8CF2 /* CouchbaseLiteReplicator.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 276241BC1AF2C51100FFF9DC /* CouchbaseLiteReplicator.framework */; };
@@ -1505,7 +1507,8 @@
 		27538FA117F1ECE8004C3BFD /* LoggingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoggingMode.h; sourceTree = "<group>"; };
 		27538FA217F1ECE8004C3BFD /* LoggingMode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = LoggingMode.c; sourceTree = "<group>"; };
 		275D393C1AF3E1340013B9A9 /* libCouchbaseLiteReplicator.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCouchbaseLiteReplicator.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		275D39681AF437700013B9A9 /* CBL_Replicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Replicator.m; sourceTree = "<group>"; };
+		275D39681AF437700013B9A9 /* CBL_ReplicatorSettings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_ReplicatorSettings.m; sourceTree = "<group>"; };
+		275D39701AF677B50013B9A9 /* CBL_ReplicatorSettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_ReplicatorSettings.h; sourceTree = "<group>"; };
 		276240AC1AF2AB4B00FFF9DC /* CBLRestReplicator+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLRestReplicator+Internal.h"; sourceTree = "<group>"; };
 		276240B31AF2ADDD00FFF9DC /* CBL_Replicator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBL_Replicator.h; sourceTree = "<group>"; };
 		276241BC1AF2C51100FFF9DC /* CouchbaseLiteReplicator.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLiteReplicator.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2519,7 +2522,8 @@
 			isa = PBXGroup;
 			children = (
 				276240B31AF2ADDD00FFF9DC /* CBL_Replicator.h */,
-				275D39681AF437700013B9A9 /* CBL_Replicator.m */,
+				275D39701AF677B50013B9A9 /* CBL_ReplicatorSettings.h */,
+				275D39681AF437700013B9A9 /* CBL_ReplicatorSettings.m */,
 				27821BB5148E7D6F0099B373 /* CBLRestReplicator.h */,
 				276240AC1AF2AB4B00FFF9DC /* CBLRestReplicator+Internal.h */,
 				27821BB6148E7D6F0099B373 /* CBLRestReplicator.m */,
@@ -3025,6 +3029,7 @@
 				279CE40A14D8AA23009F3FA6 /* CBLMultipartDownloader.h in Headers */,
 				27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */,
 				2733022A18F8572700A488F7 /* CBLAuthenticator.h in Headers */,
+				275D39721AF677B50013B9A9 /* CBL_ReplicatorSettings.h in Headers */,
 				27DB90DB14DB24E800FC7118 /* GTMDefines.h in Headers */,
 				27C5305414DF3A050078F886 /* CBLMultipartUploader.h in Headers */,
 				279C7E2E14F424090004A1E8 /* CBLSequenceMap.h in Headers */,
@@ -3053,6 +3058,8 @@
 				27846FB915D475DF0030122F /* MYRegexUtils.h in Headers */,
 				27846FBC15D475DF0030122F /* MYStreamUtils.h in Headers */,
 				272401B41860CB4B0080E082 /* WebSocket.h in Headers */,
+				275D39751AF6795F0013B9A9 /* CBLReachability.h in Headers */,
+				275D397B1AF7FF030013B9A9 /* CBLCookieStorage.h in Headers */,
 				27DF57B119C782DE00FFB075 /* MYReadWriteLock.h in Headers */,
 				270D6FC1164484190081812D /* CBLSocketChangeTracker.h in Headers */,
 				27208F8E184D1D83006ADBEF /* NSURL+Base.h in Headers */,
@@ -3077,6 +3084,8 @@
 				275D396B1AF5337E0013B9A9 /* CBLMisc.h in Headers */,
 				27452BD61AB1187E00327776 /* CBLDatabase.h in Headers */,
 				27452BD71AB1187E00327776 /* CBLDatabaseChange.h in Headers */,
+				275D397C1AF7FF080013B9A9 /* CBLCookieStorage.h in Headers */,
+				275D39761AF679690013B9A9 /* CBLReachability.h in Headers */,
 				27452BD81AB1187E00327776 /* CBLDocument.h in Headers */,
 				27452BD91AB1187E00327776 /* CBLRevision.h in Headers */,
 				27452BDA1AB1187E00327776 /* CBLAttachment.h in Headers */,
@@ -3084,6 +3093,7 @@
 				27452BDC1AB1187E00327776 /* CBLQuery.h in Headers */,
 				27452BDD1AB1187E00327776 /* CBLQuery+FullTextSearch.h in Headers */,
 				27452BDE1AB1187E00327776 /* CBLQuery+Geo.h in Headers */,
+				275D397A1AF685190013B9A9 /* CBL_ReplicatorSettings.h in Headers */,
 				27452BDF1AB1187E00327776 /* CBLQueryBuilder.h in Headers */,
 				27452BE01AB1187E00327776 /* CBLReplication.h in Headers */,
 				275D39511AF3E9620013B9A9 /* CBL_Replicator.h in Headers */,
@@ -3171,7 +3181,6 @@
 				2762416D1AF2C51100FFF9DC /* CBLJSONReader.h in Headers */,
 				2762416E1AF2C51100FFF9DC /* CBLReplication+Transformation.h in Headers */,
 				2762416F1AF2C51100FFF9DC /* HTTPAuthenticationRequest.h in Headers */,
-				276241701AF2C51100FFF9DC /* CBLCookieStorage.h in Headers */,
 				276241711AF2C51100FFF9DC /* GCDAsyncSocket.h in Headers */,
 				276241721AF2C51100FFF9DC /* HTTPConnection.h in Headers */,
 				276241731AF2C51100FFF9DC /* HTTPLogging.h in Headers */,
@@ -3203,7 +3212,6 @@
 				2762418E1AF2C51100FFF9DC /* CBLMultipartWriter.h in Headers */,
 				2762418F1AF2C51100FFF9DC /* CBLMultiStreamWriter.h in Headers */,
 				276241901AF2C51100FFF9DC /* CBLMultipartUploader.h in Headers */,
-				276241911AF2C51100FFF9DC /* CBLReachability.h in Headers */,
 				276241921AF2C51100FFF9DC /* CBLSequenceMap.h in Headers */,
 				276241931AF2C51100FFF9DC /* CBLMultipartDocumentReader.h in Headers */,
 				276241941AF2C51100FFF9DC /* yajl_common.h in Headers */,
@@ -4161,6 +4169,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27EF7F9C1912EB5200A327B9 /* CBLForestBridge.mm in Sources */,
+				275D396E1AF676F90013B9A9 /* MYAnonymousIdentity.m in Sources */,
 				270B3E111489382F00E0A926 /* CBLDatabase+Internal.m in Sources */,
 				270B3E121489382F00E0A926 /* CBL_Body.m in Sources */,
 				27DF57B219C782DE00FFB075 /* MYReadWriteLock.m in Sources */,
@@ -4177,6 +4186,7 @@
 				27AA40A314AA8A6600E2A5FF /* CBLDatabase+Replication.m in Sources */,
 				27A073ED14C0BB6200F52FE7 /* CBLMisc.m in Sources */,
 				276BA0AD17DD13FA00D367CB /* CBLParseDate.c in Sources */,
+				275D39771AF679720013B9A9 /* CBLReachability.m in Sources */,
 				27A720A1152B959100C0A0E8 /* CBL_Attachment.m in Sources */,
 				27513A571A6827DF0055DC40 /* CBLCollateJSON.m in Sources */,
 				27CF5D2D152F514A0015D7A9 /* CBLStatus.m in Sources */,
@@ -4208,13 +4218,14 @@
 				27A9D6801A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm in Sources */,
 				27846FBA15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27846FBD15D475DF0030122F /* MYStreamUtils.m in Sources */,
-				275D39691AF437700013B9A9 /* CBL_Replicator.m in Sources */,
+				275D39691AF437700013B9A9 /* CBL_ReplicatorSettings.m in Sources */,
 				275315FF14ACF9330065964D /* ExceptionUtils.m in Sources */,
 				2753160014ACF9330065964D /* Logging.m in Sources */,
 				2753160114ACF9330065964D /* CollectionUtils.m in Sources */,
 				2753160214ACF9330065964D /* Test.m in Sources */,
 				27E3477119994FDA00076EAC /* Test_Assertions.m in Sources */,
 				279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */,
+				275D397D1AF800050013B9A9 /* CBLCookieStorage.m in Sources */,
 				27D90B1815601C340000735E /* MYErrorUtils.m in Sources */,
 				278E4DD91562B40B00DDCEF9 /* MYURLUtils.m in Sources */,
 				27F128B7156AC8C5008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
@@ -4318,13 +4329,13 @@
 				275315E714ACF1130065964D /* HTTPAuthenticationRequest.m in Sources */,
 				275315E814ACF1130065964D /* HTTPConnection.m in Sources */,
 				27E66B561A7310920091DA3F /* CBLRouter+Changes.m in Sources */,
+				275D396F1AF677230013B9A9 /* MYAnonymousIdentity.m in Sources */,
 				275315EC14ACF1130065964D /* HTTPDataResponse.m in Sources */,
 				2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */,
 				27DA435E159230AA00F9E7B5 /* CBL_Router.m in Sources */,
 				27DA4360159230B100F9E7B5 /* CBL_Router+Handlers.m in Sources */,
 				27B678B71804B62500B06D11 /* CBLHTTPServer.m in Sources */,
 				27E2E61815993CB6005B9234 /* CBL_URLProtocol.m in Sources */,
-				278097571A32817A00876DE6 /* MYAnonymousIdentity.m in Sources */,
 				2767D7DF14C8D3E500ED0F26 /* Logging.m in Sources */,
 				2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */,
 				279CE39014D1EDA0009F3FA6 /* Test.m in Sources */,
@@ -4352,14 +4363,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				275D394F1AF3E4490013B9A9 /* MYAnonymousIdentity.m in Sources */,
 				275D394E1AF3E4300013B9A9 /* yajl_encode.c in Sources */,
 				275D39491AF3E4180013B9A9 /* yajl.c in Sources */,
 				275D394A1AF3E4180013B9A9 /* yajl_alloc.c in Sources */,
 				275D394B1AF3E4180013B9A9 /* yajl_buf.c in Sources */,
 				275D394C1AF3E4180013B9A9 /* yajl_lex.c in Sources */,
 				275D394D1AF3E4180013B9A9 /* yajl_parser.c in Sources */,
-				275D39481AF3E3EF0013B9A9 /* CBLCookieStorage.m in Sources */,
 				275D39471AF3E3D20013B9A9 /* CBLJSONReader.m in Sources */,
 				275D38D01AF3E1340013B9A9 /* DDData.m in Sources */,
 				275D38D51AF3E1340013B9A9 /* CBLRestReplicator.m in Sources */,
@@ -4373,7 +4382,6 @@
 				275D38E21AF3E1340013B9A9 /* CBLMultipartWriter.m in Sources */,
 				275D38E31AF3E1340013B9A9 /* CBLMultiStreamWriter.m in Sources */,
 				275D38E41AF3E1340013B9A9 /* CBLMultipartUploader.m in Sources */,
-				275D38E71AF3E1340013B9A9 /* CBLReachability.m in Sources */,
 				275D38E81AF3E1340013B9A9 /* CBLSequenceMap.m in Sources */,
 				275D38E91AF3E1340013B9A9 /* CBLMultipartDocumentReader.m in Sources */,
 				275D38FB1AF3E1340013B9A9 /* CBLChangeMatcher.m in Sources */,
@@ -4392,7 +4400,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				276240C21AF2C51100FFF9DC /* CBLCookieStorage.m in Sources */,
 				276240C61AF2C51100FFF9DC /* CBLRestPuller.m in Sources */,
 				276240C91AF2C51100FFF9DC /* CBLRestPusher.m in Sources */,
 				276240CA1AF2C51100FFF9DC /* CBLRestReplicator.m in Sources */,
@@ -4401,12 +4408,10 @@
 				276240CE1AF2C51100FFF9DC /* CBLRemoteRequest.m in Sources */,
 				276240D61AF2C51100FFF9DC /* CBLMultipartReader.m in Sources */,
 				27CB114E1AF2CDFE008C8CF2 /* CBLJSONReader.m in Sources */,
-				27CB115D1AF2D010008C8CF2 /* MYAnonymousIdentity.m in Sources */,
 				276240D71AF2C51100FFF9DC /* CBLMultipartDownloader.m in Sources */,
 				276240D81AF2C51100FFF9DC /* CBLMultipartWriter.m in Sources */,
 				276240D91AF2C51100FFF9DC /* CBLMultiStreamWriter.m in Sources */,
 				276240DA1AF2C51100FFF9DC /* CBLMultipartUploader.m in Sources */,
-				276240DD1AF2C51100FFF9DC /* CBLReachability.m in Sources */,
 				276240DF1AF2C51100FFF9DC /* CBLWebSocketChangeTracker.m in Sources */,
 				276240E01AF2C51100FFF9DC /* CBLMultipartDocumentReader.m in Sources */,
 				276240E41AF2C51100FFF9DC /* CBLRestReplicator+Backgrounding.m in Sources */,
@@ -4502,6 +4507,7 @@
 				279CE3BA14D4A886009F3FA6 /* MYBlockUtils.m in Sources */,
 				27D90B1915601C350000735E /* MYErrorUtils.m in Sources */,
 				278E4DDA1562B40B00DDCEF9 /* MYURLUtils.m in Sources */,
+				275D39791AF6797B0013B9A9 /* CBLReachability.m in Sources */,
 				27DA435215918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
 				27846FBB15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */,
@@ -4514,7 +4520,7 @@
 				27F12890156ABE24008465C2 /* OAMutableURLRequest.m in Sources */,
 				27208F90184D1D83006ADBEF /* NSURL+Base.m in Sources */,
 				27F12893156ABE24008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
-				275D396A1AF437700013B9A9 /* CBL_Replicator.m in Sources */,
+				275D396A1AF437700013B9A9 /* CBL_ReplicatorSettings.m in Sources */,
 				2726D14718FDF44000AACC2A /* CBLSpecialKey.m in Sources */,
 				27F12899156ABE24008465C2 /* OARequestParameter.m in Sources */,
 				27F128A1156ABE24008465C2 /* OAToken.m in Sources */,

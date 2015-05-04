@@ -526,7 +526,7 @@
             if (strongR.reachabilityKnown)
                 resolved = YES;
         };
-        Assert([r start]);
+        Assert([r startOnRunLoop:CFRunLoopGetCurrent()]);
 
         BOOL known = r.reachabilityKnown;
         Log(@"\tInitially: known=%d, flags=%x --> reachable=%d",

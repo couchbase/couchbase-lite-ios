@@ -24,29 +24,6 @@
 .objc_class_name_CBLUnsavedRevision
 .objc_class_name_CBLView
 
-_OBJC_CLASS_$_CBLAttachment
-_OBJC_CLASS_$_CBLAuthenticator
-_OBJC_CLASS_$_CBLDatabase
-_OBJC_CLASS_$_CBLDatabaseChange
-_OBJC_CLASS_$_CBLDocument
-_OBJC_CLASS_$_CBLFullTextQueryRow
-_OBJC_CLASS_$_CBLGeoQueryRow
-_OBJC_CLASS_$_CBLJSON
-_OBJC_CLASS_$_CBLLiveQuery
-_OBJC_CLASS_$_CBLManager
-_OBJC_CLASS_$_CBLModel
-_OBJC_CLASS_$_CBLModelArray
-_OBJC_CLASS_$_CBLModelFactory
-_OBJC_CLASS_$_CBLQuery
-_OBJC_CLASS_$_CBLQueryBuilder
-_OBJC_CLASS_$_CBLQueryEnumerator
-_OBJC_CLASS_$_CBLQueryRow
-_OBJC_CLASS_$_CBLReplication
-_OBJC_CLASS_$_CBLRevision
-_OBJC_CLASS_$_CBLSavedRevision
-_OBJC_CLASS_$_CBLUnsavedRevision
-_OBJC_CLASS_$_CBLView
-
 # iOS only:
 .objc_class_name_CBLUITableSource
 _OBJC_CLASS_$_CBLUITableSource
@@ -71,7 +48,7 @@ _CBLGeoRectToJSON
 _CBLTextKey
 _CBLVersion
 
-# Non-public symbols that are used by CBLRouter and CBLListener:
+# Non-public symbols that are used by the replicator, router, listener:
 .objc_class_name_CBLQueryOptions
 .objc_class_name_CBL_BlobStore
 .objc_class_name_CBL_BlobStoreWriter
@@ -80,6 +57,9 @@ _CBLVersion
 .objc_class_name_CBL_Revision
 .objc_class_name_CBL_RevisionList
 .objc_class_name_CBJSONEncoder
+.objc_class_name_CBLReachability
+.objc_class_name_CBL_ReplicatorSettings
+.objc_class_name_CBLCookieStorage
 
 .objc_class_name_CBLBasicAuthorizer
 .objc_class_name_CBLFacebookAuthorizer

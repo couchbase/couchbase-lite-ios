@@ -93,19 +93,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 - (void) startChangeTracker {
     Assert(!_changeTracker);
-    NSTimeInterval pollInterval = 0.0;
-    if (_settings.continuous) {
-        NSNumber* pollObj = $castIf(NSNumber, _settings.options[kCBLReplicatorOption_PollInterval]);
-        if (pollObj) {
-            pollInterval = pollObj.doubleValue / 1000.0;
-            if (pollInterval < 30.0) {
-                Warn(@"%@: poll interval of %@ ms is too short!",
-                     self, pollObj);
-                pollInterval = 0.0;
-            }
-        }
-    }
-
+    NSTimeInterval pollInterval = _settings.pollInterval;
     CBLChangeTrackerMode mode = kOneShot;
     if (_settings.continuous && pollInterval == 0.0 && self.canUseWebSockets)
         mode = kWebSocket;
@@ -130,7 +118,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     if (pollInterval > 0.0)
         _changeTracker.pollInterval = pollInterval;
 
-    NSMutableDictionary* headers = $mdict({@"User-Agent", [CBLRemoteRequest userAgentHeader]});
+    NSMutableDictionary* headers = $mdict({@"User-Agent", [CBL_ReplicatorSettings userAgentHeader]});
     [headers addEntriesFromDictionary: _settings.requestHeaders];
     _changeTracker.requestHeaders = headers;
     
@@ -150,7 +138,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 
 - (void) stop {
-    if (!self.running)
+    if (self.status == kCBLReplicatorStopped)
         return;
     LogTo(Sync, @"%@ STOPPING...", self);
     if (_changeTracker) {
@@ -193,7 +181,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // If we were already online (i.e. server is reachable) but got a reachability-change event,
     // tell the tracker to retry in case it's in retry mode after a transient failure. (I.e. the
     // state of the network might be better now.)
-    if (self.running && self.online)
+    if (_running && _online)
         [_changeTracker retry];
     return NO;
 }
@@ -630,7 +618,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             }
         }];
 
-        CBL_Revision* xformed = [self transformRevision: rev];
+        CBL_Revision* xformed = [_settings transformRevision: rev];
         if (xformed == nil) {
             LogTo(Sync, @"%@: Transformer rejected revision %@", self, rev);
             [_pendingSequences removeSequence: rev.sequence];

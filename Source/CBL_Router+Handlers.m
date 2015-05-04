@@ -391,7 +391,7 @@
 
     if ([$castIf(NSNumber, body[@"cancel"]) boolValue]) {
         // Cancel replication:
-        if (!repl.running)
+        if (repl.status == kCBLReplicatorStopped)
             return kCBLStatusNotFound;
         [repl stop];
         return kCBLStatusOK;
@@ -455,7 +455,7 @@
     NSMutableArray* activity = $marray();
     for (CBLDatabase* db in _dbManager.allOpenDatabases) {
         for (id<CBL_Replicator> repl in db.activeReplicators) {
-            [activity addObject: repl.activeTaskInfo];
+            [activity addObject: [self activeTaskInfo: repl]];
         }
     }
 
@@ -489,7 +489,49 @@
 - (void) replicationChanged: (NSNotification*)n {
     id<CBL_Replicator> repl = n.object;
     if (repl.db.manager == _dbManager)
-        [self sendContinuousLine: repl.activeTaskInfo];
+        [self sendContinuousLine: [self activeTaskInfo: repl]];
+}
+
+
+- (NSDictionary*) activeTaskInfo: (id<CBL_Replicator>)repl {
+    static NSString* const kStatusName[] = {@"Stopped", @"Offline", @"Idle", @"Active"};
+    // For schema, see http://wiki.apache.org/couchdb/HttpGetActiveTasks
+    NSString* source = repl.settings.remote.absoluteString;
+    NSString* target = _db.name;
+    if (repl.settings.isPush) {
+        NSString* temp = source;
+        source = target;
+        target = temp;
+    }
+    NSString* status;
+    id progress = nil;
+    if (repl.status == kCBLReplicatorActive) {
+        NSUInteger processed = repl.changesProcessed;
+        NSUInteger total = repl.changesTotal;
+        status = $sprintf(@"Processed %u / %u changes",
+                          (unsigned)processed, (unsigned)total);
+        progress = (total>0) ? @(lroundf(100*(processed / (float)total))) : nil;
+    } else {
+        status = kStatusName[repl.status];
+    }
+    NSArray* error = nil;
+    NSError* errorObj = repl.error;
+    if (errorObj)
+        error = @[@(errorObj.code), errorObj.localizedDescription];
+
+    NSArray* activeRequests = nil;
+    if ([repl respondsToSelector: @selector(activeTasksInfo)])
+        activeRequests = repl.activeTasksInfo;
+    
+    return $dict({@"type", @"Replication"},
+                 {@"task", repl.sessionID},
+                 {@"source", source},
+                 {@"target", target},
+                 {@"continuous", (repl.settings.continuous ? $true : nil)},
+                 {@"status", status},
+                 {@"progress", progress},
+                 {@"x_active_requests", activeRequests},
+                 {@"error", error});
 }
 
 

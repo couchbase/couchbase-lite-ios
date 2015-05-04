@@ -15,7 +15,7 @@
 
 #if TARGET_OS_IPHONE
 
-#import "CBLRestReplicator.h"
+#import "CBLRestReplicator+Internal.h"
 #import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
 #import "MYBlockUtils.h"
@@ -75,7 +75,7 @@
     // simply suspends itself.
     Log(@"APP BACKGROUNDING");
     [self.db doSync: ^{
-        if (self.active) {
+        if (_active) {
             _bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler: ^{
                 // Called if process runs out of background time before replication finishes:
                 [self.db doSync: ^{

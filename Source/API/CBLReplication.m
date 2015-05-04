@@ -513,15 +513,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_updateProgress {
-    CBLReplicationStatus status;
-    if (!_bg_replicator.running)
-        status = kCBLReplicationStopped;
-    else if (!_bg_replicator.online)
-        status = kCBLReplicationOffline;
-    else
-        status = _bg_replicator.active ? kCBLReplicationActive : kCBLReplicationIdle;
-    
-    // Communicate its state back to the main thread:
+    CBLReplicationStatus status = (CBLReplicationStatus)_bg_replicator.status;
     NSError* error = _bg_replicator.error;
     NSUInteger changes = _bg_replicator.changesProcessed;
     NSUInteger total = _bg_replicator.changesTotal;
@@ -532,6 +524,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         [self bg_setReplicator: nil];
     }
 
+    // Communicate its state back to the main thread:
     __weak CBLReplication *weakSelf = self;
     [_database doAsync: ^{
         CBLReplication *strongSelf = weakSelf;

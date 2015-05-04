@@ -19,6 +19,7 @@
 #import "CollectionUtils.h"
 #import "CBJSONEncoder.h"
 #import "CBLJSON.h"
+#import <netdb.h>
 
 
 #ifdef GNUSTEP
@@ -296,13 +297,21 @@ BOOL CBLParseInteger(NSString* str, NSInteger* outInt) {
 BOOL CBLIsOfflineError( NSError* error ) {
     NSString* domain = error.domain;
     NSInteger code = error.code;
-    if ($equal(domain, NSURLErrorDomain))
+    if ($equal(domain, NSURLErrorDomain)) {
         return code == NSURLErrorDNSLookupFailed
             || code == NSURLErrorNotConnectedToInternet
 #ifndef GNUSTEP
             || code == NSURLErrorInternationalRoamingOff
 #endif
         ;
+    } else if ($equal(domain, (__bridge id)kCFErrorDomainCFNetwork)) {
+        if (code == kCFHostErrorUnknown) {
+            int netdbCode = [error.userInfo[(__bridge id)kCFGetAddrInfoFailureKey] intValue];
+            return netdbCode == EAI_NONAME;
+        } else {
+            return code == kCFHostErrorHostNotFound;
+        }
+    }
     return NO;
 }
 
@@ -334,6 +343,9 @@ BOOL CBLMayBeTransientError( NSError* error ) {
     if ($equal(domain, NSURLErrorDomain)) {
         return code == NSURLErrorTimedOut || code == NSURLErrorCannotConnectToHost
                                           || code == NSURLErrorNetworkConnectionLost;
+    } else if ($equal(domain, NSPOSIXErrorDomain)) {
+        return code == ENETDOWN || code == ENETUNREACH || code == ENETRESET || code == ECONNABORTED
+            || code == ECONNRESET || code == ETIMEDOUT || code == ECONNREFUSED;
     } else if ($equal(domain, CBLHTTPErrorDomain)) {
         // Internal Server Error, Bad Gateway, Service Unavailable or Gateway Timeout:
         return code == 500 || code == 502 || code == 503 || code == 504;

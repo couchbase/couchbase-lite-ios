@@ -289,7 +289,7 @@
                             continue;
                         }
 
-                        CBL_MutableRevision* populatedRev = [[self transformRevision: loadedRev] mutableCopy];
+                        CBL_MutableRevision* populatedRev = [[_settings transformRevision: loadedRev] mutableCopy];
 
                         // Add the revision history:
                         NSArray* backTo = $castIf(NSArray, revResults[@"possible_ancestors"]);

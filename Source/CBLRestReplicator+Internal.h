@@ -12,6 +12,11 @@
 
 
 @interface CBLRestReplicator ()
+{
+    @protected
+    BOOL _running, _online, _active;
+}
+
 @property (copy) NSString* lastSequence;
 @property (readwrite, nonatomic) NSUInteger changesProcessed, changesTotal;
 - (void) maybeCreateRemoteDB;

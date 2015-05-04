@@ -6,45 +6,24 @@
 //  Copyright (c) 2015 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "CBL_ReplicatorSettings.h"
 @class CBLDatabase, CBL_Revision, CBL_RevisionList, CBLCookieStorage;
-@protocol CBLAuthorizer;
 
 
-typedef CBL_Revision* (^RevisionBodyTransformationBlock)(CBL_Revision*);
+/** Describes the current status of a CBL_Replicator. */
+typedef NS_ENUM(unsigned, CBL_ReplicatorStatus) {
+    kCBLReplicatorStopped, /**< The replicator is finished or hit a fatal error. */
+    kCBLReplicatorOffline, /**< The remote host is currently unreachable. */
+    kCBLReplicatorIdle,    /**< Continuous replicator is caught up and waiting for more changes.*/
+    kCBLReplicatorActive   /**< The replicator is actively transferring data. */
+};
 
 
-/** Posted when changesProcessed or changesTotal changes. */
+/** Posted when .changesProcessed, .changesTotal or .status changes. */
 extern NSString* CBL_ReplicatorProgressChangedNotification;
 
 /** Posted when replicator stops running. */
 extern NSString* CBL_ReplicatorStoppedNotification;
-
-
-@interface CBL_ReplicatorSettings : NSObject
-- (instancetype) initWithRemote: (NSURL*)remote
-                           push: (BOOL)push;
-@property (readonly) NSURL* remote;
-@property (readonly) BOOL isPush;
-@property BOOL continuous;
-@property BOOL createTarget;
-@property (copy) NSString* filterName;
-@property (copy) NSDictionary* filterParameters;
-@property (copy) NSArray *docIDs;
-@property (copy) NSDictionary* options;
-
-/** Optional dictionary of headers to be added to all requests to remote servers. */
-@property (copy) NSDictionary* requestHeaders;
-
-@property (strong) id<CBLAuthorizer> authorizer;
-
-/** Hook for transforming document body, e.g., encryption and decryption during replication */
-@property (strong, nonatomic) RevisionBodyTransformationBlock revisionBodyTransformationBlock;
-
-- (NSString*) remoteCheckpointDocIDForLocalUUID: (NSString*)localUUID;
-
-@end
-
 
 
 /** Protocol that replicator implementations must implement. */
@@ -61,14 +40,7 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 
 @property (readonly) NSString* remoteCheckpointDocID;
 
-/** Is the replicator running? (Observable) */
-@property (readonly, nonatomic) BOOL running;
-
-/** Is the replicator able to connect to the remote host? */
-@property (readonly, nonatomic) BOOL online;
-
-/** Is the replicator actively sending/receiving revisions? (Observable) */
-@property (readonly, nonatomic) BOOL active;
+@property (readonly) CBL_ReplicatorStatus status;
 
 /** Latest error encountered while replicating.
     This is set to nil when starting. It may also be set to nil by the client if desired.
@@ -81,9 +53,6 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 /** Approximate total number of changes to transfer.
     This is only an estimate and its value will change during replication. It starts at zero and returns to zero when replication stops. */
 @property (readonly, nonatomic) NSUInteger changesTotal;
-
-/** JSON-compatible dictionary of task info, as seen in _active_tasks REST API */
-@property (readonly) NSDictionary* activeTaskInfo;
 
 /** A unique-per-process string identifying this replicator instance. */
 @property (copy, nonatomic) NSString* sessionID;
@@ -107,19 +76,6 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 - (void) databaseClosing;
 
 @optional
+@property (readonly) NSArray* activeTasksInfo;
 @property (readonly) NSSet* pendingDocIDs;
 @end
-
-
-// Supported keys in the .options dictionary:
-#define kCBLReplicatorOption_Reset @"reset"
-#define kCBLReplicatorOption_Timeout @"connection_timeout"  // CouchDB specifies this name
-#define kCBLReplicatorOption_Heartbeat @"heartbeat"         // NSNumber, in ms
-#define kCBLReplicatorOption_PollInterval @"poll"           // NSNumber, in ms
-#define kCBLReplicatorOption_Network @"network"             // "WiFi" or "Cell"
-#define kCBLReplicatorOption_UseWebSocket @"websocket"      // Boolean; default is YES
-#define kCBLReplicatorOption_PinnedCert @"pinnedCert"       // NSData or (hex) NSString
-
-// Boolean; default is YES. Setting this option will have no effect and result to always 'trust' if
-// the kCBLReplicatorOption_Network option is also set.
-#define kCBLReplicatorOption_TrustReachability @"trust_reachability"

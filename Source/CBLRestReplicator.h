@@ -26,13 +26,8 @@
 #endif
 }
 
-+ (NSString *)progressChangedNotification;
-+ (NSString *)stoppedNotification;
-
-/** Timeout interval for HTTP requests sent by this replicator.
-    (Derived from options key "connection_timeout", in milliseconds.) */
-@property (readonly) NSTimeInterval requestTimeout;
-
-- (CBL_Revision *) transformRevision:(CBL_Revision *)rev;
+#if DEBUG
+@property (readonly) BOOL running, active; // for unit tests
+#endif
 
 @end
