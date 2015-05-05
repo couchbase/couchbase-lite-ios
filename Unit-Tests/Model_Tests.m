@@ -344,6 +344,7 @@
         AssertEqual(model.url, url);
         AssertEq(model.other, model3);
         AssertEqual(model.others, (@[model2, model3]));
+        AssertEqual(model.untypedObject, @"this is an id");
 
         // Save it and make sure the save didn't trigger a reload:
         AssertEqual(db.unsavedModels, @[model]);
