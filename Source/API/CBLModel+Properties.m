@@ -201,7 +201,7 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
 + (IMP) impForGetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
     id (^impBlock)(CBLModel*) = nil;
     
-    if (propertyClass == Nil) {
+    if (propertyClass == Nil || propertyClass == [NSObject class]) {
         // Untyped
         return [super impForGetterOfProperty: property ofClass: propertyClass];
     } else if (propertyClass == [NSString class]
