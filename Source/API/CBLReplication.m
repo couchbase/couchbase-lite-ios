@@ -212,7 +212,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         return;
     }
 
-    [self tellReplicatorAndWait:^id(CBL_Replicator * bgReplicator) {
+    [self tellReplicator: ^(CBL_Replicator * bgReplicator) {
         if (bgReplicator)
             [bgReplicator.cookieStorage setCookie: cookie];
         else {
@@ -220,13 +220,12 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
                 _bg_pendingCookies = [NSMutableArray array];
             [_bg_pendingCookies addObject: cookie];
         }
-        return @(YES);
     }];
 }
 
 
--(void) deleteCookieNamed: (NSString*)name {
-    [self tellReplicatorAndWait:^id(CBL_Replicator * bgReplicator) {
+- (void) deleteCookieNamed: (NSString*)name {
+    [self tellReplicator: ^(CBL_Replicator * bgReplicator) {
         if (_bg_replicator)
             [_bg_replicator.cookieStorage deleteCookiesNamed: name];
         else {
@@ -234,7 +233,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
                 _bg_pendingCookies = [NSMutableArray array];
             [_bg_pendingCookies addObject: name];
         }
-        return @(YES);
     }];
 }
 
