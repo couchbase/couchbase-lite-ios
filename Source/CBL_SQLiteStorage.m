@@ -1024,7 +1024,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     [r close];
     
     if (options->sortBySequence) {
-        [changes sortBySequence];
+        [changes sortBySequenceAscending: !options->descending];
         [changes limit: options->limit];
     }
     return changes;

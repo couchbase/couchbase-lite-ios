@@ -68,6 +68,7 @@ typedef struct CBLChangesOptions {
     BOOL includeDocs;
     BOOL includeConflicts;
     BOOL sortBySequence;
+    BOOL descending;
 } CBLChangesOptions;
 
 extern const CBLChangesOptions kDefaultCBLChangesOptions;

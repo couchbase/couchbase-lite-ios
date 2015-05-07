@@ -814,6 +814,62 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
 }
 
 
+- (void) test_ChangesDescending {
+    RequireTestCase(Changes);
+    NSArray* revIDs = [self populateDocs];
+
+    // _changes with descending = false
+    Send(self, @"GET", @"/db/_changes?descending=false", kCBLStatusOK,
+         $dict({@"last_seq", @5},
+               {@"results", $array($dict({@"id", @"doc3"},
+                                         {@"changes", $array($dict({@"rev", revIDs[2]}))},
+                                         {@"seq", @3}),
+                                   $dict({@"id", @"doc2"},
+                                         {@"changes", $array($dict({@"rev", revIDs[1]}))},
+                                         {@"seq", @4}),
+                                   $dict({@"id", @"doc1"},
+                                         {@"changes", $array($dict({@"rev", revIDs[0]}))},
+                                         {@"seq", @5},
+                                         {@"deleted", $true}))}));
+    if (self.isSQLiteDB ) {
+        // _changes with descending = true
+        Send(self, @"GET", @"/db/_changes?descending=true", kCBLStatusOK,
+             $dict({@"last_seq", @3},
+                   {@"results", $array($dict({@"id", @"doc1"},
+                                             {@"changes", $array($dict({@"rev", revIDs[0]}))},
+                                             {@"seq", @5},
+                                             {@"deleted", $true}),
+                                       $dict({@"id", @"doc2"},
+                                             {@"changes", $array($dict({@"rev", revIDs[1]}))},
+                                             {@"seq", @4}),
+                                       $dict({@"id", @"doc3"},
+                                             {@"changes", $array($dict({@"rev", revIDs[2]}))},
+                                             {@"seq", @3}))}));
+
+
+        // _changes with descending = true and limit = 2
+        Send(self, @"GET", @"/db/_changes?descending=true&limit=2", kCBLStatusOK,
+             $dict({@"last_seq", @4},
+                   {@"results", $array($dict({@"id", @"doc1"},
+                                             {@"changes", $array($dict({@"rev", revIDs[0]}))},
+                                             {@"seq", @5},
+                                             {@"deleted", $true}),
+                                       $dict({@"id", @"doc2"},
+                                             {@"changes", $array($dict({@"rev", revIDs[1]}))},
+                                             {@"seq", @4}))}));
+
+        Send(self, @"GET", @"/db/_changes?descending=true&feed=continuous", kCBLStatusBadParam, nil);
+        Send(self, @"GET", @"/db/_changes?descending=true&feed=longpoll", kCBLStatusBadParam, nil);
+    } else {
+        // https://github.com/couchbase/couchbase-lite-ios/issues/641
+        Send(self, @"GET", @"/db/_changes?descending=true", kCBLStatusNotImplemented, nil);
+        Send(self, @"GET", @"/db/_changes?descending=true&limit=2", kCBLStatusNotImplemented, nil);
+        Send(self, @"GET", @"/db/_changes?descending=true&feed=continuous", kCBLStatusBadParam, nil);
+        Send(self, @"GET", @"/db/_changes?descending=true&feed=longpoll", kCBLStatusBadParam, nil);
+    }
+}
+
+
 #pragma mark - ATTACHMENTS:
 
 
