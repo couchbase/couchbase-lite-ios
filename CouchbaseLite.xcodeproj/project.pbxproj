@@ -55,7 +55,7 @@
 		270B3E3E148D7F0000E0A926 /* CBLRestPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3C148D7F0000E0A926 /* CBLRestPusher.h */; };
 		270D6FC1164484190081812D /* CBLSocketChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 270D6FBF164484190081812D /* CBLSocketChangeTracker.h */; };
 		270F5702156AD215000FEB8F /* OARequestParameter.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12862156ABE24008465C2 /* OARequestParameter.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		270F5705156AE0BF000FEB8F /* CBLAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 270F5703156AE0BF000FEB8F /* CBLAuthorizer.h */; };
+		270F5705156AE0BF000FEB8F /* CBLAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 270F5703156AE0BF000FEB8F /* CBLAuthorizer.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		270F5706156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 270F5704156AE0BF000FEB8F /* CBLAuthorizer.m */; };
 		270F5707156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 270F5704156AE0BF000FEB8F /* CBLAuthorizer.m */; };
 		270FE0CA14C5008C005FF647 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
@@ -319,6 +319,8 @@
 		275D397C1AF7FF080013B9A9 /* CBLCookieStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 93D21AEE1A955480000AD9AF /* CBLCookieStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275D397D1AF800050013B9A9 /* CBLCookieStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */; };
 		275D39E51B0121430013B9A9 /* CBLReplication+Transformation.h in Headers */ = {isa = PBXBuildFile; fileRef = 2762AB5618D36F1B00649D47 /* CBLReplication+Transformation.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		275D39F11B0167800013B9A9 /* CBLAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 270F5703156AE0BF000FEB8F /* CBLAuthorizer.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		275D39F21B01678D0013B9A9 /* CBLAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 270F5703156AE0BF000FEB8F /* CBLAuthorizer.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		276240C61AF2C51100FFF9DC /* CBLRestPuller.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E2A1489581E00E0A926 /* CBLRestPuller.m */; };
 		276240C91AF2C51100FFF9DC /* CBLRestPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = 270B3E3D148D7F0000E0A926 /* CBLRestPusher.m */; };
 		276240CA1AF2C51100FFF9DC /* CBLRestReplicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27821BB6148E7D6F0099B373 /* CBLRestReplicator.m */; };
@@ -439,7 +441,6 @@
 		276241971AF2C51100FFF9DC /* CBL_SQLiteStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27513A211A673F320055DC40 /* CBL_SQLiteStorage.h */; };
 		276241981AF2C51100FFF9DC /* NSMutableURLRequest+Parameters.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F128AA156AC004008465C2 /* NSMutableURLRequest+Parameters.h */; };
 		276241991AF2C51100FFF9DC /* CBLOAuth1Authorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F128AF156AC1C8008465C2 /* CBLOAuth1Authorizer.h */; };
-		2762419A1AF2C51100FFF9DC /* CBLAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 270F5703156AE0BF000FEB8F /* CBLAuthorizer.h */; };
 		2762419B1AF2C51100FFF9DC /* CBLDatabaseUpgrade.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D8C347195A28100073A51C /* CBLDatabaseUpgrade.h */; };
 		2762419C1AF2C51100FFF9DC /* CBLDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 27ED862E157D0FC600712B33 /* CBLDocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2762419D1AF2C51100FFF9DC /* CBLJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 27726AAA1889835F00AE6931 /* CBLJSON.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -3091,6 +3092,7 @@
 				27452BDA1AB1187E00327776 /* CBLAttachment.h in Headers */,
 				27452BDB1AB1187E00327776 /* CBLView.h in Headers */,
 				27452BDC1AB1187E00327776 /* CBLQuery.h in Headers */,
+				275D39F11B0167800013B9A9 /* CBLAuthorizer.h in Headers */,
 				27452BDD1AB1187E00327776 /* CBLQuery+FullTextSearch.h in Headers */,
 				27452BDE1AB1187E00327776 /* CBLQuery+Geo.h in Headers */,
 				275D397A1AF685190013B9A9 /* CBL_ReplicatorSettings.h in Headers */,
@@ -3220,7 +3222,6 @@
 				276241971AF2C51100FFF9DC /* CBL_SQLiteStorage.h in Headers */,
 				276241981AF2C51100FFF9DC /* NSMutableURLRequest+Parameters.h in Headers */,
 				276241991AF2C51100FFF9DC /* CBLOAuth1Authorizer.h in Headers */,
-				2762419A1AF2C51100FFF9DC /* CBLAuthorizer.h in Headers */,
 				2762419B1AF2C51100FFF9DC /* CBLDatabaseUpgrade.h in Headers */,
 				2762419C1AF2C51100FFF9DC /* CBLDocument.h in Headers */,
 				2762419D1AF2C51100FFF9DC /* CBLJSON.h in Headers */,
@@ -3259,6 +3260,7 @@
 				27B945B317692E2000B2DF2D /* CBLModel_Internal.h in Headers */,
 				275A29041649A12B00B0D8EE /* CBLAttachment.h in Headers */,
 				27B0B8051492BDE800A817AD /* CouchbaseLite.h in Headers */,
+				275D39F21B01678D0013B9A9 /* CBLAuthorizer.h in Headers */,
 				27DA43621592387400F9E7B5 /* CBLManager.h in Headers */,
 				27DA43631592387400F9E7B5 /* CBLDatabase.h in Headers */,
 				27DA43641592387400F9E7B5 /* CBLDocument.h in Headers */,
