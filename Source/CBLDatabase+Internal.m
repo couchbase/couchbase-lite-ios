@@ -41,7 +41,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 NSString* const CBL_PrivateRunloopMode = @"CouchbaseLitePrivate";
 NSArray* CBL_RunloopModes;
 
-const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, NO, NO, YES};
+const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, NO, NO, YES, NO};
 
 // When this many changes pile up in _changesToNotify, start removing their bodies to save RAM
 #define kManyChangesToNotify 5000

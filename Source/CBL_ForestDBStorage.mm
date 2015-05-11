@@ -436,6 +436,13 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
     // Translate options to ForestDB:
     if (!options) options = &kDefaultCBLChangesOptions;
+    
+    if (options->descending) {
+        // https://github.com/couchbase/couchbase-lite-ios/issues/641
+        *outStatus = kCBLStatusNotImplemented;
+        return nil;
+    }
+
     auto forestOpts = DocEnumerator::Options::kDefault;
     forestOpts.limit = options->limit;
     forestOpts.inclusiveEnd = YES;
