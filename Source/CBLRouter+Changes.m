@@ -47,6 +47,13 @@ NSTimeInterval kMinHeartbeat = 5.0;
     options.includeDocs = _changesIncludeDocs;
     options.includeConflicts = _changesIncludeConflicts;
     options.sortBySequence = !options.includeConflicts;
+
+    BOOL descending = [self boolQuery: @"descending"] && options.sortBySequence;
+    // valid option only when the mode is NormalFeed:
+    if (descending && _changesMode != kNormalFeed)
+        return kCBLStatusBadParam;
+    options.descending = descending;
+
     options.limit = [self intQuery: @"limit" defaultValue: options.limit];
     int since = [[self query: @"since"] intValue];
     

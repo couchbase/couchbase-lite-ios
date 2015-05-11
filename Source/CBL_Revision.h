@@ -65,6 +65,8 @@ typedef SInt64 SequenceNumber;
 
 - (NSComparisonResult) compareSequences: (CBL_Revision*)rev;
 
+- (NSComparisonResult) compareSequencesDescending: (CBL_Revision*)rev;
+
 /** Generation number: 1 for a new document, 2 for the 2nd revision, ...
     Extracted from the numeric prefix of the revID. */
 @property (readonly) unsigned generation;
@@ -130,7 +132,7 @@ typedef SInt64 SequenceNumber;
 - (void) removeObjectAtIndex: (NSUInteger)index;
 
 - (void) limit: (NSUInteger)limit;
-- (void) sortBySequence;
+- (void) sortBySequenceAscending:(BOOL)ascending;
 - (void) sortByDocID;
 
 @end
