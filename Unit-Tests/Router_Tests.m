@@ -873,6 +873,29 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
 #pragma mark - ATTACHMENTS:
 
 
+- (void) test_PutAttachmentToNewDoc {
+    CBLResponse* response = SendRequest(self, @"PUT", @"/db/doc1/attach.txt",
+                                        @{@"Content-Type": @"text/plain"},
+                                        [@"Hello there" dataUsingEncoding: NSUTF8StringEncoding]);
+    AssertEq(response.status, 201);
+}
+
+
+- (void) test_PutAttachmentToExistingDoc {
+    NSDictionary* props = $dict({@"message", @"hello"});
+    NSDictionary* result = SendBody(self, @"PUT", @"/db/doc1", props, kCBLStatusCreated, nil);
+    NSString* rev = result[@"rev"];
+    Assert(rev);
+
+    CBLResponse* response;
+    response = SendRequest(self, @"PUT",
+                           $sprintf(@"/db/doc1/attach.txt?rev=%@", rev),
+                           @{@"Content-Type": @"text/plain"},
+                           [@"Hello there" dataUsingEncoding: NSUTF8StringEncoding]);
+    AssertEq(response.status, 200);
+}
+
+
 - (NSDictionary*) createDocWithAttachment: (NSData*)attach1 and: (NSData*) attach2 {
     NSString* base64 = [CBLBase64 encode: attach1];
     NSString* base642 = [CBLBase64 encode: attach2];
