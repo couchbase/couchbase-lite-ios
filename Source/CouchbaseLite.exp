@@ -48,7 +48,7 @@ _CBLGeoRectToJSON
 _CBLTextKey
 _CBLVersion
 
-# Non-public symbols that are used by the replicator, router, listener:
+# Non-public symbols that are used by the replicator, router, listener, ForestDB storage:
 .objc_class_name_CBLQueryOptions
 .objc_class_name_CBL_BlobStore
 .objc_class_name_CBL_BlobStoreWriter
@@ -68,6 +68,10 @@ _CBLVersion
 .objc_class_name_CBLTokenAuthorizer
 
 .objc_class_name_CBL_Server
+
+.objc_class_name_CBLLazyArrayOfJSON
+.objc_class_name_CBLSpecialKey
+.objc_class_name_CBL_Attachment
 
 _OBJC_IVAR_$_CBL_Attachment.length
 _OBJC_IVAR_$_CBL_Attachment.encoding
@@ -111,6 +115,9 @@ _CBLCheckSSLServerTrust
 _CBLCreateUUID
 _CBLAppendToURL
 _CBLEscapeURLParam
+_CBLCompareRevIDs
+_CBLJSONString
+_ReturnNSErrorFromCBLStatus
 
 _CBL_DatabaseChangesNotification
 _CBL_DatabaseWillCloseNotification
