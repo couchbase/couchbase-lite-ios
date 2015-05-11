@@ -410,7 +410,9 @@ static CBLManager* sInstance;
                 // The server's manager can't have a strong reference to the CBLShared, or it will
                 // form a cycle (newManager -> strongShared -> backgroundServer -> newManager).
                 newManager->_strongShared = nil;
-                server = [[CBL_Server alloc] initWithManager: newManager];
+                Class serverClass = [_replicatorClass needsRunLoop] ? [CBL_RunLoopServer class]
+                                                                    : [CBL_DispatchServer class];
+                server = [[serverClass alloc] initWithManager: newManager];
                 LogTo(CBLDatabase, @"%@ created %@ (with %@)", self, server, newManager);
             }
             Assert(server, @"Failed to create backgroundServer!");
@@ -750,10 +752,6 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 - (id<CBL_Replicator>) replicatorWithProperties: (NSDictionary*)properties
                                          status: (CBLStatus*)outStatus
 {
-    // An unfortunate limitation:
-    Assert(_dispatchQueue==NULL || _dispatchQueue==dispatch_get_main_queue(),
-           @"CBLReplicators need a thread not a dispatch queue");
-
     // Extract the parameters from the JSON request body:
     // http://wiki.apache.org/couchdb/Replication
     CBLDatabase* db;

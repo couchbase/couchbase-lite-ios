@@ -84,12 +84,18 @@
 #endif
 
 
++ (BOOL) needsRunLoop {
+    return YES;
+}
+
+
 - (id<CBL_Replicator>) initWithDB: (CBLDatabase*)db
                          settings: (CBL_ReplicatorSettings*)settings
 {
     NSParameterAssert(db);
     NSParameterAssert(settings);
-    
+    Assert(db.manager.dispatchQueue==NULL || db.manager.dispatchQueue==dispatch_get_main_queue());
+
     // CBLRestReplicator is an abstract class; instantiating one actually instantiates a subclass.
     if ([self class] == [CBLRestReplicator class]) {
         Class klass = settings.isPush ? [CBLRestPusher class] : [CBLRestPuller class];

@@ -29,6 +29,8 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 /** Protocol that replicator implementations must implement. */
 @protocol CBL_Replicator <NSObject>
 
++ (BOOL) needsRunLoop;
+
 - (id<CBL_Replicator>) initWithDB: (CBLDatabase*)db
                          settings: (CBL_ReplicatorSettings*)settings;
 
