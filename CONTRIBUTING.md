@@ -4,6 +4,17 @@ We also want to hear about your ideas for new features and improvements. You can
 
 And while we welcome questions, **we prefer to answer questions on our [developer forums](https://forums.couchbase.com)** rather than in Github issues.
 
+# 0. Where's The Bug Tracker?
+
+We use Github Issues, so there is one bug tracker for each repo. For your convenience, here's a list:
+
+* [Couchbase Sync Gateway](https://github.com/couchbase/sync_gateway/issues)
+* Couchbase Lite:
+  * [iOS / Mac](https://github.com/couchbase/couchbase-lite-ios/issues)
+  * [Java](https://github.com/couchbase/couchbase-lite-java-core/issues)
+  * [Android-specific](https://github.com/couchbase/couchbase-lite-android/issues)
+  * [.NET](https://github.com/couchbase/couchbase-lite-net/issues)
+
 # 1. Is This A Duplicate?
 
 It's great if you can scan the open issues to see if your problem/idea has been reported already. If so, feel free to add any new details or just a note that you hit this too. But if you're in a hurry, go ahead and skip this step -- we'd rather get duplicate reports than miss an issue!
