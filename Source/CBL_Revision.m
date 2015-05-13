@@ -182,6 +182,11 @@
     return CBLSequenceCompare(_sequence, rev->_sequence);
 }
 
+- (NSComparisonResult) compareSequencesDescending: (CBL_Revision*)rev {
+    NSParameterAssert(rev != nil);
+    return CBLSequenceCompare(_sequence, rev->_sequence) * -1;
+}
+
 - (CBL_MutableRevision*) mutableCopyWithDocID: (UU NSString*)docID revID: (UU NSString*)revID {
     CBL_MutableRevision* rev = [self mutableCopy];
     [rev setDocID: docID revID: revID];
@@ -454,8 +459,11 @@
         [_revs removeObjectsInRange: NSMakeRange(limit, _revs.count - limit)];
 }
 
-- (void) sortBySequence {
-    [_revs sortUsingSelector: @selector(compareSequences:)];
+- (void) sortBySequenceAscending:(BOOL)ascending {
+    if (ascending)
+        [_revs sortUsingSelector: @selector(compareSequences:)];
+    else
+        [_revs sortUsingSelector: @selector(compareSequencesDescending:)];
 }
 
 - (void) sortByDocID {
