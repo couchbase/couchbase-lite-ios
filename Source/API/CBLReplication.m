@@ -49,6 +49,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     bool _started;
     CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
     NSMutableArray* _bg_pendingCookies;
+    NSConditionLock* _stopLock;
 }
 
 
@@ -305,18 +306,34 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 - (void) stop {
-    [self tellReplicatorAndWait:^id(CBL_Replicator * bgReplicator) {
-        // This runs on the server thread:
+    if (!_started || _stopLock)
+        return;
+
+    _stopLock = [[NSConditionLock alloc] initWithCondition: 0];
+    [self tellReplicatorAndWait: ^id(CBL_Replicator * bgReplicator) {
         [bgReplicator stop];
         return @(YES);
     }];
+
+    // Waiting for the background stop notification:
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0]; // 2 seconds:
+    if (![_stopLock lockWhenCondition: 1 beforeDate: timeout])
+        Warn(@"%@: Timeout waiting for background stop notification", self);
+    [_stopLock unlock];
+    _stopLock = nil;
 }
 
 
 - (void) restart {
     if (_started) {
         [self stop];
-        [self start];
+
+        // Schedule to call the -start method in the next runloop queue or dispatch queue.
+        // This allows the -start method to be called after the _started var is set to 'NO'
+        // in the -updateStatus: method.
+        [_database doAsync:^{
+            [self start];
+        }];
     }
 }
 
@@ -537,6 +554,11 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
                           serverCert: serverCert];
         cfrelease(serverCert);
     }];
+
+    if (status == kCBLReplicationStopped) {
+        [_stopLock lockWhenCondition: 0];
+        [_stopLock unlockWithCondition: 1];
+    }
 }
 
 
