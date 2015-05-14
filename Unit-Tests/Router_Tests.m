@@ -892,7 +892,7 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
                            $sprintf(@"/db/doc1/attach.txt?rev=%@", rev),
                            @{@"Content-Type": @"text/plain"},
                            [@"Hello there" dataUsingEncoding: NSUTF8StringEncoding]);
-    AssertEq(response.status, 200);
+    AssertEq(response.status, 201);
 }
 
 
