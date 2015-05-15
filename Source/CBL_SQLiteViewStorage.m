@@ -881,8 +881,8 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
                 [row addTerm: term atRange: NSMakeRange(location, length)];
             }
 
-//            if (options->fullTextSnippets)
-//                row.snippet = [r stringForColumnIndex: 5];
+            if (options->fullTextSnippets)
+                row.snippet = [r stringForColumnIndex: 5];
             if (!options.filter || options.filter(row))
                 [rows addObject: row];
         }
