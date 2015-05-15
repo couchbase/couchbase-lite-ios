@@ -528,14 +528,14 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     for (NSUInteger i = 0; i < 3; i++) {
         Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                      inManagedObjectContext:context];
-        entry.text = [NSString stringWithFormat:@"Entry%lu", i];
+        entry.text = [NSString stringWithFormat:@"Entry%lu", (unsigned long)i];
         [entries addObject:entry];
     }
 
     for (NSUInteger i = 0; i < 3; i++) {
         ManySubentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"ManySubentry"
                                                                inManagedObjectContext:context];
-        subentry.text = [NSString stringWithFormat:@"Subentry%lu", i];
+        subentry.text = [NSString stringWithFormat:@"Subentry%lu", (unsigned long)i];
         [subentry addEntries:entries];
     }
 
@@ -1070,7 +1070,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     for (NSUInteger i = 0; i < 4; i++) {
         ManySubentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"ManySubentry"
                                                                inManagedObjectContext:context];
-        subentry.text = [NSString stringWithFormat:@"ManySubentry%lu", i];
+        subentry.text = [NSString stringWithFormat:@"ManySubentry%lu", (unsigned long)i];
         subentry.number = @(30 + i);
 
         if (i < 2) {
