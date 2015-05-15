@@ -49,7 +49,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     bool _started;
     CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
     NSMutableArray* _bg_pendingCookies;
-    NSConditionLock* _stopLock;
+    NSConditionLock* _bg_stopLock;
 }
 
 
@@ -310,20 +310,20 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         return;
 
     [self tellReplicatorAndWait: ^id(CBL_Replicator * bgReplicator) {
-        _stopLock = [[NSConditionLock alloc] initWithCondition: 0];
+        _bg_stopLock = [[NSConditionLock alloc] initWithCondition: 0];
         [bgReplicator stop];
         return @(YES);
     }];
 
     // Waiting for the background stop notification:
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0]; // 2 seconds:
-    if ([_stopLock lockWhenCondition: 1 beforeDate: timeout])
-        [_stopLock unlock];
+    if ([_bg_stopLock lockWhenCondition: 1 beforeDate: timeout])
+        [_bg_stopLock unlock];
     else
         Warn(@"%@: Timeout waiting for background stop notification", self);
 
     [self tellReplicatorAndWait: ^id(CBL_Replicator * bgReplicator) {
-        _stopLock = nil;
+        _bg_stopLock = nil;
         return @(YES);
     }];
 }
@@ -561,8 +561,8 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     }];
 
     if (status == kCBLReplicationStopped) {
-        [_stopLock lockWhenCondition: 0];
-        [_stopLock unlockWithCondition: 1];
+        [_bg_stopLock lockWhenCondition: 0];
+        [_bg_stopLock unlockWithCondition: 1];
     }
 }
 
