@@ -160,6 +160,7 @@
                     fullTextID: (UInt64)fullTextID
                          value: (id)value
                        storage: (id<CBL_QueryRowStorage>)storage;
+@property (copy) NSString* snippet;
 - (void) addTerm: (NSUInteger)term atRange: (NSRange)range;
 @end
 
