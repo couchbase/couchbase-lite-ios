@@ -296,51 +296,83 @@ static CBLManager* sInstance;
 }
 
 
+- (Class) databaseUpgradeClass {
+    return NSClassFromString(@"CBLDatabaseUpgrade");
+}
+
+
 // Scan my dir for SQLite-based databases from Couchbase Lite 1.0 and upgrade them:
 - (void) upgradeOldDatabaseFiles {
     // The CBLDatabaseUpgrade class is optional, so don't create a hard reference to it.
     // And skip the upgrade check if it's not present:
-    Class databaseUpgradeClass = NSClassFromString(@"CBLDatabaseUpgrade");
-    if (!databaseUpgradeClass)
+    if (![self databaseUpgradeClass]) {
+        Warn(@"Upgrade skipped: Database upgrading class is not present.");
         return;
+    }
 
     NSFileManager* fmgr = [NSFileManager defaultManager];
     NSArray* files = [fmgr contentsOfDirectoryAtPath: _dir error: NULL];
     for (NSString* filename in [files pathsMatchingExtensions: @[kV1DBExtension]]) {
-        NSString* oldDbPath = [_dir stringByAppendingPathComponent: filename];
-        NSLog(@"CouchbaseLite: Upgrading v1 database at %@ ...", oldDbPath);
-
         NSString* name = [self nameOfDatabaseAtPath: filename];
-        if (![name isEqualToString: @"_replicator"]) {
-            // Create and open new CBLDatabase:
-            NSError* error;
-            CBLDatabase* db = [self _databaseNamed: name mustExist: NO error: &error];
-            if (!db) {
-                Warn(@"Upgrade failed: Creating new db failed: %@", error);
-                continue;
-            }
-            if (!db.exists) {
-                // Upgrade the old database into the new one:
-                CBLDatabaseUpgrade* upgrader = [[databaseUpgradeClass alloc] initWithDatabase: db
-                                                                             sqliteFile: oldDbPath];
-                CBLStatus status = [upgrader import];
-                if (CBLStatusIsError(status)) {
-                    Warn(@"Upgrade failed: status %d", status);
-                    [upgrader backOut];
-                    continue;
-                }
-            }
-            [db _close];
-        }
-
-        // Remove old database file and its SQLite side files:
-        for (NSString* suffix in @[@"", @"-wal", @"-shm"])
-            [fmgr removeItemAtPath: [oldDbPath stringByAppendingString: suffix] error: NULL];
-        NSString* oldAttachmentsPath = [[oldDbPath stringByDeletingPathExtension]
-                                                stringByAppendingString: @" attachments"];
-        [fmgr removeItemAtPath: oldAttachmentsPath error: NULL];
-        NSLog(@"    ...success!");
+        NSString* oldDbPath = [_dir stringByAppendingPathComponent: filename];
+        [self upgradeDatabaseNamed: name atPath: oldDbPath error: NULL];
     }
+}
+
+
+- (BOOL) upgradeDatabaseNamed: (NSString*)name
+                       atPath: (NSString*)dbPath
+                        error: (NSError**)outError {
+    Class databaseUpgradeClass = [self databaseUpgradeClass];
+    if (!databaseUpgradeClass) {
+        // Gracefully skipping the upgrade:
+        Warn(@"Upgrade skipped: Database upgrading class is not present.");
+        return YES;
+    }
+
+    if (![dbPath.pathExtension isEqualToString:kV1DBExtension]) {
+        // Gracefully skipping the upgrade:
+        Warn(@"Upgrade skipped: Database file extension is not %@", kV1DBExtension);
+        return YES;
+    }
+
+    NSLog(@"CouchbaseLite: Upgrading v1 database at %@ ...", dbPath);
+    if (![name isEqualToString: @"_replicator"]) {
+        // Create and open new CBLDatabase:
+        NSError* error;
+        CBLDatabase* db = [self _databaseNamed: name mustExist: NO error: &error];
+        if (!db) {
+            Warn(@"Upgrade failed: Creating new db failed: %@", error);
+            if (outError)
+                *outError = error;
+            return NO;
+        }
+        if (!db.exists) {
+            // Upgrade the old database into the new one:
+            CBLDatabaseUpgrade* upgrader = [[databaseUpgradeClass alloc] initWithDatabase: db
+                                                                               sqliteFile: dbPath];
+            CBLStatus status = [upgrader import];
+            if (CBLStatusIsError(status)) {
+                Warn(@"Upgrade failed: status %d", status);
+                [upgrader backOut];
+                if (outError)
+                    *outError = error;
+                return NO;
+            }
+        }
+        [db _close];
+    }
+
+    // Remove old database file and its SQLite side files:
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    for (NSString* suffix in @[@"", @"-wal", @"-shm"])
+        [fmgr removeItemAtPath: [dbPath stringByAppendingString: suffix] error: NULL];
+    NSString* oldAttachmentsPath = [[dbPath stringByDeletingPathExtension]
+                                    stringByAppendingString: @" attachments"];
+    [fmgr removeItemAtPath: oldAttachmentsPath error: NULL];
+    NSLog(@"    ...success!");
+
+    return YES;
 }
 
 
@@ -523,6 +555,53 @@ static CBLManager* sInstance;
 
 
 - (BOOL) replaceDatabaseNamed: (NSString*)databaseName
+             withDatabaseFile: (NSString*)databasePath
+              withAttachments: (NSString*)attachmentsPath
+                        error: (NSError**)outError
+{
+    CBLDatabase* db = [self _databaseNamed: databaseName mustExist: NO error: outError];
+    if (!db)
+        return NO;
+    Assert(!db.isOpen, @"Already-open database cannot be replaced");
+
+    NSFileManager *fmgr = [NSFileManager defaultManager];
+    BOOL isDbPathDir;
+    if (![fmgr fileExistsAtPath: databasePath isDirectory: &isDbPathDir]) {
+        Warn(@"Database file doesn't exist at path : %@", databasePath);
+        return NO;
+    }
+
+    if (isDbPathDir) {
+        Warn(@"Database file is a directory. "
+              "Use -replaceDatabaseNamed:withDatabaseDir:error: instead.");
+        if (outError)
+            *outError = CBLStatusToNSError(kCBLStatusBadParam, nil);
+        return NO;
+    }
+
+    NSString* dstDbPath = [[db.dir stringByDeletingPathExtension]
+                            stringByAppendingPathExtension: kV1DBExtension];
+    NSString* dstAttsPath = [[dstDbPath stringByDeletingPathExtension]
+                                    stringByAppendingString: @" attachments"];
+
+    return CBLRemoveFileIfExists(dstDbPath, outError) &&
+        CBLRemoveFileIfExists([dstDbPath stringByAppendingString: @"-wal"], outError) &&
+        CBLRemoveFileIfExists([dstDbPath stringByAppendingString: @"-shm"], outError) &&
+        CBLRemoveFileIfExists(dstAttsPath, outError) &&
+        CBLCopyFileIfExists(databasePath, dstDbPath, outError) &&
+        CBLCopyFileIfExists([databasePath stringByAppendingString: @"-wal"],
+                            [dstDbPath stringByAppendingString: @"-wal"], outError) &&
+        CBLCopyFileIfExists([databasePath stringByAppendingString: @"-shm"],
+                            [dstDbPath stringByAppendingString: @"-shm"], outError) &&
+        (!attachmentsPath || CBLCopyFileIfExists(attachmentsPath, dstAttsPath, outError)) &&
+        (isDbPathDir || [self upgradeDatabaseNamed: databaseName atPath: dstDbPath error: NULL]) &&
+        [db open: outError] &&
+        [db saveLocalUUIDInLocalCheckpointDocument: outError] &&
+        [db replaceUUIDs: outError];
+}
+
+
+- (BOOL) replaceDatabaseNamed: (NSString*)databaseName
              withDatabaseDir: (NSString*)databaseDir
                         error: (NSError**)outError
 {
@@ -530,7 +609,24 @@ static CBLManager* sInstance;
     if (!db)
         return NO;
     Assert(!db.isOpen, @"Already-open database cannot be replaced");
-    NSFileManager* fmgr = [NSFileManager defaultManager];
+
+    NSFileManager *fmgr = [NSFileManager defaultManager];
+    BOOL isDbPathDir;
+    if (![fmgr fileExistsAtPath: databaseDir isDirectory: &isDbPathDir]) {
+        Warn(@"Database file doesn't exist at path : %@", databaseDir);
+        if (outError)
+            *outError = CBLStatusToNSError(kCBLStatusNotFound, nil);
+        return NO;
+    }
+
+    if (!isDbPathDir) {
+        Warn(@"Database file is not a directory. "
+              "Use -replaceDatabaseNamed:withDatabaseFilewithAttachments:error: instead.");
+        if (outError)
+            *outError = CBLStatusToNSError(kCBLStatusBadParam, nil);
+        return NO;
+    }
+
     return CBLRemoveFileIfExists(db.dir, outError) &&
             [fmgr copyItemAtPath: databaseDir toPath: db.dir error: outError] &&
             [db open: outError] &&

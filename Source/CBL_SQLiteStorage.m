@@ -281,7 +281,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     __unused int dbVersion = self.schemaVersion;
     
     // Incompatible version changes increment the hundreds' place:
-    if (dbVersion >= 100) {
+    if (dbVersion >= 200) {
         Warn(@"CBLDatabase: Database version (%d) is newer than I know how to work with", dbVersion);
         [_fmdb close];
         if (outError) *outError = [NSError errorWithDomain: @"CouchbaseLite" code: 1 userInfo: nil]; //FIX: Real code
@@ -358,6 +358,14 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         if (![self initialize: schema error: outError])
             return NO;
         dbVersion = 18;
+    }
+
+    if (dbVersion < 101) {
+        NSString *schema = @"\
+        PRAGMA user_version = 101";
+        if (![self initialize: schema error: outError])
+            return NO;
+        dbVersion = 101;
     }
 
     if (isNew && ![self initialize: @"END TRANSACTION" error: outError])
