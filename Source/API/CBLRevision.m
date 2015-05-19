@@ -309,17 +309,13 @@
 }
 
 - (void) setProperties: (NSMutableDictionary*)properties {
-    @synchronized(self) { // Atomic property
-        if (_properties != properties) {
-            _properties = [properties mutableCopy];
-        }
+    if (_properties != properties) {
+        _properties = [properties mutableCopy];
     }
 }
 
 - (NSMutableDictionary*)properties {
-    @synchronized(self) { // Atomic property
-        return _properties;
-    }
+    return _properties;
 }
 
 - (NSArray*) getRevisionHistory: (NSError**)outError {
