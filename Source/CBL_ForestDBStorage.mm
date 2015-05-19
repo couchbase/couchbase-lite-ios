@@ -1121,5 +1121,7 @@ static void convertRevIDs(NSArray* revIDs,
     }];
 }
 
+-(void) removeKeyFromDocIDCache:(NSString*)docID {
+}
 
 @end

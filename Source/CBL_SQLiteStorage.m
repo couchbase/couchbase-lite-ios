@@ -677,9 +677,16 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 - (SInt64) _createDocNumericID: (NSString*)docID {
     if (![_fmdb executeUpdate: @"INSERT OR IGNORE INTO docs (docid) VALUES (?)", docID])
         return -1;
-    if (_fmdb.changes == 0)
-        return -1;
+    if (_fmdb.changes == 0) {
+      SInt64 result = [self _getDocNumericID:docID];
+      if(result > 0) return result; 
+      return -1;
+    }
     return _fmdb.lastInsertRowId;
+}
+
+-(void) removeKeyFromDocIDCache:(NSString*)docID {
+  [_docIDs removeObjectForKey:docID];
 }
 
 // Registers a docID and returns its numeric row ID in the 'docs' table.
