@@ -288,7 +288,7 @@
     NSMutableDictionary* _properties;
 }
 
-@synthesize parentRevisionID=_parentRevID, properties=_properties;
+@synthesize parentRevisionID=_parentRevID;
 @dynamic isDeletion, userProperties;     // Necessary because this class redeclares them
 
 - (instancetype) initWithDocument: (CBLDocument*)doc parent: (CBLSavedRevision*)parent {
@@ -306,6 +306,20 @@
 
 - (CBLSavedRevision*) parentRevision {
     return _parentRevID ? [_document revisionWithID: _parentRevID] : nil;
+}
+
+- (void) setProperties: (NSMutableDictionary*)properties {
+    @synchronized(self) { // Atomic property
+        if (_properties != properties) {
+            _properties = [properties mutableCopy];
+        }
+    }
+}
+
+- (NSMutableDictionary*)properties {
+    @synchronized(self) { // Atomic property
+        return _properties;
+    }
 }
 
 - (NSArray*) getRevisionHistory: (NSError**)outError {
