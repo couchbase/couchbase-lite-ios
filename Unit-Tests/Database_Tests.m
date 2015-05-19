@@ -308,7 +308,35 @@
 }
 
 
-- (void) test075_UpdateDocInTransaction {
+- (void) test071_CreateDocWithAttachmentInSingleRevision {
+    // Set properties:
+    CBLDocument* doc1 = [db createDocument];
+    CBLUnsavedRevision* newRev1 = [doc1 newRevision];
+    NSMutableDictionary* props = [NSMutableDictionary dictionaryWithDictionary:newRev1.properties];
+    props[@"foo"] = @"bar";
+    newRev1.properties = props;
+
+    NSData* attach1 = [@"attach1" dataUsingEncoding:NSUTF8StringEncoding];
+    [newRev1 setAttachmentNamed: @"attach1"
+                withContentType: @"text/plain; charset=utf-8"
+                        content: attach1];
+    NSError* error;
+    Assert([newRev1 save: &error], @"Cannot save the document: %@", error);
+
+    // Set userProperties:
+    CBLDocument* doc2 = [db createDocument];
+    CBLUnsavedRevision* newRev2 = [doc2 newRevision];
+    newRev2.userProperties = @{@"foo":@"bar"};
+
+    NSData* attach2 = [@"attach2" dataUsingEncoding:NSUTF8StringEncoding];
+    [newRev2 setAttachmentNamed: @"attach2"
+                withContentType: @"text/plain; charset=utf-8"
+                        content: attach2];
+    Assert([newRev2 save: &error], @"Cannot save the document: %@", error);
+}
+
+
+- (void) test072_UpdateDocInTransaction {
     // Test for #256, "Conflict error when updating a document multiple times in transaction block"
     CBLDocument* doc = [self createDocumentWithProperties: @{@"testNumber": @7.5,
                                                              @"count": @1}];
@@ -920,7 +948,6 @@
     dispatch_sync(readingQueue2, ^{  });
     dispatch_sync(writingQueue, ^{  });
 }
-
 
 #pragma mark - REPLACE DATABASE TEST:
 
