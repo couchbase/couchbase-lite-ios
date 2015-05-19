@@ -253,6 +253,10 @@
                           obeyMVCC: (BOOL)obeyMVCC
                             status: (CBLStatus*)outStatus;
 
+
+/** For use by unit tests to clear the docID cache. */
+-(void) removeKeyFromDocIDCache: (NSString*)docID;
+
 @end
 
 
