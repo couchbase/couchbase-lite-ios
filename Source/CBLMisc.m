@@ -402,6 +402,23 @@ BOOL CBLRemoveFileIfExistsAsync(NSString* path, NSError** outError) {
     }
 }
 
+
+BOOL CBLCopyFileIfExists(NSString* atPath, NSString* toPath, NSError** outError) {
+    NSFileManager *fmgr = [NSFileManager defaultManager];
+    if ([fmgr fileExistsAtPath:atPath isDirectory:NULL]) {
+        NSError *error;
+        if ([fmgr copyItemAtPath: atPath toPath: toPath error: &error])
+            return YES;
+        else {
+            if (outError)
+                *outError = error;
+            return NO;
+        }
+    } else
+        return YES;
+}
+
+
 NSString* CBLGetHostName() {
     // From <http://stackoverflow.com/a/16902907/98077>
     char baseHostName[256];
