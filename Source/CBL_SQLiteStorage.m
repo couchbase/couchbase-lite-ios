@@ -670,7 +670,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     if (![_fmdb executeUpdate: @"INSERT OR IGNORE INTO docs (docid) VALUES (?)", docID])
         return -1;
     if (_fmdb.changes == 0)
-        return -1;
+        return 0;
     return _fmdb.lastInsertRowId;
 }
 

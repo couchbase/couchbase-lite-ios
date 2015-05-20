@@ -847,4 +847,28 @@ static CBL_Revision* mkrev(NSString* revID) {
 #endif
 #endif
 
+-(void) test26_ReAddAfterPurge {
+  
+  NSString* docId = @"test26-ReAddAfterPurge";
+  
+  CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID:docId revID:@"1-1111" deleted: NO];
+  rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"testName", @"test26_ReAddAfterPurge"});
+  CBLStatus status = [db forceInsert: rev revisionHistory: nil source: nil];
+  AssertEq(status, kCBLStatusCreated);
+  
+  CBLDocument* redoc = [db existingDocumentWithID:docId];
+  Assert(redoc);
+  
+  NSError* error;
+  Assert([redoc purgeDocument: &error]);
+  
+  [self reopenTestDB];
+  
+  CBL_MutableRevision* revAfterPurge = [[CBL_MutableRevision alloc] initWithDocID:docId revID:@"1-1111" deleted: NO];
+  revAfterPurge.properties = $dict({@"_id", revAfterPurge.docID}, {@"_rev", revAfterPurge.revID}, {@"testName", @"test26_ReAddAfterPurge"});
+  CBLStatus status2 = [db forceInsert: revAfterPurge revisionHistory: nil source: nil];
+  AssertEq(status2, kCBLStatusCreated);
+  
+}
+
 @end
