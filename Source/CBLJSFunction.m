@@ -14,23 +14,18 @@
 //  and limitations under the License.
 
 #import "CBLJSFunction.h"
-#import <JavaScriptCore/JavaScript.h>
-#import <JavaScriptCore/JSStringRefCF.h>
 
-
-/* NOTE: JavaScriptCore is not a public system framework on iOS, so you'll need to link your iOS app
-   with your own copy of it. See <https://github.com/phoboslab/JavaScriptCore-iOS>. */
+#import <CouchbaseLite/CBLJSON.h>
+#define COMMON_DIGEST_FOR_OPENSSL
+#import <CommonCrypto/CommonDigest.h>
 
 /* NOTE: This source file requires ARC. */
 
-
-static JSValueRef IDToValue(JSContextRef ctx, id object);
-static void WarnJSException(JSContextRef context, NSString* warning, JSValueRef exception);
+static void WarnJSException(NSString* warning, JSValue* exception);
 
 
-@implementation CBLJSCompiler
-{
-    JSGlobalContextRef _context;
+@implementation CBLJSCompiler {
+    JSContext* _context;
 }
 
 
@@ -40,7 +35,7 @@ static void WarnJSException(JSContextRef context, NSString* warning, JSValueRef 
 - (instancetype) init {
     self = [super init];
     if (self) {
-        _context = JSGlobalContextCreate(NULL);
+        _context = [[JSContext alloc] init];
         if (!_context)
             return nil;
     }
@@ -48,121 +43,82 @@ static void WarnJSException(JSContextRef context, NSString* warning, JSValueRef 
 }
 
 
-- (void)dealloc {
-    if (_context)
-        JSGlobalContextRelease(_context);
-}
-
-
 @end
 
 
 
+#define kCBLJSFunctionName @"cblJSFunction"
 
-@implementation CBLJSFunction
-{
+@implementation CBLJSFunction {
     CBLJSCompiler* _compiler;
-    unsigned _nParams;
-    JSObjectRef _fn;
+    NSString *_fnName;
 }
 
-- (instancetype) initWithCompiler: (CBLJSCompiler*)compiler
-                       sourceCode: (NSString*)source
-                       paramNames: (NSArray*)paramNames
-{
+
+- (instancetype) initWithCompiler: (CBLJSCompiler*)compiler sourceCode: (NSString*)source {
     self = [super init];
     if (self) {
         _compiler = compiler;
-        _nParams = (unsigned)paramNames.count;
 
-        // The source code given is a complete function, like "function(doc){....}".
-        // But JSObjectMakeFunction wants the source code of the _body_ of a function.
-        // Therefore we wrap the given source in an expression that will call it:
-        NSString* body = [NSString stringWithFormat: @"return (%@)(%@);",
-                                               source, [paramNames componentsJoinedByString: @","]];
-
-        // Compile the function:
-        JSStringRef jsParamNames[_nParams];
-        for (NSUInteger i = 0; i < _nParams; ++i)
-            jsParamNames[i] = JSStringCreateWithCFString((__bridge CFStringRef)paramNames[i]);
-        JSStringRef jsBody = JSStringCreateWithCFString((__bridge CFStringRef)body);
-        JSValueRef exception;
-        _fn = JSObjectMakeFunction(_compiler.context, NULL, _nParams, jsParamNames, jsBody,
-                                   NULL, 1, &exception);
-        JSStringRelease(jsBody);
-        for (NSUInteger i = 0; i < _nParams; ++i)
-            JSStringRelease(jsParamNames[i]);
-        
-        if (!_fn) {
-            WarnJSException(_compiler.context, @"JS function compile failed", exception);
+        // Evaluate source code:
+        _fnName = [self functionNameFromSourceCode: source];
+        NSString* script = [NSString stringWithFormat: @"var %@ = %@", _fnName, source];
+        [compiler.context evaluateScript: script];
+        if (compiler.context.exception) {
+            WarnJSException(@"JS function compile failed", compiler.context.exception);
             return nil;
         }
-        JSValueProtect(_compiler.context, _fn);
     }
     return self;
 }
 
-- (JSValueRef) call: (id)param1, ... {
-    JSContextRef context = _compiler.context;
-    JSValueRef jsParams[_nParams];
-    jsParams[0] = IDToValue(context, param1);
-    if (_nParams > 1) {
-        va_list args;
+
+- (JSValue*) call: (id)param1, ... {
+    NSMutableArray *params = [NSMutableArray array];
+    va_list args;
+    if (param1) {
+        [params addObject: param1];
         va_start(args, param1);
-        for (NSUInteger i = 1; i < _nParams; ++i)
-            jsParams[i] = IDToValue(context, va_arg(args, id));
+        id param;
+        while ((param = va_arg(args, id)))
+            [params addObject: param];
         va_end(args);
     }
-    JSValueRef exception = NULL;
-    JSValueRef result = JSObjectCallAsFunction(context, _fn, NULL, _nParams, jsParams, &exception);
-    if (!result)
-        WarnJSException(context, @"JS function threw exception", exception);
+
+    JSValue *jsFunc = _compiler.context[_fnName];
+    JSValue *result = [jsFunc callWithArguments: params];
+    if (_compiler.context.exception)
+        WarnJSException(@"JS function threw exception", _compiler.context.exception);
     return result;
 }
 
-- (void)dealloc
-{
-    if (_fn)
-        JSValueUnprotect(_compiler.context, _fn);
+
+- (NSData*) SHA1: (NSData*)input {
+    unsigned char digest[SHA_DIGEST_LENGTH];
+    SHA_CTX ctx;
+    SHA1_Init(&ctx);
+    SHA1_Update(&ctx, input.bytes, input.length);
+    SHA1_Final(digest, &ctx);
+    return [NSData dataWithBytes: &digest length: sizeof(digest)];
+}
+
+
+- (NSString*) functionNameFromSourceCode: (NSString*)source {
+    // TODO: Use CBLMisc.CBLDigestFromObject instead when moving CBLJSViewCompiler
+    // into CouchbaseLite.framework
+    NSData* data = [source dataUsingEncoding: NSUTF8StringEncoding];
+    NSString* encoded = [CBLJSON base64StringWithData: [self SHA1: data]];
+    encoded = [encoded stringByReplacingOccurrencesOfString:@"=" withString:@""];
+    encoded = [encoded stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
+    encoded = [encoded stringByReplacingOccurrencesOfString:@"+" withString:@"$"];
+    NSString* fnName = [NSString stringWithFormat:@"fn%@", encoded];
+    return fnName;
 }
 
 @end
 
 
 
-// Converts a JSON-compatible NSObject to a JSValue.
-static JSValueRef IDToValue(JSContextRef ctx, id object) {
-    if (object == nil) {
-        return NULL;
-    } else if (object == (id)kCFBooleanFalse || object == (id)kCFBooleanTrue) {
-        return JSValueMakeBoolean(ctx, object == (id)kCFBooleanTrue);
-    } else if (object == [NSNull null]) {
-        return JSValueMakeNull(ctx);
-    } else if ([object isKindOfClass: [NSNumber class]]) {
-        return JSValueMakeNumber(ctx, [object doubleValue]);
-    } else if ([object isKindOfClass: [NSString class]]) {
-        JSStringRef jsStr = JSStringCreateWithCFString((__bridge CFStringRef)object);
-        JSValueRef value = JSValueMakeString(ctx, jsStr);
-        JSStringRelease(jsStr);
-        return value;
-    } else {
-        //FIX: Going through JSON is inefficient.
-        NSData* json = [NSJSONSerialization dataWithJSONObject: object options: 0 error: NULL];
-        if (!json)
-            return NULL;
-        NSString* jsonStr = [[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding];
-        JSStringRef jsStr = JSStringCreateWithCFString((__bridge CFStringRef)jsonStr);
-        JSValueRef value = JSValueMakeFromJSONString(ctx, jsStr);
-        JSStringRelease(jsStr);
-        return value;
-    }
-}
-
-
-void WarnJSException(JSContextRef context, NSString* warning, JSValueRef exception) {
-    JSStringRef error = JSValueToStringCopy(context, exception, NULL);
-    CFStringRef cfError = error ? JSStringCopyCFString(NULL, error) : NULL;
-    NSLog(@"*** WARNING: %@: %@", warning, cfError);
-    if (cfError)
-        CFRelease(cfError);
+void WarnJSException(NSString* warning, JSValue* exception) {
+    NSLog(@"*** WARNING: %@: %@", warning, exception);
 }
