@@ -110,6 +110,7 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
         Assert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
         Assert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
         Assert([doc[@"_local_seq"] isKindOfClass: [NSNumber class]], @"Invalid _local_seq in %@", doc);
+        Assert(![doc[@"_id"] hasPrefix:@"_design/"], @"Shouldn't index the design doc: %@", doc);
         if (doc[@"key"])
             emit(doc[@"key"], nil);
         if (doc[@"geoJSON"])
