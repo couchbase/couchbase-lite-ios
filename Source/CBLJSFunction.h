@@ -7,12 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <JavaScriptCore/JavaScript.h>
+#import <JavaScriptCore/JavaScriptCore.h>
 
 
 /** Abstract base class for JavaScript-based CBL*Compilers */
 @interface CBLJSCompiler : NSObject
-@property (readonly) JSGlobalContextRef context;
+@property (readonly) JSContext* context;
 @end
 
 
@@ -20,9 +20,8 @@
 @interface CBLJSFunction : NSObject
 
 - (instancetype) initWithCompiler: (CBLJSCompiler*)compiler
-                       sourceCode: (NSString*)source
-                       paramNames: (NSArray*)paramNames;
+                       sourceCode: (NSString*)source;
 
-- (JSValueRef) call: (id)param1, ...;
+- (JSValue*) call: (id)param1, ...;
 
 @end
