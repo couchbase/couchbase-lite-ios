@@ -543,6 +543,32 @@
 }
 
 
+- (void) test_DistinctCheckpointIDs {
+    NSMutableDictionary* props = [@{@"source": @"http://fake.fake/fakedb",
+                                    @"target": db.name,
+                                    @"continuous": @NO} mutableCopy];
+    CBLStatus status;
+    CBL_Replicator* r1 = [dbmgr replicatorWithProperties: props status: &status];
+    Assert(r1);
+    NSString* check1 = r1.remoteCheckpointDocID;
+
+    props[@"continuous"] = @YES;
+    CBL_Replicator* r2 = [dbmgr replicatorWithProperties: props status: &status];
+    Assert(r2);
+    NSString* check2 = r2.remoteCheckpointDocID;
+    Assert(![check1 isEqualToString: check2]);
+    Assert(![r1 hasSameSettingsAs: r2]);
+
+    props[@"filter"] = @"Melitta";
+    props[@"query_params"] = @{@"unbleached": @"true"};     // Test fix for #728
+    CBL_Replicator* r3 = [dbmgr replicatorWithProperties: props status: &status];
+    Assert(r3);
+    NSString* check3 = r3.remoteCheckpointDocID;
+    Assert(![check3 isEqualToString: check2]);
+    Assert(![r3 hasSameSettingsAs: r2]);
+}
+
+
 #pragma mark - UTILITY FUNCTIONS
 
 
