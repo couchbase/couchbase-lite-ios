@@ -84,6 +84,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     BOOL _suspended;
     SecCertificateRef _serverCert;
     NSData* _pinnedCertData;
+    CBLCookieStorage* _cookieStorage;
 }
 
 @synthesize revisionBodyTransformationBlock=_revisionBodyTransformationBlock;
@@ -119,10 +120,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         _remote = remote;
         _continuous = continuous;
         Assert(push == self.isPush);
-
-        _cookieStorage = [[CBLCookieStorage alloc] initWithDB: db
-                                                   storageKey: self.remoteCheckpointDocID];
-
         static int sLastSessionID = 0;
         _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
 #if TARGET_OS_IPHONE
@@ -153,13 +150,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
-- (void) clearCookieStorageRef {
-    // Explicitly clear the reference to the storage to ensure that the cookie storage will
-    // get dealloc and the database referenced inside the storage will get cleared as well.
-    _cookieStorage = nil;
-}
-
-
 - (void) databaseClosing {
     [self saveLastSequence];
     [self stop];
@@ -181,7 +171,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 @synthesize authorizer=_authorizer;
 @synthesize requestHeaders = _requestHeaders;
 @synthesize serverCert=_serverCert;
-@synthesize cookieStorage = _cookieStorage;
 
 
 - (BOOL) isPush {
@@ -746,6 +735,21 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 #pragma mark - HTTP REQUESTS:
 
 
+- (CBLCookieStorage*) cookieStorage {
+    if (!_cookieStorage) {
+        _cookieStorage = [[CBLCookieStorage alloc] initWithDB: _db
+                                                   storageKey: self.remoteCheckpointDocID];
+    }
+    return _cookieStorage;
+}
+
+- (void) clearCookieStorageRef {
+    // Explicitly clear the reference to the storage to ensure that the cookie storage will
+    // get dealloc and the database referenced inside the storage will get cleared as well.
+    _cookieStorage = nil;
+}
+
+
 - (NSTimeInterval) requestTimeout {
     id timeoutObj = _options[kCBLReplicatorOption_Timeout];
     if (!timeoutObj)
@@ -811,7 +815,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     request.delegate = self;
     request.timeoutInterval = self.requestTimeout;
     request.authorizer = _authorizer;
-    request.cookieStorage = _cookieStorage;
+    request.cookieStorage = self.cookieStorage;
 
     if (!_remoteRequests)
         _remoteRequests = [[NSMutableArray alloc] init];
