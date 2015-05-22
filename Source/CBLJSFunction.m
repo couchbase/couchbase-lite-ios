@@ -16,8 +16,6 @@
 #import "CBLJSFunction.h"
 
 #import <CouchbaseLite/CBLJSON.h>
-#define COMMON_DIGEST_FOR_OPENSSL
-#import <CommonCrypto/CommonDigest.h>
 
 /* NOTE: This source file requires ARC. */
 
@@ -51,7 +49,7 @@ static void WarnJSException(NSString* warning, JSValue* exception);
 
 @implementation CBLJSFunction {
     CBLJSCompiler* _compiler;
-    NSString *_fnName;
+    JSValue* _fn;
 }
 
 
@@ -61,9 +59,8 @@ static void WarnJSException(NSString* warning, JSValue* exception);
         _compiler = compiler;
 
         // Evaluate source code:
-        _fnName = [self functionNameFromSourceCode: source];
-        NSString* script = [NSString stringWithFormat: @"var %@ = %@", _fnName, source];
-        [compiler.context evaluateScript: script];
+        NSString* script = [NSString stringWithFormat: @"(%@)", source];
+        _fn = [compiler.context evaluateScript: script];
         if (compiler.context.exception) {
             WarnJSException(@"JS function compile failed", compiler.context.exception);
             return nil;
@@ -85,34 +82,10 @@ static void WarnJSException(NSString* warning, JSValue* exception);
         va_end(args);
     }
 
-    JSValue *jsFunc = _compiler.context[_fnName];
-    JSValue *result = [jsFunc callWithArguments: params];
+    JSValue *result = [_fn callWithArguments: params];
     if (_compiler.context.exception)
         WarnJSException(@"JS function threw exception", _compiler.context.exception);
     return result;
-}
-
-
-- (NSData*) SHA1: (NSData*)input {
-    unsigned char digest[SHA_DIGEST_LENGTH];
-    SHA_CTX ctx;
-    SHA1_Init(&ctx);
-    SHA1_Update(&ctx, input.bytes, input.length);
-    SHA1_Final(digest, &ctx);
-    return [NSData dataWithBytes: &digest length: sizeof(digest)];
-}
-
-
-- (NSString*) functionNameFromSourceCode: (NSString*)source {
-    // TODO: Use CBLMisc.CBLDigestFromObject instead when moving CBLJSViewCompiler
-    // into CouchbaseLite.framework
-    NSData* data = [source dataUsingEncoding: NSUTF8StringEncoding];
-    NSString* encoded = [CBLJSON base64StringWithData: [self SHA1: data]];
-    encoded = [encoded stringByReplacingOccurrencesOfString:@"=" withString:@""];
-    encoded = [encoded stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
-    encoded = [encoded stringByReplacingOccurrencesOfString:@"+" withString:@"$"];
-    NSString* fnName = [NSString stringWithFormat:@"fn%@", encoded];
-    return fnName;
 }
 
 @end
