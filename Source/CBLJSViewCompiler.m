@@ -17,30 +17,11 @@
 #import "CBLJSFunction.h"
 #import "CBLRevision.h"
 #import "CBLReduceFuncs.h"
-#import <JavaScriptCore/JavaScript.h>
-#import <JavaScriptCore/JSStringRefCF.h>
 
 
 /* NOTE: If you build this, you'll need to link against JavaScriptCore.framework */
 
 /* NOTE: This source file requires ARC. */
-
-
-// Converts a JSON-compatible JSValue to an NSObject.
-static id ValueToID(JSContextRef ctx, JSValueRef value) {
-    if (!value)
-        return nil;
-    //FIX: Going through JSON is inefficient.
-    JSStringRef jsStr = JSValueCreateJSONString(ctx, value, 0, NULL);
-    if (!jsStr)
-        return nil;
-    NSString* str = (NSString*)CFBridgingRelease(JSStringCopyCFString(NULL, jsStr));
-    JSStringRelease(jsStr);
-    str = [NSString stringWithFormat: @"[%@]", str];    // make it a valid JSON object
-    NSData* data = [str dataUsingEncoding: NSUTF8StringEncoding];
-    NSArray* result = [NSJSONSerialization JSONObjectWithData: data options: 0 error: NULL];
-    return [result objectAtIndex: 0];
-}
 
 
 @implementation CBLJSViewCompiler
@@ -55,55 +36,24 @@ __thread
 __unsafe_unretained CBLMapEmitBlock sCurrentEmitBlock;
 
 
-// This is the body of the JavaScript "emit(key,value)" function.
-static JSValueRef EmitCallback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject,
-                               size_t argumentCount, const JSValueRef arguments[],
-                               JSValueRef* exception)
-{
-    id key = nil, value = nil;
-    if (argumentCount > 0) {
-        key = ValueToID(ctx, arguments[0]);
-        if (argumentCount > 1)
-            value = ValueToID(ctx, arguments[1]);
-    }
-    sCurrentEmitBlock(key, value);
-    return JSValueMakeUndefined(ctx);
-}
-
-
-// This is the body of the JavaScript "Log(message)" function.
-static JSValueRef LogCallback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject,
-                               size_t argumentCount, const JSValueRef arguments[],
-                               JSValueRef* exception)
-{
-    id message = nil;
-    if (argumentCount > 0) {
-        message = ValueToID(ctx, arguments[0]);
-        NSLog(@"JS: %@", message);
-    }
-    return JSValueMakeUndefined(ctx);
-}
-
-
 - (instancetype) init {
     self = [super init];
     if (self) {
-        [self registerFunctionNamed:@"emit" callback:&EmitCallback];
-        [self registerFunctionNamed:@"log" callback:&LogCallback];
+        // Register emit function:
+        __weak CBLJSViewCompiler *weakSelf = self;
+        self.context[@"emit"] = ^(id key, id value) {
+            [weakSelf emitWithKey: key value: value];
+        };
+        // Register log function:
+        self.context[@"log"] = ^(NSString *message) {
+            NSLog(@"JS: %@", message);
+        };
     }
     return self;
 }
 
-
-- (void) registerFunctionNamed: (NSString*)fnName callback: (JSObjectCallAsFunctionCallback)callback {
-    JSGlobalContextRef context = self.context;
-    JSStringRef name = JSStringCreateWithCFString((__bridge CFStringRef)fnName);
-    JSObjectRef fn = JSObjectMakeFunctionWithCallback(context, name, callback);
-    JSObjectSetProperty(context, JSContextGetGlobalObject(context),
-                        name, fn,
-                        kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete,
-                        NULL);
-    JSStringRelease(name);
+- (void) emitWithKey:(id)key value:(id)value {
+    sCurrentEmitBlock(key, value);
 }
 
 
@@ -112,16 +62,14 @@ static JSValueRef LogCallback(JSContextRef ctx, JSObjectRef function, JSObjectRe
         return nil;
 
     // Compile the function:
-    CBLJSFunction* fn = [[CBLJSFunction alloc] initWithCompiler: self
-                                                   sourceCode: mapSource
-                                                   paramNames: @[@"doc"]];
+    CBLJSFunction* fn = [[CBLJSFunction alloc] initWithCompiler: self sourceCode: mapSource];
     if (!fn)
         return nil;
 
     // Return the CBLMapBlock; the code inside will be called when CouchbaseLite wants to run the map fn:
     CBLMapBlock mapBlock = ^(NSDictionary* doc, CBLMapEmitBlock emit) {
         sCurrentEmitBlock = emit;
-        [fn call: doc];
+        [fn call: doc, nil];
         sCurrentEmitBlock = nil;
     };
     return [mapBlock copy];
@@ -137,16 +85,14 @@ static JSValueRef LogCallback(JSContextRef ctx, JSObjectRef function, JSObjectRe
         return CBLGetReduceFunc([reduceSource substringFromIndex: 1]);
 
     // Compile the function:
-    CBLJSFunction* fn = [[CBLJSFunction alloc] initWithCompiler: self
-                                                   sourceCode: reduceSource
-                                                   paramNames: @[@"keys", @"values", @"rereduce"]];
+    CBLJSFunction* fn = [[CBLJSFunction alloc] initWithCompiler: self sourceCode: reduceSource];
     if (!fn)
         return nil;
 
     // Return the CBLReduceBlock; the code inside will be called when CouchbaseLite wants to reduce:
     CBLReduceBlock reduceBlock = ^id(NSArray* keys, NSArray* values, BOOL rereduce) {
-        JSValueRef result = [fn call: keys, values, @(rereduce)];
-        return ValueToID(self.context, result);
+        JSValue* result = [fn call: keys, values, @(rereduce), nil];
+        return [result toObject];
     };
     return [reduceBlock copy];
 }
@@ -165,16 +111,14 @@ static JSValueRef LogCallback(JSContextRef ctx, JSObjectRef function, JSObjectRe
         return nil;
 
     // Compile the function:
-    CBLJSFunction* fn = [[CBLJSFunction alloc] initWithCompiler: self
-                                                   sourceCode: filterSource
-                                                   paramNames: @[@"doc", @"req"]];
+    CBLJSFunction* fn = [[CBLJSFunction alloc] initWithCompiler: self sourceCode: filterSource];
     if (!fn)
         return nil;
 
     // Return the CBLMapBlock; the code inside will be called when CouchbaseLite wants to run the map fn:
-    JSContextRef ctx = self.context;
     CBLFilterBlock block = ^BOOL(CBLSavedRevision* revision, NSDictionary* params) {
-        return JSValueToBoolean(ctx, [fn call: revision.properties, params]);
+        JSValue* result = [fn call: revision.properties, params, nil];
+        return [result toBool];
     };
     return [block copy];
 }
