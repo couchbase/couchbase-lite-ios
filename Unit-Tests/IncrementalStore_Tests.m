@@ -316,6 +316,15 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEqual(file.data, attachment.content);
     
     // now change the properties in CouchbaseLite and check if those are available in Core Data
+    XCTestExpectation *expectation = [self expectationWithDescription:@"CBLIS Changed Notification"];
+    id observer = [[NSNotificationCenter defaultCenter]
+                   addObserverForName: kCBLISObjectHasBeenChangedInStoreNotification
+                               object: store
+                                queue: nil
+                           usingBlock:^(NSNotification *note) {
+        [expectation fulfill];
+    }];
+
     [entryProperties setObject:@"different text" forKey:@"text"];
     [entryProperties setObject:@NO forKey:@"check"];
     [entryProperties setObject:@42 forKey:@"number"];
@@ -323,8 +332,10 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert(revisions != nil, @"Couldn't persist changed properties in CBL: %@", error);
     Assert(error == nil, @"Couldn't persist changed properties in CBL: %@", error);
 
-    // wait for changes to be notified
-    [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 1.0]];
+    [self waitForExpectationsWithTimeout:5.0 handler:^(NSError *error) {
+        Assert(error == nil, "Timeout error: %@", error);
+    }];
+    [[NSNotificationCenter defaultCenter] removeObserver: observer];
     
     entry = (Entry*)[context existingObjectWithID:entryID error:&error];
     Assert(entry != nil, @"Couldn load entry: %@", error);
