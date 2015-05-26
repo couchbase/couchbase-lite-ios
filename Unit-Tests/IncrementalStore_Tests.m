@@ -167,16 +167,10 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 - (void) setUp {
     [super setUp];
 
-    NSError* error;
     [CBLIncrementalStore setCBLManager: dbmgr];
     model = CBLISTestCoreDataModel();
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name
-                                                                 error:&error];
-    Assert(context, @"Context could not be created: %@", error);
 
-    store = context.persistentStoreCoordinator.persistentStores[0];
-    Assert(store, @"Context doesn't have any store?!");
+    [self reCreateCoreDataContext];
 
     AssertEq(store.database, db);
 }
@@ -184,6 +178,18 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 - (void) tearDown {
     [store stop];
     [super tearDown];
+}
+
+- (void) reCreateCoreDataContext {
+    NSError* error;
+
+    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
+                                                          databaseName:db.name
+                                                                 error:&error];
+    Assert(context, @"Context could not be created: %@", error);
+
+    store = context.persistentStoreCoordinator.persistentStores[0];
+    Assert(store, @"Context doesn't have any store?!");
 }
 
 /** Test case that tests create, request, update and delete of Core Data objects. */
@@ -227,8 +233,8 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     NSManagedObjectID *objectID = entry.objectID;
     
     // tear down context to reload from DB
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:database.name error:&error];
+    [self reCreateCoreDataContext];
+
     database = store.database;
     
     entry = (Entry*)[context existingObjectWithID:objectID error:&error];
@@ -381,8 +387,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     
     NSManagedObjectID *objectID = entry.objectID;
     // tear down and re-init for checking that data got saved
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
     
     entry = (Entry*)[context existingObjectWithID:objectID error:&error];
     Assert(entry, @"Entry could not be loaded: %@", error);
@@ -442,8 +447,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     NSManagedObjectID *objectID = entry.objectID;
 
     // tear down and re-init for checking that data got saved:
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
 
     entry = (Entry*)[context existingObjectWithID:objectID error:&error];
     Assert(entry, @"Entry could not be loaded: %@", error);
@@ -452,8 +456,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEq(entry.articles.count, 0u);
 
     // Tear down and re-init and test with fetch request:
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
 
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Entry"];
     NSArray *result = [context executeFetchRequest:fetchRequest error:&error];
@@ -520,8 +523,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEq(result.count, 0u);
 
     // Tear down and re-init and test with fetch request:
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
 
     // Recheck the result:
     fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Subentry"];
@@ -554,8 +556,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert(success, @"Could not save context: %@", error);
 
     // Tear down and re-init and test with fetch request:
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
 
     // Check the result:
     NSFetchRequest* fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Entry"];
@@ -780,8 +781,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     
     // tear down the context to reload from disk
     file = nil;
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
     
     file = (File*)[context existingObjectWithID:fileID error:&error];
     Assert(file != nil, @"File should not be nil (%@)", error);
@@ -1097,8 +1097,8 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert(success, @"Could not save context: %@", error);
 
     // Tear down the database to refresh cache
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
+
     NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
 
     // one-to-one
@@ -1207,8 +1207,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert(success, @"Could not save context: %@", error);
     
     // Tear down the database to refresh cache
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
     
     NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Subentry"];
     
@@ -1223,6 +1222,32 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
         AssertEq((int)result.count, 3);
     }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user.name like %@", user1.name];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 3);
+    }];
+
+    [self reCreateCoreDataContext];
+
+    // Set the max depth to 1:
+    store.customProperties = @{kCBLISCustomPropertyMaxRelationshipSearchDepth: @(1)};
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry == %@", entry1];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 3);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user == %@", user1];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 3);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user.name like %@", user1];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 0);
+    }];
+
 }
 
 - (void)test_FetchParentChildEntities {
@@ -1353,8 +1378,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert(!error, @"Cannot create CBLIS_metadata document");
 
     // Tear down and re-init
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
 
     // The document type key should be 'CBLIS_Type'.
     Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"

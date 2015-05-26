@@ -28,8 +28,11 @@
 #define WARN(FMT, ...) NSLog(@"[CBLIS] WARNING " FMT, ##__VA_ARGS__)
 #define ERROR(FMT, ...) NSLog(@"[CBLIS] ERROR " FMT, ##__VA_ARGS__)
 
+#define kDefaultMaxRelationshipSearchDepth 3;
+
 NSString* const kCBLISErrorDomain = @"CBLISErrorDomain";
-NSString* const kCBLISObjectHasBeenChangedInStoreNotification = @"kCBLISObjectHasBeenChangedInStoreNotification";
+NSString* const kCBLISObjectHasBeenChangedInStoreNotification = @"CBLISObjectHasBeenChangedInStoreNotification";
+NSString* const kCBLISCustomPropertyMaxRelationshipSearchDepth = @"CBLISCustomPropertyMaxRelationshipFetchDepth";
 
 static NSString* const kCBLISDefaultTypeKey = @"type";
 static NSString* const kCBLISOldDefaultTypeKey = @"CBLIS_type";
@@ -56,6 +59,7 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
 @property (nonatomic, strong) NSHashTable* observingManagedObjectContexts;
 @property (nonatomic, strong) CBLDatabase* database;
 @property (nonatomic, strong) id changeObserver;
+@property (nonatomic, readonly) NSUInteger maxRelationshipSearchDepth;
 
 @end
 
@@ -66,11 +70,13 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
     NSMutableDictionary* _fetchRequestResultCache;
     CBLLiveQuery* _conflictsQuery;
     NSString * _documentTypeKey;
+    NSUInteger _relationshipSearchDepth;
 }
 
 @synthesize database = _database;
 @synthesize changeObserver = _changeObserver;
 @synthesize conflictHandler = _conflictHandler;
+@synthesize customProperties = _customProperties;
 @synthesize observingManagedObjectContexts = _observingManagedObjectContexts;
 
 static CBLManager* sCBLManager;
@@ -243,8 +249,6 @@ static CBLManager* sCBLManager;
     
     return self;
 }
-
-#pragma mark - NSIncrementalStore
 
 -(BOOL) loadMetadata: (NSError**)outError {
     // Check data model if compatible with this store:
@@ -644,6 +648,14 @@ static CBLManager* sCBLManager;
         _documentTypeKey = kCBLISDefaultTypeKey;
 
     return _documentTypeKey;
+}
+
+#pragma mark - Custom properties
+
+- (NSUInteger) maxRelationshipSearchDepth {
+    id maxDepthValue = _customProperties[kCBLISCustomPropertyMaxRelationshipSearchDepth];
+    NSUInteger maxDepth = [maxDepthValue unsignedIntegerValue];
+    return maxDepth > 0 ? maxDepth : kDefaultMaxRelationshipSearchDepth;
 }
 
 #pragma mark - Views
@@ -1065,37 +1077,26 @@ static CBLManager* sCBLManager;
                            outError: (NSError**)outError {
     NSString* keyPath = expression.keyPath;
 
-    NSDictionary* properties = [entity propertiesByName];
-    id propertyDesc = [properties objectForKey: keyPath];
-
-    BOOL hasDotAccess = NO;
-    if (!propertyDesc && [keyPath rangeOfString:@"."].location != NSNotFound) {
-        hasDotAccess = YES;
-        NSArray* components = [keyPath componentsSeparatedByString: @"."];
-        NSArray* keyComponents = [components subarrayWithRange:
-                                  NSMakeRange(0, components.count - 1)];
-        keyPath = [keyComponents componentsJoinedByString: @"."];
-        propertyDesc = [properties objectForKey: keyPath];
-    }
-
-    if (propertyDesc) {
-        BOOL needJoins = NO;
-        if ([propertyDesc isKindOfClass:[NSRelationshipDescription class]]) {
-            NSRelationshipDescription* rel = (NSRelationshipDescription*)propertyDesc;
-            needJoins = hasDotAccess || rel.isToMany;
-        }
-        if (outNeedJoinsQuery)
-            *outNeedJoinsQuery = needJoins;
+    BOOL needJoin = NO;
+    if ([keyPath rangeOfString:@"."].location != NSNotFound) {
+        needJoin = YES;
     } else {
-        keyPath = nil;
-        if (outError) {
-            NSString* errDesc = [NSString stringWithFormat: @"Predicate Keypath '%@' "
-                                 "not found in the entity '%@'.", expression.keyPath, entity.name];
-            *outError = CBLISError(CBLIncrementalStoreErrorPredicateKeyPathNotFoundInEntity,
-                                   errDesc, nil);
+        NSDictionary* properties = [entity propertiesByName];
+        id propertyDesc = [properties objectForKey: keyPath];
+        if (!propertyDesc) {
+            keyPath = nil;
+            if (outError) {
+                NSString* errDesc = [NSString stringWithFormat: @"Predicate Keypath '%@' "
+                                     "not found in the entity '%@'.", expression.keyPath, entity.name];
+                *outError = CBLISError(CBLIncrementalStoreErrorPredicateKeyPathNotFoundInEntity,
+                                       errDesc, nil);
+            }
         }
     }
 
+    if (outNeedJoinsQuery)
+        *outNeedJoinsQuery = needJoin;
+    
     return keyPath;
 }
 
@@ -1178,6 +1179,7 @@ static CBLManager* sCBLManager;
     NSUInteger offset = 0;
     NSMutableArray* result = [NSMutableArray array];
     for (CBLQueryRow* row in rows) {
+        _relationshipSearchDepth = 0;
         if (!request.predicate ||
             [self evaluatePredicate: request.predicate
                          withEntity: request.entity
@@ -1294,7 +1296,7 @@ static CBLManager* sCBLManager;
 
     NSPropertyDescription* propertyDesc = [entity.propertiesByName objectForKey: expression.keyPath];
     if (!propertyDesc) {
-        NSArray* keyProp = [self parseKeyAndPropertyFromKeyPath: expression.keyPath];
+        NSArray* keyProp = [self parseKeyPathComponents: expression.keyPath];
         if ([keyProp count] == 2)
             propertyDesc = [entity.propertiesByName objectForKey: keyProp[0]];
     }
@@ -1304,18 +1306,13 @@ static CBLManager* sCBLManager;
            ((NSRelationshipDescription*)propertyDesc).isToMany;
 }
 
-- (NSArray*) parseKeyAndPropertyFromKeyPath: (NSString*)keyPath {
+- (NSArray*) parseKeyPathComponents: (NSString*)keyPath {
     if (!keyPath) return nil;
 
-    if ([keyPath rangeOfString:@"."].location != NSNotFound) {
-        NSArray* components = [keyPath componentsSeparatedByString: @"."];
-        NSString* key = [[components subarrayWithRange: NSMakeRange(0, components.count - 1)]
-                         componentsJoinedByString: @"."];
-        NSString* property = [components lastObject];
-        return @[key, property];
-    } else {
+    if ([keyPath rangeOfString:@"."].location != NSNotFound)
+        return [keyPath componentsSeparatedByString: @"."];
+    else
         return @[keyPath];
-    }
 }
 
 - (id) evaluateExpression: (NSExpression*)expression
@@ -1331,34 +1328,24 @@ static CBLManager* sCBLManager;
             value = properties;
             break;
         case NSKeyPathExpressionType: {
-            NSPropertyDescription* propertyDesc = [entity.propertiesByName objectForKey: expression.keyPath];
+            NSPropertyDescription* propertyDesc = [entity.propertiesByName
+                                                   objectForKey: expression.keyPath];
             if (propertyDesc) {
                 value = [properties objectForKey: expression.keyPath];
                 if ([propertyDesc isKindOfClass: [NSAttributeDescription class]]) {
                     if (!value) break;
                     NSAttributeDescription* attr = (NSAttributeDescription* )propertyDesc;
-                    value =  [self convertCoreDataValue: value toCouchbaseLiteValueOfType: attr.attributeType];
+                    value =  [self convertCoreDataValue: value
+                             toCouchbaseLiteValueOfType: attr.attributeType];
                 } else if ([propertyDesc isKindOfClass: [NSRelationshipDescription class]]) {
-                    // Compare whole relationship, return managed object or array of managed objects:
                     NSRelationshipDescription* relation = (NSRelationshipDescription*)propertyDesc;
                     if (!relation.isToMany) {
-                        if (!value) break;
-                        NSString* childDocId = value;
-                        NSManagedObjectID* objectID = [self newObjectIDForEntity: relation.destinationEntity
-                                                                 referenceObject: childDocId];
-                        value = objectID ? [context existingObjectWithID: objectID error: nil] : nil;
+                        // Use the current value which is a doc id:
+                        break;
                     } else {
                         if (relation.inverseRelationship.toMany) {
-                            // many-to-many
-                            NSMutableArray* objects = [NSMutableArray array];
-                            for (NSString* docId in value) {
-                                NSManagedObjectID* objectID = [self newObjectIDForEntity: relation.destinationEntity
-                                                                         referenceObject: docId];
-                                if (!objectID) continue;
-                                NSManagedObject* object = [context existingObjectWithID: objectID error: nil];
-                                if (object) [objects addObject: object];
-                            }
-                            value = objects;
+                            // Use the current value which an array of doc id:
+                            break;
                         } else {
                             // one-to-many
                             NSString* parentDocId = [properties objectForKey: @"_id"];
@@ -1368,26 +1355,22 @@ static CBLManager* sCBLManager;
                                                                             prefetch: NO
                                                                             outError: nil];
                                 if (rows) {
-                                    NSMutableArray* objects = [NSMutableArray array];
-                                    for (CBLQueryRow* row in rows) {
-                                        NSManagedObjectID* objectID = [self newObjectIDForEntity: relation.destinationEntity
-                                                                                 referenceObject: row.documentID];
-                                        if (!objectID) continue;
-                                        NSManagedObject* object = [context existingObjectWithID: objectID error: nil];
-                                        if (object) [objects addObject: object];
-                                    }
-                                    value = objects;
+                                    NSMutableArray* docIds = [NSMutableArray array];
+                                    for (CBLQueryRow* row in rows)
+                                        [docIds addObject: row.documentID];
+                                    value = docIds;
                                 }
                             }
                         }
                     }
                 }
             } else if ([expression.keyPath rangeOfString:@"."].location != NSNotFound) {
-                NSArray* keyProp = [self parseKeyAndPropertyFromKeyPath: expression.keyPath];
-                if ([keyProp count] < 2) break;
-
-                NSString* srcKeyPath = keyProp[0];
-                NSString* destKeyPath = keyProp[1];
+                NSArray* keyPathComponents = [self parseKeyPathComponents: expression.keyPath];
+                if ([keyPathComponents count] < 2) break;
+                NSString* srcKeyPath = keyPathComponents[0];
+                NSString* destKeyPath = [[keyPathComponents subarrayWithRange:
+                                          NSMakeRange(1, keyPathComponents.count - 1)]
+                                            componentsJoinedByString: @"."];
 
                 propertyDesc = [entity.propertiesByName objectForKey: srcKeyPath];
                 if (![propertyDesc isKindOfClass: [NSRelationshipDescription class]])
@@ -1395,13 +1378,29 @@ static CBLManager* sCBLManager;
 
                 NSRelationshipDescription* relation = (NSRelationshipDescription*)propertyDesc;
                 if (!relation.isToMany) {
-                    NSString* childDocId = [properties objectForKey: srcKeyPath];
-                    if (childDocId) {
-                        CBLDocument* document = [self.database existingDocumentWithID: childDocId];
-                        if (document)
-                            value = [document.properties objectForKey: destKeyPath];
+                    // one-to-one (multiple level fetching):
+                    NSString* subDocId = [properties objectForKey: srcKeyPath];
+                    if (subDocId) {
+                        _relationshipSearchDepth++;
+                        if (_relationshipSearchDepth > self.maxRelationshipSearchDepth) {
+                            WARN(@"Excess the maximum relationship search depth (current=%lu vs max=%lu)",
+                                 _relationshipSearchDepth, self.maxRelationshipSearchDepth);
+                            break;
+                        }
+
+                        CBLDocument* subDocument = [self.database existingDocumentWithID: subDocId];
+                        if (subDocument) {
+                            NSEntityDescription* subEntity = relation.destinationEntity;
+                            NSExpression *subExpression = [NSExpression expressionForKeyPath:destKeyPath];
+                            return [self evaluateExpression: subExpression
+                                                 withEntity: subEntity
+                                             withProperties: subDocument.properties
+                                                withContext:context];
+                        }
                     }
+                    break;
                 } else {
+                    // one(many)-to-many (1 level fetching):
                     if (relation.inverseRelationship.toMany) {
                         // many-to-many
                         value = [properties objectForKey: srcKeyPath];
@@ -1450,7 +1449,9 @@ static CBLManager* sCBLManager;
     //    NSIntersectSetExpressionType,
     //    NSMinusSetExpressionType,
     //    NSBlockExpressionType = 19
-    
+
+    if ([value isKindOfClass: [NSManagedObject class]])
+        value = [[value objectID] couchbaseLiteIDRepresentation];
     return value;
 }
 
@@ -1680,7 +1681,6 @@ static CBLManager* sCBLManager;
         
         if ([desc isKindOfClass: [NSAttributeDescription class]]) {
             NSAttributeDescription* attr = desc;
-            
             if ([attr isTransient]) {
                 continue;
             }
@@ -1704,7 +1704,7 @@ static CBLManager* sCBLManager;
             
             if (value) {
                 NSAttributeType attributeType = [attr attributeType];
-                
+
                 if (attr.valueTransformerName) {
                     NSValueTransformer* transformer = [NSValueTransformer valueTransformerForName: attr.valueTransformerName];
                     Class transformedClass = [[transformer class] transformedValueClass];
