@@ -11,8 +11,8 @@
 extern NSString* const kCBLISErrorDomain;
 extern NSString* const kCBLISObjectHasBeenChangedInStoreNotification;
 
-/** Maximum number of relationship search levels allowed in a fetch request. Default value is 3. */
-extern NSString* const kCBLISCustomPropertyMaxRelationshipSearchDepth;
+/** Maximum number of relationship loading allowed in a fetch request. Default value is 3. */
+extern NSString* const kCBLISCustomPropertyMaxRelationshipLoadDepth;
 
 /** Error codes for CBLIncrementalStore. */
 typedef enum

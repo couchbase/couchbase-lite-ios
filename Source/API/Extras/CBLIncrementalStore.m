@@ -28,11 +28,11 @@
 #define WARN(FMT, ...) NSLog(@"[CBLIS] WARNING " FMT, ##__VA_ARGS__)
 #define ERROR(FMT, ...) NSLog(@"[CBLIS] ERROR " FMT, ##__VA_ARGS__)
 
-#define kDefaultMaxRelationshipSearchDepth 3;
+#define kDefaultMaxRelationshipLoadDepth 3;
 
 NSString* const kCBLISErrorDomain = @"CBLISErrorDomain";
 NSString* const kCBLISObjectHasBeenChangedInStoreNotification = @"CBLISObjectHasBeenChangedInStoreNotification";
-NSString* const kCBLISCustomPropertyMaxRelationshipSearchDepth = @"CBLISCustomPropertyMaxRelationshipFetchDepth";
+NSString* const kCBLISCustomPropertyMaxRelationshipLoadDepth = @"CBLISCustomPropertyMaxRelationshipLoadDepth";
 
 static NSString* const kCBLISDefaultTypeKey = @"type";
 static NSString* const kCBLISOldDefaultTypeKey = @"CBLIS_type";
@@ -59,7 +59,7 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
 @property (nonatomic, strong) NSHashTable* observingManagedObjectContexts;
 @property (nonatomic, strong) CBLDatabase* database;
 @property (nonatomic, strong) id changeObserver;
-@property (nonatomic, readonly) NSUInteger maxRelationshipSearchDepth;
+@property (nonatomic, readonly) NSUInteger maxRelationshipLoadDepth;
 
 @end
 
@@ -652,10 +652,10 @@ static CBLManager* sCBLManager;
 
 #pragma mark - Custom properties
 
-- (NSUInteger) maxRelationshipSearchDepth {
-    id maxDepthValue = _customProperties[kCBLISCustomPropertyMaxRelationshipSearchDepth];
-    NSUInteger maxDepth = [maxDepthValue unsignedIntegerValue];
-    return maxDepth > 0 ? maxDepth : kDefaultMaxRelationshipSearchDepth;
+- (NSUInteger) maxRelationshipLoadDepth {
+    id maxDepth = _customProperties[kCBLISCustomPropertyMaxRelationshipLoadDepth];
+    NSUInteger maxDepthValue = [maxDepth unsignedIntegerValue];
+    return maxDepthValue > 0 ? maxDepthValue : kDefaultMaxRelationshipLoadDepth;
 }
 
 #pragma mark - Views
@@ -1382,9 +1382,9 @@ static CBLManager* sCBLManager;
                     NSString* subDocId = [properties objectForKey: srcKeyPath];
                     if (subDocId) {
                         _relationshipSearchDepth++;
-                        if (_relationshipSearchDepth > self.maxRelationshipSearchDepth) {
+                        if (_relationshipSearchDepth > self.maxRelationshipLoadDepth) {
                             WARN(@"Excess the maximum relationship search depth (current=%lu vs max=%lu)",
-                                 _relationshipSearchDepth, self.maxRelationshipSearchDepth);
+                                 _relationshipSearchDepth, self.maxRelationshipLoadDepth);
                             break;
                         }
 
