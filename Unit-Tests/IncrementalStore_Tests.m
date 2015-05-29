@@ -1180,6 +1180,46 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     }];
 }
 
+- (void)test_FetchWithRelationshipNil {
+    NSError *error;
+    
+    // Entry1:
+    Entry *entry1 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                  inManagedObjectContext:context];
+    entry1.created_at = [NSDate new];
+    entry1.text = @"This is an entry 1.";
+    entry1.number = @(10);
+    
+    for (NSUInteger i = 0; i < 3; i++) {
+        Subentry *sub = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                      inManagedObjectContext:context];
+        sub.text = [NSString stringWithFormat:@"Entry1-Sub%lu", (unsigned long)i];
+        sub.number = @(10 + i);
+        [entry1 addSubEntriesObject:sub];
+    }
+    
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+    
+    // Tear down the database to refresh cache
+    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
+                                                          databaseName:db.name error:&error];
+    
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Subentry"];
+    
+    // Simple Many
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry == %@", nil];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 0);
+    }];
+    
+    // Nil Many
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user == %@", nil];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 3);
+    }];
+}
+
 - (void)test_FetchParentChildEntities {
     Parent *p1 = [NSEntityDescription insertNewObjectForEntityForName:@"Parent"
                                                inManagedObjectContext:context];
