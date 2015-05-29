@@ -1001,14 +1001,17 @@ static CBLManager* sCBLManager;
                         newExpression = [NSExpression expressionForAggregate: aggrs];
 
                         id lowerValue = [self scanConstantValue: constantValue[0]];
+                        NSAssert(lowerValue, @"Unexpected nil value in the predicate : %@", predicate);
                         [outTemplateVars setObject: lowerValue forKey: lowerVar];
 
                         id upperValue = [self scanConstantValue: constantValue[1]];
+                        NSAssert(upperValue, @"Unexpected nil value in the predicate : %@", predicate);
                         [outTemplateVars setObject: upperValue forKey: uppperVar];
                     } else {
                         NSMutableArray* values = [NSMutableArray array];
                         for (id value in constantValue) {
                             id exValue = [self scanConstantValue: value];
+                            NSAssert(exValue, @"Unexpected nil value in the predicate : %@", predicate);
                             [values addObject: exValue];
                         }
 
@@ -1025,7 +1028,10 @@ static CBLManager* sCBLManager;
                     newExpression = [NSExpression expressionForVariable: varName];
 
                     id exValue = [self scanConstantValue: constantValue];
-                    [outTemplateVars setObject: exValue forKey: varName];
+                    if (exValue)
+                        [outTemplateVars setObject: exValue forKey: varName];
+                    else
+                        break; // Not templating nil predicate:
 
                     if (comparison.predicateOperatorType == NSContainsPredicateOperatorType) {
                         // CBLQueryBuilder doesn't support CONTAINS operation with a non array exp.
