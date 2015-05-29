@@ -1180,7 +1180,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     }];
 }
 
-- (void)test_FetchWithRelationshipDeep {
+- (void)test_FetchWithNestedRelationship {
     NSError *error;
     
     User *user1 = [NSEntityDescription insertNewObjectForEntityForName:@"User"
@@ -1231,7 +1231,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     [self reCreateCoreDataContext];
 
     // Set the max depth to 1:
-    store.customProperties = @{kCBLISCustomPropertyMaxRelationshipSearchDepth: @(1)};
+    store.customProperties = @{kCBLISCustomPropertyMaxRelationshipLoadDepth: @(1)};
 
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry == %@", entry1];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
