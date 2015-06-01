@@ -1025,6 +1025,59 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     }];
 }
 
+- (void) test_FetchWithDate {
+    NSError *error;
+
+    NSDictionary *entry1 = @{
+                             @"created_at": [NSDate new],
+                             @"text": @"This is a test for predicates. Möhre.",
+                             @"text2": @"This is text2.",
+                             @"number": [NSNumber numberWithInt:10],
+                             @"decimalNumber": [NSDecimalNumber decimalNumberWithString:@"10.10"],
+                             @"doubleNumber": [NSNumber numberWithDouble:42.23]
+                             };
+    NSDictionary *entry2 = @{
+                             @"created_at": [[NSDate new] dateByAddingTimeInterval:-60],
+                             @"text": @"Entry number 2. touché.",
+                             @"text2": @"Text 2 by Entry number 2",
+                             @"number": [NSNumber numberWithInt:20],
+                             @"decimalNumber": [NSDecimalNumber decimalNumberWithString:@"20.20"],
+                             @"doubleNumber": [NSNumber numberWithDouble:12.45]
+                             };
+    NSDictionary *entry3 = @{
+                             @"created_at": [[NSDate new] dateByAddingTimeInterval:60],
+                             @"text": @"Entry number 3",
+                             @"text2": @"Text 2 by Entry number 3",
+                             @"number": [NSNumber numberWithInt:30],
+                             @"decimalNumber": [NSDecimalNumber decimalNumberWithString:@"30.30"],
+                             @"doubleNumber": [NSNumber numberWithDouble:98.76]
+                             };
+
+    CBLISTestInsertEntriesWithProperties(context, @[entry1, entry2, entry3]);
+
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
+
+    //// DATE
+    NSDate *startDate = [entry1[@"created_at"] dateByAddingTimeInterval:-30];
+    NSDate *endDate = [entry1[@"created_at"] dateByAddingTimeInterval:30];
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%@ <= created_at AND %@ >= created_at", startDate, endDate];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        if (result.count != 1) return;
+        AssertEqual([result[0] valueForKey:@"text"], entry1[@"text"]);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"created_at = %@ ", entry2[@"created_at"]];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        if (result.count != 1) return;
+        AssertEqual([result[0] valueForKey:@"text"], entry2[@"text"]);
+    }];
+}
+
 - (void)test_FetchWithRelationship {
     NSError *error;
 
@@ -1055,7 +1108,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     // Entry2:
     Entry *entry2 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                   inManagedObjectContext:context];
-    entry2.created_at = [NSDate new];
+    entry2.created_at = [entry1.created_at dateByAddingTimeInterval:60];
     entry2.text = @"This is an entry 2.";
     entry2.number = @(20);
     entry2.user = user2;
@@ -1071,7 +1124,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     // Entry3:
     Entry *entry3 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                   inManagedObjectContext:context];
-    entry3.created_at = [NSDate new];
+    entry3.created_at = [entry2.created_at dateByAddingTimeInterval:60];
     entry3.text = @"This is an entry 3.";
     entry3.number = @(30);
     entry3.user = user1;
@@ -1125,6 +1178,32 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         AssertEq((int)result.count, 1);
         if (result.count != 1) return;
         AssertEqual([result[0] valueForKey:@"number"], entry2.number);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"user.name beginswith 'User'"];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 3);
+        if (result.count != 3) return;
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry1.number);
+        AssertEqual(numbers[1], entry2.number);
+        AssertEqual(numbers[2], entry3.number);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"user.name beginswith 'User' and created_at == %@", entry3.created_at];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        if (result.count != 1) return;
+        AssertEqual([result[0] valueForKey:@"number"], entry3.number);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"user.name beginswith 'User' and created_at < %@", entry3.created_at];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+        if (result.count != 2) return;
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry1.number);
+        AssertEqual(numbers[1], entry2.number);
     }];
     
     // one-to-many
