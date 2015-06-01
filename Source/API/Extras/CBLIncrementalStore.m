@@ -1147,6 +1147,9 @@ static CBLManager* sCBLManager;
             // Shouldn't happen here:
             assert(expression.expressionType != NSConstantValueExpressionType);
         }
+    } else if ([value isKindOfClass:[NSDate class]]) {
+        // CBLQueryBuilder doesn't convert an NSDate value to a json object:
+        return [CBLJSON JSONObjectWithDate: value];
     }
     return value;
 }
@@ -1329,6 +1332,10 @@ static CBLManager* sCBLManager;
     switch (expression.expressionType) {
         case NSConstantValueExpressionType:
             value = [expression constantValue];
+            if ([value isKindOfClass: [NSManagedObject class]])
+                value = [[value objectID] couchbaseLiteIDRepresentation];
+            else if ([value isKindOfClass:[NSDate class]])
+                value = [CBLJSON JSONObjectWithDate: value];
             break;
         case NSEvaluatedObjectExpressionType:
             value = properties;
@@ -1340,9 +1347,6 @@ static CBLManager* sCBLManager;
                 value = [properties objectForKey: expression.keyPath];
                 if ([propertyDesc isKindOfClass: [NSAttributeDescription class]]) {
                     if (!value) break;
-                    NSAttributeDescription* attr = (NSAttributeDescription* )propertyDesc;
-                    value =  [self convertCoreDataValue: value
-                             toCouchbaseLiteValueOfType: attr.attributeType];
                 } else if ([propertyDesc isKindOfClass: [NSRelationshipDescription class]]) {
                     NSRelationshipDescription* relation = (NSRelationshipDescription*)propertyDesc;
                     if (!relation.isToMany) {
@@ -1401,7 +1405,7 @@ static CBLManager* sCBLManager;
                             return [self evaluateExpression: subExpression
                                                  withEntity: subEntity
                                              withProperties: subDocument.properties
-                                                withContext:context];
+                                                withContext: context];
                         }
                     }
                     break;
@@ -1415,7 +1419,8 @@ static CBLManager* sCBLManager;
                             CBLDocument* document = [self.database existingDocumentWithID: childDocId];
                             if (document) {
                                 id propValue = [document.properties objectForKey: destKeyPath];
-                                [values addObject: propValue];
+                                if (propValue)
+                                    [values addObject: propValue];
                             }
                         }
                         value = values;
@@ -1447,17 +1452,6 @@ static CBLManager* sCBLManager;
             break;
     }
 
-    // not supported yet:
-    //    NSFunctionExpressionType,
-    //    NSAggregateExpressionType,
-    //    NSSubqueryExpressionType = 13,
-    //    NSUnionSetExpressionType,
-    //    NSIntersectSetExpressionType,
-    //    NSMinusSetExpressionType,
-    //    NSBlockExpressionType = 19
-
-    if ([value isKindOfClass: [NSManagedObject class]])
-        value = [[value objectID] couchbaseLiteIDRepresentation];
     return value;
 }
 
