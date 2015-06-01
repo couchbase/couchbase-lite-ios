@@ -717,36 +717,39 @@ static CBLManager* sCBLManager;
         return result;
     }
 
-    BOOL useQueryBuilder = NO;
-    NSPredicate* proPredicate = nil;
-    NSMutableDictionary* templateVars = [NSMutableDictionary dictionary];
-    if (request.predicate) {
-        NSError* scanError;
-        BOOL hasNonQueryBuilderExp;
-        proPredicate = [self scanPredicate: request.predicate
-                                withEntity: request.entity
-                           outTemplateVars: templateVars
-                  outHasNonQueryBuilderExp: &hasNonQueryBuilderExp
-                                  outError: &scanError];
-
-        if (proPredicate) {
-            useQueryBuilder = !hasNonQueryBuilderExp;
-        } else {
-            if (outError) *outError = scanError;
-            return nil;
-        }
-    }
-
     NSArray* objects;
-    if (useQueryBuilder) {
-        NSError* queryBuilderError;
-        objects = [self fetchByUsingQueryBuilderWithPredicate: proPredicate
-                                          withOriginalRequest: request
-                                             withTemplateVars: templateVars
-                                                  withContext: context
-                                                     outError: &queryBuilderError];
-        if (!objects) {
-            useQueryBuilder = NO;
+    BOOL useQueryBuilder = NO;
+
+    if (![self containsRelationshipKeyPathsInSortDescriptors: request.sortDescriptors]) {
+        NSPredicate* proPredicate = nil;
+        NSMutableDictionary* templateVars = [NSMutableDictionary dictionary];
+        if (request.predicate) {
+            NSError* scanError;
+            BOOL hasNonQueryBuilderExp;
+            proPredicate = [self scanPredicate: request.predicate
+                                    withEntity: request.entity
+                               outTemplateVars: templateVars
+                      outHasNonQueryBuilderExp: &hasNonQueryBuilderExp
+                                      outError: &scanError];
+
+            if (proPredicate) {
+                useQueryBuilder = !hasNonQueryBuilderExp;
+            } else {
+                if (outError) *outError = scanError;
+                return nil;
+            }
+        }
+
+        if (useQueryBuilder) {
+            NSError* queryBuilderError;
+            objects = [self fetchByUsingQueryBuilderWithPredicate: proPredicate
+                                              withOriginalRequest: request
+                                                 withTemplateVars: templateVars
+                                                      withContext: context
+                                                         outError: &queryBuilderError];
+            if (!objects) {
+                useQueryBuilder = NO;
+            }
         }
     }
 
@@ -911,6 +914,14 @@ static CBLManager* sCBLManager;
     }
 
     return [self digestCacheKey: keys];
+}
+
+- (BOOL) containsRelationshipKeyPathsInSortDescriptors: (NSArray*)sortDescriptors {
+    for (NSSortDescriptor *sd in sortDescriptors) {
+        if ([sd.key containsString:@"."])
+            return YES;
+    }
+    return NO;
 }
 
 /*
@@ -1159,12 +1170,12 @@ static CBLManager* sCBLManager;
     NSPredicate* predicate = [self documentTypePredicateForFetchRequest:request];
 
     CBLQueryBuilder* builder = [self cachedQueryBuilderForPredicate: predicate
-                                                    sortDescriptors: request.sortDescriptors];
+                                                    sortDescriptors: nil];
     if (!builder) {
         builder = [[CBLQueryBuilder alloc] initWithDatabase: self.database
                                                      select: nil
                                              wherePredicate: predicate
-                                                    orderBy: request.sortDescriptors
+                                                    orderBy: nil
                                                       error: outError];
     }
 
@@ -1173,7 +1184,7 @@ static CBLManager* sCBLManager;
     
     [self cacheQueryBuilder: builder
                forPredicate: predicate
-            sortDescriptors: request.sortDescriptors];
+            sortDescriptors: nil];
 
     CBLQuery* query = [builder createQueryWithContext: nil];
     query.prefetch = request.predicate != nil;
@@ -1181,9 +1192,11 @@ static CBLManager* sCBLManager;
     CBLQueryEnumerator* rows = [query run: outError];
     if (!rows) return nil;
 
+    BOOL needSort = (request.sortDescriptors != nil);
+
     // Post filter:
     NSUInteger offset = 0;
-    NSMutableArray* result = [NSMutableArray array];
+    NSMutableArray* objects = [NSMutableArray array];
     for (CBLQueryRow* row in rows) {
         _relationshipSearchDepth = 0;
         if (!request.predicate ||
@@ -1192,17 +1205,38 @@ static CBLManager* sCBLManager;
                      withProperties: row.documentProperties
                         withContext: context
                            outError: outError]) {
-                if (offset >= request.fetchOffset) {
+                if (needSort || offset >= request.fetchOffset) {
                     NSManagedObjectID* objectID = [self newObjectIDForEntity: request.entity
                                                         managedObjectContext: context
                                                                      couchID: row.documentID];
                     NSManagedObject* object = [context objectWithID: objectID];
-                    [result addObject: object];
+                    [objects addObject: object];
                 }
-                if (request.fetchLimit > 0 && result.count == request.fetchLimit) break;
+                if (!needSort && request.fetchLimit > 0 && objects.count == request.fetchLimit)
+                    break;
                 offset++;
             }
     }
+    
+    if (needSort && (request.fetchOffset > 0 || request.fetchLimit > 0)) {
+        if (request.fetchOffset >= objects.count)
+            return @[];
+
+        NSUInteger limit = request.fetchLimit;
+        if (request.fetchLimit == 0 || (request.fetchOffset + request.fetchLimit > objects.count)) {
+            limit = objects.count - request.fetchOffset;
+        }
+
+        NSRange range = NSMakeRange(request.fetchOffset, limit);
+        [objects subarrayWithRange: range];
+    }
+
+    NSArray* result;
+    if (needSort)
+        result = [objects sortedArrayUsingDescriptors: request.sortDescriptors];
+    else
+        result = objects;
+
     return result;
 }
 

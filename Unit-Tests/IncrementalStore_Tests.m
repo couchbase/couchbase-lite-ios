@@ -1249,47 +1249,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     }];
 }
 
-- (void)test_FetchWithRelationshipNil {
-    NSError *error;
-    
-    // Entry1:
-    Entry *entry1 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
-                                                  inManagedObjectContext:context];
-    entry1.created_at = [NSDate new];
-    entry1.text = @"This is an entry 1.";
-    entry1.number = @(10);
-    
-    for (NSUInteger i = 0; i < 3; i++) {
-        Subentry *sub = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
-                                                      inManagedObjectContext:context];
-        sub.text = [NSString stringWithFormat:@"Entry1-Sub%lu", (unsigned long)i];
-        sub.number = @(10 + i);
-        [entry1 addSubEntriesObject:sub];
-    }
-    
-    BOOL success = [context save:&error];
-    Assert(success, @"Could not save context: %@", error);
-    
-    // Tear down the database to refresh cache
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
-    
-    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Subentry"];
-    
-    // Simple Many
-    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry == %@", nil];
-    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
-        AssertEq((int)result.count, 0);
-    }];
-    
-    // Nil Many
-    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user == %@", nil];
-    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
-        AssertEq((int)result.count, 3);
-    }];
-}
-
-- (void)test_FetchWithNestedRelationshipAndSortDescriptors {
+- (void)test_FetchWithNestedRelationshipAndSort {
     NSError *error;
 
     User *user1 = [NSEntityDescription insertNewObjectForEntityForName:@"User"
@@ -1342,45 +1302,100 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     // Simple Sort
     fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"text" ascending:NO]];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
-        AssertEq((int)result.count, 7);
-        Subentry *first = result[0];
-        Assert([first.text isEqualToString:@"Entry2-Sub3"]);
+        NSArray *texts = [result valueForKey:@"text"];
+        NSArray *expected = @[@"Entry2-Sub3", @"Entry2-Sub2", @"Entry2-Sub1", @"Entry2-Sub0",
+                              @"Entry1-Sub2", @"Entry1-Sub1", @"Entry1-Sub0"];
+        AssertEqual (texts, expected);
     }];
 
     // Simple Sort 2
     fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"text" ascending:YES]];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
-        AssertEq((int)result.count, 7);
-        Subentry *first = result[0];
-        Assert([first.text isEqualToString:@"Entry1-Sub0"]);
+        NSArray *texts = [result valueForKey:@"text"];
+        NSArray *expected = @[@"Entry1-Sub0", @"Entry1-Sub1", @"Entry1-Sub2",
+                              @"Entry2-Sub0", @"Entry2-Sub1", @"Entry2-Sub2", @"Entry2-Sub3"];
+        AssertEqual (texts, expected);
     }];
 
     // Deep Sort
-    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"entry.text" ascending:NO], [NSSortDescriptor sortDescriptorWithKey:@"text" ascending:YES]];
+    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"entry.text" ascending:NO],
+                                     [NSSortDescriptor sortDescriptorWithKey:@"text" ascending:YES]];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
-        AssertEq((int)result.count, 7);
-        Subentry *first = result[0];
-        Assert([first.text isEqualToString:@"Entry2-Sub0"]);
+        NSArray *texts = [result valueForKey:@"text"];
+        NSArray *expected = @[@"Entry2-Sub0", @"Entry2-Sub1", @"Entry2-Sub2", @"Entry2-Sub3",
+                              @"Entry1-Sub0", @"Entry1-Sub1", @"Entry1-Sub2"];
+        AssertEqual (texts, expected);
     }];
 
     // Deep Sort 2
-    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"entry.text" ascending:YES], [NSSortDescriptor sortDescriptorWithKey:@"text" ascending:YES]];
+    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"entry.text" ascending:YES],
+                                     [NSSortDescriptor sortDescriptorWithKey:@"text" ascending:YES]];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
-        AssertEq((int)result.count, 7);
-        Subentry *first = result[0];
-        Assert([first.text isEqualToString:@"Entry1-Sub0"]);
+        NSArray *texts = [result valueForKey:@"text"];
+        NSArray *expected = @[@"Entry1-Sub0", @"Entry1-Sub1", @"Entry1-Sub2",
+                              @"Entry2-Sub0", @"Entry2-Sub1", @"Entry2-Sub2", @"Entry2-Sub3"];
+        AssertEqual (texts, expected);
     }];
 
     // Deeper Sort
-    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"entry.user.name" ascending:NO]];
+    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"entry.user.name" ascending:NO],
+                                     [NSSortDescriptor sortDescriptorWithKey:@"text" ascending:YES]];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
-        AssertEq((int)result.count, 7);
+        NSArray *texts = [result valueForKey:@"text"];
+        NSArray *expected = @[@"Entry2-Sub0", @"Entry2-Sub1", @"Entry2-Sub2", @"Entry2-Sub3",
+                              @"Entry1-Sub0", @"Entry1-Sub1", @"Entry1-Sub2"];
+        AssertEqual (texts, expected);
     }];
 
     // Deeper Sort 2
-    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"entry.user.name" ascending:YES]];
+    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"entry.user.name" ascending:YES],
+                                     [NSSortDescriptor sortDescriptorWithKey:@"text" ascending:YES]];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
-        AssertEq((int)result.count, 7);
+        NSArray *texts = [result valueForKey:@"text"];
+        NSArray *expected = @[@"Entry1-Sub0", @"Entry1-Sub1", @"Entry1-Sub2",
+                              @"Entry2-Sub0", @"Entry2-Sub1", @"Entry2-Sub2", @"Entry2-Sub3"];
+        AssertEqual (texts, expected);
+    }];
+}
+
+
+- (void)test_FetchWithRelationshipNil {
+    NSError *error;
+
+    // Entry1:
+    Entry *entry1 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                  inManagedObjectContext:context];
+    entry1.created_at = [NSDate new];
+    entry1.text = @"This is an entry 1.";
+    entry1.number = @(10);
+
+    for (NSUInteger i = 0; i < 3; i++) {
+        Subentry *sub = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                      inManagedObjectContext:context];
+        sub.text = [NSString stringWithFormat:@"Entry1-Sub%lu", (unsigned long)i];
+        sub.number = @(10 + i);
+        [entry1 addSubEntriesObject:sub];
+    }
+
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    // Tear down the database to refresh cache
+    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
+                                                          databaseName:db.name error:&error];
+
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Subentry"];
+
+    // Simple Many
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry == %@", nil];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 0);
+    }];
+
+    // Nil Many
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user == %@", nil];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 3);
     }];
 }
 
