@@ -817,6 +817,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     
     NSDictionary *entry1 = @{
                              @"created_at": [NSDate new],
+                             @"check": @YES,
                              @"text": @"This is a test for predicates. Möhre.",
                              @"text2": @"This is text2.",
                              @"number": [NSNumber numberWithInt:10],
@@ -825,6 +826,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
                              };
     NSDictionary *entry2 = @{
                              @"created_at": [[NSDate new] dateByAddingTimeInterval:-60],
+                             @"check": @YES,
                              @"text": @"Entry number 2. touché.",
                              @"text2": @"Text 2 by Entry number 2",
                              @"number": [NSNumber numberWithInt:20],
@@ -833,6 +835,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
                              };
     NSDictionary *entry3 = @{
                              @"created_at": [[NSDate new] dateByAddingTimeInterval:60],
+                             @"check": @NO,
                              @"text": @"Entry number 3",
                              @"text2": @"Text 2 by Entry number 3",
                              @"number": [NSNumber numberWithInt:30],
@@ -846,6 +849,18 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert(success, @"Could not save context: %@", error);
     
     NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
+
+    //// ==
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"check == YES"];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+    }];
+
+    //// ==
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"check == NO"];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+    }];
 
     //// ==
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text == %@", entry1[@"text"]];
@@ -1300,6 +1315,11 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user == %@", user1];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
         AssertEq((int)result.count, 3);
+    }];
+
+    fetchRequest.predicate = [NSCompoundPredicate andPredicateWithSubpredicates:@[[NSPredicate predicateWithFormat:@"entry == %@", entry1], [NSPredicate predicateWithFormat:@"number == 10"]]];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
     }];
 
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user.name like %@", user1.name];
