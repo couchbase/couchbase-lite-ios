@@ -74,6 +74,15 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
     CBLLiveQuery* _conflictsQuery;
     NSString * _documentTypeKey;
     NSUInteger _relationshipSearchDepth;
+    
+    // this struct stores the result of [self.delegate respondsToSelector:]
+    // once and for good instead of calling it each time before calling
+    // the actual methods. This is a good optimization (used by Apple, ie UITableView)
+    //when a method is called a lot.
+    // http://stackoverflow.com/questions/16434395/storing-ios-ui-component-internal-usage-flags
+    struct {
+        unsigned int respondsToKeyValuesToAddToManagedObject:1;
+    } _flags;
 }
 
 @synthesize database = _database;
@@ -81,6 +90,7 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
 @synthesize conflictHandler = _conflictHandler;
 @synthesize customProperties = _customProperties;
 @synthesize observingManagedObjectContexts = _observingManagedObjectContexts;
+@synthesize delegate = _delegate;
 
 static CBLManager* sCBLManager;
 
@@ -247,10 +257,16 @@ static CBLManager* sCBLManager;
     _coalescedChanges = [[NSMutableArray alloc] init];
     _fetchRequestResultCache = [[NSMutableDictionary alloc] init];
     _queryBuilderCache = [[NSCache alloc] init];
+    _flags.respondsToKeyValuesToAddToManagedObject = NO;
     
     self.conflictHandler = [self defaultConflictHandler];
     
     return self;
+}
+
+- (void)setDelegate:(id<CBLIncrementalStoreDelegate>)delegate {
+    _delegate = delegate;
+    _flags.respondsToKeyValuesToAddToManagedObject = [self.delegate respondsToSelector:@selector(keyValuesToAddToManagedObject:)];
 }
 
 -(BOOL) loadMetadata: (NSError**)outError {
@@ -1706,6 +1722,13 @@ static CBLManager* sCBLManager;
     
     if (withID) {
         [proxy setObject: [object.objectID couchbaseLiteIDRepresentation] forKey: @"_id"];
+    }
+    
+    if (_flags.respondsToKeyValuesToAddToManagedObject) {
+        NSDictionary *keysAndValuesToAdd = [_delegate keyValuesToAddToManagedObject:object];
+        if (keysAndValuesToAdd.count) {
+            [proxy setValuesForKeysWithDictionary:keysAndValuesToAdd];
+        }
     }
     
     for (NSString* property in propertyDesc) {
