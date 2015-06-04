@@ -181,7 +181,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (bool) hasSameSettingsAs: (CBL_Replicator*)other {
     // Needs to be consistent with -remoteCheckpointDocID:
     // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
-    return _db == other->_db && $equal(_remote, other->_remote) && self.isPush == other.isPush
+    return _db == other->_db && self.isPush == other.isPush
         && $equal(self.remoteCheckpointDocID, other.remoteCheckpointDocID);
 }
 
@@ -927,13 +927,19 @@ static BOOL sOnlyTrustAnchorCerts;
     // Needs to be consistent with -hasSameSettingsAs: --
     // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
     NSMutableDictionary* spec = $mdict({@"localUUID", localUUID},
-                                       {@"remoteURL", _remote.absoluteString},
                                        {@"push", @(self.isPush)},
                                        {@"continuous", (self.continuous ? nil : $false)},
                                        {@"filter", _filterName},
                                        {@"filterParams", _filterParameters},
                                        //{@"headers", _requestHeaders}, (removed; see #143)
                                        {@"docids", _docIDs});
+    // If "remoteUUID" option is specified, use that instead of the remote URL:
+    NSString* remoteUUID = _options[kCBLReplicatorOption_RemoteUUID];
+    if (remoteUUID)
+        spec[@"remoteUUID"] = remoteUUID;
+    else
+        spec[@"remoteURL"] = _remote.absoluteString;
+
     NSError *error;
     NSString *remoteCheckpointDocID = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: spec
                                                                          error: &error]);
