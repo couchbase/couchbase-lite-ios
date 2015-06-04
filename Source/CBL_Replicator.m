@@ -897,6 +897,13 @@ static BOOL makeTrusted(SecTrustRef trust) {
             Warn(@"%@: SecTrustEvaluate failed with err %d", self, (int)err);
             return NO;
         }
+        if (result == kSecTrustResultRecoverableTrustFailure) {
+            // Accept a self-signed cert from a local host (".local" domain)
+            if (SecTrustGetCertificateCount(trust) == 1 &&
+                    ([host hasSuffix: @".local"] || [host hasSuffix: @".local."])) {
+                result = kSecTrustResultUnspecified;
+            }
+        }
         if (result != kSecTrustResultProceed && result != kSecTrustResultUnspecified) {
             Warn(@"%@: SSL cert is not trustworthy (result=%d)", self, result);
             return NO;
