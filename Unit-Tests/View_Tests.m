@@ -783,6 +783,23 @@
 }
 
 
+- (void) test15_LiveQueryAllDocs {
+    [self createDocuments: 10];
+    CBLQuery *allDocsQuery = [db createAllDocumentsQuery];
+    CBLLiveQuery *allDocsQueryLive = [allDocsQuery asLiveQuery];
+    [allDocsQueryLive start];
+    Assert([allDocsQueryLive waitForRows]);
+
+    CBLQueryEnumerator* rows = allDocsQueryLive.rows;
+    AssertEq(rows.count, 10u);
+    for (CBLQueryRow* row in rows) {
+        Log(@"-- %@", row);
+        CBLDocument* doc = row.document;
+        Assert(doc != nil, @"Couldn't get document of %@", row);    // Test fix for #733
+    }
+}
+
+
 #pragma mark - GEO
 
 

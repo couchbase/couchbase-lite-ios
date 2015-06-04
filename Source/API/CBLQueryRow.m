@@ -71,8 +71,9 @@ static id fromJSON( NSData* json ) {
 }
 
 
-- (void) moveToView: (CBLView*)view {
-    _database = view.database;
+- (void) moveToDatabase: (CBLDatabase*)database view: (CBLView*)view {
+    Assert(database != nil);
+    _database = database;
     _storage = [view.storage storageForQueryRow: self];
 }
 
@@ -216,6 +217,7 @@ static id fromJSON( NSData* json ) {
     NSString* docID = self.documentID;
     if (!docID)
         return nil;
+    Assert(_database != nil);
     CBLDocument* doc = [_database documentWithID: docID];
     [doc loadCurrentRevisionFrom: self];
     return doc;
@@ -225,6 +227,7 @@ static id fromJSON( NSData* json ) {
 - (NSArray*) conflictingRevisions {
     // The "_conflicts" value property is added when the query's allDocsMode==kCBLShowConflicts;
     // see -[CBLDatabase getAllDocs:] in CBLDatabase+Internal.m.
+    Assert(_database != nil);
     CBLDocument* doc = [_database documentWithID: self.sourceDocumentID];
     NSDictionary* value = $castIf(NSDictionary, self.value);
     NSArray* conflicts = $castIf(NSArray, value[@"_conflicts"]);
