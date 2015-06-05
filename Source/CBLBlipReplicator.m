@@ -179,13 +179,15 @@
     }];
     [self.cookieStorage addCookieHeaderToRequest: request];
 
-    _conn = [[BLIPPocketSocketConnection alloc] initWithURLRequest: request];
     id<CBLAuthorizer> auth = _settings.authorizer;
     if ([auth isKindOfClass: [CBLBasicAuthorizer class]]) {
         _conn.credential = ((CBLBasicAuthorizer*)auth).credential;
-    } else if (auth) {
-        Warn(@"New replicator doesn't support non-basic auth yet"); //FIX
+    } else {
+        [_request setValue: [auth authorizeURLRequest: request forRealm: nil]
+                  forHTTPHeaderField: @"Authorization"];
     }
+
+    _conn = [[BLIPPocketSocketConnection alloc] initWithURLRequest: request];
 
     CBLSyncConnection* sync = [[CBLSyncConnection alloc] initWithDatabase: _db
                                                                connection: _conn
