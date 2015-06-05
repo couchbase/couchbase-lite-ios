@@ -33,10 +33,6 @@
 
 /** Simple implementation of CBLAuthorizer that does HTTP Basic Auth. */
 @interface CBLBasicAuthorizer : NSObject <CBLAuthorizer>
-{
-    @private
-    NSURLCredential* _credential;
-}
 
 /** Initialize given a credential object that contains a username and password. */
 - (instancetype) initWithCredential: (NSURLCredential*)credential;
@@ -44,6 +40,8 @@
 /** Initialize given a URL alone -- will use a baked-in username/password in the URL,
     or look up a credential from the keychain. */
 - (instancetype) initWithURL: (NSURL*)url;
+
+@property (readonly) NSURLCredential* credential;
 
 @end
 

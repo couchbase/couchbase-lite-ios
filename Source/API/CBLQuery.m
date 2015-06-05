@@ -273,7 +273,7 @@
             if (rows) {
                 // Associate the query rows with this view, not the background-thread one:
                 for (CBLQueryRow* row in rows)
-                    [row moveToView: _view];
+                    [row moveToDatabase: _database view: _view];
                 e = [[CBLQueryEnumerator alloc] initWithDatabase: _database
                                                             view: _view
                                                   sequenceNumber: lastSequence

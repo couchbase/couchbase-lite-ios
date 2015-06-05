@@ -96,6 +96,9 @@ BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) __attribute__((no
    The file will be moved to the temp folder and renamed before it is deleted. */
 BOOL CBLRemoveFileIfExistsAsync(NSString* path, NSError** outError);
 
+/* Copy a file if it exists; does nothing if it doesn't. */
+BOOL CBLCopyFileIfExists(NSString*atPath, NSString* toPath, NSError** outError) __attribute__((nonnull(1, 2)));
+
 /** Returns the hostname of this computer/device (will be of the form "___.local") */
 NSString* CBLGetHostName(void);
 

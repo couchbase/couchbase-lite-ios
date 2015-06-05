@@ -48,7 +48,6 @@
     CBLDatabase* db = repl.db;
     for (id<CBL_Replicator> activeRepl in _activeReplicators) {
         if (db == activeRepl.db
-                && $equal(repl.settings.remote, activeRepl.settings.remote)
                 && repl.settings.isPush == activeRepl.settings.isPush
                 && $equal(repl.remoteCheckpointDocID, activeRepl.remoteCheckpointDocID)) {
             return activeRepl;

@@ -168,6 +168,12 @@ static int collateRevIDs(void *context,
 
 
 - (CBLStatus) importDoc: (NSString*)docID numericID: (int64_t)docNumericID {
+    // Check if the attachments table exists or not:
+    BOOL attsTableExists;
+    CBLStatus status = [self attachmentsTableExists: &attsTableExists];
+    if (CBLStatusIsError(status))
+        return status;
+
     // CREATE TABLE revs (
     //  sequence INTEGER PRIMARY KEY AUTOINCREMENT,
     //  doc_id INTEGER NOT NULL REFERENCES docs(doc_id) ON DELETE CASCADE,
@@ -179,9 +185,9 @@ static int collateRevIDs(void *context,
     //  no_attachments BOOLEAN,
     //  UNIQUE (doc_id, revid) );
 
-    CBLStatus status = [self prepare: &_revQuery
-                             fromSQL: "SELECT sequence, revid, parent, current, deleted, json"
-                                      " FROM revs WHERE doc_id=? ORDER BY sequence"];
+    status = [self prepare: &_revQuery
+                   fromSQL: "SELECT sequence, revid, parent, current, deleted, json, no_attachments"
+                            " FROM revs WHERE doc_id=? ORDER BY sequence"];
     if (CBLStatusIsError(status))
         return status;
     sqlite3_bind_int64(_revQuery, 1, docNumericID);
@@ -195,6 +201,7 @@ static int collateRevIDs(void *context,
             NSString* revID = columnString(_revQuery, 1);
             int64_t parentSeq = sqlite3_column_int64(_revQuery, 2);
             BOOL current = (BOOL)sqlite3_column_int(_revQuery, 3);
+            BOOL noAtts = (BOOL)sqlite3_column_int(_revQuery, 4);
 
             if (current) {
                 // Add a leaf revision:
@@ -204,7 +211,11 @@ static int collateRevIDs(void *context,
                     json = [NSData dataWithBytes: "{}" length: 2];
 
                 NSMutableData* nuJson = [json mutableCopy];
-                status = [self addAttachmentsToSequence: sequence json: nuJson];
+                if (attsTableExists)
+                    status = [self addAttachmentsToSequence: sequence json: nuJson];
+                else //.NET v1.1 database already has attachments bundled in the JSON data:
+                    if (!noAtts)
+                        status = [self updateAttachmentFollowsInJson: nuJson];
                 if (CBLStatusIsError(status))
                     return status;
                 json = nuJson;
@@ -237,6 +248,32 @@ static int collateRevIDs(void *context,
 }
 
 
+- (CBLStatus) updateAttachmentFollowsInJson: (NSMutableData*)json {
+    NSError* error;
+    NSMutableDictionary* object = [CBLJSON JSONObjectWithData: json
+                                                      options: NSJSONReadingMutableContainers
+                                                        error: &error];
+    if (!object) {
+        Warn(@"Unable to parse the json data : %@", error);
+        return kCBLStatusBadJSON;
+    }
+
+    NSMutableDictionary *attachments = object[@"_attachments"];
+    for (NSMutableDictionary *attachment in [attachments allValues]) {
+        attachment[@"follows"] = @(YES);
+        [attachment removeObjectForKey: @"stub"];
+    }
+
+    NSData *nuJson = [CBLJSON dataWithJSONObject: object options: 0 error: &error];
+    if (!nuJson) {
+        Warn(@"Unable to serialize the json object : %@", error);
+        return kCBLStatusBadJSON;
+    }
+    [json setData: nuJson];
+    return kCBLStatusOK;
+}
+
+
 - (CBLStatus) addAttachmentsToSequence: (int64_t)sequence json: (NSMutableData*)json {
     // CREATE TABLE attachments (
     //  sequence INTEGER NOT NULL REFERENCES revs(sequence) ON DELETE CASCADE,
@@ -247,9 +284,8 @@ static int collateRevIDs(void *context,
     //  revpos INTEGER DEFAULT 0,
     //  encoding INTEGER DEFAULT 0,
     //  encoded_length INTEGER );
-
     CBLStatus status = [self prepare: &_attQuery fromSQL: "SELECT filename, key, type, length,"
-                                    " revpos, encoding, encoded_length FROM attachments WHERE sequence=?"];
+                            " revpos, encoding, encoded_length FROM attachments WHERE sequence=?"];
     if (CBLStatusIsError(status))
         return status;
     sqlite3_bind_int64(_attQuery, 1, sequence);
@@ -293,6 +329,27 @@ static int collateRevIDs(void *context,
                            length: attJson.length - 2];
     }
     return kCBLStatusOK;
+}
+
+
+- (CBLStatus) attachmentsTableExists: (BOOL*)outExists {
+    sqlite3_stmt* attachmentsQuery = NULL;
+    CBLStatus status = [self prepare: &attachmentsQuery
+                             fromSQL: "SELECT 1 FROM sqlite_master WHERE type='table' AND name='attachments'"];
+    if (CBLStatusIsError(status)) {
+        *outExists = NO;
+        return status;
+    }
+
+    int err = sqlite3_step(attachmentsQuery);
+    sqlite3_finalize(attachmentsQuery);
+    if (SQLITE_ROW == err) {
+        *outExists = YES;
+        return kCBLStatusOK;
+    } else {
+        *outExists = NO;
+        return sqliteErrToStatus(err);
+    }
 }
 
 

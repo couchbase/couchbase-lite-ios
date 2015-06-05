@@ -76,6 +76,9 @@
     CBLReachability* _host;
     CBLRemoteRequest* _checkRequest;
     BOOL _suspended;
+    SecCertificateRef _serverCert;
+    NSData* _pinnedCertData;
+    CBLCookieStorage* _cookieStorage;
 }
 
 @synthesize db=_db, settings=_settings, cookieStorage=_cookieStorage, serverCert=_serverCert;
@@ -106,10 +109,6 @@
     if (self) {
         _db = db;
         _settings = settings;
-
-        _cookieStorage = [[CBLCookieStorage alloc] initWithDB: db
-                                                   storageKey: self.remoteCheckpointDocID];
-
         static int sLastSessionID = 0;
         _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
 #if TARGET_OS_IPHONE
@@ -137,13 +136,6 @@
     if (_savingCheckpoint && _lastSequence)
         [_db setLastSequence: _lastSequence.description withCheckpointID: self.remoteCheckpointDocID];
     _db = nil;
-}
-
-
-- (void) clearCookieStorageRef {
-    // Explicitly clear the reference to the storage to ensure that the cookie storage will
-    // get dealloc and the database referenced inside the storage will get cleared as well.
-    _cookieStorage = nil;
 }
 
 
@@ -629,6 +621,21 @@
 #pragma mark - HTTP REQUESTS:
 
 
+- (CBLCookieStorage*) cookieStorage {
+    if (!_cookieStorage) {
+        _cookieStorage = [[CBLCookieStorage alloc] initWithDB: _db
+                                                   storageKey: self.remoteCheckpointDocID];
+    }
+    return _cookieStorage;
+}
+
+- (void) clearCookieStorageRef {
+    // Explicitly clear the reference to the storage to ensure that the cookie storage will
+    // get dealloc and the database referenced inside the storage will get cleared as well.
+    _cookieStorage = nil;
+}
+
+
 - (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion {
     return [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
         && [[_serverType substringFromIndex: 23] compare: minVersion] >= 0;
@@ -685,7 +692,7 @@
     request.delegate = self;
     request.timeoutInterval = _settings.requestTimeout;
     request.authorizer = _authorizer;
-    request.cookieStorage = _cookieStorage;
+    request.cookieStorage = self.cookieStorage;
 
     if (!_remoteRequests)
         _remoteRequests = [[NSMutableArray alloc] init];

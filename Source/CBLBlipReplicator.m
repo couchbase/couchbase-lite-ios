@@ -8,6 +8,7 @@
 
 #import "CBLBlipReplicator.h"
 #import "CBLSyncConnection.h"
+#import "CBLAuthorizer.h"
 #import "BLIPPocketSocketConnection.h"
 #import "BLIPHTTPLogic.h"
 //#import "PSWebSocketTypes.h"
@@ -179,9 +180,9 @@
     [self.cookieStorage addCookieHeaderToRequest: request];
 
     _conn = [[BLIPPocketSocketConnection alloc] initWithURLRequest: request];
-    CBLAuthorizer* auth = _settings.authorizer;
+    id<CBLAuthorizer> auth = _settings.authorizer;
     if ([auth isKindOfClass: [CBLBasicAuthorizer class]]) {
-        _conn.credential = auth.credential;
+        _conn.credential = ((CBLBasicAuthorizer*)auth).credential;
     } else if (auth) {
         Warn(@"New replicator doesn't support non-basic auth yet"); //FIX
     }

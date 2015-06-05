@@ -36,9 +36,11 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 @implementation CBLFullTextQueryRow
 {
     UInt64 _fullTextID;
+    NSString* _snippet;
     NSMutableArray* _matchOffsets;
 }
 
+@synthesize snippet=_snippet;
 
 - (instancetype) initWithDocID: (NSString*)docID
                       sequence: (SequenceNumber)sequence
@@ -92,11 +94,27 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 }
 
 
+- (NSString*) snippetWithWordStart: (NSString*)wordStart
+                           wordEnd: (NSString*)wordEnd
+{
+    if (!_snippet)
+        return nil;
+    NSMutableString* snippet = [_snippet mutableCopy];
+    [snippet replaceOccurrencesOfString: @"\001" withString: wordStart
+                                options:NSLiteralSearch range:NSMakeRange(0, snippet.length)];
+    [snippet replaceOccurrencesOfString: @"\002" withString: wordEnd
+                                options:NSLiteralSearch range:NSMakeRange(0, snippet.length)];
+    return snippet;
+}
+
+
 // Overridden to add FTS result info
 - (NSDictionary*) asJSONDictionary {
     NSMutableDictionary* dict = [[super asJSONDictionary] mutableCopy];
     if (!dict[@"error"]) {
         [dict removeObjectForKey: @"key"];
+        if (_snippet)
+            dict[@"snippet"] = [self snippetWithWordStart: @"[" wordEnd: @"]"];
         if (_matchOffsets) {
             NSMutableArray* matches = [[NSMutableArray alloc] init];
             for (NSUInteger i = 0; i < _matchOffsets.count; i += 4) {

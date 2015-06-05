@@ -15,7 +15,11 @@ We use Github Issues, so there is one bug tracker for each repo. For your conven
   * [Android-specific](https://github.com/couchbase/couchbase-lite-android/issues)
   * [.NET](https://github.com/couchbase/couchbase-lite-net/issues)
 
-# 1. Is This A Duplicate?
+# 1. I Have A Question ...
+
+Please ask questions in our [developer forums](https://forums.couchbase.com). The Github issue trackers are for bug reports and feature requests only.
+
+# 2. Is This A Duplicate?
 
 It's great if you can scan the open issues to see if your problem/idea has been reported already. If so, feel free to add any new details or just a note that you hit this too. But if you're in a hurry, go ahead and skip this step -- we'd rather get duplicate reports than miss an issue!
 

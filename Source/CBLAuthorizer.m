@@ -22,6 +22,9 @@
 
 @implementation CBLBasicAuthorizer
 
+@synthesize credential=_credential;
+
+
 - (instancetype) initWithCredential: (NSURLCredential*)credential {
     Assert(credential);
     self = [super init];

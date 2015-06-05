@@ -204,12 +204,12 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* __null
 /** Creates a replication that will 'push' this database to a remote database at the given URL.
     This always creates a new replication, even if there is already one to the given URL.
     You must call -start on the replication to start it. */
-- (nullable CBLReplication*) createPushReplication: (NSURL*)url;
+- (CBLReplication*) createPushReplication: (NSURL*)url;
 
 /** Creates a replication that will 'pull' from a remote database at the given URL to this database.
     This always creates a new replication, even if there is already one from the given URL.
     You must call -start on the replication to start it. */
-- (nullable CBLReplication*) createPullReplication: (NSURL*)url;
+- (CBLReplication*) createPullReplication: (NSURL*)url;
 
 
 @end

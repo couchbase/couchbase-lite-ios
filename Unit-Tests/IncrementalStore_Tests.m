@@ -167,16 +167,10 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 - (void) setUp {
     [super setUp];
 
-    NSError* error;
     [CBLIncrementalStore setCBLManager: dbmgr];
     model = CBLISTestCoreDataModel();
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name
-                                                                 error:&error];
-    Assert(context, @"Context could not be created: %@", error);
 
-    store = context.persistentStoreCoordinator.persistentStores[0];
-    Assert(store, @"Context doesn't have any store?!");
+    [self reCreateCoreDataContext];
 
     AssertEq(store.database, db);
 }
@@ -184,6 +178,18 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 - (void) tearDown {
     [store stop];
     [super tearDown];
+}
+
+- (void) reCreateCoreDataContext {
+    NSError* error;
+
+    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
+                                                          databaseName:db.name
+                                                                 error:&error];
+    Assert(context, @"Context could not be created: %@", error);
+
+    store = context.persistentStoreCoordinator.persistentStores[0];
+    Assert(store, @"Context doesn't have any store?!");
 }
 
 /** Test case that tests create, request, update and delete of Core Data objects. */
@@ -227,8 +233,8 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     NSManagedObjectID *objectID = entry.objectID;
     
     // tear down context to reload from DB
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:database.name error:&error];
+    [self reCreateCoreDataContext];
+
     database = store.database;
     
     entry = (Entry*)[context existingObjectWithID:objectID error:&error];
@@ -316,6 +322,15 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEqual(file.data, attachment.content);
     
     // now change the properties in CouchbaseLite and check if those are available in Core Data
+    XCTestExpectation *expectation = [self expectationWithDescription:@"CBLIS Changed Notification"];
+    id observer = [[NSNotificationCenter defaultCenter]
+                   addObserverForName: kCBLISObjectHasBeenChangedInStoreNotification
+                               object: store
+                                queue: nil
+                           usingBlock:^(NSNotification *note) {
+        [expectation fulfill];
+    }];
+
     [entryProperties setObject:@"different text" forKey:@"text"];
     [entryProperties setObject:@NO forKey:@"check"];
     [entryProperties setObject:@42 forKey:@"number"];
@@ -323,8 +338,10 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert(revisions != nil, @"Couldn't persist changed properties in CBL: %@", error);
     Assert(error == nil, @"Couldn't persist changed properties in CBL: %@", error);
 
-    // wait for changes to be notified
-    [[NSRunLoop currentRunLoop] runUntilDate: [NSDate dateWithTimeIntervalSinceNow: 1.0]];
+    [self waitForExpectationsWithTimeout:5.0 handler:^(NSError *error) {
+        Assert(error == nil, "Timeout error: %@", error);
+    }];
+    [[NSNotificationCenter defaultCenter] removeObserver: observer];
     
     entry = (Entry*)[context existingObjectWithID:entryID error:&error];
     Assert(entry != nil, @"Couldn load entry: %@", error);
@@ -370,8 +387,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     
     NSManagedObjectID *objectID = entry.objectID;
     // tear down and re-init for checking that data got saved
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
     
     entry = (Entry*)[context existingObjectWithID:objectID error:&error];
     Assert(entry, @"Entry could not be loaded: %@", error);
@@ -431,8 +447,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     NSManagedObjectID *objectID = entry.objectID;
 
     // tear down and re-init for checking that data got saved:
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
 
     entry = (Entry*)[context existingObjectWithID:objectID error:&error];
     Assert(entry, @"Entry could not be loaded: %@", error);
@@ -441,8 +456,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEq(entry.articles.count, 0u);
 
     // Tear down and re-init and test with fetch request:
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
 
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Entry"];
     NSArray *result = [context executeFetchRequest:fetchRequest error:&error];
@@ -509,8 +523,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEq(result.count, 0u);
 
     // Tear down and re-init and test with fetch request:
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
 
     // Recheck the result:
     fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Subentry"];
@@ -528,14 +541,14 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     for (NSUInteger i = 0; i < 3; i++) {
         Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                      inManagedObjectContext:context];
-        entry.text = [NSString stringWithFormat:@"Entry%lu", i];
+        entry.text = [NSString stringWithFormat:@"Entry%lu", (unsigned long)i];
         [entries addObject:entry];
     }
 
     for (NSUInteger i = 0; i < 3; i++) {
         ManySubentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"ManySubentry"
                                                                inManagedObjectContext:context];
-        subentry.text = [NSString stringWithFormat:@"Subentry%lu", i];
+        subentry.text = [NSString stringWithFormat:@"Subentry%lu", (unsigned long)i];
         [subentry addEntries:entries];
     }
 
@@ -543,8 +556,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert(success, @"Could not save context: %@", error);
 
     // Tear down and re-init and test with fetch request:
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
 
     // Check the result:
     NSFetchRequest* fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Entry"];
@@ -769,8 +781,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     
     // tear down the context to reload from disk
     file = nil;
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
     
     file = (File*)[context existingObjectWithID:fileID error:&error];
     Assert(file != nil, @"File should not be nil (%@)", error);
@@ -1014,6 +1025,59 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     }];
 }
 
+- (void) test_FetchWithDate {
+    NSError *error;
+
+    NSDictionary *entry1 = @{
+                             @"created_at": [NSDate new],
+                             @"text": @"This is a test for predicates. Möhre.",
+                             @"text2": @"This is text2.",
+                             @"number": [NSNumber numberWithInt:10],
+                             @"decimalNumber": [NSDecimalNumber decimalNumberWithString:@"10.10"],
+                             @"doubleNumber": [NSNumber numberWithDouble:42.23]
+                             };
+    NSDictionary *entry2 = @{
+                             @"created_at": [[NSDate new] dateByAddingTimeInterval:-60],
+                             @"text": @"Entry number 2. touché.",
+                             @"text2": @"Text 2 by Entry number 2",
+                             @"number": [NSNumber numberWithInt:20],
+                             @"decimalNumber": [NSDecimalNumber decimalNumberWithString:@"20.20"],
+                             @"doubleNumber": [NSNumber numberWithDouble:12.45]
+                             };
+    NSDictionary *entry3 = @{
+                             @"created_at": [[NSDate new] dateByAddingTimeInterval:60],
+                             @"text": @"Entry number 3",
+                             @"text2": @"Text 2 by Entry number 3",
+                             @"number": [NSNumber numberWithInt:30],
+                             @"decimalNumber": [NSDecimalNumber decimalNumberWithString:@"30.30"],
+                             @"doubleNumber": [NSNumber numberWithDouble:98.76]
+                             };
+
+    CBLISTestInsertEntriesWithProperties(context, @[entry1, entry2, entry3]);
+
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
+
+    //// DATE
+    NSDate *startDate = [entry1[@"created_at"] dateByAddingTimeInterval:-30];
+    NSDate *endDate = [entry1[@"created_at"] dateByAddingTimeInterval:30];
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%@ <= created_at AND %@ >= created_at", startDate, endDate];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        if (result.count != 1) return;
+        AssertEqual([result[0] valueForKey:@"text"], entry1[@"text"]);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"created_at = %@ ", entry2[@"created_at"]];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        if (result.count != 1) return;
+        AssertEqual([result[0] valueForKey:@"text"], entry2[@"text"]);
+    }];
+}
+
 - (void)test_FetchWithRelationship {
     NSError *error;
 
@@ -1044,7 +1108,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     // Entry2:
     Entry *entry2 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                   inManagedObjectContext:context];
-    entry2.created_at = [NSDate new];
+    entry2.created_at = [entry1.created_at dateByAddingTimeInterval:60];
     entry2.text = @"This is an entry 2.";
     entry2.number = @(20);
     entry2.user = user2;
@@ -1060,7 +1124,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     // Entry3:
     Entry *entry3 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                   inManagedObjectContext:context];
-    entry3.created_at = [NSDate new];
+    entry3.created_at = [entry2.created_at dateByAddingTimeInterval:60];
     entry3.text = @"This is an entry 3.";
     entry3.number = @(30);
     entry3.user = user1;
@@ -1070,7 +1134,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     for (NSUInteger i = 0; i < 4; i++) {
         ManySubentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"ManySubentry"
                                                                inManagedObjectContext:context];
-        subentry.text = [NSString stringWithFormat:@"ManySubentry%lu", i];
+        subentry.text = [NSString stringWithFormat:@"ManySubentry%lu", (unsigned long)i];
         subentry.number = @(30 + i);
 
         if (i < 2) {
@@ -1086,8 +1150,8 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert(success, @"Could not save context: %@", error);
 
     // Tear down the database to refresh cache
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
+
     NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
 
     // one-to-one
@@ -1114,6 +1178,32 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         AssertEq((int)result.count, 1);
         if (result.count != 1) return;
         AssertEqual([result[0] valueForKey:@"number"], entry2.number);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"user.name beginswith 'User'"];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 3);
+        if (result.count != 3) return;
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry1.number);
+        AssertEqual(numbers[1], entry2.number);
+        AssertEqual(numbers[2], entry3.number);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"user.name beginswith 'User' and created_at == %@", entry3.created_at];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+        if (result.count != 1) return;
+        AssertEqual([result[0] valueForKey:@"number"], entry3.number);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"user.name beginswith 'User' and created_at < %@", entry3.created_at];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+        if (result.count != 2) return;
+        NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
+        AssertEqual(numbers[0], entry1.number);
+        AssertEqual(numbers[1], entry2.number);
     }];
     
     // one-to-many
@@ -1166,6 +1256,225 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
         AssertEqual(numbers[0], entry1.number);
         AssertEqual(numbers[1], entry2.number);
+    }];
+}
+
+- (void)test_FetchWithNestedRelationship {
+    NSError *error;
+    
+    User *user1 = [NSEntityDescription insertNewObjectForEntityForName:@"User"
+                                                inManagedObjectContext:context];
+    user1.name = @"User1";
+    
+    // Entry1:
+    Entry *entry1 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                  inManagedObjectContext:context];
+    entry1.created_at = [NSDate new];
+    entry1.text = @"This is an entry 1.";
+    entry1.number = @(10);
+    entry1.user = user1;
+    
+    for (NSUInteger i = 0; i < 3; i++) {
+        Subentry *sub = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                      inManagedObjectContext:context];
+        sub.text = [NSString stringWithFormat:@"Entry1-Sub%lu", (unsigned long)i];
+        sub.number = @(10 + i);
+        [entry1 addSubEntriesObject:sub];
+    }
+    
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+    
+    // Tear down the database to refresh cache
+    [self reCreateCoreDataContext];
+    
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Subentry"];
+    
+    // Simple Many
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry == %@", entry1];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 3);
+    }];
+    
+    // Deep Many
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user == %@", user1];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 3);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user.name like %@", user1.name];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 3);
+    }];
+
+    [self reCreateCoreDataContext];
+
+    // Set the max depth to 1:
+    store.customProperties = @{kCBLISCustomPropertyMaxRelationshipLoadDepth: @(1)};
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry == %@", entry1];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 3);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user == %@", user1];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 3);
+    }];
+
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user.name like %@", user1];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 0);
+    }];
+}
+
+- (void)test_FetchWithNestedRelationshipAndSort {
+    NSError *error;
+
+    User *user1 = [NSEntityDescription insertNewObjectForEntityForName:@"User"
+                                                inManagedObjectContext:context];
+    user1.name = @"User1";
+
+    User *user2 = [NSEntityDescription insertNewObjectForEntityForName:@"User"
+                                                inManagedObjectContext:context];
+    user2.name = @"User2";
+
+    // Entry1:
+    Entry *entry1 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                  inManagedObjectContext:context];
+    entry1.created_at = [NSDate new];
+    entry1.text = @"This is an entry 1.";
+    entry1.number = @(10);
+    entry1.user = user1;
+
+    Entry *entry2 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                  inManagedObjectContext:context];
+    entry2.created_at = [NSDate new];
+    entry2.text = @"This is an entry 2.";
+    entry2.number = @(20);
+    entry2.user = user2;
+
+    for (NSUInteger i = 0; i < 3; i++) {
+        Subentry *sub = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                      inManagedObjectContext:context];
+        sub.text = [NSString stringWithFormat:@"Entry1-Sub%lu", (unsigned long)i];
+        sub.number = @(10 + i);
+        [entry1 addSubEntriesObject:sub];
+    }
+
+    for (NSUInteger i = 0; i < 4; i++) {
+        Subentry *sub = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                      inManagedObjectContext:context];
+        sub.text = [NSString stringWithFormat:@"Entry2-Sub%lu", (unsigned long)i];
+        sub.number = @(10 + i);
+        [entry2 addSubEntriesObject:sub];
+    }
+
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    // Tear down the database to refresh cache
+    [self reCreateCoreDataContext];
+
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Subentry"];
+
+    // Simple Sort
+    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"text" ascending:NO]];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        NSArray *texts = [result valueForKey:@"text"];
+        NSArray *expected = @[@"Entry2-Sub3", @"Entry2-Sub2", @"Entry2-Sub1", @"Entry2-Sub0",
+                              @"Entry1-Sub2", @"Entry1-Sub1", @"Entry1-Sub0"];
+        AssertEqual (texts, expected);
+    }];
+
+    // Simple Sort 2
+    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"text" ascending:YES]];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        NSArray *texts = [result valueForKey:@"text"];
+        NSArray *expected = @[@"Entry1-Sub0", @"Entry1-Sub1", @"Entry1-Sub2",
+                              @"Entry2-Sub0", @"Entry2-Sub1", @"Entry2-Sub2", @"Entry2-Sub3"];
+        AssertEqual (texts, expected);
+    }];
+
+    // Deep Sort
+    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"entry.text" ascending:NO],
+                                     [NSSortDescriptor sortDescriptorWithKey:@"text" ascending:YES]];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        NSArray *texts = [result valueForKey:@"text"];
+        NSArray *expected = @[@"Entry2-Sub0", @"Entry2-Sub1", @"Entry2-Sub2", @"Entry2-Sub3",
+                              @"Entry1-Sub0", @"Entry1-Sub1", @"Entry1-Sub2"];
+        AssertEqual (texts, expected);
+    }];
+
+    // Deep Sort 2
+    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"entry.text" ascending:YES],
+                                     [NSSortDescriptor sortDescriptorWithKey:@"text" ascending:YES]];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        NSArray *texts = [result valueForKey:@"text"];
+        NSArray *expected = @[@"Entry1-Sub0", @"Entry1-Sub1", @"Entry1-Sub2",
+                              @"Entry2-Sub0", @"Entry2-Sub1", @"Entry2-Sub2", @"Entry2-Sub3"];
+        AssertEqual (texts, expected);
+    }];
+
+    // Deeper Sort
+    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"entry.user.name" ascending:NO],
+                                     [NSSortDescriptor sortDescriptorWithKey:@"text" ascending:YES]];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        NSArray *texts = [result valueForKey:@"text"];
+        NSArray *expected = @[@"Entry2-Sub0", @"Entry2-Sub1", @"Entry2-Sub2", @"Entry2-Sub3",
+                              @"Entry1-Sub0", @"Entry1-Sub1", @"Entry1-Sub2"];
+        AssertEqual (texts, expected);
+    }];
+
+    // Deeper Sort 2
+    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"entry.user.name" ascending:YES],
+                                     [NSSortDescriptor sortDescriptorWithKey:@"text" ascending:YES]];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        NSArray *texts = [result valueForKey:@"text"];
+        NSArray *expected = @[@"Entry1-Sub0", @"Entry1-Sub1", @"Entry1-Sub2",
+                              @"Entry2-Sub0", @"Entry2-Sub1", @"Entry2-Sub2", @"Entry2-Sub3"];
+        AssertEqual (texts, expected);
+    }];
+}
+
+
+- (void)test_FetchWithRelationshipNil {
+    NSError *error;
+
+    // Entry1:
+    Entry *entry1 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                  inManagedObjectContext:context];
+    entry1.created_at = [NSDate new];
+    entry1.text = @"This is an entry 1.";
+    entry1.number = @(10);
+
+    for (NSUInteger i = 0; i < 3; i++) {
+        Subentry *sub = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                      inManagedObjectContext:context];
+        sub.text = [NSString stringWithFormat:@"Entry1-Sub%lu", (unsigned long)i];
+        sub.number = @(10 + i);
+        [entry1 addSubEntriesObject:sub];
+    }
+
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    // Tear down the database to refresh cache
+    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
+                                                          databaseName:db.name error:&error];
+
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Subentry"];
+
+    // Simple Many
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry == %@", nil];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 0);
+    }];
+
+    // Nil Many
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user == %@", nil];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 3);
     }];
 }
 
@@ -1297,8 +1606,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert(!error, @"Cannot create CBLIS_metadata document");
 
     // Tear down and re-init
-    context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name error:&error];
+    [self reCreateCoreDataContext];
 
     // The document type key should be 'CBLIS_Type'.
     Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"

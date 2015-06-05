@@ -11,6 +11,9 @@
 extern NSString* const kCBLISErrorDomain;
 extern NSString* const kCBLISObjectHasBeenChangedInStoreNotification;
 
+/** Maximum number of relationship loading allowed in a fetch request. Default value is 3. */
+extern NSString* const kCBLISCustomPropertyMaxRelationshipLoadDepth;
+
 /** Error codes for CBLIncrementalStore. */
 typedef enum
 {
@@ -61,6 +64,9 @@ typedef void(^CBLISConflictHandler)(NSArray* conflictingRevisions);
 
 /** Conflict handling block that gets called when conflicts are to be handled. Initialied with a generic conflicts handler, can be set to NULL to not handle conflicts at all. */
 @property (nonatomic, copy) CBLISConflictHandler conflictHandler;
+
+/** An optional dictionary of extra properties for the incremental store.*/
+@property (nonatomic, copy) NSDictionary* customProperties;
 
 /** Returns the type of this store to use with addPersistentStore:... 
  *

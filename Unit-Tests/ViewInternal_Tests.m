@@ -110,6 +110,7 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
         Assert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
         Assert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
         Assert([doc[@"_local_seq"] isKindOfClass: [NSNumber class]], @"Invalid _local_seq in %@", doc);
+        Assert(![doc[@"_id"] hasPrefix:@"_design/"], @"Shouldn't index the design doc: %@", doc);
         if (doc[@"key"])
             emit(doc[@"key"], nil);
         if (doc[@"geoJSON"])
@@ -1199,10 +1200,12 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     AssertEq(rows.count, 0u);
 }
 
-#if 0 // Boolean operators and snippets are not available (yet) with ForestDB
+
 - (void) test24_FullTextQuery_Advanced {
+    if (!self.isSQLiteDB)
+        return; // Boolean operators and snippets are not available (yet) with ForestDB
+
     RequireTestCase(CBL_View_FullTextQuery);
-    CBLDatabase *db = createDB();
     CBLStatus status;
 
     NSMutableArray* docs = $marray();
@@ -1213,10 +1216,9 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     [docs addObject: [self putDoc: $dict({@"_id", @"55555"}, {@"text", @"was barking."})]];
 
     CBLView* view = [db viewNamed: @"fts"];
-    view.indexType = kCBLFullTextIndex;
     [view setMapBlock: MAPBLOCK({
         if (doc[@"text"])
-            emit(doc[@"text"], doc[@"_id"]);
+            emit(CBLTextKey(doc[@"text"]), doc[@"_id"]);
     }) reduceBlock: NULL version: @"1"];
 
     AssertEq([view updateIndex], kCBLStatusOK);
@@ -1229,21 +1231,21 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     Assert(rowIter, @"_queryFullText failed: %d", status);
     Log(@"rows = %@", rowIter);
     NSArray* expectedRows = $array($dict({@"id",  @"44444"},
-                                         {@"matches", @[@{@"range": @[@4, @7], @"term": @0}]},
+                                         {@"matches", @[@{@"range": @[@4, @6], @"term": @0}]},
                                          {@"snippet", @"and [STöRMy] night."},
                                          {@"value", @"44444"}),
                                    $dict({@"id",  @"33333"},
                                          {@"matches", @[@{@"range": @[@2,  @3], @"term": @1},
-                                                        @{@"range": @[@26, @3], @"term": @1}]},
+                                                        @{@"range": @[@22, @3], @"term": @1}]},
                                          {@"snippet", @"a [dog] whøse ñame was “[Dog]”"},
                                          {@"value", @"33333"}));
-    AssertEqual(rowsToDicts(rowIter), expectedRows);
+    AssertEqualish(rowsToDicts(rowIter), expectedRows);
 
     // Try a query with snippets:
     CBLQuery* query = [view createQuery];
     query.fullTextQuery = @"(was NOT barking) OR dog";
     query.fullTextSnippets = YES;
-    rows = [[query run: NULL] allObjects];
+    NSArray* rows = [[query run: NULL] allObjects];
     AssertEq(rows.count, 2u);
 
     CBLFullTextQueryRow* row = rows[0];
@@ -1287,12 +1289,11 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     Log(@"after deletion, rows = %@", rowIter);
 
     expectedRows = $array($dict({@"id",  @"44444"},
-                                {@"matches", @[@{@"range": @[@4, @7], @"term": @0}]},
+                                {@"matches", @[@{@"range": @[@4, @6], @"term": @0}]},
                                 {@"snippet", @"and [STöRMy] night."},
                                 {@"value", @"44444"}));
-    AssertEqual(rowsToDicts(rowIter), expectedRows);
+    AssertEqualish(rowsToDicts(rowIter), expectedRows);
 }
-#endif
 
 
 - (void) test25_TotalDocs {

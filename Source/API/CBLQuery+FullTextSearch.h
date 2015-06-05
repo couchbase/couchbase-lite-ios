@@ -37,6 +37,18 @@
     They also can't be reduced or grouped, so those properties are ignored too. */
 @property (copy, nullable) NSString* fullTextQuery;
 
+/** If set to YES, the query will collect snippets of the text surrounding each match, available
+    via the CBLFullTextQueryRow's -snippetWithWordStart:wordEnd: method.
+    (NOTE: ForestDB currently does not support snippets.) */
+@property BOOL fullTextSnippets;
+
+/** If YES (the default) the full-text query result rows will be sorted by (approximate) relevance.
+    If set to NO, the rows will be returned in the order the documents were added to the database,
+    i.e. essentially unordered; this is somewhat faster, so it can be useful if you don't care
+    about the ordering of the rows.
+    (NOTE: ForestDB currently does not support ranking.) */
+@property BOOL fullTextRanking;
+
 @end
 
 
@@ -48,6 +60,15 @@
 /** The text emitted when the view was indexed (the argument to CBLTextKey()) which contains the
     match(es). */
 @property (readonly, nullable) NSString* fullText;
+
+/** Returns a short substring of the full text containing at least some of the matched words.
+    This is useful to display in search results, and is faster than fetching the .fullText.
+    NOTE: The "fullTextSnippets" property of the CBLQuery must be set to YES to enable this;
+    otherwise the result will be nil.
+    @param wordStart  A delimiter that will be inserted before every instance of a match.
+    @param wordEnd  A delimiter that will be inserted after every instance of a match. */
+- (NSString*) snippetWithWordStart: (NSString*)wordStart
+                           wordEnd: (NSString*)wordEnd;
 
 /** The number of query words that were found in the fullText.
     (If a query word appears more than once, only the first instance is counted.) */
