@@ -123,7 +123,7 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     contents of each document. */
 @property BOOL prefetch;
 
-/** Changes the behavior of a query created by -queryAllDocuments.
+/** Changes the behavior of a query created by -createAllDocumentsQuery.
     * In mode kCBLAllDocs (the default), the query simply returns all non-deleted documents.
     * In mode kCBLIncludeDeleted, it also returns deleted documents.
     * In mode kCBLShowConflicts, the .conflictingRevisions property of each row will return the
