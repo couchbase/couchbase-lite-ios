@@ -180,7 +180,7 @@ static CBL_BlobStoreWriter* blobStoreWriterForBody(CBLDatabase* tddb, NSData* bo
                 // Copy attachment body into the database's blob store:
                 // OPT: If _body is an NSURL, could just copy the file without reading into RAM
                 CBL_BlobStoreWriter* writer = blobStoreWriterForBody(tddb, body);
-                metadata[@"length"] = $object(body.length);
+                metadata[@"length"] = @(body.length);
                 metadata[@"digest"] = writer.MD5DigestString;
                 metadata[@"follows"] = $true;
                 [tddb rememberAttachmentWriter: writer];
