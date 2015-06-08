@@ -447,10 +447,9 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     forestOpts.limit = options->limit;
     forestOpts.inclusiveEnd = YES;
     forestOpts.includeDeleted = NO;
-    BOOL includeDocs = options->includeDocs || options->includeConflicts || (filter != NULL);
-    if (!includeDocs)
+    BOOL withBody = (options->includeDocs || filter != nil);
+    if (!withBody)
         forestOpts.contentOptions = Database::kMetaOnly;
-    BOOL withBody = (includeDocs || filter);
 
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
     *outStatus = [self _try: ^CBLStatus{
@@ -458,17 +457,23 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
             @autoreleasepool {
                 VersionedDocument doc(*_forest, *e);
                 NSArray* revIDs;
-                if (options->includeConflicts)
+                if (options->includeConflicts && doc.isConflicted()) {
+                    if (forestOpts.contentOptions & Database::kMetaOnly)
+                        doc.read();
                     revIDs = [CBLForestBridge getCurrentRevisionIDs: doc];
-                else
+                } else {
                     revIDs = @[(NSString*)doc.revID()];
+                }
                 for (NSString* revID in revIDs) {
                     CBL_MutableRevision* rev = [CBLForestBridge revisionObjectFromForestDoc: doc
                                                                                       revID: revID
                                                                                withBody: withBody];
                     Assert(rev);
-                    if (!filter || filter(rev))
+                    if (!filter || filter(rev)) {
+                        if (!options->includeDocs)
+                            rev.body = nil;
                         [changes addRev: rev];
+                    }
                 }
             }
         }
