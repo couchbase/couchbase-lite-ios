@@ -21,8 +21,6 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLManager+Internal.h"
 #import "CBL_Server.h"
-#import "CBLPersonaAuthorizer.h"
-#import "CBLFacebookAuthorizer.h"
 #import "CBLCookieStorage.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
@@ -158,39 +156,9 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
-#ifdef CBL_DEPRECATED
-
-@synthesize facebookEmailAddress=_facebookEmailAddress;
-
-- (BOOL) registerFacebookToken: (NSString*)token forEmailAddress: (NSString*)email {
-    if (![CBLFacebookAuthorizer registerToken: token forEmailAddress: email forSite: self.remoteURL])
-        return false;
-    self.facebookEmailAddress = email;
-    [self restart];
-    return true;
-}
-#endif
-
-
 - (NSURL*) personaOrigin {
     return self.remoteURL.my_baseURL;
 }
-
-
-#ifdef CBL_DEPRECATED
-@synthesize personaEmailAddress=_personaEmailAddress;
-
-- (BOOL) registerPersonaAssertion: (NSString*)assertion {
-    NSString* email = [CBLPersonaAuthorizer registerAssertion: assertion];
-    if (!email) {
-        Warn(@"Invalid Persona assertion: %@", assertion);
-        return false;
-    }
-    self.personaEmailAddress = email;
-    [self restart];
-    return true;
-}
-#endif
 
 
 - (void) setCookieNamed: (NSString*)name
@@ -257,13 +225,9 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     NSMutableDictionary* authDict = nil;
     if (_authenticator) {
         remoteURL = remoteURL.my_URLByRemovingUser;
-    } else if (_OAuth || _facebookEmailAddress || _personaEmailAddress) {
+    } else if (_OAuth) {
         remoteURL = remoteURL.my_URLByRemovingUser;
         authDict = $mdict({@"oauth", _OAuth});
-        if (_facebookEmailAddress)
-            authDict[@"facebook"] = @{@"email": _facebookEmailAddress};
-        if (_personaEmailAddress)
-            authDict[@"persona"] = @{@"email": _personaEmailAddress};
     }
     NSDictionary* remote = $dict({@"url", remoteURL.absoluteString},
                                  {@"headers", _headers},
