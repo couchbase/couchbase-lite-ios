@@ -9,13 +9,7 @@
 #import "MYDynamicObject.h"
 #import "CBLDocument.h"
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 @class CBLAttachment, CBLDatabase;
 
 
@@ -89,7 +83,7 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
     @param models  An array of CBLModel objects, which must all be in the same database.
     @param outError  On return, the error (if the call failed.)
     @return  A RESTOperation that saves all changes, or nil if none of the models need saving. */
-+ (BOOL) saveModels: (NSArray*)models
++ (BOOL) saveModels: (CBLArrayOf(CBLModel*)*)models
               error: (NSError**)outError;
 
 /** Resets the timeSinceExternallyChanged property to zero. */
@@ -119,13 +113,13 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
     @param relation  The property name to look at
     @param fromClass  (Optional) The CBLModel subclass to restrict the search to.
     @return  An array of model objects found, or nil on error. */
-- (NSArray*) findInverseOfRelation: (NSString*)relation
-                         fromClass: (nullable Class)fromClass;
+- (CBLArrayOf(CBLModel*)*) findInverseOfRelation: (NSString*)relation
+                                       fromClass: (nullable Class)fromClass;
 
 
 /** The names of all attachments (array of strings).
     This reflects unsaved changes made by creating or deleting attachments. */
-@property (readonly, nullable) NSArray* attachmentNames;
+@property (readonly, nullable) CBLArrayOf(NSString*)* attachmentNames;
 
 /** Looks up the attachment with the given name (without fetching its contents). */
 - (nullable CBLAttachment*) attachmentNamed: (NSString*)name;
@@ -232,7 +226,7 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
 @interface CBLDatabase (CBLModel)
 
 /** All CBLModels associated with this database whose needsSave is true. */
-@property (readonly) NSArray* unsavedModels;
+@property (readonly) CBLArrayOf(CBLModel*)* unsavedModels;
 
 /** Saves changes to all CBLModels associated with this database whose needsSave is true. */
 - (BOOL) saveAllModels: (NSError**)outError;
@@ -245,6 +239,4 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
 @end
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END

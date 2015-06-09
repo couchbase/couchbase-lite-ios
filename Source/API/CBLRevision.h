@@ -6,16 +6,10 @@
 //  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "CBLBase.h"
 @class CBLDocument, CBLDatabase, CBLAttachment, CBLSavedRevision, CBLUnsavedRevision;
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 
 /** A revision of a CBLDocument.
     This is the abstract base class of CBLSavedRevision (existing revisions) and CBLNewRevision
@@ -47,17 +41,17 @@
 
 /** Returns the ancestry of this revision as an array of CBLRevisions, in chronological order.
     Older revisions are NOT guaranteed to have their properties available. */
-- (NSArray*) getRevisionHistory: (NSError**)outError;
+- (CBLArrayOf(CBLRevision*)*) getRevisionHistory: (NSError**)outError;
 
 /** The revision's contents as parsed from JSON.
     Keys beginning with "_" are defined and reserved by CouchbaseLite; others are app-specific.
     The first call to this method may need to fetch the properties from disk, but subsequent calls
     are very cheap. */
-@property (readonly, nullable) NSDictionary* properties;
+@property (readonly, nullable) CBLJSONDict* properties;
 
 /** The user-defined properties, without the ones reserved by CouchbaseLite.
     This is based on -properties, with every key whose name starts with "_" removed. */
-@property (readonly, copy, nullable) NSDictionary* userProperties;
+@property (readonly, copy, nullable) CBLJSONDict* userProperties;
 
 /** Shorthand for [self.properties objectForKey: key]. */
 - (nullable id) propertyForKey: (NSString*)key;
@@ -68,13 +62,13 @@
 #pragma mark ATTACHMENTS
 
 /** The names of all attachments (an array of strings). */
-@property (readonly, nullable) NSArray* attachmentNames;
+@property (readonly, nullable) CBLArrayOf(NSString*)* attachmentNames;
 
 /** Looks up the attachment with the given name (without fetching its contents yet). */
 - (nullable CBLAttachment*) attachmentNamed: (NSString*)name;
 
 /** All attachments, as CBLAttachment objects. */
-@property (readonly, nullable) NSArray* attachments;
+@property (readonly, nullable) CBLArrayOf(CBLAttachment*)* attachments;
 
 @end
 
@@ -93,7 +87,7 @@
 
 /** Creates and saves a new revision with the given properties.
     This will fail with a 412 error if the receiver is not the current revision of the document. */
-- (nullable CBLSavedRevision*) createRevisionWithProperties: (nullable NSDictionary*)properties
+- (nullable CBLSavedRevision*) createRevisionWithProperties: (nullable CBLJSONDict*)properties
                                                       error: (NSError**)outError;
 
 /** Deletes the document by creating a new deletion-marker revision. */
@@ -109,7 +103,7 @@
 // These properties are overridden to be settable:
 @property (readwrite) BOOL isDeletion;
 @property (readwrite, copy, nullable) NSMutableDictionary* properties;
-@property (readwrite, copy, nullable) NSDictionary* userProperties;
+@property (readwrite, copy, nullable) CBLJSONDict* userProperties;
 - (void) setObject: (nullable id)object forKeyedSubscript: (NSString*)key;
 
 /** Saves the new revision to the database.
@@ -153,6 +147,4 @@
 @end
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END

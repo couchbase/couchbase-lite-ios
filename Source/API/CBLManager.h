@@ -6,16 +6,10 @@
 //  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "CBLBase.h"
 @class CBLDatabase;
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 /** Option flags for CBLManager initialization. */
 typedef struct CBLManagerOptions {
     bool                 readOnly;          /**< No modifications to databases are allowed. */
@@ -93,7 +87,7 @@ typedef struct CBLManagerOptions {
 - (nullable CBLDatabase*) objectForKeyedSubscript: (NSString*)key;
 
 /** An array of the names of all existing databases. */
-@property (readonly) NSArray* allDatabaseNames;
+@property (readonly) CBLArrayOf(NSString*)* allDatabaseNames;
 
 /** Replaces or installs a database from a file.
  This is primarily used to install a canned database on first launch of an app, in which case you should first check .exists to avoid replacing the database if it exists already. The canned database would have been copied into your app bundle at build time.
@@ -162,6 +156,4 @@ extern NSString* const CBLHTTPErrorDomain;
 
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END
