@@ -824,15 +824,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEqual(file.filename, [doc propertyForKey:@"filename"]);
 
     att = [doc.currentRevision attachmentNamed:@"data"];
-    Assert(att != nil, @"Attachmant should be created");
-
-    content = att.content;
-    Assert(content != nil, @"Content should be loaded");
-    AssertEq(content.length, data.length);
-    AssertEqual(content, data);
-
-    NSString *stringFromContentNil = [[NSString alloc] initWithData:content encoding:NSUTF8StringEncoding];
-    Assert(0 == stringFromContentNil.length, @"Not nil, size:%lu", stringFromContentNil.length);
+    AssertNil(att);
 }
 
 - (void) test_FetchWithPredicates {
