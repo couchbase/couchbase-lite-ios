@@ -609,6 +609,9 @@
 		27E7FB04155DBDBF0025F93A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
 		27E940661954BB9E00A9732E /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E940651954BB9E00A9732E /* libc++.dylib */; };
 		27E940691954BD4C00A9732E /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E940651954BB9E00A9732E /* libc++.dylib */; };
+		27EA50B31B275527009E78C1 /* CBLBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA50B21B275527009E78C1 /* CBLBase.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27EA50B41B275527009E78C1 /* CBLBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA50B21B275527009E78C1 /* CBLBase.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27EA50B51B275527009E78C1 /* CBLBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA50B21B275527009E78C1 /* CBLBase.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27ED8630157D0FC600712B33 /* CBLDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 27ED862E157D0FC600712B33 /* CBLDocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27ED8631157D0FC600712B33 /* CBLDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ED862F157D0FC600712B33 /* CBLDocument.m */; };
 		27ED8632157D0FC600712B33 /* CBLDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ED862F157D0FC600712B33 /* CBLDocument.m */; };
@@ -1488,6 +1491,7 @@
 		27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/CFNetwork.framework; sourceTree = DEVELOPER_DIR; };
 		27E7FB02155DBDA20025F93A /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 		27E940651954BB9E00A9732E /* libc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++.dylib"; path = "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk/usr/lib/libc++.dylib"; sourceTree = DEVELOPER_DIR; };
+		27EA50B21B275527009E78C1 /* CBLBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBase.h; sourceTree = "<group>"; };
 		27ED862E157D0FC600712B33 /* CBLDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDocument.h; sourceTree = "<group>"; };
 		27ED862F157D0FC600712B33 /* CBLDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDocument.m; sourceTree = "<group>"; };
 		27ED9A961639D8D2000C844A /* LiteServ.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LiteServ.m; path = ../Listener/LiteServ.m; sourceTree = "<group>"; };
@@ -2454,6 +2458,7 @@
 			children = (
 				270B3E1F148938D800E0A926 /* CouchbaseLite.h */,
 				27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */,
+				27EA50B21B275527009E78C1 /* CBLBase.h */,
 				27DA4343159125B500F9E7B5 /* CBLManager.h */,
 				27DA4344159125B500F9E7B5 /* CBLManager.m */,
 				27DA42FB158E7D3500F9E7B5 /* CBLDatabase.h */,
@@ -2773,6 +2778,7 @@
 				276F25FB18A3386100A70679 /* DDData.h in Headers */,
 				27DA42FD158E7D3500F9E7B5 /* CBLDatabase.h in Headers */,
 				27DA4308158FA35600F9E7B5 /* CBLCache.h in Headers */,
+				27EA50B31B275527009E78C1 /* CBLBase.h in Headers */,
 				27DA4312158FB79F00F9E7B5 /* CBLQuery.h in Headers */,
 				27DA4345159125B500F9E7B5 /* CBLManager.h in Headers */,
 				27DA434A15912AFD00F9E7B5 /* CBLView.h in Headers */,
@@ -2805,6 +2811,7 @@
 				27452BD61AB1187E00327776 /* CBLDatabase.h in Headers */,
 				27452BD71AB1187E00327776 /* CBLDatabaseChange.h in Headers */,
 				27452BD81AB1187E00327776 /* CBLDocument.h in Headers */,
+				27EA50B41B275527009E78C1 /* CBLBase.h in Headers */,
 				27452BD91AB1187E00327776 /* CBLRevision.h in Headers */,
 				27452BDA1AB1187E00327776 /* CBLAttachment.h in Headers */,
 				27452BDB1AB1187E00327776 /* CBLView.h in Headers */,
@@ -2869,6 +2876,7 @@
 				277EF49117F4EA0000F7B7F7 /* CBLQuery+Geo.h in Headers */,
 				2711CE0414C759BD00505D55 /* CBLDatabase+Replication.h in Headers */,
 				27B0B7FC1492BDE800A817AD /* CBLView+Internal.h in Headers */,
+				27EA50B51B275527009E78C1 /* CBLBase.h in Headers */,
 				27B0B7FD1492BDE800A817AD /* CBL_Body.h in Headers */,
 				27B0B7FE1492BDE800A817AD /* CBL_Revision.h in Headers */,
 				278D359A19118FBC00C9C8EC /* CBLAuthenticator.h in Headers */,

@@ -9,13 +9,7 @@
 #import "CBLQuery.h"
 
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 /** CBLQuery interface for full-text searches.
     To use this, the view's map function must have emitted full-text strings as keys
     using the CBLTextKey() function. */
@@ -85,6 +79,4 @@
 @end
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END

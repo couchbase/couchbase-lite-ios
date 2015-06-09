@@ -6,15 +6,9 @@
 //  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "CBLBase.h"
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 
 /** Identical to the corresponding NSJSON option flags. */
 enum {
@@ -38,13 +32,13 @@ typedef NSUInteger CBLJSONWritingOptions;
 
 /** Same as -dataWithJSONObject... but returns an NSString. */
 + (nullable NSString*) stringWithJSONObject:(id)obj
-                           options:(CBLJSONWritingOptions)opt
-                             error:(NSError**)error;
+                                    options:(CBLJSONWritingOptions)opt
+                                      error:(NSError**)error;
 
 /** Given valid JSON data representing a dictionary, inserts the contents of the given NSDictionary into it and returns the resulting JSON data.
     This does not parse or regenerate the JSON, so it's quite fast.
     But it will generate invalid JSON if the input JSON begins or ends with whitespace, or if the dictionary contains any keys that are already in the original JSON. */
-+ (NSData*) appendDictionary: (NSDictionary*)dict
++ (NSData*) appendDictionary: (CBLJSONDict*)dict
         toJSONDictionaryData: (NSData*)json;
 
 /** Same as above but inserts a pre-encoded JSON dictionary instead of an NSDictionary. */
@@ -109,6 +103,4 @@ typedef void (^CBLOnMutateBlock)();
 @end
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END

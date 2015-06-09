@@ -6,16 +6,10 @@
 //  Copyright (c) 2014-2015 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "CBLBase.h"
 @class CBLDatabase, CBLView, CBLQuery, CBLQueryEnumerator;
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 
 /** A higher-level interface to views and queries that feels more like a traditional query language
     or like Core Data's NSFetchRequest.
@@ -83,15 +77,13 @@
                         the dollar signs used in the predicate string; if a predicate referred to
                         $FOO, the dictionary key should be @"FOO".
     @return  The configured query, ready to run. */
-- (CBLQuery*) createQueryWithContext: (nullable NSDictionary*)context;
+- (CBLQuery*) createQueryWithContext: (nullable CBLJSONDict*)context;
 
 /** A convenience method that creates a query and runs it. See -createQueryWithContext:. */
-- (nullable CBLQueryEnumerator*) runQueryWithContext: (nullable NSDictionary*)context
+- (nullable CBLQueryEnumerator*) runQueryWithContext: (nullable CBLJSONDict*)context
                                                error: (NSError**)outError;
 
 @end
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END

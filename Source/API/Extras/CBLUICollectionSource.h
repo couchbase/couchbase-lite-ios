@@ -16,16 +16,11 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
+#import "CBLBase.h"
 #import <UIKit/UIKit.h>
 @class CBLDocument, CBLLiveQuery, CBLQueryRow, RESTOperation;
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 
 /** A UICollectionView data source driven by a CBLLiveQuery.
     It populates the collection view from the query rows, and automatically updates the collection
@@ -67,11 +62,11 @@
 #pragma mark Editing The Collection:
 
 /** Deletes the documents at the given row indexes, animating the removal from the collection. */
-- (BOOL) deleteDocumentsAtIndexes: (NSArray*)indexPaths
+- (BOOL) deleteDocumentsAtIndexes: (CBLArrayOf(NSIndexPath*)*)indexPaths
                             error: (NSError**)outError;
 
 /** Deletes the given documents, animating the removal from the collection. */
-- (BOOL) deleteDocuments: (NSArray*)documents
+- (BOOL) deleteDocuments: (CBLArrayOf(CBLDocument*)*)documents
                    error: (NSError**)outError;
 
 @end
@@ -94,7 +89,7 @@
 /** Called after the query's results change to update the collection view. If this method is not implemented by the delegate, reloadData is called on the collection view.*/
 - (void)couchCollectionSource:(CBLUICollectionSource*)source
               updateFromQuery:(CBLLiveQuery*)query
-                 previousRows:(NSArray *)previousRows;
+                 previousRows:(CBLArrayOf(CBLQueryRow*) *)previousRows;
 
 /** Called from -collectionView:cellForItemAtIndexPath: just before it returns, giving the delegate a chance to customize the new cell. */
 - (void)couchCollectionSource:(CBLUICollectionSource*)source
@@ -104,6 +99,4 @@
 @end
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END

@@ -7,15 +7,9 @@
 //
 //
 
-#import <Foundation/Foundation.h>
+#import "CBLBase.h"
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 
 /** Identifies a change to a database, that is, a newly added document revision.
     The CBLDocumentChangeNotification contains one of these in the "change" key of its
@@ -41,6 +35,4 @@
 @end
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END

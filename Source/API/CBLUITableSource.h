@@ -6,16 +6,11 @@
 //  Copyright 2011-2013 Couchbase, Inc. All rights reserved.
 //
 
+#import "CBLBase.h"
 #import <UIKit/UIKit.h>
 @class CBLDocument, CBLLiveQuery, CBLQueryRow;
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 
 /** A UITableView data source driven by a CBLLiveQuery.
     It populates the table rows from the query rows, and automatically updates the table as the
@@ -40,7 +35,7 @@
 #pragma mark Row Accessors:
 
 /** The current array of CBLQueryRows being used as the data source for the table. */
-@property (nonatomic, readonly, nullable) NSArray* rows;
+@property (nonatomic, readonly, nullable) CBLArrayOf(CBLQueryRow*)* rows;
 
 /** Convenience accessor to get the row object for a given table row index. */
 - (nullable CBLQueryRow*) rowAtIndex: (NSUInteger)index;
@@ -69,11 +64,11 @@
 @property (nonatomic) BOOL deletionAllowed;
 
 /** Deletes the documents at the given row indexes, animating the removal from the table. */
-- (BOOL) deleteDocumentsAtIndexes: (NSArray*)indexPaths
+- (BOOL) deleteDocumentsAtIndexes: (CBLArrayOf(NSIndexPath*)*)indexPaths
                             error: (NSError**)outError;
 
 /** Asynchronously deletes the given documents, animating the removal from the table. */
-- (BOOL) deleteDocuments: (NSArray*)documents
+- (BOOL) deleteDocuments: (CBLArrayOf(CBLDocument*)*)documents
                    error: (NSError**)outError;
 
 @end
@@ -95,7 +90,7 @@
 /** Called after the query's results change to update the table view. If this method is not implemented by the delegate, reloadData is called on the table view.*/
 - (void)couchTableSource:(CBLUITableSource*)source
          updateFromQuery:(CBLLiveQuery*)query
-            previousRows:(NSArray *)previousRows;
+            previousRows:(CBLArrayOf(CBLQueryRow*) *)previousRows;
 
 /** Called from -tableView:cellForRowAtIndexPath: just before it returns, giving the delegate a chance to customize the new cell. */
 - (void)couchTableSource:(CBLUITableSource*)source
@@ -118,6 +113,4 @@
 @end
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END
