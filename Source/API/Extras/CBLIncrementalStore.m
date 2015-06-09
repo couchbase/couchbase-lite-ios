@@ -33,13 +33,16 @@
 NSString* const kCBLISErrorDomain = @"CBLISErrorDomain";
 NSString* const kCBLISObjectHasBeenChangedInStoreNotification = @"CBLISObjectHasBeenChangedInStoreNotification";
 NSString* const kCBLISCustomPropertyMaxRelationshipLoadDepth = @"CBLISCustomPropertyMaxRelationshipLoadDepth";
+NSString* const kCBLISCustomPropertyQueryBooleanWithNumber = @"CBLISCustomPropertyQueryBooleanWithNumber";
+
+static NSString* const kCBLISMetadataDocumentID = @"CBLIS_metadata";
+static NSString* const kCBLISMetadata_DefaultTypeKey = @"type_key";
 
 static NSString* const kCBLISDefaultTypeKey = @"type";
 static NSString* const kCBLISOldDefaultTypeKey = @"CBLIS_type";
-static NSString* const kCBLISMetadata_DefaultTypeKey = @"type_key";
+
 static NSString* const kCBLISCurrentRevisionAttributeName = @"CBLIS_Rev";
 static NSString* const kCBLISManagedObjectIDPrefix = @"CBL";
-static NSString* const kCBLISMetadataDocumentID = @"CBLIS_metadata";
 static NSString* const kCBLISToManyViewNameFormat = @"CBLIS/%@_%@_%@";
 
 // Utility functions
@@ -370,7 +373,7 @@ static CBLManager* sCBLManager;
                                   withID: kCBLISMetadataDocumentID
                                    error: &error]) {
         if (outError) {
-            NSString* errorDesc = @"Could not store metadata in database";
+            NSString* errorDesc = @"Could not save metadata in database";
             *outError = CBLISError(CBLIncrementalStoreErrorStoringMetadataFailed, errorDesc, error);
         }
     }
@@ -652,10 +655,20 @@ static CBLManager* sCBLManager;
 
 #pragma mark - Custom properties
 
+- (void)setCustomProperties: (NSDictionary*)customProperties {
+    _customProperties = customProperties;
+    [self invalidateFetchResultCache];
+}
+
 - (NSUInteger) maxRelationshipLoadDepth {
     id maxDepth = _customProperties[kCBLISCustomPropertyMaxRelationshipLoadDepth];
     NSUInteger maxDepthValue = [maxDepth unsignedIntegerValue];
     return maxDepthValue > 0 ? maxDepthValue : kDefaultMaxRelationshipLoadDepth;
+}
+
+- (BOOL) queryBooleanValueWithNumber {
+    id queryBoolNum = _customProperties[kCBLISCustomPropertyQueryBooleanWithNumber];
+    return [queryBoolNum boolValue]; // Default value is NO
 }
 
 #pragma mark - Views
@@ -973,6 +986,7 @@ static CBLManager* sCBLManager;
                                                         @[rhs, lhs] : @[lhs, rhs];
         BOOL hasError = NO;
         NSString* keyPath = nil;
+        NSExpression* boolNumberExp = nil;
         for (NSExpression* expression in expressions) {
             if (expression.expressionType == NSKeyPathExpressionType) {
                 BOOL needJoins;
@@ -1033,15 +1047,26 @@ static CBLManager* sCBLManager;
                         [outTemplateVars setObject: values forKey: varName];
                     }
                 } else {
-                    NSString* varName = [self variableForKeyPath: keyPath
-                                                          suffix: nil
-                                                         current: outTemplateVars];
-                    newExpression = [NSExpression expressionForVariable: varName];
-
-                    id exValue = [self scanConstantValue: constantValue];
-                    if (exValue)
-                        [outTemplateVars setObject: exValue forKey: varName];
-                    else
+                    id expValue = [self scanConstantValue: constantValue];
+                    if (expValue) {
+                        id exValue = [self scanConstantValue: constantValue];
+                        if ([self isBooleanConstantValue: exValue] && [self queryBooleanValueWithNumber]) {
+                            // Workaround for #756:
+                            // Need to be able to query both JSON boolean value (true,false) and
+                            // number boolean value(1,0).
+                            // 1. Not templating the original boolean value expression.
+                            // 2. Create a pair boolean number expression used for creating an
+                            // OR-compound predicate with the original boolean value expression
+                            id boolNumberValue = [exValue boolValue] ? @(1) : @(0);
+                            boolNumberExp = [NSExpression expressionForConstantValue: boolNumberValue];
+                        } else {
+                            NSString* varName = [self variableForKeyPath: keyPath
+                                                                  suffix: nil
+                                                                 current: outTemplateVars];
+                            newExpression = [NSExpression expressionForVariable: varName];
+                            [outTemplateVars setObject: expValue forKey: varName];
+                        }
+                    } else
                         break; // Not templating nil predicate:
 
                     if (comparison.predicateOperatorType == NSContainsPredicateOperatorType) {
@@ -1068,6 +1093,19 @@ static CBLManager* sCBLManager;
                                                                     options: comparison.options];
             else
                 output = comparison;
+
+            if (boolNumberExp) {
+                // Workaround for #756:
+                // Create a pair boolean number expression used for creating an
+                // OR-compound predicate with the original boolean value expression.
+                NSPredicate* boolNumberPredicate =
+                    [NSComparisonPredicate predicateWithLeftExpression: lhs
+                                                       rightExpression: boolNumberExp
+                                                              modifier: comparison.comparisonPredicateModifier
+                                                                  type: comparison.predicateOperatorType
+                                                               options: comparison.options];
+                output = [NSCompoundPredicate orPredicateWithSubpredicates: @[output, boolNumberPredicate]];
+            }
         }
     }
 
@@ -1083,6 +1121,12 @@ static CBLManager* sCBLManager;
 
     return output;
 }
+
+
+- (BOOL) isBooleanConstantValue: (id)value {
+    return (value == (id)@(YES) || value == (id)@(NO));
+}
+
 
 /*
  *   Scan an expression, detect if the expression is a joins query, and validate if
@@ -1523,7 +1567,7 @@ static CBLManager* sCBLManager;
             result = CBLISIsNull(value) ? @"" : value;
             break;
         case NSBooleanAttributeType:
-            result = CBLISIsNull(value) ? @(NO) : value;
+            result = CBLISIsNull(value) ? @(NO) : [value boolValue] ? @(YES) : @(NO);
             break;
         case NSDateAttributeType:
             result = CBLISIsNull(value) ? nil : [CBLJSON JSONObjectWithDate: value];
@@ -1863,6 +1907,10 @@ static CBLManager* sCBLManager;
             [_fetchRequestResultCache removeObjectForKey: key];
         }
     }
+}
+
+- (void) invalidateFetchResultCache {
+    [_fetchRequestResultCache removeAllObjects];
 }
 
 #pragma mark - Attachments
