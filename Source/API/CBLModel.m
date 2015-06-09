@@ -51,6 +51,12 @@
 }
 
 
+- (instancetype) init {
+    NSAssert(NO, @"CBLModels cannot be initialized with -init");
+    return [self initWithDocument: nil orDatabase: nil];
+}
+
+
 + (instancetype) modelForNewDocumentInDatabase: (CBLDatabase*)database {
     NSParameterAssert(database);
     if (self == [CBLModel class]) {
