@@ -2160,7 +2160,7 @@ static CBLManager* sCBLManager;
 
             CBLUnsavedRevision* newRev = [curRev createRevision];
             [newRev setProperties: mergedProps];
-            return [newRev saveAllowingConflict: &error];
+            return [newRev saveAllowingConflict: &error] != nil;
         }];
     };
     return handler;

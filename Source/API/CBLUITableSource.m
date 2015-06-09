@@ -84,9 +84,10 @@
 
 
 #define TELL_DELEGATE(sel, obj) \
-    (([_tableView.delegate respondsToSelector: sel]) \
-        ? [_tableView.delegate performSelector: sel withObject: self withObject: obj] \
-        : nil)
+    ({id<UITableViewDelegate> delegate = _tableView.delegate; \
+     [delegate respondsToSelector: sel] \
+        ? [delegate performSelector: sel withObject: self withObject: obj] \
+        : nil;})
 
 
 #pragma mark -

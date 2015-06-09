@@ -54,6 +54,12 @@
 }
 
 
+- (instancetype) init {
+    NSAssert(NO, @"CBLEncryptionController cannot be initialized with -init");
+    return [self initWithDatabaseName: nil];
+}
+
+
 - (void) openDatabaseAsync: (CBLEncryptionControllerCompletion)completion {
     NSAssert(!_completion, @"Already opening a database");
     NSParameterAssert(completion);
