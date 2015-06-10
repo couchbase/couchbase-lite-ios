@@ -2112,58 +2112,56 @@ static CBLManager* sCBLManager;
                          change: (NSDictionary*)change context: (void*)context {
     if ([@"rows" isEqualToString: keyPath]) {
         CBLLiveQuery* query = object;
-        
-        NSError* error;
-        CBLQueryEnumerator* enumerator = [query run: &error];
-        
-        if (enumerator.count == 0) return;
-        
-        [self resolveConflicts: enumerator];
+        [self resolveConflicts: query.rows];
     }
 }
 
 - (void) resolveConflicts: (CBLQueryEnumerator*)enumerator {
     // Resolve conflicts
     for (CBLQueryRow* row in enumerator) {
-        if ([kCBLISMetadataDocumentID isEqual: row.documentID]) // For v1.0.4 and below.
-            continue;
-        if (self.conflictHandler) self.conflictHandler(row.conflictingRevisions);
+        if ([kCBLISMetadataDocumentID isEqual: row.documentID])
+            continue; // For v1.0.4 and below.
+        if (self.conflictHandler)
+            self.conflictHandler(row.conflictingRevisions);
     }
 }
 
 - (CBLISConflictHandler) defaultConflictHandler {
+    __weak CBLIncrementalStore* weakSelf = self;
+
     CBLISConflictHandler handler = ^(NSArray* conflictingRevisions) {
-        // merges changes by
+        // Merges changes by
         // - taking the winning revision
         // - adding missing values from other revisions (starting with biggest version)
-        CBLRevision* winning = conflictingRevisions[0];
-        NSMutableDictionary* properties = [winning.properties mutableCopy];
+        CBLSavedRevision* curRev = conflictingRevisions[0];
+        NSMutableDictionary* mergedProps = [curRev.properties mutableCopy];
         
         NSRange otherRevisionsRange = NSMakeRange(1, conflictingRevisions.count - 1);
         NSArray* otherRevisions = [conflictingRevisions subarrayWithRange: otherRevisionsRange];
-        
-        NSArray* desc = @[[NSSortDescriptor sortDescriptorWithKey: @"revisionID"
-                                                        ascending: NO]];
-        NSArray* sortedRevisions = [otherRevisions sortedArrayUsingDescriptors: desc];
-        
-        // this solution merges missing keys from other conflicting revisions to not loose any values
-        for (CBLRevision* rev in sortedRevisions) {
-            for (NSString* key in rev.properties) {
-                if ([key hasPrefix: @"_"]) continue;
-                
-                if (![properties objectForKey:key]) {
-                    [properties setObject:[rev propertyForKey: key] forKey: key];
+        NSArray* sorts = @[[NSSortDescriptor sortDescriptorWithKey: @"revisionID" ascending: NO]];
+        otherRevisions = [otherRevisions sortedArrayUsingDescriptors: sorts];
+
+        [weakSelf.database inTransaction: ^BOOL{
+            // Merge missing keys from other conflicting revisions to not loose any values:
+            NSError* error;
+            for (CBLSavedRevision* rev in otherRevisions) {
+                for (NSString* key in rev.properties) {
+                    if ([key hasPrefix: @"_"])
+                        continue;
+                    if (![mergedProps objectForKey: key])
+                        [mergedProps setObject: [rev propertyForKey: key] forKey: key];
                 }
+
+                CBLUnsavedRevision *newRev = [rev createRevision];
+                newRev.isDeletion = YES;
+                if (![newRev saveAllowingConflict: &error])
+                    return NO;
             }
-        }
-        
-        // TODO: Attachments
-        
-        CBLUnsavedRevision* newRevision = [winning.document newRevision];
-        [newRevision setProperties: properties];
-        
-        NSError* error;
-        [newRevision save: &error];
+
+            CBLUnsavedRevision* newRev = [curRev createRevision];
+            [newRev setProperties: mergedProps];
+            return [newRev saveAllowingConflict: &error];
+        }];
     };
     return handler;
 }

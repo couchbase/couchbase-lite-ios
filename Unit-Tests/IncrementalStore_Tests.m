@@ -1734,8 +1734,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 }
 
 - (void)test_ConflictHandler {
-    CBLDatabase *database = store.database;
-
     __block NSArray *conflictRevs = nil;
     XCTestExpectation *expectation = [self expectationWithDescription:@"CBLIS Conflict Handler"];
     store.conflictHandler = ^(NSArray* conflictingRevisions) {
@@ -1751,7 +1749,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
-    CBLDocument *doc = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+    CBLDocument *doc = [store.database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
     AssertEqual(entry.text, [doc propertyForKey:@"text"]);
 
     CBLSavedRevision* rev1 = doc.currentRevision;
@@ -1777,6 +1775,58 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEq(conflictRevs.count, 2u);
     AssertEqual(conflictRevs[0], rev2a);
     AssertEqual(conflictRevs[1], rev2b);
+}
+
+- (void)test_DefaultConflictHandler {
+    XCTestExpectation *expectation = [self expectationWithDescription:@"CBLIS Conflict Handler"];
+
+    CBLISConflictHandler defaultHandler = [store.conflictHandler copy];
+    store.conflictHandler = ^(NSArray* conflictingRevisions) {
+        defaultHandler(conflictingRevisions);
+        [expectation fulfill];
+    };
+
+    NSError *error;
+    Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                 inManagedObjectContext:context];
+    entry.text = @"test";
+
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    CBLDocument *doc = [store.database documentWithID:
+                        [entry.objectID couchbaseLiteIDRepresentation]];
+    AssertEqual(entry.text, [doc propertyForKey:@"text"]);
+
+    CBLSavedRevision* rev1 = doc.currentRevision;
+
+    // Create rev2a:
+    NSMutableDictionary* properties = doc.properties.mutableCopy;
+    properties[@"check"] = @(YES);
+    CBLSavedRevision* rev2a = [doc putProperties: properties error: &error];
+    Assert(rev2a, @"Failed to create a new revision: %@", error);
+
+    // Create rev2b:
+    properties = rev1.properties.mutableCopy;
+    NSString *date = [CBLJSON JSONObjectWithDate:[NSDate date]];
+    properties[@"created_at"] = date;
+    CBLUnsavedRevision* newRev = [rev1 createRevision];
+    newRev.properties = properties;
+    CBLSavedRevision* rev2b = [newRev saveAllowingConflict: &error];
+    Assert(rev2b, @"Failed to create a conflict revision: %@", error);
+
+    [self waitForExpectationsWithTimeout:5.0 handler:^(NSError *error) {
+        Assert(error == nil, "Timeout error: %@", error);
+    }];
+
+    CBLSavedRevision* mergedRev = doc.currentRevision;
+    Assert([mergedRev.revisionID hasPrefix:@"3-"]);
+    AssertEq([[doc getConflictingRevisions: &error] count], 1u);
+    
+    NSDictionary *props = mergedRev.properties;
+    AssertEqual(props[@"text"], @"test");
+    AssertEqual(props[@"check"], @(YES));
+    AssertEqual(props[@"created_at"], date);
 }
 
 #pragma mark - UTILITIES
