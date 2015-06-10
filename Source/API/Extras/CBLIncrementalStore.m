@@ -2197,13 +2197,22 @@ static CBLManager* sCBLManager;
  * Can be overridden if you need more for filtered syncing.
  */
 - (NSDictionary*) propertiesForDeletingDocument: (CBLDocument*)doc {
+    NSMutableDictionary *contents = [NSMutableDictionary dictionary];
     NSString *typeKey = [self documentTypeKey];
-    NSDictionary* contents = @{
-                               @"_deleted": @YES,
-                               @"_rev": [doc propertyForKey:@"_rev"],
-                               typeKey: [doc propertyForKey: typeKey]
-                               };
-    return contents;
+    
+    [contents addEntriesFromDictionary:@{
+                                         @"_deleted": @YES,
+                                         @"_rev": [doc propertyForKey:@"_rev"],
+                                         typeKey: [doc propertyForKey: typeKey]
+                                         }];
+    
+    
+    if (_flags.respondsToKeyValuesToAddToManagedObject) {
+        [contents addEntriesFromDictionary:[_delegate keyValuesToAddToManagedObject:nil]];
+    }
+    
+    
+    return [NSDictionary dictionaryWithDictionary:contents];
 }
 
 @end
