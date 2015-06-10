@@ -44,6 +44,8 @@ typedef void(^CBLEncryptionControllerCompletion)(CBLDatabase* db, NSError* error
     @param dbName  The name of the database to open. */
 - (instancetype) initWithDatabaseName: (NSString*)dbName;
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @property (readonly) NSString* databaseName;
 
 /** The UIViewController to present password alerts on top of.

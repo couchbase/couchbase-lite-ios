@@ -123,6 +123,8 @@ FOUNDATION_EXTERN id CBLTextKey(NSString* text);
 /** The registered object, if any, that can compile map/reduce functions from source code. */
 + (nullable id<CBLViewCompiler>) compiler;
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 

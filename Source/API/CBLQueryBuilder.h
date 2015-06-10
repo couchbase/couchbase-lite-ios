@@ -64,6 +64,8 @@ NS_ASSUME_NONNULL_BEGIN
                       orderBy: (nullable NSArray*)sortDescriptors
                         error: (NSError**)outError;
 
+- (instancetype) init NS_UNAVAILABLE;
+
 /** The view the query builder is using. */
 @property (readonly, nonatomic) CBLView* view;
 

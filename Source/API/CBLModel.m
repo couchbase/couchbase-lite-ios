@@ -51,9 +51,9 @@
 }
 
 
-- (instancetype) init {
+- (instancetype) init NS_UNAVAILABLE {
     NSAssert(NO, @"CBLModels cannot be initialized with -init");
-    return [self initWithDocument: nil orDatabase: nil];
+    return nil;
 }
 
 

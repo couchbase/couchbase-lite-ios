@@ -138,6 +138,8 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 /** Returns a live query with the same parameters. */
 - (CBLLiveQuery*) asLiveQuery;
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 
@@ -214,6 +216,8 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     the key or value are arrays. This only works with indexes from 0 to 3. */
 - (void) sortUsingDescriptors: (NSArray*)sortDescriptors;
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 
@@ -281,6 +285,8 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     This is only valid in an allDocuments query whose allDocsMode is set to kCBLShowConflicts
     or kCBLOnlyConflicts; otherwise it returns nil. */
 @property (readonly, nullable) CBLArrayOf(CBLRevision*)* conflictingRevisions;
+
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

@@ -115,6 +115,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (weak, nullable) id<CBLDocumentModel> modelObject;
 
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 

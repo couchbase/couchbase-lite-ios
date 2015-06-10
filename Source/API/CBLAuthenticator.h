@@ -52,6 +52,8 @@ NS_ASSUME_NONNULL_BEGIN
                                                 tokenSecret: (NSString*)tokenSecret
                                             signatureMethod: (NSString*)signatureMethod;
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 

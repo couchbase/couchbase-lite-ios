@@ -51,6 +51,8 @@ NS_ASSUME_NONNULL_BEGIN
     so this property will return nil. */
 @property (readonly, nullable) NSURL* contentURL;
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 

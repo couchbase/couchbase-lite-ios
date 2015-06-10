@@ -185,6 +185,8 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 - (BOOL) isDocumentPending: (CBLDocument*)doc;
 
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 

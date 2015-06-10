@@ -206,6 +206,8 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* __null
 - (CBLReplication*) createPullReplication: (NSURL*)url;
 
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 
