@@ -810,6 +810,21 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
     NSString *stringFromContent = [[NSString alloc] initWithData:content encoding:NSUTF8StringEncoding];
     Assert([stringFromContent hasPrefix:@"Updated."], @"Not updated");
+
+    // nullify attachment
+
+    data = nil;
+    file.data = data;
+
+    success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    doc = [database documentWithID:[file.objectID couchbaseLiteIDRepresentation]];
+    Assert(doc != nil, @"Document should not be nil");
+    AssertEqual(file.filename, [doc propertyForKey:@"filename"]);
+
+    att = [doc.currentRevision attachmentNamed:@"data"];
+    AssertNil(att);
 }
 
 - (void) test_FetchWithPredicates {

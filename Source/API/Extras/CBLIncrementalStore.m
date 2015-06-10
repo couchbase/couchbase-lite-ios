@@ -419,12 +419,15 @@ static CBLManager* sCBLManager;
         if ([attr isTransient]) continue;
         if ([attr attributeType] != NSBinaryDataAttributeType) continue;
 
-        NSData* data = [object valueForKey: attr.name];
-        if (!data) continue;
-
-        [revision setAttachmentNamed: attr.name
-                     withContentType: @"application/binary"
-                             content: data];
+        if ([[object changedValues] objectForKey: attr.name]) {
+            NSData* data = [object valueForKey: attr.name];
+            if (data)
+                [revision setAttachmentNamed: attr.name
+                             withContentType: @"application/binary"
+                                     content: data];
+            else if ([doc.currentRevision attachmentNamed: attr.name])
+                [revision removeAttachmentNamed: attr.name];
+        }
     }
 
     BOOL result = [revision save: outError] != nil;
