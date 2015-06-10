@@ -177,6 +177,8 @@ static int parseTimezone(const char *zDate, DateTime *p){
         return 1;
     }
     
+    zDate += 2;
+    
     if (*zDate == ':') {
         zDate++;
     }
@@ -185,7 +187,7 @@ static int parseTimezone(const char *zDate, DateTime *p){
         return 1;
     }
     
-    zDate += 5;
+    zDate += 2;
     p->tz = sgn*(nMn + nHr*60);
 zulu_time:
     while( sqlite3Isspace(*zDate) ){ zDate++; }
