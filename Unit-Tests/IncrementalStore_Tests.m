@@ -1133,7 +1133,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert(success, @"Could not save context: %@", error);
 
     NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
-
+    
     //// ==
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"check == YES"];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
@@ -1144,10 +1144,22 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"check == NO"];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
         AssertEq((int)result.count, 1);
+    }];
+
+    //// !=
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"check != YES"];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+    }];
+
+    //// !=
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"check != NO"];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
     }];
     
     [store setCustomProperties:@{kCBLISCustomPropertyQueryBooleanWithNumber: @(YES)}];
-
+    
     //// ==
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"check == YES"];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
@@ -1158,6 +1170,18 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"check == NO"];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
         AssertEq((int)result.count, 1);
+    }];
+
+    //// !=
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"check != YES"];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+    }];
+
+    //// !=
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"check != NO"];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
     }];
 }
 
