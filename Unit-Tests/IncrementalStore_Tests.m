@@ -866,6 +866,18 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
 
     //// ==
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"check == YES"];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 2);
+    }];
+
+    //// ==
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"check == NO"];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 1);
+    }];
+
+    //// ==
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text == %@", entry1[@"text"]];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
         AssertEq((int)result.count, 1);
