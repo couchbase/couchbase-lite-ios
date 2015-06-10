@@ -1733,6 +1733,52 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEqual(doc.properties[@"CBLIS_type"], @"Entry");
 }
 
+- (void)test_ConflictHandler {
+    CBLDatabase *database = store.database;
+
+    __block NSArray *conflictRevs = nil;
+    XCTestExpectation *expectation = [self expectationWithDescription:@"CBLIS Conflict Handler"];
+    store.conflictHandler = ^(NSArray* conflictingRevisions) {
+        conflictRevs = conflictingRevisions;
+        [expectation fulfill];
+    };
+
+    NSError *error;
+    Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                 inManagedObjectContext:context];
+    entry.text = @"1";
+
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    CBLDocument *doc = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+    AssertEqual(entry.text, [doc propertyForKey:@"text"]);
+
+    CBLSavedRevision* rev1 = doc.currentRevision;
+
+    // Create rev2a:
+    NSMutableDictionary* properties = doc.properties.mutableCopy;
+    properties[@"text"] = @"2a";
+    CBLSavedRevision* rev2a = [doc putProperties: properties error: &error];
+    Assert(rev2a, @"Failed to create a new revision: %@", error);
+
+    // Create rev2b:
+    properties = rev1.properties.mutableCopy;
+    properties[@"text"] = @"2b";
+    CBLUnsavedRevision* newRev = [rev1 createRevision];
+    newRev.properties = properties;
+    CBLSavedRevision* rev2b = [newRev saveAllowingConflict: &error];
+    Assert(rev2b, @"Failed to create a conflict revision: %@", error);
+
+    [self waitForExpectationsWithTimeout:5.0 handler:^(NSError *error) {
+        Assert(error == nil, "Timeout error: %@", error);
+    }];
+
+    AssertEq(conflictRevs.count, 2u);
+    AssertEqual(conflictRevs[0], rev2a);
+    AssertEqual(conflictRevs[1], rev2b);
+}
+
 #pragma mark - UTILITIES
 
 - (void)assertFetchRequest:(NSFetchRequest *)fetchRequest
