@@ -70,6 +70,8 @@ NS_ASSUME_NONNULL_BEGIN
 /** All attachments, as CBLAttachment objects. */
 @property (readonly, nullable) CBLArrayOf(CBLAttachment*)* attachments;
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 

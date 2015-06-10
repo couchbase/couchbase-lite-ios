@@ -32,6 +32,8 @@ NS_ASSUME_NONNULL_BEGIN
 /** The remote database URL that this change was pulled from, if any. */
 @property (readonly, nullable) NSURL* source;
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 

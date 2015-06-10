@@ -33,6 +33,9 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
  The document won't be written to the database until -save is called. */
 + (instancetype) modelForNewDocumentInDatabase: (CBLDatabase*)database;
 
+// You cannot create CBLModel instances with -init. Use the factory class methods instead.
+- (instancetype) init NS_UNAVAILABLE;
+
 /** The document this item is associated with. Will be nil if it's new and unsaved. */
 @property (readonly, strong, nullable) CBLDocument* document;
 

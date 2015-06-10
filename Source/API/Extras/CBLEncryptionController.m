@@ -54,9 +54,9 @@
 }
 
 
-- (instancetype) init {
+- (instancetype) init NS_UNAVAILABLE {
     NSAssert(NO, @"CBLEncryptionController cannot be initialized with -init");
-    return [self initWithDatabaseName: nil];
+    return nil;
 }
 
 
