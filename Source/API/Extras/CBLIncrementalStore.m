@@ -989,7 +989,8 @@ static CBLManager* sCBLManager;
                                                         @[rhs, lhs] : @[lhs, rhs];
         BOOL hasError = NO;
         NSString* keyPath = nil;
-        NSExpression* boolNumberExp = nil;
+
+        BOOL shouldCreateCompundBoolPredicate = NO;
         for (NSExpression* expression in expressions) {
             if (expression.expressionType == NSKeyPathExpressionType) {
                 BOOL needJoins;
@@ -1058,10 +1059,9 @@ static CBLManager* sCBLManager;
                             // Need to be able to query both JSON boolean value (true,false) and
                             // number boolean value(1,0).
                             // 1. Not templating the original boolean value expression.
-                            // 2. Create a pair boolean number expression used for creating an
-                            // OR-compound predicate with the original boolean value expression
-                            id boolNumberValue = [exValue boolValue] ? @(1) : @(0);
-                            boolNumberExp = [NSExpression expressionForConstantValue: boolNumberValue];
+                            // 2. Create an OR-compound predicate of the boolean expression and
+                            //    the improvised boolean number expression
+                            shouldCreateCompundBoolPredicate = YES;
                         } else {
                             NSString* varName = [self variableForKeyPath: keyPath
                                                                   suffix: nil
@@ -1097,24 +1097,13 @@ static CBLManager* sCBLManager;
             else
                 output = comparison;
 
-            if (boolNumberExp) {
-                // Workaround for #756:
-                // Create a pair boolean number expression used for creating an
-                // OR-compound predicate with the original boolean value expression.
-                NSPredicate* boolNumberPredicate =
-                    [NSComparisonPredicate predicateWithLeftExpression: lhs
-                                                       rightExpression: boolNumberExp
-                                                              modifier: comparison.comparisonPredicateModifier
-                                                                  type: comparison.predicateOperatorType
-                                                               options: comparison.options];
-                output = [NSCompoundPredicate orPredicateWithSubpredicates: @[output, boolNumberPredicate]];
-            }
+            if (shouldCreateCompundBoolPredicate)
+                output = [self createCompoundBooleanPredicate: output];
         }
     }
 
-    if (outHasNonQueryBuilderExp) {
+    if (outHasNonQueryBuilderExp)
         *outHasNonQueryBuilderExp = hasNonQueryBuilderExp;
-    }
 
     if (!output && (outError && *outError == nil)) {
         NSString* errDesc = [NSString stringWithFormat:@"Unsupported predicate : %@", predicate];
@@ -1128,6 +1117,50 @@ static CBLManager* sCBLManager;
 
 - (BOOL) isBooleanConstantValue: (id)value {
     return (value == (id)@(YES) || value == (id)@(NO));
+}
+
+- (NSCompoundPredicate*) createCompoundBooleanPredicate: (NSPredicate*)predicate {
+    assert([predicate isKindOfClass:[NSComparisonPredicate class]]);
+
+    NSComparisonPredicate* boolPredicate = (NSComparisonPredicate*)predicate;
+    BOOL boolValue = boolPredicate.rightExpression.expressionType == NSConstantValueExpressionType ?
+        [boolPredicate.rightExpression.constantValue boolValue] :
+        [boolPredicate.leftExpression.constantValue boolValue];
+
+    NSExpression* lhs;
+    NSExpression* rhs;
+    NSNumber* boolNumberValue;
+    if (boolPredicate.predicateOperatorType == NSNotEqualToPredicateOperatorType) {
+        // If the operator type is not equal, invert it to equal:
+        NSExpression* newBoolExp = [NSExpression expressionForConstantValue:
+                                        (boolValue ? @(NO) : @(YES))];
+        lhs = boolPredicate.leftExpression.expressionType == NSKeyPathExpressionType ?
+            boolPredicate.leftExpression : newBoolExp;
+        rhs = boolPredicate.rightExpression.expressionType == NSKeyPathExpressionType ?
+            boolPredicate.rightExpression : newBoolExp;
+        boolPredicate =
+            [NSComparisonPredicate predicateWithLeftExpression: lhs
+                                               rightExpression: rhs
+                                                      modifier: boolPredicate.comparisonPredicateModifier
+                                                          type: NSEqualToPredicateOperatorType
+                                                       options: boolPredicate.options];
+        boolNumberValue = (boolValue ? @(0) : @(1));
+    } else
+        boolNumberValue = (boolValue ? @(1) : @(0));
+
+    NSExpression* boolNumberExp = [NSExpression expressionForConstantValue: boolNumberValue];
+    lhs = boolPredicate.leftExpression.expressionType == NSKeyPathExpressionType ?
+        boolPredicate.leftExpression : boolNumberExp;
+    rhs = boolPredicate.rightExpression.expressionType == NSKeyPathExpressionType ?
+        boolPredicate.rightExpression : boolNumberExp;
+
+    NSPredicate* boolNumberPredicate =
+        [NSComparisonPredicate predicateWithLeftExpression: lhs
+                                           rightExpression: rhs
+                                                  modifier: boolPredicate.comparisonPredicateModifier
+                                                      type: boolPredicate.predicateOperatorType
+                                                   options: boolPredicate.options];
+    return [NSCompoundPredicate orPredicateWithSubpredicates: @[boolPredicate, boolNumberPredicate]];
 }
 
 
