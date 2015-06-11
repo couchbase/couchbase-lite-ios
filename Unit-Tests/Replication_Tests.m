@@ -694,7 +694,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     Assert([importDb deleteDatabase:&error], @"Couldn't delete db: %@", error);
 }
 
-- (void) test12_StopIdlePush {
+- (void) test12_StopIdlePushReplication {
     NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
     if (!remoteDbURL)
         return;
@@ -919,7 +919,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     [pusher start];
     [pusher restart];
 
-    // Wait to get a notification after the replication is stopped:
+    // Wait to get a notification when the replication is idle:
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
     while (pusher.status != kCBLReplicationIdle && timeout.timeIntervalSinceNow > 0.0) {
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
@@ -948,7 +948,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     [puller start];
     [puller restart];
 
-    // Wait to get a notification after the replication is stopped:
+    // Wait to get a notification when the replication is idle:
     timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
     while (puller.status != kCBLReplicationIdle && timeout.timeIntervalSinceNow > 0.0) {
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
