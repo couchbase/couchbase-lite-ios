@@ -11,7 +11,6 @@
 #import "CBLAuthorizer.h"
 #import "BLIPPocketSocketConnection.h"
 #import "BLIPHTTPLogic.h"
-//#import "PSWebSocketTypes.h"
 #import "CollectionUtils.h"
 #import "Logging.h"
 #import "MYErrorUtils.h"
@@ -43,8 +42,7 @@
 
 @implementation CBLBlipReplicator
 {
-    dispatch_queue_t _queue;
-    NSString* _remoteCheckpointDocID;
+    dispatch_queue_t _syncQueue, _dbQueue;
     BOOL _started;
     int _retryCount;
     BLIPPocketSocketConnection* _conn;
@@ -57,6 +55,7 @@
 @synthesize db=_db, settings=_settings, error=_error, sessionID=_sessionID;
 @synthesize serverCert=_serverCert, cookieStorage = _cookieStorage;
 @synthesize sync=_sync, status=_status, progress=_progress;
+@synthesize remoteCheckpointDocID=_remoteCheckpointDocID;
 
 
 + (BOOL) needsRunLoop {
@@ -71,18 +70,24 @@
     if (self) {
         _db = db;
         _settings = settings;
+        _dbQueue = _db.manager.dispatchQueue;
 
         NSString* name = $sprintf(@"Replicator %@ <%@>",
                                   (settings.isPush ?@"to" :@"from"), settings.remote);
-        _queue = dispatch_queue_create(name.UTF8String, DISPATCH_QUEUE_SERIAL);
+        _syncQueue = dispatch_queue_create(name.UTF8String, DISPATCH_QUEUE_SERIAL);
 
         static int sLastSessionID = 0;
         _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
         _progress = [NSProgress progressWithTotalUnitCount: -1]; // indeterminate
+        _remoteCheckpointDocID = [_settings remoteCheckpointDocIDForLocalUUID: _db.privateUUID];
         _cookieStorage = [[CBLCookieStorage alloc] initWithDB: db
-                                                   storageKey: self.remoteCheckpointDocID];
+                                                   storageKey: _remoteCheckpointDocID];
     }
     return self;
+}
+
+- (void) dealloc {
+    [self forgetSync];
 }
 
 
@@ -108,15 +113,13 @@
         return;
     _started = YES;
     self.status = kReplicatorConnecting;
-    dispatch_async(_queue, ^{
-        [self connect];
-    });
+    [self connect];
 }
 
 
 - (void) stop {
     if (_started) {
-        dispatch_async(_queue, ^{
+        dispatch_async(_syncQueue, ^{
             [_sync close];
         });
     }
@@ -124,21 +127,15 @@
 
 
 - (BOOL) suspended {
-    __block BOOL suspended;
-    dispatch_sync(_queue, ^{
-        suspended = _suspended;
-    });
-    return suspended;
+    return _suspended;
 }
 
 - (void) setSuspended: (BOOL)suspended {
-    dispatch_async(_queue, ^{
-        _suspended = suspended;
-        if (_suspended)
-            [self disconnect];
-        else
-            [self connect];
-    });
+    _suspended = suspended;
+    if (_suspended)
+        [self disconnect];
+    else
+        [self connect];
 }
 
 
@@ -149,21 +146,23 @@
 
 
 - (NSSet*) pendingDocIDs {
-    return nil;    // TODO
-}
-
-
-
-- (NSString*) remoteCheckpointDocID {
-    if (!_remoteCheckpointDocID) {
-        _remoteCheckpointDocID = [_settings remoteCheckpointDocIDForLocalUUID: _db.privateUUID];
+    CBLQueryEnumerator* e = _sync.pendingDocuments;
+    if (!e)
+        return nil;
+    NSMutableSet* docIDs = [NSMutableSet new];
+    for (CBLQueryRow* row in e) {
+        [docIDs addObject: row.documentID];
     }
-    return _remoteCheckpointDocID;
+    return docIDs;
 }
+
+
+#if DEBUG
+@synthesize savingCheckpoint=_savingCheckpoint, active=_active, lastSequence=_lastSequence;
+#endif
 
 
 #pragma mark - INTERNALS:
-// Everything below runs on the internal _queue ...
 
 
 - (void) connect {
@@ -183,17 +182,19 @@
     if ([auth isKindOfClass: [CBLBasicAuthorizer class]]) {
         _conn.credential = ((CBLBasicAuthorizer*)auth).credential;
     } else {
-        [_request setValue: [auth authorizeURLRequest: request forRealm: nil]
-                  forHTTPHeaderField: @"Authorization"];
+        [request setValue: [auth authorizeURLRequest: request forRealm: nil]
+                 forHTTPHeaderField: @"Authorization"];
     }
 
     _conn = [[BLIPPocketSocketConnection alloc] initWithURLRequest: request];
 
     CBLSyncConnection* sync = [[CBLSyncConnection alloc] initWithDatabase: _db
                                                                connection: _conn
-                                                                    queue: _queue];
-    sync.remoteCheckpointDocID = [_settings remoteCheckpointDocIDForLocalUUID: _db.privateUUID];
+                                                                    queue: _syncQueue];
+    sync.remoteCheckpointDocID = _remoteCheckpointDocID;
     BOOL isPush = _settings.isPush;
+    if (isPush)
+        [sync setPushFilter: _settings.filterBlock params: _settings.filterParameters];
     [sync push: isPush pull: !isPush continuously: _settings.continuous];
 
     NSError* error;
@@ -203,13 +204,17 @@
         [self gotError: error];
     }
 
+#if DEBUG
+    _active = sync.active;
+    _savingCheckpoint = sync.savingCheckpoint;
+    _lastSequence = sync.lastSequence;
+#endif
+
     [sync addObserver: self forKeyPath: @"state" options: 0 context: (void*)1];
     self.sync = sync;
     self.progress = isPush ? sync.pushProgress : sync.pullProgress;
     [_progress addObserver: self forKeyPath: @"fractionCompleted" options: 0 context: (void*)2];
-    if (_status != kReplicatorConnecting)
-        self.status = kReplicatorConnecting;
-    [self postChangeNotification];
+    self.status = kReplicatorConnecting;
 }
 
 
@@ -234,13 +239,13 @@
         };
         _reachable = _reachability.reachable;
         LogTo(Sync, @"Starting reachability monitor... initial _reachable=%d", _reachable);
-        [_reachability startOnQueue: _queue];
+        [_reachability startOnQueue: _syncQueue];
 
         retryDelay = MAX(retryDelay, kMinRetryIntervalWhileTrackingReachability);
     }
 
     LogTo(Sync, @"Retrying connection in %g sec ...", retryDelay);
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(retryDelay * NSEC_PER_SEC)), _queue, ^{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(retryDelay * NSEC_PER_SEC)), _syncQueue, ^{
         if (_started && !_sync)
             [self connect];
     });
@@ -269,20 +274,31 @@
 }
 
 
+#pragma mark - NOTIFICATION:
+
+
 - (void) gotError: (NSError*)error {
+    if ($equal(error.domain, @"HTTP")) {
+        error = [NSError errorWithDomain: CBLHTTPErrorDomain
+                                    code: error.code
+                                userInfo: error.userInfo];
+    }
     if (!$equal(error, _error)) {
-        if (error)
-            LogTo(Sync, @"Connection got error %@ [%@ %ld]",
-                  error.localizedDescription, error.domain, (long)error.code);
+        LogTo(Sync, @"Connection got error %@ [%@ %ld]",
+              error.localizedDescription, error.domain, (long)error.code);
         self.error = error;
     }
 }
 
+
+// Called on the _syncQueue
 - (void) syncStateChanged {
     CBL_ReplicatorStatus newStatus;
+    NSError* newError = nil;
+
     switch (_sync.state) {
         case kSyncStopped: {
-            [self gotError: _sync.error];
+            newError = _sync.error;
             if (_suspended) {
                 newStatus = kCBLReplicatorOffline;
             } else if (CBLMayBeTransientError(_error) || CBLIsOfflineError(_error)) {
@@ -303,6 +319,7 @@
             newStatus = kCBLReplicatorIdle;
             if (!_settings.continuous) {
                 LogTo(Sync, @"%@: SyncHandler went idle; closing connection...", self);
+                newStatus = kCBLReplicatorStopped;
                 [_sync close];
             }
             break;
@@ -311,18 +328,46 @@
     if (newStatus >= kCBLReplicatorIdle)
         _retryCount = 0; // reset retry interval back to minimum
 
-    static const char* kStateNames[] = {"Stopped", "Offline", "Idle", "Active"};
-    LogTo(Sync, @"Replicator.status = kReplicator%s", kStateNames[newStatus]);
-    if (newStatus != _status) {
-        self.status = newStatus; // Triggers KVO!
-        [self postChangeNotification];
-    }
+#if DEBUG
+    BOOL newActive = _sync.active;
+    BOOL newSavingCheckpoint = _sync.savingCheckpoint;
+    id newLastSequence = _sync.lastSequence;
+#endif
+
+    // Now switch back to the db thread to update my public state:
+    [_db doAsync:^{
+        static const char* kStateNames[] = {"Stopped", "Offline", "Idle", "Active"};
+        LogTo(Sync, @"Replicator.status = kReplicator%s", kStateNames[newStatus]);
+#if DEBUG
+        LogTo(Sync, @"          .active=%d, .savingCheckpoint=%d, .lastSequence=%@",
+              newActive, newSavingCheckpoint, newLastSequence);
+        _active = newActive;
+        _savingCheckpoint = newSavingCheckpoint;
+        _lastSequence = newLastSequence;
+#endif
+        [self gotError: newError];
+        if (newStatus != _status) {
+            self.status = newStatus; // Triggers KVO!
+            [[NSNotificationCenter defaultCenter]
+                 postNotificationName: CBL_ReplicatorProgressChangedNotification object: self];
+        }
+    }];
 }
 
 
-- (void) postChangeNotification {
+- (void) syncProgressChanged {
+#if DEBUG
+    BOOL newActive = _sync.active;
+    BOOL newSavingCheckpoint = _sync.savingCheckpoint;
+    id newLastSequence = _sync.lastSequence;
+#endif
     // Needs to be posted on the database's official thread/queue.
     [_db doAsync:^{
+#if DEBUG
+        _active = newActive;
+        _savingCheckpoint = newSavingCheckpoint;
+        _lastSequence = newLastSequence;
+#endif
         [[NSNotificationCenter defaultCenter]
                      postNotificationName: CBL_ReplicatorProgressChangedNotification object: self];
     }];
@@ -335,7 +380,7 @@
     if (context == (void*)1 && object == _sync) {
         [self syncStateChanged];
     } else if (context == (void*)2 && object == _progress) {
-        [self postChangeNotification];
+        [self syncProgressChanged];
     } else {
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }

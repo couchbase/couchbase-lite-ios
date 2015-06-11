@@ -20,6 +20,9 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 @synthesize pullProgress=_pullProgress, nestedPullProgress=_nestedPullProgress;
 @synthesize pushProgress=_pushProgress, nestedPushProgress=_nestedPushProgress;
 @synthesize remoteCheckpointDocID=_remoteCheckpointDocID;
+#if DEBUG
+@synthesize savingCheckpoint=_savingCheckpoint;  // for unit tests
+#endif
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db
@@ -151,6 +154,17 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 #pragma mark - STATUS & PROGRESS:
 
 
+#if DEBUG
+- (BOOL) active {
+    return _state == kSyncActive || _state == kSyncConnecting;
+}
+
+- (id) lastSequence {
+    return _pushing ? @(_localCheckpointSequence) : _remoteCheckpointSequence;
+}
+#endif
+
+
 - (void) updateState {
     SyncState state;
     if (!_connection)
@@ -170,7 +184,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 - (void) updateState: (SyncState)state {
     static const char* kStateNames[] = {"Stopped", "Connecting", "Idle", "Active"};
     if (state != self.state) {
-        LogTo(Sync, @"SyncHandler.state = kSync%s", kStateNames[state]);
+        LogTo(Sync, @"SyncConnection.state = kSync%s", kStateNames[state]);
 #ifdef TIME_DB_QUEUE
         if (state == kSyncIdle) {
             Log(@"** DB queue was busy %.3f sec (inserting %.3f sec), idle %.3f sec, total %.3f sec **",

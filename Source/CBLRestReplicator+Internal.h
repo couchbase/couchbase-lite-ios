@@ -17,7 +17,7 @@
     BOOL _running, _online, _active;
 }
 
-@property (copy) NSString* lastSequence;
+@property (readwrite) id lastSequence;
 @property (readwrite, nonatomic) NSUInteger changesProcessed, changesTotal;
 - (void) maybeCreateRemoteDB;
 - (void) beginReplicating;
@@ -42,7 +42,4 @@
 - (BOOL) goOffline;
 - (BOOL) goOnline;
 - (BOOL) checkSSLServerTrust: (SecTrustRef)trust forHost: (NSString*)host port: (UInt16)port;
-#if DEBUG
-@property (readonly) BOOL savingCheckpoint;
-#endif
 @end

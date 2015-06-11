@@ -8,6 +8,9 @@
 
 #import "CBL_ReplicatorSettings.h"
 #import "CBL_Replicator.h"
+#import "CBLDatabase+Internal.h"
+#import "CBLRevision.h"
+#import "CBLDocument.h"
 #import "CBL_Revision.h"
 #import "CBJSONEncoder.h"
 #import "CBLMisc.h"
@@ -28,8 +31,8 @@
 
 @synthesize remote=_remote, isPush=_isPush, continuous=_continuous;
 @synthesize createTarget=_createTarget;
-@synthesize filterName=_filterName, filterParameters=_filterParameters, docIDs=_docIDs;
-@synthesize options=_options, requestHeaders=_requestHeaders;
+@synthesize filterName=_filterName, filterBlock=_filterBlock, filterParameters=_filterParameters;
+@synthesize docIDs=_docIDs, options=_options, requestHeaders=_requestHeaders;
 @synthesize revisionBodyTransformationBlock=_revisionBodyTransformationBlock;
 @synthesize authorizer=_authorizer;
 
@@ -186,6 +189,7 @@
     return YES;
 }
 
+
 - (CBL_Revision*) transformRevision: (CBL_Revision*)rev {
     if(_revisionBodyTransformationBlock) {
         @try {
@@ -216,6 +220,27 @@
         }
     }
     return rev;
+}
+
+
+- (BOOL) compilePushFilterForDatabase: (CBLDatabase*)db status: (CBLStatus*)outStatus {
+    if (!_isPush)
+        return YES;
+    if (_filterName) {
+        _filterBlock = [db compileFilterNamed: _filterName status: outStatus];
+        if (!_filterBlock) {
+            Warn(@"%@: No filter '%@'", db, _filterName);
+            return NO;
+        }
+    } else {
+        NSArray* docIDs = _docIDs;
+        if (docIDs) {
+            _filterBlock = FILTERBLOCK({
+                return [docIDs containsObject: revision.document.documentID];
+            });
+        }
+    }
+    return YES;
 }
 
 

@@ -442,8 +442,8 @@ static CBLManager* sInstance;
                 // The server's manager can't have a strong reference to the CBLShared, or it will
                 // form a cycle (newManager -> strongShared -> backgroundServer -> newManager).
                 newManager->_strongShared = nil;
-                Class serverClass = [_replicatorClass needsRunLoop] ? [CBL_RunLoopServer class]
-                                                                    : [CBL_DispatchServer class];
+                Class serverClass = [self.replicatorClass needsRunLoop] ? [CBL_RunLoopServer class]
+                                                                        : [CBL_DispatchServer class];
                 server = [[serverClass alloc] initWithManager: newManager];
                 LogTo(CBLDatabase, @"%@ created %@ (with %@)", self, server, newManager);
             }
@@ -845,6 +845,19 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 }
 
 
+- (Class) replicatorClass {
+    if (!_replicatorClass) {
+        _replicatorClass = NSClassFromString(_replicatorClassName);
+        Assert(_replicatorClass, @"CBLManager.replicatorClassName is '%@' but no such class found",
+               _replicatorClassName);
+        Assert([_replicatorClass conformsToProtocol: @protocol(CBL_Replicator)],
+               @"CBLManager.replicatorClassName is '%@' but class doesn't implement CBL_Replicator",
+               _replicatorClassName);
+    }
+    return _replicatorClass;
+}
+
+
 - (id<CBL_Replicator>) replicatorWithProperties: (NSDictionary*)properties
                                          status: (CBLStatus*)outStatus
 {
@@ -868,27 +881,24 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         return nil;
     }
 
+    NSString* filterName = $castIf(NSString, properties[@"filter"]);
+    NSArray* docIDs = $castIf(NSArray, properties[@"doc_ids"]);
+
     CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remote
                                                                                  push: push];
     settings.continuous = [$castIf(NSNumber, properties[@"continuous"]) boolValue];
-    settings.filterName = $castIf(NSString, properties[@"filter"]);
+    settings.filterName = filterName;
     settings.filterParameters = $castIf(NSDictionary, properties[@"query_params"]);
-    settings.docIDs = $castIf(NSArray, properties[@"doc_ids"]);
+    settings.docIDs = docIDs;
     settings.options = properties;
     settings.requestHeaders = headers;
     settings.authorizer = authorizer;
     settings.createTarget = push && createTarget;
 
-    if (!_replicatorClass) {
-        _replicatorClass = NSClassFromString(_replicatorClassName);
-        Assert(_replicatorClass, @"CBLManager.replicatorClassName is '%@' but no such class found",
-               _replicatorClassName);
-        Assert([_replicatorClass conformsToProtocol: @protocol(CBL_Replicator)],
-               @"CBLManager.replicatorClassName is '%@' but class doesn't implement CBL_Replicator",
-               _replicatorClassName);
-    }
+    if (![settings compilePushFilterForDatabase: db status: outStatus])
+        return nil;
 
-    id<CBL_Replicator> repl = [[_replicatorClass alloc] initWithDB: db settings: settings];
+    id<CBL_Replicator> repl = [[self.replicatorClass alloc] initWithDB: db settings: settings];
     if (!repl) {
         if (outStatus)
             *outStatus = kCBLStatusServerError;

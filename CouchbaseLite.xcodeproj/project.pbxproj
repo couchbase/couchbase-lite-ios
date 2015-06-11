@@ -693,6 +693,7 @@
 		27E7FB04155DBDBF0025F93A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
 		27E940661954BB9E00A9732E /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E940651954BB9E00A9732E /* libc++.dylib */; };
 		27E940691954BD4C00A9732E /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E940651954BB9E00A9732E /* libc++.dylib */; };
+		27EB82EE1B28CBCF00FCCF45 /* CouchbaseLiteNewReplicator.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27187FF21B0400B90057D7D2 /* CouchbaseLiteNewReplicator.framework */; };
 		27ED8630157D0FC600712B33 /* CBLDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 27ED862E157D0FC600712B33 /* CBLDocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27ED8631157D0FC600712B33 /* CBLDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ED862F157D0FC600712B33 /* CBLDocument.m */; };
 		27ED8632157D0FC600712B33 /* CBLDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ED862F157D0FC600712B33 /* CBLDocument.m */; };
@@ -752,8 +753,6 @@
 		792867DE178E0AED00248AF0 /* CBLRegisterJSViewCompiler.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 792867D9178E021F00248AF0 /* CBLRegisterJSViewCompiler.h */; };
 		933BED4F1B06A7440011C7C4 /* CBLEncryptionController.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27C5BADE1A92AC51008C357C /* CBLEncryptionController.h */; };
 		933BED501B06A7440011C7C4 /* CBLEncryptionController.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27C5BADF1A92AC51008C357C /* CBLEncryptionController.m */; };
-		93D21AF01A955480000AD9AF /* CBLCookieStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 93D21AEE1A955480000AD9AF /* CBLCookieStorage.h */; };
-		93D21AF11A955480000AD9AF /* CBLCookieStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */; };
 		93D21AF21A958CEC000AD9AF /* CBLCookieStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */; };
 		93D21B021A9857A1000AD9AF /* CookieStorage_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21B011A9857A1000AD9AF /* CookieStorage_Tests.m */; };
 		93D21B031A9857A1000AD9AF /* CookieStorage_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21B011A9857A1000AD9AF /* CookieStorage_Tests.m */; };
@@ -1184,6 +1183,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 27E66AD01A7307590091DA3F;
 			remoteInfo = "CBL ForestDB Storage";
+		};
+		27EB82FA1B28CBDA00FCCF45 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27187F421B0400B90057D7D2;
+			remoteInfo = "CBL New Replicator Mac";
 		};
 		27F1B0051A84160E0056DA1E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1851,6 +1857,7 @@
 			files = (
 				272AA8451A48D835004B8D55 /* CouchbaseLite.framework in Frameworks */,
 				27CB11651AF2D1C6008C8CF2 /* CouchbaseLiteReplicator.framework in Frameworks */,
+				27EB82EE1B28CBCF00FCCF45 /* CouchbaseLiteNewReplicator.framework in Frameworks */,
 				27AF0A5B1A4A25A9003F51D0 /* CouchbaseLiteListener.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3378,6 +3385,7 @@
 			dependencies = (
 				272AA8471A48D835004B8D55 /* PBXTargetDependency */,
 				27CB11641AF2D1BE008C8CF2 /* PBXTargetDependency */,
+				27EB82FB1B28CBDA00FCCF45 /* PBXTargetDependency */,
 				27AF0A5D1A4A25B1003F51D0 /* PBXTargetDependency */,
 			);
 			name = "CBL Mac Unit Tests";
@@ -4904,6 +4912,11 @@
 			isa = PBXTargetDependency;
 			target = 27E66AD01A7307590091DA3F /* CBL ForestDB Storage */;
 			targetProxy = 27E66B4C1A73082E0091DA3F /* PBXContainerItemProxy */;
+		};
+		27EB82FB1B28CBDA00FCCF45 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27187F421B0400B90057D7D2 /* CBL New Replicator Mac */;
+			targetProxy = 27EB82FA1B28CBDA00FCCF45 /* PBXContainerItemProxy */;
 		};
 		27F1B0061A84160E0056DA1E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

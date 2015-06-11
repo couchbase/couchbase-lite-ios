@@ -6,7 +6,8 @@
 //  Copyright (c) 2015 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "CBLDatabase.h"
+#import "CBLStatus.h"
 @class CBL_Revision, CBLReachability;
 @protocol CBLAuthorizer;
 
@@ -26,6 +27,7 @@ typedef CBL_Revision* (^RevisionBodyTransformationBlock)(CBL_Revision*);
 @property BOOL continuous;
 @property BOOL createTarget;
 @property (copy) NSString* filterName;
+@property (copy) CBLFilterBlock filterBlock;
 @property (copy) NSDictionary* filterParameters;
 @property (copy) NSArray *docIDs;
 @property (copy) NSDictionary* options;
@@ -69,6 +71,9 @@ typedef CBL_Revision* (^RevisionBodyTransformationBlock)(CBL_Revision*);
 
 /** Applies the revisionBodyTransformationBlock to the given revision, returning the result. */
 - (CBL_Revision*) transformRevision: (CBL_Revision*)rev;
+
+- (BOOL) compilePushFilterForDatabase: (CBLDatabase*)db
+                               status: (CBLStatus*)outStatus;
 
 @end
 

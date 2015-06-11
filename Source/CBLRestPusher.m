@@ -51,29 +51,6 @@
 }
 
 
-- (CBLFilterBlock) filter {
-    NSString* filterName = _settings.filterName;
-    CBLFilterBlock filter = nil;
-    NSArray* docIDs = _settings.docIDs;
-    if (filterName) {
-        CBLStatus status;
-        filter = [_db compileFilterNamed: filterName status: &status];
-        if (!filter) {
-            Warn(@"%@: No filter '%@' (err %d)", self, filterName, status);
-            if (!self.error) {
-                self.error = CBLStatusToNSError(status, nil);
-            }
-            [self stop]; // this is fatal; don't know what to push
-        }
-    } else if (docIDs) {
-        filter = FILTERBLOCK({
-            return [docIDs containsObject: revision.document.documentID];
-        });
-    }
-    return filter;
-}
-
-
 // This is called before beginReplicating, if the target db might not exist
 - (void) maybeCreateRemoteDB {
     if (!_settings.createTarget)
@@ -99,9 +76,7 @@
 
 - (CBL_RevisionList*) unpushedRevisions {
     CBLDatabase* db = _db;
-    CBLFilterBlock filter = self.filter;
-    if (!filter && self.error)
-        return nil;
+    CBLFilterBlock filter = _settings.filterBlock;
 
     NSString* lastSequence = _lastSequence;
     if (!lastSequence) {
@@ -140,7 +115,7 @@
         return;
 
     _pendingSequences = [NSMutableIndexSet indexSet];
-    _maxPendingSequence = self.lastSequence.longLongValue;
+    _maxPendingSequence = [self.lastSequence longLongValue];
     
     // Process existing changes since the last push:
     CBL_RevisionList* unpushedRevisions = self.unpushedRevisions;
@@ -220,12 +195,12 @@
 
 - (void) dbChanged: (NSNotification*)n {
     CBLDatabase* db = _db;
+    CBLFilterBlock filter = _settings.filterBlock;
     NSArray* changes = (n.userInfo)[@"changes"];
     for (CBLDatabaseChange* change in changes) {
         // Skip revisions that originally came from the database I'm syncing to:
         if (![change.source isEqual: _settings.remote]) {
             CBL_Revision* rev = change.addedRevision;
-            CBLFilterBlock filter = self.filter;
             if (filter && ![db runFilter: filter params: _settings.filterParameters onRevision: rev])
                 continue;
             CBL_MutableRevision* nuRev = [rev mutableCopy];

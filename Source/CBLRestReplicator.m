@@ -162,11 +162,11 @@
 }
 
 
-- (NSString*) lastSequence {
+- (id) lastSequence {
     return _lastSequence;
 }
 
-- (void) setLastSequence:(NSString*)lastSequence {
+- (void) setLastSequence:(id)lastSequence {
     if (!$equal(lastSequence, _lastSequence)) {
         LogTo(SyncVerbose, @"%@: Setting lastSequence to %@ (from %@)",
               self, lastSequence, _lastSequence);

@@ -12,6 +12,10 @@
 #import "Logging.h"
 
 
+@interface CBLSyncListener () <NSNetServiceDelegate>
+@end
+
+
 @implementation CBLSyncListener
 {
     CBLDatabase* _db;
@@ -93,7 +97,7 @@
             [_netService scheduleInRunLoop: [NSRunLoop mainRunLoop] forMode: NSDefaultRunLoopMode];
             [_netService publishWithOptions: 0];
         }
-    }
+    });
 }
 
 - (void) listenerDidStop {
@@ -101,19 +105,19 @@
         [_netService stop];
         _netService = nil;
         _netServicePublished = NO;
-    }
+    });
 }
 
 
 - (void)netServiceDidPublish:(NSNetService *)sender {
     dispatch_async(_queue, ^{
-        Log(@"CBLSyncListener: Published Bonjour service '%@'", self.name);
+        Log(@"CBLSyncListener: Published Bonjour service '%@'", _netService.name);
         _netServicePublished = YES;
-    }
+    });
 }
 
 - (void)netService:(NSNetService *)sender didNotPublish:(NSDictionary *)errorDict {
-    Warn(@"CBLSyncListener: Failed to publish Bonjour service '%@': %@", self.name, errorDict);
+    Warn(@"CBLSyncListener: Failed to publish Bonjour service '%@': %@", _netService.name, errorDict);
 }
 
 @end

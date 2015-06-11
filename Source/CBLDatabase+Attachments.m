@@ -220,7 +220,7 @@
 }
 
 // might be made public API someday...
-- (NSInputStream*) openContentStreamOfAttachmentWithDigest: (NSString*)digest {
+- (NSInputStream*) contentStreamOfAttachmentWithDigest: (NSString*)digest {
     CBLBlobKey key;
     if (![CBL_Attachment digest: digest toBlobKey: &key])
         return nil;

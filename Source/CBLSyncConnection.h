@@ -8,6 +8,7 @@
 
 #import "BLIPConnection.h"
 #import <CouchbaseLite/CBLDatabase.h>
+@class CBLQueryEnumerator;
 
 
 typedef NS_ENUM(unsigned, SyncState) {
@@ -47,6 +48,17 @@ typedef NS_ENUM(unsigned, SyncState) {
 @property (readonly) NSProgress* pushProgress;
 @property (readonly, copy) NSArray* nestedPushProgress;
 
+#if DEBUG
+@property (readonly) id lastSequence;
+@property (readonly) BOOL active;
+@property (readonly) BOOL savingCheckpoint;  // for unit tests
+#endif
+
+@end
+
+
+@interface CBLSyncConnection (PushAPI)
+@property (readonly) CBLQueryEnumerator* pendingDocuments;
 @end
 
 

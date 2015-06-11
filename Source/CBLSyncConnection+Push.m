@@ -51,28 +51,43 @@
 }
 
 
+// Call on database queue!
+- (CBLQueryEnumerator*) pendingDocumentsSince: (uint64_t)since limit: (NSUInteger)limit {
+    CBLQuery* query = [_db createAllDocumentsQuery];
+    query.allDocsMode = kCBLBySequence;
+    query.startKey = @(since);
+    query.inclusiveStart = NO;
+    if (limit > 0)
+        query.limit = limit;
+    if (_pushFilter) {
+        query.filterBlock = ^BOOL(CBLQueryRow* row) {
+            return _pushFilter(row.document.currentRevision, _pushFilterParams);
+        };
+    }
+    NSError* error;
+    CBLQueryEnumerator* e = [query run: &error];
+    if (!e)
+        Warn(@"SyncHandler: Couldn't get changes from db: %@", error);
+    return e;
+}
+
+
+// Public API; called on database queue
+- (CBLQueryEnumerator*) pendingDocuments {
+    if (!_pushing)
+        return nil;
+    return [self pendingDocumentsSince: _localCheckpointSequence limit: 0];
+}
+
+
 // Starting point of an active push (called once checkpoints are loaded.)
 - (void) sendChangesSince: (uint64_t)since {
     [self onDatabaseQueue: ^{
         // Query the database for the next batch of changes:
         CFAbsoluteTime time = CFAbsoluteTimeGetCurrent();
-        CBLQuery* query = [_db createAllDocumentsQuery];
-        query.allDocsMode = kCBLBySequence;
-        query.startKey = @(since);
-        query.inclusiveStart = NO;
-        if (_changesBatchSize > 0)
-            query.limit = _changesBatchSize;
-        if (_pushFilter) {
-            query.filterBlock = ^BOOL(CBLQueryRow* row) {
-                return _pushFilter(row.document.currentRevision, _pushFilterParams);
-            };
-        }
-        NSError* error;
-        CBLQueryEnumerator* e = [query run: &error];
-        if (!e) {
-            Warn(@"SyncHandler: Couldn't get changes from db: %@", error);
+        CBLQueryEnumerator* e = [self pendingDocumentsSince: since limit: _changesBatchSize];
+        if (!e)
             return;
-        }
         uint64_t lastSequence = 0;
         NSMutableArray* changes = [NSMutableArray new];
         for (CBLQueryRow* row in e) {
@@ -258,7 +273,7 @@ static NSArray* encodeChange(uint64_t sequence, NSString* docID, NSString* revID
     [request deferResponse];
     [self onDatabaseQueue: ^{
         uint64_t length = [_db lengthOfAttachmentWithDigest: digest];
-        NSInputStream* stream = [_db openContentStreamOfAttachmentWithDigest: digest];
+        NSInputStream* stream = [_db contentStreamOfAttachmentWithDigest: digest];
         LogTo(SyncVerbose, @"    Sending attachment %@ (%llukb)", digest, length/1024);
         [self onSyncQueue: ^{
             if (stream) {
@@ -298,7 +313,7 @@ static NSArray* encodeChange(uint64_t sequence, NSString* docID, NSString* revID
     NSData* nonce = request.body;
     if (!digest || nonce.length == 0 || nonce.length > 255)
         return [request respondWithErrorCode: 400 message: @"Invalid nonce or digest"];
-    NSInputStream* stream = [_db openContentStreamOfAttachmentWithDigest: digest];
+    NSInputStream* stream = [_db contentStreamOfAttachmentWithDigest: digest];
     if (!stream)
         return [request respondWithErrorCode: 404 message: @"Attachment digest unknown"];
 
@@ -309,15 +324,19 @@ static NSArray* encodeChange(uint64_t sequence, NSString* docID, NSString* revID
     CC_SHA1_Update(&sha, &nonceLen, 1);
     CC_SHA1_Update(&sha, nonce.bytes, (CC_LONG)nonce.length);
     NSInteger len;
+    [stream open];
     do {
         uint8_t buf[32768];
         len = [stream read: buf maxLength: sizeof(buf)];
         if (len > 0)
             CC_SHA1_Update(&sha, buf, (CC_LONG)len);
     } while (len > 0);
-    [stream close];
-    if (len < 0)
+    if (len < 0) {
+        Warn(@"Unable to send attachment proof; error reading body: %@", stream.streamError);
+        [stream close];
         return [request respondWithErrorCode: 500 message: @"Couldn't read attachment data"];
+    }
+    [stream close];
     uint8_t proofDigest[CC_SHA1_DIGEST_LENGTH];
     CC_SHA1_Final(proofDigest, &sha);
 

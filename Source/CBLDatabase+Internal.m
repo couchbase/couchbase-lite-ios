@@ -666,20 +666,29 @@ static SequenceNumber keyToSequence(id key, SequenceNumber dflt) {
     NSEnumerator* revEnum = (options->descending) ? revs.allRevisions.reverseObjectEnumerator
                                                   : revs.allRevisions.objectEnumerator;
     return ^CBLQueryRow*() {
-        CBL_Revision* rev = revEnum.nextObject;
-        if (!rev)
-            return nil;
-        SequenceNumber seq = rev.sequence;
-        if (seq < minSeq || seq > maxSeq)
-            return nil;
-        NSDictionary* value = $dict({@"rev", rev.revID},
-                                    {@"deleted", (rev.deleted ?$true : nil)});
-        return [[CBLQueryRow alloc] initWithDocID: rev.docID
-                                         sequence: seq
-                                              key: rev.docID
-                                            value: value
-                                      docRevision: rev
-                                          storage: nil];
+        for (;;) {
+            CBL_Revision* rev = revEnum.nextObject;
+            if (!rev)
+                return nil;
+            SequenceNumber seq = rev.sequence;
+            if (seq < minSeq || seq > maxSeq)
+                return nil;
+            NSDictionary* value = $dict({@"rev", rev.revID},
+                                        {@"deleted", (rev.deleted ?$true : nil)});
+            CBLQueryRow* row =  [[CBLQueryRow alloc] initWithDocID: rev.docID
+                                                          sequence: seq
+                                                               key: rev.docID
+                                                             value: value
+                                                       docRevision: rev
+                                                           storage: nil];
+            if (!options.filter)
+                return row;
+            row.database = self;
+            if (options.filter(row)) {
+                //row.database = nil;
+                return row;
+            }
+        }
     };
 }
 

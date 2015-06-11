@@ -37,7 +37,7 @@
 - (BOOL) hasAttachmentWithDigest: (NSString*)digest;
 - (uint64_t) lengthOfAttachmentWithDigest: (NSString*)digest;
 - (NSData*) contentOfAttachmentWithDigest: (NSString*)digest;
-- (NSInputStream*) openContentStreamOfAttachmentWithDigest: (NSString*)digest;
+- (NSInputStream*) contentStreamOfAttachmentWithDigest: (NSString*)digest;
 - (CBL_BlobStoreWriter*) attachmentWriter;
 - (void) rememberAttachmentWritersForDigests: (NSDictionary*)blobsByDigests;
 - (NSArray*) getPossibleAncestorsOfDocID: (NSString*)docID
