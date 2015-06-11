@@ -273,12 +273,18 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     if (!_started)
         return;
 
-    [self tellReplicatorAndWait: ^id(CBL_Replicator * bgReplicator) {
-        _bg_stopLock = [[NSConditionLock alloc] initWithCondition: 0];
-        [bgReplicator stop];
-        return @(YES);
-    }];
+    BOOL stopping = [[self tellReplicatorAndWait: ^id(CBL_Replicator * bgReplicator) {
+        if (bgReplicator.running) {
+            _bg_stopLock = [[NSConditionLock alloc] initWithCondition: 0];
+            [bgReplicator stop];
+            return @(YES);
+        }
+        return @(NO);
+    }] boolValue];
 
+    if (!stopping)
+        return;
+    
     // Waiting for the background stop notification:
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0]; // 2 seconds:
     if ([_bg_stopLock lockWhenCondition: 1 beforeDate: timeout])
