@@ -208,6 +208,13 @@ BOOL CBLCheckSSLServerTrust(SecTrustRef trust, NSString* host, UInt16 port) {
         Warn(@"CBLCheckSSLServerTrust: SecTrustEvaluate failed with err %d", (int)err);
         return NO;
     }
+    if (result == kSecTrustResultRecoverableTrustFailure) {
+        // Accept a self-signed cert from a local host (".local" domain)
+        if (SecTrustGetCertificateCount(trust) == 1 &&
+                ([host hasSuffix: @".local"] || [host hasSuffix: @".local."])) {
+            result = kSecTrustResultUnspecified;
+        }
+    }
     if (result != kSecTrustResultProceed && result != kSecTrustResultUnspecified) {
         Warn(@"CBLCheckSSLServerTrust: SSL cert is not trustworthy (result=%d)", result);
         return NO;

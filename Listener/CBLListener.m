@@ -89,6 +89,12 @@
 - (void) setBonjourName: (NSString*)name type: (NSString*)type {
     _httpServer.name = name;
     _httpServer.type = type;
+    if (_httpServer.isRunning)
+        [_httpServer republishBonjour];
+}
+
+- (NSString*) bonjourName {
+    return _httpServer.publishedName;
 }
 
 - (NSDictionary *)TXTRecordDictionary                   {return _httpServer.TXTRecordDictionary;}

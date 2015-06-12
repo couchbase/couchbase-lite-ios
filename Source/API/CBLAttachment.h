@@ -6,16 +6,10 @@
 //  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "CBLBase.h"
 @class CBLDocument, CBLRevision, CBLSavedRevision;
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 
 /** A binary attachment to a document revision.
     Existing attachments can be gotten from -[CBLRevision attachmentNamed:].
@@ -39,7 +33,7 @@
 @property (readonly) UInt64 length;
 
 /** The CouchbaseLite metadata about the attachment, that lives in the document. */
-@property (readonly) NSDictionary* metadata;
+@property (readonly) CBLJSONDict* metadata;
 
 /** The data of the attachment. */
 @property (readonly, nullable) NSData* content;
@@ -57,9 +51,9 @@
     so this property will return nil. */
 @property (readonly, nullable) NSURL* contentURL;
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END

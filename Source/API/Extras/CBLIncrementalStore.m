@@ -33,13 +33,16 @@
 NSString* const kCBLISErrorDomain = @"CBLISErrorDomain";
 NSString* const kCBLISObjectHasBeenChangedInStoreNotification = @"CBLISObjectHasBeenChangedInStoreNotification";
 NSString* const kCBLISCustomPropertyMaxRelationshipLoadDepth = @"CBLISCustomPropertyMaxRelationshipLoadDepth";
+NSString* const kCBLISCustomPropertyQueryBooleanWithNumber = @"CBLISCustomPropertyQueryBooleanWithNumber";
+
+static NSString* const kCBLISMetadataDocumentID = @"CBLIS_metadata";
+static NSString* const kCBLISMetadata_DefaultTypeKey = @"type_key";
 
 static NSString* const kCBLISDefaultTypeKey = @"type";
 static NSString* const kCBLISOldDefaultTypeKey = @"CBLIS_type";
-static NSString* const kCBLISMetadata_DefaultTypeKey = @"type_key";
+
 static NSString* const kCBLISCurrentRevisionAttributeName = @"CBLIS_Rev";
 static NSString* const kCBLISManagedObjectIDPrefix = @"CBL";
-static NSString* const kCBLISMetadataDocumentID = @"CBLIS_metadata";
 static NSString* const kCBLISToManyViewNameFormat = @"CBLIS/%@_%@_%@";
 
 // Utility functions
@@ -370,7 +373,7 @@ static CBLManager* sCBLManager;
                                   withID: kCBLISMetadataDocumentID
                                    error: &error]) {
         if (outError) {
-            NSString* errorDesc = @"Could not store metadata in database";
+            NSString* errorDesc = @"Could not save metadata in database";
             *outError = CBLISError(CBLIncrementalStoreErrorStoringMetadataFailed, errorDesc, error);
         }
     }
@@ -416,12 +419,15 @@ static CBLManager* sCBLManager;
         if ([attr isTransient]) continue;
         if ([attr attributeType] != NSBinaryDataAttributeType) continue;
 
-        NSData* data = [object valueForKey: attr.name];
-        if (!data) continue;
-
-        [revision setAttachmentNamed: attr.name
-                     withContentType: @"application/binary"
-                             content: data];
+        if ([[object changedValues] objectForKey: attr.name]) {
+            NSData* data = [object valueForKey: attr.name];
+            if (data)
+                [revision setAttachmentNamed: attr.name
+                             withContentType: @"application/binary"
+                                     content: data];
+            else if ([doc.currentRevision attachmentNamed: attr.name])
+                [revision removeAttachmentNamed: attr.name];
+        }
     }
 
     BOOL result = [revision save: outError] != nil;
@@ -652,10 +658,20 @@ static CBLManager* sCBLManager;
 
 #pragma mark - Custom properties
 
+- (void)setCustomProperties: (NSDictionary*)customProperties {
+    _customProperties = customProperties;
+    [self invalidateFetchResultCache];
+}
+
 - (NSUInteger) maxRelationshipLoadDepth {
     id maxDepth = _customProperties[kCBLISCustomPropertyMaxRelationshipLoadDepth];
     NSUInteger maxDepthValue = [maxDepth unsignedIntegerValue];
     return maxDepthValue > 0 ? maxDepthValue : kDefaultMaxRelationshipLoadDepth;
+}
+
+- (BOOL) queryBooleanValueWithNumber {
+    id queryBoolNum = _customProperties[kCBLISCustomPropertyQueryBooleanWithNumber];
+    return [queryBoolNum boolValue]; // Default value is NO
 }
 
 #pragma mark - Views
@@ -973,6 +989,8 @@ static CBLManager* sCBLManager;
                                                         @[rhs, lhs] : @[lhs, rhs];
         BOOL hasError = NO;
         NSString* keyPath = nil;
+
+        BOOL shouldCreateCompundBoolPredicate = NO;
         for (NSExpression* expression in expressions) {
             if (expression.expressionType == NSKeyPathExpressionType) {
                 BOOL needJoins;
@@ -1033,15 +1051,25 @@ static CBLManager* sCBLManager;
                         [outTemplateVars setObject: values forKey: varName];
                     }
                 } else {
-                    NSString* varName = [self variableForKeyPath: keyPath
-                                                          suffix: nil
-                                                         current: outTemplateVars];
-                    newExpression = [NSExpression expressionForVariable: varName];
-
-                    id exValue = [self scanConstantValue: constantValue];
-                    if (exValue)
-                        [outTemplateVars setObject: exValue forKey: varName];
-                    else
+                    id expValue = [self scanConstantValue: constantValue];
+                    if (expValue) {
+                        id exValue = [self scanConstantValue: constantValue];
+                        if ([self isBooleanConstantValue: exValue] && [self queryBooleanValueWithNumber]) {
+                            // Workaround for #756:
+                            // Need to be able to query both JSON boolean value (true,false) and
+                            // number boolean value(1,0).
+                            // 1. Not templating the original boolean value expression.
+                            // 2. Create an OR-compound predicate of the boolean expression and
+                            //    the improvised boolean number expression
+                            shouldCreateCompundBoolPredicate = YES;
+                        } else {
+                            NSString* varName = [self variableForKeyPath: keyPath
+                                                                  suffix: nil
+                                                                 current: outTemplateVars];
+                            newExpression = [NSExpression expressionForVariable: varName];
+                            [outTemplateVars setObject: expValue forKey: varName];
+                        }
+                    } else
                         break; // Not templating nil predicate:
 
                     if (comparison.predicateOperatorType == NSContainsPredicateOperatorType) {
@@ -1068,12 +1096,14 @@ static CBLManager* sCBLManager;
                                                                     options: comparison.options];
             else
                 output = comparison;
+
+            if (shouldCreateCompundBoolPredicate)
+                output = [self createCompoundBooleanPredicate: output];
         }
     }
 
-    if (outHasNonQueryBuilderExp) {
+    if (outHasNonQueryBuilderExp)
         *outHasNonQueryBuilderExp = hasNonQueryBuilderExp;
-    }
 
     if (!output && (outError && *outError == nil)) {
         NSString* errDesc = [NSString stringWithFormat:@"Unsupported predicate : %@", predicate];
@@ -1083,6 +1113,56 @@ static CBLManager* sCBLManager;
 
     return output;
 }
+
+
+- (BOOL) isBooleanConstantValue: (id)value {
+    return (value == (id)@(YES) || value == (id)@(NO));
+}
+
+- (NSCompoundPredicate*) createCompoundBooleanPredicate: (NSPredicate*)predicate {
+    assert([predicate isKindOfClass:[NSComparisonPredicate class]]);
+
+    NSComparisonPredicate* boolPredicate = (NSComparisonPredicate*)predicate;
+    BOOL boolValue = boolPredicate.rightExpression.expressionType == NSConstantValueExpressionType ?
+        [boolPredicate.rightExpression.constantValue boolValue] :
+        [boolPredicate.leftExpression.constantValue boolValue];
+
+    NSExpression* lhs;
+    NSExpression* rhs;
+    NSNumber* boolNumberValue;
+    if (boolPredicate.predicateOperatorType == NSNotEqualToPredicateOperatorType) {
+        // If the operator type is not equal, invert it to equal:
+        NSExpression* newBoolExp = [NSExpression expressionForConstantValue:
+                                        (boolValue ? @(NO) : @(YES))];
+        lhs = boolPredicate.leftExpression.expressionType == NSKeyPathExpressionType ?
+            boolPredicate.leftExpression : newBoolExp;
+        rhs = boolPredicate.rightExpression.expressionType == NSKeyPathExpressionType ?
+            boolPredicate.rightExpression : newBoolExp;
+        boolPredicate =
+            [NSComparisonPredicate predicateWithLeftExpression: lhs
+                                               rightExpression: rhs
+                                                      modifier: boolPredicate.comparisonPredicateModifier
+                                                          type: NSEqualToPredicateOperatorType
+                                                       options: boolPredicate.options];
+        boolNumberValue = (boolValue ? @(0) : @(1));
+    } else
+        boolNumberValue = (boolValue ? @(1) : @(0));
+
+    NSExpression* boolNumberExp = [NSExpression expressionForConstantValue: boolNumberValue];
+    lhs = boolPredicate.leftExpression.expressionType == NSKeyPathExpressionType ?
+        boolPredicate.leftExpression : boolNumberExp;
+    rhs = boolPredicate.rightExpression.expressionType == NSKeyPathExpressionType ?
+        boolPredicate.rightExpression : boolNumberExp;
+
+    NSPredicate* boolNumberPredicate =
+        [NSComparisonPredicate predicateWithLeftExpression: lhs
+                                           rightExpression: rhs
+                                                  modifier: boolPredicate.comparisonPredicateModifier
+                                                      type: boolPredicate.predicateOperatorType
+                                                   options: boolPredicate.options];
+    return [NSCompoundPredicate orPredicateWithSubpredicates: @[boolPredicate, boolNumberPredicate]];
+}
+
 
 /*
  *   Scan an expression, detect if the expression is a joins query, and validate if
@@ -1523,7 +1603,7 @@ static CBLManager* sCBLManager;
             result = CBLISIsNull(value) ? @"" : value;
             break;
         case NSBooleanAttributeType:
-            result = CBLISIsNull(value) ? @(NO) : value;
+            result = CBLISIsNull(value) ? @(NO) : [value boolValue] ? @(YES) : @(NO);
             break;
         case NSDateAttributeType:
             result = CBLISIsNull(value) ? nil : [CBLJSON JSONObjectWithDate: value];
@@ -1865,6 +1945,10 @@ static CBLManager* sCBLManager;
     }
 }
 
+- (void) invalidateFetchResultCache {
+    [_fetchRequestResultCache removeAllObjects];
+}
+
 #pragma mark - Attachments
 
 - (NSData*) loadDataForAttachmentWithName: (NSString*)name ofDocumentWithID: (NSString*)documentID {
@@ -2028,58 +2112,56 @@ static CBLManager* sCBLManager;
                          change: (NSDictionary*)change context: (void*)context {
     if ([@"rows" isEqualToString: keyPath]) {
         CBLLiveQuery* query = object;
-        
-        NSError* error;
-        CBLQueryEnumerator* enumerator = [query run: &error];
-        
-        if (enumerator.count == 0) return;
-        
-        [self resolveConflicts: enumerator];
+        [self resolveConflicts: query.rows];
     }
 }
 
 - (void) resolveConflicts: (CBLQueryEnumerator*)enumerator {
     // Resolve conflicts
     for (CBLQueryRow* row in enumerator) {
-        if ([kCBLISMetadataDocumentID isEqual: row.documentID]) // For v1.0.4 and below.
-            continue;
-        if (self.conflictHandler) self.conflictHandler(row.conflictingRevisions);
+        if ([kCBLISMetadataDocumentID isEqual: row.documentID])
+            continue; // For v1.0.4 and below.
+        if (self.conflictHandler)
+            self.conflictHandler(row.conflictingRevisions);
     }
 }
 
 - (CBLISConflictHandler) defaultConflictHandler {
+    __weak CBLIncrementalStore* weakSelf = self;
+
     CBLISConflictHandler handler = ^(NSArray* conflictingRevisions) {
-        // merges changes by
+        // Merges changes by
         // - taking the winning revision
         // - adding missing values from other revisions (starting with biggest version)
-        CBLRevision* winning = conflictingRevisions[0];
-        NSMutableDictionary* properties = [winning.properties mutableCopy];
+        CBLSavedRevision* curRev = conflictingRevisions[0];
+        NSMutableDictionary* mergedProps = [curRev.properties mutableCopy];
         
         NSRange otherRevisionsRange = NSMakeRange(1, conflictingRevisions.count - 1);
         NSArray* otherRevisions = [conflictingRevisions subarrayWithRange: otherRevisionsRange];
-        
-        NSArray* desc = @[[NSSortDescriptor sortDescriptorWithKey: @"revisionID"
-                                                        ascending: NO]];
-        NSArray* sortedRevisions = [otherRevisions sortedArrayUsingDescriptors: desc];
-        
-        // this solution merges missing keys from other conflicting revisions to not loose any values
-        for (CBLRevision* rev in sortedRevisions) {
-            for (NSString* key in rev.properties) {
-                if ([key hasPrefix: @"_"]) continue;
-                
-                if (![properties objectForKey:key]) {
-                    [properties setObject:[rev propertyForKey: key] forKey: key];
+        NSArray* sorts = @[[NSSortDescriptor sortDescriptorWithKey: @"revisionID" ascending: NO]];
+        otherRevisions = [otherRevisions sortedArrayUsingDescriptors: sorts];
+
+        [weakSelf.database inTransaction: ^BOOL{
+            // Merge missing keys from other conflicting revisions to not loose any values:
+            NSError* error;
+            for (CBLSavedRevision* rev in otherRevisions) {
+                for (NSString* key in rev.properties) {
+                    if ([key hasPrefix: @"_"])
+                        continue;
+                    if (![mergedProps objectForKey: key])
+                        [mergedProps setObject: [rev propertyForKey: key] forKey: key];
                 }
+
+                CBLUnsavedRevision *newRev = [rev createRevision];
+                newRev.isDeletion = YES;
+                if (![newRev saveAllowingConflict: &error])
+                    return NO;
             }
-        }
-        
-        // TODO: Attachments
-        
-        CBLUnsavedRevision* newRevision = [winning.document newRevision];
-        [newRevision setProperties: properties];
-        
-        NSError* error;
-        [newRevision save: &error];
+
+            CBLUnsavedRevision* newRev = [curRev createRevision];
+            [newRev setProperties: mergedProps];
+            return [newRev saveAllowingConflict: &error] != nil;
+        }];
     };
     return handler;
 }

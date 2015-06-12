@@ -10,13 +10,7 @@
 @class CBLSavedRevision, CBLUnsavedRevision, CBLDatabaseChange;
 @protocol CBLDocumentModel;
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 
 /** A CouchbaseLite document (as opposed to any specific revision of it.) */
 @interface CBLDocument : NSObject
@@ -58,15 +52,15 @@
 - (nullable CBLSavedRevision*) revisionWithID: (NSString*)revisionID;
 
 /** Returns the document's history as an array of CBLRevisions. (See CBLRevision's method.) */
-- (nullable NSArray*) getRevisionHistory: (NSError**)outError;
+- (nullable CBLArrayOf(CBLRevision*)*) getRevisionHistory: (NSError**)outError;
 
 /** Returns all the current conflicting revisions of the document. If the document is not
     in conflict, only the single current revision will be returned. */
-- (nullable NSArray*) getConflictingRevisions: (NSError**)outError;
+- (nullable CBLArrayOf(CBLRevision*)*) getConflictingRevisions: (NSError**)outError;
 
 /** Returns all the leaf revisions in the document's revision tree,
     including deleted revisions (i.e. previously-resolved conflicts.) */
-- (nullable NSArray*) getLeafRevisions: (NSError**)outError;
+- (nullable CBLArrayOf(CBLRevision*)*) getLeafRevisions: (NSError**)outError;
 
 /** Creates an unsaved new revision whose parent is the currentRevision,
     or which will be the first revision if the document doesn't exist yet.
@@ -81,11 +75,11 @@
     This is shorthand for self.currentRevision.properties.
     Any keys in the dictionary that begin with "_", such as "_id" and "_rev", contain CouchbaseLite
     metadata. */
-@property (readonly, copy, nullable) NSDictionary* properties;
+@property (readonly, copy, nullable) CBLJSONDict* properties;
 
 /** The user-defined properties, without the ones reserved by CouchDB.
     This is based on -properties, with every key whose name starts with "_" removed. */
-@property (readonly, copy, nullable) NSDictionary* userProperties;
+@property (readonly, copy, nullable) CBLJSONDict* userProperties;
 
 /** Shorthand for [self.properties objectForKey: key]. */
 - (nullable id) propertyForKey: (NSString*)key;
@@ -95,7 +89,7 @@
 
 /** Saves a new revision. The properties dictionary must have a "_rev" property whose ID matches the current revision's (as it will if it's a modified copy of this document's .properties
     property.) */
-- (nullable CBLSavedRevision*) putProperties: (NSDictionary*)properties
+- (nullable CBLSavedRevision*) putProperties: (CBLJSONDict*)properties
                                        error: (NSError**)outError;
 
 /** Saves a new revision by letting the caller update the existing properties.
@@ -121,6 +115,8 @@
 @property (weak, nullable) id<CBLDocumentModel> modelObject;
 
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 
@@ -145,6 +141,4 @@
 extern NSString* const kCBLDocumentChangeNotification;
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END

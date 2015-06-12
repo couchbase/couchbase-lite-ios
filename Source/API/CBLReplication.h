@@ -6,17 +6,11 @@
 //  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "CBLBase.h"
 @class CBLDatabase, CBLDocument;
 @protocol CBLAuthenticator;
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 
 /** Describes the current status of a replication. */
 typedef NS_ENUM(unsigned, CBLReplicationStatus) {
@@ -60,20 +54,20 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 
 /** Parameters to pass to the filter function.
     Should map strings to strings. */
-@property (nonatomic, copy, nullable) NSDictionary* filterParams;
+@property (nonatomic, copy, nullable) CBLJSONDict* filterParams;
 
 /** List of Sync Gateway channel names to filter by; a nil value means no filtering, i.e. all
     available channels will be synced.
     Only valid for pull replications whose source database is on a Couchbase Sync Gateway server.
     (This is a convenience that just reads or changes the values of .filter and .query_params.) */
-@property (nonatomic, copy, nullable) NSArray* channels;
+@property (nonatomic, copy, nullable) CBLArrayOf(NSString*)* channels;
 
 /** Sets the documents to specify as part of the replication. */
-@property (copy, nullable) NSArray *documentIDs;
+@property (copy, nullable) CBLArrayOf(NSString*) *documentIDs;
 
 /** Extra HTTP headers to send in all requests to the remote server.
     Should map strings (header names) to strings. */
-@property (nonatomic, copy, nullable) NSDictionary* headers;
+@property (nonatomic, copy, nullable) CBLDictOf(NSString*, NSString*)* headers;
 
 /** Specifies which class of network the replication will operate over.
     Default value is nil, which means replicate over all networks.
@@ -82,7 +76,7 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 @property (nonatomic, copy, nullable) NSString* network;
 
 /** An optional JSON-compatible dictionary of extra properties for the replicator. */
-@property (nonatomic, copy, nullable) NSDictionary* customProperties;
+@property (nonatomic, copy, nullable) CBLJSONDict* customProperties;
 
 
 #pragma mark - AUTHENTICATION:
@@ -100,7 +94,7 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 /** OAuth parameters that the replicator should use when authenticating to the remote database.
     Keys in the dictionary should be "consumer_key", "consumer_secret", "token", "token_secret",
     and optionally "signature_method". */
-@property (nonatomic, copy, nullable) NSDictionary* OAuth;
+@property (nonatomic, copy, nullable) CBLJSONDict* OAuth;
 
 /** The base URL of the remote server, for use as the "origin" parameter when requesting Persona or
     Facebook authentication. */
@@ -191,16 +185,7 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 - (BOOL) isDocumentPending: (CBLDocument*)doc;
 
 
-#ifdef CBL_DEPRECATED
-@property (nonatomic, copy) NSString* facebookEmailAddress
-    __attribute__((deprecated("set authenticator property instead")));
-- (BOOL) registerFacebookToken: (NSString*)token forEmailAddress: (NSString*)email
-    __attribute__((deprecated("set authenticator property instead")));
-- (BOOL) registerPersonaAssertion: (NSString*)assertion
-    __attribute__((deprecated("set authenticator property instead")));
-@property (nonatomic, copy) NSString* personaEmailAddress
-    __attribute__((deprecated("set authenticator property instead")));
-#endif
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 
@@ -211,6 +196,4 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 extern NSString* const kCBLReplicationChangeNotification;
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END

@@ -6,15 +6,9 @@
 //  Copyright (c) 2013 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "CBLBase.h"
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 
 /** A 2D geometric point. */
 typedef struct CBLGeoPoint {
@@ -66,13 +60,13 @@ BOOL CBLGeoJSONBoundingBox(NSDictionary* geoJSON, CBLGeoRect* outBBox);
 
 
 /** Converts a point to a JSON-compatible array of two coordinates. */
-NSArray* CBLGeoPointToCoordPair(CBLGeoPoint pt);
+CBLArrayOf(NSNumber*)* CBLGeoPointToCoordPair(CBLGeoPoint pt);
 
 /** Converts a JSON array of two coordinates [x,y] back into a point. */
-BOOL CBLGeoCoordPairToPoint(NSArray* coords, CBLGeoPoint* outPoint);
+BOOL CBLGeoCoordPairToPoint(CBLArrayOf(NSNumber*)* coords, CBLGeoPoint* outPoint);
 
 /** Converts a JSON array of four coordinates [x0, y0, x1, y1] to a rectangle. */
-BOOL CBLGeoCoordsToRect(NSArray* coords, CBLGeoRect* outRect);
+BOOL CBLGeoCoordsToRect(CBLArrayOf(NSNumber*)* coords, CBLGeoRect* outRect);
 
 #pragma mark - KEYS FOR MAP FUNCTIONS:
 
@@ -94,6 +88,4 @@ id CBLGeoJSONKey(NSDictionary* geoJSON);
 #endif
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END

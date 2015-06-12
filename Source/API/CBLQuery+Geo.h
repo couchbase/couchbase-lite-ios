@@ -9,13 +9,7 @@
 #import "CBLQuery.h"
 #import "CBLGeometry.h"
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 
 /** CBLQuery interface for geo-queries.
     To use this, the view's map function must have emitted geometries (points, rects, etc.)
@@ -52,6 +46,4 @@
 @end
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END

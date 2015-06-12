@@ -6,18 +6,12 @@
 //  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "CBLBase.h"
 #import "CBLView.h"
 @class CBLManager, CBLDocument, CBLRevision, CBLSavedRevision, CBLView, CBLQuery, CBLReplication;
 @protocol CBLValidationContext;
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 
 /** Validation block, used to approve revisions being added to the database.
     The block should call `[context reject]` or `[context rejectWithMessage:]` if the proposed
@@ -119,12 +113,12 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* __null
 
 
 /** Returns the contents of the local document with the given ID, or nil if none exists. */
-- (nullable NSDictionary*) existingLocalDocumentWithID: (NSString*)localDocID;
+- (nullable CBLJSONDict*) existingLocalDocumentWithID: (NSString*)localDocID;
 
 /** Sets the contents of the local document with the given ID. Unlike CouchDB, no revision-ID
     checking is done; the put always succeeds. If the properties dictionary is nil, the document
     will be deleted. */
-- (BOOL) putLocalDocument: (nullable NSDictionary*)properties
+- (BOOL) putLocalDocument: (nullable CBLJSONDict*)properties
                    withID: (NSString*)localDocID
                     error: (NSError**)outError;
 
@@ -199,7 +193,7 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* __null
 #pragma mark - REPLICATION:
 
 /** Returns an array of all current, running CBLReplications involving this database. */
-- (NSArray*) allReplications;
+- (CBLArrayOf(CBLReplication*)*) allReplications;
 
 /** Creates a replication that will 'push' this database to a remote database at the given URL.
     This always creates a new replication, even if there is already one to the given URL.
@@ -211,6 +205,8 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* __null
     You must call -start on the replication to start it. */
 - (CBLReplication*) createPullReplication: (NSURL*)url;
 
+
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 
@@ -250,7 +246,7 @@ typedef BOOL (^CBLChangeEnumeratorBlock) (NSString* key,
 #pragma mark - CONVENIENCE METHODS:
 
 /** Returns an array of all the keys whose values are different between the current and new revisions. */
-@property (readonly) NSArray* changedKeys;
+@property (readonly) CBLArrayOf(NSString*)* changedKeys;
 
 /** Calls the 'enumerator' block for each key that's changed, passing both the old and new values.
     If the block returns NO, the enumeration stops and rejects the revision, and the method returns
@@ -260,6 +256,4 @@ typedef BOOL (^CBLChangeEnumeratorBlock) (NSString* key,
 @end
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END

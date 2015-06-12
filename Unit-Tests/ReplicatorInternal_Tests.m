@@ -602,6 +602,35 @@
 }
 
 
+- (void) test_UseRemoteUUID {   // Test kCBLReplicatorOption_RemoteUUID (see #733)
+    NSDictionary* props = @{@"source": @"http://alice.local:55555/db",
+                            @"target": db.name,
+                            kCBLReplicatorOption_RemoteUUID: @"cafebabe"};
+    CBLStatus status;
+    id<CBL_Replicator> r1 = [dbmgr replicatorWithProperties: props status: &status];
+    Assert(r1);
+    NSString* check1 = r1.remoteCheckpointDocID;
+
+    // Different URL, but same remoteUUID:
+    NSMutableDictionary* props2 = [props mutableCopy];
+    props2[@"source"] = @"http://alice17.local:44444/db";
+    id<CBL_Replicator> r2 = [dbmgr replicatorWithProperties: props2 status: &status];
+    Assert(r2);
+    NSString* check2 = r2.remoteCheckpointDocID;
+    AssertEqual(check1, check2);
+    AssertEqual(r2.settings, r1.settings);
+
+    // Same UUID but different "filter" setting:
+    NSMutableDictionary* props3 = [props2 mutableCopy];
+    props3[@"filter"] = @"Melitta";
+    id<CBL_Replicator> r3 = [dbmgr replicatorWithProperties: props3 status: &status];
+    Assert(r3);
+    NSString* check3 = r3.remoteCheckpointDocID;
+    Assert(![check3 isEqualToString: check2]);
+    AssertEqual(r3.settings, r2.settings);
+}
+
+
 #pragma mark - UTILITY FUNCTIONS
 
 

@@ -54,13 +54,18 @@
     // Needs to be consistent with -hasSameSettingsAs: --
     // If a.remoteCheckpointID == b.remoteCheckpointID then [a hasSameSettingsAs: b]
     NSMutableDictionary* spec = $mdict({@"localUUID", localUUID},
-                                       {@"remoteURL", _remote.absoluteString},
                                        {@"push", @(_isPush)},
                                        {@"continuous", (_continuous ? nil : $false)},
                                        {@"filter", _filterName},
                                        {@"filterParams", _filterParameters},
                                      //{@"headers", _requestHeaders}, (removed; see #143)
                                        {@"docids", _docIDs});
+    // If "remoteUUID" option is specified, use that instead of the remote URL:
+    NSString* remoteUUID = _options[kCBLReplicatorOption_RemoteUUID];
+    if (remoteUUID)
+        spec[@"remoteUUID"] = remoteUUID;
+    else
+        spec[@"remoteURL"] = _remote.absoluteString;
     NSError *error;
     NSString *remoteCheckpointDocID = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: spec
                                                                          error: &error]);
@@ -73,7 +78,7 @@
     // Needs to be consistent with -remoteCheckpointDocIDForLocalUUID:
     // If a.remoteCheckpointID == b.remoteCheckpointID then [a isEqual: b]
     return [other isKindOfClass: [CBL_ReplicatorSettings class]]
-        && $equal(_remote, [other remote]) && _isPush == [other isPush]
+        && _isPush == [other isPush]
         && $equal([self remoteCheckpointDocIDForLocalUUID: @""],
                   [other remoteCheckpointDocIDForLocalUUID: @""]);
 }

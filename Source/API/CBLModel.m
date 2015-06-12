@@ -51,6 +51,12 @@
 }
 
 
+- (instancetype) init NS_UNAVAILABLE {
+    NSAssert(NO, @"CBLModels cannot be initialized with -init");
+    return nil;
+}
+
+
 + (instancetype) modelForNewDocumentInDatabase: (CBLDatabase*)database {
     NSParameterAssert(database);
     if (self == [CBLModel class]) {
@@ -483,10 +489,12 @@
 }
 
 
+typedef id (*idMsgSend)(id self, SEL sel);
+
 + (Class) itemClassForArrayProperty: (NSString*)property {
     SEL sel = NSSelectorFromString([property stringByAppendingString: @"ItemClass"]);
     if ([self respondsToSelector: sel]) {
-        return (Class)objc_msgSend(self, sel);
+        return ((idMsgSend)objc_msgSend)(self, sel);
     }
     return Nil;
 }
@@ -494,7 +502,7 @@
 + (NSString*) inverseRelationForArrayProperty: (NSString*)property {
     SEL sel = NSSelectorFromString([property stringByAppendingString: @"InverseRelation"]);
     if ([self respondsToSelector: sel]) {
-        return (NSString*)objc_msgSend(self, sel);
+        return ((idMsgSend)objc_msgSend)(self, sel);
     }
     return nil;
 }

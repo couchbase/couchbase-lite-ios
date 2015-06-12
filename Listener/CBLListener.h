@@ -24,10 +24,15 @@
 @property (readonly) UInt16 port;
 
 
-/** The Bonjour service name and type to advertise as.
+/** Sets the Bonjour service name and type to advertise as.
     @param name  The service name; this can be arbitrary but is generally the device user's name. An empty string will be mapped to the device's name.
     @param type  The service type; the type of a generic HTTP server is "_http._tcp." but you should use something more specific. */
 - (void) setBonjourName: (NSString*)name type: (NSString*)type;
+
+/** The published Bonjour service name. Nil until the server has started. Usually this is the same
+    as the name you specified in -setBonjourName:type:, but if there's
+    already a service with the same name on the network, your name may have a suffix appended. */
+@property (readonly) NSString* bonjourName;
 
 /** Bonjour metadata associated with the service. Changes will be visible almost immediately.
     The keys are NSStrings and values are NSData. Total size should be kept small (under 1kbyte if possible) as this data is multicast over UDP. */

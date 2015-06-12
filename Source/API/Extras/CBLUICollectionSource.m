@@ -73,9 +73,10 @@
 
 
 #define TELL_DELEGATE(sel, obj) \
-    (([_collectionView.delegate respondsToSelector: sel]) \
-        ? [_collectionView.delegate performSelector: sel withObject: self withObject: obj] \
-        : nil)
+    ({id<UICollectionViewDelegate> delegate = _collectionView.delegate; \
+     [delegate respondsToSelector: sel] \
+        ? [delegate performSelector: sel withObject: self withObject: obj] \
+        : nil;})
 
 
 #pragma mark -

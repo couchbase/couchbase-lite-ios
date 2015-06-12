@@ -6,18 +6,12 @@
 //  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "CBLBase.h"
 
 @class CBLDatabase, CBLDocument;
-@class CBLLiveQuery, CBLQueryEnumerator, CBLQueryRow;
+@class CBLLiveQuery, CBLQueryEnumerator, CBLQueryRow, CBLRevision;
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#endif
-
+NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(unsigned, CBLAllDocsMode) {
     kCBLAllDocs,            /**< Normal behavior for all-docs query */
@@ -91,7 +85,7 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     "value" to refer to the value, or "key" to refer to the key.
     A limited form of array indexing is supported, so you can refer to "key[1]" or "value[0]" if
     the key or value are arrays. This only works with indexes from 0 to 3. */
-@property (copy, nullable) NSArray* sortDescriptors;
+@property (copy, nullable) CBLArrayOf(NSSortDescriptor*)* sortDescriptors;
 
 /** An optional predicate that filters the resulting query rows.
     If present, it's called on every row returned from the query, and if it returns NO
@@ -123,7 +117,7 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     contents of each document. */
 @property BOOL prefetch;
 
-/** Changes the behavior of a query created by -queryAllDocuments.
+/** Changes the behavior of a query created by -createAllDocumentsQuery.
     * In mode kCBLAllDocs (the default), the query simply returns all non-deleted documents.
     * In mode kCBLIncludeDeleted, it also returns deleted documents.
     * In mode kCBLShowConflicts, the .conflictingRevisions property of each row will return the
@@ -143,6 +137,8 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 
 /** Returns a live query with the same parameters. */
 - (CBLLiveQuery*) asLiveQuery;
+
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 
@@ -220,6 +216,8 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     the key or value are arrays. This only works with indexes from 0 to 3. */
 - (void) sortUsingDescriptors: (NSArray*)sortDescriptors;
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 
@@ -264,7 +262,7 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     (You can still get the document properties via the .document property, of course. But it
     takes a separate call to the database. So if you're doing it for every row, using
     .prefetch and .documentProperties is faster.) */
-@property (readonly, nullable) NSDictionary* documentProperties;
+@property (readonly, nullable) CBLJSONDict* documentProperties;
 
 /** If this row's key is an array, returns the item at that index in the array.
     If the key is not an array, index=0 will return the key itself.
@@ -286,11 +284,11 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
     The first object in the array will be the default "winning" revision that shadows the others.
     This is only valid in an allDocuments query whose allDocsMode is set to kCBLShowConflicts
     or kCBLOnlyConflicts; otherwise it returns nil. */
-@property (readonly, nullable) NSArray* conflictingRevisions;
+@property (readonly, nullable) CBLArrayOf(CBLRevision*)* conflictingRevisions;
+
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 
 
-#if __has_feature(nullability)
-#pragma clang assume_nonnull end
-#endif
+NS_ASSUME_NONNULL_END
