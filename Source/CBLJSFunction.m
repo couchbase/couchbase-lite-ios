@@ -15,7 +15,7 @@
 
 #import "CBLJSFunction.h"
 
-#import <CouchbaseLite/CBLJSON.h>
+#import "CBLJSON.h"
 
 /* NOTE: This source file requires ARC. */
 

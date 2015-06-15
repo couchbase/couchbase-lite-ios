@@ -70,6 +70,7 @@ _CBLGeoRectKey
 _CBLGeoRectToJSON
 _CBLTextKey
 _CBLVersion
+_CBLRegisterJSViewCompiler
 
 # Non-public symbols that are used by CBLRouter and CBLListener:
 .objc_class_name_CBLQueryOptions
