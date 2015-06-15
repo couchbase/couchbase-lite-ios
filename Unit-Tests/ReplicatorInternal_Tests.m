@@ -627,7 +627,7 @@
     Assert(r3);
     NSString* check3 = r3.remoteCheckpointDocID;
     Assert(![check3 isEqualToString: check2]);
-    AssertEqual(r3.settings, r2.settings);
+    Assert(!$equal(r3.settings, r2.settings));
 }
 
 

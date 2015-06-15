@@ -200,12 +200,7 @@
                 // Alright, need to request some attachments before we can insert the revision:
                 NSMutableDictionary* attWritersByDigest = $mdict();
                 __block BOOL ok = YES;
-                __block uint64_t totalUnits = 0;
                 for (NSString* digest in needDigests) {
-                    uint64_t length = [needDigests[digest][@"length"] unsignedLongLongValue];
-                    uint64_t units = length / 1024;
-                    totalUnits += units;
-                    [_pullProgress becomeCurrentWithPendingUnitCount: units];
                     [self requestAttachment: needDigests[digest]
                                       named: needDigests[digest][@"name"]
                                  onComplete: ^(CBL_BlobStoreWriter* writer) {
@@ -229,9 +224,7 @@
                             }
                         }
                     }];
-                    [_pullProgress resignCurrent];
                 }
-                _pullProgress.totalUnitCount += totalUnits;
             }
         }];
     }];
@@ -246,9 +239,12 @@
     NSNumber* lengthObj = (attachment[@"encoded_length"] ?: attachment[@"length"]);
     uint64_t length = [lengthObj unsignedLongLongValue];
     LogTo(SyncVerbose, @"Requesting attachment with digest %@ (%llu bytes)", digest, length);
+    _pullProgress.totalUnitCount += length/1024;
+    [_pullProgress becomeCurrentWithPendingUnitCount: length/1024];
     NSProgress* attProgress = [self addAttachmentProgressWithName: name
                                                            length: length
                                                           pulling: YES];
+    [_pullProgress resignCurrent];
 
     //FIX: Calling CBL stuff on the wrong queue. But the BlobStoreWriter doesn't care what queue
     // it's called on as long as it's not re-entrant. (Except for -install, but we don't call that)

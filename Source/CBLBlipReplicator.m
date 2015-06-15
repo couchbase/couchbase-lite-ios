@@ -13,6 +13,7 @@
 #import "BLIPHTTPLogic.h"
 #import "CollectionUtils.h"
 #import "Logging.h"
+#import "MYBlockUtils.h"
 #import "MYErrorUtils.h"
 #import <CouchbaseLite/CouchbaseLitePrivate.h>
 #import <CouchbaseLite/CBLReachability.h>
@@ -36,7 +37,6 @@
 @interface CBLBlipReplicator ()
 @property CBLSyncConnection* sync;
 @property (readwrite) CBL_ReplicatorStatus status;
-@property (readwrite) NSProgress* progress;
 @end
 
 
@@ -50,11 +50,14 @@
     BOOL _reachable;
     BOOL _suspended;
     CBLSyncConnection* _sync;
+    NSProgress* _progress;
+    void (^_updateProgressSoon)();
 }
 
 @synthesize db=_db, settings=_settings, error=_error, sessionID=_sessionID;
 @synthesize serverCert=_serverCert, cookieStorage = _cookieStorage;
-@synthesize sync=_sync, status=_status, progress=_progress;
+@synthesize sync=_sync, status=_status;
+@synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpointDocID=_remoteCheckpointDocID;
 
 
@@ -82,29 +85,16 @@
         _remoteCheckpointDocID = [_settings remoteCheckpointDocIDForLocalUUID: _db.privateUUID];
         _cookieStorage = [[CBLCookieStorage alloc] initWithDB: db
                                                    storageKey: _remoteCheckpointDocID];
+
+        __weak CBLBlipReplicator* weakSelf = self;
+        _updateProgressSoon = MYBatchedBlock(0.25, _syncQueue,
+                                             ^{[weakSelf syncProgressChanged];});
     }
     return self;
 }
 
 - (void) dealloc {
     [self forgetSync];
-}
-
-
-- (NSUInteger) changesProcessed     {return (NSUInteger)self.progress.completedUnitCount;}
-- (NSUInteger) changesTotal         {return (NSUInteger)self.progress.totalUnitCount;}
-
-
-+ (NSSet*) keyPathsForValuesAffectingProgress {
-    return [NSSet setWithObjects:@"sync.pushProgress", @"sync.pullProgress", nil];
-}
-
-- (NSArray*) nestedProgress {
-    return _settings.isPush ? _sync.nestedPushProgress : _sync.nestedPullProgress;
-}
-
-+ (NSSet*) keyPathsForValuesAffectingNestedProgress {
-    return [NSSet setWithObjects: @"sync.nestedPushProgress", @"sync.nestedPullProgress", nil];
 }
 
 
@@ -212,7 +202,7 @@
 
     [sync addObserver: self forKeyPath: @"state" options: 0 context: (void*)1];
     self.sync = sync;
-    self.progress = isPush ? sync.pushProgress : sync.pullProgress;
+    _progress = isPush ? sync.pushProgress : sync.pullProgress;
     [_progress addObserver: self forKeyPath: @"fractionCompleted" options: 0 context: (void*)2];
     self.status = kReplicatorConnecting;
 }
@@ -269,6 +259,7 @@
         [_sync removeObserver: self forKeyPath: @"state"];
         [_progress removeObserver: self forKeyPath: @"fractionCompleted"];
         self.sync = nil;
+        _progress = nil;
     }
     _conn = nil;
 }
@@ -328,6 +319,14 @@
     if (newStatus >= kCBLReplicatorIdle)
         _retryCount = 0; // reset retry interval back to minimum
 
+    NSUInteger changesProcessed, changesTotal;
+    if (_progress.indeterminate)
+        changesProcessed = changesTotal = 0;
+    else {
+        changesProcessed = _progress.completedUnitCount;
+        changesTotal = _progress.totalUnitCount;
+    }
+    Assert(changesTotal < 100000);//TEMP
 #if DEBUG
     BOOL newActive = _sync.active;
     BOOL newSavingCheckpoint = _sync.savingCheckpoint;
@@ -338,6 +337,8 @@
     [_db doAsync:^{
         static const char* kStateNames[] = {"Stopped", "Offline", "Idle", "Active"};
         LogTo(Sync, @"Replicator.status = kReplicator%s", kStateNames[newStatus]);
+        _changesProcessed = changesProcessed;
+        _changesTotal = changesTotal;
 #if DEBUG
         LogTo(Sync, @"          .active=%d, .savingCheckpoint=%d, .lastSequence=%@",
               newActive, newSavingCheckpoint, newLastSequence);
@@ -356,6 +357,14 @@
 
 
 - (void) syncProgressChanged {
+    NSUInteger changesProcessed, changesTotal;
+    if (_progress.indeterminate)
+        changesProcessed = changesTotal = 0;
+    else {
+        changesProcessed = _progress.completedUnitCount;
+        changesTotal = _progress.totalUnitCount;
+    }
+    Assert(changesProcessed <= changesTotal);//TEMP
 #if DEBUG
     BOOL newActive = _sync.active;
     BOOL newSavingCheckpoint = _sync.savingCheckpoint;
@@ -363,7 +372,12 @@
 #endif
     // Needs to be posted on the database's official thread/queue.
     [_db doAsync:^{
+        LogTo(Sync, @"Replicator.progress = %lu / %lu", changesProcessed, changesTotal);
+        _changesProcessed = changesProcessed;
+        _changesTotal = changesTotal;
 #if DEBUG
+        LogTo(Sync, @"          .active=%d, .savingCheckpoint=%d, .lastSequence=%@",
+              newActive, newSavingCheckpoint, newLastSequence);
         _active = newActive;
         _savingCheckpoint = newSavingCheckpoint;
         _lastSequence = newLastSequence;
@@ -380,7 +394,7 @@
     if (context == (void*)1 && object == _sync) {
         [self syncStateChanged];
     } else if (context == (void*)2 && object == _progress) {
-        [self syncProgressChanged];
+        _updateProgressSoon();
     } else {
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }

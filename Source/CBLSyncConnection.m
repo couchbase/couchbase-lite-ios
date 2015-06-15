@@ -172,12 +172,15 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
     else if (!_connected)
         state = kSyncConnecting;
     else if (_pullCatchingUp || _revsToInsert != nil || _insertingRevs > 0 || _awaitingRevs > 0
+                || _changeListsInFlight > 0
                 || _connection.active)
         state = kSyncActive;
     else
         state = kSyncIdle;
-//    LogTo(Sync, @"_pullCatchingUp=%d, _revsToInsert=%lu, _insertingRevs=%lu, _awaitingRevs=%lu, _connection.active=%d",
-//          _pullCatchingUp, _revsToInsert.count, _insertingRevs, _awaitingRevs, _connection.active);
+#if 0
+    LogTo(Sync, @"_pullCatchingUp=%d, _revsToInsert=%lu, _insertingRevs=%lu, _awaitingRevs=%lu, _changeListsInFlight=%lu, _connection.active=%d",
+          _pullCatchingUp, _revsToInsert.count, _insertingRevs, _awaitingRevs, _changeListsInFlight, _connection.active);
+#endif
     [self updateState: state];
 }
 
@@ -200,7 +203,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
                         change:(NSDictionary *)change context:(void *)context
 {
-    if (context == (void*)1) {
+    if (context == (void*)1) {  // _connection.active changed
         _updateStateSoon();
     } else {
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
@@ -225,10 +228,11 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
     attProgress.kind = NSProgressKindFile;
 
     NSUInteger nFiles = [parent.userInfo[NSProgressFileTotalCountKey] unsignedIntegerValue];
-    [_pullProgress setUserInfoObject: @(nFiles+1) forKey: NSProgressFileTotalCountKey];
+    [parent setUserInfoObject: @(nFiles+1) forKey: NSProgressFileTotalCountKey];
     NSArray* children = parent.userInfo[kSyncNestedProgressKey];
     children = children ? [children arrayByAddingObject: attProgress] : @[attProgress];
     [parent setUserInfoObject: children forKey: kSyncNestedProgressKey];
+
     if (pulling)
         self.nestedPullProgress = children;
     else

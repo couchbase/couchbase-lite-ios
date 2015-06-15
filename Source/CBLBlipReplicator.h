@@ -12,7 +12,7 @@
 
 @interface CBLBlipReplicator : NSObject <CBL_Replicator>
 
-@property (readonly) NSProgress* progress;
-@property (readonly) NSArray* nestedProgress;
+//@property (readonly) NSProgress* progress;
+//@property (readonly) NSArray* nestedProgress;
 
 @end

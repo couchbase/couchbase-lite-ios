@@ -204,9 +204,9 @@
 }
 
 
-- (void) test02_RunPushReplicationNoSendAttachmentForUpdatedRev {
+- (void) test03_RunPushReplicationNoSendAttachmentForUpdatedRev {
     //RequireTestCase(CreateReplicators);
-    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    NSURL* remoteDbURL = [self remoteTestDBURL: kScratchDBName];
     if (!remoteDbURL)
         return;
     [self eraseRemoteDB: remoteDbURL];
@@ -240,7 +240,8 @@
     repl.createTarget = NO;
     [repl start];
 
-    [self runReplication: repl expectedChangesCount: 1];
+    unsigned expectedChangesCount = _newReplicator ? 2 : 1; // New repl counts attachments
+    [self runReplication: repl expectedChangesCount: expectedChangesCount];
     AssertNil(repl.lastError);
     
     
@@ -269,7 +270,7 @@
 
 
 
-- (void) test03_RunPushReplication {
+- (void) test02_RunPushReplication {
     RequireTestCase(CreateReplicators);
     NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
     if (!remoteDbURL)

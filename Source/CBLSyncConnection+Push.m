@@ -66,8 +66,10 @@
     }
     NSError* error;
     CBLQueryEnumerator* e = [query run: &error];
-    if (!e)
+    if (!e) {
         Warn(@"SyncHandler: Couldn't get changes from db: %@", error);
+        self.error = error;
+    }
     return e;
 }
 
@@ -82,12 +84,25 @@
 
 // Starting point of an active push (called once checkpoints are loaded.)
 - (void) sendChangesSince: (uint64_t)since {
+    _changeListsInFlight++;
+    [self updateState];
+    if (_pushing && _pushProgress.indeterminate) {
+        // Starting:
+        _pushProgress.completedUnitCount = 0;
+        _pushProgress.totalUnitCount = 0;
+    }
+
     [self onDatabaseQueue: ^{
         // Query the database for the next batch of changes:
         CFAbsoluteTime time = CFAbsoluteTimeGetCurrent();
         CBLQueryEnumerator* e = [self pendingDocumentsSince: since limit: _changesBatchSize];
-        if (!e)
+        if (!e) {
+            [self onSyncQueue: ^{
+                --_changeListsInFlight;
+                [self updateState];
+            }];
             return;
+        }
         uint64_t lastSequence = 0;
         NSMutableArray* changes = [NSMutableArray new];
         for (CBLQueryRow* row in e) {
@@ -109,7 +124,6 @@
         }
 
         [self onSyncQueue: ^{
-            _changeListsInFlight++;
             BOOL delayNext = (_changeListsInFlight >= kMaxChangeMessagesInFlight);
             [self sendChanges: changes
                        onSent: ^{
@@ -117,9 +131,11 @@
                                [self sendChangesSince: lastSequence];
                        }
                    onComplete: ^{
-                       _changeListsInFlight--;
+                       --_changeListsInFlight;
                        if (changes.count > 0 && delayNext)
                            [self sendChangesSince: lastSequence];
+                       else if (_changeListsInFlight == 0)
+                           [self updateState];
                    }
              ];
         }];
@@ -138,6 +154,8 @@
     if (changes.count == 0) {
         request.noReply = YES;
         [request send];
+        if (onComplete)
+            onComplete();
     } else {
         request.onSent = onSent;
         [request send].onComplete = ^(BLIPResponse* response) {
@@ -149,7 +167,15 @@
             NSArray* responseArray = $castIf(NSArray, response.bodyJSON);
             if (responseArray.count > 0) {
                 [self onDatabaseQueue: ^{
-                    NSUInteger numToSend = 0;
+                    if (_pushing) {
+                        // Update the totalUnitCount before we start sending docs
+                        NSUInteger numToSend = 0;
+                        for (NSArray* ancestors in responseArray) {
+                            if ([ancestors isKindOfClass: [NSArray class]])
+                                ++numToSend;
+                        }
+                        _pushProgress.totalUnitCount += numToSend;
+                    }
                     NSUInteger index = 0;
                     for (NSArray* ancestors in responseArray) {
                         if ([ancestors isKindOfClass: [NSArray class]]) {
@@ -161,13 +187,10 @@
                                knownAncestors: ancestors
                                    maxHistory: maxHistory
                                            to: _connection];
-                                ++numToSend;
                             }
                         }
                         ++index;
                     }
-                    if (_pushing)
-                        _pushProgress.totalUnitCount += numToSend;
                 }];
             }
             // Find the sequences the peer _didn't_ ask for and mark them as synced:
