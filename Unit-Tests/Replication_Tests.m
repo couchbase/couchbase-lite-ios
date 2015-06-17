@@ -616,7 +616,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 - (void) test11_ReplicationWithReplacedDatabase {
-    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    NSURL* remoteDbURL = [self remoteTestDBURL: kScratchDBName];
     if (!remoteDbURL) {
         Warn(@"Skipping test RunPushReplication (no remote test DB URL)");
         return;
@@ -657,10 +657,8 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     CBLReplication* puller = [prePopulateDB createPullReplication: remoteDbURL];
     puller.createTarget = YES;
     [puller start];
-    [self runReplication: puller expectedChangesCount: (unsigned)numPrePopulatedDocs];
+    [self runReplication: puller expectedChangesCount: 0];
     AssertEq(puller.status, kCBLReplicationStopped);
-    AssertEq(puller.completedChangesCount, numPrePopulatedDocs);
-    AssertEq(puller.changesCount, numPrePopulatedDocs);
 
     // Add some documents to the remote database:
     CBLDatabase* anotherDB = [dbmgr createEmptyDatabaseNamed: @"anotherdb" error: &error];
@@ -719,7 +717,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 - (void) test12_StopIdlePushReplication {
-    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    NSURL* remoteDbURL = [self remoteTestDBURL: kScratchDBName];
     if (!remoteDbURL)
         return;
     [self eraseRemoteDB: remoteDbURL];
@@ -762,7 +760,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 - (void) test13_StopIdlePullReplication {
-    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    NSURL* remoteDbURL = [self remoteTestDBURL: kScratchDBName];
     if (!remoteDbURL)
         return;
     [self eraseRemoteDB: remoteDbURL];
@@ -805,7 +803,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 - (void) test14_PullDocWithStubAttachment {
-    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    NSURL* remoteDbURL = [self remoteTestDBURL: kScratchDBName];
     if (!remoteDbURL)
         return;
     [self eraseRemoteDB: remoteDbURL];
@@ -837,11 +835,11 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
     // Push:
     CBLReplication* pusher = [pushDB createPushReplication: remoteDbURL];
-    [self runReplication:pusher expectedChangesCount:1];
+    [self runReplication:pusher expectedChangesCount: (_newReplicator ? 51 : 1)];
 
     // Pull (The db now has a base doc with an attachment.):
     CBLReplication* puller = [db createPullReplication: remoteDbURL];
-    [self runReplication: puller expectedChangesCount: 1];
+    [self runReplication: puller expectedChangesCount: (_newReplicator ? 51 : 1)];
 
     // Create a new revision and push:
     properties = doc.userProperties.mutableCopy;
@@ -875,7 +873,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 - (void) test15_PushShouldNotSendNonModifiedAttachment {
-    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    NSURL* remoteDbURL = [self remoteTestDBURL: kScratchDBName];
     if (!remoteDbURL)
         return;
     [self eraseRemoteDB: remoteDbURL];
@@ -904,7 +902,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
     // Push:
     CBLReplication* pusher = [db createPushReplication: remoteDbURL];
-    [self runReplication:pusher expectedChangesCount:1];
+    [self runReplication:pusher expectedChangesCount: (_newReplicator ? 51 : 1)];
 
     NSMutableDictionary* properties = doc.userProperties.mutableCopy;
     properties[@"tag"] = @3;
@@ -932,7 +930,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 - (void) test16_Restart {
-    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    NSURL* remoteDbURL = [self remoteTestDBURL: kScratchDBName];
     if (!remoteDbURL)
         return;
     [self eraseRemoteDB: remoteDbURL];

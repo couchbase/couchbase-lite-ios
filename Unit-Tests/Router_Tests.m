@@ -1235,7 +1235,7 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     AssertEqual(error.domain, NSURLErrorDomain);
     AssertEq(error.code, NSURLErrorCannotFindHost);
     
-    CBL_Server* server = [CBL_Server createEmptyAtTemporaryPath: @"CBL_URLProtocolTest"];
+    CBL_Server* server = [CBL_RunLoopServer createEmptyAtTemporaryPath: @"CBL_URLProtocolTest"];
     NSURL* root = [CBL_URLProtocol registerServer: server forHostname: @"some.hostname"];
     AssertEqual(root, url);
     AssertEq([CBL_URLProtocol serverForHostname: @"some.hostname"], server);
@@ -1261,7 +1261,7 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
 - (void) test_URLProtocol {
     RequireTestCase(CBL_Router);
     [CBL_URLProtocol forgetServers];
-    CBL_Server* server = [CBL_Server createEmptyAtTemporaryPath: @"CBL_URLProtocolTest"];
+    CBL_Server* server = [CBL_RunLoopServer createEmptyAtTemporaryPath: @"CBL_URLProtocolTest"];
     [CBL_URLProtocol setServer: server];
     
     NSURL* url = [NSURL URLWithString: @"cbl:///"];

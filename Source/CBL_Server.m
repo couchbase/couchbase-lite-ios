@@ -31,6 +31,7 @@
 
 #if DEBUG
 + (instancetype) createEmptyAtPath: (NSString*)path {
+    Assert(self != [CBL_Server class], @"CBL_Server is abstract");
     [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
     NSError* error;
     CBLManager* manager = [[CBLManager alloc] initWithDirectory: path options: nil error: &error];

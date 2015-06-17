@@ -7,6 +7,7 @@
 //
 
 #import "CBLSyncConnection_Internal.h"
+#import "CBLBlipReplicator.h"
 #import "MYBlockUtils.h"
 
 
@@ -19,7 +20,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 @synthesize syncQueue=_syncQueue, peerURL=_peerURL, state=_state, error=_error;
 @synthesize pullProgress=_pullProgress, nestedPullProgress=_nestedPullProgress;
 @synthesize pushProgress=_pushProgress, nestedPushProgress=_nestedPushProgress;
-@synthesize remoteCheckpointDocID=_remoteCheckpointDocID;
+@synthesize remoteCheckpointDocID=_remoteCheckpointDocID, replicator=_replicator;
 #if DEBUG
 @synthesize savingCheckpoint=_savingCheckpoint;  // for unit tests
 #endif
@@ -260,6 +261,13 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 
 
 #pragma mark - BLIP WEB SOCKET DELEGATE:
+
+
+- (BOOL)blipConnection: (BLIPConnection*)connection
+   validateServerTrust: (SecTrustRef)trust
+{
+    return [_replicator validateServerTrust: trust];
+}
 
 
 - (void)blipConnectionDidOpen:(BLIPConnection*)connection {

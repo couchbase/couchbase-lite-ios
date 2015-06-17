@@ -95,6 +95,7 @@
 
 - (void) dealloc {
     [self forgetSync];
+    cfrelease(_serverCert);
 }
 
 
@@ -181,6 +182,7 @@
     CBLSyncConnection* sync = [[CBLSyncConnection alloc] initWithDatabase: _db
                                                                connection: _conn
                                                                     queue: _syncQueue];
+    sync.replicator = self;
     sync.remoteCheckpointDocID = _remoteCheckpointDocID;
     BOOL isPush = _settings.isPush;
     if (isPush)
@@ -265,6 +267,17 @@
 }
 
 
+- (BOOL) validateServerTrust:(SecTrustRef)trust {
+    if (![_settings checkSSLServerTrust: trust
+                                  forHost: _settings.remote.host
+                                     port: _settings.remote.port.unsignedShortValue])
+        return NO;
+    // Server is trusted. Record its cert in case the client wants to pin it:
+    cfSetObj(&_serverCert, SecTrustGetCertificateAtIndex(trust, 0));
+    return YES;
+}
+
+
 #pragma mark - NOTIFICATION:
 
 
@@ -326,7 +339,6 @@
         changesProcessed = _progress.completedUnitCount;
         changesTotal = _progress.totalUnitCount;
     }
-    Assert(changesTotal < 100000);//TEMP
 #if DEBUG
     BOOL newActive = _sync.active;
     BOOL newSavingCheckpoint = _sync.savingCheckpoint;
@@ -364,7 +376,6 @@
         changesProcessed = _progress.completedUnitCount;
         changesTotal = _progress.totalUnitCount;
     }
-    Assert(changesProcessed <= changesTotal);//TEMP
 #if DEBUG
     BOOL newActive = _sync.active;
     BOOL newSavingCheckpoint = _sync.savingCheckpoint;

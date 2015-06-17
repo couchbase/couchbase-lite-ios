@@ -15,4 +15,6 @@
 //@property (readonly) NSProgress* progress;
 //@property (readonly) NSArray* nestedProgress;
 
+- (BOOL) validateServerTrust: (SecTrustRef)trust;
+
 @end

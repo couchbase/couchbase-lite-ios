@@ -8,7 +8,7 @@
 
 #import "BLIPConnection.h"
 #import <CouchbaseLite/CBLDatabase.h>
-@class CBLQueryEnumerator;
+@class CBLQueryEnumerator, CBLBlipReplicator;
 
 
 typedef NS_ENUM(unsigned, SyncState) {
@@ -31,6 +31,8 @@ typedef NS_ENUM(unsigned, SyncState) {
 - (void) setPullFilter: (NSString*)filterName params: (NSDictionary*)params;
 
 - (void) close;
+
+@property (weak) CBLBlipReplicator* replicator;
 
 @property (copy) NSString* remoteCheckpointDocID;
 
