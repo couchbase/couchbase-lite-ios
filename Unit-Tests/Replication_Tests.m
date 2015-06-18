@@ -17,6 +17,7 @@
 #define kAttSize 1*1024
 #define kEncodedDBName @"cbl_replicator_encoding"
 #define kScratchDBName @"cbl_replicator_scratch"
+#define kRemovedRevDBName @"cbl_replicator_removed_rev"
 
 // This one's never actually read or written to.
 #define kCookieTestDBName @"cbl_replicator_cookies"
@@ -967,6 +968,98 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
     // Make sure the replication is stopped:
     AssertEq(puller.status, kCBLReplicationStopped);
+}
+
+- (void)test17_RemovedRevision {
+    NSURL* remoteDbURL = [self remoteTestDBURL: kRemovedRevDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+
+    NSError* error;
+
+    // Create a new document with grant = true:
+    CBLDocument* doc = [db documentWithID: @"doc1"];
+    CBLUnsavedRevision* unsaved = [doc newRevision];
+    unsaved.userProperties = @{@"type": @"doc", @"grant": @(YES)};
+    CBLSavedRevision* rev = [unsaved save: &error];
+    Assert(rev != nil, @"Cannot save a new revision: %@", error);
+
+    // Create an authenticator for replication:
+    id auth = [CBLAuthenticator basicAuthenticatorWithName: @"test" password: @"abc123"];
+
+    // Create a pusher and push the document to the server:
+    CBLReplication* pusher = [db createPushReplication: remoteDbURL];
+    pusher.authenticator = auth;
+    [pusher start];
+    [self expectationForNotification: kCBLReplicationChangeNotification
+                              object: pusher
+                             handler: ^BOOL(NSNotification *notification) {
+        return pusher.completedChangesCount == 1;
+    }];
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    Assert(!pusher.lastError);
+
+    // Update the document with grant = false:
+    unsaved = [doc newRevision];
+    unsaved.userProperties = @{@"type": @"doc", @"grant": @(NO)};
+    rev = [unsaved save: &error];
+    Assert(rev != nil, @"Cannot save a new revision: %@", error);
+
+    // Push the updated document to the server:
+    [pusher start];
+    [self expectationForNotification: kCBLReplicationChangeNotification
+                              object: pusher
+                             handler: ^BOOL(NSNotification *notification) {
+        return pusher.completedChangesCount == 1;
+    }];
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    Assert(!pusher.lastError);
+
+    // Reset database:
+    [self eraseTestDB];
+
+    // Create a puller and pull the document from the server:
+    CBLReplication* puller = [db createPullReplication: remoteDbURL];
+    puller.authenticator = auth;
+    [puller start];
+    [self expectationForNotification: kCBLReplicationChangeNotification
+                              object: puller
+                             handler: ^BOOL(NSNotification *notification) {
+        return puller.completedChangesCount == 1;
+    }];
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    Assert(!puller.lastError);
+
+    // Check document.isGone property:
+    doc = [db existingDocumentWithID: @"doc1"];
+    Assert(doc != nil);
+    Assert(doc.isGone);
+
+    // Push to another remote server:
+    remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+
+    // Create a push replicator and push _removed revision
+    pusher = [db createPushReplication: remoteDbURL];
+    pusher.continuous = YES;
+    [pusher start];
+
+    // Check pending status:
+    Assert([pusher isDocumentPending: doc]);
+
+    [self expectationForNotification: kCBLReplicationChangeNotification
+                              object: pusher
+                             handler: ^BOOL(NSNotification *notification) {
+                                 return pusher.status == kCBLReplicationIdle;
+                             }];
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    Assert(!pusher.lastError);
+    Assert(pusher.completedChangesCount == 0);
+    Assert(pusher.changesCount == 0);
+    Assert(![pusher isDocumentPending: doc]);
 }
 
 @end

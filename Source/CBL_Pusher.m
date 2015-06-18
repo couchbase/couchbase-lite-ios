@@ -279,6 +279,12 @@
                             [self revisionFailed];
                             continue;
                         }
+                        
+                        if ([loadedRev[@"_removed"] boolValue]) {
+                            // Filter out _removed revision:
+                            [self removePending: rev];
+                            continue;
+                        }
 
                         CBL_MutableRevision* populatedRev = [[self transformRevision: loadedRev] mutableCopy];
 

@@ -54,6 +54,13 @@
 				"GUEST": {"disabled": false, "admin_channels":["*"]}
 			},
             "sync": `function(doc) {throw({forbidden: "Immutable test db"});}`
-		}
+        },
+        "cbl_replicator_removed_rev": {
+            "server": "walrus:walrus_data",
+            "users": {
+                "test": {"admin_channels":["private"],"password":"abc123"}
+            },
+            "sync": `function(doc) {if (doc.grant) {channel("private");}}`
+        }
 	}
 }
