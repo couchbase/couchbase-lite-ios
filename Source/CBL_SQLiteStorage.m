@@ -88,8 +88,9 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 #ifndef SQLITE_CONFIG_MMAP_SIZE
 #define SQLITE_CONFIG_MMAP_SIZE    22  /* sqlite3_int64, sqlite3_int64 */
 #endif
-    if (sqlite3_config(SQLITE_CONFIG_MMAP_SIZE, (SInt64)kSQLiteMMapSize, (SInt64)-1) != SQLITE_OK)
-        Log(@"FYI, couldn't enable SQLite mmap");
+    int err = sqlite3_config(SQLITE_CONFIG_MMAP_SIZE, (SInt64)kSQLiteMMapSize, (SInt64)-1);
+    if (err != SQLITE_OK)
+        Log(@"FYI, couldn't enable SQLite mmap: error %d", err);
 }
 
 
