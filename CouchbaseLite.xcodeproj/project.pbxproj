@@ -196,7 +196,6 @@
 		27486F261A606C76008D94F0 /* CBJSONEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 27486F1E1A606C76008D94F0 /* CBJSONEncoder.m */; };
 		27486F271A606C76008D94F0 /* CBJSONEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 27486F1E1A606C76008D94F0 /* CBJSONEncoder.m */; };
 		27486F2B1A606C76008D94F0 /* CBLJSONReader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27486F211A606C76008D94F0 /* CBLJSONReader.h */; };
-		27486F2D1A606C76008D94F0 /* CBLJSONReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 27486F221A606C76008D94F0 /* CBLJSONReader.m */; };
 		27486F2E1A606C76008D94F0 /* CBLJSONValidator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27486F231A606C76008D94F0 /* CBLJSONValidator.h */; };
 		27486F391A608A8B008D94F0 /* CBLJSONValidator.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27486F231A606C76008D94F0 /* CBLJSONValidator.h */; };
 		27486F3D1A608BC6008D94F0 /* CBLJSONValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27486F241A606C76008D94F0 /* CBLJSONValidator.m */; };
@@ -385,6 +384,7 @@
 		2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		2769845B198863B5009687A3 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */; };
 		2769845C198863B6009687A3 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867DA178E021F00248AF0 /* CBLRegisterJSViewCompiler.m */; };
+		276AE4E21B323457004D1768 /* libCouchbaseLiteReplicator.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 275D393C1AF3E1340013B9A9 /* libCouchbaseLiteReplicator.a */; };
 		276B231B1A36646100CAF010 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 278097551A32817A00876DE6 /* MYAnonymousIdentity.m */; };
 		276B231F1A3A2BE400CAF010 /* CBLQueryBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D2E705199BC06300D09A1D /* CBLQueryBuilder.m */; };
 		276B23201A3A2BE500CAF010 /* CBLQueryBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D2E705199BC06300D09A1D /* CBLQueryBuilder.m */; };
@@ -693,10 +693,10 @@
 		27E7FB04155DBDBF0025F93A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
 		27E940661954BB9E00A9732E /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E940651954BB9E00A9732E /* libc++.dylib */; };
 		27E940691954BD4C00A9732E /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E940651954BB9E00A9732E /* libc++.dylib */; };
-		27EB82EE1B28CBCF00FCCF45 /* CouchbaseLiteNewReplicator.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27187FF21B0400B90057D7D2 /* CouchbaseLiteNewReplicator.framework */; };
 		27EA50B31B275527009E78C1 /* CBLBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA50B21B275527009E78C1 /* CBLBase.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27EA50B41B275527009E78C1 /* CBLBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA50B21B275527009E78C1 /* CBLBase.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27EA50B51B275527009E78C1 /* CBLBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA50B21B275527009E78C1 /* CBLBase.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27EB82EE1B28CBCF00FCCF45 /* CouchbaseLiteNewReplicator.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27187FF21B0400B90057D7D2 /* CouchbaseLiteNewReplicator.framework */; };
 		27ED8630157D0FC600712B33 /* CBLDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 27ED862E157D0FC600712B33 /* CBLDocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27ED8631157D0FC600712B33 /* CBLDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ED862F157D0FC600712B33 /* CBLDocument.m */; };
 		27ED8632157D0FC600712B33 /* CBLDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ED862F157D0FC600712B33 /* CBLDocument.m */; };
@@ -1055,6 +1055,13 @@
 			remoteInfo = "CBForest-iOS";
 		};
 		275D39451AF3E35F0013B9A9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 275D38C91AF3E1340013B9A9;
+			remoteInfo = "CBL iOS repl lib";
+		};
+		276AE4E01B323366004D1768 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
 			proxyType = 1;
@@ -1982,6 +1989,7 @@
 				27E00C8E14EC2C74004BCBA9 /* SystemConfiguration.framework in Frameworks */,
 				27DB90DF14DB4B0100FC7118 /* libz.dylib in Frameworks */,
 				27B0B8531492CBE400A817AD /* libCouchbaseLite.a in Frameworks */,
+				276AE4E21B323457004D1768 /* libCouchbaseLiteReplicator.a in Frameworks */,
 				27AD1F8817C29CB00063108F /* libCouchbaseLiteListener.a in Frameworks */,
 				27B0B80D1492C16300A817AD /* UIKit.framework in Frameworks */,
 				27B0B80E1492C16300A817AD /* Foundation.framework in Frameworks */,
@@ -3417,6 +3425,7 @@
 			);
 			dependencies = (
 				27452BAF1AB1159400327776 /* PBXTargetDependency */,
+				276AE4E11B323366004D1768 /* PBXTargetDependency */,
 			);
 			name = "CBL iOS fat library";
 			productName = TouchDBiOS;
@@ -4507,7 +4516,6 @@
 				27A073EE14C0BB6200F52FE7 /* CBLMisc.m in Sources */,
 				2733022C18F8572700A488F7 /* CBLAuthenticator.m in Sources */,
 				27513A1A1A672C7F0055DC40 /* CBLDatabase+Attachments.m in Sources */,
-				27486F2D1A606C76008D94F0 /* CBLJSONReader.m in Sources */,
 				27A720A2152B959100C0A0E8 /* CBL_Attachment.m in Sources */,
 				277EF39F17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m in Sources */,
 				272A690F17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */,
@@ -4839,6 +4847,11 @@
 			isa = PBXTargetDependency;
 			target = 275D38C91AF3E1340013B9A9 /* CBL iOS repl lib */;
 			targetProxy = 275D39451AF3E35F0013B9A9 /* PBXContainerItemProxy */;
+		};
+		276AE4E11B323366004D1768 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 275D38C91AF3E1340013B9A9 /* CBL iOS repl lib */;
+			targetProxy = 276AE4E01B323366004D1768 /* PBXContainerItemProxy */;
 		};
 		27A755001A8559B6008BCD4D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

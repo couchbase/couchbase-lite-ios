@@ -124,9 +124,13 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
         return false;
     }
 
-    repl = [[CBLRestReplicator alloc] initWithDB: db remote: remote push: !pull continuous: continuous];
+    CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remote
+                                                                                 push: !pull];
+    settings.continuous = continuous;
     if (createTarget && !pull)
-        repl.createTarget = YES;
+        settings.createTarget = YES;
+
+    repl = [[CBLRestReplicator alloc] initWithDB: db settings: settings];
     if (!repl)
         fprintf(stderr, "Unable to create replication.\n");
     [repl start];
