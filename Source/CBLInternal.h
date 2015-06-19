@@ -26,7 +26,8 @@
 
 
 @interface CBLDatabase (Insertion_Internal)
-- (CBLStatus) validateRevision: (CBL_Revision*)newRev previousRevision: (CBL_Revision*)oldRev;
+- (CBLStatus) validateRevision: (CBL_Revision*)newRev previousRevision: (CBL_Revision*)oldRev
+                         error: (NSError **)outError;
 @end
 
 @interface CBLDatabase (Attachments_Internal)
