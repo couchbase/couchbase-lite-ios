@@ -29,6 +29,10 @@
     XCTAssertEqualWithAccuracy([CBLJSON absoluteTimeWithJSONObject: @"2013-04-01T20:42:33Z"], 386541753.000, 1e-6);
     NSDate* date = [CBLJSON dateWithJSONObject: @"2013-04-01T20:42:33Z"];
     AssertEq(date.timeIntervalSinceReferenceDate, 386541753.000);
+    date = [CBLJSON dateWithJSONObject: @"2013-04-01T20:42:33+0000"];
+    AssertEq(date.timeIntervalSinceReferenceDate, 386541753.000);
+    date = [CBLJSON dateWithJSONObject: @"2013-04-01T20:42:33+00:00"];
+    AssertEq(date.timeIntervalSinceReferenceDate, 386541753.000);
     date = [CBLJSON dateWithJSONObject: @"2013-04-01T20:42:33.388Z"];
     XCTAssertEqualWithAccuracy(date.timeIntervalSinceReferenceDate, 386541753.388, 1e-6);
     AssertNil([CBLJSON dateWithJSONObject: @""]);

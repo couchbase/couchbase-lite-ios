@@ -142,7 +142,7 @@ end_getDigits:
  ** Parse a timezone extension on the end of a date-time.
  ** The extension is of the form:
  **
- **        (+/-)HH:MM
+ **        (+/-)HH:MM or (+/-)HHMM
  **
  ** Or the "zulu" notation:
  **
@@ -172,10 +172,22 @@ static int parseTimezone(const char *zDate, DateTime *p){
         return c!=0;
     }
     zDate++;
-    if( getDigits(zDate, 2, 0, 14, ':', &nHr, 2, 0, 59, 0, &nMn)!=2 ){
+    
+    if( getDigits(zDate, 2, 0, 14, 0, &nHr) != 1 ) {
         return 1;
     }
-    zDate += 5;
+    
+    zDate += 2;
+    
+    if (*zDate == ':') {
+        zDate++;
+    }
+    
+    if( getDigits(zDate, 2, 0, 59, 0, &nMn) != 1 ) {
+        return 1;
+    }
+    
+    zDate += 2;
     p->tz = sgn*(nMn + nHr*60);
 zulu_time:
     while( sqlite3Isspace(*zDate) ){ zDate++; }
