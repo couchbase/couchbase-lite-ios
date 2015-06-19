@@ -6,7 +6,7 @@
 //  Copyright (c) 2015 Couchbase, Inc. All rights reserved.
 //
 
-import Cocoa
+import Foundation
 import XCTest
 
 
