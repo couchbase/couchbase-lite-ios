@@ -169,7 +169,7 @@
     if (!remoteURL)
         return;
 
-    NSError* error = CBLStatusToNSError(kCBLStatusNotFound, nil);
+    NSError* error = CBLStatusToNSError(kCBLStatusNotFound);
     replic8Continuous(db, remoteURL, NO, nil, nil, error);
 }
 
@@ -228,7 +228,7 @@
     urlStr = [urlStr stringByReplacingOccurrencesOfString: @"http://" withString: @"http://bogus@"];
     remoteURL = $url(urlStr);
 
-    NSError* error = CBLStatusToNSError(kCBLStatusUnauthorized, nil);
+    NSError* error = CBLStatusToNSError(kCBLStatusUnauthorized);
     replic8Continuous(db, remoteURL, NO, nil, nil, error);
 }
 

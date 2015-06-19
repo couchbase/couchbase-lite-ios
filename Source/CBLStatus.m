@@ -86,17 +86,15 @@ NSError* CBLStatusToNSErrorWithInfo( CBLStatus status, NSString *reason, NSURL* 
 }
 
 
-NSError* CBLStatusToNSError( CBLStatus status, NSURL* url ) {
-    return CBLStatusToNSErrorWithInfo(status, nil, url, nil);
+NSError* CBLStatusToNSError( CBLStatus status ) {
+    return CBLStatusToNSErrorWithInfo(status, nil, nil, nil);
 }
 
 
-BOOL ReturnNSErrorFromCBLStatus( CBLStatus status, NSError** outError) {
-    if (!CBLStatusIsError(status))
-        return YES;
+BOOL CBLStatusToOutNSError(CBLStatus status, NSError** outError) {
     if (outError)
-        *outError = CBLStatusToNSError(status, nil);
-    return NO;
+        *outError = CBLStatusToNSError(status);
+    return !CBLStatusIsError(status);
 }
 
 

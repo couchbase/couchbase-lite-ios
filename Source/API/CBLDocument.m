@@ -95,8 +95,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 - (BOOL) purgeDocument: (NSError**)outError {
     CBLStatus status = [_database.storage purgeRevisions: @{self.documentID : @[@"*"]} result: nil];
     if (CBLStatusIsError(status)) {
-        if (outError)
-            *outError = CBLStatusToNSError(status, nil);
+        CBLStatusToOutNSError(status, outError);
         return NO;
     }
     [_database removeDocumentFromCache: self];

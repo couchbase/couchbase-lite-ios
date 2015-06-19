@@ -225,7 +225,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     if (encryptionKey) {
         if (!hasRealEncryption) {
             Warn(@"CBL_SQLiteStorage: encryption not available (app not built with SQLCipher)");
-            return ReturnNSErrorFromCBLStatus(kCBLStatusNotImplemented,  outError);
+            return CBLStatusToOutNSError(kCBLStatusNotImplemented,  outError);
         } else {
             // http://sqlcipher.net/sqlcipher-api/#key
             if (![_fmdb executeUpdate: $sprintf(@"PRAGMA key = \"x'%@'\"",encryptionKey.hexData)]) {
@@ -244,7 +244,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
             Warn(@"CBL_SQLiteStorage: database is unreadable (err %d)", err);
             if (outError) {
                 if (err == SQLITE_NOTADB)
-                    *outError = CBLStatusToNSError(kCBLStatusUnauthorized, nil);
+                    CBLStatusToOutNSError(kCBLStatusUnauthorized, outError);
                 else
                     *outError = self.fmdbError;
             }
@@ -266,7 +266,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     } else {
         // After that, compare the keys:
         if (![actualKeyData isEqual: givenKeyData])
-            return ReturnNSErrorFromCBLStatus(kCBLStatusUnauthorized, outError);
+            return CBLStatusToOutNSError(kCBLStatusUnauthorized, outError);
     }
     return YES;
 }
@@ -1443,8 +1443,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         json = [CBL_Revision asCanonicalJSON: properties error: NULL];
         if (!json) {
             *outStatus = kCBLStatusBadJSON;
-            if (outError)
-                *outError = CBLStatusToNSError(*outStatus, nil);
+            CBLStatusToOutNSError(*outStatus, outError);
             return nil;
         }
     } else {
@@ -1621,7 +1620,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     
     if (CBLStatusIsError(*outStatus)) {
         if (outError && !*outError)
-            *outError = CBLStatusToNSError(*outStatus, nil);
+            CBLStatusToOutNSError(*outStatus, outError);
         return nil;
     }
     
@@ -1768,7 +1767,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                                                                          source: source]];
     } else {
         if (outError && !*outError)
-            *outError = CBLStatusToNSError(status, nil);
+            CBLStatusToOutNSError(status, outError);
     }
 
     return status;
@@ -1893,27 +1892,27 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     NSUInteger nPruned;
     CBLStatus status = [self pruneRevsToMaxDepth: _maxRevTreeDepth numberPruned: &nPruned];
     if (status != kCBLStatusOK)
-        return ReturnNSErrorFromCBLStatus(status, outError);
+        return CBLStatusToOutNSError(status, outError);
 
     // Remove the JSON of non-current revisions, which is most of the space.
     Log(@"CBLDatabase: Deleting JSON of old revisions...");
     if (![_fmdb executeUpdate: @"UPDATE revs SET json=null, doc_type=null, no_attachments=1"
                                 " WHERE current=0"])
-        return ReturnNSErrorFromCBLStatus(self.lastDbError, outError);
+        return CBLStatusToOutNSError(self.lastDbError, outError);
     Log(@"    ... deleted %d revisions", _fmdb.changes);
 
     Log(@"Flushing SQLite WAL...");
     if (![_fmdb executeUpdate: @"PRAGMA wal_checkpoint(RESTART)"])
-        return ReturnNSErrorFromCBLStatus(self.lastDbError, outError);
+        return CBLStatusToOutNSError(self.lastDbError, outError);
 
     Log(@"Vacuuming SQLite database...");
     if (![_fmdb executeUpdate: @"VACUUM"])
-        return ReturnNSErrorFromCBLStatus(self.lastDbError, outError);
+        return CBLStatusToOutNSError(self.lastDbError, outError);
 
 //    Log(@"Closing and re-opening database...");
 //    [_fmdb close];
 //    if (![self openFMDB: nil])
-//        return ReturnNSErrorFromCBLStatus(self.lastDbError, outError);
+//        return CBLStatusToOutNSError(self.lastDbError, outError);
 
     Log(@"...Finished database compaction.");
     return YES;
@@ -1963,7 +1962,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
 - (NSSet*) findAllAttachmentKeys: (NSError**)outError {
     CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT json FROM revs WHERE no_attachments != 1"];
     if (!r) {
-        ReturnNSErrorFromCBLStatus(self.lastDbStatus, outError);
+        CBLStatusToOutNSError(self.lastDbStatus, outError);
         return nil;
     }
     NSMutableSet* allKeys = [NSMutableSet set];

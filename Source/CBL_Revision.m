@@ -231,13 +231,13 @@
                 return YES;
             } else {
                 Log(@"CBLDatabase: Invalid top-level key '%@' in document to be inserted", key);
-                return ReturnNSErrorFromCBLStatus(kCBLStatusBadJSON, outError);
+                return CBLStatusToOutNSError(kCBLStatusBadJSON, outError);
             }
         };
     });
 
     if (!properties) {
-        ReturnNSErrorFromCBLStatus(kCBLStatusBadJSON, outError);
+        CBLStatusToOutNSError(kCBLStatusBadJSON, outError);
         return nil;
     }
 

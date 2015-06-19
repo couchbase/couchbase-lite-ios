@@ -389,8 +389,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
 {
     *outStatus = kCBLStatusBadAttachment;
     if (filename.length == 0 || (body && !contentType) || (oldRevID && !docID) || (body && !docID)) {
-        if (outError)
-            *outError = CBLStatusToNSError(*outStatus, nil);
+        CBLStatusToOutNSError(*outStatus, outError);
         return nil;
     }
 
@@ -406,8 +405,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
                                     status: outStatus] != nil) {
                 *outStatus = kCBLStatusConflict;   // if some other revision exists, it's a conflict
             }
-            if (outError)
-                *outError = CBLStatusToNSError(*outStatus, nil);
+            CBLStatusToOutNSError(*outStatus, outError);
             return nil;
         }
     } else {
@@ -432,8 +430,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
     } else {
         if (oldRevID && !attachments[filename]) {
             *outStatus = kCBLStatusAttachmentNotFound;
-            if (outError)
-                *outError = CBLStatusToNSError(*outStatus, nil);
+            CBLStatusToOutNSError(*outStatus, outError);
             return nil;
         }
         [attachments removeObjectForKey: filename];

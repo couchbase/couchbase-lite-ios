@@ -576,8 +576,7 @@ static CBLManager* sInstance;
     if (isDbPathDir) {
         Warn(@"Database file is a directory. "
               "Use -replaceDatabaseNamed:withDatabaseDir:error: instead.");
-        if (outError)
-            *outError = CBLStatusToNSError(kCBLStatusBadParam, nil);
+        CBLStatusToOutNSError(kCBLStatusBadParam, outError);
         return NO;
     }
 
@@ -616,16 +615,14 @@ static CBLManager* sInstance;
     BOOL isDbPathDir;
     if (![fmgr fileExistsAtPath: databaseDir isDirectory: &isDbPathDir]) {
         Warn(@"Database file doesn't exist at path : %@", databaseDir);
-        if (outError)
-            *outError = CBLStatusToNSError(kCBLStatusNotFound, nil);
+        CBLStatusToOutNSError(kCBLStatusNotFound, outError);
         return NO;
     }
 
     if (!isDbPathDir) {
         Warn(@"Database file is not a directory. "
               "Use -replaceDatabaseNamed:withDatabaseFilewithAttachments:error: instead.");
-        if (outError)
-            *outError = CBLStatusToNSError(kCBLStatusBadParam, nil);
+        CBLStatusToOutNSError(kCBLStatusBadParam, outError);
         return NO;
     }
 
@@ -667,8 +664,7 @@ static CBLManager* sInstance;
     CBLDatabase* db = _databases[name];
     if (!db) {
         if (![[self class] isValidDatabaseName: name]) {
-            if (outError)
-                *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
+            CBLStatusToOutNSError(kCBLStatusBadID, outError);
             return nil;
         }
         db = [[CBLDatabase alloc] initWithDir: [self pathForDatabaseNamed: name]
@@ -676,8 +672,7 @@ static CBLManager* sInstance;
                                       manager: self
                                      readOnly: _options.readOnly];
         if (mustExist && !db.exists) {
-            if (outError)
-                *outError = CBLStatusToNSError(kCBLStatusNotFound, nil);
+            CBLStatusToOutNSError(kCBLStatusNotFound, outError);
             return nil;
         }
         _databases[name] = db;

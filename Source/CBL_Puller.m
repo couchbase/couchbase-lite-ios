@@ -500,7 +500,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                   [strongSelf queueDownloadedRevision:rev];
               } else {
                   CBLStatus status = CBLStatusFromBulkDocsResponseItem(props);
-                  [strongSelf revision: rev failedWithError: CBLStatusToNSError(status, nil)];
+                  [strongSelf revision: rev failedWithError: CBLStatusToNSError(status)];
               }
           }
                                    onCompletion:
@@ -578,7 +578,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                   if (rev) {
                                       [remainingRevs removeRev: rev];
                                       [self revision: rev
-                                            failedWithError: CBLStatusToNSError(status, nil)];
+                                            failedWithError: CBLStatusToNSError(status)];
                                   }
                               }
                           }
@@ -665,7 +665,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: rev.properties];
                 if (!history && rev.generation > 1) {
                     Warn(@"%@: Missing revision history in response for %@", self, rev);
-                    self.error = CBLStatusToNSError(kCBLStatusUpstreamError, nil);
+                    self.error = CBLStatusToNSError(kCBLStatusUpstreamError);
                     [self revisionFailed];
                     continue;
                 }
@@ -686,7 +686,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                     } else {
                         Warn(@"%@ failed to write %@: status=%d", self, rev, status);
                         [self revisionFailed];
-                        self.error = CBLStatusToNSError(status, nil);
+                        self.error = CBLStatusToNSError(status);
                         continue;
                     }
                 }
