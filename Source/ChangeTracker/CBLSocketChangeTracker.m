@@ -175,7 +175,8 @@
         [self retry];
         return NO;
     } else {
-        NSError* error = _http.error ?: CBLStatusToNSError(_http.httpStatus, _http.URL);
+        NSError* error = _http.error ?: CBLStatusToNSErrorWithInfo(_http.httpStatus,
+                                                                   nil, _http.URL, nil);
         [self failedWithError: error];
         return NO;
     }

@@ -53,9 +53,12 @@ static inline bool CBLStatusIsError(CBLStatus status) {return status >= 400;}
 
 int CBLStatusToHTTPStatus( CBLStatus status, NSString** outMessage );
 
-NSError* CBLStatusToNSError( CBLStatus status, NSURL* url );
+NSError* CBLStatusToNSError( CBLStatus status );
 NSError* CBLStatusToNSErrorWithInfo( CBLStatus status, NSString *reason, NSURL* url,
                                      NSDictionary* extraInfo );
-CBLStatus CBLStatusFromNSError(NSError* error, CBLStatus defaultStatus);
 
-BOOL ReturnNSErrorFromCBLStatus( CBLStatus status, NSError** outError);
+/** If outError is not NULL, sets *outError to an NSError equivalent of status.
+    @return  YES if status is successful, NO if it's an error. */
+BOOL CBLStatusToOutNSError(CBLStatus status, NSError** outError);
+
+CBLStatus CBLStatusFromNSError(NSError* error, CBLStatus defaultStatus);

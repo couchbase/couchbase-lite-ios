@@ -740,8 +740,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                error: (NSError**)outError
 {
     if (body && !body.isValidJSON) {
-        if (outError)
-            *outError = CBLStatusToNSError(kCBLStatusBadJSON, nil);
+        CBLStatusToOutNSError(kCBLStatusBadJSON, outError);
         return kCBLStatusBadJSON;
     }
     
@@ -754,8 +753,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             // POST's doc ID may come from the _id field of the JSON body.
             docID = properties.cbl_id;
             if (!docID && deleting) {
-                if (outError)
-                    *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
+                CBLStatusToOutNSError(kCBLStatusBadID, outError);
                 return kCBLStatusBadID;
             }
         }
@@ -773,8 +771,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: nil
                                                                   deleted: deleting];
     if (!rev) {
-        if (outError)
-            *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
+        CBLStatusToOutNSError(kCBLStatusBadID, outError);
         return kCBLStatusBadID;
     }
     rev.body = body;
@@ -787,8 +784,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                                         status: &status];
 
         if (CBLStatusIsError(status)) {
-            if (outError)
-                *outError = CBLStatusToNSError(status, nil);
+            CBLStatusToOutNSError(status, outError);
         }
     } else
         *outRev = [db putRevision: rev prevRevisionID: prevRevID
@@ -814,8 +810,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                 revParam = ifMatch;
             else if (!$equal(revParam, ifMatch)) {
                 CBLStatus status = kCBLStatusBadRequest;
-                if (outError)
-                    *outError = CBLStatusToNSError(status, nil);
+                CBLStatusToOutNSError(status, outError);
                 return status;
             }
         }
@@ -829,8 +824,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             } else if (!$equal(revProp, revParam)) {
                 // mismatch between _rev and rev
                 CBLStatus status = kCBLStatusBadRequest;
-                if (outError)
-                    *outError = CBLStatusToNSError(status, nil);
+                CBLStatusToOutNSError(status, outError);
                 return status;
             }
         }

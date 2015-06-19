@@ -116,7 +116,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     }
 
     if (_delegate.encryptionKey)
-        return ReturnNSErrorFromCBLStatus(kCBLStatusNotImplemented, outError);
+        return CBLStatusToOutNSError(kCBLStatusNotImplemented, outError);
 
     _directory = [path copy];
     NSString* forestPath = [path stringByAppendingPathComponent: kDBFilename];
@@ -138,9 +138,9 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     try {
         _forest = new Database(std::string(forestPath.fileSystemRepresentation), config);
     } catch (forestdb::error err) {
-        return ReturnNSErrorFromCBLStatus(CBLStatusFromForestDBStatus(err.status), outError);
+        return CBLStatusToOutNSError(CBLStatusFromForestDBStatus(err.status), outError);
     } catch (...) {
-        return ReturnNSErrorFromCBLStatus(kCBLStatusException, outError);
+        return CBLStatusToOutNSError(kCBLStatusException, outError);
     }
     return YES;
 }
@@ -184,7 +184,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
         _forest->compact();
         return kCBLStatusOK;
     }];
-    return ReturnNSErrorFromCBLStatus(status, outError);
+    return CBLStatusToOutNSError(status, outError);
 }
 
 
@@ -664,7 +664,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
         return kCBLStatusOK;
     }];
     if (CBLStatusIsError(status)) {
-        ReturnNSErrorFromCBLStatus(status, outError);
+        CBLStatusToOutNSError(status, outError);
         keys = nil;
     }
     return keys;
@@ -906,8 +906,7 @@ static void convertRevIDs(NSArray* revIDs,
 
     if (_forest->isReadOnly()) {
         *outStatus = kCBLStatusForbidden;
-        if (outError)
-            *outError = CBLStatusToNSError(*outStatus, nil);
+        CBLStatusToOutNSError(*outStatus, outError);
         return nil;
     }
 
@@ -916,8 +915,7 @@ static void convertRevIDs(NSArray* revIDs,
         json = [CBL_Revision asCanonicalJSON: properties error: NULL];
         if (!json) {
             *outStatus = kCBLStatusBadJSON;
-            if (outError)
-                *outError = CBLStatusToNSError(*outStatus, nil);
+            CBLStatusToOutNSError(*outStatus, outError);
             return nil;
         }
     } else {
@@ -1029,7 +1027,7 @@ static void convertRevIDs(NSArray* revIDs,
     if (CBLStatusIsError(*outStatus)) {
         // Check if the outError has a value to not override the validation error:
         if (outError && !*outError)
-            *outError = CBLStatusToNSError(*outStatus, nil);
+            CBLStatusToOutNSError(*outStatus, outError);
         return nil;
     }
     [_delegate databaseStorageChanged: change];
@@ -1048,15 +1046,13 @@ static void convertRevIDs(NSArray* revIDs,
         *outError = nil;
 
     if (_forest->isReadOnly()) {
-        if (outError)
-            *outError = CBLStatusToNSError(kCBLStatusForbidden, nil);
+        CBLStatusToOutNSError(kCBLStatusForbidden, outError);
         return kCBLStatusForbidden;
     }
 
     NSData* json = inRev.asCanonicalJSON;
     if (!json) {
-        if (outError)
-            *outError = CBLStatusToNSError(kCBLStatusBadJSON, nil);
+        CBLStatusToOutNSError(kCBLStatusBadJSON, outError);
         return kCBLStatusBadJSON;
     }
 
@@ -1115,7 +1111,7 @@ static void convertRevIDs(NSArray* revIDs,
     if (CBLStatusIsError(status)) {
         // Check if the outError has a value to not override the validation error:
         if (outError && !*outError)
-            *outError = CBLStatusToNSError(status, nil);
+            CBLStatusToOutNSError(status, outError);
     }
     return status;
 }

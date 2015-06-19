@@ -169,8 +169,7 @@
     if ((prevRevID && !docID) || (deleting && !docID)
             || (docID && ![CBLDatabase isValidDocumentID: docID])) {
         *outStatus = kCBLStatusBadID;
-        if (outError)
-            *outError = CBLStatusToNSError(*outStatus, nil);
+        CBLStatusToOutNSError(*outStatus, outError);
         return nil;
     }
 
@@ -184,8 +183,7 @@
         if (![self processAttachmentsForRevision: tmpRev
                                        prevRevID: prevRevID
                                           status: outStatus]) {
-            if (outError)
-                *outError = CBLStatusToNSError(*outStatus, nil);
+            CBLStatusToOutNSError(*outStatus, outError);
             return nil;
         }
         properties = [tmpRev.properties mutableCopy];
@@ -226,16 +224,14 @@
     rev.sequence = 0;
     NSString* revID = rev.revID;
     if (![CBLDatabase isValidDocumentID: rev.docID] || !revID) {
-        if (outError)
-            *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
+        CBLStatusToOutNSError(kCBLStatusBadID, outError);
         return kCBLStatusBadID;
     }
     
     if (history.count == 0)
         history = @[revID];
     else if (!$equal(history[0], revID)) {
-        if (outError)
-            *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
+        CBLStatusToOutNSError(kCBLStatusBadID, outError);
         return kCBLStatusBadID;
     }
 
@@ -246,8 +242,7 @@
         if (![self processAttachmentsForRevision: updatedRev
                                        prevRevID: prevRevID
                                           status: &status]) {
-            if (outError)
-                *outError = CBLStatusToNSError(status, nil);
+            CBLStatusToOutNSError(status, outError);
             return status;
         }
         inRev = updatedRev;
@@ -301,8 +296,7 @@
         } @catch (NSException* x) {
             MYReportException(x, @"validation block '%@'", validationName);
             status = kCBLStatusCallbackError;
-            if (outError)
-                *outError = CBLStatusToNSError(status, nil);
+            CBLStatusToOutNSError(status, outError);
             break;
         }
         if (context.rejectionMessage != nil) {

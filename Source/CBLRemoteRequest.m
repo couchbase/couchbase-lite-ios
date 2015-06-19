@@ -210,7 +210,8 @@
     if (!_connection)
         return;
     [_connection cancel];
-    [self connection: _connection didFailWithError: CBLStatusToNSError(status, _request.URL)];
+    [self connection: _connection
+          didFailWithError: CBLStatusToNSErrorWithInfo(status, nil, _request.URL, nil)];
 }
 
 
@@ -460,7 +461,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
         if (!result) {
             Warn(@"%@: %@ %@ returned unparseable data '%@'",
                  self, _request.HTTPMethod, _request.URL, [_jsonBuffer my_UTF8ToString]);
-            error = CBLStatusToNSError(kCBLStatusUpstreamError, _request.URL);
+            error = CBLStatusToNSErrorWithInfo(kCBLStatusUpstreamError, nil, _request.URL, nil);
         }
     } else {
         result = $dict();

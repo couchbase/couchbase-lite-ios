@@ -57,7 +57,7 @@
         if (!filter) {
             Warn(@"%@: No filter '%@' (err %d)", self, _filterName, status);
             if (!self.error) {
-                self.error = CBLStatusToNSError(status, nil);
+                self.error = CBLStatusToNSError(status);
             }
             [self stop]; // this is fatal; don't know what to push
         }
@@ -119,7 +119,7 @@
                                                params: _filterParameters
                                                status: &status];
     if (!revs)
-        self.error = CBLStatusToNSError(status, nil);
+        self.error = CBLStatusToNSError(status);
     return revs;
 }
 
@@ -367,7 +367,7 @@
                                   [failedIDs addObject: docID];
                                   NSURL* url = docID ? [_remote URLByAppendingPathComponent: docID]
                                                      : nil;
-                                  error = CBLStatusToNSError(status, url);
+                                  error = CBLStatusToNSErrorWithInfo(status, nil, url, nil);
                               }
                           }
                       }
@@ -527,7 +527,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     CBLStatus status;
     if (![_db expandAttachmentsIn: rev minRevPos: 0 allowFollows: NO decode: NO
                            status: &status]) {
-        self.error = CBLStatusToNSError(status, nil);
+        self.error = CBLStatusToNSError(status);
         [self revisionFailed];
         return;
     }

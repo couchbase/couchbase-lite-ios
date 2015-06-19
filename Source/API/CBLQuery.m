@@ -214,8 +214,7 @@
                                                   lastSequence: &lastSequence
                                                         status: &status];
     if (!iterator) {
-        if (outError)
-            *outError = CBLStatusToNSError(status, nil);
+        CBLStatusToOutNSError(status, outError);
         return nil;
     }
     CBLQueryEnumerator* result = [[CBLQueryEnumerator alloc] initWithDatabase: _database
@@ -278,7 +277,7 @@
                 if (_sortDescriptors)
                     [e sortUsingDescriptors: _sortDescriptors];
             } else if (CBLStatusIsError(status)) {
-                error = CBLStatusToNSError(status, nil);
+                error = CBLStatusToNSError(status);
             }
             onComplete(e, error);
         }];

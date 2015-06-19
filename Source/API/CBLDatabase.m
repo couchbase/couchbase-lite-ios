@@ -255,8 +255,7 @@ static void catchInBlock(void (^block)()) {
     if (status == kCBLStatusOK)
         return YES;
 
-    if (outError)
-        *outError = CBLStatusToNSError(status, nil);
+    CBLStatusToOutNSError(status, outError);
     return NO;
 }
 
@@ -347,8 +346,8 @@ static NSString* makeLocalDocID(NSString* docID) {
                           prevRevisionID: nil
                                 obeyMVCC: NO
                                   status: &status] != nil;
-    if (!ok && outError)
-        *outError = CBLStatusToNSError(status, nil);
+    if (!ok)
+        CBLStatusToOutNSError(status, outError);
     return ok;
 }
 
