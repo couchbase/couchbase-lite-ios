@@ -24,7 +24,9 @@
 
 #import "HTTPMessage.h"
 #import "HTTPDataResponse.h"
+#import "GCDAsyncSocket.h"
 
+#import "MYErrorUtils.h"
 #import "Test.h"
 
 
@@ -58,7 +60,14 @@
     NSArray* certs = self.listener.SSLExtraCertificates;
     if (certs.count)
         [result addObjectsFromArray: certs];
+    LogTo(CBLListener, @"Using SSL identity/certs %@", result);
     return result;
+}
+
+
+- (void) socketDidDisconnect: (GCDAsyncSocket*)socket withError: (NSError*)error {
+    if (![error my_hasDomain: GCDAsyncSocketErrorDomain code: GCDAsyncSocketClosedError])
+        Warn(@"CBLHTTPConnection: Client disconnected: %@", error);
 }
 
 
