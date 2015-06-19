@@ -1299,7 +1299,8 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     // Now delete a document:
     CBL_Revision* rev = docs[3];
     CBL_MutableRevision* del = [[CBL_MutableRevision alloc] initWithDocID: rev.docID revID: rev.revID deleted: YES];
-    [db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status];
+    NSError* error;
+    Assert([db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status error: &error] != nil);
     AssertEq(status, kCBLStatusOK);
 
     AssertEq([view updateIndex], kCBLStatusOK);
