@@ -84,6 +84,8 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     BOOL _useForestDB;
 }
 
+@synthesize db=db;
+
 
 - (void)invokeTest {
     // Run each test method twice, once with SQLite storage and once with ForestDB.

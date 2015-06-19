@@ -60,6 +60,8 @@ void AddTemporaryCredential(NSURL* url, NSString* realm,
     CBLDatabase* db;
 }
 
+@property (readonly) CBLDatabase* db;
+
 // Closes and re-opens 'db'.
 - (void) reopenTestDB;
 
