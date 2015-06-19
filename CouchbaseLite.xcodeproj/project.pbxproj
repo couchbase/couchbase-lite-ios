@@ -440,6 +440,8 @@
 		27AF0A591A4A1F9D003F51D0 /* Router_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AF0A581A4A1F9D003F51D0 /* Router_Tests.m */; };
 		27AF0A5A1A4A1F9D003F51D0 /* Router_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AF0A581A4A1F9D003F51D0 /* Router_Tests.m */; };
 		27AF0A5B1A4A25A9003F51D0 /* CouchbaseLiteListener.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */; };
+		27B085D21B34BDD200D3D9D8 /* SwiftModel_Test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B085D11B34BDD200D3D9D8 /* SwiftModel_Test.swift */; };
+		27B085D31B34BDD200D3D9D8 /* SwiftModel_Test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B085D11B34BDD200D3D9D8 /* SwiftModel_Test.swift */; };
 		27B0B796149290AB00A817AD /* CBLChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B790149290AB00A817AD /* CBLChangeTracker.h */; };
 		27B0B797149290AB00A817AD /* CBLChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B791149290AB00A817AD /* CBLChangeTracker.m */; };
 		27B0B79E1492932800A817AD /* CBLBase64.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B79C1492932700A817AD /* CBLBase64.h */; };
@@ -1366,6 +1368,8 @@
 		27ADC077152502EE001ABC1D /* CBLMultipartDocumentReader.h */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultipartDocumentReader.h; sourceTree = "<group>"; tabWidth = 4; usesTabs = 0; wrapsLines = 1; };
 		27ADC078152502EE001ABC1D /* CBLMultipartDocumentReader.m */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.objc; path = CBLMultipartDocumentReader.m; sourceTree = "<group>"; tabWidth = 4; usesTabs = 0; wrapsLines = 1; };
 		27AF0A581A4A1F9D003F51D0 /* Router_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Router_Tests.m; sourceTree = "<group>"; };
+		27B085CF1B34BDD100D3D9D8 /* UnitTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UnitTests-Bridging-Header.h"; sourceTree = "<group>"; };
+		27B085D11B34BDD200D3D9D8 /* SwiftModel_Test.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftModel_Test.swift; sourceTree = "<group>"; };
 		27B0B790149290AB00A817AD /* CBLChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLChangeTracker.h; sourceTree = "<group>"; };
 		27B0B791149290AB00A817AD /* CBLChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLChangeTracker.m; sourceTree = "<group>"; };
 		27B0B79C1492932700A817AD /* CBLBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBase64.h; sourceTree = "<group>"; };
@@ -1836,10 +1840,12 @@
 				27452B301AB0E6AA00327776 /* View_Benchmarks.m */,
 				270035961A44FE2F0015B9F4 /* CBLTestCase.h */,
 				270035971A44FE890015B9F4 /* CBLTestCase.m */,
+				27B085D11B34BDD200D3D9D8 /* SwiftModel_Test.swift */,
 				2700358E1A44E9270015B9F4 /* Info-UnitTests.plist */,
 				27067A961AAF61380093AF4B /* CBForest tests */,
 				274E163119B90F420066CA5E /* TestData */,
 				276E68331A5C4511006D6EEB /* Server */,
+				27B085CF1B34BDD100D3D9D8 /* UnitTests-Bridging-Header.h */,
 			);
 			name = "Unit Tests";
 			path = "Unit-Tests";
@@ -3565,6 +3571,7 @@
 				2700359A1A4500160015B9F4 /* View_Tests.m in Sources */,
 				272AA85C1A48F17D004B8D55 /* ViewInternal_Tests.m in Sources */,
 				27AF0A591A4A1F9D003F51D0 /* Router_Tests.m in Sources */,
+				27B085D21B34BDD200D3D9D8 /* SwiftModel_Test.swift in Sources */,
 				2764D2C81A5F18A1005AC95A /* IncrementalStore_Tests.m in Sources */,
 				2764D2BE1A5F10E5005AC95A /* JSViewCompiler_Tests.m in Sources */,
 				270035981A44FE890015B9F4 /* CBLTestCase.m in Sources */,
@@ -3731,6 +3738,7 @@
 				2764D2B21A5E240D005AC95A /* JSON_Tests.m in Sources */,
 				272AA8661A49D95B004B8D55 /* ReplicatorInternal_Tests.m in Sources */,
 				273FA2BC1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */,
+				27B085D31B34BDD200D3D9D8 /* SwiftModel_Test.swift in Sources */,
 				272AA84D1A48DA0F004B8D55 /* Database_Tests.m in Sources */,
 				272AA85D1A48F17D004B8D55 /* ViewInternal_Tests.m in Sources */,
 				27AF0A5A1A4A1F9D003F51D0 /* Router_Tests.m in Sources */,
@@ -4363,6 +4371,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
@@ -4398,6 +4407,8 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "Unit-Tests/UnitTests-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL Test.app/CBL Test";
 			};
 			name = Debug;
@@ -4409,6 +4420,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
@@ -4438,6 +4450,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "Unit-Tests/UnitTests-Bridging-Header.h";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL Test.app/CBL Test";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -4553,6 +4566,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
@@ -4581,6 +4595,8 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Unit-Tests/UnitTests-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
@@ -4590,6 +4606,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
@@ -4613,6 +4630,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Unit-Tests/UnitTests-Bridging-Header.h";
 			};
 			name = Release;
 		};
