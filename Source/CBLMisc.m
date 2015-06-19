@@ -474,3 +474,24 @@ NSURL* CBLAppendToURL(NSURL* baseURL, NSString* toAppend) {
     [urlStr appendString: toAppend];
     return [NSURL URLWithString: urlStr];
 }
+
+
+id CBLKeyForPrefixMatch(id key, unsigned depth) {
+    if (depth < 1)
+        return key;
+    if ([key isKindOfClass: [NSString class]]) {
+        // Kludge: prefix match a string by appending max possible character value to it
+        return [key stringByAppendingString: @"\uffffffff"];
+    } else if ([key isKindOfClass: [NSArray class]]) {
+        NSMutableArray* nuKey = [key mutableCopy];
+        if (depth == 1) {
+            [nuKey addObject: @{}];
+        } else {
+            id lastObject = CBLKeyForPrefixMatch(nuKey.lastObject, depth-1);
+            [nuKey replaceObjectAtIndex: nuKey.count-1 withObject: lastObject];
+        }
+        return nuKey;
+    } else {
+        return key;
+    }
+}

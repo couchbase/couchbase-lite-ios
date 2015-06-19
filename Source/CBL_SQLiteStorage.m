@@ -1112,6 +1112,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     }
     if (maxKey) {
         Assert([maxKey isKindOfClass: [NSString class]]);
+        maxKey = CBLKeyForPrefixMatch(maxKey, options->prefixMatchLevel);
         [sql appendString: (inclusiveMax ? @" AND docid <= ?" :  @" AND docid < ?")];
         [args addObject: maxKey];
     }

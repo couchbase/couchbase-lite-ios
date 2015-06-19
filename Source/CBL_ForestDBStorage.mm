@@ -505,9 +505,17 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
             docIDs.push_back(docID.UTF8String);
         e = DocEnumerator(*_forest, docIDs, forestOpts);
     } else {
+        id startKey, endKey;
+        if (options->descending) {
+            startKey = CBLKeyForPrefixMatch(options.startKey, options->prefixMatchLevel);
+            endKey = options.endKey;
+        } else {
+            startKey = options.startKey;
+            endKey = CBLKeyForPrefixMatch(options.endKey, options->prefixMatchLevel);
+        }
         e = DocEnumerator(*_forest,
-                          nsstring_slice(options.startKey),
-                          nsstring_slice(options.endKey),
+                          nsstring_slice(startKey),
+                          nsstring_slice(endKey),
                           forestOpts);
     }
 
