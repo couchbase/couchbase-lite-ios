@@ -105,7 +105,7 @@
 
 
 /** An ordered list of CBLRevs. */
-@interface CBL_RevisionList : NSObject <NSFastEnumeration>
+@interface CBL_RevisionList : NSObject <NSFastEnumeration, NSMutableCopying>
 
 - (instancetype) init;
 - (instancetype) initWithArray: (NSArray*)revs;
@@ -125,6 +125,7 @@
 
 - (void) addRev: (CBL_Revision*)rev;
 - (void) removeRev: (CBL_Revision*)rev;
+- (void) removeRevIdenticalTo: (CBL_Revision*)rev;
 - (CBL_Revision*) removeAndReturnRev: (CBL_Revision*)rev;  // returns the object removed, or nil
 - (void) removeObjectAtIndex: (NSUInteger)index;
 

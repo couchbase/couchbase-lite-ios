@@ -590,19 +590,19 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 - (BOOL) findMissingRevisions: (CBL_RevisionList*)revs
                        status: (CBLStatus*)outStatus
 {
-    [revs sortByDocID];
+    CBL_RevisionList* sortedRevs = [revs mutableCopy];
+    [sortedRevs sortByDocID];
     __block VersionedDocument* doc = NULL;
     *outStatus = [self _try: ^CBLStatus {
         NSString* lastDocID = nil;
-        for (NSInteger i = revs.count-1; i >= 0; i--) {
-            CBL_Revision* rev = revs[i];
+        for (CBL_Revision* rev in sortedRevs) {
             if (!$equal(rev.docID, lastDocID)) {
                 lastDocID = rev.docID;
                 delete doc;
                 doc = new VersionedDocument(*_forest, lastDocID);
             }
             if (doc && doc->get(rev.revID) != NULL)
-                [revs removeObjectAtIndex: i];
+                [revs removeRevIdenticalTo: rev];
         }
         return kCBLStatusOK;
     }];
