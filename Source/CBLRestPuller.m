@@ -489,7 +489,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                   [strongSelf queueDownloadedRevision:rev];
               } else {
                   CBLStatus status = CBLStatusFromBulkDocsResponseItem(props);
-                  [strongSelf revision: rev failedWithError: CBLStatusToNSError(status, nil)];
+                  [strongSelf revision: rev failedWithError: CBLStatusToNSError(status)];
               }
           }
                                    onCompletion:
@@ -567,7 +567,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                   if (rev) {
                                       [remainingRevs removeRev: rev];
                                       [self revision: rev
-                                            failedWithError: CBLStatusToNSError(status, nil)];
+                                            failedWithError: CBLStatusToNSError(status)];
                                   }
                               }
                           }
@@ -654,7 +654,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                 NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: rev.properties];
                 if (!history && rev.generation > 1) {
                     Warn(@"%@: Missing revision history in response for %@", self, rev);
-                    self.error = CBLStatusToNSError(kCBLStatusUpstreamError, nil);
+                    self.error = CBLStatusToNSError(kCBLStatusUpstreamError);
                     [self revisionFailed];
                     continue;
                 }
@@ -662,17 +662,21 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                       self, rev.docID, [history my_compactDescription]);
 
                 // Insert the revision:
-                int status = [_db forceInsert: rev revisionHistory: history source: _settings.remote];
+                NSError* error;
+                int status = [_db forceInsert: rev revisionHistory: history
+                                       source: _settings.remote
+                                        error: &error];
                 if (CBLStatusIsError(status)) {
                     if (status == kCBLStatusForbidden) {
                         // Considered a success, since the doc was delivered to the app.
-                        LogTo(Sync, @"%@: Remote rev failed validation: %@", self, rev);
+                        LogTo(Sync, @"%@: Remote rev failed validation: %@ (reason: %@)",
+                              self, rev, error.localizedFailureReason);
                     } else if (status == kCBLStatusDBBusy) {
                         return status;  // abort transaction; _inTransaction will retry
                     } else {
                         Warn(@"%@ failed to write %@: status=%d", self, rev, status);
                         [self revisionFailed];
-                        self.error = CBLStatusToNSError(status, nil);
+                        self.error = CBLStatusToNSError(status);
                         continue;
                     }
                 }

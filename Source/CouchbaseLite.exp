@@ -47,6 +47,7 @@ _CBLGeoRectKey
 _CBLGeoRectToJSON
 _CBLTextKey
 _CBLVersion
+_CBLRegisterJSViewCompiler
 
 # Non-public symbols that are used by the replicator, router, listener, ForestDB storage:
 .objc_class_name_CBLQueryOptions

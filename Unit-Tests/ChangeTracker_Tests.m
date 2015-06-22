@@ -136,7 +136,8 @@
     url = $url(urlStr);
 
     CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  self];
-    [self run: tracker expectingError: CBLStatusToNSError(kCBLStatusUnauthorized, url)];
+    [self run: tracker expectingError: CBLStatusToNSErrorWithInfo(kCBLStatusUnauthorized,
+                                                                  nil, url, nil)];
 }
 
 

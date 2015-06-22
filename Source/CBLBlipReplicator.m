@@ -9,16 +9,16 @@
 #import "CBLBlipReplicator.h"
 #import "CBLSyncConnection.h"
 #import "CBLAuthorizer.h"
+#import "CouchbaseLitePrivate.h"
+#import "CBLReachability.h"
+#import "CBLMisc.h"
+#import "CBLCookieStorage.h"
 #import "BLIPPocketSocketConnection.h"
 #import "BLIPHTTPLogic.h"
 #import "CollectionUtils.h"
 #import "Logging.h"
 #import "MYBlockUtils.h"
 #import "MYErrorUtils.h"
-#import <CouchbaseLite/CouchbaseLitePrivate.h>
-#import <CouchbaseLite/CBLReachability.h>
-#import <CouchbaseLite/CBLMisc.h>
-#import <CouchbaseLite/CBLCookieStorage.h>
 #import <netdb.h>
 
 
@@ -336,8 +336,8 @@
     if (_progress.indeterminate)
         changesProcessed = changesTotal = 0;
     else {
-        changesProcessed = _progress.completedUnitCount;
-        changesTotal = _progress.totalUnitCount;
+        changesProcessed = (NSUInteger)_progress.completedUnitCount;
+        changesTotal = (NSUInteger)_progress.totalUnitCount;
     }
 #if DEBUG
     BOOL newActive = _sync.active;
@@ -373,8 +373,8 @@
     if (_progress.indeterminate)
         changesProcessed = changesTotal = 0;
     else {
-        changesProcessed = _progress.completedUnitCount;
-        changesTotal = _progress.totalUnitCount;
+        changesProcessed = (NSUInteger)_progress.completedUnitCount;
+        changesTotal = (NSUInteger)_progress.totalUnitCount;
     }
 #if DEBUG
     BOOL newActive = _sync.active;
@@ -383,7 +383,8 @@
 #endif
     // Needs to be posted on the database's official thread/queue.
     [_db doAsync:^{
-        LogTo(Sync, @"Replicator.progress = %lu / %lu", changesProcessed, changesTotal);
+        LogTo(Sync, @"Replicator.progress = %lu / %lu",
+              (unsigned long)changesProcessed, (unsigned long)changesTotal);
         _changesProcessed = changesProcessed;
         _changesTotal = changesTotal;
 #if DEBUG

@@ -6,8 +6,7 @@
 //  Copyright (c) 2015 Couchbase. All rights reserved.
 //
 
-#import <CouchbaseLite/CouchbaseLite.h>
-#import <CouchbaseLite/CBL_Replicator.h>
+#import "CBL_Replicator.h"
 
 
 @interface CBLBlipReplicator : NSObject <CBL_Replicator>

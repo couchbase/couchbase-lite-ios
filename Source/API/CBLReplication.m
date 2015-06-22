@@ -455,7 +455,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         [_database doAsync: ^{
             CBLReplication *strongSelf = weakSelf;
             [strongSelf updateStatus: kCBLReplicationStopped
-                               error: CBLStatusToNSError(status, nil)
+                               error: CBLStatusToNSError(status)
                            processed: 0 ofTotal: 0 serverCert: NULL];
         }];
         return;

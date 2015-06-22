@@ -7,15 +7,15 @@
 //
 
 #import "CBLSyncConnection.h"
+#import "CouchbaseLite.h"
+#import "CouchbaseLitePrivate.h"
+#import "CBLMisc.h"
+#import "CBL_BlobStore.h"
 #import "BLIPRequest.h"
 #import "BLIPResponse.h"
 #import "CollectionUtils.h"
 #import "Logging.h"
 #import "Test.h"
-#import <CouchbaseLite/CouchbaseLite.h>
-#import <CouchbaseLite/CouchbaseLitePrivate.h>
-#import <CouchbaseLite/CBLMisc.h>
-#import <CouchbaseLite/CBL_BlobStore.h>
 
 
 // Enables using a second CBLDatabase, on a separate dispatch queue, for insertions.

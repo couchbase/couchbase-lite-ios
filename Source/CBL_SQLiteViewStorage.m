@@ -21,6 +21,7 @@
 #import "CBLCollateJSON.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLInternal.h"
+#import "CBLMisc.h"
 #import "ExceptionUtils.h"
 
 #import "FMDatabase.h"
@@ -642,7 +643,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
         }
     }
     if (maxKey) {
-        maxKey = keyForPrefixMatch(maxKey, options->prefixMatchLevel);
+        maxKey = CBLKeyForPrefixMatch(maxKey, options->prefixMatchLevel);
         NSData* maxKeyData = toJSONData(maxKey);
         [sql appendString: (inclusiveMax ? @" AND key <= ?" :  @" AND key < ?")];
         [sql appendString: collationStr];
@@ -890,28 +891,6 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
 
     //OPT: Return objects from enum as they're found, without collecting them in an array first
     return queryIteratorBlockFromArray(rows);
-}
-
-
-// Changes a maxKey into one that also extends to any key it matches as a prefix.
-static id keyForPrefixMatch(id key, unsigned depth) {
-    if (depth < 1)
-        return key;
-    if ([key isKindOfClass: [NSString class]]) {
-        // Kludge: prefix match a string by appending max possible character value to it
-        return [key stringByAppendingString: @"\uffffffff"];
-    } else if ([key isKindOfClass: [NSArray class]]) {
-        NSMutableArray* nuKey = [key mutableCopy];
-        if (depth == 1) {
-            [nuKey addObject: @{}];
-        } else {
-            id lastObject = keyForPrefixMatch(nuKey.lastObject, depth-1);
-            [nuKey replaceObjectAtIndex: nuKey.count-1 withObject: lastObject];
-        }
-        return nuKey;
-    } else {
-        return key;
-    }
 }
 
 

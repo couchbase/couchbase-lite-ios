@@ -423,7 +423,8 @@
     doc = [db createDocument];
     Assert(![doc putProperties: properties error: &error]);
     AssertEq(error.code, 403);
-    //AssertEqual(error.localizedDescription, @"forbidden: uncool"); //TODO: Not hooked up yet
+    AssertEqual(error.localizedDescription, @"403 uncool");
+    AssertEqual(error.localizedFailureReason, @"uncool");
 }
 
 
@@ -453,6 +454,63 @@
         n++;
     }
     AssertEq(n, kNDocs);
+}
+
+- (void) test12_AllDocumentsPrefixMatchLevel {
+    [self createDocumentWithProperties:@{@"_id": @"three"}];
+    [self createDocumentWithProperties:@{@"_id": @"four"}];
+    [self createDocumentWithProperties:@{@"_id": @"five"}];
+    [self createDocumentWithProperties:@{@"_id": @"eight"}];
+    [self createDocumentWithProperties:@{@"_id": @"fifteen"}];
+
+    // clear the cache so all documents/revisions will be re-fetched:
+    [db _clearDocumentCache];
+
+    CBLQuery* query = [db createAllDocumentsQuery];
+    CBLQueryEnumerator* rows = nil;
+
+    // Set prefixMatchLevel = 1, no startKey, ascending:
+    query.descending = NO;
+    query.endKey = @"f";
+    query.prefixMatchLevel = 1;
+    rows = [query run: NULL];
+    AssertEq(rows.count, 4u);
+    AssertEqual(rows.nextRow.key, @"eight");
+    AssertEqual(rows.nextRow.key, @"fifteen");
+    AssertEqual(rows.nextRow.key, @"five");
+    AssertEqual(rows.nextRow.key, @"four");
+
+    // Set prefixMatchLevel = 1, ascending:
+    query.descending = NO;
+    query.startKey = @"f";
+    query.endKey = @"f";
+    query.prefixMatchLevel = 1;
+    rows = [query run: NULL];
+    AssertEq(rows.count, 3u);
+    AssertEqual(rows.nextRow.key, @"fifteen");
+    AssertEqual(rows.nextRow.key, @"five");
+    AssertEqual(rows.nextRow.key, @"four");
+
+    // Set prefixMatchLevel = 1, descending:
+    query.descending = YES;
+    query.startKey = @"f";
+    query.endKey = @"f";
+    query.prefixMatchLevel = 1;
+    rows = [query run: NULL];
+    AssertEq(rows.count, 3u);
+    AssertEqual(rows.nextRow.key, @"four");
+    AssertEqual(rows.nextRow.key, @"five");
+    AssertEqual(rows.nextRow.key, @"fifteen");
+
+    // Set prefixMatchLevel = 1, ascending, prefix = fi:
+    query.descending = NO;
+    query.startKey = @"fi";
+    query.endKey = @"fi";
+    query.prefixMatchLevel = 1;
+    rows = [query run: NULL];
+    AssertEq(rows.count, 2u);
+    AssertEqual(rows.nextRow.key, @"fifteen");
+    AssertEqual(rows.nextRow.key, @"five");
 }
 
 

@@ -94,21 +94,27 @@
     NSMutableDictionary* props = $mdict({@"_id", @"doc1"},
                                         {@"foo", @1}, {@"bar", $false});
     CBLStatus status;
+    NSError* error;
     CBL_Revision* rev1 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
-                        prevRevisionID: nil allowConflict: NO status: &status];
+                          prevRevisionID: nil allowConflict: NO status: &status error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
     
     props[@"_rev"] = rev1.revID;
     props[@"UPDATED"] = $true;
     CBL_Revision* rev2 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
-                        prevRevisionID: rev1.revID allowConflict: NO status: &status];
+                          prevRevisionID: rev1.revID allowConflict: NO
+                                  status: &status error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
     
     props = $mdict({@"_id", @"doc2"},
                    {@"baz", @(666)}, {@"fnord", $true});
-    [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
-                        prevRevisionID: nil allowConflict: NO status: &status];
+    [db putRevision: [CBL_MutableRevision revisionWithProperties: props ]
+     prevRevisionID: nil allowConflict: NO
+             status: &status error: &error];
     AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
 #pragma unused(rev2)
     
     // Push them to the remote:
@@ -186,7 +192,7 @@
     if (!remoteURL)
         return;
 
-    NSError* error = CBLStatusToNSError(kCBLStatusNotFound, nil);
+    NSError* error = CBLStatusToNSError(kCBLStatusNotFound);
     replic8Continuous(db, remoteURL, NO, nil, nil, error);
 }
 
@@ -245,7 +251,7 @@
     urlStr = [urlStr stringByReplacingOccurrencesOfString: @"http://" withString: @"http://bogus@"];
     remoteURL = $url(urlStr);
 
-    NSError* error = CBLStatusToNSError(kCBLStatusUnauthorized, nil);
+    NSError* error = CBLStatusToNSError(kCBLStatusUnauthorized);
     replic8Continuous(db, remoteURL, NO, nil, nil, error);
 }
 
@@ -414,9 +420,11 @@
     for (int i = 1; i <= 10; i++) {
         NSDictionary* props = @{@"_id": $sprintf(@"doc%d", i)};
         CBLStatus status;
+        NSError* error;
         [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
-             prevRevisionID: nil allowConflict: NO status: &status];
+             prevRevisionID: nil allowConflict: NO status: &status error: &error];
         AssertEq(status, kCBLStatusCreated);
+        AssertNil(error);
     }
 
     // Push them to the remote:

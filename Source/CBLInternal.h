@@ -25,13 +25,9 @@
 #define UU __unsafe_unretained
 
 
-@interface CBLDatabase ()
-- (instancetype) initWithDir: (NSString*)dir
-                        name: (NSString*)name
-                     manager: (CBLManager*)manager
-                    readOnly: (BOOL)readOnly;
-@property (readonly, nonatomic) NSMutableSet* unsavedModelsMutable;
-- (void) removeDocumentFromCache: (CBLDocument*)document;
+@interface CBLDatabase (Insertion_Internal)
+- (CBLStatus) validateRevision: (CBL_Revision*)newRev previousRevision: (CBL_Revision*)oldRev
+                         error: (NSError **)outError;
 @end
 
 

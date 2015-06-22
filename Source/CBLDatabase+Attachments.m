@@ -381,16 +381,19 @@ static UInt64 smallestLength(NSDictionary* attachment) {
 /** Replaces or removes a single attachment in a document, by saving a new revision whose only
     change is the value of the attachment. */
 - (CBL_Revision*) updateAttachment: (NSString*)filename
-                            body: (CBL_BlobStoreWriter*)body
-                            type: (NSString*)contentType
-                        encoding: (CBLAttachmentEncoding)encoding
-                         ofDocID: (NSString*)docID
-                           revID: (NSString*)oldRevID
-                          status: (CBLStatus*)outStatus
+                              body: (CBL_BlobStoreWriter*)body
+                              type: (NSString*)contentType
+                          encoding: (CBLAttachmentEncoding)encoding
+                           ofDocID: (NSString*)docID
+                             revID: (NSString*)oldRevID
+                            status: (CBLStatus*)outStatus
+                             error: (NSError**)outError
 {
     *outStatus = kCBLStatusBadAttachment;
-    if (filename.length == 0 || (body && !contentType) || (oldRevID && !docID) || (body && !docID))
+    if (filename.length == 0 || (body && !contentType) || (oldRevID && !docID) || (body && !docID)) {
+        CBLStatusToOutNSError(*outStatus, outError);
         return nil;
+    }
 
     CBL_MutableRevision* oldRev = [[CBL_MutableRevision alloc] initWithDocID: docID
                                                                        revID: oldRevID
@@ -401,9 +404,10 @@ static UInt64 smallestLength(NSDictionary* attachment) {
         if (CBLStatusIsError(*outStatus)) {
             if (*outStatus == kCBLStatusNotFound
                 && [self getDocumentWithID: docID revisionID: nil withBody: NO
-                                        status: outStatus] != nil) {
+                                    status: outStatus] != nil) {
                 *outStatus = kCBLStatusConflict;   // if some other revision exists, it's a conflict
             }
+            CBLStatusToOutNSError(*outStatus, outError);
             return nil;
         }
     } else {
@@ -428,6 +432,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
     } else {
         if (oldRevID && !attachments[filename]) {
             *outStatus = kCBLStatusAttachmentNotFound;
+            CBLStatusToOutNSError(*outStatus, outError);
             return nil;
         }
         [attachments removeObjectForKey: filename];
@@ -437,10 +442,11 @@ static UInt64 smallestLength(NSDictionary* attachment) {
     oldRev.properties = properties;
 
     // Store a new revision with the updated _attachments:
-    CBL_Revision* newRev = [self putRevision: oldRev prevRevisionID: oldRevID
-                             allowConflict: NO status: outStatus];
+    CBL_Revision* newRev = [self putRevision: oldRev prevRevisionID: oldRevID allowConflict: NO
+                                      status: outStatus error: outError];
     if (!body && *outStatus == kCBLStatusCreated)
         *outStatus = kCBLStatusOK;
+
     return newRev;
 }
 

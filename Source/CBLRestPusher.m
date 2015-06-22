@@ -97,7 +97,7 @@
                                                params: _settings.filterParameters
                                                status: &status];
     if (!revs)
-        self.error = CBLStatusToNSError(status, nil);
+        self.error = CBLStatusToNSError(status);
     return revs;
 }
 
@@ -352,7 +352,7 @@
                                   [failedIDs addObject: docID];
                                   NSURL* url = docID ? [_settings.remote URLByAppendingPathComponent: docID]
                                                      : nil;
-                                  error = CBLStatusToNSError(status, url);
+                                  error = CBLStatusToNSErrorWithInfo(status, nil, url, nil);
                               }
                           }
                       }
@@ -512,7 +512,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     CBLStatus status;
     if (![_db expandAttachmentsIn: rev minRevPos: 0 allowFollows: NO decode: NO
                            status: &status]) {
-        self.error = CBLStatusToNSError(status, nil);
+        self.error = CBLStatusToNSError(status);
         [self revisionFailed];
         return;
     }
