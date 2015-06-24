@@ -477,6 +477,9 @@
 		27B086991B38823F00D3D9D8 /* MYZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B086971B38823F00D3D9D8 /* MYZip.m */; };
 		27B0869A1B38823F00D3D9D8 /* MYZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B086971B38823F00D3D9D8 /* MYZip.m */; };
 		27B0869D1B3882DD00D3D9D8 /* libBLIP-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B086791B38804100D3D9D8 /* libBLIP-iOS.a */; };
+		27B086AF1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B086AD1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.h */; };
+		27B086B01B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B086AE1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m */; };
+		27B086B11B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B086AE1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m */; };
 		27B0B796149290AB00A817AD /* CBLChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B790149290AB00A817AD /* CBLChangeTracker.h */; };
 		27B0B797149290AB00A817AD /* CBLChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B791149290AB00A817AD /* CBLChangeTracker.m */; };
 		27B0B79E1492932800A817AD /* CBLBase64.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B79C1492932700A817AD /* CBLBase64.h */; };
@@ -1484,6 +1487,8 @@
 		27B0868F1B38822500D3D9D8 /* MYData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYData.m; sourceTree = "<group>"; };
 		27B086961B38823F00D3D9D8 /* MYZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYZip.h; sourceTree = "<group>"; };
 		27B086971B38823F00D3D9D8 /* MYZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYZip.m; sourceTree = "<group>"; };
+		27B086AD1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLClientCertAuthorizer.h; sourceTree = "<group>"; };
+		27B086AE1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLClientCertAuthorizer.m; sourceTree = "<group>"; };
 		27B0B790149290AB00A817AD /* CBLChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLChangeTracker.h; sourceTree = "<group>"; };
 		27B0B791149290AB00A817AD /* CBLChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLChangeTracker.m; sourceTree = "<group>"; };
 		27B0B79C1492932700A817AD /* CBLBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBase64.h; sourceTree = "<group>"; };
@@ -2284,6 +2289,8 @@
 				2776A59016A0C3A6006FF199 /* CBLPersonaAuthorizer.m */,
 				2733022D18F86C9800A488F7 /* CBLTokenAuthorizer.h */,
 				2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */,
+				27B086AD1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.h */,
+				27B086AE1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m */,
 				93D21AEE1A955480000AD9AF /* CBLCookieStorage.h */,
 				93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */,
 			);
@@ -2871,6 +2878,7 @@
 				2753158414ACEFC90065964D /* HTTPMessage.h in Headers */,
 				2753158814ACEFC90065964D /* HTTPResponse.h in Headers */,
 				27B0865F1B387C3900D3D9D8 /* CBLRestReplicator+Internal.h in Headers */,
+				27B086AF1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.h in Headers */,
 				2753158A14ACEFC90065964D /* HTTPServer.h in Headers */,
 				27B945B217692E2000B2DF2D /* CBLModel_Internal.h in Headers */,
 				2753158E14ACEFC90065964D /* HTTPAsyncFileResponse.h in Headers */,
@@ -3864,6 +3872,7 @@
 				27B086941B38822500D3D9D8 /* MYData.m in Sources */,
 				27513A571A6827DF0055DC40 /* CBLCollateJSON.m in Sources */,
 				27CF5D2D152F514A0015D7A9 /* CBLStatus.m in Sources */,
+				27B086B01B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m in Sources */,
 				27FFE20A17BD28080040AE60 /* CBLRestReplicator+Backgrounding.m in Sources */,
 				27513A611A697CC80055DC40 /* CBL_SQLiteViewStorage.m in Sources */,
 				27F128B2156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
@@ -4082,6 +4091,7 @@
 				27A073EE14C0BB6200F52FE7 /* CBLMisc.m in Sources */,
 				27B086921B38822500D3D9D8 /* MYBuffer+Zip.m in Sources */,
 				279CE40214D749A7009F3FA6 /* CBLMultipartReader.m in Sources */,
+				27B086B11B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m in Sources */,
 				27B086951B38822500D3D9D8 /* MYData.m in Sources */,
 				93EBA26E1B2EC72A0006C66C /* CBLJSViewCompiler.m in Sources */,
 				279CE40C14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */,

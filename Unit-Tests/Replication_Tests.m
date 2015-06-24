@@ -11,6 +11,7 @@
 #import <CommonCrypto/CommonCryptor.h>
 #import "CBLCookieStorage.h"
 #import "CBL_Body.h"
+#import "MYAnonymousIdentity.h"
 
 
 // These dbs will get deleted and overwritten during tests:
@@ -407,6 +408,36 @@
 
     Log(@"Pulling SSL...");
     CBLReplication* repl = [db createPullReplication: remoteDbURL];
+
+    NSArray* serverCerts = [self remoteTestDBAnchorCerts];
+    [CBLReplication setAnchorCerts: serverCerts onlyThese: NO];
+    [self runReplication: repl expectedChangesCount: 2];
+    [CBLReplication setAnchorCerts: nil onlyThese: NO];
+
+    AssertNil(repl.lastError);
+    if (repl.lastError)
+        return;
+    SecCertificateRef gotServerCert = repl.serverCertificate;
+    Assert(gotServerCert);
+    Assert(CFEqual(gotServerCert, (SecCertificateRef)serverCerts[0]));
+}
+
+
+- (void) test06_RunSSLReplicationWithClientCert {
+    RequireTestCase(RunPullReplication);
+    NSURL* remoteDbURL = [self remoteSSLTestDBURL: @"public"];
+    if (!remoteDbURL)
+        return;
+
+    Log(@"Pulling SSL...");
+    CBLReplication* repl = [db createPullReplication: remoteDbURL];
+
+    NSError* error;
+    SecIdentityRef ident = MYGetOrCreateAnonymousIdentity(@"SSLTest",
+                                                          kMYAnonymousIdentityDefaultExpirationInterval, &error);
+    Assert(ident);
+    repl.authenticator = [CBLAuthenticator SSLClientCertAuthenticatorWithIdentity: ident
+                                                                  supportingCerts: nil];
 
     NSArray* serverCerts = [self remoteTestDBAnchorCerts];
     [CBLReplication setAnchorCerts: serverCerts onlyThese: NO];

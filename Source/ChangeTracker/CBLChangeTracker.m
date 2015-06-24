@@ -20,6 +20,7 @@
 #import "CBLWebSocketChangeTracker.h"
 #import "CBLChangeMatcher.h"
 #import "CBLAuthorizer.h"
+#import "CBLClientCertAuthorizer.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
 #import "MYURLUtils.h"
@@ -170,6 +171,7 @@
 - (NSDictionary*) TLSSettings {
     if (!_databaseURL.my_isHTTPS)
         return nil;
+    NSArray* clientCerts = $castIf(CBLClientCertAuthorizer, _authorizer).certificateChain;
     // Enable SSL for this connection.
     // Disable TLS 1.2 support because it breaks compatibility with some SSL servers;
     // workaround taken from Apple technote TN2287:
@@ -177,7 +179,8 @@
     // Disable automatic cert-chain checking, because that's the only way to allow self-signed
     // certs. We will check the cert later in -checkSSLCert.
     return $dict( {(id)kCFStreamSSLLevel, (id)kCFStreamSocketSecurityLevelTLSv1},
-                  {(id)kCFStreamSSLValidatesCertificateChain, @NO} );
+                  {(id)kCFStreamSSLValidatesCertificateChain, @NO},
+                  {(id)kCFStreamSSLCertificates, clientCerts});
 }
 
 

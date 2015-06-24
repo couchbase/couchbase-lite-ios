@@ -52,6 +52,12 @@ NS_ASSUME_NONNULL_BEGIN
                                                 tokenSecret: (NSString*)tokenSecret
                                             signatureMethod: (NSString*)signatureMethod;
 
+/** Creates an authenticator that uses an SSL/TLS client certificate.
+    @param identity  The identity certificate plus private key
+    @param certs  Any additional CA certs needed to establish the chain of authority. */
++ (id<CBLAuthenticator>) SSLClientCertAuthenticatorWithIdentity: (SecIdentityRef)identity
+                                                supportingCerts: (nullable NSArray*)certs;
+
 - (instancetype) init NS_UNAVAILABLE;
 
 @end

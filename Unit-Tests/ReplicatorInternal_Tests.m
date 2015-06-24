@@ -245,18 +245,21 @@
 }
 
 
-- (void) test_06_Puller_AuthFailure {
+- (void) test_06_Puller_Authenticate {
     RequireTestCase(Puller);
     NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];
     if (!remoteURL)
         return;
-    // Add a bogus user to make auth fail:
-    NSString* urlStr = remoteURL.absoluteString;
-    urlStr = [urlStr stringByReplacingOccurrencesOfString: @"http://" withString: @"http://bogus@"];
-    remoteURL = $url(urlStr);
 
-    NSError* error = CBLStatusToNSError(kCBLStatusUnauthorized);
-    replic8Continuous(db, remoteURL, NO, nil, nil, error);
+    CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remoteURL
+                                                                                 push: NO];
+    settings.createTarget = NO;
+    NSURLCredential* cred = [NSURLCredential credentialWithUser: @"test" password: @"abc123"
+                                                    persistence: NSURLCredentialPersistenceNone];
+    [self replicate: settings expectError: CBLStatusToNSError(kCBLStatusUnauthorized)];
+
+    settings.authorizer = [[CBLBasicAuthorizer alloc] initWithCredential: cred];
+    [self replicate: settings expectError: nil];
 }
 
 
@@ -664,6 +667,13 @@
     settings.docIDs = docIDs;
     settings.authorizer = self.authorizer;
     Assert([settings compilePushFilterForDatabase: db status: NULL]);
+    return [self replicate: settings expectError: expectError];
+}
+
+
+- (NSString*) replicate: (CBL_ReplicatorSettings*)settings
+            expectError: (NSError*)expectError
+{
     id<CBL_Replicator> repl = [[dbmgr.replicatorClass alloc] initWithDB: db settings: settings];
     [repl start];
     

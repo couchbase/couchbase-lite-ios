@@ -18,6 +18,7 @@
 #import "CBLAuthorizer.h"
 #import "CBLTokenAuthorizer.h"
 #import "CBLOAuth1Authorizer.h"
+#import "CBLClientCertAuthorizer.h"
 
 
 @implementation CBLAuthenticator
@@ -53,6 +54,13 @@
                                                       token: token
                                                 tokenSecret: tokenSecret
                                             signatureMethod: signatureMethod];
+}
+
++ (id<CBLAuthenticator>) SSLClientCertAuthenticatorWithIdentity: (SecIdentityRef)identity
+                                                supportingCerts: (nullable NSArray*)certs
+{
+    return [[CBLClientCertAuthorizer alloc] initWithIdentity: identity
+                                             supportingCerts: certs];
 }
 
 

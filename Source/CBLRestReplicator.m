@@ -269,6 +269,7 @@
                 ];
 
     // If client didn't set an authorizer, use basic auth if credential is available:
+    _authorizer = _settings.authorizer;
     if (!_authorizer) {
         _authorizer = [[CBLBasicAuthorizer alloc] initWithURL: _settings.remote];
         if (_authorizer)

@@ -9,6 +9,7 @@
 #import "CBLBlipReplicator.h"
 #import "CBLSyncConnection.h"
 #import "CBLAuthorizer.h"
+#import "CBLClientCertAuthorizer.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLReachability.h"
 #import "CBLMisc.h"
@@ -169,15 +170,19 @@
     }];
     [self.cookieStorage addCookieHeaderToRequest: request];
 
+    NSURLCredential* credential = nil;
     id<CBLAuthorizer> auth = _settings.authorizer;
     if ([auth isKindOfClass: [CBLBasicAuthorizer class]]) {
-        _conn.credential = ((CBLBasicAuthorizer*)auth).credential;
+        credential = ((CBLBasicAuthorizer*)auth).credential; // password credential
+    } else if ([auth isKindOfClass: [CBLClientCertAuthorizer class]]) {
+        credential = ((CBLClientCertAuthorizer*)auth).credential; // client-cert credential
     } else {
         [request setValue: [auth authorizeURLRequest: request forRealm: nil]
                  forHTTPHeaderField: @"Authorization"];
     }
 
     _conn = [[BLIPPocketSocketConnection alloc] initWithURLRequest: request];
+    _conn.credential = credential;
 
     CBLSyncConnection* sync = [[CBLSyncConnection alloc] initWithDatabase: _db
                                                                connection: _conn
