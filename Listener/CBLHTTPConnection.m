@@ -46,6 +46,12 @@
     return self.listener.realm;
 }
 
+- (BOOL)useDigestAccessAuthentication {
+    // CBL/.NET doesn't support digest auth on the client side, so turn it off, as long as the
+    // connection is SSL (Basic auth is too insecure to use over an unencrypted connection.) #784
+    return !self.isSecureServer;
+}
+
 - (NSString*) passwordForUser: (NSString*)username {
     LogTo(CBLListener, @"Login attempted for user '%@'", username);
     return [self.listener passwordForUser: username];
