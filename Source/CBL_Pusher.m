@@ -279,8 +279,8 @@
                             [self revisionFailed];
                             continue;
                         }
-                        
-                        if ([loadedRev[@"_removed"] boolValue]) {
+
+                        if ($castIf(NSNumber, loadedRev[@"_removed"]).boolValue) {
                             // Filter out _removed revision:
                             [self removePending: rev];
                             continue;
