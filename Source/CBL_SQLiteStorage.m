@@ -1625,10 +1625,12 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     }
     
     //// EPILOGUE: A change notification is sent...
-    [_delegate databaseStorageChanged: [[CBLDatabaseChange alloc] initWithAddedRevision: newRev
-                                                              winningRevisionID: winningRevID
-                                                                     inConflict: inConflict
-                                                                         source: nil]];
+    if (newRev.sequenceIfKnown != 0) {
+        [_delegate databaseStorageChanged: [[CBLDatabaseChange alloc] initWithAddedRevision: newRev
+                                                                  winningRevisionID: winningRevID
+                                                                         inConflict: inConflict
+                                                                             source: nil]];
+    }
     return newRev;
 }
 
@@ -1760,12 +1762,12 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         return kCBLStatusCreated;
     }];
 
-    if (!CBLStatusIsError(status)) {
+    if (status == kCBLStatusCreated) {
         [_delegate databaseStorageChanged: [[CBLDatabaseChange alloc] initWithAddedRevision: rev
                                                               winningRevisionID: winningRevID
                                                                      inConflict: inConflict
                                                                          source: source]];
-    } else {
+    } else if (CBLStatusIsError(status)) {
         if (outError && !*outError)
             CBLStatusToOutNSError(status, outError);
     }
