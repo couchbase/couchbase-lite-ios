@@ -18,6 +18,7 @@
 #import "CBLCookieStorage.h"
 #import "WebSocketClient.h"
 #import "CBLMisc.h"
+#import "GCDAsyncSocket.h"
 #import "MYBlockUtils.h"
 #import <libkern/OSAtomic.h>
 
@@ -42,6 +43,19 @@
 - (NSURL*) changesFeedURL {
     // The options will be sent in a WebSocket message after opening (see -webSocketDidOpen: below)
     return CBLAppendToURL(_databaseURL, @"_changes?feed=websocket");
+}
+
+
+- (NSDictionary*) TLSSettings {
+    NSMutableDictionary* settings = [[super TLSSettings] mutableCopy];
+    if (settings) {
+        // GCDAsyncSocket refuses to use kCFStreamSSLLevel; it wants its own key instead.
+        [settings removeObjectForKey: (id)kCFStreamSSLLevel];
+        [settings removeObjectForKey: (id)kCFStreamSSLValidatesCertificateChain];
+        settings[GCDAsyncSocketSSLProtocolVersionMin] = @(kTLSProtocol1);
+        settings[GCDAsyncSocketManuallyEvaluateTrust] = @YES;
+    }
+    return settings;
 }
 
 
@@ -122,10 +136,12 @@
 
 // THESE ARE CALLED ON THE WEBSOCKET'S DISPATCH QUEUE, NOT MY THREAD!!
 
-- (void) webSocket: (WebSocket*)ws didSecureWithTrust: (SecTrustRef)trust atURL:(NSURL *)url {
-    MYOnThread(_thread, ^{
-        [self checkServerTrust: trust forURL: url];
+- (BOOL) webSocket: (WebSocket*)ws shouldSecureWithTrust: (SecTrustRef)trust {
+    __block BOOL ok;
+    MYOnThreadSynchronously(_thread, ^{
+        ok = [self checkServerTrust: trust forURL: _databaseURL];
     });
+    return ok;
 }
 
 - (void) webSocketDidOpen: (WebSocket *)ws {
