@@ -306,4 +306,15 @@ void AddTemporaryCredential(NSURL* url, NSString* realm,
 }
 
 
+void RemoveTemporaryCredential(NSURL* url, NSString* realm,
+                               NSString* username, NSString* password)
+{
+    NSURLCredential* c = [NSURLCredential credentialWithUser: username password: password
+                                                 persistence: NSURLCredentialPersistenceForSession];
+    NSURLProtectionSpace* s = [url my_protectionSpaceWithRealm: realm
+                                          authenticationMethod: NSURLAuthenticationMethodDefault];
+    [[NSURLCredentialStorage sharedCredentialStorage] removeCredential: c forProtectionSpace: s];
+}
+
+
 @end

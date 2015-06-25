@@ -125,6 +125,7 @@
                                      {@"id", @"something"},
                                      {@"revs", $array(@"1-53b059eb633a9d58042318e478cc73dc")}) );
     [self run: tracker expectingChanges: expected];
+    RemoveTemporaryCredential(url, @"Couchbase Sync Gateway", @"test", @"abc123");
 }
 
 

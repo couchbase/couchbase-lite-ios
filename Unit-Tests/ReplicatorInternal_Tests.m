@@ -253,11 +253,10 @@
 
     CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remoteURL
                                                                                  push: NO];
-    settings.createTarget = NO;
-    NSURLCredential* cred = [NSURLCredential credentialWithUser: @"test" password: @"abc123"
-                                                    persistence: NSURLCredentialPersistenceNone];
     [self replicate: settings expectError: CBLStatusToNSError(kCBLStatusUnauthorized)];
 
+    NSURLCredential* cred = [NSURLCredential credentialWithUser: @"test" password: @"abc123"
+                                                    persistence: NSURLCredentialPersistenceNone];
     settings.authorizer = [[CBLBasicAuthorizer alloc] initWithCredential: cred];
     [self replicate: settings expectError: nil];
 }
