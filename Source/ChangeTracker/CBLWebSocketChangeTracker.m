@@ -111,10 +111,10 @@
     [super setPaused: paused];
 
     // Pause the WebSocket if the client paused _or_ there are too many incoming messages:
-//    paused = paused || _pendingMessageCount >= kMaxPendingMessages;
-//    if (paused != _ws.readPaused)
-//        LogTo(ChangeTracker, @"%@: %@ WebSocket", self, (paused ? @"PAUSE" : @"RESUME"));
-//    _ws.readPaused = paused;
+    paused = paused || _pendingMessageCount >= kMaxPendingMessages;
+    if (paused != _ws.readPaused)
+        LogTo(ChangeTracker, @"%@: %@ WebSocket", self, (paused ? @"PAUSE" : @"RESUME"));
+    _ws.readPaused = paused;
 }
 
 
@@ -187,8 +187,10 @@
         OSAtomicDecrement32Barrier(&_pendingMessageCount);
         [self setPaused: self.paused]; // this will resume the WebSocket unless self.paused
     });
+
     // Tell the WebSocket to pause its reader if too many messages are waiting to be processed:
-    //return (OSAtomicIncrement32Barrier(&_pendingMessageCount) < kMaxPendingMessages);
+    if (OSAtomicIncrement32Barrier(&_pendingMessageCount) >= kMaxPendingMessages)
+        _ws.readPaused = YES;
 }
 
 /** Called after the WebSocket closes, either intentionally or due to an error. */
