@@ -249,12 +249,6 @@
             error = [NSError errorWithDomain: CBLHTTPErrorDomain
                                         code: kCBLStatusUnauthorized
                                     userInfo: error.userInfo];
-    } else if ($equal(domain, WebSocketErrorDomain)) {
-        // Map HTTP errors in WebSocket domain to our HTTP domain:
-        if (code >= 300 && code <= 510)
-            error = [NSError errorWithDomain: CBLHTTPErrorDomain
-                                        code: code
-                                    userInfo: error.userInfo];
     }
 
     // If the error may be transient (flaky network, server glitch), retry:

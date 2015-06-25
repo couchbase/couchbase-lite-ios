@@ -92,17 +92,9 @@
 		272219641AC375EA001469BE /* CouchbaseLiteListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 2722195C1AC3757C001469BE /* CouchbaseLiteListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		272401B31860CB4B0080E082 /* WebSocket_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401AE1860CB4B0080E082 /* WebSocket_Internal.h */; };
 		272401B41860CB4B0080E082 /* WebSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401AF1860CB4B0080E082 /* WebSocket.h */; };
-		272401B51860CB4B0080E082 /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401B01860CB4B0080E082 /* WebSocket.m */; };
-		272401B61860CB4B0080E082 /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401B01860CB4B0080E082 /* WebSocket.m */; };
 		272401B71860CB4B0080E082 /* WebSocketClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401B11860CB4B0080E082 /* WebSocketClient.h */; };
-		272401B81860CB4B0080E082 /* WebSocketClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401B21860CB4B0080E082 /* WebSocketClient.m */; };
-		272401B91860CB4B0080E082 /* WebSocketClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401B21860CB4B0080E082 /* WebSocketClient.m */; };
 		272401BE1860CBE00080E082 /* GCDAsyncSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401BC1860CBE00080E082 /* GCDAsyncSocket.h */; };
-		272401BF1860CBE00080E082 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401BD1860CBE00080E082 /* GCDAsyncSocket.m */; settings = {COMPILER_FLAGS = "-Wno-deprecated-declarations"; }; };
-		272401C01860CBE00080E082 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401BD1860CBE00080E082 /* GCDAsyncSocket.m */; settings = {COMPILER_FLAGS = "-Wno-deprecated-declarations"; }; };
 		272401C61860D0850080E082 /* WebSocketHTTPLogic.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401C41860D0850080E082 /* WebSocketHTTPLogic.h */; };
-		272401C71860D0850080E082 /* WebSocketHTTPLogic.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401C51860D0850080E082 /* WebSocketHTTPLogic.m */; };
-		272401C81860D0850080E082 /* WebSocketHTTPLogic.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401C51860D0850080E082 /* WebSocketHTTPLogic.m */; };
 		272401CB1860D39B0080E082 /* CBLWebSocketChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401C91860D39B0080E082 /* CBLWebSocketChangeTracker.h */; };
 		272401CC1860D39B0080E082 /* CBLWebSocketChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401CA1860D39B0080E082 /* CBLWebSocketChangeTracker.m */; };
 		272401CD1860D39B0080E082 /* CBLWebSocketChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401CA1860D39B0080E082 /* CBLWebSocketChangeTracker.m */; };
@@ -311,8 +303,6 @@
 		276BA0AD17DD13FA00D367CB /* CBLParseDate.c in Sources */ = {isa = PBXBuildFile; fileRef = 276BA0AC17DD13FA00D367CB /* CBLParseDate.c */; };
 		276BA0AE17DD13FA00D367CB /* CBLParseDate.c in Sources */ = {isa = PBXBuildFile; fileRef = 276BA0AC17DD13FA00D367CB /* CBLParseDate.c */; };
 		276F25FB18A3386100A70679 /* DDData.h in Headers */ = {isa = PBXBuildFile; fileRef = 276F25F918A3386100A70679 /* DDData.h */; };
-		276F25FC18A3386100A70679 /* DDData.m in Sources */ = {isa = PBXBuildFile; fileRef = 276F25FA18A3386100A70679 /* DDData.m */; };
-		276F25FD18A3386100A70679 /* DDData.m in Sources */ = {isa = PBXBuildFile; fileRef = 276F25FA18A3386100A70679 /* DDData.m */; };
 		27726AAC1889835F00AE6931 /* CBLGeometry.h in Headers */ = {isa = PBXBuildFile; fileRef = 27726AA81889835F00AE6931 /* CBLGeometry.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27726AAD1889835F00AE6931 /* CBLGeometry.m in Sources */ = {isa = PBXBuildFile; fileRef = 27726AA91889835F00AE6931 /* CBLGeometry.m */; };
 		27726AAE1889835F00AE6931 /* CBLGeometry.m in Sources */ = {isa = PBXBuildFile; fileRef = 27726AA91889835F00AE6931 /* CBLGeometry.m */; };
@@ -395,6 +385,12 @@
 		278E4DD81562B40B00DDCEF9 /* MYURLUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 278E4DD61562B40B00DDCEF9 /* MYURLUtils.h */; };
 		278E4DD91562B40B00DDCEF9 /* MYURLUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 278E4DD71562B40B00DDCEF9 /* MYURLUtils.m */; };
 		278E4DDA1562B40B00DDCEF9 /* MYURLUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 278E4DD71562B40B00DDCEF9 /* MYURLUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		278EB10C1B3CA720006B4BBC /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401B01860CB4B0080E082 /* WebSocket.m */; };
+		278EB10E1B3CA723006B4BBC /* WebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401B01860CB4B0080E082 /* WebSocket.m */; };
+		278EB1131B3CA87E006B4BBC /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401BD1860CBE00080E082 /* GCDAsyncSocket.m */; };
+		278EB1141B3CA880006B4BBC /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 272401BD1860CBE00080E082 /* GCDAsyncSocket.m */; };
+		278EB1151B3CA892006B4BBC /* DDData.m in Sources */ = {isa = PBXBuildFile; fileRef = 276F25FA18A3386100A70679 /* DDData.m */; };
+		278EB1161B3CA893006B4BBC /* DDData.m in Sources */ = {isa = PBXBuildFile; fileRef = 276F25FA18A3386100A70679 /* DDData.m */; };
 		27942CA6195B8991008C8DE9 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27942C9D195B8319008C8DE9 /* libsqlite3.dylib */; };
 		279906E3149A65B8003D4338 /* CBLRemoteRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 279906E1149A65B7003D4338 /* CBLRemoteRequest.h */; };
 		279906E5149A65B8003D4338 /* CBLRemoteRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906E2149A65B8003D4338 /* CBLRemoteRequest.m */; };
@@ -1230,8 +1226,8 @@
 		272401B01860CB4B0080E082 /* WebSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WebSocket.m; path = "WebSockets-Cocoa/WebSocket/WebSocket.m"; sourceTree = "<group>"; };
 		272401B11860CB4B0080E082 /* WebSocketClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WebSocketClient.h; path = "WebSockets-Cocoa/WebSocket/WebSocketClient.h"; sourceTree = "<group>"; };
 		272401B21860CB4B0080E082 /* WebSocketClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WebSocketClient.m; path = "WebSockets-Cocoa/WebSocket/WebSocketClient.m"; sourceTree = "<group>"; };
-		272401BC1860CBE00080E082 /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GCDAsyncSocket.h; path = "WebSockets-Cocoa/vendor/CocoaAsyncSocket/GCD/GCDAsyncSocket.h"; sourceTree = "<group>"; };
-		272401BD1860CBE00080E082 /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDAsyncSocket.m; path = "WebSockets-Cocoa/vendor/CocoaAsyncSocket/GCD/GCDAsyncSocket.m"; sourceTree = "<group>"; };
+		272401BC1860CBE00080E082 /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GCDAsyncSocket.h; path = ../Vendor/CocoaAsyncSocket/GCDAsyncSocket.h; sourceTree = "<group>"; };
+		272401BD1860CBE00080E082 /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDAsyncSocket.m; path = ../Vendor/CocoaAsyncSocket/GCDAsyncSocket.m; sourceTree = "<group>"; };
 		272401C41860D0850080E082 /* WebSocketHTTPLogic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WebSocketHTTPLogic.h; path = "WebSockets-Cocoa/WebSocket/WebSocketHTTPLogic.h"; sourceTree = "<group>"; };
 		272401C51860D0850080E082 /* WebSocketHTTPLogic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WebSocketHTTPLogic.m; path = "WebSockets-Cocoa/WebSocket/WebSocketHTTPLogic.m"; sourceTree = "<group>"; };
 		272401C91860D39B0080E082 /* CBLWebSocketChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLWebSocketChangeTracker.h; sourceTree = "<group>"; };
@@ -1373,8 +1369,8 @@
 		276BA0AC17DD13FA00D367CB /* CBLParseDate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = CBLParseDate.c; sourceTree = "<group>"; };
 		276BA0AF17DD222400D367CB /* CBLParseDate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLParseDate.h; sourceTree = "<group>"; };
 		276E68331A5C4511006D6EEB /* Server */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Server; sourceTree = "<group>"; };
-		276F25F918A3386100A70679 /* DDData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDData.h; path = "WebSockets-Cocoa/Categories/DDData.h"; sourceTree = "<group>"; };
-		276F25FA18A3386100A70679 /* DDData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDData.m; path = "WebSockets-Cocoa/Categories/DDData.m"; sourceTree = "<group>"; };
+		276F25F918A3386100A70679 /* DDData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDData.h; sourceTree = "<group>"; };
+		276F25FA18A3386100A70679 /* DDData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDData.m; sourceTree = "<group>"; };
 		27726AA81889835F00AE6931 /* CBLGeometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLGeometry.h; sourceTree = "<group>"; };
 		27726AA91889835F00AE6931 /* CBLGeometry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLGeometry.m; sourceTree = "<group>"; };
 		27726AAA1889835F00AE6931 /* CBLJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSON.h; sourceTree = "<group>"; };
@@ -2041,10 +2037,6 @@
 				272401B21860CB4B0080E082 /* WebSocketClient.m */,
 				272401C41860D0850080E082 /* WebSocketHTTPLogic.h */,
 				272401C51860D0850080E082 /* WebSocketHTTPLogic.m */,
-				276F25F918A3386100A70679 /* DDData.h */,
-				276F25FA18A3386100A70679 /* DDData.m */,
-				272401BC1860CBE00080E082 /* GCDAsyncSocket.h */,
-				272401BD1860CBE00080E082 /* GCDAsyncSocket.m */,
 			);
 			name = "WebSockets-Cocoa";
 			sourceTree = "<group>";
@@ -2173,6 +2165,7 @@
 				2753155F14ACEFC90065964D /* HTTPServer.h */,
 				2753156014ACEFC90065964D /* HTTPServer.m */,
 				2753156114ACEFC90065964D /* Responses */,
+				278EB1001B3C9C59006B4BBC /* CocoaAsyncSocket */,
 				275315AF14ACF0330065964D /* CocoaLumberjack */,
 			);
 			path = Core;
@@ -2181,6 +2174,8 @@
 		2753155014ACEFC90065964D /* Categories */ = {
 			isa = PBXGroup;
 			children = (
+				276F25F918A3386100A70679 /* DDData.h */,
+				276F25FA18A3386100A70679 /* DDData.m */,
 				2753155314ACEFC90065964D /* DDNumber.h */,
 				2753155414ACEFC90065964D /* DDNumber.m */,
 				2753155514ACEFC90065964D /* DDRange.h */,
@@ -2361,6 +2356,15 @@
 				27B085E41B38766600D3D9D8 /* BLIP Replicator */,
 			);
 			name = Replicator;
+			sourceTree = "<group>";
+		};
+		278EB1001B3C9C59006B4BBC /* CocoaAsyncSocket */ = {
+			isa = PBXGroup;
+			children = (
+				272401BC1860CBE00080E082 /* GCDAsyncSocket.h */,
+				272401BD1860CBE00080E082 /* GCDAsyncSocket.m */,
+			);
+			name = CocoaAsyncSocket;
 			sourceTree = "<group>";
 		};
 		279EB2D7149192C700E74185 /* Router */ = {
@@ -3928,16 +3932,12 @@
 				27208F8A184D1D5C006ADBEF /* NSString+URLEncoding.m in Sources */,
 				27208F8F184D1D83006ADBEF /* NSURL+Base.m in Sources */,
 				27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
-				272401BF1860CBE00080E082 /* GCDAsyncSocket.m in Sources */,
 				27726AAD1889835F00AE6931 /* CBLGeometry.m in Sources */,
 				93EBA27A1B2ECEE30006C66C /* CBLJSFunction.m in Sources */,
-				272401B51860CB4B0080E082 /* WebSocket.m in Sources */,
 				27DADE441A659FCC0075313A /* CBL_ForestDBStorage.mm in Sources */,
-				272401B81860CB4B0080E082 /* WebSocketClient.m in Sources */,
 				277B5D301821A8380088881E /* yajl_buf.c in Sources */,
 				2733023018F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */,
 				27486F261A606C76008D94F0 /* CBJSONEncoder.m in Sources */,
-				276F25FC18A3386100A70679 /* DDData.m in Sources */,
 				277B5D291821A8380088881E /* yajl.c in Sources */,
 				27A7552C1A8BD715008BCD4D /* CBLQueryEnumerator.m in Sources */,
 				93EBA26D1B2EC7280006C66C /* CBLJSViewCompiler.m in Sources */,
@@ -3950,7 +3950,6 @@
 				277B5D3C1821A8380088881E /* yajl_parser.c in Sources */,
 				277B5D2D1821A8380088881E /* yajl_alloc.c in Sources */,
 				27726AB01889835F00AE6931 /* CBLJSON.m in Sources */,
-				272401C71860D0850080E082 /* WebSocketHTTPLogic.m in Sources */,
 				27513A441A674C9B0055DC40 /* FMDatabase.m in Sources */,
 				27513A471A674C9B0055DC40 /* FMDatabaseAdditions.m in Sources */,
 				27513A4C1A674C9B0055DC40 /* FMResultSet.m in Sources */,
@@ -4024,6 +4023,9 @@
 				27E11F1114AD15940006B340 /* CBLHTTPResponse.m in Sources */,
 				275315F214ACF1130065964D /* DDLog.m in Sources */,
 				275315E514ACF1130065964D /* DDNumber.m in Sources */,
+				278EB1151B3CA892006B4BBC /* DDData.m in Sources */,
+				278EB10C1B3CA720006B4BBC /* WebSocket.m in Sources */,
+				278EB1131B3CA87E006B4BBC /* GCDAsyncSocket.m in Sources */,
 				275315E614ACF1130065964D /* DDRange.m in Sources */,
 				275315EA14ACF1130065964D /* HTTPServer.m in Sources */,
 				275315E914ACF1130065964D /* HTTPMessage.m in Sources */,
@@ -4070,7 +4072,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				27F9411C176A5FB9007BAEBE /* CBLModel+Properties.m in Sources */,
-				276F25FD18A3386100A70679 /* DDData.m in Sources */,
 				27B0B7CF1492B87200A817AD /* CBL_Body.m in Sources */,
 				27B0865D1B387C3900D3D9D8 /* CBLBlipReplicator.m in Sources */,
 				27B0B7D01492B87500A817AD /* CBL_Revision.m in Sources */,
@@ -4172,11 +4173,7 @@
 				27B086651B387C3900D3D9D8 /* CBLSyncConnection+Checkpoints.m in Sources */,
 				27F128A9156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
 				27208F8B184D1D5D006ADBEF /* NSString+URLEncoding.m in Sources */,
-				272401C81860D0850080E082 /* WebSocketHTTPLogic.m in Sources */,
 				27A755321A8BD797008BCD4D /* CBLQueryRow.m in Sources */,
-				272401B91860CB4B0080E082 /* WebSocketClient.m in Sources */,
-				272401B61860CB4B0080E082 /* WebSocket.m in Sources */,
-				272401C01860CBE00080E082 /* GCDAsyncSocket.m in Sources */,
 				277B5D2E1821A8380088881E /* yajl_alloc.c in Sources */,
 				277B5D2A1821A8380088881E /* yajl.c in Sources */,
 				277B5D351821A8380088881E /* yajl_encode.c in Sources */,
@@ -4261,10 +4258,13 @@
 				27B678B81804B62500B06D11 /* CBLHTTPServer.m in Sources */,
 				DA147C0D14BCA98A0052DA4D /* CBLHTTPConnection.m in Sources */,
 				DA147C0E14BCA98A0052DA4D /* CBLHTTPResponse.m in Sources */,
+				278EB1161B3CA893006B4BBC /* DDData.m in Sources */,
 				27DA435F159230AC00F9E7B5 /* CBL_Router.m in Sources */,
 				27DA4361159230B200F9E7B5 /* CBL_Router+Handlers.m in Sources */,
 				27E2E61715993CB4005B9234 /* CBL_URLProtocol.m in Sources */,
 				27E66B571A7310920091DA3F /* CBLRouter+Changes.m in Sources */,
+				278EB1141B3CA880006B4BBC /* GCDAsyncSocket.m in Sources */,
+				278EB10E1B3CA723006B4BBC /* WebSocket.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4742,6 +4742,7 @@
 					vendor/CBForest/vendor/forestdb/include/libforestdb,
 					"vendor/CBForest/vendor/sqlite3-unicodesn",
 					vendor/BLIP/BLIP,
+					vendor/BLIP/vendor/PocketSocket/PocketSocket,
 				);
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
@@ -4776,6 +4777,7 @@
 					vendor/CBForest/vendor/forestdb/include/libforestdb,
 					"vendor/CBForest/vendor/sqlite3-unicodesn",
 					vendor/BLIP/BLIP,
+					vendor/BLIP/vendor/PocketSocket/PocketSocket,
 				);
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
@@ -5253,6 +5255,7 @@
 					vendor/CBForest/vendor/forestdb/include/libforestdb/,
 					"vendor/CBForest/vendor/sqlite3-unicodesn",
 					vendor/BLIP/BLIP,
+					vendor/BLIP/vendor/PocketSocket/PocketSocket,
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CouchbaseLite;
@@ -5283,6 +5286,7 @@
 					vendor/CBForest/vendor/forestdb/include/libforestdb/,
 					"vendor/CBForest/vendor/sqlite3-unicodesn",
 					vendor/BLIP/BLIP,
+					vendor/BLIP/vendor/PocketSocket/PocketSocket,
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CouchbaseLite;

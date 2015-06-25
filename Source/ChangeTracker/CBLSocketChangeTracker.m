@@ -23,7 +23,7 @@
 #import "CBLBase64.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
-#import "WebSocketHTTPLogic.h"
+#import "BLIPHTTPLogic.h"
 #import <string.h>
 
 
@@ -32,7 +32,7 @@
 
 @implementation CBLSocketChangeTracker
 {
-    WebSocketHTTPLogic* _http;
+    BLIPHTTPLogic* _http;
     NSInputStream* _trackingInput;
     CFAbsoluteTime _startTime;
     bool _gotResponseHeaders;
@@ -67,7 +67,7 @@
             [self.cookieStorage addCookieHeaderToRequest: urlRequest];
         }
 
-        _http = [[WebSocketHTTPLogic alloc] initWithURLRequest: urlRequest];
+        _http = [[BLIPHTTPLogic alloc] initWithURLRequest: urlRequest];
 
         // Add headers from my .requestHeaders property:
         [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
