@@ -405,8 +405,8 @@ static CBLManager* sCBLManager;
     CBLDocument* doc = [self.database documentWithID:
                         [object.objectID couchbaseLiteIDRepresentation]];
     CBLUnsavedRevision* revision = [doc newRevision];
-    [revision.properties setValuesForKeysWithDictionary: contents];
-
+    revision.userProperties = contents;
+    
     // add attachments
     NSDictionary* propertyDesc = [object.entity propertiesByName];
 

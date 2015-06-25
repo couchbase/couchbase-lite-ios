@@ -827,6 +827,77 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertNil(att);
 }
 
+- (void) test_NullifyProperty {
+    NSError *error;
+
+    CBLDatabase *database = store.database;
+
+    Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                 inManagedObjectContext:context];
+
+    NSString *text = @"Test";
+
+    entry.text = text;
+    entry.check = @NO;
+
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    CBLDocument *doc = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+    AssertEqual(text, entry.text);
+    AssertEqual(text, [doc propertyForKey:@"text"]);
+
+    text = nil;
+
+    entry.text = text;
+
+    success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    doc = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+    AssertEqual(text, entry.text);
+    AssertEqual(text, [doc propertyForKey:@"text"]);
+}
+
+- (void) test_NullifyRelationship {
+    NSError *error;
+
+    CBLDatabase *database = store.database;
+
+    Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                 inManagedObjectContext:context];
+
+    Subentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                       inManagedObjectContext:context];
+
+    BOOL success = [context save:&error];
+
+    CBLDocument *docEntry = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+    CBLDocument *docSubentry = [database documentWithID:[subentry.objectID couchbaseLiteIDRepresentation]];
+
+    AssertEqual(nil, [docSubentry propertyForKey:@"entry"]);
+
+    subentry.entry = entry;
+
+    success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    docEntry = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+    docSubentry = [database documentWithID:[subentry.objectID couchbaseLiteIDRepresentation]];
+
+    AssertEqual(docEntry.documentID, [docSubentry propertyForKey:@"entry"]);
+
+    subentry.entry = nil;
+
+    success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    docEntry = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+    docSubentry = [database documentWithID:[subentry.objectID couchbaseLiteIDRepresentation]];
+
+    AssertEqual(nil, [docSubentry propertyForKey:@"entry"]);
+}
+
 - (void) test_FetchWithPredicates {
     NSError *error;
     
