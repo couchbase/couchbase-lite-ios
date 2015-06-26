@@ -218,6 +218,25 @@
 }
 
 
+- (void) test_06_Puller_Auth_Url {
+    RequireTestCase(Puller);
+    NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];
+    if (!remoteURL)
+        return;
+
+    NSURLComponents *comps = [NSURLComponents componentsWithURL: remoteURL resolvingAgainstBaseURL: nil];
+    comps.user = @"test";
+    comps.password = @"abc123";
+    remoteURL = comps.URL;
+
+    id lastSeq = replic8(db, remoteURL, NO, nil, nil, nil);
+    AssertEqual(lastSeq, @2);
+
+    AssertEq(db.documentCount, 1u);
+    AssertEq(db.lastSequenceNumber, 1u);
+}
+
+
 - (void) test_06_Puller_AuthFailure {
     RequireTestCase(Puller);
     NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];

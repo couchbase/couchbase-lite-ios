@@ -341,13 +341,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                  }
                 ];
 
-    // If client didn't set an authorizer, use basic auth if credential is available:
-    if (!_authorizer) {
-        _authorizer = [[CBLBasicAuthorizer alloc] initWithURL: _remote];
-        if (_authorizer)
-            LogTo(SyncVerbose, @"%@: Found credential, using %@", self, _authorizer);
-    }
-
     self.running = YES;
     _startTime = CFAbsoluteTimeGetCurrent();
     

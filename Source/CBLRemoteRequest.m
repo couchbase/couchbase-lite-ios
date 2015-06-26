@@ -294,8 +294,11 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
             if (cred) {
                 LogTo(RemoteRequest, @"    challenge: useCredential: %@", cred);
                 [sender useCredential: cred forAuthenticationChallenge:challenge];
-                // Update my authorizer so my owner (the replicator) can pick it up when I'm done
-                _authorizer = [[CBLBasicAuthorizer alloc] initWithCredential: cred];
+
+                if ($equal(authMethod, NSURLAuthenticationMethodHTTPBasic)) {
+                    // Update my authorizer so my owner (the replicator) can pick it up when I'm done
+                    _authorizer = [[CBLBasicAuthorizer alloc] initWithCredential: cred];
+                }
                 return;
             }
         }

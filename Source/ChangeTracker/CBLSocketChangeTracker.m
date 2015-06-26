@@ -161,7 +161,13 @@
     CFHTTPMessageRef response;
     response = (CFHTTPMessageRef) CFReadStreamCopyProperty((CFReadStreamRef)_trackingInput,
                                                            kCFStreamPropertyHTTPResponseHeader);
-    Assert(response);
+    if (!response) {
+        [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
+                                                   code: NSURLErrorNetworkConnectionLost
+                                               userInfo: nil]];
+        return NO;
+    }
+
     _gotResponseHeaders = true;
     [_http receivedResponse: response];
     CFRelease(response);
@@ -207,10 +213,10 @@
 
 - (void) handleEOF {
     if (!_gotResponseHeaders) {
-        [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
-                                                   code: NSURLErrorNetworkConnectionLost
-                                               userInfo: nil]];
-        return;
+        // For the case of receving the authentication challenge (401) response
+        // (No NSStreamEventHasBytesAvailable events received) :
+        if (![self readResponseHeader])
+            return;
     }
     if (_mode == kContinuous) {
         [self stop];

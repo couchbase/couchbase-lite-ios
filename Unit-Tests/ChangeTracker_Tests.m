@@ -125,6 +125,29 @@
 }
 
 
+- (void) test_Auth_Url {
+    RequireTestCase(AuthFailure);
+    // This database requires authentication to access at all.
+    NSURL* url = [self remoteTestDBURL: @"cbl_auth_test"];
+    if (!url)
+        return;
+
+    NSURLComponents *comps = [NSURLComponents componentsWithURL: url resolvingAgainstBaseURL: nil];
+    comps.user = @"test";
+    comps.password = @"abc123";
+    url = comps.URL;
+
+    CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  self];
+    NSArray* expected = $array($dict({@"seq", @1},
+                                     {@"id", @"_user/test"},
+                                     {@"revs", @[]}),
+                               $dict({@"seq", @2},
+                                     {@"id", @"something"},
+                                     {@"revs", $array(@"1-53b059eb633a9d58042318e478cc73dc")}) );
+    [self run: tracker expectingChanges: expected];
+}
+
+
 - (void) test_AuthFailure {
     NSURL* url = [self remoteTestDBURL: @"cbl_auth_test"];
     if (!url)
@@ -141,6 +164,31 @@
 
 
 - (void) test_CBLWebSocketChangeTracker_Auth {
+    // This Sync Gateway database requires authentication to access at all.
+    NSURL* url = [self remoteTestDBURL: @"cbl_auth_test"];
+    if (!url) {
+        Warn(@"Skipping test; no remote DB URL configured");
+        return;
+    }
+
+    NSURLComponents *comps = [NSURLComponents componentsWithURL: url resolvingAgainstBaseURL: nil];
+    comps.user = @"test";
+    comps.password = @"abc123";
+    url = comps.URL;
+
+    CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kWebSocket conflicts: NO lastSequence: 0 client:  self];
+
+    NSArray* expected = $array($dict({@"seq", @1},
+                                     {@"id", @"_user/test"},
+                                     {@"revs", $array()}) ,
+                               $dict({@"seq", @2},
+                                     {@"id", @"something"},
+                                     {@"revs", $array(@"1-53b059eb633a9d58042318e478cc73dc")}) );
+    [self run: tracker expectingChanges: expected];
+}
+
+
+- (void) test_CBLWebSocketChangeTracker_Auth_Url {
     // This Sync Gateway database requires authentication to access at all.
     NSURL* url = [self remoteTestDBURL: @"cbl_auth_test"];
     if (!url) {
