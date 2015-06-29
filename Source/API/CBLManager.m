@@ -125,6 +125,10 @@ static NSCharacterSet* kIllegalNameChars;
 #endif
 }
 
++ (void) setWarningsRaiseExceptions: (BOOL)wre {
+    gMYWarnRaisesException = wre;
+}
+
 
 + (NSString*) defaultDirectory {
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,

@@ -231,7 +231,9 @@ static int collateRevs(const char* rev1, const char* rev2) {
     // -assertionForSite: should return nil because the assertion has expired by now:
     CBLPersonaAuthorizer* auth = [[CBLPersonaAuthorizer alloc] initWithEmailAddress: email];
     AssertEqual(auth.emailAddress, email);
-    AssertEqual([auth assertionForSite: originURL], nil);
+    [self allowWarningsIn:^{
+        AssertEqual([auth assertionForSite: originURL], nil);
+    }];
 }
 
 

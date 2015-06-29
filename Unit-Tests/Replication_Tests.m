@@ -340,7 +340,11 @@
 
     Log(@"Pulling from %@...", pullURL);
     CBLReplication* repl = [db createPullReplication: pullURL];
-    [self runReplication: repl expectedChangesCount: 0];
+    [self allowWarningsIn: ^{
+        // This triggers a warning in CBLSyncConnection because the attach-test db is actually
+        // missing an attachment body. It's not a CBL error.
+        [self runReplication: repl expectedChangesCount: 0];
+    }];
     AssertNil(repl.lastError);
 
     Log(@"Verifying documents...");
@@ -373,7 +377,9 @@
 
     // Create a replication:
     CBLReplication* r1 = [db createPullReplication: fakeRemoteURL];
-    [self runReplication: r1 expectedChangesCount: 0];
+    [self allowWarningsIn:^{
+        [self runReplication: r1 expectedChangesCount: 0];
+    }];
 
     // It should have failed with a 404:
     AssertEq(r1.status, kCBLReplicationStopped);

@@ -17,6 +17,7 @@
 + (instancetype) createEmptyAtTemporaryPath: (NSString*)name;  // for testing
 - (CBLDatabase*) createEmptyDatabaseNamed: (NSString*)name error: (NSError**)outError;
 #endif
++ (void) setWarningsRaiseExceptions: (BOOL)wre;
 @end
 
 

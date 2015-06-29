@@ -33,6 +33,12 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 @implementation CBLTestCase
 
 
+- (void)setUp {
+    [super setUp];
+    [CBLManager setWarningsRaiseExceptions: YES];
+}
+
+
 - (NSString*) pathToTestFile: (NSString*)name {
     // The iOS and Mac test apps have the TestData folder copied into their Resources dir.
     NSString* path =  [[NSBundle bundleForClass: [self class]] pathForResource: name.stringByDeletingPathExtension
@@ -52,6 +58,12 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 - (void) _assertEqualish: (id)a to: (id)b {
     NSString* why = WhyUnequalObjects(a, b);
     Assert(why==nil, @"Objects not equal-ish:\n%@", why);
+}
+
+- (void) allowWarningsIn: (void (^)())block {
+    [CBLManager setWarningsRaiseExceptions: NO];
+    block();
+    [CBLManager setWarningsRaiseExceptions: YES];
 }
 
 

@@ -72,10 +72,12 @@
     NSURL* url = [self remoteSSLTestDBURL: @"public"];
     if (!url)
         return;
-    CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  self];
-    [self run: tracker expectingError: [NSError errorWithDomain: NSURLErrorDomain
-                                                             code:NSURLErrorServerCertificateUntrusted
-                                                         userInfo: nil]];
+    CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client: self];
+    [self allowWarningsIn:^{
+        [self run: tracker expectingError: [NSError errorWithDomain: NSURLErrorDomain
+                                                                 code:NSURLErrorServerCertificateUntrusted
+                                                             userInfo: nil]];
+    }];
 }
 
 - (void) test_SSL_Part2_Success {
@@ -136,8 +138,10 @@
     url = $url(urlStr);
 
     CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  self];
-    [self run: tracker expectingError: CBLStatusToNSErrorWithInfo(kCBLStatusUnauthorized,
-                                                                  nil, url, nil)];
+    [self allowWarningsIn: ^{
+        [self run: tracker expectingError: CBLStatusToNSErrorWithInfo(kCBLStatusUnauthorized,
+                                                                      nil, url, nil)];
+    }];
 }
 
 

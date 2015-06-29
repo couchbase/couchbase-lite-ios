@@ -45,6 +45,9 @@ void AddTemporaryCredential(NSURL* url, NSString* realm,
 
 // internal:
 - (void) _assertEqualish: (id)a to: (id)b;
+
+- (void) allowWarningsIn: (void (^)())block;
+
 @end
 
 

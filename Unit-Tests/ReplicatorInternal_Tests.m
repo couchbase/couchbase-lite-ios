@@ -194,8 +194,10 @@
     if (!remoteURL)
         return;
 
-    NSError* error = CBLStatusToNSError(kCBLStatusNotFound);
-    replic8Continuous(db, remoteURL, NO, nil, nil, error);
+    [self allowWarningsIn:^{
+        NSError* error = CBLStatusToNSError(kCBLStatusNotFound);
+        replic8Continuous(db, remoteURL, NO, nil, nil, error);
+    }];
 }
 
 
@@ -269,9 +271,11 @@
         return;
 
     Log(@"Replicating without root cert; should fail...");
-    replic8(db, remoteURL, NO, nil, nil,
-            ([NSError errorWithDomain: NSURLErrorDomain
-                                code: NSURLErrorServerCertificateUntrusted userInfo: nil]));
+    [self allowWarningsIn:^{
+        replic8(db, remoteURL, NO, nil, nil,
+                ([NSError errorWithDomain: NSURLErrorDomain
+                                    code: NSURLErrorServerCertificateUntrusted userInfo: nil]));
+    }];
 
     Log(@"Now replicating with root cert installed...");
     CBLSetAnchorCerts([self remoteTestDBAnchorCerts], NO);
@@ -294,10 +298,12 @@
         return;
 
     Log(@"Replicating without root cert; should fail...");
-    replic8Continuous(db, remoteURL, NO, nil, nil,
-                      [NSError errorWithDomain: NSURLErrorDomain
-                                          code: NSURLErrorServerCertificateUntrusted
-                                      userInfo: nil]);
+    [self allowWarningsIn:^{
+        replic8Continuous(db, remoteURL, NO, nil, nil,
+                          [NSError errorWithDomain: NSURLErrorDomain
+                                              code: NSURLErrorServerCertificateUntrusted
+                                          userInfo: nil]);
+    }];
 
     Log(@"Now replicating with root cert installed...");
     CBLSetAnchorCerts([self remoteTestDBAnchorCerts], NO);
@@ -320,14 +326,16 @@
         return;
 
     Log(@"Replicating with wrong pinned cert; should fail...");
-    NSString* digest = @"123456789abcdef0123456789abcdef012345678";
-    replic8Continuous(db, remoteURL, NO, nil, @{kCBLReplicatorOption_PinnedCert: digest},
-                      [NSError errorWithDomain: NSURLErrorDomain
-                                          code: NSURLErrorServerCertificateUntrusted
-                                      userInfo: nil]);
+    [self allowWarningsIn:^{
+        NSString* digest = @"123456789abcdef0123456789abcdef012345678";
+        replic8Continuous(db, remoteURL, NO, nil, @{kCBLReplicatorOption_PinnedCert: digest},
+                          [NSError errorWithDomain: NSURLErrorDomain
+                                              code: NSURLErrorServerCertificateUntrusted
+                                          userInfo: nil]);
+    }];
 
     Log(@"Now replicating with correct pinned cert...");
-    digest = @"c745fbfc03382125271daffc2e715a5b0172d1d8";
+    NSString* digest = @"c745fbfc03382125271daffc2e715a5b0172d1d8";
     id lastSeq = replic8Continuous(db, remoteURL, NO, nil,
                                    @{kCBLReplicatorOption_PinnedCert: digest},
                                    nil);
