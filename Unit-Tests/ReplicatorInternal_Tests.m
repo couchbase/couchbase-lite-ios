@@ -62,8 +62,10 @@
     // Run each test method twice, once plain and once encrypted.
     _newReplicator = NO;
     [super invokeTest];
-    _newReplicator = YES;
-    [super invokeTest];
+    if ([[NSUserDefaults standardUserDefaults] boolForKey: @"TestNewReplicator"]) {
+        _newReplicator = YES;
+        [super invokeTest];
+    }
 }
 
 - (void) setUp {
