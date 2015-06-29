@@ -17,6 +17,7 @@ extern "C" {
 #import "CBL_ForestDBStorage.h"
 #import "CBL_ForestDBViewStorage.h"
 #import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 #import "CBL_BlobStore.h"
 #import "CBL_Attachment.h"
 #import "CBLBase64.h"
@@ -402,26 +403,13 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 }
     
 
-- (NSArray*) getRevisionHistory: (CBL_Revision*)rev {
-    NSString* docID = rev.docID;
-    NSString* revID = rev.revID;
-    Assert(revID && docID);
-    __block NSArray* history = nil;
-    [self _withVersionedDoc: docID do: ^(VersionedDocument& doc) {
-        history = [CBLForestBridge getRevisionHistory: doc.get(revID)];
-        return kCBLStatusOK;
-    }];
-    return history;
-}
-
-
-- (NSDictionary*) getRevisionHistoryDict: (CBL_Revision*)rev
-                       startingFromAnyOf: (NSArray*)ancestorRevIDs
+- (NSArray*) getRevisionHistory: (CBL_Revision*)rev
+                   backToRevIDs: (NSSet*)ancestorRevIDs
 {
-    __block NSDictionary* history = nil;
+    __block NSArray* history = nil;
     [self _withVersionedDoc: rev.docID do: ^(VersionedDocument& doc) {
         history = [CBLForestBridge getRevisionHistoryOfNode: doc.get(rev.revID)
-                                          startingFromAnyOf: ancestorRevIDs];
+                                               backToRevIDs: ancestorRevIDs];
         return kCBLStatusOK;
     }];
     return history;
@@ -602,19 +590,19 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 - (BOOL) findMissingRevisions: (CBL_RevisionList*)revs
                        status: (CBLStatus*)outStatus
 {
-    [revs sortByDocID];
+    CBL_RevisionList* sortedRevs = [revs mutableCopy];
+    [sortedRevs sortByDocID];
     __block VersionedDocument* doc = NULL;
     *outStatus = [self _try: ^CBLStatus {
         NSString* lastDocID = nil;
-        for (NSInteger i = revs.count-1; i >= 0; i--) {
-            CBL_Revision* rev = revs[i];
+        for (CBL_Revision* rev in sortedRevs) {
             if (!$equal(rev.docID, lastDocID)) {
                 lastDocID = rev.docID;
                 delete doc;
                 doc = new VersionedDocument(*_forest, lastDocID);
             }
             if (doc && doc->get(rev.revID) != NULL)
-                [revs removeObjectAtIndex: i];
+                [revs removeRevIdenticalTo: rev];
         }
         return kCBLStatusOK;
     }];

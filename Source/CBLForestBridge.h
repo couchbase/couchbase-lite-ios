@@ -34,13 +34,10 @@ CBLStatus CBLStatusFromForestDBStatus(int fdbStatus);
 /** Returns the revIDs of all current leaf revisions, in descending order of priority. */
 + (NSArray*) getCurrentRevisionIDs: (forestdb::VersionedDocument&)doc;
 
-/** Returns a revision & its ancestors as CBL_Revision objects, in reverse chronological order. */
-+ (NSArray*) getRevisionHistory: (const forestdb::Revision*)revNode;
-
-/** Returns the revision history as a _revisions dictionary, as returned by the REST API's 
-    ?revs=true option. If 'ancestorRevIDs' is present, the revision history will only go back as 
+/** Returns a revision & its ancestors as CBL_Revision objects, in reverse chronological order.
+    If 'ancestorRevIDs' is present, the revision history will only go back as
     far as any of the revision ID strings in that array. */
-+ (NSDictionary*) getRevisionHistoryOfNode: (const forestdb::Revision*)revNode
-                         startingFromAnyOf: (NSArray*)ancestorRevIDs;
++ (NSArray*) getRevisionHistoryOfNode: (const forestdb::Revision*)revNode
+                         backToRevIDs: (NSSet*)ancestorRevIDs;
 
 @end

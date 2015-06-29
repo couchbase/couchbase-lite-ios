@@ -118,6 +118,13 @@
 }
 
 
+- (uint64_t) lengthOfBlobForKey: (CBLBlobKey)key {
+    return [[[NSFileManager defaultManager] attributesOfItemAtPath: [self rawPathForKey: key]
+                                                             error: NULL]
+                                                fileSize];
+}
+
+
 - (NSData*) blobForKey: (CBLBlobKey)key {
     NSString* path = [self rawPathForKey: key];
     NSData* blob = [NSData dataWithContentsOfFile: path options: NSDataReadingUncached error: NULL];
@@ -311,12 +318,14 @@
         if (!_tempPath) {
             return nil;
         }
-        if (![[NSFileManager defaultManager] createFileAtPath: _tempPath
-                                                     contents: nil
-                                                   attributes: nil]) {
-            Warn(@"CBL_BlobStoreWriter: Unable to create a temp file at %@", _tempPath);
+        // -fileHandleForWritingAtPath stupidly fails if the file doesn't exist, so we first have
+        // to create it:
+        int fd = open(_tempPath.fileSystemRepresentation, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+        if (fd < 0) {
+            Warn(@"CBL_BlobStoreWriter can't create temp file at %@ (errno %d)", _tempPath, errno);
             return nil;
         }
+        close(fd);
         _out = [NSFileHandle fileHandleForWritingAtPath: _tempPath];
         if (!_out) {
             BOOL exists = [[NSFileManager defaultManager] fileExistsAtPath: _tempPath];

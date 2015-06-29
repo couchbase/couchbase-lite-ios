@@ -11,21 +11,25 @@
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>04101981B66E318109934C9516F88D824BB96459</key>
-		<string>github.com:couchbaselabs/fmdb.git</string>
+		<string>git://github.com/couchbaselabs/fmdb.git</string>
 		<key>073B5630A41468111630CB02A17BF6B9B89CE1A3</key>
 		<string>github.com:couchbaselabs/forestdb.git</string>
 		<key>1C75F1C5CFCB95B3702F6F632FA05ED5244B519E</key>
 		<string>https://github.com/robbiehanson/CocoaAsyncSocket.git</string>
+		<key>3692ABDCB445527429496D19963AFF94CAB1E068</key>
+		<string>github.com:couchbasedeps/PocketSocket.git</string>
 		<key>3B6E0836A249709CBC66E3BD2D6E8381049097CC</key>
 		<string>git://github.com/couchbaselabs/WebSockets-Cocoa.git</string>
 		<key>71CFC0DE1DEFC877B0C5B9F98B971EBA2921D608</key>
 		<string>git://github.com/couchbaselabs/CocoaHTTPServer.git</string>
 		<key>95BD7FD70F525D599BE3B03B349FA96B7F09E4A7</key>
-		<string>github.com:couchbaselabs/cbforest.git</string>
+		<string>https://github.com/couchbaselabs/cbforest.git</string>
 		<key>9EB8DA420176E66DD13DE995CAB7884E375CF83A</key>
 		<string>git://github.com/couchbaselabs/ios-oauthconsumer.git</string>
 		<key>A285BCEC7D6D8A0B6D4A852E70EFCD820E12B9FD</key>
 		<string>github.com:couchbase/couchbase-lite-ios.git</string>
+		<key>B8D843EDBA7DA3F6D28B36CA0231AF37DBEAD40C</key>
+		<string>github.com:couchbaselabs/BLIP-Cocoa.git</string>
 		<key>EDD5A95C0B9BA456AC83DA491C4680B9358547CF</key>
 		<string>git://github.com/snej/MYUtilities.git</string>
 		<key>F084A5E79D508F8E5EB6C3DC3C9997CD80515925</key>
@@ -36,25 +40,29 @@
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>04101981B66E318109934C9516F88D824BB96459</key>
-		<string>../..vendor/fmdb</string>
+		<string>../..vendor/fmdb/</string>
 		<key>073B5630A41468111630CB02A17BF6B9B89CE1A3</key>
-		<string>../..vendor/CBForest/vendor/forestdb</string>
+		<string>../..vendor/CBForest/vendor/forestdb/</string>
 		<key>1C75F1C5CFCB95B3702F6F632FA05ED5244B519E</key>
-		<string>../..vendor/WebSockets-Cocoa/vendor/CocoaAsyncSocket</string>
+		<string>../..vendor/WebSockets-Cocoa/vendor/CocoaAsyncSocket/</string>
+		<key>3692ABDCB445527429496D19963AFF94CAB1E068</key>
+		<string>../..vendor/BLIP/vendor/PocketSocket/</string>
 		<key>3B6E0836A249709CBC66E3BD2D6E8381049097CC</key>
-		<string>../..vendor/WebSockets-Cocoa</string>
+		<string>../..vendor/WebSockets-Cocoa/</string>
 		<key>71CFC0DE1DEFC877B0C5B9F98B971EBA2921D608</key>
-		<string>../..vendor/CocoaHTTPServer</string>
+		<string>../..vendor/CocoaHTTPServer/</string>
 		<key>95BD7FD70F525D599BE3B03B349FA96B7F09E4A7</key>
-		<string>../..vendor/CBForest</string>
+		<string>../..vendor/CBForest/</string>
 		<key>9EB8DA420176E66DD13DE995CAB7884E375CF83A</key>
-		<string>../..vendor/oauthconsumer</string>
+		<string>../..vendor/oauthconsumer/</string>
 		<key>A285BCEC7D6D8A0B6D4A852E70EFCD820E12B9FD</key>
 		<string>../..</string>
+		<key>B8D843EDBA7DA3F6D28B36CA0231AF37DBEAD40C</key>
+		<string>../..vendor/BLIP/</string>
 		<key>EDD5A95C0B9BA456AC83DA491C4680B9358547CF</key>
-		<string>../..vendor/MYUtilities</string>
+		<string>../..vendor/MYUtilities/</string>
 		<key>F084A5E79D508F8E5EB6C3DC3C9997CD80515925</key>
-		<string>../..vendor/CBForest/vendor/sqlite3-unicodesn</string>
+		<string>../..vendor/CBForest/vendor/sqlite3-unicodesn/</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>github.com:couchbase/couchbase-lite-ios.git</string>
@@ -64,6 +72,14 @@
 	<string>A285BCEC7D6D8A0B6D4A852E70EFCD820E12B9FD</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>B8D843EDBA7DA3F6D28B36CA0231AF37DBEAD40C</string>
+			<key>IDESourceControlWCCName</key>
+			<string>BLIP</string>
+		</dict>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
@@ -127,6 +143,14 @@
 			<string>9EB8DA420176E66DD13DE995CAB7884E375CF83A</string>
 			<key>IDESourceControlWCCName</key>
 			<string>oauthconsumer</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>3692ABDCB445527429496D19963AFF94CAB1E068</string>
+			<key>IDESourceControlWCCName</key>
+			<string>PocketSocket</string>
 		</dict>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>

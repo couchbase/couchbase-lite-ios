@@ -22,7 +22,7 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLManager+Internal.h"
-#import "CBL_Pusher.h"
+#import "CBL_Replicator.h"
 #import "CBL_Server.h"
 #import "CBL_URLProtocol.h"
 #import "CBLPersonaAuthorizer.h"
@@ -84,6 +84,7 @@ static NSString* CBLFullVersionInfo( void ) {
     dispatch_queue_t _dispatchQueue;
     NSMutableDictionary* _databases;
     NSURL* _internalURL;
+    Class _replicatorClass;
     NSMutableArray* _replications;
     __weak CBL_Shared *_shared;
     id _strongShared;       // optional strong reference to _shared
@@ -92,7 +93,7 @@ static NSString* CBLFullVersionInfo( void ) {
 
 @synthesize dispatchQueue=_dispatchQueue, directory = _dir;
 @synthesize customHTTPHeaders = _customHTTPHeaders;
-@synthesize storageType=_storageType;
+@synthesize storageType=_storageType, replicatorClassName=_replicatorClassName;
 
 
 // http://wiki.apache.org/couchdb/HTTP_database_API#Naming_and_Addressing
@@ -232,6 +233,10 @@ static CBLManager* sInstance;
         _storageType = [[NSUserDefaults standardUserDefaults] stringForKey: @"CBLStorageType"];
         if (!_storageType)
             _storageType = @"SQLite";
+        _replicatorClassName = [[NSUserDefaults standardUserDefaults]
+                                                            stringForKey: @"CBLReplicatorClass"];
+        if (!_replicatorClassName)
+            _replicatorClassName = @"CBLRestReplicator";
         LogTo(CBLDatabase, @"Created %@", self);
     }
     return self;
@@ -270,6 +275,7 @@ static CBLManager* sInstance;
     if (managerCopy) {
         managerCopy.customHTTPHeaders = [self.customHTTPHeaders copy];
         managerCopy.storageType = _storageType;
+        managerCopy.replicatorClassName = _replicatorClassName;
     }
     return managerCopy;
 }
@@ -436,7 +442,9 @@ static CBLManager* sInstance;
                 // The server's manager can't have a strong reference to the CBLShared, or it will
                 // form a cycle (newManager -> strongShared -> backgroundServer -> newManager).
                 newManager->_strongShared = nil;
-                server = [[CBL_Server alloc] initWithManager: newManager];
+                Class serverClass = [self.replicatorClass needsRunLoop] ? [CBL_RunLoopServer class]
+                                                                        : [CBL_DispatchServer class];
+                server = [[serverClass alloc] initWithManager: newManager];
                 LogTo(CBLDatabase, @"%@ created %@ (with %@)", self, server, newManager);
             }
             Assert(server, @"Failed to create backgroundServer!");
@@ -832,13 +840,22 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
 }
 
 
-- (CBL_Replicator*) replicatorWithProperties: (NSDictionary*)properties
-                                      status: (CBLStatus*)outStatus
+- (Class) replicatorClass {
+    if (!_replicatorClass) {
+        _replicatorClass = NSClassFromString(_replicatorClassName);
+        Assert(_replicatorClass, @"CBLManager.replicatorClassName is '%@' but no such class found",
+               _replicatorClassName);
+        Assert([_replicatorClass conformsToProtocol: @protocol(CBL_Replicator)],
+               @"CBLManager.replicatorClassName is '%@' but class doesn't implement CBL_Replicator",
+               _replicatorClassName);
+    }
+    return _replicatorClass;
+}
+
+
+- (id<CBL_Replicator>) replicatorWithProperties: (NSDictionary*)properties
+                                         status: (CBLStatus*)outStatus
 {
-    // An unfortunate limitation:
-    Assert(_dispatchQueue==NULL || _dispatchQueue==dispatch_get_main_queue(),
-           @"CBLReplicators need a thread not a dispatch queue");
-    
     // Extract the parameters from the JSON request body:
     // http://wiki.apache.org/couchdb/Replication
     CBLDatabase* db;
@@ -859,29 +876,32 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         return nil;
     }
 
-    BOOL continuous = [$castIf(NSNumber, properties[@"continuous"]) boolValue];
+    NSString* filterName = $castIf(NSString, properties[@"filter"]);
+    NSArray* docIDs = $castIf(NSArray, properties[@"doc_ids"]);
 
-    CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db
-                                                       remote: remote
-                                                         push: push
-                                                   continuous: continuous];
+    CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remote
+                                                                                 push: push];
+    settings.continuous = [$castIf(NSNumber, properties[@"continuous"]) boolValue];
+    settings.filterName = filterName;
+    settings.filterParameters = $castIf(NSDictionary, properties[@"query_params"]);
+    settings.docIDs = docIDs;
+    settings.options = properties;
+    settings.requestHeaders = headers;
+    settings.authorizer = authorizer;
+    settings.createTarget = push && createTarget;
+
+    if (![settings compilePushFilterForDatabase: db status: outStatus])
+        return nil;
+
+    id<CBL_Replicator> repl = [[self.replicatorClass alloc] initWithDB: db settings: settings];
     if (!repl) {
         if (outStatus)
             *outStatus = kCBLStatusServerError;
         return nil;
     }
 
-    repl.filterName = $castIf(NSString, properties[@"filter"]);
-    repl.filterParameters = $castIf(NSDictionary, properties[@"query_params"]);
-    repl.docIDs = $castIf(NSArray, properties[@"doc_ids"]);
-    repl.options = properties;
-    repl.requestHeaders = headers;
-    repl.authorizer = authorizer;
-    if (push)
-        ((CBL_Pusher*)repl).createTarget = createTarget;
-
     // If this is a duplicate, reuse an existing replicator:
-    CBL_Replicator* existing = [db activeReplicatorLike: repl];
+    id<CBL_Replicator> existing = [db activeReplicatorLike: repl];
     if (existing)
         repl = existing;
 

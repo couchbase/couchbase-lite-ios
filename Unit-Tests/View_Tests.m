@@ -7,6 +7,7 @@
 //
 
 #import "CBLTestCase.h"
+#import "CBLInternal.h"
 #import "MYBlockUtils.h"
 
 

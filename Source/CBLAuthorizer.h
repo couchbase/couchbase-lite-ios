@@ -6,7 +6,8 @@
 //  Copyright (c) 2012-2013 Couchbase, Inc. All rights reserved.
 //
 
-#import "CBLAuthenticator.h"
+#import <CouchbaseLite/CBLAuthenticator.h>
+#import <Security/SecBase.h>
 
 
 /** Internal protocol for authenticating a user to a server.
@@ -32,10 +33,6 @@
 
 /** Simple implementation of CBLAuthorizer that does HTTP Basic Auth. */
 @interface CBLBasicAuthorizer : NSObject <CBLAuthorizer>
-{
-    @private
-    NSURLCredential* _credential;
-}
 
 /** Initialize given a credential object that contains a username and password. */
 - (instancetype) initWithCredential: (NSURLCredential*)credential;
@@ -43,6 +40,8 @@
 /** Initialize given a URL alone -- will use a baked-in username/password in the URL,
     or look up a credential from the keychain. */
 - (instancetype) initWithURL: (NSURL*)url;
+
+@property (readonly) NSURLCredential* credential;
 
 @end
 
@@ -67,3 +66,8 @@
 
 @end
 #endif
+
+
+
+void CBLSetAnchorCerts(NSArray* certs, BOOL onlyThese);
+BOOL CBLCheckSSLServerTrust(SecTrustRef trust, NSString* host, UInt16 port);

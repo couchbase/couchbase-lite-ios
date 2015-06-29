@@ -16,7 +16,7 @@
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase.h"
-#import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 #import "CBLDocument.h"
 #import "CBL_Revision.h"
 #import "CBL_Attachment.h"
@@ -231,8 +231,10 @@
     if (history.count == 0)
         history = @[revID];
     else if (!$equal(history[0], revID)) {
-        CBLStatusToOutNSError(kCBLStatusBadID, outError);
-        return kCBLStatusBadID;
+        // If inRev's revID doesn't appear in history, add it at the start:
+        NSMutableArray* nuHistory = [history mutableCopy];
+        [nuHistory insertObject: revID atIndex: 0];
+        history = nuHistory;
     }
 
     CBLStatus status;
@@ -264,6 +266,24 @@
                  validationBlock: validationBlock
                           source: source
                            error: outError];
+}
+
+
+- (BOOL) forceInsertRevisionWithJSON: (NSData*)json
+                     revisionHistory: (NSArray*)history
+                              source: (NSURL*)source
+                               error: (NSError**)outError
+{
+    CBL_Body* body = [CBL_Body bodyWithJSON: json];
+    if (body) {
+        CBL_Revision* rev = [[CBL_Revision alloc] initWithBody: body];
+        if (rev) {
+            CBLStatus status = [self forceInsert: rev revisionHistory: history source: source
+                                           error: outError];
+            return !CBLStatusIsError(status);
+        }
+    }
+    return CBLStatusToOutNSError(kCBLStatusBadJSON, outError);
 }
 
 

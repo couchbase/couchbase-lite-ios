@@ -7,7 +7,7 @@
 //
 
 #import "CBLBase.h"
-@class CBLDatabase;
+@class CBLDatabase, CBLDocument;
 @protocol CBLAuthenticator;
 
 NS_ASSUME_NONNULL_BEGIN

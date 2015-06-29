@@ -18,7 +18,7 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBL_Router.h"
 #import "CBLListener.h"
-#import "CBL_Pusher.h"
+#import "CBLRestReplicator.h"
 #import "CBLManager+Internal.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLMisc.h"
@@ -102,7 +102,7 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
         Log(@"Pushing %@ --> <%@> ...", dbName, remote);
 
     // Actually replicate -- this could probably be cleaned up to use the public API.
-    CBL_Replicator* repl = nil;
+    id<CBL_Replicator> repl = nil;
     NSError* error = nil;
     CBLDatabase* db = [dbm existingDatabaseNamed: dbName error: &error];
     if (pull) {
@@ -123,10 +123,14 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
                 dbName.UTF8String, error.localizedDescription.UTF8String);
         return false;
     }
-    repl = [[CBL_Replicator alloc] initWithDB: db remote: remote push: !pull
-                                   continuous: continuous];
+
+    CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remote
+                                                                                 push: !pull];
+    settings.continuous = continuous;
     if (createTarget && !pull)
-        ((CBL_Pusher*)repl).createTarget = YES;
+        settings.createTarget = YES;
+
+    repl = [[CBLRestReplicator alloc] initWithDB: db settings: settings];
     if (!repl)
         fprintf(stderr, "Unable to create replication.\n");
     [repl start];

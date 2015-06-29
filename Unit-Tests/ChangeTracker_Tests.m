@@ -9,6 +9,7 @@
 #import "CBLTestCase.h"
 #import "CBLChangeTracker.h"
 #import "CBLChangeMatcher.h"
+#import "CBLRemoteRequest.h"
 #import "CBLAuthorizer.h"
 #import "CBLInternal.h"
 #import "MYURLUtils.h"

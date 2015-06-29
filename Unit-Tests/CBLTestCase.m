@@ -91,7 +91,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 
 - (void)tearDown {
     NSError* error;
-    Assert(!db || [db close: &error], @"Couldn't close db: %@", error);
+    Assert(!db || [db deleteDatabase: &error], @"Couldn't close db: %@", error);
     [dbmgr close];
 
     [super tearDown];
