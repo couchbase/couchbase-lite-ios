@@ -57,6 +57,14 @@
 }
 
 
+#ifndef GNUSTEP
+- (void) dealloc {
+    if (_tempDir)
+        [[NSFileManager defaultManager] removeItemAtPath: _tempDir error: NULL];
+}
+#endif
+
+
 + (CBLBlobKey) keyForBlob: (NSData*)blob {
     NSCParameterAssert(blob);
     CBLBlobKey key;
