@@ -252,6 +252,7 @@ static BOOL sAutoCompact = YES;
 
         [_storage close];
         _storage = nil;
+        _attachments = nil;
 
         _isOpen = NO;
 
