@@ -410,7 +410,8 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
 }
 
 
-static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) {
+static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_Revision* winner) {
+    [db getRevisionSequence: rev];
     return [[CBLDatabaseChange alloc] initWithAddedRevision: rev winningRevisionID: winner.revID
                                                  inConflict: NO source: nil];
 }
@@ -434,6 +435,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
 
     CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"4-4444" deleted: NO];
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
+    CBL_Revision* revAgain = [rev copy];
     NSArray* history = @[rev.revID, @"3-3333", @"2-2222", @"1-1111"];
     change = nil;
     NSError* error;
@@ -442,9 +444,15 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     AssertNil(error);
     AssertEq(db.documentCount, 1u);
     [self verifyRev: rev history: history existing: 0];
-    AssertEqual(change, announcement(rev, rev));
+    AssertEqual(change, announcement(db, rev, rev));
     Assert(!change.inConflict);
 
+    // No-op forceInsert: of already-existing revision:
+    SequenceNumber lastSeq = db.lastSequenceNumber;
+    status = [db forceInsert: revAgain revisionHistory: history source: nil error: &error];
+    AssertEq(status, kCBLStatusOK);
+    AssertNil(error);
+    AssertEq(db.lastSequenceNumber, lastSeq);
 
     CBL_MutableRevision* conflict = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"5-5555" deleted: NO];
     conflict.properties = $dict({@"_id", conflict.docID}, {@"_rev", conflict.revID},
@@ -456,7 +464,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     AssertNil(error);
     AssertEq(db.documentCount, 1u);
     [self verifyRev: conflict history: conflictHistory existing: 0];
-    AssertEqual(change, announcement(conflict, conflict));
+    AssertEqual(change, announcement(db, conflict, conflict));
     Assert(change.inConflict);
 
     // Add an unrelated document:
@@ -466,7 +474,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     status = [db forceInsert: other revisionHistory: @[other.revID] source: nil error: &error];
     AssertEq(status, kCBLStatusCreated);
     AssertNil(error);
-    AssertEqual(change, announcement(other, other));
+    AssertEqual(change, announcement(db, other, other));
     Assert(!change.inConflict);
 
     // Fetch one of those phantom revisions with no body:
@@ -508,7 +516,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     AssertNil(error);
     current = [db getDocumentWithID: rev.docID revisionID: nil];
     AssertEqual(current, rev);
-    AssertEqual(change, announcement(del1, rev));
+    AssertEqual(change, announcement(db, del1, rev));
     
     [self verifyRev: rev history: history existing: 0];
 
@@ -523,7 +531,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     AssertEqual(current, nil);
 
     CBL_Revision* maxDel = CBLCompareRevIDs(del1.revID, del2.revID) > 0 ? del1 : nil;
-    AssertEqual(change, announcement(del2, maxDel));
+    AssertEqual(change, announcement(db, del2, maxDel));
     Assert(!change.inConflict);
 
     [[NSNotificationCenter defaultCenter] removeObserver: observer];
@@ -557,7 +565,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     AssertEq(db.documentCount, 1u);
     Assert(!change.inConflict);
     [self verifyRev: rev history: history existing: 0];
-    AssertEqual(change, announcement(rev, rev));
+    AssertEqual(change, announcement(db, rev, rev));
 
     rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"4-4444" deleted: NO];
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
@@ -569,7 +577,7 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     AssertEq(db.documentCount, 1u);
     Assert(!change.inConflict);
     [self verifyRev: rev history: history existing: 1];
-    AssertEqual(change, announcement(rev, rev));
+    AssertEqual(change, announcement(db, rev, rev));
 
     [[NSNotificationCenter defaultCenter] removeObserver: observer];
 }

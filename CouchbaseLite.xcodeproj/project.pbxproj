@@ -2133,7 +2133,7 @@
 			isa = PBXGroup;
 			children = (
 				27B0866D1B38804100D3D9D8 /* BLIP.xcodeproj */,
-				27B7E0F918F8FE1900044EBA /* CBForest */,
+				27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */,
 				27513A281A674C9B0055DC40 /* fmdb */,
 				277B5C5E1821A8370088881E /* yajl */,
 				27F0749A11CD5B1200E9A2AB /* MYUtilities */,
@@ -2522,14 +2522,6 @@
 				27B0B8191492C16300A817AD /* iOS Demo-Prefix.pch */,
 			);
 			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
-		27B7E0F918F8FE1900044EBA /* CBForest */ = {
-			isa = PBXGroup;
-			children = (
-				27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */,
-			);
-			name = CBForest;
 			sourceTree = "<group>";
 		};
 		27B7E0FB18F8FE2800044EBA /* Products */ = {
@@ -3412,6 +3404,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = CBL;
+				LastSwiftUpdateCheck = 0700;
 				LastUpgradeCheck = 0630;
 				ORGANIZATIONNAME = "Couchbase, Inc";
 				TargetAttributes = {

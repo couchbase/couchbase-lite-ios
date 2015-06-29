@@ -32,6 +32,7 @@
                                 source: (NSURL*)source
 {
     Assert(addedRevision);
+    Assert(addedRevision.sequence);
     self = [super init];
     if (self) {
         // Input CBL_Revisions need to be copied in case they are mutable:
