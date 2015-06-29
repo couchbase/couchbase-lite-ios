@@ -37,17 +37,10 @@
 
 
 @interface CBLValidationContext : NSObject <CBLValidationContext>
-{
-    @private
-    CBLDatabase* _db;
-    CBL_Revision* _currentRevision, *_newRevision;
-    int _errorType;
-    NSString* _errorMessage;
-    NSArray* _changedKeys;
-}
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                          revision: (CBL_Revision*)currentRevision
-                      newRevision: (CBL_Revision*)newRevision;
+                      newRevision: (CBL_Revision*)newRevision
+                           source: (NSURL*)source;
 @property (readonly) CBLSavedRevision* currentRevision;
 @property (readonly) NSString* rejectionMessage;
 @end
@@ -141,6 +134,7 @@
 #pragma mark - INSERTION:
 
 
+#if DEBUG // for tests only
 - (CBL_Revision*) putRevision: (CBL_MutableRevision*)putRev
                prevRevisionID: (NSString*)inPrevRevID
                 allowConflict: (BOOL)allowConflict
@@ -149,14 +143,17 @@
 {
     return [self putDocID: putRev.docID properties: [putRev.properties mutableCopy]
            prevRevisionID: inPrevRevID allowConflict: allowConflict
+                   source: nil
                    status: outStatus error: outError];
 }
+#endif
 
 
 - (CBL_Revision*) putDocID: (NSString*)inDocID
                 properties: (NSMutableDictionary*)properties
             prevRevisionID: (NSString*)inPrevRevID
              allowConflict: (BOOL)allowConflict
+                    source: (NSURL*)source
                     status: (CBLStatus*)outStatus
                      error: (NSError**)outError
 {
@@ -195,6 +192,7 @@
             return [self validateRevision: rev
                          previousRevision: prev
                               parentRevID: parentRevID
+                                   source: nil
                                     error: outError];
         };
     }
@@ -257,6 +255,7 @@
             return [self validateRevision: newRev
                          previousRevision: prev
                               parentRevID: parentRevID
+                                   source: source
                                     error: outError];
         };
     }
@@ -293,6 +292,7 @@
 - (CBLStatus) validateRevision: (CBL_Revision*)newRev
               previousRevision: (CBL_Revision*)oldRev
                    parentRevID: (NSString*)parentRevID
+                        source: (NSURL*)source
                          error: (NSError**)outError
 {
     if (outError)
@@ -306,8 +306,9 @@
                                                                revision: newRev
                                                        parentRevisionID: parentRevID];
     CBLValidationContext* context = [[CBLValidationContext alloc] initWithDatabase: self
-                                                                        revision: oldRev
-                                                                     newRevision: newRev];
+                                                                          revision: oldRev
+                                                                       newRevision: newRev
+                                                                            source: source];
     CBLStatus status = kCBLStatusOK;
     for (NSString* validationName in validations) {
         CBLValidationBlock validation = [self validationNamed: validationName];
@@ -341,16 +342,27 @@
 
 
 @implementation CBLValidationContext
+{
+@private
+    CBLDatabase* _db;
+    CBL_Revision* _currentRevision, *_newRevision;
+    NSURL* _source;
+    int _errorType;
+    NSString* _errorMessage;
+    NSArray* _changedKeys;
+}
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                          revision: (CBL_Revision*)currentRevision
                       newRevision: (CBL_Revision*)newRevision
+                           source: (NSURL*)source
 {
     self = [super init];
     if (self) {
         _db = db;
         _currentRevision = currentRevision;
         _newRevision = newRevision;
+        _source = source;
         _errorType = kCBLStatusForbidden;
         _errorMessage = @"invalid document";
     }
@@ -358,7 +370,7 @@
 }
 
 
-@synthesize rejectionMessage=_rejectionMessage;
+@synthesize rejectionMessage=_rejectionMessage, source=_source;
 
 
 - (CBL_Revision*) current_Revision {

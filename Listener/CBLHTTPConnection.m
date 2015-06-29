@@ -139,7 +139,10 @@
                                                 request: urlRequest
                                                 isLocal: NO];
     router.processRanges = NO;  // The HTTP server framework does this already
-    router.username = _username;
+    if (_username) {
+        NSString* str = [@"user:" stringByAppendingString: [_username stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding]];
+        router.source = [NSURL URLWithString: str];
+    }
     CBLHTTPResponse* response = [[CBLHTTPResponse alloc] initWithRouter: router
                                                          forConnection: self];
     

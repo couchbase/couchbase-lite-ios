@@ -72,6 +72,7 @@ typedef enum {
                           encoding: (CBLAttachmentEncoding)encoding
                            ofDocID: (NSString*)docID
                              revID: (NSString*)oldRevID
+                            source: (NSURL*)source
                             status: (CBLStatus*)outStatus
                              error: (NSError**)outError;
 

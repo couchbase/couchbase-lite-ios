@@ -276,7 +276,9 @@
                 if (noNewEdits) {
                     rev = [[CBL_Revision alloc] initWithBody: docBody];
                     NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: doc];
-                    status = rev ? [db forceInsert: rev revisionHistory: history source: nil
+                    status = rev ? [db forceInsert: rev
+                                   revisionHistory: history
+                                            source: self.source
                                              error: &error] : kCBLStatusBadParam;
                 } else {
                     status = [self update: db
@@ -861,10 +863,13 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             CBLStatusToOutNSError(status, outError);
         }
     } else
-        *outRev = [db putRevision: rev prevRevisionID: prevRevID
-                    allowConflict: allowConflict
-                           status: &status
-                            error: outError];
+        *outRev = [db putDocID: docID
+                    properties: [rev.properties mutableCopy]
+                prevRevisionID: prevRevID
+                 allowConflict: allowConflict
+                        source: self.source
+                        status: &status
+                         error: outError];
     return status;
 }
 
@@ -999,7 +1004,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                 return kCBLStatusBadID;
             NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: body.properties];
             NSError* error;
-            CBLStatus status = [_db forceInsert: rev revisionHistory: history source: nil
+            CBLStatus status = [_db forceInsert: rev
+                                revisionHistory: history
+                                         source: self.source
                                           error: &error];
             if (!CBLStatusIsError(status)) {
                 _response.bodyObject = $dict({@"ok", $true},
@@ -1034,6 +1041,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                                      encoding: kCBLAttachmentEncodingNone
                                       ofDocID: docID
                                         revID: ([self query: @"rev"] ?: self.ifMatch)
+                                       source: self.source
                                        status: &status
                                         error: outError];
     if (status < 300) {

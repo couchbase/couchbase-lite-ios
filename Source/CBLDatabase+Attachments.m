@@ -386,6 +386,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
                           encoding: (CBLAttachmentEncoding)encoding
                            ofDocID: (NSString*)docID
                              revID: (NSString*)oldRevID
+                            source: (NSURL*)source
                             status: (CBLStatus*)outStatus
                              error: (NSError**)outError
 {
@@ -437,13 +438,16 @@ static UInt64 smallestLength(NSDictionary* attachment) {
         }
         [attachments removeObjectForKey: filename];
     }
+
     NSMutableDictionary* properties = [oldRev.properties mutableCopy];
     properties[@"_attachments"] = attachments;
-    oldRev.properties = properties;
 
     // Store a new revision with the updated _attachments:
-    CBL_Revision* newRev = [self putRevision: oldRev prevRevisionID: oldRevID allowConflict: NO
-                                      status: outStatus error: outError];
+    CBL_Revision* newRev = [self putDocID: docID
+                               properties: properties
+                           prevRevisionID: oldRevID allowConflict: NO
+                                   source: source
+                                   status: outStatus error: outError];
     if (!body && *outStatus == kCBLStatusCreated)
         *outStatus = kCBLStatusOK;
 
