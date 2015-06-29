@@ -15,4 +15,6 @@
 
 @property (readonly) CBLListener* listener;
 
+@property (readonly) NSString* username;
+
 @end

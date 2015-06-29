@@ -36,6 +36,10 @@
 #define kPortNumber 59840
 
 
+@interface ListenerDelegate : NSObject <CBLListenerDelegate>
+@end
+
+
 static NSString* GetServerPath() {
     NSString* bundleID = [[NSBundle mainBundle] bundleIdentifier];
     if (!bundleID)
@@ -236,6 +240,8 @@ int main (int argc, const char * argv[])
         CBLListener* listener = [[CBLListener alloc] initWithManager: server port: port];
         NSCAssert(listener!=nil, @"Coudln't create CBLListener");
         listener.readOnly = options.readOnly;
+        id<CBLListenerDelegate> delegate = [[ListenerDelegate alloc] init];
+        listener.delegate = delegate;
 
         if (auth) {
             srandomdev();
@@ -294,3 +300,23 @@ int main (int argc, const char * argv[])
     return 0;
 }
 
+
+@implementation ListenerDelegate
+
+- (NSString*) authenticateConnectionFromAddress: (NSData*)address
+                                      withTrust: (SecTrustRef)trust
+{
+    if (trust) {
+        SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
+        CFStringRef cfCommonName = NULL;
+        SecCertificateCopyCommonName(cert, &cfCommonName);
+        NSString* commonName = CFBridgingRelease(cfCommonName);
+        Log(@"Incoming SSL connection with client cert for '%@'", commonName);
+        return commonName;
+    } else {
+        Log(@"Incoming SSL connection without a client cert");
+        return @"";
+    }
+}
+
+@end

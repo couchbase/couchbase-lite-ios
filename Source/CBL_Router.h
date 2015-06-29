@@ -74,6 +74,7 @@ enum {
                         request: (NSURLRequest*)request
                         isLocal: (BOOL)isLocal;
 
+@property (copy) NSString* username;
 @property BOOL processRanges;
 
 @property (copy) OnAccessCheckBlock onAccessCheck;

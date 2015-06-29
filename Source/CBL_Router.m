@@ -79,7 +79,7 @@
 
 
 @synthesize onAccessCheck=_onAccessCheck, onResponseReady=_onResponseReady,
-            onDataAvailable=_onDataAvailable, onFinished=_onFinished,
+            onDataAvailable=_onDataAvailable, onFinished=_onFinished, username=_username,
             request=_request, response=_response, processRanges=_processRanges;
 
 
