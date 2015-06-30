@@ -1448,6 +1448,8 @@ static CBLManager* sCBLManager;
             value = [expression constantValue];
             if ([value isKindOfClass: [NSManagedObject class]])
                 value = [[value objectID] couchbaseLiteIDRepresentation];
+            if ([value isKindOfClass: [NSManagedObjectID class]])
+                value = [value couchbaseLiteIDRepresentation];
             else if ([value isKindOfClass:[NSDate class]])
                 value = [CBLJSON JSONObjectWithDate: value];
             break;
