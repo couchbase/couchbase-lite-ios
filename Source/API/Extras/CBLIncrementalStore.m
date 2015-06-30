@@ -393,7 +393,9 @@ static CBLManager* sCBLManager;
     [context obtainPermanentIDsForObjects: @[object] error: nil];
     [object didChangeValueForKey: @"objectID"];
 
-    [context refreshObject: object mergeChanges: YES];
+    [context performBlock:^{
+        [context refreshObject: object mergeChanges: YES];
+    }];
 }
 
 
@@ -2026,7 +2028,9 @@ static CBLManager* sCBLManager;
 
 - (void) informObservingManagedObjectContextsAboutUpdatedIDs: (NSArray*)updatedIDs deletedIDs: (NSArray*)deletedIDs {
     for (NSManagedObjectContext* context in self.observingManagedObjectContexts) {
-        [self informManagedObjectContext: context updatedIDs: updatedIDs deletedIDs: deletedIDs];
+        [context performBlock:^{
+            [self informManagedObjectContext: context updatedIDs: updatedIDs deletedIDs: deletedIDs];
+        }];
     }
 }
 
