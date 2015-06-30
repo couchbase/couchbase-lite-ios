@@ -1437,6 +1437,12 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         AssertEq((int)result.count, 3);
     }];
 
+    // Deep Many with an object id
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user == %@", [user1 objectID]];
+    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+        AssertEq((int)result.count, 3);
+    }];
+
     fetchRequest.predicate = [NSCompoundPredicate andPredicateWithSubpredicates:@[[NSPredicate predicateWithFormat:@"entry == %@", entry1], [NSPredicate predicateWithFormat:@"number == 10"]]];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
         AssertEq((int)result.count, 1);
@@ -1576,7 +1582,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         AssertEqual (texts, expected);
     }];
 }
-
 
 - (void)test_FetchWithRelationshipNil {
     NSError *error;
