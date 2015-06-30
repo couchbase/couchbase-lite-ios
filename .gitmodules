@@ -15,10 +15,10 @@
 	url = git://github.com/couchbaselabs/WebSockets-Cocoa.git
 [submodule "vendor/CBForest"]
 	path = vendor/CBForest
-	url = https://github.com/couchbaselabs/cbforest.git
+	url = git://github.com/couchbaselabs/cbforest.git
 [submodule "vendor/fmdb"]
 	path = vendor/fmdb
 	url = git://github.com/couchbaselabs/fmdb.git
 [submodule "vendor/BLIP"]
 	path = vendor/BLIP
-	url = git@github.com:couchbaselabs/BLIP-Cocoa.git
+	url = git://github.com/couchbaselabs/BLIP-Cocoa.git
