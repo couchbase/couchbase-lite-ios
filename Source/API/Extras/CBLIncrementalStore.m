@@ -934,7 +934,7 @@ static CBLManager* sCBLManager;
 
 - (BOOL) containsRelationshipKeyPathsInSortDescriptors: (NSArray*)sortDescriptors {
     for (NSSortDescriptor *sd in sortDescriptors) {
-        if ([sd.key containsString:@"."])
+        if (NSNotFound != [sd.key rangeOfString:@"."].location)
             return YES;
     }
     return NO;
