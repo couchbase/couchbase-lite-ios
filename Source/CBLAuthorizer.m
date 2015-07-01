@@ -20,7 +20,7 @@
 #import <Security/Security.h>
 
 
-@implementation CBLBasicAuthorizer
+@implementation CBLPasswordAuthorizer
 
 @synthesize credential=_credential;
 
@@ -43,32 +43,6 @@
     return [self initWithCredential: cred];
 }
 
-
-- (NSString*) authorizeURLRequest: (NSMutableURLRequest*)request
-                         forRealm: (NSString*)realm
-{
-    NSString* username = _credential.user;
-    NSString* password = _credential.password;
-    if (username && password) {
-        NSString* seekrit = $sprintf(@"%@:%@", username, password);
-        seekrit = [CBLBase64 encode: [seekrit dataUsingEncoding: NSUTF8StringEncoding]];
-        return [@"Basic " stringByAppendingString: seekrit];
-    }
-    return nil;
-}
-
-- (NSString*) authorizeHTTPMessage: (CFHTTPMessageRef)message
-                            forRealm: (NSString*)realm
-{
-    NSString* username = _credential.user;
-    NSString* password = _credential.password;
-    if (username && password) {
-        NSString* seekrit = $sprintf(@"%@:%@", username, password);
-        seekrit = [CBLBase64 encode: [seekrit dataUsingEncoding: NSUTF8StringEncoding]];
-        return [@"Basic " stringByAppendingString: seekrit];
-    }
-    return nil;
-}
 
 - (NSString*) description {
     return $sprintf(@"%@[%@/****]", self.class, _credential.user);
@@ -189,14 +163,14 @@ static BOOL sOnlyTrustAnchorCerts;
 
 
 void CBLSetAnchorCerts(NSArray* certs, BOOL onlyThese) {
-    @synchronized([CBLBasicAuthorizer class]) {
+    @synchronized([CBLPasswordAuthorizer class]) {
         sAnchorCerts = certs.copy;
         sOnlyTrustAnchorCerts = onlyThese;
     }
 }
 
 BOOL CBLCheckSSLServerTrust(SecTrustRef trust, NSString* host, UInt16 port) {
-    @synchronized([CBLBasicAuthorizer class]) {
+    @synchronized([CBLPasswordAuthorizer class]) {
         if (sAnchorCerts.count > 0) {
             SecTrustSetAnchorCertificates(trust, (__bridge CFArrayRef)sAnchorCerts);
             SecTrustSetAnchorCertificatesOnly(trust, sOnlyTrustAnchorCerts);

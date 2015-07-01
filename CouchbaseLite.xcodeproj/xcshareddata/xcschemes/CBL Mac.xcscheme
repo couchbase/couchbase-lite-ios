@@ -56,6 +56,16 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "27187EAE1B03C03D0057D7D2"
+               BuildableName = "BLIPTests-Mac.xctest"
+               BlueprintName = "BLIPTests-Mac"
+               ReferencedContainer = "container:vendor/BLIP/BLIP.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "272AA83E1A48D835004B8D55"
                BuildableName = "CBL Mac Unit Tests.xctest"
                BlueprintName = "CBL Mac Unit Tests"

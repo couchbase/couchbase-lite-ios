@@ -157,7 +157,7 @@
 
     NSURLCredential* c = [NSURLCredential credentialWithUser: @"test" password: @"abc123"
                                                  persistence: NSURLCredentialPersistenceForSession];
-    tracker.authorizer = [[CBLBasicAuthorizer alloc] initWithCredential: c];
+    tracker.authorizer = [[CBLPasswordAuthorizer alloc] initWithCredential: c];
 
     NSArray* expected = $array($dict({@"seq", @1},
                                      {@"id", @"_user/test"},

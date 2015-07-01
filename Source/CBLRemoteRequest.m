@@ -88,8 +88,7 @@
 - (void) setAuthorizer: (id<CBLAuthorizer>)authorizer {
     if (_authorizer != authorizer) {
         _authorizer = authorizer;
-        [_request setValue: [authorizer authorizeURLRequest: _request forRealm: nil]
-        forHTTPHeaderField: @"Authorization"];
+        [$castIfProtocol(CBLCustomAuthorizer, _authorizer) authorizeURLRequest: _request];
     }
 }
 
@@ -224,7 +223,7 @@
     }
 
     [_connection cancel];
-    self.authorizer = [[CBLBasicAuthorizer alloc] initWithCredential: cred];
+    self.authorizer = [[CBLPasswordAuthorizer alloc] initWithCredential: cred];
     LogTo(RemoteRequest, @"%@ retrying with %@", self, _authorizer);
     [self startAfterDelay: 0.0];
     return true;
@@ -281,7 +280,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
                 LogTo(RemoteRequest, @"    challenge: useCredential: %@", cred);
                 [sender useCredential: cred forAuthenticationChallenge:challenge];
                 // Update my authorizer so my owner (the replicator) can pick it up when I'm done
-                _authorizer = [[CBLBasicAuthorizer alloc] initWithCredential: cred];
+                _authorizer = [[CBLPasswordAuthorizer alloc] initWithCredential: cred];
                 return;
             }
         }
@@ -372,12 +371,13 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     // The redirected request needs to be authorized again:
     if (![request valueForHTTPHeaderField: @"Authorization"]) {
         NSMutableURLRequest* nuRequest = [request mutableCopy];
-        NSString* auth;
-        if (_authorizer)
-            auth = [_authorizer authorizeURLRequest: nuRequest forRealm: nil];
-        else
-            auth = [_request valueForHTTPHeaderField: @"Authorization"];
-        [nuRequest setValue: auth forHTTPHeaderField: @"Authorization"];
+        id<CBLCustomAuthorizer> customAuth = $castIfProtocol(CBLCustomAuthorizer, _authorizer);
+        if (customAuth) {
+            [customAuth authorizeURLRequest: nuRequest];
+        } else {
+            NSString* authHeader = [_request valueForHTTPHeaderField: @"Authorization"];
+            [nuRequest setValue: authHeader forHTTPHeaderField: @"Authorization"];
+        }
         request = nuRequest;
     }
     return request;

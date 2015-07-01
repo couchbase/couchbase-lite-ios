@@ -10,7 +10,7 @@
 
 
 /** Authorizer for Facebook-based logins. Connects to /_facebook endpoint on server. */
-@interface CBLFacebookAuthorizer : NSObject <CBLAuthorizer>
+@interface CBLFacebookAuthorizer : NSObject <CBLLoginAuthorizer>
 
 - (id) initWithEmailAddress: (NSString*)email;
 

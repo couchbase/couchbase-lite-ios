@@ -12,7 +12,7 @@
 
 
 /** Implementation of TAuthorizer for OAuth 1 requests. */
-@interface CBLOAuth1Authorizer : NSObject <CBLAuthorizer>
+@interface CBLOAuth1Authorizer : NSObject <CBLCustomAuthorizer>
 {
     OAConsumer* _consumer;
     OAToken* _token;

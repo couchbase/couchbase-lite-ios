@@ -73,17 +73,16 @@
         [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
             _http[key] = value;
         }];
+
+        // If no credential yet, get it from authorizer if it has one:
+        if (!_http.credential)
+            _http.credential = $castIf(CBLPasswordAuthorizer, _authorizer).credential;
     }
 
     CFHTTPMessageRef request = [_http newHTTPRequest];
 
-    if (_authorizer && !_http.credential) {
-        // Let the Authorizer add its own credential:
-        NSString* authHeader = [_authorizer authorizeHTTPMessage: request forRealm: nil];
-        if (authHeader)
-            CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Authorization"),
-                                             (__bridge CFStringRef)(authHeader));
-    }
+    if (!_http.credential)
+        [$castIfProtocol(CBLCustomAuthorizer, _authorizer) authorizeHTTPMessage: request];
 
     // Now open the connection:
     LogTo(SyncVerbose, @"%@: %@ %@", self, (self.usePOST ?@"POST" :@"GET"), url.resourceSpecifier);

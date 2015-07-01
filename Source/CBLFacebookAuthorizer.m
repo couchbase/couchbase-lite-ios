@@ -73,17 +73,4 @@ static NSMutableDictionary* sRegisteredTokens;
 }
 
 
-- (NSString*) authorizeURLRequest: (NSMutableURLRequest*)request
-                         forRealm: (NSString*)realm
-{
-    return nil; // no-op
-}
-
-
-- (NSString*) authorizeHTTPMessage: (CFHTTPMessageRef)message
-                          forRealm: (NSString*)realm
-{
-    return nil; // no-op
-}
-
 @end

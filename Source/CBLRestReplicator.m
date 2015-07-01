@@ -271,7 +271,7 @@
     // If client didn't set an authorizer, use basic auth if credential is available:
     _authorizer = _settings.authorizer;
     if (!_authorizer) {
-        _authorizer = [[CBLBasicAuthorizer alloc] initWithURL: _settings.remote];
+        _authorizer = [[CBLPasswordAuthorizer alloc] initWithURL: _settings.remote];
         if (_authorizer)
             LogTo(SyncVerbose, @"%@: Found credential, using %@", self, _authorizer);
     }
@@ -552,12 +552,13 @@
 
 // Before doing anything else, determine whether we have an active login session.
 - (void) checkSession {
-    if (![_authorizer respondsToSelector: @selector(loginParametersForSite:)]) {
+    if ([_authorizer conformsToProtocol: @protocol(CBLLoginAuthorizer)]) {
+        // Sync Gateway session API is at /db/_session; try that first
+        [self checkSessionAtPath: @"_session"];
+    } else {
+        // Skip login phase
         [self fetchRemoteCheckpointDoc];
-        return;
     }
-    // Sync Gateway session API is at /db/_session; try that first
-    [self checkSessionAtPath: @"_session"];
 }
 
 - (void) checkSessionAtPath: (NSString*)sessionPath {
@@ -592,14 +593,15 @@
 
 // If there is no login session, attempt to log in, if the authorizer knows the parameters.
 - (void) login {
-    NSDictionary* loginParameters = [_authorizer loginParametersForSite: _settings.remote];
+    id<CBLLoginAuthorizer> loginAuth = (id<CBLLoginAuthorizer>)_authorizer;
+    NSDictionary* loginParameters = [loginAuth loginParametersForSite: _settings.remote];
     if (loginParameters == nil) {
         LogTo(Sync, @"%@: %@ has no login parameters, so skipping login", self, _authorizer);
         [self fetchRemoteCheckpointDoc];
         return;
     }
 
-    NSString* loginPath = [_authorizer loginPathForSite: _settings.remote];
+    NSString* loginPath = [loginAuth loginPathForSite: _settings.remote];
     LogTo(Sync, @"%@: Logging in with %@ at %@ ...", self, _authorizer.class, loginPath);
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"POST"

@@ -113,22 +113,6 @@ bool CBLParsePersonaAssertion(NSString* assertion,
 }
 
 
-- (NSString*) authorizeURLRequest: (NSMutableURLRequest*)request
-                         forRealm: (NSString*)realm
-{
-    // Auth is via cookie, which is automatically added by CFNetwork.
-    return nil;
-}
-
-
-- (NSString*) authorizeHTTPMessage: (CFHTTPMessageRef)message
-                          forRealm: (NSString*)realm
-{
-    // Auth is via cookie, which is automatically added by CFNetwork.
-    return nil;
-}
-
-
 - (NSString*) loginPathForSite:(NSURL *)site {
     return [site.path stringByAppendingPathComponent: @"_persona"];
 }

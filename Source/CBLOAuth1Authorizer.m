@@ -54,34 +54,32 @@
 
 
 // CBLAuthorizer API:
-- (NSString*) authorizeURLRequest: (NSMutableURLRequest*)request
-                         forRealm: (NSString*)realm
-{
+- (void) authorizeURLRequest: (NSMutableURLRequest*)request {
     OAMutableURLRequest* oarq = [[OAMutableURLRequest alloc] initWithURL: request.URL
                                                                 consumer: _consumer
                                                                    token: _token
-                                                                   realm: realm
+                                                                   realm: nil
                                                        signatureProvider: _signatureProvider];
     oarq.HTTPMethod = request.HTTPMethod;
     oarq.HTTPBody = request.HTTPBody;
     [oarq prepare];
     NSString* authorization = [oarq valueForHTTPHeaderField: @"Authorization"];
-    return authorization;
+    [request setValue: authorization forHTTPHeaderField: @"Authorization"];
 }
 
-- (NSString*) authorizeHTTPMessage: (CFHTTPMessageRef)message
-                          forRealm: (NSString*)realm
-{
+- (void) authorizeHTTPMessage: (CFHTTPMessageRef)message {
     NSURL* url = CFBridgingRelease(CFHTTPMessageCopyRequestURL(message));
     OAMutableURLRequest* oarq = [[OAMutableURLRequest alloc] initWithURL: url
                                                                 consumer: _consumer
                                                                    token: _token
-                                                                   realm: realm
+                                                                   realm: nil
                                                        signatureProvider: _signatureProvider];
     oarq.HTTPMethod = CFBridgingRelease(CFHTTPMessageCopyRequestMethod(message));
     oarq.HTTPBody = CFBridgingRelease(CFHTTPMessageCopyBody(message));
     [oarq prepare];
-    return [oarq valueForHTTPHeaderField: @"Authorization"];
+    NSString* authorization = [oarq valueForHTTPHeaderField: @"Authorization"];
+    CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Authorization"),
+                                     (__bridge CFStringRef)authorization);
 }
 
 @end

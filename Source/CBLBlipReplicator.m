@@ -172,14 +172,10 @@
 
     NSURLCredential* credential = nil;
     id<CBLAuthorizer> auth = _settings.authorizer;
-    if ([auth isKindOfClass: [CBLBasicAuthorizer class]]) {
-        credential = ((CBLBasicAuthorizer*)auth).credential; // password credential
-    } else if ([auth isKindOfClass: [CBLClientCertAuthorizer class]]) {
-        credential = ((CBLClientCertAuthorizer*)auth).credential; // client-cert credential
-    } else {
-        [request setValue: [auth authorizeURLRequest: request forRealm: nil]
-                 forHTTPHeaderField: @"Authorization"];
-    }
+    if ([auth conformsToProtocol: @protocol(CBLPasswordAuthorizer)] || [auth isKindOfClass: [CBLClientCertAuthorizer class]]) //FIX: Clean up
+        _conn.credential = ((id<CBLPasswordAuthorizer>)auth).credential;
+    else
+        [$castIfProtocol(CBLCustomAuthorizer, auth) authorizeURLRequest: request];
 
     _conn = [[BLIPPocketSocketConnection alloc] initWithURLRequest: request];
     _conn.credential = credential;

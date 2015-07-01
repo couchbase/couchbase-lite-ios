@@ -13,16 +13,33 @@
 /** Internal protocol for authenticating a user to a server.
     (The word "authorization" here is a misnomer, but HTTP uses it for historical reasons.) */
 @protocol CBLAuthorizer <CBLAuthenticator>
+@end
 
-/** Should generate and return an authorization string for the given request.
-    The string, if non-nil, will be set as the value of the "Authorization:" HTTP header. */
-- (NSString*) authorizeURLRequest: (NSMutableURLRequest*)request
-                         forRealm: (NSString*)realm;
 
-- (NSString*) authorizeHTTPMessage: (CFHTTPMessageRef)message
-                          forRealm: (NSString*)realm;
+/** Authorizer that uses a username/password (i.e. HTTP Basic or Digest auth) */
+@protocol CBLPasswordAuthorizer <CBLAuthorizer>
 
-@optional
+@property NSURLCredential* credential;
+
+@end
+
+
+
+/** Authorizer that adds custom headers to an HTTP request */
+@protocol CBLCustomAuthorizer <CBLAuthorizer>
+
+/** Should add a header to the request to convey the authorization token. */
+- (void) authorizeURLRequest: (NSMutableURLRequest*)request;
+
+/** Should add a header to the message to convey the authorization token. */
+- (void) authorizeHTTPMessage: (CFHTTPMessageRef)message;
+
+@end
+
+
+
+/** Authorizer that sends a login request that sets a session cookie. */
+@protocol CBLLoginAuthorizer <CBLAuthorizer>
 
 - (NSString*) loginPathForSite: (NSURL*)site;
 - (NSDictionary*) loginParametersForSite: (NSURL*)site;
@@ -31,8 +48,8 @@
 
 
 
-/** Simple implementation of CBLAuthorizer that does HTTP Basic Auth. */
-@interface CBLBasicAuthorizer : NSObject <CBLAuthorizer>
+/** Simple implementation of CBLPasswordAuthorizer. */
+@interface CBLPasswordAuthorizer : NSObject <CBLPasswordAuthorizer>
 
 /** Initialize given a credential object that contains a username and password. */
 - (instancetype) initWithCredential: (NSURLCredential*)credential;
@@ -41,15 +58,13 @@
     or look up a credential from the keychain. */
 - (instancetype) initWithURL: (NSURL*)url;
 
-@property (readonly) NSURLCredential* credential;
-
 @end
 
 
 
 #if 0 // UNUSED
 /** Implementation of CBLAuthorizer that supports MAC authorization as used in OAuth 2. */
-@interface CBLMACAuthorizer : NSObject <CBLAuthorizer>
+@interface CBLMACAuthorizer : NSObject <CBLCustomAuthorizer>
 {
 @private
     NSString *_key, *_identifier;

@@ -70,12 +70,8 @@
     if (request.HTTPShouldHandleCookies)
         [self.cookieStorage addCookieHeaderToRequest: request];
 
-    if (_authorizer) {
-        // Let the Authorizer add its own credential:
-        NSString* authHeader = [_authorizer authorizeURLRequest: request forRealm: nil];
-        if (authHeader)
-            [request setValue: authHeader forHTTPHeaderField: @"Authorization"];
-    }
+    // Let the Authorizer add its own credential:
+    [$castIfProtocol(CBLCustomAuthorizer, _authorizer) authorizeURLRequest: request];
 
     LogTo(SyncVerbose, @"%@: %@ %@", self, request.HTTPMethod, url.resourceSpecifier);
     _ws = [PSWebSocket clientSocketWithRequest: request];

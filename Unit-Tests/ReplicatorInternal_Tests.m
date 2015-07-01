@@ -257,7 +257,7 @@
 
     NSURLCredential* cred = [NSURLCredential credentialWithUser: @"test" password: @"abc123"
                                                     persistence: NSURLCredentialPersistenceNone];
-    settings.authorizer = [[CBLBasicAuthorizer alloc] initWithCredential: cred];
+    settings.authorizer = [[CBLPasswordAuthorizer alloc] initWithCredential: cred];
     [self replicate: settings expectError: nil];
 }
 
