@@ -185,17 +185,9 @@
 
 
 - (BOOL) checkServerTrust: (SecTrustRef)sslTrust forURL: (NSURL*)url {
-    BOOL trusted = [_client changeTrackerApproveSSLTrust: sslTrust
+    return [_client changeTrackerApproveSSLTrust: sslTrust
                                                  forHost: url.host
                                                     port: (UInt16)url.port.intValue];
-    if (!trusted) {
-        //TODO: This error could be made more precise
-        LogTo(ChangeTracker, @"%@: Rejected server certificate", self);
-        [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
-                                                   code: NSURLErrorServerCertificateUntrusted
-                                               userInfo: nil]];
-    }
-    return trusted;
 }
 
 

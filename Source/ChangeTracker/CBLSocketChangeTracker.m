@@ -152,6 +152,13 @@
 
         trusted = [self checkServerTrust: sslTrust forURL: url];
         CFRelease(sslTrust);
+        if (!trusted) {
+            //TODO: This error could be made more precise
+            LogTo(ChangeTracker, @"%@: Rejected server certificate", self);
+            [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
+                                                       code: NSURLErrorServerCertificateUntrusted
+                                                   userInfo: nil]];
+        }
     }
     return trusted;
 }

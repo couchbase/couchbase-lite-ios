@@ -203,7 +203,7 @@
         if (ws != _ws)
             return;
         _ws = nil;
-        if (wasClean && code == PSWebSocketStatusCodeNormal) {
+        if (wasClean && (code == PSWebSocketStatusCodeNormal || code == 0)) {
             LogTo(ChangeTracker, @"%@: closed", self);
             [self stop];
         } else {
