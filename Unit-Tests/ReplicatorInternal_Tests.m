@@ -714,14 +714,19 @@
     Log(@"Waiting for replicator to go idle...");
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
     bool wasActive = repl.active;
+    BOOL stopping = NO;
     while ((repl.status != kCBLReplicatorStopped || repl.savingCheckpoint) && timeout.timeIntervalSinceNow > 0.0) {
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                       beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
             break;
-        if (!wasActive)
+        if (!wasActive) {
             wasActive = repl.active;
-        else if (!repl.active)
-            break;  // Went inactive, so it's done
+        } else if (!repl.active && !stopping) {
+            if (!expectError)
+                Assert(repl.status != kCBLReplicatorStopped);
+            stopping = YES;
+            [repl stop];  // Went inactive, so it's done; give it time to save its checkpoint
+        }
     }
     Assert(wasActive && !repl.active);
     Assert(!repl.savingCheckpoint);
@@ -732,12 +737,10 @@
         AssertEq(repl.error.code, expectError.code);
         Log(@"...replicator finished. error=%@", repl.error);
     } else {
-        Assert(repl.status != kCBLReplicatorStopped);
         AssertNil(repl.error);
         Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
     }
     NSString* result = repl.lastSequence;
-    [repl stop];
     return result;
 }
 
