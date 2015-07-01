@@ -481,15 +481,19 @@
                    context: NULL];
 
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
+    CFAbsoluteTime lastUpdateTime = 0;
     while (timeout.timeIntervalSinceNow > 0.0) {
         @autoreleasepool {
             if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                          beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.05]])
+                                          beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.025]])
                 break;
-            usleep(50 * 1000); // throttle the loop so we don't add docs too fast
-            NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(i++)};
-            [self createDocumentWithProperties: properties];
-            //Log(@"%% Created doc #%u", i-1);
+            CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+            if ( now - lastUpdateTime >= .050) { // throttle the loop so we don't add docs too fast
+                NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(i++)};
+                [self createDocumentWithProperties: properties];
+                //Log(@"%% Created doc #%u", i-1);
+                lastUpdateTime = now;
+            }
         }
     }
     [query stop];
