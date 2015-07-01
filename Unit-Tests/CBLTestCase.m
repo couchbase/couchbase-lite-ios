@@ -38,6 +38,11 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     [CBLManager setWarningsRaiseExceptions: YES];
 }
 
+- (void) tearDown {
+    [CBLManager setWarningsRaiseExceptions: NO];
+    [super tearDown];
+}
+
 
 - (NSString*) pathToTestFile: (NSString*)name {
     // The iOS and Mac test apps have the TestData folder copied into their Resources dir.
