@@ -424,6 +424,9 @@
 
 
 - (void) test06_RunSSLReplicationWithClientCert {
+    // TODO: This doesn't fully test whether the client cert is sent, because SG currently
+    // ignores it. We need to add client-cert support to SG and set up a test database that
+    // _requires_ a client cert.
     RequireTestCase(RunPullReplication);
     NSURL* remoteDbURL = [self remoteSSLTestDBURL: @"public"];
     if (!remoteDbURL)
@@ -434,7 +437,7 @@
 
     NSError* error;
     SecIdentityRef ident = MYGetOrCreateAnonymousIdentity(@"SSLTest",
-                                                          kMYAnonymousIdentityDefaultExpirationInterval, &error);
+                                            kMYAnonymousIdentityDefaultExpirationInterval, &error);
     Assert(ident);
     repl.authenticator = [CBLAuthenticator SSLClientCertAuthenticatorWithIdentity: ident
                                                                   supportingCerts: nil];
