@@ -264,6 +264,12 @@
                             continue;
                         }
 
+                        if ($castIf(NSNumber, loadedRev[@"_removed"]).boolValue) {
+                            // Filter out _removed revision:
+                            [self removePending: rev];
+                            continue;
+                        }
+
                         CBL_MutableRevision* populatedRev = [[_settings transformRevision: loadedRev] mutableCopy];
 
                         // Add the revision history:

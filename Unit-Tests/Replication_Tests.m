@@ -1036,4 +1036,38 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     AssertEq(puller.status, kCBLReplicationStopped);
 }
 
+- (void)test17_RemovedRevision {
+    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+
+    // Create a new document with grant = true:
+    CBLDocument* doc = [db documentWithID: @"doc1"];
+    CBLUnsavedRevision* unsaved = [doc newRevision];
+    unsaved.userProperties = @{@"_removed": @(YES)};
+
+    NSError* error;
+    CBLSavedRevision* rev = [unsaved save: &error];
+    Assert(rev != nil, @"Cannot save a new revision: %@", error);
+
+    // Create a push replicator and push _removed revision
+    CBLReplication* pusher = [db createPushReplication: remoteDbURL];
+    [pusher start];
+
+    // Check pending status:
+    Assert([pusher isDocumentPending: doc]);
+
+    [self expectationForNotification: kCBLReplicationChangeNotification
+                              object: pusher
+                             handler: ^BOOL(NSNotification *notification) {
+                                 return pusher.status == kCBLReplicationStopped;
+                             }];
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    Assert(!pusher.lastError);
+    Assert(pusher.completedChangesCount == 0);
+    Assert(pusher.changesCount == 0);
+    Assert(![pusher isDocumentPending: doc]);
+}
+
 @end

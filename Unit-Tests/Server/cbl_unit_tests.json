@@ -54,6 +54,6 @@
 				"GUEST": {"disabled": false, "admin_channels":["*"]}
 			},
             "sync": `function(doc) {throw({forbidden: "Immutable test db"});}`
-		}
+        }
 	}
 }
