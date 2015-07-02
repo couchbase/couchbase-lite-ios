@@ -490,6 +490,41 @@
                                         {@"revpos", @1})}));
 }
 
+// Test for inserting a revision with attachments, when the parent of the new revision isn't local
+// and there are attachments that are unchanged in the revision. See issue #802.
+- (void) test15_MissingIntermediateRevs {
+    // Put a revision that includes an _attachments dict:
+    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
+    NSString* base64 = [CBLBase64 encode: attach1];
+    NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                                           {@"data", base64})});
+    NSDictionary* props = $dict({@"_id", @"X"},
+                                {@"_attachments", attachmentDict});
+    CBL_Revision* rev1;
+    CBLStatus status;
+    NSError* error;
+    rev1 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
+            prevRevisionID: nil allowConflict: NO status: &status error: &error];
+    AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
+    AssertEqual(rev1[@"_attachments"][@"attach"][@"revpos"], @1);
+
+    // Insert a revision several generations advanced but which hasn't changed the attachment:
+    CBL_MutableRevision* rev4 = [rev1 mutableCopy];
+    rev4[@"_rev"] = @"4-4444";
+    rev4[@"foo"] = @"bar";
+    [rev4 mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *att) {
+        NSMutableDictionary* nuAtt = [att mutableCopy];
+        [nuAtt removeObjectForKey: @"data"];
+        nuAtt[@"stub"] = @YES;
+        nuAtt[@"digest"] = @"md5-deadbeef";     // CouchDB adds MD5 digests!
+        return nuAtt;
+    }];
+    NSArray* history = @[@"4-4444", @"3-3333", @"2-2222", rev1.revID];
+    status = [db forceInsert: rev4 revisionHistory: history source: nil error: &error];
+    AssertEq(status, 200);
+}
+
 
 static NSDictionary* attachmentsDict(NSData* data, NSString* name, NSString* type, BOOL gzipped) {
     if (gzipped)

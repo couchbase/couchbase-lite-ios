@@ -292,7 +292,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
 
 /** Given a revision, updates its _attachments dictionary for storage in the database. */
 - (BOOL) processAttachmentsForRevision: (CBL_MutableRevision*)rev
-                             prevRevID: (NSString*)prevRevID
+                              ancestry: (NSArray*)ancestry
                                 status: (CBLStatus*)outStatus
 {
     *outStatus = kCBLStatusOK;
@@ -308,6 +308,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
         return YES;
     }
 
+    NSString *prevRevID = (ancestry.count > 0) ? ancestry[0] : nil;
     unsigned generation = [CBL_Revision generationFromRevID: prevRevID] + 1;
     __block NSDictionary* parentAttachments = nil;
 
@@ -339,12 +340,20 @@ static UInt64 smallestLength(NSDictionary* attachment) {
                 parentAttachments = [self attachmentsForDocID: rev.docID revID: prevRevID
                                                        status: &status];
                 if (!parentAttachments) {
-                    if (status == kCBLStatusNotFound
-                        && [_attachments hasBlobForKey: attachment.blobKey]) {
-                        // Parent revision's body isn't known (we are probably pulling a rev along
-                        // with its entire history) but it's OK, we have the attachment already
-                        *outStatus = kCBLStatusOK;
-                        return attachInfo;
+                    if (status == kCBLStatusNotFound) {
+                        if ([_attachments hasBlobForKey: attachment.blobKey]) {
+                            // Parent revision's body isn't known (we are probably pulling a rev along
+                            // with its entire history) but it's OK, we have the attachment already
+                            *outStatus = kCBLStatusOK;
+                            return attachInfo;
+                        }
+                        // If parent rev isn't available, look farther back in ancestry:
+                        NSDictionary* ancestorAttachment = [self findAttachment: name
+                                                                         revpos: attachment->revpos
+                                                                          docID: rev.docID
+                                                                       ancestry: ancestry];
+                        if (ancestorAttachment)
+                            return ancestorAttachment;
                     }
                     if (status == kCBLStatusOK || status == kCBLStatusNotFound)
                         status = kCBLStatusBadAttachment;
@@ -372,6 +381,27 @@ static UInt64 smallestLength(NSDictionary* attachment) {
     }];
 
     return !CBLStatusIsError(*outStatus);
+}
+
+
+// Looks for an attachment with the given revpos in the document's ancestry.
+- (NSDictionary*) findAttachment: (NSString*)name
+                          revpos: (unsigned)revpos
+                           docID: (NSString*)docID
+                        ancestry: (NSArray*)ancestry
+{
+    for (NSInteger i = ancestry.count - 1; i >= 0; i--) {
+        NSString* revID = ancestry[i];
+        if ([CBL_Revision generationFromRevID: revID] >= revpos) {
+            CBLStatus status;
+            NSDictionary* attachments = [self attachmentsForDocID: docID revID: revID
+                                                           status: &status];
+            NSDictionary* attachment = attachments[name];
+            if (attachment)
+                return attachment;
+        }
+    }
+    return nil;
 }
 
 
