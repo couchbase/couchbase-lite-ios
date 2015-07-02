@@ -23,8 +23,7 @@
 #import "CBL_Revision.h"
 #import "CBLDatabaseChange.h"
 #import "CBL_BlobStore.h"
-#import "CBL_Puller.h"
-#import "CBL_Pusher.h"
+#import "CBL_Replicator.h"
 #import "CBL_Shared.h"
 #import "CBLMisc.h"
 #import "CBLDatabase.h"
@@ -233,13 +232,14 @@ static BOOL sAutoCompact = YES;
             [view close];
         
         _views = nil;
-        for (CBL_Replicator* repl in _activeReplicators.copy)
+        for (id<CBL_Replicator> repl in _activeReplicators.copy)
             [repl databaseClosing];
         
         _activeReplicators = nil;
 
         [_storage close];
         _storage = nil;
+        _attachments = nil;
 
         _isOpen = NO;
 
@@ -472,6 +472,64 @@ static BOOL sAutoCompact = YES;
                                    filter: revFilter status: outStatus];
 }
 
+
+// Used by new replicator
+- (NSArray*) getPossibleAncestorsOfDocID: (NSString*)docID
+                                   revID: (NSString*)revID
+                                   limit: (NSUInteger)limit
+{
+    CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: docID revID: revID deleted: NO];
+    if ([_storage getRevisionSequence: rev] > 0)
+        return @[revID];  // Already have it!
+    return [_storage getPossibleAncestorRevisionIDs: rev
+                                              limit: (unsigned)limit
+                                    onlyAttachments: NO];
+}
+
+
+#pragma mark - HISTORY:
+
+
+- (NSArray*) getRevisionHistory: (CBL_Revision*)rev
+                   backToRevIDs: (NSArray*)ancestorRevIDs
+{
+    NSSet* ancestors = ancestorRevIDs ? [[NSSet alloc] initWithArray: ancestorRevIDs] : nil;
+    return [_storage getRevisionHistory: rev backToRevIDs: ancestors];
+}
+
+/** Turns an array of CBL_Revisions into a _revisions dictionary, as returned by the REST API's 
+    ?revs=true option. */
++ (NSDictionary*) makeRevisionHistoryDict: (NSArray*)history {
+    if (!history)
+        return nil;
+
+    // Try to extract descending numeric prefixes:
+    NSMutableArray* suffixes = $marray();
+    id start = nil;
+    int lastRevNo = -1;
+    for (CBL_Revision* rev in history) {
+        int revNo;
+        NSString* suffix;
+        if ([CBL_Revision parseRevID: rev.revID intoGeneration: &revNo andSuffix: &suffix]) {
+            if (!start)
+                start = @(revNo);
+            else if (revNo != lastRevNo - 1) {
+                start = nil;
+                break;
+            }
+            lastRevNo = revNo;
+            [suffixes addObject: suffix];
+        } else {
+            start = nil;
+            break;
+        }
+    }
+
+    NSArray* revIDs = start ? suffixes : [history my_map: ^(id rev) {return [rev revID];}];
+    return $dict({@"ids", revIDs}, {@"start", start});
+}
+
+
 #pragma mark - FILTERS:
 
 
@@ -609,20 +667,29 @@ static SequenceNumber keyToSequence(id key, SequenceNumber dflt) {
     NSEnumerator* revEnum = (options->descending) ? revs.allRevisions.reverseObjectEnumerator
                                                   : revs.allRevisions.objectEnumerator;
     return ^CBLQueryRow*() {
-        CBL_Revision* rev = revEnum.nextObject;
-        if (!rev)
-            return nil;
-        SequenceNumber seq = rev.sequence;
-        if (seq < minSeq || seq > maxSeq)
-            return nil;
-        NSDictionary* value = $dict({@"rev", rev.revID},
-                                    {@"deleted", (rev.deleted ?$true : nil)});
-        return [[CBLQueryRow alloc] initWithDocID: rev.docID
-                                         sequence: seq
-                                              key: rev.docID
-                                            value: value
-                                      docRevision: rev
-                                          storage: nil];
+        for (;;) {
+            CBL_Revision* rev = revEnum.nextObject;
+            if (!rev)
+                return nil;
+            SequenceNumber seq = rev.sequence;
+            if (seq < minSeq || seq > maxSeq)
+                return nil;
+            NSDictionary* value = $dict({@"rev", rev.revID},
+                                        {@"deleted", (rev.deleted ?$true : nil)});
+            CBLQueryRow* row =  [[CBLQueryRow alloc] initWithDocID: rev.docID
+                                                          sequence: seq
+                                                               key: rev.docID
+                                                             value: value
+                                                       docRevision: rev
+                                                           storage: nil];
+            if (!options.filter)
+                return row;
+            row.database = self;
+            if (options.filter(row)) {
+                //row.database = nil;
+                return row;
+            }
+        }
     };
 }
 

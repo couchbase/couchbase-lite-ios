@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLQuery+Geo.h"
-#import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 
 
 @implementation CBLQuery (Geo)

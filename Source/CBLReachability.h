@@ -24,14 +24,6 @@ typedef void (^CBLReachabilityOnChangeBlock)(void);
     You can get called when reachability changes by either KV-observing the properties, or setting an "onChange" block.
     "Reachable" means simply that the local IP stack has resolved the host's DNS name and knows how to route packets toward its IP address. It does NOT guarantee that you can successfully connect. Generally it just means that you have an Internet connection. */
 @interface CBLReachability : NSObject
-{
-    NSString* _hostName;
-    SCNetworkReachabilityRef _ref;
-    CFRunLoopRef _runLoop;
-    SCNetworkReachabilityFlags _reachabilityFlags;
-    BOOL _reachabilityKnown;
-    CBLReachabilityOnChangeBlock _onChange;
-}
 
 - (instancetype) initWithHostName: (NSString*)hostName;
 
@@ -40,7 +32,9 @@ typedef void (^CBLReachabilityOnChangeBlock)(void);
 /** Starts tracking reachability.
     You have to call this after creating the object, or none of its properties will change. The current thread must have a runloop.
     @return  YES if tracking started, or NO if there was an error. */
-- (BOOL) start;
+- (BOOL) startOnRunLoop: (CFRunLoopRef)runLoop;
+
+- (BOOL) startOnQueue: (dispatch_queue_t)queue;
 
 /** Stops tracking reachability.
     This is called automatically by -dealloc, but to be safe you can call it when you release your CBLReachability instance, to make sure that in case of a leak it isn't left running forever. */

@@ -236,6 +236,7 @@
                     type: @"application/foo"
                 encoding: kCBLAttachmentEncodingNone
                  ofDocID: rev1.docID revID: nil
+                  source: nil
                   status: &status
                    error: &error];
     AssertEq(status, kCBLStatusConflict);
@@ -245,6 +246,7 @@
                     type: @"application/foo"
                 encoding: kCBLAttachmentEncodingNone
                  ofDocID: rev1.docID revID: @"1-deadbeef"
+                  source: nil
                   status: &status
                    error: &error];
     AssertEq(status, kCBLStatusConflict);
@@ -254,6 +256,7 @@
                                          type: @"application/foo"
                                      encoding: kCBLAttachmentEncodingNone
                                       ofDocID: rev1.docID revID: rev1.revID
+                                       source: nil
                                        status: &status
                                         error: &error];
     AssertEq(status, kCBLStatusCreated);
@@ -278,6 +281,7 @@
     [db updateAttachment: @"nosuchattach" body: nil type: nil
                 encoding: kCBLAttachmentEncodingNone
                  ofDocID: rev2.docID revID: rev2.revID
+                  source: nil
                   status: &status
                    error: &error];
     AssertEq(status, kCBLStatusAttachmentNotFound);
@@ -286,6 +290,7 @@
     [db updateAttachment: @"nosuchattach" body: nil type: nil
                 encoding: kCBLAttachmentEncodingNone
                  ofDocID: @"nosuchdoc" revID: @"nosuchrev"
+                  source: nil
                   status: &status
                    error: &error];
     AssertEq(status, kCBLStatusNotFound);
@@ -294,6 +299,7 @@
     CBL_Revision* rev3 = [db updateAttachment: @"attach" body: nil type: nil
                                      encoding: kCBLAttachmentEncodingNone
                                       ofDocID: rev2.docID revID: rev2.revID
+                                       source: nil
                                        status: &status
                                         error: &error];
     AssertEq(status, kCBLStatusOK);
@@ -427,6 +433,7 @@
         revs[i] = [db updateAttachment: @"attach" body: nil type: nil
                               encoding: kCBLAttachmentEncodingNone
                                ofDocID: [revs[i] docID] revID: [revs[i] revID]
+                                source: nil
                                 status: &status error: &error];
     }
 

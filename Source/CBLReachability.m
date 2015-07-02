@@ -31,6 +31,15 @@ static void ClientCallback(SCNetworkReachabilityRef target,
 
 
 @implementation CBLReachability
+{
+    NSString* _hostName;
+    SCNetworkReachabilityRef _ref;
+    CFRunLoopRef _runLoop;
+    dispatch_queue_t _queue;
+    SCNetworkReachabilityFlags _reachabilityFlags;
+    BOOL _reachabilityKnown;
+    CBLReachabilityOnChangeBlock _onChange;
+}
 
 
 - (instancetype) initWithHostName: (NSString*)hostName {
@@ -49,18 +58,29 @@ static void ClientCallback(SCNetworkReachabilityRef target,
 }
 
 
-- (BOOL) start {
-    CFRunLoopRef runLoop = CFRunLoopGetCurrent();
-    if (_runLoop)
+- (BOOL) startOnRunLoop: (CFRunLoopRef)runLoop {
+    if (_runLoop || _queue)
         return (_runLoop == runLoop);
     if (!SCNetworkReachabilityScheduleWithRunLoop(_ref, runLoop, kCFRunLoopCommonModes))
         return NO;
     _runLoop = (CFRunLoopRef) CFRetain(runLoop);
+    return [self started];
+}
 
+- (BOOL) startOnQueue: (dispatch_queue_t)queue {
+    if (_runLoop || _queue)
+        return _queue == queue;
+    if (!SCNetworkReachabilitySetDispatchQueue(_ref, queue))
+        return NO;
+    _queue = queue;
+    return [self started];
+}
+
+- (BOOL) started {
     // See whether status is already known:
     if (SCNetworkReachabilityGetFlags(_ref, &_reachabilityFlags))
         _reachabilityKnown = YES;
-
+    //Log(@"ReachabilityKnown=%d; flags=%04x", _reachabilityKnown, _reachabilityFlags);
     return YES;
 }
 
@@ -70,6 +90,10 @@ static void ClientCallback(SCNetworkReachabilityRef target,
         SCNetworkReachabilityUnscheduleFromRunLoop(_ref, _runLoop, kCFRunLoopCommonModes);
         CFRelease(_runLoop);
         _runLoop = NULL;
+    }
+    if (_queue) {
+        SCNetworkReachabilitySetDispatchQueue(_ref, NULL);
+        _queue = NULL;
     }
 }
 

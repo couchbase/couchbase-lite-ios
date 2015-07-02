@@ -32,6 +32,8 @@
 // Adds a non-persistent credential to the NSURLCredentialStorage.
 void AddTemporaryCredential(NSURL* url, NSString* realm,
                             NSString* username, NSString* password);
+void RemoveTemporaryCredential(NSURL* url, NSString* realm,
+                               NSString* username, NSString* password);
 
 
 /** Base class for Couchbase Lite unit tests. */
@@ -45,6 +47,9 @@ void AddTemporaryCredential(NSURL* url, NSString* realm,
 
 // internal:
 - (void) _assertEqualish: (id)a to: (id)b;
+
+- (void) allowWarningsIn: (void (^)())block;
+
 @end
 
 

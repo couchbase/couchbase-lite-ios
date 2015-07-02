@@ -100,7 +100,6 @@ extern NSArray* CBL_RunloopModes;
 
 // DOCUMENTS:
 
-
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
                          revisionID: (NSString*)revID
                            withBody: (BOOL)withBody
@@ -114,6 +113,12 @@ extern NSArray* CBL_RunloopModes;
 - (CBL_Revision*) revisionByLoadingBody: (CBL_Revision*)rev
                                  status: (CBLStatus*)outStatus;
 - (SequenceNumber) getRevisionSequence: (CBL_Revision*)rev;
+
+// HISTORY:
+
+- (NSArray*) getRevisionHistory: (CBL_Revision*)rev
+                   backToRevIDs: (NSArray*)ancestorRevIDs;
++ (NSDictionary*) makeRevisionHistoryDict: (NSArray*)history;
 
 // VIEWS & QUERIES:
 

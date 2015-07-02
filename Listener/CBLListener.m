@@ -16,7 +16,7 @@
 #import "CBLListener.h"
 #import "CBLHTTPServer.h"
 #import "CBLHTTPConnection.h"
-#import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 #import "CBL_Server.h"
 #import "CBLMisc.h"
 #import "Logging.h"
@@ -60,7 +60,7 @@
 
 
 @synthesize readOnly=_readOnly, requiresAuth=_requiresAuth, realm=_realm,
-            SSLExtraCertificates=_SSLExtraCertificates;
+            SSLExtraCertificates=_SSLExtraCertificates, delegate=_delegate;
 
 
 - (instancetype) initWithManager: (CBLManager*)manager port: (UInt16)port {
@@ -133,7 +133,11 @@
 }
 
 - (NSString*) passwordForUser:(NSString *)username {
-    return _passwords[username];
+    id<CBLListenerDelegate> delegate = _delegate;
+    if ([delegate respondsToSelector: @selector(passwordForUser:)])
+        return [delegate passwordForUser: username];
+    else
+        return _passwords[username];
 }
 
 

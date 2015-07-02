@@ -233,6 +233,14 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 }
 
 
+- (NSArray*) getPossibleAncestorsOfRevisionID: (NSString*)revID limit: (NSUInteger)limit {
+    CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: _docID revID: revID deleted: NO];
+    return [_database.storage getPossibleAncestorRevisionIDs: rev
+                                                       limit: (unsigned)limit
+                                             onlyAttachments: NO];
+}
+
+
 #pragma mark - PROPERTIES:
 
 
@@ -277,6 +285,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
                                     properties: nuProperties
                                 prevRevisionID: prevID
                                  allowConflict: allowConflict
+                                        source: nil
                                         status: &status
                                          error: outError];
     if (!newRev)

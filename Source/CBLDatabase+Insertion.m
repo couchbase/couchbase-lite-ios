@@ -16,7 +16,7 @@
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase.h"
-#import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 #import "CBLDocument.h"
 #import "CBL_Revision.h"
 #import "CBL_Attachment.h"
@@ -37,17 +37,10 @@
 
 
 @interface CBLValidationContext : NSObject <CBLValidationContext>
-{
-    @private
-    CBLDatabase* _db;
-    CBL_Revision* _currentRevision, *_newRevision;
-    int _errorType;
-    NSString* _errorMessage;
-    NSArray* _changedKeys;
-}
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                          revision: (CBL_Revision*)currentRevision
-                      newRevision: (CBL_Revision*)newRevision;
+                      newRevision: (CBL_Revision*)newRevision
+                           source: (NSURL*)source;
 @property (readonly) CBLSavedRevision* currentRevision;
 @property (readonly) NSString* rejectionMessage;
 @end
@@ -141,6 +134,7 @@
 #pragma mark - INSERTION:
 
 
+#if DEBUG // for tests only
 - (CBL_Revision*) putRevision: (CBL_MutableRevision*)putRev
                prevRevisionID: (NSString*)inPrevRevID
                 allowConflict: (BOOL)allowConflict
@@ -149,14 +143,17 @@
 {
     return [self putDocID: putRev.docID properties: [putRev.properties mutableCopy]
            prevRevisionID: inPrevRevID allowConflict: allowConflict
+                   source: nil
                    status: outStatus error: outError];
 }
+#endif
 
 
 - (CBL_Revision*) putDocID: (NSString*)inDocID
                 properties: (NSMutableDictionary*)properties
             prevRevisionID: (NSString*)inPrevRevID
              allowConflict: (BOOL)allowConflict
+                    source: (NSURL*)source
                     status: (CBLStatus*)outStatus
                      error: (NSError**)outError
 {
@@ -195,6 +192,7 @@
             return [self validateRevision: rev
                          previousRevision: prev
                               parentRevID: parentRevID
+                                   source: nil
                                     error: outError];
         };
     }
@@ -231,8 +229,10 @@
     if (history.count == 0)
         history = @[revID];
     else if (!$equal(history[0], revID)) {
-        CBLStatusToOutNSError(kCBLStatusBadID, outError);
-        return kCBLStatusBadID;
+        // If inRev's revID doesn't appear in history, add it at the start:
+        NSMutableArray* nuHistory = [history mutableCopy];
+        [nuHistory insertObject: revID atIndex: 0];
+        history = nuHistory;
     }
 
     CBLStatus status;
@@ -255,6 +255,7 @@
             return [self validateRevision: newRev
                          previousRevision: prev
                               parentRevID: parentRevID
+                                   source: source
                                     error: outError];
         };
     }
@@ -267,12 +268,31 @@
 }
 
 
+- (BOOL) forceInsertRevisionWithJSON: (NSData*)json
+                     revisionHistory: (NSArray*)history
+                              source: (NSURL*)source
+                               error: (NSError**)outError
+{
+    CBL_Body* body = [CBL_Body bodyWithJSON: json];
+    if (body) {
+        CBL_Revision* rev = [[CBL_Revision alloc] initWithBody: body];
+        if (rev) {
+            CBLStatus status = [self forceInsert: rev revisionHistory: history source: source
+                                           error: outError];
+            return !CBLStatusIsError(status);
+        }
+    }
+    return CBLStatusToOutNSError(kCBLStatusBadJSON, outError);
+}
+
+
 #pragma mark - VALIDATION:
 
 
 - (CBLStatus) validateRevision: (CBL_Revision*)newRev
               previousRevision: (CBL_Revision*)oldRev
                    parentRevID: (NSString*)parentRevID
+                        source: (NSURL*)source
                          error: (NSError**)outError
 {
     if (outError)
@@ -286,8 +306,9 @@
                                                                revision: newRev
                                                        parentRevisionID: parentRevID];
     CBLValidationContext* context = [[CBLValidationContext alloc] initWithDatabase: self
-                                                                        revision: oldRev
-                                                                     newRevision: newRev];
+                                                                          revision: oldRev
+                                                                       newRevision: newRev
+                                                                            source: source];
     CBLStatus status = kCBLStatusOK;
     for (NSString* validationName in validations) {
         CBLValidationBlock validation = [self validationNamed: validationName];
@@ -321,16 +342,27 @@
 
 
 @implementation CBLValidationContext
+{
+@private
+    CBLDatabase* _db;
+    CBL_Revision* _currentRevision, *_newRevision;
+    NSURL* _source;
+    int _errorType;
+    NSString* _errorMessage;
+    NSArray* _changedKeys;
+}
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                          revision: (CBL_Revision*)currentRevision
                       newRevision: (CBL_Revision*)newRevision
+                           source: (NSURL*)source
 {
     self = [super init];
     if (self) {
         _db = db;
         _currentRevision = currentRevision;
         _newRevision = newRevision;
+        _source = source;
         _errorType = kCBLStatusForbidden;
         _errorMessage = @"invalid document";
     }
@@ -338,7 +370,7 @@
 }
 
 
-@synthesize rejectionMessage=_rejectionMessage;
+@synthesize rejectionMessage=_rejectionMessage, source=_source;
 
 
 - (CBL_Revision*) current_Revision {

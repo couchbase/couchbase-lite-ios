@@ -9,6 +9,7 @@
 #import "CBLTestCase.h"
 #import "CBLChangeTracker.h"
 #import "CBLChangeMatcher.h"
+#import "CBLRemoteRequest.h"
 #import "CBLAuthorizer.h"
 #import "CBLInternal.h"
 #import "MYURLUtils.h"
@@ -71,10 +72,12 @@
     NSURL* url = [self remoteSSLTestDBURL: @"public"];
     if (!url)
         return;
-    CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  self];
-    [self run: tracker expectingError: [NSError errorWithDomain: NSURLErrorDomain
-                                                             code:NSURLErrorServerCertificateUntrusted
-                                                         userInfo: nil]];
+    CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client: self];
+    [self allowWarningsIn:^{
+        [self run: tracker expectingError: [NSError errorWithDomain: NSURLErrorDomain
+                                                                 code:NSURLErrorServerCertificateUntrusted
+                                                             userInfo: nil]];
+    }];
 }
 
 - (void) test_SSL_Part2_Success {
@@ -122,6 +125,7 @@
                                      {@"id", @"something"},
                                      {@"revs", $array(@"1-53b059eb633a9d58042318e478cc73dc")}) );
     [self run: tracker expectingChanges: expected];
+    RemoveTemporaryCredential(url, @"Couchbase Sync Gateway", @"test", @"abc123");
 }
 
 
@@ -135,8 +139,10 @@
     url = $url(urlStr);
 
     CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  self];
-    [self run: tracker expectingError: CBLStatusToNSErrorWithInfo(kCBLStatusUnauthorized,
-                                                                  nil, url, nil)];
+    [self allowWarningsIn: ^{
+        [self run: tracker expectingError: CBLStatusToNSErrorWithInfo(kCBLStatusUnauthorized,
+                                                                      nil, url, nil)];
+    }];
 }
 
 

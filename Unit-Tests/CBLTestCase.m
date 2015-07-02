@@ -33,6 +33,17 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 @implementation CBLTestCase
 
 
+- (void)setUp {
+    [super setUp];
+    [CBLManager setWarningsRaiseExceptions: YES];
+}
+
+- (void) tearDown {
+    [CBLManager setWarningsRaiseExceptions: NO];
+    [super tearDown];
+}
+
+
 - (NSString*) pathToTestFile: (NSString*)name {
     // The iOS and Mac test apps have the TestData folder copied into their Resources dir.
     NSString* path =  [[NSBundle bundleForClass: [self class]] pathForResource: name.stringByDeletingPathExtension
@@ -52,6 +63,12 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 - (void) _assertEqualish: (id)a to: (id)b {
     NSString* why = WhyUnequalObjects(a, b);
     Assert(why==nil, @"Objects not equal-ish:\n%@", why);
+}
+
+- (void) allowWarningsIn: (void (^)())block {
+    [CBLManager setWarningsRaiseExceptions: NO];
+    block();
+    [CBLManager setWarningsRaiseExceptions: YES];
 }
 
 
@@ -91,7 +108,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 
 - (void)tearDown {
     NSError* error;
-    Assert(!db || [db close: &error], @"Couldn't close db: %@", error);
+    Assert(!db || [db deleteDatabase: &error], @"Couldn't close db: %@", error);
     [dbmgr close];
 
     [super tearDown];
@@ -286,6 +303,17 @@ void AddTemporaryCredential(NSURL* url, NSString* realm,
     NSURLProtectionSpace* s = [url my_protectionSpaceWithRealm: realm
                                           authenticationMethod: NSURLAuthenticationMethodDefault];
     [[NSURLCredentialStorage sharedCredentialStorage] setCredential: c forProtectionSpace: s];
+}
+
+
+void RemoveTemporaryCredential(NSURL* url, NSString* realm,
+                               NSString* username, NSString* password)
+{
+    NSURLCredential* c = [NSURLCredential credentialWithUser: username password: password
+                                                 persistence: NSURLCredentialPersistenceForSession];
+    NSURLProtectionSpace* s = [url my_protectionSpaceWithRealm: realm
+                                          authenticationMethod: NSURLAuthenticationMethodDefault];
+    [[NSURLCredentialStorage sharedCredentialStorage] removeCredential: c forProtectionSpace: s];
 }
 
 

@@ -74,7 +74,6 @@
     return docs;
 }
 
-#if 0 //FIX: REIMPLEMENT GEO
 static NSDictionary* mkGeoPoint(double x, double y) {
     return CBLGeoPointToJSON((CBLGeoPoint){x,y});
 }
@@ -104,7 +103,6 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
                                         mkGeoRect(-115,-10, -90, 12)})]];
     return docs;
 }
-#endif
 
 
 - (CBLView*) createViewNamed: (NSString*)name {
@@ -713,8 +711,9 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     AssertEqual([rows[0] key], @(33547239));
 }
 
-#if 0 //FIX: REIMPLEMENT GEO
 - (void) test14_GeoQuery {
+    if (!self.isSQLiteDB)
+        return; //FIX: ForestDB doesn't support nontrivial geo queries (#485)
     RequireTestCase(CBLGeometry);
     RequireTestCase(Index);
     [self putGeoDocs];
@@ -724,9 +723,9 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     // Bounding-box query:
     CBLQueryOptions *options = [CBLQueryOptions new];
     CBLGeoRect bbox = {{-100, 0}, {180, 90}};
-    options.bbox = &bbox;
+    options->bbox = &bbox;
     CBLStatus status;
-    NSArray* rows = [view _queryWithOptions: options status: &status];
+    NSArray* rows = rowsToDictsSettingDB(db, [view _queryWithOptions: options status: &status]);
     NSArray* expectedRows = @[$dict({@"id", @"xxx"},
                                     {@"geometry", mkGeoRect(-115, -10, -90, 12)},
                                     {@"bbox", @[@-115, @-10, @-90, @12]}),
@@ -736,13 +735,14 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
                                $dict({@"id", @"diy"},
                                      {@"geometry", mkGeoPoint(40.12, 37.53)},
                                      {@"bbox", @[@40.12, @37.53, @40.12, @37.53]})];
-    AssertEqualish(rowsToDicts(rows), expectedRows);
+    AssertEqualish(rows, expectedRows);
 
     // Now try again using the public API:
     CBLQuery* query = [view createQuery];
     query.boundingBox = bbox;
     rows = [[query run: NULL] allObjects];
-    AssertEqualish(rowsToDicts(rows), expectedRows);
+    NSArray* rowDicts = [rows my_map: ^(CBLQueryRow* row) {return row.asJSONDictionary;}];
+    AssertEqualish(rowDicts, expectedRows);
 
     CBLGeoQueryRow* row = rows[0];
     AssertEq(row.boundingBox.min.x, -115);
@@ -758,7 +758,6 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     AssertEqual(row.geometryType, @"Point");
     AssertEqual(row.geometry, mkGeoPoint(-97.75, 30.25));
 }
-#endif
 
 - (void) test15_AllDocsQuery {
     NSArray* docs = [self putDocs];

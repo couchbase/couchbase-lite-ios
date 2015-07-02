@@ -74,6 +74,7 @@ enum {
                         request: (NSURLRequest*)request
                         isLocal: (BOOL)isLocal;
 
+@property (copy) NSURL* source;
 @property BOOL processRanges;
 
 @property (copy) OnAccessCheckBlock onAccessCheck;

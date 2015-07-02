@@ -18,6 +18,7 @@
 #import "CBLReduceFuncs.h"
 #import "CBJSONEncoder.h"
 #import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 #import "CBLMisc.h"
 
 

@@ -18,7 +18,7 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBL_Router.h"
 #import "CBLListener.h"
-#import "CBL_Pusher.h"
+#import "CBLRestReplicator.h"
 #import "CBLManager+Internal.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLMisc.h"
@@ -34,6 +34,10 @@
 
 
 #define kPortNumber 59840
+
+
+@interface ListenerDelegate : NSObject <CBLListenerDelegate>
+@end
 
 
 static NSString* GetServerPath() {
@@ -102,7 +106,7 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
         Log(@"Pushing %@ --> <%@> ...", dbName, remote);
 
     // Actually replicate -- this could probably be cleaned up to use the public API.
-    CBL_Replicator* repl = nil;
+    id<CBL_Replicator> repl = nil;
     NSError* error = nil;
     CBLDatabase* db = [dbm existingDatabaseNamed: dbName error: &error];
     if (pull) {
@@ -123,10 +127,14 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
                 dbName.UTF8String, error.localizedDescription.UTF8String);
         return false;
     }
-    repl = [[CBL_Replicator alloc] initWithDB: db remote: remote push: !pull
-                                   continuous: continuous];
+
+    CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remote
+                                                                                 push: !pull];
+    settings.continuous = continuous;
     if (createTarget && !pull)
-        ((CBL_Pusher*)repl).createTarget = YES;
+        settings.createTarget = YES;
+
+    repl = [[CBLRestReplicator alloc] initWithDB: db settings: settings];
     if (!repl)
         fprintf(stderr, "Unable to create replication.\n");
     [repl start];
@@ -232,6 +240,8 @@ int main (int argc, const char * argv[])
         CBLListener* listener = [[CBLListener alloc] initWithManager: server port: port];
         NSCAssert(listener!=nil, @"Coudln't create CBLListener");
         listener.readOnly = options.readOnly;
+        id<CBLListenerDelegate> delegate = [[ListenerDelegate alloc] init];
+        listener.delegate = delegate;
 
         if (auth) {
             srandomdev();
@@ -290,3 +300,23 @@ int main (int argc, const char * argv[])
     return 0;
 }
 
+
+@implementation ListenerDelegate
+
+- (NSString*) authenticateConnectionFromAddress: (NSData*)address
+                                      withTrust: (SecTrustRef)trust
+{
+    if (trust) {
+        SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
+        CFStringRef cfCommonName = NULL;
+        SecCertificateCopyCommonName(cert, &cfCommonName);
+        NSString* commonName = CFBridgingRelease(cfCommonName);
+        Log(@"Incoming SSL connection with client cert for '%@'", commonName);
+        return commonName;
+    } else {
+        Log(@"Incoming SSL connection without a client cert");
+        return @"";
+    }
+}
+
+@end

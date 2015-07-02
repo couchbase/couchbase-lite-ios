@@ -1,5 +1,5 @@
 //
-//  CBL_Pusher.m
+//  CBLRestPusher.m
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/5/11.
@@ -13,8 +13,10 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CBL_Pusher.h"
+#import "CBLRestPusher.h"
+#import "CBLRestReplicator+Internal.h"
 #import "CBLDatabase.h"
+#import "CBLDatabase+Replication.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBL_Storage.h"
 #import "CBL_Revision.h"
@@ -33,12 +35,12 @@
 #define kMaxBulkDocsObjectSize (5*1000*1000) // Max in-memory size of buffered bulk_docs dictionary
 
 
-@interface CBL_Pusher ()
+@interface CBLRestPusher ()
 - (BOOL) uploadMultipartRevision: (CBL_Revision*)rev;
 @end
 
 
-@implementation CBL_Pusher
+@implementation CBLRestPusher
 
 
 @synthesize createTarget=_createTarget;
@@ -49,31 +51,9 @@
 }
 
 
-- (CBLFilterBlock) filter {
-    CBLFilterBlock filter = nil;
-    if (_filterName) {
-        CBLStatus status;
-        filter = [_db compileFilterNamed: _filterName status: &status];
-        if (!filter) {
-            Warn(@"%@: No filter '%@' (err %d)", self, _filterName, status);
-            if (!self.error) {
-                self.error = CBLStatusToNSError(status);
-            }
-            [self stop]; // this is fatal; don't know what to push
-        }
-    } else if (_docIDs) {
-        NSArray* docIDs = _docIDs;
-        filter = FILTERBLOCK({
-            return [docIDs containsObject: revision.document.documentID];
-        });
-    }
-    return filter;
-}
-
-
 // This is called before beginReplicating, if the target db might not exist
 - (void) maybeCreateRemoteDB {
-    if (!_createTarget)
+    if (!_settings.createTarget)
         return;
     LogTo(Sync, @"Remote db might not exist; creating it...");
     _creatingTarget = YES;
@@ -96,9 +76,7 @@
 
 - (CBL_RevisionList*) unpushedRevisions {
     CBLDatabase* db = _db;
-    CBLFilterBlock filter = self.filter;
-    if (!filter && self.error)
-        return nil;
+    CBLFilterBlock filter = _settings.filterBlock;
 
     NSString* lastSequence = _lastSequence;
     if (!lastSequence) {
@@ -116,11 +94,17 @@
     CBL_RevisionList* revs = [db changesSinceSequence: [lastSequence longLongValue]
                                               options: &options
                                                filter: filter
-                                               params: _filterParameters
+                                               params: _settings.filterParameters
                                                status: &status];
     if (!revs)
         self.error = CBLStatusToNSError(status);
     return revs;
+}
+
+- (NSSet*) pendingDocIDs {
+    CBL_RevisionList* revs = self.unpushedRevisions;
+    return revs ? [NSSet setWithArray: revs.allDocIDs] : nil;
+
 }
 
 
@@ -131,7 +115,7 @@
         return;
 
     _pendingSequences = [NSMutableIndexSet indexSet];
-    _maxPendingSequence = self.lastSequence.longLongValue;
+    _maxPendingSequence = [self.lastSequence longLongValue];
     
     // Process existing changes since the last push:
     CBL_RevisionList* unpushedRevisions = self.unpushedRevisions;
@@ -141,7 +125,7 @@
     [_batcher flush];  // process up to the first 100 revs
     
     // Now listen for future changes (in continuous mode):
-    if (_continuous && !_observing) {
+    if (_settings.continuous && !_observing) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbChanged:)
                                                      name: CBL_DatabaseChangesNotification
@@ -211,13 +195,13 @@
 
 - (void) dbChanged: (NSNotification*)n {
     CBLDatabase* db = _db;
+    CBLFilterBlock filter = _settings.filterBlock;
     NSArray* changes = (n.userInfo)[@"changes"];
     for (CBLDatabaseChange* change in changes) {
         // Skip revisions that originally came from the database I'm syncing to:
-        if (![change.source isEqual: _remote]) {
+        if (![change.source isEqual: _settings.remote]) {
             CBL_Revision* rev = change.addedRevision;
-            CBLFilterBlock filter = self.filter;
-            if (filter && ![db runFilter: filter params: _filterParameters onRevision: rev])
+            if (filter && ![db runFilter: filter params: _settings.filterParameters onRevision: rev])
                 continue;
             CBL_MutableRevision* nuRev = [rev mutableCopy];
             nuRev.body = nil; // save memory
@@ -286,18 +270,19 @@
                             continue;
                         }
 
-                        CBL_MutableRevision* populatedRev = [[self transformRevision: loadedRev] mutableCopy];
+                        CBL_MutableRevision* populatedRev = [[_settings transformRevision: loadedRev] mutableCopy];
 
                         // Add the revision history:
-                        NSArray* possibleAncestors = revResults[@"possible_ancestors"];
-                        populatedRev[@"_revisions"] = [db.storage getRevisionHistoryDict: populatedRev
-                                                               startingFromAnyOf: possibleAncestors];
+                        NSArray* backTo = $castIf(NSArray, revResults[@"possible_ancestors"]);
+                        NSArray* history = [db getRevisionHistory: populatedRev
+                                                     backToRevIDs: backTo];
+                        populatedRev[@"_revisions"] = [CBLDatabase makeRevisionHistoryDict:history];
                         properties = populatedRev.properties;
 
                         // Strip any attachments already known to the target db:
                         if (properties.cbl_attachments) {
                             // Look for the latest common ancestor and stub out older attachments:
-                            int minRevPos = CBLFindCommonAncestor(populatedRev, possibleAncestors);
+                            int minRevPos = CBLFindCommonAncestor(populatedRev, backTo);
                             if (![db expandAttachmentsIn: populatedRev
                                                minRevPos: minRevPos + 1
                                             allowFollows: !_dontSendMultipart
@@ -371,7 +356,7 @@
                               if (status != kCBLStatusForbidden && status != kCBLStatusUnauthorized) {
                                   NSString* docID = item[@"id"];
                                   [failedIDs addObject: docID];
-                                  NSURL* url = docID ? [_remote URLByAppendingPathComponent: docID]
+                                  NSURL* url = docID ? [_settings.remote URLByAppendingPathComponent: docID]
                                                      : nil;
                                   error = CBLStatusToNSErrorWithInfo(status, nil, url, nil);
                               }
@@ -481,8 +466,8 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
 
     NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeURLParam(rev.docID));
     __block CBLMultipartUploader* uploader = [[CBLMultipartUploader alloc]
-                                  initWithURL: CBLAppendToURL(_remote, path)
-                               requestHeaders: self.requestHeaders
+                                  initWithURL: CBLAppendToURL(_settings.remote, path)
+                               requestHeaders: _settings.requestHeaders
                               multipartWriter:^CBLMultipartWriter *{
                                   CBLMultipartWriter* writer = bodyStream;
                                   // Reset to nil so the writer will get regenerated if the block

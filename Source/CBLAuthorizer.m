@@ -17,9 +17,13 @@
 #import "CBLMisc.h"
 #import "CBLBase64.h"
 #import "MYURLUtils.h"
+#import <Security/Security.h>
 
 
 @implementation CBLBasicAuthorizer
+
+@synthesize credential=_credential;
+
 
 - (instancetype) initWithCredential: (NSURLCredential*)credential {
     Assert(credential);
@@ -175,3 +179,45 @@
 
 @end
 #endif
+
+
+#pragma mark - ANCHOR CERTS:
+
+
+static NSArray* sAnchorCerts;
+static BOOL sOnlyTrustAnchorCerts;
+
+
+void CBLSetAnchorCerts(NSArray* certs, BOOL onlyThese) {
+    @synchronized([CBLBasicAuthorizer class]) {
+        sAnchorCerts = certs.copy;
+        sOnlyTrustAnchorCerts = onlyThese;
+    }
+}
+
+BOOL CBLCheckSSLServerTrust(SecTrustRef trust, NSString* host, UInt16 port) {
+    @synchronized([CBLBasicAuthorizer class]) {
+        if (sAnchorCerts.count > 0) {
+            SecTrustSetAnchorCertificates(trust, (__bridge CFArrayRef)sAnchorCerts);
+            SecTrustSetAnchorCertificatesOnly(trust, sOnlyTrustAnchorCerts);
+        }
+    }
+    SecTrustResultType result;
+    OSStatus err = SecTrustEvaluate(trust, &result);
+    if (err) {
+        Warn(@"CBLCheckSSLServerTrust: SecTrustEvaluate failed with err %d", (int)err);
+        return NO;
+    }
+    if (result == kSecTrustResultRecoverableTrustFailure) {
+        // Accept a self-signed cert from a local host (".local" domain)
+        if (SecTrustGetCertificateCount(trust) == 1 &&
+                ([host hasSuffix: @".local"] || [host hasSuffix: @".local."])) {
+            result = kSecTrustResultUnspecified;
+        }
+    }
+    if (result != kSecTrustResultProceed && result != kSecTrustResultUnspecified) {
+        Warn(@"CBLCheckSSLServerTrust: SSL cert is not trustworthy (result=%d)", result);
+        return NO;
+    }
+    return YES;
+}

@@ -18,6 +18,7 @@ extern "C" {
 #import "CBL_ForestDBStorage.h"
 #import "CBLSpecialKey.h"
 #import "CouchbaseLitePrivate.h"
+#import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "ExceptionUtils.h"
 }

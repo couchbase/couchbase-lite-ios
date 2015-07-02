@@ -383,6 +383,10 @@
     return self;
 }
 
+- (instancetype) mutableCopyWithZone: (NSZone*)zoneIgnored {
+    return [[[self class] alloc] initWithArray: _revs];
+}
+
 
 - (NSString*) description {
     return _revs.description;
@@ -404,6 +408,10 @@
 
 - (void) removeRev: (CBL_Revision*)rev {
     [_revs removeObject: rev];
+}
+
+- (void) removeRevIdenticalTo: (CBL_Revision*)rev {
+    [_revs removeObjectIdenticalTo: rev];
 }
 
 - (CBL_Revision*) removeAndReturnRev: (CBL_Revision*)rev {

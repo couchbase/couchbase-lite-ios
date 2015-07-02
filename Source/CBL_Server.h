@@ -13,16 +13,9 @@
     A CBL_Server owns a background thread on which it runs a CBLManager and all related tasks.
     The database objects can only be called by queueing blocks that will run on the background thread. */
 @interface CBL_Server : NSObject
-{
-    @private
-    CBLManager* _manager;
-    NSThread* _serverThread;
-    BOOL _stopRunLoop;
-}
 
 - (instancetype) initWithManager: (CBLManager*)newManager;
 
-@property (readonly) NSString* directory;
 @property (readonly) NSDictionary *customHTTPHeaders;
 
 - (void) queue: (void(^)())block;
@@ -33,4 +26,12 @@
 
 - (void) close;
 
+@end
+
+
+
+@interface CBL_RunLoopServer : CBL_Server
+@end
+
+@interface CBL_DispatchServer : CBL_Server
 @end

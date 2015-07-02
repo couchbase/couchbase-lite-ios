@@ -8,8 +8,9 @@
 
 #import "CBLTestCase.h"
 #import "CouchbaseLitePrivate.h"
-#import "CBL_Puller.h"
-#import "CBL_Pusher.h"
+#import "CBLRestReplicator+Internal.h"
+#import "CBLRestPuller.h"
+#import "CBLRestPusher.h"
 #import "CBLReachability.h"
 #import "CBL_Server.h"
 #import "CBLDatabase+Replication.h"
@@ -52,6 +53,30 @@
 
 
 @implementation ReplicatorInternal_Tests
+{
+    BOOL _newReplicator;
+}
+
+
+- (void)invokeTest {
+    // Run each test method twice, once with the old replicator and once with the new.
+    _newReplicator = NO;
+    [super invokeTest];
+    if ([[NSUserDefaults standardUserDefaults] boolForKey: @"TestNewReplicator"]) {
+        _newReplicator = YES;
+        [super invokeTest];
+    }
+}
+
+- (void) setUp {
+    if (_newReplicator)
+        Log(@"++++ Now using new replicator");
+    [super setUp];
+    if (_newReplicator) {
+        dbmgr.replicatorClassName = @"CBLBlipReplicator";
+        dbmgr.dispatchQueue = dispatch_get_main_queue();
+    }
+}
 
 
 - (void) test_01_Pusher {
@@ -100,7 +125,7 @@
         return;
     [self eraseRemoteDB: remoteDB];
     id lastSeq = replic8(db, remoteDB, YES, @"filter", nil, nil);
-    AssertEqual(lastSeq, @"3");
+    AssertEq([lastSeq intValue], 3);
     AssertEq(filterCalls, 2);
 }
 
@@ -169,8 +194,10 @@
     if (!remoteURL)
         return;
 
-    NSError* error = CBLStatusToNSError(kCBLStatusNotFound);
-    replic8Continuous(db, remoteURL, NO, nil, nil, error);
+    [self allowWarningsIn:^{
+        NSError* error = CBLStatusToNSError(kCBLStatusNotFound);
+        replic8Continuous(db, remoteURL, NO, nil, nil, error);
+    }];
 }
 
 
@@ -188,20 +215,20 @@
     }];
 
     // Start a named document pull replication.
-    CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
-                                                         push: NO continuous: NO];
-    repl.authorizer = self.authorizer;
+    CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remote push: NO];
+    settings.authorizer = self.authorizer;
+    id<CBL_Replicator> repl = [[dbmgr.replicatorClass alloc] initWithDB: db settings: settings];
     [repl start];
 
     // Let the replicator run.
-    Assert(repl.running);
+    Assert(repl.status != kCBLReplicatorStopped);
     Log(@"Waiting for replicator to finish...");
-    while (repl.running || repl.savingCheckpoint) {
+    while (repl.status != kCBLReplicatorStopped || repl.savingCheckpoint) {
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                       beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
             break;
     }
-    Assert(!repl.running);
+    Assert(repl.status == kCBLReplicatorStopped);
     Assert(!repl.savingCheckpoint);
     AssertNil(repl.error);
     Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
@@ -218,36 +245,44 @@
 }
 
 
-- (void) test_06_Puller_AuthFailure {
+- (void) test_06_Puller_Authenticate {
     RequireTestCase(Puller);
     NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];
     if (!remoteURL)
         return;
-    // Add a bogus user to make auth fail:
-    NSString* urlStr = remoteURL.absoluteString;
-    urlStr = [urlStr stringByReplacingOccurrencesOfString: @"http://" withString: @"http://bogus@"];
-    remoteURL = $url(urlStr);
 
-    NSError* error = CBLStatusToNSError(kCBLStatusUnauthorized);
-    replic8Continuous(db, remoteURL, NO, nil, nil, error);
+    CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remoteURL
+                                                                                 push: NO];
+    [self replicate: settings expectError: CBLStatusToNSError(kCBLStatusUnauthorized)];
+
+    NSURLCredential* cred = [NSURLCredential credentialWithUser: @"test" password: @"abc123"
+                                                    persistence: NSURLCredentialPersistenceNone];
+    settings.authorizer = [[CBLBasicAuthorizer alloc] initWithCredential: cred];
+    [self replicate: settings expectError: nil];
 }
 
 
 - (void) test_06_Puller_SSL {
+    if (_newReplicator) {
+        Warn(@"Skipping SSL tests until new replicator supports cert validation");
+        return;
+    }
     RequireTestCase(Pusher);
     NSURL* remoteURL = [self remoteSSLTestDBURL: @"public"];
     if (!remoteURL)
         return;
 
     Log(@"Replicating without root cert; should fail...");
-    replic8(db, remoteURL, NO, nil, nil,
-            ([NSError errorWithDomain: NSURLErrorDomain
-                                code: NSURLErrorServerCertificateUntrusted userInfo: nil]));
+    [self allowWarningsIn:^{
+        replic8(db, remoteURL, NO, nil, nil,
+                ([NSError errorWithDomain: NSURLErrorDomain
+                                    code: NSURLErrorServerCertificateUntrusted userInfo: nil]));
+    }];
 
     Log(@"Now replicating with root cert installed...");
-    [CBL_Replicator setAnchorCerts: [self remoteTestDBAnchorCerts] onlyThese: NO];
+    CBLSetAnchorCerts([self remoteTestDBAnchorCerts], NO);
     id lastSeq = replic8(db, remoteURL, NO, nil, nil, nil);
-    [CBL_Replicator setAnchorCerts: nil onlyThese: NO];
+    CBLSetAnchorCerts(nil, NO);
     Assert([lastSeq intValue] >= 2);
 
     AssertEq(db.documentCount, 2u);
@@ -255,21 +290,27 @@
 }
 
 - (void) test_07_Puller_SSL_Continuous {
+    if (_newReplicator) {
+        Warn(@"Skipping SSL tests until new replicator supports cert validation");
+        return;
+    }
     RequireTestCase(Pusher);
     NSURL* remoteURL = [self remoteSSLTestDBURL: @"public"];
     if (!remoteURL)
         return;
 
     Log(@"Replicating without root cert; should fail...");
-    replic8Continuous(db, remoteURL, NO, nil, nil,
-                      [NSError errorWithDomain: NSURLErrorDomain
-                                          code: NSURLErrorServerCertificateUntrusted
-                                      userInfo: nil]);
+    [self allowWarningsIn:^{
+        replic8Continuous(db, remoteURL, NO, nil, nil,
+                          [NSError errorWithDomain: NSURLErrorDomain
+                                              code: NSURLErrorServerCertificateUntrusted
+                                          userInfo: nil]);
+    }];
 
     Log(@"Now replicating with root cert installed...");
-    [CBL_Replicator setAnchorCerts: [self remoteTestDBAnchorCerts] onlyThese: NO];
+    CBLSetAnchorCerts([self remoteTestDBAnchorCerts], NO);
     id lastSeq = replic8Continuous(db, remoteURL, NO, nil, nil, nil);
-    [CBL_Replicator setAnchorCerts: nil onlyThese: NO];
+    CBLSetAnchorCerts(nil, NO);
     Assert([lastSeq intValue] >= 2);
 
     AssertEq(db.documentCount, 2u);
@@ -277,24 +318,30 @@
 }
 
 - (void) test_08_Puller_SSL_Pinned {
+    if (_newReplicator) {
+        Warn(@"Skipping SSL tests until new replicator supports cert validation");
+        return;
+    }
     RequireTestCase(Puller_SSL_Continuous);
     NSURL* remoteURL = [self remoteSSLTestDBURL: @"public"];
     if (!remoteURL)
         return;
 
     Log(@"Replicating with wrong pinned cert; should fail...");
-    NSString* digest = @"123456789abcdef0123456789abcdef012345678";
-    replic8Continuous(db, remoteURL, NO, nil, @{kCBLReplicatorOption_PinnedCert: digest},
-                      [NSError errorWithDomain: NSURLErrorDomain
-                                          code: NSURLErrorServerCertificateUntrusted
-                                      userInfo: nil]);
+    [self allowWarningsIn:^{
+        NSString* digest = @"123456789abcdef0123456789abcdef012345678";
+        replic8Continuous(db, remoteURL, NO, nil, @{kCBLReplicatorOption_PinnedCert: digest},
+                          [NSError errorWithDomain: NSURLErrorDomain
+                                              code: NSURLErrorServerCertificateUntrusted
+                                          userInfo: nil]);
+    }];
 
     Log(@"Now replicating with correct pinned cert...");
-    digest = @"c745fbfc03382125271daffc2e715a5b0172d1d8";
+    NSString* digest = @"c745fbfc03382125271daffc2e715a5b0172d1d8";
     id lastSeq = replic8Continuous(db, remoteURL, NO, nil,
                                    @{kCBLReplicatorOption_PinnedCert: digest},
                                    nil);
-    [CBL_Replicator setAnchorCerts: nil onlyThese: NO];
+    CBLSetAnchorCerts(nil, NO);
     Assert([lastSeq intValue] >= 2);
 
     AssertEq(db.documentCount, 2u);
@@ -346,14 +393,14 @@
     [repl start];
     
     // Let the replicator run.
-    Assert(repl.running);
+    Assert(repl.status != kCBLReplicatorStopped);
     Log(@"Waiting for replicator to finish...");
-    while (repl.running || repl.savingCheckpoint) {
+    while (repl.status != kCBLReplicatorStopped || repl.savingCheckpoint) {
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                       beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
             break;
     }
-    Assert(!repl.running);
+    Assert(repl.status == kCBLReplicatorStopped);
     Assert(!repl.savingCheckpoint);
     AssertNil(repl.error);
     Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
@@ -533,7 +580,7 @@
             if (strongR.reachabilityKnown)
                 resolved = YES;
         };
-        Assert([r start]);
+        Assert([r startOnRunLoop:CFRunLoopGetCurrent()]);
 
         BOOL known = r.reachabilityKnown;
         Log(@"\tInitially: known=%d, flags=%x --> reachable=%d",
@@ -556,24 +603,22 @@
                                     @"target": db.name,
                                     @"continuous": @NO} mutableCopy];
     CBLStatus status;
-    CBL_Replicator* r1 = [dbmgr replicatorWithProperties: props status: &status];
+    id<CBL_Replicator> r1 = [dbmgr replicatorWithProperties: props status: &status];
     Assert(r1);
     NSString* check1 = r1.remoteCheckpointDocID;
 
     props[@"continuous"] = @YES;
-    CBL_Replicator* r2 = [dbmgr replicatorWithProperties: props status: &status];
+    id<CBL_Replicator> r2 = [dbmgr replicatorWithProperties: props status: &status];
     Assert(r2);
     NSString* check2 = r2.remoteCheckpointDocID;
     Assert(![check1 isEqualToString: check2]);
-    Assert(![r1 hasSameSettingsAs: r2]);
 
     props[@"filter"] = @"Melitta";
     props[@"query_params"] = @{@"unbleached": @"true"};     // Test fix for #728
-    CBL_Replicator* r3 = [dbmgr replicatorWithProperties: props status: &status];
+    id<CBL_Replicator> r3 = [dbmgr replicatorWithProperties: props status: &status];
     Assert(r3);
     NSString* check3 = r3.remoteCheckpointDocID;
     Assert(![check3 isEqualToString: check2]);
-    Assert(![r3 hasSameSettingsAs: r2]);
 }
 
 
@@ -582,27 +627,27 @@
                             @"target": db.name,
                             kCBLReplicatorOption_RemoteUUID: @"cafebabe"};
     CBLStatus status;
-    CBL_Replicator* r1 = [dbmgr replicatorWithProperties: props status: &status];
+    id<CBL_Replicator> r1 = [dbmgr replicatorWithProperties: props status: &status];
     Assert(r1);
     NSString* check1 = r1.remoteCheckpointDocID;
 
     // Different URL, but same remoteUUID:
     NSMutableDictionary* props2 = [props mutableCopy];
     props2[@"source"] = @"http://alice17.local:44444/db";
-    CBL_Replicator* r2 = [dbmgr replicatorWithProperties: props2 status: &status];
+    id<CBL_Replicator> r2 = [dbmgr replicatorWithProperties: props2 status: &status];
     Assert(r2);
     NSString* check2 = r2.remoteCheckpointDocID;
     AssertEqual(check1, check2);
-    Assert([r1 hasSameSettingsAs: r2]);
+    AssertEqual(r2.settings, r1.settings);
 
     // Same UUID but different "filter" setting:
     NSMutableDictionary* props3 = [props2 mutableCopy];
     props3[@"filter"] = @"Melitta";
-    CBL_Replicator* r3 = [dbmgr replicatorWithProperties: props3 status: &status];
+    id<CBL_Replicator> r3 = [dbmgr replicatorWithProperties: props3 status: &status];
     Assert(r3);
     NSString* check3 = r3.remoteCheckpointDocID;
     Assert(![check3 isEqualToString: check2]);
-    Assert(![r3 hasSameSettingsAs: r2]);
+    Assert(!$equal(r3.settings, r2.settings));
 }
 
 
@@ -615,31 +660,38 @@
                  docIDs: (NSArray*)docIDs
             expectError: (NSError*) expectError
 {
-    CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
-                                                        push: push continuous: NO];
-    if (push)
-        ((CBL_Pusher*)repl).createTarget = YES;
-    repl.filterName = filter;
-    repl.docIDs = docIDs;
-    repl.authorizer = self.authorizer;
+    CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remote push: push];
+    settings.createTarget = push;
+    settings.filterName = filter;
+    settings.docIDs = docIDs;
+    settings.authorizer = self.authorizer;
+    Assert([settings compilePushFilterForDatabase: db status: NULL]);
+    return [self replicate: settings expectError: expectError];
+}
+
+
+- (NSString*) replicate: (CBL_ReplicatorSettings*)settings
+            expectError: (NSError*)expectError
+{
+    id<CBL_Replicator> repl = [[dbmgr.replicatorClass alloc] initWithDB: db settings: settings];
     [repl start];
     
-    Assert(repl.running);
+    Assert(repl.status != kCBLReplicatorStopped);
     Log(@"Waiting for replicator to finish...");
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
-    while ((repl.running || repl.savingCheckpoint) && timeout.timeIntervalSinceNow > 0.0) {
+    while ((repl.status != kCBLReplicatorStopped || repl.savingCheckpoint) && timeout.timeIntervalSinceNow > 0.0) {
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                       beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]]) {
             Warn(@"Runloop exiting unexpectedly!");
             break;
         }
     }
-    Assert(!repl.running);
+    Assert(repl.status == kCBLReplicatorStopped);
     Assert(!repl.savingCheckpoint);
     if (expectError) {
-        Assert(!repl.running);
-        AssertEqual(repl.error.domain, expectError.domain);
-        AssertEq(repl.error.code, expectError.code);
+        Assert(repl.status == kCBLReplicatorStopped);
+        Assert($equal(repl.error.domain, expectError.domain) && repl.error.code == expectError.code,
+               @"\nUnexpected error %@\n  Expected error %@", repl.error, expectError);
         Log(@"...replicator got expected error %@", repl.error);
     } else {
         AssertNil(repl.error);
@@ -656,44 +708,48 @@
                           options: (NSDictionary*)options
                       expectError: (NSError*) expectError
 {
-    CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
-                                                         push: push continuous: YES];
-    if (push)
-        ((CBL_Pusher*)repl).createTarget = YES;
-    repl.filterName = filter;
-    repl.authorizer = self.authorizer;
-    repl.options = options;
+    CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remote push: push];
+    settings.continuous = YES;
+    settings.createTarget = push;
+    settings.authorizer = self.authorizer;
+    settings.filterName = filter;
+    settings.options = options;
+    Assert([settings compilePushFilterForDatabase: db status: NULL]);
+    id<CBL_Replicator> repl = [[dbmgr.replicatorClass alloc] initWithDB: db settings: settings];
     [repl start];
 
     // Start the replicator and wait for it to go active, then inactive:
-    Assert(repl.running);
+    Assert(repl.status != kCBLReplicatorStopped);
     Log(@"Waiting for replicator to go idle...");
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
     bool wasActive = repl.active;
-    while ((repl.running || repl.savingCheckpoint) && timeout.timeIntervalSinceNow > 0.0) {
+    BOOL stopping = NO;
+    while ((repl.status != kCBLReplicatorStopped || repl.savingCheckpoint) && timeout.timeIntervalSinceNow > 0.0) {
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                       beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
             break;
-        if (!wasActive)
+        if (!wasActive) {
             wasActive = repl.active;
-        else if (!repl.active)
-            break;  // Went inactive, so it's done
+        } else if (!repl.active && !stopping) {
+            if (!expectError)
+                Assert(repl.status != kCBLReplicatorStopped);
+            stopping = YES;
+            [repl stop];  // Went inactive, so it's done; give it time to save its checkpoint
+        }
     }
     Assert(wasActive && !repl.active);
     Assert(!repl.savingCheckpoint);
 
     if (expectError) {
-        Assert(!repl.running);
+        AssertEq(repl.status, kCBLReplicatorStopped);
         AssertEqual(repl.error.domain, expectError.domain);
         AssertEq(repl.error.code, expectError.code);
         Log(@"...replicator finished. error=%@", repl.error);
     } else {
-        Assert(repl.running);
         AssertNil(repl.error);
         Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
     }
     NSString* result = repl.lastSequence;
-    [repl stop];
     return result;
 }
 

@@ -17,7 +17,7 @@
 #import "CBLBulkDownloader.h"
 #import "CBLMultipartReader.h"
 #import "CBLMultipartDocumentReader.h"
-#import "CBL_Puller.h"
+#import "CBLRestPuller.h"
 #import "CBL_Revision.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLMisc.h"

@@ -9,11 +9,8 @@
 #import <Foundation/Foundation.h>
 #import "CBLDatabase.h"
 #import "CBL_Body.h"
+#import "CBLMisc.h"
 @class CBL_MutableRevision;
-
-
-/** Database sequence ID */
-typedef SInt64 SequenceNumber;
 
 
 /** Stores information about a revision -- its docID, revID, and whether it's deleted. It can also store the sequence number and document contents (they can be added after creation). */
@@ -108,7 +105,7 @@ typedef SInt64 SequenceNumber;
 
 
 /** An ordered list of CBLRevs. */
-@interface CBL_RevisionList : NSObject <NSFastEnumeration>
+@interface CBL_RevisionList : NSObject <NSFastEnumeration, NSMutableCopying>
 
 - (instancetype) init;
 - (instancetype) initWithArray: (NSArray*)revs;
@@ -128,6 +125,7 @@ typedef SInt64 SequenceNumber;
 
 - (void) addRev: (CBL_Revision*)rev;
 - (void) removeRev: (CBL_Revision*)rev;
+- (void) removeRevIdenticalTo: (CBL_Revision*)rev;
 - (CBL_Revision*) removeAndReturnRev: (CBL_Revision*)rev;  // returns the object removed, or nil
 - (void) removeObjectAtIndex: (NSUInteger)index;
 

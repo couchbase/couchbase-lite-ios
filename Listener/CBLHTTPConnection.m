@@ -31,6 +31,11 @@
 
 
 @implementation CBLHTTPConnection
+{
+    BOOL _hasClientCert;
+}
+
+@synthesize username=_username;
 
 
 - (CBLListener*) listener {
@@ -38,8 +43,38 @@
 }
 
 
+- (SSLAuthenticate)sslClientSideAuthentication {
+    return kTryAuthenticate;
+}
+
+- (void)socket:(GCDAsyncSocket *)sock
+        didReceiveTrust:(SecTrustRef)trust
+        completionHandler:(void (^)(BOOL shouldTrustPeer))completionHandler
+{
+    // This only gets called if the SSL settings disable regular cert validation.
+    SecTrustEvaluateAsync(trust, dispatch_get_main_queue(),
+                          ^(SecTrustRef trustRef, SecTrustResultType result)
+    {
+        LogTo(CBLListener, @"Login attempted with client cert; trust result = %d", result);
+        id<CBLListenerDelegate> delegate = self.listener.delegate;
+        BOOL ok;
+        if (result == kSecTrustResultDeny || result == kSecTrustResultFatalTrustFailure
+                                          || result == kSecTrustResultOtherError) {
+            ok = NO;
+        } else if ([delegate respondsToSelector: @selector(authenticateConnectionFromAddress:withTrust:)]) {
+            _username = [delegate authenticateConnectionFromAddress: sock.connectedAddress
+                                                          withTrust: trust];
+            ok = (_username != nil);
+        } else {
+            ok = (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified);
+        }
+        _hasClientCert = ok;
+        completionHandler(ok);
+    });
+}
+
 - (BOOL)isPasswordProtected:(NSString *)path {
-    return self.listener.requiresAuth;
+    return !_hasClientCert && self.listener.requiresAuth;
 }
 
 - (NSString*) realm {
@@ -54,6 +89,7 @@
 
 - (NSString*) passwordForUser: (NSString*)username {
     LogTo(CBLListener, @"Login attempted for user '%@'", username);
+    _username = username;
     return [self.listener passwordForUser: username];
 }
 
@@ -103,6 +139,10 @@
                                                 request: urlRequest
                                                 isLocal: NO];
     router.processRanges = NO;  // The HTTP server framework does this already
+    if (_username) {
+        NSString* str = [@"user:" stringByAppendingString: [_username stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding]];
+        router.source = [NSURL URLWithString: str];
+    }
     CBLHTTPResponse* response = [[CBLHTTPResponse alloc] initWithRouter: router
                                                          forConnection: self];
     

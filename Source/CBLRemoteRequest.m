@@ -15,11 +15,12 @@
 
 #import "CBLRemoteRequest.h"
 #import "CBLAuthorizer.h"
+#import "CBLClientCertAuthorizer.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
 #import "CBL_BlobStore.h"
 #import "CBLDatabase.h"
-#import "CBL_Replicator.h"
+#import "CBLRestReplicator.h"
 #import "CollectionUtils.h"
 #import "Logging.h"
 #import "Test.h"
@@ -40,21 +41,6 @@
 @synthesize autoRetry = _autoRetry;
 
 
-+ (NSString*) userAgentHeader {
-    static NSString* sUserAgent;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-#if TARGET_OS_IPHONE
-        const char* platform = "iOS";
-#else
-        const char* platform = "Mac OS X";
-#endif
-        sUserAgent = $sprintf(@"CouchbaseLite/%s (%s)", CBL_VERSION_STRING, platform);
-    });
-    return sUserAgent;
-}
-
-
 - (instancetype) initWithMethod: (NSString*)method
                             URL: (NSURL*)url
                            body: (id)body
@@ -70,7 +56,7 @@
         _request.cachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
         
         // Add headers.
-        [_request setValue: [[self class] userAgentHeader] forHTTPHeaderField:@"User-Agent"];
+        [_request setValue: [CBL_ReplicatorSettings userAgentHeader] forHTTPHeaderField:@"User-Agent"];
         [requestHeaders enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL *stop) {
             [_request setValue:value forHTTPHeaderField:key];
             // If app explicitly wants to set a cookie, we have to stop NSURLRequest from using its
@@ -301,7 +287,9 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
         }
         LogTo(RemoteRequest, @"    challenge: continueWithoutCredential");
         [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
+
     } else if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
+        // Verify the _server's_ SSL certificate:
         SecTrustRef trust = space.serverTrust;
         BOOL ok;
         if (_delegate)
@@ -320,6 +308,22 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
             LogTo(RemoteRequest, @"    challenge: fail (untrusted cert)");
             [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
         }
+
+    } else if ($equal(authMethod, NSURLAuthenticationMethodClientCertificate)) {
+        // Request for SSL client cert:
+        if (challenge.previousFailureCount == 0) {
+            NSURLCredential* cred = $castIf(CBLClientCertAuthorizer, _authorizer).credential;
+            if (cred) {
+                LogTo(RemoteRequest, @"    challenge: sending SSL client cert");
+                [sender useCredential: cred forAuthenticationChallenge:challenge];
+                return;
+            }
+            LogTo(RemoteRequest, @"    challenge: no SSL client cert");
+        } else {
+            LogTo(RemoteRequest, @"    challenge: SSL client cert rejected");
+        }
+        [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
+        
     } else {
         LogTo(RemoteRequest, @"    challenge: performDefaultHandling");
         [sender performDefaultHandlingForAuthenticationChallenge: challenge];

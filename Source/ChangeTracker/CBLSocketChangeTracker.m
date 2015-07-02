@@ -23,7 +23,7 @@
 #import "CBLBase64.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
-#import "WebSocketHTTPLogic.h"
+#import "BLIPHTTPLogic.h"
 #import <string.h>
 
 
@@ -32,7 +32,7 @@
 
 @implementation CBLSocketChangeTracker
 {
-    WebSocketHTTPLogic* _http;
+    BLIPHTTPLogic* _http;
     NSInputStream* _trackingInput;
     CFAbsoluteTime _startTime;
     bool _gotResponseHeaders;
@@ -67,7 +67,7 @@
             [self.cookieStorage addCookieHeaderToRequest: urlRequest];
         }
 
-        _http = [[WebSocketHTTPLogic alloc] initWithURLRequest: urlRequest];
+        _http = [[BLIPHTTPLogic alloc] initWithURLRequest: urlRequest];
 
         // Add headers from my .requestHeaders property:
         [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
@@ -152,6 +152,13 @@
 
         trusted = [self checkServerTrust: sslTrust forURL: url];
         CFRelease(sslTrust);
+        if (!trusted) {
+            //TODO: This error could be made more precise
+            LogTo(ChangeTracker, @"%@: Rejected server certificate", self);
+            [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
+                                                       code: NSURLErrorServerCertificateUntrusted
+                                                   userInfo: nil]];
+        }
     }
     return trusted;
 }
