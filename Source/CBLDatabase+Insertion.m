@@ -181,7 +181,7 @@
                                                                          deleted: deleting];
         tmpRev.properties = properties;
         if (![self processAttachmentsForRevision: tmpRev
-                                       prevRevID: prevRevID
+                                        ancestry: (prevRevID ? @[prevRevID] : nil)
                                           status: outStatus]) {
             CBLStatusToOutNSError(*outStatus, outError);
             return nil;
@@ -238,9 +238,9 @@
     CBLStatus status;
     if (inRev.attachments) {
         CBL_MutableRevision* updatedRev = [inRev mutableCopy];
-        NSString* prevRevID = history.count >= 2 ? history[1] : nil;
+        NSArray* ancestry = [history subarrayWithRange: NSMakeRange(1, history.count-1)];
         if (![self processAttachmentsForRevision: updatedRev
-                                       prevRevID: prevRevID
+                                        ancestry: ancestry
                                           status: &status]) {
             CBLStatusToOutNSError(status, outError);
             return status;
