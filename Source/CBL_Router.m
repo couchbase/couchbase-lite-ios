@@ -205,6 +205,8 @@
             options->indexUpdateMode = kCBLUpdateIndexNever;
         else if ([stale isEqualToString:@"update_after"])
             options->indexUpdateMode = kCBLUpdateIndexAfter;
+        else if ([stale isEqualToString:@"false"])    // 'false' is a no-op, for CBS compatibility
+            options->indexUpdateMode = kCBLUpdateIndexBefore;
         else
             return nil;
     }
