@@ -170,11 +170,14 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 
 - (void) updateState {
     SyncState state;
-    if (!_connection)
+    if (_revsToInsert != nil || _insertingRevs > 0)
+        state = kSyncActive;
+    else if (!_connection)
         state = kSyncStopped;
     else if (!_connected)
         state = kSyncConnecting;
-    else if (_pullCatchingUp || _revsToInsert != nil || _insertingRevs > 0 || _awaitingRevs > 0
+    else if (_pullCatchingUp
+                || _awaitingRevs > 0
                 || _changeListsInFlight > 0
                 || _connection.active)
         state = kSyncActive;

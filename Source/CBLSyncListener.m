@@ -18,6 +18,7 @@
 
 @interface CBLSyncListener ()
 @property (readwrite) UInt16 port;
+@property (readwrite) NSUInteger connectionCount;
 @end
 
 
@@ -78,6 +79,7 @@
         [handler addObserver: self forKeyPath: @"state" options: 0 context: (void*)1];
         dispatch_sync(_queue, ^{
             [_handlers addObject: handler];
+            _facade.connectionCount = _handlers.count;
         });
         return nil;
     }];
@@ -94,6 +96,7 @@
             dispatch_sync(_queue, ^{
                 [_handlers removeObject: handler];
                 [handler removeObserver: self forKeyPath: @"state"];
+                _facade.connectionCount = _handlers.count;
             });
         }
     } else {
@@ -169,7 +172,7 @@
     uint16_t _desiredPort;
 }
 
-@synthesize port=_port;
+@synthesize port=_port, connectionCount=_connectionCount;
 
 - (instancetype) initWithManager: (CBLManager*)manager port: (uint16_t)port {
     self = [super init];

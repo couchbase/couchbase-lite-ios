@@ -25,4 +25,6 @@
     If the listener has not yet started, this will return 0. */
 @property (readonly) UInt16 port;
 
+@property (readonly) NSUInteger connectionCount;
+
 @end

@@ -188,8 +188,6 @@
                 needDigests[digest] = mattachment;
             }
         }
-        LogTo(SyncVerbose, @"Still need %lu of %lu attachments of doc '%@'...",
-              (unsigned long)needDigests.count, (unsigned long)attachments.count, docID);
 
         [self onSyncQueue: ^{
             if (needDigests.count == 0) {
@@ -198,6 +196,8 @@
                 [request respondWithData: nil contentType: nil];
             } else {
                 // Alright, need to request some attachments before we can insert the revision:
+                LogTo(SyncVerbose, @"Still need attachments {%@} of doc '%@'...",
+                      [needDigests.allKeys componentsJoinedByString: @", "], docID);
                 NSMutableDictionary* attWritersByDigest = $mdict();
                 __block BOOL ok = YES;
                 for (NSString* digest in needDigests) {
