@@ -73,7 +73,9 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@]", self.class, _peerURL.host];
+    NSString* verb = _pushing ? @"push" : (_pulling ? @"pull": @"from");
+    return [NSString stringWithFormat: @"%@[%@ %@%@]",
+            self.class, verb, _peerURL.host, _peerURL.path];
 }
 
 

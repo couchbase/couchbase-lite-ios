@@ -476,6 +476,8 @@
 		27B086AF1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B086AD1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.h */; };
 		27B086B01B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B086AE1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m */; };
 		27B086B11B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B086AE1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m */; };
+		27B0AC1C1B4B036500DFE818 /* P2P_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0AC1B1B4B036500DFE818 /* P2P_Tests.m */; };
+		27B0AC1D1B4B036500DFE818 /* P2P_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0AC1B1B4B036500DFE818 /* P2P_Tests.m */; };
 		27B0B796149290AB00A817AD /* CBLChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B790149290AB00A817AD /* CBLChangeTracker.h */; };
 		27B0B797149290AB00A817AD /* CBLChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B791149290AB00A817AD /* CBLChangeTracker.m */; };
 		27B0B79E1492932800A817AD /* CBLBase64.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B79C1492932700A817AD /* CBLBase64.h */; };
@@ -1485,6 +1487,7 @@
 		27B086971B38823F00D3D9D8 /* MYZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYZip.m; sourceTree = "<group>"; };
 		27B086AD1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLClientCertAuthorizer.h; sourceTree = "<group>"; };
 		27B086AE1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLClientCertAuthorizer.m; sourceTree = "<group>"; };
+		27B0AC1B1B4B036500DFE818 /* P2P_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = P2P_Tests.m; sourceTree = "<group>"; };
 		27B0B790149290AB00A817AD /* CBLChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLChangeTracker.h; sourceTree = "<group>"; };
 		27B0B791149290AB00A817AD /* CBLChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLChangeTracker.m; sourceTree = "<group>"; };
 		27B0B79C1492932700A817AD /* CBLBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBase64.h; sourceTree = "<group>"; };
@@ -1947,6 +1950,7 @@
 				2764D2B31A5E29EC005AC95A /* Misc_Tests.m */,
 				272AA8191A48A023004B8D55 /* Model_Tests.m */,
 				272AA8741A49EE5D004B8D55 /* Multipart_Tests.m */,
+				27B0AC1B1B4B036500DFE818 /* P2P_Tests.m */,
 				272AA81B1A48A301004B8D55 /* QueryBuilder_Tests.m */,
 				272AA81D1A48A8BF004B8D55 /* Replication_Tests.m */,
 				272AA8641A49D95B004B8D55 /* ReplicatorInternal_Tests.m */,
@@ -3801,6 +3805,7 @@
 				272AA8651A49D95B004B8D55 /* ReplicatorInternal_Tests.m in Sources */,
 				27452B311AB0E6AA00327776 /* View_Benchmarks.m in Sources */,
 				2700359A1A4500160015B9F4 /* View_Tests.m in Sources */,
+				27B0AC1C1B4B036500DFE818 /* P2P_Tests.m in Sources */,
 				272AA85C1A48F17D004B8D55 /* ViewInternal_Tests.m in Sources */,
 				27AF0A591A4A1F9D003F51D0 /* Router_Tests.m in Sources */,
 				27B085D21B34BDD200D3D9D8 /* SwiftModel_Test.swift in Sources */,
@@ -3982,6 +3987,7 @@
 				272AA85D1A48F17D004B8D55 /* ViewInternal_Tests.m in Sources */,
 				27AF0A5A1A4A1F9D003F51D0 /* Router_Tests.m in Sources */,
 				2764D2C71A5F18A0005AC95A /* IncrementalStore_Tests.m in Sources */,
+				27B0AC1D1B4B036500DFE818 /* P2P_Tests.m in Sources */,
 				27486F3E1A608BC7008D94F0 /* CBLJSONValidator.m in Sources */,
 				2764D2BF1A5F10E6005AC95A /* JSViewCompiler_Tests.m in Sources */,
 				271297491A8D7DA400F6C5CE /* DatabaseAttachment_Tests.m in Sources */,

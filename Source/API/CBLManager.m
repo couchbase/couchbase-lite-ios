@@ -785,7 +785,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     }
 
     NSURL* remote = [NSURL URLWithString: remoteDict[@"url"]];
-    if (![@[@"http", @"https", @"cbl"] containsObject: remote.scheme.lowercaseString])
+    if (![@[@"http", @"https", @"cbl", @"ws", @"wss"] containsObject: remote.scheme.lowercaseString])
         return kCBLStatusBadRequest;
     if (outDatabase) {
         *outDatabase = db;

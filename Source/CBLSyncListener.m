@@ -8,17 +8,27 @@
 
 #import "CBLSyncListener.h"
 #import "CBLSyncConnection.h"
+#import "CouchbaseLite.h"
+#import "CBLInternal.h"
+#import "BLIPPocketSocketListener.h"
+#import "PSWebSocket.h"
 #import "CollectionUtils.h"
 #import "Logging.h"
 
 
-@interface CBLSyncListener () <NSNetServiceDelegate>
+@interface CBLSyncListener ()
+@property (readwrite) UInt16 port;
 @end
 
 
-@implementation CBLSyncListener
+@interface CBLSyncListenerImpl : BLIPPocketSocketListener <NSNetServiceDelegate>
+@end
+
+
+@implementation CBLSyncListenerImpl
 {
-    CBLDatabase* _db;
+    CBLManager* _manager;
+    __weak CBLSyncListener* _facade;
     NSMutableSet* _handlers;
     dispatch_queue_t _queue;
     NSString* _bonjourName, *_bonjourType;
@@ -26,52 +36,74 @@
     BOOL _netServicePublished;
 }
 
-- (instancetype) initWithDatabase: (CBLDatabase*)db
-                             path: (NSString*)path
+
+- (instancetype) initWithManager: (CBLManager*)manager
+                          facade: (CBLSyncListener*)facade
 {
-    self = [super initWithPath: path delegate: nil queue: nil];
+    NSArray* paths = [manager.allDatabaseNames my_map:^id(NSString* name) {
+        return $sprintf(@"/%@/_blipsync", name);
+    }];
+
+    self = [super initWithPaths: paths delegate: nil queue: nil];
     if (self) {
-        _db = db;
+        _manager = manager;
+        _facade = facade;
         _handlers = [NSMutableSet new];
         _queue = dispatch_queue_create("CBLSyncListener", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
 
-- (void) blipConnectionDidOpen:(BLIPConnection *)connection {
-    dispatch_async(_queue, ^{
-        LogTo(Sync, @"OPENED INCOMING %@ from <%@>", connection, connection.URL);
-        NSString* name = $sprintf(@"Sync from %@", connection.URL);
-        dispatch_queue_t queue = dispatch_queue_create(name.UTF8String, DISPATCH_QUEUE_SERIAL);
-        CBLSyncConnection* handler = [[CBLSyncConnection alloc] initWithDatabase: _db
-                                                                connection: connection
-                                                                     queue: queue];
-        [_handlers addObject: handler];
-        [handler addObserver: self forKeyPath: @"state" options: 0 context: (void*)1];
+
+- (void)dealloc {
+    Log(@"DEALLOC %@", self);
+    dispatch_sync(_queue, ^{
+        for (CBLSyncConnection* handler in _handlers)
+            [handler removeObserver: self forKeyPath: @"state"];
     });
 }
 
-- (void) forgetHandler: (CBLSyncConnection*)handler {
-    dispatch_async(_queue, ^{
-        LogTo(Sync, @"CLOSED INCOMING connection from <%@>", handler.peerURL);
-        [handler removeObserver: self forKeyPath: @"state"];
-        [_handlers removeObject: handler];
-    });
+
+- (void) blipConnectionDidOpen:(BLIPConnection *)connection {
+    NSString* name = ((BLIPPocketSocketConnection*)connection).webSocket.URLRequest.URL.path;
+    name = name.stringByDeletingLastPathComponent.lastPathComponent;
+    LogTo(Sync, @"OPENED INCOMING %@ from <%@> for %@", connection, connection.URL, name);
+
+    [_manager.backgroundServer waitForDatabaseNamed: name to: ^id(CBLDatabase* db) {
+        NSString* name = $sprintf(@"Sync from %@", connection.URL);
+        dispatch_queue_t queue = dispatch_queue_create(name.UTF8String, DISPATCH_QUEUE_SERIAL);
+        CBLSyncConnection* handler = [[CBLSyncConnection alloc] initWithDatabase: db
+                                                                      connection: connection
+                                                                           queue: queue];
+        [handler addObserver: self forKeyPath: @"state" options: 0 context: (void*)1];
+        dispatch_sync(_queue, ^{
+            [_handlers addObject: handler];
+        });
+        return nil;
+    }];
 }
+
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
                         change:(NSDictionary *)change context:(void *)context
 {
     if (context == (void*)1) {
         CBLSyncConnection* handler = object;
-        if (handler.state == kSyncStopped)
-            [self forgetHandler: handler];
+        if (handler.state == kSyncStopped) {
+            LogTo(Sync, @"CLOSED INCOMING connection from <%@>", handler.peerURL);
+            dispatch_sync(_queue, ^{
+                [_handlers removeObject: handler];
+                [handler removeObserver: self forKeyPath: @"state"];
+            });
+        }
     } else {
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }
 }
 
+
 #pragma mark - BONJOUR:
+
 
 - (void) setBonjourName: (NSString*)name type: (NSString*)type {
     dispatch_async(_queue, ^{
@@ -80,13 +112,16 @@
     });
 }
 
+
 - (NSString*) bonjourName {
     return _netServicePublished ? _netService.name : nil;
 }
 
+
 - (void) listenerDidStart {
-    dispatch_async(_queue, ^{
-        if (_bonjourType) {
+    _facade.port = self.port;
+    if (_bonjourType) {
+        dispatch_async(_queue, ^{
             _netService = [[NSNetService alloc] initWithDomain: @""
                                                           type: _bonjourType
                                                           name: _bonjourName
@@ -96,11 +131,13 @@
             _netServicePublished = NO;
             [_netService scheduleInRunLoop: [NSRunLoop mainRunLoop] forMode: NSDefaultRunLoopMode];
             [_netService publishWithOptions: 0];
-        }
-    });
+        });
+    }
 }
 
+
 - (void) listenerDidStop {
+    _facade.port = 0;
     dispatch_async(_queue, ^{
         [_netService stop];
         _netService = nil;
@@ -116,8 +153,44 @@
     });
 }
 
+
 - (void)netService:(NSNetService *)sender didNotPublish:(NSDictionary *)errorDict {
     Warn(@"CBLSyncListener: Failed to publish Bonjour service '%@': %@", _netService.name, errorDict);
 }
+
+@end
+
+
+
+
+@implementation CBLSyncListener
+{
+    CBLSyncListenerImpl* _impl;
+    uint16_t _desiredPort;
+}
+
+@synthesize port=_port;
+
+- (instancetype) initWithManager: (CBLManager*)manager port: (uint16_t)port {
+    self = [super init];
+    if (self) {
+        _impl = [[CBLSyncListenerImpl alloc] initWithManager: manager facade: self];
+        _desiredPort = port;
+    }
+    return self;
+}
+
+- (void) setBonjourName: (NSString*)name type: (NSString*)type {
+    [_impl setBonjourName: name type: type];
+}
+
+- (BOOL) start: (NSError**)outError {
+    return [_impl acceptOnInterface: nil port: _desiredPort error: outError];
+}
+
+- (void) stop {
+    [_impl disconnect];
+}
+
 
 @end
