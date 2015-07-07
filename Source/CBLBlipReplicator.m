@@ -293,8 +293,8 @@
                                 userInfo: error.userInfo];
     }
     if (!$equal(error, _error)) {
-        LogTo(Sync, @"Connection got error %@ [%@ %ld]",
-              error.localizedDescription, error.domain, (long)error.code);
+        LogTo(Sync, @"%@: Connection got error %@ [%@ %ld]",
+              self, error.localizedDescription, error.domain, (long)error.code);
         self.error = error;
     }
 }

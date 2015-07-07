@@ -19,6 +19,7 @@
 @interface CBLSyncListener ()
 @property (readwrite) UInt16 port;
 @property (readwrite) NSUInteger connectionCount;
+@property (readwrite, copy) NSString* bonjourName;
 @end
 
 
@@ -34,7 +35,6 @@
     dispatch_queue_t _queue;
     NSString* _bonjourName, *_bonjourType;
     NSNetService* _netService;
-    BOOL _netServicePublished;
 }
 
 
@@ -57,7 +57,7 @@
 
 
 - (void)dealloc {
-    Log(@"DEALLOC %@", self);
+    LogTo(Listener, @"DEALLOC %@", self);
     dispatch_sync(_queue, ^{
         for (CBLSyncConnection* handler in _handlers)
             [handler removeObserver: self forKeyPath: @"state"];
@@ -116,8 +116,16 @@
 }
 
 
-- (NSString*) bonjourName {
-    return _netServicePublished ? _netService.name : nil;
+- (void)setTXTRecordDictionary:(NSDictionary *)dict {
+    dispatch_async(_queue, ^{
+        NSNetService* ns = _netService;
+        if (ns) {
+            NSData* txtData = dict ? [NSNetService dataFromTXTRecordDictionary: dict] : nil;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                ns.TXTRecordData = txtData;
+            });
+        }
+    });
 }
 
 
@@ -125,40 +133,50 @@
     _facade.port = self.port;
     if (_bonjourType) {
         dispatch_async(_queue, ^{
-            _netService = [[NSNetService alloc] initWithDomain: @""
-                                                          type: _bonjourType
-                                                          name: _bonjourName
-                                                          port: self.port];
-            _netService.includesPeerToPeer = YES;
-            _netService.delegate = self;
-            _netServicePublished = NO;
-            [_netService scheduleInRunLoop: [NSRunLoop mainRunLoop] forMode: NSDefaultRunLoopMode];
-            [_netService publishWithOptions: 0];
+            NSNetService* ns = [[NSNetService alloc] initWithDomain: @""
+                                                               type: _bonjourType
+                                                               name: _bonjourName
+                                                               port: self.port];
+            if ([ns respondsToSelector: @selector(setIncludesPeerToPeer:)])    // 10.10+
+                ns.includesPeerToPeer = YES;
+            ns.delegate = self;
+            _netService = ns;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [ns publishWithOptions: 0];
+            });
         });
     }
 }
 
 
 - (void) listenerDidStop {
-    _facade.port = 0;
     dispatch_async(_queue, ^{
-        [_netService stop];
-        _netService = nil;
-        _netServicePublished = NO;
+        CBLSyncListener* facade = _facade;
+        facade.port = 0;
+        NSNetService* ns = _netService;
+        if (ns) {
+            _netService = nil;
+            facade.bonjourName = nil;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                ns.delegate = nil;
+                [ns stop];
+            });
+        }
     });
 }
 
 
-- (void)netServiceDidPublish:(NSNetService *)sender {
-    dispatch_async(_queue, ^{
-        Log(@"CBLSyncListener: Published Bonjour service '%@'", _netService.name);
-        _netServicePublished = YES;
-    });
+// called on main thread
+- (void)netServiceDidPublish:(NSNetService *)ns {
+    NSString* name = ns.name;
+    LogTo(Listener, @"CBLSyncListener: Published Bonjour service '%@'", name);
+    _facade.bonjourName = name;
 }
 
 
-- (void)netService:(NSNetService *)sender didNotPublish:(NSDictionary *)errorDict {
-    Warn(@"CBLSyncListener: Failed to publish Bonjour service '%@': %@", _netService.name, errorDict);
+// called on main thread
+- (void)netService:(NSNetService *)ns didNotPublish:(NSDictionary *)errorDict {
+    Warn(@"CBLSyncListener: Failed to publish Bonjour service '%@': %@", ns.name, errorDict);
 }
 
 @end
@@ -172,7 +190,9 @@
     uint16_t _desiredPort;
 }
 
-@synthesize port=_port, connectionCount=_connectionCount;
+@synthesize port=_port, connectionCount=_connectionCount, SSLCertificates=_SSLCertificates;
+@synthesize bonjourName=_bonjourName, TXTRecordDictionary=_TXTRecordDictionary;
+
 
 - (instancetype) initWithManager: (CBLManager*)manager port: (uint16_t)port {
     self = [super init];
@@ -187,8 +207,28 @@
     [_impl setBonjourName: name type: type];
 }
 
+- (void)setTXTRecordDictionary:(NSDictionary *)dict {
+    _TXTRecordDictionary = [dict copy];
+    [_impl setTXTRecordDictionary: _TXTRecordDictionary];
+}
+
+- (void) setPasswords:(NSDictionary *)passwords         {_impl.passwords = passwords;}
+
+- (NSURL*) URL {
+    NSString* hostName = CBLGetHostName();
+    int port = self.port ?: _desiredPort;
+    if (port == 0 || hostName == nil)
+        return nil;
+    NSString* urlStr = [NSString stringWithFormat: @"%@://%@:%d/",
+                        (_SSLCertificates ? @"wss" : @"ws"), hostName, port];
+    return [NSURL URLWithString: urlStr];
+}
+
 - (BOOL) start: (NSError**)outError {
-    return [_impl acceptOnInterface: nil port: _desiredPort error: outError];
+    return [_impl acceptOnInterface: nil
+                               port: _desiredPort
+                    SSLCertificates: _SSLCertificates
+                              error: outError];
 }
 
 - (void) stop {

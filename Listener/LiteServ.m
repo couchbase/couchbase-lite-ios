@@ -23,6 +23,7 @@
 #import "CBLDatabase+Replication.h"
 #import "CBLMisc.h"
 #import "CBLRegisterJSViewCompiler.h"
+#import "CBLSyncListener.h"
 #import <Security/Security.h>
 
 #if DEBUG
@@ -173,7 +174,7 @@ int main (int argc, const char * argv[])
         CBLRegisterJSViewCompiler();
 
         NSString* dataPath = nil;
-        UInt16 port = kPortNumber;
+        UInt16 port = kPortNumber, nuPort = 0;
         CBLManagerOptions options = {};
         const char* replArg = NULL, *user = NULL, *password = NULL, *realm = NULL;
         const char* identityName = NULL;
@@ -191,6 +192,10 @@ int main (int argc, const char * argv[])
                 const char *str = argv[++i];
                 char *end;
                 port = (UInt16)strtol(str, &end, 10);
+            } else if (strcmp(argv[i], "--nuport") == 0) {
+                const char *str = argv[++i];
+                char *end;
+                nuPort = (UInt16)strtol(str, &end, 10);
             } else if (strcmp(argv[i], "--readonly") == 0) {
                 options.readOnly = YES;
             } else if (strcmp(argv[i], "--auth") == 0) {
@@ -281,6 +286,16 @@ int main (int argc, const char * argv[])
         if (![listener start: &error]) {
             Warn(@"Failed to start HTTP listener: %@", error.localizedDescription);
             exit(1);
+        }
+
+        CBLSyncListener* syncListener;
+        if (nuPort > 0) {
+            // New-replicator listener:
+            syncListener = [[CBLSyncListener alloc] initWithManager: server port: nuPort];
+            [syncListener setBonjourName: @"LiteServ" type: @"_cbl_ws._tcp."];
+            syncListener.TXTRecordDictionary = @{@"Key": value};
+            [syncListener start: NULL];
+            Log(@"Started BLIP sync listener at <%@>", syncListener.URL);
         }
 
         if (replArg) {
