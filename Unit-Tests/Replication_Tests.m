@@ -123,6 +123,7 @@
 - (void) cookiesChanged: (NSNotification*)n {
     CBLCookieStorage* storage = n.object;
     _changedCookies = storage.cookies;
+    Log(@"%@ changed: %lu cookies", storage, _changedCookies.count);
 }
 
 
@@ -577,7 +578,6 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
     [repl deleteCookieNamed: cookie2.name];
 
-    [repl start];
     [self runReplication: repl expectedChangesCount: 0 expectedChangedCookies: @[cookie1, cookie3]];
     AssertNil(repl.lastError);
 
