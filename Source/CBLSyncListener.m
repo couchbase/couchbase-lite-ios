@@ -67,6 +67,17 @@
 }
 
 
+- (BOOL) checkClientCertificateAuthentication: (SecTrustRef)trust
+                                  fromAddress: (NSData*)address
+{
+    id<CBLListenerDelegate> delegate = _facade.delegate;
+    if ([delegate respondsToSelector: @selector(authenticateConnectionFromAddress:withTrust:)]) {
+        return [delegate authenticateConnectionFromAddress: address withTrust: trust] != nil;
+    }
+    return YES;
+}
+
+
 - (void) blipConnectionDidOpen:(BLIPConnection *)connection {
     NSString* name = ((BLIPPocketSocketConnection*)connection).webSocket.URLRequest.URL.path;
     name = name.stringByDeletingLastPathComponent.lastPathComponent;

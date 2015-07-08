@@ -482,6 +482,8 @@
 		27B0AC2D1B4C59B300DFE818 /* CBLHTTPListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0AC2A1B4C59B300DFE818 /* CBLHTTPListener.m */; };
 		27B0AC2F1B4C73FC00DFE818 /* CBLListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* CBLListener.m */; };
 		27B0AC301B4C73FF00DFE818 /* CBLListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* CBLListener.m */; };
+		27B0AC321B4D966A00DFE818 /* Listener_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0AC311B4D966A00DFE818 /* Listener_Tests.m */; };
+		27B0AC331B4D966A00DFE818 /* Listener_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0AC311B4D966A00DFE818 /* Listener_Tests.m */; };
 		27B0B796149290AB00A817AD /* CBLChangeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B790149290AB00A817AD /* CBLChangeTracker.h */; };
 		27B0B797149290AB00A817AD /* CBLChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B791149290AB00A817AD /* CBLChangeTracker.m */; };
 		27B0B79E1492932800A817AD /* CBLBase64.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B0B79C1492932700A817AD /* CBLBase64.h */; };
@@ -1491,6 +1493,7 @@
 		27B0AC291B4C59B300DFE818 /* CBLHTTPListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLHTTPListener.h; sourceTree = "<group>"; };
 		27B0AC2A1B4C59B300DFE818 /* CBLHTTPListener.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLHTTPListener.m; sourceTree = "<group>"; };
 		27B0AC2E1B4C5A1B00DFE818 /* CBLListener+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLListener+Internal.h"; sourceTree = "<group>"; };
+		27B0AC311B4D966A00DFE818 /* Listener_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Listener_Tests.m; sourceTree = "<group>"; };
 		27B0B790149290AB00A817AD /* CBLChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLChangeTracker.h; sourceTree = "<group>"; };
 		27B0B791149290AB00A817AD /* CBLChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLChangeTracker.m; sourceTree = "<group>"; };
 		27B0B79C1492932700A817AD /* CBLBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBase64.h; sourceTree = "<group>"; };
@@ -1948,6 +1951,7 @@
 				2764D2C41A5F1792005AC95A /* IncrementalStore_Tests.m */,
 				2764D2B01A5E240D005AC95A /* JSON_Tests.m */,
 				2764D2BB1A5F1063005AC95A /* JSViewCompiler_Tests.m */,
+				27B0AC311B4D966A00DFE818 /* Listener_Tests.m */,
 				2764D2B31A5E29EC005AC95A /* Misc_Tests.m */,
 				272AA8191A48A023004B8D55 /* Model_Tests.m */,
 				272AA8741A49EE5D004B8D55 /* Multipart_Tests.m */,
@@ -3828,6 +3832,7 @@
 				2740D8531A8C240500809EE0 /* Collatable_Test.mm in Sources */,
 				2740D8541A8C240500809EE0 /* Database_Test.mm in Sources */,
 				2740D8551A8C240500809EE0 /* Index_Test.mm in Sources */,
+				27B0AC321B4D966A00DFE818 /* Listener_Tests.m in Sources */,
 				273FA2BB1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */,
 				2740D8561A8C240500809EE0 /* MapReduce_Test.mm in Sources */,
 				2740D8571A8C240500809EE0 /* VersionedDocument_Tests.mm in Sources */,
@@ -3983,6 +3988,7 @@
 				272AA8601A49D4A9004B8D55 /* BlobStore_Tests.m in Sources */,
 				93D21B031A9857A1000AD9AF /* CookieStorage_Tests.m in Sources */,
 				2764D2B21A5E240D005AC95A /* JSON_Tests.m in Sources */,
+				27B0AC331B4D966A00DFE818 /* Listener_Tests.m in Sources */,
 				272AA8661A49D95B004B8D55 /* ReplicatorInternal_Tests.m in Sources */,
 				273FA2BC1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */,
 				27B085D31B34BDD200D3D9D8 /* SwiftModel_Test.swift in Sources */,
@@ -4863,6 +4869,7 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				HEADER_SEARCH_PATHS = vendor/BLIP/BLIP/;
 				INFOPLIST_FILE = "Unit-Tests/Info-UnitTests.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
@@ -4899,6 +4906,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				HEADER_SEARCH_PATHS = vendor/BLIP/BLIP/;
 				INFOPLIST_FILE = "Unit-Tests/Info-UnitTests.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
