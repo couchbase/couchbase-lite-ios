@@ -22,15 +22,20 @@
 #import "Logging.h"
 
 
-@interface CBLHTTPResponse ()
-- (void) onResponseReady: (CBLResponse*)response;
-- (void) onDataAvailable: (NSData*)data finished: (BOOL)finished;
-- (void) onFinished;
-@end
-
-
-
 @implementation CBLHTTPResponse
+{
+    CBL_Router* _router;
+    CBLHTTPConnection* _connection;
+    CBLResponse* _response;
+    BOOL _finished;
+    BOOL _askedIfChunked;
+    BOOL _chunked;
+    BOOL _delayedHeaders;
+    NSData* _data;              // Data received, waiting to be read by the connection
+    BOOL _dataMutable;          // Is _data an NSMutableData?
+    UInt64 _dataOffset;         // Offset in response of 1st byte of _data
+    UInt64 _offset;             // Offset in response for next readData
+}
 
 
 - (instancetype) initWithRouter: (CBL_Router*)router forConnection:(CBLHTTPConnection*)connection {

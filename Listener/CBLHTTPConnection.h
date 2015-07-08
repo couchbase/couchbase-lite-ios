@@ -7,14 +7,24 @@
 //
 
 #import "HTTPConnection.h"
-@class CBLListener;
+#import "HTTPServer.h"
+@class CBLListener, CBL_Server;
 
 
 /** Custom CouchbaseLite subclass of CocoaHTTPServer's HTTPConnection class. */
 @interface CBLHTTPConnection : HTTPConnection
 
 @property (readonly) CBLListener* listener;
-
 @property (readonly) NSString* username;
+
+@end
+
+
+
+/** Trivial HTTPServer subclass that just adds synthesized `listener` and `cblServer` properties. */
+@interface CBLHTTPServer : HTTPServer
+
+@property (retain) CBLListener* listener;
+@property (retain) CBL_Server* cblServer;
 
 @end

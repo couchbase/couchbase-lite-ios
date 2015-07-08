@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <Security/SecBase.h>
-@class CBLHTTPServer, CBLManager;
+@class CBLManager;
 @protocol CBLListenerDelegate;
 
 

@@ -14,48 +14,19 @@
 //  and limitations under the License.
 
 #import "CBLListener.h"
-#import "CBLHTTPServer.h"
-#import "CBLHTTPConnection.h"
-#import "CBLInternal.h"
 #import "CBL_Server.h"
+#import "CBLSyncListener.h"
+#import "CBLHTTPListener.h"
 #import "CBLMisc.h"
 #import "Logging.h"
 #import "MYAnonymousIdentity.h"
 
-#import "HTTPServer.h"
-#import "HTTPLogging.h"
-
-#import <sys/types.h>
-#import <sys/socket.h>
-#import <net/if.h>
-#import <netinet/in.h>
-#import <ifaddrs.h>
-#import <arpa/inet.h>
-
-
-@interface CBL_MYDDLogger : DDAbstractLogger
-@end
-
 
 @implementation CBLListener
 {
-    CBLHTTPServer* _httpServer;
-    CBL_Server* _tdServer;
-    NSString* _realm;
-    BOOL _readOnly;
-    BOOL _requiresAuth;
+    UInt16 _explicitPort;
     NSDictionary* _passwords;
     SecIdentityRef _SSLIdentity;
-    NSArray* _SSLExtraCertificates;
-}
-
-
-+ (void) initialize {
-    if (self == [CBLListener class]) {
-        if (WillLogTo(CBLListener)) {
-            [DDLog addLogger:[[CBL_MYDDLogger alloc] init]];
-        }
-    }
 }
 
 
@@ -64,61 +35,45 @@
 
 
 - (instancetype) initWithManager: (CBLManager*)manager port: (UInt16)port {
-    self = [super init];
-    if (self) {
-        _tdServer = manager.backgroundServer;
-        _httpServer = [[CBLHTTPServer alloc] init];
-        _httpServer.listener = self;
-        _httpServer.tdServer = _tdServer;
-        _httpServer.port = port;
-        _httpServer.connectionClass = [CBLHTTPConnection class];
-        self.realm = @"CouchbaseLite";
+    if ([self class] == [CBLListener class]) {
+        // If trying to instantiate CBLListener directly, choose appropriate subclass:
+        NSString* className = @"CBLHTTPListener";
+        if ([manager.replicatorClassName isEqualToString: @"CBLBlipReplicator"])
+            className = @"CBLSyncListener";
+        Class klass = NSClassFromString(className);
+        Assert(klass, @"Concrete listener class %@ not found; make sure you've linked the necessary library", className);
+        return [[klass alloc] initWithManager: manager port: port];
+    } else {
+        // Instantiating a subclass, so do my part:
+        self = [super init];
+        if (self) {
+            _explicitPort = port;
+            self.realm = @"CouchbaseLite";
+        }
+        return self;
     }
-    return self;
 }
 
 
-- (void)dealloc
-{
+- (void)dealloc {
     [self stop];
     if (_SSLIdentity)
         CFRelease(_SSLIdentity);
 }
 
 
-- (void) setBonjourName: (NSString*)name type: (NSString*)type {
-    _httpServer.name = name;
-    _httpServer.type = type;
-    if (_httpServer.isRunning)
-        [_httpServer republishBonjour];
-}
-
-- (NSString*) bonjourName {
-    return _httpServer.publishedName;
-}
-
-- (NSDictionary *)TXTRecordDictionary                   {return _httpServer.TXTRecordDictionary;}
-- (void)setTXTRecordDictionary:(NSDictionary *)dict     {_httpServer.TXTRecordDictionary = dict;}
-
-
-
-- (BOOL) start: (NSError**)outError {
-    return [_httpServer start: outError];
-}
-
-- (void) stop {
-    [_httpServer stop];
-}
-
-
-- (UInt16) port {
-    return _httpServer.listeningPort;
-}
+- (void) setBonjourName: (NSString*)name type: (NSString*)type  {AssertAbstractMethod();}
+- (NSString*) bonjourName                                       {AssertAbstractMethod();}
+- (NSDictionary *)TXTRecordDictionary                           {AssertAbstractMethod();}
+- (void)setTXTRecordDictionary:(NSDictionary *)dict             {AssertAbstractMethod();}
+- (UInt16) port                                                 {AssertAbstractMethod();}
+- (BOOL) start: (NSError**)outError                             {AssertAbstractMethod();}
+- (void) stop                                                   { /* no-op*/ }
 
 
 - (NSURL*) URL {
     NSString* hostName = CBLGetHostName();
-    UInt16 port = self.port;
+    int port = (_explicitPort ?: self.port);
     if (port == 0 || hostName == nil)
         return nil;
     NSString* urlStr = [NSString stringWithFormat: @"http%@://%@:%d/",
@@ -174,22 +129,14 @@
     return digest;
 }
 
-+ (void) runTestCases {
-#if DEBUG && MY_ENABLE_TESTS
-    const char* argv[] = {"Test_All"};
-    RunTestCases(1, argv);
-#endif
-}
-
-@end
-
-
-
-// Adapter to output DDLog messages (from CocoaHTTPServer) via MYUtilities logging.
-@implementation CBL_MYDDLogger
-
-- (void) logMessage:(DDLogMessage *)logMessage {
-    Log(@"%@", logMessage->logMsg);
+- (NSArray *) SSLIdentityAndCertificates {
+    if (!_SSLIdentity)
+        return nil;
+    NSMutableArray* result = [NSMutableArray arrayWithObject: (__bridge id)_SSLIdentity];
+    if (_SSLExtraCertificates)
+        [result addObjectsFromArray: _SSLExtraCertificates];
+    LogTo(CBLListener, @"Using SSL identity/certs %@", result);
+    return result;
 }
 
 @end

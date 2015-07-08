@@ -7,6 +7,7 @@
 //
 
 #import "CBLSyncListener.h"
+#import "CBLListener+Internal.h"
 #import "CBLSyncConnection.h"
 #import "CouchbaseLite.h"
 #import "CBLInternal.h"
@@ -35,6 +36,7 @@
     dispatch_queue_t _queue;
     NSString* _bonjourName, *_bonjourType;
     NSNetService* _netService;
+    NSData* _txtData;
 }
 
 
@@ -57,7 +59,7 @@
 
 
 - (void)dealloc {
-    LogTo(Listener, @"DEALLOC %@", self);
+    LogTo(CBLListener, @"DEALLOC %@", self);
     dispatch_sync(_queue, ^{
         for (CBLSyncConnection* handler in _handlers)
             [handler removeObserver: self forKeyPath: @"state"];
@@ -68,7 +70,7 @@
 - (void) blipConnectionDidOpen:(BLIPConnection *)connection {
     NSString* name = ((BLIPPocketSocketConnection*)connection).webSocket.URLRequest.URL.path;
     name = name.stringByDeletingLastPathComponent.lastPathComponent;
-    LogTo(Sync, @"OPENED INCOMING %@ from <%@> for %@", connection, connection.URL, name);
+    LogTo(CBLListener, @"OPENED INCOMING %@ from <%@> for %@", connection, connection.URL, name);
 
     [_manager.backgroundServer waitForDatabaseNamed: name to: ^id(CBLDatabase* db) {
         NSString* name = $sprintf(@"Sync from %@", connection.URL);
@@ -92,7 +94,7 @@
     if (context == (void*)1) {
         CBLSyncConnection* handler = object;
         if (handler.state == kSyncStopped) {
-            LogTo(Sync, @"CLOSED INCOMING connection from <%@>", handler.peerURL);
+            LogTo(CBLListener, @"CLOSED INCOMING connection from <%@>", handler.peerURL);
             dispatch_sync(_queue, ^{
                 [_handlers removeObject: handler];
                 [handler removeObserver: self forKeyPath: @"state"];
@@ -116,11 +118,17 @@
 }
 
 
+- (NSDictionary*) TXTRecordDictionary {
+    return _txtData ? [NSNetService dictionaryFromTXTRecordData: _txtData] : nil;
+}
+
+
 - (void)setTXTRecordDictionary:(NSDictionary *)dict {
+    NSData* txtData = dict ? [NSNetService dataFromTXTRecordDictionary: dict] : nil;
     dispatch_async(_queue, ^{
+        _txtData = txtData;
         NSNetService* ns = _netService;
         if (ns) {
-            NSData* txtData = dict ? [NSNetService dataFromTXTRecordDictionary: dict] : nil;
             dispatch_async(dispatch_get_main_queue(), ^{
                 ns.TXTRecordData = txtData;
             });
@@ -140,6 +148,7 @@
             if ([ns respondsToSelector: @selector(setIncludesPeerToPeer:)])    // 10.10+
                 ns.includesPeerToPeer = YES;
             ns.delegate = self;
+            ns.TXTRecordData = _txtData;
             _netService = ns;
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ns publishWithOptions: 0];
@@ -169,7 +178,7 @@
 // called on main thread
 - (void)netServiceDidPublish:(NSNetService *)ns {
     NSString* name = ns.name;
-    LogTo(Listener, @"CBLSyncListener: Published Bonjour service '%@'", name);
+    LogTo(CBLListener, @"CBLSyncListener: Published Bonjour service '%@'", name);
     _facade.bonjourName = name;
 }
 
@@ -190,12 +199,12 @@
     uint16_t _desiredPort;
 }
 
-@synthesize port=_port, connectionCount=_connectionCount, SSLCertificates=_SSLCertificates;
-@synthesize bonjourName=_bonjourName, TXTRecordDictionary=_TXTRecordDictionary;
+@synthesize port=_port, connectionCount=_connectionCount;
+@synthesize bonjourName=_bonjourName;
 
 
 - (instancetype) initWithManager: (CBLManager*)manager port: (uint16_t)port {
-    self = [super init];
+    self = [super initWithManager: manager port: port];
     if (self) {
         _impl = [[CBLSyncListenerImpl alloc] initWithManager: manager facade: self];
         _desiredPort = port;
@@ -207,27 +216,14 @@
     [_impl setBonjourName: name type: type];
 }
 
-- (void)setTXTRecordDictionary:(NSDictionary *)dict {
-    _TXTRecordDictionary = [dict copy];
-    [_impl setTXTRecordDictionary: _TXTRecordDictionary];
-}
-
+- (NSDictionary*) TXTRecordDictionary                   {return _impl.TXTRecordDictionary;}
+- (void)setTXTRecordDictionary:(NSDictionary *)dict     {_impl.TXTRecordDictionary = dict;}
 - (void) setPasswords:(NSDictionary *)passwords         {_impl.passwords = passwords;}
-
-- (NSURL*) URL {
-    NSString* hostName = CBLGetHostName();
-    int port = self.port ?: _desiredPort;
-    if (port == 0 || hostName == nil)
-        return nil;
-    NSString* urlStr = [NSString stringWithFormat: @"%@://%@:%d/",
-                        (_SSLCertificates ? @"wss" : @"ws"), hostName, port];
-    return [NSURL URLWithString: urlStr];
-}
 
 - (BOOL) start: (NSError**)outError {
     return [_impl acceptOnInterface: nil
                                port: _desiredPort
-                    SSLCertificates: _SSLCertificates
+                    SSLCertificates: self.SSLIdentityAndCertificates
                               error: outError];
 }
 

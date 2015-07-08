@@ -16,9 +16,8 @@
 //  Based on CocoaHTTPServer/Samples/PostHTTPServer/MyHTTPConnection.m
 
 #import "CBLHTTPConnection.h"
-#import "CBLHTTPServer.h"
 #import "CBLHTTPResponse.h"
-#import "CBLListener.h"
+#import "CBLListener+Internal.h"
 #import "CBL_Server.h"
 #import "CBL_Router.h"
 
@@ -47,13 +46,19 @@
     return kTryAuthenticate;
 }
 
+static void evaluate(SecTrustRef trust, SecTrustCallback callback) {
+    if (trust)
+        SecTrustEvaluateAsync(trust, dispatch_get_main_queue(), callback);
+    else
+        callback(trust, kSecTrustResultInvalid);
+}
+
 - (void)socket:(GCDAsyncSocket *)sock
         didReceiveTrust:(SecTrustRef)trust
         completionHandler:(void (^)(BOOL shouldTrustPeer))completionHandler
 {
     // This only gets called if the SSL settings disable regular cert validation.
-    SecTrustEvaluateAsync(trust, dispatch_get_main_queue(),
-                          ^(SecTrustRef trustRef, SecTrustResultType result)
+    evaluate(trust, ^(SecTrustRef trustRef, SecTrustResultType result)
     {
         LogTo(CBLListener, @"Login attempted with client cert; trust result = %d", result);
         id<CBLListenerDelegate> delegate = self.listener.delegate;
@@ -66,7 +71,9 @@
                                                           withTrust: trust];
             ok = (_username != nil);
         } else {
-            ok = (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified);
+            ok = (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified
+                                                   || result == kSecTrustResultInvalid);
+            // kSecTrustResultInvalid means there's no TrustRef, i.e. no client cert. OK by default.
         }
         _hasClientCert = ok;
         completionHandler(ok);
@@ -98,12 +105,7 @@
 }
 
 - (NSArray *)sslIdentityAndCertificates {
-    NSMutableArray* result = [NSMutableArray arrayWithObject: (__bridge id)self.listener.SSLIdentity];
-    NSArray* certs = self.listener.SSLExtraCertificates;
-    if (certs.count)
-        [result addObjectsFromArray: certs];
-    LogTo(CBLListener, @"Using SSL identity/certs %@", result);
-    return result;
+    return self.listener.SSLIdentityAndCertificates;
 }
 
 
@@ -135,7 +137,7 @@
         [urlRequest setValue: headers[header] forHTTPHeaderField: header];
     
     // Create a CBL_Router:
-    CBL_Router* router = [[CBL_Router alloc] initWithServer: ((CBLHTTPServer*)config.server).tdServer
+    CBL_Router* router = [[CBL_Router alloc] initWithServer: ((CBLHTTPServer*)config.server).cblServer
                                                 request: urlRequest
                                                 isLocal: NO];
     router.processRanges = NO;  // The HTTP server framework does this already
@@ -172,5 +174,14 @@
 		Warn(@"CBLHTTPConnection: couldn't append data chunk");
 }
 
+
+@end
+
+
+
+
+@implementation CBLHTTPServer
+
+@synthesize listener=_listener, cblServer=_cblServer;
 
 @end
