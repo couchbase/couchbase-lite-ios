@@ -69,6 +69,14 @@
     return _httpServer.listeningPort;
 }
 
+- (CBLHTTPServer*)_httpServer {
+    return _httpServer;
+}
+
++ (NSSet *)keyPathsForValuesAffectingPort {
+    return [NSSet setWithObjects:@"_httpServer.listeningPort", nil];
+}
+
 
 @end
 

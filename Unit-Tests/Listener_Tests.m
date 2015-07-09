@@ -9,66 +9,89 @@
 #import "CBLTestCase.h"
 #import "CBLManager+Internal.h"
 #import "CBLSyncListener.h"
+#import "CBLHTTPListener.h"
+#import "CBLRemoteRequest.h"
+#import "CBLClientCertAuthorizer.h"
 #import "BLIPPocketSocketConnection.h"
 #import "MYAnonymousIdentity.h"
 
 #import <arpa/inet.h>
 
 
-#define kPort 59999
+#define kTimeout 5.0
 
 
 @interface Listener_Tests : CBLTestCaseWithDB <CBLListenerDelegate, BLIPConnectionDelegate>
 @end
 
 
+static UInt16 sPort = 60000;
+
+
 @implementation Listener_Tests
 {
+    @protected
     CBLListener* listener;
     NSURLCredential* clientCredential;
     XCTestExpectation *_expectValidateServerTrust, *_expectDidOpen, *_expectDidClose;
     XCTestExpectation *_expectAuthenticateTrust;
 }
 
+- (Class) listenerClass {
+    return [CBLSyncListener class];
+}
+
 - (void)setUp {
     [super setUp];
     dbmgr.dispatchQueue = dispatch_get_main_queue();
     dbmgr.replicatorClassName = @"CBLBlipReplicator";
+
+    // Each test run uses a different port number (sPort is incremented) to prevent CFNetwork from
+    // resuming the previous SSL session. Because if it does that, the previous client cert gets
+    // used on the server side, which breaks the test. Haven't found a workaround for this yet.
+    // --Jens 7/2015
+    listener = [[[self listenerClass] alloc] initWithManager: dbmgr port: sPort];
+    listener.delegate = self;
 }
 
 - (void)tearDown {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
+    listener.delegate = nil;
+    [listener stop];
+    ++sPort;
     [super tearDown];
 }
 
 
-- (void)testSSL {
-    listener = [[CBLSyncListener alloc] initWithManager: dbmgr port: kPort];
-    listener.delegate = self;
+- (void)testSSL_NoClientCert {
+    if (!self.isSQLiteDB)
+        return;
     NSError* error;
     Assert([listener setAnonymousSSLIdentityWithLabel: @"CBLUnitTests" error: &error],
            @"Failed to set SSL identity: %@", error);
     // Wait for listener to start:
-    [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(kPort)];
-    [listener start: NULL];
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    if (listener.port == 0) {
+        [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(sPort)];
+        [listener start: NULL];
+        [self waitForExpectationsWithTimeout: kTimeout handler: nil];
+    }
 
+    _expectAuthenticateTrust = [self expectationWithDescription: @"authenticateWithTrust"];
     [self connect];
-
-    [listener stop];
 }
 
 
-- (void)testSSLClientCert {
-    listener = [[CBLSyncListener alloc] initWithManager: dbmgr port: kPort];
-    listener.delegate = self;
+- (void)testSSL_ClientCert {
+    if (!self.isSQLiteDB)
+        return;
     NSError* error;
     Assert([listener setAnonymousSSLIdentityWithLabel: @"CBLUnitTests" error: &error],
            @"Failed to set SSL identity: %@", error);
     // Wait for listener to start:
-    [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(kPort)];
-    [listener start: NULL];
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    if (listener.port == 0) {
+        [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(sPort)];
+        [listener start: NULL];
+        [self waitForExpectationsWithTimeout: kTimeout handler: nil];
+    }
 
     SecIdentityRef identity = MYGetOrCreateAnonymousIdentity(@"CBLUnitTests-Client",
                                                      kMYAnonymousIdentityDefaultExpirationInterval,
@@ -79,8 +102,6 @@
 
     _expectAuthenticateTrust = [self expectationWithDescription: @"authenticateWithTrust"];
     [self connect];
-
-    [listener stop];
 }
 
 
@@ -97,11 +118,11 @@
 
     _expectValidateServerTrust = [self expectationWithDescription: @"validateServerTrust"];
     _expectDidOpen = [self expectationWithDescription: @"didOpen"];
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: kTimeout handler: nil];
 
     _expectDidClose = [self expectationWithDescription: @"didClose"];
     [conn close];
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: kTimeout handler: nil];
 }
 
 
@@ -125,6 +146,7 @@ static NSString* addressToString(NSData* addrData) {
 {
     Log(@"authenticateConnectionFromAddress: %@ withTrust: %@",
         addressToString(address), trust);
+    [_expectAuthenticateTrust fulfill];
     Assert(address != nil);
     if (clientCredential) {
         Assert(trust != nil);
@@ -132,11 +154,11 @@ static NSString* addressToString(NSData* addrData) {
         SecCertificateRef realClientCert;
         SecIdentityCopyCertificate(clientCredential.identity, &realClientCert);
         Assert(CFEqual(clientCert, realClientCert));
-        [_expectAuthenticateTrust fulfill];
+        CFRelease(realClientCert);
         return @"userWithClientCert";
     } else {
         AssertEq(trust, NULL);
-        return nil;
+        return @"";
     }
 }
 
@@ -171,5 +193,53 @@ static NSString* addressToString(NSData* addrData) {
     [_expectDidClose fulfill];
 }
 
+
+@end
+
+
+
+
+@interface ListenerHTTP_Tests : Listener_Tests <CBLRemoteRequestDelegate>
+@end
+
+
+@implementation ListenerHTTP_Tests
+{
+    XCTestExpectation* _expectCheckServerTrust;
+}
+
+- (Class) listenerClass {
+    return [CBLHTTPListener class];
+}
+
+
+- (void)testSSL_NoClientCert    {[super testSSL_NoClientCert];}
+- (void)testSSL_ClientCert      {[super testSSL_ClientCert];}
+
+
+
+- (void) connect {
+    Log(@"Connecting to <%@>", listener.URL);
+    XCTestExpectation* expectDidComplete = [self expectationWithDescription: @"didComplete"];
+    CBLRemoteRequest* req = [[CBLRemoteJSONRequest alloc] initWithMethod: @"GET" URL: listener.URL body: nil requestHeaders: nil onCompletion:^(id result, NSError *error) {
+        [expectDidComplete fulfill];
+    }];
+
+    if (clientCredential) {
+        req.authorizer = [[CBLClientCertAuthorizer alloc] initWithIdentity: clientCredential.identity supportingCerts: clientCredential.certificates];
+    }
+
+    _expectCheckServerTrust = [self expectationWithDescription: @"checkServerTrust"];
+    req.delegate = self;
+    [req start];
+    [self waitForExpectationsWithTimeout: kTimeout handler: nil];
+}
+
+
+- (BOOL) checkSSLServerTrust: (NSURLProtectionSpace*)protectionSpace {
+    Log(@"checkSSLServerTrust called!");
+    [_expectCheckServerTrust fulfill];
+    return YES;
+}
 
 @end

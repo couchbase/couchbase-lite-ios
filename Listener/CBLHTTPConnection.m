@@ -60,7 +60,8 @@ static void evaluate(SecTrustRef trust, SecTrustCallback callback) {
     // This only gets called if the SSL settings disable regular cert validation.
     evaluate(trust, ^(SecTrustRef trustRef, SecTrustResultType result)
     {
-        LogTo(CBLListener, @"Login attempted with client cert; trust result = %d", result);
+        LogTo(CBLListener, @"Login attempted with%@ client cert; trust result = %d",
+              (trust ? @"" : @"out"), result);
         id<CBLListenerDelegate> delegate = self.listener.delegate;
         BOOL ok;
         if (result == kSecTrustResultDeny || result == kSecTrustResultFatalTrustFailure
