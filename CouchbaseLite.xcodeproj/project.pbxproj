@@ -4675,6 +4675,7 @@
 					"/Applications/Xcode-Beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
 					vendor/CBForest/CBForest/,
 					vendor/CBForest/vendor/forestdb/include/libforestdb/,
+					vendor/BLIP/BLIP/,
 				);
 				INFOPLIST_FILE = "Unit-Tests/Info-UnitTests.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
@@ -4719,6 +4720,7 @@
 					"/Applications/Xcode-Beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
 					vendor/CBForest/CBForest/,
 					vendor/CBForest/vendor/forestdb/include/libforestdb/,
+					vendor/BLIP/BLIP/,
 				);
 				INFOPLIST_FILE = "Unit-Tests/Info-UnitTests.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;

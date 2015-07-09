@@ -151,7 +151,7 @@
 - (void) cookiesChanged: (NSNotification*)n {
     CBLCookieStorage* storage = n.object;
     _changedCookies = storage.cookies;
-    Log(@"%@ changed: %lu cookies", storage, _changedCookies.count);
+    Log(@"%@ changed: %lu cookies", storage, (unsigned long)_changedCookies.count);
 }
 
 

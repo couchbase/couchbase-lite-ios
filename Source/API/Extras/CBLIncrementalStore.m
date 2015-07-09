@@ -1508,7 +1508,7 @@ static CBLManager* sCBLManager;
                         _relationshipSearchDepth++;
                         if (_relationshipSearchDepth > self.maxRelationshipLoadDepth) {
                             WARN(@"Excess the maximum relationship search depth (current=%lu vs max=%lu)",
-                                 _relationshipSearchDepth, self.maxRelationshipLoadDepth);
+                                 (unsigned long)_relationshipSearchDepth, (unsigned long)self.maxRelationshipLoadDepth);
                             break;
                         }
 
