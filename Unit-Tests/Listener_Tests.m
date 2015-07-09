@@ -212,16 +212,16 @@ static NSString* addressToString(NSData* addrData) {
     return [CBLHTTPListener class];
 }
 
-
 - (void)testSSL_NoClientCert    {[super testSSL_NoClientCert];}
 - (void)testSSL_ClientCert      {[super testSSL_ClientCert];}
-
 
 
 - (void) connect {
     Log(@"Connecting to <%@>", listener.URL);
     XCTestExpectation* expectDidComplete = [self expectationWithDescription: @"didComplete"];
     CBLRemoteRequest* req = [[CBLRemoteJSONRequest alloc] initWithMethod: @"GET" URL: listener.URL body: nil requestHeaders: nil onCompletion:^(id result, NSError *error) {
+        AssertNil(error);
+        Assert(result != nil);
         [expectDidComplete fulfill];
     }];
 
@@ -239,6 +239,11 @@ static NSString* addressToString(NSData* addrData) {
 - (BOOL) checkSSLServerTrust: (NSURLProtectionSpace*)protectionSpace {
     Log(@"checkSSLServerTrust called!");
     [_expectCheckServerTrust fulfill];
+    SecCertificateRef cert = SecTrustGetCertificateAtIndex(protectionSpace.serverTrust, 0);
+    SecCertificateRef realServerCert;
+    SecIdentityCopyCertificate(listener.SSLIdentity, &realServerCert);
+    Assert(CFEqual(cert, realServerCert));
+    CFRelease(realServerCert);
     return YES;
 }
 
