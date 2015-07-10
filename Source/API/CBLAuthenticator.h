@@ -58,6 +58,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (id<CBLAuthenticator>) SSLClientCertAuthenticatorWithIdentity: (SecIdentityRef)identity
                                                 supportingCerts: (nullable NSArray*)certs;
 
++ (id<CBLAuthenticator>) SSLClientCertAuthenticatorWithAnonymousIdentity: (NSString*)label;
+
 - (instancetype) init NS_UNAVAILABLE;
 
 @end

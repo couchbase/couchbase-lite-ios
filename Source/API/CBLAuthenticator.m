@@ -19,6 +19,7 @@
 #import "CBLTokenAuthorizer.h"
 #import "CBLOAuth1Authorizer.h"
 #import "CBLClientCertAuthorizer.h"
+#import "MYAnonymousIdentity.h"
 
 
 @implementation CBLAuthenticator
@@ -61,6 +62,15 @@
 {
     return [[CBLClientCertAuthorizer alloc] initWithIdentity: identity
                                              supportingCerts: certs];
+}
+
++ (id<CBLAuthenticator>) SSLClientCertAuthenticatorWithAnonymousIdentity: (NSString*)label {
+    SecIdentityRef identity = MYGetOrCreateAnonymousIdentity(label,
+                                                     kMYAnonymousIdentityDefaultExpirationInterval,
+                                                     NULL);
+    if (!identity)
+        return nil;
+    return [self SSLClientCertAuthenticatorWithIdentity: identity supportingCerts: nil];
 }
 
 
