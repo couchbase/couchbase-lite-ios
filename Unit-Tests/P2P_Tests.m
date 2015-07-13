@@ -8,37 +8,53 @@
 
 #import "CBLTestCase.h"
 #import "CBLSyncListener.h"
+#import "CBLHTTPListener.h"
 #import "CBLManager+Internal.h"
 
 
 #define kPort 59999
 #define kListenerDBName @"listy"
-#define kNDocuments 1000
+#define kNDocuments 100
 #define kMinAttachmentLength   4000
 #define kMaxAttachmentLength 100000
 
 
-@interface P2P_Tests : CBLTestCaseWithDB
+@interface P2P_HTTP_Tests : CBLTestCaseWithDB
 @end
 
 
-@implementation P2P_Tests
+@implementation P2P_HTTP_Tests
 {
-    CBLSyncListener* listener;
+    @protected
+    CBLListener* listener;
     CBLDatabase* listenerDB;
     NSURL* listenerDBURL;
+}
+
+
+- (Class) listenerClass {
+    return [CBLHTTPListener class];
+}
+
+- (NSString*) replicatorClassName {
+    return @"CBLRestReplicator";
 }
 
 
 - (void) setUp {
     [super setUp];
 
-    dbmgr.replicatorClassName = @"CBLBlipReplicator";
+    dbmgr.replicatorClassName = self.replicatorClassName;
 
     listenerDB = [dbmgr databaseNamed: kListenerDBName error: NULL];
-    listenerDBURL = [NSURL URLWithString: $sprintf(@"ws://localhost:%d/%@", kPort, kListenerDBName)];
+    listenerDBURL = [NSURL URLWithString: $sprintf(@"http://localhost:%d/%@", kPort, kListenerDBName)];
 
-    listener = [[CBLSyncListener alloc] initWithManager: dbmgr port: kPort];
+    listener = [[[self listenerClass] alloc] initWithManager: dbmgr port: kPort];
+#if USE_AUTH
+    listener.requiresAuth = YES;
+    listener.passwords = @{@"bob": @"slack"};
+#endif
+
     // Wait for listener to start:
     [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(kPort)];
     [listener start: NULL];
@@ -126,8 +142,12 @@
 
 
 - (void) runReplication: (CBLReplication*)repl
-   expectedChangesCount: (NSUInteger)expectedChangesCount
+         expectedChangesCount: (NSUInteger)expectedChangesCount
 {
+#if USE_AUTH
+    repl.authenticator = [CBLAuthenticator basicAuthenticatorWithName: @"bob"
+                                                             password: @"slack"];
+#endif
     [repl start];
     __block bool started = false;
     [self expectationForNotification: kCBLReplicationChangeNotification object: repl
@@ -145,11 +165,40 @@
     if (expectedChangesCount > 0) {
         AssertEq(repl.completedChangesCount, expectedChangesCount);
     }
+}
 
+
+@end
+
+
+
+
+@interface P2P_BLIP_Tests : P2P_HTTP_Tests
+@end
+
+@implementation P2P_BLIP_Tests
+
+- (Class) listenerClass {
+    return [CBLSyncListener class];
+}
+
+- (NSString*) replicatorClassName {
+    return @"CBLBlipReplicator";
+}
+
+- (void) testPush               {[super testPush];}
+- (void) testPull               {[super testPull];}
+- (void) testPushAttachments    {[super testPushAttachments];}
+- (void) testPullAttachments    {[super testPullAttachments];}
+
+- (void) runReplication: (CBLReplication*)repl
+         expectedChangesCount: (NSUInteger)expectedChangesCount
+{
+    [super runReplication: repl expectedChangesCount: expectedChangesCount];
     // Wait for the listener-side connection to finish:
     [self keyValueObservingExpectationForObject: listener keyPath: @"connectionCount" expectedValue: @0];
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
 }
 
-
 @end
+
