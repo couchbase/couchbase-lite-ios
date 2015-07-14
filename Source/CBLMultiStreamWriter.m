@@ -281,9 +281,9 @@
             
         case NSStreamEventHasSpaceAvailable:
             if (_input && _input.streamStatus < NSStreamStatusOpen) {
-                // CFNetwork workaround; see https://github.com/couchbaselabs/CouchbaseLite-iOS/issues/99
+                // CFNetwork workaround; see https://github.com/couchbaselabs/TouchDB-iOS/issues/99
                 LogTo(CBLMultiStreamWriter, @"%@:   Input isn't open; waiting...", self);
-                [self performSelector: @selector(retryWrite:) withObject: stream afterDelay: 0.1];
+                [self performSelector: @selector(retryWrite:) withObject: stream afterDelay: 0.001];
             } else if (![self writeToOutput]) {
                 LogTo(CBLMultiStreamWriter, @"%@:   At end -- closing _output!", self);
                 if (_totalBytesWritten != _length && !_error)
