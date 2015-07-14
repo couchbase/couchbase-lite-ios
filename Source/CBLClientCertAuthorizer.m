@@ -27,16 +27,15 @@
     return self;
 }
 
-- (NSString*) authorizeURLRequest: (NSMutableURLRequest*)request
-                         forRealm: (NSString*)realm
-{
-    return nil;
-}
-
-- (NSString*) authorizeHTTPMessage: (CFHTTPMessageRef)message
-                          forRealm: (NSString*)realm
-{
-    return nil;
+- (NSString *)description {
+    NSString* name = nil;
+    SecCertificateRef cert = NULL;
+    SecIdentityCopyCertificate(_credential.identity, &cert);
+    if (cert) {
+        name = CFBridgingRelease(SecCertificateCopySubjectSummary(cert));
+        CFRelease(cert);
+    }
+    return $sprintf(@"%@[%@]", self.class, name);
 }
 
 @end

@@ -9,7 +9,6 @@
 #import "CBLBlipReplicator.h"
 #import "CBLSyncConnection.h"
 #import "CBLAuthorizer.h"
-#import "CBLClientCertAuthorizer.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLReachability.h"
 #import "CBLMisc.h"
@@ -170,12 +169,10 @@
     }];
     [self.cookieStorage addCookieHeaderToRequest: request];
 
-    NSURLCredential* credential = nil;
     id<CBLAuthorizer> auth = _settings.authorizer;
-    if ([auth conformsToProtocol: @protocol(CBLPasswordAuthorizer)] || [auth isKindOfClass: [CBLClientCertAuthorizer class]]) //FIX: Clean up
-        _conn.credential = ((id<CBLPasswordAuthorizer>)auth).credential;
-    else
-        [$castIfProtocol(CBLCustomAuthorizer, auth) authorizeURLRequest: request];
+    NSURLCredential* credential = $castIfProtocol(CBLCredentialAuthorizer, auth).credential;
+    if (!credential)
+        [$castIfProtocol(CBLCustomHeadersAuthorizer, auth) authorizeURLRequest: request];
 
     _conn = [[BLIPPocketSocketConnection alloc] initWithURLRequest: request];
     _conn.credential = credential;

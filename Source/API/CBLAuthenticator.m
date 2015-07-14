@@ -28,10 +28,7 @@
 + (id<CBLAuthenticator>) basicAuthenticatorWithName: (NSString*)name
                                            password: (NSString*)password
 {
-    NSURLCredential *cred = [NSURLCredential credentialWithUser: name
-                                                       password: password
-                                                    persistence: NSURLCredentialPersistenceNone];
-    return [[CBLPasswordAuthorizer alloc] initWithCredential: cred];
+    return [[CBLPasswordAuthorizer alloc] initWithUser: name password: password];
 }
 
 + (id<CBLAuthenticator>) facebookAuthenticatorWithToken: (NSString*)token {

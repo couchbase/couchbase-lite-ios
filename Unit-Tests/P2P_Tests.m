@@ -18,6 +18,8 @@
 #define kMinAttachmentLength   4000
 #define kMaxAttachmentLength 100000
 
+#define USE_AUTH 1
+
 
 @interface P2P_HTTP_Tests : CBLTestCaseWithDB
 @end

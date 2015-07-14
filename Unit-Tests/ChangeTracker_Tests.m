@@ -155,9 +155,7 @@
     }
     CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kWebSocket conflicts: NO lastSequence: 0 client:  self];
 
-    NSURLCredential* c = [NSURLCredential credentialWithUser: @"test" password: @"abc123"
-                                                 persistence: NSURLCredentialPersistenceForSession];
-    tracker.authorizer = [[CBLPasswordAuthorizer alloc] initWithCredential: c];
+    tracker.authorizer = [[CBLPasswordAuthorizer alloc] initWithUser: @"test" password: @"abc123"];
 
     NSArray* expected = $array($dict({@"seq", @1},
                                      {@"id", @"_user/test"},

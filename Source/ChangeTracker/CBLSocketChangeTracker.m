@@ -76,13 +76,13 @@
 
         // If no credential yet, get it from authorizer if it has one:
         if (!_http.credential)
-            _http.credential = $castIf(CBLPasswordAuthorizer, _authorizer).credential;
+            _http.credential = $castIfProtocol(CBLCredentialAuthorizer, _authorizer).credential;
     }
 
     CFHTTPMessageRef request = [_http newHTTPRequest];
 
     if (!_http.credential)
-        [$castIfProtocol(CBLCustomAuthorizer, _authorizer) authorizeHTTPMessage: request];
+        [$castIfProtocol(CBLCustomHeadersAuthorizer, _authorizer) authorizeHTTPMessage: request];
 
     // Now open the connection:
     LogTo(SyncVerbose, @"%@: %@ %@", self, (self.usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
@@ -167,7 +167,12 @@
     CFHTTPMessageRef response;
     response = (CFHTTPMessageRef) CFReadStreamCopyProperty((CFReadStreamRef)_trackingInput,
                                                            kCFStreamPropertyHTTPResponseHeader);
-    Assert(response);
+    if (!response) {
+        [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
+                                                   code: NSURLErrorNetworkConnectionLost
+                                               userInfo: nil]];
+        return NO;
+    }
     _gotResponseHeaders = true;
     [_http receivedResponse: response];
     CFRelease(response);
@@ -213,10 +218,9 @@
 
 - (void) handleEOF {
     if (!_gotResponseHeaders) {
-        [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
-                                                   code: NSURLErrorNetworkConnectionLost
-                                               userInfo: nil]];
-        return;
+        [self readResponseHeader];
+        if (!_gotResponseHeaders)
+            return;
     }
     if (_mode == kContinuous) {
         [self stop];

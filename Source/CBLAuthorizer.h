@@ -16,17 +16,18 @@
 @end
 
 
-/** Authorizer that uses a username/password (i.e. HTTP Basic or Digest auth) */
-@protocol CBLPasswordAuthorizer <CBLAuthorizer>
 
-@property NSURLCredential* credential;
+/** Authorizer that uses a username/password (i.e. HTTP Basic or Digest auth) */
+@protocol CBLCredentialAuthorizer <CBLAuthorizer>
+
+@property (readonly) NSURLCredential* credential;
 
 @end
 
 
 
 /** Authorizer that adds custom headers to an HTTP request */
-@protocol CBLCustomAuthorizer <CBLAuthorizer>
+@protocol CBLCustomHeadersAuthorizer <CBLAuthorizer>
 
 /** Should add a header to the request to convey the authorization token. */
 - (void) authorizeURLRequest: (NSMutableURLRequest*)request;
@@ -49,7 +50,9 @@
 
 
 /** Simple implementation of CBLPasswordAuthorizer. */
-@interface CBLPasswordAuthorizer : NSObject <CBLPasswordAuthorizer>
+@interface CBLPasswordAuthorizer : NSObject <CBLCredentialAuthorizer>
+
+- (instancetype) initWithUser: (NSString*)user password: (NSString*)password;
 
 /** Initialize given a credential object that contains a username and password. */
 - (instancetype) initWithCredential: (NSURLCredential*)credential;
@@ -62,27 +65,8 @@
 
 
 
-#if 0 // UNUSED
-/** Implementation of CBLAuthorizer that supports MAC authorization as used in OAuth 2. */
-@interface CBLMACAuthorizer : NSObject <CBLCustomAuthorizer>
-{
-@private
-    NSString *_key, *_identifier;
-    NSDate* _issueTime;
-    NSData* (*_hmacFunction)(NSData*, NSData*);
-
-}
-
-/** Initialize given MAC credentials */
-- (instancetype) initWithKey: (NSString*)key
-                  identifier: (NSString*)identifier
-                   algorithm: (NSString*)algorithm
-                   issueTime: (NSDate*)issueTime;
-
-@end
-#endif
-
-
-
+/** Sets the global list of anchor certs to be used by CBLCheckSSLServerTrust. */
 void CBLSetAnchorCerts(NSArray* certs, BOOL onlyThese);
+
+/** Checks server trust, using the global list of anchor certs. */
 BOOL CBLCheckSSLServerTrust(SecTrustRef trust, NSString* host, UInt16 port);

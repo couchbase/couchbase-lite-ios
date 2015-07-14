@@ -255,9 +255,7 @@
                                                                                  push: NO];
     [self replicate: settings expectError: CBLStatusToNSError(kCBLStatusUnauthorized)];
 
-    NSURLCredential* cred = [NSURLCredential credentialWithUser: @"test" password: @"abc123"
-                                                    persistence: NSURLCredentialPersistenceNone];
-    settings.authorizer = [[CBLPasswordAuthorizer alloc] initWithCredential: cred];
+    settings.authorizer = [[CBLPasswordAuthorizer alloc] initWithUser: @"test" password: @"abc123"];
     [self replicate: settings expectError: nil];
 }
 

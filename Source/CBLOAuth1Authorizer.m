@@ -51,8 +51,6 @@
 }
 
 
-
-
 // CBLAuthorizer API:
 - (void) authorizeURLRequest: (NSMutableURLRequest*)request {
     OAMutableURLRequest* oarq = [[OAMutableURLRequest alloc] initWithURL: request.URL
