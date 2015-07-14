@@ -24,6 +24,8 @@
 .objc_class_name_CBLUnsavedRevision
 .objc_class_name_CBLView
 
+.objc_class_name_CBLListener
+
 # iOS only:
 .objc_class_name_CBLUITableSource
 _OBJC_CLASS_$_CBLUITableSource
@@ -61,8 +63,10 @@ _CBLRegisterJSViewCompiler
 .objc_class_name_CBLReachability
 .objc_class_name_CBL_ReplicatorSettings
 .objc_class_name_CBLCookieStorage
+.objc_class_name_CBLMultipartDocumentReader
+.objc_class_name_CBLMultipartWriter
 
-.objc_class_name_CBLBasicAuthorizer
+.objc_class_name_CBLPasswordAuthorizer
 .objc_class_name_CBLFacebookAuthorizer
 .objc_class_name_CBLOAuth1Authorizer
 .objc_class_name_CBLPersonaAuthorizer
@@ -118,7 +122,7 @@ _CBLAppendToURL
 _CBLEscapeURLParam
 _CBLCompareRevIDs
 _CBLJSONString
-_ReturnNSErrorFromCBLStatus
+_CBLStatusToOutNSError
 
 _CBL_DatabaseChangesNotification
 _CBL_DatabaseWillCloseNotification
