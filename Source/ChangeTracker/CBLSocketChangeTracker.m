@@ -32,7 +32,6 @@
 
 @implementation CBLSocketChangeTracker
 {
-    BLIPHTTPLogic* _http;
     NSInputStream* _trackingInput;
     CFAbsoluteTime _startTime;
     bool _gotResponseHeaders;
@@ -48,41 +47,7 @@
 
     NSURL* url = self.changesFeedURL;
 
-    if (!_http) {
-        NSMutableURLRequest* urlRequest = [NSMutableURLRequest requestWithURL: url];
-        if (self.usePOST) {
-            urlRequest.HTTPMethod = @"POST";
-            urlRequest.HTTPBody = self.changesFeedPOSTBody;
-            [urlRequest setValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
-        }
-
-        for (NSString* key in self.requestHeaders) {
-            if ([key caseInsensitiveCompare: @"Cookie"] == 0) {
-                urlRequest.HTTPShouldHandleCookies = NO;
-                break;
-            }
-        }
-
-        if (urlRequest.HTTPShouldHandleCookies) {
-            [self.cookieStorage addCookieHeaderToRequest: urlRequest];
-        }
-
-        _http = [[BLIPHTTPLogic alloc] initWithURLRequest: urlRequest];
-
-        // Add headers from my .requestHeaders property:
-        [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
-            _http[key] = value;
-        }];
-
-        // If no credential yet, get it from authorizer if it has one:
-        if (!_http.credential)
-            _http.credential = $castIfProtocol(CBLCredentialAuthorizer, _authorizer).credential;
-    }
-
     CFHTTPMessageRef request = [_http newHTTPRequest];
-
-    if (!_http.credential)
-        [$castIfProtocol(CBLCustomHeadersAuthorizer, _authorizer) authorizeHTTPMessage: request];
 
     // Now open the connection:
     LogTo(SyncVerbose, @"%@: %@ %@", self, (self.usePOST ?@"POST" :@"GET"), url.resourceSpecifier);

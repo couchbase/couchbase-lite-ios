@@ -17,6 +17,7 @@
 #import "CBLAuthorizer.h"
 #import "CBLCookieStorage.h"
 #import "PSWebSocket.h"
+#import "BLIPHTTPLogic.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
 #import "MYBlockUtils.h"
@@ -50,30 +51,18 @@
     if (_ws)
         return NO;
     LogTo(ChangeTracker, @"%@: Starting...", self);
-    [super start];
 
     // A WebSocket has to be opened with a GET request, not a POST (as defined in the RFC.)
     // Instead of putting the options in the POST body as with HTTP, we will send them in an
     // initial WebSocket message, in -webSocketDidOpen:, below.
-    NSURL* url = self.changesFeedURL;
-    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
+    self.usePOST = NO;
+
+    [super start];
+
+    NSMutableURLRequest* request = [[_http URLRequest] mutableCopy];
     request.timeoutInterval = _heartbeat * 1.5;
 
-    // Add headers from my .requestHeaders property:
-    [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
-        [request setValue: value forHTTPHeaderField: key];
-        
-        if ([key caseInsensitiveCompare: @"Cookie"] == 0)
-            request.HTTPShouldHandleCookies = NO;
-    }];
-
-    if (request.HTTPShouldHandleCookies)
-        [self.cookieStorage addCookieHeaderToRequest: request];
-
-    // Let the Authorizer add its own credential:
-    [$castIfProtocol(CBLCustomHeadersAuthorizer, _authorizer) authorizeURLRequest: request];
-
-    LogTo(SyncVerbose, @"%@: %@ %@", self, request.HTTPMethod, url.resourceSpecifier);
+    LogTo(SyncVerbose, @"%@: %@ %@", self, request.HTTPMethod, request.URL.resourceSpecifier);
     _ws = [PSWebSocket clientSocketWithRequest: request];
     _ws.delegate = self;
     NSDictionary* tls = self.TLSSettings;
@@ -87,7 +76,7 @@
     _caughtUp = NO;
     _startTime = CFAbsoluteTimeGetCurrent();
     _pendingMessageCount = 0;
-    LogTo(ChangeTracker, @"%@: Started... <%@>", self, url);
+    LogTo(ChangeTracker, @"%@: Started... <%@>", self, request.URL);
     return YES;
 }
 
@@ -141,11 +130,35 @@
         _ws = nil;
         NSError* myError = error;
         if ([error.domain isEqualToString: PSWebSocketErrorDomain]) {
-            // Map HTTP errors to my own error domain:
-            NSNumber* status = error.userInfo[PSHTTPStatusErrorKey];
-            if (status) {
-                myError = CBLStatusToNSErrorWithInfo((CBLStatus)status.integerValue, nil,
-                                                   self.changesFeedURL, nil);
+            if (error.code == PSWebSocketErrorCodeHandshakeFailed) {
+                // HTTP error; ask _httpLogic what to do:
+                CFHTTPMessageRef response = (__bridge CFHTTPMessageRef)error.userInfo[PSHTTPResponseErrorKey];
+                NSInteger status = CFHTTPMessageGetResponseStatusCode(response);
+                [_http receivedResponse: response];
+                if (_http.shouldRetry) {
+                    // Retry due to redirect or auth challenge:
+                    LogTo(ChangeTrackerVerbose, @"%@ got HTTP response %ld, retrying...",
+                          self, (long)status);
+                    [self retry];
+                    return;
+                }
+                // Failed, but map the error back to HTTP:
+                NSString* message = CFBridgingRelease(CFHTTPMessageCopyResponseStatusLine(response));
+                if (message.length == 0)
+                    message = error.localizedDescription;
+                NSString* urlStr = webSocket.URLRequest.URL.absoluteString;
+                myError = [NSError errorWithDomain: CBLHTTPErrorDomain
+                                              code: status
+                                          userInfo: @{NSLocalizedDescriptionKey: message,
+                                                      NSUnderlyingErrorKey: error,
+                                                      NSURLErrorFailingURLStringErrorKey: urlStr}];
+            } else {
+                // Map HTTP errors to my own error domain:
+                NSNumber* status = error.userInfo[PSHTTPStatusErrorKey];
+                if (status) {
+                    myError = CBLStatusToNSErrorWithInfo((CBLStatus)status.integerValue, nil,
+                                                       self.changesFeedURL, nil);
+                }
             }
         }
         [self failedWithError: myError];

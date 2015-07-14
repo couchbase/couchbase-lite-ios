@@ -14,8 +14,7 @@
 //  and limitations under the License.
 
 #import <Foundation/Foundation.h>
-@class CBLChangeTracker;
-@class CBLCookieStorage;
+@class CBLChangeTracker, CBLCookieStorage, BLIPHTTPLogic;
 @protocol CBLAuthorizer;
 
 
@@ -63,6 +62,7 @@ typedef enum CBLChangeTrackerMode {
     CBLCookieStorage* _cookieStorage;
     unsigned _retryCount;
     BOOL _caughtUp;
+    BLIPHTTPLogic* _http;
 }
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL

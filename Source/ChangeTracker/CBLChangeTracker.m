@@ -21,8 +21,10 @@
 #import "CBLChangeMatcher.h"
 #import "CBLAuthorizer.h"
 #import "CBLClientCertAuthorizer.h"
+#import "CBLCookieStorage.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
+#import "BLIPHTTPLogic.h"
 #import "MYURLUtils.h"
 #import "WebSocket.h"
 
@@ -205,6 +207,35 @@
 }
 
 - (BOOL) start {
+    if (!_http) {
+        // Initialize HTTPLogic before sending first request:
+        NSMutableURLRequest* urlRequest = [NSMutableURLRequest requestWithURL: self.changesFeedURL];
+        if (self.usePOST) {
+            urlRequest.HTTPMethod = @"POST";
+            urlRequest.HTTPBody = self.changesFeedPOSTBody;
+            [urlRequest setValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
+        }
+
+        // Add headers from my .requestHeaders property:
+        [self.requestHeaders enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
+            if ([key caseInsensitiveCompare: @"Cookie"] == 0)
+                urlRequest.HTTPShouldHandleCookies = NO;
+            [urlRequest setValue: value forHTTPHeaderField: key];
+        }];
+        
+        if (urlRequest.HTTPShouldHandleCookies) {
+            [self.cookieStorage addCookieHeaderToRequest: urlRequest];
+        }
+
+        // Let the Authorizer add its own headers:
+        [$castIfProtocol(CBLCustomHeadersAuthorizer, _authorizer) authorizeURLRequest: urlRequest];
+
+        _http = [[BLIPHTTPLogic alloc] initWithURLRequest: urlRequest];
+
+        // If no credential yet, get it from authorizer if it has one:
+        if (!_http.credential)
+            _http.credential = $castIfProtocol(CBLCredentialAuthorizer, _authorizer).credential;
+    }
     self.error = nil;
     return NO;
 }
