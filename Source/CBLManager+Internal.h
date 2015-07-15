@@ -14,7 +14,6 @@
 
 @interface CBLManager ()
 
-@property (copy, nonatomic) NSString* storageType;          // @"SQLite" (default) or @"ForestDB"
 @property (copy, nonatomic) NSString* replicatorClassName;  // defaults to "CBLRestReplicator"
 @property (readonly) Class replicatorClass;
 
