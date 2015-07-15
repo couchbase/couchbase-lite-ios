@@ -1229,6 +1229,9 @@ static CBLManager* sCBLManager;
         return [value couchbaseLiteIDRepresentation];
     else if ([value isKindOfClass: [NSManagedObject class]])
         return [[value objectID] couchbaseLiteIDRepresentation];
+    else if ([value isKindOfClass:[NSDate class]])
+        // CBLQueryBuilder doesn't convert an NSDate value to a json object:
+        return [CBLJSON JSONObjectWithDate: value];
     else if ([value isKindOfClass: [NSExpression class]]) {
         // An aggregate expression can contain constant value exp in its value.
         NSExpression* expression = (NSExpression*)value;
@@ -1238,9 +1241,6 @@ static CBLManager* sCBLManager;
             // Shouldn't happen here:
             assert(expression.expressionType != NSConstantValueExpressionType);
         }
-    } else if ([value isKindOfClass:[NSDate class]]) {
-        // CBLQueryBuilder doesn't convert an NSDate value to a json object:
-        return [CBLJSON JSONObjectWithDate: value];
     }
     return value;
 }
@@ -1445,13 +1445,7 @@ static CBLManager* sCBLManager;
     id value = nil;
     switch (expression.expressionType) {
         case NSConstantValueExpressionType:
-            value = [expression constantValue];
-            if ([value isKindOfClass: [NSManagedObject class]])
-                value = [[value objectID] couchbaseLiteIDRepresentation];
-            if ([value isKindOfClass: [NSManagedObjectID class]])
-                value = [value couchbaseLiteIDRepresentation];
-            else if ([value isKindOfClass:[NSDate class]])
-                value = [CBLJSON JSONObjectWithDate: value];
+            value = [self scanConstantValue: [expression constantValue]];
             break;
         case NSEvaluatedObjectExpressionType:
             value = properties;
