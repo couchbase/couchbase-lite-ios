@@ -9,6 +9,7 @@
 .objc_class_name_CBLFullTextQueryRow
 .objc_class_name_CBLGeoQueryRow
 .objc_class_name_CBLJSON
+.objc_class_name_CBLJSViewCompiler
 .objc_class_name_CBLLiveQuery
 .objc_class_name_CBLManager
 .objc_class_name_CBLModel
@@ -62,6 +63,8 @@ _CBLRegisterJSViewCompiler
 .objc_class_name_CBJSONEncoder
 .objc_class_name_CBLReachability
 .objc_class_name_CBL_ReplicatorSettings
+.objc_class_name_CBLRestReplicator
+.objc_class_name_CBLSyncListener
 .objc_class_name_CBLCookieStorage
 .objc_class_name_CBLMultipartDocumentReader
 .objc_class_name_CBLMultipartWriter
