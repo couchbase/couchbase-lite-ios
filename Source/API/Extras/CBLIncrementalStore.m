@@ -393,7 +393,9 @@ static CBLManager* sCBLManager;
     [context obtainPermanentIDsForObjects: @[object] error: nil];
     [object didChangeValueForKey: @"objectID"];
 
-    [context refreshObject: object mergeChanges: YES];
+    [context performBlock:^{
+        [context refreshObject: object mergeChanges: YES];
+    }];
 }
 
 
@@ -2022,7 +2024,9 @@ static CBLManager* sCBLManager;
 
 - (void) informObservingManagedObjectContextsAboutUpdatedIDs: (NSArray*)updatedIDs deletedIDs: (NSArray*)deletedIDs {
     for (NSManagedObjectContext* context in self.observingManagedObjectContexts) {
-        [self informManagedObjectContext: context updatedIDs: updatedIDs deletedIDs: deletedIDs];
+        [context performBlock:^{
+            [self informManagedObjectContext: context updatedIDs: updatedIDs deletedIDs: deletedIDs];
+        }];
     }
 }
 
@@ -2031,64 +2035,71 @@ static CBLManager* sCBLManager;
     [_coalescedChanges addObjectsFromArray: changes];
     [self processCouchbaseLiteChanges];
 #else
-    [NSThread cancelPreviousPerformRequestsWithTarget: self selector: @selector(processCouchbaseLiteChanges) object: nil];
-    
-    @synchronized(self) {
-        [_coalescedChanges addObjectsFromArray: changes];
-    }
-    
-    [self performSelector: @selector(processCouchbaseLiteChanges) withObject: nil afterDelay: 0.1];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSThread cancelPreviousPerformRequestsWithTarget: self selector: @selector(processCouchbaseLiteChanges) object: nil];
+
+        @synchronized(self) {
+            [_coalescedChanges addObjectsFromArray: changes];
+        }
+
+        [self performSelector: @selector(processCouchbaseLiteChanges) withObject: nil afterDelay: 0.1];
+    });
 #endif
 }
 
 - (void) processCouchbaseLiteChanges {
-    NSArray* changes = nil;
-    @synchronized(self) {
-        changes = _coalescedChanges;
-        _coalescedChanges = [[NSMutableArray alloc] initWithCapacity: 20];
-    }
-    
-    NSMutableSet* changedEntitites = [NSMutableSet setWithCapacity: changes.count];
-    NSMutableArray* deletedObjectIDs = [NSMutableArray array];
-    NSMutableArray* updatedObjectIDs = [NSMutableArray array];
-    
-    for (CBLDatabaseChange* change in changes) {
-        if (!change.isCurrentRevision) continue;
-        if ([change.documentID hasPrefix: @"CBLIS"]) continue;
-        
-        CBLDocument* doc = [self.database documentWithID: change.documentID];
-        CBLRevision* rev = [doc revisionWithID: change.revisionID];
-        
-        BOOL deleted = rev.isDeletion;
-
-        NSDictionary* properties = [rev properties];
-        
-        NSString* type = [properties objectForKey: [self documentTypeKey]];
-        NSString* reference = change.documentID;
-
-        NSDictionary *entitiesByName = self.persistentStoreCoordinator.managedObjectModel.entitiesByName;
-        NSEntityDescription* entity = entitiesByName[type];
-        NSManagedObjectID* objectID = [self newObjectIDForEntity: entity referenceObject: reference];
-        
-        if (deleted) {
-            [deletedObjectIDs addObject: objectID];
-        } else {
-            [updatedObjectIDs addObject: objectID];
+    [self.database.manager backgroundTellDatabaseNamed:self.database.name to:^(CBLDatabase * database) {
+        NSArray* changes = nil;
+        @synchronized(self) {
+            changes = _coalescedChanges;
+            _coalescedChanges = [[NSMutableArray alloc] initWithCapacity: 20];
         }
 
-        [changedEntitites addObject: type];
-    }
-    
-    [self informObservingManagedObjectContextsAboutUpdatedIDs: updatedObjectIDs
-                                                   deletedIDs: deletedObjectIDs];
-    
-    NSDictionary* userInfo = @{
-                               NSDeletedObjectsKey: deletedObjectIDs,
-                               NSUpdatedObjectsKey: updatedObjectIDs
-                               };
-    [[NSNotificationCenter defaultCenter] postNotificationName: kCBLISObjectHasBeenChangedInStoreNotification
-                                                        object: self
-                                                      userInfo: userInfo];
+        NSMutableSet* changedEntitites = [NSMutableSet setWithCapacity: changes.count];
+        NSMutableArray* deletedObjectIDs = [NSMutableArray array];
+        NSMutableArray* updatedObjectIDs = [NSMutableArray array];
+
+        for (CBLDatabaseChange* change in changes) {
+            if (!change.isCurrentRevision) continue;
+            if ([change.documentID hasPrefix: @"CBLIS"]) continue;
+
+            CBLDocument* doc = [database documentWithID: change.documentID];
+            CBLRevision* rev = [doc revisionWithID: change.revisionID];
+
+            BOOL deleted = rev.isDeletion;
+
+            NSDictionary* properties = [rev properties];
+
+            NSString* type = [properties objectForKey: [self documentTypeKey]];
+            NSString* reference = change.documentID;
+
+            NSDictionary *entitiesByName = self.persistentStoreCoordinator.managedObjectModel.entitiesByName;
+            NSEntityDescription* entity = entitiesByName[type];
+            NSManagedObjectID* objectID = [self newObjectIDForEntity: entity referenceObject: reference];
+
+            if (deleted) {
+                [deletedObjectIDs addObject: objectID];
+            } else {
+                [updatedObjectIDs addObject: objectID];
+            }
+
+            [changedEntitites addObject: type];
+        }
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self informObservingManagedObjectContextsAboutUpdatedIDs: updatedObjectIDs
+                                                           deletedIDs: deletedObjectIDs];
+
+            NSDictionary* userInfo = @{
+                                       NSDeletedObjectsKey: deletedObjectIDs,
+                                       NSUpdatedObjectsKey: updatedObjectIDs
+                                       };
+            [[NSNotificationCenter defaultCenter] postNotificationName: kCBLISObjectHasBeenChangedInStoreNotification
+                                                                object: self
+                                                              userInfo: userInfo];
+
+        });
+    }];
 }
 
 - (void) stop {
