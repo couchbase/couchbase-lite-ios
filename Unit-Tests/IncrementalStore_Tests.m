@@ -15,10 +15,6 @@
 
 #define TEST_NON_INVERSE_RELATIONSHIP 0
 
-@interface CBLIncrementalStore (Internal)
-- (void) stop;
-@end
-
 
 @interface IncrementalStore_Tests : CBLTestCaseWithDB
 @end
@@ -160,7 +156,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 }
 
 - (void) tearDown {
-    [store stop];
     [super tearDown];
 }
 
@@ -296,13 +291,15 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEqual(file.data, attachment.content);
     
     // now change the properties in CouchbaseLite and check if those are available in Core Data
+    __block NSUInteger count = 0;
     XCTestExpectation *expectation = [self expectationWithDescription:@"CBLIS Changed Notification"];
     id observer = [[NSNotificationCenter defaultCenter]
                    addObserverForName: kCBLISObjectHasBeenChangedInStoreNotification
                                object: store
                                 queue: nil
                            usingBlock:^(NSNotification *note) {
-        [expectation fulfill];
+        if (++count == 2)
+            [expectation fulfill];
     }];
 
     [entryProperties setObject:@"different text" forKey:@"text"];
@@ -319,8 +316,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     
     entry = (Entry*)[context existingObjectWithID:entryID error:&error];
     Assert(entry != nil, @"Couldn load entry: %@", error);
-    
-    // if one of the following fails, make sure you compiled the CBLIncrementalStore with CBLIS_NO_CHANGE_COALESCING=1
     AssertEqual(entry.text, [entryProperties objectForKey:@"text"]);
     AssertEqual(entry.check, [entryProperties objectForKey:@"check"]);
     AssertEqual(entry.number, [entryProperties objectForKey:@"number"]);
@@ -589,7 +584,12 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     entry.text = @"Test2";
     success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
-    
+
+    result = [context executeFetchRequest:fetchRequest error:&error];
+    AssertEq(result.count, 2u);
+    Assert([result[0] isKindOfClass:[NSManagedObject class]], @"Results are not NSManagedObjects");
+    Assert([result[1] isKindOfClass:[NSManagedObject class]], @"Results are not NSManagedObjects");
+
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text == 'Test2'"];
     fetchRequest.resultType = NSCountResultType;
     result = [context executeFetchRequest:fetchRequest error:&error];
