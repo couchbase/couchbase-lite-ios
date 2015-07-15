@@ -50,6 +50,9 @@ typedef struct CBLManagerOptions {
 /** Releases all resources used by the CBLManager instance and closes all its databases. */
 - (void) close;
 
+/** Storage engine type. There are two options, "SQLite" (default) or "ForestDB". */
+@property (copy, nonatomic) NSString* storageType;
+
 /** The root directory of this manager (as specified at initialization time.) */
 @property (readonly) NSString* directory;
 

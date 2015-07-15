@@ -13,6 +13,7 @@
 
 @interface CBLManager ()
 
+
 @property (copy, nonatomic) NSString* storageType;      // @"SQLite" (default) or @"ForestDB"
 
 - (NSString*) nameOfDatabaseAtPath: (NSString*)path;
