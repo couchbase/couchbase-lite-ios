@@ -41,32 +41,32 @@ static inline BOOL CBLGeoRectIsEmpty(CBLGeoRect r) {
 
 
 /** Converts a string of four comma-separated numbers ("x0,y0,x1,y1") to a rectangle. */
-BOOL CBLGeoCoordsStringToRect(NSString* coordsStr, CBLGeoRect* outRect);
+BOOL CBLGeoCoordsStringToRect(NSString* __nullable coordsStr, CBLGeoRect* outRect);
 
 
 #pragma mark - CONVERTING TO/FROM JSON:
 
 /** Converts a point to GeoJSON format.
     For details see http://geojson.org/geojson-spec.html#point */
-NSDictionary* CBLGeoPointToJSON(CBLGeoPoint pt);
+CBLJSONDict* CBLGeoPointToJSON(CBLGeoPoint pt);
 
 /** Converts a rectangle to GeoJSON format (as a polygon.)
     For details see http://geojson.org/geojson-spec.html#polygon */
-NSDictionary* CBLGeoRectToJSON(CBLGeoRect rect);
+CBLJSONDict* CBLGeoRectToJSON(CBLGeoRect rect);
 
 /** Computes the bounding box of a GeoJSON object.
     Currently only implemented for points and polygons. */
-BOOL CBLGeoJSONBoundingBox(NSDictionary* geoJSON, CBLGeoRect* outBBox);
+BOOL CBLGeoJSONBoundingBox(NSDictionary* __nullable geoJSON, CBLGeoRect* outBBox);
 
 
 /** Converts a point to a JSON-compatible array of two coordinates. */
 CBLArrayOf(NSNumber*)* CBLGeoPointToCoordPair(CBLGeoPoint pt);
 
 /** Converts a JSON array of two coordinates [x,y] back into a point. */
-BOOL CBLGeoCoordPairToPoint(CBLArrayOf(NSNumber*)* coords, CBLGeoPoint* outPoint);
+BOOL CBLGeoCoordPairToPoint(NSArray* __nullable coords, CBLGeoPoint* outPoint);
 
 /** Converts a JSON array of four coordinates [x0, y0, x1, y1] to a rectangle. */
-BOOL CBLGeoCoordsToRect(CBLArrayOf(NSNumber*)* coords, CBLGeoRect* outRect);
+BOOL CBLGeoCoordsToRect(NSArray* __nullable coords, CBLGeoRect* outRect);
 
 #pragma mark - KEYS FOR MAP FUNCTIONS:
 

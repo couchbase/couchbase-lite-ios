@@ -40,9 +40,9 @@ typedef struct CBLManagerOptions {
     @param directory  Path to data directory. If it doesn't already exist it will be created.
     @param options  If non-NULL, a pointer to options (read-only and no-replicator).
     @param outError  On return, the error if any. */
-- (instancetype) initWithDirectory: (NSString*)directory
-                           options: (const CBLManagerOptions* __nullable)options
-                             error: (NSError**)outError;
+- (nullable instancetype) initWithDirectory: (NSString*)directory
+                                    options: (const CBLManagerOptions* __nullable)options
+                                      error: (NSError**)outError;
 
 /** Creates a copy of this CBLManager, which can be used on a different thread. */
 - (instancetype) copy;

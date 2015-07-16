@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Returns the ancestry of this revision as an array of CBLRevisions, in chronological order.
     Older revisions are NOT guaranteed to have their properties available. */
-- (CBLArrayOf(CBLRevision*)*) getRevisionHistory: (NSError**)outError;
+- (nullable CBLArrayOf(CBLRevision*)*) getRevisionHistory: (NSError**)outError;
 
 /** The revision's contents as parsed from JSON.
     Keys beginning with "_" are defined and reserved by CouchbaseLite; others are app-specific.

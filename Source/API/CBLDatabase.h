@@ -102,7 +102,7 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* __null
 - (nullable CBLDocument*) existingDocumentWithID: (NSString*)docID;
 
 /** Same as -documentWithID:. Enables "[]" access in Xcode 4.4+ */
-- (CBLDocument*)objectForKeyedSubscript: (NSString*)key;
+- (nullable CBLDocument*)objectForKeyedSubscript: (NSString*)key;
 
 /** Creates a new CBLDocument object with no properties and a new (random) UUID.
     The document will be saved to the database when you call -putProperties: on it. */

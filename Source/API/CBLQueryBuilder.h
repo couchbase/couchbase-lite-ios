@@ -41,28 +41,28 @@ NS_ASSUME_NONNULL_BEGIN
     @param outError  If the builder doesn't know how to handle the input, this will be filled in
                 with an NSError describing the problem.
     @return  The initialized CBLQueryBuilder, or nil on error. */
-- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
-                           select: (nullable NSArray*)valueTemplate
-                            where: (NSString*)predicateStr
-                          orderBy: (nullable NSArray*)sortDescriptors
-                            error: (NSError**)outError;
+- (nullable instancetype) initWithDatabase: (nullable CBLDatabase*)database
+                                    select: (nullable NSArray*)valueTemplate
+                                     where: (NSString*)predicateStr
+                                   orderBy: (nullable NSArray*)sortDescriptors
+                                     error: (NSError**)outError;
 
 /** Initializes a CBLQueryBuilder.
     This is an alternate initializer that takes an NSPredicate instead of a predicate template
     string; see the main initializer for details. */
-- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
-                           select: (nullable NSArray*)valueTemplate
-                   wherePredicate: (NSPredicate*)predicate
-                          orderBy: (nullable NSArray*)sortDescriptors
-                            error: (NSError**)outError;
+- (nullable instancetype) initWithDatabase: (nullable CBLDatabase*)database
+                                    select: (nullable NSArray*)valueTemplate
+                            wherePredicate: (NSPredicate*)predicate
+                                   orderBy: (nullable NSArray*)sortDescriptors
+                                     error: (NSError**)outError;
 
 /** Initializes a CBLQueryBuilder, using an explicitly chosen view.
     See the main initializer for details. */
-- (instancetype) initWithView: (CBLView*)view
-                       select: (NSArray*)valueTemplate
-               wherePredicate: (NSPredicate*)predicate
-                      orderBy: (nullable NSArray*)sortDescriptors
-                        error: (NSError**)outError;
+- (nullable instancetype) initWithView: (CBLView*)view
+                                select: (NSArray*)valueTemplate
+                        wherePredicate: (NSPredicate*)predicate
+                               orderBy: (nullable NSArray*)sortDescriptors
+                                 error: (NSError**)outError;
 
 - (instancetype) init NS_UNAVAILABLE;
 
