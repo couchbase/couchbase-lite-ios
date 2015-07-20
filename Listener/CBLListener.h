@@ -98,7 +98,7 @@ NS_ASSUME_NONNULL_BEGIN
     is not directly signed by a CA cert known to the OS. */
 @property (strong, nonatomic, nullable) NSArray* SSLExtraCertificates;
 
-/** The SHA-1 digest of the SSL identity's public key, which can be used as a unique 'fingerprint'
+/** The SHA-1 digest of the SSL identity's certificate, which can be used as a unique 'fingerprint'
     of the identity. For example, you can send this digest to someone else over an existing secure
     channel (like iMessage or a QR code) and the recipient can then make an SSL connection to this
     listener and verify its identity by comparing digests. */

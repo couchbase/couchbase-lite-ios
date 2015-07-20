@@ -155,43 +155,26 @@
 
 
 - (BOOL) checkSSLServerTrust: (SecTrustRef)trust
-                     forHost: (NSString*)host port: (UInt16)port
+                     forHost: (NSString*)host
+                        port: (UInt16)port
 {
     NSData* pinnedCertData;
-    id digest = _options[kCBLReplicatorOption_PinnedCert];
-    if (digest) {
-        if ([digest isKindOfClass: [NSData class]])
-            pinnedCertData = digest;
-        else if ([digest isKindOfClass: [NSString class]])
-            pinnedCertData = CBLDataFromHex(digest);
+    id pin = _options[kCBLReplicatorOption_PinnedCert];
+    if (pin) {
+        // Pinned cert can be given as either NSData, hex NSString, or SecCertificateRef:
+        if ([pin isKindOfClass: [NSData class]])
+            pinnedCertData = pin;
+        else if ([pin isKindOfClass: [NSString class]])
+            pinnedCertData = CBLDataFromHex(pin);
+        else if (CFGetTypeID((__bridge CFTypeRef)pin) == SecCertificateGetTypeID())
+            pinnedCertData = CFAutorelease(SecCertificateCopyData((__bridge SecCertificateRef)pin));
         if (!pinnedCertData) {
             Warn(@"Invalid replicator %@ property value \"%@\"",
-                 kCBLReplicatorOption_PinnedCert, digest);
+                 kCBLReplicatorOption_PinnedCert, pin);
             return NO;
         }
     }
-
-    SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
-    if (pinnedCertData) {
-        if (pinnedCertData.length == CC_SHA1_DIGEST_LENGTH) {
-            NSData* certDigest = MYGetCertificateDigest(cert);
-            if (![certDigest isEqual: pinnedCertData]) {
-                Warn(@"%@: SSL cert digest %@ doesn't match pinnedCert %@",
-                     self, certDigest, pinnedCertData);
-                return NO;
-            }
-        } else {
-            NSData* certData = CFBridgingRelease(SecCertificateCopyData(cert));
-            if (![certData isEqual: pinnedCertData]) {
-                Warn(@"%@: SSL cert does not equal pinnedCert", self);
-                return NO;
-            }
-        }
-    } else {
-        if (!CBLCheckSSLServerTrust(trust, host, port))
-            return NO;
-    }
-    return YES;
+    return CBLCheckSSLServerTrust(trust, host, port, pinnedCertData);
 }
 
 

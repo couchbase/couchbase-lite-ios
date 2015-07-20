@@ -69,4 +69,4 @@
 void CBLSetAnchorCerts(NSArray* certs, BOOL onlyThese);
 
 /** Checks server trust, using the global list of anchor certs. */
-BOOL CBLCheckSSLServerTrust(SecTrustRef trust, NSString* host, UInt16 port);
+BOOL CBLCheckSSLServerTrust(SecTrustRef trust, NSString* host, UInt16 port, NSData *pinned);
