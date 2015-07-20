@@ -12,13 +12,16 @@
 #import "CBLManager+Internal.h"
 
 
-#define kPort 59999
 #define kListenerDBName @"listy"
 #define kNDocuments 100
 #define kMinAttachmentLength   4000
 #define kMaxAttachmentLength 100000
 
 #define USE_AUTH 1
+#define USE_SSL  1
+
+
+static UInt16 sPort = 60100;
 
 
 @interface P2P_HTTP_Tests : CBLTestCaseWithDB
@@ -49,16 +52,24 @@
     dbmgr.replicatorClassName = self.replicatorClassName;
 
     listenerDB = [dbmgr databaseNamed: kListenerDBName error: NULL];
-    listenerDBURL = [NSURL URLWithString: $sprintf(@"http://localhost:%d/%@", kPort, kListenerDBName)];
 
-    listener = [[[self listenerClass] alloc] initWithManager: dbmgr port: kPort];
+    listener = [[[self listenerClass] alloc] initWithManager: dbmgr port: sPort];
 #if USE_AUTH
     listener.requiresAuth = YES;
     listener.passwords = @{@"bob": @"slack"};
 #endif
 
+#if USE_SSL
+    NSError* error;
+    Assert([listener setAnonymousSSLIdentityWithLabel: @"CBLUnitTests" error: &error],
+           @"Failed to set SSL identity: %@", error);
+#endif
+
+    listenerDBURL = [listener.URL URLByAppendingPathComponent: listenerDB.name];
+    Log(@"'Remote' db URL = <%@>", listenerDBURL);
+
     // Wait for listener to start:
-    [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(kPort)];
+    [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(sPort)];
     [listener start: NULL];
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
 }
@@ -66,6 +77,11 @@
 
 - (void) tearDown {
     [listener stop];
+    // Each test run uses a different port number (sPort is incremented) to prevent CFNetwork from
+    // resuming the previous SSL session. Because if it does that, the previous client cert gets
+    // used on the server side, which breaks the test. Haven't found a workaround for this yet.
+    // --Jens 7/2015
+    ++sPort;
     [super tearDown];
 }
 

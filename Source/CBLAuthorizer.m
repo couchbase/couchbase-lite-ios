@@ -71,6 +71,43 @@ void CBLSetAnchorCerts(NSArray* certs, BOOL onlyThese) {
     }
 }
 
+
+// Checks whether the reported problems with a SecTrust are OK for us
+static BOOL acceptProblems(SecTrustRef trust, NSString* host) {
+    BOOL localDomain = ([host hasSuffix: @".local"] || [host hasSuffix: @".local."]);
+    NSDictionary* resultDict = CFBridgingRelease(SecTrustCopyResult(trust));
+    NSArray* detailsArray = resultDict[@"TrustResultDetails"];
+    NSUInteger i = 0;
+    for (NSDictionary* details in detailsArray) {
+        for (NSString* problem in details) {
+            BOOL accept = NO;
+            if ([problem isEqualToString: @"SSLHostname"] ||
+                        [problem isEqualToString: @"AnchorTrusted"])
+            {
+                // Accept a self-signed cert from a local host (".local" domain)
+                accept = (i == 0 && SecTrustGetCertificateCount(trust) == 1 && localDomain);
+            }
+            if (!accept)
+                return NO;
+        }
+        i++;
+    }
+    return YES;
+}
+
+
+// Updates a SecTrust's result to kSecTrustResultProceed
+static BOOL makeTrusted(SecTrustRef trust) {
+    CFDataRef exception = SecTrustCopyExceptions(trust);
+    if (!exception)
+        return NO;
+    SecTrustResultType result;
+    SecTrustSetExceptions(trust, exception);
+    SecTrustEvaluate(trust, &result);
+    return YES;
+}
+
+
 BOOL CBLCheckSSLServerTrust(SecTrustRef trust, NSString* host, UInt16 port) {
     @synchronized([CBLPasswordAuthorizer class]) {
         if (sAnchorCerts.count > 0) {
@@ -85,9 +122,8 @@ BOOL CBLCheckSSLServerTrust(SecTrustRef trust, NSString* host, UInt16 port) {
         return NO;
     }
     if (result == kSecTrustResultRecoverableTrustFailure) {
-        // Accept a self-signed cert from a local host (".local" domain)
-        if (SecTrustGetCertificateCount(trust) == 1 &&
-                ([host hasSuffix: @".local"] || [host hasSuffix: @".local."])) {
+        if (acceptProblems(trust, host)) {
+            makeTrusted(trust);
             result = kSecTrustResultUnspecified;
         }
     }

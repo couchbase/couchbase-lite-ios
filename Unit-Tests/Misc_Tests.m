@@ -12,6 +12,7 @@
 #import "CBLFacebookAuthorizer.h"
 #import "CBLPersonaAuthorizer.h"
 #import "CBLSymmetricKey.h"
+#import "MYAnonymousIdentity.h"
 
 
 @interface Misc_Tests : CBLTestCase
@@ -291,6 +292,31 @@ static int collateRevs(const char* rev1, const char* rev2) {
         [incrementalOutput appendBytes: buf length: bytesRead];
     } while (bytesRead > 0);
     AssertEqual(incrementalOutput, incrementalCleartext);
+}
+
+
+- (void) test_AnonymousIdentity {
+    NSError* error;
+    MYDeleteAnonymousIdentity(@"CBLUnitTests");
+    SecIdentityRef ident = MYGetOrCreateAnonymousIdentity(@"CBLUnitTests", 100, &error);
+    Assert(ident != NULL, @"Couldn't create identity: %@", error);
+
+    SecCertificateRef cert = NULL;
+    AssertEq(SecIdentityCopyCertificate(ident, &cert), noErr);
+    CFAutorelease(cert);
+    NSString* summary = CFBridgingRelease(SecCertificateCopySubjectSummary(cert));
+    Log(@"Summary = %@", summary);
+    AssertEqual(summary, @"Anonymous");
+
+    SecTrustRef trust = NULL;
+    AssertEq(SecTrustCreateWithCertificates(cert, SecPolicyCreateSSL(YES, CFSTR("foo")), &trust), noErr);
+    CFAutorelease(trust);
+    SecTrustResultType result;
+    AssertEq(SecTrustEvaluate(trust, &result), noErr);
+    Log(@"Trust result = %d", result);
+    AssertEq(result, (SecTrustResultType)kSecTrustResultRecoverableTrustFailure);
+
+    MYDeleteAnonymousIdentity(@"CBLUnitTests");
 }
 
 
