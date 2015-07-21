@@ -853,6 +853,17 @@ static BOOL sOnlyTrustAnchorCerts;
     }
 }
 
+// Updates a SecTrust's result to kSecTrustResultProceed
+static BOOL makeTrusted(SecTrustRef trust) {
+    CFDataRef exception = SecTrustCopyExceptions(trust);
+    if (!exception)
+        return NO;
+    SecTrustResultType result;
+    SecTrustSetExceptions(trust, exception);
+    SecTrustEvaluate(trust, &result);
+    return YES;
+}
+
 - (BOOL) checkSSLServerTrust: (SecTrustRef)trust
                      forHost: (NSString*)host port: (UInt16)port
 {
@@ -872,6 +883,7 @@ static BOOL sOnlyTrustAnchorCerts;
                 return NO;
             }
         }
+        makeTrusted(trust);
     } else {
         @synchronized([self class]) {
             if (sAnchorCerts.count > 0) {
