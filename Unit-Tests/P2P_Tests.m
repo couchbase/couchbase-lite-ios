@@ -167,17 +167,25 @@ static UInt16 sPort = 60100;
                                                              password: @"slack"];
 #endif
     [repl start];
+
     __block bool started = false;
     [self expectationForNotification: kCBLReplicationChangeNotification object: repl
-                             handler: ^BOOL(NSNotification *n) {
-                                 Log(@"Repl running=%d, status=%d", repl.running, repl.status);
-                                 if (repl.running)
-                                     started = true;
-                                 if (repl.lastError)
-                                     return true;
-                                 return started && (repl.status == kCBLReplicationStopped ||
-                                                    repl.status == kCBLReplicationIdle);
-                             }];
+         handler: ^BOOL(NSNotification *n) {
+             Log(@"Repl running=%d, status=%d", repl.running, repl.status);
+             if (repl.running)
+                 started = true;
+             if (repl.lastError)
+                 return true;
+             if (repl.status == kCBLReplicationStopped)
+                 NSLog(@"Stop");
+             return started && (repl.status == kCBLReplicationStopped ||
+                                repl.status == kCBLReplicationIdle);
+         }];
+
+    if ([listener respondsToSelector:@selector(connectionCount)]) // observe for changes:
+        [self keyValueObservingExpectationForObject: listener
+                                            keyPath: @"connectionCount" expectedValue: @0];
+
     [self waitForExpectationsWithTimeout: 30.0 handler: nil];
     AssertNil(repl.lastError);
     if (expectedChangesCount > 0) {
@@ -213,9 +221,6 @@ static UInt16 sPort = 60100;
          expectedChangesCount: (NSUInteger)expectedChangesCount
 {
     [super runReplication: repl expectedChangesCount: expectedChangesCount];
-    // Wait for the listener-side connection to finish:
-    [self keyValueObservingExpectationForObject: listener keyPath: @"connectionCount" expectedValue: @0];
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
 }
 
 @end
