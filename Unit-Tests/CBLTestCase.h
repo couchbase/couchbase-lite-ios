@@ -43,6 +43,9 @@ void AddTemporaryCredential(NSURL* url, NSString* realm,
 /** Returns the contents of a named test fixture in the unit-test bundle. */
 - (NSData*) contentsOfTestFile: (NSString*)name;
 
+@property (readonly) NSInteger iOSVersion;      // Returns 0 on Mac OS
+@property (readonly) NSInteger macOSVersion;    // Returns 0 on iOS
+
 // internal:
 - (void) _assertEqualish: (id)a to: (id)b;
 @end
@@ -95,6 +98,9 @@ void AddTemporaryCredential(NSURL* url, NSString* realm,
 /** Same as remoteTestDBURL: but with a server that uses/requires SSL.
     The environment variable that controls this is CBL_SSL_TEST_SERVER. */
 - (NSURL*) remoteSSLTestDBURL: (NSString*)dbName;
+
+/** Never returns an HTTPS URL even if App Transport Security is present. */
+- (NSURL*) remoteNonSSLTestDBURL: (NSString*)dbName;
 
 /** A CBLAuthorizer to use when talking to the remote test server. */
 @property (readonly) id<CBLAuthorizer> authorizer;

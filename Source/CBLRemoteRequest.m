@@ -38,6 +38,9 @@
 
 @synthesize delegate=_delegate, responseHeaders=_responseHeaders, cookieStorage=_cookieStorage;
 @synthesize autoRetry = _autoRetry;
+#if DEBUG
+@synthesize debugAlwaysTrust=_debugAlwaysTrust;
+#endif
 
 
 + (NSString*) userAgentHeader {
@@ -309,6 +312,16 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
             SecTrustResultType result;
             ok = (SecTrustEvaluate(trust, &result) == noErr) &&
                     (result==kSecTrustResultProceed || result==kSecTrustResultUnspecified);
+#if DEBUG
+            if (!ok && _debugAlwaysTrust) {
+                ok = YES;
+                CFDataRef exception = SecTrustCopyExceptions(trust);
+                if (exception) {
+                    SecTrustSetExceptions(trust, exception);
+                    CFRelease(exception);
+                }
+            }
+#endif
         }
         if (ok) {
             LogTo(RemoteRequest, @"    useCredential for trust: %@", trust);
