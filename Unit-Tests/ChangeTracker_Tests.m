@@ -35,7 +35,7 @@
 - (void) test_Simple {
     for (CBLChangeTrackerMode mode = kOneShot; mode <= kLongPoll; ++mode) {
         Log(@"Mode = %d ...", mode);
-        NSURL* url = [self remoteTestDBURL: @"attach_test"];
+        NSURL* url = [self remoteNonSSLTestDBURL: @"attach_test"];
         if (!url)
             return;
         CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: mode conflicts: NO lastSequence: nil client: self];
@@ -111,7 +111,7 @@
 - (void) test_Auth {
     RequireTestCase(AuthFailure);
     // This database requires authentication to access at all.
-    NSURL* url = [self remoteTestDBURL: @"cbl_auth_test"];
+    NSURL* url = [self remoteNonSSLTestDBURL: @"cbl_auth_test"];
     if (!url)
         return;
 
@@ -130,7 +130,7 @@
 
 
 - (void) test_AuthFailure {
-    NSURL* url = [self remoteTestDBURL: @"cbl_auth_test"];
+    NSURL* url = [self remoteNonSSLTestDBURL: @"cbl_auth_test"];
     if (!url)
         return;
     // Add a bogus user to make auth fail:
@@ -148,7 +148,7 @@
 
 - (void) test_CBLWebSocketChangeTracker_Auth {
     // This Sync Gateway database requires authentication to access at all.
-    NSURL* url = [self remoteTestDBURL: @"cbl_auth_test"];
+    NSURL* url = [self remoteNonSSLTestDBURL: @"cbl_auth_test"];
     if (!url) {
         Warn(@"Skipping test; no remote DB URL configured");
         return;

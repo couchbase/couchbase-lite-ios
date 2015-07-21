@@ -72,6 +72,27 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 }
 
 
+- (NSInteger) iOSVersion {
+#if TARGET_OS_IPHONE
+    if (![NSProcessInfo instancesRespondToSelector: @selector(operatingSystemVersion)])
+        return 7; // -operatingSystemVersion was added in iOS 8
+    return [NSProcessInfo processInfo].operatingSystemVersion.majorVersion;
+#else
+    return 0;
+#endif
+}
+
+- (NSInteger) macOSVersion {
+#if TARGET_OS_IPHONE
+    return 0;
+#else
+    if (![NSProcessInfo instancesRespondToSelector: @selector(operatingSystemVersion)])
+        return 9; // -operatingSystemVersion was added in OS X 10.10
+    return [NSProcessInfo processInfo].operatingSystemVersion.majorVersion;
+#endif
+}
+
+
 @end
 
 
@@ -206,6 +227,18 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 
 
 - (NSURL*) remoteTestDBURL: (NSString*)dbName {
+    // If the OS has App Transport Security, we have to make all connections over SSL:
+    if (self.iOSVersion >= 9 || self.macOSVersion >= 11) {
+        NSArray* serverCerts = [self remoteTestDBAnchorCerts];
+        [CBLReplication setAnchorCerts: serverCerts onlyThese: NO];
+        return [self remoteSSLTestDBURL: dbName];
+    } else {
+        return [self remoteNonSSLTestDBURL: dbName];
+    }
+}
+
+
+- (NSURL*) remoteNonSSLTestDBURL: (NSString*)dbName {
     NSString* urlStr = [[NSProcessInfo processInfo] environment][@"CBL_TEST_SERVER"];
     if (!urlStr)
         urlStr = kDefaultRemoteTestServer;
@@ -272,7 +305,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     
     // Post to /db/_flush is supported by Sync Gateway 1.1, but not by CouchDB
     NSURLComponents* comp = [NSURLComponents componentsWithURL: dbURL resolvingAgainstBaseURL: YES];
-    comp.port = @4985;
+    comp.port = ([dbURL.scheme isEqualToString: @"http"]) ? @4985 : @4995;
     comp.path = [comp.path stringByAppendingPathComponent: @"_flush"];
 
     CBLRemoteRequest* request = [[CBLRemoteRequest alloc] initWithMethod: @"POST"
@@ -286,6 +319,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
                                  }
                                  ];
     request.authorizer = self.authorizer;
+    request.debugAlwaysTrust = YES;
     [request start];
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
     while (!finished && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode

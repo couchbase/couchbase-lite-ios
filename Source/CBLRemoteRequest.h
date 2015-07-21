@@ -76,6 +76,10 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 - (void) respondWithResult: (id)result error: (NSError*)error;
 - (BOOL) retry;
 
+#if DEBUG
+@property BOOL debugAlwaysTrust;    // For unit tests only!
+#endif
+
 @end
 
 

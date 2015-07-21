@@ -70,7 +70,8 @@
     urlStr = [urlStr stringByAppendingString: @"/oneBigAttachment?revs=true&attachments=true"];
     NSURL* url = [NSURL URLWithString: urlStr];
     __block BOOL done = NO;
-    [[[CBLMultipartDownloader alloc] initWithURL: url
+    CBLMultipartDownloader* dl;
+    dl = [[CBLMultipartDownloader alloc] initWithURL: url
                                         database: db
                                   requestHeaders: nil
                                     onCompletion: ^(id result, NSError * error)
@@ -93,7 +94,9 @@
           }
           AssertEq(db.attachmentStore.count, attachments.count);
           done = YES;
-      }] start];
+      }];
+    dl.debugAlwaysTrust = YES;
+    [dl start];
 
     while (!done)
         [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]];

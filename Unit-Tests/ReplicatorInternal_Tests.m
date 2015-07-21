@@ -271,6 +271,7 @@
         return;
 
     Log(@"Replicating without root cert; should fail...");
+    CBLSetAnchorCerts(nil, NO);
     [self allowWarningsIn:^{
         replic8(db, remoteURL, NO, nil, nil,
                 ([NSError errorWithDomain: NSURLErrorDomain
@@ -298,6 +299,7 @@
         return;
 
     Log(@"Replicating without root cert; should fail...");
+    CBLSetAnchorCerts(nil, NO);
     [self allowWarningsIn:^{
         replic8Continuous(db, remoteURL, NO, nil, nil,
                           [NSError errorWithDomain: NSURLErrorDomain
@@ -348,7 +350,7 @@
 
 - (void) test_09_Pusher_NonExistentServer {
     RequireTestCase(Pusher);
-    NSURL* remoteURL = [NSURL URLWithString:@"http://mylocalhost/db"];
+    NSURL* remoteURL = [NSURL URLWithString:@"https://mylocalhost/db"];
     if (!remoteURL) {
         Warn(@"Skipping test CBL_Pusher_NonExistentServer: invalid URL");
         return;
@@ -361,7 +363,7 @@
 
 - (void) test_10_Puller_NonExistentServer {
     RequireTestCase(Puller);
-    NSURL* remoteURL = [NSURL URLWithString:@"http://mylocalhost/db"];
+    NSURL* remoteURL = [NSURL URLWithString:@"https://mylocalhost/db"];
     if (!remoteURL) {
         Warn(@"Skipping test CBL_Puller_NonExistentServer: invalid URL");
         return;
