@@ -75,36 +75,20 @@
 
 
 - (CBL_RevisionList*) unpushedRevisions {
-    CBLDatabase* db = _db;
-    CBLFilterBlock filter = _settings.filterBlock;
-
-    NSString* lastSequence = _lastSequence;
-    if (!lastSequence) {
-        // If replicator hasn't started yet (can happen if this method is being called from a
-        // CBLReplication), get local checkpoint from db:
-        NSString* checkpointID = self.remoteCheckpointDocID;
-        lastSequence = [db lastSequenceWithCheckpointID: checkpointID];
-    }
-
-    // Include conflicts so all conflicting revisions are replicated too
-    CBLChangesOptions options = kDefaultCBLChangesOptions;
-    options.includeConflicts = YES;
-
-    CBLStatus status;
-    CBL_RevisionList* revs = [db changesSinceSequence: [lastSequence longLongValue]
-                                              options: &options
-                                               filter: filter
-                                               params: _settings.filterParameters
-                                               status: &status];
+    NSError *error;
+    CBL_RevisionList* revs = [_db unpushedRevisionsSince: _lastSequence
+                                                  filter: _settings.filterBlock
+                                                  params: _settings.filterParameters
+                                                   error: &error];
     if (!revs)
-        self.error = CBLStatusToNSError(status);
+        self.error = error;
     return revs;
 }
+
 
 - (NSSet*) pendingDocIDs {
     CBL_RevisionList* revs = self.unpushedRevisions;
     return revs ? [NSSet setWithArray: revs.allDocIDs] : nil;
-
 }
 
 

@@ -321,7 +321,9 @@
             newStatus = kCBLReplicatorIdle;
             if (!_settings.continuous) {
                 LogTo(Sync, @"%@: SyncHandler went idle; closing connection...", self);
-                newStatus = kCBLReplicatorStopped;
+                // Keep the previous status. After the sync connection is closed,
+                // the status will be updated to kCBLReplicatorStopped:
+                newStatus = self.status;
                 [_sync close];
             }
             break;
