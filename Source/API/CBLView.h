@@ -105,6 +105,10 @@ FOUNDATION_EXTERN id CBLTextKey(NSString* text);
 /** The last sequence number indexed so far. */
 @property (readonly) SInt64 lastSequenceIndexed;
 
+/** Total number of rows in the view. The view's index will be updated if needed before returning
+    the totalRows value. */
+@property (readonly) NSUInteger totalRows;
+
 /** Deletes the view's persistent index. It will be regenerated on the next query. */
 - (void) deleteIndex;
 
