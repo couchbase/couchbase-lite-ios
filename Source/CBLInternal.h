@@ -138,7 +138,9 @@
                          value: (id)value
                        storage: (id<CBL_QueryRowStorage>)storage;
 @property (copy) NSString* snippet;
+@property float relevance;
 - (void) addTerm: (NSUInteger)term atRange: (NSRange)range;
+- (BOOL) containsAllTerms: (NSUInteger)termCount;
 @end
 
 

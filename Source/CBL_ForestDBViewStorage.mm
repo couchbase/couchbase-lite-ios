@@ -203,6 +203,17 @@ private:
 @synthesize delegate=_delegate, name=_name;
 
 
++ (void) initialize {
+    if (self == [CBL_ForestDBViewStorage class]) {
+        NSString* stemmer = CBLStemmerNameForCurrentLocale();
+        if (stemmer) {
+            Tokenizer::defaultStemmer = stemmer.UTF8String;
+            Tokenizer::defaultRemoveDiacritics = $equal(stemmer, @"english");
+        }
+    }
+}
+
+
 + (NSString*) fileNameToViewName: (NSString*)fileName {
     if (![fileName.pathExtension isEqualToString: kViewIndexPathExtension])
         return nil;
@@ -768,15 +779,17 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     }
 
     NSMutableArray* result = $marray();
+    std::vector<size_t> termTotalCounts;
     @autoreleasepool {
         // Tokenize the query string:
         LogTo(QueryVerbose, @"Full-text search for \"%@\":", options.fullTextQuery);
         std::vector<std::string> queryTokens;
         std::vector<KeyRange> collatableKeys;
-        Tokenizer tokenizer("en", true);
+        Tokenizer tokenizer;
         for (TokenIterator i(tokenizer, nsstring_slice(options.fullTextQuery), true); i; ++i) {
             collatableKeys.push_back(Collatable(i.token()));
             queryTokens.push_back(i.token());
+            termTotalCounts.push_back(0);
             LogTo(QueryVerbose, @"    token: \"%s\"", i.token().c_str());
         }
 
@@ -785,11 +798,10 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         *outStatus = kCBLStatusOK;
         DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
         for (IndexEnumerator e = IndexEnumerator(index, collatableKeys, forestOpts); e.next(); ) {
-            std::string token;
-            unsigned fullTextID;
-            size_t wordStart, wordLength;
-            e.getTextToken(token, wordStart, wordLength, fullTextID);
+            std::string token = e.textToken();
             NSString* docID = (NSString*)e.docID();
+            unsigned fullTextID;
+            std::vector<size_t> matches = e.getTextTokenInfo(fullTextID);
 
             id key = fullTextID > 0 ? @[docID, @(fullTextID)] : docID;
             CBLFullTextQueryRow* row = docRows[key];
@@ -808,12 +820,38 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 
             auto termIndex = std::find(queryTokens.begin(), queryTokens.end(), token)
                                 - queryTokens.begin();
-            [row addTerm: termIndex atRange: NSMakeRange(wordStart, wordLength)];
-            if (row.matchCount == queryTokens.size()) {
-                // Row must contain _all_ the search terms to be a hit
-                [result addObject: row];
+
+            size_t nMatches = matches.size() / 2;
+            for (size_t i = 0; i < nMatches; ++i) {
+                [row addTerm: termIndex atRange: NSMakeRange(matches[2*i], matches[2*i+1])];
             }
+            termTotalCounts[termIndex] += nMatches;
         };
+
+        // Only keep the rows that contain each term in the query (implicit AND):
+        [docRows enumerateKeysAndObjectsUsingBlock:^(id key, CBLFullTextQueryRow* row, BOOL *stop) {
+            if ([row containsAllTerms: queryTokens.size()])
+                [result addObject: row];
+        }];
+    }
+
+    if (options->fullTextRanking) {
+        // Compute relevance of each row:
+        for (CBLFullTextQueryRow* row in result) {
+            double relevance = 0.0;
+            NSUInteger matchCount = row.matchCount;
+            for (NSUInteger i = 0; i < matchCount; i++) {
+                NSUInteger termIndex = [row termIndexOfMatch: i];
+                relevance += 1.0 / termTotalCounts[termIndex];
+            }
+            row.relevance = (float)relevance;
+        }
+        // Sort by descending relevance:
+        [result sortUsingComparator: ^NSComparisonResult(CBLFullTextQueryRow *a,
+                                                         CBLFullTextQueryRow *b) {
+            float diff = a.relevance - b.relevance;
+            return diff<0.0 ? NSOrderedDescending : (diff==0.0 ? NSOrderedSame : NSOrderedAscending);
+        }];
     }
 
     NSEnumerator* rowEnum = result.objectEnumerator;

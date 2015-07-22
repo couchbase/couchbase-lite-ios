@@ -21,6 +21,24 @@
 static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUInteger byteEnd);
 
 
+@interface CBLFTSMatch : NSObject
+{
+    @public
+    NSUInteger term;
+    NSRange textRange;
+}
+@end
+
+@implementation CBLFTSMatch
+
+- (NSComparisonResult) compare: (CBLFTSMatch*)other {
+    return (NSInteger)textRange.location - (NSInteger)other->textRange.location;
+}
+
+@end
+
+
+
 @implementation CBLQuery (FullTextSearch)
 
 - (NSString*) fullTextQuery                         {return _fullTextQuery;}
@@ -33,14 +51,15 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 @end
 
 
+
 @implementation CBLFullTextQueryRow
 {
     UInt64 _fullTextID;
     NSString* _snippet;
-    NSMutableArray* _matchOffsets;
+    NSMutableArray* _matches;
 }
 
-@synthesize snippet=_snippet;
+@synthesize snippet=_snippet, relevance=_relevance;
 
 - (instancetype) initWithDocID: (NSString*)docID
                       sequence: (SequenceNumber)sequence
@@ -52,17 +71,42 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
                   docRevision: nil storage: storage];
     if (self) {
         _fullTextID = fullTextID;
-        _matchOffsets = [[NSMutableArray alloc] initWithCapacity: 4];
+        _matches = [[NSMutableArray alloc] initWithCapacity: 4];
     }
     return self;
 }
 
 - (void) addTerm: (NSUInteger)term atRange: (NSRange)range {
-    [_matchOffsets addObject: @"?"]; //FIX
-    [_matchOffsets addObject: @(term)];
-    [_matchOffsets addObject: @(range.location)];
-    [_matchOffsets addObject: @(range.length)];
+    CBLFTSMatch* match = [CBLFTSMatch new];
+    match->term = term;
+    match->textRange = range;
+    [_matches addObject: match];
 }
+
+
+- (BOOL) containsAllTerms: (NSUInteger)termCount {
+    if (termCount == 1)
+        return YES;
+    BOOL result = NO;
+    if (self.matchCount >= termCount) {
+        CFMutableBitVectorRef seen = CFBitVectorCreateMutable(NULL, termCount);
+        NSUInteger termsSeen = 0;
+        for (CBLFTSMatch* match in _matches) {
+            if (!CFBitVectorGetBitAtIndex(seen, match->term)) {
+                if (++termsSeen == termCount) {
+                    result = YES;
+                    break;
+                }
+                CFBitVectorSetBitAtIndex(seen, match->term, 1);
+            }
+        }
+        CFRelease(seen);
+    }
+    if (result)
+        [_matches sortUsingSelector: @selector(compare:)];
+    return result;
+}
+
 
 - (NSData*) fullTextUTF8Data {
     return [self.storage fullTextForDocument: self.documentID
@@ -78,16 +122,17 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 }
 
 - (NSUInteger) matchCount {
-    return _matchOffsets.count / 4;
+    return _matches.count;
 }
 
 - (NSUInteger) termIndexOfMatch: (NSUInteger)matchNumber {
-    return [_matchOffsets[4*matchNumber + 1] unsignedIntegerValue];
+    return ((CBLFTSMatch*)_matches[matchNumber])->term;
 }
 
 - (NSRange) textRangeOfMatch: (NSUInteger)matchNumber {
-    NSUInteger byteStart  = [_matchOffsets[4*matchNumber + 2] unsignedIntegerValue];
-    NSUInteger byteLength = [_matchOffsets[4*matchNumber + 3] unsignedIntegerValue];
+    CBLFTSMatch* match = _matches[matchNumber];
+    NSUInteger byteStart  = match->textRange.location;
+    NSUInteger byteLength = match->textRange.length;
     NSData* rawText = self.fullTextUTF8Data;
     return NSMakeRange(utf8BytesToChars(rawText.bytes, 0, byteStart),
                        utf8BytesToChars(rawText.bytes, byteStart, byteStart + byteLength));
@@ -115,11 +160,11 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
         [dict removeObjectForKey: @"key"];
         if (_snippet)
             dict[@"snippet"] = [self snippetWithWordStart: @"[" wordEnd: @"]"];
-        if (_matchOffsets) {
+        if (_matches) {
             NSMutableArray* matches = [[NSMutableArray alloc] init];
-            for (NSUInteger i = 0; i < _matchOffsets.count; i += 4) {
-                NSRange r = [self textRangeOfMatch: i/4];
-                [matches addObject: @{@"term": _matchOffsets[i+1],
+            for (NSUInteger i = 0; i < _matches.count; ++i) {
+                NSRange r = [self textRangeOfMatch: i];
+                [matches addObject: @{@"term": @([self termIndexOfMatch: i]),
                                       @"range": @[@(r.location), @(r.length)]}];
             }
             dict[@"matches"] = matches;

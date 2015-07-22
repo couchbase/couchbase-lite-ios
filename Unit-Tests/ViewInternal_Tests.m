@@ -1199,10 +1199,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     if (row.matchCount >= 2u) {
         Assert(NSEqualRanges([row textRangeOfMatch: 0], NSMakeRange(2, 3)));  // first "dog"
         Assert(NSEqualRanges([row textRangeOfMatch: 1], NSMakeRange(12, 4))); // "ñame"
-        // SQlite's fts4 will report a 3rd match, the second occurrance of "dog",
-        // but our homegrown ForestDB matcher only reports the 1st instance of a term.
-        if (row.matchCount >= 3u)
-            Assert(NSEqualRanges([row textRangeOfMatch: 2], NSMakeRange(22, 3))); // "Dog"
+        Assert(NSEqualRanges([row textRangeOfMatch: 2], NSMakeRange(22, 3))); // "Dog"
     }
 
     // Now delete a document:
@@ -1222,7 +1219,41 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test24_FullTextQuery_Advanced {
+- (void) test24_FullTextRanking {
+    RequireTestCase(Query);
+
+    // Text by Cicero's "de Finibus Bonorum et Malorum", copied from http://www.lipsum.com/
+    NSMutableArray* docs = $marray();
+    [docs addObject: [self putDoc: $dict({@"_id", @"11111"}, {@"text", @"But I must explain to you how all this mistaken idea of denouncing pleasure and praising pain was born and I will give you a complete account of the system, and expound the actual teachings of the great explorer of the truth, the master-builder of human happiness."})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"22222"}, {@"text", @"No one rejects, dislikes, or avoids pleasure itself, because it is pleasure, but because those who do not know how to pursue pleasure rationally encounter consequences that are extremely painful."})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"33333"}, {@"text", @"Nor again is there anyone who loves or pursues or desires to obtain pain of itself, because it is pain, but because occasionally circumstances occur in which toil and pain can procure him some great pleasure."})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"44444"}, {@"text", @"To take a trivial example, which of us ever undertakes laborious physical exercise, except to obtain some advantage from it? "})]];
+    [docs addObject: [self putDoc: $dict({@"_id", @"55555"}, {@"text", @"But who has any right to find fault with a man who chooses to enjoy a pleasure that has no annoying consequences, or one who avoids a pain that produces no resultant pleasure?"})]];
+
+    CBLView* view = [db viewNamed: @"fts"];
+    [view setMapBlock: MAPBLOCK({
+        if (doc[@"text"])
+            emit(CBLTextKey(doc[@"text"]), doc[@"_id"]);
+    }) reduceBlock: NULL version: @"1"];
+
+    AssertEq([view updateIndex], kCBLStatusOK);
+
+    // Query the full-text index:
+    CBLQuery *query = [view createQuery];
+    query.fullTextQuery = @"pleasure pain";
+    query.fullTextRanking = YES;
+    NSArray* rows = [[query run: NULL] allObjects];
+    AssertEq(rows.count, 4u);
+
+    NSArray* matchDocIDs = @[@"33333", @"22222", @"55555", @"11111"];
+    for (NSUInteger i = 0; i < 3; i++) {
+        CBLFullTextQueryRow* row = rows[i];
+        AssertEqual(row.documentID, matchDocIDs[i]);
+    }
+}
+
+
+- (void) test25_FullTextQuery_Advanced {
     if (!self.isSQLiteDB)
         return; // Boolean operators and snippets are not available (yet) with ForestDB
 
@@ -1318,7 +1349,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
-- (void) test25_TotalDocs {
+- (void) test26_TotalDocs {
     // Create some docs
     NSArray* docs = [self putDocs];
     NSUInteger totalRows = [docs count];
