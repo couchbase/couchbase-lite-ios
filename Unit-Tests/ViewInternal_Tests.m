@@ -1242,6 +1242,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     CBLQuery *query = [view createQuery];
     query.fullTextQuery = @"pleasure pain";
     query.fullTextRanking = YES;
+    query.fullTextSnippets = YES;
     NSArray* rows = [[query run: NULL] allObjects];
     AssertEq(rows.count, 4u);
 
@@ -1249,6 +1250,11 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     for (NSUInteger i = 0; i < 3; i++) {
         CBLFullTextQueryRow* row = rows[i];
         AssertEqual(row.documentID, matchDocIDs[i]);
+        NSString* snippet = [row snippetWithWordStart: @"[" wordEnd: @"]"];
+        Log(@"Snippet #%lu = '%@'", (unsigned long)i, snippet);
+        // SQLite and ForestDB storage don't create exactly the same snippets,
+        // so just check that the snippet makes some minimal sense:
+        Assert([snippet containsString: @"[pleasure]"] || [snippet containsString: @"[pain"]);
     }
 }
 

@@ -142,14 +142,103 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 - (NSString*) snippetWithWordStart: (NSString*)wordStart
                            wordEnd: (NSString*)wordEnd
 {
-    if (!_snippet)
-        return nil;
-    NSMutableString* snippet = [_snippet mutableCopy];
-    [snippet replaceOccurrencesOfString: @"\001" withString: wordStart
-                                options:NSLiteralSearch range:NSMakeRange(0, snippet.length)];
-    [snippet replaceOccurrencesOfString: @"\002" withString: wordEnd
-                                options:NSLiteralSearch range:NSMakeRange(0, snippet.length)];
-    return snippet;
+    if (_snippet) {
+        NSMutableString* snippet = [_snippet mutableCopy];
+        [snippet replaceOccurrencesOfString: @"\001" withString: wordStart
+                                    options:NSLiteralSearch range:NSMakeRange(0, snippet.length)];
+        [snippet replaceOccurrencesOfString: @"\002" withString: wordEnd
+                                    options:NSLiteralSearch range:NSMakeRange(0, snippet.length)];
+        return snippet;
+    } else {
+        // Generate the snippet myself. This is pretty crude compared to SQLite's algorithm,
+        // which is described at http://sqlite.org/fts3.html#section_4_2
+        NSString* fullText = self.fullText;
+        if (!fullText)
+            return nil;
+
+        // Use an NSLinguisticTagger to tokenize the full text into a list of word char ranges:
+        NSLinguisticTagger* tagger = [[NSLinguisticTagger alloc] initWithTagSchemes:@[NSLinguisticTagSchemeTokenType] options: 0];
+        tagger.string = fullText;
+        NSArray* tokenRanges = nil;
+        [tagger tagsInRange: NSMakeRange(0, fullText.length)
+                     scheme: NSLinguisticTagSchemeTokenType
+                    options: NSLinguisticTaggerOmitPunctuation | NSLinguisticTaggerOmitWhitespace
+                                | NSLinguisticTaggerOmitOther
+                tokenRanges: &tokenRanges];
+        if (!tokenRanges)
+            return nil;
+
+        // Find the indexes (in tokenRanges) of the first and last match:
+        //FIX: It would be better to find a region that includes as many matches as possible.
+        NSUInteger start = [self textRangeOfMatch: 0].location;
+        NSUInteger end = NSMaxRange([self textRangeOfMatch: self.matchCount - 1]);
+        NSInteger startTokenIndex = -1, endTokenIndex = -1;
+        NSUInteger i = 0;
+        for (NSValue* rangeObj in tokenRanges) {
+            NSRange range = rangeObj.rangeValue;
+            if (startTokenIndex < 0 && range.location >= start)
+                startTokenIndex = i;
+            endTokenIndex = i;
+            if (NSMaxRange(range) >= end)
+                break;
+            i++;
+        }
+
+        // Try to get exactly the desired number of tokens in the snippet by adjusting start/end:
+        static const NSInteger kMaxTokens = 15;
+        NSInteger addTokens = kMaxTokens - (endTokenIndex-startTokenIndex+1);
+        if (addTokens > 0) {
+            startTokenIndex -= MIN(addTokens/2, startTokenIndex);
+            endTokenIndex = MIN(startTokenIndex + kMaxTokens, (NSInteger)tokenRanges.count - 1);
+            startTokenIndex = MAX(0, endTokenIndex - kMaxTokens);
+        } else {
+            endTokenIndex += addTokens;
+        }
+
+        if (startTokenIndex > 0)
+            --startTokenIndex;      // start the snippet one word before the first match
+
+        // Update the snippet character range to the ends of the tokens:
+        NSString *prefix = @"", *suffix = @"";
+        if (startTokenIndex > 0) {
+            start = [tokenRanges[startTokenIndex] rangeValue].location;
+            prefix = @"…";
+        } else {
+            start = 0;
+        }
+        if ((NSUInteger)endTokenIndex < tokenRanges.count - 1) {
+            end = NSMaxRange([tokenRanges[endTokenIndex] rangeValue]);
+            suffix = @"…";
+        } else {
+            end = fullText.length;
+        }
+
+        NSMutableString *snippet = [[fullText substringWithRange: NSMakeRange(start, end-start)]
+                                        mutableCopy];
+
+        // Wrap matches with caller-supplied strings:
+        if (wordStart || wordEnd) {
+            NSInteger delta = -start;
+            for (NSUInteger i = 0; i < self.matchCount; i++) {
+                NSRange range = [self textRangeOfMatch: i];
+                if (range.location >= start && NSMaxRange(range) <= end) {
+                    if (wordStart) {
+                        [snippet insertString: wordStart atIndex: range.location + delta];
+                        delta += wordStart.length;
+                    }
+                    if (wordEnd) {
+                        [snippet insertString: wordEnd atIndex: NSMaxRange(range) + delta];
+                        delta += wordEnd.length;
+                    }
+                }
+            }
+        }
+
+        // Add ellipses at start/end if necessary:
+        [snippet insertString: prefix atIndex: 0];
+        [snippet appendString: suffix];
+        return snippet;
+    }
 }
 
 
