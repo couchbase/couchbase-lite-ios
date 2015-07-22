@@ -128,7 +128,10 @@ static id fromJSON( NSData* json ) {
         if ([value isKindOfClass: [NSData class]]) {
             // _value may start out as unparsed Collatable data
             id<CBL_QueryRowStorage> storage = _storage;
-            Assert(storage);
+            if (!storage) {
+                Warn(@"CBLQueryRow.value: cannot get the value, the database is gone");
+                return nil;
+            }
             if ([storage rowValueIsEntireDoc: _value]) {
                 // Value is a placeholder ("*") denoting that the map function emitted "doc" as
                 // the value. So load the body of the revision now:
