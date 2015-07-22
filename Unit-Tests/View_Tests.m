@@ -1048,4 +1048,28 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
 }
 
 
+- (void) test21_TotalRows {
+    CBLView* view = [db viewNamed: @"vu"];
+    Assert(view);
+    [view setMapBlock: MAPBLOCK({
+        emit(doc[@"sequence"], nil);
+    }) version: @"1"];
+    Assert(view.mapBlock != nil);
+    AssertEq(view.totalRows, 0u);
+
+    // Add 20 documents:
+    [self createDocuments: 20];
+    Assert(view.stale);
+    AssertEq(view.totalRows, 20u);
+    Assert(!view.stale);
+
+    // Add another 20 documents, query, and check totalRows:
+    [self createDocuments: 20];
+    CBLQuery* query = [view createQuery];
+    CBLQueryEnumerator* rows = [query run: NULL];
+    AssertEq(rows.count, 40u);
+    AssertEq(view.totalRows, 40u);
+}
+
+
 @end

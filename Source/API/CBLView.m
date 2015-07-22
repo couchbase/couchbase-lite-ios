@@ -324,6 +324,7 @@ static id<CBLViewCompiler> sCompiler;
 
 
 - (NSUInteger) totalRows {
+    [self updateIndex];
     return _storage.totalRows;
 }
 
