@@ -134,6 +134,7 @@ static BOOL makeTrusted(SecTrustRef trust) {
         return NO;
     SecTrustResultType result;
     SecTrustSetExceptions(trust, exception);
+    CFRelease(exception);
     SecTrustEvaluate(trust, &result);
     return YES;
 }
