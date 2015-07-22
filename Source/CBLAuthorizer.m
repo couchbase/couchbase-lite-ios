@@ -101,7 +101,9 @@ static BOOL acceptProblems(SecTrustRef trust, NSString* host) {
     NSArray* detailsArray = resultDict[@"TrustResultDetails"];
     NSUInteger i = 0;
     for (NSDictionary* details in detailsArray) {
+        // Each item in detailsArray corresponds to one certificate in the chain.
         for (NSString* problem in details) {
+            // Check each problem with this cert and decide if it's acceptable:
             BOOL accept = NO;
             if ([problem isEqualToString: @"SSLHostname"] ||
                         [problem isEqualToString: @"AnchorTrusted"])
@@ -109,6 +111,13 @@ static BOOL acceptProblems(SecTrustRef trust, NSString* host) {
                 // Accept a self-signed cert from a local host (".local" domain)
                 accept = (i == 0 && SecTrustGetCertificateCount(trust) == 1 && localDomain);
             }
+#if !TARGET_OS_IPHONE
+            else if ([problem isEqualToString: @"StatusCodes"]) {
+                // Same thing, but on Mac they express the problem differently :-p
+                if ([details[problem] isEqual: @[@(CSSMERR_APPLETP_HOSTNAME_MISMATCH)]])
+                    accept = (i == 0 && SecTrustGetCertificateCount(trust) == 1 && localDomain);
+            }
+#endif
             if (!accept)
                 return NO;
         }
