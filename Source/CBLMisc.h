@@ -111,6 +111,9 @@ NSURL* CBLAppendToURL(NSURL* baseURL, NSString* toAppend) __attribute__((nonnull
 /** Changes a given query max key into one that also extends to any key it matches as a prefix. */
 id CBLKeyForPrefixMatch(id key, unsigned depth);
 
+/** Stemmer name to use for the sqlite3-unicodesn tokenizer, based on current locale's language. */
+NSString* CBLStemmerNameForCurrentLocale(void);
+
 #if DEBUG
 NSString* CBLPathToTestFile(NSString* name);
 NSData* CBLContentsOfTestFile(NSString* name);

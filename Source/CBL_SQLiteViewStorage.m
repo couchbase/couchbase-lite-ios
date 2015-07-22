@@ -152,12 +152,20 @@
         Warn(@"Can't index full text: SQLite isn't built with FTS3 or FTS4 module");
         return NO;
     }
-    NSString* sql = @"\
-        CREATE VIRTUAL TABLE IF NOT EXISTS fulltext USING fts4(content, tokenize=unicodesn);\
+
+    // Derive the stemmer language name based on the current locale's language.
+    NSString* stemmerName = CBLStemmerNameForCurrentLocale();
+    NSString* stemmer = @"";
+    if (stemmerName)
+        stemmer = $sprintf(@"\"stemmer=%@\"", stemmerName);
+
+    NSString* sql = $sprintf(@"\
+        CREATE VIRTUAL TABLE IF NOT EXISTS fulltext \
+            USING fts4(content, tokenize=unicodesn %@);\
         CREATE INDEX IF NOT EXISTS  'maps_#_by_fulltext' ON 'maps_#'(fulltext_id); \
         CREATE TRIGGER IF NOT EXISTS 'del_maps_#_fulltext' \
             DELETE ON 'maps_#' WHEN old.fulltext_id not null BEGIN \
-                DELETE FROM fulltext WHERE rowid=old.fulltext_id| END";
+                DELETE FROM fulltext WHERE rowid=old.fulltext_id| END", stemmer);
     //OPT: Would be nice to use partial indexes but that requires SQLite 3.8 and makes
     // the db file only readable by SQLite 3.8+, i.e. the file would not be portable to
     // iOS 8 which only has SQLite 3.7 :(
