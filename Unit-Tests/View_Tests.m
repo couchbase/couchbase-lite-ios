@@ -1072,4 +1072,61 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
 }
 
 
+- (void) test22_MapFn_Conflicts {
+    CBLView* view = [db viewNamed: @"vu"];
+    Assert(view);
+    [view setMapBlock: MAPBLOCK({
+        // NSLog(@"%@", doc);
+        emit(doc[@"_id"], doc[@"_conflicts"]);
+    }) version: @"1"];
+    Assert(view.mapBlock != nil);
+
+    CBLDocument* doc = [self createDocumentWithProperties: @{@"foo": @"bar"}];
+    CBLSavedRevision* rev1 = doc.currentRevision;
+    NSMutableDictionary* properties = doc.properties.mutableCopy;
+    properties[@"tag"] = @"1";
+    NSError* error;
+    CBLSavedRevision* rev2a = [doc putProperties: properties error: &error];
+    Assert(rev2a);
+
+    // No conflicts:
+    CBLQuery* query = [view createQuery];
+    CBLQueryEnumerator* rows = [query run: NULL];
+    AssertEq(rows.count, 1u);
+    CBLQueryRow* row = [rows rowAtIndex: 0];
+    AssertEqual(row.key, doc.documentID);
+    AssertNil(row.value);
+
+    // Create a conflict revision:
+    properties = rev1.properties.mutableCopy;
+    properties[@"tag"] = @"2";
+    CBLUnsavedRevision* newRev = [rev1 createRevision];
+    newRev.properties = properties;
+    CBLSavedRevision* rev2b = [newRev saveAllowingConflict: &error];
+    Assert(rev2b);
+
+    rows = [query run: NULL];
+    AssertEq(rows.count, 1u);
+    row = [rows rowAtIndex: 0];
+    AssertEqual(row.key, doc.documentID);
+    NSArray* conflicts = @[rev2a.revisionID];
+    AssertEqual(row.value, conflicts);
+
+    // Create another conflict revision:
+    properties = rev1.properties.mutableCopy;
+    properties[@"tag"] = @"3";
+    newRev = [rev1 createRevision];
+    newRev.properties = properties;
+    CBLSavedRevision* rev2c = [newRev saveAllowingConflict: &error];
+    Assert(rev2c);
+
+    rows = [query run: NULL];
+    AssertEq(rows.count, 1u);
+    row = [rows rowAtIndex: 0];
+    AssertEqual(row.key, doc.documentID);
+    conflicts = @[rev2b.revisionID, rev2a.revisionID];
+    AssertEqual(row.value, conflicts);
+}
+
+
 @end

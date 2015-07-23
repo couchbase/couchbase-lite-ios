@@ -16,7 +16,8 @@
 
 @implementation View_Benchmarks
 
-- (void) benchmarkIndexingWithDocTypeOptimization: (BOOL)optimize {
+- (void) benchmarkIndexingWithDocTypeOptimization: (BOOL)optimize conflicts: (BOOL)conflicts
+{
     [db inTransaction:^BOOL{
         for (NSUInteger i = 0; i < 5000; i++) {
             NSString* type = (i % 10 == 0) ? @"INTP" : @"ESFJ";
@@ -26,7 +27,21 @@
                 id value = @(random());
                 props[key] = value;
             }
-            [self createDocumentWithProperties: props];
+
+            CBLDocument* doc = [self createDocumentWithProperties: props];
+            
+            if (conflicts) {
+                static const NSUInteger kNConflicts = 10;
+                CBLSavedRevision* rev = doc.currentRevision;
+                for (NSUInteger i = 0; i < kNConflicts; i++) {
+                    CBLUnsavedRevision* newRev = [rev createRevision];
+                    NSMutableDictionary* props = [rev.properties mutableCopy];
+                    NSString* key = $sprintf(@"%lx", random());
+                    props[key] = @(random());
+                    newRev.properties = props;
+                    [newRev saveAllowingConflict: NULL];
+                }
+            }
         }
         return YES;
     }];
@@ -38,7 +53,7 @@
         if ([doc[@"type"] isEqualToString: @"INTP"])
             emit(doc[@"i"], nil);
     }) version: @"1"];
-    
+
     if (optimize)
         intpView.documentType = @"INTP";
 
@@ -48,24 +63,34 @@
     }];
 }
 
-- (void)testDocType_SQLite {
+- (void) testDocType_SQLite {
     if (self.isSQLiteDB)
-        [self benchmarkIndexingWithDocTypeOptimization: NO];
+        [self benchmarkIndexingWithDocTypeOptimization: NO conflicts: NO];
 }
 
-- (void)testDocType_SQLite_Optimized {
+- (void) testDocType_SQLite_Optimized {
     if (self.isSQLiteDB)
-        [self benchmarkIndexingWithDocTypeOptimization: YES];
+        [self benchmarkIndexingWithDocTypeOptimization: YES conflicts: NO];
 }
 
 - (void) testDocType_ForestDB {
     if (!self.isSQLiteDB)
-        [self benchmarkIndexingWithDocTypeOptimization: NO];
+        [self benchmarkIndexingWithDocTypeOptimization: NO conflicts: NO];
 }
 
 - (void) testDocType_ForestDB_Optimized {
     if (!self.isSQLiteDB)
-        [self benchmarkIndexingWithDocTypeOptimization: YES];
+        [self benchmarkIndexingWithDocTypeOptimization: YES conflicts: NO];
+}
+
+- (void)testDocWithConflicts_SQLite {
+    if (self.isSQLiteDB)
+        [self benchmarkIndexingWithDocTypeOptimization: NO conflicts: YES];
+}
+
+- (void)testDocWithConflicts_ForestDB {
+    if (!self.isSQLiteDB)
+        [self benchmarkIndexingWithDocTypeOptimization: NO conflicts: YES];
 }
 
 @end
