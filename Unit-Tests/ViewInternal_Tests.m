@@ -1362,8 +1362,10 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     
     // Create a view
     CBLView* view = [self createView];
-    AssertEq(view.totalRows, 0u);
+    AssertEq(view.currentTotalRows, 0u);
     AssertEq([view updateIndex], kCBLStatusOK);
+    Assert(!view.stale);
+    AssertEq(view.currentTotalRows, totalRows);
     AssertEq(view.totalRows, totalRows);
 
     // Create a conflict, won by the new revision:
@@ -1415,7 +1417,8 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     
     // Delete the index
     [view deleteIndex];
-    AssertEq(view.totalRows, 0u);
+    Assert(view.stale);
+    AssertEq(view.currentTotalRows, 0u);
 }
 
 

@@ -39,6 +39,9 @@ BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions
 
 - (void) close;
 
+/** Current total rows in the view. The index will not be updated when accessing this property. */
+@property (readonly) NSUInteger currentTotalRows;
+
 /** The map block alredy registered with the view. Unlike the public .mapBlock property, this
     will not look for a design document or compile a function therein. */
 @property (readonly) CBLMapBlock registeredMapBlock;

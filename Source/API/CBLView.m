@@ -323,9 +323,14 @@ static id<CBLViewCompiler> sCompiler;
 #pragma mark - QUERYING:
 
 
+- (NSUInteger) currentTotalRows {
+    return _storage.totalRows;
+}
+
+
 - (NSUInteger) totalRows {
     [self updateIndex];
-    return _storage.totalRows;
+    return [self currentTotalRows];
 }
 
 
