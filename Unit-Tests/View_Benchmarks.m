@@ -10,6 +10,8 @@
 #import "CBLView+Internal.h"
 
 
+#define TEST_DOCS_CONFLICTS 0
+
 @interface View_Benchmarks : CBLTestCaseWithDB
 @end
 
@@ -83,6 +85,8 @@
         [self benchmarkIndexingWithDocTypeOptimization: YES conflicts: NO];
 }
 
+#if TEST_DOCS_CONFLICTS
+
 - (void)testDocWithConflicts_SQLite {
     if (self.isSQLiteDB)
         [self benchmarkIndexingWithDocTypeOptimization: NO conflicts: YES];
@@ -92,5 +96,7 @@
     if (!self.isSQLiteDB)
         [self benchmarkIndexingWithDocTypeOptimization: NO conflicts: YES];
 }
+
+#endif
 
 @end

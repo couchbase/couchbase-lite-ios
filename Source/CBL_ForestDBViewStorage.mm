@@ -92,10 +92,14 @@ public:
                 const Revision* node = vdoc.currentRevision();
                 NSMutableDictionary* body = [CBLForestBridge bodyOfNode: node];
                 body[@"_local_seq"] = @(node->sequence);
-                NSArray* conflicts = [CBLForestBridge getCurrentRevisionIDs: vdoc];
-                if (conflicts.count > 1)
-                    body[@"_conflicts"] = [conflicts subarrayWithRange:
-                                           NSMakeRange(1, conflicts.count - 1)];
+
+                if (vdoc.hasConflict()) {
+                    NSArray* conflicts = [CBLForestBridge getCurrentRevisionIDs: vdoc];
+                    if (conflicts.count > 1)
+                        body[@"_conflicts"] = [conflicts subarrayWithRange:
+                                               NSMakeRange(1, conflicts.count - 1)];
+                }
+
                 LogTo(ViewVerbose, @"Mapping %@ rev %@", body.cbl_id, body.cbl_rev);
                 CocoaMappable mappable(cppDoc, body);
                 addMappable(mappable);
