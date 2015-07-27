@@ -46,6 +46,17 @@ using namespace forestdb;
 #define kCloseDelay 60.0
 
 
+static geohash::area geoRectToArea(CBLGeoRect rect) {
+    return geohash::area(geohash::coord(rect.min.y, rect.min.x),        // lat/lon order
+                         geohash::coord(rect.max.y, rect.max.x));
+}
+
+static CBLGeoRect areaToGeoRect(geohash::area area) {
+    return CBLGeoRect{{area.longitude.min, area.latitude.min},
+                      {area.longitude.max, area.latitude.max}};
+}
+
+
 #pragma mark - C++ MAP/REDUCE GLUE:
 
 
@@ -141,7 +152,7 @@ public:
                     if (text) {
                         emitText(text, value, doc, emitFn);
                     } else {
-                        emitGeo(specialKey.rect, value, doc, emitFn);
+                        emitGeo(specialKey, value, doc, emitFn);
                     }
                 } else if (key) {
                     LogTo(ViewVerbose, @"    emit(%@, %@)  to %@", toJSONStr(key), toJSONStr(value), viewName);
@@ -163,16 +174,13 @@ private:
     }
 
     // Geo-index a rectangle
-    void emitGeo(CBLGeoRect rect, id value, NSDictionary* doc, EmitFn& emitFn) {
-        geohash::area area(geohash::coord(rect.min.x, rect.min.y),
-                           geohash::coord(rect.max.x, rect.max.y));
-        Collatable collKey, collValue;
-        collKey << area.mid(); // HACK: Can only emit points for now
+    void emitGeo(CBLSpecialKey* geoKey, id value, NSDictionary* doc, EmitFn& emitFn) {
+        Collatable collValue;
         if (value == doc)
             collValue.addSpecial(); // placeholder for doc
         else if (value)
             collValue << value;
-        emitFn(collKey, collValue);
+        emitFn(geoRectToArea(geoKey.rect), slice(geoKey.geoJSONData), collValue);
     }
 
     // Emit a regular key/value pair
@@ -481,12 +489,13 @@ static NSString* viewNames(NSArray* views) {
         return nil;
     NSMutableArray* result = $marray();
 
-    IndexEnumerator e = [self _runForestQueryWithOptions: [CBLQueryOptions new]];
-    while (e.next()) {
-        [result addObject: $dict({@"key", CBLJSONString(e.key().readNSObject())},
-                                 {@"value", CBLJSONString(e.value().readNSObject())},
-                                 {@"seq", @(e.sequence())})];
+    IndexEnumerator *e = [self _runForestQueryWithOptions: [CBLQueryOptions new]];
+    while (e->next()) {
+        [result addObject: $dict({@"key", CBLJSONString(e->key().readNSObject())},
+                                 {@"value", CBLJSONString(e->value().readNSObject())},
+                                 {@"seq", @(e->sequence())})];
     }
+    delete e;
     return result;
 }
 #endif
@@ -496,7 +505,7 @@ static NSString* viewNames(NSArray* views) {
 
 
 /** Starts a view query, returning a CBForest enumerator. */
-- (IndexEnumerator) _runForestQueryWithOptions: (CBLQueryOptions*)options
+- (IndexEnumerator*) _runForestQueryWithOptions: (CBLQueryOptions*)options
 {
     Assert(_index); // caller MUST call -openIndex: first
     DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
@@ -506,21 +515,23 @@ static NSString* viewNames(NSArray* views) {
     forestOpts.descending = options->descending;
     forestOpts.inclusiveStart = options->inclusiveStart;
     forestOpts.inclusiveEnd = options->inclusiveEnd;
-    if (options.keys) {
+    if (options->bbox) {
+        return new GeoIndexEnumerator(_index, geoRectToArea(*options->bbox));
+    } else if (options.keys) {
         std::vector<KeyRange> collatableKeys;
         for (id key in options.keys)
             collatableKeys.push_back(Collatable(key));
-        return IndexEnumerator(_index,
-                               collatableKeys,
-                               forestOpts);
+        return new IndexEnumerator(_index,
+                                   collatableKeys,
+                                   forestOpts);
     } else {
         id endKey = CBLKeyForPrefixMatch(options.endKey, options->prefixMatchLevel);
-        return IndexEnumerator(_index,
-                               Collatable(options.startKey),
-                               nsstring_slice(options.startKeyDocID),
-                               Collatable(endKey),
-                               nsstring_slice(options.endKeyDocID),
-                               forestOpts);
+        return new IndexEnumerator(_index,
+                                   Collatable(options.startKey),
+                                   nsstring_slice(options.startKeyDocID),
+                                   Collatable(endKey),
+                                   nsstring_slice(options.endKeyDocID),
+                                   forestOpts);
     }
 }
 
@@ -542,25 +553,25 @@ static NSString* viewNames(NSArray* views) {
         options->skip = 0;
     }
 
-    __block IndexEnumerator e = [self _runForestQueryWithOptions: options];
+    __block std::auto_ptr<IndexEnumerator> e ([self _runForestQueryWithOptions: options]);
 
     *outStatus = kCBLStatusOK;
     return ^CBLQueryRow*() {
         try{
             if (limit-- == 0)
                 return nil;
-            while (e.next()) {
+            while (e->next()) {
                 CBL_Revision* docRevision = nil;
-                id key = e.key().readNSObject();
+                id key = e->key().readNSObject();
                 id value = nil;
-                NSString* docID = (NSString*)e.docID();
-                SequenceNumber sequence = e.sequence();
+                NSString* docID = (NSString*)e->docID();
+                SequenceNumber sequence = e->sequence();
 
                 if (options->includeDocs) {
                     NSDictionary* valueDict = nil;
                     NSString* linkedID = nil;
-                    if (e.value().peekTag() == CollatableReader::kMap) {
-                        value = e.value().readNSObject();
+                    if (e->value().peekTag() == CollatableReader::kMap) {
+                        value = e->value().readNSObject();
                         valueDict = $castIf(NSDictionary, value);
                         linkedID = valueDict.cbl_id;
                     }
@@ -579,16 +590,30 @@ static NSString* viewNames(NSArray* views) {
                 }
 
                 if (!value)
-                    value = e.value().data().copiedNSData();
+                    value = e->value().data().copiedNSData();
 
                 LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
                       _name, CBLJSONString(key), value, CBLJSONString(docID));
-                auto row = [[CBLQueryRow alloc] initWithDocID: docID
-                                                     sequence: sequence
-                                                          key: key
-                                                        value: value
-                                                  docRevision: docRevision
-                                                      storage: self];
+                CBLQueryRow* row;
+                if (options->bbox) {
+                    GeoIndexEnumerator* ge = (GeoIndexEnumerator*)e.get();
+                    CBLGeoRect bbox = areaToGeoRect(ge->keyBoundingBox());
+                    NSData* geoJSON = ge->keyGeoJSON().copiedNSData();
+                    row = [[CBLGeoQueryRow alloc] initWithDocID: docID
+                                                       sequence: sequence
+                                                    boundingBox: bbox
+                                                    geoJSONData: geoJSON
+                                                          value: value
+                                                    docRevision: docRevision
+                                                        storage: self];
+                } else {
+                    row = [[CBLQueryRow alloc] initWithDocID: docID
+                                                    sequence: sequence
+                                                         key: key
+                                                       value: value
+                                                 docRevision: docRevision
+                                                     storage: self];
+                }
                 if (filter) {
                     if (!filter(row))
                         continue;
@@ -643,14 +668,14 @@ static NSString* viewNames(NSArray* views) {
 
     if (![self openIndex: outStatus])
         return nil;
-    __block IndexEnumerator e = [self _runForestQueryWithOptions: options];
+    __block std::auto_ptr<IndexEnumerator> e([self _runForestQueryWithOptions: options]);
 
     *outStatus = kCBLStatusOK;
     return ^CBLQueryRow*() {
         try {
             CBLQueryRow* row = nil;
             do {
-                id key = e.next() ? e.key().readNSObject() : nil;
+                id key = e->next() ? e->key().readNSObject() : nil;
                 if (lastKey && (!key || (group && !groupTogether(lastKey, key, groupLevel)))) {
                     // key doesn't match lastKey; emit a grouped/reduced row for what came before:
                     row = [[CBLQueryRow alloc] initWithDocID: nil
@@ -670,12 +695,12 @@ static NSString* viewNames(NSArray* views) {
                 if (key && reduce) {
                     // Add this key/value to the list to be reduced:
                     [keysToReduce addObject: key];
-                    CollatableReader collatableValue = e.value();
+                    CollatableReader collatableValue = e->value();
                     id value;
                     if (collatableValue.peekTag() == CollatableReader::kSpecial) {
                         CBLStatus status;
-                        CBL_Revision* rev = [_dbStorage getDocumentWithID: (NSString*)e.docID()
-                                                                 sequence: e.sequence()
+                        CBL_Revision* rev = [_dbStorage getDocumentWithID: (NSString*)e->docID()
+                                                                 sequence: e->sequence()
                                                                    status: &status];
                         if (!rev)
                             Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
@@ -804,7 +829,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         NSMutableDictionary* docRows = [[NSMutableDictionary alloc] init];
         *outStatus = kCBLStatusOK;
         DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
-        for (IndexEnumerator e = IndexEnumerator(index, collatableKeys, forestOpts); e.next(); ) {
+        for (IndexEnumerator e(index, collatableKeys, forestOpts); e.next(); ) {
             std::string token = e.textToken();
             NSString* docID = (NSString*)e.docID();
             unsigned fullTextID;

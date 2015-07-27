@@ -712,8 +712,6 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 - (void) test14_GeoQuery {
-    if (!self.isSQLiteDB)
-        return; //FIX: ForestDB doesn't support nontrivial geo queries (#485)
     RequireTestCase(CBLGeometry);
     RequireTestCase(Index);
     [self putGeoDocs];

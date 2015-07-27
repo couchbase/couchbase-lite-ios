@@ -37,8 +37,7 @@
     self = [super init];
     if (self) {
         _rect = (CBLGeoRect){point, point};
-        _geoJSONData = [CBLJSON dataWithJSONObject: CBLGeoPointToJSON(point) options: 0 error:NULL];
-        _geoJSONData = [NSData data]; // Empty _geoJSONData means the bbox is a point
+        // nil _geoJSONData means a point
     }
     return self;
 }
@@ -47,7 +46,7 @@
     self = [super init];
     if (self) {
         _rect = rect;
-        // Don't set _geoJSONData; if nil it defaults to the same as the bbox.
+        _geoJSONData = [NSData data]; // Empty _geoJSONData means a rect
     }
     return self;
 }
