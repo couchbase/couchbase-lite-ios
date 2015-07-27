@@ -407,7 +407,14 @@
                 NSString* docType = checkDocTypes ? [r stringForColumnIndex: 6] : nil;
 
                 // Skip rows with the same doc_id -- these are losing conflicts.
+                NSMutableArray* conflicts = nil;
                 while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == doc_id) {
+                    if (!deleted) {
+                        // Conflict revisions:
+                        if (!conflicts)
+                            conflicts = $marray();
+                        [conflicts addObject: [r stringForColumnIndex: 3]];
+                    }
                 }
 
                 SequenceNumber realSequence = sequence; // because sequence may be changed, below
@@ -416,8 +423,7 @@
                     CBL_FMResultSet* r2 = [fmdb executeQuery:
                                     @"SELECT revid, sequence FROM revs "
                                      "WHERE doc_id=? AND sequence<=? AND current!=0 AND deleted=0 "
-                                     "ORDER BY revID DESC "
-                                     "LIMIT 1",
+                                     "ORDER BY revID DESC",
                                     @(doc_id), @(minLastSequence)];
                     if (!r2) {
                         [r close];
@@ -445,6 +451,14 @@
                             json = [fmdb dataForQuery: @"SELECT json FROM revs WHERE sequence=?",
                                     @(sequence)];
                         }
+                        if (!deleted) {
+                            // Conflict revisions:
+                            if (!conflicts)
+                                conflicts = $marray();
+                            [conflicts addObject: oldRevID];
+                            while ([r2 next])
+                                [conflicts addObject: [r2 stringForColumnIndex:0]];
+                        }
                     }
                     [r2 close];
                 }
@@ -462,6 +476,9 @@
                     continue;
                 }
                 curDoc[@"_local_seq"] = @(sequence);
+
+                if (conflicts)
+                    curDoc[@"_conflicts"] = conflicts;
 
                 // Call the user-defined map() to emit new key/value pairs from this revision:
                 int i = -1;
