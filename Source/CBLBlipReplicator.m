@@ -59,6 +59,7 @@
 @synthesize sync=_sync, status=_status;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpointDocID=_remoteCheckpointDocID;
+@synthesize lastSequence=_lastSequence;
 
 
 + (BOOL) needsRunLoop {
@@ -149,7 +150,7 @@
 
 
 #if DEBUG
-@synthesize savingCheckpoint=_savingCheckpoint, active=_active, lastSequence=_lastSequence;
+@synthesize savingCheckpoint=_savingCheckpoint, active=_active;
 #endif
 
 

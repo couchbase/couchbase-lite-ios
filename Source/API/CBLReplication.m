@@ -403,7 +403,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                                                 toDatabase: nil
                                                     status: &status];
         if (!settings) {
-            Warn(@"Error parsing replicatior settings : %@", CBLStatusToNSError(status));
+            Warn(@"Error parsing replicator settings : %@", CBLStatusToNSError(status));
             return nil;
         }
 
