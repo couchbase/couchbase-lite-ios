@@ -172,8 +172,7 @@
 
 + (void) runTestCases {
 #if DEBUG
-    const char* argv[] = {"Test_All"};
-    RunTestCases(1, argv);
+    RunTestCases(1, {"Test_All"});
 #endif
 }
 

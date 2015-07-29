@@ -249,10 +249,12 @@ static CBLManager* sInstance;
                                                 error: &error];
     Assert(dbm, @"Failed to create db manager at %@: %@", path, error);
     AssertEqual(dbm.directory, path);
+#if MY_ENABLE_TESTS
     AfterThisTest(^{
         [dbm close];
         [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
     });
+#endif
     return dbm;
 }
 
@@ -710,8 +712,7 @@ static CBLManager* sInstance;
     CBLDatabase* db = _databases[name];
     if (!db) {
         if (![[self class] isValidDatabaseName: name]) {
-            if (outError)
-                *outError = CBLStatusToNSError(kCBLStatusBadID, nil);
+            CBLStatusToOutNSError(kCBLStatusBadID, outError);
             return nil;
         }
         db = [[CBLDatabase alloc] initWithPath: [self pathForDatabaseNamed: name]
@@ -719,8 +720,7 @@ static CBLManager* sInstance;
                                        manager: self
                                       readOnly: _options.readOnly];
         if (mustExist && !db.exists) {
-            if (outError)
-                *outError = CBLStatusToNSError(kCBLStatusNotFound, nil);
+            CBLStatusToOutNSError(kCBLStatusNotFound, outError);
             return nil;
         }
         _databases[name] = db;
