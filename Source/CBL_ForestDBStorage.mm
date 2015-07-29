@@ -22,6 +22,7 @@ extern "C" {
 #import "CBL_Attachment.h"
 #import "CBLBase64.h"
 #import "CBLMisc.h"
+#import "CBLSymmetricKey.h"
 #import "ExceptionUtils.h"
 }
 #import <CBForest/CBForest.hh>
@@ -109,9 +110,6 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
                 manager: (CBLManager*)manager
                   error: (NSError**)outError
 {
-    if (_delegate.encryptionKey)
-        return CBLStatusToOutNSError(kCBLStatusNotImplemented, outError);
-
     _directory = [directory copy];
     NSString* forestPath = [directory stringByAppendingPathComponent: kDBFilename];
     fdb_open_flags flags = readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE;
@@ -127,6 +125,14 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
         config.compactor_sleep_duration = (uint64_t)kAutoCompactInterval;
     } else {
         config.compaction_threshold = 0; // disables auto-compact
+    }
+
+    CBLSymmetricKey* encryptionKey = _delegate.encryptionKey;
+    if (encryptionKey) {
+        LogTo(CBLDatabase, @"Database is encrypted; setting CBForest encryption key");
+        AssertEq(encryptionKey.keyData.length, sizeof(config.encryptionKey));
+        config.encrypted = true;
+        memcpy(&config.encryptionKey, encryptionKey.keyData.bytes, sizeof(config.encryptionKey));
     }
 
     try {

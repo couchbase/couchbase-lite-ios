@@ -21,6 +21,7 @@ extern "C" {
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "ExceptionUtils.h"
+#import "CBLSymmetricKey.h"
 }
 #import <CBForest/CBForest.hh>
 #import <CBForest/GeoIndex.hh>
@@ -337,6 +338,15 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         config.wal_flush_before_commit = true;
         config.seqtree_opt = NO; // indexes don't need by-sequence ordering
         config.compaction_threshold = 50;
+
+        CBLSymmetricKey* encryptionKey = _dbStorage.delegate.encryptionKey;
+        if (encryptionKey) {
+            LogTo(CBLDatabase, @"Database is encrypted; setting CBForest encryption key");
+            AssertEq(encryptionKey.keyData.length, sizeof(config.encryptionKey));
+            config.encrypted = true;
+            memcpy(&config.encryptionKey, encryptionKey.keyData.bytes, sizeof(config.encryptionKey));
+        }
+
         try {
             _indexDB = new Database(_path.fileSystemRepresentation, config);
             Database* db = (Database*)_dbStorage.forestDatabase;

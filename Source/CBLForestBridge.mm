@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLForestBridge.h"
+#import <CBForest/Encryption/filemgr_ops_encrypted.h>
 
 using namespace forestdb;
 
@@ -171,6 +172,9 @@ CBLStatus CBLStatusFromForestDBStatus(int fdbStatus) {
             return kCBLStatusNotFound;
         case FDB_RESULT_RONLY_VIOLATION:
             return kCBLStatusForbidden;
+        case FDB_RESULT_NO_DB_HEADERS:
+        case FDB_RESULT_ENCRYPTION_ERROR:
+            return kCBLStatusUnauthorized;     // assuming db is encrypted
         case FDB_RESULT_CHECKSUM_ERROR:
         case FDB_RESULT_FILE_CORRUPTION:
         case error::CorruptRevisionData:
