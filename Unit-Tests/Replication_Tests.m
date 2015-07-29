@@ -124,14 +124,14 @@
                                                     name: CBLCookieStorageCookiesChangedNotification
                                                   object: nil];
 
-    Assert (expectedChangedCookies.count == _changedCookies.count);
+    AssertEq(expectedChangedCookies.count, _changedCookies.count);
     for (NSHTTPCookie* cookie in expectedChangedCookies)
         Assert([_changedCookies containsObject: cookie]);
 }
 
 
 - (void) replChanged: (NSNotification*)n {
-    Assert(n.object == _currentReplication, @"Wrong replication given to notification");
+    AssertEq(n.object, _currentReplication, @"Wrong replication given to notification");
     Log(@"Replication status=%u; completedChangesCount=%u; changesCount=%u",
         _currentReplication.status, _currentReplication.completedChangesCount, _currentReplication.changesCount);
     if (!_newReplicator) {
@@ -220,7 +220,7 @@
     NSError* error;
     __unused CBLSavedRevision *rev1 = [doc putProperties: @{@"dynamic":@1} error: &error];
     
-    Assert(!error);
+    AssertNil(error);
 
     unsigned char attachbytes[kAttSize];
     for(int i=0; i<kAttSize; i++) {
@@ -234,7 +234,7 @@
     
     [rev2 save:&error];
     
-    Assert(!error);
+    AssertNil(error);
     
     AssertEq(rev2.attachments.count, (NSUInteger)1);
     AssertEqual(rev2.attachmentNames, [NSArray arrayWithObject: @"attach"]);
@@ -261,7 +261,7 @@
     // save the updated document
     [doc putProperties: contents error: &error];
     
-    Assert(!error);
+    AssertNil(error);
     
     Log(@"Pushing 2...");
     repl = [db createPushReplication: remoteDbURL];
@@ -1064,9 +1064,9 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
                                  return pusher.status == kCBLReplicationStopped;
                              }];
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
-    Assert(!pusher.lastError);
-    Assert(pusher.completedChangesCount == 0);
-    Assert(pusher.changesCount == 0);
+    AssertNil(pusher.lastError);
+    AssertEq(pusher.completedChangesCount, 0u);
+    AssertEq(pusher.changesCount, 0u);
     Assert(![pusher isDocumentPending: doc]);
 }
 

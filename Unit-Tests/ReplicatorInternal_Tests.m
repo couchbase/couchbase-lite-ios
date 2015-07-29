@@ -228,7 +228,7 @@
                                       beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
             break;
     }
-    Assert(repl.status == kCBLReplicatorStopped);
+    AssertEq(repl.status, kCBLReplicatorStopped);
     Assert(!repl.savingCheckpoint);
     AssertNil(repl.error);
     Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
@@ -398,7 +398,7 @@
                                       beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
             break;
     }
-    Assert(repl.status == kCBLReplicatorStopped);
+    AssertEq(repl.status, kCBLReplicatorStopped);
     Assert(!repl.savingCheckpoint);
     AssertNil(repl.error);
     Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
@@ -684,10 +684,9 @@
             break;
         }
     }
-    Assert(repl.status == kCBLReplicatorStopped);
+    AssertEq(repl.status, kCBLReplicatorStopped);
     Assert(!repl.savingCheckpoint);
     if (expectError) {
-        Assert(repl.status == kCBLReplicatorStopped);
         Assert($equal(repl.error.domain, expectError.domain) && repl.error.code == expectError.code,
                @"\nUnexpected error %@\n  Expected error %@", repl.error, expectError);
         Log(@"...replicator got expected error %@", repl.error);
