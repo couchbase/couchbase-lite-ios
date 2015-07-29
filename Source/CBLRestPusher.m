@@ -86,12 +86,6 @@
 }
 
 
-- (NSSet*) pendingDocIDs {
-    CBL_RevisionList* revs = self.unpushedRevisions;
-    return revs ? [NSSet setWithArray: revs.allDocIDs] : nil;
-}
-
-
 - (void) beginReplicating {
     // If we're still waiting to create the remote db, do nothing now. (This method will be
     // re-invoked after that request finishes; see -maybeCreateRemoteDB above.)

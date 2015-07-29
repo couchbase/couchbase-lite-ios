@@ -87,7 +87,6 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 
 @optional
 @property (readonly) NSArray* activeTasksInfo;
-@property (readonly) NSSet* pendingDocIDs;
 
 @end
 

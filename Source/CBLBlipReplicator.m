@@ -137,18 +137,6 @@
 }
 
 
-- (NSSet*) pendingDocIDs {
-    CBLQueryEnumerator* e = _sync.pendingDocuments;
-    if (!e)
-        return nil;
-    NSMutableSet* docIDs = [NSMutableSet new];
-    for (CBLQueryRow* row in e) {
-        [docIDs addObject: row.documentID];
-    }
-    return docIDs;
-}
-
-
 #if DEBUG
 @synthesize savingCheckpoint=_savingCheckpoint, active=_active;
 #endif
