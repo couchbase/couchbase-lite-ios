@@ -97,8 +97,8 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
                 return nil;
             }
             self.possiblyEncodedLength = _data.length;
-        } else if ([attachInfo[@"stub"] isEqual: $true]) {
-            // This item is just a stub; validate and skip it
+        } else {
+            // Get the revpos:
             id revPosObj = attachInfo[@"revpos"];
             if (revPosObj) {
                 int revPos = [$castIf(NSNumber, revPosObj) intValue];
@@ -108,26 +108,19 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
                 }
                 self->revpos = (unsigned)revPos;
             }
-            return self; // skip
-        } else if ([attachInfo[@"follows"] isEqual: $true]) {
-            // I can't handle this myself; my caller will look it up from the digest
-            if (!_digest) {
+            if ([attachInfo[@"stub"] isEqual: $true]) {
+                // Stub with nothing else
+                return self;
+            } else if ([attachInfo[@"follows"] isEqual: $true]) {
+                // Attachment with _follows must have a digest to match with the MIME body
+                if (!_digest) {
+                    *outStatus = kCBLStatusBadAttachment;
+                    return nil;
+                }
+            } else {
                 *outStatus = kCBLStatusBadAttachment;
                 return nil;
             }
-            // #817: There could be a revpos set to a parent revision:
-            id revPosObj = attachInfo[@"revpos"];
-            if (revPosObj) {
-                int revPos = [$castIf(NSNumber, revPosObj) intValue];
-                if (revPos <= 0) {
-                    *outStatus = kCBLStatusBadAttachment;
-                    return nil;
-                }
-                self->revpos = (unsigned)revPos;
-            }
-        } else {
-            *outStatus = kCBLStatusBadAttachment;
-            return nil;
         }
     }
     return self;
