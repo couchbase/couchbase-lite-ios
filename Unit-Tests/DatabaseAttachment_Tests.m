@@ -484,6 +484,27 @@
 }
 
 
+- (void) test16_FollowWithRevpos {
+    NSDictionary* attachInfo = $dict({@"content_type", @"text/plain"},
+                                     {@"digest", @"md5-DaUdFsLh8FKLbcBIDlU57g=="},
+                                     {@"follows", @YES},
+                                     {@"length", @51200},
+                                     {@"revpos", @2});
+    CBLStatus status;
+    CBL_Attachment *attachment = [[CBL_Attachment alloc] initWithName: @"attachment"
+                                                                 info: attachInfo
+                                                               status: &status];
+    Assert(attachment);
+    Assert(status != kCBLStatusBadAttachment);
+    NSDictionary* stub = [attachment asStubDictionary];
+    AssertEqualish(stub, $dict({@"content_type", @"text/plain"},
+                               {@"digest", @"sha1-AAAAAAAAAAAAAAAAAAAAAAAAAAA="},
+                               {@"length", @51200},
+                               {@"revpos", @2},
+                               {@"stub", @YES}));
+}
+
+
 static NSDictionary* attachmentsDict(NSData* data, NSString* name, NSString* type, BOOL gzipped) {
     if (gzipped)
         data = [NSData gtm_dataByGzippingData: data];
