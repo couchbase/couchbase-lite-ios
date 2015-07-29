@@ -115,6 +115,16 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
                 *outStatus = kCBLStatusBadAttachment;
                 return nil;
             }
+            // #817: There could be a revpos set to a parent revision:
+            id revPosObj = attachInfo[@"revpos"];
+            if (revPosObj) {
+                int revPos = [$castIf(NSNumber, revPosObj) intValue];
+                if (revPos <= 0) {
+                    *outStatus = kCBLStatusBadAttachment;
+                    return nil;
+                }
+                self->revpos = (unsigned)revPos;
+            }
         } else {
             *outStatus = kCBLStatusBadAttachment;
             return nil;
