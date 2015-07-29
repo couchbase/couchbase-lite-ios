@@ -79,17 +79,26 @@ _CBLVersion
 .objc_class_name_CBL_MutableRevision
 .objc_class_name_CBL_Revision
 .objc_class_name_CBL_RevisionList
-
-.objc_class_name_CBL_Replicator
-.objc_class_name_CBL_Pusher
-.objc_class_name_CBL_Puller
-.objc_class_name_CBLFacebookAuthorizer
-.objc_class_name_CBLPersonaAuthorizer
-
-.objc_class_name_CBL_Server
+.objc_class_name_CBJSONEncoder
+.objc_class_name_CBLReachability
+.objc_class_name_CBLCookieStorage
 .objc_class_name_CBLMultipartDocumentReader
 .objc_class_name_CBLMultipartWriter
 
+.objc_class_name_CBLPasswordAuthorizer
+.objc_class_name_CBLFacebookAuthorizer
+.objc_class_name_CBLOAuth1Authorizer
+.objc_class_name_CBLPersonaAuthorizer
+.objc_class_name_CBLTokenAuthorizer
+
+.objc_class_name_CBL_Server
+.objc_class_name_CBL_Replicator
+.objc_class_name_CBL_Pusher
+.objc_class_name_CBL_Puller
+
+.objc_class_name_CBLLazyArrayOfJSON
+.objc_class_name_CBLSpecialKey
+.objc_class_name_CBL_Attachment
 .objc_class_name_CBL_GCDAsyncSocket
 .objc_class_name_CBL_WebSocket
 
@@ -122,6 +131,20 @@ _CBLStatusFromNSError
 _CBLURLWithoutQuery
 _CBLSequenceCompare
 _CBLGetReduceFunc
+_CBLQuoteString
+_CBLUnquoteString
+_CBLParseInteger
+_CBLMayBeTransientError
+_CBLIsOfflineError
+_CBLIsPermanentError
+_CBLHexSHA1Digest
+_CBLDataFromHex
+_CBLCreateUUID
+_CBLAppendToURL
+_CBLEscapeURLParam
+_CBLCompareRevIDs
+_CBLJSONString
+_CBLStatusToOutNSError
 
 _CBL_DatabaseChangesNotification
 _CBL_DatabaseWillCloseNotification
