@@ -1070,4 +1070,76 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     Assert(![pusher isDocumentPending: doc]);
 }
 
+
+- (void)test18_PendingDocumentIDs {
+    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+
+    // Push replication:
+    CBLReplication* repl = [db createPushReplication: remoteDbURL];
+    Assert(repl.pendingDocumentIDs != nil);
+    AssertEq(repl.pendingDocumentIDs.count, 0u);
+
+    [db inTransaction: ^BOOL{
+        for (int i = 1; i <= 10; i++) {
+            @autoreleasepool {
+                CBLDocument* doc = db[ $sprintf(@"doc-%d", i) ];
+                NSError* error;
+                [doc putProperties: @{@"index": @(i), @"bar": $false} error: &error];
+                AssertNil(error);
+            }
+        }
+        return YES;
+    }];
+
+    AssertEq(repl.pendingDocumentIDs.count, 10u);
+    Assert([repl isDocumentPending: [db documentWithID: @"doc-1"]]);
+
+    [repl start];
+    AssertEq(repl.pendingDocumentIDs.count, 10u);
+    Assert([repl isDocumentPending: [db documentWithID: @"doc-1"]]);
+
+    [self runReplication: repl expectedChangesCount: 10u];
+    Assert(repl.pendingDocumentIDs != nil);
+    AssertEq(repl.pendingDocumentIDs.count, 0u);
+    Assert(![repl isDocumentPending: [db documentWithID: @"doc-1"]]);
+
+    // Add another set of documents and create a new replicator:
+    [db inTransaction: ^BOOL{
+        for (int i = 11; i <= 20; i++) {
+            @autoreleasepool {
+                CBLDocument* doc = db[ $sprintf(@"doc-%d", i) ];
+                NSError* error;
+                [doc putProperties: @{@"index": @(i), @"bar": $false} error: &error];
+                AssertNil(error);
+            }
+        }
+        return YES;
+    }];
+
+    repl = [db createPushReplication: remoteDbURL];
+
+    AssertEq(repl.pendingDocumentIDs.count, 10u);
+    Assert([repl isDocumentPending: [db documentWithID: @"doc-11"]]);
+    Assert(![repl isDocumentPending: [db documentWithID: @"doc-1"]]);
+
+    [repl start];
+    AssertEq(repl.pendingDocumentIDs.count, 10u);
+    Assert([repl isDocumentPending: [db documentWithID: @"doc-11"]]);
+    Assert(![repl isDocumentPending: [db documentWithID: @"doc-1"]]);
+
+    // Pull replication:
+    repl = [db createPullReplication: remoteDbURL];
+    Assert(repl.pendingDocumentIDs == nil);
+
+    // Start and recheck:
+    [repl start];
+    Assert(repl.pendingDocumentIDs == nil);
+
+    [self runReplication: repl expectedChangesCount: 0u];
+    Assert(repl.pendingDocumentIDs == nil);
+}
+
 @end

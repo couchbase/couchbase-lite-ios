@@ -59,6 +59,7 @@
 @synthesize sync=_sync, status=_status;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpointDocID=_remoteCheckpointDocID;
+@synthesize lastSequence=_lastSequence;
 
 
 + (BOOL) needsRunLoop {
@@ -136,20 +137,8 @@
 }
 
 
-- (NSSet*) pendingDocIDs {
-    CBLQueryEnumerator* e = _sync.pendingDocuments;
-    if (!e)
-        return nil;
-    NSMutableSet* docIDs = [NSMutableSet new];
-    for (CBLQueryRow* row in e) {
-        [docIDs addObject: row.documentID];
-    }
-    return docIDs;
-}
-
-
 #if DEBUG
-@synthesize savingCheckpoint=_savingCheckpoint, active=_active, lastSequence=_lastSequence;
+@synthesize savingCheckpoint=_savingCheckpoint, active=_active;
 #endif
 
 
@@ -321,7 +310,9 @@
             newStatus = kCBLReplicatorIdle;
             if (!_settings.continuous) {
                 LogTo(Sync, @"%@: SyncHandler went idle; closing connection...", self);
-                newStatus = kCBLReplicatorStopped;
+                // Keep the previous status. After the sync connection is closed,
+                // the status will be updated to kCBLReplicatorStopped:
+                newStatus = self.status;
                 [_sync close];
             }
             break;

@@ -9,6 +9,7 @@
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 @protocol CBL_Replicator;
+@class CBL_ReplicatorSettings;
 
 
 @interface CBLDatabase (Replication)
@@ -42,5 +43,14 @@
 - (void) stopAndForgetReplicator: (id<CBL_Replicator>)repl;
 - (NSString*) lastSequenceWithCheckpointID: (NSString*)checkpointID;
 - (BOOL) setLastSequence: (NSString*)lastSequence withCheckpointID: (NSString*)checkpointID;
+
+/** Get the current last sequence for a given replicator settings */
+- (NSString*) lastSequenceForReplicator: (CBL_ReplicatorSettings*)settings;
+
+/** Get unpushed revisions for a replicator since a given sequence */
+- (CBL_RevisionList*) unpushedRevisionsSince: (NSString*)sequence
+                                      filter: (CBLFilterBlock)filter
+                                      params: (NSDictionary*)filterParams
+                                       error: (NSError**)outError;
 
 @end

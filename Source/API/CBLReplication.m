@@ -390,18 +390,41 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 #pragma mark - PUSH REPLICATION ONLY:
 
-
 - (NSSet*) pendingDocumentIDs {
-    if (!_pendingDocIDs && _started && !_pull) {
-        _pendingDocIDs = [self tellReplicatorAndWait: ^NSSet*(id<CBL_Replicator> bgReplicator) {
-            if ([_bg_replicator respondsToSelector: @selector(pendingDocIDs)])
-                return _bg_replicator.pendingDocIDs;
-            else
-                return nil;
-        }];
-    }
+    if (_pull || (_started && _pendingDocIDs))
+        return _pendingDocIDs;
+
+    _pendingDocIDs = [_database.manager.backgroundServer
+                      waitForDatabaseNamed: _database.name to: ^id(CBLDatabase* bgDb)
+    {
+        CBLStatus status;
+        CBL_ReplicatorSettings* settings =
+            [bgDb.manager replicatorSettingsWithProperties: self.properties
+                                                toDatabase: nil
+                                                    status: &status];
+        if (!settings) {
+            Warn(@"Error parsing replicator settings : %@", CBLStatusToNSError(status));
+            return nil;
+        }
+
+        NSString* lastSequence = _bg_replicator.lastSequence;
+        if (!lastSequence)
+            lastSequence = [bgDb lastSequenceForReplicator: settings];
+
+        NSError* error;
+        CBL_RevisionList* revs = [bgDb unpushedRevisionsSince: lastSequence
+                                                       filter: settings.filterBlock
+                                                       params: settings.filterParameters
+                                                        error: &error];
+        if (revs)
+            return [NSSet setWithArray: revs.allDocIDs];
+        else
+            Warn(@"Error getting unpushed revisions : %@", error);
+        return nil;
+    }];
     return _pendingDocIDs;
 }
+
 
 - (BOOL) isDocumentPending: (CBLDocument*)doc {
     return doc && [self.pendingDocumentIDs containsObject: doc.documentID];

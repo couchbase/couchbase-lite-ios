@@ -77,15 +77,16 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 /** Called by CBLDatabase to notify active replicators that it's about to close. */
 - (void) databaseClosing;
 
-#if DEBUG // for unit tests
+/** Current lastSequence tracked by the replicator. */
 @property (readonly) id lastSequence;
+
+#if DEBUG // for unit tests
 @property (readonly) BOOL active;
 @property (readonly) BOOL savingCheckpoint;
 #endif
 
 @optional
 @property (readonly) NSArray* activeTasksInfo;
-@property (readonly) NSSet* pendingDocIDs;
 
 @end
 

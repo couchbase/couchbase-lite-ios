@@ -8,7 +8,7 @@
 
 #import "CBLManager.h"
 #import "CBLStatus.h"
-@class CBLDatabase, CBL_Shared;
+@class CBLDatabase, CBL_Shared, CBL_ReplicatorSettings;
 @protocol CBL_Replicator;
 
 
@@ -37,5 +37,10 @@
 /** Creates a new CBL_Replicator, or returns an existing active one if it has the same properties. */
 - (id<CBL_Replicator>) replicatorWithProperties: (NSDictionary*)body
                                     status: (CBLStatus*)outStatus;
+
+/** Get a replicator settings from a given property. */
+- (CBL_ReplicatorSettings*) replicatorSettingsWithProperties: (NSDictionary*)body
+                                                  toDatabase: (CBLDatabase**)outDatabase // may be NULL
+                                                      status: (CBLStatus*)outStatus;
 
 @end

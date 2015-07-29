@@ -119,4 +119,40 @@ static NSString* checkpointInfoKey(NSString* checkpointID) {
 }
 
 
+- (NSString*) lastSequenceForReplicator: (CBL_ReplicatorSettings*)settings {
+    NSString* checkpointID = [settings remoteCheckpointDocIDForLocalUUID: self.privateUUID];
+    NSString* lastSequence = [self lastSequenceWithCheckpointID: checkpointID];
+    if (!lastSequence) {
+        NSDictionary* doc = [self getLocalCheckpointDocument];
+        NSString* importedUUID = doc[kCBLDatabaseLocalCheckpoint_LocalUUID];
+        if (importedUUID) {
+            checkpointID = [settings remoteCheckpointDocIDForLocalUUID: importedUUID];
+            lastSequence = [self lastSequenceWithCheckpointID: checkpointID];
+        }
+    }
+    return lastSequence;
+}
+
+
+- (CBL_RevisionList*) unpushedRevisionsSince: (NSString*)sequence
+                                      filter: (CBLFilterBlock)filter
+                                      params: (NSDictionary*)filterParams
+                                       error: (NSError**)outError
+{
+
+    // Include conflicts so all conflicting revisions are replicated too
+    CBLChangesOptions options = kDefaultCBLChangesOptions;
+    options.includeConflicts = YES;
+
+    CBLStatus status;
+    CBL_RevisionList* revs = [self changesSinceSequence: [sequence longLongValue]
+                                                options: &options
+                                                 filter: filter
+                                                 params: filterParams
+                                                 status: &status];
+    if (!revs)
+        CBLStatusToOutNSError(status, outError);
+    return revs;
+}
+
 @end
