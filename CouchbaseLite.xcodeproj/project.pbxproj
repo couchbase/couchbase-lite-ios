@@ -4676,6 +4676,7 @@
 					vendor/CBForest/CBForest/,
 					vendor/CBForest/vendor/forestdb/include/libforestdb/,
 					vendor/BLIP/BLIP/,
+					vendor/CBForest/CBForest/Encryption/,
 				);
 				INFOPLIST_FILE = "Unit-Tests/Info-UnitTests.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
@@ -4721,6 +4722,7 @@
 					vendor/CBForest/CBForest/,
 					vendor/CBForest/vendor/forestdb/include/libforestdb/,
 					vendor/BLIP/BLIP/,
+					vendor/CBForest/CBForest/Encryption/,
 				);
 				INFOPLIST_FILE = "Unit-Tests/Info-UnitTests.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
@@ -5391,12 +5393,17 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+				);
 				INFOPLIST_FILE = "Test-iOS/iOS Demo-Info.plist";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "CBL Test";
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -5418,6 +5425,10 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Test-iOS/iOS Demo-Prefix.pch";
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+				);
 				INFOPLIST_FILE = "Test-iOS/iOS Demo-Info.plist";
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = "-ObjC";
@@ -5425,6 +5436,7 @@
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "";
 				VALIDATE_PRODUCT = YES;
 				WRAPPER_EXTENSION = app;
 			};
