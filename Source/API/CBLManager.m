@@ -536,12 +536,12 @@ static CBLManager* sInstance;
     if (keyOrPassword) {
         if ([keyOrPassword isKindOfClass: [NSString class]]) {
             realKey = [[CBLSymmetricKey alloc] initWithPassword: keyOrPassword];
-        } else if (keyOrPassword) {
+        } else {
             Assert([keyOrPassword isKindOfClass: [NSData class]]);
             realKey = [[CBLSymmetricKey alloc] initWithKeyData: keyOrPassword];
+            if (!realKey)
+                return NO;
         }
-        if (!realKey)
-            return NO;
     }
     [self.shared setValue: realKey
                   forType: @"encryptionKey"
@@ -549,6 +549,31 @@ static CBLManager* sInstance;
           inDatabaseNamed: name];
     return YES;
 }
+
+
+#if !TARGET_OS_IPHONE
+- (BOOL) encryptDatabaseNamed: (NSString*)name {
+    NSString* dir = self.directory.stringByAbbreviatingWithTildeInPath;
+    NSString* itemName = $sprintf(@"%@ database in %@", name, dir);
+    NSError* error;
+    CBLSymmetricKey* key = [[CBLSymmetricKey alloc] initWithKeychainItemNamed: itemName
+                                                                        error: &error];
+    if (!key) {
+        if (error.code == errSecItemNotFound) {
+            key = [CBLSymmetricKey new];
+            if (![key saveKeychainItemNamed: itemName])
+                return NO;
+        } else {
+            return NO;
+        }
+    }
+    [self.shared setValue: key
+                  forType: @"encryptionKey"
+                     name: @""
+          inDatabaseNamed: name];
+    return YES;
+}
+#endif
 
 
 #if DEBUG

@@ -39,9 +39,15 @@ typedef NSMutableData* (^CBLCryptorBlock)(NSData* input);
 /** Creates an instance with a key derived from a password, using default salt and rounds. */
 - (instancetype) initWithPassword: (NSString*)password;
 
-
 /** Creates an instance from existing key data. */
 - (instancetype) initWithKeyData: (NSData*)keyData;
+
+/** Creates an instance with a key read from the Keychain. */
+- (instancetype) initWithKeychainItemNamed: (NSString*)itemName
+                                     error: (NSError**)outError;
+
+/** Saves a key to the Keychain under the given name. */
+- (BOOL) saveKeychainItemNamed: (NSString*)itemName;
 
 /** The SymmetricKey's key data; can be used to reconstitute it. */
 @property (readonly) NSData* keyData;

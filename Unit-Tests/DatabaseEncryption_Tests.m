@@ -164,4 +164,40 @@
 }
 
 
+- (void) test06_Keychain {
+#if !TARGET_OS_IPHONE
+    CBLEnableMockEncryption = YES;
+
+    // Create encrypted DB:
+    NSError* error;
+    Assert([dbmgr encryptDatabaseNamed: @"seekrit"], @"encryptDatabaseNamed failed");
+    __block CBLDatabase* seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
+    Assert(seekrit, @"Failed to create encrypted db: %@", error);
+    [self createDocumentWithProperties: @{@"answer": @42} inDatabase: seekrit];
+    Assert([seekrit close: NULL]);
+
+    // Try to reopen without the password (fails):
+    [self allowWarningsIn:^{
+        [dbmgr registerEncryptionKey: nil forDatabaseNamed: @"seekrit"];
+        NSError* error;
+        seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
+        AssertNil(seekrit, @"Shouldn't have been able to reopen encrypted db w/o password");
+        AssertEq(error.code, 401);
+
+        // Try to reopen with wrong password (fails):
+        [dbmgr registerEncryptionKey: @"wrong" forDatabaseNamed: @"seekrit"];
+        seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
+        AssertNil(seekrit, @"Shouldn't have been able to reopen encrypted db with wrong password");
+        AssertEq(error.code, 401);
+    }];
+
+    // Reopen with correct password:
+    Assert([dbmgr encryptDatabaseNamed: @"seekrit"], @"encryptDatabaseNamed failed");
+    seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
+    Assert(seekrit, @"Failed to reopen encrypted db: %@", error);
+    AssertEq(seekrit.documentCount, 1u);
+#endif
+}
+
+
 @end
