@@ -55,6 +55,12 @@ extern "C" {
 #define GCDAsyncSocketSSLProtocolVersionMax CBL_GCDAsyncSocketSSLProtocolVersionMax
 #define GCDAsyncSocketSSLProtocolVersionMin CBL_GCDAsyncSocketSSLProtocolVersionMin
 
+#define GCDAsyncSocketManuallyEvaluateTrust CBL_GCDAsyncSocketManuallyEvaluateTrust
+#define GCDAsyncSocketUseCFStreamForTLS     CBL_GCDAsyncSocketUseCFStreamForTLS
+#define GCDAsyncSocketSSLPeerID             CBL_GCDAsyncSocketSSLPeerID
+#define GCDAsyncSocketSSLSessionOptionFalseStart        CBL_GCDAsyncSocketSSLSessionOptionFalseStart
+#define GCDAsyncSocketSSLSessionOptionSendOneByteRecord CBL_GCDAsyncSocketSSLSessionOptionSendOneByteRecord
+
 // Rename the CocoaLumberjack classes to avoid collisions:
 #define DDLog                       CBL_DDLog
 #define DDLogMessage                CBL_DDLogMessage
