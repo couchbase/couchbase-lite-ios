@@ -74,14 +74,9 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
     NSUInteger _relationshipSearchDepth;
     NSCache* _relationshipCache;
     
-    // this struct stores the result of [self.delegate respondsToSelector:]
-    // once and for good instead of calling it each time before calling
-    // the actual methods. This is a good optimization (used by Apple, ie UITableView)
-    //when a method is called a lot.
-    // http://stackoverflow.com/questions/16434395/storing-ios-ui-component-internal-usage-flags
     struct {
-        unsigned int respondsToKeyValuesToAddToManagedObject:1;
-    } _flags;
+        unsigned int storeWillSaveDocument:1;
+    } _respondFlags;
 }
 
 @synthesize database = _database;
@@ -253,7 +248,7 @@ static CBLManager* sCBLManager;
 
     _fetchRequestResultCache = [[NSMutableDictionary alloc] init];
     _queryBuilderCache = [[NSCache alloc] init];
-    _flags.respondsToKeyValuesToAddToManagedObject = NO;
+    _respondFlags.storeWillSaveDocument = NO;
     
     self.conflictHandler = [self defaultConflictHandler];
 
@@ -261,8 +256,11 @@ static CBLManager* sCBLManager;
 }
 
 - (void)setDelegate:(id<CBLIncrementalStoreDelegate>)delegate {
-    _delegate = delegate;
-    _flags.respondsToKeyValuesToAddToManagedObject = [self.delegate respondsToSelector:@selector(keyValuesToAddToManagedObject:)];
+    if (_delegate != delegate) {
+        _delegate = delegate;
+        _respondFlags.storeWillSaveDocument =
+        [self.delegate respondsToSelector: @selector(storeWillSaveDocument:)];
+    }
 }
 
 -(BOOL) loadMetadata: (NSError**)outError {
@@ -417,7 +415,6 @@ static CBLManager* sCBLManager;
 
     // add attachments
     NSDictionary* propertyDesc = [object.entity propertiesByName];
-
     for (NSString* property in propertyDesc) {
         if ([kCBLISCurrentRevisionAttributeName isEqual: property]) continue;
 
@@ -437,7 +434,13 @@ static CBLManager* sCBLManager;
                 [revision removeAttachmentNamed: attr.name];
         }
     }
-
+    
+    if (_respondFlags.storeWillSaveDocument) {
+        NSDictionary *newProperties = [_delegate storeWillSaveDocument: revision.properties];
+        if (newProperties != revision.properties)
+            revision.properties = [newProperties mutableCopy];
+    }
+    
     BOOL result = [revision save: outError] != nil;
     if (result) {
         [self notifyNewRevisionForManagedObject: object
@@ -456,12 +459,17 @@ static CBLManager* sCBLManager;
                         [object.objectID couchbaseLiteIDRepresentation]];
     if (!doc || doc.isDeleted)
         return YES;
-
-    BOOL result = [doc putProperties:
-                   [self propertiesForDeletingDocument: doc] error: outError] != nil;
-    if (result) {
-        [self purgeCachedObjectsForEntityName: object.entity.name];
+    
+    NSDictionary* properties = [self propertiesForDeletingDocument: doc];
+    if (_respondFlags.storeWillSaveDocument) {
+        NSDictionary* newProperties = [_delegate storeWillSaveDocument: properties];
+        if (newProperties != properties)
+            properties = newProperties;
     }
+    
+    BOOL result = [doc putProperties: properties error: outError] != nil;
+    if (result)
+        [self purgeCachedObjectsForEntityName: object.entity.name];
     return result;
 }
 
@@ -1725,13 +1733,6 @@ static CBLManager* sCBLManager;
         [proxy setObject: [object.objectID couchbaseLiteIDRepresentation] forKey: @"_id"];
     }
     
-    if (_flags.respondsToKeyValuesToAddToManagedObject) {
-        NSDictionary *keysAndValuesToAdd = [_delegate keyValuesToAddToManagedObject:object];
-        if (keysAndValuesToAdd.count) {
-            [proxy setValuesForKeysWithDictionary:keysAndValuesToAdd];
-        }
-    }
-    
     for (NSString* property in propertyDesc) {
         if ([kCBLISCurrentRevisionAttributeName isEqual: property]) continue;
 
@@ -2180,12 +2181,6 @@ static CBLManager* sCBLManager;
                                          @"_rev": [doc propertyForKey:@"_rev"],
                                          typeKey: [doc propertyForKey: typeKey]
                                          }];
-    
-    
-    if (_flags.respondsToKeyValuesToAddToManagedObject) {
-        [contents addEntriesFromDictionary:[_delegate keyValuesToAddToManagedObject:nil]];
-    }
-    
     
     return [NSDictionary dictionaryWithDictionary:contents];
 }

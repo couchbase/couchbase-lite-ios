@@ -55,7 +55,7 @@ typedef void(^CBLISConflictHandler)(NSArray* conflictingRevisions);
 
 @protocol CBLIncrementalStoreDelegate <NSObject>
 @optional
-- (NSDictionary *)keyValuesToAddToManagedObject:(NSManagedObject *)managedObject;
+- (NSDictionary *) storeWillSaveDocument:(NSDictionary *)document;
 @end
 
 
