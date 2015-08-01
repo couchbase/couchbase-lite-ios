@@ -15,7 +15,7 @@
 
 #import "CBLIncrementalStore.h"
 
-#import "CouchbaseLite.h"
+#import <CouchbaseLite/CouchbaseLite.h>
 
 #define COMMON_DIGEST_FOR_OPENSSL
 #import <CommonCrypto/CommonDigest.h>
@@ -73,12 +73,17 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
     NSString * _documentTypeKey;
     NSUInteger _relationshipSearchDepth;
     NSCache* _relationshipCache;
+    
+    struct {
+        unsigned int storeWillSaveDocument:1;
+    } _respondFlags;
 }
 
 @synthesize database = _database;
 @synthesize conflictHandler = _conflictHandler;
 @synthesize customProperties = _customProperties;
 @synthesize observingManagedObjectContexts = _observingManagedObjectContexts;
+@synthesize delegate = _delegate;
 
 static CBLManager* sCBLManager;
 
@@ -243,10 +248,19 @@ static CBLManager* sCBLManager;
 
     _fetchRequestResultCache = [[NSMutableDictionary alloc] init];
     _queryBuilderCache = [[NSCache alloc] init];
-
+    _respondFlags.storeWillSaveDocument = NO;
+    
     self.conflictHandler = [self defaultConflictHandler];
 
     return self;
+}
+
+- (void)setDelegate:(id<CBLIncrementalStoreDelegate>)delegate {
+    if (_delegate != delegate) {
+        _delegate = delegate;
+        _respondFlags.storeWillSaveDocument =
+        [self.delegate respondsToSelector: @selector(storeWillSaveDocument:)];
+    }
 }
 
 -(BOOL) loadMetadata: (NSError**)outError {
@@ -401,7 +415,6 @@ static CBLManager* sCBLManager;
 
     // add attachments
     NSDictionary* propertyDesc = [object.entity propertiesByName];
-
     for (NSString* property in propertyDesc) {
         if ([kCBLISCurrentRevisionAttributeName isEqual: property]) continue;
 
@@ -421,7 +434,13 @@ static CBLManager* sCBLManager;
                 [revision removeAttachmentNamed: attr.name];
         }
     }
-
+    
+    if (_respondFlags.storeWillSaveDocument) {
+        NSDictionary *newProperties = [_delegate storeWillSaveDocument: revision.properties];
+        if (newProperties != revision.properties)
+            revision.properties = [newProperties mutableCopy];
+    }
+    
     BOOL result = [revision save: outError] != nil;
     if (result) {
         [self notifyNewRevisionForManagedObject: object
@@ -440,12 +459,17 @@ static CBLManager* sCBLManager;
                         [object.objectID couchbaseLiteIDRepresentation]];
     if (!doc || doc.isDeleted)
         return YES;
-
-    BOOL result = [doc putProperties:
-                   [self propertiesForDeletingDocument: doc] error: outError] != nil;
-    if (result) {
-        [self purgeCachedObjectsForEntityName: object.entity.name];
+    
+    NSDictionary* properties = [self propertiesForDeletingDocument: doc];
+    if (_respondFlags.storeWillSaveDocument) {
+        NSDictionary* newProperties = [_delegate storeWillSaveDocument: properties];
+        if (newProperties != properties)
+            properties = newProperties;
     }
+    
+    BOOL result = [doc putProperties: properties error: outError] != nil;
+    if (result)
+        [self purgeCachedObjectsForEntityName: object.entity.name];
     return result;
 }
 
@@ -1708,7 +1732,7 @@ static CBLManager* sCBLManager;
     if (withID) {
         [proxy setObject: [object.objectID couchbaseLiteIDRepresentation] forKey: @"_id"];
     }
-
+    
     for (NSString* property in propertyDesc) {
         if ([kCBLISCurrentRevisionAttributeName isEqual: property]) continue;
 
@@ -2149,13 +2173,16 @@ static CBLManager* sCBLManager;
  * Can be overridden if you need more for filtered syncing.
  */
 - (NSDictionary*) propertiesForDeletingDocument: (CBLDocument*)doc {
+    NSMutableDictionary *contents = [NSMutableDictionary dictionary];
     NSString *typeKey = [self documentTypeKey];
-    NSDictionary* contents = @{
-                               @"_deleted": @YES,
-                               @"_rev": [doc propertyForKey:@"_rev"],
-                               typeKey: [doc propertyForKey: typeKey]
-                               };
-    return contents;
+    
+    [contents addEntriesFromDictionary:@{
+                                         @"_deleted": @YES,
+                                         @"_rev": [doc propertyForKey:@"_rev"],
+                                         typeKey: [doc propertyForKey: typeKey]
+                                         }];
+    
+    return [NSDictionary dictionaryWithDictionary:contents];
 }
 
 @end
