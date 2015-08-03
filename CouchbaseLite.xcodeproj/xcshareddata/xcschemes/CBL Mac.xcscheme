@@ -85,7 +85,7 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "-TestNewReplicator YES"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-Log YES"

@@ -42,6 +42,7 @@
     NSUInteger _expectedChangesCount;
     NSArray* _changedCookies;
     BOOL _newReplicator;
+    NSTimeInterval _timeout;
 }
 
 
@@ -64,6 +65,7 @@
         dbmgr.replicatorClassName = @"CBLBlipReplicator";
         dbmgr.dispatchQueue = dispatch_get_main_queue();
     }
+    _timeout = 15.0;
 }
 
 
@@ -79,7 +81,8 @@
 
     bool started = false, done = false;
     [repl start];
-    CFAbsoluteTime lastTime = 0;
+    CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
+    CFAbsoluteTime lastTime = startTime;
     while (!done) {
         if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                       beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.1]])
@@ -93,9 +96,13 @@
         // Replication runs on a background thread, so the main runloop should not be blocked.
         // Make sure it's spinning in a timely manner:
         CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
-        if (lastTime > 0 && now-lastTime > 0.25)
+        if (now-lastTime > 0.25)
             Warn(@"Runloop was blocked for %g sec", now-lastTime);
         lastTime = now;
+        if (now-startTime > _timeout) {
+            XCTFail(@"...replication took too long (%.3f sec)", now-startTime);
+            return;
+        }
     }
     Log(@"...replicator finished. mode=%u, progress %u/%u, error=%@",
         repl.status, repl.completedChangesCount, repl.changesCount, repl.lastError);
@@ -1141,5 +1148,30 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     [self runReplication: repl expectedChangesCount: 0u];
     Assert(repl.pendingDocumentIDs == nil);
 }
+
+
+- (void) test_19_Auth_Failure {
+    _timeout = 2.0; // Failure should be immediate, with no retries
+    NSURL* remoteDbURL = [self remoteTestDBURL: @"cbl_auth_test"];
+    if (!remoteDbURL)
+        return;
+
+    CBLReplication* repl = [db createPullReplication: remoteDbURL];
+    repl.authenticator = [CBLAuthenticator basicAuthenticatorWithName: @"wrong"
+                                                             password: @"wrong"];
+    [self runReplication: repl expectedChangesCount: 0];
+    AssertEqual(repl.lastError.domain, CBLHTTPErrorDomain);
+    AssertEq(repl.lastError.code, 401);
+
+    repl.authenticator = [CBLAuthenticator OAuth1AuthenticatorWithConsumerKey: @"wrong"
+                                                               consumerSecret: @"wrong"
+                                                                        token: @"wrong"
+                                                                  tokenSecret: @"wrong"
+                                                              signatureMethod: @"PLAINTEXT"];
+    [self runReplication: repl expectedChangesCount: 0];
+    AssertEqual(repl.lastError.domain, CBLHTTPErrorDomain);
+    AssertEq(repl.lastError.code, 401);
+}
+
 
 @end

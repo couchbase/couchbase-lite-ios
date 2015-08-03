@@ -19,7 +19,7 @@
     if (self) {
         _credential = [NSURLCredential credentialWithIdentity: identity
                                                  certificates: certs
-                                                  persistence:NSURLCredentialPersistenceForSession];
+                                                  persistence:NSURLCredentialPersistenceNone];
         _certificateChain = @[(__bridge id)identity];
         if (certs)
             _certificateChain = [_certificateChain arrayByAddingObjectsFromArray: certs];

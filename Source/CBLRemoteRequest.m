@@ -46,6 +46,7 @@ typedef enum {
 @implementation CBLRemoteRequest
 {
     AuthPhase _authPhase;
+    NSURLCredential* _proposedCredential;
 }
 
 
@@ -247,10 +248,12 @@ typedef enum {
     do {
         switch (++_authPhase) {
             case kTryAuthorizer:
+                _proposedCredential = challenge.proposedCredential;
                 cred = $castIf(CBLPasswordAuthorizer, _authorizer).credential;
                 break;
             case kTryProposed:
-                cred = challenge.proposedCredential;
+                cred = _proposedCredential;
+                _proposedCredential = nil;
                 break;
             case kFindCredential: {
                 NSURLProtectionSpace* space = challenge.protectionSpace;
@@ -261,7 +264,7 @@ typedef enum {
             default:
                 return nil; // give up
         }
-    } while (cred == nil);
+    } while (cred == nil || (cred.user && !cred.hasPassword));
     return cred;
 }
 
