@@ -1214,6 +1214,23 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     // Make sure the deleted doc doesn't still show up in the query results:
     rows = [[query run: NULL] allObjects];
     AssertEq(rows.count, 0u);
+
+    // Make sure an empty FTS query returns an empty result set: (#840)
+    query = [view createQuery];
+    query.fullTextQuery = @"";
+    rows = [[query run: &error] allObjects];
+    AssertEqual(rows, @[]);
+    AssertNil(error);
+
+    // Make sure SQLite rejects invalid FTS query strings with an error: (#840)
+    if (self.isSQLiteDB) {
+        query = [view createQuery];
+        query.fullTextQuery = @"\"";
+        error = nil;
+        CBLQueryEnumerator* e = [query run: &error];
+        AssertNil(e);
+        AssertEq(error.code, 400);
+    }
 }
 
 

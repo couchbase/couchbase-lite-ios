@@ -882,7 +882,10 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
                                                 options.fullTextQuery,
                                                 @(limit), @(options->skip)];
     if (!r) {
-        *outStatus = dbStorage.lastDbError;
+        if (dbStorage.fmdb.lastErrorCode == SQLITE_ERROR)
+            *outStatus = kCBLStatusBadRequest;      // SQLITE_ERROR means invalid FTS query string
+        else
+            *outStatus = dbStorage.lastDbError;
         return nil;
     }
     NSMutableArray* rows = [[NSMutableArray alloc] init];

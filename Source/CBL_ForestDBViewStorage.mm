@@ -823,58 +823,72 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     NSMutableArray* result = $marray();
     std::vector<size_t> termTotalCounts;
     @autoreleasepool {
-        // Tokenize the query string:
-        LogTo(QueryVerbose, @"Full-text search for \"%@\":", options.fullTextQuery);
-        std::vector<std::string> queryTokens;
-        std::vector<KeyRange> collatableKeys;
-        Tokenizer tokenizer;
-        for (TokenIterator i(tokenizer, nsstring_slice(options.fullTextQuery), true); i; ++i) {
-            collatableKeys.push_back(Collatable(i.token()));
-            queryTokens.push_back(i.token());
-            termTotalCounts.push_back(0);
-            LogTo(QueryVerbose, @"    token: \"%s\"", i.token().c_str());
+        try {
+            // Tokenize the query string:
+            LogTo(QueryVerbose, @"Full-text search for \"%@\":", options.fullTextQuery);
+            std::vector<std::string> queryTokens;
+            std::vector<KeyRange> collatableKeys;
+            Tokenizer tokenizer;
+            for (TokenIterator i(tokenizer, nsstring_slice(options.fullTextQuery), true); i; ++i) {
+                collatableKeys.push_back(Collatable(i.token()));
+                queryTokens.push_back(i.token());
+                termTotalCounts.push_back(0);
+                LogTo(QueryVerbose, @"    token: \"%s\"", i.token().c_str());
+            }
+
+            LogTo(QueryVerbose, @"Iterating index...");
+            NSMutableDictionary* docRows = [[NSMutableDictionary alloc] init];
+            *outStatus = kCBLStatusOK;
+            DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
+            for (IndexEnumerator e(index, collatableKeys, forestOpts); e.next(); ) {
+                std::string token = e.textToken();
+                NSString* docID = (NSString*)e.docID();
+                unsigned fullTextID;
+                std::vector<size_t> matches = e.getTextTokenInfo(fullTextID);
+
+                id key = fullTextID > 0 ? @[docID, @(fullTextID)] : docID;
+                CBLFullTextQueryRow* row = docRows[key];
+                if (!row) {
+                    alloc_slice valueSlice = index->readFullTextValue(nsstring_slice(docID),
+                                                                      e.sequence(),
+                                                                      fullTextID);
+                    NSData* valueData = valueSlice.copiedNSData();
+                    row = [[CBLFullTextQueryRow alloc] initWithDocID: docID
+                                                            sequence: e.sequence()
+                                                          fullTextID: fullTextID
+                                                               value: valueData
+                                                             storage: self];
+                    docRows[key] = row;
+                }
+
+                auto termIndex = std::find(queryTokens.begin(), queryTokens.end(), token)
+                                    - queryTokens.begin();
+
+                size_t nMatches = matches.size() / 2;
+                for (size_t i = 0; i < nMatches; ++i) {
+                    [row addTerm: termIndex atRange: NSMakeRange(matches[2*i], matches[2*i+1])];
+                }
+                termTotalCounts[termIndex] += nMatches;
+            };
+
+            // Only keep the rows that contain each term in the query (implicit AND):
+            [docRows enumerateKeysAndObjectsUsingBlock:^(id key, CBLFullTextQueryRow* row, BOOL *stop) {
+                if ([row containsAllTerms: queryTokens.size()])
+                    [result addObject: row];
+            }];
+        } catch (forestdb::error x) {
+            Warn(@"Unexpected ForestDB error iterating query (status %d)", x.status);
+            *outStatus = CBLStatusFromForestDBStatus(x.status);
+            return nil;
+        } catch (NSException* x) {
+            MYReportException(x, @"CBL_ForestDBViewStorage");
+            *outStatus = kCBLStatusException;
+            return nil;
+        } catch (...) {
+            Warn(@"Unexpected CBForest exception iterating query");
+            *outStatus = kCBLStatusException;
+            return nil;
         }
-
-        LogTo(QueryVerbose, @"Iterating index...");
-        NSMutableDictionary* docRows = [[NSMutableDictionary alloc] init];
-        *outStatus = kCBLStatusOK;
-        DocEnumerator::Options forestOpts = DocEnumerator::Options::kDefault;
-        for (IndexEnumerator e(index, collatableKeys, forestOpts); e.next(); ) {
-            std::string token = e.textToken();
-            NSString* docID = (NSString*)e.docID();
-            unsigned fullTextID;
-            std::vector<size_t> matches = e.getTextTokenInfo(fullTextID);
-
-            id key = fullTextID > 0 ? @[docID, @(fullTextID)] : docID;
-            CBLFullTextQueryRow* row = docRows[key];
-            if (!row) {
-                alloc_slice valueSlice = index->readFullTextValue(nsstring_slice(docID),
-                                                                  e.sequence(),
-                                                                  fullTextID);
-                NSData* valueData = valueSlice.copiedNSData();
-                row = [[CBLFullTextQueryRow alloc] initWithDocID: docID
-                                                        sequence: e.sequence()
-                                                      fullTextID: fullTextID
-                                                           value: valueData
-                                                         storage: self];
-                docRows[key] = row;
-            }
-
-            auto termIndex = std::find(queryTokens.begin(), queryTokens.end(), token)
-                                - queryTokens.begin();
-
-            size_t nMatches = matches.size() / 2;
-            for (size_t i = 0; i < nMatches; ++i) {
-                [row addTerm: termIndex atRange: NSMakeRange(matches[2*i], matches[2*i+1])];
-            }
-            termTotalCounts[termIndex] += nMatches;
-        };
-
-        // Only keep the rows that contain each term in the query (implicit AND):
-        [docRows enumerateKeysAndObjectsUsingBlock:^(id key, CBLFullTextQueryRow* row, BOOL *stop) {
-            if ([row containsAllTerms: queryTokens.size()])
-                [result addObject: row];
-        }];
     }
 
     if (options->fullTextRanking) {
