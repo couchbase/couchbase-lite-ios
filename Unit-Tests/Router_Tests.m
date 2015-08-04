@@ -1066,9 +1066,9 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     response = SendRequest(self, @"GET", @"/db/doc1/attach",
                            $dict({@"Range", @"bytes=5-3"}),
                            nil);
-    AssertEq(response.status, 416);
-    AssertEqual((response.headers)[@"Content-Range"], @"bytes */27");
-    AssertNil(response.body);
+    AssertEq(response.status, 200);
+    AssertNil((response.headers)[@"Content-Range"]);
+    AssertEqual(response.body.asJSON, [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding]);
 
     // -100:
     response = SendRequest(self, @"GET", @"/db/doc1/attach",

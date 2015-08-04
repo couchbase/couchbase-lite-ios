@@ -358,8 +358,8 @@ static NSString* addressToString(NSData* addrData) {
        expectedResult: [@"attach1" dataUsingEncoding: NSUTF8StringEncoding]];
 
     [self sendRequest: @"GET" path: path headers: @{@"Range": @"bytes=5-3"} body: nil
-       expectedStatus: 416 expectedHeaders: @{@"Content-Range": @"bytes */27"}
-       expectedResult: nil];
+       expectedStatus: 200 expectedHeaders: nil
+       expectedResult: [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding]];
 
     [self sendRequest: @"GET" path: path headers: @{@"Range": @"bytes=100-"} body: nil
        expectedStatus: 416 expectedHeaders: @{@"Content-Range": @"bytes */27"}
