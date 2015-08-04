@@ -1022,6 +1022,7 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     NSData* attach2 = [@"This is the body of path/to/attachment" dataUsingEncoding: NSUTF8StringEncoding];
     [self createDocWithAttachment: attach1 and: attach2];
 
+    // 5-15:
     CBLResponse* response = SendRequest(self, @"GET", @"/db/doc1/attach",
                                        $dict({@"Range", @"bytes=5-15"}),
                                        nil);
@@ -1029,6 +1030,7 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     AssertEqual((response.headers)[@"Content-Range"], @"bytes 5-15/27");
     AssertEqual(response.body.asJSON, [@"is the body" dataUsingEncoding: NSUTF8StringEncoding]);
 
+    // 12-:
     response = SendRequest(self, @"GET", @"/db/doc1/attach",
                                        $dict({@"Range", @"bytes=12-"}),
                                        nil);
@@ -1036,6 +1038,15 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     AssertEqual((response.headers)[@"Content-Range"], @"bytes 12-26/27");
     AssertEqual(response.body.asJSON, [@"body of attach1" dataUsingEncoding: NSUTF8StringEncoding]);
 
+    // 12-100:
+    response = SendRequest(self, @"GET", @"/db/doc1/attach",
+                           $dict({@"Range", @"bytes=12-100"}),
+                           nil);
+    AssertEq(response.status, 206);
+    AssertEqual((response.headers)[@"Content-Range"], @"bytes 12-26/27");
+    AssertEqual(response.body.asJSON, [@"body of attach1" dataUsingEncoding: NSUTF8StringEncoding]);
+
+    // -7:
     response = SendRequest(self, @"GET", @"/db/doc1/attach",
                                        $dict({@"Range", @"bytes=-7"}),
                                        nil);
@@ -1050,6 +1061,30 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
                                  {@"If-None-Match", eTag}),
                            nil);
     AssertEq(response.status, 304);
+
+    // 5-3:
+    response = SendRequest(self, @"GET", @"/db/doc1/attach",
+                           $dict({@"Range", @"bytes=5-3"}),
+                           nil);
+    AssertEq(response.status, 416);
+    AssertEqual((response.headers)[@"Content-Range"], @"bytes */27");
+    AssertNil(response.body);
+
+    // -100:
+    response = SendRequest(self, @"GET", @"/db/doc1/attach",
+                           $dict({@"Range", @"bytes=-100"}),
+                           nil);
+    AssertEq(response.status, 200); // full range
+    AssertNil((response.headers)[@"Content-Range"]);
+    AssertEqual(response.body.asJSON, [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding]);
+
+    // 100-:
+    response = SendRequest(self, @"GET", @"/db/doc1/attach",
+                           $dict({@"Range", @"bytes=100-"}),
+                           nil);
+    AssertEq(response.status, 416);
+    AssertEqual((response.headers)[@"Content-Range"], @"bytes */27");
+    AssertNil(response.body);
 }
 
 

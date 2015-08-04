@@ -550,6 +550,7 @@ static NSArray* splitPath( NSURL* url ) {
         toStr = [rangeHeader substringWithRange: r];
 
     // Now convert those into the integer offsets (remember that 'to' is inclusive):
+    BOOL missingRange = NO;
     NSUInteger from, to;
     if (fromStr.length > 0) {
         from = (NSUInteger)fromStr.integerValue;
@@ -557,16 +558,14 @@ static NSArray* splitPath( NSURL* url ) {
             to = MIN((NSUInteger)toStr.integerValue, bodyLength - 1);
         else
             to = bodyLength - 1;
-        if (to < from)
-            return;  // invalid range
     } else if (toStr.length > 0) {
         to = bodyLength - 1;
         from = bodyLength - MIN((NSUInteger)toStr.integerValue, bodyLength);
     } else {
-        return;  // "-" is an invalid range
+        missingRange = YES;
     }
 
-    if (from >= bodyLength || to < from) {
+    if (missingRange || from >= bodyLength || to < from) {
         _response.status = 416; // Requested Range Not Satisfiable
         NSString* contentRangeStr = $sprintf(@"bytes */%llu", (uint64_t)bodyLength);
         _response[@"Content-Range"] = contentRangeStr;
