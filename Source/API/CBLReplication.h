@@ -21,6 +21,15 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 } ;
 
 
+/** Callback for notifying progress downloading an attachment.
+    `bytesRead` is the number of bytes received so far and `contentLength` is the total number of
+    bytes to read. The download is complete when bytesRead == contentLength. If an error occurs,
+    `error` will be non-nil. */
+typedef void (^CBLAttachmentProgressBlock)(uint64_t bytesRead,
+                                           uint64_t contentLength,
+                                           NSError* error);
+
+
 /** A 'push' or 'pull' replication between a local and a remote database.
     Replications can be one-shot or continuous. */
 @interface CBLReplication : NSObject
@@ -170,6 +179,7 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 /** The total number of changes to be processed, if the task is active, else 0 (observable). */
 @property (nonatomic, readonly) unsigned changesCount;
 
+#pragma mark - PENDING DOCUMENTS (PUSH ONLY):
 
 /** The IDs of documents that have local changes that have not yet been pushed to the server
     by this replication. This only considers documents that this replication would push: documents
@@ -183,6 +193,15 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
     a document that isn't matched by its filter or documentIDs, even if that document has local
     changes. */
 - (BOOL) isDocumentPending: (CBLDocument*)doc;
+
+#pragma mark - ATTACHMENT DOWNLOADING (PULL ONLY)
+
+/** Triggers an asynchronous download of an attachment that was skipped in a pull replication.
+    @param attachment  The attachment to download.
+    @param onProgress  An optional block that will be called during the download. It will be
+                called periodically as data is received, and on successful completion or error. */
+- (void) downloadAttachment: (CBLAttachment*)attachment
+                 onProgress: (CBLAttachmentProgressBlock)onProgress;
 
 
 - (instancetype) init NS_UNAVAILABLE;

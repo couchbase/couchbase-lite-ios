@@ -311,7 +311,7 @@
     CBLMD5Key _MD5Digest;
     CBLCryptorBlock _encryptor;
 }
-@synthesize length=_length, blobKey=_blobKey;
+@synthesize name=_name, length=_length, blobKey=_blobKey;
 
 - (instancetype) initWithStore: (CBL_BlobStore*)store {
     self = [super init];
@@ -383,6 +383,23 @@
 - (NSString*) SHA1DigestString {
     return [@"sha1-" stringByAppendingString: [CBLBase64 encode: &_blobKey
                                                         length: sizeof(_blobKey)]];
+}
+
+- (BOOL) verifyDigest: (NSString*)digestString {
+    if (digestString == nil)
+        return YES;
+    NSString* actualDigest;
+    if ([digestString hasPrefix: @"md5-"])
+        actualDigest = self.MD5DigestString;
+    else
+        actualDigest = self.SHA1DigestString;
+    if ([actualDigest isEqualToString: digestString]) {
+        return YES;
+    } else {
+        Warn(@"Attachment '%@' has incorrect data (digests to %@; expected %@)",
+             _name, actualDigest, digestString);
+        return NO;
+    }
 }
 
 - (NSData*) blobData {

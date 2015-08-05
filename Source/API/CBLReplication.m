@@ -27,6 +27,9 @@
 #import "MYURLUtils.h"
 
 
+typedef void (^PendingAction)(id<CBL_Replicator>);
+
+
 NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 // Declared in CBL_Replicator.h
@@ -50,8 +53,11 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 {
     NSSet* _pendingDocIDs;
     bool _started;
-    id<CBL_Replicator> _bg_replicator;       // ONLY used on the server thread
+
+    // ONLY used on the server thread:
+    id<CBL_Replicator> _bg_replicator;
     NSMutableArray* _bg_pendingCookies;
+    NSMutableArray* _bg_pendingActions;
     NSConditionLock* _bg_stopLock;
 }
 
@@ -433,6 +439,35 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
+#pragma mark - PULL REPLICATION ONLY:
+
+
+- (void) downloadAttachment: (CBLAttachment*)attachment
+                 onProgress: (CBLAttachmentProgressBlock)onProgress
+{
+    Assert(_pull, @"Not a pull replication");
+    AssertEq(attachment.document.database, _database);
+    NSString* name = attachment.name;
+    NSDictionary* docProps = attachment.revision.properties;
+
+    // Wrap the onProgress block in a proxy that will perform the call on the db thread/queue:
+    CBLAttachmentProgressBlock innerOnProgress = ^(uint64_t bytesRead,
+                                                   uint64_t contentLength,
+                                                   NSError* error) {
+        if (onProgress) {
+            [_database doAsync:^{
+                onProgress(bytesRead, contentLength, error);
+            }];
+        }
+    };
+
+    [self tellReplicatorWhileRunning:^(id<CBL_Replicator> bgReplicator) {
+        [bgReplicator downloadAttachment: name ofDocument: docProps onProgress: innerOnProgress];
+    }];
+    [self start];
+}
+
+
 #pragma mark - BACKGROUND OPERATIONS:
 
 
@@ -445,6 +480,20 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (id) tellReplicatorAndWait: (id (^)(id<CBL_Replicator>))block {
     return [_database.manager.backgroundServer waitForDatabaseManager: ^(CBLManager* _) {
         return block(_bg_replicator);
+    }];
+}
+
+- (void) tellReplicatorWhileRunning: (void (^)(id<CBL_Replicator>))block {
+    [self tellReplicator: ^(id<CBL_Replicator> bgRepl) {
+        if (bgRepl.status > kCBLReplicatorStopped) {
+            // If we have an active replicator, tell it right away:
+            block(bgRepl);
+        } else {
+            // Otherwise, queue the action till the replicator starts:
+            if (!_bg_pendingActions)
+                _bg_pendingActions = [NSMutableArray new];
+            [_bg_pendingActions addObject: block];
+        }
     }];
 }
 
@@ -518,6 +567,12 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     [self bg_setReplicator: repl];
     [repl start];
     [self bg_updateProgress];
+
+    // Perform any pending actions that were queued up by -tellReplicatorWhileRunning:
+    NSArray* actions = _bg_pendingActions;
+    _bg_pendingActions = nil;
+    for (PendingAction action in actions)
+        action(repl);
 }
 
 

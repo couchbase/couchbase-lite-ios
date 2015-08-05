@@ -26,6 +26,7 @@
 #import "CBLBatcher.h"
 #import "CBLMultipartDownloader.h"
 #import "CBLBulkDownloader.h"
+#import "CBLAttachmentDownloader.h"
 #import "CBLCookieStorage.h"
 #import "CBLSequenceMap.h"
 #import "CBLInternal.h"
@@ -701,6 +702,32 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     [self asyncTasksFinished: downloads.count];
     self.changesProcessed += downloads.count;
     [self pauseOrResume];
+}
+
+
+#pragma mark - DOWNLOADING ATTACHMENTS:
+
+
+- (void) downloadAttachment: (NSString*)name
+                 ofDocument: (NSDictionary*)doc
+                 onProgress: (CBL_ReplicatorAttachmentProgressBlock)onProgress
+{
+    __weak CBLRestPuller *weakSelf = self;
+    __block CBLAttachmentDownloader* dl;
+    dl = [[CBLAttachmentDownloader alloc] initWithDbURL: _settings.remote
+                                               database: _db
+                                               document: doc
+                                         attachmentName: name
+                                             onProgress: onProgress
+                                           onCompletion:
+          ^(id result, NSError *error) {
+              __strong CBLRestPuller *strongSelf = weakSelf;
+              [strongSelf removeRemoteRequest:dl];
+              [strongSelf asyncTasksFinished: 1];
+          }];
+    [self asyncTaskStarted];
+    [self addRemoteRequest: dl];
+    [dl start];
 }
 
 

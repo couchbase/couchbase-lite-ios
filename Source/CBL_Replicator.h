@@ -19,6 +19,11 @@ typedef NS_ENUM(unsigned, CBL_ReplicatorStatus) {
 };
 
 
+typedef void (^CBL_ReplicatorAttachmentProgressBlock)(uint64_t bytesRead,
+                                                      uint64_t contentLength,
+                                                      NSError* error);
+
+
 /** Posted when .changesProcessed, .changesTotal or .status changes. */
 extern NSString* CBL_ReplicatorProgressChangedNotification;
 
@@ -86,7 +91,19 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 #endif
 
 @optional
+/** The currently active tasks, each represented by an NSProgress object. (Observable) */
 @property (readonly) NSArray* activeTasksInfo;
+
+/** Requests asynchronous download of the given attachment from the server.
+    @param name  The name of the attachment
+    @param doc  The document properties (custom properties not needed, just _id/_rev/_attachments)
+    @param onProgress  A callback block that will be called periodically during the download.
+                    The first call will have 0 for bytesRead, and the correct contentLength.
+                    The final call on completion will have bytesRead == contentLength.
+                    A non-nil error parameter means the download failed. */
+- (void) downloadAttachment: (NSString*)name
+                 ofDocument: (NSDictionary*)doc
+                 onProgress: (CBL_ReplicatorAttachmentProgressBlock)onProgress;
 
 @end
 

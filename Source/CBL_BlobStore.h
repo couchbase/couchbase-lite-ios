@@ -70,6 +70,8 @@ typedef struct {
 
 - (instancetype) initWithStore: (CBL_BlobStore*)store;
 
+@property (copy) NSString* name;
+
 /** Appends data to the blob. Call this when new data is available. */
 - (void) appendData: (NSData*)data;
 
@@ -95,6 +97,8 @@ typedef struct {
     (This is useful for compatibility with CouchDB, which stores MD5 digests of attachments.) */
 @property (readonly) NSString* MD5DigestString;
 @property (readonly) NSString* SHA1DigestString;
+
+- (BOOL) verifyDigest: (NSString*)digestString;
 
 /** The location of the temporary file containing the attachment contents.
     Will be nil after -install is called. */
