@@ -99,7 +99,7 @@
         self = [self initWithKeyData: CFBridgingRelease(cfData)];
         if (self)
             return self;    // success!
-        status = errSecInvalidValue; // data is not a valid AES key
+        status = errSecDecode; // data is not a valid AES key
     }
     if (outError)
         *outError = [NSError errorWithDomain: NSOSStatusErrorDomain code: status userInfo: nil];
@@ -118,7 +118,7 @@
                             (__bridge id)kSecValueData: _keyData};
     OSStatus status = SecItemAdd((__bridge CFDictionaryRef)attrs, NULL);
     if (status != noErr)
-        Warn(@"CBLSymmetricKey: SecItemAdd returned %d", status);
+        Warn(@"CBLSymmetricKey: SecItemAdd returned %d", (int)status);
     return (status == noErr);
 }
 
