@@ -4356,7 +4356,7 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_INCREASE_PRECOMPILED_HEADER_SHARING = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_PREFIX_HEADER = "Source/CBLJSViewCompiler-Prefix.pch";
+				GCC_PREFIX_HEADER = "";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"CBL_VERSION_STRING=\"\\\"$(CBL_VERSION_STRING)-Debug\\\"\"",
@@ -4409,7 +4409,7 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_INCREASE_PRECOMPILED_HEADER_SHARING = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_PREFIX_HEADER = "Source/CBLJSViewCompiler-Prefix.pch";
+				GCC_PREFIX_HEADER = "";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"CBL_VERSION_STRING=\"\\\"$(CBL_VERSION_STRING)\\\"\"",
 					"CBL_SOURCE_REVISION=\"\\\"$(CBL_SOURCE_REVISION)\\\"\"",
@@ -5769,6 +5769,7 @@
 				93C6053D1B69813400ED9891 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		DA023B6114BCA94C008184BB /* Build configuration list for PBXNativeTarget "Listener iOS Library" */ = {
 			isa = XCConfigurationList;
