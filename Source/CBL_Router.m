@@ -553,9 +553,11 @@ static NSArray* splitPath( NSURL* url ) {
     NSUInteger from, to;
     if (fromStr.length > 0) {
         from = (NSUInteger)fromStr.integerValue;
-        if (toStr.length > 0)
+        if (toStr.length > 0) {
             to = MIN((NSUInteger)toStr.integerValue, bodyLength - 1);
-        else
+            if (to < from)
+                return;  // invalid range
+        } else
             to = bodyLength - 1;
     } else if (toStr.length > 0) {
         to = bodyLength - 1;
@@ -571,9 +573,6 @@ static NSArray* splitPath( NSURL* url ) {
         _response.body = nil;
         return;
     }
-
-    if (to < from)
-        return;  // invalid range
 
     if (from == 0 && to == bodyLength - 1)
         return; // No-op; entire body still causes a 200 response
