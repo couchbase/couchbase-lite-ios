@@ -519,7 +519,51 @@
 }
 
 
-- (void) test16_FollowWithRevpos {
+- (void) test16_IntermediateDeletedRevs {
+    // Put a revision that includes an _attachments dict:
+    NSData* attach1 = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
+    NSString* base64 = [CBLBase64 encode: attach1];
+    NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
+                                                           {@"data", base64})});
+    NSDictionary* props = $dict({@"_id", @"X"},
+                                {@"_attachments", attachmentDict});
+    CBL_Revision* rev1;
+    CBLStatus status;
+    NSError* error;
+    rev1 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
+            prevRevisionID: nil allowConflict: NO status: &status error: &error];
+    AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
+    AssertEqual(rev1[@"_attachments"][@"attach"][@"revpos"], @1);
+
+    // Insert a delete rev:
+    props = $dict({@"_id", rev1.docID},
+                  {@"_deleted", $true});
+    CBL_Revision* rev2;
+    rev2 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props] prevRevisionID:
+            rev1.revID allowConflict: NO status: &status error: &error] ;
+    AssertEq(status, kCBLStatusOK);
+    AssertNil(error);
+    Assert(rev2.deleted);
+
+    // Insert a revision several generations advanced but which hasn't changed the attachment:
+    CBL_MutableRevision* rev3 = [rev1 mutableCopy];
+    rev3[@"_rev"] = @"3-3333";
+    rev3[@"foo"] = @"bar";
+    [rev3 mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *att) {
+        NSMutableDictionary* nuAtt = [att mutableCopy];
+        [nuAtt removeObjectForKey: @"data"];
+        nuAtt[@"stub"] = @YES;
+        nuAtt[@"digest"] = @"md5-deadbeef";     // CouchDB adds MD5 digests!
+        return nuAtt;
+    }];
+    NSArray* history = @[rev2.revID, rev1.revID];
+    status = [db forceInsert: rev3 revisionHistory: history source: nil error: &error];
+    AssertEq(status, 200);
+}
+
+
+- (void) test17_FollowWithRevpos {
     NSDictionary* attachInfo = $dict({@"content_type", @"text/plain"},
                                      {@"digest", @"md5-DaUdFsLh8FKLbcBIDlU57g=="},
                                      {@"follows", @YES},
