@@ -340,7 +340,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
                 parentAttachments = [self attachmentsForDocID: rev.docID revID: prevRevID
                                                        status: &status];
                 if (!parentAttachments) {
-                    if (status == kCBLStatusNotFound) {
+                    if (status == kCBLStatusOK || status == kCBLStatusNotFound) {
                         if ([_attachments hasBlobForKey: attachment.blobKey]) {
                             // Parent revision's body isn't known (we are probably pulling a rev along
                             // with its entire history) but it's OK, we have the attachment already
@@ -352,11 +352,12 @@ static UInt64 smallestLength(NSDictionary* attachment) {
                                                                          revpos: attachment->revpos
                                                                           docID: rev.docID
                                                                        ancestry: ancestry];
-                        if (ancestorAttachment)
+                        if (ancestorAttachment) {
+                            *outStatus = kCBLStatusOK;
                             return ancestorAttachment;
+                        } else
+                            status = kCBLStatusBadAttachment;
                     }
-                    if (status == kCBLStatusOK || status == kCBLStatusNotFound)
-                        status = kCBLStatusBadAttachment;
                     *outStatus = status;
                     return nil;
                 }
