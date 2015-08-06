@@ -32,6 +32,7 @@
 @implementation CBLBulkDownloader
 {
     CBLDatabase* _db;
+    BOOL _attachments;
     CBLMultipartReader* _topReader;
     CBLMultipartDocumentReader* _docReader;
     unsigned _docCount;
@@ -43,29 +44,36 @@
                       database: (CBLDatabase*)database
                 requestHeaders: (NSDictionary *) requestHeaders
                      revisions: (NSArray*)revs
+                   attachments: (BOOL)attachments
                     onDocument: (CBLBulkDownloaderDocumentBlock)onDocument
                   onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
     // Build up a JSON body describing what revisions we want:
     NSArray* keys = [revs my_map: ^(CBL_Revision* rev) {
-        NSArray* attsSince = [database.storage getPossibleAncestorRevisionIDs: rev
-                                                           limit: kMaxNumberOfAttsSince
-                                                 onlyAttachments: YES];
-        if (attsSince.count == 0)
-            attsSince = nil;
+        NSArray* attsSince = nil;
+        if (attachments) {
+            attsSince = [database.storage getPossibleAncestorRevisionIDs: rev
+                                                               limit: kMaxNumberOfAttsSince
+                                                     onlyAttachments: YES];
+            if (attsSince.count == 0)
+                attsSince = nil;
+        }
         return $dict({@"id", rev.docID},
                      {@"rev", rev.revID},
                      {@"atts_since", attsSince});
     }];
     NSDictionary* body = @{@"docs": keys};
 
+    NSString* query = attachments ?@"_bulk_get?revs=true&attachments=true" :@"_bulk_get?revs=true";
+
     self = [super initWithMethod: @"POST"
-                             URL: CBLAppendToURL(dbURL, @"_bulk_get?revs=true&attachments=true")
+                             URL: CBLAppendToURL(dbURL, query)
                             body: body
                   requestHeaders: requestHeaders
                     onCompletion: onCompletion];
     if (self) {
         _db = database;
+        _attachments = attachments;
         _onDocument = onDocument;
     }
     return self;

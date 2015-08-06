@@ -32,8 +32,14 @@ NS_ASSUME_NONNULL_BEGIN
 /** The length in bytes of the contents. */
 @property (readonly) UInt64 length;
 
-/** The CouchbaseLite metadata about the attachment, that lives in the document. */
+/** The Couchbase Lite metadata about the attachment, that lives in the document. */
 @property (readonly) CBLJSONDict* metadata;
+
+/** Is the content locally available? This may be NO if the attachment's document was pulled
+    from a remote database by a CBLReplication whose downloadAttachments property was NO.
+    If so, the content accessors will return nil. The attachment can be downloaded by calling
+    the replication's -downloadAttachment:onProgress: method. */
+@property (readonly) BOOL contentAvailable;
 
 /** The data of the attachment. */
 @property (readonly, nullable) NSData* content;

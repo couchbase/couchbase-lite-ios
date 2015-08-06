@@ -30,6 +30,18 @@
 
 @implementation CBLMultipartDocumentReader
 {
+    @private
+    CBLDatabase* _database;
+    BOOL _attachments;
+    CBLStatus _status;
+    CBLMultipartReader* _multipartReader;
+    NSMutableData* _jsonBuffer;
+    BOOL _jsonCompressed;
+    CBL_BlobStoreWriter* _curAttachment;
+    NSMutableDictionary* _attachmentsByName;      // maps attachment name --> CBL_BlobStoreWriter
+    NSMutableDictionary* _attachmentsByDigest;    // maps attachment MD5 --> CBL_BlobStoreWriter
+    NSMutableDictionary* _document;
+    CBLMultipartDocumentReaderCompletionBlock _completionBlock;
     __strong id _retainSelf; // Used to keep this object alive by keeping a reference to self
 }
 

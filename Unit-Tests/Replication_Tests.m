@@ -1174,4 +1174,47 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 
+- (void) test20_LazyPullAttachments {
+    NSURL* pullURL = [self remoteTestDBURL: kAttachTestDBName];
+    if (!pullURL)
+        return;
+
+    CBLReplication* repl = [db createPullReplication: pullURL];
+    repl.downloadAttachments = NO;
+    [self allowWarningsIn: ^{
+        // This triggers a warning in CBLSyncConnection because the attach-test db is actually
+        // missing an attachment body. It's not a CBL error.
+        [self runReplication: repl expectedChangesCount: 0];
+    }];
+    AssertNil(repl.lastError);
+
+    Log(@"Verifying attachment...");
+    CBLDocument* doc = db[@"oneBigAttachment"];
+    CBLAttachment* att = [doc.currentRevision attachmentNamed: @"IMG_0450.MOV"];
+    Assert(att);
+    AssertEq(att.length, 34120085ul);
+    Assert(!att.contentAvailable);
+    AssertNil(att.content);
+    AssertNil(att.contentURL);
+    AssertNil(att.openContentStream);
+
+    Log(@"Downloading attachment...");
+    XCTestExpectation* downloaded = [self expectationWithDescription: @"Downloaded attachment"];
+    [repl downloadAttachment: att onProgress: ^(uint64_t bytesRead, uint64_t contentLength, NSError *error) {
+        Log(@"Progress report: %llu / %llu bytes; err = %@", bytesRead, contentLength, error);
+        AssertNil(error);
+        if (bytesRead == contentLength || error)
+            [downloaded fulfill];
+    }];
+    [self waitForExpectationsWithTimeout: _timeout handler: nil];
+
+    Assert(att.contentAvailable);
+    AssertEq(att.content.length, att.length);
+    Assert(att.contentURL != nil);
+    NSInputStream* stream = att.openContentStream;
+    Assert(stream != nil);
+    [stream close];
+}
+
+
 @end

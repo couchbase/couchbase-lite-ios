@@ -34,7 +34,7 @@
 @synthesize filterName=_filterName, filterBlock=_filterBlock, filterParameters=_filterParameters;
 @synthesize docIDs=_docIDs, options=_options, requestHeaders=_requestHeaders;
 @synthesize revisionBodyTransformationBlock=_revisionBodyTransformationBlock;
-@synthesize authorizer=_authorizer;
+@synthesize authorizer=_authorizer, downloadAttachments=_downloadAttachments;
 
 
 - (instancetype) initWithRemote: (NSURL*)remote push: (BOOL)push {
@@ -42,6 +42,7 @@
     if (self) {
         _remote = remote;
         _isPush = push;
+        _downloadAttachments = YES;
     }
     return self;
 }

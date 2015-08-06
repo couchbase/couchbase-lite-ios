@@ -74,6 +74,11 @@ typedef void (^CBLAttachmentProgressBlock)(uint64_t bytesRead,
 /** Sets the documents to specify as part of the replication. */
 @property (copy, nullable) CBLArrayOf(NSString*) *documentIDs;
 
+/** Should attachments be downloaded along with documents?
+    Defaults to YES; if you set it to NO you can later download individual attachments by calling
+    -downloadAttachment:onProgress:. */
+@property (nonatomic) BOOL downloadAttachments;
+
 /** Extra HTTP headers to send in all requests to the remote server.
     Should map strings (header names) to strings. */
 @property (nonatomic, copy, nullable) CBLDictOf(NSString*, NSString*)* headers;

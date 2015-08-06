@@ -15,19 +15,6 @@ typedef void(^CBLMultipartDocumentReaderCompletionBlock)(CBLMultipartDocumentRea
 
 
 @interface CBLMultipartDocumentReader : NSObject
-{
-    @private
-    CBLDatabase* _database;
-    CBLStatus _status;
-    CBLMultipartReader* _multipartReader;
-    NSMutableData* _jsonBuffer;
-    BOOL _jsonCompressed;
-    CBL_BlobStoreWriter* _curAttachment;
-    NSMutableDictionary* _attachmentsByName;      // maps attachment name --> CBL_BlobStoreWriter
-    NSMutableDictionary* _attachmentsByDigest;    // maps attachment MD5 --> CBL_BlobStoreWriter
-    NSMutableDictionary* _document;
-    CBLMultipartDocumentReaderCompletionBlock _completionBlock;
-}
 
 // synchronous:
 + (NSDictionary*) readData: (NSData*)data

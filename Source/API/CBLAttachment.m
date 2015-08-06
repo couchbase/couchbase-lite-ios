@@ -112,6 +112,16 @@
 }
 
 
+- (BOOL) contentAvailable {
+    if (_body) {
+        return ([_body isKindOfClass: [NSData class]] ||
+                ([_body isKindOfClass: [NSURL class]] && [_body isFileURL]));
+    } else {
+        return self._internalAttachment.hasContent;
+    }
+}
+
+
 - (NSData*) content {
     if (_body) {
         if ([_body isKindOfClass: [NSData class]])

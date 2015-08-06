@@ -37,6 +37,7 @@
 @property                       CBLBlobKey blobKey;
 @property (readonly, nonatomic) NSString* digest;
 
+@property (readonly, nonatomic) BOOL hasContent;
 @property (readonly, nonatomic) NSData* encodedContent;  // only if inline or stored in db blob-store
 @property (readonly, nonatomic) NSData* content;
 @property (readonly, nonatomic) NSInputStream* contentStream;

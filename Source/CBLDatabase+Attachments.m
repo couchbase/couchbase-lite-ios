@@ -333,8 +333,10 @@ static UInt64 smallestLength(NSDictionary* attachment) {
             *outStatus = [self installAttachment: attachment];
             if (CBLStatusIsError(*outStatus))
                 return nil;
-        } else if ([attachInfo[@"stub"] isEqual: $true]) {
+        } else if ([attachInfo[@"stub"] isEqual: $true] && attachment->revpos < generation) {
             // "stub" on an incoming revision means the attachment is the same as in the parent.
+            // (Either that or the replicator just decided to defer downloading the attachment;
+            // that's why the 'if' above tests the revpos.)
             if (!parentAttachments && prevRevID) {
                 CBLStatus status;
                 parentAttachments = [self attachmentsForDocID: rev.docID revID: prevRevID

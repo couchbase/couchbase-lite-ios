@@ -954,6 +954,10 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     settings.authorizer = authorizer;
     settings.createTarget = push && createTarget;
 
+    NSNumber* attachments = $castIf(NSNumber, properties[@"attachments"]);
+    if (attachments)
+        settings.downloadAttachments = attachments.boolValue;
+
     if (![settings compilePushFilterForDatabase: database status: outStatus])
         return nil;
 

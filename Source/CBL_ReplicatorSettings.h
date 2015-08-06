@@ -30,6 +30,7 @@ typedef CBL_Revision* (^RevisionBodyTransformationBlock)(CBL_Revision*);
 @property (copy) CBLFilterBlock filterBlock;
 @property (copy) NSDictionary* filterParameters;
 @property (copy) NSArray *docIDs;
+@property BOOL downloadAttachments;
 @property (copy) NSDictionary* options;
 
 /** Optional dictionary of headers to be added to all requests to remote servers. */

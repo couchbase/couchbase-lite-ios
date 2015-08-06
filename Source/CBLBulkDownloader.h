@@ -21,6 +21,7 @@ typedef void (^CBLBulkDownloaderDocumentBlock)(NSDictionary*);
                       database: (CBLDatabase*)database
                 requestHeaders: (NSDictionary *) requestHeaders
                      revisions: (NSArray*)revs
+                   attachments: (BOOL)attachments
                     onDocument: (CBLBulkDownloaderDocumentBlock)onDocument
                   onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 

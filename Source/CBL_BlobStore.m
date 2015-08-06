@@ -163,10 +163,13 @@
         }
     }
     NSInputStream* stream = [NSInputStream inputStreamWithFileAtPath: path];
-    if (_encryptionKey) {
-        [stream open];
-        stream = [_encryptionKey decryptStream: stream];
+    [stream open];
+    if (CBLIsFileNotFoundError(stream.streamError)) {
+        [stream close];
+        return nil;
     }
+    if (_encryptionKey)
+        stream = [_encryptionKey decryptStream: stream];
     return stream;
 }
 

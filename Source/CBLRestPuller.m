@@ -396,27 +396,30 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // Construct a query. We want the revision history, and the bodies of attachments.
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#GET
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#Getting_Attachments_With_a_Document
-    NSString* path = $sprintf(@"%@?rev=%@&revs=true&attachments=true",
+    NSString* path = $sprintf(@"%@?rev=%@&revs=true",
                               CBLEscapeURLParam(rev.docID), CBLEscapeURLParam(rev.revID));
-    // If the document has attachments, add an 'atts_since' param with a list of
-    // already-known revisions, so the server can skip sending the bodies of any
-    // attachments we already have locally:
     CBLDatabase* db = _db;
-    NSArray* knownRevs = [db.storage getPossibleAncestorRevisionIDs: rev
-                                                              limit: kMaxNumberOfAttsSince
-                                                    onlyAttachments: YES];
-    if (knownRevs.count > 0)
-        path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
+    if (_settings.downloadAttachments) {
+        // If the document has attachments, add an 'atts_since' param with a list of
+        // already-known revisions, so the server can skip sending the bodies of any
+        // attachments we already have locally:
+        NSArray* knownRevs = [db.storage getPossibleAncestorRevisionIDs: rev
+                                                                  limit: kMaxNumberOfAttsSince
+                                                        onlyAttachments: YES];
+        if (knownRevs.count > 0)
+            path = [path stringByAppendingFormat: @"&attachments=true&atts_since=%@",
+                                joinQuotedEscaped(knownRevs)];
+        else
+            path = [path stringByAppendingString: @"&attachments=true"];
+    }
     LogTo(SyncVerbose, @"%@: GET %@", self, path);
     
-    // Under ARC, using variable dl directly in the block given as an argument to initWithURL:...
-    // results in compiler error (could be undefined variable)
     __weak CBLRestPuller *weakSelf = self;
     __block CBLMultipartDownloader *dl;
     dl = [[CBLMultipartDownloader alloc] initWithURL: CBLAppendToURL(_settings.remote, path)
-                                           database: db
-                                     requestHeaders: _settings.requestHeaders
-                                       onCompletion:
+                                            database: db
+                                      requestHeaders: _settings.requestHeaders
+                                        onCompletion:
         ^(CBLMultipartDownloader* result, NSError *error) {
             __strong CBLRestPuller *strongSelf = weakSelf;
             // OK, now we've got the response revision:
@@ -466,6 +469,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                          database: _db
                                    requestHeaders: _settings.requestHeaders
                                         revisions: bulkRevs
+                                      attachments: _settings.downloadAttachments
                                        onDocument:
           ^(NSDictionary* props) {
               // Got a revision!
