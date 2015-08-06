@@ -85,7 +85,6 @@ _CBLVersion
 .objc_class_name_CBLMultipartDocumentReader
 .objc_class_name_CBLMultipartWriter
 
-.objc_class_name_CBLPasswordAuthorizer
 .objc_class_name_CBLFacebookAuthorizer
 .objc_class_name_CBLOAuth1Authorizer
 .objc_class_name_CBLPersonaAuthorizer
@@ -152,3 +151,5 @@ _CBL_ReplicatorProgressChangedNotification
 _CBL_ReplicatorStoppedNotification
 
 _kDefaultCBLChangesOptions
+
+_CBL_GCDAsyncSocketErrorDomain
