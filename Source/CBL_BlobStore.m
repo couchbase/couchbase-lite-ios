@@ -198,6 +198,12 @@
 }
 
 
+- (BOOL) deleteBlobForKey: (CBLBlobKey)key {
+    return [[NSFileManager defaultManager] removeItemAtPath: [self rawPathForKey: key]
+                                                      error: nil];
+}
+
+
 - (NSArray*) allKeys {
     NSArray* blob = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _path
                                                                             error: NULL];

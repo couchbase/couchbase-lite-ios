@@ -57,6 +57,11 @@ NS_ASSUME_NONNULL_BEGIN
     so this property will return nil. */
 @property (readonly, nullable) NSURL* contentURL;
 
+/** Deletes the attachment's contents from local storage. If the attachment is still available on
+    a remote server, it can be restored by calling -[CBLReplication downloadAttachment:onProgress:].
+ */
+- (BOOL) purge;
+
 - (instancetype) init NS_UNAVAILABLE;
 
 @end

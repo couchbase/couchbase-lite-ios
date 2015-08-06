@@ -164,6 +164,14 @@
 }
 
 
+- (BOOL) purge {
+    CBLBlobKey key;
+    return !_body
+        && [CBL_Attachment digest: _metadata[@"digest"] toBlobKey: &key]
+        && [_rev.database.attachmentStore deleteBlobForKey: key];
+}
+
+
 static CBL_BlobStoreWriter* blobStoreWriterForBody(CBLDatabase* tddb, NSData* body) {
     CBL_BlobStoreWriter* writer = tddb.attachmentWriter;
     [writer appendData: body];

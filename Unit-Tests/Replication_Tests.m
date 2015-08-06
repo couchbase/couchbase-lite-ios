@@ -1214,6 +1214,13 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     NSInputStream* stream = att.openContentStream;
     Assert(stream != nil);
     [stream close];
+
+    Log(@"Purging attachment...");
+    Assert([att purge]);
+    Assert(!att.contentAvailable);
+    AssertNil(att.content);
+    AssertNil(att.contentURL);
+    AssertNil(att.openContentStream);
 }
 
 

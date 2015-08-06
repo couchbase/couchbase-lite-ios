@@ -45,6 +45,8 @@ typedef struct CBLBlobKey {
 - (BOOL) storeBlob: (NSData*)blob
        creatingKey: (CBLBlobKey*)outKey;
 
+- (BOOL) deleteBlobForKey: (CBLBlobKey)key;
+
 @property (readonly) NSString* path;
 @property (readonly) NSUInteger count;
 @property (readonly) NSArray* allKeys;
