@@ -118,9 +118,10 @@
 }
 
 
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    [super connection: connection didFailWithError: error];
-    _onProgress(_bytesRead, _contentLength, error); // report error
+- (void) respondWithResult: (id)result error: (NSError*)error {
+    if (error)
+        _onProgress(_bytesRead, _contentLength, error); // report error
+    [super respondWithResult: result error: error];
 }
 
 
