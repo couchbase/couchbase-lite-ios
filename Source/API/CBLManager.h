@@ -100,6 +100,12 @@ typedef struct CBLManagerOptions {
 - (BOOL) encryptDatabaseNamed: (NSString*)name;
 #endif
 
+/** Closes the database with the given name. Same as CBLDatabase's -close: method, this method stops 
+    the replicators, closes the views, and saves all of the models associated with the database. 
+    In addition, the shared background database used in the background thread with the given name 
+    will be closed as well. The method returns NO when an error occurs, otherwise returns YES. */
+- (BOOL) closeDatabaseNamed: (NSString*)name error: (NSError**)error;
+
 /** Same as -existingDatabaseNamed:. Enables "[]" access in Xcode 4.4+ */
 - (nullable CBLDatabase*) objectForKeyedSubscript: (NSString*)key;
 
