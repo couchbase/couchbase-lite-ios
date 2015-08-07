@@ -576,6 +576,24 @@ static CBLManager* sInstance;
 #endif
 
 
+- (BOOL) closeDatabaseNamed: (NSString*)name error: (NSError**)error {
+    CBLDatabase* db = _databases[name];
+    if (db) {
+        if (![db close: error])
+            return NO;
+    }
+    
+    CBL_Shared* shared = _shared;
+    if (shared.backgroundServer) {
+        return [[shared.backgroundServer waitForDatabaseNamed: name to: ^id(CBLDatabase* bgdb) {
+            BOOL result = [bgdb close: error];
+            return @(result);
+        }] boolValue];
+    }
+    return YES;
+}
+
+
 #if DEBUG
 - (CBLDatabase*) createEmptyDatabaseNamed: (NSString*)name error: (NSError**)outError {
     CBLDatabase* db = _databases[name];

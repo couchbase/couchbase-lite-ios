@@ -8,6 +8,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLInternal.h"
+#import "CBL_Shared.h"
 
 
 @interface Database_Tests : CBLTestCaseWithDB
@@ -1184,5 +1185,39 @@
                         }];
 }
 
+
+- (void) test_24_ManagerCloseDatabase {
+    // Add some documents:
+    for (NSUInteger i = 0; i < 10; i++) {
+        CBLDocument* doc = [db createDocument];
+        CBLSavedRevision* rev = [doc putProperties: @{@"foo": @"bar"} error: nil];
+        Assert(rev);
+    }
+    
+    // Use background database:
+    [dbmgr backgroundTellDatabaseNamed: db.name to: ^(CBLDatabase *bgdb) {
+        CBLDocument* doc = [bgdb createDocument];
+        CBLSavedRevision* rev = [doc putProperties: @{@"foo": @"bar"} error: nil];
+        Assert(rev);
+    }];
+    
+    // Close database:
+    NSError* error;
+    Assert([dbmgr.shared isDatabaseOpened: db.name]);
+    BOOL success = [dbmgr closeDatabaseNamed: db.name error: &error];
+    Assert(success, @"Couldn't close database: %@", error);
+    Assert(![dbmgr.shared isDatabaseOpened: db.name]);
+    
+    if (self.isSQLiteDB) {
+        // If the WAL file exists, the size of the file should be zero:
+        NSString* dbPath = [dbmgr pathForDatabaseNamed: db.name];
+        NSString* dbWALPath = [dbPath stringByAppendingPathComponent :@"db.sqlite3-wal"];
+        NSFileManager* fmgr = [NSFileManager defaultManager];
+        if ([fmgr fileExistsAtPath: dbWALPath]) {
+            NSDictionary* attrs = [fmgr attributesOfItemAtPath: dbWALPath error: nil];
+            AssertEq(attrs.fileSize, 0u);
+        }
+    }
+}
 
 @end
