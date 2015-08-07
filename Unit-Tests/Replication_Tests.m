@@ -1278,4 +1278,32 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     [self waitForExpectationsWithTimeout: 2.0 handler: nil];
 }
 
+
+- (void) test_22_StoppedWhenCloseDatabase {
+    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+    
+    NSError* error;
+    
+    // Run push and pull replication:
+    CBLReplication* push = [db createPushReplication: remoteDbURL];
+    push.continuous = YES;
+    [self runReplication: push expectedChangesCount: 0u];
+    
+    CBLReplication* pull = [db createPushReplication: remoteDbURL];
+    pull.continuous = YES;
+    [self runReplication: pull expectedChangesCount: 0u];
+    
+    [self keyValueObservingExpectationForObject: push keyPath: @"status" expectedValue: @(kCBLReplicationStopped)];
+    [self keyValueObservingExpectationForObject: pull keyPath: @"status" expectedValue: @(kCBLReplicationStopped)];
+    
+    Assert([db close: &error], @"Error when closing the database: %@", error);
+    
+    [self waitForExpectationsWithTimeout: 2.0 handler: nil];
+    AssertEq(db.allReplications.count, 0u);
+}
+
+
 @end
