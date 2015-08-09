@@ -248,6 +248,7 @@ static CBLManager* sCBLManager;
 
     _fetchRequestResultCache = [[NSMutableDictionary alloc] init];
     _queryBuilderCache = [[NSCache alloc] init];
+    _relationshipCache = [[NSCache alloc] init];
     _respondFlags.storeWillSaveDocument = NO;
     
     self.conflictHandler = [self defaultConflictHandler];
@@ -588,10 +589,10 @@ static CBLManager* sCBLManager;
             return result;
         } else {
             // one-to-many
-            CBLQueryEnumerator* rows = [self queryToManyRelation: relationship
-                                                    forParentKey: [objectID couchbaseLiteIDRepresentation]
-                                                        prefetch: NO
-                                                        outError: outError];
+            NSArray* rows = [self queryToManyRelation: relationship
+                                         forParentKey: [objectID couchbaseLiteIDRepresentation]
+                                             prefetch: NO
+                                             outError: outError];
             if (!rows) return nil;
             NSMutableArray* result = [NSMutableArray arrayWithCapacity: rows.count];
             for (CBLQueryRow* row in rows) {
@@ -1488,10 +1489,10 @@ static CBLManager* sCBLManager;
                             // one-to-many
                             NSString* parentDocId = [properties objectForKey: @"_id"];
                             if (parentDocId) {
-                                CBLQueryEnumerator* rows = [self queryToManyRelation: relation
-                                                                        forParentKey: parentDocId
-                                                                            prefetch: NO
-                                                                            outError: nil];
+                                NSArray* rows = [self queryToManyRelation: relation
+                                                             forParentKey: parentDocId
+                                                                 prefetch: NO
+                                                                 outError: nil];
                                 if (rows) {
                                     NSMutableArray* docIds = [NSMutableArray array];
                                     for (CBLQueryRow* row in rows)
@@ -1556,10 +1557,10 @@ static CBLManager* sCBLManager;
                         // one-to-many
                         NSString* parentDocId = [properties objectForKey: @"_id"];
                         if (parentDocId) {
-                            CBLQueryEnumerator* rows = [self queryToManyRelation: relation
-                                                                    forParentKey: parentDocId
-                                                                        prefetch: YES
-                                                                        outError: nil];
+                            NSArray* rows = [self queryToManyRelation: relation
+                                                         forParentKey: parentDocId
+                                                             prefetch: YES
+                                                             outError: nil];
                             if (rows) {
                                 NSMutableArray* values = [NSMutableArray array];
                                 for (CBLQueryRow* row in rows) {
@@ -1583,17 +1584,17 @@ static CBLManager* sCBLManager;
     return value;
 }
 
-- (CBLQueryEnumerator*) queryToManyRelation: (NSRelationshipDescription*)relation
-                              forParentKey: (NSString*)parentKey
-                                   prefetch: (BOOL)prefetch
-                                   outError: (NSError**)outError {
+- (NSArray*) queryToManyRelation: (NSRelationshipDescription*)relation
+                    forParentKey: (NSString*)parentKey
+                        prefetch: (BOOL)prefetch
+                        outError: (NSError**)outError {
     NSString* viewName = CBLISToManyViewNameForRelationship(relation);
     CBLView* view = [self.database existingViewNamed: viewName];
     if (view) {
         NSString* cacheKey = [NSString stringWithFormat:@"%@/%@", view, parentKey];
         CBLQueryEnumerator* result = [_relationshipCache objectForKey: cacheKey];
         if (result && (SInt64)result.sequenceNumber == view.database.lastSequenceNumber)
-            return result;
+            return [result allObjects];
 
         CBLQuery* query = [view createQuery];
         query.keys = @[parentKey];
@@ -1603,7 +1604,7 @@ static CBLManager* sCBLManager;
         if (result)
             [_relationshipCache setObject: result forKey: cacheKey];
 
-        return result;
+        return [result allObjects];
     }
     return nil;
 }
