@@ -11,6 +11,7 @@
 #import <CommonCrypto/CommonCryptor.h>
 #import "CBLCookieStorage.h"
 #import "CBL_Body.h"
+#import "CBLAttachmentDownloader.h"
 #import "MYAnonymousIdentity.h"
 
 
@@ -1198,6 +1199,8 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     AssertNil(att.contentURL);
     AssertNil(att.openContentStream);
 
+    CBLAttachmentDownloaderFakeTransientFailures = YES;
+
     Log(@"Downloading attachment...");
     XCTestExpectation* downloaded = [self expectationWithDescription: @"Downloaded attachment"];
     [repl downloadAttachment: att onProgress: ^(uint64_t bytesRead, uint64_t contentLength, NSError *error) {
@@ -1221,6 +1224,8 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     AssertNil(att.content);
     AssertNil(att.contentURL);
     AssertNil(att.openContentStream);
+
+    CBLAttachmentDownloaderFakeTransientFailures = NO;
 }
 
 

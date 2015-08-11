@@ -343,13 +343,8 @@
             return nil;
         }
         close(fd);
-        _out = [NSFileHandle fileHandleForWritingAtPath: _tempPath];
-        if (!_out) {
-            BOOL exists = [[NSFileManager defaultManager] fileExistsAtPath: _tempPath];
-            Warn(@"CBL_BlobStoreWriter: Unable to get a file handle for the temp file at "
-                  "%@ (exists: %@)", _tempPath, (exists ? @"yes" : @"no"));
+        if (![self openFile])
             return nil;
-        }
         CBLSymmetricKey* encryptionKey = _store.encryptionKey;
         if (encryptionKey)
             _encryptor = [encryptionKey createEncryptor];
@@ -369,16 +364,39 @@
 }
 
 - (void) closeFile {
-    if (_encryptor) {
-        [_out writeData: _encryptor(nil)];  // write remaining encrypted data & clean up
-        _encryptor = nil;
-    }
     [_out closeFile];
     _out = nil;    
 }
 
+- (BOOL) openFile {
+    if (_out)
+        return YES;
+    _out = [NSFileHandle fileHandleForWritingAtPath: _tempPath];
+    if (!_out) {
+        BOOL exists = [[NSFileManager defaultManager] fileExistsAtPath: _tempPath];
+        Warn(@"CBL_BlobStoreWriter: Unable to get a file handle for the temp file at "
+             "%@ (exists: %@)", _tempPath, (exists ? @"yes" : @"no"));
+        return NO;
+    }
+    [_out seekToEndOfFile];
+    return YES;
+}
+
+- (void) reset {
+    if (_out) {
+        [_out truncateFileAtOffset: 0];
+        SHA1_Init(&_shaCtx);
+        MD5_Init(&_md5Ctx);
+        _length = 0;
+    }
+}
+
 - (void) finish {
     Assert(_out, @"Already finished");
+    if (_encryptor) {
+        [_out writeData: _encryptor(nil)];  // write remaining encrypted data & clean up
+        _encryptor = nil;
+    }
     [self closeFile];
     SHA1_Final(_blobKey.bytes, &_shaCtx);
     MD5_Final(_MD5Digest.bytes, &_md5Ctx);
@@ -455,6 +473,7 @@
 
 - (void) cancel {
     [self closeFile];
+    _encryptor = nil;
     if (_tempPath) {
         [[NSFileManager defaultManager] removeItemAtPath: _tempPath error: NULL];
         _tempPath = nil;

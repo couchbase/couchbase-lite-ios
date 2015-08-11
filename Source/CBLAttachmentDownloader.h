@@ -22,4 +22,9 @@ typedef void (^CBLAttachmentDownloaderProgressBlock)(uint64_t bytesRead,
                     onProgress: (CBLAttachmentDownloaderProgressBlock)onProgress
                   onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 
+#if DEBUG
+extern BOOL CBLAttachmentDownloaderFakeTransientFailures;
+@property BOOL fakeTransientFailure;    // for testing only; causes one fake failure during DL
+#endif
+
 @end

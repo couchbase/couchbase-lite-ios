@@ -19,6 +19,7 @@
 #import "CBLInternal.h"
 #import "CBLBase64.h"
 #import "CBLMisc.h"
+#import "CouchbaseLitePrivate.h"
 #import "CollectionUtils.h"
 #import "MYStreamUtils.h"
 #import "GTMNSData+zlib.h"
