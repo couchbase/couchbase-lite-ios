@@ -204,6 +204,14 @@ static UInt16 sPort = 60100;
 
 @implementation P2P_BLIP_Tests
 
+- (void)invokeTest {
+    // Skip these tests if TestNewReplicator isn't enabled:
+    if ([[NSUserDefaults standardUserDefaults] boolForKey: @"TestNewReplicator"])
+        [super invokeTest];
+    else
+        Log(@"(Skipping test; TestNewReplicator is not enabled)");
+}
+
 - (Class) listenerClass {
     return [CBLSyncListener class];
 }
@@ -216,12 +224,6 @@ static UInt16 sPort = 60100;
 - (void) testPull               {[super testPull];}
 - (void) testPushAttachments    {[super testPushAttachments];}
 - (void) testPullAttachments    {[super testPullAttachments];}
-
-- (void) runReplication: (CBLReplication*)repl
-         expectedChangesCount: (NSUInteger)expectedChangesCount
-{
-    [super runReplication: repl expectedChangesCount: expectedChangesCount];
-}
 
 @end
 
