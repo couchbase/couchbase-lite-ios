@@ -222,6 +222,19 @@ static void test(QueryBuilder_Tests *self,
          nil,
          nil,
          nil);
+
+    // For https://github.com/couchbase/couchbase-lite-ios/issues/857
+    test(self, /*select*/ nil,
+         /*where*/ @"model_type == 'member' AND uid IN $uids",
+         /*order by*/ @"name",
+         @"model_type == \"member\"",
+         @"uid",
+         @"name",
+         nil,
+         nil,
+         @"$uids",
+         @"[(value0, ascending, compare:)]",
+         nil);
 }
 
 
@@ -415,5 +428,48 @@ query.sortDescriptors = [(value3, descending, compare:)];\n");
     }
 }
 
+// For https://github.com/couchbase/couchbase-lite-ios/issues/857
+- (void) test09_SortWithContains {
+    [db inTransaction:^BOOL{
+        for (unsigned i=0; i<100; i++) {
+            @autoreleasepool {
+                NSDictionary* properties = @{@"name": [NSString stringWithFormat:@"%d", i*773%100], @"uid": @(i), @"model_type":@"member"};
+                [self createDocumentWithProperties: properties];
+            }
+        }
+        return YES;
+    }];
+
+    NSMutableArray *predicates = [[NSMutableArray alloc] init];
+    NSString *where = [NSString stringWithFormat:@"%@=='%@'", @"model_type", @"member"];
+    NSPredicate *typePredicate = [NSPredicate predicateWithFormat:where];
+    [predicates addObject:typePredicate];
+    NSPredicate *idsPredicate = [NSPredicate predicateWithFormat:@"uid in $uids"];
+    [predicates addObject:idsPredicate];
+    NSPredicate *predicate = [NSCompoundPredicate andPredicateWithSubpredicates:predicates];
+    NSError *error = nil;
+    NSSortDescriptor *sort = [NSSortDescriptor sortDescriptorWithKey:@"name" ascending:YES];
+
+    for (int sorted = 0; sorted <= 1; ++sorted) {
+        Log(@"--- sorted = %d", sorted);
+        CBLQueryBuilder* b = [[CBLQueryBuilder alloc] initWithDatabase: db
+                                                                select: nil
+                                                        wherePredicate: predicate
+                                                               orderBy: (sorted ? @[sort] : nil)
+                                                                 error: &error];
+        Assert(b, @"Failed to build: %@", error);
+        Log(@"%@", b.explanation);
+
+        NSArray *uids = @[@(7), @(13), @(67), @(88), @(56)];
+        NSDictionary *context = @{@"uids":uids};
+        CBLQueryEnumerator *e = [b runQueryWithContext:context error:&error];
+        Assert(e, @"Query failed: %@", error);
+        NSArray* rows = e.allObjects;
+        NSArray* names = [rows my_map:^id(CBLQueryRow* row) {return row.document[@"name"];}];
+        if (sorted)
+            AssertEqual(names, (@[@"11", @"24", @"49", @"88", @"91"]));
+        AssertEq(rows.count, uids.count);
+    }
+}
 
 @end
