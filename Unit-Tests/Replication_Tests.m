@@ -1181,7 +1181,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
         return;
 
     CBLReplication* repl = [db createPullReplication: pullURL];
-    repl.downloadAttachments = NO;
+    repl.downloadsAttachments = NO;
     [self allowWarningsIn: ^{
         // This triggers a warning in CBLSyncConnection because the attach-test db is actually
         // missing an attachment body. It's not a CBL error.

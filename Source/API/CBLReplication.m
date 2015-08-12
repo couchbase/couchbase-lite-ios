@@ -71,7 +71,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 @synthesize running = _running, completedChangesCount=_completedChangesCount;
 @synthesize changesCount=_changesCount, lastError=_lastError, status=_status;
 @synthesize authenticator=_authenticator, serverCertificate=_serverCertificate;
-@synthesize downloadAttachments=_downloadAttachments;
+@synthesize downloadsAttachments=_downloadsAttachments;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -85,7 +85,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         _database = database;
         _remoteURL = remote;
         _pull = pull;
-        _downloadAttachments = YES;
+        _downloadsAttachments = YES;
     }
     return self;
 }
@@ -236,7 +236,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                                         {@"filter", _filter},
                                         {@"query_params", _filterParams},
                                         {@"doc_ids", _documentIDs},
-                                        {@"attachments", (_downloadAttachments ? nil : @NO)});
+                                        {@"attachments", (_downloadsAttachments ? nil : @NO)});
     NSURL* remoteURL = _remoteURL;
     NSMutableDictionary* authDict = nil;
     if (_authenticator) {
