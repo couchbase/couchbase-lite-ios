@@ -53,6 +53,7 @@
             _changesMode = kNormalFeed;
             _changesFilter = NULL;
             _changesFilterParams = nil;
+            _changesContentOptions = 0;
         }
     }
     return self;
