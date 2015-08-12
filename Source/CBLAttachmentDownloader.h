@@ -19,7 +19,7 @@ typedef void (^CBLAttachmentDownloaderProgressBlock)(uint64_t bytesRead,
                       database: (CBLDatabase*)database
                       document: (NSDictionary*)doc
                 attachmentName: (NSString*)name
-                    onProgress: (CBLAttachmentDownloaderProgressBlock)onProgress
+                      progress: (NSProgress*)progress
                   onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 
 #if DEBUG

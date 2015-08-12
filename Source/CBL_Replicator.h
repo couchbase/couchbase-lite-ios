@@ -97,15 +97,16 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 /** Requests asynchronous download of the given attachment from the server.
     @param name  The name of the attachment
     @param doc  The document properties (custom properties not needed, just _id/_rev/_attachments)
-    @param onProgress  A callback block that will be called periodically during the download.
-                    The first call will have 0 for bytesRead, and the correct contentLength.
-                    The final call on completion will have bytesRead == contentLength.
-                    A non-nil error parameter means the download failed. */
+    @param progress  An NSProgress object that should be updated during the download. */
 - (void) downloadAttachment: (NSString*)name
                  ofDocument: (NSDictionary*)doc
-                 onProgress: (CBL_ReplicatorAttachmentProgressBlock)onProgress;
+                   progress: (NSProgress*)progress;
 
 @end
+
+
+// Key for NSProgress userInfo dictionary
+#define kCBLProgressError @"CBLError"
 
 
 // Supported keys in the .options dictionary:

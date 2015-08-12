@@ -46,6 +46,7 @@ typedef enum {
     kCBLStatusCallbackError  = 593,      // app callback (emit fn, etc.) failed
     kCBLStatusException      = 594,      // Exception raised/caught
     kCBLStatusDBBusy         = 595,      // SQLite DB is busy (this is recoverable!)
+    kCBLStatusCanceled       = 596,      // Operation was canceled by client
 } CBLStatus;
 
 

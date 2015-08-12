@@ -11,6 +11,7 @@
 #import "CBL_BlobStore.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLStatus.h"
+#import "CBL_Replicator.h"
 #import "CouchbaseLitePrivate.h"
 
 #import "MYBlockUtils.h"
@@ -24,7 +25,7 @@
 @implementation CBLAttachmentDownloader
 {
     NSDictionary* _metadata;
-    CBLAttachmentDownloaderProgressBlock _onProgress;
+    NSProgress* _progress;
     CBL_BlobStoreWriter* _writer;
     BOOL _resumeable;
     NSString* _eTag;
@@ -43,7 +44,7 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
                       database: (CBLDatabase*)database
                       document: (NSDictionary*)doc
                 attachmentName: (NSString*)name
-                    onProgress: (CBLAttachmentDownloaderProgressBlock)onProgress
+                      progress: (NSProgress*)progress
                   onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
     NSURL* url = [[dbURL URLByAppendingPathComponent: doc.cbl_id] URLByAppendingPathComponent: name];
@@ -53,12 +54,22 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
                   requestHeaders: nil
                     onCompletion: onCompletion];
     if (self) {
+        _progress = progress;
+        [_progress setUserInfoObject: url forKey: NSProgressFileURLKey];
+        __weak CBLAttachmentDownloader* weakSelf = self;
+        _progress.cancellationHandler = ^{
+            [database doAsync:^{
+                [weakSelf cancelWithStatus: kCBLStatusCanceled];
+            }];
+        };
+        if (_progress.isCancelled)
+            return nil;     // client already canceled, so give up
+
         _metadata = [doc.cbl_attachments[name] copy];
-        _onProgress = onProgress;
         _writer = [database attachmentWriter];
         _writer.name = name;
         _noteProgress = MYThrottledBlock(kProgressInterval, ^{
-            onProgress(MIN(_bytesRead, _contentLength-1), _contentLength, nil);
+            progress.completedUnitCount = MIN(_bytesRead, _contentLength-1);
         });
 #if DEBUG
         _fakeTransientFailure = CBLAttachmentDownloaderFakeTransientFailures;
@@ -69,6 +80,8 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
 
 
 - (void) start {
+    [_progress setUserInfoObject: nil forKey: kCBLProgressError];
+
     if (_bytesRead > 0 && _eTag)
         [_request setValue: _eTag forHTTPHeaderField: @"If-Match"];
     [_request setValue: $sprintf(@"bytes=%llu-", _bytesRead) forHTTPHeaderField: @"Range"];
@@ -101,6 +114,8 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
             NSNumber* len = _metadata[@"encoded_length"] ?: _metadata[@"length"];
             _contentLength = len ? len.longLongValue : UINT64_MAX;
         }
+        _progress.completedUnitCount = _bytesRead;
+        _progress.totalUnitCount = _contentLength;
     }
     [super connection: connection didReceiveResponse: response];
 }
@@ -133,7 +148,7 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
         [_writer install];
         _writer = nil; // stop clearConnection from canceling
         [self clearConnection];
-        _onProgress(_bytesRead, _bytesRead, nil); // immediately report 100% complete
+        _progress.completedUnitCount = _contentLength;
         [self respondWithResult: writer error: nil];
     } else {
         [self cancelWithStatus: kCBLStatusBadAttachment];
@@ -143,7 +158,7 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
 
 - (void) respondWithResult: (id)result error: (NSError*)error {
     if (error)
-        _onProgress(_bytesRead, _contentLength, error); // report error
+        [_progress setUserInfoObject: error forKey: kCBLProgressError];
     [super respondWithResult: result error: error];
 }
 
@@ -156,6 +171,7 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
             LogTo(RemoteRequest, @"%@: Will retry, but download isn't resumeable so truncating file", self);
             [_writer reset];
             _bytesRead = 0;
+            _progress.completedUnitCount = _bytesRead;
         }
         [_writer closeFile];
     }

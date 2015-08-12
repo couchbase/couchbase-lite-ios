@@ -714,7 +714,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 - (void) downloadAttachment: (NSString*)name
                  ofDocument: (NSDictionary*)doc
-                 onProgress: (CBL_ReplicatorAttachmentProgressBlock)onProgress
+                   progress: (NSProgress*)progress
 {
     __weak CBLRestPuller *weakSelf = self;
     __block CBLAttachmentDownloader* dl;
@@ -722,7 +722,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                database: _db
                                                document: doc
                                          attachmentName: name
-                                             onProgress: onProgress
+                                               progress: progress
                                            onCompletion:
           ^(id result, NSError *error) {
               __strong CBLRestPuller *strongSelf = weakSelf;

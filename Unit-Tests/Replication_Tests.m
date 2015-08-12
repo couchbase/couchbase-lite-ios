@@ -1202,14 +1202,19 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     CBLAttachmentDownloaderFakeTransientFailures = YES;
 
     Log(@"Downloading attachment...");
-    XCTestExpectation* downloaded = [self expectationWithDescription: @"Downloaded attachment"];
-    [repl downloadAttachment: att onProgress: ^(uint64_t bytesRead, uint64_t contentLength, NSError *error) {
-        Log(@"Progress report: %llu / %llu bytes; err = %@", bytesRead, contentLength, error);
-        AssertNil(error);
-        if (bytesRead == contentLength || error)
-            [downloaded fulfill];
+    NSProgress* progress = [repl downloadAttachment: att];
+    [self keyValueObservingExpectationForObject: progress
+                                        keyPath: @"fractionCompleted"
+                                        handler:
+        ^BOOL(id observedObject, NSDictionary *change) {
+            Log(@"progress = %@", progress);
+            Log(@"    desc = %@ / %@",
+                progress.localizedDescription, progress.localizedAdditionalDescription);
+            NSError* error = progress.userInfo[kCBLProgressErrorKey];
+            return progress.completedUnitCount == progress.totalUnitCount || error != nil;
     }];
     [self waitForExpectationsWithTimeout: _timeout handler: nil];
+    AssertNil(progress.userInfo[kCBLProgressErrorKey]);
 
     Assert(att.contentAvailable);
     AssertEq(att.content.length, att.length);

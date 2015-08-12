@@ -31,6 +31,8 @@ typedef void (^PendingAction)(id<CBL_Replicator>);
 
 
 NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
+NSString* const kCBLProgressErrorKey = kCBLProgressError;
+
 
 // Declared in CBL_Replicator.h
 NSString* CBL_ReplicatorProgressChangedNotification = @"CBL_ReplicatorProgressChanged";
@@ -234,7 +236,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                                         {@"filter", _filter},
                                         {@"query_params", _filterParams},
                                         {@"doc_ids", _documentIDs},
-                                        {@"attachments", @(_downloadAttachments)});
+                                        {@"attachments", (_downloadAttachments ? nil : @NO)});
     NSURL* remoteURL = _remoteURL;
     NSMutableDictionary* authDict = nil;
     if (_authenticator) {
@@ -445,29 +447,25 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 #pragma mark - PULL REPLICATION ONLY:
 
 
-- (void) downloadAttachment: (CBLAttachment*)attachment
-                 onProgress: (CBLAttachmentProgressBlock)onProgress
-{
+- (NSProgress*) downloadAttachment: (CBLAttachment*)attachment{
     Assert(_pull, @"Not a pull replication");
     AssertEq(attachment.document.database, _database);
     NSString* name = attachment.name;
     NSDictionary* docProps = attachment.revision.properties;
 
-    // Wrap the onProgress block in a proxy that will perform the call on the db thread/queue:
-    CBLAttachmentProgressBlock innerOnProgress = ^(uint64_t bytesRead,
-                                                   uint64_t contentLength,
-                                                   NSError* error) {
-        if (onProgress) {
-            [_database doAsync:^{
-                onProgress(bytesRead, contentLength, error);
-            }];
-        }
-    };
+    NSNumber* encodedLength = $castIf(NSNumber, attachment.metadata[@"encoded_length"]);
+    uint64_t length = encodedLength ? encodedLength.unsignedLongLongValue : attachment.length;
+    NSProgress* progress = [NSProgress progressWithTotalUnitCount: length];
+    progress.cancellable = YES;     // downloader will set its own cancellation handler
+    progress.kind = NSProgressKindFile;
+    [progress setUserInfoObject: NSProgressFileOperationKindDownloading
+                         forKey: NSProgressFileOperationKindKey];
 
     [self tellReplicatorWhileRunning:^(id<CBL_Replicator> bgReplicator) {
-        [bgReplicator downloadAttachment: name ofDocument: docProps onProgress: innerOnProgress];
+        [bgReplicator downloadAttachment: name ofDocument: docProps progress: progress];
     }];
     [self start];
+    return progress;
 }
 
 

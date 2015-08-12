@@ -203,10 +203,8 @@ typedef void (^CBLAttachmentProgressBlock)(uint64_t bytesRead,
 
 /** Triggers an asynchronous download of an attachment that was skipped in a pull replication.
     @param attachment  The attachment to download.
-    @param onProgress  An optional block that will be called during the download. It will be
-                called periodically as data is received, and on successful completion or error. */
-- (void) downloadAttachment: (CBLAttachment*)attachment
-                 onProgress: (CBLAttachmentProgressBlock)onProgress;
+    @return  An NSProgress object that will be updated to report the progress of the download. */
+- (NSProgress*) downloadAttachment: (CBLAttachment*)attachment;
 
 
 - (instancetype) init NS_UNAVAILABLE;
@@ -218,6 +216,9 @@ typedef void (^CBLAttachmentProgressBlock)(uint64_t bytesRead,
     {status, running, error, completed, total}. It's often more convenient to observe this
     notification rather than observing each property individually. */
 extern NSString* const kCBLReplicationChangeNotification;
+
+/** NSProgress userInfo key used to report an NSError when an attachment download fails. */
+extern NSString* const kCBLProgressErrorKey;
 
 
 NS_ASSUME_NONNULL_END
