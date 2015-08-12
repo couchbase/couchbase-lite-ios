@@ -172,7 +172,7 @@ typedef struct CBLManagerOptions {
     It's usually more convenient to enable logging via command-line args, as discussed on that
     same page; but in some environments you may not have access to the args, or may want to use
     other criteria to enable logging. */
-+ (void) enableLogging: (NSString*)type;
++ (void) enableLogging: (nullable NSString*)type;
 
 /** Redirects Couchbase Lite logging: instead of writing to the console/stderr, it will call the
     given block. Passing a nil block restores the default behavior. */
