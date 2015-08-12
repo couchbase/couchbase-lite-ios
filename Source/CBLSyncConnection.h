@@ -8,6 +8,7 @@
 
 #import "BLIPConnection.h"
 #import <CouchbaseLite/CBLDatabase.h>
+#import <CouchbaseLite/CBLStatus.h>
 @class CBLQueryEnumerator, CBLBlipReplicator;
 
 
@@ -18,6 +19,7 @@ typedef NS_ENUM(unsigned, SyncState) {
     kSyncActive,
 };
 
+typedef CBLStatus (^OnSyncAccessCheckBlock)(BLIPRequest* req, NSString* docID);
 
 @interface CBLSyncConnection : NSObject <BLIPConnectionDelegate>
 
@@ -38,6 +40,8 @@ typedef NS_ENUM(unsigned, SyncState) {
 
 @property (readonly) dispatch_queue_t syncQueue;
 @property (readonly) NSURL* peerURL;
+
+@property (copy) OnSyncAccessCheckBlock onSyncAccessCheck;
 
 // The below properties are observable, but the changes happen on the syncQueue
 

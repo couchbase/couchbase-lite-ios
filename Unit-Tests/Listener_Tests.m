@@ -12,7 +12,7 @@
 #import "CBLHTTPListener.h"
 #import "CBLRemoteRequest.h"
 #import "CBLClientCertAuthorizer.h"
-#import "BLIPPocketSocketConnection.h"
+#import "BLIP.h"
 #import "MYAnonymousIdentity.h"
 
 #import <arpa/inet.h>
@@ -107,6 +107,92 @@ static UInt16 sPort = 60000;
     [self connect];
 }
 
+- (void)test03_ReadOnly {
+    if (!self.isSQLiteDB || ![self isKindOfClass: [CBLSyncListener class]])
+        return;
+
+    // Wait for listener to start:
+    if (listener.port == 0) {
+        [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(sPort)];
+        [listener start: NULL];
+        [self waitForExpectationsWithTimeout: kTimeout handler: nil];
+    }
+
+    // Enable readOnly mode:
+    listener.readOnly = YES;
+
+    NSURL* url = [[listener.URL URLByAppendingPathComponent: db.name]
+                  URLByAppendingPathComponent: @"_blipsync"];
+    Log(@"Connecting to <%@>", url);
+    BLIPPocketSocketConnection* conn = [[BLIPPocketSocketConnection alloc] initWithURL: url];
+    [conn setDelegate: self queue: dispatch_get_main_queue()];
+
+    NSError* error;
+    Assert([conn connect: &error], @"Can't connect: %@", error);
+    _expectDidOpen = [self expectationWithDescription: @"didOpen"];
+    [self waitForExpectationsWithTimeout: kTimeout handler: nil];
+
+    // getCheckpoint:
+    BLIPRequest* request = [conn request];
+    request.profile = @"getCheckpoint";
+    request[@"client"] = @"TestReadOnly";
+    [self sendRequest: request expectedErrorCode: 0 expectedResult: nil];
+
+    // setCheckpoint:
+    request = [conn request];
+    request.profile = @"setCheckpoint";
+    request[@"client"] = @"TestReadOnly";
+    request[@"rev"] = @"1-000";
+    request.bodyJSON = $dict({@"lastSequence", @(1)});
+    [self sendRequest: request expectedErrorCode: 403 expectedResult: nil];
+
+    // subChanges:
+    request = [conn request];
+    request.profile = @"subChanges";
+    [self sendRequest: request expectedErrorCode: 0 expectedResult: nil];
+
+    // changes:
+    request = [conn request];
+    request.profile = @"changes";
+    request.bodyJSON = @[@[@(1), @"doc1", @"1-001"]];
+    [self sendRequest: request expectedErrorCode: 403 expectedResult: nil];
+
+    // rev:
+    request = [conn request];
+    request.profile = @"rev";
+    request[@"history"] = @"1-001";
+    request.bodyJSON = @{@"_id": @"doc1", @"_rev": @"1-001"};
+    [self sendRequest: request expectedErrorCode: 403 expectedResult: nil];
+
+    // getAttachment:
+    CBLUnsavedRevision* newRev =[[db createDocument] newRevision];
+    NSData* body = [@"This is an attachment." dataUsingEncoding: NSUTF8StringEncoding];
+    [newRev setAttachmentNamed: @"attach" withContentType: @"text/plain" content: body];
+    CBLAttachment* att = [[newRev save: nil] attachmentNamed: @"attach"];
+    Assert(att);
+
+    request = [conn request];
+    request.profile = @"getAttachment";
+    request[@"digest"] = att.metadata[@"digest"];
+    [self sendRequest: request expectedErrorCode: 0 expectedResult: nil];
+
+    // proveAttachment:
+    request = [conn request];
+    request.profile = @"proveAttachment";
+    request[@"digest"] = att.metadata[@"digest"];
+    uint8_t nonceBytes[16];
+    SecRandomCopyBytes(kSecRandomDefault, sizeof(nonceBytes), nonceBytes);
+    NSData* nonceData = [NSData dataWithBytes: nonceBytes length: sizeof(nonceBytes)];
+    request.body = nonceData;
+    [self sendRequest: request expectedErrorCode: 0 expectedResult: nil];
+
+    _expectDidClose = [self expectationWithDescription: @"didClose"];
+    [conn close];
+    [self waitForExpectationsWithTimeout: kTimeout handler: nil];
+}
+
+
+#pragma mark - Test Utilities
 
 - (void) connect {
     NSURL* url = [[listener.URL URLByAppendingPathComponent: db.name]
@@ -125,6 +211,22 @@ static UInt16 sPort = 60000;
 
     _expectDidClose = [self expectationWithDescription: @"didClose"];
     [conn close];
+    [self waitForExpectationsWithTimeout: kTimeout handler: nil];
+}
+
+
+- (void)sendRequest: (BLIPRequest*)request
+  expectedErrorCode: (NSInteger)expectedErrorCode
+     expectedResult: (id)expectedResult
+{
+    XCTestExpectation* expectDidComplete = [self expectationWithDescription: @"didComplete"];
+    [request send].onComplete = ^(BLIPResponse* response) {
+        Assert(response);
+        AssertEq(response.error.code, expectedErrorCode);
+        if (expectedResult)
+            AssertEqual(response.bodyJSON, expectedResult);
+        [expectDidComplete fulfill];
+    };
     [self waitForExpectationsWithTimeout: kTimeout handler: nil];
 }
 
@@ -216,8 +318,10 @@ static NSString* addressToString(NSData* addrData) {
 }
 
 // Have to override these so Xcode will recognize that these tests exist in this class:
+// Have to override these so Xcode will recognize that these tests exist in this class:
 - (void)test01_SSL_NoClientCert    {[super test01_SSL_NoClientCert];}
 - (void)test02_SSL_ClientCert      {[super test02_SSL_ClientCert];}
+- (void)test03_ReadOnly			   {[super test03_ReadOnly];}
 
 
 - (void) connect {
