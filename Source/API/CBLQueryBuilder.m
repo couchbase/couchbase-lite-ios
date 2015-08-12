@@ -596,26 +596,37 @@ static NSString* printExpr(NSExpression* expr) {
     NSMutableArray* keyPredicates = [NSMutableArray array];
     if (_equalityKey)
         [keyPredicates addObject: _equalityKey];
-    if (_otherKey)
-        [keyPredicates addObject: _otherKey];
-    else if (allAscendingSorts(_querySort)) {
-        // Add sort descriptors as extra components of the key so the index will sort by them:
-        NSUInteger i = 0;
-        for (NSSortDescriptor* sortDesc in _querySort) {
-            NSExpression* expr = [NSExpression expressionForKeyPath: sortDesc.key];
-            if (i++ == 0 && [expr isEqual: _equalityKey.leftExpression])
-                continue;   // This sort descriptor is already the 1st component of the key
-            NSComparisonPredicateOptions options = 0;
-            if (sortDesc.selector == @selector(caseInsensitiveCompare:))
-                options |= NSCaseInsensitivePredicateOption;
-            [keyPredicates addObject: [NSComparisonPredicate
-                    predicateWithLeftExpression: expr
-                                rightExpression: [NSExpression expressionForConstantValue: nil]
-                                       modifier: NSDirectPredicateModifier
-                                           type: NSLessThanPredicateOperatorType
-                                        options: options]];
+
+    if (_equalityKey && _equalityKey.predicateOperatorType == NSInPredicateOperatorType) {
+        // In an "x in $y" query the keys have to match exactly, so can't add components to the key.
+        // But check whether the sort descriptor is redundant with the key and if so remove it:
+        if (_querySort.count == 1) {
+            NSExpression* expr = [NSExpression expressionForKeyPath: [_querySort[0] key]];
+            if ([expr isEqual: _equalityKey.leftExpression])
+                _querySort = nil;
         }
-        _querySort = nil;
+    } else {
+        if (_otherKey) {
+            [keyPredicates addObject: _otherKey];
+        } else if (allAscendingSorts(_querySort)) {
+            // Add sort descriptors as extra components of the key so the index will sort by them:
+            NSUInteger i = 0;
+            for (NSSortDescriptor* sortDesc in _querySort) {
+                NSExpression* expr = [NSExpression expressionForKeyPath: sortDesc.key];
+                if (i++ == 0 && [expr isEqual: _equalityKey.leftExpression])
+                    continue;   // This sort descriptor is already the 1st component of the key
+                NSComparisonPredicateOptions options = 0;
+                if (sortDesc.selector == @selector(caseInsensitiveCompare:))
+                    options |= NSCaseInsensitivePredicateOption;
+                [keyPredicates addObject: [NSComparisonPredicate
+                        predicateWithLeftExpression: expr
+                                    rightExpression: [NSExpression expressionForConstantValue: nil]
+                                           modifier: NSDirectPredicateModifier
+                                               type: NSLessThanPredicateOperatorType
+                                            options: options]];
+            }
+            _querySort = nil;
+        }
     }
 
     // Remove redundant values that are already part of the key:
