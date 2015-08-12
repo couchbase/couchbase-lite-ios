@@ -201,9 +201,12 @@ typedef void (^CBLAttachmentProgressBlock)(uint64_t bytesRead,
 
 #pragma mark - ATTACHMENT DOWNLOADING (PULL ONLY)
 
-/** Triggers an asynchronous download of an attachment that was skipped in a pull replication.
+/** Starts an asynchronous download of an attachment that was skipped in a pull replication.
     @param attachment  The attachment to download.
-    @return  An NSProgress object that will be updated to report the progress of the download. */
+    @return  An NSProgress object that will be updated to report the progress of the download.
+        You can use Key-Value Observing to observe its fractionCompleted property.
+        (Note: observer callbacks will be issued on a background thread!)
+        You can cancel the download by calling its -cancel method. */
 - (NSProgress*) downloadAttachment: (CBLAttachment*)attachment;
 
 

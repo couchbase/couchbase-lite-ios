@@ -32,6 +32,10 @@ NS_ASSUME_NONNULL_BEGIN
 /** The length in bytes of the contents. */
 @property (readonly) UInt64 length;
 
+/** The length in bytes of the encoded form of the attachment.
+    This may be smaller than the length if the attachment is stored in compressed form. */
+@property (readonly) UInt64 encodedLength;
+
 /** The Couchbase Lite metadata about the attachment, that lives in the document. */
 @property (readonly) CBLJSONDict* metadata;
 

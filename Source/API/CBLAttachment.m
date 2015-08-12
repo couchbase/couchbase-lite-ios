@@ -98,6 +98,12 @@
 }
 
 
+- (UInt64) encodedLength {
+    NSNumber* lengthObj = $castIf(NSNumber, _metadata[@"encoded_length"] ?: _metadata[@"length"]);
+    return lengthObj ? [lengthObj longLongValue] : 0;
+}
+
+
 #pragma mark - BODY
 
 

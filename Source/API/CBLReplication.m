@@ -453,9 +453,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     NSString* name = attachment.name;
     NSDictionary* docProps = attachment.revision.properties;
 
-    NSNumber* encodedLength = $castIf(NSNumber, attachment.metadata[@"encoded_length"]);
-    uint64_t length = encodedLength ? encodedLength.unsignedLongLongValue : attachment.length;
-    NSProgress* progress = [NSProgress progressWithTotalUnitCount: length];
+    NSProgress* progress = [NSProgress progressWithTotalUnitCount: attachment.encodedLength];
     progress.cancellable = YES;     // downloader will set its own cancellation handler
     progress.kind = NSProgressKindFile;
     [progress setUserInfoObject: NSProgressFileOperationKindDownloading
