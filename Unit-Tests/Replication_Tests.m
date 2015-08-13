@@ -1234,4 +1234,47 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 
+- (void) test21_SyncGatewaySessionCookie {
+    NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];
+    if (!remoteURL)
+        return;
+    
+    // Get SyncGatewaySession cookie:
+    __block NSDictionary* cookie;
+    NSURLComponents* comp = [NSURLComponents componentsWithURL: remoteURL
+                                       resolvingAgainstBaseURL: YES];
+    comp.port = @4985;
+    comp.path = [comp.path stringByAppendingPathComponent: @"_session"];
+    XCTestExpectation* complete = [self expectationWithDescription: @"didComplete"];
+    CBLRemoteRequest *req =
+        [[CBLRemoteJSONRequest alloc] initWithMethod: @"POST"
+                                                 URL: comp.URL
+                                                body: @{@"name": @"test", @"password": @"abc123"}
+                                      requestHeaders: nil
+                                        onCompletion:^(id result, NSError *error) {
+                                            AssertNil(error);
+                                            cookie = result;
+                                            [complete fulfill];
+                                        }];
+    [req start];
+    [self waitForExpectationsWithTimeout: 2.0 handler: nil];
+    
+    // Create a continuous pull replicator and set SyncGatewaySession cookie:
+    CBLReplication* repl = [db createPullReplication: remoteURL];
+    repl.continuous = YES;
+    [repl setCookieNamed: cookie[@"cookie_name"]
+               withValue: cookie[@"session_id"]
+                    path: remoteURL.path
+          expirationDate: [CBLJSON dateWithJSONObject: cookie[@"expires"]]
+                  secure: NO];
+    [self runReplication: repl expectedChangesCount: 0u];
+    AssertNil(repl.lastError);
+    
+    // Stop the pull replicator:
+    [self keyValueObservingExpectationForObject: repl
+                                        keyPath: @"status" expectedValue: @(kCBLReplicationStopped)];
+    [repl stop];
+    [self waitForExpectationsWithTimeout: 2.0 handler: nil];
+}
+
 @end
