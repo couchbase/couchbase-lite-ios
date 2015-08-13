@@ -3,6 +3,7 @@
 *.perspectivev3
 *.mode1v3
 *.xcscmblueprint
+*.xccheckout
 *.framework
 *~
 xcuserdata/
