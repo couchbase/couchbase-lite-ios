@@ -175,9 +175,11 @@
     Assert(_readyToRead);
     _readyToRead = false;
     uint8_t buffer[kReadLength];
-    NSInteger bytesRead = [_trackingInput read: buffer maxLength: sizeof(buffer)];
-    if (bytesRead > 0)
-        [self parseBytes: buffer length: bytesRead];
+    while (_trackingInput.hasBytesAvailable) {
+        NSInteger bytesRead = [_trackingInput read: buffer maxLength: sizeof(buffer)];
+        if (bytesRead > 0)
+            [self parseBytes: buffer length: bytesRead];
+    }
 }
 
 
@@ -187,6 +189,7 @@
         if (!_gotResponseHeaders)
             return;
     }
+    self.paused = NO;   // parse any incoming bytes that have been waiting
     if (_mode == kContinuous) {
         [self stop];
     } else if ([self endParsingData] >= 0) {
