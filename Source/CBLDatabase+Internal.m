@@ -196,7 +196,9 @@ static BOOL sAutoCompact = YES;
         return NO;
     }
 
+    [self willChangeValueForKey: @"isOpen"];
     _isOpen = YES;
+    [self didChangeValueForKey: @"isOpen"];
 
     // Listen for _any_ CBLDatabase changing, so I can detect changes made to my database
     // file by other instances (running on other threads presumably.)
@@ -207,6 +209,10 @@ static BOOL sAutoCompact = YES;
     [[NSNotificationCenter defaultCenter] addObserver: self
                                              selector: @selector(dbChanged:)
                                                  name: CBL_DatabaseWillBeDeletedNotification
+                                               object: nil];
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(dbChanged:)
+                                                 name: CBL_DatabaseWillCloseNotification
                                                object: nil];
     return YES;
 }
@@ -228,6 +234,9 @@ static BOOL sAutoCompact = YES;
         [[NSNotificationCenter defaultCenter] removeObserver: self
                                                         name: CBL_DatabaseWillBeDeletedNotification
                                                       object: nil];
+        [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                        name: CBL_DatabaseWillCloseNotification
+                                                      object: nil];
         for (CBLView* view in _views.allValues)
             [view close];
         
@@ -241,7 +250,9 @@ static BOOL sAutoCompact = YES;
         _storage = nil;
         _attachments = nil;
 
+        [self willChangeValueForKey: @"isOpen"];
         _isOpen = NO;
+        [self didChangeValueForKey: @"isOpen"];
 
         [[NSNotificationCenter defaultCenter] removeObserver: self];
         [self _clearDocumentCache];
@@ -381,6 +392,11 @@ static BOOL sAutoCompact = YES;
         } else if ([[n name] isEqualToString: CBL_DatabaseWillBeDeletedNotification]) {
             [self doAsync: ^{
                 LogTo(CBLDatabase, @"%@: Notified of deletion; closing", self);
+                [self _close];
+            }];
+        } else if ([[n name] isEqualToString: CBL_DatabaseWillCloseNotification]) {
+            [self doAsync: ^{
+                LogTo(CBLDatabase, @"%@: Notified of closing", self);
                 [self _close];
             }];
         }
