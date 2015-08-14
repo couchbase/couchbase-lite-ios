@@ -436,7 +436,7 @@ static CBLManager* sInstance;
 
 
 - (CBL_Server*) backgroundServer {
-    CBL_Shared* shared = _shared;
+    CBL_Shared* shared = self.shared;
     Assert(shared);
     @synchronized(shared) {
         CBL_Server* server = shared.backgroundServer;

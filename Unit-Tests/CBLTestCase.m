@@ -243,7 +243,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     if (!urlStr)
         urlStr = kDefaultRemoteTestServer;
     else if (urlStr.length == 0) {
-        Assert(NO, @"Skipping test: no remote DB SSL URL configured");
+        Assert(NO, @"Skipping test: no remote DB URL configured");
         return nil;
     }
     NSURL* server = [NSURL URLWithString: urlStr];

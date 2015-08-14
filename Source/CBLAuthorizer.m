@@ -128,7 +128,7 @@ static BOOL acceptProblems(SecTrustRef trust, NSString* host) {
 
 
 // Updates a SecTrust's result to kSecTrustResultProceed
-static BOOL makeTrusted(SecTrustRef trust) {
+BOOL CBLForceTrusted(SecTrustRef trust) {
     CFDataRef exception = SecTrustCopyExceptions(trust);
     if (!exception)
         return NO;
@@ -164,7 +164,7 @@ BOOL CBLCheckSSLServerTrust(SecTrustRef trust, NSString* host, UInt16 port, NSDa
     // If using cert-pinning, accept cert iff it matches the pin:
     if (pinned) {
         if (certMatchesPinned(SecTrustGetCertificateAtIndex(trust, 0), pinned, host)) {
-            makeTrusted(trust);
+            CBLForceTrusted(trust);
             return YES;
         } else {
             return NO;
@@ -174,7 +174,7 @@ BOOL CBLCheckSSLServerTrust(SecTrustRef trust, NSString* host, UInt16 port, NSDa
     if (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified) {
         return YES;             // explicitly trusted
     } else if (acceptProblems(trust, host)) {
-        makeTrusted(trust);     // self-signed or host mismatch but we'll accept it anyway
+        CBLForceTrusted(trust);     // self-signed or host mismatch but we'll accept it anyway
         return YES;
     } else {
         return NO;              // nope

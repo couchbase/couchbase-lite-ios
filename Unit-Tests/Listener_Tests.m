@@ -52,6 +52,9 @@ static UInt16 sPort = 60000;
     // --Jens 7/2015
     listener = [[[self listenerClass] alloc] initWithManager: dbmgr port: sPort];
     listener.delegate = self;
+    // Need to register a Bonjour service, otherwise on an iOS device the listener's URL doesn't
+    // work because the .local hostname hasn't been registered over mDNS.
+    [listener setBonjourName: @"CBL Unit Tests" type: @"_cblunittests._tcp"];
 }
 
 - (void)tearDown {
@@ -62,7 +65,7 @@ static UInt16 sPort = 60000;
 }
 
 
-- (void)testSSL_NoClientCert {
+- (void)test01_SSL_NoClientCert {
     if (!self.isSQLiteDB)
         return;
     NSError* error;
@@ -80,7 +83,7 @@ static UInt16 sPort = 60000;
 }
 
 
-- (void)testSSL_ClientCert {
+- (void)test02_SSL_ClientCert {
     if (!self.isSQLiteDB)
         return;
     NSError* error;
@@ -212,8 +215,9 @@ static NSString* addressToString(NSData* addrData) {
     return [CBLHTTPListener class];
 }
 
-- (void)testSSL_NoClientCert    {[super testSSL_NoClientCert];}
-- (void)testSSL_ClientCert      {[super testSSL_ClientCert];}
+// Have to override these so Xcode will recognize that these tests exist in this class:
+- (void)test01_SSL_NoClientCert    {[super test01_SSL_NoClientCert];}
+- (void)test02_SSL_ClientCert      {[super test02_SSL_ClientCert];}
 
 
 - (void) connect {
@@ -239,11 +243,13 @@ static NSString* addressToString(NSData* addrData) {
 - (BOOL) checkSSLServerTrust: (NSURLProtectionSpace*)protectionSpace {
     Log(@"checkSSLServerTrust called!");
     [_expectCheckServerTrust fulfill];
+    // Verify that the cert is the same one I told the listener to use:
     SecCertificateRef cert = SecTrustGetCertificateAtIndex(protectionSpace.serverTrust, 0);
     SecCertificateRef realServerCert;
     SecIdentityCopyCertificate(listener.SSLIdentity, &realServerCert);
     Assert(CFEqual(cert, realServerCert));
     CFRelease(realServerCert);
+    Assert(CBLForceTrusted(protectionSpace.serverTrust));
     return YES;
 }
 

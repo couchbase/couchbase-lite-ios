@@ -1243,7 +1243,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     __block NSDictionary* cookie;
     NSURLComponents* comp = [NSURLComponents componentsWithURL: remoteURL
                                        resolvingAgainstBaseURL: YES];
-    comp.port = @4985;
+    comp.port = @(comp.port.intValue + 1); // admin port
     comp.path = [comp.path stringByAppendingPathComponent: @"_session"];
     XCTestExpectation* complete = [self expectationWithDescription: @"didComplete"];
     CBLRemoteRequest *req =
@@ -1256,6 +1256,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
                                             cookie = result;
                                             [complete fulfill];
                                         }];
+    req.debugAlwaysTrust = YES;
     [req start];
     [self waitForExpectationsWithTimeout: 2.0 handler: nil];
     
