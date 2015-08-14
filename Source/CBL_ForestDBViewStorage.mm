@@ -91,7 +91,7 @@ public:
             indexIt = false;
         } else if (flags & VersionedDocument::kDeleted) {
             indexIt = false;
-        } else if ([(NSString*)cppDoc.key() hasPrefix: @"_design/"]) {
+        } else if (cppDoc.key().hasPrefix(slice("_design/"))) {
             indexIt = false; // design docs don't get indexed!
         } else if (_docTypes.size() > 0) {
             if (std::find(_docTypes.begin(), _docTypes.end(), docType) == _docTypes.end())
