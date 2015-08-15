@@ -323,7 +323,7 @@ static NSString* addressToString(NSData* addrData) {
 - (void)test02_SSL_ClientCert      {[super test02_SSL_ClientCert];}
 - (void)test03_ReadOnly			   {[super test03_ReadOnly];}
 
-- (void)testGetRange {
+- (void)test04_GetRange {
     // Create a document with an attachment:
     CBLDocument* doc = [db createDocument];
     CBLUnsavedRevision* newRev = [doc newRevision];

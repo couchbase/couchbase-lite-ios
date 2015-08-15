@@ -554,9 +554,10 @@ static NSArray* splitPath( NSURL* url ) {
     if (fromStr.length > 0) {
         from = (NSUInteger)fromStr.integerValue;
         if (toStr.length > 0) {
-            to = MIN((NSUInteger)toStr.integerValue, bodyLength - 1);
+            to = (NSUInteger)toStr.integerValue;
             if (to < from)
                 return;  // invalid range
+            to = MIN(to, bodyLength - 1);
         } else
             to = bodyLength - 1;
     } else if (toStr.length > 0) {
