@@ -111,6 +111,8 @@
 - (void) removeAttachmentProgress: (NSProgress*)attProgress
                           pulling: (BOOL)pulling;
 
+- (BOOL) accessCheckForRequest: (BLIPRequest*)request docID: (NSString*)docID;
+
 @end
 
 
