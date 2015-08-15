@@ -323,6 +323,57 @@ static NSString* addressToString(NSData* addrData) {
 - (void)test02_SSL_ClientCert      {[super test02_SSL_ClientCert];}
 - (void)test03_ReadOnly			   {[super test03_ReadOnly];}
 
+- (void)test04_GetRange {
+    // Create a document with an attachment:
+    CBLDocument* doc = [db createDocument];
+    CBLUnsavedRevision* newRev = [doc newRevision];
+    NSData* attach = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
+    [newRev setAttachmentNamed: @"attach" withContentType: @"text/plain" content: attach];
+    Assert([newRev save: nil]);
+
+    // Wait for listener to start:
+    if (listener.port == 0) {
+        [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(sPort)];
+        [listener start: NULL];
+        [self waitForExpectationsWithTimeout: kTimeout handler: nil];
+    }
+
+    // URL to the attachment:
+    NSString* path = [NSString stringWithFormat:@"%@/%@/attach", db.name, doc.documentID];
+
+    [self sendRequest: @"GET" path: path headers: @{@"Range": @"bytes=5-15"} body: nil
+       expectedStatus: 206 expectedHeaders: @{@"Content-Range": @"bytes 5-15/27"}
+       expectedResult: [@"is the body" dataUsingEncoding: NSUTF8StringEncoding]];
+
+    [self sendRequest: @"GET" path: path headers: @{@"Range": @"bytes=12-"} body: nil
+       expectedStatus: 206 expectedHeaders: @{@"Content-Range": @"bytes 12-26/27"}
+       expectedResult: [@"body of attach1" dataUsingEncoding: NSUTF8StringEncoding]];
+
+    [self sendRequest: @"GET" path: path headers: @{@"Range": @"bytes=12-100"} body: nil
+       expectedStatus: 206 expectedHeaders: @{@"Content-Range": @"bytes 12-26/27"}
+       expectedResult: [@"body of attach1" dataUsingEncoding: NSUTF8StringEncoding]];
+
+    [self sendRequest: @"GET" path: path headers: @{@"Range": @"bytes=-7"} body: nil
+       expectedStatus: 206 expectedHeaders: @{@"Content-Range": @"bytes 20-26/27"}
+       expectedResult: [@"attach1" dataUsingEncoding: NSUTF8StringEncoding]];
+
+    [self sendRequest: @"GET" path: path headers: @{@"Range": @"bytes=5-3"} body: nil
+       expectedStatus: 200 expectedHeaders: nil
+       expectedResult: [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding]];
+
+    [self sendRequest: @"GET" path: path headers: @{@"Range": @"bytes=100-"} body: nil
+       expectedStatus: 416 expectedHeaders: @{@"Content-Range": @"bytes */27"}
+       expectedResult: nil];
+
+    [self sendRequest: @"GET" path: path headers: @{@"Range": @"bytes=-100"} body: nil
+       expectedStatus: 200 expectedHeaders: nil
+       expectedResult: [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding]];
+
+    [self sendRequest: @"GET" path: path headers: @{@"Range": @"bytes=500-100"} body: nil
+       expectedStatus: 200 expectedHeaders: nil
+       expectedResult: [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding]];
+}
+
 
 - (void) connect {
     Log(@"Connecting to <%@>", listener.URL);
@@ -355,6 +406,68 @@ static NSString* addressToString(NSData* addrData) {
     CFRelease(realServerCert);
     Assert(CBLForceTrusted(protectionSpace.serverTrust));
     return YES;
+}
+
+
+- (void) sendRequest: (NSString*)method
+                path: (NSString*)path
+             headers: (NSDictionary*)headers
+                body: (id)bodyObj
+          onComplete: (void (^)(NSData *data, NSURLResponse *response, NSError *error))onComplete {
+    NSURL* url = [NSURL URLWithString: path relativeToURL: listener.URL];
+    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
+    request.HTTPMethod = method;
+
+    for (NSString* header in headers)
+        [request setValue: headers[header] forHTTPHeaderField: header];
+
+    if (bodyObj) {
+        if ([bodyObj isKindOfClass: [NSData class]])
+            request.HTTPBody = bodyObj;
+        else {
+            NSError* error = nil;
+            request.HTTPBody = [CBLJSON dataWithJSONObject: bodyObj options:0 error:&error];
+            AssertNil(error);
+        }
+    }
+
+    NSURLSessionConfiguration* config = [NSURLSessionConfiguration defaultSessionConfiguration];
+    config.requestCachePolicy = NSURLRequestReloadIgnoringCacheData;
+    NSURLSession *session = [NSURLSession sessionWithConfiguration: config];
+    NSURLSessionDataTask *task = [session dataTaskWithRequest: request
+                                            completionHandler:
+                                  ^(NSData *data, NSURLResponse *response, NSError *error) {
+                                      onComplete(data, response, error);
+                                  }];
+    [task resume];
+}
+
+
+- (void) sendRequest: (NSString*)method
+                path: (NSString*)path
+             headers: (NSDictionary*)headers
+                body: (id)bodyObj
+      expectedStatus: (NSInteger)expectedStatus
+     expectedHeaders: (NSDictionary*)expectedHeader
+      expectedResult: (NSData*)expectedResult {
+    NSString* description = [NSString stringWithFormat:@"%@ %@", method, path];
+    XCTestExpectation* exp = [self expectationWithDescription: description];
+
+    [self sendRequest: method path: path headers: headers body: bodyObj
+           onComplete: ^(NSData *data, NSURLResponse *response, NSError *error) {
+               NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
+               AssertEq(httpResponse.statusCode, expectedStatus);
+
+               for (NSString* key in [expectedHeader allKeys])
+                   AssertEqual(httpResponse.allHeaderFields[key], expectedHeader[key]);
+
+               if (expectedResult)
+                   AssertEqual(data, expectedResult);
+
+               [exp fulfill];
+           }];
+
+    [self waitForExpectationsWithTimeout: kTimeout handler: nil];
 }
 
 @end

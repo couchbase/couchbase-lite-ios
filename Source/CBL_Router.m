@@ -553,12 +553,13 @@ static NSArray* splitPath( NSURL* url ) {
     NSUInteger from, to;
     if (fromStr.length > 0) {
         from = (NSUInteger)fromStr.integerValue;
-        if (toStr.length > 0)
-            to = MIN((NSUInteger)toStr.integerValue, bodyLength - 1);
-        else
+        if (toStr.length > 0) {
+            to = (NSUInteger)toStr.integerValue;
+            if (to < from)
+                return;  // invalid range
+            to = MIN(to, bodyLength - 1);
+        } else
             to = bodyLength - 1;
-        if (to < from)
-            return;  // invalid range
     } else if (toStr.length > 0) {
         to = bodyLength - 1;
         from = bodyLength - MIN((NSUInteger)toStr.integerValue, bodyLength);
@@ -566,7 +567,7 @@ static NSArray* splitPath( NSURL* url ) {
         return;  // "-" is an invalid range
     }
 
-    if (from >= bodyLength || to < from) {
+    if (from >= bodyLength) {
         _response.status = 416; // Requested Range Not Satisfiable
         NSString* contentRangeStr = $sprintf(@"bytes */%llu", (uint64_t)bodyLength);
         _response[@"Content-Range"] = contentRangeStr;
