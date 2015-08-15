@@ -273,8 +273,8 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
         CBLStatus status = self.onSyncAccessCheck(request, docID);
         if (CBLStatusIsError(status)) {
             NSString* message;
-            [request respondWithErrorCode: CBLStatusToHTTPStatus(status, &message)
-                                  message: message];
+            int code = CBLStatusToHTTPStatus(status, &message);
+            [request respondWithErrorCode: code message: message];
             return NO;
         }
     }

@@ -164,7 +164,7 @@
     NSDictionary* attachments = nil;
     NSString* docID;
     NSData* json = request.body;
-    if (self.onSyncAccessCheck && memmem(json.bytes, json.length, "\"_attachments\":", 15) != NULL) {
+    if (self.onSyncAccessCheck || memmem(json.bytes, json.length, "\"_attachments\":", 15) != NULL) {
         NSDictionary* props = [NSJSONSerialization JSONObjectWithData: json options: 0 error: NULL];
         attachments = $castIf(NSDictionary, props[@"_attachments"]);
         docID = props[@"_id"];
