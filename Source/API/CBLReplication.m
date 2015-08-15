@@ -599,11 +599,15 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     }
 
     // Communicate its state back to the main thread:
+    // Call -doAsync: on the manager object instead of on the database object
+    // to allow the block to be executed regardless of the database open status.
+    // Without loosing the database open status check, the stopped notification
+    // can't be sent when the replication is stopped from closing the database.
     __weak CBLReplication *weakSelf = self;
-    [_database doAsync: ^{
+    [_database.manager doAsync:^{
         CBLReplication *strongSelf = weakSelf;
         [strongSelf updateStatus: status error: error processed: changes ofTotal: total
-                          serverCert: serverCert];
+                      serverCert: serverCert];
         cfrelease(serverCert);
     }];
 
