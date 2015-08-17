@@ -1185,4 +1185,32 @@
 }
 
 
+- (void) test24_CloseDatabase {
+    // Add some documents:
+    for (NSUInteger i = 0; i < 10; i++) {
+        CBLDocument* doc = [db createDocument];
+        CBLSavedRevision* rev = [doc putProperties: @{@"foo": @"bar"} error: nil];
+        Assert(rev);
+    }
+    
+    // Use the background database:
+    __block CBLDatabase* bgdb;
+    XCTestExpectation* expectation =
+        [self expectationWithDescription: @"Adding a document in background"];
+    [dbmgr backgroundTellDatabaseNamed: db.name to: ^(CBLDatabase *_bgdb) {
+        bgdb = _bgdb;
+        CBLDocument* doc = [_bgdb createDocument];
+        CBLSavedRevision* rev = [doc putProperties: @{@"foo": @"bar"} error: nil];
+        [expectation fulfill];
+        Assert(rev);
+    }];
+    [self waitForExpectationsWithTimeout: 1.0 handler: nil];
+    
+    // Close database:
+    NSError* error;
+    [self keyValueObservingExpectationForObject: bgdb keyPath: @"isOpen" expectedValue: @(NO)];
+    Assert([db close: &error], @"Cannot close the database: %@", error);
+    [self waitForExpectationsWithTimeout: 1.0 handler: nil];
+}
+
 @end

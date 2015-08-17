@@ -196,7 +196,9 @@ static BOOL sAutoCompact = YES;
         return NO;
     }
 
+    [self willChangeValueForKey: @"isOpen"];
     _isOpen = YES;
+    [self didChangeValueForKey: @"isOpen"];
 
     // Listen for _any_ CBLDatabase changing, so I can detect changes made to my database
     // file by other instances (running on other threads presumably.)
@@ -241,7 +243,9 @@ static BOOL sAutoCompact = YES;
         _storage = nil;
         _attachments = nil;
 
+        [self willChangeValueForKey: @"isOpen"];
         _isOpen = NO;
+        [self didChangeValueForKey: @"isOpen"];
 
         [[NSNotificationCenter defaultCenter] removeObserver: self];
         [self _clearDocumentCache];

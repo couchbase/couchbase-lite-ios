@@ -28,6 +28,9 @@
 
 - (void) _forgetDatabase: (CBLDatabase*)db;
 
+- (BOOL) _closeDatabaseNamed: (NSString*)name
+                       error: (NSError**)outError;
+
 @property (readonly) NSArray* allOpenDatabases;
 
 @property (readonly) CBL_Shared* shared;
