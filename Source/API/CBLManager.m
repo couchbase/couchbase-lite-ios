@@ -726,9 +726,25 @@ static CBLManager* sInstance;
         return [repl localDatabase] == db;
     }];
     [_databases removeObjectForKey: name];
-    [_shared closedDatabase: name];
+
+    CBL_Shared* strongShared = _shared;
+    [strongShared closedDatabase: name];
+
+    // Close background database:
+    [strongShared.backgroundServer tellDatabaseManager: ^(CBLManager* bgmgr) {
+        NSError* error;
+        if (![bgmgr _closeDatabaseNamed: name error: &error])
+            Warn(@"Cannot close background database named %@: %@", name, error);
+    }];
 }
 
+
+- (BOOL) _closeDatabaseNamed: (NSString*)name error: (NSError**)outError {
+    CBLDatabase* db = _databases[name];
+    if (db)
+        return [db close: outError];
+    return YES;
+}
 
 #pragma mark - REPLICATION:
 
