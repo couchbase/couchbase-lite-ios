@@ -1203,6 +1203,28 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
     Log(@"Downloading attachment...");
     NSProgress* progress = [repl downloadAttachment: att];
+
+#if 1 // workaround for a weird XCTest expectation bug (?)
+    XCTestExpectation* expectDone = [self expectationWithDescription: @"Download done"];
+    XCKeyValueObservingExpectationHandler handler = ^BOOL(id object, NSDictionary *change) {
+        Log(@"progress = %@", progress);
+        Log(@"    desc = %@ / %@",
+            progress.localizedDescription, progress.localizedAdditionalDescription);
+        NSError* error = progress.userInfo[kCBLProgressErrorKey];
+        if (progress.completedUnitCount == progress.totalUnitCount || error != nil) {
+            [expectDone fulfill];
+            return YES;
+        }
+        return NO;
+    };
+    [progress addObserver: self
+               forKeyPath: @"fractionCompleted"
+                  options: NSKeyValueObservingOptionInitial
+                  context: (__bridge void*)handler];
+    if (!handler(progress, @{}))
+        [self waitForExpectationsWithTimeout: _timeout handler: nil];
+    [progress removeObserver: self forKeyPath: @"fractionCompleted"];
+#else
     [self keyValueObservingExpectationForObject: progress
                                         keyPath: @"fractionCompleted"
                                         handler:
@@ -1214,6 +1236,8 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
             return progress.completedUnitCount == progress.totalUnitCount || error != nil;
     }];
     [self waitForExpectationsWithTimeout: _timeout handler: nil];
+#endif
+
     AssertNil(progress.userInfo[kCBLProgressErrorKey]);
 
     Assert(att.contentAvailable);
@@ -1231,6 +1255,18 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     AssertNil(att.openContentStream);
 
     CBLAttachmentDownloaderFakeTransientFailures = NO;
+}
+
+
+// part of the workaround for a weird XCTest expectation bug (?)
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if ([keyPath isEqualToString: @"fractionCompleted"]) {
+        XCKeyValueObservingExpectationHandler handler = (__bridge id)context;
+        handler(object, change);
+    } else {
+        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+    }
 }
 
 
