@@ -155,7 +155,7 @@ static BOOL sAutoCompact = YES;
     NSString* storageType = _manager.storageType ?: @"SQLite";
     NSString* storageClassName = $sprintf(@"CBL_%@Storage", storageType);
     Class primaryStorage = NSClassFromString(storageClassName);
-    Assert(primaryStorage, @"CBLManager.storageType is '%@' but no %@ class found",
+    Assert(primaryStorage, @"CBLManager.storageType is '%@' but no %@ class found, maybe add the -ObjC flag to Other Linker Flags in Build Settings",
            _manager.storageType, storageClassName);
     Assert([primaryStorage conformsToProtocol: @protocol(CBL_Storage)],
             @"CBLManager.storageType is '%@' but %@ is not a CBL_Storage implementation",
