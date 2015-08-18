@@ -266,11 +266,9 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 }
 
 
-- (BOOL) accessCheckForRequest: (BLIPRequest*)request
-                         docID: (NSString*)docID
-{
+- (BOOL) accessCheckForRequest: (BLIPRequest*)request {
     if (self.onSyncAccessCheck) {
-        CBLStatus status = self.onSyncAccessCheck(request, docID);
+        CBLStatus status = self.onSyncAccessCheck(request);
         if (CBLStatusIsError(status)) {
             NSString* message;
             int code = CBLStatusToHTTPStatus(status, &message);

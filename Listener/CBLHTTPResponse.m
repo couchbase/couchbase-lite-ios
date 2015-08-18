@@ -60,7 +60,9 @@
             router.onAccessCheck = ^CBLStatus(CBLDatabase* db, NSString* docID, SEL action) {
                 if ([method isEqualToString: @"GET"] || [method isEqualToString: @"HEAD"])
                     return kCBLStatusOK;
-                if ([method isEqualToString: @"POST"]) {
+                else if ([method isEqualToString: @"PUT"] && [docID hasPrefix: @"_local/"])
+                    return kCBLStatusOK;
+                else if ([method isEqualToString: @"POST"]) {
                     NSString* actionStr = NSStringFromSelector(action);
                     if ([actionStr isEqualToString: @"do_POST_all_docs:"]
                             || [actionStr isEqualToString: @"do_POST_revs_diff:"])

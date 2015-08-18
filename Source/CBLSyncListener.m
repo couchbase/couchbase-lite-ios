@@ -91,11 +91,9 @@
                                                                       connection: connection
                                                                            queue: queue];
         if (_facade.readOnly) {
-            handler.onSyncAccessCheck = ^CBLStatus(BLIPRequest* request, NSString* docID) {
+            handler.onSyncAccessCheck = ^CBLStatus(BLIPRequest* request) {
                 NSString* profile = request.profile;
-                if ([profile isEqualToString:@"setCheckpoint"] ||
-                    [profile isEqualToString:@"changes"] ||
-                    [profile isEqualToString:@"rev"])
+                if ([profile isEqualToString:@"changes"] || [profile isEqualToString:@"rev"])
                     return kCBLStatusForbidden;
                 return kCBLStatusOK;
             };

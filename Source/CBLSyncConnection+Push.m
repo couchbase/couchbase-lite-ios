@@ -21,7 +21,7 @@
 
 // Starting point of a passive push (called by peer when it starts pulling.)
 - (void) handleSubscribeToChanges: (BLIPRequest*)request {
-    if (![self accessCheckForRequest: request docID: nil])
+    if (![self accessCheckForRequest: request])
         return;
     
     uint64_t since = MAX(0, [request[@"since"] longLongValue]);
@@ -295,7 +295,7 @@ static NSArray* encodeChange(uint64_t sequence, NSString* docID, NSString* revID
 
 
 - (void) handleGetAttachment: (BLIPRequest*)request {
-    if (![self accessCheckForRequest: request docID: nil])
+    if (![self accessCheckForRequest: request])
         return;
     
     NSString* digest = request[@"digest"];
@@ -338,7 +338,7 @@ static NSArray* encodeChange(uint64_t sequence, NSString* docID, NSString* revID
 
 
 - (void) handleProveAttachment: (BLIPRequest*)request {
-    if (![self accessCheckForRequest: request docID: nil])
+    if (![self accessCheckForRequest: request])
         return;
     
     NSString* digest = request[@"digest"];

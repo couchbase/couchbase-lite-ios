@@ -72,7 +72,7 @@
     // (Note: even if we got 0 changes (i.e. caught up) we still need to go through the db queue
     // before announcing it, so previously queued change processing blocks get to run first.)
     LogTo(Sync, @"Received %u changes", (unsigned)changes.count);
-    if (![self accessCheckForRequest: request docID: nil])
+    if (![self accessCheckForRequest: request])
         return;
     [request deferResponse];
     [self onDatabaseQueue: ^{
@@ -158,21 +158,18 @@
 // Received a "rev" request
 - (void) handleIncomingRevision: (BLIPRequest*)request {
     _awaitingRevs--;
+    if (![self accessCheckForRequest: request])
+        return;
     _insertingRevs++;
 
     // Look for "_attachments" property, trying not to parse JSON if we can avoid it:
     NSDictionary* attachments = nil;
     NSString* docID;
     NSData* json = request.body;
-    if (self.onSyncAccessCheck || memmem(json.bytes, json.length, "\"_attachments\":", 15) != NULL) {
+    if (memmem(json.bytes, json.length, "\"_attachments\":", 15) != NULL) {
         NSDictionary* props = [NSJSONSerialization JSONObjectWithData: json options: 0 error: NULL];
         attachments = $castIf(NSDictionary, props[@"_attachments"]);
         docID = props[@"_id"];
-    }
-    
-    if (![self accessCheckForRequest: request docID: docID]) {
-        --_insertingRevs;
-        return;
     }
     
     if (attachments.count == 0) {

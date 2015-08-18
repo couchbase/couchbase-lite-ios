@@ -168,7 +168,7 @@ static NSString* localDocIDForCheckpointRequest(BLIPRequest* request) {
         [request respondWithErrorCode: 400 message: @"Bad Request"];
         return;
     }
-    if (![self accessCheckForRequest: request docID: [@"_local/" stringByAppendingString: docID]])
+    if (![self accessCheckForRequest: request])
         return;
     [request deferResponse];
     
@@ -203,7 +203,7 @@ static NSString* localDocIDForCheckpointRequest(BLIPRequest* request) {
         [request respondWithErrorCode: 400 message: @"Bad Request"];
         return;
     }
-    if (![self accessCheckForRequest: request docID: [@"_local/" stringByAppendingString: docID]])
+    if (![self accessCheckForRequest: request])
         return;
     NSString* revID = request[@"rev"];
     if (revID)

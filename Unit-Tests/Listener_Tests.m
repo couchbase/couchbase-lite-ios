@@ -108,7 +108,7 @@ static UInt16 sPort = 60000;
 }
 
 - (void)test03_ReadOnly {
-    if (!self.isSQLiteDB || ![self isKindOfClass: [CBLSyncListener class]])
+    if (!self.isSQLiteDB)
         return;
 
     // Wait for listener to start:
@@ -144,7 +144,7 @@ static UInt16 sPort = 60000;
     request[@"client"] = @"TestReadOnly";
     request[@"rev"] = @"1-000";
     request.bodyJSON = $dict({@"lastSequence", @(1)});
-    [self sendRequest: request expectedErrorCode: 403 expectedResult: nil];
+    [self sendRequest: request expectedErrorCode: 0 expectedResult: nil];
 
     // subChanges:
     request = [conn request];
@@ -213,7 +213,6 @@ static UInt16 sPort = 60000;
     [conn close];
     [self waitForExpectationsWithTimeout: kTimeout handler: nil];
 }
-
 
 - (void)sendRequest: (BLIPRequest*)request
   expectedErrorCode: (NSInteger)expectedErrorCode
@@ -321,7 +320,36 @@ static NSString* addressToString(NSData* addrData) {
 // Have to override these so Xcode will recognize that these tests exist in this class:
 - (void)test01_SSL_NoClientCert    {[super test01_SSL_NoClientCert];}
 - (void)test02_SSL_ClientCert      {[super test02_SSL_ClientCert];}
-- (void)test03_ReadOnly			   {[super test03_ReadOnly];}
+
+- (void)test03_ReadOnly {
+    if (!self.isSQLiteDB)
+        return;
+
+    // Enable readOnly mode:
+    listener.readOnly = YES;
+
+    // Wait for listener to start:
+    if (listener.port == 0) {
+        [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(sPort)];
+        [listener start: NULL];
+        [self waitForExpectationsWithTimeout: kTimeout handler: nil];
+    }
+
+    NSString* dbPath = [NSString stringWithFormat:@"%@/", db.name];
+
+    [self sendRequest: @"PUT" path: [dbPath stringByAppendingString: @"doc1"]
+              headers: nil body: @{} expectedStatus: 403
+      expectedHeaders: nil expectedResult: nil];
+
+    [self sendRequest: @"PUT" path: [dbPath stringByAppendingString: @"_local/remotecheckpointdocid"]
+              headers: nil body: @{@"lastSequence": @"1"} expectedStatus: 201
+      expectedHeaders: nil expectedResult: nil];
+
+    Assert([[db documentWithID: @"doc2"] putProperties: @{} error: nil]);
+    [self sendRequest: @"GET" path: [dbPath stringByAppendingString: @"doc2"]
+              headers: nil body: nil expectedStatus: 200
+      expectedHeaders: nil expectedResult: nil];
+}
 
 - (void)test04_GetRange {
     // Create a document with an attachment:

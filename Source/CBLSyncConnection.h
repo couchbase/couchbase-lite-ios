@@ -19,7 +19,7 @@ typedef NS_ENUM(unsigned, SyncState) {
     kSyncActive,
 };
 
-typedef CBLStatus (^OnSyncAccessCheckBlock)(BLIPRequest* req, NSString* docID);
+typedef CBLStatus (^OnSyncAccessCheckBlock)(BLIPRequest* req);
 
 @interface CBLSyncConnection : NSObject <BLIPConnectionDelegate>
 
