@@ -27,6 +27,45 @@
 #define kDefaultRequestTimeout 60.0
 
 
+
+@implementation CBL_AttachmentRequest
+
+@synthesize docID=_docID, revID=_revID, name=_name, metadata=_metadata;
+
+- (instancetype) initWithDocID: (NSString*)docID
+                         revID: (NSString *)revID
+                          name: (NSString*)attachmentName
+                      metadata: (NSDictionary*)metadata
+{
+    self = [super init];
+    if (self) {
+        _docID = [docID copy];
+        _revID = [revID copy];
+        _name = [attachmentName copy];
+        _metadata = [metadata copy];
+    }
+    return self;
+}
+
+- (instancetype) copyWithZone: (NSZone*)zone {
+    return self;
+}
+
+- (NSUInteger) hash {
+    return _docID.hash ^ _revID.hash ^ _name.hash;
+}
+
+- (BOOL) isEqual: (id)object {
+    return [object isKindOfClass: [CBL_AttachmentRequest class]]
+        && $equal(_docID, [object docID])
+        && $equal(_revID, [object revID])
+        && $equal(_name,  [object name]);
+}
+
+@end
+
+
+
 @implementation CBL_ReplicatorSettings
 
 @synthesize remote=_remote, isPush=_isPush, continuous=_continuous;

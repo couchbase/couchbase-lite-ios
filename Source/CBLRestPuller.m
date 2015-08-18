@@ -712,26 +712,36 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 #pragma mark - DOWNLOADING ATTACHMENTS:
 
 
-- (void) downloadAttachment: (NSString*)name
-                 ofDocument: (NSDictionary*)doc
+- (void) downloadAttachment: (CBL_AttachmentRequest*)attachment
                    progress: (NSProgress*)progress
 {
-    __weak CBLRestPuller *weakSelf = self;
-    __block CBLAttachmentDownloader* dl;
-    dl = [[CBLAttachmentDownloader alloc] initWithDbURL: _settings.remote
-                                               database: _db
-                                               document: doc
-                                         attachmentName: name
-                                               progress: progress
-                                           onCompletion:
-          ^(id result, NSError *error) {
-              __strong CBLRestPuller *strongSelf = weakSelf;
-              [strongSelf removeRemoteRequest:dl];
-              [strongSelf asyncTasksFinished: 1];
-          }];
-    [self asyncTaskStarted];
-    [self addRemoteRequest: dl];
-    [dl start];
+    __block CBLAttachmentDownloader* dl = _attachmentDownloads[attachment];
+    if (dl) {
+        [dl addProgress: progress];
+    } else {
+        __weak CBLRestPuller *weakSelf = self;
+        dl = [[CBLAttachmentDownloader alloc] initWithDbURL: _settings.remote
+                                                   database: _db
+                                                 attachment: (CBL_AttachmentRequest*)attachment
+                                                   progress: progress
+                                               onCompletion:
+              ^(id result, NSError *error) {
+                  __strong CBLRestPuller *strongSelf = weakSelf;
+                  [strongSelf->_attachmentDownloads removeObjectForKey: attachment];
+                  [strongSelf removeRemoteRequest:dl];
+                  [strongSelf asyncTasksFinished: 1];
+              }];
+        if (!dl)
+            return;
+
+        if (!_attachmentDownloads)
+            _attachmentDownloads = [NSMutableDictionary new];
+        _attachmentDownloads[attachment] = dl;
+
+        [self asyncTaskStarted];
+        [self addRemoteRequest: dl];
+        [dl start];
+    }
 }
 
 

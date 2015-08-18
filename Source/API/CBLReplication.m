@@ -450,8 +450,14 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 - (NSProgress*) downloadAttachment: (CBLAttachment*)attachment{
     Assert(_pull, @"Not a pull replication");
     AssertEq(attachment.document.database, _database);
-    NSString* name = attachment.name;
-    NSDictionary* docProps = attachment.revision.properties;
+
+    if (attachment.contentAvailable)
+        return nil;
+    CBL_AttachmentRequest *request = [[CBL_AttachmentRequest alloc]
+                                                   initWithDocID: attachment.document.documentID
+                                                           revID: attachment.revision.revisionID
+                                                            name: attachment.name
+                                                        metadata: attachment.metadata];
 
     NSProgress* progress = [NSProgress progressWithTotalUnitCount: attachment.encodedLength];
     progress.cancellable = YES;     // downloader will set its own cancellation handler
@@ -460,7 +466,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                          forKey: NSProgressFileOperationKindKey];
 
     [self tellReplicatorWhileRunning:^(id<CBL_Replicator> bgReplicator) {
-        [bgReplicator downloadAttachment: name ofDocument: docProps progress: progress];
+        [bgReplicator downloadAttachment: request progress: progress];
     }];
     [self start];
     return progress;

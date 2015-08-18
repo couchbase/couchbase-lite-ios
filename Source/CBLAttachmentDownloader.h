@@ -7,7 +7,7 @@
 //
 
 #import "CBLRemoteRequest.h"
-@class CBLDatabase;
+@class CBLDatabase, CBL_AttachmentRequest;
 
 typedef void (^CBLAttachmentDownloaderProgressBlock)(uint64_t bytesRead,
                                                      uint64_t contentLength,
@@ -17,10 +17,12 @@ typedef void (^CBLAttachmentDownloaderProgressBlock)(uint64_t bytesRead,
 
 - (instancetype) initWithDbURL: (NSURL*)dbURL
                       database: (CBLDatabase*)database
-                      document: (NSDictionary*)doc
-                attachmentName: (NSString*)name
+                    attachment: (CBL_AttachmentRequest*)attachment
                       progress: (NSProgress*)progress
                   onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
+
+- (void) addProgress: (NSProgress*)progress;
+- (void) removeProgress: (NSProgress*)progress;
 
 #if DEBUG
 extern BOOL CBLAttachmentDownloaderFakeTransientFailures;

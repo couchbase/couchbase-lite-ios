@@ -1202,19 +1202,29 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     CBLAttachmentDownloaderFakeTransientFailures = YES;
 
     Log(@"Downloading attachment...");
-    NSProgress* progress = [repl downloadAttachment: att];
-    [self keyValueObservingExpectationForObject: progress
+
+    XCKeyValueObservingExpectationHandler handler = ^BOOL(id observedObject, NSDictionary *change) {
+        NSProgress* p = observedObject;
+        Log(@"progress = %@", p);
+        Log(@"    desc = %@ / %@",
+            p.localizedDescription, p.localizedAdditionalDescription);
+        NSError* error = p.userInfo[kCBLProgressErrorKey];
+        return p.completedUnitCount == p.totalUnitCount || error != nil;
+    };
+
+    // Request it twice to make sure simultaneous requests work:
+    NSProgress* progress1 = [repl downloadAttachment: att];
+    NSProgress* progress2 = [repl downloadAttachment: att];
+
+    [self keyValueObservingExpectationForObject: progress1
                                         keyPath: @"fractionCompleted"
-                                        handler:
-        ^BOOL(id observedObject, NSDictionary *change) {
-            Log(@"progress = %@", progress);
-            Log(@"    desc = %@ / %@",
-                progress.localizedDescription, progress.localizedAdditionalDescription);
-            NSError* error = progress.userInfo[kCBLProgressErrorKey];
-            return progress.completedUnitCount == progress.totalUnitCount || error != nil;
-    }];
+                                        handler: handler];
+    [self keyValueObservingExpectationForObject: progress2
+                                        keyPath: @"fractionCompleted"
+                                        handler: handler];
     [self waitForExpectationsWithTimeout: _timeout handler: nil];
-    AssertNil(progress.userInfo[kCBLProgressErrorKey]);
+    AssertNil(progress1.userInfo[kCBLProgressErrorKey]);
+    AssertNil(progress2.userInfo[kCBLProgressErrorKey]);
 
     Assert(att.contentAvailable);
     AssertEq(att.content.length, att.length);

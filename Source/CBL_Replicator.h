@@ -31,6 +31,19 @@ extern NSString* CBL_ReplicatorProgressChangedNotification;
 extern NSString* CBL_ReplicatorStoppedNotification;
 
 
+
+/** Simple value object representing a request for an attachment. Useable as an NSDictionary key. */
+@interface CBL_AttachmentRequest : NSObject <NSCopying>
+- (instancetype) initWithDocID: (NSString*)docID
+                         revID: (NSString *)revID
+                          name: (NSString*)attachmentName
+                      metadata: (NSDictionary*)metadata;
+@property (readonly, nonatomic) NSString *docID, *revID, *name;
+@property (readonly, nonatomic) NSDictionary* metadata;
+@end
+
+
+
 /** Protocol that replicator implementations must implement. */
 @protocol CBL_Replicator <NSObject>
 
@@ -95,11 +108,9 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 @property (readonly) NSArray* activeTasksInfo;
 
 /** Requests asynchronous download of the given attachment from the server.
-    @param name  The name of the attachment
-    @param doc  The document properties (custom properties not needed, just _id/_rev/_attachments)
+    @param attachment  The attachment requested
     @param progress  An NSProgress object that should be updated during the download. */
-- (void) downloadAttachment: (NSString*)name
-                 ofDocument: (NSDictionary*)doc
+- (void) downloadAttachment: (CBL_AttachmentRequest*)attachment
                    progress: (NSProgress*)progress;
 
 @end
