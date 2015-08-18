@@ -13,6 +13,7 @@
 #import "CBLRemoteRequest.h"
 #import "CBL_BlobStore.h"
 #import "CBLSymmetricKey.h"
+#import "CBLKVOProxy.h"
 
 
 // The default remote server URL used by RemoteTestDBURL().
@@ -91,6 +92,37 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     return [NSProcessInfo processInfo].operatingSystemVersion.majorVersion;
 #endif
 }
+
+
+#if 1
+// NOTE: This is a workaround for XCTest's implementation of this method not being thread-safe.
+// We can take it out when our test bot is upgraded to Xcode 7 (beta 5 or later).
+- (XCTestExpectation *)keyValueObservingExpectationForObject:(id)objectToObserve
+                                                     keyPath:(NSString *)keyPath
+                                               expectedValue:(nullable id)expectedValue
+{
+    CBLKVOProxy* proxy = [[CBLKVOProxy alloc] initWithObject: objectToObserve
+                                                     keyPath: keyPath];
+    return [super keyValueObservingExpectationForObject: proxy
+                                                keyPath: keyPath
+                                          expectedValue: expectedValue];
+}
+
+- (XCTestExpectation *)keyValueObservingExpectationForObject:(id)objectToObserve
+                                                     keyPath:(NSString *)keyPath
+                                                     handler:(nullable XCKeyValueObservingExpectationHandler)handler
+{
+    XCKeyValueObservingExpectationHandler wrappedHandler = ^BOOL(id o, NSDictionary* c) {
+        return handler(objectToObserve, c);
+    };
+    CBLKVOProxy* proxy = [[CBLKVOProxy alloc] initWithObject: objectToObserve
+                                                     keyPath: keyPath];
+    return [super keyValueObservingExpectationForObject: proxy
+                                                keyPath: keyPath
+                                                handler: wrappedHandler];
+
+}
+#endif
 
 
 @end
