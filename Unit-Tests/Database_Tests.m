@@ -1208,16 +1208,9 @@
     
     // Close database:
     NSError* error;
+    [self keyValueObservingExpectationForObject: bgdb keyPath: @"isOpen" expectedValue: @(NO)];
     Assert([db close: &error], @"Cannot close the database: %@", error);
-
-    // Wait for background database to be closed:
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
-    while (bgdb.isOpen && timeout.timeIntervalSinceNow > 0.0) {
-        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.1]])
-            break;
-    }
-    Assert(!bgdb.isOpen);
+    [self waitForExpectationsWithTimeout: 1.0 handler: nil];
 }
 
 @end
