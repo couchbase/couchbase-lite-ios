@@ -966,11 +966,22 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     [self runReplication: pusher expectedChangesCount: 1];
 
     // Implicitly verify the result by checking the revpos of the document on the Sync Gateway.
-    NSURL* allDocsURL = [remoteDbURL URLByAppendingPathComponent: @"mydoc"];
-    NSData* data = [NSData dataWithContentsOfURL: allDocsURL];
-    Assert(data);
-    NSDictionary* response = [CBLJSON JSONObjectWithData: data options: 0 error: NULL];
-    NSDictionary* attachments = response[@"_attachments"];
+    __block NSDictionary* data;
+    NSURL* docUrl = [remoteDbURL URLByAppendingPathComponent: @"mydoc"];
+    XCTestExpectation* complete = [self expectationWithDescription: @"didComplete"];
+    CBLRemoteRequest *req =
+        [[CBLRemoteJSONRequest alloc] initWithMethod: @"GET" URL: docUrl
+                                                body: nil requestHeaders: nil
+                                        onCompletion:^(id result, NSError *error) {
+                                            AssertNil(error);
+                                            data = result;
+                                            [complete fulfill];
+                                        }];
+    req.debugAlwaysTrust = YES;
+    [req start];
+    [self waitForExpectationsWithTimeout: 2.0 handler: nil];
+
+    NSDictionary* attachments = data[@"_attachments"];
     Assert(attachments);
     NSDictionary* myAttachment = attachments[@"myattachment"];
     Assert(myAttachment);
