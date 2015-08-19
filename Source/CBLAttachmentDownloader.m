@@ -8,7 +8,7 @@
 
 #import "CBLAttachmentDownloader.h"
 #import "CBL_Attachment.h"
-#import "CBL_BlobStore.h"
+#import "CBL_BlobStoreWriter.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLStatus.h"
 #import "CBL_Replicator.h"

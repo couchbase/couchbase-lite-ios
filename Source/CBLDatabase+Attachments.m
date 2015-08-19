@@ -28,6 +28,7 @@
 #import "CBLDatabase+Insertion.h"
 #import "CBLBase64.h"
 #import "CBL_BlobStore.h"
+#import "CBL_BlobStoreWriter.h"
 #import "CBL_Attachment.h"
 #import "CBL_Body.h"
 #import "CBLMultipartWriter.h"

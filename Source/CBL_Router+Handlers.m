@@ -21,6 +21,7 @@
 #import "CBLDatabase+Replication.h"
 #import "CBLView+Internal.h"
 #import "CBL_Body.h"
+#import "CBL_BlobStoreWriter.h"
 #import "CBLMultipartDocumentReader.h"
 #import "CBLMultipartWriter.h"
 #import "CBL_Revision.h"

@@ -7,6 +7,7 @@
 //
 
 #import "CBLSyncConnection_Internal.h"
+#import "CBL_BlobStoreWriter.h"
 #import "MYBuffer.h"
 
 

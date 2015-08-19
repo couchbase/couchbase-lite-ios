@@ -12,6 +12,7 @@
 #import "CBLMultipartWriter.h"
 #import "CBLInternal.h"
 #import "CBL_BlobStore.h"
+#import "CBL_BlobStoreWriter.h"
 #import "GTMNSData+zlib.h"
 
 

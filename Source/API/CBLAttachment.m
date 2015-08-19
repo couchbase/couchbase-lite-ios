@@ -18,7 +18,7 @@
 
 #import "CBLDatabase+Attachments.h"
 #import "CBL_Attachment.h"
-#import "CBL_BlobStore.h"
+#import "CBL_BlobStoreWriter.h"
 #import "CBLInternal.h"
 
 

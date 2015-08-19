@@ -16,6 +16,7 @@
 #import "CBLMultipartDocumentReader.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBL_BlobStore.h"
+#import "CBL_BlobStoreWriter.h"
 #import "CBLInternal.h"
 #import "CBLBase64.h"
 #import "CBLMisc.h"

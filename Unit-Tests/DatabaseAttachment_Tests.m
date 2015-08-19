@@ -18,6 +18,7 @@
 #import "CBLRevision.h"
 #import "CBLDatabaseChange.h"
 #import "CBL_BlobStore.h"
+#import "CBL_BlobStoreWriter.h"
 #import "CBLBase64.h"
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
