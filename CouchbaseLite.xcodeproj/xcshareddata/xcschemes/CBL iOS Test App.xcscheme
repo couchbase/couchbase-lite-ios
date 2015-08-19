@@ -76,12 +76,12 @@
          <EnvironmentVariable
             key = "CBL_TEST_SERVER"
             value = "http://localhost:4984/"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "CBL_SSL_TEST_SERVER"
             value = "https://localhost:4994/"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
    </TestAction>
