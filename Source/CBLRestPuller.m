@@ -32,6 +32,8 @@
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLJSON.h"
+#import "CBLProgressGroup.h"
+#import "CBL_AttachmentTask.h"
 #import "ExceptionUtils.h"
 #import "MYURLUtils.h"
 
@@ -89,6 +91,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     _caughtUp = NO;
     [self asyncTaskStarted];   // task: waiting to catch up
     [self startChangeTracker];
+    [self downloadWaitingAttachments];
 }
 
 
@@ -182,8 +185,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // If we were already online (i.e. server is reachable) but got a reachability-change event,
     // tell the tracker to retry in case it's in retry mode after a transient failure. (I.e. the
     // state of the network might be better now.)
-    if (_running && _online)
+    if (_running && _online) {
         [_changeTracker retry];
+        [self downloadWaitingAttachments];
+    }
     return NO;
 }
 
@@ -712,35 +717,66 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 #pragma mark - DOWNLOADING ATTACHMENTS:
 
 
-- (void) downloadAttachment: (CBL_AttachmentRequest*)attachment
-                   progress: (NSProgress*)progress
-{
-    __block CBLAttachmentDownloader* dl = _attachmentDownloads[attachment];
+// Start downloading if online, else add to _waitingAttachments
+- (void) downloadAttachment: (CBL_AttachmentTask*)task {
+    __block CBLAttachmentDownloader* dl = _attachmentDownloads[task.ID];
     if (dl) {
-        [dl addProgress: progress];
+        // Already being downloaded, so just transfer task's progress object(s) to existing dl:
+        [dl addTask: task];
+    } else if (!_running || !_online) {
+        // Replicator isn't online, so remember it for later:
+        [self addToWaitingAttachments: task];
     } else {
+        // Not being downloaded, so create a downloader:
         __weak CBLRestPuller *weakSelf = self;
         dl = [[CBLAttachmentDownloader alloc] initWithDbURL: _settings.remote
                                                    database: _db
-                                                 attachment: (CBL_AttachmentRequest*)attachment
-                                                   progress: progress
+                                                 attachment: task
                                                onCompletion:
               ^(id result, NSError *error) {
+                  // On completion or error:
                   __strong CBLRestPuller *strongSelf = weakSelf;
-                  [strongSelf->_attachmentDownloads removeObjectForKey: attachment];
-                  [strongSelf removeRemoteRequest:dl];
+                  [strongSelf->_attachmentDownloads removeObjectForKey: task.ID];
+                  if (error) {
+                      if (_running && !_online) {
+                          // I've gone offline, so save the tasks for later:
+                          [task.progress setIndeterminate];
+                          [self addToWaitingAttachments: task];
+                      } else {
+                          // Otherwise give up:
+                          [task.progress failedWithError: error];
+                      }
+                  }
+                  [strongSelf removeRemoteRequest: dl];
                   [strongSelf asyncTasksFinished: 1];
               }];
         if (!dl)
-            return;
+            return; // already been downloaded
 
+        // Remember the downloader, then start it:
         if (!_attachmentDownloads)
             _attachmentDownloads = [NSMutableDictionary new];
-        _attachmentDownloads[attachment] = dl;
+        _attachmentDownloads[task.ID] = dl;
 
         [self asyncTaskStarted];
         [self addRemoteRequest: dl];
         [dl start];
+    }
+}
+
+- (void) addToWaitingAttachments: (CBL_AttachmentTask*)task {
+    if (!_waitingAttachments)
+        _waitingAttachments = [NSMutableArray new];
+    [_waitingAttachments addObject: task];
+}
+
+// Start all attachment requests in _waitingAttachments
+- (void) downloadWaitingAttachments {
+    if (_running && _online) {
+        NSArray* waiting = _waitingAttachments;
+        _waitingAttachments = nil;
+        for (CBL_AttachmentTask* attachment in waiting)
+            [self downloadAttachment: attachment];
     }
 }
 

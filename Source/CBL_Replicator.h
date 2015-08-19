@@ -7,7 +7,7 @@
 //
 
 #import "CBL_ReplicatorSettings.h"
-@class CBLDatabase, CBL_Revision, CBL_RevisionList, CBLCookieStorage;
+@class CBLDatabase, CBL_Revision, CBL_RevisionList, CBLCookieStorage, CBL_AttachmentTask;
 
 
 /** Describes the current status of a CBL_Replicator. */
@@ -29,18 +29,6 @@ extern NSString* CBL_ReplicatorProgressChangedNotification;
 
 /** Posted when replicator stops running. */
 extern NSString* CBL_ReplicatorStoppedNotification;
-
-
-
-/** Simple value object representing a request for an attachment. Useable as an NSDictionary key. */
-@interface CBL_AttachmentRequest : NSObject <NSCopying>
-- (instancetype) initWithDocID: (NSString*)docID
-                         revID: (NSString *)revID
-                          name: (NSString*)attachmentName
-                      metadata: (NSDictionary*)metadata;
-@property (readonly, nonatomic) NSString *docID, *revID, *name;
-@property (readonly, nonatomic) NSDictionary* metadata;
-@end
 
 
 
@@ -107,17 +95,10 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 /** The currently active tasks, each represented by an NSProgress object. (Observable) */
 @property (readonly) NSArray* activeTasksInfo;
 
-/** Requests asynchronous download of the given attachment from the server.
-    @param attachment  The attachment requested
-    @param progress  An NSProgress object that should be updated during the download. */
-- (void) downloadAttachment: (CBL_AttachmentRequest*)attachment
-                   progress: (NSProgress*)progress;
+/** Requests asynchronous download of the given attachment from the server. */
+- (void) downloadAttachment: (CBL_AttachmentTask*)attachment;
 
 @end
-
-
-// Key for NSProgress userInfo dictionary
-#define kCBLProgressError @"CBLError"
 
 
 // Supported keys in the .options dictionary:

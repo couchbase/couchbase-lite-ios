@@ -116,7 +116,7 @@
         if (![writer install])
             return kCBLStatusAttachmentError;
         attachment.blobKey = [writer blobKey];
-        attachment.possiblyEncodedLength = [writer length];
+        attachment.possiblyEncodedLength = [writer bytesWritten];
         // Remove the writer but leave the blob-key behind for future use:
         [self rememberPendingKey: attachment.blobKey forDigest: digest];
         return kCBLStatusOK;
@@ -460,7 +460,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
         [self rememberAttachmentWriter: body forDigest: digest];
         NSString* encodingName = (encoding == kCBLAttachmentEncodingGZIP) ? @"gzip" : nil;
         attachments[filename] = $dict({@"digest", digest},
-                                      {@"length", @(body.length)},
+                                      {@"length", @(body.bytesWritten)},
                                       {@"follows", $true},
                                       {@"content_type", contentType},
                                       {@"encoding", encodingName});

@@ -28,7 +28,8 @@
     NSMutableArray* _bulkRevsToPull;    // CBLPulledRevisions that can be fetched in bulk
     NSUInteger _httpConnectionCount;    // Number of active NSURLConnections
     CBLBatcher* _downloadsToInsert;     // Queue of CBLPulledRevisions, with bodies, to insert
-    NSMutableDictionary* _attachmentDownloads;
+    NSMutableArray* _waitingAttachments;// CBL_AttachmentTasks waiting to start downloading
+    NSMutableDictionary* _attachmentDownloads; // CBL_AttachmentID -> CBLAttachmentDownloader
 }
 
 @end

@@ -386,6 +386,9 @@
 		2786CE621B83A4830061998D /* CBLKVOProxy.h in Headers */ = {isa = PBXBuildFile; fileRef = 2786CE601B83A4830061998D /* CBLKVOProxy.h */; };
 		2786CE6F1B83A48F0061998D /* CBLKVOProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = 2786CE611B83A4830061998D /* CBLKVOProxy.m */; };
 		2786CE701B83A48F0061998D /* CBLKVOProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = 2786CE611B83A4830061998D /* CBLKVOProxy.m */; };
+		2786CE731B83DE5A0061998D /* CBL_AttachmentTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 2786CE711B83DE5A0061998D /* CBL_AttachmentTask.h */; };
+		2786CE741B83DE5A0061998D /* CBL_AttachmentTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 2786CE721B83DE5A0061998D /* CBL_AttachmentTask.m */; };
+		2786CE751B83DF700061998D /* CBL_AttachmentTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 2786CE721B83DE5A0061998D /* CBL_AttachmentTask.m */; };
 		2786CE781B84FFAE0061998D /* CBL_BlobStoreWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 2786CE761B84FFAE0061998D /* CBL_BlobStoreWriter.h */; };
 		2786CE791B84FFAE0061998D /* CBL_BlobStoreWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2786CE771B84FFAE0061998D /* CBL_BlobStoreWriter.m */; };
 		2786CE7A1B84FFBA0061998D /* CBL_BlobStoreWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2786CE771B84FFAE0061998D /* CBL_BlobStoreWriter.m */; };
@@ -548,6 +551,9 @@
 		27CB056316CDD1ED0040C9F8 /* CBLUICollectionSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */; };
 		27CF5D2D152F514A0015D7A9 /* CBLStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* CBLStatus.m */; };
 		27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* CBLStatus.m */; };
+		27D0F3E41B865234006B4419 /* CBLProgressGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D0F3E21B865234006B4419 /* CBLProgressGroup.h */; };
+		27D0F3E51B865234006B4419 /* CBLProgressGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D0F3E31B865234006B4419 /* CBLProgressGroup.m */; };
+		27D0F3F11B86587E006B4419 /* CBLProgressGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D0F3E31B865234006B4419 /* CBLProgressGroup.m */; };
 		27D2E707199BC06300D09A1D /* CBLQueryBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D2E704199BC06300D09A1D /* CBLQueryBuilder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27D895CB14E4EF9E00AC701E /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2714CF511496AE5B00E03341 /* Entitlements.plist */; };
 		27D8C349195A28100073A51C /* CBLDatabaseUpgrade.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D8C347195A28100073A51C /* CBLDatabaseUpgrade.h */; };
@@ -1442,6 +1448,8 @@
 		27846FB815D475DF0030122F /* MYStreamUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYStreamUtils.m; sourceTree = "<group>"; };
 		2786CE601B83A4830061998D /* CBLKVOProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLKVOProxy.h; sourceTree = "<group>"; };
 		2786CE611B83A4830061998D /* CBLKVOProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLKVOProxy.m; sourceTree = "<group>"; };
+		2786CE711B83DE5A0061998D /* CBL_AttachmentTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_AttachmentTask.h; sourceTree = "<group>"; };
+		2786CE721B83DE5A0061998D /* CBL_AttachmentTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_AttachmentTask.m; sourceTree = "<group>"; };
 		2786CE761B84FFAE0061998D /* CBL_BlobStoreWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_BlobStoreWriter.h; sourceTree = "<group>"; };
 		2786CE771B84FFAE0061998D /* CBL_BlobStoreWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_BlobStoreWriter.m; sourceTree = "<group>"; };
 		278E4DD61562B40B00DDCEF9 /* MYURLUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYURLUtils.h; sourceTree = "<group>"; };
@@ -1562,6 +1570,8 @@
 		27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLUICollectionSource.m; path = Extras/CBLUICollectionSource.m; sourceTree = "<group>"; };
 		27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CBLUICollectionSource.h; path = Extras/CBLUICollectionSource.h; sourceTree = "<group>"; };
 		27CF5D2C152F514A0015D7A9 /* CBLStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLStatus.m; sourceTree = "<group>"; };
+		27D0F3E21B865234006B4419 /* CBLProgressGroup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLProgressGroup.h; sourceTree = "<group>"; };
+		27D0F3E31B865234006B4419 /* CBLProgressGroup.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLProgressGroup.m; sourceTree = "<group>"; };
 		27D2E704199BC06300D09A1D /* CBLQueryBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryBuilder.h; sourceTree = "<group>"; };
 		27D2E705199BC06300D09A1D /* CBLQueryBuilder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryBuilder.m; sourceTree = "<group>"; };
 		27D2E70C199BCED100D09A1D /* CBLQueryBuilder+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLQueryBuilder+Private.h"; sourceTree = "<group>"; };
@@ -2379,6 +2389,8 @@
 				27821BB5148E7D6F0099B373 /* CBL_Replicator.h */,
 				27B0864A1B387C3900D3D9D8 /* CBL_ReplicatorSettings.h */,
 				27B0864B1B387C3900D3D9D8 /* CBL_ReplicatorSettings.m */,
+				2786CE711B83DE5A0061998D /* CBL_AttachmentTask.h */,
+				2786CE721B83DE5A0061998D /* CBL_AttachmentTask.m */,
 				27103F8114E9CE4400DF7209 /* CBLReachability.h */,
 				27103F8214E9CE4400DF7209 /* CBLReachability.m */,
 				27B0869E1B3885B600D3D9D8 /* REST Replicator */,
@@ -2429,6 +2441,8 @@
 				27A073EB14C0BB6200F52FE7 /* CBLMisc.m */,
 				271297421A8D597B00F6C5CE /* CBLSymmetricKey.h */,
 				271297431A8D597B00F6C5CE /* CBLSymmetricKey.m */,
+				27D0F3E21B865234006B4419 /* CBLProgressGroup.h */,
+				27D0F3E31B865234006B4419 /* CBLProgressGroup.m */,
 				270B3DEE1489359000E0A926 /* CouchbaseLite-Info.plist */,
 				27821BBD14906FB50099B373 /* CouchbaseLitePrefix.h */,
 				27821BBF149078C70099B373 /* CouchbaseLite.exp */,
@@ -2861,6 +2875,7 @@
 				27486F2E1A606C76008D94F0 /* CBLJSONValidator.h in Headers */,
 				27731EFF1493FA3100815D67 /* CBL_BlobStore.h in Headers */,
 				279906E3149A65B8003D4338 /* CBLRemoteRequest.h in Headers */,
+				2786CE731B83DE5A0061998D /* CBL_AttachmentTask.h in Headers */,
 				279906EE149ABFC2003D4338 /* CBLBatcher.h in Headers */,
 				277B5D3E1821A8380088881E /* yajl_parser.h in Headers */,
 				277B5DCA1821A8B60088881E /* yajl_tree.h in Headers */,
@@ -2933,6 +2948,7 @@
 				27A073EC14C0BB6200F52FE7 /* CBLMisc.h in Headers */,
 				277B5DC91821A8B60088881E /* yajl_parse.h in Headers */,
 				279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */,
+				27D0F3E41B865234006B4419 /* CBLProgressGroup.h in Headers */,
 				271297441A8D597B00F6C5CE /* CBLSymmetricKey.h in Headers */,
 				279CE40014D749A7009F3FA6 /* CBLMultipartReader.h in Headers */,
 				274C6C281A3F838500F9BDF7 /* CBLReduceFuncs.h in Headers */,
@@ -3884,6 +3900,7 @@
 				270B3E3A14898DF200E0A926 /* CBL_Revision.m in Sources */,
 				272A690E17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */,
 				270B3E3F148D7F0000E0A926 /* CBLRestPusher.m in Sources */,
+				2786CE741B83DE5A0061998D /* CBL_AttachmentTask.m in Sources */,
 				27821BB8148E7D6F0099B373 /* CBLRestReplicator.m in Sources */,
 				27B0B797149290AB00A817AD /* CBLChangeTracker.m in Sources */,
 				27B0B79F1492932800A817AD /* CBLBase64.m in Sources */,
@@ -3926,6 +3943,7 @@
 				27B0866B1B387C3900D3D9D8 /* CBLSyncListener.m in Sources */,
 				27DA4309158FA35600F9E7B5 /* CBLCache.m in Sources */,
 				27DA4313158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
+				27D0F3E51B865234006B4419 /* CBLProgressGroup.m in Sources */,
 				2786CE791B84FFAE0061998D /* CBL_BlobStoreWriter.m in Sources */,
 				27DA4346159125B500F9E7B5 /* CBLManager.m in Sources */,
 				27DA434B15912AFD00F9E7B5 /* CBLView.m in Sources */,
@@ -4156,6 +4174,7 @@
 				27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */,
 				27F128B3156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
 				270F5707156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,
+				2786CE751B83DF700061998D /* CBL_AttachmentTask.m in Sources */,
 				27ED8632157D0FC600712B33 /* CBLDocument.m in Sources */,
 				2762AB5A18D36F1B00649D47 /* CBLReplication+Transformation.m in Sources */,
 				93D21AF21A958CEC000AD9AF /* CBLCookieStorage.m in Sources */,
@@ -4220,6 +4239,7 @@
 				2786CE7A1B84FFBA0061998D /* CBL_BlobStoreWriter.m in Sources */,
 				277B5D2E1821A8380088881E /* yajl_alloc.c in Sources */,
 				2737A6D01B703DD500CEF619 /* CBLAttachmentDownloader.m in Sources */,
+				27D0F3F11B86587E006B4419 /* CBLProgressGroup.m in Sources */,
 				277B5D2A1821A8380088881E /* yajl.c in Sources */,
 				277B5D351821A8380088881E /* yajl_encode.c in Sources */,
 				277B5D311821A8380088881E /* yajl_buf.c in Sources */,

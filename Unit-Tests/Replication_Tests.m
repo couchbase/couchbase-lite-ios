@@ -13,6 +13,7 @@
 #import "CBL_Body.h"
 #import "CBLAttachmentDownloader.h"
 #import "MYAnonymousIdentity.h"
+#import "MYErrorUtils.h"
 
 
 // These dbs will get deleted and overwritten during tests:
@@ -1186,10 +1187,10 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 
-- (void) test20_LazyPullAttachments {
+- (CBLReplication*) pullFromAttachTest {
     NSURL* pullURL = [self remoteTestDBURL: kAttachTestDBName];
     if (!pullURL)
-        return;
+        return nil;
 
     CBLReplication* repl = [db createPullReplication: pullURL];
     repl.downloadsAttachments = NO;
@@ -1199,7 +1200,13 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
         [self runReplication: repl expectedChangesCount: 0];
     }];
     AssertNil(repl.lastError);
+    return repl.lastError ? nil : repl;
+}
 
+- (void) test20_LazyPullAttachments {
+    CBLReplication* repl = [self pullFromAttachTest];
+    if (!repl)
+        return;
     Log(@"Verifying attachment...");
     CBLDocument* doc = db[@"oneBigAttachment"];
     CBLAttachment* att = [doc.currentRevision attachmentNamed: @"IMG_0450.MOV"];
@@ -1255,7 +1262,41 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 
-- (void) test21_SyncGatewaySessionCookie {
+- (void) test21_LazyPullMissingAttachment {
+    CBLReplication* repl = [self pullFromAttachTest];
+    if (!repl)
+        return;
+    // This attachment has metadata, but the actual contents are missing in SG, which will cause
+    // a 404 error when we try to download it
+    CBLAttachment* att = [db[@"weirdmeta"].currentRevision attachmentNamed: @"first"];
+    Assert(att);
+
+    // Request it twice to make sure simultaneous requests work:
+    Log(@"Downloading attachment...");
+    NSProgress* progress1 = [repl downloadAttachment: att];
+    NSProgress* progress2 = [repl downloadAttachment: att];
+
+    [self keyValueObservingExpectationForObject: progress1.userInfo
+                                        keyPath: kCBLProgressErrorKey
+                                        handler: ^BOOL(id observedObject, NSDictionary *change) {
+                                            Log(@"progress1.userInfo = %@", observedObject);
+                                            return YES;
+                                        }];
+    [self keyValueObservingExpectationForObject: progress2.userInfo
+                                        keyPath: kCBLProgressErrorKey
+                                        handler: ^BOOL(id observedObject, NSDictionary *change) {
+                                            Log(@"progress2.userInfo = %@", observedObject);
+                                            return YES;
+                                        }];
+    [self waitForExpectationsWithTimeout: _timeout handler: nil];
+    NSError* error1 = progress1.userInfo[kCBLProgressErrorKey];
+    Assert([error1 my_hasDomain: CBLHTTPErrorDomain code: kCBLStatusNotFound]);
+    NSError* error2 = progress2.userInfo[kCBLProgressErrorKey];
+    Assert([error2 my_hasDomain: CBLHTTPErrorDomain code: kCBLStatusNotFound]);
+}
+
+
+- (void) test22_SyncGatewaySessionCookie {
     NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];
     if (!remoteURL)
         return;
@@ -1300,7 +1341,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 
-- (void) test_22_StoppedWhenCloseDatabase {
+- (void) test_23_StoppedWhenCloseDatabase {
     NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
     if (!remoteDbURL)
         return;

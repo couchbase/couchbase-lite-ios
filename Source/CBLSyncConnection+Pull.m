@@ -281,13 +281,13 @@
         if (error == nil) {
             [writer finish];
             LogTo(SyncVerbose, @"Received attachment with digest %@ (%llu bytes)",
-                  digest, writer.length);
+                  digest, writer.bytesWritten);
             [self removeAttachmentProgress: attProgress pulling: YES];
             if ([writer.SHA1DigestString isEqualToString: digest]) {
                 onComplete(writer);
             } else {
                 Warn(@"Attachment received has digest %@; should have been %@ (%llu bytes)",
-                     writer.SHA1DigestString, digest, writer.length);
+                     writer.SHA1DigestString, digest, writer.bytesWritten);
                 [writer cancel];
                 onComplete(nil);
             }

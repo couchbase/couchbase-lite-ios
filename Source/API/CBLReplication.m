@@ -23,6 +23,8 @@
 #import "CBL_Server.h"
 #import "CBLCookieStorage.h"
 #import "CBLAuthorizer.h"
+#import "CBL_AttachmentTask.h"
+#import "CBLProgressGroup.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
 
@@ -453,11 +455,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
     if (attachment.contentAvailable)
         return nil;
-    CBL_AttachmentRequest *request = [[CBL_AttachmentRequest alloc]
-                                                   initWithDocID: attachment.document.documentID
-                                                           revID: attachment.revision.revisionID
-                                                            name: attachment.name
-                                                        metadata: attachment.metadata];
 
     NSProgress* progress = [NSProgress progressWithTotalUnitCount: attachment.encodedLength];
     progress.cancellable = YES;     // downloader will set its own cancellation handler
@@ -465,8 +462,16 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     [progress setUserInfoObject: NSProgressFileOperationKindDownloading
                          forKey: NSProgressFileOperationKindKey];
 
+    CBL_AttachmentID *attID;
+    attID = [[CBL_AttachmentID alloc] initWithDocID: attachment.document.documentID
+                                              revID: attachment.revision.revisionID
+                                               name: attachment.name
+                                           metadata: attachment.metadata];
+    CBL_AttachmentTask *request = [[CBL_AttachmentTask alloc] initWithID: attID
+                                                                progress: progress];
+
     [self tellReplicatorWhileRunning:^(id<CBL_Replicator> bgReplicator) {
-        [bgReplicator downloadAttachment: request progress: progress];
+        [bgReplicator downloadAttachment: request];
     }];
     [self start];
     return progress;

@@ -10,6 +10,8 @@
 #import "CBLSymmetricKey.h"
 #import "CBLBase64.h"
 #import "CBLMisc.h"
+#import "CBLProgressGroup.h"
+#import "MYBlockUtils.h"
 
 #ifdef GNUSTEP
 #import <openssl/md5.h>
@@ -34,14 +36,15 @@ typedef struct {
     CBL_BlobStore* _store;
     NSString* _tempPath;
     NSFileHandle* _out;
-    UInt64 _length;
+    uint64_t _contentLength;
     SHA_CTX _shaCtx;
     MD5_CTX _md5Ctx;
-    CBLBlobKey _blobKey;
     CBLMD5Key _MD5Digest;
     CBLCryptorBlock _encryptor;
+    CBLProgressGroup* _progress;
 }
-@synthesize name=_name, length=_length, blobKey=_blobKey;
+@synthesize name=_name, bytesWritten=_bytesWritten, contentLength=_contentLength;
+@synthesize blobKey=_blobKey, eTag=_eTag;
 
 
 - (instancetype) initWithStore: (CBL_BlobStore*)store {
@@ -70,14 +73,33 @@ typedef struct {
         CBLSymmetricKey* encryptionKey = _store.encryptionKey;
         if (encryptionKey)
             _encryptor = [encryptionKey createEncryptor];
-    }
+}
     return self;
 }
 
 
+- (void) setProgress:(CBLProgressGroup *)progress {
+    _progress = progress;
+    if (_contentLength > 0) {
+        progress.totalUnitCount = _contentLength;
+        progress.completedUnitCount = _bytesWritten;
+    }
+}
+
+- (void) setContentLength:(UInt64)contentLength {
+    _contentLength = contentLength;
+    _progress.totalUnitCount = contentLength;
+}
+
+- (CBLProgressGroup*) progress {
+    return _progress;
+}
+
 - (void) appendData: (NSData*)data {
+    Assert(_out, @"Not open");
     NSUInteger dataLen = data.length;
-    _length += dataLen;
+    _bytesWritten += dataLen;
+    _progress.completedUnitCount = _bytesWritten;
     SHA1_Update(&_shaCtx, data.bytes, dataLen);
     MD5_Update(&_md5Ctx, data.bytes, dataLen);
 
@@ -109,12 +131,10 @@ typedef struct {
 
 
 - (void) reset {
-    if (_out) {
-        [_out truncateFileAtOffset: 0];
-        SHA1_Init(&_shaCtx);
-        MD5_Init(&_md5Ctx);
-        _length = 0;
-    }
+    [_out truncateFileAtOffset: 0];
+    SHA1_Init(&_shaCtx);
+    MD5_Init(&_md5Ctx);
+    _progress.completedUnitCount = 0;
 }
 
 
@@ -132,13 +152,13 @@ typedef struct {
 
 - (NSString*) MD5DigestString {
     return [@"md5-" stringByAppendingString: [CBLBase64 encode: &_MD5Digest
-                                                       length: sizeof(_MD5Digest)]];
+                                                        length: sizeof(_MD5Digest)]];
 }
 
 
 - (NSString*) SHA1DigestString {
     return [@"sha1-" stringByAppendingString: [CBLBase64 encode: &_blobKey
-                                                        length: sizeof(_blobKey)]];
+                                                         length: sizeof(_blobKey)]];
 }
 
 
@@ -202,7 +222,10 @@ typedef struct {
         // case it must have the identical contents, so we're still OK.
         [self cancel];
     }
-    return YES;
+
+    // mark progress as complete now that the attachment is available:
+    [_progress finished];
+return YES;
 }
 
 

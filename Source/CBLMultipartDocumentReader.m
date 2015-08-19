@@ -316,7 +316,7 @@
             CBLBlobKey key = _curAttachment.blobKey;
             NSData* keyData = [NSData dataWithBytes: &key length: sizeof(key)];
             LogTo(SyncVerbose, @"%@: Finished attachment #%u: len=%uk, digest=%@, SHA1=%@",
-                  self, (unsigned)_attachmentsByDigest.count+1, (unsigned)_curAttachment.length/1024,
+                  self, (unsigned)_attachmentsByDigest.count+1, (unsigned)_curAttachment.bytesWritten/1024,
                   md5Str, keyData);
         }
 #endif
@@ -405,9 +405,9 @@
             }
             
             // Check that the length matches:
-            if (writer.length != length) {
+            if (writer.bytesWritten != length) {
                 Warn(@"%@: Attachment '%@' has incorrect length field %@ (should be %llu)",
-                    self, attachmentName, lengthObj, writer.length);
+                    self, attachmentName, lengthObj, writer.bytesWritten);
                 return NO;
             }
             

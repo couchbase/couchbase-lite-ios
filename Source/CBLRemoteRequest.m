@@ -154,9 +154,7 @@ typedef enum {
 
 - (void) clearConnection {
     _request = nil;
-    if (_connection) {
-        _connection = nil;
-    }
+    _connection = nil;
 }
 
 

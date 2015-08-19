@@ -7,6 +7,7 @@
 //
 
 #import "CBL_BlobStore.h"
+@class CBLProgressGroup;
 
 
 /** Lets you stream a large attachment to a CBL_BlobStore asynchronously, e.g. from a network download. */
@@ -14,7 +15,15 @@
 
 - (instancetype) initWithStore: (CBL_BlobStore*)store;
 
-@property (copy) NSString* name;
+@property (copy, nonatomic) NSString* name;
+
+@property (copy, nonatomic) NSString* eTag;   /**< Can be used to store HTTP eTag of remote resource */
+@property (nonatomic) UInt64 contentLength;
+
+/** The number of bytes written to the blob. */
+@property (readonly, nonatomic) UInt64 bytesWritten;
+
+@property CBLProgressGroup* progress;
 
 /** Appends data to the blob. Call this when new data is available. */
 - (void) appendData: (NSData*)data;
@@ -29,11 +38,11 @@
 /** Call this to cancel before finishing the data. */
 - (void) cancel;
 
+
+// Methods below should only be called after -finish:
+
 /** Installs a finished blob into the store. */
 - (BOOL) install;
-
-/** The number of bytes in the blob. */
-@property (readonly) UInt64 length;
 
 /** The contents of the blob. */
 @property (readonly) NSData* blobData;
@@ -51,7 +60,7 @@
 - (BOOL) verifyDigest: (NSString*)digestString;
 
 /** The location of the temporary file containing the attachment contents.
-    Will be nil after -install is called. */
+    Will be nil after -install is called, or if the file is encrypted. */
 @property (readonly) NSString* filePath;
 
 /** A stream for reading the completed blob. */

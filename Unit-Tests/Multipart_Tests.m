@@ -91,7 +91,7 @@
               Log(@"Found %u bytes of data for attachment %@", (unsigned)blob.length, attachment);
               NSNumber* lengthObj = attachment[@"encoded_length"] ?: attachment[@"length"];
               AssertEq(blob.length, [lengthObj unsignedLongLongValue]);
-              AssertEq(writer.length, blob.length);
+              AssertEq(writer.bytesWritten, blob.length);
           }
           AssertEq(db.attachmentStore.count, attachments.count);
           done = YES;
@@ -120,7 +120,7 @@
     NSDictionary* attachment = (dict[@"_attachments"])[@"mary.txt"];
     CBL_BlobStoreWriter* writer = [db attachmentWriterForAttachment: attachment];
     Assert(writer);
-    AssertEq(writer.length, 52u);
+    AssertEq(writer.bytesWritten, 52u);
 
     mime = [self contentsOfTestFile: @"MultipartBinary.mime"];
     headers = @{@"Content-Type": @"multipart/mixed; boundary=\"dc0bf3cdc9a6c6e4c46fe2a361c8c5d7\""};
@@ -144,11 +144,11 @@
     attachment = (dict[@"_attachments"])[@"Toad.gif"];
     writer = [db attachmentWriterForAttachment: attachment];
     Assert(writer);
-    AssertEq(writer.length, 6566u);
+    AssertEq(writer.bytesWritten, 6566u);
     attachment = (dict[@"_attachments"])[@"want3.jpg"];
     writer = [db attachmentWriterForAttachment: attachment];
     Assert(writer);
-    AssertEq(writer.length, 24758u);
+    AssertEq(writer.bytesWritten, 24758u);
 
     // Read data that's equivalent to the last one except the JSON is gzipped:
     mime = [self contentsOfTestFile: @"MultipartBinary.mime"];
