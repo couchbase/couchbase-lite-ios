@@ -337,7 +337,7 @@
     }];
 
     Log(@"Now replicating with correct pinned cert...");
-    NSString* digest = @"29adb68f518347bfa2770723642414f89a4d352a";
+    NSString* digest = CBLHexSHA1Digest([self contentsOfTestFile: @"SelfSigned.cer"]);
     id lastSeq = replic8Continuous(db, remoteURL, NO, nil,
                                    @{kCBLReplicatorOption_PinnedCert: digest},
                                    nil);
