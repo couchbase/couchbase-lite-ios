@@ -17,6 +17,7 @@
 
 
 @interface IncrementalStore_Tests : CBLTestCaseWithDB <CBLIncrementalStoreDelegate>
+@property NSUInteger counter; // General purpose counter that can be used with XCTest Async KVO expectation check
 @end
 
 
@@ -144,6 +145,8 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     CBLIncrementalStore *store;
 }
 
+@synthesize counter=_counter;
+
 - (void) setUp {
     [super setUp];
 
@@ -153,6 +156,9 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     [self reCreateCoreDataContext];
 
     AssertEq(store.database, db);
+    
+    // Reset counter:
+    self.counter = 0;
 }
 
 - (void) tearDown {
@@ -1812,26 +1818,23 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 }
 
 - (void)test_DefaultConflictHandler {
-    XCTestExpectation *expectation = [self expectationWithDescription:@"CBLIS Conflict Handler"];
-
+    [self keyValueObservingExpectationForObject: self keyPath: @"counter" expectedValue: @(1)];
     CBLISConflictHandler defaultHandler = [store.conflictHandler copy];
+    __weak IncrementalStore_Tests* weakSelf = self;
     store.conflictHandler = ^(NSArray* conflictingRevisions) {
         defaultHandler(conflictingRevisions);
-        [expectation fulfill];
+        weakSelf.counter++;
     };
 
-    NSError *error;
-    Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
-                                                 inManagedObjectContext:context];
+    NSError* error;
+    Entry* entry = [NSEntityDescription insertNewObjectForEntityForName: @"Entry"
+                                                 inManagedObjectContext: context];
     entry.text = @"test";
-
-    BOOL success = [context save:&error];
+    BOOL success = [context save: &error];
     Assert(success, @"Could not save context: %@", error);
-
     CBLDocument *doc = [store.database documentWithID:
                         [entry.objectID couchbaseLiteIDRepresentation]];
-    AssertEqual(entry.text, [doc propertyForKey:@"text"]);
-
+    AssertEqual(entry.text, [doc propertyForKey: @"text"]);
     CBLSavedRevision* rev1 = doc.currentRevision;
 
     // Create rev2a:
@@ -1842,14 +1845,14 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
     // Create rev2b:
     properties = rev1.properties.mutableCopy;
-    NSString *date = [CBLJSON JSONObjectWithDate:[NSDate date]];
+    NSString* date = [CBLJSON JSONObjectWithDate: [NSDate date]];
     properties[@"created_at"] = date;
     CBLUnsavedRevision* newRev = [rev1 createRevision];
     newRev.properties = properties;
     CBLSavedRevision* rev2b = [newRev saveAllowingConflict: &error];
     Assert(rev2b, @"Failed to create a conflict revision: %@", error);
-
-    [self waitForExpectationsWithTimeout:5.0 handler:^(NSError *error) {
+    
+    [self waitForExpectationsWithTimeout: 2.0 handler: ^(NSError *error) {
         Assert(error == nil, "Timeout error: %@", error);
     }];
 
