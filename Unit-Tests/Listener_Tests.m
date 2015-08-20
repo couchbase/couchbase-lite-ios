@@ -55,6 +55,9 @@ static UInt16 sPort = 60000;
     // Need to register a Bonjour service, otherwise on an iOS device the listener's URL doesn't
     // work because the .local hostname hasn't been registered over mDNS.
     [listener setBonjourName: @"CBL Unit Tests" type: @"_cblunittests._tcp"];
+
+    if (self.iOSVersion >= 9)
+        [self enableSSL];
 }
 
 - (void)tearDown {
@@ -65,19 +68,30 @@ static UInt16 sPort = 60000;
 }
 
 
-- (void)test01_SSL_NoClientCert {
-    if (!self.isSQLiteDB)
-        return;
-    NSError* error;
-    Assert([listener setAnonymousSSLIdentityWithLabel: @"CBLUnitTests" error: &error],
-           @"Failed to set SSL identity: %@", error);
-    // Wait for listener to start:
+- (void) enableSSL {
+    if (!listener.SSLIdentity) {
+        NSError* error;
+        Assert([listener setAnonymousSSLIdentityWithLabel: @"CBLUnitTests" error: &error],
+               @"Failed to set SSL identity: %@", error);
+    }
+}
+
+- (void) startListener {
     if (listener.port == 0) {
-        [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(sPort)];
+        [self keyValueObservingExpectationForObject: listener
+                                            keyPath: @"port"
+                                      expectedValue: @(sPort)];
         [listener start: NULL];
         [self waitForExpectationsWithTimeout: kTimeout handler: nil];
     }
+}
 
+
+- (void)test01_SSL_NoClientCert {
+    if (!self.isSQLiteDB)
+        return;
+    [self enableSSL];
+    [self startListener];
     _expectAuthenticateTrust = [self expectationWithDescription: @"authenticateWithTrust"];
     [self connect];
 }
@@ -86,16 +100,10 @@ static UInt16 sPort = 60000;
 - (void)test02_SSL_ClientCert {
     if (!self.isSQLiteDB)
         return;
-    NSError* error;
-    Assert([listener setAnonymousSSLIdentityWithLabel: @"CBLUnitTests" error: &error],
-           @"Failed to set SSL identity: %@", error);
-    // Wait for listener to start:
-    if (listener.port == 0) {
-        [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(sPort)];
-        [listener start: NULL];
-        [self waitForExpectationsWithTimeout: kTimeout handler: nil];
-    }
+    [self enableSSL];
+    [self startListener];
 
+    NSError* error;
     SecIdentityRef identity = MYGetOrCreateAnonymousIdentity(@"CBLUnitTests-Client",
                                                      kMYAnonymousIdentityDefaultExpirationInterval,
                                                      &error);
@@ -108,18 +116,13 @@ static UInt16 sPort = 60000;
 }
 
 - (void)test03_ReadOnly {
-    if (!self.isSQLiteDB)
+    if (!self.isSQLiteDB || ![listener isKindOfClass: [CBLSyncListener class]])
         return;
-
-    // Wait for listener to start:
-    if (listener.port == 0) {
-        [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(sPort)];
-        [listener start: NULL];
-        [self waitForExpectationsWithTimeout: kTimeout handler: nil];
-    }
 
     // Enable readOnly mode:
     listener.readOnly = YES;
+
+    [self startListener];
 
     NSURL* url = [[listener.URL URLByAppendingPathComponent: db.name]
                   URLByAppendingPathComponent: @"_blipsync"];
@@ -327,13 +330,7 @@ static NSString* addressToString(NSData* addrData) {
 
     // Enable readOnly mode:
     listener.readOnly = YES;
-
-    // Wait for listener to start:
-    if (listener.port == 0) {
-        [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(sPort)];
-        [listener start: NULL];
-        [self waitForExpectationsWithTimeout: kTimeout handler: nil];
-    }
+    [self startListener];
 
     NSString* dbPath = [NSString stringWithFormat:@"%@/", db.name];
 
@@ -352,19 +349,14 @@ static NSString* addressToString(NSData* addrData) {
 }
 
 - (void)test04_GetRange {
+    [self startListener];
+
     // Create a document with an attachment:
     CBLDocument* doc = [db createDocument];
     CBLUnsavedRevision* newRev = [doc newRevision];
     NSData* attach = [@"This is the body of attach1" dataUsingEncoding: NSUTF8StringEncoding];
     [newRev setAttachmentNamed: @"attach" withContentType: @"text/plain" content: attach];
     Assert([newRev save: nil]);
-
-    // Wait for listener to start:
-    if (listener.port == 0) {
-        [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(sPort)];
-        [listener start: NULL];
-        [self waitForExpectationsWithTimeout: kTimeout handler: nil];
-    }
 
     // URL to the attachment:
     NSString* path = [NSString stringWithFormat:@"%@/%@/attach", db.name, doc.documentID];
