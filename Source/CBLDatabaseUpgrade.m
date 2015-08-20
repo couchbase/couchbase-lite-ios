@@ -163,7 +163,70 @@ static int collateRevIDs(void *context,
             return CBLStatusFromNSError(error, 0);
         }
     }
-    return kCBLStatusOK;
+
+    return [self renameAttachmentFileNamesInDir: newAttachmentsPath];
+}
+
+
+- (CBLStatus) renameAttachmentFileNamesInDir: (NSString*)dir {
+    // CBL Android 1.0.4 and .NET 1.1.0 have lowercase attachment file names.
+    // This method will detect that and uppercase the file names if needed.
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+
+    if (![fmgr fileExistsAtPath: dir])
+        return kCBLStatusOK;
+
+    NSError* error;
+    NSArray* content = [fmgr contentsOfDirectoryAtPath: dir error: &error];
+    if (error)
+        return CBLStatusFromNSError(error, kCBLStatusAttachmentError);
+
+    BOOL success = YES;
+    NSMutableArray* processed = [NSMutableArray array];
+    for (NSString* fileName in content) {
+        if (![[fileName pathExtension] isEqualToString:@"blob"])
+            continue;
+
+        NSString* filePath = [dir stringByAppendingPathComponent: fileName];
+        NSString* newPath = [self uppercaseAttachmentFileNameAtPath: filePath];
+
+        // Assume no both lowercase and uppercase filename mixed.
+        // Skip the renaming process if detecting that the file is already
+        // uppercased:
+        if ([filePath isEqualToString: newPath])
+            break;
+
+        if ([fmgr moveItemAtPath: filePath toPath: newPath error: &error]) {
+            [processed addObject: filePath];
+        } else {
+            Warn(@"Upgrade failed: Cannot rename attachment file %@: %@", filePath, error);
+            success = NO;
+            break;
+        }
+    }
+    
+    if (!success) {
+        // Backing out if there is an error found:
+        for (NSString* filePath in processed) {
+            NSString* renamedPath = [self uppercaseAttachmentFileNameAtPath: filePath];
+            NSError* error;
+            if (![fmgr moveItemAtPath: renamedPath toPath: filePath error: &error]) {
+                Warn(@"Upgrade failed: Cannot back out renaming attachment file %@: %@",
+                     filePath, error);
+            }
+        }
+    }
+
+    return success ? kCBLStatusOK : (CBLStatusFromNSError(error, kCBLStatusAttachmentError));
+}
+
+
+- (NSString*)uppercaseAttachmentFileNameAtPath: (NSString*)filePath {
+    NSString *fileName = [[filePath lastPathComponent] stringByDeletingPathExtension];
+    NSString *uppercaseFileName = [fileName uppercaseString];
+    return [[[filePath stringByDeletingLastPathComponent]
+                stringByAppendingPathComponent: uppercaseFileName]
+                    stringByAppendingPathExtension: @"blob"];
 }
 
 
