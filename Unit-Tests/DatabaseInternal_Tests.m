@@ -901,7 +901,10 @@ static CBL_Revision* mkrev(NSString* revID) {
         NSString* absPath = [dir stringByAppendingPathComponent: path];
         id prot = [[fmgr attributesOfItemAtPath: absPath error: nil] objectForKey: NSFileProtectionKey];
         Log(@"Protection of %@ --> %@", path, prot);
-        AssertEqual(prot, NSFileProtectionCompleteUnlessOpen);
+        // Not checking -shm file as it will have NSFileProtectionNone by default regardless of its
+        // parent directory projection level. However, the -shm file contains non-sensitive information.
+        if (![path hasSuffix:@"-shm"])
+            AssertEqual(prot, NSFileProtectionCompleteUnlessOpen);
     }
 }
 #endif
