@@ -826,7 +826,7 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
                 [startKey addObject: keyExpr];
                 _queryInclusiveStart = (op == NSGreaterThanOrEqualToPredicateOperatorType);
                 if (endKey.count > 0)
-                    [endKey addObject: @{}];
+                    [endKey addObject: [NSExpression expressionForConstantValue: @{}]];
                 break;
             case NSBeginsWithPredicateOperatorType:
                 [startKey addObject: keyExpr];
