@@ -182,51 +182,44 @@ static int collateRevIDs(void *context,
         return CBLStatusFromNSError(error, kCBLStatusAttachmentError);
 
     BOOL success = YES;
-    NSMutableArray* processed = [NSMutableArray array];
-    for (NSString* fileName in content) {
-        if (![[fileName pathExtension] isEqualToString:@"blob"])
+    NSMutableDictionary* renDict = [NSMutableDictionary dictionary];
+    for (NSString* oldFileName in content) {
+        if (![[oldFileName pathExtension] isEqualToString:@"blob"])
             continue;
-
-        NSString* filePath = [dir stringByAppendingPathComponent: fileName];
-        NSString* newPath = [self uppercaseAttachmentFileNameAtPath: filePath];
-
+        
+        NSString* newFileName = [[[oldFileName stringByDeletingPathExtension] uppercaseString]
+                                    stringByAppendingPathExtension: @"blob"];
         // Assume no both lowercase and uppercase filename mixed.
-        // Skip the renaming process if detecting that the file is already
-        // uppercased:
-        if ([filePath isEqualToString: newPath])
+        // Skip the renaming process if detecting that the file name is already uppercase:
+        if ([newFileName isEqualToString: oldFileName])
             break;
-
-        if ([fmgr moveItemAtPath: filePath toPath: newPath error: &error]) {
-            [processed addObject: filePath];
+        
+        NSString* oldPath = [dir stringByAppendingPathComponent: oldFileName];
+        NSString* newPath = [dir stringByAppendingPathComponent: newFileName];
+        if ([fmgr moveItemAtPath: oldPath toPath: newPath error: &error]) {
+            [renDict setObject: newFileName forKey: oldFileName];
         } else {
-            Warn(@"Upgrade failed: Cannot rename attachment file %@: %@", filePath, error);
+            Warn(@"Upgrade failed: Cannot rename attachment file from %@ to %@: %@",
+                 oldPath, newPath, error);
             success = NO;
             break;
         }
     }
     
-    if (!success) {
+    if (success && [renDict count] > 0) {
         // Backing out if there is an error found:
-        for (NSString* filePath in processed) {
-            NSString* renamedPath = [self uppercaseAttachmentFileNameAtPath: filePath];
+        for (NSString *oldFileName in [renDict allKeys]) {
+            NSString* oldPath = [dir stringByAppendingPathComponent: oldFileName];
+            NSString* newPath = [dir stringByAppendingPathComponent: [renDict objectForKey: oldFileName]];
             NSError* error;
-            if (![fmgr moveItemAtPath: renamedPath toPath: filePath error: &error]) {
-                Warn(@"Upgrade failed: Cannot back out renaming attachment file %@: %@",
-                     filePath, error);
+            if (![fmgr moveItemAtPath: newPath toPath: oldPath error: &error]) {
+                Warn(@"Upgrade failed: Cannot back out renaming attachment file from %@ to %@: %@",
+                     newPath, oldPath, error);
             }
         }
     }
 
     return success ? kCBLStatusOK : (CBLStatusFromNSError(error, kCBLStatusAttachmentError));
-}
-
-
-- (NSString*)uppercaseAttachmentFileNameAtPath: (NSString*)filePath {
-    NSString *fileName = [[filePath lastPathComponent] stringByDeletingPathExtension];
-    NSString *uppercaseFileName = [fileName uppercaseString];
-    return [[[filePath stringByDeletingLastPathComponent]
-                stringByAppendingPathComponent: uppercaseFileName]
-                    stringByAppendingPathExtension: @"blob"];
 }
 
 
