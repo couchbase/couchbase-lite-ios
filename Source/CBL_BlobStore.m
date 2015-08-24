@@ -39,11 +39,15 @@
 @synthesize path=_path, encryptionKey=_encryptionKey;
 
 
-- (instancetype) initWithPath: (NSString*)dir error: (NSError**)outError {
+- (instancetype) initWithPath: (NSString*)dir
+                encryptionKey: (CBLSymmetricKey*)encryptionKey
+                        error: (NSError**)outError
+{
     Assert(dir);
     self = [super init];
     if (self) {
         _path = [dir copy];
+        _encryptionKey = encryptionKey;
         BOOL isDir;
         if (![[NSFileManager defaultManager] fileExistsAtPath: dir isDirectory: &isDir] || !isDir) {
             if (![[NSFileManager defaultManager] createDirectoryAtPath: dir

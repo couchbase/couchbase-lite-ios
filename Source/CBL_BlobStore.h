@@ -28,7 +28,9 @@ typedef struct CBLBlobKey {
     Each blob is stored as a file named by its SHA-1 digest. */
 @interface CBL_BlobStore : NSObject
 
-- (instancetype) initWithPath: (NSString*)dir error: (NSError**)outError;
+- (instancetype) initWithPath: (NSString*)dir
+                encryptionKey: (CBLSymmetricKey*)encryptionKey
+                        error: (NSError**)outError;
 
 @property (nonatomic) CBLSymmetricKey* encryptionKey;
 
