@@ -206,7 +206,7 @@ static int collateRevIDs(void *context,
         }
     }
     
-    if (success && [renDict count] > 0) {
+    if (!success && [renDict count] > 0) {
         // Backing out if there is an error found:
         for (NSString *oldFileName in [renDict allKeys]) {
             NSString* oldPath = [dir stringByAppendingPathComponent: oldFileName];
