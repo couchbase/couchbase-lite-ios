@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBL_BlobStore.h"
+#import "CBL_BlobStore+Internal.h"
 #import "CBLSymmetricKey.h"
 #import "CBLBase64.h"
 #import "CBLMisc.h"
@@ -28,6 +29,8 @@
 
 #define kFileExtension "blob"
 
+#define kEncryptionAlgorithm @"AES"
+
 
 @implementation CBL_BlobStore
 {
@@ -38,22 +41,42 @@
 @synthesize path=_path, encryptionKey=_encryptionKey;
 
 
-- (instancetype) initWithPath: (NSString*)dir
-                encryptionKey: (CBLSymmetricKey*)encryptionKey
-                        error: (NSError**)outError
+// private
+- (instancetype) initInternalWithPath: (NSString*)dir
+                        encryptionKey: (CBLSymmetricKey*)encryptionKey
 {
     Assert(dir);
     self = [super init];
     if (self) {
         _path = [dir copy];
         _encryptionKey = encryptionKey;
+    }
+    return self;
+}
+
+
+- (instancetype) initWithPath: (NSString*)dir
+                encryptionKey: (CBLSymmetricKey*)encryptionKey
+                        error: (NSError**)outError
+{
+    self = [self initInternalWithPath: dir encryptionKey: encryptionKey];
+    if (self) {
         BOOL isDir;
-        if (![[NSFileManager defaultManager] fileExistsAtPath: dir isDirectory: &isDir] || !isDir) {
+        if ([[NSFileManager defaultManager] fileExistsAtPath: dir isDirectory: &isDir] && isDir) {
+            // Existing blob-store.
+            if (![self verifyExistingStore: outError])
+                return nil;
+        } else {
+            // New blob store; create directory:
             if (![[NSFileManager defaultManager] createDirectoryAtPath: dir
                                            withIntermediateDirectories: NO
                                                             attributes: nil
                                                                  error: outError]) {
                 return nil;
+            }
+            if (encryptionKey) {
+                if (![self markEncrypted: YES error: outError])  // note it's encrypted
+                    return nil;
             }
         }
     }
@@ -61,12 +84,45 @@
 }
 
 
-#ifndef GNUSTEP
+- (BOOL) verifyExistingStore: (NSError**)outError {
+    NSString* markerPath = [_path stringByAppendingPathComponent: kEncryptionMarkerFilename];
+    NSError* error;
+    NSString* encryptionAlg = [NSString stringWithContentsOfFile: markerPath
+                                                 encoding: NSUTF8StringEncoding
+                                                    error: &error];
+    if (encryptionAlg) {
+        // "_encryption" file is present, so make sure we support its format & have a key:
+        if (!_encryptionKey) {
+            Warn(@"Opening encrypted blob-store without providing a key");
+            return CBLStatusToOutNSError(kCBLStatusUnauthorized, outError);
+        } else if (!$equal(encryptionAlg, kEncryptionAlgorithm)) {
+            Warn(@"Blob-store uses unrecognized encryption '%@'", encryptionAlg);
+            return CBLStatusToOutNSError(kCBLStatusUnauthorized, outError);
+        }
+    } else if (CBLIsFileNotFoundError(error)) {
+        // No "_encryption" file was found, so on-disk store isn't encrypted:
+        CBLSymmetricKey* encryptionKey = _encryptionKey;
+        if (encryptionKey) {
+            // This store was created before the db encryption fix, so its files are not
+            // encrypted, even though they should be. Remedy that:
+            NSLog(@"**** BlobStore should be encrypted; fixing it now...");
+            _encryptionKey = nil;
+            if (![self changeEncryptionKey: encryptionKey error: outError])
+                return NO;
+        }
+    } else {
+        // "_encryption" file was unreadable:
+        if (outError) *outError = error;
+        return NO;
+    }
+    return YES;
+}
+
+
 - (void) dealloc {
     if (_tempDir)
         [[NSFileManager defaultManager] removeItemAtPath: _tempDir error: NULL];
 }
-#endif
 
 
 + (CBLBlobKey) keyForBlob: (NSData*)blob {
@@ -267,26 +323,122 @@
 }
 
 
+// Adds/removes the "_encryption" file that marks an encrypted blob-store
+- (BOOL) markEncrypted: (BOOL)encrypted error: (NSError**)outError {
+    NSString* encMarkerPath = [_path stringByAppendingPathComponent: kEncryptionMarkerFilename];
+    if (encrypted) {
+        return [kEncryptionAlgorithm writeToFile: encMarkerPath atomically: YES
+                                        encoding: NSUTF8StringEncoding error: outError];
+    } else {
+        return CBLRemoveFileIfExists(encMarkerPath, outError);
+    }
+}
+
+
+- (BOOL) changeEncryptionKey: (CBLSymmetricKey*)newKey error: (NSError**)outError {
+    // Find all the blob files:
+    Log(@"CBLBlobStore: %@ %@", (newKey ? @"encrypting" : @"decrypting"), _path);
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    NSArray* blobs = [fmgr contentsOfDirectoryAtPath: _path error: outError];
+    if (!blobs)
+        return NO;
+    blobs = [blobs pathsMatchingExtensions: @[@kFileExtension]];
+    if (blobs.count == 0) {
+        // No blobs, so nothing to encrypt. Just add/remove the encryption marker file:
+        Log(@"    No blobs to copy; done.");
+        _encryptionKey = newKey;
+        return [self markEncrypted: (newKey != nil) error: outError];
+    }
+
+    // Create a new empty attachment store with the new encryption key:
+    NSString* tempPath = [self createTempDir: outError];
+    if (!tempPath)
+        return NO;
+    CBL_BlobStore* tempStore = [[CBL_BlobStore alloc] initInternalWithPath: tempPath
+                                                             encryptionKey: newKey];
+    if (![tempStore markEncrypted: (newKey != nil) error: outError])
+        return NO;
+
+    // Copy each of my blobs into the new store (which will update its encryption):
+    BOOL ok = YES;
+    for (NSString* blobName in blobs) {
+        // Copy file by reading with old key and writing with new one:
+        Log(@"    Copying %@", blobName);
+        NSString* srcFile = [_path stringByAppendingPathComponent: blobName];
+        NSInputStream* readStream = [NSInputStream inputStreamWithFileAtPath: srcFile];
+        [readStream open];
+        if (readStream.streamError) {
+            if (outError)
+                *outError = readStream.streamError;
+            [readStream close];
+            ok = NO;
+            break;
+        }
+        if (_encryptionKey)
+            readStream = [_encryptionKey decryptStream: readStream];
+
+        CBL_BlobStoreWriter* writer = [[CBL_BlobStoreWriter alloc] initWithStore: tempStore];
+        ok = [writer appendInputStream: readStream error: outError];
+        [readStream close];
+        if (ok) {
+            [writer finish];
+            [writer install];
+        } else {
+            [writer cancel];
+            break;
+        }
+    }
+
+    if (ok) {
+        // Replace my directory with the new one:
+        Log(@"    Installing new blob store %@", tempPath);
+        if (CBLSafeReplaceDir(tempPath, _path, outError))
+            _encryptionKey = newKey;
+        else
+            ok = NO;
+    }
+    if (!ok) {
+        Warn(@"Changing blob-store encryption key failed! path= %@ ; error=%@",
+             _path, (outError ? *outError : nil));
+        [fmgr removeItemAtPath: tempPath error: NULL];
+    }
+    return ok;
+}
+
+
 - (NSString*) tempDir {
     if (!_tempDir) {
         // Find a temporary directory suitable for files that will be moved into the store:
-#ifdef GNUSTEP
-        _tempDir = [NSTemporaryDirectory() copy];
-#else
-        NSError* error;
-        NSURL* parentURL = [NSURL fileURLWithPath: _path isDirectory: YES];
-        NSURL* tempDirURL = [[NSFileManager defaultManager] 
-                                                 URLForDirectory: NSItemReplacementDirectory
-                                                 inDomain: NSUserDomainMask
-                                                 appropriateForURL: parentURL
-                                                 create: YES error: &error];
-        _tempDir = [tempDirURL.path copy];
-        Log(@"CBL_BlobStore %@ created tempDir %@", _path, _tempDir);
-        if (!_tempDir)
-            Warn(@"CBL_BlobStore: Unable to create temp dir: %@", error);
-#endif
+        _tempDir = [self createTempDir: NULL];
+        LogTo(CBLDatabase, @"CBL_BlobStore %@ created tempDir %@", _path, _tempDir);
     }
     return _tempDir;
+}
+
+
+- (NSString*) createTempDir: (NSError**)outError {
+#ifdef GNUSTEP
+    NSString* name = $sprintf(@"CouchbaseLite-Temp-%@", CBLCreateUUID());
+    NSString* tempDir = [NSTemporaryDirectory() stringByAppendingPathComponent: name];
+    NSDictionary* attrs = @{NSFilePosixPermissions: @(0700)};
+    if (![[NSFileManager defaultManager] createDirectoryAtPath: tempDir
+                                   withIntermediateDirectories: YES
+                                                    attributes: attrs
+                                                         error: outError])
+        return nil;
+    return tempDir;
+#else
+    NSError* error;
+    NSURL* parentURL = [NSURL fileURLWithPath: _path isDirectory: YES];
+    NSURL* tempDirURL = [[NSFileManager defaultManager] URLForDirectory: NSItemReplacementDirectory
+                                                               inDomain: NSUserDomainMask
+                                                      appropriateForURL: parentURL
+                                                                 create: YES
+                                                                  error: outError];
+    if (!tempDirURL)
+        Warn(@"CBL_BlobStore: Unable to create temp dir: %@", error);
+    return tempDirURL.path;
+#endif
 }
 
 
@@ -352,6 +504,26 @@
     if (_encryptor)
         data = _encryptor(data);
     [_out writeData: data];
+}
+
+- (BOOL) appendInputStream: (NSInputStream*)readStream error: (NSError**)outError {
+    while(YES) {
+        @autoreleasepool {
+            uint8_t buf[16384];
+            NSInteger bytesRead = [readStream read: buf maxLength: sizeof(buf)];
+            if (bytesRead > 0) {
+                NSData* input = [[NSData alloc] initWithBytesNoCopy: buf length: bytesRead
+                                                       freeWhenDone: NO];
+                [self appendData: input];
+            } else if (bytesRead == 0) {
+                return YES;
+            } else {
+                if (outError)
+                    *outError = readStream.streamError;
+                return NO;
+            }
+        }
+    }
 }
 
 - (void) closeFile {
