@@ -7,6 +7,7 @@
 //
 
 #import "CBL_BlobStoreWriter.h"
+#import "CBL_BlobStore+Internal.h"
 #import "CBLSymmetricKey.h"
 #import "CBLBase64.h"
 #import "CBLMisc.h"
@@ -21,13 +22,6 @@
 typedef struct {
     uint8_t bytes[MD5_DIGEST_LENGTH];
 } CBLMD5Key;
-
-
-// internal CBL_BlobStore API:
-@interface CBL_BlobStore ()
-- (NSString*) rawPathForKey: (CBLBlobKey)key;
-@property (readonly, nonatomic) NSString* tempDir;
-@end
 
 
 @implementation CBL_BlobStoreWriter
@@ -106,6 +100,27 @@ typedef struct {
     if (_encryptor)
         data = _encryptor(data);
     [_out writeData: data];
+}
+
+
+- (BOOL) appendInputStream: (NSInputStream*)readStream error: (NSError**)outError {
+    while(YES) {
+        @autoreleasepool {
+            uint8_t buf[16384];
+            NSInteger bytesRead = [readStream read: buf maxLength: sizeof(buf)];
+            if (bytesRead > 0) {
+                NSData* input = [[NSData alloc] initWithBytesNoCopy: buf length: bytesRead
+                                                       freeWhenDone: NO];
+                [self appendData: input];
+            } else if (bytesRead == 0) {
+                return YES;
+            } else {
+                if (outError)
+                    *outError = readStream.streamError;
+                return NO;
+            }
+        }
+    }
 }
 
 

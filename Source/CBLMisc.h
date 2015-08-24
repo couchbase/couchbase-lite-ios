@@ -99,6 +99,12 @@ BOOL CBLRemoveFileIfExistsAsync(NSString* path, NSError** outError);
 /* Copy a file if it exists; does nothing if it doesn't. */
 BOOL CBLCopyFileIfExists(NSString*atPath, NSString* toPath, NSError** outError) __attribute__((nonnull(1, 2)));
 
+/** Replaces the directory at dstPath with the one at srcPath. (Both must already exist.)
+    Afterwards, on success, there will be a dir at dstPath but not at srcPath.
+    For safety's sake, the old directory is moved aside, then the new directory is moved in,
+    and only then is the old directory deleted. */
+BOOL CBLSafeReplaceDir(NSString* srcPath, NSString* dstPath, NSError** outError);
+
 /** Returns the hostname of this computer/device (will be of the form "___.local") */
 NSString* CBLGetHostName(void);
 

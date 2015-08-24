@@ -32,7 +32,10 @@ typedef struct CBLBlobKey {
                 encryptionKey: (CBLSymmetricKey*)encryptionKey
                         error: (NSError**)outError;
 
-@property (nonatomic) CBLSymmetricKey* encryptionKey;
+/** Changes the encryption key. This will rewrite every blob to a new directory
+    and then replace the current directory with it. */
+- (BOOL) changeEncryptionKey: (CBLSymmetricKey*)newKey
+                       error: (NSError**)outError;
 
 - (BOOL) hasBlobForKey: (CBLBlobKey)key;
 - (NSData*) blobForKey: (CBLBlobKey)key;

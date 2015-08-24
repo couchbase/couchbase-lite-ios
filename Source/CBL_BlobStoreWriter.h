@@ -28,6 +28,9 @@
 /** Appends data to the blob. Call this when new data is available. */
 - (void) appendData: (NSData*)data;
 
+- (BOOL) appendInputStream: (NSInputStream*)readStream
+                     error: (NSError**)outError;
+
 - (void) closeFile;     /**< Closes the temporary file; it can be reopened later. */
 - (BOOL) openFile;      /**< Reopens the temporary file for further appends. */
 - (void) reset;         /**< Clears the temporary file to 0 bytes (must be open.) */

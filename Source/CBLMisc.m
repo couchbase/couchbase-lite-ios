@@ -331,7 +331,8 @@ BOOL CBLIsFileNotFoundError( NSError* error ) {
     NSInteger code = error.code;
     return ($equal(domain, NSPOSIXErrorDomain) && code == ENOENT)
 #ifndef GNUSTEP
-        || ($equal(domain, NSCocoaErrorDomain) && code == NSFileNoSuchFileError)
+        || ($equal(domain, NSCocoaErrorDomain) && (code == NSFileNoSuchFileError ||
+                                                   code == NSFileReadNoSuchFileError))
 #endif
     ;
 }
@@ -428,6 +429,23 @@ BOOL CBLCopyFileIfExists(NSString* atPath, NSString* toPath, NSError** outError)
         }
     } else
         return YES;
+}
+
+
+BOOL CBLSafeReplaceDir(NSString* srcPath, NSString* dstPath, NSError** outError) {
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    // Define an interim location to move dstPath to, and make sure it's available:
+    NSString* interimPath = [dstPath stringByAppendingString: @"~"];
+    [fmgr removeItemAtPath: interimPath error: NULL];
+
+    if ([fmgr moveItemAtPath: dstPath toPath: interimPath error: outError]) {
+        if ([fmgr moveItemAtPath: srcPath toPath: dstPath error: outError]) {
+            [fmgr removeItemAtPath: interimPath error: NULL];
+            return YES; // success!
+        }
+        [fmgr moveItemAtPath: interimPath toPath: dstPath error: NULL]; // back out
+    }
+    return NO;
 }
 
 

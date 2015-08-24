@@ -1632,6 +1632,7 @@
 		27ED862E157D0FC600712B33 /* CBLDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDocument.h; sourceTree = "<group>"; };
 		27ED862F157D0FC600712B33 /* CBLDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDocument.m; sourceTree = "<group>"; };
 		27ED9A961639D8D2000C844A /* LiteServ.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LiteServ.m; path = ../Listener/LiteServ.m; sourceTree = "<group>"; };
+		27EF111F1B8BAD190039A138 /* CBL_BlobStore+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBL_BlobStore+Internal.h"; sourceTree = "<group>"; };
 		27EF7F991912EB5200A327B9 /* CBLForestBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLForestBridge.h; sourceTree = "<group>"; };
 		27EF7F9A1912EB5200A327B9 /* CBLForestBridge.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLForestBridge.mm; sourceTree = "<group>"; };
 		27F0744611CD4B6D00E9A2AB /* CBLDatabase+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Internal.h"; sourceTree = "<group>"; };
@@ -2047,6 +2048,7 @@
 				27731EFE1493FA3100815D67 /* CBL_BlobStore.m */,
 				2786CE761B84FFAE0061998D /* CBL_BlobStoreWriter.h */,
 				2786CE771B84FFAE0061998D /* CBL_BlobStoreWriter.m */,
+				27EF111F1B8BAD190039A138 /* CBL_BlobStore+Internal.h */,
 				27D8C347195A28100073A51C /* CBLDatabaseUpgrade.h */,
 				27D8C348195A28100073A51C /* CBLDatabaseUpgrade.m */,
 			);
