@@ -8,6 +8,14 @@
 
 #import "CBLTestCase.h"
 #import "CBL_SQLiteStorage.h"
+#import "CBL_Attachment.h"
+#import "CBL_BlobStore.h"
+
+
+@interface CBL_BlobStore ()
+- (NSString*) rawPathForKey: (CBLBlobKey)key;
+@end
+
 
 
 @interface DatabaseEncryption_Tests : CBLTestCaseWithDB
@@ -124,5 +132,35 @@
     AssertNil(seekrit, @"Password opened unencrypted db!");
     AssertEq(error.code, 401);
 }
+
+
+- (void) test07_EncryptedAttachments {
+    if (!self.isSQLiteDB)
+        return;
+    CBLEnableMockEncryption = YES;
+    [dbmgr registerEncryptionKey: @"letmein" forDatabaseNamed: @"seekrit"];
+    CBLDatabase* seekrit = [dbmgr databaseNamed: @"seekrit" error: NULL];
+    Assert(seekrit);
+
+    // Save a doc with an attachment:
+    CBLDocument* doc = [seekrit documentWithID: @"att"];
+    NSData* body = [@"This is a test attachment!" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLUnsavedRevision *rev = [doc newRevision];
+    [rev setAttachmentNamed: @"att.txt" withContentType: @"text/plain; charset=utf-8" content:body];
+    NSError* error;
+    CBLSavedRevision* savedRev = [rev save: &error];
+    Assert(savedRev, @"Saving doc failed: %@", error);
+
+    // Read the raw attachment file and make sure it's not cleartext:
+    NSString* digest = savedRev[@"_attachments"][@"att.txt"][@"digest"];
+    Assert(digest);
+    CBLBlobKey attKey;
+    Assert([CBL_Attachment digest: digest toBlobKey: &attKey]);
+    NSString* path = [seekrit.attachmentStore rawPathForKey: attKey];
+    NSData* raw = [NSData dataWithContentsOfFile: path];
+    Assert(raw != nil);
+    Assert(![raw isEqual: body], @"Oops, attachment was not encrypted");
+}
+
 
 @end

@@ -201,7 +201,9 @@ static BOOL sAutoCompact = YES;
 
     // Open attachment store:
     NSString* attachmentsPath = self.attachmentStorePath;
-    _attachments = [[CBL_BlobStore alloc] initWithPath: attachmentsPath error: outError];
+    _attachments = [[CBL_BlobStore alloc] initWithPath: attachmentsPath
+                                         encryptionKey: self.encryptionKey
+                                                 error: outError];
     if (!_attachments) {
         Warn(@"%@: Couldn't open attachment store at %@", self, attachmentsPath);
         [_storage close];

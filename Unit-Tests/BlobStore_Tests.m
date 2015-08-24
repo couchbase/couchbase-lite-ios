@@ -36,7 +36,9 @@
     storePath = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CBL_BlobStoreTest"];
     [[NSFileManager defaultManager] removeItemAtPath: storePath error: NULL];
     NSError* error;
-    store = [[CBL_BlobStore alloc] initWithPath: storePath error: &error];
+    store = [[CBL_BlobStore alloc] initWithPath: storePath
+                                  encryptionKey: nil
+                                          error: &error];
     Assert(store, @"Couldn't create CBL_BlobStore: %@", error);
     if (encrypt) {
         Log(@"---- Now enabling attachment encryption ----");
