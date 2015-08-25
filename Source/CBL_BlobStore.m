@@ -417,28 +417,30 @@
 
 
 - (NSString*) createTempDir: (NSError**)outError {
+    NSError* error;
+    NSString* tempDir;
 #ifdef GNUSTEP
     NSString* name = $sprintf(@"CouchbaseLite-Temp-%@", CBLCreateUUID());
-    NSString* tempDir = [NSTemporaryDirectory() stringByAppendingPathComponent: name];
+    tempDir = [NSTemporaryDirectory() stringByAppendingPathComponent: name];
     NSDictionary* attrs = @{NSFilePosixPermissions: @(0700)};
     if (![[NSFileManager defaultManager] createDirectoryAtPath: tempDir
                                    withIntermediateDirectories: YES
                                                     attributes: attrs
-                                                         error: outError])
-        return nil;
-    return tempDir;
+                                                         error: &error])
+        tempDir = nil;
 #else
-    NSError* error;
     NSURL* parentURL = [NSURL fileURLWithPath: _path isDirectory: YES];
-    NSURL* tempDirURL = [[NSFileManager defaultManager] URLForDirectory: NSItemReplacementDirectory
-                                                               inDomain: NSUserDomainMask
-                                                      appropriateForURL: parentURL
-                                                                 create: YES
-                                                                  error: outError];
-    if (!tempDirURL)
-        Warn(@"CBL_BlobStore: Unable to create temp dir: %@", error);
-    return tempDirURL.path;
+    tempDir = [[[NSFileManager defaultManager] URLForDirectory: NSItemReplacementDirectory
+                                                      inDomain: NSUserDomainMask
+                                             appropriateForURL: parentURL
+                                                        create: YES
+                                                         error: &error] path];
 #endif
+    if (!tempDir) {
+        Warn(@"CBL_BlobStore: Unable to create temp dir: %@", error);
+        if (outError) *outError = error;
+    }
+    return tempDir;
 }
 
 
