@@ -472,4 +472,45 @@ query.sortDescriptors = [(value3, descending, compare:)];\n");
     }
 }
 
+// https://github.com/couchbase/couchbase-lite-ios/issues/890
+- (void) test10_PredicateHasMoreThanTwoVariable {
+    [db inTransaction:^BOOL{
+        for (unsigned i=0; i<100; i++) {
+            @autoreleasepool {
+                unsigned random = (i+17)*773%100;
+                NSDictionary* properties = @{@"id": @(i),
+                                             @"model_type":@"message",
+                                             @"text": [NSString stringWithFormat:@"%d", random],
+                                             @"create_time":@(random),
+                                             @"channel_id":@((i+30)*17%13)};
+                [self createDocumentWithProperties: properties];
+            }
+        }
+        return YES;
+    }];
+
+    //Get the latest message
+    NSPredicate *typePredicate = [NSPredicate predicateWithFormat:@"model_type == 'message'"];
+    NSPredicate *timePredicate = [NSPredicate predicateWithFormat:@"create_time > $create_time"];
+    NSPredicate *channelPredicate = [NSPredicate predicateWithFormat:@"channel_id == $channel_id"];
+    NSCompoundPredicate *predicate = [NSCompoundPredicate andPredicateWithSubpredicates:@[typePredicate, timePredicate, channelPredicate]];
+    NSError *error = nil;
+
+    CBLQueryBuilder* b = [[CBLQueryBuilder alloc] initWithDatabase: db
+                                                            select: nil
+                                                    wherePredicate: predicate
+                                                           orderBy: nil
+                                                             error: &error];
+    Assert(b, @"Failed to build: %@", error);
+    Log(@"%@", b.explanation);
+    CBLQuery* query = [b createQueryWithContext: @{@"create_time":@(50), @"channel_id":@(7)}];
+    CBLQueryEnumerator *e = [query run:&error];
+    Assert(e, @"Query failed: %@", error);
+
+    NSArray* rows = e.allObjects;
+    Log(@"Rows = %@", rows);
+    NSArray* names = [rows my_map:^id(CBLQueryRow* row) {return row.document[@"id"];}];
+    AssertEqual(names, (@[@92, @66, @40, @14]));
+}
+
 @end
