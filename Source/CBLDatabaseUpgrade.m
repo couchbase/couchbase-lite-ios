@@ -163,7 +163,63 @@ static int collateRevIDs(void *context,
             return CBLStatusFromNSError(error, 0);
         }
     }
-    return kCBLStatusOK;
+
+    return [self renameAttachmentFileNamesInDir: newAttachmentsPath];
+}
+
+
+- (CBLStatus) renameAttachmentFileNamesInDir: (NSString*)dir {
+    // CBL Android 1.0.4 and .NET 1.1.0 have lowercase attachment file names.
+    // This method will detect that and uppercase the file names if needed.
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+
+    if (![fmgr fileExistsAtPath: dir])
+        return kCBLStatusOK;
+
+    NSError* error;
+    NSArray* content = [fmgr contentsOfDirectoryAtPath: dir error: &error];
+    if (error)
+        return CBLStatusFromNSError(error, kCBLStatusAttachmentError);
+
+    BOOL success = YES;
+    NSMutableDictionary* renDict = [NSMutableDictionary dictionary];
+    for (NSString* oldFileName in content) {
+        if (![[oldFileName pathExtension] isEqualToString:@"blob"])
+            continue;
+        
+        NSString* newFileName = [[[oldFileName stringByDeletingPathExtension] uppercaseString]
+                                    stringByAppendingPathExtension: @"blob"];
+        // Assume no both lowercase and uppercase filename mixed.
+        // Skip the renaming process if detecting that the file name is already uppercase:
+        if ([newFileName isEqualToString: oldFileName])
+            break;
+        
+        NSString* oldPath = [dir stringByAppendingPathComponent: oldFileName];
+        NSString* newPath = [dir stringByAppendingPathComponent: newFileName];
+        if ([fmgr moveItemAtPath: oldPath toPath: newPath error: &error]) {
+            [renDict setObject: newFileName forKey: oldFileName];
+        } else {
+            Warn(@"Upgrade failed: Cannot rename attachment file from %@ to %@: %@",
+                 oldPath, newPath, error);
+            success = NO;
+            break;
+        }
+    }
+    
+    if (!success && [renDict count] > 0) {
+        // Backing out if there is an error found:
+        for (NSString *oldFileName in [renDict allKeys]) {
+            NSString* oldPath = [dir stringByAppendingPathComponent: oldFileName];
+            NSString* newPath = [dir stringByAppendingPathComponent: [renDict objectForKey: oldFileName]];
+            NSError* error;
+            if (![fmgr moveItemAtPath: newPath toPath: oldPath error: &error]) {
+                Warn(@"Upgrade failed: Cannot back out renaming attachment file from %@ to %@: %@",
+                     newPath, oldPath, error);
+            }
+        }
+    }
+
+    return success ? kCBLStatusOK : (CBLStatusFromNSError(error, kCBLStatusAttachmentError));
 }
 
 
