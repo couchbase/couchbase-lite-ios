@@ -651,9 +651,15 @@ static NSString* printExpr(NSExpression* expr) {
 
     NSMutableArray* sort = [NSMutableArray arrayWithCapacity: _querySort.count];
     for (NSSortDescriptor* sd in _querySort) {
-        [sort addObject: [[NSSortDescriptor alloc] initWithKey: [self rewriteKeyPath: sd.key]
-                                                     ascending: sd.ascending
-                                                      selector: sd.selector]];
+        if (sd.comparator) {
+            [sort addObject: [[NSSortDescriptor alloc] initWithKey: [self rewriteKeyPath: sd.key]
+                                                         ascending: sd.ascending
+                                                        comparator: sd.comparator]];
+        } else {
+            [sort addObject: [[NSSortDescriptor alloc] initWithKey: [self rewriteKeyPath: sd.key]
+                                                         ascending: sd.ascending
+                                                          selector: sd.selector]];
+        }
     }
     return sort;
 }
@@ -820,7 +826,7 @@ static NSExpression* keyExprForQuery(NSComparisonPredicate* cp) {
                 [startKey addObject: keyExpr];
                 _queryInclusiveStart = (op == NSGreaterThanOrEqualToPredicateOperatorType);
                 if (endKey.count > 0)
-                    [endKey addObject: @{}];
+                    [endKey addObject: [NSExpression expressionForConstantValue: @{}]];
                 break;
             case NSBeginsWithPredicateOperatorType:
                 [startKey addObject: keyExpr];
