@@ -179,8 +179,6 @@
     options->fullTextSnippets = _fullTextSnippets;
     options->fullTextRanking = _fullTextRanking;
     options->bbox = (_isGeoQuery ? &_boundingBox : NULL);
-    options->skip = (unsigned)_skip;
-    options->limit = (unsigned)_limit;
     options->reduce = !_mapOnly;
     options->reduceSpecified = YES;
     options->groupLevel = (unsigned)_groupLevel;
@@ -190,6 +188,12 @@
     options->allDocsMode = _allDocsMode;
     options->indexUpdateMode = _indexUpdateMode;
     options->indexUpdateMode = _indexUpdateMode;
+
+    if (_sortDescriptors.count == 0) {
+        options->skip = (unsigned)_skip;
+        options->limit = (unsigned)_limit;
+        // If using sortDescriptors, have to apply skip+limit later, after sorting
+    }
 
     if (_filterBlock) {
         options.filter = _filterBlock;
@@ -224,8 +228,10 @@
                                                                          view: _view
                                                                sequenceNumber: lastSequence
                                                                      iterator: iterator];
-    if (_sortDescriptors)
-        [result sortUsingDescriptors: _sortDescriptors];
+    if (_sortDescriptors.count > 0)
+        [result sortUsingDescriptors: _sortDescriptors
+                                skip: _skip
+                               limit: _limit];
     return result;
 }
 
@@ -277,8 +283,10 @@
                                                             view: _view
                                                   sequenceNumber: lastSequence
                                                             rows: rows];
-                if (_sortDescriptors)
-                    [e sortUsingDescriptors: _sortDescriptors];
+                if (_sortDescriptors.count > 0)
+                    [e sortUsingDescriptors: _sortDescriptors
+                                       skip: _skip
+                                      limit: _limit];
             } else if (CBLStatusIsError(status)) {
                 error = CBLStatusToNSError(status);
             }

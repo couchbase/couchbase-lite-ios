@@ -126,6 +126,20 @@
     _rows = [self.allObjects sortedArrayUsingDescriptors: sortDescriptors];
 }
 
+- (void) sortUsingDescriptors: (NSArray*)sortDescriptors
+                         skip: (NSUInteger)skip
+                        limit: (NSUInteger)limit
+{
+    [self sortUsingDescriptors: sortDescriptors];
+    NSUInteger n = _rows.count;
+    if (skip >= n) {
+        _rows = @[];
+    } else if (skip > 0 || limit < n) {
+        limit = MIN(limit, n - skip);
+        _rows = [_rows subarrayWithRange: NSMakeRange(skip, limit)];
+    }
+}
+
 
 - (CBLQueryRow*) nextRow {
     if (_rows) {

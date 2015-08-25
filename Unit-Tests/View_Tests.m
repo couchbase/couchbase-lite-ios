@@ -248,6 +248,29 @@
     AssertEqual(rows.nextRow.value, @[@"none"]);
     AssertEqual(rows.nextRow.value, @[@"furry"]);
     AssertNil(rows.nextRow);
+
+    // Now combine with a limit (#892):
+    query.limit = 2;
+    rows = [query run: NULL];
+
+    AssertEqual(rows.nextRow.value, @[@"scaly"]);
+    AssertEqual(rows.nextRow.value, @[@"none"]);
+    AssertNil(rows.nextRow);
+
+    // ...and a skip
+    query.skip = 1;
+    query.limit = 9;
+    rows = [query run: NULL];
+
+    AssertEqual(rows.nextRow.value, @[@"none"]);
+    AssertEqual(rows.nextRow.value, @[@"furry"]);
+    AssertNil(rows.nextRow);
+
+    // ...and skipping everything:
+    query.skip = 3;
+    rows = [query run: NULL];
+
+    AssertNil(rows.nextRow);
 }
 
 
