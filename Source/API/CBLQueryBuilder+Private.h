@@ -21,7 +21,7 @@
 @property (readonly, nonatomic) NSExpression* queryStartKey;
 @property (readonly, nonatomic) NSExpression* queryEndKey;
 @property (readonly, nonatomic) NSExpression* queryKeys;
-@property (readonly, nonatomic) BOOL queryInclusiveStart, queryInclusiveEnd;
+@property (readonly, nonatomic) BOOL queryInclusiveStart, queryInclusiveEnd, queryDescending;
 @property (readonly, nonatomic) NSArray* sortDescriptors;
 @property (readonly, nonatomic) NSPredicate* filter;
 
