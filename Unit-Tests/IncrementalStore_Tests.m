@@ -675,7 +675,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     fetchRequest.fetchLimit = 20;
     result = [context executeFetchRequest:fetchRequest error:&error];
     AssertEq(result.count, 20u);
-    number = 40;
+    number = 99;
     for (NSManagedObject *obj in result) {
         AssertEqual([obj valueForKey:@"number"], @(number--));
     }
