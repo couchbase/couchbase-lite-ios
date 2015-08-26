@@ -11,7 +11,7 @@
 #import "CBLManager+Internal.h"
 #import "MYURLUtils.h"
 #import "CBLRemoteRequest.h"
-#import "CBL_BlobStore.h"
+#import "CBL_BlobStore+Internal.h"
 #import "CBLSymmetricKey.h"
 
 
@@ -148,10 +148,12 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 }
 
 - (void) setEncryptedAttachmentStore: (BOOL)encrypted {
-    if (!encrypted)
-        db.attachmentStore.encryptionKey = nil;
-    else if (db.attachmentStore.encryptionKey == nil)
-        db.attachmentStore.encryptionKey = [[CBLSymmetricKey alloc] init];
+    if (encrypted != self.encryptedAttachmentStore) {
+        CBLSymmetricKey* key = encrypted ? [[CBLSymmetricKey alloc] init] : nil;
+        NSError* error;
+        Assert([db.attachmentStore changeEncryptionKey: key error: &error],
+               @"Failed to add/remove encryption: %@", error);
+    }
 }
 
 

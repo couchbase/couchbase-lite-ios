@@ -29,9 +29,14 @@ typedef struct CBLBlobKey {
     Each blob is stored as a file named by its SHA-1 digest. */
 @interface CBL_BlobStore : NSObject
 
-- (instancetype) initWithPath: (NSString*)dir error: (NSError**)outError;
+- (instancetype) initWithPath: (NSString*)dir
+                encryptionKey: (CBLSymmetricKey*)encryptionKey
+                        error: (NSError**)outError;
 
-@property (nonatomic) CBLSymmetricKey* encryptionKey;
+/** Changes the encryption key. This will rewrite every blob to a new directory
+    and then replace the current directory with it. */
+- (BOOL) changeEncryptionKey: (CBLSymmetricKey*)newKey
+                       error: (NSError**)outError;
 
 - (BOOL) hasBlobForKey: (CBLBlobKey)key;
 - (NSData*) blobForKey: (CBLBlobKey)key;
@@ -71,6 +76,9 @@ typedef struct {
 
 /** Appends data to the blob. Call this when new data is available. */
 - (void) appendData: (NSData*)data;
+
+- (BOOL) appendInputStream: (NSInputStream*)readStream
+                     error: (NSError**)outError;
 
 /** Call this after all the data has been added. */
 - (void) finish;
