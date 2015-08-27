@@ -134,7 +134,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
                                                                      revisionID: nil
                                                                        withBody: YES
                                                                          status: &status]];
-        if (!CBLStatusIsError(status))
+        if (_currentRevision || status == kCBLStatusNotFound || !CBLStatusIsError(status))
             _currentRevisionKnown = YES;
     }
     return _currentRevision;
