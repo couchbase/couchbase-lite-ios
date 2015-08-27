@@ -108,6 +108,14 @@
 }
 
 
+- (id) debugQuickLookObject {
+    NSDictionary* props = [self propertiesToSave];
+    return $sprintf(@"%@ %@",
+                    [self class],
+                    [CBLJSON stringWithJSONObject: props options: CBLJSONWritingPrettyPrinted
+                                            error: NULL]);
+}
+
 #pragma mark - DOCUMENT / DATABASE:
 
 

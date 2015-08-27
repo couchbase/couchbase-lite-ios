@@ -71,6 +71,17 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 }
 
 
+- (id) debugQuickLookObject {
+    if (_currentRevision && _currentRevision.propertiesAreLoaded)
+        return [CBLJSON stringWithJSONObject: _currentRevision.properties
+                                     options:CBLJSONWritingPrettyPrinted error: NULL];
+    else if (_currentRevisionKnown)
+        return $sprintf(@"\"_id\":\"%@\"\n(doesn't exist yet)", _docID);
+    else
+        return $sprintf(@"\"_id\":\"%@\"\n(sorry, data not loaded)", _docID);
+}
+
+
 @synthesize database=_database, documentID=_docID, modelObject=_modelObject;
 
 

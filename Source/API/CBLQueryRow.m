@@ -256,16 +256,28 @@ static id fromJSON( NSData* json ) {
 }
 
 
+static NSString* jsonStr(id o) {
+    if (!o)
+        return nil;
+    return [CBLJSON stringWithJSONObject: o options: CBLJSONWritingAllowFragments error: nil];
+}
+
+
 - (NSString*) description {
-    NSString* valueStr = @"nil";
-    if (self.value)
-        valueStr = [CBLJSON stringWithJSONObject: self.value
-                                         options: CBLJSONWritingAllowFragments error: nil];
     return [NSString stringWithFormat: @"%@[key=%@; value=%@; id=%@]",
-            [self class],
-            [CBLJSON stringWithJSONObject: self.key options: CBLJSONWritingAllowFragments error: nil],
-            valueStr,
-            self.documentID];
+            [self class], jsonStr(self.key), jsonStr(self.value), self.documentID];
+}
+
+
+- (id) debugQuickLookObject {
+    NSMutableString* result = [NSMutableString stringWithFormat: @"Key:   %@\nValue: %@",
+                               jsonStr(self.key), jsonStr(self.value)];
+    if (self.documentID) {
+        [result appendFormat: @"\nDocID: %@", self.documentID];
+        if (_documentRevision)
+            [result appendFormat: @" (rev %@)", _documentRevision];
+    }
+    return result;
 }
 
 

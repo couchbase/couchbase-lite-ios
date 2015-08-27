@@ -81,6 +81,12 @@
 }
 
 
+- (id) debugQuickLookObject {
+    return [CBLJSON stringWithJSONObject: self.properties
+                                 options: CBLJSONWritingPrettyPrinted error: NULL];
+}
+
+
 #pragma mark - ATTACHMENTS:
 
 
@@ -162,6 +168,15 @@
         _checkedProperties = YES;
     }
     return self;
+}
+
+- (id) debugQuickLookObject {
+    if (self.propertiesAreLoaded)
+        return [super debugQuickLookObject];
+    else
+        return $sprintf(@"{\n\t\"_id\":\"%@\",\n\t\"_rev\":\"%@\"\n}\n(sorry, data not loaded)",
+                        self.document.documentID, self.revisionID);
+
 }
 
 - (BOOL) isEqual: (id)object {
