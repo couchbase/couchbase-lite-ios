@@ -753,6 +753,8 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
         // underlying query, so handle them specially:
         limit = options->limit;
         skip = options->skip;
+        if (limit == 0)
+            return queryIteratorBlockFromArray(nil); // empty result set
         options->limit = kCBLQueryOptionsDefaultLimit;
         options->skip = 0;
     }
@@ -823,7 +825,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
         
         [rows addObject: row];
 
-        if (limit-- == 0)
+        if (--limit == 0)
             return 0;  // stops the iteration
         return kCBLStatusOK;
     }];

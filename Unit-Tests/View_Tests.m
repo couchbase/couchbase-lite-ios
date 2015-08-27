@@ -297,15 +297,19 @@
     AssertEqual(rows.nextRow.value, @"scaly");
     AssertNil(rows.nextRow);
 
-    // Check that limits work as expected (#574):
+    // Check that limits work as expected (#574, #893):
     query = [view createQuery];
     query.postFilter = [NSPredicate predicateWithFormat: @"value endswith 'y'"];
-    query.limit = 2;
+    query.limit = 1;
     rows = [query run: NULL];
 
+    AssertEq(rows.count, 1u);
     AssertEqual(rows.nextRow.value, @"furry");
-    AssertEqual(rows.nextRow.value, @"scaly");
     AssertNil(rows.nextRow);
+
+    query.limit = 0;
+    rows = [query run: NULL];
+    AssertEq(rows.count, 0u);
 
     // Check that skip works as expected (#574):
     query = [view createQuery];
