@@ -24,6 +24,7 @@ extern "C" {
 #import "CBLMisc.h"
 #import "CBLSymmetricKey.h"
 #import "ExceptionUtils.h"
+#import "MYAction.h"
 }
 #import <CBForest/CBForest.hh>
 #import "CBLForestBridge.h"
@@ -52,6 +53,7 @@ using namespace couchbase_lite;
 {
     @private
     NSString* _directory;
+    Database::config _config;
     Database* _forest;
     Transaction* _forestTransaction;
     KeyStore* _localDocs;
@@ -59,7 +61,8 @@ using namespace couchbase_lite;
     NSMapTable* _views;
 }
 
-@synthesize delegate=_delegate, directory=_directory, autoCompact=_autoCompact, maxRevTreeDepth=_maxRevTreeDepth;
+@synthesize delegate=_delegate, directory=_directory, autoCompact=_autoCompact;
+@synthesize maxRevTreeDepth=_maxRevTreeDepth, encryptionKey=_encryptionKey;
 
 
 static void FDBLogCallback(forestdb::logLevel level, const char *message) {
@@ -115,32 +118,32 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
                   error: (NSError**)outError
 {
     _directory = [directory copy];
-    NSString* forestPath = [directory stringByAppendingPathComponent: kDBFilename];
     fdb_open_flags flags = readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE;
 
-    Database::config config = Database::defaultConfig();
-    config.flags = flags;
-    config.buffercache_size = kDBBufferCacheSize;
-    config.wal_threshold = kDBWALThreshold;
-    config.wal_flush_before_commit = true;
-    config.seqtree_opt = true;
-    config.compress_document_body = true;
+    _config = Database::defaultConfig();
+    _config.flags = flags;
+    _config.buffercache_size = kDBBufferCacheSize;
+    _config.wal_threshold = kDBWALThreshold;
+    _config.wal_flush_before_commit = true;
+    _config.seqtree_opt = true;
+    _config.compress_document_body = true;
     if (_autoCompact) {
-        config.compactor_sleep_duration = (uint64_t)kAutoCompactInterval;
+        _config.compactor_sleep_duration = (uint64_t)kAutoCompactInterval;
     } else {
-        config.compaction_threshold = 0; // disables auto-compact
+        _config.compaction_threshold = 0; // disables auto-compact
     }
+    return [self reopen: outError];
+}
 
-    CBLSymmetricKey* encryptionKey = _delegate.encryptionKey;
-    if (encryptionKey) {
+
+- (BOOL) reopen: (NSError**)outError {
+    if (_encryptionKey)
         LogTo(CBLDatabase, @"Database is encrypted; setting CBForest encryption key");
-        AssertEq(encryptionKey.keyData.length, sizeof(config.encryptionKey));
-        config.encrypted = true;
-        memcpy(&config.encryptionKey, encryptionKey.keyData.bytes, sizeof(config.encryptionKey));
-    }
+    _config.setEncryptionKey(slice(_encryptionKey.keyData));
 
     return tryError(outError, ^{
-        _forest = new Database(std::string(forestPath.fileSystemRepresentation), config);
+        NSString* forestPath = [_directory stringByAppendingPathComponent: kDBFilename];
+        _forest = new Database(std::string(forestPath.fileSystemRepresentation), _config);
     });
 }
 
@@ -151,6 +154,47 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     delete _forest;
     _forest = NULL;
     _transactionLevel = 0;
+}
+
+
+- (MYAction*) actionToChangeEncryptionKey: (CBLSymmetricKey*)newKey {
+    MYAction* action = [MYAction new];
+    forestdb::Database::encryptionConfig enc;
+    enc.setEncryptionKey(slice(newKey.keyData));
+
+    // Re-key the views!
+    NSArray* viewNames = self.allViewNames;
+    for (NSString* viewName in viewNames) {
+        CBL_ForestDBViewStorage* viewStorage = [self viewStorageNamed: viewName create: YES];
+        [action addAction: [viewStorage actionToChangeEncryptionKey]];
+    }
+
+    // Copy the database to a temporary file using the new encryption:
+    NSString* tempPath = [NSTemporaryDirectory() stringByAppendingPathComponent: CBLCreateUUID()];
+    [action addPerform: ^BOOL(NSError **outError) {
+        return tryError(outError, ^{
+            _forest->copyToFile(tempPath.fileSystemRepresentation, enc);
+        });
+    } backOut:^BOOL(NSError **outError) {
+        return [[NSFileManager defaultManager] removeItemAtPath: tempPath error: outError];
+    } cleanUp: nil];
+
+     // Close the database (and re-open it on cleanup):
+     [action addPerform: ^BOOL(NSError **outError) {
+        [self close];
+        return YES;
+    } backOut: ^BOOL(NSError **outError) {
+        return [self reopen: outError];
+    } cleanUp: ^BOOL(NSError **outError) {
+        [self setEncryptionKey: newKey];
+        return [self reopen: outError];
+    }];
+
+     // Overwrite the old db file with the new one:
+    NSString* dbPath = [_directory stringByAppendingPathComponent: kDBFilename];
+    [action addAction: [MYAction moveFile: tempPath toPath: dbPath]];
+
+    return action;
 }
 
 

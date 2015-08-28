@@ -25,6 +25,7 @@
 #import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
 #import "ExceptionUtils.h"
+#import "MYAction.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
@@ -60,6 +61,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     NSString* _directory;
     BOOL _readOnly;
     NSCache* _docIDs;
+    CBLSymmetricKey* _encryptionKey;
 }
 
 @synthesize delegate=_delegate, autoCompact=_autoCompact,
@@ -101,6 +103,11 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 - (BOOL) databaseExistsIn: (NSString*)directory {
     NSString* dbPath = [directory stringByAppendingPathComponent: kDBFilename];
     return [[NSFileManager defaultManager] fileExistsAtPath: dbPath isDirectory: NULL];
+}
+
+
+- (void) setEncryptionKey:(CBLSymmetricKey *)key {
+    _encryptionKey = key;
 }
 
 
@@ -182,16 +189,15 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         flags |= SQLITE_OPEN_READONLY;
     else
         flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-    CBLSymmetricKey* encryptionKey = _delegate.encryptionKey;
 
     LogTo(CBLDatabase, @"Open %@ (flags=%X%@)",
-          _fmdb.databasePath, flags, (encryptionKey ? @", encryption key given" : nil));
+          _fmdb.databasePath, flags, (_encryptionKey ? @", encryption key given" : nil));
     if (![_fmdb openWithFlags: flags]) {
         if (outError) *outError = self.fmdbError;
         return NO;
     }
 
-    if (![self decryptWithKey: encryptionKey error: outError])
+    if (![self decryptWithKey: _encryptionKey error: outError])
         return NO;
 
     // Register CouchDB-compatible JSON collation functions:
@@ -272,6 +278,82 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     return YES;
 }
 #endif
+
+
+- (BOOL) checkUpdate: (BOOL)updateResult error: (NSError**)outError {
+    if (!updateResult && outError)
+        *outError = self.fmdbError;
+    return updateResult;
+}
+
+
+- (MYAction*) actionToChangeEncryptionKey: (CBLSymmetricKey*)newKey {
+    // https://www.zetetic.net/sqlcipher/sqlcipher-api/index.html#sqlcipher_export
+    BOOL hasRealEncryption = sqlite3_compileoption_used("SQLITE_HAS_CODEC") != 0;
+    if (!hasRealEncryption) {
+#ifdef MOCK_ENCRYPTION
+        if (!CBLEnableMockEncryption)
+#endif
+            return nil;
+    }
+
+    MYAction* action = [MYAction new];
+
+    __block BOOL dbWasClosed = NO;
+    NSString* tempPath;
+#ifdef MOCK_ENCRYPTION
+    if (!hasRealEncryption) {
+        NSData* givenKeyData = newKey ? newKey.keyData : [NSData data];
+        NSString* oldKeyPath = [_directory stringByAppendingPathComponent: @"mock_key"];
+        NSString* newKeyPath = [_directory stringByAppendingPathComponent: @"mock_new_key"];
+        [givenKeyData writeToFile: newKeyPath atomically: YES];
+        [action addAction: [MYAction moveFile: newKeyPath toPath: oldKeyPath]];
+    } else
+#endif
+    {
+        // Make a path for a temporary database file:
+        tempPath = [NSTemporaryDirectory() stringByAppendingPathComponent: CBLCreateUUID()];
+        [action addPerform: nil backOut: ^BOOL(NSError **outError) {
+            return [[NSFileManager defaultManager] removeItemAtPath: tempPath error: outError];
+        } cleanUp: nil];
+
+        // Create & attach a temporary database encrypted with the new key:
+        [action addPerform:^BOOL(NSError **outError) {
+            NSString* keyStr = newKey ? newKey.hexData : @"";
+            NSString* sql = $sprintf(@"ATTACH DATABASE ? AS rekeyed_db KEY \"x'%@'\"", keyStr);
+            return [self checkUpdate: [_fmdb executeUpdate: sql, tempPath] error: outError];
+        } backOutOrCleanUp:^BOOL(NSError **outError) {
+            return dbWasClosed ||
+                        [self checkUpdate: [_fmdb executeUpdate: @"DETACH DATABASE rekeyed_db"]
+                                    error: outError];
+        }];
+
+        // Export the current database's contents to the new one:
+        [action addPerform:^BOOL(NSError **outError) {
+            return [self checkUpdate: [_fmdb executeUpdate: @"SELECT sqlcipher_export('rekeyed_db')"]
+                               error: outError];
+        } backOut: NULL cleanUp: NULL];
+    }
+
+    // Close the database (and re-open it on cleanup):
+    [action addPerform: ^BOOL(NSError **outError) {
+        [_fmdb close];
+        dbWasClosed = YES;
+        return YES;
+    } backOut: ^BOOL(NSError **outError) {
+        return [self open: outError];
+    } cleanUp: ^BOOL(NSError **outError) {
+        [self setEncryptionKey: newKey];
+        return [self open: outError];
+    }];
+
+    // Overwrite the old db file with the new one:
+    if (hasRealEncryption) {
+        [action addAction: [MYAction moveFile: tempPath toPath: _fmdb.databasePath]];
+    }
+
+    return action;
+}
 
 
 - (BOOL) open: (NSError**)outError {

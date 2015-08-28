@@ -534,14 +534,9 @@ static CBLManager* sInstance;
 {
     CBLSymmetricKey* realKey = nil;
     if (keyOrPassword) {
-        if ([keyOrPassword isKindOfClass: [NSString class]]) {
-            realKey = [[CBLSymmetricKey alloc] initWithPassword: keyOrPassword];
-        } else {
-            Assert([keyOrPassword isKindOfClass: [NSData class]]);
-            realKey = [[CBLSymmetricKey alloc] initWithKeyData: keyOrPassword];
-            if (!realKey)
-                return NO;
-        }
+        realKey = [[CBLSymmetricKey alloc] initWithKeyOrPassword: keyOrPassword];
+        if (!realKey)
+            return NO;
     }
     [self.shared setValue: realKey
                   forType: @"encryptionKey"

@@ -76,14 +76,21 @@ typedef struct CBLManagerOptions {
 /** Returns YES if a database with the given name exists. Does not open the database. */
 - (BOOL) databaseExistsNamed: (NSString*)name;
 
-/** Registers an encryption key for a database. This must be called before opening an encrypted
+/** Registers an encryption key for a database. This must be called _before_ opening an encrypted
     database, or before creating a database that's to be encrypted.
     If the key is incorrect (or no key is given for an encrypted database), the subsequent call
     to open the database will fail with an error with code 401.
     To use this API, the database storage engine must support encryption. In the case of SQLite,
     this means the application must be linked with SQLCipher <http://sqlcipher.net> instead of
-    regular SQLite. Otherwise opening the database will fail with an error. */
-- (BOOL) registerEncryptionKey: (nullable id)encryptionKey
+    regular SQLite. Otherwise opening the database will fail with an error.
+    @param keyOrPassword  The encryption key in the form of an NSString (a password) or an
+                NSData object exactly 32 bytes in length (a raw AES key.) If a string is given,
+                it will be internally converted to a raw key using 64,000 rounds of PBKDF2 hashing.
+                A nil value is legal, and clears a previously-registered key.
+    @param name  The name of the database this key applies to.
+    @result  YES if the key can be used, NO if it's not in a legal form (e.g. NSData object not 32
+                bytes in length.) */
+- (BOOL) registerEncryptionKey: (nullable id)keyOrPassword
               forDatabaseNamed: (NSString*)name;
 
 #if !TARGET_OS_IPHONE

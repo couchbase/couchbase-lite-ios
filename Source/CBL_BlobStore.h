@@ -15,7 +15,7 @@
 #import <CommonCrypto/CommonDigest.h>
 #endif
 
-@class CBLSymmetricKey;
+@class CBLSymmetricKey, MYAction;
 
 
 /** Key identifying a data blob. This happens to be a SHA-1 digest. */
@@ -36,6 +36,8 @@ typedef struct CBLBlobKey {
     and then replace the current directory with it. */
 - (BOOL) changeEncryptionKey: (CBLSymmetricKey*)newKey
                        error: (NSError**)outError;
+
+- (MYAction*) actionToChangeEncryptionKey: (CBLSymmetricKey*)newKey;
 
 - (BOOL) hasBlobForKey: (CBLBlobKey)key;
 - (NSData*) blobForKey: (CBLBlobKey)key;

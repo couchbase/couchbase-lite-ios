@@ -20,6 +20,7 @@
 #import "CBLBase64.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
+#import "MYAction.h"
 #import <ctype.h>
 
 
@@ -352,74 +353,97 @@
 }
 
 
-- (BOOL) changeEncryptionKey: (CBLSymmetricKey*)newKey error: (NSError**)outError {
+- (MYAction*) actionToChangeEncryptionKey: (CBLSymmetricKey*)newKey {
+    MYAction* action = [MYAction new];
+
     // Find all the blob files:
-    Log(@"CBLBlobStore: %@ %@", (newKey ? @"encrypting" : @"decrypting"), _path);
+    __block NSArray* blobs = nil;
+    CBLSymmetricKey* oldKey = _encryptionKey;
+
     NSFileManager* fmgr = [NSFileManager defaultManager];
-    NSArray* blobs = [fmgr contentsOfDirectoryAtPath: _path error: outError];
-    if (!blobs)
-        return NO;
+    blobs = [fmgr contentsOfDirectoryAtPath: _path error: NULL];
     blobs = [blobs pathsMatchingExtensions: @[@kFileExtension]];
     if (blobs.count == 0) {
         // No blobs, so nothing to encrypt. Just add/remove the encryption marker file:
-        Log(@"    No blobs to copy; done.");
-        _encryptionKey = newKey;
-        return [self markEncrypted: (newKey != nil) error: outError];
+        [action addPerform: ^BOOL(NSError** outError) {
+            Log(@"CBLBlobStore: %@ %@", (newKey ? @"encrypting" : @"decrypting"), _path);
+            Log(@"    No blobs to copy; done.");
+            _encryptionKey = newKey;
+            return [self markEncrypted: (newKey != nil) error: outError];
+        } backOut:  ^BOOL(NSError** outError) {
+            _encryptionKey = oldKey;
+            return [self markEncrypted: (oldKey != nil) error: outError];
+        } cleanUp: nil];
+        return action;
     }
 
-    // Create a new empty attachment store with the new encryption key:
-    NSString* tempPath = [self createTempDir: outError];
-    if (!tempPath)
-        return NO;
-    CBL_BlobStore* tempStore = [[CBL_BlobStore alloc] initInternalWithPath: tempPath
-                                                             encryptionKey: newKey];
-    if (![tempStore markEncrypted: (newKey != nil) error: outError])
-        return NO;
+    // Create a new directory for the new blob store. Have to do this now, before starting the
+    // action, because farther down we create an action to move it...
+    NSError* createTempDirError;
+    NSString* tempPath = [self createTempDir: &createTempDirError];
+    [action addPerform:^BOOL(NSError** outError) {
+        Log(@"CBLBlobStore: %@ %@", (newKey ? @"encrypting" : @"decrypting"), _path);
+        *outError = createTempDirError;
+        return tempPath != nil;
+    } backOut:^BOOL(NSError** outError) {
+        return [fmgr removeItemAtPath: tempPath error: outError];
+    } cleanUp: nil];
+
+    __block CBL_BlobStore* tempStore;
+    [action addPerform:^BOOL(NSError** outError) {
+        tempStore = [[CBL_BlobStore alloc] initInternalWithPath: tempPath
+                                                  encryptionKey: newKey];
+        return [tempStore markEncrypted: (newKey != nil) error: outError];
+    } backOut: nil cleanUp: nil];
 
     // Copy each of my blobs into the new store (which will update its encryption):
-    BOOL ok = YES;
-    for (NSString* blobName in blobs) {
-        // Copy file by reading with old key and writing with new one:
-        Log(@"    Copying %@", blobName);
-        NSString* srcFile = [_path stringByAppendingPathComponent: blobName];
-        NSInputStream* readStream = [NSInputStream inputStreamWithFileAtPath: srcFile];
-        [readStream open];
-        if (readStream.streamError) {
-            if (outError)
+    [action addPerform:^BOOL(NSError** outError) {
+        for (NSString* blobName in blobs) {
+            // Copy file by reading with old key and writing with new one:
+            Log(@"    Copying %@", blobName);
+            NSString* srcFile = [_path stringByAppendingPathComponent: blobName];
+            NSInputStream* readStream = [NSInputStream inputStreamWithFileAtPath: srcFile];
+            [readStream open];
+            if (readStream.streamError) {
                 *outError = readStream.streamError;
+                return NO;
+            }
+            if (_encryptionKey)
+                readStream = [_encryptionKey decryptStream: readStream];
+
+            CBL_BlobStoreWriter* writer = [[CBL_BlobStoreWriter alloc] initWithStore: tempStore];
+            BOOL ok = [writer appendInputStream: readStream error: outError];
             [readStream close];
-            ok = NO;
-            break;
+            if (ok) {
+                [writer finish];
+                [writer install];
+            } else {
+                [writer cancel];
+                return NO;
+            }
         }
-        if (_encryptionKey)
-            readStream = [_encryptionKey decryptStream: readStream];
+        return YES;
+    } backOut: nil cleanUp: nil];
 
-        CBL_BlobStoreWriter* writer = [[CBL_BlobStoreWriter alloc] initWithStore: tempStore];
-        ok = [writer appendInputStream: readStream error: outError];
-        [readStream close];
-        if (ok) {
-            [writer finish];
-            [writer install];
-        } else {
-            [writer cancel];
-            break;
-        }
-    }
+    // Replace the attachment dir with the new one:
+    [action addAction: [MYAction moveFile: tempPath toPath: self.path]];
 
-    if (ok) {
-        // Replace my directory with the new one:
-        Log(@"    Installing new blob store %@", tempPath);
-        if (CBLSafeReplaceDir(tempPath, _path, outError))
-            _encryptionKey = newKey;
-        else
-            ok = NO;
-    }
-    if (!ok) {
-        Warn(@"Changing blob-store encryption key failed! path= %@ ; error=%@",
-             _path, (outError ? *outError : nil));
-        [fmgr removeItemAtPath: tempPath error: NULL];
-    }
-    return ok;
+    // Finally update _encryptionKey:
+    [action addPerform:^BOOL(NSError** outError) {
+        _encryptionKey = newKey;
+        return YES;
+    } backOut: ^BOOL(NSError** outError) {
+        _encryptionKey = oldKey;
+        return YES;
+    } cleanUp: nil];
+    return action;
+}
+
+
+- (BOOL) changeEncryptionKey: (CBLSymmetricKey*)newKey
+                       error: (NSError**)outError
+{
+    return [[self actionToChangeEncryptionKey: newKey] run: outError];
 }
 
 

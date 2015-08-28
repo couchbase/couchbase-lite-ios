@@ -42,6 +42,9 @@ typedef NSMutableData* (^CBLCryptorBlock)(NSData* input);
 /** Creates an instance from existing key data. */
 - (instancetype) initWithKeyData: (NSData*)keyData;
 
+/** Creates an instance with key data or a password string. */
+- (instancetype) initWithKeyOrPassword: (id)keyOrPassword;
+
 /** Creates an instance with a key read from the Keychain. */
 - (instancetype) initWithKeychainItemNamed: (NSString*)itemName
                                      error: (NSError**)outError;

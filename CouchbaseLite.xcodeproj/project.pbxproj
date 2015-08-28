@@ -654,6 +654,11 @@
 		27E7FB04155DBDBF0025F93A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
 		27E940661954BB9E00A9732E /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E940651954BB9E00A9732E /* libc++.dylib */; };
 		27E940691954BD4C00A9732E /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E940651954BB9E00A9732E /* libc++.dylib */; };
+		27EA1F481B90CEC200B37251 /* MYAction.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA1F461B90CEC200B37251 /* MYAction.h */; settings = {ASSET_TAGS = (); }; };
+		27EA1F491B90CEC200B37251 /* MYAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EA1F471B90CEC200B37251 /* MYAction.m */; settings = {ASSET_TAGS = (); }; };
+		27EA1F4A1B90CEC200B37251 /* MYAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EA1F471B90CEC200B37251 /* MYAction.m */; settings = {ASSET_TAGS = (); }; };
+		27EA1F5A1B91183100B37251 /* MYAction_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EA1F591B91183100B37251 /* MYAction_Test.m */; settings = {ASSET_TAGS = (); }; };
+		27EA1F5B1B91183100B37251 /* MYAction_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EA1F591B91183100B37251 /* MYAction_Test.m */; settings = {ASSET_TAGS = (); }; };
 		27EA50B31B275527009E78C1 /* CBLBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA50B21B275527009E78C1 /* CBLBase.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27EA50B41B275527009E78C1 /* CBLBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA50B21B275527009E78C1 /* CBLBase.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27EA50B51B275527009E78C1 /* CBLBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA50B21B275527009E78C1 /* CBLBase.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1628,6 +1633,9 @@
 		27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/CFNetwork.framework; sourceTree = DEVELOPER_DIR; };
 		27E7FB02155DBDA20025F93A /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 		27E940651954BB9E00A9732E /* libc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++.dylib"; path = "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk/usr/lib/libc++.dylib"; sourceTree = DEVELOPER_DIR; };
+		27EA1F461B90CEC200B37251 /* MYAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYAction.h; sourceTree = "<group>"; };
+		27EA1F471B90CEC200B37251 /* MYAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYAction.m; sourceTree = "<group>"; };
+		27EA1F591B91183100B37251 /* MYAction_Test.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MYAction_Test.m; path = vendor/MYUtilities/Tests/MYAction_Test.m; sourceTree = SOURCE_ROOT; };
 		27EA50B21B275527009E78C1 /* CBLBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBase.h; sourceTree = "<group>"; };
 		27ED862E157D0FC600712B33 /* CBLDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDocument.h; sourceTree = "<group>"; };
 		27ED862F157D0FC600712B33 /* CBLDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDocument.m; sourceTree = "<group>"; };
@@ -1981,6 +1989,7 @@
 				2764D2B31A5E29EC005AC95A /* Misc_Tests.m */,
 				272AA8191A48A023004B8D55 /* Model_Tests.m */,
 				272AA8741A49EE5D004B8D55 /* Multipart_Tests.m */,
+				27EA1F591B91183100B37251 /* MYAction_Test.m */,
 				27B0AC1B1B4B036500DFE818 /* P2P_Tests.m */,
 				272AA81B1A48A301004B8D55 /* QueryBuilder_Tests.m */,
 				272AA81D1A48A8BF004B8D55 /* Replication_Tests.m */,
@@ -2751,6 +2760,8 @@
 				27F0749D11CD5B4F00E9A2AB /* Test.h */,
 				27F0749E11CD5B4F00E9A2AB /* Test.m */,
 				27E3476D19994F5A00076EAC /* Test_Assertions.m */,
+				27EA1F461B90CEC200B37251 /* MYAction.h */,
+				27EA1F471B90CEC200B37251 /* MYAction.m */,
 				278097541A32817A00876DE6 /* MYAnonymousIdentity.h */,
 				278097551A32817A00876DE6 /* MYAnonymousIdentity.m */,
 				279CE3B614D4A885009F3FA6 /* MYBlockUtils.h */,
@@ -2937,6 +2948,7 @@
 				2753158A14ACEFC90065964D /* HTTPServer.h in Headers */,
 				27B945B217692E2000B2DF2D /* CBLModel_Internal.h in Headers */,
 				2753158E14ACEFC90065964D /* HTTPAsyncFileResponse.h in Headers */,
+				27EA1F481B90CEC200B37251 /* MYAction.h in Headers */,
 				2753159214ACEFC90065964D /* HTTPDataResponse.h in Headers */,
 				27EF7F9B1912EB5200A327B9 /* CBLForestBridge.h in Headers */,
 				2753159614ACEFC90065964D /* HTTPDynamicFileResponse.h in Headers */,
@@ -3879,6 +3891,7 @@
 				273FA2BB1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */,
 				2740D8561A8C240500809EE0 /* MapReduce_Test.mm in Sources */,
 				2740D8571A8C240500809EE0 /* VersionedDocument_Tests.mm in Sources */,
+				27EA1F5A1B91183100B37251 /* MYAction_Test.m in Sources */,
 				271297481A8D7DA400F6C5CE /* DatabaseAttachment_Tests.m in Sources */,
 				2740D8581A8C240500809EE0 /* Tokenizer_Test.mm in Sources */,
 				2740D8591A8C240500809EE0 /* GeoHash_Test.mm in Sources */,
@@ -3996,6 +4009,7 @@
 				27DADE441A659FCC0075313A /* CBL_ForestDBStorage.mm in Sources */,
 				277B5D301821A8380088881E /* yajl_buf.c in Sources */,
 				2733023018F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */,
+				27EA1F491B90CEC200B37251 /* MYAction.m in Sources */,
 				27486F261A606C76008D94F0 /* CBJSONEncoder.m in Sources */,
 				277B5D291821A8380088881E /* yajl.c in Sources */,
 				27A7552C1A8BD715008BCD4D /* CBLQueryEnumerator.m in Sources */,
@@ -4049,6 +4063,7 @@
 				2764D2BF1A5F10E6005AC95A /* JSViewCompiler_Tests.m in Sources */,
 				271297491A8D7DA400F6C5CE /* DatabaseAttachment_Tests.m in Sources */,
 				272AA8521A48DA0F004B8D55 /* CBLTestCase.m in Sources */,
+				27EA1F5B1B91183100B37251 /* MYAction_Test.m in Sources */,
 				272AA8631A49D5B0004B8D55 /* ChangeTracker_Tests.m in Sources */,
 				272AA84E1A48DA0F004B8D55 /* Model_Tests.m in Sources */,
 				2764D2B51A5E29EC005AC95A /* Misc_Tests.m in Sources */,
@@ -4239,6 +4254,7 @@
 				27208F8B184D1D5D006ADBEF /* NSString+URLEncoding.m in Sources */,
 				27A755321A8BD797008BCD4D /* CBLQueryRow.m in Sources */,
 				2786CE7A1B84FFBA0061998D /* CBL_BlobStoreWriter.m in Sources */,
+				27EA1F4A1B90CEC200B37251 /* MYAction.m in Sources */,
 				277B5D2E1821A8380088881E /* yajl_alloc.c in Sources */,
 				2737A6D01B703DD500CEF619 /* CBLAttachmentDownloader.m in Sources */,
 				27D0F3F11B86587E006B4419 /* CBLProgressGroup.m in Sources */,

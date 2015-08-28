@@ -171,6 +171,12 @@ static BOOL sAutoCompact = YES;
 
     _storage = storage;
     _storage.delegate = self;
+
+    CBLSymmetricKey* encryptionKey = [_manager.shared valueForType: @"encryptionKey"
+                                                              name: @"" inDatabaseNamed: _name];
+    if ([_storage respondsToSelector: @selector(setEncryptionKey:)])
+        [_storage setEncryptionKey: encryptionKey];
+
     if (![_storage openInDirectory: _dir
                           readOnly: _readOnly
                            manager: _manager
@@ -189,7 +195,7 @@ static BOOL sAutoCompact = YES;
     // Open attachment store:
     NSString* attachmentsPath = self.attachmentStorePath;
     _attachments = [[CBL_BlobStore alloc] initWithPath: attachmentsPath
-                                         encryptionKey: self.encryptionKey
+                                         encryptionKey: encryptionKey
                                                  error: outError];
     if (!_attachments) {
         Warn(@"%@: Couldn't open attachment store at %@", self, attachmentsPath);
@@ -272,11 +278,6 @@ static BOOL sAutoCompact = YES;
 
 - (NSString*) publicUUID {
     return [_storage infoForKey: @"publicUUID"];
-}
-
-
-- (CBLSymmetricKey*) encryptionKey {
-    return [_manager.shared valueForType: @"encryptionKey" name: @"" inDatabaseNamed: _name];
 }
 
 

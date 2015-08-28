@@ -8,7 +8,7 @@
 
 #import "CBL_Revision.h"
 #import "CBL_StorageTypes.h"
-@class CBLDatabaseChange, CBLManager, CBLSymmetricKey;
+@class CBLDatabaseChange, CBLManager, CBLSymmetricKey, MYAction;
 @protocol CBL_ViewStorage;
 @protocol CBL_StorageDelegate;
 
@@ -252,6 +252,15 @@
                           obeyMVCC: (BOOL)obeyMVCC
                             status: (CBLStatus*)outStatus;
 
+@optional
+
+/** Registers the encryption key of the database file. Must be called before opening the db. */
+- (void) setEncryptionKey: (CBLSymmetricKey*)key;
+
+/** Called when the delegate changes its encryptionKey property. The storage should rewrite its
+    files using the new key (which may be nil, meaning no encryption.) */
+- (MYAction*) actionToChangeEncryptionKey: (CBLSymmetricKey*)newKey;
+
 @end
 
 
@@ -259,9 +268,6 @@
 
 /** Delegate of a CBL_Storage instance. CBLDatabase implements this. */
 @protocol CBL_StorageDelegate <NSObject>
-
-/** Optional encryption key registered with this database. */
-@property (readonly) CBLSymmetricKey* encryptionKey;
 
 /** Called whenever the outermost transaction completes.
     @param committed  YES on commit, NO if the transaction was aborted. */

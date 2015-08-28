@@ -23,6 +23,15 @@
 
 
 @implementation DatabaseEncryption_Tests
+{
+    CBLDatabase* seekrit;
+}
+
+
+- (void) setUp {
+    [super setUp];
+    CBLEnableMockEncryption = YES;
+}
 
 
 - (void) tearDown {
@@ -32,10 +41,11 @@
 
 
 - (void) test01_EncryptionFailsGracefully {
+    CBLEnableMockEncryption = NO;
     Assert([dbmgr registerEncryptionKey: @"123456" forDatabaseNamed: @"seekrit"]);
     [self allowWarningsIn:^{
         NSError* error;
-        CBLDatabase* seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
+        seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
         if (seekrit == nil)
             AssertEq(error.code, 501 /*Not Implemented*/);
     }];
@@ -43,11 +53,9 @@
 
 
 - (void) test02_UnEncryptedDB {
-    CBLEnableMockEncryption = YES;
-
     // Create unencrypted DB:
     NSError* error;
-    __block CBLDatabase* seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
+    seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
     Assert(seekrit, @"Failed to create encrypted db: %@", error);
     [self createDocumentWithProperties: @{@"answer": @42} inDatabase: seekrit];
     Assert([seekrit close: NULL]);
@@ -70,12 +78,10 @@
 
 
 - (void) test03_EncryptedDB {
-    CBLEnableMockEncryption = YES;
-
     // Create encrypted DB:
     NSError* error;
     [dbmgr registerEncryptionKey: @"letmein" forDatabaseNamed: @"seekrit"];
-    __block CBLDatabase* seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
+    seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
     Assert(seekrit, @"Failed to create encrypted db: %@", error);
     [self createDocumentWithProperties: @{@"answer": @42} inDatabase: seekrit];
     Assert([seekrit close: NULL]);
@@ -104,12 +110,10 @@
 
 
 - (void) test04_DeleteEncryptedDB {
-    CBLEnableMockEncryption = YES;
-
     // Create encrypted DB:
     __block NSError* error;
     [dbmgr registerEncryptionKey: @"letmein" forDatabaseNamed: @"seekrit"];
-    __block CBLDatabase* seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
+    seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
     Assert(seekrit, @"Failed to create encrypted db: %@", error);
     [self createDocumentWithProperties: @{@"answer": @42} inDatabase: seekrit];
 
@@ -139,12 +143,10 @@
 
 
 - (void) test05_CompactEncryptedDB {
-    CBLEnableMockEncryption = YES;
-
     // Create encrypted DB:
     __block NSError* error;
     [dbmgr registerEncryptionKey: @"letmein" forDatabaseNamed: @"seekrit"];
-    __block CBLDatabase* seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
+    seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
     Assert(seekrit, @"Failed to create encrypted db: %@", error);
 
     // Create a doc and then update it:
@@ -174,12 +176,10 @@
 
 - (void) test06_Keychain {
 #if !TARGET_OS_IPHONE
-    CBLEnableMockEncryption = YES;
-
     // Create encrypted DB:
     NSError* error;
     Assert([dbmgr encryptDatabaseNamed: @"seekrit"], @"encryptDatabaseNamed failed");
-    __block CBLDatabase* seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
+    seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
     Assert(seekrit, @"Failed to create encrypted db: %@", error);
     [self createDocumentWithProperties: @{@"answer": @42} inDatabase: seekrit];
     Assert([seekrit close: NULL]);
@@ -209,11 +209,8 @@
 
 
 - (void) test07_EncryptedAttachments {
-    if (!self.isSQLiteDB)
-        return;
-    CBLEnableMockEncryption = YES;
     [dbmgr registerEncryptionKey: @"letmein" forDatabaseNamed: @"seekrit"];
-    CBLDatabase* seekrit = [dbmgr databaseNamed: @"seekrit" error: NULL];
+    seekrit = [dbmgr databaseNamed: @"seekrit" error: NULL];
     Assert(seekrit);
 
     // Save a doc with an attachment:
@@ -234,6 +231,46 @@
     NSData* raw = [NSData dataWithContentsOfFile: path];
     Assert(raw != nil);
     Assert(![raw isEqual: body], @"Oops, attachment was not encrypted");
+}
+
+
+- (void) test08_Rekey {
+    // First run the encrypted-attachments test to populate the db:
+    [self test07_EncryptedAttachments];
+
+    // Create a view and some documents:
+    [self createDocuments: 100];
+    CBLView* view = [db viewNamed: @"vu"];
+    [view setMapBlock: MAPBLOCK({
+        emit(doc[@"sequence"], nil);
+    }) version: @"1"];
+    CBLQuery* query = [view createQuery];
+    NSError* error;
+    AssertEq([[query run: &error] count], 100u);
+
+    Assert([seekrit changeEncryptionKey: @"letmeout" error: &error],
+           @"Error changing encryption key: %@", error);
+
+    // Close & reopen seekrit:
+    NSString* dbName = seekrit.name;
+    Assert([seekrit close: &error], @"Couldn't close seekrit: %@", error);
+    seekrit = nil;
+    Assert([dbmgr registerEncryptionKey: @"letmeout" forDatabaseNamed: @"seekrit"]);
+    CBLDatabase* seekrit2 = [dbmgr databaseNamed: dbName error: &error];
+    Assert(seekrit2, @"Couldn't reopen seekrit: %@", error);
+    Assert(seekrit2 != seekrit, @"-reopenTestDB couldn't make a new instance");
+    seekrit = seekrit2;
+
+    // Check the document and its attachment:
+    CBLSavedRevision* savedRev = [seekrit documentWithID: @"att"].currentRevision;
+    Assert(savedRev);
+    CBLAttachment* att = [savedRev attachmentNamed: @"att.txt"];
+    Assert(att);
+    NSData* body = [@"This is a test attachment!" dataUsingEncoding: NSUTF8StringEncoding];
+    AssertEqual(att.content, body);
+
+    // Check that the view survived:
+    AssertEq([[query run: &error] count], 100u);
 }
 
 

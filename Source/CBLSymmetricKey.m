@@ -86,6 +86,16 @@
 }
 
 
+- (instancetype) initWithKeyOrPassword: (id)keyOrPassword {
+    if ([keyOrPassword isKindOfClass: [NSString class]]) {
+        return [self initWithPassword: keyOrPassword];
+    } else {
+        Assert([keyOrPassword isKindOfClass: [NSData class]], @"Key must be NSString or NSData");
+        return [self initWithKeyData: keyOrPassword];
+    }
+}
+
+
 - (instancetype) initWithKeychainItemNamed: (NSString*)itemName
                                      error: (NSError**)outError
 {

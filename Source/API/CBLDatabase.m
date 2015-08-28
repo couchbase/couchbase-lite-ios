@@ -25,6 +25,8 @@
 #import "CBLCache.h"
 #import "CBLManager+Internal.h"
 #import "CBLMisc.h"
+#import "CBLSymmetricKey.h"
+#import "MYAction.h"
 #import "MYBlockUtils.h"
 #import "ExceptionUtils.h"
 
@@ -257,6 +259,27 @@ static void catchInBlock(void (^block)()) {
 
     CBLStatusToOutNSError(status, outError);
     return NO;
+}
+
+
+- (BOOL) changeEncryptionKey: (id)newKeyOrPassword error: (NSError**)outError {
+    if (![_storage respondsToSelector: @selector(actionToChangeEncryptionKey:)])
+        return CBLStatusToOutNSError(kCBLStatusNotImplemented, outError);
+
+    CBLSymmetricKey* newKey = nil;
+    if (newKeyOrPassword) {
+        newKey = [[CBLSymmetricKey alloc] initWithKeyOrPassword: newKeyOrPassword];
+        if (!newKey)
+            return CBLStatusToOutNSError(kCBLStatusBadRequest, outError);
+    }
+
+    MYAction* action = [_storage actionToChangeEncryptionKey: newKey];
+    [action addAction: [_attachments actionToChangeEncryptionKey: newKey]];
+    [action addPerform:^BOOL(NSError** error) {
+        [_manager registerEncryptionKey: newKeyOrPassword forDatabaseNamed: _name];
+        return YES;
+    } backOut: nil cleanUp: nil];
+    return [action run: outError];
 }
 
 

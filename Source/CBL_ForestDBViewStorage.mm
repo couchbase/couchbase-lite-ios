@@ -22,6 +22,7 @@ extern "C" {
 #import "CBLMisc.h"
 #import "ExceptionUtils.h"
 #import "CBLSymmetricKey.h"
+#import "MYAction.h"
 }
 #import <CBForest/CBForest.hh>
 #import <CBForest/GeoIndex.hh>
@@ -341,7 +342,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         config.seqtree_opt = NO; // indexes don't need by-sequence ordering
         config.compaction_threshold = 50;
 
-        CBLSymmetricKey* encryptionKey = _dbStorage.delegate.encryptionKey;
+        CBLSymmetricKey* encryptionKey = _dbStorage.encryptionKey;
         if (encryptionKey) {
             LogTo(CBLDatabase, @"Database is encrypted; setting CBForest encryption key");
             AssertEq(encryptionKey.keyData.length, sizeof(config.encryptionKey));
@@ -406,6 +407,24 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
     [self closeIndex];
     [[NSFileManager defaultManager] removeItemAtPath: _path error: NULL];
     [_dbStorage forgetViewStorageNamed: _name];
+}
+
+
+- (MYAction*) actionToChangeEncryptionKey {
+    MYAction* action = [MYAction new];
+    [action addPerform:^BOOL(NSError **outError) {
+        // Close and delete the index database:
+        [self closeIndex];
+        return [[NSFileManager defaultManager] removeItemAtPath: _path error: outError];
+    } backOutOrCleanUp:^BOOL(NSError **outError) {
+        // Afterwards, reopen (and re-create) the index:
+        CBLStatus status;
+        if (![self openIndexWithOptions: FDB_OPEN_FLAG_CREATE status: &status])
+            return CBLStatusToOutNSError(status, outError);
+        [self closeIndex];
+        return YES;
+    }];
+    return action;
 }
 
 
