@@ -898,13 +898,21 @@ static CBL_Revision* mkrev(NSString* revID) {
     // Check that every file has the file protection set for the CBLManager (which defaults to
     // NSFileProtectionCompleteUnlessOpen.)
     NSFileManager* fmgr = [NSFileManager defaultManager];
-    NSString* dir = db.dir;
-    NSArray* paths = [[fmgr subpathsAtPath: dir] arrayByAddingObject: @"."];
+    NSArray* paths;
+    if (self.isSQLiteDB)
+        paths = @[@""]; // As of 1.1.1, SQLite storage is not using the new bundle structure yet.
+    else
+        paths = [[fmgr subpathsAtPath: db.path] arrayByAddingObject: @"."];
+
     for (NSString* path in paths) {
-        NSString* absPath = [dir stringByAppendingPathComponent: path];
+        NSString* absPath = [db.path stringByAppendingPathComponent: path];
+        NSLog(@"absPath: %@", absPath);
         id prot = [[fmgr attributesOfItemAtPath: absPath error: nil] objectForKey: NSFileProtectionKey];
         Log(@"Protection of %@ --> %@", path, prot);
-        AssertEqual(prot, NSFileProtectionCompleteUnlessOpen);
+        // Not checking -shm file as it will have NSFileProtectionNone by default regardless of its
+        // parent directory projection level. However, the -shm file contains non-sensitive information.
+        if (![path hasSuffix:@"-shm"])
+            AssertEqual(prot, NSFileProtectionCompleteUnlessOpen);
     }
 }
 #endif
