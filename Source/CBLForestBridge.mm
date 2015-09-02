@@ -15,6 +15,9 @@
 
 #import "CBLForestBridge.h"
 #import <CBForest/Encryption/filemgr_ops_encrypted.h>
+extern "C" {
+#import "ExceptionUtils.h"
+}
 
 using namespace forestdb;
 
@@ -162,26 +165,53 @@ static NSData* dataOfNode(const Revision* rev) {
 @end
 
 
+namespace couchbase_lite {
 
-CBLStatus CBLStatusFromForestDBStatus(int fdbStatus) {
-    switch (fdbStatus) {
-        case FDB_RESULT_SUCCESS:
-            return kCBLStatusOK;
-        case FDB_RESULT_KEY_NOT_FOUND:
-        case FDB_RESULT_NO_SUCH_FILE:
-            return kCBLStatusNotFound;
-        case FDB_RESULT_RONLY_VIOLATION:
-            return kCBLStatusForbidden;
-        case FDB_RESULT_NO_DB_HEADERS:
-        case FDB_RESULT_ENCRYPTION_ERROR:
-            return kCBLStatusUnauthorized;     // assuming db is encrypted
-        case FDB_RESULT_CHECKSUM_ERROR:
-        case FDB_RESULT_FILE_CORRUPTION:
-        case error::CorruptRevisionData:
-            return kCBLStatusCorruptError;
-        case error::BadRevisionID:
-            return kCBLStatusBadID;
-        default:
-            return kCBLStatusDBError;
+    CBLStatus tryStatus(CBLStatus(^block)()) {
+        try {
+            return block();
+        } catch (forestdb::error err) {
+            return CBLStatusFromForestDBStatus(err.status);
+        } catch (NSException* x) {
+            MYReportException(x, @"CBL_ForestDBStorage");
+            return kCBLStatusException;
+        } catch (...) {
+            Warn(@"Unknown C++ exception caught in CBL_ForestDBStorage");
+            return kCBLStatusException;
+        }
     }
+
+
+    bool tryError(NSError** outError, void(^block)()) {
+        CBLStatus status = tryStatus(^{
+            block();
+            return kCBLStatusOK;
+        });
+        return CBLStatusToOutNSError(status, outError);
+    }
+
+
+    CBLStatus CBLStatusFromForestDBStatus(int fdbStatus) {
+        switch (fdbStatus) {
+            case FDB_RESULT_SUCCESS:
+                return kCBLStatusOK;
+            case FDB_RESULT_KEY_NOT_FOUND:
+            case FDB_RESULT_NO_SUCH_FILE:
+                return kCBLStatusNotFound;
+            case FDB_RESULT_RONLY_VIOLATION:
+                return kCBLStatusForbidden;
+            case FDB_RESULT_NO_DB_HEADERS:
+            case FDB_RESULT_ENCRYPTION_ERROR:
+                return kCBLStatusUnauthorized;     // assuming db is encrypted
+            case FDB_RESULT_CHECKSUM_ERROR:
+            case FDB_RESULT_FILE_CORRUPTION:
+            case error::CorruptRevisionData:
+                return kCBLStatusCorruptError;
+            case error::BadRevisionID:
+                return kCBLStatusBadID;
+            default:
+                return kCBLStatusDBError;
+        }
+    }
+
 }

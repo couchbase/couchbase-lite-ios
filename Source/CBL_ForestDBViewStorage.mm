@@ -29,6 +29,7 @@ extern "C" {
 #import <CBForest/Tokenizer.hh>
 using namespace forestdb;
 #import "CBLForestBridge.h"
+using namespace couchbase_lite;
 
 
 @interface CBL_ForestDBViewStorage () <CBL_QueryRowStorage>
@@ -347,21 +348,19 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
             memcpy(&config.encryptionKey, encryptionKey.keyData.bytes, sizeof(config.encryptionKey));
         }
 
-        try {
+        CBLStatus status = tryStatus(^CBLStatus{
             _indexDB = new Database(_path.fileSystemRepresentation, config);
             Database* db = (Database*)_dbStorage.forestDatabase;
             _index = new MapReduceIndex(_indexDB, "index", *db);
-        } catch (forestdb::error x) {
-            Warn(@"Unable to open index of %@: ForestDB error %d", self, x.status);
+            return kCBLStatusOK;
+        });
+        if (status != kCBLStatusOK) {
+            Warn(@"Unable to open index of %@: Status %d", self, status);
             if (outStatus)
-                *outStatus = CBLStatusFromForestDBStatus(x.status);
-            return NULL;
-        } catch (...) {
-            Warn(@"Unable to open index of %@: Unexpected exception", self);
-            if (outStatus)
-                *outStatus = kCBLStatusException;
+                *outStatus = status;
             return NULL;
         }
+
         [self closeIndexSoon];
 
     //    if (_indexType >= 0)
@@ -453,7 +452,7 @@ static NSString* viewNames(NSArray* views) {
 
 - (CBLStatus) updateIndexes: (NSArray*)views {
     LogTo(View, @"Checking indexes of (%@) for %@", viewNames(views), _name);
-    return [_dbStorage _try: ^{
+    return tryStatus(^{
         CBLStatus status;
         CocoaIndexer indexer;
         indexer.triggerOnIndex(_index);
@@ -487,7 +486,7 @@ static NSString* viewNames(NSArray* views) {
             LogTo(View, @"... Nothing to do.");
             return kCBLStatusNotModified;
         }
-    }];
+    });
 }
 
 
@@ -821,9 +820,9 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     }
 
     NSMutableArray* result = $marray();
-    std::vector<size_t> termTotalCounts;
+    __block std::vector<size_t> termTotalCounts;
     @autoreleasepool {
-        try {
+        *outStatus = tryStatus(^CBLStatus{
             // Tokenize the query string:
             LogTo(QueryVerbose, @"Full-text search for \"%@\":", options.fullTextQuery);
             std::vector<std::string> queryTokens;
@@ -876,19 +875,10 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                 if ([row containsAllTerms: queryTokens.size()])
                     [result addObject: row];
             }];
-        } catch (forestdb::error x) {
-            Warn(@"Unexpected ForestDB error iterating query (status %d)", x.status);
-            *outStatus = CBLStatusFromForestDBStatus(x.status);
+            return kCBLStatusOK;
+        });
+        if (CBLStatusIsError(*outStatus))
             return nil;
-        } catch (NSException* x) {
-            MYReportException(x, @"CBL_ForestDBViewStorage");
-            *outStatus = kCBLStatusException;
-            return nil;
-        } catch (...) {
-            Warn(@"Unexpected CBForest exception iterating query");
-            *outStatus = kCBLStatusException;
-            return nil;
-        }
     }
 
     if (options->fullTextRanking) {

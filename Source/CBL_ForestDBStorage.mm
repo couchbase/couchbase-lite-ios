@@ -45,6 +45,9 @@ using namespace forestdb;
 #define kDefaultMaxRevTreeDepth 20
 
 
+using namespace couchbase_lite;
+
+
 @implementation CBL_ForestDBStorage
 {
     @private
@@ -135,14 +138,9 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
         memcpy(&config.encryptionKey, encryptionKey.keyData.bytes, sizeof(config.encryptionKey));
     }
 
-    try {
+    return tryError(outError, ^{
         _forest = new Database(std::string(forestPath.fileSystemRepresentation), config);
-    } catch (forestdb::error err) {
-        return CBLStatusToOutNSError(CBLStatusFromForestDBStatus(err.status), outError);
-    } catch (...) {
-        return CBLStatusToOutNSError(kCBLStatusException, outError);
-    }
-    return YES;
+    });
 }
 
 
@@ -180,26 +178,11 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
 
 - (BOOL) compact: (NSError**)outError {
-    CBLStatus status = [self _try: ^{
+    CBLStatus status = tryStatus(^{
         _forest->compact();
         return kCBLStatusOK;
-    }];
+    });
     return CBLStatusToOutNSError(status, outError);
-}
-
-
-- (CBLStatus) _try: (CBLStatus(^)())block {
-    try {
-        return block();
-    } catch (forestdb::error err) {
-        return CBLStatusFromForestDBStatus(err.status);
-    } catch (NSException* x) {
-        MYReportException(x, @"CBL_ForestDBStorage");
-        return kCBLStatusException;
-    } catch (...) {
-        Warn(@"Unknown C++ exception caught in CBL_ForestDBStorage");
-        return kCBLStatusException;
-    }
 }
 
 
@@ -209,9 +192,9 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
         _forestTransaction = new Transaction(_forest);
     }
 
-    CBLStatus status = [self _try: ^CBLStatus{
+    CBLStatus status = tryStatus(^CBLStatus{
         return block();
-    }];
+    });
     BOOL commit = !CBLStatusIsError(status);
 
     LogTo(CBLDatabase, @"END transaction (status=%d)", status);
@@ -236,12 +219,12 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 - (CBLStatus) _withVersionedDoc: (NSString*)docID
                              do: (CBLStatus(^)(VersionedDocument&))block
 {
-    return [self _try: ^{
+    return tryStatus(^{
         VersionedDocument doc(*_forest, docID);
         if (!doc.exists())
             return kCBLStatusNotFound;
         return block(doc);
-    }];
+    });
 }
 
 
@@ -446,7 +429,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
         forestOpts.contentOptions = Database::kMetaOnly;
 
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
-    *outStatus = [self _try: ^CBLStatus{
+    *outStatus = tryStatus(^CBLStatus{
         for (DocEnumerator e(*_forest, lastSequence+1, UINT64_MAX, forestOpts); e.next(); ) {
             @autoreleasepool {
                 VersionedDocument doc(*_forest, *e);
@@ -472,7 +455,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
             }
         }
         return kCBLStatusOK;
-    }];
+    });
     return changes;
 }
 
@@ -599,7 +582,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     CBL_RevisionList* sortedRevs = [revs mutableCopy];
     [sortedRevs sortByDocID];
     __block VersionedDocument* doc = NULL;
-    *outStatus = [self _try: ^CBLStatus {
+    *outStatus = tryStatus(^CBLStatus {
         NSString* lastDocID = nil;
         for (CBL_Revision* rev in sortedRevs) {
             if (!$equal(rev.docID, lastDocID)) {
@@ -611,7 +594,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
                 [revs removeRevIdenticalTo: rev];
         }
         return kCBLStatusOK;
-    }];
+    });
     delete doc;
     return !CBLStatusIsError(*outStatus);
 }
@@ -622,7 +605,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
 - (NSSet*) findAllAttachmentKeys: (NSError**)outError {
     NSMutableSet* keys = [NSMutableSet setWithCapacity: 1000];
-    CBLStatus status = [self _try: ^CBLStatus{
+    CBLStatus status = tryStatus(^CBLStatus{
         DocEnumerator::Options options = DocEnumerator::Options::kDefault;
         options.contentOptions = Database::kMetaOnly;
         for (DocEnumerator e(*_forest, slice::null, slice::null, options); e.next(); ) {
@@ -651,7 +634,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
             }
         }
         return kCBLStatusOK;
-    }];
+    });
     if (CBLStatusIsError(status)) {
         CBLStatusToOutNSError(status, outError);
         keys = nil;
@@ -828,11 +811,11 @@ static NSDictionary* getDocProperties(const Document& doc) {
 - (NSString*) infoForKey: (NSString*)key {
     KeyStore infoStore(_forest, "info");
     __block NSString* value = nil;
-    [self _try: ^CBLStatus {
+    tryStatus(^CBLStatus {
         Document doc = infoStore.get((forestdb::slice)key.UTF8String);
         value = (NSString*)doc.body();
         return kCBLStatusOK;
-    }];
+    });
     return value;
 }
 

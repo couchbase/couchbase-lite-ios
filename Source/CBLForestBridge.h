@@ -13,7 +13,11 @@ extern "C" {
 }
 
 
-CBLStatus CBLStatusFromForestDBStatus(int fdbStatus);
+namespace couchbase_lite {
+    CBLStatus tryStatus(CBLStatus(^block)());
+    bool tryError(NSError** outError, void(^block)());
+    CBLStatus CBLStatusFromForestDBStatus(int fdbStatus);
+}
 
 
 @interface CBLForestBridge : NSObject
