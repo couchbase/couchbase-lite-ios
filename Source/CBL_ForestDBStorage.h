@@ -19,4 +19,6 @@
                                   sequence: (SequenceNumber)sequence
                                     status: (CBLStatus*)outStatus;
 
+- (void) forgetViewStorageNamed: (NSString*)viewName;
+
 @end

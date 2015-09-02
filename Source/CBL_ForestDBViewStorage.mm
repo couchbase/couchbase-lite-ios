@@ -286,6 +286,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 - (void) close {
     [self closeIndex];
+    [_dbStorage forgetViewStorageNamed: _name];
 }
 
 
@@ -404,6 +405,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 - (void) deleteView {
     [self closeIndex];
     [[NSFileManager defaultManager] removeItemAtPath: _path error: NULL];
+    [_dbStorage forgetViewStorageNamed: _name];
 }
 
 

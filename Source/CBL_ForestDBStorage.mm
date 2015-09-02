@@ -56,6 +56,7 @@ using namespace couchbase_lite;
     Transaction* _forestTransaction;
     KeyStore* _localDocs;
     int _transactionLevel;
+    NSMapTable* _views;
 }
 
 @synthesize delegate=_delegate, directory=_directory, autoCompact=_autoCompact, maxRevTreeDepth=_maxRevTreeDepth;
@@ -1111,7 +1112,21 @@ static void convertRevIDs(NSArray* revIDs,
 
 
 - (id<CBL_ViewStorage>) viewStorageNamed: (NSString*)name create:(BOOL)create {
-    return [[CBL_ForestDBViewStorage alloc] initWithDBStorage: self name: name create: create];
+    id<CBL_ViewStorage> view = [_views objectForKey: name];
+    if (!view) {
+        view = [[CBL_ForestDBViewStorage alloc] initWithDBStorage: self name: name create: create];
+        if (view) {
+            if (!_views)
+                _views = [NSMapTable strongToWeakObjectsMapTable];
+            [_views setObject: view forKey: name];
+        }
+    }
+    return view;
+}
+
+
+- (void) forgetViewStorageNamed: (NSString*)viewName {
+    [_views removeObjectForKey: viewName];
 }
 
 
