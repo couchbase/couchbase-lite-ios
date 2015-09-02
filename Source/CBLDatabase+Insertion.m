@@ -231,8 +231,10 @@
     if (history.count == 0)
         history = @[revID];
     else if (!$equal(history[0], revID)) {
-        CBLStatusToOutNSError(kCBLStatusBadID, outError);
-        return kCBLStatusBadID;
+        // If inRev's revID doesn't appear in history, add it at the start:
+        NSMutableArray* nuHistory = [history mutableCopy];
+        [nuHistory insertObject: revID atIndex: 0];
+        history = nuHistory;
     }
 
     CBLStatus status;
