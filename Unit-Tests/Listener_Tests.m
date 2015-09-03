@@ -304,6 +304,13 @@ static NSString* addressToString(NSData* addrData) {
 @end
 
 
+@interface ListenerTestRemoteRequest : CBLRemoteRequest {
+@private
+    NSMutableData* _data;
+}
+@property (readonly) NSData* data;
+@property (readonly) int status;
+@end
 
 
 @interface ListenerHTTP_Tests : Listener_Tests <CBLRemoteRequestDelegate>
@@ -441,61 +448,70 @@ static NSString* addressToString(NSData* addrData) {
                 path: (NSString*)path
              headers: (NSDictionary*)headers
                 body: (id)bodyObj
-          onComplete: (void (^)(NSData *data, NSURLResponse *response, NSError *error))onComplete {
-    NSURL* url = [NSURL URLWithString: path relativeToURL: listener.URL];
-    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL: url];
-    request.HTTPMethod = method;
-
-    for (NSString* header in headers)
-        [request setValue: headers[header] forHTTPHeaderField: header];
-
-    if (bodyObj) {
-        if ([bodyObj isKindOfClass: [NSData class]])
-            request.HTTPBody = bodyObj;
-        else {
-            NSError* error = nil;
-            request.HTTPBody = [CBLJSON dataWithJSONObject: bodyObj options:0 error:&error];
-            AssertNil(error);
-        }
-    }
-
-    NSURLSessionConfiguration* config = [NSURLSessionConfiguration defaultSessionConfiguration];
-    config.requestCachePolicy = NSURLRequestReloadIgnoringCacheData;
-    NSURLSession *session = [NSURLSession sessionWithConfiguration: config];
-    NSURLSessionDataTask *task = [session dataTaskWithRequest: request
-                                            completionHandler:
-                                  ^(NSData *data, NSURLResponse *response, NSError *error) {
-                                      onComplete(data, response, error);
-                                  }];
-    [task resume];
-}
-
-
-- (void) sendRequest: (NSString*)method
-                path: (NSString*)path
-             headers: (NSDictionary*)headers
-                body: (id)bodyObj
       expectedStatus: (NSInteger)expectedStatus
      expectedHeaders: (NSDictionary*)expectedHeader
       expectedResult: (NSData*)expectedResult {
-    NSString* description = [NSString stringWithFormat:@"%@ %@", method, path];
-    XCTestExpectation* exp = [self expectationWithDescription: description];
+    XCTestExpectation* expectDidComplete = [self expectationWithDescription: @"didComplete"];
+    NSURL* url = [NSURL URLWithString: path relativeToURL: listener.URL];
+    ListenerTestRemoteRequest* req =
+        [[ListenerTestRemoteRequest alloc] initWithMethod: method
+                                                      URL: url
+                                                     body: bodyObj
+                                           requestHeaders: headers
+                                             onCompletion:
+         ^(ListenerTestRemoteRequest* result, NSError *error) {
+             AssertEq(result.status, expectedStatus);
+             for (NSString* key in [expectedHeader allKeys])
+                 AssertEqual(result.responseHeaders[key], expectedHeader[key]);
+             if (expectedResult)
+                 AssertEqual(result.data, expectedResult);
 
-    [self sendRequest: method path: path headers: headers body: bodyObj
-           onComplete: ^(NSData *data, NSURLResponse *response, NSError *error) {
-               NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
-               AssertEq(httpResponse.statusCode, expectedStatus);
+             [expectDidComplete fulfill];
+         }];
 
-               for (NSString* key in [expectedHeader allKeys])
-                   AssertEqual(httpResponse.allHeaderFields[key], expectedHeader[key]);
+    if (clientCredential) {
+        req.authorizer = [[CBLClientCertAuthorizer alloc] initWithIdentity: clientCredential.identity
+                                                           supportingCerts: clientCredential.certificates];
+    }
 
-               if (expectedResult)
-                   AssertEqual(data, expectedResult);
-
-               [exp fulfill];
-           }];
-
+    req.delegate = self;
+    [req start];
     [self waitForExpectationsWithTimeout: kTimeout handler: nil];
+}
+
+@end
+
+@implementation ListenerTestRemoteRequest
+
+@synthesize data=_data;
+
+- (int)status {
+    return _status;
+}
+
+- (void)setupRequest: (NSMutableURLRequest *)request withBody: (id)body {
+    if (body) {
+        if ([body isKindOfClass: [NSData class]]) {
+            request.HTTPBody = body;
+        } else {
+            NSError* error = nil;
+            request.HTTPBody = [CBLJSON dataWithJSONObject: body options:0 error: &error];
+            if (error)
+                Log(@"Cannot parse JSON body with error: %@", error);
+        }
+    }
+}
+
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
+    [super connection: connection didReceiveData: data];
+    if (!_data)
+        _data = [[NSMutableData alloc] initWithCapacity: data.length];
+    [_data appendData: data];
+}
+
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
+    [self clearConnection];
+    [self respondWithResult: self error: error];
 }
 
 @end
