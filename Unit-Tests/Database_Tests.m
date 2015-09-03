@@ -80,8 +80,7 @@
     error = nil;
     CBLManager* copiedMgr = [dbmgr copy];
     CBLDatabase* localdb = [copiedMgr databaseNamed: dbName error: &error];
-    Assert(!error);
-    Assert(localdb);
+    Assert(localdb, @"Couldn't open db: %@", error);
 
     // Get the database from the shared manager and delete
     error = nil;
@@ -89,8 +88,7 @@
     // Close the copied manager before deleting the database
     [copiedMgr close];
     result = [localdb deleteDatabase: &error];
-    Assert(!error);
-    Assert(result);
+    Assert(result, @"Couldn't delete db: %@", error);
 
     // Check if the database still exists or not
     error = nil;
@@ -107,16 +105,14 @@
     dispatch_sync(queue, ^{
         NSError *error;
         copiedMgrDb = [copiedMgr databaseNamed: dbName error: &error];
-        Assert(!error);
-        Assert(copiedMgrDb);
+        Assert(copiedMgrDb, @"Couldn't open db: %@", error);
     });
 
     // Get the database from the shared manager and delete
     error = nil;
     localdb = [dbmgr databaseNamed: dbName error: &error];
     result = [localdb deleteDatabase: &error];
-    Assert(!error);
-    Assert(result);
+    Assert(result, @"Couldn't delete db: %@", error);
 
     // Cleanup
     dispatch_sync(queue, ^{

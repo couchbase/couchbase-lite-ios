@@ -93,7 +93,7 @@ NSError* CBLStatusToNSError( CBLStatus status ) {
 
 BOOL CBLStatusToOutNSError(CBLStatus status, NSError** outError) {
     if (outError)
-        *outError = CBLStatusToNSError(status);
+        *outError = status < 300 ? nil : CBLStatusToNSError(status);
     return !CBLStatusIsError(status);
 }
 
