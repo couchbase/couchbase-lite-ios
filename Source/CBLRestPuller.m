@@ -58,9 +58,6 @@
 @end
 
 
-static NSString* joinQuotedEscaped(NSArray* strings);
-
-
 @implementation CBLRestPuller
 
 
@@ -427,13 +424,20 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                         onCompletion:
         ^(CBLMultipartDownloader* result, NSError *error) {
             __strong CBLRestPuller *strongSelf = weakSelf;
-            // OK, now we've got the response revision:
+            // OK, now we've got the response:
             if (error) {
-                [strongSelf revision: rev failedWithError: error];
+                if (isDocumentError(error)) {
+                    // Revision is missing or not accessible:
+                    [strongSelf revision: rev failedWithError: error];
+                } else {
+                    // Request failed:
+                    strongSelf.error = error;
+                    [strongSelf revisionFailed];
+                }
             } else {
+                // Add to batcher ... eventually it will be fed to -insertRevisions:.
                 CBL_Revision* gotRev = [CBL_Revision revisionWithProperties: result.document];
                 gotRev.sequence = rev.sequence;
-                // Add to batcher ... eventually it will be fed to -insertRevisions:.
                 [strongSelf queueDownloadedRevision:gotRev];
             }
             
@@ -781,6 +785,27 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
+#pragma mark - UTILITY FUNCTIONS:
+
+
+static NSString* joinQuotedEscaped(NSArray* strings) {
+    if (strings.count == 0)
+        return @"[]";
+    NSString* json = [CBLJSON stringWithJSONObject: strings options: 0 error: NULL];
+    return CBLEscapeURLParam(json);
+}
+
+
+// Returns YES if an error refers to an inaccessible document, not the request itself,
+// and shouldn't cause the replication to stop.
+static BOOL isDocumentError(NSError* error) {
+    if (![error.domain isEqualToString: CBLHTTPErrorDomain])
+        return NO;
+    NSInteger code = error.code;
+    return code == kCBLStatusNotFound || code == kCBLStatusForbidden || code == kCBLStatusGone;
+}
+
+
 @end
 
 
@@ -791,14 +816,5 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 @synthesize remoteSequenceID=_remoteSequenceID, conflicted=_conflicted;
 
-
 @end
 
-
-
-static NSString* joinQuotedEscaped(NSArray* strings) {
-    if (strings.count == 0)
-        return @"[]";
-    NSString* json = [CBLJSON stringWithJSONObject: strings options: 0 error: NULL];
-    return CBLEscapeURLParam(json);
-}
