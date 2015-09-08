@@ -552,6 +552,48 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     AssertEqual(rows, expectedRows);
 }
 
+- (void) test08a_QueryOpenEnded {
+    RequireTestCase(Index);
+    [self putDocs];
+    CBLView* view = [self createView];
+    AssertEq([view updateIndex], kCBLStatusOK);
+    CBLQueryOptions *options = [CBLQueryOptions new];
+    CBLStatus status;
+    NSArray *rows, *expectedRows;
+
+    // Start, no end:
+    options.startKey = @"g";
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
+    expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @"one"}),
+                          $dict({@"id",  @"33333"}, {@"key", @"three"}),
+                          $dict({@"id",  @"22222"}, {@"key", @"two"}));
+    AssertEqual(rows, expectedRows);
+
+    // Start, no end, descending:
+    options->descending = YES;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
+    expectedRows = $array($dict({@"id",  @"44444"}, {@"key", @"four"}),
+                          $dict({@"id",  @"55555"}, {@"key", @"five"}));
+    AssertEqual(rows, expectedRows);
+
+    // End, no start:
+    options = [CBLQueryOptions new];
+    options.endKey = @"g";
+    options->descending = NO;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
+    expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
+                          $dict({@"id",  @"44444"}, {@"key", @"four"}));
+    AssertEqual(rows, expectedRows);
+
+    // End, no start, descending:
+    options->descending = YES;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
+    expectedRows = $array($dict({@"id",  @"22222"}, {@"key", @"two"}),
+                          $dict({@"id",  @"33333"}, {@"key", @"three"}),
+                          $dict({@"id",  @"11111"}, {@"key", @"one"}));
+    AssertEqual(rows, expectedRows);
+}
+
 - (void) test09_QueryStartKeyDocID {
     RequireTestCase(Query);
     [self putDocs];
@@ -620,21 +662,61 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     AssertEqual(rows, expectedRows);
 }
 
-- (void) test11_PrefixMatch {
+static NSArray* reverse(NSArray* a) {
+    return a.reverseObjectEnumerator.allObjects;
+}
+
+- (void) test11a_PrefixMatchStrings {
     RequireTestCase(Query);
     [self putDocs];
     CBLView* view = [self createView];
     AssertEq([view updateIndex], kCBLStatusOK);
 
-    // Query all rows:
+    // Keys with prefix "f":
     CBLQueryOptions *options = [CBLQueryOptions new];
     CBLStatus status;
+    options.startKey = @"f";
     options.endKey = @"f";
     options->prefixMatchLevel = 1;
     NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
     NSArray* expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"}),
                                    $dict({@"id",  @"44444"}, {@"key", @"four"}));
     AssertEqual(rows, expectedRows);
+
+    // ...descending:
+    options->descending = YES;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
+    AssertEqual(rows, reverse(expectedRows));
+
+    // TODO: Test prefixMatchLevel > 1
+}
+
+- (void) test11b_PrefixMatchArrays {
+    RequireTestCase(Query);
+    [self putDocs];
+    CBLView* view = [db viewNamed: @"view"];
+    [view setMapBlock: MAPBLOCK({
+        int i = [doc[@"_id"] intValue];
+        emit(@[doc[@"key"], @(i)], nil);
+        emit(@[doc[@"key"], @(i/100)], nil);
+    }) reduceBlock: NULL version: @"1"];
+    AssertEq([view updateIndex], kCBLStatusOK);
+
+    // Keys starting with "one":
+    CBLQueryOptions *options = [CBLQueryOptions new];
+    CBLStatus status;
+    options.startKey = options.endKey = @[@"one"];
+    options->prefixMatchLevel = 1;
+    NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
+    NSArray* expectedRows = $array($dict({@"id",  @"11111"}, {@"key", @[@"one", @111]}),
+                                   $dict({@"id",  @"11111"}, {@"key", @[@"one", @11111]}));
+    AssertEqual(rows, expectedRows);
+
+    // ...descending:
+    options->descending = YES;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
+    AssertEqual(rows, reverse(expectedRows));
+
     // TODO: Test prefixMatchLevel > 1
 }
 

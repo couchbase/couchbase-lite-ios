@@ -667,4 +667,73 @@ query.descending = YES;\n");
     AssertEqual(resultID, limitedResultID);
 }
 
+// https://github.com/couchbase/couchbase-lite-ios/issues/908
+- (void) test15_SortedQueryWithPrefixMatchAndLimit {
+    [db inTransaction:^BOOL{
+        for (unsigned i=0; i<100; i++) {
+            @autoreleasepool {
+                unsigned random = (i+17)*773%100;
+                unsigned cid = i % 7;
+                NSDictionary* properties = @{@"id": @(i),
+                                             @"model_type":@"message",
+                                             @"text": [NSString stringWithFormat:@"%d", random],
+                                             @"create_time":@(random),
+                                             @"cid":@(cid),
+                                             };
+                [self createDocumentWithProperties: properties];
+            }
+        }
+        return YES;
+    }];
+
+    //Get the latest message
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"model_type == 'message' && cid==$cid"];
+    NSError *error = nil;
+    NSSortDescriptor *sort = [NSSortDescriptor sortDescriptorWithKey:@"create_time" ascending:NO];
+    //    NSSortDescriptor *sort = [NSSortDescriptor sortDescriptorWithKey:@"create_time" ascending:NO comparator:^NSComparisonResult(id obj1, id obj2) {
+    //        return [obj1 compare:obj2];
+    //    }];
+    /*
+     NSSortDescriptor *sort = [NSSortDescriptor sortDescriptorWithKey:@"text" ascending:NO comparator:^NSComparisonResult(id obj1, id obj2) {
+     return [obj1 compare:obj2 options:NSNumericSearch];
+     }];
+     */
+    NSNumber *resultID = nil;
+    NSNumber *limitedResultID = nil;
+    for (int limited = 0; limited <= 1; ++limited) {
+
+        CBLQueryBuilder* b = [[CBLQueryBuilder alloc] initWithDatabase: db
+                                                                select: nil
+                                                        wherePredicate: predicate
+                                                               orderBy: @[sort]
+                                                                 error: &error];
+        Assert(b, @"Failed to build: %@", error);
+        Log(@"%@", b.explanation);
+
+        CBLQuery* query = [b createQueryWithContext: @{@"cid":@(5)}];
+        query.prefetch = YES;
+        if (limited) {
+            query.limit = 1;
+        }
+        CBLQueryEnumerator *e = [query run:&error];
+        Assert(e, @"Query failed: %@", error);
+        NSArray* rows = e.allObjects;
+        NSLog(@"\n%@", [[[rows my_map:^id(CBLQueryRow* row) {
+            return [ NSString stringWithFormat:@"id:%@, text:%@, create_time:%@",
+                    row.document[@"id"],
+                    row.document[@"text"],
+                    row.document[@"create_time"]];
+        }] valueForKey:@"description"] componentsJoinedByString:@"\n"]);
+        NSArray* ids = [rows my_map:^id(CBLQueryRow* row) {return row.document[@"id"];}];
+        Assert(ids.count > 0);
+        if (limited) {
+            limitedResultID = ids[0];
+        } else {
+            resultID = ids[0];
+        }
+    }
+    Log(@"%@", resultID);
+    AssertEqual(resultID, limitedResultID);
+}
+
 @end

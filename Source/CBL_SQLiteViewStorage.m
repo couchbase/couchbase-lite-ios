@@ -706,7 +706,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
     [args addObject: @(limit)];
     [args addObject: @(options->skip)];
 
-    LogTo(View, @"Query %@: %@\n\tArguments: %@", _name, sql, args);
+    LogTo(Query, @"Query %@: %@\n\tArguments: %@", _name, sql, args);
     
     CBL_SQLiteStorage* dbStorage = _dbStorage;
     CBL_FMDatabase* fmdb = dbStorage.fmdb;
@@ -789,7 +789,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
                                                        json: [r dataForColumnIndex: 5]];
             }
         }
-        LogTo(ViewVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
+        LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
               _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString],
               toJSONString(docID));
         CBLQueryRow* row;
@@ -1040,7 +1040,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
             }
             lastKeyData = [keyData copy];
         }
-        LogTo(ViewVerbose, @"Query %@: Will reduce row with key=%@, value=%@",
+        LogTo(QueryVerbose, @"Query %@: Will reduce row with key=%@, value=%@",
               _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString]);
 
         id valueOrData = valueData;
@@ -1064,7 +1064,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         // Finish the last group (or the entire list, if no grouping):
         id key = group ? groupKey(lastKeyData, groupLevel) : $null;
         id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
-        LogTo(ViewVerbose, @"Query %@: Reduced to key=%@, value=%@",
+        LogTo(QueryVerbose, @"Query %@: Reduced to key=%@, value=%@",
               _name, toJSONString(key), toJSONString(reduced));
         CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: nil
                                                      sequence: 0

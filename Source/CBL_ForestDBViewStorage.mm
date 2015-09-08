@@ -536,9 +536,11 @@ static NSString* viewNames(NSArray* views) {
                                    collatableKeys,
                                    forestOpts);
     } else {
-        id endKey = CBLKeyForPrefixMatch(options.endKey, options->prefixMatchLevel);
+        id startKey = options.startKey, endKey = options.endKey;
+        __strong id &maxKey = options->descending ? startKey : endKey;
+        maxKey = CBLKeyForPrefixMatch(maxKey, options->prefixMatchLevel);
         return new IndexEnumerator(_index,
-                                   Collatable(options.startKey),
+                                   Collatable(startKey),
                                    nsstring_slice(options.startKeyDocID),
                                    Collatable(endKey),
                                    nsstring_slice(options.endKeyDocID),
