@@ -109,4 +109,3 @@ If you want the very latest and greatest (and possibly buggy) version, you'll ne
 [22]: https://github.com/couchbase/couchbase-lite-ios/wiki/Why-Couchbase-Lite%3F#history
 [23]: https://github.com/couchbase/couchbase-lite-ios/wiki/Replication-Algorithm
 
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/dd0341b0dc5dcfad9f86b4ef5b44a65f "githalytics.com")](http://githalytics.com/couchbase/couchbase-lite-ios)
