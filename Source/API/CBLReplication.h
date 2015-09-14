@@ -187,6 +187,17 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 
 - (instancetype) init NS_UNAVAILABLE;
 
+#ifdef CBL_DEPRECATED
+@property (nonatomic, copy) NSString* facebookEmailAddress
+    __attribute__((deprecated("set authenticator property instead")));
+- (BOOL) registerFacebookToken: (NSString*)token forEmailAddress: (NSString*)email
+    __attribute__((deprecated("set authenticator property instead")));
+- (BOOL) registerPersonaAssertion: (NSString*)assertion
+    __attribute__((deprecated("set authenticator property instead")));
+@property (nonatomic, copy) NSString* personaEmailAddress
+    __attribute__((deprecated("set authenticator property instead")));
+#endif
+
 @end
 
 
