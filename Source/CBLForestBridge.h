@@ -36,7 +36,8 @@ namespace couchbase_lite {
                               doc: (forestdb::VersionedDocument&)doc;
 
 /** Returns the revIDs of all current leaf revisions, in descending order of priority. */
-+ (NSArray*) getCurrentRevisionIDs: (forestdb::VersionedDocument&)doc;
++ (NSArray*) getCurrentRevisionIDs: (forestdb::VersionedDocument&)doc
+                    includeDeleted: (BOOL)includeDeleted;
 
 /** Returns a revision & its ancestors as CBL_Revision objects, in reverse chronological order.
     If 'ancestorRevIDs' is present, the revision history will only go back as

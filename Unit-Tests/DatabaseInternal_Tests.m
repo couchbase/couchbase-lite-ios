@@ -949,6 +949,16 @@ static CBL_Revision* mkrev(NSString* revID) {
     history = @[rev.revID];
     AssertEq([db forceInsert: rev revisionHistory: history source: nil error: &error], 201);
 
+    // Create another new doc with a merged conflict:
+    rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID2" revID: @"1-1111" deleted: NO];
+    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
+    history = @[rev.revID];
+    AssertEq([db forceInsert: rev revisionHistory: history source: nil error: &error], 201);
+    rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID2" revID: @"1-ffff" deleted: YES];
+    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID});
+    history = @[rev.revID];
+    AssertEq([db forceInsert: rev revisionHistory: history source: nil error: &error], 201);
+
     // Get changes, testing all combinations of includeConflicts and includeDocs:
     for (int conflicts=0; conflicts <= 1; conflicts++) {
         for (int bodies=0; bodies <= 1; bodies++) {
@@ -957,7 +967,7 @@ static CBL_Revision* mkrev(NSString* revID) {
             options.includeDocs = (BOOL)bodies;
             CBLStatus status;
             CBL_RevisionList* changes = [db changesSinceSequence: 0 options: &options filter: NULL params: nil status: &status];
-            AssertEq(changes.count, 11u + conflicts);
+            AssertEq(changes.count, 12u + 2*conflicts);
             for (CBL_Revision* change in changes) {
                 if (bodies)
                     Assert(change.body != nil);

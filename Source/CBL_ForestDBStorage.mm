@@ -469,7 +469,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     forestOpts.limit = options->limit;
     forestOpts.inclusiveEnd = YES;
     forestOpts.includeDeleted = NO;
-    BOOL withBody = (options->includeDocs || filter != nil);
+    BOOL withBody = (options->includeDocs || options->includeConflicts || filter != nil);
     if (!withBody)
         forestOpts.contentOptions = Database::kMetaOnly;
 
@@ -479,10 +479,8 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
             @autoreleasepool {
                 VersionedDocument doc(*_forest, *e);
                 NSArray* revIDs;
-                if (options->includeConflicts && doc.isConflicted()) {
-                    if (forestOpts.contentOptions & Database::kMetaOnly)
-                        doc.read();
-                    revIDs = [CBLForestBridge getCurrentRevisionIDs: doc];
+                if (options->includeConflicts) {
+                    revIDs = [CBLForestBridge getCurrentRevisionIDs: doc includeDeleted: YES];
                 } else {
                     revIDs = @[(NSString*)doc.revID()];
                 }
@@ -591,7 +589,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
             NSArray* conflicts = nil;
             if (options->allDocsMode >= kCBLShowConflicts && doc.isConflicted()) {
-                conflicts = [CBLForestBridge getCurrentRevisionIDs: doc];
+                conflicts = [CBLForestBridge getCurrentRevisionIDs: doc includeDeleted: NO];
                 if (conflicts.count == 1)
                     conflicts = nil;
             }

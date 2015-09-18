@@ -122,11 +122,11 @@ static NSData* dataOfNode(const Revision* rev) {
 }
 
 
-+ (NSArray*) getCurrentRevisionIDs: (VersionedDocument&)doc {
++ (NSArray*) getCurrentRevisionIDs: (VersionedDocument&)doc includeDeleted: (BOOL)includeDeleted {
     NSMutableArray* currentRevIDs = $marray();
     auto revs = doc.currentRevisions();
     for (auto rev = revs.begin(); rev != revs.end(); ++rev)
-        if (!(*rev)->isDeleted())
+        if (includeDeleted || !(*rev)->isDeleted())
             [currentRevIDs addObject: (NSString*)(*rev)->revID];
     return currentRevIDs;
 }
