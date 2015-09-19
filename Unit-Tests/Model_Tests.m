@@ -170,6 +170,7 @@
     CBLDocument* doc2 = [db createDocument];
     Assert([doc2 putProperties: props error: NULL]);
     TestModel* model2 = [TestModel modelForDocument: doc2];
+    Assert(!model2.isNew);
     AssertEqual(model2.subModel, name);
 
     // Now test array of encodable objects:
@@ -351,6 +352,7 @@
         NSError* error;
         Assert([db saveAllModels: &error]);
         AssertEq(model.reloadCount, 0u);
+        Assert(!model.isNew);
 
         // Verify that the document got updated correctly:
         NSMutableDictionary* props = [model.document.properties mutableCopy];
@@ -399,6 +401,7 @@
         [self reopenTestDB];
         CBLDocument* doc = [db documentWithID: modelID];
         TestModel* modelAgain = [TestModel modelForDocument: doc];
+        Assert(!modelAgain.isNew);
         AssertEq(modelAgain.number, 4321);
         AssertEqual(modelAgain.str, @"LEET");
         AssertEqual(modelAgain.strings, (@[@"fee", @"fie", @"foe", @"fum"]));
@@ -605,6 +608,14 @@
         AssertEq([m class], [TestOtherModel class]);
         AssertEq(m.number % 2, 0);
     }
+}
+
+
+- (void) test00_IsNew {
+    // https://github.com/couchbase/couchbase-lite-ios/issues/909
+    CBLDocument* doc = db[@"somedoc"];
+    CBLModel *model = [TestModel modelForDocument: doc];
+    Assert(model.isNew);
 }
 
 @end

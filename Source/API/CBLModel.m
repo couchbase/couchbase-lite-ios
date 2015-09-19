@@ -39,6 +39,7 @@
         if (document) {
             LogTo(CBLModel, @"%@ initWithDocument: %@ @%p", self.class, document, document);
             self.document = document;
+            _isNew = (document.currentRevisionID == nil);
             [self didLoadFromDocument];
         } else {
             LogTo(CBLModel, @"%@ initWithDatabase: %@", self.class, database);
