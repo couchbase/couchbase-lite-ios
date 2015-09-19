@@ -1087,7 +1087,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     NSString* sql = $sprintf(@"SELECT sequence, revs.doc_id, docid, revid, deleted %@ FROM revs, docs "
                              "WHERE sequence > ? AND current=1 "
                              "AND revs.doc_id = docs.doc_id "
-                             "ORDER BY revs.doc_id, revid DESC",
+                             "ORDER BY revs.doc_id, deleted, revid DESC",
                              (includeDocs ? @", json" : @""));
     CBL_FMResultSet* r = [_fmdb executeQuery: sql, @(lastSequence)];
     if (!r)

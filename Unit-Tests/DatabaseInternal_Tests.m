@@ -974,6 +974,11 @@ static CBL_Revision* mkrev(NSString* revID) {
                 else
                     AssertNil(change.body);
             }
+
+            if (!conflicts) {
+                AssertEqual(changes[10].revID, @"1-ffff");
+                AssertEqual(changes[11].revID, @"1-1111"); // Non-deleted rev should be current (#896)
+            }
         }
     }
 }
