@@ -127,11 +127,8 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     _config.wal_flush_before_commit = true;
     _config.seqtree_opt = true;
     _config.compress_document_body = true;
-    if (_autoCompact) {
-        _config.compactor_sleep_duration = (uint64_t)kAutoCompactInterval;
-    } else {
-        _config.compaction_threshold = 0; // disables auto-compact
-    }
+    _config.compaction_mode = _autoCompact ? FDB_COMPACTION_AUTO : FDB_COMPACTION_MANUAL;
+    _config.compactor_sleep_duration = (uint64_t)kAutoCompactInterval; // global to all dbs
     return [self reopen: outError];
 }
 
