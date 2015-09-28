@@ -2010,14 +2010,30 @@ static CBLManager* sCBLManager;
                 if (!moc) {
                     moc = [context objectWithID: mocid];
                     [inserted addObject: moc];
-                } else {
-                    [context refreshObject: moc mergeChanges: YES];
-                    [updated addObject: moc];
-                }
 
-                // Ensure that a fault has been fired:
-                [moc willAccessValueForKey: nil];
-                [context refreshObject: moc mergeChanges: YES];
+                    // Ensure that a fault has been fired:
+                    [moc willAccessValueForKey: nil];
+                    [context refreshObject: moc mergeChanges: YES];
+
+                    for (NSString *relationshipName in moc.entity.relationshipsByName) {
+                        NSRelationshipDescription *relationshipDescription = moc.entity.relationshipsByName[relationshipName];
+
+                        if (NO == relationshipDescription.toMany) {
+                            NSManagedObject *destinationObject = [moc valueForKey:relationshipName];
+                            if (nil != destinationObject) {
+                                // Ensure that a fault has been fired:
+                                [destinationObject willAccessValueForKey: nil];
+                                [context refreshObject: destinationObject mergeChanges: YES];
+                            }
+                        }
+                    }
+                } else {
+                    [updated addObject: moc];
+
+                    // Ensure that a fault has been fired:
+                    [moc willAccessValueForKey: nil];
+                    [context refreshObject: moc mergeChanges: YES];
+                }
 
                 [updatedEntities addObject: moc.entity.name];
             }
