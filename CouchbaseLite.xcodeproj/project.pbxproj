@@ -646,6 +646,8 @@
 		27E66B521A730DBF0091DA3F /* libCBLForestDBStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */; };
 		27E66B561A7310920091DA3F /* CBLRouter+Changes.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E66B551A7310920091DA3F /* CBLRouter+Changes.m */; };
 		27E66B571A7310920091DA3F /* CBLRouter+Changes.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E66B551A7310920091DA3F /* CBLRouter+Changes.m */; };
+		27E721651BB491B7001500DF /* MYBackgroundMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E721641BB491B7001500DF /* MYBackgroundMonitor.m */; };
+		27E721721BB4A08F001500DF /* CBLRestReplicator+Backgrounding.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E721711BB4A08F001500DF /* CBLRestReplicator+Backgrounding.m */; };
 		27E7FAEE155D7F110025F93A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F714ACF2500065964D /* CoreServices.framework */; };
 		27E7FAF0155D8EBA0025F93A /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */; };
 		27E7FAF1155D8ECE0025F93A /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */; };
@@ -653,11 +655,11 @@
 		27E7FB04155DBDBF0025F93A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
 		27E940661954BB9E00A9732E /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E940651954BB9E00A9732E /* libc++.dylib */; };
 		27E940691954BD4C00A9732E /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E940651954BB9E00A9732E /* libc++.dylib */; };
-		27EA1F481B90CEC200B37251 /* MYAction.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA1F461B90CEC200B37251 /* MYAction.h */; settings = {ASSET_TAGS = (); }; };
-		27EA1F491B90CEC200B37251 /* MYAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EA1F471B90CEC200B37251 /* MYAction.m */; settings = {ASSET_TAGS = (); }; };
-		27EA1F4A1B90CEC200B37251 /* MYAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EA1F471B90CEC200B37251 /* MYAction.m */; settings = {ASSET_TAGS = (); }; };
-		27EA1F5A1B91183100B37251 /* MYAction_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EA1F591B91183100B37251 /* MYAction_Test.m */; settings = {ASSET_TAGS = (); }; };
-		27EA1F5B1B91183100B37251 /* MYAction_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EA1F591B91183100B37251 /* MYAction_Test.m */; settings = {ASSET_TAGS = (); }; };
+		27EA1F481B90CEC200B37251 /* MYAction.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA1F461B90CEC200B37251 /* MYAction.h */; };
+		27EA1F491B90CEC200B37251 /* MYAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EA1F471B90CEC200B37251 /* MYAction.m */; };
+		27EA1F4A1B90CEC200B37251 /* MYAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EA1F471B90CEC200B37251 /* MYAction.m */; };
+		27EA1F5A1B91183100B37251 /* MYAction_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EA1F591B91183100B37251 /* MYAction_Test.m */; };
+		27EA1F5B1B91183100B37251 /* MYAction_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EA1F591B91183100B37251 /* MYAction_Test.m */; };
 		27EA50B31B275527009E78C1 /* CBLBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA50B21B275527009E78C1 /* CBLBase.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27EA50B41B275527009E78C1 /* CBLBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA50B21B275527009E78C1 /* CBLBase.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27EA50B51B275527009E78C1 /* CBLBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EA50B21B275527009E78C1 /* CBLBase.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -714,8 +716,6 @@
 		27FAEF0F164C8ADB00A3C0C2 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0C164C8ADB00A3C0C2 /* icon.png */; };
 		27FAEF10164C8ADB00A3C0C2 /* icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0D164C8ADB00A3C0C2 /* icon@2x.png */; };
 		27FAEF11164C8ADB00A3C0C2 /* icon~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0E164C8ADB00A3C0C2 /* icon~ipad.png */; };
-		27FFE20A17BD28080040AE60 /* CBLRestReplicator+Backgrounding.m in Sources */ = {isa = PBXBuildFile; fileRef = 27FFE20817BD28080040AE60 /* CBLRestReplicator+Backgrounding.m */; };
-		27FFE20B17BD28080040AE60 /* CBLRestReplicator+Backgrounding.m in Sources */ = {isa = PBXBuildFile; fileRef = 27FFE20817BD28080040AE60 /* CBLRestReplicator+Backgrounding.m */; };
 		933BED4F1B06A7440011C7C4 /* CBLEncryptionController.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27C5BADE1A92AC51008C357C /* CBLEncryptionController.h */; };
 		933BED501B06A7440011C7C4 /* CBLEncryptionController.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27C5BADF1A92AC51008C357C /* CBLEncryptionController.m */; };
 		933EF7571B29B3AB0004C1C1 /* CBLJSONValidator.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27486F241A606C76008D94F0 /* CBLJSONValidator.m */; };
@@ -1628,6 +1628,9 @@
 		27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCBLForestDBStorage.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		27E66B501A730CA80091DA3F /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk/usr/lib/libsqlite3.dylib; sourceTree = DEVELOPER_DIR; };
 		27E66B551A7310920091DA3F /* CBLRouter+Changes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLRouter+Changes.m"; sourceTree = "<group>"; };
+		27E721631BB491B7001500DF /* MYBackgroundMonitor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYBackgroundMonitor.h; sourceTree = "<group>"; };
+		27E721641BB491B7001500DF /* MYBackgroundMonitor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYBackgroundMonitor.m; sourceTree = "<group>"; };
+		27E721711BB4A08F001500DF /* CBLRestReplicator+Backgrounding.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLRestReplicator+Backgrounding.m"; sourceTree = "<group>"; };
 		27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/CFNetwork.framework; sourceTree = DEVELOPER_DIR; };
 		27E7FB02155DBDA20025F93A /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 		27E940651954BB9E00A9732E /* libc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++.dylib"; path = "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk/usr/lib/libc++.dylib"; sourceTree = DEVELOPER_DIR; };
@@ -1700,7 +1703,6 @@
 		27FAEF0C164C8ADB00A3C0C2 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
 		27FAEF0D164C8ADB00A3C0C2 /* icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon@2x.png"; sourceTree = "<group>"; };
 		27FAEF0E164C8ADB00A3C0C2 /* icon~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon~ipad.png"; sourceTree = "<group>"; };
-		27FFE20817BD28080040AE60 /* CBLRestReplicator+Backgrounding.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLRestReplicator+Backgrounding.m"; sourceTree = "<group>"; };
 		792867CB178DE03E00248AF0 /* CBLJSFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSFunction.h; sourceTree = "<group>"; };
 		792867CC178DE03E00248AF0 /* CBLJSFunction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSFunction.m; sourceTree = "<group>"; };
 		792867CE178DE03E00248AF0 /* CBLJSViewCompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSViewCompiler.h; sourceTree = "<group>"; };
@@ -2500,7 +2502,7 @@
 				27B0864E1B387C3900D3D9D8 /* CBLRestReplicator.h */,
 				27821BB6148E7D6F0099B373 /* CBLRestReplicator.m */,
 				27B0864F1B387C3900D3D9D8 /* CBLRestReplicator+Internal.h */,
-				27FFE20817BD28080040AE60 /* CBLRestReplicator+Backgrounding.m */,
+				27E721711BB4A08F001500DF /* CBLRestReplicator+Backgrounding.m */,
 				270B3E291489581E00E0A926 /* CBLRestPuller.h */,
 				270B3E2A1489581E00E0A926 /* CBLRestPuller.m */,
 				270B3E3C148D7F0000E0A926 /* CBLRestPusher.h */,
@@ -2753,6 +2755,8 @@
 				27EA1F471B90CEC200B37251 /* MYAction.m */,
 				278097541A32817A00876DE6 /* MYAnonymousIdentity.h */,
 				278097551A32817A00876DE6 /* MYAnonymousIdentity.m */,
+				27E721631BB491B7001500DF /* MYBackgroundMonitor.h */,
+				27E721641BB491B7001500DF /* MYBackgroundMonitor.m */,
 				279CE3B614D4A885009F3FA6 /* MYBlockUtils.h */,
 				279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */,
 				27B086861B3881E100D3D9D8 /* MYBuffer.h */,
@@ -3934,7 +3938,6 @@
 				27513A571A6827DF0055DC40 /* CBLCollateJSON.m in Sources */,
 				27CF5D2D152F514A0015D7A9 /* CBLStatus.m in Sources */,
 				27B086B01B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m in Sources */,
-				27FFE20A17BD28080040AE60 /* CBLRestReplicator+Backgrounding.m in Sources */,
 				27513A611A697CC80055DC40 /* CBL_SQLiteViewStorage.m in Sources */,
 				27F128B2156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
 				270F5706156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,
@@ -4164,6 +4167,7 @@
 				279CE40C14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */,
 				2733022C18F8572700A488F7 /* CBLAuthenticator.m in Sources */,
 				27B0868A1B3881E100D3D9D8 /* MYBuffer.m in Sources */,
+				27E721651BB491B7001500DF /* MYBackgroundMonitor.m in Sources */,
 				2766EFFA14DB7F9F009ECCA8 /* CBLMultipartWriter.m in Sources */,
 				2766EFFF14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */,
 				27B086671B387C3900D3D9D8 /* CBLSyncConnection+Pull.m in Sources */,
@@ -4207,7 +4211,6 @@
 				27BDA820181973EF00F27A11 /* CBLBulkDownloader.m in Sources */,
 				27DF57B319C782DE00FFB075 /* MYReadWriteLock.m in Sources */,
 				277EF3A217F4DEDD00F7B7F7 /* CBLQuery+Geo.m in Sources */,
-				27FFE20B17BD28080040AE60 /* CBLRestReplicator+Backgrounding.m in Sources */,
 				2776A59616A0C3B1006FF199 /* CBLPersonaAuthorizer.m in Sources */,
 				2776A63216A9BCBC006FF199 /* CBLDatabaseChange.m in Sources */,
 				271C2AD616FA176300B8C9DB /* CBL_Shared.m in Sources */,
@@ -4222,6 +4225,7 @@
 				279CE3BA14D4A886009F3FA6 /* MYBlockUtils.m in Sources */,
 				27D90B1915601C350000735E /* MYErrorUtils.m in Sources */,
 				278E4DDA1562B40B00DDCEF9 /* MYURLUtils.m in Sources */,
+				27E721721BB4A08F001500DF /* CBLRestReplicator+Backgrounding.m in Sources */,
 				27DA435215918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
 				27846FBB15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */,

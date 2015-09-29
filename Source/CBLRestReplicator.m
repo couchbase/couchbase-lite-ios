@@ -113,7 +113,8 @@
         _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
 #if TARGET_OS_IPHONE
         // Keeps static analyzer from complaining this ivar is unused:
-        _bgTask = 0;
+        _bgMonitor = nil;
+        _hasBGTask = NO;
 #endif
     }
     return self;

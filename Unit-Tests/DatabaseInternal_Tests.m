@@ -983,4 +983,24 @@ static CBL_Revision* mkrev(NSString* revID) {
     }
 }
 
+
+// Ensure that a database created without auto-compact (by CBL 1.1, or prior to 10/5/15) can
+// stil be opened, since it has to be switched to auto-compact mode.
+- (void) test28_enableAutoCompact {
+    __block NSError* error;
+    [CBLDatabase setAutoCompact: NO];
+    __block CBLDatabase* manualDB = [dbmgr databaseNamed: @"manualcompact" error: &error];
+    Assert(manualDB);
+    [self createDocumentWithProperties: @{} inDatabase: manualDB];
+    Assert([manualDB close: &error]);
+    manualDB = nil;
+
+    [CBLDatabase setAutoCompact: YES];
+    [self allowWarningsIn:^{
+        manualDB = [dbmgr databaseNamed: @"manualcompact" error: &error];
+    }];
+    Assert(manualDB);
+    [manualDB close: &error];
+}
+
 @end

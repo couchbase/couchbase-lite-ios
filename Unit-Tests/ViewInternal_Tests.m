@@ -242,6 +242,13 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 }
 
 
+static NSArray* sortViews(NSArray *array) {
+    return [array sortedArrayUsingComparator:^NSComparisonResult(CBLView* a, CBLView* b) {
+        return [a.name compare: b.name];
+    }];
+}
+
+
 - (void) test04_IndexMultiple {
     RequireTestCase(Index);
 
@@ -254,12 +261,12 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 
     [vX forgetMapBlock]; // To reproduce #438
 
-    AssertEqual(v1.viewsInGroup, (@[v1]));
-    AssertEqual(v2.viewsInGroup, (@[v2, v3, vX]));
-    AssertEqual(v3.viewsInGroup, (@[v2, v3, vX]));
-    AssertEqual(vX.viewsInGroup, (@[v2, v3, vX]));
-    AssertEqual(v4.viewsInGroup, (@[v4])); // because GROUP_VIEWS_BY_DEFAULT isn't enabled
-    AssertEqual(v5.viewsInGroup, (@[v5]));
+    AssertEqual(sortViews(v1.viewsInGroup), (@[v1]));
+    AssertEqual(sortViews(v2.viewsInGroup), (@[v2, v3, vX]));
+    AssertEqual(sortViews(v3.viewsInGroup), (@[v2, v3, vX]));
+    AssertEqual(sortViews(vX.viewsInGroup), (@[v2, v3, vX]));
+    AssertEqual(sortViews(v4.viewsInGroup), (@[v4])); // because GROUP_VIEWS_BY_DEFAULT isn't enabled
+    AssertEqual(sortViews(v5.viewsInGroup), (@[v5]));
 
     const int kNDocs = 10;
     for (int i=0; i<kNDocs; i++) {

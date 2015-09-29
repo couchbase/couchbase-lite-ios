@@ -8,7 +8,7 @@
 
 #import "CBL_Replicator.h"
 
-@class CBLBatcher;
+@class CBLBatcher, MYBackgroundMonitor;
 
 
 /** Abstract base class for push or pull replications. */
@@ -22,7 +22,8 @@
     id<CBLAuthorizer> _authorizer;
     NSString* _serverType;
 #if TARGET_OS_IPHONE
-    NSUInteger /*UIBackgroundTaskIdentifier*/ _bgTask;
+    MYBackgroundMonitor *_bgMonitor;
+    BOOL _hasBGTask;
 #endif
 }
 

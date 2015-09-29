@@ -93,7 +93,6 @@ static BOOL sAutoCompact = YES;
 
 #if DEBUG
 + (instancetype) createEmptyDBAtPath: (NSString*)dir {
-    [self setAutoCompact: NO]; // unit tests don't want autocompact
     if (![self deleteDatabaseFilesAtPath: dir error: NULL])
         return nil;
     CBLDatabase *db = [[self alloc] initWithDir: dir name: nil manager: nil readOnly: NO];
@@ -171,6 +170,7 @@ static BOOL sAutoCompact = YES;
 
     _storage = storage;
     _storage.delegate = self;
+    _storage.autoCompact = sAutoCompact;
 
     CBLSymmetricKey* encryptionKey = [_manager.shared valueForType: @"encryptionKey"
                                                               name: @"" inDatabaseNamed: _name];
@@ -182,7 +182,6 @@ static BOOL sAutoCompact = YES;
                            manager: _manager
                              error: outError])
         return NO;
-    _storage.autoCompact = sAutoCompact;
 
     // First-time setup:
     if (!self.privateUUID) {

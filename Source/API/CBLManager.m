@@ -249,7 +249,6 @@ static CBLManager* sInstance;
 
 #if DEBUG
 + (instancetype) createEmptyAtPath: (NSString*)path {
-    [CBLDatabase setAutoCompact: NO]; // unit tests don't want autocompact
     [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
     NSError* error;
     CBLManager* dbm = [[self alloc] initWithDirectory: path

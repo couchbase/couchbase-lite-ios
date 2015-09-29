@@ -20,6 +20,7 @@ extern "C" {
 }
 
 using namespace forestdb;
+using namespace couchbase_lite;
 
 
 @implementation CBLForestBridge
@@ -44,6 +45,36 @@ static NSData* dataOfNode(const Revision* rev) {
     } else {
         fdbKey->algorithm = FDB_ENCRYPTION_NONE;
     }
+}
+
+
++ (Database*) openDatabaseAtPath: (NSString*)path
+                      withConfig: (Database::config&)config
+                   encryptionKey: (CBLSymmetricKey*)key
+                           error: (NSError**)outError
+{
+    [self setEncryptionKey: &config.encryption_key fromSymmetricKey: key];
+    __block Database* db = NULL;
+    BOOL ok = tryError(outError, ^{
+        std::string pathStr(path.fileSystemRepresentation);
+        try {
+            db = new Database(pathStr, config);
+        } catch (forestdb::error error) {
+            if (error.status == FDB_RESULT_INVALID_COMPACTION_MODE
+                        && config.compaction_mode == FDB_COMPACTION_AUTO) {
+                // Databases created by earlier builds of CBL (pre-1.2) didn't have auto-compact.
+                // Opening them with auto-compact causes this error. Upgrade such a database by
+                // switching its compaction mode:
+                Log(@"%@: Upgrading to auto-compact", self);
+                config.compaction_mode = FDB_COMPACTION_MANUAL;
+                db = new Database(pathStr, config);
+                db->setCompactionMode(FDB_COMPACTION_AUTO);
+            } else {
+                throw error;
+            }
+        }
+    });
+    return ok ? db : nil;
 }
 
 
