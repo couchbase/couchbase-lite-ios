@@ -341,7 +341,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         config.wal_threshold = kDBWALThreshold;
         config.wal_flush_before_commit = true;
         config.seqtree_opt = NO; // indexes don't need by-sequence ordering
-        config.compaction_mode = FDB_COMPACTION_AUTO;
+        config.compaction_threshold = 50;
 
         CBLSymmetricKey* encryptionKey = _dbStorage.encryptionKey;
         if (encryptionKey) {
