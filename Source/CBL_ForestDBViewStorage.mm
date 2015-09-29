@@ -346,9 +346,8 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         CBLSymmetricKey* encryptionKey = _dbStorage.encryptionKey;
         if (encryptionKey) {
             LogTo(CBLDatabase, @"Database is encrypted; setting CBForest encryption key");
-            AssertEq(encryptionKey.keyData.length, sizeof(config.encryptionKey));
-            config.encrypted = true;
-            memcpy(&config.encryptionKey, encryptionKey.keyData.bytes, sizeof(config.encryptionKey));
+            [CBLForestBridge setEncryptionKey: &config.encryption_key
+                             fromSymmetricKey: encryptionKey];
         }
 
         CBLStatus status = tryStatus(^CBLStatus{

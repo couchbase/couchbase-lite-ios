@@ -143,7 +143,8 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 - (BOOL) reopen: (NSError**)outError {
     if (_encryptionKey)
         LogTo(CBLDatabase, @"Database is encrypted; setting CBForest encryption key");
-    _config.setEncryptionKey(slice(_encryptionKey.keyData));
+    [CBLForestBridge setEncryptionKey: &_config.encryption_key
+                     fromSymmetricKey: _encryptionKey];
 
     return tryError(outError, ^{
         NSString* forestPath = [_directory stringByAppendingPathComponent: kDBFilename];
@@ -163,8 +164,6 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
 - (MYAction*) actionToChangeEncryptionKey: (CBLSymmetricKey*)newKey {
     MYAction* action = [MYAction new];
-    forestdb::Database::encryptionConfig enc;
-    enc.setEncryptionKey(slice(newKey.keyData));
 
     // Re-key the views!
     NSArray* viewNames = self.allViewNames;
@@ -173,30 +172,26 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
         [action addAction: [viewStorage actionToChangeEncryptionKey]];
     }
 
-    // Copy the database to a temporary file using the new encryption:
-    NSString* tempPath = [NSTemporaryDirectory() stringByAppendingPathComponent: CBLCreateUUID()];
+    // Re-key the database:
+    CBLSymmetricKey* oldKey = _encryptionKey;
     [action addPerform: ^BOOL(NSError **outError) {
         return tryError(outError, ^{
-            _forest->copyToFile(tempPath.fileSystemRepresentation, enc);
+            fdb_encryption_key enc;
+            [CBLForestBridge setEncryptionKey: &enc fromSymmetricKey: newKey];
+            _forest->rekey(enc);
+            self.encryptionKey = newKey;
         });
     } backOut:^BOOL(NSError **outError) {
-        return [[NSFileManager defaultManager] removeItemAtPath: tempPath error: outError];
+        return tryError(outError, ^{
+            fdb_encryption_key enc;
+            [CBLForestBridge setEncryptionKey: &enc fromSymmetricKey: _encryptionKey];
+            //FIX: This can potentially fail. If it did, the database would be lost.
+            // It would be safer to save & restore the old db file, the one that got replaced
+            // during rekeying, but the ForestDB API doesn't allow preserving it...
+            _forest->rekey(enc);
+            self.encryptionKey = oldKey;
+        });
     } cleanUp: nil];
-
-     // Close the database (and re-open it on cleanup):
-     [action addPerform: ^BOOL(NSError **outError) {
-        [self close];
-        return YES;
-    } backOut: ^BOOL(NSError **outError) {
-        return [self reopen: outError];
-    } cleanUp: ^BOOL(NSError **outError) {
-        [self setEncryptionKey: newKey];
-        return [self reopen: outError];
-    }];
-
-     // Overwrite the old db file with the new one:
-    NSString* dbPath = [_directory stringByAppendingPathComponent: kDBFilename];
-    [action addAction: [MYAction moveFile: tempPath toPath: dbPath]];
 
     return action;
 }

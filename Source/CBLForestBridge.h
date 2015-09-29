@@ -11,6 +11,7 @@ extern "C" {
 #import <CBForest/CBForest.hh>
 #import "CBL_Storage.h"
 }
+@class CBLSymmetricKey;
 
 
 namespace couchbase_lite {
@@ -21,6 +22,9 @@ namespace couchbase_lite {
 
 
 @interface CBLForestBridge : NSObject
+
++ (void) setEncryptionKey: (fdb_encryption_key*)fdbKey
+         fromSymmetricKey: (CBLSymmetricKey*)key;
 
 + (NSMutableDictionary*) bodyOfNode: (const forestdb::Revision*)revNode;
 

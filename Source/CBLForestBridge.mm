@@ -14,9 +14,9 @@
 //  and limitations under the License.
 
 #import "CBLForestBridge.h"
-#import <CBForest/Encryption/filemgr_ops_encrypted.h>
 extern "C" {
 #import "ExceptionUtils.h"
+#import "CBLSymmetricKey.h"
 }
 
 using namespace forestdb;
@@ -32,6 +32,17 @@ static NSData* dataOfNode(const Revision* rev) {
         return rev->readBody().copiedNSData();
     } catch (...) {
         return nil;
+    }
+}
+
+
++ (void) setEncryptionKey: (fdb_encryption_key*)fdbKey fromSymmetricKey: (CBLSymmetricKey*)key {
+    if (key) {
+        fdbKey->algorithm = FDB_ENCRYPTION_AES256;
+        Assert(key.keyData.length <= sizeof(fdbKey->bytes));
+        memcpy(fdbKey->bytes, key.keyData.bytes, sizeof(fdbKey->bytes));
+    } else {
+        fdbKey->algorithm = FDB_ENCRYPTION_NONE;
     }
 }
 
@@ -201,7 +212,7 @@ namespace couchbase_lite {
             case FDB_RESULT_RONLY_VIOLATION:
                 return kCBLStatusForbidden;
             case FDB_RESULT_NO_DB_HEADERS:
-            case FDB_RESULT_ENCRYPTION_ERROR:
+            case FDB_RESULT_CRYPTO_ERROR:
                 return kCBLStatusUnauthorized;     // assuming db is encrypted
             case FDB_RESULT_CHECKSUM_ERROR:
             case FDB_RESULT_FILE_CORRUPTION:
