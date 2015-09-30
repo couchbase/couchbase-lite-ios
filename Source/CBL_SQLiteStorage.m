@@ -330,7 +330,10 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
         // Export the current database's contents to the new one:
         [action addPerform:^BOOL(NSError **outError) {
-            return [self checkUpdate: [_fmdb executeUpdate: @"SELECT sqlcipher_export('rekeyed_db')"]
+            return [self checkUpdate: [_fmdb executeUpdate:@"SELECT sqlcipher_export('rekeyed_db')"]
+                               error: outError]
+                && [self checkUpdate: [_fmdb executeUpdate: @"PRAGMA rekeyed_db.user_version = ?",
+                                       @(self.schemaVersion)]
                                error: outError];
         } backOut: NULL cleanUp: NULL];
     }
