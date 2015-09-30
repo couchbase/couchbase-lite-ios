@@ -274,6 +274,8 @@ static void catchInBlock(void (^block)()) {
     }
 
     MYAction* action = [_storage actionToChangeEncryptionKey: newKey];
+    if (!action)
+        return CBLStatusToOutNSError(kCBLStatusNotImplemented, outError);
     [action addAction: [_attachments actionToChangeEncryptionKey: newKey]];
     [action addPerform:^BOOL(NSError** error) {
         [_manager registerEncryptionKey: newKeyOrPassword forDatabaseNamed: _name];
