@@ -108,6 +108,10 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
 - (BOOL) databaseExistsIn: (NSString*)directory {
     NSString* dbPath = [directory stringByAppendingPathComponent: kDBFilename];
+    if ([[NSFileManager defaultManager] fileExistsAtPath: dbPath isDirectory: NULL])
+        return YES;
+    // If "db.forest" doesn't exist (auto-compaction will add numeric suffixes), check for meta:
+    dbPath = [dbPath stringByAppendingString: @".meta"];
     return [[NSFileManager defaultManager] fileExistsAtPath: dbPath isDirectory: NULL];
 }
 
