@@ -22,7 +22,7 @@
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
-#import "GTMNSData+zlib.h"
+#import "CBLGZip.h"
 
 
 static NSDictionary* userProperties(NSDictionary* dict) {

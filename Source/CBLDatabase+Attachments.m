@@ -34,9 +34,9 @@
 #import "CBLMultipartWriter.h"
 #import "CBLMisc.h"
 #import "CBLInternal.h"
+#import "CBLGZip.h"
 
 #import "CollectionUtils.h"
-#import "GTMNSData+zlib.h"
 
 
 // Length that constitutes a 'big' attachment
