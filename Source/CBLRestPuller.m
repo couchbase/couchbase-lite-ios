@@ -104,7 +104,6 @@
                                                          conflicts: YES
                                                       lastSequence: _lastSequence
                                                             client: self];
-    // Limit the number of changes to return, so we can parse the feed in parts:
     _changeTracker.continuous = _settings.continuous;
     _changeTracker.filterName = _settings.filterName;
     _changeTracker.filterParameters = _settings.filterParameters;

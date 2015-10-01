@@ -87,9 +87,7 @@
             rval = inflate(&_strm, Z_SYNC_FLUSH);
         if (rval == Z_BUF_ERROR || rval == Z_STREAM_END || length == 0) {
             // Output is full, or at EOF, so deliver it:
-            onOutput(_buffer, kBufferSize - _strm.avail_out);
-            _strm.next_out  = _buffer;
-            _strm.avail_out = (uInt)kBufferSize;
+            [self flush: onOutput];
             if (rval == Z_BUF_ERROR)
                 rval = Z_OK;
         }
@@ -99,6 +97,15 @@
             return rval == Z_STREAM_END;
         }
     } while (_strm.avail_in > 0 || length == 0);
+    return YES;
+}
+
+- (BOOL) flush: (void(^)(const void*,size_t))onOutput {
+    if (_strm.avail_out >= kBufferSize)
+        return NO;
+    onOutput(_buffer, kBufferSize - _strm.avail_out);
+    _strm.next_out  = _buffer;
+    _strm.avail_out = (uInt)kBufferSize;
     return YES;
 }
 

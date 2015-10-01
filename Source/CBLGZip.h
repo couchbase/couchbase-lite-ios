@@ -23,6 +23,9 @@
            length: (size_t)length
          onOutput: (void(^)(const void*,size_t))onOutput;
 
+/** Invokes the callback with any bytes that have already been processed but not yet delivered. */
+- (BOOL) flush: (void(^)(const void*,size_t))onOutput;
+
 /** The codec's current status. */
 @property (readonly) int status;
 @end
