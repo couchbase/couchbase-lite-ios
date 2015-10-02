@@ -60,7 +60,7 @@
             status = deflateEnd(&_strm);
         else
             status = inflateEnd(&_strm);
-        if (_status < Z_OK && _status >= Z_OK)
+        if (status < Z_OK && _status >= Z_OK)
             _status = status;
         _open = NO;
     }
