@@ -118,6 +118,8 @@
     AssertEq(status, kCBLStatusCreated);
     AssertNil(error);
 #pragma unused(rev2)
+
+    [self createDocuments: 100];
     
     // Push them to the remote:
     NSURL* remoteDB = [self remoteTestDBURL: kScratchDBName];
@@ -125,8 +127,8 @@
         return;
     [self eraseRemoteDB: remoteDB];
     id lastSeq = replic8(db, remoteDB, YES, @"filter", nil, nil);
-    AssertEq([lastSeq intValue], 3);
-    AssertEq(filterCalls, 2);
+    AssertEq([lastSeq intValue], 103);
+    AssertEq(filterCalls, 102);
 }
 
 
@@ -137,15 +139,15 @@
         return;
 
     id lastSeq = replic8(db, remoteURL, NO, nil, nil, nil);
-    AssertEqual(lastSeq, @3);
+    AssertEqual(lastSeq, @103);
     
-    AssertEq(db.documentCount, 2u);
-    AssertEq(db.lastSequenceNumber, (self.isSQLiteDB ? 3 : 2));
+    AssertEq(db.documentCount, 102u);
+    AssertEq(db.lastSequenceNumber, (self.isSQLiteDB ? 103 : 102));
     
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
     replic8(db, ([self remoteTestDBURL: kScratchDBName]), NO, nil, nil, nil);
-    AssertEq(db.lastSequenceNumber, (self.isSQLiteDB ? 3 : 2));
+    AssertEq(db.lastSequenceNumber, (self.isSQLiteDB ? 103 : 102));
     
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
     Assert(doc);
@@ -166,15 +168,15 @@
         return;
 
     id lastSeq = replic8Continuous(db, remoteURL, NO, nil, nil, nil);
-    AssertEqual(lastSeq, @3);
+    AssertEqual(lastSeq, @103);
 
-    AssertEq(db.documentCount, 2u);
-    AssertEq(db.lastSequenceNumber, (self.isSQLiteDB ? 3 : 2));
+    AssertEq(db.documentCount, 102u);
+    AssertEq(db.lastSequenceNumber, (self.isSQLiteDB ? 103 : 102));
 
     // Replicate again; should complete but add no revisions:
     Log(@"Second replication, should get no more revs:");
     replic8Continuous(db, remoteURL, NO, nil, nil, nil);
-    AssertEq(db.lastSequenceNumber, (self.isSQLiteDB ? 3 : 2));
+    AssertEq(db.lastSequenceNumber, (self.isSQLiteDB ? 103 : 102));
 
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
     Assert(doc);
@@ -233,7 +235,7 @@
     AssertNil(repl.error);
     Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
     id lastSeq = repl.lastSequence;
-    AssertEqual(lastSeq, @3);
+    AssertEqual(lastSeq, @103);
 
     AssertEq(db.documentCount, 1u);
     AssertEq(db.lastSequenceNumber, (self.isSQLiteDB ? 2 : 1));

@@ -21,6 +21,7 @@
 #import "CBLCookieStorage.h"
 #import "CBLStatus.h"
 #import "CBLBase64.h"
+#import "CBLGZip.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
 #import "BLIPHTTPLogic.h"
@@ -34,6 +35,7 @@
 {
     NSInputStream* _trackingInput;
     CFAbsoluteTime _startTime;
+    CBLGZip* _gzip;
     bool _gotResponseHeaders;
     bool _readyToRead;
 }
@@ -48,6 +50,7 @@
     NSURL* url = self.changesFeedURL;
 
     CFHTTPMessageRef request = [_http newHTTPRequest];
+    CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Accept-Encoding"), CFSTR("gzip"));
 
     // Now open the connection:
     LogTo(SyncVerbose, @"%@: %@ %@", self, (self.usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
@@ -74,6 +77,7 @@
 
     _gotResponseHeaders = false;
     _readyToRead = NO;
+    _gzip = nil;
 
     _trackingInput = (NSInputStream*)CFBridgingRelease(cfInputStream);
     [_trackingInput setDelegate: self];
@@ -140,11 +144,17 @@
     }
     _gotResponseHeaders = true;
     [_http receivedResponse: response];
+    NSString* encoding = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response,
+                                                                    CFSTR("Content-Encoding")));
+    BOOL compressed = [encoding isEqualToString: @"gzip"];
+
     CFRelease(response);
 
     if (_http.shouldContinue) {
         _retryCount = 0;
         _http = nil;
+        if (compressed)
+            _gzip = [[CBLGZip alloc] initForCompressing: NO];
         return YES;
     } else if (_http.shouldRetry) {
         [self clearConnection];
@@ -171,14 +181,33 @@
 #pragma mark - STREAM HANDLING:
 
 
+- (BOOL) readGzippedBytes: (const void*)bytes length: (size_t)length {
+    __weak CBLSocketChangeTracker* weakSelf = self;
+    BOOL ok = [_gzip addBytes: bytes
+                       length: length
+                     onOutput: ^(const void *decompressedBytes, size_t decompressedLength) {
+        [weakSelf parseBytes: decompressedBytes length: decompressedLength];
+    }];
+    if (!ok) {
+        NSDictionary* info = @{NSLocalizedDescriptionKey: @"Invalid gzipped response data"};
+        [self failedWithError: [NSError errorWithDomain: @"zlib" code:_gzip.status userInfo: info]];
+    }
+    return ok;
+}
+
+
 - (void) readFromInput {
     Assert(_readyToRead);
     _readyToRead = false;
     uint8_t buffer[kReadLength];
     while (_trackingInput.hasBytesAvailable) {
         NSInteger bytesRead = [_trackingInput read: buffer maxLength: sizeof(buffer)];
-        if (bytesRead > 0)
-            [self parseBytes: buffer length: bytesRead];
+        if (bytesRead > 0) {
+            if (_gzip)
+                [self readGzippedBytes: buffer length: bytesRead];
+            else
+                [self parseBytes: buffer length: bytesRead];
+        }
     }
 }
 
@@ -190,6 +219,10 @@
             return;
     }
     self.paused = NO;   // parse any incoming bytes that have been waiting
+    if (_gzip) {
+        [self readGzippedBytes: NULL length: 0]; // flush gzip decoder
+        _gzip = nil;
+    }
     if (_mode == kContinuous) {
         [self stop];
     } else if ([self endParsingData] >= 0) {

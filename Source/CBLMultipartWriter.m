@@ -15,7 +15,7 @@
 
 #import "CBLMultipartWriter.h"
 #import "CBLMisc.h"
-#import "GTMNSData+zlib.h"
+#import "CBLGZip.h"
 #import "CollectionUtils.h"
 #import "Test.h"
 
@@ -88,7 +88,7 @@
 
 - (void) addGZippedData: (NSData*)data {
     if (data.length >= kMinDataLengthToCompress) {
-        NSData* compressed = [NSData gtm_dataByGzippingData: data];
+        NSData* compressed = [CBLGZip dataByCompressingData: data];
         if (compressed.length < data.length) {
             data = compressed;
             [self setValue: @"gzip" forNextPartsHeader: @"Content-Encoding"];

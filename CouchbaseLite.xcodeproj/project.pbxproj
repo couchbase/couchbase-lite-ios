@@ -436,6 +436,9 @@
 		27A7552D1A8BD715008BCD4D /* CBLQueryEnumerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7552A1A8BD715008BCD4D /* CBLQueryEnumerator.m */; };
 		27A755311A8BD797008BCD4D /* CBLQueryRow.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7552F1A8BD797008BCD4D /* CBLQueryRow.m */; };
 		27A755321A8BD797008BCD4D /* CBLQueryRow.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7552F1A8BD797008BCD4D /* CBLQueryRow.m */; };
+		27A82D271BBC9C1D005CB742 /* CBLGZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A82D251BBC9C1D005CB742 /* CBLGZip.h */; };
+		27A82D281BBC9C1D005CB742 /* CBLGZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82D261BBC9C1D005CB742 /* CBLGZip.m */; };
+		27A82D291BBC9C1D005CB742 /* CBLGZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82D261BBC9C1D005CB742 /* CBLGZip.m */; };
 		27A9D67F1A661ED10074FDD2 /* CBL_ViewStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A9D67D1A661ED10074FDD2 /* CBL_ViewStorage.h */; };
 		27A9D6801A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A9D67E1A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm */; };
 		27AA409D14AA86AE00E2A5FF /* CBLDatabase+Insertion.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AA409A14AA86AD00E2A5FF /* CBLDatabase+Insertion.m */; };
@@ -604,10 +607,6 @@
 		27DA43691592387400F9E7B5 /* CBLModelFactory.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA435515918C8D00F9E7B5 /* CBLModelFactory.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27DADE431A659FCC0075313A /* CBL_Storage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DADE411A659FCC0075313A /* CBL_Storage.h */; };
 		27DADE441A659FCC0075313A /* CBL_ForestDBStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DADE421A659FCC0075313A /* CBL_ForestDBStorage.mm */; };
-		27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DB90D514DB249700FC7118 /* GTMNSData+zlib.h */; };
-		27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27DB90DB14DB24E800FC7118 /* GTMDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DB90DA14DB24E800FC7118 /* GTMDefines.h */; };
 		27DB90DD14DB250500FC7118 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DB90DC14DB250500FC7118 /* libz.dylib */; };
 		27DB90DF14DB4B0100FC7118 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DB90DE14DB4B0100FC7118 /* libz.dylib */; };
 		27DB90E014DB4B0A00FC7118 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DB90DE14DB4B0100FC7118 /* libz.dylib */; };
@@ -1483,6 +1482,8 @@
 		27A7209F152B959100C0A0E8 /* CBL_Attachment.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Attachment.m; sourceTree = "<group>"; };
 		27A7552A1A8BD715008BCD4D /* CBLQueryEnumerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryEnumerator.m; sourceTree = "<group>"; };
 		27A7552F1A8BD797008BCD4D /* CBLQueryRow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryRow.m; sourceTree = "<group>"; };
+		27A82D251BBC9C1D005CB742 /* CBLGZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLGZip.h; sourceTree = "<group>"; };
+		27A82D261BBC9C1D005CB742 /* CBLGZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLGZip.m; sourceTree = "<group>"; };
 		27A9D67D1A661ED10074FDD2 /* CBL_ViewStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_ViewStorage.h; sourceTree = "<group>"; };
 		27A9D67E1A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBL_ForestDBViewStorage.mm; sourceTree = "<group>"; };
 		27AA409A14AA86AD00E2A5FF /* CBLDatabase+Insertion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLDatabase+Insertion.m"; sourceTree = "<group>"; };
@@ -1607,9 +1608,6 @@
 		27DA435615918C8E00F9E7B5 /* CBLModelFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLModelFactory.m; sourceTree = "<group>"; };
 		27DADE411A659FCC0075313A /* CBL_Storage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Storage.h; sourceTree = "<group>"; };
 		27DADE421A659FCC0075313A /* CBL_ForestDBStorage.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBL_ForestDBStorage.mm; sourceTree = "<group>"; };
-		27DB90D514DB249700FC7118 /* GTMNSData+zlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GTMNSData+zlib.h"; sourceTree = "<group>"; };
-		27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GTMNSData+zlib.m"; sourceTree = "<group>"; };
-		27DB90DA14DB24E800FC7118 /* GTMDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMDefines.h; sourceTree = "<group>"; };
 		27DB90DC14DB250500FC7118 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		27DB90DE14DB4B0100FC7118 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/usr/lib/libz.dylib; sourceTree = DEVELOPER_DIR; };
 		27DD150319354AF7009A367D /* libstdc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libstdc++.dylib"; path = "usr/lib/libstdc++.dylib"; sourceTree = SDKROOT; };
@@ -2184,7 +2182,6 @@
 				277B5C5E1821A8370088881E /* yajl */,
 				27F0749A11CD5B1200E9A2AB /* MYUtilities */,
 				2753154E14ACEF5C0065964D /* CocoaHTTPServer */,
-				27DB90D414DB249700FC7118 /* google-toolbox-for-mac */,
 				27F12842156ABE23008465C2 /* oauthconsumer */,
 				272401AD1860CB260080E082 /* WebSockets-Cocoa */,
 			);
@@ -2444,6 +2441,8 @@
 				27B0B79D1492932700A817AD /* CBLBase64.m */,
 				279906EC149ABFC1003D4338 /* CBLBatcher.h */,
 				279906ED149ABFC2003D4338 /* CBLBatcher.m */,
+				27A82D251BBC9C1D005CB742 /* CBLGZip.h */,
+				27A82D261BBC9C1D005CB742 /* CBLGZip.m */,
 				279C7E2C14F424090004A1E8 /* CBLSequenceMap.h */,
 				279C7E2D14F424090004A1E8 /* CBLSequenceMap.m */,
 				27DA4306158FA35600F9E7B5 /* CBLCache.h */,
@@ -2733,16 +2732,6 @@
 			name = Model;
 			sourceTree = "<group>";
 		};
-		27DB90D414DB249700FC7118 /* google-toolbox-for-mac */ = {
-			isa = PBXGroup;
-			children = (
-				27DB90DA14DB24E800FC7118 /* GTMDefines.h */,
-				27DB90D514DB249700FC7118 /* GTMNSData+zlib.h */,
-				27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */,
-			);
-			path = "google-toolbox-for-mac";
-			sourceTree = "<group>";
-		};
 		27F0749A11CD5B1200E9A2AB /* MYUtilities */ = {
 			isa = PBXGroup;
 			children = (
@@ -2894,6 +2883,7 @@
 				277B5DCA1821A8B60088881E /* yajl_tree.h in Headers */,
 				93EBA2771B2ECECE0006C66C /* CBLJSViewCompiler.h in Headers */,
 				2753157214ACEFC90065964D /* DDNumber.h in Headers */,
+				27A82D271BBC9C1D005CB742 /* CBLGZip.h in Headers */,
 				271EC6A5198C53DD009C9E05 /* CBJSONEncoder.h in Headers */,
 				27E2E5A3159383E9005B9234 /* CBLAttachment.h in Headers */,
 				27E4152F154F6E8500771FC5 /* CBLStatus.h in Headers */,
@@ -2969,9 +2959,7 @@
 				93EBA27D1B2ED0D90006C66C /* CBLRegisterJSViewCompiler.h in Headers */,
 				27B945A91768E63200B2DF2D /* CBLModelArray.h in Headers */,
 				279CE40A14D8AA23009F3FA6 /* CBLMultipartDownloader.h in Headers */,
-				27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */,
 				2733022A18F8572700A488F7 /* CBLAuthenticator.h in Headers */,
-				27DB90DB14DB24E800FC7118 /* GTMDefines.h in Headers */,
 				2766EFF814DB7F9F009ECCA8 /* CBLMultipartWriter.h in Headers */,
 				27B0866A1B387C3900D3D9D8 /* CBLSyncListener.h in Headers */,
 				2766EFFD14DC7B37009ECCA8 /* CBLMultiStreamWriter.h in Headers */,
@@ -4003,7 +3991,6 @@
 				27B086911B38822500D3D9D8 /* MYBuffer+Zip.m in Sources */,
 				27208F8A184D1D5C006ADBEF /* NSString+URLEncoding.m in Sources */,
 				27208F8F184D1D83006ADBEF /* NSURL+Base.m in Sources */,
-				27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 				27726AAD1889835F00AE6931 /* CBLGeometry.m in Sources */,
 				93EBA27A1B2ECEE30006C66C /* CBLJSFunction.m in Sources */,
 				27DADE441A659FCC0075313A /* CBL_ForestDBStorage.mm in Sources */,
@@ -4015,6 +4002,7 @@
 				27A7552C1A8BD715008BCD4D /* CBLQueryEnumerator.m in Sources */,
 				93EBA26D1B2EC7280006C66C /* CBLJSViewCompiler.m in Sources */,
 				277B5D341821A8380088881E /* yajl_encode.c in Sources */,
+				27A82D281BBC9C1D005CB742 /* CBLGZip.m in Sources */,
 				27B0AC2F1B4C73FC00DFE818 /* CBLListener.m in Sources */,
 				27B0865C1B387C3900D3D9D8 /* CBLBlipReplicator.m in Sources */,
 				27B086991B38823F00D3D9D8 /* MYZip.m in Sources */,
@@ -4163,6 +4151,7 @@
 				27B0B7DB1492B8A200A817AD /* CBLBase64.m in Sources */,
 				27731F061495335B00815D67 /* CBL_BlobStore.m in Sources */,
 				93EBA26C1B2EC6B80006C66C /* CBLRegisterJSViewCompiler.m in Sources */,
+				27A82D291BBC9C1D005CB742 /* CBLGZip.m in Sources */,
 				27513A181A672C760055DC40 /* CBLView.m in Sources */,
 				279906E6149A65B8003D4338 /* CBLRemoteRequest.m in Sources */,
 				279906F1149ABFC2003D4338 /* CBLBatcher.m in Sources */,
@@ -4236,7 +4225,6 @@
 				27DA435215918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
 				27846FBB15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */,
-				27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 				276B23201A3A2BE500CAF010 /* CBLQueryBuilder.m in Sources */,
 				27F12887156ABE24008465C2 /* OAConsumer.m in Sources */,
 				27513A1B1A672C830055DC40 /* CBLDatabase+Insertion.m in Sources */,

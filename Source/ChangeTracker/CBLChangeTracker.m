@@ -164,7 +164,8 @@
                                        {@"style", (_includeConflicts ? @"all_docs" : nil)},
                                        {@"since", since},
                                        {@"limit", (_limit > 0 ? @(_limit) : nil)},
-                                       {@"filter", filterName});
+                                       {@"filter", filterName},
+                                       {@"accept_encoding", @"gzip"});
     if (filterName && filterParameters)
         [post addEntriesFromDictionary: filterParameters];
     return [CBLJSON dataWithJSONObject: post options: 0 error: NULL];

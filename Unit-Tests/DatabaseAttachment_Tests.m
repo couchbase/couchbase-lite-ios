@@ -23,7 +23,7 @@
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
-#import "GTMNSData+zlib.h"
+#import "CBLGZip.h"
 
 
 @interface DatabaseAttachment_Tests : CBLTestCaseWithDB
@@ -185,7 +185,7 @@
     if (compress) {
         length = @(attachmentData.length);
         encoding = @"gzip";
-        attachmentData = [NSData gtm_dataByGzippingData: attachmentData];
+        attachmentData = [CBLGZip dataByCompressingData: attachmentData];
     }
     NSString* base64 = [CBLBase64 encode: attachmentData];
     NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
@@ -349,7 +349,7 @@
                             status: &status],
            @"expandAttachments failed: status %d", status);
 
-    NSString* encoded = [CBLBase64 encode: [NSData gtm_dataByGzippingData: [bodyString dataUsingEncoding: NSUTF8StringEncoding]]];
+    NSString* encoded = [CBLBase64 encode: [CBLGZip dataByCompressingData: [bodyString dataUsingEncoding: NSUTF8StringEncoding]]];
     AssertEqual(expandedRev[@"_attachments"],
                 $dict({@"attach", $dict({@"content_type", @"text/plain"},
                                         {@"digest", @"sha1-Wk8g89eb0Y+5DtvMKkf+/g90Mhc="},
@@ -478,7 +478,7 @@
                             decode: NO
                             status: &status],
            @"expandAttachments failed: status %d", status);
-    NSData* zipped = [NSData gtm_dataByGzippingData: [attachStr dataUsingEncoding: NSUTF8StringEncoding]];
+    NSData* zipped = [CBLGZip dataByCompressingData: [attachStr dataUsingEncoding: NSUTF8StringEncoding]];
     Assert(zipped.length < 1024); // needs to be short for this test
     NSString* base64 = [CBLBase64 encode: zipped];
     AssertEqualish(expandedRev[@"_attachments"],
@@ -594,7 +594,7 @@
 
 static NSDictionary* attachmentsDict(NSData* data, NSString* name, NSString* type, BOOL gzipped) {
     if (gzipped)
-        data = [NSData gtm_dataByGzippingData: data];
+        data = [CBLGZip dataByCompressingData: data];
     NSMutableDictionary* att = $mdict({@"content_type", type}, {@"data", data});
     if (gzipped)
         att[@"encoding"] = @"gzip";
