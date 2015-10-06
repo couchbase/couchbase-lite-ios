@@ -209,7 +209,11 @@
 
 
 - (void) test07_EncryptedAttachments {
-    [dbmgr registerEncryptionKey: @"letmein" forDatabaseNamed: @"seekrit"];
+    [self _testEncryptedAttachmentsWithKey: @"letmein"];
+}
+
+- (void) _testEncryptedAttachmentsWithKey: (NSString*)key {
+    [dbmgr registerEncryptionKey: key forDatabaseNamed: @"seekrit"];
     seekrit = [dbmgr databaseNamed: @"seekrit" error: NULL];
     Assert(seekrit);
 
@@ -230,13 +234,21 @@
     NSString* path = [seekrit.attachmentStore rawPathForKey: attKey];
     NSData* raw = [NSData dataWithContentsOfFile: path];
     Assert(raw != nil);
-    Assert(![raw isEqual: body], @"Oops, attachment was not encrypted");
+    if (key)
+        Assert(![raw isEqual: body], @"Oops, attachment was not encrypted");
+    else
+        Assert([raw isEqual: body], @"Oops, attachment was encrypted");
 }
 
 
-- (void) test08_Rekey {
+- (void) test08_AddKey      { [self rekeyUsingOldKey: nil        newKey: @"letmein"]; }
+- (void) test09_Rekey       { [self rekeyUsingOldKey: @"letmein" newKey: @"letmeout"]; }
+- (void) test10_RemoveKey   { [self rekeyUsingOldKey: @"letmein" newKey: nil]; }
+
+- (void) rekeyUsingOldKey: (NSString*)oldKey newKey: (NSString*)newKey {
     // First run the encrypted-attachments test to populate the db:
-    [self test07_EncryptedAttachments];
+    Log(@"Creating database with key '%@'", oldKey);
+    [self _testEncryptedAttachmentsWithKey: oldKey];
 
     // Create a view and some documents:
     [self createDocuments: 100];
@@ -248,14 +260,16 @@
     NSError* error;
     AssertEq([[query run: &error] count], 100u);
 
-    Assert([seekrit changeEncryptionKey: @"letmeout" error: &error],
+    Log(@"Re-keying database with new key '%@'", newKey);
+    Assert([seekrit changeEncryptionKey: newKey error: &error],
            @"Error changing encryption key: %@", error);
 
     // Close & reopen seekrit:
     NSString* dbName = seekrit.name;
     Assert([seekrit close: &error], @"Couldn't close seekrit: %@", error);
     seekrit = nil;
-    Assert([dbmgr registerEncryptionKey: @"letmeout" forDatabaseNamed: @"seekrit"]);
+    Log(@"Re-opening database with new key '%@'", newKey);
+    Assert([dbmgr registerEncryptionKey: newKey forDatabaseNamed: @"seekrit"]);
     CBLDatabase* seekrit2 = [dbmgr databaseNamed: dbName error: &error];
     Assert(seekrit2, @"Couldn't reopen seekrit: %@", error);
     Assert(seekrit2 != seekrit, @"-reopenTestDB couldn't make a new instance");

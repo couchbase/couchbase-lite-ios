@@ -288,7 +288,6 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 
 - (MYAction*) actionToChangeEncryptionKey: (CBLSymmetricKey*)newKey {
-    // https://www.zetetic.net/sqlcipher/sqlcipher-api/index.html#sqlcipher_export
     BOOL hasRealEncryption = sqlite3_compileoption_used("SQLITE_HAS_CODEC") != 0;
     if (!hasRealEncryption) {
 #ifdef MOCK_ENCRYPTION
@@ -319,8 +318,11 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
         // Create & attach a temporary database encrypted with the new key:
         [action addPerform:^BOOL(NSError **outError) {
-            NSString* keyStr = newKey ? newKey.hexData : @"";
-            NSString* sql = $sprintf(@"ATTACH DATABASE ? AS rekeyed_db KEY \"x'%@'\"", keyStr);
+            NSString* sql;
+            if (newKey)
+                sql = $sprintf(@"ATTACH DATABASE ? AS rekeyed_db KEY \"x'%@'\"", newKey.hexData);
+            else
+                sql = @"ATTACH DATABASE ? AS rekeyed_db KEY ''";
             return [self checkUpdate: [_fmdb executeUpdate: sql, tempPath] error: outError];
         } backOutOrCleanUp:^BOOL(NSError **outError) {
             return dbWasClosed ||
@@ -329,6 +331,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         }];
 
         // Export the current database's contents to the new one:
+        // <https://www.zetetic.net/sqlcipher/sqlcipher-api/#sqlcipher_export>
         [action addPerform:^BOOL(NSError **outError) {
             NSString* vers = $sprintf(@"PRAGMA rekeyed_db.user_version = %d", self.schemaVersion);
             return [self checkUpdate: [_fmdb executeUpdate:@"SELECT sqlcipher_export('rekeyed_db')"]
