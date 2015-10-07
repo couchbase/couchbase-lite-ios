@@ -267,6 +267,12 @@
             error = [NSError errorWithDomain: NSURLErrorDomain
                                         code: NSURLErrorCannotConnectToHost
                                     userInfo: error.userInfo];
+    } else if ($equal(domain, (id)kCFErrorDomainCFNetwork)) {
+        if (code == kCFHostErrorHostNotFound || code == kCFHostErrorUnknown) {
+            error = [NSError errorWithDomain: NSURLErrorDomain
+                                        code: NSURLErrorCannotFindHost
+                                    userInfo: error.userInfo];
+        }
     } else if ($equal(domain, NSURLErrorDomain)) {
         // Map a lower-level auth failure to an HTTP status:
         if (code == NSURLErrorUserAuthenticationRequired)
