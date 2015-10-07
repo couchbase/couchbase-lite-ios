@@ -53,6 +53,9 @@
 // above this limit.
 #define kMaxPendingDocs 200u
 
+// Delay time of the CBLBatcher that stores revisions to be inserted into the database.
+#define kInsertionBatcherDelay 0.25
+
 
 @interface CBLRestPuller () <CBLChangeTrackerClient>
 @end
@@ -70,7 +73,7 @@
     if (!_downloadsToInsert) {
         // Note: This is a ref cycle, because the block has a (retained) reference to 'self',
         // and _downloadsToInsert retains the block, and of course I retain _downloadsToInsert.
-        _downloadsToInsert = [[CBLBatcher alloc] initWithCapacity: 200 delay: 1.0
+        _downloadsToInsert = [[CBLBatcher alloc] initWithCapacity: 200 delay: kInsertionBatcherDelay
                                                   processor: ^(NSArray *downloads) {
                                                       [self insertDownloads: downloads];
                                                   }];
