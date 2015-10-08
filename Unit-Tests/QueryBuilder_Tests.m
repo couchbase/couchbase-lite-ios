@@ -156,7 +156,7 @@ static void test(QueryBuilder_Tests *self,
          /*order by*/ @"date",
          @"type == \"post\"",
          @"{tags, date}",
-         @"{title, body, author}",
+         @"{title, body, author, date}",
          @"{$TAG}",
          @"{$TAG}",
          nil,
@@ -168,7 +168,7 @@ static void test(QueryBuilder_Tests *self,
          /*order by*/ @"date",
          @"type == \"comment\"",
          @"{post_id, date}",
-         @"{body, author}",
+         @"{body, author, date}",
          @"{$POST_ID}",
          @"{$POST_ID}",
          nil,
@@ -180,7 +180,7 @@ static void test(QueryBuilder_Tests *self,
          /*order by*/ @"name",
          @"type == \"bird\"",
          @"name",
-         @"wingspan",
+         @"{wingspan, name}",
          nil, // there's no startKey or endKey because we didn't specify a range.
          nil,
          nil,
@@ -294,11 +294,11 @@ static void test(QueryBuilder_Tests *self,
     NSString* exp = b.explanation;
     Log(@"Explanation = \n%@", exp);
     AssertEqual(exp, // See comment above regarding view name
-@"// view \"builder-DFRAfT3vcpah+01pgnBLlM80vQU=\":\n\
+@"// view \"builder-x2w/vgtJDacv2N7Jb90pZwTkIcU=\":\n\
 view.map = {\n\
     if (type == \"post\")\n\
         for (i in tags)\n\
-            emit([i, date], [title, body, author]);\n\
+            emit([i, date], [title, body, author, date]);\n\
 };\n\
 query.startKey = [$TAG];\n\
 query.endKey = [$TAG];\n\

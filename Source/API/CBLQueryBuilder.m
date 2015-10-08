@@ -629,17 +629,6 @@ static NSString* printExpr(NSExpression* expr) {
         }
     }
 
-    // Remove redundant values that are already part of the key:
-    NSMutableArray* values = [_valueTemplate mutableCopy];
-    for (NSComparisonPredicate* cp in keyPredicates) {
-        NSExpression* expr = cp.leftExpression;
-        if (expr.expressionType == NSKeyPathExpressionType && cp.options == 0) {
-            [values removeObject: expr];
-            [values removeObject: expr.keyPath];
-        }
-    }
-    _valueTemplate = [values copy];
-
     return keyPredicates;
 }
 
