@@ -290,7 +290,7 @@
             self, _retryCount, retryDelay, error.localizedDescription);
         [self retryAfterDelay: retryDelay];
     } else {
-        Warn(@"%@: Can't connect, giving up: %@", self, error);
+        Log(@"%@: Can't connect, giving up: %@", self, error);
         self.error = error;
         [self stop];
     }
