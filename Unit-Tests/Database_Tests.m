@@ -1043,6 +1043,10 @@
     NSError* error;
     CBLDatabase* replaceDb = [dbmgr existingDatabaseNamed: name error: &error];
     Assert(replaceDb, @"Couldn't find the replaced database named %@ : %@", name, error);
+
+    NSString* storageType = NSStringFromClass(replaceDb.storage.class);
+    AssertEqual(storageType, (self.isSQLiteDB ? @"CBL_SQLiteStorage" : @"CBL_ForestDBStorage"));
+
     CBLView* view = [replaceDb viewNamed: @"myview"];
     Assert(view);
     [view setMapBlock: MAPBLOCK({
@@ -1053,7 +1057,7 @@
     query.prefetch = YES;
     Assert(query);
     CBLQueryEnumerator* rows = [query run: &error];
-    Assert(rows, @"Could query the replaced database named %@ : %@", name, error);
+    Assert(rows, @"Couldn't query the replaced database named %@ : %@", name, error);
 
     onComplete(rows);
 }
@@ -1069,9 +1073,9 @@
 }
 
 - (void) test23_ReplaceOldVersionDatabase {
-    // Test only SQLite:
-    if (!self.isSQLiteDB)
-        return;
+    // During the SQLite phase, this just tests copying the db and upgrading to 1.1 format.
+    // During the ForestDB phase, the databases will also be upgraded to ForestDB.
+    dbmgr.upgradeStorage = YES;
 
     // iOS 1.0.4
     NSString* dbFile = [self pathToReplaceDbFile: @"iosdb.cblite" inDirectory: @"ios104"];

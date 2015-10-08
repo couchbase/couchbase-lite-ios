@@ -25,6 +25,8 @@
 
 - (void) backOut;
 
+- (void) deleteSQLiteFiles;
+
 @property (readonly) NSUInteger numDocs, numRevs;
 
 @end
