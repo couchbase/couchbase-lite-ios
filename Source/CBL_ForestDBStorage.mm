@@ -25,6 +25,7 @@ extern "C" {
 #import "CBLSymmetricKey.h"
 #import "ExceptionUtils.h"
 #import "MYAction.h"
+#import "MYBackgroundMonitor.h"
 }
 #import <CBForest/CBForest.hh>
 #import "CBLForestBridge.h"
@@ -41,7 +42,10 @@ using namespace forestdb;
 #define kDBWALThreshold 1024
 
 // How often ForestDB should check whether databases need auto-compaction
-#define kAutoCompactInterval (5*60.0)
+#define kAutoCompactInterval (15.0)
+
+// Percentage of wasted space in db file that triggers auto-compaction
+#define kCompactionThreshold 70
 
 #define kDefaultMaxRevTreeDepth 20
 
@@ -85,15 +89,82 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 }
 
 
+#ifdef TARGET_OS_IPHONE
+static MYBackgroundMonitor *bgMonitor;
+#endif
+
+
+static void onCompactCallback(Database *db, bool compacting) {
+    const char *what = (compacting ?"starting" :"finished");
+    NSString* path = [[NSString alloc] initWithCString: db->filename().c_str()
+                                              encoding: NSUTF8StringEncoding];
+    NSString* viewName = path.lastPathComponent;
+    path = path.stringByDeletingLastPathComponent;
+    NSString* dbName = path.lastPathComponent.stringByDeletingPathExtension;
+    if ([viewName isEqualToString: kDBFilename]) {
+        Log(@"Database '%@' %s compaction", dbName, what);
+    } else {
+        dbName = [dbName stringByAppendingPathComponent: viewName];
+        Log(@"View index '%@/%@' %s compaction",
+            dbName, viewName.stringByDeletingPathExtension, what);
+    }
+}
+
+
 + (void) initialize {
     if (self == [CBL_ForestDBStorage class]) {
+        Log(@"Initializing ForestDB");
         forestdb::LogCallback = FDBLogCallback;
         if (WillLogTo(CBLDatabaseVerbose))
             forestdb::LogLevel = kDebug;
         else if (WillLogTo(CBLDatabase))
             forestdb::LogLevel = kInfo;
+
+        Database::onCompactCallback = onCompactCallback;
+
+        // Initialize ForestDB global config settings:
+        auto config = Database::defaultConfig();
+        config.buffercache_size = kDBBufferCacheSize;
+        config.wal_threshold = kDBWALThreshold;
+        config.wal_flush_before_commit = true;
+        config.compress_document_body = true;
+        config.multi_kv_instances = true;
+        config.compaction_threshold = kCompactionThreshold;
+        config.compactor_sleep_duration = (uint64_t)kAutoCompactInterval;
+        config.num_compactor_threads = 1;
+        Database::setDefaultConfig(config);
+
+#if TARGET_OS_IPHONE
+        bgMonitor = [[MYBackgroundMonitor alloc] init];
+        bgMonitor.onAppBackgrounding = ^{
+            if ([self checkStillCompacting])
+                [bgMonitor beginBackgroundTaskNamed: @"Database compaction"];
+        };
+        bgMonitor.onAppForegrounding = ^{
+            [self cancelPreviousPerformRequestsWithTarget: self
+                                                 selector: @selector(checkStillCompacting)
+                                                   object: nil];
+        };
+#endif
     }
 }
+
+
+#if TARGET_OS_IPHONE
++ (BOOL) checkStillCompacting {
+    if (Database::isAnyCompacting()) {
+        Log(@"Database still compacting; delaying app suspend...");
+        [self performSelector: @selector(checkStillCompacting) withObject: nil afterDelay: 0.5];
+        return YES;
+    } else {
+        if (bgMonitor.hasBackgroundTask) {
+            Log(@"Database finished compacting; allowing app to suspend.");
+            [bgMonitor endBackgroundTask];
+        }
+        return NO;
+    }
+}
+#endif
 
 
 - (instancetype) init {
@@ -103,6 +174,11 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
         _maxRevTreeDepth = kDefaultMaxRevTreeDepth;
     }
     return self;
+}
+
+
+- (NSString*) description {
+    return [NSString stringWithFormat: @"%@[%@]", self.class, _directory];
 }
 
 
@@ -124,18 +200,10 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
     _directory = [directory copy];
     fdb_open_flags flags = readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE;
 
-    _config = Database::defaultConfig();
+    _config = Database::defaultConfig(); // Default config is set in +initialize, above
     _config.flags = flags;
-    _config.buffercache_size = kDBBufferCacheSize;
-    _config.wal_threshold = kDBWALThreshold;
-    _config.wal_flush_before_commit = true;
     _config.seqtree_opt = true;
-    _config.compress_document_body = true;
-    if (_autoCompact) {
-        _config.compactor_sleep_duration = (uint64_t)kAutoCompactInterval;
-    } else {
-        _config.compaction_threshold = 0; // disables auto-compact
-    }
+    _config.compaction_mode = _autoCompact ? FDB_COMPACTION_AUTO : FDB_COMPACTION_MANUAL;
     return [self reopen: outError];
 }
 
@@ -143,12 +211,12 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 - (BOOL) reopen: (NSError**)outError {
     if (_encryptionKey)
         LogTo(CBLDatabase, @"Database is encrypted; setting CBForest encryption key");
-    _config.setEncryptionKey(slice(_encryptionKey.keyData));
-
-    return tryError(outError, ^{
-        NSString* forestPath = [_directory stringByAppendingPathComponent: kDBFilename];
-        _forest = new Database(std::string(forestPath.fileSystemRepresentation), _config);
-    });
+    NSString* forestPath = [_directory stringByAppendingPathComponent: kDBFilename];
+    _forest = [CBLForestBridge openDatabaseAtPath: forestPath
+                                       withConfig: _config
+                                    encryptionKey: _encryptionKey
+                                            error: outError];
+    return (_forest != NULL);
 }
 
 
@@ -163,8 +231,6 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
 - (MYAction*) actionToChangeEncryptionKey: (CBLSymmetricKey*)newKey {
     MYAction* action = [MYAction new];
-    forestdb::Database::encryptionConfig enc;
-    enc.setEncryptionKey(slice(newKey.keyData));
 
     // Re-key the views!
     NSArray* viewNames = self.allViewNames;
@@ -173,30 +239,26 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
         [action addAction: [viewStorage actionToChangeEncryptionKey]];
     }
 
-    // Copy the database to a temporary file using the new encryption:
-    NSString* tempPath = [NSTemporaryDirectory() stringByAppendingPathComponent: CBLCreateUUID()];
+    // Re-key the database:
+    CBLSymmetricKey* oldKey = _encryptionKey;
     [action addPerform: ^BOOL(NSError **outError) {
         return tryError(outError, ^{
-            _forest->copyToFile(tempPath.fileSystemRepresentation, enc);
+            fdb_encryption_key enc;
+            [CBLForestBridge setEncryptionKey: &enc fromSymmetricKey: newKey];
+            _forest->rekey(enc);
+            self.encryptionKey = newKey;
         });
     } backOut:^BOOL(NSError **outError) {
-        return [[NSFileManager defaultManager] removeItemAtPath: tempPath error: outError];
+        return tryError(outError, ^{
+            fdb_encryption_key enc;
+            [CBLForestBridge setEncryptionKey: &enc fromSymmetricKey: _encryptionKey];
+            //FIX: This can potentially fail. If it did, the database would be lost.
+            // It would be safer to save & restore the old db file, the one that got replaced
+            // during rekeying, but the ForestDB API doesn't allow preserving it...
+            _forest->rekey(enc);
+            self.encryptionKey = oldKey;
+        });
     } cleanUp: nil];
-
-     // Close the database (and re-open it on cleanup):
-     [action addPerform: ^BOOL(NSError **outError) {
-        [self close];
-        return YES;
-    } backOut: ^BOOL(NSError **outError) {
-        return [self reopen: outError];
-    } cleanUp: ^BOOL(NSError **outError) {
-        [self setEncryptionKey: newKey];
-        return [self reopen: outError];
-    }];
-
-     // Overwrite the old db file with the new one:
-    NSString* dbPath = [_directory stringByAppendingPathComponent: kDBFilename];
-    [action addAction: [MYAction moveFile: tempPath toPath: dbPath]];
 
     return action;
 }
@@ -1179,9 +1241,15 @@ static void convertRevIDs(NSArray* revIDs,
 - (NSArray*) allViewNames {
     NSArray* filenames = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _directory
                                                                              error: NULL];
-    return [filenames my_map: ^id(NSString* filename) {
-        return [CBL_ForestDBViewStorage fileNameToViewName: filename];
-    }];
+    // Mapping files->views may produce duplicates because there can be multiple files for the
+    // same view, if compression is in progress. So use a set to coalesce them.
+    NSMutableSet *viewNames = [NSMutableSet set];
+    for (NSString* filename in filenames) {
+        NSString* viewName = [CBL_ForestDBViewStorage fileNameToViewName: filename];
+        if (viewName)
+            [viewNames addObject: viewName];
+    }
+    return viewNames.allObjects;
 }
 
 

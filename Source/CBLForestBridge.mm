@@ -14,12 +14,13 @@
 //  and limitations under the License.
 
 #import "CBLForestBridge.h"
-#import <CBForest/Encryption/filemgr_ops_encrypted.h>
 extern "C" {
 #import "ExceptionUtils.h"
+#import "CBLSymmetricKey.h"
 }
 
 using namespace forestdb;
+using namespace couchbase_lite;
 
 
 @implementation CBLForestBridge
@@ -33,6 +34,47 @@ static NSData* dataOfNode(const Revision* rev) {
     } catch (...) {
         return nil;
     }
+}
+
+
++ (void) setEncryptionKey: (fdb_encryption_key*)fdbKey fromSymmetricKey: (CBLSymmetricKey*)key {
+    if (key) {
+        fdbKey->algorithm = FDB_ENCRYPTION_AES256;
+        Assert(key.keyData.length <= sizeof(fdbKey->bytes));
+        memcpy(fdbKey->bytes, key.keyData.bytes, sizeof(fdbKey->bytes));
+    } else {
+        fdbKey->algorithm = FDB_ENCRYPTION_NONE;
+    }
+}
+
+
++ (Database*) openDatabaseAtPath: (NSString*)path
+                      withConfig: (Database::config&)config
+                   encryptionKey: (CBLSymmetricKey*)key
+                           error: (NSError**)outError
+{
+    [self setEncryptionKey: &config.encryption_key fromSymmetricKey: key];
+    __block Database* db = NULL;
+    BOOL ok = tryError(outError, ^{
+        std::string pathStr(path.fileSystemRepresentation);
+        try {
+            db = new Database(pathStr, config);
+        } catch (forestdb::error error) {
+            if (error.status == FDB_RESULT_INVALID_COMPACTION_MODE
+                        && config.compaction_mode == FDB_COMPACTION_AUTO) {
+                // Databases created by earlier builds of CBL (pre-1.2) didn't have auto-compact.
+                // Opening them with auto-compact causes this error. Upgrade such a database by
+                // switching its compaction mode:
+                Log(@"%@: Upgrading to auto-compact", self);
+                config.compaction_mode = FDB_COMPACTION_MANUAL;
+                db = new Database(pathStr, config);
+                db->setCompactionMode(FDB_COMPACTION_AUTO);
+            } else {
+                throw error;
+            }
+        }
+    });
+    return ok ? db : nil;
 }
 
 
@@ -201,7 +243,7 @@ namespace couchbase_lite {
             case FDB_RESULT_RONLY_VIOLATION:
                 return kCBLStatusForbidden;
             case FDB_RESULT_NO_DB_HEADERS:
-            case FDB_RESULT_ENCRYPTION_ERROR:
+            case FDB_RESULT_CRYPTO_ERROR:
                 return kCBLStatusUnauthorized;     // assuming db is encrypted
             case FDB_RESULT_CHECKSUM_ERROR:
             case FDB_RESULT_FILE_CORRUPTION:

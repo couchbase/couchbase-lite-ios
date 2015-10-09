@@ -157,6 +157,7 @@
     } error: NULL];
 
     // Compact:
+    Log(@"//// Compacting");
     Assert([seekrit compact: &error], @"Compaction failed: %@", error);
 
     // Add a document:
@@ -167,6 +168,7 @@
 
     // Close and re-open:
     Assert([seekrit close: &error], @"Close failed: %@", error);
+    Log(@"//// Reopening database");
     [dbmgr registerEncryptionKey: @"letmein" forDatabaseNamed: @"seekrit"];
     seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
     Assert(seekrit, @"Failed to reopen encrypted db: %@", error);

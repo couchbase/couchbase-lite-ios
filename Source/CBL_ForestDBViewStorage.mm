@@ -39,12 +39,6 @@ using namespace couchbase_lite;
 
 #define kViewIndexPathExtension @"viewindex"
 
-// Size of ForestDB buffer cache allocated for a database
-#define kDBBufferCacheSize (8*1024*1024)
-
-// ForestDB Write-Ahead Log size (# of records)
-#define kDBWALThreshold 1024
-
 // Close the index db after it's inactive this many seconds
 #define kCloseDelay 60.0
 
@@ -222,6 +216,9 @@ private:
 @synthesize delegate=_delegate, name=_name;
 
 
+static NSRegularExpression* kViewNameRegex;
+
+
 + (void) initialize {
     if (self == [CBL_ForestDBViewStorage class]) {
         NSString* stemmer = CBLStemmerNameForCurrentLocale();
@@ -229,16 +226,22 @@ private:
             Tokenizer::defaultStemmer = stemmer.UTF8String;
             Tokenizer::defaultRemoveDiacritics = $equal(stemmer, @"english");
         }
+
+        kViewNameRegex = [NSRegularExpression
+                      regularExpressionWithPattern: @"^(.*)\\." kViewIndexPathExtension "(.\\d+)?$"
+                      options: 0 error: NULL];
+        Assert(kViewNameRegex);
     }
 }
 
 
 + (NSString*) fileNameToViewName: (NSString*)fileName {
-    if (![fileName.pathExtension isEqualToString: kViewIndexPathExtension])
+    NSTextCheckingResult *result = [kViewNameRegex firstMatchInString: fileName options: 0
+                                                        range: NSMakeRange(0, fileName.length)];
+    if (!result)
         return nil;
-    if ([fileName hasPrefix: @"."])
-        return nil;
-    NSString* viewName = fileName.stringByDeletingPathExtension;
+    NSRange r = [result rangeAtIndex: 1];
+    NSString* viewName = [fileName substringWithRange: r];
     viewName = [viewName stringByReplacingOccurrencesOfString: @":" withString: @"/"];
     return viewName;
 }
@@ -264,7 +267,10 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         _path = [dbStorage.directory stringByAppendingPathComponent: viewNameToFileName(_name)];
         _indexType = (CBLViewIndexType)-1; // unknown
 
-        if (![[NSFileManager defaultManager] fileExistsAtPath: _path isDirectory: NULL]) {
+        // Somewhat of a hack: There probably won't be a file at the exact _path because ForestDB
+        // likes to append ".0" etc., but there will be a file with a ".meta" extension:
+        NSString* metaPath = [_path stringByAppendingPathExtension: @"meta"];
+        if (![[NSFileManager defaultManager] fileExistsAtPath: metaPath isDirectory: NULL]) {
             if (!create || ![self openIndexWithOptions: FDB_OPEN_FLAG_CREATE status: NULL])
                 return nil;
         }
@@ -335,32 +341,26 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 {
     if (!_index) {
         Assert(!_indexDB);
-        auto config = Database::defaultConfig();
+        auto config = Database::defaultConfig(); // +[CBL_ForestDBStorage initialize] sets defaults
         config.flags = options;
-        config.buffercache_size = kDBBufferCacheSize;
-        config.wal_threshold = kDBWALThreshold;
-        config.wal_flush_before_commit = true;
         config.seqtree_opt = NO; // indexes don't need by-sequence ordering
-        config.compaction_threshold = 50;
+        config.compaction_mode = FDB_COMPACTION_AUTO;
 
-        CBLSymmetricKey* encryptionKey = _dbStorage.encryptionKey;
-        if (encryptionKey) {
-            LogTo(CBLDatabase, @"Database is encrypted; setting CBForest encryption key");
-            AssertEq(encryptionKey.keyData.length, sizeof(config.encryptionKey));
-            config.encrypted = true;
-            memcpy(&config.encryptionKey, encryptionKey.keyData.bytes, sizeof(config.encryptionKey));
+        NSError* error;
+        _indexDB = [CBLForestBridge openDatabaseAtPath: _path
+                                            withConfig: config
+                                         encryptionKey: _dbStorage.encryptionKey
+                                                 error: &error];
+        if (_indexDB) {
+            tryError(&error, ^{
+                Database* db = (Database*)_dbStorage.forestDatabase;
+                _index = new MapReduceIndex(_indexDB, "index", *db);
+            });
         }
-
-        CBLStatus status = tryStatus(^CBLStatus{
-            _indexDB = new Database(_path.fileSystemRepresentation, config);
-            Database* db = (Database*)_dbStorage.forestDatabase;
-            _index = new MapReduceIndex(_indexDB, "index", *db);
-            return kCBLStatusOK;
-        });
-        if (status != kCBLStatusOK) {
-            Warn(@"Unable to open index of %@: Status %d", self, status);
+        if (!_index) {
+            Warn(@"Unable to open index of %@: %@", self, error);
             if (outStatus)
-                *outStatus = status;
+                *outStatus = CBLStatusFromNSError(error, kCBLStatusDBError);
             return NULL;
         }
 

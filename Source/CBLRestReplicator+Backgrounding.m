@@ -19,8 +19,7 @@
 #import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
 #import "MYBlockUtils.h"
-
-#import <UIKit/UIKit.h>
+#import "MYBackgroundMonitor.h"
 
 
 @implementation CBLRestReplicator (Backgrounding)
@@ -28,83 +27,67 @@
 
 // Called when the replicator starts
 - (void) setupBackgrounding {
-    _bgTask = UIBackgroundTaskInvalid;
-    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(appBackgrounding:)
-                                                 name: UIApplicationDidEnterBackgroundNotification
-                                               object: nil];
-    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(appForegrounding:)
-                                                 name: UIApplicationWillEnterForegroundNotification
-                                               object: nil];
-}
-
-
-- (void) endBGTask {
-    if (_bgTask != UIBackgroundTaskInvalid) {
-        [[UIApplication sharedApplication] endBackgroundTask: _bgTask];
-        _bgTask = UIBackgroundTaskInvalid;
-    }
+    _bgMonitor = [[MYBackgroundMonitor alloc] init];
+    __weak CBLRestReplicator* weakSelf = self;
+    _bgMonitor.onAppBackgrounding = ^{ [weakSelf appBackgrounding]; };
+    _bgMonitor.onAppForegrounding = ^{ [weakSelf appForegrounding]; };
+    _bgMonitor.onBackgroundTaskExpired = ^{ [weakSelf backgroundTaskExpired]; };
 }
 
 
 // Called when the replicator stops
 - (void) endBackgrounding {
-    [self endBGTask];
-    [[NSNotificationCenter defaultCenter] removeObserver: self
-                                                    name: UIApplicationDidEnterBackgroundNotification
-                                                  object: nil];
-    [[NSNotificationCenter defaultCenter] removeObserver: self
-                                                    name: UIApplicationWillEnterForegroundNotification
-                                                  object: nil];
+    [_bgMonitor stop];
+    _bgMonitor = nil;
 }
 
 
 // Called when the replicator goes idle (from -updateActive)
 - (void) okToEndBackgrounding {
-    if (_bgTask != UIBackgroundTaskInvalid) {
-        LogTo(Sync, @"%@: Now idle; stopping background task (%lu)",
-              self, (unsigned long)_bgTask);
+    if (_hasBGTask) {
+        LogTo(Sync, @"%@: Now idle; ending background task", self);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [_bgMonitor endBackgroundTask];
+        });
         [self setSuspended: YES];
     }
 }
 
 
-- (void) appBackgrounding: (NSNotification*)n {
+- (void) appBackgrounding {
     // Danger: This is called on the main thread! It switches to the replicator's thread to do its
     // work, but it has to block until that work is done, because UIApplication requires
     // background tasks to be registered before the notification handler returns; otherwise the app
     // simply suspends itself.
-    Log(@"APP BACKGROUNDING");
+    BOOL hasTask = _active && [_bgMonitor beginBackgroundTaskNamed: self.description];
     [self.db doSync: ^{
-        if (_active) {
-            _bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler: ^{
-                // Called if process runs out of background time before replication finishes:
-                [self.db doSync: ^{
-                    LogTo(Sync, @"%@: Background task (%lu) ran out of time!",
-                          self, (unsigned long)_bgTask);
-                    [self setSuspended: YES];
-                }];
-            }];
-            LogTo(Sync, @"%@: App going into background (bgTask=%lu)", self, (unsigned long)_bgTask);
-            if (_bgTask == UIBackgroundTaskInvalid) {
-                // Backgrounding isn't possible for whatever reason, so just stop now:
-                [self setSuspended: YES];
-            }
-        } else {
+        _hasBGTask = hasTask;
+        if (hasTask)
+            LogTo(Sync, @"%@: App backgrounding; starting temporary background task", self);
+        else
             [self setSuspended: YES];
-        }
     }];
 }
 
 
-- (void) appForegrounding: (NSNotification*)n {
+- (void) appForegrounding {
     // Danger: This is called on the main thread!
-    Log(@"APP FOREGROUNDING");
     [self.db doAsync: ^{
-        if (_bgTask != UIBackgroundTaskInvalid) {
-            LogTo(Sync, @"%@: App returning to foreground (bgTask=%lu)", self, (unsigned long)_bgTask);
-            [self endBGTask];
+        if (_hasBGTask) {
+            _hasBGTask = NO;
+            LogTo(Sync, @"%@: App foregrounded, ending background task", self);
         }
         [self setSuspended: NO];
+    }];
+}
+
+
+- (void) backgroundTaskExpired {
+    // Called if process runs out of background time before replication finishes:
+    [self.db doSync: ^{
+        LogTo(Sync, @"%@: Background task time expired!", self);
+        _hasBGTask = NO;
+        [self setSuspended: YES];
     }];
 }
 
