@@ -92,7 +92,7 @@ static NSString* CBLFullVersionInfo( void ) {
 
 
 @synthesize dispatchQueue=_dispatchQueue, directory = _dir;
-@synthesize customHTTPHeaders = _customHTTPHeaders;
+@synthesize customHTTPHeaders = _customHTTPHeaders, upgradeStorage=_upgradeStorage;
 @synthesize storageType=_storageType, replicatorClassName=_replicatorClassName;
 
 
@@ -327,14 +327,16 @@ static CBLManager* sInstance;
     for (NSString* filename in [files pathsMatchingExtensions: @[kV1DBExtension]]) {
         NSString* name = [self nameOfDatabaseAtPath: filename];
         NSString* oldDbPath = [_dir stringByAppendingPathComponent: filename];
-        [self upgradeDatabaseNamed: name atPath: oldDbPath error: NULL];
+        [self upgradeDatabaseNamed: name atPath: oldDbPath andClose: YES error: NULL];
     }
 }
 
 
 - (BOOL) upgradeDatabaseNamed: (NSString*)name
                        atPath: (NSString*)dbPath
-                        error: (NSError**)outError {
+                     andClose: (BOOL)andClose
+                        error: (NSError**)outError
+{
     Class databaseUpgradeClass = [self databaseUpgradeClass];
     if (!databaseUpgradeClass) {
         // Gracefully skipping the upgrade:
@@ -342,13 +344,7 @@ static CBLManager* sInstance;
         return YES;
     }
 
-    if (![dbPath.pathExtension isEqualToString:kV1DBExtension]) {
-        // Gracefully skipping the upgrade:
-        Warn(@"Upgrade skipped: Database file extension is not %@", kV1DBExtension);
-        return YES;
-    }
-
-    NSLog(@"CouchbaseLite: Upgrading v1 database at %@ ...", dbPath);
+    NSLog(@"CouchbaseLite: Upgrading database at %@ ...", dbPath);
     if (![name isEqualToString: @"_replicator"]) {
         // Create and open new CBLDatabase:
         NSError* error;
@@ -367,24 +363,54 @@ static CBLManager* sInstance;
             if (CBLStatusIsError(status)) {
                 Warn(@"Upgrade failed: status %d", status);
                 [upgrader backOut];
-                if (outError)
-                    *outError = error;
-                return NO;
+                return CBLStatusToOutNSError(status, outError);
             }
         }
+        if (andClose)
         [db _close];
     }
 
     // Remove old database file and its SQLite side files:
-    NSFileManager* fmgr = [NSFileManager defaultManager];
-    for (NSString* suffix in @[@"", @"-wal", @"-shm"])
-        [fmgr removeItemAtPath: [dbPath stringByAppendingString: suffix] error: NULL];
+    moveSQLiteDbFiles(dbPath, nil);
+
+    if ([dbPath.pathExtension isEqualToString:kV1DBExtension]) {
+        // If upgrading a v1 database, delete its old attachments directory:
     NSString* oldAttachmentsPath = [[dbPath stringByDeletingPathExtension]
                                     stringByAppendingString: @" attachments"];
-    [fmgr removeItemAtPath: oldAttachmentsPath error: NULL];
+        [[NSFileManager defaultManager] removeItemAtPath: oldAttachmentsPath error: NULL];
+    }
     NSLog(@"    ...success!");
 
     return YES;
+}
+
+
+- (BOOL) upgradeV1DatabaseNamed: (NSString*)name
+                         atPath: (NSString*)dbPath
+                          error: (NSError**)outError
+{
+    if ([dbPath.pathExtension isEqualToString:kV1DBExtension]) {
+        return [self upgradeDatabaseNamed: name atPath: dbPath andClose: NO error: outError];
+    } else {
+        // Gracefully skipping the upgrade:
+        Warn(@"Upgrade skipped: Database file extension is not %@", kV1DBExtension);
+        return YES;
+    }
+}
+
+
+static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    for (NSString* suffix in @[@"", @"-wal", @"-shm"]) {
+        NSString* oldFile = [oldDbPath stringByAppendingString: suffix];
+        if (newDbPath) {
+            [fmgr moveItemAtPath: oldFile
+                          toPath: [newDbPath stringByAppendingString: suffix]
+                           error: NULL];
+        } else {
+            [fmgr removeItemAtPath: oldFile error: NULL];
+        }
+    }
 }
 
 
@@ -627,7 +653,7 @@ static CBLManager* sInstance;
         CBLCopyFileIfExists([databasePath stringByAppendingString: @"-shm"],
                             [dstDbPath stringByAppendingString: @"-shm"], outError) &&
         (!attachmentsPath || CBLCopyFileIfExists(attachmentsPath, dstAttsPath, outError)) &&
-        (isDbPathDir || [self upgradeDatabaseNamed: databaseName atPath: dstDbPath error: NULL]) &&
+        (isDbPathDir || [self upgradeV1DatabaseNamed: databaseName atPath: dstDbPath error: NULL]) &&
         [db open: outError] &&
         [db saveLocalUUIDInLocalCheckpointDocument: outError] &&
         [db replaceUUIDs: outError];

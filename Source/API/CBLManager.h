@@ -53,6 +53,10 @@ typedef struct CBLManagerOptions {
 /** Storage engine type. There are two options, "SQLite" (default) or "ForestDB". */
 @property (copy, nonatomic) NSString* storageType;
 
+/** Should existing databases be upgraded to the preferred storage engine type when opened?
+    (Defaults to NO.) */
+@property (nonatomic) BOOL upgradeStorage;
+
 /** The root directory of this manager (as specified at initialization time.) */
 @property (readonly) NSString* directory;
 

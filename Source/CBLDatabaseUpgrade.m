@@ -138,6 +138,14 @@ static int collateRevIDs(void *context,
 }
 
 
+- (void) deleteSQLiteFiles {
+    for (NSString* suffix in @[@"", @"-wal", @"-shm"]) {
+        NSString* oldFile = [_path stringByAppendingString: suffix];
+        [[NSFileManager defaultManager] removeItemAtPath: oldFile error: NULL];
+    }
+}
+
+
 - (CBLStatus) moveAttachmentsDir {
     NSFileManager* fmgr = [NSFileManager defaultManager];
     NSString* oldAttachmentsPath = [[_path stringByDeletingPathExtension]

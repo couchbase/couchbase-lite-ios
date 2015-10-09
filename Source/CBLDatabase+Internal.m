@@ -27,6 +27,7 @@
 #import "CBL_Shared.h"
 #import "CBLMisc.h"
 #import "CBLDatabase.h"
+#import "CBLDatabaseUpgrade.h"
 #import "CouchbaseLitePrivate.h"
 
 #import "MYBlockUtils.h"
@@ -160,13 +161,28 @@ static BOOL sAutoCompact = YES;
     Assert([primaryStorage conformsToProtocol: @protocol(CBL_Storage)],
             @"CBLManager.storageType is '%@' but %@ is not a CBL_Storage implementation",
             _manager.storageType, storageClassName);
+
+    id<CBL_Storage> storage;
+    BOOL upgrade = NO;
+
+    if (_manager.upgradeStorage) {
+        // If upgrading, always use primary storage type, and check for SQL db:
+        storage = [[primaryStorage alloc] init];
+        if (![storageType isEqualToString: @"SQLite"]) {
+            NSString* sqlitePath = [_dir stringByAppendingPathComponent: @"db.sqlite3"];
+            upgrade = [[NSFileManager defaultManager] fileExistsAtPath: sqlitePath]
+                        && ![storage databaseExistsIn: _dir];
+        }
+    } else {
+        // Use primary unless dir already contains a db created by secondary:
     Class secondaryStorage = NSClassFromString(@"CBL_ForestDBStorage");
     if (primaryStorage == secondaryStorage)
         secondaryStorage = NSClassFromString(@"CBL_SQLiteStorage");
-    // Use primary unless dir already contains a db created by secondary:
-    id<CBL_Storage> storage = [[secondaryStorage alloc] init];
-    if (![storage databaseExistsIn: _dir])
+        storage = [[secondaryStorage alloc] init];
+        if (!storage || ![storage databaseExistsIn: _dir])
         storage = [[primaryStorage alloc] init];
+    }
+
     LogTo(CBLDatabase, @"Using %@ for db at %@", [storage class], _dir);
 
     _storage = storage;
@@ -218,6 +234,29 @@ static BOOL sAutoCompact = YES;
                                              selector: @selector(dbChanged:)
                                                  name: CBL_DatabaseWillBeDeletedNotification
                                                object: nil];
+
+    if (upgrade) {
+        // Upgrading a SQLite database:
+        Class databaseUpgradeClass = NSClassFromString(@"CBLDatabaseUpgrade");
+        if (databaseUpgradeClass) {
+            NSString* dbPath = [_dir stringByAppendingPathComponent: @"db.sqlite3"];
+            Log(@"%@: Upgrading to %@ ...", self, storageType);
+            CBLDatabaseUpgrade* upgrader = [[databaseUpgradeClass alloc] initWithDatabase: self
+                                                                               sqliteFile: dbPath];
+            CBLStatus status = [upgrader import];
+            if (CBLStatusIsError(status)) {
+                Warn(@"Upgrade failed: status %d", status);
+                [upgrader backOut];
+                [self _close];
+                return CBLStatusToOutNSError(status, outError);
+            } else {
+                [upgrader deleteSQLiteFiles];
+            }
+        } else {
+            Warn(@"Upgrade skipped: Database upgrading class is not present.");
+        }
+    }
+
     return YES;
 }
 
