@@ -743,6 +743,9 @@ static CBLManager* sCBLManager;
 - (NSArray*) executeFetchWithRequest: (NSFetchRequest*)request
                          withContext: (NSManagedObjectContext*)context
                             outError: (NSError**)outError {
+    if (![self validateFetchRequest:request error:outError])
+        return nil;
+
     NSArray* cachedObjects = [self cachedObjectsForFetchRequest: request];
     if (cachedObjects) {
         NSArray* result = [self fetchResult: cachedObjects
@@ -805,6 +808,17 @@ static CBLManager* sCBLManager;
     return result;
 }
 
+- (BOOL)validateFetchRequest: (NSFetchRequest*)request error: (NSError**)outError {
+    NSError* error = nil;
+    if ([request.propertiesToGroupBy count] > 0) {
+        error = CBLISError(CBLIncrementalStoreErrorUnsupportedFetchRequest,
+                           @"GroupBy request not implemented", nil);
+    }
+    if (outError)
+        *outError = error;
+    return !error;
+}
+
 - (NSArray*) fetchResult: (NSArray*)objects
            forResultType: (NSFetchRequestResultType)type
    withPropertiesToFetch: (NSArray*)propertiesToFetch
@@ -826,9 +840,16 @@ static CBLManager* sCBLManager;
         for (NSManagedObject* object in objects) {
             NSDictionary* properties =
             [self couchbaseLiteRepresentationOfManagedObject: object withCouchbaseLiteID: YES];
-
             if (propertiesToFetch) {
-                [result addObject: [properties dictionaryWithValuesForKeys: propertiesToFetch]];
+                NSMutableArray *propNameToFetch =
+                    [NSMutableArray arrayWithCapacity:propertiesToFetch.count];
+                for (id prop in propertiesToFetch) {
+                    if ([prop isKindOfClass:[NSPropertyDescription class]])
+                        [propNameToFetch addObject:((NSPropertyDescription*)prop).name];
+                    else
+                        [propNameToFetch addObject:prop];
+                }
+                [result addObject: [properties dictionaryWithValuesForKeys: propNameToFetch]];
             } else {
                 [result addObject: properties];
             }

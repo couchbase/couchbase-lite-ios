@@ -37,7 +37,8 @@ typedef enum
     CBLIncrementalStoreErrorUnsupportedRequestType,
     CBLIncrementalStoreErrorUnsupportedPredicate,
     CBLIncrementalStoreErrorPredicateKeyPathNotFoundInEntity,
-    CBLIncrementalStoreErrorUnsupportedFetchRequestResultType
+    CBLIncrementalStoreErrorUnsupportedFetchRequestResultType,
+    CBLIncrementalStoreErrorUnsupportedFetchRequest
 } CBLIncrementalStoreError;
 
 @class CBLDocument;

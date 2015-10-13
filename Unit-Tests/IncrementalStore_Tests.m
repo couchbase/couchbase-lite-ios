@@ -1901,6 +1901,49 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     store.delegate = nil;
 }
 
+- (void) test_FetchWithGroupBy {
+    // Not support GroupBy fetch yet.
+    NSError *error;
+
+    NSDictionary *entry1 = @{
+                             @"text": @"Name 1",
+                             @"check": @YES,
+                             };
+    NSDictionary *entry2 = @{
+                             @"text": @"Name 1",
+                             @"check": @YES,
+                             };
+    NSDictionary *entry3 = @{
+                             @"text": @"Name 2",
+                             @"check": @YES,
+                             };
+
+    CBLISTestInsertEntriesWithProperties(context, @[entry1, entry2, entry3]);
+
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
+
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"Entry"
+                                              inManagedObjectContext:context];
+    NSString *checkPropertyName = @"check";
+    NSString *textPropertyName = @"text";
+    NSAttributeDescription *checkPropertyDescription = [entity.attributesByName objectForKey:checkPropertyName];
+    NSAttributeDescription *textPropertyDescription = [entity.attributesByName objectForKey:textPropertyName];
+
+    [fetchRequest setPropertiesToFetch:[NSArray arrayWithObjects:checkPropertyDescription, textPropertyDescription, nil]];
+    [fetchRequest setPropertiesToGroupBy:[NSArray arrayWithObjects:checkPropertyDescription, textPropertyDescription, nil]];
+    [fetchRequest setResultType:NSDictionaryResultType];
+    [fetchRequest setSortDescriptors:@[[NSSortDescriptor sortDescriptorWithKey:checkPropertyName ascending:YES]]];
+    [fetchRequest setPredicate:[NSPredicate predicateWithFormat:@"check == %@", @YES]];
+
+    NSArray *result = [context executeFetchRequest:fetchRequest error:&error];
+    Assert(error);
+    AssertEq(CBLIncrementalStoreErrorUnsupportedFetchRequest, error.code);
+    AssertEq((int)result.count, 0);
+}
+
 #pragma mark - CBLIncrementalStoreDelegate
 
 - (NSDictionary *)storeWillSaveDocument:(NSDictionary *)props {
