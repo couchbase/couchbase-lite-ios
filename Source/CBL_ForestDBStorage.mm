@@ -132,6 +132,7 @@ static void onCompactCallback(Database *db, bool compacting) {
         config.compaction_threshold = kCompactionThreshold;
         config.compactor_sleep_duration = (uint64_t)kAutoCompactInterval;
         config.num_compactor_threads = 1;
+        config.num_bgflusher_threads = 1;
         Database::setDefaultConfig(config);
 
 #if TARGET_OS_IPHONE

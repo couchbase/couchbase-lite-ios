@@ -343,7 +343,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         Assert(!_indexDB);
         auto config = Database::defaultConfig(); // +[CBL_ForestDBStorage initialize] sets defaults
         config.flags = options;
-        config.seqtree_opt = NO; // indexes don't need by-sequence ordering
+        config.seqtree_opt = FDB_SEQTREE_NOT_USE; // indexes don't need by-sequence ordering
         config.compaction_mode = FDB_COMPACTION_AUTO;
 
         NSError* error;
