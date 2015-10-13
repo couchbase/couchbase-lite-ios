@@ -124,8 +124,7 @@ static UInt16 sPort = 60000;
 
     [self startListener];
 
-    NSURL* url = [[listener.URL URLByAppendingPathComponent: db.name]
-                  URLByAppendingPathComponent: @"_blipsync"];
+    NSURL* url = self.listenerSyncURL;
     Log(@"Connecting to <%@>", url);
     BLIPPocketSocketConnection* conn = [[BLIPPocketSocketConnection alloc] initWithURL: url];
     [conn setDelegate: self queue: dispatch_get_main_queue()];
@@ -197,10 +196,21 @@ static UInt16 sPort = 60000;
 
 #pragma mark - Test Utilities
 
-- (void) connect {
+- (NSURL*) listenerSyncURL {
     NSURL* url = [[listener.URL URLByAppendingPathComponent: db.name]
-                                      URLByAppendingPathComponent: @"_blipsync"];
-    Log(@"Connecting to <%@>", url);
+                                    URLByAppendingPathComponent: @"_blipsync"];
+#if TARGET_OS_IPHONE && TARGET_OS_SIMULATOR
+    // Simulator has trouble with Bonjour URLs sometimes -- symptom is that both client and
+    // listener simultaneously get a connection refused/aborted (-61 or -9806) error.
+    NSURLComponents* comp = [[NSURLComponents alloc] initWithURL: url resolvingAgainstBaseURL: NO];
+    comp.host = @"localhost";
+    url = comp.URL;
+#endif
+    return url;
+}
+
+- (void) connect {
+    NSURL* url = self.listenerSyncURL;
     BLIPPocketSocketConnection* conn = [[BLIPPocketSocketConnection alloc] initWithURL: url];
     [conn setDelegate: self queue: dispatch_get_main_queue()];
     conn.credential = clientCredential;
