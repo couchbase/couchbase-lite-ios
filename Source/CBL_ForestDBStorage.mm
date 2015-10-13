@@ -942,18 +942,6 @@ static NSDictionary* getDocProperties(const Document& doc) {
 #pragma mark - INSERTION:
 
 
-static void convertRevIDs(NSArray* revIDs,
-                          std::vector<revidBuffer> &historyBuffers,
-                          std::vector<revid> &historyVector)
-{
-    historyBuffers.resize(revIDs.count);
-    for (NSString* revID in revIDs) {
-        historyBuffers.push_back(revidBuffer(revID));
-        historyVector.push_back(historyBuffers.back());
-    }
-}
-
-
 - (CBLDatabaseChange*) changeWithNewRevision: (CBL_Revision*)inRev
                                 isWinningRev: (BOOL)isWinningRev
                                          doc: (VersionedDocument&)doc
@@ -1144,9 +1132,10 @@ static void convertRevIDs(NSArray* revIDs,
         VersionedDocument doc(*_forest, inRev.docID);
 
         // Add the revision & ancestry to the doc:
-        std::vector<revidBuffer> historyBuffers;
-        std::vector<revid> historyVector;
-        convertRevIDs(history, historyBuffers, historyVector);
+        std::vector<revidBuffer> historyVector;
+        historyVector.reserve(history.count);
+        for (NSString* revID in history)
+            historyVector.push_back(revidBuffer(revID));
         int common = doc.insertHistory(historyVector,
                                        forestdb::slice(json),
                                        inRev.deleted,
