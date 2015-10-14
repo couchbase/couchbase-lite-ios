@@ -163,33 +163,39 @@ public:
 private:
     // Emit a full-text row
     void emitText(NSString* text, id value, NSDictionary* doc, EmitFn& emitFn) {
-        Collatable collValue;
-        if (value == doc)
-            collValue.addSpecial(); // placeholder for doc
-        else if (value)
-            collValue << value;
-        emitFn.emitTextTokens(nsstring_slice(text), collValue);
+        nsstring_slice textSlice(text);
+        if (value == doc) {
+            emitFn.emitTextTokens(textSlice, Index::kSpecialValue);
+        } else if (value) {
+            emitFn.emitTextTokens(textSlice, nsstring_slice(toJSONStr(value)));
+        } else {
+            emitFn.emitTextTokens(textSlice, slice::null);
+        }
     }
 
     // Geo-index a rectangle
     void emitGeo(CBLSpecialKey* geoKey, id value, NSDictionary* doc, EmitFn& emitFn) {
-        Collatable collValue;
-        if (value == doc)
-            collValue.addSpecial(); // placeholder for doc
-        else if (value)
-            collValue << value;
-        emitFn(geoRectToArea(geoKey.rect), slice(geoKey.geoJSONData), collValue);
+        auto geoArea = geoRectToArea(geoKey.rect);
+        slice geoJSON = slice(geoKey.geoJSONData);
+        if (value == doc) {
+            emitFn(geoArea, geoJSON, Index::kSpecialValue);
+        } else if (value) {
+            emitFn(geoArea, geoJSON, nsstring_slice(toJSONStr(value)));
+        } else {
+            emitFn(geoArea, geoJSON, slice::null);
+        }
     }
 
     // Emit a regular key/value pair
     void callEmit(id key, id value, NSDictionary* doc, EmitFn& emitFn) {
-        Collatable collKey, collValue;
-        collKey << key;
-        if (value == doc)
-            collValue.addSpecial(); // placeholder for doc
-        else if (value)
-            collValue << value;
-        emitFn(collKey, collValue);
+        Collatable collKey(key);
+        if (value == doc) {
+            emitFn(collKey, Index::kSpecialValue);
+        } else if (value) {
+            emitFn(collKey, nsstring_slice(toJSONStr(value)));
+        } else {
+            emitFn(collKey, slice::null);
+        }
     }
 
     static NSString* toJSONStr(id obj) {
@@ -522,8 +528,10 @@ static NSString* viewNames(NSArray* views) {
 
     IndexEnumerator *e = [self _runForestQueryWithOptions: [CBLQueryOptions new]];
     while (e->next()) {
+        NSString* valueStr = (NSString*)e->value();
+        Assert(valueStr || e->value().size == 0);//TEMP
         [result addObject: $dict({@"key", CBLJSONString(e->key().readNSObject())},
-                                 {@"value", CBLJSONString(e->value().readNSObject())},
+                                 {@"value", valueStr},
                                  {@"seq", @(e->sequence())})];
     }
     delete e;
@@ -569,6 +577,16 @@ static NSString* viewNames(NSArray* views) {
 }
 
 
+static id parseJSONSlice(slice s) {
+    NSError* error;
+    id value = [CBLJSON JSONObjectWithData: s.uncopiedNSData()
+                                   options: CBLJSONReadingAllowFragments error: &error];
+    if (!value)
+        Warn(@"Couldn't parse JSON value: %@", s.uncopiedNSData());
+    return value;
+}
+
+
 - (CBLQueryIteratorBlock) regularQueryWithOptions: (CBLQueryOptions*)options
                                            status: (CBLStatus*)outStatus
 {
@@ -603,9 +621,8 @@ static NSString* viewNames(NSArray* views) {
                 if (options->includeDocs) {
                     NSDictionary* valueDict = nil;
                     NSString* linkedID = nil;
-                    if (e->value().peekTag() == CollatableReader::kMap) {
-                        value = e->value().readNSObject();
-                        valueDict = $castIf(NSDictionary, value);
+                    if (e->value().size > 0 && e->value()[0] == '{') {
+                        valueDict = $castIf(NSDictionary, parseJSONSlice(e->value()));
                         linkedID = valueDict.cbl_id;
                     }
                     if (linkedID) {
@@ -623,7 +640,7 @@ static NSString* viewNames(NSArray* views) {
                 }
 
                 if (!value)
-                    value = e->value().data().copiedNSData();
+                    value = e->value().copiedNSData();
 
                 LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
                       _name, CBLJSONString(key), value, CBLJSONString(docID));
@@ -728,9 +745,9 @@ static NSString* viewNames(NSArray* views) {
                 if (key && reduce) {
                     // Add this key/value to the list to be reduced:
                     [keysToReduce addObject: key];
-                    CollatableReader collatableValue = e->value();
-                    id value;
-                    if (collatableValue.peekTag() == CollatableReader::kSpecial) {
+                    slice rawValue = e->value();
+                    id value = nil;
+                    if (rawValue == Index::kSpecialValue) {
                         CBLStatus status;
                         CBL_Revision* rev = [_dbStorage getDocumentWithID: (NSString*)e->docID()
                                                                  sequence: e->sequence()
@@ -738,8 +755,8 @@ static NSString* viewNames(NSArray* views) {
                         if (!rev)
                             Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
                         value = rev.properties;
-                    } else {
-                        value = collatableValue.readNSObject();
+                    } else if (rawValue.size > 0) {
+                        value = parseJSONSlice(rawValue);
                     }
                     [valuesToReduce addObject: (value ?: $null)];
                     //TODO: Reduce the keys/values when there are too many; then rereduce at end
@@ -940,13 +957,14 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 
 
 - (BOOL) rowValueIsEntireDoc: (NSData*)valueData {
-    return valueData.length == 1 && *(uint8_t*)valueData.bytes == CollatableReader::kSpecial;
+    return (slice)valueData == Index::kSpecialValue;
 }
 
 
 - (id) parseRowValue: (NSData*)valueData {
-    CollatableReader reader((slice(valueData)));
-    return reader.readNSObject();
+    return [CBLJSON JSONObjectWithData: valueData
+                               options: CBLJSONReadingAllowFragments
+                                 error: NULL];
 }
 
 

@@ -155,16 +155,26 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     [self putDoc: $dict({@"_id", @"_design/foo"})];
     [self putDoc: $dict({@"clef", @"quatre"})];
     
-    CBLView* view = [self createView];
+    CBLView* view = [db viewNamed: @"aview"];
+    [view setMapBlock: MAPBLOCK({
+        Assert(doc[@"_id"] != nil, @"Missing _id in %@", doc);
+        Assert(doc[@"_rev"] != nil, @"Missing _rev in %@", doc);
+        Assert([doc[@"_local_seq"] isKindOfClass: [NSNumber class]], @"Invalid _local_seq in %@", doc);
+        Assert(![doc[@"_id"] hasPrefix:@"_design/"], @"Shouldn't index the design doc: %@", doc);
+        if (doc[@"key"])
+            emit(doc[@"key"], @([doc[@"key"] length]));
+        if (doc[@"geoJSON"])
+            emit(CBLGeoJSONKey(doc[@"geoJSON"]), nil);
+    }) reduceBlock: NULL version: @"1"];
 
     Assert(view.stale);
     AssertEq([view updateIndex], kCBLStatusOK);
     
     NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
-    AssertEqual(dump, $array($dict({@"key", @"\"one\""}, {@"seq", @1}),
-                              $dict({@"key", @"\"three\""}, {@"seq", @3}),
-                              $dict({@"key", @"\"two\""}, {@"seq", @2}) ));
+    AssertEqual(dump, $array($dict({@"key", @"\"one\""},   {@"value", @"3"}, {@"seq", @1}),
+                             $dict({@"key", @"\"three\""}, {@"value", @"5"}, {@"seq", @3}),
+                             $dict({@"key", @"\"two\""},   {@"value", @"3"}, {@"seq", @2}) ));
     // No-op reindex:
     Assert(!view.stale);
     AssertEq([view updateIndex], kCBLStatusNotModified);
@@ -193,16 +203,16 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 
     dump = [view.storage dump];
     Log(@"View dump: %@", dump);
-    AssertEqual(dump, $array($dict({@"key", @"\"3hree\""}, {@"seq", @6}),
-                              $dict({@"key", @"\"four\""}, {@"seq", @7}),
-                              $dict({@"key", @"\"one\""}, {@"seq", @1}) ));
+    AssertEqual(dump, $array($dict({@"key", @"\"3hree\""}, {@"value", @"5"}, {@"seq", @6}),
+                              $dict({@"key", @"\"four\""}, {@"value", @"4"}, {@"seq", @7}),
+                              $dict({@"key", @"\"one\""},  {@"value", @"3"}, {@"seq", @1}) ));
     
     // Now do a real query:
     NSArray* rows = rowsToDicts([view _queryWithOptions: NULL status: &status]);
     AssertEq(status, kCBLStatusOK);
-    AssertEqual(rows, $array( $dict({@"key", @"3hree"}, {@"id", rev3.docID}),
-                               $dict({@"key", @"four"}, {@"id", rev4.docID}),
-                               $dict({@"key", @"one"}, {@"id", rev1.docID}) ));
+    AssertEqual(rows, $array( $dict({@"key", @"3hree"}, {@"value", @5}, {@"id", rev3.docID}),
+                               $dict({@"key", @"four"}, {@"value", @4}, {@"id", rev4.docID}),
+                               $dict({@"key", @"one"},  {@"value", @3}, {@"id", rev1.docID}) ));
     
     [view deleteIndex];
 }
@@ -649,7 +659,7 @@ static NSArray* sortViews(NSArray *array) {
 
     NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
-    AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}, {@"value", @"-1"}),
+    AssertEqualish(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}, {@"value", @"-1"}),
                               $dict({@"key", @"\"five\""}, {@"seq", @5}, {@"value", @"-2"}),
                               $dict({@"key", @"\"four\""}, {@"seq", @2}, {@"value", @"-1"}),
                               $dict({@"key", @"\"four\""}, {@"seq", @2}, {@"value", @"-2"}),
