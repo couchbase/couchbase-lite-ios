@@ -43,8 +43,8 @@
 // run out, even if the CBL thread doesn't always have time to run.)
 #define kMaxOpenHTTPConnections 12
 
-// Maximum number of revs to fetch in a single bulk request
-#define kMaxRevsToGetInBulk 50u
+// Maximum number of revs to fetch in a single _all_docs request (CouchDB only, not SG)
+#define kMaxRevsToGetInBulkWithAllDocs 50u
 
 // Maximum number of revs we want to be handling at once -- that's all revs that we've heard about
 // from the change tracker but haven't yet inserted into the database. Once we hit this limit we
@@ -371,7 +371,9 @@
 // Start up some HTTP GETs, within our limit on the maximum simultaneous number
 - (void) pullRemoteRevisions {
     while (_db && _httpConnectionCount < kMaxOpenHTTPConnections) {
-        NSUInteger nBulk = MIN(_bulkRevsToPull.count, kMaxRevsToGetInBulk);
+        NSUInteger nBulk = _bulkRevsToPull.count;
+        if (!_canBulkGet)
+            nBulk = MIN(nBulk, kMaxRevsToGetInBulkWithAllDocs);
         if (nBulk == 1) {
             // Rather than pulling a single revision in 'bulk', just pull it normally:
             [self queueRemoteRevision: _bulkRevsToPull[0]];
@@ -659,7 +661,6 @@
             [attachment removeObjectForKey: @"file"];
         }];
     }
-    [rev.body compact];
     [self asyncTaskStarted];
     [_downloadsToInsert queueObject: rev];
 }
