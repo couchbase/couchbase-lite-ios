@@ -53,6 +53,7 @@
     CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Accept-Encoding"), CFSTR("gzip"));
 
     // Now open the connection:
+    LogTo(SyncPerf, @"%@: %@ %@", self, (self.usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
     LogTo(SyncVerbose, @"%@: %@ %@", self, (self.usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
     CFReadStreamRef cfInputStream = CFReadStreamCreateForHTTPRequest(NULL, request);
     CFRelease(request);
@@ -144,6 +145,8 @@
     }
     CFAutorelease(response);
     _gotResponseHeaders = true;
+    LogTo(SyncPerf, @"%@ got HTTP response headers (%ld) after %.3f sec",
+          self, CFHTTPMessageGetResponseStatusCode(response), CFAbsoluteTimeGetCurrent()-_startTime);
     [_http receivedResponse: response];
     NSString* encoding = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response,
                                                                     CFSTR("Content-Encoding")));
@@ -224,6 +227,7 @@
         [self readGzippedBytes: NULL length: 0]; // flush gzip decoder
         _gzip = nil;
     }
+    LogTo(SyncPerf, @"%@ reached EOF after %.3f sec", self, CFAbsoluteTimeGetCurrent()-_startTime);
     if (_mode == kContinuous) {
         [self stop];
     } else if ([self endParsingData] >= 0) {

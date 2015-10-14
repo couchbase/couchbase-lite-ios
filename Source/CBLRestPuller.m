@@ -298,6 +298,7 @@
         _canBulkGet = [self serverIsSyncGatewayVersion: @"0.81"];
 
     // Ask the local database which of the revs are not known to it:
+    LogTo(SyncPerf, @"%@: Processing %u changes", self, (unsigned)inbox.count);
     LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
     id lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
     NSUInteger originalCount = inbox.count;
@@ -324,6 +325,7 @@
         return;
     }
     
+    LogTo(SyncPerf, @"%@: Queuing download requests for %u revisions", self, (unsigned)inbox.count);
     LogTo(SyncVerbose, @"%@ queuing remote revisions %@", self, inbox.allRevisions);
     
     // Dump the revs into the queues of revs to pull from the remote db:
@@ -426,6 +428,7 @@
         else
             path = [path stringByAppendingString: @"&attachments=true"];
     }
+    LogTo(SyncPerf, @"%@: Getting %@", self, rev);
     LogTo(SyncVerbose, @"%@: GET %@", self, path);
     
     __weak CBLRestPuller *weakSelf = self;
@@ -437,6 +440,7 @@
         ^(CBLMultipartDownloader* result, NSError *error) {
             __strong CBLRestPuller *strongSelf = weakSelf;
             // OK, now we've got the response:
+            LogTo(SyncPerf, @"%@: Got %@", strongSelf, rev);
             if (error) {
                 if (isDocumentError(error)) {
                     // Revision is missing or not accessible:
@@ -480,12 +484,15 @@
         return;
     }
 
+    LogTo(SyncPerf, @"%@: bulk-getting %u remote revisions...", self, (unsigned)nRevs);
     LogTo(SyncVerbose, @"%@: POST _bulk_get", self);
     NSMutableArray* remainingRevs = [bulkRevs mutableCopy];
     [self asyncTaskStarted];
     ++_httpConnectionCount;
     __weak CBLRestPuller *weakSelf = self;
     __block CBLBulkDownloader *dl;
+    __block BOOL first = YES;
+    CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
     dl = [[CBLBulkDownloader alloc] initWithDbURL: _settings.remote
                                          database: _db
                                    requestHeaders: _settings.requestHeaders
@@ -495,6 +502,11 @@
           ^(NSDictionary* props) {
               // Got a revision!
               __strong CBLRestPuller *strongSelf = weakSelf;
+              if (first) {
+                  first = NO;
+                  LogTo(SyncPerf, @"%@: Received first revision from bulk-get (%.3f sec)",
+                        self, CFAbsoluteTimeGetCurrent()-start);
+              }
               // Find the matching revision in 'remainingRevs' and get its sequence:
               CBL_Revision* rev;
               if (props.cbl_id)
@@ -522,6 +534,8 @@
           ^(CBLBulkDownloader* result, NSError *error) {
               // The entire _bulk_get is finished:
               __strong CBLRestPuller *strongSelf = weakSelf;
+              LogTo(SyncPerf, @"%@: finished bulk-getting %u remote revisions (%.3f sec)",
+                    self, (unsigned)nRevs, CFAbsoluteTimeGetCurrent()-start);
 
               // Remove the remote request first to prevent the request from cancellation
               // when setting the error (a permanent error). If that happens, this block
@@ -559,6 +573,8 @@
 // This is compatible with CouchDB, but it only works for revs of generation 1 without attachments.
 - (void) pullBulkWithAllDocs: (NSArray*)bulkRevs {
     // http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
+    LogTo(SyncPerf, @"%@: Using _all_docs to get %u remote revisions...",
+          self, (unsigned)bulkRevs.count);
     [self asyncTaskStarted];
     ++_httpConnectionCount;
     CBL_RevisionList* remainingRevs = [[CBL_RevisionList alloc] initWithArray: bulkRevs];
@@ -575,6 +591,8 @@
                       // We only add a document if it doesn't have attachments, and if its
                       // revID matches the one we asked for.
                       NSArray* rows = $castIf(NSArray, result[@"rows"]);
+                      LogTo(SyncPerf, @"%@: Got %u remote revisions with _all_docs",
+                            self, (unsigned)rows.count);
                       LogTo(Sync, @"%@ checking %u bulk-fetched remote revisions",
                             self, (unsigned)rows.count);
                       for (NSDictionary* row in rows) {
@@ -667,6 +685,7 @@
 
 // This will be called when _downloadsToInsert fills up:
 - (void) insertDownloads:(NSArray *)downloads {
+    LogTo(SyncPerf, @"%@: inserting %u revisions into db...", self, (unsigned)downloads.count);
     LogTo(SyncVerbose, @"%@ inserting %u revisions...", self, (unsigned)downloads.count);
     CFAbsoluteTime time = CFAbsoluteTimeGetCurrent();
         
@@ -720,6 +739,8 @@
     self.lastSequence = _pendingSequences.checkpointedValue;
 
     time = CFAbsoluteTimeGetCurrent() - time;
+    LogTo(SyncPerf, @"%@: inserted %u revs in %.3f sec (%.1f/sec)",
+          self, (unsigned)downloads.count, time, downloads.count/time);
     LogTo(Sync, @"%@ inserted %u revs in %.3f sec (%.1f/sec)",
           self, (unsigned)downloads.count, time, downloads.count/time);
     
