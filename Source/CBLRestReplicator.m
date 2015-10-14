@@ -704,8 +704,10 @@
 }
 
 - (void) removeRemoteRequest: (CBLRemoteRequest*)request {
-    if (!_serverType)
+    if (!_serverType) {
         _serverType = request.responseHeaders[@"Server"];
+        LogTo(Sync, @"%@: Server is %@", self, _serverType);
+    }
     [_remoteRequests removeObjectIdenticalTo: request];
 }
 

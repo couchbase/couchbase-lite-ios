@@ -22,6 +22,7 @@
 - (BOOL) changeTrackerApproveSSLTrust: (SecTrustRef)serverTrust
                               forHost: (NSString*)host
                                  port: (UInt16)port;
+- (void) changeTrackerReceivedHTTPHeaders: (NSDictionary*)headers;
 - (void) changeTrackerReceivedSequence: (id)sequence
                                  docID: (NSString*)docID
                                 revIDs: (NSArray*)revIDs

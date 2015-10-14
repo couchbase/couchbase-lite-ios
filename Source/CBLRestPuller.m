@@ -214,6 +214,14 @@
 }
 
 
+- (void) changeTrackerReceivedHTTPHeaders:(NSDictionary *)headers {
+    if (!_serverType) {
+        _serverType = headers[@"Server"];
+        LogTo(Sync, @"%@: Server is %@", self, _serverType);
+    }
+}
+
+
 - (void) changeTrackerReceivedSequence: (id)remoteSequenceID
                                  docID: (NSString*)docID
                                 revIDs: (NSArray*)revIDs

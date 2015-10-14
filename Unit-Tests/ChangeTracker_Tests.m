@@ -30,6 +30,7 @@
 {
     NSMutableArray* _changes;
     BOOL _running, _finished;
+    BOOL _gotHeaders;
 }
 
 - (void) test_Simple {
@@ -63,6 +64,7 @@
                                          {@"revs", $array(@"2-116dc4ccc934971ae14d8a8afb29b023")})
                                    );
         [self run: tracker expectingChanges: expected];
+        Assert(_gotHeaders);
     }
 }
 
@@ -105,6 +107,7 @@
                                );
     [self run: tracker expectingChanges: expected];
     Assert(self.checkedAnSSLCert);
+    Assert(_gotHeaders);
 }
 
 
@@ -126,6 +129,7 @@
                                      {@"revs", $array(@"1-53b059eb633a9d58042318e478cc73dc")}) );
     [self run: tracker expectingChanges: expected];
     RemoveTemporaryCredential(url, @"Couchbase Sync Gateway", @"test", @"abc123");
+    Assert(_gotHeaders);
 }
 
 
@@ -244,6 +248,11 @@
     Assert(!_running, @"-changeTrackerStoped: wasn't called");
     AssertEqual(tracker.error.domain, error.domain);
     AssertEq(tracker.error.code, error.code);
+}
+
+- (void) changeTrackerReceivedHTTPHeaders:(NSDictionary *)headers {
+    _gotHeaders = YES;
+    Assert([headers[@"Server"] hasPrefix: @"Couchbase Sync Gateway"]);
 }
 
 - (void) changeTrackerReceivedSequence:(id)sequence
