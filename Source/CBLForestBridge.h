@@ -36,9 +36,6 @@ namespace couchbase_lite {
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (forestdb::VersionedDocument&)doc
                                                revID: (NSString*)revID
                                             withBody: (BOOL)withBody;
-+ (CBL_MutableRevision*) revisionObjectFromForestDoc: (forestdb::VersionedDocument&)doc
-                                            sequence: (forestdb::sequence)sequence
-                                            withBody: (BOOL)withBody;
 
 /** Stores the body of a revision (including metadata) into a CBL_MutableRevision. */
 + (BOOL) loadBodyOfRevisionObject: (CBL_MutableRevision*)rev

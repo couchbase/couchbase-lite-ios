@@ -769,7 +769,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
         CBL_Revision* docRevision = nil;
         if (options->includeDocs) {
             NSDictionary* value = nil;
-            if (valueData && ![self rowValueIsEntireDoc: valueData])
+            if (valueData && !CBLQueryRowValueIsEntireDoc(valueData))
                 value = $castIf(NSDictionary, fromJSON(valueData));
             NSString* linkedID = value.cbl_id;
             if (linkedID) {
@@ -1044,7 +1044,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
               _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString]);
 
         id valueOrData = valueData;
-        if (valuesToReduce && [self rowValueIsEntireDoc: valueData]) {
+        if (valuesToReduce && CBLQueryRowValueIsEntireDoc(valueData)) {
             // map fn emitted 'doc' as value, which was stored as a "*" placeholder; expand now:
             CBLStatus status;
             CBL_Revision* rev = [db getDocumentWithID: docID
@@ -1117,16 +1117,6 @@ static CBLQueryIteratorBlock queryIteratorBlockFromArray(NSArray* rows) {
 
 - (id<CBL_QueryRowStorage>) storageForQueryRow: (CBLQueryRow*)row {
     return self;
-}
-
-
-- (BOOL) rowValueIsEntireDoc: (NSData*)valueData {
-    return valueData.length == 1 && *(const char*)valueData.bytes == '*';
-}
-
-
-- (id) parseRowValue: (NSData*)valueData {
-    return fromJSON(valueData);
 }
 
 

@@ -28,6 +28,16 @@ static id fromJSON( NSData* json ) {
 }
 
 
+BOOL CBLQueryRowValueIsEntireDoc(id value) {
+    static NSData* kEntireDocPlaceholder;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        kEntireDocPlaceholder = [NSData dataWithBytes: "*" length: 1];
+    });
+    return [value isEqual: kEntireDocPlaceholder];
+}
+
+
 @implementation CBLQueryRow
 {
     id _key, _value;            // Usually starts as JSON NSData; parsed on demand
@@ -80,8 +90,7 @@ static id fromJSON( NSData* json ) {
 
 
 - (BOOL) isNonMagicValue {
-    return _value && !( [_value isKindOfClass: [NSData class]]
-                        && [_storage rowValueIsEntireDoc: _value] );
+    return _value && !CBLQueryRowValueIsEntireDoc(_value);
 }
 
 
@@ -132,7 +141,7 @@ static id fromJSON( NSData* json ) {
                 Warn(@"CBLQueryRow.value: cannot get the value, the database is gone");
                 return nil;
             }
-            if ([storage rowValueIsEntireDoc: _value]) {
+            if (CBLQueryRowValueIsEntireDoc(value)) {
                 // Value is a placeholder ("*") denoting that the map function emitted "doc" as
                 // the value. So load the body of the revision now:
                 if (_documentRevision) {
@@ -147,7 +156,9 @@ static id fromJSON( NSData* json ) {
                         Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
                 }
             } else {
-                value = [storage parseRowValue: _value];
+                value = [CBLJSON JSONObjectWithData: _value
+                                            options: CBLJSONReadingAllowFragments
+                                              error: NULL];
             }
             _parsedValue = value;
         }

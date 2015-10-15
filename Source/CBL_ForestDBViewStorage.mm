@@ -749,12 +749,11 @@ static id parseJSONSlice(slice s) {
                     id value = nil;
                     if (rawValue == Index::kSpecialValue) {
                         CBLStatus status;
-                        CBL_Revision* rev = [_dbStorage getDocumentWithID: (NSString*)e->docID()
-                                                                 sequence: e->sequence()
-                                                                   status: &status];
-                        if (!rev)
+                        value = [_dbStorage getBodyWithID: (NSString*)e->docID()
+                                                 sequence: e->sequence()
+                                                   status: &status];
+                        if (!value)
                             Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
-                        value = rev.properties;
                     } else if (rawValue.size > 0) {
                         value = parseJSONSlice(rawValue);
                     }
@@ -956,23 +955,11 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 }
 
 
-- (BOOL) rowValueIsEntireDoc: (NSData*)valueData {
-    return (slice)valueData == Index::kSpecialValue;
-}
-
-
-- (id) parseRowValue: (NSData*)valueData {
-    return [CBLJSON JSONObjectWithData: valueData
-                               options: CBLJSONReadingAllowFragments
-                                 error: NULL];
-}
-
-
 - (NSDictionary*) documentPropertiesWithID: (NSString*)docID
                                   sequence: (SequenceNumber)sequence
                                     status: (CBLStatus*)outStatus
 {
-    return [_dbStorage getDocumentWithID: docID sequence: sequence status: outStatus].properties;
+    return [_dbStorage getBodyWithID: docID sequence: sequence status: outStatus];
 }
 
 

@@ -16,9 +16,9 @@
 @property (nonatomic) CBLSymmetricKey* encryptionKey;
 
 /** Loads revision given its sequence. Assumes the given docID is valid. */
-- (CBL_MutableRevision*) getDocumentWithID: (NSString*)docID
-                                  sequence: (SequenceNumber)sequence
-                                    status: (CBLStatus*)outStatus;
+- (NSDictionary*) getBodyWithID: (NSString*)docID
+                       sequence: (SequenceNumber)sequence
+                         status: (CBLStatus*)outStatus;
 
 - (void) forgetViewStorageNamed: (NSString*)viewName;
 

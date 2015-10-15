@@ -112,23 +112,6 @@ static NSData* dataOfNode(const Revision* rev) {
 }
 
 
-+ (CBL_MutableRevision*) revisionObjectFromForestDoc: (VersionedDocument&)doc
-                                            sequence: (forestdb::sequence)sequence
-                                            withBody: (BOOL)withBody
-{
-    const Revision* revNode = doc.getBySequence(sequence);
-    if (!revNode)
-        return nil;
-    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: (NSString*)doc.docID()
-                                                                    revID: (NSString*)revNode->revID
-                                                                  deleted: revNode->isDeleted()];
-    if (withBody && ![self loadBodyOfRevisionObject: rev doc: doc])
-        return nil;
-    rev.sequence = sequence;
-    return rev;
-}
-
-
 + (BOOL) loadBodyOfRevisionObject: (CBL_MutableRevision*)rev
                               doc: (VersionedDocument&)doc
 {

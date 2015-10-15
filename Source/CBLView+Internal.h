@@ -23,7 +23,7 @@ typedef enum {
 } CBLViewCollation;
 
 
-BOOL CBLRowPassesFilter(CBLDatabase* db, CBLQueryRow* row, const CBLQueryOptions* options);
+BOOL CBLQueryRowValueIsEntireDoc(id value);
 
 
 @interface CBLView () <CBL_ViewStorageDelegate>

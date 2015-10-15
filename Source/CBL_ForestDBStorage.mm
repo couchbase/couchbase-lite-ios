@@ -367,18 +367,19 @@ static void onCompactCallback(Database *db, bool compacting) {
 }
 
 
-- (CBL_MutableRevision*) getDocumentWithID: (NSString*)docID
-                                  sequence: (SequenceNumber)sequence
-                                    status: (CBLStatus*)outStatus
+- (NSDictionary*) getBodyWithID: (NSString*)docID
+                       sequence: (SequenceNumber)sequence
+                         status: (CBLStatus*)outStatus
 {
-    __block CBL_MutableRevision* result = nil;
+    __block NSDictionary* result = nil;
     *outStatus = [self _withVersionedDoc: docID do: ^(VersionedDocument& doc) {
 #if DEBUG
         LogTo(CBLDatabase, @"Read %s", doc.dump().c_str());
 #endif
-        result = [CBLForestBridge revisionObjectFromForestDoc: doc
-                                                     sequence: sequence
-                                                     withBody: YES];
+        const Revision* revNode = doc.getBySequence(sequence);
+        if (!revNode)
+            return kCBLStatusNotFound;
+        result = [CBLForestBridge bodyOfNode: revNode];
         return result ? kCBLStatusOK : kCBLStatusNotFound;
     }];
     return result;
