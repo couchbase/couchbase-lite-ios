@@ -1944,6 +1944,178 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEq((int)result.count, 0);
 }
 
+#pragma mark - Performance
+
+- (void) test_PerformanceSave {
+    if (NO == self.isSQLiteDB) return;
+
+    [self measureMetrics:[[self class] defaultPerformanceMetrics] automaticallyStartMeasuring:NO forBlock:^{
+
+        for (NSInteger i = 1; i < 1000; i++) {
+            Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                         inManagedObjectContext:context];
+            entry.created_at = [NSDate new];
+            entry.text = [NSString stringWithFormat:@"Test %@", @(i)];
+
+            entry.check = @(YES);
+
+            Subentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                               inManagedObjectContext:context];
+            subentry.text = @"Subentry abc";
+            [entry addSubEntriesObject:subentry];
+            
+            subentry.number = @123;
+        }
+
+        [self startMeasuring];
+
+        NSError *error;
+
+        [context save:&error];
+
+        [self stopMeasuring];
+
+        [self reCreateCoreDataContext];
+    }];
+}
+
+- (void) test_PerformanceFetch {
+    if (NO == self.isSQLiteDB) return;
+
+    for (NSInteger i = 1; i < 1000; i++) {
+        Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                     inManagedObjectContext:context];
+        entry.created_at = [NSDate new];
+        entry.text = [NSString stringWithFormat:@"Test %@", @(i)];
+
+        entry.check = (i%3) ? @(YES) : @(NO);
+
+        Subentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                           inManagedObjectContext:context];
+        subentry.text = @"Subentry abc";
+        [entry addSubEntriesObject:subentry];
+
+        subentry.number = @123;
+    }
+
+    NSError *error;
+
+    [context save:&error];
+
+    [self measureMetrics:[[self class] defaultPerformanceMetrics] automaticallyStartMeasuring:NO forBlock:^{
+        [self startMeasuring];
+
+        NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:NSStringFromClass(Entry.class)];
+        request.fetchLimit = 1;
+        request.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:NSStringFromSelector(@selector(created_at)) ascending:YES]];
+
+        NSError *error;
+
+        [context executeFetchRequest:request error:&error];
+
+        [self stopMeasuring];
+
+        [self reCreateCoreDataContext];
+    }];
+}
+
+- (void) test_PerformanceFetchIncreasing {
+    if (NO == self.isSQLiteDB) return;
+
+    [self measureMetrics:[[self class] defaultPerformanceMetrics] automaticallyStartMeasuring:NO forBlock:^{
+        for (NSInteger i = 1; i < 1000; i++) {
+            Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                         inManagedObjectContext:context];
+            entry.created_at = [NSDate new];
+            entry.text = [NSString stringWithFormat:@"Test %@", @(i)];
+
+            entry.check = (i%3) ? @(YES) : @(NO);
+
+            Subentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                               inManagedObjectContext:context];
+            subentry.text = @"Subentry abc";
+            [entry addSubEntriesObject:subentry];
+
+            subentry.number = @123;
+        }
+
+        NSError *error;
+        
+        [context save:&error];
+
+        [self reCreateCoreDataContext];
+
+        [self startMeasuring];
+
+        NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:NSStringFromClass(Entry.class)];
+        request.predicate = [NSPredicate predicateWithFormat:@"%K == %@", NSStringFromSelector(@selector(check)), @(YES)];
+        request.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:NSStringFromSelector(@selector(created_at)) ascending:YES]];
+
+        [context executeFetchRequest:request error:&error];
+
+        [self stopMeasuring];
+
+        [self reCreateCoreDataContext];
+    }];
+}
+
+- (void) test_PerformanceInform {
+    if (NO == self.isSQLiteDB) return;
+
+    NSUInteger docCount = 1000;
+
+    [self measureMetrics:[[self class] defaultPerformanceMetrics] automaticallyStartMeasuring:NO forBlock:^{
+        XCTestExpectation *expectation = [self expectationWithDescription:@"CBLIS Changed Notification"];
+
+        [self startMeasuring];
+
+        __block NSUInteger count = 0;
+
+        [[NSNotificationCenter defaultCenter]
+         addObserverForName: kCBLISObjectHasBeenChangedInStoreNotification
+         object: store
+         queue: nil
+         usingBlock:^(NSNotification *note) {
+             if (++count == docCount) {
+                 NSError *error;
+                 NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:NSStringFromClass(Entry.class)];
+                 request.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:NSStringFromSelector(@selector(created_at)) ascending:YES]];
+
+                 NSArray *result = [context executeFetchRequest:request error:&error];
+
+                 Assert(docCount == result.count);
+
+                 [expectation fulfill];
+             }
+         }];
+
+        for (NSUInteger i = 0; i < docCount; i++) {
+            NSDictionary* properties = @{@"created_at": [CBLJSON JSONObjectWithDate: [NSDate new]],
+                                         @"text": [NSString stringWithFormat: @"Test %@", @(i)],
+                                         @"type": @"Entry",
+                                         @"check": (i%3) ? @(YES) : @(NO)};
+            CBLDocument* doc = [self createDocumentWithProperties: properties];
+
+            NSString* docID = doc.documentID;
+            AssertEqual(doc.userProperties, properties);
+            AssertEq([db documentWithID: docID], doc);
+
+            [db _clearDocumentCache]; // so we can load fresh copies
+
+            CBLDocument* doc2 = [db existingDocumentWithID: docID];
+            AssertEqual(doc2.documentID, docID);
+        }
+
+        [self waitForExpectationsWithTimeout:30.0 handler:^(NSError *error) {
+            [self stopMeasuring];
+            [self tearDown];
+            [self setUp];
+            Assert(error == nil, "Timeout error: %@", error);
+        }];
+    }];
+}
+
+
 #pragma mark - CBLIncrementalStoreDelegate
 
 - (NSDictionary *)storeWillSaveDocument:(NSDictionary *)props {
