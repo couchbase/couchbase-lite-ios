@@ -412,8 +412,10 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 - (void) deleteView {
     [self closeIndex];
-    [[NSFileManager defaultManager] removeItemAtPath: _path error: NULL];
-    [_dbStorage forgetViewStorageNamed: _name];
+    if (!_dbStorage.readOnly) {
+        [[NSFileManager defaultManager] removeItemAtPath: _path error: NULL];
+        [_dbStorage forgetViewStorageNamed: _name];
+    }
 }
 
 

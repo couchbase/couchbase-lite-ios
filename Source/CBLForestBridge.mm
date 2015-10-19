@@ -68,7 +68,8 @@ static NSData* dataOfNode(const Revision* rev) {
                 Log(@"%@: Upgrading to auto-compact", self);
                 config.compaction_mode = FDB_COMPACTION_MANUAL;
                 db = new Database(pathStr, config);
-                db->setCompactionMode(FDB_COMPACTION_AUTO);
+                if (!(config.flags & FDB_OPEN_FLAG_RDONLY))
+                    db->setCompactionMode(FDB_COMPACTION_AUTO);
             } else {
                 throw error;
             }

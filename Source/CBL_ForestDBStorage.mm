@@ -269,6 +269,10 @@ static void onCompactCallback(Database *db, bool compacting) {
     return _forest;
 }
 
+- (BOOL) readOnly {
+    return (_config.flags & FDB_OPEN_FLAG_RDONLY) != 0;
+}
+
 
 - (NSUInteger) documentCount {
     auto opts = DocEnumerator::Options::kDefault;
