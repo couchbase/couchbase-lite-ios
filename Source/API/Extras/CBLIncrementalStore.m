@@ -2038,13 +2038,14 @@ static CBLManager* sCBLManager;
 
                     for (NSString *relationshipName in moc.entity.relationshipsByName) {
                         NSRelationshipDescription *relationshipDescription = moc.entity.relationshipsByName[relationshipName];
-
-                        if (NO == relationshipDescription.toMany) {
-                            NSManagedObject *destinationObject = [moc valueForKey:relationshipName];
-                            if (nil != destinationObject) {
-                                // Ensure that a fault has been fired:
-                                [destinationObject willAccessValueForKey: nil];
-                                [context refreshObject: destinationObject mergeChanges: YES];
+                        if (!relationshipDescription.toMany) {
+                            if (![moc hasFaultForRelationshipNamed:relationshipName]) {
+                                NSManagedObject *destinationObject = [moc valueForKey:relationshipName];
+                                if (destinationObject) {
+                                    // Ensure that a fault has been fired:
+                                    [destinationObject willAccessValueForKey: nil];
+                                    [context refreshObject: destinationObject mergeChanges: YES];
+                                }
                             }
                         }
                     }
