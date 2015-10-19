@@ -2109,7 +2109,6 @@ static CBLManager* sCBLManager;
 }
 
 - (void) processCouchbaseLiteChanges: (NSArray*)changes {
-    NSMutableSet* changedEntitites = [NSMutableSet setWithCapacity: changes.count];
     NSMutableArray* deletedObjectIDs = [NSMutableArray array];
     NSMutableArray* updatedObjectIDs = [NSMutableArray array];
 
@@ -2125,6 +2124,12 @@ static CBLManager* sCBLManager;
         NSDictionary* properties = [rev properties];
 
         NSString* type = [properties objectForKey: [self documentTypeKey]];
+        if (!type) {
+            WARN(@"Couldn't find type property on changed document : %@ (source = %@)",
+                 properties, change.source);
+            continue;
+        }
+
         NSString* reference = change.documentID;
 
         NSDictionary *entitiesByName = self.persistentStoreCoordinator.managedObjectModel.entitiesByName;
@@ -2136,8 +2141,6 @@ static CBLManager* sCBLManager;
         } else {
             [updatedObjectIDs addObject: objectID];
         }
-
-        [changedEntitites addObject: type];
     }
 
     [self informObservingManagedObjectContextsAboutUpdatedIDs: updatedObjectIDs
