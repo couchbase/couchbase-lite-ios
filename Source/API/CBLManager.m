@@ -336,6 +336,9 @@ static CBLManager* sInstance;
                      andClose: (BOOL)andClose
                         error: (NSError**)outError
 {
+    if (_options.readOnly)
+        return CBLStatusToOutNSError(kCBLStatusUnsupportedType, outError);
+
     Class databaseUpgradeClass = [self databaseUpgradeClass];
     if (!databaseUpgradeClass) {
         // Gracefully skipping the upgrade:
@@ -618,6 +621,8 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
               withAttachments: (NSString*)attachmentsPath
                         error: (NSError**)outError
 {
+    if (_options.readOnly)
+        return CBLStatusToOutNSError(kCBLStatusForbidden, outError);
     CBLDatabase* db = [self _databaseNamed: databaseName mustExist: NO error: outError];
     if (!db)
         return NO;
@@ -663,6 +668,8 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
              withDatabaseDir: (NSString*)databaseDir
                         error: (NSError**)outError
 {
+    if (_options.readOnly)
+        return CBLStatusToOutNSError(kCBLStatusForbidden, outError);
     CBLDatabase* db = [self _databaseNamed: databaseName mustExist: NO error: outError];
     if (!db)
         return NO;
