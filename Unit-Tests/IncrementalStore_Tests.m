@@ -13,14 +13,21 @@
 #import <CoreData/CoreData.h>
 #import "CBLIncrementalStore.h"
 
-#define NON_INVERSE_RELATIONSHIP_TEST_ENABLED 0
 #define PERFORMANCE_TEST_ENABLED 0
-
+#define NON_INVERSE_RELATIONSHIP_TEST_ENABLED 0
 
 @interface IncrementalStore_Tests : CBLTestCaseWithDB <CBLIncrementalStoreDelegate>
 @property NSUInteger counter; // General purpose counter that can be used with XCTest Async KVO expectation check
 @end
 
+
+@interface CBLIncrementalStore (UnitTest)
+@property (nonatomic) BOOL shouldNotifyLocalDatabaseChangesToContexts;
+@end
+
+@implementation CBLIncrementalStore (UnitTest)
+@dynamic shouldNotifyLocalDatabaseChangesToContexts;
+@end
 
 #pragma mark - Helper Classes / Methods
 
@@ -296,36 +303,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     CBLAttachment *attachment = [fileDoc.currentRevision attachmentNamed:@"data"];
     Assert(attachment != nil, @"Unable to load attachment");
     AssertEqual(file.data, attachment.content);
-    
-    // now change the properties in CouchbaseLite and check if those are available in Core Data
-    __block NSUInteger count = 0;
-    XCTestExpectation *expectation = [self expectationWithDescription:@"CBLIS Changed Notification"];
-    id observer = [[NSNotificationCenter defaultCenter]
-                   addObserverForName: kCBLISObjectHasBeenChangedInStoreNotification
-                               object: store
-                                queue: nil
-                           usingBlock:^(NSNotification *note) {
-        if (++count == 2)
-            [expectation fulfill];
-    }];
-
-    [entryProperties setObject:@"different text" forKey:@"text"];
-    [entryProperties setObject:@NO forKey:@"check"];
-    [entryProperties setObject:@42 forKey:@"number"];
-    id revisions = [entryDoc putProperties:entryProperties error:&error];
-    Assert(revisions != nil, @"Couldn't persist changed properties in CBL: %@", error);
-    Assert(error == nil, @"Couldn't persist changed properties in CBL: %@", error);
-
-    [self waitForExpectationsWithTimeout:5.0 handler:^(NSError *error) {
-        Assert(error == nil, "Timeout error: %@", error);
-    }];
-    [[NSNotificationCenter defaultCenter] removeObserver: observer];
-    
-    entry = (Entry*)[context existingObjectWithID:entryID error:&error];
-    Assert(entry != nil, @"Couldn load entry: %@", error);
-    AssertEqual(entry.text, [entryProperties objectForKey:@"text"]);
-    AssertEqual(entry.check, [entryProperties objectForKey:@"check"]);
-    AssertEqual(entry.number, [entryProperties objectForKey:@"number"]);
 }
 
 
@@ -2101,14 +2078,16 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     }];
 }
 
-- (void) test_PerformanceInform {
+- (void) test_PerformanceCBLDatabaseChanged {
     if (!self.isSQLiteDB)
         return;
 
     static NSUInteger docCount = 1000;
-    
+
     NSArray *metrics = [[self class] defaultPerformanceMetrics];
     [self measureMetrics:metrics automaticallyStartMeasuring:NO forBlock:^{
+        store.shouldNotifyLocalDatabaseChangesToContexts = YES;
+
         XCTestExpectation *expectation = [self expectationWithDescription:@"CBLIS Changed Notification"];
 
         [self startMeasuring];
@@ -2155,6 +2134,8 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         db = [dbmgr createEmptyDatabaseNamed:@"db" error:nil];
         [self reCreateCoreDataContext];
     }];
+
+    store.shouldNotifyLocalDatabaseChangesToContexts = NO;
 }
 
 #endif
