@@ -56,6 +56,10 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
 - (NSString*) couchbaseLiteIDRepresentation;
 @end
 
+@interface CBLView (CBLIncrementalStore)
+@property (readonly) SInt64 lastSequenceChangedAt;
+@end
+
 
 @interface CBLIncrementalStore ()
 
@@ -1624,7 +1628,7 @@ static CBLManager* sCBLManager;
     if (view) {
         NSString* cacheKey = [NSString stringWithFormat:@"%@/%@", view, parentKey];
         CBLQueryEnumerator* result = [_relationshipCache objectForKey: cacheKey];
-        if (result && (SInt64)result.sequenceNumber == view.database.lastSequenceNumber)
+        if (result && (SInt64)result.sequenceNumber == view.lastSequenceChangedAt)
             return [result allObjects];
 
         CBLQuery* query = [view createQuery];
