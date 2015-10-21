@@ -253,10 +253,21 @@
     [self _testEncryptedAttachmentsWithKey: oldKey];
 
     // Create a view and some documents:
-    [self createDocuments: 100];
-    CBLView* view = [db viewNamed: @"vu"];
+    [seekrit inTransaction:^BOOL{
+        for (unsigned i=0; i<100; i++) {
+            @autoreleasepool {
+                NSDictionary* properties = @{@"testName": @"testDatabase", @"sequence": @(i)};
+                [self createDocumentWithProperties: properties inDatabase:seekrit];
+            }
+        }
+        return YES;
+    }];
+    
+    CBLView* view = [seekrit viewNamed: @"vu"];
     [view setMapBlock: MAPBLOCK({
-        emit(doc[@"sequence"], nil);
+        if(doc[@"sequence"] != nil) {
+            emit(doc[@"sequence"], nil);
+        }
     }) version: @"1"];
     CBLQuery* query = [view createQuery];
     NSError* error;
@@ -286,6 +297,18 @@
     AssertEqual(att.content, body);
 
     // Check that the view survived:
+    view = [seekrit existingViewNamed:@"vu"];
+    Assert(view != nil);
+    
+    // Need to reset the map block since it was destroyed when the database closed
+    [view setMapBlock: MAPBLOCK({
+        if(doc[@"sequence"] != nil) {
+            emit(doc[@"sequence"], nil);
+        }
+    }) version: @"1"];
+    query = [view createQuery];
+    query.indexUpdateMode = kCBLUpdateIndexNever; // Make sure that the query doesn't generate new results
+    
     AssertEq([[query run: &error] count], 100u);
 }
 
