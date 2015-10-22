@@ -2200,9 +2200,9 @@ static CBLManager* sCBLManager;
                                     userInfo: userInfo];
     [strongRootContext mergeChangesFromContextDidSaveNotification: notification];
 
-    for (NSManagedObjectContext *context in self.observingManagedObjectContexts) {
+    for (NSManagedObjectContext* context in self.observingManagedObjectContexts) {
         if (context != strongRootContext) {
-            [context performBlockAndWait:^{
+            [context performBlock: ^{
                 [context mergeChangesFromContextDidSaveNotification: notification];
             }];
         }
