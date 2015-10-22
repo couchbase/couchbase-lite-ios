@@ -2144,6 +2144,8 @@ static CBLManager* sCBLManager;
         return;
     }
 
+    NSMutableSet *needRefreshObjects = [NSMutableSet set];
+    
     NSMutableDictionary* userInfo = [NSMutableDictionary dictionaryWithCapacity: 3];
     NSMutableSet* updatedEntities = [NSMutableSet set];
     if (updatedIDs.count > 0) {
@@ -2157,19 +2159,9 @@ static CBLManager* sCBLManager;
             } else {
                 mObj = [strongRootContext objectWithID: moID];
                 [inserted addObject: mObj];
-
-                for (NSString *relName in mObj.entity.relationshipsByName) {
-                    NSRelationshipDescription *relDesc = mObj.entity.relationshipsByName[relName];
-                    if (!relDesc.toMany) {
-                        if (![mObj hasFaultForRelationshipNamed:relName]) {
-                            NSManagedObject *destObj = [mObj valueForKey:relName];
-                            if (destObj) {
-                                [updated addObject: destObj];
-                            }
-                        }
-                    }
-                }
             }
+            
+            [needRefreshObjects addObject: moID];
             [updatedEntities addObject: mObj.entity.name];
         }
 
@@ -2194,18 +2186,56 @@ static CBLManager* sCBLManager;
         [self purgeCachedObjectsForEntityName: entity];
     }
     
+    // Firing fault:
+    if (self.observingManagedObjectContexts.count > 1) {
+        for (NSManagedObjectID *moID in [needRefreshObjects allObjects]) {
+            [self fireFaultOnManagedObjectID: moID];
+        }
+    }
+    
     NSNotification* notification =
         [NSNotification notificationWithName: NSManagedObjectContextObjectsDidChangeNotification
                                       object: strongRootContext
                                     userInfo: userInfo];
     [strongRootContext mergeChangesFromContextDidSaveNotification: notification];
 
-    for (NSManagedObjectContext* context in self.observingManagedObjectContexts) {
+    for (NSManagedObjectContext *context in self.observingManagedObjectContexts) {
         if (context != strongRootContext) {
-            [context performBlock: ^{
+            [context performBlock:^{
                 [context mergeChangesFromContextDidSaveNotification: notification];
             }];
         }
+    }
+}
+
+- (void) fireFaultOnManagedObjectID: (NSManagedObjectID *)moID {
+    for (NSManagedObjectContext *context in self.observingManagedObjectContexts) {
+        if (context == self.rootContext)
+            continue;
+        
+        [context performBlock:^{
+            NSManagedObject *mObj = [context objectRegisteredForID: moID];
+            if (!mObj) return;
+            
+            INFO(@"firing fault : %@ in %@ on %@", moID, context, [NSThread currentThread]);
+            [mObj willAccessValueForKey: nil];
+            [context refreshObject: mObj mergeChanges: YES];
+            
+            for (NSString *relName in mObj.entity.relationshipsByName) {
+                NSRelationshipDescription *invRel =
+                    mObj.entity.relationshipsByName[relName].inverseRelationship;
+                if (!invRel)
+                    continue;
+                NSManagedObject *destObj = [mObj valueForKey:relName];
+                if (!destObj || destObj.isFault || [destObj hasFaultForRelationshipNamed:invRel.name])
+                    continue;
+                
+                INFO(@"firing fault (inverse relationship) : %@ in %@ on %@",
+                     destObj.objectID, context, [NSThread currentThread]);
+                [destObj willAccessValueForKey:nil];
+                [context refreshObject: destObj mergeChanges:YES];
+            }
+        }];
     }
 }
              
