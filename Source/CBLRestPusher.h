@@ -22,6 +22,7 @@
     BOOL _dontSendMultipart;
     NSMutableIndexSet* _pendingSequences;
     SequenceNumber _maxPendingSequence;
+    CBLBatcher* _purgeQueue;
 }
 
 @property BOOL createTarget;

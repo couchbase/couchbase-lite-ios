@@ -105,14 +105,3 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 - (void) downloadAttachment: (CBL_AttachmentTask*)attachment;
 
 @end
-
-
-// Supported keys in the .options dictionary:
-#define kCBLReplicatorOption_Reset @"reset"
-#define kCBLReplicatorOption_Timeout @"connection_timeout"  // CouchDB specifies this name
-#define kCBLReplicatorOption_Heartbeat @"heartbeat"         // NSNumber, in ms
-#define kCBLReplicatorOption_PollInterval @"poll"           // NSNumber, in ms
-#define kCBLReplicatorOption_Network @"network"             // "WiFi" or "Cell"
-#define kCBLReplicatorOption_UseWebSocket @"websocket"      // Boolean; default is YES
-#define kCBLReplicatorOption_PinnedCert @"pinnedCert"       // NSData or (hex) NSString
-#define kCBLReplicatorOption_RemoteUUID @"remoteUUID"       // NSString
