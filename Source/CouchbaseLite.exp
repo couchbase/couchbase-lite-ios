@@ -21,8 +21,10 @@
 .objc_class_name_CBLQueryEnumerator
 .objc_class_name_CBLQueryRow
 .objc_class_name_CBLReplication
+.objc_class_name_CBLRemoteLogging
 .objc_class_name_CBLRevision
 .objc_class_name_CBLSavedRevision
+.objc_class_name_CBLTimeSeries
 .objc_class_name_CBLUnsavedRevision
 .objc_class_name_CBLView
 
