@@ -2163,6 +2163,22 @@ static CBLManager* sCBLManager;
             
             [needRefreshObjects addObject: moID];
             [updatedEntities addObject: mObj.entity.name];
+            
+            for (NSString *relName in mObj.entity.relationshipsByName) {
+                NSRelationshipDescription* rel = mObj.entity.relationshipsByName[relName];
+                if (rel.toMany)
+                    continue;
+                
+                NSRelationshipDescription *invRel = rel.inverseRelationship;
+                if (!invRel)
+                    continue;
+                
+                NSManagedObject *destObj = [mObj valueForKey:relName];
+                if (!destObj || destObj.isFault || [destObj hasFaultForRelationshipNamed:invRel.name])
+                    continue;
+                
+                [needRefreshObjects addObject: destObj];
+            }    
         }
 
         if (updated.count > 0)
@@ -2220,21 +2236,6 @@ static CBLManager* sCBLManager;
             INFO(@"firing fault : %@ in %@ on %@", moID, context, [NSThread currentThread]);
             [mObj willAccessValueForKey: nil];
             [context refreshObject: mObj mergeChanges: YES];
-            
-            for (NSString *relName in mObj.entity.relationshipsByName) {
-                NSRelationshipDescription *invRel =
-                    mObj.entity.relationshipsByName[relName].inverseRelationship;
-                if (!invRel)
-                    continue;
-                NSManagedObject *destObj = [mObj valueForKey:relName];
-                if (!destObj || destObj.isFault || [destObj hasFaultForRelationshipNamed:invRel.name])
-                    continue;
-                
-                INFO(@"firing fault (inverse relationship) : %@ in %@ on %@",
-                     destObj.objectID, context, [NSThread currentThread]);
-                [destObj willAccessValueForKey:nil];
-                [context refreshObject: destObj mergeChanges:YES];
-            }
         }];
     }
 }
