@@ -107,7 +107,6 @@
 - (void) insertObject: (CBLModel*)object inEntriesAtIndex: (NSUInteger)index {
     [self._entries insertObject: object atIndex: index];
     object.autosaves = YES;
-    object.database = _query.database;
 }
 
 

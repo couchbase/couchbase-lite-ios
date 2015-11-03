@@ -42,6 +42,7 @@
 
 @property (retain) DemoQuery* query;
 
+- (IBAction) addItem:(id)sender;
 - (IBAction) compact: (id)sender;
 - (IBAction) configureSync: (id)sender;
 - (IBAction) dismissSyncConfigSheet:(id)sender;
