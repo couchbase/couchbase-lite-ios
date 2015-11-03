@@ -173,8 +173,9 @@
     if (properties.cbl_attachments) {
         // Add any new attachment data to the blob-store, and turn all of them into stubs:
         //FIX: Optimize this to avoid creating a revision object
-        CBL_MutableRevision* tmpRev = [[CBL_MutableRevision alloc] initWithDocID: docID
-                                                                           revID: prevRevID
+        NSString* tmpRevID = $sprintf(@"%d-00", [CBL_Revision generationFromRevID: prevRevID] + 1);
+        CBL_MutableRevision* tmpRev = [[CBL_MutableRevision alloc] initWithDocID: (docID ?: @"x")
+                                                                           revID: tmpRevID
                                                                          deleted: deleting];
         tmpRev.properties = properties;
         if (![self processAttachmentsForRevision: tmpRev
