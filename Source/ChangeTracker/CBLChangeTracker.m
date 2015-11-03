@@ -160,7 +160,7 @@
         filterParameters = @{@"doc_ids": _docIDs};
     }
     NSMutableDictionary* post = $mdict({@"feed", self.feed},
-                                       {@"heartbeat", @(_heartbeat*1000.0)},
+                                       {@"heartbeat", @(round(_heartbeat*1000.0))},
                                        {@"style", (_includeConflicts ? @"all_docs" : nil)},
                                        {@"since", since},
                                        {@"limit", (_limit > 0 ? @(_limit) : nil)},
