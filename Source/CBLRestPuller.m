@@ -113,7 +113,7 @@
     _changeTracker.docIDs = _settings.docIDs;
     _changeTracker.authorizer = _authorizer;
     _changeTracker.cookieStorage = self.cookieStorage;
-    _changeTracker.usePOST = [self serverIsSyncGatewayVersion: @"0.93"];
+    _changeTracker.usePOST = YES; // both SG and CouchDB support POST to _changes
 
     unsigned heartbeat = $castIf(NSNumber, _settings.options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;
     if (heartbeat >= 15000)
