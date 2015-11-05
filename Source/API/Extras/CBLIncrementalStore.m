@@ -2150,9 +2150,14 @@ static CBLManager* sCBLManager;
         return;
     }
 
-    for (NSManagedObjectContext *context in self.observingManagedObjectContexts.allObjects) {
+    NSArray *sortedContextRootBeforeMain = [self.observingManagedObjectContexts.allObjects sortedArrayUsingDescriptors:@[[NSSortDescriptor sortDescriptorWithKey:NSStringFromSelector(@selector(parentContext)) ascending:YES]]];
+
+    for (NSManagedObjectContext *context in sortedContextRootBeforeMain) {
         [context performBlock:^{
-            NSMutableSet* refreshedIDs = [NSMutableSet set];
+            INFO(@"start refresh context : %@", context.parentContext ? @"MAIN" : @"ROOT");
+
+            NSMutableSet *refreshedIDs = [NSMutableSet set];
+            NSMutableSet *updatedEntities = [NSMutableSet set];
 
             for (NSManagedObjectID* moID in insertedIDs) {
                 NSManagedObject* mObj = [context objectRegisteredForID: moID];
@@ -2167,21 +2172,42 @@ static CBLManager* sCBLManager;
                 }
             }
 
-            NSMutableSet *objectsToRefresh = [NSMutableSet set];
+            NSMutableArray *objectsToRefresh = [NSMutableArray array];
             [objectsToRefresh addObjectsFromArray:insertedIDs.allObjects];
             [objectsToRefresh addObjectsFromArray:updatedIDs.allObjects];
-            [objectsToRefresh addObjectsFromArray:deletedIDs.allObjects];
             [objectsToRefresh addObjectsFromArray:refreshedIDs.allObjects];
 
             INFO(@"Will refresh %@ / %@ objects", @(objectsToRefresh.count), @(context.registeredObjects.count));
 
+            for (NSManagedObjectID *objID in deletedIDs) {
+                NSManagedObject *obj = [context objectRegisteredForID:objID];
+
+                if (obj) {
+                    [context deleteObject:obj];
+                }
+
+                [updatedEntities addObject:objID.entity.name];
+            }
+
             for (NSManagedObjectID *objID in objectsToRefresh) {
                 NSManagedObject *obj = [context objectRegisteredForID:objID];
-                
-                if (obj) {
-                    [context refreshObject:obj mergeChanges:NO];
+
+                if (!obj) {
+                    obj = [context objectWithID: objID];
                 }
+
+                if (obj) {
+                    [context refreshObject:obj mergeChanges:YES];
+                }
+
+                [updatedEntities addObject:objID.entity.name];
             }
+
+            for (NSString* entity in updatedEntities) {
+                [self purgeCachedObjectsForEntityName: entity];
+            }
+            
+            INFO(@"finish refresh context : %@", context.parentContext ? @"MAIN" : @"ROOT");
         }];
     }
 }
