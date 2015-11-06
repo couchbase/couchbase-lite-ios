@@ -2192,10 +2192,6 @@ static CBLManager* sCBLManager;
             for (NSManagedObjectID *objID in objectsToRefresh) {
                 NSManagedObject *obj = [context objectRegisteredForID:objID];
 
-                if (!obj) {
-                    obj = [context objectWithID: objID];
-                }
-
                 if (obj) {
                     [context refreshObject:obj mergeChanges:YES];
                 }
@@ -2206,6 +2202,8 @@ static CBLManager* sCBLManager;
             for (NSString* entity in updatedEntities) {
                 [self purgeCachedObjectsForEntityName: entity];
             }
+            
+            [context processPendingChanges];
             
             INFO(@"finish refresh context : %@", context.parentContext ? @"MAIN" : @"ROOT");
         }];
