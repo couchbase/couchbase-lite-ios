@@ -2054,7 +2054,6 @@ static CBLManager* sCBLManager;
     
     CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
 
-    NSMutableSet* insertedIDs = [NSMutableSet set];
     NSMutableSet* updatedIDs = [NSMutableSet set];
     NSMutableSet* deletedIDs = [NSMutableSet set];
     NSMutableSet *localChangedEntities = [NSMutableSet set];
@@ -2099,17 +2098,13 @@ static CBLManager* sCBLManager;
 
     }
 
-    if (insertedIDs.count > 0 || updatedIDs.count > 0 || deletedIDs.count > 0) {
+    if (updatedIDs.count > 0 || deletedIDs.count > 0) {
         [self refreshContextsWithUpdatedIDs:updatedIDs deletedIDs: deletedIDs];
-
-        NSMutableSet *allUpdatedIDs = [NSMutableSet set];
-        [allUpdatedIDs addObjectsFromArray:insertedIDs.allObjects];
-        [allUpdatedIDs addObjectsFromArray:updatedIDs.allObjects];
 
         [[NSNotificationCenter defaultCenter]
          postNotificationName: kCBLISObjectHasBeenChangedInStoreNotification
          object: self
-         userInfo: @{ NSUpdatedObjectsKey: allUpdatedIDs,
+         userInfo: @{ NSUpdatedObjectsKey: updatedIDs,
                       NSDeletedObjectsKey: deletedIDs }];
     } else {
         INFO(@"processCouchbaseLiteChanges : no changes from remote");
