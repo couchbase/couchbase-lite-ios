@@ -2073,7 +2073,6 @@ static CBLManager* sCBLManager;
         CBLDocument* doc = [self.database documentWithID: change.documentID];
         CBLRevision* rev = [doc revisionWithID: change.revisionID];
 
-        BOOL inserted = rev.parentRevision == nil;
         BOOL deleted = rev.isDeletion;
 
         NSDictionary* properties = [rev properties];
@@ -2095,18 +2094,13 @@ static CBLManager* sCBLManager;
             [deletedIDs addObject: objectID];
         }
         else {
-            if (inserted) {
-                [insertedIDs addObject:objectID];
-            }
-            else {
-                [updatedIDs addObject: objectID];
-            }
+            [updatedIDs addObject: objectID];
         }
 
     }
 
     if (insertedIDs.count > 0 || updatedIDs.count > 0 || deletedIDs.count > 0) {
-        [self refreshContextsWithInsertedIDs:insertedIDs updatedIDs:updatedIDs deletedIDs: deletedIDs];
+        [self refreshContextsWithUpdatedIDs:updatedIDs deletedIDs: deletedIDs];
 
         NSMutableSet *allUpdatedIDs = [NSMutableSet set];
         [allUpdatedIDs addObjectsFromArray:insertedIDs.allObjects];
@@ -2140,9 +2134,9 @@ static CBLManager* sCBLManager;
     return entities;
 }
 
-- (void) refreshContextsWithInsertedIDs: (NSSet *)insertedIDs updatedIDs: (NSSet*)updatedIDs deletedIDs: (NSSet*)deletedIDs {
-    INFO(@"refreshContextsWithUpdatedIDs : inserted %lu, updated %lu, deleted %lu on %@",
-         (unsigned long)insertedIDs.count, (unsigned long)updatedIDs.count, (unsigned long)deletedIDs.count, [NSThread currentThread]);
+- (void) refreshContextsWithUpdatedIDs: (NSSet*)updatedIDs deletedIDs: (NSSet*)deletedIDs {
+    INFO(@"refreshContextsWithUpdatedIDs : updated %lu, deleted %lu on %@",
+         (unsigned long)updatedIDs.count, (unsigned long)deletedIDs.count, [NSThread currentThread]);
 
     NSManagedObjectContext *strongRootContext = self.rootContext;
     if (!strongRootContext) {
@@ -2159,13 +2153,22 @@ static CBLManager* sCBLManager;
             NSMutableSet *refreshedIDs = [NSMutableSet set];
             NSMutableSet *updatedEntities = [NSMutableSet set];
 
-            for (NSManagedObjectID* moID in insertedIDs) {
+            for (NSManagedObjectID* moID in updatedIDs) {
                 NSManagedObject* mObj = [context objectRegisteredForID: moID];
+
                 if (!mObj) {
                     mObj = [context objectWithID: moID];
                 }
 
-                for (NSString *relName in mObj.entity.relationshipsByName) {
+                for (NSString *relName in moID.entity.relationshipsByName) {
+                    NSRelationshipDescription* rel = moID.entity.relationshipsByName[relName];
+                    if (rel.toMany)
+                        continue;
+
+                    NSRelationshipDescription *invRel = rel.inverseRelationship;
+                    if (!invRel)
+                        continue;
+
                     NSArray *objIDs = [mObj objectIDsForRelationshipNamed:relName];
 
                     [refreshedIDs addObjectsFromArray:objIDs];
@@ -2173,7 +2176,6 @@ static CBLManager* sCBLManager;
             }
 
             NSMutableArray *objectsToRefresh = [NSMutableArray array];
-            [objectsToRefresh addObjectsFromArray:insertedIDs.allObjects];
             [objectsToRefresh addObjectsFromArray:updatedIDs.allObjects];
             [objectsToRefresh addObjectsFromArray:refreshedIDs.allObjects];
 
