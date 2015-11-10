@@ -948,6 +948,34 @@
 			remoteGlobalIDString = 27139B9418F8EE3A0021A9A3;
 			remoteInfo = "CBForest-iOS";
 		};
+		2782C2381BF2974800DF7D93 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 274D03D31BA732B000FF7C35;
+			remoteInfo = CBForestJNI;
+		};
+		2782C23A1BF2974800DF7D93 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 274D04081BA75E1C00FF7C35;
+			remoteInfo = CppTests;
+		};
+		2782C23C1BF2974800DF7D93 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 720EA3F51BA7EAD9002B8416;
+			remoteInfo = "CBForest-Interop";
+		};
+		2782C23E1BF2974800DF7D93 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 720EA46E1BA909C4002B8416;
+			remoteInfo = "CBForest-Interop iOS";
+		};
 		27A754FF1A8559B6008BCD4D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
@@ -2603,6 +2631,10 @@
 				27571E0C18F9060100141BDD /* libforestdb.a */,
 				27FA99F21917FFD000912F96 /* libTokenizer.a */,
 				27FA9A441918A7C700912F96 /* libTokenizer-iOS.a */,
+				2782C2391BF2974800DF7D93 /* libCBForestJNI.dylib */,
+				2782C23B1BF2974800DF7D93 /* CppTests */,
+				2782C23D1BF2974800DF7D93 /* libCBForest-Interop.dylib */,
+				2782C23F1BF2974800DF7D93 /* libCBForest-Interop.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -3573,6 +3605,34 @@
 			fileType = archive.ar;
 			path = libforestdb.a;
 			remoteRef = 27571E0B18F9060100141BDD /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		2782C2391BF2974800DF7D93 /* libCBForestJNI.dylib */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.dylib";
+			path = libCBForestJNI.dylib;
+			remoteRef = 2782C2381BF2974800DF7D93 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		2782C23B1BF2974800DF7D93 /* CppTests */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = CppTests;
+			remoteRef = 2782C23A1BF2974800DF7D93 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		2782C23D1BF2974800DF7D93 /* libCBForest-Interop.dylib */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.dylib";
+			path = "libCBForest-Interop.dylib";
+			remoteRef = 2782C23C1BF2974800DF7D93 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		2782C23F1BF2974800DF7D93 /* libCBForest-Interop.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libCBForest-Interop.a";
+			remoteRef = 2782C23E1BF2974800DF7D93 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		27B086791B38804100D3D9D8 /* libBLIP-iOS.a */ = {
@@ -4604,7 +4664,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CBL_SOURCE_REVISION = "";
-				CBL_VERSION_STRING = "1.1+";
+				CBL_VERSION_STRING = 1.3;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -4656,7 +4716,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CBL_SOURCE_REVISION = "";
-				CBL_VERSION_STRING = "1.1+";
+				CBL_VERSION_STRING = 1.3;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
