@@ -9,7 +9,7 @@
 #import "CBL_Storage.h"
 #import "CBLDatabase.h"
 @class CBLQueryOptions, CBLView, CBLQueryRow, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase,
-       CBLDatabaseChange, CBL_Shared, CBLModelFactory;
+       CBLDatabaseChange, CBL_Shared, CBLModelFactory, CBLDatabaseOptions;
 
 
 // Default value for maxRevTreeDepth, the max rev depth to preserve in a prune operation
@@ -82,6 +82,7 @@ extern NSArray* CBL_RunloopModes;
 + (instancetype) createEmptyDBAtPath: (NSString*)path;
 #endif
 - (BOOL) open: (NSError**)outError;
+- (BOOL) openWithOptions: (CBLDatabaseOptions*)options error: (NSError**)outError;
 - (void) _close; // closes without saving CBLModels.
 
 + (void) setAutoCompact: (BOOL)autoCompact;

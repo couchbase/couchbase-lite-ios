@@ -100,7 +100,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 #pragma mark - OPEN/CLOSE:
 
 
-- (BOOL) databaseExistsIn: (NSString*)directory {
++ (BOOL) databaseExistsIn: (NSString*)directory {
     NSString* dbPath = [directory stringByAppendingPathComponent: kDBFilename];
     return [[NSFileManager defaultManager] fileExistsAtPath: dbPath isDirectory: NULL];
 }

@@ -37,6 +37,7 @@ typedef enum {
     kCBLStatusBadID          = 494,
     kCBLStatusBadParam       = 495,
     kCBLStatusDeleted        = 496,      // Document deleted
+    kCBLStatusInvalidStorageType = 497,
 
     kCBLStatusBadChangesFeed = 587,
     kCBLStatusChangesFeedTruncated = 588,

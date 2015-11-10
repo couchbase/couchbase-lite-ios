@@ -183,7 +183,7 @@ static void onCompactCallback(Database *db, bool compacting) {
 }
 
 
-- (BOOL) databaseExistsIn: (NSString*)directory {
++ (BOOL) databaseExistsIn: (NSString*)directory {
     NSString* dbPath = [directory stringByAppendingPathComponent: kDBFilename];
     if ([[NSFileManager defaultManager] fileExistsAtPath: dbPath isDirectory: NULL])
         return YES;

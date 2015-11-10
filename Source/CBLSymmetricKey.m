@@ -87,7 +87,9 @@
 
 
 - (instancetype) initWithKeyOrPassword: (id)keyOrPassword {
-    if ([keyOrPassword isKindOfClass: [NSString class]]) {
+    if ([keyOrPassword isKindOfClass: [CBLSymmetricKey class]]) {
+        return keyOrPassword;
+    } else if ([keyOrPassword isKindOfClass: [NSString class]]) {
         return [self initWithPassword: keyOrPassword];
     } else {
         Assert([keyOrPassword isKindOfClass: [NSData class]], @"Key must be NSString or NSData");
@@ -122,14 +124,18 @@
 }
 
 
-- (BOOL) saveKeychainItemNamed: (NSString*)itemName {
+- (BOOL) saveKeychainItemNamed: (NSString*)itemName error: (NSError**)outError {
     NSDictionary *attrs = @{(__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
                             (__bridge id)kSecAttrService: itemName,
                             (__bridge id)kSecValueData: _keyData};
     OSStatus status = SecItemAdd((__bridge CFDictionaryRef)attrs, NULL);
-    if (status != noErr)
+    if (status != noErr) {
         Warn(@"CBLSymmetricKey: SecItemAdd returned %d", (int)status);
-    return (status == noErr);
+        if (outError)
+            *outError = [NSError errorWithDomain: NSOSStatusErrorDomain code: status userInfo: nil];
+        return NO;
+    }
+    return YES;
 }
 
 

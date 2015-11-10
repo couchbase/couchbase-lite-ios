@@ -194,11 +194,6 @@ static void catchInBlock(void (^block)()) {
 }
 
 
-- (BOOL) create: (NSError**)outError {
-    return [self open: outError];
-}
-
-
 - (BOOL) close: (NSError**)outError {
     if (![self saveAllModels: outError])
         return NO;

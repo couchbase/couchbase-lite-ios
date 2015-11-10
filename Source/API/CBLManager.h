@@ -17,7 +17,38 @@ typedef struct CBLManagerOptions {
 } CBLManagerOptions;
 
 
-/** Top-level CouchbaseLite object; manages a collection of databases as a CouchDB server does.
+
+
+/** Options for opening a database. All properties default to NO or nil. */
+@interface CBLDatabaseOptions : NSObject
+@property (nonatomic) BOOL create;                  /**< Create database if it doesn't exist? */
+@property (nonatomic) BOOL readOnly;                /**< Open database read-only? */
+
+/** The underlying storage engine to use. Legal values are @"SQLite", @"ForestDB", or nil.
+    * If the database is being created, the given storage engine will be used, or the default if
+      the value is nil.
+    * If the database exists, and the value is not nil, the database will be upgraded to that
+      storage engine if possible. (SQLite-to-ForestDB upgrades are supported.) */
+@property (nonatomic, copy) NSString* storageType;
+
+/** A key to encrypt the database with. If the database does not exist and is being created, it
+    will use this key, and the same key must be given every time it's opened.
+
+    * The primary form of key is an NSData object 32 bytes in length: this is interpreted as a raw
+      AES-256 key. To create a key, generate random data using a secure cryptographic randomizer
+      like SecRandomCopyBytes or CCRandomGenerateBytes.
+    * Alternatively, the value may be an NSString containing a passphrase. This will be run through
+      64,000 rounds of the PBKDF algorithm to securely convert it into an AES-256 key.
+    * On Mac OS only, the value may be @YES. This instructs Couchbase Lite to use a key stored in
+      the user's Keychain, or generate one there if it doesn't exist yet.
+    * A default nil value, of course, means the database is unencrypted. */
+@property (nonatomic, strong) id encryptionKey;
+@end
+
+
+
+
+/** Top-level Couchbase Lite object; manages a collection of databases.
     A CBLManager and all the objects descending from it may only be used on a single
     thread. To work with databases on another thread, copy the database manager (by calling
     -copy) and use the copy on the other thread. */
@@ -50,12 +81,9 @@ typedef struct CBLManagerOptions {
 /** Releases all resources used by the CBLManager instance and closes all its databases. */
 - (void) close;
 
-/** Storage engine type. There are two options, "SQLite" (default) or "ForestDB". */
+/** Default storage engine type for newly-created databases.
+    There are two options, "SQLite" (the default) or "ForestDB". */
 @property (copy, nonatomic) NSString* storageType;
-
-/** Should existing databases be upgraded to the preferred storage engine type when opened?
-    (Defaults to NO.) */
-@property (nonatomic) BOOL upgradeStorage;
 
 /** The root directory of this manager (as specified at initialization time.) */
 @property (readonly) NSString* directory;
@@ -68,48 +96,33 @@ typedef struct CBLManagerOptions {
 
 /** Returns the database with the given name, creating it if it didn't already exist.
     Multiple calls with the same name will return the same CBLDatabase instance.
-    NOTE: Database names may not contain capital letters! */
+    NOTE: Database names may not contain capital letters!
+    This is equivalent to calling -openDatabaseNamed:withOptions:error: with a default set of
+    options with the `create` flag set. */
 - (nullable CBLDatabase*) databaseNamed: (NSString*)name
                                   error: (NSError**)outError;
 
 /** Returns the database with the given name, or nil if it doesn't exist.
-    Multiple calls with the same name will return the same CBLDatabase instance. */
+    Multiple calls with the same name will return the same CBLDatabase instance.
+    This is equivalent to calling -openDatabaseNamed:withOptions:error: with a default set of
+    options. */
 - (nullable CBLDatabase*) existingDatabaseNamed: (NSString*)name
                                           error: (NSError**)outError;
 
+/** Returns the database with the given name. If the database is not yet open, the options given
+    will be applied; if it's already open, the options are ignored.
+    Multiple calls with the same name will return the same CBLDatabase instance.
+    @param name  The name of the database. May NOT contain capital letters!
+    @param options  Options to use when opening, such as the encryption key; if nil, a default
+                    set of options will be used.
+    @param outError  On return, the error if any.
+    @return  The database instance, or nil on error. */
+- (nullable CBLDatabase*) openDatabaseNamed: (NSString*)name
+                                withOptions: (nullable CBLDatabaseOptions*)options
+                                      error: (NSError**)outError;
+
 /** Returns YES if a database with the given name exists. Does not open the database. */
 - (BOOL) databaseExistsNamed: (NSString*)name;
-
-/** Registers an encryption key for a database. This must be called _before_ opening an encrypted
-    database, or before creating a database that's to be encrypted.
-    If the key is incorrect (or no key is given for an encrypted database), the subsequent call
-    to open the database will fail with an error with code 401.
-    To use this API, the database storage engine must support encryption. In the case of SQLite,
-    this means the application must be linked with SQLCipher <http://sqlcipher.net> instead of
-    regular SQLite. Otherwise opening the database will fail with an error.
-    @param keyOrPassword  The encryption key in the form of an NSString (a password) or an
-                NSData object exactly 32 bytes in length (a raw AES key.) If a string is given,
-                it will be internally converted to a raw key using 64,000 rounds of PBKDF2 hashing.
-                A nil value is legal, and clears a previously-registered key.
-    @param name  The name of the database this key applies to.
-    @result  YES if the key can be used, NO if it's not in a legal form (e.g. NSData object not 32
-                bytes in length.) */
-- (BOOL) registerEncryptionKey: (nullable id)keyOrPassword
-              forDatabaseNamed: (NSString*)name;
-
-#if !TARGET_OS_IPHONE
-/** Encrypts a database using a randomly-generated key that's stored in the default Keychain.
-    This must be called before opening an encrypted database, or before creating a database
-    that's to be encrypted.
- 
-    (The effect is similar to -registerEncryptionKey:forDatabaseNamed:, except that storage of
-    the key is taken care of automatically.)
-
-    For security reasons this method is not available on iOS. Instead, consider using
-    CBLEncryptionController (found in the Extras folder of the distribution) as a high level
-    interface for managing database encryption using a user-supplied password or TouchID. */
-- (BOOL) encryptDatabaseNamed: (NSString*)name;
-#endif
 
 /** Same as -existingDatabaseNamed:. Enables "[]" access in Xcode 4.4+ */
 - (nullable CBLDatabase*) objectForKeyedSubscript: (NSString*)key;
@@ -191,6 +204,11 @@ typedef struct CBLManagerOptions {
 
 
 @property (readonly, nonatomic, nullable) NSMutableDictionary* customHTTPHeaders;
+
+
+/** This method has been superseded by -openDatabaseNamed:options:error:. */
+- (BOOL) registerEncryptionKey: (nullable id)keyOrPassword
+              forDatabaseNamed: (NSString*)name;
 
 @end
 
