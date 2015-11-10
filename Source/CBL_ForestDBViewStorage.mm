@@ -333,6 +333,15 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 #pragma mark - INDEX MANAGEMENT:
 
 
+- (Database::config) config {
+    auto config = Database::defaultConfig(); // +[CBL_ForestDBStorage initialize] sets defaults
+    config.seqtree_opt = FDB_SEQTREE_NOT_USE; // indexes don't need by-sequence ordering
+    if (!_dbStorage.autoCompact)
+        config.compaction_mode = FDB_COMPACTION_MANUAL;
+    return config;
+}
+
+
 // Opens the index. You MUST call this (or a method that calls it) before dereferencing _index.
 - (MapReduceIndex*) openIndex: (CBLStatus*)outStatus {
     if (_index)
@@ -347,10 +356,8 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 {
     if (!_index) {
         Assert(!_indexDB);
-        auto config = Database::defaultConfig(); // +[CBL_ForestDBStorage initialize] sets defaults
+        auto config = self.config;
         config.flags = options;
-        config.seqtree_opt = FDB_SEQTREE_NOT_USE; // indexes don't need by-sequence ordering
-        config.compaction_mode = FDB_COMPACTION_AUTO;
 
         NSError* error;
         _indexDB = [CBLForestBridge openDatabaseAtPath: _path
@@ -402,6 +409,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 }
 
 
+// This doesn't delete the index database, just erases it
 - (void) deleteIndex {
     if ([self openIndex: NULL]) {
         Transaction t(_indexDB);
@@ -410,9 +418,19 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 }
 
 
-- (void) deleteView {
+// Deletes the index without notifying the main storage that the view is gone
+- (BOOL) deleteViewFiles: (NSError**)outError {
     [self closeIndex];
-    [[NSFileManager defaultManager] removeItemAtPath: _path error: NULL];
+    return tryError(outError, ^{
+        std::string pathStr(_path.fileSystemRepresentation);
+        auto config = self.config;
+        Database::deleteDatabase(pathStr, config);
+    });
+}
+
+// Main Storage-protocol method to delete a view
+- (void) deleteView {
+    [self deleteViewFiles: NULL];
     [_dbStorage forgetViewStorageNamed: _name];
 }
 
@@ -421,8 +439,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
     MYAction* action = [MYAction new];
     [action addPerform:^BOOL(NSError **outError) {
         // Close and delete the index database:
-        [self closeIndex];
-        return [[NSFileManager defaultManager] removeItemAtPath: _path error: outError];
+        return [self deleteViewFiles: outError];
     } backOutOrCleanUp:^BOOL(NSError **outError) {
         // Afterwards, reopen (and re-create) the index:
         CBLStatus status;
