@@ -129,6 +129,7 @@ static void onCompactCallback(Database *db, bool compacting) {
         config.wal_flush_before_commit = true;
         config.compress_document_body = true;
         config.multi_kv_instances = true;
+        config.compaction_mode = FDB_COMPACTION_AUTO;
         config.compaction_threshold = kCompactionThreshold;
         config.compactor_sleep_duration = (uint64_t)kAutoCompactInterval;
         config.num_compactor_threads = 1;
@@ -203,8 +204,9 @@ static void onCompactCallback(Database *db, bool compacting) {
 
     _config = Database::defaultConfig(); // Default config is set in +initialize, above
     _config.flags = flags;
-    _config.seqtree_opt = true;
-    _config.compaction_mode = _autoCompact ? FDB_COMPACTION_AUTO : FDB_COMPACTION_MANUAL;
+    _config.seqtree_opt = FDB_SEQTREE_USE;
+    if (!_autoCompact)
+        _config.compaction_mode = FDB_COMPACTION_MANUAL;
     return [self reopen: outError];
 }
 
