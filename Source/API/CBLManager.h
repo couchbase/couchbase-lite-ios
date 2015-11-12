@@ -145,8 +145,8 @@ typedef struct CBLManagerOptions {
  @return  YES if the database was copied, NO if an error occurred. */
 - (BOOL) replaceDatabaseNamed: (NSString*)databaseName
              withDatabaseFile: (NSString*)databasePath
-              withAttachments: (NSString*)attachmentsPath
-                        error: (NSError**)outError                  __attribute__((nonnull(1,2)));
+              withAttachments: (nullable NSString*)attachmentsPath
+                        error: (NSError**)outError;
 #endif
 
 /** Replaces or installs a database from a file. This is primarily used to install a canned database 
