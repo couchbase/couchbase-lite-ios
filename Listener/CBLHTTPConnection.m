@@ -112,7 +112,9 @@ static void evaluate(SecTrustRef trust, SecTrustCallback callback) {
 
 - (void) socketDidDisconnect: (GCDAsyncSocket*)socket withError: (NSError*)error {
     if (error && ![error my_hasDomain: GCDAsyncSocketErrorDomain
-                                 code: GCDAsyncSocketClosedError]) {
+                                 code: GCDAsyncSocketClosedError]
+              && ![error my_hasDomain: GCDAsyncSocketErrorDomain
+                                 code: GCDAsyncSocketReadTimeoutError]) {
         Warn(@"CBLHTTPConnection: Client disconnected: %@", error);
     }
 }
