@@ -1092,5 +1092,154 @@
     }];
 }
 
+- (void) testResetRevisionsWithoutConflicts {
+    if (!self.isSQLiteDB)
+        return;
+    
+    CBLDocument* doc = [db createDocument];
+    CBLSavedRevision* rev1 = [doc putProperties: @{@"name": @"1"} error: nil];
+    CBLSavedRevision* rev2 = [rev1 createRevisionWithProperties: @{@"name": @"2"} error: nil];
+    CBLSavedRevision* rev3 = [rev2 createRevisionWithProperties: @{@"name": @"3"} error: nil];
+    AssertEqual(doc.currentRevisionID, rev3.revisionID);
+    AssertEqual(([doc getRevisionHistory: nil]), (@[rev1, rev2, rev3]));
+    
+    // No revision reset:
+    Assert([self resetRevisions:@{doc.documentID: rev3.revisionID} inDatabase: db error: nil]);
+    AssertEqual(doc.currentRevisionID, rev3.revisionID);
+    AssertEqual(([doc getRevisionHistory: nil]), (@[rev1, rev2, rev3]));
+    
+    // Two revision reset:
+    Assert([self resetRevisions:@{doc.documentID: rev1.revisionID} inDatabase: db error: nil]);
+    AssertNil(doc.currentRevision);
+    NSArray* leafRevs = [doc getLeafRevisions:nil];
+    AssertEq(leafRevs.count, 2u);
+    AssertEqual(((CBLRevision*)leafRevs[0]).parentRevision, rev3);
+    AssertEqual(((CBLRevision*)leafRevs[1]).parentRevision, rev2);
+    
+    NSDictionary* resetHistory = [db existingLocalDocumentWithID:@"reset_revs_history"];
+    AssertEq([resetHistory objectForKey:
+              [self resetRevHistoryIDForDocID: doc.documentID revID: rev3.revisionID]], @(YES));
+    AssertEq([resetHistory objectForKey:
+              [self resetRevHistoryIDForDocID: doc.documentID revID: rev1.revisionID]], @(YES));
+}
+
+- (void) testResetRevisionsWithConflicts {
+    if (!self.isSQLiteDB)
+        return;
+    
+    // Create 3 revisions:
+    CBLDocument* doc = [db createDocument];
+    CBLSavedRevision* rev1 = [doc putProperties: @{@"name": @"1"} error: nil];
+    CBLSavedRevision* rev2 = [rev1 createRevisionWithProperties: @{@"name": @"2"} error: nil];
+    CBLSavedRevision* rev3 = [rev2 createRevisionWithProperties: @{@"name": @"3"} error: nil];
+    AssertEqual(doc.currentRevisionID, rev3.revisionID);
+    AssertEqual(([doc getRevisionHistory: nil]), (@[rev1, rev2, rev3]));
+    
+    // Create a conflicted revision with rev3 and 2 more revisions under it:
+    CBLUnsavedRevision* unsavedRev3b = [rev2 createRevision];
+    unsavedRev3b.userProperties = @{@"name": @"3b"};
+    CBLSavedRevision* rev3b = [unsavedRev3b saveAllowingConflict:nil];
+    Assert(rev3b);
+    CBLSavedRevision* rev4 = [rev3b createRevisionWithProperties: @{@"name": @"4"} error: nil];
+    CBLSavedRevision* rev5 = [rev4 createRevisionWithProperties: @{@"name": @"5"} error: nil];
+    AssertEqual(doc.currentRevisionID, rev5.revisionID);
+    AssertEqual(([doc getRevisionHistory: nil]), (@[rev1, rev2, /*rev3b*/ rev3b, rev4, rev5]));
+    
+    // Reset revisions back to Rev3
+    Assert([self resetRevisions:@{doc.documentID: rev3.revisionID} inDatabase: db error: nil]);
+    AssertEqual(doc.currentRevisionID, rev3.revisionID);
+    AssertEqual(([doc getRevisionHistory: nil]), (@[rev1, rev2, rev3]));
+    NSArray* leafRevs = [doc getLeafRevisions:nil];
+    AssertEq(leafRevs.count, 4u);
+    AssertEqual(((CBLRevision*)leafRevs[0]).parentRevision, rev5);
+    AssertEqual(((CBLRevision*)leafRevs[1]).parentRevision, rev4);
+    AssertEqual(((CBLRevision*)leafRevs[2]).parentRevision, rev3b);
+    AssertEqual(((CBLRevision*)leafRevs[3]).parentRevision, rev2);
+    
+    NSDictionary* resetHistory = [db existingLocalDocumentWithID:@"reset_revs_history"];
+    AssertEq([resetHistory objectForKey:
+              [self resetRevHistoryIDForDocID: doc.documentID revID: rev3.revisionID]], @(YES));
+}
+
+- (BOOL) resetRevisions: (NSDictionary*)docIDRevIDPairs
+             inDatabase: (CBLDatabase*)database
+                  error: (NSError**)outError {
+    return [database inTransaction: ^BOOL{
+        // Get reset history from a local document named, 'reset_revs_history':
+        NSMutableDictionary* resetHistory =
+        [[database existingLocalDocumentWithID: @"reset_revs_history"] mutableCopy];
+        if (!resetHistory)
+            resetHistory = [NSMutableDictionary dictionary];
+        
+        for (NSString* docID in docIDRevIDPairs.allKeys) {
+            NSString* referenceRevID = [docIDRevIDPairs objectForKey: docID];
+            
+            // Check if the reset has already been done, if YES, ignore:
+            NSString* resetHistoryID = [self resetRevHistoryIDForDocID: docID revID: referenceRevID];
+            if ([resetHistory objectForKey: resetHistoryID])
+                continue;
+            
+            CBLDocument* doc = [database existingDocumentWithID: docID];
+            if (!doc) continue;
+            
+            unsigned referenceGen = [self generationFromRevID: referenceRevID];
+            
+            NSError* error;
+            NSArray* revisions = [doc getRevisionHistory: &error];
+            if (!revisions) {
+                NSLog(@"Cannot get revision history for docid=%@", docID);
+                if (outError) *outError = error;
+                return false;
+            }
+            
+            for (CBLRevision* rev in revisions) {
+                if ([rev.revisionID isEqual: referenceRevID])
+                    continue;
+                
+                if (rev.isDeletion || rev.isGone)
+                    continue;
+                
+                unsigned gen = [self generationFromRevID: rev.revisionID];
+                if (gen >= referenceGen) {
+                    CBLUnsavedRevision* newRev = [(CBLSavedRevision*)rev createRevision];
+                    newRev.isDeletion = YES;
+                    if (![newRev saveAllowingConflict: &error]) {
+                        NSLog(@"Cannot create tombstone revision for revid=%@ of docid = %@",
+                              rev.revisionID, docID);
+                        if (outError) *outError = error;
+                        return false;
+                    }
+                }
+            }
+            
+            [resetHistory setObject:@(YES) forKey: resetHistoryID];
+        }
+        
+        [database putLocalDocument: resetHistory withID:@"reset_revs_history" error:nil];
+        
+        return true;
+    }];
+}
+
+// Parse generation number for a revision id
+- (unsigned) generationFromRevID: (NSString*)revID {
+    unsigned generation = 0;
+    NSUInteger length = MIN(revID.length, 9u);
+    for (NSUInteger i=0; i<length; ++i) {
+        unichar c = [revID characterAtIndex: i];
+        if (isdigit(c))
+            generation = 10*generation + digittoint(c);
+        else if (c == '-')
+            return generation;
+        else
+            break;
+    }
+    return 0;
+}
+
+// Generate reset history ID for a given pair of document id and revision id
+- (NSString*) resetRevHistoryIDForDocID: (NSString*)docId revID: (NSString*)revID {
+    return [NSString stringWithFormat:@"CBL/%@/%@", docId, revID];
+}
 
 @end
