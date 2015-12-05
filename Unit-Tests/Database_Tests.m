@@ -1092,5 +1092,174 @@
     }];
 }
 
+- (void) testResetRevisions {
+    if (!self.isSQLiteDB)
+        return;
+    
+    // Create 3 revisions:
+    CBLDocument* doc = [db createDocument];
+    CBLSavedRevision* rev1 = [doc putProperties: @{@"name": @"1"} error: nil];
+    CBLSavedRevision* rev2 = [rev1 createRevisionWithProperties: @{@"name": @"2"} error: nil];
+    CBLSavedRevision* rev3 = [rev2 createRevisionWithProperties: @{@"name": @"3"} error: nil];
+    AssertEqual(doc.currentRevisionID, rev3.revisionID);
+    AssertEqual(([doc getRevisionHistory: nil]), (@[rev1, rev2, rev3]));
+    
+    // Create a conflicted revision with rev3 and 2 more revisions under it:
+    CBLUnsavedRevision* unsavedRev3b = [rev2 createRevision];
+    unsavedRev3b.userProperties = @{@"name": @"3b"};
+    CBLSavedRevision* rev3b = [unsavedRev3b saveAllowingConflict:nil];
+    Assert(rev3b);
+    CBLSavedRevision* rev4 = [rev3b createRevisionWithProperties: @{@"name": @"4"} error: nil];
+    CBLSavedRevision* rev5 = [rev4 createRevisionWithProperties: @{@"name": @"5"} error: nil];
+    AssertEqual(doc.currentRevisionID, rev5.revisionID);
+    AssertEqual(([doc getRevisionHistory: nil]), (@[rev1, rev2, /*rev3b*/ rev3b, rev4, rev5]));
+    AssertEqual(([doc getConflictingRevisions: nil]), (@[rev5, rev3]));
+    
+    // Reset revisions to Rev3
+    Assert([self resetRevisions:@{doc.documentID: rev3.revisionID} inDatabase: db error: nil]);
+    AssertEqual(doc.currentRevisionID, rev3.revisionID);
+    AssertEqual(([doc getRevisionHistory: nil]), (@[rev1, rev2, rev3]));
+    AssertEqual(([doc getConflictingRevisions: nil]), (@[rev3]));
+    
+    NSDictionary* resetHistory = [db existingLocalDocumentWithID:@"reset_revs_history"];
+    AssertEq([resetHistory objectForKey:
+              [self resetRevHistoryIDForDocID: doc.documentID revID: rev3.revisionID]], @(YES));
+}
+
+- (void) testResetRevisionsWithMaxRevTreeDepth {
+    if (!self.isSQLiteDB)
+        return;
+    
+    [db setMaxRevTreeDepth:10];
+    
+    // Create rev1 and rev2:
+    CBLDocument* doc = [db createDocument];
+    CBLSavedRevision* rev1 = [doc putProperties: @{@"name": @"1"} error: nil];
+    
+    // Select a revision that will be used for reset:
+    CBLSavedRevision* selectRev = nil;
+    
+    // Create 20 pair of conflicted revisions:
+    CBLSavedRevision* parent = rev1;
+    for (int i = 1; i <= 20; i++) {
+        CBLUnsavedRevision* newRev1 = [parent createRevision];
+        newRev1.userProperties = @{@"name": [NSString stringWithFormat:@"%d-1", i]};
+        CBLSavedRevision* rev1 = [newRev1 saveAllowingConflict:nil];
+        Assert(rev1 != nil);
+        
+        CBLUnsavedRevision* newRev2 = [parent createRevision];
+        newRev2.userProperties = @{@"name": [NSString stringWithFormat:@"%d-2", i]};
+        CBLSavedRevision* rev2 = [newRev2 saveAllowingConflict:nil];
+        Assert(rev2 != nil);
+        
+        parent = rev1;
+        if (i == 1)
+            selectRev = rev2;
+    }
+    Assert([selectRev.revisionID hasPrefix:@"2-"]);
+    
+    Assert([doc.currentRevisionID hasPrefix:@"21-"]);
+    AssertEq([doc getRevisionHistory: nil].count, 21u);
+    AssertEq([doc getLeafRevisions: nil].count, 21u);
+    AssertEq([doc getConflictingRevisions: nil].count, 21u);
+    
+    // Call compact:
+    Assert([db compact: nil]);
+    
+    Assert([doc.currentRevisionID hasPrefix:@"21-"]);
+    NSArray* history = [doc getRevisionHistory: nil];
+    AssertEq(history.count, 10u);
+    Assert([((CBLSavedRevision*)history[0]).revisionID hasPrefix:@"12-"]);
+    Assert([((CBLSavedRevision*)history[9]).revisionID hasPrefix:@"21-"]);
+    
+    AssertEq([doc getLeafRevisions: nil].count, 21u);
+    
+    NSArray* conflicts = [doc getConflictingRevisions: nil];
+    AssertEq(conflicts.count, 21u);
+    Assert([((CBLSavedRevision*)conflicts[0]).revisionID hasPrefix:@"21-"]);
+    Assert([((CBLSavedRevision*)conflicts[20]).revisionID hasPrefix:@"2-"]);
+    
+    // Reset to selectRev (rev2-xxx):
+    Assert([self resetRevisions:@{doc.documentID: selectRev.revisionID} inDatabase: db error: nil]);
+    
+    AssertEqual(doc.currentRevision, selectRev);
+    history = [doc getRevisionHistory: nil];
+    AssertEq(history.count, 1u);
+    AssertEqual((CBLSavedRevision*)history[0], selectRev);
+    
+    AssertEq([doc getLeafRevisions: nil].count, 21u);
+    
+    conflicts = [doc getConflictingRevisions: nil];
+    AssertEq(conflicts.count, 1u);
+    AssertEqual((CBLSavedRevision*)conflicts[0], selectRev);
+}
+
+- (BOOL) resetRevisions: (NSDictionary*)docIDRevIDPairs
+             inDatabase: (CBLDatabase*)database
+                  error: (NSError**)outError {
+    return [database inTransaction: ^BOOL{
+        // Get reset history from a local document named, 'reset_revs_history':
+        NSMutableDictionary* resetHistory =
+            [[database existingLocalDocumentWithID: @"reset_revs_history"] mutableCopy];
+        if (!resetHistory)
+            resetHistory = [NSMutableDictionary dictionary];
+        
+        for (NSString* docID in docIDRevIDPairs.allKeys) {
+            NSString* winningRevID = [docIDRevIDPairs objectForKey: docID];
+            
+            // Check if the reset has already been done, if YES, ignore:
+            NSString* resetHistoryID = [self resetRevHistoryIDForDocID: docID revID: winningRevID];
+            if ([resetHistory objectForKey: resetHistoryID])
+                continue;
+            
+            CBLDocument* doc = [database existingDocumentWithID: docID];
+            if (!doc) {
+                NSLog(@"Skip: Cannot find a document with ID %@", docID);
+                continue;
+            }
+            
+            CBLSavedRevision* winningRev = [doc revisionWithID: winningRevID];
+            if (!winningRev) {
+                NSLog(@"Skip: Cannot find a revision with ID %@ of doc ID %@", winningRevID, docID);
+                continue;
+            }
+            
+            NSError* error;
+            NSArray* revisions = [doc getConflictingRevisions: &error];
+            for (CBLSavedRevision* rev in revisions) {
+                if (![self hasRevision: winningRev inBranch: rev]) {
+                    // Create a tombstone revision:
+                    CBLUnsavedRevision* newRev = [(CBLSavedRevision*)rev createRevision];
+                    newRev.isDeletion = YES;
+                    if (![newRev saveAllowingConflict: &error]) {
+                        NSLog(@"Cannot create a tombstone revision for rev ID %@ of doc ID %@",
+                              rev.revisionID, docID);
+                        if (outError) *outError = error;
+                        return false;
+                    }
+                }
+            }
+            
+            // Mark as processed in reset history local doc:
+            [resetHistory setObject:@(YES) forKey: resetHistoryID];
+        }
+        
+        [database putLocalDocument: resetHistory withID:@"reset_revs_history" error:nil];
+        
+        return true;
+    }];
+}
+
+- (BOOL) hasRevision: (CBLSavedRevision*)revision inBranch: (CBLSavedRevision*)leafRevision {
+    if ([leafRevision isEqual: revision])
+        return YES;
+    NSArray* history = [leafRevision getRevisionHistory: nil];
+    return [history containsObject: revision];
+}
+
+// Generate reset history ID for a given pair of document id and revision id
+- (NSString*) resetRevHistoryIDForDocID: (NSString*)docId revID: (NSString*)revID {
+    return [NSString stringWithFormat:@"CBL/%@/%@", docId, revID];
+}
 
 @end
