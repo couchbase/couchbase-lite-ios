@@ -24,7 +24,8 @@ typedef struct CBLManagerOptions {
 @property (nonatomic) BOOL create;                  /**< Create database if it doesn't exist? */
 @property (nonatomic) BOOL readOnly;                /**< Open database read-only? */
 
-/** The underlying storage engine to use. Legal values are @"SQLite", @"ForestDB", or nil.
+/** The underlying storage engine to use. Legal values are kCBLSQLiteStorage, kCBLForestDBStorage, 
+    or nil.
     * If the database is being created, the given storage engine will be used, or the default if
       the value is nil.
     * If the database exists, and the value is not nil, the database will be upgraded to that
@@ -220,6 +221,10 @@ extern NSString* CBLVersion( void );
     for example code 404 is "not found", 403 is "forbidden", etc. */
 extern NSString* const CBLHTTPErrorDomain;
 
+/** SQLite storage type used for setting CBLDatabaseOptions.storageType. */
+extern NSString* const kCBLSQLiteStorage;
 
+/** ForestDB storage type used for setting CBLDatabaseOptions.storageType. */
+extern NSString* const kCBLForestDBStorage;
 
 NS_ASSUME_NONNULL_END

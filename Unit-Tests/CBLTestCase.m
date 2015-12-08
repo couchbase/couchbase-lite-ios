@@ -149,7 +149,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     [super setUp];
 
     dbmgr = [CBLManager createEmptyAtTemporaryPath: @"CBL_iOS_Unit_Tests"];
-    dbmgr.storageType = _useForestDB ? @"ForestDB" : @"SQLite";
+    dbmgr.storageType = _useForestDB ? kCBLForestDBStorage : kCBLSQLiteStorage;
     Assert(dbmgr);
     Log(@"---- Using %@ ----", dbmgr.storageType);
     NSError* error;

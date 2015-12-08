@@ -158,11 +158,11 @@ static BOOL sAutoCompact = YES;
         return NO;
 
     // Instantiate storage:
-    NSString* storageType = options.storageType ?: (_manager.storageType ?: @"SQLite");
+    NSString* storageType = options.storageType ?: (_manager.storageType ?: kCBLSQLiteStorage);
     NSString* storageClassName = $sprintf(@"CBL_%@Storage", storageType);
     Class primaryStorage = NSClassFromString(storageClassName);
     if (!primaryStorage) {
-        if ($equal(storageType, @"SQLite") || $equal(storageType, @"ForestDB"))
+        if ($equal(storageType, kCBLSQLiteStorage) || $equal(storageType, kCBLForestDBStorage))
             Warn(@"storageType is '%@' but no %@ class found;"
                  " make sure `-ObjC` is in Other Linker Flags in Build Settings",
                  storageType, storageClassName);
@@ -171,7 +171,7 @@ static BOOL sAutoCompact = YES;
     }
     if (!primaryStorage)
         return CBLStatusToOutNSError(kCBLStatusInvalidStorageType, outError);
-    BOOL primarySQLite = [storageType isEqualToString: @"SQLite"];
+    BOOL primarySQLite = [storageType isEqualToString: kCBLSQLiteStorage];
     Class otherStorage = NSClassFromString(primarySQLite ? @"CBL_ForestDBStorage"
                                                          : @"CBL_SQLiteStorage");
 
