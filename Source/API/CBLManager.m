@@ -40,6 +40,8 @@
 #define kV1DBExtension @"cblite"    // Couchbase Lite 1.0
 #define kDBExtension @"cblite2"
 
+NSString* const kCBLSQLiteStorage = @"SQLite";
+NSString* const kCBLForestDBStorage = @"ForestDB";
 
 static const CBLManagerOptions kCBLManagerDefaultOptions;
 
@@ -241,7 +243,7 @@ static CBLManager* sInstance;
         _replications = [[NSMutableArray alloc] init];
         _storageType = [[NSUserDefaults standardUserDefaults] stringForKey: @"CBLStorageType"];
         if (!_storageType)
-            _storageType = @"SQLite";
+            _storageType = kCBLSQLiteStorage;
         _replicatorClassName = [[NSUserDefaults standardUserDefaults]
                                                             stringForKey: @"CBLReplicatorClass"];
         if (!_replicatorClassName)

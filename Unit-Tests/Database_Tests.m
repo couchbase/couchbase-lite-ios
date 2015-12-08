@@ -1190,7 +1190,7 @@
 
     // Open installed db with storageType set to this test's storage type:
     CBLDatabaseOptions* options = [CBLDatabaseOptions new];
-    options.storageType = self.isSQLiteDB ? @"SQLite" : @"ForestDB";
+    options.storageType = self.isSQLiteDB ? kCBLSQLiteStorage : kCBLForestDBStorage;
     CBLDatabase* replacedb = [dbmgr openDatabaseNamed: @"replacedb" withOptions: options error: &error];
     Assert(replacedb, @"Opening db failed: %@", error);
 
@@ -1214,7 +1214,7 @@
 
     // Close and re-open the db using SQLite storage type. Should fail if it used to be ForestDB:
     Assert([replacedb close: &error]);
-    options.storageType = @"SQLite";
+    options.storageType = kCBLSQLiteStorage;
     replacedb = [dbmgr openDatabaseNamed: @"replacedb" withOptions: options error: &error];
     if (self.isSQLiteDB) {
         Assert(replacedb, @"Couldn't re-open SQLite db");
