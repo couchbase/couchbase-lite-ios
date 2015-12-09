@@ -61,6 +61,7 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
 
 // TODO: check if there is a better way to not hold strong references on these MOCs
 @property (nonatomic, strong) NSHashTable* observingManagedObjectContexts;
+@property (nonatomic, weak, readonly) NSManagedObjectContext* rootContext;
 @property (nonatomic, strong) CBLDatabase* database;
 @property (nonatomic, readonly) NSUInteger maxRelationshipLoadDepth;
 
@@ -74,6 +75,7 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
     NSString * _documentTypeKey;
     NSUInteger _relationshipSearchDepth;
     NSCache* _relationshipCache;
+    NSCache* _recentSavedObjectIDs;
     
     struct {
         unsigned int storeWillSaveDocument:1;
@@ -84,6 +86,7 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
 @synthesize conflictHandler = _conflictHandler;
 @synthesize customProperties = _customProperties;
 @synthesize observingManagedObjectContexts = _observingManagedObjectContexts;
+@synthesize rootContext = _rootContext;
 @synthesize delegate = _delegate;
 
 static CBLManager* sCBLManager;
@@ -176,9 +179,9 @@ static CBLManager* sCBLManager;
     }
 
     NSManagedObjectContext* managedObjectContext =
-    [[NSManagedObjectContext alloc] initWithConcurrencyType: NSMainQueueConcurrencyType];
+        [[NSManagedObjectContext alloc] initWithConcurrencyType: NSMainQueueConcurrencyType];
     [managedObjectContext setPersistentStoreCoordinator: persistentStoreCoordinator];
-
+    
     [store addObservingManagedObjectContext: managedObjectContext];
 
     return managedObjectContext;
@@ -252,6 +255,7 @@ static CBLManager* sCBLManager;
     _fetchRequestResultCache = [[NSMutableDictionary alloc] init];
     _queryBuilderCache = [[NSCache alloc] init];
     _relationshipCache = [[NSCache alloc] init];
+    _recentSavedObjectIDs = [[NSCache alloc] init];
     _respondFlags.storeWillSaveDocument = NO;
     
     self.conflictHandler = [self defaultConflictHandler];
@@ -322,7 +326,7 @@ static CBLManager* sCBLManager;
 
     // Setup database change notification:
     [[NSNotificationCenter defaultCenter] addObserver: self
-                                             selector: @selector(documentsChanged:)
+                                             selector: @selector(databaseChanged:)
                                                  name: kCBLDatabaseChangeNotification
                                                object: self.database];
 
@@ -600,17 +604,26 @@ static CBLManager* sCBLManager;
                  outError: (NSError**)outError {
     [self.database inTransaction: ^BOOL{
         for (NSManagedObject* object in [request insertedObjects]) {
-            if (![self insertOrUpdateObject:object withContext:context outError:outError])
+            if ([self insertOrUpdateObject:object withContext:context outError:outError])
+                [_recentSavedObjectIDs setObject: object.objectID
+                                          forKey: object.objectID.couchbaseLiteIDRepresentation];
+            else
                 return NO;
         }
 
         for (NSManagedObject* object in [request updatedObjects]) {
-            if (![self insertOrUpdateObject:object withContext:context outError:outError])
+            if ([self insertOrUpdateObject:object withContext:context outError:outError])
+                [_recentSavedObjectIDs setObject: object.objectID
+                                          forKey: object.objectID.couchbaseLiteIDRepresentation];
+            else
                 return NO;
         }
 
         for (NSManagedObject* object in [request deletedObjects]) {
-            if (![self deleteObject:object withContext:context outError:outError])
+            if ([self deleteObject:object withContext:context outError:outError])
+                [_recentSavedObjectIDs setObject: object.objectID
+                                          forKey: object.objectID.couchbaseLiteIDRepresentation];
+            else
                 return NO;
         }
         return YES;
@@ -811,7 +824,7 @@ static CBLManager* sCBLManager;
     return result;
 }
 
-- (BOOL)validateFetchRequest: (NSFetchRequest*)request error: (NSError**)outError {
+- (BOOL) validateFetchRequest: (NSFetchRequest*)request error: (NSError**)outError {
     NSError* error = nil;
     if ([request.propertiesToGroupBy count] > 0) {
         error = CBLISError(CBLIncrementalStoreErrorUnsupportedFetchRequest,
@@ -931,7 +944,7 @@ static CBLManager* sCBLManager;
                 request.entityName];
 }
 
-- (NSArray *)getSubentityNamesOfEntity:(NSEntityDescription *)entity {
+- (NSArray*) getSubentityNamesOfEntity:(NSEntityDescription *)entity {
     NSMutableArray* subentities = [NSMutableArray array];
     for (NSEntityDescription* subentity in entity.subentities) {
         [subentities addObject:subentity.name];
@@ -1308,9 +1321,7 @@ static CBLManager* sCBLManager;
     if (!builder)
         return nil;
 
-    [self cacheQueryBuilder: builder
-               forPredicate: predicate
-            sortDescriptors: nil];
+    [self cacheQueryBuilder: builder forPredicate: predicate sortDescriptors: nil];
 
     CBLQuery* query = [builder createQueryWithContext: nil];
     query.prefetch = request.predicate != nil;
@@ -2011,149 +2022,192 @@ static CBLManager* sCBLManager;
 
 #pragma mark - Change Handling
 
-- (void) addObservingManagedObjectContext:(NSManagedObjectContext*)context {
+- (void) addObservingManagedObjectContext: (NSManagedObjectContext*)context {
     if (!_observingManagedObjectContexts) {
         _observingManagedObjectContexts =
-            [[NSHashTable alloc] initWithOptions: NSPointerFunctionsWeakMemory capacity:10];
+            [[NSHashTable alloc] initWithOptions: NSPointerFunctionsWeakMemory capacity: 2];
     }
     [_observingManagedObjectContexts addObject:context];
+
+    if (!context.parentContext)
+        _rootContext = context;
 }
 
-- (void) removeObservingManagedObjectContext:(NSManagedObjectContext*)context {
+- (void) removeObservingManagedObjectContext: (NSManagedObjectContext*)context {
     [_observingManagedObjectContexts removeObject:context];
+    if (context == _rootContext)
+        _rootContext = nil;
 }
 
-- (void) documentsChanged: (NSNotification*)notification {
+- (NSArray*) sortedObservingManagedObjectContexts {
+    return [self.observingManagedObjectContexts.allObjects sortedArrayUsingDescriptors:
+        @[[NSSortDescriptor sortDescriptorWithKey:
+           NSStringFromSelector(@selector(parentContext)) ascending:YES]]];
+}
+
+- (void) databaseChanged: (NSNotification*)notification {
+    // This should get executed on the same root context dispatch queue:
     NSArray* changes = notification.userInfo[@"changes"];
     [self processCouchbaseLiteChanges: changes];
 }
 
 - (void) processCouchbaseLiteChanges: (NSArray*)changes {
-    NSMutableArray* deletedObjectIDs = [NSMutableArray array];
-    NSMutableArray* updatedObjectIDs = [NSMutableArray array];
-
+    INFO(@"processCouchbaseLiteChanges : %lu on %@", (unsigned long)changes.count,
+         [NSThread currentThread]);
+    
+    CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
+    
+    NSMutableSet* updatedIDs = [NSMutableSet set];
+    NSMutableSet* deletedIDs = [NSMutableSet set];
+    NSMutableSet* localChangedEntities = [NSMutableSet set];
+    
     for (CBLDatabaseChange* change in changes) {
-        if (!change.isCurrentRevision) continue;
-        if ([change.documentID hasPrefix: @"CBLIS"]) continue;
-
+        if (!change.isCurrentRevision)
+            continue;
+        if ([change.documentID hasPrefix: @"CBLIS"])
+            continue;
+        if (change.source == nil) {
+            NSString* entityName = [self entityNameFromDatabaseChange: change];
+            if (entityName)
+                [localChangedEntities addObject: entityName];
+            continue;
+        }
+        
         CBLDocument* doc = [self.database documentWithID: change.documentID];
         CBLRevision* rev = [doc revisionWithID: change.revisionID];
-
         BOOL deleted = rev.isDeletion;
-
         NSDictionary* properties = [rev properties];
-
         NSString* type = [properties objectForKey: [self documentTypeKey]];
         if (!type) {
             WARN(@"Couldn't find type property on changed document : %@ (source = %@)",
                  properties, change.source);
             continue;
         }
-
-        NSString* reference = change.documentID;
-
-        NSDictionary *entitiesByName = self.persistentStoreCoordinator.managedObjectModel.entitiesByName;
+        
+        NSDictionary *entitiesByName =
+            self.persistentStoreCoordinator.managedObjectModel.entitiesByName;
         NSEntityDescription* entity = entitiesByName[type];
-        NSManagedObjectID* objectID = [self newObjectIDForEntity: entity referenceObject: reference];
-
-        if (deleted) {
-            [deletedObjectIDs addObject: objectID];
-        } else {
-            [updatedObjectIDs addObject: objectID];
-        }
+        NSManagedObjectID* objectID = [self newObjectIDForEntity: entity
+                                                 referenceObject: change.documentID];
+        if (deleted)
+            [deletedIDs addObject: objectID];
+        else
+            [updatedIDs addObject: objectID];
     }
-
-    for (NSManagedObjectContext* context in self.observingManagedObjectContexts) {
-        [self informManagedObjectContext: context
-                              updatedIDs: updatedObjectIDs deletedIDs: deletedObjectIDs];
+    
+    for (NSString* entity in localChangedEntities.allObjects) {
+        [self purgeCachedObjectsForEntityName: entity];
     }
+    
+    if (updatedIDs.count > 0 || deletedIDs.count > 0) {
+        NSMutableArray* contexts = [[self sortedObservingManagedObjectContexts] mutableCopy];
+        [self refreshContexts: contexts withUpdatedIDs: updatedIDs deletedIDs: deletedIDs];
+    } else {
+        INFO(@"processCouchbaseLiteChanges : no changes from remote");
+    }
+    
+    CFAbsoluteTime end = CFAbsoluteTimeGetCurrent();
+    
+    INFO(@"processCouchbaseLiteChanges finished in %f seconds", (end - start));
 }
 
+- (NSString*) entityNameFromDatabaseChange: (CBLDatabaseChange*)change {
+    NSManagedObjectID* mID = [_recentSavedObjectIDs objectForKey: change.documentID];
+    NSString* entityName = mID.entity.name;
+    if (!entityName) {
+        CBLDocument* doc = [self.database documentWithID: change.documentID];
+        NSDictionary* properties = [doc revisionWithID: change.revisionID].properties;
+        entityName = [properties objectForKey: [self documentTypeKey]];
+    }
+    return entityName;
+}
 
-- (void) informManagedObjectContext: (NSManagedObjectContext*)context
-                         updatedIDs: (NSArray*)updatedIDs deletedIDs: (NSArray*)deletedIDs {
-    [context performBlock:^{
-        NSMutableDictionary* userInfo = [NSMutableDictionary dictionaryWithCapacity: 3];
+- (void) refreshContexts: (NSMutableArray*) contexts
+          withUpdatedIDs: (NSSet*)updatedIDs deletedIDs: (NSSet*)deletedIDs {
+    if (contexts.count == 0)
+        return;
+    
+    INFO(@"refreshContextsWithUpdatedIDs : updated %lu, deleted %lu on %@",
+         (unsigned long)updatedIDs.count, (unsigned long)deletedIDs.count, [NSThread currentThread]);
+    
+    NSManagedObjectContext* context = [contexts firstObject];
+    [contexts removeObjectAtIndex:0];
+    [context performBlock: ^{
+        INFO(@"Start refresh context : %@", context.parentContext ? @"Child" : @"Root");
+        
+        NSMutableSet* refreshedIDs = [NSMutableSet set];
         NSMutableSet* updatedEntities = [NSMutableSet set];
-
-        if (updatedIDs.count > 0) {
-            NSMutableArray* updated = [NSMutableArray arrayWithCapacity: updatedIDs.count];
-            NSMutableArray* inserted = [NSMutableArray arrayWithCapacity: updatedIDs.count];
-
-            for (NSManagedObjectID* mocid in updatedIDs) {
-                NSManagedObject* moc = [context objectRegisteredForID: mocid];
-                if (!moc) {
-                    moc = [context objectWithID: mocid];
-                    [inserted addObject: moc];
-
-                    // Ensure that a fault has been fired:
-                    [moc willAccessValueForKey: nil];
-                    [context refreshObject: moc mergeChanges: YES];
-
-                    for (NSString *relationshipName in moc.entity.relationshipsByName) {
-                        NSRelationshipDescription *relationshipDescription =
-                        moc.entity.relationshipsByName[relationshipName];
-                        if (!relationshipDescription.toMany) {
-                            if (![moc hasFaultForRelationshipNamed:relationshipName]) {
-                                NSManagedObject *destinationObject = [moc valueForKey:relationshipName];
-                                if (destinationObject) {
-                                    // Ensure that a fault has been fired:
-                                    [destinationObject willAccessValueForKey: nil];
-                                    [context refreshObject: destinationObject mergeChanges: YES];
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    [updated addObject: moc];
-
-                    // Ensure that a fault has been fired:
-                    [moc willAccessValueForKey: nil];
-                    [context refreshObject: moc mergeChanges: YES];
-                }
-
-                [updatedEntities addObject: moc.entity.name];
-            }
-            [userInfo setObject: updated forKey: NSUpdatedObjectsKey];
-            if (inserted.count > 0) {
-                [userInfo setObject: inserted forKey: NSInsertedObjectsKey];
+        
+        for (NSManagedObjectID* moID in updatedIDs) {
+            NSManagedObject* mObj = [context objectRegisteredForID: moID];
+            if (!mObj)
+                mObj = [context objectWithID: moID];
+            
+            for (NSString* relName in moID.entity.relationshipsByName) {
+                NSRelationshipDescription* rel = moID.entity.relationshipsByName[relName];
+                if (rel.toMany)
+                    continue;
+                
+                NSRelationshipDescription* invRel = rel.inverseRelationship;
+                if (!invRel)
+                    continue;
+                
+                NSArray* objIDs = [mObj objectIDsForRelationshipNamed: relName];
+                [refreshedIDs addObjectsFromArray: objIDs];
             }
         }
-
-        if (deletedIDs.count > 0) {
-            NSMutableArray* deleted = [NSMutableArray arrayWithCapacity: deletedIDs.count];
-            for (NSManagedObjectID* mocid in deletedIDs) {
-                NSManagedObject* moc = [context objectWithID: mocid];
-                [context deleteObject: moc];
-                // load object again to get a fault
-                [deleted addObject: [context objectWithID: mocid]];
-
-                [updatedEntities addObject: moc.entity.name];
+        
+        NSMutableArray* objectsToRefresh = [NSMutableArray array];
+        [objectsToRefresh addObjectsFromArray: updatedIDs.allObjects];
+        [objectsToRefresh addObjectsFromArray: refreshedIDs.allObjects];
+        
+        INFO(@"Refreshing context : %@ (%@ / %@ objects)",
+             (context.parentContext ? @"Child" : @"Root"),
+                @(objectsToRefresh.count), @(context.registeredObjects.count));
+        
+        for (NSManagedObjectID* objID in deletedIDs) {
+            NSManagedObject* obj = [context objectRegisteredForID: objID];
+            if (obj)
+                [context deleteObject: obj];
+            [updatedEntities addObject: objID.entity.name];
+        }
+        
+        for (NSManagedObjectID* objID in objectsToRefresh) {
+            NSManagedObject* obj = [context objectRegisteredForID: objID];
+            if (obj) {
+                [obj willAccessValueForKey: nil];
+                [context refreshObject: obj mergeChanges: NO];
             }
-            [userInfo setObject: deleted forKey: NSDeletedObjectsKey];
+            [updatedEntities addObject: objID.entity.name];
         }
-
-        // Clear cache:
-        for (NSString* entity in updatedEntities) {
-            [self purgeCachedObjectsForEntityName: entity];
+        
+        if (context == self.rootContext) {
+            for (NSString* entity in updatedEntities) {
+                [self purgeCachedObjectsForEntityName: entity];
+            }
         }
-
-        NSNotification* didUpdateNote =
-        [NSNotification notificationWithName: NSManagedObjectContextObjectsDidChangeNotification
-                                      object: context
-                                    userInfo: userInfo];
-        [context mergeChangesFromContextDidSaveNotification: didUpdateNote];
-
-        [[NSNotificationCenter defaultCenter]
-         postNotificationName: kCBLISObjectHasBeenChangedInStoreNotification
-         object: self
-         userInfo: @{
-                     NSDeletedObjectsKey: deletedIDs,
-                     NSUpdatedObjectsKey: updatedIDs
-                     }];
+        
+        [context processPendingChanges];
+        
+        INFO(@"Finish refresh context : %@", context.parentContext ? @"Child" : @"Root");
+        
+        if (contexts.count > 0)
+            [self refreshContexts: contexts withUpdatedIDs: updatedIDs deletedIDs: deletedIDs];
+        else
+            [self notifyChangeInStoreNotificationWithUpdatedIDs: updatedIDs deletedIDs: deletedIDs];
     }];
 }
 
+- (void) notifyChangeInStoreNotificationWithUpdatedIDs: (NSSet*)updatedIDs
+                                            deletedIDs: (NSSet*)deletedIDs {
+    [self.rootContext performBlock: ^{
+        [[NSNotificationCenter defaultCenter]
+            postNotificationName: kCBLISObjectHasBeenChangedInStoreNotification
+                          object: self
+                        userInfo: @{ NSUpdatedObjectsKey: updatedIDs,
+                                     NSDeletedObjectsKey: deletedIDs }];
+    }];
+}
 
 #pragma mark - Conflicts handling
 
