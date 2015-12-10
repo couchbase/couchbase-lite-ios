@@ -2169,9 +2169,10 @@ static CBLManager* sCBLManager;
                 NSRelationshipDescription* invRel = rel.inverseRelationship;
                 if (!invRel)
                     continue;
-                
-                NSArray* objIDs = [mObj objectIDsForRelationshipNamed: relName];
-                [refreshedIDs addObjectsFromArray: objIDs];
+
+                NSManagedObject *relObj = [mObj valueForKey: relName];
+                if (relObj)
+                    [refreshedIDs addObject: relObj.objectID];
             }
         }
         
