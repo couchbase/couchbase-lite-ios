@@ -44,7 +44,7 @@ static NSString* const kCBLISOldDefaultTypeKey = @"CBLIS_type";
 
 static NSString* const kCBLISCurrentRevisionAttributeName = @"CBLIS_Rev";
 static NSString* const kCBLISManagedObjectIDPrefix = @"CBL";
-static NSString* const kCBLISToManyViewNameFormat = @"CBLIS/%@_%@_%@";
+static NSString* const kCBLISToManyViewNameFormat = @"CBLIS_View_%@_%@_%@";
 
 // Utility functions
 static BOOL CBLISIsNull(id value);
@@ -56,6 +56,9 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
 - (NSString*) couchbaseLiteIDRepresentation;
 @end
 
+@interface CBLView ()
+- (void) updateIndex;
+@end
 
 @interface CBLIncrementalStore ()
 
@@ -287,7 +290,7 @@ static CBLManager* sCBLManager;
 
         // Check if the entity contains to-many relationship without an inverse relation and warn:
         NSDictionary* relationship = [entity relationshipsByName];
-        for (NSRelationshipDescription *rel in [relationship allValues]) {
+        for (NSRelationshipDescription* rel in [relationship allValues]) {
             if (rel.isToMany) {
                 if (!rel.inverseRelationship)
                     WARN(@"'%@' entity has a to-many relationship '%@' that has no inverse relationship "
@@ -1642,17 +1645,23 @@ static CBLManager* sCBLManager;
     if (view) {
         NSString* cacheKey = [NSString stringWithFormat:@"%@/%@", view, parentKey];
         CBLQueryEnumerator* result = [_relationshipCache objectForKey: cacheKey];
-        if (result && (SInt64)result.sequenceNumber == view.database.lastSequenceNumber)
-            return [result allObjects];
-
+        if (result) {
+            if ((SInt64)result.sequenceNumber == view.database.lastSequenceNumber)
+                return [result allObjects];
+            else {
+                SInt64 oldLastSequenceIndexed = view.lastSequenceIndexed;
+                [view updateIndex];
+                if (view.lastSequenceIndexed == oldLastSequenceIndexed)
+                    return [result allObjects];
+            }
+        }
+        
         CBLQuery* query = [view createQuery];
         query.keys = @[parentKey];
         query.prefetch = prefetch;
         result = [self queryEnumeratorForQuery: query error: outError];
-
         if (result)
             [_relationshipCache setObject: result forKey: cacheKey];
-
         return [result allObjects];
     }
     return nil;
