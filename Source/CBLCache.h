@@ -22,15 +22,8 @@
     and it keeps a certain number of recently-accessed objects with no external references.
     It's intended for use by a parent resource, to cache its children.
  
-    Important:
-    * Every object added must have a unique and fixed .cacheKey value.
-    * If ARC is not enabled, an object can belong to only one CBLCache at a time. */
+    Important: Every object added must have a unique and fixed .cacheKey value. */
 @interface CBLCache : NSObject
-{
-    @private
-    NSMapTable* _map;
-    NSCache* _cache;
-}
 
 - (instancetype) init;
 - (instancetype) initWithRetainLimit: (NSUInteger)retainLimit;

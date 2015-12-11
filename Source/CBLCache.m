@@ -20,6 +20,12 @@ static const NSUInteger kDefaultRetainLimit = 50;
 
 
 @implementation CBLCache
+{
+    @private
+    NSMapTable* _map;           // Weak mapping, docID-->Document
+    NSMutableArray* _recents;   // Retains recently-used documents (least recently used first)
+    NSUInteger _retainLimit;    // Max number of docs to retain
+}
 
 
 - (instancetype) init {
@@ -36,8 +42,8 @@ static const NSUInteger kDefaultRetainLimit = 50;
                                          valueOptions: NSMapTableWeakMemory
                                              capacity: 100];
         if (retainLimit > 0) {
-            _cache = [[NSCache alloc] init];
-            _cache.countLimit = retainLimit;
+            _retainLimit = retainLimit;
+            _recents = [[NSMutableArray alloc] initWithCapacity: retainLimit];
         }
     }
     return self;
@@ -49,15 +55,25 @@ static const NSUInteger kDefaultRetainLimit = 50;
     NSAssert(![_map objectForKey: key], @"Caching duplicate items for '%@': %p, now %p",
              key, [_map objectForKey: key], resource);
     [_map setObject: resource forKey: key];
-    if (_cache)
-        [_cache setObject: resource forKey: key];
+    if (_recents) {
+        if (_recents.count == _retainLimit)
+            [_recents removeObjectAtIndex: 0];    // remove least recently used
+        [_recents addObject: resource];
+    }
 }
 
 
 - (id<CBLCacheable>) resourceWithCacheKey: (NSString*)docID {
     id<CBLCacheable> doc = [_map objectForKey: docID];
-    if (doc && _cache && ![_cache objectForKey:docID])
-        [_cache setObject: doc forKey: docID];  // re-add doc to NSCache since it's recently used
+    if (doc && _recents.count > 1) {
+        // Move doc to the front of the list since it's been accessed:
+        // (Yes, this is O(n), but it's very fast: just a scan for pointer equality).
+        NSUInteger index = [_recents indexOfObjectIdenticalTo: doc];
+        if (index != NSNotFound && index != _recents.count - 1) {
+            [_recents removeObjectAtIndex: index];
+            [_recents addObject: doc];
+        }
+    }
     return doc;
 }
 
@@ -72,13 +88,13 @@ static const NSUInteger kDefaultRetainLimit = 50;
 
 
 - (void) unretainResources {
-    [_cache removeAllObjects];
+    [_recents removeAllObjects];
 }
 
 
 - (void) forgetAllResources {
     [_map removeAllObjects];
-    [_cache removeAllObjects];
+    [_recents removeAllObjects];
 }
 
 
