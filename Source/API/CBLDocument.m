@@ -30,15 +30,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     CBLSavedRevision* _currentRevision;
     BOOL _currentRevisionKnown;
     __weak id<CBLDocumentModel> _modelObject;
-#if ! CBLCACHE_IS_SMART
-    __weak CBLCache* _owningCache;
-#endif
 }
-
-
-#if ! CBLCACHE_IS_SMART
-@synthesize owningCache=_owningCache;
-#endif
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -53,17 +45,6 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     }
     return self;
 }
-
-
-#if ! CBLCACHE_IS_SMART
-- (void)dealloc
-{
-    id model = _modelObject;
-    if (model)
-        Warn(@"Deallocing %@ while it still has a modelObject %@", self, model);
-    [_owningCache resourceBeingDealloced: self];
-}
-#endif
 
 
 - (NSString*) description {

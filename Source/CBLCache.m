@@ -30,21 +30,11 @@ static const NSUInteger kDefaultRetainLimit = 50;
 - (instancetype) initWithRetainLimit: (NSUInteger)retainLimit {
     self = [super init];
     if (self) {
-#if CBLCACHE_IS_SMART
         // Construct an NSMapTable with weak references to values, which automatically removes
         // key/value pairs when a value is dealloced.
         _map = [[NSMapTable alloc] initWithKeyOptions: NSMapTableStrongMemory
                                          valueOptions: NSMapTableWeakMemory
                                              capacity: 100];
-#else
-        // Construct a CFDictionary that doesn't retain its values. It does _not_ automatically
-        // remove dealloced values, so we'll have to do it manually in -resourceBeingDeallocated.
-        CFDictionaryValueCallBacks valueCB = kCFTypeDictionaryValueCallBacks;
-        valueCB.retain = NULL;
-        valueCB.release = NULL;
-        _map = (NSMutableDictionary*)CFBridgingRelease(CFDictionaryCreateMutable(
-                       NULL, 100, &kCFCopyStringDictionaryKeyCallBacks, &valueCB));
-#endif
         if (retainLimit > 0) {
             _cache = [[NSCache alloc] init];
             _cache.countLimit = retainLimit;
@@ -54,18 +44,7 @@ static const NSUInteger kDefaultRetainLimit = 50;
 }
 
 
-#if ! CBLCACHE_IS_SMART
-- (void)dealloc {
-    for (id<CBLCacheable> doc in _map.objectEnumerator)
-        doc.owningCache = nil;
-}
-#endif
-
-
 - (void) addResource: (id<CBLCacheable>)resource {
-#if ! CBLCACHE_IS_SMART
-    resource.owningCache = self;
-#endif
     NSString* key = resource.cacheKey;
     NSAssert(![_map objectForKey: key], @"Caching duplicate items for '%@': %p, now %p",
              key, [_map objectForKey: key], resource);
@@ -88,24 +67,8 @@ static const NSUInteger kDefaultRetainLimit = 50;
 
 
 - (void) forgetResource: (id<CBLCacheable>)resource {
-#if ! CBLCACHE_IS_SMART
-    CBLCache* cache = resource.owningCache;
-    if (cache) {
-        NSAssert(cache == self, @"Removing object from the wrong cache");
-        resource.owningCache = nil;
-        [_map removeObjectForKey: resource.cacheKey];
-    }
-#else
-    [_map removeObjectForKey: resource.cacheKey];
-#endif
-}
-
-
-#if ! CBLCACHE_IS_SMART
-- (void) resourceBeingDealloced:(id<CBLCacheable>)resource {
     [_map removeObjectForKey: resource.cacheKey];
 }
-#endif
 
 
 - (void) unretainResources {

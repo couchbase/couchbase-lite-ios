@@ -17,19 +17,6 @@
 @protocol CBLCacheable;
 
 
-// CBLCache doesn't need hand-holding from its CBLCacheable objects if NSMapTable is available
-// and supports weak references. (iOS 6, Mac OS X 10.8.)
-#if ! __has_feature(objc_arc)
-#  define CBLCACHE_IS_SMART 0
-#elif defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
-#  define CBLCACHE_IS_SMART (__IPHONE_OS_VERSION_MIN_REQUIRED >= 60000)
-#elif defined(TARGET_OS_MAC)
-#  define CBLCACHE_IS_SMART (__MAC_OS_X_VERSION_MIN_REQUIRED >= 1080)
-#else
-#  define CBLCACHE_IS_SMART 0
-#endif
-
-
 /** An in-memory object cache.
     It keeps track of all added objects as long as anything else has retained them,
     and it keeps a certain number of recently-accessed objects with no external references.
@@ -41,11 +28,7 @@
 @interface CBLCache : NSObject
 {
     @private
-#if CBLCACHE_IS_SMART
     NSMapTable* _map;
-#else
-    NSMutableDictionary* _map;
-#endif
     NSCache* _cache;
 }
 
@@ -75,19 +58,11 @@
     All objects that don't have anything else retaining them will be removed from the cache. */
 - (void) unretainResources;
 
-#if ! CBLCACHE_IS_SMART
-/** A CBLCacheable implementation MUST call this at the start of its -dealloc method! */
-- (void) resourceBeingDealloced:(id<CBLCacheable>)resource;
-#endif
-
 @end
 
 
 @protocol CBLCacheable <NSObject>
 
-#if ! CBLCACHE_IS_SMART
-@property (weak) CBLCache* owningCache;
-#endif
 @property (readonly) NSString* cacheKey;
 
 @end
