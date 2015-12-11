@@ -151,10 +151,11 @@ static BOOL sAutoCompact = YES;
     LogTo(CBLDatabase, @"Opening %@", self);
 
     // Create the database directory:
-    if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
-                                   withIntermediateDirectories: YES
-                                                    attributes: nil
-                                                         error: outError])
+    _readOnly = _readOnly || options.readOnly;
+    if (!_readOnly && ![[NSFileManager defaultManager] createDirectoryAtPath: _dir
+                                                 withIntermediateDirectories: YES
+                                                                  attributes: nil
+                                                                       error: outError])
         return NO;
 
     // Instantiate storage:
@@ -181,8 +182,12 @@ static BOOL sAutoCompact = YES;
         // If explicit storage type given in options, always use primary storage type,
         // and if secondary db exists, try to upgrade from it:
         upgrade = [otherStorage databaseExistsIn: _dir] && ![primaryStorage databaseExistsIn: _dir];
-        if (upgrade && primarySQLite)  // can't upgrade to SQLite
-            return CBLStatusToOutNSError(kCBLStatusInvalidStorageType, outError);
+        if (upgrade) {
+            if (_readOnly)
+                return CBLStatusToOutNSError(kCBLStatusForbidden, outError);
+            if (primarySQLite)  // can't upgrade to SQLite
+                return CBLStatusToOutNSError(kCBLStatusInvalidStorageType, outError);
+        }
     } else {
         // If options don't specify, use primary unless secondary db already exists in dir:
         if (otherStorage && [otherStorage databaseExistsIn: _dir])

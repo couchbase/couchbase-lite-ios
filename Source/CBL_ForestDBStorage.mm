@@ -200,10 +200,8 @@ static void onCompactCallback(Database *db, bool compacting) {
                   error: (NSError**)outError
 {
     _directory = [directory copy];
-    fdb_open_flags flags = readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE;
-
     _config = Database::defaultConfig(); // Default config is set in +initialize, above
-    _config.flags = flags;
+    _config.flags = (readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE);
     _config.seqtree_opt = FDB_SEQTREE_USE;
     if (!_autoCompact)
         _config.compaction_mode = FDB_COMPACTION_MANUAL;
@@ -1219,6 +1217,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
 - (id<CBL_ViewStorage>) viewStorageNamed: (NSString*)name create:(BOOL)create {
     id<CBL_ViewStorage> view = [_views objectForKey: name];
     if (!view) {
+        create = create && !_forest->isReadOnly();
         view = [[CBL_ForestDBViewStorage alloc] initWithDBStorage: self name: name create: create];
         if (view) {
             if (!_views)

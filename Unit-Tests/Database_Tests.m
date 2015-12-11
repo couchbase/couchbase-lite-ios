@@ -26,19 +26,59 @@
     Assert(founddb, @"Couldn't get/create test_db: %@", error);
     AssertEq(founddb, db);
 
-    CBLManagerOptions options = {.readOnly= true};
-    CBLManager* ro = [[CBLManager alloc] initWithDirectory: dbmgr.directory options: &options
-                                                     error: &error];
-    Assert(ro);
+    // openDatabaseNamed:withOptions: returns existing Database object
+    CBLDatabaseOptions* dbOptions = [CBLDatabaseOptions new];
+    founddb = [dbmgr openDatabaseNamed: dbName withOptions: dbOptions error: &error];
+    AssertEq(founddb, db);
 
-    db = [ro databaseNamed: @"foo" error: &error];
-    AssertNil(db);
+    // Can't create a readOnly database
+    dbOptions.readOnly = YES;
+    founddb = [dbmgr openDatabaseNamed: @"foo" withOptions: dbOptions error: &error];
+    AssertNil(founddb);
 
-    db = [ro existingDatabaseNamed: dbName error: &error];
-    Assert(db);
-    CBLDocument* doc = [db createDocument];
-    Assert(![doc putProperties: @{@"foo": @"bar"} error: &error]);
-    [ro close];
+    // Open a read-only manager on the same directory:
+    {
+        CBLManagerOptions options = {.readOnly= true};
+        CBLManager* ro = [[CBLManager alloc] initWithDirectory: dbmgr.directory options: &options
+                                                         error: &error];
+        Assert(ro);
+
+        // Read-only Manager can't create a database:
+        CBLDatabase *rodb = [ro databaseNamed: @"foo" error: &error];
+        AssertNil(rodb);
+
+        // ...even if db is opened without the readOnly flag
+        dbOptions.readOnly = NO;
+        rodb = [dbmgr openDatabaseNamed: @"foo" withOptions: dbOptions error: &error];
+        AssertNil(rodb);
+
+        // ...but it can open an existing one:
+        rodb = [ro existingDatabaseNamed: dbName error: &error];
+        Assert(rodb);
+        // ...but can't create a document:
+        CBLDocument* doc = [rodb createDocument];
+        Assert(![doc putProperties: @{@"foo": @"bar"} error: &error]);
+
+        Assert(![rodb compact: &error]);
+        Assert(![rodb deleteDatabase: &error]);
+
+        [ro close];
+    }
+
+    {
+        // Open a second read/write Manager
+        CBLManager* otherMgr = [[CBLManager alloc] initWithDirectory: dbmgr.directory options: NULL
+                                                         error: &error];
+        // Open a read-only database:
+        dbOptions.readOnly = YES;
+        CBLDatabase *rodb = [otherMgr openDatabaseNamed: dbName withOptions: dbOptions error: &error];
+        Assert(rodb);
+        // Make sure it can't create a document:
+        CBLDocument *doc = [rodb createDocument];
+        Assert(![doc putProperties: @{@"foo": @"bar"} error: &error]);
+        AssertEq(error.code, kCBLStatusForbidden);
+        [otherMgr close];
+    }
 }
 
 

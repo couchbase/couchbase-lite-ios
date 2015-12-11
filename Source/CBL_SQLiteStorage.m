@@ -489,6 +489,9 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         case SQLITE_ROW:
         case SQLITE_DONE:
             return kCBLStatusOK;
+        case SQLITE_READONLY:
+        case SQLITE_PERM:
+            return kCBLStatusForbidden;
         case SQLITE_BUSY:
         case SQLITE_LOCKED:
             return kCBLStatusDBBusy;

@@ -563,7 +563,9 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
                                 withOptions: (CBLDatabaseOptions*)options
                                       error: (NSError**)outError
 {
-    CBLDatabase* db = [self _databaseNamed: name mustExist: !options.create error: outError];
+    CBLDatabase* db = [self _databaseNamed: name
+                                 mustExist: !options.create || options.readOnly
+                                     error: outError];
     if (db && !db.isOpen) {
         if ([db openWithOptions: options error: outError]) {
             [self registerEncryptionKey: options.encryptionKey forDatabaseNamed: name];
