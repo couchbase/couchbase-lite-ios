@@ -66,7 +66,7 @@ typedef void(^CBLISConflictHandler)(NSArray* conflictingRevisions);
  * The last path component of the database URL is used for the database name. Examples: cblite://test-database, cblite://test/abc/database-name.
  *
  * There are also convenience methods to create the whole Core Data stack with one line of code.
- *
+ * 
  * @author Christian Beer http://chbeer.de
  */
 @interface CBLIncrementalStore : NSIncrementalStore
@@ -127,17 +127,35 @@ typedef void(^CBLISConflictHandler)(NSArray* conflictingRevisions);
                                                           error: (NSError**)outError;
 
 /** Configures which CBLManager instance to use. The default value (nil) means to use
-    the shared CBLManager. */
+ *  the shared CBLManager.
+ */
 + (void) setCBLManager: (CBLManager*)manager;
 + (CBLManager*) CBLManager;
 
-/** Register a NSManagedObjectContext to be informed about changes in the CouchbaseLite database. A NSManagedObjectContextObjectsDidChangeNotification is sent
- * to this context on changes.
+/** Register a NSManagedObjectContext to be informed about changes in the CouchbaseLite database. 
+ * A NSManagedObjectContextObjectsDidChangeNotification is sent to this context on changes.
  */
 - (void) addObservingManagedObjectContext: (NSManagedObjectContext*)context;
-/** Deregister a NSManagedObjectContext from observing changes.
- */
+
+/** Deregister a NSManagedObjectContext from observing changes.*/
 - (void) removeObservingManagedObjectContext: (NSManagedObjectContext*)context;
+
+
+/** Purges this object from the database. The method is not thread-safe so please make sure
+ * that the method is executed on the root context's dispatch queue.
+ *
+ * In multiple context setup, if the object was created on a context aside from the root context, and
+ * the object hasn't been retrieved back from the store, the object ID of the object may be still a
+ * tempory ID as in general the ID will not be refreshed with the permanent ID from its root
+ * context. As a result, the object may not be purged as expected due to ID mismatching. To avoid 
+ * the issue, call NSManagedObjectContext's -obtainPermanentIDsForObjects:error: to obtain 
+ * its permanent ID.
+ *
+ * @param object the NSManagedObject object to be purged
+ * @param outError an optional error reference. Contains an NSError when the return is NO.
+ * @returns YES of success, otherwise return NO.
+ */
+- (BOOL) purgeObject: (NSManagedObject*)object error: (NSError**)outError;
 
 /** Creates a view for fetching entities by a property name. Can speed up fetching this entity by this property. If, for example, your entity 
  * "Entity" references an entity "Subentity" by a property named "subentities", you can speed up fetching those entities by calling 
