@@ -22,11 +22,11 @@
 
 
 @interface CBLIncrementalStore (UnitTest)
-@property (nonatomic) BOOL shouldNotifyLocalDatabaseChangesToContexts;
+@property (nonatomic) BOOL shouldNotifyLocalDatabaseChanges;
 @end
 
 @implementation CBLIncrementalStore (UnitTest)
-@dynamic shouldNotifyLocalDatabaseChangesToContexts;
+@dynamic shouldNotifyLocalDatabaseChanges;
 @end
 
 #pragma mark - Helper Classes / Methods
@@ -1897,9 +1897,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
                              };
 
     CBLISTestInsertEntriesWithProperties(context, @[entry1, entry2, entry3]);
-
     
-
     NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
 
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"Entry"
@@ -1919,6 +1917,25 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert(error);
     AssertEq(CBLIncrementalStoreErrorUnsupportedFetchRequest, error.code);
     AssertEq((int)result.count, 0);
+}
+
+- (void) test_PurgeObject {
+    NSError *error;
+
+    Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                 inManagedObjectContext:context];
+    entry.text = @"Test";
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    NSString *docID = [entry.objectID couchbaseLiteIDRepresentation];
+    Assert([store.database existingDocumentWithID: docID] != nil);
+    Assert(!entry.isDeleted);
+    
+    success = [store purgeObject: entry error: &error];
+
+    Assert(success, @"Could not purge object: %@", error);
+    AssertNil([store.database _cachedDocumentWithID: docID]);
 }
 
 #pragma mark - Performance
@@ -2086,7 +2103,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
     NSArray *metrics = [[self class] defaultPerformanceMetrics];
     [self measureMetrics:metrics automaticallyStartMeasuring:NO forBlock:^{
-        store.shouldNotifyLocalDatabaseChangesToContexts = YES;
+        store.shouldNotifyLocalDatabaseChanges = YES;
 
         XCTestExpectation *expectation = [self expectationWithDescription:@"CBLIS Changed Notification"];
 
@@ -2135,7 +2152,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         [self reCreateCoreDataContext];
     }];
 
-    store.shouldNotifyLocalDatabaseChangesToContexts = NO;
+    store.shouldNotifyLocalDatabaseChanges = NO;
 }
 
 #endif
