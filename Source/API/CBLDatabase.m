@@ -331,6 +331,10 @@ static void catchInBlock(void (^block)()) {
     [_docCache forgetAllResources];
 }
 
+- (void) _pruneDocumentCache {
+    [_docCache unretainResources];
+}
+
 - (void) removeDocumentFromCache: (CBLDocument*)document {
     [_docCache forgetResource: document];
 }

@@ -254,6 +254,9 @@
 
 @optional
 
+/** Low-memory warning; free up resources if possible. */
+- (void) lowMemoryWarning;
+
 /** Registers the encryption key of the database file. Must be called before opening the db. */
 - (void) setEncryptionKey: (CBLSymmetricKey*)key;
 

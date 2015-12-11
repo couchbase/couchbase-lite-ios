@@ -1250,4 +1250,10 @@ static NSDictionary* getDocProperties(const Document& doc) {
 }
 
 
+- (void) lowMemoryWarning {
+    for (CBL_ForestDBViewStorage* view in _views.objectEnumerator)
+        [view closeIndex];
+}
+
+
 @end

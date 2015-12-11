@@ -280,22 +280,9 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
             if (!create || ![self openIndexWithOptions: FDB_OPEN_FLAG_CREATE status: NULL])
                 return nil;
         }
-
-    #if TARGET_OS_IPHONE
-        // On iOS, close the index when there's a low-memory notification:
-        [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(closeIndex)
-                                                     name: UIApplicationDidReceiveMemoryWarningNotification object: nil];
-    #endif
     }
     return self;
 }
-
-
-#if TARGET_OS_IPHONE
-- (void) dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
-}
-#endif
 
 
 - (void) close {

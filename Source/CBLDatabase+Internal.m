@@ -256,6 +256,13 @@ static BOOL sAutoCompact = YES;
                                                  name: CBL_DatabaseWillBeDeletedNotification
                                                object: nil];
 
+#if TARGET_OS_IPHONE
+    // On iOS, observe low-memory notifications:
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(lowMemory:)
+                                                 name: UIApplicationDidReceiveMemoryWarningNotification
+                                               object: nil];
+#endif
+
     if (upgrade) {
         // Upgrading a SQLite database:
         Class databaseUpgradeClass = NSClassFromString(@"CBLDatabaseUpgrade");
@@ -473,6 +480,16 @@ static BOOL sAutoCompact = YES;
         }
     }
 }
+
+
+#if TARGET_OS_IPHONE
+- (void) lowMemory: (NSNotification*)n {
+    [self doAsync: ^{
+        [self _pruneDocumentCache];
+        [_storage lowMemoryWarning];
+    }];
+}
+#endif
 
 
 #pragma mark - GETTING DOCUMENTS:
