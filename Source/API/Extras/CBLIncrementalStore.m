@@ -66,6 +66,7 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
 @property (nonatomic, strong) NSHashTable* observingManagedObjectContexts;
 @property (nonatomic, strong) CBLDatabase* database;
 @property (nonatomic, readonly) NSUInteger maxRelationshipLoadDepth;
+@property (nonatomic) BOOL shouldNotifyLocalDatabaseChanges;
 
 @end
 
@@ -78,6 +79,7 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
     NSUInteger _relationshipSearchDepth;
     NSCache* _relationshipCache;
     NSCache* _recentSavedObjectIDs;
+    BOOL _shouldNotifyLocalDatabaseChanges;
     
     struct {
         unsigned int storeWillSaveDocument:1;
@@ -88,6 +90,7 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
 @synthesize conflictHandler = _conflictHandler;
 @synthesize customProperties = _customProperties;
 @synthesize observingManagedObjectContexts = _observingManagedObjectContexts;
+@synthesize shouldNotifyLocalDatabaseChanges = _shouldNotifyLocalDatabaseChanges;
 @synthesize delegate = _delegate;
 
 static CBLManager* sCBLManager;
@@ -2040,6 +2043,27 @@ static CBLManager* sCBLManager;
     return attachment.content;
 }
 
+#pragma mark - Purge
+
+- (BOOL) purgeObject: (NSManagedObject*)object error:(NSError **)outError {
+    if ([object.objectID isTemporaryID]) {
+        WARN(@"The object has a tempory ID so the object many not be purged as expected due to "
+              "ID mismatching. Please call NSManagedObjectContext's -obtainPermanentIDsForObjects:error:"
+              "to obtain its permanent ID.");
+    }
+
+    NSString* docID = [object.objectID couchbaseLiteIDRepresentation];
+    CBLDocument* doc = [self.database documentWithID: docID];
+    BOOL success = [doc purgeDocument: outError];
+    if (success) {
+        NSMutableSet* deletedIDs = [NSMutableSet setWithCapacity: 1];
+        [deletedIDs addObject: object.objectID];
+        [self refreshObservingContextsWithUpdatedIDs: nil deletedIDs: deletedIDs
+                                    thenNotifyChange: NO];
+    }
+    return success;
+}
+
 #pragma mark - Change Handling
 
 - (void) addObservingManagedObjectContext: (NSManagedObjectContext*)context {
@@ -2063,73 +2087,108 @@ static CBLManager* sCBLManager;
 - (void) databaseChanged: (NSNotification*)notification {
     // This should get executed on the same root context dispatch queue:
     NSArray* changes = notification.userInfo[@"changes"];
-    [self processCouchbaseLiteChanges: changes];
+    if (changes.count == 0)
+        return;
+
+    CBLDatabaseChange* change = changes.firstObject;
+    if (change.source == nil)
+        [self processLocalChanges: changes];
+    else
+        [self processRemoteChanges: changes];
 }
 
-- (void) processCouchbaseLiteChanges: (NSArray*)changes {
-    INFO(@"processCouchbaseLiteChanges : %lu on %@", (unsigned long)changes.count,
+- (void) processLocalChanges: (NSArray*)changes {
+    INFO(@"processLocalChanges : %lu on %@", (unsigned long)changes.count,
+         [NSThread currentThread]);
+
+    CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
+
+    NSMutableSet* updatedIDs = nil;
+    NSMutableSet* deletedIDs = nil;
+    for (CBLDatabaseChange* change in changes) {
+        if (!change.isCurrentRevision)
+            continue;
+        if ([change.documentID hasPrefix: @"CBLIS"])
+            continue;
+
+        NSString* entity = [self entityNameForDatabaseChange: change];
+        [self purgeCachedObjectsForEntityName: entity];
+
+        if (self.shouldNotifyLocalDatabaseChanges) {
+            BOOL isDeleted;
+            NSManagedObjectID *objectID = [self objectIDForChange: change isDeleted: &isDeleted];
+            if (objectID) {
+                if (isDeleted) {
+                    if (!deletedIDs) deletedIDs = [NSMutableSet set];
+                    [deletedIDs addObject: objectID];
+                } else {
+                    if (!updatedIDs) updatedIDs = [NSMutableSet set];
+                    [updatedIDs addObject: objectID];
+                }
+            }
+        }
+    }
+
+    if (self.shouldNotifyLocalDatabaseChanges && updatedIDs.count > 0 && deletedIDs.count > 0)
+        [self notifyChangeNotificationWithUpdatedIDs: updatedIDs deletedIDs: deletedIDs];
+
+    CFAbsoluteTime end = CFAbsoluteTimeGetCurrent();
+    INFO(@"processLocalChanges : Finished in %f seconds", (end - start));
+}
+
+- (void) processRemoteChanges: (NSArray*)changes {
+    INFO(@"processRemoteChanges : %lu on %@", (unsigned long)changes.count,
          [NSThread currentThread]);
     
     CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
     
     NSMutableSet* updatedIDs = [NSMutableSet set];
     NSMutableSet* deletedIDs = [NSMutableSet set];
-    NSMutableSet* changedEntities = [NSMutableSet set];
-    
+
     for (CBLDatabaseChange* change in changes) {
         if (!change.isCurrentRevision)
             continue;
         if ([change.documentID hasPrefix: @"CBLIS"])
             continue;
-        if (change.source == nil || self.observingManagedObjectContexts.count == 0) {
-            NSString* entityName = [self entityNameFromDatabaseChange: change];
-            if (entityName)
-                [changedEntities addObject: entityName];
-            continue;
-        }
-        
-        CBLDocument* doc = [self.database documentWithID: change.documentID];
-        CBLRevision* rev = [doc revisionWithID: change.revisionID];
-        BOOL deleted = rev.isDeletion;
-        NSDictionary* properties = [rev properties];
-        NSString* type = [properties objectForKey: [self documentTypeKey]];
-        if (!type) {
-            WARN(@"Couldn't find type property on changed document : %@ (source = %@)",
-                 properties, change.source);
-            continue;
-        }
-        
-        NSDictionary *entitiesByName =
-            self.persistentStoreCoordinator.managedObjectModel.entitiesByName;
-        NSEntityDescription* entity = entitiesByName[type];
-        NSManagedObjectID* objectID = [self newObjectIDForEntity: entity
-                                                 referenceObject: change.documentID];
-        if (deleted)
+
+        BOOL isDeleted;
+        NSManagedObjectID *objectID = [self objectIDForChange: change isDeleted: &isDeleted];
+        if (isDeleted)
             [deletedIDs addObject: objectID];
         else
             [updatedIDs addObject: objectID];
     }
-    
-    for (NSString* entity in changedEntities.allObjects) {
-        [self purgeCachedObjectsForEntityName: entity];
-    }
-    
+
     if (updatedIDs.count > 0 || deletedIDs.count > 0) {
-        NSMutableArray* contexts = [[self sortedObservingManagedObjectContexts] mutableCopy];
-        [self refreshContexts: contexts withUpdatedIDs: updatedIDs deletedIDs: deletedIDs];
-    } else {
-        if (self.observingManagedObjectContexts > 0)
-            INFO(@"processCouchbaseLiteChanges : no changes from remote");
-        else
-            INFO(@"processCouchbaseLiteChanges : no observing contexts");
+        [self refreshObservingContextsWithUpdatedIDs: updatedIDs deletedIDs: deletedIDs
+                                    thenNotifyChange: YES];
     }
     
     CFAbsoluteTime end = CFAbsoluteTimeGetCurrent();
-    
-    INFO(@"processCouchbaseLiteChanges : Finished in %f seconds", (end - start));
+    INFO(@"processRemoteChanges : Finished in %f seconds", (end - start));
 }
 
-- (NSString*) entityNameFromDatabaseChange: (CBLDatabaseChange*)change {
+- (NSManagedObjectID*) objectIDForChange: (CBLDatabaseChange*)change isDeleted: (BOOL*)isDeleted {
+    CBLDocument* doc = [self.database documentWithID: change.documentID];
+    CBLRevision* rev = [doc revisionWithID: change.revisionID];
+    NSDictionary* properties = [rev properties];
+    NSString* type = [properties objectForKey: [self documentTypeKey]];
+    if (!type) {
+        WARN(@"Couldn't find type property on changed document : %@ (source = %@)",
+             properties, change.source);
+        return nil;
+    }
+
+    if (isDeleted)
+        *isDeleted = rev.isDeletion;
+
+    NSDictionary *entitiesByName =
+    self.persistentStoreCoordinator.managedObjectModel.entitiesByName;
+    NSEntityDescription* entity = entitiesByName[type];
+    return [self newObjectIDForEntity: entity referenceObject: change.documentID];
+}
+
+- (NSString*) entityNameForDatabaseChange: (CBLDatabaseChange*)change {
     NSManagedObjectID* mID = [_recentSavedObjectIDs objectForKey: change.documentID];
     NSString* entityName = mID.entity.name;
     if (!entityName) {
@@ -2140,14 +2199,29 @@ static CBLManager* sCBLManager;
     return entityName;
 }
 
+- (void) refreshObservingContextsWithUpdatedIDs: (NSSet*)updatedIDs deletedIDs: (NSSet*)deletedIDs
+                               thenNotifyChange: (BOOL)notifyChange {
+    NSMutableArray* contexts = [[self sortedObservingManagedObjectContexts] mutableCopy];
+    if (contexts.count > 0) {
+        [self refreshContexts: contexts
+               withUpdatedIDs: updatedIDs deletedIDs: deletedIDs
+                 onCompletion: ^{
+                     if (notifyChange)
+                         [self notifyChangeNotificationWithUpdatedIDs: updatedIDs
+                                                           deletedIDs: deletedIDs];
+                 }
+         ];
+    } else {
+        if (notifyChange)
+            [self notifyChangeNotificationWithUpdatedIDs: updatedIDs deletedIDs: deletedIDs];
+    }
+}
+
 - (void) refreshContexts: (NSMutableArray*) contexts
-          withUpdatedIDs: (NSSet*)updatedIDs deletedIDs: (NSSet*)deletedIDs {
-    if (contexts.count == 0)
-        return;
-    
+          withUpdatedIDs: (NSSet*)updatedIDs deletedIDs: (NSSet*)deletedIDs
+            onCompletion: (void (^)())completionBlock {
     INFO(@"refreshContextsWithUpdatedIDs : updated %lu, deleted %lu on %@",
          (unsigned long)updatedIDs.count, (unsigned long)deletedIDs.count, [NSThread currentThread]);
-    
     NSManagedObjectContext* context = [contexts firstObject];
     [contexts removeObjectAtIndex:0];
     [context performBlock: ^{
@@ -2212,21 +2286,30 @@ static CBLManager* sCBLManager;
         INFO(@"Finish refresh context : %@", context.parentContext ? @"Child" : @"Root");
         
         if (contexts.count > 0)
-            [self refreshContexts: contexts withUpdatedIDs: updatedIDs deletedIDs: deletedIDs];
-        else
-            [self notifyChangeInStoreNotificationWithUpdatedIDs: updatedIDs deletedIDs: deletedIDs];
+            [self refreshContexts: contexts withUpdatedIDs: updatedIDs deletedIDs: deletedIDs
+                     onCompletion: completionBlock];
+        else {
+            if (completionBlock) {
+                [self.database doAsync:^{
+                    completionBlock();
+                }];
+            }
+        }
     }];
 }
 
-- (void) notifyChangeInStoreNotificationWithUpdatedIDs: (NSSet*)updatedIDs
-                                            deletedIDs: (NSSet*)deletedIDs {
-    [self.database doAsync: ^{
-        [[NSNotificationCenter defaultCenter]
-            postNotificationName: kCBLISObjectHasBeenChangedInStoreNotification
-                          object: self
-                        userInfo: @{ NSUpdatedObjectsKey: updatedIDs,
-                                     NSDeletedObjectsKey: deletedIDs }];
-    }];
+- (void) notifyChangeNotificationWithUpdatedIDs: (NSSet*)updatedIDs
+                                     deletedIDs: (NSSet*)deletedIDs {
+    NSMutableDictionary* userInfo = [NSMutableDictionary dictionary];
+    if (updatedIDs.count > 0)
+        [userInfo setObject: updatedIDs forKey: NSUpdatedObjectsKey];
+    if (deletedIDs.count > 0)
+        [userInfo setObject: deletedIDs forKey: NSDeletedObjectsKey];
+
+    [[NSNotificationCenter defaultCenter]
+        postNotificationName: kCBLISObjectHasBeenChangedInStoreNotification
+                      object: self
+                    userInfo: userInfo];
 }
 
 #pragma mark - Conflicts handling
