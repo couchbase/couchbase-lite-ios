@@ -715,13 +715,18 @@
                         // Considered a success, since the doc was delivered to the app.
                         LogTo(Sync, @"%@: Remote rev failed validation: %@ (reason: %@)",
                               self, rev, error.localizedFailureReason);
+                    } else if (status == kCBLStatusBadAttachment) {
+                        // Revision with broken _attachments metadata (i.e. bogus revpos)
+                        // should not stop replication. Warn and skip it. (#1001)
+                        Warn(@"%@: Revision %@ has invalid attachment metadata: %@",
+                             self, rev, rev[@"_attachments"]);
                     } else if (status == kCBLStatusDBBusy) {
                         return status;  // abort transaction; _inTransaction will retry
                     } else {
                         Warn(@"%@ failed to write %@: status=%d", self, rev, status);
                         [self revisionFailed];
                         self.error = CBLStatusToNSError(status);
-                        continue;
+                        continue; // don't mark as processed
                     }
                 }
                 
