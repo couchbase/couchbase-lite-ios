@@ -96,7 +96,8 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 
 - (BOOL) isDeleted {
-    return self.currentRevision.isDeletion || (self.currentRevision == nil && [self getLeafRevisions: NULL].count > 0);
+    CBLRevision *currentRev = self.currentRevision;
+    return currentRev.isDeletion || ((currentRev == nil) && ([self getLeafRevisions: NULL].count > 0));
 }
 
 
