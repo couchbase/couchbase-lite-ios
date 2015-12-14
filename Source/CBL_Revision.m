@@ -47,6 +47,26 @@
     return self;
 }
 
+- (instancetype) initWithDocID: (UU NSString*)docID
+                         revID: (UU NSString*)revID
+                       deleted: (BOOL)deleted
+                          body: (UU CBL_Body*)body
+{
+    self = [super init];
+    if (self) {
+        if (!docID && (revID || deleted)) {
+            // Illegal rev
+            return nil;
+        }
+        _docID = docID.copy;
+        _revID = revID.copy;
+        _deleted = deleted;
+        _body = body;
+
+    }
+    return self;
+}
+
 - (instancetype) initWithBody: (UU CBL_Body*)body {
     Assert(body);
     NSDictionary* props = body.properties;

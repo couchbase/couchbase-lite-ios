@@ -38,6 +38,9 @@ NSData* CBLHMACSHA256(NSData* key, NSData* data) __attribute__((nonnull));
     Returns a pointer to the end of the string (where it writes a null.) */
 char* CBLAppendHex( char *dst, const void* bytes, size_t length);
 
+/** Appends a decimal number to the output string. */
+size_t CBLAppendDecimal(char *buf, uint64_t n);
+
 /** Generates a digest string from a JSON-encodable object. Equal objects produce equal strings. */
 NSString* CBLDigestFromObject(id obj);
 

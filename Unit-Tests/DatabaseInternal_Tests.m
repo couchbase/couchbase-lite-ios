@@ -232,6 +232,22 @@ static NSDictionary* userProperties(NSDictionary* dict) {
 }
 
 
+- (void) test02_ExpectedRevIDs {
+    // It's not strictly required that revisions always generate the same revIDs, but it helps
+    // prevent false conflicts when two peers make the same change to the same parent revision.
+    CBL_Revision* rev1 = [self putDoc: $dict({@"_id", @"doc"}, {@"property", @"value"})];
+    AssertEqual(rev1.revID, @"1-0f9219c8f699b156f1f86242b0c8e350");
+    CBL_Revision* rev2 = [self putDoc: $dict({@"_id", rev1.docID},
+                                             {@"_rev", rev1.revID},
+                                             {@"property", @"newvalue"})];
+    AssertEqual(rev2.revID, @"2-59284737f6f209344495057ac5007606");
+    CBL_Revision* rev3 = [self putDoc: $dict({@"_id", rev2.docID},
+                                             {@"_rev", rev2.revID},
+                                             {@"_deleted", @YES})];
+    AssertEqual(rev3.revID, @"3-fff64159f36e69ecaf4395e153efe969");
+}
+
+
 - (void) test03_DeleteWithProperties {
     // Test case for issue #50.
     // Test that it's possible to delete a document by PUTting a revision with _deleted=true,

@@ -19,6 +19,10 @@
 - (instancetype) initWithDocID: (NSString*)docID
                          revID: (NSString*)revID
                        deleted: (BOOL)deleted;
+- (instancetype) initWithDocID: (NSString*)docID
+                         revID: (NSString*)revID
+                       deleted: (BOOL)deleted
+                          body: (CBL_Body*)body;
 - (instancetype) initWithBody: (CBL_Body*)body;
 - (instancetype) initWithProperties: (NSDictionary*)properties;
 

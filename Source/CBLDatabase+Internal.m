@@ -747,9 +747,9 @@ static SequenceNumber keyToSequence(id key, SequenceNumber dflt) {
 
 
 // CBL_StorageDelegate method. It has to be in this category but the real method is in another one
-- (NSString*) generateRevIDForJSON: (NSData*)json
+- (NSString*) generateRevIDForJSON: (UU NSData*)json
                            deleted: (BOOL)deleted
-                         prevRevID: (NSString*)prevID
+                         prevRevID: (UU NSString*)prevID
 {
     return [self _generateRevIDForJSON: json deleted: deleted prevRevID: prevID];
 }

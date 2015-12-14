@@ -52,6 +52,10 @@ NSData* CBLContentsOfTestFile(NSString* name) {
 
 
 BOOL CBLWithStringBytes(UU NSString* str, void (^block)(const char*, size_t)) {
+    if (!str) {
+        block(NULL, 0);
+        return YES;
+    }
     // First attempt: Get a C string directly from the CFString if it's in the right format:
     const char* cstr = CFStringGetCStringPtr((CFStringRef)str, kCFStringEncodingUTF8);
     if (cstr) {
@@ -142,6 +146,26 @@ char* CBLAppendHex( char *dst, const void* bytes, size_t length) {
     }
     *dst = '\0';
     return dst;
+}
+
+size_t CBLAppendDecimal(char *str, uint64_t n) {
+    size_t len;
+    if (n < 10) {
+        str[0] = '0' + (char)n;
+        len = 1;
+    } else {
+        char temp[20]; // max length is 20 decimal digits
+        char *dst = &temp[20];
+        len = 0;
+        do {
+            *(--dst) = '0' + (n % 10);
+            n /= 10;
+            len++;
+        } while (n > 0);
+        memcpy(str, dst, len);
+    }
+    str[len] = '\0';
+    return len;
 }
 
 NSString* CBLHexFromBytes( const void* bytes, size_t length) {

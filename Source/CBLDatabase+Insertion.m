@@ -91,15 +91,20 @@
     unsigned char digestBytes[MD5_DIGEST_LENGTH];
     MD5_Init(&ctx);
 
-    __block BOOL tooLong = NO;
-    CBLWithStringBytes(prevID, ^(const char *bytes, size_t length) {
-        if (length > 0xFF)
-            tooLong = YES;
-        uint8_t lengthByte = length & 0xFF;
-        MD5_Update(&ctx, &lengthByte, 1);       // prefix with length byte
-        if (length > 0)
-            MD5_Update(&ctx, bytes, length);
-    });
+    if (prevID) {
+        // (Note: It's not really correct to skip this entirely if prevID is nil -- we should be
+        // writing the 0 length byte -- but it's necessary for consistency with prior versions,
+        // which had a bug in CBLWithStringBytes that didn't call the block if the string was nil.)
+        __block BOOL tooLong = NO;
+        CBLWithStringBytes(prevID, ^(const char *bytes, size_t length) {
+            if (length > 0xFF)
+                tooLong = YES;
+            uint8_t lengthByte = length & 0xFF;
+            MD5_Update(&ctx, &lengthByte, 1);       // prefix with length byte
+            if (length > 0)
+                MD5_Update(&ctx, bytes, length);
+        });
+    }
     
     uint8_t deletedByte = deleted != NO;
     MD5_Update(&ctx, &deletedByte, 1);
@@ -108,7 +113,8 @@
     MD5_Final(digestBytes, &ctx);
 
     char hex[11 + 2*MD5_DIGEST_LENGTH + 1];
-    char *dst = hex + sprintf(hex, "%u-", generation+1);
+    char *dst = hex + CBLAppendDecimal(hex, generation+1);
+    *dst++ = '-';
     dst = CBLAppendHex(dst, digestBytes, sizeof(digestBytes));
     return [[NSString alloc] initWithBytes: hex
                                     length: dst - hex

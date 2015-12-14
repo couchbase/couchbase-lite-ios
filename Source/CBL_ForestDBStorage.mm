@@ -61,7 +61,6 @@ using namespace couchbase_lite;
     Database* _forest;
     Transaction* _forestTransaction;
     KeyStore* _localDocs;
-    int _transactionLevel;
     NSMapTable* _views;
 }
 
@@ -224,11 +223,9 @@ static void onCompactCallback(Database *db, bool compacting) {
 
 
 - (void) close {
-    Assert(_transactionLevel == 0, @"Can't close database while %u transactions active",
-           _transactionLevel);
+    Assert(!_forestTransaction, @"Can't close database while transaction active");
     delete _forest;
     _forest = NULL;
-    _transactionLevel = 0;
 }
 
 
@@ -301,29 +298,27 @@ static void onCompactCallback(Database *db, bool compacting) {
 
 
 - (CBLStatus) inTransaction: (CBLStatus(^)())block {
-    LogTo(CBLDatabase, @"BEGIN transaction...");
-    if (++_transactionLevel == 1) {
+    if (!_forestTransaction) {
         _forestTransaction = new Transaction(_forest);
-    }
+        LogTo(CBLDatabase, @"BEGIN transaction...");
 
-    CBLStatus status = tryStatus(^CBLStatus{
-        return block();
-    });
-    BOOL commit = !CBLStatusIsError(status);
+        CBLStatus status = tryStatus(block);
+        BOOL commit = !CBLStatusIsError(status);
 
-    LogTo(CBLDatabase, @"END transaction (status=%d)", status);
-    if (--_transactionLevel == 0) {
+        LogTo(CBLDatabase, @"END transaction...");
         if (!commit)
             _forestTransaction->abort();
         delete _forestTransaction;
         _forestTransaction = NULL;
         [_delegate storageExitedTransaction: commit];
+        return status;
+    } else {
+        return block();
     }
-    return status;
 }
 
 - (BOOL) inTransaction {
-    return _transactionLevel > 0;
+    return _forestTransaction != NULL;
 }
 
 
@@ -995,7 +990,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
         json = [NSData dataWithBytes: "{}" length: 2];
     }
 
-    __block CBL_MutableRevision* putRev = nil;
+    __block CBL_Revision* putRev = nil;
     __block CBLDatabaseChange* change = nil;
 
     *outStatus = [self inTransaction: ^CBLStatus {
@@ -1050,14 +1045,17 @@ static NSDictionary* getDocProperties(const Document& doc) {
         if (!newRevID)
             return kCBLStatusBadID;  // invalid previous revID (no numeric prefix)
 
-        putRev = [[CBL_MutableRevision alloc] initWithDocID: docID
-                                                      revID: newRevID
-                                                    deleted: deleting];
+        // Create the new CBL_Revision:
+        CBL_Body *body = nil;
         if (properties) {
             properties[@"_id"] = docID;
             properties[@"_rev"] = newRevID;
-            putRev.properties = properties;
+            body = [[CBL_Body alloc] initWithProperties: properties];
         }
+        putRev = [[CBL_Revision alloc] initWithDocID: docID
+                                               revID: newRevID
+                                             deleted: deleting
+                                                body: body];
 
         // Run any validation blocks:
         if (validationBlock) {
