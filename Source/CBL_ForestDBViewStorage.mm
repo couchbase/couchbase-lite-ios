@@ -96,7 +96,7 @@ public:
 
         if (indexIt) {
             @autoreleasepool {
-                VersionedDocument vdoc(_indexes[0]->sourceStore(), cppDoc);
+                VersionedDocument vdoc(sourceStore(), cppDoc);
                 const Revision* node = vdoc.currentRevision();
                 NSMutableDictionary* body = [CBLForestBridge bodyOfNode: node];
                 body[@"_local_seq"] = @(node->sequence);
