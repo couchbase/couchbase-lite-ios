@@ -188,7 +188,7 @@ private:
 
     // Emit a regular key/value pair
     void callEmit(id key, id value, NSDictionary* doc, EmitFn& emitFn) {
-        Collatable collKey(key);
+        CollatableBuilder collKey(key);
         if (value == doc) {
             emitFn(collKey, Index::kSpecialValue);
         } else if (value) {
@@ -576,7 +576,7 @@ static NSString* viewNames(NSArray* views) {
     } else if (options.keys) {
         std::vector<KeyRange> collatableKeys;
         for (id key in options.keys)
-            collatableKeys.push_back(Collatable(key));
+            collatableKeys.push_back(Collatable(CollatableBuilder(key)));
         return new IndexEnumerator(_index,
                                    collatableKeys,
                                    forestOpts);
@@ -585,9 +585,9 @@ static NSString* viewNames(NSArray* views) {
         __strong id &maxKey = options->descending ? startKey : endKey;
         maxKey = CBLKeyForPrefixMatch(maxKey, options->prefixMatchLevel);
         return new IndexEnumerator(_index,
-                                   Collatable(startKey),
+                                   CollatableBuilder(startKey),
                                    nsstring_slice(options.startKeyDocID),
-                                   Collatable(endKey),
+                                   CollatableBuilder(endKey),
                                    nsstring_slice(options.endKeyDocID),
                                    forestOpts);
     }
@@ -886,7 +886,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
             std::vector<KeyRange> collatableKeys;
             Tokenizer tokenizer;
             for (TokenIterator i(tokenizer, nsstring_slice(options.fullTextQuery), true); i; ++i) {
-                collatableKeys.push_back(Collatable(i.token()));
+                collatableKeys.push_back(Collatable(CollatableBuilder(i.token())));
                 queryTokens.push_back(i.token());
                 termTotalCounts.push_back(0);
                 LogTo(QueryVerbose, @"    token: \"%s\"", i.token().c_str());
