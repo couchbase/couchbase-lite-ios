@@ -19,7 +19,7 @@ extern "C" {
 #import "CBLSymmetricKey.h"
 }
 
-using namespace forestdb;
+using namespace cbforest;
 using namespace couchbase_lite;
 
 
@@ -59,7 +59,7 @@ static NSData* dataOfNode(const Revision* rev) {
         std::string pathStr(path.fileSystemRepresentation);
         try {
             db = new Database(pathStr, config);
-        } catch (forestdb::error error) {
+        } catch (cbforest::error error) {
             if (error.status == FDB_RESULT_INVALID_COMPACTION_MODE
                         && config.compaction_mode == FDB_COMPACTION_AUTO) {
                 // Databases created by earlier builds of CBL (pre-1.2) didn't have auto-compact.
@@ -169,7 +169,7 @@ static NSData* dataOfNode(const Revision* rev) {
 }
 
 
-+ (NSArray*) getRevisionHistoryOfNode: (const forestdb::Revision*)revNode
++ (NSArray*) getRevisionHistoryOfNode: (const cbforest::Revision*)revNode
                          backToRevIDs: (NSSet*)ancestorRevIDs
 {
     const VersionedDocument* doc = (const VersionedDocument*)revNode->owner;
@@ -196,7 +196,7 @@ namespace couchbase_lite {
     CBLStatus tryStatus(CBLStatus(^block)()) {
         try {
             return block();
-        } catch (forestdb::error err) {
+        } catch (cbforest::error err) {
             return CBLStatusFromForestDBStatus(err.status);
         } catch (NSException* x) {
             MYReportException(x, @"CBL_ForestDBStorage");

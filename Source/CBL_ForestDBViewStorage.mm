@@ -28,7 +28,7 @@ extern "C" {
 #import <CBForest/GeoIndex.hh>
 #import <CBForest/MapReduceDispatchIndexer.hh>
 #import <CBForest/Tokenizer.hh>
-using namespace forestdb;
+using namespace cbforest;
 #import "CBLForestBridge.h"
 using namespace couchbase_lite;
 
@@ -684,7 +684,7 @@ static id parseJSONSlice(slice s) {
                 // Got a row to return!
                 return row;
             }
-        } catch (forestdb::error x) {
+        } catch (cbforest::error x) {
             Warn(@"Unexpected ForestDB error iterating query (status %d)", x.status);
         } catch (NSException* x) {
             MYReportException(x, @"CBL_ForestDBViewStorage");
@@ -773,7 +773,7 @@ static id parseJSONSlice(slice s) {
                 lastKey = key;
             } while (!row && lastKey);
             return row;
-        } catch (forestdb::error x) {
+        } catch (cbforest::error x) {
             Warn(@"Unexpected ForestDB error iterating query (status %d)", x.status);
         } catch (NSException* x) {
             MYReportException(x, @"CBL_ForestDBViewStorage");
