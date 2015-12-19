@@ -30,7 +30,7 @@ extern "C" {
 #import <CBForest/CBForest.hh>
 #import "CBLForestBridge.h"
 
-using namespace forestdb;
+using namespace cbforest;
 
 
 #define kDBFilename @"db.forest"
@@ -68,18 +68,18 @@ using namespace couchbase_lite;
 @synthesize maxRevTreeDepth=_maxRevTreeDepth, encryptionKey=_encryptionKey;
 
 
-static void FDBLogCallback(forestdb::logLevel level, const char *message) {
+static void FDBLogCallback(cbforest::logLevel level, const char *message) {
     switch (level) {
-        case forestdb::kDebug:
+        case cbforest::kDebug:
             LogTo(CBLDatabaseVerbose, @"ForestDB: %s", message);
             break;
-        case forestdb::kInfo:
+        case cbforest::kInfo:
             LogTo(CBLDatabase, @"ForestDB: %s", message);
             break;
-        case forestdb::kWarning:
+        case cbforest::kWarning:
             Warn(@"%s", message);
             break;
-        case forestdb::kError:
+        case cbforest::kError:
             Warn(@"ForestDB error: %s", message);
             break;
         default:
@@ -113,11 +113,11 @@ static void onCompactCallback(Database *db, bool compacting) {
 + (void) initialize {
     if (self == [CBL_ForestDBStorage class]) {
         Log(@"Initializing ForestDB");
-        forestdb::LogCallback = FDBLogCallback;
+        cbforest::LogCallback = FDBLogCallback;
         if (WillLogTo(CBLDatabaseVerbose))
-            forestdb::LogLevel = kDebug;
+            cbforest::LogLevel = kDebug;
         else if (WillLogTo(CBLDatabase))
-            forestdb::LogLevel = kInfo;
+            cbforest::LogLevel = kInfo;
 
         Database::onCompactCallback = onCompactCallback;
 
@@ -274,7 +274,7 @@ static void onCompactCallback(Database *db, bool compacting) {
     opts.contentOptions = Database::kMetaOnly;
 
     NSUInteger count = 0;
-    for (DocEnumerator e(*_forest, forestdb::slice::null, forestdb::slice::null, opts); e.next(); ) {
+    for (DocEnumerator e(*_forest, cbforest::slice::null, cbforest::slice::null, opts); e.next(); ) {
         VersionedDocument vdoc(*_forest, *e);
         if (!vdoc.isDeleted())
             ++count;
@@ -819,7 +819,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
     if (![docID hasPrefix: @"_local/"])
         return nil;
     KeyStore localDocs(_forest, "_local");
-    Document doc = localDocs.get((forestdb::slice)docID.UTF8String);
+    Document doc = localDocs.get((cbforest::slice)docID.UTF8String);
     if (!doc.exists())
         return nil;
     NSString* gotRevID = (NSString*)doc.meta();
@@ -862,7 +862,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
             NSData* json = revision.asCanonicalJSON;
             if (!json)
                 return kCBLStatusBadJSON;
-            forestdb::slice key(docID.UTF8String);
+            cbforest::slice key(docID.UTF8String);
             Document doc = localWriter.get(key);
             unsigned generation = [CBL_Revision generationFromRevID: prevRevID];
             if (obeyMVCC) {
@@ -877,7 +877,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
                 }
             }
             NSString* newRevID = $sprintf(@"%d-local", ++generation);
-            localWriter.set(key, nsstring_slice(newRevID), forestdb::slice(json));
+            localWriter.set(key, nsstring_slice(newRevID), cbforest::slice(json));
             result = [revision mutableCopyWithDocID: docID revID: newRevID];
             return kCBLStatusCreated;
         }];
@@ -900,7 +900,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
     KeyStore localDocs(_forest, "_local");
     return [self inTransaction: ^CBLStatus {
         KeyStoreWriter localWriter = (*_forestTransaction)(localDocs);
-        Document doc = localWriter.get(forestdb::slice(docID.UTF8String));
+        Document doc = localWriter.get(cbforest::slice(docID.UTF8String));
         if (!doc.exists())
             return kCBLStatusNotFound;
         else if (obeyMVCC && !$equal(revID, (NSString*)doc.meta()))
@@ -920,7 +920,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
     KeyStore infoStore(_forest, "info");
     __block NSString* value = nil;
     tryStatus(^CBLStatus {
-        Document doc = infoStore.get((forestdb::slice)key.UTF8String);
+        Document doc = infoStore.get((cbforest::slice)key.UTF8String);
         value = (NSString*)doc.body();
         return kCBLStatusOK;
     });
@@ -932,7 +932,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
     KeyStore infoStore(_forest, "info");
     return [self inTransaction: ^CBLStatus {
         KeyStoreWriter infoWriter = (*_forestTransaction)(infoStore);
-        infoWriter.set((forestdb::slice)key.UTF8String, (forestdb::slice)info.UTF8String);
+        infoWriter.set((cbforest::slice)key.UTF8String, (cbforest::slice)info.UTF8String);
         return kCBLStatusOK;
     }];
 }
@@ -1139,7 +1139,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
         for (NSString* revID in history)
             historyVector.push_back(revidBuffer(revID));
         int common = doc.insertHistory(historyVector,
-                                       forestdb::slice(json),
+                                       cbforest::slice(json),
                                        inRev.deleted,
                                        (inRev.attachments != nil));
         if (common < 0)

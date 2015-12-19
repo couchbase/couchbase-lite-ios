@@ -26,29 +26,29 @@ namespace couchbase_lite {
 + (void) setEncryptionKey: (fdb_encryption_key*)fdbKey
          fromSymmetricKey: (CBLSymmetricKey*)key;
 
-+ (forestdb::Database*) openDatabaseAtPath: (NSString*)path
-                                withConfig: (forestdb::Database::config&)config
++ (cbforest::Database*) openDatabaseAtPath: (NSString*)path
+                                withConfig: (cbforest::Database::config&)config
                              encryptionKey: (CBLSymmetricKey*)key
                                      error: (NSError**)outError;
 
-+ (NSMutableDictionary*) bodyOfNode: (const forestdb::Revision*)revNode;
++ (NSMutableDictionary*) bodyOfNode: (const cbforest::Revision*)revNode;
 
-+ (CBL_MutableRevision*) revisionObjectFromForestDoc: (forestdb::VersionedDocument&)doc
++ (CBL_MutableRevision*) revisionObjectFromForestDoc: (cbforest::VersionedDocument&)doc
                                                revID: (NSString*)revID
                                             withBody: (BOOL)withBody;
 
 /** Stores the body of a revision (including metadata) into a CBL_MutableRevision. */
 + (BOOL) loadBodyOfRevisionObject: (CBL_MutableRevision*)rev
-                              doc: (forestdb::VersionedDocument&)doc;
+                              doc: (cbforest::VersionedDocument&)doc;
 
 /** Returns the revIDs of all current leaf revisions, in descending order of priority. */
-+ (NSArray*) getCurrentRevisionIDs: (forestdb::VersionedDocument&)doc
++ (NSArray*) getCurrentRevisionIDs: (cbforest::VersionedDocument&)doc
                     includeDeleted: (BOOL)includeDeleted;
 
 /** Returns a revision & its ancestors as CBL_Revision objects, in reverse chronological order.
     If 'ancestorRevIDs' is present, the revision history will only go back as
     far as any of the revision ID strings in that array. */
-+ (NSArray*) getRevisionHistoryOfNode: (const forestdb::Revision*)revNode
++ (NSArray*) getRevisionHistoryOfNode: (const cbforest::Revision*)revNode
                          backToRevIDs: (NSSet*)ancestorRevIDs;
 
 @end

@@ -12,7 +12,7 @@
 @interface CBL_ForestDBStorage : NSObject <CBL_Storage>
 
 @property (nonatomic, readonly) NSString* directory;
-@property (nonatomic, readonly) void* forestDatabase; // really forestdb::Database*
+@property (nonatomic, readonly) void* forestDatabase; // really cbforest::Database*
 @property (nonatomic) CBLSymmetricKey* encryptionKey;
 
 /** Loads revision given its sequence. Assumes the given docID is valid. */
