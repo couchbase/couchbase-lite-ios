@@ -114,22 +114,24 @@ typedef void (^CBLAttachmentProgressBlock)(uint64_t bytesRead,
     Facebook authentication. */
 @property (readonly, nullable) NSURL* personaOrigin;
 
-/** Adds a cookie to the shared NSHTTPCookieStorage that will be sent to the remote server. This
-    is useful if you've obtained a session cookie through some external means and need to tell the
-    replicator to send it for authentication purposes.
-    This method constructs an NSHTTPCookie from the given parameters, as well as the remote server
-    URL's host, port and path.
-    If you already have an NSHTTPCookie object for the remote server, you can simply add it to the
-    sharedHTTPCookieStorage yourself. 
-    If you have a "Set-Cookie:" response header, you can use NSHTTPCookie's class methods to parse
-    it to a cookie object, then add it to the sharedHTTPCookieStorage. */
+/** Registers an HTTP cookie that will be sent to the remote server along with the replication's
+    HTTP requests. This is useful if you've obtained a session cookie through some external means.
+    The cookie will be saved persistently until its `expirationDate` passes; or if that date is
+    nil, the cookie will only be associated with this replication object.
+ 
+    The parameters have the same meanings as in the NSHTTPCookie API. If the `path` is nil, the
+    path of this replication's URL is used.
+
+    The replicator does _not_ use the standard shared NSHTTPCookieStorage, so registering a cookie
+    through that will have no effect. This is because each replication has independent
+    authentication and may need to send different cookies. */
 - (void) setCookieNamed: (NSString*)name
               withValue: (NSString*)value
-                   path: (NSString*)path
-         expirationDate: (NSDate*)expirationDate
+                   path: (nullable NSString*)path
+         expirationDate: (nullable NSDate*)expirationDate
                  secure: (BOOL)secure;
 
-/** Deletes the named cookie from the shared NSHTTPCookieStorage for the remote server's URL. */
+/** Deletes the named cookie from this replication's cookie storage. */
 - (void) deleteCookieNamed: (NSString *)name;
 
 /** Adds additional SSL root certificates to be trusted by the replicator, or entirely overrides the
