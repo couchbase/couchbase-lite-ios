@@ -170,22 +170,22 @@
                                           indexPath);
     if (!cell) {
         // ...if it doesn't, create a cell for it:
-        cell = [tableView dequeueReusableCellWithIdentifier: @"CBLUITableDelegate"];
+        cell = [tableView dequeueReusableCellWithIdentifier: @"CBUITableDelegate"];
         if (!cell)
             cell = [[UITableViewCell alloc] initWithStyle: UITableViewCellStyleDefault
-                                          reuseIdentifier: @"CBLUITableDelegate"];
-        
-        CBLQueryRow* row = [self rowAtIndex: indexPath.row];
-        cell.textLabel.text = [self labelForRow: row];
-        
-        // Allow the delegate to customize the cell:
-        id delegate = _tableView.delegate;
-        if ([delegate respondsToSelector: @selector(couchTableSource:willUseCell:forRow:)])
-            [(id<CBLUITableDelegate>)delegate couchTableSource: self willUseCell: cell forRow: row];
+                                          reuseIdentifier: @"CBUITableDelegate"];
     }
+    
+    CBLQueryRow* row = [self rowAtIndex: indexPath.row];
+    cell.textLabel.text = [self labelForRow: row];
+    
+    // Allow the delegate to customize the cell:
+    id delegate = _tableView.delegate;
+    if ([delegate respondsToSelector: @selector(couchTableSource:willUseCell:forRow:)])
+        [(id<CBUITableDelegate>)delegate couchTableSource: self willUseCell: cell forRow: row];
+    
     return cell;
 }
-
 
 #pragma mark -
 #pragma mark EDITING:
