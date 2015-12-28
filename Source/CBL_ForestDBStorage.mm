@@ -855,28 +855,20 @@ static NSDictionary* getDocProperties(const Document& doc) {
         return *outStatus < 300 ? revision : nil;
     } else {
         // PUT:
-        KeyStore localDocs(_forest, "_local");
         __block CBL_Revision* result = nil;
         *outStatus = [self inTransaction: ^CBLStatus {
+            KeyStore localDocs(_forest, "_local");
             KeyStoreWriter localWriter = (*_forestTransaction)(localDocs);
             NSData* json = revision.asCanonicalJSON;
             if (!json)
                 return kCBLStatusBadJSON;
             cbforest::slice key(docID.UTF8String);
             Document doc = localWriter.get(key);
-            unsigned generation = [CBL_Revision generationFromRevID: prevRevID];
-            if (obeyMVCC) {
-                if (prevRevID) {
-                    if (!$equal(prevRevID, (NSString*)doc.meta()))
-                        return kCBLStatusConflict;
-                    if (generation == 0)
-                        return kCBLStatusBadID;
-                } else {
-                    if (doc.exists())
-                        return kCBLStatusConflict;
-                }
-            }
-            NSString* newRevID = $sprintf(@"%d-local", ++generation);
+            NSString* actualPrevRevID = doc.exists() ? (NSString*)doc.meta() : nil;
+            if (obeyMVCC && !$equal(prevRevID, actualPrevRevID))
+                return kCBLStatusConflict;
+            unsigned generation = [CBL_Revision generationFromRevID: actualPrevRevID];
+            NSString* newRevID = $sprintf(@"%d-local", generation + 1);
             localWriter.set(key, nsstring_slice(newRevID), cbforest::slice(json));
             result = [revision mutableCopyWithDocID: docID revID: newRevID];
             return kCBLStatusCreated;

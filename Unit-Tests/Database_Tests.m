@@ -580,7 +580,14 @@
             @"Couldn't put new local doc: %@", error);
     props = [db existingLocalDocumentWithID: @"dock"];
     AssertEqual(props[@"foo"], @"bar");
+    Assert([props[@"_rev"] hasPrefix: @"1-"]);
     
+    Assert([db putLocalDocument: @{@"crave": @"mineral"} withID: @"dock" error: &error],
+           @"Couldn't update local doc: %@", error);
+    props = [db existingLocalDocumentWithID: @"dock"];
+    AssertEqual(props[@"crave"], @"mineral");
+    Assert([props[@"_rev"] hasPrefix: @"2-"]);
+
     Assert([db putLocalDocument: @{@"FOOO": @"BARRR"} withID: @"dock" error: &error],
             @"Couldn't update local doc: %@", error);
     props = [db existingLocalDocumentWithID: @"dock"];
