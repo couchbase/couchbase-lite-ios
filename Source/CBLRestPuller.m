@@ -439,6 +439,7 @@
                                         onCompletion:
         ^(CBLMultipartDownloader* result, NSError *error) {
             __strong CBLRestPuller *strongSelf = weakSelf;
+            if (!strongSelf) return; // already dealloced
             // OK, now we've got the response:
             LogTo(SyncPerf, @"%@: Got %@", strongSelf, rev);
             if (error) {
@@ -460,7 +461,7 @@
             // Note that we've finished this task:
             [strongSelf removeRemoteRequest:dl];
             [strongSelf asyncTasksFinished:1];
-            --_httpConnectionCount;
+            --strongSelf->_httpConnectionCount;
             // Start another task if there are still revisions waiting to be pulled:
             [strongSelf pullRemoteRevisions];
         }
@@ -502,6 +503,7 @@
           ^(NSDictionary* props) {
               // Got a revision!
               __strong CBLRestPuller *strongSelf = weakSelf;
+              if (!strongSelf) return; // already dealloced
               if (first) {
                   first = NO;
                   LogTo(SyncPerf, @"%@: Received first revision from bulk-get (%.3f sec)",
@@ -534,6 +536,7 @@
           ^(CBLBulkDownloader* result, NSError *error) {
               // The entire _bulk_get is finished:
               __strong CBLRestPuller *strongSelf = weakSelf;
+              if (!strongSelf) return; // already dealloced
               LogTo(SyncPerf, @"%@: finished bulk-getting %u remote revisions (%.3f sec)",
                     self, (unsigned)nRevs, CFAbsoluteTimeGetCurrent()-start);
 
@@ -555,7 +558,7 @@
               // Note that we've finished this task:
               [strongSelf asyncTasksFinished:1];
               
-              --_httpConnectionCount;
+              --strongSelf->_httpConnectionCount;
               // Start another task if there are still revisions waiting to be pulled:
               [strongSelf pullRemoteRevisions];
           }
@@ -777,9 +780,10 @@
               ^(id result, NSError *error) {
                   // On completion or error:
                   __strong CBLRestPuller *strongSelf = weakSelf;
+                  if (!strongSelf) return; // already dealloced
                   [strongSelf->_attachmentDownloads removeObjectForKey: task.ID];
                   if (error) {
-                      if (_running && !_online) {
+                      if (strongSelf->_running && !strongSelf->_online) {
                           // I've gone offline, so save the tasks for later:
                           [task.progress setIndeterminate];
                           [self addToWaitingAttachments: task];

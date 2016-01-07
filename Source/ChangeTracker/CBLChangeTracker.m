@@ -317,6 +317,7 @@
                                 ^(id sequence, NSString *docID, NSArray *revs, bool deleted) {
                                     // Callback when the parser reads another change from the feed:
                                     CBLChangeTracker* strongSelf = weakSelf;
+                                    if (!strongSelf) return; // already dealloced
                                     strongSelf->_parsedChangeCount++;
                                     strongSelf.lastSequenceID = sequence;
                                     [strongSelf.client changeTrackerReceivedSequence: sequence
