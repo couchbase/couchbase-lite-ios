@@ -113,7 +113,9 @@
     _changeTracker.docIDs = _settings.docIDs;
     _changeTracker.authorizer = _authorizer;
     _changeTracker.cookieStorage = self.cookieStorage;
-    _changeTracker.usePOST = YES; // both SG and CouchDB support POST to _changes
+
+    // both SG and CouchDB support POST to _changes, but Cloudant doesn't.
+    _changeTracker.usePOST = ![_settings.remote.host.lowercaseString hasSuffix: @".cloudant.com"];
 
     unsigned heartbeat = $castIf(NSNumber, _settings.options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;
     if (heartbeat >= 15000)
