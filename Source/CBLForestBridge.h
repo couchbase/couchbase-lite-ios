@@ -9,6 +9,7 @@
 extern "C" {
 #import "c4Database.h"
 #import "c4Document.h"
+#import "c4DocEnumerator.h"
 #import "CBL_Storage.h"
 }
 @class CBLSymmetricKey;
@@ -30,6 +31,11 @@ CBLStatus CBLStatusFromC4Error(C4Error);
 BOOL ErrorFromC4Error(C4Error, NSError**);
 
 
+#define CLEANUP(TYPE) __attribute__((cleanup(cleanup_##TYPE))) TYPE
+static inline void cleanup_C4Document(C4Document **docp)           { c4doc_free(*docp); }
+static inline void cleanup_C4DocEnumerator(C4DocEnumerator **ep)   { c4enum_free(*ep); }
+
+
 @interface CBLForestBridge : NSObject
 
 + (void) setEncryptionKey: (C4EncryptionKey*)fdbKey
@@ -48,9 +54,9 @@ BOOL ErrorFromC4Error(C4Error, NSError**);
 
 + (NSMutableDictionary*) bodyOfSelectedRevision: (C4Document*)doc;
 
-+ (CBL_MutableRevision*) revisionObjectFromC4Doc: (C4Document*)doc
-                                           revID: (NSString*)revID
-                                        withBody: (BOOL)withBody;
+//+ (CBL_MutableRevision*) revisionObjectFromC4Doc: (C4Document*)doc
+//                                           revID: (NSString*)revID
+//                                        withBody: (BOOL)withBody;
 
 /** Stores the body of a revision (including metadata) into a CBL_MutableRevision. */
 + (CBLStatus) loadBodyOfRevisionObject: (CBL_MutableRevision*)rev

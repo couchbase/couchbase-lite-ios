@@ -63,13 +63,8 @@ NSString* C4SliceToString(C4Slice s) {
                                               status: (CBLStatus*)outStatus
 {
     BOOL deleted = (doc->selectedRev.flags & kRevDeleted) != 0;
-    if (revID == nil) {
-        if (deleted) {
-            *outStatus = kCBLStatusDeleted;
-            return nil;
-        }
+    if (revID == nil)
         revID = C4SliceToString(doc->selectedRev.revID);
-    }
     CBL_MutableRevision* result = [[CBL_MutableRevision alloc] initWithDocID: docID
                                                                        revID: revID
                                                                      deleted: deleted];
