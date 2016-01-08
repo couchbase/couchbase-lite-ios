@@ -19,111 +19,79 @@ extern "C" {
 #import "CBLSymmetricKey.h"
 }
 
-using namespace cbforest;
-using namespace couchbase_lite;
+
+NSString* C4SliceToString(C4Slice s) {
+    if (!s.buf)
+        return nil;
+    return [[NSString alloc] initWithBytes: s.buf length: s.size encoding:NSUTF8StringEncoding];
+}
 
 
 @implementation CBLForestBridge
 
 
-static NSData* dataOfNode(const Revision* rev) {
-    if (rev->inlineBody().buf)
-        return rev->inlineBody().uncopiedNSData();
-    try {
-        return rev->readBody().copiedNSData();
-    } catch (...) {
-        return nil;
-    }
-}
-
-
-+ (void) setEncryptionKey: (fdb_encryption_key*)fdbKey fromSymmetricKey: (CBLSymmetricKey*)key {
++ (void) setEncryptionKey: (C4EncryptionKey*)fdbKey fromSymmetricKey: (CBLSymmetricKey*)key {
     if (key) {
-        fdbKey->algorithm = FDB_ENCRYPTION_AES256;
-        Assert(key.keyData.length <= sizeof(fdbKey->bytes));
+        fdbKey->algorithm = kC4EncryptionAES256;
+        Assert(key.keyData.length == sizeof(fdbKey->bytes));
         memcpy(fdbKey->bytes, key.keyData.bytes, sizeof(fdbKey->bytes));
     } else {
-        fdbKey->algorithm = FDB_ENCRYPTION_NONE;
+        fdbKey->algorithm = kC4EncryptionNone;
     }
 }
 
 
-+ (Database*) openDatabaseAtPath: (NSString*)path
-                      withConfig: (Database::config&)config
-                   encryptionKey: (CBLSymmetricKey*)key
-                           error: (NSError**)outError
++ (C4Database*) openDatabaseAtPath: (NSString*)path
+                         withFlags: (C4DatabaseFlags)flags
+                     encryptionKey: (CBLSymmetricKey*)key
+                             error: (NSError**)outError
 {
-    [self setEncryptionKey: &config.encryption_key fromSymmetricKey: key];
-    __block Database* db = NULL;
-    BOOL ok = tryError(outError, ^{
-        std::string pathStr(path.fileSystemRepresentation);
-        try {
-            db = new Database(pathStr, config);
-        } catch (cbforest::error error) {
-            if (error.status == FDB_RESULT_INVALID_COMPACTION_MODE
-                        && config.compaction_mode == FDB_COMPACTION_AUTO) {
-                // Databases created by earlier builds of CBL (pre-1.2) didn't have auto-compact.
-                // Opening them with auto-compact causes this error. Upgrade such a database by
-                // switching its compaction mode:
-                Log(@"%@: Upgrading to auto-compact", self);
-                config.compaction_mode = FDB_COMPACTION_MANUAL;
-                db = new Database(pathStr, config);
-                db->setCompactionMode(FDB_COMPACTION_AUTO);
-            } else {
-                throw error;
-            }
-        }
-    });
-    return ok ? db : nil;
+    C4EncryptionKey encKey;
+    [self setEncryptionKey: &encKey fromSymmetricKey: key];
+    C4Error c4err;
+    auto db = c4db_open(stringToSlice(path), flags, &encKey, &c4err);
+    if (!db)
+        ErrorFromC4Error(c4err, outError);
+    return db;
 }
 
 
-+ (CBL_MutableRevision*) revisionObjectFromForestDoc: (VersionedDocument&)doc
-                                               revID: (NSString*)revID
++ (CBL_MutableRevision*) revisionObjectFromForestDoc: (C4Document*)doc
+                                               docID: (UU NSString*)docID
+                                               revID: (UU NSString*)revID
                                             withBody: (BOOL)withBody
+                                              status: (CBLStatus*)outStatus
 {
-    CBL_MutableRevision* rev;
-    NSString* docID = (NSString*)doc.docID();
-    if (doc.revsAvailable()) {
-        const Revision* revNode;
-        if (revID)
-            revNode = doc.get(revID);
-        else {
-            revNode = doc.currentRevision();
-            if (revNode)
-                revID = (NSString*)revNode->revID;
-        }
-        if (!revNode)
+    BOOL deleted = (doc->selectedRev.flags & kRevDeleted) != 0;
+    if (revID == nil) {
+        if (deleted) {
+            *outStatus = kCBLStatusDeleted;
             return nil;
-        rev = [[CBL_MutableRevision alloc] initWithDocID: docID
-                                                   revID: revID
-                                                 deleted: revNode->isDeleted()];
-        rev.sequence = revNode->sequence;
-    } else {
-        Assert(revID == nil || $equal(revID, (NSString*)doc.revID()));
-        rev = [[CBL_MutableRevision alloc] initWithDocID: docID
-                                                   revID: (NSString*)doc.revID()
-                                                 deleted: doc.isDeleted()];
-        rev.sequence = doc.sequence();
+        }
+        revID = C4SliceToString(doc->selectedRev.revID);
     }
-    if (withBody && ![self loadBodyOfRevisionObject: rev doc: doc])
-        return nil;
-    return rev;
+    CBL_MutableRevision* result = [[CBL_MutableRevision alloc] initWithDocID: docID
+                                                                       revID: revID
+                                                                     deleted: deleted];
+    result.sequence = doc->selectedRev.sequence;
+    if (withBody) {
+        *outStatus = [self loadBodyOfRevisionObject: result fromSelectedRevision: doc];
+        if (CBLStatusIsError(*outStatus))
+            result = nil;
+    }
+    return result;
 }
 
 
-+ (BOOL) loadBodyOfRevisionObject: (CBL_MutableRevision*)rev
-                              doc: (VersionedDocument&)doc
++ (CBLStatus) loadBodyOfRevisionObject: (CBL_MutableRevision*)rev
+                  fromSelectedRevision: (C4Document*)doc
 {
-    const Revision* revNode = doc.get(rev.revID);
-    if (!revNode)
-        return NO;
-    NSData* json = dataOfNode(revNode);
-    if (!json)
-        return NO;
-    rev.sequence = revNode->sequence;
-    rev.asJSON = json;
-    return YES;
+    C4Error c4err;
+    if (!c4doc_loadRevisionBody(doc, &c4err))
+        return CBLStatusFromC4Error(c4err);
+    rev.asJSON = C4SliceToData(doc->selectedRev.body);
+    rev.sequence = doc->selectedRev.sequence;
+    return kCBLStatusOK;
 }
 
 
@@ -147,7 +115,7 @@ static NSData* dataOfNode(const Revision* rev) {
 }
 
 
-+ (NSArray*) getCurrentRevisionIDs: (VersionedDocument&)doc includeDeleted: (BOOL)includeDeleted {
++ (NSArray*) getCurrentRevisionIDs: (C4Document*)doc includeDeleted: (BOOL)includeDeleted {
     NSMutableArray* currentRevIDs = $marray();
     auto revs = doc.currentRevisions();
     for (auto rev = revs.begin(); rev != revs.end(); ++rev)
