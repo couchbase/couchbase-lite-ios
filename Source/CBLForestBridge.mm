@@ -17,20 +17,188 @@
 extern "C" {
 #import "ExceptionUtils.h"
 #import "CBLSymmetricKey.h"
+#import "CBLSpecialKey.h"
+#import "forestdb.h"
 }
 
+C4Slice string2slice(UU NSString* str) {
+    if (!str)
+        return kC4SliceNull;
+    const char* cstr = CFStringGetCStringPtr((__bridge CFStringRef)str, kCFStringEncodingUTF8);
+    if (cstr)
+        return (C4Slice){cstr, strlen(cstr)};
+    else
+        return data2slice([str dataUsingEncoding: NSUTF8StringEncoding]);
+}
 
-NSString* C4SliceToString(C4Slice s) {
+NSString* slice2string(C4Slice s) {
     if (!s.buf)
         return nil;
     return [[NSString alloc] initWithBytes: s.buf length: s.size encoding:NSUTF8StringEncoding];
 }
 
+NSData* slice2data(C4Slice s) {
+    return [[NSData alloc] initWithBytes: s.buf length: s.size];
+}
+
+NSData* slice2dataNoCopy(C4Slice s) {
+    return [[NSData alloc] initWithBytesNoCopy: (void*)s.buf length: s.size freeWhenDone: NO];
+}
+
+id slice2jsonObject(C4Slice s, CBLJSONReadingOptions options) {
+    NSData* json = slice2dataNoCopy(s);
+    if (!json)
+        return nil;
+    return [CBLJSON JSONObjectWithData: json options: options error: NULL];
+}
+
+
+static void addToKey(C4Key *key, UU id obj) {
+    if ([obj isKindOfClass: [NSString class]]) {
+        c4key_addString(key, string2slice(obj));
+    } else if ([obj isKindOfClass: [NSNumber class]]) {
+        if (obj == (__bridge id)kCFBooleanFalse)
+            c4key_addBool(key, false);
+        else if (obj == (__bridge id)kCFBooleanTrue)
+            c4key_addBool(key, true);
+        else
+            c4key_addNumber(key, [obj doubleValue]);
+    } else if ([obj isKindOfClass: [NSArray class]]) {
+        c4key_beginArray(key);
+        for (id item in obj)
+            addToKey(key, item);
+    } else if ([obj isKindOfClass: [NSDictionary class]]) {
+        c4key_beginMap(key);
+        [obj enumerateKeysAndObjectsUsingBlock:^(id dictKey, id dictValue, BOOL *stop) {
+            c4key_addString(key, string2slice(dictKey));
+            addToKey(key, dictValue);
+        }];
+        c4key_endMap(key);
+    } else if ([obj isKindOfClass: [NSNull class]]) {
+        c4key_addNull(key);
+    } else {
+        Assert(NO, @"emit() does not support keys of class %@", [obj class]);
+    }
+}
+
+C4Key* id2key(UU id obj) {
+    if ([obj isKindOfClass: [CBLSpecialKey class]]) {
+        CBLSpecialKey* special = (CBLSpecialKey*)obj;
+        NSString* text = special.text;
+        if (text)
+            return c4key_newFullTextString(string2slice(text), kC4SliceNull);
+        else
+            return c4key_newGeoJSON(data2slice(special.geoJSONData),
+                                    geoRect2Area(special.rect));
+    } else {
+        C4Key *key = c4key_new();
+        addToKey(key, obj);
+        return key;
+    }
+}
+
+
+static id key2id_(C4KeyReader *kr) {
+    switch (c4key_peek(kr)) {
+        case kC4Null:
+            c4key_skipToken(kr);
+            return [NSNull null];
+        case kC4Bool:
+            return c4key_readBool(kr) ? @YES : @NO;
+        case kC4Number:
+            return @(c4key_readNumber(kr));
+        case kC4String: {
+            C4SliceResult str = c4key_readString(kr);
+            return [[NSString alloc] initWithBytesNoCopy: (void*)str.buf length: str.size
+                                                encoding:NSUTF8StringEncoding freeWhenDone: YES];
+        }
+        case kC4Array: {
+            NSMutableArray* a = [NSMutableArray new];
+            c4key_skipToken(kr);
+            while (c4key_peek(kr) != kC4EndSequence)
+                [a addObject: key2id_(kr)];
+            c4key_skipToken(kr);
+            return a;
+        }
+        case kC4Map: {
+            NSMutableDictionary* a = [NSMutableDictionary new];
+            c4key_skipToken(kr);
+            while (c4key_peek(kr) != kC4EndSequence) {
+                NSString* key = key2id_(kr);
+                a[key] = key2id_(kr);
+            }
+            c4key_skipToken(kr);
+            return a;
+        }
+        default:
+            Assert(NO, @"Invalid token %d in C4Key", (int)c4key_peek(kr));
+            return nil;
+    }
+}
+
+id key2id(C4KeyReader kr) {
+    return key2id_(&kr);
+}
+
+
+CBLStatus err2status(C4Error c4err) {
+    switch (c4err.domain) {
+        case HTTPDomain: {
+            return (CBLStatus)c4err.code;
+        }
+        case POSIXDomain: {
+        }
+        case ForestDBDomain: {
+            switch (c4err.code) {
+                case FDB_RESULT_SUCCESS:
+                    return kCBLStatusOK;
+                case FDB_RESULT_KEY_NOT_FOUND:
+                case FDB_RESULT_NO_SUCH_FILE:
+                    return kCBLStatusNotFound;
+                case FDB_RESULT_RONLY_VIOLATION:
+                    return kCBLStatusForbidden;
+                case FDB_RESULT_NO_DB_HEADERS:
+                case FDB_RESULT_CRYPTO_ERROR:
+                    return kCBLStatusUnauthorized;     // assuming db is encrypted
+                case FDB_RESULT_CHECKSUM_ERROR:
+                case FDB_RESULT_FILE_CORRUPTION:
+                    return kCBLStatusCorruptError;
+            }
+        }
+        case C4Domain: {
+            switch (c4err.code) {
+                case kC4ErrorCorruptRevisionData:
+                    return kCBLStatusCorruptError;
+                case kC4ErrorBadRevisionID:
+                    return kCBLStatusBadID;
+                case kC4ErrorCorruptIndexData:
+                    return kCBLStatusCorruptError;
+                case kC4ErrorAssertionFailed:
+                    Assert(NO, @"Assertion failure in CBForest (check log)");
+                    break;
+                default: {
+                    Warn(@"Unexpected CBForest error %d", c4err.code);
+                }
+            }
+        }
+    }
+    return kCBLStatusDBError;
+}
+
+
+BOOL err2OutNSError(C4Error c4err, NSError** outError) {
+    CBLStatusToOutNSError(err2status(c4err), outError);
+    return NO;
+}
+
+
 
 @implementation CBLForestBridge
 
 
-+ (void) setEncryptionKey: (C4EncryptionKey*)fdbKey fromSymmetricKey: (CBLSymmetricKey*)key {
++ (void) setEncryptionKey: (C4EncryptionKey*)fdbKey
+         fromSymmetricKey: (CBLSymmetricKey*)key
+{
     if (key) {
         fdbKey->algorithm = kC4EncryptionAES256;
         Assert(key.keyData.length == sizeof(fdbKey->bytes));
@@ -49,9 +217,9 @@ NSString* C4SliceToString(C4Slice s) {
     C4EncryptionKey encKey;
     [self setEncryptionKey: &encKey fromSymmetricKey: key];
     C4Error c4err;
-    auto db = c4db_open(stringToSlice(path), flags, &encKey, &c4err);
+    C4Database *db = c4db_open(string2slice(path), flags, &encKey, &c4err);
     if (!db)
-        ErrorFromC4Error(c4err, outError);
+        err2OutNSError(c4err, outError);
     return db;
 }
 
@@ -64,7 +232,7 @@ NSString* C4SliceToString(C4Slice s) {
 {
     BOOL deleted = (doc->selectedRev.flags & kRevDeleted) != 0;
     if (revID == nil)
-        revID = C4SliceToString(doc->selectedRev.revID);
+        revID = slice2string(doc->selectedRev.revID);
     CBL_MutableRevision* result = [[CBL_MutableRevision alloc] initWithDocID: docID
                                                                        revID: revID
                                                                      deleted: deleted];
@@ -83,123 +251,36 @@ NSString* C4SliceToString(C4Slice s) {
 {
     C4Error c4err;
     if (!c4doc_loadRevisionBody(doc, &c4err))
-        return CBLStatusFromC4Error(c4err);
-    rev.asJSON = C4SliceToData(doc->selectedRev.body);
+        return err2status(c4err);
+    rev.asJSON = slice2data(doc->selectedRev.body);
     rev.sequence = doc->selectedRev.sequence;
     return kCBLStatusOK;
 }
 
 
-+ (NSMutableDictionary*) bodyOfNode: (const Revision*)rev {
-    NSData* json = dataOfNode(rev);
-    if (!json)
++ (NSMutableDictionary*) bodyOfSelectedRevision: (C4Document*)doc {
+    if (!c4doc_loadRevisionBody(doc, NULL))
         return nil;
-    NSMutableDictionary* properties = [CBLJSON JSONObjectWithData: json
-                                                          options: NSJSONReadingMutableContainers
-                                                            error: NULL];
-    Assert(properties, @"Unable to parse doc from db: %@", json.my_UTF8ToString);
-    NSString* revID = (NSString*)rev->revID;
-    Assert(revID);
-
-    const VersionedDocument* doc = (const VersionedDocument*)rev->owner;
-    properties[@"_id"] = (NSString*)doc->docID();
-    properties[@"_rev"] = revID;
-    if (rev->isDeleted())
-        properties[@"_deleted"] = $true;
+    C4Slice body = doc->selectedRev.body;
+    NSMutableDictionary* properties = slice2mutableDict(body);
+    Assert(properties, @"Unable to parse doc from db: %.*s", body.size, body.buf);
     return properties;
 }
 
 
-+ (NSArray*) getCurrentRevisionIDs: (C4Document*)doc includeDeleted: (BOOL)includeDeleted {
-    NSMutableArray* currentRevIDs = $marray();
-    auto revs = doc.currentRevisions();
-    for (auto rev = revs.begin(); rev != revs.end(); ++rev)
-        if (includeDeleted || !(*rev)->isDeleted())
-            [currentRevIDs addObject: (NSString*)(*rev)->revID];
-    return currentRevIDs;
-}
-
-
-+ (NSArray*) mapHistoryOfNode: (const Revision*)rev
-                      through: (id(^)(const Revision*, BOOL *stop))block
++ (NSMutableArray*) getCurrentRevisionIDs: (C4Document*)doc
+                           includeDeleted: (BOOL)includeDeleted
+                            onlyConflicts: (BOOL)onlyConflicts
 {
-    NSMutableArray* history = $marray();
-    BOOL stop = NO;
-    for (; rev && !stop; rev = rev->parent())
-        [history addObject: block(rev, &stop)];
-    return history;
-}
-
-
-+ (NSArray*) getRevisionHistoryOfNode: (const cbforest::Revision*)revNode
-                         backToRevIDs: (NSSet*)ancestorRevIDs
-{
-    const VersionedDocument* doc = (const VersionedDocument*)revNode->owner;
-    NSString* docID = (NSString*)doc->docID();
-    return [self mapHistoryOfNode: revNode
-                          through: ^id(const Revision *ancestor, BOOL *stop)
-    {
-        CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID
-                                                                revID: (NSString*)ancestor->revID
-                                                              deleted: ancestor->isDeleted()];
-        rev.missing = !ancestor->isBodyAvailable();
-        if ([ancestorRevIDs containsObject: rev.revID])
-            *stop = YES;
-        return rev;
-    }];
+    NSMutableArray *revs = [[NSMutableArray alloc] init];
+    do {
+        if (onlyConflicts)
+            onlyConflicts = NO;
+        else if (!(doc->selectedRev.flags & kRevDeleted))
+            [revs addObject: slice2string(doc->selectedRev.revID)];
+    } while (c4doc_selectNextLeafRevision(doc, includeDeleted, false, NULL));
+    return revs;
 }
 
 
 @end
-
-
-namespace couchbase_lite {
-
-    CBLStatus tryStatus(CBLStatus(^block)()) {
-        try {
-            return block();
-        } catch (cbforest::error err) {
-            return CBLStatusFromForestDBStatus(err.status);
-        } catch (NSException* x) {
-            MYReportException(x, @"CBL_ForestDBStorage");
-            return kCBLStatusException;
-        } catch (...) {
-            Warn(@"Unknown C++ exception caught in CBL_ForestDBStorage");
-            return kCBLStatusException;
-        }
-    }
-
-
-    bool tryError(NSError** outError, void(^block)()) {
-        CBLStatus status = tryStatus(^{
-            block();
-            return kCBLStatusOK;
-        });
-        return CBLStatusToOutNSError(status, outError);
-    }
-
-
-    CBLStatus CBLStatusFromForestDBStatus(int fdbStatus) {
-        switch (fdbStatus) {
-            case FDB_RESULT_SUCCESS:
-                return kCBLStatusOK;
-            case FDB_RESULT_KEY_NOT_FOUND:
-            case FDB_RESULT_NO_SUCH_FILE:
-                return kCBLStatusNotFound;
-            case FDB_RESULT_RONLY_VIOLATION:
-                return kCBLStatusForbidden;
-            case FDB_RESULT_NO_DB_HEADERS:
-            case FDB_RESULT_CRYPTO_ERROR:
-                return kCBLStatusUnauthorized;     // assuming db is encrypted
-            case FDB_RESULT_CHECKSUM_ERROR:
-            case FDB_RESULT_FILE_CORRUPTION:
-            case error::CorruptRevisionData:
-                return kCBLStatusCorruptError;
-            case error::BadRevisionID:
-                return kCBLStatusBadID;
-            default:
-                return kCBLStatusDBError;
-        }
-    }
-
-}

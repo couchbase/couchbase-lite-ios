@@ -555,23 +555,5 @@ NSString* CBLStemmerNameForCurrentLocale(void) {
     // Derive the stemmer language name based on the current locale's language.
     // For NSLocale language codes see https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
     // The tokenizer hardcodes language names; see unicodeSetStemmer() in fts3_unicodesn.c.
-    NSString* languageCode = [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
-    if (!languageCode)
-        return nil;
-    NSDictionary* languages = @{@"da": @"danish",
-                                @"nl": @"dutch",
-                                @"en": @"english",
-                                @"fi": @"finnish",
-                                @"fr": @"french",
-                                @"de": @"german",
-                                @"hu": @"hungarian",
-                                @"it": @"italian",
-                                @"no": @"norwegian",
-                                @"pt": @"portuguese",
-                                @"ro": @"romanian",
-                                @"ru": @"russian",
-                                @"es": @"spanish",
-                                @"sv": @"swedish",
-                                @"tr": @"turkish"};
-    return languages[languageCode];
+    return [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
 }

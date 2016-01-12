@@ -10,30 +10,63 @@ extern "C" {
 #import "c4Database.h"
 #import "c4Document.h"
 #import "c4DocEnumerator.h"
-#import "CBL_Storage.h"
+#import "c4View.h"
+#import "c4Key.h"
+#import "CBLInternal.h"
 }
 @class CBLSymmetricKey;
 
 
-static inline C4Slice dataToSlice(UU NSData* data) {
-    return {data.bytes, data.length};
+static inline C4Slice data2slice(UU NSData* data) {
+    return (C4Slice){data.bytes, data.length};
 }
 
-static inline C4Slice stringToSlice(UU NSString* str) {
-    return dataToSlice([str dataUsingEncoding: NSUTF8StringEncoding]);
+C4Slice string2slice(UU NSString* str);
+NSString* slice2string(C4Slice s);
+NSData* slice2data(C4Slice s);
+NSData* slice2dataNoCopy(C4Slice s);
+id slice2jsonObject(C4Slice, CBLJSONReadingOptions);
+
+static inline NSMutableDictionary* slice2mutableDict(C4Slice s) {
+    return slice2jsonObject(s, CBLJSONReadingMutableContainers | CBLJSONReadingAllowFragments);
 }
 
-NSString* C4SliceToString(C4Slice s);
-NSData* C4SliceToData(C4Slice s);
+static inline C4Slice id2JSONSlice(id obj) {
+    if (!obj)
+        return kC4SliceNull;
+    return data2slice([CBLJSON dataWithJSONObject: obj
+                                          options: CBLJSONWritingAllowFragments
+                                            error: nil]);
+}
 
-CBLStatus CBLStatusFromC4Error(C4Error);
+C4Key* id2key(id obj);
+id key2id(C4KeyReader kr);
 
-BOOL ErrorFromC4Error(C4Error, NSError**);
+static inline C4GeoArea geoRect2Area(CBLGeoRect rect) {
+    return (C4GeoArea){rect.min.x, rect.min.y, rect.max.x, rect.max.y};
+}
+
+static inline CBLGeoRect area2GeoRect(C4GeoArea area) {
+    return (CBLGeoRect){{area.xmin, area.ymin}, {area.xmax, area.ymax}};
+}
+
+
+
+CBLStatus err2status(C4Error);
+BOOL err2OutNSError(C4Error, NSError**);    // always returns NO, for convenience
 
 
 #define CLEANUP(TYPE) __attribute__((cleanup(cleanup_##TYPE))) TYPE
-static inline void cleanup_C4Document(C4Document **docp)           { c4doc_free(*docp); }
-static inline void cleanup_C4DocEnumerator(C4DocEnumerator **ep)   { c4enum_free(*ep); }
+static inline void cleanup_C4SliceResult(C4SliceResult *sp)         { c4slice_free(*sp); }
+static inline void cleanup_C4Document(C4Document **docp)            { c4doc_free(*docp); }
+static inline void cleanup_C4RawDocument(C4RawDocument **docp)      { c4raw_free(*docp); }
+static inline void cleanup_C4DocEnumerator(C4DocEnumerator **ep)    { c4enum_free(*ep); }
+static inline void cleanup_C4Key(C4Key **kp)                        { c4key_free(*kp); }
+static inline void cleanup_C4KeyValueList(C4KeyValueList **kp)      { c4kv_free(*kp); }
+static inline void cleanup_C4QueryEnumerator(C4QueryEnumerator **qp) { c4queryenum_free(*qp); }
+static inline void cleanup_C4Indexer(C4Indexer **ip) {
+    if (*ip) c4indexer_end(*ip, false, NULL);
+}
 
 
 @interface CBLForestBridge : NSObject
@@ -47,19 +80,19 @@ static inline void cleanup_C4DocEnumerator(C4DocEnumerator **ep)   { c4enum_free
                              error: (NSError**)outError;
 
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (C4Document*)doc
-                                               docID: (NSString*)docID
-                                               revID: (NSString*)revID
+                                               docID: (NSString*)docIDIfKnown
+                                               revID: (NSString*)revIDIfKnown
                                             withBody: (BOOL)withBody
                                               status: (CBLStatus*)outStatus;
 
 + (NSMutableDictionary*) bodyOfSelectedRevision: (C4Document*)doc;
 
-//+ (CBL_MutableRevision*) revisionObjectFromC4Doc: (C4Document*)doc
-//                                           revID: (NSString*)revID
-//                                        withBody: (BOOL)withBody;
-
 /** Stores the body of a revision (including metadata) into a CBL_MutableRevision. */
 + (CBLStatus) loadBodyOfRevisionObject: (CBL_MutableRevision*)rev
                   fromSelectedRevision: (C4Document*)doc;
+
++ (NSMutableArray*) getCurrentRevisionIDs: (C4Document*)doc
+                           includeDeleted: (BOOL)includeDeleted
+                            onlyConflicts: (BOOL)onlyConflicts;
 
 @end
