@@ -712,11 +712,13 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 {
     if (![self openIndex: NULL])
         return nil;
+    C4Error c4err;
     CLEANUP(C4SliceResult) valueSlice = c4view_fullTextMatched(_view, string2slice(docID),
-                                                               sequence, (unsigned)fullTextID);
-    if (valueSlice.size == 0) {
-        Warn(@"%@: Couldn't find full text for doc <%@>, seq %llu, fullTextID %llu",
-             self, docID, sequence, fullTextID);
+                                                               sequence, (unsigned)fullTextID,
+                                                               &c4err);
+    if (!valueSlice.buf) {
+        Warn(@"%@: Couldn't find full text for doc <%@>, seq %llu, fullTextID %llu (err %d/%d)",
+             self, docID, sequence, fullTextID, c4err.domain, c4err.code);
         return nil;
     }
     return slice2data(valueSlice);
