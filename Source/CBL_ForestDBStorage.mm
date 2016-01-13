@@ -191,9 +191,12 @@ static void onCompactCallback(C4Database *db, bool compacting) {
     C4DatabaseFlags flags = _readOnly ? kC4DB_ReadOnly : kC4DB_Create;
     if (_autoCompact)
         flags |= kC4DB_AutoCompact;
+    C4EncryptionKey encKey = symmetricKey2Forest(_encryptionKey);
 
-    _forest = [CBLForestBridge openDatabaseAtPath: forestPath withFlags: flags
-                                    encryptionKey: _encryptionKey error: outError];
+    C4Error c4err;
+    _forest = c4db_open(string2slice(forestPath), flags, &encKey, &c4err);
+    if (!_forest)
+        err2OutNSError(c4err, outError);
     return (_forest != nil);
 }
 
@@ -217,20 +220,18 @@ static void onCompactCallback(C4Database *db, bool compacting) {
     // Re-key the database:
     CBLSymmetricKey* oldKey = _encryptionKey;
     [action addPerform: ^BOOL(NSError **outError) {
-        C4EncryptionKey enc;
-        [CBLForestBridge setEncryptionKey: &enc fromSymmetricKey: newKey];
+        C4EncryptionKey encKey = symmetricKey2Forest(_encryptionKey);
         C4Error c4Err;
-        if (!c4db_rekey(_forest, &enc, &c4Err))
+        if (!c4db_rekey(_forest, &encKey, &c4Err))
             return err2OutNSError(c4Err, outError);
         self.encryptionKey = newKey;
         return YES;
     } backOut:^BOOL(NSError **outError) {
-        C4EncryptionKey enc;
-        [CBLForestBridge setEncryptionKey: &enc fromSymmetricKey: newKey];
+        C4EncryptionKey encKey = symmetricKey2Forest(oldKey);
         //FIX: This can potentially fail. If it did, the database would be lost.
         // It would be safer to save & restore the old db file, the one that got replaced
         // during rekeying, but the ForestDB API doesn't allow preserving it...
-        c4db_rekey(_forest, &enc, NULL);
+        c4db_rekey(_forest, &encKey, NULL);
         self.encryptionKey = oldKey;
         return YES;
     } cleanUp: nil];
@@ -537,7 +538,7 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
     BOOL withBody = (options->includeDocs || filter != nil);
     unsigned limit = options->limit;
 
-    C4Error c4err;
+    C4Error c4err = {};
     CLEANUP(C4DocEnumerator)* e = c4db_enumerateChanges(_forest, lastSequence, NULL, &c4err);
     if (!e) {
         *outStatus = err2status(c4err);
@@ -965,8 +966,9 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
 - (CBLStatus) setInfo: (NSString*)info forKey: (NSString*)key {
     return [self inTransaction: ^CBLStatus {
         C4Error c4err;
-        if (!c4raw_put(_forest, C4STR("info"), string2slice(key),
-                       string2slice(info), kC4SliceNull, &c4err))
+        if (!c4raw_put(_forest, C4STR("info"),
+                       string2slice(key), kC4SliceNull, string2slice(info),
+                       &c4err))
             return err2status(c4err);
         return kCBLStatusOK;
     }];

@@ -21,6 +21,8 @@ extern "C" {
 #import "forestdb.h"
 }
 
+namespace CBL {
+
 C4Slice string2slice(UU NSString* str) {
     if (!str)
         return kC4SliceNull;
@@ -50,6 +52,15 @@ id slice2jsonObject(C4Slice s, CBLJSONReadingOptions options) {
     if (!json)
         return nil;
     return [CBLJSON JSONObjectWithData: json options: options error: NULL];
+}
+
+
+C4Slice id2JSONSlice(id obj) {
+    if (!obj)
+        return kC4SliceNull;
+    return data2slice([CBLJSON dataWithJSONObject: obj
+                                          options: CBLJSONWritingAllowFragments
+                                            error: nil]);
 }
 
 
@@ -192,36 +203,22 @@ BOOL err2OutNSError(C4Error c4err, NSError** outError) {
 }
 
 
+C4EncryptionKey symmetricKey2Forest(CBLSymmetricKey* key) {
+    C4EncryptionKey fdbKey;
+    if (key) {
+        fdbKey.algorithm = kC4EncryptionAES256;
+        Assert(key.keyData.length == sizeof(fdbKey.bytes));
+        memcpy(fdbKey.bytes, key.keyData.bytes, sizeof(fdbKey.bytes));
+    } else {
+        fdbKey.algorithm = kC4EncryptionNone;
+    }
+    return fdbKey;
+}
+
+} // end namespace CBL
+
 
 @implementation CBLForestBridge
-
-
-+ (void) setEncryptionKey: (C4EncryptionKey*)fdbKey
-         fromSymmetricKey: (CBLSymmetricKey*)key
-{
-    if (key) {
-        fdbKey->algorithm = kC4EncryptionAES256;
-        Assert(key.keyData.length == sizeof(fdbKey->bytes));
-        memcpy(fdbKey->bytes, key.keyData.bytes, sizeof(fdbKey->bytes));
-    } else {
-        fdbKey->algorithm = kC4EncryptionNone;
-    }
-}
-
-
-+ (C4Database*) openDatabaseAtPath: (NSString*)path
-                         withFlags: (C4DatabaseFlags)flags
-                     encryptionKey: (CBLSymmetricKey*)key
-                             error: (NSError**)outError
-{
-    C4EncryptionKey encKey;
-    [self setEncryptionKey: &encKey fromSymmetricKey: key];
-    C4Error c4err;
-    C4Database *db = c4db_open(string2slice(path), flags, &encKey, &c4err);
-    if (!db)
-        err2OutNSError(c4err, outError);
-    return db;
-}
 
 
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (C4Document*)doc

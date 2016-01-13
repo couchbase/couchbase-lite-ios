@@ -17,6 +17,8 @@ extern "C" {
 @class CBLSymmetricKey;
 
 
+namespace CBL {
+
 static inline C4Slice data2slice(UU NSData* data) {
     return (C4Slice){data.bytes, data.length};
 }
@@ -31,13 +33,7 @@ static inline NSMutableDictionary* slice2mutableDict(C4Slice s) {
     return slice2jsonObject(s, CBLJSONReadingMutableContainers | CBLJSONReadingAllowFragments);
 }
 
-static inline C4Slice id2JSONSlice(id obj) {
-    if (!obj)
-        return kC4SliceNull;
-    return data2slice([CBLJSON dataWithJSONObject: obj
-                                          options: CBLJSONWritingAllowFragments
-                                            error: nil]);
-}
+C4Slice id2JSONSlice(id obj);
 
 C4Key* id2key(id obj);
 id key2id(C4KeyReader kr);
@@ -50,6 +46,7 @@ static inline CBLGeoRect area2GeoRect(C4GeoArea area) {
     return (CBLGeoRect){{area.xmin, area.ymin}, {area.xmax, area.ymax}};
 }
 
+C4EncryptionKey symmetricKey2Forest(CBLSymmetricKey* key);
 
 
 CBLStatus err2status(C4Error);
@@ -63,21 +60,17 @@ static inline void cleanup_C4RawDocument(C4RawDocument **docp)      { c4raw_free
 static inline void cleanup_C4DocEnumerator(C4DocEnumerator **ep)    { c4enum_free(*ep); }
 static inline void cleanup_C4Key(C4Key **kp)                        { c4key_free(*kp); }
 static inline void cleanup_C4KeyValueList(C4KeyValueList **kp)      { c4kv_free(*kp); }
-static inline void cleanup_C4QueryEnumerator(C4QueryEnumerator **qp) { c4queryenum_free(*qp); }
+static inline void cleanup_C4QueryEnumerator(C4QueryEnumerator **q) { c4queryenum_free(*q); }
 static inline void cleanup_C4Indexer(C4Indexer **ip) {
     if (*ip) c4indexer_end(*ip, false, NULL);
 }
 
+} // end namespace CBL
+
+using namespace CBL;
+
 
 @interface CBLForestBridge : NSObject
-
-+ (void) setEncryptionKey: (C4EncryptionKey*)fdbKey
-         fromSymmetricKey: (CBLSymmetricKey*)key;
-
-+ (C4Database*) openDatabaseAtPath: (NSString*)path
-                         withFlags: (C4DatabaseFlags)flags
-                     encryptionKey: (CBLSymmetricKey*)key
-                             error: (NSError**)outError;
 
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (C4Document*)doc
                                                docID: (NSString*)docIDIfKnown

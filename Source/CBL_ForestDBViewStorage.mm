@@ -172,8 +172,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         if (!_dbStorage.autoCompact)
             flags |= kC4DB_AutoCompact;
         CBLSymmetricKey* encKey = _dbStorage.encryptionKey;
-        C4EncryptionKey c4encKey;
-        [CBLForestBridge setEncryptionKey: &c4encKey fromSymmetricKey: encKey];
+        C4EncryptionKey c4encKey = symmetricKey2Forest(encKey);
         C4Error c4err;
 
         _view = c4view_open((C4Database*)_dbStorage.forestDatabase,
@@ -491,11 +490,17 @@ static NSString* viewNames(NSArray* views) {
                                                 docRevision: docRevision
                                                     storage: self];
             } else if (options.fullTextQuery) {
-                row = [[CBLFullTextQueryRow alloc] initWithDocID: docID
+                CBLFullTextQueryRow *ftrow;
+                ftrow = [[CBLFullTextQueryRow alloc] initWithDocID: docID
                                                         sequence: e->docSequence
                                                       fullTextID: e->fullTextID
                                                            value: value
                                                          storage: self];
+                for (NSUInteger t = 0; t < e->fullTextTermCount; t++) {
+                    const C4FullTextTerm *term = &e->fullTextTerms[t];
+                    [ftrow addTerm: term->termIndex atRange: {term->start, term->length}];
+                }
+                row = ftrow;
             } else {
                 row = [[CBLQueryRow alloc] initWithDocID: docID
                                                 sequence: sequence
