@@ -57,7 +57,7 @@
     // A WebSocket has to be opened with a GET request, not a POST (as defined in the RFC.)
     // Instead of putting the options in the POST body as with HTTP, we will send them in an
     // initial WebSocket message, in -webSocketDidOpen:, below.
-    self.usePOST = NO;
+    _usePOST = NO;
 
     [super start];
 

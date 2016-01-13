@@ -50,8 +50,7 @@
 @synthesize limit=_limit, heartbeat=_heartbeat, error=_error, continuous=_continuous;
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
 @synthesize requestHeaders = _requestHeaders, authorizer=_authorizer, cookieStorage=_cookieStorage;
-@synthesize docIDs = _docIDs, pollInterval=_pollInterval, usePOST=_usePOST;
-@synthesize paused=_paused;
+@synthesize docIDs = _docIDs, pollInterval=_pollInterval, paused=_paused;
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
                                 mode: (CBLChangeTrackerMode)mode
@@ -79,6 +78,7 @@
         _heartbeat = kDefaultHeartbeat;
         _includeConflicts = includeConflicts;
         self.lastSequenceID = lastSequenceID;
+        _usePOST = YES;
     }
     return self;
 }
@@ -211,7 +211,7 @@
     if (!_http) {
         // Initialize HTTPLogic before sending first request:
         NSMutableURLRequest* urlRequest = [NSMutableURLRequest requestWithURL: self.changesFeedURL];
-        if (self.usePOST) {
+        if (_usePOST) {
             urlRequest.HTTPMethod = @"POST";
             urlRequest.HTTPBody = self.changesFeedPOSTBody;
             [urlRequest setValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
