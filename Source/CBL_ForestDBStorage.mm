@@ -112,6 +112,7 @@ static void onCompactCallback(C4Database *db, bool compacting) {
         else if (WillLogTo(CBLDatabase))
             logLevel = kC4LogInfo;
         c4log_register(logLevel, FDBLogCallback);
+        C4GenerateOldStyleRevIDs = true; // Compatible with CBL 1.x
 
 //TODO        Database::onCompactCallback = onCompactCallback;
 
@@ -538,8 +539,10 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
     BOOL withBody = (options->includeDocs || filter != nil);
     unsigned limit = options->limit;
 
+    C4EnumeratorOptions c4opts = kC4DefaultEnumeratorOptions;
+    c4opts.flags |= kC4IncludeDeleted;
     C4Error c4err = {};
-    CLEANUP(C4DocEnumerator)* e = c4db_enumerateChanges(_forest, lastSequence, NULL, &c4err);
+    CLEANUP(C4DocEnumerator)* e = c4db_enumerateChanges(_forest, lastSequence, &c4opts, &c4err);
     if (!e) {
         *outStatus = err2status(c4err);
         return nil;
@@ -587,12 +590,18 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
 
     C4EnumeratorOptions c4options = {0, 0};
     BOOL includeDocs = (options->includeDocs || options.filter);
+    if (includeDocs || options->allDocsMode >= kCBLShowConflicts)
+        c4options.flags |= kC4IncludeBodies;
     if (options->descending)
         c4options.flags |= kC4Descending;
     if (options->inclusiveStart)
         c4options.flags |= kC4InclusiveStart;
     if (options->inclusiveEnd)
         c4options.flags |= kC4InclusiveEnd;
+    if (options->allDocsMode == kCBLIncludeDeleted)
+        c4options.flags |= kC4IncludeDeleted;
+    if (options->allDocsMode != kCBLOnlyConflicts)
+        c4options.flags |= kC4IncludeNonConflicted;
     __block unsigned limit = options->limit;
     __block unsigned skip = options->skip;
     CBLQueryRowFilter filter = options.filter;
@@ -672,9 +681,9 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
                     Warn(@"AllDocs: Unable to read body of doc %@: status %d", docID, status);
             }
 
-            NSArray* conflicts = nil;
+            NSMutableArray* conflicts = nil;
             if (options->allDocsMode >= kCBLShowConflicts && (doc->flags & kConflicted)) {
-                NSMutableArray* conflicts = [NSMutableArray array];
+                conflicts = [NSMutableArray array];
                 [conflicts addObject: revID];
                 while (c4doc_selectNextLeafRevision(doc, false, false, NULL)) {
                     NSString* conflictID = slice2string(doc->selectedRev.revID);
@@ -719,7 +728,7 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
     CBL_RevisionList* sortedRevs = [revs mutableCopy];
     [sortedRevs sortByDocID];
 
-    C4Document* doc = NULL;
+    CLEANUP(C4Document)* doc = NULL;
     NSString* lastDocID = nil;
     C4Error c4err = {};
     for (CBL_Revision* rev in sortedRevs) {
@@ -727,16 +736,14 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
             lastDocID = rev.docID;
             c4doc_free(doc);
             doc = c4doc_get(_forest, string2slice(lastDocID), true, &c4err);
-            if (!doc && c4err.code != 404)
-                break;
+            if (!doc) {
+                *outStatus = err2status(c4err);
+                if (*outStatus != kCBLStatusNotFound)
+                    return NO;
+            }
         }
         if (doc && c4doc_selectRevision(doc, string2slice(rev.revID), false, NULL))
             [revs removeRevIdenticalTo: rev];   // not missing, so remove from list
-    }
-    c4doc_free(doc);
-    if (c4err.code != 0 && c4err.code != 404) {
-        *outStatus = err2status(c4err);
-        return NO;
     }
     return YES;
 }
@@ -1046,7 +1053,8 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
             .save = false
         };
         C4Error c4err;
-        CLEANUP(C4Document)* doc = c4doc_put(_forest, &rq, NULL, &c4err);
+        size_t commonAncestorIndex;
+        CLEANUP(C4Document)* doc = c4doc_put(_forest, &rq, &commonAncestorIndex, &c4err);
         if (!doc)
             return err2status(c4err);
 
@@ -1065,6 +1073,8 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
                                                revID: newRevID
                                              deleted: deleting
                                                 body: body];
+        if (commonAncestorIndex == 0)
+            return kCBLStatusOK;    // Revision already exists; no need to save
 
         // Run any validation blocks:
         if (validationBlock) {
@@ -1103,7 +1113,8 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
             CBLStatusToOutNSError(*outStatus, outError);
         return nil;
     }
-    [_delegate databaseStorageChanged: change];
+    if (change)
+        [_delegate databaseStorageChanged: change];
     return putRev;
 }
 

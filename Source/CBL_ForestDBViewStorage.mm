@@ -200,9 +200,11 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 - (void) closeIndex {
     [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(closeIndex)
                                                object: nil];
-    if (_view)
+    if (_view) {
         LogTo(View, @"%@: Closing index", self);
-    c4view_close(_view, NULL);
+        c4view_close(_view, NULL);
+        _view = NULL;
+    }
 }
 
 - (void) closeIndexSoon {
