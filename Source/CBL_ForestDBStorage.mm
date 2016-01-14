@@ -71,9 +71,13 @@ static void FDBLogCallback(C4LogLevel level, C4Slice message) {
         case kC4LogWarning:
             Warn(@"%.*s", (int)message.size, message.buf);
             break;
-        case kC4LogError:
+        case kC4LogError: {
+            bool raises = gMYWarnRaisesException;
+            gMYWarnRaisesException = NO;    // don't throw from a ForestDB callback!
             Warn(@"ForestDB error: %.*s", (int)message.size, message.buf);
+            gMYWarnRaisesException = raises;
             break;
+        }
         default:
             break;
     }
@@ -221,17 +225,17 @@ static void onCompactCallback(C4Database *db, bool compacting) {
     // Re-key the database:
     CBLSymmetricKey* oldKey = _encryptionKey;
     [action addPerform: ^BOOL(NSError **outError) {
-        C4EncryptionKey encKey = symmetricKey2Forest(_encryptionKey);
+        C4EncryptionKey encKey = symmetricKey2Forest(newKey);
         C4Error c4Err;
         if (!c4db_rekey(_forest, &encKey, &c4Err))
             return err2OutNSError(c4Err, outError);
         self.encryptionKey = newKey;
         return YES;
     } backOut:^BOOL(NSError **outError) {
-        C4EncryptionKey encKey = symmetricKey2Forest(oldKey);
         //FIX: This can potentially fail. If it did, the database would be lost.
         // It would be safer to save & restore the old db file, the one that got replaced
         // during rekeying, but the ForestDB API doesn't allow preserving it...
+        C4EncryptionKey encKey = symmetricKey2Forest(oldKey);
         c4db_rekey(_forest, &encKey, NULL);
         self.encryptionKey = oldKey;
         return YES;

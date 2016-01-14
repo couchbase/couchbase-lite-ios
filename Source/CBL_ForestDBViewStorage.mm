@@ -169,7 +169,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
                           status: (CBLStatus*)outStatus
 {
     if (!_view) {
-        if (!_dbStorage.autoCompact)
+        if (_dbStorage.autoCompact)
             flags |= kC4DB_AutoCompact;
         CBLSymmetricKey* encKey = _dbStorage.encryptionKey;
         C4EncryptionKey c4encKey = symmetricKey2Forest(encKey);
@@ -225,8 +225,11 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 // Deletes the index without notifying the main storage that the view is gone
 - (BOOL) deleteViewFiles: (NSError**)outError {
     [self closeIndex];
+    C4DatabaseFlags flags = 0;
+    if (_dbStorage.autoCompact)
+        flags |= kC4DB_AutoCompact;
     C4Error c4err;
-    if (!c4view_delete(_view, &c4err))
+    if (!c4view_deleteAtPath(string2slice(_path), flags, &c4err))
         return err2OutNSError(c4err, outError);
     return YES;
 }
