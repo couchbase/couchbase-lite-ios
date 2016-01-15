@@ -151,7 +151,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 - (SequenceNumber) lastSequenceChangedAt {
     if (![self openIndex: NULL]) // in case the _mapVersion changed, invalidating the index
         return -1;
-    return c4view_getLastSequenceIndexed(_view);
+    return c4view_getLastSequenceChangedAt(_view);
 }
 
 
