@@ -78,6 +78,7 @@ static void addToKey(C4Key *key, UU id obj) {
         c4key_beginArray(key);
         for (id item in obj)
             addToKey(key, item);
+        c4key_endArray(key);
     } else if ([obj isKindOfClass: [NSDictionary class]]) {
         c4key_beginMap(key);
         [obj enumerateKeysAndObjectsUsingBlock:^(id dictKey, id dictValue, BOOL *stop) {
@@ -93,7 +94,9 @@ static void addToKey(C4Key *key, UU id obj) {
 }
 
 C4Key* id2key(UU id obj) {
-    if ([obj isKindOfClass: [CBLSpecialKey class]]) {
+    if (obj == nil) {
+        return NULL;
+    } else if ([obj isKindOfClass: [CBLSpecialKey class]]) {
         CBLSpecialKey* special = (CBLSpecialKey*)obj;
         NSString* text = special.text;
         if (text)
@@ -148,11 +151,15 @@ static id key2id_(C4KeyReader *kr) {
 }
 
 id key2id(C4KeyReader kr) {
+    if (kr.bytes == NULL)
+        return nil;
     return key2id_(&kr);
 }
 
 
 CBLStatus err2status(C4Error c4err) {
+    if (c4err.code == 0)
+        return kCBLStatusOK;
     switch (c4err.domain) {
         case HTTPDomain: {
             return (CBLStatus)c4err.code;
@@ -223,7 +230,7 @@ C4EncryptionKey symmetricKey2Forest(CBLSymmetricKey* key) {
 
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (C4Document*)doc
                                                docID: (UU NSString*)docID
-                                               revID: (UU NSString*)revID
+                                               revID: (NSString*)revID
                                             withBody: (BOOL)withBody
                                               status: (CBLStatus*)outStatus
 {

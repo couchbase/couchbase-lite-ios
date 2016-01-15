@@ -265,6 +265,19 @@ static NSString* viewNames(NSArray* views) {
     return [[views my_map: ^(CBLView* view) {return view.name;}] componentsJoinedByString: @", "];
 }
 
+static NSString* toJSONStr(id obj) {
+    if (!obj)
+        return @"nil";
+    return [CBLJSON stringWithJSONObject: obj options: CBLJSONWritingAllowFragments error: nil];
+}
+
+static NSString* keyToJSONStr(id key) {
+    if ([key isKindOfClass: [CBLSpecialKey class]])
+        return [key description];
+    else
+        return toJSONStr(key);
+}
+
 
 - (CBLStatus) updateIndexes: (NSArray*)views {
     LogTo(View, @"Checking indexes of (%@) for %@", viewNames(views), _name);
@@ -280,7 +293,12 @@ static NSString* viewNames(NSArray* views) {
             continue;
         }
         [maps addObject: mapBlock];
-        c4views[i++] = view->_view;
+
+        CBLStatus status;
+        C4View* c4view = [view openIndex: &status];
+        if (!c4view)
+            return status;
+        c4views[i++] = c4view;
     }
     viewCount = i;
 
@@ -292,18 +310,26 @@ static NSString* viewNames(NSArray* views) {
     c4indexer_triggerOnView(indexer, _view);
 
     // Set up the emit block:
+    __block NSMutableDictionary* body;
     CLEANUP(C4KeyValueList)* emitted = c4kv_new();
     CBLMapEmitBlock emit = ^(id key, id value) {
-        c4kv_add(emitted, id2key(key), id2JSONSlice(value));
+        LogTo(ViewVerbose, @"    emit(%@, %@)",
+              keyToJSONStr(key),
+              (value == body) ? @"doc" : toJSONStr(value));
+        C4Key *c4key = id2key(key);
+        C4Slice valueSlice = (value == body) ? kC4PlaceholderValue : id2JSONSlice(value);
+        c4kv_add(emitted, c4key, valueSlice);
+        c4key_free(c4key);
     };
 
     // Now enumerate the docs:
     SequenceNumber latestSequence = 0;
     CLEANUP(C4DocEnumerator) *e = c4indexer_enumerateDocuments(indexer, &c4err);
     if (!e) {
-        if (c4err.code == 0)
-            LogTo(View, @"... Finished re-indexing (%@) -- already up-to-date", viewNames(views));
-        return err2status(c4err);
+        if (c4err.code != 0)
+            return err2status(c4err);
+        LogTo(View, @"... Finished re-indexing (%@) -- already up-to-date", viewNames(views));
+        return kCBLStatusNotModified;
     }
 
     while (c4enum_next(e, &c4err)) {
@@ -314,8 +340,12 @@ static NSString* viewNames(NSArray* views) {
                 break;
             latestSequence = doc->sequence;
 
+            // Skip design docs
+            if (doc->docID.size >= 8 && memcmp(doc->docID.buf, "_design/", 8) == 0)
+                continue;
+
             // Read the document body:
-            NSMutableDictionary* body = [CBLForestBridge bodyOfSelectedRevision: doc];
+            body = [CBLForestBridge bodyOfSelectedRevision: doc];
             body[@"_id"] = slice2string(doc->docID);
             body[@"_rev"] = slice2string(doc->revID);
             body[@"_local_seq"] = @(doc->sequence);
@@ -369,7 +399,7 @@ static NSString* viewNames(NSArray* views) {
                                  {@"seq", @(e->docSequence)})];
 
     }
-    return c4err.code ? result : nil;
+    return c4err.code ? nil : result;
 }
 #endif
 
@@ -389,32 +419,41 @@ static NSString* viewNames(NSArray* views) {
     forestOpts.descending = options->descending;
     forestOpts.inclusiveStart = options->inclusiveStart;
     forestOpts.inclusiveEnd = options->inclusiveEnd;
+    forestOpts.startKeyDocID = string2slice(options.startKeyDocID);
+    forestOpts.endKeyDocID = string2slice(options.endKeyDocID);
+
+    id startKey = options.startKey, endKey = options.endKey;
+    __strong id &maxKey = options->descending ? startKey : endKey;
+    maxKey = CBLKeyForPrefixMatch(maxKey, options->prefixMatchLevel);
+    forestOpts.startKey = id2key(startKey);
+    forestOpts.endKey = id2key(endKey);
 
     if (options->bbox) {
         return c4view_geoQuery(_view, geoRect2Area(*options->bbox), outError);
     } else if (options.fullTextQuery) {
         return c4view_fullTextQuery(_view, string2slice(options.fullTextQuery),
                                     kC4SliceNull, &forestOpts, outError);
-    }
-    if (options.keys) {
-        forestOpts.keysCount = options.keys.count;
-        forestOpts.keys = (const C4Key**)malloc(forestOpts.keysCount * sizeof(C4Key*));
-        NSUInteger i = 0;
-        for (id keyObj in options.keys) {
-            forestOpts.keys[i++] = id2key(keyObj);
+    } else {
+        if (options.keys) {
+            forestOpts.keysCount = options.keys.count;
+            forestOpts.keys = (const C4Key**)malloc(forestOpts.keysCount * sizeof(C4Key*));
+            NSUInteger i = 0;
+            for (id keyObj in options.keys) {
+                forestOpts.keys[i++] = id2key(keyObj);
+            }
         }
+
+        C4QueryEnumerator *e = c4view_query(_view, &forestOpts, outError);
+
+        // Clean up allocated keys on the way out:
+        if (forestOpts.keys) {
+            for (NSUInteger i = 0; i < forestOpts.keysCount; i++)
+                c4key_free((C4Key*)forestOpts.keys[i]);
+            free(forestOpts.keys);
+        }
+
+        return e;
     }
-
-    C4QueryEnumerator *e = c4view_query(_view, &forestOpts, outError);
-
-    // Clean up allocated keys on the way out:
-    if (forestOpts.keys) {
-        for (NSUInteger i = 0; i < forestOpts.keysCount; i++)
-            c4key_free((C4Key*)forestOpts.keys[i]);
-        free(forestOpts.keys);
-    }
-
-    return e;
 }
 
 

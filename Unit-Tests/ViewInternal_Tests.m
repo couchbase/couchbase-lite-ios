@@ -775,7 +775,7 @@ static NSArray* reverse(NSArray* a) {
                                          {@"value", [docs[3] properties]}),
                                    $dict({@"id",  @"22222"}, {@"key", @"two"},
                                          {@"value", [docs[0] properties]}));
-    AssertEqual(rows, expectedRows);
+    AssertEqualish(rows, expectedRows);
 
     // Now test reducing
     options->reduce = YES;

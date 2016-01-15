@@ -356,20 +356,20 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
                        sequence: (SequenceNumber)sequence
                          status: (CBLStatus*)outStatus
 {
-    __block NSDictionary* result = nil;
+    __block NSMutableDictionary* result = nil;
     *outStatus = [self _withVersionedDoc: docID mustExist: YES do: ^(C4Document* doc) {
 #if DEBUG
         LogTo(CBLDatabase, @"Read %@ seq %lld", docID, sequence);
 #endif
         do {
             if (doc->selectedRev.sequence == (C4SequenceNumber)sequence) {
-                NSMutableDictionary* result = [CBLForestBridge bodyOfSelectedRevision: doc];
+                result = [CBLForestBridge bodyOfSelectedRevision: doc];
                 if (!result)
                     return kCBLStatusNotFound;
-                    result[@"_id"] = docID;
-                    result[@"_rev"] = slice2string(doc->selectedRev.revID);
-                    if (doc->selectedRev.flags & kRevDeleted)
-                        result[@"_deleted"] = @YES;
+                result[@"_id"] = docID;
+                result[@"_rev"] = slice2string(doc->selectedRev.revID);
+                if (doc->selectedRev.flags & kRevDeleted)
+                    result[@"_deleted"] = @YES;
                 return kCBLStatusOK;
             }
         } while (c4doc_selectNextRevision(doc));

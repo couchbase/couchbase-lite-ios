@@ -153,7 +153,8 @@ BOOL CBLQueryRowValueIsEntireDoc(id value) {
                                                      sequence: _sequence
                                                        status: &status];
                     if (!value)
-                        Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
+                        Warn(@"%@[key=%@]: Couldn't load doc for row value: status %d",
+                             self.class, self.key, status);
                 }
             } else {
                 value = [CBLJSON JSONObjectWithData: _value
