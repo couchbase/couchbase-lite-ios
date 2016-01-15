@@ -119,7 +119,13 @@
 #else
         const char* platform = "Mac OS X";
 #endif
-        sUserAgent = $sprintf(@"CouchbaseLite/%s (%s)", CBL_VERSION_STRING, platform);
+        NSString* commit;
+        if (strlen(CBL_SOURCE_REVISION) > (0))
+            commit = [NSString stringWithFormat:@"/%s", CBL_SOURCE_REVISION];
+        else
+            commit = @"";
+        sUserAgent = $sprintf(@"CouchbaseLite/%s (%s %s%@)",
+                              CBL_SYNC_VERSION_STRING, platform, CBL_VERSION_STRING, commit);
     });
     return sUserAgent;
 }
