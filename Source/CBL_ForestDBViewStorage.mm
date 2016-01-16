@@ -169,6 +169,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
                           status: (CBLStatus*)outStatus
 {
     if (!_view) {
+        auto delegate = _delegate;
         if (_dbStorage.autoCompact)
             flags |= kC4DB_AutoCompact;
         CBLSymmetricKey* encKey = _dbStorage.encryptionKey;
@@ -178,7 +179,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         _view = c4view_open((C4Database*)_dbStorage.forestDatabase,
                              string2slice(_path),
                              string2slice(_name),
-                             string2slice(_delegate.mapVersion),
+                             string2slice(delegate.mapVersion),
                              flags,
                              (encKey ? &c4encKey : NULL),
                              &c4err);
@@ -189,8 +190,9 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
             return NULL;
         }
 
-        [self closeIndexSoon];
+        c4view_setDocumentType(_view, string2slice(delegate.documentType));
 
+        [self closeIndexSoon];
         LogTo(View, @"%@: Opened index %p", self, _view);
     }
     return _view;

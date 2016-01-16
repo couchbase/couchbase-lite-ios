@@ -1016,7 +1016,7 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
     view1.documentType = @"person";
     [view1 setMapBlock: MAPBLOCK({
         Log(@"view1 mapping: %@", doc);
-        Assert([doc[@"type"] isEqualToString:@"person"]);
+        AssertEqual(doc[@"type"], @"person");
         emit(doc[@"name"], nil);
     }) version: @"1"];
 
@@ -1024,7 +1024,7 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
     view2.documentType = @"aardvark";
     [view2 setMapBlock: MAPBLOCK({
         Log(@"view2 mapping: %@", doc);
-        Assert([doc[@"type"] isEqualToString:@"aardvark"]);
+        AssertEqual(doc[@"type"], @"aardvark");
         emit(doc[@"name"], nil);
     }) version: @"1"];
 
