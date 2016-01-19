@@ -168,7 +168,13 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 - (C4View*) openIndexWithOptions: (C4DatabaseFlags)flags
                           status: (CBLStatus*)outStatus
 {
-    if (!_view) {
+    C4Slice mapVersion = string2slice(_delegate.mapVersion);
+
+    if (_view) {
+        // Check if version has changed:
+        c4view_setMapVersion(_view, mapVersion);
+
+    } else {
         auto delegate = _delegate;
         if (_dbStorage.autoCompact)
             flags |= kC4DB_AutoCompact;
@@ -179,7 +185,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         _view = c4view_open((C4Database*)_dbStorage.forestDatabase,
                              string2slice(_path),
                              string2slice(_name),
-                             string2slice(delegate.mapVersion),
+                             mapVersion,
                              flags,
                              (encKey ? &c4encKey : NULL),
                              &c4err);
@@ -297,7 +303,7 @@ static NSString* keyToJSONStr(id key) {
         [maps addObject: mapBlock];
 
         CBLStatus status;
-        C4View* c4view = [view openIndex: &status];
+        C4View* c4view = [view openIndexWithOptions: 0 status: &status];
         if (!c4view)
             return status;
         c4views[i++] = c4view;
@@ -313,15 +319,32 @@ static NSString* keyToJSONStr(id key) {
 
     // Set up the emit block:
     __block NSMutableDictionary* body;
+    NSMutableArray* emittedJSONValues = [NSMutableArray new];
     CLEANUP(C4KeyValueList)* emitted = c4kv_new();
     CBLMapEmitBlock emit = ^(id key, id value) {
         LogTo(ViewVerbose, @"    emit(%@, %@)",
               keyToJSONStr(key),
               (value == body) ? @"doc" : toJSONStr(value));
-        C4Key *c4key = id2key(key);
-        C4Slice valueSlice = (value == body) ? kC4PlaceholderValue : id2JSONSlice(value);
+        CLEANUP(C4Key) *c4key = id2key(key);
+        C4Slice valueSlice;
+        if (value == body) {
+            valueSlice = kC4PlaceholderValue;
+        } else if (value) {
+            NSError* error;
+            NSData* valueJSON = [CBLJSON dataWithJSONObject: value
+                                                    options: CBLJSONWritingAllowFragments
+                                                      error: &error];
+            if (!valueJSON) {
+                Warn(@"emit() called with invalid value: %@",
+                     error.localizedDescription);
+                return;
+            }
+            [emittedJSONValues addObject: valueJSON];  // keep it alive
+            valueSlice = data2slice(valueJSON);
+        } else {
+            valueSlice = kC4SliceNull;
+        }
         c4kv_add(emitted, c4key, valueSlice);
-        c4key_free(c4key);
     };
 
     // Now enumerate the docs:
@@ -366,6 +389,7 @@ static NSString* keyToJSONStr(id key) {
                     if (!c4indexer_emitList(indexer, doc, curViewIndex, emitted, &c4err))
                         return err2status(c4err);
                     c4kv_reset(emitted);
+                    [emittedJSONValues removeAllObjects];
                 }
             }
         }

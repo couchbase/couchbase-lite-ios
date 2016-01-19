@@ -453,6 +453,8 @@
             if(rows && ![rows isEqual: _rows]) {
                 LogTo(Query, @"%@: ...Rows changed! (now %lu)", self, (unsigned long)rows.count);
                 self.rows = rows;   // Triggers KVO notification
+            } else {
+                LogTo(QueryVerbose, @"%@: ...Rows NOT changed; not updating .rows", self);
             }
         }
         if (_updateAgain)
