@@ -47,6 +47,10 @@ NSData* slice2dataNoCopy(C4Slice s) {
     return [[NSData alloc] initWithBytesNoCopy: (void*)s.buf length: s.size freeWhenDone: NO];
 }
 
+NSData* slice2dataAdopt(C4Slice s) {
+    return [[NSData alloc] initWithBytesNoCopy: (void*)s.buf length: s.size freeWhenDone: YES];
+}
+
 id slice2jsonObject(C4Slice s, CBLJSONReadingOptions options) {
     NSData* json = slice2dataNoCopy(s);
     if (!json)

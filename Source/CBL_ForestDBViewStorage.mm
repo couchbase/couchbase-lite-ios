@@ -273,13 +273,13 @@ static NSString* viewNames(NSArray* views) {
     return [[views my_map: ^(CBLView* view) {return view.name;}] componentsJoinedByString: @", "];
 }
 
-static NSString* toJSONStr(id obj) {
+static NSString* toJSONStr(id obj) { // only used for logging
     if (!obj)
         return @"nil";
     return [CBLJSON stringWithJSONObject: obj options: CBLJSONWritingAllowFragments error: nil];
 }
 
-static NSString* keyToJSONStr(id key) {
+static NSString* keyToJSONStr(id key) { // only used for logging
     if ([key isKindOfClass: [CBLSpecialKey class]])
         return [key description];
     else
@@ -290,6 +290,7 @@ static NSString* keyToJSONStr(id key) {
 - (CBLStatus) updateIndexes: (NSArray*)views {
     LogTo(View, @"Checking indexes of (%@) for %@", viewNames(views), _name);
 
+    // Build arrays of map blocks and C4Views:
     NSUInteger viewCount = views.count;
     NSMutableArray<CBLMapBlock>* maps = [NSMutableArray arrayWithCapacity: viewCount];
     C4View* c4views[viewCount];
@@ -317,6 +318,16 @@ static NSString* keyToJSONStr(id key) {
         return err2status(c4err);
     c4indexer_triggerOnView(indexer, _view);
 
+    // Create the doc enumerator:
+    SequenceNumber latestSequence = 0;
+    CLEANUP(C4DocEnumerator) *e = c4indexer_enumerateDocuments(indexer, &c4err);
+    if (!e) {
+        if (c4err.code != 0)
+            return err2status(c4err);
+        LogTo(View, @"... Finished re-indexing (%@) -- already up-to-date", viewNames(views));
+        return kCBLStatusNotModified;
+    }
+
     // Set up the emit block:
     __block NSMutableDictionary* body;
     NSMutableArray* emittedJSONValues = [NSMutableArray new];
@@ -325,7 +336,6 @@ static NSString* keyToJSONStr(id key) {
         LogTo(ViewVerbose, @"    emit(%@, %@)",
               keyToJSONStr(key),
               (value == body) ? @"doc" : toJSONStr(value));
-        CLEANUP(C4Key) *c4key = id2key(key);
         C4Slice valueSlice;
         if (value == body) {
             valueSlice = kC4PlaceholderValue;
@@ -344,19 +354,11 @@ static NSString* keyToJSONStr(id key) {
         } else {
             valueSlice = kC4SliceNull;
         }
+        CLEANUP(C4Key) *c4key = id2key(key);
         c4kv_add(emitted, c4key, valueSlice);
     };
 
     // Now enumerate the docs:
-    SequenceNumber latestSequence = 0;
-    CLEANUP(C4DocEnumerator) *e = c4indexer_enumerateDocuments(indexer, &c4err);
-    if (!e) {
-        if (c4err.code != 0)
-            return err2status(c4err);
-        LogTo(View, @"... Finished re-indexing (%@) -- already up-to-date", viewNames(views));
-        return kCBLStatusNotModified;
-    }
-
     while (c4enum_next(e, &c4err)) {
         @autoreleasepool {
             // For each updated document:
@@ -400,8 +402,7 @@ static NSString* keyToJSONStr(id key) {
     // Finish up:
     c4indexer_end(indexer, true, &c4err);
     indexer = NULL; // keep CLEANUP from double-disposing it
-    LogTo(View, @"... Finished re-indexing (%@) to #%lld",
-          viewNames(views), latestSequence);
+    LogTo(View, @"... Finished re-indexing (%@) to #%lld", viewNames(views), latestSequence);
     return kCBLStatusOK;
 }
 
@@ -434,8 +435,8 @@ static NSString* keyToJSONStr(id key) {
 
 
 /** Starts a view query, returning a CBForest enumerator. */
-- (C4QueryEnumerator*) _runForestQueryWithOptions: (CBLQueryOptions*)options
-                                            error: (C4Error*)outError
+- (C4QueryEnumerator*) _forestQueryWithOptions: (CBLQueryOptions*)options
+                                         error: (C4Error*)outError
 {
     Assert(_view); // caller MUST call -openIndex: first
     C4QueryOptions forestOpts = kC4DefaultQueryOptions;
@@ -501,7 +502,7 @@ static NSString* keyToJSONStr(id key) {
     }
 
     C4Error c4err;
-    __block C4QueryEnumerator *e = [self _runForestQueryWithOptions: options error: &c4err];
+    __block C4QueryEnumerator *e = [self _forestQueryWithOptions: options error: &c4err];
     if (!e) {
         *outStatus = err2status(c4err);
         return nil;
@@ -509,6 +510,7 @@ static NSString* keyToJSONStr(id key) {
 
     *outStatus = kCBLStatusOK;
     return ^CBLQueryRow*() {
+        // This is the block that returns the next row:
         if (e == nil)
             return nil;
         if (limit-- == 0) {
@@ -528,7 +530,8 @@ static NSString* keyToJSONStr(id key) {
                 NSDictionary* valueDict = nil;
                 NSString* linkedID = nil;
                 if (e->value.size > 0 && ((char*)e->value.buf)[0] == '{') {
-                    valueDict = $castIf(NSDictionary, slice2jsonObject(e->value, 0));
+                    value = slice2jsonObject(e->value, 0);
+                    valueDict = $castIf(NSDictionary, value);
                     linkedID = valueDict.cbl_id;
                 }
                 if (linkedID) {
@@ -547,9 +550,10 @@ static NSString* keyToJSONStr(id key) {
 
             if (!value)
                 value = slice2data(e->value);
-
             LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
                   _name, CBLJSONString(key), value, CBLJSONString(docID));
+            
+            // Create a CBLQueryRow:
             CBLQueryRow* row;
             if (options->bbox) {
                 row = [[CBLGeoQueryRow alloc] initWithDocID: docID
@@ -638,7 +642,7 @@ static NSString* keyToJSONStr(id key) {
     if (![self openIndex: outStatus])
         return nil;
     C4Error c4err;
-    C4QueryEnumerator *e = [self _runForestQueryWithOptions: options error: &c4err];
+    __block C4QueryEnumerator *e = [self _forestQueryWithOptions: options error: &c4err];
     if (!e) {
         *outStatus = err2status(c4err);
         return nil;
@@ -646,14 +650,21 @@ static NSString* keyToJSONStr(id key) {
 
     *outStatus = kCBLStatusOK;
     return ^CBLQueryRow*() {
+        // This is the block that returns the next row:
         CBLQueryRow* row = nil;
         do {
+            if (!e)
+                return nil;
             id key = nil;
             C4Error c4err;
-            if (c4queryenum_next(e, &c4err))
+            if (c4queryenum_next(e, &c4err)) {
                 key = key2id(e->key);
-            else if (c4err.code)
-                break;
+            } else {
+                c4queryenum_free(e);
+                e = NULL;
+                if (c4err.code)
+                    break;
+            }
 
             if (lastKey && (!key || (group && !groupTogether(lastKey, key, groupLevel)))) {
                 // key doesn't match lastKey; emit a grouped/reduced row for what came before:
@@ -788,15 +799,15 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     if (![self openIndex: NULL])
         return nil;
     C4Error c4err;
-    CLEANUP(C4SliceResult) valueSlice = c4view_fullTextMatched(_view, string2slice(docID),
-                                                               sequence, (unsigned)fullTextID,
-                                                               &c4err);
+    C4SliceResult valueSlice = c4view_fullTextMatched(_view, string2slice(docID),
+                                                      sequence, (unsigned)fullTextID,
+                                                      &c4err);
     if (!valueSlice.buf) {
         Warn(@"%@: Couldn't find full text for doc <%@>, seq %llu, fullTextID %llu (err %d/%d)",
              self, docID, sequence, fullTextID, c4err.domain, c4err.code);
         return nil;
     }
-    return slice2data(valueSlice);
+    return slice2dataAdopt(valueSlice);
 }
 
 

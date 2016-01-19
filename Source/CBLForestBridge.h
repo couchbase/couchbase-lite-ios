@@ -26,6 +26,7 @@ static inline C4Slice data2slice(UU NSData* data) {
 C4Slice string2slice(UU NSString* str);
 NSString* slice2string(C4Slice s);
 NSData* slice2data(C4Slice s);
+NSData* slice2dataAdopt(C4Slice s);
 NSData* slice2dataNoCopy(C4Slice s);
 id slice2jsonObject(C4Slice, CBLJSONReadingOptions);
 
