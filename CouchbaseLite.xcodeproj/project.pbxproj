@@ -325,6 +325,7 @@
 		2701C20A1C4D5BDD006D7A99 /* CBL_Shared.h in Headers */ = {isa = PBXBuildFile; fileRef = 271C2AD216FA176300B8C9DB /* CBL_Shared.h */; };
 		2701C20B1C4D5BDD006D7A99 /* WebSocketClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401B11860CB4B0080E082 /* WebSocketClient.h */; };
 		2701C2131C4D5C82006D7A99 /* libsqlcipher.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2701C2121C4D5C82006D7A99 /* libsqlcipher.a */; };
+		2701C24B1C4DAD9B006D7A99 /* libCBForest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FA99F01917FFD000912F96 /* libCBForest.a */; };
 		270B3E1E1489385C00E0A926 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		270B3E201489390000E0A926 /* CouchbaseLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E1F148938D800E0A926 /* CouchbaseLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270B3E211489390F00E0A926 /* CBL_URLProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706461487584300F0F099 /* CBL_URLProtocol.h */; };
@@ -815,7 +816,6 @@
 		27E66AE81A7307590091DA3F /* CBLForestBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27EF7F9A1912EB5200A327B9 /* CBLForestBridge.mm */; };
 		27E66AEF1A7307590091DA3F /* CBL_ForestDBViewStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A9D67E1A661ED10074FDD2 /* CBL_ForestDBViewStorage.mm */; };
 		27E66B001A7307590091DA3F /* CBL_ForestDBStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DADE421A659FCC0075313A /* CBL_ForestDBStorage.mm */; };
-		27E66B3D1A7307590091DA3F /* libCBForest-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27571E0618F9060100141BDD /* libCBForest-iOS.a */; };
 		27E66B4F1A73091D0091DA3F /* CBLCollateJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 27513A551A6827DF0055DC40 /* CBLCollateJSON.m */; };
 		27E66B511A730CA80091DA3F /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66B501A730CA80091DA3F /* libsqlite3.dylib */; };
 		27E66B521A730DBF0091DA3F /* libCBLForestDBStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */; };
@@ -851,7 +851,6 @@
 		27F128AB156AC004008465C2 /* NSMutableURLRequest+Parameters.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F128AA156AC004008465C2 /* NSMutableURLRequest+Parameters.h */; };
 		27F128B1156AC1CA008465C2 /* CBLOAuth1Authorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F128AF156AC1C8008465C2 /* CBLOAuth1Authorizer.h */; };
 		27F128B3156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F128B0156AC1C9008465C2 /* CBLOAuth1Authorizer.m */; };
-		27F1B0031A8415C90056DA1E /* libTokenizer-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FA9A441918A7C700912F96 /* libTokenizer-iOS.a */; };
 		27F1B0041A8416010056DA1E /* libCBLSQLiteStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66ACF1A7305B10091DA3F /* libCBLSQLiteStorage.a */; };
 		27F1E4A8169799DA00F0E50F /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
 		27F273C117039D6000CD2B85 /* CBLUICollectionSource.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */; };
@@ -955,6 +954,13 @@
 			remoteGlobalIDString = 2701C0261C49CFE6006D7A99;
 			remoteInfo = "CBL Mac library";
 		};
+		2701C2511C4DAE82006D7A99 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 27EF80F91917EEC600A327B9;
+			remoteInfo = "CBForest static";
+		};
 		270BDD6E15645127007D52F6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
@@ -1053,33 +1059,12 @@
 			remoteGlobalIDString = 275315D414ACF0A10065964D;
 			remoteInfo = "CBL Listener Mac";
 		};
-		27571E0518F9060100141BDD /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 27139B9518F8EE3A0021A9A3;
-			remoteInfo = "CBForest-iOS";
-		};
 		27571E0718F9060100141BDD /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 27139B3018F8E9750021A9A3;
 			remoteInfo = CBForestTests;
-		};
-		27571E0918F9060100141BDD /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 27139BA218F8EE3A0021A9A3;
-			remoteInfo = "CBForest-iOSTests";
-		};
-		27571E0B18F9060100141BDD /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 27139B9018F8EDA20021A9A3;
-			remoteInfo = "forestdb iOS";
 		};
 		275A290A1649A54500B0D8EE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1129,20 +1114,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 270FE0C714C5008C005FF647;
 			remoteInfo = LiteServ;
-		};
-		275A7CEA1901AE0900729933 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 27139B9418F8EE3A0021A9A3;
-			remoteInfo = "CBForest-iOS";
-		};
-		27A754FF1A8559B6008BCD4D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 27FA99F419180B5F00912F96;
-			remoteInfo = "Tokenizer-iOS";
 		};
 		27AD1F8617C29BE80063108F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1249,13 +1220,6 @@
 			remoteGlobalIDString = 720EA3F51BA7EAD9002B8416;
 			remoteInfo = "CBForest-Interop";
 		};
-		27E11A5D1BD0646E00D8DB7D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 720EA46E1BA909C4002B8416;
-			remoteInfo = "CBForest-Interop iOS";
-		};
 		27E11F1A14AD251C0006B340 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
@@ -1269,13 +1233,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 275315D414ACF0A10065964D;
 			remoteInfo = TouchDBListener;
-		};
-		27E66AD21A7307590091DA3F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 27139B9418F8EE3A0021A9A3;
-			remoteInfo = "CBForest-iOS";
 		};
 		27E66B461A73081C0091DA3F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1325,13 +1282,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = 27EF807419142C2500A327B9;
 			remoteInfo = Tokenizer;
-		};
-		27FA9A431918A7C700912F96 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 27FA9A3F19180B5F00912F96;
-			remoteInfo = "Tokenizer-iOS";
 		};
 		DA147C3814BCAC670052DA4D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -2114,7 +2064,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27F1B0031A8415C90056DA1E /* libTokenizer-iOS.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2122,7 +2071,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27E66B3D1A7307590091DA3F /* libCBForest-iOS.a in Frameworks */,
+				2701C24B1C4DAD9B006D7A99 /* libCBForest.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2841,17 +2790,12 @@
 			isa = PBXGroup;
 			children = (
 				27FA99F01917FFD000912F96 /* libCBForest.a */,
-				27571E0618F9060100141BDD /* libCBForest-iOS.a */,
 				27571E0818F9060100141BDD /* CBForest Tests.xctest */,
-				27571E0A18F9060100141BDD /* CBForest-iOS Tests.xctest */,
-				27B7E10D18F8FE2800044EBA /* libforestdb.a */,
-				27571E0C18F9060100141BDD /* libforestdb.a */,
-				27FA99F21917FFD000912F96 /* libTokenizer.a */,
-				27FA9A441918A7C700912F96 /* libTokenizer-iOS.a */,
-				27E11A581BD0646E00D8DB7D /* libCBForestJNI.dylib */,
 				27E11A5A1BD0646E00D8DB7D /* CppTests */,
+				27E11A581BD0646E00D8DB7D /* libCBForestJNI.dylib */,
 				27E11A5C1BD0646E00D8DB7D /* libCBForest-Interop.dylib */,
-				27E11A5E1BD0646E00D8DB7D /* libCBForest-Interop.a */,
+				27FA99F21917FFD000912F96 /* libTokenizer.a */,
+				27B7E10D18F8FE2800044EBA /* libforestdb.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -3763,7 +3707,6 @@
 			dependencies = (
 				27B0869C1B3882D400D3D9D8 /* PBXTargetDependency */,
 				27F1B0061A84160E0056DA1E /* PBXTargetDependency */,
-				275A7CEB1901AE0900729933 /* PBXTargetDependency */,
 			);
 			name = "CBL iOS library";
 			productName = TouchDBiOS;
@@ -3845,7 +3788,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				27A755001A8559B6008BCD4D /* PBXTargetDependency */,
 			);
 			name = "CBL SQLite Storage";
 			productName = TouchDBiOS;
@@ -3863,7 +3805,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				27E66AD11A7307590091DA3F /* PBXTargetDependency */,
+				2701C2521C4DAE82006D7A99 /* PBXTargetDependency */,
 			);
 			name = "CBL ForestDB Storage";
 			productName = TouchDBiOS;
@@ -3990,32 +3932,11 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		27571E0618F9060100141BDD /* libCBForest-iOS.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libCBForest-iOS.a";
-			remoteRef = 27571E0518F9060100141BDD /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		27571E0818F9060100141BDD /* CBForest Tests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
 			path = "CBForest Tests.xctest";
 			remoteRef = 27571E0718F9060100141BDD /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		27571E0A18F9060100141BDD /* CBForest-iOS Tests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = "CBForest-iOS Tests.xctest";
-			remoteRef = 27571E0918F9060100141BDD /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		27571E0C18F9060100141BDD /* libforestdb.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libforestdb.a;
-			remoteRef = 27571E0B18F9060100141BDD /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		27B086791B38804100D3D9D8 /* libBLIP-iOS.a */ = {
@@ -4088,13 +4009,6 @@
 			remoteRef = 27E11A5B1BD0646E00D8DB7D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		27E11A5E1BD0646E00D8DB7D /* libCBForest-Interop.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libCBForest-Interop.a";
-			remoteRef = 27E11A5D1BD0646E00D8DB7D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		27FA99F01917FFD000912F96 /* libCBForest.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -4107,13 +4021,6 @@
 			fileType = archive.ar;
 			path = libTokenizer.a;
 			remoteRef = 27FA99F11917FFD000912F96 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		27FA9A441918A7C700912F96 /* libTokenizer-iOS.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libTokenizer-iOS.a";
-			remoteRef = 27FA9A431918A7C700912F96 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -4242,7 +4149,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
-			showEnvVarsInLog = 0;
 		};
 		27B0B8061492BE2100A817AD /* Copy Library */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -4256,7 +4162,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CREATING_UNIVERSAL_DIR=${SYMROOT}/${CONFIGURATION}-CouchbaseLiteFat-ios-universal\ncp \"${CREATING_UNIVERSAL_DIR}/libCouchbaseLiteFat.a\" \"${CONFIGURATION_BUILD_DIR}/${EXECUTABLE_PATH}\"";
+			shellScript = "cp \"${UNIVERSAL_BUILD_DIR}/libCouchbaseLiteFat.a\" \"${CONFIGURATION_BUILD_DIR}/${EXECUTABLE_PATH}\"";
 			showEnvVarsInLog = 0;
 		};
 		27E66ACB1A7305B10091DA3F /* Build Fat Library */ = {
@@ -4319,8 +4225,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CREATING_UNIVERSAL_DIR=${SYMROOT}/${CONFIGURATION}-${PRODUCT_NAME}-ios-universal\ncp \"${CREATING_UNIVERSAL_DIR}/libCouchbaseLiteListener.a\" \"${CONFIGURATION_BUILD_DIR}/${EXECUTABLE_PATH}\"";
-			showEnvVarsInLog = 0;
+			shellScript = "cp \"${UNIVERSAL_BUILD_DIR}/libCouchbaseLiteListener.a\" \"${CONFIGURATION_BUILD_DIR}/${EXECUTABLE_PATH}\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -4871,6 +4776,11 @@
 			target = 2701C0261C49CFE6006D7A99 /* CBL Mac library */;
 			targetProxy = 2701C16A1C4D5BDD006D7A99 /* PBXContainerItemProxy */;
 		};
+		2701C2521C4DAE82006D7A99 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "CBForest static";
+			targetProxy = 2701C2511C4DAE82006D7A99 /* PBXContainerItemProxy */;
+		};
 		270BDD6F15645127007D52F6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 275315D414ACF0A10065964D /* CBL Listener Mac */;
@@ -4976,16 +4886,6 @@
 			target = 270FE0C714C5008C005FF647 /* LiteServ */;
 			targetProxy = 275A29161649A55500B0D8EE /* PBXContainerItemProxy */;
 		};
-		275A7CEB1901AE0900729933 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "CBForest-iOS";
-			targetProxy = 275A7CEA1901AE0900729933 /* PBXContainerItemProxy */;
-		};
-		27A755001A8559B6008BCD4D /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "Tokenizer-iOS";
-			targetProxy = 27A754FF1A8559B6008BCD4D /* PBXContainerItemProxy */;
-		};
 		27AD1F8717C29BE80063108F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = DA147C1F14BCAC3B0052DA4D /* CBL Listener iOS */;
@@ -5020,11 +4920,6 @@
 			isa = PBXTargetDependency;
 			target = 275315D414ACF0A10065964D /* CBL Listener Mac */;
 			targetProxy = 27E11F1C14AD25570006B340 /* PBXContainerItemProxy */;
-		};
-		27E66AD11A7307590091DA3F /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "CBForest-iOS";
-			targetProxy = 27E66AD21A7307590091DA3F /* PBXContainerItemProxy */;
 		};
 		27E66B471A73081C0091DA3F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -5135,6 +5030,8 @@
 				);
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				"GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS[sdk=appletvos*]" = NO;
+				"GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS[sdk=appletvsimulator*]" = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
@@ -5144,6 +5041,12 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = macosx;
+				TVOS_DEPLOYMENT_TARGET = 9.0;
+				UNIVERSAL_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)-$(UNIVERSAL_NAME_$(PLATFORM_NAME))-universal";
+				UNIVERSAL_NAME_appletvos = tvOS;
+				UNIVERSAL_NAME_appletvsimulator = tvOS;
+				UNIVERSAL_NAME_iphoneos = iOS;
+				UNIVERSAL_NAME_iphonesimulator = iOS;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_FILE = "$(PRODUCT_NAME)_vers.c";
 				WARNING_CFLAGS = (
@@ -5189,6 +5092,8 @@
 				);
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				"GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS[sdk=appletvos*]" = NO;
+				"GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS[sdk=appletvsimulator*]" = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
@@ -5197,6 +5102,12 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				SDKROOT = macosx;
+				TVOS_DEPLOYMENT_TARGET = 9.0;
+				UNIVERSAL_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)-$(UNIVERSAL_NAME_$(PLATFORM_NAME))-universal";
+				UNIVERSAL_NAME_appletvos = tvOS;
+				UNIVERSAL_NAME_appletvsimulator = tvOS;
+				UNIVERSAL_NAME_iphoneos = iOS;
+				UNIVERSAL_NAME_iphonesimulator = iOS;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_FILE = "$(PRODUCT_NAME)_vers.c";
 				WARNING_CFLAGS = (
@@ -5254,6 +5165,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 				SWIFT_OBJC_BRIDGING_HEADER = "Unit-Tests/UnitTests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL Test.app/CBL Test";
@@ -5299,6 +5211,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 				SWIFT_OBJC_BRIDGING_HEADER = "Unit-Tests/UnitTests-Bridging-Header.h";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL Test.app/CBL Test";
 				VALIDATE_PRODUCT = YES;
@@ -5663,6 +5576,7 @@
 				PRODUCT_NAME = CouchbaseLiteFat;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 			};
 			name = Debug;
 		};
@@ -5682,6 +5596,7 @@
 				PRODUCT_NAME = CouchbaseLiteFat;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -6008,6 +5923,7 @@
 				PRODUCT_NAME = CouchbaseLite;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 			};
 			name = Debug;
 		};
@@ -6039,6 +5955,7 @@
 				PRODUCT_NAME = CouchbaseLite;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -6048,7 +5965,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)-ios-universal";
+				CONFIGURATION_BUILD_DIR = "$(UNIVERSAL_BUILD_DIR)";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -6067,6 +5984,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = CouchbaseLite;
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = framework;
 			};
@@ -6077,7 +5995,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)-ios-universal";
+				CONFIGURATION_BUILD_DIR = "$(UNIVERSAL_BUILD_DIR)";
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -6090,6 +6008,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = CouchbaseLite;
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = framework;
 			};
@@ -6234,6 +6153,7 @@
 				PRODUCT_NAME = CBLSQLiteStorage;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 			};
 			name = Debug;
 		};
@@ -6262,6 +6182,7 @@
 				PRODUCT_NAME = CBLSQLiteStorage;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -6289,6 +6210,7 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CBLForestDBStorage;
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 			};
 			name = Debug;
 		};
@@ -6316,6 +6238,7 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CBLForestDBStorage;
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -6405,6 +6328,7 @@
 				PRODUCT_NAME = CouchbaseLiteListener;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 			};
 			name = Debug;
 		};
@@ -6430,6 +6354,7 @@
 				PRODUCT_NAME = CouchbaseLiteListener;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -6439,7 +6364,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)-ios-universal";
+				CONFIGURATION_BUILD_DIR = "$(UNIVERSAL_BUILD_DIR)";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -6458,6 +6383,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = CouchbaseLiteListener;
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = framework;
 			};
@@ -6468,7 +6394,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)-ios-universal";
+				CONFIGURATION_BUILD_DIR = "$(UNIVERSAL_BUILD_DIR)";
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -6481,6 +6407,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = CouchbaseLiteListener;
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvos appletvsimulator";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = framework;
 			};
