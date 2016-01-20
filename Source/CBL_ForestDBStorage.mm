@@ -188,10 +188,12 @@ static void onCompactCallback(void *context, bool compacting) {
 
     C4Error c4err;
     _forest = c4db_open(string2slice(forestPath), flags, &encKey, &c4err);
-    if (!_forest)
+    if (!_forest) {
         err2OutNSError(c4err, outError);
+        return NO;
+    }
     c4db_setOnCompactCallback(_forest, &onCompactCallback, (__bridge void*)self);
-    return (_forest != nil);
+    return YES;
 }
 
 
