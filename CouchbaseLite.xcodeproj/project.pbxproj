@@ -1200,6 +1200,13 @@
 			remoteGlobalIDString = 275072C318E4AA4400A80C5A;
 			remoteInfo = forestdb;
 		};
+		27C3CF081C501A5C00BEE4EB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 27EF807319142C2500A327B9;
+			remoteInfo = Tokenizer;
+		};
 		27E11A571BD0646E00D8DB7D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
@@ -3790,6 +3797,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				27C3CF091C501A5C00BEE4EB /* PBXTargetDependency */,
 			);
 			name = "CBL SQLite Storage";
 			productName = TouchDBiOS;
@@ -4912,6 +4920,11 @@
 			isa = PBXTargetDependency;
 			target = 27731F131495CFEF00815D67 /* CBL iOS Empty App */;
 			targetProxy = 27B15521164AD14E00DF5E2C /* PBXContainerItemProxy */;
+		};
+		27C3CF091C501A5C00BEE4EB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Tokenizer;
+			targetProxy = 27C3CF081C501A5C00BEE4EB /* PBXContainerItemProxy */;
 		};
 		27E11F1B14AD251C0006B340 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
