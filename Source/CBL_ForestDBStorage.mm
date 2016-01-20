@@ -89,7 +89,6 @@ static MYBackgroundMonitor *bgMonitor;
 #endif
 
 
-#if 0 // TODO
 static void onCompactCallback(C4Database *db, bool compacting) {
     const char *what = (compacting ?"starting" :"finished");
     NSString* path = slice2string(c4db_getPath(db));
@@ -104,7 +103,6 @@ static void onCompactCallback(C4Database *db, bool compacting) {
             dbName, viewName.stringByDeletingPathExtension, what);
     }
 }
-#endif
 
 
 + (void) initialize {
@@ -118,10 +116,7 @@ static void onCompactCallback(C4Database *db, bool compacting) {
         c4log_register(logLevel, FDBLogCallback);
         C4GenerateOldStyleRevIDs = true; // Compatible with CBL 1.x
 
-//TODO        Database::onCompactCallback = onCompactCallback;
-
 #if TARGET_OS_IPHONE
-#if 0 //TODO
         bgMonitor = [[MYBackgroundMonitor alloc] init];
         bgMonitor.onAppBackgrounding = ^{
             if ([self checkStillCompacting])
@@ -133,15 +128,13 @@ static void onCompactCallback(C4Database *db, bool compacting) {
                                                    object: nil];
         };
 #endif
-#endif
     }
 }
 
 
 #if TARGET_OS_IPHONE
-#if 0 //TODO
 + (BOOL) checkStillCompacting {
-    if (Database::isAnyCompacting()) {
+    if (c4db_isCompacting(NULL)) {
         Log(@"Database still compacting; delaying app suspend...");
         [self performSelector: @selector(checkStillCompacting) withObject: nil afterDelay: 0.5];
         return YES;
@@ -153,7 +146,6 @@ static void onCompactCallback(C4Database *db, bool compacting) {
         return NO;
     }
 }
-#endif
 #endif
 
 
@@ -206,6 +198,7 @@ static void onCompactCallback(C4Database *db, bool compacting) {
     _forest = c4db_open(string2slice(forestPath), flags, &encKey, &c4err);
     if (!_forest)
         err2OutNSError(c4err, outError);
+    c4db_setOnCompactCallback(_forest, &onCompactCallback);
     return (_forest != nil);
 }
 
