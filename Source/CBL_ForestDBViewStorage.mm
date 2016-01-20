@@ -158,6 +158,15 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 #pragma mark - INDEX MANAGEMENT:
 
 
+static void onCompactCallback(void *context, bool compacting) {
+    auto storage = (__bridge CBL_ForestDBViewStorage*)context;
+    Log(@"View '%@' of db '%@' %s compaction",
+        storage.name,
+        storage->_dbStorage.directory.lastPathComponent,
+        (compacting ?"starting" :"finished"));
+}
+
+
 // Opens the index. You MUST call this (or a method that calls it) before dereferencing _view.
 - (C4View*) openIndex: (CBLStatus*)outStatus {
     return _view ?: [self openIndexWithOptions: 0 status: outStatus];
@@ -196,6 +205,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
             return NULL;
         }
 
+        c4view_setOnCompactCallback(_view, onCompactCallback, (__bridge void*)self);
         c4view_setDocumentType(_view, string2slice(delegate.documentType));
 
         [self closeIndexSoon];

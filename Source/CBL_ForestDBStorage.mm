@@ -89,19 +89,11 @@ static MYBackgroundMonitor *bgMonitor;
 #endif
 
 
-static void onCompactCallback(C4Database *db, bool compacting) {
-    const char *what = (compacting ?"starting" :"finished");
-    NSString* path = slice2string(c4db_getPath(db));
-    NSString* viewName = path.lastPathComponent;
-    path = path.stringByDeletingLastPathComponent;
-    NSString* dbName = path.lastPathComponent.stringByDeletingPathExtension;
-    if ([viewName isEqualToString: kDBFilename]) {
-        Log(@"Database '%@' %s compaction", dbName, what);
-    } else {
-        dbName = [dbName stringByAppendingPathComponent: viewName];
-        Log(@"View index '%@/%@' %s compaction",
-            dbName, viewName.stringByDeletingPathExtension, what);
-    }
+static void onCompactCallback(void *context, bool compacting) {
+    auto storage = (__bridge CBL_ForestDBStorage*)context;
+    Log(@"Database '%@' %s compaction",
+        storage.directory.lastPathComponent,
+        (compacting ?"starting" :"finished"));
 }
 
 
@@ -198,7 +190,7 @@ static void onCompactCallback(C4Database *db, bool compacting) {
     _forest = c4db_open(string2slice(forestPath), flags, &encKey, &c4err);
     if (!_forest)
         err2OutNSError(c4err, outError);
-    c4db_setOnCompactCallback(_forest, &onCompactCallback);
+    c4db_setOnCompactCallback(_forest, &onCompactCallback, (__bridge void*)self);
     return (_forest != nil);
 }
 
@@ -718,6 +710,9 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
             }
             return row;
         }
+        // End of enumeration:
+        c4enum_free(e);
+        e = NULL;
         if (c4err.code)
             Warn(@"AllDocs: Enumeration failed: %d", err2status(c4err));
         return nil;
