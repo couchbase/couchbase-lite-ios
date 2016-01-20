@@ -610,6 +610,7 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
             keySlices[i++] = string2slice(key);
         c4options.flags |= kC4IncludeDeleted;
         e = c4db_enumerateSomeDocs(_forest, keySlices, nKeys, &c4options, &c4err);
+        free(keySlices);
     } else {
         id startKey, endKey;
         if (options->descending) {
