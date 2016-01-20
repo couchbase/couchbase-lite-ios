@@ -121,6 +121,7 @@ static void onCompactCallback(C4Database *db, bool compacting) {
 //TODO        Database::onCompactCallback = onCompactCallback;
 
 #if TARGET_OS_IPHONE
+#if 0 //TODO
         bgMonitor = [[MYBackgroundMonitor alloc] init];
         bgMonitor.onAppBackgrounding = ^{
             if ([self checkStillCompacting])
@@ -132,11 +133,13 @@ static void onCompactCallback(C4Database *db, bool compacting) {
                                                    object: nil];
         };
 #endif
+#endif
     }
 }
 
 
 #if TARGET_OS_IPHONE
+#if 0 //TODO
 + (BOOL) checkStillCompacting {
     if (Database::isAnyCompacting()) {
         Log(@"Database still compacting; delaying app suspend...");
@@ -150,6 +153,7 @@ static void onCompactCallback(C4Database *db, bool compacting) {
         return NO;
     }
 }
+#endif
 #endif
 
 
@@ -251,7 +255,7 @@ static void onCompactCallback(C4Database *db, bool compacting) {
 
 
 - (NSUInteger) documentCount {
-    return c4db_getDocumentCount(_forest);
+    return (NSUInteger)c4db_getDocumentCount(_forest);
 }
 
 
