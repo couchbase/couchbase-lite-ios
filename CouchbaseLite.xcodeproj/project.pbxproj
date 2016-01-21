@@ -408,6 +408,44 @@
 		2733023118F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */; };
 		2737A6CE1B703DD500CEF619 /* CBLAttachmentDownloader.h in Headers */ = {isa = PBXBuildFile; fileRef = 2737A6CC1B703DD500CEF619 /* CBLAttachmentDownloader.h */; };
 		2737A6D01B703DD500CEF619 /* CBLAttachmentDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 2737A6CD1B703DD500CEF619 /* CBLAttachmentDownloader.m */; };
+		273E9EF11C509F38003115A6 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 273E9EF01C509F38003115A6 /* main.m */; };
+		273E9EF41C509F39003115A6 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 273E9EF31C509F38003115A6 /* AppDelegate.m */; };
+		273E9EF71C509F39003115A6 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 273E9EF61C509F39003115A6 /* ViewController.m */; };
+		273E9EFA1C509F39003115A6 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 273E9EF81C509F39003115A6 /* Main.storyboard */; };
+		273E9EFC1C509F39003115A6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 273E9EFB1C509F39003115A6 /* Assets.xcassets */; };
+		273E9F1A1C509F97003115A6 /* BlobStore_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 272AA85E1A49D4A9004B8D55 /* BlobStore_Tests.m */; };
+		273E9F1B1C509F97003115A6 /* ChangeTracker_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 272AA8611A49D5B0004B8D55 /* ChangeTracker_Tests.m */; };
+		273E9F1C1C509F97003115A6 /* CookieStorage_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21B011A9857A1000AD9AF /* CookieStorage_Tests.m */; };
+		273E9F1D1C509F97003115A6 /* DatabaseInternal_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 272AA8571A48ECD4004B8D55 /* DatabaseInternal_Tests.m */; };
+		273E9F1E1C509F97003115A6 /* Database_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2700358F1A44E9270015B9F4 /* Database_Tests.m */; };
+		273E9F1F1C509F97003115A6 /* DatabaseEncryption_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */; };
+		273E9F201C509F97003115A6 /* DatabaseAttachment_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 271297471A8D7DA300F6C5CE /* DatabaseAttachment_Tests.m */; };
+		273E9F211C509F97003115A6 /* IncrementalStore_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2764D2C41A5F1792005AC95A /* IncrementalStore_Tests.m */; };
+		273E9F221C509F97003115A6 /* JSON_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2764D2B01A5E240D005AC95A /* JSON_Tests.m */; };
+		273E9F231C509F97003115A6 /* JSViewCompiler_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2764D2BB1A5F1063005AC95A /* JSViewCompiler_Tests.m */; };
+		273E9F241C509F97003115A6 /* Listener_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0AC311B4D966A00DFE818 /* Listener_Tests.m */; };
+		273E9F251C509F97003115A6 /* Misc_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2764D2B31A5E29EC005AC95A /* Misc_Tests.m */; };
+		273E9F261C509F97003115A6 /* Model_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 272AA8191A48A023004B8D55 /* Model_Tests.m */; };
+		273E9F271C509F97003115A6 /* Multipart_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 272AA8741A49EE5D004B8D55 /* Multipart_Tests.m */; };
+		273E9F281C509F97003115A6 /* MYAction_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EA1F591B91183100B37251 /* MYAction_Test.m */; };
+		273E9F291C509F97003115A6 /* P2P_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0AC1B1B4B036500DFE818 /* P2P_Tests.m */; };
+		273E9F2A1C509F97003115A6 /* QueryBuilder_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 272AA81B1A48A301004B8D55 /* QueryBuilder_Tests.m */; };
+		273E9F2B1C509F97003115A6 /* Replication_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 272AA81D1A48A8BF004B8D55 /* Replication_Tests.m */; };
+		273E9F2C1C509F97003115A6 /* ReplicatorInternal_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 272AA8641A49D95B004B8D55 /* ReplicatorInternal_Tests.m */; };
+		273E9F2D1C509F97003115A6 /* Router_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27AF0A581A4A1F9D003F51D0 /* Router_Tests.m */; };
+		273E9F2E1C509F97003115A6 /* ViewInternal_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 272AA85B1A48F17D004B8D55 /* ViewInternal_Tests.m */; };
+		273E9F2F1C509F97003115A6 /* View_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 270035991A4500160015B9F4 /* View_Tests.m */; };
+		273E9F301C509F97003115A6 /* View_Benchmarks.m in Sources */ = {isa = PBXBuildFile; fileRef = 27452B301AB0E6AA00327776 /* View_Benchmarks.m */; };
+		273E9F311C509FA0003115A6 /* CBLTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 270035971A44FE890015B9F4 /* CBLTestCase.m */; };
+		273E9F321C509FA0003115A6 /* CBLKVOProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = 2786CE611B83A4830061998D /* CBLKVOProxy.m */; };
+		273E9F341C50A03C003115A6 /* libCBLForestDBStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */; };
+		273E9F351C50A03C003115A6 /* libCouchbaseLite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7A91492B83B00A817AD /* libCouchbaseLite.a */; };
+		273E9F371C50A0A5003115A6 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 273E9F361C50A0A5003115A6 /* libz.tbd */; };
+		273E9F391C50A0F2003115A6 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 273E9F381C50A0F2003115A6 /* libc++.tbd */; };
+		273E9F3B1C50A10E003115A6 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 273E9F3A1C50A10E003115A6 /* libsqlite3.tbd */; };
+		273E9F3C1C50A1A1003115A6 /* libCouchbaseLiteListener.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DA023B6414BCA94C008184BB /* libCouchbaseLiteListener.a */; };
+		273E9F3D1C50A1C4003115A6 /* CBLIncrementalStore.m in Sources */ = {isa = PBXBuildFile; fileRef = AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */; };
+		273E9F3E1C50A438003115A6 /* TestData in Resources */ = {isa = PBXBuildFile; fileRef = 274E163119B90F420066CA5E /* TestData */; };
 		273FA2BB1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */; };
 		273FA2BC1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */; };
 		2740D8531A8C240500809EE0 /* Collatable_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D84B1A8C240500809EE0 /* Collatable_Test.mm */; };
@@ -1004,6 +1042,34 @@
 			remoteGlobalIDString = 270B3DE91489359000E0A926;
 			remoteInfo = "CBL Mac";
 		};
+		273E9F031C509F39003115A6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 273E9EEC1C509F38003115A6;
+			remoteInfo = "CBL tvOS Test App";
+		};
+		273E9F3F1C50A450003115A6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27B0B7E61492BB6B00A817AD;
+			remoteInfo = "CBL iOS";
+		};
+		273E9F411C50A452003115A6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DA147C1F14BCAC3B0052DA4D;
+			remoteInfo = "CBL Listener iOS";
+		};
+		273E9F431C50A45B003115A6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27E66AD01A7307590091DA3F;
+			remoteInfo = "CBL ForestDB Storage";
+		};
 		27452BAE1AB1159400327776 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
@@ -1439,6 +1505,19 @@
 		2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLTokenAuthorizer.m; sourceTree = "<group>"; };
 		2737A6CC1B703DD500CEF619 /* CBLAttachmentDownloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLAttachmentDownloader.h; sourceTree = "<group>"; };
 		2737A6CD1B703DD500CEF619 /* CBLAttachmentDownloader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLAttachmentDownloader.m; sourceTree = "<group>"; };
+		273E9EED1C509F38003115A6 /* CBL tvOS Test App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL tvOS Test App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		273E9EF01C509F38003115A6 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		273E9EF21C509F38003115A6 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		273E9EF31C509F38003115A6 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		273E9EF51C509F39003115A6 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		273E9EF61C509F39003115A6 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		273E9EF91C509F39003115A6 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		273E9EFB1C509F39003115A6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		273E9EFD1C509F39003115A6 /* tvosDemo-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "tvosDemo-Info.plist"; sourceTree = "<group>"; };
+		273E9F021C509F39003115A6 /* CBL tvOS Unit Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CBL tvOS Unit Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		273E9F361C50A0A5003115A6 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk/usr/lib/libz.tbd; sourceTree = DEVELOPER_DIR; };
+		273E9F381C50A0F2003115A6 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
+		273E9F3A1C50A10E003115A6 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk/usr/lib/libsqlite3.tbd; sourceTree = DEVELOPER_DIR; };
 		273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DatabaseEncryption_Tests.m; sourceTree = "<group>"; };
 		2740D84B1A8C240500809EE0 /* Collatable_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Collatable_Test.mm; path = "../vendor/CBForest/CBForest Tests/Collatable_Test.mm"; sourceTree = "<group>"; };
 		2740D84C1A8C240500809EE0 /* Database_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Database_Test.mm; path = "../vendor/CBForest/CBForest Tests/Database_Test.mm"; sourceTree = "<group>"; };
@@ -1957,6 +2036,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		273E9EEA1C509F38003115A6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				273E9F351C50A03C003115A6 /* libCouchbaseLite.a in Frameworks */,
+				273E9F3C1C50A1A1003115A6 /* libCouchbaseLiteListener.a in Frameworks */,
+				273E9F341C50A03C003115A6 /* libCBLForestDBStorage.a in Frameworks */,
+				273E9F391C50A0F2003115A6 /* libc++.tbd in Frameworks */,
+				273E9F3B1C50A10E003115A6 /* libsqlite3.tbd in Frameworks */,
+				273E9F371C50A0A5003115A6 /* libz.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		273E9EFF1C509F39003115A6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		27452BA71AB1156F00327776 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -2116,6 +2215,7 @@
 				2700358C1A44E9270015B9F4 /* Unit Tests */,
 				27C706CA1488679500F0F099 /* Test-Mac */,
 				27B0B8111492C16300A817AD /* Test-iOS */,
+				273E9EEE1C509F38003115A6 /* Test-tvOS */,
 				27FA59EE179EFD730043460A /* Documentation */,
 				2753154D14ACEF350065964D /* vendor */,
 				275C6F131C49C6C20041E9AD /* CouchbaseLite-static */,
@@ -2162,6 +2262,8 @@
 				27452BB81AB1180800327776 /* CouchbaseLite.framework */,
 				2701C14E1C49CFE6006D7A99 /* libCouchbaseLite.a */,
 				2701C2101C4D5BDD006D7A99 /* CouchbaseLite.framework */,
+				273E9EED1C509F38003115A6 /* CBL tvOS Test App.app */,
+				273E9F021C509F39003115A6 /* CBL tvOS Unit Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2319,6 +2421,29 @@
 				93EBA2651B2EC61E0006C66C /* CBLRegisterJSViewCompiler.m */,
 			);
 			name = Views/Queries;
+			sourceTree = "<group>";
+		};
+		273E9EEE1C509F38003115A6 /* Test-tvOS */ = {
+			isa = PBXGroup;
+			children = (
+				273E9EF21C509F38003115A6 /* AppDelegate.h */,
+				273E9EF31C509F38003115A6 /* AppDelegate.m */,
+				273E9EF51C509F39003115A6 /* ViewController.h */,
+				273E9EF61C509F39003115A6 /* ViewController.m */,
+				273E9EF81C509F39003115A6 /* Main.storyboard */,
+				273E9EFB1C509F39003115A6 /* Assets.xcassets */,
+				273E9EFD1C509F39003115A6 /* tvosDemo-Info.plist */,
+				273E9EEF1C509F38003115A6 /* Supporting Files */,
+			);
+			path = "Test-tvOS";
+			sourceTree = "<group>";
+		};
+		273E9EEF1C509F38003115A6 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				273E9EF01C509F38003115A6 /* main.m */,
+			);
+			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 		27486F381A606C7D008D94F0 /* JSON */ = {
@@ -2812,6 +2937,9 @@
 		27C70696148864BA00F0F099 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				273E9F3A1C50A10E003115A6 /* libsqlite3.tbd */,
+				273E9F381C50A0F2003115A6 /* libc++.tbd */,
+				273E9F361C50A0A5003115A6 /* libz.tbd */,
 				2701C2121C4D5C82006D7A99 /* libsqlcipher.a */,
 				27452C201AB1F6C100327776 /* libz.dylib */,
 				27452BF11AB11A0500327776 /* UIKit.framework */,
@@ -3608,6 +3736,44 @@
 			productReference = 272AA83F1A48D835004B8D55 /* CBL Mac Unit Tests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		273E9EEC1C509F38003115A6 /* CBL tvOS Test App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 273E9F181C509F39003115A6 /* Build configuration list for PBXNativeTarget "CBL tvOS Test App" */;
+			buildPhases = (
+				273E9EE91C509F38003115A6 /* Sources */,
+				273E9EEA1C509F38003115A6 /* Frameworks */,
+				273E9EEB1C509F38003115A6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				273E9F401C50A450003115A6 /* PBXTargetDependency */,
+				273E9F421C50A452003115A6 /* PBXTargetDependency */,
+				273E9F441C50A45B003115A6 /* PBXTargetDependency */,
+			);
+			name = "CBL tvOS Test App";
+			productName = "CBL tvOS Test App";
+			productReference = 273E9EED1C509F38003115A6 /* CBL tvOS Test App.app */;
+			productType = "com.apple.product-type.application";
+		};
+		273E9F011C509F39003115A6 /* CBL tvOS Unit Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 273E9F191C509F39003115A6 /* Build configuration list for PBXNativeTarget "CBL tvOS Unit Tests" */;
+			buildPhases = (
+				273E9EFE1C509F39003115A6 /* Sources */,
+				273E9EFF1C509F39003115A6 /* Frameworks */,
+				273E9F001C509F39003115A6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				273E9F041C509F39003115A6 /* PBXTargetDependency */,
+			);
+			name = "CBL tvOS Unit Tests";
+			productName = "CBL tvOS Test AppTests";
+			productReference = 273E9F021C509F39003115A6 /* CBL tvOS Unit Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		27452B391AB1156F00327776 /* CBL iOS fat library */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 27452BAA1AB1156F00327776 /* Build configuration list for PBXNativeTarget "CBL iOS fat library" */;
@@ -3876,6 +4042,13 @@
 					272AA83E1A48D835004B8D55 = {
 						CreatedOnToolsVersion = 6.1.1;
 					};
+					273E9EEC1C509F38003115A6 = {
+						CreatedOnToolsVersion = 7.2;
+					};
+					273E9F011C509F39003115A6 = {
+						CreatedOnToolsVersion = 7.2;
+						TestTargetID = 273E9EEC1C509F38003115A6;
+					};
 					27452BB71AB1180800327776 = {
 						CreatedOnToolsVersion = 6.3;
 						DevelopmentTeam = N2Q372V7W2;
@@ -3933,8 +4106,10 @@
 				27538F4F17F13B03004C3BFD /* LiteServ App */,
 				27FA59EA179EEACA0043460A /* Documentation */,
 				275A29061649A54000B0D8EE /* All */,
+				273E9EEC1C509F38003115A6 /* CBL tvOS Test App */,
 				2700358A1A44E9270015B9F4 /* CBL iOS Unit Tests */,
 				272AA83E1A48D835004B8D55 /* CBL Mac Unit Tests */,
+				273E9F011C509F39003115A6 /* CBL tvOS Unit Tests */,
 				27E66A571A7305B10091DA3F /* CBL SQLite Storage */,
 				27E66AD01A7307590091DA3F /* CBL ForestDB Storage */,
 			);
@@ -4063,6 +4238,23 @@
 			buildActionMask = 2147483647;
 			files = (
 				272AA8531A48DA14004B8D55 /* TestData in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		273E9EEB1C509F38003115A6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				273E9EFC1C509F39003115A6 /* Assets.xcassets in Resources */,
+				273E9EFA1C509F39003115A6 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		273E9F001C509F39003115A6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				273E9F3E1C50A438003115A6 /* TestData in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4477,6 +4669,49 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		273E9EE91C509F38003115A6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				273E9EF71C509F39003115A6 /* ViewController.m in Sources */,
+				273E9EF41C509F39003115A6 /* AppDelegate.m in Sources */,
+				273E9EF11C509F38003115A6 /* main.m in Sources */,
+				273E9F3D1C50A1C4003115A6 /* CBLIncrementalStore.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		273E9EFE1C509F39003115A6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				273E9F1B1C509F97003115A6 /* ChangeTracker_Tests.m in Sources */,
+				273E9F2C1C509F97003115A6 /* ReplicatorInternal_Tests.m in Sources */,
+				273E9F1C1C509F97003115A6 /* CookieStorage_Tests.m in Sources */,
+				273E9F321C509FA0003115A6 /* CBLKVOProxy.m in Sources */,
+				273E9F2D1C509F97003115A6 /* Router_Tests.m in Sources */,
+				273E9F271C509F97003115A6 /* Multipart_Tests.m in Sources */,
+				273E9F1F1C509F97003115A6 /* DatabaseEncryption_Tests.m in Sources */,
+				273E9F211C509F97003115A6 /* IncrementalStore_Tests.m in Sources */,
+				273E9F251C509F97003115A6 /* Misc_Tests.m in Sources */,
+				273E9F2F1C509F97003115A6 /* View_Tests.m in Sources */,
+				273E9F291C509F97003115A6 /* P2P_Tests.m in Sources */,
+				273E9F1D1C509F97003115A6 /* DatabaseInternal_Tests.m in Sources */,
+				273E9F1A1C509F97003115A6 /* BlobStore_Tests.m in Sources */,
+				273E9F2B1C509F97003115A6 /* Replication_Tests.m in Sources */,
+				273E9F201C509F97003115A6 /* DatabaseAttachment_Tests.m in Sources */,
+				273E9F2E1C509F97003115A6 /* ViewInternal_Tests.m in Sources */,
+				273E9F221C509F97003115A6 /* JSON_Tests.m in Sources */,
+				273E9F1E1C509F97003115A6 /* Database_Tests.m in Sources */,
+				273E9F2A1C509F97003115A6 /* QueryBuilder_Tests.m in Sources */,
+				273E9F231C509F97003115A6 /* JSViewCompiler_Tests.m in Sources */,
+				273E9F301C509F97003115A6 /* View_Benchmarks.m in Sources */,
+				273E9F281C509F97003115A6 /* MYAction_Test.m in Sources */,
+				273E9F241C509F97003115A6 /* Listener_Tests.m in Sources */,
+				273E9F261C509F97003115A6 /* Model_Tests.m in Sources */,
+				273E9F311C509FA0003115A6 /* CBLTestCase.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		27452B3E1AB1156F00327776 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -4821,6 +5056,26 @@
 			target = 270B3DE91489359000E0A926 /* CBL Mac */;
 			targetProxy = 272AA8461A48D835004B8D55 /* PBXContainerItemProxy */;
 		};
+		273E9F041C509F39003115A6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 273E9EEC1C509F38003115A6 /* CBL tvOS Test App */;
+			targetProxy = 273E9F031C509F39003115A6 /* PBXContainerItemProxy */;
+		};
+		273E9F401C50A450003115A6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27B0B7E61492BB6B00A817AD /* CBL iOS */;
+			targetProxy = 273E9F3F1C50A450003115A6 /* PBXContainerItemProxy */;
+		};
+		273E9F421C50A452003115A6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DA147C1F14BCAC3B0052DA4D /* CBL Listener iOS */;
+			targetProxy = 273E9F411C50A452003115A6 /* PBXContainerItemProxy */;
+		};
+		273E9F441C50A45B003115A6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27E66AD01A7307590091DA3F /* CBL ForestDB Storage */;
+			targetProxy = 273E9F431C50A45B003115A6 /* PBXContainerItemProxy */;
+		};
 		27452BAF1AB1159400327776 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 27B0B7A81492B83B00A817AD /* CBL iOS library */;
@@ -4969,6 +5224,14 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		273E9EF81C509F39003115A6 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				273E9EF91C509F39003115A6 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
 		275315DA14ACF0A20065964D /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -5572,6 +5835,144 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Unit-Tests/UnitTests-Bridging-Header.h";
+			};
+			name = Release;
+		};
+		273E9F091C509F39003115A6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				INFOPLIST_FILE = "Test-tvOS/tvosDemo-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.couchbase.CBL-tvOS-Test-App";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 9.1;
+			};
+			name = Debug;
+		};
+		273E9F0A1C509F39003115A6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				INFOPLIST_FILE = "Test-tvOS/tvosDemo-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.couchbase.CBL-tvOS-Test-App";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 9.1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		273E9F0B1C509F39003115A6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					vendor/BLIP/BLIP/,
+				);
+				INFOPLIST_FILE = "Test-tvOS/tvosTests-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.couchbase.CBL-tvOS-Test-AppTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL tvOS Test App.app/CBL tvOS Test App";
+				TVOS_DEPLOYMENT_TARGET = 9.1;
+			};
+			name = Debug;
+		};
+		273E9F0C1C509F39003115A6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					vendor/BLIP/BLIP/,
+				);
+				INFOPLIST_FILE = "Test-tvOS/tvosTests-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.couchbase.CBL-tvOS-Test-AppTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL tvOS Test App.app/CBL tvOS Test App";
+				TVOS_DEPLOYMENT_TARGET = 9.1;
+				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
@@ -6493,6 +6894,22 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		273E9F181C509F39003115A6 /* Build configuration list for PBXNativeTarget "CBL tvOS Test App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				273E9F091C509F39003115A6 /* Debug */,
+				273E9F0A1C509F39003115A6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		273E9F191C509F39003115A6 /* Build configuration list for PBXNativeTarget "CBL tvOS Unit Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				273E9F0B1C509F39003115A6 /* Debug */,
+				273E9F0C1C509F39003115A6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		27452BAA1AB1156F00327776 /* Build configuration list for PBXNativeTarget "CBL iOS fat library" */ = {
 			isa = XCConfigurationList;
