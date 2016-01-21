@@ -1105,8 +1105,10 @@
     if (dir)
         subDir = [subDir stringByAppendingPathComponent:dir];
 
-    return [[NSBundle bundleForClass: [self class]] pathForResource: fileName ofType: nil
-                                                        inDirectory: subDir];
+    NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: fileName ofType: nil
+                                                                  inDirectory: subDir];
+    Assert(path, @"FATAL: Missing file '%@' in bundle directory '%@'", fileName, subDir);
+    return path;
 }
 
 
