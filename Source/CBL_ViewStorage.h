@@ -8,6 +8,7 @@
 
 #import "CBL_StorageTypes.h"
 #import "CBL_Revision.h"    // defines SequenceNumber
+#import "CBLStatus.h"
 @protocol CBL_ViewStorageDelegate, CBL_QueryRowStorage;
 
 

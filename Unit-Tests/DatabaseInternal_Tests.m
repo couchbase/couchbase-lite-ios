@@ -867,7 +867,7 @@ static CBL_Revision* mkrev(NSString* revID) {
 
     // Check the doc IDs:
     NSMutableArray* docIDs = $marray();
-    CBLQueryIteratorBlock iterator = [db getAllDocs: nil status: NULL];
+    CBLQueryIteratorBlock iterator = [db getAllDocs: nil status: &status];
     CBLQueryRow* row;
     while (nil != (row = iterator())) {
         [docIDs addObject: row.documentID];

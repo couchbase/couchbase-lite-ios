@@ -27,11 +27,8 @@ extern "C" {
 #import "MYAction.h"
 #import "MYBackgroundMonitor.h"
 }
-#import <CBForest/CBForest.hh>
 #import "CBLForestBridge.h"
-
-using namespace cbforest;
-
+    
 
 #define kDBFilename @"db.forest"
 
@@ -50,38 +47,37 @@ using namespace cbforest;
 #define kDefaultMaxRevTreeDepth 20
 
 
-using namespace couchbase_lite;
-
-
 @implementation CBL_ForestDBStorage
 {
     @private
     NSString* _directory;
-    Database::config _config;
-    Database* _forest;
-    Transaction* _forestTransaction;
-    KeyStore* _localDocs;
+    BOOL _readOnly;
+    C4Database* _forest;
     NSMapTable* _views;
 }
 
 @synthesize delegate=_delegate, directory=_directory, autoCompact=_autoCompact;
-@synthesize maxRevTreeDepth=_maxRevTreeDepth, encryptionKey=_encryptionKey;
+@synthesize maxRevTreeDepth=_maxRevTreeDepth, encryptionKey=_encryptionKey, readOnly=_readOnly;
 
 
-static void FDBLogCallback(cbforest::logLevel level, const char *message) {
+static void FDBLogCallback(C4LogLevel level, C4Slice message) {
     switch (level) {
-        case cbforest::kDebug:
-            LogTo(CBLDatabaseVerbose, @"ForestDB: %s", message);
+        case kC4LogDebug:
+            LogTo(CBLDatabaseVerbose, @"ForestDB: %.*s", (int)message.size, message.buf);
             break;
-        case cbforest::kInfo:
-            LogTo(CBLDatabase, @"ForestDB: %s", message);
+        case kC4LogInfo:
+            LogTo(CBLDatabase, @"ForestDB: %.*s", (int)message.size, message.buf);
             break;
-        case cbforest::kWarning:
-            Warn(@"%s", message);
+        case kC4LogWarning:
+            Warn(@"%.*s", (int)message.size, message.buf);
             break;
-        case cbforest::kError:
-            Warn(@"ForestDB error: %s", message);
+        case kC4LogError: {
+            bool raises = gMYWarnRaisesException;
+            gMYWarnRaisesException = NO;    // don't throw from a ForestDB callback!
+            Warn(@"ForestDB error: %.*s", (int)message.size, message.buf);
+            gMYWarnRaisesException = raises;
             break;
+        }
         default:
             break;
     }
@@ -104,25 +100,13 @@ static void onCompactCallback(void *context, bool compacting) {
 + (void) initialize {
     if (self == [CBL_ForestDBStorage class]) {
         Log(@"Initializing ForestDB");
-        cbforest::LogCallback = FDBLogCallback;
+        C4LogLevel logLevel = kC4LogWarning;
         if (WillLogTo(CBLDatabaseVerbose))
-            cbforest::LogLevel = kDebug;
+            logLevel = kC4LogDebug;
         else if (WillLogTo(CBLDatabase))
-            cbforest::LogLevel = kInfo;
-
-        // Initialize ForestDB global config settings:
-        auto config = Database::defaultConfig();
-        config.buffercache_size = kDBBufferCacheSize;
-        config.wal_threshold = kDBWALThreshold;
-        config.wal_flush_before_commit = true;
-        config.compress_document_body = true;
-        config.multi_kv_instances = true;
-        config.compaction_mode = FDB_COMPACTION_AUTO;
-        config.compaction_threshold = kCompactionThreshold;
-        config.compactor_sleep_duration = (uint64_t)kAutoCompactInterval;
-        config.num_compactor_threads = 1;
-        config.num_bgflusher_threads = 1;
-        Database::setDefaultConfig(config);
+            logLevel = kC4LogInfo;
+        c4log_register(logLevel, FDBLogCallback);
+        C4GenerateOldStyleRevIDs = true; // Compatible with CBL 1.x
 
 #if TARGET_OS_IPHONE
         bgMonitor = [[MYBackgroundMonitor alloc] init];
@@ -142,7 +126,7 @@ static void onCompactCallback(void *context, bool compacting) {
 
 #if TARGET_OS_IPHONE
 + (BOOL) checkStillCompacting {
-    if (Database::isAnyCompacting()) {
+    if (c4db_isCompacting(NULL)) {
         Log(@"Database still compacting; delaying app suspend...");
         [self performSelector: @selector(checkStillCompacting) withObject: nil afterDelay: 0.5];
         return YES;
@@ -188,11 +172,7 @@ static void onCompactCallback(void *context, bool compacting) {
                   error: (NSError**)outError
 {
     _directory = [directory copy];
-    _config = Database::defaultConfig(); // Default config is set in +initialize, above
-    _config.flags = (readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE);
-    _config.seqtree_opt = FDB_SEQTREE_USE;
-    if (!_autoCompact)
-        _config.compaction_mode = FDB_COMPACTION_MANUAL;
+    _readOnly = readOnly;
     return [self reopen: outError];
 }
 
@@ -201,20 +181,24 @@ static void onCompactCallback(void *context, bool compacting) {
     if (_encryptionKey)
         LogTo(CBLDatabase, @"Database is encrypted; setting CBForest encryption key");
     NSString* forestPath = [_directory stringByAppendingPathComponent: kDBFilename];
-    _forest = [CBLForestBridge openDatabaseAtPath: forestPath
-                                       withConfig: _config
-                                    encryptionKey: _encryptionKey
-                                            error: outError];
-    if (!_forest)
+    C4DatabaseFlags flags = _readOnly ? kC4DB_ReadOnly : kC4DB_Create;
+    if (_autoCompact)
+        flags |= kC4DB_AutoCompact;
+    C4EncryptionKey encKey = symmetricKey2Forest(_encryptionKey);
+
+    C4Error c4err;
+    _forest = c4db_open(string2slice(forestPath), flags, &encKey, &c4err);
+    if (!_forest) {
+        err2OutNSError(c4err, outError);
         return NO;
-    _forest->setOnCompact(onCompactCallback, (__bridge void*)self);
+    }
+    c4db_setOnCompactCallback(_forest, &onCompactCallback, (__bridge void*)self);
     return YES;
 }
 
 
 - (void) close {
-    Assert(!_forestTransaction, @"Can't close database while transaction active");
-    delete _forest;
+    c4db_close(_forest, NULL);
     _forest = NULL;
 }
 
@@ -232,22 +216,20 @@ static void onCompactCallback(void *context, bool compacting) {
     // Re-key the database:
     CBLSymmetricKey* oldKey = _encryptionKey;
     [action addPerform: ^BOOL(NSError **outError) {
-        return tryError(outError, ^{
-            fdb_encryption_key enc;
-            [CBLForestBridge setEncryptionKey: &enc fromSymmetricKey: newKey];
-            _forest->rekey(enc);
-            self.encryptionKey = newKey;
-        });
+        C4EncryptionKey encKey = symmetricKey2Forest(newKey);
+        C4Error c4Err;
+        if (!c4db_rekey(_forest, &encKey, &c4Err))
+            return err2OutNSError(c4Err, outError);
+        self.encryptionKey = newKey;
+        return YES;
     } backOut:^BOOL(NSError **outError) {
-        return tryError(outError, ^{
-            fdb_encryption_key enc;
-            [CBLForestBridge setEncryptionKey: &enc fromSymmetricKey: _encryptionKey];
-            //FIX: This can potentially fail. If it did, the database would be lost.
-            // It would be safer to save & restore the old db file, the one that got replaced
-            // during rekeying, but the ForestDB API doesn't allow preserving it...
-            _forest->rekey(enc);
-            self.encryptionKey = oldKey;
-        });
+        //FIX: This can potentially fail. If it did, the database would be lost.
+        // It would be safer to save & restore the old db file, the one that got replaced
+        // during rekeying, but the ForestDB API doesn't allow preserving it...
+        C4EncryptionKey encKey = symmetricKey2Forest(oldKey);
+        c4db_rekey(_forest, &encKey, NULL);
+        self.encryptionKey = oldKey;
+        return YES;
     } cleanUp: nil];
 
     return action;
@@ -258,76 +240,78 @@ static void onCompactCallback(void *context, bool compacting) {
     return _forest;
 }
 
-- (BOOL) readOnly {
-    return (_config.flags & FDB_OPEN_FLAG_RDONLY) != 0;
-}
-
 
 - (NSUInteger) documentCount {
-    auto opts = DocEnumerator::Options::kDefault;
-    opts.contentOptions = Database::kMetaOnly;
-
-    NSUInteger count = 0;
-    for (DocEnumerator e(*_forest, cbforest::slice::null, cbforest::slice::null, opts); e.next(); ) {
-        VersionedDocument vdoc(*_forest, *e);
-        if (!vdoc.isDeleted())
-            ++count;
-    }
-    return count;
+    return (NSUInteger)c4db_getDocumentCount(_forest);
 }
 
 
 - (SequenceNumber) lastSequence {
-    return _forest->lastSequence();
+    return c4db_getLastSequence(_forest);
 }
 
 
 - (BOOL) compact: (NSError**)outError {
-    CBLStatus status = tryStatus(^{
-        _forest->compact();
-        return kCBLStatusOK;
-    });
-    return CBLStatusToOutNSError(status, outError);
+    C4Error c4Err;
+    return c4db_compact(_forest, &c4Err) || err2OutNSError(c4Err, outError);
 }
 
 
 - (CBLStatus) inTransaction: (CBLStatus(^)())block {
-    if (!_forestTransaction) {
-        _forestTransaction = new Transaction(_forest);
+    if (c4db_isInTransaction(_forest)) {
+        return block();
+    } else {
         LogTo(CBLDatabase, @"BEGIN transaction...");
-
-        CBLStatus status = tryStatus(block);
+        C4Error c4Err;
+        if (!c4db_beginTransaction(_forest, &c4Err))
+            return err2status(c4Err);
+        CBLStatus status = block();
         BOOL commit = !CBLStatusIsError(status);
-
         LogTo(CBLDatabase, @"END transaction...");
-        if (!commit)
-            _forestTransaction->abort();
-        delete _forestTransaction;
-        _forestTransaction = NULL;
+        if (!c4db_endTransaction(_forest, commit, &c4Err) && commit) {
+            status = err2status(c4Err);
+            commit = NO;
+        }
         [_delegate storageExitedTransaction: commit];
         return status;
-    } else {
-        return block();
     }
 }
 
 - (BOOL) inTransaction {
-    return _forestTransaction != NULL;
+    return _forest && c4db_isInTransaction(_forest);
 }
 
 
 #pragma mark - DOCUMENTS:
 
 
-- (CBLStatus) _withVersionedDoc: (NSString*)docID
-                             do: (CBLStatus(^)(VersionedDocument&))block
+- (C4Document*) getC4Doc: (UU NSString*)docID
+                  status: (CBLStatus*)outStatus
 {
-    return tryStatus(^{
-        VersionedDocument doc(*_forest, docID);
-        if (!doc.exists())
-            return kCBLStatusNotFound;
-        return block(doc);
+    __block C4Document* doc = NULL;
+    CBLWithStringBytes(docID, ^(const char *docIDBuf, size_t docIDSize) {
+        C4Error c4err;
+        doc = c4doc_get(_forest, (C4Slice){docIDBuf, docIDSize}, true, &c4err);
+        if (!doc && outStatus)
+            *outStatus = err2status(c4err);
     });
+    return doc;
+}
+
+
+static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
+    __block CBLStatus status = kCBLStatusOK;
+    if (revID) {
+        CBLWithStringBytes(revID, ^(const char *buf, size_t size) {
+            C4Error c4err;
+            if (!c4doc_selectRevision(doc, (C4Slice){buf, size}, withBody, &c4err))
+                status = err2status(c4err);
+        });
+    } else {
+        if (!c4doc_selectCurrentRevision(doc))
+            status = kCBLStatusDeleted;
+    }
+    return status;
 }
 
 
@@ -336,25 +320,22 @@ static void onCompactCallback(void *context, bool compacting) {
                                   withBody: (BOOL)withBody
                                     status: (CBLStatus*)outStatus
 {
-    __block CBL_MutableRevision* result = nil;
-    *outStatus = [self _withVersionedDoc: docID do: ^(VersionedDocument& doc) {
+    CLEANUP(C4Document) *doc = [self getC4Doc: docID status: outStatus];
+    if (!doc)
+        return nil;
 #if DEBUG
-        LogTo(CBLDatabase, @"Read %s", doc.dump().c_str());
+    LogTo(CBLDatabase, @"Read %@ rev %@", docID, inRevID);
 #endif
-        NSString* revID = inRevID;
-        if (revID == nil) {
-            const Revision* rev = doc.currentRevision();
-            if (!rev || rev->isDeleted())
-                return kCBLStatusDeleted;
-            revID = (NSString*)rev->revID;
-        }
-
-        result = [CBLForestBridge revisionObjectFromForestDoc: doc
-                                                        revID: revID
-                                                     withBody: withBody];
-        return result ? kCBLStatusOK : kCBLStatusNotFound;
-    }];
-    return result;
+    *outStatus = selectRev(doc, inRevID, withBody);
+    if (CBLStatusIsError(*outStatus))
+        return nil;
+    if (!inRevID && (doc->selectedRev.flags & kRevDeleted)) {
+        *outStatus = kCBLStatusDeleted;
+        return nil;
+    }
+    return [CBLForestBridge revisionObjectFromForestDoc: doc
+                                                  docID: docID revID: inRevID
+                                               withBody: withBody status: outStatus];
 }
 
 
@@ -362,38 +343,51 @@ static void onCompactCallback(void *context, bool compacting) {
                        sequence: (SequenceNumber)sequence
                          status: (CBLStatus*)outStatus
 {
-    __block NSDictionary* result = nil;
-    *outStatus = [self _withVersionedDoc: docID do: ^(VersionedDocument& doc) {
+    CLEANUP(C4Document) *doc = [self getC4Doc: docID status: outStatus];
+    if (!doc)
+        return nil;
 #if DEBUG
-        LogTo(CBLDatabase, @"Read %s", doc.dump().c_str());
+    LogTo(CBLDatabase, @"Read %@ seq %lld", docID, sequence);
 #endif
-        const Revision* revNode = doc.getBySequence(sequence);
-        if (!revNode)
-            return kCBLStatusNotFound;
-        result = [CBLForestBridge bodyOfNode: revNode];
-        return result ? kCBLStatusOK : kCBLStatusNotFound;
-    }];
-    return result;
+    NSMutableDictionary* result = nil;
+    do {
+        if (doc->selectedRev.sequence == (C4SequenceNumber)sequence) {
+            // Found it:
+            result = [CBLForestBridge bodyOfSelectedRevision: doc];
+            if (!result) {
+                *outStatus = kCBLStatusNotFound;
+                return nil;
+            }
+            result[@"_id"] = docID;
+            result[@"_rev"] = slice2string(doc->selectedRev.revID);
+            if (doc->selectedRev.flags & kRevDeleted)
+                result[@"_deleted"] = @YES;
+            return result;
+        }
+    } while (c4doc_selectNextRevision(doc));
+    *outStatus = kCBLStatusNotFound;
+    return nil;
 }
 
 
 - (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev {
-    return [self _withVersionedDoc: rev.docID do: ^(VersionedDocument& doc) {
-        BOOL ok = [CBLForestBridge loadBodyOfRevisionObject: rev doc: doc];
-        return ok ? kCBLStatusOK : kCBLStatusNotFound;
-    }];
+    CBLStatus status;
+    CLEANUP(C4Document) *doc = [self getC4Doc: rev.docID status: &status];
+    if (!doc)
+        return status;
+
+    status = selectRev(doc, rev.revID, YES);
+    if (CBLStatusIsError(status))
+        return status;
+    return [CBLForestBridge loadBodyOfRevisionObject: rev fromSelectedRevision: doc];
 }
 
 
 - (SequenceNumber) getRevisionSequence: (CBL_Revision*)rev {
-    __block SequenceNumber sequence = 0;
-    [self _withVersionedDoc: rev.docID do: ^(VersionedDocument& doc) {
-        const Revision* revNode = doc.get(rev.revID);
-        if (revNode)
-            sequence = revNode->sequence;
-        return kCBLStatusOK;
-    }];
-    return sequence;
+    CLEANUP(C4Document) *doc = [self getC4Doc: rev.docID status: NULL];
+    if (doc && !CBLStatusIsError( selectRev(doc, rev.revID, YES) ))
+        return doc->selectedRev.sequence;
+    return 0;
 }
 
 
@@ -403,47 +397,40 @@ static void onCompactCallback(void *context, bool compacting) {
 - (CBL_Revision*) getParentRevision: (CBL_Revision*)rev {
     if (!rev.docID || !rev.revID)
         return nil;
-    __block CBL_Revision* parent = nil;
-    [self _withVersionedDoc: rev.docID do: ^(VersionedDocument& doc) {
-        const Revision* revNode = doc.get(rev.revID);
-        if (revNode) {
-            const Revision* parentRevision = revNode->parent();
-            if (parentRevision) {
-                NSString* parentRevID = (NSString*)parentRevision->revID;
-                parent = [[CBL_Revision alloc] initWithDocID: rev.docID
-                                                       revID: parentRevID
-                                                     deleted: parentRevision->isDeleted()];
-            }
-        }
-        return kCBLStatusOK;
-    }];
-    return parent;
+    CLEANUP(C4Document) *doc = [self getC4Doc: rev.docID status: NULL];
+    if (!doc)
+        return nil;
+
+    CBLStatus status = selectRev(doc, rev.revID, YES);
+    if (CBLStatusIsError(status))
+        return nil;
+    if (!c4doc_selectParentRevision(doc))
+        return nil;
+    return [CBLForestBridge revisionObjectFromForestDoc: doc docID: rev.docID revID: nil
+                                               withBody: YES status: &status];
 }
 
 
 - (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                       onlyCurrent: (BOOL)onlyCurrent
 {
-    __block CBL_RevisionList* revs = nil;
-    [self _withVersionedDoc: docID do: ^(VersionedDocument& doc) {
-        revs = [[CBL_RevisionList alloc] init];
-        if (onlyCurrent) {
-            auto revNodes = doc.currentRevisions();
-            for (auto revNode = revNodes.begin(); revNode != revNodes.end(); ++revNode) {
-                [revs addRev: [[CBL_Revision alloc] initWithDocID: docID
-                                                            revID: (NSString*)(*revNode)->revID
-                                                          deleted: (*revNode)->isDeleted()]];
-            }
-        } else {
-            auto revNodes = doc.allRevisions();
-            for (auto revNode = revNodes.begin(); revNode != revNodes.end(); ++revNode) {
-                [revs addRev: [[CBL_Revision alloc] initWithDocID: docID
-                                                            revID: (NSString*)revNode->revID
-                                                          deleted: revNode->isDeleted()]];
-            }
-        }
-        return kCBLStatusOK;
-    }];
+    CLEANUP(C4Document) *doc = [self getC4Doc: docID status: NULL];
+    if (!doc)
+        return nil;
+
+    CBL_RevisionList* revs = [[CBL_RevisionList alloc] init];
+    do {
+        if (onlyCurrent && !(doc->selectedRev.flags & kRevLeaf))
+            continue;
+        CBLStatus status;
+        CBL_Revision *rev = [CBLForestBridge revisionObjectFromForestDoc: doc
+                                                                   docID: docID
+                                                                   revID: nil
+                                                                withBody: NO
+                                                                  status: &status];
+        if (rev)
+            [revs addRev: rev];
+    } while (c4doc_selectNextRevision(doc));
     return revs;
 }
 
@@ -455,21 +442,21 @@ static void onCompactCallback(void *context, bool compacting) {
     unsigned generation = [CBL_Revision generationFromRevID: rev.revID];
     if (generation <= 1)
         return nil;
-    __block NSMutableArray* revIDs = nil;
-    [self _withVersionedDoc: rev.docID do: ^(VersionedDocument& doc) {
-        revIDs = $marray();
-        auto allRevisions = doc.allRevisions();
-        for (auto rev = allRevisions.begin(); rev != allRevisions.end(); ++rev) {
-            if (rev->revID.generation() < generation
-                    && !rev->isDeleted() && rev->isBodyAvailable()
-                    && !(onlyAttachments && !rev->hasAttachments())) {
-                [revIDs addObject: (NSString*)rev->revID];
-                if (limit && revIDs.count >= limit)
-                    break;
-            }
+    CLEANUP(C4Document) *doc = [self getC4Doc: rev.docID status: NULL];
+    if (!doc)
+        return nil;
+
+    NSMutableArray* revIDs = $marray();
+    do {
+        C4RevisionFlags flags = doc->selectedRev.flags;
+        if (!(flags & kRevDeleted) && (!onlyAttachments || (flags & kRevHasAttachments))
+                        && c4rev_getGeneration(doc->selectedRev.revID) < generation
+                        && c4doc_hasRevisionBody(doc)) {
+            [revIDs addObject: slice2string(doc->selectedRev.revID)];
+            if (limit && revIDs.count >= limit)
+                break;
         }
-        return kCBLStatusOK;
-    }];
+    } while (c4doc_selectNextRevision(doc));
     return revIDs;
 }
 
@@ -481,17 +468,21 @@ static void onCompactCallback(void *context, bool compacting) {
     revIDs = [revIDs sortedArrayUsingComparator: ^NSComparisonResult(NSString* id1, NSString* id2) {
         return CBLCompareRevIDs(id2, id1); // descending order of generation
     }];
+    CLEANUP(C4Document) *doc = [self getC4Doc: rev.docID status: NULL];
+    if (!doc)
+        return nil;
+
     __block NSString* commonAncestor = nil;
-    [self _withVersionedDoc: rev.docID do: ^(VersionedDocument& doc) {
-        for (NSString* possibleRevID in revIDs) {
-            revidBuffer revIDSlice(possibleRevID);
-            if (revIDSlice.generation() <= generation && doc.get(revIDSlice) != NULL) {
-                commonAncestor = possibleRevID;
+    for (NSString* possibleRevID in revIDs) {
+        if ([CBL_Revision generationFromRevID: possibleRevID] <= generation) {
+            CBLWithStringBytes(possibleRevID, ^(const char *buf, size_t size) {
+                if (c4doc_selectRevision(doc, (C4Slice){buf, size}, false, NULL))
+                    commonAncestor = possibleRevID;
+            });
+            if (commonAncestor)
                 break;
-            }
         }
-        return kCBLStatusOK;
-    }];
+    }
     return commonAncestor;
 }
     
@@ -499,12 +490,30 @@ static void onCompactCallback(void *context, bool compacting) {
 - (NSArray*) getRevisionHistory: (CBL_Revision*)rev
                    backToRevIDs: (NSSet*)ancestorRevIDs
 {
-    __block NSArray* history = nil;
-    [self _withVersionedDoc: rev.docID do: ^(VersionedDocument& doc) {
-        history = [CBLForestBridge getRevisionHistoryOfNode: doc.get(rev.revID)
-                                               backToRevIDs: ancestorRevIDs];
-        return kCBLStatusOK;
-    }];
+    CLEANUP(C4Document) *doc = [self getC4Doc: rev.docID status: NULL];
+    if (!doc)
+        return nil;
+
+    NSString* revID = rev.revID;
+    C4Error c4err;
+    if (revID && !c4doc_selectRevision(doc, string2slice(revID), false, &c4err))
+        return nil;
+
+    NSMutableArray* history = [NSMutableArray array];
+    do {
+        CBLStatus status;
+        CBL_MutableRevision* ancestor = [CBLForestBridge revisionObjectFromForestDoc: doc
+                                                                               docID: rev.docID
+                                                                               revID: nil
+                                                                            withBody: NO
+                                                                              status: &status];
+        if (!ancestor)
+            break;
+        ancestor.missing = !c4doc_hasRevisionBody(doc);
+        [history addObject: ancestor];
+        if ([ancestorRevIDs containsObject: ancestor.revID])
+            break;
+    } while (c4doc_selectParentRevision(doc));
     return history;
 }
 
@@ -515,7 +524,6 @@ static void onCompactCallback(void *context, bool compacting) {
                                     status: (CBLStatus*)outStatus
 {
     // http://wiki.apache.org/couchdb/HTTP_database_API#Changes
-    // Translate options to ForestDB:
     if (!options) options = &kDefaultCBLChangesOptions;
     
     if (options->descending) {
@@ -524,40 +532,48 @@ static void onCompactCallback(void *context, bool compacting) {
         return nil;
     }
 
-    auto forestOpts = DocEnumerator::Options::kDefault;
-    forestOpts.limit = options->limit;
-    forestOpts.inclusiveEnd = YES;
-    forestOpts.includeDeleted = NO;
-    BOOL withBody = (options->includeDocs || options->includeConflicts || filter != nil);
-    if (!withBody)
-        forestOpts.contentOptions = Database::kMetaOnly;
+    BOOL withBody = (options->includeDocs || filter != nil);
+    unsigned limit = options->limit;
 
+    C4EnumeratorOptions c4opts = kC4DefaultEnumeratorOptions;
+    c4opts.flags |= kC4IncludeDeleted;
+    C4Error c4err = {};
+    CLEANUP(C4DocEnumerator)* e = c4db_enumerateChanges(_forest, lastSequence, &c4opts, &c4err);
+    if (!e) {
+        *outStatus = err2status(c4err);
+        return nil;
+    }
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
-    *outStatus = tryStatus(^CBLStatus{
-        for (DocEnumerator e(*_forest, lastSequence+1, UINT64_MAX, forestOpts); e.next(); ) {
-            @autoreleasepool {
-                VersionedDocument doc(*_forest, *e);
-                NSArray* revIDs;
-                if (options->includeConflicts) {
-                    revIDs = [CBLForestBridge getCurrentRevisionIDs: doc includeDeleted: YES];
-                } else {
-                    revIDs = @[(NSString*)doc.revID()];
+    while (limit-- > 0 && c4enum_next(e, &c4err)) {
+        @autoreleasepool {
+            CLEANUP(C4Document) *doc = c4enum_getDocument(e, &c4err);
+            if (!doc)
+                break;
+            NSString* docID = slice2string(doc->docID);
+            do {
+                CBL_MutableRevision* rev;
+                rev = [CBLForestBridge revisionObjectFromForestDoc: doc
+                                                             docID: docID
+                                                             revID: nil
+                                                          withBody: withBody
+                                                            status: outStatus];
+                if (!rev)
+                    return nil;
+                if (!filter || filter(rev)) {
+                    if (!options->includeDocs)
+                        rev.body = nil;
+                    [changes addRev: rev];
                 }
-                for (NSString* revID in revIDs) {
-                    CBL_MutableRevision* rev = [CBLForestBridge revisionObjectFromForestDoc: doc
-                                                                                      revID: revID
-                                                                               withBody: withBody];
-                    Assert(rev);
-                    if (!filter || filter(rev)) {
-                        if (!options->includeDocs)
-                            rev.body = nil;
-                        [changes addRev: rev];
-                    }
-                }
-            }
+            } while (options->includeConflicts && c4doc_selectNextLeafRevision(doc, true, withBody,
+                                                                               &c4err));
+            if (c4err.code)
+                break;
         }
-        return kCBLStatusOK;
-    });
+    }
+    if (c4err.code) {
+        *outStatus = err2status(c4err);
+        return nil;
+    }
     return changes;
 }
 
@@ -567,22 +583,36 @@ static void onCompactCallback(void *context, bool compacting) {
 {
     if (!options)
         options = [CBLQueryOptions new];
-    auto forestOpts = DocEnumerator::Options::kDefault;
+
+    C4EnumeratorOptions c4options = {0, 0};
     BOOL includeDocs = (options->includeDocs || options.filter);
-    forestOpts.descending = options->descending;
-    forestOpts.inclusiveEnd = options->inclusiveEnd;
-    if (!includeDocs && !(options->allDocsMode >= kCBLShowConflicts))
-        forestOpts.contentOptions = Database::kMetaOnly;
+    if (includeDocs || options->allDocsMode >= kCBLShowConflicts)
+        c4options.flags |= kC4IncludeBodies;
+    if (options->descending)
+        c4options.flags |= kC4Descending;
+    if (options->inclusiveStart)
+        c4options.flags |= kC4InclusiveStart;
+    if (options->inclusiveEnd)
+        c4options.flags |= kC4InclusiveEnd;
+    if (options->allDocsMode == kCBLIncludeDeleted)
+        c4options.flags |= kC4IncludeDeleted;
+    if (options->allDocsMode != kCBLOnlyConflicts)
+        c4options.flags |= kC4IncludeNonConflicted;
     __block unsigned limit = options->limit;
     __block unsigned skip = options->skip;
     CBLQueryRowFilter filter = options.filter;
 
-    __block DocEnumerator e;
+    __block C4DocEnumerator* e;
+    C4Error c4err;
     if (options.keys) {
-        std::vector<std::string> docIDs;
-        for (NSString* docID in options.keys)
-            docIDs.push_back(docID.UTF8String);
-        e = DocEnumerator(*_forest, docIDs, forestOpts);
+        size_t nKeys = options.keys.count;
+        C4Slice *keySlices = (C4Slice*)malloc(nKeys * sizeof(C4Slice));
+        size_t i = 0;
+        for (NSString* key in options.keys)
+            keySlices[i++] = string2slice(key);
+        c4options.flags |= kC4IncludeDeleted;
+        e = c4db_enumerateSomeDocs(_forest, keySlices, nKeys, &c4options, &c4err);
+        free(keySlices);
     } else {
         id startKey, endKey;
         if (options->descending) {
@@ -592,16 +622,28 @@ static void onCompactCallback(void *context, bool compacting) {
             startKey = options.startKey;
             endKey = CBLKeyForPrefixMatch(options.endKey, options->prefixMatchLevel);
         }
-        e = DocEnumerator(*_forest,
-                          nsstring_slice(startKey),
-                          nsstring_slice(endKey),
-                          forestOpts);
+        e = c4db_enumerateAllDocs(_forest,
+                                  string2slice(startKey),
+                                  string2slice(endKey),
+                                  &c4options,
+                                  &c4err);
+    }
+    if (!e) {
+        *outStatus = err2status(c4err);
+        return nil;
     }
 
+    // The rest is the block that gets called later to return the next row:
     return ^CBLQueryRow*() {
-        while (e.next()) {
-            NSString* docID = (NSString*)e.doc().key();
-            if (!e.doc().exists()) {
+        if (!e)
+            return nil;
+        C4Error c4err;
+        while (c4enum_next(e, &c4err)) {
+            CLEANUP(C4Document)* doc = c4enum_getDocument(e, &c4err);
+            if (!doc)
+                break;
+            NSString* docID = slice2string(doc->docID);
+            if (!(doc->flags & kExists)) {
                 LogTo(QueryVerbose, @"AllDocs: No such row with key=\"%@\"",
                       docID);
                 return [[CBLQueryRow alloc] initWithDocID: nil
@@ -612,43 +654,39 @@ static void onCompactCallback(void *context, bool compacting) {
                                                   storage: nil];
             }
 
-            bool deleted;
-            {
-                VersionedDocument::Flags flags;
-                revid revID;
-                slice docType;
-                if (!VersionedDocument::readMeta(e.doc(), flags, revID, docType))
-                    if (!options.keys)  // key might be a nonexistent doc
-                        continue;
-                deleted = (flags & VersionedDocument::kDeleted) != 0;
-                if (deleted && options->allDocsMode != kCBLIncludeDeleted && !options.keys)
-                    continue; // skip deleted doc
-                if (!(flags & VersionedDocument::kConflicted)
-                        && options->allDocsMode == kCBLOnlyConflicts)
-                    continue; // skip non-conflicted doc
-                if (skip > 0) {
-                    --skip;
-                    continue;
-                }
+            bool deleted = (doc->flags & kDeleted) != 0;
+            if (deleted && options->allDocsMode != kCBLIncludeDeleted && !options.keys)
+                continue; // skip deleted doc
+            if (!(doc->flags & kConflicted) && options->allDocsMode == kCBLOnlyConflicts)
+                continue; // skip non-conflicted doc
+            if (skip > 0) {
+                --skip;
+                continue;
             }
 
-            VersionedDocument doc(*_forest, *e);
-            NSString* revID = (NSString*)doc.revID();
-            SequenceNumber sequence = doc.sequence();
+            NSString* revID = slice2string(doc->revID);
 
             CBL_Revision* docRevision = nil;
             if (includeDocs) {
                 // Fill in the document contents:
+                CBLStatus status;
                 docRevision = [CBLForestBridge revisionObjectFromForestDoc: doc
-                                                                     revID: nil
-                                                                  withBody: YES];
+                                                                     docID: docID
+                                                                     revID: revID
+                                                                  withBody: YES
+                                                                    status: &status];
                 if (!docRevision)
-                    Warn(@"AllDocs: Unable to read body of doc %@", docID);
+                    Warn(@"AllDocs: Unable to read body of doc %@: status %d", docID, status);
             }
 
-            NSArray* conflicts = nil;
-            if (options->allDocsMode >= kCBLShowConflicts && doc.isConflicted()) {
-                conflicts = [CBLForestBridge getCurrentRevisionIDs: doc includeDeleted: NO];
+            NSMutableArray* conflicts = nil;
+            if (options->allDocsMode >= kCBLShowConflicts && (doc->flags & kConflicted)) {
+                conflicts = [NSMutableArray array];
+                [conflicts addObject: revID];
+                while (c4doc_selectNextLeafRevision(doc, false, false, NULL)) {
+                    NSString* conflictID = slice2string(doc->selectedRev.revID);
+                    [conflicts addObject: conflictID];
+                }
                 if (conflicts.count == 1)
                     conflicts = nil;
             }
@@ -658,8 +696,8 @@ static void onCompactCallback(void *context, bool compacting) {
                                         {@"_conflicts", conflicts});  // (not found in CouchDB)
             LogTo(QueryVerbose, @"AllDocs: Found row with key=\"%@\", value=%@",
                   docID, value);
-            auto row = [[CBLQueryRow alloc] initWithDocID: docID
-                                                 sequence: sequence
+            CBLQueryRow *row = [[CBLQueryRow alloc] initWithDocID: docID
+                                                 sequence: doc->sequence
                                                       key: docID
                                                     value: value
                                               docRevision: docRevision
@@ -669,10 +707,17 @@ static void onCompactCallback(void *context, bool compacting) {
                 continue;
             }
 
-            if (limit > 0 && --limit == 0)
-                e.close();
+            if (limit > 0 && --limit == 0) {
+                c4enum_free(e);
+                e = NULL;
+            }
             return row;
         }
+        // End of enumeration:
+        c4enum_free(e);
+        e = NULL;
+        if (c4err.code)
+            Warn(@"AllDocs: Enumeration failed: %d", err2status(c4err));
         return nil;
     };
 }
@@ -683,22 +728,25 @@ static void onCompactCallback(void *context, bool compacting) {
 {
     CBL_RevisionList* sortedRevs = [revs mutableCopy];
     [sortedRevs sortByDocID];
-    __block VersionedDocument* doc = NULL;
-    *outStatus = tryStatus(^CBLStatus {
-        NSString* lastDocID = nil;
-        for (CBL_Revision* rev in sortedRevs) {
-            if (!$equal(rev.docID, lastDocID)) {
-                lastDocID = rev.docID;
-                delete doc;
-                doc = new VersionedDocument(*_forest, lastDocID);
+
+    CLEANUP(C4Document)* doc = NULL;
+    NSString* lastDocID = nil;
+    C4Error c4err = {};
+    for (CBL_Revision* rev in sortedRevs) {
+        if (!$equal(rev.docID, lastDocID)) {
+            lastDocID = rev.docID;
+            c4doc_free(doc);
+            doc = c4doc_get(_forest, string2slice(lastDocID), true, &c4err);
+            if (!doc) {
+                *outStatus = err2status(c4err);
+                if (*outStatus != kCBLStatusNotFound)
+                    return NO;
             }
-            if (doc && doc->get(rev.revID) != NULL)
-                [revs removeRevIdenticalTo: rev];
         }
-        return kCBLStatusOK;
-    });
-    delete doc;
-    return !CBLStatusIsError(*outStatus);
+        if (doc && c4doc_selectRevision(doc, string2slice(rev.revID), false, NULL))
+            [revs removeRevIdenticalTo: rev];   // not missing, so remove from list
+    }
+    return YES;
 }
 
 
@@ -707,38 +755,50 @@ static void onCompactCallback(void *context, bool compacting) {
 
 - (NSSet*) findAllAttachmentKeys: (NSError**)outError {
     NSMutableSet* keys = [NSMutableSet setWithCapacity: 1000];
-    CBLStatus status = tryStatus(^CBLStatus{
-        DocEnumerator::Options options = DocEnumerator::Options::kDefault;
-        options.contentOptions = Database::kMetaOnly;
-        for (DocEnumerator e(*_forest, slice::null, slice::null, options); e.next(); ) {
-            VersionedDocument doc(*_forest, *e);
-            if (!doc.hasAttachments() || (doc.isDeleted() && !doc.isConflicted()))
-                continue;
-            doc.read();
-            // Since db is assumed to have just been compacted, we know that non-current revisions
-            // won't have any bodies. So only scan the current revs.
-            auto revNodes = doc.currentRevisions();
-            for (auto revNode = revNodes.begin(); revNode != revNodes.end(); ++revNode) {
-                if ((*revNode)->isActive() && (*revNode)->hasAttachments()) {
-                    alloc_slice body = (*revNode)->readBody();
-                    if (body.size > 0) {
-                        NSDictionary* rev = [CBLJSON JSONObjectWithData: body.uncopiedNSData()
-                                                                options: 0 error: NULL];
-                        [rev.cbl_attachments enumerateKeysAndObjectsUsingBlock:^(id key, NSDictionary* att, BOOL *stop) {
+    C4Error c4err;
+    CLEANUP(C4DocEnumerator)* e = c4db_enumerateAllDocs(_forest, kC4SliceNull, kC4SliceNull,
+                                                        NULL, &c4err);
+    if (!e) {
+        err2OutNSError(c4err, outError);
+        return nil;
+    }
+
+    while (c4enum_next(e, &c4err)) {
+        CLEANUP(C4Document)* doc = c4enum_getDocument(e, &c4err);
+        if (!doc) {
+            err2OutNSError(c4err, outError);
+            return nil;
+        }
+        C4DocumentFlags flags = doc->flags;
+        if (!(flags & kHasAttachments) || ((flags & kDeleted) && !(flags & kConflicted)))
+            continue;
+
+        // Since db is assumed to have just been compacted, we know that non-current revisions
+        // won't have any bodies. So only scan the current revs.
+        do {
+            if (doc->selectedRev.flags & kRevHasAttachments) {
+                if (!c4doc_loadRevisionBody(doc, &c4err)) {
+                    err2OutNSError(c4err, outError);
+                    return nil;
+                }
+                C4Slice body = doc->selectedRev.body;
+                if (body.size > 0) {
+                    NSDictionary* rev = slice2mutableDict(body);
+                    [rev.cbl_attachments enumerateKeysAndObjectsUsingBlock:
+                        ^(id key, NSDictionary* att, BOOL *stop) {
                             CBLBlobKey blobKey;
                             if ([CBL_Attachment digest: att[@"digest"] toBlobKey: &blobKey]) {
-                                NSData* keyData = [[NSData alloc] initWithBytes: &blobKey length: sizeof(blobKey)];
+                                NSData* keyData = [[NSData alloc] initWithBytes: &blobKey
+                                                                         length: sizeof(blobKey)];
                                 [keys addObject: keyData];
                             }
                         }];
-                    }
                 }
             }
-        }
-        return kCBLStatusOK;
-    });
-    if (CBLStatusIsError(status)) {
-        CBLStatusToOutNSError(status, outError);
+        } while (c4doc_selectNextLeafRevision(doc, false, false, &c4err));
+    }
+    if (c4err.code) {
+        err2OutNSError(c4err, outError);
         keys = nil;
     }
     return keys;
@@ -757,9 +817,8 @@ static void onCompactCallback(void *context, bool compacting) {
     LogTo(CBLDatabase, @"Purging %lu docs...", (unsigned long)docsToRevs.count);
     return [self inTransaction: ^CBLStatus {
         for (NSString* docID in docsToRevs) {
-            VersionedDocument doc(*_forest, docID);
-            if (!doc.exists())
-                return kCBLStatusNotFound;
+            C4Slice docIDSlice = string2slice(docID);
+            C4Error c4err;
 
             NSArray* revsPurged;
             NSArray* revIDs = $castIf(NSArray, docsToRevs[docID]);
@@ -769,23 +828,23 @@ static void onCompactCallback(void *context, bool compacting) {
                 revsPurged = @[];
             } else if ([revIDs containsObject: @"*"]) {
                 // Delete all revisions if magic "*" revision ID is given:
-                _forestTransaction->del(doc.docID());
+                if (!c4db_purgeDoc(_forest, docIDSlice, &c4err))
+                    return err2status(c4err);
                 revsPurged = @[@"*"];
                 LogTo(CBLDatabase, @"Purged doc '%@'", docID);
             } else {
+                CLEANUP(C4Document)* doc = c4doc_get(_forest, docIDSlice, true, &c4err);
+                if (!doc)
+                    return err2status(c4err);
                 NSMutableArray* purged = $marray();
                 for (NSString* revID in revIDs) {
-                    if (doc.purge(revidBuffer(revID)) > 0)
+                    if (c4doc_purgeRevision(doc, string2slice(revID), &c4err) > 0)
                         [purged addObject: revID];
                 }
                 if (purged.count > 0) {
-                    if (doc.allRevisions().size() > 0) {
-                        doc.save(*_forestTransaction);
-                        LogTo(CBLDatabase, @"Purged doc '%@' revs %@", docID, revIDs);
-                    } else {
-                        _forestTransaction->del(doc.docID());
-                        LogTo(CBLDatabase, @"Purged doc '%@'", docID);
-                    }
+                    if (!c4doc_save(doc, _maxRevTreeDepth, &c4err))
+                        return err2status(c4err);
+                    LogTo(CBLDatabase, @"Purged doc '%@' revs %@", docID, revIDs);
                 }
                 revsPurged = purged;
             }
@@ -799,27 +858,22 @@ static void onCompactCallback(void *context, bool compacting) {
 #pragma mark - LOCAL DOCS:
 
 
-static NSDictionary* getDocProperties(const Document& doc) {
-    NSData* bodyData = doc.body().uncopiedNSData();
-    if (!bodyData)
-        return nil;
-    return [CBLJSON JSONObjectWithData: bodyData options: 0 error: NULL];
-}
-
-
 - (CBL_MutableRevision*) getLocalDocumentWithID: (NSString*)docID
                                      revisionID: (NSString*)revID
 {
     if (![docID hasPrefix: @"_local/"])
         return nil;
-    KeyStore localDocs(_forest, "_local");
-    Document doc = localDocs.get((cbforest::slice)docID.UTF8String);
-    if (!doc.exists())
+    C4Error c4err;
+    CLEANUP(C4RawDocument) *doc = c4raw_get(_forest, C4STR("_local"), string2slice(docID), &c4err);
+    if (!doc)
         return nil;
-    NSString* gotRevID = (NSString*)doc.meta();
+
+    NSString* gotRevID = slice2string(doc->meta);
+    if (!gotRevID)
+        return nil;
     if (revID && !$equal(revID, gotRevID))
         return nil;
-    NSMutableDictionary* properties = [getDocProperties(doc) mutableCopy];
+    NSMutableDictionary* properties = slice2mutableDict(doc->body);
     if (!properties)
         return nil;
     properties[@"_id"] = docID;
@@ -851,19 +905,23 @@ static NSDictionary* getDocProperties(const Document& doc) {
         // PUT:
         __block CBL_Revision* result = nil;
         *outStatus = [self inTransaction: ^CBLStatus {
-            KeyStore localDocs(_forest, "_local");
-            KeyStoreWriter localWriter = (*_forestTransaction)(localDocs);
             NSData* json = revision.asCanonicalJSON;
             if (!json)
                 return kCBLStatusBadJSON;
-            cbforest::slice key(docID.UTF8String);
-            Document doc = localWriter.get(key);
-            NSString* actualPrevRevID = doc.exists() ? (NSString*)doc.meta() : nil;
+
+            C4Slice key = string2slice(docID);
+            C4Error c4err;
+            CLEANUP(C4RawDocument) *doc = c4raw_get(_forest, C4STR("_local"), key, &c4err);
+            NSString* actualPrevRevID = doc ? slice2string(doc->meta) : nil;
             if (obeyMVCC && !$equal(prevRevID, actualPrevRevID))
                 return kCBLStatusConflict;
             unsigned generation = [CBL_Revision generationFromRevID: actualPrevRevID];
             NSString* newRevID = $sprintf(@"%d-local", generation + 1);
-            localWriter.set(key, nsstring_slice(newRevID), cbforest::slice(json));
+
+            if (!c4raw_put(_forest, C4STR("_local"), key,
+                           string2slice(newRevID), data2slice(json), &c4err))
+                return err2status(c4err);
+
             result = [revision mutableCopyWithDocID: docID revID: newRevID];
             return kCBLStatusCreated;
         }];
@@ -883,16 +941,18 @@ static NSDictionary* getDocProperties(const Document& doc) {
         return [self getLocalDocumentWithID: docID revisionID: nil] ? kCBLStatusConflict : kCBLStatusNotFound;
     }
 
-    KeyStore localDocs(_forest, "_local");
     return [self inTransaction: ^CBLStatus {
-        KeyStoreWriter localWriter = (*_forestTransaction)(localDocs);
-        Document doc = localWriter.get(cbforest::slice(docID.UTF8String));
-        if (!doc.exists())
-            return kCBLStatusNotFound;
-        else if (obeyMVCC && !$equal(revID, (NSString*)doc.meta()))
+        C4Slice key = string2slice(docID);
+        C4Error c4err;
+        CLEANUP(C4RawDocument) *doc = c4raw_get(_forest, C4STR("_local"), key, &c4err);
+        if (!doc)
+            return err2status(c4err);
+
+        else if (obeyMVCC && !$equal(revID, slice2string(doc->meta)))
             return kCBLStatusConflict;
         else {
-            localWriter.del(doc);
+            if (!c4raw_put(_forest, C4STR("_local"), key, kC4SliceNull, kC4SliceNull, &c4err))
+                return err2status(c4err);
             return kCBLStatusOK;
         }
     }];
@@ -903,22 +963,21 @@ static NSDictionary* getDocProperties(const Document& doc) {
 
 
 - (NSString*) infoForKey: (NSString*)key {
-    KeyStore infoStore(_forest, "info");
-    __block NSString* value = nil;
-    tryStatus(^CBLStatus {
-        Document doc = infoStore.get((cbforest::slice)key.UTF8String);
-        value = (NSString*)doc.body();
-        return kCBLStatusOK;
-    });
-    return value;
+    C4Error c4err;
+    CLEANUP(C4RawDocument) *doc = c4raw_get(_forest, C4STR("info"), string2slice(key), &c4err);
+    if (!doc)
+        return nil;
+    return slice2string(doc->body);
 }
 
 
 - (CBLStatus) setInfo: (NSString*)info forKey: (NSString*)key {
-    KeyStore infoStore(_forest, "info");
     return [self inTransaction: ^CBLStatus {
-        KeyStoreWriter infoWriter = (*_forestTransaction)(infoStore);
-        infoWriter.set((cbforest::slice)key.UTF8String, (cbforest::slice)info.UTF8String);
+        C4Error c4err;
+        if (!c4raw_put(_forest, C4STR("info"),
+                       string2slice(key), kC4SliceNull, string2slice(info),
+                       &c4err))
+            return err2status(c4err);
         return kCBLStatusOK;
     }];
 }
@@ -929,19 +988,18 @@ static NSDictionary* getDocProperties(const Document& doc) {
 
 - (CBLDatabaseChange*) changeWithNewRevision: (CBL_Revision*)inRev
                                 isWinningRev: (BOOL)isWinningRev
-                                         doc: (VersionedDocument&)doc
+                                         doc: (C4Document*)doc
                                       source: (NSURL*)source
 {
     NSString* winningRevID;
-    if (isWinningRev) {
+    if (isWinningRev)
         winningRevID = inRev.revID;
-    } else {
-        const Revision* winningRevision = doc.currentRevision();
-        winningRevID = (NSString*)winningRevision->revID;
-    }
+    else
+        winningRevID = slice2string(doc->revID);
+    BOOL inConflict = (doc->flags & kConflicted) != 0;
     return [[CBLDatabaseChange alloc] initWithAddedRevision: inRev
                                           winningRevisionID: winningRevID
-                                                 inConflict: doc.hasConflict()
+                                                 inConflict: inConflict
                                                      source: source];
 }
 
@@ -958,7 +1016,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
     if (outError)
         *outError = nil;
 
-    if (_forest->isReadOnly()) {
+    if (_readOnly) {
         *outStatus = kCBLStatusForbidden;
         CBLStatusToOutNSError(*outStatus, outError);
         return nil;
@@ -981,55 +1039,29 @@ static NSDictionary* getDocProperties(const Document& doc) {
 
     *outStatus = [self inTransaction: ^CBLStatus {
         NSString* docID = inDocID;
-        NSString* prevRevID = inPrevRevID;
+        C4Slice prevRevIDSlice = string2slice(inPrevRevID);
 
-        Document rawDoc;
-        if (docID) {
-            // Read the doc from the database:
-            rawDoc.setKey(nsstring_slice(docID));
-            _forest->read(rawDoc);
-        } else {
-            // Create new doc ID, and don't bother to read it since it's a new doc:
-            docID = CBLCreateUUID();
-            rawDoc.setKey(nsstring_slice(docID));
-        }
+        // Let CBForest load the doc and insert the new revision:
+        C4DocPutRequest rq = {
+            .body = data2slice(json),
+            .docID = string2slice(docID),
+            .deletion = (bool)deleting,
+            .hasAttachments = (properties.cbl_attachments != nil),
+            .existingRevision = false,
+            .allowConflict = (bool)allowConflict,
+            .history = &prevRevIDSlice,
+            .historyCount = 1,
+            .save = false
+        };
+        C4Error c4err;
+        size_t commonAncestorIndex;
+        CLEANUP(C4Document)* doc = c4doc_put(_forest, &rq, &commonAncestorIndex, &c4err);
+        if (!doc)
+            return err2status(c4err);
 
-        // Parse the document revision tree:
-        VersionedDocument doc(*_forest, rawDoc);
-        const Revision* revNode;
-
-        if (prevRevID) {
-            // Updating an existing revision; make sure it exists and is a leaf:
-            revNode = doc.get(prevRevID);
-            if (!revNode)
-                return kCBLStatusNotFound;
-            else if (!allowConflict && !revNode->isLeaf())
-                return kCBLStatusConflict;
-        } else {
-            // No parent revision given:
-            if (deleting) {
-                // Didn't specify a revision to delete: NotFound or a Conflict, depending
-                return doc.exists() ? kCBLStatusConflict : kCBLStatusNotFound;
-            }
-            // If doc exists, current rev must be in a deleted state or there will be a conflict:
-            revNode = doc.currentRevision();
-            if (revNode) {
-                if (revNode->isDeleted()) {
-                    // New rev will be child of the tombstone:
-                    // (T0D0: Write a horror novel called "Child Of The Tombstone"!)
-                    prevRevID = (NSString*)revNode->revID;
-                } else {
-                    return kCBLStatusConflict;
-                }
-            }
-        }
-
-        // Compute the new revID. (Can't be done earlier because prevRevID may have changed.)
-        NSString* newRevID = [_delegate generateRevIDForJSON: json
-                                                     deleted: deleting
-                                                   prevRevID: prevRevID];
-        if (!newRevID)
-            return kCBLStatusBadID;  // invalid previous revID (no numeric prefix)
+        if (!docID)
+            docID = slice2string(doc->docID);
+        NSString* newRevID = slice2string(doc->selectedRev.revID);
 
         // Create the new CBL_Revision:
         CBL_Body *body = nil;
@@ -1042,43 +1074,38 @@ static NSDictionary* getDocProperties(const Document& doc) {
                                                revID: newRevID
                                              deleted: deleting
                                                 body: body];
+        if (commonAncestorIndex == 0)
+            return kCBLStatusOK;    // Revision already exists; no need to save
 
         // Run any validation blocks:
         if (validationBlock) {
             CBL_Revision* prevRev = nil;
-            if (prevRevID) {
-                prevRev = [[CBL_Revision alloc] initWithDocID: docID
-                                                        revID: prevRevID
-                                                      deleted: revNode->isDeleted()];
+            if (c4doc_selectParentRevision(doc)) {
+                prevRev = [CBLForestBridge revisionObjectFromForestDoc: doc
+                                                                 docID: docID revID: nil
+                                                              withBody: NO status: NULL];
             }
 
-            CBLStatus status = validationBlock(putRev, prevRev, prevRevID, outError);
+            CBLStatus status = validationBlock(putRev, prevRev, prevRev.revID, outError);
             if (CBLStatusIsError(status))
                 return status;
         }
 
-        // Add the revision to the database:
-        int status;
-        revidBuffer newrevid(newRevID);
-        {
-            const Revision* fdbRev = doc.insert(newrevid, json,
-                                                deleting,
-                                                (putRev.attachments != nil),
-                                                revNode, allowConflict, status);
-            if (!fdbRev && CBLStatusIsError((CBLStatus)status))
-                return (CBLStatus)status;
-        } // fdbRev ptr will be invalidated soon, so let it go out of scope
-        BOOL isWinner = [self saveForestDoc: doc revID: newrevid properties: properties];
-        putRev.sequence = doc.sequence();
+        // Save the updated doc:
+        BOOL isWinner;
+        if (![self saveForestDoc: doc revID: string2slice(newRevID)
+                      properties: properties isWinner: &isWinner error: &c4err])
+            return err2status(c4err);
+        putRev.sequence = doc->sequence;
 #if DEBUG
-        LogTo(CBLDatabase, @"Saved %s", doc.dump().c_str());
+        LogTo(CBLDatabase, @"Saved %@", docID);
 #endif
 
         change = [self changeWithNewRevision: putRev
                                 isWinningRev: isWinner
                                          doc: doc
                                       source: nil];
-        return (CBLStatus)status;
+        return deleting ? kCBLStatusOK : kCBLStatusCreated;
     }];
 
     if (CBLStatusIsError(*outStatus)) {
@@ -1087,7 +1114,8 @@ static NSDictionary* getDocProperties(const Document& doc) {
             CBLStatusToOutNSError(*outStatus, outError);
         return nil;
     }
-    [_delegate databaseStorageChanged: change];
+    if (change)
+        [_delegate databaseStorageChanged: change];
     return putRev;
 }
 
@@ -1102,7 +1130,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
     if (outError)
         *outError = nil;
 
-    if (_forest->isReadOnly()) {
+    if (_readOnly) {
         CBLStatusToOutNSError(kCBLStatusForbidden, outError);
         return kCBLStatusForbidden;
     }
@@ -1115,32 +1143,41 @@ static NSDictionary* getDocProperties(const Document& doc) {
 
     __block CBLDatabaseChange* change = nil;
 
-    CBLStatus status = [self inTransaction: ^CBLStatus {
-        // First get the CBForest doc:
-        VersionedDocument doc(*_forest, inRev.docID);
+    C4Slice* historySlices = (C4Slice*)malloc(history.count * sizeof(C4Slice));
+    size_t i = 0;
+    for (NSString* revID in history)
+        historySlices[i++] = string2slice(revID);
 
-        // Add the revision & ancestry to the doc:
-        std::vector<revidBuffer> historyVector;
-        historyVector.reserve(history.count);
-        for (NSString* revID in history)
-            historyVector.push_back(revidBuffer(revID));
-        int common = doc.insertHistory(historyVector,
-                                       cbforest::slice(json),
-                                       inRev.deleted,
-                                       (inRev.attachments != nil));
-        if (common < 0)
-            return kCBLStatusBadRequest; // generation numbers not in descending order
-        else if (common == 0)
-            return kCBLStatusOK;      // No-op: No new revisions were inserted.
+    CBLStatus status = [self inTransaction: ^CBLStatus {
+        C4DocPutRequest rq = {
+            .body = data2slice(json),
+            .docID = string2slice(inRev.docID),
+            .deletion = (bool)inRev.deleted,
+            .hasAttachments = inRev.attachments != nil,
+            .existingRevision = true,
+            .allowConflict = true,
+            .history = historySlices,
+            .historyCount = history.count,
+            .save = false
+        };
+        size_t commonAncestorIndex;
+        C4Error c4err;
+        CLEANUP(C4Document)* doc = c4doc_put(_forest, &rq, &commonAncestorIndex, &c4err);
+        if (!doc)
+            return err2status(c4err);
+
+        if (commonAncestorIndex == 0)
+            return kCBLStatusOK;    // Rev already existed; no change
 
         // Validate against the common ancestor:
         if (validationBlock) {
-            CBL_Revision* prev;
-            if ((NSUInteger)common < history.count) {
-                BOOL deleted = doc[historyVector[common]]->isDeleted();
-                prev = [[CBL_Revision alloc] initWithDocID: inRev.docID
-                                                     revID: history[common]
-                                                   deleted: deleted];
+            CBL_Revision* prev = nil;
+            if (commonAncestorIndex < history.count) {
+                c4doc_selectRevision(doc, historySlices[commonAncestorIndex], false, NULL);
+                CBLStatus status;
+                prev = [CBLForestBridge revisionObjectFromForestDoc: doc
+                                                              docID: inRev.docID revID: nil
+                                                           withBody: NO status: &status];
             }
             NSString* parentRevID = (history.count > 1) ? history[1] : nil;
             CBLStatus status = validationBlock(inRev, prev, parentRevID, outError);
@@ -1149,12 +1186,13 @@ static NSDictionary* getDocProperties(const Document& doc) {
         }
 
         // Save updated doc back to the database:
-        BOOL isWinner = [self saveForestDoc: doc
-                                      revID: historyVector[0]
-                                 properties: inRev.properties];
-        inRev.sequence = doc.sequence();
+        BOOL isWinner;
+        if (![self saveForestDoc: doc revID: historySlices[0] properties: inRev.properties
+                        isWinner: &isWinner error: &c4err])
+            return err2status(c4err);
+        inRev.sequence = doc->sequence;
 #if DEBUG
-        LogTo(CBLDatabase, @"Saved %s", doc.dump().c_str());
+        LogTo(CBLDatabase, @"Saved %@", inRev.docID);
 #endif
         change = [self changeWithNewRevision: inRev
                                 isWinningRev: isWinner
@@ -1175,21 +1213,22 @@ static NSDictionary* getDocProperties(const Document& doc) {
 }
 
 
-- (BOOL) saveForestDoc: (VersionedDocument&)doc
-                 revID: (revid)revID
+- (BOOL) saveForestDoc: (C4Document*)doc
+                 revID: (C4Slice)revID
             properties: (NSDictionary*)properties
+              isWinner: (BOOL*)isWinner
+                 error: (C4Error*)outErr
 {
     // Is the new revision the winner?
-    BOOL isWinner = (doc.currentRevision()->revID == revID);
+    *isWinner = c4SliceEqual(revID, doc->revID);
     // Update the documentType:
-    if (!isWinner)
-        properties = [CBLForestBridge bodyOfNode: doc[0]];
-    nsstring_slice type(properties[@"type"]);
-    doc.setDocType(type);
+    if (!*isWinner) {
+        c4doc_selectCurrentRevision(doc);
+        properties = [CBLForestBridge bodyOfSelectedRevision: doc];
+    }
+    c4doc_setType(doc, string2slice(properties[@"type"]));
     // Save:
-    doc.prune((unsigned)_maxRevTreeDepth);
-    doc.save(*_forestTransaction);
-    return isWinner;
+    return c4doc_save(doc, _maxRevTreeDepth, outErr);
 }
 
 
@@ -1199,7 +1238,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
 - (id<CBL_ViewStorage>) viewStorageNamed: (NSString*)name create:(BOOL)create {
     id<CBL_ViewStorage> view = [_views objectForKey: name];
     if (!view) {
-        create = create && !_forest->isReadOnly();
+        create = create && !_readOnly;
         view = [[CBL_ForestDBViewStorage alloc] initWithDBStorage: self name: name create: create];
         if (view) {
             if (!_views)
