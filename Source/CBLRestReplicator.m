@@ -297,6 +297,7 @@
         __weak id weakSelf = self;
         _host.onChange = ^{
             CBLRestReplicator *strongSelf = weakSelf;
+            if (!strongSelf) return; // already dealloced
             [strongSelf reachabilityChanged:strongSelf->_host];
         };
         [_host startOnRunLoop: CFRunLoopGetCurrent()];
@@ -679,11 +680,12 @@
                                        requestHeaders: _settings.requestHeaders
                                          onCompletion: ^(id result, NSError* error) {
         CBLRestReplicator *strongSelf = weakSelf;
+        if (!strongSelf) return; // already dealloced
         [strongSelf removeRemoteRequest: req];
         id<CBLAuthorizer> auth = req.authorizer;
-        if (auth && auth != _authorizer && error.code != 401) {
-            LogTo(SyncVerbose, @"%@: Updated to %@", self, auth);
-            _authorizer = auth;
+        if (auth && auth != strongSelf->_authorizer && error.code != 401) {
+            LogTo(SyncVerbose, @"%@: Updated to %@", strongSelf, auth);
+            strongSelf->_authorizer = auth;
         }
         onCompletion(result, error);
     }];

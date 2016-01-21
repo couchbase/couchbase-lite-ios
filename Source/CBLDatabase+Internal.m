@@ -28,6 +28,7 @@
 #import "CBLMisc.h"
 #import "CBLDatabase.h"
 #import "CBLDatabaseUpgrade.h"
+#import "CBLSymmetricKey.h"
 #import "CouchbaseLitePrivate.h"
 
 #import "MYBlockUtils.h"
@@ -140,59 +141,85 @@ static BOOL sAutoCompact = YES;
 
 
 - (BOOL) open: (NSError**)outError {
+    return [self openWithOptions: [_manager defaultOptionsForDatabaseNamed: _name]
+                           error: outError];
+}
+
+- (BOOL) openWithOptions: (CBLDatabaseOptions*)options error: (NSError**)outError {
     if (_isOpen)
         return YES;
     LogTo(CBLDatabase, @"Opening %@", self);
 
     // Create the database directory:
-    if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
-                                   withIntermediateDirectories: YES
-                                                    attributes: nil
-                                                         error: outError])
+    _readOnly = _readOnly || options.readOnly;
+    if (!_readOnly && ![[NSFileManager defaultManager] createDirectoryAtPath: _dir
+                                                 withIntermediateDirectories: YES
+                                                                  attributes: nil
+                                                                       error: outError])
         return NO;
 
     // Instantiate storage:
-    NSString* storageType = _manager.storageType ?: @"SQLite";
+    NSString* storageType = options.storageType ?: (_manager.storageType ?: kCBLSQLiteStorage);
     NSString* storageClassName = $sprintf(@"CBL_%@Storage", storageType);
     Class primaryStorage = NSClassFromString(storageClassName);
-    Assert(primaryStorage, @"CBLManager.storageType is '%@' but no %@ class found, maybe add the -ObjC flag to Other Linker Flags in Build Settings",
-           _manager.storageType, storageClassName);
-    Assert([primaryStorage conformsToProtocol: @protocol(CBL_Storage)],
-            @"CBLManager.storageType is '%@' but %@ is not a CBL_Storage implementation",
-            _manager.storageType, storageClassName);
+    if (!primaryStorage) {
+        if ($equal(storageType, kCBLSQLiteStorage) || $equal(storageType, kCBLForestDBStorage))
+            Warn(@"storageType is '%@' but no %@ class found;"
+                 " make sure `-ObjC` is in Other Linker Flags in Build Settings",
+                 storageType, storageClassName);
+    } else if (![primaryStorage conformsToProtocol: @protocol(CBL_Storage)]) {
+        primaryStorage = nil;
+    }
+    if (!primaryStorage)
+        return CBLStatusToOutNSError(kCBLStatusInvalidStorageType, outError);
+    BOOL primarySQLite = [storageType isEqualToString: kCBLSQLiteStorage];
+    Class otherStorage = NSClassFromString(primarySQLite ? @"CBL_ForestDBStorage"
+                                                         : @"CBL_SQLiteStorage");
 
-    id<CBL_Storage> storage;
     BOOL upgrade = NO;
 
-    if (_manager.upgradeStorage) {
-        // If upgrading, always use primary storage type, and check for SQL db:
-        storage = [[primaryStorage alloc] init];
-        if (![storageType isEqualToString: @"SQLite"]) {
-            NSString* sqlitePath = [_dir stringByAppendingPathComponent: @"db.sqlite3"];
-            upgrade = [[NSFileManager defaultManager] fileExistsAtPath: sqlitePath]
-                        && ![storage databaseExistsIn: _dir];
+    if (options.storageType) {
+        // If explicit storage type given in options, always use primary storage type,
+        // and if secondary db exists, try to upgrade from it:
+        upgrade = [otherStorage databaseExistsIn: _dir] && ![primaryStorage databaseExistsIn: _dir];
+        if (upgrade) {
+            if (_readOnly)
+                return CBLStatusToOutNSError(kCBLStatusForbidden, outError);
+            if (primarySQLite)  // can't upgrade to SQLite
+                return CBLStatusToOutNSError(kCBLStatusInvalidStorageType, outError);
         }
     } else {
-        // Use primary unless dir already contains a db created by secondary:
-    Class secondaryStorage = NSClassFromString(@"CBL_ForestDBStorage");
-    if (primaryStorage == secondaryStorage)
-        secondaryStorage = NSClassFromString(@"CBL_SQLiteStorage");
-        storage = [[secondaryStorage alloc] init];
-        if (!storage || ![storage databaseExistsIn: _dir])
-        storage = [[primaryStorage alloc] init];
+        // If options don't specify, use primary unless secondary db already exists in dir:
+        if (otherStorage && [otherStorage databaseExistsIn: _dir])
+            primaryStorage = otherStorage;
     }
 
-    LogTo(CBLDatabase, @"Using %@ for db at %@", [storage class], _dir);
+    LogTo(CBLDatabase, @"Using %@ for db at %@; upgrade=%d", primaryStorage, _dir, upgrade);
 
-    _storage = storage;
+    _storage = [[primaryStorage alloc] init];
     _storage.delegate = self;
     _storage.autoCompact = sAutoCompact;
 
-    CBLSymmetricKey* encryptionKey = [_manager.shared valueForType: @"encryptionKey"
-                                                              name: @"" inDatabaseNamed: _name];
-    if ([_storage respondsToSelector: @selector(setEncryptionKey:)])
-        [_storage setEncryptionKey: encryptionKey];
+    // Encryption:
+    CBLSymmetricKey* encryptionKey = nil;
+    id keyOrPass = options.encryptionKey;
+    if (keyOrPass) {
+#if !TARGET_OS_IPHONE
+        if ([keyOrPass isEqual: @YES]) {
+            encryptionKey = [self encryptionKeyFromKeychain: outError];
+            if (!encryptionKey)
+                return NO;
+        } else
+#endif
+        {
+            encryptionKey = [[CBLSymmetricKey alloc] initWithKeyOrPassword: keyOrPass];
+        }
+        options.encryptionKey = encryptionKey;
+        if ([_storage respondsToSelector: @selector(setEncryptionKey:)])
+            [_storage setEncryptionKey: encryptionKey];
+    }
 
+    // Open the storage!
     if (![_storage openInDirectory: _dir
                           readOnly: _readOnly
                            manager: _manager
@@ -234,6 +261,13 @@ static BOOL sAutoCompact = YES;
                                                  name: CBL_DatabaseWillBeDeletedNotification
                                                object: nil];
 
+#if TARGET_OS_IPHONE
+    // On iOS, observe low-memory notifications:
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(lowMemory:)
+                                                 name: UIApplicationDidReceiveMemoryWarningNotification
+                                               object: nil];
+#endif
+
     if (upgrade) {
         // Upgrading a SQLite database:
         Class databaseUpgradeClass = NSClassFromString(@"CBLDatabaseUpgrade");
@@ -258,6 +292,26 @@ static BOOL sAutoCompact = YES;
 
     return YES;
 }
+
+
+#if !TARGET_OS_IPHONE
+- (CBLSymmetricKey*) encryptionKeyFromKeychain: (NSError**)outError {
+    NSString* dir = _manager.directory.stringByAbbreviatingWithTildeInPath;
+    NSString* itemName = $sprintf(@"%@ database in %@", self.name, dir);
+    NSError* error;
+    CBLSymmetricKey* key = [[CBLSymmetricKey alloc] initWithKeychainItemNamed: itemName
+                                                                        error: outError];
+    if (!key) {
+        if (error.code == errSecItemNotFound) {
+            key = [CBLSymmetricKey new];
+            if (![key saveKeychainItemNamed: itemName error: outError])
+                key = nil;
+        }
+    }
+    return key;
+}
+#endif
+
 
 - (void) _close {
     if (_isOpen) {
@@ -431,6 +485,16 @@ static BOOL sAutoCompact = YES;
         }
     }
 }
+
+
+#if TARGET_OS_IPHONE
+- (void) lowMemory: (NSNotification*)n {
+    [self doAsync: ^{
+        [self _pruneDocumentCache];
+        [_storage lowMemoryWarning];
+    }];
+}
+#endif
 
 
 #pragma mark - GETTING DOCUMENTS:

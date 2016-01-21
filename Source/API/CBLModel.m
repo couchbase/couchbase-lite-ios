@@ -212,9 +212,6 @@
         _changedNames = nil;
         _changedAttachments = nil;
         self.needsSave = NO;
-        // Detach from document:
-        _document.modelObject = nil;
-        _document = nil;
 
     } else {
         // Otherwise, remove unchanged cached values in _properties:

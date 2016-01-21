@@ -40,6 +40,8 @@
 #define kV1DBExtension @"cblite"    // Couchbase Lite 1.0
 #define kDBExtension @"cblite2"
 
+NSString* const kCBLSQLiteStorage = @"SQLite";
+NSString* const kCBLForestDBStorage = @"ForestDB";
 
 static const CBLManagerOptions kCBLManagerDefaultOptions;
 
@@ -70,6 +72,11 @@ static NSString* CBLFullVersionInfo( void ) {
 #endif
 
 
+@implementation CBLDatabaseOptions
+@synthesize create, readOnly, storageType, encryptionKey;
+@end
+
+
 @interface CBLManager ()
 
 @property (nonatomic) NSMutableDictionary* customHTTPHeaders;
@@ -92,7 +99,7 @@ static NSString* CBLFullVersionInfo( void ) {
 
 
 @synthesize dispatchQueue=_dispatchQueue, directory = _dir;
-@synthesize customHTTPHeaders = _customHTTPHeaders, upgradeStorage=_upgradeStorage;
+@synthesize customHTTPHeaders = _customHTTPHeaders;
 @synthesize storageType=_storageType, replicatorClassName=_replicatorClassName;
 
 
@@ -236,7 +243,7 @@ static CBLManager* sInstance;
         _replications = [[NSMutableArray alloc] init];
         _storageType = [[NSUserDefaults standardUserDefaults] stringForKey: @"CBLStorageType"];
         if (!_storageType)
-            _storageType = @"SQLite";
+            _storageType = kCBLSQLiteStorage;
         _replicatorClassName = [[NSUserDefaults standardUserDefaults]
                                                             stringForKey: @"CBLReplicatorClass"];
         if (!_replicatorClassName)
@@ -336,6 +343,9 @@ static CBLManager* sInstance;
                      andClose: (BOOL)andClose
                         error: (NSError**)outError
 {
+    if (_options.readOnly)
+        return CBLStatusToOutNSError(kCBLStatusUnsupportedType, outError);
+
     Class databaseUpgradeClass = [self databaseUpgradeClass];
     if (!databaseUpgradeClass) {
         // Gracefully skipping the upgrade:
@@ -539,18 +549,39 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
 }
 
 - (CBLDatabase*) existingDatabaseNamed: (NSString*)name error: (NSError**)outError {
-    CBLDatabase* db = [self _databaseNamed: name mustExist: YES error: outError];
-    if (![db open: outError])
-        db = nil;
+    CBLDatabaseOptions* options = [self defaultOptionsForDatabaseNamed: name];
+    return [self openDatabaseNamed: name withOptions: options error: outError];
+}
+
+- (CBLDatabase*) databaseNamed: (NSString*)name error: (NSError**)outError {
+    CBLDatabaseOptions* options = [self defaultOptionsForDatabaseNamed: name];
+    options.create = YES;
+    return [self openDatabaseNamed: name withOptions: options error: outError];
+}
+
+- (nullable CBLDatabase*) openDatabaseNamed: (NSString*)name
+                                withOptions: (CBLDatabaseOptions*)options
+                                      error: (NSError**)outError
+{
+    CBLDatabase* db = [self _databaseNamed: name
+                                 mustExist: !options.create || options.readOnly
+                                     error: outError];
+    if (db && !db.isOpen) {
+        if ([db openWithOptions: options error: outError]) {
+            [self registerEncryptionKey: options.encryptionKey forDatabaseNamed: name];
+        } else {
+            db = nil;
+        }
+    }
     return db;
 }
 
 
-- (CBLDatabase*) databaseNamed: (NSString*)name error: (NSError**)outError {
-    CBLDatabase* db = [self _databaseNamed: name mustExist: NO error: outError];
-    if (![db open: outError])
-        db = nil;
-    return db;
+- (CBLDatabaseOptions*) defaultOptionsForDatabaseNamed: (NSString*)name {
+    CBLDatabaseOptions* options = [CBLDatabaseOptions new];
+    options.encryptionKey = [self.shared valueForType: @"encryptionKey"
+                                                 name: @"" inDatabaseNamed: name];
+    return options;
 }
 
 
@@ -569,31 +600,6 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
           inDatabaseNamed: name];
     return YES;
 }
-
-
-#if !TARGET_OS_IPHONE
-- (BOOL) encryptDatabaseNamed: (NSString*)name {
-    NSString* dir = self.directory.stringByAbbreviatingWithTildeInPath;
-    NSString* itemName = $sprintf(@"%@ database in %@", name, dir);
-    NSError* error;
-    CBLSymmetricKey* key = [[CBLSymmetricKey alloc] initWithKeychainItemNamed: itemName
-                                                                        error: &error];
-    if (!key) {
-        if (error.code == errSecItemNotFound) {
-            key = [CBLSymmetricKey new];
-            if (![key saveKeychainItemNamed: itemName])
-                return NO;
-        } else {
-            return NO;
-        }
-    }
-    [self.shared setValue: key
-                  forType: @"encryptionKey"
-                     name: @""
-          inDatabaseNamed: name];
-    return YES;
-}
-#endif
 
 
 #if DEBUG
@@ -618,6 +624,8 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
               withAttachments: (NSString*)attachmentsPath
                         error: (NSError**)outError
 {
+    if (_options.readOnly)
+        return CBLStatusToOutNSError(kCBLStatusForbidden, outError);
     CBLDatabase* db = [self _databaseNamed: databaseName mustExist: NO error: outError];
     if (!db)
         return NO;
@@ -663,6 +671,8 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
              withDatabaseDir: (NSString*)databaseDir
                         error: (NSError**)outError
 {
+    if (_options.readOnly)
+        return CBLStatusToOutNSError(kCBLStatusForbidden, outError);
     CBLDatabase* db = [self _databaseNamed: databaseName mustExist: NO error: outError];
     if (!db)
         return NO;
@@ -683,11 +693,17 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
         return NO;
     }
 
-    return CBLRemoveFileIfExists(db.dir, outError) &&
-            [fmgr copyItemAtPath: databaseDir toPath: db.dir error: outError] &&
-            [db open: outError] &&
-            [db saveLocalUUIDInLocalCheckpointDocument: outError] &&
-            [db replaceUUIDs: outError];
+    NSString* dstDir = db.dir;
+    BOOL ok =  CBLRemoveFileIfExists(dstDir, outError) &&
+                [fmgr copyItemAtPath: databaseDir toPath: dstDir error: outError] &&
+                [db open: outError] &&
+                [db saveLocalUUIDInLocalCheckpointDocument: outError] &&
+                [db replaceUUIDs: outError];
+    [db _close]; // close so app can (re)open db with its preferred options
+    if (!ok) {
+        [fmgr removeItemAtPath: dstDir error: NULL];
+    }
+    return ok;
 }
 
 

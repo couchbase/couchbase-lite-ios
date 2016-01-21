@@ -511,8 +511,7 @@
     AssertEqual(rev1[@"_attachments"][@"attach"][@"revpos"], @1);
 
     // Insert a revision several generations advanced but which hasn't changed the attachment:
-    CBL_MutableRevision* rev4 = [rev1 mutableCopy];
-    rev4[@"_rev"] = @"4-4444";
+    CBL_MutableRevision* rev4 = [rev1 mutableCopyWithDocID: rev1.docID revID: @"4-4444"];
     rev4[@"foo"] = @"bar";
     [rev4 mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *att) {
         NSMutableDictionary* nuAtt = [att mutableCopy];
@@ -523,7 +522,21 @@
     }];
     NSArray* history = @[@"4-4444", @"3-3333", @"2-2222", rev1.revID];
     status = [db forceInsert: rev4 revisionHistory: history source: nil error: &error];
-    AssertEq(status, 200);
+    AssertEq(status, kCBLStatusCreated);
+
+    // Insert a doc with no revision history and no attachment bodies:
+    // (this happens during db upgrade; see #961)
+    NSString* digest = [[rev1[@"_attachments"] objectForKey: @"attach"] objectForKey: @"digest"];
+    Assert(digest);
+    attachmentDict = @{@"attach": @{@"content_type": @"text/plain",
+                                    @"digest": digest,
+                                    @"follows": @YES,
+                                    @"revpos": @100}};
+    props = @{@"_id": @"Y", @"_rev": @"123-ffff", @"_attachments": attachmentDict};
+    CBL_Revision* rev = [CBL_Revision revisionWithProperties: props];
+    status = [db forceInsert: rev revisionHistory: @[] source: nil error: &error];
+    AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
 }
 
 
@@ -555,8 +568,7 @@
     Assert(rev2.deleted);
 
     // Insert a revision several generations advanced but which hasn't changed the attachment:
-    CBL_MutableRevision* rev3 = [rev1 mutableCopy];
-    rev3[@"_rev"] = @"3-3333";
+    CBL_MutableRevision* rev3 = [rev1 mutableCopyWithDocID: rev1.docID revID: @"3-3333"];
     rev3[@"foo"] = @"bar";
     [rev3 mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *att) {
         NSMutableDictionary* nuAtt = [att mutableCopy];
@@ -567,7 +579,7 @@
     }];
     NSArray* history = @[rev2.revID, rev1.revID];
     status = [db forceInsert: rev3 revisionHistory: history source: nil error: &error];
-    AssertEq(status, 200);
+    AssertEq(status, 201);
 }
 
 

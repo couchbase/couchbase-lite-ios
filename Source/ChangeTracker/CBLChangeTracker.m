@@ -50,8 +50,7 @@
 @synthesize limit=_limit, heartbeat=_heartbeat, error=_error, continuous=_continuous;
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
 @synthesize requestHeaders = _requestHeaders, authorizer=_authorizer, cookieStorage=_cookieStorage;
-@synthesize docIDs = _docIDs, pollInterval=_pollInterval, usePOST=_usePOST;
-@synthesize paused=_paused;
+@synthesize docIDs = _docIDs, pollInterval=_pollInterval, paused=_paused;
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
                                 mode: (CBLChangeTrackerMode)mode
@@ -79,6 +78,7 @@
         _heartbeat = kDefaultHeartbeat;
         _includeConflicts = includeConflicts;
         self.lastSequenceID = lastSequenceID;
+        _usePOST = YES;
     }
     return self;
 }
@@ -160,7 +160,7 @@
         filterParameters = @{@"doc_ids": _docIDs};
     }
     NSMutableDictionary* post = $mdict({@"feed", self.feed},
-                                       {@"heartbeat", @(_heartbeat*1000.0)},
+                                       {@"heartbeat", @(round(_heartbeat*1000.0))},
                                        {@"style", (_includeConflicts ? @"all_docs" : nil)},
                                        {@"since", since},
                                        {@"limit", (_limit > 0 ? @(_limit) : nil)},
@@ -211,7 +211,7 @@
     if (!_http) {
         // Initialize HTTPLogic before sending first request:
         NSMutableURLRequest* urlRequest = [NSMutableURLRequest requestWithURL: self.changesFeedURL];
-        if (self.usePOST) {
+        if (_usePOST) {
             urlRequest.HTTPMethod = @"POST";
             urlRequest.HTTPBody = self.changesFeedPOSTBody;
             [urlRequest setValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
@@ -317,6 +317,7 @@
                                 ^(id sequence, NSString *docID, NSArray *revs, bool deleted) {
                                     // Callback when the parser reads another change from the feed:
                                     CBLChangeTracker* strongSelf = weakSelf;
+                                    if (!strongSelf) return; // already dealloced
                                     strongSelf->_parsedChangeCount++;
                                     strongSelf.lastSequenceID = sequence;
                                     [strongSelf.client changeTrackerReceivedSequence: sequence

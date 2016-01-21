@@ -107,8 +107,10 @@
 // and install it into the blob-store.
 - (CBLStatus) installAttachment: (CBL_Attachment*)attachment {
     NSString* digest = attachment.digest;
-    if (!digest)
+    if (!digest) {
+        Warn(@"Missing 'digest' property in attachment");
         return kCBLStatusBadAttachment;
+    }
     id writer = _pendingAttachmentsByDigest[digest];
 
     if ([writer isKindOfClass: [CBL_BlobStoreWriter class]]) {
@@ -163,8 +165,10 @@
     NSDictionary* attachments = rev.attachments;
     if (!attachments) {
         attachments = [self attachmentsForDocID: rev.docID revID: rev.revID status: outStatus];
-        if (!attachments)
+        if (!attachments) {
+            *outStatus = kCBLStatusNotFound;
             return nil;
+        }
     }
     return [self attachmentForDict: attachments[filename] named: filename status: outStatus];
 }
@@ -309,8 +313,9 @@ static UInt64 smallestLength(NSDictionary* attachment) {
         return YES;
     }
 
-    NSString *prevRevID = (ancestry.count > 0) ? ancestry[0] : nil;
-    unsigned generation = [CBL_Revision generationFromRevID: prevRevID] + 1;
+    NSString *prevRevID = ancestry.firstObject;
+    unsigned generation = rev.generation;
+    Assert(generation > 0);
     __block NSDictionary* parentAttachments = nil;
 
     [rev mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *attachInfo) {
@@ -344,7 +349,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
                                                        status: &status];
                 if (!parentAttachments) {
                     if (status == kCBLStatusOK || status == kCBLStatusNotFound) {
-                        if ([_attachments hasBlobForKey: attachment.blobKey]) {
+                        if (attachment.hasBlobKey && [_attachments hasBlobForKey: attachment.blobKey]) {
                             // Parent revision's body isn't known (we are probably pulling a rev along
                             // with its entire history) but it's OK, we have the attachment already
                             *outStatus = kCBLStatusOK;
@@ -358,8 +363,11 @@ static UInt64 smallestLength(NSDictionary* attachment) {
                         if (ancestorAttachment) {
                             *outStatus = kCBLStatusOK;
                             return ancestorAttachment;
-                        } else
+                        } else {
+                            Warn(@"Don't have original attachment for stub '%@' in %@ (missing rev)",
+                                 name, rev);
                             status = kCBLStatusBadAttachment;
+                        }
                     }
                     *outStatus = status;
                     return nil;
@@ -367,6 +375,8 @@ static UInt64 smallestLength(NSDictionary* attachment) {
             }
             NSDictionary* parentAttachment = parentAttachments[name];
             if (!parentAttachment) {
+                Warn(@"Don't have original attachment for stub '%@' in %@ (missing attachment)",
+                     name, rev);
                 *outStatus = kCBLStatusBadAttachment;
                 return nil;
             }
@@ -377,6 +387,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
         if (attachment->revpos == 0) {
             attachment->revpos = generation;
         } else if (attachment->revpos > generation) {
+            Warn(@"Attachment '%@' in %@ has invalid revpos=%d", name, rev, attachment->revpos);
             *outStatus = kCBLStatusBadAttachment;
             return nil;
         }

@@ -93,20 +93,11 @@ static MYBackgroundMonitor *bgMonitor;
 #endif
 
 
-static void onCompactCallback(Database *db, bool compacting) {
-    const char *what = (compacting ?"starting" :"finished");
-    NSString* path = [[NSString alloc] initWithCString: db->filename().c_str()
-                                              encoding: NSUTF8StringEncoding];
-    NSString* viewName = path.lastPathComponent;
-    path = path.stringByDeletingLastPathComponent;
-    NSString* dbName = path.lastPathComponent.stringByDeletingPathExtension;
-    if ([viewName isEqualToString: kDBFilename]) {
-        Log(@"Database '%@' %s compaction", dbName, what);
-    } else {
-        dbName = [dbName stringByAppendingPathComponent: viewName];
-        Log(@"View index '%@/%@' %s compaction",
-            dbName, viewName.stringByDeletingPathExtension, what);
-    }
+static void onCompactCallback(void *context, bool compacting) {
+    auto storage = (__bridge CBL_ForestDBStorage*)context;
+    Log(@"Database '%@' %s compaction",
+        storage.directory.lastPathComponent,
+        (compacting ?"starting" :"finished"));
 }
 
 
@@ -118,8 +109,6 @@ static void onCompactCallback(Database *db, bool compacting) {
             cbforest::LogLevel = kDebug;
         else if (WillLogTo(CBLDatabase))
             cbforest::LogLevel = kInfo;
-
-        Database::onCompactCallback = onCompactCallback;
 
         // Initialize ForestDB global config settings:
         auto config = Database::defaultConfig();
@@ -183,7 +172,7 @@ static void onCompactCallback(Database *db, bool compacting) {
 }
 
 
-- (BOOL) databaseExistsIn: (NSString*)directory {
++ (BOOL) databaseExistsIn: (NSString*)directory {
     NSString* dbPath = [directory stringByAppendingPathComponent: kDBFilename];
     if ([[NSFileManager defaultManager] fileExistsAtPath: dbPath isDirectory: NULL])
         return YES;
@@ -199,10 +188,8 @@ static void onCompactCallback(Database *db, bool compacting) {
                   error: (NSError**)outError
 {
     _directory = [directory copy];
-    fdb_open_flags flags = readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE;
-
     _config = Database::defaultConfig(); // Default config is set in +initialize, above
-    _config.flags = flags;
+    _config.flags = (readOnly ? FDB_OPEN_FLAG_RDONLY : FDB_OPEN_FLAG_CREATE);
     _config.seqtree_opt = FDB_SEQTREE_USE;
     if (!_autoCompact)
         _config.compaction_mode = FDB_COMPACTION_MANUAL;
@@ -218,7 +205,10 @@ static void onCompactCallback(Database *db, bool compacting) {
                                        withConfig: _config
                                     encryptionKey: _encryptionKey
                                             error: outError];
-    return (_forest != NULL);
+    if (!_forest)
+        return NO;
+    _forest->setOnCompact(onCompactCallback, (__bridge void*)self);
+    return YES;
 }
 
 
@@ -266,6 +256,10 @@ static void onCompactCallback(Database *db, bool compacting) {
 
 - (void*) forestDatabase {
     return _forest;
+}
+
+- (BOOL) readOnly {
+    return (_config.flags & FDB_OPEN_FLAG_RDONLY) != 0;
 }
 
 
@@ -1205,6 +1199,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
 - (id<CBL_ViewStorage>) viewStorageNamed: (NSString*)name create:(BOOL)create {
     id<CBL_ViewStorage> view = [_views objectForKey: name];
     if (!view) {
+        create = create && !_forest->isReadOnly();
         view = [[CBL_ForestDBViewStorage alloc] initWithDBStorage: self name: name create: create];
         if (view) {
             if (!_views)
@@ -1233,6 +1228,12 @@ static NSDictionary* getDocProperties(const Document& doc) {
             [viewNames addObject: viewName];
     }
     return viewNames.allObjects;
+}
+
+
+- (void) lowMemoryWarning {
+    for (CBL_ForestDBViewStorage* view in _views.objectEnumerator)
+        [view closeIndex];
 }
 
 

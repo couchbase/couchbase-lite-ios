@@ -33,6 +33,7 @@
 - (void) addReplication: (CBLReplication*)repl;
 - (void) forgetReplication: (CBLReplication*)repl;
 - (void) _clearDocumentCache;
+- (void) _pruneDocumentCache;
 - (CBLDocument*) _cachedDocumentWithID: (NSString*)docID;
 @end
 

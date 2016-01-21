@@ -20,7 +20,7 @@
 // INITIALIZATION AND CONFIGURATION:
 
 /** Preflight to see if a database file exists in this directory. Called _before_ -open! */
-- (BOOL) databaseExistsIn: (NSString*)directory;
++ (BOOL) databaseExistsIn: (NSString*)directory;
 
 /** Opens storage. Files will be created in the directory, which must already exist.
     @param directory  The existing directory to put data files into. The implementation may
@@ -253,6 +253,9 @@
                             status: (CBLStatus*)outStatus;
 
 @optional
+
+/** Low-memory warning; free up resources if possible. */
+- (void) lowMemoryWarning;
 
 /** Registers the encryption key of the database file. Must be called before opening the db. */
 - (void) setEncryptionKey: (CBLSymmetricKey*)key;

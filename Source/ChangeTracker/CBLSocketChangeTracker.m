@@ -19,10 +19,12 @@
 #import "CBLRemoteRequest.h"
 #import "CBLAuthorizer.h"
 #import "CBLCookieStorage.h"
+#import "CBLMisc.h"
 #import "CBLStatus.h"
 #import "CBLBase64.h"
 #import "CBLGZip.h"
 #import "MYBlockUtils.h"
+#import "MYErrorUtils.h"
 #import "MYURLUtils.h"
 #import "BLIPHTTPLogic.h"
 #import <string.h>
@@ -38,6 +40,7 @@
     CBLGZip* _gzip;
     bool _gotResponseHeaders;
     bool _readyToRead;
+    NSString* _serverName;
 }
 
 - (BOOL) start {
@@ -53,8 +56,8 @@
     CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Accept-Encoding"), CFSTR("gzip"));
 
     // Now open the connection:
-    LogTo(SyncPerf, @"%@: %@ %@", self, (self.usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
-    LogTo(SyncVerbose, @"%@: %@ %@", self, (self.usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
+    LogTo(SyncPerf, @"%@: %@ %@", self, (_usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
+    LogTo(SyncVerbose, @"%@: %@ %@", self, (_usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
     CFReadStreamRef cfInputStream = CFReadStreamCreateForHTTPRequest(NULL, request);
     CFRelease(request);
     if (!cfInputStream)
@@ -79,6 +82,7 @@
     _gotResponseHeaders = false;
     _readyToRead = NO;
     _gzip = nil;
+    _serverName = nil;
 
     _trackingInput = (NSInputStream*)CFBridgingRelease(cfInputStream);
     [_trackingInput setDelegate: self];
@@ -147,11 +151,14 @@
     _gotResponseHeaders = true;
     LogTo(SyncPerf, @"%@ got HTTP response headers (%ld) after %.3f sec",
           self, CFHTTPMessageGetResponseStatusCode(response), CFAbsoluteTimeGetCurrent()-_startTime);
-    [_http receivedResponse: response];
+
+    _serverName = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response,
+                                                                      CFSTR("Server")));
     NSString* encoding = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response,
                                                                     CFSTR("Content-Encoding")));
     BOOL compressed = [encoding isEqualToString: @"gzip"];
 
+    [_http receivedResponse: response];
     if (_http.shouldContinue) {
         _retryCount = 0;
         _http = nil;
@@ -279,6 +286,23 @@
 
 - (void) failedWithError:(NSError*) error {
     [self clearConnection];
+
+    // Work around Cloudant's lack of support of POST to _changes. a 405 (Method Not Allowed) is
+    // a dead giveaway, but Cloudant returns a 401 instead if the database is write-protected.
+    // This could also happen with a read-protected SG or CouchDB database, so if we get a 401
+    // double-check that it's Cloudant. (See issue #1020.)
+    if (_usePOST) {
+        if ([error my_hasDomain: CBLHTTPErrorDomain code: kCBLStatusMethodNotAllowed]
+            || ([error my_hasDomain: NSURLErrorDomain code: NSURLErrorUserAuthenticationRequired]
+                    && [_serverName containsString: @"CouchDB/1.0.2"])) {
+                LogTo(ChangeTracker, @"Apparently server is Cloudant; retrying with a GET...");
+                _usePOST = NO;
+                _http = nil;
+                [self retryAfterDelay: 0.0];
+                return;
+            }
+    }
+
     [super failedWithError: error];
 }
 

@@ -113,7 +113,6 @@
     _changeTracker.docIDs = _settings.docIDs;
     _changeTracker.authorizer = _authorizer;
     _changeTracker.cookieStorage = self.cookieStorage;
-    _changeTracker.usePOST = [self serverIsSyncGatewayVersion: @"0.93"];
 
     unsigned heartbeat = $castIf(NSNumber, _settings.options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;
     if (heartbeat >= 15000)
@@ -439,6 +438,7 @@
                                         onCompletion:
         ^(CBLMultipartDownloader* result, NSError *error) {
             __strong CBLRestPuller *strongSelf = weakSelf;
+            if (!strongSelf) return; // already dealloced
             // OK, now we've got the response:
             LogTo(SyncPerf, @"%@: Got %@", strongSelf, rev);
             if (error) {
@@ -460,7 +460,7 @@
             // Note that we've finished this task:
             [strongSelf removeRemoteRequest:dl];
             [strongSelf asyncTasksFinished:1];
-            --_httpConnectionCount;
+            --strongSelf->_httpConnectionCount;
             // Start another task if there are still revisions waiting to be pulled:
             [strongSelf pullRemoteRevisions];
         }
@@ -502,6 +502,7 @@
           ^(NSDictionary* props) {
               // Got a revision!
               __strong CBLRestPuller *strongSelf = weakSelf;
+              if (!strongSelf) return; // already dealloced
               if (first) {
                   first = NO;
                   LogTo(SyncPerf, @"%@: Received first revision from bulk-get (%.3f sec)",
@@ -534,6 +535,7 @@
           ^(CBLBulkDownloader* result, NSError *error) {
               // The entire _bulk_get is finished:
               __strong CBLRestPuller *strongSelf = weakSelf;
+              if (!strongSelf) return; // already dealloced
               LogTo(SyncPerf, @"%@: finished bulk-getting %u remote revisions (%.3f sec)",
                     self, (unsigned)nRevs, CFAbsoluteTimeGetCurrent()-start);
 
@@ -555,7 +557,7 @@
               // Note that we've finished this task:
               [strongSelf asyncTasksFinished:1];
               
-              --_httpConnectionCount;
+              --strongSelf->_httpConnectionCount;
               // Start another task if there are still revisions waiting to be pulled:
               [strongSelf pullRemoteRevisions];
           }
@@ -715,13 +717,18 @@
                         // Considered a success, since the doc was delivered to the app.
                         LogTo(Sync, @"%@: Remote rev failed validation: %@ (reason: %@)",
                               self, rev, error.localizedFailureReason);
+                    } else if (status == kCBLStatusBadAttachment) {
+                        // Revision with broken _attachments metadata (i.e. bogus revpos)
+                        // should not stop replication. Warn and skip it. (#1001)
+                        Warn(@"%@: Revision %@ has invalid attachment metadata: %@",
+                             self, rev, rev[@"_attachments"]);
                     } else if (status == kCBLStatusDBBusy) {
                         return status;  // abort transaction; _inTransaction will retry
                     } else {
                         Warn(@"%@ failed to write %@: status=%d", self, rev, status);
                         [self revisionFailed];
                         self.error = CBLStatusToNSError(status);
-                        continue;
+                        continue; // don't mark as processed
                     }
                 }
                 
@@ -772,9 +779,10 @@
               ^(id result, NSError *error) {
                   // On completion or error:
                   __strong CBLRestPuller *strongSelf = weakSelf;
+                  if (!strongSelf) return; // already dealloced
                   [strongSelf->_attachmentDownloads removeObjectForKey: task.ID];
                   if (error) {
-                      if (_running && !_online) {
+                      if (strongSelf->_running && !strongSelf->_online) {
                           // I've gone offline, so save the tasks for later:
                           [task.progress setIndeterminate];
                           [self addToWaitingAttachments: task];

@@ -46,15 +46,28 @@ SDK_VERSION=$(echo ${SDK_NAME} | grep -o '.\{3\}$')
 
 # Next, work out if we're in SIM or DEVICE
 
+DEVICE="iphone"
+OSNAME="iOS"
+
 if [ ${PLATFORM_NAME} = "iphonesimulator" ]
 then
-OTHER_SDK_TO_BUILD=iphoneos${SDK_VERSION}
-else
-OTHER_SDK_TO_BUILD=iphonesimulator${SDK_VERSION}
+    OTHER_SDK_TO_BUILD=iphoneos${SDK_VERSION}
+elif [ ${PLATFORM_NAME} = "iphoneos" ]
+then
+    OTHER_SDK_TO_BUILD=iphonesimulator${SDK_VERSION}
+elif [ ${PLATFORM_NAME} = "appletvsimulator" ]
+then
+    OTHER_SDK_TO_BUILD=appletvos${SDK_VERSION}
+    DEVICE="appletv"
+    OSNAME="tvOS"
+elif [ ${PLATFORM_NAME} = "appletvos" ]
+then
+    OTHER_SDK_TO_BUILD=appletvsimulator${SDK_VERSION}
+    DEVICE="appletv"
+    OSNAME="tvOS"
 fi
 
-echo "XCode has selected SDK: ${PLATFORM_NAME} with version: ${SDK_VERSION} (although back-targetting: ${IPHONEOS_DEPLOYMENT_TARGET})"
-echo "...therefore, OTHER_SDK_TO_BUILD = ${OTHER_SDK_TO_BUILD}"
+echo "XCode has selected SDK: ${PLATFORM_NAME} with version: ${SDK_VERSION}, so OTHER_SDK_TO_BUILD = ${OTHER_SDK_TO_BUILD}"
 #
 #####################[ end of part 1 ]##################
 
@@ -88,13 +101,13 @@ ACTION="build"
 #Merge all platform binaries as a fat binary for each configurations.
 
 # Calculate where the (multiple) built files are coming from:
-CURRENTCONFIG_DEVICE_DIR=${SYMROOT}/${CONFIGURATION}-iphoneos
-CURRENTCONFIG_SIMULATOR_DIR=${SYMROOT}/${CONFIGURATION}-iphonesimulator
+CURRENTCONFIG_DEVICE_DIR=${SYMROOT}/${CONFIGURATION}-${DEVICE}os
+CURRENTCONFIG_SIMULATOR_DIR=${SYMROOT}/${CONFIGURATION}-${DEVICE}simulator
 
 echo "Taking device build from: ${CURRENTCONFIG_DEVICE_DIR}"
 echo "Taking simulator build from: ${CURRENTCONFIG_SIMULATOR_DIR}"
 
-CREATING_UNIVERSAL_DIR=${SYMROOT}/${CONFIGURATION}-${PRODUCT_NAME}-ios-universal
+CREATING_UNIVERSAL_DIR=${UNIVERSAL_BUILD_DIR} # Defined in CBL project-wide build settings
 echo "...I will output a universal build to: ${CREATING_UNIVERSAL_DIR}"
 
 # ... remove the products of previous runs of this script

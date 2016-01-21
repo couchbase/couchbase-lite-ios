@@ -62,6 +62,15 @@ static NSString* GetServerPath() {
 }
 
 
+static NSString* MakeAbsolutePath(const char *cStr) {
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    NSString* path = [fmgr stringWithFileSystemRepresentation: cStr length: strlen(cStr)];
+    if (path && !path.isAbsolutePath)
+        path = [fmgr.currentDirectoryPath stringByAppendingPathComponent: path];
+    return path.stringByStandardizingPath;
+}
+
+
 static bool doReplicate(CBLManager* dbm, const char* replArg,
                         BOOL pull, BOOL createTarget, BOOL continuous,
                         const char *user, const char *password, const char *realm)
@@ -243,9 +252,7 @@ int main (int argc, const char * argv[])
                 usage();
                 return 1;
             } else if (strcmp(argv[i], "--dir") == 0) {
-                const char *path = argv[++i];
-                dataPath = [[NSFileManager defaultManager] stringWithFileSystemRepresentation: path
-                                                                           length: strlen(path)];
+                dataPath = MakeAbsolutePath(argv[++i]);
             } else if (strcmp(argv[i], "--port") == 0) {
                 const char *str = argv[++i];
                 char *end;

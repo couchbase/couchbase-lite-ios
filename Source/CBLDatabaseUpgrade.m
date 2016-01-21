@@ -265,7 +265,7 @@ static int collateRevIDs(void *context,
             NSString* revID = columnString(_revQuery, 1);
             int64_t parentSeq = sqlite3_column_int64(_revQuery, 2);
             BOOL current = (BOOL)sqlite3_column_int(_revQuery, 3);
-            BOOL noAtts = (BOOL)sqlite3_column_int(_revQuery, 4);
+            BOOL noAtts = (BOOL)sqlite3_column_int(_revQuery, 6);
 
             if (current) {
                 // Add a leaf revision:

@@ -45,6 +45,7 @@ static const struct StatusMapEntry kStatusMap[] = {
     {kCBLStatusBadID,                400, "Invalid database/document/revision ID"},
     {kCBLStatusBadParam,             400, "Invalid parameter in HTTP query or JSON body"},
     {kCBLStatusDeleted,              404, "deleted"},
+    {kCBLStatusInvalidStorageType,   406, "Can't open database in that storage format"},
 
     {kCBLStatusUpstreamError,        502, "Invalid response from remote replication server"},
     {kCBLStatusBadChangesFeed,       502, "Server changes feed parse error"},

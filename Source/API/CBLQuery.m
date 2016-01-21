@@ -25,7 +25,7 @@
 
 
 // Default value of CBLLiveQuery.updateInterval
-#define kDefaultLiveQueryUpdateInterval 0.5
+#define kDefaultLiveQueryUpdateInterval 0.2
 
 
 // Querying utilities for CBLDatabase. Defined down below.

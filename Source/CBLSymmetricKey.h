@@ -42,7 +42,7 @@ typedef NSMutableData* (^CBLCryptorBlock)(NSData* input);
 /** Creates an instance from existing key data. */
 - (instancetype) initWithKeyData: (NSData*)keyData;
 
-/** Creates an instance with key data or a password string. */
+/** Creates an instance with key data or a password string, or even a CBLSymmetricKey. */
 - (instancetype) initWithKeyOrPassword: (id)keyOrPassword;
 
 /** Creates an instance with a key read from the Keychain. */
@@ -50,7 +50,8 @@ typedef NSMutableData* (^CBLCryptorBlock)(NSData* input);
                                      error: (NSError**)outError;
 
 /** Saves a key to the Keychain under the given name. */
-- (BOOL) saveKeychainItemNamed: (NSString*)itemName;
+- (BOOL) saveKeychainItemNamed: (NSString*)itemName
+                         error: (NSError**)outError;
 
 /** The SymmetricKey's key data; can be used to reconstitute it. */
 @property (readonly) NSData* keyData;

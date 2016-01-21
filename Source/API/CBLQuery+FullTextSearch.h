@@ -32,15 +32,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (copy, nullable) NSString* fullTextQuery;
 
 /** If set to YES, the query will collect snippets of the text surrounding each match, available
-    via the CBLFullTextQueryRow's -snippetWithWordStart:wordEnd: method.
-    (NOTE: ForestDB currently does not support snippets.) */
+    via the CBLFullTextQueryRow's -snippetWithWordStart:wordEnd: method. */
 @property BOOL fullTextSnippets;
 
 /** If YES (the default) the full-text query result rows will be sorted by (approximate) relevance.
     If set to NO, the rows will be returned in the order the documents were added to the database,
     i.e. essentially unordered; this is somewhat faster, so it can be useful if you don't care
-    about the ordering of the rows.
-    (NOTE: ForestDB currently does not support ranking.) */
+    about the ordering of the rows. */
 @property BOOL fullTextRanking;
 
 @end

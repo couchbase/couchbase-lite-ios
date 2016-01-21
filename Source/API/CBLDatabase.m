@@ -194,11 +194,6 @@ static void catchInBlock(void (^block)()) {
 }
 
 
-- (BOOL) create: (NSError**)outError {
-    return [self open: outError];
-}
-
-
 - (BOOL) close: (NSError**)outError {
     if (![self saveAllModels: outError])
         return NO;
@@ -210,6 +205,8 @@ static void catchInBlock(void (^block)()) {
 
 
 - (BOOL) deleteDatabase: (NSError**)outError {
+    if (_readOnly)
+        return CBLStatusToOutNSError(kCBLStatusForbidden, outError);
     LogTo(CBLDatabase, @"Deleting %@", _dir);
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillBeDeletedNotification
                                                         object: self];
@@ -226,6 +223,8 @@ static void catchInBlock(void (^block)()) {
 
 
 - (BOOL) compact: (NSError**)outError {
+    if (_readOnly)
+        return CBLStatusToOutNSError(kCBLStatusForbidden, outError);
     //FIX:
 //    CBLStatus status = [_storage inTransaction: ^CBLStatus {
         // Do this in a transaction because garbageCollectAttachments expects the database to be
@@ -263,6 +262,8 @@ static void catchInBlock(void (^block)()) {
 
 
 - (BOOL) changeEncryptionKey: (id)newKeyOrPassword error: (NSError**)outError {
+    if (_readOnly)
+        return CBLStatusToOutNSError(kCBLStatusForbidden, outError);
     if (![_storage respondsToSelector: @selector(actionToChangeEncryptionKey:)])
         return CBLStatusToOutNSError(kCBLStatusNotImplemented, outError);
 
@@ -334,6 +335,10 @@ static void catchInBlock(void (^block)()) {
 
 - (void) _clearDocumentCache {
     [_docCache forgetAllResources];
+}
+
+- (void) _pruneDocumentCache {
+    [_docCache unretainResources];
 }
 
 - (void) removeDocumentFromCache: (CBLDocument*)document {

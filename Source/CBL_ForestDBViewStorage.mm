@@ -164,13 +164,13 @@ private:
     // Emit a full-text row
     void emitText(NSString* text, id value, NSDictionary* doc, EmitFn& emitFn) {
         nsstring_slice textSlice(text);
+        slice valueSlice;
         if (value == doc) {
-            emitFn.emitTextTokens(textSlice, Index::kSpecialValue);
+            valueSlice = Index::kSpecialValue;
         } else if (value) {
-            emitFn.emitTextTokens(textSlice, nsstring_slice(toJSONStr(value)));
-        } else {
-            emitFn.emitTextTokens(textSlice, slice::null);
+            valueSlice = nsstring_slice(toJSONStr(value));
         }
+        emitFn.emitTextTokens(textSlice, Tokenizer::defaultStemmer, valueSlice);
     }
 
     // Geo-index a rectangle
@@ -277,25 +277,12 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         // likes to append ".0" etc., but there will be a file with a ".meta" extension:
         NSString* metaPath = [_path stringByAppendingPathExtension: @"meta"];
         if (![[NSFileManager defaultManager] fileExistsAtPath: metaPath isDirectory: NULL]) {
-            if (!create || ![self openIndexWithOptions: FDB_OPEN_FLAG_CREATE status: NULL])
+            if (!create || ![self openIndexWithCreate: YES status: NULL])
                 return nil;
         }
-
-    #if TARGET_OS_IPHONE
-        // On iOS, close the index when there's a low-memory notification:
-        [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(closeIndex)
-                                                     name: UIApplicationDidReceiveMemoryWarningNotification object: nil];
-    #endif
     }
     return self;
 }
-
-
-#if TARGET_OS_IPHONE
-- (void) dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
-}
-#endif
 
 
 - (void) close {
@@ -338,6 +325,8 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
     config.seqtree_opt = FDB_SEQTREE_NOT_USE; // indexes don't need by-sequence ordering
     if (!_dbStorage.autoCompact)
         config.compaction_mode = FDB_COMPACTION_MANUAL;
+    if (_dbStorage.readOnly)
+        config.flags |= FDB_OPEN_FLAG_RDONLY;
     return config;
 }
 
@@ -346,18 +335,19 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 - (MapReduceIndex*) openIndex: (CBLStatus*)outStatus {
     if (_index)
         return _index;
-    return [self openIndexWithOptions: 0 status: outStatus];
+    return [self openIndexWithCreate: NO status: outStatus];
 }
 
 
-// Opens the index, specifying ForestDB database flags
-- (MapReduceIndex*) openIndexWithOptions: (fdb_open_flags)options
-                                  status: (CBLStatus*)outStatus
+// Opens the index, optionally creating it
+- (MapReduceIndex*) openIndexWithCreate: (BOOL)create
+                                 status: (CBLStatus*)outStatus
 {
     if (!_index) {
         Assert(!_indexDB);
         auto config = self.config;
-        config.flags = options;
+        if (create && !(config.flags & FDB_OPEN_FLAG_RDONLY))
+            config.flags |= FDB_OPEN_FLAG_CREATE;
 
         NSError* error;
         _indexDB = [CBLForestBridge openDatabaseAtPath: _path
@@ -430,8 +420,10 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 
 // Main Storage-protocol method to delete a view
 - (void) deleteView {
-    [self deleteViewFiles: NULL];
-    [_dbStorage forgetViewStorageNamed: _name];
+    if (!_dbStorage.readOnly) {
+        [self deleteViewFiles: NULL];
+        [_dbStorage forgetViewStorageNamed: _name];
+    }
 }
 
 
@@ -443,7 +435,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
     } backOutOrCleanUp:^BOOL(NSError **outError) {
         // Afterwards, reopen (and re-create) the index:
         CBLStatus status;
-        if (![self openIndexWithOptions: FDB_OPEN_FLAG_CREATE status: &status])
+        if (![self openIndexWithCreate: YES status: &status])
             return CBLStatusToOutNSError(status, outError);
         [self closeIndex];
         return YES;

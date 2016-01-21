@@ -8,7 +8,7 @@
 
 #import "CBLManager.h"
 #import "CBLStatus.h"
-@class CBLDatabase, CBL_Shared, CBL_ReplicatorSettings;
+@class CBLDatabase, CBL_Shared, CBL_ReplicatorSettings, CBLSymmetricKey;
 @protocol CBL_Replicator;
 
 
@@ -27,6 +27,8 @@
                           error: (NSError**)outError;
 
 - (void) _forgetDatabase: (CBLDatabase*)db;
+
+- (CBLDatabaseOptions*) defaultOptionsForDatabaseNamed: (NSString*)name;
 
 - (BOOL) _closeDatabaseNamed: (NSString*)name
                        error: (NSError**)outError;

@@ -600,8 +600,8 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     
 
     // _changes with include_docs and revs=true:
-    Send(self, @"GET", @"/db/_changes?since=4&include_docs=true&revs=true", kCBLStatusOK,
-         $dict({@"last_seq", @5},
+    NSDictionary* expected =
+             $dict({@"last_seq", @5},
                {@"results", $array($dict({@"id", @"doc1"},
                                          {@"changes", $array($dict({@"rev", revIDs[0]}))},
                                          {@"seq", @5},
@@ -613,8 +613,12 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
                                                                       @"641a9554032af9bcb2351b2780161a4d",
                                                                       @"9c7ff8308d0c89a7f1fe0f4b683655c2"],
                                                             @"start": @3},
-                                                    @"_deleted": @YES}}))}));
-    
+                                                    @"_deleted": @YES}}))});
+    Send(self, @"GET", @"/db/_changes?since=4&include_docs=true&revs=true", kCBLStatusOK, expected);
+
+    // POST to _changes:
+    SendBody(self, @"POST", @"/db/_changes?include_docs=true", @{@"since":@4, @"revs":@YES},
+             kCBLStatusOK, expected);
 }
 
 

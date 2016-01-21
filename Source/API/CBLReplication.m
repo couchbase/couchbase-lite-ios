@@ -180,8 +180,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 - (void) setCookieNamed: (NSString*)name
               withValue: (NSString*)value
-                   path: (NSString*)path
-         expirationDate: (NSDate*)expirationDate
+                   path: (nullable NSString*)path
+         expirationDate: (nullable NSDate*)expirationDate
                  secure: (BOOL)secure
 {
     if (secure && !_remoteURL.my_isHTTPS)

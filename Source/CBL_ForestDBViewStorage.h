@@ -20,4 +20,6 @@
 
 - (MYAction*) actionToChangeEncryptionKey;
 
+- (void) closeIndex;
+
 @end

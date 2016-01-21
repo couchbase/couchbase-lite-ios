@@ -64,6 +64,7 @@ typedef enum CBLChangeTrackerMode {
     unsigned _retryCount;
     BOOL _caughtUp;
     BLIPHTTPLogic* _http;
+    BOOL _usePOST;
 }
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
@@ -83,8 +84,6 @@ typedef enum CBLChangeTrackerMode {
 @property (strong, nonatomic) NSDictionary *requestHeaders;
 @property (strong, nonatomic) id<CBLAuthorizer> authorizer;
 @property (strong, nonatomic) CBLCookieStorage* cookieStorage;
-
-@property (nonatomic) BOOL usePOST;
 
 @property (nonatomic) CBLChangeTrackerMode mode;
 @property (copy) NSString* filterName;
