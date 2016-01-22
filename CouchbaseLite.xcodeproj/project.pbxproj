@@ -6902,6 +6902,7 @@
 				273E9F0A1C509F39003115A6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		273E9F191C509F39003115A6 /* Build configuration list for PBXNativeTarget "CBL tvOS Unit Tests" */ = {
 			isa = XCConfigurationList;
@@ -6910,6 +6911,7 @@
 				273E9F0C1C509F39003115A6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		27452BAA1AB1156F00327776 /* Build configuration list for PBXNativeTarget "CBL iOS fat library" */ = {
 			isa = XCConfigurationList;
