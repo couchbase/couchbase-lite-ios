@@ -39,7 +39,7 @@ The native APIs are Objective-C (iOS, tvOS, Mac), Java (Android), and C# (.NET, 
 ## More Information
 
 * [Why Couchbase Lite?](https://github.com/couchbase/couchbase-lite-ios/wiki/Why-Couchbase-Lite%3F)
-* [API Overview](http://developer.couchbase.com/documentation/mobile/1.1.0/get-started/couchbase-lite-overview/index.html)
+* [API Overview](http://developer.couchbase.com/documentation/mobile/current/get-started/couchbase-lite-overview/index.html)
 * [API Reference](http://couchbase.github.com/couchbase-lite-ios/docs/html/annotated.html)
 * There's lots more information on the [wiki][2].
 * Demo apps:
