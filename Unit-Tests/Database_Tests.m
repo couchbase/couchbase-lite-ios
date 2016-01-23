@@ -1324,7 +1324,7 @@
 
     // Test db contents:
     [self checkReplacedDatabaseNamed: @"replacedb"
-                         onComplete: ^(CBLDatabase* replaceDb, CBLQueryEnumerator* rows) {
+                         onComplete: ^(CBLDatabase* targetDb, CBLQueryEnumerator* rows) {
                              AssertEq(rows.count, 2u);
                              CBLDocument* doc = [rows rowAtIndex:0].document;
                              AssertEqual(doc.documentID, @"doc1");
@@ -1334,8 +1334,8 @@
                              AssertEq(att.length, att.content.length);
                              
                              // https://github.com/couchbase/couchbase-lite-ios/issues/1041:
-                             // NSDictionary* localDoc = [replaceDb existingLocalDocumentWithID: @"local1"];
-                             //Assert(localDoc);
+                             NSDictionary* localDoc = [targetDb existingLocalDocumentWithID: @"local1"];
+                             Assert(localDoc);
                           }];
 
     // Close and re-open the db using SQLite storage type. Should fail if it used to be ForestDB:
