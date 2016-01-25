@@ -14,7 +14,6 @@
 //  and limitations under the License.
 
 #import "CBLMultipartWriter.h"
-#import "CBLMisc.h"
 #import "CBLGZip.h"
 #import "CollectionUtils.h"
 #import "Test.h"
@@ -31,7 +30,7 @@
     self = [super init];
     if (self) {
         _contentType = [type copy];
-        _boundary = [(boundary ?: CBLCreateUUID()) copy];
+        _boundary = boundary ? [boundary copy] : [[NSUUID UUID] UUIDString];
         // Account for the final boundary to be written by -opened. Add its length now, because the
         // client is probably going to ask for my .length *before* it calls -open.
         NSString* finalBoundaryStr = $sprintf(@"\r\n--%@--", _boundary);
