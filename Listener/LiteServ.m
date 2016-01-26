@@ -157,7 +157,7 @@ static void usage(void) {
     fprintf(stderr, "USAGE: LiteServ\n"
             "\t[--dir <databaseDir>]    Alternate directory to store databases in\n"
             "\t[--port <listeningPort>] Port to listen on (defaults to 59840)\n"
-            "\t[--<readonly>]           Enables read-only mode\n"
+            "\t[--readonly]             Enables read-only mode\n"
             "\t[--auth]                 REST API requires HTTP auth\n"
             "\t[--pull <URL>]           Pull from remote database\n"
             "\t[--push <URL>]           Push to remote database\n"
@@ -168,6 +168,7 @@ static void usage(void) {
             "\t[--realm <realm>]        HTTP realm for connecting to remote database\n"
             "\t[--ssl]                  Serve over SSL\n"
             "\t[--sslas <identityname>] Identity pref name to use for SSL serving\n"
+            "\t[--storage <engine>]     Set default storage engine: 'SQLite' or 'ForestDB'\n"
             "Runs Couchbase Lite as a faceless server.\n");
 }
 
@@ -243,7 +244,7 @@ int main (int argc, const char * argv[])
 
         CBLRegisterJSViewCompiler();
 
-        NSString* dataPath = nil;
+        NSString *dataPath = nil, *storageType = nil;
         UInt16 port = kPortNumber, nuPort = 0;
         BOOL pull = NO, createTarget = NO, continuous = NO;
 
@@ -285,6 +286,8 @@ int main (int argc, const char * argv[])
             } else if (strcmp(argv[i], "--sslas") == 0) {
                 useSSL = YES;
                 identityName = argv[++i];
+            } else if (strcmp(argv[i], "--storage") == 0) {
+                storageType = [NSString stringWithUTF8String: argv[++i]];
             } else if (strncmp(argv[i], "-Log", 4) == 0) {
                 ++i; // Ignore MYUtilities logging flags
             } else {
@@ -305,6 +308,9 @@ int main (int argc, const char * argv[])
             Warn(@"FATAL: Error initializing CouchbaseLite: %@", error);
             exit(1);
         }
+
+        if (storageType)
+            server.storageType = storageType;
 
         // Start a listener socket:
         CBLListener* listener = [[CBLListener alloc] initWithManager: server port: port];
