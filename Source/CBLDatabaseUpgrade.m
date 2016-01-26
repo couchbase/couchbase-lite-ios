@@ -431,6 +431,9 @@ static int collateRevIDs(void *context,
     while (SQLITE_ROW == (err = sqlite3_step(localQuery))) {
         @autoreleasepool {
             NSString* docID = columnString(localQuery, 0);
+            // Remove "_local/" prefix:
+            if ([docID hasPrefix:@"_local/"])
+                docID = [docID substringFromIndex:7];
             NSData* json = columnData(localQuery, 1);
             NSDictionary* props = [CBLJSON JSONObjectWithData: json options: 0 error: NULL];
             LogTo(Upgrade, @"Upgrading local doc '%@'", docID);
