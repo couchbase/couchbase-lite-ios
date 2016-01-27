@@ -5529,6 +5529,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = CouchbaseLite;
 				STRIP_INSTALLED_PRODUCT = NO;
+				VERSIONING_SYSTEM = "";
 			};
 			name = Debug;
 		};
@@ -5564,6 +5565,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = CouchbaseLite;
 				STRIP_INSTALLED_PRODUCT = NO;
+				VERSIONING_SYSTEM = "";
 			};
 			name = Release;
 		};
@@ -5602,7 +5604,10 @@
 					"$(BUILD_DIR)/$(CONFIGURATION)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-all_load",
+				);
 				PRODUCT_MODULE_NAME = CouchbaseLite;
 				PRODUCT_NAME = CouchbaseLite;
 				WRAPPER_EXTENSION = framework;
@@ -5681,7 +5686,10 @@
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-all_load",
+				);
 				PRODUCT_MODULE_NAME = CouchbaseLite;
 				PRODUCT_NAME = CouchbaseLite;
 				WRAPPER_EXTENSION = framework;
