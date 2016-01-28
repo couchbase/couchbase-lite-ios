@@ -13,13 +13,21 @@
 #import <CoreData/CoreData.h>
 #import "CBLIncrementalStore.h"
 
-#define TEST_NON_INVERSE_RELATIONSHIP 0
-
+#define PERFORMANCE_TEST_ENABLED 0
+#define NON_INVERSE_RELATIONSHIP_TEST_ENABLED 0
 
 @interface IncrementalStore_Tests : CBLTestCaseWithDB <CBLIncrementalStoreDelegate>
 @property NSUInteger counter; // General purpose counter that can be used with XCTest Async KVO expectation check
 @end
 
+
+@interface CBLIncrementalStore (UnitTest)
+@property (nonatomic) BOOL shouldNotifyLocalDatabaseChanges;
+@end
+
+@implementation CBLIncrementalStore (UnitTest)
+@dynamic shouldNotifyLocalDatabaseChanges;
+@end
 
 #pragma mark - Helper Classes / Methods
 
@@ -49,7 +57,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 @property (nonatomic, retain) NSSet *files;
 @property (nonatomic, retain) User *user;
 
-#if TEST_NON_INVERSE_RELATIONSHIP
+#if NON_INVERSE_RELATIONSHIP_TEST_ENABLED
 // To-Many relationship without an inverse relationship.
 @property (nonatomic, retain) NSSet *nonInverseSubentries;
 #endif
@@ -72,7 +80,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 - (void)addFiles:(NSSet *)values;
 - (void)removeFiles:(NSSet *)values;
 
-#if TEST_NON_INVERSE_RELATIONSHIP
+#if NON_INVERSE_RELATIONSHIP_TEST_ENABLED
 // non-inverse sub-entries:
 - (void)addNonInverseSubentriesObject:(NonInverseSubentry *)value;
 - (void)removeNonInverseSubentriesObject:(NonInverseSubentry *)value;
@@ -295,36 +303,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     CBLAttachment *attachment = [fileDoc.currentRevision attachmentNamed:@"data"];
     Assert(attachment != nil, @"Unable to load attachment");
     AssertEqual(file.data, attachment.content);
-    
-    // now change the properties in CouchbaseLite and check if those are available in Core Data
-    __block NSUInteger count = 0;
-    XCTestExpectation *expectation = [self expectationWithDescription:@"CBLIS Changed Notification"];
-    id observer = [[NSNotificationCenter defaultCenter]
-                   addObserverForName: kCBLISObjectHasBeenChangedInStoreNotification
-                               object: store
-                                queue: nil
-                           usingBlock:^(NSNotification *note) {
-        if (++count == 2)
-            [expectation fulfill];
-    }];
-
-    [entryProperties setObject:@"different text" forKey:@"text"];
-    [entryProperties setObject:@NO forKey:@"check"];
-    [entryProperties setObject:@42 forKey:@"number"];
-    id revisions = [entryDoc putProperties:entryProperties error:&error];
-    Assert(revisions != nil, @"Couldn't persist changed properties in CBL: %@", error);
-    Assert(error == nil, @"Couldn't persist changed properties in CBL: %@", error);
-
-    [self waitForExpectationsWithTimeout:5.0 handler:^(NSError *error) {
-        Assert(error == nil, "Timeout error: %@", error);
-    }];
-    [[NSNotificationCenter defaultCenter] removeObserver: observer];
-    
-    entry = (Entry*)[context existingObjectWithID:entryID error:&error];
-    Assert(entry != nil, @"Couldn load entry: %@", error);
-    AssertEqual(entry.text, [entryProperties objectForKey:@"text"]);
-    AssertEqual(entry.check, [entryProperties objectForKey:@"check"]);
-    AssertEqual(entry.number, [entryProperties objectForKey:@"number"]);
 }
 
 
@@ -386,7 +364,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
-#if TEST_NON_INVERSE_RELATIONSHIP
+#if NON_INVERSE_RELATIONSHIP_TEST_ENABLED
     // To-Many without inverse relationship:
     for (NSUInteger i = 0; i < 3; i++) {
         NonInverseSubentry *sub = [NSEntityDescription insertNewObjectForEntityForName:@"NonInverseSubentry"
@@ -408,7 +386,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEq(entry.subEntries.count, 3u);
 
 
-#if TEST_NON_INVERSE_RELATIONSHIP
+#if NON_INVERSE_RELATIONSHIP_TEST_ENABLED
     // We do not support to-many-non-inverse-relationship.
     AssertEq(entry.nonInverseSubentries.count, 0u);
 #endif
@@ -423,7 +401,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEq(entry.subEntries.count, 3u);
 
 
-#if TEST_NON_INVERSE_RELATIONSHIP
+#if NON_INVERSE_RELATIONSHIP_TEST_ENABLED
     // We do not support to-many-non-inverse-relationship.
     AssertEq(entry.nonInverseSubentries.count, 0u);
 #endif
@@ -1919,10 +1897,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
                              };
 
     CBLISTestInsertEntriesWithProperties(context, @[entry1, entry2, entry3]);
-
-    BOOL success = [context save:&error];
-    Assert(success, @"Could not save context: %@", error);
-
+    
     NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
 
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"Entry"
@@ -1943,6 +1918,245 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     AssertEq(CBLIncrementalStoreErrorUnsupportedFetchRequest, error.code);
     AssertEq((int)result.count, 0);
 }
+
+- (void) test_PurgeObject {
+    NSError *error;
+
+    Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                 inManagedObjectContext:context];
+    entry.text = @"Test";
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+
+    NSString *docID = [entry.objectID couchbaseLiteIDRepresentation];
+    Assert([store.database existingDocumentWithID: docID] != nil);
+    Assert(!entry.isDeleted);
+    
+    success = [store purgeObject: entry error: &error];
+
+    Assert(success, @"Could not purge object: %@", error);
+    AssertNil([store.database _cachedDocumentWithID: docID]);
+}
+
+#pragma mark - Performance
+
+#if PERFORMANCE_TEST_ENABLED
+
+- (void) test_PerformanceSave {
+    if (!self.isSQLiteDB)
+        return;
+    
+    NSArray *metrics = [[self class] defaultPerformanceMetrics];
+    [self measureMetrics:metrics automaticallyStartMeasuring:NO forBlock:^{
+        for (NSInteger i = 1; i < 1000; i++) {
+            Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                         inManagedObjectContext:context];
+            entry.created_at = [NSDate new];
+            entry.text = [NSString stringWithFormat:@"Test %@", @(i)];
+            entry.check = @(YES);
+
+            Subentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                               inManagedObjectContext:context];
+            subentry.text = @"Subentry abc";
+            subentry.number = @123;
+            [entry addSubEntriesObject:subentry];
+        }
+
+        [self startMeasuring];
+
+        NSError *error;
+        BOOL success = [context save:&error];
+        Assert(success, @"Could not save context: %@", error);
+        
+        [self stopMeasuring];
+    }];
+}
+
+- (void) test_PerformanceFetchWithContextReset {
+    if (!self.isSQLiteDB)
+        return;
+
+    for (NSInteger i = 1; i < 1000; i++) {
+        Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                     inManagedObjectContext:context];
+        entry.created_at = [NSDate new];
+        entry.text = [NSString stringWithFormat:@"Test %@", @(i)];
+        entry.check = (i%3) ? @(YES) : @(NO);
+
+        Subentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                           inManagedObjectContext:context];
+        subentry.text = @"Subentry abc";
+        subentry.number = @123;
+        [entry addSubEntriesObject:subentry];
+    }
+
+    NSError *error;
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+    
+    NSArray *metrics = [[self class] defaultPerformanceMetrics];
+    [self measureMetrics:metrics automaticallyStartMeasuring:NO forBlock:^{
+        // This will make all the Core Data and CBLIS cache gone:
+        [self reCreateCoreDataContext];
+        
+        [self startMeasuring];
+        
+        NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
+        request.fetchLimit = 1;
+        request.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"created_at" ascending:YES]];
+
+        NSError *error;
+        [context executeFetchRequest:request error:&error];
+        AssertNil(error);
+
+        [self stopMeasuring];
+    }];
+}
+
+- (void) test_PerformanceFetchWithoutContextReset {
+    // Note: Wihtout resetting the context, the fetch result cache will be used:
+    if (!self.isSQLiteDB)
+        return;
+    
+    for (NSInteger i = 1; i < 1000; i++) {
+        Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                     inManagedObjectContext:context];
+        entry.created_at = [NSDate new];
+        entry.text = [NSString stringWithFormat:@"Test %@", @(i)];
+        entry.check = (i%3) ? @(YES) : @(NO);
+        
+        Subentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                           inManagedObjectContext:context];
+        subentry.text = @"Subentry abc";
+        subentry.number = @123;
+        [entry addSubEntriesObject:subentry];
+    }
+    
+    NSError *error;
+    BOOL success = [context save:&error];
+    Assert(success, @"Could not save context: %@", error);
+    
+    NSArray *metrics = [[self class] defaultPerformanceMetrics];
+    [self measureMetrics:metrics automaticallyStartMeasuring:NO forBlock:^{
+        [self startMeasuring];
+        
+        NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
+        request.fetchLimit = 1;
+        request.sortDescriptors =
+            @[[NSSortDescriptor sortDescriptorWithKey:@"created_at" ascending:YES]];
+        
+        NSError *error;
+        [context executeFetchRequest:request error:&error];
+        AssertNil(error);
+        
+        [self stopMeasuring];
+    }];
+}
+
+- (void) test_PerformanceFetchWithIncreasingData {
+    if (!self.isSQLiteDB)
+        return;
+
+    NSArray *metrics = [[self class] defaultPerformanceMetrics];
+    [self measureMetrics:metrics automaticallyStartMeasuring:NO forBlock:^{
+        for (NSInteger i = 1; i < 1000; i++) {
+            Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
+                                                         inManagedObjectContext:context];
+            entry.created_at = [NSDate new];
+            entry.text = [NSString stringWithFormat:@"Test %@", @(i)];
+
+            entry.check = (i%3) ? @(YES) : @(NO);
+
+            Subentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
+                                                               inManagedObjectContext:context];
+            subentry.text = @"Subentry abc";
+            subentry.number = @123;
+            [entry addSubEntriesObject:subentry];
+        }
+
+        NSError *error;
+        BOOL success = [context save:&error];
+        Assert(success, @"Could not save context: %@", error);
+        
+        [self reCreateCoreDataContext];
+
+        [self startMeasuring];
+
+        NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
+        request.predicate = [NSPredicate predicateWithFormat:@"%K == %@", @"check", @(YES)];
+        request.sortDescriptors =
+            @[[NSSortDescriptor sortDescriptorWithKey:@"created_at" ascending:YES]];
+
+        [context executeFetchRequest:request error:&error];
+
+        [self stopMeasuring];
+
+        [self reCreateCoreDataContext];
+    }];
+}
+
+- (void) test_PerformanceCBLDatabaseChanged {
+    if (!self.isSQLiteDB)
+        return;
+
+    static NSUInteger docCount = 1000;
+
+    NSArray *metrics = [[self class] defaultPerformanceMetrics];
+    [self measureMetrics:metrics automaticallyStartMeasuring:NO forBlock:^{
+        store.shouldNotifyLocalDatabaseChanges = YES;
+
+        XCTestExpectation *expectation = [self expectationWithDescription:@"CBLIS Changed Notification"];
+
+        [self startMeasuring];
+
+        __block NSUInteger count = 0;
+
+        [[NSNotificationCenter defaultCenter] addObserverForName:kCBLISObjectHasBeenChangedInStoreNotification
+                                                          object:store
+                                                           queue:nil
+         usingBlock:^(NSNotification *note) {
+             if (++count == docCount) {
+                 NSError *error;
+                 NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
+                 request.sortDescriptors =
+                    @[[NSSortDescriptor sortDescriptorWithKey:@"created_at" ascending:YES]];
+                 
+                 NSArray *result = [context executeFetchRequest:request error:&error];
+                 Assert(docCount == result.count);
+                 [expectation fulfill];
+             }
+         }];
+
+        for (NSUInteger i = 0; i < docCount; i++) {
+            NSDictionary *properties = @{@"created_at": [CBLJSON JSONObjectWithDate: [NSDate new]],
+                                         @"text": [NSString stringWithFormat: @"Test %@", @(i)],
+                                         @"type": @"Entry",
+                                         @"check": (i%3) ? @(YES) : @(NO)};
+            CBLDocument *doc = [self createDocumentWithProperties: properties];
+            NSString *docID = doc.documentID;
+            AssertEqual(doc.userProperties, properties);
+            AssertEq([db documentWithID: docID], doc);
+
+            [db _clearDocumentCache]; // so we can load fresh copies
+
+            CBLDocument *doc2 = [db existingDocumentWithID: docID];
+            AssertEqual(doc2.documentID, docID);
+        }
+
+        [self waitForExpectationsWithTimeout:30.0 handler:^(NSError *error) {
+            [self stopMeasuring];
+            Assert(error == nil, "Timeout error: %@", error);
+        }];
+        
+        db = [dbmgr createEmptyDatabaseNamed:@"db" error:nil];
+        [self reCreateCoreDataContext];
+    }];
+
+    store.shouldNotifyLocalDatabaseChanges = NO;
+}
+
+#endif
+
 
 #pragma mark - CBLIncrementalStoreDelegate
 
@@ -2116,7 +2330,7 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
     [model setEntities:@[entry, file, subentry, manySubentry, user, parent, child]];
 
 
-#if TEST_NON_INVERSE_RELATIONSHIP
+#if NON_INVERSE_RELATIONSHIP_TEST_ENABLED
     NSEntityDescription *nonInverseSubentry = [NSEntityDescription new];
     [nonInverseSubentry setName:@"NonInverseSubentry"];
     [nonInverseSubentry setManagedObjectClassName:@"NonInverseSubentry"];
@@ -2143,7 +2357,7 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
 @dynamic subEntries, files, manySubentries;
 @dynamic user;
 
-#if TEST_NON_INVERSE_RELATIONSHIP
+#if NON_INVERSE_RELATIONSHIP_TEST_ENABLED
 @dynamic nonInverseSubentries;
 #endif
 
