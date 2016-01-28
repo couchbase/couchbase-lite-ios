@@ -169,6 +169,7 @@ static void usage(void) {
             "\t[--ssl]                  Serve over SSL\n"
             "\t[--sslas <identityname>] Identity pref name to use for SSL serving\n"
             "\t[--storage <engine>]     Set default storage engine: 'SQLite' or 'ForestDB'\n"
+            "\t[--dbpassword <dbname>=<password>]  Register password to open a database\n"
             "Runs Couchbase Lite as a faceless server.\n");
 }
 
@@ -247,6 +248,7 @@ int main (int argc, const char * argv[])
         NSString *dataPath = nil, *storageType = nil;
         UInt16 port = kPortNumber, nuPort = 0;
         BOOL pull = NO, createTarget = NO, continuous = NO;
+        NSMutableDictionary* dbPasswords = [NSMutableDictionary new];
 
         for (int i = 1; i < argc; ++i) {
             if (strcmp(argv[i], "--help") == 0) {
@@ -288,6 +290,15 @@ int main (int argc, const char * argv[])
                 identityName = argv[++i];
             } else if (strcmp(argv[i], "--storage") == 0) {
                 storageType = [NSString stringWithUTF8String: argv[++i]];
+            } else if (strcmp(argv[i], "--dbpassword") == 0) {
+                NSString *arg = [NSString stringWithUTF8String: argv[++i]];
+                NSArray* items = [arg componentsSeparatedByString: @"="];
+                if (items.count != 2) {
+                    fprintf(stderr, "Invalid --dbpassword argument: needs to be NAME=PASSWORD\n");
+                    exit(1);
+                }
+                dbPasswords[items[0]] = items[1];
+                Log(@"Using password for encrypted database '%@'", items[0]);
             } else if (strncmp(argv[i], "-Log", 4) == 0) {
                 ++i; // Ignore MYUtilities logging flags
             } else {
@@ -311,6 +322,9 @@ int main (int argc, const char * argv[])
 
         if (storageType)
             server.storageType = storageType;
+
+        for (NSString* dbName in dbPasswords)
+            [server registerEncryptionKey: dbPasswords[dbName] forDatabaseNamed: dbName];
 
         // Start a listener socket:
         CBLListener* listener = [[CBLListener alloc] initWithManager: server port: port];
