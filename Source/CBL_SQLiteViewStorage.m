@@ -495,8 +495,9 @@
                         @try {
                             ((CBLMapBlock)mapBlocks[i])(curDoc, emit);
                         } @catch (NSException* x) {
-                            MYReportException(x, @"map block of view '%@'", curView.name);
-                            emitStatus = kCBLStatusCallbackError;
+                            MYReportException(x, @"map block of view %@, on doc %@",
+                                              curView.name, curDoc);
+                            // don't abort; continue to next doc
                         }
                         if (CBLStatusIsError(emitStatus)) {
                             [r close];

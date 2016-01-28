@@ -383,10 +383,15 @@ static NSString* keyToJSONStr(id key) { // only used for logging
             // Feed it to each view's map function:
             for (unsigned curViewIndex = 0; curViewIndex < viewCount; ++curViewIndex) {
                 if (viewCount == 1 || c4indexer_shouldIndexDocument(indexer, curViewIndex, doc)) {
-                    maps[curViewIndex](body, emit);
-                    // ...and emit the new key/value pairs to the index:
-                    if (!c4indexer_emitList(indexer, doc, curViewIndex, emitted, &c4err))
-                        return err2status(c4err);
+                    @try {
+                        maps[curViewIndex](body, emit);
+                        // ...and emit the new key/value pairs to the index:
+                        if (!c4indexer_emitList(indexer, doc, curViewIndex, emitted, &c4err))
+                            return err2status(c4err);
+                    } @catch (NSException* x) {
+                        MYReportException(x, @"map block of view %@, on doc %@",
+                                          [views[i] name], body);
+                    }
                     c4kv_reset(emitted);
                     [emittedJSONValues removeAllObjects];
                 }
