@@ -15,22 +15,47 @@
 @property (nonatomic, weak) IBOutlet UIButton *addButton;
 @property (nonatomic, strong) NSFetchedResultsController *frc;
 @property (nonatomic, strong) NSManagedObjectContext *context;
+@property (nonatomic, strong) NSManagedObject *game;
 
 
 @end
 
+
 @implementation CBLISRootViewController
 
-@synthesize frc, context, tableView, addButton;
+@synthesize frc, context, tableView = _tableView, addButton;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     AppDelegateCBLIS *appDelegate = (AppDelegateCBLIS *)[UIApplication sharedApplication].delegate;
     
+    
+    
     [appDelegate setupCoreDataStackWithCompletion:^{
         self.context = [appDelegate context];
         
+        
+        if (self.game == nil) {
+            NSFetchRequest *request = [[NSFetchRequest alloc] initWithEntityName:@"Game"];
+            request.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"name" ascending:NO]];
+            NSArray *games = [self.context executeFetchRequest:request error:nil];
+            self.game = games.firstObject;
+            
+//            [self.context deleteObject:self.game];
+//            self.game = nil;
+            
+            if (self.game == nil) {
+                NSManagedObject *game = [NSEntityDescription insertNewObjectForEntityForName:@"Game" inManagedObjectContext:context];
+                [game setValue:@"game" forKey:@"name"];
+                [self.context insertObject:game];
+                 [(AppDelegateCBLIS *)[UIApplication sharedApplication].delegate saveContext];
+                self.game = game;
+            }
+
+        }
+        
         NSFetchRequest *request = [[NSFetchRequest alloc] initWithEntityName:@"Team"];
+        request.predicate = [NSPredicate predicateWithFormat:@"game == %@", self.game];
         request.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
         self.frc = [[NSFetchedResultsController alloc] initWithFetchRequest:request managedObjectContext:self.context sectionNameKeyPath:nil cacheName:nil];
         self.frc.delegate = self;
@@ -68,17 +93,28 @@
     return cell;
 }
 
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSManagedObject *team = [self.frc objectAtIndexPath:indexPath];
+    
+    NSManagedObject *player = [NSEntityDescription insertNewObjectForEntityForName:@"Player" inManagedObjectContext:context];
+    [player setValue:[NSString stringWithFormat:@"player%d", arc4random_uniform(1000)] forKey:@"name"];
+    [player setValue:team forKey:@"team"];
+    [self.context insertObject:player];
+    [(AppDelegateCBLIS *)[UIApplication sharedApplication].delegate saveContext];
+}
+
 - (void)controllerDidChangeContent:(NSFetchedResultsController *)controller {
     [self.tableView reloadData];
 }
 
 - (IBAction)addTeam:(id)sender {
     NSManagedObject *team = [NSEntityDescription insertNewObjectForEntityForName:@"Team" inManagedObjectContext:context];
-    [team setValue:[NSString stringWithFormat:@"team%d", arc4random_uniform(1000)] forKey:@"name"];
+    [team setValue:[NSString stringWithFormat:@"team%@", @([[self.game valueForKey:@"teams"] count])] forKey:@"name"];
     [team setValue:[NSDate date] forKey:@"date"];
+    [team setValue:self.game forKey:@"game"];
     [self.context insertObject:team];
     
-    NSInteger max = arc4random_uniform(10);
+    NSInteger max = 20; //arc4random_uniform(10)+5;
     for (int i = 0 ; i < max ; i++) {
         NSManagedObject *player = [NSEntityDescription insertNewObjectForEntityForName:@"Player" inManagedObjectContext:context];
         [player setValue:[NSString stringWithFormat:@"player%d", arc4random_uniform(1000)] forKey:@"name"];

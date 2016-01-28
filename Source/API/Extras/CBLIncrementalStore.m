@@ -2225,7 +2225,7 @@ static CBLManager* sCBLManager;
     NSManagedObjectContext* context = [contexts firstObject];
     [contexts removeObjectAtIndex:0];
     [context performBlock: ^{
-        INFO(@"Start refresh context : %@", context.parentContext ? @"Child" : @"Root");
+        NSLog(@"Start refresh context : %@", context.parentContext ? @"Child" : @"Root");
         
         NSMutableSet* refreshedIDs = [NSMutableSet set];
         NSMutableSet* updatedEntities = [NSMutableSet set];
@@ -2234,6 +2234,11 @@ static CBLManager* sCBLManager;
             NSManagedObject* mObj = [context objectRegisteredForID: moID];
             if (!mObj)
                 mObj = [context objectWithID: moID];
+            
+            if ([mObj.entity.name isEqualToString:@"Player"]) {
+                NSLog(@"%@ - %@", [mObj valueForKey:@"name"], [mObj valueForKeyPath:@"team.name"]);
+                NSLog(@"%@ : %@ players", [mObj valueForKeyPath:@"team.name"], @([[mObj valueForKeyPath:@"team.players"] count]));
+            }
             
             for (NSString* relName in moID.entity.relationshipsByName) {
                 NSRelationshipDescription* rel = moID.entity.relationshipsByName[relName];
@@ -2283,7 +2288,7 @@ static CBLManager* sCBLManager;
         
         [context processPendingChanges];
         
-        INFO(@"Finish refresh context : %@", context.parentContext ? @"Child" : @"Root");
+        NSLog(@"Finish refresh context : %@", context.parentContext ? @"Child" : @"Root");
         
         if (contexts.count > 0)
             [self refreshContexts: contexts withUpdatedIDs: updatedIDs deletedIDs: deletedIDs
