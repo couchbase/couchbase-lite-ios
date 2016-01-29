@@ -491,7 +491,8 @@ static BOOL sAutoCompact = YES;
 - (void) lowMemory: (NSNotification*)n {
     [self doAsync: ^{
         [self _pruneDocumentCache];
-        [_storage lowMemoryWarning];
+        if ([_storage respondsToSelector:@selector(lowMemoryWarning)])
+            [_storage lowMemoryWarning];
     }];
 }
 #endif
