@@ -32,8 +32,9 @@
 #import "CBLModel.h"
 #import "CBLModelFactory.h"
 #import "CBLJSON.h"
-#import "CBLRegisterJSViewCompiler.h"
 
 #if TARGET_OS_IPHONE
 #import "CBLUITableSource.h"
+#else
+#import "CBLRegisterJSViewCompiler.h"
 #endif

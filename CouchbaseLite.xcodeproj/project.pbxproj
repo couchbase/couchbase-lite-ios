@@ -919,23 +919,24 @@
 		27FAEF0F164C8ADB00A3C0C2 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0C164C8ADB00A3C0C2 /* icon.png */; };
 		27FAEF10164C8ADB00A3C0C2 /* icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0D164C8ADB00A3C0C2 /* icon@2x.png */; };
 		27FAEF11164C8ADB00A3C0C2 /* icon~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0E164C8ADB00A3C0C2 /* icon~ipad.png */; };
+		930FE5721C5856E1008107A0 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 93EBA2651B2EC61E0006C66C /* CBLRegisterJSViewCompiler.m */; };
+		930FE5731C58571E008107A0 /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
+		930FE5741C58573F008107A0 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
+		930FE5771C5857B8008107A0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 930FE5761C5857B8008107A0 /* Foundation.framework */; };
+		930FE5791C585B77008107A0 /* libCBLJSViewCompiler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 930FE55E1C58562B008107A0 /* libCBLJSViewCompiler.a */; };
 		933BED4F1B06A7440011C7C4 /* CBLEncryptionController.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27C5BADE1A92AC51008C357C /* CBLEncryptionController.h */; };
 		933BED501B06A7440011C7C4 /* CBLEncryptionController.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27C5BADF1A92AC51008C357C /* CBLEncryptionController.m */; };
 		933EF7571B29B3AB0004C1C1 /* CBLJSONValidator.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27486F241A606C76008D94F0 /* CBLJSONValidator.m */; };
 		933EF75E1B29B3CF0004C1C1 /* CBLIncrementalStore.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = AA1776B61857ADDB00CB01A3 /* CBLIncrementalStore.h */; };
 		933EF75F1B29B3CF0004C1C1 /* CBLIncrementalStore.m in Copy Extras */ = {isa = PBXBuildFile; fileRef = AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */; };
-		934744EA1B2F975B00F6ADD4 /* CBLRegisterJSViewCompiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 93EBA2641B2EC61E0006C66C /* CBLRegisterJSViewCompiler.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		934744EB1B2F976000F6ADD4 /* CBLRegisterJSViewCompiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 93EBA2641B2EC61E0006C66C /* CBLRegisterJSViewCompiler.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		934744EA1B2F975B00F6ADD4 /* CBLRegisterJSViewCompiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 93EBA2641B2EC61E0006C66C /* CBLRegisterJSViewCompiler.h */; };
+		939C2F1E1C5973AB006E8C2B /* CBLRegisterJSViewCompiler.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 93EBA2641B2EC61E0006C66C /* CBLRegisterJSViewCompiler.h */; };
 		93D21AF01A955480000AD9AF /* CBLCookieStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 93D21AEE1A955480000AD9AF /* CBLCookieStorage.h */; };
 		93D21AF21A958CEC000AD9AF /* CBLCookieStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */; };
 		93D21B021A9857A1000AD9AF /* CookieStorage_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21B011A9857A1000AD9AF /* CookieStorage_Tests.m */; };
 		93D21B031A9857A1000AD9AF /* CookieStorage_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21B011A9857A1000AD9AF /* CookieStorage_Tests.m */; };
-		93EBA26C1B2EC6B80006C66C /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 93EBA2651B2EC61E0006C66C /* CBLRegisterJSViewCompiler.m */; };
-		93EBA26E1B2EC72A0006C66C /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
 		93EBA2771B2ECECE0006C66C /* CBLJSViewCompiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 792867CE178DE03E00248AF0 /* CBLJSViewCompiler.h */; };
 		93EBA2781B2ECEDF0006C66C /* CBLJSFunction.h in Headers */ = {isa = PBXBuildFile; fileRef = 792867CB178DE03E00248AF0 /* CBLJSFunction.h */; };
-		93EBA2791B2ECEDF0006C66C /* CBLJSFunction.h in Headers */ = {isa = PBXBuildFile; fileRef = 792867CB178DE03E00248AF0 /* CBLJSFunction.h */; };
-		93EBA27B1B2ECEE40006C66C /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
 		93EBA27D1B2ED0D90006C66C /* CBLRegisterJSViewCompiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 93EBA2641B2EC61E0006C66C /* CBLRegisterJSViewCompiler.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AA1776BC1857AE4D00CB01A3 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1776BB1857AE4D00CB01A3 /* CoreData.framework */; };
 		AA24F8E4184538AE0091D577 /* CBLDatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A62E16A9BCBC006FF199 /* CBLDatabaseChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1416,6 +1417,7 @@
 			dstPath = Extras;
 			dstSubfolderSpec = 16;
 			files = (
+				939C2F1E1C5973AB006E8C2B /* CBLRegisterJSViewCompiler.h in Copy Extras */,
 				933EF75E1B29B3CF0004C1C1 /* CBLIncrementalStore.h in Copy Extras */,
 				933EF75F1B29B3CF0004C1C1 /* CBLIncrementalStore.m in Copy Extras */,
 				933EF7571B29B3AB0004C1C1 /* CBLJSONValidator.m in Copy Extras */,
@@ -1426,6 +1428,15 @@
 				27486F391A608A8B008D94F0 /* CBLJSONValidator.h in Copy Extras */,
 			);
 			name = "Copy Extras";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		930FE55C1C58562B008107A0 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -1952,6 +1963,8 @@
 		792867CC178DE03E00248AF0 /* CBLJSFunction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSFunction.m; sourceTree = "<group>"; };
 		792867CE178DE03E00248AF0 /* CBLJSViewCompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSViewCompiler.h; sourceTree = "<group>"; };
 		792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSViewCompiler.m; sourceTree = "<group>"; };
+		930FE55E1C58562B008107A0 /* libCBLJSViewCompiler.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCBLJSViewCompiler.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		930FE5761C5857B8008107A0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.2.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		93D21AEE1A955480000AD9AF /* CBLCookieStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLCookieStorage.h; sourceTree = "<group>"; };
 		93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLCookieStorage.m; sourceTree = "<group>"; };
 		93D21B011A9857A1000AD9AF /* CookieStorage_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CookieStorage_Tests.m; sourceTree = "<group>"; };
@@ -1971,6 +1984,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				930FE5791C585B77008107A0 /* libCBLJSViewCompiler.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2183,6 +2197,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		930FE55B1C58562B008107A0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				930FE5771C5857B8008107A0 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DA023B4514BCA94C008184BB /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -2264,6 +2286,7 @@
 				2701C2101C4D5BDD006D7A99 /* CouchbaseLite.framework */,
 				273E9EED1C509F38003115A6 /* CBL tvOS Test App.app */,
 				273E9F021C509F39003115A6 /* CBL tvOS Unit Tests.xctest */,
+				930FE55E1C58562B008107A0 /* libCBLJSViewCompiler.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2937,6 +2960,7 @@
 		27C70696148864BA00F0F099 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				930FE5761C5857B8008107A0 /* Foundation.framework */,
 				273E9F3A1C50A10E003115A6 /* libsqlite3.tbd */,
 				273E9F381C50A0F2003115A6 /* libc++.tbd */,
 				273E9F361C50A0A5003115A6 /* libz.tbd */,
@@ -3515,7 +3539,6 @@
 				27452BDB1AB1187E00327776 /* CBLView.h in Headers */,
 				27452BDC1AB1187E00327776 /* CBLQuery.h in Headers */,
 				27452BDD1AB1187E00327776 /* CBLQuery+FullTextSearch.h in Headers */,
-				934744EB1B2F976000F6ADD4 /* CBLRegisterJSViewCompiler.h in Headers */,
 				27452BDE1AB1187E00327776 /* CBLQuery+Geo.h in Headers */,
 				27452BDF1AB1187E00327776 /* CBLQueryBuilder.h in Headers */,
 				27452BE01AB1187E00327776 /* CBLReplication.h in Headers */,
@@ -3566,7 +3589,6 @@
 				275A29051649A13900B0D8EE /* CBLReplication.h in Headers */,
 				27F5B18716519F2400126D0D /* CBLUITableSource.h in Headers */,
 				275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */,
-				93EBA2791B2ECEDF0006C66C /* CBLJSFunction.h in Headers */,
 				27B945AA1768E63200B2DF2D /* CBLModelArray.h in Headers */,
 				27F5B18916519F8F00126D0D /* MYDynamicObject.h in Headers */,
 				27726AB2188983AE00AE6931 /* CBLJSON.h in Headers */,
@@ -3988,6 +4010,24 @@
 			productReference = 27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */;
 			productType = "com.apple.product-type.library.static";
 		};
+		930FE55D1C58562B008107A0 /* CBLJSViewCompiler */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 930FE5711C58562B008107A0 /* Build configuration list for PBXNativeTarget "CBLJSViewCompiler" */;
+			buildPhases = (
+				930FE55A1C58562B008107A0 /* Sources */,
+				930FE55B1C58562B008107A0 /* Frameworks */,
+				930FE55C1C58562B008107A0 /* CopyFiles */,
+				930FE5781C5857BF008107A0 /* Make a Fat Binary */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CBLJSViewCompiler;
+			productName = CBLJSViewCompiler;
+			productReference = 930FE55E1C58562B008107A0 /* libCBLJSViewCompiler.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 		DA023B2614BCA94C008184BB /* Listener iOS Library */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DA023B6114BCA94C008184BB /* Build configuration list for PBXNativeTarget "Listener iOS Library" */;
@@ -4065,6 +4105,9 @@
 					27B0B80A1492C16300A817AD = {
 						DevelopmentTeam = N2Q372V7W2;
 					};
+					930FE55D1C58562B008107A0 = {
+						CreatedOnToolsVersion = 7.2;
+					};
 				};
 			};
 			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "CouchbaseLite" */;
@@ -4112,6 +4155,7 @@
 				273E9F011C509F39003115A6 /* CBL tvOS Unit Tests */,
 				27E66A571A7305B10091DA3F /* CBL SQLite Storage */,
 				27E66AD01A7307590091DA3F /* CBL ForestDB Storage */,
+				930FE55D1C58562B008107A0 /* CBLJSViewCompiler */,
 			);
 		};
 /* End PBXProject section */
@@ -4398,6 +4442,21 @@
 			shellPath = /bin/sh;
 			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
 			showEnvVarsInLog = 0;
+		};
+		930FE5781C5857BF008107A0 /* Make a Fat Binary */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Source/BuildFatLibrary.sh",
+			);
+			name = "Make a Fat Binary";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
 		};
 		DA023B6014BCA94C008184BB /* Build Fat Library */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -4797,7 +4856,6 @@
 				27B0B7D81492B8A200A817AD /* CBLChangeTracker.m in Sources */,
 				27B0B7DB1492B8A200A817AD /* CBLBase64.m in Sources */,
 				27731F061495335B00815D67 /* CBL_BlobStore.m in Sources */,
-				93EBA26C1B2EC6B80006C66C /* CBLRegisterJSViewCompiler.m in Sources */,
 				27A82D291BBC9C1D005CB742 /* CBLGZip.m in Sources */,
 				27513A181A672C760055DC40 /* CBLView.m in Sources */,
 				279906E6149A65B8003D4338 /* CBLRemoteRequest.m in Sources */,
@@ -4807,7 +4865,6 @@
 				279CE40214D749A7009F3FA6 /* CBLMultipartReader.m in Sources */,
 				27B086B11B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m in Sources */,
 				27B086951B38822500D3D9D8 /* MYData.m in Sources */,
-				93EBA26E1B2EC72A0006C66C /* CBLJSViewCompiler.m in Sources */,
 				279CE40C14D8AA23009F3FA6 /* CBLMultipartDownloader.m in Sources */,
 				2733022C18F8572700A488F7 /* CBLAuthenticator.m in Sources */,
 				27B0868A1B3881E100D3D9D8 /* MYBuffer.m in Sources */,
@@ -4823,7 +4880,6 @@
 				27ADC07B152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */,
 				27A720A2152B959100C0A0E8 /* CBL_Attachment.m in Sources */,
 				277EF39F17F4DEDD00F7B7F7 /* CBLQuery+FullTextSearch.m in Sources */,
-				93EBA27B1B2ECEE40006C66C /* CBLJSFunction.m in Sources */,
 				272A690F17B2CCF0000722FA /* CBLFacebookAuthorizer.m in Sources */,
 				27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */,
 				27F128B3156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
@@ -4957,6 +5013,16 @@
 				27E66B001A7307590091DA3F /* CBL_ForestDBStorage.mm in Sources */,
 				27E66AEF1A7307590091DA3F /* CBL_ForestDBViewStorage.mm in Sources */,
 				27E66AE81A7307590091DA3F /* CBLForestBridge.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		930FE55A1C58562B008107A0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				930FE5731C58571E008107A0 /* CBLJSFunction.m in Sources */,
+				930FE5721C5856E1008107A0 /* CBLRegisterJSViewCompiler.m in Sources */,
+				930FE5741C58573F008107A0 /* CBLJSViewCompiler.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5529,6 +5595,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = CouchbaseLite;
 				STRIP_INSTALLED_PRODUCT = NO;
+				VERSIONING_SYSTEM = "";
 			};
 			name = Debug;
 		};
@@ -5564,6 +5631,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = CouchbaseLite;
 				STRIP_INSTALLED_PRODUCT = NO;
+				VERSIONING_SYSTEM = "";
 			};
 			name = Release;
 		};
@@ -5602,7 +5670,10 @@
 					"$(BUILD_DIR)/$(CONFIGURATION)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-all_load",
+				);
 				PRODUCT_MODULE_NAME = CouchbaseLite;
 				PRODUCT_NAME = CouchbaseLite;
 				WRAPPER_EXTENSION = framework;
@@ -5662,7 +5733,7 @@
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
-				EXPORTED_SYMBOLS_FILE = Source/CouchbaseLite.exp;
+				EXPORTED_SYMBOLS_FILE = "";
 				FRAMEWORK_VERSION = A;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -5681,7 +5752,10 @@
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-all_load",
+				);
 				PRODUCT_MODULE_NAME = CouchbaseLite;
 				PRODUCT_NAME = CouchbaseLite;
 				WRAPPER_EXTENSION = framework;
@@ -5985,6 +6059,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_MODULES = NO;
+				CLANG_ENABLE_MODULE_DEBUGGING = NO;
 				COPY_PHASE_STRIP = NO;
 				DSTROOT = /tmp/CouchbaseLiteiOS.dst;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -6005,6 +6081,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_MODULES = NO;
+				CLANG_ENABLE_MODULE_DEBUGGING = NO;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DSTROOT = /tmp/CouchbaseLiteiOS.dst;
@@ -6321,6 +6399,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_MODULES = NO;
+				CLANG_MODULES_AUTOLINK = NO;
 				COPY_PHASE_STRIP = NO;
 				DSTROOT = /tmp/CouchbaseLiteiOS.dst;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -6350,6 +6430,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_MODULES = NO;
+				CLANG_MODULES_AUTOLINK = NO;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DSTROOT = /tmp/CouchbaseLiteiOS.dst;
@@ -6550,6 +6632,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_MODULES = NO;
+				CLANG_ENABLE_MODULE_DEBUGGING = NO;
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -6578,6 +6662,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_MODULES = NO;
+				CLANG_ENABLE_MODULE_DEBUGGING = NO;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				EXPORTED_SYMBOLS_FILE = Source/CouchbaseLite.exp;
@@ -6608,6 +6694,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_MODULES = NO;
+				CLANG_ENABLE_MODULE_DEBUGGING = NO;
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -6635,6 +6723,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_MODULES = NO;
+				CLANG_ENABLE_MODULE_DEBUGGING = NO;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				EXPORTED_SYMBOLS_FILE = Source/CouchbaseLite.exp;
@@ -6722,11 +6812,78 @@
 			};
 			name = Release;
 		};
+		930FE5641C58562B008107A0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = NO;
+				CLANG_ENABLE_MODULE_DEBUGGING = NO;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
+			};
+			name = Debug;
+		};
+		930FE5651C58562B008107A0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = NO;
+				CLANG_ENABLE_MODULE_DEBUGGING = NO;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		DA023B6214BCA94C008184BB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_MODULES = NO;
+				CLANG_ENABLE_MODULE_DEBUGGING = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
 				COPY_PHASE_STRIP = NO;
@@ -6753,6 +6910,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_MODULES = NO;
+				CLANG_ENABLE_MODULE_DEBUGGING = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
 				COPY_PHASE_STRIP = YES;
@@ -7026,6 +7185,15 @@
 			buildConfigurations = (
 				27FA59EC179EEACA0043460A /* Debug */,
 				27FA59ED179EEACA0043460A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		930FE5711C58562B008107A0 /* Build configuration list for PBXNativeTarget "CBLJSViewCompiler" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				930FE5641C58562B008107A0 /* Debug */,
+				930FE5651C58562B008107A0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
