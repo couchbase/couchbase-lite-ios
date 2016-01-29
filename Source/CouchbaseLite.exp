@@ -5,6 +5,7 @@
 .objc_class_name_CBLAuthenticator
 .objc_class_name_CBLDatabase
 .objc_class_name_CBLDatabaseChange
+.objc_class_name_CBLDatabaseOptions
 .objc_class_name_CBLDocument
 .objc_class_name_CBLFullTextQueryRow
 .objc_class_name_CBLGeoQueryRow
@@ -36,6 +37,8 @@ _CBLHTTPErrorDomain
 _kCBLDatabaseChangeNotification
 _kCBLDocumentChangeNotification
 _kCBLReplicationChangeNotification
+_kCBLSQLiteStorage
+_kCBLForestDBStorage
 
 # Public functions:
 _CBLGeoCoordPairToPoint
