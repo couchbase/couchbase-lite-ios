@@ -1156,4 +1156,79 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
 }
 
 
+// https://github.com/couchbase/couchbase-lite-ios/issues/1082
+- (void) test23_ViewWithDocDeletion {
+    CBLView* view = [db viewNamed: @"vu"];
+    Assert(view);
+    [view setMapBlock: MAPBLOCK({
+        if ([doc[@"type"] isEqualToString: @"task"]) {
+            id date = doc[@"created_at"];
+            NSString* listID = doc[@"list_id"];
+            emit(@[listID, date], doc);
+        }
+    }) version: @"1"];
+    Assert(view.mapBlock != nil);
+    AssertEq(view.totalRows, 0u);
+
+    NSString* listId = @"list1";
+
+    // Create 3 documents:
+    CBLDocument* doc1 = [self createDocumentWithProperties:
+                         @{@"_id": @"doc1",
+                           @"type": @"task",
+                           @"created_at": @"2016-01-29T22:25:01.000Z",
+                           @"list_id": listId}];
+    CBLDocument* doc2 = [self createDocumentWithProperties:
+                         @{@"_id": @"doc2",
+                           @"type": @"task",
+                           @"created_at": @"2016-01-29T22:25:02.000Z",
+                           @"list_id": listId}];
+    CBLDocument* doc3 = [self createDocumentWithProperties:
+                         @{@"_id": @"doc3",
+                           @"type": @"task",
+                           @"created_at": @"2016-01-29T22:25:03.000Z",
+                           @"list_id": listId}];
+
+    // Check query result:
+    CBLQuery* query = [view createQuery];
+    query.descending = YES;
+    query.startKey = @[listId, @{}];
+    query.endKey = @[listId];
+
+    CBLQueryEnumerator* rows;
+    rows = [query run: NULL];
+    Log(@"First query: rows = %@", rows.allObjects);
+    AssertEq(rows.count, 3u);
+    AssertEqual([rows rowAtIndex:0].documentID, doc3.documentID);
+    AssertEqual([rows rowAtIndex:1].documentID, doc2.documentID);
+    AssertEqual([rows rowAtIndex:2].documentID, doc1.documentID);
+
+    // Delete doc2:
+    Assert(doc2);
+    NSError* error;
+    Assert([doc2 deleteDocument: &error]);
+    Log(@"Deleted doc2");
+
+    // Check ascending query result:
+    query.descending = NO;
+    query.startKey = @[listId];
+    query.endKey = @[listId, @{}];
+    rows = [query run: NULL];
+    Log(@"Ascending query: rows = %@", rows.allObjects);
+    AssertEq(rows.count, 2u);
+    AssertEqual([rows rowAtIndex:0].documentID, doc1.documentID);
+    AssertEqual([rows rowAtIndex:1].documentID, doc3.documentID);
+
+    // Check descending query result:
+    query.descending = YES;
+    query.startKey = @[listId, @{}];
+    query.endKey = @[listId];
+    rows = [query run: NULL];
+    Log(@"Descending query: rows = %@", rows.allObjects);
+    AssertEq(rows.count, 2u);
+    AssertEqual([rows rowAtIndex:0].documentID, doc3.documentID);
+    AssertEqual([rows rowAtIndex:1].documentID, doc1.documentID);
+}
+
+
 @end
