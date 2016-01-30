@@ -1648,16 +1648,8 @@ static CBLManager* sCBLManager;
     if (view) {
         NSString* cacheKey = [NSString stringWithFormat:@"%@/%@", view, parentKey];
         CBLQueryEnumerator* result = [_relationshipCache objectForKey: cacheKey];
-        if (result) {
-            if ((SInt64)result.sequenceNumber == view.database.lastSequenceNumber)
-                return [result allObjects];
-            else {
-                SInt64 oldLastSequenceIndexed = view.lastSequenceIndexed;
-                [view updateIndex];
-                if (view.lastSequenceIndexed == oldLastSequenceIndexed)
-                    return [result allObjects];
-            }
-        }
+        if (result && (SInt64)result.sequenceNumber == view.database.lastSequenceNumber)
+            return [result allObjects];
         
         CBLQuery* query = [view createQuery];
         query.keys = @[parentKey];
