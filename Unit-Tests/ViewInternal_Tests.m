@@ -1536,4 +1536,20 @@ static NSArray* reverse(NSArray* a) {
 }
 
 
+// https://github.com/couchbase/couchbase-lite-java-core/issues/971
+- (void) test27_EmptyQuery {
+    CBLView* view = [self createView];
+
+    CBLQueryOptions *options = [CBLQueryOptions new];
+    CBLStatus status;
+    NSArray* rows = rowsToDicts([view _queryWithOptions: options status: &status]);
+    AssertEq(status, kCBLStatusOK);
+    AssertEqual(rows, @[]);
+
+    options->descending = YES;
+    rows = rowsToDicts([view _queryWithOptions: options status: &status]);
+    AssertEq(status, kCBLStatusOK);
+    AssertEqual(rows, @[]);
+}
+
 @end
