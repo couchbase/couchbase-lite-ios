@@ -253,7 +253,7 @@
         }
 
         // Report error:
-        LogTo(ChangeTracker, @"%@: closed with code %ld, reason '%@'", self, effectiveCode, reason);
+        LogTo(ChangeTracker, @"%@: closed with code %ld, reason '%@'", self, (long)effectiveCode, reason);
         NSDictionary* userInfo = $dict({NSLocalizedFailureReasonErrorKey, reason},
                                        {NSURLErrorFailingURLStringErrorKey,
                                            self.changesFeedURL.absoluteString});
