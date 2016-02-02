@@ -138,8 +138,11 @@ static NSCharacterSet* kIllegalNameChars;
 
 
 + (NSString*) defaultDirectory {
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
-                                                         NSUserDomainMask, YES);
+    NSSearchPathDirectory dirID = NSApplicationSupportDirectory;
+#if TARGET_OS_TV
+    dirID = NSCachesDirectory; // Apple TV only allows apps to store data in the Caches directory
+#endif
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(dirID, NSUserDomainMask, YES);
     NSString* path = paths[0];
 #if !TARGET_OS_IPHONE
     path = [path stringByAppendingPathComponent: [[NSBundle mainBundle] bundleIdentifier]];
