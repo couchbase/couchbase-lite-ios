@@ -441,6 +441,13 @@ static NSString* keyToJSONStr(id key) { // only used for logging
                                          error: (C4Error*)outError
 {
     Assert(_view); // caller MUST call -openIndex: first
+
+    id startKey = options.startKey, endKey = options.endKey;
+    __strong id &maxKey = options->descending ? startKey : endKey;
+    maxKey = CBLKeyForPrefixMatch(maxKey, options->prefixMatchLevel);
+    CLEANUP(C4Key) *c4StartKey = id2key(startKey);
+    CLEANUP(C4Key) *c4EndKey = id2key(endKey);
+
     C4QueryOptions forestOpts = kC4DefaultQueryOptions;
     forestOpts.skip = options->skip;
     if (options->limit != kCBLQueryOptionsDefaultLimit)
@@ -450,12 +457,8 @@ static NSString* keyToJSONStr(id key) { // only used for logging
     forestOpts.inclusiveEnd = options->inclusiveEnd;
     forestOpts.startKeyDocID = string2slice(options.startKeyDocID);
     forestOpts.endKeyDocID = string2slice(options.endKeyDocID);
-
-    id startKey = options.startKey, endKey = options.endKey;
-    __strong id &maxKey = options->descending ? startKey : endKey;
-    maxKey = CBLKeyForPrefixMatch(maxKey, options->prefixMatchLevel);
-    forestOpts.startKey = id2key(startKey);
-    forestOpts.endKey = id2key(endKey);
+    forestOpts.startKey = c4StartKey;
+    forestOpts.endKey = c4EndKey;
 
     if (options->bbox) {
         return c4view_geoQuery(_view, geoRect2Area(*options->bbox), outError);
@@ -568,10 +571,10 @@ static NSString* keyToJSONStr(id key) { // only used for logging
             } else if (options.fullTextQuery) {
                 CBLFullTextQueryRow *ftrow;
                 ftrow = [[CBLFullTextQueryRow alloc] initWithDocID: docID
-                                                        sequence: e->docSequence
-                                                      fullTextID: e->fullTextID
-                                                           value: value
-                                                         storage: self];
+                                                          sequence: e->docSequence
+                                                        fullTextID: e->fullTextID
+                                                             value: value
+                                                           storage: self];
                 for (NSUInteger t = 0; t < e->fullTextTermCount; t++) {
                     const C4FullTextTerm *term = &e->fullTextTerms[t];
                     [ftrow addTerm: term->termIndex atRange: {term->start, term->length}];

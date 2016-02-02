@@ -32,18 +32,6 @@ extern "C" {
 
 #define kDBFilename @"db.forest"
 
-// Size of ForestDB buffer cache allocated for a database
-#define kDBBufferCacheSize (8*1024*1024)
-
-// ForestDB Write-Ahead Log size (# of records)
-#define kDBWALThreshold 1024
-
-// How often ForestDB should check whether databases need auto-compaction
-#define kAutoCompactInterval (15.0)
-
-// Percentage of wasted space in db file that triggers auto-compaction
-#define kCompactionThreshold 70
-
 #define kDefaultMaxRevTreeDepth 20
 
 
