@@ -148,7 +148,7 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 @interface CBLLiveQuery : CBLQuery
 
 /** The shortest interval at which the query will update, regardless of how often the
-    database changes. Defaults to 0.5 sec. Increase this if the query is expensive and
+    database changes. Defaults to 0.2 sec. Increase this if the query is expensive and
     the database updates frequently, to limit CPU consumption. */
 @property (nonatomic) NSTimeInterval updateInterval;
 
