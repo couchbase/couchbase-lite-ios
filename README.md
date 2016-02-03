@@ -96,7 +96,7 @@ Can be included in any iOS project via [Carthage](https://github.com/carthage/ca
 Add the following line to your Cartfile:
    
 ```
-github "couchbase/couchbase-lite-ios"
+github "couchbase/couchbase-lite-ios" "release/1.2.0"
 ```
 
 Run `carthage update --platform ios`, and you should now have the latest version of Couchbase Lite iOS in your Carthage folder.
