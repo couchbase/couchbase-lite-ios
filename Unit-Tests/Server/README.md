@@ -34,13 +34,13 @@ If Safari fails to connect, first verify that you entered the address and port n
 
 **(4) Create a new SSL certificate for the Sync Gateway.** The one included in this repo (as `cert.pem` and `SelfSigned.cer`) has a Common Name of `localhost`, which won't match the hostname in the URLs above, causing the client to reject the cert.
 
-The Sync Gateway repo has directions on how to [create a new self-signed SSL cert]. Basically you just need to run these commands:
+The Sync Gateway repo has directions on how to [create a new self-signed SSL cert](https://github.com/couchbase/sync_gateway/wiki/SSL-support#creating-your-own-self-signed-cert). Basically you just need to run these commands:
 
     cd Unit-Tests/Server   # if you're not there yet
     openssl genrsa -out privkey.pem 2048
     openssl req -new -x509 -sha256 -key privkey.pem -out cert.pem -days 1095
 
-That last command will prompt you for the values of various fields that go in the cert. None of the values matter (you can just press Return to accept the default), _except_ for Common Name (CN) -- when asked for that, enter the Sync Gateway server's hostname (if it has one) or its numeric IP address. (Don't use a Bonjour `.local` hostname -- it works but will invalidate assumptions made in a few of the tests, causing a test failure.)
+That last command will prompt you for the values of various fields that go in the cert. None of the values matter (you can just press Return to accept the default), _except_ for Common Name (CN) -- when asked for that, enter the Sync Gateway server's hostname/address.
 
 **(5) Tell the unit tests about the new cert.** The unit tests need a copy of the cert, so they can register it as trusted, but annoyingly enough iOS needs it in DER format (`.cer`) not PEM. Update the .cer file like so:
 
