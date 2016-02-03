@@ -1,3 +1,5 @@
+[![Carthage compatible][carthage-svg]](carthage-link)
+
 # Couchbase Lite 
 
 **Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine. 
@@ -87,6 +89,19 @@ Get Couchbase Lite via [the Couchbase mobile portal](http://mobile.couchbase.com
 
 If you want the very latest and greatest (and possibly buggy) version, you'll need to build it yourself. For instructions see the [wiki page][7].
 
+## Include via Carthage ##
+
+Can be included in any iOS project via [Carthage](https://github.com/carthage/carthage)
+ 
+Add the following line to your Cartfile:
+   
+```
+github "couchbase/couchbase-lite-ios"
+```
+
+Run `carthage update --platform ios`, and you should now have the latest version of Couchbase Lite iOS in your Carthage folder.
+
+
 [1]: http://couchdb.apache.org
 [2]: https://github.com/couchbase/couchbase-lite-ios/wiki
 [3]: http://couchbase.com
@@ -108,3 +123,5 @@ If you want the very latest and greatest (and possibly buggy) version, you'll ne
 [22]: https://github.com/couchbase/couchbase-lite-ios/wiki/Why-Couchbase-Lite%3F#history
 [23]: https://github.com/couchbase/couchbase-lite-ios/wiki/Replication-Algorithm
 [24]: https://github.com/couchbase/couchbase-lite-net
+
+ [carthage-svg]: https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat
