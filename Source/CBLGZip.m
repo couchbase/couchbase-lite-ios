@@ -70,9 +70,9 @@
 - (BOOL) addBytes: (const void*)bytes length: (size_t)length
          onOutput: (void(^)(const void*,size_t))onOutput
 {
+    if (length == 0 && (!_open || !_compressing))
+        return YES; // no-op
     if (!_open) {
-        if (length == 0)
-            return YES;
         if (_status >= 0)
             _status = CBLGZipStatusReadPastEOF;
         return NO;
