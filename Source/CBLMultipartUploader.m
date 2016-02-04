@@ -54,8 +54,7 @@
 }
 
 
-- (NSInputStream *)connection:(NSURLConnection *)connection
-            needNewBodyStream:(NSURLRequest *)request {
+- (NSInputStream *) needNewBodyStream:(NSURLRequest *)request {
     LogTo(CBLRemoteRequest, @"%@: Needs new body stream, resetting writer...", self);
     [_currentWriter close];
     _currentWriter = _writer();
@@ -63,7 +62,7 @@
 }
 
 
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
+- (void) didFailWithError:(NSError *)error {
     if ($equal(error.domain, NSURLErrorDomain) && error.code == NSURLErrorRequestBodyStreamExhausted) {
         // The connection is complaining that the body input stream closed prematurely.
         // Check whether this is because the multipart writer got an error on _its_ input stream:
@@ -71,7 +70,7 @@
         if (writerError)
             error = writerError;
     }
-    [super connection: connection didFailWithError: error];
+    [super didFailWithError: error];
 }
 
 @end

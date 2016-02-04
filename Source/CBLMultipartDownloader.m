@@ -64,7 +64,7 @@
 #pragma mark - URL CONNECTION CALLBACKS:
 
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+- (void) didReceiveResponse:(NSURLResponse *)response {
     _reader = [[CBLMultipartDocumentReader alloc] initWithDatabase: _db];
     CBLStatus status = (CBLStatus) ((NSHTTPURLResponse*)response).statusCode;
     if (status < 300) {
@@ -84,18 +84,18 @@
         }
     }
     
-    [super connection: connection didReceiveResponse: response];
+    [super didReceiveResponse: response];
 }
 
 
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    [super connection: connection didReceiveData: data];
+- (void) didReceiveData:(NSData *)data {
+    [super didReceiveData: data];
     if (![_reader appendData: data])
         [self cancelWithStatus: _reader.status];
 }
 
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+- (void) didFinishLoading {
     LogTo(SyncVerbose, @"%@: Finished loading (%u attachments)",
           self, (unsigned)_reader.attachmentCount);
     if (![_reader finish]) {

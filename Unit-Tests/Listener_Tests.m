@@ -512,14 +512,14 @@ static NSString* addressToString(NSData* addrData) {
     }
 }
 
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    [super connection: connection didReceiveData: data];
+- (void) didReceiveData:(NSData *)data {
+    [super didReceiveData: data];
     if (!_data)
         _data = [[NSMutableData alloc] initWithCapacity: data.length];
     [_data appendData: data];
 }
 
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
+- (void) didFailWithError:(NSError *)error {
     [self clearConnection];
     [self respondWithResult: self error: error];
 }

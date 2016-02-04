@@ -106,7 +106,7 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
 }
 
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+- (void) didReceiveResponse:(NSURLResponse *)response {
     CBLStatus status = (CBLStatus) ((NSHTTPURLResponse*)response).statusCode;
     if (status < 300) {
         NSDictionary* headers = ((NSHTTPURLResponse*)response).allHeaderFields;
@@ -133,29 +133,28 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
         if (reset)
             [_writer reset];
     }
-    [super connection: connection didReceiveResponse: response];
+    [super didReceiveResponse: response];
 }
 
 
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
+- (void) didReceiveData:(NSData *)data {
 #if TRANSIENT_FAILURES
     if (_fakeTransientFailure && _writer.bytesWritten > 0) {
         LogTo(RemoteRequest, @"%@: Fake transient failure at %llu bytes!", self, _writer.bytesWritten);
         _fakeTransientFailure = NO;
         NSError* error = [NSError errorWithDomain: NSURLErrorDomain
                                              code: NSURLErrorCannotConnectToHost userInfo: nil];
-        [self connection: connection didFailWithError: error];
-        [connection cancel];
+        [self didFailWithError: error];
         return;
     }
 #endif
-    [super connection: connection didReceiveData: data];
+    [super didReceiveData: data];
     [_writer appendData: data];
 
 }
 
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+- (void) didFinishLoading {
     [_writer finish];
     if ([_writer verifyDigest: _task.ID.metadata[@"digest"]]) {
         [_writer install];

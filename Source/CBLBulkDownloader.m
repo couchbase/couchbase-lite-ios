@@ -106,7 +106,7 @@
 }
 
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+- (void) didReceiveResponse:(NSURLResponse *)response {
     CBLStatus status = (CBLStatus) ((NSHTTPURLResponse*)response).statusCode;
     if (status < 300) {
         // Check the content type to see whether it's a multipart response:
@@ -121,12 +121,12 @@
         }
     }
     
-    [super connection: connection didReceiveResponse: response];
+    [super didReceiveResponse: response];
 }
 
 
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    [super connection: connection didReceiveData: data];
+- (void) didReceiveData:(NSData *)data {
+    [super didReceiveData: data];
     [_topReader appendData: data];
     if (_topReader.error) {
         [self cancelWithStatus: kCBLStatusUpstreamError];
@@ -134,7 +134,7 @@
 }
 
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+- (void)connectionDidFinishLoading {
     LogTo(SyncVerbose, @"%@: Finished loading (%u documents)", self, _docCount);
     if (!_topReader.finished) {
         Warn(@"%@ got unexpected EOF", self);

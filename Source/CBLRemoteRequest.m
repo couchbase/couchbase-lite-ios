@@ -43,6 +43,10 @@ typedef enum {
 } AuthPhase;
 
 
+@interface CBLRemoteRequest () <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
+@end
+
+
 @implementation CBLRemoteRequest
 {
     AuthPhase _authPhase;
@@ -275,6 +279,38 @@ typedef enum {
 #pragma mark - NSURLCONNECTION DELEGATE:
 
 
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+    [self didReceiveResponse: response];
+}
+
+- (NSInputStream *)connection:(NSURLConnection *)connection
+            needNewBodyStream:(NSURLRequest *)request
+{
+    return [self needNewBodyStream: request];
+}
+
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
+    [self didReceiveData: data];
+}
+
+- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+    [self didFinishLoading];
+}
+
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
+    [self didFailWithError: error];
+}
+
+- (NSCachedURLResponse *)connection:(NSURLConnection *)connection
+                  willCacheResponse:(NSCachedURLResponse *)cachedResponse
+{
+    return nil;
+}
+
+
+#pragma mark - AUTHENTICATION
+
+
 void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     Warn(@"CouchbaseLite: SSL server <%@> not trusted; cert chain follows:", host);
 #if TARGET_OS_IPHONE
@@ -377,7 +413,36 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 }
 
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+- (NSURLRequest *)connection:(NSURLConnection *)connection
+             willSendRequest:(NSURLRequest *)request
+            redirectResponse:(NSURLResponse *)response
+{
+    // The redirected request needs to be authorized again:
+    if (![request valueForHTTPHeaderField: @"Authorization"]) {
+        NSMutableURLRequest* nuRequest = [request mutableCopy];
+        id<CBLCustomHeadersAuthorizer> customAuth = $castIfProtocol(CBLCustomHeadersAuthorizer, _authorizer);
+        if (customAuth) {
+            [customAuth authorizeURLRequest: nuRequest];
+        } else {
+            NSString* authHeader = [_request valueForHTTPHeaderField: @"Authorization"];
+            [nuRequest setValue: authHeader forHTTPHeaderField: @"Authorization"];
+        }
+        request = nuRequest;
+    }
+    return request;
+}
+
+
+#pragma mark CALLBACKS:
+
+
+- (NSInputStream *) needNewBodyStream:(NSURLRequest *)request {
+    Warn(@"Unexpected call to needNewBodyStream");
+    return nil;
+}
+
+
+- (void) didReceiveResponse:(NSURLResponse *)response {
     _status = (int) ((NSHTTPURLResponse*)response).statusCode;
     _responseHeaders = ((NSHTTPURLResponse*)response).allHeaderFields;
 
@@ -411,37 +476,19 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 }
 
 
-- (NSURLRequest *)connection:(NSURLConnection *)connection
-             willSendRequest:(NSURLRequest *)request
-            redirectResponse:(NSURLResponse *)response
-{
-    // The redirected request needs to be authorized again:
-    if (![request valueForHTTPHeaderField: @"Authorization"]) {
-        NSMutableURLRequest* nuRequest = [request mutableCopy];
-        id<CBLCustomHeadersAuthorizer> customAuth = $castIfProtocol(CBLCustomHeadersAuthorizer, _authorizer);
-        if (customAuth) {
-            [customAuth authorizeURLRequest: nuRequest];
-        } else {
-            NSString* authHeader = [_request valueForHTTPHeaderField: @"Authorization"];
-            [nuRequest setValue: authHeader forHTTPHeaderField: @"Authorization"];
-        }
-        request = nuRequest;
-    }
-    return request;
-}
-
-
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
+- (void) didReceiveData:(NSData *)data {
     LogTo(RemoteRequestVerbose, @"%@: Got %lu bytes", self, (unsigned long)data.length);
 }
 
 
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
+- (void) didFailWithError:(NSError *)error {
     if (WillLog()) {
         if (!(_dontLog404 && error.code == kCBLStatusNotFound && $equal(error.domain, CBLHTTPErrorDomain)))
             Log(@"%@: Got error %@", self, error);
     }
-    
+
+    [_connection cancel];
+
     // If the error is likely transient, retry:
     if (CBLMayBeTransientError(error) && [self retry])
         return;
@@ -450,18 +497,13 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     [self respondWithResult: nil error: error];
 }
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+
+- (void)didFinishLoading {
     LogTo(RemoteRequest, @"%@: Finished loading", self);
     [self clearConnection];
     [self respondWithResult: self error: nil];
 }
 
-
-- (NSCachedURLResponse *)connection:(NSURLConnection *)connection
-                  willCacheResponse:(NSCachedURLResponse *)cachedResponse
-{
-    return nil;
-}
 
 @end
 
@@ -483,14 +525,14 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     [super clearConnection];
 }
 
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    [super connection: connection didReceiveData: data];
+- (void) didReceiveData:(NSData *)data {
+    [super didReceiveData: data];
     if (!_jsonBuffer)
         _jsonBuffer = [[NSMutableData alloc] initWithCapacity: MAX(data.length, 8192u)];
     [_jsonBuffer appendData: data];
 }
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+- (void) didFinishLoading {
     LogTo(RemoteRequest, @"%@: Finished loading", self);
     id result = nil;
     NSError* error = nil;
