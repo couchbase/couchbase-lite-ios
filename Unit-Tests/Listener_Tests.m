@@ -499,19 +499,6 @@ static NSString* addressToString(NSData* addrData) {
     return _status;
 }
 
-- (void)setupRequest: (NSMutableURLRequest *)request withBody: (id)body {
-    if (body) {
-        if ([body isKindOfClass: [NSData class]]) {
-            request.HTTPBody = body;
-        } else {
-            NSError* error = nil;
-            request.HTTPBody = [CBLJSON dataWithJSONObject: body options:0 error: &error];
-            if (error)
-                Log(@"Cannot parse JSON body with error: %@", error);
-        }
-    }
-}
-
 - (void) didReceiveData:(NSData *)data {
     [super didReceiveData: data];
     if (!_data)

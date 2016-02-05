@@ -70,7 +70,6 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 @property (readonly) NSMutableDictionary* statusInfo;
 
 // protected:
-- (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body;
 - (void) clearConnection;
 - (void) cancelWithStatus: (int)status;
 - (void) respondWithResult: (id)result error: (NSError*)error;

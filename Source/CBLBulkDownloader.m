@@ -62,34 +62,28 @@
                      {@"rev", rev.revID},
                      {@"atts_since", attsSince});
     }];
-    NSDictionary* body = @{@"docs": keys};
 
     NSString* query = attachments ?@"_bulk_get?revs=true&attachments=true" :@"_bulk_get?revs=true";
 
     self = [super initWithMethod: @"POST"
                              URL: CBLAppendToURL(dbURL, query)
-                            body: body
+                            body: @{@"docs": keys}
                   requestHeaders: requestHeaders
                     onCompletion: onCompletion];
     if (self) {
         _db = database;
         _attachments = attachments;
         _onDocument = onDocument;
-    }
+
+        [_request setValue: @"multipart/related" forHTTPHeaderField: @"Accept"];
+        [_request setValue: @"gzip" forHTTPHeaderField: @"X-Accept-Part-Encoding"];
+}
     return self;
 }
 
 
 - (NSString*) description {
     return $sprintf(@"%@[%@]", [self class], _request.URL.path);
-}
-
-
-- (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
-    request.HTTPBody = [CBLJSON dataWithJSONObject: body options: 0 error: NULL];
-    [request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
-    [request setValue: @"multipart/related" forHTTPHeaderField: @"Accept"];
-    [request setValue: @"gzip" forHTTPHeaderField: @"X-Accept-Part-Encoding"];
 }
 
 

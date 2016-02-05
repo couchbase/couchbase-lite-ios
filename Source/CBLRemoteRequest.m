@@ -74,7 +74,18 @@ typedef enum {
         _request = [[NSMutableURLRequest alloc] initWithURL: url];
         _request.HTTPMethod = method;
         _request.cachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
-        
+
+        // Interpret non-NSData body as a JSON object:
+        if (body) {
+            if (![body isKindOfClass: [NSData class]]) {
+                NSError* error;
+                body = [CBLJSON dataWithJSONObject: body options:0 error: &error];
+                Assert(body, @"Cannot encode JSON body: %@", error);
+                [_request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
+            }
+            _request.HTTPBody = body;
+        }
+
         // Add headers.
         [_request setValue: [CBL_ReplicatorSettings userAgentHeader] forHTTPHeaderField:@"User-Agent"];
         [requestHeaders enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL *stop) {
@@ -84,8 +95,6 @@ typedef enum {
             if ([key caseInsensitiveCompare: @"Cookie"] == 0)
                 _request.HTTPShouldHandleCookies = NO;
         }];
-
-        [self setupRequest: _request withBody: body];
 
     }
     return self;
@@ -119,11 +128,6 @@ typedef enum {
             [_cookieStorage addCookieHeaderToRequest: _request];
         }
     }
-}
-
-
-- (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
-    // subclasses can override this.
 }
 
 
@@ -512,12 +516,21 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 
 @implementation CBLRemoteJSONRequest
 
-- (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
-    [request setValue: @"application/json" forHTTPHeaderField: @"Accept"];
-    if (body) {
-        request.HTTPBody = [CBLJSON dataWithJSONObject: body options: 0 error: NULL];
-        [request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
+- (instancetype) initWithMethod: (NSString*)method
+                            URL: (NSURL*)url
+                           body: (id)body
+                 requestHeaders: (NSDictionary *)requestHeaders
+                   onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
+{
+    self = [super initWithMethod: method
+                             URL: url
+                            body: body
+                  requestHeaders: requestHeaders
+                    onCompletion: onCompletion];
+    if (self) {
+        [_request setValue: @"application/json" forHTTPHeaderField: @"Accept"];
     }
+    return self;
 }
 
 - (void) clearConnection {

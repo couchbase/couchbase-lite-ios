@@ -36,6 +36,9 @@
                     onCompletion: onCompletion];
     if (self) {
         _db = database;
+
+        [_request setValue: @"multipart/related, application/json" forHTTPHeaderField: @"Accept"];
+        [_request setValue: @"gzip" forHTTPHeaderField: @"X-Accept-Part-Encoding"];
     }
     return self;
 }
@@ -44,16 +47,6 @@
 - (NSString*) description {
     return $sprintf(@"%@[%@]", [self class], _request.URL.path);
 }
-
-
-- (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
-    [request setValue: @"multipart/related, application/json" forHTTPHeaderField: @"Accept"];
-    [request setValue: @"gzip" forHTTPHeaderField: @"X-Accept-Part-Encoding"];
-
-    request.HTTPBody = body;
-}
-
-
 
 
 - (NSDictionary*) document {
