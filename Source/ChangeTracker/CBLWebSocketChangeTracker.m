@@ -232,17 +232,34 @@
         if (ws != _ws)
             return;
         _ws = nil;
+        NSInteger effectiveCode = code;
+        NSString* effectiveReason = reason;
         if (wasClean && (code == PSWebSocketStatusCodeNormal || code == 0)) {
-            LogTo(ChangeTracker, @"%@: closed", self);
-            [self stop];
-        } else {
-            NSDictionary* userInfo = $dict({NSLocalizedFailureReasonErrorKey, reason},
-                                           {NSURLErrorFailingURLStringErrorKey,
-                                               self.changesFeedURL.absoluteString});
-            NSError* error = [NSError errorWithDomain: PSWebSocketErrorDomain code: code
-                                             userInfo: userInfo];
-            [self failedWithError: error];
+            // Clean shutdown with no error/status:
+            if (!_running) {
+                // I closed the connection, so this is expected.
+                LogTo(ChangeTracker, @"%@: closed", self);
+                [self stop];
+                return; // without reporting error
+
+            } else {
+                // Server closed the connection. It shouldn't do this unless it's going offline
+                // or something; treat this as an (non-fatal) error.
+                LogTo(ChangeTracker, @"%@: closed unexpectedly", self);
+                effectiveCode = 503; // Service Unavailable
+                if (!effectiveReason)
+                    effectiveReason = @"Server closed connection";
+            }
         }
+
+        // Report error:
+        LogTo(ChangeTracker, @"%@: closed with code %ld, reason '%@'", self, (long)effectiveCode, reason);
+        NSDictionary* userInfo = $dict({NSLocalizedFailureReasonErrorKey, reason},
+                                       {NSURLErrorFailingURLStringErrorKey,
+                                           self.changesFeedURL.absoluteString});
+        NSError* error = [NSError errorWithDomain: PSWebSocketErrorDomain code: effectiveCode
+                                         userInfo: userInfo];
+        [self failedWithError: error];
     });
 }
 
