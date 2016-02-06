@@ -91,7 +91,7 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
 }
 
 
-- (void) start {
+- (NSURLSessionTask*) createTaskInURLSession:(NSURLSession *)session {
     [_writer openFile];
 
     uint64_t bytesRead = _writer.bytesWritten;
@@ -102,7 +102,7 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
         [_request setValue: $sprintf(@"bytes=%llu-", bytesRead) forHTTPHeaderField: @"Range"];
     }
     LogTo(RemoteRequest, @"%@: Headers = %@", self, _request.allHTTPHeaderFields);
-    [super start];
+    return [super createTaskInURLSession: session];
 }
 
 

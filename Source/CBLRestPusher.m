@@ -530,7 +530,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
         _uploading = YES;
         CBLMultipartUploader* uploader = _uploaderQueue[0];
         LogTo(SyncVerbose, @"%@: Starting %@", self, uploader);
-        [uploader start];
+        [self startRemoteRequest: uploader];
         [_uploaderQueue removeObjectAtIndex: 0];
     }
 }

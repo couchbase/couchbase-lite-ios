@@ -11,6 +11,7 @@
 #import "CBLMultipartDocumentReader.h"
 #import "CBLMultipartWriter.h"
 #import "CBLInternal.h"
+#import "CBLRemoteSession.h"
 #import "CBL_BlobStore.h"
 #import "CBL_BlobStoreWriter.h"
 #import "CBLGZip.h"
@@ -97,7 +98,8 @@
           done = YES;
       }];
     dl.debugAlwaysTrust = YES;
-    [dl start];
+    CBLRemoteSession* session = [[CBLRemoteSession alloc] init];
+    [session startRequest: dl];
 
     while (!done)
         [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]];

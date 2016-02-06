@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLRemoteRequest.h"
+#import "CBLRemoteSession.h"
 #import "CBLAuthorizer.h"
 #import "CBLClientCertAuthorizer.h"
 #import "CBLMisc.h"
@@ -43,10 +44,6 @@ typedef enum {
 } AuthPhase;
 
 
-@interface CBLRemoteRequest () <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
-@end
-
-
 @implementation CBLRemoteRequest
 {
     AuthPhase _authPhase;
@@ -55,7 +52,7 @@ typedef enum {
 
 
 @synthesize delegate=_delegate, responseHeaders=_responseHeaders, cookieStorage=_cookieStorage;
-@synthesize autoRetry = _autoRetry;
+@synthesize autoRetry = _autoRetry, session=_session, task=_task;
 #if DEBUG
 @synthesize debugAlwaysTrust=_debugAlwaysTrust;
 #endif
@@ -149,20 +146,21 @@ typedef enum {
 }
 
 
-- (void) start {
+- (NSURLSessionTask*) createTaskInURLSession: (NSURLSession*)session {
     if (!_request)
-        return;     // -clearConnection already called
+        return nil;     // -clearConnection already called
     _responseHeaders = nil;
     _authPhase = kNoAuthChallenge;
     LogTo(RemoteRequest, @"%@: Starting...", self);
-    Assert(!_connection);
-    _connection = [NSURLConnection connectionWithRequest: _request delegate: self];
+    Assert(!_task);
+    _task = [session dataTaskWithRequest: _request];
+    return _task;
 }
 
 
 - (void) clearConnection {
     _request = nil;
-    _connection = nil;
+    _task = nil;
 }
 
 
@@ -182,6 +180,11 @@ typedef enum {
 }
 
 
+- (BOOL) running {
+    return _task != nil;
+}
+
+
 - (void) respondWithResult: (id)result error: (NSError*)error {
     Assert(result || error);
 
@@ -192,16 +195,18 @@ typedef enum {
 
 
 - (void) startAfterDelay: (NSTimeInterval)delay {
-    // assumes _connection already failed or canceled.
-    _connection = nil;
-    [self performSelector: @selector(start) withObject: nil afterDelay: delay];
+    // assumes _task already failed or canceled.
+    _task = nil;
+    CBLRemoteSession* session = _session;
+    Assert(session);
+    [session performSelector: @selector(startRequest:) withObject: self afterDelay: delay];
 }
 
 
 - (void) stop {
-    if (_connection) {
+    if (_task) {
         LogTo(RemoteRequest, @"%@: Stopped", self);
-        [_connection cancel];
+        [_task cancel];
     }
     [self clearConnection];
     if (_onCompletion) {
@@ -214,11 +219,10 @@ typedef enum {
 
 
 - (void) cancelWithStatus: (int)status {
-    if (!_connection)
+    if (!_task)
         return;
-    [_connection cancel];
-    [self connection: _connection
-          didFailWithError: CBLStatusToNSErrorWithInfo(status, nil, _request.URL, nil)];
+    [_task cancel];
+    [self didFailWithError: CBLStatusToNSErrorWithInfo(status, nil, _request.URL, nil)];
 }
 
 
@@ -246,7 +250,7 @@ typedef enum {
         return false;
     }
 
-    [_connection cancel];
+    [_task cancel];
     self.authorizer = auth;
     LogTo(RemoteRequest, @"%@ retrying with %@", self, auth);
     [self startAfterDelay: 0.0];
@@ -280,38 +284,6 @@ typedef enum {
 }
 
 
-#pragma mark - NSURLCONNECTION DELEGATE:
-
-
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-    [self didReceiveResponse: response];
-}
-
-- (NSInputStream *)connection:(NSURLConnection *)connection
-            needNewBodyStream:(NSURLRequest *)request
-{
-    return [self needNewBodyStream: request];
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    [self didReceiveData: data];
-}
-
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-    [self didFinishLoading];
-}
-
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    [self didFailWithError: error];
-}
-
-- (NSCachedURLResponse *)connection:(NSURLConnection *)connection
-                  willCacheResponse:(NSCachedURLResponse *)cachedResponse
-{
-    return nil;
-}
-
-
 #pragma mark - AUTHENTICATION
 
 
@@ -339,10 +311,10 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 }
 
 
-- (void)connection:(NSURLConnection *)connection
-        willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
+- (void) didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
+           completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition,
+                                       NSURLCredential* credential))completionHandler
 {
-    id<NSURLAuthenticationChallengeSender> sender = challenge.sender;
     NSURLProtectionSpace* space = challenge.protectionSpace;
     NSString* authMethod = space.authenticationMethod;
     LogTo(RemoteRequest, @"Got challenge for %@: method=%@, proposed=%@, err=%@", self, authMethod, challenge.proposedCredential, challenge.error);
@@ -352,7 +324,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
         NSURLCredential* cred = [self nextCredentialToTry: challenge];
         if (cred) {
             LogTo(RemoteRequest, @"    challenge: (phase %d) useCredential: %@", _authPhase, cred);
-            [sender useCredential: cred forAuthenticationChallenge:challenge];
+            completionHandler(NSURLSessionAuthChallengeUseCredential, cred);
             // Update my authorizer so my owner (the replicator) can pick it up when I'm done
             if (_authPhase > kTryAuthorizer)
                 _authorizer = [[CBLPasswordAuthorizer alloc] initWithCredential: cred];
@@ -360,7 +332,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
         } else {
             _authorizer = nil;
             LogTo(RemoteRequest, @"    challenge: (phase %d) continueWithoutCredential", _authPhase);
-            [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
+            completionHandler(NSURLSessionAuthChallengeUseCredential, nil);
         }
 
     } else if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
@@ -386,12 +358,12 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
         }
         if (ok) {
             LogTo(RemoteRequest, @"    useCredential for trust: %@", trust);
-            [sender useCredential: [NSURLCredential credentialForTrust: trust]
-                    forAuthenticationChallenge: challenge];
+            completionHandler(NSURLSessionAuthChallengeUseCredential,
+                              [NSURLCredential credentialForTrust: trust]);
         } else {
             CBLWarnUntrustedCert(space.host, trust);
             LogTo(RemoteRequest, @"    challenge: fail (untrusted cert)");
-            [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
+            completionHandler(NSURLSessionAuthChallengeUseCredential, nil);
         }
 
     } else if ($equal(authMethod, NSURLAuthenticationMethodClientCertificate)) {
@@ -400,7 +372,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
             NSURLCredential* cred = $castIf(CBLClientCertAuthorizer, _authorizer).credential;
             if (cred) {
                 LogTo(RemoteRequest, @"    challenge: sending SSL client cert");
-                [sender useCredential: cred forAuthenticationChallenge:challenge];
+                completionHandler(NSURLSessionAuthChallengeUseCredential, cred);
                 return;
             }
             LogTo(RemoteRequest, @"    challenge: no SSL client cert");
@@ -408,18 +380,17 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
             _authorizer = nil;
             LogTo(RemoteRequest, @"    challenge: SSL client cert rejected");
         }
-        [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
-        
+        completionHandler(NSURLSessionAuthChallengeUseCredential, nil);
+
     } else {
         LogTo(RemoteRequest, @"    challenge: performDefaultHandling");
-        [sender performDefaultHandlingForAuthenticationChallenge: challenge];
+        completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
     }
 }
 
 
-- (NSURLRequest *)connection:(NSURLConnection *)connection
-             willSendRequest:(NSURLRequest *)request
-            redirectResponse:(NSURLResponse *)response
+- (NSURLRequest*) willSendRequest:(NSURLRequest *)request
+                 redirectResponse:(NSURLResponse *)response
 {
     // The redirected request needs to be authorized again:
     if (![request valueForHTTPHeaderField: @"Authorization"]) {
@@ -440,7 +411,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 #pragma mark CALLBACKS:
 
 
-- (NSInputStream *) needNewBodyStream:(NSURLRequest *)request {
+- (NSInputStream *) needNewBodyStream {
     Warn(@"Unexpected call to needNewBodyStream");
     return nil;
 }
@@ -486,12 +457,16 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 
 
 - (void) didFailWithError:(NSError *)error {
+    if (error && !_request)
+        return;     // This is an echo of my canceling the task
+
     if (WillLog()) {
         if (!(_dontLog404 && error.code == kCBLStatusNotFound && $equal(error.domain, CBLHTTPErrorDomain)))
             Log(@"%@: Got error %@", self, error);
     }
 
-    [_connection cancel];
+    [_task cancel];
+    _task = nil;
 
     // If the error is likely transient, retry:
     if (CBLMayBeTransientError(error) && [self retry])

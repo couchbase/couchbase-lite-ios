@@ -38,7 +38,7 @@
 }
 
 
-- (void) start {
+- (NSURLSessionTask*) createTaskInURLSession:(NSURLSession *)session {
     _currentWriter = _writer();
 
     // It's important to set a Content-Length header -- without this, CFNetwork won't know the
@@ -50,11 +50,11 @@
     [_request setValue: $sprintf(@"%lld", length) forHTTPHeaderField: @"Content-Length"];
 
     [_currentWriter openForURLRequest: _request];
-    [super start];
+    return [super createTaskInURLSession: session];
 }
 
 
-- (NSInputStream *) needNewBodyStream:(NSURLRequest *)request {
+- (NSInputStream *) needNewBodyStream {
     LogTo(CBLRemoteRequest, @"%@: Needs new body stream, resetting writer...", self);
     [_currentWriter close];
     _currentWriter = _writer();

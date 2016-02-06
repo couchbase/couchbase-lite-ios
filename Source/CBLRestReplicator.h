@@ -8,7 +8,7 @@
 
 #import "CBL_Replicator.h"
 
-@class CBLBatcher, MYBackgroundMonitor;
+@class CBLBatcher, CBLRemoteRequest, MYBackgroundMonitor;
 
 
 /** Abstract base class for push or pull replications. */
@@ -29,5 +29,7 @@
 #if DEBUG
 @property (readonly) BOOL running, active; // for unit tests
 #endif
+
+- (void) startRemoteRequest: (CBLRemoteRequest*)request;
 
 @end

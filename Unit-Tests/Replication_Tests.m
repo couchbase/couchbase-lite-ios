@@ -12,6 +12,8 @@
 #import "CBLCookieStorage.h"
 #import "CBL_Body.h"
 #import "CBLAttachmentDownloader.h"
+#import "CBLRemoteSession.h"
+#import "CBLRemoteRequest.h"
 #import "MYAnonymousIdentity.h"
 #import "MYErrorUtils.h"
 
@@ -979,7 +981,8 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
                                             [complete fulfill];
                                         }];
     req.debugAlwaysTrust = YES;
-    [req start];
+    CBLRemoteSession* session = [[CBLRemoteSession alloc] init];
+    [session startRequest: req];
     [self waitForExpectationsWithTimeout: 2.0 handler: nil];
 
     NSDictionary* attachments = data[@"_attachments"];
@@ -1319,7 +1322,8 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
                                             [complete fulfill];
                                         }];
     req.debugAlwaysTrust = YES;
-    [req start];
+    CBLRemoteSession* session = [[CBLRemoteSession alloc] init];
+    [session startRequest: req];
     [self waitForExpectationsWithTimeout: 2.0 handler: nil];
     
     // Create a continuous pull replicator and set SyncGatewaySession cookie:

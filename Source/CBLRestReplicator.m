@@ -18,6 +18,7 @@
 #import "CBLRestPuller.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLRemoteRequest.h"
+#import "CBLRemoteSession.h"
 #import "CBLAuthorizer.h"
 #import "CBLBatcher.h"
 #import "CBLReachability.h"
@@ -79,6 +80,7 @@
     SecCertificateRef _serverCert;
     NSData* _pinnedCertData;
     CBLCookieStorage* _cookieStorage;
+    CBLRemoteSession* _remoteSession;
 }
 
 @synthesize db=_db, settings=_settings, cookieStorage=_cookieStorage, serverCert=_serverCert;
@@ -277,6 +279,13 @@
             LogTo(SyncVerbose, @"%@: Found credential, using %@", self, _authorizer);
     }
 
+    // Initialize the CBLRemoteSession:
+    NSURLSessionConfiguration* config = [[NSURLSessionConfiguration defaultSessionConfiguration] copy];
+    config.requestCachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
+    config.allowsCellularAccess = YES;  // ??
+    config.URLCache = nil;
+    _remoteSession = [[CBLRemoteSession alloc] initWithConfiguration: config];
+
     _running = YES;
     _online = NO;
     [self updateStatus];
@@ -345,6 +354,9 @@
     _suspended = NO;
     [self stopCheckRequest];
     _settings.revisionBodyTransformationBlock = nil;
+
+    [_remoteSession close];
+    
     [self clearDbRef];  // _db no longer tracks me so it won't notify me when it closes; clear ref now
 }
 
@@ -445,7 +457,7 @@
     }];
     _checkRequest.timeoutInterval = kCheckRequestTimeout;
     _checkRequest.autoRetry = NO;
-    [_checkRequest start];
+    [self startRemoteRequest: _checkRequest];
 }
 
 
@@ -693,7 +705,7 @@
         [req compressBody];
 
     [self addRemoteRequest: req];
-    [req start];
+    [self startRemoteRequest: req];
     return req;
 }
 
@@ -715,6 +727,10 @@
         LogTo(Sync, @"%@: Server is %@", self, _serverType);
     }
     [_remoteRequests removeObjectIdenticalTo: request];
+}
+
+- (void) startRemoteRequest: (CBLRemoteRequest*)request {
+    [_remoteSession startRequest: request];
 }
 
 

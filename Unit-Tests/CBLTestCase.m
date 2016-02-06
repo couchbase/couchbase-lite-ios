@@ -11,6 +11,7 @@
 #import "CBLManager+Internal.h"
 #import "MYURLUtils.h"
 #import "CBLRemoteRequest.h"
+#import "CBLRemoteSession.h"
 #import "CBL_BlobStore+Internal.h"
 #import "CBLSymmetricKey.h"
 #import "CBLKVOProxy.h"
@@ -335,31 +336,29 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 - (void) eraseRemoteDB: (NSURL*)dbURL {
     Log(@"Deleting %@", dbURL);
     __block NSError* error = nil;
-    __block BOOL finished = NO;
     
     // Post to /db/_flush is supported by Sync Gateway 1.1, but not by CouchDB
     NSURLComponents* comp = [NSURLComponents componentsWithURL: dbURL resolvingAgainstBaseURL: YES];
     comp.port = ([dbURL.scheme isEqualToString: @"http"]) ? @4985 : @4995;
     comp.path = [comp.path stringByAppendingPathComponent: @"_flush"];
 
+    XCTestExpectation* finished = [self expectationWithDescription: @"Finished erasing"];
+    CBLRemoteSession* session = [[CBLRemoteSession alloc] init];
     CBLRemoteRequest* request = [[CBLRemoteRequest alloc] initWithMethod: @"POST"
                                                                      URL: comp.URL
                                                                     body: nil
                                                           requestHeaders: nil
                                                             onCompletion:
                                  ^(id result, NSError *err) {
-                                     finished = YES;
+                                     [finished fulfill];
                                      error = err;
                                  }
                                  ];
     request.authorizer = self.authorizer;
     request.debugAlwaysTrust = YES;
-    [request start];
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
-    while (!finished && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                                 beforeDate: timeout])
-        ;
-    Assert(error == nil, @"Couldn't delete remote: %@", error);
+    [session startRequest: request];
+    
+    [self waitForExpectationsWithTimeout: 10 handler: nil];
 }
 
 

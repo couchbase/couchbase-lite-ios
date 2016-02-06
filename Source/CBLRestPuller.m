@@ -466,7 +466,7 @@
         }
      ];
     [self addRemoteRequest: dl];
-    [dl start];
+    [self startRemoteRequest: dl];
 }
 
 
@@ -567,7 +567,7 @@
     if (self.canSendCompressedRequests)
         [dl compressBody];
 
-    [dl start];
+    [self startRemoteRequest: dl];
 }
 
 
@@ -804,7 +804,7 @@
 
         [self asyncTaskStarted];
         [self addRemoteRequest: dl];
-        [dl start];
+        [self startRemoteRequest: dl];
     }
 }
 

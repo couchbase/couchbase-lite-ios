@@ -11,6 +11,7 @@
 #import "CBLSyncListener.h"
 #import "CBLHTTPListener.h"
 #import "CBLRemoteRequest.h"
+#import "CBLRemoteSession.h"
 #import "CBLClientCertAuthorizer.h"
 #import "BLIP.h"
 #import "MYAnonymousIdentity.h"
@@ -31,6 +32,7 @@ static UInt16 sPort = 60000;
 @implementation Listener_Tests
 {
     @protected
+    CBLRemoteSession* _session;
     CBLListener* listener;
     NSURLCredential* clientCredential;
     XCTestExpectation *_expectValidateServerTrust, *_expectDidOpen, *_expectDidClose;
@@ -43,6 +45,7 @@ static UInt16 sPort = 60000;
 
 - (void)setUp {
     [super setUp];
+    _session = [[CBLRemoteSession alloc] init];
     dbmgr.dispatchQueue = dispatch_get_main_queue();
     dbmgr.replicatorClassName = @"CBLBlipReplicator";
 
@@ -435,7 +438,8 @@ static NSString* addressToString(NSData* addrData) {
 
     _expectCheckServerTrust = [self expectationWithDescription: @"checkServerTrust"];
     req.delegate = self;
-    [req start];
+
+    [_session startRequest: req];
     [self waitForExpectationsWithTimeout: kTimeout handler: nil];
 }
 
@@ -485,7 +489,7 @@ static NSString* addressToString(NSData* addrData) {
     }
 
     req.delegate = self;
-    [req start];
+    [_session startRequest: req];
     [self waitForExpectationsWithTimeout: kTimeout handler: nil];
 }
 

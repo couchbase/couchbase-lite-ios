@@ -10,7 +10,7 @@
 @protocol CBLAuthorizer, CBLRemoteRequestDelegate;
 
 
-@class CBLCookieStorage;
+@class CBLCookieStorage, CBLRemoteSession;
 
 /** The signature of the completion block called by a CBLRemoteRequest.
     @param result  On success, a 'result' object; by default this is the CBLRemoteRequest iself, but subclasses may return something else. On failure, this will likely be nil.
@@ -30,7 +30,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
     CBLCookieStorage* _cookieStorage;
     id<CBLRemoteRequestDelegate> _delegate;
     CBLRemoteRequestCompletionBlock _onCompletion;
-    NSURLConnection* _connection;
+    NSURLSessionTask* _task;
     int _status;
     NSDictionary* _responseHeaders;
     UInt8 _retryCount;
@@ -58,9 +58,6 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 /** In some cases a kCBLStatusNotFound Not Found is an expected condition and shouldn't be logged; call this to suppress that log message. */
 - (void) dontLog404;
 
-/** Starts a request; when finished, the onCompletion block will be called. */
-- (void) start;
-
 /** Stops the request, calling the onCompletion block. */
 - (void) stop;
 
@@ -69,6 +66,8 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 /** JSON-compatible dictionary with status information, to be returned from _active_tasks API */
 @property (readonly) NSMutableDictionary* statusInfo;
 
+@property (readonly) BOOL running;
+
 // protected:
 - (void) clearConnection;
 - (void) cancelWithStatus: (int)status;
@@ -76,11 +75,21 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 - (BOOL) retry;
 
 // connection callbacks (protected)
-- (NSInputStream *) needNewBodyStream:(NSURLRequest *)request;
+- (NSInputStream *) needNewBodyStream;
 - (void) didReceiveResponse:(NSURLResponse *)response;
 - (void) didReceiveData:(NSData *)data;
 - (void) didFinishLoading;
 - (void) didFailWithError:(NSError *)error;
+
+// called by CBLRemoteSession (protected)
+@property (weak) CBLRemoteSession* session;
+@property (readonly, atomic) NSURLSessionTask* task;
+- (NSURLSessionTask*) createTaskInURLSession: (NSURLSession*)session;
+- (void) didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
+           completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition,
+                                       NSURLCredential* credential))completionHandler;
+- (NSURLRequest*) willSendRequest:(NSURLRequest *)request
+                 redirectResponse:(NSURLResponse *)response;
 
 #if DEBUG
 @property BOOL debugAlwaysTrust;    // For unit tests only!
