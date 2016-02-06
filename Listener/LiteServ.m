@@ -147,8 +147,23 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
     repl = [[CBLRestReplicator alloc] initWithDB: db settings: settings];
     if (!repl)
         fprintf(stderr, "Unable to create replication.\n");
-    [repl start];
 
+    [[NSNotificationCenter defaultCenter] addObserverForName: nil object: repl queue: nil
+                                                  usingBlock:^(NSNotification* n)
+    {
+        if ([n.name isEqualToString: CBL_ReplicatorProgressChangedNotification]) {
+            Log(@"*** Replicator status changed ***");
+        } else if ([n.name isEqualToString: CBL_ReplicatorStoppedNotification]) {
+            if (repl.error)
+                Log(@"*** Replicator failed, error = %@", repl.error);
+            else
+                Log(@"*** Replicator finished ***");
+        } else {
+            Log(@"*** Replicator posted %@", n.name);
+        }
+    }];
+
+    [repl start];
     return true;
 }
 
