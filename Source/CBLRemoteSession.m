@@ -134,7 +134,10 @@
                                     NSURLCredential * __nullable credential))completionHandler
 {
     [self requestForTask: task do: ^(CBLRemoteRequest *request) {
-        [request didReceiveChallenge: challenge completionHandler: completionHandler];
+        NSURLSessionAuthChallengeDisposition disposition;
+        NSURLCredential* credential;
+        disposition = [request didReceiveChallenge: challenge useCredential: &credential];
+        completionHandler(disposition, credential);
     }];
 }
 

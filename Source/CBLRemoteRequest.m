@@ -311,29 +311,30 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 }
 
 
-- (void) didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
-           completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition,
-                                       NSURLCredential* credential))completionHandler
+- (NSURLSessionAuthChallengeDisposition)
+                                    didReceiveChallenge:(NSURLAuthenticationChallenge*)challenge
+                                          useCredential: (NSURLCredential**)outCredential
 {
+    *outCredential = nil;
+
     NSURLProtectionSpace* space = challenge.protectionSpace;
     NSString* authMethod = space.authenticationMethod;
     LogTo(RemoteRequest, @"Got challenge for %@: method=%@, proposed=%@, err=%@", self, authMethod, challenge.proposedCredential, challenge.error);
     if ($equal(authMethod, NSURLAuthenticationMethodHTTPBasic) ||
             $equal(authMethod, NSURLAuthenticationMethodHTTPDigest)) {
         _challenged = true;
-        NSURLCredential* cred = [self nextCredentialToTry: challenge];
-        if (cred) {
-            LogTo(RemoteRequest, @"    challenge: (phase %d) useCredential: %@", _authPhase, cred);
-            completionHandler(NSURLSessionAuthChallengeUseCredential, cred);
+        *outCredential = [self nextCredentialToTry: challenge];
+        if (*outCredential) {
+            LogTo(RemoteRequest, @"    challenge: (phase %d) useCredential: %@",
+                  _authPhase, *outCredential);
             // Update my authorizer so my owner (the replicator) can pick it up when I'm done
             if (_authPhase > kTryAuthorizer)
-                _authorizer = [[CBLPasswordAuthorizer alloc] initWithCredential: cred];
-            return;
+                _authorizer = [[CBLPasswordAuthorizer alloc] initWithCredential: *outCredential];
         } else {
             _authorizer = nil;
             LogTo(RemoteRequest, @"    challenge: (phase %d) continueWithoutCredential", _authPhase);
-            completionHandler(NSURLSessionAuthChallengeUseCredential, nil);
         }
+        return NSURLSessionAuthChallengeUseCredential;
 
     } else if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
         // Verify the _server's_ SSL certificate:
@@ -358,33 +359,30 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
         }
         if (ok) {
             LogTo(RemoteRequest, @"    useCredential for trust: %@", trust);
-            completionHandler(NSURLSessionAuthChallengeUseCredential,
-                              [NSURLCredential credentialForTrust: trust]);
+            *outCredential = [NSURLCredential credentialForTrust: trust];
         } else {
             CBLWarnUntrustedCert(space.host, trust);
             LogTo(RemoteRequest, @"    challenge: fail (untrusted cert)");
-            completionHandler(NSURLSessionAuthChallengeUseCredential, nil);
         }
+        return NSURLSessionAuthChallengeUseCredential;
 
     } else if ($equal(authMethod, NSURLAuthenticationMethodClientCertificate)) {
         // Request for SSL client cert:
         if (challenge.previousFailureCount == 0) {
-            NSURLCredential* cred = $castIf(CBLClientCertAuthorizer, _authorizer).credential;
-            if (cred) {
+            *outCredential = $castIf(CBLClientCertAuthorizer, _authorizer).credential;
+            if (*outCredential)
                 LogTo(RemoteRequest, @"    challenge: sending SSL client cert");
-                completionHandler(NSURLSessionAuthChallengeUseCredential, cred);
-                return;
-            }
-            LogTo(RemoteRequest, @"    challenge: no SSL client cert");
+            else
+                LogTo(RemoteRequest, @"    challenge: no SSL client cert");
         } else {
             _authorizer = nil;
             LogTo(RemoteRequest, @"    challenge: SSL client cert rejected");
         }
-        completionHandler(NSURLSessionAuthChallengeUseCredential, nil);
+        return NSURLSessionAuthChallengeUseCredential;
 
     } else {
         LogTo(RemoteRequest, @"    challenge: performDefaultHandling");
-        completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
+        return NSURLSessionAuthChallengePerformDefaultHandling;
     }
 }
 
