@@ -7,14 +7,21 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLRemoteRequest;
+@class CBLRemoteRequest, CBLCookieStorage;
+@protocol CBLAuthorizer;
 
 
 @interface CBLRemoteSession : NSObject
 
-- (instancetype) initWithConfiguration: (NSURLSessionConfiguration*)config;
++ (NSURLSessionConfiguration*) defaultConfiguration;
+
+- (instancetype) initWithConfiguration: (NSURLSessionConfiguration*)config
+                            authorizer: (id<CBLAuthorizer>)authorizer
+                         cookieStorage: (CBLCookieStorage*)cookieStorage;
 
 - (instancetype) init;
+
+@property (readonly) id<CBLAuthorizer> authorizer;
 
 - (void) startRequest: (CBLRemoteRequest*)request;
 

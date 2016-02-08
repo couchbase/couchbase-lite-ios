@@ -131,6 +131,12 @@
 }
 
 
+- (BOOL) canUseCellNetwork {
+    NSString* network = [$castIf(NSString, _options[kCBLReplicatorOption_Network]) lowercaseString];
+    return network == nil || $equal(network, @"cell") || $equal(network, @"!wifi");
+}
+
+
 - (BOOL) isHostReachable: (CBLReachability*)reachability {
     BOOL reachable = reachability.reachable;
     if (!reachable)

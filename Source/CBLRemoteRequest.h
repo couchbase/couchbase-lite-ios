@@ -76,7 +76,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 
 // connection callbacks (protected)
 - (NSInputStream *) needNewBodyStream;
-- (void) didReceiveResponse:(NSURLResponse *)response;
+- (void) didReceiveResponse:(NSHTTPURLResponse *)response;
 - (void) didReceiveData:(NSData *)data;
 - (void) didFinishLoading;
 - (void) didFailWithError:(NSError *)error;

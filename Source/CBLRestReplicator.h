@@ -19,7 +19,6 @@
     CBLDatabase* __weak _db;
     NSString* _lastSequence;
     CBLBatcher* _batcher;
-    id<CBLAuthorizer> _authorizer;
     NSString* _serverType;
 #if TARGET_OS_IPHONE
     MYBackgroundMonitor *_bgMonitor;

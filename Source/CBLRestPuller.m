@@ -111,7 +111,7 @@
     _changeTracker.filterName = _settings.filterName;
     _changeTracker.filterParameters = _settings.filterParameters;
     _changeTracker.docIDs = _settings.docIDs;
-    _changeTracker.authorizer = _authorizer;
+    _changeTracker.authorizer = self.authorizer;
     _changeTracker.cookieStorage = self.cookieStorage;
 
     unsigned heartbeat = $castIf(NSNumber, _settings.options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;

@@ -272,19 +272,20 @@
                 ];
 
     // If client didn't set an authorizer, use basic auth if credential is available:
-    _authorizer = _settings.authorizer;
-    if (!_authorizer) {
-        _authorizer = [[CBLPasswordAuthorizer alloc] initWithURL: _settings.remote];
-        if (_authorizer)
-            LogTo(SyncVerbose, @"%@: Found credential, using %@", self, _authorizer);
+    id<CBLAuthorizer> authorizer = _settings.authorizer;
+    if (!authorizer) {
+        authorizer = [[CBLPasswordAuthorizer alloc] initWithURL: _settings.remote];
+        if (authorizer)
+            LogTo(SyncVerbose, @"%@: Found credential, using %@", self, authorizer);
     }
 
     // Initialize the CBLRemoteSession:
-    NSURLSessionConfiguration* config = [[NSURLSessionConfiguration defaultSessionConfiguration] copy];
-    config.requestCachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
-    config.allowsCellularAccess = YES;  // ??
-    config.URLCache = nil;
-    _remoteSession = [[CBLRemoteSession alloc] initWithConfiguration: config];
+    NSURLSessionConfiguration* config = [[CBLRemoteSession defaultConfiguration] copy];
+    config.timeoutIntervalForRequest = _settings.requestTimeout;
+    config.allowsCellularAccess = _settings.canUseCellNetwork;
+    _remoteSession = [[CBLRemoteSession alloc] initWithConfiguration: config
+                                                          authorizer: authorizer
+                                                       cookieStorage: _cookieStorage];
 
     _running = YES;
     _online = NO;
@@ -570,7 +571,7 @@
 
 // Before doing anything else, determine whether we have an active login session.
 - (void) checkSession {
-    if ([_authorizer conformsToProtocol: @protocol(CBLLoginAuthorizer)]) {
+    if ([_remoteSession.authorizer conformsToProtocol: @protocol(CBLLoginAuthorizer)]) {
         // Sync Gateway session API is at /db/_session; try that first
         [self checkSessionAtPath: @"_session"];
     } else {
@@ -611,16 +612,16 @@
 
 // If there is no login session, attempt to log in, if the authorizer knows the parameters.
 - (void) login {
-    id<CBLLoginAuthorizer> loginAuth = (id<CBLLoginAuthorizer>)_authorizer;
+    id<CBLLoginAuthorizer> loginAuth = (id<CBLLoginAuthorizer>)_remoteSession.authorizer;
     NSDictionary* loginParameters = [loginAuth loginParametersForSite: _settings.remote];
     if (loginParameters == nil) {
-        LogTo(Sync, @"%@: %@ has no login parameters, so skipping login", self, _authorizer);
+        LogTo(Sync, @"%@: %@ has no login parameters, so skipping login", self, _remoteSession.authorizer);
         [self fetchRemoteCheckpointDoc];
         return;
     }
 
     NSString* loginPath = [loginAuth loginPathForSite: _settings.remote];
-    LogTo(Sync, @"%@: Logging in with %@ at %@ ...", self, _authorizer.class, loginPath);
+    LogTo(Sync, @"%@: Logging in with %@ at %@ ...", self, _remoteSession.authorizer.class, loginPath);
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"POST"
                       path: loginPath
@@ -641,6 +642,10 @@
 
 #pragma mark - HTTP REQUESTS:
 
+
+- (id<CBLAuthorizer>) authorizer {
+    return _remoteSession.authorizer;
+}
 
 - (CBLCookieStorage*) cookieStorage {
     if (!_cookieStorage) {
@@ -693,11 +698,6 @@
         CBLRestReplicator *strongSelf = weakSelf;
         if (!strongSelf) return; // already dealloced
         [strongSelf removeRemoteRequest: req];
-        id<CBLAuthorizer> auth = req.authorizer;
-        if (auth && auth != strongSelf->_authorizer && error.code != 401) {
-            LogTo(SyncVerbose, @"%@: Updated to %@", strongSelf, auth);
-            strongSelf->_authorizer = auth;
-        }
         onCompletion(result, error);
     }];
 
@@ -712,9 +712,6 @@
 
 - (void) addRemoteRequest: (CBLRemoteRequest*)request {
     request.delegate = self;
-    request.timeoutInterval = _settings.requestTimeout;
-    request.authorizer = _authorizer;
-    request.cookieStorage = self.cookieStorage;
 
     if (!_remoteRequests)
         _remoteRequests = [[NSMutableArray alloc] init];

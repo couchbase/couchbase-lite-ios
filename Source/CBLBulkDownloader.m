@@ -100,12 +100,10 @@
 }
 
 
-- (void) didReceiveResponse:(NSURLResponse *)response {
-    CBLStatus status = (CBLStatus) ((NSHTTPURLResponse*)response).statusCode;
-    if (status < 300) {
+- (void) didReceiveResponse:(NSHTTPURLResponse *)response {
+    if (_status < 300) {
         // Check the content type to see whether it's a multipart response:
-        NSDictionary* headers = [(NSHTTPURLResponse*)response allHeaderFields];
-        NSString* contentType = headers[@"Content-Type"];
+        NSString* contentType = _responseHeaders[@"Content-Type"];
         _topReader = [[CBLMultipartReader alloc] initWithContentType: contentType
                                                             delegate: self];
         if (!_topReader) {

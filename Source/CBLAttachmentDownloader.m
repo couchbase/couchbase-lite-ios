@@ -106,10 +106,10 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
 }
 
 
-- (void) didReceiveResponse:(NSURLResponse *)response {
-    CBLStatus status = (CBLStatus) ((NSHTTPURLResponse*)response).statusCode;
+- (void) didReceiveResponse:(NSHTTPURLResponse *)response {
+    CBLStatus status = (CBLStatus) response.statusCode;
     if (status < 300) {
-        NSDictionary* headers = ((NSHTTPURLResponse*)response).allHeaderFields;
+        NSDictionary* headers = response.allHeaderFields;
         BOOL reset = NO;
         // Check whether the server is honoring the "Range:" header:
         if (_writer.bytesWritten > 0 && (status != 206 || !headers[@"Content-Range"])) {

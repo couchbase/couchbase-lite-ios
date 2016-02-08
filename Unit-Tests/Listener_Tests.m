@@ -32,7 +32,6 @@ static UInt16 sPort = 60000;
 @implementation Listener_Tests
 {
     @protected
-    CBLRemoteSession* _session;
     CBLListener* listener;
     NSURLCredential* clientCredential;
     XCTestExpectation *_expectValidateServerTrust, *_expectDidOpen, *_expectDidClose;
@@ -45,7 +44,6 @@ static UInt16 sPort = 60000;
 
 - (void)setUp {
     [super setUp];
-    _session = [[CBLRemoteSession alloc] init];
     dbmgr.dispatchQueue = dispatch_get_main_queue();
     dbmgr.replicatorClassName = @"CBLBlipReplicator";
 
@@ -332,7 +330,13 @@ static NSString* addressToString(NSData* addrData) {
 
 @implementation ListenerHTTP_Tests
 {
+    CBLRemoteSession* _session;
     XCTestExpectation* _expectCheckServerTrust;
+}
+
+- (void) setUp {
+    [super setUp];
+    _session = [[CBLRemoteSession alloc] init];
 }
 
 - (Class) listenerClass {

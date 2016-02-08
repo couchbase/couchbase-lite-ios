@@ -8,6 +8,8 @@
 
 #import "CBLRemoteSession.h"
 #import "CBLRemoteRequest.h"
+#import "CBL_ReplicatorSettings.h"
+#import "CBLCookieStorage.h"
 
 
 @interface CBLRemoteSession () <NSURLSessionDataDelegate>
@@ -19,12 +21,32 @@
     NSURLSession* _session;
     NSRunLoop* _runLoop;
     NSMutableDictionary* _requestIDs;  // taskIdentifier -> CBLRemoteRequest. Used on op-queue only
+    CBLCookieStorage* _cookieStorage;
+}
+
+@synthesize authorizer=_authorizer;
+
+
++ (NSURLSessionConfiguration*) defaultConfiguration {
+    NSURLSessionConfiguration* config;
+    config = [[NSURLSessionConfiguration defaultSessionConfiguration] copy];
+    config.requestCachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
+    config.HTTPCookieStorage = nil;
+    config.HTTPShouldSetCookies = NO;
+    config.URLCache = nil;
+    config.HTTPAdditionalHeaders = @{@"User-Agent": [CBL_ReplicatorSettings userAgentHeader]};
+    return config;
 }
 
 
-- (instancetype)initWithConfiguration: (NSURLSessionConfiguration*)config {
+- (instancetype)initWithConfiguration: (NSURLSessionConfiguration*)config
+                           authorizer: (id<CBLAuthorizer>)authorizer
+                        cookieStorage: (CBLCookieStorage*)cookieStorage
+{
     self = [super init];
     if (self) {
+        _authorizer = authorizer;
+        _cookieStorage = cookieStorage;
         NSOperationQueue* queue = [[NSOperationQueue alloc] init];
         queue.maxConcurrentOperationCount = 1;
         _session = [NSURLSession sessionWithConfiguration: config
@@ -38,8 +60,10 @@
 }
 
 
-- (instancetype)init {
-    return [self initWithConfiguration: [NSURLSessionConfiguration defaultSessionConfiguration]];
+- (instancetype) init {
+    return [self initWithConfiguration: [[self class] defaultConfiguration]
+                            authorizer: nil
+                         cookieStorage: nil];
 }
 
 
@@ -55,6 +79,9 @@
 
 - (void) startRequest: (CBLRemoteRequest*)request {
     request.session = self;
+    if (_authorizer)
+        request.authorizer = _authorizer;
+    request.cookieStorage = _cookieStorage;
     NSURLSessionTask* task = [request createTaskInURLSession: _session];
     if (!task)
         return;
@@ -171,7 +198,15 @@
         completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler
 {
     [self requestForTask: dataTask do: ^(CBLRemoteRequest *request) {
-        [request didReceiveResponse: response];
+        [request didReceiveResponse: (NSHTTPURLResponse*)response];
+
+        NSInteger status = ((NSHTTPURLResponse*)response).statusCode;
+        id<CBLAuthorizer> auth = request.authorizer;
+        if (auth && auth != _authorizer && status != 401) {
+            LogTo(RemoteRequest, @"%@: Updated to %@", self, auth);
+            _authorizer = auth;
+        }
+
         completionHandler(request.running ? NSURLSessionResponseAllow : NSURLSessionResponseCancel);
     }];
 }

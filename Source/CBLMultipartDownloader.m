@@ -57,11 +57,10 @@
 #pragma mark - URL CONNECTION CALLBACKS:
 
 
-- (void) didReceiveResponse:(NSURLResponse *)response {
+- (void) didReceiveResponse:(NSHTTPURLResponse *)response {
     _reader = [[CBLMultipartDocumentReader alloc] initWithDatabase: _db];
-    CBLStatus status = (CBLStatus) ((NSHTTPURLResponse*)response).statusCode;
-    if (status < 300) {
-        NSDictionary* headers = [(NSHTTPURLResponse*)response allHeaderFields];
+    if (_status < 300) {
+        NSDictionary* headers = _responseHeaders;
         // If we let the reader see the Content-Encoding header it might decide to un-gzip the
         // data, but it's already been decoded by NSURLConnection! So remove that header:
         if (headers[@"Content-Encoding"]) {
