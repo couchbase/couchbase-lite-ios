@@ -23,7 +23,6 @@
     NSString* _serverType;
 #if TARGET_OS_IPHONE
     MYBackgroundMonitor *_bgMonitor;
-    BOOL _hasBGTask;
 #endif
 }
 

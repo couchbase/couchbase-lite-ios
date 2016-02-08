@@ -119,10 +119,8 @@ static void onCompactCallback(void *context, bool compacting) {
         [self performSelector: @selector(checkStillCompacting) withObject: nil afterDelay: 0.5];
         return YES;
     } else {
-        if (bgMonitor.hasBackgroundTask) {
+        if ([bgMonitor endBackgroundTask])
             Log(@"Database finished compacting; allowing app to suspend.");
-            [bgMonitor endBackgroundTask];
-        }
         return NO;
     }
 }

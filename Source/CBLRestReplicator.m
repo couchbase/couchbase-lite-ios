@@ -114,7 +114,6 @@
 #if TARGET_OS_IPHONE
         // Keeps static analyzer from complaining this ivar is unused:
         _bgMonitor = nil;
-        _hasBGTask = NO;
 #endif
     }
     return self;

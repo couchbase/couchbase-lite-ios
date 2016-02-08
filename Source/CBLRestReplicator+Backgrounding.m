@@ -44,11 +44,8 @@
 
 // Called when the replicator goes idle (from -updateActive)
 - (void) okToEndBackgrounding {
-    if (_hasBGTask) {
+    if ([_bgMonitor endBackgroundTask]) {
         LogTo(Sync, @"%@: Now idle; ending background task", self);
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [_bgMonitor endBackgroundTask];
-        });
         [self setSuspended: YES];
     }
 }
@@ -59,34 +56,32 @@
     // work, but it has to block until that work is done, because UIApplication requires
     // background tasks to be registered before the notification handler returns; otherwise the app
     // simply suspends itself.
-    BOOL hasTask = _active && [_bgMonitor beginBackgroundTaskNamed: self.description];
-    [self.db doSync: ^{
-        _hasBGTask = hasTask;
-        if (hasTask)
-            LogTo(Sync, @"%@: App backgrounding; starting temporary background task", self);
-        else
+    if (_active && [_bgMonitor beginBackgroundTaskNamed: self.description]) {
+        LogTo(Sync, @"%@: App backgrounding; starting temporary background task", self);
+    } else {
+        [self.db doSync: ^{
             [self setSuspended: YES];
-    }];
+        }];
+    }
 }
 
 
 - (void) appForegrounding {
     // Danger: This is called on the main thread!
     [self.db doAsync: ^{
-        if (_hasBGTask) {
-            _hasBGTask = NO;
+        if ([_bgMonitor endBackgroundTask])
             LogTo(Sync, @"%@: App foregrounded, ending background task", self);
-        }
         [self setSuspended: NO];
     }];
 }
 
 
 - (void) backgroundTaskExpired {
-    // Called if process runs out of background time before replication finishes:
+    // Danger: This is called on the main thread!
+    // Called if process runs out of background time before replication finishes.
+    // Must do its work synchronously, before the OS quits the app.
     [self.db doSync: ^{
         LogTo(Sync, @"%@: Background task time expired!", self);
-        _hasBGTask = NO;
         [self setSuspended: YES];
     }];
 }
