@@ -32,6 +32,8 @@
 @implementation CBLHTTPConnection
 {
     BOOL _hasClientCert;
+    NSURL* _remoteURL;
+    BOOL _builtRemoteURL;
 }
 
 @synthesize username=_username;
@@ -110,6 +112,26 @@ static void evaluate(SecTrustRef trust, SecTrustCallback callback) {
 }
 
 
+- (NSURL*) remoteURL {
+    if (!_builtRemoteURL) {
+        NSString* addr = asyncSocket.connectedHost;
+        if (![addr isEqualToString: @"127.0.0.1"]  && ![addr isEqualToString: @"::1"]) {
+            if ([addr rangeOfString: @":"].length > 0)
+                addr = $sprintf(@"[%@]", addr);     // RFC 2732
+
+            NSURLComponents* c = [NSURLComponents new];
+            c.scheme = self.isSecureServer ? @"https" : @"http";
+            c.host = addr;
+            c.user = _username;
+            c.path = @"/";
+            _remoteURL = c.URL;
+        }
+        _builtRemoteURL = YES;
+    }
+    return _remoteURL;
+}
+
+
 - (void) socketDidDisconnect: (GCDAsyncSocket*)socket withError: (NSError*)error {
     if (error && ![error my_hasDomain: GCDAsyncSocketErrorDomain
                                  code: GCDAsyncSocketClosedError]
@@ -146,10 +168,8 @@ static void evaluate(SecTrustRef trust, SecTrustCallback callback) {
                                                 request: urlRequest
                                                 isLocal: NO];
     router.processRanges = NO;  // The HTTP server framework does this already
-    if (_username) {
-        NSString* str = [@"user:" stringByAppendingString: [_username stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding]];
-        router.source = [NSURL URLWithString: str];
-    }
+    router.source = self.remoteURL;
+
     CBLHTTPResponse* response = [[CBLHTTPResponse alloc] initWithRouter: router
                                                          forConnection: self];
     
