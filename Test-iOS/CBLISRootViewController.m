@@ -23,37 +23,29 @@
 
 @implementation CBLISRootViewController
 
-@synthesize frc, context, tableView = _tableView, addButton;
+@synthesize frc, context, tableView = _tableView, addButton, game = _game;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     AppDelegateCBLIS *appDelegate = (AppDelegateCBLIS *)[UIApplication sharedApplication].delegate;
     
-    
-    
     [appDelegate setupCoreDataStackWithCompletion:^{
         self.context = [appDelegate context];
-        
         
         if (self.game == nil) {
             NSFetchRequest *request = [[NSFetchRequest alloc] initWithEntityName:@"Game"];
             request.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"name" ascending:NO]];
             NSArray *games = [self.context executeFetchRequest:request error:nil];
             self.game = games.firstObject;
-            
-//            [self.context deleteObject:self.game];
-//            self.game = nil;
-            
-            if (self.game == nil) {
-                NSManagedObject *game = [NSEntityDescription insertNewObjectForEntityForName:@"Game" inManagedObjectContext:context];
-                [game setValue:@"game" forKey:@"name"];
-                [self.context insertObject:game];
-                 [(AppDelegateCBLIS *)[UIApplication sharedApplication].delegate saveContext];
-                self.game = game;
-            }
-
         }
         
+        [self reloadData];
+       
+    }];
+}
+
+- (void)reloadData {
+    if (self.game) {
         NSFetchRequest *request = [[NSFetchRequest alloc] initWithEntityName:@"Team"];
         request.predicate = [NSPredicate predicateWithFormat:@"game == %@", self.game];
         request.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
@@ -66,11 +58,14 @@
         if (error) {
             NSLog(@"%@", error);
         }
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.tableView reloadData];
-        });
-    }];
+    }
+    else {
+        self.frc = nil;
+    }
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.tableView reloadData];
+    });
 }
 
 
@@ -105,6 +100,54 @@
 
 - (void)controllerDidChangeContent:(NSFetchedResultsController *)controller {
     [self.tableView reloadData];
+}
+
+- (IBAction)pickGame:(id)sender {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"" message:@"Game" preferredStyle:UIAlertControllerStyleActionSheet];
+    NSFetchRequest *request = [[NSFetchRequest alloc] initWithEntityName:@"Game"];
+    request.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"name" ascending:NO]];
+    NSArray *games = [self.context executeFetchRequest:request error:nil];
+    
+    for (NSManagedObject *obj in games) {
+        UIAlertAction *action = [UIAlertAction actionWithTitle:[obj valueForKey:@"name"] style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            self.game = obj;
+            [self reloadData];
+        }];
+        [alert addAction:action];
+    }
+    
+    UIAlertAction *action = [UIAlertAction actionWithTitle:@"New team" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+        NSManagedObject *game = [NSEntityDescription insertNewObjectForEntityForName:@"Game" inManagedObjectContext:context];
+        [game setValue:@"game" forKey:@"name"];
+        [self.context insertObject:game];
+        [(AppDelegateCBLIS *)[UIApplication sharedApplication].delegate saveContext];
+        self.game = game;
+        [self reloadData];
+    }];
+    
+    [alert addAction:action];
+    
+    if (self.game) {
+        NSManagedObject *obj = self.game;
+        
+        UIAlertAction *action = [UIAlertAction actionWithTitle:[NSString stringWithFormat:@"Delete: %@", [obj valueForKey:@"name"]] style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+            [self.context deleteObject:obj];
+            self.game = nil;
+            
+            [(AppDelegateCBLIS *)[UIApplication sharedApplication].delegate saveContext];
+            [self reloadData];
+        }];
+        
+        [alert addAction:action];
+    }
+    
+    action = [UIAlertAction actionWithTitle:@"Annuler" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+    }];
+    
+    [alert addAction:action];
+    
+    
+    [self showViewController:alert sender:self];
 }
 
 - (IBAction)addTeam:(id)sender {
