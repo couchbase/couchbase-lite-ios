@@ -41,8 +41,6 @@
 }
 
 
-
-
 - (void) unschedule {
     _scheduled = false;
     [NSObject cancelPreviousPerformRequestsWithTarget: self
@@ -79,7 +77,8 @@
 
     __unused id retainSelf = self;  // Prevent _processor block from deallocating me (#508)
 
-    _processor(toProcess);
+    __typeof(_processor) processor = _processor;
+    processor(toProcess);
     _lastProcessedTime = CFAbsoluteTimeGetCurrent();
 }
 
@@ -124,7 +123,8 @@
         [self unschedule];
         NSArray* toProcess = _inbox;
         _inbox = nil;
-        _processor(toProcess);
+        __typeof(_processor) processor = _processor;
+        processor(toProcess);
         _lastProcessedTime = CFAbsoluteTimeGetCurrent();
     }
 }

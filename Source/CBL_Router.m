@@ -450,9 +450,10 @@ static NSArray* splitPath( NSURL* url ) {
 
         sel = hasAltMethod ? @selector(do_METHOD_NOT_ALLOWED) : @selector(do_UNKNOWN);
     }
-    
-    if (_onAccessCheck) {
-        CBLStatus status = _onAccessCheck(_db, docID, sel);
+
+    __typeof(_onAccessCheck) onAccessCheck = _onAccessCheck;
+    if (onAccessCheck) {
+        CBLStatus status = onAccessCheck(_db, docID, sel);
         if (CBLStatusIsError(status)) {
             LogTo(CBL_Router, @"Access check failed for %@", _db.name);
             return status;
@@ -624,9 +625,10 @@ static NSArray* splitPath( NSURL* url ) {
     for (NSString *key in [_server.customHTTPHeaders allKeys]) {
         _response[key] = _server.customHTTPHeaders[key];
     }
-    
-    if (_onResponseReady)
-        _onResponseReady(_response);
+
+    __typeof(_onResponseReady) onResponseReady = _onResponseReady;
+    if (onResponseReady)
+        onResponseReady(_response);
 }
 
 
@@ -648,14 +650,16 @@ static NSArray* splitPath( NSURL* url ) {
 
 // Send data without closing the connection.
 - (void) sendData: (NSData*)data {
-    if (_onDataAvailable)
-        _onDataAvailable(data, NO);
+    __typeof(_onDataAvailable) onDataAvailable = _onDataAvailable;
+    if (onDataAvailable)
+        onDataAvailable(data, NO);
 }
 
 
 - (void) sendResponseBodyAndFinish: (BOOL)finished {
-    if (_onDataAvailable && _response.body && !$equal(_request.HTTPMethod, @"HEAD")) {
-        _onDataAvailable(_response.body.asJSON, finished);
+    __typeof(_onDataAvailable) onDataAvailable = _onDataAvailable;
+    if (onDataAvailable && _response.body && !$equal(_request.HTTPMethod, @"HEAD")) {
+        onDataAvailable(_response.body.asJSON, finished);
     }
     if (finished)
         [self finished];
@@ -731,8 +735,9 @@ static NSArray* splitPath( NSURL* url ) {
 #pragma mark - Heartbeat
 
 - (void) sendHeartbeatResponse: (NSTimer*)timer {
-    if (_onDataAvailable) {
-        _onDataAvailable(timer.userInfo, NO);
+    __typeof(_onDataAvailable) onDataAvailable = _onDataAvailable;
+    if (onDataAvailable) {
+        onDataAvailable(timer.userInfo, NO);
     }
 }
 
