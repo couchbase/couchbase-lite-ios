@@ -22,6 +22,14 @@
 #import "Logging.h"
 
 
+// Declared here just so we can name them with @selector() without a compiler warning:
+@interface CBL_Router (SomeActions)
+- (CBLStatus) do_POST_all_docs: (CBLDatabase*)db;
+- (CBLStatus) do_POST_changes: (CBLDatabase*)db;
+- (CBLStatus) do_POST_revs_diff: (CBLDatabase*)db;
+@end
+
+
 @implementation CBLHTTPResponse
 {
     CBL_Router* _router;
@@ -58,14 +66,16 @@
         if (connection.listener.readOnly) {
             NSString* method = router.request.HTTPMethod;
             router.onAccessCheck = ^CBLStatus(CBLDatabase* db, NSString* docID, SEL action) {
-                if ([method isEqualToString: @"GET"] || [method isEqualToString: @"HEAD"])
+                if ([method isEqualToString: @"GET"] || [method isEqualToString: @"HEAD"]) {
                     return kCBLStatusOK;
-                else if ([method isEqualToString: @"PUT"] && [docID hasPrefix: @"_local/"])
+                } else if ([method isEqualToString: @"PUT"] && [docID hasPrefix: @"_local/"]) {
+                    // Allow read-only clients to save checkpoints:
                     return kCBLStatusOK;
-                else if ([method isEqualToString: @"POST"]) {
-                    NSString* actionStr = NSStringFromSelector(action);
-                    if ([actionStr isEqualToString: @"do_POST_all_docs:"]
-                            || [actionStr isEqualToString: @"do_POST_revs_diff:"])
+                } else if ([method isEqualToString: @"POST"]) {
+                    // POSTs that are legal read-only because they don't change anything:
+                    if (action == @selector(do_POST_all_docs:)
+                            || action == @selector(do_POST_changes:)
+                            || action == @selector(do_POST_revs_diff:))
                         return kCBLStatusOK;
                 }
                 return kCBLStatusForbidden;
