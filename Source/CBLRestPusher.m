@@ -136,8 +136,6 @@
 
 - (void) stop {
     LogTo(Sync, @"%@ STOPPING...", self);
-    _uploaderQueue = nil;
-    _uploading = NO;
     [self stopObserving];
     [super stop];
 }
@@ -448,7 +446,6 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeURLParam(rev.docID));
     __block CBLMultipartUploader* uploader = [[CBLMultipartUploader alloc]
                                   initWithURL: CBLAppendToURL(_settings.remote, path)
-                               requestHeaders: _settings.requestHeaders
                               multipartWriter:^CBLMultipartWriter *{
                                   CBLMultipartWriter* writer = bodyStream;
                                   // Reset to nil so the writer will get regenerated if the block
@@ -462,7 +459,6 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                                   return writer;
                               }
                                  onCompletion: ^(CBLMultipartUploader* result, NSError *error) {
-                  [self removeRemoteRequest: uploader];
                   if (error) {
                       if ($equal(error.domain, CBLHTTPErrorDomain)
                                 && error.code == kCBLStatusUnsupportedType) {
@@ -484,7 +480,6 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                   [self startNextUpload];
               }
      ];
-    [self addRemoteRequest: uploader];
     LogTo(SyncVerbose, @"%@: Queuing %@ (multipart, %lldkb)", self, uploader, bodyStream.length/1024);
     if (!_uploaderQueue)
         _uploaderQueue = [[NSMutableArray alloc] init];
@@ -533,6 +528,17 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
         [self startRemoteRequest: uploader];
         [_uploaderQueue removeObjectAtIndex: 0];
     }
+}
+
+
+- (void) stopRemoteRequests {
+    NSArray* queue = _uploaderQueue;
+    _uploaderQueue = nil;
+    _uploading = NO;
+    [queue makeObjectsPerformSelector: @selector(stop)];
+
+    [super stopRemoteRequests];
+
 }
 
 

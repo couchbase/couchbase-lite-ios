@@ -23,7 +23,11 @@
 
 @property (readonly) id<CBLAuthorizer> authorizer;
 
+@property (readonly) NSArray<CBLRemoteRequest*>* activeRequests;
+
 - (void) startRequest: (CBLRemoteRequest*)request;
+
+- (void) stopActiveRequests;
 
 - (void) close;
 

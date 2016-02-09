@@ -434,7 +434,6 @@
     __block CBLMultipartDownloader *dl;
     dl = [[CBLMultipartDownloader alloc] initWithURL: CBLAppendToURL(_settings.remote, path)
                                             database: db
-                                      requestHeaders: _settings.requestHeaders
                                         onCompletion:
         ^(CBLMultipartDownloader* result, NSError *error) {
             __strong CBLRestPuller *strongSelf = weakSelf;
@@ -458,14 +457,12 @@
             }
             
             // Note that we've finished this task:
-            [strongSelf removeRemoteRequest:dl];
             [strongSelf asyncTasksFinished:1];
             --strongSelf->_httpConnectionCount;
             // Start another task if there are still revisions waiting to be pulled:
             [strongSelf pullRemoteRevisions];
         }
      ];
-    [self addRemoteRequest: dl];
     [self startRemoteRequest: dl];
 }
 
@@ -495,7 +492,6 @@
     CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
     dl = [[CBLBulkDownloader alloc] initWithDbURL: _settings.remote
                                          database: _db
-                                   requestHeaders: _settings.requestHeaders
                                         revisions: bulkRevs
                                       attachments: _settings.downloadAttachments
                                        onDocument:
@@ -539,12 +535,6 @@
               LogTo(SyncPerf, @"%@: finished bulk-getting %u remote revisions (%.3f sec)",
                     self, (unsigned)nRevs, CFAbsoluteTimeGetCurrent()-start);
 
-              // Remove the remote request first to prevent the request from cancellation
-              // when setting the error (a permanent error). If that happens, this block
-              // will be called a second time upon calling cancelling request and result to
-              // a romdom crash and over-decreasing the _asyncTaskCount (#613):
-              [strongSelf removeRemoteRequest:dl];
-
               if (error) {
                   strongSelf.error = error;
                   [strongSelf revisionFailed];
@@ -562,7 +552,6 @@
               [strongSelf pullRemoteRevisions];
           }
      ];
-    [self addRemoteRequest: dl];
 
     if (self.canSendCompressedRequests)
         [dl compressBody];
@@ -791,7 +780,6 @@
                           [task.progress failedWithError: error];
                       }
                   }
-                  [strongSelf removeRemoteRequest: dl];
                   [strongSelf asyncTasksFinished: 1];
               }];
         if (!dl)
@@ -803,7 +791,6 @@
         _attachmentDownloads[task.ID] = dl;
 
         [self asyncTaskStarted];
-        [self addRemoteRequest: dl];
         [self startRemoteRequest: dl];
     }
 }

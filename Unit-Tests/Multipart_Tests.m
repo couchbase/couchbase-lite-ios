@@ -75,7 +75,6 @@
     CBLMultipartDownloader* dl;
     dl = [[CBLMultipartDownloader alloc] initWithURL: url
                                         database: db
-                                  requestHeaders: nil
                                     onCompletion: ^(id result, NSError * error)
       {
           AssertNil(error);

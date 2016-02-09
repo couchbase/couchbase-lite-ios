@@ -23,7 +23,6 @@ typedef CBLMultipartWriter* (^CBLMultipartUploaderMultipartWriterBlock)(void);
 }
 
 - (instancetype) initWithURL: (NSURL *)url
-              requestHeaders: (NSDictionary *) requestHeaders
              multipartWriter: (CBLMultipartUploaderMultipartWriterBlock)writer
                 onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 

@@ -32,8 +32,7 @@
                                      path: (NSString*)relativePath
                                      body: (id)body
                              onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
-- (void) addRemoteRequest: (CBLRemoteRequest*)request;
-- (void) removeRemoteRequest: (CBLRemoteRequest*)request;
+- (void) stopRemoteRequests;
 - (void) asyncTaskStarted;
 - (void) asyncTasksFinished: (NSUInteger)numTasks;
 - (void) stopped;

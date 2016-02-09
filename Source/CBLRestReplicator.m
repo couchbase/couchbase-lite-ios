@@ -70,7 +70,6 @@
     NSString* _remoteCheckpointDocID;
     NSDictionary* _remoteCheckpoint;
     BOOL _savingCheckpoint, _overdueForSave;
-    NSMutableArray* _remoteRequests;
     int _asyncTaskCount;
     NSUInteger _changesProcessed, _changesTotal;
     CFAbsoluteTime _startTime;
@@ -145,7 +144,9 @@
     [self saveLastSequence];
     [self stop];
     [self clearDbRef];
-    [self clearCookieStorageRef];
+    // Explicitly clear the reference to the storage to ensure that the cookie storage will
+    // get dealloc and the database referenced inside the storage will get cleared as well.
+    _cookieStorage = nil;
 }
 
 
@@ -196,7 +197,7 @@
 
 
 - (NSArray*) activeTasksInfo {
-    return [_remoteRequests my_map: ^id(CBLRemoteRequest* request) {
+    return [_remoteSession.activeRequests my_map: ^id(CBLRemoteRequest* request) {
         return request.statusInfo;
     }];
 }
@@ -283,6 +284,12 @@
     NSURLSessionConfiguration* config = [[CBLRemoteSession defaultConfiguration] copy];
     config.timeoutIntervalForRequest = _settings.requestTimeout;
     config.allowsCellularAccess = _settings.canUseCellNetwork;
+    NSMutableDictionary* headers = _settings.requestHeaders.mutableCopy;
+    if (headers) {
+        if( config.HTTPAdditionalHeaders)
+            [headers addEntriesFromDictionary: config.HTTPAdditionalHeaders];
+        config.HTTPAdditionalHeaders = headers;
+    }
     _remoteSession = [[CBLRemoteSession alloc] initWithConfiguration: config
                                                           authorizer: authorizer
                                                        cookieStorage: _cookieStorage];
@@ -442,7 +449,6 @@
     _checkRequest = [[CBLRemoteRequest alloc] initWithMethod: @"GET"
                                                          URL: _settings.remote
                                                         body: nil
-                                              requestHeaders: nil
                                                 onCompletion: ^(id result, NSError* error) {
         if (error.code == NSURLErrorCancelled) {
             LogTo(Sync, @"%@: Attempted to connect: cancelled", self);
@@ -655,12 +661,6 @@
     return _cookieStorage;
 }
 
-- (void) clearCookieStorageRef {
-    // Explicitly clear the reference to the storage to ensure that the cookie storage will
-    // get dealloc and the database referenced inside the storage will get cleared as well.
-    _cookieStorage = nil;
-}
-
 
 - (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion {
     return [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
@@ -685,62 +685,35 @@
     } else {
         url = CBLAppendToURL(_settings.remote, path);
     }
-    onCompletion = [onCompletion copy];
-    
-    // under ARC, using variable req used directly inside the block results in a compiler error (it could have undefined value).
-    __weak CBLRestReplicator *weakSelf = self;
-    __block CBLRemoteJSONRequest *req = nil;
-    req = [[CBLRemoteJSONRequest alloc] initWithMethod: method
-                                                  URL: url
-                                                 body: body
-                                       requestHeaders: _settings.requestHeaders
-                                         onCompletion: ^(id result, NSError* error) {
-        CBLRestReplicator *strongSelf = weakSelf;
-        if (!strongSelf) return; // already dealloced
-        [strongSelf removeRemoteRequest: req];
-        onCompletion(result, error);
-    }];
 
+    CBLRemoteJSONRequest *req = [[CBLRemoteJSONRequest alloc] initWithMethod: method
+                                                                     URL: url
+                                                                    body: body
+                                                            onCompletion: onCompletion];
     if (self.canSendCompressedRequests)
         [req compressBody];
 
-    [self addRemoteRequest: req];
     [self startRemoteRequest: req];
     return req;
 }
 
 
-- (void) addRemoteRequest: (CBLRemoteRequest*)request {
-    request.delegate = self;
-
-    if (!_remoteRequests)
-        _remoteRequests = [[NSMutableArray alloc] init];
-    [_remoteRequests addObject: request];
-}
-
-- (void) removeRemoteRequest: (CBLRemoteRequest*)request {
-    if (!_serverType) {
-        _serverType = request.responseHeaders[@"Server"];
-        LogTo(Sync, @"%@: Server is %@", self, _serverType);
-    }
-    [_remoteRequests removeObjectIdenticalTo: request];
-}
-
 - (void) startRemoteRequest: (CBLRemoteRequest*)request {
+    request.delegate = self;
     [_remoteSession startRequest: request];
 }
 
 
+- (void) remoteRequestReceivedResponse: (CBLRemoteRequest*)request {
+    if (!_serverType) {
+        _serverType = request.responseHeaders[@"Server"];
+        LogTo(Sync, @"%@: Server is %@", self, _serverType);
+    }
+}
+
+
 - (void) stopRemoteRequests {
-    if (!_remoteRequests)
-        return;
-    LogTo(Sync, @"Stopping %u remote requests", (unsigned)_remoteRequests.count);
-    // Clear _remoteRequests before iterating, to ensure that re-entrant calls to this won't
-    // try to re-stop any of the requests. (Re-entrant calls are possible due to replicator
-    // error handling when it receives the 'canceled' errors from the requests I'm stopping.)
-    NSArray* requests = _remoteRequests;
-    _remoteRequests = nil;
-    [requests makeObjectsPerformSelector: @selector(stop)];
+    [_remoteSession stopActiveRequests];
 }
 
 
@@ -948,7 +921,7 @@
                   }
          ];
     // This request should not be canceled when the replication is told to stop:
-    [_remoteRequests removeObject: request];
+    request.dontStop = YES;
 }
 
 

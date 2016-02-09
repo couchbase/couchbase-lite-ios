@@ -347,7 +347,6 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     CBLRemoteRequest* request = [[CBLRemoteRequest alloc] initWithMethod: @"POST"
                                                                      URL: comp.URL
                                                                     body: nil
-                                                          requestHeaders: nil
                                                             onCompletion:
                                  ^(id result, NSError *err) {
                                      [finished fulfill];

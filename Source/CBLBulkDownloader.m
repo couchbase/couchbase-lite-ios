@@ -42,7 +42,6 @@
 
 - (instancetype) initWithDbURL: (NSURL*)dbURL
                       database: (CBLDatabase*)database
-                requestHeaders: (NSDictionary *) requestHeaders
                      revisions: (NSArray*)revs
                    attachments: (BOOL)attachments
                     onDocument: (CBLBulkDownloaderDocumentBlock)onDocument
@@ -68,7 +67,6 @@
     self = [super initWithMethod: @"POST"
                              URL: CBLAppendToURL(dbURL, query)
                             body: @{@"docs": keys}
-                  requestHeaders: requestHeaders
                     onCompletion: onCompletion];
     if (self) {
         _db = database;
@@ -101,6 +99,7 @@
 
 
 - (void) didReceiveResponse:(NSHTTPURLResponse *)response {
+    [super didReceiveResponse: response];
     if (_status < 300) {
         // Check the content type to see whether it's a multipart response:
         NSString* contentType = _responseHeaders[@"Content-Type"];
@@ -112,8 +111,6 @@
             return;
         }
     }
-    
-    [super didReceiveResponse: response];
 }
 
 

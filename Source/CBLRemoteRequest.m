@@ -52,7 +52,7 @@ typedef enum {
 
 
 @synthesize delegate=_delegate, responseHeaders=_responseHeaders, cookieStorage=_cookieStorage;
-@synthesize autoRetry = _autoRetry, session=_session, task=_task;
+@synthesize autoRetry = _autoRetry, dontStop=_dontStop, session=_session, task=_task;
 #if DEBUG
 @synthesize debugAlwaysTrust=_debugAlwaysTrust;
 #endif
@@ -61,7 +61,6 @@ typedef enum {
 - (instancetype) initWithMethod: (NSString*)method
                             URL: (NSURL*)url
                            body: (id)body
-                 requestHeaders: (NSDictionary *)requestHeaders
                    onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
     self = [super init];
@@ -82,12 +81,6 @@ typedef enum {
             }
             _request.HTTPBody = body;
         }
-
-        // Add headers.
-        [requestHeaders enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL *stop) {
-            [_request setValue:value forHTTPHeaderField:key];
-        }];
-
     }
     return self;
 }
@@ -197,6 +190,8 @@ typedef enum {
 
 
 - (void) stop {
+    if (_dontStop)
+        return;
     if (_task) {
         LogTo(RemoteRequest, @"%@: Stopped", self);
         [_task cancel];
@@ -415,6 +410,8 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     if (_cookieStorage)
         [_cookieStorage setCookieFromResponse: response];
 
+    [_delegate remoteRequestReceivedResponse: self];
+
     LogTo(RemoteRequest, @"%@: Got response, status %d", self, _status);
     if (_status == 401) {
         // CouchDB says we're unauthorized but it didn't present a 'WWW-Authenticate' header
@@ -443,7 +440,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 
 
 - (void) didReceiveData:(NSData *)data {
-    LogTo(RemoteRequestVerbose, @"%@: Got %lu bytes", self, (unsigned long)data.length);
+//    LogTo(RemoteRequestVerbose, @"%@: Got %lu bytes", self, (unsigned long)data.length);
 }
 
 
@@ -485,13 +482,11 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 - (instancetype) initWithMethod: (NSString*)method
                             URL: (NSURL*)url
                            body: (id)body
-                 requestHeaders: (NSDictionary *)requestHeaders
                    onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
     self = [super initWithMethod: method
                              URL: url
                             body: body
-                  requestHeaders: requestHeaders
                     onCompletion: onCompletion];
     if (self) {
         [_request setValue: @"application/json" forHTTPHeaderField: @"Accept"];

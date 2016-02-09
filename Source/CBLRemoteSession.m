@@ -20,7 +20,8 @@
 {
     NSURLSession* _session;
     NSRunLoop* _runLoop;
-    NSMutableDictionary* _requestIDs;  // taskIdentifier -> CBLRemoteRequest. Used on op-queue only
+    NSMutableDictionary<NSNumber*, CBLRemoteRequest*>* _requestIDs; // Used on operation queue only
+    NSMutableSet<CBLRemoteRequest*>* _allRequests;                  // Used on API thread only
     CBLCookieStorage* _cookieStorage;
 }
 
@@ -67,6 +68,12 @@
 }
 
 
+- (void)dealloc {
+    if (_allRequests.count > 0)
+        Warn(@"CBLRemoteSession dealloced but has leftover requests: %@", _allRequests);
+}
+
+
 - (void) close {
     [_session.delegateQueue addOperationWithBlock:^{
         // Do this on the queue so that it's properly ordered with the tasks being started in
@@ -85,6 +92,11 @@
     NSURLSessionTask* task = [request createTaskInURLSession: _session];
     if (!task)
         return;
+
+    if (!_allRequests)
+        _allRequests = [NSMutableSet new];
+    [_allRequests addObject: request];
+
     [_session.delegateQueue addOperationWithBlock:^{
         // Now running on delegate queue:
         _requestIDs[@(task.taskIdentifier)] = request;
@@ -92,6 +104,27 @@
         [task resume]; // Go!
     }];
 }
+
+
+- (NSArray<CBLRemoteRequest*>*) activeRequests {
+    return _allRequests.allObjects;
+}
+
+
+- (void) stopActiveRequests {
+    if (!_allRequests)
+        return;
+    LogTo(RemoteRequest, @"Stopping %u remote requests", (unsigned)_allRequests.count);
+    // Clear _allRequests before iterating, to ensure that re-entrant calls to this won't
+    // try to re-stop any of the requests. (Re-entrant calls are possible due to replicator
+    // error handling when it receives the 'canceled' errors from the requests I'm stopping.)
+    NSSet* requests = _allRequests;
+    _allRequests = nil;
+    [requests makeObjectsPerformSelector: @selector(stop)];
+}
+
+
+#pragma mark - INTERNAL:
 
 
 // must be called on the delegate queue
@@ -120,8 +153,6 @@
             }
         });
         CFRunLoopWakeUp(_runLoop.getCFRunLoop);
-    } else {
-        Warn(@"CBLRemoteSession: Unknown task with ID %zu: %@", task.taskIdentifier, task);
     }
 }
 
@@ -137,6 +168,7 @@
     if (_requestIDs.count > 0)
         Warn(@"CBLRemoteSession closed but has leftover tasks: %@", _requestIDs.allValues);
     _session = nil;
+    _allRequests = nil;
     _requestIDs = nil;
 }
 
@@ -183,6 +215,7 @@
         didCompleteWithError:(nullable NSError *)error
 {
     [self requestForTask: task do: ^(CBLRemoteRequest *request) {
+        [_allRequests removeObject: request];
         if (error)
             [request didFailWithError: error];
         else

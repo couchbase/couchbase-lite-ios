@@ -51,7 +51,6 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
     if (task.ID.revID)
         [urlStr appendFormat: @"?rev=%@", task.ID.revID];
     self = [super initWithMethod: @"GET" URL: $url(urlStr) body: nil
-                  requestHeaders: nil
                     onCompletion: onCompletion];
     if (self) {
         CBLProgressGroup* progress = task.progress;
@@ -107,21 +106,20 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
 
 
 - (void) didReceiveResponse:(NSHTTPURLResponse *)response {
-    CBLStatus status = (CBLStatus) response.statusCode;
-    if (status < 300) {
-        NSDictionary* headers = response.allHeaderFields;
+    [super didReceiveResponse: response];
+    if (_status < 300) {
         BOOL reset = NO;
         // Check whether the server is honoring the "Range:" header:
-        if (_writer.bytesWritten > 0 && (status != 206 || !headers[@"Content-Range"])) {
+        if (_writer.bytesWritten > 0 && (_status != 206 || !_responseHeaders[@"Content-Range"])) {
             LogTo(RemoteRequest, @"%@: Range header was not honored; restarting", self);
             reset = YES;
         }
 
         // Remember the eTag if the server supports resumeable downloads:
-        _writer.eTag = headers[@"Accept-Ranges"] ? headers[@"Etag"] : nil;
+        _writer.eTag = _responseHeaders[@"Accept-Ranges"] ? _responseHeaders[@"Etag"] : nil;
 
         // Determine the content length:
-        uint64_t contentLength = [headers[@"Content-Length"] longLongValue];
+        uint64_t contentLength = [_responseHeaders[@"Content-Length"] longLongValue];
         if (contentLength > 0) {
             contentLength += _writer.bytesWritten;
         } else {
@@ -133,7 +131,6 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
         if (reset)
             [_writer reset];
     }
-    [super didReceiveResponse: response];
 }
 
 

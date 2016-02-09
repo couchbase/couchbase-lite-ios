@@ -43,7 +43,6 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 - (instancetype) initWithMethod: (NSString*)method
                             URL: (NSURL*)url
                            body: (id)body
-                 requestHeaders: (NSDictionary *)requestHeaders
                    onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 
 @property NSTimeInterval timeoutInterval;
@@ -51,6 +50,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 @property (strong, nonatomic) id<CBLRemoteRequestDelegate> delegate;
 @property (strong, nonatomic) CBLCookieStorage* cookieStorage;
 @property (nonatomic) bool autoRetry;   // Default value is YES
+@property (nonatomic) bool dontStop;
 
 /** Applies GZip compression to the request body if appropriate. */
 - (BOOL) compressBody;
@@ -110,6 +110,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 
 @protocol CBLRemoteRequestDelegate <NSObject>
 
+- (void) remoteRequestReceivedResponse: (CBLRemoteRequest*)request;
 - (BOOL) checkSSLServerTrust: (NSURLProtectionSpace*)protectionSpace;
 
 @end

@@ -353,11 +353,11 @@
 
     Log(@"Pulling from %@...", pullURL);
     CBLReplication* repl = [db createPullReplication: pullURL];
-    [self allowWarningsIn: ^{
+//    [self allowWarningsIn: ^{
         // This triggers a warning in CBLSyncConnection because the attach-test db is actually
         // missing an attachment body. It's not a CBL error.
         [self runReplication: repl expectedChangesCount: 0];
-    }];
+//    }];
     AssertNil(repl.lastError);
 
     Log(@"Verifying documents...");
@@ -974,7 +974,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     XCTestExpectation* complete = [self expectationWithDescription: @"didComplete"];
     CBLRemoteRequest *req =
         [[CBLRemoteJSONRequest alloc] initWithMethod: @"GET" URL: docUrl
-                                                body: nil requestHeaders: nil
+                                                body: nil
                                         onCompletion:^(id result, NSError *error) {
                                             AssertNil(error);
                                             data = result;
@@ -1315,7 +1315,6 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
         [[CBLRemoteJSONRequest alloc] initWithMethod: @"POST"
                                                  URL: comp.URL
                                                 body: @{@"name": @"test", @"password": @"abc123"}
-                                      requestHeaders: nil
                                         onCompletion:^(id result, NSError *error) {
                                             AssertNil(error);
                                             cookie = result;

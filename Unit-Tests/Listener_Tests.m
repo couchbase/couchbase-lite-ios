@@ -319,6 +319,7 @@ static NSString* addressToString(NSData* addrData) {
 @private
     NSMutableData* _data;
 }
+- (void) setValue:(NSString*)value forHTTPHeaderField:(NSString *)header;
 @property (readonly) NSData* data;
 @property (readonly) int status;
 @end
@@ -430,7 +431,7 @@ static NSString* addressToString(NSData* addrData) {
 - (void) connect {
     Log(@"Connecting to <%@>", listener.URL);
     XCTestExpectation* expectDidComplete = [self expectationWithDescription: @"didComplete"];
-    CBLRemoteRequest* req = [[CBLRemoteJSONRequest alloc] initWithMethod: @"GET" URL: listener.URL body: nil requestHeaders: nil onCompletion:^(id result, NSError *error) {
+    CBLRemoteRequest* req = [[CBLRemoteJSONRequest alloc] initWithMethod: @"GET" URL: listener.URL body: nil onCompletion:^(id result, NSError *error) {
         AssertNil(error);
         Assert(result != nil);
         [expectDidComplete fulfill];
@@ -462,6 +463,10 @@ static NSString* addressToString(NSData* addrData) {
 }
 
 
+- (void) remoteRequestReceivedResponse:(CBLRemoteRequest *)request {
+}
+
+
 - (void) sendRequest: (NSString*)method
                 path: (NSString*)path
              headers: (NSDictionary*)headers
@@ -475,7 +480,6 @@ static NSString* addressToString(NSData* addrData) {
         [[ListenerTestRemoteRequest alloc] initWithMethod: method
                                                       URL: url
                                                      body: bodyObj
-                                           requestHeaders: headers
                                              onCompletion:
          ^(ListenerTestRemoteRequest* result, NSError *error) {
              AssertEq(result.status, expectedStatus);
@@ -487,6 +491,9 @@ static NSString* addressToString(NSData* addrData) {
              [expectDidComplete fulfill];
          }];
 
+    [headers enumerateKeysAndObjectsUsingBlock:^(id header, id value, BOOL* stop) {
+        [req setValue: value forHTTPHeaderField: header];
+    }];
     if (clientCredential) {
         req.authorizer = [[CBLClientCertAuthorizer alloc] initWithIdentity: clientCredential.identity
                                                            supportingCerts: clientCredential.certificates];
@@ -502,6 +509,10 @@ static NSString* addressToString(NSData* addrData) {
 @implementation ListenerTestRemoteRequest
 
 @synthesize data=_data;
+
+- (void) setValue:(NSString*)value forHTTPHeaderField:(NSString *)header {
+    [_request setValue: value forHTTPHeaderField: header];
+}
 
 - (int)status {
     return _status;

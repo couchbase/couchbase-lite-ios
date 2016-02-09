@@ -26,13 +26,11 @@
 
 - (instancetype) initWithURL: (NSURL*)url
                     database: (CBLDatabase*)database
-              requestHeaders: (NSDictionary *) requestHeaders
                 onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
     self = [super initWithMethod: @"GET" 
                              URL: url 
                             body: nil
-                  requestHeaders: requestHeaders
                     onCompletion: onCompletion];
     if (self) {
         _db = database;
@@ -58,6 +56,7 @@
 
 
 - (void) didReceiveResponse:(NSHTTPURLResponse *)response {
+    [super didReceiveResponse: response];
     _reader = [[CBLMultipartDocumentReader alloc] initWithDatabase: _db];
     if (_status < 300) {
         NSDictionary* headers = _responseHeaders;
@@ -75,8 +74,6 @@
             return;
         }
     }
-    
-    [super didReceiveResponse: response];
 }
 
 

@@ -22,14 +22,12 @@
 @implementation CBLMultipartUploader
 
 - (instancetype) initWithURL: (NSURL *)url
-              requestHeaders: (NSDictionary *) requestHeaders
              multipartWriter: (CBLMultipartUploaderMultipartWriterBlock)writer
                 onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion {
     Assert(writer);
     self = [super initWithMethod: @"PUT" 
                              URL: url 
                             body: nil
-                  requestHeaders: requestHeaders 
                     onCompletion: onCompletion];
     if (self) {
         _writer = [writer copy];
