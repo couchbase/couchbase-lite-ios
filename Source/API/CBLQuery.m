@@ -217,7 +217,7 @@
     SequenceNumber lastSequence;
     CBLQueryIteratorBlock iterator = [_database queryViewNamed: _view.name
                                                        options: self.queryOptions
-                                                ifChangedSince: 0
+                                                ifChangedSince: -1
                                                   lastSequence: &lastSequence
                                                         status: &status];
     if (!iterator) {
@@ -237,7 +237,7 @@
 
 
 - (void) runAsync: (void (^)(CBLQueryEnumerator*, NSError*))onComplete {
-    [self runAsyncIfChangedSince: 0 onComplete: onComplete];
+    [self runAsyncIfChangedSince: -1 onComplete: onComplete];
 }
 
 - (void) runAsyncIfChangedSince: (SequenceNumber)ifChangedSince
@@ -438,10 +438,12 @@
     _isUpdatingAtSequence = lastSequence;
     _lastUpdatedAt = CFAbsoluteTimeGetCurrent();
 
-    // Reset sequence number in the current result's sequence number when
-    // forcing the query to re-run as setting _lastSequence to zero.
-    SequenceNumber curRowsSeq = _lastSequence != 0 ? _rows.sequenceNumber : 0;
-    [self runAsyncIfChangedSince: curRowsSeq
+    SequenceNumber since;
+    if (_rows != nil && _lastSequence > 0)
+        since = _rows.sequenceNumber;
+    else
+        since = -1;    // Initially, or if _viewChanged forced me to re-run, start over
+    [self runAsyncIfChangedSince: since
                       onComplete: ^(CBLQueryEnumerator *rows, NSError* error) {
         // Async update finished:
         _isUpdatingAtSequence = 0;
@@ -482,13 +484,24 @@
 
 @implementation CBLDatabase (Views)
 
+
+/** Internal subroutine that does CBLQuery's actual index-updating and querying.
+    It's a method on CBLDatabase so that it can handle all-docs queries as well as view queries.
+    @param viewName  The name of the view, or nil for an all-docs query.
+    @param options  The query options.
+    @param ifChangedSince  If the view index (or database) hasn't changed since this sequence,
+                the method will return nil and kCBLStatusNotModified. (Pass -1 to bypass this.)
+    @param outLastSequence  On return will be set to the sequence at which the view's index was
+                last updated. (Can be NULL.)
+    @param outStatus  If the method returns nil, this will be set to a status code.
+    @return  An iterator block that returns successive view rows, or nil. */
 - (CBLQueryIteratorBlock) queryViewNamed: (NSString*)viewName
                                  options: (CBLQueryOptions*)options
                           ifChangedSince: (SequenceNumber)ifChangedSince
                             lastSequence: (SequenceNumber*)outLastSequence
                                   status: (CBLStatus*)outStatus
 {
-    CBLStatus status;
+    CBLStatus status = kCBLStatusOK;
     CBLQueryIteratorBlock iterator = nil;
     SequenceNumber lastIndexedSequence = 0, lastChangedSequence = 0;
     do {
@@ -513,15 +526,17 @@
                 }];
             }
             lastChangedSequence = view.lastSequenceChangedAt;
-            iterator = [view _queryWithOptions: options status: &status];
+            if (lastChangedSequence > ifChangedSince)
+                iterator = [view _queryWithOptions: options status: &status];
+            else
+                status = kCBLStatusNotModified;
         } else {
             // nil view means query _all_docs
-            iterator = [self getAllDocs: options status: &status];
             lastIndexedSequence = lastChangedSequence = self.lastSequenceNumber;
-        }
-        if (lastChangedSequence <= ifChangedSince) {
-            status = 304;
-            break;
+            if (lastChangedSequence > ifChangedSince)
+                iterator = [self getAllDocs: options status: &status];
+            else
+                status = kCBLStatusNotModified;
         }
     } while(false); // just to allow 'break' within the block
 

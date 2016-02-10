@@ -537,7 +537,8 @@
     RequireTestCase(API_CreateView);
     CBLView* view = [db viewNamed: @"vu"];
     [view setMapBlock: MAPBLOCK({
-        emit(doc[@"sequence"], doc);        // Emitting doc as value makes trickier things happen
+        if (doc[@"sequence"])
+            emit(doc[@"sequence"], doc);    // Emitting doc as value makes trickier things happen
     }) version: @"1"];
 
     static const NSUInteger kNDocs = 50;
@@ -547,14 +548,17 @@
     query.startKey = @23;
     query.endKey = @33;
 
-    __block bool finished = false;
+    XCTestExpectation* finished = [self expectationWithDescription: @"Query finished"];
     NSThread* curThread = [NSThread currentThread];
+    __block SequenceNumber lastSequence;
     [query runAsync: ^(CBLQueryEnumerator *rows, NSError* error) {
         Log(@"Async query finished!");
         AssertEq([NSThread currentThread], curThread);
         Assert(rows);
         AssertNil(error);
         AssertEq(rows.count, (NSUInteger)11);
+        lastSequence = rows.sequenceNumber;
+        AssertEq(lastSequence, 50);
 
         int expectedKey = 23;
         for (CBLQueryRow* row in rows) {
@@ -563,16 +567,41 @@
             AssertEqual(row.value, row.document.properties);    // Make sure value is looked up
             ++expectedKey;
         }
-        finished = true;
+        [finished fulfill];
     }];
 
     Log(@"Waiting for async query to finish...");
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 5.0];
-    while (!finished) {
-        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
-            break;
-    }
-    Assert(finished, @"Async query timed out!");
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+
+    // Now try a conditional async query:
+    finished = [self expectationWithDescription: @"Conditional query finished"];
+    [query runAsyncIfChangedSince: lastSequence
+                       onComplete: ^(CBLQueryEnumerator *rows, NSError* error) {
+        Log(@"Conditional async query finished!");
+        AssertEq([NSThread currentThread], curThread);
+        // Expect no rows because the view index is unchanged since lastSequence:
+        AssertNil(rows);
+        AssertNil(error);
+        [finished fulfill];
+    }];
+    Log(@"Waiting for conditional async query to finish...");
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+
+    // Add a doc that doesn't affect the index, and run another conditional query:
+    [self createDocumentWithProperties: @{}];
+    finished = [self expectationWithDescription: @"2nd conditional query finished"];
+    [query runAsyncIfChangedSince: lastSequence
+                       onComplete: ^(CBLQueryEnumerator *rows, NSError* error) {
+                           Log(@"Conditional async query finished!");
+                           AssertEq([NSThread currentThread], curThread);
+                           // ForestDB storage will detect that the index is unchanged; SQLite won't
+                           if (!self.isSQLiteDB)
+                               AssertNil(rows);
+                           AssertNil(error);
+                           [finished fulfill];
+                       }];
+    Log(@"Waiting for 2nd conditional async query to finish...");
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
 }
 
 // Ensure that when the view mapblock changes, a related live query
