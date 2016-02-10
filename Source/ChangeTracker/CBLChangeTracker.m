@@ -53,7 +53,7 @@ DefineLogDomain(ChangeTracker);
 @synthesize limit=_limit, heartbeat=_heartbeat, error=_error, continuous=_continuous;
 @synthesize client=_client, filterName=_filterName, filterParameters=_filterParameters;
 @synthesize requestHeaders = _requestHeaders, authorizer=_authorizer, cookieStorage=_cookieStorage;
-@synthesize docIDs = _docIDs, pollInterval=_pollInterval, paused=_paused;
+@synthesize docIDs = _docIDs, pollInterval=_pollInterval, paused=_paused, activeOnly=_activeOnly;
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
                                 mode: (CBLChangeTrackerMode)mode
@@ -110,10 +110,9 @@ DefineLogDomain(ChangeTracker);
         if ([seq isKindOfClass: [NSArray class]] || [seq isKindOfClass: [NSDictionary class]])
             seq = [CBLJSON stringWithJSONObject: seq options: 0 error: nil];
         [path appendFormat: @"&since=%@", CBLEscapeURLParam([seq description])];
-    } else {
-        // On first replication we can skip getting deleted docs. (SG enhancement in ver. 1.2)
-        [path appendString: @"&active_only=true"];
     }
+    if (_activeOnly && !_caughtUp)
+        [path appendString: @"&active_only=true"];
     if (_limit > 0)
         [path appendFormat: @"&limit=%u", _limit];
 
@@ -168,7 +167,7 @@ DefineLogDomain(ChangeTracker);
     NSMutableDictionary* post = $mdict({@"feed", self.feed},
                                        {@"heartbeat", @(round(_heartbeat*1000.0))},
                                        {@"style", (_includeConflicts ? @"all_docs" : nil)},
-                                       {@"active_only", (since ? nil : @YES)},
+                                       {@"active_only", (_activeOnly && !_caughtUp ? @YES : nil)},
                                        {@"since", since},
                                        {@"limit", (_limit > 0 ? @(_limit) : nil)},
                                        {@"filter", filterName},
