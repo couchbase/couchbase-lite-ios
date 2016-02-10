@@ -161,8 +161,9 @@ static void ClientCallback(SCNetworkReachabilityRef target,
     if (!_reachabilityKnown || flags != _reachabilityFlags) {
         self.reachabilityFlags = flags;
         self.reachabilityKnown = YES;
-        if (_onChange)
-            _onChange();
+        __typeof(_onChange) onChange = _onChange;
+        if (onChange)
+            onChange();
     }
 }
 

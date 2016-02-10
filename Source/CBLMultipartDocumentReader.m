@@ -238,7 +238,8 @@
     [stream close];
     if (!CBLStatusIsError(_status))
         [self finish];
-    _completionBlock(self);
+    __typeof(_completionBlock) completionBlock = _completionBlock;
+    completionBlock(self);
     _completionBlock = nil;
     _retainSelf = nil;  // clears the reference acquired in -readStream:
 }

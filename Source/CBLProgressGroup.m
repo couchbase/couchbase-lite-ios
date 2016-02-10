@@ -93,7 +93,8 @@
 - (void) setCompletedUnitCount: (int64_t)completed {
     completed = MIN(completed, _total-1);   // don't allow _completed to equal _total yet
     _completed = completed;
-    _noteProgress();
+    __typeof(_noteProgress) noteProgress = _noteProgress;
+    noteProgress();
 }
 
 - (void) setTotalUnitCount: (int64_t)total {

@@ -179,7 +179,8 @@
         return NO;
     }
     ++_docCount;
-    _onDocument(_docReader.document);
+    __typeof(_onDocument) onDocument = _onDocument;
+    onDocument(_docReader.document);
     _docReader = nil;
     return YES;
 }

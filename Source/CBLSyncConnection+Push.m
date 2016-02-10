@@ -62,9 +62,10 @@
     query.inclusiveStart = NO;
     if (limit > 0)
         query.limit = limit;
-    if (_pushFilter) {
+    __typeof(_pushFilter) pushFilter = _pushFilter;
+    if (pushFilter) {
         query.filterBlock = ^BOOL(CBLQueryRow* row) {
-            return _pushFilter(row.document.currentRevision, _pushFilterParams);
+            return pushFilter(row.document.currentRevision, _pushFilterParams);
         };
     }
     NSError* error;
@@ -217,9 +218,10 @@
     NSMutableArray* changes = [NSMutableArray new];
     for (CBLDatabaseChange* change in (n.userInfo)[@"changes"]) {
         if (![change.source isEqual: _peerURL]) {  // ignore echoes of changes rcvd from this peer
-            if (_pushFilter) {
+            __typeof(_pushFilter) pushFilter = _pushFilter;
+            if (pushFilter) {
                 CBLSavedRevision* rev = [_db[change.documentID] revisionWithID: change.revisionID];
-                if (!_pushFilter(rev, _pushFilterParams))
+                if (!pushFilter(rev, _pushFilterParams))
                     continue;
             }
             [changes addObject: encodeChange(change.sequenceNumber, change.documentID,
