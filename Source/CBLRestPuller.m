@@ -108,6 +108,7 @@
                                                       lastSequence: _lastSequence
                                                             client: self];
     _changeTracker.continuous = _settings.continuous;
+    _changeTracker.activeOnly = (_lastSequence == nil && _db.documentCount == 0);
     _changeTracker.filterName = _settings.filterName;
     _changeTracker.filterParameters = _settings.filterParameters;
     _changeTracker.docIDs = _settings.docIDs;
