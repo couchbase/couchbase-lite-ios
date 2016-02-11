@@ -489,7 +489,6 @@
 		27452BF31AB11D4200327776 /* CBLUITableSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA4317158FD9B400F9E7B5 /* CBLUITableSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27452BF41AB11D8400327776 /* MYDynamicObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434E15918C0200F9E7B5 /* MYDynamicObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27452C211AB1F6C100327776 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27452C201AB1F6C100327776 /* libz.dylib */; };
-		27452C231AB20BD500327776 /* noop.m in Sources */ = {isa = PBXBuildFile; fileRef = 27452C221AB20BD500327776 /* noop.m */; };
 		27486F251A606C76008D94F0 /* CBJSONEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 27486F1D1A606C76008D94F0 /* CBJSONEncoder.h */; };
 		27486F271A606C76008D94F0 /* CBJSONEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 27486F1E1A606C76008D94F0 /* CBJSONEncoder.m */; };
 		27486F2B1A606C76008D94F0 /* CBLJSONReader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27486F211A606C76008D94F0 /* CBLJSONReader.h */; };
@@ -502,6 +501,9 @@
 		274C3919149E6B0900A5E89B /* EmptyAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */; };
 		274C6C271A3F838500F9BDF7 /* CBLReduceFuncs.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C6C241A3F838500F9BDF7 /* CBLReduceFuncs.m */; };
 		274C6C281A3F838500F9BDF7 /* CBLReduceFuncs.h in Headers */ = {isa = PBXBuildFile; fileRef = 274C6C251A3F838500F9BDF7 /* CBLReduceFuncs.h */; };
+		274CBC1F1C6D4152006DBE7F /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
+		274CBC201C6D4152006DBE7F /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
+		274CBC2C1C6D417C006DBE7F /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 93EBA2651B2EC61E0006C66C /* CBLRegisterJSViewCompiler.m */; };
 		274E163219B90F520066CA5E /* TestData in Resources */ = {isa = PBXBuildFile; fileRef = 274E163119B90F420066CA5E /* TestData */; };
 		274E163319B90F740066CA5E /* TestData in Resources */ = {isa = PBXBuildFile; fileRef = 274E163119B90F420066CA5E /* TestData */; };
 		27513A181A672C760055DC40 /* CBLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DA434915912AFD00F9E7B5 /* CBLView.m */; };
@@ -4792,7 +4794,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27452C231AB20BD500327776 /* noop.m in Sources */,
+				274CBC1F1C6D4152006DBE7F /* CBLJSFunction.m in Sources */,
+				274CBC201C6D4152006DBE7F /* CBLJSViewCompiler.m in Sources */,
+				274CBC2C1C6D417C006DBE7F /* CBLRegisterJSViewCompiler.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6184,6 +6188,8 @@
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_GENERATE_MAP_FILE = YES;
+				LD_MAP_FILE_PATH = "$(TARGET_BUILD_DIR)/$(PRODUCT_NAME)-LinkMap-$(CURRENT_VARIANT)-$(CURRENT_ARCH).txt";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = "-ObjC";
