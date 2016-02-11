@@ -73,5 +73,5 @@ static NSData* ImageJPEGData(NSImage* image) {
         }
     }
     NSCAssert(bitmapRep != nil, @"No bitmap rep");
-    return [bitmapRep representationUsingType: NSJPEGFileType properties: nil];
+    return [bitmapRep representationUsingType: NSJPEGFileType properties: @{}];
 }

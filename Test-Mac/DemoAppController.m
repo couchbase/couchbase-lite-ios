@@ -309,7 +309,7 @@ int main (int argc, const char * argv[]) {
             break;
         default:
             NSAssert(NO, @"Illegal mode");
-            break;
+            return;
     }
     _syncStatusView.intValue = value;
     _syncStatusView.toolTip = tooltip;
