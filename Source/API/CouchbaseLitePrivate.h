@@ -120,4 +120,6 @@
 
 @interface CBLQuery ()
 @property (nonatomic, strong) BOOL (^filterBlock)(CBLQueryRow*);
+- (void) runAsyncIfChangedSince: (SInt64)ifChangedSince
+                     onComplete: (void (^)(CBLQueryEnumerator*, NSError*))onComplete;
 @end
