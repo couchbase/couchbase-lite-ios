@@ -125,21 +125,21 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
 }
 
 
-static NSArray* rowsToDicts(CBLQueryIteratorBlock iterator) {
+static NSArray* rowsToDicts(NSEnumerator* iterator) {
     NSCParameterAssert(iterator!=nil);
     NSMutableArray* rows = $marray();
     CBLQueryRow* row;
-    while (nil != (row = iterator()))
+    while (nil != (row = iterator.nextObject))
         [rows addObject: row.asJSONDictionary];
     return rows;
 }
 
 
-static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iterator) {
+static NSArray* rowsToDictsSettingDB(CBLDatabase* db, NSEnumerator* iterator) {
     NSCParameterAssert(iterator!=nil);
     NSMutableArray* rows = $marray();
     CBLQueryRow* row;
-    while (nil != (row = iterator())) {
+    while (nil != (row = iterator.nextObject)) {
         row.database = db;
         [rows addObject: row.asJSONDictionary];
     }
@@ -779,13 +779,13 @@ static NSArray* reverse(NSArray* a) {
 
     // Now test reducing
     options->reduce = YES;
-    CBLQueryIteratorBlock reduced = [view _queryWithOptions: options status: &status];
+    NSEnumerator* reduced = [view _queryWithOptions: options status: &status];
     Assert(reduced != NULL);
     AssertEq(status, kCBLStatusOK);
-    CBLQueryRow* row = reduced();
+    CBLQueryRow* row = reduced.nextObject;
     row.database = db;
     AssertEqual(row.value, @"fivefouronethreetwo");
-    AssertNil(reduced());
+    AssertNil(reduced.nextObject);
 }
 
 - (void) test13_NumericKeys {
@@ -881,7 +881,7 @@ static NSArray* reverse(NSArray* a) {
 
     // Query all rows:
     CBLQueryOptions *options = [CBLQueryOptions new];
-    CBLQueryIteratorBlock query = [db getAllDocs: options status: &status];
+    NSEnumerator* query = [db getAllDocs: options status: &status];
     NSArray* expectedRows = $array(expectedRow[2], expectedRow[0], expectedRow[3], expectedRow[1],
                                    expectedRow[4]);
     AssertEqual(rowsToDicts(query), expectedRows);
@@ -914,7 +914,7 @@ static NSArray* reverse(NSArray* a) {
     options = [CBLQueryOptions new];
     options.keys = @[];
     query = [db getAllDocs: options status: &status];
-    Assert(query == nil || query() == nil);
+    Assert(query == nil || query.nextObject == nil);
     
     // Get specific documents:
     options = [CBLQueryOptions new];
@@ -1399,7 +1399,7 @@ static NSArray* reverse(NSArray* a) {
     options.fullTextQuery = @"stormy OR dog";
     options->fullTextRanking = NO;
     options->fullTextSnippets = YES;
-    CBLQueryIteratorBlock rowIter = [view _queryWithOptions: options status: &status];
+    NSEnumerator* rowIter = [view _queryWithOptions: options status: &status];
     Assert(rowIter, @"_queryFullText failed: %d", status);
     Log(@"rows = %@", rowIter);
     NSArray* expectedRows = $array($dict({@"id",  @"44444"},

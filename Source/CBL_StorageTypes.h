@@ -14,10 +14,6 @@
 /** Predicate block that can filter rows of a query result. */
 typedef BOOL (^CBLQueryRowFilter)(CBLQueryRow*);
 
-/** Block-based iterator for returning query results. 
-    Returns next row every time it's called, then returns nil at the end. */
-typedef CBLQueryRow* (^CBLQueryIteratorBlock)(void);
-
 /** Document validation callback, passed to the insertion methods. */
 typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
                                                CBL_Revision* prev,

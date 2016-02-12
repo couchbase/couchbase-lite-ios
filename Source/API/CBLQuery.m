@@ -33,11 +33,11 @@ DefineLogDomain(Query);
 
 // Querying utilities for CBLDatabase. Defined down below.
 @interface CBLDatabase (Views)
-- (CBLQueryIteratorBlock) queryViewNamed: (NSString*)viewName
-                                 options: (CBLQueryOptions*)options
-                          ifChangedSince: (SequenceNumber)ifChangedSince
-                            lastSequence: (SequenceNumber*)outLastSequence
-                                  status: (CBLStatus*)outStatus;
+- (NSEnumerator*) queryViewNamed: (NSString*)viewName
+                         options: (CBLQueryOptions*)options
+                  ifChangedSince: (SequenceNumber)ifChangedSince
+                    lastSequence: (SequenceNumber*)outLastSequence
+                          status: (CBLStatus*)outStatus;
 @end
 
 
@@ -222,11 +222,11 @@ DefineLogDomain(Query);
     CBLStatus status;
     LogTo(Query, @"%@: running...", self);
     SequenceNumber lastSequence;
-    CBLQueryIteratorBlock iterator = [_database queryViewNamed: _view.name
-                                                       options: self.queryOptions
-                                                ifChangedSince: -1
-                                                  lastSequence: &lastSequence
-                                                        status: &status];
+    NSEnumerator* iterator = [_database queryViewNamed: _view.name
+                                               options: self.queryOptions
+                                        ifChangedSince: -1
+                                          lastSequence: &lastSequence
+                                                status: &status];
     if (!iterator) {
         CBLStatusToOutNSError(status, outError);
         return nil;
@@ -258,22 +258,16 @@ DefineLogDomain(Query);
         // On the background server thread, run the query:
         CBLStatus status;
         SequenceNumber lastSequence;
-        CBLQueryIteratorBlock iterator = [bgdb queryViewNamed: viewName
-                                                      options: options
-                                               ifChangedSince: ifChangedSince
-                                                 lastSequence: &lastSequence
-                                                       status: &status];
-        NSMutableArray* rows = nil;
+        NSEnumerator* iterator = [bgdb queryViewNamed: viewName
+                                              options: options
+                                       ifChangedSince: ifChangedSince
+                                         lastSequence: &lastSequence
+                                               status: &status];
+        NSArray* rows = nil;
         if (iterator) {
             // The iterator came from a background thread, so we shouldn't call it on the
             // original thread. Instead, copy all the rows into an array:
-            rows = $marray();
-            while (true) {
-                CBLQueryRow* row = iterator();
-                if (!row)
-                    break;
-                [rows addObject: row];
-            }
+            rows = iterator.allObjects;
         }
 
         [_database doAsync: ^{
@@ -502,14 +496,14 @@ DefineLogDomain(Query);
                 last updated. (Can be NULL.)
     @param outStatus  If the method returns nil, this will be set to a status code.
     @return  An iterator block that returns successive view rows, or nil. */
-- (CBLQueryIteratorBlock) queryViewNamed: (NSString*)viewName
-                                 options: (CBLQueryOptions*)options
-                          ifChangedSince: (SequenceNumber)ifChangedSince
-                            lastSequence: (SequenceNumber*)outLastSequence
-                                  status: (CBLStatus*)outStatus
+- (NSEnumerator*) queryViewNamed: (NSString*)viewName
+                         options: (CBLQueryOptions*)options
+                  ifChangedSince: (SequenceNumber)ifChangedSince
+                    lastSequence: (SequenceNumber*)outLastSequence
+                          status: (CBLStatus*)outStatus
 {
     CBLStatus status = kCBLStatusOK;
-    CBLQueryIteratorBlock iterator = nil;
+    NSEnumerator* e = nil;
     SequenceNumber lastIndexedSequence = 0, lastChangedSequence = 0;
     do {
         if (viewName) {
@@ -534,14 +528,14 @@ DefineLogDomain(Query);
             }
             lastChangedSequence = view.lastSequenceChangedAt;
             if (lastChangedSequence > ifChangedSince)
-                iterator = [view _queryWithOptions: options status: &status];
+                e = [view _queryWithOptions: options status: &status];
             else
                 status = kCBLStatusNotModified;
         } else {
             // nil view means query _all_docs
             lastIndexedSequence = lastChangedSequence = self.lastSequenceNumber;
             if (lastChangedSequence > ifChangedSince)
-                iterator = [self getAllDocs: options status: &status];
+                e = [self getAllDocs: options status: &status];
             else
                 status = kCBLStatusNotModified;
         }
@@ -551,7 +545,7 @@ DefineLogDomain(Query);
         *outLastSequence = lastIndexedSequence;
     if (outStatus)
         *outStatus = status;
-    return iterator;
+    return e;
 }
 
 @end

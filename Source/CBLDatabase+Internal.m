@@ -741,31 +741,32 @@ static SequenceNumber keyToSequence(id key, SequenceNumber dflt) {
 }
 
 
-- (CBLQueryIteratorBlock) getAllDocs: (CBLQueryOptions*)options
-                              status: (CBLStatus*)outStatus
+- (NSEnumerator*) getAllDocs: (CBLQueryOptions*)options
+                      status: (CBLStatus*)outStatus
 {
     // For regular all-docs, let storage do it all:
     if (!options || options->allDocsMode != kCBLBySequence)
         return [_storage getAllDocs: options status: outStatus];
 
     // For changes feed mode (kCBLBySequence) do more work here:
-    if (options->descending) {
-        *outStatus = kCBLStatusNotImplemented;    //FIX: Implement descending order
-        return nil;
-    }
     CBLChangesOptions changesOpts = {
         .limit = options->limit,
         .includeDocs = options->includeDocs,
         .includeConflicts = YES,
         .sortBySequence = YES
     };
-    SequenceNumber startSeq = keyToSequence(options.startKey, 1);
-    SequenceNumber endSeq = keyToSequence(options.endKey, INT64_MAX);
-    if (!options->inclusiveStart)
-        ++startSeq;
-    if (!options->inclusiveEnd)
-        --endSeq;
-    SequenceNumber minSeq = startSeq, maxSeq = endSeq;
+    id minKey = options.startKey, maxKey = options.endKey;
+    if (options->descending) {
+        id temp = minKey;
+        minKey = maxKey;
+        maxKey = temp;
+    }
+    SequenceNumber minSeq = keyToSequence(minKey, 1);
+    SequenceNumber maxSeq = keyToSequence(maxKey, INT64_MAX);
+    if (!(options->descending ? options->inclusiveEnd : options->inclusiveStart))
+        ++minSeq;
+    if (!(options->descending ? options->inclusiveStart : options->inclusiveEnd))
+        --maxSeq;
     if (minSeq > maxSeq) {
         *outStatus = kCBLStatusOK;
         return nil;  // empty result
@@ -777,33 +778,33 @@ static SequenceNumber keyToSequence(id key, SequenceNumber dflt) {
     if (!revs)
         return nil;
 
+    NSMutableArray* result = [NSMutableArray arrayWithCapacity: revs.count];
     NSEnumerator* revEnum = (options->descending) ? revs.allRevisions.reverseObjectEnumerator
                                                   : revs.allRevisions.objectEnumerator;
-    return ^CBLQueryRow*() {
-        for (;;) {
-            CBL_Revision* rev = revEnum.nextObject;
-            if (!rev)
-                return nil;
-            SequenceNumber seq = rev.sequence;
-            if (seq < minSeq || seq > maxSeq)
-                return nil;
-            NSDictionary* value = $dict({@"rev", rev.revID},
-                                        {@"deleted", (rev.deleted ?$true : nil)});
-            CBLQueryRow* row =  [[CBLQueryRow alloc] initWithDocID: rev.docID
-                                                          sequence: seq
-                                                               key: rev.docID
-                                                             value: value
-                                                       docRevision: rev
-                                                           storage: nil];
-            if (!options.filter)
-                return row;
-            row.database = self;
-            if (options.filter(row)) {
-                //row.database = nil;
-                return row;
-            }
+    for (CBL_Revision* rev in revEnum) {
+        SequenceNumber seq = rev.sequence;
+        if (seq > maxSeq) {
+            if (options->descending)
+                continue;
+            else
+                break;
         }
-    };
+        NSDictionary* value = $dict({@"rev", rev.revID},
+                                    {@"deleted", (rev.deleted ?$true : nil)});
+        CBLQueryRow* row =  [[CBLQueryRow alloc] initWithDocID: rev.docID
+                                                      sequence: seq
+                                                           key: rev.docID
+                                                         value: value
+                                                   docRevision: rev
+                                                       storage: nil];
+        if (options.filter) {
+            row.database = self;
+            if (!options.filter(row))
+                continue;
+        }
+        [result addObject: row];
+    }
+    return result.objectEnumerator;
 }
 
 

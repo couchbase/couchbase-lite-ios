@@ -27,6 +27,7 @@ extern "C" {
 #import "MYAction.h"
 #import "MYBackgroundMonitor.h"
 }
+#import "CBL_ForestDBDocEnumerator.h"
 #import "CBLForestBridge.h"
     
 
@@ -195,7 +196,7 @@ static void onCompactCallback(void *context, bool compacting) {
     // Re-key the views!
     NSArray* viewNames = self.allViewNames;
     for (NSString* viewName in viewNames) {
-        CBL_ForestDBViewStorage* viewStorage = [self viewStorageNamed: viewName create: YES];
+        CBL_ForestDBViewStorage* viewStorage = (CBL_ForestDBViewStorage*)[self viewStorageNamed: viewName create: YES];
         [action addAction: [viewStorage actionToChangeEncryptionKey]];
     }
 
@@ -564,148 +565,19 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
 }
 
 
-- (CBLQueryIteratorBlock) getAllDocs: (CBLQueryOptions*)options
-                              status: (CBLStatus*)outStatus
+- (NSEnumerator*) getAllDocs: (CBLQueryOptions*)options
+                      status: (CBLStatus*)outStatus
 {
     if (!options)
         options = [CBLQueryOptions new];
 
-    C4EnumeratorOptions c4options = {0, 0};
-    BOOL includeDocs = (options->includeDocs || options.filter);
-    if (includeDocs || options->allDocsMode >= kCBLShowConflicts)
-        c4options.flags |= kC4IncludeBodies;
-    if (options->descending)
-        c4options.flags |= kC4Descending;
-    if (options->inclusiveStart)
-        c4options.flags |= kC4InclusiveStart;
-    if (options->inclusiveEnd)
-        c4options.flags |= kC4InclusiveEnd;
-    if (options->allDocsMode == kCBLIncludeDeleted)
-        c4options.flags |= kC4IncludeDeleted;
-    if (options->allDocsMode != kCBLOnlyConflicts)
-        c4options.flags |= kC4IncludeNonConflicted;
-    __block unsigned limit = options->limit;
-    __block unsigned skip = options->skip;
-    CBLQueryRowFilter filter = options.filter;
-
-    __block C4DocEnumerator* e;
     C4Error c4err;
-    if (options.keys) {
-        size_t nKeys = options.keys.count;
-        C4Slice *keySlices = (C4Slice*)malloc(nKeys * sizeof(C4Slice));
-        size_t i = 0;
-        for (NSString* key in options.keys)
-            keySlices[i++] = string2slice(key);
-        c4options.flags |= kC4IncludeDeleted;
-        e = c4db_enumerateSomeDocs(_forest, keySlices, nKeys, &c4options, &c4err);
-        free(keySlices);
-    } else {
-        id startKey, endKey;
-        if (options->descending) {
-            startKey = CBLKeyForPrefixMatch(options.startKey, options->prefixMatchLevel);
-            endKey = options.endKey;
-        } else {
-            startKey = options.startKey;
-            endKey = CBLKeyForPrefixMatch(options.endKey, options->prefixMatchLevel);
-        }
-        e = c4db_enumerateAllDocs(_forest,
-                                  string2slice(startKey),
-                                  string2slice(endKey),
-                                  &c4options,
-                                  &c4err);
-    }
-    if (!e) {
+    NSEnumerator* e = [[CBL_ForestDBDocEnumerator alloc] initWithStorage: self
+                                                                 options: options
+                                                                   error: &c4err];
+    if (!e)
         *outStatus = err2status(c4err);
-        return nil;
-    }
-
-    // The rest is the block that gets called later to return the next row:
-    return ^CBLQueryRow*() {
-        if (!e)
-            return nil;
-        C4Error c4err;
-        while (c4enum_next(e, &c4err)) {
-            CLEANUP(C4Document)* doc = c4enum_getDocument(e, &c4err);
-            if (!doc)
-                break;
-            NSString* docID = slice2string(doc->docID);
-            if (!(doc->flags & kExists)) {
-                LogVerbose(Query, @"AllDocs: No such row with key=\"%@\"",
-                      docID);
-                return [[CBLQueryRow alloc] initWithDocID: nil
-                                                 sequence: 0
-                                                      key: docID
-                                                    value: nil
-                                              docRevision: nil
-                                                  storage: nil];
-            }
-
-            bool deleted = (doc->flags & kDeleted) != 0;
-            if (deleted && options->allDocsMode != kCBLIncludeDeleted && !options.keys)
-                continue; // skip deleted doc
-            if (!(doc->flags & kConflicted) && options->allDocsMode == kCBLOnlyConflicts)
-                continue; // skip non-conflicted doc
-            if (skip > 0) {
-                --skip;
-                continue;
-            }
-
-            NSString* revID = slice2string(doc->revID);
-
-            CBL_Revision* docRevision = nil;
-            if (includeDocs) {
-                // Fill in the document contents:
-                CBLStatus status;
-                docRevision = [CBLForestBridge revisionObjectFromForestDoc: doc
-                                                                     docID: docID
-                                                                     revID: revID
-                                                                  withBody: YES
-                                                                    status: &status];
-                if (!docRevision)
-                    Warn(@"AllDocs: Unable to read body of doc %@: status %d", docID, status);
-            }
-
-            NSMutableArray* conflicts = nil;
-            if (options->allDocsMode >= kCBLShowConflicts && (doc->flags & kConflicted)) {
-                conflicts = [NSMutableArray array];
-                [conflicts addObject: revID];
-                while (c4doc_selectNextLeafRevision(doc, false, false, NULL)) {
-                    NSString* conflictID = slice2string(doc->selectedRev.revID);
-                    [conflicts addObject: conflictID];
-                }
-                if (conflicts.count == 1)
-                    conflicts = nil;
-            }
-
-            NSDictionary* value = $dict({@"rev", revID},
-                                        {@"deleted", (deleted ?$true : nil)},
-                                        {@"_conflicts", conflicts});  // (not found in CouchDB)
-            LogVerbose(Query, @"AllDocs: Found row with key=\"%@\", value=%@",
-                  docID, value);
-            CBLQueryRow *row = [[CBLQueryRow alloc] initWithDocID: docID
-                                                 sequence: doc->sequence
-                                                      key: docID
-                                                    value: value
-                                              docRevision: docRevision
-                                                  storage: nil];
-            if (filter && !filter(row)) {
-                LogVerbose(Query, @"   ... on 2nd thought, filter predicate skipped that row");
-                continue;
-            }
-
-            if (limit > 0 && --limit == 0) {
-                c4enum_free(e);
-                e = NULL;
-            }
-            return row;
-        }
-        // End of enumeration:
-        c4enum_free(e);
-        e = NULL;
-        if (c4err.code)
-            Warn(@"AllDocs: Enumeration failed: %d", err2status(c4err));
-        return nil;
-    };
+    return e;
 }
 
 

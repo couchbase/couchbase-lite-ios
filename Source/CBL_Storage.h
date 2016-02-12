@@ -143,8 +143,8 @@
 - (NSSet*) findAllAttachmentKeys: (NSError**)outError;
 
 /** Iterates over all documents in the database, according to the given query options. */
-- (CBLQueryIteratorBlock) getAllDocs: (CBLQueryOptions*)options
-                              status: (CBLStatus*)outStatus;
+- (NSEnumerator*) getAllDocs: (CBLQueryOptions*)options
+                      status: (CBLStatus*)outStatus;
 
 /** Returns all database changes with sequences greater than `lastSequence`.
     @param  lastSequence  The sequence number to start _after_

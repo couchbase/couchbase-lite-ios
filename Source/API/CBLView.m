@@ -376,34 +376,17 @@ static id<CBLViewCompiler> sCompiler;
 
 
 /** Main internal call to query a view. */
-- (CBLQueryIteratorBlock) _queryWithOptions: (CBLQueryOptions*)options
+- (NSEnumerator*) _queryWithOptions: (CBLQueryOptions*)options
                                      status: (CBLStatus*)outStatus
 {
     if (!options)
         options = [CBLQueryOptions new];
-    CBLQueryIteratorBlock iterator;
-    if (options.fullTextQuery) {
-        iterator = [_storage fullTextQueryWithOptions: options status: outStatus];
-    } else if ([self groupOrReduceWithOptions: options])
-        iterator = [_storage reducedQueryWithOptions: options status: outStatus];
-    else
-        iterator = [_storage regularQueryWithOptions: options status: outStatus];
-    if (iterator)
+    NSEnumerator* e = [_storage queryWithOptions: options status: outStatus];
+    if (e)
         LogTo(Query, @"Query %@: Returning iterator", _name);
     else
         LogTo(Query, @"Query %@: Failed with status %d", _name, *outStatus);
-    return iterator;
-}
-
-
-// Should this query be run as grouped/reduced?
-- (BOOL) groupOrReduceWithOptions: (CBLQueryOptions*) options {
-    if (options->group || options->groupLevel > 0)
-        return YES;
-    else if (options->reduceSpecified)
-        return options->reduce;
-    else
-        return (self.reduceBlock != nil); // Reduce defaults to true iff there's a reduce block
+    return e;
 }
 
 

@@ -13,7 +13,7 @@
 
 @property (nonatomic, readonly) NSString* directory;
 @property (nonatomic, readonly) BOOL readOnly;
-@property (nonatomic, readonly) void* forestDatabase; // really cbforest::Database*
+@property (nonatomic, readonly) void* forestDatabase; // really C4Database*
 @property (nonatomic) CBLSymmetricKey* encryptionKey;
 
 /** Loads revision given its sequence. Assumes the given docID is valid. */

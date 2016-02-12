@@ -81,9 +81,9 @@ BOOL CBLQueryRowValueIsEntireDoc(id value);
 
 /** Queries the view. Does NOT first update the index.
     @param options  The options to use.
-    @return  An array of CBLQueryRow. */
-- (CBLQueryIteratorBlock) _queryWithOptions: (CBLQueryOptions*)options
-                                     status: (CBLStatus*)outStatus;
+    @return  An enumerator of CBLQueryRow. */
+- (NSEnumerator*) _queryWithOptions: (CBLQueryOptions*)options
+                             status: (CBLStatus*)outStatus;
 
 @end
 
@@ -92,7 +92,7 @@ BOOL CBLQueryRowValueIsEntireDoc(id value);
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                              view: (CBLView*)view
                    sequenceNumber: (SequenceNumber)sequenceNumber
-                         iterator: (CBLQueryIteratorBlock)iterator;
+                         iterator: (NSEnumerator*)iterator;
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                              view: (CBLView*)view
                    sequenceNumber: (SequenceNumber)sequenceNumber

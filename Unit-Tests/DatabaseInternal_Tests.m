@@ -225,9 +225,9 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     NSArray* keys = @[rev.docID];
     options.keys = keys;
     CBLStatus status;
-    CBLQueryIteratorBlock iterator = [db getAllDocs: options status: &status];
+    NSEnumerator* iterator = [db getAllDocs: options status: &status];
     Assert(iterator);
-    while (iterator()) {
+    while (iterator.nextObject) {
     }
 }
 
@@ -867,9 +867,9 @@ static CBL_Revision* mkrev(NSString* revID) {
 
     // Check the doc IDs:
     NSMutableArray* docIDs = $marray();
-    CBLQueryIteratorBlock iterator = [db getAllDocs: nil status: &status];
+    NSEnumerator* iterator = [db getAllDocs: nil status: &status];
     CBLQueryRow* row;
-    while (nil != (row = iterator())) {
+    while (nil != (row = iterator.nextObject)) {
         [docIDs addObject: row.documentID];
     }
     AssertEqual(docIDs, (@[@"0BCD3CDB-2D2A-4794-9778-C246E1342DAF",

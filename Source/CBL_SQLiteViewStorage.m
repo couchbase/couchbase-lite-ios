@@ -602,6 +602,30 @@ static NSString* viewNames(NSArray* views) {
 #pragma mark - QUERYING:
 
 
+/** Main internal call to query a view. */
+- (NSEnumerator*) queryWithOptions: (CBLQueryOptions*)options
+                            status: (CBLStatus*)outStatus
+{
+    if (options.fullTextQuery)
+        return [self fullTextQueryWithOptions: options status: outStatus];
+    else if ([self groupOrReduceWithOptions: options])
+        return [self reducedQueryWithOptions: options status: outStatus];
+    else
+        return [self regularQueryWithOptions: options status: outStatus];
+}
+
+
+// Should this query be run as grouped/reduced?
+- (BOOL) groupOrReduceWithOptions: (CBLQueryOptions*) options {
+    if (options->group || options->groupLevel > 0)
+        return YES;
+    else if (options->reduceSpecified)
+        return options->reduce;
+    else
+        return (_delegate.reduceBlock != nil); // Reduce defaults to true iff there's a reduce block
+}
+
+
 typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString* docID,
                                    CBL_FMResultSet* r);
 
@@ -745,8 +769,8 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
 }
 
 
-- (CBLQueryIteratorBlock) regularQueryWithOptions: (CBLQueryOptions*)options
-                                           status: (CBLStatus*)outStatus
+- (NSEnumerator*) regularQueryWithOptions: (CBLQueryOptions*)options
+                                   status: (CBLStatus*)outStatus
 {
     CBL_SQLiteStorage* db = _dbStorage;
 
@@ -759,7 +783,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
         limit = options->limit;
         skip = options->skip;
         if (limit == 0)
-            return queryIteratorBlockFromArray(nil); // empty result set
+            return [@[] objectEnumerator]; // empty result set
         options->limit = kCBLQueryOptionsDefaultLimit;
         options->skip = 0;
     }
@@ -856,13 +880,13 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
     }
 
     //OPT: Return objects from enum as they're found, without collecting them in an array first
-    return queryIteratorBlockFromArray(rows);
+    return rows.objectEnumerator;
 }
 
 
 /** Runs a full-text query of a view, using the FTS4 table. */
-- (CBLQueryIteratorBlock) fullTextQueryWithOptions: (const CBLQueryOptions*)options
-                                            status: (CBLStatus*)outStatus
+- (NSEnumerator*) fullTextQueryWithOptions: (const CBLQueryOptions*)options
+                                    status: (CBLStatus*)outStatus
 {
     if (![self createFullTextSchema]) {
         *outStatus = kCBLStatusNotImplemented;
@@ -925,7 +949,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
     }
 
     //OPT: Return objects from enum as they're found, without collecting them in an array first
-    return queryIteratorBlockFromArray(rows);
+    return rows.objectEnumerator;
 }
 
 
@@ -1000,8 +1024,8 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
 }
 
 
-- (CBLQueryIteratorBlock) reducedQueryWithOptions: (CBLQueryOptions*)options
-                                           status: (CBLStatus*)outStatus
+- (NSEnumerator*) reducedQueryWithOptions: (CBLQueryOptions*)options
+                                   status: (CBLStatus*)outStatus
 {
     CBL_SQLiteStorage* db = _dbStorage;
     unsigned groupLevel = options->groupLevel;
@@ -1084,15 +1108,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     }
 
     //OPT: Return objects from enum as they're found, without collecting them in an array first
-    return queryIteratorBlockFromArray(rows);
-}
-
-
-static CBLQueryIteratorBlock queryIteratorBlockFromArray(NSArray* rows) {
-    NSEnumerator* rowEnum = rows.objectEnumerator;
-    return ^CBLQueryRow*() {
-        return rowEnum.nextObject;
-    };
+    return rows.objectEnumerator;
 }
 
 

@@ -648,6 +648,72 @@
 }
 
 
+- (void) test12_AllDocumentsBySequenceDescending {
+    static const NSUInteger kNDocs = 10;
+    [self createDocuments: kNDocs];
+
+    // clear the cache so all documents/revisions will be re-fetched:
+    [db _clearDocumentCache];
+
+    CBLQuery* query = [db createAllDocumentsQuery];
+    query.descending = YES;
+    query.allDocsMode = kCBLBySequence;
+    CBLQueryEnumerator* rows = [query run: NULL];
+    SequenceNumber n = kNDocs;
+    for (CBLQueryRow* row in rows) {
+        CBLDocument* doc = row.document;
+        Assert(doc, @"Couldn't get doc from query");
+        AssertEq(doc.currentRevision.sequence, n);
+        n--;
+    }
+    AssertEq(n, 0);
+
+    query = [db createAllDocumentsQuery];
+    query.descending = YES;
+    query.allDocsMode = kCBLBySequence;
+    query.startKey = @3;
+    rows = [query run: NULL];
+    n = 3;
+    for (CBLQueryRow* row in rows) {
+        CBLDocument* doc = row.document;
+        Assert(doc, @"Couldn't get doc from query");
+        AssertEq(doc.currentRevision.sequence, n);
+        n--;
+    }
+    AssertEq(n, 0);
+
+    query = [db createAllDocumentsQuery];
+    query.descending = YES;
+    query.allDocsMode = kCBLBySequence;
+    query.endKey = @6;
+    rows = [query run: NULL];
+    n = kNDocs;
+    for (CBLQueryRow* row in rows) {
+        CBLDocument* doc = row.document;
+        Assert(doc, @"Couldn't get doc from query");
+        AssertEq(doc.currentRevision.sequence, n);
+        n--;
+    }
+    AssertEq(n, 5);
+
+    query = [db createAllDocumentsQuery];
+    query.descending = YES;
+    query.allDocsMode = kCBLBySequence;
+    query.startKey = @6;
+    query.endKey = @3;
+    query.inclusiveStart = query.inclusiveEnd = NO;
+    rows = [query run: NULL];
+    n = 5;
+    for (CBLQueryRow* row in rows) {
+        CBLDocument* doc = row.document;
+        Assert(doc, @"Couldn't get doc from query");
+        AssertEq(doc.currentRevision.sequence, n);
+        n--;
+    }
+    AssertEq(n, 3);
+}
+
+
 - (void) test13_LocalDocs {
     NSDictionary* props = [db existingLocalDocumentWithID: @"dock"];
     AssertNil(props);

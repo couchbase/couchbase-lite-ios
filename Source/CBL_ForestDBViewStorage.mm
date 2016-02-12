@@ -25,10 +25,7 @@ extern "C" {
 #import "MYAction.h"
 }
 #import "CBLForestBridge.h"
-
-
-@interface CBL_ForestDBViewStorage () <CBL_QueryRowStorage>
-@end
+#import "CBL_ForestDBQueryEnumerator.h"
 
 
 #define kViewIndexPathExtension @"viewindex"
@@ -44,7 +41,7 @@ extern "C" {
     C4View* _view;
 }
 
-@synthesize delegate=_delegate, name=_name;
+@synthesize delegate=_delegate, name=_name, dbStorage=_dbStorage;
 
 
 static NSRegularExpression* kViewNameRegex;
@@ -440,352 +437,23 @@ static NSString* keyToJSONStr(id key) { // only used for logging
 #pragma mark - QUERYING:
 
 
-/** Starts a view query, returning a CBForest enumerator. */
-- (C4QueryEnumerator*) _forestQueryWithOptions: (CBLQueryOptions*)options
-                                         error: (C4Error*)outError
-{
-    Assert(_view); // caller MUST call -openIndex: first
-
-    id startKey = options.startKey, endKey = options.endKey;
-    __strong id &maxKey = options->descending ? startKey : endKey;
-    maxKey = CBLKeyForPrefixMatch(maxKey, options->prefixMatchLevel);
-    CLEANUP(C4Key) *c4StartKey = id2key(startKey);
-    CLEANUP(C4Key) *c4EndKey = id2key(endKey);
-
-    C4QueryOptions forestOpts = kC4DefaultQueryOptions;
-    forestOpts.skip = options->skip;
-    if (options->limit != kCBLQueryOptionsDefaultLimit)
-        forestOpts.limit = options->limit;
-    forestOpts.descending = options->descending;
-    forestOpts.inclusiveStart = options->inclusiveStart;
-    forestOpts.inclusiveEnd = options->inclusiveEnd;
-    forestOpts.startKeyDocID = string2slice(options.startKeyDocID);
-    forestOpts.endKeyDocID = string2slice(options.endKeyDocID);
-    forestOpts.startKey = c4StartKey;
-    forestOpts.endKey = c4EndKey;
-
-    if (options->bbox) {
-        return c4view_geoQuery(_view, geoRect2Area(*options->bbox), outError);
-    } else if (options.fullTextQuery) {
-        return c4view_fullTextQuery(_view, string2slice(options.fullTextQuery),
-                                    kC4SliceNull, &forestOpts, outError);
-    } else {
-        if (options.keys) {
-            forestOpts.keysCount = options.keys.count;
-            forestOpts.keys = (const C4Key**)malloc(forestOpts.keysCount * sizeof(C4Key*));
-            NSUInteger i = 0;
-            for (id keyObj in options.keys) {
-                forestOpts.keys[i++] = id2key(keyObj);
-            }
-        }
-
-        C4QueryEnumerator *e = c4view_query(_view, &forestOpts, outError);
-
-        // Clean up allocated keys on the way out:
-        if (forestOpts.keys) {
-            for (NSUInteger i = 0; i < forestOpts.keysCount; i++)
-                c4key_free((C4Key*)forestOpts.keys[i]);
-            free(forestOpts.keys);
-        }
-
-        return e;
-    }
-}
-
-
-- (CBLQueryIteratorBlock) regularQueryWithOptions: (CBLQueryOptions*)options
-                                           status: (CBLStatus*)outStatus
+- (NSEnumerator*) queryWithOptions: (CBLQueryOptions*)options
+                            status: (CBLStatus*)outStatus
 {
     if (![self openIndex: outStatus])
         return nil;
-    CBLQueryRowFilter filter = options.filter;
-    __block unsigned limit = UINT_MAX;
-    __block unsigned skip = 0;
-    if (filter) {
-        // #574: Custom post-filter means skip/limit apply to the filtered rows, not to the
-        // underlying query, so handle them specially:
-        limit = options->limit;
-        skip = options->skip;
-        options->limit = kCBLQueryOptionsDefaultLimit;
-        options->skip = 0;
-    }
-
     C4Error c4err;
-    __block C4QueryEnumerator *e = [self _forestQueryWithOptions: options error: &c4err];
-    if (!e) {
-        *outStatus = err2status(c4err);
-        return nil;
-    }
-
-    *outStatus = kCBLStatusOK;
-    return ^CBLQueryRow*() {
-        // This is the block that returns the next row:
-        if (e == nil)
-            return nil;
-        if (limit-- == 0) {
-            c4queryenum_free(e);
-            e = nil;
-            return nil;
-        }
-        C4Error c4err;
-        while (c4queryenum_next(e, &c4err)) {
-            CBL_Revision* docRevision = nil;
-            id key = key2id(e->key);
-            id value = nil;
-            NSString* docID = slice2string(e->docID);
-            SequenceNumber sequence = e->docSequence;
-
-            if (options->includeDocs) {
-                NSDictionary* valueDict = nil;
-                NSString* linkedID = nil;
-                if (e->value.size > 0 && ((char*)e->value.buf)[0] == '{') {
-                    value = slice2jsonObject(e->value, 0);
-                    valueDict = $castIf(NSDictionary, value);
-                    linkedID = valueDict.cbl_id;
-                }
-                if (linkedID) {
-                    // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
-                    NSString* linkedRev = valueDict.cbl_rev; // usually nil
-                    CBLStatus linkedStatus;
-                    docRevision = [_dbStorage getDocumentWithID: linkedID revisionID: linkedRev
-                                                       withBody: YES status: &linkedStatus];
-                    sequence = docRevision.sequence;
-                } else {
-                    CBLStatus status;
-                    docRevision = [_dbStorage getDocumentWithID: docID revisionID: nil
-                                                       withBody: YES status: &status];
-                }
-            }
-
-            if (!value)
-                value = slice2data(e->value);
-            LogVerbose(Query, @"Query %@: Found row with key=%@, value=%@, id=%@",
-                  _name, CBLJSONString(key), value, CBLJSONString(docID));
-            
-            // Create a CBLQueryRow:
-            CBLQueryRow* row;
-            if (options->bbox) {
-                row = [[CBLGeoQueryRow alloc] initWithDocID: docID
-                                                   sequence: sequence
-                                                boundingBox: area2GeoRect(e->geoBBox)
-                                                geoJSONData: slice2data(e->geoJSON)
-                                                      value: value
-                                                docRevision: docRevision
-                                                    storage: self];
-            } else if (options.fullTextQuery) {
-                CBLFullTextQueryRow *ftrow;
-                ftrow = [[CBLFullTextQueryRow alloc] initWithDocID: docID
-                                                          sequence: e->docSequence
-                                                        fullTextID: e->fullTextID
-                                                             value: value
-                                                           storage: self];
-                for (NSUInteger t = 0; t < e->fullTextTermCount; t++) {
-                    const C4FullTextTerm *term = &e->fullTextTerms[t];
-                    [ftrow addTerm: term->termIndex atRange: {term->start, term->length}];
-                }
-                row = ftrow;
-            } else {
-                row = [[CBLQueryRow alloc] initWithDocID: docID
-                                                sequence: sequence
-                                                     key: key
-                                                   value: value
-                                             docRevision: docRevision
-                                                 storage: self];
-            }
-            if (filter) {
-                if (!filter(row))
-                    continue;
-                if (skip > 0) {
-                    --skip;
-                    continue;
-                }
-            }
-            // Got a row to return!
-            return row;
-        }
-
-        // End of enumeration:
-        c4queryenum_free(e);
-        e = nil;
-        return nil;
-    };
+    CBL_ForestDBQueryEnumerator* enumer;
+    enumer = [[CBL_ForestDBQueryEnumerator alloc] initWithStorage: self
+                                                           C4View: _view
+                                                          options: options
+                                                            error: &c4err];
+    *outStatus = enumer ? kCBLStatusOK : err2status(c4err);
+    return enumer;
 }
 
 
-- (CBLQueryIteratorBlock) fullTextQueryWithOptions: (CBLQueryOptions*)options
-                                            status: (CBLStatus*)outStatus
-{
-    return [self regularQueryWithOptions: options status: outStatus];
-}
-
-
-#pragma mark - REDUCING/GROUPING:
-
-
-- (CBLQueryIteratorBlock) reducedQueryWithOptions: (CBLQueryOptions*)options
-                                           status: (CBLStatus*)outStatus
-{
-    unsigned groupLevel = options->groupLevel;
-    bool group = options->group || groupLevel > 0;
-
-    CBLReduceBlock reduce = _delegate.reduceBlock;
-    if (options->reduceSpecified) {
-        if (!options->reduce) {
-            reduce = nil;
-        } else if (!reduce) {
-            Warn(@"Cannot use reduce option in view %@ which has no reduce block defined",
-                 _name);
-            *outStatus = kCBLStatusBadParam;
-            return nil;
-        }
-    }
-
-    __block id lastKey = nil;
-    CBLQueryRowFilter filter = options.filter;
-    NSMutableArray* keysToReduce = nil, *valuesToReduce = nil;
-    if (reduce) {
-        keysToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
-        valuesToReduce = [[NSMutableArray alloc] initWithCapacity: 100];
-    }
-
-    if (![self openIndex: outStatus])
-        return nil;
-    C4Error c4err;
-    __block C4QueryEnumerator *e = [self _forestQueryWithOptions: options error: &c4err];
-    if (!e) {
-        *outStatus = err2status(c4err);
-        return nil;
-    }
-
-    *outStatus = kCBLStatusOK;
-    return ^CBLQueryRow*() {
-        // This is the block that returns the next row:
-        CBLQueryRow* row = nil;
-        do {
-            if (!e)
-                return nil;
-            id key = nil;
-            C4Error c4err;
-            if (c4queryenum_next(e, &c4err)) {
-                key = key2id(e->key);
-            } else {
-                c4queryenum_free(e);
-                e = NULL;
-                if (c4err.code)
-                    break;
-            }
-
-            if (lastKey && (!key || (group && !groupTogether(lastKey, key, groupLevel)))) {
-                // key doesn't match lastKey; emit a grouped/reduced row for what came before:
-                row = [[CBLQueryRow alloc] initWithDocID: nil
-                                    sequence: 0
-                                         key: (group ? groupKey(lastKey, groupLevel) : $null)
-                                       value: callReduce(reduce, keysToReduce,valuesToReduce)
-                                 docRevision: nil
-                                     storage: self];
-                LogVerbose(Query, @"Query %@: Reduced row with key=%@, value=%@",
-                                    _name, CBLJSONString(row.key), CBLJSONString(row.value));
-                if (filter && !filter(row))
-                    row = nil;
-                [keysToReduce removeAllObjects];
-                [valuesToReduce removeAllObjects];
-            }
-
-            if (key && reduce) {
-                // Add this key/value to the list to be reduced:
-                [keysToReduce addObject: key];
-                id value = nil;
-                if (c4SliceEqual(e->value, kC4PlaceholderValue)) {
-                    CBLStatus status;
-                    value = [_dbStorage getBodyWithID: slice2string(e->docID)
-                                             sequence: e->docSequence
-                                               status: &status];
-                    if (!value)
-                        Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
-                } else if (e->value.size > 0) {
-                    value = slice2jsonObject(e->value, CBLJSONReadingAllowFragments);
-                }
-                [valuesToReduce addObject: (value ?: $null)];
-                //TODO: Reduce the keys/values when there are too many; then rereduce at end
-            }
-
-            lastKey = key;
-        } while (!row && lastKey);
-        return row;
-    };
-}
-
-
-#define PARSED_KEYS
-
-// Are key1 and key2 grouped together at this groupLevel?
-#ifdef PARSED_KEYS
-static bool groupTogether(id key1, id key2, unsigned groupLevel) {
-    if (groupLevel == 0)
-        return [key1 isEqual: key2];
-    if (![key1 isKindOfClass: [NSArray class]] || ![key2 isKindOfClass: [NSArray class]])
-        return groupLevel == 1 && [key1 isEqual: key2];
-    NSUInteger level = MIN(groupLevel, MIN([key1 count], [key2 count]));
-    for (NSUInteger i = 0; i < level; i++) {
-        if (![[key1 objectAtIndex: i] isEqual: [key2 objectAtIndex: i]])
-            return NO;
-    }
-    return YES;
-}
-
-// Returns the prefix of the key to use in the result row, at this groupLevel
-static id groupKey(id key, unsigned groupLevel) {
-    if (groupLevel > 0 && [key isKindOfClass: [NSArray class]] && [key count] > groupLevel)
-        return [key subarrayWithRange: NSMakeRange(0, groupLevel)];
-    else
-        return key;
-}
-#else
-static bool groupTogether(NSData* key1, NSData* key2, unsigned groupLevel) {
-    if (!key1 || !key2)
-        return NO;
-    if (groupLevel == 0)
-        groupLevel = UINT_MAX;
-    return CBLCollateJSONLimited(kCBLCollateJSON_Unicode,
-                                (int)key1.length, key1.bytes,
-                                (int)key2.length, key2.bytes,
-                                groupLevel) == 0;
-}
-
-// Returns the prefix of the key to use in the result row, at this groupLevel
-static id groupKey(NSData* keyJSON, unsigned groupLevel) {
-    id key = fromJSON(keyJSON);
-    if (groupLevel > 0 && [key isKindOfClass: [NSArray class]] && [key count] > groupLevel)
-        return [key subarrayWithRange: NSMakeRange(0, groupLevel)];
-    else
-        return key;
-}
-#endif
-
-
-// Invokes the reduce function on the parallel arrays of keys and values
-static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutableArray* values) {
-    if (!reduceBlock)
-        return nil;
-    NSArray *lazyKeys, *lazyValues;
-#ifdef PARSED_KEYS
-    lazyKeys = keys;
-#else
-    keys = [[CBLLazyArrayOfJSON alloc] initWithMutableArray: keys];
-#endif
-    lazyValues = [[CBLLazyArrayOfJSON alloc] initWithMutableArray: values];
-    @try {
-        id result = reduceBlock(lazyKeys, lazyValues, NO);
-        if (result)
-            return result;
-    } @catch (NSException *x) {
-        MYReportException(x, @"reduce block");
-    }
-    return $null;
-}
-
-
-#pragma mark - CBL_QueryRowStorage API:
+// CBL_QueryRowStorage API:
 
 
 - (id<CBL_QueryRowStorage>) storageForQueryRow: (CBLQueryRow*)row {

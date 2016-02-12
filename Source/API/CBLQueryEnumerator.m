@@ -29,7 +29,7 @@
     NSArray* _rows;
     NSUInteger _nextRow;
     UInt64 _sequenceNumber;
-    CBLQueryIteratorBlock _iterator;
+    NSEnumerator* _iterator;
     BOOL _usingIterator;
     id __unsafe_unretained _enumerationBuffer[kEnumerationBufferSize];
 }
@@ -41,7 +41,7 @@
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                              view: (CBLView*)view
                    sequenceNumber: (SequenceNumber)sequenceNumber
-                         iterator: (CBLQueryIteratorBlock)iterator
+                         iterator: (NSEnumerator*)iterator
 {
     NSParameterAssert(database);
     self = [super init];
@@ -153,7 +153,7 @@
         _usingIterator = YES;
         if (!_iterator)
             return nil;
-        CBLQueryRow* row = _iterator();
+        CBLQueryRow* row = _iterator.nextObject;
         if (row)
             row.database = _database;
         else
