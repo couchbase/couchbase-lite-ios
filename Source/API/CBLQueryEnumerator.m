@@ -27,10 +27,9 @@
     CBLDatabase* _database;
     CBLView* _view; // nil if this is an all-docs query
     NSArray* _rows;
-    NSUInteger _nextRow;
+    NSUInteger _nextRowIndex;
     UInt64 _sequenceNumber;
-    NSEnumerator* _iterator;
-    BOOL _usingIterator;
+    BOOL _generating;
     id __unsafe_unretained _enumerationBuffer[kEnumerationBufferSize];
 }
 
@@ -38,21 +37,17 @@
 @synthesize sequenceNumber=_sequenceNumber;
 
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                             view: (CBLView*)view
-                   sequenceNumber: (SequenceNumber)sequenceNumber
-                         iterator: (NSEnumerator*)iterator
+- (instancetype) initWithSequenceNumber: (SequenceNumber)sequenceNumber
+                                   rows: (NSArray*)rows
 {
-    NSParameterAssert(database);
     self = [super init];
     if (self ) {
-        _database = database;
-        _view = view;
         _sequenceNumber = sequenceNumber;
-        _iterator = iterator;
+        _rows = rows;
     }
     return self;
 }
+
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                              view: (CBLView*)view
@@ -60,25 +55,36 @@
                              rows: (NSArray*)rows
 {
     NSParameterAssert(database);
-    self = [super init];
+    self = [self initWithSequenceNumber: sequenceNumber
+                                   rows: (rows ?: @[])];
     if (self ) {
         _database = database;
         _view = view;
-        _sequenceNumber = sequenceNumber;
-        _rows = rows;
+        for (CBLQueryRow* row in _rows)
+            [row moveToDatabase: database view: view];
     }
     return self;
 }
 
+
 - (id) copyWithZone: (NSZone*)zone {
-    return [[[self class] alloc] initWithDatabase: _database
-                                             view: _view
-                                   sequenceNumber: _sequenceNumber
-                                             rows: self.allObjects];
+    CBLQueryEnumerator* e = [[[self class] alloc] initWithSequenceNumber: _sequenceNumber
+                                                                    rows: self.allObjects];
+    e->_database = _database;
+    e->_view = _view;
+    return e;
 }
 
 - (void) dealloc {
     [self clearEnumBuffer];
+}
+
+
+- (void) setDatabase: (CBLDatabase*)database view: (CBLView*)view {
+    _database = database;
+    _view = view;
+    for (CBLQueryRow* row in _rows)
+        [row moveToDatabase: database view: view];
 }
 
 
@@ -144,20 +150,16 @@
 - (CBLQueryRow*) nextRow {
     if (_rows) {
         // Using array:
-        if (_nextRow >= _rows.count)
+        if (_nextRowIndex >= _rows.count)
             return nil;
-        return [self rowAtIndex:_nextRow++];
+        return [self rowAtIndex:_nextRowIndex++];
 
     } else {
         // Using iterator:
-        _usingIterator = YES;
-        if (!_iterator)
-            return nil;
-        CBLQueryRow* row = _iterator.nextObject;
+        _generating = YES;
+        CBLQueryRow* row = [self generateNextRow];
         if (row)
-            row.database = _database;
-        else
-            _iterator = nil;
+            [row moveToDatabase: _database view: _view];
         return row;
     }
 }
@@ -168,11 +170,16 @@
 }
 
 
+- (CBLQueryRow*) generateNextRow {
+    AssertAbstractMethod();
+}
+
+
 - (NSArray*) allObjects {
     if (!_rows) {
-        Assert(!_usingIterator, @"Enumerator is not at start");
+        Assert(!_generating, @"Enumerator is not at start; can't capture all objects");
         _rows = [super allObjects];
-        _usingIterator = NO;
+        _generating = NO;
     }
     return _rows;
 }
@@ -189,9 +196,9 @@
 
 
 - (void) reset {
-    Assert(!_usingIterator, @"Sorry, the enumerator did not save up its rows so it cannot be "
+    Assert(!_generating, @"Sorry, the enumerator did not save up its rows so it cannot be "
            "reset. Call -allObjects first thing to make the enumerator resettable.");
-    _nextRow = 0;
+    _nextRowIndex = 0;
 }
 
 
@@ -203,7 +210,7 @@
     if (state->state == 0) {
         state->state = 1;
         state->mutationsPtr = &state->extra[0]; // boilerplate for when we don't track mutations
-        _nextRow = 0; // restart in case we're iterating over _rows
+        _nextRowIndex = 0; // restart in case we're iterating over _rows
     }
     [self clearEnumBuffer];
     NSUInteger i;

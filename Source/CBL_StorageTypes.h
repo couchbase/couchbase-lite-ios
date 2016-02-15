@@ -53,6 +53,12 @@ typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
 @property (copy, nonatomic) CBLQueryRowFilter filter;
 @property (copy, nonatomic) NSString* fullTextQuery;
 
+@property (readonly) id minKey;     // startKey, or endKey if descending=YES
+@property (readonly) id maxKey;     // Max of the key range, taking into account prefixMatchLevel
+
+/** Checks whether limit=0 or keys=[] */
+@property (readonly) BOOL isEmpty;
+
 @end
 
 // Default value of CBLQueryOptions.limit

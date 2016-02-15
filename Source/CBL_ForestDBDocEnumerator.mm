@@ -16,6 +16,7 @@ extern "C" {
 
 @implementation CBL_ForestDBDocEnumerator
 {
+    CBL_ForestDBStorage* _storage;
     C4DocEnumerator *_enum;
     CBLAllDocsMode _allDocsMode;
     unsigned _limit, _skip;
@@ -28,8 +29,9 @@ extern "C" {
                          options: (CBLQueryOptions*)options
                            error: (C4Error*)outError
 {
-    self = [super init];
+    self = [super initWithSequenceNumber: storage.lastSequence rows: nil];
     if (self) {
+        _storage = storage;
         C4EnumeratorOptions c4options = {0, 0};
         _includeDocs = (options->includeDocs || options.filter);
         if (_includeDocs || options->allDocsMode >= kCBLShowConflicts)
@@ -87,7 +89,7 @@ extern "C" {
 }
 
 
-- (id) nextObject {
+- (CBLQueryRow*) generateNextRow {
     if (!_enum)
         return nil;
     C4Error c4err;
@@ -102,8 +104,7 @@ extern "C" {
                                              sequence: 0
                                                   key: docID
                                                 value: nil
-                                          docRevision: nil
-                                              storage: nil];
+                                          docRevision: nil];
         }
 
         bool deleted = (doc->flags & kDeleted) != 0;
@@ -151,9 +152,8 @@ extern "C" {
                                                      sequence: doc->sequence
                                                           key: docID
                                                         value: value
-                                                  docRevision: docRevision
-                                                      storage: nil];
-        if (_filter && !_filter(row)) {
+                                                  docRevision: docRevision];
+        if (_filter && ![self rowPassesFilter: row]) {
             LogVerbose(Query, @"   ... on 2nd thought, filter predicate skipped that row");
             continue;
         }
@@ -171,6 +171,16 @@ extern "C" {
     if (c4err.code)
         Warn(@"AllDocs: Enumeration failed: %d", err2status(c4err));
     return nil;
+}
+
+
+- (BOOL) rowPassesFilter: (CBLQueryRow*)row {
+    //FIX: I'm not supposed to know the delegates' real classes...
+    [row moveToDatabase: _storage.delegate view: nil];
+    if (!_filter(row))
+        return NO;
+    [row _clearDatabase];
+    return YES;
 }
 
 

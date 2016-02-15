@@ -60,19 +60,18 @@ BOOL CBLQueryRowValueIsEntireDoc(id value) {
                            key: (id)key
                          value: (id)value
                    docRevision: (CBL_Revision*)docRevision
-                       storage: (id<CBL_QueryRowStorage>)storage
 {
     self = [super init];
     if (self) {
-        // Don't initialize _database yet. I might be instantiated on a background thread (if the
-        // query is async) which has a different CBLDatabase instance than the original caller.
-        // Instead, the database property will be filled in when I'm added to a CBLQueryEnumerator.
         _sourceDocID = [docID copy];
         _sequence = sequence;
         _key = [key copy];
         _value = [value copy];
         _documentRevision = docRevision;
-        _storage = storage;
+        // Don't initialize _database or _storage yet. I might be instantiated on a background
+        // thread (if the query is async) which has a different CBLDatabase instance than the
+        // original caller. Instead, these properties will be filled in when I'm added to a
+        // CBLQueryEnumerator.
     }
     return self;
 }
@@ -80,13 +79,16 @@ BOOL CBLQueryRowValueIsEntireDoc(id value) {
 
 - (void) _clearDatabase {
     _database = nil;
+    _storage = nil;
 }
 
 
 - (void) moveToDatabase: (CBLDatabase*)database view: (CBLView*)view {
     Assert(database != nil);
-    _database = database;
-    _storage = [view.storage storageForQueryRow: self];
+    if (database != _database) {
+        _database = database;
+        _storage = [view.storage storageForQueryRow: self];
+    }
 }
 
 
@@ -163,11 +165,6 @@ BOOL CBLQueryRowValueIsEntireDoc(id value) {
         value = _value;
         if ([value isKindOfClass: [NSData class]]) {
             // _value may start out as unparsed Collatable data
-            id<CBL_QueryRowStorage> storage = _storage;
-            if (!storage) {
-                Warn(@"CBLQueryRow.value: cannot get the value, the database is gone");
-                return nil;
-            }
             if (CBLQueryRowValueIsEntireDoc(value)) {
                 // Value is a placeholder ("*") denoting that the map function emitted "doc" as
                 // the value. So load the body of the revision now:
@@ -175,6 +172,11 @@ BOOL CBLQueryRowValueIsEntireDoc(id value) {
                     value = _documentRevision.properties;
                 } else {
                     Assert(_sequence);
+                    id<CBL_QueryRowStorage> storage = _storage;
+                    if (!storage) {
+                        Warn(@"CBLQueryRow.value: cannot get the value, the database is gone");
+                        return nil;
+                    }
                     CBLStatus status;
                     value = [storage documentPropertiesWithID: _sourceDocID
                                                      sequence: _sequence

@@ -122,9 +122,7 @@
                       sequence: (SequenceNumber)sequence
                            key: (id)key
                          value: (id)value
-                   docRevision: (CBL_Revision*)docRevision
-                       storage: (id<CBL_QueryRowStorage>)storage;
-@property (readwrite, nonatomic) CBLDatabase* database;
+                   docRevision: (CBL_Revision*)docRevision;
 @property (readonly, nonatomic) id<CBL_QueryRowStorage> storage;
 @property (readonly, nonatomic) NSDictionary* asJSONDictionary;
 @property (readonly, nonatomic) CBL_Revision* documentRevision;
@@ -135,8 +133,7 @@
 - (instancetype) initWithDocID: (NSString*)docID
                       sequence: (SequenceNumber)sequence
                     fullTextID: (UInt64)fullTextID
-                         value: (id)value
-                       storage: (id<CBL_QueryRowStorage>)storage;
+                         value: (id)value;
 @property (copy) NSString* snippet;
 @property float relevance;
 - (void) addTerm: (NSUInteger)term atRange: (NSRange)range;
@@ -150,8 +147,7 @@
                    boundingBox: (CBLGeoRect)bbox
                    geoJSONData: (NSData*)geoJSONData
                          value: (NSData*)valueData
-                   docRevision: (CBL_Revision*)docRevision
-                       storage: (id<CBL_QueryRowStorage>)storage;
+                   docRevision: (CBL_Revision*)docRevision;
 @end
 
 NSString* CBLKeyPathForQueryRow(NSString* keyPath); // for testing

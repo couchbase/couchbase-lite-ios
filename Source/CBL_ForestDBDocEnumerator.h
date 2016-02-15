@@ -6,12 +6,15 @@
 //  Copyright © 2016 Couchbase, Inc. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+extern "C" {
+    #import "CBLQuery.h"
+    #import "CBLView+Internal.h"
+}
 #include "c4View.h"
-@class CBL_ForestDBStorage, CBLQueryOptions;
+@class CBL_ForestDBStorage;
 
 
-@interface CBL_ForestDBDocEnumerator : NSEnumerator
+@interface CBL_ForestDBDocEnumerator : CBLQueryEnumerator
 
 - (instancetype) initWithStorage: (CBL_ForestDBStorage*)storage
                          options: (CBLQueryOptions*)options

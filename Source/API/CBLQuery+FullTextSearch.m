@@ -65,10 +65,8 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
                       sequence: (SequenceNumber)sequence
                     fullTextID: (UInt64)fullTextID
                          value: (id)value
-                       storage: (id<CBL_QueryRowStorage>)storage
 {
-    self = [super initWithDocID: docID sequence: sequence key: $null value: value
-                  docRevision: nil storage: storage];
+    self = [super initWithDocID: docID sequence: sequence key: $null value: value docRevision: nil];
     if (self) {
         _fullTextID = fullTextID;
         _matches = [[NSMutableArray alloc] initWithCapacity: 4];
@@ -109,9 +107,12 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 
 
 - (NSData*) fullTextUTF8Data {
-    return [self.storage fullTextForDocument: self.documentID
-                                    sequence: self.sequenceNumber
-                                  fullTextID: _fullTextID];
+    id<CBL_QueryRowStorage> storage = self.storage;
+    if (!storage)
+        Warn(@"CBLFullTextQueryRow: cannot get the fullText, the database is gone");
+    return [storage fullTextForDocument: self.documentID
+                               sequence: self.sequenceNumber
+                             fullTextID: _fullTextID];
 }
 
 - (NSString*) fullText {
@@ -134,6 +135,8 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
     NSUInteger byteStart  = match->textRange.location;
     NSUInteger byteLength = match->textRange.length;
     NSData* rawText = self.fullTextUTF8Data;
+    if (!rawText)
+        return NSMakeRange(NSNotFound, 0);
     return NSMakeRange(utf8BytesToChars(rawText.bytes, 0, byteStart),
                        utf8BytesToChars(rawText.bytes, byteStart, byteStart + byteLength));
 }

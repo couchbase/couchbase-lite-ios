@@ -54,6 +54,18 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
     return self;
 }
 
+- (BOOL) isEmpty {
+    return limit == 0 || (keys && keys.count == 0);
+}
+
+- (id) minKey {
+    return descending ? endKey : startKey;
+}
+
+- (id) maxKey {
+    return CBLKeyForPrefixMatch(descending ? startKey : endKey, prefixMatchLevel);
+}
+
 @end
 
 
@@ -376,12 +388,19 @@ static id<CBLViewCompiler> sCompiler;
 
 
 /** Main internal call to query a view. */
-- (NSEnumerator*) _queryWithOptions: (CBLQueryOptions*)options
-                                     status: (CBLStatus*)outStatus
+- (CBLQueryEnumerator*) _queryWithOptions: (CBLQueryOptions*)options
+                                   status: (CBLStatus*)outStatus
 {
     if (!options)
         options = [CBLQueryOptions new];
-    NSEnumerator* e = [_storage queryWithOptions: options status: outStatus];
+    else if (options.isEmpty)
+        return [[CBLQueryEnumerator alloc] initWithDatabase: self.database
+                                                       view: self
+                                             sequenceNumber: self.lastSequenceIndexed
+                                                       rows: nil];
+
+    CBLQueryEnumerator* e = [_storage queryWithOptions: options status: outStatus];
+    [e setDatabase: self.database view: self];
     if (e)
         LogTo(Query, @"Query %@: Returning iterator", _name);
     else

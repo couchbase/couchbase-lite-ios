@@ -54,8 +54,8 @@ UsingLogDomain(Query);
 - (CBLStatus) updateIndexes: (NSArray*)views; // array of CBL_ViewStorage
 
 /** Queries the view. */
-- (NSEnumerator*) queryWithOptions: (CBLQueryOptions*)options
-                            status: (CBLStatus*)outStatus;
+- (CBLQueryEnumerator*) queryWithOptions: (CBLQueryOptions*)options
+                                  status: (CBLStatus*)outStatus;
 
 - (id<CBL_QueryRowStorage>) storageForQueryRow: (CBLQueryRow*)row;
 

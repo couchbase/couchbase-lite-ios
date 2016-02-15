@@ -437,8 +437,8 @@ static NSString* keyToJSONStr(id key) { // only used for logging
 #pragma mark - QUERYING:
 
 
-- (NSEnumerator*) queryWithOptions: (CBLQueryOptions*)options
-                            status: (CBLStatus*)outStatus
+- (CBLQueryEnumerator*) queryWithOptions: (CBLQueryOptions*)options
+                                  status: (CBLStatus*)outStatus
 {
     if (![self openIndex: outStatus])
         return nil;

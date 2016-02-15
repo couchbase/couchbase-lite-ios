@@ -213,13 +213,12 @@
     return [self doAllDocs: options];
 }
 
-- (NSArray*) queryIteratorAllRows: (NSEnumerator*) iterator
+- (NSArray*) queryIteratorAllRows: (CBLQueryEnumerator*) iterator
 {
     CBLContentOptions options = self.contentOptions;
     NSMutableArray* result = $marray();
     CBLQueryRow* row;
     while (nil != (row = iterator.nextObject)) {
-        row.database = _db;
         NSDictionary* dict = row.asJSONDictionary;
         if (options != 0) {
             NSDictionary* doc = dict[@"doc"];
@@ -243,7 +242,7 @@
 - (CBLStatus) doAllDocs: (CBLQueryOptions*)options
 {
     CBLStatus status;
-    NSEnumerator* iterator = [_db getAllDocs: options status: &status];
+    CBLQueryEnumerator* iterator = [_db getAllDocs: options status: &status];
     if (!iterator)
         return status;
     NSArray* result = [self queryIteratorAllRows: iterator];
@@ -1132,7 +1131,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 
 - (CBLStatus) queryView: (CBLView*)view withOptions: (CBLQueryOptions*)options {
     CBLStatus status;
-    NSEnumerator* iterator = [view _queryWithOptions: options status: &status];
+    CBLQueryEnumerator* iterator = [view _queryWithOptions: options status: &status];
     if (!iterator)
         return status;
     NSArray* rows = [self queryIteratorAllRows: iterator];

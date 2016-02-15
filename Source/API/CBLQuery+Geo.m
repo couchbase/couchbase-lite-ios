@@ -47,14 +47,12 @@
                    geoJSONData: (NSData*)geoJSONData
                          value: (NSData*)valueData
                    docRevision: (CBL_Revision*)docRevision
-                       storage: (id<CBL_QueryRowStorage>)storage
 {
     self = [super initWithDocID: docID
                        sequence: sequence
                             key: nil
                           value: valueData
-                    docRevision: docRevision
-                        storage: storage];
+                    docRevision: docRevision];
     if (self) {
         _boundingBox = bbox;
         _geoJSONData = geoJSONData;

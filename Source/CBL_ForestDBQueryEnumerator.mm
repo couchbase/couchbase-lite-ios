@@ -36,7 +36,7 @@ extern "C" {
                          options: (CBLQueryOptions*)options
                            error: (C4Error*)outError
 {
-    self = [super init];
+    self = [super initWithSequenceNumber: c4view_getLastSequenceChangedAt(c4view) rows: nil];
     if (self) {
         _viewStorage = viewStorage;
         _includeDocs = options->includeDocs;
@@ -143,7 +143,7 @@ extern "C" {
 
 
 - (void)dealloc {
-    [self freeEnum];
+    c4queryenum_free(_enum);
 }
 
 
@@ -154,7 +154,7 @@ extern "C" {
 
 
 // Here's the guts of the enumeration:
-- (id) nextObject {
+- (CBLQueryRow*) generateNextRow {
     if (_enum == nil)
         return nil;
     if (_limit-- == 0) {
@@ -181,19 +181,27 @@ extern "C" {
                 valueDict = $castIf(NSDictionary, value);
                 linkedID = valueDict.cbl_id;
             }
+            CBLStatus status;
             if (linkedID) {
                 // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
                 NSString* linkedRev = valueDict.cbl_rev; // usually nil
-                CBLStatus linkedStatus;
                 docRevision = [_viewStorage.dbStorage getDocumentWithID: linkedID
                                                              revisionID: linkedRev
-                                                   withBody: YES status: &linkedStatus];
-                sequence = docRevision.sequence;
+                                                   withBody: YES status: &status];
+                if (docRevision)
+                    sequence = docRevision.sequence;
+                else
+                    Warn(@"%@: Couldn't load linked doc %@ rev %@: status %d",
+                         self, linkedID, linkedRev, status);
             } else {
-                CBLStatus linkedStatus;
-                docRevision = [_viewStorage.dbStorage getDocumentWithID: docID
-                                                             revisionID: nil
-                                                   withBody: YES status: &linkedStatus];
+                NSDictionary* body = [_viewStorage.dbStorage getBodyWithID: docID
+                                                                  sequence: sequence
+                                                                    status: &status];
+                if (body)
+                    docRevision = [CBL_Revision revisionWithProperties: body];
+                else
+                    Warn(@"%@: Couldn't load body of %@ (seq %lld): status %d",
+                         self, docID, sequence, status);
             }
         }
 
@@ -210,15 +218,13 @@ extern "C" {
                                             boundingBox: area2GeoRect(_enum->geoBBox)
                                             geoJSONData: slice2data(_enum->geoJSON)
                                                   value: value
-                                            docRevision: docRevision
-                                                storage: _viewStorage];
+                                            docRevision: docRevision];
         } else if (_fullTextQuery) {
             CBLFullTextQueryRow *ftrow;
             ftrow = [[CBLFullTextQueryRow alloc] initWithDocID: docID
                                                       sequence: _enum->docSequence
                                                     fullTextID: _enum->fullTextID
-                                                         value: value
-                                                       storage: _viewStorage];
+                                                         value: value];
             for (NSUInteger t = 0; t < _enum->fullTextTermCount; t++) {
                 const C4FullTextTerm *term = &_enum->fullTextTerms[t];
                 [ftrow addTerm: term->termIndex atRange: {term->start, term->length}];
@@ -229,11 +235,10 @@ extern "C" {
                                             sequence: sequence
                                                  key: key
                                                value: value
-                                         docRevision: docRevision
-                                             storage: _viewStorage];
+                                         docRevision: docRevision];
         }
         if (_filter) {
-            if (!_filter(row))
+            if (![self rowPassesFilter: row])
                 continue;
             if (_skip > 0) {
                 --_skip;
@@ -272,11 +277,10 @@ extern "C" {
                                 sequence: 0
                                      key: (_group ? groupKey(_lastKey, _groupLevel) : $null)
                                    value: (_reduce ? [self callReduce] : nil)
-                             docRevision: nil
-                                 storage: _viewStorage];
+                             docRevision: nil];
             LogVerbose(Query, @"Query %@: Reduced row with key=%@, value=%@",
                        _viewStorage.name, CBLJSONString(row.key), CBLJSONString(row.value));
-            if (_filter && !_filter(row))
+            if (_filter && ![self rowPassesFilter: row])
                 row = nil;
             [_keysToReduce removeAllObjects];
             [_valuesToReduce removeAllObjects];
@@ -312,6 +316,16 @@ extern "C" {
 
 
 #pragma mark - UTILITY FUNCTIONS
+
+
+- (BOOL) rowPassesFilter: (CBLQueryRow*)row {
+    //FIX: I'm not supposed to know the delegates' real classes...
+    [row moveToDatabase: _viewStorage.dbStorage.delegate view: _viewStorage.delegate];
+    if (!_filter(row))
+        return NO;
+    [row _clearDatabase];
+    return YES;
+}
 
 
 #define PARSED_KEYS

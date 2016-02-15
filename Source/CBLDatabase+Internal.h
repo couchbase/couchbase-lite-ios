@@ -132,8 +132,8 @@ extern NSArray* CBL_RunloopModes;
 - (void) forgetViewNamed: (NSString*)name;
 
 /** Returns the value of an _all_docs query, as an enumerator of CBLQueryRow. */
-- (NSEnumerator*) getAllDocs: (CBLQueryOptions*)options
-                      status: (CBLStatus*)outStatus;
+- (CBLQueryEnumerator*) getAllDocs: (CBLQueryOptions*)options
+                            status: (CBLStatus*)outStatus;
 
 - (CBLView*) makeAnonymousView;
 

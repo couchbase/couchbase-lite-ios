@@ -135,12 +135,12 @@ static NSArray* rowsToDicts(NSEnumerator* iterator) {
 }
 
 
-static NSArray* rowsToDictsSettingDB(CBLDatabase* db, NSEnumerator* iterator) {
+static NSArray* rowsToDictsSettingDB(CBLView* view, NSEnumerator* iterator) {
     NSCParameterAssert(iterator!=nil);
     NSMutableArray* rows = $marray();
     CBLQueryRow* row;
     while (nil != (row = iterator.nextObject)) {
-        row.database = db;
+        [row moveToDatabase: view.database view: view];
         [rows addObject: row.asJSONDictionary];
     }
     return rows;
@@ -764,7 +764,7 @@ static NSArray* reverse(NSArray* a) {
     options->reduceSpecified = YES;
     options->reduce = NO;
     CBLStatus status;
-    NSArray* rows = rowsToDictsSettingDB(db, [view _queryWithOptions: options status: &status]);
+    NSArray* rows = rowsToDictsSettingDB(view, [view _queryWithOptions: options status: &status]);
     NSArray* expectedRows = $array($dict({@"id",  @"55555"}, {@"key", @"five"},
                                          {@"value", [docs[4] properties]}),
                                    $dict({@"id",  @"44444"}, {@"key", @"four"},
@@ -783,7 +783,7 @@ static NSArray* reverse(NSArray* a) {
     Assert(reduced != NULL);
     AssertEq(status, kCBLStatusOK);
     CBLQueryRow* row = reduced.nextObject;
-    row.database = db;
+    [row moveToDatabase: db view: view];
     AssertEqual(row.value, @"fivefouronethreetwo");
     AssertNil(reduced.nextObject);
 }
@@ -822,7 +822,7 @@ static NSArray* reverse(NSArray* a) {
     CBLGeoRect bbox = {{-100, 0}, {180, 90}};
     options->bbox = &bbox;
     CBLStatus status;
-    NSArray* rows = rowsToDictsSettingDB(db, [view _queryWithOptions: options status: &status]);
+    NSArray* rows = rowsToDictsSettingDB(view, [view _queryWithOptions: options status: &status]);
     NSArray* expectedRows = @[$dict({@"id", @"xxx"},
                                     {@"geometry", mkGeoRect(-115, -10, -90, 12)},
                                     {@"bbox", @[@-115, @-10, @-90, @12]}),
@@ -1411,7 +1411,7 @@ static NSArray* reverse(NSArray* a) {
                                                         @{@"range": @[@22, @3], @"term": @1}]},
                                          {@"snippet", @"a [dog] whøse ñame was “[Dog]”"},
                                          {@"value", @"33333"}));
-    AssertEqualish(rowsToDicts(rowIter), expectedRows);
+    AssertEqualish(rowsToDictsSettingDB(view, rowIter), expectedRows);
 
     // Try a query with snippets:
     CBLQuery* query = [view createQuery];
@@ -1465,7 +1465,7 @@ static NSArray* reverse(NSArray* a) {
                                 {@"matches", @[@{@"range": @[@4, @6], @"term": @0}]},
                                 {@"snippet", @"and [STöRMy] night."},
                                 {@"value", @"44444"}));
-    AssertEqualish(rowsToDicts(rowIter), expectedRows);
+    AssertEqualish(rowsToDictsSettingDB(view, rowIter), expectedRows);
 }
 
 

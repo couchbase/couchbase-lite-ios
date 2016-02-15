@@ -1169,13 +1169,13 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
 }
 
 
-- (NSEnumerator*) getAllDocs: (CBLQueryOptions*)options
-                      status: (CBLStatus*)outStatus
+- (CBLQueryEnumerator*) getAllDocs: (CBLQueryOptions*)options
+                            status: (CBLStatus*)outStatus
 {
-    if (!options)
-        options = [CBLQueryOptions new];
+    SequenceNumber lastSeq = self.lastSequence;
     BOOL includeDocs = (options->includeDocs || options.filter);
     BOOL includeDeletedDocs = (options->allDocsMode == kCBLIncludeDeleted);
+    CBLQueryRowFilter filter = options.filter;
     
     // Generate the SELECT statement, based on the options:
     BOOL cacheQuery = YES;
@@ -1186,8 +1186,6 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         [sql appendString: @", deleted"];
     [sql appendString: @" FROM revs, docs WHERE"];
     if (options.keys) {
-        if (options.keys.count == 0)
-            return @[].objectEnumerator;
         [sql appendFormat: @" revs.doc_id IN (SELECT doc_id FROM docs WHERE docid IN (%@)) AND", CBLJoinSQLQuotedStrings(options.keys)];
         cacheQuery = NO; // we've put hardcoded key strings in the query
     }
@@ -1196,13 +1194,11 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         [sql appendString: @" AND deleted=0"];
 
     NSMutableArray* args = $marray();
-    id minKey = options.startKey, maxKey = options.endKey;
-    BOOL inclusiveMin = YES, inclusiveMax = options->inclusiveEnd;
+    id minKey = options.minKey, maxKey = options.maxKey;
+    BOOL inclusiveMin = options->inclusiveStart, inclusiveMax = options->inclusiveEnd;
     if (options->descending) {
-        minKey = maxKey;
-        maxKey = options.startKey;
-        inclusiveMin = inclusiveMax;
-        inclusiveMax = YES;
+        inclusiveMin = options->inclusiveEnd;
+        inclusiveMax = options->inclusiveStart;
     }
     if (minKey) {
         Assert([minKey isKindOfClass: [NSString class]]);
@@ -1211,7 +1207,6 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     }
     if (maxKey) {
         Assert([maxKey isKindOfClass: [NSString class]]);
-        maxKey = CBLKeyForPrefixMatch(maxKey, options->prefixMatchLevel);
         [sql appendString: (inclusiveMax ? @" AND docid <= ?" :  @" AND docid < ?")];
         [args addObject: maxKey];
     }
@@ -1221,15 +1216,17 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                        (includeDeletedDocs ? @"deleted ASC," : @"")];
     [args addObject: @(options->limit)];
     [args addObject: @(options->skip)];
-    
+
     // Now run the database query:
     if (!cacheQuery)
         _fmdb.shouldCacheStatements = NO;
     CBL_FMResultSet* r = [_fmdb executeQuery: sql withArgumentsInArray: args];
     if (!cacheQuery)
         _fmdb.shouldCacheStatements = YES;
-    if (!r)
+    if (!r) {
+        *outStatus = self.lastDbError;
         return nil;
+    }
     
     NSMutableArray* rows = $marray();
     NSMutableDictionary* docs = options.keys ? $mdict() : nil;
@@ -1275,11 +1272,10 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                                                          sequence: sequence
                                                               key: docID
                                                             value: value
-                                                      docRevision: docRevision
-                                                          storage: nil];
+                                                      docRevision: docRevision];
             if (options.keys)
                 docs[docID] = row;
-            else if (!options.filter || options.filter(row))
+            else if (!filter || [self row: row passesFilter: filter])
                 [rows addObject: row];
         }
     }
@@ -1288,8 +1284,8 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     // If given doc IDs, sort the output into that order, and add entries for missing docs:
     if (options.keys) {
         for (NSString* docID in options.keys) {
-            CBLQueryRow* change = docs[docID];
-            if (!change) {
+            CBLQueryRow* row = docs[docID];
+            if (!row) {
                 // create entry for missing or deleted doc:
                 NSDictionary* value = nil;
                 SInt64 docNumericID = [self getDocNumericID: docID];
@@ -1304,20 +1300,28 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                     if (revID)
                         value = $dict({@"rev", revID}, {@"deleted", $true});
                 }
-                change = [[CBLQueryRow alloc] initWithDocID: (value ?docID :nil)
+                row = [[CBLQueryRow alloc] initWithDocID: (value ?docID :nil)
                                                    sequence: 0
                                                         key: docID
                                                       value: value
-                                                docRevision: nil
-                                                    storage: nil];
+                                                docRevision: nil];
             }
-            if (!options.filter || options.filter(change))
-                [rows addObject: change];
+            if (!filter || [self row: row passesFilter: filter])
+                [rows addObject: row];
         }
     }
 
     //OPT: Return objects from enum as they're found, without collecting them in an array first
-    return rows.objectEnumerator;
+    return [[CBLQueryEnumerator alloc] initWithSequenceNumber: lastSeq rows: rows];
+}
+
+
+- (BOOL) row: (CBLQueryRow*)row passesFilter: (CBLQueryRowFilter)filter {
+    [row moveToDatabase: _delegate view: nil];      //FIX: Technically _delgate is not CBLDatabase
+    if (!filter(row))
+        return NO;
+    [row _clearDatabase];
+    return YES;
 }
 
 
