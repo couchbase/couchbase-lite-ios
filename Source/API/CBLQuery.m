@@ -477,47 +477,38 @@ DefineLogDomain(Query);
                         ifChangedSince: (SequenceNumber)ifChangedSince
                                 status: (CBLStatus*)outStatus
 {
-    CBLStatus status = kCBLStatusOK;
-    CBLQueryEnumerator* e = nil;
-    SequenceNumber lastIndexedSequence = 0, lastChangedSequence = 0;
-    do {
-        if (viewName) {
-            CBLView* view = [self viewNamed: viewName];
-            if (!view) {
-                status = kCBLStatusNotFound;
-                break;
-            }
-            lastIndexedSequence = view.lastSequenceIndexed;
-            if (options->indexUpdateMode == kCBLUpdateIndexBefore || lastIndexedSequence <= 0) {
-                status = [view _updateIndex];
-                if (CBLStatusIsError(status)) {
-                    Warn(@"Failed to update view index: %d", status);
-                    break;
-                }
-                lastIndexedSequence = view.lastSequenceIndexed;
-            } else if (options->indexUpdateMode == kCBLUpdateIndexAfter &&
-                       lastIndexedSequence < self.lastSequenceNumber) {
-                [self doAsync: ^{
-                    [view updateIndex];
-                }];
-            }
-            lastChangedSequence = view.lastSequenceChangedAt;
-            if (lastChangedSequence > ifChangedSince)
-                e = [view _queryWithOptions: options status: &status];
-            else
-                status = kCBLStatusNotModified;
-        } else {
-            // nil view means query _all_docs
-            lastIndexedSequence = lastChangedSequence = self.lastSequenceNumber;
-            if (lastChangedSequence > ifChangedSince)
-                e = [self getAllDocs: options status: &status];
-            else
-                status = kCBLStatusNotModified;
+    if (viewName) {
+        CBLView* view = [self viewNamed: viewName];
+        if (!view) {
+            *outStatus = kCBLStatusNotFound;
+            return nil;
         }
-    } while(false); // just to allow 'break' within the block
+        SequenceNumber lastIndexedSequence = view.lastSequenceIndexed;
+        if (options->indexUpdateMode == kCBLUpdateIndexBefore || lastIndexedSequence <= 0) {
+            // Update view index before query:
+            CBLStatus status = [view _updateIndex];
+            if (CBLStatusIsError(status)) {
+                Warn(@"Failed to update view index: %d", status);
+                *outStatus = status;
+                return nil;
+            }
+        } else if (options->indexUpdateMode == kCBLUpdateIndexAfter &&
+                   lastIndexedSequence < self.lastSequenceNumber) {
+            // Update view index after query:
+            [self doAsync: ^{
+                [view updateIndex];
+            }];
+        }
+        if (view.lastSequenceChangedAt > ifChangedSince)
+            return [view _queryWithOptions: options status: outStatus];
 
-    *outStatus = status;
-    return e;
+    } else {
+        // nil view means query _all_docs
+        if (self.lastSequenceNumber > ifChangedSince)
+            return [self getAllDocs: options status: outStatus];
+    }
+    *outStatus = kCBLStatusNotModified;
+    return nil;
 }
 
 @end
