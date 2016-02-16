@@ -333,6 +333,10 @@ static NSString* keyToJSONStr(id key) { // only used for logging
         LogTo(ViewVerbose, @"    emit(%@, %@)",
               keyToJSONStr(key),
               (value == body) ? @"doc" : toJSONStr(value));
+        if (!key) {
+            Warn(@"emit() called with nil key; ignoring");
+            return;
+        }
         C4Slice valueSlice;
         if (value == body) {
             valueSlice = kC4PlaceholderValue;

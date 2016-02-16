@@ -1552,4 +1552,25 @@ static NSArray* reverse(NSArray* a) {
     AssertEqual(rows, @[]);
 }
 
+
+// Check that nil keys are ignored
+- (void) test28_Nil_Key {
+    RequireTestCase(CBL_View_Index);
+    [self putDoc: @{@"name": @"bar"}];
+
+    CBLView* view = [db viewNamed: @"view"];
+    [view setMapBlock: MAPBLOCK({
+        emit(nil, @"bogus");
+        emit(@"name", doc[@"name"]);
+    }) reduceBlock: NULL version: @"1"];
+
+    [self allowWarningsIn:^{
+        AssertEq([view updateIndex], kCBLStatusOK);
+    }];
+
+    NSArray* dump = [view.storage dump];
+    AssertEqualish(dump, (@[@{@"key": @"\"name\"", @"seq": @1, @"value": @"\"bar\""}]));
+}
+
+
 @end
