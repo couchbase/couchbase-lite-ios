@@ -186,9 +186,7 @@ BOOL CBLQueryRowValueIsEntireDoc(id value) {
                              self.class, self.key, status);
                 }
             } else {
-                value = [CBLJSON JSONObjectWithData: _value
-                                            options: CBLJSONReadingAllowFragments
-                                              error: NULL];
+                value = fromJSON(_value);
             }
             _parsedValue = value;
         }
@@ -280,20 +278,6 @@ BOOL CBLQueryRowValueIsEntireDoc(id value) {
         NSString* revID = $castIf(NSString, obj);
         return revID ? [doc revisionWithID: revID] : nil;
     }];
-}
-
-
-// This is used by the router
-- (NSDictionary*) asJSONDictionary {
-    if (_value || _sourceDocID) {
-        return $dict({@"key", self.key},
-                     {@"value", self.value},
-                     {@"id", _sourceDocID},
-                     {@"doc", self.documentProperties});
-    } else {
-        return $dict({@"key", self.key}, {@"error", @"not_found"});
-    }
-
 }
 
 

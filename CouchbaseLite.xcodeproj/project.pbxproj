@@ -1609,6 +1609,8 @@
 		274CBC311C6D52E2006DBE7F /* CBL_ForestDBQueryEnumerator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBL_ForestDBQueryEnumerator.mm; sourceTree = "<group>"; };
 		274CBC421C6E8BC4006DBE7F /* CBL_ForestDBDocEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_ForestDBDocEnumerator.h; sourceTree = "<group>"; };
 		274CBC431C6E8BC4006DBE7F /* CBL_ForestDBDocEnumerator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBL_ForestDBDocEnumerator.mm; sourceTree = "<group>"; };
+		274CBC511C728417006DBE7F /* CBLQueryRow+Router.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQueryRow+Router.h"; sourceTree = "<group>"; };
+		274CBC521C728417006DBE7F /* CBLQueryRow+Router.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLQueryRow+Router.m"; sourceTree = "<group>"; };
 		274E163119B90F420066CA5E /* TestData */ = {isa = PBXFileReference; lastKnownFileType = folder; path = TestData; sourceTree = SOURCE_ROOT; };
 		274F9807152E6E0C00247C46 /* CBLStatus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLStatus.h; sourceTree = "<group>"; };
 		27513A161A6728450055DC40 /* CBL_ForestDBStorage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBL_ForestDBStorage.h; sourceTree = "<group>"; };
@@ -2904,6 +2906,8 @@
 			children = (
 				27C706431486BE7100F0F099 /* CBL_Router.h */,
 				27C706441486BE7100F0F099 /* CBL_Router.m */,
+				274CBC511C728417006DBE7F /* CBLQueryRow+Router.h */,
+				274CBC521C728417006DBE7F /* CBLQueryRow+Router.m */,
 				2700BC5B14B64AA600B5B297 /* CBL_Router+Handlers.m */,
 				27E66B551A7310920091DA3F /* CBLRouter+Changes.m */,
 				27C706461487584300F0F099 /* CBL_URLProtocol.h */,
@@ -3778,6 +3782,7 @@
 				2785BE9D16BC87EA00A3E881 /* CBL_URLProtocol.h in Headers */,
 				2753160C14ACFC2A0065964D /* CBLHTTPConnection.h in Headers */,
 				278097561A32817A00876DE6 /* MYAnonymousIdentity.h in Headers */,
+				274CBC531C728417006DBE7F /* CBLQueryRow+Router.h in Headers */,
 				27B0AC2B1B4C59B300DFE818 /* CBLHTTPListener.h in Headers */,
 				27E11F1014AD15940006B340 /* CBLHTTPResponse.h in Headers */,
 			);
@@ -5073,6 +5078,7 @@
 				27DA435E159230AA00F9E7B5 /* CBL_Router.m in Sources */,
 				27DA4360159230B100F9E7B5 /* CBL_Router+Handlers.m in Sources */,
 				27E2E61815993CB6005B9234 /* CBL_URLProtocol.m in Sources */,
+				274CBC541C728417006DBE7F /* CBLQueryRow+Router.m in Sources */,
 				27B0AC2C1B4C59B300DFE818 /* CBLHTTPListener.m in Sources */,
 				278097571A32817A00876DE6 /* MYAnonymousIdentity.m in Sources */,
 				2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */,
@@ -5316,6 +5322,7 @@
 				27DA435F159230AC00F9E7B5 /* CBL_Router.m in Sources */,
 				27DA4361159230B200F9E7B5 /* CBL_Router+Handlers.m in Sources */,
 				27E2E61715993CB4005B9234 /* CBL_URLProtocol.m in Sources */,
+				274CBC551C728417006DBE7F /* CBLQueryRow+Router.m in Sources */,
 				27E66B571A7310920091DA3F /* CBLRouter+Changes.m in Sources */,
 				278EB1141B3CA880006B4BBC /* GCDAsyncSocket.m in Sources */,
 				278EB10E1B3CA723006B4BBC /* WebSocket.m in Sources */,

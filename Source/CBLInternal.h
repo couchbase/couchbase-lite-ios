@@ -124,7 +124,6 @@
                          value: (id)value
                    docRevision: (CBL_Revision*)docRevision;
 @property (readonly, nonatomic) id<CBL_QueryRowStorage> storage;
-@property (readonly, nonatomic) NSDictionary* asJSONDictionary;
 @property (readonly, nonatomic) CBL_Revision* documentRevision;
 @end
 

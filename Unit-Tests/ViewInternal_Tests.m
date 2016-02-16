@@ -10,6 +10,7 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLView+Internal.h"
 #import "CBLQuery+Geo.h"
+#import "CBLQueryRow+Router.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLInternal.h"
 

@@ -20,6 +20,7 @@
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLView+Internal.h"
+#import "CBLQueryRow+Router.h"
 #import "CBL_Body.h"
 #import "CBL_BlobStoreWriter.h"
 #import "CBLMultipartDocumentReader.h"

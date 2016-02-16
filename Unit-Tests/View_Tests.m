@@ -8,6 +8,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLInternal.h"
+#import "CBLQueryRow+Router.h"
 #import "MYBlockUtils.h"
 
 

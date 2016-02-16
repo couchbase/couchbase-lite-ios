@@ -93,17 +93,4 @@
 }
 
 
-// Override to return same format as GeoCouch <https://github.com/couchbase/geocouch/>
-- (NSDictionary*) asJSONDictionary {
-    NSMutableDictionary* dict = [[super asJSONDictionary] mutableCopy];
-    if (!dict[@"error"]) {
-        [dict removeObjectForKey: @"key"];
-        dict[@"geometry"] = self.geometry;
-        dict[@"bbox"] = @[@(_boundingBox.min.x), @(_boundingBox.min.y),
-                          @(_boundingBox.max.x), @(_boundingBox.max.y)];
-    }
-    return dict;
-}
-
-
 @end

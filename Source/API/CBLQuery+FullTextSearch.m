@@ -245,27 +245,6 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
 }
 
 
-// Overridden to add FTS result info
-- (NSDictionary*) asJSONDictionary {
-    NSMutableDictionary* dict = [[super asJSONDictionary] mutableCopy];
-    if (!dict[@"error"]) {
-        [dict removeObjectForKey: @"key"];
-        if (_snippet)
-            dict[@"snippet"] = [self snippetWithWordStart: @"[" wordEnd: @"]"];
-        if (_matches) {
-            NSMutableArray* matches = [[NSMutableArray alloc] init];
-            for (NSUInteger i = 0; i < _matches.count; ++i) {
-                NSRange r = [self textRangeOfMatch: i];
-                [matches addObject: @{@"term": @([self termIndexOfMatch: i]),
-                                      @"range": @[@(r.location), @(r.length)]}];
-            }
-            dict[@"matches"] = matches;
-        }
-    }
-    return dict;
-}
-
-
 @end
 
 
