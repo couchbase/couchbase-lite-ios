@@ -571,6 +571,10 @@
             return dbStorage.lastDbError;
         key = nil;
     } else {
+        if (!key) {
+            Warn(@"emit() called with nil key; ignoring");
+            return kCBLStatusOK;
+        }
         keyJSON = toJSONData(key);
         LogTo(ViewVerbose, @"    emit(%@, %@)", keyJSON.my_UTF8ToString, valueJSON.my_UTF8ToString);
     }
@@ -938,9 +942,13 @@ static inline NSString* toJSONString( id object ) {
 static inline NSData* toJSONData( id object ) {
     if (!object)
         return nil;
-    return [CBLJSON dataWithJSONObject: object
-                               options: CBLJSONWritingAllowFragments
-                                 error: NULL];
+    NSError* error;
+    NSData* json = [CBLJSON dataWithJSONObject: object
+                                       options: CBLJSONWritingAllowFragments
+                                         error: &error];
+    if (!json)
+        Warn(@"Could not convert key/value to JSON: %@ -- %@", object, error.localizedDescription);
+    return json;
 }
 
 static id fromJSON( NSData* json ) {
