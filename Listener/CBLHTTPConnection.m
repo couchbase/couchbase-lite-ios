@@ -29,6 +29,11 @@
 #import "Test.h"
 
 
+// For some reason this is not declared in HTTPConnection's @interface
+@interface HTTPConnection () <GCDAsyncSocketDelegate>
+@end
+
+
 @implementation CBLHTTPConnection
 {
     BOOL _hasClientCert;
@@ -139,6 +144,7 @@ static void evaluate(SecTrustRef trust, SecTrustCallback callback) {
                                  code: GCDAsyncSocketReadTimeoutError]) {
         Warn(@"CBLHTTPConnection: Client disconnected: %@", error);
     }
+    [super socketDidDisconnect: socket withError: error];
 }
 
 
