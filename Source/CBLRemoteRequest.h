@@ -85,9 +85,11 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 @property (weak) CBLRemoteSession* session;
 @property (readonly, atomic) NSURLSessionTask* task;
 - (NSURLSessionTask*) createTaskInURLSession: (NSURLSession*)session;
-- (NSURLSessionAuthChallengeDisposition)
-                                    didReceiveChallenge:(NSURLAuthenticationChallenge*)challenge
-                                          useCredential: (NSURLCredential**)outCredential;
+- (NSURLCredential*) credentialForHTTPAuthChallenge: (NSURLAuthenticationChallenge*)challenge
+                                disposition: (NSURLSessionAuthChallengeDisposition*)outDisposition;
+- (NSURLCredential*) credentialForClientCertChallenge: (NSURLAuthenticationChallenge*)challenge
+                                disposition: (NSURLSessionAuthChallengeDisposition*)outDisposition;
+- (SecTrustRef) checkServerTrust:(NSURLAuthenticationChallenge*)challenge;
 - (NSURLRequest*) willSendRequest:(NSURLRequest *)request
                  redirectResponse:(NSURLResponse *)response;
 

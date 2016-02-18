@@ -194,8 +194,32 @@
 {
     [self requestForTask: task do: ^(CBLRemoteRequest *request) {
         NSURLSessionAuthChallengeDisposition disposition;
-        NSURLCredential* credential;
-        disposition = [request didReceiveChallenge: challenge useCredential: &credential];
+        disposition = NSURLSessionAuthChallengePerformDefaultHandling;
+        NSURLCredential* credential = nil;
+        NSString* authMethod = challenge.protectionSpace.authenticationMethod;
+        LogTo(RemoteRequest, @"Got challenge for %@: method=%@, proposed=%@, err=%@",
+              self, authMethod, challenge.proposedCredential, challenge.error);
+        if ($equal(authMethod, NSURLAuthenticationMethodHTTPBasic) ||
+                $equal(authMethod, NSURLAuthenticationMethodHTTPDigest)) {
+            // HTTP authentication:
+            credential = [request credentialForHTTPAuthChallenge: challenge
+                                                     disposition: &disposition];
+        } else if ($equal(authMethod, NSURLAuthenticationMethodClientCertificate)) {
+            // SSL client-cert authentication:
+            credential = [request credentialForClientCertChallenge: challenge
+                                                       disposition: &disposition];
+        } else if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
+            // Check server's SSL cert:
+            SecTrustRef trust = [request checkServerTrust: challenge];
+            if (trust) {
+                credential = [NSURLCredential credentialForTrust: trust];
+                disposition = NSURLSessionAuthChallengeUseCredential;
+            } else {
+                disposition = NSURLSessionAuthChallengeCancelAuthenticationChallenge;
+            }
+        } else {
+            LogTo(RemoteRequest, @"    challenge: performDefaultHandling");
+        }
         completionHandler(disposition, credential);
     }];
 }

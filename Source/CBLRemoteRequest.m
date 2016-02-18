@@ -69,7 +69,6 @@ typedef enum {
         _autoRetry = YES;
         _request = [[NSMutableURLRequest alloc] initWithURL: url];
         _request.HTTPMethod = method;
-        _request.cachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
 
         // Interpret non-NSData body as a JSON object:
         if (body) {
@@ -253,6 +252,8 @@ typedef enum {
             case kTryAuthorizer:
                 _proposedCredential = challenge.proposedCredential;
                 cred = $castIf(CBLPasswordAuthorizer, _authorizer).credential;
+                if ([cred isEqual: _proposedCredential])
+                    cred = nil;
                 break;
             case kTryProposed:
                 cred = _proposedCredential;
@@ -285,12 +286,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
         CFRelease(subject);
     }
 #else
-#ifdef __OBJC_GC__
-    NSArray* trustProperties = NSMakeCollectable(SecTrustCopyProperties(trust));
-#else
-    NSArray* trustProperties = (__bridge_transfer NSArray *)SecTrustCopyProperties(trust);
-#endif
-    for (NSDictionary* property in trustProperties) {
+    for (NSDictionary* property in CFBridgingRelease(SecTrustCopyProperties(trust))) {
         Warn(@"    %@: error = %@",
              property[(__bridge id)kSecPropertyTypeTitle],
              property[(__bridge id)kSecPropertyTypeError]);
@@ -299,78 +295,79 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 }
 
 
-- (NSURLSessionAuthChallengeDisposition)
-                                    didReceiveChallenge:(NSURLAuthenticationChallenge*)challenge
-                                          useCredential: (NSURLCredential**)outCredential
+- (NSURLCredential*) credentialForHTTPAuthChallenge: (NSURLAuthenticationChallenge*)challenge
+                                disposition: (NSURLSessionAuthChallengeDisposition*)outDisposition
 {
-    *outCredential = nil;
-
-    NSURLProtectionSpace* space = challenge.protectionSpace;
-    NSString* authMethod = space.authenticationMethod;
-    LogTo(RemoteRequest, @"Got challenge for %@: method=%@, proposed=%@, err=%@", self, authMethod, challenge.proposedCredential, challenge.error);
-    if ($equal(authMethod, NSURLAuthenticationMethodHTTPBasic) ||
-            $equal(authMethod, NSURLAuthenticationMethodHTTPDigest)) {
-        _challenged = true;
-        *outCredential = [self nextCredentialToTry: challenge];
-        if (*outCredential) {
-            LogTo(RemoteRequest, @"    challenge: (phase %d) useCredential: %@",
-                  _authPhase, *outCredential);
-            // Update my authorizer so my owner (the replicator) can pick it up when I'm done
-            if (_authPhase > kTryAuthorizer)
-                _authorizer = [[CBLPasswordAuthorizer alloc] initWithCredential: *outCredential];
-        } else {
-            _authorizer = nil;
-            LogTo(RemoteRequest, @"    challenge: (phase %d) continueWithoutCredential", _authPhase);
+    _challenged = true;
+    NSURLCredential* cred = [self nextCredentialToTry: challenge];
+    if (cred) {
+        if (_authPhase == kTryProposed) {
+            LogTo(RemoteRequest, @"    challenge: (phase %d) use proposed credential: %@, persistence=%lu",
+                  _authPhase, cred, (unsigned long)(cred).persistence);
+            return cred;
         }
-        return NSURLSessionAuthChallengeUseCredential;
-
-    } else if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
-        // Verify the _server's_ SSL certificate:
-        SecTrustRef trust = space.serverTrust;
-        BOOL ok;
-        if (_delegate)
-            ok = [_delegate checkSSLServerTrust: space];
-        else {
-            SecTrustResultType result;
-            ok = (SecTrustEvaluate(trust, &result) == noErr) &&
-                    (result==kSecTrustResultProceed || result==kSecTrustResultUnspecified);
-#if DEBUG
-            if (!ok && _debugAlwaysTrust) {
-                ok = YES;
-                CFDataRef exception = SecTrustCopyExceptions(trust);
-                if (exception) {
-                    SecTrustSetExceptions(trust, exception);
-                    CFRelease(exception);
-                }
-            }
-#endif
-        }
-        if (ok) {
-            LogTo(RemoteRequest, @"    useCredential for trust: %@", trust);
-            *outCredential = [NSURLCredential credentialForTrust: trust];
-        } else {
-            CBLWarnUntrustedCert(space.host, trust);
-            LogTo(RemoteRequest, @"    challenge: fail (untrusted cert)");
-        }
-        return NSURLSessionAuthChallengeUseCredential;
-
-    } else if ($equal(authMethod, NSURLAuthenticationMethodClientCertificate)) {
-        // Request for SSL client cert:
-        if (challenge.previousFailureCount == 0) {
-            *outCredential = $castIf(CBLClientCertAuthorizer, _authorizer).credential;
-            if (*outCredential)
-                LogTo(RemoteRequest, @"    challenge: sending SSL client cert");
-            else
-                LogTo(RemoteRequest, @"    challenge: no SSL client cert");
-        } else {
-            _authorizer = nil;
-            LogTo(RemoteRequest, @"    challenge: SSL client cert rejected");
-        }
-        return NSURLSessionAuthChallengeUseCredential;
-
+        LogTo(RemoteRequest, @"    challenge: (phase %d) useCredential: %@, persistence=%lu",
+              _authPhase, cred, (unsigned long)(cred).persistence);
+        // Update my authorizer so my owner (the replicator) can pick it up when I'm done
+        if (_authPhase > kTryAuthorizer)
+            _authorizer = [[CBLPasswordAuthorizer alloc] initWithCredential: cred];
+        *outDisposition = NSURLSessionAuthChallengeUseCredential;
     } else {
-        LogTo(RemoteRequest, @"    challenge: performDefaultHandling");
-        return NSURLSessionAuthChallengePerformDefaultHandling;
+        _authorizer = nil;
+        LogTo(RemoteRequest, @"    challenge: (phase %d) continueWithoutCredential", _authPhase);
+    }
+    return cred;
+}
+
+
+- (NSURLCredential*) credentialForClientCertChallenge: (NSURLAuthenticationChallenge*)challenge
+                                disposition: (NSURLSessionAuthChallengeDisposition*)outDisposition
+{
+    NSURLCredential* cred = nil;
+    if (challenge.previousFailureCount == 0) {
+        cred = $castIf(CBLClientCertAuthorizer, _authorizer).credential;
+        if (cred) {
+            LogTo(RemoteRequest, @"    challenge: sending SSL client cert");
+            *outDisposition = NSURLSessionAuthChallengeUseCredential;
+        } else {
+            LogTo(RemoteRequest, @"    challenge: no SSL client cert");
+        }
+    } else {
+        _authorizer = nil;
+        LogTo(RemoteRequest, @"    challenge: SSL client cert rejected");
+    }
+    return cred;
+}
+
+
+- (SecTrustRef) checkServerTrust:(NSURLAuthenticationChallenge*)challenge {
+    NSURLProtectionSpace* space = challenge.protectionSpace;
+    SecTrustRef trust = space.serverTrust;
+    BOOL ok;
+    if (_delegate) {
+        ok = [_delegate checkSSLServerTrust: space];
+    } else {
+        SecTrustResultType result;
+        ok = (SecTrustEvaluate(trust, &result) == noErr) &&
+                (result==kSecTrustResultProceed || result==kSecTrustResultUnspecified);
+#if DEBUG
+        if (!ok && _debugAlwaysTrust) {
+            ok = YES;
+            CFDataRef exception = SecTrustCopyExceptions(trust);
+            if (exception) {
+                SecTrustSetExceptions(trust, exception);
+                CFRelease(exception);
+            }
+        }
+#endif
+    }
+    if (ok) {
+        LogTo(RemoteRequest, @"    useCredential for trust: %@", trust);
+        return trust;
+    } else {
+        CBLWarnUntrustedCert(space.host, trust);
+        LogTo(RemoteRequest, @"    challenge: fail (untrusted cert)");
+        return NULL;
     }
 }
 
