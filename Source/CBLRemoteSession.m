@@ -197,8 +197,8 @@
         disposition = NSURLSessionAuthChallengePerformDefaultHandling;
         NSURLCredential* credential = nil;
         NSString* authMethod = challenge.protectionSpace.authenticationMethod;
-        LogTo(RemoteRequest, @"Got challenge for %@: method=%@, proposed=%@, err=%@",
-              self, authMethod, challenge.proposedCredential, challenge.error);
+        LogTo(RemoteRequest, @"Got challenge for %@: method=%@, err=%@",
+              request, authMethod, challenge.error);
         if ($equal(authMethod, NSURLAuthenticationMethodHTTPBasic) ||
                 $equal(authMethod, NSURLAuthenticationMethodHTTPDigest)) {
             // HTTP authentication:
@@ -235,21 +235,6 @@
 }
 
 - (void)URLSession:(NSURLSession *)session
-        task:(NSURLSessionTask *)task
-        didCompleteWithError:(nullable NSError *)error
-{
-    [self requestForTask: task do: ^(CBLRemoteRequest *request) {
-        [_allRequests removeObject: request];
-        if (error)
-            [request didFailWithError: error];
-        else
-            [request didFinishLoading];
-    }];
-    LogTo(RemoteRequest, @"CBLRemoteSession done with %@", _requestIDs[@(task.taskIdentifier)]);
-    [self forgetTask: task];
-}
-
-- (void)URLSession:(NSURLSession *)session
         dataTask:(NSURLSessionDataTask *)dataTask
         didReceiveResponse:(NSURLResponse *)response
         completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler
@@ -257,6 +242,8 @@
     [self requestForTask: dataTask do: ^(CBLRemoteRequest *request) {
         [request didReceiveResponse: (NSHTTPURLResponse*)response];
 
+        // If the request had to change its credentials to pass authentication,
+        // pick up the new authorizer for later requests:
         NSInteger status = ((NSHTTPURLResponse*)response).statusCode;
         id<CBLAuthorizer> auth = request.authorizer;
         if (auth && auth != _authorizer && status != 401) {
@@ -276,6 +263,21 @@
         if (request.running)  // request might have just canceled itself
             [request didReceiveData: data];
     }];
+}
+
+- (void)URLSession:(NSURLSession *)session
+        task:(NSURLSessionTask *)task
+        didCompleteWithError:(nullable NSError *)error
+{
+    [self requestForTask: task do: ^(CBLRemoteRequest *request) {
+        [_allRequests removeObject: request];
+        if (error)
+            [request didFailWithError: error];
+        else
+            [request didFinishLoading];
+    }];
+    LogTo(RemoteRequest, @"CBLRemoteSession done with %@", _requestIDs[@(task.taskIdentifier)]);
+    [self forgetTask: task];
 }
 
 - (void)URLSession:(NSURLSession *)session

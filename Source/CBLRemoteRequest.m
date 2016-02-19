@@ -38,7 +38,6 @@
 typedef enum {
     kNoAuthChallenge,
     kTryAuthorizer,
-    kTryProposed,
     kFindCredential,
     kGiveUp
 } AuthPhase;
@@ -47,7 +46,6 @@ typedef enum {
 @implementation CBLRemoteRequest
 {
     AuthPhase _authPhase;
-    NSURLCredential* _proposedCredential;
 }
 
 
@@ -101,13 +99,19 @@ typedef enum {
 - (void) setAuthorizer: (id<CBLAuthorizer>)authorizer {
     if (_authorizer != authorizer) {
         _authorizer = authorizer;
-        [$castIfProtocol(CBLCustomHeadersAuthorizer, _authorizer) authorizeURLRequest: _request];
+        // Let the authorizer add an Authorization: header if it wants:
+        id<CBLCustomHeadersAuthorizer> a = $castIfProtocol(CBLCustomHeadersAuthorizer, _authorizer);
+        if (a) {
+            [a authorizeURLRequest: _request];
+            LogTo(RemoteRequest, @"Added Authorization header for %@", a);
+        }
     }
 }
 
 - (void) setCookieStorage:(CBLCookieStorage *)cookieStorage {
     if (_cookieStorage != cookieStorage) {
         _cookieStorage = cookieStorage;
+        // Let the cookie storage add a Cookie: header:
         [_cookieStorage addCookieHeaderToRequest: _request];
     }
 }
@@ -227,6 +231,9 @@ typedef enum {
 }
 
 
+#pragma mark - AUTHENTICATION
+
+
 - (bool) retryWithCredential {
     if (!_autoRetry || _authorizer || _challenged)
         return false;
@@ -246,34 +253,30 @@ typedef enum {
 
 
 - (NSURLCredential*) nextCredentialToTry: (NSURLAuthenticationChallenge*)challenge {
-    NSURLCredential* cred;
+    NSURLCredential* cred = nil;
     do {
         switch (++_authPhase) {
             case kTryAuthorizer:
-                _proposedCredential = challenge.proposedCredential;
-                cred = $castIf(CBLPasswordAuthorizer, _authorizer).credential;
-                if ([cred isEqual: _proposedCredential])
-                    cred = nil;
-                break;
-            case kTryProposed:
-                cred = _proposedCredential;
-                _proposedCredential = nil;
+                // If _authorizer hasn't already been tried (by adding its Authorization header),
+                // try it first:
+                if ([_request valueForHTTPHeaderField: @"Authorization"] == nil)
+                    cred = $castIf(CBLPasswordAuthorizer, _authorizer).credential;
                 break;
             case kFindCredential: {
+                // 2nd attempt: Look up a credential, either one embedded in the URL or one found
+                // in the credential store:
                 NSURLProtectionSpace* space = challenge.protectionSpace;
                 cred = [_request.URL my_credentialForRealm: space.realm
                                       authenticationMethod: space.authenticationMethod];
                 break;
             }
             default:
-                return nil; // give up
+                // 3rd: Give up
+                return nil;
         }
     } while (cred == nil || (cred.user && !cred.hasPassword));
     return cred;
 }
-
-
-#pragma mark - AUTHENTICATION
 
 
 void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
@@ -301,14 +304,9 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     _challenged = true;
     NSURLCredential* cred = [self nextCredentialToTry: challenge];
     if (cred) {
-        if (_authPhase == kTryProposed) {
-            LogTo(RemoteRequest, @"    challenge: (phase %d) use proposed credential: %@, persistence=%lu",
-                  _authPhase, cred, (unsigned long)(cred).persistence);
-            return cred;
-        }
         LogTo(RemoteRequest, @"    challenge: (phase %d) useCredential: %@, persistence=%lu",
               _authPhase, cred, (unsigned long)(cred).persistence);
-        // Update my authorizer so my owner (the replicator) can pick it up when I'm done
+        // Update my authorizer so the CBLRemoteSession can pick it up on success
         if (_authPhase > kTryAuthorizer)
             _authorizer = [[CBLPasswordAuthorizer alloc] initWithCredential: cred];
         *outDisposition = NSURLSessionAuthChallengeUseCredential;

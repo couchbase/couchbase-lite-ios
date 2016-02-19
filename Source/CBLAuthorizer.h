@@ -50,7 +50,7 @@
 
 
 /** Simple implementation of CBLPasswordAuthorizer. */
-@interface CBLPasswordAuthorizer : NSObject <CBLCredentialAuthorizer>
+@interface CBLPasswordAuthorizer : NSObject <CBLCredentialAuthorizer, CBLCustomHeadersAuthorizer>
 
 - (instancetype) initWithUser: (NSString*)user password: (NSString*)password;
 
