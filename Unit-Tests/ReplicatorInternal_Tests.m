@@ -85,8 +85,8 @@
     __weak ReplicatorInternal_Tests* weakSelf = self;
     [db setFilterNamed: @"filter" asBlock: ^BOOL(CBLSavedRevision *revision, NSDictionary* params) {
         ReplicatorInternal_Tests* self = weakSelf;
-        Log(@"Test filter called with params = %@", params);
-        Log(@"Rev = %@, properties = %@", revision, revision.properties);
+        //Log(@"Test filter called with params = %@", params);
+        //Log(@"Rev = %@, properties = %@", revision, revision.properties);
         Assert(revision.properties);
         ++filterCalls;
         return YES;

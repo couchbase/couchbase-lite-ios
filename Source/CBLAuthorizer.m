@@ -22,6 +22,9 @@
 
 
 @implementation CBLPasswordAuthorizer
+{
+    NSString* _basicAuthorization;
+}
 
 @synthesize credential=_credential;
 
@@ -54,6 +57,36 @@
 - (NSString*) description {
     return $sprintf(@"%@[%@/****]", self.class, _credential.user);
 }
+
+
+- (NSString*) basicAuthorization {
+    if (!_basicAuthorization) {
+        NSString* username = _credential.user;
+        NSString* password = _credential.password;
+        if (username && password) {
+            NSString* seekrit = $sprintf(@"%@:%@", username, password);
+            seekrit = [CBLBase64 encode: [seekrit dataUsingEncoding: NSUTF8StringEncoding]];
+            _basicAuthorization = [@"Basic " stringByAppendingString: seekrit];
+        }
+    }
+    return _basicAuthorization;
+}
+
+
+- (void) authorizeURLRequest: (NSMutableURLRequest*)request {
+    NSString* auth = self.basicAuthorization;
+    if (auth)
+        [request setValue: auth forHTTPHeaderField: @"Authorization"];
+}
+
+
+- (void) authorizeHTTPMessage: (CFHTTPMessageRef)message {
+    NSString* auth = self.basicAuthorization;
+    if (auth)
+        CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Authorization"),
+                                         (__bridge CFStringRef)auth);
+}
+
 
 @end
 

@@ -326,6 +326,8 @@
 		2701C20B1C4D5BDD006D7A99 /* WebSocketClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401B11860CB4B0080E082 /* WebSocketClient.h */; };
 		2701C2131C4D5C82006D7A99 /* libsqlcipher.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2701C2121C4D5C82006D7A99 /* libsqlcipher.a */; };
 		2701C24B1C4DAD9B006D7A99 /* libCBForest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FA99F01917FFD000912F96 /* libCBForest.a */; };
+		2701FD301C642669004D89FA /* CBLRemoteSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 2701FD2F1C642669004D89FA /* CBLRemoteSession.m */; };
+		2701FD311C642669004D89FA /* CBLRemoteSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 2701FD2F1C642669004D89FA /* CBLRemoteSession.m */; };
 		270B3E1E1489385C00E0A926 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		270B3E201489390000E0A926 /* CouchbaseLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E1F148938D800E0A926 /* CouchbaseLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270B3E211489390F00E0A926 /* CBL_URLProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706461487584300F0F099 /* CBL_URLProtocol.h */; };
@@ -1457,6 +1459,8 @@
 		2701C14E1C49CFE6006D7A99 /* libCouchbaseLite.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCouchbaseLite.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		2701C2101C4D5BDD006D7A99 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2701C2121C4D5C82006D7A99 /* libsqlcipher.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsqlcipher.a; path = vendor/SQLCipher/libs/osx/libsqlcipher.a; sourceTree = "<group>"; };
+		2701FD2E1C642669004D89FA /* CBLRemoteSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRemoteSession.h; sourceTree = "<group>"; };
+		2701FD2F1C642669004D89FA /* CBLRemoteSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLRemoteSession.m; sourceTree = "<group>"; };
 		270B3DEA1489359000E0A926 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		270B3DEE1489359000E0A926 /* CouchbaseLite-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CouchbaseLite-Info.plist"; sourceTree = "<group>"; };
 		270B3DFC1489359000E0A926 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
@@ -2870,6 +2874,8 @@
 				270B3E3D148D7F0000E0A926 /* CBLRestPusher.m */,
 				279906E1149A65B7003D4338 /* CBLRemoteRequest.h */,
 				279906E2149A65B8003D4338 /* CBLRemoteRequest.m */,
+				2701FD2E1C642669004D89FA /* CBLRemoteSession.h */,
+				2701FD2F1C642669004D89FA /* CBLRemoteSession.m */,
 				27BDA81C181973EF00F27A11 /* CBLBulkDownloader.h */,
 				27BDA81D181973EF00F27A11 /* CBLBulkDownloader.m */,
 				2737A6CC1B703DD500CEF619 /* CBLAttachmentDownloader.h */,
@@ -4629,6 +4635,7 @@
 				2701C0771C49CFE6006D7A99 /* CBL_ReplicatorSettings.m in Sources */,
 				2701C0781C49CFE6006D7A99 /* CBL_ForestDBViewStorage.mm in Sources */,
 				2701C0791C49CFE6006D7A99 /* MYRegexUtils.m in Sources */,
+				2701FD301C642669004D89FA /* CBLRemoteSession.m in Sources */,
 				2701C07A1C49CFE6006D7A99 /* MYStreamUtils.m in Sources */,
 				2701C07B1C49CFE6006D7A99 /* ExceptionUtils.m in Sources */,
 				2701C07C1C49CFE6006D7A99 /* Logging.m in Sources */,
@@ -4911,6 +4918,7 @@
 				27DA4314158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
 				276BA0AE17DD13FA00D367CB /* CBLParseDate.c in Sources */,
 				27DA4319158FD9B400F9E7B5 /* CBLUITableSource.m in Sources */,
+				2701FD311C642669004D89FA /* CBLRemoteSession.m in Sources */,
 				27486F3B1A608ABF008D94F0 /* CBLChangeMatcher.m in Sources */,
 				27DA4347159125B500F9E7B5 /* CBLManager.m in Sources */,
 				27DA435915918C8E00F9E7B5 /* CBLModel.m in Sources */,

@@ -26,16 +26,17 @@
 
 - (instancetype) initWithURL: (NSURL*)url
                     database: (CBLDatabase*)database
-              requestHeaders: (NSDictionary *) requestHeaders
                 onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
     self = [super initWithMethod: @"GET" 
                              URL: url 
                             body: nil
-                  requestHeaders: requestHeaders
                     onCompletion: onCompletion];
     if (self) {
         _db = database;
+
+        [_request setValue: @"multipart/related, application/json" forHTTPHeaderField: @"Accept"];
+        [_request setValue: @"gzip" forHTTPHeaderField: @"X-Accept-Part-Encoding"];
     }
     return self;
 }
@@ -46,16 +47,6 @@
 }
 
 
-- (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
-    [request setValue: @"multipart/related, application/json" forHTTPHeaderField: @"Accept"];
-    [request setValue: @"gzip" forHTTPHeaderField: @"X-Accept-Part-Encoding"];
-
-    request.HTTPBody = body;
-}
-
-
-
-
 - (NSDictionary*) document {
     return _reader.document;
 }
@@ -64,11 +55,11 @@
 #pragma mark - URL CONNECTION CALLBACKS:
 
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+- (void) didReceiveResponse:(NSHTTPURLResponse *)response {
+    [super didReceiveResponse: response];
     _reader = [[CBLMultipartDocumentReader alloc] initWithDatabase: _db];
-    CBLStatus status = (CBLStatus) ((NSHTTPURLResponse*)response).statusCode;
-    if (status < 300) {
-        NSDictionary* headers = [(NSHTTPURLResponse*)response allHeaderFields];
+    if (_status < 300) {
+        NSDictionary* headers = _responseHeaders;
         // If we let the reader see the Content-Encoding header it might decide to un-gzip the
         // data, but it's already been decoded by NSURLConnection! So remove that header:
         if (headers[@"Content-Encoding"]) {
@@ -83,19 +74,17 @@
             return;
         }
     }
-    
-    [super connection: connection didReceiveResponse: response];
 }
 
 
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    [super connection: connection didReceiveData: data];
+- (void) didReceiveData:(NSData *)data {
+    [super didReceiveData: data];
     if (![_reader appendData: data])
         [self cancelWithStatus: _reader.status];
 }
 
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+- (void) didFinishLoading {
     LogTo(SyncVerbose, @"%@: Finished loading (%u attachments)",
           self, (unsigned)_reader.attachmentCount);
     if (![_reader finish]) {

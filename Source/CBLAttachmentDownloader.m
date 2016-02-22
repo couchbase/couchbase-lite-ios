@@ -51,7 +51,6 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
     if (task.ID.revID)
         [urlStr appendFormat: @"?rev=%@", task.ID.revID];
     self = [super initWithMethod: @"GET" URL: $url(urlStr) body: nil
-                  requestHeaders: nil
                     onCompletion: onCompletion];
     if (self) {
         CBLProgressGroup* progress = task.progress;
@@ -91,7 +90,7 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
 }
 
 
-- (void) start {
+- (NSURLSessionTask*) createTaskInURLSession:(NSURLSession *)session {
     [_writer openFile];
 
     uint64_t bytesRead = _writer.bytesWritten;
@@ -102,26 +101,25 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
         [_request setValue: $sprintf(@"bytes=%llu-", bytesRead) forHTTPHeaderField: @"Range"];
     }
     LogTo(RemoteRequest, @"%@: Headers = %@", self, _request.allHTTPHeaderFields);
-    [super start];
+    return [super createTaskInURLSession: session];
 }
 
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-    CBLStatus status = (CBLStatus) ((NSHTTPURLResponse*)response).statusCode;
-    if (status < 300) {
-        NSDictionary* headers = ((NSHTTPURLResponse*)response).allHeaderFields;
+- (void) didReceiveResponse:(NSHTTPURLResponse *)response {
+    [super didReceiveResponse: response];
+    if (_status < 300) {
         BOOL reset = NO;
         // Check whether the server is honoring the "Range:" header:
-        if (_writer.bytesWritten > 0 && (status != 206 || !headers[@"Content-Range"])) {
+        if (_writer.bytesWritten > 0 && (_status != 206 || !_responseHeaders[@"Content-Range"])) {
             LogTo(RemoteRequest, @"%@: Range header was not honored; restarting", self);
             reset = YES;
         }
 
         // Remember the eTag if the server supports resumeable downloads:
-        _writer.eTag = headers[@"Accept-Ranges"] ? headers[@"Etag"] : nil;
+        _writer.eTag = _responseHeaders[@"Accept-Ranges"] ? _responseHeaders[@"Etag"] : nil;
 
         // Determine the content length:
-        uint64_t contentLength = [headers[@"Content-Length"] longLongValue];
+        uint64_t contentLength = [_responseHeaders[@"Content-Length"] longLongValue];
         if (contentLength > 0) {
             contentLength += _writer.bytesWritten;
         } else {
@@ -133,29 +131,27 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
         if (reset)
             [_writer reset];
     }
-    [super connection: connection didReceiveResponse: response];
 }
 
 
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
+- (void) didReceiveData:(NSData *)data {
 #if TRANSIENT_FAILURES
     if (_fakeTransientFailure && _writer.bytesWritten > 0) {
         LogTo(RemoteRequest, @"%@: Fake transient failure at %llu bytes!", self, _writer.bytesWritten);
         _fakeTransientFailure = NO;
         NSError* error = [NSError errorWithDomain: NSURLErrorDomain
                                              code: NSURLErrorCannotConnectToHost userInfo: nil];
-        [self connection: connection didFailWithError: error];
-        [connection cancel];
+        [self didFailWithError: error];
         return;
     }
 #endif
-    [super connection: connection didReceiveData: data];
+    [super didReceiveData: data];
     [_writer appendData: data];
 
 }
 
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+- (void) didFinishLoading {
     [_writer finish];
     if ([_writer verifyDigest: _task.ID.metadata[@"digest"]]) {
         [_writer install];

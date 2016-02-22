@@ -9,6 +9,7 @@
 #import "CBLRestReplicator.h"
 #import "CBLRemoteRequest.h"
 @class CBL_RevisionList, CBLReachability;
+@protocol CBLAuthorizer;
 
 
 @interface CBLRestReplicator ()
@@ -26,12 +27,12 @@
 - (void) processInbox: (CBL_RevisionList*)inbox;  // override this
 - (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion;
 @property (readonly) BOOL canSendCompressedRequests;
+@property (readonly, nonatomic) id<CBLAuthorizer> authorizer;
 - (CBLRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
                                      path: (NSString*)relativePath
                                      body: (id)body
                              onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
-- (void) addRemoteRequest: (CBLRemoteRequest*)request;
-- (void) removeRemoteRequest: (CBLRemoteRequest*)request;
+- (void) stopRemoteRequests;
 - (void) asyncTaskStarted;
 - (void) asyncTasksFinished: (NSUInteger)numTasks;
 - (void) stopped;

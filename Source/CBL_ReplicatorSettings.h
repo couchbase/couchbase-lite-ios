@@ -59,6 +59,8 @@ typedef CBL_Revision* (^RevisionBodyTransformationBlock)(CBL_Revision*);
     (Derived from options key "poll", in milliseconds.) */
 @property (readonly) NSTimeInterval pollInterval;
 
+@property (readonly) BOOL canUseCellNetwork;
+
 /** Returns YES if the reachability flags indicate the host is reachable according to the settings'
     "network" option (see below). */
 - (BOOL) isHostReachable: (CBLReachability*)reachability;

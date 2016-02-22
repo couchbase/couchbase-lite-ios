@@ -42,7 +42,6 @@
 
 - (instancetype) initWithDbURL: (NSURL*)dbURL
                       database: (CBLDatabase*)database
-                requestHeaders: (NSDictionary *) requestHeaders
                      revisions: (NSArray*)revs
                    attachments: (BOOL)attachments
                     onDocument: (CBLBulkDownloaderDocumentBlock)onDocument
@@ -62,34 +61,27 @@
                      {@"rev", rev.revID},
                      {@"atts_since", attsSince});
     }];
-    NSDictionary* body = @{@"docs": keys};
 
     NSString* query = attachments ?@"_bulk_get?revs=true&attachments=true" :@"_bulk_get?revs=true";
 
     self = [super initWithMethod: @"POST"
                              URL: CBLAppendToURL(dbURL, query)
-                            body: body
-                  requestHeaders: requestHeaders
+                            body: @{@"docs": keys}
                     onCompletion: onCompletion];
     if (self) {
         _db = database;
         _attachments = attachments;
         _onDocument = onDocument;
-    }
+
+        [_request setValue: @"multipart/related" forHTTPHeaderField: @"Accept"];
+        [_request setValue: @"gzip" forHTTPHeaderField: @"X-Accept-Part-Encoding"];
+}
     return self;
 }
 
 
 - (NSString*) description {
     return $sprintf(@"%@[%@]", [self class], _request.URL.path);
-}
-
-
-- (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body {
-    request.HTTPBody = [CBLJSON dataWithJSONObject: body options: 0 error: NULL];
-    [request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
-    [request setValue: @"multipart/related" forHTTPHeaderField: @"Accept"];
-    [request setValue: @"gzip" forHTTPHeaderField: @"X-Accept-Part-Encoding"];
 }
 
 
@@ -106,12 +98,11 @@
 }
 
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-    CBLStatus status = (CBLStatus) ((NSHTTPURLResponse*)response).statusCode;
-    if (status < 300) {
+- (void) didReceiveResponse:(NSHTTPURLResponse *)response {
+    [super didReceiveResponse: response];
+    if (_status < 300) {
         // Check the content type to see whether it's a multipart response:
-        NSDictionary* headers = [(NSHTTPURLResponse*)response allHeaderFields];
-        NSString* contentType = headers[@"Content-Type"];
+        NSString* contentType = _responseHeaders[@"Content-Type"];
         _topReader = [[CBLMultipartReader alloc] initWithContentType: contentType
                                                             delegate: self];
         if (!_topReader) {
@@ -120,13 +111,11 @@
             return;
         }
     }
-    
-    [super connection: connection didReceiveResponse: response];
 }
 
 
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    [super connection: connection didReceiveData: data];
+- (void) didReceiveData:(NSData *)data {
+    [super didReceiveData: data];
     [_topReader appendData: data];
     if (_topReader.error) {
         [self cancelWithStatus: kCBLStatusUpstreamError];
@@ -134,7 +123,7 @@
 }
 
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+- (void)connectionDidFinishLoading {
     LogTo(SyncVerbose, @"%@: Finished loading (%u documents)", self, _docCount);
     if (!_topReader.finished) {
         Warn(@"%@ got unexpected EOF", self);
