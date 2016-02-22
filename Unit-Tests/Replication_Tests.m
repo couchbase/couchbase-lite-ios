@@ -1131,7 +1131,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     AssertEq(repl.pendingDocumentIDs.count, 0u);
     Assert(![repl isDocumentPending: [db documentWithID: @"doc-1"]]);
 
-    // Add another set of documents and create a new replicator:
+    // Add another set of documents:
     [db inTransaction: ^BOOL{
         for (int i = 11; i <= 20; i++) {
             @autoreleasepool {
@@ -1144,6 +1144,11 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
         return YES;
     }];
 
+    // Make sure newly-added documents are considered pending: (#1132)
+    Assert([repl isDocumentPending: [db documentWithID: @"doc-11"]]);
+    AssertEq(repl.pendingDocumentIDs.count, 10u);
+
+    // Create a new replicator:
     repl = [db createPushReplication: remoteDbURL];
 
     AssertEq(repl.pendingDocumentIDs.count, 10u);
