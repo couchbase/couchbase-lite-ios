@@ -346,6 +346,8 @@
 
 
 - (void) test04_ReplicateAttachments {
+    _timeout = 30; // There are some big attachments that can take time to transfer to a device
+
     // First pull the read-only "attach_test" database:
     NSURL* pullURL = [self remoteTestDBURL: kAttachTestDBName];
     if (!pullURL)
