@@ -253,11 +253,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     return self.currentRevision.userProperties;
 }
 
-- (CBLSavedRevision*) putProperties: (NSDictionary*)properties
-                          prevRevID: (NSString*)prevID
-                      allowConflict: (BOOL)allowConflict
-                              error: (NSError**)outError
-{
+- (NSMutableDictionary*) propertiesToInsert: (NSDictionary*)properties {
     id idProp = properties.cbl_id;
     if (idProp && ![idProp isEqual: self.documentID])
         Warn(@"Trying to PUT wrong _id to %@: %@", self, properties);
@@ -268,14 +264,21 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     NSDictionary* attachments = properties.cbl_attachments;
     if (attachments.count) {
         NSDictionary* expanded = [CBLAttachment installAttachmentBodies: attachments
-                                                             intoDatabase: _database];
+                                                           intoDatabase: _database];
         if (expanded != attachments)
             nuProperties[@"_attachments"] = expanded;
     }
-    
+    return nuProperties;
+}
+
+- (CBLSavedRevision*) putProperties: (NSDictionary*)properties
+                          prevRevID: (NSString*)prevID
+                      allowConflict: (BOOL)allowConflict
+                              error: (NSError**)outError
+{
     CBLStatus status = 0;
     CBL_Revision* newRev = [_database putDocID: _docID
-                                    properties: nuProperties
+                                    properties: [self propertiesToInsert: properties]
                                 prevRevisionID: prevID
                                  allowConflict: allowConflict
                                         source: nil
@@ -310,6 +313,23 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     if (outError)
         *outError = error;
     return nil;
+}
+
+- (BOOL) putExistingRevisionWithProperties: (NSDictionary*)properties
+                           revisionHistory: (NSArray*)revIDs
+                                   fromURL: (NSURL*)sourceURL
+                                     error: (NSError**)outError
+{
+    Assert(revIDs.count > 0);
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: _docID
+                                                                    revID: revIDs[0]
+                                                                  deleted: properties.cbl_deleted];
+    rev.properties = [self propertiesToInsert: properties];
+    CBLStatus status = [_database forceInsert: rev
+                              revisionHistory: revIDs
+                                       source: sourceURL
+                                        error: outError];
+    return !CBLStatusIsError(status);
 }
 
 @end
