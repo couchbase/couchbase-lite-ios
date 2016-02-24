@@ -101,7 +101,7 @@
     CBLChangeTrackerMode mode = kOneShot;
     if (_settings.continuous && pollInterval == 0.0 && self.canUseWebSockets)
         mode = kWebSocket;
-    LogTo(SyncVerbose, @"%@ starting ChangeTracker: mode=%d, since=%@", self, mode, _lastSequence);
+    LogVerbose(Sync, @"%@ starting ChangeTracker: mode=%d, since=%@", self, mode, _lastSequence);
     _changeTracker = [[CBLChangeTracker alloc] initWithDatabaseURL: _settings.remote
                                                               mode: mode
                                                          conflicts: YES
@@ -241,7 +241,7 @@
         rev.remoteSequenceID = remoteSequenceID;
         if (revIDs.count > 1)
             rev.conflicted = true;
-        LogTo(SyncVerbose, @"%@: Received #%@ %@", self, remoteSequenceID, rev);
+        LogVerbose(Sync, @"%@: Received #%@ %@", self, remoteSequenceID, rev);
         [self addToInbox: rev];
     }
 
@@ -298,7 +298,7 @@
 
     // Ask the local database which of the revs are not known to it:
     LogTo(SyncPerf, @"%@: Processing %u changes", self, (unsigned)inbox.count);
-    LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
+    LogVerbose(Sync, @"%@: Looking up %@", self, inbox);
     id lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
     NSUInteger originalCount = inbox.count;
     CBLStatus status;
@@ -316,7 +316,7 @@
         // Nothing to do; just count all the revisions as processed.
         // Instead of adding and immediately removing the revs to _pendingSequences,
         // just do the latest one (equivalent but faster):
-        LogTo(SyncVerbose, @"%@: no new remote revisions to fetch", self);
+        LogVerbose(Sync, @"%@: no new remote revisions to fetch", self);
         SequenceNumber seq = [_pendingSequences addValue: lastInboxSequence];
         [_pendingSequences removeSequence: seq];
         self.lastSequence = _pendingSequences.checkpointedValue;
@@ -325,7 +325,7 @@
     }
     
     LogTo(SyncPerf, @"%@: Queuing download requests for %u revisions", self, (unsigned)inbox.count);
-    LogTo(SyncVerbose, @"%@ queuing remote revisions %@", self, inbox.allRevisions);
+    LogVerbose(Sync, @"%@ queuing remote revisions %@", self, inbox.allRevisions);
     
     // Dump the revs into the queues of revs to pull from the remote db:
     unsigned numBulked = 0;
@@ -428,7 +428,7 @@
             path = [path stringByAppendingString: @"&attachments=true"];
     }
     LogTo(SyncPerf, @"%@: Getting %@", self, rev);
-    LogTo(SyncVerbose, @"%@: GET %@", self, path);
+    LogVerbose(Sync, @"%@: GET %@", self, path);
     
     __weak CBLRestPuller *weakSelf = self;
     __block CBLMultipartDownloader *dl;
@@ -473,7 +473,7 @@
     if (nRevs == 0)
         return;
     LogTo(Sync, @"%@ bulk-fetching %u remote revisions...", self, (unsigned)nRevs);
-    LogTo(SyncVerbose, @"%@ bulk-fetching remote revisions: %@", self, bulkRevs);
+    LogVerbose(Sync, @"%@ bulk-fetching remote revisions: %@", self, bulkRevs);
 
     if (!_canBulkGet) {
         // _bulk_get is not supported, so fall back to _all_docs:
@@ -482,14 +482,14 @@
     }
 
     LogTo(SyncPerf, @"%@: bulk-getting %u remote revisions...", self, (unsigned)nRevs);
-    LogTo(SyncVerbose, @"%@: POST _bulk_get", self);
+    LogVerbose(Sync, @"%@: POST _bulk_get", self);
     NSMutableArray* remainingRevs = [bulkRevs mutableCopy];
     [self asyncTaskStarted];
     ++_httpConnectionCount;
     __weak CBLRestPuller *weakSelf = self;
     __block CBLBulkDownloader *dl;
     __block BOOL first = YES;
-    CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
+    __unused CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
     dl = [[CBLBulkDownloader alloc] initWithDbURL: _settings.remote
                                          database: _db
                                         revisions: bulkRevs
@@ -631,7 +631,7 @@
     if (CBLMayBeTransientError(error))
         [self revisionFailed]; // retry later
     else {
-        LogTo(SyncVerbose, @"Giving up on %@: %@", rev, error);
+        LogVerbose(Sync, @"Giving up on %@: %@", rev, error);
         [_pendingSequences removeSequence: rev.sequence];
         [self pauseOrResume];
     }
@@ -677,7 +677,7 @@
 // This will be called when _downloadsToInsert fills up:
 - (void) insertDownloads:(NSArray *)downloads {
     LogTo(SyncPerf, @"%@: inserting %u revisions into db...", self, (unsigned)downloads.count);
-    LogTo(SyncVerbose, @"%@ inserting %u revisions...", self, (unsigned)downloads.count);
+    LogVerbose(Sync, @"%@ inserting %u revisions...", self, (unsigned)downloads.count);
     CFAbsoluteTime time = CFAbsoluteTimeGetCurrent();
         
     downloads = [downloads sortedArrayUsingSelector: @selector(compareSequences:)];
@@ -693,7 +693,7 @@
                     [self revisionFailed];
                     continue;
                 }
-                LogTo(SyncVerbose, @"%@ inserting %@ %@",
+                LogVerbose(Sync, @"%@ inserting %@ %@",
                       self, rev.docID, [history my_compactDescription]);
 
                 // Insert the revision:
@@ -726,7 +726,7 @@
             }
         }
         
-        LogTo(SyncVerbose, @"%@ finished inserting %u revisions",
+        LogVerbose(Sync, @"%@ finished inserting %u revisions",
               self, (unsigned)downloads.count);
         return kCBLStatusOK;
     }];

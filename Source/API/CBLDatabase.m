@@ -207,7 +207,7 @@ static void catchInBlock(void (^block)()) {
 - (BOOL) deleteDatabase: (NSError**)outError {
     if (_readOnly)
         return CBLStatusToOutNSError(kCBLStatusForbidden, outError);
-    LogTo(CBLDatabase, @"Deleting %@", _dir);
+    LogTo(Database, @"Deleting %@", _dir);
     [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillBeDeletedNotification
                                                         object: self];
     [self _close];

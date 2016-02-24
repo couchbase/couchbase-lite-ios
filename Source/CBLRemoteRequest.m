@@ -23,11 +23,12 @@
 #import "CBLDatabase.h"
 #import "CBLRestReplicator.h"
 #import "CollectionUtils.h"
-#import "Logging.h"
-#import "Test.h"
 #import "MYURLUtils.h"
 #import "CBLGZip.h"
 #import "CBLCookieStorage.h"
+
+
+DefineLogDomain(RemoteRequest);
 
 
 // Max number of retry attempts for a transient failure, and the backoff time formula
@@ -426,7 +427,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
         NSUserDefaults* dflts = [NSUserDefaults standardUserDefaults];
         float fakeFailureRate = [dflts floatForKey: @"CBLFakeFailureRate"];
         if (fakeFailureRate > 0.0 && random() < fakeFailureRate * 0x7FFFFFFF) {
-            AlwaysLog(@"***FAKE FAILURE: %@", self);
+            Log(@"***FAKE FAILURE: %@", self);
             _status = (int)[dflts integerForKey: @"CBLFakeFailureStatus"] ?: 567;
         }
     }
@@ -438,7 +439,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 
 
 - (void) didReceiveData:(NSData *)data {
-//    LogTo(RemoteRequestVerbose, @"%@: Got %lu bytes", self, (unsigned long)data.length);
+//    LogVerbose(RemoteRequest, @"%@: Got %lu bytes", self, (unsigned long)data.length);
 }
 
 

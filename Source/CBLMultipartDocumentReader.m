@@ -26,6 +26,9 @@
 #import "CBLGZip.h"
 
 
+UsingLogDomain(Sync);
+
+
 @interface CBLMultipartDocumentReader () <CBLMultipartReaderDelegate, NSStreamDelegate>
 @end
 
@@ -104,7 +107,7 @@
     NSString* contentType = headers[@"Content-Type"];
     if ([contentType hasPrefix: @"multipart/"]) {
         // Multipart, so initialize the parser:
-        LogTo(SyncVerbose, @"%@: has attachments, %@", self, contentType);
+        LogVerbose(Sync, @"%@: has attachments, %@", self, contentType);
         _multipartReader = [[CBLMultipartReader alloc] initWithContentType: contentType delegate: self];
         if (_multipartReader) {
             _attachmentsByName = [[NSMutableDictionary alloc] init];
@@ -148,7 +151,7 @@
 
 
 - (BOOL) finish {
-    LogTo(SyncVerbose, @"%@: Finished loading (%u attachments)",
+    LogVerbose(Sync, @"%@: Finished loading (%u attachments)",
           self, (unsigned)_attachmentsByDigest.count);
     if (_multipartReader) {
         if (!_multipartReader.finished) {
@@ -188,7 +191,7 @@
                     then: (CBLMultipartDocumentReaderCompletionBlock)completionBlock
 {
     if ([self setHeaders: headers]) {
-        LogTo(SyncVerbose, @"%@: Reading from input stream...", self);
+        LogVerbose(Sync, @"%@: Reading from input stream...", self);
         _retainSelf = self;  // balanced by release in -finishAsync:
         _completionBlock = [completionBlock copy];
         [stream open];
@@ -254,7 +257,7 @@
     if (!_document) {
         [self startJSONBufferWithHeaders: headers];
     } else {
-        LogTo(SyncVerbose, @"%@: Starting attachment #%u...",
+        LogVerbose(Sync, @"%@: Starting attachment #%u...",
               self, (unsigned)_attachmentsByDigest.count + 1);
         _curAttachment = [_database attachmentWriter];
         if (!_curAttachment) {
@@ -313,10 +316,10 @@
         [_curAttachment finish];
         NSString* md5Str = _curAttachment.MD5DigestString;
 #ifndef MY_DISABLE_LOGGING
-        if (WillLogTo(SyncVerbose)) {
+        if (WillLogVerbose(Sync)) {
             CBLBlobKey key = _curAttachment.blobKey;
             NSData* keyData = [NSData dataWithBytes: &key length: sizeof(key)];
-            LogTo(SyncVerbose, @"%@: Finished attachment #%u: len=%uk, digest=%@, SHA1=%@",
+            LogVerbose(Sync, @"%@: Finished attachment #%u: len=%uk, digest=%@, SHA1=%@",
                   self, (unsigned)_attachmentsByDigest.count+1, (unsigned)_curAttachment.bytesWritten/1024,
                   md5Str, keyData);
         }

@@ -30,10 +30,6 @@ static CBLListener* sListener;
 #endif
 
 
-@interface CBLListener (Testing)
-+ (void) runTestCases;
-@end
-
 #define ENABLE_REPLICATION
 
 
@@ -41,8 +37,6 @@ static CBLListener* sListener;
 
 
 int main (int argc, const char * argv[]) {
-    RunTestCases(argc,argv);
-    [CBLListener runTestCases];
     return NSApplicationMain(argc, argv);
 }
 

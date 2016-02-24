@@ -29,6 +29,9 @@
 #import "WebSocket.h"
 
 
+DefineLogDomain(ChangeTracker);
+
+
 #define kDefaultHeartbeat (5 * 60.0)
 
 #define kInitialRetryDelay 2.0      // Initial retry delay (doubles after every subsequent failure)
@@ -314,7 +317,7 @@
 }
 
 - (BOOL) parseBytes: (const void*)bytes length: (size_t)length {
-    LogTo(ChangeTrackerVerbose, @"%@: read %ld bytes", self, (long)length);
+    LogVerbose(ChangeTracker, @"%@: read %ld bytes", self, (long)length);
     if (!_parser) {
         __weak CBLChangeTracker* weakSelf = self;
         CBLJSONMatcher* root = [CBLChangeMatcher changesFeedMatcherWithClient:

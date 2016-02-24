@@ -36,6 +36,9 @@
 #endif
 
 
+DefineLogDomain(Router);
+
+
 @implementation CBL_Router
 
 
@@ -439,7 +442,7 @@ static NSArray* splitPath( NSURL* url ) {
                                                                           withString: altDoMethod];
                 SEL altSel = NSSelectorFromString(altMessage);
                 if (altSel && [self respondsToSelector: altSel]) {
-                    LogTo(CBLRouter,
+                    LogTo(Router,
                           @"Found an alternative request type: %@"
                           " for the mapped selector: %@", aMethod, message);
                     hasAltMethod = YES;
@@ -455,7 +458,7 @@ static NSArray* splitPath( NSURL* url ) {
     if (onAccessCheck) {
         CBLStatus status = onAccessCheck(_db, docID, sel);
         if (CBLStatusIsError(status)) {
-            LogTo(CBL_Router, @"Access check failed for %@", _db.name);
+            LogTo(Router, @"Access check failed for %@", _db.name);
             return status;
         }
     }
@@ -471,7 +474,7 @@ static NSArray* splitPath( NSURL* url ) {
 
 
 - (void) run {
-    if (WillLogTo(CBL_Router)) {
+    if (WillLogTo(Router)) {
         NSMutableString* output = [NSMutableString stringWithFormat: @"%@ %@",
                                    _request.HTTPMethod, _request.URL.my_sanitizedString];
         if (_request.HTTPBodyStream)
@@ -481,7 +484,7 @@ static NSArray* splitPath( NSURL* url ) {
         NSDictionary* headers = _request.allHTTPHeaderFields;
         for (NSString* key in headers)
             [output appendFormat: @"\n\t%@: %@", key, headers[key]];
-        LogTo(CBL_Router, @"%@", output);
+        LogTo(Router, @"%@", output);
     }
     
     Assert(_dbManager);
@@ -587,7 +590,7 @@ static NSArray* splitPath( NSURL* url ) {
                                          (uint64_t)from, (uint64_t)to, (uint64_t)bodyLength);
     _response[@"Content-Range"] = contentRangeStr;
     _response.status = 206; // Partial Content
-    LogTo(CBL_Router, @"Content-Range: %@", contentRangeStr);
+    LogTo(Router, @"Content-Range: %@", contentRangeStr);
 }
 
 
@@ -603,7 +606,7 @@ static NSArray* splitPath( NSURL* url ) {
     if (accept && [accept rangeOfString: @"*/*"].length == 0) {
         NSString* responseType = _response.baseContentType;
         if (responseType && [accept rangeOfString: responseType].length == 0) {
-            LogTo(CBL_Router, @"Error kCBLStatusNotAcceptable: Can't satisfy request Accept: %@"
+            LogTo(Router, @"Error kCBLStatusNotAcceptable: Can't satisfy request Accept: %@"
                                " (actual type is %@)", accept, responseType);
             [_response reset];
             _response.internalStatus = kCBLStatusNotAcceptable;
@@ -667,13 +670,13 @@ static NSArray* splitPath( NSURL* url ) {
 
 
 - (void) finished {
-    if (WillLogTo(CBL_Router)) {
+    if (WillLogTo(Router)) {
         NSMutableString* output = [NSMutableString stringWithFormat: @"Response -- status=%d, body=%llu bytes",
                                    _response.status, (uint64_t)_response.body.asJSON.length];
         NSDictionary* headers = _response.headers;
         for (NSString* key in headers)
             [output appendFormat: @"\n\t%@: %@", key, headers[key]];
-        LogTo(CBL_Router, @"%@", output);
+        LogTo(Router, @"%@", output);
     }
     OnFinishedBlock onFinished = _onFinished;
     [self stopNow];
@@ -724,7 +727,7 @@ static NSArray* splitPath( NSURL* url ) {
 
 
 - (void) dbClosing: (NSNotification*)n {
-    LogTo(CBL_Router, @"Database closing! Returning error 500");
+    LogTo(Router, @"Database closing! Returning error 500");
     if (!_responseSent) {
         _response.internalStatus = 500;
         [self sendResponseHeaders];

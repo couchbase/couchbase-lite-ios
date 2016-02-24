@@ -140,10 +140,10 @@
     Assert(task);
     CBLRemoteRequest *request = _requestIDs[@(task.taskIdentifier)];
     if (request) {
-        //LogTo(RemoteRequest, @">>> performBlock for %@", request);
+        LogDebug(RemoteRequest, @">>> performBlock for %@", request);
         CFRunLoopPerformBlock(_runLoop.getCFRunLoop, kCFRunLoopDefaultMode, ^{
             // Now on the replicator thread
-            //LogTo(RemoteRequest, @"   <<< calling block for %@", request);
+            LogDebug(RemoteRequest, @"   <<< calling block for %@", request);
             if (request.task == task) {
                 block(request);
             } else {

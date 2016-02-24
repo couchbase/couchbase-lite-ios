@@ -60,7 +60,6 @@ NSString* CBLVersion( void ) {
         return $sprintf(@"%s (unofficial)", CBL_VERSION_STRING);
 }
 
-#ifndef MY_DISABLE_LOGGING
 static NSString* CBLFullVersionInfo( void ) {
     NSMutableString* vers = [NSMutableString stringWithFormat: @"Couchbase Lite %@", CBLVersion()];
 #ifdef CBL_SOURCE_REVISION
@@ -69,7 +68,6 @@ static NSString* CBLFullVersionInfo( void ) {
 #endif
     return vers;
 }
-#endif
 
 
 @implementation CBLDatabaseOptions
@@ -122,7 +120,7 @@ static NSCharacterSet* kIllegalNameChars;
 #else
     EnableLog(YES);
     if (type != nil)
-        _EnableLogTo(type, YES);
+        EnableLogTo(type, YES);
 #endif
 }
 
@@ -160,7 +158,7 @@ static CBLManager* sInstance;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sInstance = [[self alloc] init];
-        LogTo(CBLDatabase, @"%@ is the sharedInstance", sInstance);
+        LogTo(Database, @"%@ is the sharedInstance", sInstance);
     });
     return sInstance;
 }
@@ -254,7 +252,7 @@ static CBLManager* sInstance;
                                                             stringForKey: @"CBLReplicatorClass"];
         if (!_replicatorClassName)
             _replicatorClassName = @"CBLRestReplicator";
-        LogTo(CBLDatabase, @"Created %@", self);
+        LogTo(Database, @"Created %@", self);
     }
     return self;
 }
@@ -303,14 +301,14 @@ static CBLManager* sInstance;
 
 - (void) close {
     Assert(self != sInstance, @"Please don't close the sharedInstance!");
-    LogTo(CBLDatabase, @"CLOSING %@ ...", self);
+    LogTo(Database, @"CLOSING %@ ...", self);
     for (CBLDatabase* db in _databases.allValues) {
         [db _close];
     }
     [_databases removeAllObjects];
     _shared = nil;
     _strongShared = nil;
-    LogTo(CBLDatabase, @"CLOSED %@", self);
+    LogTo(Database, @"CLOSED %@", self);
 }
 
 
@@ -490,7 +488,7 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
                 Class serverClass = [self.replicatorClass needsRunLoop] ? [CBL_RunLoopServer class]
                                                                         : [CBL_DispatchServer class];
                 server = [[serverClass alloc] initWithManager: newManager];
-                LogTo(CBLDatabase, @"%@ created %@ (with %@)", self, server, newManager);
+                LogTo(Database, @"%@ created %@ (with %@)", self, server, newManager);
             }
             Assert(server, @"Failed to create backgroundServer!");
             shared.backgroundServer = server;

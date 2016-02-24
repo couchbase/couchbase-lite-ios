@@ -24,6 +24,9 @@
 #import <ctype.h>
 
 
+UsingLogDomain(Database);
+
+
 #ifdef GNUSTEP
 #define NSDataReadingMappedIfSafe NSMappedRead
 #define NSDataWritingAtomic NSAtomicWrite
@@ -451,7 +454,7 @@
     if (!_tempDir) {
         // Find a temporary directory suitable for files that will be moved into the store:
         _tempDir = [self createTempDir: NULL];
-        LogTo(CBLDatabase, @"CBL_BlobStore %@ created tempDir %@", _path, _tempDir);
+        LogTo(Database, @"CBL_BlobStore %@ created tempDir %@", _path, _tempDir);
     }
     return _tempDir;
 }

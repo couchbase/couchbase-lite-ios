@@ -25,8 +25,10 @@ extern "C" {
 
 #import "CBLJSON.h"
 
+//#define MY_DISABLE_LOGGING    // Uncomment this to prevent Log calls from generating any code
+
 #import "CollectionUtils.h"
-#import "Logging.h"
+#import "MYLogging.h"
 #import "Test.h"
 
 #ifdef __cplusplus

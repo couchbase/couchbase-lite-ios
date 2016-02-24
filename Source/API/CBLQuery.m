@@ -24,6 +24,9 @@
 #import "MYBlockUtils.h"
 
 
+DefineLogDomain(Query);
+
+
 // Default value of CBLLiveQuery.updateInterval
 #define kDefaultLiveQueryUpdateInterval 0.2
 
@@ -456,7 +459,7 @@
                 LogTo(Query, @"%@: ...Rows changed! (now %lu)", self, (unsigned long)rows.count);
                 self.rows = rows;   // Triggers KVO notification
             } else {
-                LogTo(QueryVerbose, @"%@: ...Rows NOT changed; not updating .rows", self);
+                LogVerbose(Query, @"%@: ...Rows NOT changed; not updating .rows", self);
             }
         }
         if (_updateAgain)

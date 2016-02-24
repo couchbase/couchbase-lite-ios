@@ -16,7 +16,6 @@
 #import <Foundation/Foundation.h>
 #import "CouchbaseLite.h"
 #import "CouchbaseLitePrivate.h"
-#import "CBL_Router.h"
 #import "CBLListener.h"
 #import "CBLRestReplicator.h"
 #import "CBLManager+Internal.h"
@@ -27,7 +26,7 @@
 #import <Security/Security.h>
 
 #if DEBUG
-#import "Logging.h"
+#import "MYLogging.h"
 #else
 #define Warn NSLog
 #define Log NSLog
@@ -130,8 +129,6 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
         }
         db = [dbm databaseNamed: dbName error: &error];
     }
-    if (db && ![db open: &error])
-        db = nil;
     if (!db) {
         fprintf(stderr, "Couldn't open database '%s': %s\n",
                 dbName.UTF8String, error.localizedDescription.UTF8String);
@@ -255,7 +252,7 @@ int main (int argc, const char * argv[])
     @autoreleasepool {
 #if DEBUG
         EnableLog(YES);
-        EnableLogTo(CBLListener, YES);
+        EnableLogTo(@"Listener", MYLogLevelOn);
 #endif
 
         CBLRegisterJSViewCompiler();

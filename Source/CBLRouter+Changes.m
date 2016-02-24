@@ -88,7 +88,7 @@ NSTimeInterval kMinHeartbeat = 5.0;
         if (!_changesFilter)
             return status;
         _changesFilterParams = [self.queries copy];
-        LogTo(CBL_Router, @"Filter params=%@", _changesFilterParams);
+        LogTo(Router, @"Filter params=%@", _changesFilterParams);
     }
     
     CBLStatus status;

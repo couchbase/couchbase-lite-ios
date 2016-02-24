@@ -36,6 +36,9 @@
 #endif
 
 
+DefineLogDomain(Validation);
+
+
 @interface CBLValidationContext : NSObject <CBLValidationContext>
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                          revision: (CBL_Revision*)currentRevision
@@ -167,7 +170,7 @@
     __block NSString* docID = inDocID;
     __block NSString* prevRevID = inPrevRevID;
     BOOL deleting = !properties || properties.cbl_deleted;
-    LogTo(CBLDatabase, @"PUT _id=%@, _rev=%@, _deleted=%d, allowConflict=%d",
+    LogTo(Database, @"PUT _id=%@, _rev=%@, _deleted=%d, allowConflict=%d",
           docID, prevRevID, deleting, allowConflict);
     if ((prevRevID && !docID) || (deleting && !docID)
             || (docID && ![CBLDatabase isValidDocumentID: docID])) {
@@ -213,7 +216,7 @@
                                        status: outStatus
                                         error: outError];
     if (putRev) {
-        LogTo(CBLDatabase, @"--> created %@", putRev);
+        LogTo(Database, @"--> created %@", putRev);
     }
     return putRev;
 }
@@ -328,7 +331,7 @@
             break;
         }
         if (context.rejectionMessage != nil) {
-            LogTo(CBLValidation, @"Failed update of %@: %@:\n  Old doc = %@\n  New doc = %@",
+            LogTo(Validation, @"Failed update of %@: %@:\n  Old doc = %@\n  New doc = %@",
                   oldRev, context.rejectionMessage, oldRev.properties, newRev.properties);
             status = kCBLStatusForbidden;
             if (outError)

@@ -15,7 +15,6 @@
 #import "BLIPPocketSocketListener.h"
 #import "PSWebSocket.h"
 #import "CollectionUtils.h"
-#import "Logging.h"
 
 
 @interface CBLSyncListener ()
@@ -60,7 +59,7 @@
 
 
 - (void)dealloc {
-    LogTo(CBLListener, @"DEALLOC %@", self);
+    LogTo(Listener, @"DEALLOC %@", self);
     dispatch_sync(_queue, ^{
         for (CBLSyncConnection* handler in _handlers)
             [handler removeObserver: self forKeyPath: @"state"];
@@ -82,7 +81,7 @@
 - (void) blipConnectionDidOpen:(BLIPConnection *)connection {
     NSString* name = ((BLIPPocketSocketConnection*)connection).webSocket.URLRequest.URL.path;
     name = name.stringByDeletingLastPathComponent.lastPathComponent;
-    LogTo(CBLListener, @"OPENED INCOMING %@ from <%@> for %@", connection, connection.URL, name);
+    LogTo(Listener, @"OPENED INCOMING %@ from <%@> for %@", connection, connection.URL, name);
 
     [_manager.backgroundServer waitForDatabaseNamed: name to: ^id(CBLDatabase* db) {
         NSString* name = $sprintf(@"Sync from %@", connection.URL);
@@ -114,7 +113,7 @@
     if (context == (void*)1) {
         CBLSyncConnection* handler = object;
         if (handler.state == kSyncStopped) {
-            LogTo(CBLListener, @"CLOSED INCOMING connection from <%@>", handler.peerURL);
+            LogTo(Listener, @"CLOSED INCOMING connection from <%@>", handler.peerURL);
             dispatch_sync(_queue, ^{
                 [_handlers removeObject: handler];
                 [handler removeObserver: self forKeyPath: @"state"];
@@ -198,7 +197,7 @@
 // called on main thread
 - (void)netServiceDidPublish:(NSNetService *)ns {
     NSString* name = ns.name;
-    LogTo(CBLListener, @"CBLSyncListener: Published Bonjour service '%@'", name);
+    LogTo(Listener, @"CBLSyncListener: Published Bonjour service '%@'", name);
     _facade.bonjourName = name;
 }
 

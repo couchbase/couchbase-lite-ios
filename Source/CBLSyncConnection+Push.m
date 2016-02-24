@@ -253,7 +253,7 @@ static NSArray* encodeChange(uint64_t sequence, NSString* docID, NSString* revID
       maxHistory: (NSUInteger)maxHistory
               to: (BLIPConnection*)socket
 {
-    LogTo(SyncVerbose, @"Sending revision {%@, %@}", docID, revID);
+    LogVerbose(Sync, @"Sending revision {%@, %@}", docID, revID);
     CBLSavedRevision* rev = [_db[docID] revisionWithID: revID];
     NSData* revJSON = rev.JSONData;
     NSError* error;
@@ -284,7 +284,7 @@ static NSArray* encodeChange(uint64_t sequence, NSString* docID, NSString* revID
             [update send].onComplete = ^(BLIPResponse* response) {
                 if ([self gotError: response])
                     return;
-                LogTo(SyncVerbose, @"    ...sent revision {%@, %@}", docID, revID);
+                LogVerbose(Sync, @"    ...sent revision {%@, %@}", docID, revID);
                 [self noteLocalSequenceIDPushed: sequenceID];
                 _pushProgress.completedUnitCount++;
             };
@@ -305,7 +305,7 @@ static NSArray* encodeChange(uint64_t sequence, NSString* docID, NSString* revID
     [self onDatabaseQueue: ^{
         uint64_t length = [_db lengthOfAttachmentWithDigest: digest];
         NSInputStream* stream = [_db contentStreamOfAttachmentWithDigest: digest];
-        LogTo(SyncVerbose, @"    Sending attachment %@ (%llukb)", digest, length/1024);
+        LogVerbose(Sync, @"    Sending attachment %@ (%llukb)", digest, length/1024);
         [self onSyncQueue: ^{
             if (stream) {
                 _pushProgress.totalUnitCount += length/1024;
@@ -327,7 +327,7 @@ static NSArray* encodeChange(uint64_t sequence, NSString* docID, NSString* revID
                 response.onComplete = ^(BLIPResponse* response) {
                     [self removeAttachmentProgress: attProgress pulling: NO];
                     if (![self gotError: wresponse])
-                        LogTo(SyncVerbose, @"    ...sent attachment %@", digest);
+                        LogVerbose(Sync, @"    ...sent attachment %@", digest);
                 };
                 [response send];
             } else {
@@ -376,7 +376,7 @@ static NSArray* encodeChange(uint64_t sequence, NSString* docID, NSString* revID
 
     NSData* data = [NSData dataWithBytes: proofDigest length: sizeof(proofDigest)];
     NSString* proof = [@"sha1-" stringByAppendingString: [data base64EncodedStringWithOptions:0]];
-    LogTo(SyncVerbose, @"    Returning proof %@ for nonce %@, attachment %@", proof, nonce, digest);
+    LogVerbose(Sync, @"    Returning proof %@ for nonce %@, attachment %@", proof, nonce, digest);
     [request respondWithString: proof];
 }
 

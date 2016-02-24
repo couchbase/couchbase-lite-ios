@@ -30,6 +30,10 @@
 #import <string.h>
 
 
+UsingLogDomain(SyncPerf);
+UsingLogDomain(Sync);
+
+
 #define kReadLength 4096u
 
 
@@ -57,7 +61,7 @@
 
     // Now open the connection:
     LogTo(SyncPerf, @"%@: %@ %@", self, (_usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
-    LogTo(SyncVerbose, @"%@: %@ %@", self, (_usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
+    LogVerbose(Sync, @"%@: %@ %@", self, (_usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
     CFReadStreamRef cfInputStream = CFReadStreamCreateForHTTPRequest(NULL, request);
     CFRelease(request);
     if (!cfInputStream)
@@ -311,7 +315,7 @@
     __unused id keepMeAround = self; // retain myself so I can't be dealloced during this method
     switch (eventCode) {
         case NSStreamEventHasBytesAvailable: {
-            LogTo(ChangeTrackerVerbose, @"%@: HasBytesAvailable %@", self, stream);
+            LogVerbose(ChangeTracker, @"%@: HasBytesAvailable %@", self, stream);
             if (!_gotResponseHeaders) {
                 if (![self checkSSLCert] || ![self readResponseHeader])
                     return;

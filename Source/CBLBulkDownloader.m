@@ -124,7 +124,7 @@
 
 
 - (void)connectionDidFinishLoading {
-    LogTo(SyncVerbose, @"%@: Finished loading (%u documents)", self, _docCount);
+    LogVerbose(Sync, @"%@: Finished loading (%u documents)", self, _docCount);
     if (!_topReader.finished) {
         Warn(@"%@ got unexpected EOF", self);
         [self cancelWithStatus: kCBLStatusUpstreamError];
@@ -142,7 +142,7 @@
 /** This method is called when a part's headers have been parsed, before its data is parsed. */
 - (BOOL) startedPart: (NSDictionary*)headers {
     Assert(!_docReader);
-    LogTo(SyncVerbose, @"%@: Starting new document; ID=\"%@\"", self, headers[@"X-Doc-ID"]);
+    LogVerbose(Sync, @"%@: Starting new document; ID=\"%@\"", self, headers[@"X-Doc-ID"]);
     _docReader = [[CBLMultipartDocumentReader alloc] initWithDatabase: _db];
     _docReader.headers = headers;
     return YES;
@@ -160,7 +160,7 @@
 
 /** This method is called when a part is complete. */
 - (BOOL) finishedPart {
-    LogTo(SyncVerbose, @"%@: Finished document", self);
+    LogVerbose(Sync, @"%@: Finished document", self);
     Assert(_docReader);
     if (![_docReader finish]) {
         [self cancelWithStatus: _docReader.status];

@@ -14,8 +14,9 @@
 #import "BLIPRequest.h"
 #import "BLIPResponse.h"
 #import "CollectionUtils.h"
-#import "Logging.h"
-#import "Test.h"
+
+
+UsingLogDomain(Sync);
 
 
 // Enables using a second CBLDatabase, on a separate dispatch queue, for insertions.

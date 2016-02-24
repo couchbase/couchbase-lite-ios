@@ -8,6 +8,10 @@
 
 #import "CBLListener.h"
 
+
+UsingLogDomain(Listener);
+
+
 @interface CBLListener ()
 
 @property (readonly) NSArray* SSLIdentityAndCertificates;

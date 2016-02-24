@@ -171,7 +171,7 @@
 
 - (void) setLastSequence:(id)lastSequence {
     if (!$equal(lastSequence, _lastSequence)) {
-        LogTo(SyncVerbose, @"%@: Setting lastSequence to %@ (from %@)",
+        LogVerbose(Sync, @"%@: Setting lastSequence to %@ (from %@)",
               self, lastSequence, _lastSequence);
         _lastSequence = [lastSequence copy];
         if (!_lastSequenceChanged) {
@@ -183,7 +183,7 @@
 
 
 - (void) postProgressChanged {
-    LogTo(SyncVerbose, @"%@: postProgressChanged (%u/%u, active=%d (batch=%u, net=%u), online=%d)",
+    LogVerbose(Sync, @"%@: postProgressChanged (%u/%u, active=%d (batch=%u, net=%u), online=%d)",
           self, (unsigned)_changesProcessed, (unsigned)_changesTotal,
           _active, (unsigned)_batcher.count, _asyncTaskCount, _online);
     NSNotification* n = [NSNotification notificationWithName: CBL_ReplicatorProgressChangedNotification
@@ -263,11 +263,11 @@
     // The cycle is broken in -stopped when I release _batcher.
     _batcher = [[CBLBatcher alloc] initWithCapacity: kInboxCapacity delay: kProcessDelay
                  processor:^(NSArray *inbox) {
-                     LogTo(SyncVerbose, @"*** %@: BEGIN processInbox (%u sequences)",
+                     LogVerbose(Sync, @"*** %@: BEGIN processInbox (%u sequences)",
                            self, (unsigned)inbox.count);
                      CBL_RevisionList* revs = [[CBL_RevisionList alloc] initWithArray: inbox];
                      [self processInbox: revs];
-                     LogTo(SyncVerbose, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
+                     LogVerbose(Sync, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
                      [self updateActive];
                  }
                 ];
@@ -277,7 +277,7 @@
     if (!authorizer) {
         authorizer = [[CBLPasswordAuthorizer alloc] initWithURL: _settings.remote];
         if (authorizer)
-            LogTo(SyncVerbose, @"%@: Found credential, using %@", self, authorizer);
+            LogVerbose(Sync, @"%@: Found credential, using %@", self, authorizer);
     }
 
     // Initialize the CBLRemoteSession:
@@ -559,7 +559,7 @@
 
 - (void) addRevsToInbox: (CBL_RevisionList*)revs {
     Assert(_running);
-    LogTo(SyncVerbose, @"%@: Received %llu revs", self, (UInt64)revs.count);
+    LogVerbose(Sync, @"%@: Received %llu revs", self, (UInt64)revs.count);
     [_batcher queueObjects: revs.allRevisions];
     [self updateActive];
 }
@@ -678,7 +678,7 @@
                                      body: (id)body
                              onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
-    LogTo(SyncVerbose, @"%@: %@ %@", self, method, path);
+    LogVerbose(Sync, @"%@: %@ %@", self, method, path);
     NSURL* url;
     if ([path hasPrefix: @"/"]) {
         url = [[NSURL URLWithString: path relativeToURL: _settings.remote] absoluteURL];

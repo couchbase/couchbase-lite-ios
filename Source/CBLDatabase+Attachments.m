@@ -501,16 +501,16 @@ static UInt64 smallestLength(NSDictionary* attachment) {
 
 
 - (BOOL) garbageCollectAttachments: (NSError**)outError {
-    LogTo(CBLDatabase, @"Scanning database revisions for attachments...");
+    LogTo(Database, @"Scanning database revisions for attachments...");
     NSSet* keys = [_storage findAllAttachmentKeys: outError];
     if (!keys)
         return NO;
-    LogTo(CBLDatabase, @"    ...found %lu attachments", (unsigned long)keys.count);
+    LogTo(Database, @"    ...found %lu attachments", (unsigned long)keys.count);
     NSInteger deleted = [_attachments deleteBlobsExceptMatching: ^BOOL(CBLBlobKey blobKey) {
         NSData* keyData = [[NSData alloc] initWithBytes: &blobKey length: sizeof(blobKey)];
         return [keys containsObject: keyData];
     } error: outError];
-    LogTo(CBLDatabase, @"    ... deleted %ld obsolete attachment files.", (long)deleted);
+    LogTo(Database, @"    ... deleted %ld obsolete attachment files.", (long)deleted);
     return deleted >= 0;
 }
 

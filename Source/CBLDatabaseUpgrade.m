@@ -22,6 +22,9 @@
 #import <sqlite3.h>
 
 
+DefineLogDomain(Upgrade);
+
+
 @implementation CBLDatabaseUpgrade
 {
     CBLDatabase* _db;

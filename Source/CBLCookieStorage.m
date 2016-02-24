@@ -10,7 +10,6 @@
 #import "CBLDatabase.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLMisc.h"
-#import "Logging.h"
 
 
 NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCookiesChanged";

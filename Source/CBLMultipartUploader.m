@@ -53,7 +53,7 @@
 
 
 - (NSInputStream *) needNewBodyStream {
-    LogTo(CBLRemoteRequest, @"%@: Needs new body stream, resetting writer...", self);
+    LogTo(RemoteRequest, @"%@: Needs new body stream, resetting writer...", self);
     [_currentWriter close];
     _currentWriter = _writer();
     return [_currentWriter openForInputStream];

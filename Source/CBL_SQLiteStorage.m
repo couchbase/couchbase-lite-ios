@@ -131,9 +131,9 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 #if DEBUG
     _fmdb.logsErrors = YES;
 #else
-    _fmdb.logsErrors = WillLogTo(CBLDatabase);
+    _fmdb.logsErrors = WillLogTo(Database);
 #endif
-    _fmdb.traceExecution = WillLogTo(CBLDatabaseVerbose);
+    _fmdb.traceExecution = WillLogVerbose(Database);
 
     _docIDs = [[NSCache alloc] init];
     _docIDs.countLimit = kDocIDCacheSize;
@@ -190,7 +190,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     else
         flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
 
-    LogTo(CBLDatabase, @"Open %@ (flags=%X%@)",
+    LogTo(Database, @"Open %@ (flags=%X%@)",
           _fmdb.databasePath, flags, (_encryptionKey ? @", encryption key given" : nil));
     if (![_fmdb openWithFlags: flags]) {
         if (outError) *outError = self.fmdbError;
@@ -363,7 +363,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 
 - (BOOL) open: (NSError**)outError {
-    LogTo(CBLDatabase, @"Opening %@", self);
+    LogTo(Database, @"Opening %@", self);
     if (![self openFMDB: outError])
         return NO;
     
@@ -500,7 +500,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         case SQLITE_NOTADB:
             return kCBLStatusUnauthorized; // DB is probably encrypted (SQLCipher)
         default:
-            LogTo(CBLDatabase, @"Other _fmdb.lastErrorCode %d", _fmdb.lastErrorCode);
+            LogTo(Database, @"Other _fmdb.lastErrorCode %d", _fmdb.lastErrorCode);
             return kCBLStatusDBError;
     }
 }
@@ -548,12 +548,12 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         Warn(@"Failed to create SQLite transaction!");
         return NO;
     }
-    LogTo(CBLDatabase, @"Begin transaction (level %d)...", _fmdb.transactionLevel);
+    LogTo(Database, @"Begin transaction (level %d)...", _fmdb.transactionLevel);
     return YES;
 }
 
 - (BOOL) endTransaction: (BOOL)commit {
-    LogTo(CBLDatabase, @"%@ transaction (level %d)",
+    LogTo(Database, @"%@ transaction (level %d)",
           (commit ? @"Commit" : @"Abort"), _fmdb.transactionLevel);
 
     BOOL ok = [_fmdb endTransaction: commit];
@@ -1687,7 +1687,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
             // insert call, then.
             if (_fmdb.lastErrorCode != SQLITE_CONSTRAINT)
                 return self.lastDbError;
-            LogTo(CBLDatabase, @"Duplicate rev insertion: %@ / %@", docID, newRevID);
+            LogTo(Database, @"Duplicate rev insertion: %@ / %@", docID, newRevID);
             newRev.body = nil;
             // don't return yet; update the parent's current just to be sure (see #509)
         }
@@ -1972,7 +1972,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         SequenceNumber lastOptimized = [[self infoForKey: @"last_optimized"] longLongValue];
         if (lastOptimized <= curSequence/10) {
             [self inTransaction:^CBLStatus{
-                LogTo(CBLDatabase, @"%@: Optimizing SQL indexes (curSeq=%lld, last run at %lld)",
+                LogTo(Database, @"%@: Optimizing SQL indexes (curSeq=%lld, last run at %lld)",
                       self, curSequence, lastOptimized);
                 [_fmdb executeUpdate: @"ANALYZE"];
                 [_fmdb executeUpdate: @"ANALYZE sqlite_master"];
@@ -2145,7 +2145,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                 [r close];
                 [seqsToPurge minusSet: seqsToKeep];
 
-                LogTo(CBLDatabase, @"Purging doc '%@' revs (%@); asked for (%@)",
+                LogTo(Database, @"Purging doc '%@' revs (%@); asked for (%@)",
                       docID, [revsToPurge.allObjects componentsJoinedByString: @", "],
                       [revIDs componentsJoinedByString: @", "]);
 

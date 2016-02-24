@@ -11,6 +11,9 @@
 #import "MYBlockUtils.h"
 
 
+UsingLogDomain(Sync);
+
+
 NSString* const kSyncNestedProgressKey = @"CBLChildren";
 
 
@@ -52,7 +55,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
                 @"proveAttachment": @"handleProveAttachment:"
             }];
             _peerURL = connection.URL;
-            LogTo(BLIPVerbose, @"%@ connected to socket", self);
+            LogVerbose(Sync, @"%@ connected to socket", self);
             [self updateState: kSyncConnecting];
         }
         _changesBatchSize = kDefaultChangeBatchSize;
@@ -68,7 +71,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 
 
 - (void)dealloc {
-    LogTo(SyncVerbose, @"DEALLOC %@", self);
+    LogVerbose(Sync, @"DEALLOC %@", self);
     [_connection removeObserver: self forKeyPath: @"active"];
 }
 
@@ -137,8 +140,9 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
         if (_dbQueueTime > 0) {
             NSTimeInterval idle = enterTime - _dbQueueTime;
             _dbQueueTotalIdleTime += idle;
-//            if (idle > 0.01)
-//                LogTo(Sync, @"** DB queue was idle %.4f sec (total %.4f)", idle, _dbQueueTotalIdleTime);
+            if (idle > 0.01)
+                LogDebug(Sync, @"** DB queue was idle %.4f sec (total %.4f)",
+                         idle, _dbQueueTotalIdleTime);
         }
 
         block();
@@ -192,7 +196,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 }
 
 - (void) updateState: (SyncState)state {
-    static const char* kStateNames[] = {"Stopped", "Connecting", "Idle", "Active"};
+    __unused static const char* kStateNames[] = {"Stopped", "Connecting", "Idle", "Active"};
     if (state != self.state) {
         LogTo(Sync, @"SyncConnection.state = kSync%s", kStateNames[state]);
 #ifdef TIME_DB_QUEUE

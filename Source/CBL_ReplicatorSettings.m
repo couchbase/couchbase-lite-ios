@@ -24,6 +24,10 @@
 #import <CommonCrypto/CommonDigest.h>
 
 
+DefineLogDomain(Sync);
+DefineLogDomain(SyncPerf);
+
+
 #define kDefaultRequestTimeout 60.0
 
 

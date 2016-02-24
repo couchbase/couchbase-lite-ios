@@ -8,6 +8,7 @@
 
 #import "CBLHTTPListener.h"
 #import "CBLHTTPConnection.h"
+#import "CBLListener+Internal.h"
 #import "CBLInternal.h"
 
 #import "HTTPServer.h"
@@ -25,7 +26,7 @@
 
 + (void) initialize {
     if (self == [CBLHTTPListener class]) {
-        if (WillLogTo(CBLListener)) {
+        if (WillLogTo(Listener)) {
             [DDLog addLogger:[[CBL_MYDDLogger alloc] init]];
         }
     }

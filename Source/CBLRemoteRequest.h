@@ -8,9 +8,11 @@
 
 #import <Foundation/Foundation.h>
 @protocol CBLAuthorizer, CBLRemoteRequestDelegate;
-
-
 @class CBLCookieStorage, CBLRemoteSession;
+
+
+UsingLogDomain(RemoteRequest);
+
 
 /** The signature of the completion block called by a CBLRemoteRequest.
     @param result  On success, a 'result' object; by default this is the CBLRemoteRequest iself, but subclasses may return something else. On failure, this will likely be nil.

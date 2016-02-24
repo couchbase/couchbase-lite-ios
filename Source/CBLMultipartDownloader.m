@@ -21,6 +21,9 @@
 #import "CollectionUtils.h"
 
 
+UsingLogDomain(Sync);
+
+
 @implementation CBLMultipartDownloader
 
 
@@ -85,7 +88,7 @@
 
 
 - (void) didFinishLoading {
-    LogTo(SyncVerbose, @"%@: Finished loading (%u attachments)",
+    LogVerbose(Sync, @"%@: Finished loading (%u attachments)",
           self, (unsigned)_reader.attachmentCount);
     if (![_reader finish]) {
         [self cancelWithStatus: _reader.status];

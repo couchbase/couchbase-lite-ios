@@ -12,6 +12,9 @@
        CBLDatabaseChange, CBL_Shared, CBLModelFactory, CBLDatabaseOptions;
 
 
+UsingLogDomain(Database);
+
+
 // Default value for maxRevTreeDepth, the max rev depth to preserve in a prune operation
 #define kDefaultMaxRevs 20
 

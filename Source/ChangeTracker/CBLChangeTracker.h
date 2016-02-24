@@ -18,6 +18,9 @@
 @protocol CBLAuthorizer;
 
 
+UsingLogDomain(ChangeTracker);
+
+
 @protocol CBLChangeTrackerClient <NSObject>
 - (BOOL) changeTrackerApproveSSLTrust: (SecTrustRef)serverTrust
                               forHost: (NSString*)host

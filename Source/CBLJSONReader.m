@@ -17,6 +17,9 @@
 #import <yajl/yajl_parse.h>
 
 
+DefineLogDomain(JSONReader);
+
+
 @interface CBLGenericArrayMatcher : CBLJSONArrayMatcher
 @end
 
@@ -168,7 +171,7 @@
             return nil;
         _stack = $marray();
         _matcher = rootMatcher;
-        LogTo(CBLJSONMatcher, @"Start with %@", _matcher);
+        LogTo(JSONReader, @"Start with %@", _matcher);
     }
     return self;
 }
@@ -220,7 +223,7 @@
     if (_matcher)
         [_stack addObject: _matcher];
     _matcher = matcher;
-    LogTo(CBLJSONMatcher, @"Pushed %@", matcher);
+    LogTo(JSONReader, @"Pushed %@", matcher);
 }
 
 - (void) pop {
@@ -232,7 +235,7 @@
         Assert(_matcher != nil);
         _matcher = nil;
     }
-    LogTo(CBLJSONMatcher, @"Popped: now %@", _matcher);
+    LogTo(JSONReader, @"Popped: now %@", _matcher);
 }
 
 - (CBLJSONMatcher*) matcher {
@@ -288,60 +291,60 @@ static inline int checkErr(bool result) {
 
 
 static int parsed_null(void * ctx) {
-    LogTo(CBLJSONMatcher, @"Match null");
+    LogTo(JSONReader, @"Match null");
     CBLJSONReader* self = parserForCtx(ctx);
     return checkErr([self.matcher matchValue: [NSNull null]]);
 }
 
 static int parsed_boolean(void * ctx, int boolVal) {
-    LogTo(CBLJSONMatcher, @"Match %s", (boolVal ?"true" :"false"));
+    LogTo(JSONReader, @"Match %s", (boolVal ?"true" :"false"));
     CBLJSONReader* self = parserForCtx(ctx);
     return checkErr([self.matcher matchValue: [NSNumber numberWithBool: (BOOL)boolVal]]);
 }
 
 static int parsed_integer(void * ctx, long long integerVal) {
-    LogTo(CBLJSONMatcher, @"Match %lld", integerVal);
+    LogTo(JSONReader, @"Match %lld", integerVal);
     CBLJSONReader* self = parserForCtx(ctx);
     return checkErr([self.matcher matchValue: [NSNumber numberWithLongLong: integerVal]]);
 }
 
 static int parsed_double(void * ctx, double doubleVal) {
-    LogTo(CBLJSONMatcher, @"Match %g", doubleVal);
+    LogTo(JSONReader, @"Match %g", doubleVal);
     CBLJSONReader* self = parserForCtx(ctx);
     return checkErr([self.matcher matchValue: [NSNumber numberWithDouble: doubleVal]]);
 }
 
 static int parsed_string(void * ctx, const unsigned char * stringVal, size_t stringLen) {
-    LogTo(CBLJSONMatcher, @"Match \"%.*s\"", (int)stringLen, stringVal);
+    LogTo(JSONReader, @"Match \"%.*s\"", (int)stringLen, stringVal);
     CBLJSONReader* self = parserForCtx(ctx);
     NSString* string = [[NSString alloc] initWithBytes: stringVal length: stringLen encoding: NSUTF8StringEncoding];
     return checkErr([self.matcher matchValue: string]);
 }
 
 static int parsed_start_array(void * ctx) {
-    LogTo(CBLJSONMatcher, @"Start array");
+    LogTo(JSONReader, @"Start array");
     CBLJSONReader* self = parserForCtx(ctx);
     return checkErr([self startArray]);
 }
 
 static int parsed_end_array(void * ctx) {
-    LogTo(CBLJSONMatcher, @"End array");
+    LogTo(JSONReader, @"End array");
     return checkErr([parserForCtx(ctx) endArrayOrMap: false]);
 }
 
 static int parsed_start_map(void * ctx) {
-    LogTo(CBLJSONMatcher, @"Start object");
+    LogTo(JSONReader, @"Start object");
     CBLJSONReader* self = parserForCtx(ctx);
     return checkErr([self startMap]);
 }
 
 static int parsed_map_key(void * ctx, const unsigned char * key, size_t stringLen) {
-    LogTo(CBLJSONMatcher, @"Object key: \"%.*s\"", (int)stringLen, key);
+    LogTo(JSONReader, @"Object key: \"%.*s\"", (int)stringLen, key);
     return checkErr([parserForCtx(ctx) matchMapKey: key length: stringLen]);
 }
 
 static int parsed_end_map(void * ctx) {
-    LogTo(CBLJSONMatcher, @"End object");
+    LogTo(JSONReader, @"End object");
     return checkErr([parserForCtx(ctx) endArrayOrMap: true]);
 }
 

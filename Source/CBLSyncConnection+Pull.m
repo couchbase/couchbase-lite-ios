@@ -11,6 +11,9 @@
 #import "MYBuffer.h"
 
 
+UsingLogDomain(Sync);
+
+
 @interface PendingRev : NSObject
 @property NSData* body;
 @property NSDictionary* attachments;
@@ -37,7 +40,7 @@
                  inBatchesOf: (NSUInteger)batchSize
                   continuous: (BOOL)continuous
 {
-    LogTo(SyncVerbose, @"    Sending request for changes since '%@'", sinceSequence);
+    LogVerbose(Sync, @"    Sending request for changes since '%@'", sinceSequence);
     _pullCatchingUp = YES;
     BLIPRequest* request = _connection.request;
     request.profile = @"subChanges";
@@ -91,7 +94,7 @@
                 NSArray* ancestors = [_db getPossibleAncestorsOfDocID: docID revID: revID
                                                                 limit: kMaxPossibleAncestorsToSend];
                 if ([ancestors.firstObject isEqualToString: revID]) {
-                    LogTo(SyncVerbose, @"    ...already have {%@, %@}", docID, revID);
+                    LogVerbose(Sync, @"    ...already have {%@, %@}", docID, revID);
                     [responseInfo addObject: @0];
 #if 0
                 } else if (change.count >= 4 && [change[3] boolValue]) {
@@ -107,7 +110,7 @@
 #endif
                 } else {
                     [responseInfo addObject: ancestors ?: none];
-                    LogTo(SyncVerbose, @"    Requesting {%@, %@}; I have %@", docID, revID, ancestors);
+                    LogVerbose(Sync, @"    Requesting {%@, %@}; I have %@", docID, revID, ancestors);
                     numRequested++;
                     realSize = responseInfo.count;
                 }
@@ -178,7 +181,7 @@
         return;
     }
 
-    LogTo(SyncVerbose, @"Checking %lu attachments of doc '%@'...",
+    LogVerbose(Sync, @"Checking %lu attachments of doc '%@'...",
           (unsigned long)attachments.count, docID);
     [request deferResponse];
 
@@ -202,7 +205,7 @@
                 [request respondWithData: nil contentType: nil];
             } else {
                 // Alright, need to request some attachments before we can insert the revision:
-                LogTo(SyncVerbose, @"Still need attachments {%@} of doc '%@'...",
+                LogVerbose(Sync, @"Still need attachments {%@} of doc '%@'...",
                       [needDigests.allKeys componentsJoinedByString: @", "], docID);
                 NSMutableDictionary* attWritersByDigest = $mdict();
                 __block BOOL ok = YES;
@@ -244,7 +247,7 @@
     NSString* digest = attachment[@"digest"];
     NSNumber* lengthObj = (attachment[@"encoded_length"] ?: attachment[@"length"]);
     uint64_t length = [lengthObj unsignedLongLongValue];
-    LogTo(SyncVerbose, @"Requesting attachment with digest %@ (%llu bytes)", digest, length);
+    LogVerbose(Sync, @"Requesting attachment with digest %@ (%llu bytes)", digest, length);
     _pullProgress.totalUnitCount += length/1024;
     [_pullProgress becomeCurrentWithPendingUnitCount: length/1024];
     NSProgress* attProgress = [self addAttachmentProgressWithName: name
@@ -280,7 +283,7 @@
         NSError* error = response.error;
         if (error == nil) {
             [writer finish];
-            LogTo(SyncVerbose, @"Received attachment with digest %@ (%llu bytes)",
+            LogVerbose(Sync, @"Received attachment with digest %@ (%llu bytes)",
                   digest, writer.bytesWritten);
             [self removeAttachmentProgress: attProgress pulling: YES];
             if ([writer.SHA1DigestString isEqualToString: digest]) {
@@ -378,15 +381,15 @@
                                                revisionHistory: rev.history
                                                         source: _connection.URL
                                                          error: &error]) {
-                        if (WillLogTo(SyncVerbose)) {
+                        if (WillLogVerbose(Sync)) {
                             NSDictionary* doc = [CBLJSON JSONObjectWithData: rev.body options: 0
                                                                       error: NULL];
-                            LogTo(SyncVerbose, @"    Inserted {'%@' %@}, sequence #%@, +%lu ancestors",
+                            LogVerbose(Sync, @"    Inserted {'%@' %@}, sequence #%@, +%lu ancestors",
                                   doc[@"_id"], doc[@"_rev"], rev.sequenceID, (unsigned long)rev.history.count);
                         }
                         ++inserted;
                     } else if (error.code == 403 && [error.domain isEqualToString: CBLHTTPErrorDomain]) {
-                        LogTo(SyncVerbose, @"    Revision rejected by local validator");
+                        LogVerbose(Sync, @"    Revision rejected by local validator");
                         // Validation failure doesn't count as an error. Don't retry.
                     } else {
                         Warn(@"SyncHandler: Couldn't insert rev: %@", error);

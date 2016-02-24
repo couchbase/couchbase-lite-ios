@@ -289,7 +289,7 @@
                 Assert(view != self,
                        @"Cannot index view %@: no map block registered",
                        view.name);
-                LogTo(ViewVerbose, @"    %@ has no map block; skipping it", view.name);
+                LogVerbose(View, @"    %@ has no map block; skipping it", view.name);
                 continue;
             }
 
@@ -310,7 +310,7 @@
                 if (last == 0)
                     [view createIndex];
                 minLastSequence = MIN(minLastSequence, last);
-                LogTo(ViewVerbose, @"    %@ last indexed at #%lld", view.name, last);
+                LogVerbose(View, @"    %@ last indexed at #%lld", view.name, last);
 
                 NSString* docType = delegate.documentType;
                 if (docType) {
@@ -490,7 +490,7 @@
                             if (viewDocType && ![viewDocType isEqual: docType])
                                 continue; // skip; view's documentType doesn't match this doc
                         }
-                        LogTo(ViewVerbose, @"#%lld: map \"%@\" for view %@...",
+                        LogVerbose(View, @"#%lld: map \"%@\" for view %@...",
                               sequence, docID, curView.name);
                         @try {
                             ((CBLMapBlock)mapBlocks[i])(curDoc, emit);
@@ -550,7 +550,7 @@
     NSData* geoKey = nil;
     if ([key isKindOfClass: [CBLSpecialKey class]]) {
         CBLSpecialKey *specialKey = key;
-        LogTo(ViewVerbose, @"    emit(%@, %@)", specialKey, valueJSON.my_UTF8ToString);
+        LogVerbose(View, @"    emit(%@, %@)", specialKey, valueJSON.my_UTF8ToString);
         BOOL ok;
         NSString* text = specialKey.text;
         if (text) {
@@ -576,7 +576,7 @@
             return kCBLStatusOK;
         }
         keyJSON = toJSONData(key);
-        LogTo(ViewVerbose, @"    emit(%@, %@)", keyJSON.my_UTF8ToString, valueJSON.my_UTF8ToString);
+        LogVerbose(View, @"    emit(%@, %@)", keyJSON.my_UTF8ToString, valueJSON.my_UTF8ToString);
     }
 
     if (!keyJSON)
@@ -794,7 +794,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
                                                        json: [r dataForColumnIndex: 5]];
             }
         }
-        LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
+        LogVerbose(Query, @"Query %@: Found row with key=%@, value=%@, id=%@",
               _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString],
               toJSONString(docID));
         CBLQueryRow* row;
@@ -929,7 +929,6 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
 }
 
 
-#ifndef MY_DISABLE_LOGGING
 static inline NSString* toJSONString( id object ) {
     if (!object)
         return nil;
@@ -937,7 +936,6 @@ static inline NSString* toJSONString( id object ) {
                                  options: CBLJSONWritingAllowFragments
                                    error: NULL];
 }
-#endif
 
 static inline NSData* toJSONData( id object ) {
     if (!object)
@@ -1049,7 +1047,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
             }
             lastKeyData = [keyData copy];
         }
-        LogTo(QueryVerbose, @"Query %@: Will reduce row with key=%@, value=%@",
+        LogVerbose(Query, @"Query %@: Will reduce row with key=%@, value=%@",
               _name, [keyData my_UTF8ToString], [valueData my_UTF8ToString]);
 
         id valueOrData = valueData;
@@ -1073,7 +1071,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
         // Finish the last group (or the entire list, if no grouping):
         id key = group ? groupKey(lastKeyData, groupLevel) : $null;
         id reduced = callReduce(reduce, keysToReduce, valuesToReduce);
-        LogTo(QueryVerbose, @"Query %@: Reduced to key=%@, value=%@",
+        LogVerbose(Query, @"Query %@: Reduced to key=%@, value=%@",
               _name, toJSONString(key), toJSONString(reduced));
         CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: nil
                                                      sequence: 0

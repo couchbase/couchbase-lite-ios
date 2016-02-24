@@ -181,7 +181,7 @@
                 continue;
             CBL_MutableRevision* nuRev = [rev mutableCopy];
             nuRev.body = nil; // save memory
-            LogTo(SyncVerbose, @"%@: Queuing #%lld %@",
+            LogVerbose(Sync, @"%@: Queuing #%lld %@",
                   self, [db getRevisionSequence: nuRev], nuRev);
             [self addToInbox: nuRev];
         }
@@ -310,7 +310,7 @@
     if (numDocsToSend == 0)
         return;
     LogTo(Sync, @"%@: Sending %u revisions", self, (unsigned)numDocsToSend);
-    LogTo(SyncVerbose, @"%@: Sending %@", self, changes.allRevisions);
+    LogVerbose(Sync, @"%@: Sending %@", self, changes.allRevisions);
     self.changesTotal += numDocsToSend;
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"POST"
@@ -349,7 +349,7 @@
                       self.error = error;
                       [self revisionFailed];
                   } else {
-                      LogTo(SyncVerbose, @"%@: Sent %@", self, changes.allRevisions);
+                      LogVerbose(Sync, @"%@: Sent %@", self, changes.allRevisions);
                   }
                   self.changesProcessed += numDocsToSend;
                   [self asyncTasksFinished: 1];
@@ -470,7 +470,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                           [self revisionFailed];
                       }
                   } else {
-                      LogTo(SyncVerbose, @"%@: Sent multipart %@", self, rev);
+                      LogVerbose(Sync, @"%@: Sent multipart %@", self, rev);
                       [self removePending: rev];
                   }
                   self.changesProcessed++;
@@ -480,7 +480,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                   [self startNextUpload];
               }
      ];
-    LogTo(SyncVerbose, @"%@: Queuing %@ (multipart, %lldkb)", self, uploader, bodyStream.length/1024);
+    LogVerbose(Sync, @"%@: Queuing %@ (multipart, %lldkb)", self, uploader, bodyStream.length/1024);
     if (!_uploaderQueue)
         _uploaderQueue = [[NSMutableArray alloc] init];
     [_uploaderQueue addObject: uploader];
@@ -512,7 +512,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                       self.error = error;
                       [self revisionFailed];
                   } else {
-                      LogTo(SyncVerbose, @"%@: Sent %@ (JSON), response=%@", self, rev, response);
+                      LogVerbose(Sync, @"%@: Sent %@ (JSON), response=%@", self, rev, response);
                       [self removePending: rev];
                   }
                   [self asyncTasksFinished: 1];
@@ -524,7 +524,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     if (!_uploading && _uploaderQueue.count > 0) {
         _uploading = YES;
         CBLMultipartUploader* uploader = _uploaderQueue[0];
-        LogTo(SyncVerbose, @"%@: Starting %@", self, uploader);
+        LogVerbose(Sync, @"%@: Starting %@", self, uploader);
         [self startRemoteRequest: uploader];
         [_uploaderQueue removeObjectAtIndex: 0];
     }

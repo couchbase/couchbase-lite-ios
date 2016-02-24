@@ -23,6 +23,9 @@
 #import "MYBlockUtils.h"
 
 
+DefineLogDomain(Server);
+
+
 @implementation CBL_Server
 {
 @protected
@@ -58,7 +61,7 @@
 }
 
 - (void) dealloc {
-    LogTo(CBL_Server, @"DEALLOC");
+    LogTo(Server, @"DEALLOC");
 }
 
 - (NSString*) description {
@@ -88,7 +91,7 @@
 }
 
 - (void) close {
-    LogTo(CBL_Server, @"%@: Closing...", self);
+    LogTo(Server, @"%@: Closing...", self);
     Class tdURLProtocol = NSClassFromString(@"CBL_URLProtocol");
     if (tdURLProtocol)
         [tdURLProtocol unregisterServer: self];
@@ -159,7 +162,7 @@
         _serverThread = [[NSThread alloc] initWithTarget: self
                                                 selector: @selector(runServerThread)
                                                   object: nil];
-        LogTo(CBL_Server, @"%@ Starting server thread ...", self);
+        LogTo(Server, @"%@ Starting server thread ...", self);
         [_serverThread start];
     }
     return self;
@@ -174,7 +177,7 @@
 
 - (void) runServerThread {
     @autoreleasepool {
-        LogTo(CBL_Server, @"%@: Server thread starting...", self);
+        LogTo(Server, @"%@: Server thread starting...", self);
 
         [[NSThread currentThread] setName:@"CouchbaseLite"];
         
@@ -191,7 +194,7 @@
                                                          beforeDate: [NSDate distantFuture]])
             ;
         
-        LogTo(CBL_Server, @"%@: Server thread exiting", self);
+        LogTo(Server, @"%@: Server thread exiting", self);
 
         // Clean up; this has to be done on the server thread, not in the -close method.
         [_manager close];
@@ -203,7 +206,7 @@
     if (_serverThread) {
         [super close];
         [self waitForDatabaseManager:^id(CBLManager* mgr) {
-            LogTo(CBL_Server, @"%@: Stopping server thread...", self);
+            LogTo(Server, @"%@: Stopping server thread...", self);
             [_manager close];
             _manager = nil;
             _stopRunLoop = YES;

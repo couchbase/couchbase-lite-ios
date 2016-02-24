@@ -51,10 +51,10 @@ extern "C" {
 static void FDBLogCallback(C4LogLevel level, C4Slice message) {
     switch (level) {
         case kC4LogDebug:
-            LogTo(CBLDatabaseVerbose, @"ForestDB: %.*s", (int)message.size, message.buf);
+            LogVerbose(Database, @"ForestDB: %.*s", (int)message.size, message.buf);
             break;
         case kC4LogInfo:
-            LogTo(CBLDatabase, @"ForestDB: %.*s", (int)message.size, message.buf);
+            LogTo(Database, @"ForestDB: %.*s", (int)message.size, message.buf);
             break;
         case kC4LogWarning:
             Warn(@"%.*s", (int)message.size, message.buf);
@@ -89,9 +89,9 @@ static void onCompactCallback(void *context, bool compacting) {
     if (self == [CBL_ForestDBStorage class]) {
         Log(@"Initializing ForestDB");
         C4LogLevel logLevel = kC4LogWarning;
-        if (WillLogTo(CBLDatabaseVerbose))
+        if (WillLogVerbose(Database))
             logLevel = kC4LogDebug;
-        else if (WillLogTo(CBLDatabase))
+        else if (WillLogTo(Database))
             logLevel = kC4LogInfo;
         c4log_register(logLevel, FDBLogCallback);
         C4GenerateOldStyleRevIDs = true; // Compatible with CBL 1.x
@@ -165,7 +165,7 @@ static void onCompactCallback(void *context, bool compacting) {
 
 - (BOOL) reopen: (NSError**)outError {
     if (_encryptionKey)
-        LogTo(CBLDatabase, @"Database is encrypted; setting CBForest encryption key");
+        LogTo(Database, @"Database is encrypted; setting CBForest encryption key");
     NSString* forestPath = [_directory stringByAppendingPathComponent: kDBFilename];
     C4DatabaseFlags flags = _readOnly ? kC4DB_ReadOnly : kC4DB_Create;
     if (_autoCompact)
@@ -247,13 +247,13 @@ static void onCompactCallback(void *context, bool compacting) {
     if (c4db_isInTransaction(_forest)) {
         return block();
     } else {
-        LogTo(CBLDatabase, @"BEGIN transaction...");
+        LogTo(Database, @"BEGIN transaction...");
         C4Error c4Err;
         if (!c4db_beginTransaction(_forest, &c4Err))
             return err2status(c4Err);
         CBLStatus status = block();
         BOOL commit = !CBLStatusIsError(status);
-        LogTo(CBLDatabase, @"END transaction...");
+        LogTo(Database, @"END transaction...");
         if (!c4db_endTransaction(_forest, commit, &c4Err) && commit) {
             status = err2status(c4Err);
             commit = NO;
@@ -310,7 +310,7 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
     if (!doc)
         return nil;
 #if DEBUG
-    LogTo(CBLDatabase, @"Read %@ rev %@", docID, inRevID);
+    LogTo(Database, @"Read %@ rev %@", docID, inRevID);
 #endif
     *outStatus = selectRev(doc, inRevID, withBody);
     if (CBLStatusIsError(*outStatus))
@@ -333,7 +333,7 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
     if (!doc)
         return nil;
 #if DEBUG
-    LogTo(CBLDatabase, @"Read %@ seq %lld", docID, sequence);
+    LogTo(Database, @"Read %@ seq %lld", docID, sequence);
 #endif
     NSMutableDictionary* result = nil;
     do {
@@ -630,7 +630,7 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
                 break;
             NSString* docID = slice2string(doc->docID);
             if (!(doc->flags & kExists)) {
-                LogTo(QueryVerbose, @"AllDocs: No such row with key=\"%@\"",
+                LogVerbose(Query, @"AllDocs: No such row with key=\"%@\"",
                       docID);
                 return [[CBLQueryRow alloc] initWithDocID: nil
                                                  sequence: 0
@@ -680,7 +680,7 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
             NSDictionary* value = $dict({@"rev", revID},
                                         {@"deleted", (deleted ?$true : nil)},
                                         {@"_conflicts", conflicts});  // (not found in CouchDB)
-            LogTo(QueryVerbose, @"AllDocs: Found row with key=\"%@\", value=%@",
+            LogVerbose(Query, @"AllDocs: Found row with key=\"%@\", value=%@",
                   docID, value);
             CBLQueryRow *row = [[CBLQueryRow alloc] initWithDocID: docID
                                                  sequence: doc->sequence
@@ -689,7 +689,7 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
                                               docRevision: docRevision
                                                   storage: nil];
             if (filter && !filter(row)) {
-                LogTo(QueryVerbose, @"   ... on 2nd thought, filter predicate skipped that row");
+                LogVerbose(Query, @"   ... on 2nd thought, filter predicate skipped that row");
                 continue;
             }
 
@@ -800,7 +800,7 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
         *outResult = result;
     if (docsToRevs.count == 0)
         return kCBLStatusOK;
-    LogTo(CBLDatabase, @"Purging %lu docs...", (unsigned long)docsToRevs.count);
+    LogTo(Database, @"Purging %lu docs...", (unsigned long)docsToRevs.count);
     return [self inTransaction: ^CBLStatus {
         for (NSString* docID in docsToRevs) {
             C4Slice docIDSlice = string2slice(docID);
@@ -817,7 +817,7 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
                 if (!c4db_purgeDoc(_forest, docIDSlice, &c4err))
                     return err2status(c4err);
                 revsPurged = @[@"*"];
-                LogTo(CBLDatabase, @"Purged doc '%@'", docID);
+                LogTo(Database, @"Purged doc '%@'", docID);
             } else {
                 CLEANUP(C4Document)* doc = c4doc_get(_forest, docIDSlice, true, &c4err);
                 if (!doc)
@@ -830,7 +830,7 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
                 if (purged.count > 0) {
                     if (!c4doc_save(doc, _maxRevTreeDepth, &c4err))
                         return err2status(c4err);
-                    LogTo(CBLDatabase, @"Purged doc '%@' revs %@", docID, revIDs);
+                    LogTo(Database, @"Purged doc '%@' revs %@", docID, revIDs);
                 }
                 revsPurged = purged;
             }
@@ -1084,7 +1084,7 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
             return err2status(c4err);
         putRev.sequence = doc->sequence;
 #if DEBUG
-        LogTo(CBLDatabase, @"Saved %@", docID);
+        LogTo(Database, @"Saved %@", docID);
 #endif
 
         change = [self changeWithNewRevision: putRev
@@ -1178,7 +1178,7 @@ static CBLStatus selectRev(C4Document* doc, NSString* revID, BOOL withBody) {
             return err2status(c4err);
         inRev.sequence = doc->sequence;
 #if DEBUG
-        LogTo(CBLDatabase, @"Saved %@", inRev.docID);
+        LogTo(Database, @"Saved %@", inRev.docID);
 #endif
         change = [self changeWithNewRevision: inRev
                                 isWinningRev: isWinner
