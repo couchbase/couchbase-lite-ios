@@ -179,8 +179,8 @@ typedef enum {
     Assert(result || error);
 
     CBLRemoteRequestCompletionBlock onCompletion = _onCompletion;   // keep block alive till return
-    onCompletion(result, error);
     _onCompletion = nil;  // break cycles
+    onCompletion(result, error);
 }
 
 
