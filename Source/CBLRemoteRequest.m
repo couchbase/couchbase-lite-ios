@@ -176,8 +176,9 @@ typedef enum {
 
 - (void) respondWithResult: (id)result error: (NSError*)error {
     Assert(result || error);
-    _onCompletion(result, error);
+    __typeof(_onCompletion) onCompletion = _onCompletion;   // keep block alive till return
     _onCompletion = nil;  // break cycles
+    onCompletion(result, error);
 }
 
 
