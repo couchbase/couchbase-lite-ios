@@ -36,7 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** The GeoJSON object emitted as the key of the emit() call by the map function.
     The format is a parsed GeoJSON point or polygon; see http://geojson.org/geojson-spec */
-@property (readonly, nullable) NSDictionary* geometry;
+@property (readonly, nullable) CBLJSONDict* geometry;
 
 /** The GeoJSON object type of the row's geometry.
     Usually @"Point" or @"Rectangle", but may be another type if the emitted key was GeoJSON.

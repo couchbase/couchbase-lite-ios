@@ -9,13 +9,7 @@
 #import <Foundation/Foundation.h>
 @class CBLDatabase, CBLQuery;
 
-#if __has_feature(nullability) // Xcode 6.3+
-#pragma clang assume_nonnull begin
-#else
-#define nullable
-#define __nullable
-#define __nonnull
-#endif
+NS_ASSUME_NONNULL_BEGIN
 
 
 typedef enum {

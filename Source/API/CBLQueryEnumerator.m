@@ -163,7 +163,7 @@
 }
 
 
-- (id) nextObject {
+- (CBLQueryRow*) nextObject {
     return [self nextRow];
 }
 

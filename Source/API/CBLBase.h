@@ -27,9 +27,11 @@
 #if __has_feature(objc_generics)
 #define CBLArrayOf(VALUE) NSArray<VALUE>
 #define CBLDictOf(KEY, VALUE) NSDictionary<KEY, VALUE>
+#define CBLEnumeratorOf(VALUE) NSEnumerator<VALUE>
 #else
 #define CBLArrayOf(VALUE) NSArray
 #define CBLDictOf(KEY, VALUE) NSDictionary
+#define CBLEnumeratorOf(VALUE) NSEnumerator
 #endif
 
 typedef CBLDictOf(NSString*, id) CBLJSONDict;
