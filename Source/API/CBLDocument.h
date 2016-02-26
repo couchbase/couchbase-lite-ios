@@ -52,15 +52,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable CBLSavedRevision*) revisionWithID: (NSString*)revisionID;
 
 /** Returns the document's history as an array of CBLRevisions. (See CBLRevision's method.) */
-- (nullable CBLArrayOf(CBLRevision*)*) getRevisionHistory: (NSError**)outError;
+- (nullable CBLArrayOf(CBLSavedRevision*)*) getRevisionHistory: (NSError**)outError;
 
 /** Returns all the current conflicting revisions of the document. If the document is not
     in conflict, only the single current revision will be returned. */
-- (nullable CBLArrayOf(CBLRevision*)*) getConflictingRevisions: (NSError**)outError;
+- (nullable CBLArrayOf(CBLSavedRevision*)*) getConflictingRevisions: (NSError**)outError;
 
 /** Returns all the leaf revisions in the document's revision tree,
     including deleted revisions (i.e. previously-resolved conflicts.) */
-- (nullable CBLArrayOf(CBLRevision*)*) getLeafRevisions: (NSError**)outError;
+- (nullable CBLArrayOf(CBLSavedRevision*)*) getLeafRevisions: (NSError**)outError;
 
 /** Creates an unsaved new revision whose parent is the currentRevision,
     or which will be the first revision if the document doesn't exist yet.
@@ -125,7 +125,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param outError  Error information will be stored here if the insertion fails.
     @return  YES on success, NO on failure. */
 - (BOOL) putExistingRevisionWithProperties: (NSDictionary*)properties
-                           revisionHistory: (NSArray*)revIDs
+                           revisionHistory: (CBLArrayOf(NSString*)*)revIDs
                                    fromURL: (nullable NSURL*)sourceURL
                                      error: (NSError**)outError;
 
