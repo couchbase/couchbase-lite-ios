@@ -392,7 +392,7 @@ UsingLogDomain(Sync);
                         LogVerbose(Sync, @"    Revision rejected by local validator");
                         // Validation failure doesn't count as an error. Don't retry.
                     } else {
-                        Warn(@"SyncHandler: Couldn't insert rev: %@", error);
+                        Warn(@"SyncHandler: Couldn't insert rev: %@", error.my_compactDescription);
                         [self failedToGetRevision: @"db insertion failed"];
                     }
                 }

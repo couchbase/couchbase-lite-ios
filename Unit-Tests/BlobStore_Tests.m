@@ -42,7 +42,7 @@
     store = [[CBL_BlobStore alloc] initWithPath: storePath
                                   encryptionKey: (encrypt ? [[CBLSymmetricKey alloc] init] : nil)
                                           error: &error];
-    Assert(store, @"Couldn't create CBL_BlobStore: %@", error);
+    Assert(store, @"Couldn't create CBL_BlobStore: %@", error.my_compactDescription);
 
     NSString* encMarkerPath = [storePath stringByAppendingPathComponent: kEncryptionMarkerFilename];
     BOOL markerExists = [[NSFileManager defaultManager] fileExistsAtPath: encMarkerPath
@@ -97,7 +97,7 @@
     CBL_BlobStore* store2 = [[CBL_BlobStore alloc] initWithPath: store.path
                                                   encryptionKey: store.encryptionKey
                                                           error: &error];
-    Assert(store2, @"Couldn't re-open store: %@", error);
+    Assert(store2, @"Couldn't re-open store: %@", error.my_compactDescription);
 
     NSData* readItem = [store2 blobForKey: key];
     AssertEqual(readItem, item);
@@ -143,7 +143,7 @@
 
     if (encrypt) {
         Log(@"---- Removing key");
-        Assert([store changeEncryptionKey: nil error: &error], @"Removing key failed: %@", error);
+        Assert([store changeEncryptionKey: nil error: &error], @"Removing key failed: %@", error.my_compactDescription);
         AssertEqual(store.encryptionKey, nil);
         AssertEqual([store blobForKey: blobKey], item);
         [self test02_Reopen];
@@ -167,7 +167,7 @@
     store = [[CBL_BlobStore alloc] initWithPath: store.path
                                                   encryptionKey: encryptionKey
                                                           error: &error];
-    Assert(store, @"Couldn't re-open store: %@", error);
+    Assert(store, @"Couldn't re-open store: %@", error.my_compactDescription);
     AssertEqual(store.encryptionKey, encryptionKey);
 
     // Verify that the store got the "_encrypted" marker file:

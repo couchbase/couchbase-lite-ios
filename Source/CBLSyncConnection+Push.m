@@ -71,7 +71,7 @@
     NSError* error;
     CBLQueryEnumerator* e = [query run: &error];
     if (!e) {
-        Warn(@"SyncHandler: Couldn't get changes from db: %@", error);
+        Warn(@"SyncHandler: Couldn't get changes from db: %@", error.my_compactDescription);
         self.error = error;
     }
     return e;

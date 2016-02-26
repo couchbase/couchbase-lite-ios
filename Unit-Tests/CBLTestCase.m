@@ -58,7 +58,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 - (NSData*) contentsOfTestFile: (NSString*)name {
     NSError* error;
     NSData* data = [NSData dataWithContentsOfFile: [self pathToTestFile: name] options:0 error: &error];
-    Assert(data, @"Couldn't read test file '%@': %@", name, error);
+    Assert(data, @"Couldn't read test file '%@': %@", name, error.my_compactDescription);
     return data;
 }
 
@@ -155,14 +155,14 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     Log(@"---- Using %@ ----", dbmgr.storageType);
     NSError* error;
     db = [dbmgr createEmptyDatabaseNamed: @"db" error: &error];
-    Assert(db, @"Couldn't create db: %@", error);
+    Assert(db, @"Couldn't create db: %@", error.my_compactDescription);
 
     AssertEq(db.lastSequenceNumber, 0); // Ensure db was deleted properly by the previous test
 }
 
 - (void)tearDown {
     NSError* error;
-    Assert(!db || [db deleteDatabase: &error], @"Couldn't close db: %@", error);
+    Assert(!db || [db deleteDatabase: &error], @"Couldn't close db: %@", error.my_compactDescription);
     [dbmgr close];
 
     [super tearDown];
@@ -173,12 +173,12 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     Assert(db != nil);
     NSString* dbName = db.name;
     NSError* error;
-    Assert([db close: &error], @"Couldn't close db: %@", error);
+    Assert([db close: &error], @"Couldn't close db: %@", error.my_compactDescription);
     db = nil;
 
     Log(@"---- reopening db ----");
     CBLDatabase* db2 = [dbmgr databaseNamed: dbName error: &error];
-    Assert(db2, @"Couldn't reopen db: %@", error);
+    Assert(db2, @"Couldn't reopen db: %@", error.my_compactDescription);
     Assert(db2 != db, @"-reopenTestDB couldn't make a new instance");
     db = db2;
 }
@@ -187,9 +187,9 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 - (void) eraseTestDB {
     NSString* dbName = db.name;
     NSError* error;
-    Assert([db deleteDatabase: &error], @"Couldn't delete test db: %@", error);
+    Assert([db deleteDatabase: &error], @"Couldn't delete test db: %@", error.my_compactDescription);
     db = [dbmgr createEmptyDatabaseNamed: dbName error: &error];
-    Assert(db, @"Couldn't recreate test db: %@", error);
+    Assert(db, @"Couldn't recreate test db: %@", error.my_compactDescription);
 }
 
 
@@ -236,7 +236,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     Assert(doc.documentID, @"Document has no ID"); // 'untitled' docs are no longer untitled (8/10/12)
 
     NSError* error;
-    Assert([doc putProperties: properties error: &error], @"Couldn't save: %@", error);  // save it!
+    Assert([doc putProperties: properties error: &error], @"Couldn't save: %@", error.my_compactDescription);  // save it!
 
     Assert(doc.documentID);
     Assert(doc.currentRevisionID);

@@ -61,7 +61,7 @@
     [self sendAsyncRequest: @"PUT" path: @"" body: nil onCompletion: ^(id result, NSError* error) {
         _creatingTarget = NO;
         if (error && error.code != kCBLStatusDuplicate && error.code != kCBLStatusMethodNotAllowed) {
-            LogTo(Sync, @"Failed to create remote db: %@", error);
+            LogTo(Sync, @"Failed to create remote db: %@", error.my_compactDescription);
             self.error = error;
             [self stop]; // this is fatal: no db to push to!
         } else {
@@ -402,7 +402,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                 NSError* error;
                 NSData* json = [CBJSONEncoder canonicalEncoding: rev.properties error: &error];
                 if (error) {
-                    Warn(@"%@: Creating canonical JSON data got an error: %@", self, error);
+                    Warn(@"%@: Creating canonical JSON data got an error: %@", self, error.my_compactDescription);
                     return nil;
                 }
 

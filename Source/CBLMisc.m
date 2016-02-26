@@ -48,7 +48,7 @@ NSString* CBLPathToTestFile(NSString* name) {
 NSData* CBLContentsOfTestFile(NSString* name) {
     NSError* error;
     NSData* data = [NSData dataWithContentsOfFile: CBLPathToTestFile(name) options:0 error: &error];
-    Assert(data, @"Couldn't read test file '%@': %@", name, error);
+    Assert(data, @"Couldn't read test file '%@': %@", name, error.my_compactDescription);
     return data;
 }
 #endif

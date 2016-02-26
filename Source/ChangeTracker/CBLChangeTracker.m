@@ -294,10 +294,10 @@ DefineLogDomain(ChangeTracker);
         retryDelay = MIN(retryDelay, kMaxRetryDelay);
         ++_retryCount;
         Log(@"%@: Connection error #%d, retrying in %.1f sec: %@",
-            self, _retryCount, retryDelay, error.localizedDescription);
+            self, _retryCount, retryDelay, error.my_compactDescription);
         [self retryAfterDelay: retryDelay];
     } else {
-        Log(@"%@: Can't connect, giving up: %@", self, error);
+        Log(@"%@: Can't connect, giving up: %@", self, error.my_compactDescription);
         self.error = error;
         [self stop];
     }

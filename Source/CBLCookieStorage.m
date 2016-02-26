@@ -153,7 +153,7 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 
         NSError* error;
         if (![self saveCookies: &error])
-            Warn(@"%@: Cannot save the cookie %@ with an error : %@", self, cookie, error);
+            Warn(@"%@: Cannot save the cookie %@ with an error : %@", self, cookie, error.my_compactDescription);
         
         [self notifyCookiesChanged];
     }
@@ -173,7 +173,7 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 
         NSError* error;
         if (![self saveCookies: &error]) {
-            Warn(@"%@: Cannot save cookies with an error : %@", self, error);
+            Warn(@"%@: Cannot save cookies with an error : %@", self, error.my_compactDescription);
         }
         
         [self notifyCookiesChanged];
@@ -192,7 +192,7 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 
         NSError* error;
         if (![self saveCookies: &error]) {
-            Warn(@"%@: Cannot save cookies with an error : %@", self, error);
+            Warn(@"%@: Cannot save cookies with an error : %@", self, error.my_compactDescription);
         }
 
         [self notifyCookiesChanged];
@@ -208,7 +208,7 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 
         NSError* error;
         if (![self saveCookies: &error]) {
-            Warn(@"%@: Cannot save cookies with an error : %@", self, error);
+            Warn(@"%@: Cannot save cookies with an error : %@", self, error.my_compactDescription);
         }
         
         [self notifyCookiesChanged];

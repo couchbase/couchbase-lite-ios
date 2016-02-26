@@ -203,7 +203,7 @@ DefineLogDomain(MultiStreamWriter);
 // Set my .error property from 'stream's error.
 - (void) setErrorFrom: (NSStream*)stream {
     NSError* error = stream.streamError;
-    Warn(@"%@: Error on %@: %@", self, stream, error);
+    Warn(@"%@: Error on %@: %@", self, stream, error.my_compactDescription);
     if (error && !_error)
         self.error = error;
 }

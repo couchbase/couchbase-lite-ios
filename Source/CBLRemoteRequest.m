@@ -74,7 +74,7 @@ typedef enum {
             if (![body isKindOfClass: [NSData class]]) {
                 NSError* error;
                 body = [CBLJSON dataWithJSONObject: body options:0 error: &error];
-                Assert(body, @"Cannot encode JSON body: %@", error);
+                Assert(body, @"Cannot encode JSON body: %@", error.my_compactDescription);
                 [_request addValue: @"application/json" forHTTPHeaderField: @"Content-Type"];
             }
             _request.HTTPBody = body;
@@ -449,7 +449,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 
     if (WillLog()) {
         if (!(_dontLog404 && error.code == kCBLStatusNotFound && $equal(error.domain, CBLHTTPErrorDomain)))
-            Log(@"%@: Got error %@", self, error);
+            Log(@"%@: Got error %@", self, error.my_compactDescription);
     }
 
     [_task cancel];

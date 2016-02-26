@@ -452,7 +452,7 @@ DefineLogDomain(Query);
         _isUpdatingAtSequence = 0;
         _lastError = error;
         if (error) {
-            Warn(@"%@: Error updating rows: %@", self, error);
+            Warn(@"%@: Error updating rows: %@", self, error.my_compactDescription);
         } else {
             _lastSequence = (SequenceNumber)rows.sequenceNumber;
             if(rows && ![rows isEqual: _rows]) {

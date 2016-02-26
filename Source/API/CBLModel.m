@@ -350,7 +350,7 @@
         if (outError)
             *outError = error;
         else
-            Warn(@"%@: Save failed: %@", self, error);
+            Warn(@"%@: Save failed: %@", self, error.my_compactDescription);
         return NO;
     }
     LogTo(Model, @"%@ Saved as rev %@", self, _document.currentRevisionID);
@@ -572,7 +572,7 @@ typedef id (*idMsgSend)(id self, SEL sel);
                                              wherePredicate: pred
                                                     orderBy: nil
                                                       error: &error];
-        Assert(builder, @"Couldn't create query builder: %@", error);
+        Assert(builder, @"Couldn't create query builder: %@", error.my_compactDescription);
         [factory setQueryBuilder: builder forClass: fromClass property:relation];
     }
 
@@ -580,7 +580,7 @@ typedef id (*idMsgSend)(id self, SEL sel);
     NSError* error;
     CBLQueryEnumerator* e = [q run: &error];
     if (!e) {
-        Warn(@"Querying for inverse of %@.%@ failed: %@", fromClass, relation, error);
+        Warn(@"Querying for inverse of %@.%@ failed: %@", fromClass, relation, error.my_compactDescription);
         return nil;
     }
     NSMutableArray* docIDs = $marray();

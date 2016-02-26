@@ -117,7 +117,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
     NSError* error = response.error;
     if (!error)
         return NO;
-    LogTo(Sync, @"Received error in %@: %@", response, error.localizedDescription);
+    LogTo(Sync, @"Received error in %@: %@", response, error.my_compactDescription);
     self.error = error;
     [self close];
     return YES;
@@ -305,8 +305,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 
 
 - (void)blipConnection: (BLIPConnection*)connection didFailWithError:(NSError *)error {
-    LogTo(Sync, @"FAILED %@: %@", connection,
-          (error.localizedFailureReason ?: error.localizedDescription));
+    LogTo(Sync, @"FAILED %@: %@", connection, error.my_compactDescription);
     self.error = error;
     [self closed];
 }
@@ -316,9 +315,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
     didCloseWithError: (NSError*)error
 {
     if (error) {
-        LogTo(Sync, @"CLOSED %@ (%@ %d : \"%@\")",
-              connection, error.domain, (int)error.code,
-              (error.localizedFailureReason ?: error.localizedDescription));
+        LogTo(Sync, @"CLOSED %@ (%@)", connection, error.my_compactDescription);
         self.error = error;
     } else {
         LogTo(Sync, @"CLOSED %@", connection);

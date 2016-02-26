@@ -233,7 +233,7 @@
     
     if (_error != error)
     {
-        LogTo(Sync, @"%@ Progress: set error = %@", self, error.localizedDescription);
+        LogTo(Sync, @"%@ Progress: set error = %@", self, error.my_compactDescription);
         _error = error;
         if (CBLIsPermanentError(error))
             [self stop];
@@ -346,7 +346,7 @@
     LogTo(Sync, @"%@ STOPPED", self);
     LogTo(SyncPerf, @"%@ STOPPED", self);
     Log(@"Replication: %@ took %.3f sec; error=%@",
-        self, CFAbsoluteTimeGetCurrent()-_startTime, _error);
+        self, CFAbsoluteTimeGetCurrent()-_startTime, _error.my_compactDescription);
 #if TARGET_OS_IPHONE
     [self endBackgrounding];
 #endif
@@ -599,7 +599,7 @@
                           [self checkSessionAtPath: @"/_session"];
                           return;
                       }
-                      LogTo(Sync, @"%@: Session check failed: %@", self, error);
+                      LogTo(Sync, @"%@: Session check failed: %@", self, error.my_compactDescription);
                       self.error = error;
                   } else {
                       NSString* username = $castIf(NSString, result[@"userCtx"][@"name"]);
@@ -792,7 +792,7 @@
                   LogTo(SyncPerf, @"%@ Got remote checkpoint", self);
                   if (error && error.code != kCBLStatusNotFound) {
                       LogTo(Sync, @"%@: Error fetching last sequence: %@",
-                            self, error.localizedDescription);
+                            self, error.my_compactDescription);
                       self.error = error;
                   } else {
                       if (error.code == kCBLStatusNotFound)
@@ -840,7 +840,7 @@
                   _savingCheckpoint = NO;
                   if (error && error.code != kCBLStatusNotFound) {
                       LogTo(Sync, @"%@: Error refreshing remote checkpoint: %@",
-                            self, error.localizedDescription);
+                            self, error.my_compactDescription);
                   } else {
                       LogTo(Sync, @"%@ Refreshed remote checkpoint: %@", self, response);
                       self.remoteCheckpoint = $castIf(NSDictionary, response);
@@ -886,7 +886,7 @@
                   onCompletion: ^(id response, NSError* error) {
                       _savingCheckpoint = NO;
                       if (error)
-                          Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
+                          Warn(@"%@: Unable to save remote checkpoint: %@", self, error.my_compactDescription);
                       CBLDatabase* db = _db;
                       if (!db)
                           return;

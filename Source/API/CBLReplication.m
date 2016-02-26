@@ -393,7 +393,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         static const char* kStatusNames[] = {"stopped", "offline", "idle", "active"};
         LogTo(Sync, @"%@: %s, progress = %u / %u, err: %@",
               self, kStatusNames[status], (unsigned)changesProcessed, (unsigned)changesTotal,
-              error.localizedDescription);
+              error.my_compactDescription);
 #endif
         [[NSNotificationCenter defaultCenter]
                         postNotificationName: kCBLReplicationChangeNotification object: self];
@@ -432,7 +432,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         if (revs)
             return [NSSet setWithArray: revs.allDocIDs];
         else
-            Warn(@"Error getting unpushed revisions : %@", error);
+            Warn(@"Error getting unpushed revisions : %@", error.my_compactDescription);
         return nil;
     }];
     return _pendingDocIDs;

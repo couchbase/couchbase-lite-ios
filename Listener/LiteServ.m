@@ -152,7 +152,7 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
             Log(@"*** Replicator status changed ***");
         } else if ([n.name isEqualToString: CBL_ReplicatorStoppedNotification]) {
             if (repl.error)
-                Log(@"*** Replicator failed, error = %@", repl.error);
+                Log(@"*** Replicator failed, error = %@", repl.error.my_compactDescription);
             else
                 Log(@"*** Replicator finished ***");
         } else {
@@ -224,7 +224,7 @@ static void startListener(CBLListener* listener) {
             NSError* error;
             if (![listener setAnonymousSSLIdentityWithLabel: name error: &error]) {
                 Warn(@"FATAL: Couldn't get/create default SSL identity: %@",
-                     error.localizedDescription);
+                     error.my_compactDescription);
                 exit(1);
             }
         }
@@ -241,7 +241,7 @@ static void startListener(CBLListener* listener) {
 
     NSError* error;
     if (![listener start: &error]) {
-        Warn(@"Failed to start %@: %@", listener.class, error.localizedDescription);
+        Warn(@"Failed to start %@: %@", listener.class, error.my_compactDescription);
         exit(1);
     }
 }
@@ -328,7 +328,7 @@ int main (int argc, const char * argv[])
                                                            options: &options
                                                              error: &error];
         if (error) {
-            Warn(@"FATAL: Error initializing CouchbaseLite: %@", error);
+            Warn(@"FATAL: Error initializing CouchbaseLite: %@", error.my_compactDescription);
             exit(1);
         }
 

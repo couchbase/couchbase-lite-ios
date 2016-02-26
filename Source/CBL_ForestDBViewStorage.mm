@@ -347,7 +347,7 @@ static NSString* keyToJSONStr(id key) { // only used for logging
                                                       error: &error];
             if (!valueJSON) {
                 Warn(@"emit() called with invalid value: %@",
-                     error.localizedDescription);
+                     error.my_compactDescription);
                 return;
             }
             [emittedJSONValues addObject: valueJSON];  // keep it alive

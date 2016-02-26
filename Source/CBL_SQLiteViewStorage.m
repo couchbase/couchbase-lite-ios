@@ -119,7 +119,7 @@
             geokey BLOB)";
     NSError* error;
     if (![self runStatements: sql error: &error])
-        Warn(@"Couldn't create view index `%@`: %@", _name, error);
+        Warn(@"Couldn't create view index `%@`: %@", _name, error.my_compactDescription);
 }
 
 - (void) finishCreatingIndex {
@@ -128,7 +128,7 @@
         CREATE INDEX IF NOT EXISTS 'maps_#_sequence' ON 'maps_#'(sequence)";
     NSError* error;
     if (![self runStatements: sql error: &error])
-        Warn(@"Couldn't create view SQL index `%@`: %@", _name, error);
+        Warn(@"Couldn't create view SQL index `%@`: %@", _name, error.my_compactDescription);
 }
 
 
@@ -140,7 +140,7 @@
         UPDATE views SET lastSequence=0, total_docs=0 WHERE view_id=#";
     NSError* error;
     if (![self runStatements: sql error: &error])
-        Warn(@"Couldn't delete view index `%@`: %@", _name, error);
+        Warn(@"Couldn't delete view index `%@`: %@", _name, error.my_compactDescription);
 }
 
 
@@ -172,7 +172,7 @@
     // On the above index we could add "WHERE fulltext_id not null".
     NSError* error;
     if (![self runStatements: sql error: &error]) {
-        Warn(@"Error initializing fts4 schema: %@", error);
+        Warn(@"Error initializing fts4 schema: %@", error.my_compactDescription);
         return NO;
     }
     _initializedFullTextSchema = YES;
@@ -194,7 +194,7 @@
             DELETE FROM bboxes WHERE rowid=old.bbox_id| END";
     NSError* error;
     if (![self runStatements: sql error: &error]) {
-        Warn(@"Error initializing rtree schema: %@", error);
+        Warn(@"Error initializing rtree schema: %@", error.my_compactDescription);
         return NO;
     }
     _initializedRTreeSchema = YES;
@@ -945,7 +945,7 @@ static inline NSData* toJSONData( id object ) {
                                        options: CBLJSONWritingAllowFragments
                                          error: &error];
     if (!json)
-        Warn(@"Could not convert key/value to JSON: %@ -- %@", object, error.localizedDescription);
+        Warn(@"Could not convert key/value to JSON: %@ -- %@", object, error.my_compactDescription);
     return json;
 }
 

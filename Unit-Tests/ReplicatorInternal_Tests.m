@@ -692,8 +692,9 @@
     Assert(!repl.savingCheckpoint);
     if (expectError) {
         Assert($equal(repl.error.domain, expectError.domain) && repl.error.code == expectError.code,
-               @"\nUnexpected error %@\n  Expected error %@", repl.error, expectError);
-        Log(@"...replicator got expected error %@", repl.error);
+               @"\nUnexpected error %@\n  Expected error %@",
+               repl.error.my_compactDescription, expectError.my_compactDescription);
+        Log(@"...replicator got expected error %@", repl.error.my_compactDescription);
     } else {
         AssertNil(repl.error);
         Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
@@ -745,7 +746,7 @@
         AssertEq(repl.status, kCBLReplicatorStopped);
         AssertEqual(repl.error.domain, expectError.domain);
         AssertEq(repl.error.code, expectError.code);
-        Log(@"...replicator finished. error=%@", repl.error);
+        Log(@"...replicator finished. error=%@", repl.error.my_compactDescription);
     } else {
         AssertNil(repl.error);
         Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);

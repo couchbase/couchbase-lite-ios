@@ -109,7 +109,7 @@
         }
     }
     Log(@"...replicator finished. mode=%u, progress %u/%u, error=%@",
-        repl.status, repl.completedChangesCount, repl.changesCount, repl.lastError);
+        repl.status, repl.completedChangesCount, repl.changesCount, repl.lastError.my_compactDescription);
 
     [[NSNotificationCenter defaultCenter] removeObserver: self
                                                     name: kCBLReplicationChangeNotification

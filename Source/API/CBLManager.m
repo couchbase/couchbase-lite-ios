@@ -265,7 +265,7 @@ static CBLManager* sInstance;
     CBLManager* dbm = [[self alloc] initWithDirectory: path
                                               options: NULL
                                                 error: &error];
-    Assert(dbm, @"Failed to create db manager at %@: %@", path, error);
+    Assert(dbm, @"Failed to create db manager at %@: %@", path, error.my_compactDescription);
     AssertEqual(dbm.directory, path);
 #if MY_ENABLE_TESTS
     AfterThisTest(^{
@@ -363,7 +363,7 @@ static CBLManager* sInstance;
         NSError* error;
         CBLDatabase* db = [self _databaseNamed: name mustExist: NO error: &error];
         if (!db) {
-            Warn(@"Upgrade failed: Creating new db failed: %@", error);
+            Warn(@"Upgrade failed: Creating new db failed: %@", error.my_compactDescription);
             if (outError)
                 *outError = error;
             return NO;
@@ -438,7 +438,7 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
     if (![[NSURL fileURLWithPath: _dir] getResourceValue: &excluded
                                                   forKey: NSURLIsExcludedFromBackupKey
                                                    error: &error]) {
-        Warn(@"%@: -excludedFromBackup failed: %@", self, error);
+        Warn(@"%@: -excludedFromBackup failed: %@", self, error.my_compactDescription);
     }
     return excluded.boolValue;
 }
@@ -448,7 +448,7 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
     if (![[NSURL fileURLWithPath: _dir] setResourceValue: @(exclude)
                                                   forKey: NSURLIsExcludedFromBackupKey
                                                    error: &error]) {
-        Warn(@"%@: -setExcludedFromBackup:%d failed: %@", self, exclude, error);
+        Warn(@"%@: -setExcludedFromBackup:%d failed: %@", self, exclude, error.my_compactDescription);
     }
 }
 
@@ -774,7 +774,7 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
     [strongShared.backgroundServer tellDatabaseManager: ^(CBLManager* bgmgr) {
         NSError* error;
         if (![bgmgr _closeDatabaseNamed: name error: &error])
-            Warn(@"Cannot close background database named %@: %@", name, error);
+            Warn(@"Cannot close background database named %@: %@", name, error.my_compactDescription);
     }];
 }
 

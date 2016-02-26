@@ -142,7 +142,7 @@ static void evaluate(SecTrustRef trust, SecTrustCallback callback) {
                                  code: GCDAsyncSocketClosedError]
               && ![error my_hasDomain: GCDAsyncSocketErrorDomain
                                  code: GCDAsyncSocketReadTimeoutError]) {
-        Warn(@"CBLHTTPConnection: Client disconnected: %@", error);
+        Warn(@"CBLHTTPConnection: Client disconnected: %@", error.my_compactDescription);
     }
     [super socketDidDisconnect: socket withError: error];
 }

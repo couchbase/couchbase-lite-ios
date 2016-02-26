@@ -268,7 +268,7 @@
     if (tracker != _changeTracker)
         return;
     NSError* error = tracker.error;
-    LogTo(Sync, @"%@: ChangeTracker stopped; error=%@", self, error.description);
+    LogTo(Sync, @"%@: ChangeTracker stopped; error=%@", self, error.my_compactDescription);
     
     BOOL continous = _changeTracker.continuous;
     _changeTracker = nil;
@@ -631,7 +631,7 @@
     if (CBLMayBeTransientError(error))
         [self revisionFailed]; // retry later
     else {
-        LogVerbose(Sync, @"Giving up on %@: %@", rev, error);
+        LogVerbose(Sync, @"Giving up on %@: %@", rev, error.my_compactDescription);
         [_pendingSequences removeSequence: rev.sequence];
         [self pauseOrResume];
     }
