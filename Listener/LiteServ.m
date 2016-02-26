@@ -25,12 +25,8 @@
 #import "CBLSyncListener.h"
 #import <Security/Security.h>
 
-#if DEBUG
 #import "MYLogging.h"
-#else
-#define Warn NSLog
-#define Log NSLog
-#endif
+#import "MYErrorUtils.h"
 
 
 #define kPortNumber 59840
@@ -54,7 +50,7 @@ static NSString* GetServerPath() {
     if (![[NSFileManager defaultManager] createDirectoryAtPath: path
                                   withIntermediateDirectories: YES
                                                    attributes: nil error: &error]) {
-        NSLog(@"FATAL: Couldn't create CouchbaseLite server dir at %@", path);
+        Warn(@"FATAL: Couldn't create CouchbaseLite server dir at %@", path);
         exit(1);
     }
     return path;
