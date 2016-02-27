@@ -27,6 +27,8 @@ extern "C" {
 
 //#define MY_DISABLE_LOGGING    // Uncomment this to prevent Log calls from generating any code
 
+#define MYERRORUTILS_USE_SECURITY_API 1     // Tell MYErrorUtils it can look up Security messages
+
 #import "CollectionUtils.h"
 #import "MYLogging.h"
 #import "Test.h"

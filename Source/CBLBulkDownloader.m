@@ -107,7 +107,7 @@
                                                             delegate: self];
         if (!_topReader) {
             Warn(@"%@ got invalid Content-Type '%@'", self, contentType);
-            [self cancelWithStatus: kCBLStatusUpstreamError];
+            [self cancelWithStatus: kCBLStatusUpstreamError message: @"Invalid Content-Type"];
             return;
         }
     }
@@ -118,7 +118,7 @@
     [super didReceiveData: data];
     [_topReader appendData: data];
     if (_topReader.error) {
-        [self cancelWithStatus: kCBLStatusUpstreamError];
+        [self cancelWithStatus: kCBLStatusUpstreamError message: _topReader.error];
     }
 }
 
@@ -127,7 +127,8 @@
     LogVerbose(Sync, @"%@: Finished loading (%u documents)", self, _docCount);
     if (!_topReader.finished) {
         Warn(@"%@ got unexpected EOF", self);
-        [self cancelWithStatus: kCBLStatusUpstreamError];
+        [self cancelWithStatus: kCBLStatusUpstreamError
+                       message: @"Error reading multipart response"];
         return;
     }
     
@@ -152,7 +153,7 @@
 - (BOOL) appendToPart: (NSData*)data {
     Assert(_docReader);
     if (![_docReader appendData: data]) {
-        [self cancelWithStatus: _docReader.status];
+        [self cancelWithStatus: _docReader.status message: nil];
         return NO;
     }
     return YES;
@@ -163,7 +164,7 @@
     LogVerbose(Sync, @"%@: Finished document", self);
     Assert(_docReader);
     if (![_docReader finish]) {
-        [self cancelWithStatus: _docReader.status];
+        [self cancelWithStatus: _docReader.status message: nil];
         _docReader = nil;
         return NO;
     }

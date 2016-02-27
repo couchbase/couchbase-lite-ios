@@ -72,7 +72,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 
 // protected:
 - (void) clearConnection;
-- (void) cancelWithStatus: (int)status;
+- (void) cancelWithStatus: (int)status message: (NSString*)message;
 - (void) respondWithResult: (id)result error: (NSError*)error;
 - (BOOL) retry;
 

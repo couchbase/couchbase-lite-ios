@@ -22,6 +22,7 @@
 #import "CBLStatus.h"
 #import "CBLGZip.h"
 #import "MYBlockUtils.h"
+#import "MYErrorUtils.h"
 #import <libkern/OSAtomic.h>
 
 
@@ -149,20 +150,17 @@ UsingLogDomain(Sync);
                 }
                 // Failed, but map the error back to HTTP:
                 NSString* message = CFBridgingRelease(CFHTTPMessageCopyResponseStatusLine(response));
-                if (message.length == 0)
-                    message = error.localizedDescription;
-                NSString* urlStr = webSocket.URLRequest.URL.absoluteString;
-                myError = [NSError errorWithDomain: CBLHTTPErrorDomain
-                                              code: status
-                                          userInfo: @{NSLocalizedDescriptionKey: message,
-                                                      NSUnderlyingErrorKey: error,
-                                                      NSURLErrorFailingURLStringErrorKey: urlStr}];
+                NSURL* url = webSocket.URLRequest.URL;
+                myError = MYWrapError(error, CBLHTTPErrorDomain, status,
+                                      @{NSLocalizedDescriptionKey: message,
+                                        NSUnderlyingErrorKey: error,
+                                        NSURLErrorFailingURLErrorKey: url});
             } else {
                 // Map HTTP errors to my own error domain:
                 NSNumber* status = error.userInfo[PSHTTPStatusErrorKey];
                 if (status) {
                     myError = CBLStatusToNSErrorWithInfo((CBLStatus)status.integerValue, nil,
-                                                       self.changesFeedURL, nil);
+                                                         webSocket.URLRequest.URL, nil);
                 }
             }
         }
@@ -258,13 +256,8 @@ UsingLogDomain(Sync);
         // Report error:
         LogTo(ChangeTracker, @"%@: closed with code %ld, reason '%@'",
               self, (long)effectiveCode, effectiveReason);
-        NSDictionary* userInfo = $dict({NSLocalizedFailureReasonErrorKey, effectiveReason},
-                                       {NSURLErrorFailingURLStringErrorKey,
-                                           self.changesFeedURL.absoluteString});
-        NSError* error = [NSError errorWithDomain: PSWebSocketErrorDomain
-                                             code: effectiveCode
-                                         userInfo: userInfo];
-        [self failedWithError: error];
+        [self failedWithErrorDomain: PSWebSocketErrorDomain code: effectiveCode
+                            message: effectiveReason];
     });
 }
 

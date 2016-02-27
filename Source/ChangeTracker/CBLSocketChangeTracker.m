@@ -131,10 +131,10 @@ UsingLogDomain(Sync);
         CFRelease(sslTrust);
         if (!trusted) {
             //TODO: This error could be made more precise
-            LogTo(ChangeTracker, @"%@: Rejected server certificate", self);
-            [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
-                                                       code: NSURLErrorServerCertificateUntrusted
-                                                   userInfo: nil]];
+            LogTo(ChangeTracker, @"%@: Untrustworthy SSL certificate", self);
+            [self failedWithErrorDomain: NSURLErrorDomain
+                                   code: NSURLErrorServerCertificateUntrusted
+                                message: @"Untrustworthy SSL certificate"];
         }
     }
     return trusted;
@@ -146,9 +146,8 @@ UsingLogDomain(Sync);
     response = (CFHTTPMessageRef) CFReadStreamCopyProperty((CFReadStreamRef)_trackingInput,
                                                            kCFStreamPropertyHTTPResponseHeader);
     if (!response) {
-        [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
-                                                   code: NSURLErrorNetworkConnectionLost
-                                               userInfo: nil]];
+        [self failedWithErrorDomain: NSURLErrorDomain code: NSURLErrorNetworkConnectionLost
+                            message: @"Connection lost"];
         return NO;
     }
     CFAutorelease(response);
@@ -204,8 +203,8 @@ UsingLogDomain(Sync);
         [weakSelf parseBytes: decompressedBytes length: decompressedLength];
     }];
     if (!ok) {
-        NSDictionary* info = @{NSLocalizedDescriptionKey: @"Invalid gzipped response data"};
-        [self failedWithError: [NSError errorWithDomain: @"zlib" code:_gzip.status userInfo: info]];
+        [self failedWithErrorDomain: @"zlib" code:_gzip.status
+                            message: @"Invalid gzipped response data"];
     }
     return ok;
 }
@@ -263,9 +262,8 @@ UsingLogDomain(Sync);
     } else {
         // JSON must have been truncated, probably due to socket being closed early.
         if (_mode == kOneShot) {
-            [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
-                                                       code: NSURLErrorNetworkConnectionLost
-                                                   userInfo: nil]];
+            [self failedWithErrorDomain: NSURLErrorDomain code: NSURLErrorNetworkConnectionLost
+                                message: @"Truncated response received"];
             return;
         }
         NSTimeInterval elapsed = CFAbsoluteTimeGetCurrent() - _startTime;
@@ -280,9 +278,8 @@ UsingLogDomain(Sync);
         } else {
             // Response data was truncated. This has been reported as an intermittent error
             // (see TouchDB issue #241). Treat it as if it were a socket error -- i.e. pause/retry.
-            [self failedWithError: [NSError errorWithDomain: NSURLErrorDomain
-                                                       code: NSURLErrorNetworkConnectionLost
-                                                   userInfo: nil]];
+            [self failedWithErrorDomain: NSURLErrorDomain code: NSURLErrorNetworkConnectionLost
+                                                 message: @"Truncated response received"];
         }
     }
 }

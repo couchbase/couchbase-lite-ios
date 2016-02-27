@@ -73,7 +73,7 @@ UsingLogDomain(Sync);
         // Check the content type to see whether it's a multipart response:
         if (![_reader setHeaders: headers]) {
             LogTo(RemoteRequest, @"%@ got invalid Content-Type", self);
-            [self cancelWithStatus: _reader.status];
+            [self cancelWithStatus: _reader.status message: @"Received invalid Content-Type"];
             return;
         }
     }
@@ -83,7 +83,7 @@ UsingLogDomain(Sync);
 - (void) didReceiveData:(NSData *)data {
     [super didReceiveData: data];
     if (![_reader appendData: data])
-        [self cancelWithStatus: _reader.status];
+        [self cancelWithStatus: _reader.status message: @"Received invalid multipart response"];
 }
 
 
@@ -91,7 +91,7 @@ UsingLogDomain(Sync);
     LogVerbose(Sync, @"%@: Finished loading (%u attachments)",
           self, (unsigned)_reader.attachmentCount);
     if (![_reader finish]) {
-        [self cancelWithStatus: _reader.status];
+        [self cancelWithStatus: _reader.status message: @"Received invalid multipart response"];
         return;
     }
     

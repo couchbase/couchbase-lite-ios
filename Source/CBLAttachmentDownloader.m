@@ -162,7 +162,7 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
         [self respondWithResult: task error: nil];
     } else {
         // digest didn't match:
-        [self cancelWithStatus: kCBLStatusBadAttachment];
+        [self cancelWithStatus: kCBLStatusBadAttachment message: @"Attachment digest mismatch"];
     }
 }
 

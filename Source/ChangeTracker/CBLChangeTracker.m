@@ -25,6 +25,7 @@
 #import "CBLMisc.h"
 #import "CBLStatus.h"
 #import "BLIPHTTPLogic.h"
+#import "MYErrorUtils.h"
 #import "MYURLUtils.h"
 #import "WebSocket.h"
 
@@ -214,11 +215,6 @@ DefineLogDomain(ChangeTracker);
     [self stop];
 }
 
-- (void) setUpstreamError: (NSString*)message {
-    Warn(@"%@: Server error: %@", self, message);
-    self.error = [NSError errorWithDomain: @"CBLChangeTracker" code: kCBLStatusUpstreamError userInfo: nil];
-}
-
 - (BOOL) start {
     if (!_http) {
         // Initialize HTTPLogic before sending first request:
@@ -270,27 +266,31 @@ DefineLogDomain(ChangeTracker);
 }
 
 
+- (void) failedWithErrorDomain: (NSString*)domain
+                          code: (NSInteger)code
+                       message: (NSString*) message {
+    [self failedWithError: [NSError errorWithDomain: domain code: code
+                                           userInfo: $dict({NSLocalizedDescriptionKey, message},
+                                                           {NSURLErrorFailingURLErrorKey, self.changesFeedURL})]];
+}
+
+
 - (void) failedWithError: (NSError*)error {
     NSString* domain = error.domain;
     NSInteger code = error.code;
+    NSDictionary* userInfo = @{NSURLErrorFailingURLErrorKey: self.changesFeedURL};
     if ($equal(domain, NSPOSIXErrorDomain)) {
         // Map POSIX errors from CFStream to higher-level NSURLError ones:
         if (code == ECONNREFUSED)
-            error = [NSError errorWithDomain: NSURLErrorDomain
-                                        code: NSURLErrorCannotConnectToHost
-                                    userInfo: error.userInfo];
+            error = MYWrapError(error, NSURLErrorDomain, NSURLErrorCannotConnectToHost, userInfo);
     } else if ($equal(domain, (id)kCFErrorDomainCFNetwork)) {
         if (code == kCFHostErrorHostNotFound || code == kCFHostErrorUnknown) {
-            error = [NSError errorWithDomain: NSURLErrorDomain
-                                        code: NSURLErrorCannotFindHost
-                                    userInfo: error.userInfo];
+            error = MYWrapError(error, NSURLErrorDomain, NSURLErrorCannotFindHost, userInfo);
         }
     } else if ($equal(domain, NSURLErrorDomain)) {
         // Map a lower-level auth failure to an HTTP status:
         if (code == NSURLErrorUserAuthenticationRequired)
-            error = [NSError errorWithDomain: CBLHTTPErrorDomain
-                                        code: kCBLStatusUnauthorized
-                                    userInfo: error.userInfo];
+            error = MYWrapError(error, CBLHTTPErrorDomain, kCBLStatusUnauthorized, userInfo);
     }
 
     // If the error may be transient (flaky network, server glitch), retry:
@@ -343,9 +343,10 @@ DefineLogDomain(ChangeTracker);
     }
     
     if (![_parser parseBytes: bytes length: length]) {
-        Warn(@"JSON error parsing _changes feed: %@", _parser.errorString);
-        [self failedWithError: [NSError errorWithDomain: @"CBLChangeTracker"
-                                                   code: kCBLStatusBadChangesFeed userInfo: nil]];
+        NSString* message = $sprintf(@"JSON error parsing _changes feed: %@", _parser.errorString);
+        Warn(@"%@", message);
+        [self failedWithErrorDomain: CBLHTTPErrorDomain code: kCBLStatusBadChangesFeed
+                            message: message];
         return NO;
     }
     return YES;

@@ -213,11 +213,11 @@ typedef enum {
 }
 
 
-- (void) cancelWithStatus: (int)status {
+- (void) cancelWithStatus: (int)status message: (NSString*)message {
     if (!_task)
         return;
     [_task cancel];
-    [self didFailWithError: CBLStatusToNSErrorWithInfo(status, nil, _request.URL, nil)];
+    [self didFailWithError: CBLStatusToNSErrorWithInfo(status, message, _request.URL, nil)];
 }
 
 
@@ -435,7 +435,8 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 #endif
     
     if (CBLStatusIsError(_status))
-        [self cancelWithStatus: _status];
+        [self cancelWithStatus: _status
+                       message: [NSHTTPURLResponse localizedStringForStatusCode: _status]];
 }
 
 
@@ -511,11 +512,13 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     id result = nil;
     NSError* error = nil;
     if (_jsonBuffer.length > 0) {
-        result = [CBLJSON JSONObjectWithData: _jsonBuffer options: 0 error: NULL];
+        NSError* parseError;
+        result = [CBLJSON JSONObjectWithData: _jsonBuffer options: 0 error: &parseError];
         if (!result) {
             Warn(@"%@: %@ %@ returned unparseable data '%@'",
                  self, _request.HTTPMethod, _request.URL, [_jsonBuffer my_UTF8ToString]);
-            error = CBLStatusToNSErrorWithInfo(kCBLStatusUpstreamError, nil, _request.URL, nil);
+            error = CBLStatusToNSErrorWithInfo(kCBLStatusUpstreamError, nil, _request.URL,
+                                               @{NSUnderlyingErrorKey: parseError});
         }
     } else {
         result = $dict();

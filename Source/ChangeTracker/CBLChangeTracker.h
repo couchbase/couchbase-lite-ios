@@ -113,8 +113,10 @@ typedef enum CBLChangeTrackerMode {
 @property (readonly) NSDictionary* TLSSettings;
 - (BOOL) checkServerTrust: (SecTrustRef)sslTrust forURL: (NSURL*)url;
 - (void) retryAfterDelay: (NSTimeInterval)retryDelay;
-- (void) setUpstreamError: (NSString*)message;
 - (void) failedWithError: (NSError*)error;
+- (void) failedWithErrorDomain: (NSString*)domain
+                          code: (NSInteger)code
+                       message: (NSString*) message;
 - (void) stopped; // override this
 - (BOOL) parseBytes: (const void*)bytes length: (size_t)length;
 - (NSInteger) endParsingData;

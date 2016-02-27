@@ -690,12 +690,14 @@
                 NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: rev.properties];
                 if (!history && rev.generation > 1) {
                     Warn(@"%@: Missing revision history in response for %@", self, rev);
-                    self.error = CBLStatusToNSError(kCBLStatusUpstreamError);
+                    self.error = CBLStatusToNSErrorWithInfo(kCBLStatusUpstreamError,
+                                                            @"Missing revision history in response",
+                                                            _settings.remote, nil);
                     [self revisionFailed];
                     continue;
                 }
                 LogVerbose(Sync, @"%@ inserting %@ %@",
-                      self, rev.docID, [history my_compactDescription]);
+                           self, rev.docID, [history my_compactDescription]);
 
                 // Insert the revision:
                 NSError* error;
