@@ -59,10 +59,6 @@ static NSError* CBLISError(NSInteger code, NSString* desc, NSError *parent);
 - (NSString*) documentIDRepresentation;
 @end
 
-@interface CBLView ()
-- (void) updateIndex;
-@end
-
 @interface CBLIncrementalStore ()
 
 // TODO: check if there is a better way to not hold strong references on these MOCs
