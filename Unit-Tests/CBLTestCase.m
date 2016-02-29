@@ -11,6 +11,7 @@
 #import "CBLManager+Internal.h"
 #import "MYURLUtils.h"
 #import "CBLRemoteRequest.h"
+#import "CBLRemoteSession.h"
 #import "CBL_BlobStore+Internal.h"
 #import "CBLSymmetricKey.h"
 #import "CBLKVOProxy.h"
@@ -57,7 +58,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 - (NSData*) contentsOfTestFile: (NSString*)name {
     NSError* error;
     NSData* data = [NSData dataWithContentsOfFile: [self pathToTestFile: name] options:0 error: &error];
-    Assert(data, @"Couldn't read test file '%@': %@", name, error);
+    Assert(data, @"Couldn't read test file '%@': %@", name, error.my_compactDescription);
     return data;
 }
 
@@ -154,14 +155,14 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     Log(@"---- Using %@ ----", dbmgr.storageType);
     NSError* error;
     db = [dbmgr createEmptyDatabaseNamed: @"db" error: &error];
-    Assert(db, @"Couldn't create db: %@", error);
+    Assert(db, @"Couldn't create db: %@", error.my_compactDescription);
 
     AssertEq(db.lastSequenceNumber, 0); // Ensure db was deleted properly by the previous test
 }
 
 - (void)tearDown {
     NSError* error;
-    Assert(!db || [db deleteDatabase: &error], @"Couldn't close db: %@", error);
+    Assert(!db || [db deleteDatabase: &error], @"Couldn't close db: %@", error.my_compactDescription);
     [dbmgr close];
 
     [super tearDown];
@@ -172,12 +173,12 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     Assert(db != nil);
     NSString* dbName = db.name;
     NSError* error;
-    Assert([db close: &error], @"Couldn't close db: %@", error);
+    Assert([db close: &error], @"Couldn't close db: %@", error.my_compactDescription);
     db = nil;
 
     Log(@"---- reopening db ----");
     CBLDatabase* db2 = [dbmgr databaseNamed: dbName error: &error];
-    Assert(db2, @"Couldn't reopen db: %@", error);
+    Assert(db2, @"Couldn't reopen db: %@", error.my_compactDescription);
     Assert(db2 != db, @"-reopenTestDB couldn't make a new instance");
     db = db2;
 }
@@ -186,9 +187,9 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 - (void) eraseTestDB {
     NSString* dbName = db.name;
     NSError* error;
-    Assert([db deleteDatabase: &error], @"Couldn't delete test db: %@", error);
+    Assert([db deleteDatabase: &error], @"Couldn't delete test db: %@", error.my_compactDescription);
     db = [dbmgr createEmptyDatabaseNamed: dbName error: &error];
-    Assert(db, @"Couldn't recreate test db: %@", error);
+    Assert(db, @"Couldn't recreate test db: %@", error.my_compactDescription);
 }
 
 
@@ -235,7 +236,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     Assert(doc.documentID, @"Document has no ID"); // 'untitled' docs are no longer untitled (8/10/12)
 
     NSError* error;
-    Assert([doc putProperties: properties error: &error], @"Couldn't save: %@", error);  // save it!
+    Assert([doc putProperties: properties error: &error], @"Couldn't save: %@", error.my_compactDescription);  // save it!
 
     Assert(doc.documentID);
     Assert(doc.currentRevisionID);
@@ -335,31 +336,28 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 - (void) eraseRemoteDB: (NSURL*)dbURL {
     Log(@"Deleting %@", dbURL);
     __block NSError* error = nil;
-    __block BOOL finished = NO;
     
     // Post to /db/_flush is supported by Sync Gateway 1.1, but not by CouchDB
     NSURLComponents* comp = [NSURLComponents componentsWithURL: dbURL resolvingAgainstBaseURL: YES];
     comp.port = ([dbURL.scheme isEqualToString: @"http"]) ? @4985 : @4995;
     comp.path = [comp.path stringByAppendingPathComponent: @"_flush"];
 
+    XCTestExpectation* finished = [self expectationWithDescription: @"Finished erasing"];
+    CBLRemoteSession* session = [[CBLRemoteSession alloc] init];
     CBLRemoteRequest* request = [[CBLRemoteRequest alloc] initWithMethod: @"POST"
                                                                      URL: comp.URL
                                                                     body: nil
-                                                          requestHeaders: nil
                                                             onCompletion:
                                  ^(id result, NSError *err) {
-                                     finished = YES;
+                                     [finished fulfill];
                                      error = err;
                                  }
                                  ];
     request.authorizer = self.authorizer;
     request.debugAlwaysTrust = YES;
-    [request start];
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
-    while (!finished && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                                 beforeDate: timeout])
-        ;
-    Assert(error == nil, @"Couldn't delete remote: %@", error);
+    [session startRequest: request];
+    
+    [self waitForExpectationsWithTimeout: 10 handler: nil];
 }
 
 

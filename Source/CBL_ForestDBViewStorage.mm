@@ -295,7 +295,7 @@ static NSString* keyToJSONStr(id key) { // only used for logging
     for (CBL_ForestDBViewStorage* view in views) {
         CBLMapBlock mapBlock = view->_delegate.mapBlock;
         if (!mapBlock) {
-            LogTo(ViewVerbose, @"    %@ has no map block; skipping it", view.name);
+            LogVerbose(View, @"    %@ has no map block; skipping it", view.name);
             continue;
         }
         [maps addObject: mapBlock];
@@ -330,9 +330,13 @@ static NSString* keyToJSONStr(id key) { // only used for logging
     NSMutableArray* emittedJSONValues = [NSMutableArray new];
     CLEANUP(C4KeyValueList)* emitted = c4kv_new();
     CBLMapEmitBlock emit = ^(id key, id value) {
-        LogTo(ViewVerbose, @"    emit(%@, %@)",
+        LogVerbose(View, @"    emit(%@, %@)",
               keyToJSONStr(key),
               (value == body) ? @"doc" : toJSONStr(value));
+        if (!key) {
+            Warn(@"emit() called with nil key; ignoring");
+            return;
+        }
         C4Slice valueSlice;
         if (value == body) {
             valueSlice = kC4PlaceholderValue;
@@ -343,7 +347,7 @@ static NSString* keyToJSONStr(id key) { // only used for logging
                                                       error: &error];
             if (!valueJSON) {
                 Warn(@"emit() called with invalid value: %@",
-                     error.localizedDescription);
+                     error.my_compactDescription);
                 return;
             }
             [emittedJSONValues addObject: valueJSON];  // keep it alive
@@ -378,7 +382,7 @@ static NSString* keyToJSONStr(id key) { // only used for logging
                                                               includeDeleted: NO
                                                                onlyConflicts: YES];
             }
-            LogTo(ViewVerbose, @"Mapping %@ rev %@", body.cbl_id, body.cbl_rev);
+            LogVerbose(View, @"Mapping %@ rev %@", body.cbl_id, body.cbl_rev);
 
             // Feed it to each view's map function:
             for (unsigned curViewIndex = 0; curViewIndex < viewCount; ++curViewIndex) {
@@ -555,7 +559,7 @@ static NSString* keyToJSONStr(id key) { // only used for logging
 
             if (!value)
                 value = slice2data(e->value);
-            LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
+            LogVerbose(Query, @"Query %@: Found row with key=%@, value=%@, id=%@",
                   _name, CBLJSONString(key), value, CBLJSONString(docID));
             
             // Create a CBLQueryRow:
@@ -679,7 +683,7 @@ static NSString* keyToJSONStr(id key) { // only used for logging
                                        value: callReduce(reduce, keysToReduce,valuesToReduce)
                                  docRevision: nil
                                      storage: self];
-                LogTo(QueryVerbose, @"Query %@: Reduced row with key=%@, value=%@",
+                LogVerbose(Query, @"Query %@: Reduced row with key=%@, value=%@",
                                     _name, CBLJSONString(row.key), CBLJSONString(row.value));
                 if (filter && !filter(row))
                     row = nil;

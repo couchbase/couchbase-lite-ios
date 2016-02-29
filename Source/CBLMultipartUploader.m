@@ -22,14 +22,12 @@
 @implementation CBLMultipartUploader
 
 - (instancetype) initWithURL: (NSURL *)url
-              requestHeaders: (NSDictionary *) requestHeaders
              multipartWriter: (CBLMultipartUploaderMultipartWriterBlock)writer
                 onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion {
     Assert(writer);
     self = [super initWithMethod: @"PUT" 
                              URL: url 
                             body: nil
-                  requestHeaders: requestHeaders 
                     onCompletion: onCompletion];
     if (self) {
         _writer = [writer copy];
@@ -38,7 +36,7 @@
 }
 
 
-- (void) start {
+- (NSURLSessionTask*) createTaskInURLSession:(NSURLSession *)session {
     _currentWriter = _writer();
 
     // It's important to set a Content-Length header -- without this, CFNetwork won't know the
@@ -50,20 +48,19 @@
     [_request setValue: $sprintf(@"%lld", length) forHTTPHeaderField: @"Content-Length"];
 
     [_currentWriter openForURLRequest: _request];
-    [super start];
+    return [super createTaskInURLSession: session];
 }
 
 
-- (NSInputStream *)connection:(NSURLConnection *)connection
-            needNewBodyStream:(NSURLRequest *)request {
-    LogTo(CBLRemoteRequest, @"%@: Needs new body stream, resetting writer...", self);
+- (NSInputStream *) needNewBodyStream {
+    LogTo(RemoteRequest, @"%@: Needs new body stream, resetting writer...", self);
     [_currentWriter close];
     _currentWriter = _writer();
     return [_currentWriter openForInputStream];
 }
 
 
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
+- (void) didFailWithError:(NSError *)error {
     if ($equal(error.domain, NSURLErrorDomain) && error.code == NSURLErrorRequestBodyStreamExhausted) {
         // The connection is complaining that the body input stream closed prematurely.
         // Check whether this is because the multipart writer got an error on _its_ input stream:
@@ -71,7 +68,7 @@
         if (writerError)
             error = writerError;
     }
-    [super connection: connection didFailWithError: error];
+    [super didFailWithError: error];
 }
 
 @end

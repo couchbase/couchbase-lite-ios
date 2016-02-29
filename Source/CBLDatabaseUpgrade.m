@@ -22,6 +22,9 @@
 #import <sqlite3.h>
 
 
+DefineLogDomain(Upgrade);
+
+
 @implementation CBLDatabaseUpgrade
 {
     CBLDatabase* _db;
@@ -77,7 +80,7 @@ static int collateRevIDs(void *context,
     // Open destination database:
     NSError* error;
     if (![_db open: &error]) {
-        Warn(@"Upgrade failed: Couldn't open new db: %@", error);
+        Warn(@"Upgrade failed: Couldn't open new db: %@", error.my_compactDescription);
         return CBLStatusFromNSError(error, 0);
     }
 
@@ -167,7 +170,7 @@ static int collateRevIDs(void *context,
     }
     if (!result) {
         if (!CBLIsFileNotFoundError(error)) {
-            Warn(@"Upgrade failed: Couldn't move attachments: %@", error);
+            Warn(@"Upgrade failed: Couldn't move attachments: %@", error.my_compactDescription);
             return CBLStatusFromNSError(error, 0);
         }
     }
@@ -208,7 +211,7 @@ static int collateRevIDs(void *context,
             [renDict setObject: newFileName forKey: oldFileName];
         } else {
             Warn(@"Upgrade failed: Cannot rename attachment file from %@ to %@: %@",
-                 oldPath, newPath, error);
+                 oldPath, newPath, error.my_compactDescription);
             success = NO;
             break;
         }
@@ -222,7 +225,7 @@ static int collateRevIDs(void *context,
             NSError* error;
             if (![fmgr moveItemAtPath: newPath toPath: oldPath error: &error]) {
                 Warn(@"Upgrade failed: Cannot back out renaming attachment file from %@ to %@: %@",
-                     newPath, oldPath, error);
+                     newPath, oldPath, error.my_compactDescription);
             }
         }
     }
@@ -318,7 +321,7 @@ static int collateRevIDs(void *context,
                                                       options: NSJSONReadingMutableContainers
                                                         error: &error];
     if (!object) {
-        Warn(@"Unable to parse the json data : %@", error);
+        Warn(@"Unable to parse the json data : %@", error.my_compactDescription);
         return kCBLStatusBadJSON;
     }
 
@@ -330,7 +333,7 @@ static int collateRevIDs(void *context,
 
     NSData *nuJson = [CBLJSON dataWithJSONObject: object options: 0 error: &error];
     if (!nuJson) {
-        Warn(@"Unable to serialize the json object : %@", error);
+        Warn(@"Unable to serialize the json object : %@", error.my_compactDescription);
         return kCBLStatusBadJSON;
     }
     [json setData: nuJson];
@@ -439,7 +442,7 @@ static int collateRevIDs(void *context,
             LogTo(Upgrade, @"Upgrading local doc '%@'", docID);
             NSError* error;
             if (props && ![_db putLocalDocument: props withID: docID error: &error]) {
-                Warn(@"Couldn't import local doc '%@': %@", docID, error);
+                Warn(@"Couldn't import local doc '%@': %@", docID, error.my_compactDescription);
             }
         }
     }

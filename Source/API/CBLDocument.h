@@ -52,15 +52,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable CBLSavedRevision*) revisionWithID: (NSString*)revisionID;
 
 /** Returns the document's history as an array of CBLRevisions. (See CBLRevision's method.) */
-- (nullable CBLArrayOf(CBLRevision*)*) getRevisionHistory: (NSError**)outError;
+- (nullable CBLArrayOf(CBLSavedRevision*)*) getRevisionHistory: (NSError**)outError;
 
 /** Returns all the current conflicting revisions of the document. If the document is not
     in conflict, only the single current revision will be returned. */
-- (nullable CBLArrayOf(CBLRevision*)*) getConflictingRevisions: (NSError**)outError;
+- (nullable CBLArrayOf(CBLSavedRevision*)*) getConflictingRevisions: (NSError**)outError;
 
 /** Returns all the leaf revisions in the document's revision tree,
     including deleted revisions (i.e. previously-resolved conflicts.) */
-- (nullable CBLArrayOf(CBLRevision*)*) getLeafRevisions: (NSError**)outError;
+- (nullable CBLArrayOf(CBLSavedRevision*)*) getLeafRevisions: (NSError**)outError;
 
 /** Creates an unsaved new revision whose parent is the currentRevision,
     or which will be the first revision if the document doesn't exist yet.
@@ -106,6 +106,28 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable CBLSavedRevision*) update: (BOOL(^)(CBLUnsavedRevision*))block
                                 error: (NSError**)outError;
 
+/** Adds an existing revision copied from another database. Unlike a normal insertion, this does
+    not assign a new revision ID; instead the revision's ID must be given. The revision's history
+    (ancestry) must be given, which can put it anywhere in the revision tree. It's not an error if
+    the revision already exists locally; it will just be ignored.
+
+    This is not an operation that clients normally perform; it's used by the replicator.
+    You might want to use it if you're pre-loading a database with canned content, or if you're
+    implementing some new kind of replicator that transfers revisions from another database.
+    @param properties  The properties of the revision (_id and _rev will be ignored, but _deleted
+                    and _attachments are recognized.)
+    @param revIDs  The revision history in the form of an array of revision-ID strings, in
+                    reverse chronological order. The first item must be the new revision's ID.
+                    Following items are its parent's ID, etc.
+    @param sourceURL  The URL of the database this revision came from, if any. (This value shows
+                    up in the CBLDatabaseChange triggered by this insertion, and can help clients
+                    decide whether the change is local or not.)
+    @param outError  Error information will be stored here if the insertion fails.
+    @return  YES on success, NO on failure. */
+- (BOOL) putExistingRevisionWithProperties: (NSDictionary*)properties
+                           revisionHistory: (CBLArrayOf(NSString*)*)revIDs
+                                   fromURL: (nullable NSURL*)sourceURL
+                                     error: (NSError**)outError;
 
 #pragma mark MODEL:
 

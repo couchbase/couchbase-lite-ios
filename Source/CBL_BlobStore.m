@@ -24,6 +24,9 @@
 #import <ctype.h>
 
 
+UsingLogDomain(Database);
+
+
 #ifdef GNUSTEP
 #define NSDataReadingMappedIfSafe NSMappedRead
 #define NSDataWritingAtomic NSAtomicWrite
@@ -253,7 +256,7 @@
 
     NSError* error;
     if (![blob writeToFile: path options: NSDataWritingAtomic error: &error]) {
-        Warn(@"CBL_BlobStore: Couldn't write to %@: %@", path, error);
+        Warn(@"CBL_BlobStore: Couldn't write to %@: %@", path, error.my_compactDescription);
         return NO;
     }
     return YES;
@@ -327,7 +330,7 @@
                 else {
                     if (!error)
                         error = error1;
-                    Warn(@"%@: Failed to delete '%@': %@", self, filename, error);
+                    Warn(@"%@: Failed to delete '%@': %@", self, filename, error.my_compactDescription);
                 }
             }
         }
@@ -451,7 +454,7 @@
     if (!_tempDir) {
         // Find a temporary directory suitable for files that will be moved into the store:
         _tempDir = [self createTempDir: NULL];
-        LogTo(CBLDatabase, @"CBL_BlobStore %@ created tempDir %@", _path, _tempDir);
+        LogTo(Database, @"CBL_BlobStore %@ created tempDir %@", _path, _tempDir);
     }
     return _tempDir;
 }
@@ -477,7 +480,7 @@
                                                                  create: YES
                                                                   error: outError];
     if (!tempDirURL)
-        Warn(@"CBL_BlobStore: Unable to create temp dir: %@", error);
+        Warn(@"CBL_BlobStore: Unable to create temp dir: %@", error.my_compactDescription);
     return tempDirURL.path;
 #endif
 }

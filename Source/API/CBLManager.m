@@ -60,7 +60,6 @@ NSString* CBLVersion( void ) {
         return $sprintf(@"%s (unofficial)", CBL_VERSION_STRING);
 }
 
-#ifndef MY_DISABLE_LOGGING
 static NSString* CBLFullVersionInfo( void ) {
     NSMutableString* vers = [NSMutableString stringWithFormat: @"Couchbase Lite %@", CBLVersion()];
 #ifdef CBL_SOURCE_REVISION
@@ -69,7 +68,6 @@ static NSString* CBLFullVersionInfo( void ) {
 #endif
     return vers;
 }
-#endif
 
 
 @implementation CBLDatabaseOptions
@@ -122,7 +120,7 @@ static NSCharacterSet* kIllegalNameChars;
 #else
     EnableLog(YES);
     if (type != nil)
-        _EnableLogTo(type, YES);
+        EnableLogTo(type, YES);
 #endif
 }
 
@@ -160,7 +158,7 @@ static CBLManager* sInstance;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sInstance = [[self alloc] init];
-        LogTo(CBLDatabase, @"%@ is the sharedInstance", sInstance);
+        LogTo(Database, @"%@ is the sharedInstance", sInstance);
     });
     return sInstance;
 }
@@ -254,7 +252,7 @@ static CBLManager* sInstance;
                                                             stringForKey: @"CBLReplicatorClass"];
         if (!_replicatorClassName)
             _replicatorClassName = @"CBLRestReplicator";
-        LogTo(CBLDatabase, @"Created %@", self);
+        LogTo(Database, @"Created %@", self);
     }
     return self;
 }
@@ -267,7 +265,7 @@ static CBLManager* sInstance;
     CBLManager* dbm = [[self alloc] initWithDirectory: path
                                               options: NULL
                                                 error: &error];
-    Assert(dbm, @"Failed to create db manager at %@: %@", path, error);
+    Assert(dbm, @"Failed to create db manager at %@: %@", path, error.my_compactDescription);
     AssertEqual(dbm.directory, path);
 #if MY_ENABLE_TESTS
     AfterThisTest(^{
@@ -303,14 +301,14 @@ static CBLManager* sInstance;
 
 - (void) close {
     Assert(self != sInstance, @"Please don't close the sharedInstance!");
-    LogTo(CBLDatabase, @"CLOSING %@ ...", self);
+    LogTo(Database, @"CLOSING %@ ...", self);
     for (CBLDatabase* db in _databases.allValues) {
         [db _close];
     }
     [_databases removeAllObjects];
     _shared = nil;
     _strongShared = nil;
-    LogTo(CBLDatabase, @"CLOSED %@", self);
+    LogTo(Database, @"CLOSED %@", self);
 }
 
 
@@ -365,7 +363,7 @@ static CBLManager* sInstance;
         NSError* error;
         CBLDatabase* db = [self _databaseNamed: name mustExist: NO error: &error];
         if (!db) {
-            Warn(@"Upgrade failed: Creating new db failed: %@", error);
+            Warn(@"Upgrade failed: Creating new db failed: %@", error.my_compactDescription);
             if (outError)
                 *outError = error;
             return NO;
@@ -440,7 +438,7 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
     if (![[NSURL fileURLWithPath: _dir] getResourceValue: &excluded
                                                   forKey: NSURLIsExcludedFromBackupKey
                                                    error: &error]) {
-        Warn(@"%@: -excludedFromBackup failed: %@", self, error);
+        Warn(@"%@: -excludedFromBackup failed: %@", self, error.my_compactDescription);
     }
     return excluded.boolValue;
 }
@@ -450,7 +448,7 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
     if (![[NSURL fileURLWithPath: _dir] setResourceValue: @(exclude)
                                                   forKey: NSURLIsExcludedFromBackupKey
                                                    error: &error]) {
-        Warn(@"%@: -setExcludedFromBackup:%d failed: %@", self, exclude, error);
+        Warn(@"%@: -setExcludedFromBackup:%d failed: %@", self, exclude, error.my_compactDescription);
     }
 }
 
@@ -490,7 +488,7 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
                 Class serverClass = [self.replicatorClass needsRunLoop] ? [CBL_RunLoopServer class]
                                                                         : [CBL_DispatchServer class];
                 server = [[serverClass alloc] initWithManager: newManager];
-                LogTo(CBLDatabase, @"%@ created %@ (with %@)", self, server, newManager);
+                LogTo(Database, @"%@ created %@ (with %@)", self, server, newManager);
             }
             Assert(server, @"Failed to create backgroundServer!");
             shared.backgroundServer = server;
@@ -776,7 +774,7 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
     [strongShared.backgroundServer tellDatabaseManager: ^(CBLManager* bgmgr) {
         NSError* error;
         if (![bgmgr _closeDatabaseNamed: name error: &error])
-            Warn(@"Cannot close background database named %@: %@", name, error);
+            Warn(@"Cannot close background database named %@: %@", name, error.my_compactDescription);
     }];
 }
 

@@ -10,6 +10,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+UsingLogDomain(Model);
+
 @interface CBLModel ()
 {
     CBLDocument* _document;

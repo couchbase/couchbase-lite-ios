@@ -30,7 +30,7 @@ typedef struct CBLManagerOptions {
       the value is nil.
     * If the database exists, and the value is not nil, the database will be upgraded to that
       storage engine if possible. (SQLite-to-ForestDB upgrades are supported.) */
-@property (nonatomic, copy) NSString* storageType;
+@property (nonatomic, copy, nullable) NSString* storageType;
 
 /** A key to encrypt the database with. If the database does not exist and is being created, it
     will use this key, and the same key must be given every time it's opened.
@@ -43,7 +43,7 @@ typedef struct CBLManagerOptions {
     * On Mac OS only, the value may be @YES. This instructs Couchbase Lite to use a key stored in
       the user's Keychain, or generate one there if it doesn't exist yet.
     * A default nil value, of course, means the database is unencrypted. */
-@property (nonatomic, strong) id encryptionKey;
+@property (nonatomic, strong, nullable) id encryptionKey;
 @end
 
 

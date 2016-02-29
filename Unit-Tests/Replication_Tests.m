@@ -12,6 +12,8 @@
 #import "CBLCookieStorage.h"
 #import "CBL_Body.h"
 #import "CBLAttachmentDownloader.h"
+#import "CBLRemoteSession.h"
+#import "CBLRemoteRequest.h"
 #import "MYAnonymousIdentity.h"
 #import "MYErrorUtils.h"
 
@@ -107,7 +109,7 @@
         }
     }
     Log(@"...replicator finished. mode=%u, progress %u/%u, error=%@",
-        repl.status, repl.completedChangesCount, repl.changesCount, repl.lastError);
+        repl.status, repl.completedChangesCount, repl.changesCount, repl.lastError.my_compactDescription);
 
     [[NSNotificationCenter defaultCenter] removeObserver: self
                                                     name: kCBLReplicationChangeNotification
@@ -344,6 +346,8 @@
 
 
 - (void) test04_ReplicateAttachments {
+    _timeout = 30; // There are some big attachments that can take time to transfer to a device
+
     // First pull the read-only "attach_test" database:
     NSURL* pullURL = [self remoteTestDBURL: kAttachTestDBName];
     if (!pullURL)
@@ -351,11 +355,11 @@
 
     Log(@"Pulling from %@...", pullURL);
     CBLReplication* repl = [db createPullReplication: pullURL];
-    [self allowWarningsIn: ^{
+//    [self allowWarningsIn: ^{
         // This triggers a warning in CBLSyncConnection because the attach-test db is actually
         // missing an attachment body. It's not a CBL error.
         [self runReplication: repl expectedChangesCount: 0];
-    }];
+//    }];
     AssertNil(repl.lastError);
 
     Log(@"Verifying documents...");
@@ -972,14 +976,15 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     XCTestExpectation* complete = [self expectationWithDescription: @"didComplete"];
     CBLRemoteRequest *req =
         [[CBLRemoteJSONRequest alloc] initWithMethod: @"GET" URL: docUrl
-                                                body: nil requestHeaders: nil
+                                                body: nil
                                         onCompletion:^(id result, NSError *error) {
                                             AssertNil(error);
                                             data = result;
                                             [complete fulfill];
                                         }];
     req.debugAlwaysTrust = YES;
-    [req start];
+    CBLRemoteSession* session = [[CBLRemoteSession alloc] init];
+    [session startRequest: req];
     [self waitForExpectationsWithTimeout: 2.0 handler: nil];
 
     NSDictionary* attachments = data[@"_attachments"];
@@ -1126,7 +1131,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     AssertEq(repl.pendingDocumentIDs.count, 0u);
     Assert(![repl isDocumentPending: [db documentWithID: @"doc-1"]]);
 
-    // Add another set of documents and create a new replicator:
+    // Add another set of documents:
     [db inTransaction: ^BOOL{
         for (int i = 11; i <= 20; i++) {
             @autoreleasepool {
@@ -1139,6 +1144,11 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
         return YES;
     }];
 
+    // Make sure newly-added documents are considered pending: (#1132)
+    Assert([repl isDocumentPending: [db documentWithID: @"doc-11"]]);
+    AssertEq(repl.pendingDocumentIDs.count, 10u);
+
+    // Create a new replicator:
     repl = [db createPushReplication: remoteDbURL];
 
     AssertEq(repl.pendingDocumentIDs.count, 10u);
@@ -1312,14 +1322,14 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
         [[CBLRemoteJSONRequest alloc] initWithMethod: @"POST"
                                                  URL: comp.URL
                                                 body: @{@"name": @"test", @"password": @"abc123"}
-                                      requestHeaders: nil
                                         onCompletion:^(id result, NSError *error) {
                                             AssertNil(error);
                                             cookie = result;
                                             [complete fulfill];
                                         }];
     req.debugAlwaysTrust = YES;
-    [req start];
+    CBLRemoteSession* session = [[CBLRemoteSession alloc] init];
+    [session startRequest: req];
     [self waitForExpectationsWithTimeout: 2.0 handler: nil];
     
     // Create a continuous pull replicator and set SyncGatewaySession cookie:

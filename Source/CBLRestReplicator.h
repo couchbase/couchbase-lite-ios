@@ -8,7 +8,7 @@
 
 #import "CBL_Replicator.h"
 
-@class CBLBatcher, MYBackgroundMonitor;
+@class CBLBatcher, CBLRemoteRequest, MYBackgroundMonitor;
 
 
 /** Abstract base class for push or pull replications. */
@@ -19,7 +19,6 @@
     CBLDatabase* __weak _db;
     NSString* _lastSequence;
     CBLBatcher* _batcher;
-    id<CBLAuthorizer> _authorizer;
     NSString* _serverType;
 #if TARGET_OS_IPHONE
     MYBackgroundMonitor *_bgMonitor;
@@ -29,5 +28,7 @@
 #if DEBUG
 @property (readonly) BOOL running, active; // for unit tests
 #endif
+
+- (void) startRemoteRequest: (CBLRemoteRequest*)request;
 
 @end

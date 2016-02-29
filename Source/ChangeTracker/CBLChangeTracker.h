@@ -18,6 +18,9 @@
 @protocol CBLAuthorizer;
 
 
+UsingLogDomain(ChangeTracker);
+
+
 @protocol CBLChangeTrackerClient <NSObject>
 - (BOOL) changeTrackerApproveSSLTrust: (SecTrustRef)serverTrust
                               forHost: (NSString*)host
@@ -79,6 +82,7 @@ typedef enum CBLChangeTrackerMode {
 @property (readonly, copy, nonatomic) id lastSequenceID;
 @property (nonatomic) BOOL continuous;  // If true, never give up due to errors
 @property (nonatomic) NSTimeInterval pollInterval;  // 0.0 to not poll
+@property (nonatomic) BOOL activeOnly;
 @property (strong, nonatomic) NSError* error;
 @property (weak, nonatomic) id<CBLChangeTrackerClient> client;
 @property (strong, nonatomic) NSDictionary *requestHeaders;

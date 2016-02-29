@@ -28,7 +28,7 @@
 
 - (void) getCheckpoint {
     Assert(_pushing || _pulling);
-    LogTo(SyncVerbose, @"Requesting checkpoint...");
+    LogVerbose(Sync, @"Requesting checkpoint...");
     BLIPRequest* request = [_connection request];
     request.profile = @"getCheckpoint";
     NSString* checkpointID = self.effectiveRemoteCheckpointDocID;
@@ -42,9 +42,9 @@
                 [self gotError: response]; // fatal
                 return;
             }
-            LogTo(SyncVerbose, @"No checkpoint on server");
+            LogVerbose(Sync, @"No checkpoint on server");
         } else {
-            LogTo(SyncVerbose, @"Received checkpoint: %@", response.body.my_UTF8ToString);
+            LogVerbose(Sync, @"Received checkpoint: %@", response.body.my_UTF8ToString);
             checkpoint = $castIf(NSDictionary, response.bodyJSON);
         }
         id lastSequenceID = checkpoint[@"lastSequence"];

@@ -19,7 +19,7 @@
 #import "CBLInternal.h"
 #import "MYBlockUtils.h"
 #import "CollectionUtils.h"
-#import "Logging.h"
+#import "MYLogging.h"
 #import "Test.h"
 
 
@@ -169,7 +169,6 @@ static NSString* normalizeHostname( NSString* hostname ) {
 
 
 - (void) startLoading {
-    LogTo(CBL_URLProtocol, @"Loading <%@>", self.request.URL);
     CBL_Server* server = [[self class] serverForURL: self.request.URL];
     if (!server) {
         NSError* error = [NSError errorWithDomain: NSURLErrorDomain
@@ -209,10 +208,6 @@ static NSString* normalizeHostname( NSString* hostname ) {
 
 
 - (void) onResponseReady: (CBLResponse*)routerResponse {
-    LogTo(CBL_URLProtocol, @"response ready for <%@> (%d %@)",
-          self.request.URL, routerResponse.status, routerResponse.statusMsg);
-    // NOTE: This initializer is only available in iOS 5 and OS X 10.7.2.
-    // TODO: Find a way to work around this; it'd be nice to support 10.6 or iOS 4.x.
     NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL: self.request.URL
                                                               statusCode: routerResponse.status
                                                              HTTPVersion: @"1.1"
@@ -223,20 +218,17 @@ static NSString* normalizeHostname( NSString* hostname ) {
 
 
 - (void) onDataAvailable: (NSData*)data {
-    LogTo(CBL_URLProtocol, @"data available from <%@>", self.request.URL);
     if (data.length)
         [self.client URLProtocol: self didLoadData: data];
 }
 
 
 - (void) onFinished {
-    LogTo(CBL_URLProtocol, @"finished response <%@>", self.request.URL);
     [self.client URLProtocolDidFinishLoading: self];
 }
 
 
 - (void)stopLoading {
-    LogTo(CBL_URLProtocol, @"Stop <%@>", self.request.URL);
     [_router stop];
 }
 

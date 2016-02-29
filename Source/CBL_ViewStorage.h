@@ -12,6 +12,10 @@
 @protocol CBL_ViewStorageDelegate, CBL_QueryRowStorage;
 
 
+UsingLogDomain(View);
+UsingLogDomain(Query);
+
+
 /** Storage for a view. Instances are created by CBL_Storage implementations, and are owned by
     CBLView instances. */
 @protocol CBL_ViewStorage <NSObject>

@@ -223,7 +223,7 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
             NSString* inverse = [self inverseRelationForArrayProperty: property];
             if (inverse) {
                 // This is a computed (queried) inverse relation:
-                LogTo(CBLModel, @"%@.%@ is a query-based inverse of %@.%@",
+                LogTo(Model, @"%@.%@ is a query-based inverse of %@.%@",
                       self, property, itemClass, inverse);
                 Assert([itemClass hasRelation: inverse],
                        @"%@.%@ specified as inverse of %@.%@, which is not a valid relation",
@@ -233,7 +233,7 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
                 };
             } else {
                 // This is an explicit array of docIDs:
-                LogTo(CBLModel, @"%@.%@ is an explicit array of %@", self, property, itemClass);
+                LogTo(Model, @"%@.%@ is an explicit array of %@", self, property, itemClass);
                 impBlock = ^id(CBLModel* receiver) {
                     return [receiver getArrayRelationProperty: property withModelClass: itemClass];
                 };

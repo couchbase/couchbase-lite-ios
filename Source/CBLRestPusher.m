@@ -61,7 +61,7 @@
     [self sendAsyncRequest: @"PUT" path: @"" body: nil onCompletion: ^(id result, NSError* error) {
         _creatingTarget = NO;
         if (error && error.code != kCBLStatusDuplicate && error.code != kCBLStatusMethodNotAllowed) {
-            LogTo(Sync, @"Failed to create remote db: %@", error);
+            LogTo(Sync, @"Failed to create remote db: %@", error.my_compactDescription);
             self.error = error;
             [self stop]; // this is fatal: no db to push to!
         } else {
@@ -136,8 +136,6 @@
 
 - (void) stop {
     LogTo(Sync, @"%@ STOPPING...", self);
-    _uploaderQueue = nil;
-    _uploading = NO;
     [self stopObserving];
     [super stop];
 }
@@ -183,7 +181,7 @@
                 continue;
             CBL_MutableRevision* nuRev = [rev mutableCopy];
             nuRev.body = nil; // save memory
-            LogTo(SyncVerbose, @"%@: Queuing #%lld %@",
+            LogVerbose(Sync, @"%@: Queuing #%lld %@",
                   self, [db getRevisionSequence: nuRev], nuRev);
             [self addToInbox: nuRev];
         }
@@ -312,7 +310,7 @@
     if (numDocsToSend == 0)
         return;
     LogTo(Sync, @"%@: Sending %u revisions", self, (unsigned)numDocsToSend);
-    LogTo(SyncVerbose, @"%@: Sending %@", self, changes.allRevisions);
+    LogVerbose(Sync, @"%@: Sending %@", self, changes.allRevisions);
     self.changesTotal += numDocsToSend;
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"POST"
@@ -351,7 +349,7 @@
                       self.error = error;
                       [self revisionFailed];
                   } else {
-                      LogTo(SyncVerbose, @"%@: Sent %@", self, changes.allRevisions);
+                      LogVerbose(Sync, @"%@: Sent %@", self, changes.allRevisions);
                   }
                   self.changesProcessed += numDocsToSend;
                   [self asyncTasksFinished: 1];
@@ -404,7 +402,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                 NSError* error;
                 NSData* json = [CBJSONEncoder canonicalEncoding: rev.properties error: &error];
                 if (error) {
-                    Warn(@"%@: Creating canonical JSON data got an error: %@", self, error);
+                    Warn(@"%@: Creating canonical JSON data got an error: %@", self, error.my_compactDescription);
                     return nil;
                 }
 
@@ -448,7 +446,6 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeURLParam(rev.docID));
     __block CBLMultipartUploader* uploader = [[CBLMultipartUploader alloc]
                                   initWithURL: CBLAppendToURL(_settings.remote, path)
-                               requestHeaders: _settings.requestHeaders
                               multipartWriter:^CBLMultipartWriter *{
                                   CBLMultipartWriter* writer = bodyStream;
                                   // Reset to nil so the writer will get regenerated if the block
@@ -462,7 +459,6 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                                   return writer;
                               }
                                  onCompletion: ^(CBLMultipartUploader* result, NSError *error) {
-                  [self removeRemoteRequest: uploader];
                   if (error) {
                       if ($equal(error.domain, CBLHTTPErrorDomain)
                                 && error.code == kCBLStatusUnsupportedType) {
@@ -474,7 +470,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                           [self revisionFailed];
                       }
                   } else {
-                      LogTo(SyncVerbose, @"%@: Sent multipart %@", self, rev);
+                      LogVerbose(Sync, @"%@: Sent multipart %@", self, rev);
                       [self removePending: rev];
                   }
                   self.changesProcessed++;
@@ -484,8 +480,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                   [self startNextUpload];
               }
      ];
-    [self addRemoteRequest: uploader];
-    LogTo(SyncVerbose, @"%@: Queuing %@ (multipart, %lldkb)", self, uploader, bodyStream.length/1024);
+    LogVerbose(Sync, @"%@: Queuing %@ (multipart, %lldkb)", self, uploader, bodyStream.length/1024);
     if (!_uploaderQueue)
         _uploaderQueue = [[NSMutableArray alloc] init];
     [_uploaderQueue addObject: uploader];
@@ -517,7 +512,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                       self.error = error;
                       [self revisionFailed];
                   } else {
-                      LogTo(SyncVerbose, @"%@: Sent %@ (JSON), response=%@", self, rev, response);
+                      LogVerbose(Sync, @"%@: Sent %@ (JSON), response=%@", self, rev, response);
                       [self removePending: rev];
                   }
                   [self asyncTasksFinished: 1];
@@ -529,10 +524,21 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     if (!_uploading && _uploaderQueue.count > 0) {
         _uploading = YES;
         CBLMultipartUploader* uploader = _uploaderQueue[0];
-        LogTo(SyncVerbose, @"%@: Starting %@", self, uploader);
-        [uploader start];
+        LogVerbose(Sync, @"%@: Starting %@", self, uploader);
+        [self startRemoteRequest: uploader];
         [_uploaderQueue removeObjectAtIndex: 0];
     }
+}
+
+
+- (void) stopRemoteRequests {
+    NSArray* queue = _uploaderQueue;
+    _uploaderQueue = nil;
+    _uploading = NO;
+    [queue makeObjectsPerformSelector: @selector(stop)];
+
+    [super stopRemoteRequests];
+
 }
 
 

@@ -29,6 +29,11 @@
 #import "Test.h"
 
 
+// For some reason this is not declared in HTTPConnection's @interface
+@interface HTTPConnection () <GCDAsyncSocketDelegate>
+@end
+
+
 @implementation CBLHTTPConnection
 {
     BOOL _hasClientCert;
@@ -62,7 +67,7 @@ static void evaluate(SecTrustRef trust, SecTrustCallback callback) {
     // This only gets called if the SSL settings disable regular cert validation.
     evaluate(trust, ^(SecTrustRef trustRef, SecTrustResultType result)
     {
-        LogTo(CBLListener, @"Login attempted with%@ client cert; trust result = %d",
+        LogTo(Listener, @"Login attempted with%@ client cert; trust result = %d",
               (trust ? @"" : @"out"), result);
         id<CBLListenerDelegate> delegate = self.listener.delegate;
         BOOL ok;
@@ -98,7 +103,7 @@ static void evaluate(SecTrustRef trust, SecTrustCallback callback) {
 }
 
 - (NSString*) passwordForUser: (NSString*)username {
-    LogTo(CBLListener, @"Login attempted for user '%@'", username);
+    LogTo(Listener, @"Login attempted for user '%@'", username);
     _username = username;
     return [self.listener passwordForUser: username];
 }
@@ -137,8 +142,9 @@ static void evaluate(SecTrustRef trust, SecTrustCallback callback) {
                                  code: GCDAsyncSocketClosedError]
               && ![error my_hasDomain: GCDAsyncSocketErrorDomain
                                  code: GCDAsyncSocketReadTimeoutError]) {
-        Warn(@"CBLHTTPConnection: Client disconnected: %@", error);
+        Warn(@"CBLHTTPConnection: Client disconnected: %@", error.my_compactDescription);
     }
+    [super socketDidDisconnect: socket withError: error];
 }
 
 
@@ -151,9 +157,9 @@ static void evaluate(SecTrustRef trust, SecTrustCallback callback) {
 
 - (NSObject<HTTPResponse>*)httpResponseForMethod:(NSString *)method URI:(NSString *)path {
     if (requestContentLength > 0)
-        LogTo(CBLListener, @"%@ %@ {+%u}", method, path, (unsigned)requestContentLength);
+        LogTo(Listener, @"%@ %@ {+%u}", method, path, (unsigned)requestContentLength);
     else
-        LogTo(CBLListener, @"%@ %@", method, path);
+        LogTo(Listener, @"%@ %@", method, path);
     
     // Construct an NSURLRequest from the HTTPRequest:
     NSMutableURLRequest* urlRequest = [NSMutableURLRequest requestWithURL: request.url];

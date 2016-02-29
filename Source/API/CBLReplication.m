@@ -55,8 +55,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 @implementation CBLReplication
 {
-    NSSet* _pendingDocIDs;
-    bool _started;
+    bool _started;                          // Has replicator been started?
+    SequenceNumber _lastSequencePushed;     // The latest sequence pushed by the replicator
+    NSSet* _pendingDocIDs;                  // Cached set of docIDs awaiting push
+    SequenceNumber _pendingDocIDsSequence;  // DB lastSequenceNumber when _pendingDocIDs was set
 
     // ONLY used on the server thread:
     id<CBL_Replicator> _bg_replicator;
@@ -280,7 +282,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
         // Initialize the status to something other than kCBLReplicationStopped:
         [self updateStatus: kCBLReplicationOffline error: nil processed: 0 ofTotal: 0
-                serverCert: NULL];
+             lastSeqPushed: 0 serverCert: NULL];
 
         [_database addReplication: self];
     }
@@ -350,6 +352,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
                 error: (NSError*)error
             processed: (NSUInteger)changesProcessed
               ofTotal: (NSUInteger)changesTotal
+        lastSeqPushed: (SequenceNumber)lastSeqPushed
            serverCert: (SecCertificateRef)serverCert
 {
     if (!_started)
@@ -359,7 +362,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         [_database forgetReplication: self];
     }
 
-    _pendingDocIDs = nil; // forget cached IDs
+    if (lastSeqPushed >= 0 && lastSeqPushed != _lastSequencePushed) {
+        _lastSequencePushed = lastSeqPushed;
+        _pendingDocIDs = nil;
+    }
 
     BOOL changed = NO;
     if (!$equal(error, _lastError)) {
@@ -393,7 +399,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         static const char* kStatusNames[] = {"stopped", "offline", "idle", "active"};
         LogTo(Sync, @"%@: %s, progress = %u / %u, err: %@",
               self, kStatusNames[status], (unsigned)changesProcessed, (unsigned)changesTotal,
-              error.localizedDescription);
+              error.my_compactDescription);
 #endif
         [[NSNotificationCenter defaultCenter]
                         postNotificationName: kCBLReplicationChangeNotification object: self];
@@ -403,46 +409,86 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 #pragma mark - PUSH REPLICATION ONLY:
 
+
 - (NSSet*) pendingDocumentIDs {
-    if (_pull || (_started && _pendingDocIDs))
-        return _pendingDocIDs;
-
-    _pendingDocIDs = [_database.manager.backgroundServer
-                      waitForDatabaseNamed: _database.name to: ^id(CBLDatabase* bgDb)
-    {
-        CBLStatus status;
-        CBL_ReplicatorSettings* settings =
-            [bgDb.manager replicatorSettingsWithProperties: self.properties
-                                                toDatabase: nil
-                                                    status: &status];
-        if (!settings) {
-            Warn(@"Error parsing replicator settings : %@", CBLStatusToNSError(status));
-            return nil;
-        }
-
-        NSString* lastSequence = _bg_replicator.lastSequence;
-        if (!lastSequence)
-            lastSequence = [bgDb lastSequenceForReplicator: settings];
-
-        NSError* error;
-        CBL_RevisionList* revs = [bgDb unpushedRevisionsSince: lastSequence
-                                                       filter: settings.filterBlock
-                                                       params: settings.filterParameters
-                                                        error: &error];
-        if (revs)
-            return [NSSet setWithArray: revs.allDocIDs];
-        else
-            Warn(@"Error getting unpushed revisions : %@", error);
+    if (_pull)
         return nil;
-    }];
+    if (_pendingDocIDs) {
+        if (_pendingDocIDsSequence == _database.lastSequenceNumber)
+            return _pendingDocIDs;      // Still valid
+        _pendingDocIDs = nil;
+    }
+
+    CBL_ReplicatorSettings* settings = self.replicatorSettings;
+    if (!settings)
+        return nil;
+    SequenceNumber lastSequence = self.lastSequencePushed;
+    if (lastSequence < 0)
+        return nil;
+
+    SequenceNumber newPendingDocIDsSequence = _database.lastSequenceNumber;
+    NSError* error;
+    CBL_RevisionList* revs = [_database unpushedRevisionsSince: $sprintf(@"%lld", lastSequence)
+                                                        filter: settings.filterBlock
+                                                        params: settings.filterParameters
+                                                         error: &error];
+    if (!revs) {
+        Warn(@"Error getting unpushed revisions : %@", error.my_compactDescription);
+        return nil;
+    }
+    _pendingDocIDsSequence = newPendingDocIDsSequence;
+    _pendingDocIDs = [NSSet setWithArray: revs.allDocIDs];
     return _pendingDocIDs;
 }
 
 
 - (BOOL) isDocumentPending: (CBLDocument*)doc {
-    return doc && [self.pendingDocumentIDs containsObject: doc.documentID];
-    //OPT: It may be cheaper to do this by fetching the replicator's checkpoint sequence and
-    // comparing the doc's sequence to it.
+    SequenceNumber lastSeq = self.lastSequencePushed;
+    if (lastSeq < 0)
+        return NO; // error
+
+    CBLSavedRevision* rev = doc.currentRevision;
+    SequenceNumber seq = rev.sequence;
+    if (seq <= lastSeq)
+        return NO;
+    
+    if (_filter) {
+        // Use _pendingDocIDs as a shortcut, if it's valid
+        if (_pendingDocIDs && _pendingDocIDsSequence == _database.lastSequenceNumber)
+            return [_pendingDocIDs containsObject: doc.documentID];
+        // Else run the filter on the doc:
+        CBL_ReplicatorSettings* settings = self.replicatorSettings;
+        if (!settings.filterBlock(rev, settings.filterParameters))
+            return NO;
+    }
+    return YES;
+}
+
+
+- (CBL_ReplicatorSettings*) replicatorSettings {
+    CBLStatus status;
+    CBL_ReplicatorSettings* settings;
+    settings = [_database.manager replicatorSettingsWithProperties: self.properties
+                                                        toDatabase: nil
+                                                            status: &status];
+    if (!settings)
+        Warn(@"Error parsing replicator settings : %@",
+             CBLStatusToNSError(status).my_compactDescription);
+    return settings;
+}
+
+
+- (SInt64) lastSequencePushed {
+    if (_pull)
+        return -1;
+    if (_lastSequencePushed <= 0) {
+        // If running replicator hasn't updated yet, fetch the checkpointed last sequence:
+        CBL_ReplicatorSettings* settings = self.replicatorSettings;
+        if (!settings)
+            return -1;
+        _lastSequencePushed = [[_database lastSequenceForReplicator: settings] longLongValue];
+    }
+    return _lastSequencePushed;
 }
 
 
@@ -538,7 +584,9 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
             CBLReplication *strongSelf = weakSelf;
             [strongSelf updateStatus: kCBLReplicationStopped
                                error: CBLStatusToNSError(status)
-                           processed: 0 ofTotal: 0 serverCert: NULL];
+                           processed: 0 ofTotal: 0
+                       lastSeqPushed: -1
+                          serverCert: NULL];
         }];
         return;
     }
@@ -605,6 +653,10 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     SecCertificateRef serverCert = _bg_replicator.serverCert;
     cfretain(serverCert);
 
+    SequenceNumber lastSeqPushed = -1;
+    if (!_pull)
+        lastSeqPushed = [_bg_replicator.lastSequence longLongValue];
+
     if (status == kCBLReplicationStopped) {
         [self bg_setReplicator: nil];
     }
@@ -617,7 +669,9 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     __weak CBLReplication *weakSelf = self;
     [_database.manager doAsync:^{
         CBLReplication *strongSelf = weakSelf;
-        [strongSelf updateStatus: status error: error processed: changes ofTotal: total
+        [strongSelf updateStatus: status error: error
+                       processed: changes ofTotal: total
+                   lastSeqPushed: lastSeqPushed
                       serverCert: serverCert];
         cfrelease(serverCert);
     }];

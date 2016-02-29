@@ -345,6 +345,42 @@
 }
 
 
+- (void) test071_PutExistingRevision {
+    CBLDocument* doc = [self createDocumentWithProperties: @{@"foo": @1}];
+
+    NSError* error;
+    Assert(([doc putExistingRevisionWithProperties: @{@"foo": @2}
+                                   revisionHistory: @[@"3-cafebabe", @"2-feedba95", doc.currentRevisionID]
+                                           fromURL: nil
+                                             error: &error]));
+    CBLRevision* rev = [doc revisionWithID: @"3-cafebabe"];
+    Assert(rev);
+    Assert(!rev.isDeletion);
+    AssertEqual(rev.properties, (@{@"_id": doc.documentID,
+                                   @"_rev": @"3-cafebabe",
+                                   @"foo": @2}));
+
+    // Repeat; should be no error:
+    Assert(([doc putExistingRevisionWithProperties: @{@"foo": @2}
+                                   revisionHistory: @[@"3-cafebabe", @"2-feedba95", doc.currentRevisionID]
+                                           fromURL: nil
+                                             error: &error]));
+
+    // Add a deleted revision:
+    Assert(([doc putExistingRevisionWithProperties: @{@"foo": @-1, @"_deleted": @YES}
+                                   revisionHistory: @[@"3-deadbeef", @"2-feedba95", doc.currentRevisionID]
+                                           fromURL: nil
+                                             error: &error]));
+    rev = [doc revisionWithID: @"3-deadbeef"];
+    Assert(rev);
+    Assert(rev.isDeletion);
+    AssertEqual(rev.properties, (@{@"_id": doc.documentID,
+                                   @"_rev": @"3-deadbeef",
+                                   @"_deleted": @YES,
+                                   @"foo": @-1}));
+}
+
+
 - (void) test075_UpdateDocInTransaction {
     // Test for #256, "Conflict error when updating a document multiple times in transaction block"
     CBLDocument* doc = [self createDocumentWithProperties: @{@"testNumber": @7.5,

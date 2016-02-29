@@ -16,7 +16,6 @@
 #import <Foundation/Foundation.h>
 #import "CouchbaseLite.h"
 #import "CouchbaseLitePrivate.h"
-#import "CBL_Router.h"
 #import "CBLListener.h"
 #import "CBLRestReplicator.h"
 #import "CBLManager+Internal.h"
@@ -26,12 +25,8 @@
 #import "CBLSyncListener.h"
 #import <Security/Security.h>
 
-#if DEBUG
-#import "Logging.h"
-#else
-#define Warn NSLog
-#define Log NSLog
-#endif
+#import "MYLogging.h"
+#import "MYErrorUtils.h"
 
 
 #define kPortNumber 59840
@@ -55,7 +50,7 @@ static NSString* GetServerPath() {
     if (![[NSFileManager defaultManager] createDirectoryAtPath: path
                                   withIntermediateDirectories: YES
                                                    attributes: nil error: &error]) {
-        NSLog(@"FATAL: Couldn't create CouchbaseLite server dir at %@", path);
+        Warn(@"FATAL: Couldn't create CouchbaseLite server dir at %@", path);
         exit(1);
     }
     return path;
@@ -130,8 +125,6 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
         }
         db = [dbm databaseNamed: dbName error: &error];
     }
-    if (db && ![db open: &error])
-        db = nil;
     if (!db) {
         fprintf(stderr, "Couldn't open database '%s': %s\n",
                 dbName.UTF8String, error.localizedDescription.UTF8String);
@@ -147,8 +140,23 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
     repl = [[CBLRestReplicator alloc] initWithDB: db settings: settings];
     if (!repl)
         fprintf(stderr, "Unable to create replication.\n");
-    [repl start];
 
+    [[NSNotificationCenter defaultCenter] addObserverForName: nil object: repl queue: nil
+                                                  usingBlock:^(NSNotification* n)
+    {
+        if ([n.name isEqualToString: CBL_ReplicatorProgressChangedNotification]) {
+            Log(@"*** Replicator status changed ***");
+        } else if ([n.name isEqualToString: CBL_ReplicatorStoppedNotification]) {
+            if (repl.error)
+                Log(@"*** Replicator failed, error = %@", repl.error.my_compactDescription);
+            else
+                Log(@"*** Replicator finished ***");
+        } else {
+            Log(@"*** Replicator posted %@", n.name);
+        }
+    }];
+
+    [repl start];
     return true;
 }
 
@@ -212,7 +220,7 @@ static void startListener(CBLListener* listener) {
             NSError* error;
             if (![listener setAnonymousSSLIdentityWithLabel: name error: &error]) {
                 Warn(@"FATAL: Couldn't get/create default SSL identity: %@",
-                     error.localizedDescription);
+                     error.my_compactDescription);
                 exit(1);
             }
         }
@@ -229,7 +237,7 @@ static void startListener(CBLListener* listener) {
 
     NSError* error;
     if (![listener start: &error]) {
-        Warn(@"Failed to start %@: %@", listener.class, error.localizedDescription);
+        Warn(@"Failed to start %@: %@", listener.class, error.my_compactDescription);
         exit(1);
     }
 }
@@ -240,7 +248,7 @@ int main (int argc, const char * argv[])
     @autoreleasepool {
 #if DEBUG
         EnableLog(YES);
-        EnableLogTo(CBLListener, YES);
+        EnableLogTo(@"Listener", MYLogLevelOn);
 #endif
 
         CBLRegisterJSViewCompiler();
@@ -316,7 +324,7 @@ int main (int argc, const char * argv[])
                                                            options: &options
                                                              error: &error];
         if (error) {
-            Warn(@"FATAL: Error initializing CouchbaseLite: %@", error);
+            Warn(@"FATAL: Error initializing CouchbaseLite: %@", error.my_compactDescription);
             exit(1);
         }
 

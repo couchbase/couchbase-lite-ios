@@ -150,7 +150,7 @@
         NSError* error = nil;
         _object = [[CBLJSON JSONObjectWithData: _json options: 0 error: &error] copy];
         if (!_object) {
-            Warn(@"CBL_Body: couldn't parse JSON: %@ (error=%@)", [_json my_UTF8ToString], error);
+            Warn(@"CBL_Body: couldn't parse JSON: %@ (error=%@)", [_json my_UTF8ToString], error.my_compactDescription);
             _error = YES;
         }
     }

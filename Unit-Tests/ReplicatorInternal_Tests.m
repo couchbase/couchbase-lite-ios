@@ -85,8 +85,8 @@
     __weak ReplicatorInternal_Tests* weakSelf = self;
     [db setFilterNamed: @"filter" asBlock: ^BOOL(CBLSavedRevision *revision, NSDictionary* params) {
         ReplicatorInternal_Tests* self = weakSelf;
-        Log(@"Test filter called with params = %@", params);
-        Log(@"Rev = %@, properties = %@", revision, revision.properties);
+        //Log(@"Test filter called with params = %@", params);
+        //Log(@"Rev = %@, properties = %@", revision, revision.properties);
         Assert(revision.properties);
         ++filterCalls;
         return YES;
@@ -552,7 +552,7 @@
 }
 
 
-- (void) test_FindCommonAncestor {
+- (void) test_16_FindCommonAncestor {
     NSDictionary* revDict = $dict({@"ids", @[@"second", @"first"]}, {@"start", @2});
     CBL_Revision* rev = [CBL_Revision revisionWithProperties: $dict({@"_revisions", revDict})];
     AssertEq(CBLFindCommonAncestor(rev, @[]), 0);
@@ -562,7 +562,7 @@
 }
 
 
-- (void) test_Reachability {
+- (void) test_17_Reachability {
     NSArray* hostnames = @[@"couchbase.com", @"localhost", @"127.0.0.1", @"67.221.231.37",
                            @"fsdfsaf.fsdfdaf.fsfddf"];
     for (NSString* hostname in hostnames) {
@@ -600,7 +600,7 @@
 }
 
 
-- (void) test_DistinctCheckpointIDs {
+- (void) test_18_DistinctCheckpointIDs {
     NSMutableDictionary* props = [@{@"source": @"http://fake.fake/fakedb",
                                     @"target": db.name,
                                     @"continuous": @NO} mutableCopy];
@@ -624,7 +624,7 @@
 }
 
 
-- (void) test_UseRemoteUUID {   // Test kCBLReplicatorOption_RemoteUUID (see #733)
+- (void) test_19_UseRemoteUUID {   // Test kCBLReplicatorOption_RemoteUUID (see #733)
     NSDictionary* props = @{@"source": @"http://alice.local:55555/db",
                             @"target": db.name,
                             kCBLReplicatorOption_RemoteUUID: @"cafebabe"};
@@ -650,6 +650,35 @@
     NSString* check3 = r3.remoteCheckpointDocID;
     Assert(![check3 isEqualToString: check2]);
     Assert(!$equal(r3.settings, r2.settings));
+}
+
+
+- (void) test20_PullActiveOnly {
+    // Database 'attach_test' happens to have a deleted document named 'propertytest'.
+    // Make sure the puller doesn't add it to an empty database:
+    NSURL* remoteURL = [self remoteTestDBURL: @"attach_test"];
+    if (!remoteURL)
+        return;
+    id lastSeq = replic8(db, remoteURL, NO, nil, nil, nil);
+    AssertEqual(lastSeq, @7);
+    // Ensure we didn't pull the deleted document 'propertytest':
+    CBL_RevisionList* revs = [db.storage getAllRevisionsOfDocumentID: @"propertytest" onlyCurrent: NO];
+    AssertEq(revs.count, 0u);
+}
+
+- (void) test21_PullNotActiveOnly {
+    // If database _isn't_ empty, the puller won't use the active_only optimization:
+    [self createDocuments: 1];
+
+    NSURL* remoteURL = [self remoteTestDBURL: @"attach_test"];
+    if (!remoteURL)
+        return;
+    id lastSeq = replic8(db, remoteURL, NO, nil, nil, nil);
+    AssertEqual(lastSeq, @7);
+    // Verify we did pull the deleted document 'propertytest':
+    CBL_RevisionList* revs = [db.storage getAllRevisionsOfDocumentID: @"propertytest" onlyCurrent: NO];
+    Assert(revs);
+    Assert(revs[0].deleted);
 }
 
 
@@ -692,8 +721,9 @@
     Assert(!repl.savingCheckpoint);
     if (expectError) {
         Assert($equal(repl.error.domain, expectError.domain) && repl.error.code == expectError.code,
-               @"\nUnexpected error %@\n  Expected error %@", repl.error, expectError);
-        Log(@"...replicator got expected error %@", repl.error);
+               @"\nUnexpected error %@\n  Expected error %@",
+               repl.error.my_compactDescription, expectError.my_compactDescription);
+        Log(@"...replicator got expected error %@", repl.error.my_compactDescription);
     } else {
         AssertNil(repl.error);
         Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
@@ -745,7 +775,7 @@
         AssertEq(repl.status, kCBLReplicatorStopped);
         AssertEqual(repl.error.domain, expectError.domain);
         AssertEq(repl.error.code, expectError.code);
-        Log(@"...replicator finished. error=%@", repl.error);
+        Log(@"...replicator finished. error=%@", repl.error.my_compactDescription);
     } else {
         AssertNil(repl.error);
         Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);

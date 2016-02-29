@@ -35,6 +35,9 @@
 #import "ExceptionUtils.h"
 
 
+DefineLogDomain(Database);
+
+
 NSString* const CBL_DatabaseChangesNotification = @"CBLDatabaseChanges";
 NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
 NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDeleted";
@@ -148,7 +151,7 @@ static BOOL sAutoCompact = YES;
 - (BOOL) openWithOptions: (CBLDatabaseOptions*)options error: (NSError**)outError {
     if (_isOpen)
         return YES;
-    LogTo(CBLDatabase, @"Opening %@", self);
+    LogTo(Database, @"Opening %@", self);
 
     // Create the database directory:
     _readOnly = _readOnly || options.readOnly;
@@ -194,7 +197,7 @@ static BOOL sAutoCompact = YES;
             primaryStorage = otherStorage;
     }
 
-    LogTo(CBLDatabase, @"Using %@ for db at %@; upgrade=%d", primaryStorage, _dir, upgrade);
+    LogTo(Database, @"Using %@ for db at %@; upgrade=%d", primaryStorage, _dir, upgrade);
 
     _storage = [[primaryStorage alloc] init];
     _storage.delegate = self;
@@ -315,7 +318,7 @@ static BOOL sAutoCompact = YES;
 
 - (void) _close {
     if (_isOpen) {
-        LogTo(CBLDatabase, @"Closing <%p> %@", self, _dir);
+        LogTo(Database, @"Closing <%p> %@", self, _dir);
         // Don't want any models trying to save themselves back to the db. (Generally there shouldn't
         // be any, because the public -close: method saves changes first.)
         for (CBLModel* model in _unsavedModelsMutable.copy)
@@ -378,7 +381,7 @@ static BOOL sAutoCompact = YES;
 
 /** Posts a local NSNotification of a new revision of a document. */
 - (void) databaseStorageChanged:(CBLDatabaseChange *)change {
-    LogTo(CBLDatabase, @"Added: %@", change.addedRevision);
+    LogTo(Database, @"Added: %@", change.addedRevision);
     if (!_changesToNotify)
         _changesToNotify = [[NSMutableArray alloc] init];
     [_changesToNotify addObject: change];
@@ -421,7 +424,7 @@ static BOOL sAutoCompact = YES;
         NSArray* changes = _changesToNotify;
         _changesToNotify = nil;
 
-        if (WillLogTo(CBLDatabase)) {
+        if (WillLogTo(Database)) {
             NSMutableString* seqs = [NSMutableString string];
             for (CBLDatabaseChange* change in changes) {
                 if (seqs.length > 0)
@@ -432,7 +435,7 @@ static BOOL sAutoCompact = YES;
                 else
                     [seqs appendFormat: @"%lld", seq];
             }
-            LogTo(CBLDatabase, @"%@: Posting change notifications: seq %@", self, seqs);
+            LogTo(Database, @"%@: Posting change notifications: seq %@", self, seqs);
         }
         
         [self postPublicChangeNotification: changes];
@@ -471,7 +474,7 @@ static BOOL sAutoCompact = YES;
                     [echoedChanges addObject: change.copy]; // copied change is marked as echoed
             }
             if (echoedChanges.count > 0) {
-                LogTo(CBLDatabase, @"%@: Notified of %u changes by %@",
+                LogTo(Database, @"%@: Notified of %u changes by %@",
                       self, (unsigned)echoedChanges.count, senderDB);
                 [self doAsync: ^{
                     [self notifyChanges: echoedChanges];
@@ -479,7 +482,7 @@ static BOOL sAutoCompact = YES;
             }
         } else if ([[n name] isEqualToString: CBL_DatabaseWillBeDeletedNotification]) {
             [self doAsync: ^{
-                LogTo(CBLDatabase, @"%@: Notified of deletion; closing", self);
+                LogTo(Database, @"%@: Notified of deletion; closing", self);
                 [self _close];
             }];
         }

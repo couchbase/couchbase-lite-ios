@@ -223,7 +223,7 @@ static BOOL readFully(NSInputStream* in, void* dst, size_t len) {
     for (size_t bytesRead = 0; bytesRead < len; bytesRead += n) {
         n = [in read: (uint8_t*)dst + bytesRead maxLength: (len - bytesRead)];
         if (n <= 0) {
-            Warn(@"SymmetricKey: readFully failed, error=%@", in.streamError);
+            Warn(@"SymmetricKey: readFully failed, error=%@", in.streamError.my_compactDescription);
             return NO;
         }
     }
@@ -236,7 +236,7 @@ static BOOL writeFully(NSOutputStream* out, const void* src, size_t len) {
     for (size_t bytesWritten = 0; bytesWritten < len; bytesWritten += n) {
         n = [out write: (const uint8_t*)src + bytesWritten maxLength: (len - bytesWritten)];
         if (n <= 0) {
-            Warn(@"SymmetricKey: writeFully failed, error=%@", out.streamError);
+            Warn(@"SymmetricKey: writeFully failed, error=%@", out.streamError.my_compactDescription);
             return NO;
         }
     }

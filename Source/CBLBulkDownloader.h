@@ -19,7 +19,6 @@ typedef void (^CBLBulkDownloaderDocumentBlock)(NSDictionary*);
 
 - (instancetype) initWithDbURL: (NSURL*)dbURL
                       database: (CBLDatabase*)database
-                requestHeaders: (NSDictionary *) requestHeaders
                      revisions: (NSArray*)revs
                    attachments: (BOOL)attachments
                     onDocument: (CBLBulkDownloaderDocumentBlock)onDocument

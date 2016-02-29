@@ -32,6 +32,9 @@
 #endif
 
 
+UsingLogDomain(Database);
+
+
 #if DEBUG
 NSString* CBLPathToTestFile(NSString* name) {
     // The iOS and Mac test apps have the TestData folder copied into their Resources dir.
@@ -45,7 +48,7 @@ NSString* CBLPathToTestFile(NSString* name) {
 NSData* CBLContentsOfTestFile(NSString* name) {
     NSError* error;
     NSData* data = [NSData dataWithContentsOfFile: CBLPathToTestFile(name) options:0 error: &error];
-    Assert(data, @"Couldn't read test file '%@': %@", name, error);
+    Assert(data, @"Couldn't read test file '%@': %@", name, error.my_compactDescription);
     return data;
 }
 #endif
@@ -401,7 +404,7 @@ BOOL CBLIsPermanentError( NSError* error ) {
 BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) {
     NSError* error;
     if ([[NSFileManager defaultManager] removeItemAtPath: path error: &error]) {
-        LogTo(CBLDatabase, @"Deleted file %@", path);
+        LogTo(Database, @"Deleted file %@", path);
         return YES;
     } else if (CBLIsFileNotFoundError(error)) {
         return YES;
@@ -420,11 +423,11 @@ BOOL CBLRemoveFileIfExistsAsync(NSString* path, NSError** outError) {
                                                           toPath: renamedPath
                                                            error: &error];
     if (result) {
-        LogTo(CBLDatabase, @"Renamed file %@ to %@ for async delete", renamedPath, renamedPath);
+        LogTo(Database, @"Renamed file %@ to %@ for async delete", renamedPath, renamedPath);
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             NSError* outError;
             if (CBLRemoveFileIfExists(renamedPath, &outError))
-                LogTo(CBLDatabase, @"Deleted file %@", renamedPath);
+                LogTo(Database, @"Deleted file %@", renamedPath);
             else
                 Warn(@"Failed to delete an attachment folder at %@ with error: %@",
                      renamedPath, outError);

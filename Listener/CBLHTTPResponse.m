@@ -15,11 +15,11 @@
 
 #import "CBLHTTPResponse.h"
 #import "CBLHTTPConnection.h"
-#import "CBLListener.h"
+#import "CBLListener+Internal.h"
 #import "CBL_Router.h"
 #import "CBL_Body.h"
 
-#import "Logging.h"
+#define LogVerbose MYLogVerbose
 
 
 // Declared here just so we can name them with @selector() without a compiler warning:
@@ -50,7 +50,7 @@
     self = [super init];
     if (self) {
         //EnableLog(YES);
-        //EnableLogTo(CBLListenerVerbose, YES);
+        //EnableLogVerbose(Listener, YES);
         _router = router;
         _connection = connection;
         router.onResponseReady = ^(CBLResponse* r) {
@@ -83,16 +83,16 @@
         }
         
         // Run the router, asynchronously:
-        LogTo(CBLListenerVerbose, @"%@: Starting...", self);
+        LogVerbose(Listener, @"%@: Starting...", self);
         [router start];
-        LogTo(CBLListenerVerbose, @"%@: Returning from -init", self);
+        LogVerbose(Listener, @"%@: Returning from -init", self);
     }
     return self;
 }
 
 #if 0
 - (void)dealloc {
-    LogTo(CBLListenerVerbose, @"DEALLOC %@", self);
+    LogVerbose(Listener, @"DEALLOC %@", self);
 }
 #endif
 
@@ -115,7 +115,7 @@
         if (!_askedIfChunked) {
             _chunked = !_finished;
         }
-        LogTo(CBLListenerVerbose, @"%@ answers isChunked=%d", self, _chunked);
+        LogVerbose(Listener, @"%@ answers isChunked=%d", self, _chunked);
         return _chunked;
     }
 }
@@ -128,7 +128,7 @@
  **/
 - (BOOL) delayResponseHeaders {
     @synchronized(self) {
-        LogTo(CBLListenerVerbose, @"%@ answers delayResponseHeaders=%d", self, !_response);
+        LogVerbose(Listener, @"%@ answers delayResponseHeaders=%d", self, !_response);
         if (!_response)
             _delayedHeaders = YES;
         return !_response;
@@ -139,7 +139,7 @@
 - (void) onResponseReady: (CBLResponse*)response {
     @synchronized(self) {
         _response = response;
-        LogTo(CBLListener, @"    %@ --> %i", self, _response.status);
+        LogTo(Listener, @"    %@ --> %i", self, _response.status);
         if (_delayedHeaders)
             [_connection responseHasAvailableData: self];
     }
@@ -151,7 +151,7 @@
  * Allows for responses such as redirect (301), etc.
 **/
 - (NSInteger) status {
-    LogTo(CBLListenerVerbose, @"%@ answers status=%d", self, _response.status);
+    LogVerbose(Listener, @"%@ answers status=%d", self, _response.status);
     return _response.status;
 }
 
@@ -160,14 +160,14 @@
  * simply return them in a dictionary in this method.
 **/
 - (NSDictionary *) httpHeaders {
-    LogTo(CBLListenerVerbose, @"%@ answers httpHeaders={%u headers}", self, (unsigned)_response.headers.count);
+    LogVerbose(Listener, @"%@ answers httpHeaders={%u headers}", self, (unsigned)_response.headers.count);
     return _response.headers;
 }
 
 
 - (void) onDataAvailable: (NSData*)data finished: (BOOL)finished {
     @synchronized(self) {
-        LogTo(CBLListenerVerbose, @"%@ adding %u bytes", self, (unsigned)data.length);
+        LogVerbose(Listener, @"%@ adding %u bytes", self, (unsigned)data.length);
         if (!_data) {
             _data = [data copy];
             _dataMutable = NO;
@@ -218,14 +218,14 @@
         NSRange range;
         range.location = (NSUInteger)(_offset - _dataOffset);
         if (range.location >= _data.length) {
-            LogTo(CBLListenerVerbose, @"%@ sending nil bytes", self);
+            LogVerbose(Listener, @"%@ sending nil bytes", self);
             return nil;
         }
         NSUInteger bytesAvailable = _data.length - range.location;
         range.length = MIN(length, bytesAvailable);
         NSData* result = [_data subdataWithRange: range];
         _offset += range.length;
-        LogTo(CBLListenerVerbose, @"%@ sending %lu bytes (of %ld requested)",
+        LogVerbose(Listener, @"%@ sending %lu bytes (of %ld requested)",
               self, (unsigned long)result.length, (unsigned long)length);
         return result;
     }
@@ -237,7 +237,7 @@
  * That is, all data for the response has been returned to the HTTPConnection via the readDataOfLength method.
 **/
 - (BOOL) isDone {
-    LogTo(CBLListenerVerbose, @"%@ answers isDone=%d", self, _finished);
+    LogVerbose(Listener, @"%@ answers isDone=%d", self, _finished);
     return _finished && (_offset >= _dataOffset + _data.length);
 }
 
@@ -260,7 +260,7 @@
         _askedIfChunked = true;
         [self cleanUp];
 
-        LogTo(CBLListenerVerbose, @"%@ Finished!", self);
+        LogVerbose(Listener, @"%@ Finished!", self);
 
         if ((!_chunked || _offset == 0) && ![_router.request.HTTPMethod isEqualToString: @"HEAD"]) {
             // Response finished immediately, before the connection asked for any data, so we're free
@@ -273,7 +273,7 @@
             if (pretty) {
                 NSString* contentType = (_response.headers)[@"Content-Type"];
                 if ([contentType hasPrefix: @"application/json"] && _data.length < 100000) {
-                    LogTo(CBLListenerVerbose, @"%@ prettifying response body", self);
+                    LogVerbose(Listener, @"%@ prettifying response body", self);
                     _data = [_response.body.asPrettyJSON mutableCopy];
                 }
             }

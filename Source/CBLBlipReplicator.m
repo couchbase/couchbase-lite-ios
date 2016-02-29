@@ -16,7 +16,6 @@
 #import "BLIPPocketSocketConnection.h"
 #import "BLIPHTTPLogic.h"
 #import "CollectionUtils.h"
-#import "Logging.h"
 #import "MYBlockUtils.h"
 #import "MYErrorUtils.h"
 #import <netdb.h>
@@ -178,7 +177,7 @@
 
     NSError* error;
     if (![_conn connect: &error]) {
-        Warn(@"Couldn't connect: %@", error);
+        Warn(@"Couldn't connect: %@", error.my_compactDescription);
         _conn = nil;
         [self gotError: error];
     }
@@ -275,8 +274,7 @@
                                 userInfo: error.userInfo];
     }
     if (!$equal(error, _error)) {
-        LogTo(Sync, @"%@: Connection got error %@ [%@ %ld]",
-              self, error.localizedDescription, error.domain, (long)error.code);
+        LogTo(Sync, @"%@: Connection got error %@", self, error.my_compactDescription);
         self.error = error;
     }
 }

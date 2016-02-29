@@ -30,7 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
     (In other words, does it have a "_deleted_ or "_removed" property?) */
 @property (readonly) BOOL isGone;
 
-/** The ID of this revision. Will be nil if this is an unsaved CBLNewRevision. */
+/** The ID of this revision. Will be nil if this is a CBLUnsavedRevision. */
 @property (readonly, nullable) NSString* revisionID;
 
 /** The revision this one is a child of. */

@@ -19,6 +19,7 @@
 #define AssertEqual     XCTAssertEqualObjects
 #define AssertNil       XCTAssertNil
 #define RequireTestCase(TC) // ignored; there's no equivalent of this
+#define UsingLogDomain(D)
 
 #define Log             NSLog
 #define Warn(FMT, ...)  NSLog(@"WARNING: " FMT, ##__VA_ARGS__)

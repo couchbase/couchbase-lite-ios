@@ -24,6 +24,10 @@
 #import <CommonCrypto/CommonDigest.h>
 
 
+DefineLogDomain(Sync);
+DefineLogDomain(SyncPerf);
+
+
 #define kDefaultRequestTimeout 60.0
 
 
@@ -128,6 +132,12 @@
                               CBL_SYNC_VERSION_STRING, platform, CBL_VERSION_STRING, commit);
     });
     return sUserAgent;
+}
+
+
+- (BOOL) canUseCellNetwork {
+    NSString* network = [$castIf(NSString, _options[kCBLReplicatorOption_Network]) lowercaseString];
+    return network == nil || $equal(network, @"cell") || $equal(network, @"!wifi");
 }
 
 

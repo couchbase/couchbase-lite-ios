@@ -115,10 +115,8 @@
 		2701C0791C49CFE6006D7A99 /* MYRegexUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FB615D475DF0030122F /* MYRegexUtils.m */; };
 		2701C07A1C49CFE6006D7A99 /* MYStreamUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FB815D475DF0030122F /* MYStreamUtils.m */; };
 		2701C07B1C49CFE6006D7A99 /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; };
-		2701C07C1C49CFE6006D7A99 /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; };
 		2701C07D1C49CFE6006D7A99 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 93EBA2651B2EC61E0006C66C /* CBLRegisterJSViewCompiler.m */; };
 		2701C07E1C49CFE6006D7A99 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; };
-		2701C07F1C49CFE6006D7A99 /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; };
 		2701C0801C49CFE6006D7A99 /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E3476D19994F5A00076EAC /* Test_Assertions.m */; };
 		2701C0811C49CFE6006D7A99 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; };
 		2701C0821C49CFE6006D7A99 /* MYErrorUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D90B1715601C2F0000735E /* MYErrorUtils.m */; };
@@ -326,6 +324,8 @@
 		2701C20B1C4D5BDD006D7A99 /* WebSocketClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 272401B11860CB4B0080E082 /* WebSocketClient.h */; };
 		2701C2131C4D5C82006D7A99 /* libsqlcipher.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2701C2121C4D5C82006D7A99 /* libsqlcipher.a */; };
 		2701C24B1C4DAD9B006D7A99 /* libCBForest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FA99F01917FFD000912F96 /* libCBForest.a */; };
+		2701FD301C642669004D89FA /* CBLRemoteSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 2701FD2F1C642669004D89FA /* CBLRemoteSession.m */; };
+		2701FD311C642669004D89FA /* CBLRemoteSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 2701FD2F1C642669004D89FA /* CBLRemoteSession.m */; };
 		270B3E1E1489385C00E0A926 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		270B3E201489390000E0A926 /* CouchbaseLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E1F148938D800E0A926 /* CouchbaseLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270B3E211489390F00E0A926 /* CBL_URLProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706461487584300F0F099 /* CBL_URLProtocol.h */; };
@@ -406,6 +406,8 @@
 		2733022C18F8572700A488F7 /* CBLAuthenticator.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022918F8572700A488F7 /* CBLAuthenticator.m */; };
 		2733022F18F86C9800A488F7 /* CBLTokenAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2733022D18F86C9800A488F7 /* CBLTokenAuthorizer.h */; };
 		2733023118F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */; };
+		27356DDD1C7D206C0055DA9D /* MYLogging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27356DDC1C7D206C0055DA9D /* MYLogging.m */; };
+		27356DDE1C7D206C0055DA9D /* MYLogging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27356DDC1C7D206C0055DA9D /* MYLogging.m */; };
 		2737A6CE1B703DD500CEF619 /* CBLAttachmentDownloader.h in Headers */ = {isa = PBXBuildFile; fileRef = 2737A6CC1B703DD500CEF619 /* CBLAttachmentDownloader.h */; };
 		2737A6D01B703DD500CEF619 /* CBLAttachmentDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 2737A6CD1B703DD500CEF619 /* CBLAttachmentDownloader.m */; };
 		273E9EF11C509F38003115A6 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 273E9EF01C509F38003115A6 /* main.m */; };
@@ -589,7 +591,6 @@
 		2766EFFA14DB7F9F009ECCA8 /* CBLMultipartWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFF714DB7F9F009ECCA8 /* CBLMultipartWriter.m */; };
 		2766EFFD14DC7B37009ECCA8 /* CBLMultiStreamWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 2766EFFB14DC7B37009ECCA8 /* CBLMultiStreamWriter.h */; };
 		2766EFFF14DC7B37009ECCA8 /* CBLMultiStreamWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 2766EFFC14DC7B37009ECCA8 /* CBLMultiStreamWriter.m */; };
-		2767D7DF14C8D3E500ED0F26 /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		276B231B1A36646100CAF010 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 278097551A32817A00876DE6 /* MYAnonymousIdentity.m */; };
 		276B23201A3A2BE500CAF010 /* CBLQueryBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D2E705199BC06300D09A1D /* CBLQueryBuilder.m */; };
@@ -678,7 +679,6 @@
 		279906F1149ABFC2003D4338 /* CBLBatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 279906ED149ABFC2003D4338 /* CBLBatcher.m */; };
 		279C7E2E14F424090004A1E8 /* CBLSequenceMap.h in Headers */ = {isa = PBXBuildFile; fileRef = 279C7E2C14F424090004A1E8 /* CBLSequenceMap.h */; };
 		279C7E3014F424090004A1E8 /* CBLSequenceMap.m in Sources */ = {isa = PBXBuildFile; fileRef = 279C7E2D14F424090004A1E8 /* CBLSequenceMap.m */; };
-		279CE39014D1EDA0009F3FA6 /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 279CE3B614D4A885009F3FA6 /* MYBlockUtils.h */; };
 		279CE3BA14D4A886009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; };
 		279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -750,9 +750,7 @@
 		27B0B7D81492B8A200A817AD /* CBLChangeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B791149290AB00A817AD /* CBLChangeTracker.m */; };
 		27B0B7DB1492B8A200A817AD /* CBLBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B0B79D1492932700A817AD /* CBLBase64.m */; };
 		27B0B7DE1492B8C100A817AD /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; };
-		27B0B7DF1492B8C100A817AD /* Logging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751211CDC7F900E9A2AB /* Logging.m */; };
 		27B0B7E01492B8C100A817AD /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; };
-		27B0B7E11492B8C100A817AD /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749E11CD5B4F00E9A2AB /* Test.m */; };
 		27B0B7FB1492BDE800A817AD /* CBLDatabase+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F0744611CD4B6D00E9A2AB /* CBLDatabase+Internal.h */; };
 		27B0B7FC1492BDE800A817AD /* CBLView+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 279EB2CC149140DE00E74185 /* CBLView+Internal.h */; };
 		27B0B7FD1492BDE800A817AD /* CBL_Body.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F074A911CD5D7A00E9A2AB /* CBL_Body.h */; };
@@ -1457,6 +1455,8 @@
 		2701C14E1C49CFE6006D7A99 /* libCouchbaseLite.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCouchbaseLite.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		2701C2101C4D5BDD006D7A99 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2701C2121C4D5C82006D7A99 /* libsqlcipher.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsqlcipher.a; path = vendor/SQLCipher/libs/osx/libsqlcipher.a; sourceTree = "<group>"; };
+		2701FD2E1C642669004D89FA /* CBLRemoteSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRemoteSession.h; sourceTree = "<group>"; };
+		2701FD2F1C642669004D89FA /* CBLRemoteSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLRemoteSession.m; sourceTree = "<group>"; };
 		270B3DEA1489359000E0A926 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		270B3DEE1489359000E0A926 /* CouchbaseLite-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CouchbaseLite-Info.plist"; sourceTree = "<group>"; };
 		270B3DFC1489359000E0A926 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
@@ -1486,6 +1486,7 @@
 		2714CF511496AE5B00E03341 /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
 		271C2AD216FA176300B8C9DB /* CBL_Shared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Shared.h; sourceTree = "<group>"; };
 		271C2AD316FA176300B8C9DB /* CBL_Shared.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Shared.m; sourceTree = "<group>"; };
+		271D1B4B1C7E248F00E71CE0 /* CouchbaseLiteListenerPrefix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CouchbaseLiteListenerPrefix.h; sourceTree = "<group>"; };
 		271EC6A0198C53DD009C9E05 /* CBJSONEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBJSONEncoder.h; sourceTree = "<group>"; };
 		27208F8C184D1D83006ADBEF /* NSURL+Base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURL+Base.h"; sourceTree = "<group>"; };
 		27208F8D184D1D83006ADBEF /* NSURL+Base.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+Base.m"; sourceTree = "<group>"; };
@@ -1519,6 +1520,8 @@
 		2733022918F8572700A488F7 /* CBLAuthenticator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLAuthenticator.m; sourceTree = "<group>"; };
 		2733022D18F86C9800A488F7 /* CBLTokenAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLTokenAuthorizer.h; sourceTree = "<group>"; };
 		2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLTokenAuthorizer.m; sourceTree = "<group>"; };
+		27356DDB1C7D206C0055DA9D /* MYLogging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYLogging.h; sourceTree = "<group>"; };
+		27356DDC1C7D206C0055DA9D /* MYLogging.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYLogging.m; sourceTree = "<group>"; };
 		2737A6CC1B703DD500CEF619 /* CBLAttachmentDownloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLAttachmentDownloader.h; sourceTree = "<group>"; };
 		2737A6CD1B703DD500CEF619 /* CBLAttachmentDownloader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLAttachmentDownloader.m; sourceTree = "<group>"; };
 		273E9EED1C509F38003115A6 /* CBL tvOS Test App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL tvOS Test App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1918,8 +1921,6 @@
 		27F074F811CDC71800E9A2AB /* MYUtilities_Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = MYUtilities_Debug.xcconfig; sourceTree = "<group>"; };
 		27F074F911CDC71800E9A2AB /* MYUtilities_Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = MYUtilities_Release.xcconfig; sourceTree = "<group>"; };
 		27F074FA11CDC71800E9A2AB /* MYUtilities.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = MYUtilities.xcconfig; sourceTree = "<group>"; };
-		27F0751111CDC7F900E9A2AB /* Logging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Logging.h; sourceTree = "<group>"; };
-		27F0751211CDC7F900E9A2AB /* Logging.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Logging.m; sourceTree = "<group>"; };
 		27F0751611CDC80A00E9A2AB /* ExceptionUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExceptionUtils.h; sourceTree = "<group>"; };
 		27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExceptionUtils.m; sourceTree = "<group>"; };
 		27F12846156ABE24008465C2 /* NSString+URLEncoding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+URLEncoding.h"; sourceTree = "<group>"; };
@@ -2632,6 +2633,7 @@
 		275315D814ACF0A20065964D /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				271D1B4B1C7E248F00E71CE0 /* CouchbaseLiteListenerPrefix.h */,
 				275315D914ACF0A20065964D /* CouchbaseLiteListener-Info.plist */,
 				275315DA14ACF0A20065964D /* InfoPlist.strings */,
 				275315FA14ACF7FF0065964D /* CouchbaseLiteListener.exp */,
@@ -2870,6 +2872,8 @@
 				270B3E3D148D7F0000E0A926 /* CBLRestPusher.m */,
 				279906E1149A65B7003D4338 /* CBLRemoteRequest.h */,
 				279906E2149A65B8003D4338 /* CBLRemoteRequest.m */,
+				2701FD2E1C642669004D89FA /* CBLRemoteSession.h */,
+				2701FD2F1C642669004D89FA /* CBLRemoteSession.m */,
 				27BDA81C181973EF00F27A11 /* CBLBulkDownloader.h */,
 				27BDA81D181973EF00F27A11 /* CBLBulkDownloader.m */,
 				2737A6CC1B703DD500CEF619 /* CBLAttachmentDownloader.h */,
@@ -3106,8 +3110,6 @@
 			children = (
 				27F0751611CDC80A00E9A2AB /* ExceptionUtils.h */,
 				27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */,
-				27F0751111CDC7F900E9A2AB /* Logging.h */,
-				27F0751211CDC7F900E9A2AB /* Logging.m */,
 				27F074F811CDC71800E9A2AB /* MYUtilities_Debug.xcconfig */,
 				27F074F911CDC71800E9A2AB /* MYUtilities_Release.xcconfig */,
 				27F074FA11CDC71800E9A2AB /* MYUtilities.xcconfig */,
@@ -3115,6 +3117,8 @@
 				279421D91B24C616005BE0AD /* CollectionUtils+Old.m */,
 				279421DB1B24C62F005BE0AD /* CollectionUtils+Old.h */,
 				27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */,
+				27356DDB1C7D206C0055DA9D /* MYLogging.h */,
+				27356DDC1C7D206C0055DA9D /* MYLogging.m */,
 				27F0749D11CD5B4F00E9A2AB /* Test.h */,
 				27F0749E11CD5B4F00E9A2AB /* Test.m */,
 				27E3476D19994F5A00076EAC /* Test_Assertions.m */,
@@ -4629,12 +4633,11 @@
 				2701C0771C49CFE6006D7A99 /* CBL_ReplicatorSettings.m in Sources */,
 				2701C0781C49CFE6006D7A99 /* CBL_ForestDBViewStorage.mm in Sources */,
 				2701C0791C49CFE6006D7A99 /* MYRegexUtils.m in Sources */,
+				2701FD301C642669004D89FA /* CBLRemoteSession.m in Sources */,
 				2701C07A1C49CFE6006D7A99 /* MYStreamUtils.m in Sources */,
 				2701C07B1C49CFE6006D7A99 /* ExceptionUtils.m in Sources */,
-				2701C07C1C49CFE6006D7A99 /* Logging.m in Sources */,
 				2701C07D1C49CFE6006D7A99 /* CBLRegisterJSViewCompiler.m in Sources */,
 				2701C07E1C49CFE6006D7A99 /* CollectionUtils.m in Sources */,
-				2701C07F1C49CFE6006D7A99 /* Test.m in Sources */,
 				2701C0801C49CFE6006D7A99 /* Test_Assertions.m in Sources */,
 				2701C0811C49CFE6006D7A99 /* MYBlockUtils.m in Sources */,
 				2701C0821C49CFE6006D7A99 /* MYErrorUtils.m in Sources */,
@@ -4648,6 +4651,7 @@
 				2701C08A1C49CFE6006D7A99 /* OAConsumer.m in Sources */,
 				2701C08B1C49CFE6006D7A99 /* NSMutableURLRequest+Parameters.m in Sources */,
 				2701C08C1C49CFE6006D7A99 /* MYBuffer+Zip.m in Sources */,
+				27356DDD1C7D206C0055DA9D /* MYLogging.m in Sources */,
 				2701C08D1C49CFE6006D7A99 /* NSString+URLEncoding.m in Sources */,
 				2701C08E1C49CFE6006D7A99 /* NSURL+Base.m in Sources */,
 				2701C08F1C49CFE6006D7A99 /* CBLGeometry.m in Sources */,
@@ -4824,9 +4828,7 @@
 				27E2E61815993CB6005B9234 /* CBL_URLProtocol.m in Sources */,
 				27B0AC2C1B4C59B300DFE818 /* CBLHTTPListener.m in Sources */,
 				278097571A32817A00876DE6 /* MYAnonymousIdentity.m in Sources */,
-				2767D7DF14C8D3E500ED0F26 /* Logging.m in Sources */,
 				2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */,
-				279CE39014D1EDA0009F3FA6 /* Test.m in Sources */,
 				27E34773199950A800076EAC /* Test_Assertions.m in Sources */,
 				27F3A5D015ED427200263663 /* MYRegexUtils.m in Sources */,
 			);
@@ -4867,6 +4869,7 @@
 				27B0869A1B38823F00D3D9D8 /* MYZip.m in Sources */,
 				27B0B7D71492B8A200A817AD /* CBLRestPusher.m in Sources */,
 				27B0865A1B387C3900D3D9D8 /* CBL_ReplicatorSettings.m in Sources */,
+				27356DDE1C7D206C0055DA9D /* MYLogging.m in Sources */,
 				27B0B7D81492B8A200A817AD /* CBLChangeTracker.m in Sources */,
 				27B0B7DB1492B8A200A817AD /* CBLBase64.m in Sources */,
 				27731F061495335B00815D67 /* CBL_BlobStore.m in Sources */,
@@ -4911,6 +4914,7 @@
 				27DA4314158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
 				276BA0AE17DD13FA00D367CB /* CBLParseDate.c in Sources */,
 				27DA4319158FD9B400F9E7B5 /* CBLUITableSource.m in Sources */,
+				2701FD311C642669004D89FA /* CBLRemoteSession.m in Sources */,
 				27486F3B1A608ABF008D94F0 /* CBLChangeMatcher.m in Sources */,
 				27DA4347159125B500F9E7B5 /* CBLManager.m in Sources */,
 				27DA435915918C8E00F9E7B5 /* CBLModel.m in Sources */,
@@ -4930,11 +4934,9 @@
 				271C2AD616FA176300B8C9DB /* CBL_Shared.m in Sources */,
 				27D8C34B195A28100073A51C /* CBLDatabaseUpgrade.m in Sources */,
 				27B0B7DE1492B8C100A817AD /* ExceptionUtils.m in Sources */,
-				27B0B7DF1492B8C100A817AD /* Logging.m in Sources */,
 				27513A1C1A672C870055DC40 /* CBLDatabase+Replication.m in Sources */,
 				271297461A8D597B00F6C5CE /* CBLSymmetricKey.m in Sources */,
 				27B0B7E01492B8C100A817AD /* CollectionUtils.m in Sources */,
-				27B0B7E11492B8C100A817AD /* Test.m in Sources */,
 				27E347721999502400076EAC /* Test_Assertions.m in Sources */,
 				279CE3BA14D4A886009F3FA6 /* MYBlockUtils.m in Sources */,
 				27D90B1915601C350000735E /* MYErrorUtils.m in Sources */,
@@ -5765,6 +5767,8 @@
 				);
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
+				LD_GENERATE_MAP_FILE = NO;
+				LD_MAP_FILE_PATH = "$(TARGET_BUILD_DIR)/$(PRODUCT_NAME)-LinkMap-$(CURRENT_VARIANT)-$(CURRENT_ARCH).txt";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -5804,6 +5808,8 @@
 				);
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
+				LD_GENERATE_MAP_FILE = YES;
+				LD_MAP_FILE_PATH = "$(TARGET_BUILD_DIR)/$(PRODUCT_NAME)-LinkMap-$(CURRENT_VARIANT)-$(CURRENT_ARCH).txt";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_MODULE_NAME = CouchbaseLite;
@@ -6218,7 +6224,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
+				GCC_PREFIX_HEADER = Listener/CouchbaseLiteListenerPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -6253,7 +6259,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
+				GCC_PREFIX_HEADER = Listener/CouchbaseLiteListenerPrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_SIGN_COMPARE = NO;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
@@ -6909,7 +6915,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
+				GCC_PREFIX_HEADER = Listener/CouchbaseLiteListenerPrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = YES;
@@ -6937,7 +6943,7 @@
 				EXPORTED_SYMBOLS_FILE = Listener/CouchbaseLiteListener.exp;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
+				GCC_PREFIX_HEADER = Listener/CouchbaseLiteListenerPrefix.h;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = YES;

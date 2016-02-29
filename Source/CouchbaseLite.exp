@@ -136,3 +136,10 @@ _CBL_ReplicatorProgressChangedNotification
 _CBL_ReplicatorStoppedNotification
 
 _kDefaultCBLChangesOptions
+
+# MYLogging symbols:
+_gMYLogDomainList
+_MYDefault_LogDomain
+_Listener_LogDomain
+_MYWarn
+_MYLogTo

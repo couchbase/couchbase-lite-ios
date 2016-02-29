@@ -13,13 +13,15 @@
 //  either express or implied. See the License for the specific language governing permissions
 //  and limitations under the License.
 
-#import "CBLListener.h"
+#import "CBLListener+Internal.h"
 #import "CBL_Server.h"
 #import "CBLSyncListener.h"
 #import "CBLHTTPListener.h"
 #import "CBLMisc.h"
-#import "Logging.h"
 #import "MYAnonymousIdentity.h"
+
+
+DefineLogDomain(Listener);
 
 
 @implementation CBLListener
@@ -135,7 +137,7 @@
     NSMutableArray* result = [NSMutableArray arrayWithObject: (__bridge id)_SSLIdentity];
     if (_SSLExtraCertificates)
         [result addObjectsFromArray: _SSLExtraCertificates];
-    LogTo(CBLListener, @"Using SSL identity/certs %@", result);
+    LogTo(Listener, @"Using SSL identity/certs %@", result);
     return result;
 }
 

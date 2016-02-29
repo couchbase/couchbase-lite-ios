@@ -8,9 +8,11 @@
 
 #import <Foundation/Foundation.h>
 @protocol CBLAuthorizer, CBLRemoteRequestDelegate;
+@class CBLCookieStorage, CBLRemoteSession;
 
 
-@class CBLCookieStorage;
+UsingLogDomain(RemoteRequest);
+
 
 /** The signature of the completion block called by a CBLRemoteRequest.
     @param result  On success, a 'result' object; by default this is the CBLRemoteRequest iself, but subclasses may return something else. On failure, this will likely be nil.
@@ -22,7 +24,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 
 
 /** Asynchronous HTTP request; a fairly simple wrapper around NSURLConnection that calls a completion block when ready. */
-@interface CBLRemoteRequest : NSObject <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
+@interface CBLRemoteRequest : NSObject
 {
     @protected
     NSMutableURLRequest* _request;
@@ -30,7 +32,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
     CBLCookieStorage* _cookieStorage;
     id<CBLRemoteRequestDelegate> _delegate;
     CBLRemoteRequestCompletionBlock _onCompletion;
-    NSURLConnection* _connection;
+    NSURLSessionTask* _task;
     int _status;
     NSDictionary* _responseHeaders;
     UInt8 _retryCount;
@@ -43,7 +45,6 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 - (instancetype) initWithMethod: (NSString*)method
                             URL: (NSURL*)url
                            body: (id)body
-                 requestHeaders: (NSDictionary *)requestHeaders
                    onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 
 @property NSTimeInterval timeoutInterval;
@@ -51,15 +52,13 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 @property (strong, nonatomic) id<CBLRemoteRequestDelegate> delegate;
 @property (strong, nonatomic) CBLCookieStorage* cookieStorage;
 @property (nonatomic) bool autoRetry;   // Default value is YES
+@property (nonatomic) bool dontStop;
 
 /** Applies GZip compression to the request body if appropriate. */
 - (BOOL) compressBody;
 
 /** In some cases a kCBLStatusNotFound Not Found is an expected condition and shouldn't be logged; call this to suppress that log message. */
 - (void) dontLog404;
-
-/** Starts a request; when finished, the onCompletion block will be called. */
-- (void) start;
 
 /** Stops the request, calling the onCompletion block. */
 - (void) stop;
@@ -69,12 +68,32 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 /** JSON-compatible dictionary with status information, to be returned from _active_tasks API */
 @property (readonly) NSMutableDictionary* statusInfo;
 
+@property (readonly) BOOL running;
+
 // protected:
-- (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body;
 - (void) clearConnection;
 - (void) cancelWithStatus: (int)status;
 - (void) respondWithResult: (id)result error: (NSError*)error;
 - (BOOL) retry;
+
+// connection callbacks (protected)
+- (NSInputStream *) needNewBodyStream;
+- (void) didReceiveResponse:(NSHTTPURLResponse *)response;
+- (void) didReceiveData:(NSData *)data;
+- (void) didFinishLoading;
+- (void) didFailWithError:(NSError *)error;
+
+// called by CBLRemoteSession (protected)
+@property (weak) CBLRemoteSession* session;
+@property (readonly, atomic) NSURLSessionTask* task;
+- (NSURLSessionTask*) createTaskInURLSession: (NSURLSession*)session;
+- (NSURLCredential*) credentialForHTTPAuthChallenge: (NSURLAuthenticationChallenge*)challenge
+                                disposition: (NSURLSessionAuthChallengeDisposition*)outDisposition;
+- (NSURLCredential*) credentialForClientCertChallenge: (NSURLAuthenticationChallenge*)challenge
+                                disposition: (NSURLSessionAuthChallengeDisposition*)outDisposition;
+- (SecTrustRef) checkServerTrust:(NSURLAuthenticationChallenge*)challenge;
+- (NSURLRequest*) willSendRequest:(NSURLRequest *)request
+                 redirectResponse:(NSURLResponse *)response;
 
 #if DEBUG
 @property BOOL debugAlwaysTrust;    // For unit tests only!
@@ -95,6 +114,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 
 @protocol CBLRemoteRequestDelegate <NSObject>
 
+- (void) remoteRequestReceivedResponse: (CBLRemoteRequest*)request;
 - (BOOL) checkSSLServerTrust: (NSURLProtectionSpace*)protectionSpace;
 
 @end

@@ -24,6 +24,9 @@
 #import "ExceptionUtils.h"
 
 
+DefineLogDomain(View);
+
+
 NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 
 

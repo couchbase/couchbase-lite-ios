@@ -11,6 +11,9 @@
 #import "MYBlockUtils.h"
 
 
+UsingLogDomain(Sync);
+
+
 NSString* const kSyncNestedProgressKey = @"CBLChildren";
 
 
@@ -52,7 +55,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
                 @"proveAttachment": @"handleProveAttachment:"
             }];
             _peerURL = connection.URL;
-            LogTo(BLIPVerbose, @"%@ connected to socket", self);
+            LogVerbose(Sync, @"%@ connected to socket", self);
             [self updateState: kSyncConnecting];
         }
         _changesBatchSize = kDefaultChangeBatchSize;
@@ -68,7 +71,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 
 
 - (void)dealloc {
-    LogTo(SyncVerbose, @"DEALLOC %@", self);
+    LogVerbose(Sync, @"DEALLOC %@", self);
     [_connection removeObserver: self forKeyPath: @"active"];
 }
 
@@ -114,7 +117,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
     NSError* error = response.error;
     if (!error)
         return NO;
-    LogTo(Sync, @"Received error in %@: %@", response, error.localizedDescription);
+    LogTo(Sync, @"Received error in %@: %@", response, error.my_compactDescription);
     self.error = error;
     [self close];
     return YES;
@@ -137,8 +140,9 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
         if (_dbQueueTime > 0) {
             NSTimeInterval idle = enterTime - _dbQueueTime;
             _dbQueueTotalIdleTime += idle;
-//            if (idle > 0.01)
-//                LogTo(Sync, @"** DB queue was idle %.4f sec (total %.4f)", idle, _dbQueueTotalIdleTime);
+            if (idle > 0.01)
+                LogDebug(Sync, @"** DB queue was idle %.4f sec (total %.4f)",
+                         idle, _dbQueueTotalIdleTime);
         }
 
         block();
@@ -192,7 +196,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 }
 
 - (void) updateState: (SyncState)state {
-    static const char* kStateNames[] = {"Stopped", "Connecting", "Idle", "Active"};
+    __unused static const char* kStateNames[] = {"Stopped", "Connecting", "Idle", "Active"};
     if (state != self.state) {
         LogTo(Sync, @"SyncConnection.state = kSync%s", kStateNames[state]);
 #ifdef TIME_DB_QUEUE
@@ -301,8 +305,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 
 
 - (void)blipConnection: (BLIPConnection*)connection didFailWithError:(NSError *)error {
-    LogTo(Sync, @"FAILED %@: %@", connection,
-          (error.localizedFailureReason ?: error.localizedDescription));
+    LogTo(Sync, @"FAILED %@: %@", connection, error.my_compactDescription);
     self.error = error;
     [self closed];
 }
@@ -312,9 +315,7 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
     didCloseWithError: (NSError*)error
 {
     if (error) {
-        LogTo(Sync, @"CLOSED %@ (%@ %d : \"%@\")",
-              connection, error.domain, (int)error.code,
-              (error.localizedFailureReason ?: error.localizedDescription));
+        LogTo(Sync, @"CLOSED %@ (%@)", connection, error.my_compactDescription);
         self.error = error;
     } else {
         LogTo(Sync, @"CLOSED %@", connection);

@@ -11,6 +11,9 @@
 @class CBL_Server, CBLResponse, CBL_Body, CBLMultipartWriter, CBLQueryOptions;
 
 
+UsingLogDomain(Router);
+
+
 #if DEBUG
 extern NSTimeInterval kMinHeartbeat;    // Configurable for testing purposes only
 #endif

@@ -25,6 +25,9 @@
 #import <libkern/OSAtomic.h>
 
 
+UsingLogDomain(Sync);
+
+
 #define kMaxPendingMessages 2
 
 
@@ -64,7 +67,7 @@
     NSMutableURLRequest* request = [[_http URLRequest] mutableCopy];
     request.timeoutInterval = _heartbeat * 1.5;
 
-    LogTo(SyncVerbose, @"%@: %@ %@", self, request.HTTPMethod, request.URL.resourceSpecifier);
+    LogVerbose(Sync, @"%@: %@ %@", self, request.HTTPMethod, request.URL.resourceSpecifier);
     _ws = [PSWebSocket clientSocketWithRequest: request];
     _ws.delegate = self;
     NSDictionary* tls = self.TLSSettings;
@@ -119,7 +122,7 @@
 
 - (void) webSocketDidOpen: (PSWebSocket*)ws {
     MYOnThread(_thread, ^{
-        LogTo(ChangeTrackerVerbose, @"%@: WebSocket opened", self);
+        LogVerbose(ChangeTracker, @"%@: WebSocket opened", self);
         _retryCount = 0;
         // Now that the WebSocket is open, send the changes-feed options (the ones that would have
         // gone in the POST body if this were HTTP-based.)
@@ -139,7 +142,7 @@
                 [_http receivedResponse: response];
                 if (_http.shouldRetry) {
                     // Retry due to redirect or auth challenge:
-                    LogTo(ChangeTrackerVerbose, @"%@ got HTTP response %ld, retrying...",
+                    LogVerbose(ChangeTracker, @"%@ got HTTP response %ld, retrying...",
                           self, (long)status);
                     [self retry];
                     return;
@@ -194,7 +197,7 @@
             data = [msg dataUsingEncoding: NSUTF8StringEncoding];
         }
 
-        LogTo(ChangeTrackerVerbose, @"%@: Got a message: %@", self, msg);
+        LogVerbose(ChangeTracker, @"%@: Got a message: %@", self, msg);
         if (data.length > 0 && ws == _ws && _running) {
             BOOL parsed = [self parseBytes: data.bytes length: data.length];
             if (parsed) {

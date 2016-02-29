@@ -24,6 +24,9 @@
 #import "MYBlockUtils.h"
 
 
+DefineLogDomain(Query);
+
+
 // Default value of CBLLiveQuery.updateInterval
 #define kDefaultLiveQueryUpdateInterval 0.2
 
@@ -449,14 +452,14 @@
         _isUpdatingAtSequence = 0;
         _lastError = error;
         if (error) {
-            Warn(@"%@: Error updating rows: %@", self, error);
+            Warn(@"%@: Error updating rows: %@", self, error.my_compactDescription);
         } else {
             _lastSequence = (SequenceNumber)rows.sequenceNumber;
             if(rows && ![rows isEqual: _rows]) {
                 LogTo(Query, @"%@: ...Rows changed! (now %lu)", self, (unsigned long)rows.count);
                 self.rows = rows;   // Triggers KVO notification
             } else {
-                LogTo(QueryVerbose, @"%@: ...Rows NOT changed; not updating .rows", self);
+                LogVerbose(Query, @"%@: ...Rows NOT changed; not updating .rows", self);
             }
         }
         if (_updateAgain)

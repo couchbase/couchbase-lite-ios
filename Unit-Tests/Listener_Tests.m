@@ -11,6 +11,7 @@
 #import "CBLSyncListener.h"
 #import "CBLHTTPListener.h"
 #import "CBLRemoteRequest.h"
+#import "CBLRemoteSession.h"
 #import "CBLClientCertAuthorizer.h"
 #import "BLIP.h"
 #import "MYAnonymousIdentity.h"
@@ -318,6 +319,7 @@ static NSString* addressToString(NSData* addrData) {
 @private
     NSMutableData* _data;
 }
+- (void) setValue:(NSString*)value forHTTPHeaderField:(NSString *)header;
 @property (readonly) NSData* data;
 @property (readonly) int status;
 @end
@@ -329,7 +331,13 @@ static NSString* addressToString(NSData* addrData) {
 
 @implementation ListenerHTTP_Tests
 {
+    CBLRemoteSession* _session;
     XCTestExpectation* _expectCheckServerTrust;
+}
+
+- (void) setUp {
+    [super setUp];
+    _session = [[CBLRemoteSession alloc] init];
 }
 
 - (Class) listenerClass {
@@ -423,7 +431,7 @@ static NSString* addressToString(NSData* addrData) {
 - (void) connect {
     Log(@"Connecting to <%@>", listener.URL);
     XCTestExpectation* expectDidComplete = [self expectationWithDescription: @"didComplete"];
-    CBLRemoteRequest* req = [[CBLRemoteJSONRequest alloc] initWithMethod: @"GET" URL: listener.URL body: nil requestHeaders: nil onCompletion:^(id result, NSError *error) {
+    CBLRemoteRequest* req = [[CBLRemoteJSONRequest alloc] initWithMethod: @"GET" URL: listener.URL body: nil onCompletion:^(id result, NSError *error) {
         AssertNil(error);
         Assert(result != nil);
         [expectDidComplete fulfill];
@@ -435,7 +443,8 @@ static NSString* addressToString(NSData* addrData) {
 
     _expectCheckServerTrust = [self expectationWithDescription: @"checkServerTrust"];
     req.delegate = self;
-    [req start];
+
+    [_session startRequest: req];
     [self waitForExpectationsWithTimeout: kTimeout handler: nil];
 }
 
@@ -454,6 +463,10 @@ static NSString* addressToString(NSData* addrData) {
 }
 
 
+- (void) remoteRequestReceivedResponse:(CBLRemoteRequest *)request {
+}
+
+
 - (void) sendRequest: (NSString*)method
                 path: (NSString*)path
              headers: (NSDictionary*)headers
@@ -467,7 +480,6 @@ static NSString* addressToString(NSData* addrData) {
         [[ListenerTestRemoteRequest alloc] initWithMethod: method
                                                       URL: url
                                                      body: bodyObj
-                                           requestHeaders: headers
                                              onCompletion:
          ^(ListenerTestRemoteRequest* result, NSError *error) {
              AssertEq(result.status, expectedStatus);
@@ -479,13 +491,16 @@ static NSString* addressToString(NSData* addrData) {
              [expectDidComplete fulfill];
          }];
 
+    [headers enumerateKeysAndObjectsUsingBlock:^(id header, id value, BOOL* stop) {
+        [req setValue: value forHTTPHeaderField: header];
+    }];
     if (clientCredential) {
         req.authorizer = [[CBLClientCertAuthorizer alloc] initWithIdentity: clientCredential.identity
                                                            supportingCerts: clientCredential.certificates];
     }
 
     req.delegate = self;
-    [req start];
+    [_session startRequest: req];
     [self waitForExpectationsWithTimeout: kTimeout handler: nil];
 }
 
@@ -495,31 +510,22 @@ static NSString* addressToString(NSData* addrData) {
 
 @synthesize data=_data;
 
+- (void) setValue:(NSString*)value forHTTPHeaderField:(NSString *)header {
+    [_request setValue: value forHTTPHeaderField: header];
+}
+
 - (int)status {
     return _status;
 }
 
-- (void)setupRequest: (NSMutableURLRequest *)request withBody: (id)body {
-    if (body) {
-        if ([body isKindOfClass: [NSData class]]) {
-            request.HTTPBody = body;
-        } else {
-            NSError* error = nil;
-            request.HTTPBody = [CBLJSON dataWithJSONObject: body options:0 error: &error];
-            if (error)
-                Log(@"Cannot parse JSON body with error: %@", error);
-        }
-    }
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    [super connection: connection didReceiveData: data];
+- (void) didReceiveData:(NSData *)data {
+    [super didReceiveData: data];
     if (!_data)
         _data = [[NSMutableData alloc] initWithCapacity: data.length];
     [_data appendData: data];
 }
 
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
+- (void) didFailWithError:(NSError *)error {
     [self clearConnection];
     [self respondWithResult: self error: error];
 }

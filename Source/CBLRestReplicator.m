@@ -18,6 +18,7 @@
 #import "CBLRestPuller.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLRemoteRequest.h"
+#import "CBLRemoteSession.h"
 #import "CBLAuthorizer.h"
 #import "CBLBatcher.h"
 #import "CBLReachability.h"
@@ -69,7 +70,6 @@
     NSString* _remoteCheckpointDocID;
     NSDictionary* _remoteCheckpoint;
     BOOL _savingCheckpoint, _overdueForSave;
-    NSMutableArray* _remoteRequests;
     int _asyncTaskCount;
     NSUInteger _changesProcessed, _changesTotal;
     CFAbsoluteTime _startTime;
@@ -79,6 +79,7 @@
     SecCertificateRef _serverCert;
     NSData* _pinnedCertData;
     CBLCookieStorage* _cookieStorage;
+    CBLRemoteSession* _remoteSession;
 }
 
 @synthesize db=_db, settings=_settings, cookieStorage=_cookieStorage, serverCert=_serverCert;
@@ -143,7 +144,9 @@
     [self saveLastSequence];
     [self stop];
     [self clearDbRef];
-    [self clearCookieStorageRef];
+    // Explicitly clear the reference to the storage to ensure that the cookie storage will
+    // get dealloc and the database referenced inside the storage will get cleared as well.
+    _cookieStorage = nil;
 }
 
 
@@ -168,7 +171,7 @@
 
 - (void) setLastSequence:(id)lastSequence {
     if (!$equal(lastSequence, _lastSequence)) {
-        LogTo(SyncVerbose, @"%@: Setting lastSequence to %@ (from %@)",
+        LogVerbose(Sync, @"%@: Setting lastSequence to %@ (from %@)",
               self, lastSequence, _lastSequence);
         _lastSequence = [lastSequence copy];
         if (!_lastSequenceChanged) {
@@ -180,7 +183,7 @@
 
 
 - (void) postProgressChanged {
-    LogTo(SyncVerbose, @"%@: postProgressChanged (%u/%u, active=%d (batch=%u, net=%u), online=%d)",
+    LogVerbose(Sync, @"%@: postProgressChanged (%u/%u, active=%d (batch=%u, net=%u), online=%d)",
           self, (unsigned)_changesProcessed, (unsigned)_changesTotal,
           _active, (unsigned)_batcher.count, _asyncTaskCount, _online);
     NSNotification* n = [NSNotification notificationWithName: CBL_ReplicatorProgressChangedNotification
@@ -194,7 +197,7 @@
 
 
 - (NSArray*) activeTasksInfo {
-    return [_remoteRequests my_map: ^id(CBLRemoteRequest* request) {
+    return [_remoteSession.activeRequests my_map: ^id(CBLRemoteRequest* request) {
         return request.statusInfo;
     }];
 }
@@ -230,7 +233,7 @@
     
     if (_error != error)
     {
-        LogTo(Sync, @"%@ Progress: set error = %@", self, error.localizedDescription);
+        LogTo(Sync, @"%@ Progress: set error = %@", self, error.my_compactDescription);
         _error = error;
         if (CBLIsPermanentError(error))
             [self stop];
@@ -260,22 +263,36 @@
     // The cycle is broken in -stopped when I release _batcher.
     _batcher = [[CBLBatcher alloc] initWithCapacity: kInboxCapacity delay: kProcessDelay
                  processor:^(NSArray *inbox) {
-                     LogTo(SyncVerbose, @"*** %@: BEGIN processInbox (%u sequences)",
+                     LogVerbose(Sync, @"*** %@: BEGIN processInbox (%u sequences)",
                            self, (unsigned)inbox.count);
                      CBL_RevisionList* revs = [[CBL_RevisionList alloc] initWithArray: inbox];
                      [self processInbox: revs];
-                     LogTo(SyncVerbose, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
+                     LogVerbose(Sync, @"*** %@: END processInbox (lastSequence=%@)", self, _lastSequence);
                      [self updateActive];
                  }
                 ];
 
     // If client didn't set an authorizer, use basic auth if credential is available:
-    _authorizer = _settings.authorizer;
-    if (!_authorizer) {
-        _authorizer = [[CBLPasswordAuthorizer alloc] initWithURL: _settings.remote];
-        if (_authorizer)
-            LogTo(SyncVerbose, @"%@: Found credential, using %@", self, _authorizer);
+    id<CBLAuthorizer> authorizer = _settings.authorizer;
+    if (!authorizer) {
+        authorizer = [[CBLPasswordAuthorizer alloc] initWithURL: _settings.remote];
+        if (authorizer)
+            LogVerbose(Sync, @"%@: Found credential, using %@", self, authorizer);
     }
+
+    // Initialize the CBLRemoteSession:
+    NSURLSessionConfiguration* config = [[CBLRemoteSession defaultConfiguration] copy];
+    config.timeoutIntervalForRequest = _settings.requestTimeout;
+    config.allowsCellularAccess = _settings.canUseCellNetwork;
+    NSMutableDictionary* headers = _settings.requestHeaders.mutableCopy;
+    if (headers) {
+        if( config.HTTPAdditionalHeaders)
+            [headers addEntriesFromDictionary: config.HTTPAdditionalHeaders];
+        config.HTTPAdditionalHeaders = headers;
+    }
+    _remoteSession = [[CBLRemoteSession alloc] initWithConfiguration: config
+                                                          authorizer: authorizer
+                                                       cookieStorage: _cookieStorage];
 
     _running = YES;
     _online = NO;
@@ -329,7 +346,7 @@
     LogTo(Sync, @"%@ STOPPED", self);
     LogTo(SyncPerf, @"%@ STOPPED", self);
     Log(@"Replication: %@ took %.3f sec; error=%@",
-        self, CFAbsoluteTimeGetCurrent()-_startTime, _error);
+        self, CFAbsoluteTimeGetCurrent()-_startTime, _error.my_compactDescription);
 #if TARGET_OS_IPHONE
     [self endBackgrounding];
 #endif
@@ -345,6 +362,9 @@
     _suspended = NO;
     [self stopCheckRequest];
     _settings.revisionBodyTransformationBlock = nil;
+
+    [_remoteSession close];
+    
     [self clearDbRef];  // _db no longer tracks me so it won't notify me when it closes; clear ref now
 }
 
@@ -429,7 +449,6 @@
     _checkRequest = [[CBLRemoteRequest alloc] initWithMethod: @"GET"
                                                          URL: _settings.remote
                                                         body: nil
-                                              requestHeaders: nil
                                                 onCompletion: ^(id result, NSError* error) {
         if (error.code == NSURLErrorCancelled) {
             LogTo(Sync, @"%@: Attempted to connect: cancelled", self);
@@ -445,7 +464,7 @@
     }];
     _checkRequest.timeoutInterval = kCheckRequestTimeout;
     _checkRequest.autoRetry = NO;
-    [_checkRequest start];
+    [self startRemoteRequest: _checkRequest];
 }
 
 
@@ -540,7 +559,7 @@
 
 - (void) addRevsToInbox: (CBL_RevisionList*)revs {
     Assert(_running);
-    LogTo(SyncVerbose, @"%@: Received %llu revs", self, (UInt64)revs.count);
+    LogVerbose(Sync, @"%@: Received %llu revs", self, (UInt64)revs.count);
     [_batcher queueObjects: revs.allRevisions];
     [self updateActive];
 }
@@ -558,7 +577,7 @@
 
 // Before doing anything else, determine whether we have an active login session.
 - (void) checkSession {
-    if ([_authorizer conformsToProtocol: @protocol(CBLLoginAuthorizer)]) {
+    if ([_remoteSession.authorizer conformsToProtocol: @protocol(CBLLoginAuthorizer)]) {
         // Sync Gateway session API is at /db/_session; try that first
         [self checkSessionAtPath: @"_session"];
     } else {
@@ -580,7 +599,7 @@
                           [self checkSessionAtPath: @"/_session"];
                           return;
                       }
-                      LogTo(Sync, @"%@: Session check failed: %@", self, error);
+                      LogTo(Sync, @"%@: Session check failed: %@", self, error.my_compactDescription);
                       self.error = error;
                   } else {
                       NSString* username = $castIf(NSString, result[@"userCtx"][@"name"]);
@@ -599,16 +618,16 @@
 
 // If there is no login session, attempt to log in, if the authorizer knows the parameters.
 - (void) login {
-    id<CBLLoginAuthorizer> loginAuth = (id<CBLLoginAuthorizer>)_authorizer;
+    id<CBLLoginAuthorizer> loginAuth = (id<CBLLoginAuthorizer>)_remoteSession.authorizer;
     NSDictionary* loginParameters = [loginAuth loginParametersForSite: _settings.remote];
     if (loginParameters == nil) {
-        LogTo(Sync, @"%@: %@ has no login parameters, so skipping login", self, _authorizer);
+        LogTo(Sync, @"%@: %@ has no login parameters, so skipping login", self, _remoteSession.authorizer);
         [self fetchRemoteCheckpointDoc];
         return;
     }
 
     NSString* loginPath = [loginAuth loginPathForSite: _settings.remote];
-    LogTo(Sync, @"%@: Logging in with %@ at %@ ...", self, _authorizer.class, loginPath);
+    LogTo(Sync, @"%@: Logging in with %@ at %@ ...", self, _remoteSession.authorizer.class, loginPath);
     [self asyncTaskStarted];
     [self sendAsyncRequest: @"POST"
                       path: loginPath
@@ -630,18 +649,16 @@
 #pragma mark - HTTP REQUESTS:
 
 
+- (id<CBLAuthorizer>) authorizer {
+    return _remoteSession.authorizer;
+}
+
 - (CBLCookieStorage*) cookieStorage {
     if (!_cookieStorage) {
         _cookieStorage = [[CBLCookieStorage alloc] initWithDB: _db
                                                    storageKey: self.remoteCheckpointDocID];
     }
     return _cookieStorage;
-}
-
-- (void) clearCookieStorageRef {
-    // Explicitly clear the reference to the storage to ensure that the cookie storage will
-    // get dealloc and the database referenced inside the storage will get cleared as well.
-    _cookieStorage = nil;
 }
 
 
@@ -661,73 +678,42 @@
                                      body: (id)body
                              onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
-    LogTo(SyncVerbose, @"%@: %@ %@", self, method, path);
+    LogVerbose(Sync, @"%@: %@ %@", self, method, path);
     NSURL* url;
     if ([path hasPrefix: @"/"]) {
         url = [[NSURL URLWithString: path relativeToURL: _settings.remote] absoluteURL];
     } else {
         url = CBLAppendToURL(_settings.remote, path);
     }
-    onCompletion = [onCompletion copy];
-    
-    // under ARC, using variable req used directly inside the block results in a compiler error (it could have undefined value).
-    __weak CBLRestReplicator *weakSelf = self;
-    __block CBLRemoteJSONRequest *req = nil;
-    req = [[CBLRemoteJSONRequest alloc] initWithMethod: method
-                                                  URL: url
-                                                 body: body
-                                       requestHeaders: _settings.requestHeaders
-                                         onCompletion: ^(id result, NSError* error) {
-        CBLRestReplicator *strongSelf = weakSelf;
-        if (!strongSelf) return; // already dealloced
-        [strongSelf removeRemoteRequest: req];
-        id<CBLAuthorizer> auth = req.authorizer;
-        if (auth && auth != strongSelf->_authorizer && error.code != 401) {
-            LogTo(SyncVerbose, @"%@: Updated to %@", strongSelf, auth);
-            strongSelf->_authorizer = auth;
-        }
-        onCompletion(result, error);
-    }];
 
+    CBLRemoteJSONRequest *req = [[CBLRemoteJSONRequest alloc] initWithMethod: method
+                                                                     URL: url
+                                                                    body: body
+                                                            onCompletion: onCompletion];
     if (self.canSendCompressedRequests)
         [req compressBody];
 
-    [self addRemoteRequest: req];
-    [req start];
+    [self startRemoteRequest: req];
     return req;
 }
 
 
-- (void) addRemoteRequest: (CBLRemoteRequest*)request {
+- (void) startRemoteRequest: (CBLRemoteRequest*)request {
     request.delegate = self;
-    request.timeoutInterval = _settings.requestTimeout;
-    request.authorizer = _authorizer;
-    request.cookieStorage = self.cookieStorage;
-
-    if (!_remoteRequests)
-        _remoteRequests = [[NSMutableArray alloc] init];
-    [_remoteRequests addObject: request];
+    [_remoteSession startRequest: request];
 }
 
-- (void) removeRemoteRequest: (CBLRemoteRequest*)request {
+
+- (void) remoteRequestReceivedResponse: (CBLRemoteRequest*)request {
     if (!_serverType) {
         _serverType = request.responseHeaders[@"Server"];
         LogTo(Sync, @"%@: Server is %@", self, _serverType);
     }
-    [_remoteRequests removeObjectIdenticalTo: request];
 }
 
 
 - (void) stopRemoteRequests {
-    if (!_remoteRequests)
-        return;
-    LogTo(Sync, @"Stopping %u remote requests", (unsigned)_remoteRequests.count);
-    // Clear _remoteRequests before iterating, to ensure that re-entrant calls to this won't
-    // try to re-stop any of the requests. (Re-entrant calls are possible due to replicator
-    // error handling when it receives the 'canceled' errors from the requests I'm stopping.)
-    NSArray* requests = _remoteRequests;
-    _remoteRequests = nil;
-    [requests makeObjectsPerformSelector: @selector(stop)];
+    [_remoteSession stopActiveRequests];
 }
 
 
@@ -806,7 +792,7 @@
                   LogTo(SyncPerf, @"%@ Got remote checkpoint", self);
                   if (error && error.code != kCBLStatusNotFound) {
                       LogTo(Sync, @"%@: Error fetching last sequence: %@",
-                            self, error.localizedDescription);
+                            self, error.my_compactDescription);
                       self.error = error;
                   } else {
                       if (error.code == kCBLStatusNotFound)
@@ -854,7 +840,7 @@
                   _savingCheckpoint = NO;
                   if (error && error.code != kCBLStatusNotFound) {
                       LogTo(Sync, @"%@: Error refreshing remote checkpoint: %@",
-                            self, error.localizedDescription);
+                            self, error.my_compactDescription);
                   } else {
                       LogTo(Sync, @"%@ Refreshed remote checkpoint: %@", self, response);
                       self.remoteCheckpoint = $castIf(NSDictionary, response);
@@ -900,7 +886,7 @@
                   onCompletion: ^(id response, NSError* error) {
                       _savingCheckpoint = NO;
                       if (error)
-                          Warn(@"%@: Unable to save remote checkpoint: %@", self, error);
+                          Warn(@"%@: Unable to save remote checkpoint: %@", self, error.my_compactDescription);
                       CBLDatabase* db = _db;
                       if (!db)
                           return;
@@ -935,7 +921,7 @@
                   }
          ];
     // This request should not be canceled when the replication is told to stop:
-    [_remoteRequests removeObject: request];
+    request.dontStop = YES;
 }
 
 

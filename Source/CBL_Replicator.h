@@ -10,6 +10,12 @@
 @class CBLDatabase, CBL_Revision, CBL_RevisionList, CBLCookieStorage, CBL_AttachmentTask;
 
 
+#ifdef MYLOGGING
+UsingLogDomain(Sync);
+UsingLogDomain(SyncPerf);
+#endif
+
+
 /** Describes the current status of a CBL_Replicator. */
 typedef NS_ENUM(unsigned, CBL_ReplicatorStatus) {
     kCBLReplicatorStopped, /**< The replicator is finished or hit a fatal error. */
