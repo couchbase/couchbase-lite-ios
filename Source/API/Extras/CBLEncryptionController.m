@@ -101,7 +101,7 @@
         Log(@"EncryptionController: Got database password/key! Opening db...");
         [_manager registerEncryptionKey: keyOrPassword forDatabaseNamed: _dbName];
         db = [_manager databaseNamed: _dbName error: &error];
-        Log(@"    db=%@,  error=%@", db, error.my_compactDescription);
+        Log(@"    db=%@,  error=%@", db, error);
         if (!db && error.code == 401 && !_useTouchID) {
             // Wrong password; let the user retry after a brief delay:
             [_manager registerEncryptionKey: nil forDatabaseNamed: _dbName];
@@ -114,7 +114,7 @@
         }
     }
     if (error) {
-        Log(@"EncryptionController: Failed with error: %@", error.my_compactDescription);
+        Log(@"EncryptionController: Failed with error: %@", error);
     }
     _completion(db, error);
     _completion = nil;
