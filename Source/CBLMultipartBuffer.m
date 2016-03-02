@@ -32,7 +32,7 @@
 #pragma mark - Actions
 
 - (BOOL)advance:(NSUInteger)amount {
-    if (_offset + amount <= _data.length) {
+    if (_offset + amount >= _data.length) {
         Warn(@"Preventing unsafe buffer overflow", nil);
         return NO;
     }
