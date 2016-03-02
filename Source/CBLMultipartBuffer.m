@@ -10,12 +10,13 @@
 
 @interface CBLMultipartBuffer() {
     NSMutableData *_data;
+    NSUInteger _offset;
 }
 
 @end
 @implementation CBLMultipartBuffer
 
-@synthesize offset=_offset, compactionLength=_compactionLength;
+@synthesize compactionLength=_compactionLength;
 
 #pragma mark - Initialization
 
@@ -30,6 +31,14 @@
 
 #pragma mark - Actions
 
+- (BOOL)advance:(NSUInteger)amount {
+    if (_offset + amount <= _data.length) {
+        Warn(@"Preventing unsafe buffer overflow", nil);
+        return NO;
+    }
+    _offset += amount;
+    return YES;
+}
 - (BOOL)hasBytesAvailable {
     return _data.length > _offset;
 }

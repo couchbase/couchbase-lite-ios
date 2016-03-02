@@ -147,7 +147,7 @@ static NSData* kCRLFCRLF;
 }
 
 - (void) deleteUpThrough: (NSRange)r {
-    _buffer.offset += NSMaxRange(r);
+    [_buffer advance:NSMaxRange(r)];
 }
 
 - (BOOL) appendAndTrimBuffer {
@@ -200,7 +200,7 @@ static NSData* kCRLFCRLF;
                 NSUInteger testLen = _boundary.length - 2;
                 if (bufLen >= testLen) {
                     if (memcmp(_buffer.bytes, _boundary.bytes + 2, testLen) == 0) {
-                        _buffer.offset += testLen;
+                        [_buffer advance:testLen];
                         nextState = kInHeaders;
                     } else {
                         nextState = kInPrologue;

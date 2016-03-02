@@ -11,11 +11,11 @@
 /** Streaming MIME multipart parsing buffer  */
 @interface CBLMultipartBuffer : NSObject
 
-/** The current offset of the buffer in bytes */
-@property (nonatomic, assign) NSUInteger offset;
-
 /** The amount of bytes the buffer must be offset of before a compaction can happen */
 @property (nonatomic, assign) NSUInteger compactionLength;
+
+/** Advances the offset of the bytes pointers, will return NO if there is not enough memory left to advance */
+- (BOOL)advance:(NSUInteger)amount;
 
 /** Whether or not the buffer has bytes available */
 - (BOOL)hasBytesAvailable;
