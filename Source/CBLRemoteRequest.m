@@ -377,6 +377,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 - (NSURLRequest*) willSendRequest:(NSURLRequest *)request
                  redirectResponse:(NSURLResponse *)response
 {
+    LogTo(RemoteRequest, @"%@ redirected to <%@>", self, request.URL.absoluteString);
     // The redirected request needs to be authorized again:
     if (![request valueForHTTPHeaderField: @"Authorization"]) {
         NSMutableURLRequest* nuRequest = [request mutableCopy];
