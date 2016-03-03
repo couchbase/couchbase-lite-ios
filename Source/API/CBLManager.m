@@ -166,13 +166,9 @@ static CBLManager* sInstance;
 
 - (instancetype) init {
     NSError* error;
-    self = [self initWithDirectory: [[self class] defaultDirectory]
+    return [self initWithDirectory: [[self class] defaultDirectory]
                            options: NULL
                              error: &error];
-    if (self) {
-        _customHTTPHeaders = [NSMutableDictionary dictionary];
-    }
-    return self;
 }
 
 
@@ -239,6 +235,7 @@ static CBLManager* sInstance;
 {
     self = [super init];
     if (self) {
+        _customHTTPHeaders = [NSMutableDictionary dictionary];
         _dir = [directory copy];
         _options = options ? *options : kCBLManagerDefaultOptions;
         _shared = shared;
