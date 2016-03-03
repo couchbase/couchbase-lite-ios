@@ -156,8 +156,7 @@ static NSData* kCRLFCRLF;
     if (bufLen > boundaryLen) {
         // Leave enough bytes in _buffer that we can find an incomplete boundary string
         NSRange trim = NSMakeRange(0, bufLen - boundaryLen);
-        NSData *data = [NSData dataWithBytesNoCopy:_buffer.mutableBytes length:_buffer.bytesAvailable freeWhenDone:NO];
-        if (![_delegate appendToPart: [data subdataWithRange: trim]])
+        if (![_delegate appendToPart: [_buffer subdataWithRange: trim]])
             return NO;
         [self deleteUpThrough: trim];
     }
@@ -219,8 +218,7 @@ static NSData* kCRLFCRLF;
                 if (r.length > 0) {
                     if (_state == kInBody) {
                         __unused id retainSelf = self;
-                        NSData *data = [NSData dataWithBytesNoCopy:_buffer.mutableBytes length:_buffer.bytesAvailable freeWhenDone:NO];
-                        if (![delegate appendToPart: [data subdataWithRange: NSMakeRange(0, r.location)]]
+                        if (![delegate appendToPart: [_buffer subdataWithRange: NSMakeRange(0, r.location)]]
                                 || ![delegate finishedPart]) {
                             [self stop];
                             break;
