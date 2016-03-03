@@ -75,7 +75,7 @@
     if (!self.hasBytesAvailable) {
         return nil;
     }
-    return [[NSData dataWithBytes:self.bytes length:self.bytesAvailable freeWhenDone:NO] subdataWithRange:range];
+    return [[NSData dataWithBytesNoCopy:self.mutableBytes length:self.bytesAvailable freeWhenDone:NO] subdataWithRange:range];
 }
 
 @end
