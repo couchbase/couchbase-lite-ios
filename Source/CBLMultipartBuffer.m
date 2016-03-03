@@ -8,13 +8,10 @@
 
 #import "CBLMultipartBuffer.h"
 
-@interface CBLMultipartBuffer() {
+@implementation CBLMultipartBuffer {
     NSMutableData *_data;
     NSUInteger _offset;
 }
-
-@end
-@implementation CBLMultipartBuffer
 
 @synthesize compactionLength=_compactionLength;
 
@@ -33,7 +30,7 @@
 
 - (BOOL)advance:(NSUInteger)amount {
     if (_offset + amount >= _data.length) {
-        Warn(@"Preventing unsafe buffer overflow", nil);
+        Warn(@"Preventing unsafe buffer overflow");
         return NO;
     }
     _offset += amount;
@@ -43,10 +40,7 @@
     return _data.length > _offset;
 }
 - (NSUInteger)bytesAvailable {
-    if(_data.length > _offset) {
-        return _data.length - _offset;
-    }
-    return 0;
+    return _data.length - _offset;
 }
 - (void)appendData:(NSData *)data {
     [_data appendData:data];
@@ -72,8 +66,16 @@
     return _data.mutableBytes + _offset;
 }
 - (NSData *)data {
-    return [_data copy];
+    if (!self.hasBytesAvailable) {
+        return nil;
+    }
+    return [NSData dataWithBytes:self.bytes length:self.bytesAvailable];
 }
-
+- (NSData *)subdataWithRange:(NSRange)range {
+    if (!self.hasBytesAvailable) {
+        return nil;
+    }
+    return [[NSData dataWithBytes:self.bytes length:self.bytesAvailable freeWhenDone:NO] subdataWithRange:range];
+}
 
 @end

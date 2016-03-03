@@ -41,7 +41,10 @@
 /** An mutable reference the buffers bytes */
 - (void *)mutableBytes;
 
-/** A NSData copy of the buffer */
+/** A NSData copy of the available bytes in the buffer or nil if there are no available bytes */
 - (NSData *)data;
+
+/** A NSData copy of the available bytes with the given range or nil if there are no available bytes */
+- (NSData *)subdataWithRange:(NSRange)range;
 
 @end
