@@ -559,12 +559,12 @@
 		27538F8017F140DD004C3BFD /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* CouchbaseLite.framework */; };
 		27538F8117F140DD004C3BFD /* CouchbaseLiteListener.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */; };
 		27538F8417F14198004C3BFD /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
-		27538F8617F14504004C3BFD /* CouchbaseLite.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* CouchbaseLite.framework */; };
-		27538F8717F14504004C3BFD /* CouchbaseLiteListener.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */; };
+		27538F8617F14504004C3BFD /* CouchbaseLite.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* CouchbaseLite.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		27538F8717F14504004C3BFD /* CouchbaseLiteListener.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		27538F8917F148C2004C3BFD /* LiteServ.icns in Resources */ = {isa = PBXBuildFile; fileRef = 27538F8817F148C2004C3BFD /* LiteServ.icns */; };
 		27538F8B17F14A73004C3BFD /* LiteServ_MenubarIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 27538F8A17F14A73004C3BFD /* LiteServ_MenubarIcon.png */; };
 		27538F8F17F15057004C3BFD /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27538F8E17F15057004C3BFD /* ScriptingBridge.framework */; };
-		27538F9317F1D2AC004C3BFD /* LiteServ in Copy Tool */ = {isa = PBXBuildFile; fileRef = 270FE0C814C5008C005FF647 /* LiteServ */; };
+		27538F9317F1D2AC004C3BFD /* LiteServ in Copy Tool */ = {isa = PBXBuildFile; fileRef = 270FE0C814C5008C005FF647 /* LiteServ */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		27538F9A17F1D93F004C3BFD /* ToolInstallController.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538F9917F1D93F004C3BFD /* ToolInstallController.m */; };
 		27538F9C17F1D957004C3BFD /* ToolInstallController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27538F9B17F1D957004C3BFD /* ToolInstallController.xib */; };
 		27538F9F17F1D9D6004C3BFD /* PrivilegedInstall.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */; };
@@ -4088,7 +4088,7 @@
 			attributes = {
 				CLASSPREFIX = CBL;
 				LastSwiftUpdateCheck = 0700;
-				LastUpgradeCheck = 0720;
+				LastUpgradeCheck = 0730;
 				ORGANIZATIONNAME = "Couchbase, Inc";
 				TargetAttributes = {
 					2700358A1A44E9270015B9F4 = {
@@ -5379,6 +5379,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CURRENT_PROJECT_VERSION = 0;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_INCREASE_PRECOMPILED_HEADER_SHARING = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -5400,6 +5401,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.${PRODUCT_NAME:rfc1034identifier}";
 				SDKROOT = macosx;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 				UNIVERSAL_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)-$(UNIVERSAL_NAME_$(PLATFORM_NAME))-universal";
@@ -5461,6 +5463,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.${PRODUCT_NAME:rfc1034identifier}";
 				SDKROOT = macosx;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 				UNIVERSAL_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)-$(UNIVERSAL_NAME_$(PLATFORM_NAME))-universal";
@@ -5874,7 +5877,6 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = "org.couchbase.CBL-tvOS-Test-App";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
 				TARGETED_DEVICE_FAMILY = 3;
@@ -5892,7 +5894,6 @@
 				INFOPLIST_FILE = "Test-tvOS/tvosDemo-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = "org.couchbase.CBL-tvOS-Test-App";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
 				TARGETED_DEVICE_FAMILY = 3;
@@ -5917,7 +5918,6 @@
 				INFOPLIST_FILE = "Test-tvOS/tvosTests-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.couchbase.CBL-tvOS-Test-AppTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL tvOS Test App.app/CBL tvOS Test App";
@@ -5937,7 +5937,6 @@
 				);
 				INFOPLIST_FILE = "Test-tvOS/tvosTests-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "org.couchbase.CBL-tvOS-Test-AppTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBL tvOS Test App.app/CBL tvOS Test App";
