@@ -138,7 +138,7 @@
     SequenceNumber update_seq = db.lastSequenceNumber;
     if (num_docs == NSNotFound || update_seq == NSNotFound)
         return kCBLStatusDBError;
-    UInt64 startTime = round(db.startTime.timeIntervalSince1970 * 1.0e6); // it's in microseconds
+    UInt64 startTime = (UInt64)(db.startTime.timeIntervalSince1970 * 1.0e6); // it's in microseconds
     _response.bodyObject = $dict({@"db_name", db.name},
                                  {@"db_uuid", db.publicUUID},
                                  {@"doc_count", @(num_docs)},
