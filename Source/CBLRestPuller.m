@@ -442,6 +442,12 @@
             if (!strongSelf) return; // already dealloced
             // OK, now we've got the response:
             LogTo(SyncPerf, @"%@: Got %@", strongSelf, rev);
+            
+            // Remove the remote request first to prevent this block to be called second time
+            // when setting a permanent error to the error property. If that happens the
+            // _asyncTaskCount will be over-decreased and lead to an assertion failure (#1140).
+            [strongSelf removeRemoteRequest:dl];
+            
             if (error) {
                 if (isDocumentError(error)) {
                     // Revision is missing or not accessible:
@@ -459,7 +465,6 @@
             }
             
             // Note that we've finished this task:
-            [strongSelf removeRemoteRequest:dl];
             [strongSelf asyncTasksFinished:1];
             --strongSelf->_httpConnectionCount;
             // Start another task if there are still revisions waiting to be pulled:
