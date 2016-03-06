@@ -410,6 +410,7 @@
 		27356DDE1C7D206C0055DA9D /* MYLogging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27356DDC1C7D206C0055DA9D /* MYLogging.m */; };
 		2737A6CE1B703DD500CEF619 /* CBLAttachmentDownloader.h in Headers */ = {isa = PBXBuildFile; fileRef = 2737A6CC1B703DD500CEF619 /* CBLAttachmentDownloader.h */; };
 		2737A6D01B703DD500CEF619 /* CBLAttachmentDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 2737A6CD1B703DD500CEF619 /* CBLAttachmentDownloader.m */; };
+		27393A971C8B8C6300829C9B /* getRepoVersion.sh in Resources */ = {isa = PBXBuildFile; fileRef = 27393A961C8B8C6300829C9B /* getRepoVersion.sh */; };
 		273E9EF11C509F38003115A6 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 273E9EF01C509F38003115A6 /* main.m */; };
 		273E9EF41C509F39003115A6 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 273E9EF31C509F38003115A6 /* AppDelegate.m */; };
 		273E9EF71C509F39003115A6 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 273E9EF61C509F39003115A6 /* ViewController.m */; };
@@ -1468,7 +1469,7 @@
 		270B3E3814898DF200E0A926 /* CBL_Revision.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_Revision.m; sourceTree = "<group>"; };
 		270B3E3C148D7F0000E0A926 /* CBLRestPusher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRestPusher.h; sourceTree = "<group>"; };
 		270B3E3D148D7F0000E0A926 /* CBLRestPusher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLRestPusher.m; sourceTree = "<group>"; };
-		270BDD6815644EA8007D52F6 /* BuildFatLibrary.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = BuildFatLibrary.sh; sourceTree = "<group>"; };
+		270BDD6815644EA8007D52F6 /* BuildFatLibrary.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = BuildFatLibrary.sh; path = ../BuildScripts/BuildFatLibrary.sh; sourceTree = "<group>"; };
 		270D6FBF164484190081812D /* CBLSocketChangeTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLSocketChangeTracker.h; sourceTree = "<group>"; };
 		270D6FC0164484190081812D /* CBLSocketChangeTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLSocketChangeTracker.m; sourceTree = "<group>"; };
 		270F5703156AE0BF000FEB8F /* CBLAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLAuthorizer.h; sourceTree = "<group>"; };
@@ -1524,6 +1525,7 @@
 		27356DDC1C7D206C0055DA9D /* MYLogging.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYLogging.m; sourceTree = "<group>"; };
 		2737A6CC1B703DD500CEF619 /* CBLAttachmentDownloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLAttachmentDownloader.h; sourceTree = "<group>"; };
 		2737A6CD1B703DD500CEF619 /* CBLAttachmentDownloader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLAttachmentDownloader.m; sourceTree = "<group>"; };
+		27393A961C8B8C6300829C9B /* getRepoVersion.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = getRepoVersion.sh; path = BuildScripts/getRepoVersion.sh; sourceTree = SOURCE_ROOT; };
 		273E9EED1C509F38003115A6 /* CBL tvOS Test App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL tvOS Test App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		273E9EF01C509F38003115A6 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		273E9EF21C509F38003115A6 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -2824,6 +2826,7 @@
 				27F87BE61558890600F0A416 /* CBLGNUstep.h */,
 				27F87BE71558890700F0A416 /* CBLGNUstep.m */,
 				270BDD6815644EA8007D52F6 /* BuildFatLibrary.sh */,
+				27393A961C8B8C6300829C9B /* getRepoVersion.sh */,
 				27452C221AB20BD500327776 /* noop.m */,
 			);
 			name = Support;
@@ -3685,6 +3688,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2701C14B1C49CFE6006D7A99 /* Build configuration list for PBXNativeTarget "CBL Mac library" */;
 			buildPhases = (
+				27393A8A1C8B8C3B00829C9B /* Check Git Commit */,
 				2701C02B1C49CFE6006D7A99 /* Sources */,
 				2701C0AB1C49CFE6006D7A99 /* Frameworks */,
 			);
@@ -3912,6 +3916,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 27B0B7C71492B83C00A817AD /* Build configuration list for PBXNativeTarget "CBL iOS library" */;
 			buildPhases = (
+				27393A9A1C8B960D00829C9B /* Check Git Commit */,
 				27B0B7A51492B83B00A817AD /* Sources */,
 				27B0B7A61492B83B00A817AD /* Frameworks */,
 			);
@@ -4290,6 +4295,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27393A971C8B8C6300829C9B /* getRepoVersion.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4397,13 +4403,45 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		27393A8A1C8B8C3B00829C9B /* Check Git Commit */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 12;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/BuildScripts/getRepoVersion.sh",
+			);
+			name = "Check Git Commit";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/repo_version.h",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
+		};
+		27393A9A1C8B960D00829C9B /* Check Git Commit */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/BuildScripts/getRepoVersion.sh",
+			);
+			name = "Check Git Commit";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/repo_version.h",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
+		};
 		27452BA91AB1156F00327776 /* Build Fat Library */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Source/BuildFatLibrary.sh",
+				"$(SRCROOT)/BuildScripts/BuildFatLibrary.sh",
 			);
 			name = "Build Fat Library";
 			outputPaths = (
@@ -4433,7 +4471,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Source/BuildFatLibrary.sh",
+				"$(SRCROOT)/BuildScripts/BuildFatLibrary.sh",
 			);
 			name = "Build Fat Library";
 			outputPaths = (
@@ -4449,7 +4487,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Source/BuildFatLibrary.sh",
+				"$(SRCROOT)/BuildScripts/BuildFatLibrary.sh",
 			);
 			name = "Build Fat Library";
 			outputPaths = (
@@ -4465,7 +4503,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Source/BuildFatLibrary.sh",
+				"$(SRCROOT)/BuildScripts/BuildFatLibrary.sh",
 			);
 			name = "Make a Fat Binary";
 			outputPaths = (
@@ -4480,7 +4518,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Source/BuildFatLibrary.sh",
+				"$(SRCROOT)/BuildScripts/BuildFatLibrary.sh",
 			);
 			name = "Build Fat Library";
 			outputPaths = (
