@@ -37,6 +37,7 @@ fi
 export DOXY_OUTPUT_DIRECTORY="$DERIVED_FILE_DIR/Documentation"    # Used by the Doxyfile
 mkdir -p "$DOXY_OUTPUT_DIRECTORY"
 doxygen "Documentation/Doxyfile"
+mkdir -p "$TARGET_BUILD_DIR"
 mv -f "$DOXY_OUTPUT_DIRECTORY/html" "$TARGET_BUILD_DIR/Documentation"
 
 # Generate XCode- and Dash-compatible DocSet bundle:
