@@ -30,6 +30,49 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		0B3D40791C56234100EEED9F /* CBLUICollectionSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */; };
+		0B3D407B1C56234100EEED9F /* libCBLForestDBStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */; };
+		0B3D407C1C56234100EEED9F /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66B501A730CA80091DA3F /* libsqlite3.dylib */; };
+		0B3D407D1C56234100EEED9F /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E940651954BB9E00A9732E /* libc++.dylib */; };
+		0B3D407E1C56234100EEED9F /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1776BB1857AE4D00CB01A3 /* CoreData.framework */; };
+		0B3D407F1C56234100EEED9F /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E7FB02155DBDA20025F93A /* Security.framework */; };
+		0B3D40801C56234100EEED9F /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E7FAEF155D8EBA0025F93A /* CFNetwork.framework */; };
+		0B3D40811C56234100EEED9F /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E00C8D14EC2C74004BCBA9 /* SystemConfiguration.framework */; };
+		0B3D40821C56234100EEED9F /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DB90DE14DB4B0100FC7118 /* libz.dylib */; };
+		0B3D40831C56234100EEED9F /* libCouchbaseLite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7A91492B83B00A817AD /* libCouchbaseLite.a */; };
+		0B3D40841C56234100EEED9F /* libCouchbaseLiteListener.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DA023B6414BCA94C008184BB /* libCouchbaseLiteListener.a */; };
+		0B3D40851C56234100EEED9F /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7B81492B83C00A817AD /* UIKit.framework */; };
+		0B3D40861C56234100EEED9F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
+		0B3D40871C56234100EEED9F /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B80F1492C16300A817AD /* CoreGraphics.framework */; };
+		0B3D40891C56234100EEED9F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 27B0B8141492C16300A817AD /* InfoPlist.strings */; };
+		0B3D408A1C56234100EEED9F /* RootViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27731F3914967A8400815D67 /* RootViewController.xib */; };
+		0B3D408C1C56234100EEED9F /* ConfigViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27731F3B14967A8400815D67 /* ConfigViewController.xib */; };
+		0B3D408D1C56234100EEED9F /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2714CF511496AE5B00E03341 /* Entitlements.plist */; };
+		0B3D408E1C56234100EEED9F /* background.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDA164C8A3E00A3C0C2 /* background.jpg */; };
+		0B3D408F1C56234100EEED9F /* background~ipad.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDB164C8A3E00A3C0C2 /* background~ipad.jpg */; };
+		0B3D40901C56234100EEED9F /* couchbase-mobile-icon-nameless.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDC164C8A3E00A3C0C2 /* couchbase-mobile-icon-nameless.png */; };
+		0B3D40911C56234100EEED9F /* item_background.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDD164C8A3E00A3C0C2 /* item_background.png */; };
+		0B3D40921C56234100EEED9F /* item_background~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDE164C8A3E00A3C0C2 /* item_background~ipad.png */; };
+		0B3D40931C56234100EEED9F /* TestData in Resources */ = {isa = PBXBuildFile; fileRef = 274E163119B90F420066CA5E /* TestData */; };
+		0B3D40941C56234100EEED9F /* list_area___background_middle~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEDF164C8A3E00A3C0C2 /* list_area___background_middle~ipad.png */; };
+		0B3D40951C56234100EEED9F /* list_area___checkbox___checked.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEE0164C8A3E00A3C0C2 /* list_area___checkbox___checked.png */; };
+		0B3D40961C56234100EEED9F /* list_area___checkbox___unchecked.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEE1164C8A3E00A3C0C2 /* list_area___checkbox___unchecked.png */; };
+		0B3D40971C56234100EEED9F /* textfield___active.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEE2164C8A3E00A3C0C2 /* textfield___active.png */; };
+		0B3D40981C56234100EEED9F /* textfield___active~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEE3164C8A3E00A3C0C2 /* textfield___active~ipad.png */; };
+		0B3D40991C56234100EEED9F /* textfield___inactive.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEE4164C8A3E00A3C0C2 /* textfield___inactive.png */; };
+		0B3D409A1C56234100EEED9F /* textfield___inactive~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEE5164C8A3E00A3C0C2 /* textfield___inactive~ipad.png */; };
+		0B3D409B1C56234100EEED9F /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEFE164C8A8400A3C0C2 /* Default.png */; };
+		0B3D409C1C56234100EEED9F /* Default~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEEFF164C8A8400A3C0C2 /* Default~ipad.png */; };
+		0B3D409D1C56234100EEED9F /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0C164C8ADB00A3C0C2 /* icon.png */; };
+		0B3D409E1C56234100EEED9F /* icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0D164C8ADB00A3C0C2 /* icon@2x.png */; };
+		0B3D409F1C56234100EEED9F /* icon~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 27FAEF0E164C8ADB00A3C0C2 /* icon~ipad.png */; };
+		0B3D40A01C56234100EEED9F /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 27F5B175164D74EA00126D0D /* Default-568h@2x.png */; };
+		0B3D40B31C56241F00EEED9F /* mainCBLIS.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B3D40B21C56241F00EEED9F /* mainCBLIS.m */; };
+		0B3D40B61C56244900EEED9F /* AppDelegateCBLIS.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B3D40B51C56244900EEED9F /* AppDelegateCBLIS.m */; };
+		0B3D40BD1C5626CB00EEED9F /* CBLISRootViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B3D40BB1C5626CB00EEED9F /* CBLISRootViewController.m */; };
+		0BDFE46D1C56693400FF8553 /* CBLIncrementalStore.m in Sources */ = {isa = PBXBuildFile; fileRef = AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */; };
+		0BDFE4721C56868300FF8553 /* Storyboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0BDFE4711C56868300FF8553 /* Storyboard.storyboard */; };
+		0BE5794F1C565CD1009BC6C3 /* CBLISModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 0BE5794D1C565CD1009BC6C3 /* CBLISModel.xcdatamodeld */; };
 		270035841A40E7160015B9F4 /* CBLQueryBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D2E704199BC06300D09A1D /* CBLQueryBuilder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		270035901A44E9270015B9F4 /* Database_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2700358F1A44E9270015B9F4 /* Database_Tests.m */; };
 		270035981A44FE890015B9F4 /* CBLTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 270035971A44FE890015B9F4 /* CBLTestCase.m */; };
@@ -962,6 +1005,34 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		0B3D406D1C56234100EEED9F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27E66A571A7305B10091DA3F;
+			remoteInfo = "CBL SQLite Storage";
+		};
+		0B3D406F1C56234100EEED9F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27E66AD01A7307590091DA3F;
+			remoteInfo = "CBL ForestDB Storage";
+		};
+		0B3D40711C56234100EEED9F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DA147C1F14BCAC3B0052DA4D;
+			remoteInfo = "CBL Listener iOS";
+		};
+		0B3D40731C56234100EEED9F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27B0B7E61492BB6B00A817AD;
+			remoteInfo = "iOS Framework";
+		};
 		270035911A44E9270015B9F4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
@@ -1371,6 +1442,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		0B3D40A11C56234100EEED9F /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		274E162A19B90EE00066CA5E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1445,6 +1525,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0B3D40A51C56234100EEED9F /* CBLIS iOS Test App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBLIS iOS Test App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0B3D40A61C56234200EEED9F /* CBL iOS Test App copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "CBL iOS Test App copy-Info.plist"; path = "/Users/florion/workspace/couchbase-lite-ios/CBL iOS Test App copy-Info.plist"; sourceTree = "<absolute>"; };
+		0B3D40B21C56241F00EEED9F /* mainCBLIS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = mainCBLIS.m; sourceTree = "<group>"; };
+		0B3D40B41C56244900EEED9F /* AppDelegateCBLIS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegateCBLIS.h; sourceTree = "<group>"; };
+		0B3D40B51C56244900EEED9F /* AppDelegateCBLIS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegateCBLIS.m; sourceTree = "<group>"; };
+		0B3D40BA1C5626CB00EEED9F /* CBLISRootViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLISRootViewController.h; sourceTree = "<group>"; };
+		0B3D40BB1C5626CB00EEED9F /* CBLISRootViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLISRootViewController.m; sourceTree = "<group>"; };
+		0BDFE4711C56868300FF8553 /* Storyboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Storyboard.storyboard; sourceTree = "<group>"; };
+		0BE5794E1C565CD1009BC6C3 /* CBLISModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = CBLISModel.xcdatamodel; sourceTree = "<group>"; };
 		2700358B1A44E9270015B9F4 /* CBL iOS Unit Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CBL iOS Unit Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2700358E1A44E9270015B9F4 /* Info-UnitTests.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-UnitTests.plist"; sourceTree = "<group>"; };
 		2700358F1A44E9270015B9F4 /* Database_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Database_Tests.m; sourceTree = "<group>"; };
@@ -1988,6 +2077,26 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0B3D407A1C56234100EEED9F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0B3D407B1C56234100EEED9F /* libCBLForestDBStorage.a in Frameworks */,
+				0B3D407C1C56234100EEED9F /* libsqlite3.dylib in Frameworks */,
+				0B3D407D1C56234100EEED9F /* libc++.dylib in Frameworks */,
+				0B3D407E1C56234100EEED9F /* CoreData.framework in Frameworks */,
+				0B3D407F1C56234100EEED9F /* Security.framework in Frameworks */,
+				0B3D40801C56234100EEED9F /* CFNetwork.framework in Frameworks */,
+				0B3D40811C56234100EEED9F /* SystemConfiguration.framework in Frameworks */,
+				0B3D40821C56234100EEED9F /* libz.dylib in Frameworks */,
+				0B3D40831C56234100EEED9F /* libCouchbaseLite.a in Frameworks */,
+				0B3D40841C56234100EEED9F /* libCouchbaseLiteListener.a in Frameworks */,
+				0B3D40851C56234100EEED9F /* UIKit.framework in Frameworks */,
+				0B3D40861C56234100EEED9F /* Foundation.framework in Frameworks */,
+				0B3D40871C56234100EEED9F /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		270035881A44E9270015B9F4 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -2254,6 +2363,7 @@
 				275C6F131C49C6C20041E9AD /* CouchbaseLite-static */,
 				27C70696148864BA00F0F099 /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
+				0B3D40A61C56234200EEED9F /* CBL iOS Test App copy-Info.plist */,
 			);
 			name = CouchLite;
 			sourceTree = "<group>";
@@ -2298,6 +2408,7 @@
 				273E9EED1C509F38003115A6 /* CBL tvOS Test App.app */,
 				273E9F021C509F39003115A6 /* CBL tvOS Unit Tests.xctest */,
 				930FE55E1C58562B008107A0 /* libCBLJSViewCompiler.a */,
+				0B3D40A51C56234100EEED9F /* CBLIS iOS Test App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2932,7 +3043,13 @@
 				27731F3B14967A8400815D67 /* ConfigViewController.xib */,
 				274C3917149E6B0900A5E89B /* EmptyAppDelegate.h */,
 				274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */,
+				0B3D40B41C56244900EEED9F /* AppDelegateCBLIS.h */,
+				0B3D40B51C56244900EEED9F /* AppDelegateCBLIS.m */,
+				0B3D40BA1C5626CB00EEED9F /* CBLISRootViewController.h */,
+				0B3D40BB1C5626CB00EEED9F /* CBLISRootViewController.m */,
 				27B0B8121492C16300A817AD /* Supporting Files */,
+				0BE5794D1C565CD1009BC6C3 /* CBLISModel.xcdatamodeld */,
+				0BDFE4711C56868300FF8553 /* Storyboard.storyboard */,
 			);
 			path = "Test-iOS";
 			sourceTree = "<group>";
@@ -2951,6 +3068,7 @@
 				27731F2C1495CFF000815D67 /* iOS Empty App-Info.plist */,
 				27B0B8141492C16300A817AD /* InfoPlist.strings */,
 				2714CF511496AE5B00E03341 /* Entitlements.plist */,
+				0B3D40B21C56241F00EEED9F /* mainCBLIS.m */,
 				27B0B8171492C16300A817AD /* main.m */,
 				27B0B8191492C16300A817AD /* iOS Demo-Prefix.pch */,
 			);
@@ -3662,6 +3780,28 @@
 /* End PBXLegacyTarget section */
 
 /* Begin PBXNativeTarget section */
+		0B3D406B1C56234100EEED9F /* CBLIS iOS Test App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0B3D40A21C56234100EEED9F /* Build configuration list for PBXNativeTarget "CBLIS iOS Test App" */;
+			buildPhases = (
+				0B3D40741C56234100EEED9F /* Sources */,
+				0B3D407A1C56234100EEED9F /* Frameworks */,
+				0B3D40881C56234100EEED9F /* Resources */,
+				0B3D40A11C56234100EEED9F /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0B3D406C1C56234100EEED9F /* PBXTargetDependency */,
+				0B3D406E1C56234100EEED9F /* PBXTargetDependency */,
+				0B3D40701C56234100EEED9F /* PBXTargetDependency */,
+				0B3D40721C56234100EEED9F /* PBXTargetDependency */,
+			);
+			name = "CBLIS iOS Test App";
+			productName = "iOS Demo";
+			productReference = 0B3D40A51C56234100EEED9F /* CBLIS iOS Test App.app */;
+			productType = "com.apple.product-type.application";
+		};
 		2700358A1A44E9270015B9F4 /* CBL iOS Unit Tests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 270035951A44E9280015B9F4 /* Build configuration list for PBXNativeTarget "CBL iOS Unit Tests" */;
@@ -4091,6 +4231,9 @@
 				LastUpgradeCheck = 0720;
 				ORGANIZATIONNAME = "Couchbase, Inc";
 				TargetAttributes = {
+					0B3D406B1C56234100EEED9F = {
+						DevelopmentTeam = HX7UT22XZZ;
+					};
 					2700358A1A44E9270015B9F4 = {
 						CreatedOnToolsVersion = 6.1.1;
 						TestTargetID = 27B0B80A1492C16300A817AD;
@@ -4157,6 +4300,7 @@
 				27452B391AB1156F00327776 /* CBL iOS fat library */,
 				27C70693148864BA00F0F099 /* CBL Mac Test App */,
 				27B0B80A1492C16300A817AD /* CBL iOS Test App */,
+				0B3D406B1C56234100EEED9F /* CBLIS iOS Test App */,
 				27731F131495CFEF00815D67 /* CBL iOS Empty App */,
 				275315D414ACF0A10065964D /* CBL Listener Mac */,
 				DA147C1F14BCAC3B0052DA4D /* CBL Listener iOS */,
@@ -4271,6 +4415,37 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
+		0B3D40881C56234100EEED9F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0B3D40891C56234100EEED9F /* InfoPlist.strings in Resources */,
+				0B3D408A1C56234100EEED9F /* RootViewController.xib in Resources */,
+				0B3D408C1C56234100EEED9F /* ConfigViewController.xib in Resources */,
+				0B3D408D1C56234100EEED9F /* Entitlements.plist in Resources */,
+				0B3D408E1C56234100EEED9F /* background.jpg in Resources */,
+				0B3D408F1C56234100EEED9F /* background~ipad.jpg in Resources */,
+				0B3D40901C56234100EEED9F /* couchbase-mobile-icon-nameless.png in Resources */,
+				0B3D40911C56234100EEED9F /* item_background.png in Resources */,
+				0B3D40921C56234100EEED9F /* item_background~ipad.png in Resources */,
+				0BDFE4721C56868300FF8553 /* Storyboard.storyboard in Resources */,
+				0B3D40931C56234100EEED9F /* TestData in Resources */,
+				0B3D40941C56234100EEED9F /* list_area___background_middle~ipad.png in Resources */,
+				0B3D40951C56234100EEED9F /* list_area___checkbox___checked.png in Resources */,
+				0B3D40961C56234100EEED9F /* list_area___checkbox___unchecked.png in Resources */,
+				0B3D40971C56234100EEED9F /* textfield___active.png in Resources */,
+				0B3D40981C56234100EEED9F /* textfield___active~ipad.png in Resources */,
+				0B3D40991C56234100EEED9F /* textfield___inactive.png in Resources */,
+				0B3D409A1C56234100EEED9F /* textfield___inactive~ipad.png in Resources */,
+				0B3D409B1C56234100EEED9F /* Default.png in Resources */,
+				0B3D409C1C56234100EEED9F /* Default~ipad.png in Resources */,
+				0B3D409D1C56234100EEED9F /* icon.png in Resources */,
+				0B3D409E1C56234100EEED9F /* icon@2x.png in Resources */,
+				0B3D409F1C56234100EEED9F /* icon~ipad.png in Resources */,
+				0B3D40A01C56234100EEED9F /* Default-568h@2x.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		270035891A44E9270015B9F4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -4507,6 +4682,19 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0B3D40741C56234100EEED9F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0BDFE46D1C56693400FF8553 /* CBLIncrementalStore.m in Sources */,
+				0B3D40B61C56244900EEED9F /* AppDelegateCBLIS.m in Sources */,
+				0B3D40B31C56241F00EEED9F /* mainCBLIS.m in Sources */,
+				0BE5794F1C565CD1009BC6C3 /* CBLISModel.xcdatamodeld in Sources */,
+				0B3D40BD1C5626CB00EEED9F /* CBLISRootViewController.m in Sources */,
+				0B3D40791C56234100EEED9F /* CBLUICollectionSource.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		270035871A44E9270015B9F4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -5078,6 +5266,26 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		0B3D406C1C56234100EEED9F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27E66A571A7305B10091DA3F /* CBL SQLite Storage */;
+			targetProxy = 0B3D406D1C56234100EEED9F /* PBXContainerItemProxy */;
+		};
+		0B3D406E1C56234100EEED9F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27E66AD01A7307590091DA3F /* CBL ForestDB Storage */;
+			targetProxy = 0B3D406F1C56234100EEED9F /* PBXContainerItemProxy */;
+		};
+		0B3D40701C56234100EEED9F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DA147C1F14BCAC3B0052DA4D /* CBL Listener iOS */;
+			targetProxy = 0B3D40711C56234100EEED9F /* PBXContainerItemProxy */;
+		};
+		0B3D40721C56234100EEED9F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27B0B7E61492BB6B00A817AD /* CBL iOS */;
+			targetProxy = 0B3D40731C56234100EEED9F /* PBXContainerItemProxy */;
+		};
 		270035921A44E9270015B9F4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 27731F131495CFEF00815D67 /* CBL iOS Empty App */;
@@ -5357,6 +5565,84 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		0B3D40A31C56234100EEED9F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(DEVELOPER_FRAMEWORKS_DIR)\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Test-iOS/iOS Demo-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+					"CBLIS_NO_CHANGE_COALESCING=1",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+				);
+				INFOPLIST_FILE = "CBL iOS Test App copy-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = com.popina.couchbase.cblistest;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		0B3D40A41C56234100EEED9F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(DEVELOPER_FRAMEWORKS_DIR)\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Test-iOS/iOS Demo-Prefix.pch";
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+				);
+				INFOPLIST_FILE = "CBL iOS Test App copy-Info.plist";
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = com.popina.couchbase.cblistest;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "";
+				VALIDATE_PRODUCT = YES;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
 		1DEB923608733DC60010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27F074F811CDC71800E9A2AB /* MYUtilities_Debug.xcconfig */;
@@ -7014,6 +7300,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0B3D40A21C56234100EEED9F /* Build configuration list for PBXNativeTarget "CBLIS iOS Test App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0B3D40A31C56234100EEED9F /* Debug */,
+				0B3D40A41C56234100EEED9F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "CouchbaseLite" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -7240,6 +7535,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		0BE5794D1C565CD1009BC6C3 /* CBLISModel.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				0BE5794E1C565CD1009BC6C3 /* CBLISModel.xcdatamodel */,
+			);
+			currentVersion = 0BE5794E1C565CD1009BC6C3 /* CBLISModel.xcdatamodel */;
+			path = CBLISModel.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
 }

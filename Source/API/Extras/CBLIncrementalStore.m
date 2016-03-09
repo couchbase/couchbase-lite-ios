@@ -493,21 +493,26 @@ static CBLManager* sCBLManager;
     INFO(@"newValuesForObjectWithID in %@ on %@", context, [NSThread currentThread]);
     CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
 
-    CBLDocument* doc = [self documentForObjectID: objectID inContext: context];
-    NSEntityDescription* entity = objectID.entity;
-    NSString* docTypeKey = [self documentTypeKey];
-    if (![entity.name isEqual: [doc propertyForKey: docTypeKey]]) {
-        entity = [NSEntityDescription entityForName: [doc propertyForKey: docTypeKey]
-                             inManagedObjectContext: context];
+    NSIncrementalStoreNode* node;
+
+    @synchronized(self) {
+        CBLDocument* doc = [self documentForObjectID: objectID inContext: context];
+        NSEntityDescription* entity = objectID.entity;
+        NSString* docTypeKey = [self documentTypeKey];
+        if (![entity.name isEqual: [doc propertyForKey: docTypeKey]]) {
+            entity = [NSEntityDescription entityForName: [doc propertyForKey: docTypeKey]
+                                 inManagedObjectContext: context];
+        }
+
+        NSDictionary* values = [self coreDataPropertiesOfDocumentWithID: doc.documentID
+                                                             properties: doc.properties
+                                                             withEntity: entity
+                                                              inContext: context];
+        node = [[NSIncrementalStoreNode alloc] initWithObjectID: objectID
+                                                     withValues: values
+                                                        version: 1];
     }
 
-    NSDictionary* values = [self coreDataPropertiesOfDocumentWithID: doc.documentID
-                                                         properties: doc.properties
-                                                         withEntity: entity
-                                                          inContext: context];
-    NSIncrementalStoreNode* node = [[NSIncrementalStoreNode alloc] initWithObjectID: objectID
-                                                                         withValues: values
-                                                                            version: 1];
     CFAbsoluteTime end = CFAbsoluteTimeGetCurrent();
     INFO(@"newValuesForObjectWithID finished in %f seconds", (end - start));
     return node;
@@ -521,44 +526,47 @@ static CBLManager* sCBLManager;
          objectID.URIRepresentation.lastPathComponent, context, [NSThread currentThread]);
     CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
     id newValue;
-    if ([relationship isToMany]) {
-        if (relationship.inverseRelationship.toMany) {
-            // many-to-many
-            CBLDocument* doc = [self documentForObjectID: objectID inContext: context];
-            NSArray* destinationIDs = [doc.properties valueForKey: relationship.name];
-            NSMutableArray* result = [NSMutableArray arrayWithCapacity: destinationIDs.count];
-            for (NSString* destinationID in destinationIDs) {
-                [result addObject:[self newObjectIDForEntity: relationship.destinationEntity
-                                             referenceObject: destinationID]];
-            }
-            newValue = result;
-        } else {
-            __block id result = nil;
-            [context performBlockAndWait: ^{
-                // one-to-many
-                NSArray* rows = [self queryToManyRelation: relationship
-                                             forParentKey: [objectID couchbaseLiteIDRepresentation]
-                                                 prefetch: NO
-                                                 outError: outError];
-                if (rows) {
-                    result = [NSMutableArray arrayWithCapacity: rows.count];
-                    for (CBLQueryRow* row in rows) {
-                        [result addObject: [self newObjectIDForEntity: relationship.destinationEntity
-                                                 managedObjectContext: context
-                                                              couchID: row.documentID]];
-                    }
+
+    @synchronized(self) {
+        if ([relationship isToMany]) {
+            if (relationship.inverseRelationship.toMany) {
+                // many-to-many
+                CBLDocument* doc = [self documentForObjectID: objectID inContext: context];
+                NSArray* destinationIDs = [doc.properties valueForKey: relationship.name];
+                NSMutableArray* result = [NSMutableArray arrayWithCapacity: destinationIDs.count];
+                for (NSString* destinationID in destinationIDs) {
+                    [result addObject:[self newObjectIDForEntity: relationship.destinationEntity
+                                                 referenceObject: destinationID]];
                 }
-            }];
-            newValue = result;
+                newValue = result;
+            } else {
+                __block id result = nil;
+                [context performBlockAndWait: ^{
+                    // one-to-many
+                    NSArray* rows = [self queryToManyRelation: relationship
+                                                 forParentKey: [objectID couchbaseLiteIDRepresentation]
+                                                     prefetch: NO
+                                                     outError: outError];
+                    if (rows) {
+                        result = [NSMutableArray arrayWithCapacity: rows.count];
+                        for (CBLQueryRow* row in rows) {
+                            [result addObject: [self newObjectIDForEntity: relationship.destinationEntity
+                                                     managedObjectContext: context
+                                                                  couchID: row.documentID]];
+                        }
+                    }
+                }];
+                newValue = result;
+            }
+        } else {
+            CBLDocument* doc = [self documentForObjectID: objectID inContext: context];
+            NSString* destinationID = [doc propertyForKey: relationship.name];
+            if (destinationID)
+                newValue = [self newObjectIDForEntity: relationship.destinationEntity
+                                      referenceObject: destinationID];
+            else
+                newValue = [NSNull null];
         }
-    } else {
-        CBLDocument* doc = [self documentForObjectID: objectID inContext: context];
-        NSString* destinationID = [doc propertyForKey: relationship.name];
-        if (destinationID)
-            newValue = [self newObjectIDForEntity: relationship.destinationEntity
-                              referenceObject: destinationID];
-        else
-            newValue = [NSNull null];
     }
 
     CFAbsoluteTime end = CFAbsoluteTimeGetCurrent();
@@ -2217,7 +2225,7 @@ static CBLManager* sCBLManager;
     NSManagedObjectContext* context = [contexts firstObject];
     [contexts removeObjectAtIndex:0];
     [context performBlock: ^{
-        INFO(@"Start refresh context : %@", context.parentContext ? @"Child" : @"Root");
+        NSLog(@"Start refresh context : %@", context.parentContext ? @"Child" : @"Root");
         
         NSMutableSet* refreshedIDs = [NSMutableSet set];
         NSMutableSet* updatedEntities = [NSMutableSet set];
@@ -2226,6 +2234,11 @@ static CBLManager* sCBLManager;
             NSManagedObject* mObj = [context objectRegisteredForID: moID];
             if (!mObj)
                 mObj = [context objectWithID: moID];
+            
+            if ([mObj.entity.name isEqualToString:@"Player"]) {
+                NSLog(@"%@ - %@", [mObj valueForKey:@"name"], [mObj valueForKeyPath:@"team.name"]);
+                NSLog(@"%@ : %@ players", [mObj valueForKeyPath:@"team.name"], @([[mObj valueForKeyPath:@"team.players"] count]));
+            }
             
             for (NSString* relName in moID.entity.relationshipsByName) {
                 NSRelationshipDescription* rel = moID.entity.relationshipsByName[relName];
@@ -2275,7 +2288,7 @@ static CBLManager* sCBLManager;
         
         [context processPendingChanges];
         
-        INFO(@"Finish refresh context : %@", context.parentContext ? @"Child" : @"Root");
+        NSLog(@"Finish refresh context : %@", context.parentContext ? @"Child" : @"Root");
         
         if (contexts.count > 0)
             [self refreshContexts: contexts withUpdatedIDs: updatedIDs deletedIDs: deletedIDs

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="9532" systemVersion="15D21" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" initialViewController="ZqU-fE-4Iq">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9530"/>
+    </dependencies>
+    <scenes>
+        <!--Root View Controller-->
+        <scene sceneID="Dwt-A8-jHt">
+            <objects>
+                <viewController id="ZqU-fE-4Iq" customClass="CBLISRootViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8dC-9V-edV">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" id="36L-gN-VAc">
+                                <rect key="frame" x="0.0" y="63" width="320" height="505"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" red="0.45167496815475816" green="1" blue="0.62048410730006553" alpha="0.5084496897163121" colorSpace="calibratedRGB"/>
+                                <color key="separatorColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                <connections>
+                                    <outlet property="dataSource" destination="ZqU-fE-4Iq" id="jb8-fl-r5i"/>
+                                    <outlet property="delegate" destination="ZqU-fE-4Iq" id="Yy1-kz-3Z7"/>
+                                </connections>
+                            </tableView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="Uc4-Kn-iJf">
+                                <rect key="frame" x="265" y="25" width="55" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="Add"/>
+                                <connections>
+                                    <action selector="addTeam:" destination="ZqU-fE-4Iq" eventType="touchUpInside" id="hri-7v-FbX"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="peM-w0-m0P">
+                                <rect key="frame" x="13" y="25" width="73" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="Pick Game"/>
+                                <connections>
+                                    <action selector="addTeam:" destination="ZqU-fE-4Iq" eventType="touchUpInside" id="fG0-ic-3My"/>
+                                    <action selector="pickGame:" destination="ZqU-fE-4Iq" eventType="touchUpInside" id="GpT-lS-MnR"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                    <connections>
+                        <outlet property="addButton" destination="Uc4-Kn-iJf" id="sN4-0q-LYO"/>
+                        <outlet property="tableView" destination="36L-gN-VAc" id="IS8-kD-iON"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="4qw-NH-ezk" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="206" y="321"/>
+        </scene>
+    </scenes>
+</document>

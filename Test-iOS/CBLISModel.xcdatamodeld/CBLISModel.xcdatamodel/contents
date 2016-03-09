@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="9525" systemVersion="15D21" minimumToolsVersion="Xcode 7.0">
+    <entity name="Game" syncable="YES">
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="teams" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Team" inverseName="game" inverseEntity="Team" syncable="YES"/>
+    </entity>
+    <entity name="Player" syncable="YES">
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="team" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Team" inverseName="players" inverseEntity="Team" syncable="YES"/>
+    </entity>
+    <entity name="Team" syncable="YES">
+        <attribute name="date" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="game" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Game" inverseName="teams" inverseEntity="Game" syncable="YES"/>
+        <relationship name="players" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Player" inverseName="team" inverseEntity="Player" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="Player" positionX="-54" positionY="0" width="128" height="75"/>
+        <element name="Team" positionX="-63" positionY="-18" width="128" height="105"/>
+        <element name="Game" positionX="-54" positionY="18" width="128" height="75"/>
+    </elements>
+</model>
