@@ -119,7 +119,13 @@
 
 
 @interface CBLQuery ()
+@property (readonly) BOOL isAggregate;
 @property (nonatomic, strong) BOOL (^filterBlock)(CBLQueryRow*);
 - (void) runAsyncIfChangedSince: (SInt64)ifChangedSince
                      onComplete: (void (^)(CBLQueryEnumerator*, NSError*))onComplete;
+@end
+
+
+@interface CBLQueryRow ()
+- (uint8_t/*CBLDiffItemComparison*/) compareForArrayDiff: (CBLQueryRow*)other;
 @end
