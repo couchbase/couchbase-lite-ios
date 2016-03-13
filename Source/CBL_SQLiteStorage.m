@@ -461,6 +461,9 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     if (isNew && ![self initialize: @"END TRANSACTION" error: outError])
         return NO;
 
+    if (isNew)
+        [self setInfo: @"true" forKey: @"pruned"];  // See -compact: for explanation
+
     if (!isNew)
         [self optimizeSQLIndexes];          // runs ANALYZE query
 
@@ -1705,6 +1708,15 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         if (!sequence)
             return kCBLStatusOK;  // duplicate rev; see above
 
+        // Delete the deepest revs in the tree to enforce the maxRevTreeDepth:
+        int minGenToKeep = (int)newRev.generation - (int)_maxRevTreeDepth + 1;
+        if (minGenToKeep > 1) {
+            unsigned pruned = [self pruneDocument: docNumericID generationsBelow: minGenToKeep];
+            if (pruned > 0)
+                LogVerbose(Database, @"Pruned %lu old revisions of doc '%@'",
+                           (unsigned long)pruned, docID);
+        }
+
         // Figure out what the new winning rev ID is:
             winningRevID = [self winnerWithDocID: docNumericID
                                  oldWinner: oldWinningRevID oldDeleted: oldWinnerWasDeletion
@@ -1849,11 +1861,28 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                 inConflict = YES; // local parent wasn't a leaf, ergo we just created a branch
         }
 
-            // Figure out what the new winning rev ID is:
-            winningRevID = [self winnerWithDocID: docNumericID
-                                     oldWinner: oldWinningRevID
-                                    oldDeleted: oldWinnerWasDeletion
-                                        newRev: rev];
+        // Delete the deepest revs in the tree to enforce the maxRevTreeDepth:
+        if (inRev.generation > _maxRevTreeDepth) {
+            __block unsigned minGen, maxGen;
+            minGen = maxGen = rev.generation;
+            [localRevs enumerateKeysAndObjectsUsingBlock:^(id key, CBL_Revision* rev, BOOL* stop) {
+                unsigned generation = rev.generation;
+                minGen = MIN(minGen, generation);
+                maxGen = MAX(maxGen, generation);
+            }];
+            int minGenToKeep = maxGen - _maxRevTreeDepth + 1;
+            if ((int)minGen < minGenToKeep) {
+                unsigned pruned = [self pruneDocument: docNumericID generationsBelow: minGenToKeep];
+                if (pruned > 0)
+                    LogVerbose(Database, @"Pruned %u old revisions of doc '%@'", pruned, docID);
+            }
+        }
+
+        // Figure out what the new winning rev ID is:
+        winningRevID = [self winnerWithDocID: docNumericID
+                                   oldWinner: oldWinningRevID
+                                  oldDeleted: oldWinnerWasDeletion
+                                      newRev: rev];
 
         return kCBLStatusCreated;
     }];
@@ -1986,11 +2015,17 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
 
 
 - (BOOL) compact: (NSError**)outError {
-    // Start off by pruning each revision tree's depth:
-    NSUInteger nPruned;
-    CBLStatus status = [self pruneRevsToMaxDepth: _maxRevTreeDepth numberPruned: &nPruned];
-    if (status != kCBLStatusOK)
-        return CBLStatusToOutNSError(status, outError);
+    if (![self infoForKey: @"pruned"]) {
+        // Bulk pruning is no longer needed, because revisions are pruned incrementally as new
+        // ones are added. But databases from before this feature was added (1.3) may have documents
+        // that need pruning. So we'll do a one-time bulk prune, then set a flag indicating that
+        // it isn't needed anymore.
+        NSUInteger nPruned;
+        CBLStatus status = [self pruneRevsToMaxDepth: _maxRevTreeDepth numberPruned: &nPruned];
+        if (status != kCBLStatusOK)
+            return CBLStatusToOutNSError(status, outError);
+        [self setInfo: @"true" forKey: @"pruned"];
+    }
 
     // Remove the JSON of non-current revisions, which is most of the space.
     Log(@"CBLDatabase: Deleting JSON of old revisions...");
@@ -2045,15 +2080,26 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
 
     // Now prune:
     return [self inTransaction:^CBLStatus{
-        for (id docNumericID in toPrune) {
-            NSString* minIDToKeep = $sprintf(@"%d-", [toPrune[docNumericID] intValue] + 1);
-            if (![_fmdb executeUpdate: @"DELETE FROM revs WHERE doc_id=? AND revid < ? AND current=0",
-                                       docNumericID, minIDToKeep])
-                return self.lastDbError;
-            *outPruned += _fmdb.changes;
+        for (NSNumber* docNumericID in toPrune) {
+            *outPruned += [self pruneDocument: docNumericID.unsignedLongLongValue
+                             generationsBelow: [toPrune[docNumericID] intValue] + 1];
         }
         return kCBLStatusOK;
     }];
+}
+
+
+// Returns the number of revisions pruned.
+- (unsigned) pruneDocument: (UInt64)docNumericID
+          generationsBelow: (unsigned)minGenToKeep
+{
+    if (![_fmdb executeUpdate: @"DELETE FROM revs WHERE doc_id=? AND revid < ? AND current=0",
+          @(docNumericID), $sprintf(@"%u-", minGenToKeep)]) {
+        Warn(@"SQLite error %d pruning generations < %d of doc %llu",
+             _fmdb.lastErrorCode, minGenToKeep, docNumericID);
+        return 0;
+    }
+    return _fmdb.changes;
 }
 
 
