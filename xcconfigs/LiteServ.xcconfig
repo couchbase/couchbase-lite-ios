@@ -6,8 +6,6 @@
 //
 
 CREATE_INFOPLIST_SECTION_IN_BINARY = YES
-GCC_DYNAMIC_NO_PIC                 = YES
-GCC_ENABLE_OBJC_EXCEPTIONS         = YES
 INFOPLIST_FILE                     = LiteServ App/LiteServ App-Info.plist
 LD_RUNPATH_SEARCH_PATHS            = @loader_path/ @executable_path/../Frameworks
 PRODUCT_NAME                       = $(TARGET_NAME)

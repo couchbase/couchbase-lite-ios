@@ -583,9 +583,6 @@
 		275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29041649A12B00B0D8EE /* CBLAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5A1159383E9005B9234 /* CBLAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275A29051649A13900B0D8EE /* CBLReplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5CB159533A5005B9234 /* CBLReplication.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		275FB6621C972DBF000D13A3 /* CBLJSViewCompiler_Debug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 275FB65F1C972DBF000D13A3 /* CBLJSViewCompiler_Debug.xcconfig */; };
-		275FB6631C972DBF000D13A3 /* CBLJSViewCompiler_Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 275FB6601C972DBF000D13A3 /* CBLJSViewCompiler_Release.xcconfig */; };
-		275FB6641C972DBF000D13A3 /* CBLJSViewCompiler.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 275FB6611C972DBF000D13A3 /* CBLJSViewCompiler.xcconfig */; };
 		2762AB5818D36F1B00649D47 /* CBLReplication+Transformation.h in Headers */ = {isa = PBXBuildFile; fileRef = 2762AB5618D36F1B00649D47 /* CBLReplication+Transformation.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2762AB5A18D36F1B00649D47 /* CBLReplication+Transformation.m in Sources */ = {isa = PBXBuildFile; fileRef = 2762AB5718D36F1B00649D47 /* CBLReplication+Transformation.m */; };
 		2764D2B11A5E240D005AC95A /* JSON_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2764D2B01A5E240D005AC95A /* JSON_Tests.m */; };
@@ -1535,30 +1532,6 @@
 		272AFF5E1C92401300D0DBA6 /* CBLArrayDiff+UIKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLArrayDiff+UIKit.h"; sourceTree = "<group>"; };
 		272AFF5F1C92401300D0DBA6 /* CBLArrayDiff+UIKit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLArrayDiff+UIKit.m"; sourceTree = "<group>"; };
 		272AFF611C934FD800D0DBA6 /* ArrayDiff_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ArrayDiff_Test.mm; sourceTree = "<group>"; };
-		272AFF691C937CAF00D0DBA6 /* Project_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Debug.xcconfig; sourceTree = "<group>"; };
-		272AFF6A1C937CAF00D0DBA6 /* Project_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Release.xcconfig; sourceTree = "<group>"; };
-		272AFF6B1C937CAF00D0DBA6 /* Project.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
-		272AFF6C1C937FBE00D0DBA6 /* CBL Mac library_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Mac library_Debug.xcconfig"; sourceTree = "<group>"; };
-		272AFF6D1C937FBE00D0DBA6 /* CBL Mac library_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Mac library_Release.xcconfig"; sourceTree = "<group>"; };
-		272AFF6E1C937FBE00D0DBA6 /* CBL Mac library.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Mac library.xcconfig"; sourceTree = "<group>"; };
-		272AFF6F1C9380D400D0DBA6 /* CBL Mac_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Mac_Debug.xcconfig"; sourceTree = "<group>"; };
-		272AFF701C9380D400D0DBA6 /* CBL Mac_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Mac_Release.xcconfig"; sourceTree = "<group>"; };
-		272AFF711C9380D400D0DBA6 /* CBL Mac.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Mac.xcconfig"; sourceTree = "<group>"; };
-		272AFF741C93815700D0DBA6 /* CBL Mac+SQLCipher.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Mac+SQLCipher.xcconfig"; sourceTree = "<group>"; };
-		272AFF751C93830900D0DBA6 /* CBL Mac+SQLCipher_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Mac+SQLCipher_Debug.xcconfig"; sourceTree = "<group>"; };
-		272AFF761C93830900D0DBA6 /* CBL Mac+SQLCipher_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Mac+SQLCipher_Release.xcconfig"; sourceTree = "<group>"; };
-		272AFF771C93840C00D0DBA6 /* CBL iOS fat library_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL iOS fat library_Debug.xcconfig"; sourceTree = "<group>"; };
-		272AFF781C93840C00D0DBA6 /* CBL iOS fat library_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL iOS fat library_Release.xcconfig"; sourceTree = "<group>"; };
-		272AFF791C93840C00D0DBA6 /* CBL iOS fat library.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL iOS fat library.xcconfig"; sourceTree = "<group>"; };
-		272AFF7A1C93840C00D0DBA6 /* CBL iOS framework_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL iOS framework_Debug.xcconfig"; sourceTree = "<group>"; };
-		272AFF7B1C93840C00D0DBA6 /* CBL iOS framework_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL iOS framework_Release.xcconfig"; sourceTree = "<group>"; };
-		272AFF7C1C93840C00D0DBA6 /* CBL iOS framework.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL iOS framework.xcconfig"; sourceTree = "<group>"; };
-		272AFF7D1C93840C00D0DBA6 /* CBL iOS library_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL iOS library_Debug.xcconfig"; sourceTree = "<group>"; };
-		272AFF7E1C93840C00D0DBA6 /* CBL iOS library_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL iOS library_Release.xcconfig"; sourceTree = "<group>"; };
-		272AFF7F1C93840C00D0DBA6 /* CBL iOS library.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL iOS library.xcconfig"; sourceTree = "<group>"; };
-		272AFF801C93840C00D0DBA6 /* CBL iOS_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL iOS_Debug.xcconfig"; sourceTree = "<group>"; };
-		272AFF811C93840C00D0DBA6 /* CBL iOS_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL iOS_Release.xcconfig"; sourceTree = "<group>"; };
-		272AFF821C93840C00D0DBA6 /* CBL iOS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL iOS.xcconfig"; sourceTree = "<group>"; };
 		2733022818F8572700A488F7 /* CBLAuthenticator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLAuthenticator.h; sourceTree = "<group>"; };
 		2733022918F8572700A488F7 /* CBLAuthenticator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLAuthenticator.m; sourceTree = "<group>"; };
 		2733022D18F86C9800A488F7 /* CBLTokenAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLTokenAuthorizer.h; sourceTree = "<group>"; };
@@ -1685,9 +1658,6 @@
 		27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrivilegedInstall.m; sourceTree = "<group>"; };
 		27538FA117F1ECE8004C3BFD /* LoggingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoggingMode.h; sourceTree = "<group>"; };
 		27538FA217F1ECE8004C3BFD /* LoggingMode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = LoggingMode.c; sourceTree = "<group>"; };
-		275FB65F1C972DBF000D13A3 /* CBLJSViewCompiler_Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = CBLJSViewCompiler_Debug.xcconfig; sourceTree = "<group>"; };
-		275FB6601C972DBF000D13A3 /* CBLJSViewCompiler_Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = CBLJSViewCompiler_Release.xcconfig; sourceTree = "<group>"; };
-		275FB6611C972DBF000D13A3 /* CBLJSViewCompiler.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = CBLJSViewCompiler.xcconfig; sourceTree = "<group>"; };
 		2762AB5618D36F1B00649D47 /* CBLReplication+Transformation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLReplication+Transformation.h"; sourceTree = "<group>"; };
 		2762AB5718D36F1B00649D47 /* CBLReplication+Transformation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLReplication+Transformation.m"; sourceTree = "<group>"; };
 		2764D2B01A5E240D005AC95A /* JSON_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JSON_Tests.m; sourceTree = "<group>"; };
@@ -1984,48 +1954,6 @@
 		27F128B0156AC1C9008465C2 /* CBLOAuth1Authorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLOAuth1Authorizer.m; sourceTree = "<group>"; };
 		27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		27F5B175164D74EA00126D0D /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
-		27F7A1381C938AEA00326DE9 /* CBL Listener iOS_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL Listener iOS_Debug.xcconfig"; path = "xcconfigs/CBL Listener iOS_Debug.xcconfig"; sourceTree = "<group>"; };
-		27F7A1391C938AEA00326DE9 /* CBL Listener iOS_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL Listener iOS_Release.xcconfig"; path = "xcconfigs/CBL Listener iOS_Release.xcconfig"; sourceTree = "<group>"; };
-		27F7A13A1C938AEA00326DE9 /* CBL Listener iOS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL Listener iOS.xcconfig"; path = "xcconfigs/CBL Listener iOS.xcconfig"; sourceTree = "<group>"; };
-		27F7A13B1C938AEA00326DE9 /* CBL Listener Mac_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL Listener Mac_Debug.xcconfig"; path = "xcconfigs/CBL Listener Mac_Debug.xcconfig"; sourceTree = "<group>"; };
-		27F7A13C1C938AEA00326DE9 /* CBL Listener Mac_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL Listener Mac_Release.xcconfig"; path = "xcconfigs/CBL Listener Mac_Release.xcconfig"; sourceTree = "<group>"; };
-		27F7A13D1C938AEA00326DE9 /* CBL Listener Mac.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL Listener Mac.xcconfig"; path = "xcconfigs/CBL Listener Mac.xcconfig"; sourceTree = "<group>"; };
-		27F7A13E1C938AEA00326DE9 /* Listener iOS Library_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Listener iOS Library_Debug.xcconfig"; path = "xcconfigs/Listener iOS Library_Debug.xcconfig"; sourceTree = "<group>"; };
-		27F7A13F1C938AEA00326DE9 /* Listener iOS Library_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Listener iOS Library_Release.xcconfig"; path = "xcconfigs/Listener iOS Library_Release.xcconfig"; sourceTree = "<group>"; };
-		27F7A1401C938AEA00326DE9 /* Listener iOS Library.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Listener iOS Library.xcconfig"; path = "xcconfigs/Listener iOS Library.xcconfig"; sourceTree = "<group>"; };
-		27F7A1431C938C1E00326DE9 /* LiteServ App_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "LiteServ App_Debug.xcconfig"; path = "xcconfigs/LiteServ App_Debug.xcconfig"; sourceTree = "<group>"; };
-		27F7A1441C938C1E00326DE9 /* LiteServ App_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "LiteServ App_Release.xcconfig"; path = "xcconfigs/LiteServ App_Release.xcconfig"; sourceTree = "<group>"; };
-		27F7A1451C938C1E00326DE9 /* LiteServ App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "LiteServ App.xcconfig"; path = "xcconfigs/LiteServ App.xcconfig"; sourceTree = "<group>"; };
-		27F7A1461C938C1E00326DE9 /* LiteServ_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = LiteServ_Debug.xcconfig; path = xcconfigs/LiteServ_Debug.xcconfig; sourceTree = "<group>"; };
-		27F7A1471C938C1E00326DE9 /* LiteServ_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = LiteServ_Release.xcconfig; path = xcconfigs/LiteServ_Release.xcconfig; sourceTree = "<group>"; };
-		27F7A1481C938C1E00326DE9 /* LiteServ.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = LiteServ.xcconfig; path = xcconfigs/LiteServ.xcconfig; sourceTree = "<group>"; };
-		27F7A14A1C938CFF00326DE9 /* CBL ForestDB Storage_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL ForestDB Storage_Debug.xcconfig"; path = "xcconfigs/CBL ForestDB Storage_Debug.xcconfig"; sourceTree = "<group>"; };
-		27F7A14B1C938CFF00326DE9 /* CBL ForestDB Storage_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL ForestDB Storage_Release.xcconfig"; path = "xcconfigs/CBL ForestDB Storage_Release.xcconfig"; sourceTree = "<group>"; };
-		27F7A14C1C938CFF00326DE9 /* CBL ForestDB Storage.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL ForestDB Storage.xcconfig"; path = "xcconfigs/CBL ForestDB Storage.xcconfig"; sourceTree = "<group>"; };
-		27F7A14D1C938CFF00326DE9 /* CBL SQLite Storage_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL SQLite Storage_Debug.xcconfig"; path = "xcconfigs/CBL SQLite Storage_Debug.xcconfig"; sourceTree = "<group>"; };
-		27F7A14E1C938CFF00326DE9 /* CBL SQLite Storage_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL SQLite Storage_Release.xcconfig"; path = "xcconfigs/CBL SQLite Storage_Release.xcconfig"; sourceTree = "<group>"; };
-		27F7A14F1C938CFF00326DE9 /* CBL SQLite Storage.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL SQLite Storage.xcconfig"; path = "xcconfigs/CBL SQLite Storage.xcconfig"; sourceTree = "<group>"; };
-		27F7A1511C938D6200326DE9 /* CBL iOS Test App_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL iOS Test App_Debug.xcconfig"; path = "xcconfigs/CBL iOS Test App_Debug.xcconfig"; sourceTree = "<group>"; };
-		27F7A1521C938D6200326DE9 /* CBL iOS Test App_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL iOS Test App_Release.xcconfig"; path = "xcconfigs/CBL iOS Test App_Release.xcconfig"; sourceTree = "<group>"; };
-		27F7A1531C938D6200326DE9 /* CBL iOS Test App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL iOS Test App.xcconfig"; path = "xcconfigs/CBL iOS Test App.xcconfig"; sourceTree = "<group>"; };
-		27F7A1541C938D6200326DE9 /* CBL iOS Unit Tests_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL iOS Unit Tests_Debug.xcconfig"; path = "xcconfigs/CBL iOS Unit Tests_Debug.xcconfig"; sourceTree = "<group>"; };
-		27F7A1551C938D6200326DE9 /* CBL iOS Unit Tests_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL iOS Unit Tests_Release.xcconfig"; path = "xcconfigs/CBL iOS Unit Tests_Release.xcconfig"; sourceTree = "<group>"; };
-		27F7A1561C938D6200326DE9 /* CBL iOS Unit Tests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL iOS Unit Tests.xcconfig"; path = "xcconfigs/CBL iOS Unit Tests.xcconfig"; sourceTree = "<group>"; };
-		27F7A1571C938D6200326DE9 /* CBL Mac Test App_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL Mac Test App_Debug.xcconfig"; path = "xcconfigs/CBL Mac Test App_Debug.xcconfig"; sourceTree = "<group>"; };
-		27F7A1581C938D6200326DE9 /* CBL Mac Test App_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL Mac Test App_Release.xcconfig"; path = "xcconfigs/CBL Mac Test App_Release.xcconfig"; sourceTree = "<group>"; };
-		27F7A1591C938D6200326DE9 /* CBL Mac Test App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL Mac Test App.xcconfig"; path = "xcconfigs/CBL Mac Test App.xcconfig"; sourceTree = "<group>"; };
-		27F7A15A1C938D6200326DE9 /* CBL Mac Unit Tests_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL Mac Unit Tests_Debug.xcconfig"; path = "xcconfigs/CBL Mac Unit Tests_Debug.xcconfig"; sourceTree = "<group>"; };
-		27F7A15B1C938D6200326DE9 /* CBL Mac Unit Tests_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL Mac Unit Tests_Release.xcconfig"; path = "xcconfigs/CBL Mac Unit Tests_Release.xcconfig"; sourceTree = "<group>"; };
-		27F7A15C1C938D6200326DE9 /* CBL Mac Unit Tests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL Mac Unit Tests.xcconfig"; path = "xcconfigs/CBL Mac Unit Tests.xcconfig"; sourceTree = "<group>"; };
-		27F7A15D1C938D6200326DE9 /* CBL tvOS Test App_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL tvOS Test App_Debug.xcconfig"; path = "xcconfigs/CBL tvOS Test App_Debug.xcconfig"; sourceTree = "<group>"; };
-		27F7A15E1C938D6200326DE9 /* CBL tvOS Test App_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL tvOS Test App_Release.xcconfig"; path = "xcconfigs/CBL tvOS Test App_Release.xcconfig"; sourceTree = "<group>"; };
-		27F7A15F1C938D6200326DE9 /* CBL tvOS Test App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL tvOS Test App.xcconfig"; path = "xcconfigs/CBL tvOS Test App.xcconfig"; sourceTree = "<group>"; };
-		27F7A1601C938D6200326DE9 /* CBL tvOS Unit Tests_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL tvOS Unit Tests_Debug.xcconfig"; path = "xcconfigs/CBL tvOS Unit Tests_Debug.xcconfig"; sourceTree = "<group>"; };
-		27F7A1611C938D6200326DE9 /* CBL tvOS Unit Tests_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL tvOS Unit Tests_Release.xcconfig"; path = "xcconfigs/CBL tvOS Unit Tests_Release.xcconfig"; sourceTree = "<group>"; };
-		27F7A1621C938D6200326DE9 /* CBL tvOS Unit Tests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL tvOS Unit Tests.xcconfig"; path = "xcconfigs/CBL tvOS Unit Tests.xcconfig"; sourceTree = "<group>"; };
-		27F7A1631C938E4800326DE9 /* CBL iOS Empty App_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL iOS Empty App_Debug.xcconfig"; path = "xcconfigs/CBL iOS Empty App_Debug.xcconfig"; sourceTree = "<group>"; };
-		27F7A1641C938E4800326DE9 /* CBL iOS Empty App_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL iOS Empty App_Release.xcconfig"; path = "xcconfigs/CBL iOS Empty App_Release.xcconfig"; sourceTree = "<group>"; };
-		27F7A1651C938E4800326DE9 /* CBL iOS Empty App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "CBL iOS Empty App.xcconfig"; path = "xcconfigs/CBL iOS Empty App.xcconfig"; sourceTree = "<group>"; };
 		27F87BE61558890600F0A416 /* CBLGNUstep.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLGNUstep.h; sourceTree = "<group>"; };
 		27F87BE71558890700F0A416 /* CBLGNUstep.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLGNUstep.m; sourceTree = "<group>"; };
 		27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSONValidator.h; sourceTree = "<group>"; };
@@ -2049,6 +1977,75 @@
 		27FAEF0C164C8ADB00A3C0C2 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
 		27FAEF0D164C8ADB00A3C0C2 /* icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon@2x.png"; sourceTree = "<group>"; };
 		27FAEF0E164C8ADB00A3C0C2 /* icon~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon~ipad.png"; sourceTree = "<group>"; };
+		27FFFF0B1C973FB5001A70FC /* ForestDB Storage.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "ForestDB Storage.xcconfig"; sourceTree = "<group>"; };
+		27FFFF0C1C973FB5001A70FC /* ForestDB Storage_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "ForestDB Storage_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF0D1C973FB5001A70FC /* ForestDB Storage_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "ForestDB Storage_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF0E1C973FB5001A70FC /* iOS Empty App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS Empty App.xcconfig"; sourceTree = "<group>"; };
+		27FFFF0F1C973FB5001A70FC /* iOS Empty App_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS Empty App_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF101C973FB5001A70FC /* iOS Empty App_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS Empty App_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF111C973FB5001A70FC /* iOS fat library.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS fat library.xcconfig"; sourceTree = "<group>"; };
+		27FFFF121C973FB5001A70FC /* iOS fat library_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS fat library_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF131C973FB5001A70FC /* iOS fat library_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS fat library_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF141C973FB5001A70FC /* iOS framework.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS framework.xcconfig"; sourceTree = "<group>"; };
+		27FFFF151C973FB5001A70FC /* iOS framework_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS framework_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF161C973FB5001A70FC /* iOS framework_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS framework_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF171C973FB5001A70FC /* iOS library.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS library.xcconfig"; sourceTree = "<group>"; };
+		27FFFF181C973FB5001A70FC /* iOS library_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS library_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF191C973FB5001A70FC /* iOS library_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS library_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF1A1C973FB5001A70FC /* iOS Test App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS Test App.xcconfig"; sourceTree = "<group>"; };
+		27FFFF1B1C973FB5001A70FC /* iOS Test App_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS Test App_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF1C1C973FB5001A70FC /* iOS Test App_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS Test App_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF1D1C973FB5001A70FC /* iOS Unit Tests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS Unit Tests.xcconfig"; sourceTree = "<group>"; };
+		27FFFF1E1C973FB5001A70FC /* iOS Unit Tests_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS Unit Tests_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF1F1C973FB5001A70FC /* iOS Unit Tests_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS Unit Tests_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF201C973FB5001A70FC /* iOS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = iOS.xcconfig; sourceTree = "<group>"; };
+		27FFFF211C973FB5001A70FC /* iOS_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = iOS_Debug.xcconfig; sourceTree = "<group>"; };
+		27FFFF221C973FB5001A70FC /* iOS_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = iOS_Release.xcconfig; sourceTree = "<group>"; };
+		27FFFF231C973FB5001A70FC /* Listener iOS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Listener iOS.xcconfig"; sourceTree = "<group>"; };
+		27FFFF241C973FB5001A70FC /* Listener iOS_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Listener iOS_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF251C973FB5001A70FC /* Listener iOS_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Listener iOS_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF261C973FB5001A70FC /* Listener Mac.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Listener Mac.xcconfig"; sourceTree = "<group>"; };
+		27FFFF271C973FB5001A70FC /* Listener Mac_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Listener Mac_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF281C973FB5001A70FC /* Listener Mac_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Listener Mac_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF291C973FB5001A70FC /* Mac library.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Mac library.xcconfig"; sourceTree = "<group>"; };
+		27FFFF2A1C973FB5001A70FC /* Mac library_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Mac library_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF2B1C973FB5001A70FC /* Mac library_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Mac library_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF2C1C973FB5001A70FC /* Mac Test App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Mac Test App.xcconfig"; sourceTree = "<group>"; };
+		27FFFF2D1C973FB5001A70FC /* Mac Test App_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Mac Test App_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF2E1C973FB5001A70FC /* Mac Test App_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Mac Test App_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF2F1C973FB5001A70FC /* Mac Unit Tests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Mac Unit Tests.xcconfig"; sourceTree = "<group>"; };
+		27FFFF301C973FB5001A70FC /* Mac Unit Tests_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Mac Unit Tests_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF311C973FB5001A70FC /* Mac Unit Tests_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Mac Unit Tests_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF321C973FB5001A70FC /* Mac+SQLCipher.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Mac+SQLCipher.xcconfig"; sourceTree = "<group>"; };
+		27FFFF331C973FB5001A70FC /* Mac+SQLCipher_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Mac+SQLCipher_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF341C973FB5001A70FC /* Mac+SQLCipher_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Mac+SQLCipher_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF351C973FB5001A70FC /* Mac.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Mac.xcconfig; sourceTree = "<group>"; };
+		27FFFF361C973FB5001A70FC /* Mac_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Mac_Debug.xcconfig; sourceTree = "<group>"; };
+		27FFFF371C973FB5001A70FC /* Mac_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Mac_Release.xcconfig; sourceTree = "<group>"; };
+		27FFFF381C973FB5001A70FC /* SQLite Storage.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "SQLite Storage.xcconfig"; sourceTree = "<group>"; };
+		27FFFF391C973FB5001A70FC /* SQLite Storage_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "SQLite Storage_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF3A1C973FB5001A70FC /* SQLite Storage_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "SQLite Storage_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF3B1C973FB5001A70FC /* tvOS Test App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "tvOS Test App.xcconfig"; sourceTree = "<group>"; };
+		27FFFF3C1C973FB5001A70FC /* tvOS Test App_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "tvOS Test App_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF3D1C973FB5001A70FC /* tvOS Test App_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "tvOS Test App_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF3E1C973FB5001A70FC /* tvOS Unit Tests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "tvOS Unit Tests.xcconfig"; sourceTree = "<group>"; };
+		27FFFF3F1C973FB5001A70FC /* tvOS Unit Tests_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "tvOS Unit Tests_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF401C973FB5001A70FC /* tvOS Unit Tests_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "tvOS Unit Tests_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF411C973FB5001A70FC /* CBLJSViewCompiler.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CBLJSViewCompiler.xcconfig; sourceTree = "<group>"; };
+		27FFFF421C973FB5001A70FC /* CBLJSViewCompiler_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CBLJSViewCompiler_Debug.xcconfig; sourceTree = "<group>"; };
+		27FFFF431C973FB5001A70FC /* CBLJSViewCompiler_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CBLJSViewCompiler_Release.xcconfig; sourceTree = "<group>"; };
+		27FFFF471C973FB5001A70FC /* Listener iOS Library.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Listener iOS Library.xcconfig"; sourceTree = "<group>"; };
+		27FFFF481C973FB5001A70FC /* Listener iOS Library_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Listener iOS Library_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF491C973FB5001A70FC /* Listener iOS Library_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Listener iOS Library_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF4A1C973FB5001A70FC /* LiteServ App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "LiteServ App.xcconfig"; sourceTree = "<group>"; };
+		27FFFF4B1C973FB5001A70FC /* LiteServ App_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "LiteServ App_Debug.xcconfig"; sourceTree = "<group>"; };
+		27FFFF4C1C973FB5001A70FC /* LiteServ App_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "LiteServ App_Release.xcconfig"; sourceTree = "<group>"; };
+		27FFFF4D1C973FB5001A70FC /* LiteServ.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = LiteServ.xcconfig; sourceTree = "<group>"; };
+		27FFFF4E1C973FB5001A70FC /* LiteServ_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = LiteServ_Debug.xcconfig; sourceTree = "<group>"; };
+		27FFFF4F1C973FB5001A70FC /* LiteServ_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = LiteServ_Release.xcconfig; sourceTree = "<group>"; };
+		27FFFF501C973FB5001A70FC /* Project.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
+		27FFFF511C973FB5001A70FC /* Project_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Debug.xcconfig; sourceTree = "<group>"; };
+		27FFFF521C973FB5001A70FC /* Project_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Release.xcconfig; sourceTree = "<group>"; };
 		792867CB178DE03E00248AF0 /* CBLJSFunction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSFunction.h; sourceTree = "<group>"; };
 		792867CC178DE03E00248AF0 /* CBLJSFunction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSFunction.m; sourceTree = "<group>"; };
 		792867CE178DE03E00248AF0 /* CBLJSViewCompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSViewCompiler.h; sourceTree = "<group>"; };
@@ -2334,8 +2331,8 @@
 				27B0B8111492C16300A817AD /* Test-iOS */,
 				273E9EEE1C509F38003115A6 /* Test-tvOS */,
 				27FA59EE179EFD730043460A /* Documentation */,
+				27FFFF071C973FB5001A70FC /* xcconfigs */,
 				2753154D14ACEF350065964D /* vendor */,
-				272AFF681C937C8900D0DBA6 /* Build Settings */,
 				27C70696148864BA00F0F099 /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
@@ -2516,22 +2513,6 @@
 				272AFF5F1C92401300D0DBA6 /* CBLArrayDiff+UIKit.m */,
 			);
 			name = Diff;
-			sourceTree = "<group>";
-		};
-		272AFF681C937C8900D0DBA6 /* Build Settings */ = {
-			isa = PBXGroup;
-			children = (
-				272AFF6B1C937CAF00D0DBA6 /* Project.xcconfig */,
-				272AFF691C937CAF00D0DBA6 /* Project_Debug.xcconfig */,
-				272AFF6A1C937CAF00D0DBA6 /* Project_Release.xcconfig */,
-				27F7A1371C938AAF00326DE9 /* Couchbase Lite */,
-				27F7A1491C938CC400326DE9 /* Storage */,
-				27F7A1411C938AF300326DE9 /* Listener */,
-				27F7A1421C938C0000326DE9 /* LiteServ */,
-				27F7A1501C938D2800326DE9 /* Tests */,
-			);
-			name = "Build Settings";
-			path = xcconfigs;
 			sourceTree = "<group>";
 		};
 		2733023218F884DD00A488F7 /* Replication */ = {
@@ -3290,107 +3271,6 @@
 			path = Categories;
 			sourceTree = "<group>";
 		};
-		27F7A1371C938AAF00326DE9 /* Couchbase Lite */ = {
-			isa = PBXGroup;
-			children = (
-				272AFF6F1C9380D400D0DBA6 /* CBL Mac_Debug.xcconfig */,
-				272AFF701C9380D400D0DBA6 /* CBL Mac_Release.xcconfig */,
-				272AFF711C9380D400D0DBA6 /* CBL Mac.xcconfig */,
-				272AFF741C93815700D0DBA6 /* CBL Mac+SQLCipher.xcconfig */,
-				272AFF751C93830900D0DBA6 /* CBL Mac+SQLCipher_Debug.xcconfig */,
-				272AFF761C93830900D0DBA6 /* CBL Mac+SQLCipher_Release.xcconfig */,
-				272AFF6E1C937FBE00D0DBA6 /* CBL Mac library.xcconfig */,
-				272AFF6C1C937FBE00D0DBA6 /* CBL Mac library_Debug.xcconfig */,
-				272AFF6D1C937FBE00D0DBA6 /* CBL Mac library_Release.xcconfig */,
-				272AFF771C93840C00D0DBA6 /* CBL iOS fat library_Debug.xcconfig */,
-				272AFF781C93840C00D0DBA6 /* CBL iOS fat library_Release.xcconfig */,
-				272AFF791C93840C00D0DBA6 /* CBL iOS fat library.xcconfig */,
-				272AFF7A1C93840C00D0DBA6 /* CBL iOS framework_Debug.xcconfig */,
-				272AFF7B1C93840C00D0DBA6 /* CBL iOS framework_Release.xcconfig */,
-				272AFF7C1C93840C00D0DBA6 /* CBL iOS framework.xcconfig */,
-				272AFF7D1C93840C00D0DBA6 /* CBL iOS library_Debug.xcconfig */,
-				272AFF7E1C93840C00D0DBA6 /* CBL iOS library_Release.xcconfig */,
-				272AFF7F1C93840C00D0DBA6 /* CBL iOS library.xcconfig */,
-				272AFF801C93840C00D0DBA6 /* CBL iOS_Debug.xcconfig */,
-				272AFF811C93840C00D0DBA6 /* CBL iOS_Release.xcconfig */,
-				272AFF821C93840C00D0DBA6 /* CBL iOS.xcconfig */,
-				275FB65F1C972DBF000D13A3 /* CBLJSViewCompiler_Debug.xcconfig */,
-				275FB6601C972DBF000D13A3 /* CBLJSViewCompiler_Release.xcconfig */,
-				275FB6611C972DBF000D13A3 /* CBLJSViewCompiler.xcconfig */,
-			);
-			name = "Couchbase Lite";
-			sourceTree = "<group>";
-		};
-		27F7A1411C938AF300326DE9 /* Listener */ = {
-			isa = PBXGroup;
-			children = (
-				27F7A1381C938AEA00326DE9 /* CBL Listener iOS_Debug.xcconfig */,
-				27F7A1391C938AEA00326DE9 /* CBL Listener iOS_Release.xcconfig */,
-				27F7A13A1C938AEA00326DE9 /* CBL Listener iOS.xcconfig */,
-				27F7A13B1C938AEA00326DE9 /* CBL Listener Mac_Debug.xcconfig */,
-				27F7A13C1C938AEA00326DE9 /* CBL Listener Mac_Release.xcconfig */,
-				27F7A13D1C938AEA00326DE9 /* CBL Listener Mac.xcconfig */,
-				27F7A13E1C938AEA00326DE9 /* Listener iOS Library_Debug.xcconfig */,
-				27F7A13F1C938AEA00326DE9 /* Listener iOS Library_Release.xcconfig */,
-				27F7A1401C938AEA00326DE9 /* Listener iOS Library.xcconfig */,
-			);
-			path = Listener;
-			sourceTree = "<group>";
-		};
-		27F7A1421C938C0000326DE9 /* LiteServ */ = {
-			isa = PBXGroup;
-			children = (
-				27F7A1461C938C1E00326DE9 /* LiteServ_Debug.xcconfig */,
-				27F7A1471C938C1E00326DE9 /* LiteServ_Release.xcconfig */,
-				27F7A1481C938C1E00326DE9 /* LiteServ.xcconfig */,
-				27F7A1431C938C1E00326DE9 /* LiteServ App_Debug.xcconfig */,
-				27F7A1441C938C1E00326DE9 /* LiteServ App_Release.xcconfig */,
-				27F7A1451C938C1E00326DE9 /* LiteServ App.xcconfig */,
-			);
-			path = LiteServ;
-			sourceTree = "<group>";
-		};
-		27F7A1491C938CC400326DE9 /* Storage */ = {
-			isa = PBXGroup;
-			children = (
-				27F7A14A1C938CFF00326DE9 /* CBL ForestDB Storage_Debug.xcconfig */,
-				27F7A14B1C938CFF00326DE9 /* CBL ForestDB Storage_Release.xcconfig */,
-				27F7A14C1C938CFF00326DE9 /* CBL ForestDB Storage.xcconfig */,
-				27F7A14D1C938CFF00326DE9 /* CBL SQLite Storage_Debug.xcconfig */,
-				27F7A14E1C938CFF00326DE9 /* CBL SQLite Storage_Release.xcconfig */,
-				27F7A14F1C938CFF00326DE9 /* CBL SQLite Storage.xcconfig */,
-			);
-			path = Storage;
-			sourceTree = "<group>";
-		};
-		27F7A1501C938D2800326DE9 /* Tests */ = {
-			isa = PBXGroup;
-			children = (
-				27F7A1631C938E4800326DE9 /* CBL iOS Empty App_Debug.xcconfig */,
-				27F7A1641C938E4800326DE9 /* CBL iOS Empty App_Release.xcconfig */,
-				27F7A1651C938E4800326DE9 /* CBL iOS Empty App.xcconfig */,
-				27F7A1511C938D6200326DE9 /* CBL iOS Test App_Debug.xcconfig */,
-				27F7A1521C938D6200326DE9 /* CBL iOS Test App_Release.xcconfig */,
-				27F7A1531C938D6200326DE9 /* CBL iOS Test App.xcconfig */,
-				27F7A1541C938D6200326DE9 /* CBL iOS Unit Tests_Debug.xcconfig */,
-				27F7A1551C938D6200326DE9 /* CBL iOS Unit Tests_Release.xcconfig */,
-				27F7A1561C938D6200326DE9 /* CBL iOS Unit Tests.xcconfig */,
-				27F7A1571C938D6200326DE9 /* CBL Mac Test App_Debug.xcconfig */,
-				27F7A1581C938D6200326DE9 /* CBL Mac Test App_Release.xcconfig */,
-				27F7A1591C938D6200326DE9 /* CBL Mac Test App.xcconfig */,
-				27F7A15A1C938D6200326DE9 /* CBL Mac Unit Tests_Debug.xcconfig */,
-				27F7A15B1C938D6200326DE9 /* CBL Mac Unit Tests_Release.xcconfig */,
-				27F7A15C1C938D6200326DE9 /* CBL Mac Unit Tests.xcconfig */,
-				27F7A15D1C938D6200326DE9 /* CBL tvOS Test App_Debug.xcconfig */,
-				27F7A15E1C938D6200326DE9 /* CBL tvOS Test App_Release.xcconfig */,
-				27F7A15F1C938D6200326DE9 /* CBL tvOS Test App.xcconfig */,
-				27F7A1601C938D6200326DE9 /* CBL tvOS Unit Tests_Debug.xcconfig */,
-				27F7A1611C938D6200326DE9 /* CBL tvOS Unit Tests_Release.xcconfig */,
-				27F7A1621C938D6200326DE9 /* CBL tvOS Unit Tests.xcconfig */,
-			);
-			path = Tests;
-			sourceTree = "<group>";
-		};
 		27FA59EE179EFD730043460A /* Documentation */ = {
 			isa = PBXGroup;
 			children = (
@@ -3419,6 +3299,82 @@
 				27FAEEE5164C8A3E00A3C0C2 /* textfield___inactive~ipad.png */,
 			);
 			path = Elements;
+			sourceTree = "<group>";
+		};
+		27FFFF071C973FB5001A70FC /* xcconfigs */ = {
+			isa = PBXGroup;
+			children = (
+				27FFFF511C973FB5001A70FC /* Project_Debug.xcconfig */,
+				27FFFF521C973FB5001A70FC /* Project_Release.xcconfig */,
+				27FFFF501C973FB5001A70FC /* Project.xcconfig */,
+				27FFFF421C973FB5001A70FC /* CBLJSViewCompiler_Debug.xcconfig */,
+				27FFFF431C973FB5001A70FC /* CBLJSViewCompiler_Release.xcconfig */,
+				27FFFF411C973FB5001A70FC /* CBLJSViewCompiler.xcconfig */,
+				27FFFF0C1C973FB5001A70FC /* ForestDB Storage_Debug.xcconfig */,
+				27FFFF0D1C973FB5001A70FC /* ForestDB Storage_Release.xcconfig */,
+				27FFFF0B1C973FB5001A70FC /* ForestDB Storage.xcconfig */,
+				27FFFF0F1C973FB5001A70FC /* iOS Empty App_Debug.xcconfig */,
+				27FFFF101C973FB5001A70FC /* iOS Empty App_Release.xcconfig */,
+				27FFFF0E1C973FB5001A70FC /* iOS Empty App.xcconfig */,
+				27FFFF121C973FB5001A70FC /* iOS fat library_Debug.xcconfig */,
+				27FFFF131C973FB5001A70FC /* iOS fat library_Release.xcconfig */,
+				27FFFF111C973FB5001A70FC /* iOS fat library.xcconfig */,
+				27FFFF151C973FB5001A70FC /* iOS framework_Debug.xcconfig */,
+				27FFFF161C973FB5001A70FC /* iOS framework_Release.xcconfig */,
+				27FFFF141C973FB5001A70FC /* iOS framework.xcconfig */,
+				27FFFF181C973FB5001A70FC /* iOS library_Debug.xcconfig */,
+				27FFFF191C973FB5001A70FC /* iOS library_Release.xcconfig */,
+				27FFFF171C973FB5001A70FC /* iOS library.xcconfig */,
+				27FFFF1B1C973FB5001A70FC /* iOS Test App_Debug.xcconfig */,
+				27FFFF1C1C973FB5001A70FC /* iOS Test App_Release.xcconfig */,
+				27FFFF1A1C973FB5001A70FC /* iOS Test App.xcconfig */,
+				27FFFF1E1C973FB5001A70FC /* iOS Unit Tests_Debug.xcconfig */,
+				27FFFF1F1C973FB5001A70FC /* iOS Unit Tests_Release.xcconfig */,
+				27FFFF1D1C973FB5001A70FC /* iOS Unit Tests.xcconfig */,
+				27FFFF211C973FB5001A70FC /* iOS_Debug.xcconfig */,
+				27FFFF221C973FB5001A70FC /* iOS_Release.xcconfig */,
+				27FFFF201C973FB5001A70FC /* iOS.xcconfig */,
+				27FFFF481C973FB5001A70FC /* Listener iOS Library_Debug.xcconfig */,
+				27FFFF491C973FB5001A70FC /* Listener iOS Library_Release.xcconfig */,
+				27FFFF471C973FB5001A70FC /* Listener iOS Library.xcconfig */,
+				27FFFF241C973FB5001A70FC /* Listener iOS_Debug.xcconfig */,
+				27FFFF251C973FB5001A70FC /* Listener iOS_Release.xcconfig */,
+				27FFFF231C973FB5001A70FC /* Listener iOS.xcconfig */,
+				27FFFF271C973FB5001A70FC /* Listener Mac_Debug.xcconfig */,
+				27FFFF281C973FB5001A70FC /* Listener Mac_Release.xcconfig */,
+				27FFFF261C973FB5001A70FC /* Listener Mac.xcconfig */,
+				27FFFF4B1C973FB5001A70FC /* LiteServ App_Debug.xcconfig */,
+				27FFFF4C1C973FB5001A70FC /* LiteServ App_Release.xcconfig */,
+				27FFFF4A1C973FB5001A70FC /* LiteServ App.xcconfig */,
+				27FFFF4E1C973FB5001A70FC /* LiteServ_Debug.xcconfig */,
+				27FFFF4F1C973FB5001A70FC /* LiteServ_Release.xcconfig */,
+				27FFFF4D1C973FB5001A70FC /* LiteServ.xcconfig */,
+				27FFFF2A1C973FB5001A70FC /* Mac library_Debug.xcconfig */,
+				27FFFF2B1C973FB5001A70FC /* Mac library_Release.xcconfig */,
+				27FFFF291C973FB5001A70FC /* Mac library.xcconfig */,
+				27FFFF2D1C973FB5001A70FC /* Mac Test App_Debug.xcconfig */,
+				27FFFF2E1C973FB5001A70FC /* Mac Test App_Release.xcconfig */,
+				27FFFF2C1C973FB5001A70FC /* Mac Test App.xcconfig */,
+				27FFFF301C973FB5001A70FC /* Mac Unit Tests_Debug.xcconfig */,
+				27FFFF311C973FB5001A70FC /* Mac Unit Tests_Release.xcconfig */,
+				27FFFF2F1C973FB5001A70FC /* Mac Unit Tests.xcconfig */,
+				27FFFF361C973FB5001A70FC /* Mac_Debug.xcconfig */,
+				27FFFF371C973FB5001A70FC /* Mac_Release.xcconfig */,
+				27FFFF351C973FB5001A70FC /* Mac.xcconfig */,
+				27FFFF331C973FB5001A70FC /* Mac+SQLCipher_Debug.xcconfig */,
+				27FFFF341C973FB5001A70FC /* Mac+SQLCipher_Release.xcconfig */,
+				27FFFF321C973FB5001A70FC /* Mac+SQLCipher.xcconfig */,
+				27FFFF391C973FB5001A70FC /* SQLite Storage_Debug.xcconfig */,
+				27FFFF3A1C973FB5001A70FC /* SQLite Storage_Release.xcconfig */,
+				27FFFF381C973FB5001A70FC /* SQLite Storage.xcconfig */,
+				27FFFF3C1C973FB5001A70FC /* tvOS Test App_Debug.xcconfig */,
+				27FFFF3D1C973FB5001A70FC /* tvOS Test App_Release.xcconfig */,
+				27FFFF3B1C973FB5001A70FC /* tvOS Test App.xcconfig */,
+				27FFFF3F1C973FB5001A70FC /* tvOS Unit Tests_Debug.xcconfig */,
+				27FFFF401C973FB5001A70FC /* tvOS Unit Tests_Release.xcconfig */,
+				27FFFF3E1C973FB5001A70FC /* tvOS Unit Tests.xcconfig */,
+			);
+			path = xcconfigs;
 			sourceTree = "<group>";
 		};
 		792867C1178DE01900248AF0 /* JSViewCompiler */ = {
@@ -4497,10 +4453,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				275FB6621C972DBF000D13A3 /* CBLJSViewCompiler_Debug.xcconfig in Resources */,
 				27393A971C8B8C6300829C9B /* getRepoVersion.sh in Resources */,
-				275FB6641C972DBF000D13A3 /* CBLJSViewCompiler.xcconfig in Resources */,
-				275FB6631C972DBF000D13A3 /* CBLJSViewCompiler_Release.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5610,192 +5563,182 @@
 /* Begin XCBuildConfiguration section */
 		1DEB923608733DC60010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF691C937CAF00D0DBA6 /* Project_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF511C973FB5001A70FC /* Project_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		1DEB923708733DC60010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF6A1C937CAF00D0DBA6 /* Project_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF521C973FB5001A70FC /* Project_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		270035931A44E9280015B9F4 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1541C938D6200326DE9 /* CBL iOS Unit Tests_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF1E1C973FB5001A70FC /* iOS Unit Tests_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		270035941A44E9280015B9F4 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1551C938D6200326DE9 /* CBL iOS Unit Tests_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF1F1C973FB5001A70FC /* iOS Unit Tests_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		2701C14C1C49CFE6006D7A99 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF6C1C937FBE00D0DBA6 /* CBL Mac library_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF2A1C973FB5001A70FC /* Mac library_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		2701C14D1C49CFE6006D7A99 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF6D1C937FBE00D0DBA6 /* CBL Mac library_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF2B1C973FB5001A70FC /* Mac library_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		2701C20E1C4D5BDD006D7A99 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF751C93830900D0DBA6 /* CBL Mac+SQLCipher_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF331C973FB5001A70FC /* Mac+SQLCipher_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		2701C20F1C4D5BDD006D7A99 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF761C93830900D0DBA6 /* CBL Mac+SQLCipher_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF341C973FB5001A70FC /* Mac+SQLCipher_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		270B3E0C1489359100E0A926 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF6F1C9380D400D0DBA6 /* CBL Mac_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF361C973FB5001A70FC /* Mac_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		270B3E0D1489359100E0A926 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF701C9380D400D0DBA6 /* CBL Mac_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF371C973FB5001A70FC /* Mac_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		270FE0D214C5008C005FF647 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1461C938C1E00326DE9 /* LiteServ_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF4E1C973FB5001A70FC /* LiteServ_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		270FE0D314C5008C005FF647 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1471C938C1E00326DE9 /* LiteServ_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF4F1C973FB5001A70FC /* LiteServ_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		272AA8491A48D835004B8D55 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A15A1C938D6200326DE9 /* CBL Mac Unit Tests_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF301C973FB5001A70FC /* Mac Unit Tests_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		272AA84A1A48D835004B8D55 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A15B1C938D6200326DE9 /* CBL Mac Unit Tests_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF311C973FB5001A70FC /* Mac Unit Tests_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		273E9F091C509F39003115A6 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A15D1C938D6200326DE9 /* CBL tvOS Test App_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF3C1C973FB5001A70FC /* tvOS Test App_Debug.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				TARGETED_DEVICE_FAMILY = 3;
 			};
 			name = Debug;
 		};
 		273E9F0A1C509F39003115A6 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A15E1C938D6200326DE9 /* CBL tvOS Test App_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF3D1C973FB5001A70FC /* tvOS Test App_Release.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
-				TARGETED_DEVICE_FAMILY = 3;
 			};
 			name = Release;
 		};
 		273E9F0B1C509F39003115A6 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1601C938D6200326DE9 /* CBL tvOS Unit Tests_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF3F1C973FB5001A70FC /* tvOS Unit Tests_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		273E9F0C1C509F39003115A6 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1611C938D6200326DE9 /* CBL tvOS Unit Tests_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF401C973FB5001A70FC /* tvOS Unit Tests_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		27452BAB1AB1156F00327776 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF771C93840C00D0DBA6 /* CBL iOS fat library_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF121C973FB5001A70FC /* iOS fat library_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		27452BAC1AB1156F00327776 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF781C93840C00D0DBA6 /* CBL iOS fat library_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF131C973FB5001A70FC /* iOS fat library_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		27452BCC1AB1180900327776 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF7A1C93840C00D0DBA6 /* CBL iOS framework_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF151C973FB5001A70FC /* iOS framework_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		27452BCD1AB1180900327776 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF7B1C93840C00D0DBA6 /* CBL iOS framework_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF161C973FB5001A70FC /* iOS framework_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		275315E214ACF0A20065964D /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A13B1C938AEA00326DE9 /* CBL Listener Mac_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF271C973FB5001A70FC /* Listener Mac_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		275315E314ACF0A20065964D /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A13C1C938AEA00326DE9 /* CBL Listener Mac_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF281C973FB5001A70FC /* Listener Mac_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		27538F7817F13B04004C3BFD /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1431C938C1E00326DE9 /* LiteServ App_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF4B1C973FB5001A70FC /* LiteServ App_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		27538F7917F13B04004C3BFD /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1441C938C1E00326DE9 /* LiteServ App_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF4C1C973FB5001A70FC /* LiteServ App_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
@@ -5814,98 +5757,98 @@
 		};
 		27731F281495CFEF00815D67 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1631C938E4800326DE9 /* CBL iOS Empty App_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF0F1C973FB5001A70FC /* iOS Empty App_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		27731F291495CFEF00815D67 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1641C938E4800326DE9 /* CBL iOS Empty App_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF101C973FB5001A70FC /* iOS Empty App_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		27B0B7C81492B83C00A817AD /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF7D1C93840C00D0DBA6 /* CBL iOS library_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF181C973FB5001A70FC /* iOS library_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		27B0B7C91492B83C00A817AD /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF7E1C93840C00D0DBA6 /* CBL iOS library_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF191C973FB5001A70FC /* iOS library_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		27B0B7F21492BB6C00A817AD /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF801C93840C00D0DBA6 /* CBL iOS_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF211C973FB5001A70FC /* iOS_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		27B0B7F31492BB6C00A817AD /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 272AFF811C93840C00D0DBA6 /* CBL iOS_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF221C973FB5001A70FC /* iOS_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		27B0B82A1492C16300A817AD /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1511C938D6200326DE9 /* CBL iOS Test App_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF1B1C973FB5001A70FC /* iOS Test App_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		27B0B82B1492C16300A817AD /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1521C938D6200326DE9 /* CBL iOS Test App_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF1C1C973FB5001A70FC /* iOS Test App_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		27C706B0148864BA00F0F099 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1571C938D6200326DE9 /* CBL Mac Test App_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF2D1C973FB5001A70FC /* Mac Test App_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		27C706B1148864BA00F0F099 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1581C938D6200326DE9 /* CBL Mac Test App_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF2E1C973FB5001A70FC /* Mac Test App_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		27E66ACD1A7305B10091DA3F /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A14D1C938CFF00326DE9 /* CBL SQLite Storage_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF391C973FB5001A70FC /* SQLite Storage_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		27E66ACE1A7305B10091DA3F /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A14E1C938CFF00326DE9 /* CBL SQLite Storage_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF3A1C973FB5001A70FC /* SQLite Storage_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		27E66B411A7307590091DA3F /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A14A1C938CFF00326DE9 /* CBL ForestDB Storage_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF0C1C973FB5001A70FC /* ForestDB Storage_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		27E66B421A7307590091DA3F /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A14B1C938CFF00326DE9 /* CBL ForestDB Storage_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF0D1C973FB5001A70FC /* ForestDB Storage_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
@@ -5924,42 +5867,42 @@
 		};
 		930FE5641C58562B008107A0 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 275FB65F1C972DBF000D13A3 /* CBLJSViewCompiler_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF421C973FB5001A70FC /* CBLJSViewCompiler_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		930FE5651C58562B008107A0 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 275FB6601C972DBF000D13A3 /* CBLJSViewCompiler_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF431C973FB5001A70FC /* CBLJSViewCompiler_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		DA023B6214BCA94C008184BB /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A13E1C938AEA00326DE9 /* Listener iOS Library_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF481C973FB5001A70FC /* Listener iOS Library_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		DA023B6314BCA94C008184BB /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A13F1C938AEA00326DE9 /* Listener iOS Library_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF491C973FB5001A70FC /* Listener iOS Library_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		DA147C3414BCAC3B0052DA4D /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1381C938AEA00326DE9 /* CBL Listener iOS_Debug.xcconfig */;
+			baseConfigurationReference = 27FFFF241C973FB5001A70FC /* Listener iOS_Debug.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		DA147C3514BCAC3B0052DA4D /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27F7A1391C938AEA00326DE9 /* CBL Listener iOS_Release.xcconfig */;
+			baseConfigurationReference = 27FFFF251C973FB5001A70FC /* Listener iOS_Release.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;

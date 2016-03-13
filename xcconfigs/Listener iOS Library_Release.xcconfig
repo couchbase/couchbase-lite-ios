@@ -7,6 +7,3 @@
 
 #include "Listener iOS Library.xcconfig"
 
-COPY_PHASE_STRIP         = YES
-DEBUG_INFORMATION_FORMAT = dwarf
-VALIDATE_PRODUCT         = YES
