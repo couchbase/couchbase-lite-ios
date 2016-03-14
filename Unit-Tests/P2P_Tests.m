@@ -34,6 +34,7 @@ static UInt16 sPort = 60100;
     CBLListener* listener;
     CBLDatabase* listenerDB;
     NSURL* listenerDBURL;
+    id<CBLAuthenticator> clientAuthenticator;
 }
 
 
@@ -57,6 +58,8 @@ static UInt16 sPort = 60100;
 #if USE_AUTH
     listener.requiresAuth = YES;
     listener.passwords = @{@"bob": @"slack"};
+    clientAuthenticator = [CBLAuthenticator basicAuthenticatorWithName: @"bob"
+                                                              password: @"slack"];
 #endif
 
 #if USE_SSL
@@ -120,6 +123,38 @@ static UInt16 sPort = 60100;
         [self verifyDocsIn: db withAttachments: YES];
 }
 
+- (void) testWrongAuth {
+#if !USE_AUTH
+    XCTFail(@"This test requires HTTP auth to be enabled");
+#else
+    clientAuthenticator = [CBLAuthenticator basicAuthenticatorWithName: @"bob"
+                                                              password: @"pink"];
+    [self createDocsIn: listenerDB withAttachments: YES];
+    Log(@"Pulling...");
+    CBLReplication* repl = [db createPullReplication: listenerDBURL];
+    [self runReplication: repl];
+    NSError* error = repl.lastError;
+    AssertEqual(error.domain, CBLHTTPErrorDomain);
+    AssertEq(error.code, 401);
+#endif
+}
+
+
+- (void) testMissingAuth {
+#if !USE_AUTH
+    XCTFail(@"This test requires HTTP auth to be enabled");
+#else
+    clientAuthenticator = nil; // Don't authenticate!
+    [self createDocsIn: listenerDB withAttachments: YES];
+    Log(@"Pulling...");
+    CBLReplication* repl = [db createPullReplication: listenerDBURL];
+    [self runReplication: repl];
+    NSError* error = repl.lastError;
+    AssertEqual(error.domain, CBLHTTPErrorDomain);
+    AssertEq(error.code, 401);
+#endif
+}
+
 
 - (void) createDocsIn: (CBLDatabase*)database withAttachments: (BOOL)withAttachments {
     Log(@"Creating %d documents in %@...", kNDocuments, database.name);
@@ -159,12 +194,9 @@ static UInt16 sPort = 60100;
 }
 
 
-- (BOOL) runReplication: (CBLReplication*)repl
-         expectedChangesCount: (NSUInteger)expectedChangesCount
-{
+- (void) runReplication: (CBLReplication*)repl {
 #if USE_AUTH
-    repl.authenticator = [CBLAuthenticator basicAuthenticatorWithName: @"bob"
-                                                             password: @"slack"];
+    repl.authenticator = clientAuthenticator;
 #endif
     [repl start];
 
@@ -185,8 +217,15 @@ static UInt16 sPort = 60100;
     if ([listener respondsToSelector:@selector(connectionCount)]) // observe for changes:
         [self keyValueObservingExpectationForObject: listener
                                             keyPath: @"connectionCount" expectedValue: @0];
-
+    
     [self waitForExpectationsWithTimeout: 30.0 handler: nil];
+}
+
+
+- (BOOL) runReplication: (CBLReplication*)repl
+         expectedChangesCount: (NSUInteger)expectedChangesCount
+{
+    [self runReplication: repl];
     AssertNil(repl.lastError);
     if (repl.lastError)
         return NO;

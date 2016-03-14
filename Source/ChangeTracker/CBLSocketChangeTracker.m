@@ -239,7 +239,7 @@ UsingLogDomain(Sync);
         _gzip = nil;
     }
     LogTo(SyncPerf, @"%@ reached EOF after %.3f sec", self, CFAbsoluteTimeGetCurrent()-_startTime);
-    if (_mode == kContinuous) {
+    if (_mode == kContinuous || _error) {
         [self stop];
     } else if ([self endParsingData] >= 0) {
         // Successfully reached end.
