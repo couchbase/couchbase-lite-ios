@@ -81,7 +81,7 @@ static void evaluate(SecTrustRef trust, SecTrustCallback callback) {
                                                    || result == kSecTrustResultInvalid);
             // kSecTrustResultInvalid means there's no TrustRef, i.e. no client cert. OK by default.
         }
-        _hasClientCert = ok;
+        _hasClientCert = (trustRef != nil) && ok;
         completionHandler(ok);
     });
 }
