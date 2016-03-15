@@ -499,14 +499,17 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     Assert(_pull, @"Not a pull replication");
     AssertEq(attachment.document.database, _database);
 
-    if (attachment.contentAvailable)
-        return nil;
-
     NSProgress* progress = [NSProgress progressWithTotalUnitCount: attachment.encodedLength];
     progress.cancellable = YES;     // downloader will set its own cancellation handler
     progress.kind = NSProgressKindFile;
     [progress setUserInfoObject: NSProgressFileOperationKindDownloading
                          forKey: NSProgressFileOperationKindKey];
+
+    if (attachment.contentAvailable) {
+        // Nothing to do, so return a completed progress object:
+        progress.completedUnitCount = progress.totalUnitCount;
+        return progress;
+    }
 
     CBL_AttachmentID *attID;
     attID = [[CBL_AttachmentID alloc] initWithDocID: attachment.document.documentID

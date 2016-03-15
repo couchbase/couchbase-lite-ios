@@ -384,7 +384,7 @@ UsingLogDomain(Database);
     // action, because farther down we create an action to move it...
     NSError* createTempDirError;
     NSString* tempPath = [self createTempDir: &createTempDirError];
-    [action addPerform:^BOOL(NSError** outError) {
+    [action addPerform:^BOOL(NSError** _Nonnull outError) {
         Log(@"CBLBlobStore: %@ %@", (newKey ? @"encrypting" : @"decrypting"), _path);
         *outError = createTempDirError;
         return tempPath != nil;

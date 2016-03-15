@@ -27,7 +27,7 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
     If the CBLDocument already has an associated model, it's returned. Otherwise a new one is instantiated.
     If you call this on CBLModel itself, it'll delegate to the CBLModelFactory to decide what class to instantiate; this lets you map different classes to different "type" property values, for instance.
     If you call this method on a CBLModel subclass, it will always instantiate an instance of that class; e.g. [MyWidgetModel modelForDocument: doc] always creates a MyWidgetModel. */
-+ (instancetype) modelForDocument: (CBLDocument*)document;
++ (nullable instancetype) modelForDocument: (CBLDocument*)document;
 
 /** Returns a new "untitled" CBLModel with a new unsaved document.
  The document won't be written to the database until -save is called. */
@@ -165,7 +165,7 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
 
 /** The document ID to use when creating a new document.
     Default is nil, which means to assign no ID (the server will assign one). */
-- (NSString*) idForNewDocumentInDatabase: (CBLDatabase*)db              __attribute__((nonnull));
+- (nullable NSString*) idForNewDocumentInDatabase: (CBLDatabase*)db;
 
 /** Called when the model's properties are reloaded from the document.
     This happens both when initialized from a document, and after an external change. */
@@ -173,7 +173,7 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
 
 /** Returns the database in which to look up the document ID of a model-valued property.
     Defaults to the same database as the receiver's document. You should override this if a document property contains the ID of a document in a different database. */
-- (CBLDatabase*) databaseForModelProperty: (NSString*)propertyName      __attribute__((nonnull));
+- (CBLDatabase*) databaseForModelProperty: (NSString*)propertyName;
 
 /** Marks the model as having unsaved content, ensuring that it will get saved after a short interval (if .autosaves is YES) or when -save or -[CBLDatabase saveAllModels] are called.
     You don't normally need to call this, since property setters call it for you. One case where you'd need to call it is if you want to manage mutable state in your own properties and not store the changes into dynamic properties until it's time to save. In that case you should also override -propertiesToSave and update the dynamic properties accordingly before chaining to the superclass method. */
@@ -229,7 +229,7 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
 @interface CBLDatabase (CBLModel)
 
 /** All CBLModels associated with this database whose needsSave is true. */
-@property (readonly) CBLArrayOf(CBLModel*)* unsavedModels;
+@property (readonly, nullable) CBLArrayOf(CBLModel*)* unsavedModels;
 
 /** Saves changes to all CBLModels associated with this database whose needsSave is true. */
 - (BOOL) saveAllModels: (NSError**)outError;

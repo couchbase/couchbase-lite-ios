@@ -50,7 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Returns a stream from which you can read the data of the attachment.
     Remember to close it when you're done. */
-- (NSInputStream*) openContentStream;
+- (nullable NSInputStream*) openContentStream;
 
 /** The (file:) URL of the file containing the contents.
     This property is somewhat deprecated and is made available only for use with platform APIs that
