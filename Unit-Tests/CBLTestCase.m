@@ -90,7 +90,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 #else
     if (![NSProcessInfo instancesRespondToSelector: @selector(operatingSystemVersion)])
         return 9; // -operatingSystemVersion was added in OS X 10.10
-    return [NSProcessInfo processInfo].operatingSystemVersion.majorVersion;
+    return [NSProcessInfo processInfo].operatingSystemVersion.minorVersion;
 #endif
 }
 

@@ -47,7 +47,7 @@ void RemoveTemporaryCredential(NSURL* url, NSString* realm,
 - (NSData*) contentsOfTestFile: (NSString*)name;
 
 @property (readonly) NSInteger iOSVersion;      // Returns 0 on Mac OS
-@property (readonly) NSInteger macOSVersion;    // Returns 0 on iOS
+@property (readonly) NSInteger macOSVersion;    // Returns 0 on iOS, minor version ('10.*') on Mac
 
 // internal:
 - (void) _assertEqualish: (id)a to: (id)b;
