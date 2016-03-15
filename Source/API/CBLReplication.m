@@ -458,7 +458,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
             return [_pendingDocIDs containsObject: doc.documentID];
         // Else run the filter on the doc:
         CBL_ReplicatorSettings* settings = self.replicatorSettings;
-        if (!settings.filterBlock(rev, settings.filterParameters))
+        CBLFilterBlock filter = settings.filterBlock;
+        if (filter && !filter(rev, settings.filterParameters))
             return NO;
     }
     return YES;
