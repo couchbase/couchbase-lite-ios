@@ -116,7 +116,10 @@ void RemoveTemporaryCredential(NSURL* url, NSString* realm,
 /** The self-signed cert(s) of the remote test server's SSL identity. */
 @property (readonly) NSArray* remoteTestDBAnchorCerts;
 
-/** Deletes a remote database. Works only with CouchDB, not Sync Gateway. */
+/** Sends an HTTP request via a CBLRemoteJSONRequest. Returns parsed JSON response. */
+- (id) sendRemoteRequest: (NSString*)method toURL: (NSURL*)url;
+
+/** Deletes a remote database. */
 - (void) eraseRemoteDB: (NSURL*)url;
 
 @end

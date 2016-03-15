@@ -450,9 +450,8 @@
 
     // Check _all_docs on the remote db and make sure only doc4 and doc7 were pushed:
     NSURL* allDocsURL = [remoteDB URLByAppendingPathComponent: @"_all_docs"];
-    NSData* data = [NSData dataWithContentsOfURL: allDocsURL];
-    Assert(data);
-    NSDictionary* response = [CBLJSON JSONObjectWithData: data options: 0 error: NULL];
+    NSDictionary* response = [self sendRemoteRequest: @"GET" toURL: allDocsURL];
+    Assert(response);
     NSArray* rows = response[@"rows"];
     AssertEq(rows.count, 2u);
     AssertEqual((rows[0])[@"id"], @"doc4");

@@ -335,29 +335,36 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 
 - (void) eraseRemoteDB: (NSURL*)dbURL {
     Log(@"Deleting %@", dbURL);
-    __block NSError* error = nil;
-    
     // Post to /db/_flush is supported by Sync Gateway 1.1, but not by CouchDB
     NSURLComponents* comp = [NSURLComponents componentsWithURL: dbURL resolvingAgainstBaseURL: YES];
     comp.port = ([dbURL.scheme isEqualToString: @"http"]) ? @4985 : @4995;
     comp.path = [comp.path stringByAppendingPathComponent: @"_flush"];
+    [self sendRemoteRequest: @"POST" toURL: comp.URL];
+}
 
-    XCTestExpectation* finished = [self expectationWithDescription: @"Finished erasing"];
+
+- (id) sendRemoteRequest: (NSString*)method toURL: (NSURL*)url {
+    __block id result = nil;
+    __block NSError* error = nil;
+    XCTestExpectation* finished = [self expectationWithDescription: @"Sent request to server"];
     CBLRemoteSession* session = [[CBLRemoteSession alloc] init];
-    CBLRemoteRequest* request = [[CBLRemoteRequest alloc] initWithMethod: @"POST"
-                                                                     URL: comp.URL
-                                                                    body: nil
-                                                            onCompletion:
-                                 ^(id result, NSError *err) {
-                                     [finished fulfill];
+    CBLRemoteRequest* request = [[CBLRemoteJSONRequest alloc] initWithMethod: method
+                                                                         URL: url
+                                                                        body: nil
+                                                                onCompletion:
+                                 ^(id r, NSError *err) {
+                                     result = r;
                                      error = err;
+                                     [finished fulfill];
                                  }
                                  ];
     request.authorizer = self.authorizer;
     request.debugAlwaysTrust = YES;
     [session startRequest: request];
-    
+
     [self waitForExpectationsWithTimeout: 10 handler: nil];
+    AssertNil(error);
+    return result;
 }
 
 
