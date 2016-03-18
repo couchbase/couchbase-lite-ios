@@ -101,7 +101,7 @@
          <EnvironmentVariable
             key = "MallocScribble"
             value = ""
-            isEnabled = "YES">
+            isEnabled = "NO">
          </EnvironmentVariable>
       </EnvironmentVariables>
       <AdditionalOptions>

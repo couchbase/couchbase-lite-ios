@@ -939,9 +939,18 @@ static CBL_Revision* mkrev(NSString* revID) {
     CBLDocument* redoc = [db existingDocumentWithID:docId];
     Assert(redoc);
 
+    Log(@"Before purge, lastSequence = %llu", db.lastSequenceNumber);
+
+    Log(@"PURGE");
     Assert([redoc purgeDocument: &error]);
+    Log(@"After purge, lastSequence = %llu", db.lastSequenceNumber);
+
+    AssertNil([db existingDocumentWithID:docId]);
 
     [self reopenTestDB];
+
+    Log(@"After reopen, lastSequence = %llu", db.lastSequenceNumber);
+    AssertNil([db existingDocumentWithID:docId]);
 
     CBL_MutableRevision* revAfterPurge = [[CBL_MutableRevision alloc] initWithDocID:docId revID:@"1-1111" deleted: NO];
     revAfterPurge.properties = $dict({@"_id", revAfterPurge.docID}, {@"_rev", revAfterPurge.revID}, {@"testName", @"test26_ReAddAfterPurge"});
