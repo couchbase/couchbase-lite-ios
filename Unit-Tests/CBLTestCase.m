@@ -263,7 +263,9 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 
 - (NSURL*) remoteTestDBURL: (NSString*)dbName {
     // If the OS has App Transport Security, we have to make all connections over SSL:
-    if (self.iOSVersion >= 9 || self.macOSVersion >= 11) {
+    // ...except that Mac OS unit tests don't appear to be restricted by ATS. And there is
+    // a CFNetwork bug(?) triggered by using SSL (see #1170)
+    if (self.iOSVersion >= 9 /*|| self.macOSVersion >= 11*/) {
         NSArray* serverCerts = [self remoteTestDBAnchorCerts];
         [CBLReplication setAnchorCerts: serverCerts onlyThese: NO];
         return [self remoteSSLTestDBURL: dbName];
