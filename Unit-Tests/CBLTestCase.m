@@ -90,7 +90,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 #else
     if (![NSProcessInfo instancesRespondToSelector: @selector(operatingSystemVersion)])
         return 9; // -operatingSystemVersion was added in OS X 10.10
-    return [NSProcessInfo processInfo].operatingSystemVersion.majorVersion;
+    return [NSProcessInfo processInfo].operatingSystemVersion.minorVersion;
 #endif
 }
 
@@ -263,7 +263,9 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 
 - (NSURL*) remoteTestDBURL: (NSString*)dbName {
     // If the OS has App Transport Security, we have to make all connections over SSL:
-    if (self.iOSVersion >= 9 || self.macOSVersion >= 11) {
+    // ...except that Mac OS unit tests don't appear to be restricted by ATS. And there is
+    // a CFNetwork bug(?) triggered by using SSL (see #1170)
+    if (self.iOSVersion >= 9 /*|| self.macOSVersion >= 11*/) {
         NSArray* serverCerts = [self remoteTestDBAnchorCerts];
         [CBLReplication setAnchorCerts: serverCerts onlyThese: NO];
         return [self remoteSSLTestDBURL: dbName];
@@ -335,29 +337,36 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 
 - (void) eraseRemoteDB: (NSURL*)dbURL {
     Log(@"Deleting %@", dbURL);
-    __block NSError* error = nil;
-    
     // Post to /db/_flush is supported by Sync Gateway 1.1, but not by CouchDB
     NSURLComponents* comp = [NSURLComponents componentsWithURL: dbURL resolvingAgainstBaseURL: YES];
     comp.port = ([dbURL.scheme isEqualToString: @"http"]) ? @4985 : @4995;
     comp.path = [comp.path stringByAppendingPathComponent: @"_flush"];
+    [self sendRemoteRequest: @"POST" toURL: comp.URL];
+}
 
-    XCTestExpectation* finished = [self expectationWithDescription: @"Finished erasing"];
+
+- (id) sendRemoteRequest: (NSString*)method toURL: (NSURL*)url {
+    __block id result = nil;
+    __block NSError* error = nil;
+    XCTestExpectation* finished = [self expectationWithDescription: @"Sent request to server"];
     CBLRemoteSession* session = [[CBLRemoteSession alloc] init];
-    CBLRemoteRequest* request = [[CBLRemoteRequest alloc] initWithMethod: @"POST"
-                                                                     URL: comp.URL
-                                                                    body: nil
-                                                            onCompletion:
-                                 ^(id result, NSError *err) {
-                                     [finished fulfill];
+    CBLRemoteRequest* request = [[CBLRemoteJSONRequest alloc] initWithMethod: method
+                                                                         URL: url
+                                                                        body: nil
+                                                                onCompletion:
+                                 ^(id r, NSError *err) {
+                                     result = r;
                                      error = err;
+                                     [finished fulfill];
                                  }
                                  ];
     request.authorizer = self.authorizer;
     request.debugAlwaysTrust = YES;
     [session startRequest: request];
-    
+
     [self waitForExpectationsWithTimeout: 10 handler: nil];
+    AssertNil(error);
+    return result;
 }
 
 

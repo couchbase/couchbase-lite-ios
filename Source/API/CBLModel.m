@@ -63,10 +63,7 @@
 
 + (instancetype) modelForNewDocumentInDatabase: (CBLDatabase*)database {
     NSParameterAssert(database);
-    if (self == [CBLModel class]) {
-        Warn(@"Couldn't create a model object for a new document from the base CBLModel class.");
-        return nil;
-    }
+    Assert(self != [CBLModel class], @"Must be called on a subclass of CBLModel");
 
     CBLModel *model = [[self alloc] initWithDocument:nil orDatabase:database];
     NSString *documentType = [database.modelFactory documentTypeForClass:[self class]];

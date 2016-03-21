@@ -5,6 +5,9 @@
 //  Created by Christian Beer on 21.11.13.
 //  Copyright (c) 2013 Christian Beer. All rights reserved.
 //
+//  Modified by Pasin Suriyentrakorn
+//  Copyright (c) 2016 Couchbase. All rights reserved.
+//
 
 #import <CoreData/CoreData.h>
 
@@ -23,16 +26,10 @@ extern NSString* const kCBLISCustomPropertyQueryBooleanWithNumber;
 /** Error codes for CBLIncrementalStore. */
 typedef enum
 {
-    CBLIncrementalStoreErrorUndefinedError = 0,
     CBLIncrementalStoreErrorCreatingStoreFailed,
     CBLIncrementalStoreErrorMigrationOfStoreFailed,
-    CBLIncrementalStoreErrorStoringMetadataFailed,
+    CBLIncrementalStoreLoadMetadataFailed,
     CBLIncrementalStoreErrorDatabaseModelIncompatible,
-    CBLIncrementalStoreErrorCBLManagerSharedInstanceMissing,
-    CBLIncrementalStoreErrorCreatingDatabaseFailed,
-    CBLIncrementalStoreErrorPersistingInsertedObjectsFailed,
-    CBLIncrementalStoreErrorPersistingUpdatedObjectsFailed,
-    CBLIncrementalStoreErrorPersistingDeletedObjectsFailed,
     CBLIncrementalStoreErrorQueryingCouchbaseLiteFailed,
     CBLIncrementalStoreErrorUnsupportedRequestType,
     CBLIncrementalStoreErrorUnsupportedPredicate,
@@ -41,6 +38,7 @@ typedef enum
     CBLIncrementalStoreErrorUnsupportedFetchRequest
 } CBLIncrementalStoreError;
 
+@class CBLIncrementalStore;
 @class CBLDocument;
 @class CBLDatabase;
 @class CBLManager;
@@ -66,7 +64,7 @@ typedef void(^CBLISConflictHandler)(NSArray* conflictingRevisions);
  * The last path component of the database URL is used for the database name. Examples: cblite://test-database, cblite://test/abc/database-name.
  *
  * There are also convenience methods to create the whole Core Data stack with one line of code.
- * 
+ *
  * @author Christian Beer http://chbeer.de
  */
 @interface CBLIncrementalStore : NSIncrementalStore
@@ -83,20 +81,27 @@ typedef void(^CBLISConflictHandler)(NSArray* conflictingRevisions);
 /** An optional dictionary of extra properties for the incremental store.*/
 @property (nonatomic, copy) NSDictionary* customProperties;
 
-/** Returns the type of this store to use with addPersistentStore:... 
+/** Returns the type of this store to use with addPersistentStore:...
  *
  * @returns the type of this store.
  */
 + (NSString*) type;
 
+/** Configures which CBLManager instance to use. The CBLManager instance set to the store
+ * requires to have a dispatch queue set. The default value (nil) means to use the default
+ * CBLManager instance created by the CBLIncrementalStore.
+ */
++ (void) setCBLManager: (CBLManager*)manager;
++ (CBLManager*) CBLManager;
+
 /** Updates the managedObjectModel to be used with this store. Adds a property named `cblisRev` to store the current `_rev`
- * value of the CouchbaseLite representation of that entity. 
+ * value of the CouchbaseLite representation of that entity.
  *
  * @param managedObjectModel the NSManagedObjectModel that should be used with this store.
  */
 + (void) updateManagedObjectModel: (NSManagedObjectModel*)managedObjectModel;
 
-/** Convenience method that creates the whole Core Data stack using the given database model and persists the data the given database. 
+/** Convenience method that creates the whole Core Data stack using the given database model and persists the data the given database.
  * You don't need to run #updateManagedObjectModel: before.
  * To get a reference to the underlying CBLIncrementalStore you can call `context.persistentStoreCoordinator.persistentStores[0]` afterwards.
  *
@@ -126,13 +131,8 @@ typedef void(^CBLISConflictHandler)(NSArray* conflictingRevisions);
                                                      importType: (NSString*)importType
                                                           error: (NSError**)outError;
 
-/** Configures which CBLManager instance to use. The default value (nil) means to use
- *  the shared CBLManager.
- */
-+ (void) setCBLManager: (CBLManager*)manager;
-+ (CBLManager*) CBLManager;
 
-/** Register a NSManagedObjectContext to be informed about changes in the CouchbaseLite database. 
+/** Register a NSManagedObjectContext to be informed about changes in the CouchbaseLite database.
  * A NSManagedObjectContextObjectsDidChangeNotification is sent to this context on changes.
  */
 - (void) addObservingManagedObjectContext: (NSManagedObjectContext*)context;
@@ -141,14 +141,14 @@ typedef void(^CBLISConflictHandler)(NSArray* conflictingRevisions);
 - (void) removeObservingManagedObjectContext: (NSManagedObjectContext*)context;
 
 
-/** Purges this object from the database. The method is not thread-safe so please make sure
- * that the method is executed on the root context's dispatch queue.
+/** Purges this object from the database. This operation will be executed on the same dispatch queue
+ * as the database.
  *
  * In multiple context setup, if the object was created on a context aside from the root context, and
  * the object hasn't been retrieved back from the store, the object ID of the object may be still a
  * tempory ID as in general the ID will not be refreshed with the permanent ID from its root
- * context. As a result, the object may not be purged as expected due to ID mismatching. To avoid 
- * the issue, call NSManagedObjectContext's -obtainPermanentIDsForObjects:error: to obtain 
+ * context. As a result, the object may not be purged as expected due to ID mismatching. To avoid
+ * the issue, call NSManagedObjectContext's -obtainPermanentIDsForObjects:error: to obtain
  * its permanent ID.
  *
  * @param object the NSManagedObject object to be purged
@@ -156,15 +156,5 @@ typedef void(^CBLISConflictHandler)(NSArray* conflictingRevisions);
  * @returns YES of success, otherwise return NO.
  */
 - (BOOL) purgeObject: (NSManagedObject*)object error: (NSError**)outError;
-
-/** Creates a view for fetching entities by a property name. Can speed up fetching this entity by this property. If, for example, your entity 
- * "Entity" references an entity "Subentity" by a property named "subentities", you can speed up fetching those entities by calling 
- * `-[store defineFetchViewForEntity:@"Subentity" byProperty:@"entities"];`.
- * 
- * @param entityName name of the entity that should be fetched
- * @param propertyName name of the property referencing this entity
- */
-- (void) defineFetchViewForEntity: (NSString*)entityName byProperty: (NSString*)propertyName
-    __attribute__((deprecated("The method is no longer needed, and calling this method will do nothing.")));
 
 @end

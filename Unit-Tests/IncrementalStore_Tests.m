@@ -139,7 +139,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 @end
 
 @interface NSManagedObjectID (CBLIncrementalStore)
-- (NSString*) couchbaseLiteIDRepresentation;
+- (NSString*) documentIDRepresentation;
 @end
 
 
@@ -158,24 +158,31 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 - (void) setUp {
     [super setUp];
 
-    [CBLIncrementalStore setCBLManager: dbmgr];
     model = CBLISTestCoreDataModel();
-
     [self reCreateCoreDataContext];
+    Assert(store.database != nil);
 
-    AssertEq(store.database, db);
-    
-    // Reset counter:
     self.counter = 0;
 }
 
 - (void) tearDown {
+    CBLManager *manager = store.database.manager;
+    dispatch_sync(manager.dispatchQueue, ^{
+        [store.database deleteDatabase:nil];
+        [manager close];
+    });
     [super tearDown];
 }
 
 - (void) reCreateCoreDataContext {
-    NSError* error;
+    CBLManager *manager = store.database.manager;
+    if (manager) {
+        dispatch_sync(manager.dispatchQueue, ^{
+            [manager close];
+        });
+    }
 
+    NSError* error;
     context = [CBLIncrementalStore createManagedObjectContextWithModel:model
                                                           databaseName:db.name
                                                                  error:&error];
@@ -185,29 +192,44 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert(store, @"Context doesn't have any store?!");
 }
 
+- (CBLDocument*) documentWithID:(NSString *)docID {
+    Assert(store.database != nil);
+    __block CBLDocument *doc;
+    [store.database doSync:^{
+        doc = [store.database documentWithID:docID];
+    }];
+    return doc;
+}
+
+- (CBLAttachment*) attachmentNamed:(NSString*)name ofDocument:(CBLDocument*)document {
+    Assert(store.database != nil);
+    __block CBLAttachment *attachment;
+    [store.database doSync:^{
+        attachment = [document.currentRevision attachmentNamed:name];
+    }];
+    return attachment;
+}
+
 /** Test case that tests create, request, update and delete of Core Data objects. */
 - (void) test_CRUD {
-    NSError *error;
-    
-    CBLDatabase *database = store.database;
-    
     Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                  inManagedObjectContext:context];
-    
+
     // cut off seconds as they are not encoded in date values in DB
     NSDate *createdAt = [NSDate dateWithTimeIntervalSince1970:(long)[NSDate new].timeIntervalSince1970];
     NSString *text = @"Test";
-    
+
     entry.created_at = createdAt;
     entry.text = text;
     entry.check = @NO;
-    
+
+    NSError *error;
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
-    
-    CBLDocument *doc = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+
+    CBLDocument *doc = [self documentWithID:[entry.objectID documentIDRepresentation]];
     AssertEqual(entry.text, [doc propertyForKey:@"text"]);
-    
+
     NSDate *date1 = entry.created_at;
     NSDate *date2 = [CBLJSON dateWithJSONObject:[doc propertyForKey:@"created_at"]];
     int diffInSeconds = (int)floor([date1 timeIntervalSinceDate:date2]);
@@ -218,51 +240,45 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
     success = [context save:&error];
     Assert(success, @"Could not save context after update: %@", error);
-    
-    doc = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+
+    doc = [self documentWithID:[entry.objectID documentIDRepresentation]];
     AssertEqual(entry.check, [doc propertyForKey:@"check"]);
     AssertEqual(@(YES), [doc propertyForKey:@"check"]);
 
     NSManagedObjectID *objectID = entry.objectID;
-    
+
     // tear down context to reload from DB
     [self reCreateCoreDataContext];
 
-    database = store.database;
-    
     entry = (Entry*)[context existingObjectWithID:objectID error:&error];
     Assert((entry != nil), @"Could not re-load entry (%@)", error);
     AssertEqual(entry.text, text);
     AssertEqual(entry.created_at, createdAt);
     AssertEqual(entry.check, @YES);
-    
+
     [context deleteObject:entry];
     success = [context save:&error];
     Assert(success, @"Could not save context after deletion: %@", error);
-    
-    doc = [database documentWithID:[objectID couchbaseLiteIDRepresentation]];
+
+    doc = [self documentWithID:[objectID documentIDRepresentation]];
     Assert([doc isDeleted], @"Document not marked as deleted after deletion");
 }
 
 
 /** Test case that tests the integration between Core Data and CouchbaseLite. */
 - (void) test_CBLIntegration {
-    NSError *error;
-    
-    CBLDatabase *database = store.database;
-    
     // cut off seconds as they are not encoded in date values in DB
     NSString *text = @"Test";
     NSNumber *number = @23;
-    
+
     // first test creation and storage of Core Data entities
     Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                  inManagedObjectContext:context];
-    
+
     entry.text = text;
     entry.check = @NO;
     entry.number = number;
-    
+
     Subentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
                                                        inManagedObjectContext:context];
     subentry.number = @123;
@@ -274,45 +290,45 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     file.filename = @"abc.png";
     file.data = [text dataUsingEncoding:NSUTF8StringEncoding];
     [entry addFilesObject:file];
-    
+
+    NSError *error;
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
-    
+
     NSManagedObjectID *entryID = entry.objectID;
     NSManagedObjectID *subentryID = subentry.objectID;
     NSManagedObjectID *fileID = file.objectID;
-    
+
     // get document from Couchbase to check correctness
-    CBLDocument *entryDoc = [database documentWithID:[entryID couchbaseLiteIDRepresentation]];
+    CBLDocument *entryDoc = [self documentWithID:[entryID documentIDRepresentation]];
     NSMutableDictionary *entryProperties = [entryDoc.properties mutableCopy];
     AssertEqual(entry.text, [entryProperties objectForKey:@"text"]);
     AssertEqual(text, [entryProperties objectForKey:@"text"]);
     AssertEqual(entry.check, [entryProperties objectForKey:@"check"]);
     AssertEqual(entry.number, [entryProperties objectForKey:@"number"]);
     AssertEqual(number, [entryProperties objectForKey:@"number"]);
-    
-    CBLDocument *subentryDoc = [database documentWithID:[subentryID couchbaseLiteIDRepresentation]];
+
+    CBLDocument *subentryDoc = [self documentWithID:[subentryID documentIDRepresentation]];
     NSMutableDictionary *subentryProperties = [subentryDoc.properties mutableCopy];
     AssertEqual(subentry.text, [subentryProperties objectForKey:@"text"]);
     AssertEqual(subentry.number, [subentryProperties objectForKey:@"number"]);
-    
-    CBLDocument *fileDoc = [database documentWithID:[fileID couchbaseLiteIDRepresentation]];
+
+    CBLDocument *fileDoc = [self documentWithID:[fileID documentIDRepresentation]];
     NSMutableDictionary *fileProperties = [fileDoc.properties mutableCopy];
     AssertEqual(file.filename, [fileProperties objectForKey:@"filename"]);
-    
-    CBLAttachment *attachment = [fileDoc.currentRevision attachmentNamed:@"data"];
+
+    CBLAttachment *attachment = [self attachmentNamed:@"data" ofDocument:fileDoc];
     Assert(attachment != nil, @"Unable to load attachment");
     AssertEqual(file.data, attachment.content);
 }
 
 
 - (void) test_CreateAndUpdate {
-    NSError *error;
-    
     Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                  inManagedObjectContext:context];
     entry.created_at = [NSDate new];
     entry.text = @"Test";
+    NSError *error;
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
@@ -326,7 +342,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     [entry addSubEntriesObject:subentry];
     success = [context save:&error];
     Assert(success, @"Could not save context after update 2: %@", error);
-    
+
     subentry.number = @123;
     success = [context save:&error];
     Assert(success, @"Could not save context after update 3: %@", error);
@@ -334,7 +350,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     NSManagedObjectID *objectID = entry.objectID;
     // tear down and re-init for checking that data got saved
     [self reCreateCoreDataContext];
-    
+
     entry = (Entry*)[context existingObjectWithID:objectID error:&error];
     Assert(entry, @"Entry could not be loaded: %@", error);
     AssertEq(entry.subEntries.count, 1u);
@@ -343,14 +359,13 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 }
 
 - (void) test_ToMany {
-    NSError *error;
-
     // To-Many with inverse relationship:
     Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                  inManagedObjectContext:context];
     entry.created_at = [NSDate new];
     entry.text = @"Test";
     entry.check = @NO;
+    NSError *error;
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
@@ -368,7 +383,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     // To-Many without inverse relationship:
     for (NSUInteger i = 0; i < 3; i++) {
         NonInverseSubentry *sub = [NSEntityDescription insertNewObjectForEntityForName:@"NonInverseSubentry"
-                                                         inManagedObjectContext:context];
+                                                                inManagedObjectContext:context];
         sub.name = [NSString stringWithFormat:@"NonInverseSub%lu", (unsigned long)i];
         [entry addNonInverseSubentriesObject:sub];
     }
@@ -408,12 +423,12 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 }
 
 - (void) test_ToManyDeletion {
-    NSError *error;
     Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                  inManagedObjectContext:context];
     entry.created_at = [NSDate new];
     entry.text = @"Test";
     entry.check = @NO;
+    NSError *error;
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
@@ -472,7 +487,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 }
 
 - (void) test_ManyToMany {
-    NSError *error;
     NSMutableSet *entries = [NSMutableSet set];
     for (NSUInteger i = 0; i < 3; i++) {
         Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
@@ -488,6 +502,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         [subentry addEntries:entries];
     }
 
+    NSError *error;
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
@@ -501,7 +516,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     for (Entry *entry in result) {
         AssertEq(entry.manySubentries.count, 3u);
         NSMutableArray *expected = [NSMutableArray arrayWithArray:
-                                        @[@"Subentry0", @"Subentry1", @"Subentry2"]];
+                                    @[@"Subentry0", @"Subentry1", @"Subentry2"]];
         for (ManySubentry *subentry in entry.manySubentries) {
             NSString *text = subentry.text;
             Assert([expected containsObject:text]);
@@ -525,7 +540,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 }
 
 - (void) test_FetchRequest {
-    NSError *error;
     NSUInteger count;
     NSArray *result;
 
@@ -534,7 +548,8 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     entry.created_at = [NSDate new];
     entry.text = @"Test";
     entry.check = @(YES);
-    
+
+    NSError *error;
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
@@ -598,7 +613,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 }
 
 - (void)test_FetchLimit {
-    NSError *error;
     for (NSUInteger i = 0; i < 100; i++) {
         Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                      inManagedObjectContext:context];
@@ -607,6 +621,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         entry.number = @(i);
     }
 
+    NSError *error;
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
@@ -694,56 +709,54 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
 - (void) test_Attachments {
     NSError *error;
-    CBLDatabase *database = store.database;
-    
     File *file = [NSEntityDescription insertNewObjectForEntityForName:@"File"
                                                inManagedObjectContext:context];
     file.filename = @"test.txt";
-    
+
     NSData *data = [@"Test. Hello World" dataUsingEncoding:NSUTF8StringEncoding];
     file.data = data;
-    
+
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
-    
-    CBLDocument *doc = [database documentWithID:[file.objectID couchbaseLiteIDRepresentation]];
+
+    CBLDocument *doc = [self documentWithID:[file.objectID documentIDRepresentation]];
     Assert(doc != nil, @"Document should not be nil");
     AssertEqual(file.filename, [doc propertyForKey:@"filename"]);
-    
-    CBLAttachment *att = [doc.currentRevision attachmentNamed:@"data"];
+
+    CBLAttachment *att = [self attachmentNamed:@"data" ofDocument:doc];
     Assert(att != nil, @"Attachmant should be created");
-    
+
     NSData *content = att.content;
     Assert(content != nil, @"Content should be loaded");
     AssertEq(content.length, data.length);
     AssertEqual(content, data);
-    
+
     NSManagedObjectID *fileID = file.objectID;
-    
+
     // tear down the context to reload from disk
     file = nil;
     [self reCreateCoreDataContext];
-    
+
     file = (File*)[context existingObjectWithID:fileID error:&error];
     Assert(file != nil, @"File should not be nil (%@)", error);
     AssertEqual(file.data, data);
-    
-    
+
+
     // update attachment
-    
+
     data = [@"Updated. Hello World" dataUsingEncoding:NSUTF8StringEncoding];
     file.data = data;
-    
+
     success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
-    
-    doc = [database documentWithID:[file.objectID couchbaseLiteIDRepresentation]];
+
+    doc = [self documentWithID:[file.objectID documentIDRepresentation]];
     Assert(doc != nil, @"Document should not be nil");
     AssertEqual(file.filename, [doc propertyForKey:@"filename"]);
-    
-    att = [doc.currentRevision attachmentNamed:@"data"];
+
+    att = [self attachmentNamed:@"data" ofDocument:doc];
     Assert(att != nil, @"Attachmant should be created");
-    
+
     content = att.content;
     Assert(content != nil, @"Content should be loaded");
     AssertEq(content.length, data.length);
@@ -760,18 +773,16 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
-    doc = [database documentWithID:[file.objectID couchbaseLiteIDRepresentation]];
+    doc = [self documentWithID:[file.objectID documentIDRepresentation]];
     Assert(doc != nil, @"Document should not be nil");
     AssertEqual(file.filename, [doc propertyForKey:@"filename"]);
 
-    att = [doc.currentRevision attachmentNamed:@"data"];
+    att = [self attachmentNamed:@"data" ofDocument:doc];
     AssertNil(att);
 }
 
 - (void) test_NullifyProperty {
     NSError *error;
-
-    CBLDatabase *database = store.database;
 
     Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                  inManagedObjectContext:context];
@@ -784,7 +795,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
-    CBLDocument *doc = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+    CBLDocument *doc = [self documentWithID:[entry.objectID documentIDRepresentation]];
     AssertEqual(text, entry.text);
     AssertEqual(text, [doc propertyForKey:@"text"]);
 
@@ -795,15 +806,13 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
-    doc = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+    doc = [self documentWithID:[entry.objectID documentIDRepresentation]];
     AssertEqual(text, entry.text);
     AssertEqual(text, [doc propertyForKey:@"text"]);
 }
 
 - (void) test_NullifyRelationship {
     NSError *error;
-
-    CBLDatabase *database = store.database;
 
     Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                  inManagedObjectContext:context];
@@ -813,8 +822,8 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
     BOOL success = [context save:&error];
 
-    CBLDocument *docEntry = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
-    CBLDocument *docSubentry = [database documentWithID:[subentry.objectID couchbaseLiteIDRepresentation]];
+    CBLDocument *docEntry = [self documentWithID:[entry.objectID documentIDRepresentation]];
+    CBLDocument *docSubentry = [self documentWithID:[subentry.objectID documentIDRepresentation]];
 
     AssertEqual(nil, [docSubentry propertyForKey:@"entry"]);
 
@@ -823,8 +832,8 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
-    docEntry = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
-    docSubentry = [database documentWithID:[subentry.objectID couchbaseLiteIDRepresentation]];
+    docEntry = [self documentWithID:[entry.objectID documentIDRepresentation]];
+    docSubentry = [self documentWithID:[subentry.objectID documentIDRepresentation]];
 
     AssertEqual(docEntry.documentID, [docSubentry propertyForKey:@"entry"]);
 
@@ -833,15 +842,15 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
-    docEntry = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
-    docSubentry = [database documentWithID:[subentry.objectID couchbaseLiteIDRepresentation]];
+    docEntry = [self documentWithID:[entry.objectID documentIDRepresentation]];
+    docSubentry = [self documentWithID:[subentry.objectID documentIDRepresentation]];
 
     AssertEqual(nil, [docSubentry propertyForKey:@"entry"]);
 }
 
 - (void) test_FetchWithPredicates {
     NSError *error;
-    
+
     NSDictionary *entry1 = @{
                              @"created_at": [NSDate new],
                              @"check": @YES,
@@ -869,12 +878,12 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
                              @"decimalNumber": [NSDecimalNumber decimalNumberWithString:@"30.30"],
                              @"doubleNumber": [NSNumber numberWithDouble:98.76]
                              };
-    
+
     CBLISTestInsertEntriesWithProperties(context, @[entry1, entry2, entry3]);
-    
+
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
-    
+
     NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
 
     //// ==
@@ -891,7 +900,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         if (result.count != 1) return;
         AssertEqual([result[0] valueForKey:@"number"], entry1[@"number"]);
     }];
-    
+
     //// >=
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number >= %@", entry2[@"number"]];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
@@ -901,7 +910,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         AssertEqual(numbers[0], entry2[@"number"]);
         AssertEqual(numbers[1], entry3[@"number"]);
     }];
-    
+
     //// <=
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number <= %@", entry2[@"number"]];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
@@ -929,7 +938,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         NSArray *numbers = [[result valueForKey:@"number"] sortedArrayUsingSelector:@selector(compare:)];
         AssertEqual(numbers[0], entry1[@"number"]);
     }];
-    
+
     //// !=
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number != %@", entry2[@"number"]];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
@@ -939,7 +948,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         AssertEqual(numbers[0], entry1[@"number"]);
         AssertEqual(numbers[1], entry3[@"number"]);
     }];
-    
+
     //// BETWEEN
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number BETWEEN %@", @[entry1[@"number"], entry2[@"number"]]];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
@@ -949,7 +958,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         AssertEqual(numbers[0], entry1[@"number"]);
         AssertEqual(numbers[1], entry2[@"number"]);
     }];
-    
+
     //// BEGINSWITH
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text BEGINSWITH 'Entry'"];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
@@ -999,20 +1008,20 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         AssertEq((int)result.count, 1);
         Assert([[result[0] valueForKey:@"text"] rangeOfString:@"touché."].location != NSNotFound);
     }];
-    
+
     //// LIKE
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text LIKE '*number ?*'"];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
         AssertEq((int)result.count, 2);
     }];
-    
+
     //// MATCH
     // this test fails, although I think it should be correctly filter the second and third entries...: Need to investigate more
-//    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text MATCHES %@", @"^Entry"];
-//    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
-//        AssertEq((int)result.count, 2);
-//    }];
-    
+    //    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"text MATCHES %@", @"^Entry"];
+    //    [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
+    //        AssertEq((int)result.count, 2);
+    //    }];
+
     //// IN
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number IN %@", @[@(10), @(30)]];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
@@ -1022,7 +1031,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         AssertEqual(numbers[0], entry1[@"number"]);
         AssertEqual(numbers[1], entry3[@"number"]);
     }];
-    
+
     //// AND
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"number == 10 AND decimalNumber == 10.10"];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
@@ -1145,7 +1154,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     Assert(success, @"Could not save context: %@", error);
 
     NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
-    
+
     //// ==
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"check == YES"];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
@@ -1169,9 +1178,9 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
         AssertEq((int)result.count, 2);
     }];
-    
+
     [store setCustomProperties:@{kCBLISCustomPropertyQueryBooleanWithNumber: @(YES)}];
-    
+
     //// ==
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"check == YES"];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
@@ -1198,8 +1207,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 }
 
 - (void)test_FetchWithRelationship {
-    NSError *error;
-
     User *user1 = [NSEntityDescription insertNewObjectForEntityForName:@"User"
                                                 inManagedObjectContext:context];
     user1.name = @"User1";
@@ -1210,7 +1217,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
     // Entry1:
     Entry *entry1 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
-                                                 inManagedObjectContext:context];
+                                                  inManagedObjectContext:context];
     entry1.created_at = [NSDate new];
     entry1.text = @"This is an entry 1.";
     entry1.number = @(10);
@@ -1265,6 +1272,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         }
     }
 
+    NSError *error;
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
@@ -1324,7 +1332,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         AssertEqual(numbers[0], entry1.number);
         AssertEqual(numbers[1], entry2.number);
     }];
-    
+
     // one-to-many
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"ANY subEntries.number < 20"];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
@@ -1380,11 +1388,11 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
 - (void)test_FetchWithNestedRelationship {
     NSError *error;
-    
+
     User *user1 = [NSEntityDescription insertNewObjectForEntityForName:@"User"
                                                 inManagedObjectContext:context];
     user1.name = @"User1";
-    
+
     // Entry1:
     Entry *entry1 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                   inManagedObjectContext:context];
@@ -1392,7 +1400,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     entry1.text = @"This is an entry 1.";
     entry1.number = @(10);
     entry1.user = user1;
-    
+
     for (NSUInteger i = 0; i < 3; i++) {
         Subentry *sub = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
                                                       inManagedObjectContext:context];
@@ -1400,21 +1408,21 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         sub.number = @(10 + i);
         [entry1 addSubEntriesObject:sub];
     }
-    
+
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
-    
+
     // Reset context and cache:
     [self reCreateCoreDataContext];
-    
+
     NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Subentry"];
-    
+
     // Simple Many
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry == %@", entry1];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
         AssertEq((int)result.count, 3);
     }];
-    
+
     // Deep Many
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"entry.user == %@", user1];
     [self assertFetchRequest: fetchRequest block: ^(NSArray *result, NSFetchRequestResultType resultType) {
@@ -1699,8 +1707,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 }
 
 - (void)test_DocTypeKey {
-    CBLDatabase *database = store.database;
-
     Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                  inManagedObjectContext:context];
     NSString *text = @"Test";
@@ -1710,7 +1716,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
-    CBLDocument *doc = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+    CBLDocument *doc = [self documentWithID:[entry.objectID documentIDRepresentation]];
     AssertEqual(entry.text, [doc propertyForKey:@"text"]);
     Assert([[doc.properties allKeys] containsObject:@"type"]);
     AssertEqual(doc.properties[@"type"], @"Entry");
@@ -1718,19 +1724,23 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
 - (void)test_DocTypeKeyBackwardCompat {
     // Simulate old version (v.1.0.4 and below).
-    NSError* error;
+    __block NSDictionary *metadata;
+    [store.database doSync:^{
+        metadata = [store.database existingLocalDocumentWithID:@"CBLIS_metadata"];
+    }];
 
-    CBLDatabase *database = store.database;
-    NSDictionary *metadata = [database existingLocalDocumentWithID:@"CBLIS_metadata"];
     Assert(metadata != nil, @"Cannot find CBLIS_metadata local document");
-    [database deleteLocalDocumentWithID:@"CBLIS_metadata" error: &error];
+    __block NSError* error;
+    [store.database doSync:^{
+        [store.database deleteLocalDocumentWithID:@"CBLIS_metadata" error: &error];
+    }];
     Assert(!error, @"Cannot delete CBLIS_metadata local document");
 
     // Old version of CBLIncrementalStore stores metadata in a document
-    CBLDocument *metadataDoc = [database documentWithID: @"CBLIS_metadata"];
+    CBLDocument *metadataDoc = [self documentWithID: @"CBLIS_metadata"];
     [metadataDoc putProperties:@{metadata[NSStoreUUIDKey]: metadata[NSStoreUUIDKey],
                                  metadata[NSStoreTypeKey]: metadata[NSStoreTypeKey]
-                                } error:&error];
+                                 } error:&error];
     Assert(!error, @"Cannot create CBLIS_metadata document");
 
     // Tear down and re-init
@@ -1745,7 +1755,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
-    CBLDocument *doc = [database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+    CBLDocument *doc = [self documentWithID:[entry.objectID documentIDRepresentation]];
     AssertEqual(entry.text, [doc propertyForKey:@"text"]);
     Assert([[doc.properties allKeys] containsObject:@"CBLIS_type"]);
     AssertEqual(doc.properties[@"CBLIS_type"], @"Entry");
@@ -1767,7 +1777,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
-    CBLDocument *doc = [store.database documentWithID:[entry.objectID couchbaseLiteIDRepresentation]];
+    CBLDocument *doc = [self documentWithID:[entry.objectID documentIDRepresentation]];
     AssertEqual(entry.text, [doc propertyForKey:@"text"]);
 
     CBLSavedRevision* rev1 = doc.currentRevision;
@@ -1797,65 +1807,72 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
 - (void)test_DefaultConflictHandler {
     [self keyValueObservingExpectationForObject: self keyPath: @"counter" expectedValue: @(1)];
+
     CBLISConflictHandler defaultHandler = [store.conflictHandler copy];
     __weak IncrementalStore_Tests* weakSelf = self;
     store.conflictHandler = ^(NSArray* conflictingRevisions) {
         defaultHandler(conflictingRevisions);
-        weakSelf.counter++;
+        weakSelf.counter = 1;
     };
 
-    NSError* error;
+    __block NSError* error;
     Entry* entry = [NSEntityDescription insertNewObjectForEntityForName: @"Entry"
                                                  inManagedObjectContext: context];
     entry.text = @"test";
     BOOL success = [context save: &error];
     Assert(success, @"Could not save context: %@", error);
-    CBLDocument *doc = [store.database documentWithID:
-                        [entry.objectID couchbaseLiteIDRepresentation]];
-    AssertEqual(entry.text, [doc propertyForKey: @"text"]);
-    CBLSavedRevision* rev1 = doc.currentRevision;
 
-    // Create rev2a:
-    NSMutableDictionary* properties = doc.properties.mutableCopy;
-    properties[@"check"] = @(YES);
-    CBLSavedRevision* rev2a = [doc putProperties: properties error: &error];
-    Assert(rev2a, @"Failed to create a new revision: %@", error);
-
-    // Create rev2b:
-    properties = rev1.properties.mutableCopy;
     NSString* date = [CBLJSON JSONObjectWithDate: [NSDate date]];
-    properties[@"created_at"] = date;
-    CBLUnsavedRevision* newRev = [rev1 createRevision];
-    newRev.properties = properties;
-    CBLSavedRevision* rev2b = [newRev saveAllowingConflict: &error];
-    Assert(rev2b, @"Failed to create a conflict revision: %@", error);
-    
-    [self waitForExpectationsWithTimeout: 2.0 handler: ^(NSError *error) {
-        Assert(error == nil, "Timeout error: %@", error);
+    [store.database doSync: ^{
+        CBLDocument *doc = [store.database documentWithID: [entry.objectID documentIDRepresentation]];
+        AssertEqual(entry.text, [doc propertyForKey: @"text"]);
+        CBLSavedRevision* rev1 = doc.currentRevision;
+
+        // Create rev2a:
+        NSMutableDictionary* properties = doc.properties.mutableCopy;
+        properties[@"check"] = @(YES);
+        CBLSavedRevision* rev2a = [doc putProperties: properties error: &error];
+        Assert(rev2a, @"Failed to create a new revision: %@", error);
+
+        // Create rev2b:
+        properties = rev1.properties.mutableCopy;
+        properties[@"created_at"] = date;
+        CBLUnsavedRevision* newRev = [rev1 createRevision];
+        newRev.properties = properties;
+        CBLSavedRevision* rev2b = [newRev saveAllowingConflict: &error];
+        Assert(rev2b, @"Failed to create a conflict revision: %@", error);
     }];
 
-    CBLSavedRevision* mergedRev = doc.currentRevision;
-    Assert([mergedRev.revisionID hasPrefix:@"3-"]);
-    AssertEq([[doc getConflictingRevisions: &error] count], 1u);
-    
-    NSDictionary *props = mergedRev.properties;
-    AssertEqual(props[@"text"], @"test");
-    AssertEqual(props[@"check"], @(YES));
-    AssertEqual(props[@"created_at"], date);
+    [self waitForExpectationsWithTimeout: 2.0 handler: ^(NSError *error) {
+        Assert(error == nil, "Timeout error: %@ (counter = %lu)", error, (unsigned long)self.counter);
+    }];
+
+    __block NSDictionary *properties;
+    [store.database doSync: ^{
+        CBLDocument *doc = [store.database documentWithID: [entry.objectID documentIDRepresentation]];
+        CBLSavedRevision* mergedRev = doc.currentRevision;
+        Assert([mergedRev.revisionID hasPrefix:@"3-"]);
+        AssertEq([[doc getConflictingRevisions: &error] count], 1u);
+        properties = mergedRev.properties;
+    }];
+
+    AssertEqual(properties[@"text"], @"test");
+    AssertEqual(properties[@"check"], @(YES));
+    AssertEqual(properties[@"created_at"], date);
 }
 
 - (void)test_StoreWillSaveDocument {
     NSError *error;
     Entry *entry1 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
-                                                 inManagedObjectContext:context];
+                                                  inManagedObjectContext:context];
     Assert([context save:&error]);
-    
-    CBLDocument *doc1 = [store.database documentWithID:[entry1.objectID couchbaseLiteIDRepresentation]];
+
+    CBLDocument *doc1 = [self documentWithID:[entry1.objectID documentIDRepresentation]];
     AssertNil([doc1 propertyForKey:@"code"]);
-    
+
     // Set delegate:
     store.delegate = self;
-    
+
     // Update entry1 and create entry2 and user1:
     entry1.text = @"entry1";
     Entry *entry2 = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
@@ -1863,18 +1880,18 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     User *user1 = [NSEntityDescription insertNewObjectForEntityForName:@"User"
                                                 inManagedObjectContext:context];
     Assert([context save:&error]);
-    
-    CBLDocument *doc2 = [store.database documentWithID:[entry2.objectID couchbaseLiteIDRepresentation]];
-    CBLDocument *doc3 = [store.database documentWithID:[user1.objectID couchbaseLiteIDRepresentation]];
-    
+
+    CBLDocument *doc2 = [self documentWithID:[entry2.objectID documentIDRepresentation]];
+    CBLDocument *doc3 = [self documentWithID:[user1.objectID documentIDRepresentation]];
+
     AssertEqual([doc1 propertyForKey:@"code"], @"1234");
     AssertEqual([doc2 propertyForKey:@"code"], @"1234");
     AssertNil([doc3 propertyForKey:@"code"]);
-    
+
     // Delete (ensure no error):
     [context deleteObject: entry2];
     Assert([context save:&error]);
-    
+
     // Reset delegate:
     store.delegate = nil;
 }
@@ -1897,7 +1914,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
                              };
 
     CBLISTestInsertEntriesWithProperties(context, @[entry1, entry2, entry3]);
-    
+
     NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
 
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"Entry"
@@ -1928,14 +1945,23 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
 
-    NSString *docID = [entry.objectID couchbaseLiteIDRepresentation];
-    Assert([store.database existingDocumentWithID: docID] != nil);
+    NSString *docID = [entry.objectID documentIDRepresentation];
+    __block CBLDocument *doc;
+    [store.database doSync:^{
+        doc = [store.database existingDocumentWithID: docID];
+    }];
+    Assert(doc != nil);
     Assert(!entry.isDeleted);
-    
+
     success = [store purgeObject: entry error: &error];
 
     Assert(success, @"Could not purge object: %@", error);
-    AssertNil([store.database _cachedDocumentWithID: docID]);
+
+    __block CBLDocument *cachedDoc;
+    [store.database doSync:^{
+        cachedDoc = [store.database _cachedDocumentWithID: docID];
+    }];
+    AssertNil(cachedDoc);
 }
 
 #pragma mark - Performance
@@ -1945,7 +1971,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 - (void) test_PerformanceSave {
     if (!self.isSQLiteDB)
         return;
-    
+
     NSArray *metrics = [[self class] defaultPerformanceMetrics];
     [self measureMetrics:metrics automaticallyStartMeasuring:NO forBlock:^{
         for (NSInteger i = 1; i < 1000; i++) {
@@ -1967,7 +1993,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         NSError *error;
         BOOL success = [context save:&error];
         Assert(success, @"Could not save context: %@", error);
-        
+
         [self stopMeasuring];
     }];
 }
@@ -1993,14 +2019,14 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     NSError *error;
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
-    
+
     NSArray *metrics = [[self class] defaultPerformanceMetrics];
     [self measureMetrics:metrics automaticallyStartMeasuring:NO forBlock:^{
         // This will make all the Core Data and CBLIS cache gone:
         [self reCreateCoreDataContext];
-        
+
         [self startMeasuring];
-        
+
         NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
         request.fetchLimit = 1;
         request.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"created_at" ascending:YES]];
@@ -2017,38 +2043,38 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
     // Note: Wihtout resetting the context, the fetch result cache will be used:
     if (!self.isSQLiteDB)
         return;
-    
+
     for (NSInteger i = 1; i < 1000; i++) {
         Entry *entry = [NSEntityDescription insertNewObjectForEntityForName:@"Entry"
                                                      inManagedObjectContext:context];
         entry.created_at = [NSDate new];
         entry.text = [NSString stringWithFormat:@"Test %@", @(i)];
         entry.check = (i%3) ? @(YES) : @(NO);
-        
+
         Subentry *subentry = [NSEntityDescription insertNewObjectForEntityForName:@"Subentry"
                                                            inManagedObjectContext:context];
         subentry.text = @"Subentry abc";
         subentry.number = @123;
         [entry addSubEntriesObject:subentry];
     }
-    
+
     NSError *error;
     BOOL success = [context save:&error];
     Assert(success, @"Could not save context: %@", error);
-    
+
     NSArray *metrics = [[self class] defaultPerformanceMetrics];
     [self measureMetrics:metrics automaticallyStartMeasuring:NO forBlock:^{
         [self startMeasuring];
-        
+
         NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
         request.fetchLimit = 1;
         request.sortDescriptors =
-            @[[NSSortDescriptor sortDescriptorWithKey:@"created_at" ascending:YES]];
-        
+        @[[NSSortDescriptor sortDescriptorWithKey:@"created_at" ascending:YES]];
+
         NSError *error;
         [context executeFetchRequest:request error:&error];
         AssertNil(error);
-        
+
         [self stopMeasuring];
     }];
 }
@@ -2077,7 +2103,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         NSError *error;
         BOOL success = [context save:&error];
         Assert(success, @"Could not save context: %@", error);
-        
+
         [self reCreateCoreDataContext];
 
         [self startMeasuring];
@@ -2085,7 +2111,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
         request.predicate = [NSPredicate predicateWithFormat:@"%K == %@", @"check", @(YES)];
         request.sortDescriptors =
-            @[[NSSortDescriptor sortDescriptorWithKey:@"created_at" ascending:YES]];
+        @[[NSSortDescriptor sortDescriptorWithKey:@"created_at" ascending:YES]];
 
         [context executeFetchRequest:request error:&error];
 
@@ -2114,41 +2140,45 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         [[NSNotificationCenter defaultCenter] addObserverForName:kCBLISObjectHasBeenChangedInStoreNotification
                                                           object:store
                                                            queue:nil
-         usingBlock:^(NSNotification *note) {
-             if (++count == docCount) {
-                 NSError *error;
-                 NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
-                 request.sortDescriptors =
-                    @[[NSSortDescriptor sortDescriptorWithKey:@"created_at" ascending:YES]];
-                 
-                 NSArray *result = [context executeFetchRequest:request error:&error];
-                 Assert(docCount == result.count);
-                 [expectation fulfill];
-             }
-         }];
+                                                      usingBlock:^(NSNotification *note) {
+                                                          if (++count == docCount) {
+                                                              NSError *error;
+                                                              NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"Entry"];
+                                                              request.sortDescriptors =
+                                                              @[[NSSortDescriptor sortDescriptorWithKey:@"created_at" ascending:YES]];
 
-        for (NSUInteger i = 0; i < docCount; i++) {
-            NSDictionary *properties = @{@"created_at": [CBLJSON JSONObjectWithDate: [NSDate new]],
-                                         @"text": [NSString stringWithFormat: @"Test %@", @(i)],
-                                         @"type": @"Entry",
-                                         @"check": (i%3) ? @(YES) : @(NO)};
-            CBLDocument *doc = [self createDocumentWithProperties: properties];
-            NSString *docID = doc.documentID;
-            AssertEqual(doc.userProperties, properties);
-            AssertEq([db documentWithID: docID], doc);
+                                                              NSArray *result = [context executeFetchRequest:request error:&error];
+                                                              Assert(docCount == result.count);
+                                                              [expectation fulfill];
+                                                          }
+                                                      }];
 
-            [db _clearDocumentCache]; // so we can load fresh copies
+        [store.database doSync:^{
+            for (NSUInteger i = 0; i < docCount; i++) {
+                NSDictionary *properties = @{@"created_at": [CBLJSON JSONObjectWithDate: [NSDate new]],
+                                             @"text": [NSString stringWithFormat: @"Test %@", @(i)],
+                                             @"type": @"Entry",
+                                             @"check": (i%3) ? @(YES) : @(NO)};
+                CBLDocument *doc = [self createDocumentWithProperties: properties];
+                NSString *docID = doc.documentID;
+                AssertEqual(doc.userProperties, properties);
+                AssertEq([self documentWithID: docID], doc);
 
-            CBLDocument *doc2 = [db existingDocumentWithID: docID];
-            AssertEqual(doc2.documentID, docID);
-        }
+                [store.database _clearDocumentCache]; // so we can load fresh copies
+
+                CBLDocument *doc2 = [db existingDocumentWithID: docID];
+                AssertEqual(doc2.documentID, docID);
+            }
+        }];
 
         [self waitForExpectationsWithTimeout:30.0 handler:^(NSError *error) {
             [self stopMeasuring];
             Assert(error == nil, "Timeout error: %@", error);
         }];
-        
-        db = [dbmgr createEmptyDatabaseNamed:@"db" error:nil];
+
+        [store.database doSync:^{
+            [store.database deleteDatabase:nil];
+        }];
         [self reCreateCoreDataContext];
     }];
 
@@ -2233,15 +2263,15 @@ static NSRelationshipDescription *CBLISRelationshipDescription(NSString *name, B
 static NSManagedObjectModel *CBLISTestCoreDataModel(void)
 {
     NSManagedObjectModel *model = [NSManagedObjectModel new];
-    
+
     NSEntityDescription *entry = [NSEntityDescription new];
     [entry setName:@"Entry"];
     [entry setManagedObjectClassName:@"Entry"];
-    
+
     NSEntityDescription *file = [NSEntityDescription new];
     [file setName:@"File"];
     [file setManagedObjectClassName:@"File"];
-    
+
     NSEntityDescription *subentry = [NSEntityDescription new];
     [subentry setName:@"Subentry"];
     [subentry setManagedObjectClassName:@"Subentry"];
@@ -2295,13 +2325,13 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
                            entryManySubentries,
                            entryUser
                            ]];
-    
+
     [file setProperties:@[
                           CBLISAttributeDescription(@"data", YES, NSBinaryDataAttributeType, nil),
                           CBLISAttributeDescription(@"filename", YES, NSStringAttributeType, nil),
                           fileEntry
                           ]];
-    
+
     [subentry setProperties:@[
                               CBLISAttributeDescription(@"number", YES, NSInteger32AttributeType, @(0)),
                               CBLISAttributeDescription(@"text", YES, NSStringAttributeType, nil),
@@ -2337,18 +2367,18 @@ static NSManagedObjectModel *CBLISTestCoreDataModel(void)
     [nonInverseSubentry setProperties:@[ CBLISAttributeDescription(@"name", YES, NSStringAttributeType, nil)]];
 
     NSRelationshipDescription *entryNonInverseSubentries =
-        CBLISRelationshipDescription(@"nonInverseSubentries", YES, YES, NSCascadeDeleteRule, nonInverseSubentry);
-
+    CBLISRelationshipDescription(@"nonInverseSubentries", YES, YES, NSCascadeDeleteRule, nonInverseSubentry);
+    
     NSMutableArray *entryProperties = [NSMutableArray arrayWithArray:entry.properties];
     [entryProperties addObject:entryNonInverseSubentries];
     [entry setProperties:entryProperties];
-
-
+    
+    
     NSMutableArray *modelEntities = [NSMutableArray arrayWithArray:model.entities];
     [modelEntities addObject:nonInverseSubentry];
     [model setEntities:modelEntities];
 #endif
-
+    
     return model;
 }
 

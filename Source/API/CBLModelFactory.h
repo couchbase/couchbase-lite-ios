@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable Class) classForDocument: (CBLDocument*)document;
 
 /** Looks up the CBLModel subclass that's been registered for a document type. */
-- (Class) classForDocumentType: (NSString*)type;
+- (nullable Class) classForDocumentType: (NSString*)type;
 
 /** Looks up the document type for which the given class has been registered.
     If it's unregistered, or registered with multiple types, returns nil. */

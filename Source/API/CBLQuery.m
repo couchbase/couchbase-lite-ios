@@ -168,6 +168,10 @@ DefineLogDomain(Query);
     return [[CBLLiveQuery alloc] initWithQuery: self];
 }
 
+- (BOOL) isAggregate {
+    return !_fullTextQuery && (_groupLevel > 0 || (!_mapOnly && _view.reduceBlock != nil));
+}
+
 - (CBLQueryOptions*) queryOptions {
     CBLQueryOptions* options = [CBLQueryOptions new];
     options.startKey = _startKey;

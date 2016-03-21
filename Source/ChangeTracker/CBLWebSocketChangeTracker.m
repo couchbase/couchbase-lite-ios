@@ -256,11 +256,13 @@ UsingLogDomain(Sync);
         }
 
         // Report error:
-        LogTo(ChangeTracker, @"%@: closed with code %ld, reason '%@'", self, (long)effectiveCode, reason);
-        NSDictionary* userInfo = $dict({NSLocalizedFailureReasonErrorKey, reason},
+        LogTo(ChangeTracker, @"%@: closed with code %ld, reason '%@'",
+              self, (long)effectiveCode, effectiveReason);
+        NSDictionary* userInfo = $dict({NSLocalizedFailureReasonErrorKey, effectiveReason},
                                        {NSURLErrorFailingURLStringErrorKey,
                                            self.changesFeedURL.absoluteString});
-        NSError* error = [NSError errorWithDomain: PSWebSocketErrorDomain code: effectiveCode
+        NSError* error = [NSError errorWithDomain: PSWebSocketErrorDomain
+                                             code: effectiveCode
                                          userInfo: userInfo];
         [self failedWithError: error];
     });

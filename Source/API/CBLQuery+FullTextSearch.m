@@ -154,7 +154,7 @@ static NSUInteger utf8BytesToChars(const void* bytes, NSUInteger byteStart, NSUI
         // which is described at http://sqlite.org/fts3.html#section_4_2
         NSString* fullText = self.fullText;
         if (!fullText)
-            return nil;
+            return @"";
 
         // Use an NSLinguisticTagger to tokenize the full text into a list of word char ranges:
         NSLinguisticTagger* tagger = [[NSLinguisticTagger alloc] initWithTagSchemes:@[NSLinguisticTagSchemeTokenType] options: 0];

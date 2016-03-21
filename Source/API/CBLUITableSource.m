@@ -15,6 +15,8 @@
 
 #import "CBLUITableSource.h"
 #import "CouchbaseLite.h"
+#import "CouchbaseLitePrivate.h"
+#import "CBLArrayDiff+UIKit.h"
 
 
 @interface CBLUITableSource ()
@@ -35,7 +37,9 @@
 - (instancetype) init {
     self = [super init];
     if (self) {
-        _deletionAllowed = YES;
+        _rowInsertAnimation = UITableViewRowAnimationAutomatic;
+        _rowDeleteAnimation = UITableViewRowAnimationAutomatic;
+        _rowReplaceAnimation = UITableViewRowAnimationAutomatic;
     }
     return self;
 }
@@ -50,8 +54,9 @@
 #pragma mark ACCESSORS:
 
 
-@synthesize tableView=_tableView;
-@synthesize rows=_rows;
+@synthesize tableView=_tableView, rows=_rows;
+@synthesize rowInsertAnimation=_rowInsertAnimation, rowDeleteAnimation=_rowDeleteAnimation;
+@synthesize rowReplaceAnimation=_rowReplaceAnimation;
 
 
 - (CBLQueryRow*) rowAtIndex: (NSUInteger)index {
@@ -110,20 +115,58 @@
 
 -(void) reloadFromQuery {
     CBLQueryEnumerator* rowEnum = _query.rows;
-    if (rowEnum) {
-        NSArray *oldRows = _rows;
-        _rows = [rowEnum.allObjects mutableCopy];
-        TELL_DELEGATE(@selector(couchTableSource:willUpdateFromQuery:), _query);
+    if (!rowEnum)
+        return;
+
+    id delegate = _tableView.delegate;
+    TELL_DELEGATE(@selector(couchTableSource:willUpdateFromQuery:), _query);
+
+    NSArray *previousRows = _rows;
+    NSMutableArray *newRows = [rowEnum.allObjects mutableCopy];
+
+    if ([delegate respondsToSelector: @selector(couchTableSource:updateFromQuery:previousRows:)]) {
+        // Delegate wants to reload the table itself:
+        _rows = newRows;
+        [delegate couchTableSource: self
+                   updateFromQuery: _query
+                      previousRows: previousRows];
+
+    } else if (previousRows == nil || (_rowInsertAnimation == UITableViewRowAnimationNone &&
+                                       _rowDeleteAnimation == UITableViewRowAnimationNone &&
+                                       _rowReplaceAnimation == UITableViewRowAnimationNone)) {
+        // No previous data, or no animations, so just slam the new data in:
+        _rows = newRows;
+        [_tableView reloadData];
         
-        id delegate = _tableView.delegate;
-        SEL selector = @selector(couchTableSource:updateFromQuery:previousRows:);
-        if ([delegate respondsToSelector: selector]) {
-            [delegate couchTableSource: self 
-                       updateFromQuery: _query
-                          previousRows: oldRows];
-        } else {
-            [self.tableView reloadData];
-        }
+    } else {
+        // Update the table myself with animation. First diff the old and new rows:
+        CBLDiffItemComparator comparator = ^(CBLQueryRow *before, CBLQueryRow *after) {
+            return [before compareForArrayDiff: after];
+        };
+        CBLArrayDiff* diff = [[CBLArrayDiff alloc] initWithBeforeArray: previousRows
+                                                            afterArray: newRows
+                                                           detectMoves: YES
+                                                        itemComparator: comparator];
+
+        // Update modified rows before doing the animations. This is tricky because the
+        // cells have to be reloaded at their old indexes, but with the new values.
+        // So update the old rows array with the updated values from the new one:
+        NSMutableArray* modPaths = [NSMutableArray new];
+        [diff forEachModification: ^(NSUInteger before, NSUInteger after) {
+            _rows[before] = newRows[after];
+            [modPaths addObject: [NSIndexPath indexPathForRow: before inSection: 0]];
+        }];
+        [_tableView reloadRowsAtIndexPaths: modPaths
+                          withRowAnimation: UITableViewRowAnimationNone];
+
+        // Update the data source:
+        _rows = newRows;
+
+        // Now animate the row insertions/deletions/moves:
+        [diff animateTableView: _tableView
+             deletionAnimation: _rowDeleteAnimation
+              replaceAnimation: _rowReplaceAnimation
+            insertionAnimation: _rowInsertAnimation];
     }
 }
 
@@ -165,6 +208,8 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    CBLQueryRow* row = [self rowAtIndex: indexPath.row];
+
     // Allow the delegate to create its own cell:
     UITableViewCell* cell = TELL_DELEGATE(@selector(couchTableSource:cellForRowAtIndexPath:),
                                           indexPath);
@@ -175,14 +220,13 @@
             cell = [[UITableViewCell alloc] initWithStyle: UITableViewCellStyleDefault
                                           reuseIdentifier: @"CBLUITableDelegate"];
         
-        CBLQueryRow* row = [self rowAtIndex: indexPath.row];
         cell.textLabel.text = [self labelForRow: row];
-        
-        // Allow the delegate to customize the cell:
-        id delegate = _tableView.delegate;
-        if ([delegate respondsToSelector: @selector(couchTableSource:willUseCell:forRow:)])
-            [(id<CBLUITableDelegate>)delegate couchTableSource: self willUseCell: cell forRow: row];
     }
+
+    // Allow the delegate to customize the cell:
+    id delegate = _tableView.delegate;
+    if ([delegate respondsToSelector: @selector(couchTableSource:willUseCell:forRow:)])
+        [(id<CBLUITableDelegate>)delegate couchTableSource: self willUseCell: cell forRow: row];
     return cell;
 }
 
@@ -195,7 +239,9 @@
 
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
-    return _deletionAllowed;
+    // In general it doesn't make sense to delete a row from an aggregated (reduced/grouped) query
+    // because it doesn't correspond to a specific document.
+    return _deletionAllowed && [self rowAtIndexPath: indexPath].documentID != nil;
 }
 
 
@@ -250,7 +296,6 @@
             *outError = error;
         return NO;
     }
-    
     
     NSMutableIndexSet* indexSet = [NSMutableIndexSet indexSet];
     for (NSIndexPath* path in indexPaths) {

@@ -1190,6 +1190,14 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
 
 // https://github.com/couchbase/couchbase-lite-ios/issues/1082
 - (void) test23_ViewWithDocDeletion {
+    [self _testViewWithDocDeletionOrPurge: NO];
+}
+
+- (void) test24_ViewWithDocPurge {
+    [self _testViewWithDocDeletionOrPurge: YES];
+}
+
+- (void) _testViewWithDocDeletionOrPurge: (BOOL)purge {
     CBLView* view = [db viewNamed: @"vu"];
     Assert(view);
     [view setMapBlock: MAPBLOCK({
@@ -1235,10 +1243,13 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
     AssertEqual([rows rowAtIndex:1].documentID, doc2.documentID);
     AssertEqual([rows rowAtIndex:2].documentID, doc1.documentID);
 
-    // Delete doc2:
+    // Delete or purge doc2:
     Assert(doc2);
     NSError* error;
-    Assert([doc2 deleteDocument: &error]);
+    if (purge)
+        Assert([doc2 purgeDocument: &error]);
+    else
+        Assert([doc2 deleteDocument: &error]);
     Log(@"Deleted doc2");
 
     // Check ascending query result:

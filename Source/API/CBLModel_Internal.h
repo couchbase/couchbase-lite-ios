@@ -32,12 +32,12 @@ UsingLogDomain(Model);
 - (instancetype) initWithDocument: (nullable CBLDocument*)document
                        orDatabase: (nullable CBLDatabase*)database NS_DESIGNATED_INITIALIZER;
 
-- (id) getValueOfProperty: (NSString*)property ofClass: (Class)klass;
+- (nullable id) getValueOfProperty: (NSString*)property ofClass: (Class)klass;
 - (void) cacheValue: (id)value ofProperty: (NSString*)property changed: (BOOL)changed;
 - (void) willSave: (NSSet*)changedProperties;   // overridable
-- (CBLModel*) modelWithDocID: (NSString*)docID
-                 forProperty: (NSString*)property
-                     ofClass: (nullable Class)declaredClass;
+- (nullable CBLModel*) modelWithDocID: (NSString*)docID
+                          forProperty: (NSString*)property
+                              ofClass: (nullable Class)declaredClass;
 - (void) markPropertyNeedsSave: (NSString*)property;
 @end
 

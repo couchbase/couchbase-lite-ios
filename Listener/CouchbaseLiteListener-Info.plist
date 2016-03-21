@@ -6,8 +6,10 @@
 	<string>English</string>
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
+	<key>CFBundleGetInfoString</key>
+	<string>${CBL_VERSION_STRING}; Copyright © 2012-2016 Couchbase, Inc. All rights reserved.</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.couchbase.${PRODUCT_NAME:rfc1034identifier}</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -20,7 +22,5 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>${CURRENT_PROJECT_VERSION}.0.0</string>
-	<key>CFBundleGetInfoString</key>
-	<string>${CBL_VERSION_STRING}; Copyright © 2012-2016 Couchbase, Inc. All rights reserved.</string>
 </dict>
 </plist>

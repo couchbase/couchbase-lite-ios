@@ -66,8 +66,10 @@ static NSTimeInterval k1970ToReferenceDate;
     if (!dict.count)
         return json;
     NSData* extraJson = [self dataWithJSONObject: dict options: 0 error: NULL];
-    if (!extraJson)
-        return nil;
+    if (!extraJson) {
+        Warn(@"Unable to serialize to JSON: %@", dict);
+        return json;
+    }
     return [self appendJSONDictionaryData: (NSData*)extraJson toJSONDictionaryData: json];
 }
 
@@ -81,8 +83,6 @@ static NSTimeInterval k1970ToReferenceDate;
     if (jsonLength == 2)  // Original JSON was empty
         return extraJson;
     NSMutableData* newJson = [NSMutableData dataWithLength: jsonLength + extraLength - 1];
-    if (!newJson)
-        return nil;
     uint8_t* dst = newJson.mutableBytes;
     memcpy(dst, json.bytes, jsonLength - 1);                          // Copy json w/o trailing '}'
     dst += jsonLength - 1;

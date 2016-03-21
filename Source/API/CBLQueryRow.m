@@ -17,6 +17,7 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLInternal.h"
 #import "CBLView+Internal.h"
+#import "CBLArrayDiff.h"
 
 
 static id fromJSON( NSData* json ) {
@@ -94,6 +95,16 @@ BOOL CBLQueryRowValueIsEntireDoc(id value) {
 }
 
 
+- (BOOL) isValueEqual: (CBLQueryRow*)other {
+    // If values were emitted, compare them. Otherwise we have nothing to go on so check
+    // if _anything_ about the doc has changed (i.e. the sequences are different.)
+    if ([self isNonMagicValue] || [other isNonMagicValue])
+        return $equal(_value, other->_value);
+    else
+        return _sequence == other->_sequence;
+}
+
+
 // This is used implicitly by -[CBLLiveQuery update] to decide whether the query result has changed
 // enough to notify the client. So it's important that it not give false positives, else the app
 // won't get notified of changes.
@@ -107,14 +118,30 @@ BOOL CBLQueryRowValueIsEntireDoc(id value) {
             && $equal(_key, other->_key)
             && $equal(_sourceDocID, other->_sourceDocID)
             && $equal(_documentRevision, other->_documentRevision)) {
-        // If values were emitted, compare them. Otherwise we have nothing to go on so check
-        // if _anything_ about the doc has changed (i.e. the sequences are different.)
-        if ([self isNonMagicValue] || [other isNonMagicValue])
-            return $equal(_value, other->_value);
-        else
-            return _sequence == other->_sequence;
+        return [self isValueEqual: other];
     }
     return NO;
+}
+
+
+- (uint8_t/*CBLDiffItemComparison*/) compareForArrayDiff: (CBLQueryRow*)other {
+    if (_sourceDocID) {
+        if (![_sourceDocID isEqualToString: other->_sourceDocID])
+            return kCBLItemsDifferent;
+        else if (_sequence == other->_sequence)
+            return kCBLItemsEqual;
+        else
+            return kCBLItemsModified;
+
+    } else {
+        // Aggregated (grouped/reduced) row:
+        if (!$equal(_key, other->_key))
+            return kCBLItemsDifferent;
+        else if ([self isValueEqual: other])
+            return kCBLItemsEqual;
+        else
+            return kCBLItemsModified;
+    }
 }
 
 
