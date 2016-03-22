@@ -4012,7 +4012,6 @@
 				27E66AD31A7307590091DA3F /* Sources */,
 				27E66B3C1A7307590091DA3F /* Frameworks */,
 				27E66B3F1A7307590091DA3F /* Build Fat Library */,
-				275816761CA0711A00CD66C5 /* Install Library */,
 			);
 			buildRules = (
 			);
@@ -4032,7 +4031,6 @@
 				930FE55B1C58562B008107A0 /* Frameworks */,
 				930FE55C1C58562B008107A0 /* CopyFiles */,
 				930FE5781C5857BF008107A0 /* Make a Fat Binary */,
-				275816771CA0748F00CD66C5 /* Install Library */,
 			);
 			buildRules = (
 			);
@@ -4410,36 +4408,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
-		};
-		275816761CA0711A00CD66C5 /* Install Library */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 8;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Install Library";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-			shellPath = /bin/sh;
-			shellScript = "cp \"${UNIVERSAL_BUILD_DIR}/${EXECUTABLE_PATH}\" \"${CONFIGURATION_BUILD_DIR}/${EXECUTABLE_PATH}\" || echo \"Not found\"";
-			showEnvVarsInLog = 0;
-		};
-		275816771CA0748F00CD66C5 /* Install Library */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 8;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Install Library";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-			shellPath = /bin/sh;
-			shellScript = "cp \"${UNIVERSAL_BUILD_DIR}/${EXECUTABLE_PATH}\" \"${CONFIGURATION_BUILD_DIR}/${EXECUTABLE_PATH}\" || echo \"Not found\"";
-			showEnvVarsInLog = 0;
 		};
 		27B0B8061492BE2100A817AD /* Copy Library */ = {
 			isa = PBXShellScriptBuildPhase;
