@@ -264,7 +264,8 @@
                                             allowFollows: !_dontSendMultipart
                                                   decode: NO
                                                   status: &status]) {
-                                Warn(@"%@: Couldn't expand attachments of %@", self, populatedRev);
+                                LogTo(Sync, @"%@: Couldn't expand attachments of %@: status %d",
+                                      self, populatedRev, status);
                                 [self revisionFailed];
                                 continue;
                             }
@@ -383,6 +384,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
 
 - (CBLMultipartWriter*)multipartWriterForRevision: (CBL_Revision*)rev
                                          boundary: (NSString*)boundary
+                                            error: (NSError**)outError
 {
     // Find all the attachments with "follows" instead of a body, and put 'em in a multipart stream.
     // It's important to scan the _attachments entries in the same order in which they will appear
@@ -403,6 +405,8 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                 NSData* json = [CBJSONEncoder canonicalEncoding: rev.properties error: &error];
                 if (error) {
                     Warn(@"%@: Creating canonical JSON data got an error: %@", self, error.my_compactDescription);
+                    if (outError)
+                        *outError = error;
                     return nil;
                 }
 
@@ -423,20 +427,46 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
             CBL_Attachment* attachmentObj = [_db attachmentForDict: attachment
                                                              named: attachmentName
                                                             status: &status];
-            if (!attachmentObj)
+            if (!attachmentObj) {
+                Warn(@"CBLRestPusher: Invalid attachment '%@' in %@", attachmentName, rev);
+                CBLStatusToOutNSError(status, outError);
                 return nil;
-            [bodyStream addStream: attachmentObj.contentStream length: attachmentObj->length];
+            }
+            NSInputStream *contentStream = attachmentObj.contentStream;
+            if (!contentStream) {
+                LogTo(Sync, @"Skipping rev %@ due to missing attachment '%@'", rev, attachmentName);
+                CBLStatusToOutNSError(kCBLStatusAttachmentNotFound, outError);
+                return nil;
+            }
+            [bodyStream addStream: contentStream length: attachmentObj->length];
         }
     }
 
+    if (!bodyStream && outError)
+        *outError = nil;
     return bodyStream;
 }
 
+
+/** Checks whether this revision has non-inlined attachments; if so, it schedules it to be
+    uploaded separately, and returns YES. Otherwise returns NO, indicating that the caller is
+    still responsible for uploading it. */
 - (BOOL) uploadMultipartRevision: (CBL_Revision*)rev {
     // Pre-creating the body stream and check if it's available or not.
-    __block CBLMultipartWriter* bodyStream = [self multipartWriterForRevision: rev boundary: nil];
-    if (!bodyStream)
-        return NO;
+    NSError* error = nil;
+    __block CBLMultipartWriter* bodyStream = [self multipartWriterForRevision: rev
+                                                                     boundary: nil
+                                                                        error: &error];
+    if (!bodyStream) {
+        if (error) {
+            // On error creating the stream, note that we're skipping this revision, but still
+            // return YES so that the caller won't try to upload it.
+            [self revisionFailed];
+            return YES;
+        } else {
+            return NO;
+        }
+    }
     NSString* boundary = bodyStream.boundary;
     
     // OK, we are going to upload this on its own:
@@ -455,7 +485,8 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                                   bodyStream = nil;
                                   if (!writer)
                                       writer = [self multipartWriterForRevision: rev
-                                                                       boundary: boundary];
+                                                                       boundary: boundary
+                                                                          error: NULL];
                                   return writer;
                               }
                                  onCompletion: ^(CBLMultipartUploader* result, NSError *error) {

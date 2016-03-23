@@ -1197,6 +1197,9 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 
+#pragma mark - LAZY ATTACHMENTS:
+
+
 - (CBLReplication*) pullFromAttachTest {
     NSURL* pullURL = [self remoteTestDBURL: kAttachTestDBName];
     if (!pullURL)
@@ -1211,6 +1214,24 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     }];
     AssertNil(repl.lastError);
     return repl.lastError ? nil : repl;
+}
+
+- (XCTestExpectation*) expectationForProgress: (NSProgress*)progress
+                                      logging: (BOOL)logging
+{
+    XCKeyValueObservingExpectationHandler handler = ^BOOL(id observedObject, NSDictionary *change) {
+        NSProgress* p = observedObject;
+        if (logging) {
+            Log(@"progress = %@", p);
+            Log(@"    desc = %@ / %@",
+                p.localizedDescription, p.localizedAdditionalDescription);
+        }
+        NSError* error = p.userInfo[kCBLProgressErrorKey];
+        return p.completedUnitCount == p.totalUnitCount || error != nil;
+    };
+    return [self keyValueObservingExpectationForObject: progress
+                                               keyPath: @"fractionCompleted"
+                                               handler: handler];
 }
 
 - (void) test20_LazyPullAttachments {
@@ -1231,25 +1252,11 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
     Log(@"Downloading attachment...");
 
-    XCKeyValueObservingExpectationHandler handler = ^BOOL(id observedObject, NSDictionary *change) {
-        NSProgress* p = observedObject;
-        Log(@"progress = %@", p);
-        Log(@"    desc = %@ / %@",
-            p.localizedDescription, p.localizedAdditionalDescription);
-        NSError* error = p.userInfo[kCBLProgressErrorKey];
-        return p.completedUnitCount == p.totalUnitCount || error != nil;
-    };
-
     // Request it twice to make sure simultaneous requests work:
     NSProgress* progress1 = [repl downloadAttachment: att];
     NSProgress* progress2 = [repl downloadAttachment: att];
-
-    [self keyValueObservingExpectationForObject: progress1
-                                        keyPath: @"fractionCompleted"
-                                        handler: handler];
-    [self keyValueObservingExpectationForObject: progress2
-                                        keyPath: @"fractionCompleted"
-                                        handler: handler];
+    [self expectationForProgress: progress1 logging: YES];
+    [self expectationForProgress: progress2 logging: YES];
     [self waitForExpectationsWithTimeout: _timeout handler: nil];
     AssertNil(progress1.userInfo[kCBLProgressErrorKey]);
     AssertNil(progress2.userInfo[kCBLProgressErrorKey]);
@@ -1304,6 +1311,52 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     NSError* error2 = progress2.userInfo[kCBLProgressErrorKey];
     Assert([error2 my_hasDomain: CBLHTTPErrorDomain code: kCBLStatusNotFound]);
 }
+
+
+- (void) test22_NonDownloadedAttachments {
+    // First pull the read-only "attach_test" database:
+    NSURL* pullURL = [self remoteTestDBURL: kAttachTestDBName];
+    if (!pullURL)
+        return;
+
+    Log(@"Pulling from %@...", pullURL);
+    CBLReplication* pull = [db createPullReplication: pullURL];
+    pull.downloadsAttachments = NO; // Crucial: Skip attachments on pull!
+    [self runReplication: pull expectedChangesCount: 0];
+    AssertNil(pull.lastError);
+
+    Log(@"Verifying documents...");
+    CBLDocument* doc = db[@"oneBigAttachment"];
+    CBLAttachment* att = [doc.currentRevision attachmentNamed: @"IMG_0450.MOV"];
+    Assert(att);
+    AssertEq(att.length, 34120085ul);
+    AssertNil(att.content);
+
+    doc = db[@"extrameta"];
+    att = [doc.currentRevision attachmentNamed: @"extra.txt"];
+    AssertNil(att.content);
+
+    // Now push it to the scratch database:
+    NSURL* pushURL = [self remoteTestDBURL: kScratchDBName];
+    [self eraseRemoteDB: pushURL];
+    Log(@"Pushing to %@...", pushURL);
+    CBLReplication *push = [db createPushReplication: pushURL];
+    [self runReplication: push expectedChangesCount: 0];
+    AssertNil(push.lastError);
+
+    // Download a missing attachment:
+    NSProgress* progress = [pull downloadAttachment: att];
+    [self expectationForProgress: progress logging: NO];
+    [self waitForExpectationsWithTimeout: _timeout handler: nil];
+    AssertNil(progress.userInfo[kCBLProgressErrorKey]);
+
+    // Push again (without clearing scratch) -- will upload 'extrameta'
+    [self runReplication: push expectedChangesCount: 1];
+    AssertNil(push.lastError);
+}
+
+
+#pragma mark - MISC
 
 
 - (void) test22_SyncGatewaySessionCookie {

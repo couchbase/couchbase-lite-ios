@@ -73,7 +73,7 @@ static UInt16 sPort = 60100;
 
     // Wait for listener to start:
     [self keyValueObservingExpectationForObject: listener keyPath: @"port" expectedValue: @(sPort)];
-    [listener start: NULL];
+    Assert([listener start: &error], @"Couldn't start listener: %@", error);
     [self waitForExpectationsWithTimeout: 5.0 handler: nil];
 }
 
