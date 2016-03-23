@@ -130,11 +130,5 @@ mkdir -p "${CREATING_UNIVERSAL_DIR}/usr/local/include"
 # * needs to be outside the double quotes?
 cp "${CURRENTCONFIG_DEVICE_DIR}/usr/local/include/"* "${CREATING_UNIVERSAL_DIR}/usr/local/include"
 fi
-fi
 
-
-if [ -e "${UNIVERSAL_BUILD_DIR}/${EXECUTABLE_PATH}" ]
-then
-    echo "Installing fat ${EXECUTABLE_PATH} to ${CONFIGURATION_BUILD_DIR}"
-    cp "${UNIVERSAL_BUILD_DIR}/${EXECUTABLE_PATH}" "${CONFIGURATION_BUILD_DIR}/${EXECUTABLE_PATH}"
 fi

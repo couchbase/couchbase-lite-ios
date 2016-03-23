@@ -1804,6 +1804,7 @@
 		27B0B81A1492C16300A817AD /* DemoAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DemoAppDelegate.h; sourceTree = "<group>"; };
 		27B0B81B1492C16300A817AD /* DemoAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DemoAppDelegate.m; sourceTree = "<group>"; };
 		27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CBForest.xcodeproj; path = CBForest/CBForest.xcodeproj; sourceTree = "<group>"; };
+		27B8D8261CA3029700B6F193 /* InstallFatLibrary.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = InstallFatLibrary.sh; sourceTree = "<group>"; };
 		27B945A71768E63200B2DF2D /* CBLModelArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLModelArray.h; sourceTree = "<group>"; };
 		27B945A81768E63200B2DF2D /* CBLModelArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLModelArray.m; sourceTree = "<group>"; };
 		27B945B017692E2000B2DF2D /* CBLModel_Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLModel_Internal.h; sourceTree = "<group>"; };
@@ -2823,6 +2824,7 @@
 				27F87BE61558890600F0A416 /* CBLGNUstep.h */,
 				27F87BE71558890700F0A416 /* CBLGNUstep.m */,
 				270BDD6815644EA8007D52F6 /* BuildFatLibrary.sh */,
+				27B8D8261CA3029700B6F193 /* InstallFatLibrary.sh */,
 				27452C221AB20BD500327776 /* noop.m */,
 			);
 			name = Support;
@@ -4012,6 +4014,7 @@
 				27E66AD31A7307590091DA3F /* Sources */,
 				27E66B3C1A7307590091DA3F /* Frameworks */,
 				27E66B3F1A7307590091DA3F /* Build Fat Library */,
+				27B8D8321CA3284700B6F193 /* Install Fat Library */,
 			);
 			buildRules = (
 			);
@@ -4031,6 +4034,7 @@
 				930FE55B1C58562B008107A0 /* Frameworks */,
 				930FE55C1C58562B008107A0 /* CopyFiles */,
 				930FE5781C5857BF008107A0 /* Make a Fat Binary */,
+				27B8D8331CA3287900B6F193 /* Install Fat Library */,
 			);
 			buildRules = (
 			);
@@ -4424,6 +4428,38 @@
 			shellScript = "cp \"${UNIVERSAL_BUILD_DIR}/libCouchbaseLiteFat.a\" \"${CONFIGURATION_BUILD_DIR}/${EXECUTABLE_PATH}\"";
 			showEnvVarsInLog = 0;
 		};
+		27B8D8321CA3284700B6F193 /* Install Fat Library */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 8;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Source/InstallFatLibrary.sh",
+			);
+			name = "Install Fat Library";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"\n";
+			showEnvVarsInLog = 0;
+		};
+		27B8D8331CA3287900B6F193 /* Install Fat Library */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 8;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Source/InstallFatLibrary.sh",
+			);
+			name = "Install Fat Library";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"\n";
+			showEnvVarsInLog = 0;
+		};
 		27E66ACB1A7305B10091DA3F /* Build Fat Library */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -4447,13 +4483,15 @@
 			);
 			inputPaths = (
 				"$(SRCROOT)/Source/BuildFatLibrary.sh",
+				"",
 			);
 			name = "Build Fat Library";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"\n";
+			showEnvVarsInLog = 0;
 		};
 		930FE5781C5857BF008107A0 /* Make a Fat Binary */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -4468,7 +4506,8 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"\n";
+			showEnvVarsInLog = 0;
 		};
 		DA023B6014BCA94C008184BB /* Build Fat Library */ = {
 			isa = PBXShellScriptBuildPhase;
