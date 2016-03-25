@@ -1028,4 +1028,59 @@ static CBL_Revision* mkrev(NSString* revID) {
     [manualDB close: &error];
 }
 
+
+- (void) test29_autoPruneOnPut {    // Test #1165
+    db.maxRevTreeDepth = 5;
+
+    CBL_Revision* lastRev = nil;
+    NSMutableArray *revs = [NSMutableArray new];
+    for (int gen = 1; gen <= 10; gen++) {
+        CBL_MutableRevision* newRev = [CBL_MutableRevision revisionWithProperties: @{@"_id": @"foo",
+                                                                                     @"gen": @(gen)}];
+        CBLStatus status;
+        CBL_Revision* rev = [db putRevision: newRev prevRevisionID: lastRev.revID allowConflict: NO status: &status error: NULL];
+        Assert(rev, @"Failed to putRevision: %d", status);
+        [revs addObject: rev];
+        lastRev = rev;
+    }
+
+    // Verify that the first five revs are no longer available:
+    for (int gen = 1; gen <= 10; gen++) {
+        CBL_Revision* rev = [db getDocumentWithID: @"foo" revisionID: [revs[gen-1] revID]];
+        if (gen <= 5)
+            AssertNil(rev);
+        else
+            Assert(rev != nil);
+    }
+}
+
+
+- (void) test29_autoPruneOnForceInsert {    // Test #1165
+    db.maxRevTreeDepth = 5;
+
+    CBL_Revision* lastRev = nil;
+    NSMutableArray *revs = [NSMutableArray new];
+    NSMutableArray *history = [NSMutableArray new];
+    for (int gen = 1; gen <= 10; gen++) {
+        CBL_Revision* rev = [CBL_Revision revisionWithProperties: @{@"_id": @"foo",
+                                                                    @"_rev": $sprintf(@"%d-cafebabe", gen),
+                                                                    @"gen": @(gen)}];
+        CBLStatus status = [db forceInsert: rev revisionHistory: history source: nil error: NULL];
+        Assert(status == 201, @"Failed to forceInsert: %d", status);
+        [history insertObject: rev.revID atIndex: 0];
+        [revs addObject: rev];
+        lastRev = rev;
+    }
+
+    // Verify that the first five revs are no longer available:
+    for (int gen = 1; gen <= 10; gen++) {
+        CBL_Revision* rev = [db getDocumentWithID: @"foo" revisionID: [revs[gen-1] revID]];
+        if (gen <= 5)
+            AssertNil(rev);
+        else
+            Assert(rev != nil);
+    }
+}
+
+
 @end
