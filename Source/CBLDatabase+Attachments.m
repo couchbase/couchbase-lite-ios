@@ -282,8 +282,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
                 }
                 NSData* data = decodeAttachments ? attachObj.content : attachObj.encodedContent;
                 if (!data) {
-                    Warn(@"Can't get binary data of attachment '%@' of %@", name, rev);
-                    *outStatus = kCBLStatusNotFound;
+                    *outStatus = kCBLStatusAttachmentNotFound;
                     return attachment;
                 }
                 expanded[@"data"] = [CBLBase64 encode: data];
