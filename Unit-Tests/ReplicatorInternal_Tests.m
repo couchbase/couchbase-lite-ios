@@ -563,14 +563,14 @@
 
 - (void) test_17_Reachability {
     NSArray* hostnames = @[@"couchbase.com", @"localhost", @"127.0.0.1", @"67.221.231.37",
-                           @"fsdfsaf.fsdfdaf.fsfddf"];
+                           @"qqq", @"foobar.local.", @"fsdfsaf.fsdfdaf.ws"];
     for (NSString* hostname in hostnames) {
         Log(@"Test reachability of %@ ...", hostname);
-        CBLReachability* r = [[CBLReachability alloc] initWithHostName: hostname];
+        NSURL* url = $url($sprintf(@"https://%@/", hostname));
+        CBLReachability* r = [[CBLReachability alloc] initWithURL: url];
         Assert(r);
-        Log(@"\tCBLReachability = %@", r);
         AssertEqual(r.hostName, hostname);
-        __block BOOL resolved = NO;
+        __block XCTestExpectation* resolved;
         
         __weak CBLReachability *weakR = r;
         r.onChange = ^{
@@ -579,19 +579,17 @@
                 strongR.reachabilityKnown, strongR.reachabilityFlags, strongR.reachable);
             Log(@"\tCBLReachability = %@", strongR);
             if (strongR.reachabilityKnown)
-                resolved = YES;
+                [resolved fulfill];
         };
         Assert([r startOnRunLoop:CFRunLoopGetCurrent()]);
+        Log(@"\tCBLReachability = %@", r);
 
         BOOL known = r.reachabilityKnown;
         Log(@"\tInitially: known=%d, flags=%x --> reachable=%d",
             known, r.reachabilityFlags, r.reachable);
         if (!known) {
-            while (!resolved) {
-                Log(@"\twaiting...");
-                [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                         beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]];
-            }
+            resolved = [self expectationWithDescription: @"Reachability resolved"];
+            [self waitForExpectationsWithTimeout: 10.0 handler: nil];
         }
         [r stop];
         Log(@"\t...done!");

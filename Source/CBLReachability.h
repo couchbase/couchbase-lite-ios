@@ -25,7 +25,12 @@ typedef void (^CBLReachabilityOnChangeBlock)(void);
     "Reachable" means simply that the local IP stack has resolved the host's DNS name and knows how to route packets toward its IP address. It does NOT guarantee that you can successfully connect. Generally it just means that you have an Internet connection. */
 @interface CBLReachability : NSObject
 
-- (instancetype) initWithHostName: (NSString*)hostName;
+/** Tracks the reachability of the given URL. In general this just uses the URL's hostname,
+    but if the URL must be reached via a proxy, it will track reachability of a local network. */
+- (instancetype) initWithURL: (NSURL*)url;
+
+/** Tracks reachability of any network address, i.e. whether there is a network connection. */
+- (instancetype) init;
 
 @property (readonly, nonatomic) NSString* hostName;
 
@@ -54,5 +59,10 @@ typedef void (^CBLReachabilityOnChangeBlock)(void);
 
 /** If you set this, the block will be called whenever the reachability related properties change. */
 @property (copy) CBLReachabilityOnChangeBlock onChange;
+
+
+#if DEBUG
++ (void) setAlwaysAssumesProxy: (BOOL)alwaysAssumesProxy;   // For debugging
+#endif
 
 @end
