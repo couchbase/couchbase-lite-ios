@@ -6,7 +6,7 @@
 //  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 
-#import "MYDynamicObject.h"
+#import "CBLDynamicObject.h"
 #import "CBLDocument.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -21,7 +21,7 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
     Supported object types are NSString, NSNumber, NSData, NSDate, NSArray, NSDictionary, NSDecimalNumber. (NSData and NSDate are not native JSON; they will be automatically converted to/from strings in base64 and ISO date formats, respectively. NSDecimalNumber is not native JSON as well; it will be converted to/from string.)
     Additionally, a property's type can be a pointer to a CBLModel subclass. This provides references between model objects. The raw property value in the document must be a string whose value is interpreted as a document ID.
     NSArray-valued properties may be restricted to a specific item class. See the documentation of +itemClassForArrayProperty: for details. */
-@interface CBLModel : MYDynamicObject <CBLDocumentModel>
+@interface CBLModel : CBLDynamicObject <CBLDocumentModel>
 
 /** Returns the CBLModel associated with a CBLDocument, or creates & assigns one if necessary.
     If the CBLDocument already has an associated model, it's returned. Otherwise a new one is instantiated.
