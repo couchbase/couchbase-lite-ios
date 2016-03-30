@@ -103,6 +103,18 @@ FOUNDATION_EXTERN id CBLTextKey(NSString* text);
     the totalRows value. */
 @property (readonly) NSUInteger totalRows;
 
+/** Updates the view's index, then returns YES if the index changed or NO if it didn't.
+    Indexing scans all documents that have changed since the last time the index was updated.
+    The body of each document is passed to the view's map block, and any emitted rows are added
+    to the index. Any existing rows previously emitted by those documents, that weren't re-emitted
+    this time, are removed. */
+- (void) updateIndex;
+
+/** Asynchronously updates the view's index. This method returns immediately, after scheduling a
+    call to -updateIndex on a background thread; the onComplete callback block is called after 
+    indexing finishes. */
+- (void) updateIndexAsync: (void (^)())onComplete;
+
 /** Deletes the view's persistent index. It will be regenerated on the next query. */
 - (void) deleteIndex;
 

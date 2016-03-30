@@ -168,7 +168,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     }) reduceBlock: NULL version: @"1"];
 
     Assert(view.stale);
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     
     NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
@@ -177,7 +177,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
                              $dict({@"key", @"\"two\""},   {@"value", @"3"}, {@"seq", @2}) ));
     // No-op reindex:
     Assert(!view.stale);
-    AssertEq([view updateIndex], kCBLStatusNotModified);
+    AssertEq([view _updateIndex], kCBLStatusNotModified);
     
     // Now add a doc and update a doc:
     CBL_MutableRevision* threeUpdated = [[CBL_MutableRevision alloc] initWithDocID: rev3.docID revID: nil deleted:NO];
@@ -199,7 +199,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
 
     // Reindex again:
     Assert(view.stale);
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     dump = [view.storage dump];
     Log(@"View dump: %@", dump);
@@ -227,7 +227,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     [self putDoc: $dict({@"clef", @"quatre"})];
 
     CBLView* view = [self createView];
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
@@ -242,7 +242,7 @@ static NSArray* rowsToDictsSettingDB(CBLDatabase* db, CBLQueryIteratorBlock iter
     }) reduceBlock: NULL version: @"2"];
 
     Assert(view.stale);
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     dump = [view.storage dump];
     Log(@"View dump: %@", dump);
@@ -282,7 +282,7 @@ static NSArray* sortViews(NSArray *array) {
     for (int i=0; i<kNDocs; i++) {
         [self putDoc: @{@"key": @(i)}];
         if (i == kNDocs/2) {
-            CBLStatus status = [v1 updateIndex];
+            CBLStatus status = [v1 _updateIndex];
             Assert(status < 300);
         }
     }
@@ -290,7 +290,7 @@ static NSArray* sortViews(NSArray *array) {
     CBLStatus status = [v2 updateIndexAlone];
     Assert(status < 300);
 
-    status = [v2 updateIndex];
+    status = [v2 _updateIndex];
     AssertEq(status, kCBLStatusNotModified); // should not update v3
 
     NSArray* views = @[v1, v2, v3];
@@ -310,7 +310,7 @@ static NSArray* sortViews(NSArray *array) {
     CBL_Revision* leaf1 = docs[1];
     
     CBLView* view = [self createView];
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
@@ -331,7 +331,7 @@ static NSArray* sortViews(NSArray *array) {
     AssertEqual(leaf1.docID, leaf2.docID);
     
     // Update the view -- should contain only the key from the new rev, not the old:
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"40ur\""}, {@"seq", @6}),
@@ -350,7 +350,7 @@ static NSArray* sortViews(NSArray *array) {
     CBL_Revision* leaf1 = docs[1];
     
     CBLView* view = [self createView];
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
@@ -374,7 +374,7 @@ static NSArray* sortViews(NSArray *array) {
     AssertEqual(winner.revID, [docs[1] revID]);
 
     // Update the view -- should contain only the key from the new rev, not the old:
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
@@ -393,7 +393,7 @@ static NSArray* sortViews(NSArray *array) {
     CBL_Revision* leaf1 = docs[1];
     
     CBLView* view = [self createView];
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"five\""}, {@"seq", @5}),
@@ -414,7 +414,7 @@ static NSArray* sortViews(NSArray *array) {
     AssertEqual(leaf1.docID, leaf2.docID);
     
     // Update the view -- should contain only the key from the new rev, not the old:
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"40ur\""}, {@"seq", @6}),
@@ -436,7 +436,7 @@ static NSArray* sortViews(NSArray *array) {
     AssertEqual(@"four", [[db documentWithID:@"44444"] propertyForKey:@"key"]);
     
     // Update the view -- should contain only the key from the old rev, not the new:
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     SequenceNumber fourSeq = (self.isSQLiteDB ? leaf1 : leaf3).sequence;
@@ -458,9 +458,9 @@ static NSArray* sortViews(NSArray *array) {
     Assert(db);
     [self putDocs];
     CBLView* view = [self createView];
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     Assert(!view.stale);
-    AssertEq([view updateIndex], kCBLStatusNotModified);
+    AssertEq([view _updateIndex], kCBLStatusNotModified);
     [db _close];
     db = nil;
 
@@ -469,7 +469,7 @@ static NSArray* sortViews(NSArray *array) {
     Assert([db open: nil]);
     view = [self createView];
     Assert(!view.stale);
-    AssertEq([view updateIndex], kCBLStatusNotModified);
+    AssertEq([view _updateIndex], kCBLStatusNotModified);
     [db _close];
     db = nil;
 }
@@ -479,7 +479,7 @@ static NSArray* sortViews(NSArray *array) {
     RequireTestCase(Index);
     [self putDocs];
     CBLView* view = [self createView];
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     // Query all rows:
     CBLQueryOptions *options = [CBLQueryOptions new];
@@ -573,7 +573,7 @@ static NSArray* sortViews(NSArray *array) {
     RequireTestCase(Index);
     [self putDocs];
     CBLView* view = [self createView];
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     CBLQueryOptions *options = [CBLQueryOptions new];
     CBLStatus status;
     NSArray *rows, *expectedRows;
@@ -617,7 +617,7 @@ static NSArray* sortViews(NSArray *array) {
     [self putDoc: $dict({@"_id", @"11112"}, {@"key", @"one"})];
 
     CBLView* view = [self createView];
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     CBLQueryOptions *options = [CBLQueryOptions new];
     options.startKey = @"one";
@@ -655,7 +655,7 @@ static NSArray* sortViews(NSArray *array) {
         emit(doc[@"key"], @-1);
         emit(doc[@"key"], @-2);
     }) reduceBlock: NULL version: @"1"];
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
@@ -687,7 +687,7 @@ static NSArray* reverse(NSArray* a) {
     RequireTestCase(Query);
     [self putDocs];
     CBLView* view = [self createView];
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     // Keys with prefix "f":
     CBLQueryOptions *options = [CBLQueryOptions new];
@@ -717,7 +717,7 @@ static NSArray* reverse(NSArray* a) {
         emit(@[doc[@"key"], @(i)], nil);
         emit(@[doc[@"key"], @(i/100)], nil);
     }) reduceBlock: NULL version: @"1"];
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     // Keys starting with "one":
     CBLQueryOptions *options = [CBLQueryOptions new];
@@ -757,7 +757,7 @@ static NSArray* reverse(NSArray* a) {
         return result;
     } version: @"1"];
 
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     // Query all rows:
     CBLQueryOptions *options = [[CBLQueryOptions alloc] init];
@@ -815,7 +815,7 @@ static NSArray* reverse(NSArray* a) {
     RequireTestCase(Index);
     [self putGeoDocs];
     CBLView* view = [self createView];
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     
     // Bounding-box query:
     CBLQueryOptions *options = [CBLQueryOptions new];
@@ -977,7 +977,7 @@ static NSArray* reverse(NSArray* a) {
         return [CBLView totalValues: values];
     } version: @"1"];
 
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
     AssertEqual(dump, $array($dict({@"key", @"\"App\""}, {@"value", @"1.95"}, {@"seq", @2}),
@@ -1017,7 +1017,7 @@ static NSArray* reverse(NSArray* a) {
         return [CBLView totalValues: values];
     } version: @"1"];
     
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     CBLQueryOptions *options = [CBLQueryOptions new];
     CBLStatus status;
@@ -1079,7 +1079,7 @@ static NSArray* reverse(NSArray* a) {
          return @([values count]);
      } version:@"1.0"];
    
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     CBLQueryOptions *options = [CBLQueryOptions new];
     options->groupLevel = 1;
@@ -1107,7 +1107,7 @@ static NSArray* reverse(NSArray* a) {
             emit(type, nil);
     }) version:@"1.0"];
     
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     CBLQueryOptions *options = [CBLQueryOptions new];
     options->groupLevel = 1;
     CBLStatus status;
@@ -1230,7 +1230,7 @@ static NSArray* reverse(NSArray* a) {
         emit(key, value);
     }) reduceBlock: NULL version: @"1"];
 
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     
     // Query all rows:
     CBLQueryOptions *options = [CBLQueryOptions new];
@@ -1271,7 +1271,7 @@ static NSArray* reverse(NSArray* a) {
             emit(CBLTextKey(doc[@"text"]), doc[@"_id"]);
     }) reduceBlock: NULL version: @"1"];
 
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     // Create another view that outputs similar-but-different text, to make sure the results
     // don't get mixed up
@@ -1280,7 +1280,7 @@ static NSArray* reverse(NSArray* a) {
         if (doc[@"text"])
             emit(CBLTextKey(@"dog stormy"), doc[@"_id"]);
     }) reduceBlock: NULL version: @"1"];
-    AssertEq([otherView updateIndex], kCBLStatusOK);
+    AssertEq([otherView _updateIndex], kCBLStatusOK);
 
     // Query the full-text index:
     CBLQuery* query = [view createQuery];
@@ -1308,7 +1308,7 @@ static NSArray* reverse(NSArray* a) {
     AssertEq(status, kCBLStatusOK);
     AssertNil(error);
 
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     // Make sure the deleted doc doesn't still show up in the query results:
     rows = [[query run: NULL] allObjects];
@@ -1350,7 +1350,7 @@ static NSArray* reverse(NSArray* a) {
             emit(CBLTextKey(doc[@"text"]), doc[@"_id"]);
     }) reduceBlock: NULL version: @"1"];
 
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     // Query the full-text index:
     CBLQuery *query = [view createQuery];
@@ -1393,7 +1393,7 @@ static NSArray* reverse(NSArray* a) {
             emit(CBLTextKey(doc[@"text"]), doc[@"_id"]);
     }) reduceBlock: NULL version: @"1"];
 
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     CBLQueryOptions *options = [CBLQueryOptions new];
     options.fullTextQuery = @"stormy OR dog";
@@ -1453,7 +1453,7 @@ static NSArray* reverse(NSArray* a) {
     Assert([db putRevision: del prevRevisionID: rev.revID allowConflict: NO status: &status error: &error] != nil);
     AssertEq(status, kCBLStatusOK);
 
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
 
     // Make sure the deleted doc doesn't still show up in the query results:
     options.fullTextQuery = @"stormy OR dog";
@@ -1477,7 +1477,7 @@ static NSArray* reverse(NSArray* a) {
     // Create a view
     CBLView* view = [self createView];
     AssertEq(view.currentTotalRows, 0u);
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     Assert(!view.stale);
     AssertEq(view.currentTotalRows, totalRows);
     AssertEq(view.totalRows, totalRows);
@@ -1494,7 +1494,7 @@ static NSArray* reverse(NSArray* a) {
     status = [db forceInsert: rev revisionHistory: @[] source: nil error: &error];
     Assert(status < 300);
     AssertNil(error);
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     AssertEq(view.totalRows, totalRows);
     
     // Create a conflict, won by the old revision:
@@ -1505,7 +1505,7 @@ static NSArray* reverse(NSArray* a) {
     status = [db forceInsert: rev revisionHistory: @[] source: nil error: &error];
     Assert(status < 300);
     AssertNil(error);
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     AssertEq(view.totalRows, totalRows);
     
     // Update a doc
@@ -1516,7 +1516,7 @@ static NSArray* reverse(NSArray* a) {
                    status: &status error: &error];
     Assert(status < 300);
     AssertNil(error);
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     AssertEq(view.totalRows, totalRows);
     
     // Delete a doc
@@ -1526,7 +1526,7 @@ static NSArray* reverse(NSArray* a) {
     [db putRevision: del prevRevisionID: doc3.revID allowConflict: NO status: &status error: &error];
     AssertEq(status, kCBLStatusOK);
     AssertNil(error);
-    AssertEq([view updateIndex], kCBLStatusOK);
+    AssertEq([view _updateIndex], kCBLStatusOK);
     AssertEq(view.totalRows, totalRows - 1);
     
     // Delete the index
@@ -1565,7 +1565,7 @@ static NSArray* reverse(NSArray* a) {
     }) reduceBlock: NULL version: @"1"];
 
     [self allowWarningsIn:^{
-        AssertEq([view updateIndex], kCBLStatusOK);
+        AssertEq([view _updateIndex], kCBLStatusOK);
     }];
 
     NSArray* dump = [view.storage dump];

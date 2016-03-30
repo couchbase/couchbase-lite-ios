@@ -520,7 +520,7 @@ DefineLogDomain(Query);
             }
             lastIndexedSequence = view.lastSequenceIndexed;
             if (options->indexUpdateMode == kCBLUpdateIndexBefore || lastIndexedSequence <= 0) {
-                status = [view updateIndex];
+                status = [view _updateIndex];
                 if (CBLStatusIsError(status)) {
                     Warn(@"Failed to update view index: %d", status);
                     break;

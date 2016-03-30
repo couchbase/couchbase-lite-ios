@@ -291,9 +291,27 @@ static id<CBLViewCompiler> sCompiler;
 }
 
 
-/** Updates the view's index, if necessary. (If no changes needed, returns kCBLStatusNotModified.)*/
-- (CBLStatus) updateIndex {
+/** Updates the view's index, if necessary. (If nothing changed, returns kCBLStatusNotModified.)*/
+- (CBLStatus) _updateIndex {
     return [self updateIndexes: self.viewsInGroup];
+}
+
+- (void) updateIndex {
+    CBLStatus status = [self updateIndexes: self.viewsInGroup];
+    if (CBLStatusIsError(status))
+        Warn(@"Error %d updating index of %@", status, self);
+}
+
+- (void) updateIndexAsync: (void (^)())onComplete {
+    CBLDatabase* db = self.database;
+    [db.manager backgroundTellDatabaseNamed: db.name to: ^(CBLDatabase *bgdb)
+     {
+         CBLView* bgview = [bgdb existingViewNamed: self.name];
+         [bgview updateIndex];
+         [db doAsync: ^{
+             onComplete();
+         }];
+     }];
 }
 
 - (CBLStatus) updateIndexAlone {
