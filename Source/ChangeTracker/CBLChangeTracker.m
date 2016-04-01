@@ -96,9 +96,10 @@ DefineLogDomain(ChangeTracker);
 }
 
 - (NSString*) changesFeedPath {
-    if (_usePOST)
-        return @"_changes";
-    
+    // We add the basic query params to the URL even if we'll send a POST request. Yes, this is
+    // redundant, since those params are in the JSON body too. This is for CouchDB compatibility:
+    // for some reason it still expects most of the params in the URL, even with a POST; only the
+    // filter-related params go in the body. (See #1139)
     NSMutableString* path;
     path = [NSMutableString stringWithFormat: @"_changes?feed=%@&heartbeat=%.0f",
                                               self.feed, _heartbeat*1000.0];
@@ -116,30 +117,32 @@ DefineLogDomain(ChangeTracker);
     if (_limit > 0)
         [path appendFormat: @"&limit=%u", _limit];
 
-    // Add filter or doc_ids:
-    NSString* filterName = _filterName;
-    NSDictionary* filterParameters = _filterParameters;
-    if (_docIDs) {
-        filterName = @"_doc_ids";
-        filterParameters = @{@"doc_ids": _docIDs};
-    }
-    if (filterName) {
-        [path appendFormat: @"&filter=%@", CBLEscapeURLParam(filterName)];
-        for (NSString* key in filterParameters) {
-            NSString* value = filterParameters[key];
-            if (![value isKindOfClass: [NSString class]]) {
-                // It's ambiguous whether non-string filter params are allowed.
-                // If we get one, encode it as JSON:
-                NSError* error;
-                value = [CBLJSON stringWithJSONObject: value options: CBLJSONWritingAllowFragments
-                                                error: &error];
-                if (!value) {
-                    Warn(@"Illegal filter parameter %@ = %@", key, filterParameters[key]);
-                    continue;
+    if (!_usePOST) {
+        // Add filter or doc_ids to URL. If sending a POST, these will go in the JSON body instead.
+        NSString* filterName = _filterName;
+        NSDictionary* filterParameters = _filterParameters;
+        if (_docIDs) {
+            filterName = @"_doc_ids";
+            filterParameters = @{@"doc_ids": _docIDs};
+        }
+        if (filterName) {
+            [path appendFormat: @"&filter=%@", CBLEscapeURLParam(filterName)];
+            for (NSString* key in filterParameters) {
+                NSString* value = filterParameters[key];
+                if (![value isKindOfClass: [NSString class]]) {
+                    // It's ambiguous whether non-string filter params are allowed.
+                    // If we get one, encode it as JSON:
+                    NSError* error;
+                    value = [CBLJSON stringWithJSONObject: value options: CBLJSONWritingAllowFragments
+                                                    error: &error];
+                    if (!value) {
+                        Warn(@"Illegal filter parameter %@ = %@", key, filterParameters[key]);
+                        continue;
+                    }
                 }
+                [path appendFormat: @"&%@=%@", CBLEscapeURLParam(key),
+                                               CBLEscapeURLParam(value)];
             }
-            [path appendFormat: @"&%@=%@", CBLEscapeURLParam(key),
-                                           CBLEscapeURLParam(value)];
         }
     }
 
@@ -164,6 +167,9 @@ DefineLogDomain(ChangeTracker);
         filterName = @"_doc_ids";
         filterParameters = @{@"doc_ids": _docIDs};
     }
+    // Sync Gateway expects all the parameters here, but CouchDB expects them in the URL and
+    // ignores these, _except_ the filter and filterParameters. For compatibility we put the
+    // basic parameters in both places.
     NSMutableDictionary* post = $mdict({@"feed", self.feed},
                                        {@"heartbeat", @(round(_heartbeat*1000.0))},
                                        {@"style", (_includeConflicts ? @"all_docs" : nil)},
