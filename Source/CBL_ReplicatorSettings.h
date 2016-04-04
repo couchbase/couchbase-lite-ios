@@ -89,6 +89,9 @@ typedef CBL_Revision* (^RevisionBodyTransformationBlock)(CBL_Revision*);
 #define kCBLReplicatorOption_Network @"network"             // "WiFi" or "Cell"
 #define kCBLReplicatorOption_UseWebSocket @"websocket"      // Boolean; default is YES
 #define kCBLReplicatorOption_PinnedCert @"pinnedCert"       // NSData or (hex) NSString
+#define kCBLReplicatorOption_RemoteUUID @"remoteUUID"       // NSString
+#define kCBLReplicatorOption_PurgePushed @"purgePushed"     // Boolean; default is NO
+#define kCBLReplicatorOption_AllNew @"allNew"               // Boolean; default is NO
 
 // Boolean; default is YES. Setting this option will have no effect and result to always 'trust' if
 // the kCBLReplicatorOption_Network option is also set.

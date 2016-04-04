@@ -25,7 +25,7 @@
 #import <objc/runtime.h>
 
 
-//DefineLogDomain(Model);   // This is actually in MYDynamicObject.m
+//DefineLogDomain(Model);   // This is actually in CBLDynamicObject.m
 
 
 @implementation CBLModel

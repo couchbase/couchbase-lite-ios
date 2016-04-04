@@ -68,8 +68,9 @@
 
 - (void) appForegrounding {
     // Danger: This is called on the main thread!
-    [self.db doAsync: ^{
-        if ([_bgMonitor endBackgroundTask])
+    BOOL ended = [_bgMonitor endBackgroundTask];
+    [self.db doSync: ^{                 // sync call avoids a race condition on _active
+        if (ended)
             LogTo(Sync, @"%@: App foregrounded, ending background task", self);
         [self setSuspended: NO];
     }];

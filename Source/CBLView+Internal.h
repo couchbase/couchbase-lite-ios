@@ -66,7 +66,7 @@ BOOL CBLQueryRowValueIsEntireDoc(id value);
 /** Updates the view's index (incrementally) if necessary.
     If the index is updated, the other views in the viewGroup will be updated as a bonus.
     @return  200 if updated, 304 if already up-to-date, else an error code */
-- (CBLStatus) updateIndex;
+- (CBLStatus) _updateIndex;
 
 /** Updates the view's index (incrementally) if necessary. No other groups will be updated.
     @return  200 if updated, 304 if already up-to-date, else an error code */

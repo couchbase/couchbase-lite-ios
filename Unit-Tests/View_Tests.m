@@ -198,22 +198,28 @@
 }
 
 
-- (void) test05_ViewCustomSort {
-    RequireTestCase(CBLQuery_KeyPathForQueryRow);
+- (CBLView*) createSkinsViewAndDocs {
     CBLView* view = [db viewNamed: @"vu"];
     [view setMapBlock: MAPBLOCK({
-        emit(doc[@"name"], doc[@"skin"]);
+        if (doc[@"name"])
+            emit(doc[@"name"], doc[@"skin"]);
     }) version: @"1"];
 
     Assert(view.mapBlock != nil);
 
     [db inTransaction: ^BOOL {
-        [self createDocumentWithProperties: @{@"name": @"Barry", @"skin": @"none"}];
-        [self createDocumentWithProperties: @{@"name": @"Terry", @"skin": @"furry"}];
-        [self createDocumentWithProperties: @{@"name": @"Wanda", @"skin": @"scaly"}];
+        [self createDocumentWithProperties: @{@"_id": @"1", @"name": @"Barry", @"skin": @"none"}];
+        [self createDocumentWithProperties: @{@"_id": @"2", @"name": @"Terry", @"skin": @"furry"}];
+        [self createDocumentWithProperties: @{@"_id": @"3", @"name": @"Wanda", @"skin": @"scaly"}];
         return YES;
     }];
+    return view;
+}
 
+
+- (void) test05_ViewCustomSort {
+    RequireTestCase(CBLQuery_KeyPathForQueryRow);
+    CBLView* view = [self createSkinsViewAndDocs];
     CBLQuery* query = [view createQuery];
     query.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey: @"value" ascending: NO]];
     CBLQueryEnumerator* rows = [query run: NULL];
@@ -275,20 +281,7 @@
 
 
 - (void) test06_ViewCustomFilter {
-    CBLView* view = [db viewNamed: @"vu"];
-    [view setMapBlock: MAPBLOCK({
-        emit(doc[@"name"], doc[@"skin"]);
-    }) version: @"1"];
-
-    Assert(view.mapBlock != nil);
-
-    [db inTransaction: ^BOOL {
-        [self createDocumentWithProperties: @{@"name": @"Barry", @"skin": @"none"}];
-        [self createDocumentWithProperties: @{@"name": @"Terry", @"skin": @"furry"}];
-        [self createDocumentWithProperties: @{@"name": @"Wanda", @"skin": @"scaly"}];
-        return YES;
-    }];
-
+    CBLView* view = [self createSkinsViewAndDocs];
     CBLQuery* query = [view createQuery];
     query.postFilter = [NSPredicate predicateWithFormat: @"value endswith 'y'"];
     CBLQueryEnumerator* rows = [query run: NULL];
@@ -323,12 +316,7 @@
 
 
 - (void) test06_AllDocsCustomFilter {
-    [db inTransaction: ^BOOL {
-        [self createDocumentWithProperties: @{@"_id": @"1", @"name": @"Barry", @"skin": @"none"}];
-        [self createDocumentWithProperties: @{@"_id": @"2", @"name": @"Terry", @"skin": @"furry"}];
-        [self createDocumentWithProperties: @{@"_id": @"3", @"name": @"Wanda", @"skin": @"scaly"}];
-        return YES;
-    }];
+    [self createSkinsViewAndDocs];
     [db _clearDocumentCache];
 
     Log(@" ---- QUERYIN' ----");
@@ -339,6 +327,32 @@
     AssertEqual(rows.nextRow.key, @"2");
     AssertEqual(rows.nextRow.key, @"3");
     AssertNil(rows.nextRow);
+}
+
+
+- (void) test061_UpdateIndex {
+    CBLView* view = [self createSkinsViewAndDocs];
+
+    AssertEq(view.lastSequenceIndexed, 0);
+    AssertEq(view.lastSequenceChangedAt, 0);
+    [view updateIndex];
+    AssertEq(view.lastSequenceIndexed, 3);
+    AssertEq(view.lastSequenceChangedAt, 3);
+    [view updateIndex];
+    AssertEq(view.lastSequenceIndexed, 3);
+    AssertEq(view.lastSequenceChangedAt, 3);
+
+    [self createDocumentWithProperties: @{@"_id": @"4", @"name": @"Peach", @"skin": @"pink"}];
+    [view updateIndex];
+
+    [self createDocuments: 500];
+    AssertEq(view.lastSequenceIndexed, 4);
+    XCTestExpectation *expect = [self expectationWithDescription: @"Indexing complete"];
+    [view updateIndexAsync:^() {
+        [expect fulfill];
+    }];
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    AssertEq(view.lastSequenceIndexed, 504);
 }
 
 

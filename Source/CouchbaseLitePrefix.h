@@ -36,12 +36,6 @@ extern "C" {
 #endif
 
 
-// Rename the MYUtilities classes to avoid collisions:
-#define MYDynamicObject             CBL_MYDynamicObject
-
-#define MYClassFromType             CBL_MYClassFromType
-#define MYGetPropertyInfo           CBL_MYGetPropertyInfo
-
 // Rename the GCDAsyncSocket classes to avoid collisions:
 #define GCDAsyncSocket              CBL_GCDAsyncSocket
 #define GCDAsyncSocketPreBuffer     CBL_GCDAsyncSocketPreBuffer

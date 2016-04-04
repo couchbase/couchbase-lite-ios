@@ -1110,7 +1110,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         options.keys = keys;
 
     if (options->indexUpdateMode == kCBLUpdateIndexBefore || view.lastSequenceIndexed <= 0) {
-        status = [view updateIndex];
+        status = [view _updateIndex];
         if (status >= kCBLStatusBadRequest)
             return status;
     } else if (options->indexUpdateMode == kCBLUpdateIndexAfter &&
@@ -1181,7 +1181,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         return status;
 
     @try {
-        CBLStatus status = [view updateIndex];
+        CBLStatus status = [view _updateIndex];
         if (status >= kCBLStatusBadRequest)
             return status;
         return [self queryView: view withOptions: options];

@@ -164,8 +164,10 @@
                                                                type: _bonjourType
                                                                name: _bonjourName
                                                                port: self.port];
-            if ([ns respondsToSelector: @selector(setIncludesPeerToPeer:)])    // 10.10+
-                ns.includesPeerToPeer = YES;
+            // Set ns.includesPeerToPeer = YES but only if it's supported (OS X 10.10, iOS 7)
+            // and without getting a false positive warning from DeployMate:
+            if ([ns respondsToSelector: @selector(setIncludesPeerToPeer:)])
+                [ns setValue: @YES forKey: @"includesPeerToPeer"];
             ns.delegate = self;
             ns.TXTRecordData = _txtData;
             _netService = ns;

@@ -298,7 +298,7 @@ UsingLogDomain(Sync);
     if (_usePOST) {
         if ([error my_hasDomain: CBLHTTPErrorDomain code: kCBLStatusMethodNotAllowed]
             || ([error my_hasDomain: NSURLErrorDomain code: NSURLErrorUserAuthenticationRequired]
-                    && [_serverName containsString: @"CouchDB/1.0.2"])) {
+                    && [_serverName rangeOfString: @"CouchDB/1.0.2"].length > 0)) {
                 LogTo(ChangeTracker, @"Apparently server is Cloudant; retrying with a GET...");
                 _usePOST = NO;
                 _http = nil;
