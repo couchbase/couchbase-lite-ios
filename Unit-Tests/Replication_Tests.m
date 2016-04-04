@@ -1431,4 +1431,42 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 
+// Test the "purgePushed" and "allNew" push options:
+- (void) test24_PushAndPurge {
+    static const int nDocuments = 100;
+    RequireTestCase(Push);
+    NSURL* remoteDbURL = [self remoteTestDBURL: kScratchDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+
+    // Do this twice so we also test the case where the docs _do_ already exist on the server.
+    for (int pass = 1; pass <= 2; ++pass) {
+        Log(@"Pass #%d: Creating %d documents...", pass, nDocuments);
+        [db inTransaction:^BOOL{
+            for (int i = 1; i <= nDocuments; i++) {
+                @autoreleasepool {
+                    CBLDocument* doc = db[ $sprintf(@"doc-%d", i) ];
+                    NSError* error;
+                    [doc putProperties: @{@"index": @(i), @"bar": $false} error: &error];
+                    AssertNil(error);
+                }
+            }
+            return YES;
+        }];
+
+
+        CBLReplication* repl = [db createPushReplication: remoteDbURL];
+        repl.customProperties = @{@"purgePushed": @YES, @"allNew": @YES};
+        [repl start];
+
+        [self runReplication: repl expectedChangesCount: nDocuments];
+        AssertNil(repl.lastError);
+
+        // Did the docs get purged?
+        AssertEq(db.documentCount, 0ull);
+    }
+}
+
+
 @end
