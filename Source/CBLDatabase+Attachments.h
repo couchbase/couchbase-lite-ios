@@ -24,6 +24,13 @@ typedef enum {
 
 + (NSString*) blobKeyToDigest: (CBLBlobKey)key;
 
+/** Register attachment bodies in `attachments` (NSData or file NSURLs) corresponding to the
+    attachments in `rev`. The _attachments dict will be mutated if necessary to add "digest"
+    and "follows" properties. */
+- (BOOL) registerAttachmentBodies: (NSDictionary*)attachments
+                      forRevision: (CBL_MutableRevision*)rev
+                            error: (NSError**)outError;
+
 /** Scans the rev's _attachments dictionary, adding inline attachment data to the blob-store
     and turning all the attachments into stubs. */
 - (BOOL) processAttachmentsForRevision: (CBL_MutableRevision*)rev

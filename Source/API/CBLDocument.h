@@ -116,6 +116,9 @@ NS_ASSUME_NONNULL_BEGIN
     implementing some new kind of replicator that transfers revisions from another database.
     @param properties  The properties of the revision (_id and _rev will be ignored, but _deleted
                     and _attachments are recognized.)
+    @param attachments  A dictionary providing attachment bodies. The keys are the attachment
+                    names (matching the keys in the properties' `_attachments` dictionary) and
+                    the values are the attachment bodies as NSData or NSURL.
     @param revIDs  The revision history in the form of an array of revision-ID strings, in
                     reverse chronological order. The first item must be the new revision's ID.
                     Following items are its parent's ID, etc.
@@ -124,7 +127,8 @@ NS_ASSUME_NONNULL_BEGIN
                     decide whether the change is local or not.)
     @param outError  Error information will be stored here if the insertion fails.
     @return  YES on success, NO on failure. */
-- (BOOL) putExistingRevisionWithProperties: (NSDictionary*)properties
+- (BOOL) putExistingRevisionWithProperties: (CBLJSONDict*)properties
+                               attachments: (nullable NSDictionary*)attachments
                            revisionHistory: (CBLArrayOf(NSString*)*)revIDs
                                    fromURL: (nullable NSURL*)sourceURL
                                      error: (NSError**)outError;

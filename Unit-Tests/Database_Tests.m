@@ -350,6 +350,7 @@
 
     NSError* error;
     Assert(([doc putExistingRevisionWithProperties: @{@"foo": @2}
+                                       attachments: nil
                                    revisionHistory: @[@"3-cafebabe", @"2-feedba95", doc.currentRevisionID]
                                            fromURL: nil
                                              error: &error]));
@@ -362,12 +363,14 @@
 
     // Repeat; should be no error:
     Assert(([doc putExistingRevisionWithProperties: @{@"foo": @2}
+                                       attachments: nil
                                    revisionHistory: @[@"3-cafebabe", @"2-feedba95", doc.currentRevisionID]
                                            fromURL: nil
                                              error: &error]));
 
     // Add a deleted revision:
     Assert(([doc putExistingRevisionWithProperties: @{@"foo": @-1, @"_deleted": @YES}
+                                       attachments: nil
                                    revisionHistory: @[@"3-deadbeef", @"2-feedba95", doc.currentRevisionID]
                                            fromURL: nil
                                              error: &error]));
@@ -378,6 +381,39 @@
                                    @"_rev": @"3-deadbeef",
                                    @"_deleted": @YES,
                                    @"foo": @-1}));
+}
+
+
+- (void) test072_PutExistingRevisionWithAttachment {
+    CBLDocument* doc = db[@"some-doc"];
+
+    NSData* content = [@"hi there" dataUsingEncoding: NSUTF8StringEncoding];
+    NSDictionary* props = @{@"_attachments": @{
+                                    @"foo.txt": @{@"content_type": @"text/plain"},
+                                    @"bar.txt": @{@"content_type": @"text/plain", @"stub": @YES}}
+                            };
+    NSDictionary* attachments = @{@"foo.txt": content,
+                                  @"bar.txt": content};
+
+    NSError* error;
+    Assert(([doc putExistingRevisionWithProperties: props
+                                       attachments: attachments
+                                   revisionHistory: @[@"1-cafebabe"]
+                                           fromURL: nil
+                                             error: &error]));
+
+    CBLRevision* rev = doc.currentRevision;
+    Assert(rev);
+    Assert(!rev.isDeletion);
+    AssertEqual(rev.revisionID, @"1-cafebabe");
+    CBLAttachment* a = [rev attachmentNamed: @"foo.txt"];
+    Assert(a);
+    AssertEqual(a.contentType, @"text/plain");
+    AssertEqual(a.content, content);
+    a = [rev attachmentNamed: @"bar.txt"];
+    Assert(a);
+    AssertEqual(a.contentType, @"text/plain");
+    AssertEqual(a.content, content);
 }
 
 
