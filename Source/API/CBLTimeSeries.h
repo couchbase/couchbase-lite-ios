@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** The latest error encountered. 
     Observable. (Note: May be modified on any thread.) */
-@property (readonly) NSError* lastError;
+@property (readonly, nullable) NSError* lastError;
 
 /** Adds an event, timestamped with the current time. Can be called on any thread. */
 - (void) addEvent: (CBLJSONDict*)event;
@@ -79,8 +79,8 @@ NS_ASSUME_NONNULL_BEGIN
     @param endDate  The ending time (or nil to continue till the end.)
     @param outError  On return, any error that occurred starting the enumeration.
     @return  An enumerator of NSDictionaries, one per event. */
-- (NSEnumerator<CBLJSONDict*>*) eventsFromDate: (NSDate*)startDate
-                                        toDate: (NSDate*)endDate
+- (NSEnumerator<CBLJSONDict*>*) eventsFromDate: (nullable NSDate*)startDate
+                                        toDate: (nullable NSDate*)endDate
                                          error: (NSError**)outError;
 
 /** Callback for single-document enumeration.
