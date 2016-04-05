@@ -5,15 +5,11 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-DEBUG_INFORMATION_FORMAT     = dwarf-with-dsym  // dSYM file allows debugging inside CBL framework
-DEFINES_MODULE               = YES
-DYLIB_COMPATIBILITY_VERSION  = 1
-DYLIB_CURRENT_VERSION        = 1
-FRAMEWORK_VERSION            = A
+#include "DynamicFramework.xcconfig"
+
 INFOPLIST_FILE               = Source/CouchbaseLite-Info.plist
 LD_DYLIB_INSTALL_NAME        = @rpath/$(EXECUTABLE_PATH)
 LD_MAP_FILE_PATH             = $(TARGET_BUILD_DIR)/$(PRODUCT_NAME)-LinkMap-$(CURRENT_VARIANT)-$(CURRENT_ARCH).txt
 PRODUCT_MODULE_NAME          = CouchbaseLite
 PRODUCT_NAME                 = CouchbaseLite
 VALID_ARCHS                  = x86_64
-WRAPPER_EXTENSION            = framework

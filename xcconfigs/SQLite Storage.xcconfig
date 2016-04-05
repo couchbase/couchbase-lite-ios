@@ -5,11 +5,10 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-ARCHS                         = $(ARCHS_STANDARD)
-CLANG_ENABLE_MODULE_DEBUGGING = NO
+#include "iOS and tvOS.xcconfig"
+#include "StaticLibProduct.xcconfig"
+
 GCC_PREFIX_HEADER             = Source/CouchbaseLitePrefix.h
-HEADER_SEARCH_PATHS           = $(inherited) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include $SRCROOT/vendor/yajl/build/yajl-2.0.5/include vendor/CBForest/ vendor/CBForest/vendor/forestdb/include/libforestdb/ vendor/CBForest/vendor/sqlite3-unicodesn
+HEADER_SEARCH_PATHS           = $(inherited) vendor/CBForest/vendor/sqlite3-unicodesn
 PRODUCT_NAME                  = CBLSQLiteStorage
-SDKROOT                       = iphoneos
 SKIP_INSTALL                  = YES
-SUPPORTED_PLATFORMS           = iphonesimulator iphoneos appletvos appletvsimulator

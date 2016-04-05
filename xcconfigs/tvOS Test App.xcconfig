@@ -12,4 +12,3 @@ LD_RUNPATH_SEARCH_PATHS                = $(inherited) @executable_path/Framework
 PRODUCT_NAME                           = $(TARGET_NAME)
 SDKROOT                                = appletvos
 TARGETED_DEVICE_FAMILY                 = 3
-TVOS_DEPLOYMENT_TARGET                 = 9.1

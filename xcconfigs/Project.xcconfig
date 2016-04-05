@@ -8,7 +8,7 @@
 PRODUCT_BUNDLE_IDENTIFIER                                  = com.couchbase.${PRODUCT_NAME:rfc1034identifier}
 
 // Platforms:
-ARCHS                                                      = $(ARCHS_STANDARD_64_BIT)
+ARCHS[sdk=macosx*]                                         = $(ARCHS_STANDARD_64_BIT)
 ONLY_ACTIVE_ARCH                                           = NO
 SDKROOT                                                    = macosx
 MACOSX_DEPLOYMENT_TARGET                                   = 10.9

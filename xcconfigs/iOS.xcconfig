@@ -5,13 +5,12 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-ARCHS                        = $(ARCHS_STANDARD)
+#include "iOS and tvOS.xcconfig"
+
 CONFIGURATION_BUILD_DIR      = $(UNIVERSAL_BUILD_DIR)
 INFOPLIST_FILE               = Source/CouchbaseLite-Info.plist
 INSTALL_PATH                 = $(LOCAL_LIBRARY_DIR)/Frameworks
 MACH_O_TYPE                  = mh_dylib
 PRODUCT_NAME                 = CouchbaseLite
-SDKROOT                      = iphoneos
-SUPPORTED_PLATFORMS          = iphonesimulator iphoneos appletvos appletvsimulator
 TARGETED_DEVICE_FAMILY       = 1,2
 WRAPPER_EXTENSION            = framework

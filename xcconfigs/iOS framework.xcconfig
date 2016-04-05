@@ -5,7 +5,8 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-ARCHS                             = $(ARCHS_STANDARD)
+#include "iOS and tvOS.xcconfig"
+
 CODE_SIGN_IDENTITY                = iPhone Developer
 CODE_SIGN_IDENTITY[sdk=iphoneos*] = iPhone Developer
 CURRENT_PROJECT_VERSION           = 1
@@ -13,16 +14,13 @@ DEFINES_MODULE                    = YES
 DYLIB_COMPATIBILITY_VERSION       = 1
 DYLIB_CURRENT_VERSION             = 1
 DYLIB_INSTALL_NAME_BASE           = @rpath
-ENABLE_STRICT_OBJC_MSGSEND        = YES
 EXPORTED_SYMBOLS_FILE             = Source/CouchbaseLite.exp
 INFOPLIST_FILE                    = Source/CouchbaseLite-Info.plist
 INSTALL_PATH                      = $(LOCAL_LIBRARY_DIR)/Frameworks
-IPHONEOS_DEPLOYMENT_TARGET        = 8.0
+IPHONEOS_DEPLOYMENT_TARGET        = 8.0     // dynamic frameworks require iOS 8
 LD_RUNPATH_SEARCH_PATHS           = $(inherited) @executable_path/Frameworks @loader_path/Frameworks
 PRODUCT_NAME                      = CouchbaseLite
-SDKROOT                           = iphoneos
 SKIP_INSTALL                      = YES
-SUPPORTED_PLATFORMS               = iphonesimulator iphoneos appletvsimulator appletvos
 TARGETED_DEVICE_FAMILY            = 1,2
 VERSION_INFO_FILE                 = 
 VERSION_INFO_PREFIX               =

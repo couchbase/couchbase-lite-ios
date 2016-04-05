@@ -1,0 +1,16 @@
+//
+//  DynamicFramework.xcconfig
+//  CouchbaseLite
+//
+//  Created by Jens Alfke on 4/5/16.
+//  Copyright © 2016 Couchbase, Inc. All rights reserved.
+//
+
+//  Build settings for true (dylib-based) frameworks
+
+DEBUG_INFORMATION_FORMAT     = dwarf-with-dsym  // dSYM file allows debugging inside framework
+DEFINES_MODULE               = YES
+DYLIB_COMPATIBILITY_VERSION  = 1
+DYLIB_CURRENT_VERSION        = 1
+FRAMEWORK_VERSION            = A
+WRAPPER_EXTENSION            = framework

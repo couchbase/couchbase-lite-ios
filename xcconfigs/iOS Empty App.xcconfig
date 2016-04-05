@@ -5,7 +5,6 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-ARCHS                             = $(ARCHS_STANDARD)
 CODE_SIGN_IDENTITY                = iPhone Developer
 CODE_SIGN_IDENTITY[sdk=iphoneos*] = iPhone Developer
 FRAMEWORK_SEARCH_PATHS            = $(inherited) "$(DEVELOPER_FRAMEWORKS_DIR)"

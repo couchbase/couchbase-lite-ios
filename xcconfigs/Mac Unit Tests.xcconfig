@@ -5,12 +5,9 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-ENABLE_STRICT_OBJC_MSGSEND = YES
-FRAMEWORK_SEARCH_PATHS     = $(DEVELOPER_FRAMEWORKS_DIR) $(inherited)
-HEADER_SEARCH_PATHS        = vendor/BLIP/BLIP/
+#include "UnitTests.xcconfig"
+
 INFOPLIST_FILE             = Unit-Tests/Info-UnitTests.plist
 LD_RUNPATH_SEARCH_PATHS    = $(inherited) @executable_path/../Frameworks @loader_path/../Frameworks
-MACOSX_DEPLOYMENT_TARGET   = 10.10
 PRODUCT_NAME               = $(TARGET_NAME)
-SWIFT_OBJC_BRIDGING_HEADER = Unit-Tests/UnitTests-Bridging-Header.h
 VALID_ARCHS                = x86_64

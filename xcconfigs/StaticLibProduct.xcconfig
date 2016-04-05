@@ -1,0 +1,16 @@
+//
+//  StaticLibProduct.xcconfig
+//  CouchbaseLite
+//
+//  Created by Jens Alfke on 4/5/16.
+//  Copyright © 2016 Couchbase, Inc. All rights reserved.
+//
+
+//  Build settings for static libraries we distribute.
+
+
+// These should be turned off when building static libraries for
+// distribution (i.e. to be linked into an app on some other computer.)
+// Otherwise you get linker warnings or errors. (#1054)
+CLANG_ENABLE_MODULES = NO;
+CLANG_ENABLE_MODULE_DEBUGGING = NO;

@@ -313,8 +313,6 @@ typedef NSArray<CBLJSONDict*> EventArray;
 #pragma mark - QUERYING:
 
 
-typedef void (^CBLTimeSeriesEnumerationBlock)(CBLJSONDict* event, CFAbsoluteTime time, BOOL *stop);
-
 + (BOOL) enumerateEventsInDocument: (CBLJSONDict*)doc
                         usingBlock: (CBLTimeSeriesEnumerationBlock)block
 {

@@ -5,16 +5,11 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
+#include "iOS and tvOS.xcconfig"
+#include "UnitTests.xcconfig"
+
 BUNDLE_LOADER              = $(TEST_HOST)
 CODE_SIGN_IDENTITY         = iPhone Developer
-ENABLE_STRICT_OBJC_MSGSEND = YES
-FRAMEWORK_SEARCH_PATHS     = $(SDKROOT)/Developer/Library/Frameworks $(inherited)
-HEADER_SEARCH_PATHS        = $(inherited) /Applications/Xcode-Beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include vendor/CBForest/CBForest/ vendor/CBForest/vendor/forestdb/include/libforestdb/ vendor/BLIP/BLIP/ vendor/CBForest/CBForest/Encryption/
 INFOPLIST_FILE             = Unit-Tests/Info-UnitTests.plist
-IPHONEOS_DEPLOYMENT_TARGET = 8.1
-LD_RUNPATH_SEARCH_PATHS    = $(inherited) @executable_path/Frameworks @loader_path/Frameworks
 PRODUCT_NAME               = $(TARGET_NAME)
-SDKROOT                    = iphoneos
-SUPPORTED_PLATFORMS        = iphonesimulator iphoneos appletvos appletvsimulator
-SWIFT_OBJC_BRIDGING_HEADER = Unit-Tests/UnitTests-Bridging-Header.h
 TEST_HOST                  = $(BUILT_PRODUCTS_DIR)/CBL Test.app/CBL Test

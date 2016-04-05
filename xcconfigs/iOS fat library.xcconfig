@@ -5,10 +5,9 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-ARCHS                         = $(ARCHS_STANDARD)
-CLANG_ENABLE_MODULE_DEBUGGING = NO
+#include "iOS and tvOS.xcconfig"
+#include "StaticLibProduct.xcconfig"
+
 DSTROOT                       = /tmp/CouchbaseLiteiOS.dst
 PRODUCT_NAME                  = CouchbaseLiteFat
-SDKROOT                       = iphoneos
 SKIP_INSTALL                  = YES
-SUPPORTED_PLATFORMS           = iphonesimulator iphoneos appletvos appletvsimulator

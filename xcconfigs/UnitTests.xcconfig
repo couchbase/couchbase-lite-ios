@@ -1,0 +1,14 @@
+//
+//  UnitTests.xcconfig
+//  CouchbaseLite
+//
+//  Created by Jens Alfke on 4/5/16.
+//  Copyright © 2016 Couchbase, Inc. All rights reserved.
+//
+
+//  Build settings for unit-test targets
+
+FRAMEWORK_SEARCH_PATHS      = $(DEVELOPER_FRAMEWORKS_DIR) $(inherited)
+HEADER_SEARCH_PATHS         = $(inherited) vendor/CBForest/CBForest/ vendor/CBForest/vendor/forestdb/include/libforestdb/ vendor/BLIP/BLIP/ vendor/CBForest/CBForest/Encryption/
+LD_RUNPATH_SEARCH_PATHS     = $(inherited) @executable_path/Frameworks @loader_path/Frameworks
+SWIFT_OBJC_BRIDGING_HEADER  = Unit-Tests/UnitTests-Bridging-Header.h

@@ -1,0 +1,12 @@
+//
+//  iOS and tvOS.xcconfig
+//  CouchbaseLite
+//
+//  Created by Jens Alfke on 4/5/16.
+//  Copyright © 2016 Couchbase, Inc. All rights reserved.
+//
+
+//  Build settings for targets that build both iOS and tvOS binaries.
+
+SDKROOT             = iphoneos
+SUPPORTED_PLATFORMS = iphonesimulator iphoneos appletvsimulator appletvos

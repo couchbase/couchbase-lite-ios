@@ -5,11 +5,8 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-DEBUG_INFORMATION_FORMAT    = dwarf-with-dsym  // dSYM file allows debugging inside framework
-DEFINES_MODULE              = YES
-DYLIB_COMPATIBILITY_VERSION = 1
-DYLIB_CURRENT_VERSION       = 1
-FRAMEWORK_VERSION           = A
+#include "DynamicFramework.xcconfig"
+
 GCC_PREFIX_HEADER           = Listener/CouchbaseLiteListenerPrefix.h
 INFOPLIST_FILE              = Listener/CouchbaseLiteListener-Info.plist
 LD_DYLIB_INSTALL_NAME       = @rpath/$(EXECUTABLE_PATH)
@@ -17,4 +14,3 @@ PRODUCT_MODULE_NAME         = CouchbaseLiteListener
 PRODUCT_NAME                = CouchbaseLiteListener
 PROVISIONING_PROFILE        = 
 VALID_ARCHS                 = x86_64
-WRAPPER_EXTENSION           = framework

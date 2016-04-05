@@ -5,13 +5,11 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-ARCHS                        = $(ARCHS_STANDARD)
-CLANG_ENABLE_MODULE_DEBUGGING= NO
-CLANG_MODULES_AUTOLINK       = NO
+#include "iOS and tvOS.xcconfig"
+#include "StaticLibProduct.xcconfig"
+
 DSTROOT                      = /tmp/CouchbaseLiteiOS.dst
 GCC_PREFIX_HEADER            = Source/CouchbaseLitePrefix.h
-HEADER_SEARCH_PATHS          = $(inherited) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include $SRCROOT/vendor/yajl/build/yajl-2.0.5/include vendor/CBForest/vendor/sqlite3-unicodesn vendor/BLIP/BLIP vendor/BLIP/vendor/PocketSocket/PocketSocket
+HEADER_SEARCH_PATHS          = $(inherited) $SRCROOT/vendor/yajl/build/yajl-2.0.5/include vendor/CBForest/vendor/sqlite3-unicodesn vendor/BLIP/BLIP vendor/BLIP/vendor/PocketSocket/PocketSocket
 PRODUCT_NAME                 = CouchbaseLite
-SDKROOT                      = iphoneos
 SKIP_INSTALL                 = YES
-SUPPORTED_PLATFORMS          = iphonesimulator iphoneos appletvos appletvsimulator

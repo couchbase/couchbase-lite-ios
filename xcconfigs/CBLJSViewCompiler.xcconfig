@@ -5,8 +5,8 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-CLANG_ENABLE_MODULE_DEBUGGING     = NO
+#include "iOS and tvOS.xcconfig"
+#include "StaticLibProduct.xcconfig"
+
 GCC_PREFIX_HEADER                 = Source/CouchbaseLitePrefix.h
 PRODUCT_NAME                      = CBLJSViewCompiler
-SDKROOT                           = iphoneos
-SUPPORTED_PLATFORMS               = iphonesimulator iphoneos appletvsimulator appletvos

@@ -7,7 +7,7 @@
 
 DEFINES_MODULE               = YES
 GCC_PREFIX_HEADER            = Source/CouchbaseLitePrefix.h
-HEADER_SEARCH_PATHS          = $(inherited) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include $SRCROOT/vendor/yajl/build/yajl-2.0.5/include vendor/CBForest/C vendor/CBForest/vendor/forestdb/include/libforestdb vendor/CBForest/vendor/sqlite3-unicodesn vendor/BLIP/BLIP vendor/BLIP/vendor/PocketSocket/PocketSocket
+HEADER_SEARCH_PATHS          = $(inherited) $SRCROOT/vendor/yajl/build/yajl-2.0.5/include vendor/CBForest/C vendor/CBForest/vendor/forestdb/include/libforestdb vendor/CBForest/vendor/sqlite3-unicodesn vendor/BLIP/BLIP vendor/BLIP/vendor/PocketSocket/PocketSocket
 MACH_O_TYPE                  = staticlib
 PRODUCT_NAME                 = CouchbaseLite
 STRIP_INSTALLED_PRODUCT      = NO

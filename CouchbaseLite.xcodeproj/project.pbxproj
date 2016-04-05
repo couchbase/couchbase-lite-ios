@@ -1848,6 +1848,10 @@
 		27B0B81B1492C16300A817AD /* DemoAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DemoAppDelegate.m; sourceTree = "<group>"; };
 		27B346A01BE80EA50079D57C /* CBLRemoteLogging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRemoteLogging.h; sourceTree = "<group>"; };
 		27B346A11BE80EA50079D57C /* CBLRemoteLogging.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLRemoteLogging.m; sourceTree = "<group>"; };
+		27B46EA51CB4656000D56BEE /* StaticLibProduct.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = StaticLibProduct.xcconfig; sourceTree = "<group>"; };
+		27B46EB11CB46EA400D56BEE /* DynamicFramework.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = DynamicFramework.xcconfig; sourceTree = "<group>"; };
+		27B46EB21CB470AB00D56BEE /* UnitTests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = UnitTests.xcconfig; sourceTree = "<group>"; };
+		27B46EB31CB472C400D56BEE /* iOS and tvOS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "iOS and tvOS.xcconfig"; sourceTree = "<group>"; };
 		27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CBForest.xcodeproj; path = CBForest/CBForest.xcodeproj; sourceTree = "<group>"; };
 		27B945A71768E63200B2DF2D /* CBLModelArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLModelArray.h; sourceTree = "<group>"; };
 		27B945A81768E63200B2DF2D /* CBLModelArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLModelArray.m; sourceTree = "<group>"; };
@@ -3350,6 +3354,10 @@
 				27FFFF511C973FB5001A70FC /* Project_Debug.xcconfig */,
 				27FFFF521C973FB5001A70FC /* Project_Release.xcconfig */,
 				27FFFF501C973FB5001A70FC /* Project.xcconfig */,
+				27B46EA51CB4656000D56BEE /* StaticLibProduct.xcconfig */,
+				27B46EB11CB46EA400D56BEE /* DynamicFramework.xcconfig */,
+				27B46EB21CB470AB00D56BEE /* UnitTests.xcconfig */,
+				27B46EB31CB472C400D56BEE /* iOS and tvOS.xcconfig */,
 				27FFFF421C973FB5001A70FC /* CBLJSViewCompiler_Debug.xcconfig */,
 				27FFFF431C973FB5001A70FC /* CBLJSViewCompiler_Release.xcconfig */,
 				27FFFF411C973FB5001A70FC /* CBLJSViewCompiler.xcconfig */,
@@ -5930,20 +5938,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF421C973FB5001A70FC /* CBLJSViewCompiler_Debug.xcconfig */;
 			buildSettings = {
-				CLANG_ENABLE_MODULES = NO;
-				CLANG_ENABLE_MODULE_DEBUGGING = NO;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				COPY_PHASE_STRIP = NO;
-				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
 			};
 			name = Debug;
 		};
@@ -5951,16 +5945,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF431C973FB5001A70FC /* CBLJSViewCompiler_Release.xcconfig */;
 			buildSettings = {
-				CLANG_ENABLE_MODULES = NO;
-				CLANG_ENABLE_MODULE_DEBUGGING = NO;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				GCC_PREFIX_HEADER = Source/CouchbaseLitePrefix.h;
-				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
 			};
 			name = Release;
 		};

@@ -5,12 +5,10 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-ARCHS                             = $(ARCHS_STANDARD)
 CODE_SIGN_IDENTITY                = iPhone Developer
 CODE_SIGN_IDENTITY[sdk=iphoneos*] = iPhone Developer
 FRAMEWORK_SEARCH_PATHS            = $(inherited) "$(DEVELOPER_FRAMEWORKS_DIR)"
 GCC_PREFIX_HEADER                 = Test-iOS/iOS Demo-Prefix.pch
-HEADER_SEARCH_PATHS               = $(inherited) /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include
 INFOPLIST_FILE                    = Test-iOS/iOS Demo-Info.plist
 PRODUCT_NAME                      = CBL Test
 PROVISIONING_PROFILE              = 

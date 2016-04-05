@@ -5,11 +5,10 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
+#include "UnitTests.xcconfig"
+
 BUNDLE_LOADER           = $(TEST_HOST)
-HEADER_SEARCH_PATHS     = $(inherited) vendor/BLIP/BLIP/
 INFOPLIST_FILE          = Test-tvOS/tvosTests-Info.plist
-LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks @loader_path/Frameworks
 PRODUCT_NAME            = $(TARGET_NAME)
 SDKROOT                 = appletvos
 TEST_HOST               = $(BUILT_PRODUCTS_DIR)/CBL tvOS Test App.app/CBL tvOS Test App
-TVOS_DEPLOYMENT_TARGET  = 9.1
