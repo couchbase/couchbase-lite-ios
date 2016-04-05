@@ -870,8 +870,18 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     }
 
     NSURL* remote = [NSURL URLWithString: remoteDict[@"url"]];
-    if (![@[@"http", @"https", @"cbl", @"ws", @"wss"] containsObject: remote.scheme.lowercaseString])
+    NSURLComponents *comps = [NSURLComponents componentsWithURL: remote resolvingAgainstBaseURL: YES];
+    if (![@[@"http", @"https", @"cbl", @"ws", @"wss"] containsObject: comps.scheme.lowercaseString]) {
+        Warn(@"Replication URL <%@> has unsupported scheme", remote);
         return kCBLStatusBadRequest;
+    } else if ($equal(comps.path, @"/") || $equal(comps.path, @"")) {
+        Warn(@"Replication URL <%@> missing database name", remote);
+        return kCBLStatusBadRequest;
+    } else if (comps.query || comps.fragment) {
+        Warn(@"Replication URL <%@> cannot contain a query or fragment", remote);
+        return kCBLStatusBadRequest;
+    }
+
     if (outDatabase) {
         *outDatabase = db;
         if (!db)

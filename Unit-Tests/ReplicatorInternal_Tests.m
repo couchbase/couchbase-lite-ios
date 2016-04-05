@@ -460,14 +460,14 @@
 
 
 - (void) test_15_ParseReplicatorProperties {
-    CBLDatabase* parsedDB = nil;
-    NSURL* remote = nil;
-    BOOL isPush = NO, createTarget = NO;
-    NSDictionary* headers = nil;
+    __block CBLDatabase* parsedDB = nil;
+    __block NSURL* remote = nil;
+    __block BOOL isPush = NO, createTarget = NO;
+    __block NSDictionary* headers = nil;
     
-    NSDictionary* props;
+    __block NSDictionary* props;
     props = $dict({@"source", db.name},
-                  {@"target", @"http://example.com"},
+                  {@"target", @"http://example.com/foo"},
                   {@"create_target", $true});
     AssertEq(200, [dbmgr parseReplicatorProperties: props
                                         toDatabase: &parsedDB
@@ -477,7 +477,7 @@
                                            headers: &headers
                                         authorizer: NULL]);
     AssertEq(parsedDB, db);
-    AssertEqual(remote, $url(@"http://example.com"));
+    AssertEqual(remote, $url(@"http://example.com/foo"));
     AssertEq(isPush, YES);
     AssertEq(createTarget, YES);
     AssertEqual(headers, nil);
@@ -496,6 +496,26 @@
     AssertEq(isPush, NO);
     AssertEq(createTarget, NO);
     AssertEqual(headers, nil);
+
+    // Invalid URLs:
+    [self allowWarningsIn:^{
+        NSArray* badTargets = @[@"http://example.com",
+                                @"http://example.com/",
+                                @"http://example.com/foo?x=y",
+                                @"http://example.com/foo#frag",
+                                @"gopher://example.com/foo"];
+        for (NSString* target in badTargets) {
+            props = $dict({@"source", db.name},
+                          {@"target", target});
+            AssertEq(400, [dbmgr parseReplicatorProperties: props
+                                                toDatabase: &parsedDB
+                                                    remote: &remote
+                                                    isPush: &isPush
+                                              createTarget: &createTarget
+                                                   headers: &headers
+                                                authorizer: NULL]);
+        }
+    }];
 
     if (NSClassFromString(@"CBLURLProtocol")) {
         // Local-to-local replication:
@@ -530,7 +550,7 @@
                                     {@"consumer_key", @"consumer_key"},
                                     {@"token_secret", @"token_secret"},
                                     {@"token", @"token"});
-    props = $dict({@"source", $dict({@"url", @"http://example.com"},
+    props = $dict({@"source", $dict({@"url", @"http://example.com/foo"},
                                     {@"headers", $dict({@"Excellence", @"Most"})},
                                     {@"auth", $dict({@"oauth", oauthDict})})},
                   {@"target", db.name});
@@ -543,7 +563,7 @@
                                                 headers: &headers
                                              authorizer: &authorizer]);
     AssertEq(parsedDB, db);
-    AssertEqual(remote, $url(@"http://example.com"));
+    AssertEqual(remote, $url(@"http://example.com/foo"));
     AssertEq(isPush, NO);
     AssertEq(createTarget, NO);
     AssertEqual(headers, $dict({@"Excellence", @"Most"}));
