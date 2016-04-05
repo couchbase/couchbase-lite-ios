@@ -6,7 +6,7 @@
 
 Get more info and downloads of Couchbase Lite (for iOS and Android) via [the Couchbase mobile portal](http://mobile.couchbase.com)
 
-[Click here for **official documentation for Couchbase Lite iOS**](http://developer.couchbase.com/documentation/mobile/1.1.0/develop/training/build-first-ios-app/index.html)
+[Click here for **official documentation for Couchbase Lite iOS**](http://developer.couchbase.com/documentation/mobile/current/develop/training/build-first-ios-app/index.html)
 
 Latency matters a lot to users, so a local database takes frustration out of the equation. It’s got JSON documents, and the same map/reduce as Couchbase Server, in a pint-sized edition.
 
