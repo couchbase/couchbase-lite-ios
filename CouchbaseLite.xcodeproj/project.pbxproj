@@ -526,7 +526,6 @@
 		274CBC2C1C6D417C006DBE7F /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 93EBA2651B2EC61E0006C66C /* CBLRegisterJSViewCompiler.m */; };
 		274CBC321C6D52E2006DBE7F /* CBL_ForestDBQueryEnumerator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 274CBC311C6D52E2006DBE7F /* CBL_ForestDBQueryEnumerator.mm */; };
 		274CBC441C6E8BC4006DBE7F /* CBL_ForestDBDocEnumerator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 274CBC431C6E8BC4006DBE7F /* CBL_ForestDBDocEnumerator.mm */; };
-		274CBC451C6E8BC4006DBE7F /* CBL_ForestDBDocEnumerator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 274CBC431C6E8BC4006DBE7F /* CBL_ForestDBDocEnumerator.mm */; };
 		274CBC531C728417006DBE7F /* CBLQueryRow+Router.h in Headers */ = {isa = PBXBuildFile; fileRef = 274CBC511C728417006DBE7F /* CBLQueryRow+Router.h */; };
 		274CBC541C728417006DBE7F /* CBLQueryRow+Router.m in Sources */ = {isa = PBXBuildFile; fileRef = 274CBC521C728417006DBE7F /* CBLQueryRow+Router.m */; };
 		274CBC551C728417006DBE7F /* CBLQueryRow+Router.m in Sources */ = {isa = PBXBuildFile; fileRef = 274CBC521C728417006DBE7F /* CBLQueryRow+Router.m */; };
@@ -2356,9 +2355,6 @@
 				275315D714ACF0A20065964D /* Listener */,
 				27538F5217F13B03004C3BFD /* LiteServ App */,
 				2700358C1A44E9270015B9F4 /* Unit Tests */,
-				27C706CA1488679500F0F099 /* Test-Mac */,
-				27B0B8111492C16300A817AD /* Test-iOS */,
-				273E9EEE1C509F38003115A6 /* Test-tvOS */,
 				27FA59EE179EFD730043460A /* Documentation */,
 				27FFFF071C973FB5001A70FC /* xcconfigs */,
 				2753154D14ACEF350065964D /* vendor */,
@@ -2447,6 +2443,9 @@
 				27B085D11B34BDD200D3D9D8 /* SwiftModel_Test.swift */,
 				2700358E1A44E9270015B9F4 /* Info-UnitTests.plist */,
 				27067A961AAF61380093AF4B /* CBForest tests */,
+				27C706CA1488679500F0F099 /* Test-Mac */,
+				27B0B8111492C16300A817AD /* Test-iOS */,
+				273E9EEE1C509F38003115A6 /* Test-tvOS */,
 				274E163119B90F420066CA5E /* TestData */,
 				276E68331A5C4511006D6EEB /* Server */,
 				27B085CF1B34BDD100D3D9D8 /* UnitTests-Bridging-Header.h */,
@@ -2594,7 +2593,8 @@
 				273E9EFD1C509F39003115A6 /* tvosDemo-Info.plist */,
 				273E9EEF1C509F38003115A6 /* Supporting Files */,
 			);
-			path = "Test-tvOS";
+			name = "Test-tvOS";
+			path = "../Test-tvOS";
 			sourceTree = "<group>";
 		};
 		273E9EEF1C509F38003115A6 /* Supporting Files */ = {
@@ -3058,7 +3058,8 @@
 				274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */,
 				27B0B8121492C16300A817AD /* Supporting Files */,
 			);
-			path = "Test-iOS";
+			name = "Test-iOS";
+			path = "../Test-iOS";
 			sourceTree = "<group>";
 		};
 		27B0B8121492C16300A817AD /* Supporting Files */ = {
@@ -3168,7 +3169,8 @@
 				27C706D21488679500F0F099 /* ShoppingItem.m */,
 				27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */,
 			);
-			path = "Test-Mac";
+			name = "Test-Mac";
+			path = "../Test-Mac";
 			sourceTree = "<group>";
 		};
 		27DA4300158F9D7A00F9E7B5 /* API */ = {
