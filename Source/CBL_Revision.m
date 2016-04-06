@@ -215,6 +215,8 @@
 
 - (CBL_Revision*) revisionByAddingBasicMetadata {
     NSMutableDictionary* props = [self.properties mutableCopy];
+    if (!props)
+        return nil; // failed to parse
     props[@"_id"] = self.docID;
     props[@"_rev"] = self.revID;
     if (_deleted)
@@ -321,6 +323,8 @@
 
 - (void) setObject: (UU id)object forKeyedSubscript: (UU NSString*)key {
     NSMutableDictionary* nuProps = self.properties.mutableCopy;
+    if (!nuProps)
+        return; // failed to parse
     [nuProps setValue: object forKey: key];
     self.properties = nuProps;
 }
@@ -348,6 +352,8 @@
 - (BOOL) mutateAttachments: (NSDictionary*(^)(NSString*, NSDictionary*))block
 {
     NSDictionary* properties = self.properties;
+    if (!properties)
+        return NO; // failed to parse
     NSMutableDictionary* editedProperties = nil;
     NSDictionary* attachments = (id)properties.cbl_attachments;
     NSMutableDictionary* editedAttachments = nil;
