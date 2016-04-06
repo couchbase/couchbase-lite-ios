@@ -110,6 +110,11 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
 }
 
 
+- (NSString*) description {
+    return [NSString stringWithFormat: @"%@[%@]", self.class, _name];
+}
+
+
 - (BOOL) setVersion: (NSString*)version {
     [self closeIndex];
     return YES;
@@ -198,19 +203,43 @@ static void onCompactCallback(void *context, bool compacting) {
 
 
 - (void) closeIndex {
-    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(closeIndex)
+    CBLStatus status;
+    if (![self closeIndex: &status])
+        Warn(@"Couldn't close index of %@: status=%d", self, status);
+}
+
+
+- (BOOL) closeIndex: (CBLStatus*)outStatus {
+    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(closeIndexNow)
                                                object: nil];
     if (_view) {
         LogTo(View, @"%@: Closing index", self);
-        c4view_close(_view, NULL);
+        C4Error c4err;
+        if (!c4view_close(_view, &c4err)) {
+            *outStatus = err2status(c4err);
+            return NO;
+        }
         _view = NULL;
+    }
+    return YES;
+}
+
+- (void) closeIndexNow {
+    CBLStatus status;
+    if (![self closeIndex: &status]) {
+        if (status == kCBLStatusDBBusy) {
+            LogTo(View, @"%@: ...index is busy, will retry", self);
+            [self closeIndexSoon];      // Try again later if the index is currently busy
+        } else {
+            Warn(@"Couldn't close index of idle view %@: status=%d", self, status);
+        }
     }
 }
 
 - (void) closeIndexSoon {
-    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(closeIndex)
+    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(closeIndexNow)
                                                object: nil];
-    [self performSelector: @selector(closeIndex) withObject: nil afterDelay: kCloseDelay];
+    [self performSelector: @selector(closeIndexNow) withObject: nil afterDelay: kCloseDelay];
 }
 
 

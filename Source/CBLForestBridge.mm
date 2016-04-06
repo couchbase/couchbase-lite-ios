@@ -195,6 +195,8 @@ CBLStatus err2status(C4Error c4err) {
                     return kCBLStatusBadID;
                 case kC4ErrorCorruptIndexData:
                     return kCBLStatusCorruptError;
+                case kC4ErrorIndexBusy:
+                    return kCBLStatusDBBusy;
                 case kC4ErrorAssertionFailed:
                     Assert(NO, @"Assertion failure in CBForest (check log)");
                     break;
