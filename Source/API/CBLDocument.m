@@ -315,7 +315,8 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     return nil;
 }
 
-- (BOOL) putExistingRevisionWithProperties: (NSDictionary*)properties
+- (BOOL) putExistingRevisionWithProperties: (CBLJSONDict*)properties
+                               attachments: (NSDictionary*)attachments
                            revisionHistory: (NSArray*)revIDs
                                    fromURL: (NSURL*)sourceURL
                                      error: (NSError**)outError
@@ -325,6 +326,8 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
                                                                     revID: revIDs[0]
                                                                   deleted: properties.cbl_deleted];
     rev.properties = [self propertiesToInsert: properties];
+    if (![_database registerAttachmentBodies: attachments forRevision: rev error: outError])
+        return NO;
     CBLStatus status = [_database forceInsert: rev
                               revisionHistory: revIDs
                                        source: sourceURL
