@@ -16,6 +16,7 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
+#import "CBLDatabase+REST.h"
 #import "CBL_ForestDBStorage.h"
 #import "CBL_SQLiteStorage.h"
 #import "CBLInternal.h"
@@ -646,6 +647,18 @@ static BOOL sAutoCompact = YES;
 #pragma mark - FILTERS:
 
 
+- (CBLFilterBlock) loadFilterNamed: (NSString*)filterName status: (CBLStatus*)outStatus {
+    CBLFilterBlock filter = [self filterNamed: filterName];
+    //
+    if (!filter && [self respondsToSelector: @selector(compileFilterNamed:status:)]) {
+        CBLStatus status;
+        filter = [self compileFilterNamed: filterName status: &status];
+        [self setFilterNamed: filterName asBlock: filter];
+    }
+    return filter;
+}
+
+
 - (BOOL) runFilter: (CBLFilterBlock)filter
             params: (NSDictionary*)filterParams
         onRevision: (CBL_Revision*)rev
@@ -659,55 +672,6 @@ static BOOL sAutoCompact = YES;
         MYReportException(x, @"filter block");
         return NO;
     }
-}
-
-
-- (id) getDesignDocFunction: (NSString*)fnName
-                        key: (NSString*)key
-                   language: (NSString**)outLanguage
-{
-    NSArray* path = [fnName componentsSeparatedByString: @"/"];
-    if (path.count != 2)
-        return nil;
-    CBLStatus status;
-    CBL_Revision* rev = [self getDocumentWithID: [@"_design/" stringByAppendingString: path[0]]
-                                    revisionID: nil
-                                       withBody: YES
-                                         status: &status];
-    if (!rev)
-        return nil;
-    *outLanguage = rev[@"language"] ?: @"javascript";
-    NSDictionary* container = $castIf(NSDictionary, rev[key]);
-    return container[path[1]];
-}
-
-
-- (CBLFilterBlock) compileFilterNamed: (NSString*)filterName status: (CBLStatus*)outStatus {
-    CBLFilterBlock filter = [self filterNamed: filterName];
-    if (filter)
-        return filter;
-    id<CBLFilterCompiler> compiler = [CBLDatabase filterCompiler];
-    if (!compiler) {
-        *outStatus = kCBLStatusNotFound;
-        return nil;
-    }
-    NSString* language;
-    NSString* source = $castIf(NSString, [self getDesignDocFunction: filterName
-                                                                key: @"filters"
-                                                           language: &language]);
-    if (!source) {
-        *outStatus = kCBLStatusNotFound;
-        return nil;
-    }
-
-    filter = [compiler compileFilterFunction: source language: language];
-    if (!filter) {
-        Warn(@"Filter %@ failed to compile", filterName);
-        *outStatus = kCBLStatusCallbackError;
-        return nil;
-    }
-    [self setFilterNamed: filterName asBlock: filter];
-    return filter;
 }
 
 

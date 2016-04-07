@@ -84,7 +84,7 @@ NSTimeInterval kMinHeartbeat = 5.0;
     NSString* filterName = [self query: @"filter"];
     if (filterName) {
         CBLStatus status;
-        _changesFilter = [_db compileFilterNamed: filterName status: &status];
+        _changesFilter = [_db loadFilterNamed: filterName status: &status];
         if (!_changesFilter)
             return status;
         _changesFilterParams = [self.queries copy];

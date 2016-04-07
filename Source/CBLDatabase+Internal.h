@@ -137,10 +137,6 @@ extern NSArray* CBL_RunloopModes;
 
 - (CBLView*) makeAnonymousView;
 
-- (id) getDesignDocFunction: (NSString*)fnName
-                        key: (NSString*)key
-                   language: (NSString**)outLanguage;
-
 //@property (readonly) NSArray* allViews;
 
 - (CBL_RevisionList*) changesSinceSequence: (SequenceNumber)lastSequence
@@ -149,7 +145,7 @@ extern NSArray* CBL_RunloopModes;
                                     params: (NSDictionary*)filterParams
                                     status: (CBLStatus*)outStatus;
 
-- (CBLFilterBlock) compileFilterNamed: (NSString*)filterName status: (CBLStatus*)outStatus;
+- (CBLFilterBlock) loadFilterNamed: (NSString*)filterName status: (CBLStatus*)outStatus;
 
 - (BOOL) runFilter: (CBLFilterBlock)filter
             params: (NSDictionary*)filterParams

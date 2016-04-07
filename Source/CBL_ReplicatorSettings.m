@@ -232,7 +232,7 @@ DefineLogDomain(SyncPerf);
     if (!_isPush)
         return YES;
     if (_filterName) {
-        _filterBlock = [db compileFilterNamed: _filterName status: outStatus];
+        _filterBlock = [db loadFilterNamed: _filterName status: outStatus];
         if (!_filterBlock) {
             Warn(@"%@: No filter '%@'", db, _filterName);
             return NO;

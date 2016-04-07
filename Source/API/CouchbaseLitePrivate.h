@@ -77,8 +77,6 @@
                      prevRevID: (NSString*)prevID
                  allowConflict: (BOOL)allowConflict
                          error: (NSError**)outError;
-- (NSArray*) getPossibleAncestorsOfRevisionID: (NSString*)revID
-                                        limit: (NSUInteger)limit;
 @end
 
 

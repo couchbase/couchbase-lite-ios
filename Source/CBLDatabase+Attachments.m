@@ -156,24 +156,6 @@
 }
 
 
-/** Returns a CBL_Attachment for an attachment in a stored revision. */
-- (CBL_Attachment*) attachmentForRevision: (CBL_Revision*)rev
-                                    named: (NSString*)filename
-                                   status: (CBLStatus*)outStatus
-{
-    Assert(filename);
-    NSDictionary* attachments = rev.attachments;
-    if (!attachments) {
-        attachments = [self attachmentsForDocID: rev.docID revID: rev.revID status: outStatus];
-        if (!attachments) {
-            *outStatus = kCBLStatusNotFound;
-            return nil;
-        }
-    }
-    return [self attachmentForDict: attachments[filename] named: filename status: outStatus];
-}
-
-
 - (CBL_Attachment*) attachmentForDict: (NSDictionary*)info
                                 named: (NSString*)filename
                                status: (CBLStatus*)outStatus
@@ -482,83 +464,6 @@ static UInt64 smallestLength(NSDictionary* attachment) {
 
 
 #pragma mark - MISC.:
-
-
-/** Replaces or removes a single attachment in a document, by saving a new revision whose only
-    change is the value of the attachment. */
-- (CBL_Revision*) updateAttachment: (NSString*)filename
-                              body: (CBL_BlobStoreWriter*)body
-                              type: (NSString*)contentType
-                          encoding: (CBLAttachmentEncoding)encoding
-                           ofDocID: (NSString*)docID
-                             revID: (NSString*)oldRevID
-                            source: (NSURL*)source
-                            status: (CBLStatus*)outStatus
-                             error: (NSError**)outError
-{
-    *outStatus = kCBLStatusBadAttachment;
-    if (filename.length == 0 || (body && !contentType) || (oldRevID && !docID) || (body && !docID)) {
-        CBLStatusToOutNSError(*outStatus, outError);
-        return nil;
-    }
-
-    CBL_MutableRevision* oldRev = [[CBL_MutableRevision alloc] initWithDocID: docID
-                                                                       revID: oldRevID
-                                                                     deleted: NO];
-    if (oldRevID) {
-        // Load existing revision if this is a replacement:
-        *outStatus = [self loadRevisionBody: oldRev];
-        if (CBLStatusIsError(*outStatus)) {
-            if (*outStatus == kCBLStatusNotFound
-                && [self getDocumentWithID: docID revisionID: nil withBody: NO
-                                    status: outStatus] != nil) {
-                *outStatus = kCBLStatusConflict;   // if some other revision exists, it's a conflict
-            }
-            CBLStatusToOutNSError(*outStatus, outError);
-            return nil;
-        }
-    } else {
-        // If this creates a new doc, it needs a body:
-        oldRev.body = [CBL_Body bodyWithProperties: @{}];
-    }
-
-    // Update the _attachments dictionary:
-    NSMutableDictionary* attachments = [oldRev.attachments mutableCopy];
-    if (!attachments)
-        attachments = $mdict();
-    if (body) {
-        CBLBlobKey key = body.blobKey;
-        NSString* digest = [CBLDatabase blobKeyToDigest: key];
-        [self rememberAttachmentWriter: body forDigest: digest];
-        NSString* encodingName = (encoding == kCBLAttachmentEncodingGZIP) ? @"gzip" : nil;
-        attachments[filename] = $dict({@"digest", digest},
-                                      {@"length", @(body.bytesWritten)},
-                                      {@"follows", $true},
-                                      {@"content_type", contentType},
-                                      {@"encoding", encodingName});
-    } else {
-        if (oldRevID && !attachments[filename]) {
-            *outStatus = kCBLStatusAttachmentNotFound;
-            CBLStatusToOutNSError(*outStatus, outError);
-            return nil;
-        }
-        [attachments removeObjectForKey: filename];
-    }
-
-    NSMutableDictionary* properties = [oldRev.properties mutableCopy];
-    properties[@"_attachments"] = attachments;
-
-    // Store a new revision with the updated _attachments:
-    CBL_Revision* newRev = [self putDocID: docID
-                               properties: properties
-                           prevRevisionID: oldRevID allowConflict: NO
-                                   source: source
-                                   status: outStatus error: outError];
-    if (!body && *outStatus == kCBLStatusCreated)
-        *outStatus = kCBLStatusOK;
-
-    return newRev;
-}
 
 
 - (BOOL) garbageCollectAttachments: (NSError**)outError {

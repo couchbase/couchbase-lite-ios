@@ -11,6 +11,7 @@
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Replication.h"
+#import "CBLDatabase+REST.h"
 #import "CBL_Storage.h"
 #import "CBLDatabaseUpgrade.h"
 #import "CBL_Attachment.h"

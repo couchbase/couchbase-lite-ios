@@ -114,7 +114,6 @@
 		2701C0791C49CFE6006D7A99 /* MYRegexUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FB615D475DF0030122F /* MYRegexUtils.m */; };
 		2701C07A1C49CFE6006D7A99 /* MYStreamUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27846FB815D475DF0030122F /* MYStreamUtils.m */; };
 		2701C07B1C49CFE6006D7A99 /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0751711CDC80A00E9A2AB /* ExceptionUtils.m */; };
-		2701C07D1C49CFE6006D7A99 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 93EBA2651B2EC61E0006C66C /* CBLRegisterJSViewCompiler.m */; };
 		2701C07E1C49CFE6006D7A99 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F0749C11CD5B4F00E9A2AB /* CollectionUtils.m */; };
 		2701C0801C49CFE6006D7A99 /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E3476D19994F5A00076EAC /* Test_Assertions.m */; };
 		2701C0811C49CFE6006D7A99 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; };
@@ -132,7 +131,6 @@
 		2701C08D1C49CFE6006D7A99 /* NSString+URLEncoding.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F12847156ABE24008465C2 /* NSString+URLEncoding.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		2701C08E1C49CFE6006D7A99 /* NSURL+Base.m in Sources */ = {isa = PBXBuildFile; fileRef = 27208F8D184D1D83006ADBEF /* NSURL+Base.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		2701C08F1C49CFE6006D7A99 /* CBLGeometry.m in Sources */ = {isa = PBXBuildFile; fileRef = 27726AA91889835F00AE6931 /* CBLGeometry.m */; };
-		2701C0901C49CFE6006D7A99 /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
 		2701C0911C49CFE6006D7A99 /* CBL_ForestDBStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DADE421A659FCC0075313A /* CBL_ForestDBStorage.mm */; };
 		2701C0921C49CFE6006D7A99 /* yajl_buf.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C821821A8370088881E /* yajl_buf.c */; };
 		2701C0931C49CFE6006D7A99 /* CBLTokenAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */; };
@@ -140,7 +138,6 @@
 		2701C0951C49CFE6006D7A99 /* CBJSONEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 27486F1E1A606C76008D94F0 /* CBJSONEncoder.m */; };
 		2701C0961C49CFE6006D7A99 /* yajl.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C7D1821A8370088881E /* yajl.c */; };
 		2701C0971C49CFE6006D7A99 /* CBLQueryEnumerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A7552A1A8BD715008BCD4D /* CBLQueryEnumerator.m */; };
-		2701C0981C49CFE6006D7A99 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
 		2701C0991C49CFE6006D7A99 /* yajl_encode.c in Sources */ = {isa = PBXBuildFile; fileRef = 277B5C851821A8370088881E /* yajl_encode.c */; };
 		2701C09A1C49CFE6006D7A99 /* CBLGZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 27A82D261BBC9C1D005CB742 /* CBLGZip.m */; };
 		2701C09B1C49CFE6006D7A99 /* CBLListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 275315DF14ACF0A20065964D /* CBLListener.m */; };
@@ -163,9 +160,7 @@
 		2701C0AF1C49CFE6006D7A99 /* libCBForest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27FA99F01917FFD000912F96 /* libCBForest.a */; };
 		2701C1621C49D234006D7A99 /* noop.m in Sources */ = {isa = PBXBuildFile; fileRef = 27452C221AB20BD500327776 /* noop.m */; };
 		2701C1661C49D2E3006D7A99 /* libCouchbaseLite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2701C14E1C49CFE6006D7A99 /* libCouchbaseLite.a */; };
-		2701C1671C49D4A7006D7A99 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
 		2701C16C1C4D5BDD006D7A99 /* noop.m in Sources */ = {isa = PBXBuildFile; fileRef = 27452C221AB20BD500327776 /* noop.m */; };
-		2701C16E1C4D5BDD006D7A99 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
 		2701C16F1C4D5BDD006D7A99 /* libCouchbaseLite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2701C14E1C49CFE6006D7A99 /* libCouchbaseLite.a */; };
 		2701C1711C4D5BDD006D7A99 /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DD150519354B3F009A367D /* libc++.dylib */; };
 		2701C1721C4D5BDD006D7A99 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
@@ -521,9 +516,6 @@
 		274C3919149E6B0900A5E89B /* EmptyAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */; };
 		274C6C271A3F838500F9BDF7 /* CBLReduceFuncs.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C6C241A3F838500F9BDF7 /* CBLReduceFuncs.m */; };
 		274C6C281A3F838500F9BDF7 /* CBLReduceFuncs.h in Headers */ = {isa = PBXBuildFile; fileRef = 274C6C251A3F838500F9BDF7 /* CBLReduceFuncs.h */; };
-		274CBC1F1C6D4152006DBE7F /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
-		274CBC201C6D4152006DBE7F /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
-		274CBC2C1C6D417C006DBE7F /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 93EBA2651B2EC61E0006C66C /* CBLRegisterJSViewCompiler.m */; };
 		274CBC321C6D52E2006DBE7F /* CBL_ForestDBQueryEnumerator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 274CBC311C6D52E2006DBE7F /* CBL_ForestDBQueryEnumerator.mm */; };
 		274CBC441C6E8BC4006DBE7F /* CBL_ForestDBDocEnumerator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 274CBC431C6E8BC4006DBE7F /* CBL_ForestDBDocEnumerator.mm */; };
 		274CBC531C728417006DBE7F /* CBLQueryRow+Router.h in Headers */ = {isa = PBXBuildFile; fileRef = 274CBC511C728417006DBE7F /* CBLQueryRow+Router.h */; };
@@ -597,6 +589,16 @@
 		275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29041649A12B00B0D8EE /* CBLAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5A1159383E9005B9234 /* CBLAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275A29051649A13900B0D8EE /* CBLReplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5CB159533A5005B9234 /* CBLReplication.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		276093931CB6F6BF00297FC4 /* CBLDatabase+REST.h in Headers */ = {isa = PBXBuildFile; fileRef = 276093911CB6F6BF00297FC4 /* CBLDatabase+REST.h */; };
+		276093941CB6F6BF00297FC4 /* CBLDatabase+REST.m in Sources */ = {isa = PBXBuildFile; fileRef = 276093921CB6F6BF00297FC4 /* CBLDatabase+REST.m */; };
+		276093951CB6F6BF00297FC4 /* CBLDatabase+REST.m in Sources */ = {isa = PBXBuildFile; fileRef = 276093921CB6F6BF00297FC4 /* CBLDatabase+REST.m */; };
+		276093A11CB7020400297FC4 /* CBLJSFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CC178DE03E00248AF0 /* CBLJSFunction.m */; };
+		276093A21CB7020400297FC4 /* CBLJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */; };
+		276093A51CB7022F00297FC4 /* CBLView+REST.h in Headers */ = {isa = PBXBuildFile; fileRef = 276093A31CB7022F00297FC4 /* CBLView+REST.h */; };
+		276093A61CB7022F00297FC4 /* CBLView+REST.m in Sources */ = {isa = PBXBuildFile; fileRef = 276093A41CB7022F00297FC4 /* CBLView+REST.m */; };
+		276093A71CB7022F00297FC4 /* CBLView+REST.m in Sources */ = {isa = PBXBuildFile; fileRef = 276093A41CB7022F00297FC4 /* CBLView+REST.m */; };
+		276093A81CB708F600297FC4 /* CBLRegisterJSViewCompiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 93EBA2651B2EC61E0006C66C /* CBLRegisterJSViewCompiler.m */; };
+		276093A91CB7097000297FC4 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
 		2762AB5818D36F1B00649D47 /* CBLReplication+Transformation.h in Headers */ = {isa = PBXBuildFile; fileRef = 2762AB5618D36F1B00649D47 /* CBLReplication+Transformation.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		2762AB5A18D36F1B00649D47 /* CBLReplication+Transformation.m in Sources */ = {isa = PBXBuildFile; fileRef = 2762AB5718D36F1B00649D47 /* CBLReplication+Transformation.m */; };
 		2764D2B11A5E240D005AC95A /* JSON_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2764D2B01A5E240D005AC95A /* JSON_Tests.m */; };
@@ -1684,6 +1686,10 @@
 		27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrivilegedInstall.m; sourceTree = "<group>"; };
 		27538FA117F1ECE8004C3BFD /* LoggingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoggingMode.h; sourceTree = "<group>"; };
 		27538FA217F1ECE8004C3BFD /* LoggingMode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = LoggingMode.c; sourceTree = "<group>"; };
+		276093911CB6F6BF00297FC4 /* CBLDatabase+REST.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+REST.h"; sourceTree = "<group>"; };
+		276093921CB6F6BF00297FC4 /* CBLDatabase+REST.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLDatabase+REST.m"; sourceTree = "<group>"; };
+		276093A31CB7022F00297FC4 /* CBLView+REST.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLView+REST.h"; sourceTree = "<group>"; };
+		276093A41CB7022F00297FC4 /* CBLView+REST.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLView+REST.m"; sourceTree = "<group>"; };
 		2762AB5618D36F1B00649D47 /* CBLReplication+Transformation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLReplication+Transformation.h"; sourceTree = "<group>"; };
 		2762AB5718D36F1B00649D47 /* CBLReplication+Transformation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLReplication+Transformation.m"; sourceTree = "<group>"; };
 		2764D2B01A5E240D005AC95A /* JSON_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JSON_Tests.m; sourceTree = "<group>"; };
@@ -2129,7 +2135,6 @@
 				2701C1751C4D5BDD006D7A99 /* libz.dylib in Frameworks */,
 				2701C1731C4D5BDD006D7A99 /* CoreServices.framework in Frameworks */,
 				2701C1761C4D5BDD006D7A99 /* Foundation.framework in Frameworks */,
-				2701C16E1C4D5BDD006D7A99 /* JavaScriptCore.framework in Frameworks */,
 				2701C1721C4D5BDD006D7A99 /* Security.framework in Frameworks */,
 				2701C1741C4D5BDD006D7A99 /* SystemConfiguration.framework in Frameworks */,
 			);
@@ -2139,7 +2144,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2701C1671C49D4A7006D7A99 /* JavaScriptCore.framework in Frameworks */,
 				2701C1661C49D2E3006D7A99 /* libCouchbaseLite.a in Frameworks */,
 				27D8C353195A42980073A51C /* libsqlite3.dylib in Frameworks */,
 				27DD150619354B3F009A367D /* libc++.dylib in Frameworks */,
@@ -2222,6 +2226,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				276093A91CB7097000297FC4 /* JavaScriptCore.framework in Frameworks */,
 				275315FC14ACF83C0065964D /* CouchbaseLite.framework in Frameworks */,
 				275315F814ACF2500065964D /* CoreServices.framework in Frameworks */,
 				275315F314ACF1C20065964D /* Foundation.framework in Frameworks */,
@@ -2485,8 +2490,12 @@
 				27AA409A14AA86AD00E2A5FF /* CBLDatabase+Insertion.m */,
 				2711CE0214C759BD00505D55 /* CBLDatabase+Replication.h */,
 				27AA40A014AA8A6600E2A5FF /* CBLDatabase+Replication.m */,
+				276093911CB6F6BF00297FC4 /* CBLDatabase+REST.h */,
+				276093921CB6F6BF00297FC4 /* CBLDatabase+REST.m */,
 				2751D4E2151BAE7000F7FD57 /* CBLManager+Internal.h */,
 				279EB2CC149140DE00E74185 /* CBLView+Internal.h */,
+				276093A31CB7022F00297FC4 /* CBLView+REST.h */,
+				276093A41CB7022F00297FC4 /* CBLView+REST.m */,
 				2726D14318FDF44000AACC2A /* CBLSpecialKey.h */,
 				2726D14418FDF44000AACC2A /* CBLSpecialKey.m */,
 				271C2AD216FA176300B8C9DB /* CBL_Shared.h */,
@@ -3788,7 +3797,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				2722195D1AC3757C001469BE /* CouchbaseLiteListener.h in Headers */,
+				276093931CB6F6BF00297FC4 /* CBLDatabase+REST.h in Headers */,
 				275315F914ACF2D70065964D /* CBLListener.h in Headers */,
+				276093A51CB7022F00297FC4 /* CBLView+REST.h in Headers */,
 				2785BE9E16BC87ED00A3E881 /* CBL_Router.h in Headers */,
 				2785BE9D16BC87EA00A3E881 /* CBL_URLProtocol.h in Headers */,
 				2753160C14ACFC2A0065964D /* CBLHTTPConnection.h in Headers */,
@@ -4894,7 +4905,6 @@
 				2701FD301C642669004D89FA /* CBLRemoteSession.m in Sources */,
 				2701C07A1C49CFE6006D7A99 /* MYStreamUtils.m in Sources */,
 				2701C07B1C49CFE6006D7A99 /* ExceptionUtils.m in Sources */,
-				2701C07D1C49CFE6006D7A99 /* CBLRegisterJSViewCompiler.m in Sources */,
 				2701C07E1C49CFE6006D7A99 /* CollectionUtils.m in Sources */,
 				2701C0801C49CFE6006D7A99 /* Test_Assertions.m in Sources */,
 				2701C0811C49CFE6006D7A99 /* MYBlockUtils.m in Sources */,
@@ -4913,7 +4923,6 @@
 				2701C08D1C49CFE6006D7A99 /* NSString+URLEncoding.m in Sources */,
 				2701C08E1C49CFE6006D7A99 /* NSURL+Base.m in Sources */,
 				2701C08F1C49CFE6006D7A99 /* CBLGeometry.m in Sources */,
-				2701C0901C49CFE6006D7A99 /* CBLJSFunction.m in Sources */,
 				2701C0911C49CFE6006D7A99 /* CBL_ForestDBStorage.mm in Sources */,
 				2701C0921C49CFE6006D7A99 /* yajl_buf.c in Sources */,
 				2701C0931C49CFE6006D7A99 /* CBLTokenAuthorizer.m in Sources */,
@@ -4922,7 +4931,6 @@
 				2701C0951C49CFE6006D7A99 /* CBJSONEncoder.m in Sources */,
 				2701C0961C49CFE6006D7A99 /* yajl.c in Sources */,
 				2701C0971C49CFE6006D7A99 /* CBLQueryEnumerator.m in Sources */,
-				2701C0981C49CFE6006D7A99 /* CBLJSViewCompiler.m in Sources */,
 				2701C0991C49CFE6006D7A99 /* yajl_encode.c in Sources */,
 				2701C09A1C49CFE6006D7A99 /* CBLGZip.m in Sources */,
 				2701C09B1C49CFE6006D7A99 /* CBLListener.m in Sources */,
@@ -5062,9 +5070,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				274CBC1F1C6D4152006DBE7F /* CBLJSFunction.m in Sources */,
-				274CBC201C6D4152006DBE7F /* CBLJSViewCompiler.m in Sources */,
-				274CBC2C1C6D417C006DBE7F /* CBLRegisterJSViewCompiler.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5072,6 +5077,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				276093A11CB7020400297FC4 /* CBLJSFunction.m in Sources */,
 				2753160D14ACFC2A0065964D /* CBLHTTPConnection.m in Sources */,
 				27E11F1114AD15940006B340 /* CBLHTTPResponse.m in Sources */,
 				275315F214ACF1130065964D /* DDLog.m in Sources */,
@@ -5085,16 +5091,20 @@
 				275315E714ACF1130065964D /* HTTPAuthenticationRequest.m in Sources */,
 				275315E814ACF1130065964D /* HTTPConnection.m in Sources */,
 				27E66B561A7310920091DA3F /* CBLRouter+Changes.m in Sources */,
+				276093A81CB708F600297FC4 /* CBLRegisterJSViewCompiler.m in Sources */,
 				275315EC14ACF1130065964D /* HTTPDataResponse.m in Sources */,
 				2700BC5114B3864B00B5B297 /* HTTPFileResponse.m in Sources */,
 				27DA435E159230AA00F9E7B5 /* CBL_Router.m in Sources */,
+				276093941CB6F6BF00297FC4 /* CBLDatabase+REST.m in Sources */,
 				27DA4360159230B100F9E7B5 /* CBL_Router+Handlers.m in Sources */,
 				27E2E61815993CB6005B9234 /* CBL_URLProtocol.m in Sources */,
+				276093A21CB7020400297FC4 /* CBLJSViewCompiler.m in Sources */,
 				274CBC541C728417006DBE7F /* CBLQueryRow+Router.m in Sources */,
 				27B0AC2C1B4C59B300DFE818 /* CBLHTTPListener.m in Sources */,
 				278097571A32817A00876DE6 /* MYAnonymousIdentity.m in Sources */,
 				2767D7E014C8D3EA00ED0F26 /* CollectionUtils.m in Sources */,
 				27E34773199950A800076EAC /* Test_Assertions.m in Sources */,
+				276093A61CB7022F00297FC4 /* CBLView+REST.m in Sources */,
 				27F3A5D015ED427200263663 /* MYRegexUtils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5318,11 +5328,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				276093A71CB7022F00297FC4 /* CBLView+REST.m in Sources */,
 				DA147C1C14BCAABE0052DA4D /* HTTPDataResponse.m in Sources */,
 				DA147C1D14BCAABE0052DA4D /* HTTPFileResponse.m in Sources */,
 				DA147C1814BCAAAD0052DA4D /* HTTPAuthenticationRequest.m in Sources */,
 				27B0AC2D1B4C59B300DFE818 /* CBLHTTPListener.m in Sources */,
 				DA147C1914BCAAAD0052DA4D /* HTTPConnection.m in Sources */,
+				276093951CB6F6BF00297FC4 /* CBLDatabase+REST.m in Sources */,
 				DA147C1A14BCAAAD0052DA4D /* HTTPMessage.m in Sources */,
 				DA147C1B14BCAAAD0052DA4D /* HTTPServer.m in Sources */,
 				DA147C1614BCAA8F0052DA4D /* DDLog.m in Sources */,

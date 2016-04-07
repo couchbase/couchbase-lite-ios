@@ -57,12 +57,6 @@ BOOL CBLQueryRowValueIsEntireDoc(id value);
 
 @property (readonly) NSArray* viewsInGroup;
 
-- (CBLStatus) compileFromDesignDoc;
-
-/** Compiles a view (using the registered CBLViewCompiler) from the properties found in a CouchDB-style design document. */
-- (CBLStatus) compileFromProperties: (NSDictionary*)viewProps
-                           language: (NSString*)language;
-
 /** Updates the view's index (incrementally) if necessary.
     If the index is updated, the other views in the viewGroup will be updated as a bonus.
     @return  200 if updated, 304 if already up-to-date, else an error code */

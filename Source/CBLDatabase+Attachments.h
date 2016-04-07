@@ -52,10 +52,9 @@ typedef enum {
                       decode: (BOOL)decodeAttachments
                       status: (CBLStatus*)outStatus;
 
-/** Returns a CBL_Attachment for an attachment in a stored revision. */
-- (CBL_Attachment*) attachmentForRevision: (CBL_Revision*)rev
-                                    named: (NSString*)filename
-                                   status: (CBLStatus*)outStatus;
+- (NSDictionary*) attachmentsForDocID: (NSString*)docID
+                                revID: (NSString*)revID
+                               status: (CBLStatus*)outStatus;
 
 /** Uses the "digest" field of the attachment dict to look up the attachment in the store.
     Input dict must come from an already-saved revision. */
@@ -68,19 +67,8 @@ typedef enum {
 /** Deletes obsolete attachments from the database and blob store. */
 - (BOOL) garbageCollectAttachments: (NSError**)outError;
 
-/** Updates or deletes an attachment, creating a new document revision in the process.
-    Used by the PUT / DELETE methods called on attachment URLs. */
-- (CBL_Revision*) updateAttachment: (NSString*)filename
-                              body: (CBL_BlobStoreWriter*)body
-                              type: (NSString*)contentType
-                          encoding: (CBLAttachmentEncoding)encoding
-                           ofDocID: (NSString*)docID
-                             revID: (NSString*)oldRevID
-                            source: (NSURL*)source
-                            status: (CBLStatus*)outStatus
-                             error: (NSError**)outError;
-
 - (void) rememberAttachmentWriter: (CBL_BlobStoreWriter*)writer;
+- (void) rememberAttachmentWriter: (CBL_BlobStoreWriter*)writer forDigest:(NSString*)digest;
 - (void) rememberAttachmentWritersForDigests: (NSDictionary*)writersByDigests;
 #if DEBUG
 - (id) attachmentWriterForAttachment: (NSDictionary*)attachment;
