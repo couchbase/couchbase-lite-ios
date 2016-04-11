@@ -1023,6 +1023,24 @@
     Assert(!error);
     Assert(rev4);
     AssertEq([rev4.attachmentNames count], (NSUInteger)0);
+
+    // Add an attachment with revpos=0 (see #1200)
+    NSMutableDictionary* props = [rev3.properties mutableCopy];
+    NSMutableDictionary* atts = [props.cbl_attachments mutableCopy];
+    props[@"_attachments"] = atts;
+    atts[@"zero.txt"] = @{@"content_type": @"text/plain",
+                          @"revpos": @0,
+                          @"following": @YES};
+    BOOL ok = [doc putExistingRevisionWithProperties: props
+                                         attachments: @{@"zero.txt": [@"zero" dataUsingEncoding: NSUTF8StringEncoding]}
+                                     revisionHistory: @[@"3-0000", rev3.revisionID, rev.revisionID]
+                                             fromURL: nil
+                                               error: &error];
+    Assert(ok, @"Adding attachment with revpos=0 failed: %@", error);
+
+    CBLRevision* rev5 = [doc revisionWithID: @"3-0000"];
+    CBLAttachment* att = [rev5 attachmentNamed: @"zero.txt"];
+    Assert(att);
 }
 
 

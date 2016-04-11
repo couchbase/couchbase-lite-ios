@@ -101,8 +101,13 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
             // Get the revpos:
             id revPosObj = attachInfo[@"revpos"];
             if (revPosObj) {
-                int revPos = [$castIf(NSNumber, revPosObj) intValue];
-                if (revPos <= 0) {
+                if (![revPosObj isKindOfClass: [NSNumber class]]) {
+                    *outStatus = kCBLStatusBadAttachment;
+                    return nil;
+                }
+                int revPos = [revPosObj intValue];
+                // PouchDB has a bug that generates "revpos":0; allow this (#1200)
+                if (revPos < 0) {
                     *outStatus = kCBLStatusBadAttachment;
                     return nil;
                 }
