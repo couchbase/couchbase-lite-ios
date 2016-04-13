@@ -308,7 +308,7 @@
     } else {
         // Start reachability checks. (This creates another ref cycle, because
         // the block also retains a ref to self. Cycle is also broken in -stopped.)
-        _host = [[CBLReachability alloc] initWithHostName: _settings.remote.host];
+        _host = [[CBLReachability alloc] initWithURL: _settings.remote];
         
         __weak id weakSelf = self;
         _host.onChange = ^{

@@ -18,6 +18,9 @@
 #include <arpa/inet.h>
 
 
+DefineLogDomain(Reachability);
+
+
 static void ClientCallback(SCNetworkReachabilityRef target,
                            SCNetworkReachabilityFlags flags,
                            void *info);
@@ -38,21 +41,71 @@ static void ClientCallback(SCNetworkReachabilityRef target,
     dispatch_queue_t _queue;
     SCNetworkReachabilityFlags _reachabilityFlags;
     BOOL _reachabilityKnown;
+    BOOL _usingProxy;
     CBLReachabilityOnChangeBlock _onChange;
 }
 
 
-- (instancetype) initWithHostName: (NSString*)hostName {
+#if DEBUG
+static BOOL sAlwaysAssumeProxy = NO;
++ (void) setAlwaysAssumesProxy: (BOOL)alwaysAssumesProxy {
+    sAlwaysAssumeProxy = alwaysAssumesProxy;
+}
+#endif
+
+
+
++ (BOOL) usingProxyForURL: (NSURL*)url {
+    NSDictionary* settings = CFBridgingRelease(CFNetworkCopySystemProxySettings());
+    NSArray* proxies = CFBridgingRelease(CFNetworkCopyProxiesForURL((__bridge CFURLRef)url,
+                                                                    (__bridge CFDictionaryRef)settings));
+    for (NSDictionary* proxy in proxies) {
+        if (![proxy[(id)kCFProxyTypeKey] isEqual: (id)kCFProxyTypeNone])
+            return YES;
+    }
+#if DEBUG
+    return sAlwaysAssumeProxy;
+#endif
+    return NO;
+}
+
+
+- (instancetype) initWithReachabilityRef: (SCNetworkReachabilityRef)ref {
     self = [super init];
     if (self) {
-        if (!hostName.length)
-            hostName = @"localhost";
-        _hostName = [hostName copy];
-        _ref = SCNetworkReachabilityCreateWithName(NULL, [_hostName UTF8String]);
+        _ref = ref;
         SCNetworkReachabilityContext context = {0, (__bridge void *)(self)};
         if (!_ref || !SCNetworkReachabilitySetCallback(_ref, ClientCallback, &context)) {
             return nil;
         }
+    }
+    return self;
+}
+
+
+- (instancetype) init {
+    struct sockaddr_in addr = {sizeof(addr), AF_INET};  // IP address 0.0.0.0
+    SCNetworkReachabilityRef ref = SCNetworkReachabilityCreateWithAddress(NULL,
+                                                                          (struct sockaddr*)&addr);
+    return [self initWithReachabilityRef: ref];
+}
+
+
+- (instancetype) initWithURL: (NSURL*)url {
+    NSString* hostName = url.host;
+    if (!hostName.length)
+        hostName = @"localhost";
+    // If network access requires a proxy, just track whether there is any network connection:
+    if ([[self class] usingProxyForURL: url]) {
+        self = [self init];
+        if (self)
+            _usingProxy = YES;
+    } else {
+        self = [self initWithReachabilityRef: SCNetworkReachabilityCreateWithName(NULL,
+                                                                          hostName.UTF8String)];
+    }
+    if (self) {
+        _hostName = [hostName copy];
     }
     return self;
 }
@@ -78,14 +131,20 @@ static void ClientCallback(SCNetworkReachabilityRef target,
 
 - (BOOL) started {
     // See whether status is already known:
-    if (SCNetworkReachabilityGetFlags(_ref, &_reachabilityFlags))
+    if (SCNetworkReachabilityGetFlags(_ref, &_reachabilityFlags)) {
         _reachabilityKnown = YES;
-    //Log(@"ReachabilityKnown=%d; flags=%04x", _reachabilityKnown, _reachabilityFlags);
+        LogTo(Reachability, @"%@: flags=%x; starting...", self, _reachabilityFlags);
+    } else {
+        LogTo(Reachability, @"%@: starting...", self);
+    }
     return YES;
 }
 
 
 - (void) stop {
+    _reachabilityKnown = NO;
+    if (_runLoop || _queue)
+        LogTo(Reachability, @"%@: stopped", self);
     if (_runLoop) {
         SCNetworkReachabilityUnscheduleFromRunLoop(_ref, _runLoop, kCFRunLoopCommonModes);
         CFRelease(_runLoop);
@@ -124,19 +183,24 @@ static void ClientCallback(SCNetworkReachabilityRef target,
 }
 
 - (NSString*) description {
-    return $sprintf(@"<%@>:%@", _hostName, self.status);
+    NSString* desc;
+    if (!_hostName)
+        desc = @"<(any)>";
+    else if (_usingProxy)
+        desc = $sprintf(@"<(proxy to)%@>", _hostName);
+    else
+        desc = $sprintf(@"<%@>", _hostName);
+    if (_reachabilityKnown)
+        desc = [desc stringByAppendingFormat: @":%@", self.status];
+    return desc;
 }
 
 
 - (BOOL) reachable {
-    // We want 'reachable' to be on, but not any of the flags that indicate that a network interface
-    // must first be brought online.
+    // We want 'reachable' flag to be on, but not if user intervention is required (like PPP login)
     return _reachabilityKnown
-        && (_reachabilityFlags & (kSCNetworkReachabilityFlagsReachable
-                                | kSCNetworkReachabilityFlagsConnectionRequired
-                                | kSCNetworkReachabilityFlagsConnectionAutomatic
-                                | kSCNetworkReachabilityFlagsInterventionRequired))
-                == kSCNetworkReachabilityFlagsReachable;
+        &&  (_reachabilityFlags & kSCNetworkReachabilityFlagsReachable)
+        && !(_reachabilityFlags & kSCNetworkReachabilityFlagsInterventionRequired);
 }
 
 - (BOOL) reachableByWiFi {
@@ -161,6 +225,7 @@ static void ClientCallback(SCNetworkReachabilityRef target,
     if (!_reachabilityKnown || flags != _reachabilityFlags) {
         self.reachabilityFlags = flags;
         self.reachabilityKnown = YES;
+        LogTo(Reachability, @"%@: flags <-- %x", self, flags);
         __typeof(_onChange) onChange = _onChange;
         if (onChange)
             onChange();

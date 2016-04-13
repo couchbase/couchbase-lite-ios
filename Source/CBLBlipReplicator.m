@@ -210,7 +210,7 @@
 
     if (!_reachability && CBLIsOfflineError(_error)) {
         // Network seems to be offline, so start a reachability monitor so I can retry ASAP:
-        _reachability = [[CBLReachability alloc] initWithHostName: _settings.remote.host];
+        _reachability = [[CBLReachability alloc] initWithURL: _settings.remote];
         __weak CBLBlipReplicator* weakSelf = self;
         _reachability.onChange = ^{
             [weakSelf reachabilityChanged];
