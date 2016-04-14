@@ -82,6 +82,7 @@ UsingLogDomain(Sync);
     _caughtUp = NO;
     _startTime = CFAbsoluteTimeGetCurrent();
     _pendingMessageCount = 0;
+    _gzip = nil;
     LogTo(ChangeTracker, @"%@: Started... <%@>", self, request.URL);
     return YES;
 }
@@ -168,50 +169,54 @@ UsingLogDomain(Sync);
     });
 }
 
-/** Called when a WebSocket receives a textual message from its peer. */
+/** Called when a WebSocket receives a message from its peer. */
 - (void) webSocket: (PSWebSocket*)ws didReceiveMessage: (id)msg {
     MYOnThread(_thread, ^{
-        __block NSData *data;
-        if ([msg isKindOfClass: [NSData class]]) {
-            // Binary messages are gzip-compressed; actually they're segments of a single stream.
-            if (!_gzip)
-                _gzip = [[CBLGZip alloc] initForCompressing: NO];
-            NSMutableData* decoded = [NSMutableData new];
-            [_gzip addBytes: [msg bytes] length: [msg length]
-                   onOutput:^(const void *bytes, size_t length) {
-                       [decoded appendBytes: bytes length: length];
-            }];
-            [_gzip flush:^(const void *bytes, size_t length) {
-                [decoded appendBytes: bytes length: length];
-            }];
-            if (decoded.length == 0) {
-                Warn(@"CBLWebSocketChangeTracker: Couldn't unzip compressed message; status=%d",
-                     _gzip.status);
-                [_ws closeWithCode: PSWebSocketStatusCodeUnhandledType
-                            reason: @"Couldn't unzip change entry"];
-            }
-            data = decoded;
-        } else if ([msg isKindOfClass: [NSString class]]) {
-            data = [msg dataUsingEncoding: NSUTF8StringEncoding];
-        }
-
         LogVerbose(ChangeTracker, @"%@: Got a message: %@", self, msg);
-        if (data.length > 0 && ws == _ws && _running) {
-            BOOL parsed = [self parseBytes: data.bytes length: data.length];
-            if (parsed) {
-                NSInteger changeCount = [self endParsingData];
-                parsed = changeCount >= 0;
-                if (changeCount == 0 && !_caughtUp) {
-                    // Received an empty changes array: means server is waiting, so I'm caught up
-                    LogTo(ChangeTracker, @"%@: caught up!", self);
-                    _caughtUp = YES;
-                    [self.client changeTrackerCaughtUp];
+        if (ws == _ws && _running) {
+            __block NSData *data;
+            if ([msg isKindOfClass: [NSData class]]) {
+                // Binary messages are gzip-compressed; actually they're segments of a single stream.
+                if (!_gzip)
+                    _gzip = [[CBLGZip alloc] initForCompressing: NO];
+                NSMutableData* decoded = [NSMutableData new];
+                [_gzip addBytes: [msg bytes] length: [msg length]
+                       onOutput:^(const void *bytes, size_t length) {
+                           [decoded appendBytes: bytes length: length];
+                }];
+                [_gzip flush:^(const void *bytes, size_t length) {
+                    [decoded appendBytes: bytes length: length];
+                }];
+                if (decoded.length == 0) {
+                    Warn(@"CBLWebSocketChangeTracker: Couldn't unzip compressed message; status=%d",
+                         _gzip.status);
+                    [_ws closeWithCode: PSWebSocketStatusCodeUnhandledType
+                                reason: @"Couldn't unzip change entry"];
+                    _running = NO;
                 }
+                data = decoded;
+            } else if ([msg isKindOfClass: [NSString class]]) {
+                data = [msg dataUsingEncoding: NSUTF8StringEncoding];
             }
-            if (!parsed) {
-                Warn(@"Couldn't parse message: %@", msg);
-                [_ws closeWithCode: PSWebSocketStatusCodeUnhandledType
-                            reason: @"Unparseable change entry"];
+
+            if (data.length > 0) {
+                BOOL parsed = [self parseBytes: data.bytes length: data.length];
+                if (parsed) {
+                    NSInteger changeCount = [self endParsingData];
+                    parsed = changeCount >= 0;
+                    if (changeCount == 0 && !_caughtUp) {
+                        // Received an empty changes array: means server is waiting, so I'm caught up
+                        LogTo(ChangeTracker, @"%@: caught up!", self);
+                        _caughtUp = YES;
+                        [self.client changeTrackerCaughtUp];
+                    }
+                }
+                if (!parsed) {
+                    Warn(@"Couldn't parse message: %@", msg);
+                    [_ws closeWithCode: PSWebSocketStatusCodeUnhandledType
+                                reason: @"Unparseable change entry"];
+                    _running = NO;
+                }
             }
         }
         OSAtomicDecrement32Barrier(&_pendingMessageCount);
