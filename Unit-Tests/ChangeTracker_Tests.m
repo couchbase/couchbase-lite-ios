@@ -75,6 +75,43 @@
 }
 
 
+- (void) test_DocIDs {
+    for (CBLChangeTrackerMode mode = kOneShot; mode <= kLongPoll; ++mode) {
+        if (mode == kLongPoll)  //FIX: SG doesn't support _doc_ids filter in longpoll mode: SG#1703
+            continue;
+        for (int activeOnly = 0; activeOnly <= 1; ++activeOnly) {
+            Log(@"Mode = %d, activeOnly=%d ...", mode, activeOnly);
+            NSURL* url = [self remoteNonSSLTestDBURL: @"attach_test"];
+            if (!url)
+                return;
+            CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: mode conflicts: NO lastSequence: nil client: self];
+            tracker.docIDs = @[@"oneBigAttachment", @"weirdmeta", @"propertytest"];
+            tracker.activeOnly = (BOOL)activeOnly;
+            NSMutableArray* expected = $marray(
+                                   $dict({@"seq", @2},
+                                         {@"id", @"oneBigAttachment"},
+                                         {@"revs", $array(@"2-7a9086d57651b86882d4806bad25903c")}),
+#if 0 // FIX: commented out because SG doesn't correctly handle deleted docs; see issue SG#1702
+                                   $dict({@"seq", @4},
+                                         {@"id", @"propertytest"},
+                                         {@"revs", $array(@"2-61de0ad4b61a3106195e9b21bcb69d0c")},
+                                         {@"deleted", @YES}),
+#endif
+                                   $dict({@"seq", @6},
+                                         {@"id", @"weirdmeta"},
+                                         {@"revs", $array(@"1-eef1e19e2aa822dc3f1c62196cbe6746")})
+                                   );
+#if 0 // FIX: See above
+            if (activeOnly)
+                [expected removeObjectAtIndex: 1];
+#endif
+            [self run: tracker expectingChanges: expected];
+            Assert(_gotHeaders);
+        }
+    }
+}
+
+
 - (void) test_SSL_Part1_Failure {
     // First try without adding the custom root cert, which should fail:
     NSURL* url = [self remoteSSLTestDBURL: @"public"];

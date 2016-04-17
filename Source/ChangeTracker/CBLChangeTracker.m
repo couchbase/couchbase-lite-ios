@@ -118,16 +118,13 @@ DefineLogDomain(ChangeTracker);
     if (_limit > 0)
         [path appendFormat: @"&limit=%u", _limit];
 
-    if (!_usePOST) {
-        // Add filter or doc_ids to URL. If sending a POST, these will go in the JSON body instead.
-        NSString* filterName = _filterName;
-        NSDictionary* filterParameters = _filterParameters;
-        if (_docIDs) {
-            filterName = @"_doc_ids";
-            filterParameters = @{@"doc_ids": _docIDs};
-        }
-        if (filterName) {
-            [path appendFormat: @"&filter=%@", CBLEscapeURLParam(filterName)];
+    NSString* filterName = _docIDs ?  @"_doc_ids" : _filterName;
+    if (filterName) {
+        [path appendFormat: @"&filter=%@", CBLEscapeURLParam(filterName)];
+
+        if (!_usePOST) {
+            // Add filter or doc_ids to URL. If sending a POST, these will go in JSON body instead.
+            NSDictionary* filterParameters = _docIDs ? @{@"doc_ids": _docIDs} : _filterParameters;
             for (NSString* key in filterParameters) {
                 NSString* value = filterParameters[key];
                 if (![value isKindOfClass: [NSString class]]) {
@@ -169,8 +166,7 @@ DefineLogDomain(ChangeTracker);
         filterParameters = @{@"doc_ids": _docIDs};
     }
     // Sync Gateway expects all the parameters here, but CouchDB expects them in the URL and
-    // ignores these, _except_ the filter and filterParameters. For compatibility we put the
-    // basic parameters in both places.
+    // ignores these, _except_ the filterParameters. For compatibility we put them in both places.
     NSMutableDictionary* post = $mdict({@"feed", self.feed},
                                        {@"heartbeat", @(round(_heartbeat*1000.0))},
                                        {@"style", (_includeConflicts ? @"all_docs" : nil)},
