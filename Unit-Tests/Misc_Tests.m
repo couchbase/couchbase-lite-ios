@@ -84,8 +84,12 @@
 }
 
 
-static BOOL parseRevID(NSString* revID, int *gen, NSString** suffix) {
-    return [CBL_Revision parseRevID: revID intoGeneration: gen andSuffix: suffix];
+static BOOL parseRevID(NSString* revIDStr, unsigned *gen, NSString** suffix) {
+
+    CBL_RevID* revID = revIDStr.cbl_asRevID;
+    *gen = revID.generation;
+    *suffix = revID.suffix;
+    return *gen > 0 && *suffix;
 }
 
 static int collateRevs(const char* rev1, const char* rev2) {
@@ -94,14 +98,14 @@ static int collateRevs(const char* rev1, const char* rev2) {
 
 - (void) test_ParseRevID {
     RequireTestCase(CBLDatabase);
-    int num;
+    unsigned num;
     NSString* suffix;
     Assert(parseRevID(@"1-utiopturoewpt", &num, &suffix));
-    AssertEq(num, 1);
+    AssertEq(num, 1u);
     AssertEqual(suffix, @"utiopturoewpt");
     
     Assert(parseRevID(@"321-fdjfdsj-e", &num, &suffix));
-    AssertEq(num, 321);
+    AssertEq(num, 321u);
     AssertEqual(suffix, @"fdjfdsj-e");
     
     Assert(!parseRevID(@"0-fdjfdsj-e", &num, &suffix));

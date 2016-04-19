@@ -134,6 +134,10 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "-LogRouter YES"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "-CBLStorageType ForestDB"
             isEnabled = "NO">
          </CommandLineArgument>

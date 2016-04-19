@@ -184,7 +184,7 @@ extern "C" {
             CBLStatus status;
             if (linkedID) {
                 // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
-                NSString* linkedRev = valueDict.cbl_rev; // usually nil
+                CBL_RevID* linkedRev = valueDict.cbl_rev; // usually nil
                 docRevision = [_viewStorage.dbStorage getDocumentWithID: linkedID
                                                              revisionID: linkedRev
                                                    withBody: YES status: &status];

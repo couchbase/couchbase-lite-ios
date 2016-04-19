@@ -328,7 +328,7 @@
 
     // Add a deletion/tombstone revision:
     newRev = doc.newRevision;
-    AssertEq(newRev.parentRevisionID, rev2.revisionID);
+    AssertEqual(newRev.parentRevisionID, rev2.revisionID);
     AssertEqual(newRev.parentRevision, rev2);
     newRev.isDeletion = true;
     CBLSavedRevision* rev3 = [newRev save: &error];

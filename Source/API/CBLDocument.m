@@ -137,19 +137,29 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 - (CBLSavedRevision*) revisionFromRev: (CBL_Revision*)rev {
     if (!rev)
         return nil;
-    else if ($equal(rev.revID, _currentRevision.revisionID))
+    else if ($equal(rev.revID, _currentRevision.rev.revID))
         return _currentRevision;
     else
         return [[CBLSavedRevision alloc] initWithDocument: self revision: rev];
 }
 
 
-- (CBLSavedRevision*) revisionWithID: (NSString*)revID  {
-    if ($equal(revID, _currentRevision.revisionID))
+- (CBLSavedRevision*) revisionWithID: (NSString*)revIDStr  {
+    return [self revisionWithRevID: revIDStr.cbl_asRevID withBody: YES];
+}
+
+
+- (CBLSavedRevision*) revisionWithRevID: (CBL_RevID*)revID
+                               withBody: (BOOL)withBody
+{
+    if (!revID)
+        return nil;
+    if ($equal(revID, _currentRevision.rev.revID))
         return _currentRevision;
     CBLStatus status;
-    return [self revisionFromRev: [_database getDocumentWithID: _docID revisionID: revID
-                                                       withBody: YES
+    return [self revisionFromRev: [_database getDocumentWithID: _docID
+                                                    revisionID: revID
+                                                      withBody: withBody
                                                         status: &status]];
 }
 
@@ -161,10 +171,10 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 // Notification from the CBLDatabase that a (current, winning) revision has been added
 - (void) revisionAdded: (CBLDatabaseChange*)change notify: (BOOL)notify {
-    NSString* revID = change.winningRevisionID;
+    CBL_RevID* revID = change.winningRevisionID;
     if (!revID)
         return; // current revision didn't change
-    if (_currentRevisionKnown && !$equal(revID, _currentRevision.revisionID)) {
+    if (_currentRevisionKnown && !$equal(revID, _currentRevision.rev.revID)) {
         CBL_Revision* rev = change.winningRevisionIfKnown;
         if (!rev)
             [self forgetCurrentRevision];
@@ -187,10 +197,10 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 
 - (void) loadCurrentRevisionFrom: (CBLQueryRow*)row {
-    NSString* revID = row.documentRevisionID;
+    CBL_RevID* revID = row._documentRevisionID;
     if (!revID)
         return;
-    if (!_currentRevision || CBLCompareRevIDs(revID, _currentRevision.revisionID) > 0) {
+    if (!_currentRevision || [revID compare: _currentRevision.rev.revID] > 0) {
         [self forgetCurrentRevision];
         CBL_Revision* rev = row.documentRevision;
         if (rev) {
@@ -264,7 +274,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 }
 
 - (CBLSavedRevision*) putProperties: (NSDictionary*)properties
-                          prevRevID: (NSString*)prevID
+                          prevRevID: (CBL_RevID*)prevID
                       allowConflict: (BOOL)allowConflict
                               error: (NSError**)outError
 {
@@ -283,7 +293,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 }
 
 - (CBLSavedRevision*) putProperties: (NSDictionary*)properties error: (NSError**)outError {
-    NSString* prevID = properties.cbl_rev;
+    CBL_RevID* prevID = properties.cbl_rev;
     return [self putProperties: properties prevRevID: prevID allowConflict: NO error: outError];
 }
 
@@ -309,11 +319,12 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 - (BOOL) putExistingRevisionWithProperties: (CBLJSONDict*)properties
                                attachments: (NSDictionary*)attachments
-                           revisionHistory: (NSArray*)revIDs
+                           revisionHistory: (NSArray<NSString*>*)revIDStrings
                                    fromURL: (NSURL*)sourceURL
                                      error: (NSError**)outError
 {
-    Assert(revIDs.count > 0);
+    Assert(revIDStrings.count > 0);
+    NSArray<CBL_RevID*>* revIDs = revIDStrings.cbl_asRevIDs;
     CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: _docID
                                                                     revID: revIDs[0]
                                                                   deleted: properties.cbl_deleted];

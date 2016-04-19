@@ -143,7 +143,7 @@
 
 
 - (NSDictionary*) attachmentsForDocID: (NSString*)docID
-                                revID: (NSString*)revID
+                                revID: (CBL_RevID*)revID
                                status: (CBLStatus*)outStatus
 {
     CBL_MutableRevision* mrev = [[CBL_MutableRevision alloc] initWithDocID: docID
@@ -340,7 +340,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
 
 /** Given a revision, updates its _attachments dictionary for storage in the database. */
 - (BOOL) processAttachmentsForRevision: (CBL_MutableRevision*)rev
-                              ancestry: (NSArray*)ancestry
+                              ancestry: (NSArray<CBL_RevID*>*)ancestry
                                 status: (CBLStatus*)outStatus
 {
     *outStatus = kCBLStatusOK;
@@ -356,7 +356,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
         return YES;
     }
 
-    NSString *prevRevID = ancestry.firstObject;
+    CBL_RevID *prevRevID = ancestry.firstObject;
     unsigned generation = rev.generation;
     Assert(generation > 0);
     __block NSDictionary* parentAttachments = nil;
@@ -446,11 +446,11 @@ static UInt64 smallestLength(NSDictionary* attachment) {
 - (NSDictionary*) findAttachment: (NSString*)name
                           revpos: (unsigned)revpos
                            docID: (NSString*)docID
-                        ancestry: (NSArray*)ancestry
+                        ancestry: (NSArray<CBL_RevID*>*)ancestry
 {
     for (NSInteger i = ancestry.count - 1; i >= 0; i--) {
-        NSString* revID = ancestry[i];
-        if ([CBL_Revision generationFromRevID: revID] >= revpos) {
+        CBL_RevID* revID = ancestry[i];
+        if (revID.generation >= revpos) {
             CBLStatus status;
             NSDictionary* attachments = [self attachmentsForDocID: docID revID: revID
                                                            status: &status];

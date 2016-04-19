@@ -400,13 +400,11 @@ static NSString* keyToJSONStr(id key) { // only used for logging
 
             // Read the document body:
             body = [CBLForestBridge bodyOfSelectedRevision: doc];
-            body[@"_id"] = slice2string(doc->docID);
-            body[@"_rev"] = slice2string(doc->revID);
+            [body cbl_setID: slice2string(doc->docID)
+                     revStr: slice2string(doc->revID)];
             body[@"_local_seq"] = @(doc->sequence);
             if (doc->flags & kConflicted) {
-                body[@"_conflicts"] = [CBLForestBridge getCurrentRevisionIDs: doc
-                                                              includeDeleted: NO
-                                                               onlyConflicts: YES];
+                body[@"_conflicts"] = [self getConflictingRevisionIDs: doc];
             }
             LogVerbose(View, @"Mapping %@ rev %@", body.cbl_id, body.cbl_rev);
 
@@ -436,6 +434,20 @@ static NSString* keyToJSONStr(id key) { // only used for logging
     indexer = NULL; // keep CLEANUP from double-disposing it
     LogTo(View, @"... Finished re-indexing (%@) to #%lld", viewNames(views), latestSequence);
     return kCBLStatusOK;
+}
+
+
+- (NSMutableArray<NSString*>*) getConflictingRevisionIDs: (C4Document*)doc
+{
+    BOOL first = YES;
+    NSMutableArray<NSString*> *revs = [[NSMutableArray alloc] init];
+    do {
+        if (first)
+            first = NO;
+        else if (!(doc->selectedRev.flags & kRevDeleted))
+            [revs addObject: slice2string(doc->selectedRev.revID)];
+    } while (c4doc_selectNextLeafRevision(doc, false, false, NULL));
+    return revs;
 }
 
 

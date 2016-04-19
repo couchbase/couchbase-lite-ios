@@ -159,7 +159,7 @@ NSTimeInterval kMinHeartbeat = 5.0;
     for (CBL_Revision* rev in changes) {
         NSString* docID = rev.docID;
         if ($equal(docID, lastDocID)) {
-            [lastEntry[@"changes"] addObject: $dict({@"rev", rev.revID})];
+            [lastEntry[@"changes"] addObject: $dict({@"rev", rev.revIDString})];
         } else {
             lastEntry = [self changeDictForRev: rev];
             [entries addObject: lastEntry];
@@ -190,7 +190,7 @@ NSTimeInterval kMinHeartbeat = 5.0;
     }
     return $dict({@"seq", @(rev.sequence)},
                  {@"id",  rev.docID},
-                 {@"changes", $marray($dict({@"rev", rev.revID}))},
+                 {@"changes", $marray($dict({@"rev", rev.revIDString}))},
                  {@"deleted", rev.deleted ? $true : nil},
                  {@"doc", (_changesIncludeDocs ? rev.properties : nil)});
 }
@@ -203,7 +203,7 @@ NSTimeInterval kMinHeartbeat = 5.0;
     NSMutableArray* changes = $marray();
     for (CBLDatabaseChange* change in (n.userInfo)[@"changes"]) {
         CBL_Revision* rev = change.addedRevision;
-        NSString* winningRevID = change.winningRevisionID;
+        CBL_RevID* winningRevID = change.winningRevisionID;
 
         if (!_changesIncludeConflicts) {
             if (!winningRevID)

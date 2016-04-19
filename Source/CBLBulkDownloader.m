@@ -58,7 +58,7 @@
                 attsSince = nil;
         }
         return $dict({@"id", rev.docID},
-                     {@"rev", rev.revID},
+                     {@"rev", rev.revIDString},
                      {@"atts_since", attsSince});
     }];
 

@@ -909,7 +909,7 @@
                           // Saved checkpoint:
                           id rev = response[@"rev"];
                           if (rev)
-                              body[@"_rev"] = rev;
+                              body.cbl_revStr = rev;
                           self.remoteCheckpoint = body;
                           [db setLastSequence: [lastSequence description]
                              withCheckpointID: checkpointID];

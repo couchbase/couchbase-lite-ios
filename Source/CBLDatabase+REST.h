@@ -32,7 +32,7 @@
                               type: (NSString*)contentType
                           encoding: (CBLAttachmentEncoding)encoding
                            ofDocID: (NSString*)docID
-                             revID: (NSString*)oldRevID
+                             revID: (CBL_RevID*)oldRevID
                             source: (NSURL*)source
                             status: (CBLStatus*)outStatus
                              error: (NSError**)outError;

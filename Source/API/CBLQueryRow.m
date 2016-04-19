@@ -212,16 +212,20 @@ BOOL CBLQueryRowValueIsEntireDoc(id value) {
 }
 
 
-- (NSString*) documentRevisionID {
+- (CBL_RevID*) _documentRevisionID {
     // Get the revision id from either the embedded document contents,
     // or the '_rev' or 'rev' value key:
     if (_documentRevision)
         return _documentRevision.revID;
     NSDictionary* value = $castIf(NSDictionary, self.value);
-    NSString* rev = value.cbl_rev;
+    CBL_RevID* rev = value.cbl_rev;
     if (value && !rev)
-        rev = $castIf(NSString, value[@"rev"]);
+        rev = $castIf(NSString, value[@"rev"]).cbl_asRevID;
     return rev;
+}
+
+- (NSString*) documentRevisionID {
+    return self._documentRevisionID.asString;
 }
 
 

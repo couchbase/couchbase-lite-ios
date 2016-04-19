@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLChangeMatcher.h"
+#import "CBL_RevID.h"
 
 
 @interface CBLRevInfoMatcher : CBLJSONDictMatcher
@@ -21,10 +22,10 @@
 
 @implementation CBLRevInfoMatcher
 {
-    NSMutableArray* _revIDs;
+    NSMutableArray<CBL_RevID*>* _revIDs;
 }
 
-- (id)initWithArray: (NSMutableArray*)revIDs
+- (id)initWithArray: (NSMutableArray<CBL_RevID*>*)revIDs
 {
     self = [super init];
     if (self) {
@@ -34,8 +35,12 @@
 }
 
 - (bool) matchValue:(id)value forKey:(NSString *)key {
-    if ([key isEqualToString: @"rev"])
-        [_revIDs addObject: value];
+    if ([key isEqualToString: @"rev"]) {
+        CBL_RevID* revID = $castIf(NSString, value).cbl_asRevID;
+        if (!revID)
+            return false;
+        [_revIDs addObject: revID];
+    }
     return true;
 }
 
@@ -47,7 +52,7 @@
 {
     id _sequence;
     NSString* _docID;
-    NSMutableArray* _revs;
+    NSMutableArray<CBL_RevID*>* _revs;
     bool _deleted;
     CBLTemplateMatcher* _revsMatcher;
     CBLChangeMatcherClient _client;

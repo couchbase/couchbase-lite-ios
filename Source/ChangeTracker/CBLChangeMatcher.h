@@ -7,9 +7,13 @@
 //
 
 #import "CBLJSONReader.h"
+@class CBL_RevID;
 
 
-typedef void (^CBLChangeMatcherClient)(id sequence, NSString* docID, NSArray* revs, bool deleted);
+typedef void (^CBLChangeMatcherClient)(id sequence,
+                                       NSString* docID,
+                                       NSArray<CBL_RevID*>* revs,
+                                       bool deleted);
 
 
 @interface CBLChangeMatcher : CBLJSONDictMatcher

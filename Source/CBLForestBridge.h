@@ -14,7 +14,7 @@ extern "C" {
 #import "c4Key.h"
 #import "CBLInternal.h"
 }
-@class CBLSymmetricKey;
+@class CBLSymmetricKey, CBL_RevID;
 
 
 namespace CBL {
@@ -28,6 +28,8 @@ NSString* slice2string(C4Slice s);
 NSData* slice2data(C4Slice s);
 NSData* slice2dataAdopt(C4Slice s);
 NSData* slice2dataNoCopy(C4Slice s);
+CBL_RevID* slice2revID(C4Slice s);
+C4Slice revID2slice(CBL_RevID*);
 id slice2jsonObject(C4Slice, CBLJSONReadingOptions);
 
 static inline NSMutableDictionary* slice2mutableDict(C4Slice s) {
@@ -75,7 +77,7 @@ using namespace CBL;
 
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (C4Document*)doc
                                                docID: (NSString*)docIDIfKnown
-                                               revID: (NSString*)revIDIfKnown
+                                               revID: (CBL_RevID*)revIDIfKnown
                                             withBody: (BOOL)withBody
                                               status: (CBLStatus*)outStatus;
 
@@ -84,9 +86,5 @@ using namespace CBL;
 /** Stores the body of a revision (including metadata) into a CBL_MutableRevision. */
 + (CBLStatus) loadBodyOfRevisionObject: (CBL_MutableRevision*)rev
                   fromSelectedRevision: (C4Document*)doc;
-
-+ (NSMutableArray*) getCurrentRevisionIDs: (C4Document*)doc
-                           includeDeleted: (BOOL)includeDeleted
-                            onlyConflicts: (BOOL)onlyConflicts;
 
 @end

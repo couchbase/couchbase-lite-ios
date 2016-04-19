@@ -34,7 +34,7 @@ typedef enum {
 /** Scans the rev's _attachments dictionary, adding inline attachment data to the blob-store
     and turning all the attachments into stubs. */
 - (BOOL) processAttachmentsForRevision: (CBL_MutableRevision*)rev
-                              ancestry: (NSArray*)ancestry // 1st item is parent revID, etc.
+                              ancestry: (NSArray<CBL_RevID*>*)ancestry // 1st item is parent revID, etc.
                                 status: (CBLStatus*)outStatus;
 
 /** Modifies a CBL_Revision's _attachments dictionary by adding the "data" property to all
@@ -53,7 +53,7 @@ typedef enum {
                       status: (CBLStatus*)outStatus;
 
 - (NSDictionary*) attachmentsForDocID: (NSString*)docID
-                                revID: (NSString*)revID
+                                revID: (CBL_RevID*)revID
                                status: (CBLStatus*)outStatus;
 
 /** Uses the "digest" field of the attachment dict to look up the attachment in the store.

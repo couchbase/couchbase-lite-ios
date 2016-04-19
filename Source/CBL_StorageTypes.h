@@ -8,7 +8,7 @@
 
 #import "CBLStatus.h"
 #import "CBLQuery.h"
-@class CBL_Revision;
+@class CBL_Revision, CBL_RevID;
 
 
 /** Predicate block that can filter rows of a query result. */
@@ -17,7 +17,7 @@ typedef BOOL (^CBLQueryRowFilter)(CBLQueryRow*);
 /** Document validation callback, passed to the insertion methods. */
 typedef CBLStatus(^CBL_StorageValidationBlock)(CBL_Revision* newRev,
                                                CBL_Revision* prev,
-                                               NSString* parentRevID,
+                                               CBL_RevID* parentRevID,
                                                NSError** outError);
 
 

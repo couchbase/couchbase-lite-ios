@@ -7,7 +7,7 @@
 //
 
 #import "CBL_Storage.h"
-@class CBL_FMDatabase;
+#import "FMDatabase.h"
 
 
 @interface CBL_SQLiteStorage : NSObject <CBL_Storage>
@@ -22,7 +22,7 @@
 
 - (NSMutableDictionary*) documentPropertiesFromJSON: (NSData*)json
                                               docID: (NSString*)docID
-                                              revID: (NSString*)revID
+                                              revID: (CBL_RevID*)revID
                                             deleted: (BOOL)deleted
                                            sequence: (SequenceNumber)sequence;
 
@@ -32,7 +32,7 @@
                                     status: (CBLStatus*)outStatus;
 
 - (CBL_MutableRevision*) revisionWithDocID: (NSString*)docID
-                                     revID: (NSString*)revID
+                                     revID: (CBL_RevID*)revID
                                    deleted: (BOOL)deleted
                                   sequence: (SequenceNumber)sequence
                                       json: (NSData*)json;
@@ -42,6 +42,11 @@
 /** Wraps each string in single-quotes (escaping single quotes by doubling them)
     and separates the strings with commas. */
 NSString* CBLJoinSQLQuotedStrings(NSArray* strings);
+
+
+@interface CBL_FMResultSet (CBL_RevID)
+- (CBL_RevID*)revIDForColumnIndex:(int)columnIdx;
+@end
 
 
 #if DEBUG

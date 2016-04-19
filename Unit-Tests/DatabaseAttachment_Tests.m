@@ -247,7 +247,7 @@
     [db updateAttachment: @"attach" body: blobForData(db, attachv2)
                     type: @"application/foo"
                 encoding: kCBLAttachmentEncodingNone
-                 ofDocID: rev1.docID revID: @"1-deadbeef"
+                 ofDocID: rev1.docID revID: @"1-deadbeef".cbl_asRevID
                   source: nil
                   status: &status
                    error: &error];
@@ -291,7 +291,7 @@
     error = nil;
     [db updateAttachment: @"nosuchattach" body: nil type: nil
                 encoding: kCBLAttachmentEncodingNone
-                 ofDocID: @"nosuchdoc" revID: @"nosuchrev"
+                 ofDocID: @"nosuchdoc" revID: @"nosuchrev".cbl_asRevID
                   source: nil
                   status: &status
                    error: &error];
@@ -512,7 +512,7 @@
     AssertEqual(rev1[@"_attachments"][@"attach"][@"revpos"], @1);
 
     // Insert a revision several generations advanced but which hasn't changed the attachment:
-    CBL_MutableRevision* rev4 = [rev1 mutableCopyWithDocID: rev1.docID revID: @"4-4444"];
+    CBL_MutableRevision* rev4 = [rev1 mutableCopyWithDocID: rev1.docID revID: @"4-4444".cbl_asRevID];
     rev4[@"foo"] = @"bar";
     [rev4 mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *att) {
         NSMutableDictionary* nuAtt = [att mutableCopy];
@@ -521,7 +521,7 @@
         nuAtt[@"digest"] = @"md5-deadbeef";     // CouchDB adds MD5 digests!
         return nuAtt;
     }];
-    NSArray* history = @[@"4-4444", @"3-3333", @"2-2222", rev1.revID];
+    NSArray<CBL_RevID*>* history = @[@"4-4444".cbl_asRevID, @"3-3333".cbl_asRevID, @"2-2222".cbl_asRevID, rev1.revID];
     status = [db forceInsert: rev4 revisionHistory: history source: nil error: &error];
     AssertEq(status, kCBLStatusCreated);
 
@@ -569,7 +569,7 @@
     Assert(rev2.deleted);
 
     // Insert a revision several generations advanced but which hasn't changed the attachment:
-    CBL_MutableRevision* rev3 = [rev1 mutableCopyWithDocID: rev1.docID revID: @"3-3333"];
+    CBL_MutableRevision* rev3 = [rev1 mutableCopyWithDocID: rev1.docID revID: @"3-3333".cbl_asRevID];
     rev3[@"foo"] = @"bar";
     [rev3 mutateAttachments: ^NSDictionary *(NSString *name, NSDictionary *att) {
         NSMutableDictionary* nuAtt = [att mutableCopy];
@@ -608,7 +608,8 @@
 static NSDictionary* attachmentsDict(NSData* data, NSString* name, NSString* type, BOOL gzipped) {
     if (gzipped)
         data = [CBLGZip dataByCompressingData: data];
-    NSMutableDictionary* att = $mdict({@"content_type", type}, {@"data", data});
+    NSString* base64 = [data base64EncodedStringWithOptions: 0];
+    NSMutableDictionary* att = $mdict({@"content_type", type}, {@"data", base64});
     if (gzipped)
         att[@"encoding"] = @"gzip";
     return $dict({name, att});

@@ -8,7 +8,7 @@
 
 #import <CouchbaseLite/CouchbaseLite.h>
 #import <CouchbaseLite/CBLReplication+Transformation.h>
-@class CBL_Server, CBL_BlobStoreWriter;
+@class CBL_Server, CBL_BlobStoreWriter, CBL_RevID;
 
 
 @interface CBLManager ()
@@ -62,7 +62,7 @@
 @property (readonly) UInt64 sequenceNumber;
 @property (readonly) BOOL isDeletion;
 /** The revID of the default "winning" revision, or nil if it did not change. */
-@property (nonatomic, readonly) NSString* winningRevisionID;
+@property (nonatomic, readonly) CBL_RevID* winningRevisionID;
 /** The revision that is now the default "winning" revision of the document, or nil if not known
     Guaranteed immutable.*/
 /** Is this a relayed notification of one from another thread, not the original? */
@@ -73,10 +73,12 @@
 
 
 @interface CBLDocument ()
+- (CBLSavedRevision*) revisionWithRevID: (CBL_RevID*)revID
+                               withBody: (BOOL)withBody;
 - (CBLSavedRevision*) putProperties: (NSDictionary*)properties
-                     prevRevID: (NSString*)prevID
-                 allowConflict: (BOOL)allowConflict
-                         error: (NSError**)outError;
+                          prevRevID: (CBL_RevID*)prevID
+                      allowConflict: (BOOL)allowConflict
+                              error: (NSError**)outError;
 @end
 
 
@@ -126,4 +128,5 @@
 
 @interface CBLQueryRow ()
 - (uint8_t/*CBLDiffItemComparison*/) compareForArrayDiff: (CBLQueryRow*)other;
+@property (readonly) CBL_RevID* _documentRevisionID;
 @end

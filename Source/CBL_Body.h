@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+@class CBL_RevID;
 
 
 /** A request/response/document body, stored as either JSON or an NSDictionary. */
@@ -23,7 +24,7 @@
      input parameters. */
 - (instancetype) initWithJSON: (NSData*)json
                   addingDocID: (NSString*)docID
-                        revID: (NSString*)revID
+                        revID: (CBL_RevID*)revID
                       deleted: (BOOL)deleted;
 
 @property (readonly) BOOL isValidJSON;
@@ -46,9 +47,15 @@
 
 @interface NSDictionary (CBL_Body)
 @property (readonly) NSString* cbl_id;
-@property (readonly) NSString* cbl_rev;
+@property (readonly) CBL_RevID* cbl_rev;
+@property (readonly) NSString* cbl_revStr;
 @property (readonly) BOOL cbl_deleted;
 @property (readonly) NSDictionary* cbl_attachments;
 @end
 
-
+@interface NSMutableDictionary (CBL_Body)
+@property (readwrite) CBL_RevID* cbl_rev;
+@property (readwrite) NSString* cbl_revStr;
+- (void) cbl_setID: (NSString*)docID rev: (CBL_RevID*)revID;
+- (void) cbl_setID: (NSString*)docID revStr: (NSString*)revIDStr;
+@end

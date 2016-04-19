@@ -8,6 +8,7 @@
 
 #import "CBLSyncConnection_Internal.h"
 #import "CBL_BlobStoreWriter.h"
+#import "CBL_Body.h"
 #import "MYBuffer.h"
 
 
@@ -173,7 +174,7 @@ UsingLogDomain(Sync);
     if (memmem(json.bytes, json.length, "\"_attachments\":", 15) != NULL) {
         NSDictionary* props = [NSJSONSerialization JSONObjectWithData: json options: 0 error: NULL];
         attachments = $castIf(NSDictionary, props[@"_attachments"]);
-        docID = props[@"_id"];
+        docID = props.cbl_id;
     }
     
     if (attachments.count == 0) {
@@ -385,7 +386,7 @@ UsingLogDomain(Sync);
                             NSDictionary* doc = [CBLJSON JSONObjectWithData: rev.body options: 0
                                                                       error: NULL];
                             LogVerbose(Sync, @"    Inserted {'%@' %@}, sequence #%@, +%lu ancestors",
-                                  doc[@"_id"], doc[@"_rev"], rev.sequenceID, (unsigned long)rev.history.count);
+                                  doc.cbl_id, doc.cbl_rev, rev.sequenceID, (unsigned long)rev.history.count);
                         }
                         ++inserted;
                     } else if (error.code == 403 && [error.domain isEqualToString: CBLHTTPErrorDomain]) {

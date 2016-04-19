@@ -232,7 +232,7 @@
         return;
     
     self.changesTotal += revIDs.count;
-    for (NSString* revID in revIDs) {
+    for (CBL_RevID* revID in revIDs) {
         // Push each revision info to the inbox
         CBLPulledRevision* rev = [[CBLPulledRevision alloc] initWithDocID: docID
                                                                   revID: revID
@@ -352,7 +352,7 @@
 
 
 // Add a revision to the appropriate queue of revs to individually GET
-- (void) queueRemoteRevision: (CBL_Revision*)rev {
+- (void) queueRemoteRevision: (CBLPulledRevision*)rev {
     if (rev.deleted)
     {
         if (!_deletedRevsToPull)
@@ -413,7 +413,7 @@
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#GET
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#Getting_Attachments_With_a_Document
     NSString* path = $sprintf(@"%@?rev=%@&revs=true",
-                              CBLEscapeURLParam(rev.docID), CBLEscapeURLParam(rev.revID));
+                              CBLEscapeURLParam(rev.docID), CBLEscapeURLParam(rev.revIDString));
     CBLDatabase* db = _db;
     if (_settings.downloadAttachments) {
         // If the document has attachments, add an 'atts_since' param with a list of
@@ -424,7 +424,7 @@
                                                         onlyAttachments: YES];
         if (knownRevs.count > 0)
             path = [path stringByAppendingFormat: @"&attachments=true&atts_since=%@",
-                                joinQuotedEscaped(knownRevs)];
+                                escapedRevIDArray(knownRevs)];
         else
             path = [path stringByAppendingString: @"&attachments=true"];
     }
@@ -509,9 +509,15 @@
               CBL_Revision* rev;
               if (props.cbl_id)
                   rev = [CBL_Revision revisionWithProperties: props];
-              else
-                  rev = [[CBL_Revision alloc] initWithDocID: props[@"id"]
-                                                      revID: props[@"rev"] deleted: NO];
+              else {
+                  NSString* docID = $castIf(NSString, props[@"id"]);
+                  CBL_RevID* revID = $castIf(NSString, props[@"rev"]).cbl_asRevID;
+                  if (!docID || !revID) {
+                      Warn(@"%@: Received invalid rev; ignoring: %@", self, props);
+                      return;
+                  }
+                  rev = [[CBL_Revision alloc] initWithDocID: docID revID: revID deleted: NO];
+              }
               NSUInteger pos = [remainingRevs indexOfObject: rev];
               if (pos == NSNotFound) {
                   Warn(@"%@: Received unexpected rev %@; ignoring", self, rev);
@@ -613,7 +619,7 @@
                       if (remainingRevs.count) {
                           LogTo(Sync, @"%@ bulk-fetch didn't work for %u of %u revs; getting individually",
                                 self, (unsigned)remainingRevs.count, (unsigned)bulkRevs.count);
-                          for (CBL_Revision* rev in remainingRevs)
+                          for (CBLPulledRevision* rev in remainingRevs)
                               [self queueRemoteRevision: rev];
                           [self pullRemoteRevisions];
                       }
@@ -818,9 +824,10 @@
 #pragma mark - UTILITY FUNCTIONS:
 
 
-static NSString* joinQuotedEscaped(NSArray* strings) {
-    if (strings.count == 0)
+static NSString* escapedRevIDArray(NSArray<CBL_RevID*>* revIDs) {
+    if (revIDs.count == 0)
         return @"[]";
+    NSArray* strings = [revIDs my_map:^id(CBL_RevID* revID) { return revID.asString; }];
     NSString* json = [CBLJSON stringWithJSONObject: strings options: 0 error: NULL];
     return CBLEscapeURLParam(json);
 }

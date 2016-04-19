@@ -27,7 +27,7 @@
 
 
 - (instancetype) initWithAddedRevision: (CBL_Revision*)addedRevision
-                     winningRevisionID: (NSString*)winningRevisionID
+                     winningRevisionID: (CBL_RevID*)winningRevisionID
                             inConflict: (BOOL)maybeConflict
                                 source: (NSURL*)source
 {
@@ -64,7 +64,7 @@
 
 
 - (NSString*) documentID    {return _addedRevision.docID;}
-- (NSString*) revisionID    {return _addedRevision.revID;}
+- (NSString*) revisionID    {return _addedRevision.revIDString;}
 - (UInt64) sequenceNumber   {return _addedRevision.sequence;}
 - (BOOL) isDeletion         {return _addedRevision.deleted;}
 

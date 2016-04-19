@@ -117,7 +117,7 @@ extern "C" {
             continue;
         }
 
-        NSString* revID = slice2string(doc->revID);
+        CBL_RevID* revID = slice2revID(doc->revID);
 
         CBL_Revision* docRevision = nil;
         if (_includeDocs) {
@@ -132,10 +132,10 @@ extern "C" {
                 Warn(@"AllDocs: Unable to read body of doc %@: status %d", docID, status);
         }
 
-        NSMutableArray* conflicts = nil;
+        NSMutableArray<NSString*>* conflicts = nil;
         if (_allDocsMode >= kCBLShowConflicts && (doc->flags & kConflicted)) {
             conflicts = [NSMutableArray array];
-            [conflicts addObject: revID];
+            [conflicts addObject: revID.asString];
             while (c4doc_selectNextLeafRevision(doc, false, false, NULL)) {
                 NSString* conflictID = slice2string(doc->selectedRev.revID);
                 [conflicts addObject: conflictID];
@@ -144,7 +144,7 @@ extern "C" {
                 conflicts = nil;
         }
 
-        NSDictionary* value = $dict({@"rev", revID},
+        NSDictionary* value = $dict({@"rev", revID.asString},
                                     {@"deleted", (deleted ?$true : nil)},
                                     {@"_conflicts", conflicts});  // (not found in CouchDB)
         LogVerbose(Query, @"AllDocs: Found row with key=\"%@\", value=%@", docID, value);

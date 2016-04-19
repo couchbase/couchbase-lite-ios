@@ -7,6 +7,7 @@
 //
 
 #import "CBLSyncConnection_Internal.h"
+#import "CBL_Body.h"
 
 
 @implementation CBLSyncConnection (Checkpoints)
@@ -207,7 +208,7 @@ static NSString* localDocIDForCheckpointRequest(BLIPRequest* request) {
         return;
     NSString* revID = request[@"rev"];
     if (revID)
-        checkpoint[@"_rev"] = revID;
+        checkpoint.cbl_revStr = revID;
     [request deferResponse];
 
     [self onDatabaseQueue:^{

@@ -105,7 +105,7 @@
             LogTo(Sync, @"Purging %lu docs ('purgePushed' option)", (unsigned long)revs.count);
             NSMutableDictionary* toPurge = [NSMutableDictionary dictionary];
             for( CBL_Revision* rev in revs)
-                toPurge[rev.docID] = @[rev.revID];
+                toPurge[rev.docID] = @[rev.revIDString];
             NSDictionary *result;
             [self.db.storage purgeRevisions: toPurge result: &result];
         }];
@@ -220,15 +220,15 @@
 
     // Generate a set of doc/rev IDs in the JSON format that _revs_diff wants:
     // <http://wiki.apache.org/couchdb/HttpPostRevsDiff>
-    NSMutableDictionary* diffs = $mdict();
+    NSMutableDictionary<NSString*, NSMutableArray<NSString*>*>* diffs = $mdict();
     for (CBL_Revision* rev in changes) {
         NSString* docID = rev.docID;
-        NSMutableArray* revs = diffs[docID];
+        NSMutableArray<NSString*>* revs = diffs[docID];
         if (!revs) {
             revs = $marray();
             diffs[docID] = revs;
         }
-        [revs addObject: rev.revID];
+        [revs addObject: rev.revIDString];
         [self addPending: rev];
     }
     
@@ -269,8 +269,8 @@
             NSDictionary* revResults = nil;
             if (diffs) {
                 revResults = diffs[rev.docID];
-                NSArray* missing = revResults[@"missing"];
-                if (![missing containsObject: [rev revID]]) {
+                NSArray<NSString*>* missing = revResults[@"missing"];
+                if (![missing containsObject: rev.revIDString]) {
                     [self removePending: rev];
                     continue;
                 }
@@ -302,9 +302,9 @@
 
                 // Add the revision history:
                 NSArray* backTo = $castIf(NSArray, revResults[@"possible_ancestors"]);
-                NSArray* history = [db getRevisionHistory: populatedRev
-                                             backToRevIDs: backTo];
-                populatedRev[@"_revisions"] = [CBLDatabase makeRevisionHistoryDict:history];
+                NSArray<CBL_RevID*>* history = [db getRevisionHistory: populatedRev
+                                                         backToRevIDs: backTo];
+                populatedRev[@"_revisions"] = [CBL_TreeRevID makeRevisionHistoryDict: history];
                 properties = populatedRev.properties;
 
                 // Strip any attachments already known to the target db:
@@ -619,18 +619,12 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
 
 // Given a revision and an array of revIDs, finds the latest common ancestor revID
 // and returns its generation #. If there is none, returns 0.
-int CBLFindCommonAncestor(CBL_Revision* rev, NSArray* possibleRevIDs) {
-    if (possibleRevIDs.count == 0)
+int CBLFindCommonAncestor(CBL_Revision* rev, NSArray<NSString*>* possibleRevIDStrings) {
+    if (possibleRevIDStrings.count == 0)
         return 0;
-    NSArray* history = [CBLDatabase parseCouchDBRevisionHistory: rev.properties];
+    NSArray<CBL_RevID*>* history = [CBLDatabase parseCouchDBRevisionHistory: rev.properties];
     Assert(history, @"rev is missing _revisions property");
-    NSString* ancestorID = [history firstObjectCommonWithArray: possibleRevIDs];
-    if (!ancestorID)
-        return 0;
-    int generation;
-    if (![CBL_Revision parseRevID: ancestorID intoGeneration: &generation andSuffix: NULL])
-        generation = 0;
-    return generation;
+    return [history firstObjectCommonWithArray: possibleRevIDStrings.cbl_asRevIDs].generation;
 }
 
 

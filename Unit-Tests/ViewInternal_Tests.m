@@ -425,7 +425,7 @@ static NSArray* sortViews(NSArray *array) {
                              $dict({@"key", @"\"two\""},  {@"seq", @1}) ));
 
     // Delete the new rev, which will make the old one current again:
-    CBL_Revision* leaf3 = [[CBL_Revision alloc]initWithDocID:@"44444" revID:@"" deleted:true];
+    CBL_Revision* leaf3 = [[CBL_Revision alloc]initWithDocID:@"44444" revID:@"3-00".cbl_asRevID deleted:true];
     leaf3 = [db putRevision: [leaf3 mutableCopy] prevRevisionID: leaf2.revID allowConflict:true
                      status: &status error: &error];
     AssertEq(status, kCBLStatusOK);
@@ -865,7 +865,7 @@ static NSArray* reverse(NSArray* a) {
     for (CBL_Revision* rev in docs) {
         expectedRow[i++] = $dict({@"id",  rev.docID},
                                  {@"key", rev.docID},
-                                 {@"value", $dict({@"rev", rev.revID})});
+                                 {@"value", $dict({@"rev", rev.revIDString})});
     }
 
     // Create a conflict, won by the old revision:
@@ -939,17 +939,17 @@ static NSArray* reverse(NSArray* a) {
                                               {@"error", @"not_found"}),
                                       $dict({@"id",  del.docID},
                                             {@"key", del.docID},
-                                            {@"value", $dict({@"rev", del.revID},
+                                            {@"value", $dict({@"rev", del.revIDString},
                                                              {@"deleted", $true})}) ]));
     // Get conflicts:
     options = [CBLQueryOptions new];
     options->allDocsMode = kCBLShowConflicts;
     query = [db getAllDocs: options status: &status];
-    NSString* curRevID = [docs[1] revID];
+    CBL_RevID* curRevID = [docs[1] revID];
     NSDictionary* expectedConflict1 = $dict({@"id",  @"44444"},
                                             {@"key", @"44444"},
-                                            {@"value", $dict({@"rev", [docs[1] revID]},
-                                                             {@"_conflicts", @[curRevID, @"1-00"]})} );
+                                            {@"value", $dict({@"rev", [docs[1] revIDString]},
+                                                             {@"_conflicts", @[curRevID.asString, @"1-00"]})} );
     expectedRows = $array(expectedRow[2], expectedRow[3], expectedConflict1, expectedRow[4]);
     AssertEqual(rowsToDicts(query), expectedRows);
 

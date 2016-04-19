@@ -58,7 +58,7 @@
 
 @interface CBLDatabaseChange ()
 - (instancetype) initWithAddedRevision: (CBL_Revision*)addedRevision
-                     winningRevisionID: (NSString*)winningRevisionID
+                     winningRevisionID: (CBL_RevID*)winningRevisionID
                             inConflict: (BOOL)maybeConflict
                                 source: (NSURL*)source;
 /** The revision just added. Guaranteed immutable. */
@@ -74,7 +74,7 @@
                          revision: (CBL_Revision*)rev               __attribute__((nonnull));
 - (instancetype) initForValidationWithDatabase: (CBLDatabase*)db
                                       revision: (CBL_Revision*)rev
-                              parentRevisionID: (NSString*)parentRevID __attribute__((nonnull));
+                              parentRevisionID: (CBL_RevID*)parentRevID __attribute__((nonnull));
 @property (readonly) CBL_Revision* rev;
 @end
 

@@ -48,23 +48,23 @@
                                          {@"revs", $array()}),
                                    $dict({@"seq", @2},
                                          {@"id", @"oneBigAttachment"},
-                                         {@"revs", $array(@"2-7a9086d57651b86882d4806bad25903c")}),
+                                         {@"revs", $array(@"2-7a9086d57651b86882d4806bad25903c".cbl_asRevID)}),
                                    $dict({@"seq", @3},
                                          {@"id", @"038c536dc29ff0f4127705879700062c"},
-                                         {@"revs", $array(@"3-e715bcf1865f8283ab1f0ba76e7a92ba")}),
+                                         {@"revs", $array(@"3-e715bcf1865f8283ab1f0ba76e7a92ba".cbl_asRevID)}),
                                    $dict({@"seq", @4},
                                          {@"id", @"propertytest"},
-                                         {@"revs", $array(@"2-61de0ad4b61a3106195e9b21bcb69d0c")},
+                                         {@"revs", $array(@"2-61de0ad4b61a3106195e9b21bcb69d0c".cbl_asRevID)},
                                          {@"deleted", @YES}),
                                    $dict({@"seq", @5},
                                          {@"id", @"extrameta"},
-                                         {@"revs", $array(@"1-11d28a27038a6cce1f08674ab3d67653")}),
+                                         {@"revs", $array(@"1-11d28a27038a6cce1f08674ab3d67653".cbl_asRevID)}),
                                    $dict({@"seq", @6},
                                          {@"id", @"weirdmeta"},
-                                         {@"revs", $array(@"1-eef1e19e2aa822dc3f1c62196cbe6746")}),
+                                         {@"revs", $array(@"1-eef1e19e2aa822dc3f1c62196cbe6746".cbl_asRevID)}),
                                    $dict({@"seq", @7},
                                          {@"id", @"text_attachment"},
-                                         {@"revs", $array(@"2-116dc4ccc934971ae14d8a8afb29b023")})
+                                         {@"revs", $array(@"2-116dc4ccc934971ae14d8a8afb29b023".cbl_asRevID)})
                                    );
             if (activeOnly)
                 [expected removeObjectAtIndex: 3];
@@ -90,16 +90,16 @@
             NSMutableArray* expected = $marray(
                                    $dict({@"seq", @2},
                                          {@"id", @"oneBigAttachment"},
-                                         {@"revs", $array(@"2-7a9086d57651b86882d4806bad25903c")}),
+                                         {@"revs", $array(@"2-7a9086d57651b86882d4806bad25903c".cbl_asRevID)}),
 #if 0 // FIX: commented out because SG doesn't correctly handle deleted docs; see issue SG#1702
                                    $dict({@"seq", @4},
                                          {@"id", @"propertytest"},
-                                         {@"revs", $array(@"2-61de0ad4b61a3106195e9b21bcb69d0c")},
+                                         {@"revs", $array(@"2-61de0ad4b61a3106195e9b21bcb69d0c".cbl_asRevID)},
                                          {@"deleted", @YES}),
 #endif
                                    $dict({@"seq", @6},
                                          {@"id", @"weirdmeta"},
-                                         {@"revs", $array(@"1-eef1e19e2aa822dc3f1c62196cbe6746")})
+                                         {@"revs", $array(@"1-eef1e19e2aa822dc3f1c62196cbe6746".cbl_asRevID)})
                                    );
 #if 0 // FIX: See above
             if (activeOnly)
@@ -140,10 +140,10 @@
     CBLChangeTracker* tracker = [[CBLChangeTracker alloc] initWithDatabaseURL: url mode: kOneShot conflicts: NO lastSequence: 0 client:  self];
     NSArray* expected = $array($dict({@"seq", @8},
                                      {@"id", @"foo"},
-                                     {@"revs", $array(@"1-a154bf18a4d64ee6d93b6cc838b2b344")}),
+                                     {@"revs", $array(@"1-a154bf18a4d64ee6d93b6cc838b2b344".cbl_asRevID)}),
                                $dict({@"seq", @9},
                                      {@"id", @"bar"},
-                                     {@"revs", $array(@"1-a7a0e83c48d20397aed5703a06c01ea8")}),
+                                     {@"revs", $array(@"1-a7a0e83c48d20397aed5703a06c01ea8".cbl_asRevID)}),
                                $dict({@"seq", @11},
                                      {@"id", @"_user/GUEST"},
                                      {@"revs", $array()}),
@@ -169,7 +169,7 @@
                                      {@"revs", @[]}),
                                $dict({@"seq", @2},
                                      {@"id", @"something"},
-                                     {@"revs", $array(@"1-53b059eb633a9d58042318e478cc73dc")}) );
+                                     {@"revs", $array(@"1-53b059eb633a9d58042318e478cc73dc".cbl_asRevID)}) );
     [self run: tracker expectingChanges: expected];
     RemoveTemporaryCredential(url, @"Couchbase Sync Gateway", @"test", @"abc123");
     Assert(_gotHeaders);
@@ -209,7 +209,7 @@
                                      {@"revs", $array()}) ,
                                $dict({@"seq", @2},
                                      {@"id", @"something"},
-                                     {@"revs", $array(@"1-53b059eb633a9d58042318e478cc73dc")}) );
+                                     {@"revs", $array(@"1-53b059eb633a9d58042318e478cc73dc".cbl_asRevID)}) );
     [self run: tracker expectingChanges: expected];
 }
 

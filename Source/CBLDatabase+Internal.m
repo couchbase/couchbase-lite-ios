@@ -506,7 +506,7 @@ static BOOL sAutoCompact = YES;
 
 
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
-                         revisionID: (NSString*)inRevID
+                         revisionID: (CBL_RevID*)inRevID
                            withBody: (BOOL)withBody
                              status: (CBLStatus*)outStatus
 {
@@ -517,7 +517,7 @@ static BOOL sAutoCompact = YES;
 
 #if DEBUG // convenience method for tests
 - (CBL_Revision*) getDocumentWithID: (NSString*)docID
-                         revisionID: (NSString*)revID
+                         revisionID: (CBL_RevID*)revID
 {
     CBLStatus status;
     return [self getDocumentWithID: docID revisionID: revID withBody: YES status: &status];
@@ -589,7 +589,7 @@ static BOOL sAutoCompact = YES;
 
 // Used by new replicator
 - (NSArray*) getPossibleAncestorsOfDocID: (NSString*)docID
-                                   revID: (NSString*)revID
+                                   revID: (CBL_RevID*)revID
                                    limit: (NSUInteger)limit
 {
     CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: docID revID: revID deleted: NO];
@@ -604,43 +604,11 @@ static BOOL sAutoCompact = YES;
 #pragma mark - HISTORY:
 
 
-- (NSArray*) getRevisionHistory: (CBL_Revision*)rev
-                   backToRevIDs: (NSArray*)ancestorRevIDs
+- (NSArray<CBL_RevID*>*) getRevisionHistory: (CBL_Revision*)rev
+                               backToRevIDs: (NSArray<CBL_RevID*>*)ancestorRevIDs
 {
     NSSet* ancestors = ancestorRevIDs ? [[NSSet alloc] initWithArray: ancestorRevIDs] : nil;
     return [_storage getRevisionHistory: rev backToRevIDs: ancestors];
-}
-
-/** Turns an array of CBL_Revisions into a _revisions dictionary, as returned by the REST API's 
-    ?revs=true option. */
-+ (NSDictionary*) makeRevisionHistoryDict: (NSArray*)history {
-    if (!history)
-        return nil;
-
-    // Try to extract descending numeric prefixes:
-    NSMutableArray* suffixes = $marray();
-    id start = nil;
-    int lastRevNo = -1;
-    for (CBL_Revision* rev in history) {
-        int revNo;
-        NSString* suffix;
-        if ([CBL_Revision parseRevID: rev.revID intoGeneration: &revNo andSuffix: &suffix]) {
-            if (!start)
-                start = @(revNo);
-            else if (revNo != lastRevNo - 1) {
-                start = nil;
-                break;
-            }
-            lastRevNo = revNo;
-            [suffixes addObject: suffix];
-        } else {
-            start = nil;
-            break;
-        }
-    }
-
-    NSArray* revIDs = start ? suffixes : [history my_map: ^(id rev) {return [rev revID];}];
-    return $dict({@"ids", revIDs}, {@"start", start});
 }
 
 
@@ -764,7 +732,7 @@ static SequenceNumber keyToSequence(id key, SequenceNumber dflt) {
             else
                 break;
         }
-        NSDictionary* value = $dict({@"rev", rev.revID},
+        NSDictionary* value = $dict({@"rev", rev.revIDString},
                                     {@"deleted", (rev.deleted ?$true : nil)});
         CBLQueryRow* row =  [[CBLQueryRow alloc] initWithDocID: rev.docID
                                                       sequence: seq
@@ -790,15 +758,6 @@ static SequenceNumber keyToSequence(id key, SequenceNumber dflt) {
     [self doAsync:^{
         [[NSNotificationCenter defaultCenter] postNotification: notification];
     }];
-}
-
-
-// CBL_StorageDelegate method. It has to be in this category but the real method is in another one
-- (NSString*) generateRevIDForJSON: (UU NSData*)json
-                           deleted: (BOOL)deleted
-                         prevRevID: (UU NSString*)prevID
-{
-    return [self _generateRevIDForJSON: json deleted: deleted prevRevID: prevID];
 }
 
 @end

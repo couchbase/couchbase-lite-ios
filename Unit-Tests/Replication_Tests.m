@@ -959,14 +959,15 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     CBLReplication* pusher = [db createPushReplication: remoteDbURL];
     [self runReplication:pusher expectedChangesCount: (_newReplicator ? 51 : 1)];
 
+    // Update document body (not attachment)
     NSMutableDictionary* properties = doc.userProperties.mutableCopy;
     properties[@"tag"] = @3;
-
     newRev = [rev2 createRevision];
     newRev.userProperties = properties;
     CBLSavedRevision* rev3 = [newRev save: &error];
     Assert(rev3);
 
+    // Push again:
     pusher = [db createPushReplication: remoteDbURL];
     [self runReplication: pusher expectedChangesCount: 1];
 

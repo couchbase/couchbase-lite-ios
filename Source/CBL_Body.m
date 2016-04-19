@@ -16,6 +16,7 @@
 #import "CBL_Body.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
+#import "CBL_RevID.h"
 #import "yajl_gen.h"
 
 
@@ -29,6 +30,9 @@
 
 - (instancetype) initWithProperties: (UU NSDictionary*)properties {
     NSParameterAssert(properties);
+#if DEBUG
+    Assert([CBLJSON dataWithJSONObject: properties options: 0 error: NULL] != nil);
+#endif
     self = [super init];
     if (self) {
         _object = [properties copy];
@@ -57,12 +61,12 @@
 
 - (instancetype) initWithJSON: (NSData*)json
                   addingDocID: (NSString*)docID
-                        revID: (NSString*)revID
+                        revID: (CBL_RevID*)revID
                       deleted: (BOOL)deleted
 {
     if (json.length < 2) {
         return [self initWithProperties: $dict({@"_id", docID},
-                                               {@"_rev", revID},
+                                               {@"_rev", revID.asString},
                                                {@"_deleted", (deleted ? $true : nil)})];
     }
 
@@ -74,9 +78,8 @@
         yajl_gen_string(gen, (const unsigned char*)chars, len);
     });
     yajl_gen_string(gen, (const unsigned char*)"_rev", 4);
-    CBLWithStringBytes(revID, ^(const char *chars, size_t len) {
-        yajl_gen_string(gen, (const unsigned char*)chars, len);
-    });
+    NSData* revIDBytes = revID.asData;
+    yajl_gen_string(gen, (const unsigned char*)revIDBytes.bytes, revIDBytes.length);
     if (deleted) {
         yajl_gen_string(gen, (const unsigned char*)"_deleted", 8);
         yajl_gen_bool(gen, true);
@@ -183,9 +186,24 @@
 
 @implementation NSDictionary (CBL_Body)
 - (NSString*) cbl_id                {return $castIf(NSString, self[@"_id"]);}
-- (NSString*) cbl_rev               {return $castIf(NSString, self[@"_rev"]);}
+- (CBL_RevID*) cbl_rev              {return $castIf(NSString, self[@"_rev"]).cbl_asRevID;}
+- (NSString*) cbl_revStr            {return $castIf(NSString, self[@"_rev"]);}
 - (BOOL) cbl_deleted                {return $castIf(NSNumber, self[@"_deleted"]).boolValue;}
 - (NSDictionary*) cbl_attachments   {return $castIf(NSDictionary, self[@"_attachments"]);}
 @end
 
 
+@implementation NSMutableDictionary (CBL_Body)
+- (void) cbl_setID: (UU NSString*)docID rev: (UU CBL_RevID*)revID {
+    self[@"_id"] = docID;
+    self[@"_rev"] = revID.asString;
+}
+
+- (void) cbl_setID: (UU NSString*)docID revStr: (UU NSString*)revIDStr {
+    self[@"_id"] = docID;
+    self[@"_rev"] = revIDStr;
+}
+
+- (void) setCbl_rev: (UU CBL_RevID*)revID   {self[@"_rev"] = revID.asString;}
+- (void) setCbl_revStr: (UU NSString*)revID {self[@"_rev"] = revID;}
+@end

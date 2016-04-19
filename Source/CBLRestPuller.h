@@ -8,7 +8,7 @@
 
 #import "CBLRestReplicator.h"
 #import "CBL_Revision.h"
-@class CBLChangeTracker, CBLSequenceMap;
+@class CBLChangeTracker, CBLSequenceMap, CBLPulledRevision;
 
 
 // Maximum number of revision IDs to pass in an "?atts_since=" query param
@@ -23,9 +23,9 @@
     BOOL _canBulkGet;                   // Does the server support _bulk_get requests?
     BOOL _caughtUp;                     // Have I received all current _changes entries?
     CBLSequenceMap* _pendingSequences;  // Received but not yet copied into local DB
-    NSMutableArray* _revsToPull;        // Queue of CBLPulledRevisions to download
-    NSMutableArray* _deletedRevsToPull; // Separate lower-priority of deleted CBLPulledRevisions
-    NSMutableArray* _bulkRevsToPull;    // CBLPulledRevisions that can be fetched in bulk
+    NSMutableArray<CBLPulledRevision*>* _revsToPull;        // Queue of revs to download
+    NSMutableArray<CBLPulledRevision*>* _deletedRevsToPull; // Separate lower-priority of deleted revs
+    NSMutableArray<CBLPulledRevision*>* _bulkRevsToPull;    // revs that can be fetched in bulk
     NSUInteger _httpConnectionCount;    // Number of active NSURLConnections
     CBLBatcher* _downloadsToInsert;     // Queue of CBLPulledRevisions, with bodies, to insert
     NSMutableArray* _waitingAttachments;// CBL_AttachmentTasks waiting to start downloading

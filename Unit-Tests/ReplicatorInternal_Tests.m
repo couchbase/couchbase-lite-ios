@@ -102,7 +102,7 @@
     AssertEq(status, kCBLStatusCreated);
     AssertNil(error);
     
-    props[@"_rev"] = rev1.revID;
+    props.cbl_rev = rev1.revID;
     props[@"UPDATED"] = $true;
     CBL_Revision* rev2 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
                           prevRevisionID: rev1.revID allowConflict: NO
@@ -151,12 +151,12 @@
     
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
     Assert(doc);
-    Assert([doc.revID hasPrefix: @"2-"]);
+    Assert([doc.revIDString hasPrefix: @"2-"]);
     AssertEqual(doc[@"foo"], @1);
     
     doc = [db getDocumentWithID: @"doc2" revisionID: nil];
     Assert(doc);
-    Assert([doc.revID hasPrefix: @"1-"]);
+    Assert([doc.revIDString hasPrefix: @"1-"]);
     AssertEqual(doc[@"fnord"], $true);
 }
 
@@ -180,12 +180,12 @@
 
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
     Assert(doc);
-    Assert([doc.revID hasPrefix: @"2-"]);
+    Assert([doc.revIDString hasPrefix: @"2-"]);
     AssertEqual(doc[@"foo"], @1);
 
     doc = [db getDocumentWithID: @"doc2" revisionID: nil];
     Assert(doc);
-    Assert([doc.revID hasPrefix: @"1-"]);
+    Assert([doc.revIDString hasPrefix: @"1-"]);
     AssertEqual(doc[@"fnord"], $true);
 }
 
@@ -242,7 +242,7 @@
 
     CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
     Assert(doc);
-    Assert([doc.revID hasPrefix: @"2-"]);
+    Assert([doc.revIDString hasPrefix: @"2-"]);
     AssertEqual(doc[@"foo"], @1);
 }
 

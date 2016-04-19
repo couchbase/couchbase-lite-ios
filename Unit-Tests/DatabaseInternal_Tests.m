@@ -48,7 +48,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     CBLStatus status;
     NSError* error;
     CBL_Revision* result = [db putRevision: [rev mutableCopy]
-                            prevRevisionID: props[@"_rev"]
+                            prevRevisionID: [props[@"_rev"] cbl_asRevID]
                              allowConflict: NO
                                     status: &status
                                      error: &error];
@@ -97,7 +97,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     AssertNil(error);
     Log(@"Created: %@", rev1);
     Assert(rev1.docID.length >= 10);
-    Assert([rev1.revID hasPrefix: @"1-"]);
+    Assert([rev1.revIDString hasPrefix: @"1-"]);
     
     // Read it back:
     CBL_Revision* readRev = [db getDocumentWithID: rev1.docID revisionID: nil];
@@ -116,7 +116,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     AssertNil(error);
     Log(@"Updated: %@", rev2);
     AssertEqual(rev2.docID, rev1.docID);
-    Assert([rev2.revID hasPrefix: @"2-"]);
+    Assert([rev2.revIDString hasPrefix: @"2-"]);
     
     // Read it back:
     readRev = [db getDocumentWithID: rev2.docID revisionID: nil];
@@ -160,7 +160,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     AssertEq(status, kCBLStatusOK);
     AssertNil(error);
     AssertEqual(revD.docID, rev2.docID);
-    Assert([revD.revID hasPrefix: @"3-"]);
+    Assert([revD.revIDString hasPrefix: @"3-"]);
 
     // Read the deletion revision:
     readRev = [db getDocumentWithID: revD.docID revisionID: revD.revID];
@@ -187,18 +187,18 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     
     NSArray* history = [db getRevisionHistory: revD backToRevIDs: nil];
     Log(@"History = %@", history);
-    AssertEqual(history, (@[revD, rev2, rev1]));
+    AssertEqual(history, (@[revD.revID, rev2.revID, rev1.revID]));
 
     // Check the revision-history object (_revisions property):
-    NSString* revDSuffix = [revD.revID substringFromIndex: 2];
-    NSString* rev2Suffix = [rev2.revID substringFromIndex: 2];
-    NSString* rev1Suffix = [rev1.revID substringFromIndex: 2];
-    history = [db getRevisionHistory: revD backToRevIDs: @[@"??", rev2.revID]];
-    AssertEqual([CBLDatabase makeRevisionHistoryDict: history],
+    NSString* revDSuffix = [revD.revIDString substringFromIndex: 2];
+    NSString* rev2Suffix = [rev2.revIDString substringFromIndex: 2];
+    NSString* rev1Suffix = [rev1.revIDString substringFromIndex: 2];
+    history = [db getRevisionHistory: revD backToRevIDs: @[@"99-99".cbl_asRevID, rev2.revID]];
+    AssertEqual([CBL_TreeRevID makeRevisionHistoryDict: history],
                  (@{@"ids": @[revDSuffix, rev2Suffix],
                     @"start": @3}));
     history = [db getRevisionHistory: revD backToRevIDs: nil];
-    AssertEqual([CBLDatabase makeRevisionHistoryDict: history],
+    AssertEqual([CBL_TreeRevID makeRevisionHistoryDict: history],
                  (@{@"ids": @[revDSuffix, rev2Suffix, rev1Suffix],
                     @"start": @3}));
 
@@ -237,15 +237,15 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     // It's not strictly required that revisions always generate the same revIDs, but it helps
     // prevent false conflicts when two peers make the same change to the same parent revision.
     CBL_Revision* rev1 = [self putDoc: $dict({@"_id", @"doc"}, {@"property", @"value"})];
-    AssertEqual(rev1.revID, @"1-0f9219c8f699b156f1f86242b0c8e350");
+    AssertEqual(rev1.revID, @"1-0f9219c8f699b156f1f86242b0c8e350".cbl_asRevID);
     CBL_Revision* rev2 = [self putDoc: $dict({@"_id", rev1.docID},
-                                             {@"_rev", rev1.revID},
+                                             {@"_rev", rev1.revIDString},
                                              {@"property", @"newvalue"})];
-    AssertEqual(rev2.revID, @"2-59284737f6f209344495057ac5007606");
+    AssertEqual(rev2.revID, @"2-59284737f6f209344495057ac5007606".cbl_asRevID);
     CBL_Revision* rev3 = [self putDoc: $dict({@"_id", rev2.docID},
-                                             {@"_rev", rev2.revID},
+                                             {@"_rev", rev2.revIDString},
                                              {@"_deleted", @YES})];
-    AssertEqual(rev3.revID, @"3-fff64159f36e69ecaf4395e153efe969");
+    AssertEqual(rev3.revID, @"3-fff64159f36e69ecaf4395e153efe969".cbl_asRevID);
 }
 
 
@@ -255,14 +255,14 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     // and that the saved deleted revision will preserve any extra properties.
     CBL_Revision* rev1 = [self putDoc: $dict({@"property", @"value"})];
     CBL_Revision* rev2 = [self putDoc: $dict({@"_id", rev1.docID},
-                                        {@"_rev", rev1.revID},
+                                        {@"_rev", rev1.revIDString},
                                         {@"_deleted", $true},
                                         {@"property", @"newvalue"})];
     AssertNil([db getDocumentWithID: rev2.docID revisionID: nil]);
     CBL_Revision* readRev = [db getDocumentWithID: rev2.docID revisionID: rev2.revID];
     Assert(readRev.deleted, @"PUTting a _deleted property didn't delete the doc");
     AssertEqual(readRev.properties, $dict({@"_id", rev2.docID},
-                                           {@"_rev", rev2.revID},
+                                           {@"_rev", rev2.revIDString},
                                            {@"_deleted", $true},
                                            {@"property", @"newvalue"}));
     readRev = [db getDocumentWithID: rev2.docID revisionID: nil];
@@ -270,7 +270,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     
     // Make sure it's possible to create the doc from scratch again:
     CBL_Revision* rev3 = [self putDoc: $dict({@"_id", rev1.docID}, {@"property", @"newvalue"})];
-    Assert([rev3.revID hasPrefix: @"3-"]);     // new rev is child of tombstone rev
+    Assert([rev3.revIDString hasPrefix: @"3-"]);     // new rev is child of tombstone rev
     readRev = [db getDocumentWithID: rev2.docID revisionID: nil];
     AssertEqual(readRev.revID, rev3.revID);
 }
@@ -280,7 +280,7 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     // Test case for issue #205: Create a doc, delete it, create it again with the same content.
     CBL_Revision* rev1 = [self putDoc: $dict({@"_id", @"dock"}, {@"property", @"value"})];
     Log(@"Created: %@ -- %@", rev1, rev1.properties);
-    CBL_Revision* rev2 = [self putDoc: $dict({@"_id", @"dock"}, {@"_rev", rev1.revID},
+    CBL_Revision* rev2 = [self putDoc: $dict({@"_id", @"dock"}, {@"_rev", rev1.revIDString},
                      {@"_deleted", $true})];
     Log(@"Deleted: %@ -- %@", rev2, rev2.properties);
     CBL_Revision* rev3 = [self putDoc: $dict({@"_id", @"dock"}, {@"property", @"value"})];
@@ -297,7 +297,7 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
 
 - (void) test05_Validation {
     __block BOOL validationCalled = NO;
-    __block NSString* expectedParentRevID = nil;
+    __block CBL_RevID* expectedParentRevID = nil;
     __weak DatabaseInternal_Tests* weakSelf = self;
     [db setValidationNamed: @"hoopy" 
                  asBlock: ^void(CBLRevision *newRevision, id<CBLValidationContext> context)
@@ -311,7 +311,7 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
         Log(@"--- Validating %@ --> %d", newRevision.properties, hoopy);
         if (!hoopy)
             [context rejectWithMessage: @"Where's your towel?"];
-        AssertEqual(newRevision.parentRevisionID, expectedParentRevID);
+        AssertEqual(newRevision.parentRevisionID, expectedParentRevID.asString);
     }];
     
     // POST a valid new document:
@@ -416,13 +416,7 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
     NSArray* revHistory = [db getRevisionHistory: gotRev backToRevIDs: nil];
     AssertEq(revHistory.count, history.count);
     for (unsigned i=0; i<history.count; i++) {
-        CBL_Revision* hrev = revHistory[i];
-        AssertEqual(hrev.docID, rev.docID);
-        AssertEqual(hrev.revID, history[i]);
-        Assert(!hrev.deleted);
-
-        BOOL expectedMissing = i > 0 && (history.count - i) > nExistingRevs;
-        Assert(hrev.missing == expectedMissing, @"hrev[%d].missing = %d, should be %d", i, hrev.missing, expectedMissing);
+        AssertEqual(revHistory[i], history[i]);
     }
 }
 
@@ -450,10 +444,10 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
                        change = changes[0];
                    }];
 
-    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"4-4444" deleted: NO];
-    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"4-4444".cbl_asRevID deleted: NO];
+    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revIDString}, {@"message", @"hi"});
     CBL_Revision* revAgain = [rev copy];
-    NSArray* history = @[rev.revID, @"3-3333", @"2-2222", @"1-1111"];
+    NSArray* history = @[rev.revID, @"3-3333".cbl_asRevID, @"2-2222".cbl_asRevID, @"1-1111".cbl_asRevID];
     change = nil;
     NSError* error;
     CBLStatus status = [db forceInsert: rev revisionHistory: history source: nil error: &error];
@@ -471,10 +465,10 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     AssertNil(error);
     AssertEq(db.lastSequenceNumber, lastSeq);
 
-    CBL_MutableRevision* conflict = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"5-5555" deleted: NO];
-    conflict.properties = $dict({@"_id", conflict.docID}, {@"_rev", conflict.revID},
+    CBL_MutableRevision* conflict = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"5-5555".cbl_asRevID deleted: NO];
+    conflict.properties = $dict({@"_id", conflict.docID}, {@"_rev", conflict.revIDString},
                                 {@"message", @"yo"});
-    NSArray* conflictHistory = @[conflict.revID, @"4-4545", @"3-3030", @"2-2222", @"1-1111"];
+    NSArray* conflictHistory = @[conflict.revID, @"4-4545".cbl_asRevID, @"3-3030".cbl_asRevID, @"2-2222".cbl_asRevID, @"1-1111".cbl_asRevID];
     change = nil;
     status = [db forceInsert: conflict revisionHistory: conflictHistory source: nil error: &error];
     AssertEq(status, kCBLStatusCreated);
@@ -485,7 +479,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     Assert(change.inConflict);
 
     // Add an unrelated document:
-    CBL_MutableRevision* other = [[CBL_MutableRevision alloc] initWithDocID: @"AnotherDocID" revID: @"1-1010" deleted: NO];
+    CBL_MutableRevision* other = [[CBL_MutableRevision alloc] initWithDocID: @"AnotherDocID" revID: @"1-1010".cbl_asRevID deleted: NO];
     other.properties = $dict({@"language", @"jp"});
     change = nil;
     status = [db forceInsert: other revisionHistory: @[other.revID] source: nil error: &error];
@@ -495,7 +489,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     Assert(!change.inConflict);
 
     // Fetch one of those phantom revisions with no body:
-    CBL_Revision* rev2 = [db getDocumentWithID: rev.docID revisionID: @"2-2222"];
+    CBL_Revision* rev2 = [db getDocumentWithID: rev.docID revisionID: @"2-2222".cbl_asRevID];
     AssertNil(rev2);
 
     // Make sure no duplicate rows were inserted for the common revisions:
@@ -547,7 +541,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     current = [db getDocumentWithID: rev.docID revisionID: nil];
     AssertEqual(current, nil);
 
-    CBL_Revision* maxDel = CBLCompareRevIDs(del1.revID, del2.revID) > 0 ? del1 : nil;
+    CBL_Revision* maxDel = [del1.revID compare: del2.revID] > 0 ? del1 : nil;
     AssertEqual(change, announcement(db, del2, maxDel));
     Assert(!change.inConflict);
 
@@ -571,8 +565,8 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
          change = changes[0];
      }];
 
-    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"1-1111" deleted: NO];
-    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"1-1111".cbl_asRevID deleted: NO];
+    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revIDString}, {@"message", @"hi"});
     NSArray* history = @[rev.revID];
     change = nil;
     NSError* error;
@@ -584,9 +578,9 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     [self verifyRev: rev history: history existing: 0];
     AssertEqual(change, announcement(db, rev, rev));
 
-    rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"4-4444" deleted: NO];
-    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
-    history = @[rev.revID, @"3-3333", @"2-2222", @"1-1111"];
+    rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"4-4444".cbl_asRevID deleted: NO];
+    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revIDString}, {@"message", @"hi"});
+    history = @[rev.revID, @"3-3333".cbl_asRevID, @"2-2222".cbl_asRevID, @"1-1111".cbl_asRevID];
     change = nil;
     status = [db forceInsert: rev revisionHistory: history source: nil error: &error];
     AssertEq(status, kCBLStatusCreated);
@@ -602,7 +596,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
 
 - (void) test08_DeterministicRevIDs {
     CBL_Revision* rev = [self putDoc: $dict({@"_id", @"mydoc"}, {@"key", @"value"})];
-    NSString* revID = rev.revID;
+    CBL_RevID* revID = rev.revID;
     [self eraseTestDB];
     rev = [self putDoc: $dict({@"_id", @"mydoc"}, {@"key", @"value"})];
     AssertEqual(rev.revID, revID);
@@ -614,7 +608,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     CBL_Revision* rev1 = [self putDoc: $dict({@"_id", @"mydoc"}, {@"key", @"value"})];
 
     NSDictionary* props = $dict({@"_id", @"mydoc"},
-                                {@"_rev", rev1.revID},
+                                {@"_rev", rev1.revIDString},
                                 {@"key", @"new-value"});
     CBL_Revision* rev2a = [self putDoc: props];
 
@@ -661,13 +655,13 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     AssertEq(status, kCBLStatusCreated);
     Log(@"Created: %@", rev1);
     AssertEqual(rev1.docID, @"_local/doc1");
-    Assert([rev1.revID hasPrefix: @"1-"]);
+    Assert([rev1.revIDString hasPrefix: @"1-"]);
     
     // Read it back:
     CBL_Revision* readRev = [db.storage getLocalDocumentWithID: rev1.docID revisionID: nil];
     Assert(readRev != nil);
     AssertEqual(readRev[@"_id"], rev1.docID);
-    AssertEqual(readRev[@"_rev"], rev1.revID);
+    AssertEqual(readRev[@"_rev"], rev1.revIDString);
     AssertEqual(userProperties(readRev.properties), userProperties(doc.properties));
     
     // Now update it:
@@ -680,7 +674,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     AssertEq(status, kCBLStatusCreated);
     Log(@"Updated: %@", rev2);
     AssertEqual(rev2.docID, rev1.docID);
-    Assert([rev2.revID hasPrefix: @"2-"]);
+    Assert([rev2.revIDString hasPrefix: @"2-"]);
     
     // Read it back:
     readRev = [db.storage getLocalDocumentWithID: rev2.docID revisionID: nil];
@@ -720,15 +714,15 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     [self putDoc: $dict({@"_id", @"44444"}, {@"key", @"four"})];
     [self putDoc: $dict({@"_id", @"55555"}, {@"key", @"five"})];
 
-    CBL_Revision* doc1r2 = [self putDoc: $dict({@"_id", @"11111"}, {@"_rev", doc1r1.revID}, {@"key", @"one+"})];
-    CBL_Revision* doc2r2 = [self putDoc: $dict({@"_id", @"22222"}, {@"_rev", doc2r1.revID}, {@"key", @"two+"})];
+    CBL_Revision* doc1r2 = [self putDoc: $dict({@"_id", @"11111"}, {@"_rev", doc1r1.revIDString}, {@"key", @"one+"})];
+    CBL_Revision* doc2r2 = [self putDoc: $dict({@"_id", @"22222"}, {@"_rev", doc2r1.revIDString}, {@"key", @"two+"})];
     
-    [self putDoc: $dict({@"_id", @"11111"}, {@"_rev", doc1r2.revID}, {@"_deleted", $true})];
+    [self putDoc: $dict({@"_id", @"11111"}, {@"_rev", doc1r2.revIDString}, {@"_deleted", $true})];
     
     // Now call -findMissingRevisions:
-    CBL_Revision* revToFind1 = [[CBL_Revision alloc] initWithDocID: @"11111" revID: @"3-6060" deleted: NO];
+    CBL_Revision* revToFind1 = [[CBL_Revision alloc] initWithDocID: @"11111" revID: @"3-6060".cbl_asRevID deleted: NO];
     CBL_Revision* revToFind2 = [[CBL_Revision alloc] initWithDocID: @"22222" revID: doc2r2.revID deleted: NO];
-    CBL_Revision* revToFind3 = [[CBL_Revision alloc] initWithDocID: @"99999" revID: @"9-4141" deleted: NO];
+    CBL_Revision* revToFind3 = [[CBL_Revision alloc] initWithDocID: @"99999" revID: @"9-4141".cbl_asRevID deleted: NO];
     revs = [[CBL_RevisionList alloc] initWithArray: @[revToFind1, revToFind2, revToFind3]];
     Assert([db.storage findMissingRevisions: revs status: &status]);
     AssertEqual(revs.allRevisions, (@[revToFind1, revToFind3]));
@@ -746,8 +740,8 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
 - (void) test19_Purge {
     RequireTestCase(CBL_Database_PurgeRevs);
     CBL_Revision* rev1 = [self putDoc: $dict({@"_id", @"doc"}, {@"key", @"1"})];
-    CBL_Revision* rev2 = [self putDoc: $dict({@"_id", @"doc"}, {@"_rev", rev1.revID}, {@"key", @"2"})];
-    [self putDoc: $dict({@"_id", @"doc"}, {@"_rev", rev2.revID}, {@"key", @"3"})];
+    CBL_Revision* rev2 = [self putDoc: $dict({@"_id", @"doc"}, {@"_rev", rev1.revIDString}, {@"key", @"2"})];
+    [self putDoc: $dict({@"_id", @"doc"}, {@"_rev", rev2.revIDString}, {@"key", @"3"})];
 
     // Purge the entire document:
     NSDictionary* toPurge = $dict({@"doc", @[@"*"]});
@@ -763,18 +757,18 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
 
 - (void) test20_PurgeRevs {
     CBL_Revision* rev1 = [self putDoc: $dict({@"_id", @"doc"}, {@"key", @"1"})];
-    CBL_Revision* rev2 = [self putDoc: $dict({@"_id", @"doc"}, {@"_rev", rev1.revID}, {@"key", @"2"})];
-    CBL_Revision* rev3 = [self putDoc: $dict({@"_id", @"doc"}, {@"_rev", rev2.revID}, {@"key", @"3"})];
+    CBL_Revision* rev2 = [self putDoc: $dict({@"_id", @"doc"}, {@"_rev", rev1.revIDString}, {@"key", @"2"})];
+    CBL_Revision* rev3 = [self putDoc: $dict({@"_id", @"doc"}, {@"_rev", rev2.revIDString}, {@"key", @"3"})];
 
     // Try to purge rev2, which should fail since it's not a leaf:
-    NSDictionary* toPurge = $dict({@"doc", @[rev2.revID]});
+    NSDictionary* toPurge = $dict({@"doc", @[rev2.revIDString]});
     NSDictionary* result;
     AssertEq([db.storage purgeRevisions: toPurge result: &result], kCBLStatusOK);
     AssertEqual(result, $dict({@"doc", @[]}));
     AssertEq([result[@"doc"] count], 0u);
 
     // Purge rev3, which will remove all ancestors too:
-    toPurge = $dict({@"doc", @[rev3.revID]});
+    toPurge = $dict({@"doc", @[rev3.revIDString]});
     AssertEq([db.storage purgeRevisions: toPurge result: &result], kCBLStatusOK);
     AssertEqual(result, toPurge);
 
@@ -794,7 +788,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
                             @"_attachments": @{
                                 @"attach": @{
                                     @"content_type": @"text/plain",
-                                    @"data": attach1
+                                    @"data": [attach1 base64EncodedStringWithOptions: 0]
                                 }
                             }
                            };
@@ -833,22 +827,18 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
 }
 
 
-static CBL_Revision* mkrev(NSString* revID) {
-    return [[CBL_Revision alloc] initWithDocID: @"docid" revID: revID deleted: NO];
-}
-
 - (void) test23_MakeRevisionHistoryDict {
-    NSArray* revs = @[mkrev(@"4-jkl"), mkrev(@"3-ghi"), mkrev(@"2-def")];
-    AssertEqual([CBLDatabase makeRevisionHistoryDict: revs],
+    NSArray* revs = @[@"4-jkl".cbl_asRevID, @"3-ghi".cbl_asRevID, @"2-def".cbl_asRevID];
+    AssertEqual([CBL_TreeRevID makeRevisionHistoryDict: revs],
                  $dict({@"ids", @[@"jkl", @"ghi", @"def"]},
                        {@"start", @4}));
 
-    revs = @[mkrev(@"4-jkl"), mkrev(@"2-def")];
-    AssertEqual([CBLDatabase makeRevisionHistoryDict: revs],
+    revs = @[@"4-jkl".cbl_asRevID, @"2-def".cbl_asRevID];
+    AssertEqual([CBL_TreeRevID makeRevisionHistoryDict: revs],
                  $dict({@"ids", @[@"4-jkl", @"2-def"]}));
 
-    revs = @[mkrev(@"12345"), mkrev(@"6789")];
-    AssertEqual([CBLDatabase makeRevisionHistoryDict: revs],
+    revs = @[@"12345".cbl_asRevID, @"6789".cbl_asRevID];
+    AssertEqual([CBL_TreeRevID makeRevisionHistoryDict: revs],
                  $dict({@"ids", @[@"12345", @"6789"]}));
 }
 
@@ -901,7 +891,7 @@ static CBL_Revision* mkrev(NSString* revID) {
 
     // This is the one deleted doc:
     rev = [db getDocumentWithID: @"thumbsup:0234B8F3A662F09BDE3DAE8E1A3F65CDB2256983:7999782A-5064-44F7-94C0-6C7BB255380B"
-                                   revisionID: @"2-59a8b99190d92a186249cdf86c0344f6"];
+                                   revisionID: @"2-59a8b99190d92a186249cdf86c0344f6".cbl_asRevID];
     Assert(rev != nil);
 }
 
@@ -931,8 +921,8 @@ static CBL_Revision* mkrev(NSString* revID) {
 
     NSString* docId = @"test26-ReAddAfterPurge";
 
-    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID:docId revID:@"1-1111" deleted: NO];
-    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"testName", @"test26_ReAddAfterPurge"});
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID:docId revID:@"1-1111".cbl_asRevID deleted: NO];
+    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revIDString}, {@"testName", @"test26_ReAddAfterPurge"});
     NSError* error;
     CBLStatus status = [db forceInsert: rev revisionHistory: nil source: nil error: &error];
     AssertEq(status, kCBLStatusCreated);
@@ -953,8 +943,8 @@ static CBL_Revision* mkrev(NSString* revID) {
     Log(@"After reopen, lastSequence = %llu", db.lastSequenceNumber);
     AssertNil([db existingDocumentWithID:docId]);
 
-    CBL_MutableRevision* revAfterPurge = [[CBL_MutableRevision alloc] initWithDocID:docId revID:@"1-1111" deleted: NO];
-    revAfterPurge.properties = $dict({@"_id", revAfterPurge.docID}, {@"_rev", revAfterPurge.revID}, {@"testName", @"test26_ReAddAfterPurge"});
+    CBL_MutableRevision* revAfterPurge = [[CBL_MutableRevision alloc] initWithDocID:docId revID:@"1-1111".cbl_asRevID deleted: NO];
+    revAfterPurge.properties = $dict({@"_id", revAfterPurge.docID}, {@"_rev", revAfterPurge.revIDString}, {@"testName", @"test26_ReAddAfterPurge"});
     CBLStatus status2 = [db forceInsert: revAfterPurge revisionHistory: nil source: nil error: &error];
     AssertEq(status2, kCBLStatusCreated);
 }
@@ -965,23 +955,23 @@ static CBL_Revision* mkrev(NSString* revID) {
     [self createDocuments: 10];
 
     // Create a new doc with a conflict:
-    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"1-1111" deleted: NO];
-    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
+    CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"1-1111".cbl_asRevID deleted: NO];
+    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revIDString}, {@"message", @"hi"});
     NSArray* history = @[rev.revID];
     NSError* error;
     AssertEq([db forceInsert: rev revisionHistory: history source: nil error: &error], 201);
-    rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"1-ffff" deleted: NO];
-    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"bye"});
+    rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"1-ffff".cbl_asRevID deleted: NO];
+    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revIDString}, {@"message", @"bye"});
     history = @[rev.revID];
     AssertEq([db forceInsert: rev revisionHistory: history source: nil error: &error], 201);
 
     // Create another new doc with a merged conflict:
-    rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID2" revID: @"1-1111" deleted: NO];
-    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID}, {@"message", @"hi"});
+    rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID2" revID: @"1-1111".cbl_asRevID deleted: NO];
+    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revIDString}, {@"message", @"hi"});
     history = @[rev.revID];
     AssertEq([db forceInsert: rev revisionHistory: history source: nil error: &error], 201);
-    rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID2" revID: @"1-ffff" deleted: YES];
-    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revID});
+    rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID2" revID: @"1-ffff".cbl_asRevID deleted: YES];
+    rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revIDString});
     history = @[rev.revID];
     AssertEq([db forceInsert: rev revisionHistory: history source: nil error: &error], 201);
 
@@ -1002,8 +992,8 @@ static CBL_Revision* mkrev(NSString* revID) {
             }
 
             if (!conflicts) {
-                AssertEqual(changes[10].revID, @"1-ffff");
-                AssertEqual(changes[11].revID, @"1-1111"); // Non-deleted rev should be current (#896)
+                AssertEqual(changes[10].revID, @"1-ffff".cbl_asRevID);
+                AssertEqual(changes[11].revID, @"1-1111".cbl_asRevID); // Non-deleted rev should be current (#896)
             }
         }
     }

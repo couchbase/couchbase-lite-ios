@@ -504,6 +504,8 @@
 		27452BF21AB11A0500327776 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27452BF11AB11A0500327776 /* UIKit.framework */; };
 		27452BF31AB11D4200327776 /* CBLUITableSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA4317158FD9B400F9E7B5 /* CBLUITableSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27452C211AB1F6C100327776 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27452C201AB1F6C100327776 /* libz.dylib */; };
+		2745534D1CC5970A009DA29C /* CBL_RevID.m in Sources */ = {isa = PBXBuildFile; fileRef = 2745534C1CC5970A009DA29C /* CBL_RevID.m */; };
+		2745534E1CC5970A009DA29C /* CBL_RevID.m in Sources */ = {isa = PBXBuildFile; fileRef = 2745534C1CC5970A009DA29C /* CBL_RevID.m */; };
 		27486F251A606C76008D94F0 /* CBJSONEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 27486F1D1A606C76008D94F0 /* CBJSONEncoder.h */; };
 		27486F271A606C76008D94F0 /* CBJSONEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 27486F1E1A606C76008D94F0 /* CBJSONEncoder.m */; };
 		27486F2B1A606C76008D94F0 /* CBLJSONReader.h in Headers */ = {isa = PBXBuildFile; fileRef = 27486F211A606C76008D94F0 /* CBLJSONReader.h */; };
@@ -1596,6 +1598,8 @@
 		27452BF11AB11A0500327776 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.3.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		27452C201AB1F6C100327776 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.3.sdk/usr/lib/libz.dylib; sourceTree = DEVELOPER_DIR; };
 		27452C221AB20BD500327776 /* noop.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = noop.m; sourceTree = "<group>"; };
+		2745534B1CC5970A009DA29C /* CBL_RevID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_RevID.h; sourceTree = "<group>"; };
+		2745534C1CC5970A009DA29C /* CBL_RevID.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_RevID.m; sourceTree = "<group>"; };
 		27486F1D1A606C76008D94F0 /* CBJSONEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBJSONEncoder.h; sourceTree = "<group>"; };
 		27486F1E1A606C76008D94F0 /* CBJSONEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBJSONEncoder.m; sourceTree = "<group>"; };
 		27486F211A606C76008D94F0 /* CBLJSONReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSONReader.h; sourceTree = "<group>"; };
@@ -2504,6 +2508,8 @@
 				27F074AA11CD5D7A00E9A2AB /* CBL_Body.m */,
 				270B3E3714898DF200E0A926 /* CBL_Revision.h */,
 				270B3E3814898DF200E0A926 /* CBL_Revision.m */,
+				2745534B1CC5970A009DA29C /* CBL_RevID.h */,
+				2745534C1CC5970A009DA29C /* CBL_RevID.m */,
 				27A7209E152B959100C0A0E8 /* CBL_Attachment.h */,
 				27A7209F152B959100C0A0E8 /* CBL_Attachment.m */,
 				27C706401486BBD500F0F099 /* CBL_Server.h */,
@@ -4947,6 +4953,7 @@
 				2701C0A51C49CFE6006D7A99 /* FMDatabaseAdditions.m in Sources */,
 				2701C0A61C49CFE6006D7A99 /* FMResultSet.m in Sources */,
 				2701C0A71C49CFE6006D7A99 /* CBLReduceFuncs.m in Sources */,
+				2745534D1CC5970A009DA29C /* CBL_RevID.m in Sources */,
 				2701C0A81C49CFE6006D7A99 /* CBLQueryBuilder.m in Sources */,
 				2701C0A91C49CFE6006D7A99 /* MYAnonymousIdentity.m in Sources */,
 				2701C0AA1C49CFE6006D7A99 /* CBLAuthenticator.m in Sources */,
@@ -5229,6 +5236,7 @@
 				27B0AC301B4C73FF00DFE818 /* CBLListener.m in Sources */,
 				27513A191A672C7B0055DC40 /* CBLDatabase+Internal.m in Sources */,
 				27486F271A606C76008D94F0 /* CBJSONEncoder.m in Sources */,
+				2745534E1CC5970A009DA29C /* CBL_RevID.m in Sources */,
 				27F12890156ABE24008465C2 /* OAMutableURLRequest.m in Sources */,
 				27208F90184D1D83006ADBEF /* NSURL+Base.m in Sources */,
 				272AFF491C90E9CD00D0DBA6 /* CBLArrayDiff.mm in Sources */,

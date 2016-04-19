@@ -265,7 +265,7 @@ static int collateRevIDs(void *context,
     while (SQLITE_ROW == (err = sqlite3_step(_revQuery))) {
         @autoreleasepool {
             int64_t sequence = sqlite3_column_int64(_revQuery, 0);
-            NSString* revID = columnString(_revQuery, 1);
+            CBL_RevID* revID = columnString(_revQuery, 1).cbl_asRevID;
             int64_t parentSeq = sqlite3_column_int64(_revQuery, 2);
             BOOL current = (BOOL)sqlite3_column_int(_revQuery, 3);
             BOOL noAtts = (BOOL)sqlite3_column_int(_revQuery, 6);

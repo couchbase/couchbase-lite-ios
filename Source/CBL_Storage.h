@@ -89,7 +89,7 @@
     @param outStatus  If returning nil, store a CBLStatus error value here.
     @return  The revision, or nil if not found. */
 - (CBL_MutableRevision*) getDocumentWithID: (NSString*)docID
-                                revisionID: (NSString*)revID
+                                revisionID: (CBL_RevID*)revID
                                   withBody: (BOOL)withBody
                                     status: (CBLStatus*)outStatus;
 
@@ -109,8 +109,8 @@
 /** Returns an array of CBL_Revisions giving the revision history in reverse order, starting from
     `rev` and going back to any of the revision IDs in `ancestorRevIDs` (or all the way back if
     that array is empty or nil.) */
-- (NSArray*) getRevisionHistory: (CBL_Revision*)rev
-                   backToRevIDs: (NSSet*)ancestorRevIDs;
+- (NSArray<CBL_RevID*>*) getRevisionHistory: (CBL_Revision*)rev
+                               backToRevIDs: (NSSet<CBL_RevID*>*)ancestorRevIDs;
 
 /** Returns all the known revisions (or all current/conflicting revisions) of a document.
     @param docID  The document ID
@@ -130,7 +130,7 @@
     In other words: Look at the revID properties of rev, its parent, grandparent, etc.
     As soon as you find a revID that's in the revIDs array, stop and return that revID.
     If no match is found, return nil. */
-- (NSString*) findCommonAncestorOf: (CBL_Revision*)rev withRevIDs: (NSArray*)revIDs;
+- (CBL_RevID*) findCommonAncestorOf: (CBL_Revision*)rev withRevIDs: (NSArray<CBL_RevID*>*)revIDs;
 
 /** Looks for each given revision in the local database, and removes each one found from the list.
     On return, therefore, `revs` will contain only the revisions that don't exist locally. */
@@ -177,7 +177,7 @@
     @param outError  On return, an error indicating a reason of the failure
     @return  The new revision, with its revID and sequence filled in, or nil on error. */
 - (CBL_Revision*) addDocID: (NSString*)docID
-                 prevRevID: (NSString*)prevRevID
+                 prevRevID: (CBL_RevID*)prevRevID
                 properties: (NSMutableDictionary*)properties
                   deleting: (BOOL)deleting
              allowConflict: (BOOL)allowConflict
@@ -200,14 +200,14 @@
     @param outError  On return, an error indicating a reason of the failure.
     @return  Status code; 200 on success, otherwise an error. */
 - (CBLStatus) forceInsert: (CBL_Revision*)inRev
-          revisionHistory: (NSArray*)history
+          revisionHistory: (NSArray<CBL_RevID*>*)history
           validationBlock: (CBL_StorageValidationBlock)validationBlock
                    source: (NSURL*)source
                     error: (NSError**)outError;
 
 /** Purges specific revisions, which deletes them completely from the local database _without_ adding a "tombstone" revision. It's as though they were never there.
-    @param docsToRevs  A dictionary mapping document IDs to arrays of revision IDs.
-                        The magic revision ID "*" means "all revisions", indicating that the
+    @param docsToRevs  A dictionary mapping document IDs to arrays of revision ID strings.
+                        The magic revision ID string "*" means "all revisions", indicating that the
                         document should be removed entirely from the database.
     @param outResult  On success will point to an NSDictionary with the same form as docsToRev, containing the doc/revision IDs that were actually removed. */
 - (CBLStatus) purgeRevisions: (NSDictionary*)docsToRevs
@@ -235,7 +235,7 @@
     @param revID  The revision ID, or nil to return the current revision.
     @return  A revision containing the body of the document, or nil if not found. */
 - (CBL_MutableRevision*) getLocalDocumentWithID: (NSString*)docID
-                                     revisionID: (NSString*)revID;
+                                     revisionID: (CBL_RevID*)revID;
 
 /** Creates / updates / deletes a local document.
     @param revision  The new revision to save. Its docID must be set but the revID is ignored.
@@ -248,7 +248,7 @@
                     else an error.)
     @return  The new revision, with revID filled in, or nil on error. */
 - (CBL_Revision*) putLocalRevision: (CBL_Revision*)revision
-                    prevRevisionID: (NSString*)prevRevID
+                    prevRevisionID: (CBL_RevID*)prevRevID
                           obeyMVCC: (BOOL)obeyMVCC
                             status: (CBLStatus*)outStatus;
 
@@ -278,12 +278,4 @@
 
 /** Called whenever a revision is added to the database (but not for local docs or for purges.) */
 - (void) databaseStorageChanged: (CBLDatabaseChange*)change;
-
-/** Generates a revision ID for a new revision.
-    @param json  The canonical JSON of the revision (with metadata properties removed.)
-    @param deleted  YES if this revision is a deletion
-    @param prevID  The parent's revision ID, or nil if this is a new document. */
-- (NSString*) generateRevIDForJSON: (NSData*)json
-                           deleted: (BOOL)deleted
-                         prevRevID: (NSString*)prevID;
 @end

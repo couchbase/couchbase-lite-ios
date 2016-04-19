@@ -18,6 +18,7 @@ extern "C" {
 #import "ExceptionUtils.h"
 #import "CBLSymmetricKey.h"
 #import "CBLSpecialKey.h"
+#import "CBL_RevID.h"
 #import "forestdb.h"
 }
 
@@ -49,6 +50,15 @@ NSData* slice2dataNoCopy(C4Slice s) {
 
 NSData* slice2dataAdopt(C4Slice s) {
     return [[NSData alloc] initWithBytesNoCopy: (void*)s.buf length: s.size freeWhenDone: YES];
+}
+
+CBL_RevID* slice2revID(C4Slice s) {
+    return [CBL_RevID fromData: slice2data(s)];
+}
+
+C4Slice revID2slice(UU CBL_RevID* revID) {
+    NSData* data = revID.asData;
+    return {data.bytes, data.length};
 }
 
 id slice2jsonObject(C4Slice s, CBLJSONReadingOptions options) {
@@ -236,13 +246,13 @@ C4EncryptionKey symmetricKey2Forest(CBLSymmetricKey* key) {
 
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (C4Document*)doc
                                                docID: (UU NSString*)docID
-                                               revID: (NSString*)revID
+                                               revID: (CBL_RevID*)revID
                                             withBody: (BOOL)withBody
                                               status: (CBLStatus*)outStatus
 {
     BOOL deleted = (doc->selectedRev.flags & kRevDeleted) != 0;
     if (revID == nil)
-        revID = slice2string(doc->selectedRev.revID);
+        revID = slice2revID(doc->selectedRev.revID);
     CBL_MutableRevision* result = [[CBL_MutableRevision alloc] initWithDocID: docID
                                                                        revID: revID
                                                                      deleted: deleted];
@@ -275,21 +285,6 @@ C4EncryptionKey symmetricKey2Forest(CBLSymmetricKey* key) {
     NSMutableDictionary* properties = slice2mutableDict(body);
     Assert(properties, @"Unable to parse doc from db: %.*s", body.size, body.buf);
     return properties;
-}
-
-
-+ (NSMutableArray*) getCurrentRevisionIDs: (C4Document*)doc
-                           includeDeleted: (BOOL)includeDeleted
-                            onlyConflicts: (BOOL)onlyConflicts
-{
-    NSMutableArray *revs = [[NSMutableArray alloc] init];
-    do {
-        if (onlyConflicts)
-            onlyConflicts = NO;
-        else if (!(doc->selectedRev.flags & kRevDeleted))
-            [revs addObject: slice2string(doc->selectedRev.revID)];
-    } while (c4doc_selectNextLeafRevision(doc, includeDeleted, false, NULL));
-    return revs;
 }
 
 

@@ -160,11 +160,11 @@
 
 - (instancetype) initForValidationWithDatabase: (CBLDatabase*)db
                                       revision: (CBL_Revision*)rev
-                              parentRevisionID: (NSString*)parentRevID
+                              parentRevisionID: (CBL_RevID*)parentRevID
 {
     self = [self initWithDatabase: db revision: rev];
     if (self) {
-        _parentRevID = parentRevID.copy;
+        _parentRevID = parentRevID.asString;
         _checkedProperties = YES;
     }
     return self;
@@ -184,19 +184,20 @@
         return YES;
     else if (![object isKindOfClass: [CBLSavedRevision class]])
         return NO;
-    return self.document == [object document] && $equal(_rev.revID, [object revisionID]);
+    return self.document == [object document]
+        && $equal(_rev.revID, ((CBLSavedRevision*)object).rev.revID);
 }
 
 
 @synthesize rev=_rev;
 
-- (NSString*) revisionID        {return _rev.revID;}
+- (NSString*) revisionID        {return _rev.revIDString;}
 - (BOOL) isDeletion             {return _rev.deleted;}
 - (BOOL) propertiesAvailable    {return !_rev.missing;}
 
 
 - (NSString*) parentRevisionID  {
-    return _parentRevID ?: [_document.database.storage getParentRevision: _rev].revID;
+    return _parentRevID ?: [_document.database.storage getParentRevision: _rev].revIDString;
 }
 
 - (CBLSavedRevision*) parentRevision  {
@@ -270,12 +271,12 @@
                                            error: (NSError**)outError
 {
     NSMutableArray* history = $marray();
-    for (CBL_Revision* rev in [self.database getRevisionHistory: _rev backToRevIDs: ancestorIDs]) {
+    for (CBL_RevID* revID in [self.database getRevisionHistory: _rev backToRevIDs: ancestorIDs]) {
         CBLSavedRevision* revision;
-        if ($equal(rev.revID, _rev.revID))
+        if ($equal(revID, _rev.revID))
             revision = self;
         else
-            revision = [self.document revisionFromRev: rev];
+            revision = [self.document revisionWithRevID: revID withBody: NO];
         [history insertObject: revision atIndex: 0];  // reverse into forwards order
     }
     return history;
@@ -376,12 +377,12 @@
 }
 
 - (CBLSavedRevision*) save: (NSError**)outError {
-    return [_document putProperties: _properties prevRevID: _parentRevID
+    return [_document putProperties: _properties prevRevID: _parentRevID.cbl_asRevID
                       allowConflict: NO error: outError];
 }
 
 - (CBLSavedRevision*) saveAllowingConflict: (NSError**)outError {
-    return [_document putProperties: _properties prevRevID: _parentRevID
+    return [_document putProperties: _properties prevRevID: _parentRevID.cbl_asRevID
                       allowConflict: YES error: outError];
 }
 

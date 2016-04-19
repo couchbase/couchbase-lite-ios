@@ -401,13 +401,13 @@
                     keepGoing = [r next];
                     continue;
                 }
-                NSString* revID = [r stringForColumnIndex: 3];
+                CBL_RevID* revID = [r revIDForColumnIndex: 3];
                 NSData* json = [r dataForColumnIndex: 4];
                 BOOL deleted = [r boolForColumnIndex: 5];
                 NSString* docType = checkDocTypes ? [r stringForColumnIndex: 6] : nil;
 
                 // Skip rows with the same doc_id -- these are losing conflicts.
-                NSMutableArray* conflicts = nil;
+                NSMutableArray<NSString*>* conflicts = nil;
                 while ((keepGoing = [r next]) && [r longLongIntForColumnIndex: 0] == doc_id) {
                     if (!deleted) {
                         // Conflict revisions:
@@ -430,7 +430,7 @@
                         return dbStorage.lastDbError;
                     }
                     if ([r2 next]) {
-                        NSString* oldRevID = [r2 stringForColumnIndex:0];
+                        CBL_RevID* oldRevID = [r2 revIDForColumnIndex:0];
                         // This is the revision that used to be the 'winner'.
                         // Remove its emitted rows:
                         SequenceNumber oldSequence = [r2 longLongIntForColumnIndex: 1];
@@ -442,7 +442,7 @@
                             viewTotalRows[@(view.viewID)] =
                                 @([viewTotalRows[@(view.viewID)] intValue] - changes);
                         }
-                        if (deleted || CBLCompareRevIDs(oldRevID, revID) > 0) {
+                        if (deleted || [oldRevID compare: revID] > 0) {
                             // It still 'wins' the conflict, so it's the one that
                             // should be mapped [again], not the current revision!
                             revID = oldRevID;
@@ -455,7 +455,7 @@
                             // Conflict revisions:
                             if (!conflicts)
                                 conflicts = $marray();
-                            [conflicts addObject: oldRevID];
+                            [conflicts addObject: oldRevID.asString];
                             while ([r2 next])
                                 [conflicts addObject: [r2 stringForColumnIndex:0]];
                         }
@@ -802,7 +802,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
             NSString* linkedID = value.cbl_id;
             if (linkedID) {
                 // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
-                NSString* linkedRev = value.cbl_rev; // usually nil
+                CBL_RevID* linkedRev = value.cbl_rev; // usually nil
                 CBLStatus linkedStatus;
                 docRevision = [db getDocumentWithID: linkedID
                                          revisionID: linkedRev
@@ -811,7 +811,7 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
                 sequence = docRevision.sequence;
             } else {
                 docRevision = [_dbStorage revisionWithDocID: docID
-                                                      revID: [r stringForColumnIndex: 4]
+                                                      revID: [r revIDForColumnIndex: 4]
                                                     deleted: NO
                                                    sequence: sequence
                                                        json: [r dataForColumnIndex: 5]];

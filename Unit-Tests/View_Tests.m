@@ -625,7 +625,6 @@
     CBLView* view = [db viewNamed: @"vu"];
     
     [view setMapBlock: MAPBLOCK({
-        Log(@"*** Emitting 1 for doc %@", doc.cbl_id);//TEMP
         emit(@1, nil);
     }) version: @"1"];
     
@@ -676,7 +675,6 @@
     // now update the view definition, while the live query is running
     Log(@"Updating view mapBlock");
     [view setMapBlock: MAPBLOCK({
-        Log(@"*** Emitting 2 for doc %@", doc.cbl_id);//TEMP
         emit(@2, nil);
     }) version: @"2"];
     

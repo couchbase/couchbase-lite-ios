@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "CBLDatabase.h"
 #import "CBL_Body.h"
+#import "CBL_RevID.h"
 #import "CBLMisc.h"
 @class CBL_MutableRevision;
 
@@ -17,10 +18,10 @@
 @interface CBL_Revision : NSObject <NSMutableCopying>
 
 - (instancetype) initWithDocID: (NSString*)docID
-                         revID: (NSString*)revID
+                         revID: (CBL_RevID*)revID
                        deleted: (BOOL)deleted;
 - (instancetype) initWithDocID: (NSString*)docID
-                         revID: (NSString*)revID
+                         revID: (CBL_RevID*)revID
                        deleted: (BOOL)deleted
                           body: (CBL_Body*)body;
 - (instancetype) initWithBody: (CBL_Body*)body;
@@ -29,7 +30,8 @@
 + (instancetype) revisionWithProperties: (NSDictionary*)properties;
 
 @property (readonly) NSString* docID;
-@property (readonly) NSString* revID;
+@property (readonly) CBL_RevID* revID;
+@property (readonly) NSString* revIDString;
 @property (readonly) bool deleted;
 @property (readonly) bool missing;
 
@@ -72,13 +74,7 @@
     Extracted from the numeric prefix of the revID. */
 @property (readonly) unsigned generation;
 
-+ (unsigned) generationFromRevID: (NSString*)revID;
-
-+ (BOOL) parseRevID: (NSString*)revID
-     intoGeneration: (int*)outNum
-          andSuffix: (NSString**)outSuffix;
-
-- (CBL_MutableRevision*) mutableCopyWithDocID: (NSString*)docID revID: (NSString*)revID;
+- (CBL_MutableRevision*) mutableCopyWithDocID: (NSString*)docID revID: (CBL_RevID*)revID;
 
 @end
 
@@ -95,7 +91,7 @@
 @property (readwrite, copy) NSData* asJSON;
 
 - (void) setDocID:(NSString *)docID
-            revID: (NSString*)revID;
+            revID: (CBL_RevID*)revID;
 
 - (void) setObject: (id)object forKeyedSubscript: (NSString*)key;  // subscript access in Xcode 4.4+
 
@@ -117,7 +113,7 @@
 @property (readonly) NSUInteger count;
 
 - (CBL_Revision*) revWithDocID: (NSString*)docID;
-- (CBL_Revision*) revWithDocID: (NSString*)docID revID: (NSString*)revID;
+- (CBL_Revision*) revWithDocID: (NSString*)docID revID: (CBL_RevID*)revID;
 
 - (NSEnumerator*) objectEnumerator;
 
@@ -142,12 +138,3 @@
 
 /** A block that can filter revisions by passing or rejecting them. */
 typedef BOOL (^CBL_RevisionFilter)(CBL_Revision*);
-
-
-/** Compares revision IDs by CouchDB rules: generation number first, then the suffix. */
-NSComparisonResult CBLCompareRevIDs(NSString* revID1, NSString* revID2);
-
-/** SQLite-compatible collation (comparison) function for revision IDs. */
-int CBLCollateRevIDs(void *context,
-                    int len1, const void * chars1,
-                    int len2, const void * chars2);
