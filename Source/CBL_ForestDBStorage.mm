@@ -185,7 +185,7 @@ static void onCompactCallback(void *context, bool compacting) {
 
 
 - (void) close {
-    c4db_close(_forest, NULL);
+    c4db_free(_forest);
     _forest = NULL;
 }
 

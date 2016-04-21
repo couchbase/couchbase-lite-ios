@@ -23,6 +23,7 @@
 
 
 extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
+extern int c4_getObjectCount(void);             // from c4Base.h (CBForest)
 
 
 @interface CBLManager (Secret)
@@ -132,6 +133,7 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 @implementation CBLTestCaseWithDB
 {
     BOOL _useForestDB;
+    int _cbForestObjectCount;
 }
 
 @synthesize db=db;
@@ -149,6 +151,8 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 - (void)setUp {
     [super setUp];
 
+    _cbForestObjectCount = c4_getObjectCount();
+
     dbmgr = [CBLManager createEmptyAtTemporaryPath: @"CBL_iOS_Unit_Tests"];
     dbmgr.storageType = _useForestDB ? kCBLForestDBStorage : kCBLSQLiteStorage;
     Assert(dbmgr);
@@ -164,6 +168,17 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
     NSError* error;
     Assert(!db || [db deleteDatabase: &error], @"Couldn't close db: %@", error.my_compactDescription);
     [dbmgr close];
+
+    if (_useForestDB) {
+        // Some tests create CBForest objects on a background thread, which may take a moment to
+        // be cleaned up, so wait a few seconds for the object count to go back to normal:
+        int tries = 20;
+        while (c4_getObjectCount() > _cbForestObjectCount && --tries > 0) {
+            Log(@"(Waiting for CBForest objects to be freed)");
+            usleep(100*1000);
+        }
+        AssertEq(c4_getObjectCount() - _cbForestObjectCount, 0);    // Check for CBForest leaks
+    }
 
     [super tearDown];
 }

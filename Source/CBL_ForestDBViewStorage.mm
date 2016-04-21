@@ -219,6 +219,7 @@ static void onCompactCallback(void *context, bool compacting) {
             *outStatus = err2status(c4err);
             return NO;
         }
+        c4view_free(_view);
         _view = NULL;
     }
     return YES;
