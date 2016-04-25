@@ -34,7 +34,7 @@ extern "C" {
         _storage = storage;
         C4EnumeratorOptions c4options = {0, 0};
         _includeDocs = (options->includeDocs || options.filter);
-        if (_includeDocs || options->allDocsMode >= kCBLShowConflicts)
+        if (_includeDocs || options->allDocsMode == kCBLOnlyConflicts)
             c4options.flags |= kC4IncludeBodies;
         if (options->descending)
             c4options.flags |= kC4Descending;
@@ -94,11 +94,10 @@ extern "C" {
         return nil;
     C4Error c4err;
     while (c4enum_next(_enum, &c4err)) {
-        CLEANUP(C4Document)* doc = c4enum_getDocument(_enum, &c4err);
-        if (!doc)
-            break;
-        NSString* docID = slice2string(doc->docID);
-        if (!(doc->flags & kExists)) {
+        C4DocumentInfo docInfo;
+        c4enum_getDocumentInfo(_enum, &docInfo);
+        NSString* docID = slice2string(docInfo.docID);
+        if (!(docInfo.flags & kExists)) {
             LogVerbose(Query, @"AllDocs: No such row with key=\"%@\"", docID);
             return [[CBLQueryRow alloc] initWithDocID: nil
                                              sequence: 0
@@ -107,17 +106,28 @@ extern "C" {
                                           docRevision: nil];
         }
 
-        bool deleted = (doc->flags & kDeleted) != 0;
+        bool deleted = (docInfo.flags & kDeleted) != 0;
+        bool conflicted = (docInfo.flags & kConflicted) != 0;
         if (deleted && _allDocsMode != kCBLIncludeDeleted && !_byKey)
             continue; // skip deleted doc
-        if (!(doc->flags & kConflicted) && _allDocsMode == kCBLOnlyConflicts)
+        if (!conflicted && _allDocsMode == kCBLOnlyConflicts)
             continue; // skip non-conflicted doc
         if (_skip > 0) {
             --_skip;
             continue;
         }
 
-        CBL_RevID* revID = slice2revID(doc->revID);
+        CBL_RevID* revID = slice2revID(docInfo.revID);
+
+        // We'll need the full document if we're including doc bodies or listing conflicts:
+        CLEANUP(C4Document)* doc = NULL;
+        if (_includeDocs || (_allDocsMode >= kCBLShowConflicts && conflicted)) {
+            doc = c4enum_getDocument(_enum, &c4err);
+            if (!doc)
+                break;
+            if (!c4doc_loadRevisionBody(doc, &c4err))
+                break;
+        }
 
         CBL_Revision* docRevision = nil;
         if (_includeDocs) {
@@ -133,12 +143,11 @@ extern "C" {
         }
 
         NSMutableArray<NSString*>* conflicts = nil;
-        if (_allDocsMode >= kCBLShowConflicts && (doc->flags & kConflicted)) {
-            conflicts = [NSMutableArray array];
+        if (_allDocsMode >= kCBLShowConflicts && conflicted) {
+            conflicts = [NSMutableArray new];
             [conflicts addObject: revID.asString];
             while (c4doc_selectNextLeafRevision(doc, false, false, NULL)) {
-                NSString* conflictID = slice2string(doc->selectedRev.revID);
-                [conflicts addObject: conflictID];
+                [conflicts addObject: slice2string(doc->selectedRev.revID)];
             }
             if (conflicts.count == 1)
                 conflicts = nil;
@@ -149,7 +158,7 @@ extern "C" {
                                     {@"_conflicts", conflicts});  // (not found in CouchDB)
         LogVerbose(Query, @"AllDocs: Found row with key=\"%@\", value=%@", docID, value);
         CBLQueryRow *row = [[CBLQueryRow alloc] initWithDocID: docID
-                                                     sequence: doc->sequence
+                                                     sequence: docInfo.sequence
                                                           key: docID
                                                         value: value
                                                   docRevision: docRevision];
@@ -176,7 +185,7 @@ extern "C" {
 
 - (BOOL) rowPassesFilter: (CBLQueryRow*)row {
     //FIX: I'm not supposed to know the delegates' real classes...
-    [row moveToDatabase: _storage.delegate view: nil];
+    [row moveToDatabase: (CBLDatabase*)_storage.delegate view: nil];
     if (!_filter(row))
         return NO;
     [row _clearDatabase];

@@ -504,11 +504,14 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
         return nil;
     }
 
-    BOOL withBody = (options->includeDocs || filter != nil);
+    BOOL revsWithBodies = (options->includeDocs || filter != nil);
+    BOOL loadC4Doc = (revsWithBodies || options->includeConflicts);
     unsigned limit = options->limit;
 
     C4EnumeratorOptions c4opts = kC4DefaultEnumeratorOptions;
     c4opts.flags |= kC4IncludeDeleted;
+    if (!loadC4Doc)
+        c4opts.flags &= ~kC4IncludeBodies;
     C4Error c4err = {};
     CLEANUP(C4DocEnumerator)* e = c4db_enumerateChanges(_forest, lastSequence, &c4opts, &c4err);
     if (!e) {
@@ -518,28 +521,39 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
     CBL_RevisionList* changes = [[CBL_RevisionList alloc] init];
     while (limit-- > 0 && c4enum_next(e, &c4err)) {
         @autoreleasepool {
-            CLEANUP(C4Document) *doc = c4enum_getDocument(e, &c4err);
-            if (!doc)
-                break;
-            NSString* docID = slice2string(doc->docID);
-            do {
+            if (loadC4Doc) {
+                CLEANUP(C4Document) *doc = c4enum_getDocument(e, &c4err);
+                if (!doc)
+                    break;
+                NSString* docID = slice2string(doc->docID);
+                do {
+                    CBL_MutableRevision* rev;
+                    rev = [CBLForestBridge revisionObjectFromForestDoc: doc
+                                                                 docID: docID
+                                                                 revID: nil
+                                                              withBody: revsWithBodies
+                                                                status: outStatus];
+                    if (!rev)
+                        return nil;
+                    if (!filter || filter(rev)) {
+                        if (!options->includeDocs)
+                            rev.body = nil;
+                        [changes addRev: rev];
+                    }
+                } while (options->includeConflicts && c4doc_selectNextLeafRevision(doc, true,
+                                                                                   revsWithBodies,
+                                                                                   &c4err));
+                if (c4err.code)
+                    break;
+            } else {
+                C4DocumentInfo docInfo;
+                c4enum_getDocumentInfo(e, &docInfo);
                 CBL_MutableRevision* rev;
-                rev = [CBLForestBridge revisionObjectFromForestDoc: doc
-                                                             docID: docID
-                                                             revID: nil
-                                                          withBody: withBody
-                                                            status: outStatus];
+                rev = [CBLForestBridge revisionObjectFromForestDocInfo: docInfo status: outStatus];
                 if (!rev)
                     return nil;
-                if (!filter || filter(rev)) {
-                    if (!options->includeDocs)
-                        rev.body = nil;
-                    [changes addRev: rev];
-                }
-            } while (options->includeConflicts && c4doc_selectNextLeafRevision(doc, true, withBody,
-                                                                               &c4err));
-            if (c4err.code)
-                break;
+                [changes addRev: rev];
+            }
         }
     }
     if (c4err.code) {
@@ -593,25 +607,31 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
 #pragma mark - PURGING / COMPACTING:
 
 
-- (NSSet*) findAllAttachmentKeys: (NSError**)outError {
-    NSMutableSet* keys = [NSMutableSet setWithCapacity: 1000];
+- (NSSet<NSData*>*) findAllAttachmentKeys: (NSError**)outError {
+    NSMutableSet<NSData*>* keys = [NSMutableSet setWithCapacity: 1000];
+    C4EnumeratorOptions c4opts = kC4DefaultEnumeratorOptions;
+    c4opts.flags &= ~kC4IncludeBodies;
+    c4opts.flags |= kC4IncludeDeleted;
     C4Error c4err;
     CLEANUP(C4DocEnumerator)* e = c4db_enumerateAllDocs(_forest, kC4SliceNull, kC4SliceNull,
-                                                        NULL, &c4err);
+                                                        &c4opts, &c4err);
     if (!e) {
         err2OutNSError(c4err, outError);
         return nil;
     }
 
     while (c4enum_next(e, &c4err)) {
+        C4DocumentInfo info;
+        c4enum_getDocumentInfo(e, &info);
+        C4DocumentFlags flags = info.flags;
+        if (!(flags & kHasAttachments) || ((flags & kDeleted) && !(flags & kConflicted)))
+            continue;
+
         CLEANUP(C4Document)* doc = c4enum_getDocument(e, &c4err);
         if (!doc) {
             err2OutNSError(c4err, outError);
             return nil;
         }
-        C4DocumentFlags flags = doc->flags;
-        if (!(flags & kHasAttachments) || ((flags & kDeleted) && !(flags & kConflicted)))
-            continue;
 
         // Since db is assumed to have just been compacted, we know that non-current revisions
         // won't have any bodies. So only scan the current revs.

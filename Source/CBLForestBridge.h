@@ -75,6 +75,9 @@ using namespace CBL;
 
 @interface CBLForestBridge : NSObject
 
++ (CBL_MutableRevision*) revisionObjectFromForestDocInfo: (C4DocumentInfo&)docInfo
+                                                  status: (CBLStatus*)outStatus;
+
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (C4Document*)doc
                                                docID: (NSString*)docIDIfKnown
                                                revID: (CBL_RevID*)revIDIfKnown

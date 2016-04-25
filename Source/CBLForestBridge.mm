@@ -244,6 +244,18 @@ C4EncryptionKey symmetricKey2Forest(CBLSymmetricKey* key) {
 @implementation CBLForestBridge
 
 
++ (CBL_MutableRevision*) revisionObjectFromForestDocInfo: (C4DocumentInfo&)docInfo
+                                                  status: (CBLStatus*)outStatus
+{
+    CBL_MutableRevision* result;
+    result = [[CBL_MutableRevision alloc] initWithDocID: slice2string(docInfo.docID)
+                                                  revID: slice2revID(docInfo.revID)
+                                                deleted: (docInfo.flags & kRevDeleted) != 0];
+    result.sequence = docInfo.sequence;
+    return result;
+}
+
+
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (C4Document*)doc
                                                docID: (UU NSString*)docID
                                                revID: (CBL_RevID*)revID
