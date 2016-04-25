@@ -32,7 +32,6 @@ BOOL CBLQueryRowValueIsEntireDoc(id value);
     CBLDatabase* __weak _weakDB;
     id<CBL_ViewStorage> _storage;
     NSString* _name;
-    uint8_t _collation;
 }
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db name: (NSString*)name create: (BOOL)create;
@@ -50,10 +49,7 @@ BOOL CBLQueryRowValueIsEntireDoc(id value);
 
 @property (readonly) id<CBL_ViewStorage> storage;
 
-#if DEBUG  // for unit tests only
-- (void) setCollation: (CBLViewCollation)collation;
-- (void) forgetMapBlock;
-#endif
+@property (nonatomic) CBLViewCollation collation;
 
 @property (readonly) NSArray* viewsInGroup;
 
@@ -67,6 +63,10 @@ BOOL CBLQueryRowValueIsEntireDoc(id value);
 - (CBLStatus) updateIndexAlone;
 
 - (CBLStatus) updateIndexes: (NSArray*)views;
+
+#if DEBUG  // for unit tests only
+- (void) forgetMapBlock;
+#endif
 
 @end
 

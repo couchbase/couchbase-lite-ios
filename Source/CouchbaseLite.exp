@@ -141,5 +141,6 @@ _kDefaultCBLChangesOptions
 _gMYLogDomainList
 _MYDefault_LogDomain
 _Listener_LogDomain
+_View_LogDomain
 _MYWarn
 _MYLogTo
