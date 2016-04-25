@@ -7,5 +7,7 @@
 #.objc_class_name_CBLListener       # Actually in the base fw now
 .objc_class_name_CBL_URLProtocol
 
+_CBLRegisterJSViewCompiler
+
 # Only for unit tests:
 .objc_class_name_CBL_Router
