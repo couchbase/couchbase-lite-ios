@@ -16,6 +16,7 @@
 //  http://tools.ietf.org/html/rfc2046#section-5.1
 
 #import "CBLMultipartReader.h"
+#import "CBLMultipartBuffer.h"
 
 #import "CollectionUtils.h"
 #import "Test.h"
@@ -63,7 +64,7 @@ static NSData* kCRLFCRLF;
             return nil;
         }
         _delegate = delegate;
-        _buffer = [[NSMutableData alloc] initWithCapacity: 1024];
+        _buffer = [[CBLMultipartBuffer alloc] init];
         _state = kAtStart;
     }
     return self;
@@ -137,17 +138,20 @@ static NSData* kCRLFCRLF;
 
 
 - (NSRange) searchFor: (NSData*)pattern from: (NSUInteger)start {
-    return [_buffer rangeOfData: pattern
+    if (!_buffer.hasBytesAvailable)
+        return NSMakeRange(NSNotFound, 0);
+    NSData *data = [NSData dataWithBytesNoCopy:_buffer.mutableBytes length:_buffer.bytesAvailable freeWhenDone:NO];
+    return [data rangeOfData: pattern
                         options: 0
-                          range: NSMakeRange(start, _buffer.length-start)];
+                          range: NSMakeRange(start, data.length-start)];
 }
 
 - (void) deleteUpThrough: (NSRange)r {
-    [_buffer replaceBytesInRange: NSMakeRange(0, NSMaxRange(r)) withBytes: NULL length: 0];
+    [_buffer advance:NSMaxRange(r)];
 }
 
 - (BOOL) appendAndTrimBuffer {
-    NSUInteger bufLen = _buffer.length;
+    NSUInteger bufLen = _buffer.bytesAvailable;
     NSUInteger boundaryLen = _boundary.length;
     if (bufLen > boundaryLen) {
         // Leave enough bytes in _buffer that we can find an incomplete boundary string
@@ -187,7 +191,7 @@ static NSData* kCRLFCRLF;
     int nextState;
     do {
         nextState = -1;
-        NSUInteger bufLen = _buffer.length;
+        NSUInteger bufLen = _buffer.bytesAvailable;
         id<CBLMultipartReaderDelegate> delegate = _delegate;
         switch (_state) {
             case kAtStart: {
@@ -195,8 +199,7 @@ static NSData* kCRLFCRLF;
                 NSUInteger testLen = _boundary.length - 2;
                 if (bufLen >= testLen) {
                     if (memcmp(_buffer.bytes, _boundary.bytes + 2, testLen) == 0) {
-                        [_buffer replaceBytesInRange: NSMakeRange(0, testLen)
-                                           withBytes: NULL length: 0];
+                        [_buffer advance:testLen];
                         nextState = kInHeaders;
                     } else {
                         nextState = kInPrologue;
@@ -265,7 +268,8 @@ static NSData* kCRLFCRLF;
         }
         if (nextState > 0)
             _state = nextState;
-    } while (nextState >= 0 && _buffer.length > 0);
+    } while (nextState >= 0 && _buffer.hasBytesAvailable);
+    [_buffer compact];
 }
 
 
