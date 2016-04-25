@@ -92,7 +92,7 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 }
 
 
-@synthesize name=_name, storage=_storage;
+@synthesize name=_name, storage=_storage, collation=_collation;
 
 
 - (NSString*) description {
