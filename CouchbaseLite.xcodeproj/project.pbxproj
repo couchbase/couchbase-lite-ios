@@ -990,10 +990,10 @@
 		DA147C3C14BCAC780052DA4D /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA147C3A14BCAC780052DA4D /* MobileCoreServices.framework */; };
 		DA147C3D14BCAC780052DA4D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA147C3B14BCAC780052DA4D /* Security.framework */; };
 		DA147C3E14BCAC9D0052DA4D /* CBLListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 275315DE14ACF0A20065964D /* CBLListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		EE08015B1C847912005BAD7D /* CBLMultipartBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = EE0801591C847912005BAD7D /* CBLMultipartBuffer.h */; };
-		EE0801681C847921005BAD7D /* CBLMultipartBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = EE0801591C847912005BAD7D /* CBLMultipartBuffer.h */; };
-		EE0801691C847927005BAD7D /* CBLMultipartBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = EE08015A1C847912005BAD7D /* CBLMultipartBuffer.m */; };
-		EE08016A1C847928005BAD7D /* CBLMultipartBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = EE08015A1C847912005BAD7D /* CBLMultipartBuffer.m */; };
+		EE08015B1C847912005BAD7D /* CBLByteBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = EE0801591C847912005BAD7D /* CBLByteBuffer.h */; };
+		EE0801681C847921005BAD7D /* CBLByteBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = EE0801591C847912005BAD7D /* CBLByteBuffer.h */; };
+		EE0801691C847927005BAD7D /* CBLByteBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = EE08015A1C847912005BAD7D /* CBLByteBuffer.m */; };
+		EE08016A1C847928005BAD7D /* CBLByteBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = EE08015A1C847912005BAD7D /* CBLByteBuffer.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1136,6 +1136,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 27452BB71AB1180800327776;
 			remoteInfo = "CBL iOS framework";
+		};
+		2747355B1CCE983000515EB2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 27A6579C1CBC190B00A7A1D7;
+			remoteInfo = SwiftForest;
+		};
+		2747355D1CCE983000515EB2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 27A657A51CBC190B00A7A1D7;
+			remoteInfo = SwiftForestTests;
 		};
 		275315FD14ACF87F0065964D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -2113,8 +2127,8 @@
 		DA147C3614BCAC3B0052DA4D /* CouchbaseLiteListener.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteListener.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DA147C3A14BCAC780052DA4D /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/System/Library/Frameworks/MobileCoreServices.framework; sourceTree = DEVELOPER_DIR; };
 		DA147C3B14BCAC780052DA4D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
-		EE0801591C847912005BAD7D /* CBLMultipartBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLMultipartBuffer.h; sourceTree = "<group>"; };
-		EE08015A1C847912005BAD7D /* CBLMultipartBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLMultipartBuffer.m; sourceTree = "<group>"; };
+		EE0801591C847912005BAD7D /* CBLByteBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLByteBuffer.h; sourceTree = "<group>"; };
+		EE08015A1C847912005BAD7D /* CBLByteBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLByteBuffer.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2954,6 +2968,8 @@
 				27B0B79D1492932700A817AD /* CBLBase64.m */,
 				279906EC149ABFC1003D4338 /* CBLBatcher.h */,
 				279906ED149ABFC2003D4338 /* CBLBatcher.m */,
+				EE0801591C847912005BAD7D /* CBLByteBuffer.h */,
+				EE08015A1C847912005BAD7D /* CBLByteBuffer.m */,
 				27A82D251BBC9C1D005CB742 /* CBLGZip.h */,
 				27A82D261BBC9C1D005CB742 /* CBLGZip.m */,
 				279C7E2C14F424090004A1E8 /* CBLSequenceMap.h */,
@@ -3039,8 +3055,6 @@
 			children = (
 				279CE3FE14D749A7009F3FA6 /* CBLMultipartReader.h */,
 				279CE3FF14D749A7009F3FA6 /* CBLMultipartReader.m */,
-				EE0801591C847912005BAD7D /* CBLMultipartBuffer.h */,
-				EE08015A1C847912005BAD7D /* CBLMultipartBuffer.m */,
 				2766EFFB14DC7B37009ECCA8 /* CBLMultiStreamWriter.h */,
 				2766EFFC14DC7B37009ECCA8 /* CBLMultiStreamWriter.m */,
 				2766EFF614DB7F9F009ECCA8 /* CBLMultipartWriter.h */,
@@ -3120,6 +3134,8 @@
 				27E11A5C1BD0646E00D8DB7D /* libCBForest-Interop.dylib */,
 				27FA99F21917FFD000912F96 /* libTokenizer.a */,
 				27B7E10D18F8FE2800044EBA /* libforestdb.a */,
+				2747355C1CCE983000515EB2 /* SwiftForest.framework */,
+				2747355E1CCE983000515EB2 /* SwiftForestTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -3531,7 +3547,7 @@
 				2701C1B31C4D5BDD006D7A99 /* CBLChangeMatcher.h in Headers */,
 				2701C1B41C4D5BDD006D7A99 /* CBLRestReplicator.h in Headers */,
 				2701C1B51C4D5BDD006D7A99 /* CBLView+Internal.h in Headers */,
-				EE0801681C847921005BAD7D /* CBLMultipartBuffer.h in Headers */,
+				EE0801681C847921005BAD7D /* CBLByteBuffer.h in Headers */,
 				2701C1B61C4D5BDD006D7A99 /* CBLSpecialKey.h in Headers */,
 				2701C1B71C4D5BDD006D7A99 /* CBL_SQLiteViewStorage.h in Headers */,
 				2701C1B81C4D5BDD006D7A99 /* DDRange.h in Headers */,
@@ -3688,7 +3704,7 @@
 				2764D2B81A5F054D005AC95A /* CBLChangeMatcher.h in Headers */,
 				27B0865E1B387C3900D3D9D8 /* CBLRestReplicator.h in Headers */,
 				279EB2CE149140DE00E74185 /* CBLView+Internal.h in Headers */,
-				EE08015B1C847912005BAD7D /* CBLMultipartBuffer.h in Headers */,
+				EE08015B1C847912005BAD7D /* CBLByteBuffer.h in Headers */,
 				2726D14518FDF44000AACC2A /* CBLSpecialKey.h in Headers */,
 				27513A601A697CC80055DC40 /* CBL_SQLiteViewStorage.h in Headers */,
 				2753157614ACEFC90065964D /* DDRange.h in Headers */,
@@ -4423,6 +4439,20 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		2747355C1CCE983000515EB2 /* SwiftForest.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = SwiftForest.framework;
+			remoteRef = 2747355B1CCE983000515EB2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		2747355E1CCE983000515EB2 /* SwiftForestTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = SwiftForestTests.xctest;
+			remoteRef = 2747355D1CCE983000515EB2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		27571E0818F9060100141BDD /* CBForest Tests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
@@ -4867,7 +4897,7 @@
 				2701C0451C49CFE6006D7A99 /* CBLDatabase+Replication.m in Sources */,
 				2701C0461C49CFE6006D7A99 /* CBLMisc.m in Sources */,
 				2701C0471C49CFE6006D7A99 /* CBLMultipartReader.m in Sources */,
-				EE0801691C847927005BAD7D /* CBLMultipartBuffer.m in Sources */,
+				EE0801691C847927005BAD7D /* CBLByteBuffer.m in Sources */,
 				2701C0481C49CFE6006D7A99 /* CBLMultipartDownloader.m in Sources */,
 				2701C0491C49CFE6006D7A99 /* CBLMultipartWriter.m in Sources */,
 				2701C04A1C49CFE6006D7A99 /* CBLMultiStreamWriter.m in Sources */,
@@ -5237,7 +5267,7 @@
 				27E347721999502400076EAC /* Test_Assertions.m in Sources */,
 				279CE3BA14D4A886009F3FA6 /* MYBlockUtils.m in Sources */,
 				27D90B1915601C350000735E /* MYErrorUtils.m in Sources */,
-				EE08016A1C847928005BAD7D /* CBLMultipartBuffer.m in Sources */,
+				EE08016A1C847928005BAD7D /* CBLByteBuffer.m in Sources */,
 				278E4DDA1562B40B00DDCEF9 /* MYURLUtils.m in Sources */,
 				27E721721BB4A08F001500DF /* CBLRestReplicator+Backgrounding.m in Sources */,
 				27846FBB15D475DF0030122F /* MYRegexUtils.m in Sources */,
