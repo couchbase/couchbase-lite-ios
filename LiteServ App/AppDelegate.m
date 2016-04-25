@@ -13,7 +13,7 @@
 
 #import "CouchbaseLite.h"
 #import "CBLListener.h"
-#import "CBLJSViewCompiler.h"
+#import "CBLRegisterJSViewCompiler.h"
 
 
 #define kServerPort 59840
@@ -64,7 +64,7 @@
 - (void) startLiteServ {
     NSLog(@"Starting LiteServ.app ...");
 
-    [CBLView setCompiler: [[CBLJSViewCompiler alloc] init]];
+    CBLRegisterJSViewCompiler();
 
     // Start a listener socket:
     _manager = [CBLManager sharedInstance];
