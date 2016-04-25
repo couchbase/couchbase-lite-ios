@@ -585,6 +585,8 @@
 		27538F9F17F1D9D6004C3BFD /* PrivilegedInstall.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */; };
 		27538FA017F1DC98004C3BFD /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
 		27538FA317F1ECE8004C3BFD /* LoggingMode.c in Sources */ = {isa = PBXBuildFile; fileRef = 27538FA217F1ECE8004C3BFD /* LoggingMode.c */; };
+		2759957F1CCEC80A0074CA58 /* noop.m in Sources */ = {isa = PBXBuildFile; fileRef = 27452C221AB20BD500327776 /* noop.m */; };
+		2759958C1CCEC8450074CA58 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2759958B1CCEC8450074CA58 /* libc++.tbd */; };
 		275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29041649A12B00B0D8EE /* CBLAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5A1159383E9005B9234 /* CBLAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1686,6 +1688,7 @@
 		27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrivilegedInstall.m; sourceTree = "<group>"; };
 		27538FA117F1ECE8004C3BFD /* LoggingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoggingMode.h; sourceTree = "<group>"; };
 		27538FA217F1ECE8004C3BFD /* LoggingMode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = LoggingMode.c; sourceTree = "<group>"; };
+		2759958B1CCEC8450074CA58 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
 		276093911CB6F6BF00297FC4 /* CBLDatabase+REST.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+REST.h"; sourceTree = "<group>"; };
 		276093921CB6F6BF00297FC4 /* CBLDatabase+REST.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLDatabase+REST.m"; sourceTree = "<group>"; };
 		276093A31CB7022F00297FC4 /* CBLView+REST.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLView+REST.h"; sourceTree = "<group>"; };
@@ -2219,6 +2222,7 @@
 				27452BF21AB11A0500327776 /* UIKit.framework in Frameworks */,
 				27452BEC1AB119E000327776 /* libsqlite3.dylib in Frameworks */,
 				27452C211AB1F6C100327776 /* libz.dylib in Frameworks */,
+				2759958C1CCEC8450074CA58 /* libc++.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3113,6 +3117,7 @@
 		27C70696148864BA00F0F099 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2759958B1CCEC8450074CA58 /* libc++.tbd */,
 				93FFB4871C615629006CBE30 /* Security.framework */,
 				93829ED91C6097650042189B /* SystemConfiguration.framework */,
 				930FE5761C5857B8008107A0 /* Foundation.framework */,
@@ -5070,6 +5075,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2759957F1CCEC80A0074CA58 /* noop.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
