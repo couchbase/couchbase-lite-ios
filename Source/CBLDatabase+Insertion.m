@@ -160,6 +160,7 @@ DefineLogDomain(Validation);
                    source: (NSURL*)source
                     error: (NSError**)outError
 {
+    AssertContainsRevIDs(history);
     CBL_MutableRevision* rev = inRev.mutableCopy;
     rev.sequence = 0;
     CBL_RevID* revID = rev.revID;

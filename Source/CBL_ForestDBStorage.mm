@@ -446,6 +446,7 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
 
 
 - (CBL_RevID*) findCommonAncestorOf: (CBL_Revision*)rev withRevIDs: (NSArray<CBL_RevID*>*)revIDs {
+    AssertContainsRevIDs(revIDs);
     unsigned generation = rev.revID.generation;
     if (generation <= 1 || revIDs.count == 0)
         return nil;
@@ -985,6 +986,7 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
                    source: (NSURL*)source
                     error: (NSError **)outError
 {
+    AssertContainsRevIDs(history);
     if (outError)
         *outError = nil;
 

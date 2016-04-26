@@ -565,7 +565,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     NSArray* revStrs = $castIf(NSArray, [CBLJSON JSONObjectWithData: queryData
                                                             options: 0
                                                               error: NULL]);
-    return revStrs.cbl_asRevIDs;
+    return revStrs.cbl_asMaybeRevIDs;
 }
 
 - (CBLStatus)do_OPTIONS: (CBLDatabase *)db docID:(NSString *)docID {

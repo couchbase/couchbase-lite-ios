@@ -343,6 +343,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
                               ancestry: (NSArray<CBL_RevID*>*)ancestry
                                 status: (CBLStatus*)outStatus
 {
+    AssertContainsRevIDs(ancestry);
     *outStatus = kCBLStatusOK;
     NSDictionary* revAttachments = rev.attachments;
     if (revAttachments == nil)
@@ -448,6 +449,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
                            docID: (NSString*)docID
                         ancestry: (NSArray<CBL_RevID*>*)ancestry
 {
+    AssertContainsRevIDs(ancestry);
     for (NSInteger i = ancestry.count - 1; i >= 0; i--) {
         CBL_RevID* revID = ancestry[i];
         if (revID.generation >= revpos) {

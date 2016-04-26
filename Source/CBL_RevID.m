@@ -91,6 +91,14 @@ static unsigned parseDigits(const char* str, const char* end);
     }];
 }
 
+- (NSArray<CBL_RevID*>*) cbl_asMaybeRevIDs {
+    return [self my_map: ^id(NSString* str) {
+        if (![str isKindOfClass: [NSString class]])
+            return nil;
+        return [CBL_RevID fromString: str];
+    }];
+}
+
 @end
 
 
@@ -190,6 +198,7 @@ static unsigned parseDigits(const char* str, const char* end);
 
 
 + (NSDictionary*) makeRevisionHistoryDict: (NSArray<CBL_RevID*>*)history {
+    AssertContainsRevIDs(history);
     if (!history)
         return nil;
 

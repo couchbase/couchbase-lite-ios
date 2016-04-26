@@ -54,7 +54,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSArray (CBL_RevID)
 @property (readonly) NSArray<CBL_RevID*>* cbl_asRevIDs;
+@property (readonly) NSArray<CBL_RevID*>* cbl_asMaybeRevIDs;
 @end
+
+
+#if DEBUG
+#define AssertContainsRevIDs(ARRAY)     (void)$castArrayOf(CBL_RevID, (ARRAY))
+#else
+#define AssertContainsRevIDs(ARRAY)     ({ })
+#endif
 
 
 /** SQLite-compatible collation (comparison) function for revision IDs. */

@@ -301,7 +301,8 @@
                 CBL_MutableRevision* populatedRev = [[_settings transformRevision: loadedRev] mutableCopy];
 
                 // Add the revision history:
-                NSArray* backTo = $castIf(NSArray, revResults[@"possible_ancestors"]);
+                NSArray<CBL_RevID*>* backTo = $castIf(NSArray, revResults[@"possible_ancestors"])
+                                                    .cbl_asMaybeRevIDs;
                 NSArray<CBL_RevID*>* history = [db getRevisionHistory: populatedRev
                                                          backToRevIDs: backTo];
                 populatedRev[@"_revisions"] = [CBL_TreeRevID makeRevisionHistoryDict: history];
@@ -619,12 +620,12 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
 
 // Given a revision and an array of revIDs, finds the latest common ancestor revID
 // and returns its generation #. If there is none, returns 0.
-int CBLFindCommonAncestor(CBL_Revision* rev, NSArray<NSString*>* possibleRevIDStrings) {
+int CBLFindCommonAncestor(CBL_Revision* rev, NSArray<CBL_RevID*>* possibleRevIDStrings) {
     if (possibleRevIDStrings.count == 0)
         return 0;
     NSArray<CBL_RevID*>* history = [CBLDatabase parseCouchDBRevisionHistory: rev.properties];
     Assert(history, @"rev is missing _revisions property");
-    return [history firstObjectCommonWithArray: possibleRevIDStrings.cbl_asRevIDs].generation;
+    return [history firstObjectCommonWithArray: possibleRevIDStrings].generation;
 }
 
 

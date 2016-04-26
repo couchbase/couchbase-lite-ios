@@ -607,6 +607,7 @@ static BOOL sAutoCompact = YES;
 - (NSArray<CBL_RevID*>*) getRevisionHistory: (CBL_Revision*)rev
                                backToRevIDs: (NSArray<CBL_RevID*>*)ancestorRevIDs
 {
+    AssertContainsRevIDs(ancestorRevIDs);
     NSSet* ancestors = ancestorRevIDs ? [[NSSet alloc] initWithArray: ancestorRevIDs] : nil;
     return [_storage getRevisionHistory: rev backToRevIDs: ancestors];
 }

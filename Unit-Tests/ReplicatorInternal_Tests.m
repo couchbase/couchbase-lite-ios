@@ -575,9 +575,9 @@
     NSDictionary* revDict = $dict({@"ids", @[@"second", @"first"]}, {@"start", @2});
     CBL_Revision* rev = [CBL_Revision revisionWithProperties: $dict({@"_revisions", revDict})];
     AssertEq(CBLFindCommonAncestor(rev, @[]), 0);
-    AssertEq(CBLFindCommonAncestor(rev, @[@"3-noway", @"1-nope"]), 0);
-    AssertEq(CBLFindCommonAncestor(rev, @[@"3-noway", @"1-first"]), 1);
-    AssertEq(CBLFindCommonAncestor(rev, @[@"3-noway", @"2-second", @"1-first"]), 2);
+    AssertEq(CBLFindCommonAncestor(rev, @[@"3-noway".cbl_asRevID, @"1-nope".cbl_asRevID]), 0);
+    AssertEq(CBLFindCommonAncestor(rev, @[@"3-noway".cbl_asRevID, @"1-first".cbl_asRevID]), 1);
+    AssertEq(CBLFindCommonAncestor(rev, @[@"3-noway".cbl_asRevID, @"2-second".cbl_asRevID, @"1-first".cbl_asRevID]), 2);
 }
 
 

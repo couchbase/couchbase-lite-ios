@@ -1033,6 +1033,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 /** Returns the most recent member of revIDs that appears in rev's ancestry. */
 - (CBL_RevID*) findCommonAncestorOf: (CBL_Revision*)rev withRevIDs: (NSArray<CBL_RevID*>*)revIDs {
+    AssertContainsRevIDs(revIDs);
     if (revIDs.count == 0)
         return nil;
     SInt64 docNumericID = [self getDocNumericID: rev.docID];
@@ -1730,6 +1731,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                    source: (NSURL*)source
                     error: (NSError**)outError
 {
+    AssertContainsRevIDs(history);
     if (outError)
         *outError = nil;
 
