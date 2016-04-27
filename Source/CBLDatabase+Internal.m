@@ -51,6 +51,9 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, NO, NO, YES, NO};
 // When this many changes pile up in _changesToNotify, start removing their bodies to save RAM
 #define kManyChangesToNotify 5000
 
+// How long to wait after a database opens before expiring docs
+#define kHousekeepingDelayAfterOpening 3.0
+
 static BOOL sAutoCompact = YES;
 
 
@@ -294,6 +297,8 @@ static BOOL sAutoCompact = YES;
         }
     }
 
+    [self scheduleDocumentExpiration: kHousekeepingDelayAfterOpening];
+
     return YES;
 }
 
@@ -374,6 +379,47 @@ static BOOL sAutoCompact = YES;
 
 - (NSString*) publicUUID {
     return [_storage infoForKey: @"publicUUID"];
+}
+
+
+#pragma mark - EXPIRATION:
+
+
+- (void) setExpirationDate: (NSDate*)date ofDocument: (NSString*)documentID {
+    UInt64 timestamp = date ? (UInt64)date.timeIntervalSince1970 : 0;
+    [_storage setExpiration: timestamp ofDocument: documentID];
+    [self scheduleDocumentExpiration: 0.0];
+}
+
+
+- (void) scheduleDocumentExpiration: (NSTimeInterval)minimumDelay {
+    [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                             selector: @selector(purgeExpiredDocuments)
+                                               object: nil];
+    UInt64 nextExpiration = _storage.nextDocumentExpiry;
+    if (nextExpiration > 0) {
+        NSDate* expDate = [NSDate dateWithTimeIntervalSince1970: nextExpiration];
+        NSTimeInterval delay = MAX(expDate.timeIntervalSinceNow + 1.0, minimumDelay);
+        LogTo(Database, @"Scheduling next doc expiration in %.3g sec", delay);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // Schedule the perform on the main thread, because we know it has a runloop
+            [self performSelector: @selector(purgeExpiredDocuments)
+                       withObject: nil
+                       afterDelay: delay];
+        });
+    } else {
+        LogTo(Database, @"No pending doc expirations");
+    }
+}
+
+- (void) purgeExpiredDocuments {
+    // Careful: This is called on the main thread
+    [self doAsync:^{
+        LogTo(Database, @"Purging expired documents...");
+        NSUInteger nPurged = [_storage purgeExpiredDocuments];
+        LogTo(Database, @"Purged %zu expired documents", nPurged);
+        [self scheduleDocumentExpiration: 1.0];
+    }];
 }
 
 

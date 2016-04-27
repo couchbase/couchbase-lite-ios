@@ -204,6 +204,8 @@
         // Skip revisions that originally came from the database I'm syncing to:
         if (![change.source isEqual: _settings.remote]) {
             CBL_Revision* rev = change.addedRevision;
+            if (!rev)
+                continue;  // ignore purges
             if (filter && ![db runFilter: filter params: _settings.filterParameters onRevision: rev])
                 continue;
             CBL_MutableRevision* nuRev = [rev mutableCopy];

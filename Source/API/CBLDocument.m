@@ -106,6 +106,18 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 }
 
 
+- (NSDate*) expirationDate {
+    UInt64 timestamp = [_database.storage expirationOfDocument: self.documentID];
+    if (timestamp == 0)
+        return nil;
+    return [NSDate dateWithTimeIntervalSince1970: timestamp];
+}
+
+- (void) setExpirationDate: (NSDate*)date {
+    [_database setExpirationDate: date ofDocument: self.documentID];
+}
+
+
 #pragma mark - REVISIONS:
 
 
@@ -171,17 +183,22 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 // Notification from the CBLDatabase that a (current, winning) revision has been added
 - (void) revisionAdded: (CBLDatabaseChange*)change notify: (BOOL)notify {
-    CBL_RevID* revID = change.winningRevisionID;
-    if (!revID)
-        return; // current revision didn't change
-    if (_currentRevisionKnown && !$equal(revID, _currentRevision.rev.revID)) {
-        CBL_Revision* rev = change.winningRevisionIfKnown;
-        if (!rev)
-            [self forgetCurrentRevision];
-        else if (rev.deleted)
-            _currentRevision = nil;
-        else
-            _currentRevision = [[CBLSavedRevision alloc] initWithDocument: self revision: rev];
+    if (change.revisionID) {
+        CBL_RevID* revID = change.winningRevisionID;
+        if (!revID)
+            return; // current revision didn't change
+        if (_currentRevisionKnown && !$equal(revID, _currentRevision.rev.revID)) {
+            CBL_Revision* rev = change.winningRevisionIfKnown;
+            if (!rev)
+                [self forgetCurrentRevision];
+            else if (rev.deleted)
+                _currentRevision = nil;
+            else
+                _currentRevision = [[CBLSavedRevision alloc] initWithDocument: self revision: rev];
+        }
+    } else {
+        // Document was purged!
+        _currentRevision = nil;
     }
 
     id<CBLDocumentModel> model = _modelObject; // strong reference to it

@@ -19,8 +19,8 @@ NS_ASSUME_NONNULL_BEGIN
 /** The ID of the document that changed. */
 @property (readonly) NSString* documentID;
 
-/** The ID of the newly-added revision. */
-@property (readonly) NSString* revisionID;
+/** The ID of the newly-added revision. A nil value means the document was purged. */
+@property (readonly, nullable) NSString* revisionID;
 
 /** Is the new revision the document's current (default, winning) one?
     If not, there's a conflict. */

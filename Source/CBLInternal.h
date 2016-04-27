@@ -61,6 +61,7 @@
                      winningRevisionID: (CBL_RevID*)winningRevisionID
                             inConflict: (BOOL)maybeConflict
                                 source: (NSURL*)source;
+- (instancetype) initWithPurgedDocument: (NSString*)docID;
 /** The revision just added. Guaranteed immutable. */
 @property (nonatomic, readonly) CBL_Revision* addedRevision;
 @property (nonatomic, readonly) CBL_Revision* winningRevisionIfKnown;

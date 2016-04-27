@@ -198,7 +198,7 @@
         return;  // this is just an echo from my -justSave: method, below, so ignore it
     
     LogTo(Model, @"%@ External change (rev=%@)", self, _document.currentRevisionID);
-    _isNew = false;
+    _isNew = (_document.currentRevisionID == nil);
     [self markExternallyChanged];
     
     // Prepare to send KVO notifications about all my properties in case they changed:
@@ -206,8 +206,8 @@
     for (NSString* key in keys)
         [self willChangeValueForKey: key];
 
-    if (doc.isDeleted) {
-        // If doc was deleted, revert any unsaved changes and mark doc as unchanged:
+    if (doc.isDeleted || _isNew) {
+        // If doc was deleted or purged, revert any unsaved changes and mark doc as unchanged:
         _properties = nil;
         _changedNames = nil;
         _changedAttachments = nil;

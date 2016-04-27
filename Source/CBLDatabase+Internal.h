@@ -154,4 +154,6 @@ extern NSArray* CBL_RunloopModes;
  (issue #364). */
 - (void) postNotification: (NSNotification*)notification;
 
+- (void) setExpirationDate: (NSDate*)date ofDocument: (NSString*)documentID;
+
 @end

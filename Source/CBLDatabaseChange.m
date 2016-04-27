@@ -22,7 +22,7 @@
 @implementation CBLDatabaseChange
 
 
-@synthesize addedRevision=_addedRevision, winningRevisionID=_winningRevisionID,
+@synthesize documentID=_documentID, addedRevision=_addedRevision, winningRevisionID=_winningRevisionID,
             inConflict=_inConflict, source=_source, echoed=_echoed;
 
 
@@ -37,6 +37,7 @@
     if (self) {
         // Input CBL_Revisions need to be copied in case they are mutable:
         _addedRevision = addedRevision.copy;
+        _documentID = _addedRevision.docID;
         _winningRevisionID = winningRevisionID;
         _inConflict = maybeConflict;
         _source = source;
@@ -44,12 +45,26 @@
     return self;
 }
 
+- (instancetype) initWithPurgedDocument: (NSString*)docID {
+    Assert(docID);
+    self = [super init];
+    if (self) {
+        _documentID = docID;
+    }
+    return self;
+}
+
 
 - (id) copyWithZone:(NSZone *)zone {
-    CBLDatabaseChange* change =  [[[self class] alloc] initWithAddedRevision: _addedRevision
-                                                           winningRevisionID: _winningRevisionID
-                                                                  inConflict: _inConflict
-                                                                      source: _source];
+    CBLDatabaseChange* change;
+    if (_addedRevision) {
+        change =  [[[self class] alloc] initWithAddedRevision: _addedRevision
+                                            winningRevisionID: _winningRevisionID
+                                                   inConflict: _inConflict
+                                                       source: _source];
+    } else {
+        change =  [[[self class] alloc] initWithPurgedDocument: _documentID];
+    }
     change->_echoed = true; // Copied changes are echoes
     return change;
 }
@@ -57,13 +72,13 @@
 
 - (BOOL) isEqual:(id)object {
     return [object isKindOfClass: [CBLDatabaseChange class]]
+        && $equal(_documentID, [object documentID])
         && $equal(_addedRevision, [object addedRevision])
         && $equal(_winningRevisionID, [object winningRevisionID])
         && $equal(_source, [object source]);
 }
 
 
-- (NSString*) documentID    {return _addedRevision.docID;}
 - (NSString*) revisionID    {return _addedRevision.revIDString;}
 - (UInt64) sequenceNumber   {return _addedRevision.sequence;}
 - (BOOL) isDeletion         {return _addedRevision.deleted;}
@@ -78,7 +93,10 @@
 
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@]", self.class, _addedRevision];
+    if (_addedRevision)
+        return [NSString stringWithFormat: @"%@[%@]", self.class, _addedRevision];
+    else
+        return [NSString stringWithFormat: @"%@[purged %@]", self.class, _documentID];
 }
 
 

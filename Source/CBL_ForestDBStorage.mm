@@ -29,6 +29,7 @@ extern "C" {
 }
 #import "CBL_ForestDBDocEnumerator.h"
 #import "CBLForestBridge.h"
+#import "c4ExpiryEnumerator.h"
     
 
 #define kDBFilename @"db.forest"
@@ -699,6 +700,7 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
                 // Delete all revisions if magic "*" revision ID is given:
                 if (!c4db_purgeDoc(_forest, docIDSlice, &c4err))
                     return err2status(c4err);
+                [self notifyPurgedDocument: docID];
                 revsPurged = @[@"*"];
                 LogTo(Database, @"Purged doc '%@'", docID);
             } else {
@@ -721,6 +723,54 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
         }
         return kCBLStatusOK;
     }];
+}
+
+
+- (UInt64) expirationOfDocument: (NSString*)docID {
+    return c4doc_getExpiration(_forest, string2slice(docID));
+}
+
+
+- (BOOL) setExpiration: (UInt64)timestamp ofDocument: (NSString*)docID {
+    return c4doc_setExpiration(_forest, string2slice(docID), timestamp, NULL);
+}
+
+
+- (UInt64) nextDocumentExpiry {
+    return c4db_nextDocExpiration(_forest);
+}
+
+
+static inline void cleanup_C4ExpiryEnumerator(C4ExpiryEnumerator **e) { c4exp_free(*e); }
+
+- (NSUInteger) purgeExpiredDocuments {
+    __block NSUInteger expired = 0;
+    [self inTransaction: ^CBLStatus {
+        C4Error err;
+        CLEANUP(C4ExpiryEnumerator) *e = c4db_enumerateExpired(_forest, &err);
+        if (!e)
+            return err2status(err);
+        while (c4exp_next(e, &err)) {
+            CLEANUP(C4SliceResult) docID = c4exp_getDocID(e);
+            C4Error docErr;
+            if (c4db_purgeDoc(_forest, docID, &docErr))
+                ++expired;
+            else
+                Warn(@"Unable to purge expired doc %@: CBForest error %d/%d",
+                     slice2string(docID), docErr.domain,docErr.code);
+            [self notifyPurgedDocument: slice2string(docID)];
+        }
+        if (err.code)
+            Warn(@"Error enumerating expired docs: CBForest error %d/%d", err.domain,err.code);
+        c4exp_purgeExpired(e, NULL);    // remove the expiration markers
+        return kCBLStatusOK;
+    }];
+    return expired;
+}
+
+
+- (void) notifyPurgedDocument: (NSString*)docID {
+    [_delegate databaseStorageChanged: [[CBLDatabaseChange alloc] initWithPurgedDocument: docID]];
 }
 
 

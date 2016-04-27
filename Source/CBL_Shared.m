@@ -122,6 +122,17 @@
     }
 }
 
+- (NSCache*) docIDCacheForDatabaseNamed: (NSString*)dbName {
+    @synchronized(self) {
+        NSCache* cache = [self valueForType: @"docIDCache" name: @"" inDatabaseNamed: dbName];
+        if (!cache) {
+            cache = [[NSCache alloc] init];
+            [self setValue: cache forType: @"docIDCache" name: @"" inDatabaseNamed: dbName];
+        }
+        return cache;
+    }
+}
+
 - (void) forgetDatabaseNamed: (NSString*)dbName {
     NSUInteger iterations = 0;
     while(true) {

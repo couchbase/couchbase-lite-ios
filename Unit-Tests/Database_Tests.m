@@ -1514,6 +1514,9 @@
 }
 
 
+#pragma mark - ETC.
+
+
 - (void) test25_CloseDatabase {
     // Add some documents:
     for (NSUInteger i = 0; i < 10; i++) {
@@ -1540,6 +1543,117 @@
     [self keyValueObservingExpectationForObject: bgdb keyPath: @"isOpen" expectedValue: @(NO)];
     Assert([db close: &error], @"Cannot close the database: %@", error);
     [self waitForExpectationsWithTimeout: 1.0 handler: nil];
+}
+
+
+- (void) test26_DocumentExpiry {
+    NSDate* future = [NSDate dateWithTimeIntervalSinceNow: 12345];
+    Log(@"Now is %@", [NSDate date]);
+    CBLDocument* doc = [self createDocumentWithProperties: @{@"foo": @17}];
+    AssertNil(doc.expirationDate);
+    doc.expirationDate = future;
+    NSDate* exp = doc.expirationDate;
+    Log(@"Doc expiration is %@", exp);
+    Assert(exp != nil);
+    Assert(fabs([exp timeIntervalSinceDate: future]) < 1.0);
+
+    NSDate* next = [NSDate dateWithTimeIntervalSince1970: db.storage.nextDocumentExpiry];
+    Log(@"Next expiration at %@", next);
+
+    doc.expirationDate = nil;
+    AssertNil(doc.expirationDate);
+
+    AssertEq(db.storage.nextDocumentExpiry, 0ull);
+
+    // Can a nonexistent document have an expiration date?
+    doc = db[@"foo"];
+    AssertNil(doc.expirationDate);
+    doc.expirationDate = future;
+    exp = doc.expirationDate;
+    Log(@"Nonexistent doc expiration is %@", exp);
+//    Assert(exp != nil);
+//    Assert(fabs(exp.timeIntervalSince1970 - now.timeIntervalSince1970) < 1.0);
+//    AssertEq(db.storage.nextDocumentExpiry, (UInt64)exp.timeIntervalSince1970);
+
+    Log(@"Creating documents");
+    [self createDocuments: 10000];
+
+    Log(@"Marking docs for expiration");
+    __block int total = 0, marked = 0;
+    __block CBLDocument* someDoc = nil;
+    [db inTransaction:^BOOL{
+        for (CBLQueryRow* row in [[db createAllDocumentsQuery] run: NULL]) {
+            CBLDocument* doc = row.document;
+            int sequence = [doc[@"sequence"] intValue];
+            if (sequence % 10 == 6) {
+                doc.expirationDate = [NSDate dateWithTimeIntervalSinceNow: 2];
+                someDoc = doc;
+                ++marked;
+            } else if (sequence % 10 == 3) {
+                doc.expirationDate = future;
+            }
+            ++total;
+        }
+        return YES;
+    }];
+    AssertEq(total, 10001);
+    AssertEq(marked, 1000);
+
+    next = [NSDate dateWithTimeIntervalSince1970: db.storage.nextDocumentExpiry];
+    Log(@"Next expiration at %@ (in %.3f sec)", next, next.timeIntervalSinceNow);
+    Assert(next.timeIntervalSinceNow <= 2);
+    Assert(next.timeIntervalSinceNow >= -20);
+
+    __block unsigned dbChangesReceived = 0;
+    [self expectationForNotification: kCBLDatabaseChangeNotification
+                              object: db
+                             handler: ^BOOL(NSNotification* notification) {
+                                 NSArray* changes = notification.userInfo[@"changes"];
+                                 NSUInteger purges = 0;
+                                 for (CBLDatabaseChange* change in changes) {
+                                     Assert(change.documentID);
+                                     if (!change.revisionID)
+                                         ++purges;
+                                 }
+                                 Log(@"Received %@ with %zu changes, %zu purges",
+                                     notification.name, changes.count, purges);
+                                 dbChangesReceived += purges;
+                                 Assert(dbChangesReceived <= 1000);
+                                 return (dbChangesReceived >= 1000);
+                             }];
+
+    Assert(someDoc.currentRevision != nil);
+    [self expectationForNotification: kCBLDocumentChangeNotification
+                              object: someDoc
+                             handler: ^BOOL(NSNotification* notification) {
+                                 Log(@"Received %@", notification);
+                                 CBLDatabaseChange* change = notification.userInfo[@"change"];
+                                 Assert(change);
+                                 AssertEqual(change.documentID, someDoc.documentID);
+                                 AssertNil(change.revisionID);
+                                 AssertNil(someDoc.currentRevision);
+                                 return YES;
+                             }];
+
+    Log(@"Waiting for auto-expiration...");
+    NSPredicate* expiredPred = [NSPredicate predicateWithFormat: @"documentCount <= 9001"];
+    (void)[self expectationForPredicate: expiredPred evaluatedWithObject: db handler: nil];
+
+    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    AssertEq(db.documentCount, 9001u);
+
+    total = 0;
+    for (CBLQueryRow* row in [[db createAllDocumentsQuery] run: NULL]) {
+        CBLDocument* doc = row.document;
+        int sequence = [doc[@"sequence"] intValue];
+        Assert(sequence % 10 != 6);
+        ++total;
+    }
+    AssertEq(total, 9001);
+
+    next = [NSDate dateWithTimeIntervalSince1970: db.storage.nextDocumentExpiry];
+    Log(@"Now next expiration is %@", next);
+    Assert(fabs([next timeIntervalSinceDate: future]) < 1.0);
 }
 
 @end

@@ -162,7 +162,7 @@
                                     filter: (CBL_RevisionFilter)filter
                                     status: (CBLStatus*)outStatus;
 
-// INSERTION / DELETION:
+// INSERTION / DELETION / PURGING:
 
 /** Creates a new revision of a document.
     On success, before returning the new CBL_Revision, the implementation will also call the
@@ -217,6 +217,17 @@
 - (CBLStatus) purgeRevisions: (NSDictionary*)docsToRevs
                       result: (NSDictionary**)outResult;
 
+/** Returns a document's expiration date as a Unix timestamp, or 0 for no expiration. */
+- (UInt64) expirationOfDocument: (NSString*)docID;
+
+/** Sets a document's expiration to a Unix timestamp, or 0 for no expiration. */
+- (BOOL) setExpiration: (UInt64)timestamp ofDocument: (NSString*)docID;
+
+/** Returns the next time at which a document will expire. */
+- (UInt64) nextDocumentExpiry;
+
+/** Triggers purging of documents whose expiration time has passed. */
+- (NSUInteger) purgeExpiredDocuments;
 
 // VIEWS:
 

@@ -7,6 +7,7 @@
 //
 
 #import "CBLSyncConnection_Internal.h"
+#import "CBLInternal.h"
 #import <CommonCrypto/CommonDigest.h>
 
 
@@ -215,25 +216,27 @@
 
 // Called on the database queue
 - (void) _dbChanged: (NSNotification*)n {
+    __typeof(_pushFilter) pushFilter = _pushFilter;
     NSMutableArray* changes = [NSMutableArray new];
     for (CBLDatabaseChange* change in (n.userInfo)[@"changes"]) {
-        if (![change.source isEqual: _peerURL]) {  // ignore echoes of changes rcvd from this peer
-            __typeof(_pushFilter) pushFilter = _pushFilter;
-            if (pushFilter) {
-                CBLSavedRevision* rev = [_db[change.documentID] revisionWithID: change.revisionID];
-                if (!pushFilter(rev, _pushFilterParams))
-                    continue;
-            }
-            [changes addObject: encodeChange(change.sequenceNumber, change.documentID,
-                                             change.revisionID, change.isDeletion)];
-        }
+        if ([change.source isEqual: _peerURL])
+            continue;  // ignore echoes of changes rcvd from this peer
+        CBL_Revision* rev = change.addedRevision;
+        if (!rev)
+            continue;  // ignore purges
+        if (pushFilter && ![_db runFilter: pushFilter params: _pushFilterParams onRevision: rev])
+            continue;  // filter block says ignore it
+        [changes addObject: encodeChange(change.sequenceNumber, change.documentID,
+                                         change.revisionID, change.isDeletion)];
     }
-    [self onSyncQueue: ^{
-        if (_connection) {
-            LogTo(Sync, @"Notified that %lu documents changed", (unsigned long)changes.count);
-            [self sendChanges: changes onSent: nil onComplete: nil];
-        }
-    }];
+    if (changes.count > 0) {
+        [self onSyncQueue: ^{
+            if (_connection) {
+                LogTo(Sync, @"Notified that %lu documents changed", (unsigned long)changes.count);
+                [self sendChanges: changes onSent: nil onComplete: nil];
+            }
+        }];
+    }
 }
 
 

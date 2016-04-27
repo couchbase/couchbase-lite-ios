@@ -203,6 +203,8 @@ NSTimeInterval kMinHeartbeat = 5.0;
     NSMutableArray* changes = $marray();
     for (CBLDatabaseChange* change in (n.userInfo)[@"changes"]) {
         CBL_Revision* rev = change.addedRevision;
+        if (!rev)
+            continue; // ignore purges
         CBL_RevID* winningRevID = change.winningRevisionID;
 
         if (!_changesIncludeConflicts) {

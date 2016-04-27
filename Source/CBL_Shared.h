@@ -29,7 +29,8 @@
 - (NSDictionary*) valuesOfType: (NSString*)type
                inDatabaseNamed: (NSString*)dbName;
 
-- (MYReadWriteLock*) lockForDatabaseNamed: (NSString*)dbName;
+- (MYReadWriteLock*) lockForDatabaseNamed: (NSString*)dbName;   // only SQLite storage uses this
+- (NSCache*) docIDCacheForDatabaseNamed: (NSString*)dbName;     // only SQLite storage uses this
 
 - (void) openedDatabase: (NSString*)dbName;
 - (void) closedDatabase: (NSString*)dbName;

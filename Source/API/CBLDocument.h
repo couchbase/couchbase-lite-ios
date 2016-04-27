@@ -39,6 +39,9 @@ NS_ASSUME_NONNULL_BEGIN
     The purge will NOT be replicated to other databases. */
 - (BOOL) purgeDocument: (NSError**)outError;
 
+/** A date/time after which this document will be automatically purged. */
+@property (strong, nullable) NSDate* expirationDate;
+
 
 #pragma mark REVISIONS:
 
