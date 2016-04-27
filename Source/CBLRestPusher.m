@@ -115,6 +115,13 @@
     CBL_RevisionList* unpushedRevisions = self.unpushedRevisions;
     if (!unpushedRevisions)
         return;
+    if (unpushedRevisions.count == 0 && !_settings.continuous) {
+        // Nothing to push, so stop. Use a delayed-perform, because various things like tests
+        // don't expect the replicator to stop during the call to -start, before any async
+        // activity occurs.
+        [self performSelector: @selector(stopped) withObject: nil afterDelay: 0.0];
+        return;
+    }
     [self addRevsToInbox: unpushedRevisions];
     [_batcher flush];  // process up to the first 100 revs
     
