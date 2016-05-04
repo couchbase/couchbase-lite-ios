@@ -719,8 +719,6 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 
 - (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev {
-    if (rev.body && rev.sequenceIfKnown)
-        return kCBLStatusOK;  // no-op
     Assert(rev.docID && rev.revID);
     SInt64 docNumericID = [self getDocNumericID: rev.docID];
     if (docNumericID <= 0)

@@ -282,14 +282,19 @@
                 CBLStatus status;
                 CBL_Revision* loadedRev = [db revisionByLoadingBody: rev
                                                              status: &status];
-                if (loadedRev && !loadedRev.properties)
+                if (loadedRev && !loadedRev.properties) {
+                    loadedRev = nil;
                     status = kCBLStatusBadJSON;
-                if (status >= 300) {
-                    Warn(@"%@: Couldn't get local contents of %@ (status=%d)", self, rev, status);
+                }
+                if (!loadedRev) {
+                    if (status != kCBLStatusNotFound)
+                        Warn(@"%@: Couldn't get local contents of %@ (status=%d)",
+                             self, rev, status);
                     if (status < 500)
                         [self removePending: rev];
                     else
                         [self revisionFailed]; // db error, may be temporary
+                    continue;
                 }
 
                 if ($castIf(NSNumber, loadedRev[@"_removed"]).boolValue) {
