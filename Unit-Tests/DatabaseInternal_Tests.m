@@ -212,7 +212,15 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     Assert([db compact: &error]);
 
     // Make sure old rev is missing:
-    AssertNil([db getDocumentWithID: rev1.docID revisionID: rev1.revID]);
+    CBL_Revision* oldRev = [db getDocumentWithID: rev1.docID revisionID: rev1.revID];
+    Assert(oldRev);
+    Assert(oldRev.missing);
+    AssertNil(oldRev.body);
+
+    // Make sure history still works after compaction:
+    history = [db getRevisionHistory: revD backToRevIDs: nil];
+    Log(@"After compaction, history = %@", history);
+    AssertEqual(history, (@[revD.revID, rev2.revID, rev1.revID]));
 
     [[NSNotificationCenter defaultCenter] removeObserver: observer];
 }
@@ -490,7 +498,10 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
 
     // Fetch one of those phantom revisions with no body:
     CBL_Revision* rev2 = [db getDocumentWithID: rev.docID revisionID: @"2-2222".cbl_asRevID];
-    AssertNil(rev2);
+    Assert(rev2.missing);
+    AssertNil(rev2.body);
+
+    AssertNil([db getDocumentWithID: rev.docID revisionID: @"666-6666".cbl_asRevID]);
 
     // Make sure no duplicate rows were inserted for the common revisions:
     // (SQLite storage assigns sequences to inserted ancestor revs, while ForestDB doesn't)

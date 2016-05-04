@@ -650,8 +650,10 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     NSMutableString* sql = [NSMutableString stringWithString: @"SELECT revid, deleted, sequence"];
     if (withBody)
         [sql appendString: @", json"];
+    else
+        [sql appendString: @", json is not null"];
     if (revID)
-        [sql appendString: @" FROM revs WHERE revs.doc_id=? AND revid=? AND json notnull LIMIT 1"];
+        [sql appendString: @" FROM revs WHERE revs.doc_id=? AND revid=? LIMIT 1"];
     else
         [sql appendString: @" FROM revs WHERE revs.doc_id=? and current=1 and deleted=0 "
                             "ORDER BY revid DESC LIMIT 1"];
@@ -668,6 +670,8 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         result.sequence = [r longLongIntForColumnIndex: 2];
         if (withBody)
             result.asJSON = [r dataNoCopyForColumnIndex: 3];
+        else
+            result.missing = ![r boolForColumnIndex: 3];
         status = kCBLStatusOK;
     }
     [r close];
@@ -704,7 +708,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
                                                       revID: revID
                                                     deleted: deleted];
         result.sequence = sequence;
-        result.asJSON =[r dataNoCopyForColumnIndex: 2];
+        result.asJSON = [r dataNoCopyForColumnIndex: 2];
         status = kCBLStatusOK;
     }
     [r close];
@@ -715,7 +719,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 
 - (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev {
-    if (rev.body && rev.sequence)
+    if (rev.body && rev.sequenceIfKnown)
         return kCBLStatusOK;  // no-op
     Assert(rev.docID && rev.revID);
     SInt64 docNumericID = [self getDocNumericID: rev.docID];
@@ -729,12 +733,11 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     CBLStatus status = kCBLStatusNotFound;
     if ([r next]) {
         // Found the rev. But the JSON still might be null if the database has been compacted.
+        rev.sequence = [r longLongIntForColumnIndex: 0];
         NSData* json = [r dataNoCopyForColumnIndex: 1];
-        if (json) {
+        rev.asJSON = json;
+        if (json)
             status = kCBLStatusOK;
-            rev.sequence = [r longLongIntForColumnIndex: 0];
-            rev.asJSON = json;
-        }
     }
     [r close];
     return status;
@@ -750,8 +753,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
                                                                   deleted: deleted];
     rev.sequence = sequence;
-    if (json)
-        rev.asJSON = json;
+    rev.asJSON = json;
     return rev;
 }
 

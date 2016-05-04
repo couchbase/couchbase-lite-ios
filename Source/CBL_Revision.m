@@ -296,8 +296,14 @@
 }
 
 - (void) setAsJSON:(UU NSData *)asJSON {
-    _body = [[CBL_Body alloc] initWithJSON: asJSON
-                               addingDocID: _docID revID: _revID deleted: _deleted];
+    if (asJSON) {
+        _body = [[CBL_Body alloc] initWithJSON: asJSON
+                                   addingDocID: _docID revID: _revID deleted: _deleted];
+        _missing = NO;
+    } else {
+        _body = nil;
+        _missing = YES;
+    }
 }
 
 - (void) setObject: (UU id)object forKeyedSubscript: (UU NSString*)key {

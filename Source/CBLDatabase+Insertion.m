@@ -317,8 +317,9 @@ DefineLogDomain(Validation);
 
 
 - (CBL_Revision*) current_Revision {
+    CBLStatus status;
     if (_currentRevision)
-        _currentRevision = [_db revisionByLoadingBody: _currentRevision status: NULL];
+        _currentRevision = [_db revisionByLoadingBody: _currentRevision status: &status];
     return _currentRevision;
 }
 

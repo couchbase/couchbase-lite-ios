@@ -312,7 +312,7 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
     LogTo(Database, @"Read %@ rev %@", docID, inRevID);
 #endif
     *outStatus = selectRev(doc, inRevID, withBody);
-    if (CBLStatusIsError(*outStatus))
+    if (CBLStatusIsError(*outStatus) && *outStatus != kCBLStatusGone)
         return nil;
     if (!inRevID && (doc->selectedRev.flags & kRevDeleted)) {
         *outStatus = kCBLStatusDeleted;
@@ -360,7 +360,7 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
     if (!doc)
         return status;
 
-    status = selectRev(doc, rev.revID, YES);
+    status = selectRev(doc, rev.revID, NO);
     if (CBLStatusIsError(status))
         return status;
     return [CBLForestBridge loadBodyOfRevisionObject: rev fromSelectedRevision: doc];

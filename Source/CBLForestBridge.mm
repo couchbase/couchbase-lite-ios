@@ -271,7 +271,7 @@ C4EncryptionKey symmetricKey2Forest(CBLSymmetricKey* key) {
     result.sequence = doc->selectedRev.sequence;
     if (withBody) {
         *outStatus = [self loadBodyOfRevisionObject: result fromSelectedRevision: doc];
-        if (CBLStatusIsError(*outStatus))
+        if (CBLStatusIsError(*outStatus) && *outStatus != kCBLStatusGone)
             result = nil;
     }
     return result;
@@ -281,11 +281,13 @@ C4EncryptionKey symmetricKey2Forest(CBLSymmetricKey* key) {
 + (CBLStatus) loadBodyOfRevisionObject: (CBL_MutableRevision*)rev
                   fromSelectedRevision: (C4Document*)doc
 {
-    C4Error c4err;
-    if (!c4doc_loadRevisionBody(doc, &c4err))
-        return err2status(c4err);
-    rev.asJSON = slice2data(doc->selectedRev.body);
     rev.sequence = doc->selectedRev.sequence;
+    C4Error c4err;
+    if (!c4doc_loadRevisionBody(doc, &c4err)) {
+        rev.missing = YES;
+        return err2status(c4err);
+    }
+    rev.asJSON = slice2data(doc->selectedRev.body);
     return kCBLStatusOK;
 }
 

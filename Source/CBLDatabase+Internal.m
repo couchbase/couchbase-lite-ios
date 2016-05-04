@@ -526,11 +526,12 @@ static BOOL sAutoCompact = YES;
 
 
 - (CBLStatus) loadRevisionBody: (CBL_MutableRevision*)rev {
-    // First check for no-op -- if we just need the default properties and already have them:
+    // First check whether we already have the body (or know it's missing) and the sequence:
     if (rev.sequenceIfKnown) {
-        NSDictionary* props = rev.properties;
-        if (props.cbl_rev && props.cbl_id)
+        if (rev.body)
             return kCBLStatusOK;
+        else if (rev.missing)
+            return kCBLStatusNotFound;
     }
     Assert(rev.docID && rev.revID);
 
@@ -540,20 +541,21 @@ static BOOL sAutoCompact = YES;
 - (CBL_Revision*) revisionByLoadingBody: (CBL_Revision*)rev
                                  status: (CBLStatus*)outStatus
 {
-    // First check for no-op -- if we just need the default properties and already have them:
+    // First check whether we already have the body (or know it's missing) and the sequence:
     if (rev.sequenceIfKnown) {
-        NSDictionary* props = rev.properties;
-        if (props.cbl_rev && props.cbl_id) {
-            if (outStatus)
-                *outStatus = kCBLStatusOK;
+        if (rev.body) {
+            *outStatus = kCBLStatusOK;
             return rev;
+        } else if (rev.missing) {
+            *outStatus = kCBLStatusNotFound;
+            return nil;
         }
     }
+    Assert(rev.docID && rev.revID);
+
     CBL_MutableRevision* nuRev = rev.mutableCopy;
-    CBLStatus status = [self loadRevisionBody: nuRev];
-    if (outStatus)
-        *outStatus = status;
-    if (CBLStatusIsError(status))
+    *outStatus = [_storage loadRevisionBody: nuRev];
+    if (CBLStatusIsError(*outStatus))
         nuRev = nil;
     return nuRev;
 }
