@@ -1085,4 +1085,71 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
 }
 
 
+- (void) test30_conflictAfterPrune {
+    // Create a conflict where one branch is more than maxRevTreeDepth generations deeper than
+    // the other: (#1217)
+    db.maxRevTreeDepth = 5;
+
+    CBLStatus status;
+    NSError* error;
+    CBL_Revision* base = [db putDocID: @"robin" properties: $mdict()
+                       prevRevisionID: nil allowConflict: NO source: nil
+                               status: &status error: &error];
+    Assert(base);
+    CBL_Revision* shortBranch = [db putDocID: @"robin" properties: $mdict({@"branch", @"short"})
+                              prevRevisionID: base.revID allowConflict: NO source: nil
+                                      status: &status error: &error];
+    Assert(shortBranch);
+
+    CBL_Revision* longBranch = base;
+    for (int i = 0; i < 8; i++) {
+        longBranch = [db putDocID: @"robin" properties: $mdict({@"branch", @"long"})
+                   prevRevisionID: longBranch.revID allowConflict: (i==0) source: nil
+                           status: &status error: &error];
+        Assert(longBranch);
+    }
+
+    Log(@"All revisions = %@", [db.storage getAllRevisionsOfDocumentID: @"robin" onlyCurrent: NO]);
+
+    NSArray<CBLSavedRevision*>* all = [db[@"robin"] getConflictingRevisions: &error];
+    Log(@"Conflicts = %@", all);
+    AssertEq(all.count, 2u);
+    NSArray* allRevIDs = [all valueForKeyPath: @"revisionID"];
+    Assert([allRevIDs containsObject: shortBranch.revID.asString]);
+    Assert([allRevIDs containsObject: longBranch.revID.asString]);
+    CBL_Revision *shortConflict = shortBranch, *longConflict = longBranch;
+
+    // Resolve the conflict by adding to the long branch and deleting the short one:
+    NSArray* shortHistory = [db getRevisionHistory: shortBranch backToRevIDs: nil];
+    NSArray* longHistory  = [db getRevisionHistory: longBranch  backToRevIDs: nil];
+
+    shortBranch = [db putDocID: @"robin" properties: $mdict({@"_deleted", @YES})
+                prevRevisionID: shortBranch.revID allowConflict: NO source: nil
+                        status: &status error: &error];
+    Assert(shortBranch);
+    longBranch = [db putDocID: @"robin" properties: $mdict({@"branch", @"merged"})
+               prevRevisionID: longBranch.revID allowConflict: NO source: nil
+                       status: &status error: &error];
+    Assert(longBranch);
+
+    Log(@"After merge, all revisions = %@", [db.storage getAllRevisionsOfDocumentID: @"robin" onlyCurrent: NO]);
+    all = [db[@"robin"] getConflictingRevisions: &error];
+    Log(@"After merge, conflicts = %@", all);
+    AssertEq(all.count, 1u);
+    AssertEqual(all[0].revisionID, longBranch.revID.asString);
+
+    // Add the conflicting revisions back, as a pull replication might do:
+    status = [db forceInsert: shortConflict revisionHistory: shortHistory source: nil error: &error];
+    Assert(!CBLStatusIsError(status));
+    status = [db forceInsert: longConflict revisionHistory: longHistory source: nil error: &error];
+    Assert(!CBLStatusIsError(status));
+
+    // Make sure this doesn't re-create the conflict:
+    all = [db[@"robin"] getConflictingRevisions: &error];
+    Log(@"After pull, conflicts = %@", all);
+    AssertEq(all.count, 1u);
+    AssertEqual(all.firstObject.revisionID, longBranch.revID.asString);
+}
+
+
 @end
