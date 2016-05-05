@@ -382,7 +382,8 @@ static BOOL sAutoCompact = YES;
 
 /** Posts a local NSNotification of a new revision of a document. */
 - (void) databaseStorageChanged:(CBLDatabaseChange *)change {
-    LogTo(Database, @"Added: %@", change.addedRevision);
+    LogTo(Database, @"---> Added: %@ as seq %lld",
+          change.addedRevision, change.addedRevision.sequence);
     if (!_changesToNotify)
         _changesToNotify = [[NSMutableArray alloc] init];
     [_changesToNotify addObject: change];
@@ -436,7 +437,7 @@ static BOOL sAutoCompact = YES;
                 else
                     [seqs appendFormat: @"%lld", seq];
             }
-            LogTo(Database, @"%@: Posting change notifications: seq %@", self, seqs);
+            LogVerbose(Database, @"%@: Posting change notifications: seq %@", self, seqs);
         }
         
         [self postPublicChangeNotification: changes];
@@ -475,8 +476,8 @@ static BOOL sAutoCompact = YES;
                     [echoedChanges addObject: change.copy]; // copied change is marked as echoed
             }
             if (echoedChanges.count > 0) {
-                LogTo(Database, @"%@: Notified of %u changes by %@",
-                      self, (unsigned)echoedChanges.count, senderDB);
+                LogVerbose(Database, @"%@: Notified of %u changes by %@",
+                           self, (unsigned)echoedChanges.count, senderDB);
                 [self doAsync: ^{
                     [self notifyChanges: echoedChanges];
                 }];
