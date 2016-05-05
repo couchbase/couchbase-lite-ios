@@ -1011,26 +1011,22 @@ DefineLogDomain(SQL);
     if (docNumericID <= 0)
         return nil;
     int sqlLimit = limit > 0 ? (int)limit : -1;     // SQL uses -1, not 0, to denote 'no limit'
-    CBL_FMResultSet* r = [_fmdb executeQuery:
-                      @"SELECT revid, sequence FROM revs WHERE doc_id=? and revid < ?"
-                       " and deleted=0 and json not null"
-                       " ORDER BY sequence DESC LIMIT ?",
-                      @(docNumericID), $sprintf(@"%d-", generation), @(sqlLimit)];
+
+    NSMutableString* sql = [@"SELECT revid, sequence FROM revs WHERE doc_id=? and revid < ?"
+                            " and deleted=0 and json not null" mutableCopy];
+    if (onlyAttachments)
+        [sql appendString: @" and no_attachments=0"];
+    [sql appendString: @" ORDER BY sequence DESC LIMIT ?"];
+
+    CBL_FMResultSet* r = [_fmdb executeQuery: sql,
+                                    @(docNumericID), $sprintf(@"%d-", generation), @(sqlLimit)];
     if (!r)
         return nil;
     NSMutableArray* revIDs = $marray();
-    while ([r next]) {
-        if (onlyAttachments && ![self sequenceHasAttachments: [r longLongIntForColumnIndex: 1]])
-            continue;
+    while ([r next])
         [revIDs addObject: [r revIDForColumnIndex: 0]];
-    }
     [r close];
     return revIDs;
-}
-
-
-- (BOOL) sequenceHasAttachments: (SequenceNumber)sequence {
-    return [_fmdb boolForQuery: @"SELECT no_attachments=0 FROM revs WHERE sequence=?", @(sequence)];
 }
 
 
@@ -2111,7 +2107,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     [r close];
 
     if (leaves.count <= 1) {
-        // There are no conflicts, so just delete everything below minGenToKeep:
+        // There are no branches, so just delete everything below minGenToKeep:
         if (![_fmdb executeUpdate: @"DELETE FROM revs WHERE doc_id=? AND revid < ? AND current=0",
                                    @(docNumericID), $sprintf(@"%u-", minGenToKeep)]) {
             Warn(@"SQLite error %d pruning generations < %d of doc %llu",
@@ -2124,7 +2120,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         return pruned;
 
     } else {
-        // Doc is in conflict. Keep the ancestors of all the leaves, down to _maxRevTreeDepth.
+        // Doc has branches. Keep the ancestors of all the leaves, down to _maxRevTreeDepth.
         // First fetch the skeleton of the rev tree:
         CBL_FMResultSet* r;
         r = [_fmdb executeQuery: @"SELECT sequence, parent FROM revs WHERE doc_id=?",
