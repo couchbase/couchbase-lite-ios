@@ -122,6 +122,9 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 }
 
 
+DefineLogDomain(SQL);
+
+
 /** Opens storage. Files will be created in the directory, which must already exist. */
 - (BOOL) openInDirectory: (NSString*)directory
                 readOnly: (BOOL)readOnly
@@ -144,7 +147,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 #else
     _fmdb.logsErrors = WillLogTo(Database);
 #endif
-    _fmdb.traceExecution = WillLogVerbose(Database);
+    _fmdb.traceExecution = WillLogTo(SQL);
 
     _docIDs = [[NSCache alloc] init];
     _docIDs.countLimit = kDocIDCacheSize;
@@ -201,7 +204,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     else
         flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
 
-    LogTo(Database, @"Open %@ (flags=%X%@)",
+    LogTo(Database, @"Open %@ with SQLite (flags=%X%@)",
           _fmdb.databasePath, flags, (_encryptionKey ? @", encryption key given" : nil));
     if (![_fmdb openWithFlags: flags]) {
         if (outError) *outError = self.fmdbError;
@@ -562,12 +565,12 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
         Warn(@"Failed to create SQLite transaction!");
         return NO;
     }
-    LogTo(Database, @"Begin transaction (level %d)...", _fmdb.transactionLevel);
+    LogTo(Database, @"{{ Begin transaction (level %d)...", _fmdb.transactionLevel);
     return YES;
 }
 
 - (BOOL) endTransaction: (BOOL)commit {
-    LogTo(Database, @"%@ transaction (level %d)",
+    LogTo(Database, @"}} %@ transaction (level %d)",
           (commit ? @"Commit" : @"Abort"), _fmdb.transactionLevel);
 
     BOOL ok = [_fmdb endTransaction: commit];
@@ -1008,26 +1011,22 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     if (docNumericID <= 0)
         return nil;
     int sqlLimit = limit > 0 ? (int)limit : -1;     // SQL uses -1, not 0, to denote 'no limit'
-    CBL_FMResultSet* r = [_fmdb executeQuery:
-                      @"SELECT revid, sequence FROM revs WHERE doc_id=? and revid < ?"
-                       " and deleted=0 and json not null"
-                       " ORDER BY sequence DESC LIMIT ?",
-                      @(docNumericID), $sprintf(@"%d-", generation), @(sqlLimit)];
+
+    NSMutableString* sql = [@"SELECT revid, sequence FROM revs WHERE doc_id=? and revid < ?"
+                            " and deleted=0 and json not null" mutableCopy];
+    if (onlyAttachments)
+        [sql appendString: @" and no_attachments=0"];
+    [sql appendString: @" ORDER BY sequence DESC LIMIT ?"];
+
+    CBL_FMResultSet* r = [_fmdb executeQuery: sql,
+                                    @(docNumericID), $sprintf(@"%d-", generation), @(sqlLimit)];
     if (!r)
         return nil;
     NSMutableArray* revIDs = $marray();
-    while ([r next]) {
-        if (onlyAttachments && ![self sequenceHasAttachments: [r longLongIntForColumnIndex: 1]])
-            continue;
+    while ([r next])
         [revIDs addObject: [r revIDForColumnIndex: 0]];
-    }
     [r close];
     return revIDs;
-}
-
-
-- (BOOL) sequenceHasAttachments: (SequenceNumber)sequence {
-    return [_fmdb boolForQuery: @"SELECT no_attachments=0 FROM revs WHERE sequence=?", @(sequence)];
 }
 
 
@@ -1672,9 +1671,22 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
             // insert call, then.
             if (_fmdb.lastErrorCode != SQLITE_CONSTRAINT)
                 return self.lastDbError;
-            LogTo(Database, @"Duplicate rev insertion: %@ / %@", docID, newRevID);
+            LogTo(Database, @"Duplicate rev PUT: %@ / %@ (parent seq %lld)",
+                  docID, newRevID, parentSequence);
             newRev.body = nil;
-            // don't return yet; update the parent's current just to be sure (see #509)
+
+            // The pre-existing revision may have a nulled-out parent link since its original
+            // parent may have been pruned earlier. Fix that link:
+            if (parentSequence) {
+                if (![_fmdb executeUpdate: @"UPDATE revs SET parent=? "
+                                            "WHERE doc_id=? and revid=? and parent isnull",
+                      @(parentSequence), @(docNumericID), newRevID]) {
+                    return self.lastDbError;
+                }
+                if (_fmdb.changes > 0)
+                    LogVerbose(Database, @"    fixed parent link of pre-existing rev");
+            }
+            // Keep going, to make the parent rev non-current, before returning...
         }
         
         // Make replaced rev non-current:
@@ -1685,6 +1697,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                 [_fmdb executeUpdate: @"DELETE FROM revs WHERE sequence=?", @(sequence)];
                 return status;
             }
+            LogVerbose(Database, @"    cleared current and doc_type of parent");
         }
 
         if (!sequence)
@@ -1693,16 +1706,18 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         // Delete the deepest revs in the tree to enforce the maxRevTreeDepth:
         int minGenToKeep = (int)newRev.generation - (int)_maxRevTreeDepth + 1;
         if (minGenToKeep > 1) {
-            unsigned pruned = [self pruneDocument: docNumericID generationsBelow: minGenToKeep];
+            NSInteger pruned = [self pruneDocument: docID
+                                         numericID: docNumericID
+                                  generationsBelow: minGenToKeep];
             if (pruned > 0)
-                LogVerbose(Database, @"Pruned %lu old revisions of doc '%@'",
-                           (unsigned long)pruned, docID);
+                LogVerbose(Database, @"Pruned %zd old revisions of doc '%@'", pruned, docID);
         }
 
         // Figure out what the new winning rev ID is:
-            winningRevID = [self winnerWithDocID: docNumericID
-                                 oldWinner: oldWinningRevID oldDeleted: oldWinnerWasDeletion
-                                        newRev: newRev];
+        winningRevID = [self winnerWithDocID: docNumericID
+                                   oldWinner: oldWinningRevID
+                                  oldDeleted: oldWinnerWasDeletion
+                                      newRev: newRev];
 
         // Success!
         return deleting ? kCBLStatusOK : kCBLStatusCreated;
@@ -1855,9 +1870,11 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
             }];
             int minGenToKeep = maxGen - _maxRevTreeDepth + 1;
             if ((int)minGen < minGenToKeep) {
-                unsigned pruned = [self pruneDocument: docNumericID generationsBelow: minGenToKeep];
+                NSInteger pruned = [self pruneDocument: docID
+                                             numericID: docNumericID
+                                      generationsBelow: minGenToKeep];
                 if (pruned > 0)
-                    LogVerbose(Database, @"Pruned %u old revisions of doc '%@'", pruned, docID);
+                    LogVerbose(Database, @"Pruned %zd old revisions of doc '%@'", pruned, docID);
             }
         }
 
@@ -1905,7 +1922,10 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
           json,
           docType])
         return 0;
-    return rev.sequence = _fmdb.lastInsertRowId;
+    SequenceNumber sequence = _fmdb.lastInsertRowId;
+    LogVerbose(Database, @"    Inserted rev %@ as seq %lld (parent %lld), cur=%d, JSON=%lu bytes",
+               rev, sequence, parentSequence, current, (unsigned long)json.length);
+    return rev.sequence = sequence;
 }
 
 
@@ -2036,10 +2056,6 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
 
 
 - (CBLStatus) pruneRevsToMaxDepth: (NSUInteger)maxDepth numberPruned: (NSUInteger*)outPruned {
-    // TODO: This implementation is a bit simplistic. It won't do quite the right thing in
-    // histories with branches, if one branch stops much earlier than another. The shorter branch
-    // will be deleted entirely except for its leaf revision. A more accurate pruning
-    // would require an expensive full tree traversal. Hopefully this way is good enough.
     if (maxDepth == 0)
         maxDepth = self.maxRevTreeDepth;
 
@@ -2064,7 +2080,8 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     // Now prune:
     return [self inTransaction:^CBLStatus{
         for (NSNumber* docNumericID in toPrune) {
-            *outPruned += [self pruneDocument: docNumericID.unsignedLongLongValue
+            *outPruned += [self pruneDocument: @"?"
+                                    numericID: docNumericID.unsignedLongLongValue
                              generationsBelow: [toPrune[docNumericID] intValue] + 1];
         }
         return kCBLStatusOK;
@@ -2073,16 +2090,73 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
 
 
 // Returns the number of revisions pruned.
-- (unsigned) pruneDocument: (UInt64)docNumericID
-          generationsBelow: (unsigned)minGenToKeep
+- (NSInteger) pruneDocument: (NSString*)docID
+                  numericID: (UInt64)docNumericID
+           generationsBelow: (unsigned)minGenToKeep
 {
-    if (![_fmdb executeUpdate: @"DELETE FROM revs WHERE doc_id=? AND revid < ? AND current=0",
-          @(docNumericID), $sprintf(@"%u-", minGenToKeep)]) {
-        Warn(@"SQLite error %d pruning generations < %d of doc %llu",
-             _fmdb.lastErrorCode, minGenToKeep, docNumericID);
-        return 0;
+    // First find the leaves:
+    CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT sequence FROM revs "
+                                               "WHERE doc_id=? AND current", @(docNumericID)];
+    if (!r)
+        return -1;
+    NSMutableSet* leaves = [NSMutableSet new];
+    while ([r next]) {
+        SequenceNumber seq = [r longLongIntForColumnIndex: 0];
+        [leaves addObject: @(seq)];
     }
-    return _fmdb.changes;
+    [r close];
+
+    if (leaves.count <= 1) {
+        // There are no branches, so just delete everything below minGenToKeep:
+        if (![_fmdb executeUpdate: @"DELETE FROM revs WHERE doc_id=? AND revid < ? AND current=0",
+                                   @(docNumericID), $sprintf(@"%u-", minGenToKeep)]) {
+            Warn(@"SQLite error %d pruning generations < %d of doc %llu",
+                 _fmdb.lastErrorCode, minGenToKeep, docNumericID);
+            return -1;
+        }
+        NSInteger pruned = _fmdb.changes;
+        LogVerbose(Database, @"    pruned %zd revs with gen<%u from %@",
+                   pruned, minGenToKeep, docID);
+        return pruned;
+
+    } else {
+        // Doc has branches. Keep the ancestors of all the leaves, down to _maxRevTreeDepth.
+        // First fetch the skeleton of the rev tree:
+        CBL_FMResultSet* r;
+        r = [_fmdb executeQuery: @"SELECT sequence, parent FROM revs WHERE doc_id=?",
+                                 @(docNumericID)];
+        if (!r) {
+            Warn(@"SQLite error %d pruning conflicted doc %llu", _fmdb.lastErrorCode, docNumericID);
+            return -1;
+        }
+        NSMutableDictionary* revs = $mdict();
+        while ([r next]) {
+            SequenceNumber seq = [r longLongIntForColumnIndex: 0];
+            SequenceNumber parent = [r longLongIntForColumnIndex: 1];
+            revs[@(seq)] = @(parent);
+        }
+        [r close];
+
+        // Now remove each leaf and its ancestors from `revs`:
+        LogVerbose(Database, @"    pruning %@, scanning %lu revs in tree...", docID, (unsigned long)revs.count);
+        for (NSNumber* leaf in leaves) {
+            NSNumber* seq = leaf;
+            for (unsigned i = 0; i < _maxRevTreeDepth; i++) {
+                NSNumber* parent = revs[seq];
+                [revs removeObjectForKey: seq];
+                if (parent == nil || parent.unsignedLongLongValue == 0)
+                    break;
+                seq = parent;
+            }
+        }
+
+        // The remaining keys in `revs` are sequences to purge:
+        if (![self purgeSequences: revs.allKeys]) {
+            Warn(@"SQLite error %d pruning conflicted doc %llu", _fmdb.lastErrorCode, docNumericID);
+            return -1;
+        }
+        return revs.count;
+    }
 }
 
 
@@ -2135,6 +2209,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                 revsPurged = @[];
             } else if ([revIDs containsObject: @"*"]) {
                 // Delete all revisions if magic "*" revision ID is given:
+                LogTo(Database, @"Purging doc '%@'", docID);
                 if (![_fmdb executeUpdate: @"DELETE FROM revs WHERE doc_id=?",
                                            @(docNumericID)]) {
                     return self.lastDbError;
@@ -2174,23 +2249,12 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                 [r close];
                 [seqsToPurge minusSet: seqsToKeep];
 
-                LogTo(Database, @"Purging doc '%@' revs (%@); asked for (%@)",
-                      docID, [revsToPurge.allObjects componentsJoinedByString: @", "],
-                      [revIDs componentsJoinedByString: @", "]);
+                LogTo(Database, @"Purging doc '%@' revs (%@)",
+                      docID, [revIDs componentsJoinedByString: @", "]);
 
-                if (seqsToPurge.count) {
-                    // Now delete the sequences to be purged.
-                    NSString* sql = $sprintf(@"DELETE FROM revs WHERE sequence in (%@)",
-                                           [seqsToPurge.allObjects componentsJoinedByString: @","]);
-                    _fmdb.shouldCacheStatements = NO;
-                    BOOL ok = [_fmdb executeUpdate: sql];
-                    _fmdb.shouldCacheStatements = YES;
-                    if (!ok)
-                        return self.lastDbError;
-                    if ((NSUInteger)_fmdb.changes != seqsToPurge.count)
-                        Warn(@"purgeRevisions: Only %i sequences deleted of (%@)",
-                             _fmdb.changes, [seqsToPurge.allObjects componentsJoinedByString:@","]);
-                }
+                // Now delete the sequences to be purged.
+                if (![self purgeSequences: seqsToPurge.allObjects])
+                    return self.lastDbError;
                 revsPurged = revsToPurge.allObjects;
             }
 #if 1
@@ -2205,6 +2269,23 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         }
         return kCBLStatusOK;
     }];
+}
+
+
+- (BOOL) purgeSequences: (NSArray<NSNumber*>*)seqsToPurge {
+    if (seqsToPurge.count == 0)
+        return YES;
+    NSString* seqsString = [seqsToPurge componentsJoinedByString: @","];
+    LogVerbose(Database, @"    purging %lu sequences: %@", (unsigned long)seqsToPurge.count, seqsString);
+    NSString* sql = $sprintf(@"DELETE FROM revs WHERE sequence in (%@)", seqsString);
+    _fmdb.shouldCacheStatements = NO;
+    BOOL ok = [_fmdb executeUpdate: sql];
+    _fmdb.shouldCacheStatements = YES;
+    if (!ok)
+        return NO;
+    if ((NSUInteger)_fmdb.changes != seqsToPurge.count)
+        Warn(@"purgeRevisions: Only %i sequences deleted of (%@)", _fmdb.changes, seqsString);
+    return YES;
 }
 
 

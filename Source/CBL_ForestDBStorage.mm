@@ -165,13 +165,14 @@ static void onCompactCallback(void *context, bool compacting) {
 
 
 - (BOOL) reopen: (NSError**)outError {
-    if (_encryptionKey)
-        LogTo(Database, @"Database is encrypted; setting CBForest encryption key");
     NSString* forestPath = [_directory stringByAppendingPathComponent: kDBFilename];
     C4DatabaseFlags flags = _readOnly ? kC4DB_ReadOnly : kC4DB_Create;
     if (_autoCompact)
         flags |= kC4DB_AutoCompact;
     C4EncryptionKey encKey = symmetricKey2Forest(_encryptionKey);
+
+    LogTo(Database, @"Open %@ with ForestDB (flags=%X%@)",
+          forestPath, flags, (_encryptionKey ? @", encryption key given" : nil));
 
     C4Error c4err;
     _forest = c4db_open(string2slice(forestPath), flags, &encKey, &c4err);

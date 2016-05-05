@@ -102,8 +102,8 @@ DefineLogDomain(Validation);
     __block NSString* docID = inDocID;
     __block CBL_RevID* prevRevID = inPrevRevID;
     BOOL deleting = !properties || properties.cbl_deleted;
-    LogTo(Database, @"PUT _id=%@, _rev=%@, _deleted=%d, allowConflict=%d",
-          docID, prevRevID, deleting, allowConflict);
+    LogTo(Database, @"%@ _id=%@, _rev=%@ (allowConflict=%d)",
+          (deleting ? @"DELETE" : @"PUT"), docID, prevRevID, allowConflict);
     if ((prevRevID && !docID) || (deleting && !docID)
             || (docID && ![CBLDatabase isValidDocumentID: docID])) {
         *outStatus = kCBLStatusBadID;
@@ -139,18 +139,14 @@ DefineLogDomain(Validation);
         };
     }
 
-    CBL_Revision* putRev = [_storage addDocID: inDocID
-                                    prevRevID: inPrevRevID
-                                   properties: properties
-                                     deleting: deleting
-                                allowConflict: allowConflict
-                              validationBlock: validationBlock
-                                       status: outStatus
-                                        error: outError];
-    if (putRev) {
-        LogTo(Database, @"--> created %@", putRev);
-    }
-    return putRev;
+    return [_storage addDocID: inDocID
+                    prevRevID: inPrevRevID
+                   properties: properties
+                     deleting: deleting
+                allowConflict: allowConflict
+              validationBlock: validationBlock
+                       status: outStatus
+                        error: outError];
 }
 
 
@@ -160,6 +156,7 @@ DefineLogDomain(Validation);
                    source: (NSURL*)source
                     error: (NSError**)outError
 {
+    LogTo(Database, @"INSERT %@, history[%lu]", inRev, (unsigned long)history.count);
     AssertContainsRevIDs(history);
     CBL_MutableRevision* rev = inRev.mutableCopy;
     rev.sequence = 0;
