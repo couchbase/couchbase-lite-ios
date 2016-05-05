@@ -130,7 +130,7 @@ static void (^PublicLoggingCallback)(NSString* type, NSString* message);
 #else
     EnableLog(YES);
     if (type != nil)
-        EnableLogTo(type, YES);
+        EnableLogTo(type, MYLogLevelOn);
 #endif
 }
 
