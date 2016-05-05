@@ -1674,7 +1674,19 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                 return self.lastDbError;
             LogTo(Database, @"Duplicate rev insertion: %@ / %@", docID, newRevID);
             newRev.body = nil;
-            // don't return yet; update the parent's current just to be sure (see #509)
+
+            // The pre-existing revision may have a nulled-out parent link since its original
+            // parent may have been pruned earlier. Fix that link:
+            if (parentSequence) {
+                if (![_fmdb executeUpdate: @"UPDATE revs SET parent=? "
+                                            "WHERE doc_id=? and revid=? and parent isnull",
+                      @(parentSequence), @(docNumericID), newRevID]) {
+                    return self.lastDbError;
+                }
+                if (_fmdb.changes > 0)
+                    LogVerbose(Database, @"    fixed parent link of pre-existing rev");
+            }
+            // Keep going, to make the parent rev non-current, before returning...
         }
         
         // Make replaced rev non-current:
@@ -1685,6 +1697,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                 [_fmdb executeUpdate: @"DELETE FROM revs WHERE sequence=?", @(sequence)];
                 return status;
             }
+            LogVerbose(Database, @"    cleared current and doc_type of parent");
         }
 
         if (!sequence)
