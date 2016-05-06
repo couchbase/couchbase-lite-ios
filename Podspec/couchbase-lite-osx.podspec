@@ -15,14 +15,12 @@ Pod::Spec.new do |s|
   s.default_subspec = 'Core'
 
   s.subspec 'Core' do |ss|
-    ss.source_files = 'CouchbaseLite.framework/Headers/*.h'
     ss.preserve_paths = 'CouchbaseLite.framework'
     ss.vendored_frameworks = 'CouchbaseLite.framework'
     ss.osx.resource = 'CouchbaseLite.framework'
   end
 
   s.subspec 'Listener' do |ss|
-    ss.source_files = 'CouchbaseLiteListener.framework/Headers/*.h'
     ss.preserve_paths = 'CouchbaseLiteListener.framework'
     ss.vendored_frameworks = 'CouchbaseLiteListener.framework'
     ss.osx.resource = 'CouchbaseLiteListener.framework'
