@@ -79,6 +79,17 @@
 }
 
 
+- (void) test_00_Pusher_From_Empty {
+    NSURL* remoteURL = [self remoteTestDBURL: kScratchDBName];
+    if (!remoteURL)
+        return;
+    [self eraseRemoteDB: remoteURL];
+
+    id lastSeq = replic8(db, remoteURL, YES, nil, nil, nil);
+    AssertEqual(lastSeq, nil);
+}
+
+
 - (void) test_01_Pusher {
     RequireTestCase(CBLDatabase);
     __block int filterCalls = 0;
@@ -352,6 +363,7 @@
 
 - (void) test_09_Pusher_NonExistentServer {
     RequireTestCase(Pusher);
+    [self createDocuments: 1];
     NSURL* remoteURL = [NSURL URLWithString:@"https://mylocalhost/db"];
     if (!remoteURL) {
         Warn(@"Skipping test CBL_Pusher_NonExistentServer: invalid URL");
@@ -709,7 +721,6 @@
             expectError: (NSError*) expectError
 {
     CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remote push: push];
-    settings.createTarget = push;
     settings.filterName = filter;
     settings.docIDs = docIDs;
     settings.authorizer = self.authorizer;
