@@ -1744,12 +1744,12 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
 
 
 - (CBLStatus) forceInsert: (CBL_Revision*)inRev
-          revisionHistory: (NSArray<CBL_RevID*>*)history
+          revisionHistory: (NSArray<CBL_RevID*>*)fullHistory
           validationBlock: (CBL_StorageValidationBlock)validationBlock
                    source: (NSURL*)source
                     error: (NSError**)outError
 {
-    AssertContainsRevIDs(history);
+    AssertContainsRevIDs(fullHistory);
     if (outError)
         *outError = nil;
 
@@ -1761,14 +1761,20 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     __block BOOL inConflict = NO;
     CBLStatus status = [self inTransaction: ^CBLStatus {
         // First look up the document's row-id and all locally-known revisions of it:
-        NSMutableDictionary* localRevs = nil;
-        CBL_RevID* oldWinningRevID = nil;
-        BOOL oldWinnerWasDeletion = NO;
-        BOOL isNewDoc = (history.count == 1);
+        BOOL isNewDoc = (fullHistory.count == 1);
         SInt64 docNumericID = [self createOrGetDocNumericID: docID isNew: &isNewDoc];
         if (docNumericID <= 0)
             return self.lastDbError;
-        if (!isNewDoc) {
+
+        NSUInteger fullHistoryCount = fullHistory.count;
+        NSUInteger commonAncestorIndex;
+        CBL_Revision* commonAncestor = nil;
+        NSMutableDictionary* localRevs = nil;
+        CBL_RevID* oldWinningRevID = nil;
+        BOOL oldWinnerWasDeletion = NO;
+        if (isNewDoc) {
+            commonAncestorIndex = fullHistoryCount;
+        } else {
             CBL_RevisionList* localRevsList = [self getAllRevisionsOfDocumentID: docID
                                                                       numericID: docNumericID
                                                                     onlyCurrent: NO];
@@ -1777,6 +1783,17 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
             localRevs = [[NSMutableDictionary alloc] initWithCapacity: localRevsList.count];
             for (CBL_Revision* rev in localRevsList)
                 localRevs[rev.revID] = rev;
+
+            // What's the oldest revID in the history that appears in the local db?
+            commonAncestorIndex = 0;
+            for (CBL_RevID *revID in fullHistory) {
+                commonAncestor = localRevs[revID];
+                if (commonAncestor)
+                    break;
+                commonAncestorIndex++;
+            }
+            if (commonAncestorIndex == 0)
+                return kCBLStatusOK;                        // No-op: Rev already exists
 
             // Look up which rev is the winner, before this insertion
             CBLStatus tempStatus;
@@ -1788,36 +1805,31 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
                 return tempStatus;
         }
 
+        // Trim down the history to what we need:
+        NSArray<CBL_RevID*>* history;
+        if (commonAncestorIndex < fullHistoryCount) {
+            // Trim history to new revisions
+            history = [fullHistory subarrayWithRange: NSMakeRange(0, commonAncestorIndex)];
+        } else if (fullHistoryCount > _maxRevTreeDepth) {
+            // If no common ancestor, limit history to max depth:
+            history = [fullHistory subarrayWithRange: NSMakeRange(0, _maxRevTreeDepth)];
+        } else {
+            history = fullHistory;
+        }
+
         // Validate against the latest common ancestor:
         if (validationBlock) {
-            CBL_Revision* oldRev = nil;
-            for (NSUInteger i = 1; i<history.count; ++i) {
-                oldRev = localRevs[history[i]];
-                if (oldRev)
-                    break;
-            }
-            CBL_RevID* parentRevID = (history.count > 1) ? history[1] : nil;
-            CBLStatus status = validationBlock(rev, oldRev, parentRevID, outError);
+            CBL_RevID* parentRevID = (fullHistory.count > 1) ? fullHistory[1] : nil;
+            CBLStatus status = validationBlock(rev, commonAncestor, parentRevID, outError);
             if (CBLStatusIsError(status))
                 return status;
         }
         
-        // Walk through the remote history in chronological order, matching each revision ID to
-        // a local revision. When the list diverges, start creating blank local revisions to fill
-        // in the local history:
-        SequenceNumber sequence = 0;
-        SequenceNumber localParentSequence = 0;
+        // Walk through the remote history in chronological order, adding each rev to the database.
+        // The initial parent sequence is the local common ancestor's:
+        SequenceNumber sequence = commonAncestor.sequence;
         for (NSInteger i = history.count - 1; i>=0; --i) {
             CBL_RevID* revID = history[i];
-            CBL_Revision* localRev = localRevs[revID];
-            if (localRev) {
-                // This revision is known locally. Remember its sequence as the parent of the next one:
-                sequence = localRev.sequence;
-                Assert(sequence > 0);
-                localParentSequence = sequence;
-
-            } else {
-                // This revision isn't known, so add it:
             CBL_MutableRevision* newRev;
             NSData* json = nil;
             NSString* docType = nil;
@@ -1847,16 +1859,12 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
             if (sequence <= 0)
                 return self.lastDbError;
         }
-        }
-
-        if (localParentSequence == sequence)
-            return kCBLStatusOK;      // No-op: No new revisions were inserted.
 
         // Mark the latest local rev as no longer current:
-        if (localParentSequence > 0) {
+        if (commonAncestor) {
             if (![_fmdb executeUpdate: @"UPDATE revs SET current=0, doc_type=null"
                                         " WHERE sequence=? AND current!=0",
-                  @(localParentSequence)])
+                  @(commonAncestor.sequence)])
                 return self.lastDbError;
             if (_fmdb.changes == 0)
                 inConflict = YES; // local parent wasn't a leaf, ergo we just created a branch
@@ -1865,7 +1873,8 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         // Delete the deepest revs in the tree to enforce the maxRevTreeDepth:
         if (inRev.generation > _maxRevTreeDepth) {
             __block unsigned minGen, maxGen;
-            minGen = maxGen = rev.generation;
+            maxGen = rev.generation;
+            minGen = history.lastObject.generation;
             [localRevs enumerateKeysAndObjectsUsingBlock:^(id key, CBL_Revision* rev, BOOL* stop) {
                 unsigned generation = rev.generation;
                 minGen = MIN(minGen, generation);
