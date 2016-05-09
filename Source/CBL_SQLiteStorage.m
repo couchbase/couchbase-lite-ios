@@ -997,12 +997,9 @@ DefineLogDomain(SQL);
 }
 
 
-/** Returns IDs of local revisions of the same document, that have a lower generation number.
-    Does not return revisions whose bodies have been compacted away, or deletion markers.
-    If 'onlyAttachments' is true, only revisions with attachments will be returned. */
-- (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
-                                      limit: (unsigned)limit
-                            onlyAttachments: (BOOL)onlyAttachments;
+- (NSArray<CBL_RevID*>*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
+                                                  limit: (unsigned)limit
+                                             haveBodies: (BOOL*)outHaveBodies
 {
     int generation = rev.generation;
     if (generation <= 1)
@@ -1011,22 +1008,28 @@ DefineLogDomain(SQL);
     if (docNumericID <= 0)
         return nil;
     int sqlLimit = limit > 0 ? (int)limit : -1;     // SQL uses -1, not 0, to denote 'no limit'
+    if (outHaveBodies) *outHaveBodies = YES;
 
-    NSMutableString* sql = [@"SELECT revid, sequence FROM revs WHERE doc_id=? and revid < ?"
-                            " and deleted=0 and json not null" mutableCopy];
-    if (onlyAttachments)
-        [sql appendString: @" and no_attachments=0"];
-    [sql appendString: @" ORDER BY sequence DESC LIMIT ?"];
-
-    CBL_FMResultSet* r = [_fmdb executeQuery: sql,
-                                    @(docNumericID), $sprintf(@"%d-", generation), @(sqlLimit)];
-    if (!r)
-        return nil;
-    NSMutableArray* revIDs = $marray();
-    while ([r next])
-        [revIDs addObject: [r revIDForColumnIndex: 0]];
-    [r close];
-    return revIDs;
+    // First look only for current revisions; if none match, go to non-current ones.
+    for (int current = 1; current >= 0; --current) {
+        CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, json is not null FROM revs "
+                                                   "WHERE doc_id=? and current=? and revid < ? "
+                                                   "ORDER BY revid DESC LIMIT ?",
+                                        @(docNumericID), @(current), $sprintf(@"%d-", generation),
+                                        @(sqlLimit)];
+        if (!r)
+            return nil;
+        NSMutableArray<CBL_RevID*>* revIDs = $marray();
+        while ([r next]) {
+            [revIDs addObject: [r revIDForColumnIndex: 0]];
+            if (outHaveBodies && ![r boolForColumnIndex: 1])
+                *outHaveBodies = NO;
+        }
+        [r close];
+        if (revIDs.count > 0)
+            return revIDs;
+    }
+    return nil;
 }
 
 
@@ -1815,35 +1818,35 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
 
             } else {
                 // This revision isn't known, so add it:
-                CBL_MutableRevision* newRev;
-                NSData* json = nil;
-                NSString* docType = nil;
-                BOOL current = NO;
-                if (i==0) {
-                    // Hey, this is the leaf revision we're inserting:
-                    newRev = rev;
-                    json = [self encodeDocumentJSON: rev];
-                    if (!json)
-                        return kCBLStatusBadJSON;
-                    docType = rev[@"type"];
-                    current = YES;
-                } else {
-                    // It's an intermediate parent, so insert a stub:
-                    newRev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
-                                                                deleted: NO];
-                }
-
-                // Insert it:
-                sequence = [self insertRevision: newRev
-                                   docNumericID: docNumericID
-                                 parentSequence: sequence
-                                        current: current 
-                                 hasAttachments: (newRev.attachments != nil)
-                                           JSON: json
-                                        docType: docType];
-                if (sequence <= 0)
-                    return self.lastDbError;
+            CBL_MutableRevision* newRev;
+            NSData* json = nil;
+            NSString* docType = nil;
+            BOOL current = NO;
+            if (i==0) {
+                // Hey, this is the leaf revision we're inserting:
+                newRev = rev;
+                json = [self encodeDocumentJSON: rev];
+                if (!json)
+                    return kCBLStatusBadJSON;
+                docType = rev[@"type"];
+                current = YES;
+            } else {
+                // It's an intermediate parent, so insert a stub:
+                newRev = [[CBL_MutableRevision alloc] initWithDocID: docID revID: revID
+                                                            deleted: NO];
             }
+
+            // Insert it:
+            sequence = [self insertRevision: newRev
+                               docNumericID: docNumericID
+                             parentSequence: sequence
+                                    current: current 
+                             hasAttachments: (newRev.attachments != nil)
+                                       JSON: json
+                                    docType: docType];
+            if (sequence <= 0)
+                return self.lastDbError;
+        }
         }
 
         if (localParentSequence == sequence)

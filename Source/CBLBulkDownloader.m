@@ -48,21 +48,29 @@
                   onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
     // Build up a JSON body describing what revisions we want:
+    NSUInteger maxRevTreeDepth = database.maxRevTreeDepth;
     NSArray* keys = [revs my_map: ^(CBL_Revision* rev) {
-        NSArray* attsSince = nil;
-        if (attachments) {
-            attsSince = [database.storage getPossibleAncestorRevisionIDs: rev
-                                                               limit: kMaxNumberOfAttsSince
-                                                     onlyAttachments: YES];
-            if (attsSince.count == 0)
-                attsSince = nil;
+        BOOL haveBodies = NO;
+        NSArray<CBL_RevID*>* possibleAncestors;
+        possibleAncestors = [database.storage getPossibleAncestorRevisionIDs: rev
+                                                       limit: kMaxNumberOfAttsSince
+                                                  haveBodies: (attachments ? &haveBodies : NULL)];
+        NSMutableDictionary* key = $mdict({@"id",  rev.docID},
+                                          {@"rev", rev.revIDString});
+        if (possibleAncestors) {
+            [key setObject: possibleAncestors
+                    forKey: (haveBodies ? @"atts_since" : @"revs_from")];
+        } else {
+            if (rev.generation > maxRevTreeDepth)
+                key[@"revs_limit"] = @(maxRevTreeDepth);
         }
-        return $dict({@"id", rev.docID},
-                     {@"rev", rev.revIDString},
-                     {@"atts_since", attsSince});
+        return key;
     }];
 
     NSString* query = attachments ?@"_bulk_get?revs=true&attachments=true" :@"_bulk_get?revs=true";
+
+    LogVerbose(Sync, @"%@: POST %@  %@",
+               self, query, [CBLJSON stringWithJSONObject: keys options: 0 error: NULL]);
 
     self = [super initWithMethod: @"POST"
                              URL: CBLAppendToURL(dbURL, query)

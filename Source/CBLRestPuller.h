@@ -12,7 +12,7 @@
 
 
 // Maximum number of revision IDs to pass in an "?atts_since=" query param
-#define kMaxNumberOfAttsSince 50u
+#define kMaxNumberOfAttsSince 10u
 
 
 /** Replicator that pulls from a remote CouchDB. */

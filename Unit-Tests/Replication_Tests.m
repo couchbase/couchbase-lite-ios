@@ -85,6 +85,7 @@
 
     bool started = false, done = false;
     [repl start];
+    Assert(repl.status != kCBLReplicationStopped && repl.status != kCBLReplicationIdle);
     CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
     CFAbsoluteTime lastTime = startTime;
     while (!done) {
@@ -1467,6 +1468,70 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
         // Did the docs get purged?
         AssertEq(db.documentCount, 0ull);
     }
+}
+
+
+// Creates a doc with a very deep revision history and pushes the entire history to the server.
+// Then pulls it into another database.
+- (void) test25_DeepRevTree {
+    static const unsigned kNumRevisions = 2000;
+
+    NSURL* remoteDbURL = [self remoteTestDBURL: kScratchDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+    CBLReplication* push = [db createPushReplication: remoteDbURL];
+
+    CBLDocument* doc = db[@"deep"];
+
+    __block unsigned numRevisions;
+    for (numRevisions = 0; numRevisions < kNumRevisions;) {
+        @autoreleasepool {
+            [db inTransaction: ^BOOL {
+                // Have to push the doc periodically, to make sure the server gets the whole
+                // history, since CBL will only remember the latest 20 revisions.
+                unsigned batchSize = MIN((unsigned)db.maxRevTreeDepth-1, kNumRevisions - numRevisions);
+                Log(@"Adding revisions %u -- %u ...", numRevisions+1, numRevisions+batchSize);
+                for (unsigned i = 0; i < batchSize; ++i) {
+                    Assert([doc update: ^BOOL(CBLUnsavedRevision *rev) {
+                        rev[@"counter"] = @(++numRevisions);
+                        return YES;
+                    } error: NULL]);
+                }
+                return YES;
+            }];
+            Log(@"Pushing ...");
+            [self runReplication: push expectedChangesCount: 1];
+        }
+    }
+
+    Log(@"\n\n$$$$$$$$$$ PULLING TO DB2 $$$$$$$$$$");
+
+    // Now create a second database and pull the remote db into it:
+    CBLDatabase* db2 = [dbmgr createEmptyDatabaseNamed: @"prepopdb" error: NULL];
+    Assert(db2);
+    //[CBLManager enableLogging: @"DatabaseVerbose"];
+    CBLReplication* pull = [db2 createPullReplication: remoteDbURL];
+    [self runReplication: pull expectedChangesCount: 1];
+
+    CBLDocument* doc2 = db2[@"deep"];
+    AssertEq([doc2 getRevisionHistory: NULL].count, db2.maxRevTreeDepth);
+    AssertEq([doc2 getConflictingRevisions: NULL].count, 1u);
+
+    Log(@"\n\n$$$$$$$$$$ PUSHING 1 DOC FROM DB $$$$$$$$$$");
+
+    // Now add a revision to the doc, push, and pull into db2:
+    Assert([doc update: ^BOOL(CBLUnsavedRevision *rev) {
+        rev[@"counter"] = @(++numRevisions);
+        return YES;
+    } error: NULL]);
+    [self runReplication: push expectedChangesCount: 1];
+
+    Log(@"\n\n$$$$$$$$$$ PULLING 1 DOC INTO DB2 $$$$$$$$$$");
+
+    [self runReplication: pull expectedChangesCount: 1];
+    AssertEq([doc2 getRevisionHistory: NULL].count, db2.maxRevTreeDepth);
+    AssertEq([doc2 getConflictingRevisions: NULL].count, 1u);
 }
 
 

@@ -600,7 +600,7 @@ static BOOL sAutoCompact = YES;
         return @[revID];  // Already have it!
     return [_storage getPossibleAncestorRevisionIDs: rev
                                               limit: (unsigned)limit
-                                    onlyAttachments: NO];
+                                         haveBodies: NULL];
 }
 
 

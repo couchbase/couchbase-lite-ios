@@ -120,11 +120,15 @@
                                       onlyCurrent: (BOOL)onlyCurrent;
 
 /** Returns IDs of local revisions of the same document, that have a lower generation number.
-    Does not return revisions whose bodies have been compacted away, or deletion markers.
-    If 'onlyAttachments' is true, only revisions with attachments will be returned. */
-- (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
-                                      limit: (unsigned)limit
-                            onlyAttachments: (BOOL)onlyAttachments;
+    If possible, returns only leaf revisions; if none match, returns non-leaves.
+    @param rev  The revision to look for ancestors of. Only its docID and revID are used.
+    @param limit  The maximum number of results to return, or if 0, unlimited.
+    @param outHaveBodies  On return, if not NULL, then *outHaveBodies will be YES if all the
+                          revisions returned have their JSON bodies available, otherwise NO.
+    @return  An array of revIDs of existing revisions that could be ancestors of `rev`. */
+- (NSArray<CBL_RevID*>*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
+                                                  limit: (unsigned)limit
+                                             haveBodies: (BOOL*)outHaveBodies;
 
 /** Returns the most recent member of revIDs that appears in rev's ancestry.
     In other words: Look at the revID properties of rev, its parent, grandparent, etc.

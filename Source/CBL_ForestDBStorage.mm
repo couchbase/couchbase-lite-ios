@@ -420,9 +420,9 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
 }
 
 
-- (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
-                                      limit: (unsigned)limit
-                            onlyAttachments: (BOOL)onlyAttachments
+- (NSArray<CBL_RevID*>*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
+                                                  limit: (unsigned)limit
+                                             haveBodies: (BOOL*)outHaveBodies
 {
     unsigned generation = rev.revID.generation;
     if (generation <= 1)
@@ -431,18 +431,25 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
     if (!doc)
         return nil;
 
-    NSMutableArray* revIDs = $marray();
-    do {
-        C4RevisionFlags flags = doc->selectedRev.flags;
-        if (!(flags & kRevDeleted) && (!onlyAttachments || (flags & kRevHasAttachments))
-                        && c4rev_getGeneration(doc->selectedRev.revID) < generation
-                        && c4doc_hasRevisionBody(doc)) {
-            [revIDs addObject: slice2revID(doc->selectedRev.revID)];
-            if (limit && revIDs.count >= limit)
-                break;
-        }
-    } while (c4doc_selectNextRevision(doc));
-    return revIDs;
+    if (outHaveBodies) *outHaveBodies = YES;
+    NSMutableArray<CBL_RevID*>* revIDs = $marray();
+    for (int leaf = 1; leaf >=0; --leaf) {
+        c4doc_selectCurrentRevision(doc);
+        do {
+            C4RevisionFlags flags = doc->selectedRev.flags;
+            if (((flags & kRevLeaf) != 0) == leaf
+                    && c4rev_getGeneration(doc->selectedRev.revID) < generation) {
+                [revIDs addObject: slice2revID(doc->selectedRev.revID)];
+                if (outHaveBodies && !c4doc_hasRevisionBody(doc))
+                    *outHaveBodies = NO;
+                if (limit && revIDs.count >= limit)
+                    break;
+            }
+        } while (c4doc_selectNextRevision(doc));
+        if (revIDs.count > 0)
+            return revIDs;
+    }
+    return nil;
 }
 
 

@@ -412,22 +412,34 @@
     // Construct a query. We want the revision history, and the bodies of attachments.
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#GET
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#Getting_Attachments_With_a_Document
-    NSString* path = $sprintf(@"%@?rev=%@&revs=true",
-                              CBLEscapeURLParam(rev.docID), CBLEscapeURLParam(rev.revIDString));
+    NSMutableString* path = [NSMutableString stringWithFormat: @"%@?rev=%@&revs=true",
+                              CBLEscapeURLParam(rev.docID), CBLEscapeURLParam(rev.revIDString)];
     CBLDatabase* db = _db;
-    if (_settings.downloadAttachments) {
-        // If the document has attachments, add an 'atts_since' param with a list of
-        // already-known revisions, so the server can skip sending the bodies of any
-        // attachments we already have locally:
-        NSArray* knownRevs = [db.storage getPossibleAncestorRevisionIDs: rev
-                                                                  limit: kMaxNumberOfAttsSince
-                                                        onlyAttachments: YES];
-        if (knownRevs.count > 0)
-            path = [path stringByAppendingFormat: @"&attachments=true&atts_since=%@",
-                                escapedRevIDArray(knownRevs)];
-        else
-            path = [path stringByAppendingString: @"&attachments=true"];
+
+    BOOL attachments = _settings.downloadAttachments;
+    if (attachments)
+        [path appendString: @"&attachments=true"];
+
+    // Include atts_since with a list of possible ancestor revisions of rev. If getting attachments,
+    // this allows the server to skip the bodies of attachments that have not changed since the
+    // local ancestor. The server can also trim the revision history it returns, to not extend past
+    // the local ancestor (not implemented yet in SG but will be soon.)
+    BOOL haveBodies = NO;
+    NSArray<CBL_RevID*>* possibleAncestors;
+    possibleAncestors = [db.storage getPossibleAncestorRevisionIDs: rev
+                                                         limit: kMaxNumberOfAttsSince
+                                                    haveBodies: (attachments ? &haveBodies : NULL)];
+    if (possibleAncestors) {
+        [path appendString: (haveBodies ? @"&atts_since=" : @"&revs_from=")];
+        [path appendString: escapedRevIDArray(possibleAncestors)];
+    } else {
+        // If we don't have any revisions at all, at least tell the server how long a history we
+        // can keep track of:
+        NSUInteger maxRevTreeDepth = db.maxRevTreeDepth;
+        if (rev.generation > maxRevTreeDepth)
+            [path appendFormat: @"&revs_limit=%lu", (unsigned long)maxRevTreeDepth];
     }
+
     LogTo(SyncPerf, @"%@: Getting %@", self, rev);
     LogVerbose(Sync, @"%@: GET %@", self, path);
     
@@ -474,7 +486,6 @@
     if (nRevs == 0)
         return;
     LogTo(Sync, @"%@ bulk-fetching %u remote revisions...", self, (unsigned)nRevs);
-    LogVerbose(Sync, @"%@ bulk-fetching remote revisions: %@", self, bulkRevs);
 
     if (!_canBulkGet) {
         // _bulk_get is not supported, so fall back to _all_docs:
@@ -483,7 +494,6 @@
     }
 
     LogTo(SyncPerf, @"%@: bulk-getting %u remote revisions...", self, (unsigned)nRevs);
-    LogVerbose(Sync, @"%@: POST _bulk_get", self);
     NSMutableArray* remainingRevs = [bulkRevs mutableCopy];
     [self asyncTaskStarted];
     ++_httpConnectionCount;
