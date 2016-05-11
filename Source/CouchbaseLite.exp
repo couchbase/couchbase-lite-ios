@@ -63,6 +63,7 @@ _CBLVersion
 .objc_class_name_CBL_MutableRevision
 .objc_class_name_CBL_Revision
 .objc_class_name_CBL_RevisionList
+.objc_class_name_CBL_TreeRevID
 .objc_class_name_CBJSONEncoder
 .objc_class_name_CBLReachability
 .objc_class_name_CBL_ReplicatorSettings
