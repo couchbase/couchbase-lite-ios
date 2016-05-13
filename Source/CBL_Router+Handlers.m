@@ -738,7 +738,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         if (options & kCBLIncludeRevsInfo) {
             NSArray<CBL_RevID*>* revs = [_db getRevisionHistory: rev backToRevIDs: nil];
             dst[@"_revs_info"] = [revs my_map: ^id(CBL_RevID* revID) {
-                CBL_Revision* ancestor = [_db getDocumentWithID: rev.docID revisionID: revID];
+                CBLStatus s;
+                CBL_Revision* ancestor = [_db getDocumentWithID: rev.docID revisionID: revID
+                                                       withBody: YES status: &s];
                 NSString* status = @"available";
                 if (ancestor == nil || ancestor.missing)
                     status = @"missing";
