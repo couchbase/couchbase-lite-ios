@@ -207,10 +207,23 @@
     if (!remoteURL)
         return;
 
-    [self allowWarningsIn:^{
-        NSError* error = CBLStatusToNSError(kCBLStatusNotFound);
-        replic8Continuous(db, remoteURL, NO, nil, nil, error);
-    }];
+    NSError* error = CBLStatusToNSError(kCBLStatusNotFound);
+    replic8Continuous(db, remoteURL, NO, nil, nil, error);
+}
+
+
+- (void) test_04_Pusher_Continuous_PermanentError {
+    RequireTestCase(Puller);
+    NSURL* remoteURL = [self remoteTestDBURL: @"non_existent_remote_db"];
+    if (!remoteURL)
+        return;
+
+    [self createDocuments: 1];
+
+    NSError* error = CBLStatusToNSError(kCBLStatusNotFound);
+    NSError* gotError = replic8Continuous(db, remoteURL, YES, nil, nil, error);
+    // Verify that CBLRemoteRequest picked up the error message from the server's JSON response:
+    AssertEqual(gotError.localizedDescription, @"no such database \"non_existent_remote_db\"");
 }
 
 
@@ -761,15 +774,15 @@
 }
 
 
-- (NSString*) replicateContinuous: (NSURL*)remote
-                             push: (BOOL)push
-                           filter: (NSString*)filter
-                          options: (NSDictionary*)options
-                      expectError: (NSError*) expectError
+// Returns last sequence, or the NSError 'expectError' is non-nil
+- (id) replicateContinuous: (NSURL*)remote
+                      push: (BOOL)push
+                    filter: (NSString*)filter
+                   options: (NSDictionary*)options
+               expectError: (NSError*) expectError
 {
     CBL_ReplicatorSettings* settings = [[CBL_ReplicatorSettings alloc] initWithRemote: remote push: push];
     settings.continuous = YES;
-    settings.createTarget = push;
     settings.authorizer = self.authorizer;
     settings.filterName = filter;
     settings.options = options;
@@ -804,12 +817,12 @@
         AssertEqual(repl.error.domain, expectError.domain);
         AssertEq(repl.error.code, expectError.code);
         Log(@"...replicator finished. error=%@", repl.error.my_compactDescription);
+        return repl.error;
     } else {
         AssertNil(repl.error);
         Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
+        return repl.lastSequence;
     }
-    NSString* result = repl.lastSequence;
-    return result;
 }
 
 

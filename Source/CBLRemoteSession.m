@@ -261,7 +261,7 @@
 {
     [self requestForTask: dataTask do: ^(CBLRemoteRequest *request) {
         if (request.running)  // request might have just canceled itself
-            [request didReceiveData: data];
+            [request _didReceiveData: data];
     }];
 }
 
@@ -274,7 +274,7 @@
         if (error)
             [request didFailWithError: error];
         else
-            [request didFinishLoading];
+            [request _didFinishLoading];
     }];
     LogTo(RemoteRequest, @"CBLRemoteSession done with %@", _requestIDs[@(task.taskIdentifier)]);
     [self forgetTask: task];

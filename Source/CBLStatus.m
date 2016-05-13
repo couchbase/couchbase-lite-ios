@@ -80,7 +80,7 @@ NSError* CBLStatusToNSErrorWithInfo( CBLStatus status, NSString *reason, NSURL* 
     reason = reason != nil ? reason : statusMessage;
     NSMutableDictionary* info = $mdict({NSURLErrorFailingURLErrorKey, url},
                                        {NSLocalizedFailureReasonErrorKey, reason},
-                                       {NSLocalizedDescriptionKey, $sprintf(@"%i %@", status, reason)});
+                                       {NSLocalizedDescriptionKey, reason});
     if (extraInfo)
         [info addEntriesFromDictionary: extraInfo];
     return [NSError errorWithDomain: CBLHTTPErrorDomain code: status userInfo: info];

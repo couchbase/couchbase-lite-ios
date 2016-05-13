@@ -94,6 +94,8 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 - (SecTrustRef) checkServerTrust:(NSURLAuthenticationChallenge*)challenge;
 - (NSURLRequest*) willSendRequest:(NSURLRequest *)request
                  redirectResponse:(NSURLResponse *)response;
+- (void) _didReceiveData:(NSData *)data;
+- (void) _didFinishLoading;
 
 #if DEBUG
 @property BOOL debugAlwaysTrust;    // For unit tests only!
@@ -105,10 +107,6 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 /** A request that parses its response body as JSON.
     The parsed object will be returned as the first parameter of the completion block. */
 @interface CBLRemoteJSONRequest : CBLRemoteRequest
-{
-    @private
-    NSMutableData* _jsonBuffer;
-}
 @end
 
 

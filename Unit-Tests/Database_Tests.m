@@ -531,7 +531,7 @@
     doc = [db createDocument];
     Assert(![doc putProperties: properties error: &error]);
     AssertEq(error.code, 403);
-    AssertEqual(error.localizedDescription, @"403 uncool");
+    AssertEqual(error.localizedDescription, @"uncool");
     AssertEqual(error.localizedFailureReason, @"uncool");
 }
 
