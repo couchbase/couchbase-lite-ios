@@ -357,7 +357,7 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
     Assert(validationCalled);
     AssertEq(status, kCBLStatusForbidden);
     AssertEq(error.code, kCBLStatusForbidden);
-    AssertEqual(error.localizedDescription, @"403 Where's your towel?");
+    AssertEqual(error.localizedDescription, @"Where's your towel?");
 
 
     // POST an invalid new document:
@@ -371,7 +371,7 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
     Assert(validationCalled);
     AssertEq(status, kCBLStatusForbidden);
     AssertEq(error.code, kCBLStatusForbidden);
-    AssertEqual(error.localizedDescription, @"403 Where's your towel?");
+    AssertEqual(error.localizedDescription, @"Where's your towel?");
 
     // PUT a valid new document with an ID:
     props = $mdict({@"_id", @"ford"}, {@"name", @"Ford Prefect"}, {@"towel", @"terrycloth"});
@@ -409,7 +409,7 @@ static CBL_Revision* revBySettingProperties(CBL_Revision* rev, NSDictionary* pro
     Assert(validationCalled);
     AssertEq(status, kCBLStatusForbidden);
     AssertEq(error.code, kCBLStatusForbidden);
-    AssertEqual(error.localizedDescription, @"403 Where's your towel?");
+    AssertEqual(error.localizedDescription, @"Where's your towel?");
 }
 
 

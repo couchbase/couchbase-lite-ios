@@ -47,6 +47,7 @@ typedef enum {
 @implementation CBLRemoteRequest
 {
     AuthPhase _authPhase;
+    NSMutableData* _jsonBuffer;
 }
 
 
@@ -152,6 +153,7 @@ typedef enum {
 - (void) clearConnection {
     _request = nil;
     _task = nil;
+    _jsonBuffer = nil;
 }
 
 
@@ -434,14 +436,54 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     }
 #endif
     
-    if (CBLStatusIsError(_status))
-        [self cancelWithStatus: _status
-                       message: [NSHTTPURLResponse localizedStringForStatusCode: _status]];
+    if (CBLStatusIsError(_status)) {
+        if (errorResponseMayBeJSON(response)) {
+            // Wait to receive the response before signaling an error, so we can read the error
+            // message/reason out of the JSON.
+            _jsonBuffer = [NSMutableData new];
+        } else {
+            [self cancelWithStatus: _status
+                           message: [NSHTTPURLResponse localizedStringForStatusCode: _status]];
+        }
+    }
 }
 
 
+// CBLRemoteSession calls this
+- (void) _didReceiveData:(NSData *)data {
+    LogVerbose(RemoteRequest, @"%@: Got %lu bytes", self, (unsigned long)data.length);
+    if (CBLStatusIsError(_status)) {
+        [self appendJSON: data];
+    } else {
+        [self didReceiveData: data];
+    }
+}
+
+// subclasses override this
 - (void) didReceiveData:(NSData *)data {
-//    LogVerbose(RemoteRequest, @"%@: Got %lu bytes", self, (unsigned long)data.length);
+}
+
+
+- (void) appendJSON:(NSData *)data {
+    if (!_jsonBuffer)
+        _jsonBuffer = [[NSMutableData alloc] initWithCapacity: MAX(data.length, 8192u)];
+    [_jsonBuffer appendData: data];
+}
+
+- (id) parseJSONResponse: (NSError**)outError {
+    if (!_jsonBuffer) {
+        if (outError) *outError = nil;
+        return nil;
+    }
+    NSError* parseError;
+    id result = [CBLJSON JSONObjectWithData: _jsonBuffer options: 0 error: &parseError];
+    if (!result && outError) {
+        Warn(@"%@: %@ %@ returned unparseable data '%@'",
+             self, _request.HTTPMethod, _request.URL, [_jsonBuffer my_UTF8ToString]);
+        *outError = CBLStatusToNSErrorWithInfo(kCBLStatusUpstreamError, nil, _request.URL,
+                                               @{NSUnderlyingErrorKey: parseError});
+    }
+    return result;
 }
 
 
@@ -466,10 +508,35 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 }
 
 
+// CBLRemoteSession calls this
+- (void) _didFinishLoading {
+    if (CBLStatusIsError(_status) && _jsonBuffer) {
+        // Response has an error status, and we were waiting to get the JSON message:
+        LogTo(RemoteRequest, @"%@: JSON error message is: %@", self, _jsonBuffer.my_UTF8ToString);
+        NSDictionary* info = $castIf(NSDictionary, [self parseJSONResponse: NULL]);
+        NSString* errorMsg = info[@"reason"] ?: info[@"error"];
+        NSDictionary* extra = info ? @{@"CBLServerErrorInfo": info} : nil;
+        _jsonBuffer = nil;
+        [self didFailWithError: CBLStatusToNSErrorWithInfo(_status, errorMsg, _request.URL, extra)];
+    } else {
+        [self didFinishLoading];
+    }
+}
+
+// subclasses override this
 - (void)didFinishLoading {
     LogTo(RemoteRequest, @"%@: Finished loading", self);
     [self clearConnection];
     [self respondWithResult: self error: nil];
+}
+
+
+static BOOL errorResponseMayBeJSON(NSHTTPURLResponse* response) {
+    // CouchDB returns JSON with a MIME type of "text/plain;charset=utf-8" :-p
+    NSString* contentType = response.MIMEType.lowercaseString;
+    return [contentType hasPrefix: @"application/json"]
+        || ([response.allHeaderFields[@"Server"] hasPrefix: @"CouchDB"]
+            && [contentType hasPrefix: @"text/plain;charset=utf-8"]);
 }
 
 
@@ -495,34 +562,16 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     return self;
 }
 
-- (void) clearConnection {
-    _jsonBuffer = nil;
-    [super clearConnection];
-}
-
 - (void) didReceiveData:(NSData *)data {
-    [super didReceiveData: data];
-    if (!_jsonBuffer)
-        _jsonBuffer = [[NSMutableData alloc] initWithCapacity: MAX(data.length, 8192u)];
-    [_jsonBuffer appendData: data];
+    [self appendJSON: data];
 }
 
 - (void) didFinishLoading {
     LogTo(RemoteRequest, @"%@: Finished loading", self);
-    id result = nil;
     NSError* error = nil;
-    if (_jsonBuffer.length > 0) {
-        NSError* parseError;
-        result = [CBLJSON JSONObjectWithData: _jsonBuffer options: 0 error: &parseError];
-        if (!result) {
-            Warn(@"%@: %@ %@ returned unparseable data '%@'",
-                 self, _request.HTTPMethod, _request.URL, [_jsonBuffer my_UTF8ToString]);
-            error = CBLStatusToNSErrorWithInfo(kCBLStatusUpstreamError, nil, _request.URL,
-                                               @{NSUnderlyingErrorKey: parseError});
-        }
-    } else {
+    id result = [self parseJSONResponse: &error];
+    if (!result && !error)
         result = $dict();
-    }
     [self clearConnection];
     [self respondWithResult: result error: error];
 }
