@@ -449,8 +449,8 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
     CBLMultipartWriter* bodyStream = nil;
     NSDictionary* attachments = rev.attachments;
     for (NSString* attachmentName in [CBJSONEncoder orderedKeys: attachments]) {
-        NSDictionary* attachment = attachments[attachmentName];
-        if (attachment[@"follows"]) {
+        NSDictionary* attachmentDict = attachments[attachmentName];
+        if (attachmentDict[@"follows"]) {
             if (!bodyStream) {
                 // Create the HTTP multipart stream:
                 bodyStream = [[CBLMultipartWriter alloc] initWithContentType: @"multipart/related"
@@ -472,30 +472,24 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                 else
                     [bodyStream addData: json];
             }
+
             // Add attachment as another MIME part:
-            NSString* disposition = $sprintf(@"attachment; filename=%@",
-                                             CBLQuoteString(attachmentName));
-            NSString* contentType = attachment[@"type"];
-            NSString* contentEncoding = attachment[@"encoding"];
-            [bodyStream setNextPartsHeaders: $dict({@"Content-Disposition", disposition},
-                                                   {@"Content-Type", contentType},
-                                                   {@"Content-Encoding", contentEncoding})];
             CBLStatus status;
-            CBL_Attachment* attachmentObj = [_db attachmentForDict: attachment
-                                                             named: attachmentName
-                                                            status: &status];
-            if (!attachmentObj) {
-                Warn(@"CBLRestPusher: Invalid attachment '%@' in %@", attachmentName, rev);
+            CBL_Attachment* attachment = [_db attachmentForDict: attachmentDict
+                                                          named: attachmentName
+                                                         status: &status];
+            if (attachment)
+                status = [bodyStream addAttachment: attachment];
+            if (CBLStatusIsError(status)) {
+                if (status == kCBLStatusAttachmentNotFound)
+                    LogTo(Sync, @"Skipping rev %@ due to missing attachment '%@'",
+                          rev, attachmentName);
+                else
+                    Warn(@"CBLRestPusher: Invalid attachment '%@' in %@: %@",
+                         attachmentName, rev, attachmentDict);
                 CBLStatusToOutNSError(status, outError);
                 return nil;
             }
-            NSInputStream *contentStream = attachmentObj.contentStream;
-            if (!contentStream) {
-                LogTo(Sync, @"Skipping rev %@ due to missing attachment '%@'", rev, attachmentName);
-                CBLStatusToOutNSError(kCBLStatusAttachmentNotFound, outError);
-                return nil;
-            }
-            [bodyStream addStream: contentStream length: attachmentObj->length];
         }
     }
 

@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLMultipartWriter.h"
+#import "CBL_Attachment.h"
 #import "CBLGZip.h"
 #import "CollectionUtils.h"
 #import "Test.h"
@@ -94,6 +95,26 @@
         }
     }
     [self addData: data];
+}
+
+
+- (CBLStatus) addAttachment: (CBL_Attachment*)attachment {
+    NSString* disposition = $sprintf(@"attachment; filename=%@",
+                                     CBLQuoteString(attachment.name));
+    [self setNextPartsHeaders: $dict({@"Content-Disposition", disposition},
+                                     {@"Content-Type", attachment.contentType},
+                                     {@"Content-Encoding", attachment.encodingName})];
+    uint64_t contentLength;
+    NSInputStream *contentStream = [attachment getContentStreamDecoded: NO
+                                                             andLength: &contentLength];
+    if (!contentStream)
+        return kCBLStatusAttachmentNotFound;
+    uint64_t declaredLength = attachment.possiblyEncodedLength;
+    if (declaredLength != 0 && contentLength != declaredLength)
+        Warn(@"Attachment '%@' length mismatch; actually %llu, declared %llu",
+             attachment.name, contentLength, declaredLength);
+    [self addStream: contentStream length: contentLength];
+    return kCBLStatusOK;
 }
 
 

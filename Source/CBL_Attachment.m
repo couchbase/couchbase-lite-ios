@@ -132,7 +132,12 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
 }
 
 
-- (void) setPossiblyEncodedLength: (UInt64)len {
+- (uint64_t) possiblyEncodedLength {
+    return self->encoding ? self->encodedLength : self->length;
+}
+
+
+- (void) setPossiblyEncodedLength: (uint64_t)len {
     if (self->encoding)
         self->encodedLength = len;
     else
@@ -190,17 +195,16 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
                                        {@"digest", blobKeyToDigest(_blobKey)},
                                        {@"content_type", _contentType},
                                        {@"revpos", @(revpos)},
-                                       {@"length", @(length)});
+                                       {@"length", @(length)},
+                                       {@"encoding", self.encodingName});
     if (encodedLength > 0)
         dict[@"encoded_length"] = @(encodedLength);
-    switch (encoding) {
-        case kCBLAttachmentEncodingGZIP:
-            dict[@"encoding"] = @"gzip";
-            break;
-        case kCBLAttachmentEncodingNone:
-            break;
-    }
     return dict;
+}
+
+
+- (NSString*) encodingName {
+    return encoding==kCBLAttachmentEncodingGZIP ? @"gzip" : nil;
 }
 
 
@@ -233,12 +237,19 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
 }
 
 
-- (NSInputStream*) contentStream {
-    if (encoding == kCBLAttachmentEncodingNone)
-        return [_database.attachmentStore blobInputStreamForKey: _blobKey length: NULL];
-    else {
+- (NSInputStream*) getContentStreamDecoded: (BOOL)decoded
+                                 andLength: (uint64_t*)outLength
+{
+    if (!decoded || encoding == kCBLAttachmentEncodingNone) {
+        return [_database.attachmentStore blobInputStreamForKey: _blobKey length: outLength];
+    } else {
+        // OPT: Could stream a gzip decoder instead of decoding the entire content to RAM
         NSData* content = self.content;
-        return content ? [NSInputStream inputStreamWithData: content] : nil;
+        if (!content)
+            return nil;
+        if (outLength)
+            *outLength = content.length;
+        return [NSInputStream inputStreamWithData: content];
     }
 }
 

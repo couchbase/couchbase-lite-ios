@@ -698,21 +698,14 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     [writer addData: rev.asJSON];
     NSDictionary* attachments = rev.attachments;
     for (NSString* attachmentName in attachments) {
-        NSDictionary* attachment = attachments[attachmentName];
-        if (attachment[@"follows"]) {
-            NSString* disposition = $sprintf(@"attachment; filename=%@", CBLQuoteString(attachmentName));
-            [writer setNextPartsHeaders: $dict({@"Content-Disposition", disposition})];
-
+        NSDictionary* attachmentDict = attachments[attachmentName];
+        if (attachmentDict[@"follows"]) {
             CBLStatus status;
-            CBL_Attachment* attachObj = [_db attachmentForDict: attachment named: attachmentName
-                                                        status: &status];
-            if (!attachObj)
-                return nil;
-            NSURL* fileURL = attachObj.contentURL;
-            if (fileURL)
-                [writer addFileURL: fileURL];
-            else
-                [writer addStream: attachObj.contentStream];
+            CBL_Attachment* attachment = [_db attachmentForDict: attachmentDict
+                                                          named: attachmentName
+                                                         status: &status];
+            if (attachment)
+                [writer addAttachment: attachment];
         }
     }
     return writer;

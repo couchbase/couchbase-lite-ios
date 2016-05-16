@@ -59,10 +59,16 @@
     self = [super init];
     if (self) {
         NSNumber* lengthObj = nil;
-        if ([body isKindOfClass: [NSData class]])
+        if ([body isKindOfClass: [NSData class]]) {
+            body = [body copy];
             lengthObj = @([body length]);
-        else
-            [(NSURL*)body getResourceValue: &lengthObj forKey: NSURLFileSizeKey error: NULL];
+        } else {
+            NSURL* bodyURL = $castIf(NSURL, body);
+            if (!bodyURL.isFileURL)
+                return nil;
+            if (![bodyURL getResourceValue: &lengthObj forKey: NSURLFileSizeKey error: NULL])
+                return nil;
+        }
         _metadata = $dict({@"content_type", contentType},
                           {@"length", lengthObj},
                           {@"follows", $true});
@@ -163,7 +169,7 @@
         else if ([_body isKindOfClass: [NSURL class]] && [_body isFileURL])
             stream = [NSInputStream inputStreamWithURL: _body];
     } else {
-        stream = self._internalAttachment.contentStream;
+        stream = [self._internalAttachment getContentStreamDecoded: YES andLength: NULL];
     }
     [stream open];
     return stream;
@@ -178,21 +184,12 @@
 }
 
 
-static CBL_BlobStoreWriter* blobStoreWriterForBody(CBLDatabase* tddb, NSData* body) {
-    CBL_BlobStoreWriter* writer = tddb.attachmentWriter;
-    [writer appendData: body];
-    [writer finish];
-    return writer;
-}
-
-
 // Goes through an _attachments dictionary and replaces any values that are CBLAttachment objects
 // with proper JSON metadata dicts. It registers the attachment bodies with the blob store and sets
 // the metadata 'digest' and 'follows' properties accordingly.
 + (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
                              intoDatabase: (CBLDatabase*)database
 {
-    CBLDatabase* tddb = database;
     return [attachments my_dictionaryByUpdatingValues: ^id(NSString* name, id value) {
         CBLAttachment* attachment = $castIf(CBLAttachment, value);
         if (attachment) {
@@ -203,11 +200,15 @@ static CBL_BlobStoreWriter* blobStoreWriterForBody(CBLDatabase* tddb, NSData* bo
             if (body) {
                 // Copy attachment body into the database's blob store:
                 // OPT: If _body is an NSURL, could just copy the file without reading into RAM
-                CBL_BlobStoreWriter* writer = blobStoreWriterForBody(tddb, body);
+                CBL_BlobStoreWriter* writer = [database attachmentWriter];
+                [writer appendData: body];
+                [writer finish];
+                [database rememberAttachmentWriter: writer];
                 metadata[@"length"] = @(body.length);
                 metadata[@"digest"] = writer.MD5DigestString;
                 metadata[@"follows"] = $true;
-                [tddb rememberAttachmentWriter: writer];
+                LogTo(Database, @"%@: Stored new CBLAttachment '%@' %@",
+                      database.name, name, metadata.my_compactDescription);
             }
         }
         return value;

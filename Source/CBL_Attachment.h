@@ -36,11 +36,11 @@
 @property (readonly, nonatomic) NSString* contentType;
 @property                       CBLBlobKey blobKey;
 @property (readonly, nonatomic) NSString* digest;
+@property (readonly, nonatomic) NSString* encodingName;
 
 @property (readonly, nonatomic) BOOL hasContent;
 @property (readonly, nonatomic) NSData* encodedContent;  // only if inline or stored in db blob-store
 @property (readonly, nonatomic) NSData* content;
-@property (readonly, nonatomic) NSInputStream* contentStream;
 @property (readonly, nonatomic) NSURL* contentURL; // only if already stored in db blob-store
 
 @property (readonly) BOOL hasBlobKey;
@@ -48,7 +48,10 @@
 
 @property (readonly) NSDictionary* asStubDictionary;
 
-/** Sets encodedLength if there is an encoding, else length. */
-- (void) setPossiblyEncodedLength: (UInt64)len;
+/** Equal to the encodedLength if there is an encoding, else length. */
+@property (readwrite) uint64_t possiblyEncodedLength;
+
+- (NSInputStream*) getContentStreamDecoded: (BOOL)decoded
+                                 andLength: (uint64_t*)outLength;
 
 @end

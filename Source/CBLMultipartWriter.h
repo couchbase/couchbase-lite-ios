@@ -7,6 +7,8 @@
 //
 
 #import "CBLMultiStreamWriter.h"
+#import "CBLStatus.h"
+@class CBL_Attachment;
 
 
 /** A streaming MIME multipart body generator, suitable for use with an NSURLRequest.
@@ -35,6 +37,8 @@
 - (void) setNextPartsHeaders: (NSDictionary*)headers;
 
 - (void) addGZippedData: (NSData*)data;
+
+- (CBLStatus) addAttachment: (CBL_Attachment*)attachment;
 
 /** Attaches the writer to the URL request.
     This calls -openForInputStream and sets the resulting input stream as the HTTPBodyStream of the request. It also sets the Content-Type header of the request. */
