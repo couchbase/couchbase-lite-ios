@@ -536,7 +536,7 @@ static BOOL errorResponseMayBeJSON(NSHTTPURLResponse* response) {
     NSString* contentType = response.MIMEType.lowercaseString;
     return [contentType hasPrefix: @"application/json"]
         || ([response.allHeaderFields[@"Server"] hasPrefix: @"CouchDB"]
-            && [contentType hasPrefix: @"text/plain;charset=utf-8"]);
+            && [contentType hasPrefix: @"text/plain"]);
 }
 
 
