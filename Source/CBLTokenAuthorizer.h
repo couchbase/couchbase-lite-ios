@@ -9,7 +9,7 @@
 
 /** Generic authorizer for services like Facebook and Persona where we need to POST a JSON
     request to a server endpoint (_facebook or _persona, respectively.) */
-@interface CBLTokenAuthorizer : NSObject <CBLLoginAuthorizer>
+@interface CBLTokenAuthorizer : NSObject <CBLSessionCookieAuthorizer>
 
 - (instancetype) initWithLoginPath: (NSString*)loginPath
                     postParameters: (NSDictionary*)params;

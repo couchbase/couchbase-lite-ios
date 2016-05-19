@@ -19,6 +19,7 @@
 #import "CBLJSON.h"
 #import "Test.h"
 #import "MYBlockUtils.h"
+#import "OpenIDController+AppKit.h"
 
 #import <CouchbaseLite/CouchbaseLite.h>
 #import <CouchbaseLite/CBLRemoteLogging.h>
@@ -33,7 +34,8 @@ static CBLListener* sListener;
 
 
 #define ENABLE_REPLICATION
-
+#undef REMOTE_LOGGING
+#undef OPENID_PULL
 
 #define kChangeGlowDuration 3.0
 
@@ -43,7 +45,15 @@ int main (int argc, const char * argv[]) {
 }
 
 
+@interface DemoAppController (OpenIDController) <OpenIDControllerDelegate>
+@end
+
+
+
 @implementation DemoAppController
+{
+    OpenIDController* _openIDController;
+}
 
 
 @synthesize query = _query;
@@ -82,8 +92,10 @@ int main (int argc, const char * argv[]) {
         exit(1);
     }
 
+#ifdef REMOTE_LOGGING
     [[CBLRemoteLogging sharedInstance] enableLogging: @[@"CBLDatabase", @"Query", @"Sync"]];
-    
+#endif
+
     NSError* error;
     _database = [[CBLManager sharedInstance] databaseNamed: dbName
                                                      error: &error];
@@ -142,6 +154,26 @@ int main (int argc, const char * argv[]) {
 
 - (IBAction) compact: (id)sender {
     [_database compact: NULL];
+}
+
+
+- (IBAction) fakeOpenIDLogin: (id)sender {
+    if (_openIDController)
+        return;
+    NSURL* login = [NSURL URLWithString: @"http://localhost:4984/openid_db/_oidc_testing/authorize?redirect_uri=http://example.com/openid_login"];
+    NSURL* auth = [NSURL URLWithString: @"http://example.com/openid_login"];
+#if 1
+    // Use the +loginCallback:
+    [OpenIDController loginCallback](login, auth,
+                                     ^(NSURL* __nullable authURL, NSError* __nullable error)
+    {
+        NSLog(@"**** OpenID auth finished: authURL = <%@>, error = %@", authURL, error);
+    });
+#else
+    // Run the controller directly:
+    _openIDController = [[OpenIDController alloc] initWithLoginURL: login delegate: self];
+    [_openIDController.panel makeKeyAndOrderFront: self];
+#endif
 }
 
 
@@ -270,7 +302,12 @@ int main (int argc, const char * argv[]) {
         [self stopObservingReplication: _push];
     if (otherDbURL) {
         _pull = [_database createPullReplication: otherDbURL];
+#ifdef OPENID_PULL
+        _pull.authenticator = [CBLAuthenticator OpenIDConnectAuthenticator: [OpenIDController loginCallback]];
+        _push = nil;
+#else
         _push = [_database createPushReplication: otherDbURL];
+#endif
         _pull.continuous = _push.continuous = YES;
         [self observeReplication: _pull];
         [self observeReplication: _push];
@@ -441,5 +478,35 @@ int main (int argc, const char * argv[]) {
     [cell setDrawsBackground: (bg != nil)];
 }
 
+
+@end
+
+
+
+
+@implementation DemoAppController (OpenIDController)
+
+- (void) openIDControllerDidCancel: (OpenIDController*) openIDController {
+    NSLog(@"OpenID: CANCELED login");
+    [_openIDController.panel close];
+    _openIDController = nil;
+}
+
+- (void) openIDController: (OpenIDController*) openIDController
+    didSucceedWithAuthURL: (NSURL*)authURL
+{
+    NSLog(@"OpenID: Login succeeded: auth URL = <%@>", authURL.absoluteString);
+    [_openIDController.panel close];
+    _openIDController = nil;
+}
+
+- (void) openIDController:(OpenIDController *)openIDController
+         didFailWithError:(NSString *)error
+              description:(NSString *)description
+{
+    NSLog(@"OpenID: Login failed: error '%@', description '%@'", error, description);
+    [_openIDController.panel close];
+    _openIDController = nil;
+}
 
 @end

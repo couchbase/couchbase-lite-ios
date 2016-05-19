@@ -361,26 +361,29 @@ extern int c4_getObjectCount(void);             // from c4Base.h (CBForest)
 
 
 - (id) sendRemoteRequest: (NSString*)method toURL: (NSURL*)url {
+    return [self sendRemoteRequest: [[CBLRemoteJSONRequest alloc] initWithMethod: method
+                                                                             URL: url
+                                                                            body: nil
+                                                                    onCompletion: nil]];
+}
+
+- (id) sendRemoteRequest: (CBLRemoteRequest*)request {
+    NSURLRequest* urlRequest = request.URLRequest;
     __block id result = nil;
     __block NSError* error = nil;
     XCTestExpectation* finished = [self expectationWithDescription: @"Sent request to server"];
-    CBLRemoteSession* session = [[CBLRemoteSession alloc] init];
-    CBLRemoteRequest* request = [[CBLRemoteJSONRequest alloc] initWithMethod: method
-                                                                         URL: url
-                                                                        body: nil
-                                                                onCompletion:
-                                 ^(id r, NSError *err) {
-                                     result = r;
-                                     error = err;
-                                     [finished fulfill];
-                                 }
-                                 ];
+    request.onCompletion = ^(id r, NSError *err) {
+        result = r;
+        error = err;
+        [finished fulfill];
+    };
     request.authorizer = self.authorizer;
     request.debugAlwaysTrust = YES;
+    CBLRemoteSession* session = [[CBLRemoteSession alloc] init];
     [session startRequest: request];
 
     [self waitForExpectationsWithTimeout: 10 handler: nil];
-    AssertNil(error);
+    Assert(error == nil, @"Unexpected error for %@ %@: %@", urlRequest.HTTPMethod, urlRequest.URL, error.my_compactDescription);
     return result;
 }
 

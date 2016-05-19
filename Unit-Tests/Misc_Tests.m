@@ -204,7 +204,8 @@ static int collateRevs(const char* rev1, const char* rev2) {
     gotToken = [auth tokenForSite: [NSURL URLWithString: @"HttpS://example.com:443/some/other/path"]];
     AssertEqual(gotToken, token);
 
-    AssertEqual([auth loginParametersForSite: site], (@{@"access_token": token}));
+    AssertEqual([auth loginRequestForSite: site],
+                (@[@"POST", @"/database/_facebook", @{@"access_token": token}]));
 }
 
 

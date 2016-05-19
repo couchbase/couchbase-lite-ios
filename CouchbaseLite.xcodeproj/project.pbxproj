@@ -710,7 +710,7 @@
 		279C7E3014F424090004A1E8 /* CBLSequenceMap.m in Sources */ = {isa = PBXBuildFile; fileRef = 279C7E2D14F424090004A1E8 /* CBLSequenceMap.m */; };
 		279CE3B814D4A885009F3FA6 /* MYBlockUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 279CE3B614D4A885009F3FA6 /* MYBlockUtils.h */; };
 		279CE3BA14D4A886009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; };
-		279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3B714D4A885009F3FA6 /* MYBlockUtils.m */; };
 		279CE40014D749A7009F3FA6 /* CBLMultipartReader.h in Headers */ = {isa = PBXBuildFile; fileRef = 279CE3FE14D749A7009F3FA6 /* CBLMultipartReader.h */; };
 		279CE40214D749A7009F3FA6 /* CBLMultipartReader.m in Sources */ = {isa = PBXBuildFile; fileRef = 279CE3FF14D749A7009F3FA6 /* CBLMultipartReader.m */; };
 		279CE40A14D8AA23009F3FA6 /* CBLMultipartDownloader.h in Headers */ = {isa = PBXBuildFile; fileRef = 279CE40814D8AA23009F3FA6 /* CBLMultipartDownloader.h */; };
@@ -802,6 +802,8 @@
 		27B3469E1BE585310079D57C /* CBLTimeSeries.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DC37A71BE40A5A00734E82 /* CBLTimeSeries.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		27B346A21BE80EA50079D57C /* CBLRemoteLogging.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B346A01BE80EA50079D57C /* CBLRemoteLogging.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		27B346A41BE80EA50079D57C /* CBLRemoteLogging.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B346A11BE80EA50079D57C /* CBLRemoteLogging.m */; };
+		27B469EF1CEE306400501E67 /* CBLOpenIDConnectAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B469EE1CEE306400501E67 /* CBLOpenIDConnectAuthorizer.m */; };
+		27B469F01CEE306400501E67 /* CBLOpenIDConnectAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B469EE1CEE306400501E67 /* CBLOpenIDConnectAuthorizer.m */; };
 		27B945A91768E63200B2DF2D /* CBLModelArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B945A71768E63200B2DF2D /* CBLModelArray.h */; };
 		27B945AA1768E63200B2DF2D /* CBLModelArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B945A71768E63200B2DF2D /* CBLModelArray.h */; };
 		27B945B217692E2000B2DF2D /* CBLModel_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B945B017692E2000B2DF2D /* CBLModel_Internal.h */; };
@@ -818,6 +820,15 @@
 		27C706D61488679500F0F099 /* ShoppingDemo.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27C706D01488679500F0F099 /* ShoppingDemo.xib */; };
 		27C706D71488679500F0F099 /* ShoppingItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C706D21488679500F0F099 /* ShoppingItem.m */; };
 		27CB056316CDD1ED0040C9F8 /* CBLUICollectionSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */; };
+		27CCBBED1D0240DF00BFA5F5 /* OpenIDController.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CCBBE61D0240DF00BFA5F5 /* OpenIDController.m */; };
+		27CCBBEE1D0240DF00BFA5F5 /* OpenIDController.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CCBBE61D0240DF00BFA5F5 /* OpenIDController.m */; };
+		27CCBBEF1D0240DF00BFA5F5 /* OpenIDController+AppKit.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CCBBE81D0240DF00BFA5F5 /* OpenIDController+AppKit.m */; };
+		27CCBBF21D0240DF00BFA5F5 /* OpenIDController+UIKit.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CCBBEA1D0240DF00BFA5F5 /* OpenIDController+UIKit.m */; };
+		27CCBBF71D06002E00BFA5F5 /* CBLAuthenticator+OpenID.h in Headers */ = {isa = PBXBuildFile; fileRef = 27CCBBF31D05FE1A00BFA5F5 /* CBLAuthenticator+OpenID.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27CCBBF81D06002F00BFA5F5 /* CBLAuthenticator+OpenID.h in Headers */ = {isa = PBXBuildFile; fileRef = 27CCBBF31D05FE1A00BFA5F5 /* CBLAuthenticator+OpenID.h */; };
+		27CCBBF91D06002F00BFA5F5 /* CBLAuthenticator+OpenID.h in Headers */ = {isa = PBXBuildFile; fileRef = 27CCBBF31D05FE1A00BFA5F5 /* CBLAuthenticator+OpenID.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27CCBBFA1D06003000BFA5F5 /* CBLAuthenticator+OpenID.h in Headers */ = {isa = PBXBuildFile; fileRef = 27CCBBF31D05FE1A00BFA5F5 /* CBLAuthenticator+OpenID.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27CCBBFC1D073FCF00BFA5F5 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CCBBFB1D073FCF00BFA5F5 /* WebKit.framework */; };
 		27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* CBLStatus.m */; };
 		27D0F3E41B865234006B4419 /* CBLProgressGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D0F3E21B865234006B4419 /* CBLProgressGroup.h */; };
 		27D0F3F11B86587E006B4419 /* CBLProgressGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D0F3E31B865234006B4419 /* CBLProgressGroup.m */; };
@@ -1879,6 +1890,8 @@
 		27B0B81B1492C16300A817AD /* DemoAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DemoAppDelegate.m; sourceTree = "<group>"; };
 		27B346A01BE80EA50079D57C /* CBLRemoteLogging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRemoteLogging.h; sourceTree = "<group>"; };
 		27B346A11BE80EA50079D57C /* CBLRemoteLogging.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLRemoteLogging.m; sourceTree = "<group>"; };
+		27B469ED1CEE306400501E67 /* CBLOpenIDConnectAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLOpenIDConnectAuthorizer.h; sourceTree = "<group>"; };
+		27B469EE1CEE306400501E67 /* CBLOpenIDConnectAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLOpenIDConnectAuthorizer.m; sourceTree = "<group>"; };
 		27B46EA51CB4656000D56BEE /* StaticLibProduct.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = StaticLibProduct.xcconfig; sourceTree = "<group>"; };
 		27B46EB11CB46EA400D56BEE /* DynamicFramework.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = DynamicFramework.xcconfig; sourceTree = "<group>"; };
 		27B46EB21CB470AB00D56BEE /* UnitTests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = UnitTests.xcconfig; sourceTree = "<group>"; };
@@ -1917,6 +1930,14 @@
 		27C706D21488679500F0F099 /* ShoppingItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ShoppingItem.m; sourceTree = "<group>"; };
 		27CB056216CDD1ED0040C9F8 /* CBLUICollectionSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CBLUICollectionSource.m; path = Extras/CBLUICollectionSource.m; sourceTree = "<group>"; };
 		27CB056416CDD1FB0040C9F8 /* CBLUICollectionSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CBLUICollectionSource.h; path = Extras/CBLUICollectionSource.h; sourceTree = "<group>"; };
+		27CCBBE41D0240DF00BFA5F5 /* OpenIDController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenIDController.h; sourceTree = "<group>"; };
+		27CCBBE61D0240DF00BFA5F5 /* OpenIDController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenIDController.m; sourceTree = "<group>"; };
+		27CCBBE71D0240DF00BFA5F5 /* OpenIDController+AppKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OpenIDController+AppKit.h"; sourceTree = "<group>"; };
+		27CCBBE81D0240DF00BFA5F5 /* OpenIDController+AppKit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OpenIDController+AppKit.m"; sourceTree = "<group>"; };
+		27CCBBE91D0240DF00BFA5F5 /* OpenIDController+UIKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OpenIDController+UIKit.h"; sourceTree = "<group>"; };
+		27CCBBEA1D0240DF00BFA5F5 /* OpenIDController+UIKit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OpenIDController+UIKit.m"; sourceTree = "<group>"; };
+		27CCBBF31D05FE1A00BFA5F5 /* CBLAuthenticator+OpenID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLAuthenticator+OpenID.h"; sourceTree = "<group>"; };
+		27CCBBFB1D073FCF00BFA5F5 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk/System/Library/Frameworks/WebKit.framework; sourceTree = DEVELOPER_DIR; };
 		27CF5D2C152F514A0015D7A9 /* CBLStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLStatus.m; sourceTree = "<group>"; };
 		27D0F3E21B865234006B4419 /* CBLProgressGroup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLProgressGroup.h; sourceTree = "<group>"; };
 		27D0F3E31B865234006B4419 /* CBLProgressGroup.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLProgressGroup.m; sourceTree = "<group>"; };
@@ -2312,6 +2333,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CCBBFC1D073FCF00BFA5F5 /* WebKit.framework in Frameworks */,
 				27E66B521A730DBF0091DA3F /* libCBLForestDBStorage.a in Frameworks */,
 				27E66B511A730CA80091DA3F /* libsqlite3.dylib in Frameworks */,
 				27E940691954BD4C00A9732E /* libc++.dylib in Frameworks */,
@@ -2557,6 +2579,7 @@
 				27C5BADF1A92AC51008C357C /* CBLEncryptionController.m */,
 				AA1776B61857ADDB00CB01A3 /* CBLIncrementalStore.h */,
 				AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */,
+				27CCBBE31D0240B400BFA5F5 /* OpenIDConnectUI */,
 			);
 			path = Extras;
 			sourceTree = "<group>";
@@ -2594,6 +2617,7 @@
 				27E2E5CB159533A5005B9234 /* CBLReplication.h */,
 				27E2E5CC159533A5005B9234 /* CBLReplication.m */,
 				2733022818F8572700A488F7 /* CBLAuthenticator.h */,
+				27CCBBF31D05FE1A00BFA5F5 /* CBLAuthenticator+OpenID.h */,
 				2733022918F8572700A488F7 /* CBLAuthenticator.m */,
 				2762AB5618D36F1B00649D47 /* CBLReplication+Transformation.h */,
 				2762AB5718D36F1B00649D47 /* CBLReplication+Transformation.m */,
@@ -2862,6 +2886,8 @@
 				2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */,
 				27B086AD1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.h */,
 				27B086AE1B39E7BB00D3D9D8 /* CBLClientCertAuthorizer.m */,
+				27B469ED1CEE306400501E67 /* CBLOpenIDConnectAuthorizer.h */,
+				27B469EE1CEE306400501E67 /* CBLOpenIDConnectAuthorizer.m */,
 				93D21AEE1A955480000AD9AF /* CBLCookieStorage.h */,
 				93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */,
 			);
@@ -3147,6 +3173,7 @@
 		27C70696148864BA00F0F099 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27CCBBFB1D073FCF00BFA5F5 /* WebKit.framework */,
 				2759958B1CCEC8450074CA58 /* libc++.tbd */,
 				93FFB4871C615629006CBE30 /* Security.framework */,
 				93829ED91C6097650042189B /* SystemConfiguration.framework */,
@@ -3220,6 +3247,19 @@
 			);
 			name = "Test-Mac";
 			path = "../Test-Mac";
+			sourceTree = "<group>";
+		};
+		27CCBBE31D0240B400BFA5F5 /* OpenIDConnectUI */ = {
+			isa = PBXGroup;
+			children = (
+				27CCBBE41D0240DF00BFA5F5 /* OpenIDController.h */,
+				27CCBBE61D0240DF00BFA5F5 /* OpenIDController.m */,
+				27CCBBE71D0240DF00BFA5F5 /* OpenIDController+AppKit.h */,
+				27CCBBE81D0240DF00BFA5F5 /* OpenIDController+AppKit.m */,
+				27CCBBE91D0240DF00BFA5F5 /* OpenIDController+UIKit.h */,
+				27CCBBEA1D0240DF00BFA5F5 /* OpenIDController+UIKit.m */,
+			);
+			path = OpenIDConnectUI;
 			sourceTree = "<group>";
 		};
 		27DA4300158F9D7A00F9E7B5 /* API */ = {
@@ -3497,6 +3537,7 @@
 				2701C17C1C4D5BDD006D7A99 /* CBLInternal.h in Headers */,
 				2701C17D1C4D5BDD006D7A99 /* MYData.h in Headers */,
 				2701C17E1C4D5BDD006D7A99 /* CBLFacebookAuthorizer.h in Headers */,
+				27CCBBF81D06002F00BFA5F5 /* CBLAuthenticator+OpenID.h in Headers */,
 				2701C17F1C4D5BDD006D7A99 /* CBLTokenAuthorizer.h in Headers */,
 				2701C1801C4D5BDD006D7A99 /* yajl_version.h in Headers */,
 				2701C1811C4D5BDD006D7A99 /* CBLCollateJSON.h in Headers */,
@@ -3699,6 +3740,7 @@
 				27821BB7148E7D6F0099B373 /* CBL_Replicator.h in Headers */,
 				270B3E3914898DF200E0A926 /* CBL_Revision.h in Headers */,
 				270B3E251489392C00E0A926 /* CBL_Router.h in Headers */,
+				27CCBBF71D06002E00BFA5F5 /* CBLAuthenticator+OpenID.h in Headers */,
 				27A9D67F1A661ED10074FDD2 /* CBL_ViewStorage.h in Headers */,
 				2786CE781B84FFAE0061998D /* CBL_BlobStoreWriter.h in Headers */,
 				93EBA2781B2ECEDF0006C66C /* CBLJSFunction.h in Headers */,
@@ -3812,6 +3854,7 @@
 				27EA50B41B275527009E78C1 /* CBLBase.h in Headers */,
 				27452BD91AB1187E00327776 /* CBLRevision.h in Headers */,
 				27452BDA1AB1187E00327776 /* CBLAttachment.h in Headers */,
+				27CCBBF91D06002F00BFA5F5 /* CBLAuthenticator+OpenID.h in Headers */,
 				27452BDB1AB1187E00327776 /* CBLView.h in Headers */,
 				270A3A931CAB1B5900EC3D99 /* CBLDynamicObject.h in Headers */,
 				27452BDC1AB1187E00327776 /* CBLQuery.h in Headers */,
@@ -3873,6 +3916,7 @@
 				27B945AA1768E63200B2DF2D /* CBLModelArray.h in Headers */,
 				27726AB2188983AE00AE6931 /* CBLJSON.h in Headers */,
 				27E41530154F6E9C00771FC5 /* CBLStatus.h in Headers */,
+				27CCBBFA1D06003000BFA5F5 /* CBLAuthenticator+OpenID.h in Headers */,
 				27B0B7FB1492BDE800A817AD /* CBLDatabase+Internal.h in Headers */,
 				2711CDFE14C7590A00505D55 /* CBLDatabase+Attachments.h in Headers */,
 				2711CE0114C7595900505D55 /* CBLDatabase+Insertion.h in Headers */,
@@ -4929,6 +4973,7 @@
 				2701C05F1C49CFE6006D7A99 /* CBLSyncListener.m in Sources */,
 				2701C0601C49CFE6006D7A99 /* CBLCache.m in Sources */,
 				2701C0611C49CFE6006D7A99 /* CBLQuery.m in Sources */,
+				27B469EF1CEE306400501E67 /* CBLOpenIDConnectAuthorizer.m in Sources */,
 				2701C0621C49CFE6006D7A99 /* CBLProgressGroup.m in Sources */,
 				2701C0631C49CFE6006D7A99 /* CBL_BlobStoreWriter.m in Sources */,
 				2701C0641C49CFE6006D7A99 /* CBLManager.m in Sources */,
@@ -5203,6 +5248,7 @@
 				27B0B7D81492B8A200A817AD /* CBLChangeTracker.m in Sources */,
 				27B0B7DB1492B8A200A817AD /* CBLBase64.m in Sources */,
 				27731F061495335B00815D67 /* CBL_BlobStore.m in Sources */,
+				27B469F01CEE306400501E67 /* CBLOpenIDConnectAuthorizer.m in Sources */,
 				27A82D291BBC9C1D005CB742 /* CBLGZip.m in Sources */,
 				27513A181A672C760055DC40 /* CBLView.m in Sources */,
 				279906E6149A65B8003D4338 /* CBLRemoteRequest.m in Sources */,
@@ -5326,6 +5372,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27CCBBF21D0240DF00BFA5F5 /* OpenIDController+UIKit.m in Sources */,
+				27CCBBEE1D0240DF00BFA5F5 /* OpenIDController.m in Sources */,
 				27B0B8181492C16300A817AD /* main.m in Sources */,
 				27B0B81C1492C16300A817AD /* DemoAppDelegate.m in Sources */,
 				27731F3714967A5F00815D67 /* RootViewController.m in Sources */,
@@ -5341,6 +5389,8 @@
 				27C706D31488679500F0F099 /* DemoAppController.m in Sources */,
 				27C706D41488679500F0F099 /* DemoQuery.m in Sources */,
 				27C706D71488679500F0F099 /* ShoppingItem.m in Sources */,
+				27CCBBEF1D0240DF00BFA5F5 /* OpenIDController+AppKit.m in Sources */,
+				27CCBBED1D0240DF00BFA5F5 /* OpenIDController.m in Sources */,
 				279CE3BB14D4C775009F3FA6 /* MYBlockUtils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

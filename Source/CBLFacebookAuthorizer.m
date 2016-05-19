@@ -62,14 +62,13 @@ static NSMutableDictionary* sRegisteredTokens;
 }
 
 
-- (NSString*) loginPathForSite: (NSURL*)site {
-    return [site.path stringByAppendingPathComponent: @"_facebook"];
-}
-
-
-- (NSDictionary*) loginParametersForSite: (NSURL*)site {
+- (NSArray*) loginRequestForSite: (NSURL*)site {
     NSString* token = [self tokenForSite: site];
-    return token ? @{kLoginParamAccessToken: token} : nil;
+    if (!token)
+        return nil;
+    return @[@"POST",
+             [site.path stringByAppendingPathComponent: @"_facebook"],
+             @{kLoginParamAccessToken: token} ];
 }
 
 

@@ -60,6 +60,15 @@ static NSTimeInterval k1970ToReferenceDate;
 }
 
 
++ (nullable id) JSONObjectWithData:(NSData *)data {
+    return [self JSONObjectWithData: data options: 0 error: NULL];
+}
+
++ (nullable NSData*) dataWithJSONObject:(id)obj {
+    return [self dataWithJSONObject: obj options: 0 error: NULL];
+}
+
+
 + (NSData*) appendDictionary: (NSDictionary*)dict
         toJSONDictionaryData: (NSData*)json
 {

@@ -113,14 +113,14 @@ bool CBLParsePersonaAssertion(NSString* assertion,
 }
 
 
-- (NSString*) loginPathForSite:(NSURL *)site {
-    return [site.path stringByAppendingPathComponent: @"_persona"];
-}
-
-
-- (NSDictionary*) loginParametersForSite: (NSURL*)site {
+- (NSArray*) loginRequestForSite:(NSURL *)site {
     NSString* assertion = [self assertionForSite: site];
-    return assertion ? @{@"assertion": assertion} : nil;
+    if (!assertion)
+        return nil;
+    return @[@"POST",
+             [site.path stringByAppendingPathComponent: @"_persona"],
+             assertion ];
 }
+
 
 @end

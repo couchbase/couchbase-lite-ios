@@ -9,7 +9,7 @@
 #import "CBLAuthorizer.h"
 
 /** Authorizer for the Persona decentralized-identity system. See http://persona.org */
-@interface CBLPersonaAuthorizer: NSObject <CBLLoginAuthorizer>
+@interface CBLPersonaAuthorizer: NSObject <CBLSessionCookieAuthorizer>
 
 + (NSString*) registerAssertion: (NSString*)assertion;
 

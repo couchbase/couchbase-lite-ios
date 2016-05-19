@@ -7,6 +7,7 @@
 //
 
 #import <CouchbaseLite/CBLAuthenticator.h>
+#import "CBLStatus.h"
 #import <Security/SecBase.h>
 
 
@@ -29,27 +30,47 @@
 /** Authorizer that adds custom headers to an HTTP request */
 @protocol CBLCustomHeadersAuthorizer <CBLAuthorizer>
 
-/** Should add a header to the request to convey the authorization token. */
-- (void) authorizeURLRequest: (NSMutableURLRequest*)request;
-
-/** Should add a header to the message to convey the authorization token. */
-- (void) authorizeHTTPMessage: (CFHTTPMessageRef)message;
+/** May add a header to the request (usually "Authorization:") to convey the authorization token.
+    @param request  The URL request to authenticate.
+    @return YES if it added authorization. */
+- (BOOL) authorizeURLRequest: (NSMutableURLRequest*)request;
 
 @end
 
 
-
-/** Authorizer that sends a login request that sets a session cookie. */
+/** Authorizer that sends a login request. */
 @protocol CBLLoginAuthorizer <CBLAuthorizer>
 
-- (NSString*) loginPathForSite: (NSURL*)site;
-- (NSDictionary*) loginParametersForSite: (NSURL*)site;
+/** Returns the HTTP method, URL, and body of the login request to send, or nil for no login.
+    @param site  The URL of the remote database.
+    @return  An array of the form @[method, path, body]. The path may be absolute, or relative to
+                the site URL. Return nil to skip the login. */
+- (NSArray*) loginRequestForSite: (NSURL*)site;
+
+@optional
+
+/** The replicator calls this method with the response to the login request. It then waits for the
+    authorizer to call the continuation callback, before proceeding.
+    @param jsonResponse  The parsed JSON body of the response.
+    @param headers  The HTTP response headers.
+    @param error  The error, if the request failed.
+    @param continuationBlock  The authorizer must call this block at some future time. If the
+            `loginAgain` parameter is YES, the login will be repeated, with another call to
+            -loginRequestForSite:. If the NSError* parameter is non-nil, replication stops. */
+- (void) loginResponse: (NSDictionary*)jsonResponse
+               headers: (NSDictionary*)headers
+                 error: (NSError*)error
+          continuation: (void (^)(BOOL loginAgain, NSError*))continuationBlock;
 
 @end
 
 
+/** This protocol is just a marker that the authorizer uses a session cookie. */
+@protocol CBLSessionCookieAuthorizer <CBLLoginAuthorizer>
+@end
 
-/** Simple implementation of CBLPasswordAuthorizer. */
+
+/** Simple implementation of CBLCredentialAuthorizer that supports HTTP Basic auth. */
 @interface CBLPasswordAuthorizer : NSObject <CBLCredentialAuthorizer, CBLCustomHeadersAuthorizer>
 
 - (instancetype) initWithUser: (NSString*)user password: (NSString*)password;
@@ -64,6 +85,8 @@
 @end
 
 
+
+#pragma mark - SSL CERT/TRUST UTILITIES:
 
 /** Sets the global list of anchor certs to be used by CBLCheckSSLServerTrust. */
 void CBLSetAnchorCerts(NSArray* certs, BOOL onlyThese);

@@ -20,6 +20,7 @@
 #import "CBLBase64.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
+#import "BLIPHTTPLogic.h"
 #import "MYURLUtils.h"
 
 
@@ -722,6 +723,23 @@
     CBL_RevisionList* revs = [db.storage getAllRevisionsOfDocumentID: @"propertytest" onlyCurrent: NO includeDeleted: YES];
     Assert(revs);
     Assert(revs[0].deleted);
+}
+
+- (void) test22_ParseAuthChallenge {
+    NSDictionary* c = [BLIPHTTPLogic parseAuthHeader: nil];
+    AssertNil(c);
+
+    NSString* header = @"Basic realm=Couchbase";
+    c = [BLIPHTTPLogic parseAuthHeader: header];
+    AssertEqualish(c, (@{@"WWW-Authenticate": header, @"Scheme": @"Basic", @"realm": @"Couchbase"}));
+
+    header = @"OIDC login=\"http://example.com/login?foo=bar\"";
+    c = [BLIPHTTPLogic parseAuthHeader: header];
+    AssertEqualish(c, (@{@"WWW-Authenticate": header, @"Scheme": @"OIDC", @"login": @"http://example.com/login?foo=bar"}));
+
+    header = @"OIDC login=\"http://example.com/login?foo=bar\",something=other";
+    c = [BLIPHTTPLogic parseAuthHeader: header];
+    AssertEqualish(c, (@{@"WWW-Authenticate": header, @"Scheme": @"OIDC", @"login": @"http://example.com/login?foo=bar"}));
 }
 
 

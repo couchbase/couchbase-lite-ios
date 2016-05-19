@@ -35,6 +35,10 @@ typedef NSUInteger CBLJSONWritingOptions;
                                     options:(CBLJSONWritingOptions)opt
                                       error:(NSError**)error;
 
++ (nullable id) JSONObjectWithData:(NSData *)data;
+
++ (nullable NSData*) dataWithJSONObject:(id)obj;
+
 /** Given valid JSON data representing a dictionary, inserts the contents of the given NSDictionary into it and returns the resulting JSON data.
     This does not parse or regenerate the JSON, so it's quite fast.
     But it will generate invalid JSON if the input JSON begins or ends with whitespace, or if the dictionary contains any keys that are already in the original JSON. */

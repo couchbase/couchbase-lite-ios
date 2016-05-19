@@ -14,8 +14,10 @@
 #import "CBLAttachmentDownloader.h"
 #import "CBLRemoteSession.h"
 #import "CBLRemoteRequest.h"
+#import "CBLOpenIDConnectAuthorizer.h"
 #import "MYAnonymousIdentity.h"
 #import "MYErrorUtils.h"
+#import "MYURLUtils.h"
 
 
 // These dbs will get deleted and overwritten during tests:
@@ -1185,8 +1187,12 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     repl.authenticator = [CBLAuthenticator basicAuthenticatorWithName: @"wrong"
                                                              password: @"wrong"];
     [self runReplication: repl expectedChangesCount: 0];
-    AssertEqual(repl.lastError.domain, CBLHTTPErrorDomain);
-    AssertEq(repl.lastError.code, 401);
+    NSError* error = repl.lastError;
+    AssertEqual(error.domain, CBLHTTPErrorDomain);
+    AssertEq(error.code, 401);
+    NSDictionary* challenge = error.userInfo[@"AuthChallenge"];
+    AssertEqual(challenge[@"Scheme"], @"Basic");
+    AssertEqual(challenge[@"realm"], @"Couchbase Sync Gateway");
 
     repl.authenticator = [CBLAuthenticator OAuth1AuthenticatorWithConsumerKey: @"wrong"
                                                                consumerSecret: @"wrong"
@@ -1574,6 +1580,100 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
         AssertEqual(doc[@"n"], @(i));
         AssertEqual(doc[@"updated"], (i%3 ? nil : @YES));
     }
+}
+
+
+- (NSError*) pullWithOIDCAuth: (id<CBLAuthenticator>)auth {
+    NSURL* remoteDbURL = [self remoteTestDBURL: @"openid_db"];
+    if (!remoteDbURL)
+        return nil;
+    CBLReplication* repl = [db createPullReplication: remoteDbURL];
+    repl.authenticator = auth;
+    [self runReplication: repl expectedChangesCount: 0];
+    return repl.lastError;
+}
+
+
+- (void) test26_OpenIDConnectAuth {
+    NSURL* remoteDbURL = [self remoteTestDBURL: @"openid_db"];
+    if (!remoteDbURL || !self.isSQLiteDB) return;
+
+    NSError* error;
+    Assert([CBLOpenIDConnectAuthorizer forgetIDTokensForServer: remoteDbURL error: &error]);
+
+    id<CBLAuthenticator> auth = [CBLAuthenticator OpenIDConnectAuthenticator:
+                                    ^(NSURL* login, NSURL* authBase, CBLOIDCLoginContinuation cont)
+    {
+        [self assertValidOIDCLogin: login authBase: authBase forRemoteDB: remoteDbURL];
+
+        // Fake a form submission to the OIDC test provider, to get an auth URL redirect:
+        NSURL* formURL = [NSURL URLWithString: [remoteDbURL.absoluteString stringByAppendingString: @"/_oidc_testing/authenticate?client_id=CLIENTID&redirect_uri=http%3A%2F%2F127.0.0.1%3A4984%2Fopenid_db%2F_oidc_callback&response_type=code&scope=openid+email&state="]];
+        NSData *formData = [@"username=pupshaw&authenticated=true" dataUsingEncoding: NSUTF8StringEncoding];
+        CBLRemoteRequest* rq = [[CBLRemoteRequest alloc] initWithMethod: @"POST" URL: formURL body: formData onCompletion: nil];
+        [rq dontRedirect];
+        [self sendRemoteRequest: rq];
+        AssertEq(rq.statusCode, 302);
+        NSString* authURLStr = rq.responseHeaders[@"Location"];
+        Log(@"Redirected to: %@", authURLStr);
+        Assert(authURLStr);
+        NSURL* authURL = [NSURL URLWithString: authURLStr];
+        Assert(authURL);
+        // Continue with login!
+        Log(@"**** Callback handing control back to authenticator...");
+        cont(authURL, nil);
+    }];
+
+    NSError* authError = [self pullWithOIDCAuth: auth];
+    AssertNil(authError);
+
+    // The username I gave is "pupshaw", but SG namespaces it by prefixing it with the provider's
+    // registered name, which is "testing" (as given in the SG config file.)
+    AssertEqual(auth.username, @"testing_pupshaw");
+}
+
+
+- (void) test27_OpenIDConnectAuth_ExpiredIDToken {
+    NSURL* remoteDbURL = [self remoteTestDBURL: @"openid_db"];
+    if (!remoteDbURL || !self.isSQLiteDB) return;
+
+    NSError* error;
+    Assert([CBLOpenIDConnectAuthorizer forgetIDTokensForServer: remoteDbURL error: &error]);
+
+    __block BOOL callbackInvoked = NO;
+    id<CBLAuthenticator> auth = [CBLAuthenticator OpenIDConnectAuthenticator:
+                                    ^(NSURL* login, NSURL* authBase, CBLOIDCLoginContinuation cont)
+    {
+        [self assertValidOIDCLogin: login authBase: authBase forRemoteDB: remoteDbURL];
+        Assert(!callbackInvoked);
+        callbackInvoked = YES;
+        cont(nil, nil); // cancel
+    }];
+
+    // Set bogus ID and refresh tokens, so first the session check will fail, then the attempt
+    // to refresh the ID token will fail. Finally the callback above will be called.
+    ((CBLOpenIDConnectAuthorizer*)auth).IDToken = @"BOGUS_ID";
+    ((CBLOpenIDConnectAuthorizer*)auth).refreshToken = @"BOGUS_REFRESH";
+
+    NSError* authError = [self pullWithOIDCAuth: auth];
+    Assert([authError my_hasDomain: NSURLErrorDomain
+                              code: NSURLErrorUserCancelledAuthentication]);
+    Assert(callbackInvoked);
+}
+
+
+- (void) assertValidOIDCLogin: (NSURL*)login
+                     authBase: (NSURL*)authBase
+                  forRemoteDB: (NSURL*)remoteDbURL
+{
+    Log(@"*** Login callback invoked with login URL: <%@>, authBase: <%@>", login, authBase);
+    Assert(login);
+    AssertEqual(login.host, remoteDbURL.host);
+    AssertEqual(login.port, remoteDbURL.port);
+    AssertEqual(login.path, [remoteDbURL.path stringByAppendingPathComponent: @"_oidc_testing/authorize"]);
+    Assert(authBase);
+    AssertEqual(authBase.host, remoteDbURL.host);
+    AssertEqual(authBase.port, remoteDbURL.port);
+    AssertEqual(authBase.path, [remoteDbURL.path stringByAppendingPathComponent: @"_oidc_callback"]);
 }
 
 

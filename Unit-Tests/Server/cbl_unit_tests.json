@@ -1,5 +1,5 @@
 {
-	"log": ["HTTP+"],
+	"log": ["HTTP+", "OIDC+"],
     "interface": ":4984",
     "adminInterface": ":4985",
 	"databases": {
@@ -54,6 +54,30 @@
 				"GUEST": {"disabled": false, "admin_channels":["*"]}
 			},
             "sync": `function(doc) {throw({forbidden: "Immutable test db"});}`
-        }
+        },
+		"openid_db": {
+			"server": "walrus:",
+			"users": {
+				"openidOP": {"admin_channels":["public"],"password":"abc123"},
+				"couchbaseUser": {"admin_channels":["public"],"password":"xyz789"}
+			},
+            "unsupported": {
+                "oidc_test_provider": {
+                    "enabled": true
+                }  
+            },
+            "oidc": {
+                "providers": {
+                    "testing": {
+                        "issuer":"http://127.0.0.1:4984/openid_db/_oidc_testing",
+                        "client_id":"sync_gateway",
+                        "validation_key":"abc123",
+                        "callback_url":"http://127.0.0.1:4984/openid_db/_oidc_callback",
+                        "register":true
+                    }
+                },
+                "default_provider": "testing"
+            }
+		}
 	}
 }

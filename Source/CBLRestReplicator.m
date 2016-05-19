@@ -577,12 +577,11 @@
 
 // Before doing anything else, determine whether we have an active login session.
 - (void) checkSession {
-    if ([_remoteSession.authorizer conformsToProtocol: @protocol(CBLLoginAuthorizer)]) {
+    if ([_remoteSession.authorizer conformsToProtocol: @protocol(CBLSessionCookieAuthorizer)]) {
         // Sync Gateway session API is at /db/_session; try that first
         [self checkSessionAtPath: @"_session"];
     } else {
-        // Skip login phase
-        [self fetchRemoteCheckpointDoc];
+        [self login];
     }
 }
 
@@ -618,31 +617,54 @@
 
 // If there is no login session, attempt to log in, if the authorizer knows the parameters.
 - (void) login {
-    id<CBLLoginAuthorizer> loginAuth = (id<CBLLoginAuthorizer>)_remoteSession.authorizer;
-    NSDictionary* loginParameters = [loginAuth loginParametersForSite: _settings.remote];
-    if (loginParameters == nil) {
-        LogTo(Sync, @"%@: %@ has no login parameters, so skipping login", self, _remoteSession.authorizer);
+    id<CBLLoginAuthorizer> loginAuth = $castIfProtocol(CBLLoginAuthorizer, _remoteSession.authorizer);
+    NSArray* login = [loginAuth loginRequestForSite: _settings.remote];
+    if (login == nil) {
         [self fetchRemoteCheckpointDoc];
         return;
     }
 
-    NSString* loginPath = [loginAuth loginPathForSite: _settings.remote];
+    NSString* method = login[0];
+    NSString* loginPath = login[1];
+    id loginParameters = login.count >= 3 ? login[2] : nil;
+
     LogTo(Sync, @"%@: Logging in with %@ at %@ ...", self, _remoteSession.authorizer.class, loginPath);
-    [self asyncTaskStarted];
-    [self sendAsyncRequest: @"POST"
+    [self asyncTaskStarted]; // finishes in -loginFinishedWithError:
+    __block CBLRemoteJSONRequest* rq;
+    rq = [self sendAsyncRequest: method
                       path: loginPath
                       body: loginParameters
               onCompletion: ^(id result, NSError *error) {
-                  if (error) {
-                      LogTo(Sync, @"%@: Login failed!", self);
-                      self.error = error;
+                  if ([loginAuth respondsToSelector: @selector(loginResponse:headers:error:continuation:)]) {
+                      [loginAuth loginResponse: result
+                                       headers: rq.responseHeaders
+                                         error: error
+                                  continuation: ^(BOOL loginAgain, NSError* continuationError) {
+                                      [_db doAsync:^{
+                                          if (loginAgain) {
+                                              [self login];
+                                              [self asyncTasksFinished: 1]; // finishes task begun in -login
+                                          } else {
+                                              [self loginFinishedWithError: continuationError];
+                                          }
+                                      }];
+                                  }];
                   } else {
-                      LogTo(Sync, @"%@: Successfully logged in!", self);
-                      [self fetchRemoteCheckpointDoc];
+                      [self loginFinishedWithError: error];
                   }
-                  [self asyncTasksFinished: 1];
               }
      ];
+}
+
+- (void) loginFinishedWithError: (NSError*)error {
+    if (error) {
+        LogTo(Sync, @"%@: Login error: %@", self, error.my_compactDescription);
+        self.error = error;
+    } else {
+        LogTo(Sync, @"%@: Successfully logged in!", self);
+        [self fetchRemoteCheckpointDoc];
+    }
+    [self asyncTasksFinished: 1]; // finishes task begun in -login
 }
 
 

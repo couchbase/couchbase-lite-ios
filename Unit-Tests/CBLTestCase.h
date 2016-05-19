@@ -10,6 +10,7 @@
 #import <CouchbaseLite/CouchbaseLitePrivate.h>
 #import <XCTest/XCTest.h>
 #import "CollectionUtils.h"
+@class CBLRemoteRequest;
 @protocol CBLAuthorizer;
 
 
@@ -115,6 +116,9 @@ void RemoveTemporaryCredential(NSURL* url, NSString* realm,
 
 /** The self-signed cert(s) of the remote test server's SSL identity. */
 @property (readonly) NSArray* remoteTestDBAnchorCerts;
+
+/** Sends a CBLRemoteRequest, returning its result object. */
+- (id) sendRemoteRequest: (CBLRemoteRequest*)request;
 
 /** Sends an HTTP request via a CBLRemoteJSONRequest. Returns parsed JSON response. */
 - (id) sendRemoteRequest: (NSString*)method toURL: (NSURL*)url;
