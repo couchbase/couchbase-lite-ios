@@ -445,7 +445,9 @@
                         if (deleted || [oldRevID compare: revID] > 0) {
                             // It still 'wins' the conflict, so it's the one that
                             // should be mapped [again], not the current revision!
+                            CBL_RevID* temp = revID;
                             revID = oldRevID;
+                            oldRevID = temp;
                             deleted = NO;
                             sequence = oldSequence;
                             json = [fmdb dataForQuery: @"SELECT json FROM revs WHERE sequence=?",
