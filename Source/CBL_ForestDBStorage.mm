@@ -399,6 +399,7 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
 
 - (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                       onlyCurrent: (BOOL)onlyCurrent
+                                   includeDeleted: (BOOL)includeDeleted
 {
     CLEANUP(C4Document) *doc = [self getC4Doc: docID status: NULL];
     if (!doc)
@@ -407,6 +408,8 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
     CBL_RevisionList* revs = [[CBL_RevisionList alloc] init];
     do {
         if (onlyCurrent && !(doc->selectedRev.flags & kRevLeaf))
+            continue;
+        if (!includeDeleted && (doc->selectedRev.flags & kRevDeleted))
             continue;
         CBLStatus status;
         CBL_Revision *rev = [CBLForestBridge revisionObjectFromForestDoc: doc

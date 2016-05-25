@@ -704,7 +704,7 @@
     id lastSeq = replic8(db, remoteURL, NO, nil, nil, nil);
     AssertEqual(lastSeq, @7);
     // Ensure we didn't pull the deleted document 'propertytest':
-    CBL_RevisionList* revs = [db.storage getAllRevisionsOfDocumentID: @"propertytest" onlyCurrent: NO];
+    CBL_RevisionList* revs = [db.storage getAllRevisionsOfDocumentID: @"propertytest" onlyCurrent: NO includeDeleted: YES];
     AssertEq(revs.count, 0u);
 }
 
@@ -718,7 +718,7 @@
     id lastSeq = replic8(db, remoteURL, NO, nil, nil, nil);
     AssertEqual(lastSeq, @7);
     // Verify we did pull the deleted document 'propertytest':
-    CBL_RevisionList* revs = [db.storage getAllRevisionsOfDocumentID: @"propertytest" onlyCurrent: NO];
+    CBL_RevisionList* revs = [db.storage getAllRevisionsOfDocumentID: @"propertytest" onlyCurrent: NO includeDeleted: YES];
     Assert(revs);
     Assert(revs[0].deleted);
 }

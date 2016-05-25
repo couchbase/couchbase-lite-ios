@@ -117,7 +117,8 @@
     @param onlyCurrent  If YES, only leaf revisions (whether or not deleted) should be returned.
     @return  An array of all available revisions of the document. */
 - (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
-                                      onlyCurrent: (BOOL)onlyCurrent;
+                                      onlyCurrent: (BOOL)onlyCurrent
+                                   includeDeleted: (BOOL)includeDeleted;
 
 /** Returns IDs of local revisions of the same document, that have a lower generation number.
     If possible, returns only leaf revisions; if none match, returns non-leaves.

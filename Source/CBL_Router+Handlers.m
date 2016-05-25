@@ -640,11 +640,10 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             // ?open_revs=all returns all current/leaf revisions:
             BOOL includeDeleted = [self boolQuery: @"include_deleted"];
             CBL_RevisionList* allRevs = [_db.storage getAllRevisionsOfDocumentID: docID
-                                                                     onlyCurrent: YES];
+                                                                     onlyCurrent: YES
+                                                                  includeDeleted: includeDeleted];
             result = [NSMutableArray arrayWithCapacity: allRevs.count];
             for (CBL_Revision* rev in allRevs.allRevisions) {
-                if (!includeDeleted && rev.deleted)
-                    continue;
                 CBLStatus status;
                 CBL_Revision* loadedRev = [_db revisionByLoadingBody: rev status: &status];
                 if (loadedRev)
@@ -744,10 +743,11 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         }
         if (options & kCBLIncludeConflicts) {
             CBL_RevisionList* revs = [storage getAllRevisionsOfDocumentID: rev.docID
-                                                                  onlyCurrent: YES];
+                                                              onlyCurrent: YES
+                                                           includeDeleted: NO];
             if (revs.count > 1) {
-                dst[@"_conflicts"] = [revs.allRevisions my_map: ^(CBL_Revision* aRev) {
-                    return ($equal(aRev, rev) || aRev.deleted) ? nil : aRev.revIDString;
+                dst[@"_conflicts"] =  [revs.allRevisions my_map: ^(CBL_Revision* aRev) {
+                    return $equal(aRev, rev) ? nil : aRev.revIDString;
                 }];
             }
         }

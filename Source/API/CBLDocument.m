@@ -235,10 +235,9 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
 
 - (NSArray*) getLeafRevisions: (NSError**)outError includeDeleted: (BOOL)includeDeleted {
     CBL_RevisionList* revs = [_database.storage getAllRevisionsOfDocumentID: _docID
-                                                                onlyCurrent: YES];
+                                                                onlyCurrent: YES
+                                                             includeDeleted: includeDeleted];
     return [revs.allRevisions my_map: ^CBLSavedRevision*(CBL_Revision* rev) {
-        if (!includeDeleted && rev.deleted)
-            return nil;
         return [self revisionFromRev: rev];
     }];
 }
