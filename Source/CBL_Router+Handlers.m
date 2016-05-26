@@ -717,7 +717,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                         status: (CBLStatus*)outStatus
 {
     if (options & (kCBLIncludeRevs | kCBLIncludeRevsInfo | kCBLIncludeConflicts |
-                   kCBLIncludeAttachments | kCBLIncludeLocalSeq)) {
+                   kCBLIncludeAttachments | kCBLIncludeLocalSeq | kCBLIncludeExpiration)) {
         NSMutableDictionary* dst = [rev.properties mutableCopy];
         id<CBL_Storage> storage = _db.storage;
 
@@ -749,6 +749,13 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                 dst[@"_conflicts"] = [revs.allRevisions my_map: ^(CBL_Revision* aRev) {
                     return ($equal(aRev, rev) || aRev.deleted) ? nil : aRev.revIDString;
                 }];
+            }
+        }
+        if (options & kCBLIncludeExpiration) {
+            uint64_t expirationTime = [_db.storage expirationOfDocument: rev.docID];
+            if (expirationTime > 0) {
+                NSDate* date = [NSDate dateWithTimeIntervalSince1970: expirationTime];
+                dst[@"_exp"] = [CBLJSON JSONObjectWithDate: date];
             }
         }
         CBL_MutableRevision* nuRev = [CBL_MutableRevision revisionWithProperties: dst];
@@ -858,9 +865,30 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         return kCBLStatusBadID;
     }
     rev.body = body;
+
+    // Check for doc expiration:
+    int64_t expirationTime = -1;
+    id exp = rev[@"_exp"];
+    if (exp) {
+        if ([exp isKindOfClass: [NSNull class]] || [exp isEqual: @0]) {
+            expirationTime = 0;
+        } else if ([exp isKindOfClass: [NSNumber class]]) {
+            expirationTime = [exp unsignedLongLongValue];
+        } else {
+            NSDate* date = [CBLJSON dateWithJSONObject: exp]; // parses ISO-8601 string
+            if (!date)
+                return kCBLStatusBadRequest;
+            expirationTime = (int64_t)date.timeIntervalSince1970;
+        }
+        NSMutableDictionary* properties = [rev.properties mutableCopy];
+        [properties removeObjectForKey: @"_exp"];
+        rev.properties = properties;
+    }
     
     CBLStatus status;
     if ([docID hasPrefix: @"_local/"]) {
+        if (expirationTime >= 0)
+            return kCBLStatusBadRequest;
         *outRev = [db.storage putLocalRevision: rev
                                 prevRevisionID: prevRevIDStr.cbl_asRevID
                                       obeyMVCC: YES
@@ -869,7 +897,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         if (CBLStatusIsError(status)) {
             CBLStatusToOutNSError(status, outError);
         }
-    } else
+    } else {
         *outRev = [db putDocID: docID
                     properties: [rev.properties mutableCopy]
                 prevRevisionID: prevRevIDStr.cbl_asRevID
@@ -877,6 +905,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                         source: self.source
                         status: &status
                          error: outError];
+        if (*outRev != nil && expirationTime >= 0)
+            [db.storage setExpiration: expirationTime ofDocument: docID];
+    }
     return status;
 }
 

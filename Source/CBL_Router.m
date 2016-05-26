@@ -162,6 +162,8 @@ DefineLogDomain(Router);
         options |= kCBLIncludeRevs;
     if ([self boolQuery: @"revs_info"])
         options |= kCBLIncludeRevsInfo;
+    if ([self boolQuery: @"show_exp"])
+        options |= kCBLIncludeExpiration;
     return options;
 }
 
