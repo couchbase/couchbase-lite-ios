@@ -96,7 +96,7 @@ static void onCompactCallback(void *context, bool compacting) {
         else if (WillLogTo(Database))
             logLevel = kC4LogInfo;
         c4log_register(logLevel, FDBLogCallback);
-        C4GenerateOldStyleRevIDs = true; // Compatible with CBL 1.x
+        c4doc_generateOldStyleRevID(true); // Compatible with CBL 1.x
 
 #if TARGET_OS_IPHONE
         bgMonitor = [[MYBackgroundMonitor alloc] init];
