@@ -288,15 +288,13 @@ UsingLogDomain(Sync);
 - (void) failedWithError:(NSError*) error {
     [self clearConnection];
 
-    // Work around Cloudant's lack of support of POST to _changes. a 405 (Method Not Allowed) is
-    // a dead giveaway, but Cloudant returns a 401 instead if the database is write-protected.
-    // This could also happen with a read-protected SG or CouchDB database, so if we get a 401
-    // double-check that it's Cloudant. (See issue #1020.)
+    // Work around some servers' lack of support of POST to _changes. A 405 (Method Not Allowed) is
+    // a dead giveaway, but there are some Cloudant-specific errors too.
     if (_usePOST) {
         if ([error my_hasDomain: CBLHTTPErrorDomain code: kCBLStatusMethodNotAllowed]
-            || ([error my_hasDomain: NSURLErrorDomain code: NSURLErrorUserAuthenticationRequired]
-                    && [_serverName rangeOfString: @"CouchDB/1.0.2"].length > 0)) {
-                LogTo(ChangeTracker, @"Apparently server is Cloudant; retrying with a GET...");
+            || [self isCloudantAuthError: error]) {
+                LogTo(ChangeTracker, @"Retrying with a GET after error %@...",
+                      error.my_compactDescription);
                 _usePOST = NO;
                 _http = nil;
                 [self retryAfterDelay: 0.0];
@@ -305,6 +303,16 @@ UsingLogDomain(Sync);
     }
 
     [super failedWithError: error];
+}
+
+
+// Cloudant returns 401 or 403 if we send it a POST to _changes for a write-protected database.
+// (See issues #1020, #1267.)
+- (BOOL) isCloudantAuthError: (NSError*)error {
+    if ([_serverName rangeOfString: @"CouchDB/1.0.2"].length == 0)     // (Accurate as of 5/2016)
+        return NO;
+    return [error my_hasDomain: NSURLErrorDomain code: NSURLErrorUserAuthenticationRequired]
+        || [error my_hasDomain: CBLHTTPErrorDomain code: kCBLStatusForbidden];
 }
 
 
