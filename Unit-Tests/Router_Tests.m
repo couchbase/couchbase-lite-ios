@@ -1497,4 +1497,49 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     AssertEqual(result[@"reason"], @"This document cannot be deleted.");
 }
 
+- (void) test_Expiration {
+    // Create doc without expiration:
+    NSDictionary* result = SendBody(self, @"PUT", @"/db/doc1", @{@"message": @"hello"},
+                                    kCBLStatusCreated, nil);
+    NSString* revID = result[@"rev"];
+    Send(self, @"GET", @"/db/doc1?show_exp=true", kCBLStatusOK,
+         @{@"_id": @"doc1", @"_rev": result[@"rev"], @"message": @"hello"});
+
+    // Set expiration as string:
+    result = SendBody(self, @"PUT", @"/db/doc1",
+                      @{@"_exp": @"2016-12-31T21:21:18Z", @"_rev": revID},
+                      kCBLStatusCreated, nil);
+    revID = result[@"rev"];
+    Send(self, @"GET", @"/db/doc1?show_exp=true", kCBLStatusOK,
+         @{@"_id": @"doc1", @"_rev": revID, @"_exp": @"2016-12-31T21:21:18.000Z"});
+    AssertEq([db.storage expirationOfDocument: @"doc1"], 1483219278ull);
+
+    // Update without changing expiration:
+    result = SendBody(self, @"PUT", @"/db/doc1",
+                      @{@"foo": @17, @"_rev": revID},
+                      kCBLStatusCreated, nil);
+    revID = result[@"rev"];
+    Send(self, @"GET", @"/db/doc1?show_exp=true", kCBLStatusOK,
+         @{@"_id": @"doc1", @"_rev": revID, @"_exp": @"2016-12-31T21:21:18.000Z", @"foo": @17});
+    AssertEq([db.storage expirationOfDocument: @"doc1"], 1483219278ull);
+
+    // Set expiration as number:
+    result = SendBody(self, @"PUT", @"/db/doc1",
+                      @{@"_exp": @1234567890, @"_rev": revID},
+                      kCBLStatusCreated, nil);
+    revID = result[@"rev"];
+    Send(self, @"GET", @"/db/doc1?show_exp=true", kCBLStatusOK,
+         @{@"_id": @"doc1", @"_rev": revID, @"_exp": @"2009-02-13T23:31:30.000Z"});
+    AssertEq([db.storage expirationOfDocument: @"doc1"], 1234567890ull);
+
+    // Clear expiration:
+    result = SendBody(self, @"PUT", @"/db/doc1",
+                      @{@"_exp": [NSNull null], @"_rev": revID},
+                      kCBLStatusCreated, nil);
+    revID = result[@"rev"];
+    Send(self, @"GET", @"/db/doc1?show_exp=true", kCBLStatusOK,
+         @{@"_id": @"doc1", @"_rev": revID});
+    AssertEq([db.storage expirationOfDocument: @"doc1"], 0ull);
+}
+
 @end
