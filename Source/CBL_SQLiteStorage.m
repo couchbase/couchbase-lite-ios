@@ -1021,6 +1021,7 @@ DefineLogDomain(SQL);
 /** Returns all the known revisions (or all current/conflicting revisions) of a document. */
 - (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                       onlyCurrent: (BOOL)onlyCurrent
+                                   includeDeleted:(BOOL)includeDeleted
 {
     __block CBL_RevisionList* list;
     [self withReadLock: ^CBLStatus {
@@ -1032,7 +1033,8 @@ DefineLogDomain(SQL);
         else
             list = [self getAllRevisionsOfDocumentID: docID
                                            numericID: docNumericID
-                                         onlyCurrent: onlyCurrent];
+                                         onlyCurrent: onlyCurrent
+                                      includeDeleted: includeDeleted];
         return kCBLStatusOK;
     }];
     return list;
@@ -1042,22 +1044,22 @@ DefineLogDomain(SQL);
 - (CBL_RevisionList*) getAllRevisionsOfDocumentID: (NSString*)docID
                                         numericID: (SInt64)docNumericID
                                       onlyCurrent: (BOOL)onlyCurrent
+                                   includeDeleted:(BOOL)includeDeleted
 {
-    NSString* sql;
+    NSMutableString* sql = [@"SELECT sequence, revid, deleted FROM revs WHERE doc_id=?" mutableCopy];
     if (onlyCurrent)
-        sql = @"SELECT sequence, revid, deleted FROM revs "
-               "WHERE doc_id=? AND current ORDER BY sequence DESC";
-    else
-        sql = @"SELECT sequence, revid, deleted FROM revs "
-               "WHERE doc_id=? ORDER BY sequence DESC";
+        [sql appendString: @" and current"];
+    if (!includeDeleted)
+        [sql appendString: @" and deleted=0"];
+    [sql appendString: @" ORDER BY sequence DESC"];
     CBL_FMResultSet* r = [_fmdb executeQuery: sql, @(docNumericID)];
     if (!r)
         return nil;
     CBL_RevisionList* revs = [[CBL_RevisionList alloc] init];
     while ([r next]) {
         CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: docID
-                                              revID: [r revIDForColumnIndex: 1]
-                                            deleted: [r boolForColumnIndex: 2]];
+                                                          revID: [r revIDForColumnIndex: 1]
+                                                        deleted: [r boolForColumnIndex: 2]];
         rev.sequence = [r longLongIntForColumnIndex: 0];
         [revs addRev: rev];
     }
@@ -1862,7 +1864,8 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         } else {
             CBL_RevisionList* localRevsList = [self getAllRevisionsOfDocumentID: docID
                                                                       numericID: docNumericID
-                                                                    onlyCurrent: NO];
+                                                                    onlyCurrent: NO
+                                                                 includeDeleted: YES];
             if (!localRevsList)
                 return self.lastDbError;
             localRevs = [[NSMutableDictionary alloc] initWithCapacity: localRevsList.count];

@@ -512,7 +512,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     AssertEqual(current, conflict);
 
     // Check that the list of conflicts is accurate:
-    CBL_RevisionList* conflictingRevs = [db.storage getAllRevisionsOfDocumentID: rev.docID onlyCurrent: YES];
+    CBL_RevisionList* conflictingRevs = [db.storage getAllRevisionsOfDocumentID: rev.docID onlyCurrent: YES includeDeleted: YES];
     AssertEqual(conflictingRevs.allRevisions, (@[conflict, rev]));
 
     // Get the _changes feed and verify only the winner is in it:
@@ -761,7 +761,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     AssertEq([db.storage purgeRevisions: toPurge result: &result], kCBLStatusOK);
     AssertEqual(result, toPurge);
 
-    CBL_RevisionList* remainingRevs = [db.storage getAllRevisionsOfDocumentID: @"doc" onlyCurrent: NO];
+    CBL_RevisionList* remainingRevs = [db.storage getAllRevisionsOfDocumentID: @"doc" onlyCurrent: NO includeDeleted: YES];
     AssertEq(remainingRevs.count, 0u);
     [db _close];
 }
@@ -784,7 +784,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     AssertEq([db.storage purgeRevisions: toPurge result: &result], kCBLStatusOK);
     AssertEqual(result, toPurge);
 
-    CBL_RevisionList* remainingRevs = [db.storage getAllRevisionsOfDocumentID: @"doc" onlyCurrent: NO];
+    CBL_RevisionList* remainingRevs = [db.storage getAllRevisionsOfDocumentID: @"doc" onlyCurrent: NO includeDeleted: YES];
     AssertEq(remainingRevs.count, 0u);
 }
 
@@ -1110,7 +1110,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
         Assert(longBranch);
     }
 
-    Log(@"All revisions = %@", [db.storage getAllRevisionsOfDocumentID: @"robin" onlyCurrent: NO]);
+    Log(@"All revisions = %@", [db.storage getAllRevisionsOfDocumentID: @"robin" onlyCurrent: NO includeDeleted: YES]);
 
     NSArray<CBLSavedRevision*>* all = [db[@"robin"] getConflictingRevisions: &error];
     Log(@"Conflicts = %@", all);
@@ -1133,7 +1133,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
                        status: &status error: &error];
     Assert(longBranch);
 
-    Log(@"After merge, all revisions = %@", [db.storage getAllRevisionsOfDocumentID: @"robin" onlyCurrent: NO]);
+    Log(@"After merge, all revisions = %@", [db.storage getAllRevisionsOfDocumentID: @"robin" onlyCurrent: NO includeDeleted: YES]);
     all = [db[@"robin"] getConflictingRevisions: &error];
     Log(@"After merge, conflicts = %@", all);
     AssertEq(all.count, 1u);
