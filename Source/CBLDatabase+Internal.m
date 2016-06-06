@@ -417,7 +417,7 @@ static BOOL sAutoCompact = YES;
     [self doAsync:^{
         LogTo(Database, @"Purging expired documents...");
         NSUInteger nPurged = [_storage purgeExpiredDocuments];
-        LogTo(Database, @"Purged %zu expired documents", nPurged);
+        LogTo(Database, @"Purged %lu expired documents", (unsigned long)nPurged);
         [self scheduleDocumentExpiration: 1.0];
     }];
 }

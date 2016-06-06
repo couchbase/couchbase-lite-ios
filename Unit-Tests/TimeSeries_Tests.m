@@ -102,7 +102,7 @@
         //Log(@"%@", [CBLJSON stringWithJSONObject: row.document.properties options: 0 error: NULL]);
         NSData* data = [CBLJSON dataWithJSONObject: row.document.properties options: 0 error: NULL];
         NSData* zipped = [CBLGZip dataByCompressingData: data];
-        NSLog(@"Data = %lu bytes, gzipped %lu", data.length, (unsigned long)zipped.length);
+        NSLog(@"Data = %lu bytes, gzipped %lu", (unsigned long)data.length, (unsigned long)zipped.length);
         for (NSDictionary* event in events) {
             AssertEqual(event[@"i"], @(i++));
             id dt = event[@"dt"];

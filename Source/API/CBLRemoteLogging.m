@@ -76,7 +76,7 @@ static CBLRemoteLogging* sShared;
 
 
 - (void) logType: (NSString*)type message: (NSString*)message {
-    [self addEvent: @{@"key": type, @"msg": message}];
+    [self addEvent: $dict({@"key", type}, {@"msg", message})];
 }
 
 

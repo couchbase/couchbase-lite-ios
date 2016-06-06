@@ -1615,8 +1615,8 @@
                                      if (!change.revisionID)
                                          ++purges;
                                  }
-                                 Log(@"Received %@ with %zu changes, %zu purges",
-                                     notification.name, changes.count, purges);
+                                 Log(@"Received %@ with %lu changes, %lu purges",
+                                     notification.name, (unsigned long)changes.count, (unsigned long)purges);
                                  dbChangesReceived += purges;
                                  Assert(dbChangesReceived <= 1000);
                                  return (dbChangesReceived >= 1000);
