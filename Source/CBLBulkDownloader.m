@@ -58,7 +58,7 @@
         NSMutableDictionary* key = $mdict({@"id",  rev.docID},
                                           {@"rev", rev.revIDString});
         if (possibleAncestors) {
-            [key setObject: possibleAncestors
+            [key setObject: [possibleAncestors my_map: ^id(CBL_RevID* r) {return r.asString;}]
                     forKey: (haveBodies ? @"atts_since" : @"revs_from")];
         } else {
             if (rev.generation > maxRevTreeDepth)

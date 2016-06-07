@@ -1535,4 +1535,46 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 
+// Test for pulling new revisions of lots of existing documents. (See #1276) 
+- (void) test26_PullLotsOfUpdates {
+    NSURL* remoteDbURL = [self remoteTestDBURL: kScratchDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+    CBLReplication* push = [db createPushReplication: remoteDbURL];
+
+    // Create 500 docs & push to remote db:
+    for (int i = 0; i < 500; ++i)
+        [self createDocumentWithProperties: @{@"_id": $sprintf(@"doc-%03d", i), @"n": @(i)}];
+    [self runReplication: push expectedChangesCount: 500];
+
+    // Pull to db2:
+    CBLDatabase* db2 = [dbmgr createEmptyDatabaseNamed: @"prepopdb" error: NULL];
+    Assert(db2);
+    CBLReplication* pull = [db2 createPullReplication: remoteDbURL];
+    [self runReplication: pull expectedChangesCount: 500];
+
+    // Update 1/3 of the docs:
+    for (int i = 0; i < 500; ++i) {
+        if (i % 3 == 0) {
+            CBLDocument* doc = db[$sprintf(@"doc-%03d", i)];
+            CBLSavedRevision* rev = [doc update: ^BOOL(CBLUnsavedRevision *rev) {
+                rev[@"updated"] = @YES;
+                return YES;
+            } error: NULL];
+            Assert(rev);
+        }
+    }
+    [self runReplication: push expectedChangesCount: 167];
+
+    // Pull to db2 and verify:
+    [self runReplication: pull expectedChangesCount: 167];
+    for (int i = 0; i < 500; ++i) {
+        CBLDocument* doc = db2[$sprintf(@"doc-%03d", i)];
+        AssertEqual(doc[@"n"], @(i));
+        AssertEqual(doc[@"updated"], (i%3 ? nil : @YES));
+    }
+}
+
+
 @end
