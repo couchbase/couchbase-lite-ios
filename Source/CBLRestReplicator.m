@@ -292,7 +292,7 @@
     }
     _remoteSession = [[CBLRemoteSession alloc] initWithConfiguration: config
                                                           authorizer: authorizer
-                                                       cookieStorage: _cookieStorage];
+                                                       cookieStorage: self.cookieStorage];
 
     _running = YES;
     _online = NO;
