@@ -378,7 +378,9 @@
                       body: $dict({@"docs", docsToSend},
                                   {@"new_edits", $false})
               onCompletion: ^(NSDictionary* response, NSError *error) {
-                  if (!error) {
+                  if (error) {
+                      self.error = error;
+                  } else {
                       NSMutableSet* failedIDs = [NSMutableSet set];
                       // _bulk_docs response is really an array, not a dictionary!
                       for (NSDictionary* item in $castIf(NSArray, response)) {
@@ -390,11 +392,12 @@
                               // because I did my job in sending the revision. Other statuses are
                               // actual replication errors.
                               if (status != kCBLStatusForbidden && status != kCBLStatusUnauthorized) {
-                                  NSString* docID = item[@"id"];
-                                  [failedIDs addObject: docID];
-                                  NSURL* url = docID ? [_settings.remote URLByAppendingPathComponent: docID]
-                                                     : nil;
-                                  error = CBLStatusToNSErrorWithInfo(status, nil, url, nil);
+                                  [failedIDs addObject: item[@"id"]];
+                                  if (CBLMayBeTransientError(CBLStatusToNSError(status)))
+                                      [self revisionFailed];    // retry after replicator finishes
+                                  // Don't set self.error ... we used to do this, but it stops the
+                                  // replicator, so if the error were repeatable it prevented all
+                                  // later documents from being pushed. (See #1279.)
                               }
                           }
                       }
@@ -404,11 +407,6 @@
                           if (![failedIDs containsObject: rev.docID])
                               [self removePending: rev];
                       }
-                  }
-                  if (error) {
-                      self.error = error;
-                      [self revisionFailed];
-                  } else {
                       LogVerbose(Sync, @"%@: Sent %@", self, changes.allRevisions);
                   }
                   self.changesProcessed += numDocsToSend;
