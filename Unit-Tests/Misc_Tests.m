@@ -193,19 +193,20 @@ static int collateRevs(const char* rev1, const char* rev2) {
     NSString* email = @"jimbo@example.com";
 
     CBLFacebookAuthorizer* auth = [[CBLFacebookAuthorizer alloc] initWithEmailAddress: email];
+    auth.remoteURL = site;
 
     // Register and retrieve the sample token:
     Assert([CBLFacebookAuthorizer registerToken: token
                                  forEmailAddress: email forSite: site]);
-    NSString* gotToken = [auth tokenForSite: site];
-    AssertEqual(gotToken, token);
+    AssertEqual([auth token], token);
 
     // Try a variant form of the URL:
-    gotToken = [auth tokenForSite: [NSURL URLWithString: @"HttpS://example.com:443/some/other/path"]];
-    AssertEqual(gotToken, token);
+    CBLFacebookAuthorizer* auth2 = [[CBLFacebookAuthorizer alloc] initWithEmailAddress: email];
+    auth2.remoteURL = [NSURL URLWithString: @"HttpS://example.com:443/some/other/path"];
+    AssertEqual([auth2 token], token);
 
-    AssertEqual([auth loginRequestForSite: site],
-                (@[@"POST", @"/database/_facebook", @{@"access_token": token}]));
+    AssertEqual([auth loginRequest],
+                (@[@"POST", @"_facebook", @{@"access_token": token}]));
 }
 
 
@@ -234,11 +235,12 @@ static int collateRevs(const char* rev1, const char* rev2) {
                                                              site: originURL];
     AssertEqual(gotAssertion, sampleAssertion);
 
-    // -assertionForSite: should return nil because the assertion has expired by now:
+    // -assertion should return nil because the assertion has expired by now:
     CBLPersonaAuthorizer* auth = [[CBLPersonaAuthorizer alloc] initWithEmailAddress: email];
+    auth.remoteURL = originURL;
     AssertEqual(auth.emailAddress, email);
     [self allowWarningsIn:^{
-        AssertEqual([auth assertionForSite: originURL], nil);
+        AssertEqual([auth assertion], nil);
     }];
 }
 

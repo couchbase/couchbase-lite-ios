@@ -1629,6 +1629,21 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     // The username I gave is "pupshaw", but SG namespaces it by prefixing it with the provider's
     // registered name, which is "testing" (as given in the SG config file.)
     AssertEqual(auth.username, @"testing_pupshaw");
+
+    // Now try again; this should use the ID token from the keychain and/or a session cookie:
+    Log(@"**** Second replication...");
+    __block BOOL callbackInvoked = NO;
+    auth = [CBLAuthenticator OpenIDConnectAuthenticator:
+            ^(NSURL* login, NSURL* authBase, CBLOIDCLoginContinuation cont)
+    {
+        [self assertValidOIDCLogin: login authBase: authBase forRemoteDB: remoteDbURL];
+        Assert(!callbackInvoked);
+        callbackInvoked = YES;
+        cont(nil, nil); // cancel
+    }];
+    authError = [self pullWithOIDCAuth: auth];
+    AssertNil(authError);
+    Assert(!callbackInvoked);
 }
 
 
@@ -1655,9 +1670,9 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     ((CBLOpenIDConnectAuthorizer*)auth).refreshToken = @"BOGUS_REFRESH";
 
     NSError* authError = [self pullWithOIDCAuth: auth];
+    Assert(callbackInvoked);
     Assert([authError my_hasDomain: NSURLErrorDomain
                               code: NSURLErrorUserCancelledAuthentication]);
-    Assert(callbackInvoked);
 }
 
 

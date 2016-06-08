@@ -14,6 +14,13 @@
 /** Internal protocol for authenticating a user to a server.
     (The word "authorization" here is a misnomer, but HTTP uses it for historical reasons.) */
 @protocol CBLAuthorizer <CBLAuthenticator>
+/** The base URL of the remote service. The replicator sets this property when it starts up. */
+@property NSURL* remoteURL;
+@end
+
+
+/** Base implementation of CBLAuthorizer protocol that synthesizes the remoteURL property. */
+@interface CBLAuthorizer : NSObject <CBLAuthorizer>
 @end
 
 
@@ -42,10 +49,9 @@
 @protocol CBLLoginAuthorizer <CBLAuthorizer>
 
 /** Returns the HTTP method, URL, and body of the login request to send, or nil for no login.
-    @param site  The URL of the remote database.
     @return  An array of the form @[method, path, body]. The path may be absolute, or relative to
-                the site URL. Return nil to skip the login. */
-- (NSArray*) loginRequestForSite: (NSURL*)site;
+                the authorizer's remote URL. Return nil to skip the login. */
+- (NSArray*) loginRequest;
 
 @optional
 
@@ -71,7 +77,7 @@
 
 
 /** Simple implementation of CBLCredentialAuthorizer that supports HTTP Basic auth. */
-@interface CBLPasswordAuthorizer : NSObject <CBLCredentialAuthorizer, CBLCustomHeadersAuthorizer>
+@interface CBLPasswordAuthorizer : CBLAuthorizer <CBLCredentialAuthorizer, CBLCustomHeadersAuthorizer>
 
 - (instancetype) initWithUser: (NSString*)user password: (NSString*)password;
 

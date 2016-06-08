@@ -21,6 +21,11 @@
 #import <Security/Security.h>
 
 
+@implementation CBLAuthorizer
+@synthesize remoteURL=_remoteURL;
+@end
+
+
 @implementation CBLPasswordAuthorizer
 {
     NSString* _basicAuthorization;

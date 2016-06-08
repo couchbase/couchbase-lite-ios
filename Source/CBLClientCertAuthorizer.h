@@ -9,7 +9,7 @@
 #import "CBLAuthorizer.h"
 #import <Security/Security.h>
 
-@interface CBLClientCertAuthorizer : NSObject <CBLCredentialAuthorizer>
+@interface CBLClientCertAuthorizer : CBLAuthorizer <CBLCredentialAuthorizer>
 
 - (instancetype) initWithIdentity: (SecIdentityRef)identity
                   supportingCerts: (NSArray*)certs;

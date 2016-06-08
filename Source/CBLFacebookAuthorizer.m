@@ -54,21 +54,19 @@ static NSMutableDictionary* sRegisteredTokens;
 }
 
 
-- (NSString*) tokenForSite: (NSURL*)site {
-    id key = @[_email, site.my_baseURL.absoluteString];
+- (NSString*) token {
+    id key = @[_email, self.remoteURL.my_baseURL.absoluteString];
     @synchronized([self class]) {
         return sRegisteredTokens[key];
     }
 }
 
 
-- (NSArray*) loginRequestForSite: (NSURL*)site {
-    NSString* token = [self tokenForSite: site];
+- (NSArray*) loginRequest {
+    NSString* token = [self token];
     if (!token)
         return nil;
-    return @[@"POST",
-             [site.path stringByAppendingPathComponent: @"_facebook"],
-             @{kLoginParamAccessToken: token} ];
+    return @[@"POST", @"_facebook", @{kLoginParamAccessToken: token} ];
 }
 
 

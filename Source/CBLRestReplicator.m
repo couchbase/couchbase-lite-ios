@@ -279,6 +279,7 @@
         if (authorizer)
             LogVerbose(Sync, @"%@: Found credential, using %@", self, authorizer);
     }
+    authorizer.remoteURL = _settings.remote;
 
     // Initialize the CBLRemoteSession:
     NSURLSessionConfiguration* config = [[CBLRemoteSession defaultConfiguration] copy];
@@ -597,15 +598,21 @@
                       if (error.code == kCBLStatusNotFound && $equal(sessionPath, @"_session")) {
                           [self checkSessionAtPath: @"/_session"];
                           return;
+                      } else if (error.code == kCBLStatusUnauthorized) {
+                          [self login];
+                      } else {
+                          LogTo(Sync, @"%@: Session check failed: %@",
+                                self, error.my_compactDescription);
+                          self.error = error;
                       }
-                      LogTo(Sync, @"%@: Session check failed: %@", self, error.my_compactDescription);
-                      self.error = error;
                   } else {
                       NSString* username = $castIf(NSString, result[@"userCtx"][@"name"]);
                       if (username) {
+                          // Found a login session!
                           LogTo(Sync, @"%@: Active session, logged in as '%@'", self, username);
                           [self fetchRemoteCheckpointDoc];
                       } else {
+                          // No current login session, so continue to regular login:
                           [self login];
                       }
                   }
@@ -618,7 +625,7 @@
 // If there is no login session, attempt to log in, if the authorizer knows the parameters.
 - (void) login {
     id<CBLLoginAuthorizer> loginAuth = $castIfProtocol(CBLLoginAuthorizer, _remoteSession.authorizer);
-    NSArray* login = [loginAuth loginRequestForSite: _settings.remote];
+    NSArray* login = [loginAuth loginRequest];
     if (login == nil) {
         [self fetchRemoteCheckpointDoc];
         return;

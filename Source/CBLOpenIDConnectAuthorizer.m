@@ -29,6 +29,7 @@ UsingLogDomain(Sync);
 @implementation CBLOpenIDConnectAuthorizer
 {
     CBLOIDCLoginCallback _loginCallback;    // App-provided callback to log into the OP
+    BOOL _checkedTokens;        // Tried to load the tokens from the keychain yet?
     NSURL* _remoteURL;          // The remote database URL
     NSURL* _authURL;            // The OIDC authentication URL redirected to by the OP
     NSString* _IDToken;         // Persistent ID token, when logged-in
@@ -51,18 +52,8 @@ UsingLogDomain(Sync);
 }
 
 
-// internal use only
-- (instancetype) initWithRemoteURL: (NSURL*)remoteURL {
-    self = [super init];
-    if (self) {
-        _remoteURL = remoteURL;
-    }
-    return self;
-}
-
-
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@]", self.class, _remoteURL.my_baseURL];
+    return [NSString stringWithFormat: @"%@[%@]", self.class, self.remoteURL.my_baseURL];
 }
 
 
@@ -81,17 +72,14 @@ UsingLogDomain(Sync);
 #pragma mark - LOGIN:
 
 
-- (NSArray*) loginRequestForSite: (NSURL*)site {
-    // Look for ID/refresh tokens in the Keychain if we haven't already:
-    if (!_remoteURL) {
-        _remoteURL = site;
-        [self loadTokens];
-    }
+- (NSArray*) loginRequest {
+    [self loadTokens];
+    // If we got here, 'GET _session' failed, so there's no valid session cookie or ID token.
+    _IDToken = nil;
+    _haveSessionCookie = NO;
 
     NSString* path;
-    if (_IDToken)
-        path = @"_session";
-    else if (_refreshToken)
+    if (_refreshToken)
         path = [@"_oidc_refresh?refresh_token=" stringByAppendingString:
                                                             CBLEscapeURLParam(_refreshToken)];
     else if (_authURL)
@@ -113,20 +101,7 @@ UsingLogDomain(Sync);
         return;
     }
 
-    if (_IDToken) {
-        if (error) {
-            if (_haveSessionCookie) {
-                // Thought we had a session cookie but we don't; try sending the ID token next:
-                _haveSessionCookie = NO;
-            } else if (_refreshToken) {
-                // If the ID token doesn't work, forget it and try the refresh token next:
-                _IDToken = nil;
-            }
-            continuationBlock(YES, nil);
-            return;
-        }
-
-    } else if (_refreshToken || _authURL) {
+    if (_refreshToken || _authURL) {
         // Logging in with an authURL from the OP, or refreshing the ID token:
         if (error) {
             _authURL = nil;
@@ -178,16 +153,17 @@ UsingLogDomain(Sync);
                       continuation: (void (^)(BOOL loginAgain, NSError* continuationError))continuationBlock
 {
     LogTo(Sync, @"%@: Calling app login callback block on main thread...", self);
-    NSURL* authBaseURL = [_remoteURL URLByAppendingPathComponent: @"_oidc_callback"];
+    NSURL* remoteURL = self.remoteURL;
+    NSURL* authBaseURL = [remoteURL URLByAppendingPathComponent: @"_oidc_callback"];
     dispatch_async(dispatch_get_main_queue(), ^{
         _loginCallback(loginURL, authBaseURL, ^(NSURL* authURL, NSError* error) {
             if (authURL) {
                 LogTo(Sync, @"%@: App login callback returned authURL=<%@>",
                       self, authURL.absoluteString);
                 // Verify that the authURL matches the site:
-                if ([authURL.host caseInsensitiveCompare: _remoteURL.host] != 0
-                    || !$equal(authURL.port, _remoteURL.port)
-                    || !$equal(authURL.path, [_remoteURL.path stringByAppendingPathComponent: @"_oidc_callback"]))
+                if ([authURL.host caseInsensitiveCompare: remoteURL.host] != 0
+                    || !$equal(authURL.port, remoteURL.port)
+                    || !$equal(authURL.path, [remoteURL.path stringByAppendingPathComponent: @"_oidc_callback"]))
                 {
                     Warn(@"%@: App-provided authURL <%@> doesn't match server URL; ignoring it",
                          self, authURL.absoluteString);
@@ -217,6 +193,7 @@ UsingLogDomain(Sync);
 // Auth phase (when we have the ID token):
 
 - (BOOL) authorizeURLRequest: (NSMutableURLRequest*)request {
+    [self loadTokens];
     if (_IDToken && !_haveSessionCookie) {
         NSString* auth = [@"Bearer " stringByAppendingString: _IDToken];
         [request addValue: auth forHTTPHeaderField: @"Authorization"];
@@ -231,17 +208,17 @@ UsingLogDomain(Sync);
 
 
 + (BOOL) forgetIDTokensForServer: (NSURL*)serverURL error: (NSError**)outError {
-    CBLOpenIDConnectAuthorizer* auth = [[self alloc] initWithRemoteURL: serverURL];
+    CBLOpenIDConnectAuthorizer* auth = [[self alloc] init];
+    auth.remoteURL = serverURL;
     return [auth deleteTokens: outError];
 }
 
 
 - (NSMutableDictionary*) keychainAttributes {
-    // 'label' is the item name shown in Keychain Access.
-    // 'service' is shown as 'Where'.
-    Assert(_remoteURL);
-    NSString* account = _remoteURL.my_baseURL.absoluteString;
-    NSString* label = $sprintf(@"%@ OpenID Connect tokens", _remoteURL.host);
+    // In Keychain Access, 'label' appears as the item name, and 'service' is shown as 'Where:'.
+    NSString* account = self.remoteURL.my_baseURL.absoluteString;
+    Assert(account, @"remoteURL not set");
+    NSString* label = $sprintf(@"%@ OpenID Connect tokens", self.remoteURL.host);
     return [@{ (__bridge id)kSecClass:        (__bridge id)kSecClassGenericPassword,
                (__bridge id)kSecAttrService:  account,
                (__bridge id)kSecAttrAccount:  kOIDCKeychainServiceName,
@@ -251,6 +228,10 @@ UsingLogDomain(Sync);
 
 
 - (BOOL) loadTokens {
+    if (_checkedTokens)
+        return (_IDToken != nil);
+    _checkedTokens = YES;
+
     NSMutableDictionary* attrs = self.keychainAttributes;
     attrs[(__bridge id)kSecReturnData] = @YES;
     CFTypeRef result = NULL;
@@ -271,6 +252,7 @@ UsingLogDomain(Sync);
 
 
 - (BOOL) saveTokens: (NSDictionary*)tokens error: (NSError**)outError {
+    _checkedTokens = YES;
     if (!tokens)
         return [self deleteTokens: outError];
     NSData* itemData = [CBLJSON dataWithJSONObject: tokens];

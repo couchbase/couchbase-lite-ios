@@ -12,7 +12,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLOpenIDConnectAuthorizer : NSObject <CBLCustomHeadersAuthorizer, CBLLoginAuthorizer>
+@interface CBLOpenIDConnectAuthorizer : CBLAuthorizer <CBLLoginAuthorizer,
+                                                       CBLCustomHeadersAuthorizer,
+                                                       CBLSessionCookieAuthorizer>
 
 - (instancetype) initWithCallback: (CBLOIDCLoginCallback)callback;
 
