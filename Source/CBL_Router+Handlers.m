@@ -648,12 +648,16 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                 CBL_Revision* loadedRev = [_db revisionByLoadingBody: rev status: &status];
                 if (loadedRev)
                     loadedRev = [self applyOptions: options toRevision: loadedRev status: &status];
-                if (loadedRev)
-                    [result addObject: $dict({@"ok", loadedRev.properties})];
-                else if (status < kCBLStatusServerError)
+                if (loadedRev) {
+                    id o = loadedRev.properties;
+                    if (mustSendJSON)
+                        o = @{@"ok": o};
+                    [result addObject: o];
+                } else if (status < kCBLStatusServerError) {
                     [result addObject: $dict({@"missing", rev.revIDString})];
-                else
+                } else {
                     return status;  // internal error getting revision
+                }
             }
                 
         } else {
@@ -671,10 +675,14 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                                                  withBody: YES status: &status];
                 if (rev)
                     rev = [self applyOptions: options toRevision: rev status: &status];
-                if (rev)
-                    [result addObject: $dict({@"ok", rev.properties})];
-                else
+                if (rev) {
+                    id o = rev.properties;
+                    if (mustSendJSON)
+                        o = @{@"ok": o};
+                    [result addObject: o];
+                } else {
                     [result addObject: $dict({@"missing", revIDStr})];
+                }
             }
         }
 
