@@ -23,6 +23,7 @@
 #import "CBLDatabaseChange.h"
 #import "CBL_Attachment.h"
 #import "CBLBatcher.h"
+#import "CBLRemoteSession.h"
 #import "CBLMultipartUploader.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLInternal.h"
@@ -60,7 +61,7 @@
     LogTo(Sync, @"Remote db might not exist; creating it...");
     _creatingTarget = YES;
     [self asyncTaskStarted];
-    [self sendAsyncRequest: @"PUT" path: @"" body: nil onCompletion: ^(id result, NSError* error) {
+    [_remoteSession startRequest: @"PUT" path: @"" body: nil onCompletion: ^(id result, NSError* error) {
         _creatingTarget = NO;
         if (error && error.code != kCBLStatusDuplicate && error.code != kCBLStatusMethodNotAllowed) {
             LogTo(Sync, @"Failed to create remote db: %@", error.my_compactDescription);
@@ -243,7 +244,7 @@
     
     // Call _revs_diff on the target db:
     [self asyncTaskStarted];
-    [self sendAsyncRequest: @"POST" path: @"_revs_diff" body: diffs
+    [_remoteSession startRequest: @"POST" path: @"_revs_diff" body: diffs
               onCompletion:^(NSDictionary* results, NSError* error) {
         if (error) {
             self.error = error;
@@ -373,7 +374,7 @@
     LogVerbose(Sync, @"%@: Sending %@", self, changes.allRevisions);
     self.changesTotal += numDocsToSend;
     [self asyncTaskStarted];
-    [self sendAsyncRequest: @"POST"
+    [_remoteSession startRequest: @"POST"
                       path: @"_bulk_docs"
                       body: $dict({@"docs", docsToSend},
                                   {@"new_edits", $false})
@@ -586,7 +587,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
 
     [self asyncTaskStarted];
     NSString* path = $sprintf(@"%@?new_edits=false", CBLEscapeURLParam(rev.docID));
-    [self sendAsyncRequest: @"PUT"
+    [_remoteSession startRequest: @"PUT"
                       path: path
                       body: rev.properties
               onCompletion: ^(id response, NSError *error) {
@@ -607,7 +608,7 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
         _uploading = YES;
         CBLMultipartUploader* uploader = _uploaderQueue[0];
         LogVerbose(Sync, @"%@: Starting %@", self, uploader);
-        [self startRemoteRequest: uploader];
+        [_remoteSession startRequest: uploader];
         [_uploaderQueue removeObjectAtIndex: 0];
     }
 }

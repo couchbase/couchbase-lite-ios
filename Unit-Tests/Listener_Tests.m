@@ -337,7 +337,7 @@ static NSString* addressToString(NSData* addrData) {
 
 - (void) setUp {
     [super setUp];
-    _session = [[CBLRemoteSession alloc] init];
+    _session = [[CBLRemoteSession alloc] initWithDelegate: self];
 }
 
 - (Class) listenerClass {
@@ -442,7 +442,6 @@ static NSString* addressToString(NSData* addrData) {
     }
 
     _expectCheckServerTrust = [self expectationWithDescription: @"checkServerTrust"];
-    req.delegate = self;
 
     [_session startRequest: req];
     [self waitForExpectationsWithTimeout: kTimeout handler: nil];
@@ -499,7 +498,6 @@ static NSString* addressToString(NSData* addrData) {
                                                            supportingCerts: clientCredential.certificates];
     }
 
-    req.delegate = self;
     [_session startRequest: req];
     [self waitForExpectationsWithTimeout: kTimeout handler: nil];
 }

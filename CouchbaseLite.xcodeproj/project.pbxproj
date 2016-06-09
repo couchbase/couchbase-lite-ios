@@ -829,6 +829,8 @@
 		27CCBBF91D06002F00BFA5F5 /* CBLAuthenticator+OpenID.h in Headers */ = {isa = PBXBuildFile; fileRef = 27CCBBF31D05FE1A00BFA5F5 /* CBLAuthenticator+OpenID.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27CCBBFA1D06003000BFA5F5 /* CBLAuthenticator+OpenID.h in Headers */ = {isa = PBXBuildFile; fileRef = 27CCBBF31D05FE1A00BFA5F5 /* CBLAuthenticator+OpenID.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27CCBBFC1D073FCF00BFA5F5 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CCBBFB1D073FCF00BFA5F5 /* WebKit.framework */; };
+		27CCBC141D08CE4900BFA5F5 /* CBLRemoteLogin.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CCBC131D08CE4900BFA5F5 /* CBLRemoteLogin.m */; };
+		27CCBC151D08CE4900BFA5F5 /* CBLRemoteLogin.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CCBC131D08CE4900BFA5F5 /* CBLRemoteLogin.m */; };
 		27CF5D2E152F514A0015D7A9 /* CBLStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF5D2C152F514A0015D7A9 /* CBLStatus.m */; };
 		27D0F3E41B865234006B4419 /* CBLProgressGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D0F3E21B865234006B4419 /* CBLProgressGroup.h */; };
 		27D0F3F11B86587E006B4419 /* CBLProgressGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D0F3E31B865234006B4419 /* CBLProgressGroup.m */; };
@@ -1938,6 +1940,8 @@
 		27CCBBEA1D0240DF00BFA5F5 /* OpenIDController+UIKit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OpenIDController+UIKit.m"; sourceTree = "<group>"; };
 		27CCBBF31D05FE1A00BFA5F5 /* CBLAuthenticator+OpenID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLAuthenticator+OpenID.h"; sourceTree = "<group>"; };
 		27CCBBFB1D073FCF00BFA5F5 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk/System/Library/Frameworks/WebKit.framework; sourceTree = DEVELOPER_DIR; };
+		27CCBC121D08CE4900BFA5F5 /* CBLRemoteLogin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRemoteLogin.h; sourceTree = "<group>"; };
+		27CCBC131D08CE4900BFA5F5 /* CBLRemoteLogin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLRemoteLogin.m; sourceTree = "<group>"; };
 		27CF5D2C152F514A0015D7A9 /* CBLStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLStatus.m; sourceTree = "<group>"; };
 		27D0F3E21B865234006B4419 /* CBLProgressGroup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLProgressGroup.h; sourceTree = "<group>"; };
 		27D0F3E31B865234006B4419 /* CBLProgressGroup.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLProgressGroup.m; sourceTree = "<group>"; };
@@ -3066,6 +3070,8 @@
 				270B3E2A1489581E00E0A926 /* CBLRestPuller.m */,
 				270B3E3C148D7F0000E0A926 /* CBLRestPusher.h */,
 				270B3E3D148D7F0000E0A926 /* CBLRestPusher.m */,
+				27CCBC121D08CE4900BFA5F5 /* CBLRemoteLogin.h */,
+				27CCBC131D08CE4900BFA5F5 /* CBLRemoteLogin.m */,
 				279906E1149A65B7003D4338 /* CBLRemoteRequest.h */,
 				279906E2149A65B8003D4338 /* CBLRemoteRequest.m */,
 				2701FD2E1C642669004D89FA /* CBLRemoteSession.h */,
@@ -5002,6 +5008,7 @@
 				2701FD301C642669004D89FA /* CBLRemoteSession.m in Sources */,
 				2701C07A1C49CFE6006D7A99 /* MYStreamUtils.m in Sources */,
 				2701C07B1C49CFE6006D7A99 /* ExceptionUtils.m in Sources */,
+				27CCBC141D08CE4900BFA5F5 /* CBLRemoteLogin.m in Sources */,
 				2701C07E1C49CFE6006D7A99 /* CollectionUtils.m in Sources */,
 				2701C0801C49CFE6006D7A99 /* Test_Assertions.m in Sources */,
 				2701C0811C49CFE6006D7A99 /* MYBlockUtils.m in Sources */,
@@ -5268,6 +5275,7 @@
 				27C5305614DF3A050078F886 /* CBLMultipartUploader.m in Sources */,
 				27513A1A1A672C7F0055DC40 /* CBLDatabase+Attachments.m in Sources */,
 				27486F2D1A606C76008D94F0 /* CBLJSONReader.m in Sources */,
+				27CCBC151D08CE4900BFA5F5 /* CBLRemoteLogin.m in Sources */,
 				27103F8514E9CE4400DF7209 /* CBLReachability.m in Sources */,
 				279C7E3014F424090004A1E8 /* CBLSequenceMap.m in Sources */,
 				27ADC07B152502EE001ABC1D /* CBLMultipartDocumentReader.m in Sources */,

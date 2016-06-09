@@ -127,6 +127,28 @@ extern int c4_getObjectCount(void);             // from c4Base.h (CBForest)
 #endif
 
 
+- (BOOL) wait: (NSTimeInterval)timeout for: (BOOL(^)())block {
+    CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
+    CFAbsoluteTime lastTime = startTime;
+    BOOL done = NO;
+    do {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.1]])
+            break;
+        // Replication runs on a background thread, so the main runloop should not be blocked.
+        // Make sure it's spinning in a timely manner:
+        CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+        if (now-lastTime > 0.25)
+            Warn(@"Main runloop was blocked for %g sec", now-lastTime);
+        lastTime = now;
+        if (now-startTime > timeout)
+            break;
+        done = block();
+    } while (!done);
+    return done;
+}
+
+
 @end
 
 
@@ -379,7 +401,7 @@ extern int c4_getObjectCount(void);             // from c4Base.h (CBForest)
     };
     request.authorizer = self.authorizer;
     request.debugAlwaysTrust = YES;
-    CBLRemoteSession* session = [[CBLRemoteSession alloc] init];
+    CBLRemoteSession* session = [[CBLRemoteSession alloc] initWithDelegate: nil];
     [session startRequest: request];
 
     [self waitForExpectationsWithTimeout: 10 handler: nil];

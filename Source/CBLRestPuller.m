@@ -27,6 +27,7 @@
 #import "CBLMultipartDownloader.h"
 #import "CBLBulkDownloader.h"
 #import "CBLAttachmentDownloader.h"
+#import "CBLRemoteSession.h"
 #import "CBLCookieStorage.h"
 #import "CBLSequenceMap.h"
 #import "CBLInternal.h"
@@ -112,7 +113,7 @@
     _changeTracker.filterName = _settings.filterName;
     _changeTracker.filterParameters = _settings.filterParameters;
     _changeTracker.docIDs = _settings.docIDs;
-    _changeTracker.authorizer = self.authorizer;
+    _changeTracker.authorizer = _remoteSession.authorizer;
     _changeTracker.cookieStorage = self.cookieStorage;
 
     unsigned heartbeat = $castIf(NSNumber, _settings.options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;
@@ -476,7 +477,7 @@
             [strongSelf pullRemoteRevisions];
         }
      ];
-    [self startRemoteRequest: dl];
+    [_remoteSession startRequest: dl];
 }
 
 
@@ -573,7 +574,7 @@
     if (self.canSendCompressedRequests)
         [dl compressBody];
 
-    [self startRemoteRequest: dl];
+    [_remoteSession startRequest: dl];
 }
 
 
@@ -586,7 +587,7 @@
     [self asyncTaskStarted];
     ++_httpConnectionCount;
     CBL_RevisionList* remainingRevs = [[CBL_RevisionList alloc] initWithArray: bulkRevs];
-    [self sendAsyncRequest: @"POST"
+    [_remoteSession startRequest: @"POST"
                       path: @"_all_docs?include_docs=true"
                       body: $dict({@"keys", remainingRevs.allDocIDs})
               onCompletion:^(id result, NSError *error) {
@@ -810,7 +811,7 @@
         _attachmentDownloads[task.ID] = dl;
 
         [self asyncTaskStarted];
-        [self startRemoteRequest: dl];
+        [_remoteSession startRequest: dl];
     }
 }
 

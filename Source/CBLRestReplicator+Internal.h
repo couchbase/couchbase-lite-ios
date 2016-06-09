@@ -1,5 +1,5 @@
 //
-//  CBL_Replicator+Internal.h
+//  CBLRestReplicator+Internal.h
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 4/30/15.
@@ -16,6 +16,15 @@
 {
     @protected
     BOOL _running, _online, _active;
+    CBL_ReplicatorSettings* _settings;
+    CBLDatabase* __weak _db;
+    NSString* _lastSequence;
+    CBLBatcher* _batcher;
+    NSString* _serverType;
+    CBLRemoteSession* _remoteSession;
+#if TARGET_OS_IPHONE
+    MYBackgroundMonitor *_bgMonitor;
+#endif
 }
 
 @property (readwrite) id lastSequence;
@@ -27,11 +36,6 @@
 - (void) processInbox: (CBL_RevisionList*)inbox;  // override this
 - (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion;
 @property (readonly) BOOL canSendCompressedRequests;
-@property (readonly, nonatomic) id<CBLAuthorizer> authorizer;
-- (CBLRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
-                                     path: (NSString*)relativePath
-                                     body: (id)body
-                             onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 - (void) stopRemoteRequests;
 - (void) asyncTaskStarted;
 - (void) asyncTasksFinished: (NSUInteger)numTasks;
