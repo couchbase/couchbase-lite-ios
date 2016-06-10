@@ -30,6 +30,9 @@ DefineLogDomain(SyncPerf);
 
 #define kDefaultRequestTimeout 60.0
 
+/** Version number of the sync protocol the replicator uses. */
+#define kSyncVersionString @"1.2"
+
 
 @implementation CBL_ReplicatorSettings
 
@@ -128,8 +131,8 @@ DefineLogDomain(SyncPerf);
             commit = [NSString stringWithFormat:@"/%s", CBL_SOURCE_REVISION];
         else
             commit = @"";
-        sUserAgent = $sprintf(@"CouchbaseLite/%s (%s %s%@)",
-                              CBL_SYNC_VERSION_STRING, platform, CBL_VERSION_STRING, commit);
+        sUserAgent = $sprintf(@"CouchbaseLite/%@ (%s %s%@)",
+                              kSyncVersionString, platform, CBL_VERSION_STRING, commit);
     });
     return sUserAgent;
 }
