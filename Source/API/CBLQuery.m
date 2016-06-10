@@ -131,7 +131,7 @@ DefineLogDomain(Query);
             endKeyDocID=_endKeyDocID, indexUpdateMode=_indexUpdateMode, mapOnly=_mapOnly,
             database=_database, allDocsMode=_allDocsMode, sortDescriptors=_sortDescriptors,
             inclusiveStart=_inclusiveStart, inclusiveEnd=_inclusiveEnd, postFilter=_postFilter,
-            filterBlock=_filterBlock, prefixMatchLevel=_prefixMatchLevel;
+            filterBlock=_filterBlock, prefixMatchLevel=_prefixMatchLevel, view=_view;
 
 
 - (NSString*) description {

@@ -8,7 +8,7 @@
 
 #import "CBLBase.h"
 
-@class CBLDatabase, CBLDocument;
+@class CBLView, CBLDatabase, CBLDocument;
 @class CBLLiveQuery, CBLQueryEnumerator, CBLQueryRow, CBLSavedRevision;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -33,7 +33,10 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 /** Represents a query of a CouchbaseLite 'view', or of a view-like resource like _all_documents. */
 @interface CBLQuery : NSObject
 
-/** The database that contains this view. */
+/** The view being queried; nil if this is an all-documents query. */
+@property (readonly, nullable) CBLView* view;
+
+/** The database being queried. */
 @property (readonly) CBLDatabase* database;
 
 /** The maximum number of rows to return. Defaults to 'unlimited' (UINT_MAX). */
