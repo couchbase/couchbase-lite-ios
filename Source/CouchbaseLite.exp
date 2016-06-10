@@ -142,5 +142,6 @@ _gMYLogDomainList
 _MYDefault_LogDomain
 _Listener_LogDomain
 _View_LogDomain
+_AlwaysLog
 _MYWarn
 _MYLogTo

@@ -106,9 +106,9 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
     }
 
     if (pull)
-        Log(@"Pulling from <%@> --> %@ ...", remote, dbName);
+        AlwaysLog(@"Pulling from <%@> --> %@ ...", remote, dbName);
     else
-        Log(@"Pushing %@ --> <%@> ...", dbName, remote);
+        AlwaysLog(@"Pushing %@ --> <%@> ...", dbName, remote);
 
     // Actually replicate -- this could probably be cleaned up to use the public API.
     id<CBL_Replicator> repl = nil;
@@ -148,9 +148,9 @@ static bool doReplicate(CBLManager* dbm, const char* replArg,
             Log(@"*** Replicator status changed ***");
         } else if ([n.name isEqualToString: CBL_ReplicatorStoppedNotification]) {
             if (repl.error)
-                Log(@"*** Replicator failed, error = %@", repl.error.my_compactDescription);
+                AlwaysLog(@"*** Replicator failed, error = %@", repl.error.my_compactDescription);
             else
-                Log(@"*** Replicator finished ***");
+                AlwaysLog(@"*** Replicator finished ***");
         } else {
             Log(@"*** Replicator posted %@", n.name);
         }
@@ -201,7 +201,7 @@ static void startListener(CBLListener* listener) {
         srandomdev();
         NSString* password = [NSString stringWithFormat: @"%lx", random()];
         listener.passwords = @{@"cbl": password};
-        Log(@"Auth required: user='cbl', password='%@'", password);
+        AlwaysLog(@"Enabled HTTP auth: user='cbl', password='%@'", password);
     }
 
     if (useSSL) {
@@ -226,7 +226,7 @@ static void startListener(CBLListener* listener) {
         }
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
-            Log(@"Serving SSL as identity '%@' %@", name, listener.SSLIdentityDigest);
+            AlwaysLog(@"Serving SSL as identity '%@' %@", name, listener.SSLIdentityDigest);
         });
     }
 
@@ -246,11 +246,6 @@ static void startListener(CBLListener* listener) {
 int main (int argc, const char * argv[])
 {
     @autoreleasepool {
-#if DEBUG
-        EnableLog(YES);
-        EnableLogTo(@"Listener", MYLogLevelOn);
-#endif
-
         CBLRegisterJSViewCompiler();
 
         NSString *dataPath = nil, *storageType = nil;
@@ -306,7 +301,7 @@ int main (int argc, const char * argv[])
                     exit(1);
                 }
                 dbPasswords[items[0]] = items[1];
-                Log(@"Using password for encrypted database '%@'", items[0]);
+                AlwaysLog(@"Using password for encrypted database '%@'", items[0]);
             } else if (strncmp(argv[i], "-Log", 4) == 0) {
                 ++i; // Ignore MYUtilities logging flags
             } else {
@@ -343,14 +338,14 @@ int main (int argc, const char * argv[])
             // New-replicator listener:
             syncListener = [[CBLSyncListener alloc] initWithManager: server port: nuPort];
             startListener(syncListener);
-            Log(@"Listening for BLIP replications at <%@>", syncListener.URL);
+            AlwaysLog(@"Listening for BLIP replications at <%@>", syncListener.URL);
         }
 
         if (replArg) {
             if (!doReplicate(server, replArg, pull, createTarget, continuous, user, password, realm))
                 return 1;
         } else {
-            Log(@"LiteServ %@ is listening%@ at <%@> ... relax!",
+            AlwaysLog(@"LiteServ %@ is listening%@ at <%@> ... relax!",
                 CBLVersion(),
                 (listener.readOnly ? @" in read-only mode" : @""),
                 listener.URL);
@@ -358,7 +353,7 @@ int main (int argc, const char * argv[])
 
         [[NSRunLoop currentRunLoop] run];
 
-        Log(@"LiteServ quitting");
+        AlwaysLog(@"LiteServ quitting");
     }
     return 0;
 }
