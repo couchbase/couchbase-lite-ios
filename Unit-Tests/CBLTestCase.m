@@ -335,7 +335,7 @@ extern int c4_getObjectCount(void);             // from c4Base.h (CBForest)
         }
     });
 
-    return [server URLByAppendingPathComponent: dbName];
+    return dbName ? [server URLByAppendingPathComponent: dbName] : server;
 }
 
 
@@ -348,7 +348,20 @@ extern int c4_getObjectCount(void);             // from c4Base.h (CBForest)
         return nil;
     }
     NSURL* server = [NSURL URLWithString: urlStr];
-    return [server URLByAppendingPathComponent: dbName];
+    return dbName ? [server URLByAppendingPathComponent: dbName] : server;
+}
+
+
+- (double) remoteServerVersion {
+    static double sVersion = -1.0;
+    if (sVersion < 0) {
+        NSURL* url = [self remoteTestDBURL: nil];
+        NSDictionary* info = [self sendRemoteRequest: @"GET" toURL: url];
+        sVersion = [[info[@"vendor"] objectForKey: @"version"] doubleValue];
+        if (sVersion <= 0)
+            Warn(@"Couldn't determine version of server at %@", url);
+    }
+    return sVersion;
 }
 
 

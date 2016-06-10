@@ -114,6 +114,9 @@ void RemoveTemporaryCredential(NSURL* url, NSString* realm,
 /** Never returns an HTTPS URL even if App Transport Security is present. */
 - (NSURL*) remoteNonSSLTestDBURL: (NSString*)dbName;
 
+/** Version number reported by the test server, via GET /. */
+@property (readonly) double remoteServerVersion;
+
 /** A CBLAuthorizer to use when talking to the remote test server. */
 @property (readonly) id<CBLAuthorizer> authorizer;
 
