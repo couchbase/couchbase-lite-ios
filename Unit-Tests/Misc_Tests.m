@@ -274,7 +274,7 @@ static int collateRevs(const char* rev1, const char* rev2) {
     NSMutableData* incrementalCiphertext = [NSMutableData data];
     for (int i = 0; i < 100; i++) {
         NSMutableData* data = [NSMutableData dataWithLength: 5555];
-        SecRandomCopyBytes(kSecRandomDefault, 555, data.mutableBytes);
+        (void)SecRandomCopyBytes(kSecRandomDefault, 555, data.mutableBytes);
         [incrementalCleartext appendData: data];
         [incrementalCiphertext appendData: encryptor(data)];
     }

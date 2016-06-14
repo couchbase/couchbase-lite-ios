@@ -98,7 +98,8 @@ BOOL CBLWithStringBytes(UU NSString* str, void (^block)(const char*, size_t)) {
 NSString* CBLCreateUUID() {
     // Generate 136 bits of entropy in base64:
     uint8_t random[17];
-    SecRandomCopyBytes(kSecRandomDefault, sizeof(random), random);
+    if (SecRandomCopyBytes(kSecRandomDefault, sizeof(random), random) != 0)
+        return nil;
     NSMutableString* uuid = [[CBLBase64 encode: random length: sizeof(random)] mutableCopy];
     // Trim the two trailing '=' padding characters:
     [uuid deleteCharactersInRange: NSMakeRange(22, 2)];

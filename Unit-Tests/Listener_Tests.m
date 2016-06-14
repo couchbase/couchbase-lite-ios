@@ -184,7 +184,7 @@ static UInt16 sPort = 60000;
     request.profile = @"proveAttachment";
     request[@"digest"] = att.metadata[@"digest"];
     uint8_t nonceBytes[16];
-    SecRandomCopyBytes(kSecRandomDefault, sizeof(nonceBytes), nonceBytes);
+    (void)SecRandomCopyBytes(kSecRandomDefault, sizeof(nonceBytes), nonceBytes);
     NSData* nonceData = [NSData dataWithBytes: nonceBytes length: sizeof(nonceBytes)];
     request.body = nonceData;
     [self sendRequest: request expectedErrorCode: 0 expectedResult: nil];

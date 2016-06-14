@@ -520,8 +520,8 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     CBLReplication* repl = [db createPushReplication: remoteDbURL];
     repl.createTarget = YES;
 
-    SecRandomCopyBytes(kSecRandomDefault, sizeof(sEncryptionKey), sEncryptionKey);
-    SecRandomCopyBytes(kSecRandomDefault, sizeof(sEncryptionIV), sEncryptionIV);
+    (void)SecRandomCopyBytes(kSecRandomDefault, sizeof(sEncryptionKey), sEncryptionKey);
+    (void)SecRandomCopyBytes(kSecRandomDefault, sizeof(sEncryptionIV), sEncryptionIV);
 
     repl.propertiesTransformationBlock = ^NSDictionary*(NSDictionary* props) {
         NSData* cleartext = [props[@"secret"] dataUsingEncoding: NSUTF8StringEncoding];
