@@ -149,7 +149,8 @@
                                  {@"committed_update_seq", @(update_seq)},
                                  {@"purge_seq", @(0)}, // TODO: Implement
                                  {@"disk_size", @(db.totalDataSize)},
-                                 {@"instance_start_time", @(startTime)});
+                                 {@"instance_start_time", @(startTime)},
+                                 {@"revs_limit", @(db.maxRevTreeDepth)});
     return kCBLStatusOK;
 }
 

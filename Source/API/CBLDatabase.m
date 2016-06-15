@@ -241,7 +241,7 @@ static void catchInBlock(void (^block)()) {
 
 - (void) setMaxRevTreeDepth: (NSUInteger)maxRevs {
     if (maxRevs == 0)
-        maxRevs = kDefaultMaxRevs;
+        maxRevs = _manager.defaultMaxRevTreeDepth;
     if (maxRevs != _storage.maxRevTreeDepth) {
         _storage.maxRevTreeDepth = (unsigned)maxRevs;
         [_storage setInfo: $sprintf(@"%lu", (unsigned long)maxRevs) forKey: @"max_revs"];

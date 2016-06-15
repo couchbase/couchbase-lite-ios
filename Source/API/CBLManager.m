@@ -47,6 +47,9 @@ NSString* const kCBLForestDBStorage = @"ForestDB";
 static const CBLManagerOptions kCBLManagerDefaultOptions;
 
 
+// Default value for defaultMaxRevTreeDepth, the max rev depth to preserve in a prune operation
+#define kDefaultMaxRevs 20
+
 #ifdef GNUSTEP
 static double CouchbaseLiteVersionNumber = 0.7;
 #else
@@ -95,6 +98,7 @@ static NSString* CBLFullVersionInfo( void ) {
 @synthesize dispatchQueue=_dispatchQueue, directory = _dir;
 @synthesize customHTTPHeaders = _customHTTPHeaders;
 @synthesize storageType=_storageType, replicatorClassName=_replicatorClassName;
+@synthesize defaultMaxRevTreeDepth=_defaultMaxRevTreeDepth;
 
 
 // http://wiki.apache.org/couchdb/HTTP_database_API#Naming_and_Addressing
@@ -250,6 +254,7 @@ static CBLManager* sInstance;
         _databases = [[NSMutableDictionary alloc] init];
         _replications = [[NSMutableArray alloc] init];
         _storageType = [[NSUserDefaults standardUserDefaults] stringForKey: @"CBLStorageType"];
+        _defaultMaxRevTreeDepth = kDefaultMaxRevs;
         if (!_storageType)
             _storageType = kCBLSQLiteStorage;
         _replicatorClassName = [[NSUserDefaults standardUserDefaults]
@@ -294,6 +299,7 @@ static CBLManager* sInstance;
         managerCopy.customHTTPHeaders = [self.customHTTPHeaders copy];
         managerCopy.storageType = _storageType;
         managerCopy.replicatorClassName = _replicatorClassName;
+        managerCopy.defaultMaxRevTreeDepth = _defaultMaxRevTreeDepth;
     }
     return managerCopy;
 }
