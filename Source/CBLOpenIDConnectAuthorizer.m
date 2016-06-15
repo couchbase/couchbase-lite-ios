@@ -154,16 +154,15 @@ UsingLogDomain(Sync);
 {
     LogTo(Sync, @"%@: Calling app login callback block on main thread...", self);
     NSURL* remoteURL = self.remoteURL;
-    NSURL* authBaseURL = [remoteURL URLByAppendingPathComponent: @"_oidc_callback"];
+    NSURL* redirectBaseURL = extractRedirectURL(loginURL);
     dispatch_async(dispatch_get_main_queue(), ^{
-        _loginCallback(loginURL, authBaseURL, ^(NSURL* authURL, NSError* error) {
+        _loginCallback(loginURL, redirectBaseURL, ^(NSURL* authURL, NSError* error) {
             if (authURL) {
                 LogTo(Sync, @"%@: App login callback returned authURL=<%@>",
                       self, authURL.absoluteString);
                 // Verify that the authURL matches the site:
                 if ([authURL.host caseInsensitiveCompare: remoteURL.host] != 0
-                    || !$equal(authURL.port, remoteURL.port)
-                    || !$equal(authURL.path, [remoteURL.path stringByAppendingPathComponent: @"_oidc_callback"]))
+                    || !$equal(authURL.port, remoteURL.port))
                 {
                     Warn(@"%@: App-provided authURL <%@> doesn't match server URL; ignoring it",
                          self, authURL.absoluteString);
@@ -295,6 +294,16 @@ UsingLogDomain(Sync);
                              @"Unable to delete ID token");
     }
     return YES;
+}
+
+
+static NSURL* extractRedirectURL(NSURL* loginURL) {
+    NSURLComponents* comp = [NSURLComponents componentsWithURL: loginURL resolvingAgainstBaseURL: YES];
+    for (NSURLQueryItem* query in comp.queryItems) {
+        if ([query.name isEqualToString: @"redirect_uri"])
+            return [NSURL URLWithString: query.value];
+    }
+    return nil;
 }
 
 

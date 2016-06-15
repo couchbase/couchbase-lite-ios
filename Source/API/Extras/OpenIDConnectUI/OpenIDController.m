@@ -8,10 +8,6 @@
 #import "OpenIDController.h"
 
 
-#define kFakeRedirectHost @"end.of.auth"
-#define kFakeRedirectURLStr @"https://" kFakeRedirectHost "/"
-
-
 @interface OpenIDController (ContinuationHandling) <OpenIDControllerDelegate>
 @end
 
@@ -19,7 +15,7 @@
 @implementation OpenIDController
 {
     CBLOIDCLoginContinuation _loginContinuation;
-    NSURL* _loginAuthBaseURL;
+    NSString* _redirectURLStr;
 }
 
 
@@ -27,30 +23,22 @@
 
 
 + (CBLOIDCLoginCallback) loginCallback {
-    return ^(NSURL* loginURL, NSURL* authBaseURL, CBLOIDCLoginContinuation continuation) {
+    return ^(NSURL* loginURL, NSURL* redirectURL, CBLOIDCLoginContinuation continuation) {
         (void)[[self alloc] initWithLoginURL: loginURL
-                                 authBaseURL: authBaseURL
+                                 redirectURL: redirectURL
                                 continuation: continuation];
     };
 }
 
 
 - (instancetype) initWithLoginURL: (NSURL*)loginURL
+                      redirectURL: (NSURL*)redirectURL
                          delegate: (id<OpenIDControllerDelegate>)delegate
 {
     self = [super init];
     if (self) {
-        NSURLComponents* comp = [NSURLComponents componentsWithURL: loginURL resolvingAgainstBaseURL: YES];
-        NSMutableArray<NSURLQueryItem*>* query = comp.queryItems.mutableCopy;
-        for (NSUInteger i = 0; i < query.count; i++) {
-            if ([query[i].name isEqualToString: @"redirect_uri"]) {
-                query[i] = [NSURLQueryItem queryItemWithName: @"redirect_uri"
-                                                       value: kFakeRedirectURLStr];
-                break;
-            }
-        }
-        comp.queryItems = query;
-        _loginURL = comp.URL;
+        _loginURL = loginURL;
+        _redirectURLStr = redirectURL.absoluteString;
         _delegate = delegate;
     }
     return self;
@@ -58,13 +46,12 @@
 
 
 - (instancetype) initWithLoginURL: (NSURL*)loginURL
-                      authBaseURL: (NSURL*)authBaseURL
+                      redirectURL: (NSURL*)redirectURL
                      continuation: (CBLOIDCLoginContinuation)continuation
 {
-    self = [self initWithLoginURL: loginURL delegate: self];
+    self = [self initWithLoginURL: loginURL redirectURL: redirectURL delegate: self];
     if (self) {
         _loginContinuation = continuation;
-        _loginAuthBaseURL = authBaseURL;
         [self presentUI];
     }
     return self;
@@ -72,7 +59,7 @@
 
 
 - (BOOL) navigateToURL: (NSURL*)url {
-    if ([url.host caseInsensitiveCompare: kFakeRedirectHost] != 0)
+    if (![url.absoluteString hasPrefix: _redirectURLStr])
         return YES;  // Ordinary URL, let the WebView handle it
 
     // Look at the URL query to see if it's an error or not:
@@ -85,18 +72,10 @@
             description = item.value;
     }
 
-    if (error) {
-        // Tell the delegate about the error:
+    if (error)
         [_delegate openIDController: self didFailWithError: error description: description];
-        return NO;
-    }
-
-    // Tell the delegate login succeeded. Construct the auth URL by replacing the authBaseURl's
-    // query string with the redirected-to URL's:
-    comp = [NSURLComponents componentsWithURL: _loginAuthBaseURL
-                      resolvingAgainstBaseURL: YES];
-    comp.query = url.query;
-    [_delegate openIDController: self didSucceedWithAuthURL: comp.URL];
+    else
+        [_delegate openIDController: self didSucceedWithAuthURL: url];
     return NO;
 }
 

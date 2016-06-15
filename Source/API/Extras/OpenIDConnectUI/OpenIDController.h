@@ -28,6 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (CBLOIDCLoginCallback) loginCallback;
 
 - (instancetype) initWithLoginURL: (NSURL*)loginURL
+                      redirectURL: (NSURL*)redirectURL
                          delegate: (id<OpenIDControllerDelegate>)delegate;
 
 @property (readonly) NSURL* loginURL;

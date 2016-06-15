@@ -164,6 +164,7 @@ int main (int argc, const char * argv[]) {
     NSURL* auth = [NSURL URLWithString: @"http://example.com/openid_login"];
 #if 1
     // Use the +loginCallback:
+    NSLog(@"**** Opening OpenIDController at <%@>", login);
     [OpenIDController loginCallback](login, auth,
                                      ^(NSURL* __nullable authURL, NSError* __nullable error)
     {

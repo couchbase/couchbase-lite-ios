@@ -13,13 +13,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Callback that will be passed to your CBLOIDCLoginCallback. You should call this callback when
     your login UI completes, so that Couchbase Lite's replicator can continue or stop.
-    @param authURL  The authentication URL to which the login web page sent a redirect. This must
-                have the same host and path as the authBaseURL passed to your login callback.
+    @param redirectedURL  The authentication URL to which the WebView was redirected.
+                It will have the same host and path as the redirectURL passed to your login
+                callback, plus extra query parameters appended.
                 If login did not complete successfully, pass nil.
     @param error  If the login UI failed, pass the error here (and a nil authURL.) As a special
                 case, if both error and authURL are nil, it's interpreted as an authentication-
                 canceled error. */
-typedef void (^CBLOIDCLoginContinuation)(NSURL* __nullable authURL, NSError* __nullable error);
+typedef void (^CBLOIDCLoginContinuation)(NSURL* __nullable redirectedURL, NSError* __nullable error);
 
 
 /** Callback block given when creating an OpenID Connect authenticator. The block will be called
@@ -34,7 +35,7 @@ typedef void (^CBLOIDCLoginContinuation)(NSURL* __nullable authURL, NSError* __n
     block, because you MUST call it later, or the replicator will never finish logging in!
 
     Wait for the web view to redirect to a URL whose host and path are the same as the given
-    authBaseURL (the query string after the path will be different, though.) Instead of following
+    redirectURL (the query string after the path will be different, though.) Instead of following
     the redirect, close the web view and call the given continuation block with the redirected
     URL (and a nil error.)
 
@@ -44,7 +45,7 @@ typedef void (^CBLOIDCLoginContinuation)(NSURL* __nullable authURL, NSError* __n
  
     If something else goes wrong, like an error loading the login page in the web view, call the
     continuation block with that error and a nil URL. */
-typedef void (^CBLOIDCLoginCallback)(NSURL* loginURL, NSURL* authBaseURL, CBLOIDCLoginContinuation);
+typedef void (^CBLOIDCLoginCallback)(NSURL* loginURL, NSURL* redirectURL, CBLOIDCLoginContinuation);
 
 
 @interface CBLAuthenticator (OpenID)
