@@ -1128,6 +1128,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         // OPT: Should read this asynchronously
         NSMutableData* buffer = [NSMutableData dataWithLength: 32768];
         NSInteger bytesRead;
+        [bodyStream open];
         do {
             bytesRead = [bodyStream read: buffer.mutableBytes maxLength: buffer.length];
             if (bytesRead > 0) {
@@ -1135,6 +1136,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
                                                        length: bytesRead freeWhenDone: NO]];
             }
         } while (bytesRead > 0);
+        [bodyStream close];
         if (bytesRead < 0)
             return kCBLStatusBadAttachment;
         
