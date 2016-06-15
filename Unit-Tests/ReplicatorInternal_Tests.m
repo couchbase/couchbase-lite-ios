@@ -542,35 +542,36 @@
         }
     }];
 
-    if (NSClassFromString(@"CBLURLProtocol")) {
-        // Local-to-local replication:
-        props = $dict({@"source", @"foo"},
-                      {@"target", @"bar"});
-        AssertEq([dbmgr parseReplicatorProperties: props
-                                            toDatabase: &parsedDB
-                                                remote: &remote
-                                                isPush: &isPush
-                                          createTarget: &createTarget
-                                               headers: &headers
-                                            authorizer: NULL],
-                  404);
-        props = $dict({@"source", @"foo"},
-                      {@"target", @"bar"}, {@"create_target", $true});
-        AssertEq([dbmgr parseReplicatorProperties: props
-                                            toDatabase: &parsedDB
-                                                remote: &remote
-                                                isPush: &isPush
-                                          createTarget: &createTarget
-                                               headers: &headers
-                                            authorizer: NULL],
-                  200);
-        AssertEq(parsedDB, db);
-        AssertEqual(remote, $url(@"http://lite.couchbase./bar/"));
-        AssertEq(isPush, YES);
-        AssertEq(createTarget, YES);
-        AssertEqual(headers, nil);
-    }
+    // Local-to-local replication:
+    Assert(dbmgr.internalURL);
+    props = $dict({@"source", db.name},
+                  {@"target", @"bar"});
+    AssertEq([dbmgr parseReplicatorProperties: props
+                                        toDatabase: &parsedDB
+                                            remote: &remote
+                                            isPush: &isPush
+                                      createTarget: &createTarget
+                                           headers: &headers
+                                        authorizer: NULL],
+              404);
 
+    CBLDatabase* barDB = [dbmgr databaseNamed: @"bar" error: NULL];
+    Assert(barDB);
+
+    AssertEq([dbmgr parseReplicatorProperties: props
+                                        toDatabase: &parsedDB
+                                            remote: &remote
+                                            isPush: &isPush
+                                      createTarget: &createTarget
+                                           headers: &headers
+                                        authorizer: NULL],
+              200);
+    AssertEq(parsedDB, db);
+    AssertEqual(remote, barDB.internalURL);
+    AssertEq(isPush, YES);
+    AssertEqual(headers, nil);
+
+    // OAuth:
     NSDictionary* oauthDict = $dict({@"consumer_secret", @"consumer_secret"},
                                     {@"consumer_key", @"consumer_key"},
                                     {@"token_secret", @"token_secret"},
