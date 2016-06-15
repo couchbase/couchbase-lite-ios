@@ -28,6 +28,8 @@ typedef enum {
     
     kCBLStatusServerError    = 500,
     kCBLStatusNotImplemented = 501,
+    kCBLStatusServiceUnavailable = 503,
+    kCBLStatusTimedOut       = 504,     // "Gateway Timeout"
 
     // Non-HTTP errors:
     kCBLStatusBadEncoding    = 490,

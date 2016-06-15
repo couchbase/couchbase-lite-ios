@@ -39,6 +39,7 @@
 #import "CBLJSON.h"
 
 #import "CollectionUtils.h"
+#import "MYErrorUtils.h"
 #import "Test.h"
 
 
@@ -435,11 +436,33 @@
 // subroutine of -do_POST_replicate
 - (void) replicationStopped: (NSNotification*)n {
     id<CBL_Replicator> repl = n.object;
-    _response.status = CBLStatusFromNSError(repl.error, kCBLStatusServerError);
+    NSError* error = repl.error;
+    NSDictionary* body;
+    if (error) {
+        _response.status = kCBLStatusServerError;
+        body = [self infoForReplicationError: error];
+    } else {
+        body = @{@"ok": @YES, @"session_id": repl.sessionID};
+    }
+    [self.response setBodyObject: body];
     [self sendResponseHeaders];
-    [self.response setBodyObject: $dict({@"ok", (repl.error ?nil :$true)},
-                                        {@"session_id", repl.sessionID})];
     [self sendResponseBodyAndFinish: YES];
+}
+
+
+- (NSDictionary*) infoForReplicationError: (NSError*)error {
+    if (!error)
+        return nil;
+    NSString* errorMsg;
+    CBLStatus status = CBLStatusFromNSError(error, 0);
+    if (status != 0)
+        CBLStatusToHTTPStatus(status, &errorMsg);
+    if (!errorMsg)
+        errorMsg = $sprintf(@"%@ %ld", error.domain, (long)error.code);
+    return $dict({@"error", errorMsg},
+                 {@"reason", error.localizedDescription},
+                 {@"status", (status ? @(status) : nil)},
+                 {@"url", error.my_failingURL.absoluteString});
 }
 
 
@@ -534,10 +557,7 @@
     } else {
         status = kStatusName[repl.status];
     }
-    NSArray* error = nil;
-    NSError* errorObj = repl.error;
-    if (errorObj)
-        error = @[@(errorObj.code), errorObj.localizedDescription];
+    NSDictionary* error = [self infoForReplicationError: repl.error];
 
     NSArray* activeRequests = nil;
     if ([repl respondsToSelector: @selector(activeTasksInfo)])
