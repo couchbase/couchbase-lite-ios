@@ -145,8 +145,22 @@ DefineLogDomain(Router);
 
 
 - (NSDictionary*) bodyAsDictionary {
-    return $castIf(NSDictionary, [CBLJSON JSONObjectWithData: _request.HTTPBody
-                                                    options: 0 error: NULL]);
+    id object;
+    NSError* error;
+    NSData* body = _request.HTTPBody;
+    if (body) {
+        object = [CBLJSON JSONObjectWithData: body options: 0 error: &error];
+    } else {
+        NSInputStream* in = _request.HTTPBodyStream;
+        if (!in)
+            return nil; // should be impossible
+        [in open];
+        object = [CBLJSON JSONObjectWithStream: in options: 0 error: &error];
+        [in close];
+    }
+    if (!object)
+        Warn(@"CBL_Router: Unparseable JSON request body: %@", error.my_compactDescription);
+    return $castIf(NSDictionary, object);
 }
 
 

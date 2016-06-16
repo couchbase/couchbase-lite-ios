@@ -36,6 +36,12 @@
     config.HTTPShouldSetCookies = NO;
     config.URLCache = nil;
     config.HTTPAdditionalHeaders = @{@"User-Agent": [CBL_ReplicatorSettings userAgentHeader]};
+
+    // Register the router's NSURLProtocol. This allows the replicator to access local databases
+    // via their internalURLs.
+    Class cblURLProtocol = NSClassFromString(@"CBL_URLProtocol");
+    if (cblURLProtocol)
+        config.protocolClasses = @[cblURLProtocol];
     return config;
 }
 

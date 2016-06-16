@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLStatus.h"
+#import "MYErrorUtils.h"
 
 
 NSString* const CBLHTTPErrorDomain = @"CBLHTTP";
@@ -99,12 +100,42 @@ BOOL CBLStatusToOutNSError(CBLStatus status, NSError** outError) {
 }
 
 
+// Mapping NSURLErrorDomain codes to CBLStatus:
+static const struct { NSInteger code; CBLStatus status; } kURLErrorToStatusMap[] = {
+    {NSURLErrorBadURL,                          kCBLStatusBadRequest},
+    {NSURLErrorUserCancelledAuthentication,     kCBLStatusUnauthorized},
+    {NSURLErrorUserAuthenticationRequired,      kCBLStatusUnauthorized},
+    {NSURLErrorCannotFindHost,                  kCBLStatusNotFound},
+    {NSURLErrorRedirectToNonExistentLocation,   kCBLStatusNotFound},
+    {NSURLErrorUnsupportedURL,                  kCBLStatusNotImplemented},
+    {NSURLErrorAppTransportSecurityRequiresSecureConnection, kCBLStatusForbidden},
+
+    {NSURLErrorResourceUnavailable,             kCBLStatusServiceUnavailable},
+    {NSURLErrorCannotConnectToHost,             kCBLStatusServiceUnavailable},
+    {NSURLErrorNetworkConnectionLost,           kCBLStatusServiceUnavailable},
+    {NSURLErrorDNSLookupFailed,                 kCBLStatusServiceUnavailable},
+    {NSURLErrorNotConnectedToInternet,          kCBLStatusServiceUnavailable},
+    {NSURLErrorNetworkConnectionLost,           kCBLStatusServiceUnavailable},
+
+    {NSURLErrorTimedOut,                        kCBLStatusTimedOut},
+    {NSURLErrorUnknown,                         kCBLStatusServerError},
+    {NSURLErrorCancelled,                       kCBLStatusCanceled},
+};
+
+
 CBLStatus CBLStatusFromNSError(NSError* error, CBLStatus defaultStatus) {
     NSInteger code = error.code;
-    if (!error)
+    if (!error) {
         return kCBLStatusOK;
-    else if ($equal(error.domain, CBLHTTPErrorDomain))
+    } else if ($equal(error.domain, CBLHTTPErrorDomain)) {
         return (CBLStatus)code;
-    else
+    } else if ($equal(error.domain, NSURLErrorDomain)) {
+        for (unsigned i=0; i < sizeof(kURLErrorToStatusMap)/sizeof(kURLErrorToStatusMap[0]); ++i) {
+            if (kURLErrorToStatusMap[i].code == code)
+                return kURLErrorToStatusMap[i].status;
+        }
+        return kCBLStatusUpstreamError;
+    } else {
         return defaultStatus;
+    }
 }
