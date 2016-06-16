@@ -424,6 +424,8 @@
 		2737A6CE1B703DD500CEF619 /* CBLAttachmentDownloader.h in Headers */ = {isa = PBXBuildFile; fileRef = 2737A6CC1B703DD500CEF619 /* CBLAttachmentDownloader.h */; };
 		2737A6D01B703DD500CEF619 /* CBLAttachmentDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 2737A6CD1B703DD500CEF619 /* CBLAttachmentDownloader.m */; };
 		27393A971C8B8C6300829C9B /* getRepoVersion.sh in Resources */ = {isa = PBXBuildFile; fileRef = 27393A961C8B8C6300829C9B /* getRepoVersion.sh */; };
+		273CD61B1D134A7C0002E949 /* OpenIDConnectUI in Copy Extras */ = {isa = PBXBuildFile; fileRef = 273CD60D1D134A720002E949 /* OpenIDConnectUI */; };
+		273CD61C1D134D720002E949 /* README.md in Copy Extras */ = {isa = PBXBuildFile; fileRef = 27C5BAEA1A92AD2A008C357C /* README.md */; };
 		273E9EF11C509F38003115A6 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 273E9EF01C509F38003115A6 /* main.m */; };
 		273E9EF41C509F39003115A6 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 273E9EF31C509F38003115A6 /* AppDelegate.m */; };
 		273E9EF71C509F39003115A6 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 273E9EF61C509F39003115A6 /* ViewController.m */; };
@@ -1484,6 +1486,7 @@
 			dstPath = Extras;
 			dstSubfolderSpec = 16;
 			files = (
+				273CD61C1D134D720002E949 /* README.md in Copy Extras */,
 				939C2F1E1C5973AB006E8C2B /* CBLRegisterJSViewCompiler.h in Copy Extras */,
 				933EF75E1B29B3CF0004C1C1 /* CBLIncrementalStore.h in Copy Extras */,
 				933EF75F1B29B3CF0004C1C1 /* CBLIncrementalStore.m in Copy Extras */,
@@ -1493,6 +1496,7 @@
 				27F273C117039D6000CD2B85 /* CBLUICollectionSource.h in Copy Extras */,
 				27F273C217039D6200CD2B85 /* CBLUICollectionSource.m in Copy Extras */,
 				27486F391A608A8B008D94F0 /* CBLJSONValidator.h in Copy Extras */,
+				273CD61B1D134A7C0002E949 /* OpenIDConnectUI in Copy Extras */,
 			);
 			name = "Copy Extras";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1598,6 +1602,7 @@
 		2737A6CC1B703DD500CEF619 /* CBLAttachmentDownloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLAttachmentDownloader.h; sourceTree = "<group>"; };
 		2737A6CD1B703DD500CEF619 /* CBLAttachmentDownloader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLAttachmentDownloader.m; sourceTree = "<group>"; };
 		27393A961C8B8C6300829C9B /* getRepoVersion.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = getRepoVersion.sh; path = BuildScripts/getRepoVersion.sh; sourceTree = SOURCE_ROOT; };
+		273CD60D1D134A720002E949 /* OpenIDConnectUI */ = {isa = PBXFileReference; lastKnownFileType = folder; path = OpenIDConnectUI; sourceTree = "<group>"; };
 		273E9EED1C509F38003115A6 /* CBL tvOS Test App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL tvOS Test App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		273E9EF01C509F38003115A6 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		273E9EF21C509F38003115A6 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -2584,6 +2589,7 @@
 				AA1776B61857ADDB00CB01A3 /* CBLIncrementalStore.h */,
 				AA1776B71857ADDB00CB01A3 /* CBLIncrementalStore.m */,
 				27CCBBE31D0240B400BFA5F5 /* OpenIDConnectUI */,
+				273CD60D1D134A720002E949 /* OpenIDConnectUI */,
 			);
 			path = Extras;
 			sourceTree = "<group>";
