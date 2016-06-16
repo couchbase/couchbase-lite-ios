@@ -13,6 +13,7 @@
 #import "CBLPersonaAuthorizer.h"
 #import "CBLSymmetricKey.h"
 #import "MYAnonymousIdentity.h"
+#import "MYURLUtils.h"
 
 
 @interface Misc_Tests : CBLTestCase
@@ -324,6 +325,38 @@ static int collateRevs(const char* rev1, const char* rev2) {
     AssertEq(result, (SecTrustResultType)kSecTrustResultRecoverableTrustFailure);
 
     MYDeleteAnonymousIdentity(@"CBLUnitTests");
+}
+
+
+- (void) testMYURLUtils {
+    NSURL* url = $url(@"https://example.com/path/here?query#fragment");
+    AssertEq(url.my_effectivePort, 443);
+    AssertEqual(url.my_baseURL, $url(@"https://example.com"));
+    AssertEqual(url.my_URLByRemovingUser, url);
+    AssertEqual(url.my_sanitizedString, @"https://example.com/path/here?query#fragment");
+
+    url = $url(@"https://example.com:8080/path/here?query#fragment");
+    AssertEq(url.my_effectivePort, 8080);
+    AssertEqual(url.my_baseURL, $url(@"https://example.com:8080"));
+    AssertEqual(url.my_URLByRemovingUser, url);
+    AssertEqual(url.my_sanitizedString, @"https://example.com:8080/path/here?query#fragment");
+
+    AssertEqual($url(@"http://example.com:80/path/here?query#fragment").my_baseURL,
+                 $url(@"http://example.com"));
+    AssertEq($url(@"http://example.com:80/path/here?query#fragment").my_effectivePort, 80);
+    AssertEqual($url(@"https://example.com:443/path/here?query#fragment").my_baseURL,
+                 $url(@"https://example.com"));
+
+    url = $url(@"https://bob@example.com/path/here?query#fragment");
+    AssertEqual(url.my_URLByRemovingUser, $url(@"https://example.com/path/here?query#fragment"));
+    AssertEqual(url.my_sanitizedString, @"https://bob@example.com/path/here?query#fragment");
+
+    url = $url(@"https://bob:foo@example.com/path/here?query#fragment");
+    AssertEqual(url.my_URLByRemovingUser, $url(@"https://example.com/path/here?query#fragment"));
+    AssertEqual(url.my_sanitizedString, @"https://bob:*****@example.com/path/here?query#fragment");
+
+    url = $url(@"https://example.com/login/here?seekrit_token=SEEKRIT&benign=23&authcodeval=SEEKRIT");
+    AssertEqual(url.my_sanitizedString, @"https://example.com/login/here?seekrit_token=*****&benign=23&authcodeval=*****");
 }
 
 

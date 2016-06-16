@@ -11,6 +11,7 @@
 #import "CBLRemoteRequest.h"
 #import "CBLAuthorizer.h"
 #import "CBLMisc.h"
+#import "MYURLUtils.h"
 
 
 UsingLogDomain(Sync);
@@ -131,7 +132,8 @@ UsingLogDomain(Sync);
     NSString* loginPath = login[1];
     id loginParameters = login.count >= 3 ? login[2] : nil;
 
-    LogTo(Sync, @"%@: Logging in with %@ at %@ ...", self, _remoteSession.authorizer.class, loginPath);
+    LogTo(Sync, @"%@: Logging in with %@ at %@ ...",
+          self, _remoteSession.authorizer.class, $url(loginPath).my_sanitizedString);
     __block CBLRemoteJSONRequest* rq;
     rq = [_remoteSession startRequest: method
                                  path: loginPath
