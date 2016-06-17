@@ -6,6 +6,7 @@
 //  Copyright (c) 2013 Couchbase. All rights reserved.
 //
 
+#import <UIKit/UIKit.h>
 #import "OpenIDController.h"
 
 NS_ASSUME_NONNULL_BEGIN
