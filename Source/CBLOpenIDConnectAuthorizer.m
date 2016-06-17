@@ -85,7 +85,7 @@ UsingLogDomain(Sync);
     else if (_authURL)
         path = [@"_oidc_callback?" stringByAppendingString: _authURL.query];
     else
-        path = @"_oidc_challenge";
+        path = @"_oidc_challenge?offline=true";
     return @[@"GET", path];
 }
 
