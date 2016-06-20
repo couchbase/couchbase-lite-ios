@@ -20,6 +20,7 @@
 #import "CBLRemoteRequest.h"
 #import "CBLRemoteSession.h"
 #import "CBLAuthorizer.h"
+#import "CBLRemoteLogin.h"
 #import "CBLBatcher.h"
 #import "CBLReachability.h"
 #import "CBL_URLProtocol.h"
@@ -79,7 +80,6 @@
     SecCertificateRef _serverCert;
     NSData* _pinnedCertData;
     CBLCookieStorage* _cookieStorage;
-    CBLRemoteSession* _remoteSession;
 }
 
 @synthesize db=_db, settings=_settings, cookieStorage=_cookieStorage, serverCert=_serverCert;
@@ -279,6 +279,7 @@
         if (authorizer)
             LogVerbose(Sync, @"%@: Found credential, using %@", self, authorizer);
     }
+    authorizer.remoteURL = _settings.remote;
 
     // Initialize the CBLRemoteSession:
     NSURLSessionConfiguration* config = [[CBLRemoteSession defaultConfiguration] copy];
@@ -291,6 +292,8 @@
         config.HTTPAdditionalHeaders = headers;
     }
     _remoteSession = [[CBLRemoteSession alloc] initWithConfiguration: config
+                                                             baseURL: _settings.remote
+                                                            delegate: self
                                                           authorizer: authorizer
                                                        cookieStorage: self.cookieStorage];
 
@@ -373,7 +376,7 @@
 // and so wants to try again in a minute. Can be overridden by subclasses.
 - (void) retry {
     self.error = nil;
-    [self checkSession];
+    [self login];
 }
 
 - (void) retryIfReady {
@@ -415,7 +418,7 @@
         _lastSequence = nil;
         self.error = nil;
 
-        [self checkSession];
+        [self login];
         [self postProgressChanged];
     }
     return YES;
@@ -464,7 +467,7 @@
     }];
     _checkRequest.timeoutInterval = kCheckRequestTimeout;
     _checkRequest.autoRetry = NO;
-    [self startRemoteRequest: _checkRequest];
+    [_remoteSession startRequest: _checkRequest];
 }
 
 
@@ -575,83 +578,32 @@
 }
 
 
-// Before doing anything else, determine whether we have an active login session.
-- (void) checkSession {
-    if ([_remoteSession.authorizer conformsToProtocol: @protocol(CBLLoginAuthorizer)]) {
-        // Sync Gateway session API is at /db/_session; try that first
-        [self checkSessionAtPath: @"_session"];
-    } else {
-        // Skip login phase
-        [self fetchRemoteCheckpointDoc];
-    }
-}
-
-- (void) checkSessionAtPath: (NSString*)sessionPath {
-    // First check whether a session exists
-    [self asyncTaskStarted];
-    [self sendAsyncRequest: @"GET"
-                      path: sessionPath
-                      body: nil
-              onCompletion: ^(id result, NSError *error) {
-                  if (error) {
-                      // If not at /db/_session, try CouchDB location /_session
-                      if (error.code == kCBLStatusNotFound && $equal(sessionPath, @"_session")) {
-                          [self checkSessionAtPath: @"/_session"];
-                          return;
-                      }
-                      LogTo(Sync, @"%@: Session check failed: %@", self, error.my_compactDescription);
-                      self.error = error;
-                  } else {
-                      NSString* username = $castIf(NSString, result[@"userCtx"][@"name"]);
-                      if (username) {
-                          LogTo(Sync, @"%@: Active session, logged in as '%@'", self, username);
-                          [self fetchRemoteCheckpointDoc];
-                      } else {
-                          [self login];
-                      }
-                  }
-                  [self asyncTasksFinished: 1];
-              }
-     ];
-}
-
-
-// If there is no login session, attempt to log in, if the authorizer knows the parameters.
-- (void) login {
-    id<CBLLoginAuthorizer> loginAuth = (id<CBLLoginAuthorizer>)_remoteSession.authorizer;
-    NSDictionary* loginParameters = [loginAuth loginParametersForSite: _settings.remote];
-    if (loginParameters == nil) {
-        LogTo(Sync, @"%@: %@ has no login parameters, so skipping login", self, _remoteSession.authorizer);
-        [self fetchRemoteCheckpointDoc];
-        return;
-    }
-
-    NSString* loginPath = [loginAuth loginPathForSite: _settings.remote];
-    LogTo(Sync, @"%@: Logging in with %@ at %@ ...", self, _remoteSession.authorizer.class, loginPath);
-    [self asyncTaskStarted];
-    [self sendAsyncRequest: @"POST"
-                      path: loginPath
-                      body: loginParameters
-              onCompletion: ^(id result, NSError *error) {
-                  if (error) {
-                      LogTo(Sync, @"%@: Login failed!", self);
-                      self.error = error;
-                  } else {
-                      LogTo(Sync, @"%@: Successfully logged in!", self);
-                      [self fetchRemoteCheckpointDoc];
-                  }
-                  [self asyncTasksFinished: 1];
-              }
-     ];
-}
-
-
 #pragma mark - HTTP REQUESTS:
 
 
-- (id<CBLAuthorizer>) authorizer {
-    return _remoteSession.authorizer;
+- (void) login {
+    if (_settings.authorizer) {
+        [self asyncTaskStarted];
+        CBLRemoteLogin* login = [[CBLRemoteLogin alloc] initWithURL: _settings.remote
+                                                        session: _remoteSession
+                                                requestDelegate: self
+                                                   continuation: ^(NSError* error)
+        {
+            if (error) {
+                LogTo(Sync, @"%@: Login error: %@", self, error.my_compactDescription);
+                self.error = error;
+            } else {
+                LogTo(Sync, @"%@: Successfully logged in!", self);
+                [self fetchRemoteCheckpointDoc];
+            }
+            [self asyncTasksFinished: 1]; // finishes task begun in -login
+        }];
+        [login start];
+    } else {
+        [self fetchRemoteCheckpointDoc];
+    }
 }
+
 
 - (CBLCookieStorage*) cookieStorage {
     if (!_cookieStorage) {
@@ -673,37 +625,6 @@
 }
 
 
-- (CBLRemoteJSONRequest*) sendAsyncRequest: (NSString*)method
-                                     path: (NSString*)path
-                                     body: (id)body
-                             onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
-{
-    LogVerbose(Sync, @"%@: %@ %@", self, method, path);
-    NSURL* url;
-    if ([path hasPrefix: @"/"]) {
-        url = [[NSURL URLWithString: path relativeToURL: _settings.remote] absoluteURL];
-    } else {
-        url = CBLAppendToURL(_settings.remote, path);
-    }
-
-    CBLRemoteJSONRequest *req = [[CBLRemoteJSONRequest alloc] initWithMethod: method
-                                                                     URL: url
-                                                                    body: body
-                                                            onCompletion: onCompletion];
-    if (self.canSendCompressedRequests)
-        [req compressBody];
-
-    [self startRemoteRequest: req];
-    return req;
-}
-
-
-- (void) startRemoteRequest: (CBLRemoteRequest*)request {
-    request.delegate = self;
-    [_remoteSession startRequest: request];
-}
-
-
 - (void) remoteRequestReceivedResponse: (CBLRemoteRequest*)request {
     if (!_serverType) {
         _serverType = request.responseHeaders[@"Server"];
@@ -714,6 +635,7 @@
 
 - (void) stopRemoteRequests {
     [_remoteSession stopActiveRequests];
+    // CBLRestPusher overrides this
 }
 
 
@@ -784,7 +706,7 @@
     LogTo(SyncPerf, @"%@ Getting remote checkpoint", self);
     [self asyncTaskStarted];
     CBLRemoteJSONRequest* request = 
-        [self sendAsyncRequest: @"GET"
+        [_remoteSession startRequest: @"GET"
                           path: [@"_local/" stringByAppendingString: checkpointID]
                           body: nil
                   onCompletion: ^(id response, NSError* error) {
@@ -831,7 +753,7 @@
     _savingCheckpoint = YES; // Disable any other save attempts till we finish reloading
     [self asyncTaskStarted];
     CBLRemoteJSONRequest* request =
-    [self sendAsyncRequest: @"GET"
+    [_remoteSession startRequest: @"GET"
                       path: [@"_local/" stringByAppendingString: self.remoteCheckpointDocID]
                       body: nil
               onCompletion: ^(id response, NSError* error) {
@@ -880,7 +802,7 @@
     _savingCheckpoint = YES;
     NSString* checkpointID = self.remoteCheckpointDocID;
     CBLRemoteRequest* request =
-        [self sendAsyncRequest: @"PUT"
+        [_remoteSession startRequest: @"PUT"
                           path: [@"_local/" stringByAppendingString: checkpointID]
                           body: body
                   onCompletion: ^(id response, NSError* error) {

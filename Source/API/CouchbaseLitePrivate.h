@@ -18,6 +18,7 @@
 - (CBLDatabase*) createEmptyDatabaseNamed: (NSString*)name error: (NSError**)outError;
 #endif
 + (void) setWarningsRaiseExceptions: (BOOL)wre;
+@property NSUInteger defaultMaxRevTreeDepth;
 @end
 
 

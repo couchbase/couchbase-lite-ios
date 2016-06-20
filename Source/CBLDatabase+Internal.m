@@ -239,7 +239,10 @@ static BOOL sAutoCompact = YES;
         [_storage setInfo: CBLCreateUUID() forKey: @"publicUUID"];
     }
 
-    _storage.maxRevTreeDepth = [[_storage infoForKey: @"max_revs"] intValue] ?: kDefaultMaxRevs;
+    unsigned maxRevs = [[_storage infoForKey: @"max_revs"] intValue];
+    if (!maxRevs)
+        maxRevs = (unsigned)_manager.defaultMaxRevTreeDepth;
+    _storage.maxRevTreeDepth = maxRevs;
 
     // Open attachment store:
     NSString* attachmentsPath = self.attachmentStorePath;

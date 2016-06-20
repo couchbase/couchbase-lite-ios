@@ -13,6 +13,7 @@
 #import "CBLPersonaAuthorizer.h"
 #import "CBLSymmetricKey.h"
 #import "MYAnonymousIdentity.h"
+#import "MYURLUtils.h"
 
 
 @interface Misc_Tests : CBLTestCase
@@ -193,18 +194,20 @@ static int collateRevs(const char* rev1, const char* rev2) {
     NSString* email = @"jimbo@example.com";
 
     CBLFacebookAuthorizer* auth = [[CBLFacebookAuthorizer alloc] initWithEmailAddress: email];
+    auth.remoteURL = site;
 
     // Register and retrieve the sample token:
     Assert([CBLFacebookAuthorizer registerToken: token
                                  forEmailAddress: email forSite: site]);
-    NSString* gotToken = [auth tokenForSite: site];
-    AssertEqual(gotToken, token);
+    AssertEqual([auth token], token);
 
     // Try a variant form of the URL:
-    gotToken = [auth tokenForSite: [NSURL URLWithString: @"HttpS://example.com:443/some/other/path"]];
-    AssertEqual(gotToken, token);
+    CBLFacebookAuthorizer* auth2 = [[CBLFacebookAuthorizer alloc] initWithEmailAddress: email];
+    auth2.remoteURL = [NSURL URLWithString: @"HttpS://example.com:443/some/other/path"];
+    AssertEqual([auth2 token], token);
 
-    AssertEqual([auth loginParametersForSite: site], (@{@"access_token": token}));
+    AssertEqual([auth loginRequest],
+                (@[@"POST", @"_facebook", @{@"access_token": token}]));
 }
 
 
@@ -233,11 +236,12 @@ static int collateRevs(const char* rev1, const char* rev2) {
                                                              site: originURL];
     AssertEqual(gotAssertion, sampleAssertion);
 
-    // -assertionForSite: should return nil because the assertion has expired by now:
+    // -assertion should return nil because the assertion has expired by now:
     CBLPersonaAuthorizer* auth = [[CBLPersonaAuthorizer alloc] initWithEmailAddress: email];
+    auth.remoteURL = originURL;
     AssertEqual(auth.emailAddress, email);
     [self allowWarningsIn:^{
-        AssertEqual([auth assertionForSite: originURL], nil);
+        AssertEqual([auth assertion], nil);
     }];
 }
 
@@ -274,7 +278,7 @@ static int collateRevs(const char* rev1, const char* rev2) {
     NSMutableData* incrementalCiphertext = [NSMutableData data];
     for (int i = 0; i < 100; i++) {
         NSMutableData* data = [NSMutableData dataWithLength: 5555];
-        SecRandomCopyBytes(kSecRandomDefault, 555, data.mutableBytes);
+        (void)SecRandomCopyBytes(kSecRandomDefault, 555, data.mutableBytes);
         [incrementalCleartext appendData: data];
         [incrementalCiphertext appendData: encryptor(data)];
     }
@@ -321,6 +325,38 @@ static int collateRevs(const char* rev1, const char* rev2) {
     AssertEq(result, (SecTrustResultType)kSecTrustResultRecoverableTrustFailure);
 
     MYDeleteAnonymousIdentity(@"CBLUnitTests");
+}
+
+
+- (void) testMYURLUtils {
+    NSURL* url = $url(@"https://example.com/path/here?query#fragment");
+    AssertEq(url.my_effectivePort, 443);
+    AssertEqual(url.my_baseURL, $url(@"https://example.com"));
+    AssertEqual(url.my_URLByRemovingUser, url);
+    AssertEqual(url.my_sanitizedString, @"https://example.com/path/here?query#fragment");
+
+    url = $url(@"https://example.com:8080/path/here?query#fragment");
+    AssertEq(url.my_effectivePort, 8080);
+    AssertEqual(url.my_baseURL, $url(@"https://example.com:8080"));
+    AssertEqual(url.my_URLByRemovingUser, url);
+    AssertEqual(url.my_sanitizedString, @"https://example.com:8080/path/here?query#fragment");
+
+    AssertEqual($url(@"http://example.com:80/path/here?query#fragment").my_baseURL,
+                 $url(@"http://example.com"));
+    AssertEq($url(@"http://example.com:80/path/here?query#fragment").my_effectivePort, 80);
+    AssertEqual($url(@"https://example.com:443/path/here?query#fragment").my_baseURL,
+                 $url(@"https://example.com"));
+
+    url = $url(@"https://bob@example.com/path/here?query#fragment");
+    AssertEqual(url.my_URLByRemovingUser, $url(@"https://example.com/path/here?query#fragment"));
+    AssertEqual(url.my_sanitizedString, @"https://bob@example.com/path/here?query#fragment");
+
+    url = $url(@"https://bob:foo@example.com/path/here?query#fragment");
+    AssertEqual(url.my_URLByRemovingUser, $url(@"https://example.com/path/here?query#fragment"));
+    AssertEqual(url.my_sanitizedString, @"https://bob:*****@example.com/path/here?query#fragment");
+
+    url = $url(@"https://example.com/login/here?seekrit_token=SEEKRIT&benign=23&authcodeval=SEEKRIT");
+    AssertEqual(url.my_sanitizedString, @"https://example.com/login/here?seekrit_token=*****&benign=23&authcodeval=*****");
 }
 
 

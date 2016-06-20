@@ -60,6 +60,9 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 /** In some cases a kCBLStatusNotFound Not Found is an expected condition and shouldn't be logged; call this to suppress that log message. */
 - (void) dontLog404;
 
+/** Call this to stop redirects from being followed. */
+- (void) dontRedirect;
+
 /** Stops the request, calling the onCompletion block. */
 - (void) stop;
 
@@ -93,12 +96,15 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
                                 disposition: (NSURLSessionAuthChallengeDisposition*)outDisposition;
 - (SecTrustRef) checkServerTrust:(NSURLAuthenticationChallenge*)challenge;
 - (NSURLRequest*) willSendRequest:(NSURLRequest *)request
-                 redirectResponse:(NSURLResponse *)response;
+                 redirectResponse:(NSHTTPURLResponse *)response;
 - (void) _didReceiveData:(NSData *)data;
 - (void) _didFinishLoading;
 
 #if DEBUG
+@property (readonly) NSURLRequest* URLRequest;
+@property (readonly) int statusCode;
 @property BOOL debugAlwaysTrust;    // For unit tests only!
+@property CBLRemoteRequestCompletionBlock onCompletion;
 #endif
 
 @end

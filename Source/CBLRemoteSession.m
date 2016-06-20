@@ -10,6 +10,9 @@
 #import "CBLRemoteRequest.h"
 #import "CBL_ReplicatorSettings.h"
 #import "CBLCookieStorage.h"
+#import "CBLMisc.h"
+
+UsingLogDomain(Sync);
 
 
 @interface CBLRemoteSession () <NSURLSessionDataDelegate>
@@ -18,8 +21,10 @@
 
 @implementation CBLRemoteSession
 {
+    NSURL* _baseURL;
     NSURLSession* _session;
     NSRunLoop* _runLoop;
+    id<CBLRemoteRequestDelegate> _requestDelegate;
     NSMutableDictionary<NSNumber*, CBLRemoteRequest*>* _requestIDs; // Used on operation queue only
     NSMutableSet<CBLRemoteRequest*>* _allRequests;                  // Used on API thread only
     CBLCookieStorage* _cookieStorage;
@@ -36,16 +41,26 @@
     config.HTTPShouldSetCookies = NO;
     config.URLCache = nil;
     config.HTTPAdditionalHeaders = @{@"User-Agent": [CBL_ReplicatorSettings userAgentHeader]};
+
+    // Register the router's NSURLProtocol. This allows the replicator to access local databases
+    // via their internalURLs.
+    Class cblURLProtocol = NSClassFromString(@"CBL_URLProtocol");
+    if (cblURLProtocol)
+        config.protocolClasses = @[cblURLProtocol];
     return config;
 }
 
 
 - (instancetype)initWithConfiguration: (NSURLSessionConfiguration*)config
+                              baseURL: (NSURL*)baseURL
+                             delegate: (id<CBLRemoteRequestDelegate>)delegate
                            authorizer: (id<CBLAuthorizer>)authorizer
                         cookieStorage: (CBLCookieStorage*)cookieStorage
 {
     self = [super init];
     if (self) {
+        _baseURL = baseURL;
+        _requestDelegate = delegate;
         _authorizer = authorizer;
         _cookieStorage = cookieStorage;
         NSOperationQueue* queue = [[NSOperationQueue alloc] init];
@@ -61,8 +76,10 @@
 }
 
 
-- (instancetype) init {
+- (instancetype) initWithDelegate: (id<CBLRemoteRequestDelegate>)delegate {
     return [self initWithConfiguration: [[self class] defaultConfiguration]
+                               baseURL: nil
+                              delegate: delegate
                             authorizer: nil
                          cookieStorage: nil];
 }
@@ -86,6 +103,7 @@
 
 - (void) startRequest: (CBLRemoteRequest*)request {
     request.session = self;
+    request.delegate = _requestDelegate;
     if (_authorizer)
         request.authorizer = _authorizer;
     request.cookieStorage = _cookieStorage;
@@ -103,6 +121,27 @@
         LogTo(RemoteRequest, @"CBLRemoteSession starting %@", request);
         [task resume]; // Go!
     }];
+}
+
+
+- (CBLRemoteJSONRequest*) startRequest: (NSString*)method
+                                  path: (NSString*)path
+                                  body: (id)body
+                          onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
+{
+    Assert(_baseURL);
+    LogVerbose(Sync, @"%@: %@ %@", self, method, path);
+    NSURL* url;
+    if ([path hasPrefix: @"/"])
+        url = [[NSURL URLWithString: path relativeToURL: _baseURL] absoluteURL];
+    else
+        url = CBLAppendToURL(_baseURL, path);
+    CBLRemoteJSONRequest *req = [[CBLRemoteJSONRequest alloc] initWithMethod: method
+                                                                         URL: url
+                                                                        body: body
+                                                                onCompletion: onCompletion];
+    [self startRequest: req];
+    return req;
 }
 
 
@@ -124,6 +163,12 @@
 }
 
 
+- (void) doAsync: (void (^)())block {
+    CFRunLoopPerformBlock(_runLoop.getCFRunLoop, kCFRunLoopDefaultMode, block);
+    CFRunLoopWakeUp(_runLoop.getCFRunLoop);
+}
+
+
 #pragma mark - INTERNAL:
 
 
@@ -141,7 +186,7 @@
     CBLRemoteRequest *request = _requestIDs[@(task.taskIdentifier)];
     if (request) {
         LogDebug(RemoteRequest, @">>> performBlock for %@", request);
-        CFRunLoopPerformBlock(_runLoop.getCFRunLoop, kCFRunLoopDefaultMode, ^{
+        [self doAsync: ^{
             // Now on the replicator thread
             LogDebug(RemoteRequest, @"   <<< calling block for %@", request);
             if (request.task == task) {
@@ -151,8 +196,7 @@
                     [self forgetTask: task];
                 }];
             }
-        });
-        CFRunLoopWakeUp(_runLoop.getCFRunLoop);
+        }];
     }
 }
 

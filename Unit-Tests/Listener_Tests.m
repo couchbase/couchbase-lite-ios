@@ -184,7 +184,7 @@ static UInt16 sPort = 60000;
     request.profile = @"proveAttachment";
     request[@"digest"] = att.metadata[@"digest"];
     uint8_t nonceBytes[16];
-    SecRandomCopyBytes(kSecRandomDefault, sizeof(nonceBytes), nonceBytes);
+    (void)SecRandomCopyBytes(kSecRandomDefault, sizeof(nonceBytes), nonceBytes);
     NSData* nonceData = [NSData dataWithBytes: nonceBytes length: sizeof(nonceBytes)];
     request.body = nonceData;
     [self sendRequest: request expectedErrorCode: 0 expectedResult: nil];
@@ -337,7 +337,7 @@ static NSString* addressToString(NSData* addrData) {
 
 - (void) setUp {
     [super setUp];
-    _session = [[CBLRemoteSession alloc] init];
+    _session = [[CBLRemoteSession alloc] initWithDelegate: self];
 }
 
 - (Class) listenerClass {
@@ -442,7 +442,6 @@ static NSString* addressToString(NSData* addrData) {
     }
 
     _expectCheckServerTrust = [self expectationWithDescription: @"checkServerTrust"];
-    req.delegate = self;
 
     [_session startRequest: req];
     [self waitForExpectationsWithTimeout: kTimeout handler: nil];
@@ -499,7 +498,6 @@ static NSString* addressToString(NSData* addrData) {
                                                            supportingCerts: clientCredential.certificates];
     }
 
-    req.delegate = self;
     [_session startRequest: req];
     [self waitForExpectationsWithTimeout: kTimeout handler: nil];
 }

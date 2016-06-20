@@ -15,10 +15,12 @@
 
 
 #import "CBLAuthenticator.h"
+#import "CBLAuthenticator+OpenID.h"
 #import "CBLAuthorizer.h"
 #import "CBLTokenAuthorizer.h"
 #import "CBLOAuth1Authorizer.h"
 #import "CBLClientCertAuthorizer.h"
+#import "CBLOpenIDConnectAuthorizer.h"
 #import "MYAnonymousIdentity.h"
 
 
@@ -52,6 +54,10 @@
                                                       token: token
                                                 tokenSecret: tokenSecret
                                             signatureMethod: signatureMethod];
+}
+
++ (id<CBLAuthenticator>) OpenIDConnectAuthenticator: (CBLOIDCLoginCallback)callback {
+    return [[CBLOpenIDConnectAuthorizer alloc] initWithCallback: callback];
 }
 
 + (id<CBLAuthenticator>) SSLClientCertAuthenticatorWithIdentity: (SecIdentityRef)identity

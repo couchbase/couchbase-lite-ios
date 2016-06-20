@@ -10,6 +10,7 @@
 #import <CouchbaseLite/CouchbaseLitePrivate.h>
 #import <XCTest/XCTest.h>
 #import "CollectionUtils.h"
+@class CBLRemoteRequest;
 @protocol CBLAuthorizer;
 
 
@@ -48,6 +49,9 @@ void RemoveTemporaryCredential(NSURL* url, NSString* realm,
 
 @property (readonly) NSInteger iOSVersion;      // Returns 0 on Mac OS
 @property (readonly) NSInteger macOSVersion;    // Returns 0 on iOS, minor version ('10.*') on Mac
+
+- (BOOL) wait: (NSTimeInterval)timeout
+          for: (BOOL(^)())block;
 
 // internal:
 - (void) _assertEqualish: (id)a to: (id)b;
@@ -110,11 +114,17 @@ void RemoveTemporaryCredential(NSURL* url, NSString* realm,
 /** Never returns an HTTPS URL even if App Transport Security is present. */
 - (NSURL*) remoteNonSSLTestDBURL: (NSString*)dbName;
 
+/** Version number reported by the test server, via GET /. */
+@property (readonly) double remoteServerVersion;
+
 /** A CBLAuthorizer to use when talking to the remote test server. */
 @property (readonly) id<CBLAuthorizer> authorizer;
 
 /** The self-signed cert(s) of the remote test server's SSL identity. */
 @property (readonly) NSArray* remoteTestDBAnchorCerts;
+
+/** Sends a CBLRemoteRequest, returning its result object. */
+- (id) sendRemoteRequest: (CBLRemoteRequest*)request;
 
 /** Sends an HTTP request via a CBLRemoteJSONRequest. Returns parsed JSON response. */
 - (id) sendRemoteRequest: (NSString*)method toURL: (NSURL*)url;

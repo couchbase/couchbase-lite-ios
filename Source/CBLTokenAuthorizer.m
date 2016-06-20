@@ -34,13 +34,10 @@
 }
 
 
-- (NSString*) loginPathForSite: (NSURL*)site {
-    return [site.path stringByAppendingPathComponent: _loginPath];
-}
-
-
-- (NSDictionary*) loginParametersForSite: (NSURL*)site {
-    return _loginParams;
+- (NSArray*) loginRequest {
+    if (!_loginParams)
+        return nil;
+    return @[@"POST", _loginPath, _loginParams];
 }
 
 

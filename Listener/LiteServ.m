@@ -174,6 +174,7 @@ static void usage(void) {
             "\t[--user <username>]      Username for connecting to remote database\n"
             "\t[--password <password>]  Password for connecting to remote database\n"
             "\t[--realm <realm>]        HTTP realm for connecting to remote database\n"
+            "\t[--revs_limit <n>        Sets default max rev-tree depth for databases\n"
             "\t[--ssl]                  Serve over SSL\n"
             "\t[--sslas <identityname>] Identity pref name to use for SSL serving\n"
             "\t[--storage <engine>]     Set default storage engine: 'SQLite' or 'ForestDB'\n"
@@ -243,6 +244,12 @@ static void startListener(CBLListener* listener) {
 }
 
 
+static long str2long(const char *str) {
+    char *end;
+    return strtol(str, &end, 10);
+}
+
+
 int main (int argc, const char * argv[])
 {
     @autoreleasepool {
@@ -252,6 +259,7 @@ int main (int argc, const char * argv[])
         UInt16 port = kPortNumber, nuPort = 0;
         BOOL pull = NO, createTarget = NO, continuous = NO;
         NSMutableDictionary* dbPasswords = [NSMutableDictionary new];
+        NSUInteger maxRevTreeDepth = 0;
 
         for (int i = 1; i < argc; ++i) {
             if (strcmp(argv[i], "--help") == 0) {
@@ -260,13 +268,9 @@ int main (int argc, const char * argv[])
             } else if (strcmp(argv[i], "--dir") == 0) {
                 dataPath = MakeAbsolutePath(argv[++i]);
             } else if (strcmp(argv[i], "--port") == 0) {
-                const char *str = argv[++i];
-                char *end;
-                port = (UInt16)strtol(str, &end, 10);
+                port = (UInt16)str2long(argv[++i]);
             } else if (strcmp(argv[i], "--nuport") == 0) {
-                const char *str = argv[++i];
-                char *end;
-                nuPort = (UInt16)strtol(str, &end, 10);
+                nuPort = (UInt16)str2long(argv[++i]);
             } else if (strcmp(argv[i], "--readonly") == 0) {
                 options.readOnly = YES;
             } else if (strcmp(argv[i], "--auth") == 0) {
@@ -302,6 +306,8 @@ int main (int argc, const char * argv[])
                 }
                 dbPasswords[items[0]] = items[1];
                 AlwaysLog(@"Using password for encrypted database '%@'", items[0]);
+            } else if (strcmp(argv[i], "--revs_limit") == 0) {
+                maxRevTreeDepth = str2long(argv[++i]);
             } else if (strncmp(argv[i], "-Log", 4) == 0) {
                 ++i; // Ignore MYUtilities logging flags
             } else {
@@ -325,6 +331,8 @@ int main (int argc, const char * argv[])
 
         if (storageType)
             server.storageType = storageType;
+        if (maxRevTreeDepth > 0)
+            server.defaultMaxRevTreeDepth = maxRevTreeDepth;
 
         for (NSString* dbName in dbPasswords)
             [server registerEncryptionKey: dbPasswords[dbName] forDatabaseNamed: dbName];

@@ -169,7 +169,7 @@ static UInt16 sPort = 60100;
                     NSUInteger length = (NSUInteger)(kMinAttachmentLength +
                          random()/(double)INT32_MAX*(kMaxAttachmentLength - kMinAttachmentLength));
                     NSMutableData* data = [NSMutableData dataWithLength: length];
-                    SecRandomCopyBytes(kSecRandomDefault, length, data.mutableBytes);
+                    (void)SecRandomCopyBytes(kSecRandomDefault, length, data.mutableBytes);
                     [rev setAttachmentNamed: @"README" withContentType: @"application/octet-stream"
                                     content: data];
                 }

@@ -91,20 +91,15 @@
                                    $dict({@"seq", @2},
                                          {@"id", @"oneBigAttachment"},
                                          {@"revs", $array(@"2-7a9086d57651b86882d4806bad25903c".cbl_asRevID)}),
-#if 0 // FIX: commented out because SG doesn't correctly handle deleted docs; see issue SG#1702
                                    $dict({@"seq", @4},
                                          {@"id", @"propertytest"},
                                          {@"revs", $array(@"2-61de0ad4b61a3106195e9b21bcb69d0c".cbl_asRevID)},
-                                         {@"deleted", @YES}),
-#endif
+                                         //{@"deleted", @YES}   //FIX: commented out as a workaround for SG #1857; uncomment when that's fixed
+                                         ),
                                    $dict({@"seq", @6},
                                          {@"id", @"weirdmeta"},
                                          {@"revs", $array(@"1-eef1e19e2aa822dc3f1c62196cbe6746".cbl_asRevID)})
                                    );
-#if 0 // FIX: See above
-            if (activeOnly)
-                [expected removeObjectAtIndex: 1];
-#endif
             [self run: tracker expectingChanges: expected];
             Assert(_gotHeaders);
         }

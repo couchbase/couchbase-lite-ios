@@ -20,6 +20,7 @@
 #import "CBLBase64.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
+#import "BLIPHTTPLogic.h"
 #import "MYURLUtils.h"
 
 
@@ -542,35 +543,36 @@
         }
     }];
 
-    if (NSClassFromString(@"CBLURLProtocol")) {
-        // Local-to-local replication:
-        props = $dict({@"source", @"foo"},
-                      {@"target", @"bar"});
-        AssertEq([dbmgr parseReplicatorProperties: props
-                                            toDatabase: &parsedDB
-                                                remote: &remote
-                                                isPush: &isPush
-                                          createTarget: &createTarget
-                                               headers: &headers
-                                            authorizer: NULL],
-                  404);
-        props = $dict({@"source", @"foo"},
-                      {@"target", @"bar"}, {@"create_target", $true});
-        AssertEq([dbmgr parseReplicatorProperties: props
-                                            toDatabase: &parsedDB
-                                                remote: &remote
-                                                isPush: &isPush
-                                          createTarget: &createTarget
-                                               headers: &headers
-                                            authorizer: NULL],
-                  200);
-        AssertEq(parsedDB, db);
-        AssertEqual(remote, $url(@"http://lite.couchbase./bar/"));
-        AssertEq(isPush, YES);
-        AssertEq(createTarget, YES);
-        AssertEqual(headers, nil);
-    }
+    // Local-to-local replication:
+    Assert(dbmgr.internalURL);
+    props = $dict({@"source", db.name},
+                  {@"target", @"bar"});
+    AssertEq([dbmgr parseReplicatorProperties: props
+                                        toDatabase: &parsedDB
+                                            remote: &remote
+                                            isPush: &isPush
+                                      createTarget: &createTarget
+                                           headers: &headers
+                                        authorizer: NULL],
+              404);
 
+    CBLDatabase* barDB = [dbmgr databaseNamed: @"bar" error: NULL];
+    Assert(barDB);
+
+    AssertEq([dbmgr parseReplicatorProperties: props
+                                        toDatabase: &parsedDB
+                                            remote: &remote
+                                            isPush: &isPush
+                                      createTarget: &createTarget
+                                           headers: &headers
+                                        authorizer: NULL],
+              200);
+    AssertEq(parsedDB, db);
+    AssertEqual(remote, barDB.internalURL);
+    AssertEq(isPush, YES);
+    AssertEqual(headers, nil);
+
+    // OAuth:
     NSDictionary* oauthDict = $dict({@"consumer_secret", @"consumer_secret"},
                                     {@"consumer_key", @"consumer_key"},
                                     {@"token_secret", @"token_secret"},
@@ -721,6 +723,23 @@
     CBL_RevisionList* revs = [db.storage getAllRevisionsOfDocumentID: @"propertytest" onlyCurrent: NO includeDeleted: YES];
     Assert(revs);
     Assert(revs[0].deleted);
+}
+
+- (void) test22_ParseAuthChallenge {
+    NSDictionary* c = [BLIPHTTPLogic parseAuthHeader: nil];
+    AssertNil(c);
+
+    NSString* header = @"Basic realm=Couchbase";
+    c = [BLIPHTTPLogic parseAuthHeader: header];
+    AssertEqualish(c, (@{@"WWW-Authenticate": header, @"Scheme": @"Basic", @"realm": @"Couchbase"}));
+
+    header = @"OIDC login=\"http://example.com/login?foo=bar\"";
+    c = [BLIPHTTPLogic parseAuthHeader: header];
+    AssertEqualish(c, (@{@"WWW-Authenticate": header, @"Scheme": @"OIDC", @"login": @"http://example.com/login?foo=bar"}));
+
+    header = @"OIDC login=\"http://example.com/login?foo=bar\",something=other";
+    c = [BLIPHTTPLogic parseAuthHeader: header];
+    AssertEqualish(c, (@{@"WWW-Authenticate": header, @"Scheme": @"OIDC", @"login": @"http://example.com/login?foo=bar"}));
 }
 
 

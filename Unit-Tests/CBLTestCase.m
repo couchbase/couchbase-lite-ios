@@ -127,6 +127,28 @@ extern int c4_getObjectCount(void);             // from c4Base.h (CBForest)
 #endif
 
 
+- (BOOL) wait: (NSTimeInterval)timeout for: (BOOL(^)())block {
+    CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
+    CFAbsoluteTime lastTime = startTime;
+    BOOL done = NO;
+    do {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.1]])
+            break;
+        // Replication runs on a background thread, so the main runloop should not be blocked.
+        // Make sure it's spinning in a timely manner:
+        CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+        if (now-lastTime > 0.25)
+            Warn(@"Main runloop was blocked for %g sec", now-lastTime);
+        lastTime = now;
+        if (now-startTime > timeout)
+            break;
+        done = block();
+    } while (!done);
+    return done;
+}
+
+
 @end
 
 
@@ -313,7 +335,7 @@ extern int c4_getObjectCount(void);             // from c4Base.h (CBForest)
         }
     });
 
-    return [server URLByAppendingPathComponent: dbName];
+    return dbName ? [server URLByAppendingPathComponent: dbName] : server;
 }
 
 
@@ -326,7 +348,20 @@ extern int c4_getObjectCount(void);             // from c4Base.h (CBForest)
         return nil;
     }
     NSURL* server = [NSURL URLWithString: urlStr];
-    return [server URLByAppendingPathComponent: dbName];
+    return dbName ? [server URLByAppendingPathComponent: dbName] : server;
+}
+
+
+- (double) remoteServerVersion {
+    static double sVersion = -1.0;
+    if (sVersion < 0) {
+        NSURL* url = [self remoteTestDBURL: nil];
+        NSDictionary* info = [self sendRemoteRequest: @"GET" toURL: url];
+        sVersion = [[info[@"vendor"] objectForKey: @"version"] doubleValue];
+        if (sVersion <= 0)
+            Warn(@"Couldn't determine version of server at %@", url);
+    }
+    return sVersion;
 }
 
 
@@ -361,26 +396,29 @@ extern int c4_getObjectCount(void);             // from c4Base.h (CBForest)
 
 
 - (id) sendRemoteRequest: (NSString*)method toURL: (NSURL*)url {
+    return [self sendRemoteRequest: [[CBLRemoteJSONRequest alloc] initWithMethod: method
+                                                                             URL: url
+                                                                            body: nil
+                                                                    onCompletion: nil]];
+}
+
+- (id) sendRemoteRequest: (CBLRemoteRequest*)request {
+    NSURLRequest* urlRequest = request.URLRequest;
     __block id result = nil;
     __block NSError* error = nil;
     XCTestExpectation* finished = [self expectationWithDescription: @"Sent request to server"];
-    CBLRemoteSession* session = [[CBLRemoteSession alloc] init];
-    CBLRemoteRequest* request = [[CBLRemoteJSONRequest alloc] initWithMethod: method
-                                                                         URL: url
-                                                                        body: nil
-                                                                onCompletion:
-                                 ^(id r, NSError *err) {
-                                     result = r;
-                                     error = err;
-                                     [finished fulfill];
-                                 }
-                                 ];
+    request.onCompletion = ^(id r, NSError *err) {
+        result = r;
+        error = err;
+        [finished fulfill];
+    };
     request.authorizer = self.authorizer;
     request.debugAlwaysTrust = YES;
+    CBLRemoteSession* session = [[CBLRemoteSession alloc] initWithDelegate: nil];
     [session startRequest: request];
 
     [self waitForExpectationsWithTimeout: 10 handler: nil];
-    AssertNil(error);
+    Assert(error == nil, @"Unexpected error for %@ %@: %@", urlRequest.HTTPMethod, urlRequest.URL, error.my_compactDescription);
     return result;
 }
 

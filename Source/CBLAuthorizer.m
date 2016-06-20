@@ -21,6 +21,11 @@
 #import <Security/Security.h>
 
 
+@implementation CBLAuthorizer
+@synthesize remoteURL=_remoteURL;
+@end
+
+
 @implementation CBLPasswordAuthorizer
 {
     NSString* _basicAuthorization;
@@ -59,6 +64,11 @@
 }
 
 
+- (NSString*) username {
+    return _credential.user;
+}
+
+
 - (NSString*) basicAuthorization {
     if (!_basicAuthorization) {
         NSString* username = _credential.user;
@@ -73,18 +83,12 @@
 }
 
 
-- (void) authorizeURLRequest: (NSMutableURLRequest*)request {
+- (BOOL) authorizeURLRequest: (NSMutableURLRequest*)request {
     NSString* auth = self.basicAuthorization;
-    if (auth)
-        [request setValue: auth forHTTPHeaderField: @"Authorization"];
-}
-
-
-- (void) authorizeHTTPMessage: (CFHTTPMessageRef)message {
-    NSString* auth = self.basicAuthorization;
-    if (auth)
-        CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Authorization"),
-                                         (__bridge CFStringRef)auth);
+    if (!auth)
+        return NO;
+    [request setValue: auth forHTTPHeaderField: @"Authorization"];
+    return YES;
 }
 
 

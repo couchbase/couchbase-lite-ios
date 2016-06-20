@@ -23,9 +23,10 @@
 #import "CBLDatabase.h"
 #import "CBLRestReplicator.h"
 #import "CollectionUtils.h"
-#import "MYURLUtils.h"
 #import "CBLGZip.h"
 #import "CBLCookieStorage.h"
+#import "BLIPHTTPLogic.h"
+#import "MYURLUtils.h"
 
 
 DefineLogDomain(RemoteRequest);
@@ -46,6 +47,7 @@ typedef enum {
 
 @implementation CBLRemoteRequest
 {
+    BOOL _followRedirects;
     AuthPhase _authPhase;
     NSMutableData* _jsonBuffer;
 }
@@ -54,7 +56,8 @@ typedef enum {
 @synthesize delegate=_delegate, responseHeaders=_responseHeaders, cookieStorage=_cookieStorage;
 @synthesize autoRetry = _autoRetry, dontStop=_dontStop, session=_session, task=_task;
 #if DEBUG
-@synthesize debugAlwaysTrust=_debugAlwaysTrust;
+@synthesize URLRequest=_request, onCompletion=_onCompletion;
+@synthesize statusCode=_status, debugAlwaysTrust=_debugAlwaysTrust;
 #endif
 
 
@@ -67,6 +70,7 @@ typedef enum {
     if (self) {
         _onCompletion = [onCompletion copy];
         _autoRetry = YES;
+        _followRedirects = YES;
         _request = [[NSMutableURLRequest alloc] initWithURL: url];
         _request.HTTPMethod = method;
 
@@ -103,10 +107,8 @@ typedef enum {
         _authorizer = authorizer;
         // Let the authorizer add an Authorization: header if it wants:
         id<CBLCustomHeadersAuthorizer> a = $castIfProtocol(CBLCustomHeadersAuthorizer, _authorizer);
-        if (a) {
-            [a authorizeURLRequest: _request];
+        if ([a authorizeURLRequest: _request])
             LogTo(RemoteRequest, @"Added Authorization header for %@", a);
-        }
     }
 }
 
@@ -135,6 +137,9 @@ typedef enum {
 
 - (void) dontLog404 {
     _dontLog404 = true;
+}
+- (void) dontRedirect {
+    _followRedirects = NO;
 }
 
 
@@ -219,7 +224,7 @@ typedef enum {
     if (!_task)
         return;
     [_task cancel];
-    [self didFailWithError: CBLStatusToNSErrorWithInfo(status, message, _request.URL, nil)];
+    [self didFailWithStatus: status message: message extra: nil];
 }
 
 
@@ -376,9 +381,16 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 }
 
 
+#pragma mark - CALLBACKS:
+
+
 - (NSURLRequest*) willSendRequest:(NSURLRequest *)request
-                 redirectResponse:(NSURLResponse *)response
+                 redirectResponse:(NSHTTPURLResponse *)response
 {
+    if (!_followRedirects) {
+        //??[self didReceiveResponse: response];
+        return nil;
+    }
     LogTo(RemoteRequest, @"%@ redirected to <%@>", self, request.URL.absoluteString);
     // The redirected request needs to be authorized again:
     if (![request valueForHTTPHeaderField: @"Authorization"]) {
@@ -394,9 +406,6 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     }
     return request;
 }
-
-
-#pragma mark CALLBACKS:
 
 
 - (NSInputStream *) needNewBodyStream {
@@ -483,6 +492,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
         *outError = CBLStatusToNSErrorWithInfo(kCBLStatusUpstreamError, nil, _request.URL,
                                                @{NSUnderlyingErrorKey: parseError});
     }
+    _jsonBuffer = nil;
     return result;
 }
 
@@ -507,6 +517,21 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     [self respondWithResult: nil error: error];
 }
 
+- (void) didFailWithStatus: (CBLStatus)status
+                   message: (NSString*)message
+                     extra: (NSMutableDictionary*)extra
+{
+    if (status == 401 || status == 407) {
+        NSDictionary* challenge = [BLIPHTTPLogic parseAuthHeader: _responseHeaders[@"WWW-Authenticate"]];
+        if (challenge) {
+            if (!extra)
+                extra = $mdict();
+            extra[@"AuthChallenge"] = challenge;
+        }
+    }
+    [self didFailWithError: CBLStatusToNSErrorWithInfo(status, message, _request.URL, extra)];
+}
+
 
 // CBLRemoteSession calls this
 - (void) _didFinishLoading {
@@ -515,9 +540,8 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
         LogTo(RemoteRequest, @"%@: JSON error message is: %@", self, _jsonBuffer.my_UTF8ToString);
         NSDictionary* info = $castIf(NSDictionary, [self parseJSONResponse: NULL]);
         NSString* errorMsg = info[@"reason"] ?: info[@"error"];
-        NSDictionary* extra = info ? @{@"CBLServerErrorInfo": info} : nil;
-        _jsonBuffer = nil;
-        [self didFailWithError: CBLStatusToNSErrorWithInfo(_status, errorMsg, _request.URL, extra)];
+        NSMutableDictionary* extra = $mdict({@"CBLServerErrorInfo", info});
+        [self didFailWithStatus: _status message: errorMsg extra: extra];
     } else {
         [self didFinishLoading];
     }

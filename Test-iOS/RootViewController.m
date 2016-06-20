@@ -22,11 +22,15 @@
 #import "ConfigViewController.h"
 #import "DemoAppDelegate.h"
 
+#import "OpenIDController+UIKit.h"
+
 #import "CouchbaseLite.h"
 #import "MYLogging.h"
 #import "CBLView+Internal.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLJSON.h"
+
+//#define OPENID_PULL
 
 
 @interface RootViewController ()
@@ -270,20 +274,27 @@
     NSString *syncpoint = [[NSUserDefaults standardUserDefaults] objectForKey:@"syncpoint"];
     if (syncpoint.length > 0)
         newRemoteURL = [NSURL URLWithString:syncpoint];
-    
-    [self forgetSync];
 
-    if (newRemoteURL) {
-        _pull = [self.database createPullReplication: newRemoteURL];
-        _push = [self.database createPushReplication: newRemoteURL];
-        _pull.continuous = _push.continuous = YES;
-        NSNotificationCenter* nctr = [NSNotificationCenter defaultCenter];
-        [nctr addObserver: self selector: @selector(replicationProgress:)
-                     name: kCBLReplicationChangeNotification object: _pull];
-        [nctr addObserver: self selector: @selector(replicationProgress:)
-                     name: kCBLReplicationChangeNotification object: _push];
-        [_pull start];
-        [_push start];
+    if (![newRemoteURL isEqual: _pull.remoteURL]) {
+        [self forgetSync];
+
+        if (newRemoteURL) {
+            _pull = [self.database createPullReplication: newRemoteURL];
+#ifdef OPENID_PULL
+            _pull.authenticator = [CBLAuthenticator OpenIDConnectAuthenticator: [OpenIDController loginCallback]];
+            _push = nil;
+#else
+            _push = [self.database createPushReplication: newRemoteURL];
+#endif
+            _pull.continuous = _push.continuous = YES;
+            NSNotificationCenter* nctr = [NSNotificationCenter defaultCenter];
+            [nctr addObserver: self selector: @selector(replicationProgress:)
+                         name: kCBLReplicationChangeNotification object: _pull];
+            [nctr addObserver: self selector: @selector(replicationProgress:)
+                         name: kCBLReplicationChangeNotification object: _push];
+            [_pull start];
+            [_push start];
+        }
     }
 }
 

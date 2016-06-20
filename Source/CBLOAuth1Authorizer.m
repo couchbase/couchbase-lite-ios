@@ -52,7 +52,7 @@
 
 
 // CBLAuthorizer API:
-- (void) authorizeURLRequest: (NSMutableURLRequest*)request {
+- (BOOL) authorizeURLRequest: (NSMutableURLRequest*)request {
     OAMutableURLRequest* oarq = [[OAMutableURLRequest alloc] initWithURL: request.URL
                                                                 consumer: _consumer
                                                                    token: _token
@@ -63,22 +63,9 @@
     [oarq prepare];
     NSString* authorization = [oarq valueForHTTPHeaderField: @"Authorization"];
     [request setValue: authorization forHTTPHeaderField: @"Authorization"];
+    return YES;
 }
 
-- (void) authorizeHTTPMessage: (CFHTTPMessageRef)message {
-    NSURL* url = CFBridgingRelease(CFHTTPMessageCopyRequestURL(message));
-    OAMutableURLRequest* oarq = [[OAMutableURLRequest alloc] initWithURL: url
-                                                                consumer: _consumer
-                                                                   token: _token
-                                                                   realm: nil
-                                                       signatureProvider: _signatureProvider];
-    oarq.HTTPMethod = CFBridgingRelease(CFHTTPMessageCopyRequestMethod(message));
-    oarq.HTTPBody = CFBridgingRelease(CFHTTPMessageCopyBody(message));
-    [oarq prepare];
-    NSString* authorization = [oarq valueForHTTPHeaderField: @"Authorization"];
-    CFHTTPMessageSetHeaderFieldValue(message, CFSTR("Authorization"),
-                                     (__bridge CFStringRef)authorization);
-}
 
 @end
 

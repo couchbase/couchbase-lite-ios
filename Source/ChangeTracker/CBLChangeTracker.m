@@ -285,8 +285,15 @@ DefineLogDomain(ChangeTracker);
         }
     } else if ($equal(domain, NSURLErrorDomain)) {
         // Map a lower-level auth failure to an HTTP status:
-        if (code == NSURLErrorUserAuthenticationRequired)
+        if (code == NSURLErrorUserAuthenticationRequired) {
+            NSDictionary* challengeInfo = error.userInfo[@"AuthChallenge"];
+            if (challengeInfo) {
+                NSMutableDictionary* minfo = [userInfo mutableCopy];
+                minfo[@"AuthChallenge"] = challengeInfo;    // Added by BLIPHTTPLogic
+                userInfo = minfo;
+            }
             error = MYWrapError(error, CBLHTTPErrorDomain, kCBLStatusUnauthorized, userInfo);
+        }
     }
 
     // If the error may be transient (flaky network, server glitch), retry:

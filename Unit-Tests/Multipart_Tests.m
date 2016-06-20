@@ -97,7 +97,7 @@
           done = YES;
       }];
     dl.debugAlwaysTrust = YES;
-    CBLRemoteSession* session = [[CBLRemoteSession alloc] init];
+    CBLRemoteSession* session = [[CBLRemoteSession alloc] initWithDelegate: nil];
     [session startRequest: dl];
 
     while (!done)

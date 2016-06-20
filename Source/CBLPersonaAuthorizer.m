@@ -97,7 +97,8 @@ bool CBLParsePersonaAssertion(NSString* assertion,
 }
 
 
-- (NSString*) assertionForSite: (NSURL*)site {
+- (NSString*) assertion {
+    NSURL* site = self.remoteURL;
     NSString* assertion = [[self class] assertionForEmailAddress: _emailAddress site: site];
     if (!assertion) {
         Warn(@"CBLPersonaAuthorizer<%@>: no assertion found for <%@>", _emailAddress, site);
@@ -113,14 +114,12 @@ bool CBLParsePersonaAssertion(NSString* assertion,
 }
 
 
-- (NSString*) loginPathForSite:(NSURL *)site {
-    return [site.path stringByAppendingPathComponent: @"_persona"];
+- (NSArray*) loginRequest {
+    NSString* assertion = [self assertion];
+    if (!assertion)
+        return nil;
+    return @[@"POST", @"_persona", assertion ];
 }
 
-
-- (NSDictionary*) loginParametersForSite: (NSURL*)site {
-    NSString* assertion = [self assertionForSite: site];
-    return assertion ? @{@"assertion": assertion} : nil;
-}
 
 @end
