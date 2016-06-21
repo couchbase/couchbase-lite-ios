@@ -1591,9 +1591,9 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     NSError* authError = [self pullWithOIDCAuth: auth];
     AssertNil(authError);
 
-    // The username I gave is "pupshaw", but SG namespaces it by prefixing it with the provider's
-    // registered name, which is "testing" (as given in the SG config file.)
-    AssertEqual(auth.username, @"testing_pupshaw");
+    // The username I gave is "pupshaw", but SG namespaces it by prefixing it with the hash of
+    // the provider's registered name (given in the SG config file.)
+    Assert([auth.username hasSuffix:@"_pupshaw"]);
 
     // Now try again; this should use the ID token from the keychain and/or a session cookie:
     Log(@"**** Second replication...");
@@ -1613,7 +1613,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
 
 - (void) test27_OpenIDConnectAuth_ExpiredIDToken {
-    NSURL* remoteDbURL = [self remoteTestDBURL: @"openid_db"];
+    NSURL* remoteDbURL = [self remoteNonSSLTestDBURL: @"openid_db"];
     if (!remoteDbURL || !self.isSQLiteDB) return;
 
     NSError* error;
@@ -1643,9 +1643,10 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
 // Use the CBLRestLogin class to log in with OIDC without using a replication
 - (void) test28_OIDCLoginWithoutReplicator {
-    NSURL* remoteDbURL = [self remoteTestDBURL: @"openid_db"];
+    NSURL* remoteDbURL = [self remoteNonSSLTestDBURL: @"openid_db"];
     if (!remoteDbURL || !self.isSQLiteDB)
         return;
+
     Assert([CBLOpenIDConnectAuthorizer forgetIDTokensForServer: remoteDbURL error: NULL]);
 
     id<CBLAuthenticator> auth = [CBLAuthenticator OpenIDConnectAuthenticator:
