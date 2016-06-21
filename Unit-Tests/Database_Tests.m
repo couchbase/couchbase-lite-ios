@@ -1639,7 +1639,7 @@
     NSPredicate* expiredPred = [NSPredicate predicateWithFormat: @"documentCount <= 9001"];
     (void)[self expectationForPredicate: expiredPred evaluatedWithObject: db handler: nil];
 
-    [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+    [self waitForExpectationsWithTimeout: 30.0 handler: nil];
     AssertEq(db.documentCount, 9001u);
 
     total = 0;
