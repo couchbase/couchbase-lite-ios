@@ -1676,7 +1676,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
 
 - (NSError*) pullWithOIDCAuth: (id<CBLAuthenticator>)auth {
-    NSURL* remoteDbURL = [self remoteTestDBURL: @"openid_db"];
+    NSURL* remoteDbURL = [self remoteNonSSLTestDBURL: @"openid_db"];
     if (!remoteDbURL)
         return nil;
     CBLReplication* repl = [db createPullReplication: remoteDbURL];
