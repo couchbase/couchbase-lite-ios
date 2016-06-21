@@ -94,8 +94,7 @@
                                    $dict({@"seq", @4},
                                          {@"id", @"propertytest"},
                                          {@"revs", $array(@"2-61de0ad4b61a3106195e9b21bcb69d0c".cbl_asRevID)},
-                                         //{@"deleted", @YES}   //FIX: commented out as a workaround for SG #1857; uncomment when that's fixed
-                                         ),
+                                         {@"deleted", @YES}),
                                    $dict({@"seq", @6},
                                          {@"id", @"weirdmeta"},
                                          {@"revs", $array(@"1-eef1e19e2aa822dc3f1c62196cbe6746".cbl_asRevID)})
