@@ -17,6 +17,7 @@
 #import "CBLBase64.h"
 #import "CBLDatabase+Internal.h"
 #import "CBL_BlobStore.h"
+#import "CBL_BlobStore+Internal.h"
 #import "CBLGZip.h"
 
 
@@ -259,6 +260,10 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
     if (!path || ![[NSFileManager defaultManager] fileExistsAtPath: path isDirectory: NULL])
         return nil;
     return [NSURL fileURLWithPath: path];
+}
+
+- (BOOL) isEncrypted {
+    return _database.attachmentStore.encryptionKey != nil;
 }
 
 

@@ -43,6 +43,8 @@
 @property (readonly, nonatomic) NSData* content;
 @property (readonly, nonatomic) NSURL* contentURL; // only if already stored in db blob-store
 
+@property (readonly, nonatomic) BOOL isEncrypted;
+
 @property (readonly) BOOL hasBlobKey;
 @property (readonly) BOOL isValid;
 
