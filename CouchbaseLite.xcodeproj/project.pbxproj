@@ -2150,6 +2150,7 @@
 		93D21AEE1A955480000AD9AF /* CBLCookieStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLCookieStorage.h; sourceTree = "<group>"; };
 		93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLCookieStorage.m; sourceTree = "<group>"; };
 		93D21B011A9857A1000AD9AF /* CookieStorage_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CookieStorage_Tests.m; sourceTree = "<group>"; };
+		93DEE2BF1D1E2EB9008FF7B6 /* InstallFatLibrary.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = InstallFatLibrary.sh; path = BuildScripts/InstallFatLibrary.sh; sourceTree = SOURCE_ROOT; };
 		93EBA2641B2EC61E0006C66C /* CBLRegisterJSViewCompiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLRegisterJSViewCompiler.h; sourceTree = "<group>"; };
 		93EBA2651B2EC61E0006C66C /* CBLRegisterJSViewCompiler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLRegisterJSViewCompiler.m; sourceTree = "<group>"; };
 		93FFB4871C615629006CBE30 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
@@ -3028,6 +3029,7 @@
 				27821BBF149078C70099B373 /* CouchbaseLite.exp */,
 				27F87BE61558890600F0A416 /* CBLGNUstep.h */,
 				27F87BE71558890700F0A416 /* CBLGNUstep.m */,
+				93DEE2BF1D1E2EB9008FF7B6 /* InstallFatLibrary.sh */,
 				270BDD6815644EA8007D52F6 /* BuildFatLibrary.sh */,
 				27393A961C8B8C6300829C9B /* getRepoVersion.sh */,
 				27452C221AB20BD500327776 /* noop.m */,
@@ -4338,6 +4340,7 @@
 				27E66AD31A7307590091DA3F /* Sources */,
 				27E66B3C1A7307590091DA3F /* Frameworks */,
 				27E66B3F1A7307590091DA3F /* Build Fat Library */,
+				93DEE2CE1D1E30E2008FF7B6 /* Install Fat Library */,
 			);
 			buildRules = (
 			);
@@ -4357,6 +4360,7 @@
 				930FE55B1C58562B008107A0 /* Frameworks */,
 				930FE55C1C58562B008107A0 /* CopyFiles */,
 				930FE5781C5857BF008107A0 /* Make a Fat Binary */,
+				93DEE2C01D1E2EC6008FF7B6 /* Install Fat Library */,
 			);
 			buildRules = (
 			);
@@ -4843,6 +4847,38 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
+		};
+		93DEE2C01D1E2EC6008FF7B6 /* Install Fat Library */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 8;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/BuildScripts/InstallFatLibrary.sh",
+			);
+			name = "Install Fat Library";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
+			showEnvVarsInLog = 0;
+		};
+		93DEE2CE1D1E30E2008FF7B6 /* Install Fat Library */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 8;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/BuildScripts/InstallFatLibrary.sh",
+			);
+			name = "Install Fat Library";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
+			showEnvVarsInLog = 0;
 		};
 		DA023B6014BCA94C008184BB /* Build Fat Library */ = {
 			isa = PBXShellScriptBuildPhase;
