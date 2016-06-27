@@ -17,6 +17,7 @@
 #import "CBLBase64.h"
 #import "CBLDatabase+Internal.h"
 #import "CBL_BlobStore.h"
+#import "CBL_BlobStore+Internal.h"
 #import "CBLGZip.h"
 
 
