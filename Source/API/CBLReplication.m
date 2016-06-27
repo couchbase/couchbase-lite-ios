@@ -30,6 +30,7 @@
 
 
 typedef void (^PendingAction)(id<CBL_Replicator>);
+typedef void (^PendingCookieAction)(CBLCookieStorage*);
 
 
 NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
@@ -50,6 +51,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 @property (nonatomic, readwrite) CBLReplicationStatus status;
 @property (nonatomic, readwrite) unsigned completedChangesCount, changesCount;
 @property (nonatomic, readwrite, strong, nullable) NSError* lastError;
+@property (nonatomic, readwrite) NSString* username;
 @end
 
 
@@ -62,8 +64,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
     // ONLY used on the server thread:
     id<CBL_Replicator> _bg_replicator;
-    NSMutableArray* _bg_pendingCookies;
-    NSMutableArray* _bg_pendingActions;
+    NSMutableArray<PendingAction>* _bg_pendingActions;
+    NSMutableArray<PendingCookieAction>* _bg_pendingCookieActions;
     NSConditionLock* _bg_stopLock;
 }
 
@@ -75,7 +77,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 @synthesize running = _running, completedChangesCount=_completedChangesCount;
 @synthesize changesCount=_changesCount, lastError=_lastError, status=_status;
 @synthesize authenticator=_authenticator, serverCertificate=_serverCertificate;
-@synthesize downloadsAttachments=_downloadsAttachments;
+@synthesize downloadsAttachments=_downloadsAttachments, username=_username;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -90,6 +92,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         _remoteURL = remote;
         _pull = pull;
         _downloadsAttachments = YES;
+        self.username = remote.user;
     }
     return self;
 }
@@ -171,6 +174,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         if (cred)
             [storage removeCredential: cred forProtectionSpace: space];
     }
+    self.username = cred.user;
     [self restart];
 }
 
@@ -199,34 +203,47 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         Warn(@"%@: Could not create cookie from parameters", self);
         return;
     }
-
-    [self tellReplicator: ^(id<CBL_Replicator> bgReplicator) {
-        if (bgReplicator)
-            [bgReplicator.cookieStorage setCookie: cookie];
-        else {
-            if (!_bg_pendingCookies)
-                _bg_pendingCookies = [NSMutableArray array];
-            [_bg_pendingCookies addObject: cookie];
-        }
+    [self tellCookieStorage: ^(CBLCookieStorage *storage) {
+        [storage setCookie: cookie];
     }];
 }
 
 
 - (void) deleteCookieNamed: (NSString*)name {
-    [self tellReplicator: ^(id<CBL_Replicator> bgReplicator) {
-        if (_bg_replicator)
-            [_bg_replicator.cookieStorage deleteCookiesNamed: name];
-        else {
-            if (!_bg_pendingCookies)
-                _bg_pendingCookies = [NSMutableArray array];
-            [_bg_pendingCookies addObject: name];
-        }
+    Assert(name);
+    [self tellCookieStorage: ^(CBLCookieStorage *storage) {
+        [storage deleteCookiesNamed: name];
+    }];
+}
+
+
+- (void) deleteAllCookies {
+    [self tellCookieStorage: ^(CBLCookieStorage *storage) {
+        [storage deleteAllCookies];
     }];
 }
 
 
 + (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese {
     CBLSetAnchorCerts(certs, onlyThese);
+}
+
+
+- (BOOL) removeStoredCredentials: (NSError**)outError {
+    if (_authenticator) {
+        if (![(id<CBLAuthorizer>)_authenticator removeStoredCredentials: outError])
+            return NO;
+    } else {
+        NSURLCredential* cred = self.credential;
+        if (cred) {
+            NSURLProtectionSpace* space = [self.remoteURL my_protectionSpaceWithRealm: nil
+                                         authenticationMethod: NSURLAuthenticationMethodDefault];
+            NSURLCredentialStorage* storage = [NSURLCredentialStorage sharedCredentialStorage];
+            [storage removeCredential: cred forProtectionSpace: space];
+        }
+    }
+    [self deleteAllCookies];
+    return YES;
 }
 
 
@@ -390,6 +407,14 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     if (running != _running) {
         self.running = running;
         changed = YES;
+    }
+
+    if ([_authenticator respondsToSelector: @selector(username)]) {
+        NSString* username = [(id<CBLAuthorizer>)_authenticator username];
+        if (!$equal(username, self.username)) {
+            self.username = username;
+            changed = YES;
+        }
     }
 
     cfSetObj(&_serverCertificate, serverCert);
@@ -557,6 +582,18 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     }];
 }
 
+- (void) tellCookieStorage: (PendingCookieAction)block {
+    [self tellReplicator: ^(id<CBL_Replicator> bgRepl) {
+        if (bgRepl) {
+            block(bgRepl.cookieStorage);
+        } else {
+            if (!_bg_pendingCookieActions)
+                _bg_pendingCookieActions = [NSMutableArray array];
+            [_bg_pendingCookieActions addObject: block];
+        }
+    }];
+}
+
 
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_setReplicator: (id<CBL_Replicator>)repl {
@@ -594,18 +631,14 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
         }];
         return;
     }
+
     if (auth)
         repl.settings.authorizer = auth;
 
-    if ([_bg_pendingCookies count] > 0) {
-        for (id cookie in _bg_pendingCookies) {
-            if ([cookie isKindOfClass: [NSHTTPCookie class]])
-                [repl.cookieStorage setCookie: cookie];
-            else if ([cookie isKindOfClass: [NSString class]])
-                [repl.cookieStorage deleteCookiesNamed: cookie];
-        }
-        _bg_pendingCookies = nil;
-    }
+    // Make all pending changes to the cookie storage:
+    for (PendingCookieAction action in _bg_pendingCookieActions)
+        action(repl.cookieStorage);
+    _bg_pendingCookieActions = nil;
 
     CBLPropertiesTransformationBlock xformer = self.propertiesTransformationBlock;
     if (xformer) {

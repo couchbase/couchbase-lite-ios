@@ -17,11 +17,6 @@ NS_ASSUME_NONNULL_BEGIN
     This protocol is currently entirely opaque and not intended for applications to implement.
     The authenticator types are limited to those createable by factory methods. */
 @protocol CBLAuthenticator <NSObject>
-
-@optional
-/** The server user name that the authenticator has logged in as, if known. */
-@property (readonly) NSString* username;
-
 @end
 
 

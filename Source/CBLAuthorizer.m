@@ -22,7 +22,13 @@
 
 
 @implementation CBLAuthorizer
+
 @synthesize remoteURL=_remoteURL;
+
+- (BOOL) removeStoredCredentials: (NSError**)outError {
+    return YES;
+}
+
 @end
 
 
@@ -88,6 +94,15 @@
     if (!auth)
         return NO;
     [request setValue: auth forHTTPHeaderField: @"Authorization"];
+    return YES;
+}
+
+
+- (BOOL) removeStoredCredentials: (NSError**)outError {
+    NSURLProtectionSpace* space = [self.remoteURL my_protectionSpaceWithRealm: nil
+                                         authenticationMethod: NSURLAuthenticationMethodDefault];
+    NSURLCredentialStorage* storage = [NSURLCredentialStorage sharedCredentialStorage];
+    [storage removeCredential: _credential forProtectionSpace: space];
     return YES;
 }
 

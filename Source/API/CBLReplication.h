@@ -105,6 +105,9 @@ typedef void (^CBLAttachmentProgressBlock)(uint64_t bytesRead,
     or be stored in the NSURLCredentialStorage, which is a wrapper around the Keychain. */
 @property (nonatomic, strong, nullable) NSURLCredential* credential;
 
+/** The server user name that the authenticator has logged in as, if known. Observable. */
+@property (nonatomic, readonly) NSString* username;
+
 /** OAuth parameters that the replicator should use when authenticating to the remote database.
     Keys in the dictionary should be "consumer_key", "consumer_secret", "token", "token_secret",
     and optionally "signature_method". */
@@ -133,6 +136,10 @@ typedef void (^CBLAttachmentProgressBlock)(uint64_t bytesRead,
 
 /** Deletes the named cookie from this replication's cookie storage. */
 - (void) deleteCookieNamed: (NSString *)name;
+
+/** Deletes any persistent credentials (passwords, auth tokens...) associated with this 
+    replication's CBLAuthenticator. Also removes session cookies from the cookie store. */
+- (BOOL) removeStoredCredentials: (NSError**)outError;
 
 /** Adds additional SSL root certificates to be trusted by the replicator, or entirely overrides the
     OS's default list of trusted root certs.
