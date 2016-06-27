@@ -262,9 +262,5 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
     return [NSURL fileURLWithPath: path];
 }
 
-- (BOOL) isEncrypted {
-    return _database.attachmentStore.encryptionKey != nil;
-}
-
 
 @end

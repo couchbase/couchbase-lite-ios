@@ -111,7 +111,7 @@
         return kCBLStatusAttachmentNotFound;
     
     uint64_t declaredLength = attachment.possiblyEncodedLength;
-    if (attachment.isEncrypted)
+    if (contentLength == 0)
         contentLength = declaredLength;
     else if (declaredLength != 0 && contentLength != declaredLength)
         Warn(@"Attachment '%@' length mismatch; actually %llu, declared %llu",
