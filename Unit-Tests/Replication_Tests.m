@@ -123,7 +123,7 @@
                                                     name: CBLCookieStorageCookiesChangedNotification
                                                   object: nil];
 
-    AssertEq(expectedChangedCookies.count, _changedCookies.count);
+    AssertEq(_changedCookies.count, expectedChangedCookies.count);
     for (NSHTTPCookie* cookie in expectedChangedCookies)
         Assert([_changedCookies containsObject: cookie]);
 }
@@ -1588,12 +1588,8 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
         cont(authURL, nil);
     }];
 
-    NSError* authError = [self pullWithOIDCAuth: auth];
+    NSError* authError = [self pullWithOIDCAuth: auth expectingUsername: @"pupshaw"];
     AssertNil(authError);
-
-    // The username I gave is "pupshaw", but SG namespaces it by prefixing it with the hash of
-    // the provider's registered name (given in the SG config file.)
-    Assert([auth.username hasSuffix:@"_pupshaw"]);
 
     // Now try again; this should use the ID token from the keychain and/or a session cookie:
     Log(@"**** Second replication...");
@@ -1606,7 +1602,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
         callbackInvoked = YES;
         cont(nil, nil); // cancel
     }];
-    authError = [self pullWithOIDCAuth: auth];
+    authError = [self pullWithOIDCAuth: auth expectingUsername: @"pupshaw"];
     AssertNil(authError);
     Assert(!callbackInvoked);
 }
@@ -1634,7 +1630,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     ((CBLOpenIDConnectAuthorizer*)auth).IDToken = @"BOGUS_ID";
     ((CBLOpenIDConnectAuthorizer*)auth).refreshToken = @"BOGUS_REFRESH";
 
-    NSError* authError = [self pullWithOIDCAuth: auth];
+    NSError* authError = [self pullWithOIDCAuth: auth expectingUsername: nil];
     Assert(callbackInvoked);
     Assert([authError my_hasDomain: NSURLErrorDomain
                               code: NSURLErrorUserCancelledAuthentication]);
@@ -1675,13 +1671,20 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 
-- (NSError*) pullWithOIDCAuth: (id<CBLAuthenticator>)auth {
+- (NSError*) pullWithOIDCAuth: (id<CBLAuthenticator>)auth
+            expectingUsername: (NSString*)username
+{
     NSURL* remoteDbURL = [self remoteNonSSLTestDBURL: @"openid_db"];
     if (!remoteDbURL)
         return nil;
     CBLReplication* repl = [db createPullReplication: remoteDbURL];
     repl.authenticator = auth;
     [self runReplication: repl expectedChangesCount: 0];
+    if (username && !repl.lastError) {
+        // SG namespaces the username by prefixing it with the hash of
+        // the identity provider's registered name (given in the SG config file.)
+        Assert([repl.username hasSuffix: username]);
+    }
     return repl.lastError;
 }
 

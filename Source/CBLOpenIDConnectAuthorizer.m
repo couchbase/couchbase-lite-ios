@@ -22,7 +22,7 @@ UsingLogDomain(Sync);
 
 
 @interface CBLOpenIDConnectAuthorizer ()
-@property (readwrite) NSString* username;   // SG user name
+@property (readwrite) NSString* username;
 @end
 
 
@@ -206,6 +206,17 @@ UsingLogDomain(Sync);
 #pragma mark - TOKEN PERSISTENCE:
 
 
+- (BOOL) removeStoredCredentials: (NSError**)outError {
+    if (![self deleteTokens: outError])
+        return NO;
+    _IDToken = nil;
+    _refreshToken = nil;
+    _haveSessionCookie = NO;
+    _authURL = nil;
+    return YES;
+}
+
+
 + (BOOL) forgetIDTokensForServer: (NSURL*)serverURL error: (NSError**)outError {
     CBLOpenIDConnectAuthorizer* auth = [[self alloc] init];
     auth.remoteURL = serverURL;
@@ -287,11 +298,10 @@ UsingLogDomain(Sync);
 - (BOOL) deleteTokens: (NSError**)outError {
     OSStatus err = [self _deleteTokens];
     if (err == noErr) {
-        LogTo(Sync, @"%@: Deleted ID token from Keychain", self);
+        LogTo(Sync, @"%@: Deleted tokens from Keychain", self);
     } else if (err != errSecItemNotFound) {
         Warn(@"%@: Couldn't delete ID token: OSStatus %d", self, (int)err);
-        return MYReturnError(outError, err, NSOSStatusErrorDomain,
-                             @"Unable to delete ID token");
+        return MYReturnError(outError, err, NSOSStatusErrorDomain, @"Unable to delete auth tokens");
     }
     return YES;
 }

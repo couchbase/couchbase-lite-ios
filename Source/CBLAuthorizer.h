@@ -16,6 +16,9 @@
 @protocol CBLAuthorizer <CBLAuthenticator>
 /** The base URL of the remote service. The replicator sets this property when it starts up. */
 @property NSURL* remoteURL;
+- (BOOL) removeStoredCredentials: (NSError**)outError;
+@optional
+@property (readonly, atomic) NSString* username;
 @end
 
 

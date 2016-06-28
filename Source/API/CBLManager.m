@@ -899,7 +899,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
         *outHeaders = $castIf(NSDictionary, remoteDict[@"headers"]);
     
     if (outAuthorizer) {
-        *outAuthorizer = nil;
+        id<CBLAuthorizer> authorizer = nil;
         NSDictionary* auth = $castIf(NSDictionary, remoteDict[@"auth"]);
         if (auth) {
             NSDictionary* oauth = $castIf(NSDictionary, auth[@"oauth"]);
@@ -911,20 +911,22 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
                 NSString* token = $castIf(NSString, oauth[@"token"]);
                 NSString* tokenSec = $castIf(NSString, oauth[@"token_secret"]);
                 NSString* sigMethod = $castIf(NSString, oauth[@"signature_method"]);
-                *outAuthorizer = [[CBLOAuth1Authorizer alloc] initWithConsumerKey: consumerKey
-                                                                   consumerSecret: consumerSec
-                                                                            token: token
-                                                                      tokenSecret: tokenSec
-                                                                  signatureMethod: sigMethod];
+                authorizer = [[CBLOAuth1Authorizer alloc] initWithConsumerKey: consumerKey
+                                                               consumerSecret: consumerSec
+                                                                        token: token
+                                                                  tokenSecret: tokenSec
+                                                              signatureMethod: sigMethod];
             } else if (persona) {
                 NSString* email = $castIf(NSString, persona[@"email"]);
-                *outAuthorizer = [[CBLPersonaAuthorizer alloc] initWithEmailAddress: email];
+                authorizer = [[CBLPersonaAuthorizer alloc] initWithEmailAddress: email];
             } else if (facebook) {
                 NSString* email = $castIf(NSString, facebook[@"email"]);
-                *outAuthorizer = [[CBLFacebookAuthorizer alloc] initWithEmailAddress: email];
+                authorizer = [[CBLFacebookAuthorizer alloc] initWithEmailAddress: email];
             }
-            if (!*outAuthorizer)
+            if (!authorizer)
                 Warn(@"Invalid authorizer settings: %@", auth);
+            authorizer.remoteURL = remote;
+            *outAuthorizer = authorizer;
         }
     }
 

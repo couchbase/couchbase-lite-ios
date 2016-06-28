@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
                            error: (NSError**)outError;
 
 #if DEBUG
-@property (copy) NSString* IDToken, *refreshToken;  // for testing only
+@property (copy, nullable) NSString* IDToken, *refreshToken;  // for testing only
 #endif
 
 @end
