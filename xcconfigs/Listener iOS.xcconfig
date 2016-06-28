@@ -6,6 +6,7 @@
 //
 
 #include "iOS and tvOS.xcconfig"
+#include "StaticLibProduct.xcconfig"
 
 CONFIGURATION_BUILD_DIR      = $(UNIVERSAL_BUILD_DIR)
 INFOPLIST_FILE               = Source/CouchbaseLite-Info.plist
