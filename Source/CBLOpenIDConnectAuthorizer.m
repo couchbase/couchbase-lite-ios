@@ -116,12 +116,19 @@ UsingLogDomain(Sync);
 
         } else {
             // Generated or refreshed ID token:
+            if (_refreshToken && !jsonResponse[@"refresh_token"]) {
+                // The response from a refresh may not contain the refresh token, so to avoid
+                // losing it, add it to the response dictionary that will be saved to the keychain:
+                NSMutableDictionary* updated = [jsonResponse mutableCopy];
+                updated[@"refresh_token"] = _refreshToken;
+                jsonResponse = updated;
+            }
             if ([self parseTokensFrom: jsonResponse]) {
                 LogTo(Sync, @"%@: Logged in as %@ !", self, _username);
                 [self saveTokens: jsonResponse error: NULL];
             } else {
                 error = CBLStatusToNSErrorWithInfo(kCBLStatusUpstreamError,
-                                                   @"Server didn't return a refreshed ID token",
+                                                   @"Server didn't return an OpenID token",
                                                    nil, nil);
             }
         }

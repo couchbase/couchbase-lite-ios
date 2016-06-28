@@ -1649,29 +1649,39 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
     Assert([CBLOpenIDConnectAuthorizer forgetIDTokensForServer: remoteDbURL error: NULL]);
 
-    id<CBLAuthenticator> auth = [CBLAuthenticator OpenIDConnectAuthenticator:
-                                    ^(NSURL* login, NSURL* authBase, CBLOIDCLoginContinuation cont)
-    {
-        [self assertValidOIDCLogin: login authBase: authBase forRemoteDB: remoteDbURL];
-        // Fake a form submission to the OIDC test provider, to get an auth URL redirect:
-        NSURL* authURL = [self loginToOIDCTestProvider: remoteDbURL];
-        Log(@"**** Callback handing control back to authenticator...");
-        cont(authURL, nil);
-    }];
+    // Log in 3 times. First will require a UI, which we fake. After that, it should be able to use
+    // the refresh token instead.
+    for (int pass = 1; pass <= 3; pass++) {
+        Log(@"***** Login #%d *****", pass);
+        id<CBLAuthenticator> auth = [CBLAuthenticator OpenIDConnectAuthenticator:
+                                        ^(NSURL* login, NSURL* authBase, CBLOIDCLoginContinuation cont)
+        {
+            if (pass == 1) {
+                [self assertValidOIDCLogin: login authBase: authBase forRemoteDB: remoteDbURL];
+                // Fake a form submission to the OIDC test provider, to get an auth URL redirect:
+                NSURL* authURL = [self loginToOIDCTestProvider: remoteDbURL];
+                Log(@"**** Callback handing control back to authenticator...");
+                cont(authURL, nil);
+            } else {
+                Assert(NO, @"Login UI should not be required after 1st login");
+                cont(nil, [NSError errorWithDomain: @"test" code: 666 userInfo: nil]);
+            }
+        }];
 
-    __block bool loginDone = false;
-    __block NSError* error = nil;
-    CBLRemoteLogin* login = [[CBLRemoteLogin alloc] initWithURL: remoteDbURL
-                                                 authorizer: (id<CBLAuthorizer>)auth
-                                               continuation: ^(NSError* e)
-    {
-        error = e;
-        loginDone = true;
-    }];
-    [login start];
-    [self wait: 5.0 for: ^BOOL { return loginDone; }];
-    login = nil;
-    AssertNil(error);
+        __block bool loginDone = false;
+        __block NSError* error = nil;
+        CBLRemoteLogin* login = [[CBLRemoteLogin alloc] initWithURL: remoteDbURL
+                                                     authorizer: (id<CBLAuthorizer>)auth
+                                                   continuation: ^(NSError* e)
+        {
+            error = e;
+            loginDone = true;
+        }];
+        [login start];
+        [self wait: 5.0 for: ^BOOL { return loginDone; }];
+        login = nil;
+        AssertNil(error);
+    }
 }
 
 
