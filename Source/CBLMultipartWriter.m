@@ -109,10 +109,14 @@
                                                              andLength: &contentLength];
     if (!contentStream)
         return kCBLStatusAttachmentNotFound;
+    
     uint64_t declaredLength = attachment.possiblyEncodedLength;
-    if (declaredLength != 0 && contentLength != declaredLength)
+    if (contentLength == 0)
+        contentLength = declaredLength;
+    else if (declaredLength != 0 && contentLength != declaredLength)
         Warn(@"Attachment '%@' length mismatch; actually %llu, declared %llu",
              attachment.name, contentLength, declaredLength);
+    
     [self addStream: contentStream length: contentLength];
     return kCBLStatusOK;
 }

@@ -1572,7 +1572,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
 
 - (void) test26_OpenIDConnectAuth {
-    NSURL* remoteDbURL = [self remoteTestDBURL: @"openid_db"];
+    NSURL* remoteDbURL = [self remoteNonSSLTestDBURL: @"openid_db"];
     if (!remoteDbURL || !self.isSQLiteDB) return;
 
     NSError* error;
