@@ -373,7 +373,7 @@ static int collateRevIDs(void *context,
             return kCBLStatusCorruptError;
         NSString* digest = [CBLDatabase blobKeyToDigest: *(CBLBlobKey*)key.bytes];
 
-        NSDictionary* att = $dict({@"type", mimeType},
+        NSDictionary* att = $dict({@"content_type", mimeType},
                                   {@"digest", digest},
                                   {@"length", @(length)},
                                   {@"revpos", @(revpos)},
