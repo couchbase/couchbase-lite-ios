@@ -11,6 +11,7 @@
 #import "CBL_ReplicatorSettings.h"
 #import "CBLCookieStorage.h"
 #import "CBLMisc.h"
+#import "MYURLUtils.h"
 
 UsingLogDomain(Sync);
 
@@ -130,12 +131,12 @@ UsingLogDomain(Sync);
                           onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
     Assert(_baseURL);
-    LogVerbose(Sync, @"%@: %@ %@", self, method, path);
     NSURL* url;
     if ([path hasPrefix: @"/"])
         url = [[NSURL URLWithString: path relativeToURL: _baseURL] absoluteURL];
     else
         url = CBLAppendToURL(_baseURL, path);
+    LogVerbose(Sync, @"%@: %@ %@", self, method, url.my_sanitizedPath);
     CBLRemoteJSONRequest *req = [[CBLRemoteJSONRequest alloc] initWithMethod: method
                                                                          URL: url
                                                                         body: body
