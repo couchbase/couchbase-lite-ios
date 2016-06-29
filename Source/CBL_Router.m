@@ -42,6 +42,9 @@ DefineLogDomain(Router);
 @implementation CBL_Router
 
 
+static NSMutableSet* sRunningRouters;
+
+
 - (instancetype) initWithDatabaseManager: (CBLManager*)dbManager request: (NSURLRequest*)request {
     NSParameterAssert(request);
     self = [super init];
@@ -490,6 +493,13 @@ static NSArray* splitPath( NSURL* url ) {
 
 
 - (void) run {
+    @synchronized ([self class]) {
+        if (!sRunningRouters)
+            sRunningRouters = [NSMutableSet new];
+        [sRunningRouters addObject: self];
+        // Will remove myself from sRunningRouters in the -stopNow method.
+    }
+
     if (WillLogTo(Router)) {
         NSMutableString* output = [NSMutableString stringWithFormat: @"%@ %@",
                                    _request.HTTPMethod, _request.URL.my_sanitizedString];
@@ -514,22 +524,21 @@ static NSArray* splitPath( NSURL* url ) {
         [_response reset];
     }
     
-    // If response is ready (nonzero status), tell my client about it:
     if (status > 0) {
+        // If response is ready (nonzero status), tell my client about it:
         _response.internalStatus = status;
         [self processRequestRanges];
         [self sendResponseHeaders];
-        [self sendResponseBodyAndFinish: !_waiting];
+        [self sendResponseBodyAndFinish: YES];
     } else {
-        _waiting = YES;
+        // If I will keep running asynchronously (i.e. a _changes feed handler), listen for the
+        // database closing so I can stop then:
+        if (_db) {
+            [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbClosing:)
+                                                         name: CBL_DatabaseWillCloseNotification
+                                                       object: _db];
+        }
     }
-    
-    // If I will keep running asynchronously (i.e. a _changes feed handler), listen for the
-    // database closing so I can stop then:
-    if (_waiting)
-        [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(dbClosing:)
-                                                     name: CBL_DatabaseWillCloseNotification
-                                                   object: _db];
 }
 
 
@@ -708,6 +717,10 @@ static NSArray* splitPath( NSURL* url ) {
     self.onDataAvailable = nil;
     self.onFinished = nil;
     [[NSNotificationCenter defaultCenter] removeObserver: self];
+
+    @synchronized ([self class]) {
+        [sRunningRouters removeObject: self];   //NOTE: This may dealloc self!
+    }
 }
 
 
