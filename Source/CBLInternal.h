@@ -92,8 +92,6 @@
 - (instancetype) initWithRevision: (CBLRevision*)rev
                              name: (NSString*)name
                          metadata: (NSDictionary*)metadata          __attribute__((nonnull));
-+ (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
-                             intoDatabase: (CBLDatabase*)database   __attribute__((nonnull(2)));
 @end
 
 

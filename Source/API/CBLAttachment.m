@@ -20,6 +20,7 @@
 #import "CBL_Attachment.h"
 #import "CBL_BlobStoreWriter.h"
 #import "CBLInternal.h"
+#import "CBLStatus.h"
 
 
 @implementation CBLAttachment
@@ -27,7 +28,7 @@
     CBLRevision* _rev;
     NSString* _name;
     NSDictionary* _metadata;
-    id _body;
+    id _body;   // Either NSData, NSURL (file URL), or nil
 }
 
 
@@ -125,27 +126,28 @@
 
 
 - (BOOL) contentAvailable {
-    if (_body) {
-        return ([_body isKindOfClass: [NSData class]] ||
-                ([_body isKindOfClass: [NSURL class]] && [_body isFileURL]));
-    } else {
-        return self._internalAttachment.hasContent;
-    }
+    return _body != nil || self._internalAttachment.hasContent;
 }
 
 
 - (NSData*) content {
+    return [self getContent: NULL];
+}
+
+- (NSData*) getContent: (NSError**)outError {
     if (_body) {
-        if ([_body isKindOfClass: [NSData class]])
+        if ([_body isKindOfClass: [NSData class]]) {
             return _body;
-        else if ([_body isKindOfClass: [NSURL class]] && [_body isFileURL]) {
+        } else {
             return [NSData dataWithContentsOfURL: _body
                                          options: NSDataReadingUncached
-                                           error: nil];
+                                           error: outError];
         }
-        return nil;
     } else {
-        return self._internalAttachment.content;
+        NSData* content = self._internalAttachment.content;
+        if (!content)
+            CBLStatusToOutNSError(kCBLStatusNotFound, outError);
+        return content;
     }
 }
 
@@ -184,35 +186,41 @@
 }
 
 
-// Goes through an _attachments dictionary and replaces any values that are CBLAttachment objects
-// with proper JSON metadata dicts. It registers the attachment bodies with the blob store and sets
-// the metadata 'digest' and 'follows' properties accordingly.
-+ (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
-                             intoDatabase: (CBLDatabase*)database
-{
-    return [attachments my_dictionaryByUpdatingValues: ^id(NSString* name, id value) {
-        CBLAttachment* attachment = $castIf(CBLAttachment, value);
-        if (attachment) {
-            // Replace the attachment object with a metadata dictionary:
-            NSMutableDictionary* metadata = [attachment.metadata mutableCopy];
-            value = metadata;
-            NSData* body = attachment.bodyIfNew;
-            if (body) {
-                // Copy attachment body into the database's blob store:
-                // OPT: If _body is an NSURL, could just copy the file without reading into RAM
-                CBL_BlobStoreWriter* writer = [database attachmentWriter];
-                [writer appendData: body];
-                [writer finish];
-                [database rememberAttachmentWriter: writer];
-                metadata[@"length"] = @(body.length);
-                metadata[@"digest"] = writer.MD5DigestString;
-                metadata[@"follows"] = $true;
-                LogTo(Database, @"%@: Stored new CBLAttachment '%@' %@",
-                      database.name, name, metadata.my_compactDescription);
-            }
+- (BOOL) saveToDatabase: (CBLDatabase*)database error: (NSError**)outError {
+    if (!_body)
+        return YES;
+
+    // Read attachment body:
+    NSError* readError;
+    NSData* body = [self getContent: &readError];
+    if (!body) {
+        Warn(@"Unable to import attachment from %@ : %@",
+             _body, readError.my_compactDescription);
+        if (outError) {
+            *outError = CBLStatusToNSErrorWithInfo(kCBLStatusAttachmentError,
+                                                   @"Can't create attachment from file",
+                                                   self->_body,
+                                                   @{NSUnderlyingErrorKey: readError});
         }
-        return value;
-    }];
+        return NO;
+    }
+
+    // Copy attachment body into the database's blob store:
+    // OPT: If _body is an NSURL, could just copy the file without reading into RAM
+    CBL_BlobStoreWriter* writer = [database attachmentWriter];
+    [writer appendData: body];
+    [writer finish];
+    [database rememberAttachmentWriter: writer];
+
+    // Update metadata with digest and 'follows':
+    NSMutableDictionary* metadata = [self.metadata mutableCopy];
+    metadata[@"length"] = @(body.length);
+    metadata[@"digest"] = writer.MD5DigestString;
+    metadata[@"follows"] = $true;
+    LogTo(Database, @"%@: Stored new CBLAttachment '%@' %@",
+          database.name, _name, metadata.my_compactDescription);
+    _metadata = metadata;
+    return YES;
 }
 
 
