@@ -274,6 +274,18 @@ static void catchInBlock(void (^block)()) {
             return CBLStatusToOutNSError(kCBLStatusBadRequest, outError);
     }
 
+    if ([_manager.shared countForOpenedDatabase: _name] > 1) {
+        // FIX: If other database handles are open on the same db file, they will be confused by
+        // the db suddenly changing its encryption key. This will cause at least errors, and
+        // possibly file corruption. It would be best to close these other handles and then
+        // reopen them afterwards, but that's difficult to do, so the workaround is to give up.
+        if (outError)
+            *outError = CBLStatusToNSErrorWithInfo(kCBLStatusServiceUnavailable,
+                                               @"This database is opened by another CBLManager",
+                                               nil, nil);
+        return NO;
+    }
+
     MYAction* action = [_storage actionToChangeEncryptionKey: newKey];
     if (!action)
         return CBLStatusToOutNSError(kCBLStatusNotImplemented, outError);
