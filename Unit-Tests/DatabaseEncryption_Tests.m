@@ -241,6 +241,22 @@
 }
 
 
+- (void) test08_MultipleDBHandles {
+    NSError* error;
+    seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
+    Assert(seekrit, @"Failed to create unencrypted db: %@", error);
+    [self createDocumentWithProperties: @{@"answer": @42} inDatabase: seekrit];
+
+    CBLManager* mgr2 = [dbmgr copy];
+    CBLDatabase* seekrit2 = [mgr2 databaseNamed: @"seekrit" error: NULL];
+    Assert(seekrit2);
+
+    Assert(![seekrit changeEncryptionKey: @"foobar" error: &error]);
+
+    [mgr2 close];
+}
+
+
 - (void) test08_AddKey      { [self rekeyUsingOldKey: nil        newKey: @"letmein"]; }
 - (void) test09_Rekey       { [self rekeyUsingOldKey: @"letmein" newKey: @"letmeout"]; }
 - (void) test10_RemoveKey   { [self rekeyUsingOldKey: @"letmein" newKey: nil]; }

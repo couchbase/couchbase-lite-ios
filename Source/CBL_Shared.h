@@ -34,15 +34,12 @@
 
 - (void) openedDatabase: (NSString*)dbName;
 - (void) closedDatabase: (NSString*)dbName;
-- (BOOL) isDatabaseOpened: (NSString*)dbName;
+
+- (NSUInteger) countForOpenedDatabase: (NSString*)dbName;
 
 // Blocks till everyone who opened the database has closed it
 - (void) forgetDatabaseNamed: (NSString*)name;
 
 @property CBL_Server* backgroundServer;
-
-#if DEBUG
-- (NSUInteger) countForOpenedDatabase: (NSString*)dbName;
-#endif
 
 @end
