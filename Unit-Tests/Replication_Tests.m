@@ -606,7 +606,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
                                    NSHTTPCookieOriginURL: remoteDbURL,
                                    NSHTTPCookiePath: remoteDbURL.path,
                                    NSHTTPCookieValue: @"logmein",
-                                   NSHTTPCookieExpires: [NSDate dateWithTimeIntervalSinceNow: 10]
+                                   NSHTTPCookieExpires: [NSDate distantFuture]
                                    }];
 
     NSHTTPCookie* cookie2 = [NSHTTPCookie cookieWithProperties:
@@ -614,7 +614,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
                                 NSHTTPCookieOriginURL: remoteDbURL,
                                 NSHTTPCookiePath: remoteDbURL.path,
                                 NSHTTPCookieValue: @"logmein",
-                                NSHTTPCookieExpires: [NSDate dateWithTimeIntervalSinceNow: 10]
+                                NSHTTPCookieExpires: [NSDate distantFuture]
                                 }];
 
     NSHTTPCookie* cookie3 = [NSHTTPCookie cookieWithProperties:
@@ -622,7 +622,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
                                 NSHTTPCookieOriginURL: remoteDbURL,
                                 NSHTTPCookiePath: remoteDbURL.path,
                                 NSHTTPCookieValue: @"logmein",
-                                NSHTTPCookieExpires: [NSDate dateWithTimeIntervalSinceNow: 10]
+                                NSHTTPCookieExpires: [NSDate distantFuture]
                                 }];
 
     CBLReplication* repl = [db createPullReplication: remoteDbURL];
@@ -651,6 +651,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     AssertNil(repl.lastError);
 
     // Recreate the replicator and delete a cookie:
+    Log(@"***** Testing cookie deletion *****");
     repl = [db createPullReplication: remoteDbURL];
     [repl deleteCookieNamed: cookie3.name];
     [repl start];
@@ -1159,6 +1160,30 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
     [self runReplication: repl expectedChangesCount: 0u];
     Assert(repl.pendingDocumentIDs == nil);
+}
+
+
+// Issue #1274: Just-pulled docs shouldn't be treated as pending by the pusher
+- (void)test18_PendingDocumentIDs_OnFirstPull {
+    NSURL* remoteDbURL = [self remoteTestDBURL: @"public"];
+    if (!remoteDbURL)
+        return;
+
+    // Push replication:
+    CBLReplication* push = [db createPushReplication: remoteDbURL];
+    push.continuous = YES;
+    [push start];
+
+    // Run a one-shot pull:
+    CBLReplication* pull = [db createPullReplication: remoteDbURL];
+    [self runReplication: pull expectedChangesCount: 2];
+
+    // Give the push CBLReplication a chance to receive the progress notification,
+    // so it learns the current checkpoint
+    [NSRunLoop.currentRunLoop runMode: NSDefaultRunLoopMode
+                           beforeDate: [NSDate dateWithTimeIntervalSinceNow: 1.0]];
+    AssertEq(push.lastSequencePushed, 2);
+    AssertEqual(push.pendingDocumentIDs, [NSSet new]);
 }
 
 

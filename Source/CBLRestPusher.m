@@ -123,6 +123,8 @@
         [self performSelector: @selector(stopped) withObject: nil afterDelay: 0.0];
         return;
     }
+    for (CBL_Revision* rev in unpushedRevisions)
+        [self addPending: rev];
     [self addRevsToInbox: unpushedRevisions];
     [_batcher flush];  // process up to the first 100 revs
     
@@ -196,24 +198,36 @@
         [_purgeQueue queueObject: rev];
 }
 
+// I'm not going to do anything with this sequence, so increase the lastSequence up to it
+- (void) skipSequence: (SequenceNumber)seq {
+    if (seq < (SequenceNumber)_pendingSequences.firstIndex)
+        if (seq > [self.lastSequence longLongValue])
+            self.lastSequence = $sprintf(@"%lld", seq);
+}
+
 
 - (void) dbChanged: (NSNotification*)n {
     CBLDatabase* db = _db;
     CBLFilterBlock filter = _settings.filterBlock;
     NSArray* changes = (n.userInfo)[@"changes"];
     for (CBLDatabaseChange* change in changes) {
-        // Skip revisions that originally came from the database I'm syncing to:
-        if (![change.source isEqual: _settings.remote]) {
-            CBL_Revision* rev = change.addedRevision;
-            if (!rev)
-                continue;  // ignore purges
-            if (filter && ![db runFilter: filter params: _settings.filterParameters onRevision: rev])
-                continue;
+        CBL_Revision* rev = change.addedRevision;
+        if (!rev)
+            continue;  // ignore purges
+        // Skip revisions that originally came from the database I'm syncing to,
+        // or which don't match the filter:
+        if (![change.source isEqual: _settings.remote] &&
+                (!filter || [db runFilter: filter params: _settings.filterParameters
+                               onRevision: rev]))
+        {
             CBL_MutableRevision* nuRev = [rev mutableCopy];
             nuRev.body = nil; // save memory
             LogVerbose(Sync, @"%@: Queuing #%lld %@",
                   self, [db getRevisionSequence: nuRev], nuRev);
+            [self addPending: nuRev];
             [self addToInbox: nuRev];
+        } else {
+            [self skipSequence: rev.sequence];
         }
     }
 }
@@ -222,8 +236,6 @@
 - (void) processInbox: (CBL_RevisionList*)changes {
     if ([_settings.options[kCBLReplicatorOption_AllNew] isEqual: @YES]) {
         // If 'allNew' option is set, upload new revs without checking first:
-        for (CBL_Revision* rev in changes)
-            [self addPending: rev];
         [self uploadChanges: changes fromDiffs: nil];
         return;
     }
@@ -239,7 +251,6 @@
             diffs[docID] = revs;
         }
         [revs addObject: rev.revIDString];
-        [self addPending: rev];
     }
     
     // Call _revs_diff on the target db:

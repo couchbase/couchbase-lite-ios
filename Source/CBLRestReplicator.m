@@ -178,14 +178,15 @@
             _lastSequenceChanged = YES;
             [self performSelector: @selector(saveLastSequence) withObject: nil afterDelay: 5.0];
         }
+        [self postProgressChanged];
     }
 }
 
 
 - (void) postProgressChanged {
-    LogVerbose(Sync, @"%@: postProgressChanged (%u/%u, active=%d (batch=%u, net=%u), online=%d)",
+    LogVerbose(Sync, @"%@: postProgressChanged (%u/%u, active=%d (batch=%u, net=%u), lastSeq=%@, online=%d, error=%@)",
           self, (unsigned)_changesProcessed, (unsigned)_changesTotal,
-          _active, (unsigned)_batcher.count, _asyncTaskCount, _online);
+          _active, (unsigned)_batcher.count, _asyncTaskCount, _lastSequence, _online, _error.my_compactDescription);
     NSNotification* n = [NSNotification notificationWithName: CBL_ReplicatorProgressChangedNotification
                                                       object: self];
     [[NSNotificationQueue defaultQueue] enqueueNotification: n
