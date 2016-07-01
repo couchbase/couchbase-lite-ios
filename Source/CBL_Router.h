@@ -57,7 +57,6 @@ enum {
     CBLResponse* _response;
     CBLDatabase* _db;
     BOOL _local;
-    BOOL _waiting;
     BOOL _responseSent;
     BOOL _processRanges;
     OnAccessCheckBlock _onAccessCheck;
