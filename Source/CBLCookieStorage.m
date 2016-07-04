@@ -8,14 +8,21 @@
 
 #import "CBLCookieStorage.h"
 #import "CBLDatabase.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLMisc.h"
 
 
 NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCookiesChanged";
 
-#define kLocalDocKeyPrefix @"cbl_cookie_storage"
-#define kLocalDocCookiesKey @"cookies"
+#define kOldLocalDocKeyPrefix @"cbl_cookie_storage"
+#define kLocalDbInfoCookiesKey @"cookies"
+
+@interface CBLCookieStorage (Internal)
+// For Unit Test Only:
+- (NSString*) localDatabaseInfoCookiesKey;
+@end
+
 
 @implementation CBLCookieStorage
 {
@@ -28,17 +35,18 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 @synthesize cookieAcceptPolicy = _cookieAcceptPolicy;
 
 
-- (instancetype) initWithDB: (CBLDatabase*)db storageKey: (NSString*)storageKey {
+- (instancetype) initWithDB: (CBLDatabase*)db {
     self = [super init];
     if (self) {
         Assert(db != nil, @"database cannot be nil.");
-        Assert(storageKey != nil, @"storageKey cannot be nil.");
-
         _db = db;
-        _storageKey = storageKey;
+        
         self.cookieAcceptPolicy = NSHTTPCookieAcceptPolicyAlways;
+        
+        _cookies = [NSMutableArray array];
 
-        [self loadCookies];
+        if (![self migrateOldCookieStorage])
+            [self loadCookies];
     }
     return self;
 }
@@ -217,11 +225,6 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 
 # pragma mark - Private
 
-- (NSString*) localDocKey {
-    return [NSString stringWithFormat: @"%@_%@", kLocalDocKeyPrefix, _storageKey];
-}
-
-
 - (BOOL) deleteCookie: (NSHTTPCookie*)aCookie outIndex: (NSUInteger*)outIndex {
     NSInteger foundIndex = -1;
     NSInteger idx = 0;
@@ -245,13 +248,39 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 }
 
 
-- (void) loadCookies {
-    _cookies = [NSMutableArray array];
+- (BOOL) migrateOldCookieStorage {
+    if (![_db getLocalDatabaseInfoPropertyValueForKey: kLocalDbInfoCookiesKey]) {
+        __block NSError* error;
+        BOOL success = [_db inTransaction: ^BOOL{
+            NSDictionary* localCheckpointDoc = [_db getLocalCheckpointDocument];
+            for (NSString* key in localCheckpointDoc.allKeys) {
+                if ([key hasPrefix: kOldLocalDocKeyPrefix]) {
+                    [self loadCookies: [localCheckpointDoc objectForKey: key]];
+                    if (![_db removeLocalCheckpointDocumentWithKey: key outError: &error])
+                        return NO;
+                }
+            }
+            return [self saveCookies: &error];
+        }];
+        
+        if (!success)
+            Warn(@"%@: Cannot migrate cookies with an error : %@",
+                 self, error.my_compactDescription);
+        return success;
+    }
+    return NO;
+}
 
-    NSString* key = [self localDocKey];
-    NSArray* allCookies = [_db getLocalCheckpointDocumentPropertyValueForKey: key];
-    for (NSDictionary* doc in allCookies) {
-        NSDictionary *props = [self cookiePropertiesFromJSONDocument: doc];
+
+- (void) loadCookies {
+    NSArray* cookies = [_db getLocalDatabaseInfoPropertyValueForKey: kLocalDbInfoCookiesKey];
+    [self loadCookies: cookies];
+}
+
+
+- (void) loadCookies: (NSArray*)cookies {
+    for (NSDictionary* doc in cookies) {
+        NSDictionary* props = [self cookiePropertiesFromJSONDocument: doc];
         NSHTTPCookie* cookie = [NSHTTPCookie cookieWithProperties: props];
         if (cookie)
             [_cookies addObject: cookie];
@@ -269,9 +298,8 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
         else
             return nil;
     }];
-
-    NSString* key = [self localDocKey];
-    return [_db putLocalCheckpointDocumentWithKey: key value: cookies outError: error];
+    
+    return [_db putLocalDatabaseInfoWithKey: kLocalDbInfoCookiesKey value: cookies outError: error];
 }
 
 
@@ -362,6 +390,10 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
     [[NSNotificationCenter defaultCenter] postNotificationName: CBLCookieStorageCookiesChangedNotification
                                                         object: self
                                                       userInfo: nil];
+}
+
+- (NSString*) localDatabaseInfoCookiesKey {
+    return kLocalDbInfoCookiesKey;
 }
 
 @end

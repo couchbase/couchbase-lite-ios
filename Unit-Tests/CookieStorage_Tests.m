@@ -8,6 +8,8 @@
 
 #import "CBLTestCase.h"
 #import "CBLCookieStorage.h"
+#import "CBLDatabase+Internal.h"
+#import "CBLDatabase+Replication.h"
 
 #define $URL(urlStr)                            ([NSURL URLWithString: urlStr])
 #define COMPARE_COOKIES(cookies1, cookies2)     [self compareCookies: cookies1 withCookies: cookies2]
@@ -15,6 +17,12 @@
 @interface CookieStorage_Tests : CBLTestCaseWithDB
 
 @end
+
+
+@interface CBLCookieStorage (Internal)
+- (NSString*) localDatabaseInfoCookiesKey;
+@end
+
 
 @implementation CookieStorage_Tests
 {
@@ -24,8 +32,7 @@
 
 - (void)setUp {
     [super setUp];
-    _cookieStore = [[CBLCookieStorage alloc] initWithDB: db
-                                             storageKey: @"cookie_store_unit_test"];
+    _cookieStore = [[CBLCookieStorage alloc] initWithDB: db];
     _appleCookieStore = [NSHTTPCookieStorage sharedHTTPCookieStorage];
 }
 
@@ -37,8 +44,7 @@
 }
 
 - (void) reloadCookieStore {
-    _cookieStore = [[CBLCookieStorage alloc] initWithDB: db
-                                             storageKey: @"cookie_store_unit_test"];
+    _cookieStore = [[CBLCookieStorage alloc] initWithDB: db];
 }
 
 - (NSHTTPCookie*) cookie: (NSDictionary*)props {
@@ -111,6 +117,51 @@
     AssertEq(_cookieStore.cookies.count, 2u);
     AssertEqual(_cookieStore.cookies[0], cookie1);
     AssertEqual(_cookieStore.cookies[1], cookie3);
+
+    // Check if cookies are stored in the local database info document:
+    NSArray* cookies = [db getLocalDatabaseInfoPropertyValueForKey:
+                        [_cookieStore localDatabaseInfoCookiesKey]];
+    AssertEq(cookies.count, 2u);
+    AssertEqual([self cookie: cookies[0]], cookie1);
+    AssertEqual([self cookie: cookies[1]], cookie3);
+}
+
+- (void) test_Migration {
+    // Manually create cookies at the local checkpoint document:
+    NSDictionary* cookie1 = @{ NSHTTPCookieName: @"whitechoco",
+                               NSHTTPCookieDomain: @"mycookie.com",
+                               NSHTTPCookiePath: @"/",
+                               NSHTTPCookieValue: @"sweet",
+                               NSHTTPCookieMaximumAge: @(3600),
+                               };
+
+    NSDictionary* cookie2 = @{ NSHTTPCookieName: @"oatmeal_raisin",
+                               NSHTTPCookieDomain: @"mycookie.com",
+                               NSHTTPCookiePath: @"/",
+                               NSHTTPCookieValue: @"sweet",
+                               NSHTTPCookieMaximumAge: @(3600),
+                               NSHTTPCookieVersion: @"1"
+                               };
+
+    NSString* localCheckpointCookiesKey = @"cbl_cookie_storage_xxxxx";
+    [db putLocalCheckpointDocumentWithKey: localCheckpointCookiesKey
+                                    value: @[ cookie1, cookie2]
+                                 outError: NULL];
+    NSArray* cookies = [db getLocalCheckpointDocumentPropertyValueForKey: localCheckpointCookiesKey];
+    AssertEq(cookies.count, 2u);
+
+    // Clear an empty cookies array at the local database info document:
+    Assert([db removeLocalDatabaseInfoWithKey: [_cookieStore localDatabaseInfoCookiesKey]
+                                     outError: NULL]);
+
+    // Recreate the cookie store:
+    [self reloadCookieStore];
+
+    // Check if migration is correct:
+    AssertEq(_cookieStore.cookies.count, 2u);
+    AssertEqual(_cookieStore.cookies[0], [self cookie: cookie1]);
+    AssertEqual(_cookieStore.cookies[1], [self cookie: cookie2]);
+    AssertNil([db getLocalCheckpointDocumentPropertyValueForKey: localCheckpointCookiesKey]);
 }
 
 - (void) test_SetCookie_NameDomainPath {

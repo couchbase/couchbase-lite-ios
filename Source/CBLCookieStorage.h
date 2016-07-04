@@ -25,7 +25,7 @@ extern NSString* const CBLCookieStorageCookiesChangedNotification;
 
 /** Creates a cookie storage that will store cookies inside the given database as a local document 
     referenced by a unique storage key. */
-- (instancetype) initWithDB: (CBLDatabase*)db storageKey: (NSString*)storageKey;
+- (instancetype) initWithDB: (CBLDatabase*)db;
 
 /** Returns an array of cookies that match with the given url. */
 - (NSArray*) cookiesForURL: (NSURL*)theURL;

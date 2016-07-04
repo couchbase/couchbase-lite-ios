@@ -13,6 +13,7 @@
 #import "CBLReachability.h"
 #import "CBLMisc.h"
 #import "CBLCookieStorage.h"
+#import "CBLDatabase+Internal.h"
 #import "BLIPPocketSocketConnection.h"
 #import "BLIPHTTPLogic.h"
 #import "CollectionUtils.h"
@@ -83,8 +84,6 @@
         _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
         _progress = [NSProgress progressWithTotalUnitCount: -1]; // indeterminate
         _remoteCheckpointDocID = [_settings remoteCheckpointDocIDForLocalUUID: _db.privateUUID];
-        _cookieStorage = [[CBLCookieStorage alloc] initWithDB: db
-                                                   storageKey: _remoteCheckpointDocID];
 
         __weak CBLBlipReplicator* weakSelf = self;
         _updateProgressSoon = MYBatchedBlock(0.25, _syncQueue,
@@ -139,6 +138,12 @@
 #if DEBUG
 @synthesize savingCheckpoint=_savingCheckpoint, active=_active;
 #endif
+
+- (CBLCookieStorage*) cookieStorage {
+    if (!_cookieStorage)
+        _cookieStorage = _db.cookieStorage;
+    return _cookieStorage;
+}
 
 
 #pragma mark - INTERNALS:

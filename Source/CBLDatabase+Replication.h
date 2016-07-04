@@ -31,6 +31,10 @@
                                      value:(id)value
                                   outError: (NSError**)outError;
 
+/** Remove a property with a given key from the local checkpoint document. */
+- (BOOL) removeLocalCheckpointDocumentWithKey: (NSString*)key
+                                     outError: (NSError**)outError;
+
 /** Returns a property value specifiec by the key from the local checkpoint document. */
 - (id) getLocalCheckpointDocumentPropertyValueForKey: (NSString*)key;
 
