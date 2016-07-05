@@ -106,6 +106,7 @@
 
 @interface CBLReplication ()
 @property (nonatomic, readonly) NSDictionary* properties;
+@property (nonatomic, readonly) SInt64 lastSequencePushed;
 @end
 
 
