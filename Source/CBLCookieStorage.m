@@ -16,12 +16,7 @@
 NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCookiesChanged";
 
 #define kOldLocalDocKeyPrefix @"cbl_cookie_storage"
-#define kLocalDbInfoCookiesKey @"cookies"
-
-@interface CBLCookieStorage (Internal)
-// For Unit Test Only:
-- (NSString*) localDatabaseInfoCookiesKey;
-@end
+#define kDatabaseInfoCookiesKey @"cookies"
 
 
 @implementation CBLCookieStorage
@@ -45,8 +40,11 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
         
         _cookies = [NSMutableArray array];
 
-        if (![self migrateOldCookieStorage])
-            [self loadCookies];
+        if (![self migrateOldCookieStorage]) {
+            NSError* error;
+            if (![self loadCookies: &error])
+                Warn(@"%@: Cannot load cookies with error : %@", self, error.my_compactDescription);
+        }
     }
     return self;
 }
@@ -161,7 +159,8 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 
         NSError* error;
         if (![self saveCookies: &error])
-            Warn(@"%@: Cannot save the cookie %@ with an error : %@", self, cookie, error.my_compactDescription);
+            Warn(@"%@: Cannot save the cookie %@ with error : %@",
+                 self, cookie, error.my_compactDescription);
         
         [self notifyCookiesChanged];
     }
@@ -249,13 +248,13 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 
 
 - (BOOL) migrateOldCookieStorage {
-    if (![_db getLocalDatabaseInfoPropertyValueForKey: kLocalDbInfoCookiesKey]) {
+    if (![_db.storage infoForKey: kDatabaseInfoCookiesKey]) {
         __block NSError* error;
         BOOL success = [_db inTransaction: ^BOOL{
             NSDictionary* localCheckpointDoc = [_db getLocalCheckpointDocument];
             for (NSString* key in localCheckpointDoc.allKeys) {
                 if ([key hasPrefix: kOldLocalDocKeyPrefix]) {
-                    [self loadCookies: [localCheckpointDoc objectForKey: key]];
+                    [self loadCookieFromJSON: [localCheckpointDoc objectForKey: key]];
                     if (![_db removeLocalCheckpointDocumentWithKey: key outError: &error])
                         return NO;
                 }
@@ -272,13 +271,20 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 }
 
 
-- (void) loadCookies {
-    NSArray* cookies = [_db getLocalDatabaseInfoPropertyValueForKey: kLocalDbInfoCookiesKey];
-    [self loadCookies: cookies];
+- (BOOL) loadCookies: (NSError**)error {
+    NSString* str = [_db.storage infoForKey: kDatabaseInfoCookiesKey];
+    NSData* json = [str dataUsingEncoding: NSUTF8StringEncoding];
+    if (json) {
+        NSArray* cookies = [CBLJSON JSONObjectWithData: json options: 0 error: error];
+        if (!cookies)
+            return NO;
+        [self loadCookieFromJSON: cookies];
+    }
+    return YES;
 }
 
 
-- (void) loadCookies: (NSArray*)cookies {
+- (void) loadCookieFromJSON: (NSArray*)cookies {
     for (NSDictionary* doc in cookies) {
         NSDictionary* props = [self cookiePropertiesFromJSONDocument: doc];
         NSHTTPCookie* cookie = [NSHTTPCookie cookieWithProperties: props];
@@ -298,8 +304,12 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
         else
             return nil;
     }];
-    
-    return [_db putLocalDatabaseInfoWithKey: kLocalDbInfoCookiesKey value: cookies outError: error];
+
+    NSString* str = [CBLJSON stringWithJSONObject: cookies options: 0 error: error];
+    if (str)
+        return [_db.storage setInfo: str forKey: kDatabaseInfoCookiesKey] == kCBLStatusOK;
+    else
+        return NO;
 }
 
 
@@ -392,8 +402,15 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
                                                       userInfo: nil];
 }
 
-- (NSString*) localDatabaseInfoCookiesKey {
-    return kLocalDbInfoCookiesKey;
+
+- (NSString*) databaseInfoCookiesKey {
+    return kDatabaseInfoCookiesKey;
+}
+
+
+// For unit test only.
+- (void) reset {
+    [_db.storage setInfo: nil forKey: kDatabaseInfoCookiesKey];
 }
 
 @end

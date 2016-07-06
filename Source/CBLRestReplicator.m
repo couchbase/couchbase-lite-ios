@@ -79,10 +79,9 @@
     BOOL _suspended;
     SecCertificateRef _serverCert;
     NSData* _pinnedCertData;
-    CBLCookieStorage* _cookieStorage;
 }
 
-@synthesize db=_db, settings=_settings, serverCert=_serverCert, cookieStorage=_cookieStorage;
+@synthesize db=_db, settings=_settings, serverCert=_serverCert;
 #if DEBUG
 @synthesize running=_running, active=_active;
 #endif
@@ -295,7 +294,7 @@
                                                              baseURL: _settings.remote
                                                             delegate: self
                                                           authorizer: authorizer
-                                                       cookieStorage: self.cookieStorage];
+                                                       cookieStorage: db.cookieStorage];
 
     _running = YES;
     _online = NO;
@@ -603,14 +602,6 @@
         [self fetchRemoteCheckpointDoc];
     }
 }
-
-
-- (CBLCookieStorage*) cookieStorage {
-    if (!_cookieStorage)
-        _cookieStorage = _db.cookieStorage;
-    return _cookieStorage;
-}
-
 
 - (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion {
     return [_serverType hasPrefix: @"Couchbase Sync Gateway/"]

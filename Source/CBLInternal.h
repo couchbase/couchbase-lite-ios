@@ -15,6 +15,7 @@
 #import "CBL_Server.h"
 #import "CBL_BlobStore.h"
 #import "CBLCache.h"
+#import "CBLCookieStorage.h"
 @class CBL_Attachment, CBL_BlobStoreWriter, CBLDatabaseChange;
 
 
@@ -160,4 +161,9 @@ NSString* CBLKeyPathForQueryRow(NSString* keyPath); // for testing
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                            remote: (NSURL*)remote
                              pull: (BOOL)pull                       __attribute__((nonnull));
+@end
+
+
+@interface CBLCookieStorage ()
+- (void) reset;
 @end

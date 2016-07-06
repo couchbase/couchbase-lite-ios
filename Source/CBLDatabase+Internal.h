@@ -155,22 +155,4 @@ extern NSArray* CBL_RunloopModes;
 
 - (void) setExpirationDate: (NSDate*)date ofDocument: (NSString*)documentID;
 
-
-// LOCAL DOC DATABASE INFO:
-
-/** Put a property with a given key and value into the local database info document. */
-- (BOOL) putLocalDatabaseInfoWithKey: (NSString*)key
-                               value: (id)value
-                            outError: (NSError**)outError;
-
-/** Remove a property with a given key from the local database info document. */
-- (BOOL) removeLocalDatabaseInfoWithKey: (NSString*)key
-                               outError: (NSError**)outError;
-
-/** Returns a property value specifiec by the key from the local database info document. */
-- (NSDictionary*) getLocalDatabaseInfoDocument;
-
-/** Returns local databaes info document if it exists. Otherwise returns nil. */
-- (id) getLocalDatabaseInfoPropertyValueForKey: (NSString*)key;
-
 @end

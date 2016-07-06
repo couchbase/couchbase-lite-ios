@@ -55,7 +55,7 @@
 }
 
 @synthesize db=_db, settings=_settings, error=_error, sessionID=_sessionID;
-@synthesize serverCert=_serverCert, cookieStorage = _cookieStorage;
+@synthesize serverCert=_serverCert;
 @synthesize sync=_sync, status=_status;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpointDocID=_remoteCheckpointDocID;
@@ -139,12 +139,6 @@
 @synthesize savingCheckpoint=_savingCheckpoint, active=_active;
 #endif
 
-- (CBLCookieStorage*) cookieStorage {
-    if (!_cookieStorage)
-        _cookieStorage = _db.cookieStorage;
-    return _cookieStorage;
-}
-
 
 #pragma mark - INTERNALS:
 
@@ -160,7 +154,7 @@
     [_settings.requestHeaders enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL *stop) {
         [request setValue: value forHTTPHeaderField: key];
     }];
-    [self.cookieStorage addCookieHeaderToRequest: request];
+    [_db.cookieStorage addCookieHeaderToRequest: request];
 
     id<CBLAuthorizer> auth = _settings.authorizer;
     NSURLCredential* credential = $castIfProtocol(CBLCredentialAuthorizer, auth).credential;

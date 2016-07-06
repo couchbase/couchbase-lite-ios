@@ -38,10 +38,6 @@
 @property (nonatomic, readonly) NSString* dir;
 @end
 
-@interface CBLReplication (Internal)
-@property (nonatomic, readonly) NSArray* cookies;
-@end
-
 @interface Replication_Tests : CBLTestCaseWithDB
 @end
 

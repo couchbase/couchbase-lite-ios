@@ -10,6 +10,7 @@
 #import "CBLCookieStorage.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Replication.h"
+#import "CBLInternal.h"
 
 #define $URL(urlStr)                            ([NSURL URLWithString: urlStr])
 #define COMPARE_COOKIES(cookies1, cookies2)     [self compareCookies: cookies1 withCookies: cookies2]
@@ -117,13 +118,6 @@
     AssertEq(_cookieStore.cookies.count, 2u);
     AssertEqual(_cookieStore.cookies[0], cookie1);
     AssertEqual(_cookieStore.cookies[1], cookie3);
-
-    // Check if cookies are stored in the local database info document:
-    NSArray* cookies = [db getLocalDatabaseInfoPropertyValueForKey:
-                        [_cookieStore localDatabaseInfoCookiesKey]];
-    AssertEq(cookies.count, 2u);
-    AssertEqual([self cookie: cookies[0]], cookie1);
-    AssertEqual([self cookie: cookies[1]], cookie3);
 }
 
 - (void) test_Migration {
@@ -150,9 +144,9 @@
     NSArray* cookies = [db getLocalCheckpointDocumentPropertyValueForKey: localCheckpointCookiesKey];
     AssertEq(cookies.count, 2u);
 
-    // Clear an empty cookies array at the local database info document:
-    Assert([db removeLocalDatabaseInfoWithKey: [_cookieStore localDatabaseInfoCookiesKey]
-                                     outError: NULL]);
+    // Reset cookie store: clear an empty cookies array so the migration will be triggered:
+    [_cookieStore reset];
+
 
     // Recreate the cookie store:
     [self reloadCookieStore];

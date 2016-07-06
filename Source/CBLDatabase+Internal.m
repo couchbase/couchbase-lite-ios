@@ -818,56 +818,6 @@ static SequenceNumber keyToSequence(id key, SequenceNumber dflt) {
 }
 
 
-#pragma mark - Database Info Local Document:
-
-
-- (BOOL) putLocalDatabaseInfoWithKey: (NSString*)key
-                               value: (id)value
-                            outError: (NSError**)outError {
-    if (key == nil || value == nil)
-        return NO;
-    
-    NSMutableDictionary* document = [NSMutableDictionary dictionaryWithDictionary:
-                                     [self getLocalDatabaseInfoDocument]];
-    document[key] = value;
-    BOOL result = [self putLocalDocument: document withID: kLocalDatabaseInfoDocId error: outError];
-    if (!result)
-        Warn(@"CBLDatabase: Could not create a local database info with an error: %@", *outError);
-    return result;
-}
-
-
-- (BOOL) removeLocalDatabaseInfoWithKey: (NSString*)key
-                               outError: (NSError**)outError {
-    if (key == nil)
-        return NO;
-
-    NSMutableDictionary* document = [NSMutableDictionary dictionaryWithDictionary:
-                                     [self getLocalDatabaseInfoDocument]];
-    if (![document objectForKey: key]) {
-        if (outError) *outError = nil;
-        return NO;
-    }
-
-    [document removeObjectForKey: key];
-    BOOL result = [self putLocalDocument: document withID: kLocalDatabaseInfoDocId error: outError];
-    if (!result)
-        Warn(@"CBLDatabase: Could not delete database info document property %@ with an error: %@",
-             key, *outError);
-    return result;
-}
-
-
-- (NSDictionary*) getLocalDatabaseInfoDocument {
-    return [self existingLocalDocumentWithID: kLocalDatabaseInfoDocId];
-}
-
-
-- (id) getLocalDatabaseInfoPropertyValueForKey: (NSString*)key {
-    return [[self getLocalDatabaseInfoDocument] objectForKey: key];
-}
-
-
 #pragma mark - Cookie Storage:
 
 

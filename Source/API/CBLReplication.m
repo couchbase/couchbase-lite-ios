@@ -53,11 +53,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 @property (nonatomic, readwrite) NSString* username;
 @end
 
-@interface CBLReplication (Internal)
-// For unit test only:
-@property (nonatomic, readonly) NSArray* cookies;
-@end
-
 
 @implementation CBLReplication
 {
