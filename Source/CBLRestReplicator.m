@@ -79,10 +79,9 @@
     BOOL _suspended;
     SecCertificateRef _serverCert;
     NSData* _pinnedCertData;
-    CBLCookieStorage* _cookieStorage;
 }
 
-@synthesize db=_db, settings=_settings, cookieStorage=_cookieStorage, serverCert=_serverCert;
+@synthesize db=_db, settings=_settings, serverCert=_serverCert;
 #if DEBUG
 @synthesize running=_running, active=_active;
 #endif
@@ -146,7 +145,6 @@
     [self clearDbRef];
     // Explicitly clear the reference to the storage to ensure that the cookie storage will
     // get dealloc and the database referenced inside the storage will get cleared as well.
-    _cookieStorage = nil;
 }
 
 
@@ -281,6 +279,7 @@
             LogVerbose(Sync, @"%@: Found credential, using %@", self, authorizer);
     }
     authorizer.remoteURL = _settings.remote;
+    authorizer.localUUID = db.publicUUID;
 
     // Initialize the CBLRemoteSession:
     NSURLSessionConfiguration* config = [[CBLRemoteSession defaultConfiguration] copy];
@@ -296,7 +295,7 @@
                                                              baseURL: _settings.remote
                                                             delegate: self
                                                           authorizer: authorizer
-                                                       cookieStorage: self.cookieStorage];
+                                                       cookieStorage: db.cookieStorage];
 
     _running = YES;
     _online = NO;
@@ -586,9 +585,10 @@
     if (_settings.authorizer) {
         [self asyncTaskStarted];
         CBLRemoteLogin* login = [[CBLRemoteLogin alloc] initWithURL: _settings.remote
-                                                        session: _remoteSession
-                                                requestDelegate: self
-                                                   continuation: ^(NSError* error)
+                                                          localUUID: _db.publicUUID
+                                                            session: _remoteSession
+                                                    requestDelegate: self
+                                                       continuation: ^(NSError* error)
         {
             if (error) {
                 LogTo(Sync, @"%@: Login error: %@", self, error.my_compactDescription);
@@ -604,16 +604,6 @@
         [self fetchRemoteCheckpointDoc];
     }
 }
-
-
-- (CBLCookieStorage*) cookieStorage {
-    if (!_cookieStorage) {
-        _cookieStorage = [[CBLCookieStorage alloc] initWithDB: _db
-                                                   storageKey: self.remoteCheckpointDocID];
-    }
-    return _cookieStorage;
-}
-
 
 - (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion {
     return [_serverType hasPrefix: @"Couchbase Sync Gateway/"]

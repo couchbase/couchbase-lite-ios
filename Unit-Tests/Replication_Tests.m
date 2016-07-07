@@ -38,7 +38,6 @@
 @property (nonatomic, readonly) NSString* dir;
 @end
 
-
 @interface Replication_Tests : CBLTestCaseWithDB
 @end
 
@@ -106,29 +105,6 @@
 }
 
 
-- (void) runReplication: (CBLReplication*)repl
-   expectedChangesCount: (unsigned)expectedChangesCount
- expectedChangedCookies: (NSArray*) expectedChangedCookies {
-
-    _changedCookies = nil;
-
-    [[NSNotificationCenter defaultCenter] addObserver: self
-                                             selector: @selector(cookiesChanged:)
-                                                 name: CBLCookieStorageCookiesChangedNotification
-                                               object: nil];
-
-    [self runReplication: repl expectedChangesCount: expectedChangesCount];
-
-    [[NSNotificationCenter defaultCenter] removeObserver: self
-                                                    name: CBLCookieStorageCookiesChangedNotification
-                                                  object: nil];
-
-    AssertEq(_changedCookies.count, expectedChangedCookies.count);
-    for (NSHTTPCookie* cookie in expectedChangedCookies)
-        Assert([_changedCookies containsObject: cookie]);
-}
-
-
 - (void) replChanged: (NSNotification*)n {
     AssertEq(n.object, _currentReplication, @"Wrong replication given to notification");
     Log(@"Replication status=%u; completedChangesCount=%u; changesCount=%u",
@@ -144,13 +120,6 @@
             AssertEq(_currentReplication.changesCount, _expectedChangesCount);
         }
     }
-}
-
-
-- (void) cookiesChanged: (NSNotification*)n {
-    CBLCookieStorage* storage = n.object;
-    _changedCookies = storage.cookies;
-    Log(@"%@ changed: %lu cookies", storage, (unsigned long)_changedCookies.count);
 }
 
 
@@ -626,7 +595,9 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
                                 }];
 
     CBLReplication* repl = [db createPullReplication: remoteDbURL];
+    repl.continuous = YES;
 
+    // 1: Set and delete cookies before starting the replicator:
     [repl setCookieNamed: cookie1.name
                withValue: cookie1.value
                     path: cookie1.path
@@ -647,16 +618,48 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
     [repl deleteCookieNamed: cookie2.name];
 
-    [self runReplication: repl expectedChangesCount: 0 expectedChangedCookies: @[cookie1, cookie3]];
-    AssertNil(repl.lastError);
+    // Check cookies:
+    NSArray* cookies = repl.cookies;
+    AssertEq(cookies.count, 2u);
+    AssertEqual(cookies[0], cookie1);
+    AssertEqual(cookies[1], cookie3);
 
-    // Recreate the replicator and delete a cookie:
+    // Run a continuous the replicator:
+    [self runReplication: repl expectedChangesCount: 0];
+
+    // 2: Set and delete cookies while the replicator is running:
+    [repl setCookieNamed: cookie2.name
+               withValue: cookie2.value
+                    path: cookie2.path
+          expirationDate: cookie2.expiresDate
+                  secure: cookie2.isSecure];
+
+    [repl deleteCookieNamed: cookie3.name];
+
+    // Check cookies:
+    cookies = repl.cookies;
+    AssertEq(cookies.count, 2u);
+    AssertEqual(cookies[0], cookie1);
+    AssertEqual(cookies[1], cookie2);
+
+    // Stop the replicator:
+    [self keyValueObservingExpectationForObject: repl
+                                        keyPath: @"status" expectedValue: @(kCBLReplicationStopped)];
+    [repl stop];
+    [self waitForExpectationsWithTimeout: 2.0 handler: nil];
+
+    // 3: Recreate the replicator (single shot) and delete a cookie:
     Log(@"***** Testing cookie deletion *****");
     repl = [db createPullReplication: remoteDbURL];
-    [repl deleteCookieNamed: cookie3.name];
+    [repl deleteCookieNamed: cookie2.name];
     [repl start];
-    [self runReplication: repl expectedChangesCount: 0 expectedChangedCookies: @[cookie1]];
+    [self runReplication: repl expectedChangesCount: 0];
     AssertNil(repl.lastError);
+
+    // Check cookies:
+    cookies = repl.cookies;
+    AssertEq(cookies.count, 1u);
+    AssertEqual(cookies[0], cookie1);
 }
 
 - (void) test11_ReplicationWithReplacedDatabase {
@@ -1692,8 +1695,9 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
         __block bool loginDone = false;
         __block NSError* error = nil;
         CBLRemoteLogin* login = [[CBLRemoteLogin alloc] initWithURL: remoteDbURL
-                                                     authorizer: (id<CBLAuthorizer>)auth
-                                                   continuation: ^(NSError* e)
+                                                          localUUID: db.publicUUID
+                                                         authorizer: (id<CBLAuthorizer>)auth
+                                                       continuation: ^(NSError* e)
         {
             error = e;
             loginDone = true;

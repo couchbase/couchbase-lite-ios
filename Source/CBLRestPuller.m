@@ -98,6 +98,7 @@
 
 - (void) startChangeTracker {
     Assert(!_changeTracker);
+    CBLDatabase* db = _db;
     NSTimeInterval pollInterval = _settings.pollInterval;
     CBLChangeTrackerMode mode = kOneShot;
     if (_settings.continuous && pollInterval == 0.0 && self.canUseWebSockets)
@@ -109,12 +110,12 @@
                                                       lastSequence: _lastSequence
                                                             client: self];
     _changeTracker.continuous = _settings.continuous;
-    _changeTracker.activeOnly = (_lastSequence == nil && _db.documentCount == 0);
+    _changeTracker.activeOnly = (_lastSequence == nil && db.documentCount == 0);
     _changeTracker.filterName = _settings.filterName;
     _changeTracker.filterParameters = _settings.filterParameters;
     _changeTracker.docIDs = _settings.docIDs;
     _changeTracker.authorizer = _remoteSession.authorizer;
-    _changeTracker.cookieStorage = self.cookieStorage;
+    _changeTracker.cookieStorage = db.cookieStorage;
 
     unsigned heartbeat = $castIf(NSNumber, _settings.options[kCBLReplicatorOption_Heartbeat]).unsignedIntValue;
     if (heartbeat >= 15000)

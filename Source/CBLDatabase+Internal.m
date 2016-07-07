@@ -30,6 +30,7 @@
 #import "CBLDatabase.h"
 #import "CBLDatabaseUpgrade.h"
 #import "CBLSymmetricKey.h"
+#import "CBLCookieStorage.h"
 #import "CouchbaseLitePrivate.h"
 
 #import "MYBlockUtils.h"
@@ -53,6 +54,7 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, NO, NO, YES, NO};
 
 // How long to wait after a database opens before expiring docs
 #define kHousekeepingDelayAfterOpening 3.0
+
 
 static BOOL sAutoCompact = YES;
 
@@ -811,6 +813,19 @@ static SequenceNumber keyToSequence(id key, SequenceNumber dflt) {
     [self doAsync:^{
         [[NSNotificationCenter defaultCenter] postNotification: notification];
     }];
+}
+
+
+#pragma mark - Cookie Storage:
+
+
+- (CBLCookieStorage*) cookieStorage {
+    CBLCookieStorage* cookieStorage = _cookieStorage;
+    if (!cookieStorage) {
+        cookieStorage = [[CBLCookieStorage alloc] initWithDB: self];
+        _cookieStorage = cookieStorage;
+    }
+    return cookieStorage;
 }
 
 @end

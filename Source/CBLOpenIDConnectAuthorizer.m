@@ -227,20 +227,21 @@ UsingLogDomain(Sync);
 + (BOOL) forgetIDTokensForServer: (NSURL*)serverURL error: (NSError**)outError {
     CBLOpenIDConnectAuthorizer* auth = [[self alloc] init];
     auth.remoteURL = serverURL;
+    // Deliberately don't set auth.localUUID. This will leave kSecAttrAccount unset in the
+    // dictionary passed to SecItemDelete, deleting keychain items for all accounts (databases).
     return [auth deleteTokens: outError];
 }
 
 
 - (NSMutableDictionary*) keychainAttributes {
     // In Keychain Access, 'label' appears as the item name, and 'service' is shown as 'Where:'.
-    NSString* account = self.remoteURL.my_baseURL.absoluteString;
-    Assert(account, @"remoteURL not set");
+    NSString* service = self.remoteURL.my_baseURL.absoluteString;
+    Assert(service, @"remoteURL not set");
     NSString* label = $sprintf(@"%@ OpenID Connect tokens", self.remoteURL.host);
-    return [@{ (__bridge id)kSecClass:        (__bridge id)kSecClassGenericPassword,
-               (__bridge id)kSecAttrService:  account,
-               (__bridge id)kSecAttrAccount:  kOIDCKeychainServiceName,
-               (__bridge id)kSecAttrLabel:    label,
-             } mutableCopy];
+    return $mdict({(__bridge id)kSecClass,        (__bridge id)kSecClassGenericPassword},
+                  {(__bridge id)kSecAttrService,  service},
+                  {(__bridge id)kSecAttrAccount,  self.localUUID}, // may be nil (see above)
+                  {(__bridge id)kSecAttrLabel,    label});
 }
 
 

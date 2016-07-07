@@ -50,8 +50,6 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 
 @property (readonly, nonatomic) CBLDatabase* db;
 
-@property (readonly) CBLCookieStorage* cookieStorage;
-
 @property (readonly) NSString* remoteCheckpointDocID;
 
 @property (readonly) CBL_ReplicatorStatus status;

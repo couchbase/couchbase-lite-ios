@@ -20,6 +20,7 @@ UsingLogDomain(Sync);
 @implementation CBLRemoteLogin
 {
     NSURL* _remoteURL;
+    NSString* _localUUID;
     CBLRemoteSession* _remoteSession;
     id<CBLRemoteRequestDelegate> _requestDelegate;
     void(^_continuation)(NSError*);
@@ -27,6 +28,7 @@ UsingLogDomain(Sync);
 
 
 - (instancetype) initWithURL: (NSURL*)remoteURL
+                   localUUID: (NSString*)localUUID
                      session: (CBLRemoteSession*)session
              requestDelegate: (id<CBLRemoteRequestDelegate>)requestDelegate
                 continuation: (void(^)(NSError*))continuation
@@ -36,6 +38,7 @@ UsingLogDomain(Sync);
     self = [super init];
     if (self) {
         _remoteURL = remoteURL;
+        _localUUID = [localUUID copy];
         _remoteSession = session;
         _requestDelegate = requestDelegate;
         _continuation = continuation;
@@ -45,6 +48,7 @@ UsingLogDomain(Sync);
 
 
 - (instancetype) initWithURL: (NSURL*)remoteURL
+                   localUUID: (NSString*)localUUID
                   authorizer: (id<CBLAuthorizer>)authorizer
                 continuation: (void(^)(NSError*))continuation
 {
@@ -55,6 +59,7 @@ UsingLogDomain(Sync);
                                                                      authorizer: authorizer
                                                                   cookieStorage: nil];
     return [self initWithURL: remoteURL
+                   localUUID: localUUID
                      session: session
              requestDelegate: nil
                 continuation: continuation];
@@ -76,6 +81,7 @@ UsingLogDomain(Sync);
 - (void) start {
     CFRetain((__bridge CFTypeRef)self); // keep self from being released until it's done
     _remoteSession.authorizer.remoteURL = _remoteURL;
+    _remoteSession.authorizer.localUUID = _localUUID;
     if ([_remoteSession.authorizer conformsToProtocol: @protocol(CBLSessionCookieAuthorizer)]) {
         // Sync Gateway session API is at /db/_session; try that first
         [self checkSessionAtPath: @"_session"];
