@@ -1695,8 +1695,9 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
         __block bool loginDone = false;
         __block NSError* error = nil;
         CBLRemoteLogin* login = [[CBLRemoteLogin alloc] initWithURL: remoteDbURL
-                                                     authorizer: (id<CBLAuthorizer>)auth
-                                                   continuation: ^(NSError* e)
+                                                          localUUID: db.publicUUID
+                                                         authorizer: (id<CBLAuthorizer>)auth
+                                                       continuation: ^(NSError* e)
         {
             error = e;
             loginDone = true;

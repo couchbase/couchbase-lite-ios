@@ -23,7 +23,7 @@
 
 @implementation CBLAuthorizer
 
-@synthesize remoteURL=_remoteURL;
+@synthesize remoteURL=_remoteURL, localUUID=_localUUID;
 
 - (BOOL) removeStoredCredentials: (NSError**)outError {
     return YES;
