@@ -279,6 +279,7 @@
             LogVerbose(Sync, @"%@: Found credential, using %@", self, authorizer);
     }
     authorizer.remoteURL = _settings.remote;
+    authorizer.localUUID = db.publicUUID;
 
     // Initialize the CBLRemoteSession:
     NSURLSessionConfiguration* config = [[CBLRemoteSession defaultConfiguration] copy];
@@ -584,9 +585,10 @@
     if (_settings.authorizer) {
         [self asyncTaskStarted];
         CBLRemoteLogin* login = [[CBLRemoteLogin alloc] initWithURL: _settings.remote
-                                                        session: _remoteSession
-                                                requestDelegate: self
-                                                   continuation: ^(NSError* error)
+                                                          localUUID: _db.publicUUID
+                                                            session: _remoteSession
+                                                    requestDelegate: self
+                                                       continuation: ^(NSError* error)
         {
             if (error) {
                 LogTo(Sync, @"%@: Login error: %@", self, error.my_compactDescription);

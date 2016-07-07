@@ -926,6 +926,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
             if (!authorizer)
                 Warn(@"Invalid authorizer settings: %@", auth);
             authorizer.remoteURL = remote;
+            authorizer.localUUID = db.publicUUID;
             *outAuthorizer = authorizer;
         }
     }
