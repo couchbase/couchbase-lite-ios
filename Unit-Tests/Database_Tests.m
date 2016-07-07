@@ -1288,13 +1288,9 @@
                             AssertEq(rows.count, 1u);
                             CBLDocument* doc = [rows rowAtIndex: 0].document;
                             AssertEqual(doc.documentID, @"doc1");
-                            AssertEq(doc.currentRevision.attachments.count, 2u);
                             CBLAttachment* att1 = [doc.currentRevision attachmentNamed: @"attach1"];
                             Assert(att1);
                             AssertEq(att1.length, att1.content.length);
-                            CBLAttachment* att2 = [doc.currentRevision attachmentNamed: @"attach2"];
-                            Assert(att2);
-                            AssertEq(att2.length, att2.content.length);
                         }];
 
     // iOS 1.1.0
@@ -1305,13 +1301,9 @@
                             AssertEq(rows.count, 1u);
                             CBLDocument* doc = [rows rowAtIndex:0].document;
                             AssertEqual(doc.documentID, @"doc1");
-                            AssertEq(doc.currentRevision.attachments.count, 2u);
                             CBLAttachment* att1 = [doc.currentRevision attachmentNamed: @"attach1"];
                             Assert(att1);
                             AssertEq(att1.length, att1.content.length);
-                            CBLAttachment* att2 = [doc.currentRevision attachmentNamed: @"attach2"];
-                            Assert(att2);
-                            AssertEq(att2.length, att2.content.length);
                         }];
 
     // iOS 1.2.0
@@ -1321,12 +1313,23 @@
                             AssertEq(rows.count, 2u);
                             CBLDocument* doc = [rows rowAtIndex:0].document;
                             AssertEqual(doc.documentID, @"doc1");
-                            AssertEq(doc.currentRevision.attachments.count, 1u);
                             CBLAttachment* att= [doc.currentRevision attachmentNamed: @"attach1"];
                             Assert(att);
                             AssertEq(att.length, att.content.length);
-                            NSDictionary* localDoc = [replaceDb existingLocalDocumentWithID: @"local1"];
-                            Assert(localDoc);
+                            Assert([replaceDb existingLocalDocumentWithID: @"local1"] != nil);
+                        }];
+
+    // iOS 1.3.0
+    dbFile = [self pathToReplaceDbFile: @"iosdb.cblite2" inDirectory: @"ios130"];
+    [self testReplaceDatabaseNamed: @"replacedb" withDatabaseDir: dbFile
+                        onComplete: ^(CBLDatabase* replaceDb, CBLQueryEnumerator* rows) {
+                            AssertEq(rows.count, 2u);
+                            CBLDocument* doc = [rows rowAtIndex:0].document;
+                            AssertEqual(doc.documentID, @"doc1");
+                            CBLAttachment* att= [doc.currentRevision attachmentNamed: @"attach1"];
+                            Assert(att);
+                            AssertEq(att.length, att.content.length);
+                            Assert([replaceDb existingLocalDocumentWithID: @"local1"] != nil);
                         }];
 
     // Android 1.0.4
@@ -1351,7 +1354,6 @@
                             AssertEq(rows.count, 2u);
                             CBLDocument* doc = [rows rowAtIndex:0].document;
                             AssertEqual(doc.documentID, @"doc0");
-                            AssertEq(doc.currentRevision.attachments.count, 1u);
                             CBLAttachment* att1 = [doc.currentRevision attachmentNamed: @"file_0.txt"];
                             Assert(att1);
                             AssertEq(att1.length, att1.content.length);
@@ -1364,12 +1366,10 @@
                             AssertEq(rows.count, 2u);
                             CBLDocument* doc = [rows rowAtIndex:0].document;
                             AssertEqual(doc.documentID, @"doc1");
-                            AssertEq(doc.currentRevision.attachments.count, 1u);
                             CBLAttachment* att= [doc.currentRevision attachmentNamed: @"attach1"];
                             Assert(att);
                             AssertEq(att.length, att.content.length);
-                            NSDictionary* localDoc = [replaceDb existingLocalDocumentWithID: @"local1"];
-                            Assert(localDoc);
+                            Assert([replaceDb existingLocalDocumentWithID: @"local1"] != nil);
                         }];
 
     // .NET 1.0.4
@@ -1380,7 +1380,6 @@
                             AssertEq(rows.count, 2u);
                             CBLDocument* doc = [rows rowAtIndex:1].document;
                             AssertEqual(doc.documentID, @"doc2");
-                            AssertEq(doc.currentRevision.attachments.count, 1u);
                             CBLAttachment* att1 = [doc.currentRevision attachmentNamed: @"image"];
                             Assert(att1);
                             AssertEq(att1.length, att1.content.length);
@@ -1394,7 +1393,6 @@
                             AssertEq(rows.count, 1u);
                             CBLDocument* doc = [rows rowAtIndex:0].document;
                             AssertEqual(doc.documentID, @"doc1");
-                            AssertEq(doc.currentRevision.attachments.count, 1u);
                             CBLAttachment* att1 = [doc.currentRevision attachmentNamed: @"image"];
                             Assert(att1);
                             AssertEq(att1.length, att1.content.length);
@@ -1407,12 +1405,10 @@
                             AssertEq(rows.count, 2u);
                             CBLDocument* doc = [rows rowAtIndex:0].document;
                             AssertEqual(doc.documentID, @"doc1");
-                            AssertEq(doc.currentRevision.attachments.count, 1u);
                             CBLAttachment* att= [doc.currentRevision attachmentNamed: @"attach1"];
                             Assert(att);
                             AssertEq(att.length, att.content.length);
-                            NSDictionary* localDoc = [replaceDb existingLocalDocumentWithID: @"local1"];
-                            Assert(localDoc);
+                            Assert([replaceDb existingLocalDocumentWithID: @"local1"] != nil);
                         }];
 }
 
@@ -1445,12 +1441,10 @@
                             AssertEq(rows.count, 2u);
                             CBLDocument* doc = [rows rowAtIndex:0].document;
                             AssertEqual(doc.documentID, @"doc1");
-                            AssertEq(doc.currentRevision.attachments.count, 1u);
                             CBLAttachment* att= [doc.currentRevision attachmentNamed: @"attach1"];
                             Assert(att);
                             AssertEq(att.length, att.content.length);
-                            NSDictionary* localDoc = [replaceDb existingLocalDocumentWithID: @"local1"];
-                            Assert(localDoc);
+                            Assert([replaceDb existingLocalDocumentWithID: @"local1"] != nil);
                         }];
 
     // .NET 1.2.0
@@ -1460,19 +1454,31 @@
                             AssertEq(rows.count, 2u);
                             CBLDocument* doc = [rows rowAtIndex:0].document;
                             AssertEqual(doc.documentID, @"doc1");
-                            AssertEq(doc.currentRevision.attachments.count, 1u);
                             CBLAttachment* att= [doc.currentRevision attachmentNamed: @"attach1"];
                             Assert(att);
                             AssertEq(att.length, att.content.length);
                             NSDictionary* localDoc = [replaceDb existingLocalDocumentWithID: @"local1"];
                             Assert(localDoc);
                         }];
+
+    // iOS 1.3.0
+    dbFile = [self pathToReplaceDbFile: @"iosdb.cblite2" inDirectory: @"ios130-forestdb"];
+    [self testReplaceDatabaseNamed: @"replacedb" withDatabaseDir: dbFile
+                        onComplete: ^(CBLDatabase* replaceDb, CBLQueryEnumerator* rows) {
+                            AssertEq(rows.count, 2u);
+                            CBLDocument* doc = [rows rowAtIndex:0].document;
+                            AssertEqual(doc.documentID, @"doc1");
+                            CBLAttachment* att= [doc.currentRevision attachmentNamed: @"attach1"];
+                            Assert(att);
+                            AssertEq(att.length, att.content.length);
+                            Assert([replaceDb existingLocalDocumentWithID: @"local1"] != nil);
+                        }];
 }
 
 
 - (void) test24_upgradeDatabase {
     // Install a canned database:
-    NSString* dbDir = [self pathToReplaceDbFile: @"iosdb.cblite2" inDirectory: @"ios120"];
+    NSString* dbDir = [self pathToReplaceDbFile: @"iosdb.cblite2" inDirectory: @"ios130"];
     NSError* error;
     Assert([dbmgr replaceDatabaseNamed: @"replacedb" withDatabaseDir: dbDir error: &error]);
 
