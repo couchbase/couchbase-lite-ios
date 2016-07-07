@@ -79,10 +79,9 @@
     BOOL _suspended;
     SecCertificateRef _serverCert;
     NSData* _pinnedCertData;
-    CBLCookieStorage* _cookieStorage;
 }
 
-@synthesize db=_db, settings=_settings, cookieStorage=_cookieStorage, serverCert=_serverCert;
+@synthesize db=_db, settings=_settings, serverCert=_serverCert;
 #if DEBUG
 @synthesize running=_running, active=_active;
 #endif
@@ -146,7 +145,6 @@
     [self clearDbRef];
     // Explicitly clear the reference to the storage to ensure that the cookie storage will
     // get dealloc and the database referenced inside the storage will get cleared as well.
-    _cookieStorage = nil;
 }
 
 
@@ -296,7 +294,7 @@
                                                              baseURL: _settings.remote
                                                             delegate: self
                                                           authorizer: authorizer
-                                                       cookieStorage: self.cookieStorage];
+                                                       cookieStorage: db.cookieStorage];
 
     _running = YES;
     _online = NO;
@@ -604,16 +602,6 @@
         [self fetchRemoteCheckpointDoc];
     }
 }
-
-
-- (CBLCookieStorage*) cookieStorage {
-    if (!_cookieStorage) {
-        _cookieStorage = [[CBLCookieStorage alloc] initWithDB: _db
-                                                   storageKey: self.remoteCheckpointDocID];
-    }
-    return _cookieStorage;
-}
-
 
 - (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion {
     return [_serverType hasPrefix: @"Couchbase Sync Gateway/"]

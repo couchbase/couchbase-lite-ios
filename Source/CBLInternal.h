@@ -15,6 +15,7 @@
 #import "CBL_Server.h"
 #import "CBL_BlobStore.h"
 #import "CBLCache.h"
+#import "CBLCookieStorage.h"
 @class CBL_Attachment, CBL_BlobStoreWriter, CBLDatabaseChange;
 
 

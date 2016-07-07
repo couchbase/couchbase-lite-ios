@@ -30,7 +30,6 @@
 
 
 typedef void (^PendingAction)(id<CBL_Replicator>);
-typedef void (^PendingCookieAction)(CBLCookieStorage*);
 
 
 NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
@@ -65,7 +64,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     // ONLY used on the server thread:
     id<CBL_Replicator> _bg_replicator;
     NSMutableArray<PendingAction>* _bg_pendingActions;
-    NSMutableArray<PendingCookieAction>* _bg_pendingCookieActions;
     NSConditionLock* _bg_stopLock;
 }
 
@@ -211,15 +209,23 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 - (void) deleteCookieNamed: (NSString*)name {
     Assert(name);
-    [self tellCookieStorage: ^(CBLCookieStorage *storage) {
+    [self tellCookieStorage: ^(CBLCookieStorage* storage) {
         [storage deleteCookiesNamed: name];
     }];
 }
 
 
 - (void) deleteAllCookies {
-    [self tellCookieStorage: ^(CBLCookieStorage *storage) {
-        [storage deleteAllCookies];
+    [self tellCookieStorage: ^(CBLCookieStorage* storage) {
+        [storage reset];
+    }];
+}
+
+
+// For unit test only:
+- (NSArray*) cookies {
+    return [self tellCookieStorageAndWait:^id(CBLCookieStorage* storage) {
+        return storage.cookies;
     }];
 }
 
@@ -582,15 +588,17 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     }];
 }
 
-- (void) tellCookieStorage: (PendingCookieAction)block {
-    [self tellReplicator: ^(id<CBL_Replicator> bgRepl) {
-        if (bgRepl) {
-            block(bgRepl.cookieStorage);
-        } else {
-            if (!_bg_pendingCookieActions)
-                _bg_pendingCookieActions = [NSMutableArray array];
-            [_bg_pendingCookieActions addObject: block];
-        }
+- (void) tellCookieStorage: (void (^)(CBLCookieStorage*))block {
+    [_database.manager.backgroundServer tellDatabaseNamed: _database.name
+                                                       to: ^(CBLDatabase* bgDb) {
+        block(bgDb.cookieStorage);
+    }];
+}
+
+- (id) tellCookieStorageAndWait: (id (^)(CBLCookieStorage*))block {
+    return [_database.manager.backgroundServer waitForDatabaseNamed: _database.name
+                                                                 to: ^id(CBLDatabase* bgDb) {
+        return block(bgDb.cookieStorage);
     }];
 }
 
@@ -634,11 +642,6 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
     if (auth)
         repl.settings.authorizer = auth;
-
-    // Make all pending changes to the cookie storage:
-    for (PendingCookieAction action in _bg_pendingCookieActions)
-        action(repl.cookieStorage);
-    _bg_pendingCookieActions = nil;
 
     CBLPropertiesTransformationBlock xformer = self.propertiesTransformationBlock;
     if (xformer) {

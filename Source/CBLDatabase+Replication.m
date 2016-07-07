@@ -94,17 +94,35 @@ static NSString* checkpointInfoKey(NSString* checkpointID) {
 }
 
 - (BOOL) putLocalCheckpointDocumentWithKey: (NSString*)key
-                                     value:(id)value
+                                     value: (id)value
                                   outError: (NSError**)outError {
     if (key == nil || value == nil)
         return NO;
 
-    NSMutableDictionary* document = [NSMutableDictionary dictionaryWithDictionary:
-                                        [self getLocalCheckpointDocument]];
+    NSMutableDictionary* document = [[self getLocalCheckpointDocument] mutableCopy];
+    if (!document)
+        document = [NSMutableDictionary dictionary];
     document[key] = value;
     BOOL result = [self putLocalDocument: document withID: kLocalCheckpointDocId error: outError];
     if (!result)
         Warn(@"CBLDatabase: Could not create a local checkpoint document with an error: %@", *outError);
+    return result;
+}
+
+- (BOOL) removeLocalCheckpointDocumentWithKey: (NSString*)key
+                                     outError: (NSError**)outError {
+    if (key == nil)
+        return NO;
+    
+    NSMutableDictionary* document = [[self getLocalCheckpointDocument] mutableCopy];
+    if (![document objectForKey: key])
+        return YES;
+    
+    [document removeObjectForKey: key];
+    BOOL result = [self putLocalDocument: document withID: kLocalCheckpointDocId error: outError];
+    if (!result)
+        Warn(@"CBLDatabase: Could not delete checkpoint document property %@ with an error: %@",
+             key, *outError);
     return result;
 }
 

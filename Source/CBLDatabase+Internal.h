@@ -9,7 +9,7 @@
 #import "CBL_Storage.h"
 #import "CBLDatabase.h"
 @class CBLQueryOptions, CBLView, CBLQueryRow, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase,
-       CBLDatabaseChange, CBL_Shared, CBLModelFactory, CBLDatabaseOptions;
+       CBLDatabaseChange, CBL_Shared, CBLModelFactory, CBLDatabaseOptions, CBLCookieStorage;
 
 
 UsingLogDomain(Database);
@@ -54,6 +54,7 @@ extern NSArray* CBL_RunloopModes;
     NSDate* _startTime;
     CBLModelFactory* _modelFactory;
     NSMutableSet* _unsavedModelsMutable;   // All CBLModels that have unsaved changes
+    __weak CBLCookieStorage* _cookieStorage;
 #if DEBUG
     CBL_Shared* _debug_shared;
 #endif
@@ -90,6 +91,7 @@ extern NSArray* CBL_RunloopModes;
 @property (nonatomic, readonly) id<CBL_Storage> storage;
 @property (nonatomic, readonly) CBL_BlobStore* attachmentStore;
 @property (nonatomic, readonly) CBL_Shared* shared;
+@property (nonatomic, readonly) CBLCookieStorage* cookieStorage;
 
 @property (nonatomic, readonly) BOOL exists;
 @property (nonatomic, readonly) UInt64 totalDataSize;

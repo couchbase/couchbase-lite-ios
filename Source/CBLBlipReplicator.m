@@ -13,6 +13,7 @@
 #import "CBLReachability.h"
 #import "CBLMisc.h"
 #import "CBLCookieStorage.h"
+#import "CBLDatabase+Internal.h"
 #import "BLIPPocketSocketConnection.h"
 #import "BLIPHTTPLogic.h"
 #import "CollectionUtils.h"
@@ -54,7 +55,7 @@
 }
 
 @synthesize db=_db, settings=_settings, error=_error, sessionID=_sessionID;
-@synthesize serverCert=_serverCert, cookieStorage = _cookieStorage;
+@synthesize serverCert=_serverCert;
 @synthesize sync=_sync, status=_status;
 @synthesize changesProcessed=_changesProcessed, changesTotal=_changesTotal;
 @synthesize remoteCheckpointDocID=_remoteCheckpointDocID;
@@ -83,8 +84,6 @@
         _sessionID = [$sprintf(@"repl%03d", ++sLastSessionID) copy];
         _progress = [NSProgress progressWithTotalUnitCount: -1]; // indeterminate
         _remoteCheckpointDocID = [_settings remoteCheckpointDocIDForLocalUUID: _db.privateUUID];
-        _cookieStorage = [[CBLCookieStorage alloc] initWithDB: db
-                                                   storageKey: _remoteCheckpointDocID];
 
         __weak CBLBlipReplicator* weakSelf = self;
         _updateProgressSoon = MYBatchedBlock(0.25, _syncQueue,
@@ -155,7 +154,7 @@
     [_settings.requestHeaders enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL *stop) {
         [request setValue: value forHTTPHeaderField: key];
     }];
-    [self.cookieStorage addCookieHeaderToRequest: request];
+    [_db.cookieStorage addCookieHeaderToRequest: request];
 
     id<CBLAuthorizer> auth = _settings.authorizer;
     NSURLCredential* credential = $castIfProtocol(CBLCredentialAuthorizer, auth).credential;

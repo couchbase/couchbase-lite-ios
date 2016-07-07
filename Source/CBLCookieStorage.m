@@ -8,14 +8,16 @@
 
 #import "CBLCookieStorage.h"
 #import "CBLDatabase.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLMisc.h"
 
 
 NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCookiesChanged";
 
-#define kLocalDocKeyPrefix @"cbl_cookie_storage"
-#define kLocalDocCookiesKey @"cookies"
+#define kOldLocalDocKeyPrefix @"cbl_cookie_storage"
+#define kDatabaseInfoCookiesKey @"cookies"
+
 
 @implementation CBLCookieStorage
 {
@@ -28,17 +30,21 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 @synthesize cookieAcceptPolicy = _cookieAcceptPolicy;
 
 
-- (instancetype) initWithDB: (CBLDatabase*)db storageKey: (NSString*)storageKey {
+- (instancetype) initWithDB: (CBLDatabase*)db {
     self = [super init];
     if (self) {
         Assert(db != nil, @"database cannot be nil.");
-        Assert(storageKey != nil, @"storageKey cannot be nil.");
-
         _db = db;
-        _storageKey = storageKey;
+        
         self.cookieAcceptPolicy = NSHTTPCookieAcceptPolicyAlways;
+        
+        _cookies = [NSMutableArray array];
 
-        [self loadCookies];
+        if (![self migrateOldCookieStorage]) {
+            NSError* error;
+            if (![self loadCookies: &error])
+                Warn(@"%@: Cannot load cookies with error : %@", self, error.my_compactDescription);
+        }
     }
     return self;
 }
@@ -153,7 +159,8 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 
         NSError* error;
         if (![self saveCookies: &error])
-            Warn(@"%@: Cannot save the cookie %@ with an error : %@", self, cookie, error.my_compactDescription);
+            Warn(@"%@: Cannot save the cookie %@ with error : %@",
+                 self, cookie, error.my_compactDescription);
         
         [self notifyCookiesChanged];
     }
@@ -199,28 +206,17 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
     }
 }
 
-- (void) deleteAllCookies {
+- (void) reset {
     @synchronized(self) {
-        if ([_cookies count] == 0)
-            return;
-
-        [_cookies removeAllObjects];
-
-        NSError* error;
-        if (![self saveCookies: &error]) {
-            Warn(@"%@: Cannot save cookies with an error : %@", self, error.my_compactDescription);
+        [_db.storage setInfo: nil forKey: kDatabaseInfoCookiesKey];
+        if ([_cookies count] > 0) {
+            [_cookies removeAllObjects];
+            [self notifyCookiesChanged];
         }
-        
-        [self notifyCookiesChanged];
     }
 }
 
 # pragma mark - Private
-
-- (NSString*) localDocKey {
-    return [NSString stringWithFormat: @"%@_%@", kLocalDocKeyPrefix, _storageKey];
-}
-
 
 - (BOOL) deleteCookie: (NSHTTPCookie*)aCookie outIndex: (NSUInteger*)outIndex {
     NSInteger foundIndex = -1;
@@ -245,13 +241,46 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 }
 
 
-- (void) loadCookies {
-    _cookies = [NSMutableArray array];
+- (BOOL) migrateOldCookieStorage {
+    if (![_db.storage infoForKey: kDatabaseInfoCookiesKey]) {
+        __block NSError* error;
+        BOOL success = [_db inTransaction: ^BOOL{
+            NSDictionary* localCheckpointDoc = [_db getLocalCheckpointDocument];
+            for (NSString* key in localCheckpointDoc.allKeys) {
+                if ([key hasPrefix: kOldLocalDocKeyPrefix]) {
+                    [self loadCookieFromJSON: [localCheckpointDoc objectForKey: key]];
+                    if (![_db removeLocalCheckpointDocumentWithKey: key outError: &error])
+                        return NO;
+                }
+            }
+            return [self saveCookies: &error];
+        }];
+        
+        if (!success)
+            Warn(@"%@: Cannot migrate cookies with an error : %@",
+                 self, error.my_compactDescription);
+        return success;
+    }
+    return NO;
+}
 
-    NSString* key = [self localDocKey];
-    NSArray* allCookies = [_db getLocalCheckpointDocumentPropertyValueForKey: key];
-    for (NSDictionary* doc in allCookies) {
-        NSDictionary *props = [self cookiePropertiesFromJSONDocument: doc];
+
+- (BOOL) loadCookies: (NSError**)error {
+    NSString* str = [_db.storage infoForKey: kDatabaseInfoCookiesKey];
+    NSData* json = [str dataUsingEncoding: NSUTF8StringEncoding];
+    if (json) {
+        NSArray* cookies = [CBLJSON JSONObjectWithData: json options: 0 error: error];
+        if (!cookies)
+            return NO;
+        [self loadCookieFromJSON: cookies];
+    }
+    return YES;
+}
+
+
+- (void) loadCookieFromJSON: (NSArray*)cookies {
+    for (NSDictionary* doc in cookies) {
+        NSDictionary* props = [self cookiePropertiesFromJSONDocument: doc];
         NSHTTPCookie* cookie = [NSHTTPCookie cookieWithProperties: props];
         if (cookie)
             [_cookies addObject: cookie];
@@ -270,8 +299,11 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
             return nil;
     }];
 
-    NSString* key = [self localDocKey];
-    return [_db putLocalCheckpointDocumentWithKey: key value: cookies outError: error];
+    NSString* str = [CBLJSON stringWithJSONObject: cookies options: 0 error: error];
+    if (str)
+        return [_db.storage setInfo: str forKey: kDatabaseInfoCookiesKey] == kCBLStatusOK;
+    else
+        return NO;
 }
 
 
@@ -363,6 +395,7 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
                                                         object: self
                                                       userInfo: nil];
 }
+
 
 @end
 
