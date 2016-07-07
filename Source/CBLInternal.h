@@ -162,8 +162,3 @@ NSString* CBLKeyPathForQueryRow(NSString* keyPath); // for testing
                            remote: (NSURL*)remote
                              pull: (BOOL)pull                       __attribute__((nonnull));
 @end
-
-
-@interface CBLCookieStorage ()
-- (void) reset;
-@end

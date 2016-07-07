@@ -8,20 +8,13 @@
 
 #import "CBLTestCase.h"
 #import "CBLCookieStorage.h"
-#import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Replication.h"
-#import "CBLInternal.h"
 
 #define $URL(urlStr)                            ([NSURL URLWithString: urlStr])
 #define COMPARE_COOKIES(cookies1, cookies2)     [self compareCookies: cookies1 withCookies: cookies2]
 
 @interface CookieStorage_Tests : CBLTestCaseWithDB
 
-@end
-
-
-@interface CBLCookieStorage (Internal)
-- (NSString*) localDatabaseInfoCookiesKey;
 @end
 
 
@@ -146,7 +139,6 @@
 
     // Reset cookie store: clear an empty cookies array so the migration will be triggered:
     [_cookieStore reset];
-
 
     // Recreate the cookie store:
     [self reloadCookieStore];
@@ -398,7 +390,7 @@
     AssertEqual(_cookieStore.cookies[0], cookie2);
 }
 
-- (void) test_DeleteAllCookies {
+- (void) test_Reset {
     NSHTTPCookie* cookie1 = [self cookie: @{ NSHTTPCookieName: @"whitechoco",
                                              NSHTTPCookieDomain: @"mycookie.com",
                                              NSHTTPCookiePath: @"/",
@@ -431,7 +423,7 @@
     AssertEqual(_cookieStore.cookies[1], cookie2);
     AssertEqual(_cookieStore.cookies[2], cookie3);
 
-    [_cookieStore deleteAllCookies];
+    [_cookieStore reset];
 
     AssertEq(_cookieStore.cookies.count, 0u);
 

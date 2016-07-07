@@ -206,19 +206,13 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
     }
 }
 
-- (void) deleteAllCookies {
+- (void) reset {
     @synchronized(self) {
-        if ([_cookies count] == 0)
-            return;
-
-        [_cookies removeAllObjects];
-
-        NSError* error;
-        if (![self saveCookies: &error]) {
-            Warn(@"%@: Cannot save cookies with an error : %@", self, error.my_compactDescription);
+        [_db.storage setInfo: nil forKey: kDatabaseInfoCookiesKey];
+        if ([_cookies count] > 0) {
+            [_cookies removeAllObjects];
+            [self notifyCookiesChanged];
         }
-        
-        [self notifyCookiesChanged];
     }
 }
 
@@ -402,16 +396,6 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
                                                       userInfo: nil];
 }
 
-
-- (NSString*) databaseInfoCookiesKey {
-    return kDatabaseInfoCookiesKey;
-}
-
-
-// For unit test only.
-- (void) reset {
-    [_db.storage setInfo: nil forKey: kDatabaseInfoCookiesKey];
-}
 
 @end
 

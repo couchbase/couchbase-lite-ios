@@ -43,7 +43,7 @@ extern NSString* const CBLCookieStorageCookiesChangedNotification;
 - (void) deleteCookiesNamed: (NSString*)name;
 
 /** Deletes all cookies from the cookie storage. */
-- (void) deleteAllCookies;
+- (void) reset;
 
 @end
 

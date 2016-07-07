@@ -55,8 +55,6 @@ const CBLChangesOptions kDefaultCBLChangesOptions = {UINT_MAX, NO, NO, YES, NO};
 // How long to wait after a database opens before expiring docs
 #define kHousekeepingDelayAfterOpening 3.0
 
-// Local document for keeping internal database info, e.g. cookies)
-#define kLocalDatabaseInfoDocId @"CBL_DatabaseInfo"
 
 static BOOL sAutoCompact = YES;
 

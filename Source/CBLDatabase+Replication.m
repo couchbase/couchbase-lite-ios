@@ -99,8 +99,9 @@ static NSString* checkpointInfoKey(NSString* checkpointID) {
     if (key == nil || value == nil)
         return NO;
 
-    NSMutableDictionary* document = [NSMutableDictionary dictionaryWithDictionary:
-                                        [self getLocalCheckpointDocument]];
+    NSMutableDictionary* document = [[self getLocalCheckpointDocument] mutableCopy];
+    if (!document)
+        document = [NSMutableDictionary dictionary];
     document[key] = value;
     BOOL result = [self putLocalDocument: document withID: kLocalCheckpointDocId error: outError];
     if (!result)
@@ -113,12 +114,9 @@ static NSString* checkpointInfoKey(NSString* checkpointID) {
     if (key == nil)
         return NO;
     
-    NSMutableDictionary* document = [NSMutableDictionary dictionaryWithDictionary:
-                                     [self getLocalCheckpointDocument]];
-    if (![document objectForKey: key]) {
-        if (outError) *outError = nil;
-        return NO;
-    }
+    NSMutableDictionary* document = [[self getLocalCheckpointDocument] mutableCopy];
+    if (![document objectForKey: key])
+        return YES;
     
     [document removeObjectForKey: key];
     BOOL result = [self putLocalDocument: document withID: kLocalCheckpointDocId error: outError];
