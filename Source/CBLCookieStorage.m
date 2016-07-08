@@ -178,11 +178,7 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
         if (![self deleteCookie:aCookie outIndex: nil])
             return;
 
-        NSError* error;
-        if (![self saveCookies: &error]) {
-            Warn(@"%@: Cannot save cookies with an error : %@", self, error.my_compactDescription);
-        }
-        
+        [self saveCookies];
         [self notifyCookiesChanged];
     }
 }
@@ -197,11 +193,17 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
             }
         }
 
-        NSError* error;
-        if (![self saveCookies: &error]) {
-            Warn(@"%@: Cannot save cookies with an error : %@", self, error.my_compactDescription);
-        }
+        [self saveCookies];
+        [self notifyCookiesChanged];
+    }
+}
 
+
+- (void) deleteCookiesForURL: (NSURL*)url {
+    NSArray* forURL = [self cookiesForURL: url];
+    if (forURL.count > 0) {
+        [_cookies removeObjectsInArray: forURL];
+        [self saveCookies];
         [self notifyCookiesChanged];
     }
 }
@@ -304,6 +306,14 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
         return [_db.storage setInfo: str forKey: kDatabaseInfoCookiesKey] == kCBLStatusOK;
     else
         return NO;
+}
+
+
+- (void) saveCookies {
+    NSError* error;
+    if (![self saveCookies: &error]) {
+        Warn(@"%@: Cannot save cookies with an error : %@", self, error.my_compactDescription);
+    }
 }
 
 
