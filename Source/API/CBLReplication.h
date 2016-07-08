@@ -139,7 +139,7 @@ typedef void (^CBLAttachmentProgressBlock)(uint64_t bytesRead,
 
 /** Deletes any persistent credentials (passwords, auth tokens...) associated with this 
     replication's CBLAuthenticator. Also removes session cookies from the cookie store. */
-- (BOOL) removeStoredCredentials: (NSError**)outError;
+- (BOOL) clearAuthenticationStores: (NSError**)outError;
 
 /** Adds additional SSL root certificates to be trusted by the replicator, or entirely overrides the
     OS's default list of trusted root certs.

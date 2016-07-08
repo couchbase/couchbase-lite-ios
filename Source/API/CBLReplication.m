@@ -217,7 +217,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 - (void) deleteAllCookies {
     [self tellCookieStorage: ^(CBLCookieStorage* storage) {
-        [storage reset];
+        [storage deleteCookiesForURL: _remoteURL];
     }];
 }
 
@@ -235,7 +235,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
-- (BOOL) removeStoredCredentials: (NSError**)outError {
+- (BOOL) clearAuthenticationStores: (NSError**)outError {
     if (_authenticator) {
         if (![(id<CBLAuthorizer>)_authenticator removeStoredCredentials: outError])
             return NO;

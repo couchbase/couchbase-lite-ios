@@ -390,6 +390,46 @@
     AssertEqual(_cookieStore.cookies[0], cookie2);
 }
 
+- (void) test_DeleteCookiesByURL {
+    NSHTTPCookie* cookie1 = [self cookie: @{ NSHTTPCookieName: @"whitechoco",
+                                             NSHTTPCookieDomain: @"mycookie.com",
+                                             NSHTTPCookiePath: @"/supersweet",
+                                             NSHTTPCookieValue: @"sweet",
+                                             NSHTTPCookieMaximumAge: @(3600),
+                                             NSHTTPCookieVersion: @"1"
+                                             }];
+    [_cookieStore setCookie: cookie1];
+
+    NSHTTPCookie* cookie2 = [self cookie: @{ NSHTTPCookieName: @"oatmeal_raisin",
+                                             NSHTTPCookieDomain: @"mycookie.com",
+                                             NSHTTPCookiePath: @"/supersweet",
+                                             NSHTTPCookieValue: @"sweet",
+                                             NSHTTPCookieMaximumAge: @(3600),
+                                             NSHTTPCookieVersion: @"1"
+                                             }];
+    [_cookieStore setCookie: cookie2];
+
+    NSHTTPCookie* cookie3 = [self cookie: @{ NSHTTPCookieName: @"WhiteChoco",
+                                             NSHTTPCookieDomain: @"yourcookie.com",
+                                             NSHTTPCookiePath: @"/supersweet",
+                                             NSHTTPCookieValue: @"sweet",
+                                             NSHTTPCookieMaximumAge: @(3600),
+                                             NSHTTPCookieVersion: @"1"
+                                             }];
+    [_cookieStore setCookie: cookie3];
+    AssertEq(_cookieStore.cookies.count, 3u);
+
+    [_cookieStore deleteCookiesForURL: [NSURL URLWithString: @"http://kale.org/bitter"]];
+    AssertEq(_cookieStore.cookies.count, 3u);
+
+    [_cookieStore deleteCookiesForURL: [NSURL URLWithString: @"http://mycookie.com/supersweet"]];
+    AssertEq(_cookieStore.cookies.count, 1u);
+    AssertEqual(_cookieStore.cookies[0], cookie3);
+
+    [_cookieStore deleteCookiesForURL: [NSURL URLWithString: @"http://yourcookie.com/supersweet"]];
+    AssertEq(_cookieStore.cookies.count, 0u);
+}
+
 - (void) test_Reset {
     NSHTTPCookie* cookie1 = [self cookie: @{ NSHTTPCookieName: @"whitechoco",
                                              NSHTTPCookieDomain: @"mycookie.com",
