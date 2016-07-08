@@ -42,6 +42,9 @@ extern NSString* const CBLCookieStorageCookiesChangedNotification;
 /** Deletes all cookies by name case-sensitively. */
 - (void) deleteCookiesNamed: (NSString*)name;
 
+/** Deletes all cookies that match the given URL. */
+- (void) deleteCookiesForURL: (NSURL*)url;
+
 /** Deletes all cookies from the cookie storage. */
 - (void) reset;
 

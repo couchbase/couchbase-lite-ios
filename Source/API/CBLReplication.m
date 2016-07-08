@@ -217,7 +217,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 - (void) deleteAllCookies {
     [self tellCookieStorage: ^(CBLCookieStorage* storage) {
-        [storage reset];
+        [storage deleteCookiesForURL: _remoteURL];
     }];
 }
 
