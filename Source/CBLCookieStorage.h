@@ -23,8 +23,7 @@ extern NSString* const CBLCookieStorageCookiesChangedNotification;
     Currently support NSHTTPCookieAcceptPolicyAlways (Default) and NSHTTPCookieAcceptPolicyNever. */
 @property NSHTTPCookieAcceptPolicy cookieAcceptPolicy;
 
-/** Creates a cookie storage that will store cookies inside the given database as a local document 
-    referenced by a unique storage key. */
+/** Creates a cookie storage that will store cookies inside the database info */
 - (instancetype) initWithDB: (CBLDatabase*)db;
 
 /** Returns an array of cookies that match with the given url. */

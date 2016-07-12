@@ -1594,7 +1594,7 @@
     next = [NSDate dateWithTimeIntervalSince1970: db.storage.nextDocumentExpiry];
     Log(@"Next expiration at %@ (in %.3f sec)", next, next.timeIntervalSinceNow);
     Assert(next.timeIntervalSinceNow <= 2);
-    Assert(next.timeIntervalSinceNow >= -20);
+    Assert(next.timeIntervalSinceNow >= -30);
 
     __block unsigned dbChangesReceived = 0;
     [self expectationForNotification: kCBLDatabaseChangeNotification
