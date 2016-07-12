@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
   s.preserve_paths  = 'LICENSE.txt'
   s.ios.deployment_target = '7.0'
   s.frameworks      = 'CFNetwork', 'Security', 'SystemConfiguration'
-  s.libraries       = 'z'
+  s.libraries       = 'z', 'c++'
   s.xcconfig        = { 'OTHER_LDFLAGS' => '-ObjC' }
   s.default_subspec = 'SQLite'
 
@@ -28,7 +28,7 @@ Pod::Spec.new do |s|
   end
 
   s.subspec 'ForestDB' do |ss|
-    ss.libraries = 'sqlite3', 'c++'
+    ss.libraries = 'sqlite3'
     ss.vendored_library = 'Extras/libCBLForestDBStorage.a'
     ss.source_files = 'CouchbaseLite.framework/Headers/*.h'
     ss.preserve_paths = 'CouchbaseLite.framework'
