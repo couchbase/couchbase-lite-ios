@@ -41,19 +41,11 @@
     [_backgroundServer close];
 }
 
-- (BOOL) isDatabaseOpened: (NSString*)dbName {
-    @synchronized(self) {
-        return [_openDatabaseNames containsObject: dbName];
-    }
-}
-
-#if DEBUG
 - (NSUInteger) countForOpenedDatabase: (NSString*)dbName {
     @synchronized(self) {
         return [_openDatabaseNames countForObject: dbName];
     }
 }
-#endif
 
 - (void) openedDatabase: (NSString*)dbName {
     @synchronized(self) {

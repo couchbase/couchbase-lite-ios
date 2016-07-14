@@ -1050,6 +1050,38 @@
 }
 
 
+- (void) test18b_AttachmentMissingFile {
+    NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
+                                @"testAttachments", @"testName",
+                                nil];
+    CBLDocument* doc = [self createDocumentWithProperties: properties];
+
+    // Adding an attachment from a nonexistent file should fail:
+    NSURL* bodyURL = [NSURL fileURLWithPath: @"/tmp/cbl_body"];
+    [NSFileManager.defaultManager removeItemAtURL: bodyURL error: NULL];
+    CBLUnsavedRevision *rev2 = [doc newRevision];
+    [rev2 setAttachmentNamed: @"index.html"
+             withContentType: @"text/plain; charset=utf-8"
+                  contentURL: bodyURL];
+    AssertNil([rev2 attachmentNamed: @"index.html"]);
+
+    [[@"hi" dataUsingEncoding: NSUTF8StringEncoding] writeToURL: bodyURL atomically: NO];
+    [rev2 setAttachmentNamed: @"index.html"
+             withContentType: @"text/plain; charset=utf-8"
+                  contentURL: bodyURL];
+    Assert([rev2 attachmentNamed: @"index.html"]);
+
+    [NSFileManager.defaultManager removeItemAtURL: bodyURL error: NULL];
+
+    [self allowWarningsIn:^{
+        NSError * error;
+        AssertNil([rev2 save:&error]);
+        Assert(error);
+        Log(@"Error saving doc: %@", error);
+    }];
+}
+
+
 #pragma mark - CHANGE TRACKING
 
 

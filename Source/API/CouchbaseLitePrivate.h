@@ -98,8 +98,7 @@
 
 
 @interface CBLAttachment ()
-+ (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
-                             intoDatabase: (CBLDatabase*)database   __attribute__((nonnull(2)));
+- (BOOL) saveToDatabase: (CBLDatabase*)database error: (NSError**)outError;
 @property (readwrite, copy) NSString* name;
 @property (readwrite, retain) CBLRevision* revision;
 @end

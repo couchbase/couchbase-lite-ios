@@ -271,18 +271,41 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     return self.currentRevision.userProperties;
 }
 
-- (NSMutableDictionary*) propertiesToInsert: (NSDictionary*)properties {
+- (NSMutableDictionary*) propertiesToInsert: (NSDictionary*)properties
+                                      error: (NSError**)outError
+{
+    if (!properties)    // nil properties implies deletion
+        return [NSMutableDictionary dictionaryWithObject: @YES forKey: @"_deleted"];
+
     id idProp = properties.cbl_id;
-    if (idProp && ![idProp isEqual: self.documentID])
+    if (idProp && ![idProp isEqual: self.documentID]) {
         Warn(@"Trying to PUT wrong _id to %@: %@", self, properties);
+        CBLStatusToOutNSError(kCBLStatusBadRequest, outError);
+        return nil;
+    }
 
     NSMutableDictionary* nuProperties = [properties mutableCopy];
 
     // Process _attachments dict, converting CBLAttachments to dicts:
     NSDictionary* attachments = properties.cbl_attachments;
     if (attachments.count) {
-        NSDictionary* expanded = [CBLAttachment installAttachmentBodies: attachments
-                                                           intoDatabase: _database];
+        __block BOOL ok = YES;
+        __block NSError* error;
+        NSDictionary* expanded = [attachments my_dictionaryByUpdatingValues: ^id(NSString* name,
+                                                                                 id value) {
+            CBLAttachment* attachment = $castIf(CBLAttachment, value);
+            if (ok && attachment) {
+                ok = [attachment saveToDatabase: _database error: &error];
+                value = attachment.metadata;
+            }
+            return value;
+        }];
+
+        if (!ok) {
+            if (outError)
+                *outError = error;
+            return nil;
+        }
         if (expanded != attachments)
             nuProperties[@"_attachments"] = expanded;
     }
@@ -294,9 +317,12 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
                       allowConflict: (BOOL)allowConflict
                               error: (NSError**)outError
 {
+    NSMutableDictionary* mProperties = [self propertiesToInsert: properties error: outError];
+    if (!mProperties)
+        return nil;
     CBLStatus status = 0;
     CBL_Revision* newRev = [_database putDocID: _docID
-                                    properties: [self propertiesToInsert: properties]
+                                    properties: mProperties
                                 prevRevisionID: prevID
                                  allowConflict: allowConflict
                                         source: nil
@@ -340,11 +366,14 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
                                      error: (NSError**)outError
 {
     Assert(revIDStrings.count > 0);
+    NSMutableDictionary* mProperties = [self propertiesToInsert: properties error: outError];
+    if (!mProperties)
+        return NO;
     NSArray<CBL_RevID*>* revIDs = revIDStrings.cbl_asRevIDs;
     CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID: _docID
                                                                     revID: revIDs[0]
                                                                   deleted: properties.cbl_deleted];
-    rev.properties = [self propertiesToInsert: properties];
+    rev.properties = mProperties;
     if (![_database registerAttachmentBodies: attachments forRevision: rev error: outError])
         return NO;
     CBLStatus status = [_database forceInsert: rev

@@ -329,7 +329,14 @@ static int collateRevs(const char* rev1, const char* rev2) {
 
 
 - (void) testMYURLUtils {
-    NSURL* url = $url(@"https://example.com/path/here?query#fragment");
+    NSURL* url = $url(@"https://example.com/path/here");
+    AssertEq(url.my_effectivePort, 443);
+    AssertEqual(url.my_baseURL, $url(@"https://example.com"));
+    AssertEqual(url.my_URLByRemovingUser, url);
+    AssertEqual(url.my_sanitizedString, @"https://example.com/path/here");
+    AssertEqual(url.my_sanitizedPath, @"/path/here");
+
+    url = $url(@"https://example.com/path/here?query#fragment");
     AssertEq(url.my_effectivePort, 443);
     AssertEqual(url.my_baseURL, $url(@"https://example.com"));
     AssertEqual(url.my_URLByRemovingUser, url);
