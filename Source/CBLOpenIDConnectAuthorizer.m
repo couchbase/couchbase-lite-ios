@@ -316,12 +316,25 @@ UsingLogDomain(Sync);
 
 
 static NSURL* extractRedirectURL(NSURL* loginURL) {
-    NSURLComponents* comp = [NSURLComponents componentsWithURL: loginURL resolvingAgainstBaseURL: YES];
-    for (NSURLQueryItem* query in comp.queryItems) {
-        if ([query.name isEqualToString: @"redirect_uri"])
-            return [NSURL URLWithString: query.value];
+    NSString* uri = nil;
+    NSURLComponents* comp = [NSURLComponents componentsWithURL: loginURL
+                                       resolvingAgainstBaseURL: YES];
+    if ([comp respondsToSelector: @selector(queryItems)]) {     // iOS 8, macOS 10.10
+        for (NSURLQueryItem* query in comp.queryItems) {
+            if ([query.name isEqualToString: @"redirect_uri"]) {
+                uri = query.value;
+                break;
+            }
+        }
+    } else {
+        for (NSString* item in [comp.query componentsSeparatedByString: @"&"]) {
+            if ([item hasPrefix: @"redirect_uri="]) {
+                uri = [[item substringFromIndex: 13] stringByRemovingPercentEncoding];
+                break;
+            }
+        }
     }
-    return nil;
+    return uri ? $url(uri) : nil;
 }
 
 
