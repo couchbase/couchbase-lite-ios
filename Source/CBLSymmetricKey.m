@@ -120,6 +120,21 @@
 }
 
 
++ (BOOL) deleteKeychainItemNamed: (NSString*)itemName
+                           error: (NSError**)outError
+{
+    NSDictionary *query = @{(__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
+                            (__bridge id)kSecAttrService: itemName };
+    OSStatus status = SecItemDelete((__bridge CFDictionaryRef)query);
+    if (status != noErr && status != errSecItemNotFound) {
+        if (outError)
+            *outError = [NSError errorWithDomain: NSOSStatusErrorDomain code: status userInfo: nil];
+        return NO;
+    }
+    return YES;
+}
+
+
 - (NSString*) hexData {
     return CBLHexFromBytes(_keyData.bytes, _keyData.length);
 }
