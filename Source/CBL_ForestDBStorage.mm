@@ -59,12 +59,13 @@ static void FDBLogCallback(C4LogLevel level, C4Slice message) {
             LogTo(Database, @"ForestDB: %.*s", (int)message.size, message.buf);
             break;
         case kC4LogWarning:
-            Warn(@"%.*s", (int)message.size, message.buf);
-            break;
         case kC4LogError: {
             bool raises = gMYWarnRaisesException;
             gMYWarnRaisesException = NO;    // don't throw from a ForestDB callback!
-            Warn(@"ForestDB error: %.*s", (int)message.size, message.buf);
+            if (level == kC4LogWarning)
+                Warn(@"%.*s", (int)message.size, message.buf);
+            else
+                Warn(@"ForestDB error: %.*s", (int)message.size, message.buf);
             gMYWarnRaisesException = raises;
             break;
         }
