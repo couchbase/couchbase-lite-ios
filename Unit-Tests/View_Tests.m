@@ -1287,4 +1287,54 @@ static NSDictionary* mkGeoRect(double x0, double y0, double x1, double y1) {
 }
 
 
+- (void) test25_ToDoLiteTaskListQuery {
+    // For https://github.com/couchbase/couchbase-lite-ios/issues/1370
+    // This is equivalent to the types of queries CBForest runs to display lists of tasks.
+    [self createDocumentWithProperties: @{@"_id": @"itemA",
+                                          @"type": @"task",
+                                          @"created_at": @"2016-07-18T22:24:01.000Z",
+                                          @"list_id": @"ListA"}];
+    [self createDocumentWithProperties: @{@"_id": @"itemB",
+                                          @"type": @"task",
+                                          @"created_at": @"2016-07-18T22:25:01.000Z",
+                                          @"list_id": @"ListB"}];
+
+    CBLView* view = [db viewNamed: @"tasksByDate"];
+    [view setMapBlock: MAPBLOCK({
+        if ([doc[@"type"] isEqualToString: @"task"]) {
+            id date = doc[@"created_at"];
+            NSString* listID = doc[@"list_id"];
+            emit(@[listID, date], doc);
+        }
+    }) reduceBlock: nil version: @"4"];
+
+    CBLQuery* query = [view createQuery];
+    query.descending = YES;
+    query.startKey = @[@"ListB", @{}];
+    query.endKey = @[@"ListB"];
+
+    // Display task list "ListB"
+    CBLQueryEnumerator *rows = [query run: NULL];
+    AssertEq(rows.count, 1u);
+    AssertEqual([rows rowAtIndex:0].documentID, @"itemB");
+
+    // Delete the sole item in "ListB"
+    Assert([db[@"itemB"] deleteDocument: NULL]);
+
+    // Display the list again -- it should be empty now:
+    rows = [query run: NULL];
+    AssertEqual(rows.allObjects, @[]);
+
+    // Display "ListA":
+    query = [view createQuery];
+    query.descending = YES;
+    query.startKey = @[@"ListA", @{}];
+    query.endKey = @[@"ListA"];
+
+    rows = [query run: NULL];
+    AssertEq(rows.count, 1u);
+    AssertEqual([rows rowAtIndex:0].documentID, @"itemA");
+}
+
+
 @end

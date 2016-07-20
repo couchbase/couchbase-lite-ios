@@ -249,6 +249,12 @@ extern "C" {
         return row;
     }
 
+    if (c4err.code) {
+        C4SliceResult msg = c4error_getMessage(c4err);
+        Warn(@"Error enumerating query: %.*s", (int)msg.size, msg.buf);
+        c4slice_free(msg);
+    }
+
     // End of enumeration:
     [self freeEnum];
     return nil;
