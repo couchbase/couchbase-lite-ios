@@ -19,6 +19,9 @@
 #endif
 + (void) setWarningsRaiseExceptions: (BOOL)wre;
 @property NSUInteger defaultMaxRevTreeDepth;
+#if !TARGET_OS_IPHONE
+- (BOOL) forgetEncryptionKeyForDatabaseNamed: (NSString*)dbName error: (NSError**)outError;
+#endif
 @end
 
 

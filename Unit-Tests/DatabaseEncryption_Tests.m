@@ -181,8 +181,10 @@
 
 - (void) test06_Keychain {
 #if !TARGET_OS_IPHONE
-    // Create encrypted DB:
     NSError* error;
+    Assert([dbmgr forgetEncryptionKeyForDatabaseNamed: @"seekrit" error: NULL]);
+    
+    // Create encrypted DB:
     seekrit = [self openSeekritDBWithKey: @YES error: &error];
     Assert(seekrit, @"Failed to create encrypted db: %@", error);
     [self createDocumentWithProperties: @{@"answer": @42} inDatabase: seekrit];

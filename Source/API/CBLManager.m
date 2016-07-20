@@ -616,6 +616,18 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
 }
 
 
+#if !TARGET_OS_IPHONE
+- (BOOL) forgetEncryptionKeyForDatabaseNamed: (NSString*)dbName
+                                       error: (NSError**)outError
+{
+    NSString* dir = _dir.stringByAbbreviatingWithTildeInPath;
+    NSString* itemName = $sprintf(@"%@ database in %@", dbName, dir);
+    return [CBLSymmetricKey deleteKeychainItemNamed: itemName error: outError];
+}
+#endif
+
+
+
 #if DEBUG
 - (CBLDatabase*) createEmptyDatabaseNamed: (NSString*)name error: (NSError**)outError {
     CBLDatabase* db = _databases[name];
