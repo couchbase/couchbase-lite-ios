@@ -314,12 +314,14 @@ static BOOL sAutoCompact = YES;
     NSString* itemName = $sprintf(@"%@ database in %@", self.name, dir);
     NSError* error;
     CBLSymmetricKey* key = [[CBLSymmetricKey alloc] initWithKeychainItemNamed: itemName
-                                                                        error: outError];
+                                                                        error: &error];
     if (!key) {
         if (error.code == errSecItemNotFound) {
             key = [CBLSymmetricKey new];
             if (![key saveKeychainItemNamed: itemName error: outError])
                 key = nil;
+        } else {
+            if (outError) *outError = error;
         }
     }
     return key;

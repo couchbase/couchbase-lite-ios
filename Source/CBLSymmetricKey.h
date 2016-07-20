@@ -49,6 +49,10 @@ typedef NSMutableData* (^CBLCryptorBlock)(NSData* input);
 - (instancetype) initWithKeychainItemNamed: (NSString*)itemName
                                      error: (NSError**)outError;
 
+/** Deletes a symmetric key from the Keychain. */
++ (BOOL) deleteKeychainItemNamed: (NSString*)itemName
+                           error: (NSError**)outError;
+
 /** Saves a key to the Keychain under the given name. */
 - (BOOL) saveKeychainItemNamed: (NSString*)itemName
                          error: (NSError**)outError;
