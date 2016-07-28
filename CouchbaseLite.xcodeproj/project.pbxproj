@@ -980,6 +980,8 @@
 		93829ECD1C6097510042189B /* libCBLJSViewCompiler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 930FE55E1C58562B008107A0 /* libCBLJSViewCompiler.a */; };
 		93829EDA1C6097650042189B /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93829ED91C6097650042189B /* SystemConfiguration.framework */; };
 		939C2F1E1C5973AB006E8C2B /* CBLRegisterJSViewCompiler.h in Copy Extras */ = {isa = PBXBuildFile; fileRef = 93EBA2641B2EC61E0006C66C /* CBLRegisterJSViewCompiler.h */; };
+		93AAD4F61D46EE470037B4F4 /* libCBLForestDBStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */; };
+		93AAD5041D46EE4E0037B4F4 /* libCBLForestDBStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E66B431A7307590091DA3F /* libCBLForestDBStorage.a */; };
 		93D21AF01A955480000AD9AF /* CBLCookieStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 93D21AEE1A955480000AD9AF /* CBLCookieStorage.h */; };
 		93D21AF21A958CEC000AD9AF /* CBLCookieStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21AEF1A955480000AD9AF /* CBLCookieStorage.m */; };
 		93D21B021A9857A1000AD9AF /* CookieStorage_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 93D21B011A9857A1000AD9AF /* CookieStorage_Tests.m */; };
@@ -2170,6 +2172,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				93AAD4F61D46EE470037B4F4 /* libCBLForestDBStorage.a in Frameworks */,
 				930FE5791C585B77008107A0 /* libCBLJSViewCompiler.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2253,6 +2256,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				93AAD5041D46EE4E0037B4F4 /* libCBLForestDBStorage.a in Frameworks */,
 				93829ECD1C6097510042189B /* libCBLJSViewCompiler.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
