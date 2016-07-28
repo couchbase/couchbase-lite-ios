@@ -1121,13 +1121,13 @@
 #pragma mark - CONCURRENT WRITES:
 
 
-- (void) lotsaWrites: (NSUInteger)nTransactions ofDocs: (NSUInteger)nDocs
+- (void) lotsaWrites: (NSUInteger)nTransactions ofDocs: (NSUInteger)nDocs as: (NSString*)name
             database: (CBLDatabase*)ondb
 {
     NSParameterAssert(ondb);
     for (NSUInteger t = 1; t <= nTransactions; t++) {
         BOOL ok = [ondb inTransaction: ^BOOL {
-            Log(@"Transaction #%u ...", (unsigned)t);
+            Log(@">>> %@ transaction #%u ...", name, (unsigned)t);
             @autoreleasepool {
                 for (NSUInteger d = 1; d <= nDocs; d++) {
                     CBLDocument* doc = [ondb createDocument];
@@ -1136,6 +1136,7 @@
                     NSError* error;
                     Assert([doc putProperties: props error: &error], @"put failed: %@", error);
                 }
+                Log(@"<<< %@ end transaction #%u", name, (unsigned)t);
                 return YES;
             }
         }];
@@ -1143,7 +1144,7 @@
     }
 }
 
-- (void) lotsaReads: (NSUInteger)nReads database: (CBLDatabase*)ondb {
+- (void) lotsaReads: (NSUInteger)nReads as: (NSString*)name database: (CBLDatabase*)ondb {
     NSParameterAssert(ondb);
     NSUInteger docCount = 0;
     for (NSUInteger t = 1; t <= nReads; t++) {
@@ -1154,7 +1155,7 @@
             CBLQueryEnumerator* allDocs = [[ondb createAllDocumentsQuery] run: &error];
             Assert(allDocs, @"getAllDocs failed: %@", error);
             NSUInteger newCount = allDocs.count;
-            NSLog(@"#%3u: Reader found %lu docs in %.3g sec", (unsigned)t, (unsigned long)newCount, CFAbsoluteTimeGetCurrent()-time);
+            NSLog(@"#%3u: Reader %@ found %lu docs in %.3g sec", (unsigned)t, name, (unsigned long)newCount, CFAbsoluteTimeGetCurrent()-time);
             Assert(newCount >= docCount, @"Wrong doc count (used to be %ld)", (unsigned long)docCount);
             docCount = newCount;
         }
@@ -1165,17 +1166,17 @@
 - (void) test21_ConcurrentWrites {
     const NSUInteger kNTransactions = 100;
     const NSUInteger kNDocs = 100;
-    Log(@"Main thread writer: %@", db);
+    Log(@"Main thread writer B: %@", db);
 
     CBLManager* bgmgr = [dbmgr copy];
     dispatch_queue_t writingQueue = dispatch_queue_create("ConcurrentWritesTest",  NULL);
     dispatch_async(writingQueue, ^{
-        Log(@"Writer 2 starting...");
+        Log(@"Writer A starting...");
         NSError* error;
         CBLDatabase* bgdb = [bgmgr existingDatabaseNamed: db.name error: &error];
         NSAssert(bgdb, @"Couldn't create bgdb: %@", error);
-        Log(@"bg writer: %@", bgdb);
-        [self lotsaWrites: kNTransactions ofDocs: kNDocs database: bgdb];
+        Log(@"bg writer A: %@", bgdb);
+        [self lotsaWrites: kNTransactions ofDocs: kNDocs as: @"A" database: bgdb];
         [bgmgr close];
     });
 
@@ -1186,8 +1187,8 @@
         NSError* error;
         CBLDatabase* bgdb = [readQueueMgr existingDatabaseNamed: db.name error: nil];
         NSAssert(bgdb, @"Couldn't create bgdb: %@", error);
-        Log(@"bg reader: %@", bgdb);
-        [self lotsaReads: kNTransactions/2 database: bgdb];
+        Log(@"bg reader 1: %@", bgdb);
+        [self lotsaReads: kNTransactions/2 as: @"1" database: bgdb];
         [readQueueMgr close];
     });
 
@@ -1198,12 +1199,13 @@
         NSError* error;
         CBLDatabase* bgdb = [readQueue2Mgr existingDatabaseNamed: db.name error: &error];
         NSAssert(bgdb, @"Couldn't create bgdb: %@", error);
-        Log(@"bg2 reader: %@", bgdb);
-        [self lotsaReads: kNTransactions/2 database: bgdb];
+        Log(@"bg reader 2: %@", bgdb);
+        [self lotsaReads: kNTransactions/2 as: @"2" database: bgdb];
         [readQueue2Mgr close];
     });
 
-    [self lotsaWrites: kNTransactions ofDocs: kNDocs database: db];
+    Log(@"Writer B starting...");
+    [self lotsaWrites: kNTransactions ofDocs: kNDocs as: @"B" database: db];
 
     // Wait for all queues to finish:
     dispatch_sync(readingQueue, ^{  });

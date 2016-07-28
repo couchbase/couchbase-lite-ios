@@ -392,8 +392,12 @@ DefineLogDomain(SQL);
         return NO;
     }
 
+    // Always make sure WAL is enabled because our concurrency support relies on it
+    if (![self initialize: @"PRAGMA journal_mode=WAL" error: outError])
+        return NO;
+
     BOOL isNew = (dbVersion == 0);
-    if (isNew && ![self initialize: @"PRAGMA journal_mode=WAL; BEGIN TRANSACTION" error: outError])
+    if (isNew && ![self initialize: @"BEGIN TRANSACTION" error: outError])
         return NO;
 
     if (dbVersion < 17) {
