@@ -25,6 +25,7 @@ GCC_VERSION                                                = com.apple.compilers
 CLANG_ENABLE_MODULES                                       = YES
 CLANG_ENABLE_OBJC_ARC                                      = YES
 ENABLE_STRICT_OBJC_MSGSEND                                 = YES
+SWIFT_VERSION                                              = 3.0    // For Xcode 8+
 
 // Linking:
 CLANG_CXX_LIBRARY                                          = libc++
