@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
   s.version         = '<RELEASE VERSION NUMBER>'
   s.license         = { :type => 'Apache License, Version 2.0', :file => 'LICENSE.txt' }
   s.homepage        = 'http://mobile.couchbase.com'
-  s.summary         = 'An embedded syncable NoSQL database for OSX apps.'
+  s.summary         = 'An embedded syncable NoSQL database for macOS apps.'
   s.author          = 'Couchbase'
   s.source          = { :http => '<RELEASE ZIP FILE URL>' }
   s.preserve_paths  = 'LICENSE.txt'
