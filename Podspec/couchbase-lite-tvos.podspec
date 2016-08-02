@@ -15,29 +15,23 @@ Pod::Spec.new do |s|
 
   s.subspec 'SQLite' do |ss|
     ss.libraries = 'sqlite3'
-    ss.source_files = 'CouchbaseLite.framework/Headers/*.h'
-    ss.preserve_paths = 'CouchbaseLite.framework'
-    ss.vendored_frameworks = 'CouchbaseLite.framework'
+    ss.source_files = 'CouchbaseLite.framework/Headers/*.h', 'CouchbaseLiteListener.framework/Headers/*.h'
+    ss.preserve_paths = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
+    ss.vendored_frameworks = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
   end
 
   s.subspec 'SQLCipher' do |ss|
     ss.vendored_library = 'Extras/libsqlcipher.a'
-    ss.source_files = 'CouchbaseLite.framework/Headers/*.h'
-    ss.preserve_paths = 'CouchbaseLite.framework'
-    ss.vendored_frameworks = 'CouchbaseLite.framework'
+    ss.source_files = 'CouchbaseLite.framework/Headers/*.h', 'CouchbaseLiteListener.framework/Headers/*.h'
+    ss.preserve_paths = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
+    ss.vendored_frameworks = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
   end
 
   s.subspec 'ForestDB' do |ss|
     ss.libraries = 'sqlite3'
     ss.vendored_library = 'Extras/libCBLForestDBStorage.a'
-    ss.source_files = 'CouchbaseLite.framework/Headers/*.h'
-    ss.preserve_paths = 'CouchbaseLite.framework'
-    ss.vendored_frameworks = 'CouchbaseLite.framework'
-  end
-
-  s.subspec 'Listener' do |ss|
-    ss.source_files = 'CouchbaseLiteListener.framework/Headers/*.h'
-    ss.preserve_paths = 'CouchbaseLiteListener.framework'
-    ss.vendored_frameworks = 'CouchbaseLiteListener.framework'
+    ss.source_files = 'CouchbaseLite.framework/Headers/*.h', 'CouchbaseLiteListener.framework/Headers/*.h'
+    ss.preserve_paths = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
+    ss.vendored_frameworks = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
   end
 end
