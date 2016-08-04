@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
   s.version         = '<RELEASE VERSION NUMBER>'
   s.license         = { :type => 'Apache License, Version 2.0', :file => 'LICENSE.txt' }
   s.homepage        = 'http://mobile.couchbase.com'
-  s.summary         = 'An embedded syncable NoSQL database for OSX apps.'
+  s.summary         = 'An embedded syncable NoSQL database for macOS apps.'
   s.author          = 'Couchbase'
   s.source          = { :http => '<RELEASE ZIP FILE URL>' }
   s.preserve_paths  = 'LICENSE.txt'
@@ -15,14 +15,8 @@ Pod::Spec.new do |s|
   s.default_subspec = 'Core'
 
   s.subspec 'Core' do |ss|
-    ss.preserve_paths = 'CouchbaseLite.framework'
-    ss.vendored_frameworks = 'CouchbaseLite.framework'
-    ss.osx.resource = 'CouchbaseLite.framework'
-  end
-
-  s.subspec 'Listener' do |ss|
-    ss.preserve_paths = 'CouchbaseLiteListener.framework'
-    ss.vendored_frameworks = 'CouchbaseLiteListener.framework'
-    ss.osx.resource = 'CouchbaseLiteListener.framework'
+    ss.preserve_paths = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
+    ss.vendored_frameworks = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
+    ss.osx.resources = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
   end
 end

@@ -6,7 +6,7 @@
 //  Copyright © 2016 Couchbase, Inc. All rights reserved.
 //
 
-#import <CouchbaseLite/CBLAuthenticator.h>
+#import "CBLAuthenticator.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
