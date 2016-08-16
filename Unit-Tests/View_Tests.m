@@ -357,6 +357,15 @@
 }
 
 
+// https://github.com/couchbase/couchbase-lite-ios/issues/1379
+- (void) test062_UpdateIndexWithUnindexedDoc {
+    CBLView* view = [self createSkinsViewAndDocs];
+    [self createDocumentWithProperties: @{@"_id": @"_design/foo"}];
+    [view updateIndex];
+    AssertEq(view.lastSequenceIndexed, db.lastSequenceNumber);
+}
+
+
 #pragma mark - LIVE QUERIES:
 
 
