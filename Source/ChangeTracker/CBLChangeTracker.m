@@ -241,6 +241,7 @@ DefineLogDomain(ChangeTracker);
         if (!_http.credential)
             _http.credential = $castIfProtocol(CBLCredentialAuthorizer, _authorizer).credential;
     }
+    _parser = nil;
     self.error = nil;
     return NO;
 }
