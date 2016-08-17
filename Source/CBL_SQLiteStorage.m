@@ -235,16 +235,35 @@ DefineLogDomain(SQL);
 }
 
 
+- (bool) sqliteHasRealEncryption {
+    static int hasRealEncryption = -1;
+    if (hasRealEncryption < 0) {
+        // Check whether encryption is available:
+        hasRealEncryption = sqlite3_compileoption_used("SQLITE_HAS_CODEC") != 0;
+        if (hasRealEncryption) {
+            // Try to determine whether we're using SQLCipher or the SQLite Encryption Extension,
+            // by calling a SQLCipher-specific pragma that returns a number:
+            Assert(_fmdb);
+            if ([_fmdb intForQuery: @"PRAGMA cipher_default_kdf_iter"] == 0) {
+                // Oops, this isn't SQLCipher, so we can't use encryption. (SEE requires us to call
+                // another pragma to enable encryption, which takes a license key we don't know.)
+                hasRealEncryption = 0;
+            }
+        }
+    }
+    return (bool)hasRealEncryption;
+}
+
+
 // Give SQLCipher the encryption key, if provided:
 - (BOOL) decryptWithKey: (CBLSymmetricKey*)encryptionKey error: (NSError**)outError {
-    BOOL hasRealEncryption = sqlite3_compileoption_used("SQLITE_HAS_CODEC") != 0;
 #ifdef MOCK_ENCRYPTION
-    if (!hasRealEncryption && CBLEnableMockEncryption)
+    if (!self.sqliteHasRealEncryption && CBLEnableMockEncryption)
         return [self mockDecryptWithKey: encryptionKey error: outError];
 #endif
 
     if (encryptionKey) {
-        if (!hasRealEncryption) {
+        if (!self.sqliteHasRealEncryption) {
             Warn(@"CBL_SQLiteStorage: encryption not available (app not built with SQLCipher)");
             return CBLStatusToOutNSError(kCBLStatusNotImplemented,  outError);
         } else {
@@ -302,8 +321,7 @@ DefineLogDomain(SQL);
 
 
 - (MYAction*) actionToChangeEncryptionKey: (CBLSymmetricKey*)newKey {
-    BOOL hasRealEncryption = sqlite3_compileoption_used("SQLITE_HAS_CODEC") != 0;
-    if (!hasRealEncryption) {
+    if (!self.sqliteHasRealEncryption) {
 #ifdef MOCK_ENCRYPTION
         if (!CBLEnableMockEncryption)
 #endif
@@ -315,7 +333,7 @@ DefineLogDomain(SQL);
     __block BOOL dbWasClosed = NO;
     NSString* tempPath;
 #ifdef MOCK_ENCRYPTION
-    if (!hasRealEncryption) {
+    if (!self.sqliteHasRealEncryption) {
         NSData* givenKeyData = newKey ? newKey.keyData : [NSData data];
         NSString* oldKeyPath = [_directory stringByAppendingPathComponent: @"mock_key"];
         NSString* newKeyPath = [_directory stringByAppendingPathComponent: @"mock_new_key"];
@@ -368,7 +386,7 @@ DefineLogDomain(SQL);
     }];
 
     // Overwrite the old db file with the new one:
-    if (hasRealEncryption) {
+    if (self.sqliteHasRealEncryption) {
         [action addAction: [MYAction moveFile: tempPath toPath: _fmdb.databasePath]];
     }
 
