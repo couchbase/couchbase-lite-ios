@@ -12,6 +12,7 @@
 #import "CBLCookieStorage.h"
 #import "CBLMisc.h"
 #import "MYURLUtils.h"
+#import "MYBlockUtils.h"
 
 UsingLogDomain(Sync);
 
@@ -25,6 +26,7 @@ UsingLogDomain(Sync);
     NSURL* _baseURL;
     NSURLSession* _session;
     NSRunLoop* _runLoop;
+    NSThread *_thread;
     id<CBLRemoteRequestDelegate> _requestDelegate;
     NSMutableDictionary<NSNumber*, CBLRemoteRequest*>* _requestIDs; // Used on operation queue only
     NSMutableSet<CBLRemoteRequest*>* _allRequests;                  // Used on API thread only
@@ -71,6 +73,7 @@ UsingLogDomain(Sync);
                                             delegateQueue: queue];
         _session.sessionDescription = @"Couchbase Lite";
         _runLoop = [NSRunLoop currentRunLoop];
+        _thread = [NSThread currentThread];
         _requestIDs = [NSMutableDictionary new];
     }
     return self;
@@ -165,8 +168,7 @@ UsingLogDomain(Sync);
 
 
 - (void) doAsync: (void (^)())block {
-    CFRunLoopPerformBlock(_runLoop.getCFRunLoop, kCFRunLoopDefaultMode, block);
-    CFRunLoopWakeUp(_runLoop.getCFRunLoop);
+    MYOnThread(_thread, block);
 }
 
 
