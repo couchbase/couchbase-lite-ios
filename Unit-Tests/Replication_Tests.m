@@ -1710,6 +1710,37 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 
+- (void) test29_OpenIDConnect_PusherBecomesIdle {
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1392
+    NSURL* remoteDbURL = [self remoteNonSSLTestDBURL: @"openid_db"];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+
+    NSError* error;
+    Assert([CBLOpenIDConnectAuthorizer forgetIDTokensForServer: remoteDbURL error: &error]);
+
+    __block BOOL callbackInvoked = NO;
+    id<CBLAuthenticator> auth = [CBLAuthenticator OpenIDConnectAuthenticator:
+                                 ^(NSURL* login, NSURL* authBase, CBLOIDCLoginContinuation cont)
+                                 {
+                                     [self assertValidOIDCLogin: login authBase: authBase forRemoteDB: remoteDbURL];
+                                     // Fake a form submission to the OIDC test provider, to get an auth URL redirect:
+                                     NSURL* authURL = [self loginToOIDCTestProvider: remoteDbURL];
+                                     callbackInvoked = YES;
+                                     cont(authURL, nil);
+                                 }];
+
+    CBLReplication* push = [db createPushReplication: remoteDbURL];
+    push.authenticator = auth;
+    push.continuous = YES;
+    [self runReplication: push expectedChangesCount: 0];
+    
+    Assert(push.status == kCBLReplicationIdle);
+    Assert(callbackInvoked);
+}
+
+
 - (NSError*) pullWithOIDCAuth: (id<CBLAuthenticator>)auth
             expectingUsername: (NSString*)username
 {
