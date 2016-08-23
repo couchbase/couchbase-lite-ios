@@ -252,7 +252,7 @@ static NSString* localized(NSString* const table[], unsigned index)
         NSError* error;
         // Generate a random 256-bit key:
         uint8_t randomData[32];
-        SecRandomCopyBytes(kSecRandomDefault, sizeof(randomData), randomData);
+        int __unused result = SecRandomCopyBytes(kSecRandomDefault, sizeof(randomData), randomData);
         NSData* key = [NSData dataWithBytes: randomData length: sizeof(randomData)];
 
         if (![self storeKeychainItem: key error: &error]) {

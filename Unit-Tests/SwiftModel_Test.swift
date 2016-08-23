@@ -24,14 +24,14 @@ class SwiftModelWithRelation : CBLModel {
 class SwiftModel_Test: CBLTestCaseWithDB {
 
     func testSwiftModel() {
-        let model = SwiftModel(forNewDocumentInDatabase: db);
+        let model = SwiftModel(forNewDocumentIn: db);
         model.intsy = 42;
         model.stringsy = "Frood";
     }
 
     func testRelation() {
-        let model = SwiftModel(forNewDocumentInDatabase: db);
-        let relator = SwiftModelWithRelation(forNewDocumentInDatabase: db)
+        let model = SwiftModel(forNewDocumentIn: db);
+        let relator = SwiftModelWithRelation(forNewDocumentIn: db)
         relator.moddy = model
     }
 

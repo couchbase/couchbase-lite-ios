@@ -335,7 +335,7 @@
 		270B3E241489392600E0A926 /* CBL_Server.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706401486BBD500F0F099 /* CBL_Server.h */; };
 		270B3E251489392C00E0A926 /* CBL_Router.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C706431486BE7100F0F099 /* CBL_Router.h */; };
 		270B3E26148939BD00E0A926 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* CouchbaseLite.framework */; };
-		270B3E27148939C500E0A926 /* CouchbaseLite.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* CouchbaseLite.framework */; };
+		270B3E27148939C500E0A926 /* CouchbaseLite.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* CouchbaseLite.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		270B3E2B1489581E00E0A926 /* CBLRestPuller.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E291489581E00E0A926 /* CBLRestPuller.h */; };
 		270B3E3914898DF200E0A926 /* CBL_Revision.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3714898DF200E0A926 /* CBL_Revision.h */; };
 		270B3E3E148D7F0000E0A926 /* CBLRestPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3C148D7F0000E0A926 /* CBLRestPusher.h */; };
@@ -349,7 +349,7 @@
 		27103F8314E9CE4400DF7209 /* CBLReachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 27103F8114E9CE4400DF7209 /* CBLReachability.h */; };
 		27103F8514E9CE4400DF7209 /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27103F8214E9CE4400DF7209 /* CBLReachability.m */; };
 		27103F8814EA076600DF7209 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27103F8714EA076600DF7209 /* SystemConfiguration.framework */; };
-		2711CDDE14C6584A00505D55 /* CouchbaseLiteListener.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */; };
+		2711CDDE14C6584A00505D55 /* CouchbaseLiteListener.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		2711CDFD14C7590A00505D55 /* CBLDatabase+Attachments.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CDFC14C7590A00505D55 /* CBLDatabase+Attachments.h */; };
 		2711CDFE14C7590A00505D55 /* CBLDatabase+Attachments.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CDFC14C7590A00505D55 /* CBLDatabase+Attachments.h */; };
 		2711CE0014C7595900505D55 /* CBLDatabase+Insertion.h in Headers */ = {isa = PBXBuildFile; fileRef = 2711CDFF14C7595900505D55 /* CBLDatabase+Insertion.h */; };
@@ -4419,11 +4419,12 @@
 			attributes = {
 				CLASSPREFIX = CBL;
 				LastSwiftUpdateCheck = 0700;
-				LastUpgradeCheck = 0730;
+				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = "Couchbase, Inc";
 				TargetAttributes = {
 					2700358A1A44E9270015B9F4 = {
 						CreatedOnToolsVersion = 6.1.1;
+						LastSwiftMigration = 0800;
 						TestTargetID = 27B0B80A1492C16300A817AD;
 					};
 					272AA83E1A48D835004B8D55 = {
@@ -4435,6 +4436,9 @@
 					273E9F011C509F39003115A6 = {
 						CreatedOnToolsVersion = 7.2;
 						TestTargetID = 273E9EEC1C509F38003115A6;
+					};
+					27452B391AB1156F00327776 = {
+						LastSwiftMigration = 0800;
 					};
 					27452BB71AB1180800327776 = {
 						CreatedOnToolsVersion = 6.3;
@@ -4448,12 +4452,33 @@
 					};
 					27731F131495CFEF00815D67 = {
 						DevelopmentTeam = N2Q372V7W2;
+						LastSwiftMigration = 0800;
+					};
+					27B0B7A81492B83B00A817AD = {
+						LastSwiftMigration = 0800;
+					};
+					27B0B7E61492BB6B00A817AD = {
+						LastSwiftMigration = 0800;
 					};
 					27B0B80A1492C16300A817AD = {
 						DevelopmentTeam = N2Q372V7W2;
+						LastSwiftMigration = 0800;
+					};
+					27E66A571A7305B10091DA3F = {
+						LastSwiftMigration = 0800;
+					};
+					27E66AD01A7307590091DA3F = {
+						LastSwiftMigration = 0800;
 					};
 					930FE55D1C58562B008107A0 = {
 						CreatedOnToolsVersion = 7.2;
+						LastSwiftMigration = 0800;
+					};
+					DA023B2614BCA94C008184BB = {
+						LastSwiftMigration = 0800;
+					};
+					DA147C1F14BCAC3B0052DA4D = {
+						LastSwiftMigration = 0800;
 					};
 				};
 			};
@@ -5806,6 +5831,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF511C973FB5001A70FC /* Project_Debug.xcconfig */;
 			buildSettings = {
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
 		};
@@ -5813,6 +5841,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF521C973FB5001A70FC /* Project_Release.xcconfig */;
 			buildSettings = {
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 			};
 			name = Release;
 		};
@@ -5820,6 +5851,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF1E1C973FB5001A70FC /* iOS Unit Tests_Debug.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -5827,6 +5859,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF1F1C973FB5001A70FC /* iOS Unit Tests_Release.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -5932,6 +5965,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF121C973FB5001A70FC /* iOS fat library_Debug.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -5939,6 +5973,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF131C973FB5001A70FC /* iOS fat library_Release.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -5946,6 +5981,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF151C973FB5001A70FC /* iOS framework_Debug.xcconfig */;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 			};
 			name = Debug;
 		};
@@ -5953,6 +5989,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF161C973FB5001A70FC /* iOS framework_Release.xcconfig */;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 			};
 			name = Release;
 		};
@@ -6000,6 +6037,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF0F1C973FB5001A70FC /* iOS Empty App_Debug.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -6007,6 +6045,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF101C973FB5001A70FC /* iOS Empty App_Release.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -6014,6 +6053,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF181C973FB5001A70FC /* iOS library_Debug.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -6021,6 +6061,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF191C973FB5001A70FC /* iOS library_Release.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -6028,6 +6069,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF211C973FB5001A70FC /* iOS_Debug.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -6035,6 +6077,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF221C973FB5001A70FC /* iOS_Release.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -6042,6 +6085,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF1B1C973FB5001A70FC /* iOS Test App_Debug.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -6049,6 +6093,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF1C1C973FB5001A70FC /* iOS Test App_Release.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -6070,6 +6115,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF391C973FB5001A70FC /* SQLite Storage_Debug.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -6077,6 +6123,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF3A1C973FB5001A70FC /* SQLite Storage_Release.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -6084,6 +6131,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF0C1C973FB5001A70FC /* ForestDB Storage_Debug.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -6091,6 +6139,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF0D1C973FB5001A70FC /* ForestDB Storage_Release.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -6110,6 +6159,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF421C973FB5001A70FC /* CBLJSViewCompiler_Debug.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -6117,6 +6167,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF431C973FB5001A70FC /* CBLJSViewCompiler_Release.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -6124,6 +6175,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF481C973FB5001A70FC /* Listener iOS Library_Debug.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -6131,6 +6183,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF491C973FB5001A70FC /* Listener iOS Library_Release.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -6138,6 +6191,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF241C973FB5001A70FC /* Listener iOS_Debug.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -6145,6 +6199,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF251C973FB5001A70FC /* Listener iOS_Release.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
