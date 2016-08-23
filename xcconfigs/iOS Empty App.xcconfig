@@ -15,5 +15,5 @@ PRODUCT_NAME                      = Couchbase Lite Empty App
 PROVISIONING_PROFILE              = 
 SDKROOT                           = iphoneos
 TARGETED_DEVICE_FAMILY            = 1,2
-VALID_ARCHS                       = armv7
+VALID_ARCHS                       = armv7 arm64
 WRAPPER_EXTENSION                 = app
