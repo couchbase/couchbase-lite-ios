@@ -5946,7 +5946,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF151C973FB5001A70FC /* iOS framework_Debug.xcconfig */;
 			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
 			};
 			name = Debug;
 		};
@@ -5954,7 +5953,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF161C973FB5001A70FC /* iOS framework_Release.xcconfig */;
 			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
 			};
 			name = Release;
 		};

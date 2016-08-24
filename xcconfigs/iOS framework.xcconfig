@@ -24,3 +24,4 @@ SKIP_INSTALL                      = YES
 TARGETED_DEVICE_FAMILY            = 1,2
 VERSION_INFO_FILE                 = 
 VERSION_INFO_PREFIX               =
+APPLICATION_EXTENSION_API_ONLY		= YES
