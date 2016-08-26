@@ -31,7 +31,7 @@ DefineLogDomain(SyncPerf);
 #define kDefaultRequestTimeout 60.0
 
 /** Version number of the sync protocol the replicator uses. */
-#define kSyncVersionString @"1.2"
+#define kSyncVersionString @"1.3"
 
 
 @implementation CBL_ReplicatorSettings
