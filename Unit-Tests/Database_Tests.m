@@ -1057,7 +1057,8 @@
     CBLDocument* doc = [self createDocumentWithProperties: properties];
 
     // Adding an attachment from a nonexistent file should fail:
-    NSURL* bodyURL = [NSURL fileURLWithPath: @"/tmp/cbl_body"];
+    NSURL* bodyURL = [NSURL fileURLWithPath:
+                      [NSTemporaryDirectory() stringByAppendingPathComponent: @"cbl_body"]];
     [NSFileManager.defaultManager removeItemAtURL: bodyURL error: NULL];
     CBLUnsavedRevision *rev2 = [doc newRevision];
     [rev2 setAttachmentNamed: @"index.html"
