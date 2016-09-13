@@ -92,6 +92,7 @@ typedef CBL_Revision* (^RevisionBodyTransformationBlock)(CBL_Revision*);
 #define kCBLReplicatorOption_RemoteUUID @"remoteUUID"       // NSString
 #define kCBLReplicatorOption_PurgePushed @"purgePushed"     // Boolean; default is NO
 #define kCBLReplicatorOption_AllNew @"allNew"               // Boolean; default is NO
+#define kCBLReplicatorOption_Attachments @"attachments"     // Boolean; default is YES
 
 // Boolean; default is YES. Setting this option will have no effect and result to always 'trust' if
 // the kCBLReplicatorOption_Network option is also set.

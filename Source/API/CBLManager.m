@@ -1045,7 +1045,7 @@ static NSDictionary* parseSourceOrTarget(NSDictionary* properties, NSString* key
     settings.authorizer = authorizer;
     settings.createTarget = push && createTarget;
 
-    NSNumber* attachments = $castIf(NSNumber, properties[@"attachments"]);
+    NSNumber* attachments = $castIf(NSNumber, properties[kCBLReplicatorOption_Attachments]);
     if (attachments)
         settings.downloadAttachments = attachments.boolValue;
 
