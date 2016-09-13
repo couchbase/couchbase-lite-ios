@@ -353,8 +353,9 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     NSURLProtectionSpace* space = challenge.protectionSpace;
     SecTrustRef trust = space.serverTrust;
     BOOL ok;
-    if (_delegate) {
-        ok = [_delegate checkSSLServerTrust: space];
+    id<CBLRemoteRequestDelegate> _strongDelegate = _delegate
+    if (_strongDelegate) {
+        ok = [_strongDelegate checkSSLServerTrust: space];
     } else {
         SecTrustResultType result;
         ok = (SecTrustEvaluate(trust, &result) == noErr) &&
