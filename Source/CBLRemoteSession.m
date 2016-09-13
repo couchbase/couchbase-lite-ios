@@ -27,7 +27,7 @@ UsingLogDomain(Sync);
     NSURLSession* _session;
     NSRunLoop* _runLoop;
     NSThread *_thread;
-    id<CBLRemoteRequestDelegate> _requestDelegate;
+    __weak id<CBLRemoteRequestDelegate> _requestDelegate;
     NSMutableDictionary<NSNumber*, CBLRemoteRequest*>* _requestIDs; // Used on operation queue only
     NSMutableSet<CBLRemoteRequest*>* _allRequests;                  // Used on API thread only
     CBLCookieStorage* _cookieStorage;
