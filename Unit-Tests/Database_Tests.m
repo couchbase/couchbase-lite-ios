@@ -1648,4 +1648,28 @@
     Assert(fabs([next timeIntervalSinceDate: future]) < 1.0);
 }
 
+
+- (void) test27_AbortedCommit {
+    // For https://github.com/couchbase/couchbase-lite-ios/issues/1437
+    // Test ported from https://github.com/couchbase/couchbase-lite-net/issues/732
+    [db inTransaction:^BOOL{
+        // Create a "rogue" document, then abort the transaction so it doesn't get saved:
+        NSError* error;
+        Assert([db[@"rogue"] putProperties: @{@"exists": @NO} error: &error]);
+        return NO; // Cancel the transaction!
+    }];
+
+    // Create a doc for real:
+    NSError* error;
+    CBLSavedRevision* rev = [db[@"proper"] putProperties: @{@"exists": @YES} error: &error];
+    Assert(rev);
+
+    // Verify the rogue doc doesn't exist:
+    AssertNil([db existingDocumentWithID: @"rogue"]);
+
+    // Try to create it:
+    rev = [db[@"rogue"] putProperties: @{@"exists": @3} error: &error];
+    Assert(rev);
+}
+
 @end
