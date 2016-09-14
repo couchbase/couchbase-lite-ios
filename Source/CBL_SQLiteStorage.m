@@ -616,6 +616,9 @@ DefineLogDomain(SQL);
     if (!ok)
         Warn(@"Failed to end transaction!");
 
+    if (!commit)
+        [self invalidateDocNumericIDs]; // Forget the rowids of any aborted new docs
+
     [_delegate storageExitedTransaction: commit];
     return ok;
 }
