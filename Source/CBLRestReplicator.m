@@ -42,6 +42,8 @@
 
 #define kCheckRequestTimeout 10.0
 
+static NSString* const kSyncGatewayServerHeaderPrefix = @"Couchbase Sync Gateway/";
+
 
 #if TARGET_OS_IPHONE
 @interface CBLRestReplicator (Backgrounding)
@@ -79,6 +81,7 @@
     BOOL _suspended;
     SecCertificateRef _serverCert;
     NSData* _pinnedCertData;
+    NSString* _serverType;
 }
 
 @synthesize db=_db, settings=_settings, serverCert=_serverCert;
@@ -605,8 +608,21 @@
     }
 }
 
+
+- (void) receivedResponseHeaders: (NSDictionary*)responseHeaders {
+    NSString* serverType = responseHeaders[@"Server"];
+    if (serverType && ![serverType isEqual: _serverType]) {
+        // First Server: response header, or else it's changed:
+        if (![_serverType hasPrefix: kSyncGatewayServerHeaderPrefix]) {
+            _serverType = serverType;
+            LogTo(Sync, @"%@: Server is %@", self, _serverType);
+        }
+    }
+}
+
+
 - (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion {
-    return [_serverType hasPrefix: @"Couchbase Sync Gateway/"]
+    return [_serverType hasPrefix: kSyncGatewayServerHeaderPrefix]
         && [[_serverType substringFromIndex: 23] compare: minVersion] >= 0;
 }
 
@@ -617,10 +633,7 @@
 
 
 - (void) remoteRequestReceivedResponse: (CBLRemoteRequest*)request {
-    if (!_serverType) {
-        _serverType = request.responseHeaders[@"Server"];
-        LogTo(Sync, @"%@: Server is %@", self, _serverType);
-    }
+    [self receivedResponseHeaders: request.responseHeaders];
 }
 
 

@@ -20,7 +20,6 @@
     CBLDatabase* __weak _db;
     NSString* _lastSequence;
     CBLBatcher* _batcher;
-    NSString* _serverType;
     CBLRemoteSession* _remoteSession;
 #if TARGET_OS_IPHONE
     MYBackgroundMonitor *_bgMonitor;
@@ -34,6 +33,7 @@
 - (void) addToInbox: (CBL_Revision*)rev;
 - (void) addRevsToInbox: (CBL_RevisionList*)revs;
 - (void) processInbox: (CBL_RevisionList*)inbox;  // override this
+- (void) receivedResponseHeaders: (NSDictionary*)responseHeaders;
 - (BOOL) serverIsSyncGatewayVersion: (NSString*)minVersion;
 @property (readonly) BOOL canSendCompressedRequests;
 - (void) stopRemoteRequests;

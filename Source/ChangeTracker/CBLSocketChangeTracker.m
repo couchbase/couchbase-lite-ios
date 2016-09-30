@@ -62,6 +62,9 @@ UsingLogDomain(Sync);
     // Now open the connection:
     LogTo(SyncPerf, @"%@: %@ %@", self, (_usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
     LogVerbose(Sync, @"%@: %@ %@", self, (_usePOST ?@"POST" :@"GET"), url.resourceSpecifier);
+    LogTo(ChangeTracker, @"%@: %@ %@ %@",
+          self, (_usePOST ?@"POST" :@"GET"), url.resourceSpecifier,
+          CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(request)));
     CFReadStreamRef cfInputStream = CFReadStreamCreateForHTTPRequest(NULL, request);
     CFRelease(request);
     if (!cfInputStream)
