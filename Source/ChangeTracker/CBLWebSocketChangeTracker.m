@@ -69,6 +69,8 @@ UsingLogDomain(Sync);
     request.timeoutInterval = _heartbeat * 1.5;
 
     LogVerbose(Sync, @"%@: %@ %@", self, request.HTTPMethod, request.URL.resourceSpecifier);
+    LogTo(ChangeTracker, @"%@: %@ %@ %@",
+          self, request.HTTPMethod, request.URL.resourceSpecifier, request.allHTTPHeaderFields);
     _ws = [PSWebSocket clientSocketWithRequest: request];
     _ws.delegate = self;
     NSDictionary* tls = self.TLSSettings;
