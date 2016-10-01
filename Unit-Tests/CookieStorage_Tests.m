@@ -38,6 +38,8 @@
 }
 
 - (void) reloadCookieStore {
+    // Reopen the test db to clear the shared cookies in CBL_Shared:
+    [self reopenTestDB];
     _cookieStore = [[CBLCookieStorage alloc] initWithDB: db];
 }
 
