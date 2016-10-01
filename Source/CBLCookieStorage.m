@@ -10,12 +10,14 @@
 #import "CBLDatabase.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDatabase+Replication.h"
+#import "CBL_Shared.h"
 #import "CBLMisc.h"
 
 
 NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCookiesChanged";
 
 #define kOldLocalDocKeyPrefix @"cbl_cookie_storage"
+#define kDatabaseShareKey @"cookies"
 #define kDatabaseInfoCookiesKey @"cookies"
 
 
@@ -36,41 +38,51 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
         Assert(db != nil, @"database cannot be nil.");
         _db = db;
         
-        self.cookieAcceptPolicy = NSHTTPCookieAcceptPolicyAlways;
+        [self setup];
         
-        _cookies = [NSMutableArray array];
-
-        if (![self migrateOldCookieStorage]) {
-            NSError* error;
-            if (![self loadCookies: &error])
-                Warn(@"%@: Cannot load cookies with error : %@", self, error.my_compactDescription);
-        }
+        self.cookieAcceptPolicy = NSHTTPCookieAcceptPolicyAlways;
     }
     return self;
 }
 
 
-- (void) setCookieAcceptPolicy: (NSHTTPCookieAcceptPolicy)cookieAcceptPolicy {
-    @synchronized(self) {
-        if (cookieAcceptPolicy == NSHTTPCookieAcceptPolicyOnlyFromMainDocumentDomain)
-            Warn(@"%@: Currently NSHTTPCookieAcceptPolicyOnlyFromMainDocumentDomain \
-                 is not supported.", self);
-        
-        if (_cookieAcceptPolicy != cookieAcceptPolicy)
-            _cookieAcceptPolicy = cookieAcceptPolicy;
+- (void) setup {
+    // Ensure that no more than one cookie storage load cookies into the shared cookies:
+    @synchronized (_db.shared) {
+        _cookies = [_db.shared valueForType: kDatabaseShareKey name: @"" inDatabaseNamed: _db.name];
+        if (!_cookies) {
+            _cookies = [NSMutableArray array];
+            [_db.shared setValue: _cookies forType: kDatabaseShareKey name: @""
+                 inDatabaseNamed: _db.name];
+            
+            if (![self migrateOldCookieStorage]) {
+                NSError* error;
+                if (![self loadCookies: &error])
+                    Warn(@"%@: Cannot load cookies : %@", self, error.my_compactDescription);
+            }
+        }
     }
+
+}
+
+
+- (void) setCookieAcceptPolicy: (NSHTTPCookieAcceptPolicy)cookieAcceptPolicy {
+    if (cookieAcceptPolicy == NSHTTPCookieAcceptPolicyOnlyFromMainDocumentDomain)
+        Warn(@"%@: Currently NSHTTPCookieAcceptPolicyOnlyFromMainDocumentDomain \
+             is not supported.", self);
+    
+    if (_cookieAcceptPolicy != cookieAcceptPolicy)
+        _cookieAcceptPolicy = cookieAcceptPolicy;
 }
 
 
 - (NSHTTPCookieAcceptPolicy) cookieAcceptPolicy {
-    @synchronized(self) {
-        return _cookieAcceptPolicy;
-    }
+    return _cookieAcceptPolicy;
 }
 
 
 - (NSArray*)cookies {
-    @synchronized(self) {
+    @synchronized(_cookies) {
         return [_cookies my_map: ^id(id obj) {
             NSHTTPCookie* cookie = (NSHTTPCookie*)obj;
             return ![self isExpiredCookie: cookie] ? cookie : nil;
@@ -80,7 +92,7 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 
 
 - (NSArray*) cookiesForURL: (NSURL*)url {
-    @synchronized(self) {
+    @synchronized(_cookies) {
         if (!url)
             return nil;
         
@@ -139,18 +151,20 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 
 
 - (NSArray*) sortedCookiesUsingDescriptors: (NSArray*)sortOrder {
-    return [self.cookies sortedArrayUsingDescriptors: sortOrder];
+    @synchronized (_cookies) {
+        return [_cookies sortedArrayUsingDescriptors: sortOrder];
+    }
 }
 
 
 - (void) setCookie: (NSHTTPCookie*)cookie {
-    @synchronized(self) {
-        if (!cookie)
-            return;
-
-        if (self.cookieAcceptPolicy == NSHTTPCookieAcceptPolicyNever)
-            return;
-
+    if (!cookie)
+        return;
+    
+    if (self.cookieAcceptPolicy == NSHTTPCookieAcceptPolicyNever)
+        return;
+    
+    @synchronized(_cookies) {
         NSUInteger idx;
         if ([self deleteCookie: cookie outIndex: &idx])
             [_cookies insertObject:cookie atIndex:idx];
@@ -161,17 +175,17 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
         if (![self saveCookies: &error])
             Warn(@"%@: Cannot save the cookie %@ with error : %@",
                  self, cookie, error.my_compactDescription);
-        
-        [self notifyCookiesChanged];
     }
+    
+    [self notifyCookiesChanged];
 }
 
 
 - (void) deleteCookie: (NSHTTPCookie*)aCookie {
-    @synchronized(self) {
-        if (!aCookie)
-            return;
-
+    if (!aCookie)
+        return;
+    
+    @synchronized(_cookies) {
         // NOTE: There is discrepancy about path matching when observing NSHTTPCookieStore behaviors:
         // 1. When adding or deleting a cookie, Comparing the cookie paths is case-insensitive.
         // 2. When getting cookies for a url, Matching the cookie paths is case-sensitive.
@@ -179,67 +193,80 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
             return;
 
         [self saveCookies];
-        [self notifyCookiesChanged];
     }
+    
+    [self notifyCookiesChanged];
 }
 
 
 - (void) deleteCookiesNamed: (NSString*)name {
-    @synchronized(self) {
+    @synchronized(_cookies) {
         for (NSInteger i = [_cookies count] - 1; i >= 0; i--) {
             NSHTTPCookie* cookie = _cookies[i];
             if ([cookie.name isEqualToString: name]) {
                 [_cookies removeObjectAtIndex: i];
             }
         }
-
         [self saveCookies];
-        [self notifyCookiesChanged];
     }
+    
+    [self notifyCookiesChanged];
 }
 
 
 - (void) deleteCookiesForURL: (NSURL*)url {
     NSArray* forURL = [self cookiesForURL: url];
     if (forURL.count > 0) {
-        [_cookies removeObjectsInArray: forURL];
-        [self saveCookies];
+        @synchronized (_cookies) {
+            [_cookies removeObjectsInArray: forURL];
+            [self saveCookies];
+        }
         [self notifyCookiesChanged];
     }
 }
 
 - (void) reset {
-    @synchronized(self) {
+    BOOL isReset = NO;
+    
+    @synchronized(_cookies) {
+        // Make sure to clear database info, including an empty array:
         [_db.storage setInfo: nil forKey: kDatabaseInfoCookiesKey];
+        
+        // Remove all cookies:
         if ([_cookies count] > 0) {
             [_cookies removeAllObjects];
-            [self notifyCookiesChanged];
+            isReset = YES;
         }
     }
+    
+    if (isReset)
+        [self notifyCookiesChanged];
 }
 
 # pragma mark - Private
 
 - (BOOL) deleteCookie: (NSHTTPCookie*)aCookie outIndex: (NSUInteger*)outIndex {
-    NSInteger foundIndex = -1;
-    NSInteger idx = 0;
-    for (NSHTTPCookie* cookie in _cookies) {
-        if ([aCookie.name caseInsensitiveCompare: cookie.name] == 0 &&
-            [aCookie.domain caseInsensitiveCompare: cookie.domain] == 0 &&
-            [aCookie.path caseInsensitiveCompare: cookie.path] == 0) {
-            foundIndex = idx;
-            break;
+    @synchronized (_cookies) {
+        NSInteger foundIndex = -1;
+        NSInteger idx = 0;
+        for (NSHTTPCookie* cookie in _cookies) {
+            if ([aCookie.name caseInsensitiveCompare: cookie.name] == 0 &&
+                [aCookie.domain caseInsensitiveCompare: cookie.domain] == 0 &&
+                [aCookie.path caseInsensitiveCompare: cookie.path] == 0) {
+                foundIndex = idx;
+                break;
+            }
+            idx++;
         }
-        idx++;
+        
+        if (foundIndex >= 0)
+            [_cookies removeObjectAtIndex:foundIndex];
+        
+        if (outIndex)
+            *outIndex = foundIndex;
+        
+        return (foundIndex >= 0);
     }
-
-    if (foundIndex >= 0)
-        [_cookies removeObjectAtIndex:foundIndex];
-
-    if (outIndex)
-        *outIndex = foundIndex;
-
-    return (foundIndex >= 0);
 }
 
 
@@ -281,31 +308,38 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 
 
 - (void) loadCookieFromJSON: (NSArray*)cookies {
-    for (NSDictionary* doc in cookies) {
-        NSDictionary* props = [self cookiePropertiesFromJSONDocument: doc];
-        NSHTTPCookie* cookie = [NSHTTPCookie cookieWithProperties: props];
-        if (cookie)
-            [_cookies addObject: cookie];
+    @synchronized (_cookies) {
+        for (NSDictionary* doc in cookies) {
+            NSDictionary* props = [self cookiePropertiesFromJSONDocument: doc];
+            NSHTTPCookie* cookie = [NSHTTPCookie cookieWithProperties: props];
+            if (cookie)
+                [_cookies addObject: cookie];
+        }
     }
 }
 
 
 - (BOOL) saveCookies: (NSError **)error {
-    [self pruneExpiredCookies];
-
-    NSArray* cookies = [_cookies my_map:^id(id obj) {
-        NSHTTPCookie* cookie = (NSHTTPCookie*)obj;
-        if (![self isSessionOnlyCookie: cookie])
-            return [self JSONDocumentFromCookieProperties: cookie.properties];
-        else
-            return nil;
-    }];
-
-    NSString* str = [CBLJSON stringWithJSONObject: cookies options: 0 error: error];
-    if (str)
-        return [_db.storage setInfo: str forKey: kDatabaseInfoCookiesKey] == kCBLStatusOK;
-    else
-        return NO;
+    NSArray* cookies = nil;
+    
+    @synchronized (_cookies) {
+        [self pruneExpiredCookies];
+        cookies = [_cookies my_map:^id(id obj) {
+            NSHTTPCookie* cookie = (NSHTTPCookie*)obj;
+            if (![self isSessionOnlyCookie: cookie])
+                return [self JSONDocumentFromCookieProperties: cookie.properties];
+            else
+                return nil;
+        }];
+    }
+    
+    if (cookies) {
+        NSString* str = [CBLJSON stringWithJSONObject: cookies options: 0 error: error];
+        if (str)
+            return [_db.storage setInfo: str forKey: kDatabaseInfoCookiesKey] == kCBLStatusOK;
+    }
+    
+    return NO;
 }
 
 
@@ -318,10 +352,12 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 
 
 - (void) pruneExpiredCookies {
-    for (NSInteger i = [_cookies count] - 1; i >= 0; i--) {
-        NSHTTPCookie* cookie = _cookies[i];
-        if ([self isExpiredCookie: cookie])
-            [_cookies removeObjectAtIndex: i];
+    @synchronized (_cookies) {
+        for (NSInteger i = [_cookies count] - 1; i >= 0; i--) {
+            NSHTTPCookie* cookie = _cookies[i];
+            if ([self isExpiredCookie: cookie])
+                [_cookies removeObjectAtIndex: i];
+        }
     }
 }
 
