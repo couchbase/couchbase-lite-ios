@@ -1380,11 +1380,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 #pragma mark - MISC
 
 
-- (void) test22_SyncGatewaySessionCookie {
-    NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];
-    if (!remoteURL)
-        return;
-    
+- (NSDictionary*) generateSyncGatewayCookieForURL: (NSURL*)remoteURL {
     // Get SyncGatewaySession cookie:
     __block NSDictionary* cookie;
     NSURLComponents* comp = [NSURLComponents componentsWithURL: remoteURL
@@ -1405,7 +1401,10 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     CBLRemoteSession* session = [[CBLRemoteSession alloc] initWithDelegate: nil];
     [session startRequest: req];
     [self waitForExpectationsWithTimeout: 2.0 handler: nil];
-    
+    return cookie;
+}
+
+- (void) runReplicationWithSyncGatewayCookie: (NSDictionary*)cookie URL: (NSURL*)remoteURL {
     // Create a continuous pull replicator and set SyncGatewaySession cookie:
     CBLReplication* repl = [db createPullReplication: remoteURL];
     repl.continuous = YES;
@@ -1422,6 +1421,25 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
                                         keyPath: @"status" expectedValue: @(kCBLReplicationStopped)];
     [repl stop];
     [self waitForExpectationsWithTimeout: 2.0 handler: nil];
+}
+
+
+- (void) test22a_SyncGatewayPersistentCookie {
+    NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];
+    if (!remoteURL)
+        return;
+    NSDictionary* cookie = [self generateSyncGatewayCookieForURL: remoteURL];
+    [self runReplicationWithSyncGatewayCookie: cookie URL: remoteURL];
+}
+
+
+- (void) test22b_SyncGatewaySessionCookie {
+    NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];
+    if (!remoteURL)
+        return;
+    NSMutableDictionary* cookie = [[self generateSyncGatewayCookieForURL: remoteURL] mutableCopy];
+    [cookie removeObjectForKey: @"expires"];    // Makes it a session (non-persistent) cookie
+    [self runReplicationWithSyncGatewayCookie: cookie URL: remoteURL];
 }
 
 
