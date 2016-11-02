@@ -372,9 +372,7 @@
 // Start up some HTTP GETs, within our limit on the maximum simultaneous number
 - (void) pullRemoteRevisions {
     while (_db && _httpConnectionCount < kMaxOpenHTTPConnections) {
-        NSUInteger nBulk = _bulkRevsToPull.count;
-        if (!_canBulkGet)
-            nBulk = MIN(nBulk, kMaxRevsToGetInBulkWithAllDocs);
+        NSUInteger nBulk = MIN(_bulkRevsToPull.count, kMaxRevsToGetInBulkWithAllDocs);
         if (nBulk == 1) {
             // Rather than pulling a single revision in 'bulk', just pull it normally:
             [self queueRemoteRevision: _bulkRevsToPull[0]];
