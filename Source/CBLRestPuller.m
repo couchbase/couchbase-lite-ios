@@ -45,7 +45,7 @@
 #define kMaxOpenHTTPConnections 12
 
 // Maximum number of revs to fetch in a single _all_docs request (CouchDB only, not SG)
-#define kMaxRevsToGetInBulkWithAllDocs 50u
+#define kMaxRevsToGetInBulkWithAllDocs 100u
 
 // Maximum number of revs we want to be handling at once -- that's all revs that we've heard about
 // from the change tracker but haven't yet inserted into the database. Once we hit this limit we
