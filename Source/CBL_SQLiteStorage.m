@@ -565,6 +565,10 @@ DefineLogDomain(SQL);
             return kCBLStatusCorruptError;
         case SQLITE_NOTADB:
             return kCBLStatusUnauthorized; // DB is probably encrypted (SQLCipher)
+#if TARGET_OS_IPHONE
+        case SQLITE_CANTOPEN:
+            return kCBLStatusFilesystemLocked;
+#endif
         default:
             LogTo(Database, @"Other _fmdb.lastErrorCode %d", _fmdb.lastErrorCode);
             return kCBLStatusDBError;

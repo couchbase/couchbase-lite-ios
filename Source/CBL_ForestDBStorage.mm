@@ -110,6 +110,7 @@ static void onCompactCallback(void *context, bool compacting) {
                                                  selector: @selector(checkStillCompacting)
                                                    object: nil];
         };
+        [bgMonitor start];
 #endif
     }
 }

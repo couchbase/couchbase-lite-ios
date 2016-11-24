@@ -31,6 +31,7 @@
 #import "CBLJSON.h"
 
 //#define OPENID_PULL
+//#define DISABLE_PUSH
 
 
 @interface RootViewController ()
@@ -279,21 +280,22 @@
         [self forgetSync];
 
         if (newRemoteURL) {
-            _pull = [self.database createPullReplication: newRemoteURL];
-#ifdef OPENID_PULL
-            _pull.authenticator = [CBLAuthenticator OpenIDConnectAuthenticator: [OpenIDController loginCallback]];
             _push = nil;
-#else
-            _push = [self.database createPushReplication: newRemoteURL];
-#endif
-            _pull.continuous = _push.continuous = YES;
+            _pull = [self.database createPullReplication: newRemoteURL];
+            _pull.continuous = YES;
             NSNotificationCenter* nctr = [NSNotificationCenter defaultCenter];
             [nctr addObserver: self selector: @selector(replicationProgress:)
                          name: kCBLReplicationChangeNotification object: _pull];
+#ifdef OPENID_PULL
+            _pull.authenticator = [CBLAuthenticator OpenIDConnectAuthenticator: [OpenIDController loginCallback]];
+#elif !defined(DISABLE_PUSH)
+            _push = [self.database createPushReplication: newRemoteURL];
+            _push.continuous = YES;
             [nctr addObserver: self selector: @selector(replicationProgress:)
                          name: kCBLReplicationChangeNotification object: _push];
-            [_pull start];
             [_push start];
+#endif
+            [_pull start];
         }
     }
 }

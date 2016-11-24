@@ -23,6 +23,8 @@
     CBLRemoteSession* _remoteSession;
 #if TARGET_OS_IPHONE
     MYBackgroundMonitor *_bgMonitor;
+    BOOL _deepBackground;
+    BOOL _filesystemUnavailable;
 #endif
 }
 
