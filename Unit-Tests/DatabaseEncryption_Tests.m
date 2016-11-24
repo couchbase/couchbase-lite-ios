@@ -38,6 +38,7 @@
 
 
 - (void) tearDown {
+    [seekrit close: NULL];
     CBLEnableMockEncryption = NO;
     [super tearDown];
 }
@@ -60,7 +61,8 @@
     CBLEnableMockEncryption = NO;
     [self allowWarningsIn:^{
         NSError* error;
-        if (![self openSeekritDBWithKey: @"123456" error: &error])
+        seekrit = [self openSeekritDBWithKey: @"123456" error: &error];
+        if (!seekrit)
             AssertEq(error.code, 501 /*Not Implemented*/);
     }];
 }
@@ -73,6 +75,7 @@
     Assert(seekrit, @"Failed to create unencrypted db: %@", error);
     [self createDocumentWithProperties: @{@"answer": @42} inDatabase: seekrit];
     Assert([seekrit close: NULL]);
+    seekrit = nil;
 
     // Try to reopen with password (fails):
     [self allowWarningsIn:^{
@@ -96,6 +99,7 @@
     Assert(seekrit, @"Failed to create encrypted db: %@", error);
     [self createDocumentWithProperties: @{@"answer": @42} inDatabase: seekrit];
     Assert([seekrit close: NULL]);
+    seekrit = nil;
 
     // Try to reopen without the password (fails):
     [self allowWarningsIn:^{
@@ -132,11 +136,13 @@
     Assert(seekrit, @"Failed to re-create formerly encrypted db: %@", error);
     AssertEq(seekrit.documentCount, 0u);
     Assert([seekrit close: NULL]);
+    seekrit = nil;
 
     // Make sure it doesn't need a password now:
     seekrit = [self openSeekritDBWithKey: nil error: &error];
     AssertEq(seekrit.documentCount, 0u);
     Assert([seekrit close: NULL]);
+    seekrit = nil;
 
     // Make sure old password doesn't work:
     [self allowWarningsIn:^{
@@ -172,6 +178,7 @@
 
     // Close and re-open:
     Assert([seekrit close: &error], @"Close failed: %@", error);
+    seekrit = nil;
     Log(@"//// Reopening database");
     seekrit = [self openSeekritDBWithKey: @"letmein" error: &error];
     Assert(seekrit, @"Failed to reopen encrypted db: %@", error);
@@ -189,6 +196,7 @@
     Assert(seekrit, @"Failed to create encrypted db: %@", error);
     [self createDocumentWithProperties: @{@"answer": @42} inDatabase: seekrit];
     Assert([seekrit close: NULL]);
+    seekrit = nil;
 
     // Try to reopen without the password (fails):
     [self allowWarningsIn:^{
