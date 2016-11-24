@@ -105,6 +105,13 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     int err = sqlite3_config(SQLITE_CONFIG_MMAP_SIZE, (SInt64)kSQLiteMMapSize, (SInt64)-1);
     if (err != SQLITE_OK)
         Log(@"FYI, couldn't enable SQLite mmap: error %d", err);
+
+    sqlite3_config(SQLITE_CONFIG_LOG, errorLogCallback, NULL);
+}
+
+
+static void errorLogCallback(void *pArg, int errCode, const char *msg) {
+    Warn(@"SQLite error (code %d): %s", errCode, msg);
 }
 
 
@@ -152,7 +159,11 @@ DefineLogDomain(SQL);
     _docIDs = [manager.shared docIDCacheForDatabaseNamed: path];
     _docIDs.countLimit = kDocIDCacheSize;
 
-    return [self open: error];
+    if (![self open: error]) {
+        [self close];
+        return NO;
+    }
+    return YES;
 }
 
 
@@ -405,7 +416,6 @@ DefineLogDomain(SQL);
     // Incompatible version changes increment the hundreds' place:
     if (dbVersion >= 200) {
         Warn(@"CBLDatabase: Database version (%d) is newer than I know how to work with", dbVersion);
-        [_fmdb close];
         if (outError) *outError = [NSError errorWithDomain: @"CouchbaseLite" code: 1 userInfo: nil]; //FIX: Real code
         return NO;
     }
