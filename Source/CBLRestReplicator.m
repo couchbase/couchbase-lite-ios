@@ -498,6 +498,14 @@ static NSString* const kSyncGatewayServerHeaderPrefix = @"Couchbase Sync Gateway
 - (void) updateActive {
     BOOL active = _batcher.count > 0 || _asyncTaskCount > 0;
     if (active != _active) {
+        // If I'm otherwise inactive, but haven't saved my checkpoint, do that first:
+        if (!active && _lastSequenceChanged) {
+            LogTo(Sync, @"%@ Progress: going inactive, after saving checkpoint...", self);
+            [self saveLastSequence];
+            if (_savingCheckpoint)
+                return;
+        }
+
         LogTo(Sync, @"%@ Progress: set active = %d", self, active);
         _active = active;
         [self updateStatus];
@@ -804,18 +812,18 @@ static NSString* const kSyncGatewayServerHeaderPrefix = @"Couchbase Sync Gateway
     [body setValue: [lastSequence description] forKey: @"lastSequence"]; // always save as a string
     
     _savingCheckpoint = YES;
+    [self asyncTaskStarted];
     NSString* checkpointID = self.remoteCheckpointDocID;
-    CBLRemoteRequest* request =
-        [_remoteSession startRequest: @"PUT"
+    CBLRemoteRequest* request = [_remoteSession startRequest: @"PUT"
                           path: [@"_local/" stringByAppendingString: checkpointID]
                           body: body
-                  onCompletion: ^(id response, NSError* error) {
+                  onCompletion: ^(id response, NSError* error)
+    {
                       _savingCheckpoint = NO;
                       if (error)
                           Warn(@"%@: Unable to save remote checkpoint: %@", self, error.my_compactDescription);
                       CBLDatabase* db = _db;
-                      if (!db)
-                          return;
+        if (db) {
                       if (error) {
                           // Failed to save checkpoint:
                           switch(CBLStatusFromNSError(error, 0)) {
@@ -845,7 +853,8 @@ static NSString* const kSyncGatewayServerHeaderPrefix = @"Couchbase Sync Gateway
                       if (_overdueForSave)
                           [self saveLastSequence];      // start a save that was waiting on me
                   }
-         ];
+        [self asyncTasksFinished: 1];
+    }];
     // This request should not be canceled when the replication is told to stop:
     request.dontStop = YES;
 }
