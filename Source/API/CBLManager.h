@@ -40,7 +40,7 @@ typedef struct CBLManagerOptions {
       like SecRandomCopyBytes or CCRandomGenerateBytes.
     * Alternatively, the value may be an NSString containing a passphrase. This will be run through
       64,000 rounds of the PBKDF algorithm to securely convert it into an AES-256 key.
-    * On Mac OS only, the value may be @YES. This instructs Couchbase Lite to use a key stored in
+    * On Mac OS only, the value may be @@YES. This instructs Couchbase Lite to use a key stored in
       the user's Keychain, or generate one there if it doesn't exist yet.
     * A default nil value, of course, means the database is unencrypted. */
 @property (nonatomic, strong, nullable) id encryptionKey;

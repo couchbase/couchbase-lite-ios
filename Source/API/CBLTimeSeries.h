@@ -20,10 +20,10 @@ NS_ASSUME_NONNULL_BEGIN
     @param db  The database to store events in.
     @param docType  The document "type" property to use. Must be non-nil, and must not be used by
                     any other documents or time-series in the database.
-    @return error  On return, the error if any. */
+    @param error  On return, the error if any. */
 - (nullable instancetype) initWithDatabase: (CBLDatabase*)db
                                    docType: (NSString*)docType
-                                     error: (NSError**)outError;
+                                     error: (NSError**)error;
 
 /** The "type" property that will be added to documents. */
 @property (readonly) NSString* docType;
