@@ -1254,6 +1254,20 @@
 			remoteGlobalIDString = 270FE0C714C5008C005FF647;
 			remoteInfo = LiteServ;
 		};
+		2773D0231DF7459B00880394 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 72EFA6141D8A392600D17CFE;
+			remoteInfo = "Tokenizer-Interop";
+		};
+		2773D0251DF7459B00880394 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 72EFA6631D8A5FA000D17CFE;
+			remoteInfo = "Tokenizer-Interop Static";
+		};
 		27AD1F8617C29BE80063108F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
@@ -3184,6 +3198,8 @@
 				27B7E10D18F8FE2800044EBA /* libforestdb.a */,
 				2747355C1CCE983000515EB2 /* SwiftForest.framework */,
 				2747355E1CCE983000515EB2 /* SwiftForestTests.xctest */,
+				2773D0241DF7459B00880394 /* libTokenizer-Interop.dylib */,
+				2773D0261DF7459B00880394 /* libTokenizer.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -4428,6 +4444,7 @@
 					};
 					272AA83E1A48D835004B8D55 = {
 						CreatedOnToolsVersion = 6.1.1;
+						LastSwiftMigration = 0820;
 					};
 					273E9EEC1C509F38003115A6 = {
 						CreatedOnToolsVersion = 7.2;
@@ -4527,6 +4544,21 @@
 			fileType = wrapper.cfbundle;
 			path = "CBForest Tests.xctest";
 			remoteRef = 27571E0718F9060100141BDD /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		2773D0241DF7459B00880394 /* libTokenizer-Interop.dylib */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			name = "libTokenizer-Interop.dylib";
+			path = libTokenizer.dylib;
+			remoteRef = 2773D0231DF7459B00880394 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		2773D0261DF7459B00880394 /* libTokenizer.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libTokenizer.a;
+			remoteRef = 2773D0251DF7459B00880394 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		27B086791B38804100D3D9D8 /* libBLIP-iOS.a */ = {
@@ -5890,6 +5922,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF301C973FB5001A70FC /* Mac Unit Tests_Debug.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -5897,6 +5930,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 27FFFF311C973FB5001A70FC /* Mac Unit Tests_Release.xcconfig */;
 			buildSettings = {
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
