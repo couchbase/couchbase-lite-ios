@@ -1156,20 +1156,6 @@
 			remoteGlobalIDString = 27452BB71AB1180800327776;
 			remoteInfo = "CBL iOS framework";
 		};
-		2747355B1CCE983000515EB2 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 27A6579C1CBC190B00A7A1D7;
-			remoteInfo = SwiftForest;
-		};
-		2747355D1CCE983000515EB2 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 27A657A51CBC190B00A7A1D7;
-			remoteInfo = SwiftForestTests;
-		};
 		275315FD14ACF87F0065964D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
@@ -3196,8 +3182,6 @@
 				27E11A5C1BD0646E00D8DB7D /* libCBForest-Interop.dylib */,
 				27FA99F21917FFD000912F96 /* libTokenizer.a */,
 				27B7E10D18F8FE2800044EBA /* libforestdb.a */,
-				2747355C1CCE983000515EB2 /* SwiftForest.framework */,
-				2747355E1CCE983000515EB2 /* SwiftForestTests.xctest */,
 				2773D0241DF7459B00880394 /* libTokenizer-Interop.dylib */,
 				2773D0261DF7459B00880394 /* libTokenizer.a */,
 			);
@@ -4435,7 +4419,7 @@
 			attributes = {
 				CLASSPREFIX = CBL;
 				LastSwiftUpdateCheck = 0700;
-				LastUpgradeCheck = 0730;
+				LastUpgradeCheck = 0820;
 				ORGANIZATIONNAME = "Couchbase, Inc";
 				TargetAttributes = {
 					2700358A1A44E9270015B9F4 = {
@@ -4525,20 +4509,6 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		2747355C1CCE983000515EB2 /* SwiftForest.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = SwiftForest.framework;
-			remoteRef = 2747355B1CCE983000515EB2 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		2747355E1CCE983000515EB2 /* SwiftForestTests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = SwiftForestTests.xctest;
-			remoteRef = 2747355D1CCE983000515EB2 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		27571E0818F9060100141BDD /* CBForest Tests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;

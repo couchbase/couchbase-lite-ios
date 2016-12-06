@@ -12,7 +12,7 @@ ARCHS[sdk=macosx*]                                         = $(ARCHS_STANDARD_64
 ONLY_ACTIVE_ARCH                                           = NO
 SDKROOT                                                    = macosx
 MACOSX_DEPLOYMENT_TARGET                                   = 10.9
-IPHONEOS_DEPLOYMENT_TARGET                                 = 7.0
+IPHONEOS_DEPLOYMENT_TARGET                                 = 8.0
 TVOS_DEPLOYMENT_TARGET                                     = 9.0
 
 // Code generation:
@@ -43,11 +43,13 @@ CLANG_WARN__DUPLICATE_METHOD_MATCH                         = YES
 CLANG_WARN_DOCUMENTATION_COMMENTS                          = YES
 CLANG_WARN_EMPTY_BODY                                      = YES
 CLANG_WARN_ENUM_CONVERSION                                 = YES
+CLANG_WARN_INFINITE_RECURSION                              = YES
 CLANG_WARN_INT_CONVERSION                                  = YES
 CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS                 = YES
 CLANG_WARN_OBJC_REPEATED_USE_OF_WEAK                       = YES
 CLANG_WARN_OBJC_ROOT_CLASS                                 = YES_ERROR
 CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION                  = YES
+CLANG_WARN_SUSPICIOUS_MOVE                                 = YES
 CLANG_WARN_UNREACHABLE_CODE                                = YES
 GCC_TREAT_WARNINGS_AS_ERRORS                               = YES
 GCC_WARN_ABOUT_MISSING_PROTOTYPES                          = YES

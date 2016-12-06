@@ -17,7 +17,6 @@ DYLIB_INSTALL_NAME_BASE           = @rpath
 EXPORTED_SYMBOLS_FILE             = Source/CouchbaseLite.exp
 INFOPLIST_FILE                    = Source/CouchbaseLite-Info.plist
 INSTALL_PATH                      = $(LOCAL_LIBRARY_DIR)/Frameworks
-IPHONEOS_DEPLOYMENT_TARGET        = 8.0     // dynamic frameworks require iOS 8
 LD_RUNPATH_SEARCH_PATHS           = $(inherited) @executable_path/Frameworks @loader_path/Frameworks
 PRODUCT_NAME                      = CouchbaseLite
 SKIP_INSTALL                      = YES
