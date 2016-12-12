@@ -36,6 +36,10 @@ echo "CONFIGURATION_BUILD_DIR = $CONFIGURATION_BUILD_DIR"
 echo "BUILT_PRODUCTS_DIR = $BUILT_PRODUCTS_DIR"
 echo "CONFIGURATION_TEMP_DIR = $CONFIGURATION_TEMP_DIR"
 echo "TARGET_BUILD_DIR = $TARGET_BUILD_DIR"
+
+# Set CUSTOM_BUILD_OPTION env variable to include extra build options
+# Ex: $export CUSTOM_BUILD_OPTIONS="CLANG_ENABLE_MODULES=NO"
+echo "CUSTOM_BUILD_OPTIONS = $CUSTOM_BUILD_OPTIONS"
 fi
 
 #####################[ part 1 ]##################
@@ -93,8 +97,8 @@ else
 export ALREADYINVOKED="true"
 
 echo "RECURSION: I am the root ... recursing all missing build targets NOW..."
-echo "RECURSION: ...about to invoke: xcodebuild -configuration \"${CONFIGURATION}\" -target \"${TARGET_NAME}\" -sdk \"${OTHER_SDK_TO_BUILD}\" ${ACTION} RUN_CLANG_STATIC_ANALYZER=NO"
-xcodebuild -configuration "${CONFIGURATION}" -target "${TARGET_NAME}" -sdk "${OTHER_SDK_TO_BUILD}" ${ACTION} RUN_CLANG_STATIC_ANALYZER=NO BUILD_DIR="${BUILD_DIR}" BUILD_ROOT="${BUILD_ROOT}" || exit 1
+echo "RECURSION: ...about to invoke: xcodebuild -configuration \"${CONFIGURATION}\" -target \"${TARGET_NAME}\" -sdk \"${OTHER_SDK_TO_BUILD}\" ${ACTION} ${CUSTOM_BUILD_OPTIONS} RUN_CLANG_STATIC_ANALYZER=NO"
+xcodebuild -configuration "${CONFIGURATION}" -target "${TARGET_NAME}" -sdk "${OTHER_SDK_TO_BUILD}" ${ACTION} ${CUSTOM_BUILD_OPTIONS} RUN_CLANG_STATIC_ANALYZER=NO BUILD_DIR="${BUILD_DIR}" BUILD_ROOT="${BUILD_ROOT}" || exit 1
 
 ACTION="build"
 
