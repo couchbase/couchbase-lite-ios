@@ -11,12 +11,17 @@
 #import "CBLDatabase+Replication.h"
 
 #define $URL(urlStr)                            ([NSURL URLWithString: urlStr])
-#define COMPARE_COOKIES(cookies1, cookies2)     [self compareCookies: cookies1 withCookies: cookies2]
+
+// NOTE: Since iOS 10.2 and MacOS 10.12.2, the behavior of the Apple NSHTTPCookieStorage
+// has been changed: An NSHTTPCookie with empty path string will not be added to the storage
+// only if the cookie storage contains some cookies in it. Such change makes some checks that
+// compare the result with the Apple cookie storage failed so the comparison with the Apple
+// cookie is disabled until we are sure that the new behavior is correct or is not a bug.
+#define COMPARE_WITH_APPLE_COOKIE_STORAGE 0
 
 @interface CookieStorage_Tests : CBLTestCaseWithDB
 
 @end
-
 
 @implementation CookieStorage_Tests
 {
@@ -50,6 +55,14 @@
 - (void) addCookie2BothStores: (NSHTTPCookie*)cookie {
     [_cookieStore setCookie: cookie];
     [_appleCookieStore setCookie:cookie];
+}
+
+- (void) compareWithAppleCookieStoreForURL: (NSURL*)url {
+#if COMPARE_WITH_APPLE_COOKIE_STORAGE
+    NSArray* cookies1 = [_cookieStore cookiesForURL: url];
+    NSArray* cookies2 = [_appleCookieStore cookiesForURL: url];
+    assert([self compareCookies: cookies1 withCookies: cookies2])
+#endif
 }
 
 - (BOOL)compareCookies: (NSArray*)cookies1 withCookies: (NSArray*)cookies2 {
@@ -574,108 +587,95 @@
     [self addCookie2BothStores: cookie12];
 
     NSArray* cookies1 = nil;
-    NSArray* cookies2 = nil;
     NSURL* url = nil;
 
     url = $URL(@"http://mycookie.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 2u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://mycookie.com/");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 2u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://MyCookiE.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 2u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://MyCookiE.com/");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 2u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://mycookie.com/morning");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 3u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
     AssertEqual(cookies1[2], cookie3);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://mycookie.com/morning/");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 4u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
     AssertEqual(cookies1[2], cookie3);
     AssertEqual(cookies1[3], cookie4);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://mycookie.com/MorNinG");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 2u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://mycookie.com/MorNinG/");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 2u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://mycookie.com/afternoon");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 2u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://mycookie.com/morning/123");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 4u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
     AssertEqual(cookies1[2], cookie3);
     AssertEqual(cookies1[3], cookie4);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://mycookie.com/morning/specials");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 5u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
     AssertEqual(cookies1[2], cookie3);
     AssertEqual(cookies1[3], cookie4);
     AssertEqual(cookies1[4], cookie5);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://mycookie.com/morning/specials/");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 6u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
@@ -683,11 +683,10 @@
     AssertEqual(cookies1[3], cookie4);
     AssertEqual(cookies1[4], cookie5);
     AssertEqual(cookies1[5], cookie6);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://mycookie.com/morning/specials/123");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 6u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
@@ -695,67 +694,59 @@
     AssertEqual(cookies1[3], cookie4);
     AssertEqual(cookies1[4], cookie5);
     AssertEqual(cookies1[5], cookie6);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://www.mycookie.com/");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 2u);
     AssertEqual(cookies1[0], cookie7);
     AssertEqual(cookies1[1], cookie8);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://www.mycookie.com/summer");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 3u);
     AssertEqual(cookies1[0], cookie7);
     AssertEqual(cookies1[1], cookie8);
     AssertEqual(cookies1[2], cookie9);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://www.mycookie.com/summer/");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 3u);
     AssertEqual(cookies1[0], cookie7);
     AssertEqual(cookies1[1], cookie8);
     AssertEqual(cookies1[2], cookie9);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://www.mycookie.com/summer/specials");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 4u);
     AssertEqual(cookies1[0], cookie7);
     AssertEqual(cookies1[1], cookie8);
     AssertEqual(cookies1[2], cookie9);
     AssertEqual(cookies1[3], cookie10);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://notmycookie.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 0u);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://www.notmycookie.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 0u);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://www2.mycookie.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 0u);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://www2.mycookie.com/summer");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 0u);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 }
 
 - (void) test_CookiesForURL_DomainCookies {
@@ -823,53 +814,47 @@
     [self addCookie2BothStores: cookie9];
 
     NSArray* cookies1 = nil;
-    NSArray* cookies2 = nil;
     NSURL* url = nil;
 
     url = $URL(@"http://mycookie.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 4u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
     AssertEqual(cookies1[2], cookie3);
     AssertEqual(cookies1[3], cookie4);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://MyCooKie.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 4u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
     AssertEqual(cookies1[2], cookie3);
     AssertEqual(cookies1[3], cookie4);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://mycookie.com/morning");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 5u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
     AssertEqual(cookies1[2], cookie3);
     AssertEqual(cookies1[3], cookie4);
     AssertEqual(cookies1[4], cookie5);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://www.mycookie.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 4u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
     AssertEqual(cookies1[2], cookie6);
     AssertEqual(cookies1[3], cookie8);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://www.mycookie.com/morning");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 6u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
@@ -877,11 +862,10 @@
     AssertEqual(cookies1[3], cookie7);
     AssertEqual(cookies1[4], cookie8);
     AssertEqual(cookies1[5], cookie9);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://www.mycookie.com/morning/123");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 6u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
@@ -889,37 +873,33 @@
     AssertEqual(cookies1[3], cookie7);
     AssertEqual(cookies1[4], cookie8);
     AssertEqual(cookies1[5], cookie9);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://www2.mycookie.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 2u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://www2.MyCooKie.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 2u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://sub1.sub2.mycookie.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 2u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://mycookie2.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 0u);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 }
 
 - (void) test_CookiesForURL_Secure {
@@ -942,25 +922,22 @@
     Assert(!cookie2.isSecure);
 
     NSArray* cookies1 = nil;
-    NSArray* cookies2 = nil;
     NSURL* url = nil;
 
     // Get only matched non-secure cookies:
     url = $URL(@"http://www.mycookie.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 1u);
     AssertEqual(cookies1[0], cookie2);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     // Get both matched secure and non-secure cookies:
     url = $URL(@"https://www.mycookie.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 2u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 }
 
 - (void) test_CookiesForURL_Ports {
@@ -1009,55 +986,49 @@
     [self addCookie2BothStores: cookie5];
 
     NSArray* cookies1 = nil;
-    NSArray* cookies2 = nil;
     NSURL* url = nil;
 
     cookies1 = _cookieStore.cookies;
-    cookies2 = _appleCookieStore.cookies;
     AssertEq(cookies1.count, 5u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie2);
     AssertEqual(cookies1[2], cookie3);
     AssertEqual(cookies1[3], cookie4);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     // Setting to an empty string ("") currently results to a port number 0 (SDK BUG).
     // As a result, only one cookie will be returned here instead of two.
     // https://developer.apple.com/library/ios/documentation/Cocoa/Reference/Foundation/Classes/NSHTTPCookie_Class/index.html
     url = $URL(@"http://www.mycookie.com");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 1u);
     AssertEqual(cookies1[0], cookie1);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     // Setting NSHTTPCookiePort also has effect on cookies version 0, which is different
     // from what is being said the apple document. We are maintaining the same behavior here.
     url = $URL(@"http://www.mycookie.com:4984");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 3u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie3);
     AssertEqual(cookies1[2], cookie5);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://www.mycookie.com/morning");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 1u);
     AssertEqual(cookies1[0], cookie1);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 
     url = $URL(@"http://www.mycookie.com:4984/morning");
     cookies1 = [_cookieStore cookiesForURL: url];
-    cookies2 = [_appleCookieStore cookiesForURL: url];
     AssertEq(cookies1.count, 4u);
     AssertEqual(cookies1[0], cookie1);
     AssertEqual(cookies1[1], cookie3);
     AssertEqual(cookies1[2], cookie4);
     AssertEqual(cookies1[3], cookie5);
-    Assert(COMPARE_COOKIES(cookies1, cookies2));
+    [self compareWithAppleCookieStoreForURL: url];
 }
 
 - (void) test_CookiesEscapedURL {
