@@ -429,6 +429,8 @@
 
 
 - (NSDictionary*) propertiesToSave {
+    NSAssert(_document, @"-propertiesToSave should not be called for model with no document (deleted document?)");
+    
     NSMutableDictionary* properties = [_document.properties mutableCopy];
     if (!properties)
         properties = [NSMutableDictionary dictionaryWithObject: _document.documentID

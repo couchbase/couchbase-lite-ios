@@ -65,7 +65,8 @@ NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properti
 @property (readonly) bool needsSave;
 
 /** The document's current properties (including unsaved changes) in externalized JSON format.
-    This is what will be written to the CBLDocument when the model is saved. */
+    This is what will be written to the CBLDocument when the model is saved.
+    It is not safe to send -[CBLModel propertiesToSave] to an instance whose document == nil. */
 - (NSDictionary*) propertiesToSave;
 
 /** Removes any changes made to properties and attachments since the last save. */
