@@ -57,6 +57,7 @@ static const struct StatusMapEntry kStatusMap[] = {
     {kCBLStatusCallbackError,        500, "Application callback block failed"},
     {kCBLStatusException,            500, "Internal error"},
     {kCBLStatusDBBusy,               500, "Database locked"},
+    {kCBLStatusFilesystemLocked,     500, "Device locked, file unavailable"},
 };
 
 
@@ -100,8 +101,10 @@ BOOL CBLStatusToOutNSError(CBLStatus status, NSError** outError) {
 }
 
 
+typedef const struct { NSInteger code; CBLStatus status; } ErrorToStatusMap[];
+
 // Mapping NSURLErrorDomain codes to CBLStatus:
-static const struct { NSInteger code; CBLStatus status; } kURLErrorToStatusMap[] = {
+static ErrorToStatusMap kURLErrorToStatusMap = {
     {NSURLErrorBadURL,                          kCBLStatusBadRequest},
     {NSURLErrorUserCancelledAuthentication,     kCBLStatusUnauthorized},
     {NSURLErrorUserAuthenticationRequired,      kCBLStatusUnauthorized},
@@ -120,7 +123,23 @@ static const struct { NSInteger code; CBLStatus status; } kURLErrorToStatusMap[]
     {NSURLErrorTimedOut,                        kCBLStatusTimedOut},
     {NSURLErrorUnknown,                         kCBLStatusServerError},
     {NSURLErrorCancelled,                       kCBLStatusCanceled},
+    {0, 0}
 };
+
+static ErrorToStatusMap kCocoaErrorToStatusMap = {
+    {NSFileReadNoPermissionError,               kCBLStatusFilesystemLocked},
+    {NSFileWriteNoPermissionError,              kCBLStatusFilesystemLocked},
+    {NSFeatureUnsupportedError,                 kCBLStatusNotImplemented},
+    {0, 0}
+};
+
+static CBLStatus mapError(NSInteger code, ErrorToStatusMap map, CBLStatus defaultStatus) {
+    for (unsigned i=0; map[i].code != 0; ++i) {
+        if (map[i].code == code)
+            return map[i].status;
+    }
+    return defaultStatus;
+}
 
 
 CBLStatus CBLStatusFromNSError(NSError* error, CBLStatus defaultStatus) {
@@ -130,11 +149,9 @@ CBLStatus CBLStatusFromNSError(NSError* error, CBLStatus defaultStatus) {
     } else if ($equal(error.domain, CBLHTTPErrorDomain)) {
         return (CBLStatus)code;
     } else if ($equal(error.domain, NSURLErrorDomain)) {
-        for (unsigned i=0; i < sizeof(kURLErrorToStatusMap)/sizeof(kURLErrorToStatusMap[0]); ++i) {
-            if (kURLErrorToStatusMap[i].code == code)
-                return kURLErrorToStatusMap[i].status;
-        }
-        return kCBLStatusUpstreamError;
+        return mapError(code, kURLErrorToStatusMap, kCBLStatusUpstreamError);
+    } else if ($equal(error.domain, NSCocoaErrorDomain)) {
+        return mapError(code, kCocoaErrorToStatusMap, kCBLStatusServerError);
     } else {
         return defaultStatus;
     }

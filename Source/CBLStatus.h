@@ -40,6 +40,7 @@ typedef enum {
     kCBLStatusBadParam       = 495,
     kCBLStatusDeleted        = 496,      // Document deleted
     kCBLStatusInvalidStorageType = 497,
+    kCBLStatusFilesystemLocked = 498,    // iOS file protection in effect; can't access file
 
     kCBLStatusBadChangesFeed = 587,
     kCBLStatusChangesFeedTruncated = 588,

@@ -29,12 +29,31 @@ static void RunViewPerformanceTest(void);
 @synthesize window, navigationController, database;
 
 
+- (instancetype) init {
+    self = [super init];
+    if (self) {
+        NSLog(@"---------- DemoAppDelegate init ----------");
+    }
+    return self;
+}
+
+
+static void exitHook(void) {
+    fprintf(stderr, "---------- exit() ----------\n");
+}
+
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
 #if PERFORMANCE_TEST
     RunViewPerformanceTest();
     exit(0);
 #endif
+
+    NSLog(@"---------- applicationDidFinishLaunching ----------");
+    atexit(exitHook);
+    static NSTimer *t;
+    t = [NSTimer scheduledTimerWithTimeInterval: 0.1 target: self selector: @selector(checkFileProtection) userInfo: nil repeats: YES];
 
     // Ensure that every public class is an exported symbol in the CouchbaseLite framework:
     [CBLAttachment class];
@@ -82,6 +101,51 @@ static void RunViewPerformanceTest(void);
 }
 
 
+- (void)applicationDidBecomeActive:(UIApplication *)application {
+    NSLog(@"---------- applicationDidBecomeActive ----------");
+}
+- (void)applicationWillResignActive:(UIApplication *)application {
+    NSLog(@"---------- applicationWillResignActive ----------");
+}
+- (void)applicationDidEnterBackground:(UIApplication *)application {
+    NSLog(@"---------- applicationDidEnterBackground ----------");
+}
+- (void)applicationWillEnterForeground:(UIApplication *)application {
+    NSLog(@"---------- applicationWillEnterForeground ----------");
+}
+- (void)applicationProtectedDataWillBecomeUnavailable:(UIApplication *)application {
+    NSLog(@"---------- applicationProtectedDataWillBecomeUnavailable ----------");
+}
+- (void)applicationProtectedDataDidBecomeAvailable:(UIApplication *)application {
+    NSLog(@"---------- applicationProtectedDataDidBecomeAvailable ----------");
+}
+- (void)applicationDidReceiveMemoryWarning:(UIApplication *)application {
+    NSLog(@"---------- applicationDidReceiveMemoryWarning ----------");
+}
+- (void)applicationWillTerminate:(UIApplication *)application {
+    NSLog(@"---------- applicationWillTerminate ----------");
+}
+
+
+static BOOL sFileAccess = YES;
+
+// Called on a timer; checks whether file protection has disabled file access and
+// logs when this state changes.
+- (void) checkFileProtection {
+    NSString* tmpPath = [NSTemporaryDirectory() stringByAppendingPathComponent: @"foo.tmp"];
+    NSError* error;
+    BOOL ok = [@"foo" writeToFile: tmpPath atomically: NO encoding: NSUTF8StringEncoding error: &error];
+    if (ok)
+        [NSFileManager.defaultManager removeItemAtPath: tmpPath error: NULL];
+
+    if (ok != sFileAccess) {
+        sFileAccess = ok;
+        if (ok)
+            NSLog(@"******** File access restored ********");
+        else
+            NSLog(@"******** File access lost ********");
+    }
+}
 
 
 // Display an error alert, without blocking.

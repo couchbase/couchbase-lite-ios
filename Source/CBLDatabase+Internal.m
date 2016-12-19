@@ -135,12 +135,24 @@ static BOOL sAutoCompact = YES;
     return self;
 }
 
+
 - (NSString*) description {
     return $sprintf(@"%@[<%p>%@]", [self class], self, self.name);
 }
 
+
 - (BOOL) exists {
     return [[NSFileManager defaultManager] fileExistsAtPath: _dir];
+}
+
+
+- (NSFileProtectionType) fileProtection {
+#if TARGET_OS_IPHONE
+    NSDictionary* attrs = [NSFileManager.defaultManager attributesOfItemAtPath: _dir error: NULL];
+    return attrs[NSFileProtectionKey] ?: NSFileProtectionNone;
+#else
+    return nil;
+#endif
 }
 
 

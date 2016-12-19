@@ -96,6 +96,7 @@ extern NSArray* CBL_RunloopModes;
 @property (nonatomic, readonly) BOOL exists;
 @property (nonatomic, readonly) UInt64 totalDataSize;
 @property (nonatomic, readonly) NSDate* startTime;
+@property (nonatomic, readonly) NSFileProtectionType fileProtection;
 
 @property (nonatomic, readonly) NSString* privateUUID;
 @property (nonatomic, readonly) NSString* publicUUID;

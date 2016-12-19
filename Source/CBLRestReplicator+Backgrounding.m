@@ -27,16 +27,38 @@
 
 // Called when the replicator starts
 - (void) setupBackgrounding {
+    // Check iOS file protection:
+    NSFileProtectionType prot = _db.fileProtection;
+    if ([prot isEqual: NSFileProtectionComplete] ||
+            [prot isEqual: NSFileProtectionCompleteUnlessOpen]) {
+        [NSNotificationCenter.defaultCenter addObserver: self
+                                        selector: @selector(fileAccessChanged:)
+                                            name: UIApplicationProtectedDataWillBecomeUnavailable
+                                            object: nil];
+        [NSNotificationCenter.defaultCenter addObserver: self
+                                        selector: @selector(fileAccessChanged:)
+                                            name: UIApplicationProtectedDataDidBecomeAvailable
+                                            object: nil];
+    }
+
+    // Start an app-backgrounding monitor:
     _bgMonitor = [[MYBackgroundMonitor alloc] init];
     __weak CBLRestReplicator* weakSelf = self;
     _bgMonitor.onAppBackgrounding = ^{ [weakSelf appBackgrounding]; };
     _bgMonitor.onAppForegrounding = ^{ [weakSelf appForegrounding]; };
     _bgMonitor.onBackgroundTaskExpired = ^{ [weakSelf backgroundTaskExpired]; };
+    [_bgMonitor start];
 }
 
 
 // Called when the replicator stops
 - (void) endBackgrounding {
+    [NSNotificationCenter.defaultCenter removeObserver: self
+                                            name: UIApplicationProtectedDataWillBecomeUnavailable
+                                          object: nil];
+    [NSNotificationCenter.defaultCenter removeObserver: self
+                                            name: UIApplicationProtectedDataDidBecomeAvailable
+                                          object: nil];
     [_bgMonitor stop];
     _bgMonitor = nil;
 }
@@ -44,46 +66,65 @@
 
 // Called when the replicator goes idle (from -updateActive)
 - (void) okToEndBackgrounding {
-    if ([_bgMonitor endBackgroundTask]) {
-        LogTo(Sync, @"%@: Now idle; ending background task", self);
-        [self setSuspended: YES];
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if ([_bgMonitor hasBackgroundTask]) {
+            _deepBackground = YES;
+            [self updateSuspended];
+            LogTo(Sync, @"%@: Now idle; ending background task", self);
+            [_bgMonitor endBackgroundTask];  // will probably suspend the process immediately
+        }
+    });
 }
 
 
+////// All the methods below are called on the MAIN THREAD, not the replicator thread ////////
+
+
 - (void) appBackgrounding {
-    // Danger: This is called on the main thread! It switches to the replicator's thread to do its
-    // work, but it has to block until that work is done, because UIApplication requires
-    // background tasks to be registered before the notification handler returns; otherwise the app
-    // simply suspends itself.
     if (_active && [_bgMonitor beginBackgroundTaskNamed: self.description]) {
         LogTo(Sync, @"%@: App backgrounding; starting temporary background task", self);
     } else {
-        [self.db doSync: ^{
-            [self setSuspended: YES];
-        }];
+        LogTo(Sync, @"%@: App backgrounding, but can't run background task; suspending", self);
+        _deepBackground = YES;
+        [self updateSuspended];
     }
 }
 
 
 - (void) appForegrounding {
-    // Danger: This is called on the main thread!
     BOOL ended = [_bgMonitor endBackgroundTask];
-    [self.db doSync: ^{                 // sync call avoids a race condition on _active
-        if (ended)
-            LogTo(Sync, @"%@: App foregrounded, ending background task", self);
-        [self setSuspended: NO];
+    if (ended)
+        LogTo(Sync, @"%@: App foregrounded, ending background task", self);
+    if (_deepBackground) {
+        _deepBackground = NO;
+        [self updateSuspended];
+    }
+}
+
+
+// Called if process runs out of background time before replication finishes.
+// Must do its work synchronously, before the OS quits the app.
+- (void) backgroundTaskExpired {
+    [self.db doSync: ^{
+        LogTo(Sync, @"%@: Background task time expired!", self);
+        _deepBackground = YES;
+        [self updateSuspended];
     }];
 }
 
 
-- (void) backgroundTaskExpired {
-    // Danger: This is called on the main thread!
-    // Called if process runs out of background time before replication finishes.
-    // Must do its work synchronously, before the OS quits the app.
+// Called when the app is about to lose access to files:
+- (void) fileAccessChanged: (NSNotification*)n {
+    LogTo(Sync, @"%@: Device locked, database unavailable", self);
+    _filesystemUnavailable = [n.name isEqual: UIApplicationProtectedDataWillBecomeUnavailable];
+    [self updateSuspended];
+}
+
+
+- (void) updateSuspended {
+    BOOL suspended = (_filesystemUnavailable || _deepBackground);
     [self.db doSync: ^{
-        LogTo(Sync, @"%@: Background task time expired!", self);
-        [self setSuspended: YES];
+        self.suspended = suspended;
     }];
 }
 
