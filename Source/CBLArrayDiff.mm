@@ -1,6 +1,6 @@
 //
 //  CBLArrayDiff.m
-//  Mutant
+//  Couchbase Lite
 //
 //  Created by Jens Alfke on 3/8/16.
 //  Copyright © 2016 Couchbase. All rights reserved.
@@ -9,6 +9,9 @@
 #import "CBLArrayDiff.h"
 #include "Differ.hh"
 #include <map>
+
+
+DefineLogDomain(ArrayDiff);
 
 
 namespace couchbase {
@@ -111,15 +114,16 @@ using namespace couchbase::differ;
             _changedIndexesAfter = changesAfter;
             _insertedIndexes = insertions;
             _modifiedIndexes = d.modifiedIndexes;
-            NSLog(@"CBLArrayDiff: %lu deleted, %lu replaced, %lu inserted, %lu moved, %lu modified",
+            LogTo(ArrayDiff, @"%lu deleted, %lu replaced, %lu inserted, %lu moved, %lu modified",
                   (unsigned long)deletions.count, (unsigned long)changesBefore.count,
                   (unsigned long)insertions.count, _moves.size(), _modifiedIndexes.size());
-            std::cerr << changeVector << "\n";
+            if (WillLogTo(ArrayDiff))
+                std::cerr << changeVector << "\n";
         } catch (const std::exception &x) {
-            NSLog(@"ERROR: CBLArrayDiff failed with C++ exception: %s", x.what());
+            Warn(@"ERROR: CBLArrayDiff failed with C++ exception: %s", x.what());
             return nil;
         } catch (...) {
-            NSLog(@"ERROR: CBLArrayDiff failed with unknown exception");
+            Warn(@"ERROR: CBLArrayDiff failed with unknown exception");
             return nil;
         }
     }

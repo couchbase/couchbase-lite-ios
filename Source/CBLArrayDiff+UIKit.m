@@ -1,6 +1,6 @@
 //
 //  CBLArrayDiff+UIKit.m
-//  Mutant
+//  Couchbase Lite
 //
 //  Created by Jens Alfke on 3/10/16.
 //  Copyright © 2016 Couchbase. All rights reserved.
