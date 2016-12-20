@@ -111,7 +111,16 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
 
 
 static void errorLogCallback(void *pArg, int errCode, const char *msg) {
-    Warn(@"SQLite error (code %d): %s", errCode, msg);
+    int baseCode = errCode & 0xFF;
+    if (baseCode == SQLITE_SCHEMA)
+        return;     // ignore harmless "statement aborts ... database schema has changed" warning
+    if (baseCode == SQLITE_CONSTRAINT)
+        return;     // This happens when we insert a rev that already exists; not a problem
+
+    if (baseCode == SQLITE_NOTICE || baseCode == SQLITE_READONLY)
+        Log(@"SQLite message: %s", msg);
+    else
+        Warn(@"SQLite error (code %d): %s", errCode, msg);
 }
 
 
