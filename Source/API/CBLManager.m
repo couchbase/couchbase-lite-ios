@@ -269,6 +269,7 @@ static CBLManager* sInstance;
 
 #if DEBUG
 + (instancetype) createEmptyAtPath: (NSString*)path {
+    LogTo(Database, @"CBLManager deleting dir %@", path);
     [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
     NSError* error;
     CBLManager* dbm = [[self alloc] initWithDirectory: path
@@ -787,17 +788,19 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
     [_replications my_removeMatching: ^int(CBLReplication* repl) {
         return [repl localDatabase] == db;
     }];
-    [_databases removeObjectForKey: name];
+    if ([_databases objectForKey: name]) {
+        [_databases removeObjectForKey: name];
 
-    CBL_Shared* strongShared = _shared;
-    [strongShared closedDatabase: name];
+        CBL_Shared* strongShared = _shared;
+        [strongShared closedDatabase: name];
 
-    // Close background database:
-    [strongShared.backgroundServer tellDatabaseManager: ^(CBLManager* bgmgr) {
-        NSError* error;
-        if (![bgmgr _closeDatabaseNamed: name error: &error])
-            Warn(@"Cannot close background database named %@: %@", name, error.my_compactDescription);
-    }];
+        // Close background database:
+        [strongShared.backgroundServer tellDatabaseManager: ^(CBLManager* bgmgr) {
+            NSError* error;
+            if (![bgmgr _closeDatabaseNamed: name error: &error])
+                Warn(@"Cannot close background database named %@: %@", name, error.my_compactDescription);
+        }];
+    }
 }
 
 
