@@ -50,6 +50,17 @@
 
     AssertEqual([CBLJSON JSONObjectWithDate:date
                                     timeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]], @"2014-07-30T15:09:00.000Z");
+
+    // Try a BCE date (i.e. negative year). I picked the creation of the Universe according
+    // to Archbishop Ussher: Oct. 22, 4004 BCE at nightfall (time zone unspecified.)
+    // Since 1 BCE is year 0, 4004 BCE is represented as -4003.
+    date = [CBLJSON dateWithJSONObject: @"-4003-10-22T18:00:00Z"];
+    NSLog(@"date = %@", date);
+    NSInteger era, year, month, day;
+    [[NSCalendar calendarWithIdentifier: NSCalendarIdentifierGregorian] getEra: &era year: &year month: &month day: &day fromDate: date];
+    AssertEq(era, 0); // BCE
+    AssertEq(year, 4004);
+    AssertEqual([CBLJSON JSONObjectWithDate: date], @"-4003-10-22T18:00:00.000Z");
 }
 
 
