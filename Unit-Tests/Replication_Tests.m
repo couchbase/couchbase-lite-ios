@@ -1611,6 +1611,8 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
         AssertEqual(doc[@"n"], @(i));
         AssertEqual(doc[@"updated"], (i%3 ? nil : @YES));
     }
+
+    [db2 deleteDatabase: NULL];
 }
 
 

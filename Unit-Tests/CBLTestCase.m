@@ -189,6 +189,11 @@ extern int c4_getObjectCount(void);             // from c4Base.h (CBForest)
 - (void)tearDown {
     NSError* error;
     Assert(!db || [db deleteDatabase: &error], @"Couldn't close db: %@", error.my_compactDescription);
+
+    // Delete all the databases before the dbmgr itself gets deleted, since closing the dbmgr will
+    // not wait for background databases to finish closing.
+    for (CBLDatabase* dbToDelete in dbmgr.allOpenDatabases)
+        Assert([dbToDelete deleteDatabase: &error]);
     [dbmgr close];
 
     if (_useForestDB) {

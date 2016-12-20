@@ -1328,6 +1328,7 @@
     Assert(rows, @"Couldn't query the replaced database named %@ : %@", name, error);
 
     onComplete(replaceDb, rows);
+    Assert([replaceDb close: &error]);
 }
 
 
