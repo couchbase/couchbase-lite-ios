@@ -6,7 +6,7 @@
 
 Get more info and downloads of Couchbase Lite (for iOS and Android) via [the Couchbase mobile portal](http://mobile.couchbase.com)
 
-[Click here for **official documentation for Couchbase Lite iOS**](http://developer.couchbase.com/documentation/mobile/current/training/index.html)
+[Click here for **official documentation for Couchbase Lite iOS**](http://developer.couchbase.com/documentation/mobile/current/installation/index.html)
 
 Latency matters a lot to users, so a local database takes frustration out of the equation. It’s got JSON documents, and the same map/reduce as Couchbase Server, in a pint-sized edition.
 
@@ -40,8 +40,9 @@ The native APIs are Objective-C (iOS, tvOS, Mac), Java (Android), and C# (.NET, 
 
 ## More Information
 
-* [Why Couchbase Lite?](https://github.com/couchbase/couchbase-lite-ios/wiki/Why-Couchbase-Lite%3F)
-* [API Overview](http://developer.couchbase.com/documentation/mobile/current/get-started/couchbase-lite-overview/index.html)
+* [Why Couchbase Lite?](http://developer.couchbase.com/mobile)
+* [Installation](http://developer.couchbase.com/documentation/mobile/current/installation/index.html)
+* [Training](http://developer.couchbase.com/documentation/mobile/current/training/index.html)
 * [API Reference](http://couchbase.github.com/couchbase-lite-ios/docs/html/annotated.html)
 * There's lots more information on the [wiki][2].
 * Demo apps:
