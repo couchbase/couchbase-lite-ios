@@ -34,13 +34,17 @@ NSTimeInterval kMinHeartbeat = 5.0;
 
 - (CBLStatus) do_POST_changes: (CBLDatabase*)db {
     // Merge the properties from the JSON request body into the URL queries.
-    // Note that values in _queries have to be NSStrings or the parsing code will break!
+    // The values have to be converted to strings because _queries only has string values.
     NSMutableDictionary* queries = [self.queries mutableCopy] ?: [NSMutableDictionary new];
     NSDictionary* body = self.bodyAsDictionary;
     for (NSString* key in body) {
-        queries[key] = [CBLJSON stringWithJSONObject: body[key]
-                                             options: CBLJSONWritingAllowFragments
-                                               error: NULL];
+        id value = body[key];
+        if (![value isKindOfClass: [NSString class]]) {
+            value = [CBLJSON stringWithJSONObject: value
+                                          options: CBLJSONWritingAllowFragments
+                                            error: NULL];
+        }
+        queries[key] = value;
     }
     _queries = [queries copy];
 
