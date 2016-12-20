@@ -242,13 +242,14 @@
 
 
 
-- (void) test02_RunPushReplication {
+- (void) test02_RunPushAndPullReplication {
     RequireTestCase(CreateReplicators);
     NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
     if (!remoteDbURL)
         return;
     [self eraseRemoteDB: remoteDbURL];
 
+    // First push:
     Log(@"Creating %d documents...", kNDocuments);
     [db inTransaction:^BOOL{
         for (int i = 1; i <= kNDocuments; i++) {
@@ -278,24 +279,19 @@
 
     AssertEq(repl.pendingDocumentIDs.count, 0u);
     Assert(![repl isDocumentPending: [db documentWithID: @"doc-1"]]);
-}
 
-
-- (void) test04_RunPullReplication {
-    RequireTestCase(RunPushReplication);
-    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
-    if (!remoteDbURL)
-        return;
+    // Now the pull part:
 
     Log(@"Pulling...");
-    CBLReplication* repl = [db createPullReplication: remoteDbURL];
+    CBLDatabase* pullDB = [dbmgr databaseNamed: @"pulldb" error: NULL];
+    CBLReplication* pullRepl = [pullDB createPullReplication: remoteDbURL];
 
-    [self runReplication: repl expectedChangesCount: kNDocuments];
-    AssertNil(repl.lastError);
+    [self runReplication: pullRepl expectedChangesCount: kNDocuments];
+    AssertNil(pullRepl.lastError);
 
     Log(@"Verifying documents...");
     for (int i = 1; i <= kNDocuments; i++) {
-        CBLDocument* doc = db[ $sprintf(@"doc-%d", i) ];
+        CBLDocument* doc = pullDB[ $sprintf(@"doc-%d", i) ];
         AssertEqual(doc[@"index"], @(i));
         AssertEqual(doc[@"bar"], $false);
     }
@@ -859,7 +855,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     CBLUnsavedRevision* newRev;
 
     NSError* error;
-    CBLDatabase* pushDB = [dbmgr createEmptyDatabaseNamed: @"prepopdb" error: &error];
+    CBLDatabase* pushDB = [dbmgr createEmptyDatabaseNamed: @"pushdb" error: &error];
 
     // Create a document:
     CBLDocument* doc = [pushDB documentWithID: @"mydoc"];
@@ -1055,7 +1051,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 - (void)test17_RemovedRevision {
-    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    NSURL* remoteDbURL = [self remoteTestDBURL: kScratchDBName];
     if (!remoteDbURL)
         return;
     [self eraseRemoteDB: remoteDbURL];
@@ -1090,7 +1086,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
 
 - (void)test18_PendingDocumentIDs {
-    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    NSURL* remoteDbURL = [self remoteTestDBURL: kScratchDBName];
     if (!remoteDbURL)
         return;
     [self eraseRemoteDB: remoteDbURL];
@@ -1444,7 +1440,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
 
 - (void) test_23_StoppedWhenCloseDatabase {
-    NSURL* remoteDbURL = [self remoteTestDBURL: kPushThenPullDBName];
+    NSURL* remoteDbURL = [self remoteTestDBURL: kScratchDBName];
     if (!remoteDbURL)
         return;
     [self eraseRemoteDB: remoteDbURL];
@@ -1467,6 +1463,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     
     [self waitForExpectationsWithTimeout: 2.0 handler: nil];
     AssertEq(db.allReplications.count, 0u);
+    Assert([db deleteDatabase: &error]);
 }
 
 
@@ -1545,7 +1542,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     Log(@"\n\n$$$$$$$$$$ PULLING TO DB2 $$$$$$$$$$");
 
     // Now create a second database and pull the remote db into it:
-    CBLDatabase* db2 = [dbmgr createEmptyDatabaseNamed: @"prepopdb" error: NULL];
+    CBLDatabase* db2 = [dbmgr createEmptyDatabaseNamed: @"db2" error: NULL];
     Assert(db2);
     //[CBLManager enableLogging: @"DatabaseVerbose"];
     CBLReplication* pull = [db2 createPullReplication: remoteDbURL];
@@ -1586,7 +1583,7 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     [self runReplication: push expectedChangesCount: 500];
 
     // Pull to db2:
-    CBLDatabase* db2 = [dbmgr createEmptyDatabaseNamed: @"prepopdb" error: NULL];
+    CBLDatabase* db2 = [dbmgr createEmptyDatabaseNamed: @"db2" error: NULL];
     Assert(db2);
     CBLReplication* pull = [db2 createPullReplication: remoteDbURL];
     [self runReplication: pull expectedChangesCount: 500];
