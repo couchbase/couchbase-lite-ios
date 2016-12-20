@@ -20,6 +20,7 @@
 #import "CBJSONEncoder.h"
 #import "CBLJSON.h"
 #import <netdb.h>
+#import <SystemConfiguration/SystemConfiguration.h>
 
 
 #ifdef GNUSTEP
@@ -478,16 +479,20 @@ BOOL CBLSafeReplaceDir(NSString* srcPath, NSString* dstPath, NSError** outError)
 
 
 NSString* CBLGetHostName() {
+    NSString* hostName;
+#if TARGET_OS_IPHONE
     // From <http://stackoverflow.com/a/16902907/98077>
     char baseHostName[256];
     if (gethostname(baseHostName, 255) != 0)
         return nil;
     baseHostName[255] = '\0';
-    NSString* hostName = [NSString stringWithUTF8String: baseHostName];
-#if TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
+    hostName = [NSString stringWithUTF8String: baseHostName];
+#else
+    // Quinn says this is the correct call to use (on Mac; it's not available on iOS)
+    hostName = CFBridgingRelease(SCDynamicStoreCopyLocalHostName(NULL));
+#endif
     if (![hostName hasSuffix: @".local"])
         hostName = [hostName stringByAppendingString: @".local"];
-#endif
     return hostName;
 }
 
