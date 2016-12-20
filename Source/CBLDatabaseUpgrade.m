@@ -49,12 +49,8 @@ DefineLogDomain(Upgrade);
     return self;
 }
 
-- (void)dealloc
-{
-    sqlite3_finalize(_docQuery);
-    sqlite3_finalize(_revQuery);
-    sqlite3_finalize(_attQuery);
-    sqlite3_close(_sqlite);
+- (void)dealloc {
+    [self close];
 }
 
 
@@ -126,7 +122,30 @@ static int collateRevIDs(void *context,
 }
 
 
+- (void) close {
+    if (_docQuery) {
+        sqlite3_finalize(_docQuery);
+        _docQuery = NULL;
+    }
+    if (_revQuery) {
+        sqlite3_finalize(_revQuery);
+        _revQuery = NULL;
+    }
+    if (_attQuery) {
+        sqlite3_finalize(_attQuery);
+        _attQuery = NULL;
+    }
+    if (_sqlite) {
+        int err = sqlite3_close(_sqlite);
+        _sqlite = NULL;
+        if (err)
+            Warn(@"CBLDatabaseUpgrade: error %d closing db", err);
+    }
+}
+
+
 - (void) backOut {
+    [self close];
     // Move attachments dir back to old path:
     NSFileManager* fmgr = [NSFileManager defaultManager];
     NSString* newAttachmentsPath = _db.attachmentStorePath;
@@ -142,6 +161,7 @@ static int collateRevIDs(void *context,
 
 
 - (void) deleteSQLiteFiles {
+    [self close];
     for (NSString* suffix in @[@"", @"-wal", @"-shm"]) {
         NSString* oldFile = [_path stringByAppendingString: suffix];
         [[NSFileManager defaultManager] removeItemAtPath: oldFile error: NULL];
@@ -461,6 +481,7 @@ static int collateRevIDs(void *context,
     while (SQLITE_ROW == (err = sqlite3_step(infoQuery))) {
         [_db.storage setInfo: columnString(infoQuery, 1) forKey: columnString(infoQuery, 0)];
     }
+    sqlite3_finalize(infoQuery);
     return sqliteErrToStatus(err);
 }
 
