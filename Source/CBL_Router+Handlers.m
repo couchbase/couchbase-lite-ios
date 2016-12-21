@@ -541,7 +541,7 @@
     static NSString* const kStatusName[] = {@"Stopped", @"Offline", @"Idle", @"Active"};
     // For schema, see http://wiki.apache.org/couchdb/HttpGetActiveTasks
     NSString* source = repl.settings.remote.absoluteString;
-    NSString* target = _db.name;
+    NSString* target = repl.db.name;
     if (repl.settings.isPush) {
         NSString* temp = source;
         source = target;
