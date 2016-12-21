@@ -318,7 +318,8 @@ UsingLogDomain(Sync);
         didCompleteWithError:(nullable NSError *)error
 {
     [self requestForTask: task do: ^(CBLRemoteRequest *request) {
-        [_allRequests removeObject: request];
+        NSMutableSet<CBLRemoteRequest*>* allRequests = _allRequests;
+        [allRequests removeObject: request];
         if (error)
             [request didFailWithError: error];
         else
