@@ -15,7 +15,8 @@ UsingLogDomain(Router);
 
 
 #if DEBUG
-extern NSTimeInterval kMinHeartbeat;    // Configurable for testing purposes only
+extern NSTimeInterval kMinHeartbeat;            // Configurable for testing purposes only
+extern NSTimeInterval kDefaultChangesTimeout;   // Configurable for testing purposes only
 #endif
 
 
@@ -71,6 +72,9 @@ enum {
     BOOL _changesIncludeDocs;
     BOOL _changesIncludeConflicts;
     NSTimer *_heartbeatTimer;
+    NSTimer *_changesTimeoutTimer;
+    NSTimeInterval _changesTimeout;
+    SequenceNumber _changesTimeoutSince;
 }
 
 - (instancetype) initWithServer: (CBL_Server*)server

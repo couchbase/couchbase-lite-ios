@@ -23,13 +23,13 @@
 #if DEBUG
 // Make this configurable for testing purposes
 NSTimeInterval kMinHeartbeat = 5.0;
+NSTimeInterval kDefaultChangesTimeout = 60.0;
 #else
 #define kMinHeartbeat 5.0
+#define kDefaultChangesTimeout 60.0
 #endif
 
 @implementation CBL_Router (Changes)
-
-
 
 
 - (CBLStatus) do_POST_changes: (CBLDatabase*)db {
@@ -117,8 +117,19 @@ NSTimeInterval kMinHeartbeat = 5.0;
                                                  selector: @selector(dbChanged:)
                                                      name: CBL_DatabaseChangesNotification
                                                    object: db];
-
-        NSString* heartbeatParam = [self query:@"heartbeat"];
+        
+        // Timeout:
+        NSString* timeoutParam = [self query: @"timeout"];
+        if (timeoutParam) {
+            _changesTimeout = [timeoutParam doubleValue] / 1000.0;
+            if (_changesTimeout <= 0)
+                return kCBLStatusBadRequest;
+        } else
+            _changesTimeout = 0;
+            
+        
+        // Heartbeat:
+        NSString* heartbeatParam = [self query: @"heartbeat"];
         if (heartbeatParam) {
             NSTimeInterval heartbeat = [heartbeatParam doubleValue] / 1000.0;
             if (heartbeat <= 0)
@@ -127,6 +138,15 @@ NSTimeInterval kMinHeartbeat = 5.0;
                 heartbeat = kMinHeartbeat;
             NSString* heartbeatResponse = (_changesMode == kEventSourceFeed) ? @":\n\n" : @"\r\n";
             [self startHeartbeat: heartbeatResponse interval: heartbeat];
+        } else {
+            // Apply default timeout when heartbeat is not specified:
+            if (_changesTimeout == 0)
+                _changesTimeout = kDefaultChangesTimeout;
+        }
+        
+        if (_changesTimeout > 0) {
+            _changesTimeoutSince = since;
+            [self startTimeout];
         }
         
         // Don't close connection; more data to come
@@ -203,6 +223,8 @@ NSTimeInterval kMinHeartbeat = 5.0;
 - (void) dbChanged: (NSNotification*)n {
     // Prevent myself from being dealloced if my client finishes during the call (see issue #266)
     __unused id retainSelf = self;
+    
+    [self stopTimeout];
 
     NSMutableArray* changes = $marray();
     for (CBLDatabaseChange* change in (n.userInfo)[@"changes"]) {
@@ -235,21 +257,50 @@ NSTimeInterval kMinHeartbeat = 5.0;
         if (_changesMode == kLongPollFeed) {
             [changes addObject: rev];
         } else {
-            Log(@"CBL_Router: Sending continous change chunk");
             [self sendContinuousLine: [self changeDictForRev: rev]];
         }
+        _changesTimeoutSince = rev.sequence;
     }
 
     if (_changesMode == kLongPollFeed && changes.count > 0) {
-        Log(@"CBL_Router: Sending longpoll response");
-        [self sendResponseHeaders];
-        NSDictionary* body = [self responseBodyForChanges: changes since: 0];
-        _response.body = [CBL_Body bodyWithProperties: body];
-        [self sendResponseBodyAndFinish: YES];
+        [self sendLongpollResponseForChanges: changes since: 0];
+    } else {
+        if (changes.count > 0)
+            _changesTimeoutSince = ((CBL_Revision*)changes.lastObject).sequence;
+        [self startTimeout];
     }
 
     retainSelf = nil;
 }
 
+
+- (void)sendLongpollResponseForChanges: (NSArray*)changes since: (UInt64)since {
+    Log(@"CBL_Router: Sending longpoll response");
+    [self sendResponseHeaders];
+    NSDictionary* body = [self responseBodyForChanges: changes since: since];
+    _response.body = [CBL_Body bodyWithProperties: body];
+    [self sendResponseBodyAndFinish: YES];
+}
+
+
+- (void) startTimeout {
+    assert(_changesTimeout > 0);
+    [_changesTimeoutTimer invalidate];
+    _changesTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval: _changesTimeout
+                                                           repeats: NO block: ^(NSTimer *timer) {
+        if (_changesMode == kLongPollFeed) {
+            [self sendLongpollResponseForChanges: @[] since: _changesTimeoutSince];
+        } else {
+            [self sendContinuousLine: $dict({@"last_seq", @(_changesTimeoutSince)})];
+            [self finished];
+        }
+    }];
+}
+
+
+- (void) stopTimeout {
+    [_changesTimeoutTimer invalidate];
+    _changesTimeoutTimer = nil;
+}
 
 @end
