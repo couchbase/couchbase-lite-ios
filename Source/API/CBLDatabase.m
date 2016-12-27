@@ -273,16 +273,30 @@ static void catchInBlock(void (^block)()) {
         if (!newKey)
             return CBLStatusToOutNSError(kCBLStatusBadRequest, outError);
     }
-
-    if ([_manager.shared countForOpenedDatabase: _name] > 1) {
-        // FIX: If other database handles are open on the same db file, they will be confused by
-        // the db suddenly changing its encryption key. This will cause at least errors, and
-        // possibly file corruption. It would be best to close these other handles and then
-        // reopen them afterwards, but that's difficult to do, so the workaround is to give up.
+    
+    // Backup the old encryption key:
+    id oldKey = [_manager.shared valueForType: @"encryptionKey" name: @"" inDatabaseNamed: _name];
+    
+    // Notify that the database will be rekeyed:
+    [[NSNotificationCenter defaultCenter] postNotificationName: CBL_DatabaseWillBeRekeyedNotification
+                                                        object: self];
+    
+    // Close the database:
+    [self _close];
+    
+    // Wait for all threads to close this database file:
+    [_manager.shared forgetDatabaseNamed: _name];
+    
+    // Restore the old encryption key
+    [_manager registerEncryptionKey: oldKey forDatabaseNamed: _name];
+    
+    // Reopen the database:
+    NSError* error;
+    if (![self open: &error]) {
+        NSString *mesg = [NSString stringWithFormat: @"Cannot reopen the database to change the "
+                            "encryption key: %@", error];
         if (outError)
-            *outError = CBLStatusToNSErrorWithInfo(kCBLStatusServiceUnavailable,
-                                               @"This database is opened by another CBLManager",
-                                               nil, nil);
+            *outError = CBLStatusToNSErrorWithInfo(kCBLStatusServiceUnavailable, mesg, nil, nil);
         return NO;
     }
 

@@ -25,6 +25,8 @@ extern NSString* const CBL_DatabaseWillCloseNotification;
 /** NSNotification posted when a database is about to be deleted (but before it closes). */
 extern NSString* const CBL_DatabaseWillBeDeletedNotification;
 
+/** NSNotification posted when a database is about to be rekeyed (but before it closes). */
+extern NSString* const CBL_DatabaseWillBeRekeyedNotification;
 
 /** A private runloop mode for waiting on. */
 extern NSString* const CBL_PrivateRunloopMode;
