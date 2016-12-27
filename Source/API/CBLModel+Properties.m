@@ -238,7 +238,8 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
                     return [receiver getArrayRelationProperty: property withModelClass: itemClass];
                 };
             }
-        } else {
+        }
+        else {
             // Typed array of scalar class:
             ValueConverter itemConverter = valueConverterToClass(itemClass);
             if (itemConverter) {
@@ -247,19 +248,29 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
                     return [receiver getProperty: property withConverter: converter];
                 };
             }
+            else if([itemClass isSubclassOfClass: [NSObject class]])
+            {
+                return [super impForGetterOfProperty: property ofClass: itemClass];
+            }
         }
     } else if ([propertyClass isSubclassOfClass: [CBLModel class]]) {
         // Model-valued property:
         impBlock = ^id(CBLModel* receiver) {
             return [receiver getModelProperty: property];
         };
-    } else {
+    }
+
+    else {
         // Other property type -- use a ValueConverter if we have one:
         ValueConverter converter = valueConverterToClass(propertyClass);
         if (converter) {
             impBlock = ^id(CBLModel* receiver) {
                 return [receiver getProperty: property withConverter: converter];
             };
+        }
+        else if([propertyClass isSubclassOfClass: [NSObject class]])
+        {
+            return [super impForGetterOfProperty: property ofClass: propertyClass];
         }
     }
 
@@ -300,7 +311,13 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
                 }
                 [receiver setValue: value ofProperty: property];
             };
-        } else {
+        }
+        else if ([propertyClass isSubclassOfClass: [NSObject class]])
+        {
+             return [super impForSetterOfProperty: property ofClass: propertyClass];
+        }
+        
+        else {
             // Scalar-valued array:
             impBlock = ^(CBLModel* receiver, NSArray* value) {
                 [receiver setValue: value ofProperty: property];
@@ -316,7 +333,12 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
             }
             [receiver setValue: value ofProperty: property];
         };
-    } else {
+    }
+    else if ([propertyClass isSubclassOfClass: [NSObject class]])
+    {
+        return [super impForSetterOfProperty: property ofClass: propertyClass];
+    }
+    else {
         return [super impForSetterOfProperty: property ofClass: propertyClass];
     }
 
