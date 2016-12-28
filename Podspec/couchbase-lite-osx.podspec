@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
   s.source          = { :http => '<RELEASE ZIP FILE URL>' }
   s.preserve_paths  = 'LICENSE.txt'
   s.osx.deployment_target = '10.8'
-  s.frameworks      = 'CFNetwork', 'Security', 'SystemConfiguration'
+  s.frameworks      = 'CFNetwork', 'Security', 'SystemConfiguration', 'JavaScriptCore'
   s.libraries       = 'z', 'c++'
   s.xcconfig        = { 'OTHER_LDFLAGS' => '-ObjC' }
 

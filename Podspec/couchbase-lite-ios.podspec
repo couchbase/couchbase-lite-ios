@@ -8,29 +8,30 @@ Pod::Spec.new do |s|
   s.source          = { :http => '<RELEASE ZIP FILE URL>' }
   s.preserve_paths  = 'LICENSE.txt'
   s.ios.deployment_target = '7.0'
-  s.frameworks      = 'CFNetwork', 'Security', 'SystemConfiguration'
+  s.frameworks      = 'CFNetwork', 'Security', 'SystemConfiguration', 'JavaScriptCore'
   s.libraries       = 'z', 'c++'
   s.xcconfig        = { 'OTHER_LDFLAGS' => '-ObjC' }
   s.default_subspec = 'SQLite'
 
   s.subspec 'SQLite' do |ss|
     ss.libraries = 'sqlite3'
-    ss.source_files = 'CouchbaseLite.framework/Headers/*.h', 'CouchbaseLiteListener.framework/Headers/*.h'
+    ss.vendored_library = 'Extras/libCBLJSViewCompiler.a'
+    ss.source_files = 'CouchbaseLite.framework/Headers/*.h', 'CouchbaseLiteListener.framework/Headers/*.h', 'Extras/CBLRegisterJSViewCompiler.h'
     ss.preserve_paths = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
     ss.vendored_frameworks = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
   end
 
   s.subspec 'SQLCipher' do |ss|
-    ss.vendored_library = 'Extras/libsqlcipher.a'
-    ss.source_files = 'CouchbaseLite.framework/Headers/*.h', 'CouchbaseLiteListener.framework/Headers/*.h'
+    ss.vendored_libraries = 'Extras/libsqlcipher.a', 'Extras/libCBLJSViewCompiler.a'
+    ss.source_files = 'CouchbaseLite.framework/Headers/*.h', 'CouchbaseLiteListener.framework/Headers/*.h', 'Extras/CBLRegisterJSViewCompiler.h'
     ss.preserve_paths = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
     ss.vendored_frameworks = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
   end
 
   s.subspec 'ForestDB' do |ss|
     ss.libraries = 'sqlite3'
-    ss.vendored_library = 'Extras/libCBLForestDBStorage.a'
-    ss.source_files = 'CouchbaseLite.framework/Headers/*.h', 'CouchbaseLiteListener.framework/Headers/*.h'
+    ss.vendored_libraries = 'Extras/libCBLForestDBStorage.a', 'Extras/libCBLJSViewCompiler.a'
+    ss.source_files = 'CouchbaseLite.framework/Headers/*.h', 'CouchbaseLiteListener.framework/Headers/*.h', 'Extras/CBLRegisterJSViewCompiler.h'
     ss.preserve_paths = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
     ss.vendored_frameworks = 'CouchbaseLite.framework', 'CouchbaseLiteListener.framework'
   end
