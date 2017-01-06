@@ -390,10 +390,9 @@ static NSString* const kSyncGatewayServerHeaderPrefix = @"Couchbase Sync Gateway
         LogTo(Sync, @"%@ RETRYING, to transfer missed revisions...", self);
         _revisionsFailed = 0;
         [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                 selector: @selector(retryIfReady) object: nil];
+                                                 selector: @selector(retryIfReady)
+                                                   object: nil];
         [self retry];
-    } else {
-        [self performSelector: @selector(retryIfReady) withObject: nil afterDelay: kRetryDelay];
     }
 }
 
@@ -405,6 +404,9 @@ static NSString* const kSyncGatewayServerHeaderPrefix = @"Couchbase Sync Gateway
     _online = NO;
     [self updateStatus];
     [self stopRemoteRequests];
+    [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                             selector: @selector(retryIfReady)
+                                               object: nil];
     [self postProgressChanged];
     return YES;
 }
