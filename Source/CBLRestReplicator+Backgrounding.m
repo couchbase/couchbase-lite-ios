@@ -44,9 +44,9 @@
     // Start an app-backgrounding monitor:
     _bgMonitor = [[MYBackgroundMonitor alloc] init];
     __weak CBLRestReplicator* weakSelf = self;
-    _bgMonitor.onAppBackgrounding = ^{ [weakSelf appBackgrounding]; };
-    _bgMonitor.onAppForegrounding = ^{ [weakSelf appForegrounding]; };
-    _bgMonitor.onBackgroundTaskExpired = ^{ [weakSelf backgroundTaskExpired]; };
+    _bgMonitor.onAppBackgrounding = ^{ id strongSelf = weakSelf; [strongSelf appBackgrounding]; };
+    _bgMonitor.onAppForegrounding = ^{ id strongSelf = weakSelf; [strongSelf appForegrounding]; };
+    _bgMonitor.onBackgroundTaskExpired = ^{ id strongSelf = weakSelf; [strongSelf backgroundTaskExpired];};
     [_bgMonitor start];
 }
 
