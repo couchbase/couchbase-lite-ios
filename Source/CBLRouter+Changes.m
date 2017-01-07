@@ -83,7 +83,7 @@ NSTimeInterval kDefaultChangesTimeout = 60.0;
     options.descending = descending;
 
     options.limit = [self intQuery: @"limit" defaultValue: options.limit];
-    int since = [[self query: @"since"] intValue];
+    _changesSince = [[self query: @"since"] intValue];
     
     NSString* filterName = [self query: @"filter"];
     if (filterName) {
@@ -96,7 +96,7 @@ NSTimeInterval kDefaultChangesTimeout = 60.0;
     }
     
     CBLStatus status;
-    CBL_RevisionList* changes = [db changesSinceSequence: since
+    CBL_RevisionList* changes = [db changesSinceSequence: _changesSince
                                                  options: &options
                                                   filter: _changesFilter
                                                   params: _changesFilterParams
@@ -144,10 +144,8 @@ NSTimeInterval kDefaultChangesTimeout = 60.0;
                 _changesTimeout = kDefaultChangesTimeout;
         }
         
-        if (_changesTimeout > 0) {
-            _changesTimeoutSince = since;
+        if (_changesTimeout > 0)
             [self startTimeout];
-        }
         
         // Don't close connection; more data to come
         return 0;
@@ -155,10 +153,11 @@ NSTimeInterval kDefaultChangesTimeout = 60.0;
         // Return a response immediately and close the connection:
         if (_changesIncludeConflicts)
             _response.bodyObject = [self responseBodyForChangesWithConflicts: changes.allRevisions
-                                                                       since: since
+                                                                       since: _changesSince
                                                                        limit: options.limit];
         else
-            _response.bodyObject = [self responseBodyForChanges: changes.allRevisions since: since];
+            _response.bodyObject = [self responseBodyForChanges: changes.allRevisions
+                                                          since: _changesSince];
         return kCBLStatusOK;
     }
 }
@@ -259,16 +258,13 @@ NSTimeInterval kDefaultChangesTimeout = 60.0;
         } else {
             [self sendContinuousLine: [self changeDictForRev: rev]];
         }
-        _changesTimeoutSince = rev.sequence;
+        _changesSince = rev.sequence;
     }
 
-    if (_changesMode == kLongPollFeed && changes.count > 0) {
+    if (_changesMode == kLongPollFeed && changes.count > 0)
         [self sendLongpollResponseForChanges: changes since: 0];
-    } else {
-        if (changes.count > 0)
-            _changesTimeoutSince = ((CBL_Revision*)changes.lastObject).sequence;
+    else
         [self startTimeout];
-    }
 
     retainSelf = nil;
 }
@@ -286,13 +282,15 @@ NSTimeInterval kDefaultChangesTimeout = 60.0;
 - (void) startTimeout {
     assert(_changesTimeout > 0);
     [_changesTimeoutTimer invalidate];
+    CBL_Router* weakSelf = self;
     _changesTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval: _changesTimeout
                                                            repeats: NO block: ^(NSTimer *timer) {
+        CBL_Router* strongSelf = weakSelf;
         if (_changesMode == kLongPollFeed) {
-            [self sendLongpollResponseForChanges: @[] since: _changesTimeoutSince];
+            [strongSelf sendLongpollResponseForChanges: @[] since: _changesSince];
         } else {
-            [self sendContinuousLine: $dict({@"last_seq", @(_changesTimeoutSince)})];
-            [self finished];
+            [strongSelf sendContinuousLine: $dict({@"last_seq", @(_changesSince)})];
+            [strongSelf finished];
         }
     }];
 }

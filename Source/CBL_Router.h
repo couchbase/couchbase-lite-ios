@@ -74,7 +74,7 @@ enum {
     NSTimer *_heartbeatTimer;
     NSTimer *_changesTimeoutTimer;
     NSTimeInterval _changesTimeout;
-    SequenceNumber _changesTimeoutSince;
+    SequenceNumber _changesSince;
 }
 
 - (instancetype) initWithServer: (CBL_Server*)server
