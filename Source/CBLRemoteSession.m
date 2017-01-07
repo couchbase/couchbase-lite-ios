@@ -216,8 +216,12 @@ UsingLogDomain(Sync);
     if (_requestIDs.count > 0)
         Warn(@"CBLRemoteSession closed but has leftover tasks: %@", _requestIDs.allValues);
     _session = nil;
-    _allRequests = nil;
     _requestIDs = nil;
+    
+    // Reset _allRequests on the API thread:
+    [self doAsync: ^{
+        _allRequests = nil;
+    }];
 }
 
 
@@ -318,8 +322,7 @@ UsingLogDomain(Sync);
         didCompleteWithError:(nullable NSError *)error
 {
     [self requestForTask: task do: ^(CBLRemoteRequest *request) {
-        NSMutableSet<CBLRemoteRequest*>* allRequests = _allRequests;
-        [allRequests removeObject: request];
+        [_allRequests removeObject: request];
         if (error)
             [request didFailWithError: error];
         else
