@@ -64,7 +64,6 @@
 
 @interface CBLDatabaseChange ()
 @property (readonly) UInt64 sequenceNumber;
-@property (readonly) BOOL isDeletion;
 /** The revID of the default "winning" revision, or nil if it did not change. */
 @property (nonatomic, readonly) CBL_RevID* winningRevisionID;
 /** The revision that is now the default "winning" revision of the document, or nil if not known
