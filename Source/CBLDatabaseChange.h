@@ -29,6 +29,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** YES if the document is in conflict. (The conflict might pre-date this change.) */
 @property (readonly) BOOL inConflict;
 
+/** YES of the document is deleted. */
+@property (readonly) BOOL isDeletion;
+
 /** The remote database URL that this change was pulled from, if any. */
 @property (readonly, nullable) NSURL* source;
 
