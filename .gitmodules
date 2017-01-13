@@ -1,0 +1,6 @@
+[submodule "vendor/couchbase-lite-core"]
+	path = vendor/couchbase-lite-core
+	url = https://github.com/couchbase/couchbase-lite-core.git
+[submodule "vendor/MYUtilities"]
+	path = vendor/MYUtilities
+	url = https://github.com/snej/MYUtilities.git
