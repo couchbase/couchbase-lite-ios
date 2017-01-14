@@ -20,7 +20,8 @@
 
 BOOL convertError(const C4Error &c4err, NSError **outError) {
     NSCAssert(c4err.code != 0 && c4err.domain != 0, @"No C4Error");
-    static NSString* const kDomains[] = {nil, @"LiteCore", NSPOSIXErrorDomain, @"ForestDB", @"SQLite"};
+    static NSString* const kDomains[] = {nil, @"LiteCore", NSPOSIXErrorDomain, @"ForestDB",
+                                         @"SQLite", @"Fleece"};
     if (outError) {
         auto msg = c4error_getMessage(c4err);
         NSString* msgStr = [[NSString alloc] initWithBytes: msg.buf length: msg.size
