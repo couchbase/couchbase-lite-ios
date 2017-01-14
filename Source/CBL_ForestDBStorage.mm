@@ -944,27 +944,52 @@ static inline void cleanup_C4ExpiryEnumerator(C4ExpiryEnumerator **e) { c4exp_fr
         CBLStatusToOutNSError(*outStatus, outError);
         return nil;
     }
-
-    __block NSData* json = nil;
-    if (properties) {
-        json = [CBL_Revision asCanonicalJSON: properties error: NULL];
-        if (!json) {
-            *outStatus = kCBLStatusBadJSON;
-            CBLStatusToOutNSError(*outStatus, outError);
-            return nil;
-        }
-    } else {
-        json = [NSData dataWithBytes: "{}" length: 2];
-    }
-
+    
     __block CBL_Revision* putRev = nil;
     __block CBLDatabaseChange* change = nil;
 
     *outStatus = [self inTransaction: ^CBLStatus {
         NSString* docID = inDocID;
-        C4Slice prevRevIDSlice = revID2slice(inPrevRevID);
+        
+        if (inPrevRevID) { // Check if an existing doc?
+            CBLStatus status;
+            CLEANUP(C4Document)* curDoc = [self getC4Doc: docID status: &status];
+            if (!curDoc)
+                return status;
+            
+            // Select the current revision:
+            status = selectRev(curDoc, inPrevRevID, NO);
+            if (CBLStatusIsError(status))
+                return status;
+            
+            // https://github.com/couchbase/couchbase-lite-ios/issues/1440
+            // Need to ensure revpos is correct for a revision inserted on top
+            // of a deletion revision:
+            if (curDoc->selectedRev.flags & kRevDeleted) {
+                NSDictionary* attachments = properties.cbl_attachments;
+                if (attachments) {
+                    NSMutableDictionary* editedAttachments = [attachments mutableCopy];
+                    for (NSString* name in editedAttachments) {
+                        NSMutableDictionary* nuMeta = [editedAttachments[name] mutableCopy];
+                        nuMeta[@"revpos"] = @(inPrevRevID.generation + 1);
+                        editedAttachments[name] = nuMeta;
+                    }
+                    properties[@"_attachments"] = editedAttachments;
+                }
+            }
+        }
+        
+        NSData* json = nil;
+        if (properties) {
+            json = [CBL_Revision asCanonicalJSON: properties error: NULL];
+            if (!json)
+                return kCBLStatusBadJSON;
+        } else {
+            json = [NSData dataWithBytes: "{}" length: 2];
+        }
 
         // Let CBForest load the doc and insert the new revision:
+        C4Slice prevRevIDSlice = revID2slice(inPrevRevID);
         C4DocPutRequest rq = {
             .body = data2slice(json),
             .docID = string2slice(docID),
