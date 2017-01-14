@@ -1656,19 +1656,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
 {
     if (outError)
         *outError = nil;
-
-    __block NSData* json = nil;
-    if (properties) {
-        json = [CBL_Revision asCanonicalJSON: properties error: NULL];
-        if (!json) {
-            *outStatus = kCBLStatusBadJSON;
-            CBLStatusToOutNSError(*outStatus, outError);
-            return nil;
-        }
-    } else {
-        json = [NSData dataWithBytes: "{}" length: 2];
-    }
-
+    
     __block CBL_MutableRevision* newRev = nil;
     __block CBL_RevID* winningRevID = nil;
     __block BOOL inConflict = NO;
@@ -1759,6 +1747,31 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
 
         //// PART II: In which we prepare for insertion...
         
+        // https://github.com/couchbase/couchbase-lite-ios/issues/1440
+        // Need to ensure revpos is correct for a revision inserted on top
+        // of a deletion revision:
+        if (oldWinnerWasDeletion) {
+            NSDictionary* attachments = properties.cbl_attachments;
+            if (attachments) {
+                NSMutableDictionary* editedAttachments = [attachments mutableCopy];
+                for (NSString* name in editedAttachments) {
+                    NSMutableDictionary* nuMeta = [editedAttachments[name] mutableCopy];
+                    nuMeta[@"revpos"] = @(prevRevID.generation + 1);
+                    editedAttachments[name] = nuMeta;
+                }
+                properties[@"_attachments"] = editedAttachments;
+            }
+        }
+        
+        NSData* json = nil;
+        if (properties) {
+            json = [CBL_Revision asCanonicalJSON: properties error: NULL];
+            if (!json)
+                return kCBLStatusBadJSON;
+        } else
+            json = [NSData dataWithBytes: "{}" length: 2];
+
+        
         // Bump the revID and update the JSON:
         CBL_RevID* newRevID = [CBL_TreeRevID revIDForJSON: json
                                                   deleted: deleting
@@ -1787,12 +1800,6 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
             if (CBLStatusIsError(status))
                 return status;
         }
-
-        // Don't store a SQL null in the 'json' column -- I reserve it to mean that the revision data
-        // is missing due to compaction or replication.
-        // Instead, store an empty zero-length blob.
-        if (json == nil)
-            json = [NSData data];
 
         //// PART III: In which the actual insertion finally takes place:
         
@@ -1837,7 +1844,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
             }
             LogVerbose(Database, @"    cleared current and doc_type of parent");
         }
-
+        
         if (!sequence)
             return kCBLStatusOK;  // duplicate rev; see above
 
