@@ -43,6 +43,7 @@ DefineLogDomain(Database);
 NSString* const CBL_DatabaseChangesNotification = @"CBLDatabaseChanges";
 NSString* const CBL_DatabaseWillCloseNotification = @"CBL_DatabaseWillClose";
 NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDeleted";
+NSString* const CBL_DatabaseWillBeRekeyedNotification = @"CBL_DatabaseWillBeRekeyed";
 
 NSString* const CBL_PrivateRunloopMode = @"CouchbaseLitePrivate";
 NSArray* CBL_RunloopModes;
@@ -284,6 +285,10 @@ static BOOL sAutoCompact = YES;
                                              selector: @selector(dbChanged:)
                                                  name: CBL_DatabaseWillBeDeletedNotification
                                                object: nil];
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(dbChanged:)
+                                                 name: CBL_DatabaseWillBeRekeyedNotification
+                                               object: nil];
 
 #if TARGET_OS_IPHONE
     // On iOS, observe low-memory notifications:
@@ -357,6 +362,9 @@ static BOOL sAutoCompact = YES;
                                                       object: nil];
         [[NSNotificationCenter defaultCenter] removeObserver: self
                                                         name: CBL_DatabaseWillBeDeletedNotification
+                                                      object: nil];
+        [[NSNotificationCenter defaultCenter] removeObserver: self
+                                                        name: CBL_DatabaseWillBeRekeyedNotification
                                                       object: nil];
         for (CBLView* view in _views.allValues)
             [view close];
@@ -550,6 +558,11 @@ static BOOL sAutoCompact = YES;
         } else if ([[n name] isEqualToString: CBL_DatabaseWillBeDeletedNotification]) {
             [self doAsync: ^{
                 LogTo(Database, @"%@: Notified of deletion; closing", self);
+                [self _close];
+            }];
+        } else if ([[n name] isEqualToString: CBL_DatabaseWillBeRekeyedNotification]) {
+            [self doAsync: ^{
+                LogTo(Database, @"%@: Notified of rekeying; closing", self);
                 [self _close];
             }];
         }

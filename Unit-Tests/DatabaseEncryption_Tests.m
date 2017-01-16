@@ -252,24 +252,38 @@
 
 
 - (void) test08_MultipleDBHandles {
+    // Test with multiple CBLManager operating on the same thread:
     NSError* error;
     seekrit = [dbmgr databaseNamed: @"seekrit" error: &error];
     Assert(seekrit, @"Failed to create unencrypted db: %@", error);
     [self createDocumentWithProperties: @{@"answer": @42} inDatabase: seekrit];
 
     CBLManager* mgr2 = [dbmgr copy];
-    CBLDatabase* seekrit2 = [mgr2 databaseNamed: @"seekrit" error: NULL];
+    CBLDatabase* seekrit2 = [mgr2 databaseNamed: seekrit.name error: NULL];
     Assert(seekrit2);
-
-    Assert(![seekrit changeEncryptionKey: @"foobar" error: &error]);
-
+    
+    // Close the copied manager before rekeying:
     [mgr2 close];
+    Assert([seekrit changeEncryptionKey: @"foobar" error: &error]);
+    
+    // Test with multiple CBLManger operating on different threads:
+    dispatch_queue_t queue = dispatch_queue_create("DeleteDatabaseTest", NULL);
+    mgr2 = [dbmgr copy];
+    mgr2.dispatchQueue = queue;
+    __block CBLDatabase* copiedMgrDb;
+    dispatch_sync(queue, ^{
+        NSError *error;
+        copiedMgrDb = [mgr2 databaseNamed: seekrit.name error: &error];
+        Assert(copiedMgrDb, @"Couldn't open db: %@", error);
+    });
+    Assert(copiedMgrDb);
+    Assert([seekrit changeEncryptionKey: @"zeekrit" error: &error]);
 }
 
 
-- (void) test08_AddKey      { [self rekeyUsingOldKey: nil        newKey: @"letmein"]; }
-- (void) test09_Rekey       { [self rekeyUsingOldKey: @"letmein" newKey: @"letmeout"]; }
-- (void) test10_RemoveKey   { [self rekeyUsingOldKey: @"letmein" newKey: nil]; }
+- (void) test09_AddKey      { [self rekeyUsingOldKey: nil        newKey: @"letmein"]; }
+- (void) test10_Rekey       { [self rekeyUsingOldKey: @"letmein" newKey: @"letmeout"]; }
+- (void) test11_RemoveKey   { [self rekeyUsingOldKey: @"letmein" newKey: nil]; }
 
 - (void) rekeyUsingOldKey: (NSString*)oldKey newKey: (NSString*)newKey {
     // First run the encrypted-attachments test to populate the db:
@@ -296,6 +310,18 @@
     CBLQuery* query = [view createQuery];
     NSError* error;
     AssertEq([[query run: &error] count], 100u);
+    
+    // Create a background database:
+    __block BOOL finished;
+    [seekrit.manager backgroundTellDatabaseNamed: seekrit.name to: ^(CBLDatabase * bgDb) {
+        assert(bgDb.documentCount > 0);
+        finished = true;
+    }];
+    while (!finished) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.1]])
+            break;
+    }
 
     Log(@"Re-keying database with new key '%@'", newKey);
     Assert([seekrit changeEncryptionKey: newKey error: &error],
