@@ -216,8 +216,12 @@ UsingLogDomain(Sync);
     if (_requestIDs.count > 0)
         Warn(@"CBLRemoteSession closed but has leftover tasks: %@", _requestIDs.allValues);
     _session = nil;
-    _allRequests = nil;
     _requestIDs = nil;
+    
+    // Reset _allRequests on the API thread:
+    [self doAsync: ^{
+        _allRequests = nil;
+    }];
 }
 
 
