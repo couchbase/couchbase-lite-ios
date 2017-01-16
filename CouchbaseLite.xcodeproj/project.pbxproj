@@ -12,7 +12,7 @@
 		27EF6A851E297BDF004748DF /* CBLQuery+Predicates.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A811E297BDF004748DF /* CBLQuery+Predicates.mm */; };
 		27EF6A941E298E26004748DF /* QueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A931E298E26004748DF /* QueryTest.m */; };
 		27EF6A971E2AC61B004748DF /* names_100.json in Resources */ = {isa = PBXBuildFile; fileRef = 27EF6A951E2AC609004748DF /* names_100.json */; };
-		27EF6A991E2AC73D004748DF /* CBLQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EF6A981E2AC73D004748DF /* CBLQuery+Internal.h */; };
+		9317621F1E2D439700563506 /* CBLQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 9317621E1E2D439700563506 /* CBLQuery+Internal.h */; };
 		934F4C101E1EF19000F90659 /* CollectionUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4BD01E1EF19000F90659 /* CollectionUtils.h */; };
 		934F4C111E1EF19000F90659 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4BD11E1EF19000F90659 /* CollectionUtils.m */; };
 		934F4C291E1EF19000F90659 /* MYErrorUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4BE91E1EF19000F90659 /* MYErrorUtils.h */; };
@@ -169,7 +169,7 @@
 		27EF6A811E297BDF004748DF /* CBLQuery+Predicates.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "CBLQuery+Predicates.mm"; sourceTree = "<group>"; };
 		27EF6A931E298E26004748DF /* QueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QueryTest.m; sourceTree = "<group>"; };
 		27EF6A951E2AC609004748DF /* names_100.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = names_100.json; sourceTree = "<group>"; };
-		27EF6A981E2AC73D004748DF /* CBLQuery+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+Internal.h"; sourceTree = "<group>"; };
+		9317621E1E2D439700563506 /* CBLQuery+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+Internal.h"; sourceTree = "<group>"; };
 		934F4BD01E1EF19000F90659 /* CollectionUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CollectionUtils.h; sourceTree = "<group>"; };
 		934F4BD11E1EF19000F90659 /* CollectionUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CollectionUtils.m; sourceTree = "<group>"; };
 		934F4BE91E1EF19000F90659 /* MYErrorUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYErrorUtils.h; sourceTree = "<group>"; };
@@ -268,6 +268,7 @@
 				9378C5E81E26F0E1001BB196 /* Support */,
 				934F4C981E241FB500F90659 /* CBLInternal.h */,
 				934F4C991E241FB500F90659 /* CBLInternal.mm */,
+				9317621E1E2D439700563506 /* CBLQuery+Internal.h */,
 				934F4CA21E241FB500F90659 /* CBLPrefix.h */,
 			);
 			path = Internal;
@@ -378,7 +379,6 @@
 				9380C6ED1E15B8C20011E8CB /* CBLDocument.h */,
 				9380C6EE1E15B8C20011E8CB /* CBLDocument.mm */,
 				27EF6A7E1E297BDF004748DF /* CBLQuery.h */,
-				27EF6A981E2AC73D004748DF /* CBLQuery+Internal.h */,
 				27EF6A7F1E297BDF004748DF /* CBLQuery.mm */,
 				27EF6A811E297BDF004748DF /* CBLQuery+Predicates.mm */,
 				934F4C931E241FB500F90659 /* Internal */,
@@ -417,12 +417,12 @@
 				934F4CB51E241FB500F90659 /* CBLPrefix.h in Headers */,
 				934F4CA91E241FB500F90659 /* CBLCoreBridge.h in Headers */,
 				934F4C5A1E1EF25E00F90659 /* Test.h in Headers */,
+				9317621F1E2D439700563506 /* CBLQuery+Internal.h in Headers */,
 				934F4CAD1E241FB500F90659 /* CBLJSON.h in Headers */,
 				934F4CAB1E241FB500F90659 /* CBLInternal.h in Headers */,
 				9380C72A1E16E7D00011E8CB /* CBLDatabase.h in Headers */,
 				934F4CAF1E241FB500F90659 /* CBLLog.h in Headers */,
 				9380C6EF1E15B8C20011E8CB /* CBLDocument.h in Headers */,
-				27EF6A991E2AC73D004748DF /* CBLQuery+Internal.h in Headers */,
 				934F4CB61E241FB500F90659 /* CBLStringBytes.h in Headers */,
 				9380C71C1E16E7CE0011E8CB /* CBLProperties.h in Headers */,
 				27EF6A821E297BDF004748DF /* CBLQuery.h in Headers */,
