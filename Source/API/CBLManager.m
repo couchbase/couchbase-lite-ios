@@ -241,7 +241,10 @@ static CBLManager* sInstance;
                 NSArray* paths = [[fmgr subpathsAtPath: _dir] arrayByAddingObject: @"."];
                 for (NSString* path in paths) {
                     NSString* absPath = [_dir stringByAppendingPathComponent: path];
-                    if (![absPath hasSuffix:@"-shm"]) { // Not changing -shm file
+                    if (![absPath hasSuffix:@"-shm"]) {
+                        // Not changing -shm file as it has NSFileProtectionNone by default
+                        // regardless of its parent directory projection level. The -shm file
+                        // contains non-sensitive information.
                         if (![fmgr setAttributes: attributes ofItemAtPath: absPath error: outError])
                             return nil;
                     }
