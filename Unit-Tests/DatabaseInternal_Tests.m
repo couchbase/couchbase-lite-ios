@@ -913,8 +913,24 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
 - (void) test25_FileProtection {
     // Check that every file has the file protection set for the CBLManager (which defaults to
     // NSFileProtectionCompleteUnlessOpen.)
+    [self verifyFileProtection: NSFileProtectionCompleteUnlessOpen forDir: db.dir];
+    
+    
+    
+    // Change file protection to NSFileProtectionNone:
+    NSError* error;
+    CBLManagerOptions options = {.fileProtection=NSDataWritingFileProtectionNone};
+    CBLManager* manager = [[CBLManager alloc] initWithDirectory: db.manager.directory
+                                                        options: &options
+                                                          error: &error];
+    Assert(manager, @"Error when creating a new manager: %@", error);
+    [self verifyFileProtection: NSFileProtectionNone forDir: db.dir];
+    [manager close];
+}
+
+
+- (void) verifyFileProtection: (NSFileProtectionType)protection forDir: (NSString*)dir {
     NSFileManager* fmgr = [NSFileManager defaultManager];
-    NSString* dir = db.dir;
     NSArray* paths = [[fmgr subpathsAtPath: dir] arrayByAddingObject: @"."];
     for (NSString* path in paths) {
         NSString* absPath = [dir stringByAppendingPathComponent: path];
@@ -923,11 +939,12 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
         // Not checking -shm file as it will have NSFileProtectionNone by default regardless of its
         // parent directory projection level. However, the -shm file contains non-sensitive information.
         if (![path hasSuffix:@"-shm"])
-            AssertEqual(prot, NSFileProtectionCompleteUnlessOpen);
+            AssertEqual(prot, protection);
     }
 }
 #endif
 #endif
+
 
 -(void) test26_ReAddAfterPurge {
 

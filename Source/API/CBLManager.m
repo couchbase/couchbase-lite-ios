@@ -217,22 +217,41 @@ static CBLManager* sInstance;
         }
         attributes = @{NSFileProtectionKey: protection};
 #endif
-        if (![[NSFileManager defaultManager] createDirectoryAtPath: _dir
-                                       withIntermediateDirectories: YES
-                                                        attributes: attributes
-                                                             error: &error]) {
+        NSFileManager* fmgr = [NSFileManager defaultManager];
+        if (![fmgr createDirectoryAtPath: _dir
+             withIntermediateDirectories: YES
+                              attributes: attributes
+                                   error: &error]) {
             if (!CBLIsFileExistsError(error)) {
                 if (outError) *outError = error;
                 return nil;
             }
-            if (attributes) {
-                if (![[NSFileManager defaultManager] setAttributes: attributes
-                                                      ofItemAtPath: _dir
-                                                             error: outError]) {
-                    return nil;
+        }
+        
+        if (attributes) {
+            BOOL needChange = NO;
+            for (NSString* key in attributes) {
+                id prot = [[fmgr attributesOfItemAtPath: _dir error: nil] objectForKey: key];
+                if (![attributes[key] isEqual: prot]) {
+                    needChange = YES;
+                    break;
+                }
+            }
+            if (needChange) {
+                NSArray* paths = [[fmgr subpathsAtPath: _dir] arrayByAddingObject: @"."];
+                for (NSString* path in paths) {
+                    NSString* absPath = [_dir stringByAppendingPathComponent: path];
+                    if (![absPath hasSuffix:@"-shm"]) {
+                        // Not changing -shm file as it has NSFileProtectionNone by default
+                        // regardless of its parent directory projection level. The -shm file
+                        // contains non-sensitive information.
+                        if (![fmgr setAttributes: attributes ofItemAtPath: absPath error: outError])
+                            return nil;
+                    }
                 }
             }
         }
+        
         [self upgradeOldDatabaseFiles];
     }
     return self;
