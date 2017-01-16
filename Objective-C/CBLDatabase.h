@@ -7,9 +7,27 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDocument;
+@class CBLDocument, CBLQuery;
 
 NS_ASSUME_NONNULL_BEGIN
+
+
+/** Types of indexes. */
+typedef NS_ENUM(uint32_t, CBLIndexType) {
+    kCBLValueIndex,         ///< Regular index of property value
+    kCBLFullTextIndex,      ///< Full-text index
+    kCBLGeoIndex,           ///< Geospatial index of GeoJSON values
+};
+
+
+/** Options for creating a database index. */
+typedef struct {
+    const char * _Nullable language;    ///< Full-text: Language code, e.g. "en" or "de". This
+                                        ///<    affects how word breaks and word stems are parsed.
+                                        ///<    NULL for current locale, "" to disable stemming.
+    BOOL ignoreDiacritics;              ///< Full-text: True to ignore accents/diacritical marks.
+} CBLIndexOptions;
+
 
 /** Options for opening a database. All properties default to NO or nil. */
 @interface CBLDatabaseOptions : NSObject <NSCopying>
@@ -39,6 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype) defaultOptions;
 
 @end
+
 
 /** A CouchbaseLite database. */
 @interface CBLDatabase : NSObject
@@ -103,6 +122,58 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Check whether the document of the given ID exists in the database or not. */
 - (BOOL) documentExists: (NSString*)docID;
+
+
+#pragma mark - QUERYING:
+
+
+/** Compiles a database query, from any of several input formats.
+    Once compiled, the query can be run many times with different parameter values.
+    @param query  The query specification. This can be an NSPredicate or an NSString (interpreted 
+                    as an NSPredicate format string), or nil to return all documents.
+    @param error  If the query cannot be parsed, an error will be stored here.
+    @return  The CBLQuery, or nil on error. */
+- (nullable CBLQuery*) createQuery: (nullable id)query
+                             error: (NSError**)error;
+
+/** Compiles a Couchbase Lite query, from any of several input formats, specifying sorting.
+    Once compiled, the query can be run many times with different parameter values.
+    @param where  The query specification; see above for details.
+    @param sortDescriptors  An array of NSSortDescriptors specifying how to sort the result.
+    @param error  If the query cannot be parsed, an error will be stored here.
+    @return  The CBLQuery, or nil on error. */
+- (nullable CBLQuery*) createQueryWhere: (nullable id)where
+                                orderBy: (nullable NSArray*)sortDescriptors
+                                  error: (NSError**)error;
+
+/** Creates a value index (type kCBLValueIndex) on a given document property.
+    This will speed up queries that test that property, at the expense of making database writes a
+    little bit slower.
+    @param propertyPath  JSON path to the property, e.g. "color" or "name.last".
+    @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
+    @return  True on success, false on failure. */
+- (bool) createIndexOn: (NSString*)propertyPath
+                 error: (NSError**)error;
+
+/** Creates an index on a given document property.
+    This will speed up queries that test that property, at the expense of making database writes a
+    little bit slower.
+    @param propertyPath  JSON path to the property, e.g. "color" or "name.last".
+    @param type  Type of index to create (value, full-text or geospatial.)
+    @param options  Options affecting the index, or NULL for default settings.
+    @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
+    @return  True on success, false on failure. */
+- (bool) createIndexOn: (NSString*)propertyPath
+                  type: (CBLIndexType)type
+               options: (nullable const CBLIndexOptions*)options
+                 error: (NSError**)error;
+
+/** Deletes an existing index. Returns NO if the index did not exist.
+    @param propertyPath  Property path that the index was created on.
+    @param type  Type of index.
+    @return  True if the index existed and was deleted, false if it did not exist. */
+- (bool) deleteIndexOn: (NSString*)propertyPath
+                  type: (CBLIndexType)type;
 
 @end
 

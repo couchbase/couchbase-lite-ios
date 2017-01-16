@@ -29,6 +29,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** Check whether the document exists? in the database or not. */
 - (BOOL) exists;
 
+/** Sequence number of the document in the database. */
+@property (readonly) uint64_t sequence;
+
 /** Save the document. */
 - (BOOL) save: (NSError**)outError;
 

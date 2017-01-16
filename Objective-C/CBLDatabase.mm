@@ -16,6 +16,7 @@
 #import "CBLDatabase.h"
 #import "CBLInternal.h"
 #import "CBLDocument.h"
+#import "CBLQuery+Internal.h"
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
 #import "CBLMisc.h"
@@ -357,6 +358,58 @@ static NSString* databasePath(NSString* name, NSString* dir) {
         }
     }
     return doc;
+}
+
+
+#pragma mark - QUERIES:
+
+
+- (nullable CBLQuery*) createQuery: (nullable id)query
+                             error: (NSError**)outError
+{
+    return [self createQueryWhere: query orderBy: nil error: outError];
+}
+
+
+- (nullable CBLQuery*) createQueryWhere: (nullable id)where
+                                orderBy: (nullable NSArray*)sortDescriptors
+                                  error: (NSError**)outError
+{
+    return [[CBLQuery alloc] initWithDatabase: self
+                                        where: where
+                                      orderBy: sortDescriptors
+                                        error: outError];
+}
+
+
+- (bool) createIndexOn: (NSString*)propertyPath
+                 error: (NSError**)outError
+{
+    return [self createIndexOn: propertyPath type: kCBLValueIndex options: NULL error: outError];
+}
+
+
+- (bool) createIndexOn: (NSString*)propertyPath
+                  type: (CBLIndexType)type
+               options: (const CBLIndexOptions*)options
+                 error: (NSError**)outError
+{
+    static_assert(sizeof(CBLIndexOptions) == sizeof(C4IndexOptions), "Index options incompatible");
+    CBLStringBytes propertyBytes(propertyPath);
+    C4Error c4err;
+    return c4db_createIndex(_c4db, propertyBytes,
+                            (C4IndexType)type,
+                            (const C4IndexOptions*)options,
+                            &c4err)
+                || convertError(c4err, outError);
+}
+
+
+- (bool) deleteIndexOn: (NSString*)propertyPath
+                  type: (CBLIndexType)type
+{
+    CBLStringBytes propertyBytes(propertyPath);
+    return c4db_deleteIndex(_c4db, propertyBytes, (C4IndexType)type, NULL);
 }
 
 

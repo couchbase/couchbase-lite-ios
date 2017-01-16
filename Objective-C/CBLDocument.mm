@@ -62,6 +62,11 @@
 }
 
 
+- (uint64_t) sequence {
+    return _c4doc->sequence;
+}
+
+
 - (BOOL) save: (NSError**)outError {
     return [self saveWithConflictResolver: nil deletion: NO error: outError];
 }
