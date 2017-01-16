@@ -951,7 +951,7 @@ static inline void cleanup_C4ExpiryEnumerator(C4ExpiryEnumerator **e) { c4exp_fr
     *outStatus = [self inTransaction: ^CBLStatus {
         NSString* docID = inDocID;
         
-        if (inPrevRevID) { // Check if an existing doc?
+        if (inPrevRevID && properties.cbl_attachments) { // Check if an existing doc?
             CBLStatus status;
             CLEANUP(C4Document)* curDoc = [self getC4Doc: docID status: &status];
             if (!curDoc)
