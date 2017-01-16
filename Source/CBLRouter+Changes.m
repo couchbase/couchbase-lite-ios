@@ -23,13 +23,13 @@
 #if DEBUG
 // Make this configurable for testing purposes
 NSTimeInterval kMinHeartbeat = 5.0;
+NSTimeInterval kDefaultChangesTimeout = 60.0;
 #else
 #define kMinHeartbeat 5.0
+#define kDefaultChangesTimeout 60.0
 #endif
 
 @implementation CBL_Router (Changes)
-
-
 
 
 - (CBLStatus) do_POST_changes: (CBLDatabase*)db {
@@ -83,7 +83,7 @@ NSTimeInterval kMinHeartbeat = 5.0;
     options.descending = descending;
 
     options.limit = [self intQuery: @"limit" defaultValue: options.limit];
-    int since = [[self query: @"since"] intValue];
+    _changesSince = [[self query: @"since"] intValue];
     
     NSString* filterName = [self query: @"filter"];
     if (filterName) {
@@ -96,7 +96,7 @@ NSTimeInterval kMinHeartbeat = 5.0;
     }
     
     CBLStatus status;
-    CBL_RevisionList* changes = [db changesSinceSequence: since
+    CBL_RevisionList* changes = [db changesSinceSequence: _changesSince
                                                  options: &options
                                                   filter: _changesFilter
                                                   params: _changesFilterParams
@@ -117,8 +117,19 @@ NSTimeInterval kMinHeartbeat = 5.0;
                                                  selector: @selector(dbChanged:)
                                                      name: CBL_DatabaseChangesNotification
                                                    object: db];
-
-        NSString* heartbeatParam = [self query:@"heartbeat"];
+        
+        // Timeout:
+        NSString* timeoutParam = [self query: @"timeout"];
+        if (timeoutParam) {
+            _changesTimeout = [timeoutParam doubleValue] / 1000.0;
+            if (_changesTimeout <= 0)
+                return kCBLStatusBadRequest;
+        } else
+            _changesTimeout = 0;
+            
+        
+        // Heartbeat:
+        NSString* heartbeatParam = [self query: @"heartbeat"];
         if (heartbeatParam) {
             NSTimeInterval heartbeat = [heartbeatParam doubleValue] / 1000.0;
             if (heartbeat <= 0)
@@ -127,7 +138,14 @@ NSTimeInterval kMinHeartbeat = 5.0;
                 heartbeat = kMinHeartbeat;
             NSString* heartbeatResponse = (_changesMode == kEventSourceFeed) ? @":\n\n" : @"\r\n";
             [self startHeartbeat: heartbeatResponse interval: heartbeat];
+        } else {
+            // Apply default timeout when heartbeat is not specified:
+            if (_changesTimeout == 0)
+                _changesTimeout = kDefaultChangesTimeout;
         }
+        
+        if (_changesTimeout > 0)
+            [self startTimeout];
         
         // Don't close connection; more data to come
         return 0;
@@ -135,10 +153,11 @@ NSTimeInterval kMinHeartbeat = 5.0;
         // Return a response immediately and close the connection:
         if (_changesIncludeConflicts)
             _response.bodyObject = [self responseBodyForChangesWithConflicts: changes.allRevisions
-                                                                       since: since
+                                                                       since: _changesSince
                                                                        limit: options.limit];
         else
-            _response.bodyObject = [self responseBodyForChanges: changes.allRevisions since: since];
+            _response.bodyObject = [self responseBodyForChanges: changes.allRevisions
+                                                          since: _changesSince];
         return kCBLStatusOK;
     }
 }
@@ -203,6 +222,8 @@ NSTimeInterval kMinHeartbeat = 5.0;
 - (void) dbChanged: (NSNotification*)n {
     // Prevent myself from being dealloced if my client finishes during the call (see issue #266)
     __unused id retainSelf = self;
+    
+    [self stopTimeout];
 
     NSMutableArray* changes = $marray();
     for (CBLDatabaseChange* change in (n.userInfo)[@"changes"]) {
@@ -235,21 +256,48 @@ NSTimeInterval kMinHeartbeat = 5.0;
         if (_changesMode == kLongPollFeed) {
             [changes addObject: rev];
         } else {
-            Log(@"CBL_Router: Sending continous change chunk");
             [self sendContinuousLine: [self changeDictForRev: rev]];
         }
+        _changesSince = rev.sequence;
     }
 
-    if (_changesMode == kLongPollFeed && changes.count > 0) {
-        Log(@"CBL_Router: Sending longpoll response");
-        [self sendResponseHeaders];
-        NSDictionary* body = [self responseBodyForChanges: changes since: 0];
-        _response.body = [CBL_Body bodyWithProperties: body];
-        [self sendResponseBodyAndFinish: YES];
-    }
+    if (_changesMode == kLongPollFeed && changes.count > 0)
+        [self sendLongpollResponseForChanges: changes since: 0];
+    else
+        [self startTimeout];
 
     retainSelf = nil;
 }
 
+
+- (void)sendLongpollResponseForChanges: (NSArray*)changes since: (UInt64)since {
+    Log(@"CBL_Router: Sending longpoll response");
+    [self sendResponseHeaders];
+    NSDictionary* body = [self responseBodyForChanges: changes since: since];
+    _response.body = [CBL_Body bodyWithProperties: body];
+    [self sendResponseBodyAndFinish: YES];
+}
+
+
+- (void) startTimeout {
+    assert(_changesTimeout > 0);
+    [_changesTimeoutTimer invalidate];
+    __weak CBL_Router* weakSelf = self;
+    _changesTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval: _changesTimeout
+                                                           repeats: NO block: ^(NSTimer *timer) {
+        CBL_Router* strongSelf = weakSelf;
+        if (_changesMode == kLongPollFeed)
+            [strongSelf sendLongpollResponseForChanges: @[] since: strongSelf->_changesSince];
+        else
+            [strongSelf sendContinuousLine: $dict({@"last_seq", @(strongSelf->_changesSince)})];
+            [strongSelf finished];
+    }];
+}
+
+
+- (void) stopTimeout {
+    [_changesTimeoutTimer invalidate];
+    _changesTimeoutTimer = nil;
+}
 
 @end

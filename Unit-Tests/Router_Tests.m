@@ -808,13 +808,176 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
 }
 
 
-- (void) test_CBL_Router_Changes_BadHeartbeatParams {
+- (void) test_Changes_BadHeartbeatParams {
     Send(self, @"GET", @"/db/_changes?feed=continuous&heartbeat=foo", kCBLStatusBadRequest, nil);
     Send(self, @"GET", @"/db/_changes?feed=continuous&heartbeat=-1", kCBLStatusBadRequest, nil);
     Send(self, @"GET", @"/db/_changes?feed=continuous&heartbeat=-0", kCBLStatusBadRequest, nil);
     Send(self, @"GET", @"/db/_changes?feed=longpoll&heartbeat=foo", kCBLStatusBadRequest, nil);
     Send(self, @"GET", @"/db/_changes?feed=longpoll&heartbeat=-1", kCBLStatusBadRequest, nil);
     Send(self, @"GET", @"/db/_changes?feed=longpoll&heartbeat=-0", kCBLStatusBadRequest, nil);
+}
+
+
+- (void) test_Changes_BadTimeoutParams {
+    Send(self, @"GET", @"/db/_changes?feed=continuous&timeout=foo", kCBLStatusBadRequest, nil);
+    Send(self, @"GET", @"/db/_changes?feed=continuous&timeout=-1", kCBLStatusBadRequest, nil);
+    Send(self, @"GET", @"/db/_changes?feed=continuous&timeout=-0", kCBLStatusBadRequest, nil);
+    Send(self, @"GET", @"/db/_changes?feed=longpoll&timeout=foo", kCBLStatusBadRequest, nil);
+    Send(self, @"GET", @"/db/_changes?feed=longpoll&timeout=-1", kCBLStatusBadRequest, nil);
+    Send(self, @"GET", @"/db/_changes?feed=longpoll&timeout=-0", kCBLStatusBadRequest, nil);
+}
+
+
+- (void) test_LongPollChanges_Timeout {
+    NSArray* sinceParams = @[@-1, @0, @5];
+    for (id sinceParam in sinceParams) {
+        __block CBLResponse* response = nil;
+        NSMutableData* body = [NSMutableData data];
+        __block BOOL finished = NO;
+        
+        NSString* urlStr = @"cbl:///db/_changes?feed=longpoll&timeout=1000";
+        int since = [sinceParam intValue];
+        if (since >= 0)
+            urlStr = [NSString stringWithFormat:@"%@&since=%d", urlStr, since];
+        
+        NSURLRequest* request = [NSURLRequest requestWithURL: [NSURL URLWithString: urlStr]];
+        CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: dbmgr request: request];
+        router.onResponseReady = ^(CBLResponse* routerResponse) {
+            Assert(!response);
+            response = routerResponse;
+        };
+        router.onDataAvailable = ^(NSData* content, BOOL finished) {
+            [body appendData: content];
+        };
+        router.onFinished = ^{
+            Assert(!finished);
+            finished = YES;
+        };
+        
+        // Start:
+        [router start];
+        
+        AssertEq(body.length, 0ul);
+        Assert(!finished);
+        
+        // Wait until timeout
+        NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 1.5];
+        while ([[NSDate date] compare: timeout] == NSOrderedAscending
+               && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate:
+                   [NSDate dateWithTimeIntervalSinceNow: 0.1]])
+            ;
+        
+        Assert(finished);
+        Assert(body.length > 0);
+        NSDictionary* changes = [CBLJSON JSONObjectWithData: body options: 0 error: NULL];
+        AssertEqual(changes, $dict({@"last_seq", since < 0 ? @0 : @(since)}, {@"results", @[]}));
+        
+        [router stopNow];
+    }
+}
+
+
+- (void) test_ContinuousChanges_Timeout_NoChanges {
+    if (!self.isSQLiteDB)
+        return;
+    
+    NSArray* sinceParams = @[@-1, @0, @5];
+    
+    for (id sinceParam in sinceParams) {
+        __block CBLResponse* response = nil;
+        NSMutableArray* bodyLines = [NSMutableArray array];
+        __block BOOL finished = NO;
+        
+        NSString* urlStr = @"cbl:///db/_changes?feed=continuous&timeout=1000";
+        int since = [sinceParam intValue];
+        if (since >= 0)
+            urlStr = [NSString stringWithFormat:@"%@&since=%d", urlStr, since];
+        
+        NSURLRequest* request = [NSURLRequest requestWithURL: [NSURL URLWithString: urlStr]];
+        CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: dbmgr request: request];
+        router.onResponseReady = ^(CBLResponse* routerResponse) {
+            Assert(!response);
+            response = routerResponse;
+        };
+        router.onDataAvailable = ^(NSData* content, BOOL finished) {
+            [bodyLines addObject: content];
+        };
+        router.onFinished = ^{
+            Assert(!finished);
+            finished = YES;
+        };
+        
+        // Start:
+        [router start];
+        
+        // Should initially have a response but zero body
+        Assert(response != nil);
+        AssertEq(response.status, kCBLStatusOK);
+        Assert(bodyLines.count == 0);
+        Assert(!finished);
+        
+        // Wait until timeout
+        NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 1.5];
+        while ([[NSDate date] compare: timeout] == NSOrderedAscending
+               && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
+            ;
+        
+        Assert(finished);
+        AssertEq(bodyLines.count, 1ul);
+        NSDictionary* changes = [CBLJSON JSONObjectWithData: bodyLines.lastObject options: 0 error: NULL];
+        AssertEqual(changes[@"last_seq"], since < 0 ? @(0) : @(since));
+        
+        [router stopNow];
+    }
+}
+
+
+- (void) test_ContinuousChanges_Timeout {
+    __block CBLResponse* response = nil;
+    
+    NSMutableArray* bodyLines = [NSMutableArray array];
+    __block BOOL finished = NO;
+    
+    NSURL* url = [NSURL URLWithString: @"cbl:///db/_changes?feed=continuous&timeout=1000"];
+    NSURLRequest* request = [NSURLRequest requestWithURL: url];
+    CBL_Router* router = [[CBL_Router alloc] initWithDatabaseManager: dbmgr request: request];
+    router.onResponseReady = ^(CBLResponse* routerResponse) {
+        Assert(!response);
+        response = routerResponse;
+    };
+    router.onDataAvailable = ^(NSData* content, BOOL finished) {
+        [bodyLines addObject: content];
+    };
+    router.onFinished = ^{
+        Assert(!finished);
+        finished = YES;
+    };
+    
+    // Start:
+    [router start];
+    
+    // Should initially have a response but zero body
+    Assert(response != nil);
+    AssertEq(response.status, kCBLStatusOK);
+    Assert(bodyLines.count == 0);
+    Assert(!finished);
+    
+    // Now make a change to the database:
+    SendBody(self, @"PUT", @"/db/doc1", $dict({@"foo", @"bar"}), kCBLStatusCreated, nil);
+    SendBody(self, @"PUT", @"/db/doc2", $dict({@"foo", @"bar"}), kCBLStatusCreated, nil);
+    
+    // Wait until timeout
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.5];
+    while ([[NSDate date] compare: timeout] == NSOrderedAscending
+           && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: timeout])
+        ;
+    
+    Assert(finished);
+    AssertEq(bodyLines.count, 3ul);
+    NSDictionary* changes = [CBLJSON JSONObjectWithData: bodyLines.lastObject options: 0 error: NULL];
+    AssertEqual(changes[@"last_seq"], @(2));
+    
+    [router stopNow];
 }
 
 

@@ -663,6 +663,7 @@ static NSArray* splitPath( NSURL* url ) {
 // Send a JSON object followed by a newline without closing the connection.
 // Used by the continuous mode of _changes and _active_tasks.
 - (void) sendContinuousLine: (NSDictionary*)changeDict {
+    Log(@"CBL_Router: Sending continous change chunk");
     NSMutableData* json = [[CBLJSON dataWithJSONObject: changeDict
                                                options: 0 error: NULL] mutableCopy];
     if (_changesMode == kEventSourceFeed) {
@@ -713,6 +714,8 @@ static NSArray* splitPath( NSURL* url ) {
 - (void) stopNow {
     _running = NO;
     [self stopHeartbeat];
+    [_changesTimeoutTimer invalidate];
+    _changesTimeoutTimer = nil;
     self.onResponseReady = nil;
     self.onDataAvailable = nil;
     self.onFinished = nil;
