@@ -73,7 +73,7 @@ typedef struct {
  @param options  The database options.
  @param outError  On return, the error if any. */
 - (instancetype) initWithName: (NSString*)name
-                      options: (CBLDatabaseOptions*)options
+                      options: (nullable CBLDatabaseOptions*)options
                         error: (NSError**)outError NS_DESIGNATED_INITIALIZER;
 
 - (instancetype) init NS_UNAVAILABLE;

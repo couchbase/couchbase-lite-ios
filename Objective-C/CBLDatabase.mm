@@ -84,10 +84,10 @@ static void logCallback(C4LogDomain domain, C4LogLevel level, C4Slice message) {
 
 
 - (instancetype) initWithName: (NSString*)name
-                      options: (CBLDatabaseOptions*)options
+                      options: (nullable CBLDatabaseOptions*)options
                         error: (NSError**)outError {
     _name = name;
-    _options = [options copy];
+    _options = options != nil? [options copy] : [CBLDatabaseOptions defaultOptions];
     if (![self open: outError])
         return nil;
     return self;
@@ -104,7 +104,7 @@ static void logCallback(C4LogDomain domain, C4LogLevel level, C4Slice message) {
         return NO;
     
     NSString* path = databasePath(_name, _options.directory);    
-    CBLStringBytes bPath = CBLStringBytes(path);
+    CBLStringBytes bPath(path);
     
     C4DatabaseConfig config = kDBConfig;
     if (_options.readOnly)
@@ -228,7 +228,7 @@ static void logCallback(C4LogDomain domain, C4LogLevel level, C4Slice message) {
             inDirectory: (nullable NSString*)directory
                   error: (NSError**)outError {
     NSString* path = databasePath(name, directory);
-    CBLStringBytes bPath = CBLStringBytes(path);
+    CBLStringBytes bPath(path);
     C4Error err;
     return c4db_deleteAtPath(bPath, &kDBConfig, &err) || convertError(err, outError);
 }
