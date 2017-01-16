@@ -105,7 +105,7 @@
 }
 
 
-- (void) reset {
+- (void) revert {
     [self resetChanges];
 }
 

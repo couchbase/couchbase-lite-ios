@@ -43,8 +43,8 @@ NS_ASSUME_NONNULL_BEGIN
  The purge will NOT be replicated to other databases. */
 - (BOOL) purge: (NSError**)outError;
 
-/** Reset changes made to the document. */
-- (void) reset;
+/** Revert changes made to the document. */
+- (void) revert;
 
 @end
 

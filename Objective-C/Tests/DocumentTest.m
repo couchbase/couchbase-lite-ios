@@ -199,13 +199,13 @@
 }
 
 
-- (void) testReset {
+- (void) testRevert {
     CBLDocument* doc = [self.db documentWithID: @"doc1"];
     doc[@"type"] = @"profile";
     doc[@"name"] = @"Scott";
     
-    // Reset before save:
-    [doc reset];
+    // Revert before save:
+    [doc revert];
     AssertNil(doc[@"type"]);
     AssertNil(doc[@"name"]);
     
@@ -221,8 +221,8 @@
     doc[@"type"] = @"user";
     doc[@"name"] = @"Scottie";
     
-    // Reset:
-    [doc reset];
+    // Revert:
+    [doc revert];
     AssertEqualObjects(doc[@"type"], @"profile");
     AssertEqualObjects(doc[@"name"], @"Scott");
 }
