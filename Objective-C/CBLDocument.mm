@@ -125,23 +125,6 @@
     }
 }
 
-#pragma mark - INTERNAL
-
-/*
-- (bool) hasUnsavedChanges {
-    return _hasUnsavedChanges;
-}
-
-
-- (void) setHasUnsavedChanges: (bool)unsaved {
-    if (unsaved != _hasUnsavedChanges) {
-        _hasUnsavedChanges = unsaved;
-        [_database document: self hasUnsavedChanges: unsaved];
-    }
-}
-*/
-
-
 #pragma mark - PRIVATE
 
 
