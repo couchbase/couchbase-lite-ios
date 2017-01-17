@@ -36,6 +36,7 @@ UsingLogDomain(Sync);
 
 #define kReadLength 4096u
 
+#define _kCFStreamPropertyReadTimeout CFSTR("_kCFStreamPropertyReadTimeout")
 
 @implementation CBLSocketChangeTracker
 {
@@ -45,6 +46,7 @@ UsingLogDomain(Sync);
     bool _gotResponseHeaders;
     bool _readyToRead;
     NSString* _serverName;
+    NSTimer* timeoutTimer;
 }
 
 - (BOOL) start {
@@ -96,6 +98,9 @@ UsingLogDomain(Sync);
     [_trackingInput scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
     [_trackingInput open];
     _startTime = CFAbsoluteTimeGetCurrent();
+    
+    [self startTimeout];
+    
     LogTo(ChangeTracker, @"%@: Started... <%@>", self, url.my_sanitizedString);
     return YES;
 }
@@ -331,6 +336,9 @@ UsingLogDomain(Sync);
             _readyToRead = true;
             if (!self.paused)
                 [self readFromInput];
+            
+            [self startTimeout];
+            
             break;
         }
             
@@ -347,6 +355,11 @@ UsingLogDomain(Sync);
             LogTo(ChangeTracker, @"%@: Event %lx on %@", self, (long)eventCode, stream);
             break;
     }
+}
+
+
+- (void) handleTimeout {
+    [self failedWithErrorDomain: NSURLErrorDomain code: NSURLErrorTimedOut message: @"Timeout"];
 }
 
 

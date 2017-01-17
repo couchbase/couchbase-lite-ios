@@ -38,6 +38,8 @@ DefineLogDomain(ChangeTracker);
 #define kInitialRetryDelay 2.0      // Initial retry delay (doubles after every subsequent failure)
 #define kMaxRetryDelay (10*60.0)    // ...but will never get longer than this
 
+#define kMinTimeout (2 * 60.0)      // Minimum read timeout value for longpoll and websocket mode
+
 
 @interface CBLChangeTracker ()
 @property (readwrite, copy, nonatomic) id lastSequenceID;
@@ -253,6 +255,8 @@ DefineLogDomain(ChangeTracker);
 }
 
 - (void) stopped {
+    [self stopTimeout];
+    
     _retryCount = 0;
     _parser = nil;
     // Clear client ref so its -changeTrackerStopped: won't be called again during -dealloc
@@ -273,6 +277,8 @@ DefineLogDomain(ChangeTracker);
 
 
 - (void) failedWithError: (NSError*)error {
+    [self stopTimeout];
+    
     NSString* domain = error.domain;
     NSInteger code = error.code;
     NSDictionary* userInfo = @{NSURLErrorFailingURLErrorKey: self.changesFeedURL};
@@ -314,11 +320,15 @@ DefineLogDomain(ChangeTracker);
 
 
 - (void) retryAfterDelay: (NSTimeInterval)retryDelay {
+    [self stopTimeout];
+    
     [self performSelector: @selector(retry) withObject: nil afterDelay: retryDelay];
 }
 
 
 - (void) retry {
+    [self stopTimeout];
+    
     if ([self start]) {
         [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(retry)
                                                    object: nil];    // cancel pending retries
@@ -371,5 +381,40 @@ DefineLogDomain(ChangeTracker);
     return _parsedChangeCount;
 }
 
+#pragma mark - Timeout
+
+- (void) startTimeout {
+    if (_mode != kLongPoll && _mode != kWebSocket)
+        return;
+    
+    NSTimeInterval timeout = self.heartbeat * 1.1;
+    if (timeout < kMinTimeout)
+        timeout = kMinTimeout;
+    
+    LogVerbose(ChangeTracker, @"%@: Start timeout, will timeout in %.0f sec.", self, timeout);
+    __weak CBLChangeTracker* weakSelf = self;
+    [_timeoutTimer invalidate];
+    _timeoutTimer = [NSTimer scheduledTimerWithTimeInterval: timeout
+                                                    repeats: NO
+                                                      block: ^(NSTimer * _Nonnull timer) {
+         CBLChangeTracker* strongSelf = weakSelf;
+         if (strongSelf.paused) {
+             LogVerbose(ChangeTracker, @"%@: Timeout but paused, restart timeout", strongSelf);
+             [strongSelf startTimeout];
+         } else {
+             LogVerbose(ChangeTracker, @"%@: Timeout ...", self);
+             [strongSelf handleTimeout];
+         }
+     }];
+}
+
+- (void) stopTimeout {
+    if (_timeoutTimer) {
+        [_timeoutTimer invalidate];
+        _timeoutTimer = nil;
+    }
+}
+
+- (void) handleTimeout {  }
 
 @end
