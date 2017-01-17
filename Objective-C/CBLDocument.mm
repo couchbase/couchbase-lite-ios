@@ -118,24 +118,6 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     [self resetChanges];
 }
 
-- (id)objectForKeyedSubscript:(NSString *)key {
-    id retVal = [super objectForKeyedSubscript:key];
-    if([retVal isKindOfClass:[NSDictionary class]]) {
-        NSDictionary* dict = retVal;
-        NSNumber* blobHint = dict[@"_blob"];
-        if([blobHint boolValue]) {
-            NSDictionary* props = dict[@"_properties"];
-            NSString *digest = props[@"digest"];
-            NSData *data = [[[self database] blobStore] dataForBlobWithDigest:digest error:nil];
-            retVal = [[CBLBlob alloc] initWithContentType:props[@"content-type"] data:data];
-        }
-        
-        self[key] = retVal;
-    }
-    
-    return retVal;
-}
-
 #pragma mark - CBLProperties
 
 
@@ -143,6 +125,14 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     return c4db_getFLSharedKeys(_c4db);
 }
 
+- (CBLBlob *)readBlobWithProperties:(NSDictionary *)properties error:(NSError * _Nullable __autoreleasing *)error {
+    CBLBlobStream* data = [[[self database] blobStore] dataForBlobWithDigest:properties[@"digest"] error:nil];
+    return [[CBLBlob alloc] initWithProperties:properties dataStream:data];
+}
+
+- (BOOL)storeBlob:(CBLBlob *)blob error:(NSError * _Nullable __autoreleasing *)error {
+    return [[[self database] blobStore] write:blob error:error];
+}
 
 - (void) setHasChanges: (BOOL)hasChanges {
     if (self.hasChanges != hasChanges) {
@@ -239,16 +229,8 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     if (!self.hasChanges && !deletion && [self exists])
         return YES;
 
-    for (NSString* key in [self properties]) {
-        id value = self[key];
-        if([value isKindOfClass:[CBLBlob class]]) {
-            CBLBlob *blob = value;
-            if(![[[self database] blobStore] write:blob error:outError]) {
-                return NO;
-            }
-            
-            self[key] = @{@"_blob":@(YES),@"_properties":blob.properties};
-        }
+    if(![self translateAndStoreBlobs:outError]) {
+        return NO;
     }
     
     C4Transaction transaction(_c4db);

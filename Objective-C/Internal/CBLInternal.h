@@ -14,7 +14,7 @@
 #import "CBLBlob.h"
 #include "c4BlobStore.h"
 
-@class CBLBlobStore;
+@class CBLBlobStore, CBLBlobStream;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -44,8 +44,19 @@ NS_ASSUME_NONNULL_BEGIN
 // Reset both current changes and hasChanges flag.
 - (void) resetChanges;
 
+// Convert all blobs to stubs
+- (BOOL)translateAndStoreBlobs:(NSError **)error;
+
 // Subclass should implement this to provide the sharedKeys.
 - (FLSharedKeys) sharedKeys;
+
+// Subclass should implement this to write binary files to disk
+- (BOOL)storeBlob:(CBLBlob *)blob
+            error:(NSError **)error;
+
+// Subclass should implement this to read binary files to disk
+- (CBLBlob *)readBlobWithProperties:(NSDictionary *)properties
+                error:(NSError **)error;
 
 @end
 
@@ -64,6 +75,9 @@ NS_ASSUME_NONNULL_BEGIN
 // CBLBlob:
 
 @interface CBLBlob ()
+
+- (instancetype)initWithProperties:(NSDictionary *)properties
+                        dataStream:(CBLBlobStream *)stream;
 
 - (BOOL)install:(C4BlobStore *)store error:(NSError **)error;
 

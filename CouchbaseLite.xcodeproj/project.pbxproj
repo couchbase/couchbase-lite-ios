@@ -19,6 +19,8 @@
 		72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A879EF1E2DD51C008466FF /* CBLBlob.mm */; };
 		72A87A011E2DEAA3008466FF /* CBLBlobStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 72A879FF1E2DEAA3008466FF /* CBLBlobStore.h */; };
 		72A87A021E2DEAA3008466FF /* CBLBlobStore.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A001E2DEAA3008466FF /* CBLBlobStore.mm */; };
+		72A87A051E2E0E70008466FF /* CBLBlobStream.h in Headers */ = {isa = PBXBuildFile; fileRef = 72A87A031E2E0E70008466FF /* CBLBlobStream.h */; };
+		72A87A061E2E0E70008466FF /* CBLBlobStream.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A041E2E0E70008466FF /* CBLBlobStream.mm */; };
 		9317621F1E2D439700563506 /* CBLQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 9317621E1E2D439700563506 /* CBLQuery+Internal.h */; };
 		934F4C101E1EF19000F90659 /* CollectionUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4BD01E1EF19000F90659 /* CollectionUtils.h */; };
 		934F4C111E1EF19000F90659 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4BD11E1EF19000F90659 /* CollectionUtils.m */; };
@@ -168,6 +170,8 @@
 		72A879FE1E2DD536008466FF /* CBLBlob.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLBlob.h; sourceTree = "<group>"; };
 		72A879FF1E2DEAA3008466FF /* CBLBlobStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBlobStore.h; sourceTree = "<group>"; };
 		72A87A001E2DEAA3008466FF /* CBLBlobStore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBlobStore.mm; sourceTree = "<group>"; };
+		72A87A031E2E0E70008466FF /* CBLBlobStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBlobStream.h; sourceTree = "<group>"; };
+		72A87A041E2E0E70008466FF /* CBLBlobStream.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBlobStream.mm; sourceTree = "<group>"; };
 		9317621E1E2D439700563506 /* CBLQuery+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+Internal.h"; sourceTree = "<group>"; };
 		934F4BD01E1EF19000F90659 /* CollectionUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CollectionUtils.h; sourceTree = "<group>"; };
 		934F4BD11E1EF19000F90659 /* CollectionUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CollectionUtils.m; sourceTree = "<group>"; };
@@ -307,6 +311,8 @@
 				934F4CA11E241FB500F90659 /* CBLParseDate.h */,
 				934F4CA51E241FB500F90659 /* CBLSymmetricKey.h */,
 				934F4CA61E241FB500F90659 /* CBLSymmetricKey.m */,
+				72A87A031E2E0E70008466FF /* CBLBlobStream.h */,
+				72A87A041E2E0E70008466FF /* CBLBlobStream.mm */,
 			);
 			name = Support;
 			sourceTree = "<group>";
@@ -435,6 +441,7 @@
 				72A87A011E2DEAA3008466FF /* CBLBlobStore.h in Headers */,
 				934F4CB41E241FB500F90659 /* CBLParseDate.h in Headers */,
 				934F4C291E1EF19000F90659 /* MYErrorUtils.h in Headers */,
+				72A87A051E2E0E70008466FF /* CBLBlobStream.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -638,6 +645,7 @@
 				934F4CB31E241FB500F90659 /* CBLParseDate.c in Sources */,
 				9380C6F01E15B8C20011E8CB /* CBLDocument.mm in Sources */,
 				934F4CA81E241FB500F90659 /* CBLBase64.m in Sources */,
+				72A87A061E2E0E70008466FF /* CBLBlobStream.mm in Sources */,
 				934F4CB71E241FB500F90659 /* CBLStringBytes.mm in Sources */,
 				934F4CB91E241FB500F90659 /* CBLSymmetricKey.m in Sources */,
 				934F4CAC1E241FB500F90659 /* CBLInternal.mm in Sources */,

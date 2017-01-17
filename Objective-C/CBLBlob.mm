@@ -23,12 +23,37 @@ length = _length, digest = _digest;
              };
 }
 
+- (NSData *)content {
+    if(_content != nil) {
+        return _content;
+    }
+    
+    NSMutableData *result = [NSMutableData new];
+    uint8_t buffer[8192];
+    NSInteger bytesRead;
+    [_contentStream open];
+    while((bytesRead = [_contentStream read:buffer maxLength:8192]) > 0) {
+        [result appendBytes:buffer length:bytesRead];
+    }
+    [_contentStream close];
+    
+    _content = [result copy];
+    return _content;
+}
+
+- (NSInputStream *)contentStream {
+    if(_contentStream != nil) {
+        return _contentStream;
+    }
+    
+    return [[NSInputStream alloc] initWithData:_content];
+}
+
 - (instancetype)initWithContentType:(NSString *)contentType data:(NSData *)data {
     self = [super init];
     if(self) {
         _contentType = [contentType copy];
         _content = [data copy];
-        _contentStream = [[NSInputStream alloc] initWithData:data];
         _length = [data length];
     }
     
@@ -49,6 +74,16 @@ length = _length, digest = _digest;
     return [self initWithContentType:contentType contentStream:[[NSInputStream alloc] initWithURL:url]];
 }
 
+- (instancetype)initWithProperties:(NSDictionary *)properties dataStream:(CBLBlobStream *)stream {
+    self = [self initWithContentType:properties[@"content-type"] contentStream:(NSInputStream *)stream];
+    if(self) {
+        _length = [properties[@"length"] integerValue];
+        _digest = properties[@"digest"];
+    }
+    
+    return self;
+}
+
 - (BOOL)install:(C4BlobStore *)store error:(NSError **)error {
     C4Error err;
     C4WriteStream* blobOut = c4blob_openWriteStream(store, &err);
@@ -59,15 +94,18 @@ length = _length, digest = _digest;
     uint8_t buffer[8192];
     NSInteger bytesRead = 0;
     _length = 0;
-    [_contentStream open];
-    while((bytesRead = [_contentStream read:buffer maxLength:8192]) > 0) {
+    NSInputStream *contentStream = [self contentStream];
+    [contentStream open];
+    while((bytesRead = [contentStream read:buffer maxLength:8192]) > 0) {
         _length += bytesRead;
         if(!c4stream_write(blobOut, buffer, bytesRead, &err)) {
+            [contentStream close];
             c4stream_closeWriter(blobOut);
             return convertError(err, error);
         }
     }
     
+    [contentStream close];
     C4BlobKey key = c4stream_computeBlobKey(blobOut);
     if(!c4stream_install(blobOut, &err)) {
         c4stream_closeWriter(blobOut);

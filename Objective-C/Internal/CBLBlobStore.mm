@@ -10,6 +10,7 @@
 #import "CBLInternal.h"
 #import "CBLStringBytes.h"
 #import "CBLCoreBridge.h"
+#import "CBLBlobStream.h"
 #include "c4BlobStore.h"
 
 @implementation CBLBlobStore
@@ -37,26 +38,26 @@
     return [blob install:_blobStore error:error];
 }
 
-- (NSData *)dataForBlobWithDigest:(NSString *)digest error:(NSError *__autoreleasing *)error {
+- (CBLBlobStream *)dataForBlobWithDigest:(NSString *)digest error:(NSError *__autoreleasing *)error {
     CBLStringBytes bDigest(digest);
     C4BlobKey key;
     if(!c4blob_keyFromString(bDigest, &key)) {
         if(error != nil) {
-            *error = [NSError errorWithDomain:@"CouchbaseLite" code:kC4ErrorCorruptData userInfo:nil];
+            NSString *desc = [NSString stringWithFormat:@"Failed to create a key from %@", digest];
+            *error = [NSError errorWithDomain:@"LiteCore" code:kC4ErrorCorruptData userInfo:
+                      @{NSLocalizedDescriptionKey:desc}];
             return nil;
         }
     }
     
     C4Error err;
-    C4SliceResult sliceResult = c4blob_getContents(_blobStore, key, &err);
-    if(!sliceResult.buf) {
+    C4ReadStream *readStream = c4blob_openReadStream(_blobStore, key, &err);
+    if(!readStream) {
         convertError(err, error);
         return nil;
     }
     
-    return [[NSData alloc] initWithBytesNoCopy:(void *)sliceResult.buf length:sliceResult.size deallocator:^(void * _Nonnull bytes, NSUInteger length) {
-        c4slice_free((C4Slice){bytes, length});
-    }];
+    return [[CBLBlobStream alloc] initWithStore:_blobStore key:key error:error];
 }
 
 - (void)dealloc {

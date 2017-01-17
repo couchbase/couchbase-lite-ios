@@ -146,10 +146,28 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (nullable id) objectForKeyedSubscript: (NSString*)key {
+    id retVal = nil;
     if (_properties)
-        return _properties[key];
+        retVal = _properties[key];
     else
-        return [self fleeceValueToObject: [self fleeceValueForKey: key]];
+        retVal = [self fleeceValueToObject: [self fleeceValueForKey: key]];
+    
+    if([retVal isKindOfClass:[NSDictionary class]]) {
+        NSDictionary* dict = retVal;
+        NSString* blobHint = dict[@"_cbltype"];
+        if(blobHint == nil) {
+            return retVal;
+        }
+        
+        if([blobHint isEqualToString:@"blob"]) {
+            NSDictionary* props = dict[@"_properties"];
+            retVal = [self readBlobWithProperties:props error:nil];
+        }
+        
+        self[key] = retVal;
+    }
+    
+    return retVal;
 }
 
 
@@ -194,6 +212,40 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
     [NSException raise: NSInternalInconsistencyException
                 format: @"Abstract method -sharedKeys was not overridden"];
     abort();
+}
+
+- (BOOL)translateAndStoreBlobs:(NSError * _Nullable __autoreleasing *)error {
+    for (NSString* key in [self properties]) {
+        id value = self[key];
+        if([value isKindOfClass:[CBLBlob class]]) {
+            CBLBlob *blob = value;
+            if(![self storeBlob:blob error:error]) {
+                return NO;
+            }
+            
+            self[key] = @{@"_cbltype":@"blob",@"_properties":blob.properties};
+        }
+    }
+    
+    return YES;
+}
+
+- (BOOL)storeBlob:(CBLBlob *)blob error:(NSError * _Nullable __autoreleasing *)error {
+    if(error != nil) {
+        *error = [NSError errorWithDomain:@"LiteCore" code:kC4ErrorUnimplemented userInfo:
+                 @{NSLocalizedDescriptionKey:@"CBLProperties does not know how to handle Blob datatype"}];
+    }
+    
+    return NO;
+}
+
+- (CBLBlob *)readBlobWithProperties:(NSDictionary *)properties error:(NSError * _Nullable __autoreleasing *)error {
+    if(error != nil) {
+        *error = [NSError errorWithDomain:@"LiteCore" code:kC4ErrorUnimplemented userInfo:
+                  @{NSLocalizedDescriptionKey:@"CBLProperties does not know how to handle Blob datatype"}];
+    }
+    
+    return nil;
 }
 
 
