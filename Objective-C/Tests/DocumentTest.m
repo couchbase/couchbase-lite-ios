@@ -8,7 +8,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
-
+#import "CBLBlob.h"
 
 @interface DocumentTest : CBLTestCase
 
@@ -227,5 +227,15 @@
     AssertEqualObjects(doc[@"name"], @"Scott");
 }
 
+- (void)testBlob {
+    CBLDocument* doc = [self.db documentWithID: @"doc1"];
+    doc[@"data"] = [[CBLBlob alloc] initWithContentType:@"text/plain" data:[@"12345" dataUsingEncoding:NSUTF8StringEncoding]];
+    
+    NSError* error;
+    Assert([doc save: &error], @"Saving error: %@", error);
+    
+    CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
+    Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
+}
 
 @end

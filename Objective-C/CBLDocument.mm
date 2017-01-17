@@ -18,6 +18,7 @@
 #import "CBLStringBytes.h"
 #import "CBLJSON.h"
 #import "CBLInternal.h"
+#import "CBLBlobStore.h"
 #include "c4Observer.h"
 
 
@@ -117,6 +118,23 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     [self resetChanges];
 }
 
+- (id)objectForKeyedSubscript:(NSString *)key {
+    id retVal = [super objectForKeyedSubscript:key];
+    if([retVal isKindOfClass:[NSDictionary class]]) {
+        NSDictionary* dict = retVal;
+        NSNumber* blobHint = dict[@"_blob"];
+        if([blobHint boolValue]) {
+            NSDictionary* props = dict[@"_properties"];
+            NSString *digest = props[@"digest"];
+            NSData *data = [[[self database] blobStore] dataForBlobWithDigest:digest error:nil];
+            retVal = [[CBLBlob alloc] initWithContentType:props[@"content-type"] data:data];
+        }
+        
+        self[key] = retVal;
+    }
+    
+    return retVal;
+}
 
 #pragma mark - CBLProperties
 
@@ -220,6 +238,18 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     
     if (!self.hasChanges && !deletion && [self exists])
         return YES;
+
+    for (NSString* key in [self properties]) {
+        id value = self[key];
+        if([value isKindOfClass:[CBLBlob class]]) {
+            CBLBlob *blob = value;
+            if(![[[self database] blobStore] write:blob error:outError]) {
+                return NO;
+            }
+            
+            self[key] = @{@"_blob":@(YES),@"_properties":blob.properties};
+        }
+    }
     
     C4Transaction transaction(_c4db);
     if (!transaction.begin())
@@ -271,7 +301,6 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     self.hasChanges = NO;
     return YES;
 }
-
 
 @end
 

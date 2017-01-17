@@ -16,6 +16,9 @@
 		27EF6AED1E32D109004748DF /* libLiteCore-static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9441E0347B600464432 /* libLiteCore-static.a */; };
 		27EF6AF21E32D12C004748DF /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27EF6AF11E32D12C004748DF /* libsqlite3.tbd */; };
 		72A87A0F1E32E858008466FF /* NotificationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A0E1E32E858008466FF /* NotificationTest.m */; };
+		72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A879EF1E2DD51C008466FF /* CBLBlob.mm */; };
+		72A87A011E2DEAA3008466FF /* CBLBlobStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 72A879FF1E2DEAA3008466FF /* CBLBlobStore.h */; };
+		72A87A021E2DEAA3008466FF /* CBLBlobStore.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A001E2DEAA3008466FF /* CBLBlobStore.mm */; };
 		9317621F1E2D439700563506 /* CBLQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 9317621E1E2D439700563506 /* CBLQuery+Internal.h */; };
 		934F4C101E1EF19000F90659 /* CollectionUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4BD01E1EF19000F90659 /* CollectionUtils.h */; };
 		934F4C111E1EF19000F90659 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4BD11E1EF19000F90659 /* CollectionUtils.m */; };
@@ -161,6 +164,10 @@
 		27EF6A951E2AC609004748DF /* names_100.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = names_100.json; sourceTree = "<group>"; };
 		27EF6AF11E32D12C004748DF /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		72A87A0E1E32E858008466FF /* NotificationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NotificationTest.m; sourceTree = "<group>"; };
+		72A879EF1E2DD51C008466FF /* CBLBlob.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBlob.mm; sourceTree = "<group>"; };
+		72A879FE1E2DD536008466FF /* CBLBlob.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLBlob.h; sourceTree = "<group>"; };
+		72A879FF1E2DEAA3008466FF /* CBLBlobStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBlobStore.h; sourceTree = "<group>"; };
+		72A87A001E2DEAA3008466FF /* CBLBlobStore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBlobStore.mm; sourceTree = "<group>"; };
 		9317621E1E2D439700563506 /* CBLQuery+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+Internal.h"; sourceTree = "<group>"; };
 		934F4BD01E1EF19000F90659 /* CollectionUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CollectionUtils.h; sourceTree = "<group>"; };
 		934F4BD11E1EF19000F90659 /* CollectionUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CollectionUtils.m; sourceTree = "<group>"; };
@@ -267,6 +274,8 @@
 				934F4C991E241FB500F90659 /* CBLInternal.mm */,
 				9317621E1E2D439700563506 /* CBLQuery+Internal.h */,
 				934F4CA21E241FB500F90659 /* CBLPrefix.h */,
+				72A879FF1E2DEAA3008466FF /* CBLBlobStore.h */,
+				72A87A001E2DEAA3008466FF /* CBLBlobStore.mm */,
 			);
 			path = Internal;
 			sourceTree = "<group>";
@@ -373,6 +382,8 @@
 				27EF6A7E1E297BDF004748DF /* CBLQuery.h */,
 				27EF6A7F1E297BDF004748DF /* CBLQuery.mm */,
 				27EF6A811E297BDF004748DF /* CBLQuery+Predicates.mm */,
+				72A879FE1E2DD536008466FF /* CBLBlob.h */,
+				72A879EF1E2DD51C008466FF /* CBLBlob.mm */,
 				934F4C931E241FB500F90659 /* Internal */,
 				9398D9FE1E03531A00464432 /* Info.plist */,
 				93BFCD931E0380A300E52F8A /* Tests */,
@@ -421,6 +432,7 @@
 				9380C71C1E16E7CE0011E8CB /* CBLProperties.h in Headers */,
 				27EF6A821E297BDF004748DF /* CBLQuery.h in Headers */,
 				934F4C2B1E1EF19000F90659 /* MYLogging.h in Headers */,
+				72A87A011E2DEAA3008466FF /* CBLBlobStore.h in Headers */,
 				934F4CB41E241FB500F90659 /* CBLParseDate.h in Headers */,
 				934F4C291E1EF19000F90659 /* MYErrorUtils.h in Headers */,
 			);
@@ -617,9 +629,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				9380C72B1E16E7D30011E8CB /* CBLDatabase.mm in Sources */,
+				72A87A021E2DEAA3008466FF /* CBLBlobStore.mm in Sources */,
 				934F4CB21E241FB500F90659 /* CBLMisc.m in Sources */,
 				934F4C111E1EF19000F90659 /* CollectionUtils.m in Sources */,
 				934F4C5B1E1EF25E00F90659 /* Test.m in Sources */,
+				72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */,
 				934F4CAE1E241FB500F90659 /* CBLJSON.m in Sources */,
 				934F4CB31E241FB500F90659 /* CBLParseDate.c in Sources */,
 				9380C6F01E15B8C20011E8CB /* CBLDocument.mm in Sources */,
