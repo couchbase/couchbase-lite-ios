@@ -18,6 +18,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@protocol CBLJSONCoding <NSObject>
+
+@property (readonly, nonatomic) NSDictionary* jsonRepresentation;
+
+@end
+
 /// CBLDatabase:
 
 @interface CBLDatabase ()
@@ -44,8 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
 // Reset both current changes and hasChanges flag.
 - (void) resetChanges;
 
-// Convert all blobs to stubs
-- (BOOL)translateAndStoreBlobs:(NSError **)error;
+- (FLSliceResult)encodeWith:(FLEncoder)encoder error:(NSError **)outError;
 
 // Subclass should implement this to provide the sharedKeys.
 - (FLSharedKeys) sharedKeys;
@@ -55,8 +60,8 @@ NS_ASSUME_NONNULL_BEGIN
             error:(NSError **)error;
 
 // Subclass should implement this to read binary files to disk
-- (CBLBlob *)readBlobWithProperties:(NSDictionary *)properties
-                error:(NSError **)error;
+- (nullable CBLBlob *)readBlobWithProperties:(NSDictionary *)properties
+                                       error:(NSError **)error;
 
 @end
 
@@ -74,7 +79,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 // CBLBlob:
 
-@interface CBLBlob ()
+@interface CBLBlob () <CBLJSONCoding>
 
 - (instancetype)initWithProperties:(NSDictionary *)properties
                         dataStream:(CBLBlobStream *)stream

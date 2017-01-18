@@ -234,9 +234,11 @@
     CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content error:&error];
     Assert(data, @"Failed to create blob: %@", error);
     doc[@"data"] = data;
+    doc[@"name"] = @"Jim";
     Assert([doc save: &error], @"Saving error: %@", error);
     
     CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
+    AssertEqualObjects(doc[@"name"], @"Jim");
     Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
     data = doc1[@"data"];
     AssertEqual(data.length, 5);
@@ -256,7 +258,6 @@
     CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content error:&error];
     Assert(data, @"Failed to create blob: %@", error);
     doc[@"data"] = data;
-    
     
     Assert([doc save: &error], @"Saving error: %@", error);
     CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];

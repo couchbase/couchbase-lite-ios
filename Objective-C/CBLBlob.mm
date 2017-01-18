@@ -26,6 +26,15 @@
              };
 }
 
+- (NSDictionary *)jsonRepresentation {
+    return @{
+             @"_cbltype":@"blob",
+             @"digest":_digest,
+             @"length":@(_length),
+             @"content-type":_contentType
+             };
+}
+
 - (NSData *)content {
     if(_content != nil) {
         return _content;

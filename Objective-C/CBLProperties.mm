@@ -20,6 +20,11 @@
 #import "CBLJSON.h"
 #import "CBLInternal.h"
 
+@interface CBLProperties()
+
+@property (nonatomic, readonly, nonnull) NSMapTable* sharedStrings;
+
+@end
 
 @implementation CBLProperties {
     FLDict _root;             // For CBLDocument
@@ -30,8 +35,19 @@
 }
 
 
-@synthesize hasChanges=_hasChanges;
+@synthesize hasChanges=_hasChanges, sharedStrings = _sharedStrings;
 
+- (nonnull NSMapTable *) sharedStrings {
+    if(!_sharedStrings) {
+        _sharedStrings = [[NSMapTable alloc] initWithKeyOptions: NSPointerFunctionsOpaquePersonality |
+                                                                 NSPointerFunctionsOpaqueMemory
+                                                   valueOptions: NSPointerFunctionsObjectPersonality |
+                                                                 NSPointerFunctionsStrongMemory
+                                                       capacity: 8];
+    }
+    
+    return _sharedStrings;
+}
 
 - (nullable NSDictionary*) properties {
     if (!_properties)
@@ -146,28 +162,10 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (nullable id) objectForKeyedSubscript: (NSString*)key {
-    id retVal = nil;
     if (_properties)
-        retVal = _properties[key];
+        return _properties[key];
     else
-        retVal = [self fleeceValueToObject: [self fleeceValueForKey: key]];
-    
-    if([retVal isKindOfClass:[NSDictionary class]]) {
-        NSDictionary* dict = retVal;
-        NSString* blobHint = dict[@"_cbltype"];
-        if(blobHint == nil) {
-            return retVal;
-        }
-        
-        if([blobHint isEqualToString:@"blob"]) {
-            NSDictionary* props = dict[@"_properties"];
-            retVal = [self readBlobWithProperties:props error:nil];
-        }
-        
-        self[key] = retVal;
-    }
-    
-    return retVal;
+        return [self fleeceValueToObject: [self fleeceValueForKey: key]];
 }
 
 
@@ -214,22 +212,6 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
     abort();
 }
 
-- (BOOL)translateAndStoreBlobs:(NSError * _Nullable __autoreleasing *)error {
-    for (NSString* key in [self properties]) {
-        id value = self[key];
-        if([value isKindOfClass:[CBLBlob class]]) {
-            CBLBlob *blob = value;
-            if(![self storeBlob:blob error:error]) {
-                return NO;
-            }
-            
-            self[key] = @{@"_cbltype":@"blob",@"_properties":blob.properties};
-        }
-    }
-    
-    return YES;
-}
-
 - (BOOL)storeBlob:(CBLBlob *)blob error:(NSError * _Nullable __autoreleasing *)error {
     if(error != nil) {
         *error = [NSError errorWithDomain:@"LiteCore" code:kC4ErrorUnimplemented userInfo:
@@ -246,6 +228,34 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
     }
     
     return nil;
+}
+
+- (FLSliceResult)encodeWith:(FLEncoder)encoder error:(NSError * _Nullable __autoreleasing *)outError {
+    FLEncoder_BeginDict(encoder, [_properties count]);
+    for (NSString *key in _properties) {
+        CBLStringBytes bKey(key);
+        FLEncoder_WriteKey(encoder, bKey);
+        id value = _properties[key];
+        if([value conformsToProtocol:@protocol(CBLJSONCoding)]) {
+            if([value isKindOfClass:[CBLBlob class]] && ![self storeBlob:value error:outError]) {
+                return (FLSliceResult){nullptr, 0};
+            }
+
+            FLEncoder_WriteNSObject(encoder, [value jsonRepresentation]);
+        } else {
+            FLEncoder_WriteNSObject(encoder, value);
+        }
+    }
+    FLEncoder_EndDict(encoder);
+    
+    FLError flErr;
+    auto body = FLEncoder_Finish(encoder, &flErr);
+    if(!body.buf) {
+        convertError(flErr, outError);
+        return (FLSliceResult){nullptr, 0};
+    }
+    
+    return body;
 }
 
 
@@ -280,6 +290,20 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 #pragma mark - PRIVATE: FLEECE
 
+- (id)convertDictionary:(NSDictionary *)dict {
+    NSString *type = dict[@"_cbltype"];
+    if(!type) {
+        // subdocument
+    }
+    
+    if([type isEqualToString:@"blob"]) {
+        return [self readBlobWithProperties:dict error:nil];
+    }
+    
+    // Invalid!
+    return nil;
+}
+
 
 - (FLValue) fleeceValueForKey: (NSString*) key {
     return FLDict_GetSharedKey(_root, CBLStringBytes(key), [self sharedKeys]);
@@ -287,7 +311,74 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (id) fleeceValueToObject: (FLValue)value {
-    return FLValue_GetNSObject(value, [self sharedKeys], nil);
+    switch (FLValue_GetType(value)) {
+        case kFLNull:
+            return [NSNull null];
+        case kFLBoolean:
+            return @(FLValue_AsBool(value));
+        case kFLNumber:
+            // It's faster to use CFNumber, than NSNumber or @(n)
+            if (FLValue_IsInteger(value)) {
+                int64_t i = FLValue_AsInt(value);
+                if (FLValue_IsUnsigned(value))
+                    return @((uint64_t)i);  // CFNumber can't do unsigned long long!
+                else
+                    return CFBridgingRelease(CFNumberCreate(nullptr, kCFNumberLongLongType,  &i));
+            } else if (FLValue_IsDouble(value)) {
+                double d = FLValue_AsDouble(value);
+                return CFBridgingRelease(CFNumberCreate(nullptr, kCFNumberDoubleType,  &d));
+            } else {
+                float f = FLValue_AsFloat(value);
+                return CFBridgingRelease(CFNumberCreate(nullptr, kCFNumberFloatType,  &f));
+            }
+        case kFLString: {
+            return slice2string(FLValue_AsString(value));
+        }
+        case kFLData: {
+            FLSlice data = FLValue_AsData(value);
+            return [[NSData alloc] initWithBytes:data.buf length:data.size];
+        }
+        case kFLArray: {
+            FLArray array = FLValue_AsArray(value);
+            FLArrayIterator iter;
+            FLArrayIterator_Begin(array, &iter);
+            auto result = [[NSMutableArray alloc] initWithCapacity: FLArray_Count(array)];
+            do {
+                [result addObject: [self fleeceValueToObject:FLArrayIterator_GetValue(&iter)]];
+            } while(FLArrayIterator_Next(&iter));
+            
+            return result;
+        }
+        case kFLDict: {
+            FLDictIterator iter;
+            FLDict dict = FLValue_AsDict(value);
+            FLDictIterator_Begin(dict, &iter);
+            auto result = [[NSMutableDictionary alloc] initWithCapacity: FLDict_Count(dict)];
+            auto platformStrings = [self sharedStrings];
+            auto sk = [self sharedKeys];
+            do {
+                NSString* key = nil;
+                FLValue rawKey = FLDictIterator_GetKey(&iter);
+                if (FLValue_IsInteger(rawKey) && sk) {
+                    // Decode int key using SharedKeys:
+                    auto encodedKey = FLValue_AsInt(rawKey);
+                    key = [platformStrings objectForKey:@(encodedKey)];
+                    if (!key) {
+                        FLSlice strSlice = FLSharedKey_GetKeyString(sk, (int)encodedKey, nil);
+                        if (strSlice.buf) {
+                            key = slice2string(strSlice);
+                            [platformStrings setObject:key forKey:@(encodedKey)];                        }
+                    }
+                }
+                if (!key)
+                    key = slice2string(FLValue_AsString(rawKey));
+                result[key] = [self fleeceValueToObject:FLDictIterator_GetValue(&iter)];
+            } while(FLDictIterator_Next(&iter));
+            return [self convertDictionary:result];
+        }
+        default:
+            return nil;
+    }
 }
 
 
