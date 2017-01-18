@@ -57,7 +57,15 @@
 
 
 - (void) setProperties: (NSDictionary*)properties {
-    _properties = properties ? [properties mutableCopy] : [NSMutableDictionary dictionary];
+    NSMutableDictionary* props = properties ? [properties mutableCopy] : [NSMutableDictionary dictionary];
+    for (NSString *key in props) {
+        id value = props[key];
+        if([value isKindOfClass:[NSDictionary class]]) {
+            props[key] = [self convertDictionary:value];
+        }
+    }
+    
+    _properties = props;
     [self markChanges];
 }
 
@@ -292,16 +300,18 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 - (id)convertDictionary:(NSDictionary *)dict {
     NSString *type = dict[@"_cbltype"];
-    if(!type) {
-        // subdocument
-    }
-    
     if([type isEqualToString:@"blob"]) {
         return [self readBlobWithProperties:dict error:nil];
     }
     
     // Invalid!
     return nil;
+}
+
+- (FLSlice)typeForDict:(FLDict)dict {
+    FLSlice typeKey = FLSTR("_cbltype");
+    FLValue type = FLDict_GetSharedKey(dict, typeKey, [self sharedKeys]);
+    return FLValue_AsString(type);
 }
 
 
@@ -312,32 +322,6 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 - (id) fleeceValueToObject: (FLValue)value {
     switch (FLValue_GetType(value)) {
-        case kFLNull:
-            return [NSNull null];
-        case kFLBoolean:
-            return @(FLValue_AsBool(value));
-        case kFLNumber:
-            // It's faster to use CFNumber, than NSNumber or @(n)
-            if (FLValue_IsInteger(value)) {
-                int64_t i = FLValue_AsInt(value);
-                if (FLValue_IsUnsigned(value))
-                    return @((uint64_t)i);  // CFNumber can't do unsigned long long!
-                else
-                    return CFBridgingRelease(CFNumberCreate(nullptr, kCFNumberLongLongType,  &i));
-            } else if (FLValue_IsDouble(value)) {
-                double d = FLValue_AsDouble(value);
-                return CFBridgingRelease(CFNumberCreate(nullptr, kCFNumberDoubleType,  &d));
-            } else {
-                float f = FLValue_AsFloat(value);
-                return CFBridgingRelease(CFNumberCreate(nullptr, kCFNumberFloatType,  &f));
-            }
-        case kFLString: {
-            return slice2string(FLValue_AsString(value));
-        }
-        case kFLData: {
-            FLSlice data = FLValue_AsData(value);
-            return [[NSData alloc] initWithBytes:data.buf length:data.size];
-        }
         case kFLArray: {
             FLArray array = FLValue_AsArray(value);
             FLArrayIterator iter;
@@ -350,34 +334,18 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
             return result;
         }
         case kFLDict: {
-            FLDictIterator iter;
             FLDict dict = FLValue_AsDict(value);
-            FLDictIterator_Begin(dict, &iter);
-            auto result = [[NSMutableDictionary alloc] initWithCapacity: FLDict_Count(dict)];
-            auto platformStrings = [self sharedStrings];
-            auto sk = [self sharedKeys];
-            do {
-                NSString* key = nil;
-                FLValue rawKey = FLDictIterator_GetKey(&iter);
-                if (FLValue_IsInteger(rawKey) && sk) {
-                    // Decode int key using SharedKeys:
-                    auto encodedKey = FLValue_AsInt(rawKey);
-                    key = [platformStrings objectForKey:@(encodedKey)];
-                    if (!key) {
-                        FLSlice strSlice = FLSharedKey_GetKeyString(sk, (int)encodedKey, nil);
-                        if (strSlice.buf) {
-                            key = slice2string(strSlice);
-                            [platformStrings setObject:key forKey:@(encodedKey)];                        }
-                    }
-                }
-                if (!key)
-                    key = slice2string(FLValue_AsString(rawKey));
-                result[key] = [self fleeceValueToObject:FLDictIterator_GetValue(&iter)];
-            } while(FLDictIterator_Next(&iter));
+            FLSlice type = [self typeForDict:dict];
+            if(!type.buf) {
+                // TODO: Subdocument
+                return nil;
+            }
+            
+            id result = FLValue_GetNSObject(value, [self sharedKeys], [self sharedStrings]);
             return [self convertDictionary:result];
         }
         default:
-            return nil;
+            return FLValue_GetNSObject(value, [self sharedKeys], [self sharedStrings]);
     }
 }
 
