@@ -126,8 +126,12 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 }
 
 - (CBLBlob *)readBlobWithProperties:(NSDictionary *)properties error:(NSError * _Nullable __autoreleasing *)error {
-    CBLBlobStream* data = [[[self database] blobStore] dataForBlobWithDigest:properties[@"digest"] error:nil];
-    return [[CBLBlob alloc] initWithProperties:properties dataStream:data];
+    CBLBlobStream* data = [[[self database] blobStore] dataForBlobWithDigest:properties[@"digest"] error:error];
+    if(data == nil) {
+        return nil;
+    }
+    
+    return [[CBLBlob alloc] initWithProperties:properties dataStream:data error:error];
 }
 
 - (BOOL)storeBlob:(CBLBlob *)blob error:(NSError * _Nullable __autoreleasing *)error {

@@ -17,7 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
  if this blob gets its contents from a slow stream this operation
  will block until the stream is fully read)
  */
-@property (readonly, nonatomic, nullable) NSData* content;
+@property (readonly, nonatomic) NSData* content;
 
 /**
  Gets a stream to the content of a CBLBlob
@@ -48,25 +48,28 @@ NS_ASSUME_NONNULL_BEGIN
  Initializes a CBLBlob with the given in-memory data
  @param contentType The type of content this CBLBlob will represent
  @param data The data that this CBLBlob will contain
- */
+ @param outError  On return, the error if any. */
 - (instancetype) initWithContentType:(NSString *)contentType
-                                data:(NSData *) data;
+                                data:(NSData *) data
+                               error:(NSError**)outError;
 
 /**
  Initializes a CBLBlob with the given stream of data
  @param contentType The type of content this CBLBlob will represent
  @param stream The stream of data that this CBLBlob will consume
- */
+ @param outError  On return, the error if any. */
 - (instancetype) initWithContentType:(NSString *)contentType
-                       contentStream:(NSInputStream *)stream;
+                       contentStream:(NSInputStream *)stream
+                               error:(NSError**)outError;
 
 /**
  Initializes a CBLBlob with the given in-memory data
  @param contentType The type of content this CBLBlob will represent
  @param url A url to a file containing the data that this CBLBlob will represent
- */
+ @param outError  On return, the error if any. */
 - (instancetype) initWithContentType:(NSString *)contentType
-                             fileURL:(NSURL*)url;
+                             fileURL:(NSURL*)url
+                               error:(NSError**)outError;
 
 - (instancetype)init NS_UNAVAILABLE;
 

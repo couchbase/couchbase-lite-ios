@@ -77,7 +77,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLBlob ()
 
 - (instancetype)initWithProperties:(NSDictionary *)properties
-                        dataStream:(CBLBlobStream *)stream;
+                        dataStream:(CBLBlobStream *)stream
+                             error:(NSError **)outError;
 
 - (BOOL)install:(C4BlobStore *)store error:(NSError **)error;
 
