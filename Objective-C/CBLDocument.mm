@@ -99,7 +99,7 @@
             if (![self loadDoc: outError mustExist: NO])
                 return NO;
             
-            [self resetChanges];
+            [self revertChanges];
             return YES;
         }
     }
@@ -108,7 +108,7 @@
 
 
 - (void) revert {
-    [self resetChanges];
+    [self revertChanges];
 }
 
 
@@ -120,12 +120,18 @@
 }
 
 
+- (NSMapTable*) sharedStrings {
+    return _database.sharedStrings;
+}
+
+
 - (void) setHasChanges: (BOOL)hasChanges {
     if (self.hasChanges != hasChanges) {
         [super setHasChanges: hasChanges];
         [_database document: self hasUnsavedChanges: hasChanges];
     }
 }
+
 
 #pragma mark - PRIVATE
 
@@ -152,14 +158,13 @@
 - (void) setC4Doc: (nullable C4Document*)doc {
     c4doc_free(_c4doc);
     _c4doc = doc;
-    [self setRootDict: nullptr orProperties: nil];
+    FLDict root = nullptr;
     if (_c4doc) {
         C4Slice body = _c4doc->selectedRev.body;
-        if (body.size > 0) {
-            FLDict root = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
-            [self setRootDict: root orProperties: nil];
-        }
+        if (body.size > 0)
+            root = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
     }
+    self.root = root;
 }
 
 
@@ -177,7 +182,7 @@
         return convertError(transaction.error(),  outError);
     
     // Encode _properties to data:
-    NSDictionary* propertiesToSave = deletion ? nil : self.properties;
+    NSDictionary* propertiesToSave = deletion ? nil : [self encodeAsJSON];
     CBLStringBytes docTypeSlice;
     C4DocPutRequest put = {
         .docID = _c4doc->docID,
@@ -216,7 +221,7 @@
     
     [self setC4Doc: newDoc];
     if (deletion)
-        [self resetChanges];
+        [self revertChanges];
     
     self.hasChanges = NO;
     return YES;

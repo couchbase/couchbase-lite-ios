@@ -44,6 +44,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** Get an NSString property by key. Returns nil if the property doesn't exists. */
 - (nullable NSString*) stringForKey: (NSString*)key;
 
+/** Get or create a new CBLSubdocument by key. */
+- (CBLSubdocument*) subdocumentForKey: (NSString*)key;
+
 #pragma mark - SETTERS
 
 /** Set a boolean value by key. */

@@ -84,7 +84,6 @@
     [doc setObject: @"str" forKey: @"string"];
     [doc setObject: @(YES) forKey: @"boolObj"];
     [doc setObject: @(1) forKey: @"number"];
-    [doc setObject: @{@"foo": @"bar"} forKey: @"dict"];
     [doc setObject: @[@"1", @"2"] forKey: @"array"];
     
     // Date:
@@ -104,7 +103,6 @@
     AssertEqualObjects([doc stringForKey: @"string"], @"str");
     AssertEqualObjects([doc objectForKey: @"boolObj"], @(YES));
     AssertEqualObjects([doc objectForKey: @"number"], @(1));
-    AssertEqualObjects([doc objectForKey: @"dict"], @{@"foo": @"bar"});
     AssertEqualObjects([doc objectForKey: @"array"], (@[@"1", @"2"]));
     
     // Date:
@@ -125,7 +123,6 @@
     AssertEqualObjects([doc1 stringForKey: @"string"], @"str");
     AssertEqualObjects([doc1 objectForKey: @"boolObj"], @(YES));
     AssertEqualObjects([doc1 objectForKey: @"number"], @(1));
-    AssertEqualObjects([doc1 objectForKey: @"dict"], @{@"foo": @"bar"});
     AssertEqualObjects([doc1 objectForKey: @"array"], (@[@"1", @"2"]));
     
     // Date:
