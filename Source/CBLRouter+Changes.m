@@ -263,8 +263,10 @@ NSTimeInterval kDefaultChangesTimeout = 60.0;
 
     if (_changesMode == kLongPollFeed && changes.count > 0)
         [self sendLongpollResponseForChanges: changes since: 0];
-    else
-        [self startTimeout];
+    else {
+        if (_changesTimeout > 0)
+            [self startTimeout];
+    }
 
     retainSelf = nil;
 }
