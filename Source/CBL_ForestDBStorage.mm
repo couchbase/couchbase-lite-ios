@@ -969,8 +969,8 @@ static inline void cleanup_C4ExpiryEnumerator(C4ExpiryEnumerator **e) { c4exp_fr
                 NSDictionary* attachments = properties.cbl_attachments;
                 if (attachments) {
                     NSMutableDictionary* editedAttachments = [attachments mutableCopy];
-                    for (NSString* name in editedAttachments) {
-                        NSMutableDictionary* nuMeta = [editedAttachments[name] mutableCopy];
+                    for (NSString* name in attachments) {
+                        NSMutableDictionary* nuMeta = [attachments[name] mutableCopy];
                         nuMeta[@"revpos"] = @(inPrevRevID.generation + 1);
                         editedAttachments[name] = nuMeta;
                     }
