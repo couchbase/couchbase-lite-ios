@@ -402,7 +402,7 @@ DefineLogDomain(ChangeTracker);
              LogVerbose(ChangeTracker, @"%@: Timeout but paused, restart timeout", strongSelf);
              [strongSelf startTimeout];
          } else {
-             LogVerbose(ChangeTracker, @"%@: Timeout ...", self);
+             LogVerbose(ChangeTracker, @"%@: Timeout ...", strongSelf);
              [strongSelf handleTimeout];
          }
      }];
@@ -415,6 +415,8 @@ DefineLogDomain(ChangeTracker);
     }
 }
 
-- (void) handleTimeout {  }
+- (void) handleTimeout {
+    [self failedWithErrorDomain: NSURLErrorDomain code: NSURLErrorTimedOut message: @"Timeout"];
+}
 
 @end
