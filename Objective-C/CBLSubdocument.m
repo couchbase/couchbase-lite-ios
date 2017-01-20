@@ -85,11 +85,4 @@
 }
 
 
-- (NSMapTable*) sharedStrings {
-    if (!_sharedStrings)
-        _sharedStrings = [_parent sharedStrings];
-    return _sharedStrings;
-}
-
-
 @end

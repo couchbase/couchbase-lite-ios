@@ -294,13 +294,6 @@ static void logCallback(C4LogDomain domain, C4LogLevel level, C4Slice message) {
 }
 
 
-- (NSMapTable*) sharedStrings {
-    if (!_sharedStrings)
-        _sharedStrings = FLCreateSharedStringsTable();
-    return _sharedStrings;
-}
-
-
 - (NSString*) path {
     C4SliceResult str = c4db_getPath(_c4db);
     NSString* path = [NSFileManager.defaultManager

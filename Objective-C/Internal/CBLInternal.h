@@ -21,7 +21,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nonatomic, nullable) C4Database* c4db;
 @property (readonly, nonatomic) NSString* path;     // For unit tests
-@property (readonly, nonatomic) NSMapTable* sharedStrings;
 
 - (void) document: (CBLDocument*)doc hasUnsavedChanges: (bool)unsaved;
 
@@ -42,9 +41,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Shared keys
 @property (readonly, nonatomic) FLSharedKeys sharedKeys;
-
-// Shared strings
-@property (nonatomic) NSMapTable* sharedStrings;
 
 // Fleece root
 @property (nonatomic, nullable) FLDict root;

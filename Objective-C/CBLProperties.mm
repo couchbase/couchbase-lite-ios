@@ -539,15 +539,9 @@ static NSNumber* numberProperty(id value) {
 - (NSString*) fleeceValueToKeyString: (FLValue)value {
     NSString* key = nil;
     if (FLValue_IsInteger(value)) {
-        NSMapTable* sharedString = self.sharedStrings;
         auto encKey = FLValue_AsInt(value);
-        key = [sharedString objectForKey: @(encKey)];
-        if (!key) {
-            auto k = FLSharedKey_GetKeyString(self.sharedKeys, (int)encKey, nil);
-            key = slice2string(k);
-            if (key)
-                [sharedString setObject: key forKey: @(encKey)];
-        }
+        auto k = FLSharedKey_GetKeyString(self.sharedKeys, (int)encKey, nil);
+        key = slice2string(k);
     }
     if (!key)
         key = slice2string(FLValue_AsString(value));

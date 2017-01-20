@@ -120,11 +120,6 @@
 }
 
 
-- (NSMapTable*) sharedStrings {
-    return _database.sharedStrings;
-}
-
-
 - (void) setHasChanges: (BOOL)hasChanges {
     if (self.hasChanges != hasChanges) {
         [super setHasChanges: hasChanges];
