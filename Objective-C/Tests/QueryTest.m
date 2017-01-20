@@ -95,6 +95,7 @@
     }
 
     // Try a query involving a property. The first pass will be unindexed, the 2nd indexed.
+    NSArray* indexSpec = @[ [NSExpression expressionForKeyPath: @"name.first"] ];
     for (int pass = 0; pass < 2; ++pass) {
         CBLQuery *q = [self.db createQuery: @"name.first == $FIRSTNAME" error: &error];
         XCTAssert(q, @"Couldn't create query: %@", error);
@@ -116,10 +117,10 @@
         XCTAssertEqual(n, 1);
 
         if (pass == 0) {
-            XCTAssert([self.db createIndexOn: @"name.first" type: kCBLValueIndex options: NULL error: &error]);
+            XCTAssert([self.db createIndexOn: indexSpec type: kCBLValueIndex options: NULL error: &error]);
         }
     }
-    XCTAssert([self.db deleteIndexOn: @"name.first" type: kCBLValueIndex]);
+    XCTAssert([self.db deleteIndexOn: indexSpec type: kCBLValueIndex error: &error]);
 }
 
 

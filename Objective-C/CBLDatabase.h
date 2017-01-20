@@ -149,31 +149,33 @@ typedef struct {
 /** Creates a value index (type kCBLValueIndex) on a given document property.
     This will speed up queries that test that property, at the expense of making database writes a
     little bit slower.
-    @param propertyPath  JSON path to the property, e.g. "color" or "name.last".
+    @param expressions  Expressions to index, typically key-paths.
     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
     @return  True on success, false on failure. */
-- (bool) createIndexOn: (NSString*)propertyPath
+- (bool) createIndexOn: (NSArray<NSExpression*>*)expressions
                  error: (NSError**)error;
 
 /** Creates an index on a given document property.
     This will speed up queries that test that property, at the expense of making database writes a
     little bit slower.
-    @param propertyPath  JSON path to the property, e.g. "color" or "name.last".
+    @param expressions  Expressions to index, typically key-paths.
     @param type  Type of index to create (value, full-text or geospatial.)
     @param options  Options affecting the index, or NULL for default settings.
     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
     @return  True on success, false on failure. */
-- (bool) createIndexOn: (NSString*)propertyPath
+- (bool) createIndexOn: (NSArray<NSExpression*>*)expressions
                   type: (CBLIndexType)type
                options: (nullable const CBLIndexOptions*)options
                  error: (NSError**)error;
 
 /** Deletes an existing index. Returns NO if the index did not exist.
-    @param propertyPath  Property path that the index was created on.
+    @param expressions  Expressions indexed (same parameter given to -createIndexOn:.)
     @param type  Type of index.
+    @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
     @return  True if the index existed and was deleted, false if it did not exist. */
-- (bool) deleteIndexOn: (NSString*)propertyPath
-                  type: (CBLIndexType)type;
+- (bool) deleteIndexOn: (NSArray<NSExpression*>*)expressions
+                  type: (CBLIndexType)type
+                 error: (NSError**)error;
 
 @end
 

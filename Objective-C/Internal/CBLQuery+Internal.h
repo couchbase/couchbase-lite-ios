@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** Just encodes the query into the JSON form parsed by LiteCore. (Exposed for testing.) */
 + (nullable NSData*) encodeQuery: (nullable id)where
                          orderBy: (nullable NSArray*)sortDescriptors
-                           error: (NSError**)outError;
+                           error: (NSError**)error;
 
 @end
 
@@ -35,12 +35,16 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLQuery (Predicates)
 
 /** Converts an NSPredicate into a JSON-compatible object tree of a LiteCore query. */
-+ (id) encodePredicate: (NSPredicate*)pred
-                 error: (NSError**)outError;
++ (nullable id) encodePredicate: (NSPredicate*)pred
+                          error: (NSError**)error;
+
+/** Translates an array of NSExpressions into the JSON equivalent. */
++ (nullable NSData*) encodeIndexExpressions: (NSArray<NSExpression*>*)expressions
+                                      error: (NSError**)error;
 
 #if DEBUG // these methods are only for tests
 + (void) dumpPredicate: (NSPredicate*)pred;
-+ (NSString*) json5ToJSON: (const char*)json5;
++ (nullable NSString*) json5ToJSON: (const char*)json5;
 #endif
 
 @end

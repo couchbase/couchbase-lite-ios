@@ -382,22 +382,25 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 }
 
 
-- (bool) createIndexOn: (NSString*)propertyPath
+- (bool) createIndexOn: (NSArray<NSExpression*>*)expressions
                  error: (NSError**)outError
 {
-    return [self createIndexOn: propertyPath type: kCBLValueIndex options: NULL error: outError];
+    return [self createIndexOn: expressions type: kCBLValueIndex options: NULL error: outError];
 }
 
 
-- (bool) createIndexOn: (NSString*)propertyPath
+- (bool) createIndexOn: (NSArray<NSExpression*>*)expressions
                   type: (CBLIndexType)type
                options: (const CBLIndexOptions*)options
                  error: (NSError**)outError
 {
     static_assert(sizeof(CBLIndexOptions) == sizeof(C4IndexOptions), "Index options incompatible");
-    CBLStringBytes propertyBytes(propertyPath);
+    NSData* json = [CBLQuery encodeIndexExpressions: expressions error: outError];
+    if (!json)
+        return false;
     C4Error c4err;
-    return c4db_createIndex(_c4db, propertyBytes,
+    return c4db_createIndex(_c4db,
+                            {json.bytes, json.length},
                             (C4IndexType)type,
                             (const C4IndexOptions*)options,
                             &c4err)
@@ -405,11 +408,16 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 }
 
 
-- (bool) deleteIndexOn: (NSString*)propertyPath
+- (bool) deleteIndexOn: (NSArray<NSExpression*>*)expressions
                   type: (CBLIndexType)type
+                 error: (NSError**)outError
 {
-    CBLStringBytes propertyBytes(propertyPath);
-    return c4db_deleteIndex(_c4db, propertyBytes, (C4IndexType)type, NULL);
+    NSData* json = [CBLQuery encodeIndexExpressions: expressions error: outError];
+    if (!json)
+        return false;
+    C4Error c4err;
+    return c4db_deleteIndex(_c4db, {json.bytes, json.length}, (C4IndexType)type, &c4err)
+                || convertError(c4err, outError);;
 }
 
 

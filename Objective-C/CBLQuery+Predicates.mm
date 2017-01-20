@@ -78,6 +78,21 @@ static NSDictionary* const  kFunctionNames = @{ @"sum:":           @"ARRAY_SUM()
 }
 
 
+// Translates an NSExpression into its JSON equivalent
++ (NSData*) encodeIndexExpressions: (NSArray<NSExpression*>*)expressions
+                             error: (NSError**)outError
+{
+    NSMutableArray *array = [NSMutableArray new];
+    for (NSExpression* expr in expressions) {
+        id encoded = EncodeExpression(expr, outError);
+        if (!encoded)
+            return nil;
+        [array addObject: encoded];
+    }
+    return [NSJSONSerialization dataWithJSONObject: array options: 0 error: outError];
+}
+
+
 // Encodes an NSPredicate.
 static id EncodePredicate(NSPredicate* pred, NSError** outError) {
     if ([pred isKindOfClass: [NSComparisonPredicate class]]) {
