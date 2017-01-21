@@ -8,11 +8,15 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLProperties.h"
-
+@class CBLDocument;
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLSubdocument : CBLProperties
+
+@property (readonly, nonatomic, nullable) CBLDocument* document;
+
++ (instancetype) subdocument;
 
 - (BOOL) exists;
 

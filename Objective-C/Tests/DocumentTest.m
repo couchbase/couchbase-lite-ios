@@ -106,7 +106,6 @@
     AssertEqualObjects([doc objectForKey: @"array"], (@[@"1", @"2"]));
     
     // Date:
-    // TODO: Why is comparing two date objects not equal?
     AssertEqualObjects([CBLJSON JSONObjectWithDate: [doc dateForKey: @"date"]],
                        [CBLJSON JSONObjectWithDate: date]);
     
@@ -126,9 +125,17 @@
     AssertEqualObjects([doc1 objectForKey: @"array"], (@[@"1", @"2"]));
     
     // Date:
-    // TODO: Why is comparing two date objects not equal?
     AssertEqualObjects([CBLJSON JSONObjectWithDate: [doc1 dateForKey: @"date"]],
                        [CBLJSON JSONObjectWithDate: date]);
+}
+
+
+- (void) testUnsupportedDataType {
+    CBLDocument* doc = [self.db documentWithID: @"doc1"];
+    XCTAssertThrows([doc setObject: [[NSMapTable alloc] init] forKey: @"table"]);
+    XCTAssertThrows([doc setObject: [[NSMapTable alloc] init] forKey: @"table"]);
+    XCTAssertThrows([doc setObject: @[[NSDate date]] forKey: @"dates"]);
+    XCTAssertThrows([doc setObject: @[[CBLSubdocument subdocument]] forKey: @"subdocs"]);
 }
 
 
@@ -162,6 +169,11 @@
     Assert([doc save: &error], @"Saving error: %@", error);
     Assert([doc exists]);
     AssertFalse(doc.isDeleted);
+    
+    doc[@"address"] = @"1 Street";
+    AssertEqualObjects(doc[@"type"], @"profile");
+    AssertEqualObjects(doc[@"name"], @"Scott");
+    AssertEqualObjects(doc[@"address"], @"1 Street");
     
     // Delete:
     Assert([doc deleteDocument: &error], @"Deleting error: %@", error);

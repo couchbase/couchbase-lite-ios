@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSString*) stringForKey: (NSString*)key;
 
 /** Get or create a new CBLSubdocument by key. */
-- (CBLSubdocument*) subdocumentForKey: (NSString*)key;
+- (nullable CBLSubdocument*) subdocumentForKey: (NSString*)key;
 
 #pragma mark - SETTERS
 
@@ -79,6 +79,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Check whether a property exists or not by key. */
 - (BOOL) containsObjectForKey: (NSString*)key;
+
+
+/** Revert changes made to the properties. */
+- (void) revert;
 
 @end
 

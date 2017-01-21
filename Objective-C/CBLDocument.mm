@@ -99,16 +99,11 @@
             if (![self loadDoc: outError mustExist: NO])
                 return NO;
             
-            [self revertChanges];
+            [self revert];
             return YES;
         }
     }
     return convertError(err, outError);
-}
-
-
-- (void) revert {
-    [self revertChanges];
 }
 
 
@@ -216,7 +211,7 @@
     
     [self setC4Doc: newDoc];
     if (deletion)
-        [self revertChanges];
+        [self revert];
     
     self.hasChanges = NO;
     return YES;

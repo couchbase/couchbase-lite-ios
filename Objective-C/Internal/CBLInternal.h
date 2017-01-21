@@ -45,8 +45,6 @@ NS_ASSUME_NONNULL_BEGIN
 // Fleece root
 @property (nonatomic, nullable) FLDict root;
 
-// Revert both current changes
-- (void) revertChanges;
 
 @end
 

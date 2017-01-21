@@ -14,16 +14,31 @@
     __weak id _parent;
     CBLOnMutateBlock _onMutate;
     FLSharedKeys _sharedKeys;
-    NSMapTable* _sharedStrings;
 }
 
 
 @synthesize parent=_parent;
 
-- (BOOL) exists {
-    return [_parent exists] && self.root;
++ (instancetype) subdocument {
+    return [[[self class] alloc] init];
 }
 
+
+- (nullable CBLDocument*) document {
+    if (!_parent)
+        return nil;
+    
+    id strongParent = _parent;
+    if ([strongParent isKindOfClass: [CBLDocument class]])
+        return strongParent;
+    else
+        return [strongParent parent];
+}
+
+
+- (BOOL) exists {
+    return [self.document exists];
+}
 
 #pragma mark - INTERNAL
 
@@ -42,7 +57,6 @@
     if (_parent != parent)
         _parent = parent;
     _sharedKeys = nil;
-    _sharedStrings = nil;
 }
 
 
@@ -56,7 +70,6 @@
     _parent = nil;
     _onMutate = nil;
     _sharedKeys = nil;
-    _sharedStrings = nil;
 }
 
 
