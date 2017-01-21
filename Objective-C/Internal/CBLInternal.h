@@ -18,7 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLDatabase ()
 
-@property (readonly, nonatomic) C4Database* c4db;
+@property (readonly, nonatomic, nullable) C4Database* c4db;
 @property (readonly, nonatomic) NSString* path;     // For unit tests
 
 - (void) document: (CBLDocument*)doc hasUnsavedChanges: (bool)unsaved;

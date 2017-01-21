@@ -228,7 +228,7 @@ static id EncodeExpression(NSExpression* expr, NSError **outError) {
                     return @[@"ARRAY_COUNT()", operand];
                 else
                     return mkError(outError, @"Array index must be constant"), nil;
-                return @[ [NSString stringWithFormat: @"%@[%ld]", keyPath, index] ];
+                return @[ [NSString stringWithFormat: @"%@[%ld]", keyPath, (long)index] ];
             } else {
                 // Regular function call:
                 if ([fn isEqualToString: @"+"] && hasStringArgs(expr))
@@ -279,7 +279,7 @@ static NSArray* encodeKeyPath(NSString *keyPath) {
 static NSString* predicateOperatorName(NSPredicateOperatorType op) {
     int iop = (int)op;
     NSString* const * table = kPredicateOpNames;
-    unsigned n = sizeof(kPredicateOpNames) / sizeof(NSString*);
+    int n = sizeof(kPredicateOpNames) / sizeof(NSString*);
     if (iop >= 99) {
         iop -= 99;
         table = kPredicateOpNames99;
@@ -329,7 +329,7 @@ static bool isPredicateUtilities(NSExpression *expr) {
 }
 
 
-void DumpPredicate(NSPredicate *pred, int indent) {
+static void DumpPredicate(NSPredicate *pred, int indent) {
     for (int i=0; i < indent; i++) fprintf(stderr, "    ");
     fprintf(stderr, "%s ", NSStringFromClass(pred.class).UTF8String);
     if ([pred isKindOfClass: [NSComparisonPredicate class]]) {

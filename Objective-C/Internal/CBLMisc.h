@@ -18,7 +18,7 @@ extern "C" {
 NS_ASSUME_NONNULL_BEGIN
 
 /** Generates UUID. */
-NSString* CBLCreateUUID( void );
+NSString* __nullable CBLCreateUUID( void );
 
 /** Writes a hex dump of the bytes to the output string.
  Returns a pointer to the end of the string (where it writes a null.) */

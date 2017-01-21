@@ -190,7 +190,11 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 }
 
 
-- (FLSharedKeys) sharedKeys { return nullptr; }
+- (FLSharedKeys) sharedKeys {
+    [NSException raise: NSInternalInconsistencyException
+                format: @"Abstract method -sharedKeys was not overridden"];
+    abort();
+}
 
 
 - (void) propertiesDidChange { }

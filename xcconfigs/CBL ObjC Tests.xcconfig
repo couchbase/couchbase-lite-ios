@@ -5,7 +5,6 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-DEVELOPMENT_TEAM          = N2Q372V7W2
 HEADER_SEARCH_PATHS       = $(SRCROOT)/vendor/couchbase-lite-core/C/include $(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece $(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC
 INFOPLIST_FILE            = Objective-C/Tests/Info.plist
 LD_RUNPATH_SEARCH_PATHS   = $(inherited) @executable_path/Frameworks @loader_path/Frameworks

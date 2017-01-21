@@ -74,7 +74,7 @@ C4LogDomain QueryLog;
             convertError(c4Err, outError);
             return nil;
         }
-        _limit = UINT64_MAX;
+        _limit = NSUIntegerMax;
     }
     return self;
 }
