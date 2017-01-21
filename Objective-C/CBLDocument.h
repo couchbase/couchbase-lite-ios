@@ -12,6 +12,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+extern NSString* const kCBLDocumentChangeNotification;
+extern NSString* const kCBLDocumentSavedNotification;
+extern NSString* const kCBLDocumentIsExternalUserInfoKey;
+
 /** A CouchbaseLite document. */
 @interface CBLDocument : CBLProperties
 
