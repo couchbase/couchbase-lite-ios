@@ -24,6 +24,11 @@
 
 @implementation CBLDatabaseOptions
 
+@synthesize directory=_directory;
+@synthesize fileProtection=_fileProtection;
+@synthesize encryptionKey=_encryptionKey;
+@synthesize readOnly=_readOnly;
+
 
 - (instancetype) copyWithZone:(NSZone *)zone {
     CBLDatabaseOptions* o = [[self.class alloc] init];
@@ -45,7 +50,6 @@
 @implementation CBLDatabase {
     NSString* _name;
     CBLDatabaseOptions* _options;
-    C4Database* _c4db;
     NSMapTable<NSString*, CBLDocument*>* _documents;
     NSMutableSet<CBLDocument*>* _unsavedDocuments;
 }

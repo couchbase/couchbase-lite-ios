@@ -173,10 +173,13 @@ typedef struct {
         return nil;
 
     CCCryptorRef cryptor;
-    CCCryptorStatus status = CCCryptorCreate(kCCEncrypt, kAlgorithm, kCCOptionPKCS7Padding, _keyData.bytes, _keyData.length,
-                    header.iv, &cryptor);
-    if (status != kCCSuccess)
-        return nil;
+    {
+        CCCryptorStatus status = CCCryptorCreate(kCCEncrypt, kAlgorithm, kCCOptionPKCS7Padding,
+                                                 _keyData.bytes, _keyData.length,
+                                                 header.iv, &cryptor);
+        if (status != kCCSuccess)
+            return nil;
+    }
     __block BOOL wroteIV = NO;
 
     return ^NSMutableData*(NSData* input) {

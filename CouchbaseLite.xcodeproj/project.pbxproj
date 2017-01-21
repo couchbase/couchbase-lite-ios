@@ -12,6 +12,8 @@
 		27EF6A851E297BDF004748DF /* CBLQuery+Predicates.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A811E297BDF004748DF /* CBLQuery+Predicates.mm */; };
 		27EF6A941E298E26004748DF /* QueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A931E298E26004748DF /* QueryTest.m */; };
 		27EF6A971E2AC61B004748DF /* names_100.json in Resources */ = {isa = PBXBuildFile; fileRef = 27EF6A951E2AC609004748DF /* names_100.json */; };
+		27EF6AED1E32D109004748DF /* libLiteCore-static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9441E0347B600464432 /* libLiteCore-static.a */; };
+		27EF6AF21E32D12C004748DF /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27EF6AF11E32D12C004748DF /* libsqlite3.tbd */; };
 		9317621F1E2D439700563506 /* CBLQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 9317621E1E2D439700563506 /* CBLQuery+Internal.h */; };
 		934F4C101E1EF19000F90659 /* CollectionUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4BD01E1EF19000F90659 /* CollectionUtils.h */; };
 		934F4C111E1EF19000F90659 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4BD11E1EF19000F90659 /* CollectionUtils.m */; };
@@ -50,12 +52,18 @@
 		9380C71C1E16E7CE0011E8CB /* CBLProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 9380C6FE1E15BB1D0011E8CB /* CBLProperties.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9380C72A1E16E7D00011E8CB /* CBLDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = 93BFCD9E1E0385EA00E52F8A /* CBLDatabase.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9380C72B1E16E7D30011E8CB /* CBLDatabase.mm in Sources */ = {isa = PBXBuildFile; fileRef = 93BFCD9F1E0385EA00E52F8A /* CBLDatabase.mm */; };
-		9380C72C1E16E8270011E8CB /* libLiteCore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9461E0347B600464432 /* libLiteCore.dylib */; };
 		9398D91C1E03434200464432 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
 		9398D9FF1E03531A00464432 /* CouchbaseLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 9398D9FD1E03531A00464432 /* CouchbaseLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		27EF6AEE1E32D111004748DF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 27EF80F91917EEC600A327B9;
+			remoteInfo = "LiteCore static";
+		};
 		9398D91D1E03434200464432 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9091E03434200464432 /* Project object */;
@@ -126,20 +134,6 @@
 			remoteGlobalIDString = 27A657A51CBC190B00A7A1D7;
 			remoteInfo = "Swift API Tests";
 		};
-		9398D9551E0347B600464432 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 27E3DCF41DB0583E00F2872D;
-			remoteInfo = LiteCoreObjC;
-		};
-		9398D9571E0347B600464432 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 27E3DCFC1DB0583E00F2872D;
-			remoteInfo = LiteCoreObjCTests;
-		};
 		9398D9591E0347B600464432 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
@@ -154,13 +148,6 @@
 			remoteGlobalIDString = 27A924AC1D9B316D00086206;
 			remoteInfo = "LiteCore-iOS Tests";
 		};
-		93BFCD991E03815500E52F8A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 720EA3DB1BA7EAD9002B8416;
-			remoteInfo = "LiteCore dylib";
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -169,6 +156,7 @@
 		27EF6A811E297BDF004748DF /* CBLQuery+Predicates.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "CBLQuery+Predicates.mm"; sourceTree = "<group>"; };
 		27EF6A931E298E26004748DF /* QueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QueryTest.m; sourceTree = "<group>"; };
 		27EF6A951E2AC609004748DF /* names_100.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = names_100.json; sourceTree = "<group>"; };
+		27EF6AF11E32D12C004748DF /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		9317621E1E2D439700563506 /* CBLQuery+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+Internal.h"; sourceTree = "<group>"; };
 		934F4BD01E1EF19000F90659 /* CollectionUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CollectionUtils.h; sourceTree = "<group>"; };
 		934F4BD11E1EF19000F90659 /* CollectionUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CollectionUtils.m; sourceTree = "<group>"; };
@@ -204,11 +192,7 @@
 		9378C5961E25B473001BB196 /* CBLTestCase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLTestCase.m; sourceTree = "<group>"; };
 		9378C59D1E269F14001BB196 /* DocumentTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DocumentTest.m; sourceTree = "<group>"; };
 		9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests.xcconfig"; sourceTree = "<group>"; };
-		9378C5D31E26CC46001BB196 /* CBL ObjC Tests_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests_Debug.xcconfig"; sourceTree = "<group>"; };
-		9378C5D41E26CC46001BB196 /* CBL ObjC Tests_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests_Release.xcconfig"; sourceTree = "<group>"; };
 		9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC.xcconfig"; sourceTree = "<group>"; };
-		9378C5D61E26CC46001BB196 /* CBL ObjC_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC_Debug.xcconfig"; sourceTree = "<group>"; };
-		9378C5D71E26CC46001BB196 /* CBL ObjC_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC_Release.xcconfig"; sourceTree = "<group>"; };
 		9378C5D81E26CC46001BB196 /* Project.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
 		9378C5D91E26CC46001BB196 /* Project_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Debug.xcconfig; sourceTree = "<group>"; };
 		9378C5DA1E26CC46001BB196 /* Project_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Release.xcconfig; sourceTree = "<group>"; };
@@ -230,7 +214,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9380C72C1E16E8270011E8CB /* libLiteCore.dylib in Frameworks */,
+				27EF6AF21E32D12C004748DF /* libsqlite3.tbd in Frameworks */,
+				27EF6AED1E32D109004748DF /* libLiteCore-static.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +230,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		27EF6AF01E32D12C004748DF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				27EF6AF11E32D12C004748DF /* libsqlite3.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		934F4BCD1E1EF19000F90659 /* MYUtilities */ = {
 			isa = PBXGroup;
 			children = (
@@ -278,11 +271,7 @@
 			isa = PBXGroup;
 			children = (
 				9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */,
-				9378C5D31E26CC46001BB196 /* CBL ObjC Tests_Debug.xcconfig */,
-				9378C5D41E26CC46001BB196 /* CBL ObjC Tests_Release.xcconfig */,
 				9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */,
-				9378C5D61E26CC46001BB196 /* CBL ObjC_Debug.xcconfig */,
-				9378C5D71E26CC46001BB196 /* CBL ObjC_Release.xcconfig */,
 				9378C5D81E26CC46001BB196 /* Project.xcconfig */,
 				9378C5D91E26CC46001BB196 /* Project_Debug.xcconfig */,
 				9378C5DA1E26CC46001BB196 /* Project_Release.xcconfig */,
@@ -327,6 +316,7 @@
 				9398D9131E03434200464432 /* Products */,
 				9398D92D1E03467C00464432 /* vendor */,
 				9378C5D11E26CC46001BB196 /* xcconfigs */,
+				27EF6AF01E32D12C004748DF /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -360,8 +350,6 @@
 				9398D9501E0347B600464432 /* libTokenizer.a */,
 				9398D9521E0347B600464432 /* LiteCoreSwift.framework */,
 				9398D9541E0347B600464432 /* Swift API Tests.xctest */,
-				9398D9561E0347B600464432 /* LiteCoreObjC.framework */,
-				9398D9581E0347B600464432 /* LiteCoreObjCTests.xctest */,
 				9398D95A1E0347B600464432 /* LiteCore-iOS.app */,
 				9398D95C1E0347B600464432 /* LiteCore-iOS Tests.xctest */,
 			);
@@ -447,7 +435,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				93BFCD9A1E03815500E52F8A /* PBXTargetDependency */,
+				27EF6AEF1E32D111004748DF /* PBXTargetDependency */,
 			);
 			name = "CBL ObjC";
 			productName = CouchbaseLite;
@@ -582,20 +570,6 @@
 			remoteRef = 9398D9531E0347B600464432 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		9398D9561E0347B600464432 /* LiteCoreObjC.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = LiteCoreObjC.framework;
-			remoteRef = 9398D9551E0347B600464432 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		9398D9581E0347B600464432 /* LiteCoreObjCTests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = LiteCoreObjCTests.xctest;
-			remoteRef = 9398D9571E0347B600464432 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		9398D95A1E0347B600464432 /* LiteCore-iOS.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
@@ -671,15 +645,15 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		27EF6AEF1E32D111004748DF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "LiteCore static";
+			targetProxy = 27EF6AEE1E32D111004748DF /* PBXContainerItemProxy */;
+		};
 		9398D91E1E03434200464432 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 9398D9111E03434200464432 /* CBL ObjC */;
 			targetProxy = 9398D91D1E03434200464432 /* PBXContainerItemProxy */;
-		};
-		93BFCD9A1E03815500E52F8A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "LiteCore dylib";
-			targetProxy = 93BFCD991E03815500E52F8A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -700,7 +674,7 @@
 		};
 		9398D9271E03434200464432 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9378C5D61E26CC46001BB196 /* CBL ObjC_Debug.xcconfig */;
+			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = YES;
@@ -726,7 +700,7 @@
 		};
 		9398D9281E03434200464432 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9378C5D71E26CC46001BB196 /* CBL ObjC_Release.xcconfig */;
+			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = YES;
@@ -752,7 +726,7 @@
 		};
 		9398D92A1E03434200464432 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9378C5D31E26CC46001BB196 /* CBL ObjC Tests_Debug.xcconfig */;
+			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				HEADER_SEARCH_PATHS = (
@@ -769,7 +743,7 @@
 		};
 		9398D92B1E03434200464432 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9378C5D41E26CC46001BB196 /* CBL ObjC Tests_Release.xcconfig */;
+			baseConfigurationReference = 9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = N2Q372V7W2;
 				HEADER_SEARCH_PATHS = (

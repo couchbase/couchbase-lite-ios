@@ -25,6 +25,8 @@
     C4Document* _c4doc;
 }
 
+@synthesize documentID=_documentID, database=_database;
+
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                             docID: (NSString*)docID
