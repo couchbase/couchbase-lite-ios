@@ -14,6 +14,8 @@
 
 @implementation CBLTestCase
 
+@synthesize db=_db;
+
 
 - (void) setUp {
     [super setUp];

@@ -77,7 +77,7 @@
     // Premitives:
     [doc setBoolean: YES forKey: @"bool"];
     [doc setDouble: 1.1 forKey: @"double"];
-    [doc setFloat: 1.2 forKey: @"float"];
+    [doc setFloat: 1.2f forKey: @"float"];
     [doc setInteger: 2 forKey: @"integer"];
     
     // Objects:

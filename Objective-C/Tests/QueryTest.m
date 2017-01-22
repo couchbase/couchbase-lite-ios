@@ -40,7 +40,7 @@
         {"age + 10 == 62",          "{WHERE: ['=', ['+', ['.age'], 10], 62]}"},
         {"foo + 'bar' == 'foobar'", "{WHERE: ['=', ['||', ['.foo'], 'bar'], 'foobar']}"},
     };
-    for (int i = 0; i < sizeof(kTests)/sizeof(kTests[0]); ++i) {
+    for (unsigned i = 0; i < sizeof(kTests)/sizeof(kTests[0]); ++i) {
         NSString* pred = @(kTests[i].pred);
         [CBLQuery dumpPredicate: [NSPredicate predicateWithFormat: pred argumentArray: nil]];
         NSString* expectedJson = [CBLQuery json5ToJSON: kTests[i].json5];
@@ -61,14 +61,14 @@
     XCTAssert(path, @"Missing test file names_100.json");
     NSString* contents = (NSString*)[NSString stringWithContentsOfFile: path encoding: NSUTF8StringEncoding error: NULL];
     XCTAssert(contents);
-    __block int n = 0;
+    __block uint64_t n = 0;
     NSError *error;
     BOOL ok = [self.db inBatch: &error do:^BOOL{
         [contents enumerateLinesUsingBlock: ^(NSString *line, BOOL *stop) {
-            CBLDocument* doc = [self.db documentWithID: [NSString stringWithFormat: @"person-%03d", ++n]];
+            CBLDocument* doc = [self.db documentWithID: [NSString stringWithFormat: @"person-%03llu", ++n]];
             doc.properties = [NSJSONSerialization JSONObjectWithData: (NSData*)[line dataUsingEncoding: NSUTF8StringEncoding] options: 0 error: NULL];
-            NSError* error;
-            XCTAssert([doc save: &error]);
+            NSError* saveError;
+            XCTAssert([doc save: &saveError]);
         }];
         return true;
     }];
@@ -84,14 +84,14 @@
         for (CBLQueryRow *row in e) {
             ++n;
             NSLog(@"Row: docID='%@', sequence=%llu", row.documentID, row.sequence);
-            NSString* expectedID = [NSString stringWithFormat: @"person-%03d", n];
+            NSString* expectedID = [NSString stringWithFormat: @"person-%03llu", n];
             XCTAssertEqualObjects(row.documentID, expectedID);
             XCTAssertEqual(row.sequence, n);
             CBLDocument* doc = row.document;
             XCTAssertEqualObjects(doc.documentID, expectedID);
             XCTAssertEqual(doc.sequence, n);
         }
-        XCTAssertEqual(n, 100);
+        XCTAssertEqual(n, 100llu);
     }
 
     // Try a query involving a property. The first pass will be unindexed, the 2nd indexed.
@@ -108,13 +108,13 @@
             ++n;
             NSLog(@"Row: docID='%@', sequence=%llu", row.documentID, row.sequence);
             XCTAssertEqualObjects(row.documentID, @"person-009");
-            XCTAssertEqual(row.sequence, 9);
+            XCTAssertEqual(row.sequence, 9llu);
             CBLDocument* doc = row.document;
             XCTAssertEqualObjects(doc.documentID, @"person-009");
-            XCTAssertEqual(doc.sequence, 9);
+            XCTAssertEqual(doc.sequence, 9llu);
             }
         }
-        XCTAssertEqual(n, 1);
+        XCTAssertEqual(n, 1llu);
 
         if (pass == 0) {
             XCTAssert([self.db createIndexOn: indexSpec type: kCBLValueIndex options: NULL error: &error]);
