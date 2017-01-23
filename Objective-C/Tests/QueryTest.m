@@ -33,6 +33,10 @@
 
 
 - (void) test01_Predicates {
+    // The query with the 'matches' operator requires there to be a FTS index on 'blurb':
+    NSError* error;
+    XCTAssert([_db createIndexOn: @[@"blurb"] type: kCBLFullTextIndex options: NULL error: &error]);
+    
     const struct {const char *pred; const char *json5;} kTests[] = {
         {"nickname == 'Bobo'",      "{WHERE: ['=', ['.nickname'],'Bobo']}"},
         {"name.first == $FIRSTNAME","{WHERE: ['=', ['.name.first'],['$FIRSTNAME']]}"},
@@ -40,7 +44,7 @@
         {"ANY children == 'Bobo'",  "{WHERE: ['ANY', 'X', ['.children'], ['=', ['?X'], 'Bobo']]}"},
         {"'Bobo' in children",      "{WHERE: ['ANY', 'X', ['.children'], ['=', ['?X'], 'Bobo']]}"},
         {"name in $NAMES",          "{WHERE: ['IN', ['.name'], ['$NAMES']]}"},
-        {"fruit matches 'bana(na)+'","{WHERE: ['REGEXP_LIKE()', ['.fruit'], 'bana(na)+']}"},
+        {"blurb matches 'N1QL SQLite'","{WHERE: ['MATCH', ['.blurb'], 'N1QL SQLite']}"},
         {"fruit contains 'ran'",    "{WHERE: ['CONTAINS()', ['.fruit'], 'ran']}"},
         {"age between {13, 19}",    "{WHERE: ['BETWEEN', ['.age'], 13, 19]}"},
         {"coords[0] < 90",          "{WHERE: ['<', ['.coords[0]'], 90]}"},
@@ -52,12 +56,13 @@
         {"sum(prices) > 100",       "{WHERE: ['>', ['ARRAY_SUM()', ['.prices']], 100]}"},
         {"age + 10 == 62",          "{WHERE: ['=', ['+', ['.age'], 10], 62]}"},
         {"foo + 'bar' == 'foobar'", "{WHERE: ['=', ['||', ['.foo'], 'bar'], 'foobar']}"},
+        {"FUNCTION(email, 'REGEXP_LIKE', '.+@.+') == true",
+                                    "{WHERE: ['=', ['REGEXP_LIKE()', ['.email'], '.+@.+'], true]}"},
     };
     for (unsigned i = 0; i < sizeof(kTests)/sizeof(kTests[0]); ++i) {
         NSString* pred = @(kTests[i].pred);
         [CBLQuery dumpPredicate: [NSPredicate predicateWithFormat: pred argumentArray: nil]];
         NSString* expectedJson = [CBLQuery json5ToJSON: kTests[i].json5];
-        NSError *error;
         NSData* actual = [CBLQuery encodeQuery: pred orderBy: nil returning: nil error: &error];
         XCTAssert(actual, @"Encode failed: %@", error);
         NSString* actualJSON = [[NSString alloc] initWithData: actual encoding: NSUTF8StringEncoding];

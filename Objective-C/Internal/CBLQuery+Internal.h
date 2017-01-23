@@ -46,8 +46,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NSArray*) encodeExpressions: (NSArray*)exprs
                                   error: (NSError**)outError;
 
-/** Translates an array of NSExpressions into JSON data. */
-+ (nullable NSData*) encodeExpressionsToJSON: (NSArray<NSExpression*>*)expressions
+/** Translates an array of NSExpressions or NSStrings into JSON data. */
++ (nullable NSData*) encodeExpressionsToJSON: (NSArray*)expressions
                                        error: (NSError**)error;
 
 #if DEBUG // these methods are only for tests

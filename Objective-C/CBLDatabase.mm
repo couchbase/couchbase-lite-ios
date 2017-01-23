@@ -455,7 +455,7 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 }
 
 
-- (bool) createIndexOn: (NSArray<NSExpression*>*)expressions
+- (bool) createIndexOn: (NSArray*)expressions
                   type: (CBLIndexType)type
                options: (const CBLIndexOptions*)options
                  error: (NSError**)outError

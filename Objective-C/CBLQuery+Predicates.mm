@@ -68,7 +68,7 @@ extern "C" {
 
 
 // Encodes an array of expressions all the way into JSON NSData.
-+ (NSData*) encodeExpressionsToJSON: (NSArray<NSExpression*>*)expressions
++ (NSData*) encodeExpressionsToJSON: (NSArray*)expressions
                               error: (NSError**)outError
 {
     NSArray* exprs = [self encodeExpressions: expressions error: outError];
@@ -86,7 +86,7 @@ extern "C" {
 // See <Foundation/NSComparisonPredicate.h> lines 26-39
 static NSString* const kPredicateOpNames[] = {
     @"<", @"<=", @">", @">=", @"=", @"!=",
-    @"REGEXP_LIKE()",   // NSPredicate's MATCH is a regex
+    @"MATCH",           // Repurpose NSPredicate's MATCH as N1QL MATCH even though they're different
     @"GLOB",            // NSPredicate's "LIKE" is comparable to SQL/N1QL "GLOB", not "LIKE"
     nil, nil,           // TODO: Implement begins with, ends with
     @"IN",
@@ -123,6 +123,9 @@ static NSDictionary* const  kFunctionNames = @{ @"sum:":           @"ARRAY_SUM()
                                                 @"valueForKeyPath:":        @".",
                                                 @"objectFrom:withIndex:":   @"[]",
                                               };
+
+// Other N1QL functions, that can be invoked in a format string as FUNCTION(rcvr, "FNNAME" [, ...])
+static NSArray* kN1QLFunctionNames = @[@"REGEXP_LIKE"];
 
 
 // Encodes an NSPredicate.
@@ -229,10 +232,17 @@ static id EncodeExpression(NSExpression* expr, NSError **outError) {
             return encodeKeyPath(expr.keyPath);
         }
         case NSFunctionExpressionType: {
-            NSString* fn = kFunctionNames[expr.function];
+            NSString *exprFunction = expr.function;
+            NSString* fn = kFunctionNames[exprFunction];
             if (fn == nil) {
-                return mkError(outError, @"Unsupported function '%@'", expr.function), nil;
-            } else if ([fn isEqualToString: @"."]) {
+                exprFunction = [exprFunction uppercaseString];
+                if ([kN1QLFunctionNames containsObject: exprFunction])
+                    fn = [exprFunction stringByAppendingString: @"()"];
+                else
+                    return mkError(outError, @"Unsupported function '%@'", expr.function), nil;
+            }
+
+            if ([fn isEqualToString: @"."]) {
                 // This is a weird case where using "first" or "last" in a key-path compiles to a
                 // predicate containing an undocumented expression type...
                 NSString* keyPath = [NSString stringWithFormat: @"%@.%@",

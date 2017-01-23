@@ -159,21 +159,23 @@ typedef struct {
 /** Creates a value index (type kCBLValueIndex) on a given document property.
     This will speed up queries that test that property, at the expense of making database writes a
     little bit slower.
-    @param expressions  Expressions to index, typically key-paths.
+    @param expressions  Expressions to index, typically key-paths. Can be NSExpression objects,
+                    or NSStrings that are expression format strings.
     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
     @return  True on success, false on failure. */
-- (bool) createIndexOn: (NSArray<NSExpression*>*)expressions
+- (bool) createIndexOn: (NSArray*)expressions
                  error: (NSError**)error;
 
 /** Creates an index on a given document property.
     This will speed up queries that test that property, at the expense of making database writes a
     little bit slower.
-    @param expressions  Expressions to index, typically key-paths.
+    @param expressions  Expressions to index, typically key-paths. Can be NSExpression objects,
+                    or NSStrings that are expression format strings.
     @param type  Type of index to create (value, full-text or geospatial.)
     @param options  Options affecting the index, or NULL for default settings.
     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
     @return  True on success, false on failure. */
-- (bool) createIndexOn: (NSArray<NSExpression*>*)expressions
+- (bool) createIndexOn: (NSArray*)expressions
                   type: (CBLIndexType)type
                options: (nullable const CBLIndexOptions*)options
                  error: (NSError**)error;
@@ -183,7 +185,7 @@ typedef struct {
     @param type  Type of index.
     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
     @return  True if the index existed and was deleted, false if it did not exist. */
-- (bool) deleteIndexOn: (NSArray<NSExpression*>*)expressions
+- (bool) deleteIndexOn: (NSArray*)expressions
                   type: (CBLIndexType)type
                  error: (NSError**)error;
 
