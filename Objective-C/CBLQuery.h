@@ -57,6 +57,18 @@ NS_ASSUME_NONNULL_BEGIN
 /** The document that produced this row. */
 @property (readonly, nonatomic) CBLDocument* document;
 
+/** The result value at the given index (if the query has a "returning" specification.) */
+- (nullable id) valueAtIndex: (NSUInteger)index;
+
+- (bool)                booleanAtIndex: (NSUInteger)index;
+- (NSInteger)           integerAtIndex: (NSUInteger)index;
+- (float)               floatAtIndex:   (NSUInteger)index;
+- (double)              doubleAtIndex:  (NSUInteger)index;
+- (nullable NSString*)  stringAtIndex:  (NSUInteger)index;
+- (nullable NSDate*)    dateAtIndex:    (NSUInteger)index;
+
+- (nullable id) objectForSubscript: (NSUInteger)subscript;
+
 @end
 
 

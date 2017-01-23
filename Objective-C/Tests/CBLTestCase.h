@@ -26,4 +26,9 @@
 
 @property (readonly) CBLDatabase* db;
 
+/** Loads the database with documents read from a JSON resource file in the test bundle.
+    Each line of the file should be a complete JSON object, which will become a document.
+    The document IDs will be of the form "doc-#" where "#" is the line number, starting at 1. */
+- (void) loadJSONResource: (NSString*)resourceName;
+
 @end

@@ -19,7 +19,20 @@
 @implementation QueryTest
 
 
-- (void) test08_Predicates {
+- (uint64_t) verifyQuery: (CBLQuery*)q test: (void (^)(uint64_t n, CBLQueryRow *row))block {
+    NSError* error;
+    NSEnumerator* e = [q run: &error];
+    XCTAssert(e, @"Query failed: %@", error);
+    uint64_t n = 0;
+    for (CBLQueryRow *row in e) {
+        NSLog(@"Row: docID='%@', sequence=%llu", row.documentID, row.sequence);
+        block(++n, row);
+    }
+    return n;
+}
+
+
+- (void) test01_Predicates {
     const struct {const char *pred; const char *json5;} kTests[] = {
         {"nickname == 'Bobo'",      "{WHERE: ['=', ['.nickname'],'Bobo']}"},
         {"name.first == $FIRSTNAME","{WHERE: ['=', ['.name.first'],['$FIRSTNAME']]}"},
@@ -45,7 +58,7 @@
         [CBLQuery dumpPredicate: [NSPredicate predicateWithFormat: pred argumentArray: nil]];
         NSString* expectedJson = [CBLQuery json5ToJSON: kTests[i].json5];
         NSError *error;
-        NSData* actual = [CBLQuery encodeQuery: pred orderBy: nil error: &error];
+        NSData* actual = [CBLQuery encodeQuery: pred orderBy: nil returning: nil error: &error];
         XCTAssert(actual, @"Encode failed: %@", error);
         NSString* actualJSON = [[NSString alloc] initWithData: actual encoding: NSUTF8StringEncoding];
         XCTAssertEqualObjects(actualJSON, expectedJson);
@@ -56,71 +69,71 @@
 }
 
 
-- (void) test09_Query {
-    NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: @"names_100" ofType: @"json"];
-    XCTAssert(path, @"Missing test file names_100.json");
-    NSString* contents = (NSString*)[NSString stringWithContentsOfFile: path encoding: NSUTF8StringEncoding error: NULL];
-    XCTAssert(contents);
-    __block uint64_t n = 0;
+- (void) test02_AllDocsQuery {
+    [self loadJSONResource: @"names_100"];
     NSError *error;
-    BOOL ok = [self.db inBatch: &error do:^BOOL{
-        [contents enumerateLinesUsingBlock: ^(NSString *line, BOOL *stop) {
-            CBLDocument* doc = [self.db documentWithID: [NSString stringWithFormat: @"person-%03llu", ++n]];
-            doc.properties = [NSJSONSerialization JSONObjectWithData: (NSData*)[line dataUsingEncoding: NSUTF8StringEncoding] options: 0 error: NULL];
-            NSError* saveError;
-            XCTAssert([doc save: &saveError]);
-        }];
-        return true;
+    CBLQuery* q = [self.db createQuery: nil error: &error];
+    XCTAssert(q, @"Couldn't create query: %@", error);
+    uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+        NSString* expectedID = [NSString stringWithFormat: @"doc-%03llu", n];
+        XCTAssertEqualObjects(row.documentID, expectedID);
+        XCTAssertEqual(row.sequence, n);
+        CBLDocument* doc = row.document;
+        XCTAssertEqualObjects(doc.documentID, expectedID);
+        XCTAssertEqual(doc.sequence, n);
     }];
-    XCTAssert(ok);
+    XCTAssertEqual(numRows, 100llu);
+}
 
-    // All-docs query:
-    {
-        CBLQuery* q = [self.db createQuery: nil error: &error];
-        XCTAssert(q, @"Couldn't create query: %@", error);
-        NSEnumerator* e = [q run: &error];
-        XCTAssert(e);
-        n = 0;
-        for (CBLQueryRow *row in e) {
-            ++n;
-            NSLog(@"Row: docID='%@', sequence=%llu", row.documentID, row.sequence);
-            NSString* expectedID = [NSString stringWithFormat: @"person-%03llu", n];
-            XCTAssertEqualObjects(row.documentID, expectedID);
-            XCTAssertEqual(row.sequence, n);
-            CBLDocument* doc = row.document;
-            XCTAssertEqualObjects(doc.documentID, expectedID);
-            XCTAssertEqual(doc.sequence, n);
-        }
-        XCTAssertEqual(n, 100llu);
-    }
 
+- (void) test03_PropertyQuery {
+    [self loadJSONResource: @"names_100"];
     // Try a query involving a property. The first pass will be unindexed, the 2nd indexed.
+    NSError *error;
     NSArray* indexSpec = @[ [NSExpression expressionForKeyPath: @"name.first"] ];
     for (int pass = 0; pass < 2; ++pass) {
         CBLQuery *q = [self.db createQuery: @"name.first == $FIRSTNAME" error: &error];
         XCTAssert(q, @"Couldn't create query: %@", error);
         q.parameters = @{@"FIRSTNAME": @"Claude"};
-        NSEnumerator* e = [q run: &error];
-        XCTAssert(e);
-        n = 0;
-        for (CBLQueryRow *row in e) {
-            @autoreleasepool {
-            ++n;
-            NSLog(@"Row: docID='%@', sequence=%llu", row.documentID, row.sequence);
-            XCTAssertEqualObjects(row.documentID, @"person-009");
+        uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+            XCTAssertEqualObjects(row.documentID, @"doc-009");
             XCTAssertEqual(row.sequence, 9llu);
             CBLDocument* doc = row.document;
-            XCTAssertEqualObjects(doc.documentID, @"person-009");
+            XCTAssertEqualObjects(doc.documentID, @"doc-009");
             XCTAssertEqual(doc.sequence, 9llu);
-            }
-        }
-        XCTAssertEqual(n, 1llu);
+        }];
+        XCTAssertEqual(numRows, 1llu);
 
         if (pass == 0) {
             XCTAssert([self.db createIndexOn: indexSpec type: kCBLValueIndex options: NULL error: &error]);
         }
     }
     XCTAssert([self.db deleteIndexOn: indexSpec type: kCBLValueIndex error: &error]);
+}
+
+
+- (void) test04_Projection {
+    NSArray* expectedDocs = @[@"doc-076", @"doc-008", @"doc-014"];
+    NSArray* expectedZips = @[@"55587", @"56307", @"56308"];
+    NSArray* expectedEmails = @[ @[@"monte.mihlfeld@nosql-matters.org"],
+                                 @[@"jennefer.menning@nosql-matters.org", @"jennefer@nosql-matters.org"],
+                                 @[@"stephen.jakovac@nosql-matters.org"] ];
+    [self loadJSONResource: @"names_100"];
+    NSError *error;
+    CBLQuery *q = [self.db createQueryWhere: @"contact.address.state == $STATE"
+                                    orderBy: @[@".contact.address.zip"]
+                                  returning: @[@"contact.address.zip", @"contact.email"]
+                                      error: &error];
+    XCTAssert(q, @"Couldn't create query: %@", error);
+    q.parameters = @{@"STATE": @"MN"};
+    uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+        XCTAssertEqualObjects(row.documentID, expectedDocs[n-1]);
+        NSString* zip = [row stringAtIndex: 0];
+        NSArray *email = [row valueAtIndex: 1];
+        XCTAssertEqualObjects(zip, expectedZips[n-1]);
+        XCTAssertEqualObjects(email, expectedEmails[n-1]);
+    }];
+    XCTAssertEqual(numRows, 3llu);
 }
 
 

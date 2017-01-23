@@ -11,15 +11,18 @@
 #import "CBLInternal.h"
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
+#import "CBLJSON.h"
 #import "c4Document.h"
 #import "c4DBQuery.h"
 #import "Fleece.h"
-#import "MYErrorUtils.h"
+extern "C" {
+    #import "Test.h"
+}
 
 
 template <typename T>
 static inline T* _Nonnull  assertNonNull(T* _Nullable t) {
-    NSCAssert(t != nil, @"Unexpected nil value");
+    Assert(t != nil, @"Unexpected nil value");
     return (T*)t;
 }
 
@@ -56,12 +59,14 @@ C4LogDomain QueryLog;
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                             where: (id)where
                           orderBy: (nullable NSArray*)sortDescriptors
+                        returning: (nullable NSArray*)returning
                             error: (NSError**)outError
 {
     self = [super init];
     if (self) {
         NSData* jsonData = [[self class] encodeQuery: where
                                              orderBy: sortDescriptors
+                                           returning: returning
                                                error: outError];
         if (!jsonData)
             return nil;
@@ -82,6 +87,7 @@ C4LogDomain QueryLog;
 
 + (NSData*) encodeQuery: (id)where
                 orderBy: (nullable NSArray*)sortDescriptors
+              returning: (nullable NSArray*)returning
                   error: (NSError**)outError
 {
     id whereJSON = nil;
@@ -94,7 +100,7 @@ C4LogDomain QueryLog;
             where = [NSPredicate predicateWithFormat: (NSString*)where argumentArray: nil];
             whereJSON = [self encodePredicate: where error: outError];
         } else if (where != nil) {
-            NSAssert(NO, @"Invalid specification for CBLQuery");
+            Assert(NO, @"Invalid specification for CBLQuery");
         }
         if (!whereJSON)
             return nil;
@@ -127,6 +133,13 @@ C4LogDomain QueryLog;
             [sorts addObject: key];
         }
         q[@"ORDER BY"] = sorts;
+    }
+
+    if (returning) {
+        NSArray* select = [self encodeExpressions: returning error: outError];
+        if (!select)
+            return nil;
+        q[@"WHAT"] = select;
     }
 
     return [NSJSONSerialization dataWithJSONObject: q options: 0 error: outError];
@@ -224,6 +237,8 @@ C4LogDomain QueryLog;
 {
     @protected
     CBLQuery *_query;
+    C4SliceResult _customColumnsData;
+    FLArray _customColumns;
 }
 
 @synthesize documentID=_documentID, sequence=_sequence;
@@ -237,13 +252,60 @@ C4LogDomain QueryLog;
                                                               length: e->docID.size
                                                             encoding: NSUTF8StringEncoding] );
         _sequence = e->docSequence;
+        _customColumnsData = c4queryenum_customColumns(e);
+        if (_customColumnsData.buf)
+            _customColumns = FLValue_AsArray(FLValue_FromTrustedData({_customColumnsData.buf,
+                                                                      _customColumnsData.size}));
     }
     return self;
 }
 
 
+- (void) dealloc {
+    c4slice_free(_customColumnsData);
+}
+
+
 - (CBLDocument*) document {
     return assertNonNull( [_query.database documentWithID: _documentID] );
+}
+
+
+- (NSUInteger) valueCount {
+    return FLArray_Count(_customColumns);
+}
+
+- (id) valueAtIndex: (NSUInteger)index {
+    return FLValue_GetNSObject(FLArray_Get(_customColumns, (uint32_t)index), nullptr, nil);
+}
+
+- (bool) booleanAtIndex: (NSUInteger)index {
+    return FLValue_AsBool(FLArray_Get(_customColumns, (uint32_t)index));
+}
+
+- (NSInteger) integerAtIndex: (NSUInteger)index {
+    return FLValue_AsInt(FLArray_Get(_customColumns, (uint32_t)index));
+}
+
+- (float) floatAtIndex: (NSUInteger)index {
+    return FLValue_AsFloat(FLArray_Get(_customColumns, (uint32_t)index));
+}
+
+- (double) doubleAtIndex: (NSUInteger)index {
+    return FLValue_AsDouble(FLArray_Get(_customColumns, (uint32_t)index));
+}
+
+- (NSString*) stringAtIndex: (NSUInteger)index {
+    id value = [self valueAtIndex: index];
+    return [value isKindOfClass: [NSString class]] ? value : nil;
+}
+
+- (NSDate*) dateAtIndex: (NSUInteger)index {
+    return [CBLJSON dateWithJSONObject: [self valueAtIndex: index]];
+}
+
+- (nullable id) objectForSubscript: (NSUInteger)subscript {
+    return [self valueAtIndex: subscript];
 }
 
 
@@ -296,12 +358,12 @@ C4LogDomain QueryLog;
 
 
 - (NSUInteger) termIndexOfMatch: (NSUInteger)matchNumber {
-    NSParameterAssert(matchNumber < _matchCount);
+    Assert(matchNumber < _matchCount);
     return _matches[matchNumber].termIndex;
 }
 
 - (NSRange) textRangeOfMatch: (NSUInteger)matchNumber {
-    NSParameterAssert(matchNumber < _matchCount);
+    Assert(matchNumber < _matchCount);
     NSUInteger byteStart  = _matches[matchNumber].start;
     NSUInteger byteLength = _matches[matchNumber].length;
     NSData* rawText = self.fullTextUTF8Data;

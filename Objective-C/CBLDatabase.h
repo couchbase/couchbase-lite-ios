@@ -142,11 +142,18 @@ typedef struct {
 /** Compiles a Couchbase Lite query, from any of several input formats, specifying sorting.
     Once compiled, the query can be run many times with different parameter values.
     @param where  The query specification; see above for details.
+                    Corresponds to the WHERE clause of a SQL query.
     @param sortDescriptors  An array of NSSortDescriptors specifying how to sort the result.
+                    Corresponds to the ORDER BY clause of a SQL query.
+    @param returning  An array of NSExpressions (or expression format strings) describing values
+                    to include in the result. If nil, only the document ID and sequence number
+                    will be available.
+                    Corresponds to the SELECT clause of a SQL query.
     @param error  If the query cannot be parsed, an error will be stored here.
     @return  The CBLQuery, or nil on error. */
 - (nullable CBLQuery*) createQueryWhere: (nullable id)where
                                 orderBy: (nullable NSArray*)sortDescriptors
+                              returning: (nullable NSArray*)returning
                                   error: (NSError**)error;
 
 /** Creates a value index (type kCBLValueIndex) on a given document property.

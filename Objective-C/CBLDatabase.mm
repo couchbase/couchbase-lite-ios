@@ -431,17 +431,19 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 - (nullable CBLQuery*) createQuery: (nullable id)query
                              error: (NSError**)outError
 {
-    return [self createQueryWhere: query orderBy: nil error: outError];
+    return [self createQueryWhere: query orderBy: nil returning: nil error: outError];
 }
 
 
 - (nullable CBLQuery*) createQueryWhere: (nullable id)where
                                 orderBy: (nullable NSArray*)sortDescriptors
+                              returning: (nullable NSArray*)returning
                                   error: (NSError**)outError
 {
     return [[CBLQuery alloc] initWithDatabase: self
                                         where: where
                                       orderBy: sortDescriptors
+                                    returning: returning
                                         error: outError];
 }
 
@@ -459,7 +461,7 @@ static NSString* databasePath(NSString* name, NSString* dir) {
                  error: (NSError**)outError
 {
     static_assert(sizeof(CBLIndexOptions) == sizeof(C4IndexOptions), "Index options incompatible");
-    NSData* json = [CBLQuery encodeIndexExpressions: expressions error: outError];
+    NSData* json = [CBLQuery encodeExpressionsToJSON: expressions error: outError];
     if (!json)
         return false;
     C4Error c4err;
@@ -476,7 +478,7 @@ static NSString* databasePath(NSString* name, NSString* dir) {
                   type: (CBLIndexType)type
                  error: (NSError**)outError
 {
-    NSData* json = [CBLQuery encodeIndexExpressions: expressions error: outError];
+    NSData* json = [CBLQuery encodeExpressionsToJSON: expressions error: outError];
     if (!json)
         return false;
     C4Error c4err;

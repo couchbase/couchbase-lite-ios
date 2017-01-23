@@ -12,6 +12,7 @@
 
 extern "C" {
 #import "MYErrorUtils.h"
+#import "Test.h"
 }
 
 #define kBadQuerySpecError -1
@@ -21,6 +22,60 @@ extern "C" {
 
 
 @implementation CBLQuery (Predicates)
+
+
+// Translates an NSPredicate into the JSON-dictionary equivalent of a WHERE clause
++ (id) encodePredicate: (NSPredicate*)pred
+                 error: (NSError**)outError
+{
+    return EncodePredicate(pred, outError);
+}
+
+
+// Translates an NSExpression into its LiteCore JSON-array equivalent
++ (id) encodeExpression: (NSExpression*)expr
+                  error: (NSError**)outError
+{
+    return EncodeExpression(expr, outError);
+}
+
+
+// Encodes an array of NSExpressions (or NSStrings that compile into them) into JSON format.
++ (NSArray*) encodeExpressions: (NSArray*)exprs
+                         error: (NSError**)outError
+{
+    NSMutableArray* result = [NSMutableArray new];
+    for (id r in exprs) {
+        id jsonObj = nil;
+        if ([r isKindOfClass: [NSArray class]]) {
+            jsonObj = r;
+        } else {
+            NSExpression* expr = nil;
+            if ([r isKindOfClass: [NSString class]]) {
+                expr = [NSExpression expressionWithFormat: r arguments: nil];
+            } else {
+                Assert([r isKindOfClass: [NSExpression class]]);
+                expr = r;
+            }
+            jsonObj = [self encodeExpression: expr error: outError];
+            if (!jsonObj)
+                return nil;
+        }
+        [result addObject: jsonObj];
+    }
+    return result;
+}
+
+
+// Encodes an array of expressions all the way into JSON NSData.
++ (NSData*) encodeExpressionsToJSON: (NSArray<NSExpression*>*)expressions
+                              error: (NSError**)outError
+{
+    NSArray* exprs = [self encodeExpressions: expressions error: outError];
+    if (!exprs)
+        return nil;
+    return [NSJSONSerialization dataWithJSONObject: exprs options: 0 error: outError];
+}
 
 
 // https://github.com/couchbase/couchbase-lite-core/wiki/JSON-Query-Schema
@@ -68,29 +123,6 @@ static NSDictionary* const  kFunctionNames = @{ @"sum:":           @"ARRAY_SUM()
                                                 @"valueForKeyPath:":        @".",
                                                 @"objectFrom:withIndex:":   @"[]",
                                               };
-
-
-// Translates an NSPredicate into the JSON-dictionary equivalent of a WHERE clause
-+ (id) encodePredicate: (NSPredicate*)pred
-                 error: (NSError**)outError
-{
-    return EncodePredicate(pred, outError);
-}
-
-
-// Translates an NSExpression into its JSON equivalent
-+ (NSData*) encodeIndexExpressions: (NSArray<NSExpression*>*)expressions
-                             error: (NSError**)outError
-{
-    NSMutableArray *array = [NSMutableArray new];
-    for (NSExpression* expr in expressions) {
-        id encoded = EncodeExpression(expr, outError);
-        if (!encoded)
-            return nil;
-        [array addObject: encoded];
-    }
-    return [NSJSONSerialization dataWithJSONObject: array options: 0 error: outError];
-}
 
 
 // Encodes an NSPredicate.
@@ -321,6 +353,9 @@ static bool isPredicateUtilities(NSExpression *expr) {
         && [NSStringFromClass((Class)[expr.constantValue class])
                                                         isEqualToString: @"_NSPredicateUtilities"];
 }
+
+
+#pragma mark - DEBUGGING UTILITIES:
 
 
 #if DEBUG
