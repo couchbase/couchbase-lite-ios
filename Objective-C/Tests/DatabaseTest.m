@@ -26,8 +26,11 @@
     options.directory = dir;
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" options: options error: &error];
     AssertNotNil(db, @"Couldn't open db: %@", error);
-    
-    [CBLDatabase deleteDatabase: @"db" inDirectory: dir error: nil];
+
+    bool ok = [db close: &error];
+    XCTAssert(ok, @"Couldn't close db: %@", error);
+    ok = [CBLDatabase deleteDatabase: @"db" inDirectory: dir error: nil];
+    XCTAssert(ok, @"Couldn't delete closed database: %@", error);
 }
 
 
