@@ -123,10 +123,11 @@
     NSArray* expectedEmails = @[ @[@"monte.mihlfeld@nosql-matters.org"],
                                  @[@"jennefer.menning@nosql-matters.org", @"jennefer@nosql-matters.org"],
                                  @[@"stephen.jakovac@nosql-matters.org"] ];
+
     [self loadJSONResource: @"names_100"];
     NSError *error;
     CBLQuery *q = [self.db createQueryWhere: @"contact.address.state == $STATE"
-                                    orderBy: @[@".contact.address.zip"]
+                                    orderBy: @[@"contact.address.zip"]
                                   returning: @[@"contact.address.zip", @"contact.email"]
                                       error: &error];
     XCTAssert(q, @"Couldn't create query: %@", error);
@@ -139,6 +140,27 @@
         XCTAssertEqualObjects(email, expectedEmails[n-1]);
     }];
     XCTAssertEqual(numRows, 3llu);
+}
+
+
+- (void) test05_FTS {
+    [self loadJSONResource: @"sentences"];
+    NSError* error;
+    XCTAssert([_db createIndexOn: @[@"sentence"] type: kCBLFullTextIndex options: NULL error: &error]);
+    CBLQuery *q = [self.db createQueryWhere: @"sentence matches 'Dummie woman'"
+                                    orderBy: @[@"-rank(sentence)"]
+                                  returning: nil
+                                      error: &error];
+    uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+        CBLFullTextQueryRow* ftsRow = (id)row;
+        NSString* text = ftsRow.fullTextMatched;
+        NSLog(@"    full text = \"%@\"", text);
+        NSLog(@"    matchCount = %u", (unsigned)ftsRow.matchCount);
+        XCTAssert([text containsString: @"Dummie"]);
+        XCTAssert([text containsString: @"woman"]);
+        XCTAssertEqual(ftsRow.matchCount, 2ul);
+    }];
+    XCTAssertEqual(numRows, 2ull);
 }
 
 

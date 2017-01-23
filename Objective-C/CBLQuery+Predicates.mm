@@ -52,7 +52,7 @@ extern "C" {
         } else {
             NSExpression* expr = nil;
             if ([r isKindOfClass: [NSString class]]) {
-                expr = [NSExpression expressionWithFormat: r arguments: nil];
+                expr = [NSExpression expressionWithFormat: r argumentArray: @[]];
             } else {
                 Assert([r isKindOfClass: [NSExpression class]]);
                 expr = r;

@@ -16,9 +16,15 @@
 #import "c4DBQuery.h"
 #import "Fleece.h"
 extern "C" {
+    #import "MYErrorUtils.h"
     #import "Test.h"
 }
 
+
+#define kBadQuerySpecError -1
+#define CBLErrorDomain @"CouchbaseLite"
+#define mkError(ERR, FMT, ...)  MYReturnError(ERR, kBadQuerySpecError, CBLErrorDomain, \
+                                              FMT, ## __VA_ARGS__)
 
 template <typename T>
 static inline T* _Nonnull  assertNonNull(T* _Nullable t) {
@@ -116,22 +122,9 @@ C4LogDomain QueryLog;
     }
 
     if (sortDescriptors) {
-        NSMutableArray* sorts = [NSMutableArray new];
-        for (id sd in sortDescriptors) {
-            id key;
-            if ([sd isKindOfClass: [NSString class]]) {
-                if ([sd hasPrefix: @"-"])
-                    key = @[@"DESC", [sd substringFromIndex: 1]];
-                else
-                    key = sd;
-            } else {
-                NSSortDescriptor* sort = sd;
-                key = sort.key;
-                if (!sort.ascending)
-                    key = @[@"DESC", key];
-            }
-            [sorts addObject: key];
-        }
+        NSArray* sorts = [self encodeSortDescriptors: sortDescriptors error: outError];
+        if (!sorts)
+            return nil;
         q[@"ORDER BY"] = sorts;
     }
 
@@ -143,6 +136,43 @@ C4LogDomain QueryLog;
     }
 
     return [NSJSONSerialization dataWithJSONObject: q options: 0 error: outError];
+}
+
+
++ (NSArray*) encodeSortDescriptors: (NSArray*)sortDescriptors error: (NSError**)outError {
+    NSMutableArray* sorts = [NSMutableArray new];
+    for (id sd in sortDescriptors) {
+        NSString* keyStr;
+        bool descending = false;
+        // Each item of sortDescriptors can be an NSString or NSSortDescriptor:
+        if ([sd isKindOfClass: [NSString class]]) {
+            descending = [sd hasPrefix: @"-"];
+            keyStr = descending ? [sd substringFromIndex: 1] : sd;
+        } else {
+            Assert([sd isKindOfClass: [NSSortDescriptor class]]);
+            descending = ![sd ascending];
+            keyStr = [sd key];
+        }
+
+        // Convert to JSON as a rank() call or a key-path:
+        id key;
+        if ([keyStr hasPrefix: @"rank("]) {
+            if (![keyStr hasSuffix: @")"])
+                return mkError(outError, @"Invalid rank sort descriptor"), nil;
+            keyStr = [keyStr substringWithRange: {5, [keyStr length] - 6}];
+            NSExpression* expr = [NSExpression expressionWithFormat: keyStr argumentArray: @[]];
+            key = [self encodeExpression: expr error: outError];
+            if (!key)
+                return nil;
+        } else {
+            key = @[ [@"." stringByAppendingString: keyStr] ];
+        }
+        
+        if (descending)
+            key = @[@"DESC", key];
+        [sorts addObject: key];
+    }
+    return sorts;
 }
 
 
