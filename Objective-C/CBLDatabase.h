@@ -11,6 +11,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+extern NSString* const kCBLDatabaseChangeNotification;
+extern NSString* const kCBLDatabaseChangesUserInfoKey;
+extern NSString* const kCBLDatabaseLastSequenceUserInfoKey;
+extern NSString* const kCBLDatabaseIsExternalUserInfoKey;
 
 /** Types of indexes. */
 typedef NS_ENUM(uint32_t, CBLIndexType) {
@@ -27,7 +31,6 @@ typedef struct {
                                         ///<    NULL for current locale, "" to disable stemming.
     BOOL ignoreDiacritics;              ///< Full-text: True to ignore accents/diacritical marks.
 } CBLIndexOptions;
-
 
 /** Options for opening a database. All properties default to NO or nil. */
 @interface CBLDatabaseOptions : NSObject <NSCopying>

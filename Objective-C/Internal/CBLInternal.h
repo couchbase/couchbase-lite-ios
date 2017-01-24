@@ -57,6 +57,9 @@ NS_ASSUME_NONNULL_BEGIN
                             docID: (NSString*)docID
                         mustExist: (BOOL)mustExist
                             error: (NSError**)outError;
+
+- (void)changedExternally;
+
 @end
 
 /// CBLSubdocument:

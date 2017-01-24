@@ -23,6 +23,7 @@ BOOL convertError(const C4Error&, NSError **outError);
 BOOL convertError(const FLError&, NSError **outError);
 
 NSString* slice2string(FLSlice s);
+NSString* slice2string(C4Slice s);
 
 C4EncryptionKey symmetricKey2C4Key(CBLSymmetricKey* key);
 

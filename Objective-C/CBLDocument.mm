@@ -18,6 +18,12 @@
 #import "CBLStringBytes.h"
 #import "CBLJSON.h"
 #import "CBLInternal.h"
+#include "c4Observer.h"
+
+
+NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChangeNotification";
+NSString* const kCBLDocumentSavedNotification = @"CBLDocumentSavedNotification";
+NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserInfoKey";
 
 
 @implementation CBLDocument {
@@ -123,7 +129,37 @@
 }
 
 
+#pragma mark - INTERNAL
+
+
+- (void)changedExternally {
+    // The current API design decision is that when a document has unsaved changes, it should
+    // not update with external changes and should not post notifications. Instead the conflict
+    // resolution will happen when the app saves the document.
+
+    if(!self.hasChanges) {
+        [self loadDoc:nil mustExist:YES];
+        [self postChangedNotificationExternal:YES];
+    }
+}
+
+
 #pragma mark - PRIVATE
+
+
+- (void)noteChanged {
+    self.hasChanges = YES;
+    [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDocumentChangeNotification
+                                                        object: self];
+}
+
+
+- (void)postChangedNotificationExternal:(BOOL)external {
+    NSDictionary* userInfo = external ? @{kCBLDocumentIsExternalUserInfoKey: @YES} : nil;
+    [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDocumentSavedNotification
+                                                        object: self
+                                                      userInfo: userInfo];
+}
 
 
 - (BOOL) loadDoc: (NSError**)outError mustExist: (BOOL)mustExist {
@@ -210,6 +246,7 @@
     }
     
     [self setC4Doc: newDoc];
+    [self postChangedNotificationExternal:NO];
     if (deletion)
         [self revert];
     
