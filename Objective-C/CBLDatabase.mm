@@ -223,6 +223,7 @@ static void logCallback(C4LogDomain domain, C4LogLevel level, C4Slice message) {
     C4Error err;
     if (!c4db_delete(_c4db, &err))
         return convertError(err, outError);
+    c4db_free(_c4db);
     _c4db = nullptr;
     return true;
 }

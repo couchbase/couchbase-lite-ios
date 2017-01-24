@@ -27,10 +27,9 @@
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" options: options error: &error];
     AssertNotNil(db, @"Couldn't open db: %@", error);
 
-    bool ok = [db close: &error];
-    XCTAssert(ok, @"Couldn't close db: %@", error);
-    ok = [CBLDatabase deleteDatabase: @"db" inDirectory: dir error: nil];
-    XCTAssert(ok, @"Couldn't delete closed database: %@", error);
+    Assert([db close: &error], @"Couldn't close db: %@", error);
+    Assert([CBLDatabase deleteDatabase: @"db" inDirectory: dir error: &error],
+           @"Couldn't delete closed database: %@", error);
 }
 
 
@@ -39,7 +38,7 @@
     Assert([[NSFileManager defaultManager] fileExistsAtPath: path]);
     
     NSError* error;
-    [self.db deleteDatabase: &error];
+    Assert([self.db deleteDatabase: &error], @"Couldn't delete db: %@", error);
     AssertFalse([[NSFileManager defaultManager] fileExistsAtPath: path]);
 }
 
