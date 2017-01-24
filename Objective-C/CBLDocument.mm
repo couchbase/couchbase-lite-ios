@@ -126,6 +126,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
         [super setHasChanges: hasChanges];
         [_database document: self hasUnsavedChanges: hasChanges];
     }
+    [self noteChanged];
 }
 
 
@@ -148,7 +149,6 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 
 
 - (void)noteChanged {
-    self.hasChanges = YES;
     [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDocumentChangeNotification
                                                         object: self];
 }

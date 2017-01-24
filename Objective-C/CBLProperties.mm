@@ -195,7 +195,7 @@ static NSNumber* numberProperty(id value) {
     }
     
     _changedNames = nil;
-    _hasChanges = NO;
+    self.hasChanges = NO;
 }
 
 
