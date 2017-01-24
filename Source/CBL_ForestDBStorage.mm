@@ -951,31 +951,21 @@ static inline void cleanup_C4ExpiryEnumerator(C4ExpiryEnumerator **e) { c4exp_fr
     *outStatus = [self inTransaction: ^CBLStatus {
         NSString* docID = inDocID;
         
-        if (inPrevRevID && properties.cbl_attachments) { // Check if an existing doc?
-            CBLStatus status;
-            CLEANUP(C4Document)* curDoc = [self getC4Doc: docID status: &status];
-            if (!curDoc)
-                return status;
-            
-            // Select the current revision:
-            status = selectRev(curDoc, inPrevRevID, NO);
-            if (CBLStatusIsError(status))
-                return status;
-            
+        NSDictionary* attachments = properties.cbl_attachments;
+        if (attachments) {
             // https://github.com/couchbase/couchbase-lite-ios/issues/1440
             // Need to ensure revpos is correct for a revision inserted on top
             // of a deletion revision:
-            if (curDoc->selectedRev.flags & kRevDeleted) {
-                NSDictionary* attachments = properties.cbl_attachments;
-                if (attachments) {
-                    NSMutableDictionary* editedAttachments = [attachments mutableCopy];
-                    for (NSString* name in attachments) {
-                        NSMutableDictionary* nuMeta = [attachments[name] mutableCopy];
-                        nuMeta[@"revpos"] = @(inPrevRevID.generation + 1);
-                        editedAttachments[name] = nuMeta;
-                    }
-                    properties[@"_attachments"] = editedAttachments;
+            CLEANUP(C4Document)* curDoc = [self getC4Doc: docID status: nil];
+            if (curDoc && (curDoc->selectedRev.flags & kRevDeleted)) {
+                CBL_RevID* prevRevID = slice2revID(curDoc->revID);
+                NSMutableDictionary* editedAttachments = [attachments mutableCopy];
+                for (NSString* name in attachments) {
+                    NSMutableDictionary* nuMeta = [attachments[name] mutableCopy];
+                    nuMeta[@"revpos"] = @(prevRevID.generation + 1);
+                    editedAttachments[name] = nuMeta;
                 }
+                properties[@"_attachments"] = editedAttachments;
             }
         }
         
