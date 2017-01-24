@@ -431,7 +431,7 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 - (nullable CBLQuery*) createQuery: (nullable id)query
                              error: (NSError**)outError
 {
-    return [self createQueryWhere: query orderBy: nil returning: nil error: outError];
+    return [self createQueryWhere: query orderBy: @[@"_id"] returning: nil error: outError];
 }
 
 
