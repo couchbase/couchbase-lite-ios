@@ -199,10 +199,6 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 - (void) propertiesDidChange { }
 
-
-#pragma mark - PRIVATE:
-
-
 - (nullable NSDictionary*) savedProperties {
     if (_properties && !self.hasChanges)
         return _properties;
@@ -211,6 +207,9 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
     else
         return _rootProps;
 }
+
+
+#pragma mark - PRIVATE:
 
 
 - (void) mutateProperties {

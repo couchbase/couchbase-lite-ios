@@ -32,6 +32,24 @@ typedef struct {
     BOOL ignoreDiacritics;              ///< Full-text: True to ignore accents/diacritical marks.
 } CBLIndexOptions;
 
+
+/** An interface definition for an object that can resolve a conflict
+    between two edits of a document */
+@protocol CBLConflictResolver <NSObject>
+
+/** Resolves the two edits of a document against their common base
+    @param source The file that is already stored locally
+    @param target The file that is attempting to be written
+    @param base The common parent of these two
+    @result The resolved set of properties for the document to store
+ */
+- (NSDictionary *)resolveSource:(NSDictionary *)source
+                  withTarget:(NSDictionary *)target
+                  andBase:(NSDictionary *)base;
+
+@end
+
+
 /** Options for opening a database. All properties default to NO or nil. */
 @interface CBLDatabaseOptions : NSObject <NSCopying>
 
@@ -64,6 +82,9 @@ typedef struct {
 
 /** A CouchbaseLite database. */
 @interface CBLDatabase : NSObject
+
+/** The default conflict resolver for this database */
+@property (nonatomic) id<CBLConflictResolver> conflictResolver;
 
 /** Initializes a CouchbaseLite database with a given name and the default database options.
  @param name  The name of the database. May NOT contain capital letters!

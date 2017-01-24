@@ -31,7 +31,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     C4Document* _c4doc;
 }
 
-@synthesize documentID=_documentID, database=_database;
+@synthesize documentID=_documentID, database=_database, conflictResolver = _conflictResolver;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db
@@ -76,12 +76,12 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 
 
 - (BOOL) save: (NSError**)outError {
-    return [self saveWithConflictResolver: nil deletion: NO error: outError];
+    return [self saveWithConflictResolver: [self getConflictResolver] deletion: NO error: outError];
 }
 
 
 - (BOOL) deleteDocument: (NSError**)outError {
-    return [self saveWithConflictResolver: nil deletion: YES error: outError];
+    return [self saveWithConflictResolver: [self getConflictResolver] deletion: YES error: outError];
 }
 
 
@@ -211,22 +211,16 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     }
 }
 
+- (id<CBLConflictResolver>)getConflictResolver {
+    if(_conflictResolver) {
+        return _conflictResolver;
+    }
+    
+    return [self.database conflictResolver];
+}
 
-- (BOOL) saveWithConflictResolver: (id)resolver
-                         deletion: (bool)deletion
-                            error: (NSError**)outError
-{
-    // TODO: Support Conflict Resolution:
-    
-    if (!self.hasChanges && !deletion && [self exists])
-        return YES;
-    
-    C4Transaction transaction(_c4db);
-    if (!transaction.begin())
-        return convertError(transaction.error(),  outError);
-    
+- (BOOL)save:(NSDictionary *)propertiesToSave into:(C4Document **)outDoc asDelete:(BOOL)deletion error:(NSError **)error {
     // Encode _properties to data:
-    NSDictionary* propertiesToSave = deletion ? nil : self.properties;
     CBLStringBytes docTypeSlice;
     C4DocPutRequest put = {
         .docID = _c4doc->docID,
@@ -242,8 +236,11 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
         FLError flErr;
         auto body = FLEncoder_Finish(enc, &flErr);
         FLEncoder_Free(enc);
-        if (!body.buf)
-            return convertError(flErr, outError);
+        if (!body.buf) {
+            *outDoc = nullptr;
+            return convertError(flErr, error);
+        }
+        
         put.body = {body.buf, body.size};
         docTypeSlice = self[@"type"];
         put.docType = docTypeSlice;
@@ -254,8 +251,46 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     C4Document* newDoc = c4doc_put(_c4db, &put, nullptr, &err);
     c4slice_free(put.body);
     
-    if (!newDoc)
-        return convertError(err, outError);
+    if (!newDoc && err.code != kC4ErrorConflict) {
+        *outDoc = nullptr;
+        return convertError(err, error);
+    }
+    
+    *outDoc = newDoc;
+    return YES;
+}
+
+
+- (BOOL) saveWithConflictResolver: (id<CBLConflictResolver>)resolver
+                         deletion: (bool)deletion
+                            error: (NSError**)outError
+{
+    if (!self.hasChanges && !deletion && [self exists])
+        return YES;
+    
+    C4Transaction transaction(_c4db);
+    if (!transaction.begin())
+        return convertError(transaction.error(),  outError);
+    
+    C4Document* newDoc;
+    NSDictionary* propertiesToSave = deletion ? nil : self.properties;
+    if(![self save:propertiesToSave into:&newDoc asDelete:deletion error:outError]) {
+        return NO;
+    }
+
+    if(!newDoc && !deletion) {
+        C4Error err;
+        C4Document *currentDoc = c4doc_get(_c4db, _c4doc->docID, true, &err);
+        FLValue currentRoot = FLValue_FromTrustedData({currentDoc->selectedRev.body.buf, currentDoc->selectedRev.body.size});
+        NSDictionary *source = FLValue_GetNSObject(currentRoot, [self sharedKeys], nil);
+        NSDictionary *resolved = [resolver resolveSource:source withTarget:propertiesToSave andBase:self.savedProperties];
+        _c4doc = currentDoc;
+        if(![self save:resolved into:&newDoc asDelete:deletion error:outError]) {
+            return NO;
+        }
+        
+        [self resetChanges];
+    }
     
     // Save succeeded; now commit:
     if (!transaction.commit()) {

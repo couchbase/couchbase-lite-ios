@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLProperties.h"
-@class CBLDatabase;
+#import "CBLDatabase.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -20,6 +20,9 @@ extern NSString* const kCBLDocumentIsExternalUserInfoKey;
 @interface CBLDocument : CBLProperties
 
 - (instancetype) init NS_UNAVAILABLE;
+
+/** The conflict resolver, if any, specific to this document */
+@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
 
 /** The document's ID. */
 @property (readonly, nonatomic) NSString* documentID;

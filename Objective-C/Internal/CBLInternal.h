@@ -42,6 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 // Subclass should implement this to provide the sharedKeys.
 - (FLSharedKeys) sharedKeys;
 
+- (nullable NSDictionary *)savedProperties;
+
 @end
 
 /// CBLDocument:
