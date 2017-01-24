@@ -39,10 +39,22 @@
 }
 
 
-- (void) setProperties: (NSDictionary*)properties {
+- (void) setProperties: (nullable NSDictionary*)properties {
     _properties = [self convertProperties: properties];
     _changedNames = nil;
-    [self markChangedKeys: [_properties allKeys]];
+    
+    __block NSMutableArray* changedKeys = [NSMutableArray array];
+    if (properties)
+        [changedKeys addObjectsFromArray: [properties allKeys]];
+    
+    if (FLDict_Count(_root) > 0) {
+        NSSet* keys = [NSSet setWithArray: changedKeys];
+        [self iterateFleeceDict: _root withBlock: ^(NSString *key, FLValue value) {
+            if (![keys containsObject: keys])
+                [changedKeys addObject: key];
+        }];
+    }
+    [self markChangedKeys: changedKeys];
 }
 
 
@@ -54,8 +66,12 @@ static NSNumber* numberProperty(id value) {
 - (BOOL) booleanForKey: (NSString*)key {
     id v = _properties[key];
     if (v) {
-        id n = numberProperty(v);
-        return n ? [n boolValue] : YES;
+        if ([v isKindOfClass: [NSNull class]])
+            return NO;
+        else {
+            id n = numberProperty(v);
+            return n ? [n boolValue] : YES;
+        }
     } else
         return FLValue_AsBool([self fleeceValueForKey: key]);
 }
@@ -63,7 +79,7 @@ static NSNumber* numberProperty(id value) {
 
 - (nullable NSDate*) dateForKey: (NSString*)key {
     NSString* dateStr = [self stringForKey: key];
-    return dateStr ? [CBLJSON dateWithJSONObject: dateStr] : nil;
+    return [CBLJSON dateWithJSONObject: dateStr];
 }
 
 
@@ -91,14 +107,12 @@ static NSNumber* numberProperty(id value) {
 
 
 - (nullable NSString*) stringForKey: (NSString*)key {
-    id v = self[key];
-    return v ? $castIf(NSString, v) : nil;
+    return $castIf(NSString, self[key]);
 }
 
 
 - (nullable CBLSubdocument*) subdocumentForKey: (NSString*)key {
-    id v = self[key];
-    return v ? $castIf(CBLSubdocument, v) : nil;
+    return $castIf(CBLSubdocument, self[key]);
 }
 
 
@@ -144,8 +158,8 @@ static NSNumber* numberProperty(id value) {
 
 
 - (nullable id) objectForKeyedSubscript: (NSString*)key {
-    id obj = _properties ? _properties[key] : nil;
-    if (!obj) {
+    id obj = _properties[key];
+    if (!obj && ![_changedNames containsObject: key]) {
         auto value = [self fleeceValueForKey: key];
         if (value == nullptr)
             return nil;
@@ -169,8 +183,8 @@ static NSNumber* numberProperty(id value) {
 - (void) revert {
     for (NSString* key in _changedNames) {
         id value = _properties[key];
-        if ([value isKindOfClass: [CBLSubdocument class]]) {
-            CBLSubdocument* subdoc = $cast(CBLSubdocument, value);
+        CBLSubdocument* subdoc = $castIf(CBLSubdocument, value);
+        if (subdoc) {
             [subdoc revert];
             if (!subdoc.root) {
                 [subdoc invalidate];
@@ -242,7 +256,7 @@ static NSNumber* numberProperty(id value) {
 
 
 /** Convert properties content into Subdocuments where dictionaries are found.*/
-- (NSMutableDictionary*) convertProperties: (NSDictionary*)properties {
+- (NSMutableDictionary*) convertProperties: (nullable NSDictionary*)properties {
     NSMutableDictionary* result = [properties mutableCopy];
     for (NSString* key in properties) {
         id oldValue = _properties ? _properties[key] : nil;
@@ -294,6 +308,7 @@ static NSNumber* numberProperty(id value) {
              [value isKindOfClass: [NSString class]] ||
              [value isKindOfClass: [NSDictionary class]] ||
              [value isKindOfClass: [NSArray class]]) ||
+            ([value isKindOfClass: [NSNull class]]) ||
             ([value isKindOfClass: [NSDate class]] && !inArray) ||
             ([value isKindOfClass: [CBLSubdocument class]] && !inArray));
 }
@@ -308,24 +323,17 @@ static NSNumber* numberProperty(id value) {
     }
     
     if (_root) {
-        int count = FLDict_Count(_root);
         if (!result)
-            result = [NSMutableDictionary dictionaryWithCapacity: count];
-        if (count > 0) {
-            FLDictIterator iter;
-            FLDictIterator_Begin(_root, &iter);
-            do {
-                NSString* key = [self fleeceValueToKeyString: FLDictIterator_GetKey(&iter)];
-                if (![_changedNames containsObject: key] && !_properties[key]) {
-                    id value = [self fleeceValueToObject: FLDictIterator_GetValue(&iter)
-                                                  forKey: key asJson: asJson];
-                    if (value) {
-                        [self cacheValue: value forKey: key changed: NO];
-                        result[key] = value;
-                    }
+            result = [NSMutableDictionary dictionaryWithCapacity: FLDict_Count(_root)];
+        [self iterateFleeceDict: _root withBlock: ^(NSString *key, FLValue value) {
+            if (![_changedNames containsObject: key] && !_properties[key]) {
+                id obj = [self fleeceValueToObject: value forKey: key asJson: asJson];
+                if (obj) {
+                    [self cacheValue: obj forKey: key changed: NO];
+                    result[key] = obj;
                 }
-            } while (FLDictIterator_Next(&iter));
-        }
+            }
+        }];
     }
     return result;
 }
@@ -480,6 +488,19 @@ static NSNumber* numberProperty(id value) {
     if (!key)
         key = slice2string(FLValue_AsString(value));
     return key;
+}
+
+
+- (void) iterateFleeceDict: (FLDict)dict withBlock: (void(^)(NSString* key, FLValue value))block {
+    if (FLDict_Count(dict) > 0) {
+        FLDictIterator iter;
+        FLDictIterator_Begin(_root, &iter);
+        do {
+            NSString* k = [self fleeceValueToKeyString: FLDictIterator_GetKey(&iter)];
+            FLValue v = FLDictIterator_GetValue(&iter);
+            block(k, v);
+        } while (FLDictIterator_Next(&iter));
+    }
 }
 
 

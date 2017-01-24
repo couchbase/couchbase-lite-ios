@@ -78,54 +78,6 @@
 }
 
 
-- (void) testPropertyAccessors {
-    CBLSubdocument* subdoc = [CBLSubdocument subdocument];
-    
-    // Setter:
-    // Premitives:
-    [subdoc setBoolean: YES forKey: @"bool"];
-    [subdoc setDouble: 1.1 forKey: @"double"];
-    [subdoc setFloat: 1.2f forKey: @"float"];
-    [subdoc setInteger: 2 forKey: @"integer"];
-    
-    // Objects:
-    [subdoc setObject: @"str" forKey: @"string"];
-    [subdoc setObject: @(YES) forKey: @"boolObj"];
-    [subdoc setObject: @(1) forKey: @"number"];
-    [subdoc setObject: @[@"string", @(1), @(YES), @{@"foo": @"bar"}] forKey: @"array"];
-    
-    // Date:
-    NSDate* date = [NSDate date];
-    [subdoc setObject: date forKey: @"date"];
-    
-    // Getter:
-    // Primitives:
-    AssertEqual([subdoc booleanForKey: @"bool"], YES);
-    AssertEqual([subdoc doubleForKey: @"double"], 1.1);
-    AssertEqual([subdoc floatForKey: @"float"], @(1.2).floatValue);
-    AssertEqual([subdoc integerForKey: @"integer"], 2);
-    
-    // Objects:
-    AssertEqualObjects([subdoc stringForKey: @"string"], @"str");
-    AssertEqualObjects([subdoc objectForKey: @"boolObj"], @(YES));
-    AssertEqualObjects([subdoc objectForKey: @"number"], @(1));
-    AssertEqualObjects([subdoc objectForKey: @"array"],
-                       (@[@"string", @(1), @(YES), @{@"foo": @"bar"}]));
-    
-    // Date:
-    AssertEqualObjects([CBLJSON JSONObjectWithDate: [subdoc dateForKey: @"date"]],
-                       [CBLJSON JSONObjectWithDate: date]);
-}
-
-
-- (void) testUnsupportedDataType {
-    CBLSubdocument* subdoc = [CBLSubdocument subdocument];
-    XCTAssertThrows([subdoc setObject: [[NSMapTable alloc] init] forKey: @"table"]);
-    XCTAssertThrows([subdoc setObject: @[[NSDate date]] forKey: @"dates"]);
-    XCTAssertThrows([subdoc setObject: @[[CBLSubdocument subdocument]] forKey: @"subdocs"]);
-}
-
-
 - (void) testNestedSubdocs {
     CBLDocument* doc = [self.db documentWithID: @"doc1"];
     AssertNil(doc.properties);
@@ -197,7 +149,6 @@
     NSError* error;
     Assert([doc save: &error], @"Saving error: %@", error);
 }
-
 
 
 - (void) testReplaceNonDict {

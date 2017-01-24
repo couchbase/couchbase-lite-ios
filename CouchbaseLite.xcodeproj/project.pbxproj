@@ -50,6 +50,7 @@
 		937EAAF81E2EAD1500133693 /* CBLSubdocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 937EAAF61E2EAD1500133693 /* CBLSubdocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		937EAAF91E2EAD1500133693 /* CBLSubdocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 937EAAF71E2EAD1500133693 /* CBLSubdocument.m */; };
 		937EAAFB1E2EE0E200133693 /* SubdocumentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 937EAAFA1E2EE0E200133693 /* SubdocumentTest.m */; };
+		937EAB2E1E37E3BA00133693 /* PropertiesTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 937EAB2D1E37E3BA00133693 /* PropertiesTest.m */; };
 		9380C6EF1E15B8C20011E8CB /* CBLDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 9380C6ED1E15B8C20011E8CB /* CBLDocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9380C6F01E15B8C20011E8CB /* CBLDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9380C6EE1E15B8C20011E8CB /* CBLDocument.mm */; };
 		9380C71C1E16E7CE0011E8CB /* CBLProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 9380C6FE1E15BB1D0011E8CB /* CBLProperties.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -202,6 +203,7 @@
 		937EAAF61E2EAD1500133693 /* CBLSubdocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLSubdocument.h; sourceTree = "<group>"; };
 		937EAAF71E2EAD1500133693 /* CBLSubdocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLSubdocument.m; sourceTree = "<group>"; };
 		937EAAFA1E2EE0E200133693 /* SubdocumentTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SubdocumentTest.m; sourceTree = "<group>"; };
+		937EAB2D1E37E3BA00133693 /* PropertiesTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PropertiesTest.m; sourceTree = "<group>"; };
 		9380C6ED1E15B8C20011E8CB /* CBLDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDocument.h; sourceTree = "<group>"; };
 		9380C6EE1E15B8C20011E8CB /* CBLDocument.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLDocument.mm; sourceTree = "<group>"; };
 		9380C6FE1E15BB1D0011E8CB /* CBLProperties.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLProperties.h; sourceTree = "<group>"; };
@@ -392,6 +394,7 @@
 				9378C5901E25B3F0001BB196 /* DatabaseTest.m */,
 				9378C59D1E269F14001BB196 /* DocumentTest.m */,
 				937EAAFA1E2EE0E200133693 /* SubdocumentTest.m */,
+				937EAB2D1E37E3BA00133693 /* PropertiesTest.m */,
 				27EF6A931E298E26004748DF /* QueryTest.m */,
 				27EF6A951E2AC609004748DF /* names_100.json */,
 				93BFCD951E0380A300E52F8A /* Info.plist */,
@@ -650,6 +653,7 @@
 				9378C5971E25B473001BB196 /* CBLTestCase.m in Sources */,
 				937EAAFB1E2EE0E200133693 /* SubdocumentTest.m in Sources */,
 				9378C5911E25B3F0001BB196 /* DatabaseTest.m in Sources */,
+				937EAB2E1E37E3BA00133693 /* PropertiesTest.m in Sources */,
 				9378C59E1E269F14001BB196 /* DocumentTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
