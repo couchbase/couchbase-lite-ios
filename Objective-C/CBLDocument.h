@@ -8,7 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLProperties.h"
-#import "CBLDatabase.h"
+@class CBLDatabase;
+@protocol CBLConflictResolver;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -16,13 +17,11 @@ extern NSString* const kCBLDocumentChangeNotification;
 extern NSString* const kCBLDocumentSavedNotification;
 extern NSString* const kCBLDocumentIsExternalUserInfoKey;
 
+
 /** A CouchbaseLite document. */
 @interface CBLDocument : CBLProperties
 
 - (instancetype) init NS_UNAVAILABLE;
-
-/** The conflict resolver, if any, specific to this document */
-@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
 
 /** The document's ID. */
 @property (readonly, nonatomic) NSString* documentID;
@@ -38,6 +37,9 @@ extern NSString* const kCBLDocumentIsExternalUserInfoKey;
 
 /** Sequence number of the document in the database. */
 @property (readonly) uint64_t sequence;
+
+/** The conflict resolver, if any, specific to this document */
+@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
 
 /** Save the document. */
 - (BOOL) save: (NSError**)outError;

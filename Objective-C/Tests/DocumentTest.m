@@ -14,43 +14,45 @@
 #include "c4Document+Fleece.h"
 #include "Fleece+CoreFoundation.h"
 
-@interface SourceWins : NSObject <CBLConflictResolver>
 
-- (NSDictionary *)resolveSource:(NSDictionary *)source withTarget:(NSDictionary *)target andBase:(NSDictionary *)base;
-
+@interface TheirsWins : NSObject <CBLConflictResolver>
 @end
 
-@implementation SourceWins
+@implementation TheirsWins
 
-- (NSDictionary *)resolveSource:(NSDictionary *)source withTarget:(NSDictionary *)target andBase:(NSDictionary *)base {
-    return source;
+- (NSDictionary *)resolveMine:(NSDictionary *)mine
+                   withTheirs:(NSDictionary *)theirs
+                      andBase:(NSDictionary *)base
+{
+    return theirs;
 }
 
 @end
 
-@interface MergeThenSourceWins : NSObject <CBLConflictResolver>
 
-- (NSDictionary *)resolveSource:(NSDictionary *)source withTarget:(NSDictionary *)target andBase:(NSDictionary *)base;
-
+@interface MergeThenTheirsWins : NSObject <CBLConflictResolver>
 @end
 
-@implementation MergeThenSourceWins
+@implementation MergeThenTheirsWins
 
-- (NSDictionary *)resolveSource:(NSDictionary *)source withTarget:(NSDictionary *)target andBase:(NSDictionary *)base {
+- (NSDictionary *)resolveMine:(NSDictionary *)mine
+                   withTheirs:(NSDictionary *)theirs
+                      andBase:(NSDictionary *)base
+{
     NSMutableDictionary *resolved = [NSMutableDictionary new];
     for (NSString *key in base) {
         resolved[key] = base[key];
     }
     
     NSMutableSet *changed = [NSMutableSet new];
-    for (NSString *key in source) {
-        resolved[key] = source[key];
+    for (NSString *key in theirs) {
+        resolved[key] = theirs[key];
         [changed addObject:key];
     }
     
-    for (NSString *key in target) {
+    for (NSString *key in mine) {
         if(![changed containsObject:key]) {
-            resolved[key] = target[key];
+            resolved[key] = mine[key];
         }
     }
     
@@ -59,12 +61,52 @@
 
 @end
 
+
+@interface GiveUp : NSObject <CBLConflictResolver>
+@end
+
+@implementation GiveUp
+
+- (NSDictionary *)resolveMine:(NSDictionary *)mine
+                   withTheirs:(NSDictionary *)theirs
+                      andBase:(NSDictionary *)base
+{
+    return nil;
+}
+
+@end
+
+
+@interface DoNotResolve : NSObject <CBLConflictResolver>
+@end
+
+@implementation DoNotResolve
+
+- (NSDictionary *)resolveMine:(NSDictionary *)mine
+                   withTheirs:(NSDictionary *)theirs
+                      andBase:(NSDictionary *)base
+{
+    NSAssert(NO, @"Resolver should not have been called!");
+    return nil;
+}
+
+@end
+
+
 @interface DocumentTest : CBLTestCase
 
 @end
 
 
 @implementation DocumentTest
+
+- (void) setUp {
+    [super setUp];
+    // Make sure resolver isn't being called at inappropriate times by defaulting to one that
+    // will raise an exception:
+    self.db.conflictResolver = [DoNotResolve new];
+}
+
 
 - (BOOL)saveProperties:(NSDictionary *)props toDocWithID:(NSString *)docID error:(NSError **)error {
     // Save to database:
@@ -309,9 +351,8 @@
     AssertEqualObjects(doc[@"name"], @"Scott");
 }
 
-- (void)testConflict {
+- (CBLDocument*) setupConflict {
     // Setup a default database conflict resolver
-    self.db.conflictResolver = [SourceWins new];
     CBLDocument* doc = [self.db documentWithID: @"doc1"];
     doc[@"type"] = @"profile";
     doc[@"name"] = @"Scott";
@@ -324,23 +365,30 @@
     BOOL ok = [self saveProperties:properties toDocWithID:[doc documentID] error:&error];
     Assert(ok);
     
-    // Save again, triggering the conflict resolution of the database
+    // Change document in memory, so save will trigger a conflict
     doc[@"name"] = @"Scott Pilgrim";
+    return doc;
+}
+
+- (void)testConflict {
+    self.db.conflictResolver = [TheirsWins new];
+    CBLDocument* doc = [self setupConflict];
+    NSError* error;
     Assert([doc save: &error], @"Saving error: %@", error);
     AssertEqualObjects(doc[@"name"], @"Scotty");
     
     // Get a new document with its own conflict resolver
     doc = [self.db documentWithID: @"doc2"];
-    doc.conflictResolver = [MergeThenSourceWins new];
+    doc.conflictResolver = [MergeThenTheirsWins new];
     doc[@"type"] = @"profile";
     doc[@"name"] = @"Scott";
     Assert([doc save: &error], @"Saving error: %@", error);
     
     // Force a conflict again
-    properties = [doc.properties mutableCopy];
+    NSMutableDictionary* properties = [doc.properties mutableCopy];
     properties[@"type"] = @"bio";
     properties[@"gender"] = @"male";
-    ok = [self saveProperties:properties toDocWithID:[doc documentID] error:&error];
+    BOOL ok = [self saveProperties:properties toDocWithID:[doc documentID] error:&error];
     Assert(ok);
     
     // Save and make sure that the correct conflict resolver won
@@ -353,5 +401,46 @@
     AssertEqualObjects(doc[@"name"], @"Scott");
 }
 
+- (void)testConflictResolverGivesUp {
+    self.db.conflictResolver = [GiveUp new];
+    CBLDocument* doc = [self setupConflict];
+    NSError* error;
+    AssertFalse([doc save: &error], @"Save should have failed!");
+    AssertEqualObjects(error.domain, @"LiteCore");      //TODO: Should have CBL error domain/code
+    AssertEqual(error.code, kC4ErrorConflict);
+    Assert(doc.hasChanges);
+}
+
+- (void)testDeletionConflict {
+    self.db.conflictResolver = [DoNotResolve new];
+    CBLDocument* doc = [self setupConflict];
+    NSError* error;
+    Assert([doc deleteDocument: &error], @"Deletion error: %@", error);
+    Assert(doc.exists);
+    AssertFalse(doc.isDeleted);
+    AssertEqualObjects(doc[@"name"], @"Scotty");
+}
+
+- (void)testConflictMineIsDeeper {
+    self.db.conflictResolver = nil;
+    CBLDocument* doc = [self setupConflict];
+    NSError* error;
+    Assert([doc save: &error], @"Saving error: %@", error);
+    AssertEqualObjects(doc[@"name"], @"Scott Pilgrim");
+}
+
+- (void)testConflictTheirsIsDeeper {
+    self.db.conflictResolver = nil;
+    CBLDocument* doc = [self setupConflict];
+
+    // Add another revision to the conflict, so it'll have a higher generation:
+    NSMutableDictionary *properties = [doc.properties mutableCopy];
+    properties[@"name"] = @"Scott of the Sahara";
+    NSError* error;
+    [self saveProperties:properties toDocWithID:[doc documentID] error:&error];
+
+    Assert([doc save: &error], @"Saving error: %@", error);
+    AssertEqualObjects(doc[@"name"], @"Scott of the Sahara");
+}
 
 @end

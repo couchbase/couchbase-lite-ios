@@ -11,6 +11,15 @@
 #import <Foundation/Foundation.h>
 
 #import "CBLLog.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #import "CollectionUtils.h"
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __OBJC__

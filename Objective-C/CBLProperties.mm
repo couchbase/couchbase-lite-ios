@@ -173,14 +173,8 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (void) setRootDict: (nullable FLDict)root orProperties: (nullable NSDictionary*) props {
-    _root = nullptr, _rootProps = nil;
-    if (root != nullptr)
-        _root = root;
-    if (props)
-        _rootProps = props;
-    
-    // Reset hasChanges flag:
-    self.hasChanges = NO;
+    _root = root;
+    _rootProps = props;
 }
 
 

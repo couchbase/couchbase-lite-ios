@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 @class CBLDocument, CBLQuery;
+@protocol CBLConflictResolver;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -31,23 +32,6 @@ typedef struct {
                                         ///<    NULL for current locale, "" to disable stemming.
     BOOL ignoreDiacritics;              ///< Full-text: True to ignore accents/diacritical marks.
 } CBLIndexOptions;
-
-
-/** An interface definition for an object that can resolve a conflict
-    between two edits of a document */
-@protocol CBLConflictResolver <NSObject>
-
-/** Resolves the two edits of a document against their common base
-    @param source The file that is already stored locally
-    @param target The file that is attempting to be written
-    @param base The common parent of these two
-    @result The resolved set of properties for the document to store
- */
-- (NSDictionary *)resolveSource:(NSDictionary *)source
-                  withTarget:(NSDictionary *)target
-                  andBase:(NSDictionary *)base;
-
-@end
 
 
 /** Options for opening a database. All properties default to NO or nil. */
@@ -82,9 +66,6 @@ typedef struct {
 
 /** A CouchbaseLite database. */
 @interface CBLDatabase : NSObject
-
-/** The default conflict resolver for this database */
-@property (nonatomic) id<CBLConflictResolver> conflictResolver;
 
 /** Initializes a CouchbaseLite database with a given name and the default database options.
  @param name  The name of the database. May NOT contain capital letters!
@@ -146,6 +127,11 @@ typedef struct {
 
 /** Check whether the document of the given ID exists in the database or not. */
 - (BOOL) documentExists: (NSString*)docID;
+
+/** The conflict resolver for this database.
+    If nil, a default algorithm will be used, where the revision with more history wins.
+    An individual document can override this for itself by setting its own property. */
+@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
 
 
 #pragma mark - QUERYING:

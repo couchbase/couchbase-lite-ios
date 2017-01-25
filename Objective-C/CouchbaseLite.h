@@ -19,4 +19,5 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import <CouchbaseLite/CBLDatabase.h>
 #import <CouchbaseLite/CBLProperties.h>
 #import <CouchbaseLite/CBLDocument.h>
+#import <CouchbaseLite/CBLConflictResolver.h>
 #import <CouchbaseLite/CBLQuery.h>

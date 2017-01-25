@@ -20,7 +20,6 @@
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
 #import "CBLMisc.h"
-#import "CBLDatabaseConflictResolver.h"
 #include "c4Observer.h"
 
 
@@ -94,14 +93,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     }
 }
 
-- (void)setConflictResolver:(id<CBLConflictResolver>)conflictResolver {
-    if(!conflictResolver) {
-        conflictResolver = [CBLDatabaseConflictResolver new];
-    }
-    
-    _conflictResolver = conflictResolver;
-}
-
 
 - (instancetype) initWithName: (NSString*)name
                         error: (NSError**)outError {
@@ -114,12 +105,13 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 - (instancetype) initWithName: (NSString*)name
                       options: (nullable CBLDatabaseOptions*)options
                         error: (NSError**)outError {
-    _name = name;
-    _options = options != nil? [options copy] : [CBLDatabaseOptions defaultOptions];
-    if (![self open: outError])
-        return nil;
-    
-    _conflictResolver = [CBLDatabaseConflictResolver new];
+    self = [super init];
+    if (self) {
+        _name = name;
+        _options = options != nil? [options copy] : [CBLDatabaseOptions defaultOptions];
+        if (![self open: outError])
+            return nil;
+    }
     return self;
 }
 

@@ -14,12 +14,16 @@
 //  and limitations under the License.
 
 #import "CBLDocument.h"
+#import "CBLConflictResolver.h"
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
 #import "CBLJSON.h"
 #import "CBLInternal.h"
 #include "c4Observer.h"
 
+extern "C" {
+    #include "Test.h"
+}
 
 NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChangeNotification";
 NSString* const kCBLDocumentSavedNotification = @"CBLDocumentSavedNotification";
@@ -75,13 +79,27 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 }
 
 
+- (NSString*) revisionID {
+    return slice2string(_c4doc->revID);
+}
+
+
+- (NSUInteger) generation {
+    return c4rev_getGeneration(_c4doc->revID);
+}
+
+
 - (BOOL) save: (NSError**)outError {
-    return [self saveWithConflictResolver: [self getConflictResolver] deletion: NO error: outError];
+    return [self saveWithConflictResolver: self.effectiveConflictResolver
+                                 deletion: NO
+                                    error: outError];
 }
 
 
 - (BOOL) deleteDocument: (NSError**)outError {
-    return [self saveWithConflictResolver: [self getConflictResolver] deletion: YES error: outError];
+    return [self saveWithConflictResolver: self.effectiveConflictResolver
+                                 deletion: YES
+                                    error: outError];
 }
 
 
@@ -184,6 +202,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     if (!doc)
         return NO;
     [self setC4Doc: doc];
+    self.hasChanges = NO;
     return YES;
 }
 
@@ -211,16 +230,22 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     }
 }
 
-- (id<CBLConflictResolver>)getConflictResolver {
-    if(_conflictResolver) {
-        return _conflictResolver;
-    }
-    
-    return [self.database conflictResolver];
+
+#pragma mark - SAVING:
+
+
+- (id<CBLConflictResolver>) effectiveConflictResolver {
+    return _conflictResolver ?: _database.conflictResolver;
 }
 
-- (BOOL)save:(NSDictionary *)propertiesToSave into:(C4Document **)outDoc asDelete:(BOOL)deletion error:(NSError **)error {
-    // Encode _properties to data:
+
+// Lower-level save method. On conflict, returns YES but sets *outDoc to NULL. */
+- (BOOL) saveInto: (C4Document **)outDoc
+         asDelete: (BOOL)deletion
+            error: (NSError **)error
+{
+    //TODO: Need to be able to save a deletion that has properties in it
+    NSDictionary* propertiesToSave = deletion ? nil : self.properties;
     CBLStringBytes docTypeSlice;
     C4DocPutRequest put = {
         .docID = _c4doc->docID,
@@ -231,6 +256,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     if (deletion)
         put.revFlags = kDeleted;
     if (propertiesToSave.count > 0) {
+        // Encode properties to Fleece data:
         auto enc = c4db_createFleeceEncoder(_c4db);
         FLEncoder_WriteNSObject(enc, propertiesToSave);
         FLError flErr;
@@ -248,24 +274,73 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     
     // Save to database:
     C4Error err;
-    C4Document* newDoc = c4doc_put(_c4db, &put, nullptr, &err);
+    *outDoc = c4doc_put(_c4db, &put, nullptr, &err);
     c4slice_free(put.body);
     
-    if (!newDoc && err.code != kC4ErrorConflict) {
-        *outDoc = nullptr;
+    if (!*outDoc && err.code != kC4ErrorConflict) {     // conflict is not an error, here
         return convertError(err, error);
     }
-    
-    *outDoc = newDoc;
     return YES;
 }
 
 
+// "Pulls" from the database, merging the latest revision into the in-memory properties,
+//  without saving. */
+- (BOOL) mergeWithConflictResolver: (id<CBLConflictResolver>)resolver
+                          deletion: (bool)deletion
+                             error: (NSError**)outError
+{
+    C4Error err;
+    C4Document *currentDoc = c4doc_get(_c4db, _c4doc->docID, true, &err);
+    if (!currentDoc)
+        return convertError(err, outError);
+    NSDictionary *current = nil;
+    auto currentData = currentDoc->selectedRev.body;
+    if (currentData.buf) {
+        FLValue currentRoot = FLValue_FromTrustedData({currentData.buf, currentData.size});
+        current = FLValue_GetNSObject(currentRoot, self.sharedKeys, nil);
+    }
+    NSDictionary* resolved;
+    if (deletion) {
+        // Deletion always loses a conflict.
+        resolved = current;
+
+    } else if (resolver) {
+        resolved = [resolver resolveMine: (self.properties ?: @{})
+                              withTheirs: (current ?: @{})
+                                 andBase: self.savedProperties];
+        if (resolved == nil) {
+            // Resolver gave up:
+            c4doc_free(currentDoc);
+            return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
+        }
+    } else {
+        // Default resolution algorithm is "most active wins", i.e. higher generation number.
+        //TODO: Once conflict resolvers can access the document generation, move this logic
+        //      into a default CBLConflictResolver.
+        NSUInteger myGgggeneration = self.generation + 1;
+        NSUInteger theirGgggeneration = c4rev_getGeneration(currentDoc->revID);
+        if (myGgggeneration >= theirGgggeneration)       // hope I die before I get old
+            resolved = self.properties;
+        else
+            resolved = current;
+    }
+
+    [self setC4Doc: currentDoc];
+    self.properties = resolved;
+    if ($equal(resolved, current)) {
+        self.hasChanges = NO;
+    }
+    return YES;
+}
+
+
+/// The main save method.
 - (BOOL) saveWithConflictResolver: (id<CBLConflictResolver>)resolver
                          deletion: (bool)deletion
                             error: (NSError**)outError
 {
-    if (!self.hasChanges && !deletion && [self exists])
+    if (!self.hasChanges && !deletion && self.exists)
         return YES;
     
     C4Transaction transaction(_c4db);
@@ -273,23 +348,20 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
         return convertError(transaction.error(),  outError);
     
     C4Document* newDoc;
-    NSDictionary* propertiesToSave = deletion ? nil : self.properties;
-    if(![self save:propertiesToSave into:&newDoc asDelete:deletion error:outError]) {
+    if (![self saveInto: &newDoc asDelete: deletion error: outError])
         return NO;
-    }
 
-    if(!newDoc && !deletion) {
-        C4Error err;
-        C4Document *currentDoc = c4doc_get(_c4db, _c4doc->docID, true, &err);
-        FLValue currentRoot = FLValue_FromTrustedData({currentDoc->selectedRev.body.buf, currentDoc->selectedRev.body.size});
-        NSDictionary *source = FLValue_GetNSObject(currentRoot, [self sharedKeys], nil);
-        NSDictionary *resolved = [resolver resolveSource:source withTarget:propertiesToSave andBase:self.savedProperties];
-        _c4doc = currentDoc;
-        if(![self save:resolved into:&newDoc asDelete:deletion error:outError]) {
+    if (!newDoc) {
+        // There's been a conflict; first merge with the new saved revision:
+        if (![self mergeWithConflictResolver: resolver deletion: deletion error: outError])
             return NO;
-        }
-        
-        [self resetChanges];
+        // The merge might have turned the save into a no-op:
+        if (!self.hasChanges)
+            return YES;
+        // Now save the merged properties:
+        if (![self saveInto: &newDoc asDelete: deletion error: outError])
+            return NO;
+        Assert(newDoc);     // In a transaction we can't have a second conflict after merging!
     }
     
     // Save succeeded; now commit:
@@ -299,11 +371,10 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     }
     
     [self setC4Doc: newDoc];
-    [self postChangedNotificationExternal:NO];
+    self.hasChanges = NO;
     if (deletion)
         [self resetChanges];
-    
-    self.hasChanges = NO;
+    [self postChangedNotificationExternal:NO];
     return YES;
 }
 
