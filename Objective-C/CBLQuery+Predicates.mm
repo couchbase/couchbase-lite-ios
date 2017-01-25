@@ -12,6 +12,7 @@
 
 extern "C" {
 #import "MYErrorUtils.h"
+#import "Test.h"
 }
 
 #define kBadQuerySpecError -1
@@ -23,6 +24,60 @@ extern "C" {
 @implementation CBLQuery (Predicates)
 
 
+// Translates an NSPredicate into the JSON-dictionary equivalent of a WHERE clause
++ (id) encodePredicate: (NSPredicate*)pred
+                 error: (NSError**)outError
+{
+    return EncodePredicate(pred, outError);
+}
+
+
+// Translates an NSExpression into its LiteCore JSON-array equivalent
++ (id) encodeExpression: (NSExpression*)expr
+                  error: (NSError**)outError
+{
+    return EncodeExpression(expr, outError);
+}
+
+
+// Encodes an array of NSExpressions (or NSStrings that compile into them) into JSON format.
++ (NSArray*) encodeExpressions: (NSArray*)exprs
+                         error: (NSError**)outError
+{
+    NSMutableArray* result = [NSMutableArray new];
+    for (id r in exprs) {
+        id jsonObj = nil;
+        if ([r isKindOfClass: [NSArray class]]) {
+            jsonObj = r;
+        } else {
+            NSExpression* expr = nil;
+            if ([r isKindOfClass: [NSString class]]) {
+                expr = [NSExpression expressionWithFormat: r argumentArray: @[]];
+            } else {
+                Assert([r isKindOfClass: [NSExpression class]]);
+                expr = r;
+            }
+            jsonObj = [self encodeExpression: expr error: outError];
+            if (!jsonObj)
+                return nil;
+        }
+        [result addObject: jsonObj];
+    }
+    return result;
+}
+
+
+// Encodes an array of expressions all the way into JSON NSData.
++ (NSData*) encodeExpressionsToJSON: (NSArray*)expressions
+                              error: (NSError**)outError
+{
+    NSArray* exprs = [self encodeExpressions: expressions error: outError];
+    if (!exprs)
+        return nil;
+    return [NSJSONSerialization dataWithJSONObject: exprs options: 0 error: outError];
+}
+
+
 // https://github.com/couchbase/couchbase-lite-core/wiki/JSON-Query-Schema
 // https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/Predicates/Articles/pSyntax.html
 // https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/KeyValueCoding/CollectionOperators.html
@@ -31,7 +86,7 @@ extern "C" {
 // See <Foundation/NSComparisonPredicate.h> lines 26-39
 static NSString* const kPredicateOpNames[] = {
     @"<", @"<=", @">", @">=", @"=", @"!=",
-    @"REGEXP_LIKE()",   // NSPredicate's MATCH is a regex
+    @"MATCH",           // Repurpose NSPredicate's MATCH as N1QL MATCH even though they're different
     @"GLOB",            // NSPredicate's "LIKE" is comparable to SQL/N1QL "GLOB", not "LIKE"
     nil, nil,           // TODO: Implement begins with, ends with
     @"IN",
@@ -69,28 +124,8 @@ static NSDictionary* const  kFunctionNames = @{ @"sum:":           @"ARRAY_SUM()
                                                 @"objectFrom:withIndex:":   @"[]",
                                               };
 
-
-// Translates an NSPredicate into the JSON-dictionary equivalent of a WHERE clause
-+ (id) encodePredicate: (NSPredicate*)pred
-                 error: (NSError**)outError
-{
-    return EncodePredicate(pred, outError);
-}
-
-
-// Translates an NSExpression into its JSON equivalent
-+ (NSData*) encodeIndexExpressions: (NSArray<NSExpression*>*)expressions
-                             error: (NSError**)outError
-{
-    NSMutableArray *array = [NSMutableArray new];
-    for (NSExpression* expr in expressions) {
-        id encoded = EncodeExpression(expr, outError);
-        if (!encoded)
-            return nil;
-        [array addObject: encoded];
-    }
-    return [NSJSONSerialization dataWithJSONObject: array options: 0 error: outError];
-}
+// Other N1QL functions, that can be invoked in a format string as FUNCTION(rcvr, "FNNAME" [, ...])
+static NSArray* kN1QLFunctionNames = @[@"REGEXP_LIKE"];
 
 
 // Encodes an NSPredicate.
@@ -197,10 +232,17 @@ static id EncodeExpression(NSExpression* expr, NSError **outError) {
             return encodeKeyPath(expr.keyPath);
         }
         case NSFunctionExpressionType: {
-            NSString* fn = kFunctionNames[expr.function];
+            NSString *exprFunction = expr.function;
+            NSString* fn = kFunctionNames[exprFunction];
             if (fn == nil) {
-                return mkError(outError, @"Unsupported function '%@'", expr.function), nil;
-            } else if ([fn isEqualToString: @"."]) {
+                exprFunction = [exprFunction uppercaseString];
+                if ([kN1QLFunctionNames containsObject: exprFunction])
+                    fn = [exprFunction stringByAppendingString: @"()"];
+                else
+                    return mkError(outError, @"Unsupported function '%@'", expr.function), nil;
+            }
+
+            if ([fn isEqualToString: @"."]) {
                 // This is a weird case where using "first" or "last" in a key-path compiles to a
                 // predicate containing an undocumented expression type...
                 NSString* keyPath = [NSString stringWithFormat: @"%@.%@",
@@ -321,6 +363,9 @@ static bool isPredicateUtilities(NSExpression *expr) {
         && [NSStringFromClass((Class)[expr.constantValue class])
                                                         isEqualToString: @"_NSPredicateUtilities"];
 }
+
+
+#pragma mark - DEBUGGING UTILITIES:
 
 
 #if DEBUG
