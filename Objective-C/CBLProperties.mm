@@ -58,7 +58,7 @@
 
 - (void) setProperties: (NSDictionary*)properties {
     NSMutableDictionary* props = properties ? [properties mutableCopy] : [NSMutableDictionary dictionary];
-    for (NSString *key in props) {
+    for (NSString *key in properties) {
         id value = props[key];
         if([value isKindOfClass:[NSDictionary class]]) {
             props[key] = [self convertDictionary:value];

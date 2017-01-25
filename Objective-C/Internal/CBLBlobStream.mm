@@ -64,7 +64,7 @@
     }
     
     *buffer = nullptr;
-    len = 0;
+    *len = 0;
     return NO;
 }
 
