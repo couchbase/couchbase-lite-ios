@@ -49,6 +49,10 @@
 		9378C5911E25B3F0001BB196 /* DatabaseTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5901E25B3F0001BB196 /* DatabaseTest.m */; };
 		9378C5971E25B473001BB196 /* CBLTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5961E25B473001BB196 /* CBLTestCase.m */; };
 		9378C59E1E269F14001BB196 /* DocumentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C59D1E269F14001BB196 /* DocumentTest.m */; };
+		937EAAF81E2EAD1500133693 /* CBLSubdocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 937EAAF61E2EAD1500133693 /* CBLSubdocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		937EAAF91E2EAD1500133693 /* CBLSubdocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 937EAAF71E2EAD1500133693 /* CBLSubdocument.m */; };
+		937EAAFB1E2EE0E200133693 /* SubdocumentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 937EAAFA1E2EE0E200133693 /* SubdocumentTest.m */; };
+		937EAB2E1E37E3BA00133693 /* PropertiesTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 937EAB2D1E37E3BA00133693 /* PropertiesTest.m */; };
 		9380C6EF1E15B8C20011E8CB /* CBLDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 9380C6ED1E15B8C20011E8CB /* CBLDocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9380C6F01E15B8C20011E8CB /* CBLDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9380C6EE1E15B8C20011E8CB /* CBLDocument.mm */; };
 		9380C71C1E16E7CE0011E8CB /* CBLProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 9380C6FE1E15BB1D0011E8CB /* CBLProperties.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -200,6 +204,10 @@
 		9378C5D81E26CC46001BB196 /* Project.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
 		9378C5D91E26CC46001BB196 /* Project_Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Debug.xcconfig; sourceTree = "<group>"; };
 		9378C5DA1E26CC46001BB196 /* Project_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project_Release.xcconfig; sourceTree = "<group>"; };
+		937EAAF61E2EAD1500133693 /* CBLSubdocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLSubdocument.h; sourceTree = "<group>"; };
+		937EAAF71E2EAD1500133693 /* CBLSubdocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLSubdocument.m; sourceTree = "<group>"; };
+		937EAAFA1E2EE0E200133693 /* SubdocumentTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SubdocumentTest.m; sourceTree = "<group>"; };
+		937EAB2D1E37E3BA00133693 /* PropertiesTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PropertiesTest.m; sourceTree = "<group>"; };
 		9380C6ED1E15B8C20011E8CB /* CBLDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDocument.h; sourceTree = "<group>"; };
 		9380C6EE1E15B8C20011E8CB /* CBLDocument.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLDocument.mm; sourceTree = "<group>"; };
 		9380C6FE1E15BB1D0011E8CB /* CBLProperties.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLProperties.h; sourceTree = "<group>"; };
@@ -370,6 +378,8 @@
 				93BFCD9F1E0385EA00E52F8A /* CBLDatabase.mm */,
 				9380C6ED1E15B8C20011E8CB /* CBLDocument.h */,
 				9380C6EE1E15B8C20011E8CB /* CBLDocument.mm */,
+				937EAAF61E2EAD1500133693 /* CBLSubdocument.h */,
+				937EAAF71E2EAD1500133693 /* CBLSubdocument.m */,
 				27EF6A7E1E297BDF004748DF /* CBLQuery.h */,
 				27EF6A7F1E297BDF004748DF /* CBLQuery.mm */,
 				27EF6A811E297BDF004748DF /* CBLQuery+Predicates.mm */,
@@ -387,6 +397,8 @@
 				9378C5961E25B473001BB196 /* CBLTestCase.m */,
 				9378C5901E25B3F0001BB196 /* DatabaseTest.m */,
 				9378C59D1E269F14001BB196 /* DocumentTest.m */,
+				937EAAFA1E2EE0E200133693 /* SubdocumentTest.m */,
+				937EAB2D1E37E3BA00133693 /* PropertiesTest.m */,
 				27EF6A931E298E26004748DF /* QueryTest.m */,
 				72A87A0E1E32E858008466FF /* NotificationTest.m */,
 				27EF6A951E2AC609004748DF /* names_100.json */,
@@ -404,8 +416,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				9398D9FF1E03531A00464432 /* CouchbaseLite.h in Headers */,
+				9380C72A1E16E7D00011E8CB /* CBLDatabase.h in Headers */,
+				9380C6EF1E15B8C20011E8CB /* CBLDocument.h in Headers */,
+				937EAAF81E2EAD1500133693 /* CBLSubdocument.h in Headers */,
 				934F4CB81E241FB500F90659 /* CBLSymmetricKey.h in Headers */,
 				934F4CA71E241FB500F90659 /* CBLBase64.h in Headers */,
+				9380C71C1E16E7CE0011E8CB /* CBLProperties.h in Headers */,
 				934F4C101E1EF19000F90659 /* CollectionUtils.h in Headers */,
 				934F4CB11E241FB500F90659 /* CBLMisc.h in Headers */,
 				934F4CB51E241FB500F90659 /* CBLPrefix.h in Headers */,
@@ -414,11 +430,8 @@
 				9317621F1E2D439700563506 /* CBLQuery+Internal.h in Headers */,
 				934F4CAD1E241FB500F90659 /* CBLJSON.h in Headers */,
 				934F4CAB1E241FB500F90659 /* CBLInternal.h in Headers */,
-				9380C72A1E16E7D00011E8CB /* CBLDatabase.h in Headers */,
 				934F4CAF1E241FB500F90659 /* CBLLog.h in Headers */,
-				9380C6EF1E15B8C20011E8CB /* CBLDocument.h in Headers */,
 				934F4CB61E241FB500F90659 /* CBLStringBytes.h in Headers */,
-				9380C71C1E16E7CE0011E8CB /* CBLProperties.h in Headers */,
 				27EF6A821E297BDF004748DF /* CBLQuery.h in Headers */,
 				934F4C2B1E1EF19000F90659 /* MYLogging.h in Headers */,
 				934F4CB41E241FB500F90659 /* CBLParseDate.h in Headers */,
@@ -617,6 +630,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9380C72B1E16E7D30011E8CB /* CBLDatabase.mm in Sources */,
+				937EAAF91E2EAD1500133693 /* CBLSubdocument.m in Sources */,
 				934F4CB21E241FB500F90659 /* CBLMisc.m in Sources */,
 				934F4C111E1EF19000F90659 /* CollectionUtils.m in Sources */,
 				934F4C5B1E1EF25E00F90659 /* Test.m in Sources */,
@@ -645,7 +659,9 @@
 				27EF6A941E298E26004748DF /* QueryTest.m in Sources */,
 				72A87A0F1E32E858008466FF /* NotificationTest.m in Sources */,
 				9378C5971E25B473001BB196 /* CBLTestCase.m in Sources */,
+				937EAAFB1E2EE0E200133693 /* SubdocumentTest.m in Sources */,
 				9378C5911E25B3F0001BB196 /* DatabaseTest.m in Sources */,
+				937EAB2E1E37E3BA00133693 /* PropertiesTest.m in Sources */,
 				9378C59E1E269F14001BB196 /* DocumentTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

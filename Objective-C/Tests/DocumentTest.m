@@ -71,83 +71,6 @@
 }
 
 
-- (void) testPropertyAccessors {
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
-    
-    // Premitives:
-    [doc setBoolean: YES forKey: @"bool"];
-    [doc setDouble: 1.1 forKey: @"double"];
-    [doc setFloat: 1.2f forKey: @"float"];
-    [doc setInteger: 2 forKey: @"integer"];
-    
-    // Objects:
-    [doc setObject: @"str" forKey: @"string"];
-    [doc setObject: @(YES) forKey: @"boolObj"];
-    [doc setObject: @(1) forKey: @"number"];
-    [doc setObject: @{@"foo": @"bar"} forKey: @"dict"];
-    [doc setObject: @[@"1", @"2"] forKey: @"array"];
-    
-    // Date:
-    NSDate* date = [NSDate date];
-    [doc setObject: date forKey: @"date"];
-    
-    NSError* error;
-    Assert([doc save: &error], @"Error saving: %@", error);
-    
-    // Primitives:
-    AssertEqual([doc booleanForKey: @"bool"], YES);
-    AssertEqual([doc doubleForKey: @"double"], 1.1);
-    AssertEqual([doc floatForKey: @"float"], @(1.2).floatValue);
-    AssertEqual([doc integerForKey: @"integer"], 2);
-    
-    // Objects:
-    AssertEqualObjects([doc stringForKey: @"string"], @"str");
-    AssertEqualObjects([doc objectForKey: @"boolObj"], @(YES));
-    AssertEqualObjects([doc objectForKey: @"number"], @(1));
-    AssertEqualObjects([doc objectForKey: @"dict"], @{@"foo": @"bar"});
-    AssertEqualObjects([doc objectForKey: @"array"], (@[@"1", @"2"]));
-    
-    // Date:
-    // TODO: Why is comparing two date objects not equal?
-    AssertEqualObjects([CBLJSON JSONObjectWithDate: [doc dateForKey: @"date"]],
-                       [CBLJSON JSONObjectWithDate: date]);
-    
-    ////// Get the doc from a different database and check again:
-    
-    CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
-    
-    AssertEqual([doc1 booleanForKey: @"bool"], YES);
-    AssertEqual([doc1 doubleForKey: @"double"], 1.1);
-    AssertEqual([doc1 floatForKey: @"float"], @(1.2).floatValue);
-    AssertEqual([doc1 integerForKey: @"integer"], 2);
-    
-    // Objects:
-    AssertEqualObjects([doc1 stringForKey: @"string"], @"str");
-    AssertEqualObjects([doc1 objectForKey: @"boolObj"], @(YES));
-    AssertEqualObjects([doc1 objectForKey: @"number"], @(1));
-    AssertEqualObjects([doc1 objectForKey: @"dict"], @{@"foo": @"bar"});
-    AssertEqualObjects([doc1 objectForKey: @"array"], (@[@"1", @"2"]));
-    
-    // Date:
-    // TODO: Why is comparing two date objects not equal?
-    AssertEqualObjects([CBLJSON JSONObjectWithDate: [doc1 dateForKey: @"date"]],
-                       [CBLJSON JSONObjectWithDate: date]);
-}
-
-
-- (void) testProperties {
-    CBLDocument* doc = self.db[@"doc1"];
-    doc[@"type"] = @"demo";
-    doc[@"weight"] = @12.5;
-    doc[@"tags"] = @[@"useless", @"temporary"];
-    
-    AssertEqualObjects(doc[@"type"], @"demo");
-    AssertEqual([doc doubleForKey: @"weight"], 12.5);
-    AssertEqualObjects(doc.properties,
-        (@{@"type": @"demo", @"weight": @12.5, @"tags": @[@"useless", @"temporary"]}));
-}
-
-
 - (void) testDelete {
     CBLDocument* doc = [self.db documentWithID: @"doc1"];
     doc[@"type"] = @"profile";
@@ -165,6 +88,11 @@
     Assert([doc save: &error], @"Saving error: %@", error);
     Assert([doc exists]);
     AssertFalse(doc.isDeleted);
+    
+    doc[@"address"] = @"1 Street";
+    AssertEqualObjects(doc[@"type"], @"profile");
+    AssertEqualObjects(doc[@"name"], @"Scott");
+    AssertEqualObjects(doc[@"address"], @"1 Street");
     
     // Delete:
     Assert([doc deleteDocument: &error], @"Deleting error: %@", error);

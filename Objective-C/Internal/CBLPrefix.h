@@ -10,7 +10,16 @@
 
 #import <Foundation/Foundation.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
 #import "CBLLog.h"
 #import "CollectionUtils.h"
+#import "Test.h"
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __OBJC__

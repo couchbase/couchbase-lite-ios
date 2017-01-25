@@ -105,16 +105,11 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
             if (![self loadDoc: outError mustExist: NO])
                 return NO;
             
-            [self resetChanges];
+            [self revert];
             return YES;
         }
     }
     return convertError(err, outError);
-}
-
-
-- (void) revert {
-    [self resetChanges];
 }
 
 
@@ -131,17 +126,6 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
         [super setHasChanges: hasChanges];
         [_database document: self hasUnsavedChanges: hasChanges];
     }
-}
-
-
-- (void)setObject:(id)value forKeyedSubscript:(NSString *)key {
-    [super setObject:value forKeyedSubscript:key];
-    [self noteChanged];
-}
-
-
-- (void)setProperties:(NSDictionary *)properties {
-    [super setProperties:properties];
     [self noteChanged];
 }
 
@@ -165,7 +149,6 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 
 
 - (void)noteChanged {
-    self.hasChanges = YES;
     [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDocumentChangeNotification
                                                         object: self];
 }
@@ -201,14 +184,13 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 - (void) setC4Doc: (nullable C4Document*)doc {
     c4doc_free(_c4doc);
     _c4doc = doc;
-    [self setRootDict: nullptr orProperties: nil];
+    FLDict root = nullptr;
     if (_c4doc) {
         C4Slice body = _c4doc->selectedRev.body;
-        if (body.size > 0) {
-            FLDict root = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
-            [self setRootDict: root orProperties: nil];
-        }
+        if (body.size > 0)
+            root = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
     }
+    self.root = root;
 }
 
 
@@ -226,7 +208,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
         return convertError(transaction.error(),  outError);
     
     // Encode _properties to data:
-    NSDictionary* propertiesToSave = deletion ? nil : self.properties;
+    NSDictionary* propertiesToSave = deletion ? nil : [self encodeAsJSON];
     CBLStringBytes docTypeSlice;
     C4DocPutRequest put = {
         .docID = _c4doc->docID,
@@ -266,7 +248,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     [self setC4Doc: newDoc];
     [self postChangedNotificationExternal:NO];
     if (deletion)
-        [self resetChanges];
+        [self revert];
     
     self.hasChanges = NO;
     return YES;

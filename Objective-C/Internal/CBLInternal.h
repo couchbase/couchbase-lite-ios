@@ -11,6 +11,7 @@
 #import "Fleece.h"
 #import "CBLDatabase.h"
 #import "CBLDocument.h"
+#import "CBLSubdocument.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -25,24 +26,28 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+/// JSONEncoding:
+
+@protocol CBLJSONEncoding <NSObject>
+- (id) encodeAsJSON;
+@end
+
 /// CBLProperties:
 
-@interface CBLProperties ()
+@interface CBLProperties () <CBLJSONEncoding>
 
 // Having changes flag
 @property (nonatomic) BOOL hasChanges;
 
-// Set the root or the original properties. After calling this method, the current changes will
-// be on top of the new root properties and the hasChanges flag will be reset.
-- (void) setRootDict: (nullable FLDict)root orProperties: (nullable NSDictionary*) props;
+// Shared keys
+@property (readonly, nonatomic) FLSharedKeys sharedKeys;
 
-// Reset both current changes and hasChanges flag.
-- (void) resetChanges;
+// Fleece root
+@property (nonatomic, nullable) FLDict root;
 
-// Subclass should implement this to provide the sharedKeys.
-- (FLSharedKeys) sharedKeys;
 
 @end
+
 
 /// CBLDocument:
 
@@ -57,5 +62,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+/// CBLSubdocument:
+
+typedef void (^CBLOnMutateBlock)();
+
+@interface CBLSubdocument ()
+
+@property (weak, nonatomic) id parent;
+
+- (instancetype) initWithParent: (id)parent root: (nullable FLDict)rootDict;
+
+- (void) setOnMutate: (nullable CBLOnMutateBlock)onMutate;
+
+- (void) invalidate;
+
+@end
 
 NS_ASSUME_NONNULL_END
