@@ -46,9 +46,7 @@ NSString* slice2string(FLSlice s) {
 }
 
 NSString* slice2string(C4Slice s) {
-    if (!s.buf)
-        return nil;
-    return [[NSString alloc] initWithBytes: s.buf length: s.size encoding:NSUTF8StringEncoding];
+    return slice2string((FLSlice){s.buf, s.size});
 }
 
 C4EncryptionKey symmetricKey2C4Key(CBLSymmetricKey* key) {

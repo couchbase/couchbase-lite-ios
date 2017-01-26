@@ -20,6 +20,7 @@
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
 #import "CBLMisc.h"
+#import "CBLBlobStore.h"
 #include "c4Observer.h"
 
 
@@ -62,7 +63,7 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
 }
 
 
-@synthesize c4db=_c4db, conflictResolver = _conflictResolver;
+@synthesize c4db=_c4db, conflictResolver = _conflictResolver, blobStore = _blobStore;
 
 
 static const C4DatabaseConfig kDBConfig = {
@@ -145,6 +146,17 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     _obs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
     _documents = [NSMapTable strongToWeakObjectsMapTable];
     _unsavedDocuments = [NSMutableSet setWithCapacity: 100];
+    
+    NSString* attachmentsPath = [[_options.directory stringByAppendingPathComponent:@"attachments"] stringByAppendingString:@"/"];
+    if (![self setupDirectory: attachmentsPath
+               fileProtection: _options.fileProtection
+                        error: outError])
+        return NO;
+    
+    _blobStore = [[CBLBlobStore alloc] initWithPath:attachmentsPath flags:config.flags encryptionKey:&config.encryptionKey error:outError];
+    if(!_blobStore) {
+        return NO;
+    }
     
     return YES;
 }

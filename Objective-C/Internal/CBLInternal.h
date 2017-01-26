@@ -11,14 +11,25 @@
 #import "Fleece.h"
 #import "CBLDatabase.h"
 #import "CBLDocument.h"
+#import "CBLBlob.h"
+#include "c4BlobStore.h"
+
+@class CBLBlobStore, CBLBlobStream;
 
 NS_ASSUME_NONNULL_BEGIN
+
+@protocol CBLJSONCoding <NSObject>
+
+@property (readonly, nonatomic) NSDictionary* jsonRepresentation;
+
+@end
 
 /// CBLDatabase:
 
 @interface CBLDatabase ()
 
 @property (readonly, nonatomic, nullable) C4Database* c4db;
+@property (readonly, nonatomic) CBLBlobStore* blobStore;
 @property (readonly, nonatomic) NSString* path;     // For unit tests
 
 - (void) document: (CBLDocument*)doc hasUnsavedChanges: (bool)unsaved;
@@ -39,10 +50,20 @@ NS_ASSUME_NONNULL_BEGIN
 // Reset both current changes and hasChanges flag.
 - (void) resetChanges;
 
+- (FLSliceResult)encodeWith:(FLEncoder)encoder error:(NSError **)outError;
+
 // Subclass should implement this to provide the sharedKeys.
 - (FLSharedKeys) sharedKeys;
 
 - (nullable NSDictionary *)savedProperties;
+
+// Subclass should implement this to write binary files to disk
+- (BOOL)storeBlob:(CBLBlob *)blob
+            error:(NSError **)error;
+
+// Subclass should implement this to read binary files to disk
+- (nullable CBLBlob *)readBlobWithProperties:(NSDictionary *)properties
+                                       error:(NSError **)error;
 
 @end
 
@@ -56,6 +77,17 @@ NS_ASSUME_NONNULL_BEGIN
                             error: (NSError**)outError;
 
 - (void)changedExternally;
+@end
+
+// CBLBlob:
+
+@interface CBLBlob () <CBLJSONCoding>
+
+- (instancetype)initWithProperties:(NSDictionary *)properties
+                        dataStream:(CBLBlobStream *)stream
+                             error:(NSError **)outError;
+
+- (BOOL)install:(C4BlobStore *)store error:(NSError **)error;
 
 @end
 

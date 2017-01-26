@@ -19,6 +19,7 @@
 #import "CBLStringBytes.h"
 #import "CBLJSON.h"
 #import "CBLInternal.h"
+#import "CBLBlobStore.h"
 #include "c4Observer.h"
 
 extern "C" {
@@ -135,7 +136,6 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     [self resetChanges];
 }
 
-
 #pragma mark - CBLProperties
 
 
@@ -143,6 +143,18 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     return c4db_getFLSharedKeys(_c4db);
 }
 
+- (CBLBlob *)readBlobWithProperties:(NSDictionary *)properties error:(NSError * _Nullable __autoreleasing *)error {
+    CBLBlobStream* data = [[[self database] blobStore] dataForBlobWithDigest:properties[@"digest"] error:error];
+    if(data == nil) {
+        return nil;
+    }
+    
+    return [[CBLBlob alloc] initWithProperties:properties dataStream:data error:error];
+}
+
+- (BOOL)storeBlob:(CBLBlob *)blob error:(NSError * _Nullable __autoreleasing *)error {
+    return [[[self database] blobStore] write:blob error:error];
+}
 
 - (void) setHasChanges: (BOOL)hasChanges {
     if (self.hasChanges != hasChanges) {
@@ -242,7 +254,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 // Lower-level save method. On conflict, returns YES but sets *outDoc to NULL. */
 - (BOOL) saveInto: (C4Document **)outDoc
          asDelete: (BOOL)deletion
-            error: (NSError **)error
+            error: (NSError **)outError
 {
     //TODO: Need to be able to save a deletion that has properties in it
     NSDictionary* propertiesToSave = deletion ? nil : self.properties;
@@ -258,15 +270,13 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     if (propertiesToSave.count > 0) {
         // Encode properties to Fleece data:
         auto enc = c4db_createFleeceEncoder(_c4db);
-        FLEncoder_WriteNSObject(enc, propertiesToSave);
-        FLError flErr;
-        auto body = FLEncoder_Finish(enc, &flErr);
+        auto body = [self encodeWith:enc error: outError];
         FLEncoder_Free(enc);
         if (!body.buf) {
             *outDoc = nullptr;
-            return convertError(flErr, error);
+            return NO;
         }
-        
+
         put.body = {body.buf, body.size};
         docTypeSlice = self[@"type"];
         put.docType = docTypeSlice;
@@ -278,7 +288,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     c4slice_free(put.body);
     
     if (!*outDoc && err.code != kC4ErrorConflict) {     // conflict is not an error, here
-        return convertError(err, error);
+        return convertError(err, outError);
     }
     return YES;
 }
@@ -377,7 +387,6 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     [self postChangedNotificationExternal:NO];
     return YES;
 }
-
 
 @end
 

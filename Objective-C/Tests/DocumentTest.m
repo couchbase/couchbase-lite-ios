@@ -8,6 +8,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
+#import "CBLBlob.h"
 #import "CBLInternal.h"
 #include "c4.h"
 #include "Fleece.h"
@@ -441,6 +442,142 @@
 
     Assert([doc save: &error], @"Saving error: %@", error);
     AssertEqualObjects(doc[@"name"], @"Scott of the Sahara");
+}
+
+- (void)testBlob {
+    CBLDocument* doc = [self.db documentWithID: @"doc1"];
+    NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
+    NSError* error;
+    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content error:&error];
+    Assert(data, @"Failed to create blob: %@", error);
+    doc[@"data"] = data;
+    doc[@"name"] = @"Jim";
+    Assert([doc save: &error], @"Saving error: %@", error);
+    
+    CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
+    AssertEqualObjects(doc[@"name"], @"Jim");
+    Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
+    data = doc1[@"data"];
+    AssertEqual(data.length, 5);
+    AssertEqualObjects(data.content, content);
+    NSInputStream *contentStream = data.contentStream;
+    [contentStream open];
+    uint8_t buffer[10];
+    NSInteger bytesRead = [contentStream read:buffer maxLength:10];
+    [contentStream close];
+    AssertEqual(bytesRead, 5);
+}
+
+- (void)testEmptyBlob {
+    CBLDocument* doc = [self.db documentWithID: @"doc1"];
+    NSData* content = [@"" dataUsingEncoding:NSUTF8StringEncoding];
+    NSError* error;
+    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content error:&error];
+    Assert(data, @"Failed to create blob: %@", error);
+    doc[@"data"] = data;
+    
+    Assert([doc save: &error], @"Saving error: %@", error);
+    CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
+    Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
+    data = doc1[@"data"];
+    AssertEqual(data.length, 0);
+    AssertEqualObjects(data.content, content);
+    NSInputStream *contentStream = data.contentStream;
+    [contentStream open];
+    uint8_t buffer[10];
+    NSInteger bytesRead = [contentStream read:buffer maxLength:10];
+    [contentStream close];
+    AssertEqual(bytesRead, 0);
+}
+
+- (void)testBlobWithStream {
+    CBLDocument* doc = [self.db documentWithID: @"doc1"];
+    NSData* content = [@"" dataUsingEncoding:NSUTF8StringEncoding];
+    NSInputStream *contentStream = [[NSInputStream alloc] initWithData:content];
+    NSError* error;
+    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" contentStream:contentStream error:&error];
+    Assert(data, @"Failed to create blob: %@", error);
+    doc[@"data"] = data;
+    
+    
+    Assert([doc save: &error], @"Saving error: %@", error);
+    CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
+    Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
+    data = doc1[@"data"];
+    AssertEqual(data.length, 0);
+    AssertEqualObjects(data.content, content);
+    contentStream = data.contentStream;
+    [contentStream open];
+    uint8_t buffer[10];
+    NSInteger bytesRead = [contentStream read:buffer maxLength:10];
+    [contentStream close];
+    AssertEqual(bytesRead, 0);
+}
+
+- (void)testMultipleBlobRead {
+    CBLDocument* doc = [self.db documentWithID: @"doc1"];
+    NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
+    NSError *error;
+    
+    CBLBlob* data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content error:&error];
+    Assert(data, @"Failed to create blob: %@", error);
+    doc[@"data"] = data;
+    
+    data = doc[@"data"];
+    for(int i = 0; i < 5; i++) {
+        AssertEqualObjects(data.content, content);
+        NSInputStream *contentStream = data.contentStream;
+        [contentStream open];
+        uint8_t buffer[10];
+        NSInteger bytesRead = [contentStream read:buffer maxLength:10];
+        [contentStream close];
+        AssertEqual(bytesRead, 5);
+    }
+   
+    Assert([doc save: &error], @"Saving error: %@", error);
+    CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
+    Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
+    data = doc1[@"data"];
+    for(int i = 0; i < 5; i++) {
+        AssertEqualObjects(data.content, content);
+        NSInputStream *contentStream = data.contentStream;
+        [contentStream open];
+        uint8_t buffer[10];
+        NSInteger bytesRead = [contentStream read:buffer maxLength:10];
+        [contentStream close];
+        AssertEqual(bytesRead, 5);
+    }
+}
+
+- (CBLBlob *)createBlob:(NSString *)contentType withData:(NSData *)data error:(NSError **)outError {
+    return [[CBLBlob alloc] initWithContentType:contentType data:data error:outError];
+}
+
+- (CBLBlob *)createBlob:(NSString *)contentType withStream:(NSInputStream *)stream error:(NSError **)outError {
+    return [[CBLBlob alloc] initWithContentType:contentType contentStream:stream error:outError];
+}
+
+- (void)testInvalidBlobs {
+    NSError *error;
+    CBLBlob* data = [self createBlob:nil withData:nil error:&error];
+    AssertNil(data);
+    
+    data = [self createBlob:@"application/foo" withData:nil error:&error];
+    AssertNil(data);
+    
+    NSData *content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
+    data = [self createBlob:nil withData:content error:&error];
+    AssertNil(data);
+    
+    data = [self createBlob:nil withStream:nil error:&error];
+    AssertNil(data);
+    
+    NSInputStream* contentStream = [[NSInputStream alloc] initWithData:content];
+    data = [self createBlob:nil withStream:contentStream error:&error];
+    AssertNil(data);
+    
+    data = [self createBlob:@"application/foo" withStream:nil error:&error];
+    AssertNil(data);
 }
 
 @end
