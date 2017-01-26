@@ -337,10 +337,10 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
             FLDict dict = FLValue_AsDict(value);
             FLSlice type = [self typeForDict:dict];
             if(!type.buf) {
-                // TODO: Subdocument
-                return nil;
+                // TODO: convert to subdocument (using 'dict')
+                return FLValue_GetNSObject(value, [self sharedKeys], [self sharedStrings]);
             }
-            
+
             id result = FLValue_GetNSObject(value, [self sharedKeys], [self sharedStrings]);
             return [self convertDictionary:result];
         }
