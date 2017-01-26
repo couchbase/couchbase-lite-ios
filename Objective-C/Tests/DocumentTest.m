@@ -458,7 +458,7 @@
     AssertEqualObjects(doc[@"name"], @"Jim");
     Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
     data = doc1[@"data"];
-    AssertEqual(data.length, 5);
+    AssertEqual(data.length, 5ull);
     AssertEqualObjects(data.content, content);
     NSInputStream *contentStream = data.contentStream;
     [contentStream open];
@@ -480,7 +480,7 @@
     CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
     Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
     data = doc1[@"data"];
-    AssertEqual(data.length, 0);
+    AssertEqual(data.length, 0ull);
     AssertEqualObjects(data.content, content);
     NSInputStream *contentStream = data.contentStream;
     [contentStream open];
@@ -504,7 +504,7 @@
     CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
     Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
     data = doc1[@"data"];
-    AssertEqual(data.length, 0);
+    AssertEqual(data.length, 0ull);
     AssertEqualObjects(data.content, content);
     contentStream = data.contentStream;
     [contentStream open];

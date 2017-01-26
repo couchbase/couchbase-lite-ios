@@ -10,68 +10,66 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+
+/** A CBLBlob appears as a property of a CBLDocument; it contains arbitrary binary data,
+    tagged with a MIME type.
+
+    Blobs can be arbitrarily large, and their data is loaded only on demand (when the `content`
+    or `contentStream` properties are accessed), not when the document is loaded. 
+ 
+    The document's raw JSON form only contains the CBLBlob's metadata (type, length and a digest of
+    the data) in a small object. The data itself is stored externally to the document, keyed by
+    the digest. */
 @interface CBLBlob : NSObject
 
-/**
- Gets the contents of a CBLBlob as a block of memory (warning: 
- if this blob gets its contents from a slow stream this operation
- will block until the stream is fully read)
- */
+/** Initializes a CBLBlob with the given in-memory data.
+    The blob can then be added as a property of a CBLDocument.
+    @param contentType  The type of content this CBLBlob will represent.
+    @param data  The data that this CBLBlob will contain.
+    @param error  On return, the error if any. */
+- (nullable instancetype) initWithContentType: (NSString *)contentType
+                                         data: (NSData *) data
+                                        error: (NSError**)error;
+
+/** Initializes a CBLBlob with the given stream of data.
+    The blob can then be added as a property of a CBLDocument.
+    @param contentType  The type of content this CBLBlob will represent.
+    @param stream  The stream of data that this CBLBlob will consume.
+    @param error  On return, the error if any. */
+- (nullable instancetype) initWithContentType: (NSString *)contentType
+                                contentStream: (NSInputStream *)stream
+                                        error: (NSError**)error;
+
+/** Initializes a CBLBlob with the contents of a file.
+    The blob can then be added as a property of a CBLDocument.
+    @param contentType  The type of content this CBLBlob will represent.
+    @param fileURL  A URL to a file containing the data that this CBLBlob will represent.
+    @param error  On return, the error if any. */
+- (nullable instancetype) initWithContentType: (NSString *)contentType
+                                      fileURL: (NSURL*)fileURL
+                                        error: (NSError**)error;
+
+- (instancetype) init NS_UNAVAILABLE;
+
+/** Gets the contents of a CBLBlob as a block of memory.
+    Not recommended for very large blobs, as it may be slow and use up lots of RAM. */
 @property (readonly, nonatomic) NSData* content;
 
-/**
- Gets a stream to the content of a CBLBlob
- */
+/** A stream of the content of a CBLBlob.
+    The caller is responsible for opening the stream, and closing it when finished. */
 @property (readonly, nonatomic) NSInputStream *contentStream;
 
-/**
- Gets the type of content this CBLBlob represents
- */
-@property (readonly, nonatomic) NSString* contentType;
+/** The type of content this CBLBlob represents; by convention this is a MIME type. */
+@property (readonly, nonatomic, nullable) NSString* contentType;
 
-/**
- Gets the binary length of this CBLBlob
- */
-@property (readonly) NSInteger length;
+/** The binary length of this CBLBlob. */
+@property (readonly, nonatomic) uint64_t length;
 
-/**
- Gets the digest of this CBLBlob's contents
- */
-@property (readonly, nullable) NSString* digest;
+/** The cryptographic digest of this CBLBlob's contents, which uniquely identifies it. */
+@property (readonly, nonatomic, nullable) NSString* digest;
 
-/**
- Gets the metadata associated with this CBLBlob
- */
+/** The metadata associated with this CBLBlob */
 @property (readonly, nonatomic) NSDictionary* properties;
-
-/**
- Initializes a CBLBlob with the given in-memory data
- @param contentType The type of content this CBLBlob will represent
- @param data The data that this CBLBlob will contain
- @param outError  On return, the error if any. */
-- (instancetype) initWithContentType:(NSString *)contentType
-                                data:(NSData *) data
-                               error:(NSError**)outError;
-
-/**
- Initializes a CBLBlob with the given stream of data
- @param contentType The type of content this CBLBlob will represent
- @param stream The stream of data that this CBLBlob will consume
- @param outError  On return, the error if any. */
-- (instancetype) initWithContentType:(NSString *)contentType
-                       contentStream:(NSInputStream *)stream
-                               error:(NSError**)outError;
-
-/**
- Initializes a CBLBlob with the given in-memory data
- @param contentType The type of content this CBLBlob will represent
- @param url A url to a file containing the data that this CBLBlob will represent
- @param outError  On return, the error if any. */
-- (instancetype) initWithContentType:(NSString *)contentType
-                             fileURL:(NSURL*)url
-                               error:(NSError**)outError;
-
-- (instancetype)init NS_UNAVAILABLE;
 
 @end
 

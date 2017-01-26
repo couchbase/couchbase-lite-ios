@@ -18,6 +18,77 @@
 
 @synthesize contentType = _contentType, length = _length, digest = _digest;
 
+
+- (instancetype)initWithContentType:(NSString *)contentType
+                               data:(NSData *)data
+                              error:(NSError**)outError
+{
+    self = [super init];
+    if(self) {
+        if(![self validateNonNullFor:@"contentType" value:contentType error:outError] ||
+           ![self validateNonNullFor:@"data" value:data error:outError]) {
+            return nil;
+        }
+        
+        _contentType = [contentType copy];
+        _content = [data copy];
+        _length = [data length];
+    }
+    
+    return self;
+}
+
+
+- (instancetype)initWithContentType:(NSString *)contentType
+                      contentStream:(NSInputStream *)stream
+                              error:(NSError**)outError
+{
+    self = [super init];
+    if(self) {
+        if(![self validateNonNullFor:@"contentType" value:contentType error:outError] ||
+           ![self validateNonNullFor:@"stream" value:stream error:outError]) {
+            return nil;
+        }
+        
+        _contentType = [contentType copy];
+        _contentStream = stream;
+    }
+    
+    return self;
+}
+
+
+- (instancetype)initWithContentType:(NSString *)contentType
+                            fileURL:(NSURL *)url
+                              error:(NSError**)outError
+{
+    return [self initWithContentType:contentType contentStream:[[NSInputStream alloc] initWithURL:url] error:outError];
+}
+
+
+- (instancetype)initWithProperties:(NSDictionary *)properties
+                        dataStream:(CBLBlobStream *)stream
+                             error:(NSError**)outError
+{
+    self = [self initWithContentType:properties[@"content-type"] contentStream:(NSInputStream *)stream error:outError];
+    if(self) {
+        if(![self validateNonNullFor:@"properties" value:properties error:outError]) {
+            return nil;
+        }
+        
+        _length = [properties[@"length"] unsignedLongLongValue];
+        _digest = properties[@"digest"];
+    }
+    
+    return self;
+}
+
+
+- (void)dealloc {
+    [_contentStream close];
+}
+
+
 - (NSDictionary *)properties {
     return @{
              @"digest":_digest,
@@ -25,6 +96,7 @@
              @"content-type":_contentType
              };
 }
+
 
 - (NSDictionary *)jsonRepresentation {
     return @{
@@ -34,6 +106,7 @@
              @"content-type":_contentType
              };
 }
+
 
 - (NSData *)content {
     if(_content != nil) {
@@ -53,6 +126,7 @@
     return _content;
 }
 
+
 - (NSInputStream *)contentStream {
     if(_contentStream != nil) {
         return _contentStream;
@@ -61,14 +135,16 @@
     return [[NSInputStream alloc] initWithData:_content];
 }
 
+
 - (BOOL)validateNonNullFor:(NSString *)pathName
                      value:(id)value
                      error:(NSError **)outError {
     if(value == nil) {
         NSString *msg = [NSString stringWithFormat:@"CBLBlob cannot have nil %@", pathName];
         if(outError != nil) {
-            *outError = [NSError errorWithDomain:@"LiteCore" code:kC4ErrorInvalidParameter userInfo:
-                         @{NSLocalizedDescriptionKey:msg}];
+            *outError = [NSError errorWithDomain:@"LiteCore"
+                                            code:kC4ErrorInvalidParameter
+                                        userInfo:@{NSLocalizedDescriptionKey:msg}];
         }
         
         return NO;
@@ -77,54 +153,6 @@
     return YES;
 }
 
-- (instancetype)initWithContentType:(NSString *)contentType data:(NSData *)data error:(NSError * _Nullable __autoreleasing * _Nullable)outError {
-    self = [super init];
-    if(self) {
-        if(![self validateNonNullFor:@"contentType" value:contentType error:outError] ||
-           ![self validateNonNullFor:@"data" value:data error:outError]) {
-            return nil;
-        }
-        
-        _contentType = [contentType copy];
-        _content = [data copy];
-        _length = [data length];
-    }
-    
-    return self;
-}
-
-- (instancetype)initWithContentType:(NSString *)contentType contentStream:(NSInputStream *)stream error:(NSError * _Nullable __autoreleasing * _Nullable)outError {
-    self = [super init];
-    if(self) {
-        if(![self validateNonNullFor:@"contentType" value:contentType error:outError] ||
-           ![self validateNonNullFor:@"stream" value:stream error:outError]) {
-            return nil;
-        }
-        
-        _contentType = [contentType copy];
-        _contentStream = stream;
-    }
-    
-    return self;
-}
-
-- (instancetype)initWithContentType:(NSString *)contentType fileURL:(NSURL *)url error:(NSError * _Nullable __autoreleasing * _Nullable)outError {
-    return [self initWithContentType:contentType contentStream:[[NSInputStream alloc] initWithURL:url] error:outError];
-}
-
-- (instancetype)initWithProperties:(NSDictionary *)properties dataStream:(CBLBlobStream *)stream error:(NSError * _Nullable __autoreleasing * _Nullable)outError {
-    self = [self initWithContentType:properties[@"content-type"] contentStream:(NSInputStream *)stream error:outError];
-    if(self) {
-        if(![self validateNonNullFor:@"properties" value:properties error:outError]) {
-            return nil;
-        }
-        
-        _length = [properties[@"length"] integerValue];
-        _digest = properties[@"digest"];
-    }
-    
-    return self;
-}
 
 - (BOOL)install:(C4BlobStore *)store error:(NSError **)error {
     C4Error err;
@@ -161,8 +189,5 @@
     return YES;
 }
 
-- (void)dealloc {
-    [_contentStream close];
-}
 
 @end
