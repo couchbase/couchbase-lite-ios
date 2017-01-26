@@ -284,16 +284,20 @@ NSTimeInterval kDefaultChangesTimeout = 60.0;
 - (void) startTimeout {
     assert(_changesTimeout > 0);
     [_changesTimeoutTimer invalidate];
-    __weak CBL_Router* weakSelf = self;
     _changesTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval: _changesTimeout
-                                                           repeats: NO block: ^(NSTimer *timer) {
-        CBL_Router* strongSelf = weakSelf;
-        if (_changesMode == kLongPollFeed)
-            [strongSelf sendLongpollResponseForChanges: @[] since: strongSelf->_changesSince];
-        else
-            [strongSelf sendContinuousLine: $dict({@"last_seq", @(strongSelf->_changesSince)})];
-            [strongSelf finished];
-    }];
+                                                            target: self
+                                                          selector: @selector(handleChangesTimeout:)
+                                                          userInfo: nil
+                                                           repeats: NO];
+}
+
+
+- (void) handleChangesTimeout: (NSTimer*)timer {
+    if (_changesMode == kLongPollFeed)
+        [self sendLongpollResponseForChanges: @[] since: self->_changesSince];
+    else
+        [self sendContinuousLine: $dict({@"last_seq", @(self->_changesSince)})];
+    [self finished];
 }
 
 
