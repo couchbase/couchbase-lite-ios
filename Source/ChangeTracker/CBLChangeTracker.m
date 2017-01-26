@@ -392,21 +392,14 @@ DefineLogDomain(ChangeTracker);
         timeout = kMinTimeout;
     
     LogVerbose(ChangeTracker, @"%@: Start timeout, will timeout in %.0f sec.", self, timeout);
-    __weak CBLChangeTracker* weakSelf = self;
     [_timeoutTimer invalidate];
     _timeoutTimer = [NSTimer scheduledTimerWithTimeInterval: timeout
-                                                    repeats: NO
-                                                      block: ^(NSTimer * _Nonnull timer) {
-         CBLChangeTracker* strongSelf = weakSelf;
-         if (strongSelf.paused) {
-             LogVerbose(ChangeTracker, @"%@: Timeout but paused, restart timeout", strongSelf);
-             [strongSelf startTimeout];
-         } else {
-             LogVerbose(ChangeTracker, @"%@: Timeout ...", strongSelf);
-             [strongSelf handleTimeout];
-         }
-     }];
+                                                     target: self
+                                                   selector: @selector(timeout:)
+                                                   userInfo: nil
+                                                    repeats: NO];
 }
+
 
 - (void) stopTimeout {
     if (_timeoutTimer) {
@@ -414,6 +407,18 @@ DefineLogDomain(ChangeTracker);
         _timeoutTimer = nil;
     }
 }
+
+
+- (void) timeout: (NSTimer*)timer {
+    if (self.paused) {
+        LogVerbose(ChangeTracker, @"%@: Timeout but paused, restart timeout", self);
+        [self startTimeout];
+    } else {
+        LogVerbose(ChangeTracker, @"%@: Timeout ...", self);
+        [self handleTimeout];
+    }
+}
+
 
 - (void) handleTimeout {
     [self failedWithErrorDomain: NSURLErrorDomain code: NSURLErrorTimedOut message: @"Timeout"];
