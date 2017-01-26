@@ -5,7 +5,7 @@ Pod::Spec.new do |s|
   s.homepage              = 'http://mobile.couchbase.com'
   s.summary               = 'An embedded syncable NoSQL database for iOS and MacOS apps.'
   s.author                = 'Couchbase'
-  s.source                = { :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :branch => "2.0", :submodules => true }
+  s.source                = { :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :branch => "feature/2.0", :submodules => true }
 
   s.libraries             = "sqlite3", "c++"
 
@@ -21,17 +21,16 @@ Pod::Spec.new do |s|
 
   s.source_files          = "Objective-C/*.{h,m,mm}",
                             "Objective-C/Internal/**/*.{h,m,mm,c}",
-                            "vendor/couchbase-lite-core/C/*.{c,cc,hh,h}",
+                            "vendor/couchbase-lite-core/C/*.{h,hh,c,cc}",
                             "vendor/couchbase-lite-core/C/include/*.h",
                             "vendor/couchbase-lite-core/LiteCore/{BlobStore,Database,Indexes,Query,RevTrees,Storage,VersionVectors,Support}/*.{h,hh,cc,cpp}",
-                            "vendor/couchbase-lite-core/vendor/fleece/Fleece/**/*.{hh,cc,h,mm}",
+                            "vendor/couchbase-lite-core/vendor/fleece/Fleece/**/*.{hh,h,cc,mm}",
                             "vendor/couchbase-lite-core/vendor/fleece/ObjC/*.{h,mm}",
                             "vendor/couchbase-lite-core/vendor/fleece/vendor/{jsonsl,libb64}/*.{h,c}",
                             "vendor/couchbase-lite-core/vendor/sqlite3-unicodesn/**/*.{h,c}",
                             "vendor/couchbase-lite-core/vendor/SQLiteCpp/src/*.cpp", 
                             "vendor/couchbase-lite-core/vendor/SQLiteCpp/include/SQLiteCpp/*.h",
-                            "vendor/MYUtilities/{CollectionUtils,MYErrorUtils,MYLogging,MYURLUtils,Test}.{h,m}",
-                            "vendor/MYUtilities/Test_Assertions.m"
+                            "vendor/MYUtilities/{CollectionUtils,MYErrorUtils,MYLogging,MYURLUtils,Test,Test_Assertions}.{h,m}"
 
   s.exclude_files         = "vendor/couchbase-lite-core/vendor/sqlite3-unicodesn/libstemmer_c/libstemmer/libstemmer.c"
 
