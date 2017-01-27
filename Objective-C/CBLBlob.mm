@@ -239,9 +239,7 @@ static NSString* const kBlobType = @"blob";
     if (!success)
         return convertError(err, outError);
 
-    C4SliceResult digestSlice = c4blob_keyToString(key);
-    _digest = slice2string(digestSlice);
-    c4slice_free(digestSlice);
+    _digest = sliceResult2string(c4blob_keyToString(key));
     _db = db;
     return YES;
 }

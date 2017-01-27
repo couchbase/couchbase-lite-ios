@@ -278,9 +278,7 @@ C4LogDomain QueryLog;
     self = [super init];
     if (self) {
         _query = query;
-        _documentID = assertNonNull( [[NSString alloc] initWithBytes: e->docID.buf
-                                                              length: e->docID.size
-                                                            encoding: NSUTF8StringEncoding] );
+        _documentID = assertNonNull( slice2string(e->docID) );
         _sequence = e->docSequence;
         _customColumnsData = c4queryenum_customColumns(e);
         if (_customColumnsData.buf)
@@ -377,12 +375,8 @@ C4LogDomain QueryLog;
 
 - (NSData*) fullTextUTF8Data {
     CBLStringBytes docIDSlice(self.documentID);
-    C4SliceResult text = c4query_fullTextMatched(_query.c4query, docIDSlice, self.sequence, nullptr);
-    if (!text.buf)
-        return nil;
-    NSData *result = [NSData dataWithBytes: text.buf length: text.size];
-    c4slice_free(text);
-    return result;
+    return sliceResult2data(c4query_fullTextMatched(_query.c4query, docIDSlice,
+                                                    self.sequence, nullptr));
 }
 
 

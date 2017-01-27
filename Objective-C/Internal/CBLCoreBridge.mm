@@ -23,9 +23,7 @@ BOOL convertError(const C4Error &c4err, NSError **outError) {
     static NSString* const kDomains[] = {nil, @"LiteCore", NSPOSIXErrorDomain, @"ForestDB",
                                          @"SQLite", @"Fleece"};
     if (outError) {
-        auto msg = c4error_getMessage(c4err);
-        NSString* msgStr = [[NSString alloc] initWithBytes: msg.buf length: msg.size
-                                                  encoding: NSUTF8StringEncoding];
+        NSString* msgStr = sliceResult2string(c4error_getMessage(c4err));
         *outError = [NSError errorWithDomain: kDomains[c4err.domain] code: c4err.code
                                     userInfo: @{NSLocalizedDescriptionKey: msgStr}];
     }
@@ -39,7 +37,7 @@ BOOL convertError(const FLError &flErr, NSError **outError) {
     return NO;
 }
 
-NSString* slice2string(FLSlice s) {
+NSString* slice2string(C4Slice s) {
     if (!s.buf)
         return nil;
     return [[NSString alloc] initWithBytes: s.buf length: s.size encoding:NSUTF8StringEncoding];
@@ -49,6 +47,12 @@ C4Slice data2slice(NSData *data) {
     return {data.bytes, data.length};
 }
 
+NSString* sliceResult2string(C4SliceResult slice) {
+    NSString* s = slice2string(C4Slice{slice.buf, slice.size});
+    c4slice_free(slice);
+    return s;
+}
+
 NSData* sliceResult2data(C4SliceResult slice) {
     if (!slice.buf)
         return nil;
@@ -56,6 +60,16 @@ NSData* sliceResult2data(C4SliceResult slice) {
                                    deallocator: ^(void *bytes, NSUInteger length) {
                                        c4slice_free({bytes, length});
                                    }];
+}
+
+NSString* sliceResult2FilesystemPath(C4SliceResult str) {
+    if (!str.buf)
+        return nil;
+    NSString* path = [NSFileManager.defaultManager
+                            stringWithFileSystemRepresentation: (const char*)str.buf
+                                                        length: str.size];
+    c4slice_free(str);
+    return path;
 }
 
 C4EncryptionKey symmetricKey2C4Key(CBLSymmetricKey* key) {

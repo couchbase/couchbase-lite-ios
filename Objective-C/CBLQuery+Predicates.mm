@@ -8,6 +8,7 @@
 
 #import "CBLQuery+Internal.h"
 #import "CBLInternal.h"
+#import "CBLCoreBridge.h"
 #import "Fleece.h"
 
 extern "C" {
@@ -431,12 +432,7 @@ static void DumpExpression(NSExpression* expr, int indent) {
 
 
 + (NSString*) json5ToJSON: (const char*)json5 {
-    FLSliceResult j = FLJSON5_ToJSON(FLSlice{json5, strlen(json5)}, NULL);
-    if (!j.buf)
-        return nil;
-    NSString* json = [[NSString alloc] initWithBytes: j.buf length: j.size encoding: NSUTF8StringEncoding];
-    FLSliceResult_Free(j);
-    return json;
+    return sliceResult2string(FLJSON5_ToJSON(FLSlice{json5, strlen(json5)}, NULL));
 }
 #endif
 

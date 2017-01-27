@@ -338,12 +338,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 
 - (NSString*) path {
-    C4SliceResult str = c4db_getPath(_c4db);
-    NSString* path = [NSFileManager.defaultManager
-                      stringWithFileSystemRepresentation: (const char*)str.buf
-                      length: str.size];
-    c4slice_free(str);
-    return path;
+    return sliceResult2FilesystemPath(c4db_getPath(_c4db));
 }
 
 

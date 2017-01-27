@@ -12,9 +12,9 @@
 
 #pragma once
 #import <Foundation/Foundation.h>
+#import "Fleece+CoreFoundation.h"
 #import "c4.h"
 #import "c4Document+Fleece.h"
-#import "Fleece+CoreFoundation.h"
 #import "CBLSymmetricKey.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -22,15 +22,22 @@ NS_ASSUME_NONNULL_BEGIN
 BOOL convertError(const C4Error&, NSError **outError);
 BOOL convertError(const FLError&, NSError **outError);
 
-NSString* slice2string(FLSlice s);
+NSString* slice2string(C4Slice s);
 
-static inline NSString* slice2string(C4Slice s) {
-    return slice2string((FLSlice){s.buf, s.size});
+static inline NSString* slice2string(FLSlice s) {
+    return slice2string(C4Slice{s.buf, s.size});
 }
 
 C4Slice data2slice(NSData*);
 
-NSData* sliceResult2data(C4SliceResult);
+// The sliceResult2... functions take care of freeing the C4SliceResult, or adopting its data.
+NSData*   sliceResult2data(C4SliceResult);
+NSString* sliceResult2string(C4SliceResult);
+NSString* sliceResult2FilesystemPath(C4SliceResult);
+
+static inline NSString* sliceResult2string(FLSliceResult s) {
+    return sliceResult2string(C4SliceResult{s.buf, s.size});
+}
 
 C4EncryptionKey symmetricKey2C4Key(CBLSymmetricKey* key);
 
