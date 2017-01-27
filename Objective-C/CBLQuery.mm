@@ -296,6 +296,11 @@ C4LogDomain QueryLog;
 }
 
 
+- (NSString*) description {
+    return [NSString stringWithFormat: @"%@[docID='%@']", self.class, _documentID];
+}
+
+
 - (CBLDocument*) document {
     return assertNonNull( [_query.database documentWithID: _documentID] );
 }

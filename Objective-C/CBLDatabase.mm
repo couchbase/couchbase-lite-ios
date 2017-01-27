@@ -218,6 +218,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
+- (NSString*) description {
+    return [NSString stringWithFormat: @"%@[%@]", self.class, _name];
+}
+
+
 - (BOOL) close: (NSError**)outError {
     if (!_c4db)
         return YES;
