@@ -12,9 +12,10 @@
 #import "CBLDatabase.h"
 #import "CBLDocument.h"
 #import "CBLBlob.h"
-#include "c4BlobStore.h"
 
-@class CBLBlobStore, CBLBlobStream;
+struct c4BlobStore;
+
+@class CBLBlobStream;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -29,10 +30,11 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLDatabase ()
 
 @property (readonly, nonatomic, nullable) C4Database* c4db;
-@property (readonly, nonatomic) CBLBlobStore* blobStore;
 @property (readonly, nonatomic) NSString* path;     // For unit tests
 
 - (void) document: (CBLDocument*)doc hasUnsavedChanges: (bool)unsaved;
+
+- (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
 
 @end
 
@@ -62,8 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
             error:(NSError **)error;
 
 // Subclass should implement this to read binary files to disk
-- (nullable CBLBlob *)readBlobWithProperties:(NSDictionary *)properties
-                                       error:(NSError **)error;
+- (nullable CBLBlob *)blobWithProperties:(NSDictionary *)properties error:(NSError **)error;
 
 @end
 
@@ -83,11 +84,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLBlob () <CBLJSONCoding>
 
-- (instancetype)initWithProperties:(NSDictionary *)properties
-                        dataStream:(CBLBlobStream *)stream
-                             error:(NSError **)outError;
+- (instancetype) initWithDatabase: (CBLDatabase*)db
+                       properties: (NSDictionary *)properties
+                            error: (NSError**)outError;
 
-- (BOOL)install:(C4BlobStore *)store error:(NSError **)error;
+- (BOOL)installInDatabase: (CBLDatabase *)db error:(NSError **)error;
 
 @end
 

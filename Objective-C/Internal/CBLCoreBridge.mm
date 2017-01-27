@@ -45,8 +45,17 @@ NSString* slice2string(FLSlice s) {
     return [[NSString alloc] initWithBytes: s.buf length: s.size encoding:NSUTF8StringEncoding];
 }
 
-NSString* slice2string(C4Slice s) {
-    return slice2string((FLSlice){s.buf, s.size});
+C4Slice data2slice(NSData *data) {
+    return {data.bytes, data.length};
+}
+
+NSData* sliceResult2data(C4SliceResult slice) {
+    if (!slice.buf)
+        return nil;
+    return [[NSData alloc] initWithBytesNoCopy: (void*)slice.buf length: slice.size
+                                   deallocator: ^(void *bytes, NSUInteger length) {
+                                       c4slice_free({bytes, length});
+                                   }];
 }
 
 C4EncryptionKey symmetricKey2C4Key(CBLSymmetricKey* key) {

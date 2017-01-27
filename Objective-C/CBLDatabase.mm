@@ -20,8 +20,8 @@
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
 #import "CBLMisc.h"
-#import "CBLBlobStore.h"
-#include "c4Observer.h"
+#import "c4BlobStore.h"
+#import "c4Observer.h"
 
 
 NSString* const kCBLDatabaseChangeNotification = @"CBLDatabaseChangeNotification";
@@ -63,7 +63,7 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
 }
 
 
-@synthesize c4db=_c4db, conflictResolver = _conflictResolver, blobStore = _blobStore;
+@synthesize c4db=_c4db, conflictResolver = _conflictResolver;
 
 
 static const C4DatabaseConfig kDBConfig = {
@@ -152,12 +152,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                fileProtection: _options.fileProtection
                         error: outError])
         return NO;
-    
-    _blobStore = [[CBLBlobStore alloc] initWithPath:attachmentsPath flags:config.flags encryptionKey:&config.encryptionKey error:outError];
-    if(!_blobStore) {
-        return NO;
-    }
-    
+
     return YES;
 }
 
@@ -244,6 +239,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     _obs = nullptr;
 
     return YES;
+}
+
+
+- (BOOL) mustBeOpen: (NSError**)outError {
+    return _c4db != nullptr || convertError({LiteCoreDomain, kC4ErrorNotOpen}, outError);
 }
 
 
@@ -407,6 +407,17 @@ static NSString* databasePath(NSString* name, NSString* dir) {
             }
         }
     } while(changes > 0);
+}
+
+
+- (C4BlobStore*) getBlobStore: (NSError**)outError {
+    if (![self mustBeOpen: outError])
+        return nil;
+    C4Error err;
+    C4BlobStore *blobStore = c4db_getBlobStore(_c4db, &err);
+    if (!blobStore)
+        convertError(err, outError);
+    return blobStore;
 }
 
 

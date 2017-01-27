@@ -7,24 +7,22 @@
 //
 
 #import "CBLBlobStream.h"
+#import "CBLCoreBridge.h"
+
 
 @implementation CBLBlobStream
 {
-    C4ReadStream* _readStream;
-    BOOL _hasBytesAvailable;
     C4BlobStore* _store;
     C4BlobKey _key;
+    C4ReadStream* _readStream;
+    BOOL _hasBytesAvailable;
+    BOOL _closed;
+    C4Error _error;
 }
 
-- (BOOL)hasBytesAvailable {
-    if(_readStream == nullptr) {
-        return [super hasBytesAvailable];
-    }
-    
-    return _hasBytesAvailable;
-}
 
-- (instancetype)initWithStore:(C4BlobStore *)store key:(C4BlobKey)key error:(NSError *__autoreleasing *)error
+- (instancetype)initWithStore:(C4BlobStore *)store
+                          key:(C4BlobKey)key
 {
     self = [super init];
     if(self) {
@@ -36,40 +34,82 @@
     return self;
 }
 
-- (void)open {
-    _readStream = c4blob_openReadStream(_store, _key, nullptr);
-    _hasBytesAvailable = YES;
+
+- (void)dealloc {
+    c4stream_close(_readStream);
 }
+
+
+- (void)open {
+    Assert(!_readStream, @"Stream is already open");
+    _readStream = c4blob_openReadStream(_store, _key, &_error);
+    if (_readStream) {
+        _error.code = 0;
+        _hasBytesAvailable = YES;
+        _closed = NO;
+    }
+}
+
 
 - (void)close {
-    C4ReadStream* rs = _readStream;
-    _readStream = nullptr;
-    c4stream_close(rs);
+    if (_readStream) {
+        c4stream_close(_readStream);
+        _readStream = nullptr;
+        _hasBytesAvailable = NO;
+        _closed = YES;
+        _error.code = 0;
+    }
 }
 
+
+- (NSStreamStatus)streamStatus {
+    if (_error.code)
+        return NSStreamStatusError;
+    else if (_closed)
+        return NSStreamStatusClosed;
+    else if (!_readStream)
+        return NSStreamStatusNotOpen;
+    else if (_hasBytesAvailable)
+        return NSStreamStatusOpen;
+    else
+        return NSStreamStatusAtEnd;
+}
+
+
+- (BOOL)hasBytesAvailable {
+    return _hasBytesAvailable;
+}
+
+
 - (NSInteger)read:(uint8_t *)buffer maxLength:(NSUInteger)len {
-    if(_readStream == nullptr) {
-        return [super read:buffer maxLength:len];
-    }
-    
-    C4Error err;
-    size_t retVal = c4stream_read(_readStream, buffer, len, &err);
+    Assert(_readStream != nullptr, @"Stream is not open");
+    size_t retVal = c4stream_read(_readStream, buffer, len, &_error);
+    if (retVal == 0 && _error.code != 0)
+        return -1;
     _hasBytesAvailable = retVal > 0 && retVal == len;
     return retVal;
 }
 
+
 - (BOOL)getBuffer:(uint8_t * _Nullable *)buffer length:(NSUInteger *)len {
-    if(_readStream == nullptr) {
-        return [super getBuffer:buffer length:len];
-    }
-    
+    Assert(_readStream != nullptr, @"Stream is not open");
     *buffer = nullptr;
     *len = 0;
     return NO;
 }
 
-- (void)dealloc {
-    c4stream_close(_readStream);
+
+- (NSError*) streamError {
+    NSError* error = nil;
+    if (_error.code != 0)
+        convertError(_error, &error);
+    return error;
 }
+
+
+- (void)scheduleInRunLoop:(NSRunLoop *)aRunLoop forMode:(NSRunLoopMode)mode {
+    Assert(NO, @"CBLBlobStream does not support scheduling");
+}
+
 
 @end

@@ -557,27 +557,4 @@
     return [[CBLBlob alloc] initWithContentType:contentType contentStream:stream error:outError];
 }
 
-- (void)testInvalidBlobs {
-    NSError *error;
-    CBLBlob* data = [self createBlob:nil withData:nil error:&error];
-    AssertNil(data);
-    
-    data = [self createBlob:@"application/foo" withData:nil error:&error];
-    AssertNil(data);
-    
-    NSData *content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
-    data = [self createBlob:nil withData:content error:&error];
-    AssertNil(data);
-    
-    data = [self createBlob:nil withStream:nil error:&error];
-    AssertNil(data);
-    
-    NSInputStream* contentStream = [[NSInputStream alloc] initWithData:content];
-    data = [self createBlob:nil withStream:contentStream error:&error];
-    AssertNil(data);
-    
-    data = [self createBlob:@"application/foo" withStream:nil error:&error];
-    AssertNil(data);
-}
-
 @end

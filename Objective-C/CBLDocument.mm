@@ -19,12 +19,7 @@
 #import "CBLStringBytes.h"
 #import "CBLJSON.h"
 #import "CBLInternal.h"
-#import "CBLBlobStore.h"
 #include "c4Observer.h"
-
-extern "C" {
-    #include "Test.h"
-}
 
 NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChangeNotification";
 NSString* const kCBLDocumentSavedNotification = @"CBLDocumentSavedNotification";
@@ -143,17 +138,12 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     return c4db_getFLSharedKeys(_c4db);
 }
 
-- (CBLBlob *)readBlobWithProperties:(NSDictionary *)properties error:(NSError * _Nullable __autoreleasing *)error {
-    CBLBlobStream* data = [[[self database] blobStore] dataForBlobWithDigest:properties[@"digest"] error:error];
-    if(data == nil) {
-        return nil;
-    }
-    
-    return [[CBLBlob alloc] initWithProperties:properties dataStream:data error:error];
+- (CBLBlob *)blobWithProperties:(NSDictionary *)properties error:(NSError **)error {
+    return [[CBLBlob alloc] initWithDatabase: _database properties:properties error:error];
 }
 
-- (BOOL)storeBlob:(CBLBlob *)blob error:(NSError * _Nullable __autoreleasing *)error {
-    return [[[self database] blobStore] write:blob error:error];
+- (BOOL)storeBlob:(CBLBlob *)blob error:(NSError **)error {
+    return [blob installInDatabase: _database error: error];
 }
 
 - (void) setHasChanges: (BOOL)hasChanges {

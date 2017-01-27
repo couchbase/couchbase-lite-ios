@@ -216,7 +216,7 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
     abort();
 }
 
-- (BOOL)storeBlob:(CBLBlob *)blob error:(NSError * _Nullable __autoreleasing *)error {
+- (BOOL)storeBlob:(CBLBlob *)blob error:(NSError **)error {
     if(error != nil) {
         *error = [NSError errorWithDomain:@"LiteCore" code:kC4ErrorUnimplemented userInfo:
                  @{NSLocalizedDescriptionKey:@"CBLProperties does not know how to handle Blob datatype"}];
@@ -225,7 +225,7 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
     return NO;
 }
 
-- (CBLBlob *)readBlobWithProperties:(NSDictionary *)properties error:(NSError * _Nullable __autoreleasing *)error {
+- (CBLBlob *)blobWithProperties:(NSDictionary *)properties error:(NSError **)error {
     if(error != nil) {
         *error = [NSError errorWithDomain:@"LiteCore" code:kC4ErrorUnimplemented userInfo:
                   @{NSLocalizedDescriptionKey:@"CBLProperties does not know how to handle Blob datatype"}];
@@ -234,7 +234,7 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
     return nil;
 }
 
-- (FLSliceResult)encodeWith:(FLEncoder)encoder error:(NSError * _Nullable __autoreleasing *)outError {
+- (FLSliceResult)encodeWith:(FLEncoder)encoder error:(NSError **)outError {
     FLEncoder_BeginDict(encoder, [_properties count]);
     for (NSString *key in _properties) {
         CBLStringBytes bKey(key);
@@ -296,7 +296,7 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 - (id)convertDictionary:(NSDictionary *)dict {
     NSString *type = dict[@"_cbltype"];
     if([type isEqualToString:@"blob"]) {
-        return [self readBlobWithProperties:dict error:nil];
+        return [self blobWithProperties:dict error:nil];
     }
 
     // Invalid!

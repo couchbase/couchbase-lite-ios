@@ -9,14 +9,17 @@
 #import <Foundation/Foundation.h>
 #include "c4BlobStore.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 // A convenience class for wrapping C4ReadStream
 @interface CBLBlobStream : NSInputStream
 
 // Create a stream based on the given store and key (this allows it to be created multiple times
 // so that it can be read more than once if need be)
 - (instancetype)initWithStore:(C4BlobStore *)store
-                          key:(C4BlobKey)key
-                        error:(NSError **)error;
+                          key:(C4BlobKey)key;
 
 
 @end
+
+NS_ASSUME_NONNULL_END

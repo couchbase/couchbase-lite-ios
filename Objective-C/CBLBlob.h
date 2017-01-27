@@ -53,11 +53,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Gets the contents of a CBLBlob as a block of memory.
     Not recommended for very large blobs, as it may be slow and use up lots of RAM. */
-@property (readonly, nonatomic) NSData* content;
+@property (readonly, nonatomic, nullable) NSData* content;
 
 /** A stream of the content of a CBLBlob.
     The caller is responsible for opening the stream, and closing it when finished. */
-@property (readonly, nonatomic) NSInputStream *contentStream;
+@property (readonly, nonatomic, nullable) NSInputStream *contentStream;
 
 /** The type of content this CBLBlob represents; by convention this is a MIME type. */
 @property (readonly, nonatomic, nullable) NSString* contentType;

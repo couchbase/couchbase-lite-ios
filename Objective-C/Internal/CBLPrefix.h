@@ -17,6 +17,7 @@ extern "C" {
 #endif
 
 #import "CollectionUtils.h"
+#import "Test.h"
 
 #ifdef __cplusplus
 }
