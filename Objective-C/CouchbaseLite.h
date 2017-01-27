@@ -16,8 +16,9 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <CouchbaseLite/PublicHeader.h>
 
-#import "CBLDatabase.h"
-#import "CBLProperties.h"
-#import "CBLDocument.h"
 #import "CBLConflictResolver.h"
+#import "CBLBlob.h"
+#import "CBLDatabase.h"
+#import "CBLDocument.h"
+#import "CBLProperties.h"
 #import "CBLQuery.h"
