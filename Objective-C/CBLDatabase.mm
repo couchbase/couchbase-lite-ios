@@ -121,12 +121,13 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     if (_c4db)
         return YES;
     
-    if (![self setupDirectory: _options.directory
+    NSString* dir = _options.directory ?: defaultDirectory();
+    if (![self setupDirectory: dir
                fileProtection: _options.fileProtection
                         error: outError])
         return NO;
     
-    NSString* path = databasePath(_name, _options.directory);    
+    NSString* path = databasePath(_name, dir);
     CBLStringBytes bPath(path);
     
     C4DatabaseConfig config = kDBConfig;
@@ -147,12 +148,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     _documents = [NSMapTable strongToWeakObjectsMapTable];
     _unsavedDocuments = [NSMutableSet setWithCapacity: 100];
     
-    NSString* attachmentsPath = [[_options.directory stringByAppendingPathComponent:@"attachments"] stringByAppendingString:@"/"];
-    if (![self setupDirectory: attachmentsPath
+    NSString* attsPath = attachmentsPath(dir);
+    if (![self setupDirectory: attsPath
                fileProtection: _options.fileProtection
                         error: outError])
         return NO;
-
     return YES;
 }
 
@@ -183,7 +183,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     attributes = @{NSFileProtectionKey: protection};
 #endif
     
-    dir = directory(dir);
     NSError* error;
     if (![[NSFileManager defaultManager] createDirectoryAtPath: dir
                                    withIntermediateDirectories: YES
@@ -273,7 +272,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 + (BOOL) deleteDatabase: (NSString*)name
             inDirectory: (nullable NSString*)directory
                   error: (NSError**)outError {
-    NSString* path = databasePath(name, directory);
+    NSString* path = databasePath(name, directory ?: defaultDirectory());
     CBLStringBytes bPath(path);
     C4Error err;
     return c4db_deleteAtPath(bPath, &kDBConfig, &err) || convertError(err, outError);
@@ -282,7 +281,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 + (BOOL) databaseExists: (NSString*)name
             inDirectory: (nullable NSString*)directory {
-    NSString* path = databasePath(name, directory);
+    NSString* path = databasePath(name, directory ?: defaultDirectory());
     return [[NSFileManager defaultManager] fileExistsAtPath: path];
 }
 
@@ -367,14 +366,15 @@ static NSString* defaultDirectory() {
 }
 
 
-static NSString* directory(NSString* directory) {
-    return directory != nil ? directory : defaultDirectory();
+static NSString* databasePath(NSString* name, NSString* dir) {
+    NSString* path = [dir stringByAppendingPathComponent: name];
+    return path.stringByStandardizingPath;
 }
 
 
-static NSString* databasePath(NSString* name, NSString* dir) {
-    NSString* path = [directory(dir) stringByAppendingPathComponent: name];
-    return path.stringByStandardizingPath;
+static NSString* attachmentsPath(NSString* dir) {
+    NSString* path = [dir stringByAppendingPathComponent: @"attachments"];
+    return path.stringByStandardizingPath;;
 }
 
 
