@@ -19,15 +19,8 @@
 
 - (void) setUp {
     [super setUp];
-    
-    NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
-    [CBLDatabase deleteDatabase: kDatabaseName inDirectory: dir error: nil];
-    
-    NSError* error;
-    CBLDatabaseOptions* options = [CBLDatabaseOptions defaultOptions];
-    options.directory = dir;
-    _db = [[CBLDatabase alloc] initWithName: kDatabaseName options: options error: &error];
-    AssertNotNil(_db, @"Couldn't open db: %@", error);
+    [CBLDatabase deleteDatabase: kDatabaseName inDirectory: [[self class] directory] error: nil];
+    [self openDB];
 }
 
 
@@ -38,6 +31,29 @@
         _db = nil;
     }
     [super tearDown];
+}
+
+
++ (NSString*) directory {
+    return [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
+}
+
+
+- (void) openDB {
+    Assert(!_db);
+    NSError* error;
+    CBLDatabaseOptions* options = [CBLDatabaseOptions defaultOptions];
+    options.directory = [[self class] directory];
+    _db = [[CBLDatabase alloc] initWithName: kDatabaseName options: options error: &error];
+    AssertNotNil(_db, @"Couldn't open db: %@", error);
+}
+
+
+- (void) reopenDB {
+    NSError *error;
+    XCTAssert([_db close: &error]);
+    _db = nil;
+    [self openDB];
 }
 
 

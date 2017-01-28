@@ -352,6 +352,22 @@
     AssertEqualObjects(doc[@"name"], @"Scott");
 }
 
+
+- (void) testReopenDB {
+    CBLDocument* doc = [self.db documentWithID: @"doc1"];
+    [doc setObject: @"str" forKey: @"string"];
+    AssertEqualObjects(doc.properties, @{@"string": @"str"});
+    NSError* error;
+    Assert([doc save: &error], @"Error saving: %@", error);
+
+    [self reopenDB];
+
+    doc = [self.db documentWithID: @"doc1"];
+    AssertEqualObjects(doc.properties, @{@"string": @"str"});
+    AssertEqualObjects(doc[@"string"], @"str");
+}
+
+
 - (CBLDocument*) setupConflict {
     // Setup a default database conflict resolver
     CBLDocument* doc = [self.db documentWithID: @"doc1"];

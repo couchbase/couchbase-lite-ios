@@ -91,8 +91,14 @@
 }
 
 
-- (void) test03_PropertyQuery {
+- (void) test03_PropertyQuery               {[self propertyQueryWithReopen: NO];}
+- (void) test03_PropertyQueryAfterReopen    {[self propertyQueryWithReopen: YES];}
+
+- (void) propertyQueryWithReopen: (BOOL)reopen {
     [self loadJSONResource: @"names_100"];
+    if (reopen)
+        [self reopenDB];
+
     // Try a query involving a property. The first pass will be unindexed, the 2nd indexed.
     NSError *error;
     NSArray* indexSpec = @[ [NSExpression expressionForKeyPath: @"name.first"] ];
@@ -161,36 +167,6 @@
         XCTAssertEqual(ftsRow.matchCount, 2ul);
     }];
     XCTAssertEqual(numRows, 2ull);
-}
-
-
-- (void) failingTest06_QueryUnchangedDatabase {
-    [self loadJSONResource: @"names_100"];
-    
-    // Try a query involving a property. The first pass will be unindexed, the 2nd indexed.
-    NSError *error;
-    NSArray* indexSpec = @[ [NSExpression expressionForKeyPath: @"name.first"] ];
-    for (int pass = 0; pass < 2; ++pass) {
-        CBLDatabase *nuDb = [self.db copy];
-        CBLQuery *q = [nuDb createQuery: @"name.first == $FIRSTNAME" error: &error];
-        XCTAssert(q, @"Couldn't create query: %@", error);
-        q.parameters = @{@"FIRSTNAME": @"Claude"};
-        uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-            XCTAssertEqualObjects(row.documentID, @"doc-009");
-            XCTAssertEqual(row.sequence, 9llu);
-            CBLDocument* doc = row.document;
-            XCTAssertEqualObjects(doc.documentID, @"doc-009");
-            XCTAssertEqual(doc.sequence, 9llu);
-        }];
-        XCTAssertEqual(numRows, 1llu);
-        
-        if (pass == 0)
-            XCTAssert([nuDb createIndexOn: indexSpec type: kCBLValueIndex options: NULL error: &error]);
-        else
-            XCTAssert([nuDb deleteIndexOn: indexSpec type: kCBLValueIndex error: &error]);
-        
-        XCTAssert([nuDb deleteDatabase: &error]);
-    }
 }
 
 
