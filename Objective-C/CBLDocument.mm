@@ -241,6 +241,33 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 }
 
 
+static bool objectContainsBlob(__unsafe_unretained id value) {
+    if ([value isKindOfClass: [NSDictionary class]])
+        return dictContainsBlob(value);
+    else if ([value isKindOfClass: [NSArray class]])
+        return arrayContainsBlob(value);
+    else
+        return false;
+}
+
+static bool arrayContainsBlob(__unsafe_unretained NSArray* array) {
+    for (id value in array)
+        if (objectContainsBlob(value))
+            return true;
+    return false;
+}
+
+static bool dictContainsBlob(__unsafe_unretained NSDictionary* dict) {
+    if ([dict[@"_cbltype"] isEqual: @"blob"])
+        return true;
+    __block bool containsBlob = false;
+    [dict enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL *stop) {
+        *stop = containsBlob = objectContainsBlob(value);
+    }];
+    return containsBlob;
+}
+
+
 // Lower-level save method. On conflict, returns YES but sets *outDoc to NULL. */
 - (BOOL) saveInto: (C4Document **)outDoc
          asDelete: (BOOL)deletion
@@ -256,7 +283,9 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
         .save = true,
     };
     if (deletion)
-        put.revFlags = kDeleted;
+        put.revFlags = kRevDeleted;
+    if (dictContainsBlob(propertiesToSave))
+        put.revFlags |= kRevHasAttachments;
     if (propertiesToSave.count > 0) {
         // Encode properties to Fleece data:
         auto enc = c4db_createFleeceEncoder(_c4db);
