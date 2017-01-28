@@ -111,7 +111,7 @@ typedef struct {
  of the batch operations. If the block returns NO, the batch is rolled back. 
  Use this when performing bulk write operations like multiple inserts/updates; it saves the
  overhead of multiple database commits, greatly improving performance. */
-- (bool) inBatch: (NSError**)outError do: (BOOL (^)())block;
+- (BOOL) inBatch: (NSError**)outError do: (BOOL (^)())block;
 
 /** Creates a new CBLDocument object with no properties and a new (random) UUID. 
  The document will be saved to the database when you call -save: on it. */
@@ -173,7 +173,7 @@ typedef struct {
                     or NSStrings that are expression format strings.
     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
     @return  True on success, false on failure. */
-- (bool) createIndexOn: (NSArray*)expressions
+- (BOOL) createIndexOn: (NSArray*)expressions
                  error: (NSError**)error;
 
 /** Creates an index on a given document property.
@@ -185,7 +185,7 @@ typedef struct {
     @param options  Options affecting the index, or NULL for default settings.
     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
     @return  True on success, false on failure. */
-- (bool) createIndexOn: (NSArray*)expressions
+- (BOOL) createIndexOn: (NSArray*)expressions
                   type: (CBLIndexType)type
                options: (nullable const CBLIndexOptions*)options
                  error: (NSError**)error;
@@ -195,7 +195,7 @@ typedef struct {
     @param type  Type of index.
     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
     @return  True if the index existed and was deleted, false if it did not exist. */
-- (bool) deleteIndexOn: (NSArray*)expressions
+- (BOOL) deleteIndexOn: (NSArray*)expressions
                   type: (CBLIndexType)type
                  error: (NSError**)error;
 

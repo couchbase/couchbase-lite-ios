@@ -160,6 +160,11 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 }
 
 
+- (id) objectForKeyedSubscript: (NSString*)key {
+    return [super objectForKeyedSubscript: key];
+}
+
+
 - (void)setProperties:(NSDictionary *)properties {
     [super setProperties:properties];
     [self noteChanged];
@@ -406,6 +411,7 @@ static bool dictContainsBlob(__unsafe_unretained NSDictionary* dict) {
     [self postChangedNotificationExternal:NO];
     return YES;
 }
+
 
 @end
 
