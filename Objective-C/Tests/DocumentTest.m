@@ -565,6 +565,29 @@
     }
 }
 
+- (void)testReadExistingBlob {
+    CBLDocument* doc = [self.db documentWithID: @"doc1"];
+    NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
+    NSError* error;
+    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content error:&error];
+    Assert(data, @"Failed to create blob: %@", error);
+    doc[@"data"] = data;
+    doc[@"name"] = @"Jim";
+    Assert([doc save: &error], @"Saving error: %@", error);
+    
+    doc = [[self.db copy] documentWithID: @"doc1"];
+    Assert([doc[@"data"] isKindOfClass:[CBLBlob class]]);
+    data = doc[@"data"];
+    AssertEqualObjects(data.content, content);
+    
+    doc = [[self.db copy] documentWithID: @"doc1"];
+    doc[@"foo"] = @"bar";
+    Assert([doc save: &error], @"Saving error: %@", error);
+    Assert([doc[@"data"] isKindOfClass:[CBLBlob class]]);
+    data = doc[@"data"];
+    AssertEqualObjects(data.content, content);
+}
+
 - (CBLBlob *)createBlob:(NSString *)contentType withData:(NSData *)data error:(NSError **)outError {
     return [[CBLBlob alloc] initWithContentType:contentType data:data error:outError];
 }
