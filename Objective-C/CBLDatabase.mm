@@ -265,7 +265,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     _c4db = nullptr;
     c4dbobs_free(_obs);
     _obs = nullptr;
-    return true;
+    return YES;
 }
 
 
@@ -286,7 +286,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-- (bool) inBatch: (NSError**)outError do: (BOOL (^)())block {
+- (BOOL) inBatch: (NSError**)outError do: (BOOL (^)())block {
     C4Transaction transaction(_c4db);
     if (outError)
         *outError = nil;
@@ -295,13 +295,13 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         return convertError(transaction.error(), outError);
     
     if (!block())
-        return false;
+        return NO;
     
     if (!transaction.commit())
         return convertError(transaction.error(), outError);
     
     [self postDatabaseChanged];
-    return true;
+    return YES;
 }
 
 
@@ -475,14 +475,14 @@ static NSString* attachmentsPath(NSString* dir) {
 }
 
 
-- (bool) createIndexOn: (NSArray<NSExpression*>*)expressions
+- (BOOL) createIndexOn: (NSArray<NSExpression*>*)expressions
                  error: (NSError**)outError
 {
     return [self createIndexOn: expressions type: kCBLValueIndex options: NULL error: outError];
 }
 
 
-- (bool) createIndexOn: (NSArray*)expressions
+- (BOOL) createIndexOn: (NSArray*)expressions
                   type: (CBLIndexType)type
                options: (const CBLIndexOptions*)options
                  error: (NSError**)outError
@@ -490,7 +490,7 @@ static NSString* attachmentsPath(NSString* dir) {
     static_assert(sizeof(CBLIndexOptions) == sizeof(C4IndexOptions), "Index options incompatible");
     NSData* json = [CBLQuery encodeExpressionsToJSON: expressions error: outError];
     if (!json)
-        return false;
+        return NO;
     C4Error c4err;
     return c4db_createIndex(_c4db,
                             {json.bytes, json.length},
@@ -501,16 +501,16 @@ static NSString* attachmentsPath(NSString* dir) {
 }
 
 
-- (bool) deleteIndexOn: (NSArray<NSExpression*>*)expressions
+- (BOOL) deleteIndexOn: (NSArray<NSExpression*>*)expressions
                   type: (CBLIndexType)type
                  error: (NSError**)outError
 {
     NSData* json = [CBLQuery encodeExpressionsToJSON: expressions error: outError];
     if (!json)
-        return false;
+        return NO;
     C4Error c4err;
     return c4db_deleteIndex(_c4db, {json.bytes, json.length}, (C4IndexType)type, &c4err)
-                || convertError(c4err, outError);;
+            || convertError(c4err, outError);
 }
 
 
