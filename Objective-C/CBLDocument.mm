@@ -222,12 +222,12 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 - (void) setC4Doc: (nullable C4Document*)doc {
     c4doc_free(_c4doc);
     _c4doc = doc;
-    [self setRootDict: nullptr orProperties: nil];
+    [self setRootDict: nullptr];
     if (_c4doc) {
         C4Slice body = _c4doc->selectedRev.body;
         if (body.size > 0) {
             FLDict root = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
-            [self setRootDict: root orProperties: nil];
+            [self setRootDict: root];
         }
     }
 }

@@ -27,9 +27,7 @@
 @end
 
 @implementation CBLProperties {
-    FLDict _root;             // For CBLDocument
-    NSDictionary* _rootProps; // For CBLSubdocument
-    
+    FLDict _root;
     NSMutableDictionary* _properties;
     BOOL _hasChanges;
 }
@@ -79,8 +77,8 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (BOOL) booleanForKey: (NSString*)key {
-    if (_properties || _rootProps)
-        return [numberProperty(_properties ? _properties : _rootProps, key) boolValue];
+    if (_properties)
+        return [numberProperty(_properties, key) boolValue];
     else
         return FLValue_AsBool([self fleeceValueForKey: key]);
     return NO;
@@ -94,24 +92,24 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (double) doubleForKey: (NSString*)key {
-    if (_properties || _rootProps)
-        return [numberProperty(_properties ? _properties : _rootProps, key) doubleValue];
+    if (_properties)
+        return [numberProperty(_properties, key) doubleValue];
     else
         return FLValue_AsDouble([self fleeceValueForKey: key]);
 }
 
 
 - (float) floatForKey: (NSString*)key {
-    if (_properties || _rootProps)
-        return [numberProperty(_properties ? _properties : _rootProps, key) floatValue];
+    if (_properties)
+        return [numberProperty(_properties, key) floatValue];
     else
         return FLValue_AsFloat([self fleeceValueForKey: key]);
 }
 
 
 - (NSInteger) integerForKey: (NSString*)key {
-    if (_properties || _rootProps)
-        return [numberProperty(_properties ? _properties : _rootProps, key) integerValue];
+    if (_properties)
+        return [numberProperty(_properties, key) integerValue];
     else
         return (NSInteger)FLValue_AsInt([self fleeceValueForKey: key]);
 }
@@ -123,8 +121,8 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (nullable NSString*) stringForKey: (NSString*)key {
-    if (_properties || _rootProps)
-        return _properties ? _properties[key] : _rootProps[key];
+    if (_properties)
+        return _properties[key];
     else
         return slice2string((FLValue_AsString([self fleeceValueForKey: key])));
 }
@@ -198,9 +196,8 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 #pragma mark - INTERNAL:
 
 
-- (void) setRootDict: (nullable FLDict)root orProperties: (nullable NSDictionary*) props {
+- (void) setRootDict: (nullable FLDict)root {
     _root = root;
-    _rootProps = props;
 }
 
 
@@ -269,9 +266,8 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
     if (_properties && !self.hasChanges)
         return _properties;
     if (_root)
-        return [self fleeceValueToObject: (FLValue)_root];
-    else
-        return _rootProps;
+        return [self fleeceRootToDictionary: _root];
+    return nil;
 }
 
 
@@ -342,6 +338,34 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
         default:
             return FLValue_GetNSObject(value, [self sharedKeys], [self sharedStrings]);
     }
+}
+
+
+- (NSDictionary*) fleeceRootToDictionary: (FLDict)root  {
+    if (root == nullptr)
+        return nil;
+    
+    NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithCapacity: FLDict_Count(root)];
+    FLDictIterator iter;
+    FLDictIterator_Begin(root, &iter);
+    do {
+        NSString* key = [self fleeceValueToSharedKey: FLDictIterator_GetKey(&iter)];
+        dict[key] = [self fleeceValueToObject: FLDictIterator_GetValue(&iter)];
+    } while (FLDictIterator_Next(&iter));
+    return dict;
+}
+
+
+- (NSString*) fleeceValueToSharedKey: (FLValue)value {
+    NSString* key = nil;
+    if (FLValue_IsInteger(value)) {
+        auto encKey = FLValue_AsInt(value);
+        auto k = FLSharedKey_GetKeyString([self sharedKeys], (int)encKey, nil);
+        key = slice2string(k);
+    }
+    if (!key)
+        key = slice2string(FLValue_AsString(value));
+    return key;
 }
 
 
