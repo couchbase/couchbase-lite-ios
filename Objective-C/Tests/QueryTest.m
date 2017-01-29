@@ -170,7 +170,7 @@
 }
 
 
-- (void) failingTest07_deleteQueriedDoc {
+- (void) test07_deleteQueriedDoc {
     [self loadJSONResource: @"names_100"];
     
     NSError* error;
