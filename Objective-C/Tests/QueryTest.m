@@ -22,7 +22,7 @@
 - (uint64_t) verifyQuery: (CBLQuery*)q test: (void (^)(uint64_t n, CBLQueryRow *row))block {
     NSError* error;
     NSEnumerator* e = [q run: &error];
-    XCTAssert(e, @"Query failed: %@", error);
+    Assert(e, @"Query failed: %@", error);
     uint64_t n = 0;
     for (CBLQueryRow *row in e) {
         NSLog(@"Row: docID='%@', sequence=%llu", row.documentID, row.sequence);
@@ -35,7 +35,7 @@
 - (void) test01_Predicates {
     // The query with the 'matches' operator requires there to be a FTS index on 'blurb':
     NSError* error;
-    XCTAssert([_db createIndexOn: @[@"blurb"] type: kCBLFullTextIndex options: NULL error: &error]);
+    Assert([_db createIndexOn: @[@"blurb"] type: kCBLFullTextIndex options: NULL error: &error]);
     
     const struct {const char *pred; const char *json5;} kTests[] = {
         {"nickname == 'Bobo'",      "{WHERE: ['=', ['.nickname'],'Bobo']}"},
@@ -64,12 +64,12 @@
         [CBLQuery dumpPredicate: [NSPredicate predicateWithFormat: pred argumentArray: nil]];
         NSString* expectedJson = [CBLQuery json5ToJSON: kTests[i].json5];
         NSData* actual = [CBLQuery encodeQuery: pred orderBy: nil returning: nil error: &error];
-        XCTAssert(actual, @"Encode failed: %@", error);
+        Assert(actual, @"Encode failed: %@", error);
         NSString* actualJSON = [[NSString alloc] initWithData: actual encoding: NSUTF8StringEncoding];
-        XCTAssertEqualObjects(actualJSON, expectedJson);
+        AssertEqualObjects(actualJSON, expectedJson);
 
         CBLQuery* query = [self.db createQuery: pred error: &error];
-        XCTAssert(query, @"Couldn't create CBLQuery: %@", error);
+        Assert(query, @"Couldn't create CBLQuery: %@", error);
     }
 }
 
@@ -78,16 +78,16 @@
     [self loadJSONResource: @"names_100"];
     NSError *error;
     CBLQuery* q = [self.db createQuery: nil error: &error];
-    XCTAssert(q, @"Couldn't create query: %@", error);
+    Assert(q, @"Couldn't create query: %@", error);
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         NSString* expectedID = [NSString stringWithFormat: @"doc-%03llu", n];
-        XCTAssertEqualObjects(row.documentID, expectedID);
-        XCTAssertEqual(row.sequence, n);
+        AssertEqualObjects(row.documentID, expectedID);
+        AssertEqual(row.sequence, n);
         CBLDocument* doc = row.document;
-        XCTAssertEqualObjects(doc.documentID, expectedID);
-        XCTAssertEqual(doc.sequence, n);
+        AssertEqualObjects(doc.documentID, expectedID);
+        AssertEqual(doc.sequence, n);
     }];
-    XCTAssertEqual(numRows, 100llu);
+    AssertEqual(numRows, 100llu);
 }
 
 
@@ -104,22 +104,22 @@
     NSArray* indexSpec = @[ [NSExpression expressionForKeyPath: @"name.first"] ];
     for (int pass = 0; pass < 2; ++pass) {
         CBLQuery *q = [self.db createQuery: @"name.first == $FIRSTNAME" error: &error];
-        XCTAssert(q, @"Couldn't create query: %@", error);
+        Assert(q, @"Couldn't create query: %@", error);
         q.parameters = @{@"FIRSTNAME": @"Claude"};
         uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-            XCTAssertEqualObjects(row.documentID, @"doc-009");
-            XCTAssertEqual(row.sequence, 9llu);
+            AssertEqualObjects(row.documentID, @"doc-009");
+            AssertEqual(row.sequence, 9llu);
             CBLDocument* doc = row.document;
-            XCTAssertEqualObjects(doc.documentID, @"doc-009");
-            XCTAssertEqual(doc.sequence, 9llu);
+            AssertEqualObjects(doc.documentID, @"doc-009");
+            AssertEqual(doc.sequence, 9llu);
         }];
-        XCTAssertEqual(numRows, 1llu);
+        AssertEqual(numRows, 1llu);
 
         if (pass == 0) {
-            XCTAssert([self.db createIndexOn: indexSpec type: kCBLValueIndex options: NULL error: &error]);
+            Assert([self.db createIndexOn: indexSpec type: kCBLValueIndex options: NULL error: &error]);
         }
     }
-    XCTAssert([self.db deleteIndexOn: indexSpec type: kCBLValueIndex error: &error]);
+    Assert([self.db deleteIndexOn: indexSpec type: kCBLValueIndex error: &error]);
 }
 
 
@@ -136,23 +136,23 @@
                                     orderBy: @[@"contact.address.zip"]
                                   returning: @[@"contact.address.zip", @"contact.email"]
                                       error: &error];
-    XCTAssert(q, @"Couldn't create query: %@", error);
+    Assert(q, @"Couldn't create query: %@", error);
     q.parameters = @{@"STATE": @"MN"};
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        XCTAssertEqualObjects(row.documentID, expectedDocs[n-1]);
+        AssertEqualObjects(row.documentID, expectedDocs[n-1]);
         NSString* zip = [row stringAtIndex: 0];
         NSArray *email = [row valueAtIndex: 1];
-        XCTAssertEqualObjects(zip, expectedZips[n-1]);
-        XCTAssertEqualObjects(email, expectedEmails[n-1]);
+        AssertEqualObjects(zip, expectedZips[n-1]);
+        AssertEqualObjects(email, expectedEmails[n-1]);
     }];
-    XCTAssertEqual(numRows, 3llu);
+    AssertEqual(numRows, 3llu);
 }
 
 
 - (void) test05_FTS {
     [self loadJSONResource: @"sentences"];
     NSError* error;
-    XCTAssert([_db createIndexOn: @[@"sentence"] type: kCBLFullTextIndex options: NULL error: &error]);
+    Assert([_db createIndexOn: @[@"sentence"] type: kCBLFullTextIndex options: NULL error: &error]);
     CBLQuery *q = [self.db createQueryWhere: @"sentence matches 'Dummie woman'"
                                     orderBy: @[@"-rank(sentence)"]
                                   returning: nil
@@ -162,11 +162,11 @@
         NSString* text = ftsRow.fullTextMatched;
         NSLog(@"    full text = \"%@\"", text);
         NSLog(@"    matchCount = %u", (unsigned)ftsRow.matchCount);
-        XCTAssert([text containsString: @"Dummie"]);
-        XCTAssert([text containsString: @"woman"]);
-        XCTAssertEqual(ftsRow.matchCount, 2ul);
+        Assert([text containsString: @"Dummie"]);
+        Assert([text containsString: @"woman"]);
+        AssertEqual(ftsRow.matchCount, 2ul);
     }];
-    XCTAssertEqual(numRows, 2ull);
+    AssertEqual(numRows, 2ull);
 }
 
 
@@ -175,18 +175,18 @@
     
     NSError* error;
     NSArray* indexSpec = @[ [NSExpression expressionForKeyPath: @"name.first"] ];
-    XCTAssert([self.db createIndexOn: indexSpec type: kCBLValueIndex options: NULL error: &error]);
+    Assert([self.db createIndexOn: indexSpec type: kCBLValueIndex options: NULL error: &error]);
     
     CBLQuery *q = [self.db createQuery: @"name.first == $FIRSTNAME" error: &error];
-    XCTAssert(q, @"Couldn't create query: %@", error);
+    Assert(q, @"Couldn't create query: %@", error);
     q.parameters = @{@"FIRSTNAME": @"Claude"};
     
     NSArray* rows = [[q run: &error] allObjects];
-    XCTAssertEqual(rows.count, 1llu);
+    AssertEqual(rows.count, 1llu);
     
     CBLDocument* doc = ((CBLQueryRow*)rows[0]).document;
-    XCTAssertNotNil(doc);
-    XCTAssert([doc deleteDocument: &error], @"Couldn't delete a document: %@", error);
+    AssertNotNil(doc);
+    Assert([doc deleteDocument: &error], @"Couldn't delete a document: %@", error);
 }
 
 

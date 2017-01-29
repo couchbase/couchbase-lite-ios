@@ -52,7 +52,7 @@
         }
         return YES;
     }];
-    XCTAssert(ok);
+    Assert(ok);
     
     [self waitForExpectationsWithTimeout: 5 handler: NULL];
 }
