@@ -20,6 +20,7 @@
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
 #import "CBLMisc.h"
+#import "CBLSharedKeys.hh"
 #import "c4BlobStore.h"
 #import "c4Observer.h"
 
@@ -63,7 +64,7 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
 }
 
 
-@synthesize c4db=_c4db, conflictResolver = _conflictResolver;
+@synthesize c4db=_c4db, sharedKeys=_sharedKeys, conflictResolver = _conflictResolver;
 
 
 static const C4DatabaseConfig kDBConfig = {
@@ -143,7 +144,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     _c4db = c4db_open(bPath, &config, &err);
     if (!_c4db)
         return convertError(err, outError);
-    
+
+    _sharedKeys = cbl::SharedKeys(_c4db);
     _obs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
     _documents = [NSMapTable strongToWeakObjectsMapTable];
     _unsavedDocuments = [NSMutableSet setWithCapacity: 100];

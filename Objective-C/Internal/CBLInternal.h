@@ -15,6 +15,12 @@
 
 struct c4BlobStore;
 
+#ifdef __cplusplus
+namespace cbl {
+    class SharedKeys;
+}
+#endif
+
 @class CBLBlobStream;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -32,6 +38,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic, nullable) C4Database* c4db;
 @property (readonly, nonatomic) NSString* path;     // For unit tests
 
+#ifdef __cplusplus
+@property (readonly, nonatomic) cbl::SharedKeys sharedKeys;
+#endif
+
 - (void) document: (CBLDocument*)doc hasUnsavedChanges: (bool)unsaved;
 
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
@@ -41,6 +51,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// CBLProperties:
 
 @interface CBLProperties ()
+
+#ifdef __cplusplus
+- (instancetype) initWithSharedKeys: (cbl::SharedKeys)sharedKeys;
+@property (readonly, nonatomic) cbl::SharedKeys* sharedKeys;
+#endif
 
 // Having changes flag
 @property (nonatomic) BOOL hasChanges;
@@ -53,9 +68,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) resetChanges;
 
 - (FLSliceResult)encodeWith:(FLEncoder)encoder error:(NSError **)outError;
-
-// Subclass should implement this to provide the sharedKeys.
-- (FLSharedKeys) sharedKeys;
 
 - (nullable NSDictionary *)savedProperties;
 

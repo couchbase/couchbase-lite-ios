@@ -19,6 +19,7 @@
 #import "CBLStringBytes.h"
 #import "CBLJSON.h"
 #import "CBLInternal.h"
+#import "CBLSharedKeys.hh"
 #include "c4Observer.h"
 
 NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChangeNotification";
@@ -38,7 +39,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
                             docID: (NSString*)docID
                         mustExist: (BOOL)mustExist
                             error: (NSError**)outError {
-    self = [super init];
+    self = [super initWithSharedKeys: db.sharedKeys];
     if (self) {
         _database = db;
         _documentID = docID;
@@ -134,9 +135,6 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 #pragma mark - CBLProperties
 
 
-- (FLSharedKeys) sharedKeys {
-    return c4db_getFLSharedKeys(_c4db);
-}
 
 - (CBLBlob *)blobWithProperties:(NSDictionary *)properties error:(NSError **)error {
     return [[CBLBlob alloc] initWithDatabase: _database properties:properties error:error];
@@ -332,7 +330,8 @@ static bool dictContainsBlob(__unsafe_unretained NSDictionary* dict) {
     auto currentData = currentDoc->selectedRev.body;
     if (currentData.buf) {
         FLValue currentRoot = FLValue_FromTrustedData({currentData.buf, currentData.size});
-        current = FLValue_GetNSObject(currentRoot, self.sharedKeys, nil);
+        cbl::SharedKeys currentKeys(*self.sharedKeys, (FLDict)currentRoot);
+        current = FLValue_GetNSObject(currentRoot, &currentKeys);
     }
     NSDictionary* resolved;
     if (deletion) {

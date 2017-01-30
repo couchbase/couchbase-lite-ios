@@ -19,6 +19,7 @@
 #import "CBLStringBytes.h"
 #import "CBLJSON.h"
 #import "CBLInternal.h"
+#import "CBLSharedKeys.hh"
 
 @interface CBLProperties()
 
@@ -27,6 +28,7 @@
 @end
 
 @implementation CBLProperties {
+    cbl::SharedKeys _sharedKeys;
     FLDict _root;
     NSMutableDictionary* _properties;
     BOOL _hasChanges;
@@ -35,17 +37,20 @@
 
 @synthesize hasChanges=_hasChanges, sharedStrings = _sharedStrings;
 
-- (nonnull NSMapTable *) sharedStrings {
-    if(!_sharedStrings) {
-        _sharedStrings = [[NSMapTable alloc] initWithKeyOptions: NSPointerFunctionsOpaquePersonality |
-                                                                 NSPointerFunctionsOpaqueMemory
-                                                   valueOptions: NSPointerFunctionsObjectPersonality |
-                                                                 NSPointerFunctionsStrongMemory
-                                                       capacity: 8];
+
+- (instancetype) initWithSharedKeys:(cbl::SharedKeys)sharedKeys {
+    self = [super init];
+    if (self) {
+        _sharedKeys = sharedKeys;
     }
-    
-    return _sharedStrings;
+    return self;
 }
+
+
+- (cbl::SharedKeys*) sharedKeys {
+    return &_sharedKeys;
+}
+
 
 - (nullable NSDictionary*) properties {
     if (!_properties)
@@ -198,6 +203,7 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 - (void) setRootDict: (nullable FLDict)root {
     _root = root;
+    _sharedKeys.useDocumentRoot(_root);
 }
 
 
@@ -206,12 +212,6 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
     _hasChanges = NO;
 }
 
-
-- (FLSharedKeys) sharedKeys {
-    [NSException raise: NSInternalInconsistencyException
-                format: @"Abstract method -sharedKeys was not overridden"];
-    abort();
-}
 
 - (BOOL)storeBlob:(CBLBlob *)blob error:(NSError **)error {
     if(error != nil) {
@@ -301,13 +301,13 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 - (FLSlice)typeForDict:(FLDict)dict {
     FLSlice typeKey = FLSTR("_cbltype");
-    FLValue type = FLDict_GetSharedKey(dict, typeKey, [self sharedKeys]);
+    FLValue type = FLDict_GetSharedKey(dict, typeKey, &_sharedKeys);
     return FLValue_AsString(type);
 }
 
 
 - (FLValue) fleeceValueForKey: (NSString*) key {
-    return FLDict_GetSharedKey(_root, CBLStringBytes(key), [self sharedKeys]);
+    return FLDict_GetSharedKey(_root, CBLStringBytes(key), &_sharedKeys);
 }
 
 
@@ -318,10 +318,11 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
             FLArrayIterator iter;
             FLArrayIterator_Begin(array, &iter);
             auto result = [[NSMutableArray alloc] initWithCapacity: FLArray_Count(array)];
-            do {
-                [result addObject: [self fleeceValueToObject:FLArrayIterator_GetValue(&iter)]];
-            } while(FLArrayIterator_Next(&iter));
-            
+            FLValue item;
+            while (nullptr != (item = FLArrayIterator_GetValue(&iter))) {
+                [result addObject: [self fleeceValueToObject: item]];
+                FLArrayIterator_Next(&iter);
+            }
             return result;
         }
         case kFLDict: {
@@ -329,14 +330,14 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
             FLSlice type = [self typeForDict:dict];
             if(!type.buf) {
                 // TODO: convert to subdocument (using 'dict')
-                return FLValue_GetNSObject(value, [self sharedKeys], [self sharedStrings]);
+                return FLValue_GetNSObject(value, &_sharedKeys);
             }
 
-            id result = FLValue_GetNSObject(value, [self sharedKeys], [self sharedStrings]);
+            id result = FLValue_GetNSObject(value, &_sharedKeys);
             return [self convertDictionary:result];
         }
         default:
-            return FLValue_GetNSObject(value, [self sharedKeys], [self sharedStrings]);
+            return FLValue_GetNSObject(value, &_sharedKeys);
     }
 }
 
@@ -348,24 +349,12 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
     NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithCapacity: FLDict_Count(root)];
     FLDictIterator iter;
     FLDictIterator_Begin(root, &iter);
-    do {
-        NSString* key = [self fleeceValueToSharedKey: FLDictIterator_GetKey(&iter)];
+    NSString *key;
+    while (nullptr != (key = FLDictIterator_GetKey(&iter, &_sharedKeys))) {
         dict[key] = [self fleeceValueToObject: FLDictIterator_GetValue(&iter)];
-    } while (FLDictIterator_Next(&iter));
-    return dict;
-}
-
-
-- (NSString*) fleeceValueToSharedKey: (FLValue)value {
-    NSString* key = nil;
-    if (FLValue_IsInteger(value)) {
-        auto encKey = FLValue_AsInt(value);
-        auto k = FLSharedKey_GetKeyString([self sharedKeys], (int)encKey, nil);
-        key = slice2string(k);
+        FLDictIterator_Next(&iter);
     }
-    if (!key)
-        key = slice2string(FLValue_AsString(value));
-    return key;
+    return dict;
 }
 
 
