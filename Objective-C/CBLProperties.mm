@@ -61,23 +61,21 @@
 
 - (void) setProperties: (NSDictionary*)properties {
     NSMutableDictionary* props = properties ? [properties mutableCopy] : [NSMutableDictionary dictionary];
-    for (NSString *key in properties) {
-        id value = props[key];
+    [properties enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         if([value isKindOfClass:[NSDictionary class]]) {
             id converted = [self convertDictionary:value];
             if (converted)
                 props[key] = converted;
         }
-    }
-    
+    }];
+
     _properties = props;
     [self markChanges];
 }
 
 
-static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
-    id obj = dict[key];
-    return [obj isKindOfClass: [NSNumber class]] ? obj : nil;
+static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
+    return $castIf(NSNumber, dict[key]);
 }
 
 
@@ -86,13 +84,11 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
         return [numberProperty(_properties, key) boolValue];
     else
         return FLValue_AsBool([self fleeceValueForKey: key]);
-    return NO;
 }
 
 
 - (nullable NSDate*) dateForKey: (NSString*)key {
-    NSString* dateStr = [self stringForKey: key];
-    return [CBLJSON dateWithJSONObject: dateStr];
+    return [CBLJSON dateWithJSONObject: self[key]];
 }
 
 
@@ -127,7 +123,7 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 - (nullable NSString*) stringForKey: (NSString*)key {
     if (_properties)
-        return _properties[key];
+        return $castIf(NSString, _properties[key]);
     else
         return slice2string((FLValue_AsString([self fleeceValueForKey: key])));
 }
@@ -183,15 +179,12 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (void) setObject: (nullable id)value forKeyedSubscript: (NSString*)key {
-    [self mutateProperties];
-    
     // NSDate:
     if ([value isKindOfClass: NSDate.class])
         value = [CBLJSON JSONObjectWithDate: value];
-    
-    id oldValue = _properties[key];
-    
-    if (![value isEqual: oldValue] && value != oldValue) {
+
+    if (_hasChanges || !$equal(value, self[key])) {
+        [self mutateProperties];
         [_properties setValue: value forKey: key];
         [self markChanges];
     }
@@ -214,22 +207,12 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (BOOL)storeBlob:(CBLBlob *)blob error:(NSError **)error {
-    if(error != nil) {
-        *error = [NSError errorWithDomain:@"LiteCore" code:kC4ErrorUnimplemented userInfo:
-                 @{NSLocalizedDescriptionKey:@"CBLProperties does not know how to handle Blob datatype"}];
-    }
-    
-    return NO;
+    AssertAbstractMethod();
 }
 
 
 - (CBLBlob *)blobWithProperties:(NSDictionary *)properties error:(NSError **)error {
-    if(error != nil) {
-        *error = [NSError errorWithDomain:@"LiteCore" code:kC4ErrorUnimplemented userInfo:
-                  @{NSLocalizedDescriptionKey:@"CBLProperties does not know how to handle Blob datatype"}];
-    }
-    
-    return nil;
+    AssertAbstractMethod();
 }
 
 
@@ -268,9 +251,8 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 - (nullable NSDictionary*) savedProperties {
     if (_properties && !self.hasChanges)
         return _properties;
-    if (_root)
+    else
         return [self fleeceRootToDictionary: _root];
-    return nil;
 }
 
 
@@ -278,15 +260,17 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (void) mutateProperties {
-    if (!_properties)
-        _properties = [self.savedProperties mutableCopy];
-    if (!_properties)
-        _properties = [NSMutableDictionary dictionary];
+    if (!_properties) {
+        _properties = [[self fleeceRootToDictionary: _root] mutableCopy];
+        if (!_properties)
+            _properties = [NSMutableDictionary new];
+    }
 }
 
 
 - (void) markChanges {
-    self.hasChanges = YES;
+    if (!_hasChanges)
+        self.hasChanges = YES;
 }
 
 

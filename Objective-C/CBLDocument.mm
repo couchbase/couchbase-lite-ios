@@ -44,7 +44,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
         _database = db;
         _documentID = docID;
         _c4db = db.c4db;
-        if (![self loadDoc: outError mustExist: mustExist])
+        if (![self loadDoc_mustExist: mustExist error: outError])
             return nil;
     }
     return self;
@@ -117,7 +117,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
             }
             
             // Reload:
-            if (![self loadDoc: outError mustExist: NO])
+            if (![self loadDoc_mustExist: NO error: outError])
                 return NO;
             
             [self resetChanges];
@@ -154,20 +154,11 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 }
 
 
-- (void)setObject:(id)value forKeyedSubscript:(NSString *)key {
-    [super setObject:value forKeyedSubscript:key];
-    [self noteChanged];
-}
-
-
-- (id) objectForKeyedSubscript: (NSString*)key {
-    return [super objectForKeyedSubscript: key];
-}
-
-
-- (void)setProperties:(NSDictionary *)properties {
-    [super setProperties:properties];
-    [self noteChanged];
+// Called by CBLProperties superclass after a change is made to the properties.
+- (void) markChanges {
+    [super markChanges];
+    [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDocumentChangeNotification
+                                                        object: self];
 }
 
 
@@ -181,19 +172,11 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     // resolution will happen when the app saves the document.
 
     if(!self.hasChanges) {
-        [self loadDoc:nil mustExist:YES];
+        NSError* error;
+        if (![self loadDoc_mustExist: YES error: nullptr])
+            CBLWarn(Default, @"%@ failed to load external changes: %@", self, error);
         [self postChangedNotificationExternal:YES];
     }
-}
-
-
-#pragma mark - PRIVATE
-
-
-- (void)noteChanged {
-    self.hasChanges = YES;
-    [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDocumentChangeNotification
-                                                        object: self];
 }
 
 
@@ -205,8 +188,12 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 }
 
 
-- (BOOL) loadDoc: (NSError**)outError mustExist: (BOOL)mustExist {
-    auto doc = [self readC4Doc: outError mustExist: mustExist];
+#pragma mark - LOADING:
+
+
+// (Re)loads the document from the db, updating _c4doc and other state.
+- (BOOL) loadDoc_mustExist: (BOOL)mustExist error: (NSError**)outError {
+    auto doc = [self readC4Doc_mustExist: mustExist error: outError];
     if (!doc)
         return NO;
     [self setC4Doc: doc];
@@ -215,7 +202,8 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 }
 
 
-- (C4Document*) readC4Doc: (NSError**)outError mustExist: (BOOL)mustExist {
+// Reads the document from the db into a new C4Document and returns it, w/o affecting my state.
+- (C4Document*) readC4Doc_mustExist: (BOOL)mustExist error: (NSError**)outError {
     CBLStringBytes docId(_documentID);
     C4Error err;
     auto doc = c4doc_get(_c4db, docId, mustExist, &err);
@@ -328,13 +316,13 @@ static bool dictContainsBlob(__unsafe_unretained NSDictionary* dict) {
                           deletion: (bool)deletion
                              error: (NSError**)outError
 {
-    C4Error err;
-    C4Document *currentDoc = c4doc_get(_c4db, _c4doc->docID, true, &err);
+    // Read the current revision from the database, and parse it into an NSDictionary:
+    C4Document *currentDoc = [self readC4Doc_mustExist: YES error: outError];
     if (!currentDoc)
-        return convertError(err, outError);
+        return NO;
     NSDictionary *current = nil;
     auto currentData = currentDoc->selectedRev.body;
-    if (currentData.buf) {
+    if (currentData.size > 0) {
         FLValue currentRoot = FLValue_FromTrustedData({currentData.buf, currentData.size});
         cbl::SharedKeys currentKeys(*self.sharedKeys, (FLDict)currentRoot);
         current = FLValue_GetNSObject(currentRoot, &currentKeys);
