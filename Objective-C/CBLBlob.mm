@@ -191,8 +191,10 @@ static NSString* const kBlobType = @"blob";
 
 - (BOOL) installInDatabase: (CBLDatabase *)db error:(NSError **)outError {
     Assert(db);
-    if (_db)
+    if (_db) {
+        Assert(_db == db, @"Blob belongs to a different database");
         return YES;
+    }
 
     C4BlobStore *store = [db getBlobStore: outError];
     if (!store)

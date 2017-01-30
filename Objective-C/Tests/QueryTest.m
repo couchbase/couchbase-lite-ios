@@ -25,7 +25,7 @@
     Assert(e, @"Query failed: %@", error);
     uint64_t n = 0;
     for (CBLQueryRow *row in e) {
-        NSLog(@"Row: docID='%@', sequence=%llu", row.documentID, row.sequence);
+        //NSLog(@"Row: docID='%@', sequence=%llu", row.documentID, row.sequence);
         block(++n, row);
     }
     return n;
@@ -61,7 +61,7 @@
     };
     for (unsigned i = 0; i < sizeof(kTests)/sizeof(kTests[0]); ++i) {
         NSString* pred = @(kTests[i].pred);
-        [CBLQuery dumpPredicate: [NSPredicate predicateWithFormat: pred argumentArray: nil]];
+        //[CBLQuery dumpPredicate: [NSPredicate predicateWithFormat: pred argumentArray: nil]];
         NSString* expectedJson = [CBLQuery json5ToJSON: kTests[i].json5];
         NSData* actual = [CBLQuery encodeQuery: pred orderBy: nil returning: nil error: &error];
         Assert(actual, @"Encode failed: %@", error);
@@ -112,6 +112,7 @@
             CBLDocument* doc = row.document;
             AssertEqualObjects(doc.documentID, @"doc-009");
             AssertEqual(doc.sequence, 9llu);
+            AssertEqualObjects([doc[@"name"] objectForKey: @"first"], @"Claude");
         }];
         AssertEqual(numRows, 1llu);
 

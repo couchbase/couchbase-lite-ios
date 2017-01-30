@@ -58,30 +58,32 @@
 
 
 - (void) loadJSONResource: (NSString*)resourceName {
-    NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: resourceName
-                                                                       ofType: @"json"];
-    Assert(path, @"Missing test file names_100.json");
-    NSString* contents = (NSString*)[NSString stringWithContentsOfFile: path encoding: NSUTF8StringEncoding error: NULL];
-    Assert(contents);
-    __block uint64_t n = 0;
-    NSError *batchError;
-    BOOL ok = [self.db inBatch: &batchError do: ^BOOL{
-        [contents enumerateLinesUsingBlock: ^(NSString *line, BOOL *stop) {
-            NSString* docID = [NSString stringWithFormat: @"doc-%03llu", ++n];
-            NSData* json = [line dataUsingEncoding: NSUTF8StringEncoding];
-            CBLDocument* doc = [self.db documentWithID: docID];
-            NSError* error;
-            NSDictionary* properties = [NSJSONSerialization JSONObjectWithData: (NSData*)json
-                                                                       options: 0
-                                                                         error: &error];
-            Assert(properties, @"Couldn't parse line %llu of %@.json: %@", n, path, error);
-            doc.properties = properties;
-            bool saved = [doc save: &error];
-            Assert(saved, @"Couldn't save document: %@", error);
+    @autoreleasepool {
+        NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: resourceName
+                                                                           ofType: @"json"];
+        Assert(path, @"Missing test file names_100.json");
+        NSString* contents = (NSString*)[NSString stringWithContentsOfFile: path encoding: NSUTF8StringEncoding error: NULL];
+        Assert(contents);
+        __block uint64_t n = 0;
+        NSError *batchError;
+        BOOL ok = [self.db inBatch: &batchError do: ^BOOL{
+            [contents enumerateLinesUsingBlock: ^(NSString *line, BOOL *stop) {
+                NSString* docID = [NSString stringWithFormat: @"doc-%03llu", ++n];
+                NSData* json = [line dataUsingEncoding: NSUTF8StringEncoding];
+                CBLDocument* doc = [self.db documentWithID: docID];
+                NSError* error;
+                NSDictionary* properties = [NSJSONSerialization JSONObjectWithData: (NSData*)json
+                                                                           options: 0
+                                                                             error: &error];
+                Assert(properties, @"Couldn't parse line %llu of %@.json: %@", n, path, error);
+                doc.properties = properties;
+                bool saved = [doc save: &error];
+                Assert(saved, @"Couldn't save document: %@", error);
+            }];
+            return true;
         }];
-        return true;
-    }];
-    Assert(ok, @"loadJSONResource failed: %@", batchError);
+        Assert(ok, @"loadJSONResource failed: %@", batchError);
+    }
 }
 
 

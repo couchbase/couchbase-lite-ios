@@ -69,6 +69,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable id) objectForSubscript: (NSUInteger)subscript;
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 
