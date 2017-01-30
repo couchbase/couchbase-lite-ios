@@ -65,6 +65,9 @@ NS_ASSUME_NONNULL_BEGIN
 // Having changes flag
 @property (nonatomic) BOOL hasChanges;
 
+// Called after a change occurs
+- (void) markChanges;
+
 // Set the root properties. After calling this method, the current changes will
 // be on top of the new root properties and the hasChanges flag will be reset.
 - (void) setRootDict: (nullable FLDict)root;

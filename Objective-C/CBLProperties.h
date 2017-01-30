@@ -102,6 +102,9 @@ NS_ASSUME_NONNULL_BEGIN
     like an NSMutableDictionary but with type-safe accessors.
     Abstract superclass of CBLDocument and (soon) CBLSubdocument. */
 @interface CBLProperties: NSObject <CBLProperties>
+
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 NS_ASSUME_NONNULL_END

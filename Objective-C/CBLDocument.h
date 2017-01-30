@@ -84,6 +84,11 @@ extern NSString* const kCBLDocumentIsExternalUserInfoKey;
 /** Reverts unsaved changes made to the document's properties. */
 - (void) revert;
 
+@end
+
+
+@interface CBLDocument (Subscripts)
+
 /** Same as objectForKey: */
 - (nullable id) objectForKeyedSubscript: (NSString*)key;
 
