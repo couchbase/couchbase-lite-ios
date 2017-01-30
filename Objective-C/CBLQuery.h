@@ -12,7 +12,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 
-/** A compiled database query. Can be run multiple times with different parameters. */
+/** A compiled database query. Can be run multiple times with different parameters.
+    Queries are created by calling the CBLDatabase methods createQuery:... */
 @interface CBLQuery : NSObject
 
 /** The database to query. */

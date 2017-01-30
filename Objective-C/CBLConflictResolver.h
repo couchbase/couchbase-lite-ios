@@ -11,10 +11,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 
-/** Abstract interface for an object that can resolve a conflict between two revisions of a
-    document. Called when saving a CBLDocument but there is a a newer revision already in the
-    database, and also when the replicator pulls a remote revision that conflicts with a
-    locally-saved revision. */
+/** Abstract interface for an application-defined object that can resolve a conflict between two
+    revisions of a document. Called when saving a CBLDocument, when there is a a newer revision
+    already in the database; and also when the replicator pulls a remote revision that conflicts
+    with a locally-saved revision. */
 @protocol CBLConflictResolver <NSObject>
 
 /** Resolves conflicting edits of a document against their common base.
