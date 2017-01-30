@@ -9,78 +9,98 @@
 #import <Foundation/Foundation.h>
 @class CBLSubdocument;
 
-/** CBLProperties defines interface for document and subdocument property type accessors. */
-@protocol CBLProperties <NSObject>
-
 NS_ASSUME_NONNULL_BEGIN
 
-/** The content of the document or subdocument. */
+/** CBLProperties defines a JSON-compatible object, much like an NSMutableDictionary but with
+    type-safe accessors. It is implemented by classes CBLDocument and (soon) CBLSubdocument. */
+@protocol CBLProperties <NSObject>
+
+/** All of the properties contained in this object. */
 @property (readwrite, nullable, nonatomic) NSDictionary* properties;
 
 #pragma mark - GETTERS
 
-/** Get a boolean value by key. Returns NO if the property doesn't exist. */
-- (BOOL) booleanForKey: (NSString*)key;
-
-/** Get an NSDate object by key. The NSDate object is converted from an ISO-8601 date
-    formatted string. Return nil if the property doesn't exists. */
-- (nullable NSDate*) dateForKey: (NSString*)key;
-
-/** Get a double value by key. Returns 0.0 if the property doesn't exists. */
-- (double) doubleForKey: (NSString*)key;
-
-/** Get a float value by key. Returns 0.0 if the property doesn't exists. */
-- (float) floatForKey: (NSString*)key;
-
-/** Get an integer value by key. Returns 0 if the property doesn't exists. */
-- (NSInteger) integerForKey: (NSString*)key;
-
-/** Get an object by key. The returned object could be one of these types NSNumber,
-    NSString, NSArray, and CBLSubdocument based on the underlining data type. The 
-    CBLSubdocument object is basically mapped to an NSDictionary to provide 
-    property type accessors. Return nil if the property doesn't exists. */
+/** Gets an property's value as an object. Returns types NSNull, NSNumber, NSString, NSArray,
+    NSDictionary, and CBLBlob, based on the underlying data type; or nil if the property doesn't
+    exist. */
 - (nullable id) objectForKey: (NSString*)key;
 
-/** Get an NSString property by key. Returns nil if the property doesn't exists. */
+/** Gets a property's value as a boolean.
+    Returns YES if the value exists, and is either `true` or a nonzero number. */
+- (BOOL) booleanForKey: (NSString*)key;
+
+/** Gets a property's value as an integer.
+    Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    Returns 0 if the property doesn't exist or does not have a numeric value. */
+- (NSInteger) integerForKey: (NSString*)key;
+
+/** Gets a property's value as a float.
+    Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
+    Returns 0.0 if the property doesn't exist or does not have a numeric value. */
+- (float) floatForKey: (NSString*)key;
+
+/** Gets a property's value as a double.
+    Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
+    Returns 0.0 if the property doesn't exist or does not have a numeric value. */
+- (double) doubleForKey: (NSString*)key;
+
+/** Gets a property's value as a string.
+    Returns nil if the property doesn't exist, or its value is not a string. */
 - (nullable NSString*) stringForKey: (NSString*)key;
+
+/** Gets a property's value as an NSDate.
+    JSON does not directly support dates, so the actual property value must be a string, which is
+    then parsed according to the ISO-8601 date format (the default used in JSON.)
+    Returns nil if the value doesn't exist, is not a string, or is not parseable as a date.
+    NOTE: This is not a generic date parser! It only recognizes the ISO-8601 format, with or
+    without milliseconds. */
+- (nullable NSDate*) dateForKey: (NSString*)key;
 
 #pragma mark - SETTERS
 
-/** Set a boolean value by key. */
-- (void) setBoolean: (BOOL)value forKey: (NSString*)key;
-
-/** Set a double value by key. */
-- (void) setDouble: (double)value forKey: (NSString*)key;
-
-/** Set a float value by key. */
-- (void) setFloat: (float)value forKey: (NSString*)key;
-
-/** Set an integer value by key. */
-- (void) setInteger: (NSInteger)value forKey: (NSString*)key;
-
-/** Set an object by key. Setting nil value will remove the property. */
+/** Sets a property value by key.
+    Allowed value types are NSNull, NSNumber, NSString, NSArray, NSDictionary, NSDate, and CBLBlob.
+    (An NSDate object will be converted to an ISO-8601 format string.)
+    NSArrays and NSDictionaries must contain only the above types.
+    Setting a nil value will remove the property. */
 - (void) setObject: (nullable id)value forKey: (NSString*)key;
 
-#pragma mark - SUBSCRIPTION
+/** Sets a boolean value by key. */
+- (void) setBoolean: (BOOL)value forKey: (NSString*)key;
 
-/** Same as objectForKey: */
+/** Sets an integer value by key. */
+- (void) setInteger: (NSInteger)value forKey: (NSString*)key;
+
+/** Sets a float value by key. */
+- (void) setFloat: (float)value forKey: (NSString*)key;
+
+/** Sets a double value by key. */
+- (void) setDouble: (double)value forKey: (NSString*)key;
+
+#pragma mark - SUBSCRIPTS
+
+/** Same as objectForKey:. Enables property access by subscript. */
 - (nullable id) objectForKeyedSubscript: (NSString*)key;
 
-/** Same as setObject:forKey: */
+/** Same as setObject:forKey:. Enables setting properties by subscript. */
 - (void) setObject: (nullable id)value forKeyedSubscript: (NSString*)key;
 
 #pragma mark - OTHERS
 
-/** Remove a property by key. */
+/** Removes a property by key. This is the same as setting its value to nil. */
 - (void) removeObjectForKey: (NSString*)key;
 
-/** Check whether a property exists or not by key. */
+/** Tests whether a property exists or not.
+    This can be less expensive than -objectForKey:, because it does not have to allocate an
+    NSObject for the property value. */
 - (BOOL) containsObjectForKey: (NSString*)key;
 
 @end
 
-/** Super class for CBLDocument and CBLSubdocument that implements CBLProperties protocol to
- provide property accessors. */
+
+/** Default implementation of CBLProperties protocol, which defines a JSON-compatible object, much
+    like an NSMutableDictionary but with type-safe accessors.
+    Abstract superclass of CBLDocument and (soon) CBLSubdocument. */
 @interface CBLProperties: NSObject <CBLProperties>
 @end
 
@@ -89,6 +109,5 @@ NS_ASSUME_NONNULL_END
 // TODO:
 // 1. Evaluate get/set Array of a specific type (new API)
 // 2. Subdocument (In progress)
-// 3. Blob (Need design)
 // 4. Property complex object (Can be deferred)
 // 5. Iterable or ObjC Equivalent (Can be deferred)

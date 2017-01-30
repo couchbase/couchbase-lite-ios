@@ -25,13 +25,16 @@ namespace cbl {
 
 NS_ASSUME_NONNULL_BEGIN
 
+
 @protocol CBLJSONCoding <NSObject>
 
 @property (readonly, nonatomic) NSDictionary* jsonRepresentation;
 
 @end
 
+
 /// CBLDatabase:
+
 
 @interface CBLDatabase ()
 
@@ -48,7 +51,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+
 /// CBLProperties:
+
 
 @interface CBLProperties ()
 
@@ -80,7 +85,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+
 /// CBLDocument:
+
 
 @interface CBLDocument ()
 
@@ -92,7 +99,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)changedExternally;
 @end
 
+
 // CBLBlob:
+
 
 @interface CBLBlob () <CBLJSONCoding>
 

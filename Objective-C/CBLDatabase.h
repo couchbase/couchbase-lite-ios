@@ -204,7 +204,5 @@ typedef struct {
 NS_ASSUME_NONNULL_END
 
 // TODO:
-// * Conflict Resolution
-// * Change Notification
 // * Logging
 // * Threading Support

@@ -132,17 +132,19 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     [self resetChanges];
 }
 
-#pragma mark - CBLProperties
 
+#pragma mark - CBLProperties
 
 
 - (CBLBlob *)blobWithProperties:(NSDictionary *)properties error:(NSError **)error {
     return [[CBLBlob alloc] initWithDatabase: _database properties:properties error:error];
 }
 
+
 - (BOOL)storeBlob:(CBLBlob *)blob error:(NSError **)error {
     return [blob installInDatabase: _database error: error];
 }
+
 
 - (void) setHasChanges: (BOOL)hasChanges {
     if (self.hasChanges != hasChanges) {
@@ -172,6 +174,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 #pragma mark - INTERNAL
 
 
+// Called by the CBLDatabase when the document has changed on disk.
 - (void)changedExternally {
     // The current API design decision is that when a document has unsaved changes, it should
     // not update with external changes and should not post notifications. Instead the conflict
@@ -222,6 +225,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 }
 
 
+// Sets _c4doc and updates my root dict
 - (void) setC4Doc: (nullable C4Document*)doc {
     c4doc_free(_c4doc);
     _c4doc = doc;
@@ -243,6 +247,8 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     return _conflictResolver ?: _database.conflictResolver;
 }
 
+
+// The next three functions search recursively for a property "_cbltype":"blob".
 
 static bool objectContainsBlob(__unsafe_unretained id value) {
     if ([value isKindOfClass: [NSDictionary class]])
@@ -333,12 +339,14 @@ static bool dictContainsBlob(__unsafe_unretained NSDictionary* dict) {
         cbl::SharedKeys currentKeys(*self.sharedKeys, (FLDict)currentRoot);
         current = FLValue_GetNSObject(currentRoot, &currentKeys);
     }
+
     NSDictionary* resolved;
     if (deletion) {
         // Deletion always loses a conflict.
         resolved = current;
 
     } else if (resolver) {
+        // Call the custom conflict resolver:
         resolved = [resolver resolveMine: (self.properties ?: @{})
                               withTheirs: (current ?: @{})
                                  andBase: self.savedProperties];
@@ -347,6 +355,7 @@ static bool dictContainsBlob(__unsafe_unretained NSDictionary* dict) {
             c4doc_free(currentDoc);
             return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
         }
+
     } else {
         // Default resolution algorithm is "most active wins", i.e. higher generation number.
         //TODO: Once conflict resolvers can access the document generation, move this logic
@@ -359,27 +368,31 @@ static bool dictContainsBlob(__unsafe_unretained NSDictionary* dict) {
             resolved = current;
     }
 
+    // Now update my state to the current C4Document and the merged/resolved properties:
     [self setC4Doc: currentDoc];
     self.properties = resolved;
     if ($equal(resolved, current)) {
-        self.hasChanges = NO;
+        self.hasChanges = NO;   // Document is now identical to current revision
     }
     return YES;
 }
 
 
-/// The main save method.
+// The main save method.
 - (BOOL) saveWithConflictResolver: (id<CBLConflictResolver>)resolver
                          deletion: (bool)deletion
                             error: (NSError**)outError
 {
+    // No-op case of unchanged document:
     if (!self.hasChanges && !deletion && self.exists)
         return YES;
-    
+
+    // Begin a db transaction:
     C4Transaction transaction(_c4db);
     if (!transaction.begin())
         return convertError(transaction.error(),  outError);
-    
+
+    // Attempt to save. (On conflict, this will succeed but newDoc will be null.)
     C4Document* newDoc;
     if (![self saveInto: &newDoc asDelete: deletion error: outError])
         return NO;
@@ -397,12 +410,13 @@ static bool dictContainsBlob(__unsafe_unretained NSDictionary* dict) {
         Assert(newDoc);     // In a transaction we can't have a second conflict after merging!
     }
     
-    // Save succeeded; now commit:
+    // Save succeeded; now commit the transaction:
     if (!transaction.commit()) {
         c4doc_free(newDoc);
         return convertError(transaction.error(), outError);
     }
-    
+
+    // Update my state and post a notification:
     [self setC4Doc: newDoc];
     self.hasChanges = NO;
     if (deletion)
@@ -413,8 +427,3 @@ static bool dictContainsBlob(__unsafe_unretained NSDictionary* dict) {
 
 
 @end
-
-// TODO:
-// * Rollback _c4doc if the transaction is aborted.
-// * Post document change notification
-// * Conflict resolution

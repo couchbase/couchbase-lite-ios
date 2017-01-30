@@ -222,6 +222,7 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
     return NO;
 }
 
+
 - (CBLBlob *)blobWithProperties:(NSDictionary *)properties error:(NSError **)error {
     if(error != nil) {
         *error = [NSError errorWithDomain:@"LiteCore" code:kC4ErrorUnimplemented userInfo:
@@ -230,6 +231,7 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
     
     return nil;
 }
+
 
 - (FLSliceResult)encodeWith:(FLEncoder)encoder error:(NSError **)outError {
     FLEncoder_BeginDict(encoder, [_properties count]);
@@ -261,6 +263,7 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (void) propertiesDidChange { }
+
 
 - (nullable NSDictionary*) savedProperties {
     if (_properties && !self.hasChanges)
@@ -362,4 +365,3 @@ static NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 // TODO:
 // * Subdocument (In progress)
-// * Support Blob
