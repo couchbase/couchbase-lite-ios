@@ -45,6 +45,7 @@ CLANG_WARN_EMPTY_BODY                                      = YES
 CLANG_WARN_ENUM_CONVERSION                                 = YES
 CLANG_WARN_INFINITE_RECURSION                              = YES
 CLANG_WARN_INT_CONVERSION                                  = YES
+CLANG_WARN_OBJC_IMPLICIT_ATOMIC_PROPERTIES                 = YES
 CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS                 = YES
 CLANG_WARN_OBJC_REPEATED_USE_OF_WEAK                       = YES
 CLANG_WARN_OBJC_ROOT_CLASS                                 = YES_ERROR

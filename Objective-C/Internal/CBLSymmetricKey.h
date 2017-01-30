@@ -61,7 +61,7 @@ typedef NSMutableData* (^CBLCryptorBlock)(NSData* input);
                          error: (NSError**)outError;
 
 /** The SymmetricKey's key data; can be used to reconstitute it. */
-@property (readonly) NSData* keyData;
+@property (readonly, atomic) NSData* keyData;
 
 /** The key data encoded as hex. */
 @property (readonly) NSString* hexData;

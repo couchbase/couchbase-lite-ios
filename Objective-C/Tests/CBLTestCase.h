@@ -24,7 +24,7 @@
     CBLDatabase* _db;
 }
 
-@property (readonly) CBLDatabase* db;
+@property (readonly, atomic) CBLDatabase* db;
 
 - (void) reopenDB;
 
