@@ -117,10 +117,19 @@ static void errorLogCallback(void *pArg, int errCode, const char *msg) {
     if (baseCode == SQLITE_CONSTRAINT)
         return;     // This happens when we insert a rev that already exists; not a problem
 
-    if (baseCode == SQLITE_NOTICE || baseCode == SQLITE_READONLY)
+    if (baseCode == SQLITE_NOTICE || baseCode == SQLITE_READONLY) {
         Log(@"SQLite message: %s", msg);
-    else
-        Warn(@"SQLite error (code %d): %s", errCode, msg);
+        return;
+    } else if (baseCode == SQLITE_ERROR) {
+        NSString* m = [NSString stringWithUTF8String: msg];
+        if ([m hasPrefix: @"no such table"] ||     // https://github.com/couchbase/couchbase-lite-ios/issues/1596
+            [m hasPrefix: @"statement aborts"])    // https://github.com/couchbase/couchbase-lite-ios/issues/1598
+        {
+            Log(@"SQLite error: %s", msg);
+            return;
+        }
+    }
+    Warn(@"SQLite error (code %d): %s", errCode, msg);
 }
 
 
