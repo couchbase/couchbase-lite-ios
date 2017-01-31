@@ -304,13 +304,6 @@
 			name = Performance;
 			sourceTree = "<group>";
 		};
-		275FF6141E3FE9DB005F90DD /* PerfTest */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = PerfTest;
-			sourceTree = "<group>";
-		};
 		27EF6AF01E32D12C004748DF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -398,7 +391,6 @@
 			isa = PBXGroup;
 			children = (
 				9398D9FC1E03531A00464432 /* Objective-C */,
-				275FF6141E3FE9DB005F90DD /* PerfTest */,
 				9398D9131E03434200464432 /* Products */,
 				9398D92D1E03467C00464432 /* vendor */,
 				9378C5D11E26CC46001BB196 /* xcconfigs */,

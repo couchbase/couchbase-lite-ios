@@ -34,14 +34,14 @@
         [self importLibrary];
     }];
 
-#if 0 // FIX: -updatePlayCounts blows up currently, due to couchbase-lite-core#51
     NSLog(@"Updating play counts:");
     Benchmark b;
     b.start();
     [self updatePlayCounts];
     b.stop();
     b.printReport();
-#endif
+    b.printReport(1.0/_documentCount, "doc");
+    //TODO: Run multiple iterations of this to get more accurate timing
 }
 
 
