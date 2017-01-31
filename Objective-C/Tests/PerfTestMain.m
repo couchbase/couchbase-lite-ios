@@ -7,6 +7,7 @@
 //
 
 #import <CouchbaseLite/CouchbaseLite.h>
+#import "DocPerfTest.h"
 #import "TunesPerfTest.h"
 
 #define kDatabaseName @"perfdb"
@@ -21,8 +22,8 @@ int main(int argc, const char * argv[]) {
         options.directory = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
 
         NSLog(@"Starting test...");
-        TunesPerfTest* test = [[TunesPerfTest alloc] initWithDatabaseOptions: options];
-        [test run];
+        [DocPerfTest runWithOptions: options];
+        [TunesPerfTest runWithOptions: options];
     }
     return 0;
 }

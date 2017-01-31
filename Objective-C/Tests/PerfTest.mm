@@ -99,6 +99,10 @@ static NSString* sResourceDir;
     [self tearDown];
 }
 
++ (void) runWithOptions: (CBLDatabaseOptions*)options {
+    [[[self alloc] initWithDatabaseOptions: options] run];
+}
+
 
 - (void) measureAtScale: (NSUInteger)count unit: (NSString*)unit block: (void (^)())block {
     Benchmark b;

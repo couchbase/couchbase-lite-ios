@@ -13,6 +13,8 @@
 
 + (void) setResourceDirectory: (NSString*)resourceDir;
 
++ (void) runWithOptions: (CBLDatabaseOptions*)options;
+
 - (instancetype) initWithDatabaseOptions: (CBLDatabaseOptions*)dbOptions;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db;
