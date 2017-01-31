@@ -222,15 +222,9 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
         CBLStringBytes bKey(key);
         FLEncoder_WriteKey(encoder, bKey);
         id value = _properties[key];
-        if([value conformsToProtocol:@protocol(CBLJSONCoding)]) {
-            if([value isKindOfClass:[CBLBlob class]] && ![self storeBlob:value error:outError]) {
-                return (FLSliceResult){nullptr, 0};
-            }
-
-            FLEncoder_WriteNSObject(encoder, [value jsonRepresentation]);
-        } else {
-            FLEncoder_WriteNSObject(encoder, value);
-        }
+        if([value isKindOfClass:[CBLBlob class]] && ![self storeBlob:value error:outError])
+            return (FLSliceResult){nullptr, 0};
+        FLEncoder_WriteNSObject(encoder, value);
     }
     FLEncoder_EndDict(encoder);
     
@@ -342,6 +336,28 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
         FLDictIterator_Next(&iter);
     }
     return dict;
+}
+
+
+@end
+
+
+#pragma mark - FLEECE ENCODING FOR CBLJSONEncoding:
+
+
+@interface NSObject (CBLJSONEncoding)
+@end
+
+@implementation NSObject (CBLJSONEncoding)
+
+- (void) fl_encodeTo:(FLEncoder)encoder {
+    if([self conformsToProtocol:@protocol(CBLJSONCoding)]) {
+        FLEncoder_WriteNSObject(encoder, [(id<CBLJSONCoding>)self jsonRepresentation]);
+    } else {
+        [NSException raise: NSInternalInconsistencyException
+            format: @"Objects of class %@ cannot be stored as Couchbase Lite property values",
+                     [self class]];
+    }
 }
 
 
