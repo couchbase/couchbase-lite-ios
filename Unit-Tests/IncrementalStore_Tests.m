@@ -156,8 +156,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 @synthesize counter=_counter;
 
 - (void) setUp {
-    [super setUp];
-
     model = CBLISTestCoreDataModel();
     [self reCreateCoreDataContext];
     Assert(store.database != nil);
@@ -171,7 +169,6 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
         [store.database deleteDatabase:nil];
         [manager close];
     });
-    [super tearDown];
 }
 
 - (void) reCreateCoreDataContext {
@@ -184,7 +181,7 @@ static NSArray *CBLISTestInsertEntriesWithProperties(NSManagedObjectContext *con
 
     NSError* error;
     context = [CBLIncrementalStore createManagedObjectContextWithModel:model
-                                                          databaseName:db.name
+                                                          databaseName:@"cblis"
                                                                  error:&error];
     Assert(context, @"Context could not be created: %@", error);
 
