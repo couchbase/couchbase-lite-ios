@@ -802,26 +802,28 @@ DefineLogDomain(SQL);
         if (revID)
             [sql appendString: @" FROM revs WHERE revs.doc_id=? AND revid=? LIMIT 1"];
         else
-            [sql appendString: @" FROM revs WHERE revs.doc_id=? and current=1 and deleted=0 "
-                                "ORDER BY revid DESC LIMIT 1"];
+            [sql appendString: @" FROM revs WHERE revs.doc_id=? and current=1 "
+                                "ORDER BY deleted ASC, revid DESC LIMIT 1"];
         CBL_FMResultSet *r = [_fmdb executeQuery: sql, @(docNumericID), revID];
         if (!r) {
             return self.lastDbError;
         } else if (![r next]) {
             [r close];
-            return revID ? kCBLStatusNotFound : kCBLStatusDeleted;
+            return kCBLStatusNotFound;
         } else {
             CBL_RevID* actualRevID = revID ?:  [r revIDForColumnIndex: 0];
             BOOL deleted = [r boolForColumnIndex: 1];
-            result = [[CBL_MutableRevision alloc] initWithDocID: docID revID: actualRevID
-                                                        deleted: deleted];
-            result.sequence = [r longLongIntForColumnIndex: 2];
-            if (withBody)
-                result.asJSON = [r dataNoCopyForColumnIndex: 3];
-            else
-                result.missing = ![r boolForColumnIndex: 3];
+            if (revID || !deleted) {
+                result = [[CBL_MutableRevision alloc] initWithDocID: docID revID: actualRevID
+                                                            deleted: deleted];
+                result.sequence = [r longLongIntForColumnIndex: 2];
+                if (withBody)
+                    result.asJSON = [r dataNoCopyForColumnIndex: 3];
+                else
+                    result.missing = ![r boolForColumnIndex: 3];
+            }
             [r close];
-            return kCBLStatusOK;
+            return deleted ? kCBLStatusDeleted : kCBLStatusOK;
         }
     }];
     if (outStatus)

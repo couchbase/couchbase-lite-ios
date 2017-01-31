@@ -252,6 +252,42 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
 }
 
 
+- (void) test_deleteDoc {
+    // Create doc:
+    NSDictionary* result = SendBody(self, @"PUT", @"/db/doc1",
+                                    $dict({@"foo", @"bar"}), kCBLStatusCreated, nil);
+    NSString* revID = result[@"rev"];
+    Assert([revID hasPrefix: @"1-"]);
+    
+    // Delete doc:
+    result = Send(self, @"DELETE", $sprintf(@"/db/doc1?rev=%@", revID), kCBLStatusOK, nil);
+    Assert([result[@"rev"] hasPrefix: @"2-"]);
+    
+    // Get the deletes doc:
+    Send(self, @"GET", @"/db/doc1", kCBLStatusDeleted, $dict({@"error", @"not_found"},
+                                                             {@"reason", @"deleted"},
+                                                             {@"status", @(404)}));
+}
+
+
+- (void) test_purgeDoc {
+    // Create doc:
+    NSDictionary* result = SendBody(self, @"PUT", @"/db/doc1",
+                                    $dict({@"foo", @"bar"}), kCBLStatusCreated, nil);
+    NSString* revID = result[@"rev"];
+    Assert([revID hasPrefix: @"1-"]);
+    
+    // Purge doc:
+    SendBody(self, @"POST", @"/db/_purge", $dict({@"doc1", @[revID]}), kCBLStatusOK,
+             $dict({@"purged", $dict({@"doc1", @[revID]})}));
+    
+    // Get the purged doc:
+    Send(self, @"GET", @"/db/doc1", kCBLStatusNotFound, $dict({@"error", @"not_found"},
+                                                              {@"reason", @"missing"},
+                                                              {@"status", @(404)}));
+}
+
+
 - (void) test_LocalDocs {
     RequireTestCase(CBL_Database_LocalDocs);
     RequireTestCase(Docs);
