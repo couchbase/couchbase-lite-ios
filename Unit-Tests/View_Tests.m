@@ -483,6 +483,18 @@
     Assert(finished, @"LiveQuery didn't update");
 
     // Clean up:
+    // Manually close the background database to avoid race with the database deletion
+    // in the teardown:
+    XCTestExpectation *expect = [self expectationWithDescription: @"Closing bg database"];
+    [dbmgr backgroundTellDatabaseNamed: db.name to: ^(CBLDatabase* bgdb) {
+        [bgdb close:nil];
+        [expect fulfill];
+    }];
+    
+    [self waitForExpectationsWithTimeout: 1.0 handler: ^(NSError *error) {
+        AssertNil(error, @"Closing background database time out!");
+    }];
+
     dispatch_sync(queue, ^{
         [query removeObserver: observer forKeyPath: @"rows"];
         [query stop];
