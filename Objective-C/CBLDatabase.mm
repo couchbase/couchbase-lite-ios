@@ -214,8 +214,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 
 - (void) dealloc {
-    c4db_free(_c4db);
     c4dbobs_free(_obs);
+    c4db_free(_c4db);
 }
 
 

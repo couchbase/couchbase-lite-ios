@@ -28,6 +28,12 @@
 
 - (void) reopenDB;
 
+/** Reads a bundle resource file into an NSData. */
+- (NSData*) dataFromResource: (NSString*)resourceName ofType: (NSString*)type;
+
+/** Reads a bundle resource file into an NSString. */
+- (NSString*) stringFromResource: (NSString*)resourceName ofType: (NSString*)type;
+
 /** Loads the database with documents read from a JSON resource file in the test bundle.
     Each line of the file should be a complete JSON object, which will become a document.
     The document IDs will be of the form "doc-#" where "#" is the line number, starting at 1. */

@@ -57,13 +57,30 @@
 }
 
 
+- (NSData*) dataFromResource: (NSString*)resourceName ofType: (NSString*)type {
+    NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: resourceName
+                                                                       ofType: type];
+    Assert(path, @"Missing test file %@.%@", resourceName, type);
+    NSData* contents = [NSData dataWithContentsOfFile: path
+                                              options: 0
+                                                error: NULL];
+    Assert(contents);
+    return contents;
+}
+
+
+- (NSString*) stringFromResource: (NSString*)resourceName ofType: (NSString*)type {
+    NSData* contents = [self dataFromResource: resourceName ofType: type];
+    NSString* str = [[NSString alloc] initWithData: contents
+                                          encoding: NSUTF8StringEncoding];
+    Assert(str);
+    return str;
+}
+
+
 - (void) loadJSONResource: (NSString*)resourceName {
     @autoreleasepool {
-        NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: resourceName
-                                                                           ofType: @"json"];
-        Assert(path, @"Missing test file names_100.json");
-        NSString* contents = (NSString*)[NSString stringWithContentsOfFile: path encoding: NSUTF8StringEncoding error: NULL];
-        Assert(contents);
+        NSString* contents = [self stringFromResource: resourceName ofType: @"json"];
         __block uint64_t n = 0;
         NSError *batchError;
         BOOL ok = [self.db inBatch: &batchError do: ^BOOL{
@@ -75,7 +92,7 @@
                 NSDictionary* properties = [NSJSONSerialization JSONObjectWithData: (NSData*)json
                                                                            options: 0
                                                                              error: &error];
-                Assert(properties, @"Couldn't parse line %llu of %@.json: %@", n, path, error);
+                Assert(properties, @"Couldn't parse line %llu of %@.json: %@", n, resourceName, error);
                 doc.properties = properties;
                 bool saved = [doc save: &error];
                 Assert(saved, @"Couldn't save document: %@", error);

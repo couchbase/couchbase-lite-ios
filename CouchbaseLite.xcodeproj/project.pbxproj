@@ -10,6 +10,12 @@
 		2704F1C91E395F3300A3B405 /* CBLConflictResolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 2704F1C71E395F3300A3B405 /* CBLConflictResolver.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2704F1CA1E395F3300A3B405 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */; };
 		273ADF7D1E36B514001E977F /* sentences.json in Resources */ = {isa = PBXBuildFile; fileRef = 273ADF7C1E36B514001E977F /* sentences.json */; };
+		275FF6091E3FC24D005F90DD /* iTunesMusicLibrary.json in Resources */ = {isa = PBXBuildFile; fileRef = 275FF6081E3FC24D005F90DD /* iTunesMusicLibrary.json */; };
+		275FF6161E3FE9DB005F90DD /* PerfTestMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6151E3FE9DB005F90DD /* PerfTestMain.m */; };
+		275FF6251E3FECAB005F90DD /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
+		275FF6281E3FECC4005F90DD /* iTunesMusicLibrary.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 275FF6081E3FC24D005F90DD /* iTunesMusicLibrary.json */; };
+		275FF6291E3FECD2005F90DD /* TunesPerfTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF60B1E3FCA20005F90DD /* TunesPerfTest.mm */; };
+		275FF6391E3FFBC0005F90DD /* PerfTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6381E3FFBC0005F90DD /* PerfTest.mm */; };
 		27A0C85E1E3E7AB600F68646 /* CBLSharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */; };
 		27A0C85F1E3E7AB600F68646 /* CBLSharedKeys.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */; };
 		27EF6A821E297BDF004748DF /* CBLQuery.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EF6A7E1E297BDF004748DF /* CBLQuery.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -67,6 +73,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		275FF6261E3FECB1005F90DD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9091E03434200464432 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9398D9111E03434200464432;
+			remoteInfo = "CBL ObjC";
+		};
 		27EF6AEE1E32D111004748DF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
@@ -160,10 +173,30 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		275FF6111E3FE9DB005F90DD /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				275FF6281E3FECC4005F90DD /* iTunesMusicLibrary.json in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		2704F1C71E395F3300A3B405 /* CBLConflictResolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLConflictResolver.h; sourceTree = "<group>"; };
 		2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLConflictResolver.m; sourceTree = "<group>"; };
 		273ADF7C1E36B514001E977F /* sentences.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = sentences.json; sourceTree = "<group>"; };
+		275FF6081E3FC24D005F90DD /* iTunesMusicLibrary.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = iTunesMusicLibrary.json; path = "vendor/couchbase-lite-core/C/tests/data/iTunesMusicLibrary.json"; sourceTree = SOURCE_ROOT; };
+		275FF60A1E3FCA20005F90DD /* TunesPerfTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TunesPerfTest.h; sourceTree = "<group>"; };
+		275FF60B1E3FCA20005F90DD /* TunesPerfTest.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TunesPerfTest.mm; sourceTree = "<group>"; };
+		275FF6131E3FE9DB005F90DD /* PerfTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = PerfTest; path = CBLPerfTests; sourceTree = BUILT_PRODUCTS_DIR; };
+		275FF6151E3FE9DB005F90DD /* PerfTestMain.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PerfTestMain.m; sourceTree = "<group>"; };
+		275FF6371E3FFBC0005F90DD /* PerfTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PerfTest.h; sourceTree = "<group>"; };
+		275FF6381E3FFBC0005F90DD /* PerfTest.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PerfTest.mm; sourceTree = "<group>"; };
 		27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CBLSharedKeys.hh; sourceTree = "<group>"; };
 		27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLSharedKeys.mm; sourceTree = "<group>"; };
 		27EF6A7E1E297BDF004748DF /* CBLQuery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQuery.h; sourceTree = "<group>"; };
@@ -230,6 +263,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		275FF6101E3FE9DB005F90DD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				275FF6251E3FECAB005F90DD /* CouchbaseLite.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9398D90E1E03434200464432 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -250,6 +291,26 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		275FF5FA1E3FBD3B005F90DD /* Performance */ = {
+			isa = PBXGroup;
+			children = (
+				275FF6371E3FFBC0005F90DD /* PerfTest.h */,
+				275FF6381E3FFBC0005F90DD /* PerfTest.mm */,
+				275FF6151E3FE9DB005F90DD /* PerfTestMain.m */,
+				275FF60A1E3FCA20005F90DD /* TunesPerfTest.h */,
+				275FF60B1E3FCA20005F90DD /* TunesPerfTest.mm */,
+				275FF6081E3FC24D005F90DD /* iTunesMusicLibrary.json */,
+			);
+			name = Performance;
+			sourceTree = "<group>";
+		};
+		275FF6141E3FE9DB005F90DD /* PerfTest */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = PerfTest;
+			sourceTree = "<group>";
+		};
 		27EF6AF01E32D12C004748DF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -337,6 +398,7 @@
 			isa = PBXGroup;
 			children = (
 				9398D9FC1E03531A00464432 /* Objective-C */,
+				275FF6141E3FE9DB005F90DD /* PerfTest */,
 				9398D9131E03434200464432 /* Products */,
 				9398D92D1E03467C00464432 /* vendor */,
 				9378C5D11E26CC46001BB196 /* xcconfigs */,
@@ -349,6 +411,7 @@
 			children = (
 				9398D9121E03434200464432 /* CouchbaseLite.framework */,
 				9398D91B1E03434200464432 /* CouchbaseLiteTests.xctest */,
+				275FF6131E3FE9DB005F90DD /* PerfTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -413,6 +476,7 @@
 				9378C59D1E269F14001BB196 /* DocumentTest.m */,
 				27EF6A931E298E26004748DF /* QueryTest.m */,
 				72A87A0E1E32E858008466FF /* NotificationTest.m */,
+				275FF5FA1E3FBD3B005F90DD /* Performance */,
 				27EF6A951E2AC609004748DF /* names_100.json */,
 				273ADF7C1E36B514001E977F /* sentences.json */,
 				93BFCD951E0380A300E52F8A /* Info.plist */,
@@ -457,6 +521,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		275FF6121E3FE9DB005F90DD /* PerfTests-Mac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 275FF6241E3FE9DB005F90DD /* Build configuration list for PBXNativeTarget "PerfTests-Mac" */;
+			buildPhases = (
+				275FF60F1E3FE9DB005F90DD /* Sources */,
+				275FF6101E3FE9DB005F90DD /* Frameworks */,
+				275FF6111E3FE9DB005F90DD /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				275FF6271E3FECB1005F90DD /* PBXTargetDependency */,
+			);
+			name = "PerfTests-Mac";
+			productName = PerfTest;
+			productReference = 275FF6131E3FE9DB005F90DD /* PerfTest */;
+			productType = "com.apple.product-type.tool";
+		};
 		9398D9111E03434200464432 /* CBL ObjC */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9398D9261E03434200464432 /* Build configuration list for PBXNativeTarget "CBL ObjC" */;
@@ -504,6 +586,11 @@
 				LastUpgradeCheck = 0820;
 				ORGANIZATIONNAME = Couchbase;
 				TargetAttributes = {
+					275FF6121E3FE9DB005F90DD = {
+						CreatedOnToolsVersion = 8.2.1;
+						DevelopmentTeam = N2Q372V7W2;
+						ProvisioningStyle = Automatic;
+					};
 					9398D9111E03434200464432 = {
 						CreatedOnToolsVersion = 8.1;
 						DevelopmentTeam = N2Q372V7W2;
@@ -536,6 +623,7 @@
 			targets = (
 				9398D9111E03434200464432 /* CBL ObjC */,
 				9398D91A1E03434200464432 /* CBL ObjC Tests */,
+				275FF6121E3FE9DB005F90DD /* PerfTests-Mac */,
 			);
 		};
 /* End PBXProject section */
@@ -632,6 +720,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				275FF6091E3FC24D005F90DD /* iTunesMusicLibrary.json in Resources */,
 				273ADF7D1E36B514001E977F /* sentences.json in Resources */,
 				27EF6A971E2AC61B004748DF /* names_100.json in Resources */,
 			);
@@ -640,6 +729,16 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		275FF60F1E3FE9DB005F90DD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				275FF6161E3FE9DB005F90DD /* PerfTestMain.m in Sources */,
+				275FF6291E3FECD2005F90DD /* TunesPerfTest.mm in Sources */,
+				275FF6391E3FFBC0005F90DD /* PerfTest.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9398D90D1E03434200464432 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -685,6 +784,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		275FF6271E3FECB1005F90DD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9398D9111E03434200464432 /* CBL ObjC */;
+			targetProxy = 275FF6261E3FECB1005F90DD /* PBXContainerItemProxy */;
+		};
 		27EF6AEF1E32D111004748DF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "LiteCore static";
@@ -698,6 +802,99 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		275FF6171E3FE9DB005F90DD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = CBLPerfTests;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		275FF6181E3FE9DB005F90DD /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				ENABLE_NS_ASSERTIONS = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = CBLPerfTests;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
 		9398D9241E03434200464432 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D91E26CC46001BB196 /* Project_Debug.xcconfig */;
@@ -801,6 +998,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		275FF6241E3FE9DB005F90DD /* Build configuration list for PBXNativeTarget "PerfTests-Mac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				275FF6171E3FE9DB005F90DD /* Debug */,
+				275FF6181E3FE9DB005F90DD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		9398D90C1E03434200464432 /* Build configuration list for PBXProject "CouchbaseLite" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
