@@ -1,0 +1,18 @@
+# Doxyfile 1.8.4
+
+# This Doxygen config is used to generate a 'docset' package for use with
+# Xcode's documentation viewer and the Dash app.
+# See: http://developer.apple.com/tools/creatingdocsetswithdoxygen.html
+
+# WARNING: This config file should be run from within an Xcode build, via the
+# 'build_docs.sh' script that's run by the "Documentation" target.
+# Some of the settings below are based on environment variables that are only
+# set up by that script, so you can't just run 'doxygen' from the command line.
+
+@INCLUDE_PATH           = Documentation
+@INCLUDE                = Doxyfile
+
+GENERATE_DOCSET         = YES
+DISABLE_INDEX           = YES
+GENERATE_TREEVIEW       = NO
+SEARCHENGINE            = NO

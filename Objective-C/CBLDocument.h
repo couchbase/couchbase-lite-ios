@@ -66,7 +66,7 @@ extern NSString* const kCBLDocumentIsExternalUserInfoKey;
     conflict occurs, which will be resolved by invoking the conflict handler. This can happen if
     multiple application threads are writing to the database, or a pull replication is copying
     changes from a server. */
-- (BOOL) save: (NSError**)outError;
+- (BOOL) save: (NSError**)error;
 
 /** Deletes this document. All properties are removed, and subsequent calls to -documentWithID:
     will return nil.
@@ -74,12 +74,12 @@ extern NSString* const kCBLDocumentIsExternalUserInfoKey;
     change can be replicated to other databases. Thus, it does not free up all of the disk space
     occupied by the document.
     To delete a document entirely (but without the ability to replicate this), use -purge:. */
-- (BOOL) deleteDocument: (NSError**)outError;
+- (BOOL) deleteDocument: (NSError**)error;
 
 /** Purges this document from the database.
     This is more drastic than deletion: it removes all traces of the document.
     The purge will NOT be replicated to other databases. */
-- (BOOL) purge: (NSError**)outError;
+- (BOOL) purge: (NSError**)error;
 
 /** Reverts unsaved changes made to the document's properties. */
 - (void) revert;

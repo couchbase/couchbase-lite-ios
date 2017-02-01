@@ -17,7 +17,8 @@ extern NSString* const kCBLDatabaseChangesUserInfoKey;
 extern NSString* const kCBLDatabaseLastSequenceUserInfoKey;
 extern NSString* const kCBLDatabaseIsExternalUserInfoKey;
 
-/** Types of indexes. */
+
+/** Types of database indexes. */
 typedef NS_ENUM(uint32_t, CBLIndexType) {
     kCBLValueIndex,         ///< Regular index of property value
     kCBLFullTextIndex,      ///< Full-text index
@@ -66,50 +67,53 @@ typedef struct {
 /** If YES, the database will be opened read-only. */
 @property (nonatomic) BOOL readOnly;
 
-/** Get the default options for a CBLDatabase */
+/** Creates a new instance with a default set of options for a CBLDatabase. */
 + (instancetype) defaultOptions;
 
 @end
 
 
-/** A CouchbaseLite database. */
+/** A Couchbase Lite database. */
 @interface CBLDatabase : NSObject
 
-/** Initializes a Couchbase Lite database with a given name and the default database options.
+/** Initializes a database object with a given name and the default database options.
+    If the database does not yet exist, it will be created.
     @param name  The name of the database. May NOT contain capital letters!
-    @param outError  On return, the error if any. */
+    @param error  On return, the error if any. */
 - (instancetype) initWithName: (NSString*)name
-                        error: (NSError**)outError;
+                        error: (NSError**)error;
 
 /** Initializes a Couchbase Lite database with a given name and database options.
+    If the database does not yet exist, it will be created, unless the `readOnly` option is used.
     @param name  The name of the database. May NOT contain capital letters!
     @param options  The database options, or nil for the default options.
-    @param outError  On return, the error if any. */
+    @param error  On return, the error if any. */
 - (instancetype) initWithName: (NSString*)name
                       options: (nullable CBLDatabaseOptions*)options
-                        error: (NSError**)outError NS_DESIGNATED_INITIALIZER;
+                        error: (NSError**)error
+    NS_DESIGNATED_INITIALIZER;
 
 - (instancetype) init NS_UNAVAILABLE;
 
 /** Closes a database. */
-- (BOOL) close: (NSError**)outError;
+- (BOOL) close: (NSError**)error;
 
 /** Changes the database's encryption key, or removes encryption if the new key is nil.
     @param key  The encryption key in the form of an NSString (a password) or an
                 NSData object exactly 32 bytes in length (a raw AES key.) If a string is given,
                 it will be internally converted to a raw key using 64,000 rounds of PBKDF2 hashing.
                 A nil value will decrypt the database.
-    @param outError  If an error occurs, it will be stored here if this parameter is non-NULL.
+    @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
     @result  YES if the database was successfully re-keyed, or NO on error. */
-- (BOOL) changeEncryptionKey: (nullable id)key error: (NSError**)outError;
+- (BOOL) changeEncryptionKey: (nullable id)key error: (NSError**)error;
 
 /** Deletes a database. */
-- (BOOL) deleteDatabase: (NSError**)outError;
+- (BOOL) deleteDatabase: (NSError**)error;
 
 /** Deletes a database of the given name in the given directory. */
 + (BOOL) deleteDatabase: (NSString*)name
             inDirectory: (nullable NSString*)directory
-                  error: (NSError**)outError;
+                  error: (NSError**)error;
 
 /** Checks whether a database of the given name exists in the given directory or not. */
 + (BOOL) databaseExists: (NSString*)name
