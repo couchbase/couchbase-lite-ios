@@ -45,6 +45,9 @@ static inline T* _Nonnull  assertNonNull(T* _Nullable t) {
 - (instancetype) initWithQuery: (CBLQuery*)query enumerator: (C4QueryEnumerator*)e;
 @end
 
+@interface CBLDocEnumerator : CBLQueryEnumerator
+@end
+
 
 
 
@@ -203,6 +206,16 @@ C4LogDomain QueryLog;
     return [[CBLQueryEnumerator alloc] initWithQuery: self enumerator: e];
 }
 
+
+- (nullable NSEnumerator<CBLDocument*>*) allDocuments: (NSError**)error {
+    auto e = c4query_run(_c4Query, nullptr, kC4SliceNull, nullptr);
+    if (!e)
+        return nil;
+    return [[CBLDocEnumerator alloc] initWithQuery: self enumerator: e];
+}
+
+
+
 @end
 
 
@@ -210,6 +223,7 @@ C4LogDomain QueryLog;
 
 @implementation CBLQueryEnumerator
 {
+    @protected
     CBLQuery *_query;
     C4QueryEnumerator* _c4enum;
     C4Error _error;
@@ -233,18 +247,23 @@ C4LogDomain QueryLog;
 }
 
 
-- (CBLQueryRow*) nextObject {
+- (id) nextObject {
     if (c4queryenum_next(_c4enum, &_error)) {
-        Class c = _c4enum->fullTextTermCount ? [CBLFullTextQueryRow class] : [CBLQueryRow class];
-        return [[c alloc] initWithQuery: _query enumerator: _c4enum];
+        return self.currentObject;
     } else if (_error.code) {
-        C4LogToAt(QueryLog, kC4LogError, "CBLQueryEnumerator error: %d/%d",
-                  _error.domain, _error.code);
+        C4LogToAt(QueryLog, kC4LogError, "%@[%p] error: %d/%d",
+                  [self class], self, _error.domain, _error.code);
         return nil;
     } else {
         C4LogToAt(QueryLog, kC4LogInfo, "End of query enumeration (%p)", _c4enum);
         return nil;
     }
+}
+
+
+- (id) currentObject {
+    Class c = _c4enum->fullTextTermCount ? [CBLFullTextQueryRow class] : [CBLQueryRow class];
+    return [[c alloc] initWithQuery: _query enumerator: _c4enum];
 }
 
 
@@ -255,6 +274,20 @@ C4LogDomain QueryLog;
     NSError* error;
     convertError(_error, &error);
     return error;
+}
+
+
+@end
+
+
+
+
+@implementation CBLDocEnumerator
+
+
+- (id) currentObject {
+    NSString* documentID = assertNonNull( slice2string(_c4enum->docID) );
+    return _query.database[documentID];
 }
 
 

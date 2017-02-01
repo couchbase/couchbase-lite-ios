@@ -152,6 +152,10 @@ typedef struct {
 #pragma mark - QUERYING:
 
 
+/** Enumerates all documents in the database, ordered by document ID. */
+- (NSEnumerator<CBLDocument*>*) allDocuments;
+
+
 /** Compiles a database query, from any of several input formats.
     Once compiled, the query can be run many times with different parameter values.
     The rows will be sorted by ascending document ID, and no custom values are returned.

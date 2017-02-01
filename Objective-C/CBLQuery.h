@@ -40,6 +40,8 @@ NS_ASSUME_NONNULL_BEGIN
     will not reflect any changes made to the database afterwards. */
 - (nullable NSEnumerator<CBLQueryRow*>*) run: (NSError**)error;
 
+- (nullable NSEnumerator<CBLDocument*>*) allDocuments: (NSError**)error;
+
 - (instancetype) init NS_UNAVAILABLE;
 
 @end

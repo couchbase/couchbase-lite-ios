@@ -61,6 +61,7 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
     C4DatabaseObserver* _obs;
     NSMapTable<NSString*, CBLDocument*>* _documents;
     NSMutableSet<CBLDocument*>* _unsavedDocuments;
+    CBLQuery* _allDocsQuery;
 }
 
 
@@ -454,6 +455,13 @@ static NSString* attachmentsPath(NSString* dir) {
 
 
 #pragma mark - QUERIES:
+
+
+- (NSEnumerator<CBLDocument*>*) allDocuments {
+    if (!_allDocsQuery)
+        _allDocsQuery = [self createQuery: nil error: nullptr];
+    return [_allDocsQuery allDocuments: nullptr];
+}
 
 
 - (nullable CBLQuery*) createQuery: (nullable id)query

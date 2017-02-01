@@ -74,9 +74,10 @@
 }
 
 
-- (void) test02_AllDocsQuery {
+- (void) test02_NoWhereQuery {
     [self loadJSONResource: @"names_100"];
     NSError *error;
+    // This is an all-docs query since it doesn't specify any criteria:
     CBLQuery* q = [self.db createQuery: nil error: &error];
     Assert(q, @"Couldn't create query: %@", error);
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
@@ -88,6 +89,19 @@
         AssertEqual(doc.sequence, n);
     }];
     AssertEqual(numRows, 100llu);
+}
+
+
+- (void) test02_AllDocsQuery {
+    [self loadJSONResource: @"names_100"];
+    uint64_t n = 0;
+    for (CBLDocument* doc in self.db.allDocuments) {
+        ++n;
+        NSString* expectedID = [NSString stringWithFormat: @"doc-%03llu", n];
+        AssertEqualObjects(doc.documentID, expectedID);
+        AssertEqual(doc.sequence, n);
+    }
+    AssertEqual(n, 100llu);
 }
 
 
