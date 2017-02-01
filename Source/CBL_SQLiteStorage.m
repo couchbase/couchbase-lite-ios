@@ -119,8 +119,12 @@ static void errorLogCallback(void *pArg, int errCode, const char *msg) {
 
     if (baseCode == SQLITE_NOTICE || baseCode == SQLITE_READONLY)
         Log(@"SQLite message: %s", msg);
-    else
+    else {
+        bool raises = gMYWarnRaisesException;
+        gMYWarnRaisesException = NO; // don't throw as it's invokded by SQLite.
         Warn(@"SQLite error (code %d): %s", errCode, msg);
+        gMYWarnRaisesException = raises;
+    }
 }
 
 
