@@ -78,38 +78,17 @@
 
 - (void) testInBatchSuccess {
     NSError* error;
-    BOOL success = [self.db inBatch: &error do: ^BOOL{
+    BOOL success = [self.db inBatch: &error do: ^{
         for (int i = 0; i < 10; i++) {
             NSString* docId = [NSString stringWithFormat:@"doc%d", i];
             CBLDocument* doc = [self.db documentWithID: docId];
             [doc save: nil];
         }
-        return YES;
     }];
     Assert(success, @"Error in batch: %@", error);
     for (int i = 0; i < 10; i++) {
         NSString* docId = [NSString stringWithFormat:@"doc%d", i];
         Assert([self.db documentExists: docId]);
-    }
-}
-
-
-// Note: this test is currently failed because the document needs to refresh
-// its internal c4doc when the batch transaction is rolled back.
-- (void) failingTestInBatchRollback {
-    NSError* error;
-    BOOL success = [self.db inBatch: &error do: ^BOOL{
-        for (int i = 1; i < 10; i++) {
-            NSString* docId = [NSString stringWithFormat:@"doc%d", i];
-            CBLDocument* doc = [self.db documentWithID: docId];
-            [doc save: nil];
-        }
-        return NO;
-    }];
-    AssertFalse(success);
-    for (int i = 1; i < 10; i++) {
-        NSString* docId = [NSString stringWithFormat:@"doc%d", i];
-        AssertFalse([self.db documentExists: docId]);
     }
 }
 

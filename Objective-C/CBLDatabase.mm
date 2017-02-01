@@ -288,7 +288,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-- (BOOL) inBatch: (NSError**)outError do: (BOOL (^)())block {
+- (BOOL) inBatch: (NSError**)outError do: (void (^)())block {
     C4Transaction transaction(_c4db);
     if (outError)
         *outError = nil;
@@ -296,9 +296,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     if (!transaction.begin())
         return convertError(transaction.error(), outError);
     
-    if (!block())
-        return NO;
-    
+    block();
+
     if (!transaction.commit())
         return convertError(transaction.error(), outError);
     

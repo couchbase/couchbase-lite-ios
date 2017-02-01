@@ -119,11 +119,13 @@ typedef struct {
 + (BOOL) databaseExists: (NSString*)name
             inDirectory: (nullable NSString*)directory;
 
-/** Runs a block of the batch database operations. Couchbase Lite will guarantee transaction 
-    of the batch operations. If the block returns NO, the batch is rolled back.
-    Use this when performing bulk write operations like multiple inserts/updates; it saves the
-    overhead of multiple database commits, greatly improving performance. */
-- (BOOL) inBatch: (NSError**)outError do: (BOOL (^)())block;
+/** Runs a group of database operations in a batch. Use this when performing bulk write operations
+    like multiple inserts/updates; it saves the overhead of multiple database commits, greatly
+    improving performance. 
+    @param error  On return, the error if any.
+    @param block  The block of code to run.
+    @return  YES on success, NO on error. */
+- (BOOL) inBatch: (NSError**)error do: (void (^)())block;
 
 /** Creates a new CBLDocument object with no properties and a new (random) UUID. 
     The document will be saved to the database when you call -save: on it. */

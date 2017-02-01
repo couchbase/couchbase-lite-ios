@@ -44,13 +44,12 @@
      }];
     
     __block NSError* error;
-    bool ok = [self.db inBatch: &error do: ^BOOL {
+    bool ok = [self.db inBatch: &error do: ^{
         for (unsigned i = 0; i < 10; i++) {
             CBLDocument* doc = self.db[[NSString stringWithFormat: @"doc-%u", i]];
             doc[@"type"] = @"demo";
             Assert([doc save: &error], @"Error saving: %@", error);
         }
-        return YES;
     }];
     Assert(ok);
     
@@ -118,13 +117,12 @@
      }];
     
     __block NSError* error;
-    BOOL ok = [self.db inBatch: &error do: ^BOOL {
+    BOOL ok = [self.db inBatch: &error do: ^{
         for (unsigned i = 0; i < 10; i++) {
             CBLDocument* doc = self.db[[NSString stringWithFormat: @"doc-%u", i]];
             doc[@"type"] = @"demo";
             Assert([doc save: &error], @"Error saving: %@", error);
         }
-        return YES;
     }];
     Assert(ok);
     

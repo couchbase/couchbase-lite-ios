@@ -111,7 +111,7 @@
 
 - (BOOL)saveProperties:(NSDictionary *)props toDocWithID:(NSString *)docID error:(NSError **)error {
     // Save to database:
-    BOOL ok = [self.db inBatch:error do:^BOOL{
+    BOOL ok = [self.db inBatch:error do: ^{
         C4Slice docIDSlice = c4str([docID cStringUsingEncoding:NSASCIIStringEncoding]);
         C4Document *tricky = c4doc_get(self.db.c4db, docIDSlice, true, NULL);
         
@@ -135,8 +135,6 @@
         C4Document* newDoc = c4doc_put(self.db.c4db, &put, NULL, &err);
         c4slice_free(put.body);
         Assert(newDoc);
-        
-        return YES;
     }];
     
     Assert(ok);
