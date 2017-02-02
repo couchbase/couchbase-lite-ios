@@ -225,6 +225,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
+- (NSString*) path {
+    return _c4db != nullptr ? sliceResult2FilesystemPath(c4db_getPath(_c4db)) : nil;
+}
+
+
 - (BOOL) close: (NSError**)outError {
     if (!_c4db)
         return YES;
@@ -336,11 +341,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         [_unsavedDocuments addObject: doc];
     else
         [_unsavedDocuments removeObject: doc];
-}
-
-
-- (NSString*) path {
-    return sliceResult2FilesystemPath(c4db_getPath(_c4db));
 }
 
 

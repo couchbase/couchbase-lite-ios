@@ -26,19 +26,24 @@
     options.directory = dir;
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" options: options error: &error];
     AssertNotNil(db, @"Couldn't open db: %@", error);
+    AssertNotNil(db.path);
+    AssertEqualObjects(db.name, @"db");
 
     Assert([db close: &error], @"Couldn't close db: %@", error);
+    AssertNil(db.path);
     Assert([CBLDatabase deleteDatabase: @"db" inDirectory: dir error: &error],
            @"Couldn't delete closed database: %@", error);
 }
 
 
 - (void) testDelete {
-    NSString* path = self.db.path;
-    Assert([[NSFileManager defaultManager] fileExistsAtPath: path]);
+    Assert(self.db.path);
+    Assert([[NSFileManager defaultManager] fileExistsAtPath: self.db.path]);
     
     NSError* error;
+    NSString* path = self.db.path;
     Assert([self.db deleteDatabase: &error], @"Couldn't delete db: %@", error);
+    AssertNil(self.db.path);
     AssertFalse([[NSFileManager defaultManager] fileExistsAtPath: path]);
 }
 

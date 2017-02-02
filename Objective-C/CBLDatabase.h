@@ -79,8 +79,8 @@ typedef struct {
 /** The database's name. */
 @property (readonly, nonatomic) NSString* name;
 
-/** The database's path. */
-@property (readonly, nonatomic) NSString* path;
+/** The database's path. If the database is closed or deleted, nil value will be returned. */
+@property (readonly, nonatomic, nullable) NSString* path;
 
 /** Initializes a database object with a given name and the default database options.
     If the database does not yet exist, it will be created.
