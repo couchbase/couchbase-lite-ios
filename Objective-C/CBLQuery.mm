@@ -350,7 +350,7 @@ C4LogDomain QueryLog;
 }
 
 - (NSInteger) integerAtIndex: (NSUInteger)index {
-    return FLValue_AsInt(FLArray_Get(_customColumns, (uint32_t)index));
+    return (NSInteger)FLValue_AsInt(FLArray_Get(_customColumns, (uint32_t)index));
 }
 
 - (float) floatAtIndex: (NSUInteger)index {
