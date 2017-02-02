@@ -1128,6 +1128,7 @@
 				275FF6601E428624005F90DD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		9398D90C1E03434200464432 /* Build configuration list for PBXProject "CouchbaseLite" */ = {
 			isa = XCConfigurationList;
