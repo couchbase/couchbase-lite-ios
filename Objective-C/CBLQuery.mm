@@ -128,7 +128,7 @@ C4LogDomain QueryLog;
         NSArray* sorts = [self encodeSortDescriptors: sortDescriptors error: outError];
         if (!sorts)
             return nil;
-        q[@"ORDER BY"] = sorts;
+        q[@"ORDER_BY"] = sorts;
     }
 
     if (returning) {
