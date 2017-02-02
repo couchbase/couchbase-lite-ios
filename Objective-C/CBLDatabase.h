@@ -76,6 +76,12 @@ typedef struct {
 /** A Couchbase Lite database. */
 @interface CBLDatabase : NSObject
 
+/** The database's name. */
+@property (readonly, nonatomic) NSString* name;
+
+/** The database's path. */
+@property (readonly, nonatomic) NSString* path;
+
 /** Initializes a database object with a given name and the default database options.
     If the database does not yet exist, it will be created.
     @param name  The name of the database. May NOT contain capital letters!

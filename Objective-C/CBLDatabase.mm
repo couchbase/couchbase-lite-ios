@@ -65,7 +65,7 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
 }
 
 
-@synthesize c4db=_c4db, sharedKeys=_sharedKeys, conflictResolver = _conflictResolver;
+@synthesize name=_name, c4db=_c4db, sharedKeys=_sharedKeys, conflictResolver = _conflictResolver;
 
 
 static const C4DatabaseConfig kDBConfig = {

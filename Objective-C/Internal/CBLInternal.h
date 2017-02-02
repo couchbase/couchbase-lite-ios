@@ -39,7 +39,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLDatabase ()
 
 @property (readonly, nonatomic, nullable) C4Database* c4db;
-@property (readonly, nonatomic) NSString* path;     // For unit tests
 
 #ifdef __cplusplus
 @property (readonly, nonatomic) cbl::SharedKeys sharedKeys;
