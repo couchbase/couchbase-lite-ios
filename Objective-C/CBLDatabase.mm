@@ -453,8 +453,10 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 
 
 - (NSEnumerator<CBLDocument*>*) allDocuments {
-    if (!_allDocsQuery)
+    if (!_allDocsQuery) {
         _allDocsQuery = [[CBLQuery alloc] initWithDatabase: self];
+        _allDocsQuery.orderBy = @[@"_id"];
+    }
     auto e = [_allDocsQuery allDocuments: nullptr];
     Assert(e, @"allDocuments failed?!");
     return e;
