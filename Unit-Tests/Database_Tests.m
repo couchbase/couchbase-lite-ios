@@ -1426,6 +1426,18 @@
                         dbFileName: @"iosdb.cblite2"
                        attsDirName: nil
                             docIds: @[@"doc1", @"doc2"] localDocIds: @[@"local1"]];
+    
+    // Android 1.4.0
+    [self testReplaceDatabaseAtDir: @"android140"
+                        dbFileName: @"androiddb.cblite2"
+                       attsDirName: nil
+                            docIds: @[@"doc1", @"doc2"] localDocIds: @[@"local1"]];
+    
+    // .NET 1.4.0
+    [self testReplaceDatabaseAtDir: @"net140"
+                        dbFileName: @"netdb.cblite2"
+                       attsDirName: nil
+                            docIds: @[@"doc1", @"doc2"] localDocIds: @[@"local1"]];
 }
 
 
@@ -1473,6 +1485,18 @@
     // iOS 1.4.0
     [self testReplaceDatabaseAtDir: @"ios140-forestdb"
                         dbFileName: @"iosdb.cblite2"
+                       attsDirName: nil
+                            docIds: @[@"doc1", @"doc2"] localDocIds: @[@"local1"]];
+    
+    // Android 1.4.0
+    [self testReplaceDatabaseAtDir: @"android140-forestdb"
+                        dbFileName: @"androiddb.cblite2"
+                       attsDirName: nil
+                            docIds: @[@"doc1", @"doc2"] localDocIds: @[@"local1"]];
+    
+    // .NET 1.4.0
+    [self testReplaceDatabaseAtDir: @"net140-forestdb"
+                        dbFileName: @"netdb.cblite2"
                        attsDirName: nil
                             docIds: @[@"doc1", @"doc2"] localDocIds: @[@"local1"]];
 }
