@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "938CF9ED1E442A3E00291631"
                BuildableName = "CBL Tests.app"
-               BlueprintName = "CBL iOS Tests App"
+               BlueprintName = "CBL Objc Tests - iOS App"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -33,8 +33,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "938CFA051E442A3E00291631"
-               BuildableName = "CBL iOS Tests.xctest"
-               BlueprintName = "CBL iOS Tests"
+               BuildableName = "CBL Objc Tests - iOS.xctest"
+               BlueprintName = "CBL Objc Tests - iOS"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -44,7 +44,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "938CF9ED1E442A3E00291631"
             BuildableName = "CBL Tests.app"
-            BlueprintName = "CBL iOS Tests App"
+            BlueprintName = "CBL Objc Tests - iOS App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -67,7 +67,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "938CF9ED1E442A3E00291631"
             BuildableName = "CBL Tests.app"
-            BlueprintName = "CBL iOS Tests App"
+            BlueprintName = "CBL Objc Tests - iOS App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -86,7 +86,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "938CF9ED1E442A3E00291631"
             BuildableName = "CBL Tests.app"
-            BlueprintName = "CBL iOS Tests App"
+            BlueprintName = "CBL Objc Tests - iOS App"
             ReferencedContainer = "container:CouchbaseLite.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

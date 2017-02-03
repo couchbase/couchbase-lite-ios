@@ -250,8 +250,8 @@
 		72A87A041E2E0E70008466FF /* CBLBlobStream.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBlobStream.mm; sourceTree = "<group>"; };
 		72A87A0E1E32E858008466FF /* NotificationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NotificationTest.m; sourceTree = "<group>"; };
 		9317621E1E2D439700563506 /* CBLQuery+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+Internal.h"; sourceTree = "<group>"; };
-		9344A3611E44517B0091F581 /* CBL iOS Tests App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL iOS Tests App.xcconfig"; sourceTree = "<group>"; };
-		9344A3621E44517B0091F581 /* CBL iOS Tests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL iOS Tests.xcconfig"; sourceTree = "<group>"; };
+		9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
+		9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests - iOS.xcconfig"; sourceTree = "<group>"; };
 		934F4BD01E1EF19000F90659 /* CollectionUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CollectionUtils.h; sourceTree = "<group>"; };
 		934F4BD11E1EF19000F90659 /* CollectionUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CollectionUtils.m; sourceTree = "<group>"; };
 		934F4BE91E1EF19000F90659 /* MYErrorUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYErrorUtils.h; sourceTree = "<group>"; };
@@ -304,7 +304,7 @@
 		9380C6EE1E15B8C20011E8CB /* CBLDocument.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLDocument.mm; sourceTree = "<group>"; };
 		9380C6FE1E15BB1D0011E8CB /* CBLProperties.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLProperties.h; sourceTree = "<group>"; };
 		938CF9EE1E442A3E00291631 /* CBL Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		938CFA061E442A3E00291631 /* CBL iOS Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CBL iOS Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		938CFA061E442A3E00291631 /* CBL Objc Tests - iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CBL Objc Tests - iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9398D9121E03434200464432 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9398D91B1E03434200464432 /* CouchbaseLiteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9398D9311E0347B600464432 /* LiteCore.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = LiteCore.xcodeproj; path = "couchbase-lite-core/Xcode/LiteCore.xcodeproj"; sourceTree = "<group>"; };
@@ -431,8 +431,8 @@
 		9378C5D11E26CC46001BB196 /* xcconfigs */ = {
 			isa = PBXGroup;
 			children = (
-				9344A3611E44517B0091F581 /* CBL iOS Tests App.xcconfig */,
-				9344A3621E44517B0091F581 /* CBL iOS Tests.xcconfig */,
+				9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */,
+				9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */,
 				9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */,
 				9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */,
 				9378C5D91E26CC46001BB196 /* Project_Debug.xcconfig */,
@@ -495,7 +495,7 @@
 				9398D91B1E03434200464432 /* CouchbaseLiteTests.xctest */,
 				275FF6131E3FE9DB005F90DD /* PerfTest */,
 				938CF9EE1E442A3E00291631 /* CBL Tests.app */,
-				938CFA061E442A3E00291631 /* CBL iOS Tests.xctest */,
+				938CFA061E442A3E00291631 /* CBL Objc Tests - iOS.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -554,17 +554,17 @@
 		93BFCD931E0380A300E52F8A /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				936483AA1E4431C6008D08B3 /* iOS */,
 				9378C5951E25B473001BB196 /* CBLTestCase.h */,
 				9378C5961E25B473001BB196 /* CBLTestCase.m */,
 				9378C5901E25B3F0001BB196 /* DatabaseTest.m */,
 				9378C59D1E269F14001BB196 /* DocumentTest.m */,
-				27EF6A931E298E26004748DF /* QueryTest.m */,
 				72A87A0E1E32E858008466FF /* NotificationTest.m */,
-				275FF5FA1E3FBD3B005F90DD /* Performance */,
+				27EF6A931E298E26004748DF /* QueryTest.m */,
+				93BFCD951E0380A300E52F8A /* Info.plist */,
 				27EF6A951E2AC609004748DF /* names_100.json */,
 				273ADF7C1E36B514001E977F /* sentences.json */,
-				93BFCD951E0380A300E52F8A /* Info.plist */,
+				275FF5FA1E3FBD3B005F90DD /* Performance */,
+				936483AA1E4431C6008D08B3 /* iOS */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -641,9 +641,9 @@
 			productReference = 275FF6131E3FE9DB005F90DD /* PerfTest */;
 			productType = "com.apple.product-type.tool";
 		};
-		938CF9ED1E442A3E00291631 /* CBL iOS Tests App */ = {
+		938CF9ED1E442A3E00291631 /* CBL Objc Tests - iOS App */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 938CFA1C1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL iOS Tests App" */;
+			buildConfigurationList = 938CFA1C1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL Objc Tests - iOS App" */;
 			buildPhases = (
 				938CF9EA1E442A3E00291631 /* Sources */,
 				938CF9EB1E442A3E00291631 /* Frameworks */,
@@ -655,14 +655,14 @@
 			dependencies = (
 				938CFA1F1E442A9100291631 /* PBXTargetDependency */,
 			);
-			name = "CBL iOS Tests App";
+			name = "CBL Objc Tests - iOS App";
 			productName = "ios-tests";
 			productReference = 938CF9EE1E442A3E00291631 /* CBL Tests.app */;
 			productType = "com.apple.product-type.application";
 		};
-		938CFA051E442A3E00291631 /* CBL iOS Tests */ = {
+		938CFA051E442A3E00291631 /* CBL Objc Tests - iOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 938CFA1D1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL iOS Tests" */;
+			buildConfigurationList = 938CFA1D1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL Objc Tests - iOS" */;
 			buildPhases = (
 				938CFA021E442A3E00291631 /* Sources */,
 				938CFA031E442A3E00291631 /* Frameworks */,
@@ -673,9 +673,9 @@
 			dependencies = (
 				936483911E442F15008D08B3 /* PBXTargetDependency */,
 			);
-			name = "CBL iOS Tests";
+			name = "CBL Objc Tests - iOS";
 			productName = "ios-testsTests";
-			productReference = 938CFA061E442A3E00291631 /* CBL iOS Tests.xctest */;
+			productReference = 938CFA061E442A3E00291631 /* CBL Objc Tests - iOS.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		9398D9111E03434200464432 /* CBL ObjC */ = {
@@ -779,8 +779,8 @@
 			targets = (
 				9398D9111E03434200464432 /* CBL ObjC */,
 				9398D91A1E03434200464432 /* CBL ObjC Tests */,
-				938CF9ED1E442A3E00291631 /* CBL iOS Tests App */,
-				938CFA051E442A3E00291631 /* CBL iOS Tests */,
+				938CF9ED1E442A3E00291631 /* CBL Objc Tests - iOS App */,
+				938CFA051E442A3E00291631 /* CBL Objc Tests - iOS */,
 				275FF6121E3FE9DB005F90DD /* PerfTests-Mac */,
 				275FF65D1E428624005F90DD /* API Docs */,
 			);
@@ -993,7 +993,7 @@
 		};
 		936483911E442F15008D08B3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 938CF9ED1E442A3E00291631 /* CBL iOS Tests App */;
+			target = 938CF9ED1E442A3E00291631 /* CBL Objc Tests - iOS App */;
 			targetProxy = 936483901E442F15008D08B3 /* PBXContainerItemProxy */;
 		};
 		938CFA1F1E442A9100291631 /* PBXTargetDependency */ = {
@@ -1214,28 +1214,28 @@
 		};
 		938CFA0D1E442A3E00291631 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL iOS Tests App.xcconfig */;
+			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		938CFA0E1E442A3E00291631 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL iOS Tests App.xcconfig */;
+			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		938CFA0F1E442A3E00291631 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL iOS Tests.xcconfig */;
+			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		938CFA101E442A3E00291631 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL iOS Tests.xcconfig */;
+			baseConfigurationReference = 9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
@@ -1361,7 +1361,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		938CFA1C1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL iOS Tests App" */ = {
+		938CFA1C1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL Objc Tests - iOS App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				938CFA0D1E442A3E00291631 /* Debug */,
@@ -1370,7 +1370,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		938CFA1D1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL iOS Tests" */ = {
+		938CFA1D1E442A3E00291631 /* Build configuration list for PBXNativeTarget "CBL Objc Tests - iOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				938CFA0F1E442A3E00291631 /* Debug */,
