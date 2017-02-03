@@ -17,7 +17,7 @@
 		275FF6291E3FECD2005F90DD /* TunesPerfTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF60B1E3FCA20005F90DD /* TunesPerfTest.mm */; };
 		275FF6391E3FFBC0005F90DD /* PerfTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6381E3FFBC0005F90DD /* PerfTest.mm */; };
 		275FF6591E412C66005F90DD /* DocPerfTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6581E412C66005F90DD /* DocPerfTest.m */; };
-		275FF6701E43E013005F90DD /* CBLQueryRow.h in Headers */ = {isa = PBXBuildFile; fileRef = 275FF66E1E43E013005F90DD /* CBLQueryRow.h */; };
+		275FF6701E43E013005F90DD /* CBLQueryRow.h in Headers */ = {isa = PBXBuildFile; fileRef = 275FF66E1E43E013005F90DD /* CBLQueryRow.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275FF6711E43E013005F90DD /* CBLQueryRow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF66F1E43E013005F90DD /* CBLQueryRow.mm */; };
 		27A0C85E1E3E7AB600F68646 /* CBLSharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */; };
 		27A0C85F1E3E7AB600F68646 /* CBLSharedKeys.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */; };

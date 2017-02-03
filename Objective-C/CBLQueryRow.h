@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSString*)  stringAtIndex:  (NSUInteger)index;
 - (nullable NSDate*)    dateAtIndex:    (NSUInteger)index;
 
-- (nullable id) objectForSubscript: (NSUInteger)subscript;
+- (nullable id) objectAtIndexedSubscript: (NSUInteger)subscript;
 
 - (instancetype) init NS_UNAVAILABLE;
 

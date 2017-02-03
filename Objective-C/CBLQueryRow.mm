@@ -92,7 +92,7 @@
     return [CBLJSON dateWithJSONObject: [self valueAtIndex: index]];
 }
 
-- (nullable id) objectForSubscript: (NSUInteger)subscript {
+- (nullable id) objectAtIndexedSubscript: (NSUInteger)subscript {
     return [self valueAtIndex: subscript];
 }
 
