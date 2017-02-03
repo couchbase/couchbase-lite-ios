@@ -161,35 +161,13 @@ typedef struct {
 /** Enumerates all documents in the database, ordered by document ID. */
 - (NSEnumerator<CBLDocument*>*) allDocuments;
 
-
 /** Compiles a database query, from any of several input formats.
     Once compiled, the query can be run many times with different parameter values.
     The rows will be sorted by ascending document ID, and no custom values are returned.
-    @param query  The query specification. This can be an NSPredicate or an NSString (interpreted 
+    @param where  The query specification. This can be an NSPredicate, or an NSString (interpreted
                     as an NSPredicate format string), or nil to return all documents.
-    @param error  If the query cannot be parsed, an error will be stored here.
-    @return  The CBLQuery, or nil on error. */
-- (nullable CBLQuery*) createQuery: (nullable id)query
-                             error: (NSError**)error;
-
-/** Compiles a Couchbase Lite query, from any of several input formats, specifying sorting.
-    Once compiled, the query can be run many times with different parameter values.
-    @param where  The query specification; see above for details.
-                    (Corresponds to the WHERE clause of a SQL or N1QL query.)
-    @param sortDescriptors  An array of NSSortDescriptors or NSStrings, specifying how to sort the
-                    resulting rows. These can name key-paths or be NSExpresson format strings.
-                    If nil, no sorting occurs; this is faster but the order of rows is undefined.
-                    (Corresponds to the ORDER BY clause of a SQL or N1QL query.)
-    @param returning  An array of NSExpressions (or expression format strings) describing values
-                    to include in the result. 
-                    If nil, only the document ID and sequence number will be available.
-                    (Corresponds to the SELECT clause of a SQL or N1QL query.)
-    @param error  If the query cannot be parsed, an error will be stored here.
-    @return  The CBLQuery, or nil on error. */
-- (nullable CBLQuery*) createQueryWhere: (nullable id)where
-                                orderBy: (nullable NSArray*)sortDescriptors
-                              returning: (nullable NSArray*)returning
-                                  error: (NSError**)error;
+    @return  The CBLQuery. */
+- (CBLQuery*) createQueryWhere: (nullable id)where;
 
 /** Creates a value index (type kCBLValueIndex) on a given document property.
     This will speed up queries that test that property, at the expense of making database writes a

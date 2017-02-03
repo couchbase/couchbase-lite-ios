@@ -7,8 +7,19 @@
 //
 
 #import "CBLQuery.h"
+#import "CBLQueryRow.h"
+#import "c4.h"
+
 
 NS_ASSUME_NONNULL_BEGIN
+
+
+#define kBadQuerySpecError -1
+#define CBLErrorDomain @"CouchbaseLite"
+#define mkError(ERR, FMT, ...)  MYReturnError(ERR, kBadQuerySpecError, CBLErrorDomain, \
+                                              FMT, ## __VA_ARGS__)
+
+extern C4LogDomain QueryLog;
 
 
 @interface CBLQuery ()
@@ -18,18 +29,10 @@ NS_ASSUME_NONNULL_BEGIN
     * NSArray (interpreted as the WHERE property of a raw LiteCore JSON query)
     * NSDictionary (interpreted as a raw LiteCore JSON query)
     * NSData (pre-encoded JSON query) */
-- (nullable instancetype) initWithDatabase: (CBLDatabase*)db
-                                     where: (nullable id)where
-                                   orderBy: (nullable NSArray*)sortDescriptors
-                                 returning: (nullable NSArray*)returning
-                                     error: (NSError**)error
-    NS_DESIGNATED_INITIALIZER;
+- (instancetype) initWithDatabase: (CBLDatabase*)db;
 
 /** Just encodes the query into the JSON form parsed by LiteCore. (Exposed for testing.) */
-+ (nullable NSData*) encodeQuery: (nullable id)where
-                         orderBy: (nullable NSArray*)sortDescriptors
-                       returning: (nullable NSArray*)returning
-                           error: (NSError**)error;
+- (nullable NSData*) encodeAsJSON: (NSError**)outError;
 
 @end
 
@@ -56,5 +59,22 @@ NS_ASSUME_NONNULL_BEGIN
 #endif
 
 @end
+
+
+@interface CBLQueryEnumerator : NSEnumerator
+- (instancetype) initWithQuery: (CBLQuery*)query
+                       c4Query: (C4Query*)c4Query
+                    enumerator: (C4QueryEnumerator*)e;
+
+@property (readonly, nonatomic) CBLDatabase* database;
+@property (readonly, nonatomic) C4Query* c4Query;
+@end
+
+
+@interface CBLQueryRow ()
+- (instancetype) initWithEnumerator: (CBLQueryEnumerator*)enumerator
+                       c4Enumerator: (C4QueryEnumerator*)e;
+@end
+
 
 NS_ASSUME_NONNULL_END

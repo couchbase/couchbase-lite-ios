@@ -63,13 +63,14 @@
         NSString* pred = @(kTests[i].pred);
         //[CBLQuery dumpPredicate: [NSPredicate predicateWithFormat: pred argumentArray: nil]];
         NSString* expectedJson = [CBLQuery json5ToJSON: kTests[i].json5];
-        NSData* actual = [CBLQuery encodeQuery: pred orderBy: nil returning: nil error: &error];
+        CBLQuery* query = [self.db createQueryWhere: pred];
+        query.orderBy = nil; // ignore ordering in this test
+        NSData* actual = [query encodeAsJSON: &error];
         Assert(actual, @"Encode failed: %@", error);
         NSString* actualJSON = [[NSString alloc] initWithData: actual encoding: NSUTF8StringEncoding];
         AssertEqualObjects(actualJSON, expectedJson);
 
-        CBLQuery* query = [self.db createQuery: pred error: &error];
-        Assert(query, @"Couldn't create CBLQuery: %@", error);
+        Assert([query check: &error], @"Couldn't compile CBLQuery: %@", error);
     }
 }
 
@@ -78,7 +79,7 @@
     [self loadJSONResource: @"names_100"];
     NSError *error;
     // This is an all-docs query since it doesn't specify any criteria:
-    CBLQuery* q = [self.db createQuery: nil error: &error];
+    CBLQuery* q = [self.db createQueryWhere: nil];
     Assert(q, @"Couldn't create query: %@", error);
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         NSString* expectedID = [NSString stringWithFormat: @"doc-%03llu", n];
@@ -117,7 +118,7 @@
     NSError *error;
     NSArray* indexSpec = @[ [NSExpression expressionForKeyPath: @"name.first"] ];
     for (int pass = 0; pass < 2; ++pass) {
-        CBLQuery *q = [self.db createQuery: @"name.first == $FIRSTNAME" error: &error];
+        CBLQuery *q = [self.db createQueryWhere: @"name.first == $FIRSTNAME"];
         Assert(q, @"Couldn't create query: %@", error);
         q.parameters = @{@"FIRSTNAME": @"Claude"};
         uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
@@ -146,12 +147,9 @@
                                  @[@"stephen.jakovac@nosql-matters.org"] ];
 
     [self loadJSONResource: @"names_100"];
-    NSError *error;
-    CBLQuery *q = [self.db createQueryWhere: @"contact.address.state == $STATE"
-                                    orderBy: @[@"contact.address.zip"]
-                                  returning: @[@"contact.address.zip", @"contact.email"]
-                                      error: &error];
-    Assert(q, @"Couldn't create query: %@", error);
+    CBLQuery *q = [self.db createQueryWhere: @"contact.address.state == $STATE"];
+    q.orderBy = @[@"contact.address.zip"];
+    q.returning = @[@"contact.address.zip", @"contact.email"];
     q.parameters = @{@"STATE": @"MN"};
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         AssertEqualObjects(row.documentID, expectedDocs[n-1]);
@@ -168,10 +166,9 @@
     [self loadJSONResource: @"sentences"];
     NSError* error;
     Assert([_db createIndexOn: @[@"sentence"] type: kCBLFullTextIndex options: NULL error: &error]);
-    CBLQuery *q = [self.db createQueryWhere: @"sentence matches 'Dummie woman'"
-                                    orderBy: @[@"-rank(sentence)"]
-                                  returning: nil
-                                      error: &error];
+    CBLQuery *q = [self.db createQueryWhere: @"sentence matches 'Dummie woman'"];
+    q.orderBy = @[@"-rank(sentence)"];
+    q.returning = nil;
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         CBLFullTextQueryRow* ftsRow = (id)row;
         NSString* text = ftsRow.fullTextMatched;
@@ -192,11 +189,11 @@
     NSArray* indexSpec = @[ [NSExpression expressionForKeyPath: @"name.first"] ];
     Assert([self.db createIndexOn: indexSpec type: kCBLValueIndex options: NULL error: &error]);
     
-    CBLQuery *q = [self.db createQuery: @"name.first == $FIRSTNAME" error: &error];
-    Assert(q, @"Couldn't create query: %@", error);
+    CBLQuery *q = [self.db createQueryWhere: @"name.first == $FIRSTNAME"];
     q.parameters = @{@"FIRSTNAME": @"Claude"};
     
     NSArray* rows = [[q run: &error] allObjects];
+    Assert(rows, @"Couldn't run query: %@", error);
     AssertEqual(rows.count, 1llu);
     
     CBLDocument* doc = ((CBLQueryRow*)rows[0]).document;
