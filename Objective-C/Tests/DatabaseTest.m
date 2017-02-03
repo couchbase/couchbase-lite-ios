@@ -26,7 +26,7 @@
     options.directory = dir;
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" options: options error: &error];
     AssertNotNil(db, @"Couldn't open db: %@", error);
-    AssertNotNil(db.path);
+    Assert([db.path.lastPathComponent hasSuffix: @".cblite2"]);
     AssertEqualObjects(db.name, @"db");
 
     Assert([db close: &error], @"Couldn't close db: %@", error);

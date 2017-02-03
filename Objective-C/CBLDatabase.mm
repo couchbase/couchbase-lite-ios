@@ -30,6 +30,10 @@ NSString* const kCBLDatabaseChangesUserInfoKey = @"CBLDatbaseChangesUserInfoKey"
 NSString* const kCBLDatabaseLastSequenceUserInfoKey = @"CBLDatabaseLastSequenceUserInfoKey";
 NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserInfoKey";
 
+
+#define kDBExtension @"cblite2"
+
+
 @implementation CBLDatabaseOptions
 
 @synthesize directory=_directory;
@@ -151,11 +155,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     _documents = [NSMapTable strongToWeakObjectsMapTable];
     _unsavedDocuments = [NSMutableSet setWithCapacity: 100];
     
-    NSString* attsPath = attachmentsPath(dir);
-    if (![self setupDirectory: attsPath
-               fileProtection: _options.fileProtection
-                        error: outError])
-        return NO;
     return YES;
 }
 
@@ -364,14 +363,10 @@ static NSString* defaultDirectory() {
 
 
 static NSString* databasePath(NSString* name, NSString* dir) {
+    name = [[name stringByReplacingOccurrencesOfString: @"/" withString: @":"]
+            stringByAppendingPathExtension: kDBExtension];
     NSString* path = [dir stringByAppendingPathComponent: name];
     return path.stringByStandardizingPath;
-}
-
-
-static NSString* attachmentsPath(NSString* dir) {
-    NSString* path = [dir stringByAppendingPathComponent: @"attachments"];
-    return path.stringByStandardizingPath;;
 }
 
 
