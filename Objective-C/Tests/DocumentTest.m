@@ -210,6 +210,10 @@
     [doc setObject: @{@"foo": @"bar"} forKey: @"dict"];
     [doc setObject: @[@"1", @"2"] forKey: @"array"];
     
+    // NSNull:
+    [doc setObject: [NSNull null] forKey: @"null"];
+    [doc setObject: @[[NSNull null], [NSNull null]] forKey: @"nullarray"];
+    
     // Date:
     NSDate* date = [NSDate date];
     [doc setObject: date forKey: @"date"];
@@ -230,15 +234,21 @@
     AssertEqualObjects([doc objectForKey: @"dict"], @{@"foo": @"bar"});
     AssertEqualObjects([doc objectForKey: @"array"], (@[@"1", @"2"]));
     
+    // NSNull:
+    AssertEqualObjects([doc objectForKey: @"null"], [NSNull null]);
+    AssertEqualObjects([doc objectForKey: @"nullarray"], (@[[NSNull null], [NSNull null]]));
+    
     // Date:
-    // TODO: Why is comparing two date objects not equal?
     AssertEqualObjects([CBLJSON JSONObjectWithDate: [doc dateForKey: @"date"]],
                        [CBLJSON JSONObjectWithDate: date]);
     
-    ////// Get the doc from a different database and check again:
+    ////// Reopen the database and get the document again:
     
-    CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
+    [self reopenDB];
     
+    CBLDocument* doc1 = [self.db documentWithID: @"doc1"];
+    
+    // Primitives:
     AssertEqual([doc1 booleanForKey: @"bool"], YES);
     AssertEqual([doc1 doubleForKey: @"double"], 1.1);
     AssertEqual([doc1 floatForKey: @"float"], @(1.2).floatValue);
@@ -251,8 +261,11 @@
     AssertEqualObjects([doc1 objectForKey: @"dict"], @{@"foo": @"bar"});
     AssertEqualObjects([doc1 objectForKey: @"array"], (@[@"1", @"2"]));
     
+    // NSNull:
+    AssertEqualObjects([doc objectForKey: @"null"], [NSNull null]);
+    AssertEqualObjects([doc objectForKey: @"nullarray"], (@[[NSNull null], [NSNull null]]));
+    
     // Date:
-    // TODO: Why is comparing two date objects not equal?
     AssertEqualObjects([CBLJSON JSONObjectWithDate: [doc1 dateForKey: @"date"]],
                        [CBLJSON JSONObjectWithDate: date]);
 }
@@ -269,6 +282,52 @@
     AssertEqualObjects(doc.properties,
         (@{@"type": @"demo", @"weight": @12.5, @"tags": @[@"useless", @"temporary"]}));
 }
+
+
+- (void) testRemoveProperties {
+    CBLDocument* doc = self.db[@"doc1"];
+    doc.properties = @{ @"type": @"profile",
+                        @"name": @"Jason",
+                        @"weight": @130.5,
+                        @"address": @{
+                                @"street": @"1 milky way.",
+                                @"city": @"galaxy city",
+                                @"zip" : @12345
+                                }
+                        };
+    
+    AssertEqual([doc doubleForKey: @"weight"], 130.5);
+    AssertEqualObjects(doc[@"address"][@"city"], @"galaxy city");
+    
+    doc[@"name"] = nil;
+    doc[@"weight"] = nil;
+    
+    NSMutableDictionary* address = [NSMutableDictionary dictionaryWithDictionary: doc[@"address"]];
+    address[@"city"] = nil;
+    doc[@"address"] = address;
+    
+    AssertNil(doc[@"name"]);
+    AssertNil(doc[@"weight"]);
+    AssertEqual([doc doubleForKey: @"weight"], 0.0);
+    AssertNil(doc[@"address"][@"city"]);
+}
+
+
+- (void) testContainsKey {
+    CBLDocument* doc = self.db[@"doc1"];
+    doc.properties =
+    @{ @"type": @"profile",
+       @"name": @"Jason",
+       @"address": @{
+               @"street": @"1 milky way.",
+               }
+       };
+    Assert([doc containsObjectForKey: @"type"]);
+    Assert([doc containsObjectForKey: @"name"]);
+    Assert([doc containsObjectForKey: @"address"]);
+    AssertFalse([doc containsObjectForKey: @"weight"]);
+}
+
 
 
 - (void) testDelete {
