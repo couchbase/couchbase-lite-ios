@@ -113,10 +113,17 @@ C4LogDomain QueryLog;
 }
 
 
+- (NSString*) explain: (NSError**)outError {
+    if (!_c4Query && ![self check: outError])
+        return nil;
+    return sliceResult2string(c4query_explain(_c4Query));
+}
+
+
 - (NSData*) encodeAsJSON: (NSError**)outError {
     id whereJSON = nil;
     if (_where) {
-            whereJSON = [[self class] encodePredicate: _where error: outError];
+        whereJSON =  [[self class] encodePredicate: _where error: outError];
         if (!whereJSON)
             return nil;
     }

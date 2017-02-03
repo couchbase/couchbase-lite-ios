@@ -118,8 +118,12 @@
     NSError *error;
     NSArray* indexSpec = @[ [NSExpression expressionForKeyPath: @"name.first"] ];
     for (int pass = 0; pass < 2; ++pass) {
+        NSLog(@"---- Pass %d", pass);
         CBLQuery *q = [self.db createQueryWhere: @"name.first == $FIRSTNAME"];
         Assert(q, @"Couldn't create query: %@", error);
+        NSString* explain = [q explain: &error];
+        Assert(explain, @"-explain failed: %@", error);
+        fprintf(stderr, "%s\n", explain.UTF8String);
         q.parameters = @{@"FIRSTNAME": @"Claude"};
         uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
             AssertEqualObjects(row.documentID, @"doc-009");
