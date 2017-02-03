@@ -40,7 +40,7 @@ extern C4LogDomain QueryLog;
 @interface CBLQuery (Predicates)
 
 /** Converts an NSPredicate into a JSON-compatible object tree of a LiteCore query. */
-+ (nullable id) encodePredicate: (NSPredicate*)pred
++ (nullable id) encodePredicate: (id)pred
                           error: (NSError**)error;
 
 + (nullable id) encodeExpression: (NSExpression*)expr

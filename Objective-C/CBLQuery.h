@@ -51,6 +51,13 @@ NS_ASSUME_NONNULL_BEGIN
     If nil, no grouping is done. Defaults to nil. */
 @property (copy, nullable, nonatomic) NSArray* groupBy;
 
+/** Specifies a condition (predicate) that grouped rows have to match; corresponds to the HAVING
+    clause of a SQL or N1QL query.
+    This can be an NSPredicate, or an NSString (interpreted as an NSPredicate format string),
+    or nil to not filter groups. Defaults to nil.
+    If this property is changed, the query will be recompiled the next time it is run. */
+@property (copy, nullable, nonatomic) id having;
+
 /** If YES, duplicate result rows will be removed so that all rows are unique;
     corresponds to the DISTINCT keyword of a SQL or N1QL query.
     Defaults to NO. */

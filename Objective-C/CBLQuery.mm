@@ -36,7 +36,7 @@ C4LogDomain QueryLog;
 
 @synthesize database=_db;
 @synthesize where=_where, orderBy=_orderBy, groupBy=_groupBy;
-@synthesize distinct=_distinct, returning=_returning;
+@synthesize having=_having, distinct=_distinct, returning=_returning;
 @synthesize offset=_offset, limit=_limit, parameters=_parameters;
 
 
@@ -82,6 +82,12 @@ C4LogDomain QueryLog;
     _c4Query = nullptr;
 }
 
+- (void) setHaving: (id)having {
+    _having = [having copy];
+    c4query_free(_c4Query);
+    _c4Query = nullptr;
+}
+
 - (void) setReturning: (NSArray*)returning {
     _returning = [returning copy];
     c4query_free(_c4Query);
@@ -110,16 +116,7 @@ C4LogDomain QueryLog;
 - (NSData*) encodeAsJSON: (NSError**)outError {
     id whereJSON = nil;
     if (_where) {
-        if ([_where isKindOfClass: [NSArray class]] || [_where isKindOfClass: [NSDictionary class]]) {
-            whereJSON = _where;
-        } else if ([_where isKindOfClass: [NSPredicate class]]) {
             whereJSON = [[self class] encodePredicate: _where error: outError];
-        } else if ([_where isKindOfClass: [NSString class]]) {
-            _where = [NSPredicate predicateWithFormat: (NSString*)_where argumentArray: nil];
-            whereJSON = [[self class] encodePredicate: _where error: outError];
-        } else if (_where != nil) {
-            Assert(NO, @"Invalid specification for CBLQuery");
-        }
         if (!whereJSON)
             return nil;
     }
@@ -144,6 +141,13 @@ C4LogDomain QueryLog;
         if (!group)
             return nil;
         q[@"GROUP_BY"] = group;
+    }
+
+    if (_having) {
+        id having =  [[self class] encodePredicate: _having error: outError];
+        if (!having)
+            return nil;
+        q[@"HAVING"] = having;
     }
 
     if (_orderBy) {

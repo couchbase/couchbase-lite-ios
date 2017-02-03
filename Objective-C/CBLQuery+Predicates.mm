@@ -26,10 +26,19 @@ extern "C" {
 
 
 // Translates an NSPredicate into the JSON-dictionary equivalent of a WHERE clause
-+ (id) encodePredicate: (NSPredicate*)pred
++ (id) encodePredicate: (id)pred
                  error: (NSError**)outError
 {
-    return EncodePredicate(pred, outError);
+    if ([pred isKindOfClass: [NSArray class]] || [pred isKindOfClass: [NSDictionary class]]) {
+        return pred;
+    } else if ([pred isKindOfClass: [NSPredicate class]]) {
+        return EncodePredicate(pred, outError);
+    } else if ([pred isKindOfClass: [NSString class]]) {
+        pred = [NSPredicate predicateWithFormat: (NSString*)pred argumentArray: nil];
+        return EncodePredicate(pred, outError);
+    } else {
+        Assert(NO, @"Invalid specification for CBLQuery");
+    }
 }
 
 
