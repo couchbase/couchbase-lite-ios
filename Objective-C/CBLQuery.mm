@@ -34,8 +34,10 @@ C4LogDomain QueryLog;
     C4Query* _c4Query;
 }
 
-@synthesize database=_db, offset=_offset, limit=_limit, parameters=_parameters;
-@synthesize where=_where, orderBy=_orderBy, returning=_returning;
+@synthesize database=_db;
+@synthesize where=_where, orderBy=_orderBy, groupBy=_groupBy;
+@synthesize distinct=_distinct, returning=_returning;
+@synthesize offset=_offset, limit=_limit, parameters=_parameters;
 
 
 + (void) initialize {
@@ -63,19 +65,25 @@ C4LogDomain QueryLog;
 
 
 - (void) setWhere: (id)where {
-    _where = where;
+    _where = [where copy];
     c4query_free(_c4Query);
     _c4Query = nullptr;
 }
 
 - (void) setOrderBy: (NSArray*)orderBy {
-    _orderBy = orderBy;
+    _orderBy = [orderBy copy];
+    c4query_free(_c4Query);
+    _c4Query = nullptr;
+}
+
+- (void) setGroupBy: (NSArray*)groupBy {
+    _groupBy = [groupBy copy];
     c4query_free(_c4Query);
     _c4Query = nullptr;
 }
 
 - (void) setReturning: (NSArray*)returning {
-    _returning = returning;
+    _returning = [returning copy];
     c4query_free(_c4Query);
     _c4Query = nullptr;
 }
@@ -125,15 +133,31 @@ C4LogDomain QueryLog;
             q[@"WHERE"] = whereJSON;
     }
 
+    if (_distinct) {
+        q[@"DISTINCT"] = @YES;
+    }
+
+    if (_groupBy) {
+        NSArray* group = [[self class] encodeExpressions: _groupBy
+                                               aggregate: YES
+                                                   error: outError];
+        if (!group)
+            return nil;
+        q[@"GROUP_BY"] = group;
+    }
+
     if (_orderBy) {
-        NSArray* sorts = [[self class] encodeSortDescriptors: _orderBy error: outError];
+        NSArray* sorts = [[self class] encodeSortDescriptors: _orderBy
+                                                       error: outError];
         if (!sorts)
             return nil;
         q[@"ORDER_BY"] = sorts;
     }
 
     if (_returning) {
-        NSArray* select = [[self class] encodeExpressions: _returning error: outError];
+        NSArray* select = [[self class] encodeExpressions: _returning
+                                                aggregate: YES
+                                                    error: outError];
         if (!select)
             return nil;
         q[@"WHAT"] = select;
@@ -165,7 +189,7 @@ C4LogDomain QueryLog;
                 return mkError(outError, @"Invalid rank sort descriptor"), nil;
             keyStr = [keyStr substringWithRange: {5, [keyStr length] - 6}];
             NSExpression* expr = [NSExpression expressionWithFormat: keyStr argumentArray: @[]];
-            key = [self encodeExpression: expr error: outError];
+            key = [self encodeExpression: expr aggregate: false error: outError];
             if (!key)
                 return nil;
         } else {

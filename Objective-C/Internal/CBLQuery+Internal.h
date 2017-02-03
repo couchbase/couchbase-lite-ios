@@ -44,9 +44,11 @@ extern C4LogDomain QueryLog;
                           error: (NSError**)error;
 
 + (nullable id) encodeExpression: (NSExpression*)expr
+                       aggregate: (BOOL)aggregate
                            error: (NSError**)outError;
 
 + (nullable NSArray*) encodeExpressions: (NSArray*)exprs
+                              aggregate: (BOOL)aggregate
                                   error: (NSError**)outError;
 
 /** Translates an array of NSExpressions or NSStrings into JSON data. */

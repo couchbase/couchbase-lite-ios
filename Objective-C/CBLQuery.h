@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
     This can be an NSPredicate, or an NSString (interpreted as an NSPredicate format string),
     or nil to return all documents. Defaults to nil.
     If this property is changed, the query will be recompiled the next time it is run. */
-@property (nullable, nonatomic) id where;
+@property (copy, nullable, nonatomic) id where;
 
 /** An array of NSSortDescriptors or NSStrings, specifying properties or expressions that the
     result rows should be sorted by; corresponds to the ORDER BY clause of a SQL or N1QL query.
@@ -37,13 +37,24 @@ NS_ASSUME_NONNULL_BEGIN
     If nil, no sorting occurs; this is faster but the order of rows is undefined.
     The default value sorts by document ID.
     If this property is changed, the query will be recompiled the next time it is run. */
-@property (nullable, nonatomic) NSArray* orderBy;
+@property (copy, nullable, nonatomic) NSArray* orderBy;
 
 /** An array of NSExpressions (or expression format strings) describing values to include in each
     result row; corresponds to the SELECT clause of a SQL or N1QL query.
     If nil, only the document ID and sequence number will be available. Defaults to nil.
     If this property is changed, the query will be recompiled the next time it is run. */
-@property (nullable, nonatomic) NSArray* returning;
+@property (copy, nullable, nonatomic) NSArray* returning;
+
+/** An array of NSExpressions (or expression format strings) describing how to group rows
+    together: all documents having the same values for these expressions will be coalesced into a
+    single row.
+    If nil, no grouping is done. Defaults to nil. */
+@property (copy, nullable, nonatomic) NSArray* groupBy;
+
+/** If YES, duplicate result rows will be removed so that all rows are unique;
+    corresponds to the DISTINCT keyword of a SQL or N1QL query.
+    Defaults to NO. */
+@property (nonatomic) BOOL distinct;
 
 /** The number of result rows to skip; corresponds to the OFFSET property of a SQL or N1QL query.
     This can be useful for "paging" through a large query, but skipping many rows is slow.
