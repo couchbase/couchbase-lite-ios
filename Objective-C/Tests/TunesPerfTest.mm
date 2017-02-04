@@ -41,7 +41,15 @@
     b.stop();
     b.printReport();
     b.printReport(1.0/_documentCount, "doc");
-    //TODO: Run multiple iterations of this to get more accurate timing
+
+
+    NSLog(@"Querying artists (no index):");
+    b.reset();
+    b.start();
+    [self queryAllArtists];
+    b.stop();
+    b.printReport();
+//TODO: Run multiple iterations of this to get more accurate timing
 }
 
 
@@ -50,7 +58,7 @@
                                          @"Total Time", @"Track Number", @"Compilation"];
 
     _documentCount = 0;
-    BOOL ok = [self.db inBatch: NULL do: ^BOOL {
+    BOOL ok = [self.db inBatch: NULL do: ^{
         for (NSDictionary* track in _tracks) {
 #ifdef kMaxDocsToImport
             if (count >= kMaxDocsToImport) {
@@ -82,7 +90,6 @@
                     NSAssert(NO, @"Couldn't save doc: %@", error);
             }
         }
-        return YES;
     }];
     NSAssert(ok, @"Batch operation failed");
 }
@@ -95,32 +102,26 @@
 }
 
 
-- (void) updatePlayCounts {
+- (unsigned) updatePlayCounts {
     __block unsigned count = 0;
-    BOOL ok = [self.db inBatch: NULL do: ^BOOL {
-        CBLQuery* allDocs = [self.db createQuery: nil error: NULL];
-        NSAssert(allDocs, @"Couldn't compile query");
-        for (CBLQueryRow* row in [allDocs run: NULL]) {
-            CBLDocument* doc = row.document;
+    BOOL ok = [self.db inBatch: NULL do: ^{
+        for (CBLDocument* doc in self.db.allDocuments) {
             NSInteger playCount = [doc integerForKey: @"playCount"];
             [doc setInteger: playCount + 1 forKey: @"playCount"];
             NSAssert([doc save: NULL], @"Save failed");
             count++;
         }
-        return YES;
     }];
     NSAssert(ok, @"Batch operation failed");
     NSLog(@"Updated %u documents' playCount", count);
+    return count;
 }
 
 
-- (void) updateArtistNames {
-    CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
+- (unsigned) updateArtistNames {
     __block unsigned count = 0;
-    [self.db inBatch: NULL do: ^BOOL {
-        CBLQuery* allDocs = [self.db createQuery: nil error: NULL];
-        for (CBLQueryRow* row in [allDocs run: NULL]) {
-            CBLDocument* doc = row.document;
+    [self.db inBatch: NULL do: ^{
+        for (CBLDocument* doc in self.db.allDocuments) {
             NSString* artist = [doc stringForKey: @"Artist"];
 #if 1
             if ([artist hasPrefix: @"The "])
@@ -135,29 +136,36 @@
             NSAssert([doc save: NULL], @"Save failed");
             count++;
         }
-        return YES;
     }];
-    NSLog(@"%.3f sec -- *** Updated %u documents' artist name",
-     (CFAbsoluteTimeGetCurrent() - startTime), count);
+    return count;
 }
 
 
-- (void) updateTrackTimes {
-    CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
+- (unsigned) updateTrackTimes {
     __block unsigned count = 0;
-    [self.db inBatch: NULL do: ^BOOL {
-        CBLQuery* allDocs = [self.db createQuery: nil error: NULL];
-        for (CBLQueryRow* row in [allDocs run: NULL]) {
-            CBLDocument* doc = row.document;
+    [self.db inBatch: NULL do: ^{
+        for (CBLDocument* doc in self.db.allDocuments) {
             double time = [doc doubleForKey: @"Total Time"];
             [doc setDouble: time + 1.0 forKey: @"Total Time"];
             NSAssert([doc save: NULL], @"Save failed");
             count++;
         }
-        return YES;
     }];
-    NSLog(@"%.3f sec -- *** Updated %u documents' track times",
-     (CFAbsoluteTimeGetCurrent() - startTime), count);
+    return count;
+}
+
+
+- (void) queryAllArtists {
+    CBLQuery* query = [self.db createQueryWhere: nil];
+    query.groupBy = @[@"Artist"];
+    query.orderBy = @[@"lowercase(Artist)"];
+    query.returning = @[@"Artist"];
+    NSLog(@"%@", [query explain: NULL]);
+    NSError* error;
+    for (CBLQueryRow* row in [query run: &error]) {
+        NSString* artist = row[0];
+        NSLog(@"Artist: %@", artist);
+    }
 }
 
 
