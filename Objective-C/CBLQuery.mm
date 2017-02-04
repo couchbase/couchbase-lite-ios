@@ -181,32 +181,37 @@ C4LogDomain QueryLog;
 + (NSArray*) encodeSortDescriptors: (NSArray*)sortDescriptors error: (NSError**)outError {
     NSMutableArray* sorts = [NSMutableArray new];
     for (id sd in sortDescriptors) {
-        NSString* keyStr;
         bool descending = false;
-        // Each item of sortDescriptors can be an NSString or NSSortDescriptor:
-        if ([sd isKindOfClass: [NSString class]]) {
-            descending = [sd hasPrefix: @"-"];
-            keyStr = descending ? [sd substringFromIndex: 1] : sd;
-        } else {
-            Assert([sd isKindOfClass: [NSSortDescriptor class]]);
-            descending = ![sd ascending];
-            keyStr = [sd key];
-        }
-
-        // Convert to JSON as a rank() call or a key-path:
         id key;
-        if ([keyStr hasPrefix: @"rank("]) {
-            if (![keyStr hasSuffix: @")"])
-                return mkError(outError, @"Invalid rank sort descriptor"), nil;
-            keyStr = [keyStr substringWithRange: {5, [keyStr length] - 6}];
-            NSExpression* expr = [NSExpression expressionWithFormat: keyStr argumentArray: @[]];
-            key = [self encodeExpression: expr aggregate: false error: outError];
-            if (!key)
-                return nil;
+        // Each item of sortDescriptors can be an NSSortDescriptor, NSString or NSExpression:
+        if ([sd isKindOfClass: [NSExpression class]]) {
+            key = [self encodeExpression: sd aggregate: true error: outError];
         } else {
-            key = @[ [@"." stringByAppendingString: keyStr] ];
+            NSString* keyStr;
+            if ([sd isKindOfClass: [NSString class]]) {
+                // As a hack, prefixing string with "-" signals descending order
+                descending = [sd hasPrefix: @"-"];
+                keyStr = descending ? [sd substringFromIndex: 1] : sd;
+            } else {
+                Assert([sd isKindOfClass: [NSSortDescriptor class]]);
+                descending = ![sd ascending];
+                keyStr = [sd key];
+            }
+
+            // Convert keyStr to JSON as a rank() call or expression:
+            if ([keyStr hasPrefix: @"rank("]) {
+                if (![keyStr hasSuffix: @")"])
+                    return mkError(outError, @"Invalid rank sort descriptor"), nil;
+                NSString* keyPath = [keyStr substringWithRange: {5, [keyStr length] - 6}];
+                key = @[@"rank()", @[@".", keyPath]];
+            } else {
+                NSExpression* expr = [NSExpression expressionWithFormat: keyStr argumentArray: @[]];
+                key = [self encodeExpression: expr aggregate: true error: outError];
+            }
         }
-        
+        if (!key)
+            return nil;
+
         if (descending)
             key = @[@"DESC", key];
         [sorts addObject: key];
