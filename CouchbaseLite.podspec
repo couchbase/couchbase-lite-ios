@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
   s.version               = '2.0DP001'
   s.license               = 'Apache License, Version 2.0'
   s.homepage              = 'http://mobile.couchbase.com'
-  s.summary               = 'An embedded syncable NoSQL database for iOS and MacOS apps.'
+  s.summary               = 'An embedded syncable NoSQL database for iOS, tvOS, and MacOS apps.'
   s.author                = 'Couchbase'
   s.source                = { :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :branch => "feature/2.0", :submodules => true }
 
@@ -38,6 +38,7 @@ Pod::Spec.new do |s|
     'HEADER_SEARCH_PATHS' => '$(inherited) "$(PODS_ROOT)/CouchbaseLite/vendor/couchbase-lite-core/vendor/SQLiteCpp/include" "$(PODS_ROOT)/CouchbaseLite/vendor/couchbase-lite-core/vendor/fleece/vendor/"'
     }
 
-  s.ios.deployment_target = '8.0'
-  s.osx.deployment_target = '10.10'
+  s.ios.deployment_target  = '8.0'
+  s.osx.deployment_target  = '10.10'
+  s.tvos.deployment_target = '9.0'
 end
