@@ -26,23 +26,34 @@ extern "C" {
 
 
 // Translates an NSPredicate into the JSON-dictionary equivalent of a WHERE clause
-+ (id) encodePredicate: (NSPredicate*)pred
++ (id) encodePredicate: (id)pred
                  error: (NSError**)outError
 {
-    return EncodePredicate(pred, outError);
+    if ([pred isKindOfClass: [NSArray class]] || [pred isKindOfClass: [NSDictionary class]]) {
+        return pred;
+    } else if ([pred isKindOfClass: [NSPredicate class]]) {
+        return EncodePredicate(pred, outError);
+    } else if ([pred isKindOfClass: [NSString class]]) {
+        pred = [NSPredicate predicateWithFormat: (NSString*)pred argumentArray: nil];
+        return EncodePredicate(pred, outError);
+    } else {
+        Assert(NO, @"Invalid specification for CBLQuery");
+    }
 }
 
 
 // Translates an NSExpression into its LiteCore JSON-array equivalent
 + (id) encodeExpression: (NSExpression*)expr
+              aggregate: (BOOL)aggregate
                   error: (NSError**)outError
 {
-    return EncodeExpression(expr, outError);
+    return EncodeExpression(expr, outError, aggregate);
 }
 
 
 // Encodes an array of NSExpressions (or NSStrings that compile into them) into JSON format.
 + (NSArray*) encodeExpressions: (NSArray*)exprs
+                     aggregate: (BOOL)aggregate
                          error: (NSError**)outError
 {
     NSMutableArray* result = [NSMutableArray new];
@@ -58,7 +69,7 @@ extern "C" {
                 Assert([r isKindOfClass: [NSExpression class]]);
                 expr = r;
             }
-            jsonObj = [self encodeExpression: expr error: outError];
+            jsonObj = [self encodeExpression: expr aggregate: aggregate error: outError];
             if (!jsonObj)
                 return nil;
         }
@@ -72,7 +83,7 @@ extern "C" {
 + (NSData*) encodeExpressionsToJSON: (NSArray*)expressions
                               error: (NSError**)outError
 {
-    NSArray* exprs = [self encodeExpressions: expressions error: outError];
+    NSArray* exprs = [self encodeExpressions: expressions aggregate: NO error: outError];
     if (!exprs)
         return nil;
     return [NSJSONSerialization dataWithJSONObject: exprs options: 0 error: outError];
@@ -103,6 +114,8 @@ static NSString* const kPredicateOpNames99[] = {
 // See <Foundation/NSExpression.h> lines 55-94
 // https://developer.couchbase.com/documentation/server/4.5/n1ql/n1ql-language-reference/functions.html
 static NSDictionary* const  kFunctionNames = @{ @"sum:":           @"ARRAY_SUM()",
+                                                @"min:":           @"LEAST()",
+                                                @"max:":           @"GREATEST()",
                                                 @"add:to:":        @"+",
                                                 @"from:subtract:": @"-",
                                                 @"multiply:by:":   @"*",
@@ -125,9 +138,16 @@ static NSDictionary* const  kFunctionNames = @{ @"sum:":           @"ARRAY_SUM()
                                                 @"objectFrom:withIndex:":   @"[]",
                                               };
 
-// Other N1QL functions, that can be invoked in a format string as FUNCTION(rcvr, "FNNAME" [, ...])
-static NSArray* kN1QLFunctionNames = @[@"REGEXP_LIKE"];
+// Function name mappings preferentially used if an aggregate expression is allowed.
+static NSDictionary* const  kAggregateFunctionNames = @{@"sum:":           @"SUM()",
+                                                        @"min:":           @"MIN()",
+                                                        @"max:":           @"MAX()",
+                                                        @"count:":         @"COUNT()",
+                                                        };
 
+// Other N1QL functions, that can be invoked in a format string as FUNCTION(rcvr, "FNNAME" [, ...])
+static NSArray* kN1QLFunctionNames = @[@"REGEXP_LIKE", @"LEAST", @"GREATEST"];
+static NSArray* kN1QLAggregateFunctionNames = @[];
 
 // Encodes an NSPredicate.
 static id EncodePredicate(NSPredicate* pred, NSError** outError) {
@@ -220,78 +240,19 @@ static id EncodePredicate(NSPredicate* pred, NSError** outError) {
 
 
 // Encodes an NSExpression.
-static id EncodeExpression(NSExpression* expr, NSError **outError) {
+static id EncodeExpression(NSExpression* expr, NSError **outError, bool aggregate =false) {
     switch (expr.expressionType) {
         case NSConstantValueExpressionType:
             return expr.constantValue;
         case NSVariableExpressionType:
             return @[ [@"$" stringByAppendingString: expr.variable] ];
-        case NSKeyPathExpressionType: {
+        case NSKeyPathExpressionType:
             for (NSString* prop in [expr.keyPath componentsSeparatedByString: @"."])
                 if ([prop hasPrefix: @"@"])
                     return mkError(outError, @"Key-path collection operators not supported yet"), nil;
             return encodeKeyPath(expr.keyPath);
-        }
-        case NSFunctionExpressionType: {
-            NSString *exprFunction = expr.function;
-            NSString* fn = kFunctionNames[exprFunction];
-            if (fn == nil) {
-                exprFunction = [exprFunction uppercaseString];
-                if ([kN1QLFunctionNames containsObject: exprFunction])
-                    fn = [exprFunction stringByAppendingString: @"()"];
-                else
-                    return mkError(outError, @"Unsupported function '%@'", expr.function), nil;
-            }
-
-            if ([fn isEqualToString: @"."]) {
-                // This is a weird case where using "first" or "last" in a key-path compiles to a
-                // predicate containing an undocumented expression type...
-                NSString* keyPath = [NSString stringWithFormat: @"%@.%@",
-                                     expr.operand.keyPath,
-                                     expr.arguments[0].description.lowercaseString];
-                return encodeKeyPath(keyPath);
-            } else if ([fn isEqualToString: @"[]"]) {
-                // Array indexing: Ignore `operand`, it's undocumented _NSPredicateUtilities object.
-                // The array and the index are the two elements of `arguments`.
-                NSArray *operand = EncodeExpression(expr.arguments[0], outError);
-                if (!operand) return nil;
-                NSString* keyPath = operand[0];
-                if (![keyPath hasPrefix: @"."])
-                    return mkError(outError, @"Can't index this as an array"), nil;
-                id indexObj = EncodeExpression(expr.arguments[1], outError);
-                if (!indexObj) return nil;
-                NSInteger index;
-                if ([indexObj isKindOfClass: [NSNumber class]])
-                    index = [indexObj integerValue];
-                else if ([indexObj isEqual: @[@".first"]])
-                    index = 0;
-                else if ([indexObj isEqual: @[@".last"]])
-                    index = -1;
-                else if ([indexObj isEqual: @[@".size"]])
-                    return @[@"ARRAY_COUNT()", operand];
-                else
-                    return mkError(outError, @"Array index must be constant"), nil;
-                return @[ [NSString stringWithFormat: @"%@[%ld]", keyPath, (long)index] ];
-            } else {
-                // Regular function call:
-                if ([fn isEqualToString: @"+"] && hasStringArgs(expr))
-                    fn = @"||";
-                NSMutableArray* result = [NSMutableArray arrayWithObject: fn];
-                NSExpression* operand = expr.operand;
-                if (!isPredicateUtilities(operand)) {
-                    // some fn calls have an undocumented _NSPredicateUtilities constant as operand
-                    id p = EncodeExpression(operand, outError);
-                    if (!p) return nil;
-                    [result addObject: p];
-                }
-                for(NSExpression* param in expr.arguments) {
-                    id p = EncodeExpression(param, outError);
-                    if (!p) return nil;
-                    [result addObject: p];
-                }
-                return result;
-            }
-        }
+        case NSFunctionExpressionType:
+            return EncodeFunction(expr, outError, aggregate);
         case NSConditionalExpressionType: {
             id condition = EncodePredicate(expr.predicate, outError);
             if (!condition) return nil;
@@ -308,6 +269,75 @@ static id EncodeExpression(NSExpression* expr, NSError **outError) {
                 return encodeKeyPath(expr.description.lowercaseString);
             }
             return mkError(outError, @"Unsupported NSExpression type %u", (unsigned)expr.expressionType), nil;
+    }
+}
+
+
+// Encodes a function NSExpression.
+static id EncodeFunction(NSExpression* expr, NSError **outError, bool aggregateOK =false) {
+    NSString *exprFunction = expr.function;
+    NSString* fn = nil;
+    if (aggregateOK && expr.arguments.count == 1)
+        fn = kAggregateFunctionNames[exprFunction];
+    if (fn == nil)
+        fn = kFunctionNames[exprFunction];
+
+    if (fn == nil) {
+        exprFunction = [exprFunction uppercaseString];
+        if ([kN1QLFunctionNames containsObject: exprFunction] ||
+            (aggregateOK && [kN1QLAggregateFunctionNames containsObject: exprFunction]))
+            fn = [exprFunction stringByAppendingString: @"()"];
+        else
+            return mkError(outError, @"Unsupported function '%@'", expr.function), nil;
+    }
+
+    if ([fn isEqualToString: @"."]) {
+        // This is a weird case where using "first" or "last" in a key-path compiles to a
+        // predicate containing an undocumented expression type...
+        NSString* keyPath = [NSString stringWithFormat: @"%@.%@",
+                             expr.operand.keyPath,
+                             expr.arguments[0].description.lowercaseString];
+        return encodeKeyPath(keyPath);
+    } else if ([fn isEqualToString: @"[]"]) {
+        // Array indexing: Ignore `operand`, it's undocumented _NSPredicateUtilities object.
+        // The array and the index are the two elements of `arguments`.
+        NSArray *operand = EncodeExpression(expr.arguments[0], outError);
+        if (!operand) return nil;
+        NSString* keyPath = operand[0];
+        if (![keyPath hasPrefix: @"."])
+            return mkError(outError, @"Can't index this as an array"), nil;
+        id indexObj = EncodeExpression(expr.arguments[1], outError);
+        if (!indexObj) return nil;
+        NSInteger index;
+        if ([indexObj isKindOfClass: [NSNumber class]])
+            index = [indexObj integerValue];
+        else if ([indexObj isEqual: @[@".first"]])
+            index = 0;
+        else if ([indexObj isEqual: @[@".last"]])
+            index = -1;
+        else if ([indexObj isEqual: @[@".size"]])
+            return @[@"ARRAY_COUNT()", operand];
+        else
+            return mkError(outError, @"Array index must be constant"), nil;
+        return @[ [NSString stringWithFormat: @"%@[%ld]", keyPath, (long)index] ];
+    } else {
+        // Regular function call:
+        if ([fn isEqualToString: @"+"] && hasStringArgs(expr))
+            fn = @"||";
+        NSMutableArray* result = [NSMutableArray arrayWithObject: fn];
+        NSExpression* operand = expr.operand;
+        if (!isPredicateUtilities(operand)) {
+            // some fn calls have an undocumented _NSPredicateUtilities constant as operand
+            id p = EncodeExpression(operand, outError);
+            if (!p) return nil;
+            [result addObject: p];
+        }
+        for(NSExpression* param in expr.arguments) {
+            id p = EncodeExpression(param, outError);
+            if (!p) return nil;
+            [result addObject: p];
+        }
+        return result;
     }
 }
 

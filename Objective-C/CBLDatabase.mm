@@ -453,29 +453,20 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 
 
 - (NSEnumerator<CBLDocument*>*) allDocuments {
-    if (!_allDocsQuery)
-        _allDocsQuery = [self createQuery: nil error: nullptr];
-    return [_allDocsQuery allDocuments: nullptr];
+    if (!_allDocsQuery) {
+        _allDocsQuery = [[CBLQuery alloc] initWithDatabase: self];
+        _allDocsQuery.orderBy = @[@"_id"];
+    }
+    auto e = [_allDocsQuery allDocuments: nullptr];
+    Assert(e, @"allDocuments failed?!");
+    return e;
 }
 
 
-- (nullable CBLQuery*) createQuery: (nullable id)query
-                             error: (NSError**)outError
-{
-    return [self createQueryWhere: query orderBy: @[@"_id"] returning: nil error: outError];
-}
-
-
-- (nullable CBLQuery*) createQueryWhere: (nullable id)where
-                                orderBy: (nullable NSArray*)sortDescriptors
-                              returning: (nullable NSArray*)returning
-                                  error: (NSError**)outError
-{
-    return [[CBLQuery alloc] initWithDatabase: self
-                                        where: where
-                                      orderBy: sortDescriptors
-                                    returning: returning
-                                        error: outError];
+- (CBLQuery*) createQueryWhere: (nullable id)where {
+    auto query = [[CBLQuery alloc] initWithDatabase: self];
+    query.where = where;
+    return query;
 }
 
 

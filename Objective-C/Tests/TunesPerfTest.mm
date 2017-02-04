@@ -18,6 +18,7 @@
 {
     NSArray* _tracks;
     NSUInteger _documentCount;
+    Benchmark _importBench, _updatePlayCountBench, _queryArtistsBench, _indexArtistsBench, _queryIndexedArtistsBench;
 }
 
 
@@ -29,28 +30,38 @@
 
 
 - (void) test {
-    NSLog(@"Importing library:");
-    [self measureAtScale: _documentCount unit: @"doc" block:^{
-        [self importLibrary];
-    }];
-
-    NSLog(@"Updating play counts:");
-    Benchmark b;
-    b.start();
-    [self updatePlayCounts];
-    b.stop();
-    b.printReport();
-    b.printReport(1.0/_documentCount, "doc");
-    //TODO: Run multiple iterations of this to get more accurate timing
+    unsigned numDocs = 0, numPlayCounts = 0, numArtists = 0;
+    for (int i = 0; i < 10; i++) {
+        fprintf(stderr, "Starting iteration #%d...\n", i+1);
+        @autoreleasepool {
+            [self eraseDB];
+            numDocs = [self importLibrary];
+            [self reopenDB];
+            numPlayCounts = [self updatePlayCounts];
+            numArtists = [self queryAllArtists: _queryArtistsBench];
+            [self createArtistsIndex];
+            [self queryAllArtists: _queryIndexedArtistsBench];
+        }
+    }
+    fprintf(stderr, "Import:             "); _importBench.printReport();
+    fprintf(stderr, "                    "); _importBench.printReport(1.0/numDocs, "doc");
+    fprintf(stderr, "Update play counts: "); _updatePlayCountBench.printReport();
+    fprintf(stderr, "                    "); _updatePlayCountBench.printReport(1.0/numPlayCounts, "update");
+    fprintf(stderr, "Query %d artists: ", numArtists); _queryArtistsBench.printReport();
+    fprintf(stderr, "                    "); _queryArtistsBench.printReport(1.0/numArtists, "row");
+    fprintf(stderr, "Index artists:      "); _indexArtistsBench.printReport();
+    fprintf(stderr, "Query %d artists: ", numArtists); _queryIndexedArtistsBench.printReport();
+    fprintf(stderr, "                    "); _queryIndexedArtistsBench.printReport(1.0/numArtists, "row");
 }
 
 
-- (void) importLibrary {
+- (unsigned) importLibrary {
+    _importBench.start();
     NSArray* keysToCopy = keysToCopy = @[@"Name", @"Artist", @"Album", @"Genre", @"Year",
                                          @"Total Time", @"Track Number", @"Compilation"];
 
     _documentCount = 0;
-    BOOL ok = [self.db inBatch: NULL do: ^BOOL {
+    BOOL ok = [self.db inBatch: NULL do: ^{
         for (NSDictionary* track in _tracks) {
 #ifdef kMaxDocsToImport
             if (count >= kMaxDocsToImport) {
@@ -82,9 +93,10 @@
                     NSAssert(NO, @"Couldn't save doc: %@", error);
             }
         }
-        return YES;
     }];
+    _importBench.stop();
     NSAssert(ok, @"Batch operation failed");
+    return (unsigned)_documentCount;
 }
 
 
@@ -95,32 +107,28 @@
 }
 
 
-- (void) updatePlayCounts {
+- (unsigned) updatePlayCounts {
+    _updatePlayCountBench.start();
     __block unsigned count = 0;
-    BOOL ok = [self.db inBatch: NULL do: ^BOOL {
-        CBLQuery* allDocs = [self.db createQuery: nil error: NULL];
-        NSAssert(allDocs, @"Couldn't compile query");
-        for (CBLQueryRow* row in [allDocs run: NULL]) {
-            CBLDocument* doc = row.document;
+    BOOL ok = [self.db inBatch: NULL do: ^{
+        for (CBLDocument* doc in self.db.allDocuments) {
             NSInteger playCount = [doc integerForKey: @"playCount"];
             [doc setInteger: playCount + 1 forKey: @"playCount"];
             NSAssert([doc save: NULL], @"Save failed");
             count++;
         }
-        return YES;
     }];
+    _updatePlayCountBench.stop();
     NSAssert(ok, @"Batch operation failed");
-    NSLog(@"Updated %u documents' playCount", count);
+//    NSLog(@"Updated %u documents' playCount", count);
+    return count;
 }
 
 
-- (void) updateArtistNames {
-    CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
+- (unsigned) updateArtistNames {
     __block unsigned count = 0;
-    [self.db inBatch: NULL do: ^BOOL {
-        CBLQuery* allDocs = [self.db createQuery: nil error: NULL];
-        for (CBLQueryRow* row in [allDocs run: NULL]) {
-            CBLDocument* doc = row.document;
+    [self.db inBatch: NULL do: ^{
+        for (CBLDocument* doc in self.db.allDocuments) {
             NSString* artist = [doc stringForKey: @"Artist"];
 #if 1
             if ([artist hasPrefix: @"The "])
@@ -135,29 +143,50 @@
             NSAssert([doc save: NULL], @"Save failed");
             count++;
         }
-        return YES;
     }];
-    NSLog(@"%.3f sec -- *** Updated %u documents' artist name",
-     (CFAbsoluteTimeGetCurrent() - startTime), count);
+    return count;
 }
 
 
-- (void) updateTrackTimes {
-    CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
+- (unsigned) updateTrackTimes {
     __block unsigned count = 0;
-    [self.db inBatch: NULL do: ^BOOL {
-        CBLQuery* allDocs = [self.db createQuery: nil error: NULL];
-        for (CBLQueryRow* row in [allDocs run: NULL]) {
-            CBLDocument* doc = row.document;
+    [self.db inBatch: NULL do: ^{
+        for (CBLDocument* doc in self.db.allDocuments) {
             double time = [doc doubleForKey: @"Total Time"];
             [doc setDouble: time + 1.0 forKey: @"Total Time"];
             NSAssert([doc save: NULL], @"Save failed");
             count++;
         }
-        return YES;
     }];
-    NSLog(@"%.3f sec -- *** Updated %u documents' track times",
-     (CFAbsoluteTimeGetCurrent() - startTime), count);
+    return count;
+}
+
+
+- (unsigned) queryAllArtists: (Benchmark&)bench {
+    CBLQuery* query = [self.db createQueryWhere: nil];
+    query.groupBy = @[@"lowercase(Artist)"];
+    query.orderBy = @[@"lowercase(Artist)"];
+    query.returning = @[@"Artist"];
+    Assert([query check: NULL]);
+    NSLog(@"%@", [query explain: NULL]);
+    bench.start();
+    NSMutableArray* artists = [NSMutableArray array];
+    NSError* error;
+    for (CBLQueryRow* row in [query run: &error]) {
+        NSString* artist = row[0];
+        [artists addObject: artist];
+    }
+    bench.stop();
+    NSLog(@"%u artists, from %@ to %@", (unsigned)artists.count, artists.firstObject, artists.lastObject);
+    return (unsigned)artists.count;
+}
+
+
+- (void) createArtistsIndex {
+    NSLog(@"Indexing artists...");
+    _indexArtistsBench.start();
+    Assert([self.db createIndexOn: @[@"lowercase(Artist)"] error: NULL]);
+    _indexArtistsBench.stop();
 }
 
 

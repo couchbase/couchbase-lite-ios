@@ -22,12 +22,11 @@
 - (void) addRevisions: (unsigned)numRevisions {
     CBLDocument* doc = self.db[@"doc"];
     NSError *error;
-    BOOL ok = [self.db inBatch: &error do:^BOOL{
+    BOOL ok = [self.db inBatch: &error do: ^{
         for (unsigned i = 0; i < numRevisions; ++i) {
             [doc setInteger: i forKey: @"count"];
             NSAssert([doc save: NULL], @"Save failed");
         }
-        return YES;
     }];
     Assert(ok);
 }

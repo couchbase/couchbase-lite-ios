@@ -25,7 +25,7 @@
     Assert(e, @"Query failed: %@", error);
     uint64_t n = 0;
     for (CBLQueryRow *row in e) {
-        //NSLog(@"Row: docID='%@', sequence=%llu", row.documentID, row.sequence);
+        NSLog(@"Row: docID='%@', sequence=%llu", row.documentID, row.sequence);
         block(++n, row);
     }
     return n;
@@ -63,13 +63,14 @@
         NSString* pred = @(kTests[i].pred);
         //[CBLQuery dumpPredicate: [NSPredicate predicateWithFormat: pred argumentArray: nil]];
         NSString* expectedJson = [CBLQuery json5ToJSON: kTests[i].json5];
-        NSData* actual = [CBLQuery encodeQuery: pred orderBy: nil returning: nil error: &error];
+        CBLQuery* query = [self.db createQueryWhere: pred];
+        query.orderBy = nil; // ignore ordering in this test
+        NSData* actual = [query encodeAsJSON: &error];
         Assert(actual, @"Encode failed: %@", error);
         NSString* actualJSON = [[NSString alloc] initWithData: actual encoding: NSUTF8StringEncoding];
         AssertEqualObjects(actualJSON, expectedJson);
 
-        CBLQuery* query = [self.db createQuery: pred error: &error];
-        Assert(query, @"Couldn't create CBLQuery: %@", error);
+        Assert([query check: &error], @"Couldn't compile CBLQuery: %@", error);
     }
 }
 
@@ -78,7 +79,7 @@
     [self loadJSONResource: @"names_100"];
     NSError *error;
     // This is an all-docs query since it doesn't specify any criteria:
-    CBLQuery* q = [self.db createQuery: nil error: &error];
+    CBLQuery* q = [self.db createQueryWhere: nil];
     Assert(q, @"Couldn't create query: %@", error);
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         NSString* expectedID = [NSString stringWithFormat: @"doc-%03llu", n];
@@ -117,8 +118,12 @@
     NSError *error;
     NSArray* indexSpec = @[ [NSExpression expressionForKeyPath: @"name.first"] ];
     for (int pass = 0; pass < 2; ++pass) {
-        CBLQuery *q = [self.db createQuery: @"name.first == $FIRSTNAME" error: &error];
+        NSLog(@"---- Pass %d", pass);
+        CBLQuery *q = [self.db createQueryWhere: @"name.first == $FIRSTNAME"];
         Assert(q, @"Couldn't create query: %@", error);
+        NSString* explain = [q explain: &error];
+        Assert(explain, @"-explain failed: %@", error);
+        fprintf(stderr, "%s\n", explain.UTF8String);
         q.parameters = @{@"FIRSTNAME": @"Claude"};
         uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
             AssertEqualObjects(row.documentID, @"doc-009");
@@ -146,12 +151,9 @@
                                  @[@"stephen.jakovac@nosql-matters.org"] ];
 
     [self loadJSONResource: @"names_100"];
-    NSError *error;
-    CBLQuery *q = [self.db createQueryWhere: @"contact.address.state == $STATE"
-                                    orderBy: @[@"contact.address.zip"]
-                                  returning: @[@"contact.address.zip", @"contact.email"]
-                                      error: &error];
-    Assert(q, @"Couldn't create query: %@", error);
+    CBLQuery *q = [self.db createQueryWhere: @"contact.address.state == $STATE"];
+    q.orderBy = @[@"contact.address.zip"];
+    q.returning = @[@"contact.address.zip", @"contact.email"];
     q.parameters = @{@"STATE": @"MN"};
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         AssertEqualObjects(row.documentID, expectedDocs[n-1]);
@@ -160,7 +162,7 @@
         AssertEqualObjects(zip, expectedZips[n-1]);
         AssertEqualObjects(email, expectedEmails[n-1]);
     }];
-    AssertEqual(numRows, 3llu);
+    AssertEqual((int)numRows, 3);
 }
 
 
@@ -168,10 +170,9 @@
     [self loadJSONResource: @"sentences"];
     NSError* error;
     Assert([_db createIndexOn: @[@"sentence"] type: kCBLFullTextIndex options: NULL error: &error]);
-    CBLQuery *q = [self.db createQueryWhere: @"sentence matches 'Dummie woman'"
-                                    orderBy: @[@"-rank(sentence)"]
-                                  returning: nil
-                                      error: &error];
+    CBLQuery *q = [self.db createQueryWhere: @"sentence matches 'Dummie woman'"];
+    q.orderBy = @[@"-rank(sentence)"];
+    q.returning = nil;
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         CBLFullTextQueryRow* ftsRow = (id)row;
         NSString* text = ftsRow.fullTextMatched;
@@ -181,7 +182,7 @@
         Assert([text containsString: @"woman"]);
         AssertEqual(ftsRow.matchCount, 2ul);
     }];
-    AssertEqual(numRows, 2ull);
+    AssertEqual((int)numRows, 2);
 }
 
 
@@ -192,16 +193,67 @@
     NSArray* indexSpec = @[ [NSExpression expressionForKeyPath: @"name.first"] ];
     Assert([self.db createIndexOn: indexSpec type: kCBLValueIndex options: NULL error: &error]);
     
-    CBLQuery *q = [self.db createQuery: @"name.first == $FIRSTNAME" error: &error];
-    Assert(q, @"Couldn't create query: %@", error);
+    CBLQuery *q = [self.db createQueryWhere: @"name.first == $FIRSTNAME"];
     q.parameters = @{@"FIRSTNAME": @"Claude"};
     
     NSArray* rows = [[q run: &error] allObjects];
+    Assert(rows, @"Couldn't run query: %@", error);
     AssertEqual(rows.count, 1llu);
     
     CBLDocument* doc = ((CBLQueryRow*)rows[0]).document;
     AssertNotNil(doc);
     Assert([doc deleteDocument: &error], @"Couldn't delete a document: %@", error);
+}
+
+
+- (void) test08_Aggregate {
+    [self loadJSONResource: @"names_100"];
+    CBLQuery *q = [self.db createQueryWhere: @"gender == 'female'"];
+    q.returning = @[@"min(contact.address.zip)", @"max(contact.address.zip)"];
+
+    NSData* json = [q encodeAsJSON: NULL];
+    NSString* jsonStr = [[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding];
+    NSLog(@"%@", jsonStr);
+
+    uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+        //AssertEqualObjects(row.documentID, nil);
+        NSString* minZip = [row stringAtIndex: 0];
+        NSString* maxZip = [row stringAtIndex: 1];
+        AssertEqualObjects(minZip, @"01910");
+        AssertEqualObjects(maxZip, @"98434");
+    }];
+    AssertEqual((int)numRows, 1);
+}
+
+
+- (void) test09_GroupBy {
+    NSArray* expectedStates = @[@"AL",    @"CA",    @"CO",    @"FL",    @"IA"];
+    NSArray* expectedCounts = @[@1,       @6,       @1,       @1,       @3];
+    NSArray* expectedMaxZips= @[@"35243", @"94153", @"81223", @"33612", @"50801"];
+
+    [self loadJSONResource: @"names_100"];
+    CBLQuery *q = [self.db createQueryWhere: @"gender == 'female'"];
+    q.groupBy = @[@"contact.address.state"];
+    q.orderBy = @[@"contact.address.state"];
+    q.returning = @[@"contact.address.state", @"count(1)", @"max(contact.address.zip)"];
+
+    NSData* json = [q encodeAsJSON: NULL];
+    NSString* jsonStr = [[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding];
+    NSLog(@"%@", jsonStr);
+
+    uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+        //AssertEqualObjects(row.documentID, nil);
+        NSString* state = [row stringAtIndex: 0];
+        NSInteger count = [row integerAtIndex: 1];
+        NSString* maxZip = [row stringAtIndex: 2];
+        //NSLog(@"State = %@, count = %d, maxZip = %@", state, (int)count,maxZip);
+        if (n-1 < expectedStates.count) {
+            AssertEqualObjects(state,  expectedStates[n-1]);
+            AssertEqual       (count,  [expectedCounts[n-1] integerValue]);
+            AssertEqualObjects(maxZip, expectedMaxZips[n-1]);
+        }
+    }];
+    AssertEqual((int)numRows, 31);
 }
 
 

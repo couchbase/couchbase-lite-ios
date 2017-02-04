@@ -21,6 +21,9 @@
 
 @property (readonly, nonatomic) CBLDatabase* db;
 
+- (void) reopenDB;
+- (void) eraseDB;
+
 - (NSData*) dataFromResource: (NSString*)resourceName ofType: (NSString*)type;
 
 - (void) measureAtScale: (NSUInteger)count unit: (NSString*)unit block: (void (^)())block;

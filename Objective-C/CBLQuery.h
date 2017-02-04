@@ -12,25 +12,85 @@
 NS_ASSUME_NONNULL_BEGIN
 
 
-/** A compiled database query. Can be run multiple times with different parameters.
-    Queries are created by calling the CBLDatabase methods createQuery:... */
+/** A compiled database query.
+    You create a query by calling the CBLDatabase method createQueryWhere:. The query can be
+    further configured by setting properties before running it. Some properties alter the
+    behavior of the query enough to trigger recompilation; it's usually best to set these only
+    once and then reuse the CBLQuery object. You can use NSPredicate / NSExpression variables
+    to parameterize the query, making it flexible without needing recompilation. Then you just
+    set the `parameters` property before running it. */
 @interface CBLQuery : NSObject
 
-/** The database to query. */
+/** The database being queried. */
 @property (nonatomic, readonly) CBLDatabase* database;
 
-/** The number of initial result rows to skip. Defaults to 0.
-    This can be useful to "page" through a large query, but skipping large numbers of rows can be
-    slow. */
-@property (nonatomic) NSUInteger skip;
+/** Specifies a condition (predicate) that documents have to match; corresponds to the WHERE
+    clause of a SQL or N1QL query.
+    This can be an NSPredicate, or an NSString (interpreted as an NSPredicate format string),
+    or nil to return all documents. Defaults to nil.
+    If this property is changed, the query will be recompiled the next time it is run. */
+@property (copy, nullable, nonatomic) id where;
 
-/** The maximum number of rows to return. Defaults to "unlimited" (UINT64_MAX). */
+/** An array of NSSortDescriptors or NSStrings, specifying properties or expressions that the
+    result rows should be sorted by; corresponds to the ORDER BY clause of a SQL or N1QL query.
+    These strings, or sort-descriptor names, can name key-paths or be NSExpresson format strings.
+    If nil, no sorting occurs; this is faster but the order of rows is undefined.
+    The default value sorts by document ID.
+    If this property is changed, the query will be recompiled the next time it is run. */
+@property (copy, nullable, nonatomic) NSArray* orderBy;
+
+/** An array of NSExpressions (or expression format strings) describing values to include in each
+    result row; corresponds to the SELECT clause of a SQL or N1QL query.
+    If nil, only the document ID and sequence number will be available. Defaults to nil.
+    If this property is changed, the query will be recompiled the next time it is run. */
+@property (copy, nullable, nonatomic) NSArray* returning;
+
+/** An array of NSExpressions (or expression format strings) describing how to group rows
+    together: all documents having the same values for these expressions will be coalesced into a
+    single row.
+    If nil, no grouping is done. Defaults to nil. */
+@property (copy, nullable, nonatomic) NSArray* groupBy;
+
+/** Specifies a condition (predicate) that grouped rows have to match; corresponds to the HAVING
+    clause of a SQL or N1QL query.
+    This can be an NSPredicate, or an NSString (interpreted as an NSPredicate format string),
+    or nil to not filter groups. Defaults to nil.
+    If this property is changed, the query will be recompiled the next time it is run. */
+@property (copy, nullable, nonatomic) id having;
+
+/** If YES, duplicate result rows will be removed so that all rows are unique;
+    corresponds to the DISTINCT keyword of a SQL or N1QL query.
+    Defaults to NO. */
+@property (nonatomic) BOOL distinct;
+
+/** The number of result rows to skip; corresponds to the OFFSET property of a SQL or N1QL query.
+    This can be useful for "paging" through a large query, but skipping many rows is slow.
+    Defaults to 0. */
+@property (nonatomic) NSUInteger offset;
+
+/** The maximum number of rows to return; corresponds to the LIMIT property of a SQL or N1QL query.
+    Defaults to NSUIntegerMax (i.e. unlimited.) */
 @property (nonatomic) NSUInteger limit;
 
 /** Values to substitute for placeholder parameters defined in the query. Defaults to nil.
     The dictionary's keys are parameter names, and values are the values to use.
     All parameters must be given values before running the query, or it will fail. */
-@property (copy, nonatomic, nullable) NSDictionary* parameters;
+@property (copy, nullable, nonatomic) NSDictionary* parameters;
+
+/** Checks whether the query is valid, recompiling it if necessary, without running it. */
+- (BOOL) check: (NSError**)error;
+
+/** Returns a string describing the implementation of the compiled query.
+    This is intended to be read by a developer for purposes of optimizing the query, especially
+    to add database indexes. It's not machine-readable and its format may change.
+
+    As currently implemented, the result is two or more lines separated by newline characters:
+    * The first line is the SQLite SELECT statement.
+    * The subsequent lines are the output of SQLite's "EXPLAIN QUERY PLAN" command applied to that
+      statement; for help interpreting this, see https://www.sqlite.org/eqp.html . The most
+      important thing to know is that if you see "SCAN TABLE", it means that SQLite is doing a
+      slow linear scan of the documents instead of using an index. */
+- (nullable NSString*) explain: (NSError**)outError;
 
 /** Runs the query, using the current settings (skip, limit, parameters), returning an enumerator
     that returns result rows one at a time.
@@ -40,61 +100,11 @@ NS_ASSUME_NONNULL_BEGIN
     will not reflect any changes made to the database afterwards. */
 - (nullable NSEnumerator<CBLQueryRow*>*) run: (NSError**)error;
 
+/** A convenience method equivalent to -run: except that its enumerator returns CBLDocuments
+    directly, not CBLQueryRows. */
 - (nullable NSEnumerator<CBLDocument*>*) allDocuments: (NSError**)error;
 
 - (instancetype) init NS_UNAVAILABLE;
-
-@end
-
-
-/** A single result from a CBLQuery.
-    The NSEnumeration returned by -[CBLQuery run:] produces these. */
-@interface CBLQueryRow : NSObject
-
-/** The ID of the document that produced this row. */
-@property (readonly, nonatomic) NSString* documentID;
-
-/** The sequence number of the document revision that produced this row. */
-@property (readonly, nonatomic) uint64_t sequence;
-
-/** The document that produced this row. */
-@property (readonly, nonatomic) CBLDocument* document;
-
-/** The result value at the given index (if the query has a "returning" specification.) */
-- (nullable id) valueAtIndex: (NSUInteger)index;
-
-- (bool)                booleanAtIndex: (NSUInteger)index;
-- (NSInteger)           integerAtIndex: (NSUInteger)index;
-- (float)               floatAtIndex:   (NSUInteger)index;
-- (double)              doubleAtIndex:  (NSUInteger)index;
-- (nullable NSString*)  stringAtIndex:  (NSUInteger)index;
-- (nullable NSDate*)    dateAtIndex:    (NSUInteger)index;
-
-- (nullable id) objectForSubscript: (NSUInteger)subscript;
-
-- (instancetype) init NS_UNAVAILABLE;
-
-@end
-
-
-/** A single result from a full-text CBLQuery. */
-@interface CBLFullTextQueryRow : CBLQueryRow
-
-/** The text emitted when the view was indexed (the argument to CBLTextKey()) which contains the
-    match(es). */
-@property (readonly, nullable) NSString* fullTextMatched;
-
-/** The number of query words that were found in the fullText.
-    (If a query word appears more than once, only the first instance is counted.) */
-@property (readonly, nonatomic) NSUInteger matchCount;
-
-/** The character range in the fullText of a particular match. */
-- (NSRange) textRangeOfMatch: (NSUInteger)matchNumber;
-
-/** The index of the search term matched by a particular match. Search terms are the individual
-    words in the full-text search expression, skipping duplicates and noise/stop-words. They're
-    numbered from zero. */
-- (NSUInteger) termIndexOfMatch: (NSUInteger)matchNumber;
 
 @end
 

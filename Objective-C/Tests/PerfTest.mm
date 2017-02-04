@@ -77,6 +77,13 @@ static NSString* sResourceDir;
 }
 
 
+- (void) reopenDB {
+    [_db close: NULL];
+    _db = nil;
+    [self openDB];
+}
+
+
 - (void) eraseDB {
     if (_db) {
         NSError *error;
