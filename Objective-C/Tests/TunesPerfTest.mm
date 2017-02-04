@@ -18,6 +18,7 @@
 {
     NSArray* _tracks;
     NSUInteger _documentCount;
+    Benchmark _importBench, _updatePlayCountBench, _queryArtistsBench, _indexArtistsBench, _queryIndexedArtistsBench;
 }
 
 
@@ -29,31 +30,33 @@
 
 
 - (void) test {
-    NSLog(@"Importing library:");
-    [self measureAtScale: _documentCount unit: @"doc" block:^{
-        [self importLibrary];
-    }];
-
-    NSLog(@"Updating play counts:");
-    Benchmark b;
-    b.start();
-    [self updatePlayCounts];
-    b.stop();
-    b.printReport();
-    b.printReport(1.0/_documentCount, "doc");
-
-
-    NSLog(@"Querying artists (no index):");
-    b.reset();
-    b.start();
-    [self queryAllArtists];
-    b.stop();
-    b.printReport();
-//TODO: Run multiple iterations of this to get more accurate timing
+    unsigned numDocs = 0, numPlayCounts = 0, numArtists = 0;
+    for (int i = 0; i < 10; i++) {
+        fprintf(stderr, "Starting iteration #%d...\n", i+1);
+        @autoreleasepool {
+            [self eraseDB];
+            numDocs = [self importLibrary];
+            [self reopenDB];
+            numPlayCounts = [self updatePlayCounts];
+            numArtists = [self queryAllArtists: _queryArtistsBench];
+            [self createArtistsIndex];
+            [self queryAllArtists: _queryIndexedArtistsBench];
+        }
+    }
+    fprintf(stderr, "Import:             "); _importBench.printReport();
+    fprintf(stderr, "                    "); _importBench.printReport(1.0/numDocs, "doc");
+    fprintf(stderr, "Update play counts: "); _updatePlayCountBench.printReport();
+    fprintf(stderr, "                    "); _updatePlayCountBench.printReport(1.0/numPlayCounts, "update");
+    fprintf(stderr, "Query %d artists: ", numArtists); _queryArtistsBench.printReport();
+    fprintf(stderr, "                    "); _queryArtistsBench.printReport(1.0/numArtists, "row");
+    fprintf(stderr, "Index artists:      "); _indexArtistsBench.printReport();
+    fprintf(stderr, "Query %d artists: ", numArtists); _queryIndexedArtistsBench.printReport();
+    fprintf(stderr, "                    "); _queryIndexedArtistsBench.printReport(1.0/numArtists, "row");
 }
 
 
-- (void) importLibrary {
+- (unsigned) importLibrary {
+    _importBench.start();
     NSArray* keysToCopy = keysToCopy = @[@"Name", @"Artist", @"Album", @"Genre", @"Year",
                                          @"Total Time", @"Track Number", @"Compilation"];
 
@@ -91,7 +94,9 @@
             }
         }
     }];
+    _importBench.stop();
     NSAssert(ok, @"Batch operation failed");
+    return (unsigned)_documentCount;
 }
 
 
@@ -103,6 +108,7 @@
 
 
 - (unsigned) updatePlayCounts {
+    _updatePlayCountBench.start();
     __block unsigned count = 0;
     BOOL ok = [self.db inBatch: NULL do: ^{
         for (CBLDocument* doc in self.db.allDocuments) {
@@ -112,8 +118,9 @@
             count++;
         }
     }];
+    _updatePlayCountBench.stop();
     NSAssert(ok, @"Batch operation failed");
-    NSLog(@"Updated %u documents' playCount", count);
+//    NSLog(@"Updated %u documents' playCount", count);
     return count;
 }
 
@@ -155,17 +162,31 @@
 }
 
 
-- (void) queryAllArtists {
+- (unsigned) queryAllArtists: (Benchmark&)bench {
     CBLQuery* query = [self.db createQueryWhere: nil];
-    query.groupBy = @[@"Artist"];
+    query.groupBy = @[@"lowercase(Artist)"];
     query.orderBy = @[@"lowercase(Artist)"];
     query.returning = @[@"Artist"];
+    Assert([query check: NULL]);
     NSLog(@"%@", [query explain: NULL]);
+    bench.start();
+    NSMutableArray* artists = [NSMutableArray array];
     NSError* error;
     for (CBLQueryRow* row in [query run: &error]) {
         NSString* artist = row[0];
-        NSLog(@"Artist: %@", artist);
+        [artists addObject: artist];
     }
+    bench.stop();
+    NSLog(@"%u artists, from %@ to %@", (unsigned)artists.count, artists.firstObject, artists.lastObject);
+    return (unsigned)artists.count;
+}
+
+
+- (void) createArtistsIndex {
+    NSLog(@"Indexing artists...");
+    _indexArtistsBench.start();
+    Assert([self.db createIndexOn: @[@"lowercase(Artist)"] error: NULL]);
+    _indexArtistsBench.stop();
 }
 
 
