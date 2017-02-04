@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name                  = 'CouchbaseLite'
-  s.version               = '2.0-dp.1'
+  s.version               = '2.0DP001'
   s.license               = 'Apache License, Version 2.0'
   s.homepage              = 'http://mobile.couchbase.com'
   s.summary               = 'An embedded syncable NoSQL database for iOS and MacOS apps.'
@@ -20,7 +20,7 @@ Pod::Spec.new do |s|
   s.prefix_header_file    = "Objective-C/Internal/CBLPrefix.h"
 
   s.source_files          = "Objective-C/*.{h,m,mm}",
-                            "Objective-C/Internal/**/*.{h,m,mm,c}",
+                            "Objective-C/Internal/**/*.*",
                             "vendor/couchbase-lite-core/C/*.{h,hh,c,cc}",
                             "vendor/couchbase-lite-core/C/include/*.h",
                             "vendor/couchbase-lite-core/LiteCore/{BlobStore,Database,Indexes,Query,RevTrees,Storage,VersionVectors,Support}/*.{h,hh,cc,cpp}",
