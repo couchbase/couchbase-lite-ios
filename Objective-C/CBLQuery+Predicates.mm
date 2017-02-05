@@ -260,7 +260,7 @@ static id EncodeExpression(NSExpression* expr, NSError **outError, bool aggregat
             if (!ifTrue) return nil;
             id ifFalse = EncodeExpression(expr.falseExpression, outError);
             if (!ifFalse) return nil;
-            return @[@"CASE", condition, @[@"WHEN", @YES, ifTrue], @[@"ELSE", ifFalse]];
+            return @[@"CASE", [NSNull null], condition, ifTrue, ifFalse];
         }
         default:
             if ((int)expr.expressionType == 11) {

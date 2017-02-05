@@ -58,6 +58,7 @@
         {"foo + 'bar' == 'foobar'", "{WHERE: ['=', ['||', ['.foo'], 'bar'], 'foobar']}"},
         {"FUNCTION(email, 'REGEXP_LIKE', '.+@.+') == true",
                                     "{WHERE: ['=', ['REGEXP_LIKE()', ['.email'], '.+@.+'], true]}"},
+        {"TERNARY(2==3, 1, 2) == 1", "{WHERE: ['=', ['CASE', null, ['=', 2, 3], 1, 2], 1]}"}, 
     };
     for (unsigned i = 0; i < sizeof(kTests)/sizeof(kTests[0]); ++i) {
         NSString* pred = @(kTests[i].pred);

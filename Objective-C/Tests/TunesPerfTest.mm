@@ -164,9 +164,8 @@
 
 - (unsigned) queryAllArtists: (Benchmark&)bench {
     CBLQuery* query = [self.db createQueryWhere: nil];
-    query.groupBy = @[@"lowercase(Artist)"];
-    query.orderBy = @[@"lowercase(Artist)"];
-    query.returning = @[@"Artist"];
+    query.groupBy = query.orderBy = @[@"TERNARY(Compilation == true, '--Compilation--', lowercase(Artist))"];
+    query.returning = @[@"TERNARY(Compilation == true, '--Compilation--', Artist)"];
     Assert([query check: NULL]);
     NSLog(@"%@", [query explain: NULL]);
     bench.start();
@@ -175,6 +174,7 @@
     for (CBLQueryRow* row in [query run: &error]) {
         NSString* artist = row[0];
         [artists addObject: artist];
+        //NSLog(@"artist: %@", artist);//TEMP
     }
     bench.stop();
     NSLog(@"%u artists, from %@ to %@", (unsigned)artists.count, artists.firstObject, artists.lastObject);
@@ -185,7 +185,7 @@
 - (void) createArtistsIndex {
     NSLog(@"Indexing artists...");
     _indexArtistsBench.start();
-    Assert([self.db createIndexOn: @[@"lowercase(Artist)"] error: NULL]);
+    Assert([self.db createIndexOn: @[@"TERNARY(Compilation == true, '--Compilation--', lowercase(Artist))"] error: NULL]);
     _indexArtistsBench.stop();
 }
 
