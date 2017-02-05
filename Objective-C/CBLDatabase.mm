@@ -234,8 +234,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         return YES;
     
     if (_unsavedDocuments.count > 0)
-        CBLWarn(Default, @"Closing database with %lu unsaved docs",
-                (unsigned long)_unsavedDocuments.count);
+        CBLWarn(Default, @"Closing %@ with %lu unsaved docs",
+                self, (unsigned long)_unsavedDocuments.count);
     
     _documents = nil;
     _unsavedDocuments = nil;

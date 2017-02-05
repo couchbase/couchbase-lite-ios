@@ -7,7 +7,7 @@
 //
 
 #import "CBLTestCase.h"
-
+#include "c4.h"
 
 #define kDatabaseName @"testdb"
 
@@ -19,7 +19,13 @@
 
 - (void) setUp {
     [super setUp];
-    [CBLDatabase deleteDatabase: kDatabaseName inDirectory: [[self class] directory] error: nil];
+    NSError* error;
+    if (![CBLDatabase deleteDatabase: kDatabaseName
+                         inDirectory: [[self class] directory]
+                               error: &error]) {
+        Assert([error.domain isEqual: @"LiteCore"] && error.code == kC4ErrorNotFound,
+               @"Couldn't delete test db: %@", error);
+    }
     [self openDB];
 }
 

@@ -100,12 +100,26 @@
 
 
 @implementation DocumentTest
+{
+    CBLDocument* doc;
+}
+
 
 - (void) setUp {
     [super setUp];
     // Make sure resolver isn't being called at inappropriate times by defaulting to one that
     // will raise an exception:
     self.db.conflictResolver = [DoNotResolve new];
+
+    doc = [self.db documentWithID: @"doc1"];
+}
+
+
+- (void) tearDown {
+    // Avoid "Closing database with 1 unsaved docs" warning:
+    [doc revert];
+
+    [super tearDown];
 }
 
 
@@ -144,7 +158,7 @@
 - (void) testNewDoc {
     NSError* error;
     
-    CBLDocument* doc = [self.db document];
+    doc = [self.db document];
     AssertNotNil(doc);
     AssertNotNil(doc.documentID);
     Assert(doc.documentID.length > 0);
@@ -170,7 +184,6 @@
 - (void) testNewDocWithId {
     NSError* error;
     
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
     AssertEqual(doc, self.db[@"doc1"]);
     AssertNotNil(doc);
     AssertEqual(doc.documentID, @"doc1");
@@ -195,8 +208,6 @@
 
 
 - (void) testPropertyAccessors {
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
-    
     // Premitives:
     [doc setBoolean: YES forKey: @"bool"];
     [doc setDouble: 1.1 forKey: @"double"];
@@ -243,7 +254,8 @@
                        [CBLJSON JSONObjectWithDate: date]);
     
     ////// Reopen the database and get the document again:
-    
+
+    doc = nil;
     [self reopenDB];
     
     CBLDocument* doc1 = [self.db documentWithID: @"doc1"];
@@ -262,8 +274,8 @@
     AssertEqualObjects([doc1 objectForKey: @"array"], (@[@"1", @"2"]));
     
     // NSNull:
-    AssertEqualObjects([doc objectForKey: @"null"], [NSNull null]);
-    AssertEqualObjects([doc objectForKey: @"nullarray"], (@[[NSNull null], [NSNull null]]));
+    AssertEqualObjects([doc1 objectForKey: @"null"], [NSNull null]);
+    AssertEqualObjects([doc1 objectForKey: @"nullarray"], (@[[NSNull null], [NSNull null]]));
     
     // Date:
     AssertEqualObjects([CBLJSON JSONObjectWithDate: [doc1 dateForKey: @"date"]],
@@ -272,7 +284,6 @@
 
 
 - (void) testProperties {
-    CBLDocument* doc = self.db[@"doc1"];
     doc[@"type"] = @"demo";
     doc[@"weight"] = @12.5;
     doc[@"tags"] = @[@"useless", @"temporary"];
@@ -285,7 +296,6 @@
 
 
 - (void) testRemoveProperties {
-    CBLDocument* doc = self.db[@"doc1"];
     doc.properties = @{ @"type": @"profile",
                         @"name": @"Jason",
                         @"weight": @130.5,
@@ -314,7 +324,6 @@
 
 
 - (void) testContainsKey {
-    CBLDocument* doc = self.db[@"doc1"];
     doc.properties =
     @{ @"type": @"profile",
        @"name": @"Jason",
@@ -331,7 +340,6 @@
 
 
 - (void) testDelete {
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
     doc[@"type"] = @"profile";
     doc[@"name"] = @"Scott";
     AssertFalse([doc exists]);
@@ -357,7 +365,6 @@
 
 
 - (void) testPurge {
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
     doc[@"type"] = @"profile";
     doc[@"name"] = @"Scott";
     AssertFalse([doc exists]);
@@ -382,7 +389,6 @@
 
 
 - (void) testRevert {
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
     doc[@"type"] = @"profile";
     doc[@"name"] = @"Scott";
     
@@ -411,7 +417,6 @@
 
 
 - (void) testReopenDB {
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
     [doc setObject: @"str" forKey: @"string"];
     AssertEqualObjects(doc.properties, @{@"string": @"str"});
     NSError* error;
@@ -427,7 +432,6 @@
 
 - (CBLDocument*) setupConflict {
     // Setup a default database conflict resolver
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
     doc[@"type"] = @"profile";
     doc[@"name"] = @"Scott";
     NSError* error;
@@ -446,7 +450,7 @@
 
 - (void)testConflict {
     self.db.conflictResolver = [TheirsWins new];
-    CBLDocument* doc = [self setupConflict];
+    doc = [self setupConflict];
     NSError* error;
     Assert([doc save: &error], @"Saving error: %@", error);
     AssertEqualObjects(doc[@"name"], @"Scotty");
@@ -477,7 +481,7 @@
 
 - (void)testConflictResolverGivesUp {
     self.db.conflictResolver = [GiveUp new];
-    CBLDocument* doc = [self setupConflict];
+    doc = [self setupConflict];
     NSError* error;
     AssertFalse([doc save: &error], @"Save should have failed!");
     AssertEqualObjects(error.domain, @"LiteCore");      //TODO: Should have CBL error domain/code
@@ -487,7 +491,7 @@
 
 - (void)testDeletionConflict {
     self.db.conflictResolver = [DoNotResolve new];
-    CBLDocument* doc = [self setupConflict];
+    doc = [self setupConflict];
     NSError* error;
     Assert([doc deleteDocument: &error], @"Deletion error: %@", error);
     Assert(doc.exists);
@@ -497,7 +501,7 @@
 
 - (void)testConflictMineIsDeeper {
     self.db.conflictResolver = nil;
-    CBLDocument* doc = [self setupConflict];
+    doc = [self setupConflict];
     NSError* error;
     Assert([doc save: &error], @"Saving error: %@", error);
     AssertEqualObjects(doc[@"name"], @"Scott Pilgrim");
@@ -505,7 +509,7 @@
 
 - (void)testConflictTheirsIsDeeper {
     self.db.conflictResolver = nil;
-    CBLDocument* doc = [self setupConflict];
+    doc = [self setupConflict];
 
     // Add another revision to the conflict, so it'll have a higher generation:
     NSMutableDictionary *properties = [doc.properties mutableCopy];
@@ -518,7 +522,6 @@
 }
 
 - (void)testBlob {
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
     NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
     NSError* error;
     CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content error:&error];
@@ -542,7 +545,6 @@
 }
 
 - (void)testEmptyBlob {
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
     NSData* content = [@"" dataUsingEncoding:NSUTF8StringEncoding];
     NSError* error;
     CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content error:&error];
@@ -564,7 +566,6 @@
 }
 
 - (void)testBlobWithStream {
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
     NSData* content = [@"" dataUsingEncoding:NSUTF8StringEncoding];
     NSInputStream *contentStream = [[NSInputStream alloc] initWithData:content];
     NSError* error;
@@ -588,7 +589,6 @@
 }
 
 - (void)testMultipleBlobRead {
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
     NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
     NSError *error;
     
@@ -623,7 +623,6 @@
 }
 
 - (void)testReadExistingBlob {
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
     NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
     NSError* error;
     CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content error:&error];
@@ -631,13 +630,17 @@
     doc[@"data"] = data;
     doc[@"name"] = @"Jim";
     Assert([doc save: &error], @"Saving error: %@", error);
-    
-    doc = [[self.db copy] documentWithID: @"doc1"];
+
+    [self reopenDB];
+
+    doc = [self.db documentWithID: @"doc1"];
     Assert([doc[@"data"] isKindOfClass:[CBLBlob class]]);
     data = doc[@"data"];
     AssertEqualObjects(data.content, content);
     
-    doc = [[self.db copy] documentWithID: @"doc1"];
+    [self reopenDB];
+
+    doc = [self.db documentWithID: @"doc1"];
     doc[@"foo"] = @"bar";
     Assert([doc save: &error], @"Saving error: %@", error);
     Assert([doc[@"data"] isKindOfClass:[CBLBlob class]]);

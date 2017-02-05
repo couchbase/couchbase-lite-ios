@@ -173,7 +173,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 
     if(!self.hasChanges) {
         NSError* error;
-        if (![self loadDoc_mustExist: YES error: nullptr])
+        if (![self loadDoc_mustExist: YES error: &error])
             CBLWarn(Default, @"%@ failed to load external changes: %@", self, error);
         [self postChangedNotificationExternal:YES];
     }
