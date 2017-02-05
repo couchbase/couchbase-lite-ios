@@ -282,7 +282,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     NSString* path = databasePath(name, directory ?: defaultDirectory());
     CBLStringBytes bPath(path);
     C4Error err;
-    return c4db_deleteAtPath(bPath, &kDBConfig, &err) || convertError(err, outError);
+    return c4db_deleteAtPath(bPath, &kDBConfig, &err) || err.code==0 || convertError(err, outError);
 }
 
 
