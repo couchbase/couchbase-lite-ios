@@ -202,7 +202,7 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 - (void) resetChanges {
     _properties = nil;
-    _hasChanges = NO;
+    self.hasChanges = NO;
 }
 
 
