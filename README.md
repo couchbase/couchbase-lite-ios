@@ -1,5 +1,5 @@
 
-# Couchbase Lite 2.0
+# Couchbase Lite 2.0 (Developer Preview)
 
 **Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine.
 
@@ -7,32 +7,42 @@ Couchbase Lite 2.0 has a completely new set of APIs. The implementation is on to
 
 THIS IS NOT A RELEASED PRODUCT. THIS IS NOT FINISHED CODE. This is currently in a very early stage of the implementation.
 
+ 
+## Requirements
+- iOS 8.0+ | macOS 10.10+ | tvOS 9.0+
+- Xcode 8
 
-# Installation
 
-### Cocoapods
+## Installation
 
-Specify CouchbaseLite in the Podfile as follows:
+### CocoaPods
+
+You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` by adding it in your [Podfile](https://guides.cocoapods.org/using/the-podfile.html):
 
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :branch => 'feature/2.0', :submodules => true
+  pod 'CouchbaseLite', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DP001', :submodules => true
 end
 ```
 
 ### Carthage
 
-Specify CouchbaseLite in the Cartfile as follows:
+You can use [Carthage](https://github.com/Carthage/Carthage) to install `CouchbaseLite` by adding it in your [Carfile](https://github.com/Carthage/Carthage/blob/master/Documentation/Artifacts.md#cartfile):
 
 ```
-github "couchbase/couchbase-lite-ios" "feature/2.0"
+github "couchbase/couchbase-lite-ios" "2.0DP001"
 ```
 
-# Credits
+##Sample Apps
+
+- [Todo](https://github.com/couchbaselabs/mobile-training-todo/tree/feature/2.0) : Objective-C and Swift
+
+
+## Credits
 
 **Design, coding:** Jens Alfke (jens@couchbase.com), Pasin Suriyentrakorn,(pasin@couchbase.com), Jim Borden (jim.borden@couchbase.com)
 
-# License
+## License
 
 Like all Couchbase source code, this is released under the Apache 2 [license](LICENSE).
