@@ -240,6 +240,8 @@
 		275FF6651E428A1E005F90DD /* Documentation */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Documentation; sourceTree = "<group>"; };
 		275FF66E1E43E013005F90DD /* CBLQueryRow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryRow.h; sourceTree = "<group>"; };
 		275FF66F1E43E013005F90DD /* CBLQueryRow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLQueryRow.mm; sourceTree = "<group>"; };
+		275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC_Release.xcconfig"; sourceTree = "<group>"; };
+		275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CouchbaseLite.exp; sourceTree = "<group>"; };
 		27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CBLSharedKeys.hh; sourceTree = "<group>"; };
 		27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLSharedKeys.mm; sourceTree = "<group>"; };
 		27EF6A7E1E297BDF004748DF /* CBLQuery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQuery.h; sourceTree = "<group>"; };
@@ -439,6 +441,7 @@
 				9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */,
 				9378C5D21E26CC46001BB196 /* CBL ObjC Tests.xcconfig */,
 				9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */,
+				275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */,
 				9378C5D91E26CC46001BB196 /* Project_Debug.xcconfig */,
 				9378C5DA1E26CC46001BB196 /* Project_Release.xcconfig */,
 				9378C5D81E26CC46001BB196 /* Project.xcconfig */,
@@ -484,11 +487,11 @@
 			isa = PBXGroup;
 			children = (
 				9398D9FC1E03531A00464432 /* Objective-C */,
-				275FF6651E428A1E005F90DD /* Documentation */,
-				9398D9131E03434200464432 /* Products */,
-				9398D92D1E03467C00464432 /* vendor */,
 				9378C5D11E26CC46001BB196 /* xcconfigs */,
+				275FF6651E428A1E005F90DD /* Documentation */,
+				9398D92D1E03467C00464432 /* vendor */,
 				27EF6AF01E32D12C004748DF /* Frameworks */,
+				9398D9131E03434200464432 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
@@ -553,6 +556,7 @@
 				934F4C931E241FB500F90659 /* Internal */,
 				9398D9FE1E03531A00464432 /* Info.plist */,
 				93BFCD931E0380A300E52F8A /* Tests */,
+				275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */,
 			);
 			path = "Objective-C";
 			sourceTree = "<group>";
@@ -1290,7 +1294,7 @@
 		};
 		9398D9281E03434200464432 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
+			baseConfigurationReference = 275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = YES;

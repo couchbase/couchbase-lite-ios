@@ -1,0 +1,27 @@
+#  CouchbaseLite.exp
+#  CouchbaseLite
+#
+#  Created by Jens Alfke on 2/5/17.
+#  Copyright © 2017 Couchbase. All rights reserved.
+
+#  All public global symbols -- classes, functions, constants -- need to be declared here.
+
+#  Public classes:
+.objc_class_name_CBLBlob
+.objc_class_name_CBLConflictResolver
+.objc_class_name_CBLDatabase
+.objc_class_name_CBLDatabaseOptions
+.objc_class_name_CBLDocument
+.objc_class_name_CBLFullTextQueryRow
+.objc_class_name_CBLProperties
+.objc_class_name_CBLQuery
+.objc_class_name_CBLQueryRow
+
+#  Public constants:
+_kCBLDatabaseChangeNotification
+_kCBLDatabaseChangesUserInfoKey
+_kCBLDatabaseIsExternalUserInfoKey
+_kCBLDatabaseLastSequenceUserInfoKey
+_kCBLDocumentChangeNotification
+_kCBLDocumentIsExternalUserInfoKey
+_kCBLDocumentSavedNotification

@@ -1,0 +1,11 @@
+//
+//  CBL ObjC_Release.xcconfig
+//  CouchbaseLite
+//
+//  Created by Jens Alfke on 2/5/17.
+//  Copyright © 2017 Couchbase. All rights reserved.
+//
+
+#include "CBL ObjC.xcconfig"
+
+EXPORTED_SYMBOLS_FILE     = Objective-C/CouchbaseLite.exp
