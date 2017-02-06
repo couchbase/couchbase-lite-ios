@@ -79,13 +79,6 @@ static const C4DatabaseConfig kDBConfig = {
 };
 
 
-static void logCallback(C4LogDomain domain, C4LogLevel level, C4Slice message) {
-    static const char* klevelNames[5] = {"Debug", "Verbose", "Info", "WARNING", "ERROR"};
-    NSLog(@"CouchbaseLite %s %s: %.*s", c4log_getDomainName(domain), klevelNames[level],
-          (int)message.size, (char*)message.buf);
-}
-
-
 static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBLDatabase *db = (__bridge CBLDatabase *)context;
     dispatch_async(dispatch_get_main_queue(), ^{        //TODO: Support other queues
@@ -96,7 +89,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 + (void) initialize {
     if (self == [CBLDatabase class]) {
-        c4log_register(kC4LogWarning, &logCallback);
+        CBLLog_Init();
     }
 }
 
@@ -144,7 +137,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                                 initWithKeyOrPassword: _options.encryptionKey];
         config.encryptionKey = symmetricKey2C4Key(key);
     }
-    
+
+    CBLLog(Database, @"Opening %@ at path %@", self, path);
     C4Error err;
     _c4db = c4db_open(bPath, &config, &err);
     if (!_c4db)
@@ -233,9 +227,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     if (!_c4db)
         return YES;
     
+    CBLLog(Database, @"Closing %@ at path %@", self, self.path);
     if (_unsavedDocuments.count > 0)
-        CBLWarn(Default, @"Closing %@ with %lu unsaved docs",
-                self, (unsigned long)_unsavedDocuments.count);
+        CBLWarn(Database, @"Closing %@ with %lu unsaved docs, such as %@",
+                self, (unsigned long)_unsavedDocuments.count, _unsavedDocuments.anyObject);
     
     _documents = nil;
     _unsavedDocuments = nil;

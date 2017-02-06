@@ -25,7 +25,7 @@
     Assert(e, @"Query failed: %@", error);
     uint64_t n = 0;
     for (CBLQueryRow *row in e) {
-        NSLog(@"Row: docID='%@', sequence=%llu", row.documentID, row.sequence);
+        //Log(@"Row: docID='%@', sequence=%llu", row.documentID, row.sequence);
         block(++n, row);
     }
     return n;
@@ -119,12 +119,12 @@
     NSError *error;
     NSArray* indexSpec = @[ [NSExpression expressionForKeyPath: @"name.first"] ];
     for (int pass = 0; pass < 2; ++pass) {
-        NSLog(@"---- Pass %d", pass);
+        Log(@"---- Pass %d", pass);
         CBLQuery *q = [self.db createQueryWhere: @"name.first == $FIRSTNAME"];
         Assert(q, @"Couldn't create query: %@", error);
         NSString* explain = [q explain: &error];
         Assert(explain, @"-explain failed: %@", error);
-        fprintf(stderr, "%s\n", explain.UTF8String);
+        //fprintf(stderr, "%s\n", explain.UTF8String);
         q.parameters = @{@"FIRSTNAME": @"Claude"};
         uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
             AssertEqualObjects(row.documentID, @"doc-009");
@@ -177,8 +177,8 @@
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         CBLFullTextQueryRow* ftsRow = (id)row;
         NSString* text = ftsRow.fullTextMatched;
-        NSLog(@"    full text = \"%@\"", text);
-        NSLog(@"    matchCount = %u", (unsigned)ftsRow.matchCount);
+//        Log(@"    full text = \"%@\"", text);
+//        Log(@"    matchCount = %u", (unsigned)ftsRow.matchCount);
         Assert([text containsString: @"Dummie"]);
         Assert([text containsString: @"woman"]);
         AssertEqual(ftsRow.matchCount, 2ul);
@@ -214,7 +214,7 @@
 
     NSData* json = [q encodeAsJSON: NULL];
     NSString* jsonStr = [[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding];
-    NSLog(@"%@", jsonStr);
+    Log(@"%@", jsonStr);
 
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         //AssertEqualObjects(row.documentID, nil);
@@ -240,14 +240,14 @@
 
     NSData* json = [q encodeAsJSON: NULL];
     NSString* jsonStr = [[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding];
-    NSLog(@"%@", jsonStr);
+    Log(@"%@", jsonStr);
 
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         //AssertEqualObjects(row.documentID, nil);
         NSString* state = [row stringAtIndex: 0];
         NSInteger count = [row integerAtIndex: 1];
         NSString* maxZip = [row stringAtIndex: 2];
-        //NSLog(@"State = %@, count = %d, maxZip = %@", state, (int)count,maxZip);
+        //Log(@"State = %@, count = %d, maxZip = %@", state, (int)count,maxZip);
         if (n-1 < expectedStates.count) {
             AssertEqualObjects(state,  expectedStates[n-1]);
             AssertEqual       (count,  [expectedCounts[n-1] integerValue]);

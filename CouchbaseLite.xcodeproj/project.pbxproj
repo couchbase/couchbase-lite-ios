@@ -19,6 +19,8 @@
 		275FF6591E412C66005F90DD /* DocPerfTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6581E412C66005F90DD /* DocPerfTest.m */; };
 		275FF6701E43E013005F90DD /* CBLQueryRow.h in Headers */ = {isa = PBXBuildFile; fileRef = 275FF66E1E43E013005F90DD /* CBLQueryRow.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275FF6711E43E013005F90DD /* CBLQueryRow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF66F1E43E013005F90DD /* CBLQueryRow.mm */; };
+		275FF6B81E47B2FC005F90DD /* ExceptionUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 275FF6B61E47B2FC005F90DD /* ExceptionUtils.h */; };
+		275FF6B91E47B2FC005F90DD /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6B71E47B2FC005F90DD /* ExceptionUtils.m */; };
 		27A0C85E1E3E7AB600F68646 /* CBLSharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */; };
 		27A0C85F1E3E7AB600F68646 /* CBLSharedKeys.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */; };
 		27EF6A821E297BDF004748DF /* CBLQuery.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EF6A7E1E297BDF004748DF /* CBLQuery.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -240,6 +242,8 @@
 		275FF6651E428A1E005F90DD /* Documentation */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Documentation; sourceTree = "<group>"; };
 		275FF66E1E43E013005F90DD /* CBLQueryRow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryRow.h; sourceTree = "<group>"; };
 		275FF66F1E43E013005F90DD /* CBLQueryRow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLQueryRow.mm; sourceTree = "<group>"; };
+		275FF6B61E47B2FC005F90DD /* ExceptionUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExceptionUtils.h; sourceTree = "<group>"; };
+		275FF6B71E47B2FC005F90DD /* ExceptionUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExceptionUtils.m; sourceTree = "<group>"; };
 		275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC_Release.xcconfig"; sourceTree = "<group>"; };
 		275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CouchbaseLite.exp; sourceTree = "<group>"; };
 		27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CBLSharedKeys.hh; sourceTree = "<group>"; };
@@ -393,6 +397,8 @@
 			children = (
 				934F4BD01E1EF19000F90659 /* CollectionUtils.h */,
 				934F4BD11E1EF19000F90659 /* CollectionUtils.m */,
+				275FF6B61E47B2FC005F90DD /* ExceptionUtils.h */,
+				275FF6B71E47B2FC005F90DD /* ExceptionUtils.m */,
 				934F4BE91E1EF19000F90659 /* MYErrorUtils.h */,
 				934F4BEA1E1EF19000F90659 /* MYErrorUtils.m */,
 				934F4BEB1E1EF19000F90659 /* MYLogging.h */,
@@ -608,6 +614,7 @@
 				9380C71C1E16E7CE0011E8CB /* CBLProperties.h in Headers */,
 				27EF6A821E297BDF004748DF /* CBLQuery.h in Headers */,
 				934F4C2B1E1EF19000F90659 /* MYLogging.h in Headers */,
+				275FF6B81E47B2FC005F90DD /* ExceptionUtils.h in Headers */,
 				934F4CB41E241FB500F90659 /* CBLParseDate.h in Headers */,
 				934F4C291E1EF19000F90659 /* MYErrorUtils.h in Headers */,
 				72A87A051E2E0E70008466FF /* CBLBlobStream.h in Headers */,
@@ -966,6 +973,7 @@
 				2704F1CA1E395F3300A3B405 /* CBLConflictResolver.m in Sources */,
 				934F4CB91E241FB500F90659 /* CBLSymmetricKey.m in Sources */,
 				934F4CAC1E241FB500F90659 /* CBLInternal.mm in Sources */,
+				275FF6B91E47B2FC005F90DD /* ExceptionUtils.m in Sources */,
 				275FF6711E43E013005F90DD /* CBLQueryRow.mm in Sources */,
 				27EF6A851E297BDF004748DF /* CBLQuery+Predicates.mm in Sources */,
 				934F4CAA1E241FB500F90659 /* CBLCoreBridge.mm in Sources */,

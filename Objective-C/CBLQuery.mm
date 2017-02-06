@@ -20,7 +20,7 @@ extern "C" {
 }
 
 
-C4LogDomain QueryLog;
+C4LogDomain kCBLQueryLogDomain;
 
 
 @interface CBLDocEnumerator : CBLQueryEnumerator
@@ -42,7 +42,7 @@ C4LogDomain QueryLog;
 
 + (void) initialize {
     if (self == [CBLQuery class]) {
-        QueryLog = c4log_getDomain("Query", true);
+        kCBLQueryLogDomain = c4log_getDomain("Query", true);
     }
 }
 
@@ -99,8 +99,7 @@ C4LogDomain QueryLog;
     NSData* jsonData = [self encodeAsJSON: outError];
     if (!jsonData)
         return NO;
-    C4LogToAt(QueryLog, kC4LogInfo,
-              "Query encoded as %.*s", (int)jsonData.length, (char*)jsonData.bytes);
+    CBLLog(Query, @"Query encoded as %.*s", (int)jsonData.length, (char*)jsonData.bytes);
     C4Error c4Err;
     auto query = c4query_new(_db.c4db, {jsonData.bytes, jsonData.length}, &c4Err);
     if (!query) {
@@ -238,7 +237,7 @@ C4LogDomain QueryLog;
     C4Error c4Err;
     auto e = c4query_run(_c4Query, &options, {paramJSON.bytes, paramJSON.length}, &c4Err);
     if (!e) {
-        C4LogToAt(QueryLog, kC4LogError, "CBLQuery failed: %d/%d", c4Err.domain, c4Err.code);
+        CBLWarnError(Query, @"CBLQuery failed: %d/%d", c4Err.domain, c4Err.code);
         convertError(c4Err, outError);
         return nullptr;
     }
@@ -285,7 +284,7 @@ C4LogDomain QueryLog;
         _database = query.database;
         _c4Query = c4Query;
         _c4enum = e;
-        C4LogToAt(QueryLog, kC4LogInfo, "Beginning query enumeration (%p)", _c4enum);
+        CBLLog(Query, @"Beginning query enumeration (%p)", _c4enum);
     }
     return self;
 }
@@ -300,11 +299,10 @@ C4LogDomain QueryLog;
     if (c4queryenum_next(_c4enum, &_error)) {
         return self.currentObject;
     } else if (_error.code) {
-        C4LogToAt(QueryLog, kC4LogError, "%@[%p] error: %d/%d",
-                  [self class], self, _error.domain, _error.code);
+        CBLWarnError(Query, @"%@[%p] error: %d/%d", [self class], self, _error.domain, _error.code);
         return nil;
     } else {
-        C4LogToAt(QueryLog, kC4LogInfo, "End of query enumeration (%p)", _c4enum);
+        CBLLog(Query, @"End of query enumeration (%p)", _c4enum);
         return nil;
     }
 }
