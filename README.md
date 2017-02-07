@@ -5,7 +5,7 @@
 
 Couchbase Lite 2.0 has a completely new set of APIs. The implementation is on top of [Couchbase Lite Core](https://github.com/couchbase/couchbase-lite-core), which is also a new cross-platform implementation of database CRUD and query features, as well as document versioning.
 
-THIS IS NOT A RELEASED PRODUCT. THIS IS NOT FINISHED CODE. This is currently in a very early stage of the implementation.
+THIS IS NOT A RELEASED PRODUCT. THIS IS NOT FINISHED CODE. The current status, as of Feb 2017, is pre-alpha, with many features not (re)implemented yet.
 
  
 ## Requirements
@@ -22,7 +22,7 @@ You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` by ad
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DP001', :submodules => true
+  pod 'CouchbaseLite', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB1', :submodules => true
 end
 ```
 
@@ -31,7 +31,7 @@ end
 You can use [Carthage](https://github.com/Carthage/Carthage) to install `CouchbaseLite` by adding it in your [Carfile](https://github.com/Carthage/Carthage/blob/master/Documentation/Artifacts.md#cartfile):
 
 ```
-github "couchbase/couchbase-lite-ios" "2.0DP001"
+github "couchbase/couchbase-lite-ios" "2.0DB1"
 ```
 
 ##Sample Apps
