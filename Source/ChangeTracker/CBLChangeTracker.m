@@ -38,7 +38,7 @@ DefineLogDomain(ChangeTracker);
 #define kInitialRetryDelay 2.0      // Initial retry delay (doubles after every subsequent failure)
 #define kMaxRetryDelay (10*60.0)    // ...but will never get longer than this
 
-#define kMinTimeout (2 * 60.0)      // Minimum read timeout value for longpoll and websocket mode
+#define kMinTimeout 60.0            // Minimum read timeout value for longpoll and websocket mode
 
 
 @interface CBLChangeTracker ()
