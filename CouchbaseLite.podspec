@@ -1,11 +1,11 @@
 Pod::Spec.new do |s|
   s.name                  = 'CouchbaseLite'
-  s.version               = '2.0DP001'
+  s.version               = '2.0DB1'
   s.license               = 'Apache License, Version 2.0'
   s.homepage              = 'http://mobile.couchbase.com'
   s.summary               = 'An embedded syncable NoSQL database for iOS, tvOS, and MacOS apps.'
   s.author                = 'Couchbase'
-  s.source                = { :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :branch => "feature/2.0", :submodules => true }
+  s.source                = { :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB1', :submodules => true }
 
   s.libraries             = "sqlite3", "c++"
 
