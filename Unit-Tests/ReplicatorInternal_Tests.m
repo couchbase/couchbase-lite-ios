@@ -144,12 +144,58 @@
 }
 
 
-- (void) test_02_Puller {
-    RequireTestCase(01_Pusher);
+- (void) preparePullReplicationTest {
+    // Create some documents:
+    NSMutableDictionary* props = $mdict({@"_id", @"doc1"},
+                                        {@"foo", @1}, {@"bar", $false});
+    CBLStatus status;
+    NSError* error;
+    CBL_Revision* rev1 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
+                          prevRevisionID: nil allowConflict: NO status: &status error: &error];
+    AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
+    
+    props.cbl_rev = rev1.revID;
+    props[@"UPDATED"] = $true;
+    CBL_Revision* rev2 = [db putRevision: [CBL_MutableRevision revisionWithProperties: props]
+                          prevRevisionID: rev1.revID allowConflict: NO
+                                  status: &status error: &error];
+    Assert(rev2 != nil);
+    AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
+    
+    props = $mdict({@"_id", @"doc2"},
+                   {@"baz", @(666)}, {@"fnord", $true});
+    [db putRevision: [CBL_MutableRevision revisionWithProperties: props ]
+     prevRevisionID: nil allowConflict: NO
+             status: &status error: &error];
+    AssertEq(status, kCBLStatusCreated);
+    AssertNil(error);
+    
+    [self createDocuments: 100];
+    
+    // Push them to the remote:
     NSURL* remoteURL = [self remoteTestDBURL: kScratchDBName];
     if (!remoteURL)
         return;
+    
+    [self eraseRemoteDB: remoteURL];
+    id lastSeq = replic8(db, remoteURL, YES, nil, nil, nil);
+    AssertEq([lastSeq intValue], 103);
+    
+    // Erase test db:
+    [self eraseTestDB];
+}
 
+
+- (void) test_02_Puller {
+    [self preparePullReplicationTest];
+    
+    NSURL* remoteURL = [self remoteTestDBURL: kScratchDBName];
+    if (!remoteURL)
+        return;
+    
+    // Pull from remote:
     id lastSeq = replic8(db, remoteURL, NO, nil, nil, nil);
     AssertEqual(lastSeq, @103);
     
@@ -174,11 +220,13 @@
 
 
 - (void) test_03_Puller_Continuous {
-    RequireTestCase(02_Puller);
+    [self preparePullReplicationTest];
+    
     NSURL* remoteURL = [self remoteTestDBURL: kScratchDBName];
     if (!remoteURL)
         return;
-
+    
+    // Pull from remote:
     id lastSeq = replic8Continuous(db, remoteURL, NO, nil, nil, nil);
     AssertEqual(lastSeq, @103);
 
@@ -229,7 +277,7 @@
 
 
 - (void) test_05_Puller_DatabaseValidation {
-    RequireTestCase(Pusher);
+    [self preparePullReplicationTest];
 
     NSURL* remote = [self remoteTestDBURL: kScratchDBName];
     if (!remote)
