@@ -10,6 +10,20 @@
 		2704F1C91E395F3300A3B405 /* CBLConflictResolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 2704F1C71E395F3300A3B405 /* CBLConflictResolver.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2704F1CA1E395F3300A3B405 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */; };
 		273ADF7D1E36B514001E977F /* sentences.json in Resources */ = {isa = PBXBuildFile; fileRef = 273ADF7C1E36B514001E977F /* sentences.json */; };
+		275F927D1E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275F92741E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework */; };
+		275F92821E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275F92811E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.swift */; };
+		275F92841E4D30A4007FD5A2 /* CouchbaseLiteSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = 275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		275F928C1E4D3119007FD5A2 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275F928B1E4D3119007FD5A2 /* Database.swift */; };
+		275F929D1E4D377C007FD5A2 /* CouchbaseLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 9398D9FD1E03531A00464432 /* CouchbaseLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		275F929E1E4D377C007FD5A2 /* CBLDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = 93BFCD9E1E0385EA00E52F8A /* CBLDatabase.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		275F929F1E4D377C007FD5A2 /* CBLDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 9380C6ED1E15B8C20011E8CB /* CBLDocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		275F92A01E4D377C007FD5A2 /* CBLConflictResolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 2704F1C71E395F3300A3B405 /* CBLConflictResolver.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		275F92A11E4D377C007FD5A2 /* CBLQuery.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EF6A7E1E297BDF004748DF /* CBLQuery.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		275F92A21E4D377C007FD5A2 /* CBLQueryRow.h in Headers */ = {isa = PBXBuildFile; fileRef = 275FF66E1E43E013005F90DD /* CBLQueryRow.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		275F92A31E4D377C007FD5A2 /* CBLBlob.h in Headers */ = {isa = PBXBuildFile; fileRef = 72A879FE1E2DD536008466FF /* CBLBlob.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		275F92A41E4D3792007FD5A2 /* CBLProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 9380C6FE1E15BB1D0011E8CB /* CBLProperties.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		275F92A61E4D3A91007FD5A2 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275F92A51E4D3A91007FD5A2 /* Document.swift */; };
+		275F92A81E4D3AFB007FD5A2 /* Properties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275F92A71E4D3AFB007FD5A2 /* Properties.swift */; };
 		275FF6091E3FC24D005F90DD /* iTunesMusicLibrary.json in Resources */ = {isa = PBXBuildFile; fileRef = 275FF6081E3FC24D005F90DD /* iTunesMusicLibrary.json */; };
 		275FF6161E3FE9DB005F90DD /* PerfTestMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6151E3FE9DB005F90DD /* PerfTestMain.m */; };
 		275FF6251E3FECAB005F90DD /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
@@ -23,6 +37,8 @@
 		275FF6B91E47B2FC005F90DD /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6B71E47B2FC005F90DD /* ExceptionUtils.m */; };
 		27A0C85E1E3E7AB600F68646 /* CBLSharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */; };
 		27A0C85F1E3E7AB600F68646 /* CBLSharedKeys.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */; };
+		27BE3B1D1E4D52C50012B74A /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
+		27BE3B2D1E4D53320012B74A /* CouchbaseLite.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		27EF6A821E297BDF004748DF /* CBLQuery.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EF6A7E1E297BDF004748DF /* CBLQuery.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27EF6A831E297BDF004748DF /* CBLQuery.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A7F1E297BDF004748DF /* CBLQuery.mm */; };
 		27EF6A851E297BDF004748DF /* CBLQuery+Predicates.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A811E297BDF004748DF /* CBLQuery+Predicates.mm */; };
@@ -89,7 +105,21 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		275F927E1E4D30A4007FD5A2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9091E03434200464432 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 275F92731E4D30A4007FD5A2;
+			remoteInfo = CouchbaseLiteSwift;
+		};
 		275FF6261E3FECB1005F90DD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9091E03434200464432 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9398D9111E03434200464432;
+			remoteInfo = "CBL ObjC";
+		};
+		27BE3B291E4D52CB0012B74A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9091E03434200464432 /* Project object */;
 			proxyType = 1;
@@ -214,6 +244,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		27BE3B2C1E4D53260012B74A /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				27BE3B2D1E4D53320012B74A /* CouchbaseLite.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		93BB72771E446FCC00427251 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -230,6 +270,15 @@
 		2704F1C71E395F3300A3B405 /* CBLConflictResolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLConflictResolver.h; sourceTree = "<group>"; };
 		2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLConflictResolver.m; sourceTree = "<group>"; };
 		273ADF7C1E36B514001E977F /* sentences.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = sentences.json; sourceTree = "<group>"; };
+		275F92741E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLiteSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CouchbaseLiteSwift.h; sourceTree = "<group>"; };
+		275F92771E4D30A4007FD5A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		275F927C1E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteSwiftTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		275F92811E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CouchbaseLiteSwiftTests.swift; sourceTree = "<group>"; };
+		275F92831E4D30A4007FD5A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		275F928B1E4D3119007FD5A2 /* Database.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
+		275F92A51E4D3A91007FD5A2 /* Document.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
+		275F92A71E4D3AFB007FD5A2 /* Properties.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Properties.swift; sourceTree = "<group>"; };
 		275FF6081E3FC24D005F90DD /* iTunesMusicLibrary.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = iTunesMusicLibrary.json; path = "vendor/couchbase-lite-core/C/tests/data/iTunesMusicLibrary.json"; sourceTree = SOURCE_ROOT; };
 		275FF60A1E3FCA20005F90DD /* TunesPerfTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TunesPerfTest.h; sourceTree = "<group>"; };
 		275FF60B1E3FCA20005F90DD /* TunesPerfTest.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TunesPerfTest.mm; sourceTree = "<group>"; };
@@ -326,6 +375,22 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		275F92701E4D30A4007FD5A2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27BE3B1D1E4D52C50012B74A /* CouchbaseLite.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		275F92791E4D30A4007FD5A2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				275F927D1E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		275FF6101E3FE9DB005F90DD /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -369,6 +434,27 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		275F92631E4D2FD7007FD5A2 /* Swift */ = {
+			isa = PBXGroup;
+			children = (
+				275F928B1E4D3119007FD5A2 /* Database.swift */,
+				275F92A51E4D3A91007FD5A2 /* Document.swift */,
+				275F92A71E4D3AFB007FD5A2 /* Properties.swift */,
+				275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */,
+				275F92771E4D30A4007FD5A2 /* Info.plist */,
+			);
+			path = Swift;
+			sourceTree = "<group>";
+		};
+		275F92801E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests */ = {
+			isa = PBXGroup;
+			children = (
+				275F92811E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.swift */,
+				275F92831E4D30A4007FD5A2 /* Info.plist */,
+			);
+			path = CouchbaseLiteSwiftTests;
+			sourceTree = "<group>";
+		};
 		275FF5FA1E3FBD3B005F90DD /* Performance */ = {
 			isa = PBXGroup;
 			children = (
@@ -492,12 +578,14 @@
 		9398D9081E03434200464432 = {
 			isa = PBXGroup;
 			children = (
+				275F92631E4D2FD7007FD5A2 /* Swift */,
 				9398D9FC1E03531A00464432 /* Objective-C */,
 				9378C5D11E26CC46001BB196 /* xcconfigs */,
 				275FF6651E428A1E005F90DD /* Documentation */,
+				275F92801E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests */,
+				9398D9131E03434200464432 /* Products */,
 				9398D92D1E03467C00464432 /* vendor */,
 				27EF6AF01E32D12C004748DF /* Frameworks */,
-				9398D9131E03434200464432 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
@@ -509,6 +597,8 @@
 				275FF6131E3FE9DB005F90DD /* PerfTest */,
 				938CF9EE1E442A3E00291631 /* CBL Tests.app */,
 				938CFA061E442A3E00291631 /* CBL Objc Tests - iOS.xctest */,
+				275F92741E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework */,
+				275F927C1E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -588,6 +678,22 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		275F92711E4D30A4007FD5A2 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				275F929D1E4D377C007FD5A2 /* CouchbaseLite.h in Headers */,
+				275F92A01E4D377C007FD5A2 /* CBLConflictResolver.h in Headers */,
+				275F929E1E4D377C007FD5A2 /* CBLDatabase.h in Headers */,
+				275F92841E4D30A4007FD5A2 /* CouchbaseLiteSwift.h in Headers */,
+				275F92A21E4D377C007FD5A2 /* CBLQueryRow.h in Headers */,
+				275F92A41E4D3792007FD5A2 /* CBLProperties.h in Headers */,
+				275F929F1E4D377C007FD5A2 /* CBLDocument.h in Headers */,
+				275F92A11E4D377C007FD5A2 /* CBLQuery.h in Headers */,
+				275F92A31E4D377C007FD5A2 /* CBLBlob.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9398D90F1E03434200464432 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -641,6 +747,43 @@
 /* End PBXLegacyTarget section */
 
 /* Begin PBXNativeTarget section */
+		275F92731E4D30A4007FD5A2 /* CBL Swift */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 275F92851E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL Swift" */;
+			buildPhases = (
+				275F926F1E4D30A4007FD5A2 /* Sources */,
+				275F92701E4D30A4007FD5A2 /* Frameworks */,
+				275F92711E4D30A4007FD5A2 /* Headers */,
+				27BE3B2C1E4D53260012B74A /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				27BE3B2A1E4D52CB0012B74A /* PBXTargetDependency */,
+			);
+			name = "CBL Swift";
+			productName = CouchbaseLiteSwift;
+			productReference = 275F92741E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		275F927B1E4D30A4007FD5A2 /* CBL Swift Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 275F92881E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL Swift Tests" */;
+			buildPhases = (
+				275F92781E4D30A4007FD5A2 /* Sources */,
+				275F92791E4D30A4007FD5A2 /* Frameworks */,
+				275F927A1E4D30A4007FD5A2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				275F927F1E4D30A4007FD5A2 /* PBXTargetDependency */,
+			);
+			name = "CBL Swift Tests";
+			productName = CouchbaseLiteSwiftTests;
+			productReference = 275F927C1E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		275FF6121E3FE9DB005F90DD /* PerfTests-Mac */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 275FF6241E3FE9DB005F90DD /* Build configuration list for PBXNativeTarget "PerfTests-Mac" */;
@@ -740,9 +883,21 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = CBL;
+				LastSwiftUpdateCheck = 0820;
 				LastUpgradeCheck = 0820;
 				ORGANIZATIONNAME = Couchbase;
 				TargetAttributes = {
+					275F92731E4D30A4007FD5A2 = {
+						CreatedOnToolsVersion = 8.2.1;
+						DevelopmentTeam = N2Q372V7W2;
+						LastSwiftMigration = 0820;
+						ProvisioningStyle = Automatic;
+					};
+					275F927B1E4D30A4007FD5A2 = {
+						CreatedOnToolsVersion = 8.2.1;
+						DevelopmentTeam = N2Q372V7W2;
+						ProvisioningStyle = Automatic;
+					};
 					275FF6121E3FE9DB005F90DD = {
 						CreatedOnToolsVersion = 8.2.1;
 						DevelopmentTeam = N2Q372V7W2;
@@ -796,9 +951,11 @@
 			projectRoot = "";
 			targets = (
 				9398D9111E03434200464432 /* CBL ObjC */,
+				275F92731E4D30A4007FD5A2 /* CBL Swift */,
 				9398D91A1E03434200464432 /* CBL ObjC Tests */,
 				938CF9ED1E442A3E00291631 /* CBL Objc Tests - iOS App */,
 				938CFA051E442A3E00291631 /* CBL Objc Tests - iOS */,
+				275F927B1E4D30A4007FD5A2 /* CBL Swift Tests */,
 				275FF6121E3FE9DB005F90DD /* PerfTests-Mac */,
 				275FF65D1E428624005F90DD /* API Docs */,
 			);
@@ -886,6 +1043,13 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
+		275F927A1E4D30A4007FD5A2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		938CF9EC1E442A3E00291631 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -923,6 +1087,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		275F926F1E4D30A4007FD5A2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				275F92A81E4D3AFB007FD5A2 /* Properties.swift in Sources */,
+				275F92A61E4D3A91007FD5A2 /* Document.swift in Sources */,
+				275F928C1E4D3119007FD5A2 /* Database.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		275F92781E4D30A4007FD5A2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				275F92821E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		275FF60F1E3FE9DB005F90DD /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1001,10 +1183,20 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		275F927F1E4D30A4007FD5A2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 275F92731E4D30A4007FD5A2 /* CBL Swift */;
+			targetProxy = 275F927E1E4D30A4007FD5A2 /* PBXContainerItemProxy */;
+		};
 		275FF6271E3FECB1005F90DD /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 9398D9111E03434200464432 /* CBL ObjC */;
 			targetProxy = 275FF6261E3FECB1005F90DD /* PBXContainerItemProxy */;
+		};
+		27BE3B2A1E4D52CB0012B74A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9398D9111E03434200464432 /* CBL ObjC */;
+			targetProxy = 27BE3B291E4D52CB0012B74A /* PBXContainerItemProxy */;
 		};
 		27EF6AEF1E32D111004748DF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1048,6 +1240,248 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		275F92861E4D30A4007FD5A2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_VERSION = A;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)",
+					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
+				);
+				INFOPLIST_FILE = Swift/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.CouchbaseLiteSwift;
+				PRODUCT_NAME = CouchbaseLiteSwift;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		275F92871E4D30A4007FD5A2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_VERSION = A;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)",
+					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
+				);
+				INFOPLIST_FILE = Swift/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.CouchbaseLiteSwift;
+				PRODUCT_NAME = CouchbaseLiteSwift;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 3.0;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		275F92891E4D30A4007FD5A2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = CouchbaseLiteSwiftTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.CouchbaseLiteSwiftTests;
+				PRODUCT_NAME = CouchbaseLiteSwiftTests;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
+			};
+			name = Debug;
+		};
+		275F928A1E4D30A4007FD5A2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = N2Q372V7W2;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = CouchbaseLiteSwiftTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.CouchbaseLiteSwiftTests;
+				PRODUCT_NAME = CouchbaseLiteSwiftTests;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 3.0;
+			};
+			name = Release;
+		};
 		275FF6171E3FE9DB005F90DD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
@@ -1363,6 +1797,24 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		275F92851E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL Swift" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				275F92861E4D30A4007FD5A2 /* Debug */,
+				275F92871E4D30A4007FD5A2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		275F92881E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL Swift Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				275F92891E4D30A4007FD5A2 /* Debug */,
+				275F928A1E4D30A4007FD5A2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		275FF6241E3FE9DB005F90DD /* Build configuration list for PBXNativeTarget "PerfTests-Mac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
