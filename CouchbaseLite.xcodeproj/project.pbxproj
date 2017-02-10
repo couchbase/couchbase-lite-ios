@@ -81,6 +81,8 @@
 		934F4CB81E241FB500F90659 /* CBLSymmetricKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4CA51E241FB500F90659 /* CBLSymmetricKey.h */; };
 		934F4CB91E241FB500F90659 /* CBLSymmetricKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4CA61E241FB500F90659 /* CBLSymmetricKey.m */; };
 		934F4CC41E24747E00F90659 /* CBLProperties.mm in Sources */ = {isa = PBXBuildFile; fileRef = 934F4CC31E24747E00F90659 /* CBLProperties.mm */; };
+		9352941F1E4E0181005CE4E8 /* MYBlockUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 9352941D1E4E0181005CE4E8 /* MYBlockUtils.h */; };
+		935294201E4E0181005CE4E8 /* MYBlockUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 9352941E1E4E0181005CE4E8 /* MYBlockUtils.m */; };
 		936483B71E4431C6008D08B3 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 936483AC1E4431C6008D08B3 /* AppDelegate.m */; };
 		936483B81E4431C6008D08B3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 936483AD1E4431C6008D08B3 /* Assets.xcassets */; };
 		936483B91E4431C6008D08B3 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 936483AE1E4431C6008D08B3 /* LaunchScreen.storyboard */; };
@@ -342,6 +344,8 @@
 		934F4CA51E241FB500F90659 /* CBLSymmetricKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLSymmetricKey.h; sourceTree = "<group>"; };
 		934F4CA61E241FB500F90659 /* CBLSymmetricKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLSymmetricKey.m; sourceTree = "<group>"; };
 		934F4CC31E24747E00F90659 /* CBLProperties.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLProperties.mm; sourceTree = "<group>"; };
+		9352941D1E4E0181005CE4E8 /* MYBlockUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYBlockUtils.h; sourceTree = "<group>"; };
+		9352941E1E4E0181005CE4E8 /* MYBlockUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYBlockUtils.m; sourceTree = "<group>"; };
 		936483AB1E4431C6008D08B3 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		936483AC1E4431C6008D08B3 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		936483AD1E4431C6008D08B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -487,13 +491,15 @@
 				934F4BD11E1EF19000F90659 /* CollectionUtils.m */,
 				275FF6B61E47B2FC005F90DD /* ExceptionUtils.h */,
 				275FF6B71E47B2FC005F90DD /* ExceptionUtils.m */,
+				9352941D1E4E0181005CE4E8 /* MYBlockUtils.h */,
+				9352941E1E4E0181005CE4E8 /* MYBlockUtils.m */,
 				934F4BE91E1EF19000F90659 /* MYErrorUtils.h */,
 				934F4BEA1E1EF19000F90659 /* MYErrorUtils.m */,
 				934F4BEB1E1EF19000F90659 /* MYLogging.h */,
 				934F4BEC1E1EF19000F90659 /* MYLogging.m */,
+				934F4C6F1E1EFAF600F90659 /* Test_Assertions.m */,
 				934F4C581E1EF25E00F90659 /* Test.h */,
 				934F4C591E1EF25E00F90659 /* Test.m */,
-				934F4C6F1E1EFAF600F90659 /* Test_Assertions.m */,
 			);
 			path = MYUtilities;
 			sourceTree = "<group>";
@@ -727,6 +733,7 @@
 				934F4CB41E241FB500F90659 /* CBLParseDate.h in Headers */,
 				934F4C291E1EF19000F90659 /* MYErrorUtils.h in Headers */,
 				72A87A051E2E0E70008466FF /* CBLBlobStream.h in Headers */,
+				9352941F1E4E0181005CE4E8 /* MYBlockUtils.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1147,6 +1154,7 @@
 				9380C72B1E16E7D30011E8CB /* CBLDatabase.mm in Sources */,
 				934F4CB21E241FB500F90659 /* CBLMisc.m in Sources */,
 				934F4C111E1EF19000F90659 /* CollectionUtils.m in Sources */,
+				935294201E4E0181005CE4E8 /* MYBlockUtils.m in Sources */,
 				934F4C5B1E1EF25E00F90659 /* Test.m in Sources */,
 				72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */,
 				934F4CAE1E241FB500F90659 /* CBLJSON.m in Sources */,

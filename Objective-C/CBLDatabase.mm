@@ -24,6 +24,17 @@
 #import "c4BlobStore.h"
 #import "c4Observer.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#import "MYBlockUtils.h"
+#import "ExceptionUtils.h"
+
+#ifdef __cplusplus
+}
+#endif
+
 
 NSString* const kCBLDatabaseChangeNotification = @"CBLDatabaseChangeNotification";
 NSString* const kCBLDatabaseChangesUserInfoKey = @"CBLDatbaseChangesUserInfoKey";
@@ -36,10 +47,9 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
 
 @implementation CBLDatabaseOptions
 
-@synthesize directory=_directory;
-@synthesize fileProtection=_fileProtection;
-@synthesize encryptionKey=_encryptionKey;
-@synthesize readOnly=_readOnly;
+
+@synthesize directory=_directory, fileProtection=_fileProtection, encryptionKey=_encryptionKey;
+@synthesize readOnly=_readOnly, dispatchQueue=_dispatchQueue;
 
 
 - (instancetype) copyWithZone:(NSZone *)zone {
@@ -47,6 +57,7 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
     o.directory = self.directory;
     o.encryptionKey = self.encryptionKey;
     o.readOnly = self.readOnly;
+    o.dispatchQueue = self.dispatchQueue;
     return o;
 }
 
@@ -62,6 +73,7 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
 @implementation CBLDatabase {
     NSString* _name;
     CBLDatabaseOptions* _options;
+    NSThread* _thread;
     C4DatabaseObserver* _obs;
     NSMapTable<NSString*, CBLDocument*>* _documents;
     NSMutableSet<CBLDocument*>* _unsavedDocuments;
@@ -81,15 +93,18 @@ static const C4DatabaseConfig kDBConfig = {
 
 static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBLDatabase *db = (__bridge CBLDatabase *)context;
-    dispatch_async(dispatch_get_main_queue(), ^{        //TODO: Support other queues
+    [db doAsync: ^{
         [db postDatabaseChanged];
-    });
+    }];
 }
 
+
+static NSArray* CBL_RunloopModes;
 
 + (void) initialize {
     if (self == [CBLDatabase class]) {
         CBLLog_Init();
+        CBL_RunloopModes = @[NSRunLoopCommonModes];
     }
 }
 
@@ -107,6 +122,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
                         error: (NSError**)outError {
     self = [super init];
     if (self) {
+        _thread = [NSThread currentThread];
         _name = name;
         _options = options != nil? [options copy] : [CBLDatabaseOptions defaultOptions];
         if (![self open: outError])
@@ -327,6 +343,32 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
+static void catchInBlock(void (^block)(), NSString* method) {
+    @try { block(); } catchAndReport([NSString stringWithFormat:@"-[CBLDatabase %@]", method]);
+}
+
+
+- (void) doAsync: (void (^)())block {
+    block = ^{
+        if ([self mustBeOpen: nil])
+            catchInBlock(block, @"doAsync:");
+    };
+    
+    if (_options.dispatchQueue)
+        dispatch_async(_options.dispatchQueue, block);
+    else
+        MYOnThreadInModes(_thread, CBL_RunloopModes, NO, block);
+}
+
+
+- (void) doSync: (void (^)())block {
+    if (_options.dispatchQueue)
+        dispatch_sync(_options.dispatchQueue, ^{catchInBlock(block, @"doSync:");});
+    else
+        MYOnThreadInModes(_thread, CBL_RunloopModes, YES, ^{catchInBlock(block, @"doSync:");});
+}
+
+
 #pragma mark - INTERNAL
 
 
@@ -365,7 +407,7 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 }
 
 
-- (void)postDatabaseChanged {
+- (void) postDatabaseChanged {
     if (!_obs || !_c4db || c4db_isInTransaction(_c4db))
         return;
 
@@ -385,7 +427,10 @@ static NSString* databasePath(NSString* name, NSString* dir) {
                 NSDictionary *userInfo = @{kCBLDatabaseChangesUserInfoKey: docIDs,
                                            kCBLDatabaseLastSequenceUserInfoKey: @(lastSequence),
                                            kCBLDatabaseIsExternalUserInfoKey: @(external)};
-                [[NSNotificationCenter defaultCenter] postNotificationName:kCBLDatabaseChangeNotification object:self userInfo:userInfo];
+                NSNotification* n = [NSNotification notificationWithName: kCBLDatabaseChangeNotification
+                                                                  object: self
+                                                                userInfo: userInfo];
+                [[NSNotificationCenter defaultCenter] postNotification: n];
                 docIDs = [NSMutableArray new];
             }
         }
