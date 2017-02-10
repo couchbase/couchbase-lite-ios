@@ -75,7 +75,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** Values to substitute for placeholder parameters defined in the query. Defaults to nil.
     The dictionary's keys are parameter names, and values are the values to use.
     All parameters must be given values before running the query, or it will fail. */
-@property (copy, nullable, nonatomic) NSDictionary* parameters;
+@property (copy, nullable, nonatomic) NSDictionary<NSString*,id>* parameters;
 
 /** Checks whether the query is valid, recompiling it if necessary, without running it. */
 - (BOOL) check: (NSError**)error;

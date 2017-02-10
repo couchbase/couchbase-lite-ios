@@ -86,17 +86,17 @@ typedef struct {
     If the database does not yet exist, it will be created.
     @param name  The name of the database. May NOT contain capital letters!
     @param error  On return, the error if any. */
-- (instancetype) initWithName: (NSString*)name
-                        error: (NSError**)error;
+- (nullable instancetype) initWithName: (NSString*)name
+                                 error: (NSError**)error;
 
 /** Initializes a Couchbase Lite database with a given name and database options.
     If the database does not yet exist, it will be created, unless the `readOnly` option is used.
     @param name  The name of the database. May NOT contain capital letters!
     @param options  The database options, or nil for the default options.
     @param error  On return, the error if any. */
-- (instancetype) initWithName: (NSString*)name
-                      options: (nullable CBLDatabaseOptions*)options
-                        error: (NSError**)error
+- (nullable instancetype) initWithName: (NSString*)name
+                               options: (nullable CBLDatabaseOptions*)options
+                                 error: (NSError**)error
     NS_DESIGNATED_INITIALIZER;
 
 - (instancetype) init NS_UNAVAILABLE;
@@ -131,7 +131,7 @@ typedef struct {
     @param error  On return, the error if any.
     @param block  The block of code to run.
     @return  YES on success, NO on error. */
-- (BOOL) inBatch: (NSError**)error do: (void (^)())block;
+- (BOOL) inBatch: (NSError**)error do: (void (NS_NOESCAPE ^)())block;
 
 /** Creates a new CBLDocument object with no properties and a new (random) UUID. 
     The document will be saved to the database when you call -save: on it. */

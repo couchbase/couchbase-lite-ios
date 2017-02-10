@@ -25,9 +25,9 @@ NS_ASSUME_NONNULL_BEGIN
     @param baseProperties  The common parent revision of these two revisions, if available.
     @return  The resolved set of properties for the document to store, or nil to give up if
                 automatic resolution isn't possible. */
-- (nullable NSDictionary*) resolveMine: (NSDictionary*)localProperties
-                            withTheirs: (NSDictionary*)conflictingProperties
-                               andBase: (NSDictionary*)baseProperties;
+- (nullable NSDictionary<NSString*,id>*) resolveMine: (NSDictionary<NSString*,id>*)localProperties
+                                          withTheirs: (NSDictionary<NSString*,id>*)conflictingProperties
+                                             andBase: (NSDictionary<NSString*,id>*)baseProperties;
 
 @end
 

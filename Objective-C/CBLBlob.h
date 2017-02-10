@@ -69,7 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic, nullable) NSString* digest;
 
 /** The metadata associated with this CBLBlob */
-@property (readonly, nonatomic) NSDictionary* properties;
+@property (readonly, nonatomic) NSDictionary<NSString*,id>* properties;
 
 @end
 

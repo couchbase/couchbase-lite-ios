@@ -16,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol CBLProperties <NSObject>
 
 /** All of the properties contained in this object. */
-@property (readwrite, nullable, nonatomic) NSDictionary* properties;
+@property (readwrite, nullable, nonatomic) NSDictionary<NSString*,id>* properties;
 
 #pragma mark - GETTERS
 
