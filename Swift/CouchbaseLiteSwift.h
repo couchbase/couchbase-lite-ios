@@ -16,4 +16,4 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteSwiftVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <CouchbaseLiteSwift/PublicHeader.h>
 
-#import <CouchbaseLite.h>
+#import "CouchbaseLite.h"

@@ -17,6 +17,20 @@ public class Properties {
     }
 
 
+    public func property(_ key: String) -> Any? {
+        return _impl.object(forKey: key)
+    }
+
+    public func setProperty(_ key: String, _ value: Any?) {
+        return _impl.setObject(value, forKey: key)
+    }
+
+
+    public func contains(_ key: String) -> Bool {
+        return _impl.containsObject(forKey: key)
+    }
+
+    
     public subscript(key: String) -> Bool {
         get {return _impl.boolean(forKey: key)}
         set {_impl.setBoolean(newValue, forKey: key)}
@@ -39,22 +53,27 @@ public class Properties {
 
     public subscript(key: String) -> String? {
         get {return _impl.string(forKey: key)}
-        set {_impl.setObject(newValue, forKey: key)}
     }
 
     public subscript(key: String) -> Date? {
         get {return _impl.date(forKey: key)}
-        set {_impl.setObject(newValue, forKey: key)}
+    }
+
+    public subscript(key: String) -> Blob? {
+        get {return _impl.object(forKey: key) as? Blob}
+    }
+
+    public subscript(key: String) -> [Any]? {
+        get {return _impl.object(forKey: key) as? [Any]}
+    }
+
+    public subscript(key: String) -> [String:Any]? {
+        get {return _impl.object(forKey: key) as? [String:Any]}
     }
 
     public subscript(key: String) -> Any? {
         get {return _impl.object(forKey: key)}
         set {_impl.setObject(newValue, forKey: key)}
-    }
-
-
-    public func contains(key: String) -> Bool {
-        return _impl.containsObject(forKey: key)
     }
 
 

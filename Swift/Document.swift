@@ -82,6 +82,11 @@ public class Document : Properties {
     }
 
 
+    public static func == (doc1: Document, doc: Document) -> Bool {
+        return doc._docimpl === doc._docimpl
+    }
+
+    
     init(_ impl: CBLDocument, inDatabase: Database) {
         database = inDatabase
         _docimpl = impl

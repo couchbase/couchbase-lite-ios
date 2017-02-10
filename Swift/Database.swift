@@ -59,6 +59,8 @@ public struct DatabaseOptions {
 
     /** If YES, the database will be opened read-only. */
     public var readOnly: Bool = false
+
+    public init() { }
 }
 
 
@@ -131,7 +133,7 @@ public final class Database {
 
 
     /** Checks whether a database of the given name exists in the given directory or not. */
-    public class func databaseExists(_ name: String, inDirectory directory: String? = nil) -> Bool {
+    public class func exists(_ name: String, inDirectory directory: String? = nil) -> Bool {
         return CBLDatabase.databaseExists(name, inDirectory: directory)
     }
 
@@ -139,8 +141,18 @@ public final class Database {
     /** Runs a group of database operations in a batch. Use this when performing bulk write operations
         like multiple inserts/updates; it saves the overhead of multiple database commits, greatly
         improving performance. */
-    public func inBatch(_ block: () -> Void ) throws {
-        try _impl.inBatch(do: block)
+    public func inBatch(_ block: () throws -> Void ) throws {
+        var caught: Error? = nil
+        try _impl.inBatch(do: {
+            do {
+                try block()
+            } catch let error {
+                caught = error
+            }
+        })
+        if let caught = caught {
+            throw caught
+        }
     }
 
 
