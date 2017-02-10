@@ -536,7 +536,7 @@
 - (void)testBlob {
     NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
     NSError* error;
-    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content error:&error];
+    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
     Assert(data, @"Failed to create blob: %@", error);
     doc[@"data"] = data;
     doc[@"name"] = @"Jim";
@@ -559,7 +559,7 @@
 - (void)testEmptyBlob {
     NSData* content = [@"" dataUsingEncoding:NSUTF8StringEncoding];
     NSError* error;
-    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content error:&error];
+    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
     Assert(data, @"Failed to create blob: %@", error);
     doc[@"data"] = data;
     
@@ -581,7 +581,7 @@
     NSData* content = [@"" dataUsingEncoding:NSUTF8StringEncoding];
     NSInputStream *contentStream = [[NSInputStream alloc] initWithData:content];
     NSError* error;
-    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" contentStream:contentStream error:&error];
+    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" contentStream:contentStream];
     Assert(data, @"Failed to create blob: %@", error);
     doc[@"data"] = data;
     
@@ -604,7 +604,7 @@
     NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
     NSError *error;
     
-    CBLBlob* data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content error:&error];
+    CBLBlob* data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
     Assert(data, @"Failed to create blob: %@", error);
     doc[@"data"] = data;
     
@@ -637,7 +637,7 @@
 - (void)testReadExistingBlob {
     NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
     NSError* error;
-    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content error:&error];
+    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
     Assert(data, @"Failed to create blob: %@", error);
     doc[@"data"] = data;
     doc[@"name"] = @"Jim";
@@ -660,12 +660,5 @@
     AssertEqualObjects(data.content, content);
 }
 
-- (CBLBlob *)createBlob:(NSString *)contentType withData:(NSData *)data error:(NSError **)outError {
-    return [[CBLBlob alloc] initWithContentType:contentType data:data error:outError];
-}
-
-- (CBLBlob *)createBlob:(NSString *)contentType withStream:(NSInputStream *)stream error:(NSError **)outError {
-    return [[CBLBlob alloc] initWithContentType:contentType contentStream:stream error:outError];
-}
 
 @end

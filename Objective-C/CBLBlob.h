@@ -25,20 +25,16 @@ NS_ASSUME_NONNULL_BEGIN
 /** Initializes a CBLBlob with the given in-memory data.
     The blob can then be added as a property of a CBLDocument.
     @param contentType  The type of content this CBLBlob will represent.
-    @param data  The data that this CBLBlob will contain.
-    @param error  On return, the error if any. */
-- (nullable instancetype) initWithContentType: (NSString *)contentType
-                                         data: (NSData *) data
-                                        error: (NSError**)error;
+    @param data  The data that this CBLBlob will contain. */
+- (instancetype) initWithContentType: (NSString *)contentType
+                                data: (NSData *)data;
 
 /** Initializes a CBLBlob with the given stream of data.
     The blob can then be added as a property of a CBLDocument.
     @param contentType  The type of content this CBLBlob will represent.
-    @param stream  The stream of data that this CBLBlob will consume.
-    @param error  On return, the error if any. */
-- (nullable instancetype) initWithContentType: (NSString *)contentType
-                                contentStream: (NSInputStream *)stream
-                                        error: (NSError**)error;
+    @param stream  The stream of data that this CBLBlob will consume. */
+- (instancetype) initWithContentType: (NSString *)contentType
+                       contentStream: (NSInputStream *)stream;
 
 /** Initializes a CBLBlob with the contents of a file.
     The blob can then be added as a property of a CBLDocument.

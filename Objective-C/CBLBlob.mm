@@ -14,6 +14,10 @@
 #import "CBLLog.h"
 #import "c4BlobStore.h"
 
+extern "C" {
+#import "MYErrorUtils.h"
+}
+
 
 // Max size of data that will be cached in memory with the CBLBlob
 static const size_t kMaxCachedContentLength = 8*1024;
@@ -42,7 +46,6 @@ static NSString* const kBlobType = @"blob";
 
 - (instancetype)initWithContentType:(NSString *)contentType
                                data:(NSData *)data
-                              error:(NSError**)outError
 {
     Assert(data != nil);
     self = [super init];
@@ -58,7 +61,6 @@ static NSString* const kBlobType = @"blob";
 
 - (instancetype)initWithContentType:(NSString *)contentType
                       contentStream:(NSInputStream *)stream
-                              error:(NSError**)outError
 {
     Assert(stream != nil);
     self = [super init];
@@ -75,9 +77,14 @@ static NSString* const kBlobType = @"blob";
                             fileURL:(NSURL *)url
                               error:(NSError**)outError
 {
-    return [self initWithContentType:contentType
-                       contentStream:[[NSInputStream alloc] initWithURL:url]
-                               error:outError];
+    NSInputStream* stream = [[NSInputStream alloc] initWithURL: url];
+    if (!stream) {
+        MYReturnError(outError, NSURLErrorFileDoesNotExist, NSURLErrorDomain,
+                      @"Couldn't create stream on %@", url.absoluteURL);
+        return nil;
+    }
+    return [self initWithContentType: contentType
+                       contentStream: stream];
 }
 
 
@@ -98,8 +105,10 @@ static NSString* const kBlobType = @"blob";
         _length = $castIf(NSNumber, _properties[@"length"]).unsignedLongLongValue;
         _digest = $castIf(NSString, _properties[@"digest"]);
         _contentType = $castIf(NSString, _properties[@"content-type"]);
-        if (!_digest)
+        if (!_digest) {
             C4Warn("Blob read from database has missing digest");
+            _digest = @"";
+        }
     }
     return self;
 }
