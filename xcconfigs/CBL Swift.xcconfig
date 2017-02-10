@@ -1,0 +1,13 @@
+//
+//  CBL Swift.xcconfig
+//  CouchbaseLite
+//
+//  Created by Jens Alfke on 2/9/17.
+//  Copyright © 2017 Couchbase. All rights reserved.
+//
+
+#include "CBL ObjC.xcconfig"
+
+INFOPLIST_FILE               = Swift/Info.plist
+PRODUCT_BUNDLE_IDENTIFIER    = com.couchbase.CouchbaseLiteSwift
+PRODUCT_NAME                 = CouchbaseLiteSwift
