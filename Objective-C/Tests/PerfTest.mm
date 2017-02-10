@@ -57,6 +57,11 @@ static NSString* sResourceDir;
 }
 
 
+- (void) dealloc {
+    [_db close: NULL];
+}
+
+
 - (NSData*) dataFromResource: (NSString*)resourceName ofType: (NSString*)type {
     NSString* path = [[sResourceDir stringByAppendingPathComponent: resourceName]
                                                       stringByAppendingPathExtension: type];
@@ -96,8 +101,13 @@ static NSString* sResourceDir;
 
 
 - (void) setUp { }
+
 - (void) test {AssertAbstractMethod();}
-- (void) tearDown { }
+
+- (void) tearDown {
+    [_db close: NULL];
+    _db = nil;
+}
 
 - (void) run {
     NSLog(@"====== %@ ======", [self class]);

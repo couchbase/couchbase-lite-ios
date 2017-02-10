@@ -39,6 +39,7 @@
 		27A0C85F1E3E7AB600F68646 /* CBLSharedKeys.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */; };
 		27BE3B1D1E4D52C50012B74A /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
 		27BE3B2D1E4D53320012B74A /* CouchbaseLite.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		27BE3B461E4D662B0012B74A /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C6F1E1EFAF600F90659 /* Test_Assertions.m */; };
 		27EF6A821E297BDF004748DF /* CBLQuery.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EF6A7E1E297BDF004748DF /* CBLQuery.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27EF6A831E297BDF004748DF /* CBLQuery.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A7F1E297BDF004748DF /* CBLQuery.mm */; };
 		27EF6A851E297BDF004748DF /* CBLQuery+Predicates.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A811E297BDF004748DF /* CBLQuery+Predicates.mm */; };
@@ -1111,6 +1112,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27BE3B461E4D662B0012B74A /* Test_Assertions.m in Sources */,
 				275FF6161E3FE9DB005F90DD /* PerfTestMain.m in Sources */,
 				275FF6291E3FECD2005F90DD /* TunesPerfTest.mm in Sources */,
 				275FF6391E3FFBC0005F90DD /* PerfTest.mm in Sources */,
