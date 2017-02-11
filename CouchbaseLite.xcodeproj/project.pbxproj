@@ -11,7 +11,6 @@
 		2704F1CA1E395F3300A3B405 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */; };
 		273ADF7D1E36B514001E977F /* sentences.json in Resources */ = {isa = PBXBuildFile; fileRef = 273ADF7C1E36B514001E977F /* sentences.json */; };
 		275F927D1E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275F92741E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework */; };
-		275F92821E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275F92811E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.swift */; };
 		275F92841E4D30A4007FD5A2 /* CouchbaseLiteSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = 275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275F928C1E4D3119007FD5A2 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275F928B1E4D3119007FD5A2 /* Database.swift */; };
 		275F929D1E4D377C007FD5A2 /* CouchbaseLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 9398D9FD1E03531A00464432 /* CouchbaseLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -43,6 +42,10 @@
 		27BE3B4B1E4E46120012B74A /* CBLTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */; };
 		27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */; };
 		27BE3B4F1E4E65EB0012B74A /* DocumentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */; };
+		27BE3B511E4E8F6F0012B74A /* QueryTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B501E4E8F6F0012B74A /* QueryTest.swift */; };
+		27BE3B521E4E916B0012B74A /* names_100.json in Resources */ = {isa = PBXBuildFile; fileRef = 27EF6A951E2AC609004748DF /* names_100.json */; };
+		27BE3B541E4E92210012B74A /* Database+Query.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B531E4E92210012B74A /* Database+Query.swift */; };
+		27BE3B561E4E93000012B74A /* Query.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B551E4E93000012B74A /* Query.swift */; };
 		27EF6A821E297BDF004748DF /* CBLQuery.h in Headers */ = {isa = PBXBuildFile; fileRef = 27EF6A7E1E297BDF004748DF /* CBLQuery.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27EF6A831E297BDF004748DF /* CBLQuery.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A7F1E297BDF004748DF /* CBLQuery.mm */; };
 		27EF6A851E297BDF004748DF /* CBLQuery+Predicates.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A811E297BDF004748DF /* CBLQuery+Predicates.mm */; };
@@ -278,8 +281,7 @@
 		275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CouchbaseLiteSwift.h; sourceTree = "<group>"; };
 		275F92771E4D30A4007FD5A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		275F927C1E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteSwiftTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		275F92811E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CouchbaseLiteSwiftTests.swift; sourceTree = "<group>"; };
-		275F92831E4D30A4007FD5A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		275F92831E4D30A4007FD5A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../../CouchbaseLiteSwiftTests/Info.plist; sourceTree = "<group>"; };
 		275F928B1E4D3119007FD5A2 /* Database.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
 		275F92A51E4D3A91007FD5A2 /* Document.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
 		275F92A71E4D3AFB007FD5A2 /* Properties.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Properties.swift; sourceTree = "<group>"; };
@@ -305,6 +307,9 @@
 		27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CBLTestCase.swift; sourceTree = "<group>"; };
 		27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DatabaseTest.swift; sourceTree = "<group>"; };
 		27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DocumentTest.swift; sourceTree = "<group>"; };
+		27BE3B501E4E8F6F0012B74A /* QueryTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QueryTest.swift; sourceTree = "<group>"; };
+		27BE3B531E4E92210012B74A /* Database+Query.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Database+Query.swift"; sourceTree = "<group>"; };
+		27BE3B551E4E93000012B74A /* Query.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Query.swift; sourceTree = "<group>"; };
 		27EF6A7E1E297BDF004748DF /* CBLQuery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQuery.h; sourceTree = "<group>"; };
 		27EF6A7F1E297BDF004748DF /* CBLQuery.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLQuery.mm; sourceTree = "<group>"; };
 		27EF6A811E297BDF004748DF /* CBLQuery+Predicates.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "CBLQuery+Predicates.mm"; sourceTree = "<group>"; };
@@ -446,22 +451,15 @@
 			isa = PBXGroup;
 			children = (
 				275F928B1E4D3119007FD5A2 /* Database.swift */,
+				27BE3B531E4E92210012B74A /* Database+Query.swift */,
 				275F92A51E4D3A91007FD5A2 /* Document.swift */,
 				275F92A71E4D3AFB007FD5A2 /* Properties.swift */,
+				27BE3B551E4E93000012B74A /* Query.swift */,
 				275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */,
 				275F92771E4D30A4007FD5A2 /* Info.plist */,
 				27BE3B491E4E45CB0012B74A /* Tests */,
 			);
 			path = Swift;
-			sourceTree = "<group>";
-		};
-		275F92801E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests */ = {
-			isa = PBXGroup;
-			children = (
-				275F92811E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.swift */,
-				275F92831E4D30A4007FD5A2 /* Info.plist */,
-			);
-			path = CouchbaseLiteSwiftTests;
 			sourceTree = "<group>";
 		};
 		275FF5FA1E3FBD3B005F90DD /* Performance */ = {
@@ -485,6 +483,8 @@
 				27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */,
 				27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */,
 				27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */,
+				27BE3B501E4E8F6F0012B74A /* QueryTest.swift */,
+				275F92831E4D30A4007FD5A2 /* Info.plist */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -602,7 +602,6 @@
 				9398D9FC1E03531A00464432 /* Objective-C */,
 				9378C5D11E26CC46001BB196 /* xcconfigs */,
 				275FF6651E428A1E005F90DD /* Documentation */,
-				275F92801E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests */,
 				9398D9131E03434200464432 /* Products */,
 				9398D92D1E03467C00464432 /* vendor */,
 				27EF6AF01E32D12C004748DF /* Frameworks */,
@@ -1067,6 +1066,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27BE3B521E4E916B0012B74A /* names_100.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1111,6 +1111,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27BE3B561E4E93000012B74A /* Query.swift in Sources */,
+				27BE3B541E4E92210012B74A /* Database+Query.swift in Sources */,
 				275F92A81E4D3AFB007FD5A2 /* Properties.swift in Sources */,
 				275F92A61E4D3A91007FD5A2 /* Document.swift in Sources */,
 				275F928C1E4D3119007FD5A2 /* Database.swift in Sources */,
@@ -1122,7 +1124,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27BE3B4F1E4E65EB0012B74A /* DocumentTest.swift in Sources */,
-				275F92821E4D30A4007FD5A2 /* CouchbaseLiteSwiftTests.swift in Sources */,
+				27BE3B511E4E8F6F0012B74A /* QueryTest.swift in Sources */,
 				27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */,
 				27BE3B4B1E4E46120012B74A /* CBLTestCase.swift in Sources */,
 			);
