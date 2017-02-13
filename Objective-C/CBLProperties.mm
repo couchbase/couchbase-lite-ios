@@ -31,6 +31,7 @@
     cbl::SharedKeys _sharedKeys;
     FLDict _root;
     NSMutableDictionary* _properties;
+    NSMutableSet* _changesKeys;
     BOOL _hasChanges;
 }
 
@@ -47,30 +48,90 @@
 }
 
 
+- (void) setSharedKeys: (cbl::SharedKeys*)sharedKeys {
+    _sharedKeys = *sharedKeys;
+}
+
+
 - (cbl::SharedKeys*) sharedKeys {
     return &_sharedKeys;
 }
 
 
 - (nullable NSDictionary*) properties {
-    if (!_properties)
+    if (!_properties && !self.hasChanges)
         _properties = [self.savedProperties mutableCopy];
+    else if (_root && !self.hasChanges)
+        [self loadRootIntoProperties];
     return _properties;
 }
 
 
 - (void) setProperties: (NSDictionary*)properties {
-    NSMutableDictionary* props = properties ? [properties mutableCopy] : [NSMutableDictionary dictionary];
+    if (properties == _properties)
+        return;
+    
+    // Convert each property value if needed, build up changedKeys set, and invalidate
+    // obsolete subdocuments:
+    NSMutableSet* changesKeys = [NSMutableSet setWithCapacity: [properties count]];
+    NSMutableDictionary* result = properties ? [properties mutableCopy] : nil;
     [properties enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
-        if([value isKindOfClass:[NSDictionary class]]) {
-            id converted = [self convertDictionary:value];
-            if (converted)
-                props[key] = converted;
-        }
+        result[key] = [self convertValue: value oldValue: _properties[key] forKey: key];
+        [changesKeys addObject: key];
     }];
+    
+    // Invalidate obsolete subdocuments from the current _properties:
+    if ([_properties count] > 0) {
+        NSSet* oldKeys = [NSSet setWithArray: [_properties allKeys]];
+        NSSet* removedKeys = [NSSet my_differenceOfSet: oldKeys andSet: changesKeys];
+        for (NSString* key in removedKeys) {
+            [self invalidateIfSubdocument: _properties[key]];
+        }
+    }
+    
+    // Add keys from _root that do not exist in the changedKeys (deleting):
+    if (_root) {
+        FLDictIterator iter;
+        FLDictIterator_Begin(_root, &iter);
+        NSString *key;
+        while (nullptr != (key = FLDictIterator_GetKey(&iter, &_sharedKeys))) {
+            if (![changesKeys containsObject: key])
+                [changesKeys addObject: key];
+            FLDictIterator_Next(&iter);
+        }
+    }
+    
+    // Update _properties:
+    _properties = result;
+    
+    // Mark changes:
+    _changesKeys = changesKeys;
+    self.hasChanges = YES;
+}
 
-    _properties = props;
-    [self markChanges];
+
+- (void) revert {
+    for (NSString* key in _changesKeys) {
+        id value = _properties[key];
+        if ([value isKindOfClass:[CBLSubdocument class]]) {
+            CBLSubdocument* subdoc = $cast(CBLSubdocument, value);
+            if ([subdoc hasRoot]) {
+                [subdoc revert];
+                continue; // Keep the subdocument value:
+            }
+            // Invalidate the subdocument set to the properties:
+            [subdoc invalidate];
+        } else if ([value isKindOfClass: [NSArray class]]) {
+            for (id v in value) {
+                CBLSubdocument* subdoc = $castIf(CBLSubdocument, v);
+                if (subdoc)
+                    [subdoc invalidate];
+            }
+        }
+        _properties[key] = nil;
+    }
+    _changesKeys = nil;
+    self.hasChanges = NO;
 }
 
 
@@ -80,52 +141,55 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (BOOL) booleanForKey: (NSString*)key {
-    if (_properties)
-        return [numberProperty(_properties, key) boolValue];
-    else
+    id v = _properties[key];
+    if (v) {
+        if ([v isKindOfClass: [NSNull class]])
+            return NO;
+        else {
+            id n = $castIf(NSNumber, v);
+            return n ? [n boolValue] : YES;
+        }
+    } else
         return FLValue_AsBool([self fleeceValueForKey: key]);
 }
 
 
 - (nullable NSDate*) dateForKey: (NSString*)key {
-    return [CBLJSON dateWithJSONObject: self[key]];
+    NSString* dateStr = [self stringForKey: key];
+    return [CBLJSON dateWithJSONObject: dateStr];
 }
 
 
 - (double) doubleForKey: (NSString*)key {
-    if (_properties)
-        return [numberProperty(_properties, key) doubleValue];
-    else
-        return FLValue_AsDouble([self fleeceValueForKey: key]);
+    id v = numberProperty(_properties, key);
+    return v ? [v doubleValue] : FLValue_AsDouble([self fleeceValueForKey: key]);
 }
 
 
 - (float) floatForKey: (NSString*)key {
-    if (_properties)
-        return [numberProperty(_properties, key) floatValue];
-    else
-        return FLValue_AsFloat([self fleeceValueForKey: key]);
+    id v = numberProperty(_properties, key);
+    return v ? [v floatValue] : FLValue_AsFloat([self fleeceValueForKey: key]);
 }
 
 
 - (NSInteger) integerForKey: (NSString*)key {
-    if (_properties)
-        return [numberProperty(_properties, key) integerValue];
-    else
-        return (NSInteger)FLValue_AsInt([self fleeceValueForKey: key]);
+    id v = numberProperty(_properties, key);
+    return v ? [v integerValue] : FLValue_AsInt([self fleeceValueForKey: key]);
 }
 
 
 - (nullable id) objectForKey: (NSString*)key {
-    return [self objectForKeyedSubscript: key];
+    return self[key];
 }
 
 
 - (nullable NSString*) stringForKey: (NSString*)key {
-    if (_properties)
-        return $castIf(NSString, _properties[key]);
-    else
-        return slice2string((FLValue_AsString([self fleeceValueForKey: key])));
+    return $castIf(NSString, self[key]);
+}
+
+
+- (nullable CBLSubdocument*) subdocumentForKey: (NSString*)key {
+    return $castIf(CBLSubdocument, self[key]);
 }
 
 
@@ -160,8 +224,8 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (BOOL) containsObjectForKey: (NSString*)key {
-    if (_properties)
-        return _properties[key] != nil;
+    if (_properties[key])
+        return YES;
     else
         return [self fleeceValueForKey: key]  != nullptr;
 }
@@ -171,22 +235,23 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (nullable id) objectForKeyedSubscript: (NSString*)key {
-    if (_properties)
-        return _properties[key];
-    else
-        return [self fleeceValueToObject: [self fleeceValueForKey: key]];
+    id obj = _properties[key];
+    if (obj || self.hasChanges)
+        return obj;
+    
+    obj = [self fleeceValueToObject: [self fleeceValueForKey: key] forKey: key];
+    [self cacheValue: obj forKey: key changed: NO];
+    return obj;
 }
 
 
 - (void) setObject: (nullable id)value forKeyedSubscript: (NSString*)key {
-    // NSDate:
-    if ([value isKindOfClass: NSDate.class])
-        value = [CBLJSON JSONObjectWithDate: value];
-
-    if (_hasChanges || !$equal(value, self[key])) {
+    id oldValue = self[key];
+    if (!$equal(value, oldValue)) {
+        value = [self convertValue: value oldValue: oldValue forKey: key];
         [self mutateProperties];
-        [_properties setValue: value forKey: key];
-        [self markChanges];
+        [self cacheValue: value forKey: key changed: YES];
+        [self markChangedKey: key];
     }
 }
 
@@ -200,23 +265,92 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 }
 
 
-- (void) resetChanges {
-    _properties = nil;
-    self.hasChanges = NO;
+// Update all subdocuments in _properties with the new FLDict values and invalidate all
+// obsolete subdocuments. Other properties beside subdocuments and array will be removed so that
+// they can be reread from the new root. This method is called after the new root has been updated
+// to the document when saving the document or updating the document from external changes.
+- (void) useNewRoot {
+    if (!_properties)
+        return;
+    
+    NSDictionary* nuProps = [_properties my_dictionaryByUpdatingValues: ^id(id key, id value) {
+        FLValue fValue = [self fleeceValueForKey: key];
+        return [self updateRootIfSubdocument: value withFleeceValue: fValue forKey: key];
+    }];
+    _properties = [nuProps mutableCopy];
 }
 
 
-- (BOOL)storeBlob:(CBLBlob *)blob error:(NSError **)error {
+- (id) updateRootIfSubdocument: (id)value withFleeceValue: (FLValue)fValue forKey: (NSString*)key {
+    if ([value isKindOfClass: [CBLSubdocument class]]) {
+        CBLSubdocument* subdoc = $cast(CBLSubdocument, value);
+        FLDict dict = FLValue_AsDict(fValue);
+        if (dict == nullptr) {
+            [self invalidateIfSubdocument: subdoc];
+            return nil;
+        }
+        
+        subdoc.sharedKeys = self.sharedKeys;
+        [subdoc setRootDict: dict];
+        [subdoc useNewRoot];
+        return subdoc;
+    } else if ([value isKindOfClass: [NSArray class]]) {
+        FLArray fArray = FLValue_AsArray(fValue);
+        if (fArray == nullptr) {
+            [self invalidateIfSubdocument: value];
+            return nil;
+        }
+        
+        NSArray* array = $cast(NSArray, value);
+        NSMutableArray* result = [NSMutableArray arrayWithCapacity: FLArray_Count(fArray)];
+        uint i = 0;
+        FLArrayIterator iter;
+        FLArrayIterator_Begin(fArray, &iter);
+        FLValue item;
+        while (nullptr != (item = FLArrayIterator_GetValue(&iter))) {
+            id obj = i < [array count] ? array[i++] : nil;
+            if (obj)
+                obj = [self updateRootIfSubdocument: obj withFleeceValue: item forKey: key];
+            obj = obj ?: [self fleeceValueToObject: item forKey: key];
+            [result addObject: obj];
+            FLArrayIterator_Next(&iter);
+        }
+        
+        // Invalidate the rest of the subdocuments not including in the new array:
+        for (; i < [array count]; i++) {
+            [self invalidateIfSubdocument: array[i]];
+        }
+        return result;
+    }
+    return nil;
+}
+
+
+- (BOOL) hasRoot {
+    return _root != nullptr;
+}
+
+
+- (nullable NSDictionary*) savedProperties {
+    if (_properties && !self.hasChanges) {
+        [self loadRootIntoProperties];
+        return _properties;
+    } else
+        return [self fleeceRootToDictionary: _root];
+}
+
+
+- (BOOL) storeBlob: (CBLBlob*)blob error: (NSError**)error {
     AssertAbstractMethod();
 }
 
 
-- (CBLBlob *)blobWithProperties:(NSDictionary *)properties error:(NSError **)error {
+- (CBLBlob*) blobWithProperties: (NSDictionary*)properties error: (NSError**)error {
     AssertAbstractMethod();
 }
 
 
-- (FLSliceResult)encodeWith:(FLEncoder)encoder error:(NSError **)outError {
+- (FLSliceResult) encodeWith: (FLEncoder)encoder error: (NSError**)outError {
     FLEncoder_BeginDict(encoder, [_properties count]);
     for (NSString *key in _properties) {
         CBLStringBytes bKey(key);
@@ -239,17 +373,6 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 }
 
 
-- (void) propertiesDidChange { }
-
-
-- (nullable NSDictionary*) savedProperties {
-    if (_properties && !self.hasChanges)
-        return _properties;
-    else
-        return [self fleeceRootToDictionary: _root];
-}
-
-
 #pragma mark - PRIVATE:
 
 
@@ -258,27 +381,213 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
         _properties = [[self fleeceRootToDictionary: _root] mutableCopy];
         if (!_properties)
             _properties = [NSMutableDictionary new];
+    } else if (_root != nullptr && !self.hasChanges)
+        [self loadRootIntoProperties];
+}
+
+
+- (void) loadRootIntoProperties {
+    assert(!self.hasChanges);
+    assert(_root != nullptr && _properties);
+    
+    if ([_properties count] == FLDict_Count(_root))
+        return; // already loaded.
+    
+    FLDictIterator iter;
+    FLDictIterator_Begin(_root, &iter);
+    NSString *key;
+    while (nullptr != (key = FLDictIterator_GetKey(&iter, &_sharedKeys))) {
+        if (!_properties[key])
+            _properties[key] = [self fleeceValueToObject: FLDictIterator_GetValue(&iter) forKey: key];
+        FLDictIterator_Next(&iter);
     }
 }
 
 
-- (void) markChanges {
-    if (!_hasChanges)
-        self.hasChanges = YES;
+- (void) markChangedKey: (NSString*)key {
+    if (![_changesKeys containsObject: key]) {
+        if (!_changesKeys)
+            _changesKeys = [NSMutableSet set];
+        [_changesKeys addObject: key];
+        
+        if (!_hasChanges)
+            self.hasChanges = YES;
+    }
+}
+
+
+- (void) resetChangesKeys {
+    [_properties enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+        [self resetChangesKeysIfSubdocument: obj];
+    }];
+    
+    _changesKeys = nil;
+    self.hasChanges = NO;
+}
+
+
+- (void) resetChangesKeysIfSubdocument: (id)value {
+    if ([value isKindOfClass: [CBLSubdocument class]]) {
+        CBLSubdocument* subdoc = $cast(CBLSubdocument, value);
+        [subdoc resetChangesKeys];
+    } else if ([value isKindOfClass: [NSArray class]]) {
+        NSArray* array = $cast(NSArray, value);
+        for (id obj in array) {
+            [self resetChangesKeysIfSubdocument: obj];
+        }
+    }
+}
+
+
+// Cache all value if changed = YES, but cache only subdocument or array if changed = NO.
+- (void) cacheValue: (nullable id)value forKey: (NSString*)key changed: (BOOL)changed {
+    if (changed ||
+        [value isKindOfClass: [CBLSubdocument class]] ||
+        [value isKindOfClass: [NSArray class]]) {
+        if (!_properties)
+            _properties = [NSMutableDictionary dictionary];
+        [_properties setValue: value forKey: key];
+    }
+}
+
+
+- (id) convertValue: (nullable id)value oldValue: (nullable id)oldValue forKey: (NSString*)key {
+    if ($equal(value, oldValue))
+        return value; // nothing to convert
+    
+    if ([value isKindOfClass: [NSDate class]])
+        return [CBLJSON JSONObjectWithDate: value];
+    else if ([value isKindOfClass: [CBLSubdocument class]])
+        return [self convertSubdoc: value oldValue: oldValue forKey: key];
+    else if ([value isKindOfClass: [NSDictionary class]])
+        return [self convertDict: value oldValue: oldValue forKey: key];
+    else if ([value isKindOfClass: [NSArray class]])
+        return [self convertArray: value oldVale: oldValue forKey: key];
+    else {
+        [self invalidateIfSubdocument: oldValue];
+        return value;
+    }
+}
+
+
+- (id) convertSubdoc: (CBLSubdocument*)subdoc oldValue: (nullable id)oldValue forKey: (NSString*)key {
+    // If the subdocument has already set to a property, copy its properties:
+    id parent = subdoc.parent; // Make strong parent
+    if (parent) {
+        CBLSubdocument* oldSubdoc = $castIf(CBLSubdocument, oldValue);
+        if (parent == self && $equal(subdoc.key, key)) { // e.g. array reorder case:
+            if (oldSubdoc)
+                [oldSubdoc invalidate];
+            return subdoc;
+        } else {
+            // Copy the properties value into the old subdocument or copy the new subdoc:
+            if (oldSubdoc) {
+                oldSubdoc.properties = subdoc.properties;
+                return oldSubdoc;
+            } else
+                subdoc = [subdoc copy];
+        }
+    }
+    
+    // Install subdocument:
+    subdoc.parent = self;
+    subdoc.key = key;
+    [subdoc setOnMutate: [self onMutateBlockForKey: key]];
+    
+    // Invalidate the old absolete subdocument:
+    [self invalidateIfSubdocument: oldValue];
+    
+    return subdoc;
+}
+
+
+- (id) convertDict: (NSDictionary*)dict oldValue: (nullable id)oldValue forKey: (NSString*)key {
+    id obj = [self convertDictionary: dict];
+    if (!obj) {
+        CBLSubdocument* subdoc = $castIf(CBLSubdocument, oldValue);
+        if (!subdoc)
+            subdoc = [self createSubdocumentForKey: key];
+        subdoc.properties = dict;
+        return subdoc;
+    }
+    return obj;
+}
+
+
+- (id) convertArray: (NSArray*)array oldVale: (nullable id)oldValue forKey: (NSString*)key {
+    NSMutableArray* result = [NSMutableArray arrayWithCapacity: [array count]];
+    NSArray* oldArray = $castIf(NSArray, oldValue);
+    
+    NSMutableSet* arraySet = nil;
+    if ([oldArray count] > 0)
+        arraySet = [NSMutableSet setWithArray: array];
+    
+    uint i;
+    for (i = 0; i < [array count]; i++) {
+        id nValue = array[i];
+        id oValue = [oldArray count] > i ? oldArray[i] : nil;
+        
+        // FIXME: Array can be nested, using a simple arraySet is not enough 
+        if ([oValue isKindOfClass: [CBLSubdocument class]] && [arraySet containsObject: oValue]) {
+            // Prevent the subdocument to be invalidated so the subdocument can be reordered:
+            oValue = nil;
+        }
+        
+        nValue = [self convertValue: nValue oldValue: oValue forKey: key];
+        [result addObject: nValue];
+    }
+    
+    // Invalidate the rest of the old array values that are not included in the result:
+    for (; i < [oldArray count]; i++) {
+        [self invalidateIfSubdocument: oldArray[i]];
+    }
+    
+    return result;
+}
+
+
+- (CBLSubdocument*) createSubdocumentForKey: (NSString*)key {
+    cbl::SharedKeys sk(*self.sharedKeys);
+    CBLSubdocument* subdoc = [[CBLSubdocument alloc] initWithParent: self sharedKeys: sk];
+    subdoc.key = key;
+    [subdoc setOnMutate: [self onMutateBlockForKey: key]];
+    return subdoc;
+}
+
+
+- (CBLOnMutateBlock) onMutateBlockForKey: (NSString*)key {
+    __weak typeof(self) weakSelf = self;
+    return ^{
+        __strong typeof(self) strongSelf = weakSelf;
+        [strongSelf markChangedKey: key];
+    };
+}
+
+
+// Invalidate Subdocument or Subdocuments in an array:
+- (void) invalidateIfSubdocument: (id)value  {
+    if ([value isKindOfClass: [CBLSubdocument class]])
+        [value invalidate];
+    else if ([value isKindOfClass: [NSArray class]]) {
+        for (id v in value ) {
+            [self invalidateIfSubdocument: v];
+        }
+    }
 }
 
 
 #pragma mark - PRIVATE: FLEECE
 
-- (id)convertDictionary:(NSDictionary *)dict {
-    NSString *type = dict[@"_cbltype"];
-    if([type isEqualToString:@"blob"]) {
-        return [self blobWithProperties:dict error:nil];
-    }
 
-    // Invalid!
-    return nil;
+- (id) convertDictionary: (NSDictionary*)dict {
+    NSString* type = dict[@"_cbltype"];
+    if (type) {
+        if ([type isEqualToString: @"blob"])
+            return [self blobWithProperties: dict error: nil];
+    }
+    return nil; // Invalid!
 }
+
 
 - (FLSlice)typeForDict:(FLDict)dict {
     FLSlice typeKey = FLSTR("_cbltype");
@@ -292,7 +601,7 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 }
 
 
-- (id) fleeceValueToObject: (FLValue)value {
+- (id) fleeceValueToObject: (FLValue)value forKey: (NSString*)key {
     switch (FLValue_GetType(value)) {
         case kFLArray: {
             FLArray array = FLValue_AsArray(value);
@@ -301,7 +610,7 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
             auto result = [[NSMutableArray alloc] initWithCapacity: FLArray_Count(array)];
             FLValue item;
             while (nullptr != (item = FLArrayIterator_GetValue(&iter))) {
-                [result addObject: [self fleeceValueToObject: item]];
+                [result addObject: [self fleeceValueToObject: item forKey: key]];
                 FLArrayIterator_Next(&iter);
             }
             return result;
@@ -310,12 +619,13 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
             FLDict dict = FLValue_AsDict(value);
             FLSlice type = [self typeForDict:dict];
             if(!type.buf) {
-                // TODO: convert to subdocument (using 'dict')
-                return FLValue_GetNSObject(value, &_sharedKeys);
+                CBLSubdocument* subdoc = [self createSubdocumentForKey: key];
+                [subdoc setRootDict: dict];
+                return subdoc;
             }
-
+            
             id result = FLValue_GetNSObject(value, &_sharedKeys);
-            return [self convertDictionary:result];
+            return [self convertDictionary: result];
         }
         default:
             return FLValue_GetNSObject(value, &_sharedKeys);
@@ -332,7 +642,7 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
     FLDictIterator_Begin(root, &iter);
     NSString *key;
     while (nullptr != (key = FLDictIterator_GetKey(&iter, &_sharedKeys))) {
-        dict[key] = [self fleeceValueToObject: FLDictIterator_GetValue(&iter)];
+        dict[key] = [self fleeceValueToObject: FLDictIterator_GetValue(&iter) forKey: key];
         FLDictIterator_Next(&iter);
     }
     return dict;
@@ -362,6 +672,3 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 @end
-
-// TODO:
-// * Subdocument (In progress)

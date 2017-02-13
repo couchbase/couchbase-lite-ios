@@ -11,6 +11,7 @@
 #import "Fleece.h"
 #import "CBLDatabase.h"
 #import "CBLDocument.h"
+#import "CBLSubdocument.h"
 #import "CBLBlob.h"
 
 struct c4BlobStore;
@@ -58,24 +59,33 @@ NS_ASSUME_NONNULL_BEGIN
 
 #ifdef __cplusplus
 - (instancetype) initWithSharedKeys: (cbl::SharedKeys)sharedKeys;
-@property (readonly, nonatomic) cbl::SharedKeys* sharedKeys;
+@property (nonatomic) cbl::SharedKeys* sharedKeys;
 #endif
 
 // Having changes flag
 @property (nonatomic) BOOL hasChanges;
 
 // Called after a change occurs
-- (void) markChanges;
+- (void) markChangedKey: (NSString*)key;
+
+// Reset all changes keys and mark hasChanges status to NO:
+- (void) resetChangesKeys;
 
 // Set the root properties. After calling this method, the current changes will
 // be on top of the new root properties and the hasChanges flag will be reset.
 - (void) setRootDict: (nullable FLDict)root;
 
-// Reset both current changes and hasChanges flag.
-- (void) resetChanges;
+// Update all subdocuments in properties with the new FLDict values from the new root, and
+// invalidate all obsolete subdocuments. This method is called after the document is saved.
+- (void) useNewRoot;
 
+// Check whether the properties has the root properties set or not.
+- (BOOL) hasRoot;
+
+// Encode the current properties into a fleece object.
 - (FLSliceResult)encodeWith:(FLEncoder)encoder error:(NSError **)outError;
 
+// The current saved properties.
 - (nullable NSDictionary *)savedProperties;
 
 // Subclass should implement this to write binary files to disk
@@ -99,6 +109,28 @@ NS_ASSUME_NONNULL_BEGIN
                             error: (NSError**)outError;
 
 - (void)changedExternally;
+@end
+
+
+/// CBLSubdocument:
+
+typedef void (^CBLOnMutateBlock)();
+
+@interface CBLSubdocument ()
+
+@property (weak, nonatomic, nullable) CBLProperties* parent;
+
+@property (nonatomic, nullable) NSString* key;
+
+#ifdef __cplusplus
+- (instancetype) initWithParent: (nullable CBLProperties*)parent
+                     sharedKeys: (cbl::SharedKeys)sharedKeys;
+#endif
+
+- (void) setOnMutate: (nullable CBLOnMutateBlock)onMutate;
+
+- (void) invalidate;
+
 @end
 
 
