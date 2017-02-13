@@ -227,7 +227,7 @@ C4LogDomain kCBLQueryLogDomain;
     options.skip = _offset;
     options.limit = _limit;
     NSData* paramJSON = nil;
-    if (_parameters) {
+    if (_parameters.count > 0) {
         paramJSON = [NSJSONSerialization dataWithJSONObject: _parameters
                                                     options: 0
                                                       error: outError];

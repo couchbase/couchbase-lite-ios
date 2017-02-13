@@ -64,16 +64,6 @@ public struct DatabaseOptions {
 }
 
 
-public typealias IndexType = CBLIndexType
-
-/** Specifies the type of index to create, and parameters for certain types of indexes. */
-public enum IndexOptions {
-    case valueIndex
-    case fullTextIndex (language: String?, ignoreDiacritics: Bool)
-    case geoIndex
-}
-
-
 
 /** A Couchbase Lite database. */
 public final class Database {
@@ -183,10 +173,14 @@ public final class Database {
         return _impl.documentExists(docID)
     }
 
+
     /** The conflict resolver for this database.
         If nil, a default algorithm will be used, where the revision with more history wins.
         An individual document can override this for itself by setting its own property. */
-    public var conflictResolver: ConflictResolver?
+    public var conflictResolver: ConflictResolver? {
+        get {return _impl.conflictResolver}
+        set {_impl.conflictResolver = newValue}
+    }
 
 
     let _impl : CBLDatabase

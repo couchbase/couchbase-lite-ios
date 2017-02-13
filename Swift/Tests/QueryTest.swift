@@ -27,7 +27,7 @@ class QueryTest: CBLTestCase {
     func testNoWhereQuery() throws {
         try loadJSONResource(resourceName: "names_100")
 
-        let query = db.createQueryWhere(nil)
+        let query = db.createQuery()
         let n = try verifyQuery(query) { (n, row) in
             let expectedID = String(format: "doc-%03llu", n);
             XCTAssertEqual(row.documentID, expectedID);
@@ -43,7 +43,7 @@ class QueryTest: CBLTestCase {
         try loadJSONResource(resourceName: "names_100")
 
         for _ in 0...1 {
-            let query = db.createQueryWhere("name.first == $FIRSTNAME")
+            let query = db.createQuery(where: "name.first == $FIRSTNAME")
             print("Query = \(try query.explain())")
             query.parameters = ["FIRSTNAME": "Claude"]
             let n = try verifyQuery(query) { (n, row) in
@@ -58,6 +58,30 @@ class QueryTest: CBLTestCase {
             try db.createIndex([NSExpression(forKeyPath: "name.first")])
         }
     }
+
+    func testProjection() throws {
+        let expectedDocs = ["doc-076", "doc-008", "doc-014"]
+        let expectedZips = ["55587", "56307", "56308"]
+        let expectedEmails = [ ["monte.mihlfeld@nosql-matters.org"],
+                               ["jennefer.menning@nosql-matters.org", "jennefer@nosql-matters.org"],
+                               ["stephen.jakovac@nosql-matters.org"] ]
+
+        try loadJSONResource(resourceName: "names_100")
+        let query = db.createQuery(where: "contact.address.state == $STATE",
+                                   returning: ["contact.address.zip", "contact.email"],
+                                   orderBy: ["contact.address.zip"])
+        query.parameters = ["STATE": "MN"]
+        let numRows = try verifyQuery(query) {(n: UInt64, row) in
+            let i = Int(n - UInt64(1))
+            XCTAssertEqual(row.documentID, expectedDocs[i])
+            let zip: String? = row[0]
+            let emails = row.value(at: 1) as? [String]
+            XCTAssertEqual(zip, expectedZips[i])
+            XCTAssertEqual(emails!, expectedEmails[i])
+        }
+        XCTAssertEqual(numRows, 3)
+    }
+
 
 
     func verifyQuery(_ query: Query, block: (UInt64, QueryRow) throws ->Void) throws -> UInt64 {

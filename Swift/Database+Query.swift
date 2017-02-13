@@ -16,14 +16,18 @@ extension Database {
         return DocumentIterator(database: self, enumerator: _impl.allDocuments())
     }
 
+    
      /** Compiles a database query, from any of several input formats.
-     Once compiled, the query can be run many times with different parameter values.
-     The rows will be sorted by ascending document ID, and no custom values are returned.
-     @param where  The query specification. This can be an NSPredicate, or an NSString (interpreted
-     as an NSPredicate format string), or nil to return all documents.
-     @return  The Query. */
-    public func createQueryWhere(_ wher: Any?) -> Query {
-        return Query(impl: _impl.createQueryWhere(nil), inDatabase: self, where: wher)
+         Once compiled, the query can be run many times with different parameter values.*/
+    public func createQuery(where wher: Predicate? = nil,
+                            groupBy: [Expression]? = nil,
+                            having: Predicate? = nil,
+                            returning: [Expression]? = nil,
+                            distinct: Bool = false,
+                            orderBy: [SortDescriptor]? = nil) -> Query
+    {
+        return Query(from: self, where: wher, groupBy: groupBy, having: having,
+                     returning: returning, distinct: distinct, orderBy: orderBy)
     }
 
 
@@ -34,7 +38,7 @@ extension Database {
      or NSStrings that are expression format strings.
      @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
      @return  True on success, false on failure. */
-    public func createIndex(_ expressions: [Any]) throws {
+    public func createIndex(_ expressions: [Expression]) throws {
         try _impl.createIndex(on: expressions)
     }
 
@@ -48,7 +52,7 @@ extension Database {
      @param options  Options affecting the index, or NULL for default settings.
      @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
      @return  True on success, false on failure. */
-    public func createIndex(_ expressions: [Any], options: IndexOptions) throws {
+    public func createIndex(_ expressions: [Expression], options: IndexOptions) throws {
         var cblType: CBLIndexType
         var cblOptions = CBLIndexOptions()
         var language: String?
@@ -79,31 +83,19 @@ extension Database {
      @param type  Type of index.
      @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
      @return  True if the index existed and was deleted, false if it did not exist. */
-    public func deleteIndex(on expressions: [Any], type: IndexType) throws {
+    public func deleteIndex(on expressions: [Expression], type: IndexType) throws {
         try deleteIndex(on: expressions, type: type)
     }
 
 }
 
 
-/** An iterator of Documents in a Database, returned by Database.allDocuments */
-public struct DocumentIterator : Sequence, IteratorProtocol {
+public typealias IndexType = CBLIndexType
 
-    public typealias Element = Document
 
-    public mutating func next() -> Document? {
-        if let doc = _enumerator.nextObject() as? CBLDocument {
-            return Document(doc, inDatabase: _database)
-        } else {
-            return nil
-        }
-    }
-
-    init(database: Database, enumerator: NSEnumerator) {
-        _database = database
-        _enumerator = enumerator
-    }
-
-    let _database: Database
-    let _enumerator: NSEnumerator
+/** Specifies the type of index to create, and parameters for certain types of indexes. */
+public enum IndexOptions {
+    case valueIndex
+    case fullTextIndex (language: String?, ignoreDiacritics: Bool)
+    case geoIndex
 }
