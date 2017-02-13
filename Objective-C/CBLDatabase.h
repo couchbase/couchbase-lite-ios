@@ -67,6 +67,13 @@ typedef struct {
 /** If YES, the database will be opened read-only. */
 @property (nonatomic) BOOL readOnly;
 
+/** The dispatch queue used to serialize access to the database manager (and its child objects.)
+ Setting this is optional: by default the objects are bound to the thread on which the database
+ manager was instantiated. By setting a dispatch queue, you can call the objects from within that
+ queue no matter what the underlying thread is, and notifications will be posted on that queue
+ as well. */
+@property (nonatomic, nullable) dispatch_queue_t dispatchQueue;
+
 /** Creates a new instance with a default set of options for a CBLDatabase. */
 + (instancetype) defaultOptions;
 
@@ -81,6 +88,11 @@ typedef struct {
 
 /** The database's path. If the database is closed or deleted, nil value will be returned. */
 @property (readonly, nonatomic, nullable) NSString* path;
+
+/** The conflict resolver for this database.
+ If nil, a default algorithm will be used, where the revision with more history wins.
+ An individual document can override this for itself by setting its own property. */
+@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
 
 /** Initializes a database object with a given name and the default database options.
     If the database does not yet exist, it will be created.
@@ -149,10 +161,18 @@ typedef struct {
 /** Checks whether the document of the given ID exists in the database or not. */
 - (BOOL) documentExists: (NSString*)docID;
 
-/** The conflict resolver for this database.
-    If nil, a default algorithm will be used, where the revision with more history wins.
-    An individual document can override this for itself by setting its own property. */
-@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
+#pragma mark - THREADING:
+
+/** Runs the block asynchronously on the database's dispatch queue or thread.
+    Unlike the rest of the API, this can be called from any thread, and provides a limited form
+    of multithreaded access to Couchbase Lite. */
+- (void) doAsync: (void (^)())block;
+
+/** Runs the block _synchronously_ on the database's dispatch queue or thread: this method does
+    not return until after the block has completed.
+    Unlike the rest of the API, this can _only_ be called from other threads/queues: If calling it
+    from the same thread or dispatch queue that the database runs on, **it will deadlock!** */
+- (void) doSync: (void (^)())block;
 
 
 #pragma mark - QUERYING:
