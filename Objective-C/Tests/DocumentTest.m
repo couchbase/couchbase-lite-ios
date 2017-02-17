@@ -221,10 +221,12 @@
 
 - (void) testPropertyAccessors {
     // Premitives:
-    [doc setBoolean: YES forKey: @"bool"];
+    [doc setBoolean: YES forKey: @"yes"];
+    [doc setBoolean: NO forKey: @"no"];
     [doc setDouble: 1.1 forKey: @"double"];
     [doc setFloat: 1.2f forKey: @"float"];
     [doc setInteger: 2 forKey: @"integer"];
+    [doc setInteger: 0 forKey: @"zero"];
     
     // Objects:
     [doc setObject: @"str" forKey: @"string"];
@@ -232,6 +234,12 @@
     [doc setObject: @(1) forKey: @"number"];
     [doc setObject: @{@"foo": @"bar"} forKey: @"dict"];
     [doc setObject: @[@"1", @"2"] forKey: @"array"];
+    
+    // Subdocuments:
+    CBLSubdocument* subdoc = [CBLSubdocument subdocument];
+    [subdoc setObject: @"scottie" forKey: @"firstname"];
+    [subdoc setObject: @"zebra" forKey: @"lastname"];
+    [doc setObject: subdoc forKey: @"subdoc"];
     
     // NSNull:
     [doc setObject: [NSNull null] forKey: @"null"];
@@ -245,17 +253,29 @@
     Assert([doc save: &error], @"Error saving: %@", error);
     
     // Primitives:
-    AssertEqual([doc booleanForKey: @"bool"], YES);
+    AssertEqual([doc booleanForKey: @"yes"], YES);
+    AssertEqual([doc booleanForKey: @"no"], NO);
     AssertEqual([doc doubleForKey: @"double"], 1.1);
     AssertEqual([doc floatForKey: @"float"], @(1.2).floatValue);
     AssertEqual([doc integerForKey: @"integer"], 2);
+    AssertEqual([doc integerForKey: @"zero"], 0);
     
     // Objects:
-    AssertEqualObjects([doc stringForKey: @"string"], @"str");
+    AssertEqualObjects([doc objectForKey: @"string"], @"str");
     AssertEqualObjects([doc objectForKey: @"boolObj"], @(YES));
     AssertEqualObjects([doc objectForKey: @"number"], @(1));
-    AssertEqualObjects([doc objectForKey: @"dict"], @{@"foo": @"bar"});
     AssertEqualObjects([doc objectForKey: @"array"], (@[@"1", @"2"]));
+    AssertEqualObjects(((CBLSubdocument*)[doc objectForKey: @"dict"]).properties, @{@"foo": @"bar"});
+    
+    // String:
+    AssertEqualObjects([doc stringForKey: @"string"], @"str");
+    
+    // Subdocuments:
+    subdoc = [doc subdocumentForKey: @"subdoc"];
+    AssertNotNil(subdoc);
+    AssertEqualObjects(subdoc, [doc objectForKey: @"subdoc"]);
+    AssertEqualObjects([subdoc objectForKey: @"firstname"], @"scottie");
+    AssertEqualObjects([subdoc objectForKey: @"lastname"], @"zebra");
     
     // NSNull:
     AssertEqualObjects([doc objectForKey: @"null"], [NSNull null]);
@@ -265,33 +285,65 @@
     AssertEqualObjects([CBLJSON JSONObjectWithDate: [doc dateForKey: @"date"]],
                        [CBLJSON JSONObjectWithDate: date]);
     
+    // Boolean:
+    Assert([doc booleanForKey:@"double"]);
+    Assert([doc booleanForKey:@"float"]);
+    Assert([doc booleanForKey:@"integer"]);
+    Assert([doc booleanForKey:@"string"]);
+    Assert([doc booleanForKey:@"array"]);
+    Assert([doc booleanForKey:@"dict"]);
+    AssertFalse([doc booleanForKey:@"zero"]);
+    AssertFalse([doc booleanForKey:@"null"]);
+    
     ////// Reopen the database and get the document again:
 
     doc = nil;
     [self reopenDB];
     
-    CBLDocument* doc1 = [self.db documentWithID: @"doc1"];
+    doc = [self.db documentWithID: @"doc1"];
     
     // Primitives:
-    AssertEqual([doc1 booleanForKey: @"bool"], YES);
-    AssertEqual([doc1 doubleForKey: @"double"], 1.1);
-    AssertEqual([doc1 floatForKey: @"float"], @(1.2).floatValue);
-    AssertEqual([doc1 integerForKey: @"integer"], 2);
+    AssertEqual([doc booleanForKey: @"yes"], YES);
+    AssertEqual([doc booleanForKey: @"no"], NO);
+    AssertEqual([doc doubleForKey: @"double"], 1.1);
+    AssertEqual([doc floatForKey: @"float"], @(1.2).floatValue);
+    AssertEqual([doc integerForKey: @"integer"], 2);
+    AssertEqual([doc integerForKey: @"zero"], 0);
     
     // Objects:
-    AssertEqualObjects([doc1 stringForKey: @"string"], @"str");
-    AssertEqualObjects([doc1 objectForKey: @"boolObj"], @(YES));
-    AssertEqualObjects([doc1 objectForKey: @"number"], @(1));
-    AssertEqualObjects([doc1 objectForKey: @"dict"], @{@"foo": @"bar"});
-    AssertEqualObjects([doc1 objectForKey: @"array"], (@[@"1", @"2"]));
+    AssertEqualObjects([doc objectForKey: @"string"], @"str");
+    AssertEqualObjects([doc objectForKey: @"boolObj"], @(YES));
+    AssertEqualObjects([doc objectForKey: @"number"], @(1));
+    AssertEqualObjects([doc objectForKey: @"array"], (@[@"1", @"2"]));
+    AssertEqualObjects(((CBLSubdocument*)[doc objectForKey: @"dict"]).properties, @{@"foo": @"bar"});
+    
+    // String:
+    AssertEqualObjects([doc stringForKey: @"string"], @"str");
+    
+    // Subdocuments:
+    subdoc = [doc subdocumentForKey: @"subdoc"];
+    AssertNotNil(subdoc);
+    AssertEqualObjects(subdoc, [doc objectForKey: @"subdoc"]);
+    AssertEqualObjects([subdoc objectForKey: @"firstname"], @"scottie");
+    AssertEqualObjects([subdoc objectForKey: @"lastname"], @"zebra");
     
     // NSNull:
-    AssertEqualObjects([doc1 objectForKey: @"null"], [NSNull null]);
-    AssertEqualObjects([doc1 objectForKey: @"nullarray"], (@[[NSNull null], [NSNull null]]));
+    AssertEqualObjects([doc objectForKey: @"null"], [NSNull null]);
+    AssertEqualObjects([doc objectForKey: @"nullarray"], (@[[NSNull null], [NSNull null]]));
     
     // Date:
-    AssertEqualObjects([CBLJSON JSONObjectWithDate: [doc1 dateForKey: @"date"]],
+    AssertEqualObjects([CBLJSON JSONObjectWithDate: [doc dateForKey: @"date"]],
                        [CBLJSON JSONObjectWithDate: date]);
+    
+    // Boolean:
+    Assert([doc booleanForKey:@"double"]);
+    Assert([doc booleanForKey:@"float"]);
+    Assert([doc booleanForKey:@"integer"]);
+    Assert([doc booleanForKey:@"string"]);
+    Assert([doc booleanForKey:@"array"]);
+    Assert([doc booleanForKey:@"dict"]);
+    AssertFalse([doc booleanForKey:@"zero"]);
+    AssertFalse([doc booleanForKey:@"null"]);
 }
 
 
@@ -307,48 +359,79 @@
 }
 
 
-- (void) testRemoveProperties {
+- (void) testRemoveKeys {
     doc.properties = @{ @"type": @"profile",
                         @"name": @"Jason",
                         @"weight": @130.5,
+                        @"active": @YES,
+                        @"age": @30,
                         @"address": @{
                                 @"street": @"1 milky way.",
                                 @"city": @"galaxy city",
                                 @"zip" : @12345
                                 }
                         };
-    
-    AssertEqual([doc doubleForKey: @"weight"], 130.5);
-    AssertEqualObjects(doc[@"address"][@"city"], @"galaxy city");
+    NSError* error;
+    Assert([doc save: &error], @"Error saving: %@", error);
     
     doc[@"name"] = nil;
     doc[@"weight"] = nil;
+    doc[@"age"] = nil;
+    doc[@"active"] = nil;
+    doc[@"address"][@"city"] = nil;
     
-    NSMutableDictionary* address = [NSMutableDictionary dictionaryWithDictionary: doc[@"address"]];
-    address[@"city"] = nil;
-    doc[@"address"] = address;
+    AssertEqual([doc doubleForKey: @"weight"], 0.0);
+    AssertEqual([doc integerForKey: @"age"], 0);
+    AssertEqual([doc booleanForKey: @"active"], NO);
     
     AssertNil(doc[@"name"]);
     AssertNil(doc[@"weight"]);
-    AssertEqual([doc doubleForKey: @"weight"], 0.0);
+    AssertNil(doc[@"age"]);
+    AssertNil(doc[@"active"]);
     AssertNil(doc[@"address"][@"city"]);
+    
+    CBLSubdocument* address = doc[@"address"];
+    AssertEqualObjects(doc.properties, (@{ @"type": @"profile",
+                                           @"address": address
+                                           }));
+    AssertEqualObjects(address.properties, (@{ @"street": @"1 milky way.",
+                                               @"zip" : @12345
+                                               }));
 }
 
-
 - (void) testContainsKey {
-    doc.properties =
-    @{ @"type": @"profile",
-       @"name": @"Jason",
-       @"address": @{
-               @"street": @"1 milky way.",
-               }
-       };
+    doc.properties = @{ @"type": @"profile",
+                        @"name": @"Jason",
+                        @"age": @"30",
+                        @"address": @{
+                                @"street": @"1 milky way.",
+                                }
+                        };
+    
     Assert([doc containsObjectForKey: @"type"]);
     Assert([doc containsObjectForKey: @"name"]);
     Assert([doc containsObjectForKey: @"address"]);
     AssertFalse([doc containsObjectForKey: @"weight"]);
+    
+    NSError* error;
+    Assert([doc save: &error], @"Error saving: %@", error);
+    
+    doc = nil;
+    [self reopenDB];
+    
+    doc = [self.db documentWithID: @"doc1"];
+    doc[@"modified"] = @(YES);
+    
+    // Access a subdocument to load the subdocument into cache:
+    AssertNotNil(doc[@"address"]);
+    
+    Assert([doc containsObjectForKey: @"type"]);
+    Assert([doc containsObjectForKey: @"name"]);
+    Assert([doc containsObjectForKey: @"age"]);
+    Assert([doc containsObjectForKey: @"address"]);
+    Assert([doc containsObjectForKey: @"modified"]);
+    AssertFalse([doc containsObjectForKey: @"weight"]);
 }
-
 
 
 - (void) testDelete {
@@ -403,28 +486,75 @@
 - (void) testRevert {
     doc[@"type"] = @"profile";
     doc[@"name"] = @"Scott";
+    CBLSubdocument* address = [CBLSubdocument subdocument];
+    address[@"street"] = @"1 Star Way.";
+    doc[@"address"] = address;
     
     // Revert before save:
     [doc revert];
     AssertNil(doc[@"type"]);
     AssertNil(doc[@"name"]);
+    AssertNil(doc[@"address"]);
+    AssertNil(address.parent);
+    AssertNil(address.document);
+    AssertNil(address.properties);
     
     // Save:
     doc[@"type"] = @"profile";
     doc[@"name"] = @"Scott";
+    address = [CBLSubdocument subdocument];
+    address[@"street"] = @"1 Star Way.";
+    doc[@"address"] = address;
+    
+    CBLSubdocument* phones = [CBLSubdocument subdocument];
+    phones[@"mobile"] = @"650-123-4567";
+    doc[@"phones"] = phones;
+    
+    CBLSubdocument* r1 = [CBLSubdocument subdocument];
+    r1[@"name"] = @"Jason";
+    CBLSubdocument* r2 = [CBLSubdocument subdocument];
+    r2[@"name"] = @"John";
+    doc[@"references"] = @[r1, r2];
+    
     NSError* error;
     Assert([doc save: &error], @"Saving error: %@", error);
     AssertEqualObjects(doc[@"type"], @"profile");
     AssertEqualObjects(doc[@"name"], @"Scott");
+    AssertEqualObjects(doc[@"address"][@"street"], @"1 Star Way.");
+    AssertEqualObjects(doc[@"phones"][@"mobile"], @"650-123-4567");
+    AssertEqualObjects(doc[@"references"][0][@"name"], @"Jason");
+    AssertEqualObjects(doc[@"references"][1][@"name"], @"John");
     
     // Make some changes:
     doc[@"type"] = @"user";
-    doc[@"name"] = @"Scottie";
+    doc[@"name"] = nil;
+    AssertNil(doc[@"name"]);
+    doc[@"address"][@"street"] = @"1 Space Dr.";
+    doc[@"address"][@"zip"] = @"88888";
+    doc[@"phones"] = nil;
+    
+    CBLSubdocument* r3 = [CBLSubdocument subdocument];
+    r3[@"name"] = @"Jack";
+    doc[@"references"] = @[r3, r2, r1];
+    
+    AssertEqualObjects(doc[@"type"], @"user");
+    AssertNil(doc[@"name"]);
+    AssertEqualObjects(doc[@"address"][@"street"], @"1 Space Dr.");
+    AssertEqualObjects(doc[@"address"][@"zip"], @"88888");
+    AssertNil(doc[@"phones"]);
+    AssertEqualObjects(doc[@"references"][0][@"name"], @"Jack");
+    AssertEqualObjects(doc[@"references"][1][@"name"], @"John");
+    AssertEqualObjects(doc[@"references"][2][@"name"], @"Jason");
     
     // Revert:
     [doc revert];
     AssertEqualObjects(doc[@"type"], @"profile");
     AssertEqualObjects(doc[@"name"], @"Scott");
+    AssertEqualObjects(doc[@"address"][@"street"], @"1 Star Way.");
+    AssertNil(doc[@"address"][@"zip"]);
+    AssertEqualObjects(doc[@"phones"][@"mobile"], @"650-123-4567");
+    AssertEqualObjects(doc[@"references"][0][@"name"], @"Jason");
+    AssertEqualObjects(doc[@"references"][1][@"name"], @"John");
 }
 
 

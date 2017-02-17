@@ -120,16 +120,13 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
             if (![self loadDoc_mustExist: NO error: outError])
                 return NO;
             
-            [self resetChanges];
+            self.properties = nil;
+            [self resetChangesKeys];
+            
             return YES;
         }
     }
     return convertError(err, outError);
-}
-
-
-- (void) revert {
-    [self resetChanges];
 }
 
 
@@ -155,8 +152,8 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 
 
 // Called by CBLProperties superclass after a change is made to the properties.
-- (void) markChanges {
-    [super markChanges];
+- (void) markChangedKey: (NSString*)key {
+    [super markChangedKey: key];
     [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDocumentChangeNotification
                                                         object: self];
 }
@@ -225,6 +222,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
             [self setRootDict: root];
         }
     }
+    [self useNewRoot];
 }
 
 
@@ -406,9 +404,11 @@ static bool dictContainsBlob(__unsafe_unretained NSDictionary* dict) {
 
     // Update my state and post a notification:
     [self setC4Doc: newDoc];
-    self.hasChanges = NO;
-    if (deletion)
-        [self resetChanges];
+    if (deletion) {
+        self.properties = nil;
+    }
+    [self resetChangesKeys];
+    
     [self postChangedNotificationExternal:NO];
     return YES;
 }

@@ -81,8 +81,6 @@ extern NSString* const kCBLDocumentIsExternalUserInfoKey;
     The purge will NOT be replicated to other databases. */
 - (BOOL) purge: (NSError**)error;
 
-/** Reverts unsaved changes made to the document's properties. */
-- (void) revert;
 
 @end
 

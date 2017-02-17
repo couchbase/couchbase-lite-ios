@@ -16,6 +16,7 @@
 .objc_class_name_CBLProperties
 .objc_class_name_CBLQuery
 .objc_class_name_CBLQueryRow
+.objc_class_name_CBLSubdocument
 
 #  Public constants:
 _kCBLDatabaseChangeNotification
