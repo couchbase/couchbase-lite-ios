@@ -100,12 +100,6 @@
 }
 
 
-- (void) setParent: (id)parent {
-    if (_parent != parent)
-        _parent = parent;
-}
-
-
 - (void) setOnMutate: (nullable CBLOnMutateBlock)onMutate {
     _onMutate = onMutate;
 }
@@ -133,7 +127,7 @@
 
 
 - (void) fl_encodeTo:(FLEncoder)encoder {
-    NSDictionary* dict = self.properties ?: @{};
+    NSDictionary* dict = self.properties;
     FLEncoder_BeginDict(encoder, dict.count);
     [dict enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
         CBLStringBytes bKey(key);

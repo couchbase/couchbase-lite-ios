@@ -380,6 +380,8 @@
     doc[@"active"] = nil;
     doc[@"address"][@"city"] = nil;
     
+    AssertNil([doc stringForKey: @"name"]);
+    AssertEqual([doc floatForKey: @"weight"], 0.0);
     AssertEqual([doc doubleForKey: @"weight"], 0.0);
     AssertEqual([doc integerForKey: @"age"], 0);
     AssertEqual([doc booleanForKey: @"active"], NO);
@@ -392,12 +394,18 @@
     
     CBLSubdocument* address = doc[@"address"];
     AssertEqualObjects(doc.properties, (@{ @"type": @"profile",
-                                           @"address": address
-                                           }));
+                                           @"address": address }));
     AssertEqualObjects(address.properties, (@{ @"street": @"1 milky way.",
-                                               @"zip" : @12345
-                                               }));
+                                               @"zip" : @12345 }));
+    
+    // Remove the rest:
+    doc[@"type"] = nil;
+    doc[@"address"] = nil;
+    AssertNil(doc[@"type"]);
+    AssertNil(doc[@"address"]);
+    AssertEqualObjects(doc.properties, @{});
 }
+
 
 - (void) testContainsKey {
     doc.properties = @{ @"type": @"profile",
@@ -590,6 +598,7 @@
     return doc;
 }
 
+
 - (void)testConflict {
     self.db.conflictResolver = [TheirsWins new];
     doc = [self setupConflict];
@@ -621,6 +630,7 @@
     AssertEqualObjects(doc[@"name"], @"Scott");
 }
 
+
 - (void)testConflictResolverGivesUp {
     self.db.conflictResolver = [GiveUp new];
     doc = [self setupConflict];
@@ -630,6 +640,7 @@
     AssertEqual(error.code, kC4ErrorConflict);
     Assert(doc.hasChanges);
 }
+
 
 - (void)testDeletionConflict {
     self.db.conflictResolver = [DoNotResolve new];
@@ -641,6 +652,7 @@
     AssertEqualObjects(doc[@"name"], @"Scotty");
 }
 
+
 - (void)testConflictMineIsDeeper {
     self.db.conflictResolver = nil;
     doc = [self setupConflict];
@@ -648,6 +660,7 @@
     Assert([doc save: &error], @"Saving error: %@", error);
     AssertEqualObjects(doc[@"name"], @"Scott Pilgrim");
 }
+
 
 - (void)testConflictTheirsIsDeeper {
     self.db.conflictResolver = nil;
@@ -662,6 +675,7 @@
     Assert([doc save: &error], @"Saving error: %@", error);
     AssertEqualObjects(doc[@"name"], @"Scott of the Sahara");
 }
+
 
 - (void)testBlob {
     NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
@@ -686,6 +700,7 @@
     AssertEqual(bytesRead, 5);
 }
 
+
 - (void)testEmptyBlob {
     NSData* content = [@"" dataUsingEncoding:NSUTF8StringEncoding];
     NSError* error;
@@ -706,6 +721,7 @@
     [contentStream close];
     AssertEqual(bytesRead, 0);
 }
+
 
 - (void)testBlobWithStream {
     NSData* content = [@"" dataUsingEncoding:NSUTF8StringEncoding];
@@ -729,6 +745,7 @@
     [contentStream close];
     AssertEqual(bytesRead, 0);
 }
+
 
 - (void)testMultipleBlobRead {
     NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
@@ -763,6 +780,7 @@
         AssertEqual(bytesRead, 5);
     }
 }
+
 
 - (void)testReadExistingBlob {
     NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];

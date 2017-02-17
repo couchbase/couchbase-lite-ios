@@ -59,10 +59,12 @@
 
 
 - (nullable NSDictionary*) properties {
-    if (!_properties && !self.hasChanges)
-        _properties = [self.savedProperties mutableCopy];
-    else if (_root && !self.hasChanges)
-        [self loadRootIntoProperties];
+    if (!self.hasChanges) {
+        if (!_properties)
+            _properties = [self.savedProperties mutableCopy];
+        else if (_root)
+            [self loadRootIntoProperties];
+    }
     return _properties;
 }
 
@@ -74,7 +76,7 @@
     // Convert each property value if needed, build up changedKeys set, and invalidate
     // obsolete subdocuments:
     NSMutableSet* changesKeys = [NSMutableSet setWithCapacity: [properties count]];
-    NSMutableDictionary* result = properties ? [properties mutableCopy] : nil;
+    NSMutableDictionary* result = [properties mutableCopy];
     [properties enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         result[key] = [self convertValue: value oldValue: _properties[key] forKey: key];
         [changesKeys addObject: key];
@@ -95,8 +97,7 @@
         FLDictIterator_Begin(_root, &iter);
         NSString *key;
         while (nullptr != (key = FLDictIterator_GetKey(&iter, &_sharedKeys))) {
-            if (![changesKeys containsObject: key])
-                [changesKeys addObject: key];
+            [changesKeys addObject: key];
             FLDictIterator_Next(&iter);
         }
     }
@@ -114,7 +115,7 @@
     for (NSString* key in _changesKeys) {
         id value = _properties[key];
         if ([value isKindOfClass:[CBLSubdocument class]]) {
-            CBLSubdocument* subdoc = $cast(CBLSubdocument, value);
+            CBLSubdocument* subdoc = (CBLSubdocument*)value;
             if ([subdoc hasRoot]) {
                 [subdoc revert];
                 continue; // Keep the subdocument value:
@@ -283,7 +284,7 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 - (id) updateRootIfSubdocument: (id)value withFleeceValue: (FLValue)fValue forKey: (NSString*)key {
     if ([value isKindOfClass: [CBLSubdocument class]]) {
-        CBLSubdocument* subdoc = $cast(CBLSubdocument, value);
+        CBLSubdocument* subdoc = (CBLSubdocument*)value;
         FLDict dict = FLValue_AsDict(fValue);
         if (dict == nullptr) {
             [self invalidateIfSubdocument: subdoc];
@@ -301,7 +302,7 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
             return nil;
         }
         
-        NSArray* array = $cast(NSArray, value);
+        NSArray* array = (NSArray*)value;
         NSMutableArray* result = [NSMutableArray arrayWithCapacity: FLArray_Count(fArray)];
         uint i = 0;
         FLArrayIterator iter;
@@ -428,10 +429,10 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 - (void) resetChangesKeysIfSubdocument: (id)value {
     if ([value isKindOfClass: [CBLSubdocument class]]) {
-        CBLSubdocument* subdoc = $cast(CBLSubdocument, value);
+        CBLSubdocument* subdoc = (CBLSubdocument*)value;
         [subdoc resetChangesKeys];
     } else if ([value isKindOfClass: [NSArray class]]) {
-        NSArray* array = $cast(NSArray, value);
+        NSArray* array = (NSArray*)value;
         for (id obj in array) {
             [self resetChangesKeysIfSubdocument: obj];
         }
