@@ -364,27 +364,34 @@
                         @"name": @"Jason",
                         @"weight": @130.5,
                         @"active": @YES,
+                        @"age": @30,
                         @"address": @{
                                 @"street": @"1 milky way.",
                                 @"city": @"galaxy city",
                                 @"zip" : @12345
                                 }
                         };
+    NSError* error;
+    Assert([doc save: &error], @"Error saving: %@", error);
     
-    AssertEqual([doc doubleForKey: @"weight"], 130.5);
-    AssertEqualObjects(doc[@"address"][@"city"], @"galaxy city");
-    
+    doc[@"name"] = nil;
     doc[@"weight"] = nil;
+    doc[@"age"] = nil;
+    doc[@"active"] = nil;
     doc[@"address"][@"city"] = nil;
     
     AssertEqual([doc doubleForKey: @"weight"], 0.0);
+    AssertEqual([doc integerForKey: @"age"], 0);
+    AssertEqual([doc booleanForKey: @"active"], NO);
+    
+    AssertNil(doc[@"name"]);
     AssertNil(doc[@"weight"]);
+    AssertNil(doc[@"age"]);
+    AssertNil(doc[@"active"]);
     AssertNil(doc[@"address"][@"city"]);
     
     CBLSubdocument* address = doc[@"address"];
     AssertEqualObjects(doc.properties, (@{ @"type": @"profile",
-                                           @"name": @"Jason",
-                                           @"active": @YES,
                                            @"address": address
                                            }));
     AssertEqualObjects(address.properties, (@{ @"street": @"1 milky way.",
@@ -392,10 +399,10 @@
                                                }));
 }
 
-
 - (void) testContainsKey {
     doc.properties = @{ @"type": @"profile",
                         @"name": @"Jason",
+                        @"age": @"30",
                         @"address": @{
                                 @"street": @"1 milky way.",
                                 }
@@ -413,13 +420,16 @@
     [self reopenDB];
     
     doc = [self.db documentWithID: @"doc1"];
+    doc[@"modified"] = @(YES);
     
     // Access a subdocument to load the subdocument into cache:
     AssertNotNil(doc[@"address"]);
     
     Assert([doc containsObjectForKey: @"type"]);
     Assert([doc containsObjectForKey: @"name"]);
+    Assert([doc containsObjectForKey: @"age"]);
     Assert([doc containsObjectForKey: @"address"]);
+    Assert([doc containsObjectForKey: @"modified"]);
     AssertFalse([doc containsObjectForKey: @"weight"]);
 }
 

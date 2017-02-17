@@ -142,8 +142,8 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 - (BOOL) booleanForKey: (NSString*)key {
     id v = _properties[key];
-    if (v) {
-        if ([v isKindOfClass: [NSNull class]])
+    if (v || self.hasChanges) {
+        if (!v || [v isKindOfClass: [NSNull class]])
             return NO;
         else {
             id n = $castIf(NSNumber, v);
@@ -162,19 +162,19 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 - (double) doubleForKey: (NSString*)key {
     id v = numberProperty(_properties, key);
-    return v ? [v doubleValue] : FLValue_AsDouble([self fleeceValueForKey: key]);
+    return v || self.hasChanges ? [v doubleValue] : FLValue_AsDouble([self fleeceValueForKey: key]);
 }
 
 
 - (float) floatForKey: (NSString*)key {
     id v = numberProperty(_properties, key);
-    return v ? [v floatValue] : FLValue_AsFloat([self fleeceValueForKey: key]);
+    return v || self.hasChanges ? [v floatValue] : FLValue_AsFloat([self fleeceValueForKey: key]);
 }
 
 
 - (NSInteger) integerForKey: (NSString*)key {
     id v = numberProperty(_properties, key);
-    return v ? [v integerValue] : FLValue_AsInt([self fleeceValueForKey: key]);
+    return v || self.hasChanges ? [v integerValue] : FLValue_AsInt([self fleeceValueForKey: key]);
 }
 
 
@@ -224,8 +224,8 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 
 - (BOOL) containsObjectForKey: (NSString*)key {
-    if (_properties[key])
-        return YES;
+    if (self.hasChanges)
+        return _properties[key] != nil;
     else
         return [self fleeceValueForKey: key]  != nullptr;
 }
