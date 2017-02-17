@@ -77,6 +77,8 @@
     _webView = [[WKWebView alloc] initWithFrame: rootView.bounds];
     _webView.navigationDelegate = self;
     _webView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+    // Workaround for #1621: Google OIDC doesn't allow OAuth request by using an embedded webview:
+    _webView.customUserAgent = @"Mozilla/5.0 (iPhone; CPU iPhone like Mac OS X) AppleWebKit";
     [rootView addSubview: _webView];
 
     self.view = rootView;
