@@ -20,12 +20,8 @@
 - (void) setUp {
     [super setUp];
     NSError* error;
-    if (![CBLDatabase deleteDatabase: kDatabaseName
-                         inDirectory: [[self class] directory]
-                               error: &error]) {
-        Assert([error.domain isEqual: @"LiteCore"] && error.code == kC4ErrorNotFound,
-               @"Couldn't delete test db: %@", error);
-    }
+    Assert([[NSFileManager defaultManager] removeItemAtPath: [[self class] directory] error: &error],
+           @"Error deleting CouchbaseLite folder");
     [self openDB];
 }
 
