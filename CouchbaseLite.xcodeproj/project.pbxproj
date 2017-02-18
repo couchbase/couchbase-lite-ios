@@ -58,6 +58,7 @@
 		72A87A061E2E0E70008466FF /* CBLBlobStream.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A041E2E0E70008466FF /* CBLBlobStream.mm */; };
 		72A87A0F1E32E858008466FF /* NotificationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A0E1E32E858008466FF /* NotificationTest.m */; };
 		931112941E57DD34007690A6 /* CBLSubdocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 935294291E501055005CE4E8 /* CBLSubdocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		931112DC1E57F173007690A6 /* Subdocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 931112DB1E57F173007690A6 /* Subdocument.swift */; };
 		9317621F1E2D439700563506 /* CBLQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 9317621E1E2D439700563506 /* CBLQuery+Internal.h */; };
 		934F4C101E1EF19000F90659 /* CollectionUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4BD01E1EF19000F90659 /* CollectionUtils.h */; };
 		934F4C111E1EF19000F90659 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4BD11E1EF19000F90659 /* CollectionUtils.m */; };
@@ -325,6 +326,7 @@
 		72A87A031E2E0E70008466FF /* CBLBlobStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBlobStream.h; sourceTree = "<group>"; };
 		72A87A041E2E0E70008466FF /* CBLBlobStream.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBlobStream.mm; sourceTree = "<group>"; };
 		72A87A0E1E32E858008466FF /* NotificationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NotificationTest.m; sourceTree = "<group>"; };
+		931112DB1E57F173007690A6 /* Subdocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Subdocument.swift; sourceTree = "<group>"; };
 		9317621E1E2D439700563506 /* CBLQuery+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+Internal.h"; sourceTree = "<group>"; };
 		9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
 		9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests - iOS.xcconfig"; sourceTree = "<group>"; };
@@ -462,6 +464,7 @@
 				275F92A51E4D3A91007FD5A2 /* Document.swift */,
 				275F92A71E4D3AFB007FD5A2 /* Properties.swift */,
 				27BE3B551E4E93000012B74A /* Query.swift */,
+				931112DB1E57F173007690A6 /* Subdocument.swift */,
 				275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */,
 				275F92771E4D30A4007FD5A2 /* Info.plist */,
 				27BE3B491E4E45CB0012B74A /* Tests */,
@@ -1128,6 +1131,7 @@
 				275F92A81E4D3AFB007FD5A2 /* Properties.swift in Sources */,
 				275F92A61E4D3A91007FD5A2 /* Document.swift in Sources */,
 				275F928C1E4D3119007FD5A2 /* Database.swift in Sources */,
+				931112DC1E57F173007690A6 /* Subdocument.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
