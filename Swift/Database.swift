@@ -158,7 +158,11 @@ public final class Database {
         Documents are cached, so there will never be more than one instance in this Database
         object at a time with the same documentID. */
     public func document(withID docID: String) -> Document {
-        return Document(_impl.document(withID: docID), inDatabase: self)
+        let implDoc = _impl.document(withID: docID)
+        if let doc = implDoc.swiftDocument {
+            return doc
+        }
+        return Document(implDoc, inDatabase: self)
     }
 
 
