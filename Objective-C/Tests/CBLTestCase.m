@@ -19,9 +19,13 @@
 
 - (void) setUp {
     [super setUp];
-    NSError* error;
-    Assert([[NSFileManager defaultManager] removeItemAtPath: [[self class] directory] error: &error],
-           @"Error deleting CouchbaseLite folder");
+    
+    NSString* dir = [[self class] directory];
+    if ([[NSFileManager defaultManager] fileExistsAtPath: dir]) {
+        NSError* error;
+        Assert([[NSFileManager defaultManager] removeItemAtPath: dir error: &error],
+               @"Error deleting CouchbaseLite folder: %@", error);
+    }
     [self openDB];
 }
 
