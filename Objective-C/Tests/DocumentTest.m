@@ -445,7 +445,7 @@
 - (void) testDelete {
     doc[@"type"] = @"profile";
     doc[@"name"] = @"Scott";
-    AssertFalse([doc exists]);
+    AssertFalse(doc.exists);
     AssertFalse(doc.isDeleted);
     
     // Delete before save:
@@ -456,12 +456,12 @@
     // Save:
     NSError* error;
     Assert([doc save: &error], @"Saving error: %@", error);
-    Assert([doc exists]);
+    Assert(doc.exists);
     AssertFalse(doc.isDeleted);
     
     // Delete:
     Assert([doc deleteDocument: &error], @"Deleting error: %@", error);
-    Assert([doc exists]);
+    Assert(doc.exists);
     Assert(doc.isDeleted);
     AssertNil(doc.properties);
 }
@@ -470,7 +470,7 @@
 - (void) testPurge {
     doc[@"type"] = @"profile";
     doc[@"name"] = @"Scott";
-    AssertFalse([doc exists]);
+    AssertFalse(doc.exists);
     AssertFalse(doc.isDeleted);
     
     // Purge before save:
@@ -481,12 +481,12 @@
     // Save:
     NSError* error;
     Assert([doc save: &error], @"Saving error: %@", error);
-    Assert([doc exists]);
+    Assert(doc.exists);
     AssertFalse(doc.isDeleted);
     
     // Purge:
     Assert([doc purge: &error], @"Purging error: %@", error);
-    AssertFalse([doc exists]);
+    AssertFalse(doc.exists);
     AssertFalse(doc.isDeleted);
 }
 

@@ -101,7 +101,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 
 
 - (BOOL) purge: (NSError**)outError {
-    if (![self exists])
+    if (!self.exists)
         return NO;
     
     C4Transaction transaction(_c4db);

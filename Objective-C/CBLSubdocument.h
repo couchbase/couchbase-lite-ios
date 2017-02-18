@@ -16,11 +16,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nonatomic, nullable) CBLDocument* document;
 
+@property (readonly, nonatomic) BOOL exists;
+
 + (instancetype) subdocument;
 
 - (instancetype) init;
-
-- (BOOL) exists;
 
 @end
 

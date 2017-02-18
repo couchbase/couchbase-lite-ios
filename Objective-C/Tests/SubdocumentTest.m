@@ -172,13 +172,13 @@
     CBLSubdocument* address = doc[@"address"];
     AssertEqualObjects(address.document, doc);
     AssertEqualObjects(address.parent, doc);
-    Assert([address exists]);
+    Assert(address.exists);
     AssertEqualObjects(address[@"street"], @"1 Star Way.");
     
     CBLSubdocument* phones = address[@"phones"];
     AssertEqualObjects(phones.document, doc);
     AssertEqualObjects(phones.parent, address);
-    Assert([phones exists]);
+    Assert(phones.exists);
     AssertEqualObjects(phones[@"mobile"], @"650-123-4567");
     
     NSArray* references = doc[@"references"];
@@ -187,13 +187,13 @@
     CBLSubdocument* r1 = references[0];
     AssertEqualObjects(r1.document, doc);
     AssertEqualObjects(r1.parent, doc);
-    Assert([r1 exists]);
+    Assert(r1.exists);
     AssertEqualObjects(r1[@"name"], @"Scott");
     
     CBLSubdocument* r2 = references[1];
     AssertEqualObjects(r2.document, doc);
     AssertEqualObjects(r2.parent, doc);
-    Assert([r2 exists]);
+    Assert(r2.exists);
     AssertEqualObjects(r2[@"name"], @"Sam");
 }
 
@@ -334,14 +334,14 @@
     doc[@"address"] = nil;
     AssertNil(address.document);
     AssertNil(address.parent);
-    AssertFalse([address exists]);
+    AssertFalse(address.exists);
     AssertNil(address.properties);
     AssertNil(address[@"street"]);
     AssertNil(address[@"phones"]);
     
     AssertNil(phones.document);
     AssertNil(phones.parent);
-    AssertFalse([phones exists]);
+    AssertFalse(phones.exists);
     AssertNil(phones.properties);
     AssertNil(phones[@"mobile"]);
     
@@ -349,13 +349,13 @@
     
     AssertNil(r1.document);
     AssertNil(r1.parent);
-    AssertFalse([r1 exists]);
+    AssertFalse(r1.exists);
     AssertNil(r1.properties);
     AssertNil(r1[@"name"]);
     
     AssertNil(r2.document);
     AssertNil(r2.parent);
-    AssertFalse([r2 exists]);
+    AssertFalse(r2.exists);
     AssertNil(r2.properties);
     AssertNil(r2[@"name"]);
     
@@ -399,26 +399,26 @@
     
     AssertNil(address.document);
     AssertNil(address.parent);
-    AssertFalse([address exists]);
+    AssertFalse(address.exists);
     AssertNil(address.properties);
     AssertNil(address[@"street"]);
     AssertNil(address[@"phones"]);
     
     AssertNil(phones.document);
     AssertNil(phones.parent);
-    AssertFalse([phones exists]);
+    AssertFalse(phones.exists);
     AssertNil(phones.properties);
     AssertNil(phones[@"mobile"]);
     
     AssertNil(r1.document);
     AssertNil(r1.parent);
-    AssertFalse([r1 exists]);
+    AssertFalse(r1.exists);
     AssertNil(r1.properties);
     AssertNil(r1[@"name"]);
     
     AssertNil(r2.document);
     AssertNil(r2.parent);
-    AssertFalse([r2 exists]);
+    AssertFalse(r2.exists);
     AssertNil(r2.properties);
     AssertNil(r2[@"name"]);
 }
@@ -480,26 +480,26 @@
     
     AssertNil(address.document);
     AssertNil(address.parent);
-    AssertFalse([address exists]);
+    AssertFalse(address.exists);
     AssertNil(address.properties);
     AssertNil(address[@"street"]);
     AssertNil(address[@"phones"]);
     
     AssertNil(phones.document);
     AssertNil(phones.parent);
-    AssertFalse([phones exists]);
+    AssertFalse(phones.exists);
     AssertNil(phones.properties);
     AssertNil(phones[@"mobile"]);
     
     AssertNil(r1.document);
     AssertNil(r1.parent);
-    AssertFalse([r1 exists]);
+    AssertFalse(r1.exists);
     AssertNil(r1.properties);
     AssertNil(r1[@"name"]);
     
     AssertNil(r2.document);
     AssertNil(r2.parent);
-    AssertFalse([r2 exists]);
+    AssertFalse(r2.exists);
     AssertNil(r2.properties);
     AssertNil(r2[@"name"]);
 }
