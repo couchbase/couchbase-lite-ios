@@ -75,8 +75,8 @@ class DocumentTest: CBLTestCase {
             XCTAssertEqual(array.count, 4)
             XCTAssert(array[0] as? Int == 1)
 
-            let dict: [String:Any] = self.doc["dict"]!
-            XCTAssertEqual(dict.count, 3)
+            let dict: CBLSubdocument = self.doc["dict"]!
+            XCTAssertEqual(dict.properties?.count, 3)
             XCTAssert(dict["miney"] as? String == "moe")
 
             XCTAssert(self.doc.property("null") as? NSNull != nil)

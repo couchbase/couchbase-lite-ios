@@ -67,8 +67,8 @@ public class Properties {
         get {return _impl.object(forKey: key) as? [Any]}
     }
 
-    public subscript(key: String) -> [String:Any]? {
-        get {return _impl.object(forKey: key) as? [String:Any]}
+    public subscript(key: String) -> CBLSubdocument? {
+        get {return _impl.object(forKey: key) as? CBLSubdocument}
     }
 
     public subscript(key: String) -> Any? {
