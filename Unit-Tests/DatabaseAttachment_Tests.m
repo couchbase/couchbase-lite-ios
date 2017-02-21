@@ -522,7 +522,7 @@
         return nuAtt;
     }];
     NSArray<CBL_RevID*>* history = @[@"4-4444".cbl_asRevID, @"3-3333".cbl_asRevID, @"2-2222".cbl_asRevID, rev1.revID];
-    status = [db forceInsert: rev4 revisionHistory: history source: nil error: &error];
+    status = [db forceInsert: rev4 revisionHistory: history source: nil allowStubAttachments: NO error: &error];
     AssertEq(status, kCBLStatusCreated);
 
     // Insert a doc with no revision history and no attachment bodies:
@@ -535,7 +535,7 @@
                                     @"revpos": @100}};
     props = @{@"_id": @"Y", @"_rev": @"123-ffff", @"_attachments": attachmentDict};
     CBL_Revision* rev = [CBL_Revision revisionWithProperties: props];
-    status = [db forceInsert: rev revisionHistory: @[] source: nil error: &error];
+    status = [db forceInsert: rev revisionHistory: @[] source: nil allowStubAttachments: NO error: &error];
     AssertEq(status, kCBLStatusCreated);
     AssertNil(error);
 }
@@ -579,7 +579,7 @@
         return nuAtt;
     }];
     NSArray* history = @[rev2.revID, rev1.revID];
-    status = [db forceInsert: rev3 revisionHistory: history source: nil error: &error];
+    status = [db forceInsert: rev3 revisionHistory: history source: nil allowStubAttachments: NO error: &error];
     AssertEq(status, 201);
 }
 
