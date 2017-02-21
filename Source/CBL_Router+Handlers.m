@@ -284,6 +284,7 @@
                     status = rev ? [db forceInsert: rev
                                    revisionHistory: history
                                             source: self.source
+                              allowStubAttachments: NO
                                              error: &error] : kCBLStatusBadParam;
                 } else {
                     status = [self update: db
@@ -1074,6 +1075,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             CBLStatus status = [_db forceInsert: rev
                                 revisionHistory: history
                                          source: self.source
+                           allowStubAttachments: NO
                                           error: &error];
             if (!CBLStatusIsError(status)) {
                 _response.bodyObject = $dict({@"ok", $true},

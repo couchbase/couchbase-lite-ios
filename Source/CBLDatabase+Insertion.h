@@ -36,6 +36,7 @@
 - (CBLStatus) forceInsert: (CBL_Revision*)rev
           revisionHistory: (NSArray<CBL_RevID*>*)history
                    source: (NSURL*)source
+     allowStubAttachments: (BOOL)allowStubAttachments
                     error: (NSError**)outError;
 
 /** Parses the _revisions dict from a document into an array of revision ID strings */

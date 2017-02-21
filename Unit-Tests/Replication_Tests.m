@@ -1372,6 +1372,72 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     AssertNil(push.lastError);
 }
 
+- (void) test22_NonDownloadedAttachmentsFromParentRevision {
+    // First pull the read-only "attach_test" database:
+    NSURL* pullURL = [self remoteTestDBURL: kAttachTestDBName];
+    if (!pullURL)
+        return;
+    
+    Log(@"Pulling from %@...", pullURL);
+    CBLReplication* pull = [db createPullReplication: pullURL];
+    pull.downloadsAttachments = YES;
+    [self runReplication: pull expectedChangesCount: 0];
+    AssertNil(pull.lastError);
+    
+    // Now push it to the scratch database:
+    NSURL* pushURL = [self remoteTestDBURL: kScratchDBName];
+    [self eraseRemoteDB: pushURL];
+    Log(@"Pushing to %@...", pushURL);
+    CBLReplication *push = [db createPushReplication: pushURL];
+    [self runReplication: push expectedChangesCount: 0];
+    AssertNil(push.lastError);
+
+    //modify the document so that the attachment comes from a parent revision
+    CBLDocument* doc = db[@"extrameta"];
+    [doc update:^BOOL(CBLUnsavedRevision *rev) {
+        rev[@"foo"] = @"bar";
+        return YES;
+    } error:nil];
+    doc = nil;
+    
+    //push this change to the scratch database
+    [self runReplication: push expectedChangesCount: 1];
+    
+    [push stop];
+    [pull stop];
+    
+    //clear and recreate our local database
+    [self eraseTestDB];
+    [self reopenTestDB];
+    
+    //and pull the database from scratch without attachments
+    pullURL = [self remoteTestDBURL: kScratchDBName];
+    if (!pullURL)
+        return;
+    
+    Log(@"Pulling from %@...", pullURL);
+    pull = [db createPullReplication: pullURL];
+    pull.downloadsAttachments = NO;
+    [self allowWarningsIn: ^{
+        [self runReplication: pull expectedChangesCount: 0];
+    }];
+    AssertNil(pull.lastError);
+
+    doc = db[@"extrameta"];
+    Assert(doc.properties);
+    CBLAttachment* att = [doc.currentRevision attachmentNamed: @"extra.txt"];
+    Assert(att);
+    AssertNil(att.content);
+    
+    // Download a missing attachment:
+    NSProgress* progress = [pull downloadAttachment: att];
+    [self expectationForProgress: progress logging: NO];
+    [self waitForExpectationsWithTimeout: _timeout handler: nil];
+    AssertNil(progress.userInfo[kCBLProgressErrorKey]);
+    
+    Assert(att.content);
+}
+
 
 #pragma mark - MISC
 

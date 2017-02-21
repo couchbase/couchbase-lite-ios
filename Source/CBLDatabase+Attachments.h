@@ -35,6 +35,7 @@ typedef enum {
     and turning all the attachments into stubs. */
 - (BOOL) processAttachmentsForRevision: (CBL_MutableRevision*)rev
                               ancestry: (NSArray<CBL_RevID*>*)ancestry // 1st item is parent revID, etc.
+                  allowStubAttachments: (BOOL)allowStubAttachments
                                 status: (CBLStatus*)outStatus;
 
 /** Modifies a CBL_Revision's _attachments dictionary by adding the "data" property to all

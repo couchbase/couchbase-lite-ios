@@ -121,6 +121,7 @@ DefineLogDomain(Validation);
         tmpRev.properties = properties;
         if (![self processAttachmentsForRevision: tmpRev
                                         ancestry: (prevRevID ? @[prevRevID] : nil)
+                            allowStubAttachments: NO
                                           status: outStatus]) {
             CBLStatusToOutNSError(*outStatus, outError);
             return nil;
@@ -154,6 +155,7 @@ DefineLogDomain(Validation);
 - (CBLStatus) forceInsert: (CBL_Revision*)inRev
           revisionHistory: (NSArray<CBL_RevID*>*)history  // in *reverse* order, starting with rev's revID
                    source: (NSURL*)source
+     allowStubAttachments: (BOOL)allowStubAttachments
                     error: (NSError**)outError
 {
     LogTo(Database, @"INSERT %@, history[%lu]", inRev, (unsigned long)history.count);
@@ -181,6 +183,7 @@ DefineLogDomain(Validation);
         NSArray* ancestry = [history subarrayWithRange: NSMakeRange(1, history.count-1)];
         if (![self processAttachmentsForRevision: updatedRev
                                         ancestry: ancestry
+                            allowStubAttachments: allowStubAttachments
                                           status: &status]) {
             CBLStatusToOutNSError(status, outError);
             return status;
@@ -217,7 +220,7 @@ DefineLogDomain(Validation);
     if (body) {
         CBL_Revision* rev = [[CBL_Revision alloc] initWithBody: body];
         if (rev) {
-            CBLStatus status = [self forceInsert: rev revisionHistory: history source: source
+            CBLStatus status = [self forceInsert: rev revisionHistory: history source: source allowStubAttachments: NO
                                            error: outError];
             return !CBLStatusIsError(status);
         }
