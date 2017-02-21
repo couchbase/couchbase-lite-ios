@@ -716,6 +716,7 @@
                 NSError* error;
                 int status = [_db forceInsert: rev revisionHistory: history
                                        source: _settings.remote
+                         allowStubAttachments: !_settings.downloadAttachments
                                         error: &error];
                 if (CBLStatusIsError(status)) {
                     if (status == kCBLStatusForbidden) {

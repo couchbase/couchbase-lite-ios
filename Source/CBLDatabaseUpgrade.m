@@ -321,7 +321,7 @@ static int collateRevIDs(void *context,
                 }
 
                 LogTo(Upgrade, @"Upgrading doc %@, history = %@", rev, history);
-                status = [_db forceInsert: rev revisionHistory: history source: nil error: nil];
+                status = [_db forceInsert: rev revisionHistory: history source: nil allowStubAttachments: NO error: nil];
                 if (CBLStatusIsError(status))
                     return status;
                 ++_numRevs;

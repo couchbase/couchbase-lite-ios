@@ -458,7 +458,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     NSArray* history = @[rev.revID, @"3-3333".cbl_asRevID, @"2-2222".cbl_asRevID, @"1-1111".cbl_asRevID];
     change = nil;
     NSError* error;
-    CBLStatus status = [db forceInsert: rev revisionHistory: history source: nil error: &error];
+    CBLStatus status = [db forceInsert: rev revisionHistory: history source: nil allowStubAttachments: NO error: &error];
     AssertEq(status, kCBLStatusCreated);
     AssertNil(error);
     AssertEq(db.documentCount, 1u);
@@ -468,7 +468,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
 
     // No-op forceInsert: of already-existing revision:
     SequenceNumber lastSeq = db.lastSequenceNumber;
-    status = [db forceInsert: revAgain revisionHistory: history source: nil error: &error];
+    status = [db forceInsert: revAgain revisionHistory: history source: nil allowStubAttachments: NO error: &error];
     AssertEq(status, kCBLStatusOK);
     AssertNil(error);
     AssertEq(db.lastSequenceNumber, lastSeq);
@@ -478,7 +478,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
                                 {@"message", @"yo"});
     NSArray* conflictHistory = @[conflict.revID, @"4-4545".cbl_asRevID, @"3-3030".cbl_asRevID, @"2-2222".cbl_asRevID, @"1-1111".cbl_asRevID];
     change = nil;
-    status = [db forceInsert: conflict revisionHistory: conflictHistory source: nil error: &error];
+    status = [db forceInsert: conflict revisionHistory: conflictHistory source: nil allowStubAttachments: NO error: &error];
     AssertEq(status, kCBLStatusCreated);
     AssertNil(error);
     AssertEq(db.documentCount, 1u);
@@ -490,7 +490,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     CBL_MutableRevision* other = [[CBL_MutableRevision alloc] initWithDocID: @"AnotherDocID" revID: @"1-1010".cbl_asRevID deleted: NO];
     other.properties = $dict({@"language", @"jp"});
     change = nil;
-    status = [db forceInsert: other revisionHistory: @[other.revID] source: nil error: &error];
+    status = [db forceInsert: other revisionHistory: @[other.revID] source: nil allowStubAttachments: NO error: &error];
     AssertEq(status, kCBLStatusCreated);
     AssertNil(error);
     AssertEqual(change, announcement(db, other, other));
@@ -581,7 +581,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     NSArray* history = @[rev.revID];
     change = nil;
     NSError* error;
-    CBLStatus status = [db forceInsert: rev revisionHistory: history source: nil error: &error];
+    CBLStatus status = [db forceInsert: rev revisionHistory: history source: nil allowStubAttachments: NO error: &error];
     AssertEq(status, 201);
     AssertNil(error);
     AssertEq(db.documentCount, 1u);
@@ -593,7 +593,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revIDString}, {@"message", @"hi"});
     history = @[rev.revID, @"3-3333".cbl_asRevID, @"2-2222".cbl_asRevID, @"1-1111".cbl_asRevID];
     change = nil;
-    status = [db forceInsert: rev revisionHistory: history source: nil error: &error];
+    status = [db forceInsert: rev revisionHistory: history source: nil allowStubAttachments: NO error: &error];
     AssertEq(status, kCBLStatusCreated);
     AssertNil(error);
     AssertEq(db.documentCount, 1u);
@@ -953,7 +953,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     CBL_MutableRevision* rev = [[CBL_MutableRevision alloc] initWithDocID:docId revID:@"1-1111".cbl_asRevID deleted: NO];
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revIDString}, {@"testName", @"test26_ReAddAfterPurge"});
     NSError* error;
-    CBLStatus status = [db forceInsert: rev revisionHistory: nil source: nil error: &error];
+    CBLStatus status = [db forceInsert: rev revisionHistory: nil source: nil allowStubAttachments: NO error: &error];
     AssertEq(status, kCBLStatusCreated);
 
     CBLDocument* redoc = [db existingDocumentWithID:docId];
@@ -974,7 +974,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
 
     CBL_MutableRevision* revAfterPurge = [[CBL_MutableRevision alloc] initWithDocID:docId revID:@"1-1111".cbl_asRevID deleted: NO];
     revAfterPurge.properties = $dict({@"_id", revAfterPurge.docID}, {@"_rev", revAfterPurge.revIDString}, {@"testName", @"test26_ReAddAfterPurge"});
-    CBLStatus status2 = [db forceInsert: revAfterPurge revisionHistory: nil source: nil error: &error];
+    CBLStatus status2 = [db forceInsert: revAfterPurge revisionHistory: nil source: nil allowStubAttachments: NO error: &error];
     AssertEq(status2, kCBLStatusCreated);
 }
 
@@ -988,21 +988,21 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revIDString}, {@"message", @"hi"});
     NSArray* history = @[rev.revID];
     NSError* error;
-    AssertEq([db forceInsert: rev revisionHistory: history source: nil error: &error], 201);
+    AssertEq([db forceInsert: rev revisionHistory: history source: nil allowStubAttachments: NO error: &error], 201);
     rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID" revID: @"1-ffff".cbl_asRevID deleted: NO];
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revIDString}, {@"message", @"bye"});
     history = @[rev.revID];
-    AssertEq([db forceInsert: rev revisionHistory: history source: nil error: &error], 201);
+    AssertEq([db forceInsert: rev revisionHistory: history source: nil allowStubAttachments: NO error: &error], 201);
 
     // Create another new doc with a merged conflict:
     rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID2" revID: @"1-1111".cbl_asRevID deleted: NO];
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revIDString}, {@"message", @"hi"});
     history = @[rev.revID];
-    AssertEq([db forceInsert: rev revisionHistory: history source: nil error: &error], 201);
+    AssertEq([db forceInsert: rev revisionHistory: history source: nil allowStubAttachments: NO error: &error], 201);
     rev = [[CBL_MutableRevision alloc] initWithDocID: @"MyDocID2" revID: @"1-ffff".cbl_asRevID deleted: YES];
     rev.properties = $dict({@"_id", rev.docID}, {@"_rev", rev.revIDString});
     history = @[rev.revID];
-    AssertEq([db forceInsert: rev revisionHistory: history source: nil error: &error], 201);
+    AssertEq([db forceInsert: rev revisionHistory: history source: nil allowStubAttachments: NO error: &error], 201);
 
     // Get changes, testing all combinations of includeConflicts and includeDocs:
     for (int conflicts=0; conflicts <= 1; conflicts++) {
@@ -1085,7 +1085,7 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
         CBL_Revision* rev = [CBL_Revision revisionWithProperties: @{@"_id": @"foo",
                                                                     @"_rev": $sprintf(@"%d-cafebabe", gen),
                                                                     @"gen": @(gen)}];
-        CBLStatus status = [db forceInsert: rev revisionHistory: history source: nil error: NULL];
+        CBLStatus status = [db forceInsert: rev revisionHistory: history source: nil allowStubAttachments: NO error: NULL];
         Assert(status == 201, @"Failed to forceInsert: %d", status);
         [history insertObject: rev.revID atIndex: 0];
         [revs addObject: rev];
@@ -1157,9 +1157,9 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     AssertEqual(all[0].revisionID, longBranch.revID.asString);
 
     // Add the conflicting revisions back, as a pull replication might do:
-    status = [db forceInsert: shortConflict revisionHistory: shortHistory source: nil error: &error];
+    status = [db forceInsert: shortConflict revisionHistory: shortHistory source: nil allowStubAttachments: NO error: &error];
     Assert(!CBLStatusIsError(status));
-    status = [db forceInsert: longConflict revisionHistory: longHistory source: nil error: &error];
+    status = [db forceInsert: longConflict revisionHistory: longHistory source: nil allowStubAttachments: NO error: &error];
     Assert(!CBLStatusIsError(status));
 
     // Make sure this doesn't re-create the conflict:

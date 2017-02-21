@@ -326,7 +326,7 @@ static NSArray* sortViews(NSArray *array) {
                                 {@"_rev", @"1-ffffff"},  // higher revID, will win conflict
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
-    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil error: &error];
+    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil allowStubAttachments: NO error: &error];
     Assert(status < 300);
     AssertNil(error);
     AssertEqual(leaf1.docID, leaf2.docID);
@@ -366,7 +366,7 @@ static NSArray* sortViews(NSArray *array) {
                                 {@"_rev", @"1-00"},  // lower revID, will lose conflict
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
-    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil error: &error];
+    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil allowStubAttachments: NO error: &error];
     Assert(status < 300);
     AssertNil(error);
     AssertEqual(leaf1.docID, leaf2.docID);
@@ -409,7 +409,7 @@ static NSArray* sortViews(NSArray *array) {
                                 {@"_rev", @"1-FFFFFFFF"},  // higher revID, will win conflict
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
-    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil error: &error];
+    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil allowStubAttachments: NO error: &error];
     Assert(status < 300);
     AssertNil(error);
     AssertEqual(leaf1.docID, leaf2.docID);
@@ -874,7 +874,7 @@ static NSArray* reverse(NSArray* a) {
                                 {@"_rev", @"1-00"},  // lower revID, will lose conflict
                                 {@"key", @"40ur"});
     CBL_Revision* leaf2 = [[CBL_Revision alloc] initWithProperties: props];
-    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil error: &error];
+    CBLStatus status = [db forceInsert: leaf2 revisionHistory: @[] source: nil allowStubAttachments: NO error: &error];
     Assert(status < 300);
     AssertNil(error);
 
@@ -1492,7 +1492,7 @@ static NSArray* reverse(NSArray* a) {
                   {@"_rev", @"1-ffffff"},  // higher revID, will win conflict
                   {@"key", @"40ur"});
     rev = [[CBL_Revision alloc] initWithProperties: props];
-    status = [db forceInsert: rev revisionHistory: @[] source: nil error: &error];
+    status = [db forceInsert: rev revisionHistory: @[] source: nil allowStubAttachments: NO error: &error];
     Assert(status < 300);
     AssertNil(error);
     AssertEq([view _updateIndex], kCBLStatusOK);
@@ -1503,7 +1503,7 @@ static NSArray* reverse(NSArray* a) {
                   {@"_rev", @"1-000000"},  // lower revID, will lose conflict
                   {@"key", @"40ur"});
     rev = [[CBL_Revision alloc] initWithProperties: props];
-    status = [db forceInsert: rev revisionHistory: @[] source: nil error: &error];
+    status = [db forceInsert: rev revisionHistory: @[] source: nil allowStubAttachments: NO error: &error];
     Assert(status < 300);
     AssertNil(error);
     AssertEq([view _updateIndex], kCBLStatusOK);
