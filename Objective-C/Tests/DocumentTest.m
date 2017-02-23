@@ -110,7 +110,6 @@
     // Make sure resolver isn't being called at inappropriate times by defaulting to one that
     // will raise an exception:
     self.db.conflictResolver = [DoNotResolve new];
-
     doc = [self.db documentWithID: @"doc1"];
 }
 
@@ -120,6 +119,14 @@
     [doc revert];
 
     [super tearDown];
+}
+
+
+- (void) reopenDB {
+    [super reopenDB];
+    
+    self.db.conflictResolver = [DoNotResolve new];
+    doc = [self.db documentWithID: @"doc1"];
 }
 
 
@@ -297,10 +304,7 @@
     
     ////// Reopen the database and get the document again:
 
-    doc = nil;
     [self reopenDB];
-    
-    doc = [self.db documentWithID: @"doc1"];
     
     // Primitives:
     AssertEqual([doc booleanForKey: @"yes"], YES);
@@ -424,10 +428,8 @@
     NSError* error;
     Assert([doc save: &error], @"Error saving: %@", error);
     
-    doc = nil;
     [self reopenDB];
     
-    doc = [self.db documentWithID: @"doc1"];
     doc[@"modified"] = @(YES);
     
     // Access a subdocument to load the subdocument into cache:
@@ -793,14 +795,12 @@
 
     [self reopenDB];
 
-    doc = [self.db documentWithID: @"doc1"];
     Assert([doc[@"data"] isKindOfClass:[CBLBlob class]]);
     data = doc[@"data"];
     AssertEqualObjects(data.content, content);
     
     [self reopenDB];
 
-    doc = [self.db documentWithID: @"doc1"];
     doc[@"foo"] = @"bar";
     Assert([doc save: &error], @"Saving error: %@", error);
     Assert([doc[@"data"] isKindOfClass:[CBLBlob class]]);
