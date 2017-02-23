@@ -114,6 +114,7 @@
 		93A8434D1E3BB95200B4AF2D /* CBLBlob.h in Headers */ = {isa = PBXBuildFile; fileRef = 72A879FE1E2DD536008466FF /* CBLBlob.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93BB726B1E446FC500427251 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
 		93BB72781E446FE000427251 /* CouchbaseLite.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		93DD40E31E5CDAA500DD9196 /* SubdocumentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DD40E21E5CDAA500DD9196 /* SubdocumentTest.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -394,6 +395,7 @@
 		93BFCD951E0380A300E52F8A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		93BFCD9E1E0385EA00E52F8A /* CBLDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabase.h; sourceTree = "<group>"; };
 		93BFCD9F1E0385EA00E52F8A /* CBLDatabase.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLDatabase.mm; sourceTree = "<group>"; };
+		93DD40E21E5CDAA500DD9196 /* SubdocumentTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SubdocumentTest.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -494,6 +496,7 @@
 				27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */,
 				27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */,
 				27BE3B501E4E8F6F0012B74A /* QueryTest.swift */,
+				93DD40E21E5CDAA500DD9196 /* SubdocumentTest.swift */,
 				275F92831E4D30A4007FD5A2 /* Info.plist */,
 			);
 			path = Tests;
@@ -1142,6 +1145,7 @@
 				27BE3B4F1E4E65EB0012B74A /* DocumentTest.swift in Sources */,
 				27BE3B511E4E8F6F0012B74A /* QueryTest.swift in Sources */,
 				27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */,
+				93DD40E31E5CDAA500DD9196 /* SubdocumentTest.swift in Sources */,
 				27BE3B4B1E4E46120012B74A /* CBLTestCase.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

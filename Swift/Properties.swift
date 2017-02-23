@@ -10,18 +10,17 @@ import Foundation
 
 
 public class Properties {
-
     public var properties : [String:Any]? {
-        get {return convertValue(_impl.properties, isGetter: YES) as? [String: Any]}
-        set {_impl.properties = convertValue(newValue, isGetter: NO) as? [String : Any]}
+        get {return convertProperties(_impl.properties, isGetter: true)}
+        set {_impl.properties = convertProperties(newValue, isGetter: false)}
     }
 
     public func property(_ key: String) -> Any? {
-        return convertValue(_impl.object(forKey: key), isGetter: YES)
+        return convertValue(_impl.object(forKey: key), isGetter: true)
     }
 
     public func setProperty(_ key: String, _ value: Any?) {
-        return _impl.setObject(convertValue(value, isGetter: NO), forKey: key)
+        return _impl.setObject(convertValue(value, isGetter: false), forKey: key)
     }
 
     public func contains(_ key: String) -> Bool {
@@ -61,11 +60,11 @@ public class Properties {
     }
 
     public subscript(key: String) -> [Any]? {
-        get {return _impl.object(forKey: key) as? [Any]}
+        get {return property(key) as? [Any]}
     }
     
     public subscript(key: String) -> Subdocument? {
-        get {return convertValue(_impl.object(forKey: key), isGetter: YES) as? Subdocument}
+        get {return property(key) as? Subdocument}
     }
     
     public subscript(key: String) -> Any? {
@@ -78,6 +77,17 @@ public class Properties {
     }
 
     let _impl: CBLProperties
+    
+    func convertProperties(_ properties: [String: Any]?, isGetter: Bool) -> [String: Any]? {
+        if let props = properties {
+            var result: [String: Any] = [:]
+            for (key, value) in props {
+                result[key] = convertValue(value, isGetter: isGetter)
+            }
+            return result
+        }
+        return nil
+    }
     
     func convertValue(_ value: Any?, isGetter: Bool) -> Any? {
         switch value {
@@ -97,17 +107,10 @@ public class Properties {
                 result.append(convertValue(v, isGetter: isGetter)!)
             }
             return result
-        case let dict as [String: Any]:
-            var result: [String: Any] = [:]
-            for (k, v) in dict {
-                result[k] = convertValue(v, isGetter: isGetter)!
-            }
-            return result
         default:
             return value
         }
     }
 }
-
 
 public typealias Blob = CBLBlob
