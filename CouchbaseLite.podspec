@@ -5,7 +5,7 @@ Pod::Spec.new do |s|
   s.homepage              = 'http://mobile.couchbase.com'
   s.summary               = 'An embedded syncable NoSQL database for iOS, tvOS, and MacOS apps.'
   s.author                = 'Couchbase'
-  s.source                = { :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => s.version, :submodules => true }
+  s.source                = { :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :branch => 'feature/2.0', :submodules => true }
 
   s.libraries             = "sqlite3", "c++"
 
@@ -30,7 +30,7 @@ Pod::Spec.new do |s|
                             "vendor/couchbase-lite-core/vendor/sqlite3-unicodesn/**/*.{h,c}",
                             "vendor/couchbase-lite-core/vendor/SQLiteCpp/src/*.cpp", 
                             "vendor/couchbase-lite-core/vendor/SQLiteCpp/include/SQLiteCpp/*.h",
-                            "vendor/MYUtilities/{CollectionUtils,MYErrorUtils,MYLogging,MYURLUtils,Test,Test_Assertions}.{h,m}"
+                            "vendor/MYUtilities/{CollectionUtils,ExceptionUtils,MYErrorUtils,MYLogging,MYURLUtils,Test,Test_Assertions}.{h,m}"
 
   s.exclude_files         = "vendor/couchbase-lite-core/vendor/sqlite3-unicodesn/libstemmer_c/libstemmer/libstemmer.c"
 

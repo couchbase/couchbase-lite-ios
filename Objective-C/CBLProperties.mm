@@ -175,7 +175,7 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 - (NSInteger) integerForKey: (NSString*)key {
     id v = numberProperty(_properties, key);
-    return v || self.hasChanges ? [v integerValue] : FLValue_AsInt([self fleeceValueForKey: key]);
+    return v || self.hasChanges ? [v integerValue] : (NSInteger)FLValue_AsInt([self fleeceValueForKey: key]);
 }
 
 
