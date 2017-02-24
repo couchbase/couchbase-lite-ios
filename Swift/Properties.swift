@@ -10,27 +10,23 @@ import Foundation
 
 
 public class Properties {
-
     public var properties : [String:Any]? {
-        get {return _impl.properties}
-        set {_impl.properties = newValue}
+        get {return convertProperties(_impl.properties, isGetter: true)}
+        set {_impl.properties = convertProperties(newValue, isGetter: false)}
     }
 
-
     public func property(_ key: String) -> Any? {
-        return _impl.object(forKey: key)
+        return convertValue(_impl.object(forKey: key), isGetter: true)
     }
 
     public func setProperty(_ key: String, _ value: Any?) {
-        return _impl.setObject(value, forKey: key)
+        return _impl.setObject(convertValue(value, isGetter: false), forKey: key)
     }
-
 
     public func contains(_ key: String) -> Bool {
         return _impl.containsObject(forKey: key)
     }
 
-    
     public subscript(key: String) -> Bool {
         get {return _impl.boolean(forKey: key)}
         set {_impl.setBoolean(newValue, forKey: key)}
@@ -64,25 +60,57 @@ public class Properties {
     }
 
     public subscript(key: String) -> [Any]? {
-        get {return _impl.object(forKey: key) as? [Any]}
+        get {return property(key) as? [Any]}
     }
-
-    public subscript(key: String) -> CBLSubdocument? {
-        get {return _impl.object(forKey: key) as? CBLSubdocument}
+    
+    public subscript(key: String) -> Subdocument? {
+        get {return property(key) as? Subdocument}
     }
-
+    
     public subscript(key: String) -> Any? {
-        get {return _impl.object(forKey: key)}
-        set {_impl.setObject(newValue, forKey: key)}
+        get {return property(key)}
+        set {setProperty(key, newValue)}
     }
-
 
     init(_ impl: CBLProperties) {
         _impl = impl
     }
 
     let _impl: CBLProperties
+    
+    func convertProperties(_ properties: [String: Any]?, isGetter: Bool) -> [String: Any]? {
+        if let props = properties {
+            var result: [String: Any] = [:]
+            for (key, value) in props {
+                result[key] = convertValue(value, isGetter: isGetter)
+            }
+            return result
+        }
+        return nil
+    }
+    
+    func convertValue(_ value: Any?, isGetter: Bool) -> Any? {
+        switch value {
+        case let subdoc as Subdocument:
+            return isGetter ? subdoc : subdoc._subdocimpl
+        case let implSubdoc as CBLSubdocument:
+            if isGetter {
+                if let subdoc = implSubdoc.swiftSubdocument {
+                    return subdoc
+                }
+                return Subdocument(implSubdoc)
+            }
+            return implSubdoc
+        case let array as [Any]:
+            var result: [Any] = [];
+            for v in array {
+                result.append(convertValue(v, isGetter: isGetter)!)
+            }
+            return result
+        default:
+            return value
+        }
+    }
 }
-
 
 public typealias Blob = CBLBlob

@@ -75,10 +75,10 @@ class DocumentTest: CBLTestCase {
             XCTAssertEqual(array.count, 4)
             XCTAssert(array[0] as? Int == 1)
 
-            let dict: CBLSubdocument = self.doc["dict"]!
-            XCTAssertEqual(dict.properties?.count, 3)
-            XCTAssert(dict["miney"] as? String == "moe")
-
+            let dict: Subdocument? = self.doc["dict"]
+            XCTAssertEqual(dict?.properties?.count, 3)
+            XCTAssert(dict?["miney"] == "moe")
+            
             XCTAssert(self.doc.property("null") as? NSNull != nil)
             XCTAssertNil(self.doc.property("none"))
             XCTAssertFalse(self.doc.contains("none"))
@@ -108,13 +108,15 @@ class DocumentTest: CBLTestCase {
         ]
 
         XCTAssertEqual(doc["weight"], 130.5)
-        XCTAssertEqual(doc["address"]?["zip"] as? Int, 12345)
+        var zip: Int? = doc["address"]?["zip"]
+        XCTAssertEqual(zip, 12345)
 
         try doc.save()
         try reopenDB()
 
         XCTAssertEqual(doc["weight"], 130.5)
-        XCTAssertEqual(doc["address"]?["zip"] as? Int, 12345)
+        zip = doc["address"]?["zip"]
+        XCTAssertEqual(zip, 12345)
 
         doc["name"] = nil
 
