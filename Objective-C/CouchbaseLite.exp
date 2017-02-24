@@ -8,7 +8,6 @@
 
 #  Public classes:
 .objc_class_name_CBLBlob
-.objc_class_name_CBLConflictResolver
 .objc_class_name_CBLDatabase
 .objc_class_name_CBLDatabaseOptions
 .objc_class_name_CBLDocument
