@@ -11,4 +11,3 @@
 INFOPLIST_FILE               = Swift/Info.plist
 PRODUCT_BUNDLE_IDENTIFIER    = com.couchbase.CouchbaseLiteSwift
 PRODUCT_NAME                 = CouchbaseLiteSwift
-REEXPORTED_FRAMEWORK_NAMES   = CouchbaseLite    // need to export some constants/classes it defines
