@@ -4,7 +4,7 @@ set -e
 
 function usage 
 {
-  echo -e "\n Use ${0} -s <Scheme Name: \"CBL ObjC\" or \"CBL Swift\"> -p <Platform Name: iOS, tvOS, or macOS> -o <Output Directory>\n\n" 
+  echo "\nUsage: ${0} -s <Scheme Name: \"CBL ObjC\" or \"CBL Swift\"> -p <Platform Name: iOS, tvOS, or macOS> -o <Output Directory>\n\n" 
 }
 
 while [[ $# -gt 1 ]]
