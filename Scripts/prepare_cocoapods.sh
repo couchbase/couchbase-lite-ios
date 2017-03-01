@@ -5,6 +5,8 @@ then
   exit 1
 fi
 
+echo "Preparing CouchbaseLite framework ..."
+
 rm -rf frameworks
 sh Scripts/build_framework.sh -s "$SCHEME" -p ios -o frameworks > ios-build.log
 sh Scripts/build_framework.sh -s "$SCHEME" -p tvos -o frameworks > tvos-build.log
