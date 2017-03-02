@@ -9,10 +9,10 @@
 #pragma once
 #import "c4.h"
 #import "Fleece.h"
+#import "CBLBlob.h"
 #import "CBLDatabase.h"
 #import "CBLDocument.h"
 #import "CBLSubdocument.h"
-#import "CBLBlob.h"
 
 struct c4BlobStore;
 
@@ -94,42 +94,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Subclass should implement this to read binary files to disk
 - (nullable CBLBlob *)blobWithProperties:(NSDictionary *)properties error:(NSError **)error;
-
-@end
-
-
-/// CBLDocument:
-
-
-@interface CBLDocument ()
-
-- (instancetype) initWithDatabase: (CBLDatabase*)db
-                            docID: (NSString*)docID
-                        mustExist: (BOOL)mustExist
-                            error: (NSError**)outError;
-
-- (void)changedExternally;
-@end
-
-
-/// CBLSubdocument:
-
-typedef void (^CBLOnMutateBlock)();
-
-@interface CBLSubdocument ()
-
-@property (weak, nonatomic, nullable) CBLProperties* parent;
-
-@property (nonatomic, nullable) NSString* key;
-
-#ifdef __cplusplus
-- (instancetype) initWithParent: (nullable CBLProperties*)parent
-                     sharedKeys: (cbl::SharedKeys)sharedKeys;
-#endif
-
-- (void) setOnMutate: (nullable CBLOnMutateBlock)onMutate;
-
-- (void) invalidate;
 
 @end
 

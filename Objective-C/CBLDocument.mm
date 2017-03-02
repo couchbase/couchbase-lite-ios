@@ -14,13 +14,15 @@
 //  and limitations under the License.
 
 #import "CBLDocument.h"
+#import "c4Observer.h"
 #import "CBLConflictResolver.h"
 #import "CBLCoreBridge.h"
-#import "CBLStringBytes.h"
-#import "CBLJSON.h"
+#import "CBLDocument+Internal.h"
 #import "CBLInternal.h"
+#import "CBLJSON.h"
 #import "CBLSharedKeys.hh"
-#include "c4Observer.h"
+#import "CBLStringBytes.h"
+
 
 NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChangeNotification";
 NSString* const kCBLDocumentSavedNotification = @"CBLDocumentSavedNotification";
@@ -32,7 +34,9 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     C4Document* _c4doc;
 }
 
-@synthesize documentID=_documentID, database=_database, conflictResolver = _conflictResolver;
+
+@synthesize documentID=_documentID, database=_database, conflictResolver=_conflictResolver;
+@synthesize swiftDocument=_swiftDocument;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db

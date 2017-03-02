@@ -7,6 +7,7 @@
 //
 
 #import "CBLSubdocument.h"
+#import "CBLSubdocument+Internal.h"
 #import "CBLCoreBridge.h"
 #import "CBLDocument.h"
 #import "CBLInternal.h"
@@ -19,7 +20,7 @@
 }
 
 
-@synthesize parent=_parent, key=_key;
+@synthesize parent=_parent, key=_key, swiftSubdocument=_swiftSubdocument;
 
 
 - (instancetype) init {

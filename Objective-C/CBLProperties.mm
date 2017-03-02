@@ -20,6 +20,7 @@
 #import "CBLJSON.h"
 #import "CBLInternal.h"
 #import "CBLSharedKeys.hh"
+#import "CBLSubdocument+Internal.h"
 
 @interface CBLProperties()
 

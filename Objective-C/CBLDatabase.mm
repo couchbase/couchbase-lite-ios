@@ -14,15 +14,16 @@
 //  and limitations under the License.
 
 #import "CBLDatabase.h"
-#import "CBLInternal.h"
-#import "CBLDocument.h"
-#import "CBLQuery+Internal.h"
-#import "CBLCoreBridge.h"
-#import "CBLStringBytes.h"
-#import "CBLMisc.h"
-#import "CBLSharedKeys.hh"
 #import "c4BlobStore.h"
 #import "c4Observer.h"
+#import "CBLCoreBridge.h"
+#import "CBLDocument.h"
+#import "CBLDocument+Internal.h"
+#import "CBLInternal.h"
+#import "CBLMisc.h"
+#import "CBLQuery+Internal.h"
+#import "CBLSharedKeys.hh"
+#import "CBLStringBytes.h"
 
 
 NSString* const kCBLDatabaseChangeNotification = @"CBLDatabaseChangeNotification";

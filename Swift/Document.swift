@@ -101,16 +101,3 @@ public class Document : Properties {
 
     let _docimpl: CBLDocument
 }
-
-
-extension CBLDocument {
-    private struct AssociatedKeys {
-        static var SwiftDocument = "SwiftDocument"
-    }
-    
-    var swiftDocument: Document? {
-        get {return objc_getAssociatedObject(self, &AssociatedKeys.SwiftDocument) as? Document}
-        set { objc_setAssociatedObject(self, &AssociatedKeys.SwiftDocument, newValue,
-                                     objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)}
-    }
-}

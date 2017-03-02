@@ -159,7 +159,7 @@ public final class Database {
         object at a time with the same documentID. */
     public func document(withID docID: String) -> Document {
         let implDoc = _impl.document(withID: docID)
-        if let doc = implDoc.swiftDocument {
+        if let doc = implDoc.swiftDocument as? Document {
             return doc
         }
         return Document(implDoc, inDatabase: self)

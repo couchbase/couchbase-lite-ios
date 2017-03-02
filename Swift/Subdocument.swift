@@ -12,7 +12,7 @@ public class Subdocument : Properties, NSCopying {
     
     /** The subdocument's owning document. */
     public var document: Document? {
-        return _subdocimpl.document?.swiftDocument
+        return _subdocimpl.document?.swiftDocument as? Document
     }
     
     /** Checks whether the subdocument exists in the database or not. */
@@ -40,16 +40,4 @@ public class Subdocument : Properties, NSCopying {
     }
     
     let _subdocimpl: CBLSubdocument
-}
-
-extension CBLSubdocument {
-    private struct AssociatedKeys {
-        static var SwiftSubdocument = "SwiftSubdocument"
-    }
-    
-    var swiftSubdocument: Subdocument? {
-        get {return objc_getAssociatedObject(self, &AssociatedKeys.SwiftSubdocument) as? Subdocument}
-        set { objc_setAssociatedObject(self, &AssociatedKeys.SwiftSubdocument, newValue,
-                                       objc_AssociationPolicy.OBJC_ASSOCIATION_ASSIGN)}
-    }
 }

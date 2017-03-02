@@ -7,12 +7,15 @@
 //
 
 #import "CBLTestCase.h"
-#import "CBLJSON.h"
+
 #import "CBLBlob.h"
 #import "CBLInternal.h"
+#import "CBLJSON.h"
+#import "CBLSubdocument+Internal.h"
+
 #include "c4.h"
-#include "Fleece.h"
 #include "c4Document+Fleece.h"
+#include "Fleece.h"
 #include "Fleece+CoreFoundation.h"
 
 

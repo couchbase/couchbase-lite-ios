@@ -9,6 +9,7 @@
 #import "CBLTestCase.h"
 #import "CBLInternal.h"
 #import "CBLJSON.h"
+#import "CBLSubdocument+Internal.h"
 
 @interface SubdocumentTest : CBLTestCase
 
