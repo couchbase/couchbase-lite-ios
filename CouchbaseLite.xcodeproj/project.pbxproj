@@ -1714,24 +1714,7 @@
 			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "";
-				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SRCROOT)/Objective-C/Internal/CBLPrefix.h";
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
-					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
-					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
-				);
-				INFOPLIST_FILE = "Objective-C/Info.plist";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.CouchbaseLite;
-				PRODUCT_NAME = CouchbaseLite;
-				SKIP_INSTALL = YES;
 			};
 			name = Debug;
 		};
@@ -1740,24 +1723,7 @@
 			baseConfigurationReference = 275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "";
-				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SRCROOT)/Objective-C/Internal/CBLPrefix.h";
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
-					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
-					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
-				);
-				INFOPLIST_FILE = "Objective-C/Info.plist";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.CouchbaseLite;
-				PRODUCT_NAME = CouchbaseLite;
-				SKIP_INSTALL = YES;
 			};
 			name = Release;
 		};

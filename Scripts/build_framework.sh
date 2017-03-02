@@ -31,7 +31,7 @@ do
   shift
 done
 
-if [ -z "$SCHEME" ] || [ -z "$PLATFORM_NAME" ]
+if [ -z "$SCHEME" ] || [ -z "$PLATFORM_NAME" ] || [ -z "$OUTPUT_DIR" ]
 then
   usage
   exit 4

@@ -15,9 +15,11 @@
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.0DP001</string>
+	<string>2.0DB2</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2017 Couchbase. All rights reserved.</string>
 	<key>NSPrincipalClass</key>
 	<string></string>
 </dict>
