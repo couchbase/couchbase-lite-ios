@@ -22,6 +22,7 @@
 #import "CBLJSON.h"
 #import "CBLSharedKeys.hh"
 #import "CBLStringBytes.h"
+#import "CBLSubdocument.h"
 
 
 NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChangeNotification";
@@ -241,8 +242,10 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 // The next three functions search recursively for a property "_cbltype":"blob".
 
 static bool objectContainsBlob(__unsafe_unretained id value) {
-    if ([value isKindOfClass: [NSDictionary class]])
-        return dictContainsBlob(value);
+    if ([value isKindOfClass: [CBLBlob class]])
+        return true;
+    else if ([value isKindOfClass: [CBLSubdocument class]])
+        return subdocContainsBlob(value);
     else if ([value isKindOfClass: [NSArray class]])
         return arrayContainsBlob(value);
     else
@@ -256,9 +259,15 @@ static bool arrayContainsBlob(__unsafe_unretained NSArray* array) {
     return false;
 }
 
-static bool dictContainsBlob(__unsafe_unretained NSDictionary* dict) {
-    if ([dict[@"_cbltype"] isEqual: @"blob"])
-        return true;
+static bool subdocContainsBlob(__unsafe_unretained CBLSubdocument* subdoc) {
+    __block bool containsBlob = false;
+    [subdoc.properties enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL *stop) {
+        *stop = containsBlob = objectContainsBlob(value);
+    }];
+    return containsBlob;
+}
+
+static bool containsBlob(__unsafe_unretained NSDictionary* dict) {
     __block bool containsBlob = false;
     [dict enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL *stop) {
         *stop = containsBlob = objectContainsBlob(value);
@@ -283,7 +292,7 @@ static bool dictContainsBlob(__unsafe_unretained NSDictionary* dict) {
     };
     if (deletion)
         put.revFlags = kRevDeleted;
-    if (dictContainsBlob(propertiesToSave))
+    if (containsBlob(propertiesToSave))
         put.revFlags |= kRevHasAttachments;
     if (propertiesToSave.count > 0) {
         // Encode properties to Fleece data:

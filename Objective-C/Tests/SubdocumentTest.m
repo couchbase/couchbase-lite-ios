@@ -396,7 +396,7 @@
 }
 
 
-- (void) testReplaceSubdocumentWithNonDict {
+- (void) testReplaceWithNonDict {
     CBLSubdocument* address = [CBLSubdocument subdocument];
     address[@"street"] = @"1 Star Way.";
     AssertEqualObjects(address[@"street"], @"1 Star Way.");
@@ -410,6 +410,108 @@
     AssertEqualObjects(doc[@"address"], @"123 Space Dr.");
     AssertNil(address.document);
     AssertNil(address.properties);
+}
+
+
+- (void) testReplaceWithNewSubdocument {
+    CBLSubdocument* address = [CBLSubdocument subdocument];
+    address[@"street"] = @"1 Star Way.";
+    AssertEqualObjects(address[@"street"], @"1 Star Way.");
+    AssertEqualObjects(address.properties, (@{@"street": @"1 Star Way."}));
+    
+    doc[@"address"] = address;
+    AssertEqualObjects(doc[@"address"], address);
+    AssertEqualObjects(address.document, doc);
+    
+    CBLSubdocument* nuAddress = [CBLSubdocument subdocument];
+    address[@"street"] = @"123 Space Dr.";
+    doc[@"address"] = nuAddress;
+    
+    AssertEqualObjects(doc[@"address"], nuAddress);
+    AssertNil(address.document);
+    AssertNil(address.properties);
+}
+
+
+- (void) testReplaceWithNewDocProperties {
+    doc.properties = @{ @"name": @"Jason",
+                        @"address": @{
+                                @"street": @"1 Star Way.",
+                                @"phones": @{@"mobile": @"650-123-4567"}
+                                },
+                        @"work": @{@"company": @"Couchbase"},
+                        @"subscription": @{@"type": @"silver"},
+                        @"expiration": @{@"date": @"2017-03-03T07:13:46.536Z"},
+                        @"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]
+                        };
+    
+    CBLSubdocument* address = doc[@"address"];
+    CBLSubdocument* phones = address[@"phones"];
+    AssertNotNil(address);
+    AssertNotNil(phones);
+    
+    CBLSubdocument* work = doc[@"work"];
+    AssertNotNil(work);
+    
+    CBLSubdocument* subscription = doc[@"subscription"];
+    AssertNotNil(subscription);
+    
+    CBLSubdocument* expiration = doc[@"expiration"];
+    AssertNotNil(expiration);
+    
+    NSArray* references = doc[@"references"];
+    AssertEqual([references count], 2u);
+    CBLSubdocument* r1 = references[0];
+    CBLSubdocument* r2 = references[1];
+    AssertNotNil(r1);
+    AssertNotNil(r2);
+    
+    CBLSubdocument* nuSubscription = [CBLSubdocument subdocument];
+    nuSubscription[@"type"] = @"platinum";
+    
+    NSDate* date = [NSDate date];
+    doc.properties = @{ @"name": @"Jason",
+                        @"address": @"1 Star Way.",
+                        @"work": @{ @"company": @"Couchbase", @"position": @"Engineer" },
+                        @"subscription": nuSubscription,
+                        @"expiration": date,
+                        @"references": @[@{@"name": @"Smith"}]
+                        };
+    
+    AssertEqualObjects(doc[@"address"], @"1 Star Way.");
+    AssertNil(address.document);
+    AssertNil(address.parent);
+    AssertNil(address.properties);
+    
+    AssertNil(phones.document);
+    AssertNil(phones.parent);
+    AssertNil(phones.properties);
+    
+    AssertEqual(doc[@"work"], work);
+    AssertEqualObjects(work[@"company"], @"Couchbase");
+    AssertEqualObjects(work[@"position"], @"Engineer");
+    
+    AssertEqualObjects(doc[@"subscription"], nuSubscription);
+    AssertEqualObjects(nuSubscription[@"type"], @"platinum");
+    AssertNil(subscription.document);
+    AssertNil(subscription.parent);
+    AssertNil(subscription.properties);
+    
+    AssertEqualObjects([CBLJSON JSONObjectWithDate: [doc dateForKey: @"expiration"]],
+                       [CBLJSON JSONObjectWithDate: date]);
+    AssertNil(expiration.document);
+    AssertNil(expiration.parent);
+    AssertNil(expiration.properties);
+    
+    references = doc[@"references"];
+    AssertEqual([references count], 1u);
+    AssertEqualObjects(references[0], r1);
+    AssertEqualObjects(r1.document, doc);
+    AssertEqualObjects(r1.parent, doc);
+    AssertEqualObjects(r1[@"name"], @"Smith");
+    AssertNil(r2.document);
+    AssertNil(r2.parent);
+    AssertNil(r2.properties);
 }
 
 

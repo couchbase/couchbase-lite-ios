@@ -457,18 +457,18 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
     if ($equal(value, oldValue))
         return value; // nothing to convert
     
-    if ([value isKindOfClass: [NSDate class]])
-        return [CBLJSON JSONObjectWithDate: value];
-    else if ([value isKindOfClass: [CBLSubdocument class]])
+    if ([value isKindOfClass: [CBLSubdocument class]])
         return [self convertSubdoc: value oldValue: oldValue forKey: key];
     else if ([value isKindOfClass: [NSDictionary class]])
         return [self convertDict: value oldValue: oldValue forKey: key];
     else if ([value isKindOfClass: [NSArray class]])
         return [self convertArray: value oldVale: oldValue forKey: key];
-    else {
-        [self invalidateIfSubdocument: oldValue];
-        return value;
-    }
+    else if ([value isKindOfClass: [NSDate class]])
+        value = [CBLJSON JSONObjectWithDate: value];
+    
+    [self invalidateIfSubdocument: oldValue];
+    
+    return value;
 }
 
 
@@ -529,7 +529,7 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
         id nValue = array[i];
         id oValue = [oldArray count] > i ? oldArray[i] : nil;
         
-        // FIXME: Array can be nested, using a simple arraySet is not enough 
+        // FIXME: Array can be nested, using a simple arraySet is not enough.
         if ([oValue isKindOfClass: [CBLSubdocument class]] && [arraySet containsObject: oValue]) {
             // Prevent the subdocument to be invalidated so the subdocument can be reordered:
             oValue = nil;

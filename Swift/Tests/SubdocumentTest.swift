@@ -335,7 +335,7 @@ class SubdocumentTest: CBLTestCase {
         XCTAssertNil(r2.property("name"))
     }
     
-    func testReplaceSubdocumentWithNonDict() {
+    func testReplaceWithNonDict() {
         let address = Subdocument()
         address["street"] = "1 Star Way."
         
@@ -347,6 +347,82 @@ class SubdocumentTest: CBLTestCase {
         XCTAssertEqual(doc["address"], "123 Space Dr.")
         XCTAssertNil(address.document)
         XCTAssertNil(address.properties)
+    }
+    
+    func testReplaceWithNewSubdocument() {
+        let address = Subdocument()
+        address["street"] = "1 Star Way."
+        
+        doc["address"] = address
+        XCTAssert(doc.property("address") as? Subdocument === address)
+        XCTAssert(address.document === doc)
+        
+        let nuAddress = Subdocument()
+        nuAddress["street"] = "123 Space Dr."
+        doc["address"] = nuAddress
+        
+        XCTAssert(doc.property("address") as? Subdocument === nuAddress)
+        XCTAssertNil(address.document)
+        XCTAssertNil(address.properties)
+    }
+    
+    func testReplaceWithNewDocProperties() {
+        doc.properties = ["name": "Jason",
+                          "address": [
+                            "street": "1 Star Way.",
+                            "phones":["mobile": "650-123-4567"]],
+                          "work": ["company": "Couchbase"],
+                          "subscription": ["type": "silver"],
+                          "expiration": ["date": "2017-03-03T07:13:46.536Z"],
+                          "references": [["name": "Scott"], ["name": "Sam"]]]
+        
+        let address: Subdocument = doc["address"]!
+        let phones: Subdocument = address["phones"]!
+        let work: Subdocument = doc["work"]!
+        let subscription: Subdocument = doc["subscription"]!
+        let expiration: Subdocument = doc["expiration"]!
+        
+        var references: [Any] = doc["references"]!
+        let r1 = references[0] as! Subdocument
+        let r2 = references[1] as! Subdocument
+        
+        let nuSubscription = Subdocument()
+        nuSubscription["type"] = "platinum"
+        
+        let date = Date()
+        doc.properties = ["name": "Jason",
+                          "address": "1 Star Way.",
+                          "work": ["company": "Couchbase", "position": "Engineer"],
+                          "subscription": nuSubscription,
+                          "expiration": date,
+                          "references": [["name": "Smith"]]]
+        
+        XCTAssertEqual(doc["address"], "1 Star Way.")
+        XCTAssertNil(address.document)
+        XCTAssertNil(address.properties)
+        
+        XCTAssertNil(phones.document)
+        XCTAssertNil(phones.properties)
+        
+        XCTAssert(doc.property("work") as? Subdocument === work)
+        XCTAssertEqual(work["company"], "Couchbase")
+        XCTAssertEqual(work["position"], "Engineer")
+        
+        XCTAssert(doc.property("subscription") as? Subdocument === nuSubscription)
+        XCTAssertNil(subscription.document)
+        XCTAssertNil(subscription.properties)
+        
+        XCTAssertNotNil(doc.property("expiration"))
+        XCTAssertNil(doc.property("expiration") as? Subdocument)
+        XCTAssertNil(expiration.document)
+        XCTAssertNil(expiration.properties)
+        
+        references = doc["references"]!
+        XCTAssertEqual(references.count, 1)
+        XCTAssert(references[0] as! Subdocument === r1)
+        XCTAssertEqual(r1["name"], "Smith")
+        XCTAssertNil(r2.document)
+        XCTAssertNil(r2.properties)
     }
     
     func testDeleteDocument() throws {
