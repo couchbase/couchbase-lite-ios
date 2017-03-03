@@ -9,6 +9,7 @@
 
 #import "CBLSubdocument.h"
 #import "CBLProperties.h"
+#import "CBLInternal.h"
 
 
 #ifdef __cplusplus
@@ -23,7 +24,7 @@ typedef void (^CBLOnMutateBlock)();
 NS_ASSUME_NONNULL_BEGIN
 
 
-@interface CBLSubdocument ()
+@interface CBLSubdocument () <CBLJSONCoding>
 
 @property (weak, nonatomic, nullable) id swiftSubdocument;
 

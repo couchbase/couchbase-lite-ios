@@ -662,14 +662,9 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 
 @implementation NSObject (CBLJSONEncoding)
 
-- (void) fl_encodeTo:(FLEncoder)encoder {
-    if([self conformsToProtocol:@protocol(CBLJSONCoding)]) {
-        FLEncoder_WriteNSObject(encoder, [(id<CBLJSONCoding>)self jsonRepresentation]);
-    } else {
-        [NSException raise: NSInternalInconsistencyException
-            format: @"Objects of class %@ cannot be stored as Couchbase Lite property values",
-                     [self class]];
-    }
+// See Fleece+CoreFoundation.h
+- (id) fl_substitutedEncoding {
+    return [(id<CBLJSONCoding>)self jsonRepresentation];
 }
 
 

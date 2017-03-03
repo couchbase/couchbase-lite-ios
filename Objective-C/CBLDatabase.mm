@@ -371,16 +371,16 @@ static NSString* databasePath(NSString* name, NSString* dir) {
         return;
 
     const uint32_t kMaxChanges = 100u;
-    C4Slice c4docIDs[kMaxChanges];
-    C4SequenceNumber lastSequence;
+    C4DatabaseChange changes[kMaxChanges];
+    C4SequenceNumber lastSequence = 0;
     bool external = false;
-    uint32_t changes = 0u;
+    uint32_t nChanges = 0u;
     NSMutableArray* docIDs = [NSMutableArray new];
     do {
         // Read changes in batches of kMaxChanges:
         bool newExternal;
-        changes = c4dbobs_getChanges(_obs, c4docIDs, kMaxChanges, &lastSequence, &newExternal);
-        if(changes == 0 || external != newExternal || docIDs.count > 1000) {
+        nChanges = c4dbobs_getChanges(_obs, changes, kMaxChanges, &newExternal);
+        if (nChanges == 0 || external != newExternal || docIDs.count > 1000) {
             if(docIDs.count > 0) {
                 // Only notify if there are actually changes to send
                 NSDictionary *userInfo = @{kCBLDatabaseChangesUserInfoKey: docIDs,
@@ -392,14 +392,16 @@ static NSString* databasePath(NSString* name, NSString* dir) {
         }
 
         external = newExternal;
-        for(uint32_t i = 0; i < changes; i++) {
-            NSString *docID =slice2string(c4docIDs[i]);
+        for(uint32_t i = 0; i < nChanges; i++) {
+            NSString *docID =slice2string(changes[i].docID);
             [docIDs addObject:docID];
             if(external) {
                 [[_documents objectForKey:docID] changedExternally];
             }
         }
-    } while(changes > 0);
+        if (nChanges > 0)
+            lastSequence = changes[nChanges-1].sequence;
+    } while(nChanges > 0);
 }
 
 

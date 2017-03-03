@@ -114,28 +114,9 @@
     [self resetChangesKeys];
 }
 
-@end
 
-
-#pragma mark - FLEECE ENCODING FOR CBLJSONEncoding:
-
-
-@interface CBLSubdocument (CBLJSONEncoder)
-@end
-
-
-@implementation CBLSubdocument (CBJSONEncoder)
-
-
-- (void) fl_encodeTo:(FLEncoder)encoder {
-    NSDictionary* dict = self.properties;
-    FLEncoder_BeginDict(encoder, dict.count);
-    [dict enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
-        CBLStringBytes bKey(key);
-        FLEncoder_WriteKey(encoder, bKey);
-        [obj fl_encodeTo: encoder];
-    }];
-    FLEncoder_EndDict(encoder);
+- (NSDictionary*) jsonRepresentation {
+    return self.properties ?: @{};
 }
 
 
