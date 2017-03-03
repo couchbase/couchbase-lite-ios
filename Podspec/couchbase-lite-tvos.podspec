@@ -1,11 +1,11 @@
 Pod::Spec.new do |s|
   s.name            = 'couchbase-lite-tvos'
-  s.version         = '<RELEASE VERSION NUMBER>'
+  s.version         = '1.4.0'
   s.license         = { :type => 'Apache License, Version 2.0', :file => 'LICENSE.txt' }
   s.homepage        = 'http://mobile.couchbase.com'
   s.summary         = 'An embedded syncable NoSQL database for tvOS apps.'
   s.author          = 'Couchbase'
-  s.source          = { :http => '<RELEASE ZIP FILE URL>' }
+  s.source          = { :http => 'https://packages.couchbase.com/releases/couchbase-lite/tvos/1.4.0/couchbase-lite-tvos-community_1.4.0-3.zip' }
   s.preserve_paths  = 'LICENSE.txt'
   s.tvos.deployment_target = '9.0'
   s.frameworks      = 'CFNetwork', 'Security', 'SystemConfiguration', 'JavaScriptCore'
