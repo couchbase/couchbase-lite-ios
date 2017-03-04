@@ -8,6 +8,6 @@ fi
 echo "Preparing CouchbaseLite framework ..."
 
 rm -rf frameworks
-sh Scripts/build_framework.sh -s "$SCHEME" -p ios -o frameworks > ios-build.log
-sh Scripts/build_framework.sh -s "$SCHEME" -p tvos -o frameworks > tvos-build.log
-sh Scripts/build_framework.sh -s "$SCHEME" -p macos -o frameworks > macos-build.log
+sh Scripts/build_framework.sh -s "$SCHEME" -p iOS -o frameworks > ios-build.log
+sh Scripts/build_framework.sh -s "$SCHEME" -p tvOS -o frameworks > tvos-build.log
+sh Scripts/build_framework.sh -s "$SCHEME" -p macOS -o frameworks > macos-build.log

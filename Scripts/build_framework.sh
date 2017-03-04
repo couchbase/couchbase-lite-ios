@@ -4,7 +4,7 @@ set -e
 
 function usage 
 {
-  echo "\nUsage: ${0} -s <Scheme Name: \"CBL ObjC\" or \"CBL Swift\"> -p <Platform Name: iOS, tvOS, or macOS> -o <Output Directory>\n\n" 
+  echo "\nUsage: ${0} -s <Scheme Name: \"CBL ObjC\" or \"CBL Swift\"> -p <Platform Name: iOS, tvOS, or macOS> -o <Output Directory> [-v <Version String>]\n" 
 }
 
 while [[ $# -gt 1 ]]
@@ -21,6 +21,10 @@ do
       ;;
       -o)
       OUTPUT_DIR=${2}
+      shift
+      ;;
+      -v)
+      VERSION=${2}
       shift
       ;;
       *)
@@ -46,12 +50,15 @@ PLATFORM_NAME=`echo $PLATFORM_NAME | tr '[:upper:]' '[:lower:]'`
 if [ ${PLATFORM_NAME} = "ios" ]
 then
   SDKS=("iphoneos" "iphonesimulator")
+  PLATFORM_NAME="iOS"
 elif [ ${PLATFORM_NAME} = "tvos" ]
 then
   SDKS=("appletvos" "appletvsimulator")
+  PLATFORM_NAME="tvOS"
 elif [ ${PLATFORM_NAME} = "macos" ]
 then
   SDKS=("macosx")
+  PLATFORM_NAME="macOS"
 fi
 
 OUTPUT_BASE_DIR=${OUTPUT_DIR}/${SCHEME}/${PLATFORM_NAME}
@@ -74,11 +81,17 @@ for SDK in "${SDKS[@]}"
     CLEAN_CMD=""
     if [[ ${ROUND} == 0 ]]
     then
-      CLEAN_CMD="clean "
+      CLEAN_CMD="clean"
     fi
 
     #Run xcodebuild:
-    xcodebuild -scheme "${SCHEME}" -configuration Release -sdk ${SDK} OHTER_CFLAGS="-fembed-bitcode" ${CLEAN_CMD}build
+    BUILD_VERSION=""
+    if [ ! -z "$VERSION" ]
+    then
+      BUILD_VERSION="CBL_VERSION_STRING=${VERSION}"
+    fi
+
+    xcodebuild -scheme "${SCHEME}" -configuration Release -sdk ${SDK} ${BUILD_VERSION} OHTER_CFLAGS="-fembed-bitcode" ${CLEAN_CMD} build
 
     # Get the XCode built framework and dsym file path:
     PRODUCTS_DIR=`xcodebuild -scheme "${SCHEME}" -configuration Release -sdk "${SDK}" -showBuildSettings|grep -w BUILT_PRODUCTS_DIR|head -n 1|awk '{ print $3 }'`

@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name                  = 'CouchbaseLite'
-  s.version               = '2.0DB2'
+  s.version               = '2.0DB002'
   s.license               = 'Apache License, Version 2.0'
   s.homepage              = 'http://mobile.couchbase.com'
   s.summary               = 'An embedded syncable NoSQL database for iOS, tvOS, and MacOS apps.'
@@ -11,14 +11,14 @@ Pod::Spec.new do |s|
     sh Scripts/prepare_cocoapods.sh "CBL ObjC"
   CMD
 
-  s.ios.preserve_paths = 'frameworks/CBL ObjC/ios/CouchbaseLite.framework'
-  s.ios.vendored_frameworks = 'frameworks/CBL ObjC/ios/CouchbaseLite.framework'
+  s.ios.preserve_paths = 'frameworks/CBL ObjC/iOS/CouchbaseLite.framework'
+  s.ios.vendored_frameworks = 'frameworks/CBL ObjC/iOS/CouchbaseLite.framework'
 
-  s.tvos.preserve_paths = 'frameworks/CBL ObjC/tvos/CouchbaseLite.framework'
-  s.tvos.vendored_frameworks = 'frameworks/CBL ObjC/tvos/CouchbaseLite.framework'
+  s.tvos.preserve_paths = 'frameworks/CBL ObjC/tvOS/CouchbaseLite.framework'
+  s.tvos.vendored_frameworks = 'frameworks/CBL ObjC/tvOS/CouchbaseLite.framework'
 
-  s.osx.preserve_paths = 'frameworks/CBL ObjC/macos/CouchbaseLite.framework'
-  s.osx.vendored_frameworks = 'frameworks/CBL ObjC/macos/CouchbaseLite.framework'
+  s.osx.preserve_paths = 'frameworks/CBL ObjC/macOS/CouchbaseLite.framework'
+  s.osx.vendored_frameworks = 'frameworks/CBL ObjC/macOS/CouchbaseLite.framework'
 
   s.ios.deployment_target  = '8.0' 
   s.tvos.deployment_target = '9.0'
