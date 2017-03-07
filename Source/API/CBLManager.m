@@ -228,33 +228,49 @@ static CBLManager* sInstance;
             }
         }
         
-        if (attributes) {
-            BOOL needChange = NO;
-            for (NSString* key in attributes) {
-                id prot = [[fmgr attributesOfItemAtPath: _dir error: nil] objectForKey: key];
-                if (![attributes[key] isEqual: prot]) {
-                    needChange = YES;
-                    break;
-                }
-            }
-            if (needChange) {
-                NSArray* paths = [[fmgr subpathsAtPath: _dir] arrayByAddingObject: @"."];
-                for (NSString* path in paths) {
-                    NSString* absPath = [_dir stringByAppendingPathComponent: path];
-                    if (![absPath hasSuffix:@"-shm"]) {
-                        // Not changing -shm file as it has NSFileProtectionNone by default
-                        // regardless of its parent directory projection level. The -shm file
-                        // contains non-sensitive information.
-                        if (![fmgr setAttributes: attributes ofItemAtPath: absPath error: outError])
-                            return nil;
-                    }
-                }
-            }
-        }
+        if (![self setAttributes: attributes ofDir: _dir error: outError])
+              return nil;
         
         [self upgradeOldDatabaseFiles];
     }
     return self;
+}
+
+
+- (BOOL) setAttributes: (NSDictionary*)attributes ofDir: (NSString*)dir error: (NSError**)outError {
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    BOOL needSet = NO;
+    for (NSString* key in attributes) {
+        id prot = [[fmgr attributesOfItemAtPath: _dir error: nil] objectForKey: key];
+        if (![attributes[key] isEqual: prot]) {
+            needSet = YES;
+            break;
+        }
+    }
+    
+    if (!needSet)
+        return YES;
+    
+    // Change the attributes of the directory:
+    if (![fmgr setAttributes: attributes ofItemAtPath: dir error: outError])
+        return NO;
+    
+    // Change the attributes of all database files and sub files in the directory:
+    for (NSString* dbFile in [self allDatabaseFiles]) {
+        NSString *dbPath = [_dir stringByAppendingPathComponent: dbFile];
+        NSArray* paths = [[fmgr subpathsAtPath: dbPath] arrayByAddingObject: @"."];
+        for (NSString* path in paths) {
+            NSString* absPath = [dbPath stringByAppendingPathComponent: path];
+            if (![absPath hasSuffix:@"-shm"]) {
+                // Not changing -shm file as it has NSFileProtectionNone by default
+                // regardless of its parent directory projection level. The -shm file
+                // contains non-sensitive information.
+                if (![fmgr setAttributes: attributes ofItemAtPath: absPath error: outError])
+                    return NO;
+            }
+        }
+    }
+    return YES;
 }
 
 
@@ -554,10 +570,14 @@ static void moveSQLiteDbFiles(NSString* oldDbPath, NSString* newDbPath) {
 }
 
 
-- (NSArray*) allDatabaseNames {
+- (NSArray*) allDatabaseFiles {
     NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: _dir error: NULL];
-    files = [files pathsMatchingExtensions: @[kDBExtension]];
-    return [files my_map: ^(NSString* filename) {
+    return [files pathsMatchingExtensions: @[kDBExtension]];
+}
+
+
+- (NSArray*) allDatabaseNames {
+    return [[self allDatabaseFiles] my_map: ^(NSString* filename) {
         return [self nameOfDatabaseAtPath: filename];
     }];
 }
