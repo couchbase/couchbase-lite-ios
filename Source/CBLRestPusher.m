@@ -560,7 +560,10 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                           _dontSendMultipart = YES;
                           [self uploadJSONRevision: rev];
                       } else {
-                          self.error = error;
+                          // 403/Forbidden means validation failed; don't treat it as an error
+                          // because I did my job in sending the revision.
+                          if (error.code != kCBLStatusForbidden)
+                              self.error = error;
                           [self revisionFailed];
                       }
                   } else {
@@ -603,7 +606,10 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                       body: rev.properties
               onCompletion: ^(id response, NSError *error) {
                   if (error) {
-                      self.error = error;
+                      // 403/Forbidden means validation failed; don't treat it as an error
+                      // because I did my job in sending the revision.
+                      if (error.code != kCBLStatusForbidden)
+                          self.error = error;
                       [self revisionFailed];
                   } else {
                       LogVerbose(Sync, @"%@: Sent %@ (JSON), response=%@", self, rev, response);
