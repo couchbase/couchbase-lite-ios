@@ -13,7 +13,7 @@
 #import "CBLStringBytes.h"
 #import "CBLJSON.h"
 #import "c4Document.h"
-#import "c4DBQuery.h"
+#import "c4Query.h"
 #import "Fleece.h"
 
 
