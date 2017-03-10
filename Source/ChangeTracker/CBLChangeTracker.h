@@ -68,6 +68,7 @@ typedef enum CBLChangeTrackerMode {
     BOOL _caughtUp;
     BLIPHTTPLogic* _http;
     BOOL _usePOST;
+    NSTimer* _timeoutTimer;
 }
 
 - (instancetype) initWithDatabaseURL: (NSURL*)databaseURL
@@ -120,5 +121,12 @@ typedef enum CBLChangeTrackerMode {
 - (void) stopped; // override this
 - (BOOL) parseBytes: (const void*)bytes length: (size_t)length;
 - (NSInteger) endParsingData;
+
+/** Start and stop read timeout only for longpoll and websocket mode. Calling this method from
+ the other modes will be no ops. If timeout occurs while change tracker is in paused state, 
+ the timeout timer will be restarted. */
+- (void) startTimeout;
+- (void) stopTimeout;
+- (void) handleTimeout; // override this
 
 @end

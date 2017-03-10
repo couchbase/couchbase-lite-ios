@@ -85,6 +85,9 @@ UsingLogDomain(Sync);
     _startTime = CFAbsoluteTimeGetCurrent();
     _pendingMessageCount = 0;
     _gzip = nil;
+    
+    [self startTimeout];
+    
     LogTo(ChangeTracker, @"%@: Started... <%@>", self, request.URL);
     return YES;
 }
@@ -158,6 +161,9 @@ UsingLogDomain(Sync);
                                       @{NSLocalizedDescriptionKey: message,
                                         NSUnderlyingErrorKey: error,
                                         NSURLErrorFailingURLErrorKey: url});
+            } else if (error.code == PSWebSocketErrorCodeTimedOut) {
+                myError = [NSError errorWithDomain: NSURLErrorDomain code: NSURLErrorTimedOut
+                                            userInfo: error.userInfo];
             } else {
                 // Map HTTP errors to my own error domain:
                 NSNumber* status = error.userInfo[PSHTTPStatusErrorKey];
@@ -220,6 +226,9 @@ UsingLogDomain(Sync);
                     _running = NO;
                 }
             }
+            
+            if (_running)
+                [self startTimeout];
         }
         OSAtomicDecrement32Barrier(&_pendingMessageCount);
         [self setPaused: self.paused]; // this will resume the WebSocket unless self.paused
@@ -268,6 +277,10 @@ UsingLogDomain(Sync);
     });
 }
 
+- (void) handleTimeout {
+    [_ws closeWithCode: PSWebSocketErrorCodeTimedOut reason: @"timeout"];
+    _running = NO;
+}
 
 
 @end

@@ -96,6 +96,9 @@ UsingLogDomain(Sync);
     [_trackingInput scheduleInRunLoop: [NSRunLoop currentRunLoop] forMode: NSRunLoopCommonModes];
     [_trackingInput open];
     _startTime = CFAbsoluteTimeGetCurrent();
+    
+    [self startTimeout];
+    
     LogTo(ChangeTracker, @"%@: Started... <%@>", self, url.my_sanitizedString);
     return YES;
 }
@@ -331,6 +334,9 @@ UsingLogDomain(Sync);
             _readyToRead = true;
             if (!self.paused)
                 [self readFromInput];
+            
+            [self startTimeout];
+            
             break;
         }
             
