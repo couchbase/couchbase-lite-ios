@@ -424,7 +424,7 @@
     AssertEqualObjects(address.document, doc);
     
     CBLSubdocument* nuAddress = [CBLSubdocument subdocument];
-    address[@"street"] = @"123 Space Dr.";
+    nuAddress[@"street"] = @"123 Space Dr.";
     doc[@"address"] = nuAddress;
     
     AssertEqualObjects(doc[@"address"], nuAddress);
