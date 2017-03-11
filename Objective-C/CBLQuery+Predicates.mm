@@ -185,7 +185,7 @@ static id EncodePredicate(NSPredicate* pred, NSError** outError) {
             return @[op, lhs, min, max];
         }
 
-        NSExpression* rhs = EncodeExpression(rightExpression, outError);
+        id rhs = EncodeExpression(rightExpression, outError);
         if (!rhs) return nil;
 
         if (opType == NSInPredicateOperatorType) {
@@ -261,6 +261,16 @@ static id EncodeExpression(NSExpression* expr, NSError **outError, bool aggregat
             id ifFalse = EncodeExpression(expr.falseExpression, outError);
             if (!ifFalse) return nil;
             return @[@"CASE", [NSNull null], condition, ifTrue, ifFalse];
+        }
+        case NSAggregateExpressionType: {
+            NSMutableArray* collection = [NSMutableArray array];
+            for (id exp in expr.collection) {
+                if ([exp isKindOfClass: [NSExpression class]])
+                    [collection addObject: EncodeExpression(exp, outError, aggregate)];
+                else
+                    return mkError(outError, @"Invalid AggregateExpresion collection"), nil;
+            }
+            return collection;
         }
         default:
             if ((int)expr.expressionType == 11) {
