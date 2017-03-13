@@ -9,7 +9,7 @@
 
 #import "CBLSubdocument.h"
 #import "CBLProperties.h"
-#import "CBLInternal.h"
+#import "CBLJSONCoding.h"
 
 
 #ifdef __cplusplus

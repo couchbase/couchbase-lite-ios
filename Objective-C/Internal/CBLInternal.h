@@ -12,7 +12,9 @@
 #import "CBLBlob.h"
 #import "CBLDatabase.h"
 #import "CBLDocument.h"
+#import "CBLJSONCoding.h"
 #import "CBLSubdocument.h"
+
 
 struct c4BlobStore;
 
@@ -25,13 +27,6 @@ namespace cbl {
 @class CBLBlobStream;
 
 NS_ASSUME_NONNULL_BEGIN
-
-
-@protocol CBLJSONCoding <NSObject>
-
-@property (readonly, nonatomic) NSDictionary* jsonRepresentation;
-
-@end
 
 
 /// CBLDatabase:
