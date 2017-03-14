@@ -25,6 +25,7 @@ namespace cbl {
 #endif
 
 @class CBLBlobStream;
+@class CBLReplication;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -35,6 +36,9 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLDatabase ()
 
 @property (readonly, nonatomic, nullable) C4Database* c4db;
+
+@property (readonly, nonatomic) NSMapTable<NSURL*,CBLReplication*>* replications;
+@property (readonly, nonatomic) NSMutableSet* activeReplications;
 
 #ifdef __cplusplus
 @property (readonly, nonatomic) cbl::SharedKeys sharedKeys;

@@ -71,6 +71,7 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
 
 
 @synthesize name=_name, c4db=_c4db, sharedKeys=_sharedKeys, conflictResolver = _conflictResolver;
+@synthesize replications=_replications, activeReplications=_activeReplications;
 
 
 static const C4DatabaseConfig kDBConfig = {
@@ -112,6 +113,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         _options = options != nil? [options copy] : [CBLDatabaseOptions defaultOptions];
         if (![self open: outError])
             return nil;
+        _replications = [NSMapTable strongToWeakObjectsMapTable];
+        _activeReplications = [NSMutableSet new];
     }
     return self;
 }
