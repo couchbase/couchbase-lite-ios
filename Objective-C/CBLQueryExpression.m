@@ -7,7 +7,7 @@
 //
 
 #import "CBLQueryExpression.h"
-#import "CBLXQuery+Internal.h"
+#import "CBLQuery+Internal.h"
 
 @implementation CBLQueryExpression
 

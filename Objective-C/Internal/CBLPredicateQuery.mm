@@ -1,13 +1,13 @@
 //
-//  CBLQuery.mm
+//  CBLPredicateQuery.mm
 //  Couchbase Lite
 //
 //  Created by Jens Alfke on 11/30/16.
 //  Copyright © 2016 Couchbase. All rights reserved.
 //
 
-#import "CBLQuery.h"
-#import "CBLQuery+Internal.h"
+#import "CBLPredicateQuery.h"
+#import "CBLPredicateQuery+Internal.h"
 #import "CBLInternal.h"
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
@@ -29,7 +29,7 @@ C4LogDomain kCBLQueryLogDomain;
 
 
 
-@implementation CBLQuery
+@implementation CBLPredicateQuery
 {
     C4Query* _c4Query;
 }
@@ -41,7 +41,7 @@ C4LogDomain kCBLQueryLogDomain;
 
 
 + (void) initialize {
-    if (self == [CBLQuery class]) {
+    if (self == [CBLPredicateQuery class]) {
         kCBLQueryLogDomain = c4log_getDomain("Query", true);
     }
 }
@@ -263,7 +263,7 @@ C4LogDomain kCBLQueryLogDomain;
 @implementation CBLQueryEnumerator
 {
     @protected
-    CBLQuery *_query;
+    CBLPredicateQuery *_query;
     C4Query *_c4Query;
     C4QueryEnumerator* _c4enum;
     C4Error _error;
@@ -272,7 +272,7 @@ C4LogDomain kCBLQueryLogDomain;
 @synthesize database=_database, c4Query=_c4Query;
 
 
-- (instancetype) initWithQuery: (CBLQuery*)query
+- (instancetype) initWithQuery: (CBLPredicateQuery*)query
                        c4Query: (C4Query*)c4Query
                     enumerator: (C4QueryEnumerator*)e
 {

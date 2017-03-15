@@ -26,8 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) init NS_UNAVAILABLE;
 
-//TODO (Will implement this when join is supported):
-// - (CBLQueryDataSource *) as:(NSString *)as;
+- (CBLQueryDataSource *) as: (NSString*)as;
 
 @end
 

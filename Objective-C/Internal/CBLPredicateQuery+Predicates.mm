@@ -6,7 +6,7 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLQuery+Internal.h"
+#import "CBLPredicateQuery+Internal.h"
 #import "CBLInternal.h"
 #import "CBLCoreBridge.h"
 #import "Fleece.h"
@@ -22,7 +22,7 @@ extern "C" {
                                               FMT, ## __VA_ARGS__)
 
 
-@implementation CBLQuery (Predicates)
+@implementation CBLPredicateQuery (Predicates)
 
 
 // Translates an NSPredicate into the JSON-dictionary equivalent of a WHERE clause
@@ -37,7 +37,7 @@ extern "C" {
         pred = [NSPredicate predicateWithFormat: (NSString*)pred argumentArray: nil];
         return EncodePredicate(pred, outError);
     } else {
-        Assert(NO, @"Invalid specification for CBLQuery");
+        Assert(NO, @"Invalid specification for CBLPredicateQuery");
     }
 }
 

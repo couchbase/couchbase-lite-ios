@@ -19,7 +19,6 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import "CBLDatabase.h"
 #import "CBLDocument.h"
 #import "CBLProperties.h"
-#import "CBLQuery.h"
 #import "CBLQueryRow.h"
 #import "CBLSubdocument.h"
 
@@ -27,4 +26,4 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import "CBLQueryExpression.h"
 #import "CBLQueryOrderBy.h"
 #import "CBLQuerySelect.h"
-#import "CBLXQuery.h"
+#import "CBLQuery.h"

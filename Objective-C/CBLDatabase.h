@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDocument, CBLQuery;
+@class CBLDocument, CBLPredicateQuery;
 @protocol CBLConflictResolver;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -160,14 +160,6 @@ typedef struct {
 
 /** Enumerates all documents in the database, ordered by document ID. */
 - (NSEnumerator<CBLDocument*>*) allDocuments;
-
-/** Compiles a database query, from any of several input formats.
-    Once compiled, the query can be run many times with different parameter values.
-    The rows will be sorted by ascending document ID, and no custom values are returned.
-    @param where  The query specification. This can be an NSPredicate, or an NSString (interpreted
-                    as an NSPredicate format string), or nil to return all documents.
-    @return  The CBLQuery. */
-- (CBLQuery*) createQueryWhere: (nullable id)where;
 
 /** Creates a value index (type kCBLValueIndex) on a given document property.
     This will speed up queries that test that property, at the expense of making database writes a

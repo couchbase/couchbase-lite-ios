@@ -2,80 +2,150 @@
 //  CBLQuery+Internal.h
 //  CouchbaseLite
 //
-//  Created by Jens Alfke on 1/14/17.
+//  Created by Pasin Suriyentrakorn on 3/10/17.
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
 #import "CBLQuery.h"
-#import "CBLQueryRow.h"
-#import "c4.h"
-
+#import "CBLInternal.h"
+#import "CBLQueryDataSource.h"
+#import "CBLQuerySelect.h"
+#import "CBLQueryExpression.h"
+#import "CBLQueryOrderBy.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 
-#define kBadQuerySpecError -1
-#define CBLErrorDomain @"CouchbaseLite"
-#define mkError(ERR, FMT, ...)  MYReturnError(ERR, kBadQuerySpecError, CBLErrorDomain, \
-                                              FMT, ## __VA_ARGS__)
-
-extern C4LogDomain QueryLog;
-
+/////
 
 @interface CBLQuery ()
 
-/** Initializer. See -[CBLDatabase createQuery:...] for parameter descriptions.
-    NOTE: There are some extra undocumented types that `where` accepts:
-    * NSArray (interpreted as the WHERE property of a raw LiteCore JSON query)
-    * NSDictionary (interpreted as a raw LiteCore JSON query)
-    * NSData (pre-encoded JSON query) */
-- (instancetype) initWithDatabase: (CBLDatabase*)db;
+@property (readonly, nonatomic) CBLQuerySelect* select;
 
-/** Just encodes the query into the JSON form parsed by LiteCore. (Exposed for testing.) */
-- (nullable NSData*) encodeAsJSON: (NSError**)outError;
+@property (readonly, nonatomic) CBLQueryDataSource* from;
+
+@property (nullable, nonatomic) CBLQueryExpression* where;
+
+@property (nullable, nonatomic) CBLQueryOrderBy* orderBy;
+
+@property (nonatomic) BOOL distinct;
+
+/** Initializer. */
+- (instancetype) initWithSelect: (CBLQuerySelect*)select
+                       distinct: (BOOL)distinct
+                           from: (CBLQueryDataSource*)from
+                          where: (nullable CBLQueryExpression*)where
+                        orderBy: (nullable CBLQueryOrderBy*)orderBy;
+
+@end
+
+/////
+
+@interface CBLQueryDataSource ()
+
+@property (readonly, nonatomic) id source;
+
+- (instancetype) initWithDataSource: (id)source;
+
+@end
+
+/////
+
+@interface CBLQueryDatabase ()
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database;
+
+@end
+
+/////
+
+@interface CBLQuerySelect ()
+
+@property (readonly, nullable, nonatomic) id select;
+
+- (instancetype) initWithSelect: (nullable id)select;
 
 @end
 
 
-@interface CBLQuery (Predicates)
+/////
 
-/** Converts an NSPredicate into a JSON-compatible object tree of a LiteCore query. */
-+ (nullable id) encodePredicate: (id)pred
-                          error: (NSError**)error;
+@protocol CBLNSPredicateCoding <NSObject>
+- (NSPredicate*) asNSPredicate;
+@end
 
-+ (nullable id) encodeExpression: (NSExpression*)expr
-                       aggregate: (BOOL)aggregate
-                           error: (NSError**)outError;
+@class CBLQueryTypeExpression;
 
-+ (nullable NSArray*) encodeExpressions: (NSArray*)exprs
-                              aggregate: (BOOL)aggregate
-                                  error: (NSError**)outError;
+@interface CBLQueryComparisonPredicate: CBLQueryExpression <CBLNSPredicateCoding>
 
-/** Translates an array of NSExpressions or NSStrings into JSON data. */
-+ (nullable NSData*) encodeExpressionsToJSON: (NSArray*)expressions
-                                       error: (NSError**)error;
+@property(readonly, nonatomic) CBLQueryTypeExpression *leftExpression;
+@property(readonly, nonatomic) CBLQueryTypeExpression *rightExpression;
+@property(readonly, nonatomic) NSPredicateOperatorType predicateOperatorType;
 
-#if DEBUG // these methods are only for tests
-+ (void) dumpPredicate: (NSPredicate*)pred;
-+ (nullable NSString*) json5ToJSON: (const char*)json5;
-#endif
+- (instancetype) initWithLeftExpression: (CBLQueryTypeExpression*)lhs
+                        rightExpression: (CBLQueryTypeExpression*)rhs
+                                   type: (NSPredicateOperatorType)type;
 
 @end
 
+/////
 
-@interface CBLQueryEnumerator : NSEnumerator
-- (instancetype) initWithQuery: (CBLQuery*)query
-                       c4Query: (C4Query*)c4Query
-                    enumerator: (C4QueryEnumerator*)e;
+@interface CBLQueryCompoundPredicate: CBLQueryExpression <CBLNSPredicateCoding>
 
-@property (readonly, nonatomic) CBLDatabase* database;
-@property (readonly, nonatomic) C4Query* c4Query;
+@property(readonly, nonatomic) NSCompoundPredicateType compoundPredicateType;
+@property(readonly, copy, nonatomic) NSArray *subpredicates;
+
+- (instancetype)initWithType: (NSCompoundPredicateType)type subpredicates: (NSArray*)subs;
+
 @end
 
+/////
 
-@interface CBLQueryRow ()
-- (instancetype) initWithEnumerator: (CBLQueryEnumerator*)enumerator
-                       c4Enumerator: (C4QueryEnumerator*)e;
+@protocol CBLNSExpressionCoding <NSObject>
+- (NSExpression*) asNSExpression;
+@end
+
+@interface CBLQueryTypeExpression: CBLQueryExpression <CBLNSExpressionCoding>
+
+@property(readonly, nonatomic) NSExpressionType expressionType;
+@property(nullable, readonly, nonatomic) id constantValue;
+@property(nullable, readonly, copy, nonatomic) NSString* keyPath;
+@property(nullable, readonly, copy, nonatomic) NSString* function;
+@property(nullable, readonly, nonatomic) CBLQueryExpression* operand;
+@property(nullable, readonly, copy, nonatomic) NSArray*arguments;
+@property(nullable, readonly, copy, nonatomic) NSArray*subexpressions;
+
+- (instancetype) initWithConstantValue: (id)value;
+
+- (instancetype) initWithKeypath: (NSString*)keyPath;
+
+- (instancetype) initWithFunction: (NSString*)function
+                          operand: (nullable CBLQueryExpression*)operand
+                        arguments: (nullable NSArray*)arguments;
+
+- (instancetype) initWithAggregateExpressions: (NSArray*)subexpressions;
+
+@end
+
+/////
+
+@interface CBLQueryOrderBy ()
+
+@property (readonly, nonatomic) NSArray* orders;
+
+- (instancetype) initWithOrders: (NSArray*)orders;
+
+- (NSArray*) asSortDescriptors;
+
+@end
+
+@interface CBLQuerySortOrder ()
+
+@property (readonly, nonatomic) CBLQueryExpression* expression;
+@property (nonatomic) BOOL isAscending;
+
+- (instancetype) initWithExpression: (CBLQueryExpression*)expression;
+
 @end
 
 

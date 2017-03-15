@@ -8,7 +8,7 @@
 
 #import "CBLQueryDataSource.h"
 #import "CBLDatabase.h"
-#import "CBLXQuery+Internal.h"
+#import "CBLQuery+Internal.h"
 
 @implementation CBLQueryDataSource
 
@@ -37,5 +37,9 @@
     return [super initWithDataSource: database];
 }
 
+
+- (CBLQueryDataSource *) as: (NSString*)as {
+    return self;
+}
 
 @end

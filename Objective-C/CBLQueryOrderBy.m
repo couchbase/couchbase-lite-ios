@@ -7,7 +7,7 @@
 //
 
 #import "CBLQueryOrderBy.h"
-#import "CBLXQuery+Internal.h"
+#import "CBLQuery+Internal.h"
 #import "CBLQueryExpression.h"
 
 @implementation CBLQueryOrderBy

@@ -21,7 +21,7 @@
 #import "CBLDocument+Internal.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
-#import "CBLQuery+Internal.h"
+#import "CBLPredicateQuery+Internal.h"
 #import "CBLSharedKeys.hh"
 #import "CBLStringBytes.h"
 
@@ -66,7 +66,7 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
     C4DatabaseObserver* _obs;
     NSMapTable<NSString*, CBLDocument*>* _documents;
     NSMutableSet<CBLDocument*>* _unsavedDocuments;
-    CBLQuery* _allDocsQuery;
+    CBLPredicateQuery* _allDocsQuery;
 }
 
 
@@ -452,7 +452,7 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 
 - (NSEnumerator<CBLDocument*>*) allDocuments {
     if (!_allDocsQuery) {
-        _allDocsQuery = [[CBLQuery alloc] initWithDatabase: self];
+        _allDocsQuery = [[CBLPredicateQuery alloc] initWithDatabase: self];
         _allDocsQuery.orderBy = @[@"_id"];
     }
     auto e = [_allDocsQuery allDocuments: nullptr];
@@ -461,8 +461,8 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 }
 
 
-- (CBLQuery*) createQueryWhere: (nullable id)where {
-    auto query = [[CBLQuery alloc] initWithDatabase: self];
+- (CBLPredicateQuery*) createQueryWhere: (nullable id)where {
+    auto query = [[CBLPredicateQuery alloc] initWithDatabase: self];
     query.where = where;
     return query;
 }
@@ -481,7 +481,7 @@ static NSString* databasePath(NSString* name, NSString* dir) {
                  error: (NSError**)outError
 {
     static_assert(sizeof(CBLIndexOptions) == sizeof(C4IndexOptions), "Index options incompatible");
-    NSData* json = [CBLQuery encodeExpressionsToJSON: expressions error: outError];
+    NSData* json = [CBLPredicateQuery encodeExpressionsToJSON: expressions error: outError];
     if (!json)
         return NO;
     C4Error c4err;
@@ -498,7 +498,7 @@ static NSString* databasePath(NSString* name, NSString* dir) {
                   type: (CBLIndexType)type
                  error: (NSError**)outError
 {
-    NSData* json = [CBLQuery encodeExpressionsToJSON: expressions error: outError];
+    NSData* json = [CBLPredicateQuery encodeExpressionsToJSON: expressions error: outError];
     if (!json)
         return NO;
     C4Error c4err;
