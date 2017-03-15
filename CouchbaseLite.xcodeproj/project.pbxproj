@@ -174,6 +174,11 @@
 		93B75BFF1E79B1010033B61B /* CBLPredicateQuery.mm in Sources */ = {isa = PBXBuildFile; fileRef = 93B75BF91E79B1010033B61B /* CBLPredicateQuery.mm */; };
 		93B75C021E79B1010033B61B /* CBLPredicateQuery+Predicates.mm in Sources */ = {isa = PBXBuildFile; fileRef = 93B75BFB1E79B1010033B61B /* CBLPredicateQuery+Predicates.mm */; };
 		93B75C031E79B1010033B61B /* CBLPredicateQuery+Predicates.mm in Sources */ = {isa = PBXBuildFile; fileRef = 93B75BFB1E79B1010033B61B /* CBLPredicateQuery+Predicates.mm */; };
+		93B75C1A1E79EF5F0033B61B /* CBLQueryDataSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 933208081E77415E000D9993 /* CBLQueryDataSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		93B75C1B1E79EF690033B61B /* CBLQueryExpression.h in Headers */ = {isa = PBXBuildFile; fileRef = 9332080A1E77415E000D9993 /* CBLQueryExpression.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		93B75C1C1E79EF6F0033B61B /* CBLQueryOrderBy.h in Headers */ = {isa = PBXBuildFile; fileRef = 9332080C1E77415E000D9993 /* CBLQueryOrderBy.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		93B75C1D1E79EF750033B61B /* CBLQuerySelect.h in Headers */ = {isa = PBXBuildFile; fileRef = 9332080E1E77415E000D9993 /* CBLQuerySelect.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		93B75C1E1E79EF7D0033B61B /* CBLQuery.h in Headers */ = {isa = PBXBuildFile; fileRef = 933208101E77415E000D9993 /* CBLQuery.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93BB726B1E446FC500427251 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
 		93BB72781E446FE000427251 /* CouchbaseLite.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		93DD40E31E5CDAA500DD9196 /* SubdocumentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DD40E21E5CDAA500DD9196 /* SubdocumentTest.swift */; };
@@ -622,7 +627,6 @@
 				933207AD1E773CFB000D9993 /* CBLJSONCoding.h */,
 				934F4CA21E241FB500F90659 /* CBLPrefix.h */,
 				93ADE9821E68C82900D59017 /* CBLSubdocument+Internal.h */,
-				933208291E774171000D9993 /* CBLQuery+Internal.h */,
 			);
 			path = Internal;
 			sourceTree = "<group>";
@@ -789,6 +793,7 @@
 		93B75BF71E79B0A20033B61B /* Query */ = {
 			isa = PBXGroup;
 			children = (
+				933208291E774171000D9993 /* CBLQuery+Internal.h */,
 				93B75BF81E79B1010033B61B /* CBLPredicateQuery.h */,
 				93B75BF91E79B1010033B61B /* CBLPredicateQuery.mm */,
 				9317621E1E2D439700563506 /* CBLPredicateQuery+Internal.h */,
@@ -826,10 +831,12 @@
 			files = (
 				275F929D1E4D377C007FD5A2 /* CouchbaseLite.h in Headers */,
 				93B503751E64B0B4002C4680 /* CBLBlobStream.h in Headers */,
+				93B75C1B1E79EF690033B61B /* CBLQueryExpression.h in Headers */,
 				93B503731E64B0AB002C4680 /* CBLSymmetricKey.h in Headers */,
 				93ADE9811E68C81000D59017 /* CBLDocument+Internal.h in Headers */,
 				93B5036F1E64B0A0002C4680 /* CBLMisc.h in Headers */,
 				9308F3F71E64B21D00F53EE4 /* CollectionUtils.h in Headers */,
+				93B75C1C1E79EF6F0033B61B /* CBLQueryOrderBy.h in Headers */,
 				93B5036D1E64B099002C4680 /* CBLLog.h in Headers */,
 				933207AF1E773CFB000D9993 /* CBLJSONCoding.h in Headers */,
 				93B5037A1E64B0E3002C4680 /* CBLPrefix.h in Headers */,
@@ -840,6 +847,7 @@
 				275F92A01E4D377C007FD5A2 /* CBLConflictResolver.h in Headers */,
 				275F929E1E4D377C007FD5A2 /* CBLDatabase.h in Headers */,
 				93B5036B1E64B093002C4680 /* CBLJSON.h in Headers */,
+				93B75C1D1E79EF750033B61B /* CBLQuerySelect.h in Headers */,
 				93B75BFD1E79B1010033B61B /* CBLPredicateQuery.h in Headers */,
 				93B503641E64B07C002C4680 /* CBLCoreBridge.h in Headers */,
 				275F92841E4D30A4007FD5A2 /* CouchbaseLiteSwift.h in Headers */,
@@ -852,9 +860,11 @@
 				275F929F1E4D377C007FD5A2 /* CBLDocument.h in Headers */,
 				9308F4081E64B22D00F53EE4 /* MYLogging.h in Headers */,
 				9308F4041E64B22200F53EE4 /* ExceptionUtils.h in Headers */,
+				93B75C1A1E79EF5F0033B61B /* CBLQueryDataSource.h in Headers */,
 				93ADE9851E68C9D500D59017 /* CBLSubdocument+Internal.h in Headers */,
 				275F92A31E4D377C007FD5A2 /* CBLBlob.h in Headers */,
 				93B503771E64B0BB002C4680 /* CBLInternal.h in Headers */,
+				93B75C1E1E79EF7D0033B61B /* CBLQuery.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

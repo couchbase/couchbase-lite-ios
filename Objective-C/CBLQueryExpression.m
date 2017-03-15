@@ -12,18 +12,17 @@
 @implementation CBLQueryExpression
 
 
+#pragma mark - Property:
+
+
 + (CBLQueryExpression*) property: (NSString*)property {
     return [[CBLQueryTypeExpression alloc] initWithKeypath: property];
 }
 
 
-+ (CBLQueryExpression*) group: (CBLQueryExpression*)expression {
-    return [[CBLQueryCompoundPredicate alloc] initWithType: NSAndPredicateType
-                                             subpredicates: @[expression]];
-}
+#pragma mark - Unary operators:
 
 
-// Unary operators.
 + (CBLQueryExpression*) negated: (id)expression {
     return [[CBLQueryCompoundPredicate alloc] initWithType: NSNotPredicateType
                                              subpredicates: @[expression]];
@@ -51,7 +50,9 @@
 }
 
 
-// Binary operators.
+#pragma mark - Arithmetic Operators:
+
+
 - (CBLQueryExpression*) concat: (id)expression {
     Assert(NO, @"Unsupported operation");
 }
@@ -90,6 +91,9 @@
                                                     operand: nil
                                                   arguments: @[self, expression]];
 }
+
+
+#pragma mark - Comparison operators:
 
 
 - (CBLQueryExpression*) lessThan: (id)expression {
@@ -153,6 +157,9 @@
 }
 
 
+#pragma mark - Bitwise operators:
+
+
 - (CBLQueryExpression*) and: (id)expression {
     return [[CBLQueryCompoundPredicate alloc] initWithType: NSAndPredicateType
                                              subpredicates: @[self, expression]];
@@ -165,6 +172,9 @@
 }
 
 
+#pragma mark - Like operators:
+
+
 - (CBLQueryExpression*) like: (id)expression {
     return [self operatorExpressionWithType: NSLikePredicateOperatorType
                           againstExpression: expression];
@@ -174,6 +184,9 @@
 - (CBLQueryExpression*) notLike: (id)expression {
     return [[self class] negated: [self like: expression]];
 }
+
+
+#pragma mark - Regex like operators:
 
 
 - (CBLQueryExpression*) regex: (id)expression {
@@ -190,6 +203,9 @@
 }
 
 
+#pragma mark - Fulltext search operators:
+
+
 - (CBLQueryExpression*) match: (id)expression {
     return [self operatorExpressionWithType: NSMatchesPredicateOperatorType
                           againstExpression: expression];
@@ -199,6 +215,9 @@
 - (CBLQueryExpression*) notMatch: (id)expression {
     return [[self class] negated: [self match: expression]];
 }
+
+
+#pragma mark - Null check operators:
 
 
 - (CBLQueryExpression*) isNull {
@@ -211,6 +230,9 @@
 }
 
 
+#pragma mark - is operations:
+
+
 - (CBLQueryExpression*) is: (id)expression {
     return [self equalTo: expression];
 }
@@ -219,6 +241,9 @@
 - (CBLQueryExpression*) isNot: (id)expression {
     return [self notEqualTo: expression];
 }
+
+
+#pragma mark - Aggregate operations:
 
 
 - (CBLQueryExpression*) between: (id)expression1 and: (id)expression2 {
@@ -274,6 +299,7 @@
 @synthesize leftExpression=_leftExpression, rightExpression=_rightExpression;
 @synthesize predicateOperatorType=_predicateOperatorType;
 
+
 - (instancetype) initWithLeftExpression: (CBLQueryTypeExpression*)lhs
                         rightExpression: (CBLQueryTypeExpression*)rhs
                                    type: (NSPredicateOperatorType)type
@@ -287,6 +313,7 @@
     return self;
 }
 
+
 - (NSPredicate*) asNSPredicate {
     return [NSComparisonPredicate predicateWithLeftExpression: [self.leftExpression asNSExpression]
                                               rightExpression: [self.rightExpression asNSExpression]
@@ -294,6 +321,7 @@
                                                          type: self.predicateOperatorType
                                                       options: 0];
 }
+
 
 @end
 
@@ -305,6 +333,7 @@
 
 @synthesize compoundPredicateType=_compoundPredicateType, subpredicates=_subpredicates;
 
+
 - (instancetype) initWithType: (NSCompoundPredicateType)type subpredicates: (NSArray*)subs {
     self = [super init];
     if (self) {
@@ -313,6 +342,7 @@
     }
     return self;
 }
+
 
 - (NSPredicate*) asNSPredicate {
     NSMutableArray* subs = [NSMutableArray array];
@@ -350,6 +380,7 @@
 @synthesize function=_function, operand=_operand, arguments=_arguments;
 @synthesize subexpressions=_subexpressions;
 
+
 - (instancetype) initWithType: (NSExpressionType)type {
     self = [super init];
     if (self) {
@@ -357,6 +388,7 @@
     }
     return self;
 }
+
 
 - (instancetype) initWithConstantValue: (id)value {
     self = [self initWithType: NSConstantValueExpressionType];
@@ -366,6 +398,7 @@
     return self;
 }
 
+
 - (instancetype) initWithKeypath: (NSString*)keyPath {
     self = [self initWithType: NSKeyPathExpressionType];
     if (self) {
@@ -373,6 +406,7 @@
     }
     return self;
 }
+
 
 - (instancetype) initWithFunction: (NSString*)function
                           operand:(CBLQueryExpression *)operand
@@ -387,6 +421,7 @@
     return self;
 }
 
+
 - (instancetype) initWithAggregateExpressions: (NSArray*)subexpressions {
     self = [self initWithType: NSAggregateExpressionType];
     if (self) {
@@ -394,6 +429,7 @@
     }
     return self;
 }
+
 
 - (NSExpression*) asNSExpression {
     NSExpression* exp = nil;
@@ -428,6 +464,7 @@
     return exp;
 }
 
+
 - (NSArray*) toNSExpressionArray: (NSArray*)expressions {
     NSMutableArray* array = [NSMutableArray array];
     for (id exp in expressions) {
@@ -440,5 +477,6 @@
     }
     return array;
 }
+
 
 @end

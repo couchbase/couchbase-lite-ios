@@ -14,30 +14,33 @@
 NS_ASSUME_NONNULL_BEGIN
 
 
+/** A database query.
+ You create a CBLQuery object by calling one of the select class methods. */
 @interface CBLQuery : NSObject
 
-- (instancetype) init NS_UNAVAILABLE;
-
-// SELECT > FROM
+/** Create a query from SELECT and FROM component. */
 + (instancetype) select: (CBLQuerySelect*)select from: (CBLQueryDataSource*)from;
 
+/** Create a DISTINCT query from SELECT and FROM component. */
 + (instancetype) selectDistict: (CBLQuerySelect*)selectDistict from: (CBLQueryDataSource*)from;
 
-// SELECT > FROM > WHERE
+/** Create a query from SELECT, FROM, and WHERE component. */
 + (instancetype) select: (CBLQuerySelect*)select
                    from: (CBLQueryDataSource*)from
                   where: (nullable CBLQueryExpression*)where;
 
+/** Create a DISTINCT query from SELECT, FROM, and WHERE component. */
 + (instancetype) selectDistict: (CBLQuerySelect*)selectDistict
                           from: (CBLQueryDataSource*)from
                          where: (nullable CBLQueryExpression*)where;
 
-// SELECT > FROM > WHERE > ORDER BY
+/** Create a query from SELECT, FROM, WHERE, and ORDERBY component. */
 + (instancetype) select: (CBLQuerySelect*)select
                    from: (CBLQueryDataSource*)from
                   where: (nullable CBLQueryExpression*)where
                 orderBy: (nullable CBLQueryOrderBy*)orderBy;
 
+/** Create a DISTINCT query from SELECT, FROM, WHERE, and ORDERBY component. */
 + (instancetype) selectDistict: (CBLQuerySelect*)selectDistict
                           from: (CBLQueryDataSource*)from
                          where: (nullable CBLQueryExpression*)where
@@ -68,6 +71,7 @@ NS_ASSUME_NONNULL_BEGIN
  will not reflect any changes made to the database afterwards. */
 - (nullable NSEnumerator<CBLQueryRow*>*) run: (NSError**)outError;
 
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

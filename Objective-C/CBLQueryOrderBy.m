@@ -16,7 +16,7 @@
 @synthesize orders=_orders;
 
 
-- (instancetype) initWithOrders:(NSArray *)orders {
+- (instancetype) initWithOrders: (NSArray *)orders {
     self = [super init];
     if (self) {
         _orders = orders;
@@ -25,7 +25,7 @@
 }
 
 
-+ (CBLQueryOrderBy *) orderBy:(CBLQueryOrderBy *)orderBy, ... {
++ (CBLQueryOrderBy *) orderBy: (CBLQueryOrderBy *)orderBy, ... {
     NSMutableArray* orders = [NSMutableArray array];
     va_list args;
     va_start(args, orderBy);
@@ -56,7 +56,6 @@
                 [descriptors addObject: exp.keyPath];
             else
                 [descriptors addObject: [NSString stringWithFormat:@"-%@", exp.keyPath]];
-            
         } else
             [descriptors addObject: exp];
     } else {
@@ -77,7 +76,7 @@
 
 
 - (instancetype) initWithExpression: (CBLQueryExpression*)expression {
-    self = [super init];
+    self = [super initWithOrders: nil];
     if (self) {
         _expression = expression;
         _isAscending = YES;

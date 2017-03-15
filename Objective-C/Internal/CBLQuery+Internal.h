@@ -67,7 +67,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-
 /////
 
 @protocol CBLNSPredicateCoding <NSObject>
@@ -131,9 +130,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQueryOrderBy ()
 
-@property (readonly, nonatomic) NSArray* orders;
+@property (readonly, nullable, nonatomic) NSArray* orders;
 
-- (instancetype) initWithOrders: (NSArray*)orders;
+- (instancetype) initWithOrders: (nullable NSArray*)orders;
 
 - (NSArray*) asSortDescriptors;
 
