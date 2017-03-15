@@ -9,6 +9,7 @@
 #import "CBLQuery.h"
 #import "CBLPredicateQuery.h"
 #import "CBLQuery+Internal.h"
+#import "CBLDatabase+Query.h"
 
 @implementation CBLQuery {
     CBLPredicateQuery* _query;

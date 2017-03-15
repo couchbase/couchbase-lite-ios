@@ -7,6 +7,7 @@
 //
 
 #import "CBLTestCase.h"
+#import "CBLDatabase+Query.h"
 #import "CBLPredicateQuery+Internal.h"
 #import "CBLInternal.h"
 

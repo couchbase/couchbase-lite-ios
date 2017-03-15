@@ -44,8 +44,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
 
-- (CBLPredicateQuery*) createQueryWhere: (nullable id)where;
-
 @end
 
 

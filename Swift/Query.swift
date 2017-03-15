@@ -95,7 +95,7 @@ public class Query {
     }
 
 
-    private let _impl: CBLQuery
+    private let _impl: CBLPredicateQuery
 }
 
 
