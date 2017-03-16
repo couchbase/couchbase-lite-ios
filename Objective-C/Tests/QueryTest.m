@@ -141,36 +141,49 @@
 
 
 - (void) failingTest_WhereCheckNull {
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1670
     NSError* error;
-    CBLDocument* doc1 = [self.db document];
-    doc1[@"number"] = @(1);
-    Assert([doc1 save: &error], @"Error when creating a document: %@", error);
+    CBLDocument* doc1 = [self.db documentWithID: @"doc1"];
+    doc1[@"name"] = @"Scott";
+    doc1[@"address"] = [NSNull null];
+    Assert([doc1 save: &error], @"Error when saving a document: %@", error);
     
-    CBLDocument* doc2 = [self.db document];
-    doc2[@"string"] = @"string";
-    Assert([doc2 save: &error], @"Error when creating a document: %@", error);
+    CBLDocument* doc2 = [self.db documentWithID: @"doc2"];
+    doc2[@"name"] = @"Tiger";
+    doc2[@"address"] = @"123 1st ave.";
+    doc2[@"age"] = @(20);
+    Assert([doc2 save: &error], @"Error when saving a document: %@", error);
     
-    CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
-                              from: [CBLQueryDatabase database: self.db]
-                             where: [[CBLQueryExpression property: @"number"] notNull]];
-    Assert(q);
-    uint64_t numRows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
-        CBLDocument* doc = row.document;
-        AssertEqualObjects(doc.documentID, doc1.documentID);
-        AssertEqualObjects(doc[@"number"], @(1));
-    }];
-    AssertEqual(numRows, 1u);
+    CBLQueryExpression* name = [CBLQueryExpression property: @"name"];
+    CBLQueryExpression* address = [CBLQueryExpression property: @"address"];
+    CBLQueryExpression* age = [CBLQueryExpression property: @"age"];
+    CBLQueryExpression* work = [CBLQueryExpression property: @"work"];
     
-    q = [CBLQuery select: [CBLQuerySelect all]
-                    from: [CBLQueryDatabase database: self.db]
-                   where: [[CBLQueryExpression property: @"number"] isNull]];
-    Assert(q);
-    numRows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
-        CBLDocument* doc = row.document;
-        AssertEqualObjects(doc.documentID, doc1.documentID);
-        AssertEqualObjects(doc[@"string"], @"string");
-    }];
-    AssertEqual(numRows, 1u);
+    NSArray* tests = @[
+       @[[name notNull],    @[doc1, doc2]],
+       @[[name isNull],     @[]],
+       @[[address notNull], @[doc2]],
+       @[[address isNull],  @[doc1]],
+       @[[age notNull],     @[doc2]],
+       @[[age isNull],      @[doc1]],
+       @[[work notNull],    @[]],
+       @[[work isNull],     @[doc1, doc2]],
+    ];
+    
+    for (NSArray* test in tests) {
+        CBLQueryExpression* exp = test[0];
+        NSArray* expectedDocs = test[1];
+        CBLQuery *q = [CBLQuery select: [CBLQuerySelect all]
+                                  from: [CBLQueryDatabase database: self.db]
+                                 where: exp];
+        uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+            if (expectedDocs.count <= n) {
+                CBLDocument* doc = expectedDocs[n-1];
+                AssertEqualObjects(doc.documentID, row.document.documentID, @"Failed case: %@", exp);
+            }
+        }];
+        AssertEqual((int)numRows, (int)expectedDocs.count, @"Failed case: %@", exp);
+    }
 }
 
 
@@ -216,17 +229,25 @@
 }
 
 
-- (void) failingTest08_WhereIn {
-    CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
-    NSArray* cases = @[
-        @[[n1 inExpressions:@[@(3), @(5), @(7), @(9)]], @"number1 IN {3, 5, 7 , 9}"]
-    ];
-    NSArray* numbers = [self loadNumbers: 10];
-    [self runTestWithNumbers: numbers cases: cases];
+- (void) fialingTest_WhereIn {
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1671
+    [self loadJSONResource: @"names_100"];
+    
+    NSArray* expected = @[@"Marcy", @"Marlen", @"Maryjo", @"Margaretta", @"Margrett"];
+    CBLQueryExpression* firstName = [CBLQueryExpression property: @"name.first"];
+    CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
+                              from: [CBLQueryDataSource database: self.db]
+                             where: [firstName inExpressions: expected]
+                           orderBy: [CBLQuerySortOrder property: @"name.first"]];
+    uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+        AssertEqualObjects(row.document[@"name"][@"first"], expected[n-1]);
+    }];
+    AssertEqual((int)numRows, (int)expected.count);
 }
 
 
 - (void) failingTest_WhereLike {
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1667
     [self loadJSONResource: @"names_100"];
     
     CBLQueryExpression* where = [[CBLQueryExpression property: @"name.first"] like: @"%Mar%"];
@@ -247,6 +268,7 @@
 
 
 - (void) failingTest_WhereRegex {
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1668
     [self loadJSONResource: @"names_100"];
     
     CBLQueryExpression* where = [[CBLQueryExpression property: @"name.first"] regex: @"^Mar.*"];
@@ -328,6 +350,7 @@
 
 
 - (void) failingTest13_SelectDistinct {
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1669
     NSError* error;
     CBLDocument* doc1 = [self.db document];
     doc1[@"number"] = @(1);
@@ -346,5 +369,6 @@
     }];
     AssertEqual(numRows, 1u);
 }
+
 
 @end

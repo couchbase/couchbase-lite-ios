@@ -323,6 +323,11 @@
 }
 
 
+- (NSString*) description {
+    return [[self asNSPredicate] description];
+}
+
+
 @end
 
 
@@ -366,6 +371,12 @@
     }
     return p;
 }
+
+
+- (NSString*) description {
+    return [[self asNSPredicate] description];
+}
+
 
 @end
 
@@ -478,5 +489,9 @@
     return array;
 }
 
+
+- (NSString*) description {
+    return [[self asNSExpression] description];
+}
 
 @end

@@ -259,4 +259,108 @@
 }
 
 
+- (void) failingTest10_Like {
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1667
+    [self loadJSONResource: @"names_100"];
+    
+    CBLPredicateQuery *q = [self.db createQueryWhere: @"name.first LIKE 'Mar*'"];
+    q.orderBy = @[@"name.first"];
+    
+    NSArray* expected = @[@"Marcy", @"Marlen", @"Maryjo", @"Margaretta", @"Margrett"];
+    uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+        AssertEqualObjects(row.document[@"name"][@"first"], expected[n-1]);
+    }];
+    AssertEqual((int)numRows, (int)expected.count);
+}
+
+
+- (void) failingTest11_Regexp {
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1668
+    [self loadJSONResource: @"names_100"];
+    
+    CBLPredicateQuery *q = [self.db createQueryWhere:
+                            @"name.first == FUNCTION(name.first, 'REGEXP_LIKE' , '^Mar.*')"];
+    q.orderBy = @[@"name.first"];
+    
+    NSArray* expected = @[@"Marcy", @"Marlen", @"Maryjo", @"Margaretta", @"Margrett"];
+    uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+        AssertEqualObjects(row.document[@"name"][@"first"], expected[n-1]);
+    }];
+    AssertEqual((int)numRows, (int)expected.count);
+}
+
+
+- (void) failingTest12_SelectDistinct {
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1669
+    for (int i = 0; i < 10; i++) {
+        NSError* error;
+        CBLDocument* doc = [self.db document];
+        doc[@"number"] = @(1);
+        Assert([doc save: &error], @"Error when creating a document: %@", error);
+    }
+    
+    CBLPredicateQuery *q = [self.db createQueryWhere: nil];
+    q.returning = @[@"number"];
+    q.distinct = YES;
+    Assert(q);
+    uint64_t numRows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
+        AssertEqualObjects(row.document.properties, @{@"number": @(1)});
+    }];
+    AssertEqual(numRows, 1u);
+}
+
+
+- (void) failingTest13_Null {
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1670
+    NSError* error;
+    CBLDocument* doc1 = [self.db documentWithID: @"doc1"];
+    doc1[@"name"] = @"Scott";
+    doc1[@"address"] = [NSNull null];
+    Assert([doc1 save: &error], @"Error when saving a document: %@", error);
+    
+    CBLDocument* doc2 = [self.db documentWithID: @"doc2"];
+    doc2[@"name"] = @"Tiger";
+    doc2[@"address"] = @"123 1st ave.";
+    doc2[@"age"] = @(20);
+    Assert([doc2 save: &error], @"Error when saving a document: %@", error);
+    
+    NSArray* tests = @[
+                       @[@"name != null",    @[doc1, doc2]],
+                       @[@"name == null",    @[]],
+                       @[@"address != null", @[doc2]],
+                       @[@"address == null", @[doc1]],
+                       @[@"age != null",     @[doc2]],
+                       @[@"age == null",     @[doc1]],
+                       @[@"work != null",    @[]],
+                       @[@"work == null",    @[doc1, doc2]],
+                       ];
+    
+    for (NSArray* test in tests) {
+        NSString* predicate = test[0];
+        NSArray* expectedDocs = test[1];
+        Log(@"Predicate: %@", predicate);
+        CBLPredicateQuery *q = [self.db createQueryWhere: predicate];
+        uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+            
+        }];
+        AssertEqual((int)numRows, (int)expectedDocs.count);
+    }
+}
+
+
+- (void) failingTest14_In {
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1671
+    [self loadJSONResource: @"names_100"];
+    
+    CBLPredicateQuery *q = [self.db createQueryWhere:
+        @"name.first IN {'Marcy', 'Marlen', 'Maryjo', 'Margaretta', 'Margrett'}"];
+    q.orderBy = @[@"name.first"];
+    
+    NSArray* expected = @[@"Marcy", @"Marlen", @"Maryjo", @"Margaretta", @"Margrett"];
+    uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+        AssertEqualObjects(row.document[@"name"][@"first"], expected[n-1]);
+    }];
+    AssertEqual((int)numRows, (int)expected.count);
+}
+
 @end
