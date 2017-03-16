@@ -243,7 +243,7 @@ static id EncodePredicate(NSPredicate* pred, NSError** outError) {
 static id EncodeExpression(NSExpression* expr, NSError **outError, bool aggregate =false) {
     switch (expr.expressionType) {
         case NSConstantValueExpressionType:
-            return expr.constantValue;
+            return expr.constantValue ? expr.constantValue : [NSNull null];
         case NSVariableExpressionType:
             return @[ [@"$" stringByAppendingString: expr.variable] ];
         case NSKeyPathExpressionType:
