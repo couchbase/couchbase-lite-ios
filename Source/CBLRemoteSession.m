@@ -321,6 +321,7 @@ UsingLogDomain(Sync);
         task:(NSURLSessionTask *)task
         didCompleteWithError:(nullable NSError *)error
 {
+    LogTo(RemoteRequest, @"CBLRemoteSession done with %@", _requestIDs[@(task.taskIdentifier)]);
     [self requestForTask: task do: ^(CBLRemoteRequest *request) {
         [_allRequests removeObject: request];
         if (error)
@@ -328,7 +329,6 @@ UsingLogDomain(Sync);
         else
             [request _didFinishLoading];
     }];
-    LogTo(RemoteRequest, @"CBLRemoteSession done with %@", _requestIDs[@(task.taskIdentifier)]);
     [self forgetTask: task];
 }
 
