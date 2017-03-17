@@ -150,6 +150,8 @@ NS_ASSUME_NONNULL_BEGIN
 // - (CBLQueryExpression*) exists: (CBLXQuery*)query;
 // - (CBLQueryExpression*) notExists: (CBLXQuery*)query;
 
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 

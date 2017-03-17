@@ -16,10 +16,10 @@ NS_ASSUME_NONNULL_BEGIN
  The current data source supported is the database. */
 @interface CBLQueryDataSource : NSObject
 
-- (instancetype) init NS_UNAVAILABLE;
-
 /** Create a database data source. */
 + (CBLQueryDatabase*) database: (CBLDatabase*)database;
+
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

@@ -39,6 +39,7 @@
 
 
 - (CBLQueryDataSource *) as: (NSString*)as {
+    // TODO: Implement this when supporting JOINS query.
     return self;
 }
 

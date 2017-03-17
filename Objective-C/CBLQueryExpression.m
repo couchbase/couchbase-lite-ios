@@ -12,6 +12,11 @@
 @implementation CBLQueryExpression
 
 
+- (instancetype) initWithNone: (id)none {
+    return [super init];
+}
+
+
 #pragma mark - Property:
 
 
@@ -304,7 +309,7 @@
                         rightExpression: (CBLQueryTypeExpression*)rhs
                                    type: (NSPredicateOperatorType)type
 {
-    self = [super init];
+    self = [super initWithNone: nil];
     if (self) {
         _leftExpression = lhs;
         _rightExpression = rhs;
@@ -340,7 +345,7 @@
 
 
 - (instancetype) initWithType: (NSCompoundPredicateType)type subpredicates: (NSArray*)subs {
-    self = [super init];
+    self = [super initWithNone: nil];
     if (self) {
         _compoundPredicateType = type;
         _subpredicates = [subs copy];
@@ -393,7 +398,7 @@
 
 
 - (instancetype) initWithType: (NSExpressionType)type {
-    self = [super init];
+    self = [super initWithNone: nil];
     if (self) {
         _expressionType = type;
     }
@@ -493,5 +498,6 @@
 - (NSString*) description {
     return [[self asNSExpression] description];
 }
+
 
 @end

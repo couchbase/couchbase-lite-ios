@@ -19,7 +19,7 @@
 - (instancetype) initWithOrders: (NSArray *)orders {
     self = [super init];
     if (self) {
-        _orders = orders;
+        _orders = [orders copy];
     }
     return self;
 }
@@ -86,13 +86,13 @@
 
 
 - (CBLQueryOrderBy*) ascending {
-    self.isAscending = YES;
+    _isAscending = YES;
     return self;
 }
 
 
 - (CBLQueryOrderBy*) descending {
-    self.isAscending = NO;
+    _isAscending = NO;
     return self;
 }
 

@@ -7,7 +7,6 @@
 //
 
 #import "CBLTestCase.h"
-#import "CBLDatabase+Query.h"
 #import "CBLQuery.h"
 #import "CBLQuerySelect.h"
 #import "CBLQueryDataSource.h"

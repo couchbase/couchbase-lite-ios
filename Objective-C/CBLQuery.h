@@ -15,7 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /** A database query.
- You create a CBLQuery object by calling one of the select class methods. */
+ A CBLQuery instance can be constructed by calling one of the select class methods. */
 @interface CBLQuery : NSObject
 
 /** Create a query from SELECT and FROM component. */

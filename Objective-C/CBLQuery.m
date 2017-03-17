@@ -9,11 +9,12 @@
 #import "CBLQuery.h"
 #import "CBLPredicateQuery.h"
 #import "CBLQuery+Internal.h"
-#import "CBLDatabase+Query.h"
+
 
 @implementation CBLQuery {
     CBLPredicateQuery* _query;
 }
+
 
 @synthesize select=_select, from=_from, where=_where, orderBy=_orderBy, distinct=_distinct;
 
@@ -133,6 +134,7 @@
 
 #pragma mark - PRIVATE
 
+
 - (CBLPredicateQuery*) query {
     if (!_query) {
         id where = nil;
@@ -146,5 +148,6 @@
     }
     return _query;
 }
+
 
 @end
