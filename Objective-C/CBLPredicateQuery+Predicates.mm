@@ -6,7 +6,7 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLQuery+Internal.h"
+#import "CBLPredicateQuery+Internal.h"
 #import "CBLInternal.h"
 #import "CBLCoreBridge.h"
 #import "Fleece.h"
@@ -22,7 +22,7 @@ extern "C" {
                                               FMT, ## __VA_ARGS__)
 
 
-@implementation CBLQuery (Predicates)
+@implementation CBLPredicateQuery (Predicates)
 
 
 // Translates an NSPredicate into the JSON-dictionary equivalent of a WHERE clause
@@ -37,7 +37,7 @@ extern "C" {
         pred = [NSPredicate predicateWithFormat: (NSString*)pred argumentArray: nil];
         return EncodePredicate(pred, outError);
     } else {
-        Assert(NO, @"Invalid specification for CBLQuery");
+        Assert(NO, @"Invalid specification for CBLPredicateQuery");
     }
 }
 
@@ -185,7 +185,7 @@ static id EncodePredicate(NSPredicate* pred, NSError** outError) {
             return @[op, lhs, min, max];
         }
 
-        NSExpression* rhs = EncodeExpression(rightExpression, outError);
+        id rhs = EncodeExpression(rightExpression, outError);
         if (!rhs) return nil;
 
         if (opType == NSInPredicateOperatorType) {
@@ -243,7 +243,7 @@ static id EncodePredicate(NSPredicate* pred, NSError** outError) {
 static id EncodeExpression(NSExpression* expr, NSError **outError, bool aggregate =false) {
     switch (expr.expressionType) {
         case NSConstantValueExpressionType:
-            return expr.constantValue;
+            return expr.constantValue ? expr.constantValue : [NSNull null];
         case NSVariableExpressionType:
             return @[ [@"$" stringByAppendingString: expr.variable] ];
         case NSKeyPathExpressionType:
@@ -261,6 +261,16 @@ static id EncodeExpression(NSExpression* expr, NSError **outError, bool aggregat
             id ifFalse = EncodeExpression(expr.falseExpression, outError);
             if (!ifFalse) return nil;
             return @[@"CASE", [NSNull null], condition, ifTrue, ifFalse];
+        }
+        case NSAggregateExpressionType: {
+            NSMutableArray* collection = [NSMutableArray array];
+            for (id exp in expr.collection) {
+                if ([exp isKindOfClass: [NSExpression class]])
+                    [collection addObject: EncodeExpression(exp, outError, aggregate)];
+                else
+                    return mkError(outError, @"Invalid AggregateExpresion collection"), nil;
+            }
+            return collection;
         }
         default:
             if ((int)expr.expressionType == 11) {
