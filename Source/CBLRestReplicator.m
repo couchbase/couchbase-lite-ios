@@ -727,6 +727,14 @@ static NSString* const kSyncGatewayServerHeaderPrefix = @"Couchbase Sync Gateway
                           path: [@"_local/" stringByAppendingString: checkpointID]
                           body: nil
                   onCompletion: ^(id response, NSError* error) {
+                  if (!_online) {
+                      // FIX: https://github.com/couchbase/couchbase-lite-ios/issues/1655
+                      // Prevent a race condition between aborting the request when putting the
+                      // replicator offine and the request is completed.
+                      [self asyncTasksFinished: 1];
+                      return;
+                  }
+                      
                   // Got the response:
                   LogTo(SyncPerf, @"%@ Got remote checkpoint", self);
                   if (error && error.code != kCBLStatusNotFound) {
