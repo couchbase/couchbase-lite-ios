@@ -20,14 +20,14 @@ extension Database {
      /** Compiles a database query, from any of several input formats.
          Once compiled, the query can be run many times with different parameter values.*/
     public func createQuery(where wher: Predicate? = nil,
-                            groupBy: [Expression]? = nil,
+                            groupBy: [PredicateExpression]? = nil,
                             having: Predicate? = nil,
-                            returning: [Expression]? = nil,
+                            returning: [PredicateExpression]? = nil,
                             distinct: Bool = false,
-                            orderBy: [SortDescriptor]? = nil) -> Query
+                            orderBy: [SortDescriptor]? = nil) -> PredicateQuery
     {
-        return Query(from: self, where: wher, groupBy: groupBy, having: having,
-                     returning: returning, distinct: distinct, orderBy: orderBy)
+        return PredicateQuery(from: self, where: wher, groupBy: groupBy, having: having,
+                              returning: returning, distinct: distinct, orderBy: orderBy)
     }
 
 
@@ -38,7 +38,7 @@ extension Database {
      or NSStrings that are expression format strings.
      @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
      @return  True on success, false on failure. */
-    public func createIndex(_ expressions: [Expression]) throws {
+    public func createIndex(_ expressions: [PredicateExpression]) throws {
         try _impl.createIndex(on: expressions)
     }
 
@@ -52,7 +52,7 @@ extension Database {
      @param options  Options affecting the index, or NULL for default settings.
      @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
      @return  True on success, false on failure. */
-    public func createIndex(_ expressions: [Expression], options: IndexOptions) throws {
+    public func createIndex(_ expressions: [PredicateExpression], options: IndexOptions) throws {
         var cblType: CBLIndexType
         var cblOptions = CBLIndexOptions()
         var language: String?
@@ -83,7 +83,7 @@ extension Database {
      @param type  Type of index.
      @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
      @return  True if the index existed and was deleted, false if it did not exist. */
-    public func deleteIndex(on expressions: [Expression], type: IndexType) throws {
+    public func deleteIndex(on expressions: [PredicateExpression], type: IndexType) throws {
         try deleteIndex(on: expressions, type: type)
     }
 

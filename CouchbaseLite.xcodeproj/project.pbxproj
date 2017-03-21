@@ -39,10 +39,10 @@
 		27BE3B4B1E4E46120012B74A /* CBLTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */; };
 		27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */; };
 		27BE3B4F1E4E65EB0012B74A /* DocumentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */; };
-		27BE3B511E4E8F6F0012B74A /* QueryTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B501E4E8F6F0012B74A /* QueryTest.swift */; };
+		27BE3B511E4E8F6F0012B74A /* PredicateQueryTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B501E4E8F6F0012B74A /* PredicateQueryTest.swift */; };
 		27BE3B521E4E916B0012B74A /* names_100.json in Resources */ = {isa = PBXBuildFile; fileRef = 27EF6A951E2AC609004748DF /* names_100.json */; };
 		27BE3B541E4E92210012B74A /* Database+Query.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B531E4E92210012B74A /* Database+Query.swift */; };
-		27BE3B561E4E93000012B74A /* Query.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B551E4E93000012B74A /* Query.swift */; };
+		27BE3B561E4E93000012B74A /* PredicateQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B551E4E93000012B74A /* PredicateQuery.swift */; };
 		27EF6A941E298E26004748DF /* PredicateQueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A931E298E26004748DF /* PredicateQueryTest.m */; };
 		27EF6A971E2AC61B004748DF /* names_100.json in Resources */ = {isa = PBXBuildFile; fileRef = 27EF6A951E2AC609004748DF /* names_100.json */; };
 		27EF6AED1E32D109004748DF /* libLiteCore-static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9441E0347B600464432 /* libLiteCore-static.a */; };
@@ -134,16 +134,35 @@
 		9380C71C1E16E7CE0011E8CB /* CBLProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 9380C6FE1E15BB1D0011E8CB /* CBLProperties.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9380C72A1E16E7D00011E8CB /* CBLDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = 93BFCD9E1E0385EA00E52F8A /* CBLDatabase.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9380C72B1E16E7D30011E8CB /* CBLDatabase.mm in Sources */ = {isa = PBXBuildFile; fileRef = 93BFCD9F1E0385EA00E52F8A /* CBLDatabase.mm */; };
+		938CDF161E807EEB002EE790 /* Query.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF151E807EEB002EE790 /* Query.swift */; };
+		938CDF181E807F08002EE790 /* Select.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF171E807F08002EE790 /* Select.swift */; };
+		938CDF1A1E807F14002EE790 /* From.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF191E807F14002EE790 /* From.swift */; };
+		938CDF1C1E807F23002EE790 /* Where.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF1B1E807F23002EE790 /* Where.swift */; };
+		938CDF1E1E807F35002EE790 /* OrderBy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF1D1E807F35002EE790 /* OrderBy.swift */; };
+		938CDF201E807F45002EE790 /* DataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF1F1E807F45002EE790 /* DataSource.swift */; };
+		938CDF221E807F51002EE790 /* Expression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF211E807F51002EE790 /* Expression.swift */; };
+		938CDF251E807F86002EE790 /* FromRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF241E807F86002EE790 /* FromRouter.swift */; };
+		938CDF271E807F8F002EE790 /* WhereRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF261E807F8F002EE790 /* WhereRouter.swift */; };
+		938CDF291E807F9F002EE790 /* OrderByRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF281E807F9F002EE790 /* OrderByRouter.swift */; };
 		938CFA2D1E442B4200291631 /* DocumentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C59D1E269F14001BB196 /* DocumentTest.m */; };
 		938CFA2E1E442B5300291631 /* CBLTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5961E25B473001BB196 /* CBLTestCase.m */; };
 		938CFA2F1E442B5700291631 /* DatabaseTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5901E25B3F0001BB196 /* DatabaseTest.m */; };
+		938D20DD1E834E7F00F40E15 /* sentences.json in Resources */ = {isa = PBXBuildFile; fileRef = 273ADF7C1E36B514001E977F /* sentences.json */; };
 		9398D91C1E03434200464432 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
 		9398D9FF1E03531A00464432 /* CouchbaseLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 9398D9FD1E03531A00464432 /* CouchbaseLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		93A2AFBA1E830BF800A08CAE /* QueryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A2AFB91E830BF800A08CAE /* QueryRow.swift */; };
 		93A8434D1E3BB95200B4AF2D /* CBLBlob.h in Headers */ = {isa = PBXBuildFile; fileRef = 72A879FE1E2DD536008466FF /* CBLBlob.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		93A91C6C1E81CE4D003D01A2 /* QueryTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */; };
 		93ADE9801E68C81000D59017 /* CBLDocument+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93ADE97F1E68C81000D59017 /* CBLDocument+Internal.h */; };
 		93ADE9811E68C81000D59017 /* CBLDocument+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93ADE97F1E68C81000D59017 /* CBLDocument+Internal.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93ADE9841E68C9D500D59017 /* CBLSubdocument+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93ADE9821E68C82900D59017 /* CBLSubdocument+Internal.h */; };
 		93ADE9851E68C9D500D59017 /* CBLSubdocument+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93ADE9821E68C82900D59017 /* CBLSubdocument+Internal.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		93AF51B61E80A6F700E200F0 /* CBLQuerySelect.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332080F1E77415E000D9993 /* CBLQuerySelect.m */; };
+		93AF51C41E80A6FC00E200F0 /* CBLQueryOrderBy.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332080D1E77415E000D9993 /* CBLQueryOrderBy.m */; };
+		93AF51C51E80A70100E200F0 /* CBLQueryExpression.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332080B1E77415E000D9993 /* CBLQueryExpression.m */; };
+		93AF51C61E80A70500E200F0 /* CBLQueryDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 933208091E77415E000D9993 /* CBLQueryDataSource.m */; };
+		93AF51C71E80A70900E200F0 /* CBLQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 933208111E77415E000D9993 /* CBLQuery.m */; };
+		93AF51CA1E80C42C00E200F0 /* CouchbaseLiteError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93AF51C81E80C42300E200F0 /* CouchbaseLiteError.swift */; };
 		93B5034F1E64B04E002C4680 /* CBLProperties.mm in Sources */ = {isa = PBXBuildFile; fileRef = 934F4CC31E24747E00F90659 /* CBLProperties.mm */; };
 		93B5035B1E64B053002C4680 /* CBLDatabase.mm in Sources */ = {isa = PBXBuildFile; fileRef = 93BFCD9F1E0385EA00E52F8A /* CBLDatabase.mm */; };
 		93B5035D1E64B05E002C4680 /* CBLSubdocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9352942A1E501055005CE4E8 /* CBLSubdocument.mm */; };
@@ -383,9 +402,9 @@
 		27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CBLTestCase.swift; sourceTree = "<group>"; };
 		27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DatabaseTest.swift; sourceTree = "<group>"; };
 		27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DocumentTest.swift; sourceTree = "<group>"; };
-		27BE3B501E4E8F6F0012B74A /* QueryTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QueryTest.swift; sourceTree = "<group>"; };
+		27BE3B501E4E8F6F0012B74A /* PredicateQueryTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PredicateQueryTest.swift; sourceTree = "<group>"; };
 		27BE3B531E4E92210012B74A /* Database+Query.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Database+Query.swift"; sourceTree = "<group>"; };
-		27BE3B551E4E93000012B74A /* Query.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Query.swift; sourceTree = "<group>"; };
+		27BE3B551E4E93000012B74A /* PredicateQuery.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PredicateQuery.swift; sourceTree = "<group>"; };
 		27EF6A931E298E26004748DF /* PredicateQueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PredicateQueryTest.m; sourceTree = "<group>"; };
 		27EF6A951E2AC609004748DF /* names_100.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = names_100.json; sourceTree = "<group>"; };
 		27EF6AF11E32D12C004748DF /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
@@ -468,6 +487,16 @@
 		9380C6ED1E15B8C20011E8CB /* CBLDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDocument.h; sourceTree = "<group>"; };
 		9380C6EE1E15B8C20011E8CB /* CBLDocument.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLDocument.mm; sourceTree = "<group>"; };
 		9380C6FE1E15BB1D0011E8CB /* CBLProperties.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLProperties.h; sourceTree = "<group>"; };
+		938CDF151E807EEB002EE790 /* Query.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Query.swift; sourceTree = "<group>"; };
+		938CDF171E807F08002EE790 /* Select.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Select.swift; sourceTree = "<group>"; };
+		938CDF191E807F14002EE790 /* From.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = From.swift; sourceTree = "<group>"; };
+		938CDF1B1E807F23002EE790 /* Where.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Where.swift; sourceTree = "<group>"; };
+		938CDF1D1E807F35002EE790 /* OrderBy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OrderBy.swift; sourceTree = "<group>"; };
+		938CDF1F1E807F45002EE790 /* DataSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataSource.swift; sourceTree = "<group>"; };
+		938CDF211E807F51002EE790 /* Expression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Expression.swift; sourceTree = "<group>"; };
+		938CDF241E807F86002EE790 /* FromRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FromRouter.swift; sourceTree = "<group>"; };
+		938CDF261E807F8F002EE790 /* WhereRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WhereRouter.swift; sourceTree = "<group>"; };
+		938CDF281E807F9F002EE790 /* OrderByRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OrderByRouter.swift; sourceTree = "<group>"; };
 		938CF9EE1E442A3E00291631 /* CBL Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL Tests.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		938CFA061E442A3E00291631 /* CBL Objc Tests - iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CBL Objc Tests - iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9398D9121E03434200464432 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -476,8 +505,11 @@
 		9398D9FD1E03531A00464432 /* CouchbaseLite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CouchbaseLite.h; sourceTree = "<group>"; };
 		9398D9FE1E03531A00464432 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		939B79241E679017009A70EF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		93A2AFB91E830BF800A08CAE /* QueryRow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QueryRow.swift; sourceTree = "<group>"; };
+		93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QueryTest.swift; sourceTree = "<group>"; };
 		93ADE97F1E68C81000D59017 /* CBLDocument+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDocument+Internal.h"; sourceTree = "<group>"; };
 		93ADE9821E68C82900D59017 /* CBLSubdocument+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLSubdocument+Internal.h"; sourceTree = "<group>"; };
+		93AF51C81E80C42300E200F0 /* CouchbaseLiteError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CouchbaseLiteError.swift; sourceTree = "<group>"; };
 		93BFCD951E0380A300E52F8A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		93BFCD9E1E0385EA00E52F8A /* CBLDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabase.h; sourceTree = "<group>"; };
 		93BFCD9F1E0385EA00E52F8A /* CBLDatabase.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLDatabase.mm; sourceTree = "<group>"; };
@@ -552,11 +584,14 @@
 				27BE3B531E4E92210012B74A /* Database+Query.swift */,
 				275F92A51E4D3A91007FD5A2 /* Document.swift */,
 				275F92A71E4D3AFB007FD5A2 /* Properties.swift */,
-				27BE3B551E4E93000012B74A /* Query.swift */,
+				27BE3B551E4E93000012B74A /* PredicateQuery.swift */,
+				93A2AFB91E830BF800A08CAE /* QueryRow.swift */,
 				931112DB1E57F173007690A6 /* Subdocument.swift */,
+				93AF51C81E80C42300E200F0 /* CouchbaseLiteError.swift */,
 				275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */,
-				275F92771E4D30A4007FD5A2 /* Info.plist */,
+				938CDF071E807E98002EE790 /* Query */,
 				27BE3B491E4E45CB0012B74A /* Tests */,
+				275F92771E4D30A4007FD5A2 /* Info.plist */,
 			);
 			path = Swift;
 			sourceTree = "<group>";
@@ -582,7 +617,8 @@
 				27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */,
 				27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */,
 				27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */,
-				27BE3B501E4E8F6F0012B74A /* QueryTest.swift */,
+				27BE3B501E4E8F6F0012B74A /* PredicateQueryTest.swift */,
+				93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */,
 				93DD40E21E5CDAA500DD9196 /* SubdocumentTest.swift */,
 				939B79241E679017009A70EF /* Info.plist */,
 			);
@@ -696,6 +732,31 @@
 				934F4CA41E241FB500F90659 /* CBLStringBytes.mm */,
 			);
 			name = Bridge;
+			sourceTree = "<group>";
+		};
+		938CDF071E807E98002EE790 /* Query */ = {
+			isa = PBXGroup;
+			children = (
+				938CDF231E807F60002EE790 /* Router */,
+				938CDF151E807EEB002EE790 /* Query.swift */,
+				938CDF171E807F08002EE790 /* Select.swift */,
+				938CDF191E807F14002EE790 /* From.swift */,
+				938CDF1B1E807F23002EE790 /* Where.swift */,
+				938CDF1D1E807F35002EE790 /* OrderBy.swift */,
+				938CDF1F1E807F45002EE790 /* DataSource.swift */,
+				938CDF211E807F51002EE790 /* Expression.swift */,
+			);
+			name = Query;
+			sourceTree = "<group>";
+		};
+		938CDF231E807F60002EE790 /* Router */ = {
+			isa = PBXGroup;
+			children = (
+				938CDF241E807F86002EE790 /* FromRouter.swift */,
+				938CDF261E807F8F002EE790 /* WhereRouter.swift */,
+				938CDF281E807F9F002EE790 /* OrderByRouter.swift */,
+			);
+			name = Router;
 			sourceTree = "<group>";
 		};
 		9398D9081E03434200464432 = {
@@ -1105,6 +1166,7 @@
 					9398D9111E03434200464432 = {
 						CreatedOnToolsVersion = 8.1;
 						DevelopmentTeam = N2Q372V7W2;
+						LastSwiftMigration = 0820;
 						ProvisioningStyle = Automatic;
 					};
 					9398D91A1E03434200464432 = {
@@ -1244,6 +1306,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				938D20DD1E834E7F00F40E15 /* sentences.json in Resources */,
 				27BE3B521E4E916B0012B74A /* names_100.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1290,33 +1353,50 @@
 			buildActionMask = 2147483647;
 			files = (
 				93B503621E64B073002C4680 /* CBLBlob.mm in Sources */,
-				27BE3B561E4E93000012B74A /* Query.swift in Sources */,
+				27BE3B561E4E93000012B74A /* PredicateQuery.swift in Sources */,
 				93B503761E64B0B7002C4680 /* CBLBlobStream.mm in Sources */,
 				93B5035E1E64B063002C4680 /* CBLConflictResolver.m in Sources */,
 				93B5036C1E64B096002C4680 /* CBLJSON.m in Sources */,
 				27BE3B541E4E92210012B74A /* Database+Query.swift in Sources */,
+				938CDF201E807F45002EE790 /* DataSource.swift in Sources */,
 				9308F4071E64B22A00F53EE4 /* MYErrorUtils.m in Sources */,
+				93AF51CA1E80C42C00E200F0 /* CouchbaseLiteError.swift in Sources */,
+				93A2AFBA1E830BF800A08CAE /* QueryRow.swift in Sources */,
+				938CDF251E807F86002EE790 /* FromRouter.swift in Sources */,
 				93B503711E64B0A5002C4680 /* CBLParseDate.c in Sources */,
 				937441D61E7B8B0500CB8F11 /* CBLPredicateQuery.mm in Sources */,
 				275F92A81E4D3AFB007FD5A2 /* Properties.swift in Sources */,
+				938CDF291E807F9F002EE790 /* OrderByRouter.swift in Sources */,
+				93AF51B61E80A6F700E200F0 /* CBLQuerySelect.m in Sources */,
+				938CDF271E807F8F002EE790 /* WhereRouter.swift in Sources */,
 				93B5035D1E64B05E002C4680 /* CBLSubdocument.mm in Sources */,
 				9308F40C1E64B23800F53EE4 /* Test_Assertions.m in Sources */,
 				9308F40B1E64B23600F53EE4 /* Test.m in Sources */,
 				93B5036A1E64B091002C4680 /* CBLBase64.m in Sources */,
 				937441D81E7B8B0500CB8F11 /* CBLPredicateQuery+Predicates.mm in Sources */,
+				938CDF161E807EEB002EE790 /* Query.swift in Sources */,
 				93B503611E64B06E002C4680 /* CBLQueryRow.mm in Sources */,
+				93AF51C41E80A6FC00E200F0 /* CBLQueryOrderBy.m in Sources */,
 				93B503631E64B079002C4680 /* CBLCoreBridge.mm in Sources */,
 				93B5034F1E64B04E002C4680 /* CBLProperties.mm in Sources */,
 				93B5035B1E64B053002C4680 /* CBLDatabase.mm in Sources */,
 				9308F4051E64B22500F53EE4 /* ExceptionUtils.m in Sources */,
 				93B503701E64B0A3002C4680 /* CBLMisc.m in Sources */,
 				93B5036E1E64B09C002C4680 /* CBLLog.m in Sources */,
+				93AF51C71E80A70900E200F0 /* CBLQuery.m in Sources */,
 				9308F4111E64B2B300F53EE4 /* CBLDocument.mm in Sources */,
 				9308F4091E64B23000F53EE4 /* MYLogging.m in Sources */,
+				938CDF221E807F51002EE790 /* Expression.swift in Sources */,
+				938CDF1C1E807F23002EE790 /* Where.swift in Sources */,
 				275F92A61E4D3A91007FD5A2 /* Document.swift in Sources */,
 				93B503681E64B088002C4680 /* CBLSharedKeys.mm in Sources */,
 				275F928C1E4D3119007FD5A2 /* Database.swift in Sources */,
+				938CDF1A1E807F14002EE790 /* From.swift in Sources */,
+				93AF51C61E80A70500E200F0 /* CBLQueryDataSource.m in Sources */,
 				93B503781E64B0BE002C4680 /* CBLInternal.mm in Sources */,
+				938CDF181E807F08002EE790 /* Select.swift in Sources */,
+				93AF51C51E80A70100E200F0 /* CBLQueryExpression.m in Sources */,
+				938CDF1E1E807F35002EE790 /* OrderBy.swift in Sources */,
 				93B503741E64B0B0002C4680 /* CBLSymmetricKey.m in Sources */,
 				93B503661E64B083002C4680 /* CBLStringBytes.mm in Sources */,
 				931112DC1E57F173007690A6 /* Subdocument.swift in Sources */,
@@ -1329,8 +1409,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				27BE3B4F1E4E65EB0012B74A /* DocumentTest.swift in Sources */,
-				27BE3B511E4E8F6F0012B74A /* QueryTest.swift in Sources */,
+				27BE3B511E4E8F6F0012B74A /* PredicateQueryTest.swift in Sources */,
 				27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */,
+				93A91C6C1E81CE4D003D01A2 /* QueryTest.swift in Sources */,
 				93DD40E31E5CDAA500DD9196 /* SubdocumentTest.swift in Sources */,
 				27BE3B4B1E4E46120012B74A /* CBLTestCase.swift in Sources */,
 			);
@@ -1827,8 +1908,13 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9378C5D51E26CC46001BB196 /* CBL ObjC.xcconfig */;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
+				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -1836,8 +1922,12 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
+				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};

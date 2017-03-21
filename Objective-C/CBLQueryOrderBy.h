@@ -11,19 +11,22 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/** An CBLQueryOrderBy represents a query ORDER BY clause of a SQL or N1QL query by sepecifying
- properties or expressions that the result rows should be sorted by. 
+/** An CBLQueryOrderBy represents a query ORDER BY clause by sepecifying properties or expressions t
+ hat the result rows should be sorted by.
  A CBLQueryOrderBy can be construct as a single CBLQuerySortOrder instance with a propery name 
  or an expression instance or as a chain of multiple CBLQueryOrderBy instances. */
 @interface CBLQueryOrderBy : NSObject
 
-/** Construct a chain of multiple CBLQueryOrderBy instances. */
+/** Create a chain of multiple CBLQueryOrderBy instances. */
 + (CBLQueryOrderBy*) orderBy: (CBLQueryOrderBy *)orderBy, ...;
 
-/** Construct a CBLQuerySortOrder instance with a given property name. */
+/** Create a chain of multiple CBLQueryOrderBy array. */
++ (CBLQueryOrderBy*) orderByArray: (NSArray<CBLQueryOrderBy*>*)orders;
+
+/** Create a CBLQuerySortOrder instance with a given property name. */
 + (CBLQuerySortOrder*) property: (NSString*)name;
 
-/** Construct a CBLQuerySortOrder instance with a given expression. */
+/** Create a CBLQuerySortOrder instance with a given expression. */
 + (CBLQuerySortOrder*) expression: (CBLQueryExpression*)expression;
 
 - (instancetype) init NS_UNAVAILABLE;
