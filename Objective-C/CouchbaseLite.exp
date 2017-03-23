@@ -21,7 +21,7 @@
 .objc_class_name_CBLQueryExpression
 .objc_class_name_CBLQueryOrderBy
 .objc_class_name_CBLQuerySelect
-.objc_class_name_CBLXQuery
+.objc_class_name_CBLQuery
 
 #  Public constants:
 _kCBLDatabaseChangeNotification

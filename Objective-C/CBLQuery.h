@@ -63,8 +63,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSString*) explain: (NSError**)outError;
 
 
-/** Runs the query, using the current settings (skip, limit, parameters), returning an enumerator
- that returns result rows one at a time.
+/** Runs the query. The returning an enumerator that returns result rows one at a time.
  You can run the query any number of times, and you can even have multiple enumerators active at
  once.
  The results come from a snapshot of the database taken at the moment -run: is called, so they

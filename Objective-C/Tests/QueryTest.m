@@ -1,5 +1,5 @@
 //
-//  XQueryTest.m
+//  QueryTest.m
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 3/13/17.
@@ -60,12 +60,14 @@
                                  where: c[0]];
         NSPredicate* p = [NSPredicate predicateWithFormat: c[1]];
         NSMutableArray* result = [[numbers filteredArrayUsingPredicate: p] mutableCopy];
-        [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
+        NSInteger total = result.count;
+        NSInteger rows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
             id props = row.document.properties;
             Assert([result containsObject: props]);
             [result removeObject: props];
         }];
         AssertEqual(result.count, 0u);
+        AssertEqual(rows, total);
     }
 }
 
@@ -107,7 +109,7 @@
 }
 
 
-- (void) test_WhereWithArithmetic {
+- (void) test_WhereArithmetic {
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
     CBLQueryExpression* n2 = [CBLQueryExpression property: @"number2"];
     NSArray* cases = @[
@@ -178,7 +180,7 @@
         uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
             if (expectedDocs.count <= n) {
                 CBLDocument* doc = expectedDocs[n-1];
-                AssertEqualObjects(doc.documentID, row.document.documentID, @"Failed case: %@", exp);
+                AssertEqualObjects(doc.documentID, row.documentID, @"Failed case: %@", exp);
             }
         }];
         AssertEqual((int)numRows, (int)expectedDocs.count, @"Failed case: %@", exp);
@@ -262,7 +264,8 @@
         if (firstName)
             [firstNames addObject: firstName];
     }];
-    AssertEqual((int)numRows, 5);
+    AssertEqual(numRows, 5u);
+    AssertEqual(firstNames.count, 5u);
 }
 
 
@@ -283,7 +286,8 @@
         if (firstName)
             [firstNames addObject: firstName];
     }];
-    AssertEqual((int)numRows, 5);
+    AssertEqual(numRows, 5u);
+    AssertEqual(firstNames.count, 5u);
 }
 
 
@@ -308,7 +312,7 @@
         Assert([text containsString: @"woman"]);
         AssertEqual(ftsRow.matchCount, 2ul);
     }];
-    AssertEqual((int)numRows, 2);
+    AssertEqual(numRows, 2u);
 }
 
 
@@ -348,7 +352,7 @@
 }
 
 
-- (void) failingTest13_SelectDistinct {
+- (void) failingTest_SelectDistinct {
     // https://github.com/couchbase/couchbase-lite-ios/issues/1669
     NSError* error;
     CBLDocument* doc1 = [self.db document];
@@ -363,8 +367,7 @@
                                      from: [CBLQueryDatabase database: self.db]];
     Assert(q);
     uint64_t numRows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
-        CBLDocument* doc = row.document;
-        AssertEqualObjects(doc.documentID, doc1.documentID);
+        AssertEqualObjects(row.documentID, doc1.documentID);
     }];
     AssertEqual(numRows, 1u);
 }

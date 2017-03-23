@@ -36,6 +36,10 @@
 }
 
 
++ (CBLQueryOrderBy*) orderByArray: (NSArray<CBLQueryOrderBy*>*)orders {
+    return [[[self class] alloc] initWithOrders: orders];
+}
+
 + (CBLQuerySortOrder *) property: (NSString*)name {
     return [[self class] expression: [CBLQueryExpression property: name]];
 }
