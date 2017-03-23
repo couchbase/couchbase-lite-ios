@@ -12,9 +12,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** This notification is posted by a CBLDatabase in response to document changes. */
 extern NSString* const kCBLDatabaseChangeNotification;
+
+/** The key to access the document IDs of the documents that has been changed. */
 extern NSString* const kCBLDatabaseChangesUserInfoKey;
+
+/** The key to access the last sequence number as of the notified changes. */
 extern NSString* const kCBLDatabaseLastSequenceUserInfoKey;
+
+/** The key to check whether the changes are from the current database object or not. */
 extern NSString* const kCBLDatabaseIsExternalUserInfoKey;
 
 
@@ -27,6 +34,7 @@ typedef NS_ENUM(uint32_t, CBLIndexType) {
 
 
 /** Options for creating a database index. */
+
 typedef struct {
     const char * _Nullable language;    ///< Full-text: Language code, e.g. "en" or "de". This
                                         ///<    affects how word breaks and word stems are parsed.
@@ -99,6 +107,7 @@ typedef struct {
                                  error: (NSError**)error
     NS_DESIGNATED_INITIALIZER;
 
+/** Not available */
 - (instancetype) init NS_UNAVAILABLE;
 
 /** Closes a database. */
@@ -127,10 +136,7 @@ typedef struct {
 
 /** Runs a group of database operations in a batch. Use this when performing bulk write operations
     like multiple inserts/updates; it saves the overhead of multiple database commits, greatly
-    improving performance. 
-    @param error  On return, the error if any.
-    @param block  The block of code to run.
-    @return  YES on success, NO on error. */
+    improving performance. */
 - (BOOL) inBatch: (NSError**)error do: (void (NS_NOESCAPE ^)())block;
 
 /** Creates a new CBLDocument object with no properties and a new (random) UUID. 

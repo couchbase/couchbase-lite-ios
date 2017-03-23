@@ -43,6 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** Create a descending CBLQueryOrderBy object. */
 - (CBLQueryOrderBy*) descending;
 
+/** Not available. */
 - (instancetype) init NS_UNAVAILABLE;
 
 @end

@@ -34,6 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+/** Define Subscription methods for CBLSubdocument. */
 @interface CBLSubdocument (Subscripts)
 
 /** Same as objectForKey: */

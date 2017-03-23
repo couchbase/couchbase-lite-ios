@@ -28,15 +28,28 @@ NS_ASSUME_NONNULL_BEGIN
 /** The result value at the given index (if the query has a "returning" specification.) */
 - (nullable id) valueAtIndex: (NSUInteger)index;
 
+/** The result boolean value at the given index. */
 - (bool)                booleanAtIndex: (NSUInteger)index;
+
+/** The result integer value at the given index. */
 - (NSInteger)           integerAtIndex: (NSUInteger)index;
+
+/** The result integer value at the given index. */
 - (float)               floatAtIndex:   (NSUInteger)index;
+
+/** The result double value at the given index. */
 - (double)              doubleAtIndex:  (NSUInteger)index;
+
+/** The result string value at the given index. */
 - (nullable NSString*)  stringAtIndex:  (NSUInteger)index;
+
+/** The result date value at the given index. */
 - (nullable NSDate*)    dateAtIndex:    (NSUInteger)index;
 
+/** The result object value at the given index. */
 - (nullable id) objectAtIndexedSubscript: (NSUInteger)subscript;
 
+/** Not Available. */
 - (instancetype) init NS_UNAVAILABLE;
 
 @end

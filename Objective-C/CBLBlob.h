@@ -13,10 +13,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** A CBLBlob appears as a property of a CBLDocument; it contains arbitrary binary data,
     tagged with a MIME type.
-
     Blobs can be arbitrarily large, and their data is loaded only on demand (when the `content`
-    or `contentStream` properties are accessed), not when the document is loaded. 
- 
+    or `contentStream` properties are accessed), not when the document is loaded.
     The document's raw JSON form only contains the CBLBlob's metadata (type, length and a digest of
     the data) in a small object. The data itself is stored externally to the document, keyed by
     the digest. */
@@ -45,6 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
                                       fileURL: (NSURL*)fileURL
                                         error: (NSError**)error;
 
+/** The -init method is not available. */
 - (instancetype) init NS_UNAVAILABLE;
 
 /** Gets the contents of a CBLBlob as a block of memory.

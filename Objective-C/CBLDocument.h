@@ -84,7 +84,7 @@ extern NSString* const kCBLDocumentIsExternalUserInfoKey;
 
 @end
 
-
+/** Define Subscription methods for CBLDocument. */
 @interface CBLDocument (Subscripts)
 
 /** Same as objectForKey: */

@@ -104,6 +104,7 @@ NS_ASSUME_NONNULL_BEGIN
     directly, not CBLQueryRows. */
 - (nullable NSEnumerator<CBLDocument*>*) allDocuments: (NSError**)error;
 
+/** Not available. */
 - (instancetype) init NS_UNAVAILABLE;
 
 @end

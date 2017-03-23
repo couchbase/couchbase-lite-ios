@@ -19,6 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** Create a database data source. */
 + (CBLQueryDatabase*) database: (CBLDatabase*)database;
 
+/** Not available. */
 - (instancetype) init NS_UNAVAILABLE;
 
 @end
@@ -27,10 +28,11 @@ NS_ASSUME_NONNULL_BEGIN
  the -as: method with a given alias name. */
 @interface CBLQueryDatabase : CBLQueryDataSource
 
-- (instancetype) init NS_UNAVAILABLE;
-
 /** Create an alias data source. */
 - (CBLQueryDataSource*) as: (NSString*)as;
+
+/** Not available. */
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 
