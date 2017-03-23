@@ -215,6 +215,19 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(firstNames.count, 5);
     }
     
+    func testWhereIn() throws {
+        try loadJSONResource(resourceName: "names_100")
+        let expected = ["Marcy", "Margaretta", "Margrett", "Marlen", "Maryjo"]
+        let w = Expression.property("name.first").in(expected)
+        let o = OrderBy.property("name.first")
+        let q = Query.select().from(DataSource.database(db)).where(w).orderBy(o)
+        let numRows = try verifyQuery(q, block: { (n, row) in
+            let firstName = expected[Int(n)-1]
+            XCTAssertEqual(row.document["name"]!["first"], firstName)
+        })
+        XCTAssertEqual(Int(numRows), expected.count);
+    }
+    
     func failingTestWhereRegex() throws {
         // https://github.com/couchbase/couchbase-lite-ios/issues/1668
         try loadJSONResource(resourceName: "names_100")

@@ -139,10 +139,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (CBLQueryExpression*) notBetween: (id)expression1 and: (id)expression2;
 
 /** Create a IN expression. */
-- (CBLQueryExpression*) inExpressions: (NSArray*)expressions;
+- (CBLQueryExpression*) in: (NSArray*)expressions;
 
 /** Create a NOT IN expression. */
-- (CBLQueryExpression*) notInExpressions: (NSArray*)expressions;
+- (CBLQueryExpression*) notIn: (NSArray*)expressions;
 
 // TODO: Subquery
 // - (CBLQueryExpression*) inQuery: (CBLQuery*)query;

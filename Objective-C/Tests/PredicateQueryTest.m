@@ -32,7 +32,7 @@
 }
 
 
-- (void) test01_Predicates {
+- (void) testPredicates {
     // The query with the 'matches' operator requires there to be a FTS index on 'blurb':
     NSError* error;
     Assert([_db createIndexOn: @[@"blurb"] type: kCBLFullTextIndex options: NULL error: &error]);
@@ -76,7 +76,7 @@
 }
 
 
-- (void) test02_NoWhereQuery {
+- (void) testNoWhereQuery {
     [self loadJSONResource: @"names_100"];
     NSError *error;
     // This is an all-docs query since it doesn't specify any criteria:
@@ -94,7 +94,7 @@
 }
 
 
-- (void) test02_AllDocsQuery {
+- (void) testAllDocsQuery {
     [self loadJSONResource: @"names_100"];
     uint64_t n = 0;
     for (CBLDocument* doc in self.db.allDocuments) {
@@ -107,8 +107,8 @@
 }
 
 
-- (void) test03_PropertyQuery               {[self propertyQueryWithReopen: NO];}
-- (void) test03_PropertyQueryAfterReopen    {[self propertyQueryWithReopen: YES];}
+- (void) testPropertyQuery               {[self propertyQueryWithReopen: NO];}
+- (void) testPropertyQueryAfterReopen    {[self propertyQueryWithReopen: YES];}
 
 - (void) propertyQueryWithReopen: (BOOL)reopen {
     [self loadJSONResource: @"names_100"];
@@ -144,7 +144,7 @@
 }
 
 
-- (void) test04_Projection {
+- (void) testProjection {
     NSArray* expectedDocs = @[@"doc-076", @"doc-008", @"doc-014"];
     NSArray* expectedZips = @[@"55587", @"56307", @"56308"];
     NSArray* expectedEmails = @[ @[@"monte.mihlfeld@nosql-matters.org"],
@@ -167,7 +167,7 @@
 }
 
 
-- (void) test05_FTS {
+- (void) testFTS {
     [self loadJSONResource: @"sentences"];
     NSError* error;
     Assert([_db createIndexOn: @[@"sentence"] type: kCBLFullTextIndex options: NULL error: &error]);
@@ -187,7 +187,7 @@
 }
 
 
-- (void) test07_deleteQueriedDoc {
+- (void) testDeleteQueriedDoc {
     [self loadJSONResource: @"names_100"];
     
     NSError* error;
@@ -207,7 +207,7 @@
 }
 
 
-- (void) test08_Aggregate {
+- (void) testAggregate {
     [self loadJSONResource: @"names_100"];
     CBLPredicateQuery *q = [self.db createQueryWhere: @"gender == 'female'"];
     q.returning = @[@"min(contact.address.zip)", @"max(contact.address.zip)"];
@@ -227,7 +227,7 @@
 }
 
 
-- (void) test09_GroupBy {
+- (void) testGroupBy {
     NSArray* expectedStates = @[@"AL",    @"CA",    @"CO",    @"FL",    @"IA"];
     NSArray* expectedCounts = @[@1,       @6,       @1,       @1,       @3];
     NSArray* expectedMaxZips= @[@"35243", @"94153", @"81223", @"33612", @"50801"];
@@ -347,15 +347,14 @@
 }
 
 
-- (void) failingTest14_In {
-    // https://github.com/couchbase/couchbase-lite-ios/issues/1671
+- (void) testWhereIn {
     [self loadJSONResource: @"names_100"];
     
     CBLPredicateQuery *q = [self.db createQueryWhere:
         @"name.first IN {'Marcy', 'Marlen', 'Maryjo', 'Margaretta', 'Margrett'}"];
     q.orderBy = @[@"name.first"];
     
-    NSArray* expected = @[@"Marcy", @"Marlen", @"Maryjo", @"Margaretta", @"Margrett"];
+    NSArray* expected = @[@"Marcy", @"Margaretta", @"Margrett", @"Marlen", @"Maryjo"];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         AssertEqualObjects(row.document[@"name"][@"first"], expected[n-1]);
     }];

@@ -191,11 +191,12 @@ static id EncodePredicate(NSPredicate* pred, NSError** outError) {
         if (opType == NSInPredicateOperatorType) {
             // IN needs translation if RHS is not a literal or property
             NSExpressionType rtype = rightExpression.expressionType;
+            NSExpression* lhs = EncodeExpression(leftExpression, outError);
             if (rtype != NSVariableExpressionType && rtype != NSAggregateExpressionType) {
-                NSExpression* lhs = EncodeExpression(leftExpression, outError);
                 if (!lhs) return nil;
                 return @[@"ANY", @"X", rhs, @[@"=", @[@"?X"], lhs]];
-            }
+            } else if (rtype == NSAggregateExpressionType)
+                return [@[op, lhs] arrayByAddingObjectsFromArray: rhs];
         }
 
         static NSString* const kModifiers[3] = {nil, @"EVERY", @"ANY"};

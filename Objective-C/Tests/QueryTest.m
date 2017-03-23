@@ -72,7 +72,7 @@
 }
 
 
-- (void) test_NoWhereQuery {
+- (void) testNoWhereQuery {
     [self loadJSONResource: @"names_100"];
     
     CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
@@ -90,7 +90,7 @@
 }
 
 
-- (void) test_WhereComparison {
+- (void) testWhereComparison {
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
     NSArray* cases = @[
         @[[n1 lessThan: @(3)], @"number1 < 3"],
@@ -109,7 +109,7 @@
 }
 
 
-- (void) test_WhereArithmetic {
+- (void) testWhereArithmetic {
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
     CBLQueryExpression* n2 = [CBLQueryExpression property: @"number2"];
     NSArray* cases = @[
@@ -129,7 +129,7 @@
 }
 
 
-- (void) test_WhereAndOr {
+- (void) testWhereAndOr {
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
     CBLQueryExpression* n2 = [CBLQueryExpression property: @"number2"];
     NSArray* cases = @[
@@ -188,7 +188,7 @@
 }
 
 
-- (void) test_WhereIs {
+- (void) testWhereIs {
     NSError* error;
     CBLDocument* doc1 = [self.db document];
     doc1 [@"string"] = @"string";
@@ -220,7 +220,7 @@
 }
 
 
-- (void) test_WhereBetween {
+- (void) testWhereBetween {
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
     NSArray* cases = @[
         @[[n1 between: @(3) and: @(7)], @"number1 BETWEEN {3,7}"]
@@ -230,15 +230,14 @@
 }
 
 
-- (void) fialingTest_WhereIn {
-    // https://github.com/couchbase/couchbase-lite-ios/issues/1671
+- (void) testWhereIn {
     [self loadJSONResource: @"names_100"];
     
-    NSArray* expected = @[@"Marcy", @"Marlen", @"Maryjo", @"Margaretta", @"Margrett"];
+    NSArray* expected = @[@"Marcy", @"Margaretta", @"Margrett", @"Marlen", @"Maryjo"];
     CBLQueryExpression* firstName = [CBLQueryExpression property: @"name.first"];
     CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
                               from: [CBLQueryDataSource database: self.db]
-                             where: [firstName inExpressions: expected]
+                             where: [firstName in: expected]
                            orderBy: [CBLQuerySortOrder property: @"name.first"]];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         AssertEqualObjects(row.document[@"name"][@"first"], expected[n-1]);
@@ -291,7 +290,7 @@
 }
 
 
-- (void) test_WhereMatch {
+- (void) testWhereMatch {
     [self loadJSONResource: @"sentences"];
     
     NSError* error;
@@ -316,7 +315,7 @@
 }
 
 
-- (void) test_OrderBy {
+- (void) testOrderBy {
     [self loadJSONResource: @"names_100"];
     
     for (id ascending in @[@(YES), @(NO)]) {

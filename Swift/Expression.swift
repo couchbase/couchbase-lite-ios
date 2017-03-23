@@ -161,17 +161,37 @@ public final class Expression {
         return Expression(self.impl.isNot(to: Expression.toCBLExp(expression)));
     }
     
-    /** Create a between expression. */
+    /** Create a BETWEEN expression. */
     public func between(_ expression1: Any, and expression2: Any) -> Expression {
         return Expression(self.impl.between(Expression.toCBLExp(expression1),
                                                    and: Expression.toCBLExp(expression2)));
     }
     
-    /** Create a NOT between expression. */
+    /** Create a NOT BETWEEN expression. */
     public func notBetween(_ expression1: Any, and expression2: Any) -> Expression {
         return Expression(self.impl.notBetween(Expression.toCBLExp(expression1),
                                                       and: Expression.toCBLExp(expression2)));
     }
+    
+    /** Create an IN expression. */
+    public func `in`(_ expressions: [Any]) -> Expression {
+        var impls: [Any] = []
+        for exp in expressions {
+            impls.append(Expression.toCBLExp(exp))
+        }
+        return Expression(self.impl.in(impls))
+    }
+    
+    /** Create a NOT IN expression. */
+    public func notIn(_ expressions:[Any]) -> Expression {
+        var impls: [Any] = []
+        for exp in expressions {
+            impls.append(Expression.toCBLExp(exp))
+        }
+        return Expression(self.impl.not(in: impls))
+    }
+    
+    // MARK: Internal
     
     let impl: CBLQueryExpression
     

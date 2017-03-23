@@ -737,26 +737,18 @@
 		938CDF071E807E98002EE790 /* Query */ = {
 			isa = PBXGroup;
 			children = (
-				938CDF231E807F60002EE790 /* Router */,
-				938CDF151E807EEB002EE790 /* Query.swift */,
-				938CDF171E807F08002EE790 /* Select.swift */,
-				938CDF191E807F14002EE790 /* From.swift */,
-				938CDF1B1E807F23002EE790 /* Where.swift */,
-				938CDF1D1E807F35002EE790 /* OrderBy.swift */,
 				938CDF1F1E807F45002EE790 /* DataSource.swift */,
 				938CDF211E807F51002EE790 /* Expression.swift */,
+				938CDF191E807F14002EE790 /* From.swift */,
+				938CDF1D1E807F35002EE790 /* OrderBy.swift */,
+				938CDF151E807EEB002EE790 /* Query.swift */,
+				938CDF171E807F08002EE790 /* Select.swift */,
+				938CDF1B1E807F23002EE790 /* Where.swift */,
+				938CDF241E807F86002EE790 /* FromRouter.swift */,
+				938CDF281E807F9F002EE790 /* OrderByRouter.swift */,
+				938CDF261E807F8F002EE790 /* WhereRouter.swift */,
 			);
 			name = Query;
-			sourceTree = "<group>";
-		};
-		938CDF231E807F60002EE790 /* Router */ = {
-			isa = PBXGroup;
-			children = (
-				938CDF241E807F86002EE790 /* FromRouter.swift */,
-				938CDF261E807F8F002EE790 /* WhereRouter.swift */,
-				938CDF281E807F9F002EE790 /* OrderByRouter.swift */,
-			);
-			name = Router;
 			sourceTree = "<group>";
 		};
 		9398D9081E03434200464432 = {

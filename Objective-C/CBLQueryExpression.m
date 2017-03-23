@@ -278,7 +278,7 @@
 }
 
 
-- (CBLQueryExpression*) inExpressions: (NSArray*)expressions {
+- (CBLQueryExpression*) in: (NSArray*)expressions {
     Assert([self isKindOfClass: [CBLQueryTypeExpression class]], @"The operation is not supported.");
     CBLQueryTypeExpression* lhs = (CBLQueryTypeExpression*)self;
     CBLQueryTypeExpression* rhs = [[CBLQueryTypeExpression alloc] initWithAggregateExpressions: expressions];
@@ -288,8 +288,8 @@
 }
 
 
-- (CBLQueryExpression*) notInExpressions: (NSArray*)expressions {
-    return [[self class] negated: [self notInExpressions: expressions]];
+- (CBLQueryExpression*) notIn: (NSArray*)expressions {
+    return [[self class] negated: [self in: expressions]];
 }
 
 
