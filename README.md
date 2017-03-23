@@ -1,5 +1,5 @@
 
-# Couchbase Lite 2.0 (Developer Preview)
+# Couchbase Lite 2.0 (Developer Build)
 
 **Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine.
 
@@ -22,7 +22,7 @@ You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` by ad
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DP001', :submodules => true
+  pod 'CouchbaseLite', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB003', :submodules => true
 end
 ```
 
@@ -31,7 +31,7 @@ end
 You can use [Carthage](https://github.com/Carthage/Carthage) to install `CouchbaseLite` by adding it in your [Carfile](https://github.com/Carthage/Carthage/blob/master/Documentation/Artifacts.md#cartfile):
 
 ```
-github "couchbase/couchbase-lite-ios" "2.0DP001"
+github "couchbase/couchbase-lite-ios" "2.0DB003"
 ```
 
 ##Sample Apps

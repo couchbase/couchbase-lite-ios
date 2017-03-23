@@ -12,14 +12,24 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** CBLSubdocument is a suboducment or a nested document with its own set of named properties. 
+ In JSON terms it's a nested JSON Map object.
+ Like CBLDocument, CBLSubdocument is mutable, so you can make changes in-place. The difference is
+ that a subdocument doesn't have its own ID. It's not a first-class entity in the database, 
+ it's just a nested object within the document's JSON. It can't be saved individually; changes are 
+ persisted when you save its document.*/
 @interface CBLSubdocument : CBLProperties
 
+/** The document that the subdocument belong to. */
 @property (readonly, nonatomic, nullable) CBLDocument* document;
 
+/** Checks whether the subdocument exists in the database or not. */
 @property (readonly, nonatomic) BOOL exists;
 
+/** Create a new subdocument. */
 + (instancetype) subdocument;
 
+/** Initializes a new subdocument. */
 - (instancetype) init;
 
 @end

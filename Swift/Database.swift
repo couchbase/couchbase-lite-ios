@@ -14,7 +14,9 @@ public typealias ConflictResolver = CBLConflictResolver
 
 /** A database encryption key consists of a password string, or a 32-byte AES256 key. */
 public enum EncryptionKey {
+    /** Password string */
     case password (String)
+    /** 32-byte AES256 data key */
     case aes256   (Data)
 
     var asObject: Any {
@@ -59,7 +61,8 @@ public struct DatabaseOptions {
 
     /** If YES, the database will be opened read-only. */
     public var readOnly: Bool = false
-
+    
+    /** Initialize a new DatabaseOptions with default properties. */
     public init() { }
 }
 

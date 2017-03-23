@@ -81,11 +81,12 @@ public class Document : Properties {
         _docimpl.revert()
     }
 
-
+    /** Equal to operator for comparing two Documents object. */
     public static func == (doc1: Document, doc: Document) -> Bool {
         return doc._docimpl === doc._docimpl
     }
 
+    // MARK: Internal
     
     init(_ impl: CBLDocument, inDatabase: Database) {
         database = inDatabase

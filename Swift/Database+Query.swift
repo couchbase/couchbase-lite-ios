@@ -95,7 +95,10 @@ public typealias IndexType = CBLIndexType
 
 /** Specifies the type of index to create, and parameters for certain types of indexes. */
 public enum IndexOptions {
+    /** Regular value index. */
     case valueIndex
+    /** Full-Text search index. */
     case fullTextIndex (language: String?, ignoreDiacritics: Bool)
+    /** Geo searcg index. */
     case geoIndex
 }

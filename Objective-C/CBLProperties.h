@@ -12,7 +12,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /** CBLProperties defines a JSON-compatible object, much like an NSMutableDictionary but with
-    type-safe accessors. It is implemented by classes CBLDocument and (soon) CBLSubdocument. */
+    type-safe accessors. It is implemented by classes CBLDocument and CBLSubdocument. */
 @protocol CBLProperties <NSObject>
 
 /** All of the properties contained in this object. */
