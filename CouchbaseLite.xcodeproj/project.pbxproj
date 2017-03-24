@@ -10,7 +10,7 @@
 		2704F1C91E395F3300A3B405 /* CBLConflictResolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 2704F1C71E395F3300A3B405 /* CBLConflictResolver.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2704F1CA1E395F3300A3B405 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */; };
 		273ADF7D1E36B514001E977F /* sentences.json in Resources */ = {isa = PBXBuildFile; fileRef = 273ADF7C1E36B514001E977F /* sentences.json */; };
-		275229C71E776BC100E630FA /* CBLReplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 275229C51E776BC100E630FA /* CBLReplication.h */; };
+		275229C71E776BC100E630FA /* CBLReplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 275229C51E776BC100E630FA /* CBLReplication.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275229C81E776BC100E630FA /* CBLReplication.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275229C61E776BC100E630FA /* CBLReplication.mm */; };
 		275229D81E776F2D00E630FA /* CouchbaseLiteReplicator.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 933207BE1E773CFB000D9993 /* CouchbaseLiteReplicator.framework */; };
 		275F927D1E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275F92741E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework */; };
@@ -36,6 +36,11 @@
 		275FF6711E43E013005F90DD /* CBLQueryRow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF66F1E43E013005F90DD /* CBLQueryRow.mm */; };
 		275FF6B81E47B2FC005F90DD /* ExceptionUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 275FF6B61E47B2FC005F90DD /* ExceptionUtils.h */; };
 		275FF6B91E47B2FC005F90DD /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6B71E47B2FC005F90DD /* ExceptionUtils.m */; };
+		2779CC481E8487E200F0D251 /* libLiteCore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9461E0347B600464432 /* libLiteCore.dylib */; };
+		2779CC4D1E8489B300F0D251 /* libLiteCore.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9398D9461E0347B600464432 /* libLiteCore.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		2779CC4E1E8489C600F0D251 /* CouchbaseLiteReplicator.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 933207BE1E773CFB000D9993 /* CouchbaseLiteReplicator.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2779CC4F1E848A3A00F0D251 /* libLiteCore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9461E0347B600464432 /* libLiteCore.dylib */; };
+		2779CC521E848B6800F0D251 /* libLiteCore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9461E0347B600464432 /* libLiteCore.dylib */; };
 		27A0C85E1E3E7AB600F68646 /* CBLSharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */; };
 		27A0C85F1E3E7AB600F68646 /* CBLSharedKeys.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */; };
 		27BE3B461E4D662B0012B74A /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C6F1E1EFAF600F90659 /* Test_Assertions.m */; };
@@ -48,8 +53,6 @@
 		27BE3B561E4E93000012B74A /* PredicateQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B551E4E93000012B74A /* PredicateQuery.swift */; };
 		27EF6A941E298E26004748DF /* PredicateQueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A931E298E26004748DF /* PredicateQueryTest.m */; };
 		27EF6A971E2AC61B004748DF /* names_100.json in Resources */ = {isa = PBXBuildFile; fileRef = 27EF6A951E2AC609004748DF /* names_100.json */; };
-		27EF6AED1E32D109004748DF /* libLiteCore-static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9441E0347B600464432 /* libLiteCore-static.a */; };
-		27EF6AF21E32D12C004748DF /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27EF6AF11E32D12C004748DF /* libsqlite3.tbd */; };
 		72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A879EF1E2DD51C008466FF /* CBLBlob.mm */; };
 		72A87A051E2E0E70008466FF /* CBLBlobStream.h in Headers */ = {isa = PBXBuildFile; fileRef = 72A87A031E2E0E70008466FF /* CBLBlobStream.h */; };
 		72A87A061E2E0E70008466FF /* CBLBlobStream.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A041E2E0E70008466FF /* CBLBlobStream.mm */; };
@@ -207,6 +210,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		273C77F71E8476F500BD7112 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 27CCC7C81E525E6D00CE1989;
+			remoteInfo = Replicator;
+		};
+		273C78081E84772200BD7112 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 27CCC7C81E525E6D00CE1989;
+			remoteInfo = Replicator;
+		};
 		275F927E1E4D30A4007FD5A2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9091E03434200464432 /* Project object */;
@@ -221,12 +238,19 @@
 			remoteGlobalIDString = 9398D9111E03434200464432;
 			remoteInfo = "CBL ObjC";
 		};
-		27EF6AEE1E32D111004748DF /* PBXContainerItemProxy */ = {
+		2779CC461E8487D800F0D251 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 27EF80F91917EEC600A327B9;
-			remoteInfo = "LiteCore static";
+			remoteGlobalIDString = 720EA3DB1BA7EAD9002B8416;
+			remoteInfo = "LiteCore dylib";
+		};
+		2779CC501E848A4300F0D251 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 720EA3DB1BA7EAD9002B8416;
+			remoteInfo = "LiteCore dylib";
 		};
 		9308F40D1E64B24700F53EE4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -319,20 +343,6 @@
 			remoteGlobalIDString = 27EF807419142C2500A327B9;
 			remoteInfo = Tokenizer;
 		};
-		9398D9511E0347B600464432 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 27A6579C1CBC190B00A7A1D7;
-			remoteInfo = "Swift API";
-		};
-		9398D9531E0347B600464432 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 27A657A51CBC190B00A7A1D7;
-			remoteInfo = "Swift API Tests";
-		};
 		9398D9591E0347B600464432 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
@@ -357,6 +367,17 @@
 			dstSubfolderSpec = 6;
 			files = (
 				275FF6281E3FECC4005F90DD /* iTunesMusicLibrary.json in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2779CC4A1E8488FF00F0D251 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				2779CC4E1E8489C600F0D251 /* CouchbaseLiteReplicator.framework in CopyFiles */,
+				2779CC4D1E8489B300F0D251 /* libLiteCore.dylib in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -560,6 +581,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2779CC521E848B6800F0D251 /* libLiteCore.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -567,9 +589,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2779CC481E8487E200F0D251 /* libLiteCore.dylib in Frameworks */,
 				275229D81E776F2D00E630FA /* CouchbaseLiteReplicator.framework in Frameworks */,
-				27EF6AF21E32D12C004748DF /* libsqlite3.tbd in Frameworks */,
-				27EF6AED1E32D109004748DF /* libLiteCore-static.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -577,6 +598,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2779CC4F1E848A3A00F0D251 /* libLiteCore.dylib in Frameworks */,
 				9398D91C1E03434200464432 /* CouchbaseLite.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -664,7 +686,7 @@
 				93B75BF71E79B0A20033B61B /* Query */,
 				9378C5E91E26F101001BB196 /* Bridge */,
 				9378C5E81E26F0E1001BB196 /* Support */,
- 				93ADE97F1E68C81000D59017 /* CBLDocument+Internal.h */,
+				93ADE97F1E68C81000D59017 /* CBLDocument+Internal.h */,
 				934F4C981E241FB500F90659 /* CBLInternal.h */,
 				934F4C991E241FB500F90659 /* CBLInternal.mm */,
 				933207AD1E773CFB000D9993 /* CBLJSONCoding.h */,
@@ -807,8 +829,6 @@
 				933207C01E773CFB000D9993 /* ReplicatorTests */,
 				9398D94E1E0347B600464432 /* libLiteCoreJNI.dylib */,
 				9398D9501E0347B600464432 /* libTokenizer.a */,
-				9398D9521E0347B600464432 /* LiteCoreSwift.framework */,
-				9398D9541E0347B600464432 /* Swift API Tests.xctest */,
 				9398D95A1E0347B600464432 /* LiteCore-iOS.app */,
 				9398D95C1E0347B600464432 /* LiteCore-iOS Tests.xctest */,
 			);
@@ -1007,6 +1027,7 @@
 			);
 			dependencies = (
 				9308F40E1E64B24700F53EE4 /* PBXTargetDependency */,
+				273C78091E84772200BD7112 /* PBXTargetDependency */,
 			);
 			name = "CBL Swift";
 			productName = CouchbaseLiteSwift;
@@ -1093,12 +1114,13 @@
 				9398D90D1E03434200464432 /* Sources */,
 				9398D90E1E03434200464432 /* Frameworks */,
 				9398D90F1E03434200464432 /* Headers */,
-				9398D9101E03434200464432 /* Resources */,
+				2779CC4A1E8488FF00F0D251 /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				27EF6AEF1E32D111004748DF /* PBXTargetDependency */,
+				2779CC471E8487D800F0D251 /* PBXTargetDependency */,
+				273C77F81E8476F500BD7112 /* PBXTargetDependency */,
 			);
 			name = "CBL ObjC";
 			productName = CouchbaseLite;
@@ -1116,6 +1138,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				2779CC511E848A4300F0D251 /* PBXTargetDependency */,
 				9398D91E1E03434200464432 /* PBXTargetDependency */,
 			);
 			name = "CBL ObjC Tests";
@@ -1274,20 +1297,6 @@
 			remoteRef = 9398D94F1E0347B600464432 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		9398D9521E0347B600464432 /* LiteCoreSwift.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = LiteCoreSwift.framework;
-			remoteRef = 9398D9511E0347B600464432 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		9398D9541E0347B600464432 /* Swift API Tests.xctest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = "Swift API Tests.xctest";
-			remoteRef = 9398D9531E0347B600464432 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		9398D95A1E0347B600464432 /* LiteCore-iOS.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
@@ -1325,13 +1334,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		938CFA041E442A3E00291631 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		9398D9101E03434200464432 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1508,6 +1510,16 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		273C77F81E8476F500BD7112 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Replicator;
+			targetProxy = 273C77F71E8476F500BD7112 /* PBXContainerItemProxy */;
+		};
+		273C78091E84772200BD7112 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Replicator;
+			targetProxy = 273C78081E84772200BD7112 /* PBXContainerItemProxy */;
+		};
 		275F927F1E4D30A4007FD5A2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 275F92731E4D30A4007FD5A2 /* CBL Swift */;
@@ -1518,10 +1530,15 @@
 			target = 9398D9111E03434200464432 /* CBL ObjC */;
 			targetProxy = 275FF6261E3FECB1005F90DD /* PBXContainerItemProxy */;
 		};
-		27EF6AEF1E32D111004748DF /* PBXTargetDependency */ = {
+		2779CC471E8487D800F0D251 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = "LiteCore static";
-			targetProxy = 27EF6AEE1E32D111004748DF /* PBXContainerItemProxy */;
+			name = "LiteCore dylib";
+			targetProxy = 2779CC461E8487D800F0D251 /* PBXContainerItemProxy */;
+		};
+		2779CC511E848A4300F0D251 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "LiteCore dylib";
+			targetProxy = 2779CC501E848A4300F0D251 /* PBXContainerItemProxy */;
 		};
 		9308F40E1E64B24700F53EE4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

@@ -5,8 +5,8 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-IPHONEOS_DEPLOYMENT_TARGET         =  8.0
-MACOSX_DEPLOYMENT_TARGET           = 10.9
+IPHONEOS_DEPLOYMENT_TARGET         =  9.0
+MACOSX_DEPLOYMENT_TARGET           = 10.11
 TVOS_DEPLOYMENT_TARGET             =  9.0
 
 ONLY_ACTIVE_ARCH                   = NO
@@ -54,7 +54,7 @@ CLANG_WARN_OBJC_ROOT_CLASS                                 = YES_ERROR
 CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION                  = YES
 CLANG_WARN_SUSPICIOUS_MOVE                                 = YES
 CLANG_WARN_UNREACHABLE_CODE                                = YES
-GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS  = YES
+GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS         = YES
 GCC_TREAT_WARNINGS_AS_ERRORS                               = YES
 GCC_WARN_ABOUT_MISSING_PROTOTYPES                          = YES
 GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS                        = YES
