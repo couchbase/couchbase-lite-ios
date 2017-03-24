@@ -17,12 +17,21 @@ THIS IS NOT A RELEASED PRODUCT. THIS IS NOT FINISHED CODE. This is currently in 
 
 ### CocoaPods
 
-You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` by adding it in your [Podfile](https://guides.cocoapods.org/using/the-podfile.html):
+You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` for Objective-C API or `CouchbaseLiteSwift` for Swift API by adding it in your [Podfile](https://guides.cocoapods.org/using/the-podfile.html):
 
+#### CouchbaseLite (Objective-C API)
 ```
 target '<your target name>' do
   use_frameworks!
   pod 'CouchbaseLite', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB003', :submodules => true
+end
+```
+
+#### CouchbaseLiteSwift (Swift API)
+```
+target '<your target name>' do
+  use_frameworks!
+  pod 'CouchbaseLiteSwift', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB003', :submodules => true
 end
 ```
 
@@ -34,14 +43,12 @@ You can use [Carthage](https://github.com/Carthage/Carthage) to install `Couchba
 github "couchbase/couchbase-lite-ios" "2.0DB003"
 ```
 
-##Sample Apps
+> When running `carthage update or build`, Carthage will build both CouchbaseLite and CouchbaseLiteSwift framework.
+
+## Sample Apps
 
 - [Todo](https://github.com/couchbaselabs/mobile-training-todo/tree/feature/2.0) : Objective-C and Swift
 
-
-## Credits
-
-**Design, coding:** Jens Alfke (jens@couchbase.com), Pasin Suriyentrakorn,(pasin@couchbase.com), Jim Borden (jim.borden@couchbase.com)
 
 ## License
 
