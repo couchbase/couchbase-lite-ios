@@ -12,6 +12,15 @@
 #import "CBLInternal.h"
 #import <CouchbaseLiteReplicator/CouchbaseLiteReplicator.h>
 
+
+static C4LogDomain kCBLSyncLogDomain;
+
+@interface CBLReplication ()
+@property (readwrite, nonatomic) CBLReplicationStatus status;
+@property (readwrite, nonatomic) NSError* lastError;
+@end
+
+
 @implementation CBLReplication
 {
     C4Replicator* _repl;
@@ -19,11 +28,12 @@
 }
 
 @synthesize database=_database, remoteURL=_remoteURL, delegate=_delegate;
-@synthesize push=_push, pull=_pull, continuous=_continuous;
+@synthesize push=_push, pull=_pull, continuous=_continuous, status=_status, lastError=_lastError;
 
 
 + (void) initialize {
     if (self == [CBLReplication class]) {
+        kCBLSyncLogDomain = c4log_getDomain("Sync", true);
         [CBLWebSocket registerWithC4];
     }
 }
@@ -46,6 +56,17 @@
 }
 
 
+- (NSString*) description {
+    return [NSString stringWithFormat: @"%@[%s%s%s %@]",
+            self.class,
+            (_pull ? "<" : ""),
+            (_continuous ? "*" : "-"),
+            (_push ? ">" : ""),
+            _remoteURL.absoluteString];
+}
+
+
+
 static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
     C4ReplicatorMode const kModes[4] = {kC4Disabled, kC4Disabled, kC4OneShot, kC4Continuous};
     return kModes[2*!!active + !!continuous];
@@ -53,8 +74,11 @@ static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
 
 
 - (void) start {
-    if (_repl)
+    if (_repl) {
+        CBLWarn(Sync, @"%@ has already started", self);
         return;
+    }
+    NSAssert(_push || _pull, @"Replication must either push or pull, or both");
     CBLStringBytes host(_remoteURL.host);
     CBLStringBytes path(_remoteURL.path.stringByDeletingLastPathComponent);
     CBLStringBytes dbName(_remoteURL.path.lastPathComponent);
@@ -68,12 +92,17 @@ static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
     _repl = c4repl_new(_database.c4db, addr, dbName,
                        mkmode(_push, _continuous), mkmode(_pull, _continuous),
                        &stateChanged, (__bridge void*)self, &err);
-    if (_repl)
+    C4ReplicatorStatus status;
+    if (_repl) {
+        status = c4repl_getStatus(_repl);
         [_database.activeReplications addObject: self];     // keeps me from being dealloced
+    } else {
+        status = {kC4Stopped, {}, err};
+    }
+    [self setC4State: status];
 
     // Post an initial notification:
-    auto state = _repl ? C4ReplicatorState{kC4Connecting} : C4ReplicatorState{kC4Stopped, err};
-    stateChanged(_repl, state, (__bridge void*)self);
+    stateChanged(_repl, status, (__bridge void*)self);
 }
 
 
@@ -83,30 +112,45 @@ static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
 }
 
 
-static void stateChanged(C4Replicator *repl,
-                         C4ReplicatorState state,
-                         void *context)
-{
+static void stateChanged(C4Replicator *repl, C4ReplicatorStatus status, void *context) {
     dispatch_async(dispatch_get_main_queue(), ^{        //TODO: Support other queues
-        [(__bridge CBLReplication*)context stateChanged: state];
+        [(__bridge CBLReplication*)context c4StatusChanged: status];
     });
 }
 
 
-- (void) stateChanged: (C4ReplicatorState)state {
+- (void) c4StatusChanged: (C4ReplicatorStatus)state {
+    [self setC4State: state];
     id<CBLReplicationDelegate> delegate = _delegate;
+
+    if ([delegate respondsToSelector: @selector(replication:didChangeStatus:)])
+        [delegate replication: self didChangeStatus: _status];
+
     if (state.level == kC4Stopped) {
         // Stopped:
         c4repl_free(_repl);
         _repl = nullptr;
-        NSError* error = nil;
-        convertError(state.error, &error);
-        [delegate replication: self didStopWithError: error];
-        [_database.activeReplications removeObject: self];      // likely to dealloc me
-    } else {
-        //NOTE: CBLReplicationStatus needs to match C4ReplicatorActivityLevel!
-        [delegate replication: self didChangeStatus: (CBLReplicationStatus)state.level];
+        if ([delegate respondsToSelector: @selector(replication:didStopWithError:)])
+            [delegate replication: self didStopWithError: _lastError];
+        [_database.activeReplications removeObject: self];      // this is likely to dealloc me
     }
+}
+
+
+- (void) setC4State: (C4ReplicatorStatus)state {
+    NSError *error = nil;;
+    convertError(state.error, &error);
+    if (error != _lastError)
+        self.lastError = error;
+
+    //NOTE: CBLReplicationStatus values needs to match C4ReplicatorActivityLevel!
+    auto status = _status;
+    status.activity = (CBLReplicationActivityLevel)state.level;
+    status.progress = {state.progress.completed, state.progress.total};
+    self.status = status;
+    CBLLog(Sync, @"%@ is %s, progress %llu/%llu",
+           self, kC4ReplicatorActivityLevelNames[state.level],
+           state.progress.completed, state.progress.total);
 }
 
 
