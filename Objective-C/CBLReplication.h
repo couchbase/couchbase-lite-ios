@@ -40,6 +40,9 @@ typedef struct {
 } CBLReplicationStatus;
 
 
+/** This notification is posted by a CBLReplication when its status/progress changes. */
+extern NSString* const kCBLReplicationStatusChangeNotification;
+
 
 /** A replication between a local and a remote database.
     Before starting the replication, you just set either the `push` or `pull` property, or both.

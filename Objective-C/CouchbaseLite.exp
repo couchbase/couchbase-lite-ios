@@ -15,13 +15,13 @@
 .objc_class_name_CBLProperties
 .objc_class_name_CBLQuery
 .objc_class_name_CBLQueryRow
+.objc_class_name_CBLReplication
 .objc_class_name_CBLSubdocument
 
 .objc_class_name_CBLQueryDataSource
 .objc_class_name_CBLQueryExpression
 .objc_class_name_CBLQueryOrderBy
 .objc_class_name_CBLQuerySelect
-.objc_class_name_CBLQuery
 
 #  Public constants:
 _kCBLDatabaseChangeNotification
@@ -31,3 +31,4 @@ _kCBLDatabaseLastSequenceUserInfoKey
 _kCBLDocumentChangeNotification
 _kCBLDocumentIsExternalUserInfoKey
 _kCBLDocumentSavedNotification
+_kCBLReplicationStatusChangeNotification
