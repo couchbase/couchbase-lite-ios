@@ -6,7 +6,7 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLReplication+Internal.h"
+#import "CBLReplication.h"
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
 #import "CBLInternal.h"
@@ -27,8 +27,8 @@ NSString* const kCBLReplicationStatusChangeNotification = @"CBLReplicationStatus
 
 @implementation CBLReplication
 {
+    CBLDatabase* _otherDB;
     C4Replicator* _repl;
-    C4ReplicatorMode _pushMode, _pullMode;
 }
 
 @synthesize database=_database, remoteURL=_remoteURL, delegate=_delegate;
@@ -44,12 +44,15 @@ NSString* const kCBLReplicationStatusChangeNotification = @"CBLReplicationStatus
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db
-                              URL: (NSURL*)remote
+                        remoteURL: (NSURL*)remoteURL
+                    otherDatabase: (CBLDatabase*)otherDB
 {
     self = [super init];
     if (self) {
         _database = db;
-        _remoteURL = remote;
+        _remoteURL = remoteURL;
+        _otherDB = otherDB;
+        _push = _pull = YES;
     }
     return self;
 }
@@ -66,9 +69,8 @@ NSString* const kCBLReplicationStatusChangeNotification = @"CBLReplicationStatus
             (_pull ? "<" : ""),
             (_continuous ? "*" : "-"),
             (_push ? ">" : ""),
-            _remoteURL.absoluteString];
+            (_remoteURL ? _remoteURL.absoluteString : _otherDB.name)];
 }
-
 
 
 static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
@@ -83,17 +85,18 @@ static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
         return;
     }
     NSAssert(_push || _pull, @"Replication must either push or pull, or both");
+    CBLStringBytes scheme(_remoteURL.scheme);
     CBLStringBytes host(_remoteURL.host);
     CBLStringBytes path(_remoteURL.path.stringByDeletingLastPathComponent);
     CBLStringBytes dbName(_remoteURL.path.lastPathComponent);
     C4Address addr {
-        .scheme = kC4Replicator2Scheme,
+        .scheme = scheme,
         .hostname = host,
         .port = (uint16_t)_remoteURL.port.shortValue,
         .path = path
     };
     C4Error err;
-    _repl = c4repl_new(_database.c4db, addr, dbName,
+    _repl = c4repl_new(_database.c4db, addr, dbName, _otherDB.c4db,
                        mkmode(_push, _continuous), mkmode(_pull, _continuous),
                        &statusChanged, (__bridge void*)self, &err);
     C4ReplicatorStatus status;
@@ -144,8 +147,9 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 
 
 - (void) setC4Status: (C4ReplicatorStatus)state {
-    NSError *error = nil;;
-    convertError(state.error, &error);
+    NSError *error = nil;
+    if (state.error.code)
+        convertError(state.error, &error);
     if (error != _lastError)
         self.lastError = error;
 
@@ -168,11 +172,26 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 
 @implementation CBLDatabase (Replication)
 
-- (CBLReplication*) replicationWithDatabase: (NSURL*)remote {
-    CBLReplication* repl = [self.replications objectForKey: remote];
+- (CBLReplication*) replicationWithURL: (NSURL*)remoteURL {
+    NSParameterAssert(remoteURL);
+    CBLReplication* repl = [self.replications objectForKey: remoteURL];
     if (!repl) {
-        repl = [[CBLReplication alloc] initWithDatabase: self URL: remote];
-        [self.replications setObject: repl forKey: remote];
+        repl = [[CBLReplication alloc] initWithDatabase: self
+                                              remoteURL: remoteURL otherDatabase: nil];
+        [self.replications setObject: repl forKey: remoteURL];
+    }
+    return repl;
+}
+
+- (CBLReplication*) replicationWithDatabase: (CBLDatabase*)otherDatabase {
+    NSParameterAssert(otherDatabase);
+    NSParameterAssert(otherDatabase != self);
+    id key = otherDatabase.path;
+    CBLReplication* repl = [self.replications objectForKey: key];
+    if (!repl) {
+        repl = [[CBLReplication alloc] initWithDatabase: self
+                                              remoteURL: nil otherDatabase: otherDatabase];
+        [self.replications setObject: repl forKey: key];
     }
     return repl;
 }

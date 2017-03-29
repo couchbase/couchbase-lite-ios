@@ -107,7 +107,11 @@ extern NSString* const kCBLReplicationStatusChangeNotification;
 
 /** Creates a replication between this database and a remote one,
     or returns an existing one if it's already been created. */
-- (CBLReplication*) replicationWithDatabase: (NSURL*)remote;
+- (CBLReplication*) replicationWithURL: (NSURL*)remote;
+
+/** Creates a replication between this database and another local database,
+    or returns an existing one if it's already been created. */
+- (CBLReplication*) replicationWithDatabase: (CBLDatabase*)otherDatabase;
 
 @end
 

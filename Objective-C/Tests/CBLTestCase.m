@@ -45,13 +45,19 @@
 }
 
 
-- (void) openDB {
-    Assert(!_db);
+- (CBLDatabase*) openDBNamed: (NSString*)name {
     NSError* error;
     CBLDatabaseOptions* options = [CBLDatabaseOptions defaultOptions];
     options.directory = [[self class] directory];
-    _db = [[CBLDatabase alloc] initWithName: kDatabaseName options: options error: &error];
-    AssertNotNil(_db, @"Couldn't open db: %@", error);
+    CBLDatabase* theDB = [[CBLDatabase alloc] initWithName: name options: options error: &error];
+    AssertNotNil(theDB, @"Couldn't open db: %@", error);
+    return theDB;
+}
+
+
+- (void) openDB {
+    Assert(!_db);
+    _db = [self openDBNamed: kDatabaseName];
 }
 
 

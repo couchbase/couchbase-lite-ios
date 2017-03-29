@@ -26,6 +26,8 @@
 
 @property (readonly, atomic) CBLDatabase* db;
 
+- (CBLDatabase*) openDBNamed: (NSString*)name;
+
 - (void) reopenDB;
 
 /** Reads a bundle resource file into an NSData. */

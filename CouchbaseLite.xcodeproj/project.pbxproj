@@ -51,6 +51,7 @@
 		27BE3B521E4E916B0012B74A /* names_100.json in Resources */ = {isa = PBXBuildFile; fileRef = 27EF6A951E2AC609004748DF /* names_100.json */; };
 		27BE3B541E4E92210012B74A /* Database+Query.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B531E4E92210012B74A /* Database+Query.swift */; };
 		27BE3B561E4E93000012B74A /* PredicateQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B551E4E93000012B74A /* PredicateQuery.swift */; };
+		27E35A821E8B3B3A00E103F9 /* ReplicationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A811E8B3B3A00E103F9 /* ReplicationTest.m */; };
 		27EF6A941E298E26004748DF /* PredicateQueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A931E298E26004748DF /* PredicateQueryTest.m */; };
 		27EF6A971E2AC61B004748DF /* names_100.json in Resources */ = {isa = PBXBuildFile; fileRef = 27EF6A951E2AC609004748DF /* names_100.json */; };
 		72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A879EF1E2DD51C008466FF /* CBLBlob.mm */; };
@@ -399,7 +400,6 @@
 		273ADF7C1E36B514001E977F /* sentences.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = sentences.json; sourceTree = "<group>"; };
 		275229C51E776BC100E630FA /* CBLReplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReplication.h; sourceTree = "<group>"; };
 		275229C61E776BC100E630FA /* CBLReplication.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLReplication.mm; sourceTree = "<group>"; };
-		275229D91E77700800E630FA /* CBLReplication+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLReplication+Internal.h"; sourceTree = "<group>"; };
 		275F92741E4D30A4007FD5A2 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLiteSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CouchbaseLiteSwift.h; sourceTree = "<group>"; };
 		275F92771E4D30A4007FD5A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -432,6 +432,7 @@
 		27BE3B501E4E8F6F0012B74A /* PredicateQueryTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PredicateQueryTest.swift; sourceTree = "<group>"; };
 		27BE3B531E4E92210012B74A /* Database+Query.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Database+Query.swift"; sourceTree = "<group>"; };
 		27BE3B551E4E93000012B74A /* PredicateQuery.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PredicateQuery.swift; sourceTree = "<group>"; };
+		27E35A811E8B3B3A00E103F9 /* ReplicationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReplicationTest.m; sourceTree = "<group>"; };
 		27EF6A931E298E26004748DF /* PredicateQueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PredicateQueryTest.m; sourceTree = "<group>"; };
 		27EF6A951E2AC609004748DF /* names_100.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = names_100.json; sourceTree = "<group>"; };
 		27EF6AF11E32D12C004748DF /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
@@ -691,7 +692,6 @@
 				934F4C991E241FB500F90659 /* CBLInternal.mm */,
 				933207AD1E773CFB000D9993 /* CBLJSONCoding.h */,
 				934F4CA21E241FB500F90659 /* CBLPrefix.h */,
-				275229D91E77700800E630FA /* CBLReplication+Internal.h */,
 				93ADE9821E68C82900D59017 /* CBLSubdocument+Internal.h */,
 			);
 			path = Internal;
@@ -895,6 +895,7 @@
 				72A87A0E1E32E858008466FF /* NotificationTest.m */,
 				27EF6A931E298E26004748DF /* PredicateQueryTest.m */,
 				9332082B1E774419000D9993 /* QueryTest.m */,
+				27E35A811E8B3B3A00E103F9 /* ReplicationTest.m */,
 				9352945E1E51708E005CE4E8 /* SubdocumentTest.m */,
 				93BFCD951E0380A300E52F8A /* Info.plist */,
 				27EF6A951E2AC609004748DF /* names_100.json */,
@@ -1503,6 +1504,7 @@
 				9378C5911E25B3F0001BB196 /* DatabaseTest.m in Sources */,
 				9378C59E1E269F14001BB196 /* DocumentTest.m in Sources */,
 				9352945F1E51708E005CE4E8 /* SubdocumentTest.m in Sources */,
+				27E35A821E8B3B3A00E103F9 /* ReplicationTest.m in Sources */,
 				9332082C1E774419000D9993 /* QueryTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
