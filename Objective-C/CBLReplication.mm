@@ -27,11 +27,10 @@ NSString* const kCBLReplicationStatusChangeNotification = @"CBLReplicationStatus
 
 @implementation CBLReplication
 {
-    CBLDatabase* _otherDB;
     C4Replicator* _repl;
 }
 
-@synthesize database=_database, remoteURL=_remoteURL, delegate=_delegate;
+@synthesize database=_database, remoteURL=_remoteURL, otherDatabase=_otherDB, delegate=_delegate;
 @synthesize push=_push, pull=_pull, continuous=_continuous, status=_status, lastError=_lastError;
 
 

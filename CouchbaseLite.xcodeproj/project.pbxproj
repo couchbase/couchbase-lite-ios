@@ -52,6 +52,10 @@
 		27BE3B541E4E92210012B74A /* Database+Query.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B531E4E92210012B74A /* Database+Query.swift */; };
 		27BE3B561E4E93000012B74A /* PredicateQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B551E4E93000012B74A /* PredicateQuery.swift */; };
 		27E35A821E8B3B3A00E103F9 /* ReplicationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A811E8B3B3A00E103F9 /* ReplicationTest.m */; };
+		27E35A921E8C4F4300E103F9 /* Replication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A911E8C4F4300E103F9 /* Replication.swift */; };
+		27E35A9C1E8C522200E103F9 /* CBLReplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 275229C51E776BC100E630FA /* CBLReplication.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27E35A9D1E8C539600E103F9 /* CBLReplication.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275229C61E776BC100E630FA /* CBLReplication.mm */; };
+		27E35A9E1E8C53AC00E103F9 /* CouchbaseLiteReplicator.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 933207BE1E773CFB000D9993 /* CouchbaseLiteReplicator.framework */; };
 		27EF6A941E298E26004748DF /* PredicateQueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A931E298E26004748DF /* PredicateQueryTest.m */; };
 		27EF6A971E2AC61B004748DF /* names_100.json in Resources */ = {isa = PBXBuildFile; fileRef = 27EF6A951E2AC609004748DF /* names_100.json */; };
 		72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A879EF1E2DD51C008466FF /* CBLBlob.mm */; };
@@ -433,6 +437,7 @@
 		27BE3B531E4E92210012B74A /* Database+Query.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Database+Query.swift"; sourceTree = "<group>"; };
 		27BE3B551E4E93000012B74A /* PredicateQuery.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PredicateQuery.swift; sourceTree = "<group>"; };
 		27E35A811E8B3B3A00E103F9 /* ReplicationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReplicationTest.m; sourceTree = "<group>"; };
+		27E35A911E8C4F4300E103F9 /* Replication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Replication.swift; sourceTree = "<group>"; };
 		27EF6A931E298E26004748DF /* PredicateQueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PredicateQueryTest.m; sourceTree = "<group>"; };
 		27EF6A951E2AC609004748DF /* names_100.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = names_100.json; sourceTree = "<group>"; };
 		27EF6AF11E32D12C004748DF /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
@@ -551,6 +556,7 @@
 			files = (
 				9308F4101E64B29000F53EE4 /* libsqlite3.tbd in Frameworks */,
 				9308F40F1E64B28800F53EE4 /* libLiteCore-static.a in Frameworks */,
+				27E35A9E1E8C53AC00E103F9 /* CouchbaseLiteReplicator.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -616,6 +622,7 @@
 				275F92A71E4D3AFB007FD5A2 /* Properties.swift */,
 				27BE3B551E4E93000012B74A /* PredicateQuery.swift */,
 				93A2AFB91E830BF800A08CAE /* QueryRow.swift */,
+				27E35A911E8C4F4300E103F9 /* Replication.swift */,
 				931112DB1E57F173007690A6 /* Subdocument.swift */,
 				93AF51C81E80C42300E200F0 /* CouchbaseLiteError.swift */,
 				275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */,
@@ -928,6 +935,7 @@
 				9308F40A1E64B23300F53EE4 /* Test.h in Headers */,
 				93B503671E64B085002C4680 /* CBLSharedKeys.hh in Headers */,
 				93B503651E64B07F002C4680 /* CBLStringBytes.h in Headers */,
+				27E35A9C1E8C522200E103F9 /* CBLReplication.h in Headers */,
 				275F92A01E4D377C007FD5A2 /* CBLConflictResolver.h in Headers */,
 				275F929E1E4D377C007FD5A2 /* CBLDatabase.h in Headers */,
 				93B5036B1E64B093002C4680 /* CBLJSON.h in Headers */,
@@ -1368,6 +1376,7 @@
 				9308F4071E64B22A00F53EE4 /* MYErrorUtils.m in Sources */,
 				93AF51CA1E80C42C00E200F0 /* CouchbaseLiteError.swift in Sources */,
 				93A2AFBA1E830BF800A08CAE /* QueryRow.swift in Sources */,
+				27E35A921E8C4F4300E103F9 /* Replication.swift in Sources */,
 				938CDF251E807F86002EE790 /* FromRouter.swift in Sources */,
 				93B503711E64B0A5002C4680 /* CBLParseDate.c in Sources */,
 				937441D61E7B8B0500CB8F11 /* CBLPredicateQuery.mm in Sources */,
@@ -1404,6 +1413,7 @@
 				93AF51C51E80A70100E200F0 /* CBLQueryExpression.m in Sources */,
 				938CDF1E1E807F35002EE790 /* OrderBy.swift in Sources */,
 				93B503741E64B0B0002C4680 /* CBLSymmetricKey.m in Sources */,
+				27E35A9D1E8C539600E103F9 /* CBLReplication.mm in Sources */,
 				93B503661E64B083002C4680 /* CBLStringBytes.mm in Sources */,
 				931112DC1E57F173007690A6 /* Subdocument.swift in Sources */,
 				9308F4031E64B21F00F53EE4 /* CollectionUtils.m in Sources */,
