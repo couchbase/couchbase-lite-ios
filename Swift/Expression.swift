@@ -11,169 +11,259 @@ import Foundation
 /** An Expression represents an expression used for constructing a query statement. */
 public final class Expression {
     
-    /** Create a property keypath expression. */
+    /** Create a property expression representing the value of the given property name.
+        @param property property name in the key path format.
+        @return a property expression. */
     public static func property(_ property: String) -> Expression {
         return Expression(CBLQueryExpression.property(property))
     }
     
-    /** Create a negated expression. */
+    /** Create a negated expression representing the negated result of the given expression.
+        @param expression   the expression to be negated.
+        @return a negated expression. */
     public static func negated(_ expression: Any) -> Expression {
         return Expression(CBLQueryExpression.negated(toCBLExp(expression)))
     }
     
-    /** Create a negated expression. */
+    /** Create a negated expression representing the negated result of the given expression.
+        @param expression   the expression to be negated.
+        @return a negated expression */
     public static func not(_ expression: Any) -> Expression {
         return Expression(CBLQueryExpression.not(toCBLExp(expression)))
     }
     
-    /** Create a multiply operation expression. */
+    /** Create a multiply expression to multiply the current expression by the given expression.
+        @param expression   the expression to be multipled by.
+        @return a multiply expression. */
     public func multiply(_ expression: Any) -> Expression {
         return Expression(self.impl.multiply(Expression.toCBLExp(expression)));
     }
     
-    /** Create a divide operation expression. */
+    /** Create a divide expression to divide the current expression by the given expression.
+        @param expression   the expression to be devided by.
+        @return a divide expression. */
     public func divide(_ expression: Any) -> Expression {
         return Expression(self.impl.divide(Expression.toCBLExp(expression)));
     }
     
-    /** Create a modulus operation expression. */
+    /** Create a modulo expression to modulo the current expression by the given expression.
+        @param expression   the expression to be moduloed by.
+        @return a modulo expression. */
     public func modulo(_ expression: Any) -> Expression {
         return Expression(self.impl.modulo(Expression.toCBLExp(expression)));
     }
     
-    /** Create an add operation expression. */
+    /** Create an add expression to add the given expression to the current expression.
+        @param expression   the expression to add to the current expression.
+        @return an add expression. */
     public func add(_ expression: Any) -> Expression {
         return Expression(self.impl.add(Expression.toCBLExp(expression)));
     }
     
-    /** Create an subtract operation expression. */
+    /** Create a subtract expression to subtract the given expression from the current expression.
+        @param expression   the expression to substract from the current expression.
+        @return a subtract expression. */
     public func subtract(_ expression: Any) -> Expression {
         return Expression(self.impl.subtract(Expression.toCBLExp(expression)));
     }
     
-    /** Create a less than comparison expression. */
+    /** Create a less than expression that evaluates whether or not the current expression
+        is less than the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a less than expression. */
     public func lessThan(_ expression: Any) -> Expression {
         return Expression(self.impl.lessThan(Expression.toCBLExp(expression)));
     }
     
-    /** Create a NOT less than comparison expression. */
+    /** Create a NOT less than expression that evaluates whether or not the current expression
+        is not less than the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a NOT less than expression. */
     public func notLessThan(_ expression: Any) -> Expression {
         return Expression(self.impl.notLessThan(Expression.toCBLExp(expression)));
     }
     
-    /** Create a less than or equal to comparison expression. */
+    /** Create a less than or equal to expression that evaluates whether or not the current
+        expression is less than or equal to the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a less than or equal to expression. */
     public func lessThanOrEqualTo(_ expression: Any) -> Expression {
         return Expression(self.impl.lessThanOrEqual(to: Expression.toCBLExp(expression)));
     }
     
-    /** Create a NOT less than or equal to comparison expression. */
+    /** Create a NOT less than or equal to expression that evaluates whether or not the current
+        expression is not less than or equal to the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a NOT less than or equal to expression. */
     public func notLessThanOrEqualTo(_ expression: Any) -> Expression {
         return Expression(self.impl.notLessThanOrEqual(to: Expression.toCBLExp(expression)));
     }
     
-    /** Create a greater then comparison expression. */
+    /** Create a greater than expression that evaluates whether or not the current expression
+        is greater than the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a greater than expression. */
     public func greaterThan(_ expression: Any) -> Expression {
         return Expression(self.impl.greaterThan(Expression.toCBLExp(expression)));
     }
     
-    /** Create a NOT greater then comparison expression. */
+    /** Create a NOT greater than expression that evaluates whether or not the current expression
+        is not greater than the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a NOT greater than expression. */
     public func notGreaterThan(_ expression: Any) -> Expression {
         return Expression(self.impl.notGreaterThan(Expression.toCBLExp(expression)));
     }
     
-    /** Create a greather than or equal to comparison expression. */
+    /** Create a greater than or equal to expression that evaluates whether or not the current
+        expression is greater than or equal to the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a greater than or equal to expression. */
     public func greaterThanOrEqualTo(_ expression: Any) -> Expression {
         return Expression(self.impl.greaterThanOrEqual(to: Expression.toCBLExp(expression)));
     }
     
-    /** Create a NOT greather than or equal comparison expression. */
+    /** Create a NOT greater than or equal to expression that evaluates whether or not the current
+        expression is not greater than or equal to the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a NOT greater than or equal to expression. */
     public func notGreaterThanOrEqualTo(_ expression: Any) -> Expression {
         return Expression(self.impl.notGreaterThanOrEqual(to: Expression.toCBLExp(expression)));
     }
     
-    /** Create an equal to comparison expression. */
+    /** Create an equal to expression that evaluates whether or not the current expression is equal
+        to the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return an equal to expression. */
     public func equalTo(_ expression: Any) -> Expression {
         return Expression(self.impl.equal(to: Expression.toCBLExp(expression)));
     }
     
-    /** Create a NOT equal to comparison expression. */
+    /** Create a NOT equal to expression that evaluates whether or not the current expression
+        is not equal to the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a NOT equal to expression. */
     public func notEqualTo(_ expression: Any) -> Expression {
         return Expression(self.impl.notEqual(to: Expression.toCBLExp(expression)));
     }
     
-    /** Create an AND operation expression. */
+    /** Create a logical AND expression that performs logical AND operation with the current 
+        expression.
+        @param expression   the expression to AND with the current expression.
+        @return a logical AND expression. */
     public func and(_ expression: Any) -> Expression {
         return Expression(self.impl.and(Expression.toCBLExp(expression)));
     }
     
-    /** Create an OR operation expression. */
+    /** Create a logical OR expression that performs logical OR operation with the current 
+        expression.
+        @param expression   the expression to OR with the current expression.
+        @return a logical OR Expression. */
     public func or(_ expression: Any) -> Expression {
         return Expression(self.impl.or(Expression.toCBLExp(expression)));
     }
     
-    /** Create a LIKE comparison expression. */
+    /** Create a Like expression that evaluates whether or not the current expression is LIKE
+        the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a Like expression. */
     public func like(_ expression: Any) -> Expression {
         return Expression(self.impl.like(Expression.toCBLExp(expression)));
     }
     
-    /** Create a NOT LIKE comparison expression. */
+    /** Create a NOT Like expression that evaluates whether or not the current expression is 
+        NOT LIKE the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a NOT Like expression. */
     public func notLike(_ expression: Any) -> Expression {
         return Expression(self.impl.notLike(Expression.toCBLExp(expression)));
     }
     
-    /** Create a REGEX_LIKE comparison expression. */
+    /** Create a regex match expression that evaluates whether or not the current expression
+        regex matches the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a regex match expression. */
     public func regex(_ expression: Any) -> Expression {
         return Expression(self.impl.regex(Expression.toCBLExp(expression)));
     }
     
-    /** Create a NOT REGEX_LIKE comparison expression. */
+    /** Create a regex NOT match expression that evaluates whether or not the current expression
+        regex NOT matches the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a regex NOT match expression. */
     public func notRegex(_ expression: Any) -> Expression {
         return Expression(self.impl.notRegex(Expression.toCBLExp(expression)));
     }
     
-    /** Create a fulltext search matching expression. */
+    /** Create a full text match expression that evaluates whether or not the current expression
+        full text matches the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a full text match expression. */
     public func match(_ expression: Any) -> Expression {
         return Expression(self.impl.match(Expression.toCBLExp(expression)));
     }
     
-    /** Create a fulltext search NOT matching expression. */
+    /** Create a full text NOT match expression that evaluates whether or not the current expression
+        full text NOT matches the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return a full text NOT match expression. */
     public func notMatch(_ expression: Any) -> Expression {
         return Expression(self.impl.notMatch(Expression.toCBLExp(expression)));
     }
     
-    /** Create a null check expression. */
+    /** Create an IS NULL expression that evaluates whether or not the current expression is null.
+        @return an IS NULL expression. */
     public func isNull() -> Expression {
         return Expression(self.impl.isNull());
     }
     
-    /** Create a NOT null check expression. */
+    /** Create an IS NOT NULL expression that evaluates whether or not the current expression
+        is NOT null.
+        @return an IS NOT NULL expression. */
     public func notNull() -> Expression {
         return Expression(self.impl.notNull());
     }
     
-    /** Create an is comparsion expression. The is comparison is the same as an equal to comparison. */
+    /** Create an IS expression that evaluates whether or not the current expression is equal to
+        the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return an IS expression. */
     public func `is`(_ expression: Any) -> Expression {
         return Expression(self.impl.is(Expression.toCBLExp(expression)));
     }
     
-    /** Create an is NOT comparsion expression. */
+    /** Create an IS NOT expression that evaluates whether or not the current expression is not 
+        equal to the given expression.
+        @param expression   the expression to be compared with the current expression.
+        @return an IS NOT expression. */
     public func isNot(_ expression: Any) -> Expression {
         return Expression(self.impl.isNot(to: Expression.toCBLExp(expression)));
     }
     
-    /** Create a BETWEEN expression. */
+    /** Create a between expression that evaluates whether or not the current expression is
+        between the given expressions inclusively.
+        @param expression1  the inclusive lower bound expression.
+        @param expression2  the inclusive upper bound expression.
+        @return a between expression. */
     public func between(_ expression1: Any, and expression2: Any) -> Expression {
         return Expression(self.impl.between(Expression.toCBLExp(expression1),
                                                    and: Expression.toCBLExp(expression2)));
     }
     
-    /** Create a NOT BETWEEN expression. */
+    /** Create a NOT between expression that evaluates whether or not the current expression is not
+        between the given expressions inclusively.
+        @param expression1  the inclusive lower bound expression.
+        @param expression2  the inclusive upper bound expression.
+        @return a NOT between expression. */
     public func notBetween(_ expression1: Any, and expression2: Any) -> Expression {
         return Expression(self.impl.notBetween(Expression.toCBLExp(expression1),
                                                       and: Expression.toCBLExp(expression2)));
     }
     
-    /** Create an IN expression. */
+    /** Create an IN expression that evaluates whether or not the current expression is in the
+        given expressions.
+        @param  expressions the expression array to be evaluated with.
+        @return an IN exprssion. */
     public func `in`(_ expressions: [Any]) -> Expression {
         var impls: [Any] = []
         for exp in expressions {
@@ -182,7 +272,10 @@ public final class Expression {
         return Expression(self.impl.in(impls))
     }
     
-    /** Create a NOT IN expression. */
+    /** Create a NOT IN expression that evaluates whether or not the current expression is not 
+        in the given expressions.
+        @param  expressions the expression array to be evaluated with.
+        @return an IN exprssion. */
     public func notIn(_ expressions:[Any]) -> Expression {
         var impls: [Any] = []
         for exp in expressions {

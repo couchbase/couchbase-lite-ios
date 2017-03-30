@@ -13,13 +13,13 @@ import Foundation
  A Query instance can be constructed by calling one of the select class methods. */
 public class Query {
     
-    /** Create a SELECT ALL (*) statement instance. You can then call the Select's instance 
+    /** Create a SELECT ALL (*) statement instance. You can then call the Select instance's
      methods such as from() method to construct the complete Query instance. */
     public static func select() -> Select {
         return Select(impl: CBLQuerySelect.all(), distict: false)
     }
     
-    /** Create a SELECT DISTINCT ALL (*) statement instance. You can then call the Select's instance 
+    /** Create a SELECT DISTINCT ALL (*) statement instance. You can then call the Select instance's
      methods such as from() method to construct the complete Query instance. */
     public static func selectDistinct() -> Select {
         return Select(impl: CBLQuerySelect.all(), distict: true)
@@ -41,7 +41,7 @@ public class Query {
             }
             
             if self.distinct {
-                queryImpl = CBLQuery.selectDistict(
+                queryImpl = CBLQuery.selectDistinct(
                     selectImpl, from: fromImpl, where: whereImpl, orderBy: orderByImpl)
             } else {
                 queryImpl = CBLQuery.select(

@@ -51,8 +51,8 @@
 }
 
 
-+ (instancetype) selectDistict: (CBLQuerySelect*)select
-                          from: (CBLQueryDataSource*)from
++ (instancetype) selectDistinct: (CBLQuerySelect*)select
+                           from: (CBLQueryDataSource*)from
 {
     return [[[self class] alloc] initWithSelect: select distinct: YES
                                            from: from
@@ -76,9 +76,9 @@
 }
 
 
-+ (instancetype) selectDistict: (CBLQuerySelect*)select
-                          from: (CBLQueryDataSource*)from
-                         where: (CBLQueryExpression*)where
++ (instancetype) selectDistinct: (CBLQuerySelect*)select
+                           from: (CBLQueryDataSource*)from
+                          where: (CBLQueryExpression*)where
 {
     return [[[self class] alloc] initWithSelect: select
                                        distinct: YES
@@ -104,10 +104,10 @@
 }
 
 
-+ (instancetype) selectDistict: (CBLQuerySelect*)select
-                          from: (CBLQueryDataSource*)from
-                         where: (CBLQueryExpression*)where
-                       orderBy: (CBLQueryOrderBy*)orderBy
++ (instancetype) selectDistinct: (CBLQuerySelect*)select
+                           from: (CBLQueryDataSource*)from
+                          where: (CBLQueryExpression*)where
+                        orderBy: (CBLQueryOrderBy*)orderBy
 {
     return [[[self class] alloc] initWithSelect: select
                                        distinct: YES

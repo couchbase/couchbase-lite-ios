@@ -42,14 +42,10 @@
 - (CBLQueryExpression*) operatorExpressionWithType: (NSPredicateOperatorType)type
                                  againstExpression: (id)expression
 {
-    Assert([self isKindOfClass: [CBLQueryTypeExpression class]], @"The operation is not supported.");
-    CBLQueryTypeExpression* lhs = (CBLQueryTypeExpression*)self;
-    CBLQueryTypeExpression* rhs = $castIf(CBLQueryTypeExpression, expression);
-    if (!rhs) {
-        Assert(![expression isKindOfClass: [CBLQueryExpression class]], @"Invalid expression value");
+    CBLQueryExpression* rhs = $castIf(CBLQueryExpression, expression);
+    if (!rhs)
         rhs = [[CBLQueryTypeExpression alloc] initWithConstantValue: expression];
-    }
-    return [[CBLQueryComparisonPredicate alloc] initWithLeftExpression: lhs
+    return [[CBLQueryComparisonPredicate alloc] initWithLeftExpression: self
                                                        rightExpression: rhs
                                                                   type: type];
 }
@@ -252,22 +248,15 @@
 
 
 - (CBLQueryExpression*) between: (id)expression1 and: (id)expression2 {
-    Assert([self isKindOfClass: [CBLQueryTypeExpression class]], @"The operation is not supported.");
-    CBLQueryTypeExpression* lhs = (CBLQueryTypeExpression*)self;
-    
-    CBLQueryTypeExpression* exp1 = $castIf(CBLQueryTypeExpression, expression1);
-    if (!exp1) {
-        Assert(![exp1 isKindOfClass: [CBLQueryExpression class]], @"Invalid expression value");
+    CBLQueryExpression* exp1 = $castIf(CBLQueryExpression, expression1);
+    if (!exp1)
         exp1 = [[CBLQueryTypeExpression alloc] initWithConstantValue: expression1];
-    }
-    CBLQueryTypeExpression* exp2 = $castIf(CBLQueryTypeExpression, expression2);
-    if (!exp2) {
-        Assert(![exp2 isKindOfClass: [CBLQueryExpression class]], @"Invalid expression value");
+    CBLQueryExpression* exp2 = $castIf(CBLQueryExpression, expression1);
+    if (!exp2)
         exp2 = [[CBLQueryTypeExpression alloc] initWithConstantValue: expression2];
-    }
-    CBLQueryTypeExpression* rhs = [[CBLQueryTypeExpression alloc] initWithAggregateExpressions: @[exp1, exp2]];
     
-    return [[CBLQueryComparisonPredicate alloc] initWithLeftExpression: lhs
+    id rhs = [[CBLQueryTypeExpression alloc] initWithAggregateExpressions: @[exp1, exp2]];
+    return [[CBLQueryComparisonPredicate alloc] initWithLeftExpression: self
                                                        rightExpression: rhs
                                                                   type: NSBetweenPredicateOperatorType];
 }
@@ -279,10 +268,8 @@
 
 
 - (CBLQueryExpression*) in: (NSArray*)expressions {
-    Assert([self isKindOfClass: [CBLQueryTypeExpression class]], @"The operation is not supported.");
-    CBLQueryTypeExpression* lhs = (CBLQueryTypeExpression*)self;
     CBLQueryTypeExpression* rhs = [[CBLQueryTypeExpression alloc] initWithAggregateExpressions: expressions];
-    return [[CBLQueryComparisonPredicate alloc] initWithLeftExpression: lhs
+    return [[CBLQueryComparisonPredicate alloc] initWithLeftExpression: self
                                                        rightExpression: rhs
                                                                   type: NSInPredicateOperatorType];
 }
@@ -305,8 +292,8 @@
 @synthesize predicateOperatorType=_predicateOperatorType;
 
 
-- (instancetype) initWithLeftExpression: (CBLQueryTypeExpression*)lhs
-                        rightExpression: (CBLQueryTypeExpression*)rhs
+- (instancetype) initWithLeftExpression: (CBLQueryExpression*)lhs
+                        rightExpression: (CBLQueryExpression*)rhs
                                    type: (NSPredicateOperatorType)type
 {
     self = [super initWithNone: nil];
@@ -320,8 +307,18 @@
 
 
 - (NSPredicate*) asNSPredicate {
-    return [NSComparisonPredicate predicateWithLeftExpression: [self.leftExpression asNSExpression]
-                                              rightExpression: [self.rightExpression asNSExpression]
+    NSExpression* lhs;
+    if ([self.leftExpression respondsToSelector:@selector(asNSExpression)])
+        lhs = [self.leftExpression performSelector: @selector(asNSExpression)];
+    Assert(lhs != nil, @"The LHS expression of the comparison expression is invalid.");
+    
+    NSExpression* rhs;
+    if ([self.rightExpression respondsToSelector:@selector(asNSExpression)])
+        rhs = [self.rightExpression performSelector: @selector(asNSExpression)];
+    Assert(rhs != nil, @"The RHS expression of the comparsion expression is invalid.");
+    
+    return [NSComparisonPredicate predicateWithLeftExpression: lhs
+                                              rightExpression: rhs
                                                      modifier: NSDirectPredicateModifier
                                                          type: self.predicateOperatorType
                                                       options: 0];
@@ -486,10 +483,8 @@
     for (id exp in expressions) {
         if ([exp respondsToSelector:@selector(asNSExpression)])
             [array addObject: [exp performSelector: @selector(asNSExpression)]];
-        else {
-            Assert(![exp isKindOfClass: [CBLQueryExpression class]], @"Invalid expression value");
+        else
             [array addObject: [NSExpression expressionForConstantValue: exp]];
-        }
     }
     return array;
 }

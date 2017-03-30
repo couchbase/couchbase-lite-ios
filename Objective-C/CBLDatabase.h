@@ -27,7 +27,7 @@ extern NSString* const kCBLDatabaseIsExternalUserInfoKey;
 
 /** Types of database indexes. */
 typedef NS_ENUM(uint32_t, CBLIndexType) {
-    kCBLValueIndex,         ///< Regular index of property value
+    kCBLValueIndex,         ///< Regular index of property values
     kCBLFullTextIndex,      ///< Full-text index
     kCBLGeoIndex,           ///< Geospatial index of GeoJSON values
 };
