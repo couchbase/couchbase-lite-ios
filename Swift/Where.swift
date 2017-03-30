@@ -15,7 +15,7 @@ public final class Where: Query, OrderByRouter {
         let implOrders = orders.map { (o) -> CBLQueryOrderBy in
             return o.impl
         }
-        return OrderBy(query: self, impl: CBLQueryOrderBy(array: implOrders))
+        return OrderBy(query: self, impl: CBLQueryOrderBy(implOrders))
     }
     
     /** An internal constructor. */

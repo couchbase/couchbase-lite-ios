@@ -362,7 +362,7 @@
     doc2[@"number"] = @(1);
     Assert([doc2 save: &error], @"Error when creating a document: %@", error);
     
-    CBLQuery* q = [CBLQuery selectDistict: [CBLQuerySelect all]
+    CBLQuery* q = [CBLQuery selectDistinct: [CBLQuerySelect all]
                                      from: [CBLQueryDatabase database: self.db]];
     Assert(q);
     uint64_t numRows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {

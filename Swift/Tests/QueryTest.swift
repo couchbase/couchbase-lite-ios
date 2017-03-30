@@ -150,7 +150,7 @@ class QueryTest: CBLTestCase {
             let expectedDocs = test[1] as! [Document]
             let q = Query.select().from(DataSource.database(db)).where(exp)
             let numRows = try verifyQuery(q, block: { (n, row) in
-                if (expectedDocs.count <= Int(n)) {
+                if (Int(n) <= expectedDocs.count) {
                     let doc = expectedDocs[Int(n)-1]
                     XCTAssertEqual(doc.documentID, row.documentID)
                 }
@@ -290,12 +290,16 @@ class QueryTest: CBLTestCase {
                     firstNames.append(firstName)
                 }
             })
+            
             XCTAssertEqual(numRows, 100)
             XCTAssertEqual(Int(numRows), firstNames.count)
+            
+            let sorted = firstNames.sorted(by: { s1, s2 in return ascending ?  s1 < s2 : s1 > s2 })
+            XCTAssertEqual(firstNames, sorted);
         }
     }
     
-    func failingTestSelectDistict() throws {
+    func failingTestSelectDistinct() throws {
         // https://github.com/couchbase/couchbase-lite-ios/issues/1669
         let doc1 = db.document()
         doc1["number"] = 1

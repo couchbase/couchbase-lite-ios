@@ -82,16 +82,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSPredicate*) asNSPredicate;
 @end
 
-@class CBLQueryTypeExpression;
-
 @interface CBLQueryComparisonPredicate: CBLQueryExpression <CBLNSPredicateCoding>
 
-@property(readonly, nonatomic) CBLQueryTypeExpression* leftExpression;
-@property(readonly, nonatomic) CBLQueryTypeExpression* rightExpression;
+@property(readonly, nonatomic) CBLQueryExpression* leftExpression;
+@property(readonly, nonatomic) CBLQueryExpression* rightExpression;
 @property(readonly, nonatomic) NSPredicateOperatorType predicateOperatorType;
 
-- (instancetype) initWithLeftExpression: (CBLQueryTypeExpression*)lhs
-                        rightExpression: (CBLQueryTypeExpression*)rhs
+- (instancetype) initWithLeftExpression: (CBLQueryExpression*)lhs
+                        rightExpression: (CBLQueryExpression*)rhs
                                    type: (NSPredicateOperatorType)type;
 
 @end

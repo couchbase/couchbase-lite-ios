@@ -11,22 +11,27 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/** An CBLQueryOrderBy represents a query ORDER BY clause by sepecifying properties or expressions t
- hat the result rows should be sorted by.
- A CBLQueryOrderBy can be construct as a single CBLQuerySortOrder instance with a propery name 
- or an expression instance or as a chain of multiple CBLQueryOrderBy instances. */
+/** A CBLQueryOrderBy represents a query ORDER BY clause by specifying properties or expressions
+    that the result rows should be sorted by.
+    A CBLQueryOrderBy can be construct as a single CBLQuerySortOrder instance with a propery name
+    or an expression instance or as a chain of multiple CBLQueryOrderBy instances. */
 @interface CBLQueryOrderBy : NSObject
 
-/** Create a chain of multiple CBLQueryOrderBy instances. */
-+ (CBLQueryOrderBy*) orderBy: (CBLQueryOrderBy *)orderBy, ...;
+/** Create a chain of multiple CBLQueryOrderBy instances for constructing an ORDER BY clause of 
+    the query.
+    @param orders   an array of CBLQueryOrderBy.
+    @return a CBLQueryOrderBy instance. */
++ (CBLQueryOrderBy*) orderBy: (NSArray<CBLQueryOrderBy*>*)orders;
 
-/** Create a chain of multiple CBLQueryOrderBy array. */
-+ (CBLQueryOrderBy*) orderByArray: (NSArray<CBLQueryOrderBy*>*)orders;
-
-/** Create a CBLQuerySortOrder instance with a given property name. */
+/** Create a sort order instance with a given property name.
+    @param name a propert name in key path format.
+    @return a sort order instance.
+ */
 + (CBLQuerySortOrder*) property: (NSString*)name;
 
-/** Create a CBLQuerySortOrder instance with a given expression. */
+/** Create a sort order instance with a given expression. 
+    @param expression   an expression instance.
+    @return a sort order instance. */
 + (CBLQuerySortOrder*) expression: (CBLQueryExpression*)expression;
 
 - (instancetype) init NS_UNAVAILABLE;
@@ -34,13 +39,15 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 /** CBLQuerySortOrder is a subclass of the CBLQueryOrderBy that allows to create an 
- ascending or a descending CBLQueryOrderBy object. */
+    ascending or a descending CBLQueryOrderBy instance. */
 @interface CBLQuerySortOrder : CBLQueryOrderBy
 
-/** Create an ascending CBLQueryOrderBy object. */
+/** Create an ascending CBLQueryOrderBy instance. 
+    @return an ascending CBLQueryOrderBy instance. */
 - (CBLQueryOrderBy*) ascending;
 
-/** Create a descending CBLQueryOrderBy object. */
+/** Create a descending CBLQueryOrderBy instance. 
+    @return a descending CBLQueryOrderBy instance. */
 - (CBLQueryOrderBy*) descending;
 
 /** Not available. */

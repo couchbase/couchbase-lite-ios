@@ -16,7 +16,9 @@ NS_ASSUME_NONNULL_BEGIN
  The current data source supported is the database. */
 @interface CBLQueryDataSource : NSObject
 
-/** Create a database data source. */
+/** Create a database data source. 
+    @param database the database used as the data source as the query.
+    @return a CBLQueryDatabase instance, which is also a CBLQueryDataSource instance. */
 + (CBLQueryDatabase*) database: (CBLDatabase*)database;
 
 /** Not available. */
@@ -28,7 +30,9 @@ NS_ASSUME_NONNULL_BEGIN
  the -as: method with a given alias name. */
 @interface CBLQueryDatabase : CBLQueryDataSource
 
-/** Create an alias data source. */
+/** Create an alias data source. 
+    @param as the alias name of the data source.
+    @return an alias CBLQueryDataSource. */
 - (CBLQueryDataSource*) as: (NSString*)as;
 
 /** Not available. */

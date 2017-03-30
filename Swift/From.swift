@@ -8,21 +8,20 @@
 
 import Foundation
 
-/** A From component represent a FROM statment for specifying a query data source. */
+/** A From component representing a FROM clause for specifying the data source of the query. */
 public final class From: Query, WhereRouter, OrderByRouter  {
     
-    /** Create and chain a WHERE clause component to specify a query WHERE clause
-     used for filtering the query result. */
+    /** Create and chain a WHERE component for specifying the WHERE clause of the query. */
     public func `where`(_ whereExpression: Expression) -> Where {
         return Where(query: self, impl: whereExpression.impl)
     }
     
-    /** Create and chain an ORDER BY clause component to specify the order of the query result. */
+    /** Create and chain an ORDER BY component for specifying the order of the query result. */
     public func orderBy(_ orders: OrderBy...) -> OrderBy {
         let implOrders = orders.map { (o) -> CBLQueryOrderBy in
             return o.impl
         }
-        return OrderBy(query: self, impl: CBLQueryOrderBy(array: implOrders))
+        return OrderBy(query: self, impl: CBLQueryOrderBy(implOrders))
     }
     
     /** An internal constructor. */

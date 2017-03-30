@@ -25,20 +25,10 @@
 }
 
 
-+ (CBLQueryOrderBy *) orderBy: (CBLQueryOrderBy *)orderBy, ... {
-    NSMutableArray* orders = [NSMutableArray array];
-    va_list args;
-    va_start(args, orderBy);
-    id o = orderBy;
-    do { if (o) [orders addObject: o]; } while ((o=va_arg(args, id)));
-    va_end(args);
++ (CBLQueryOrderBy*) orderBy: (NSArray<CBLQueryOrderBy*>*)orders {
     return [[[self class] alloc] initWithOrders: orders];
 }
 
-
-+ (CBLQueryOrderBy*) orderByArray: (NSArray<CBLQueryOrderBy*>*)orders {
-    return [[[self class] alloc] initWithOrders: orders];
-}
 
 + (CBLQuerySortOrder *) property: (NSString*)name {
     return [[self class] expression: [CBLQueryExpression property: name]];
