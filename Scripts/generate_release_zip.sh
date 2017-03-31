@@ -51,6 +51,12 @@ OUTPUT_SWIFT_ENTERPRISE_DIR=$OUTPUT_DIR/swift_enterprise
 OUTPUT_SWIFT_COMMUNITY_ZIP=`pwd`/$OUTPUT_DIR/couchbase-lite-swift_community$VERSION_SUFFIX.zip
 OUTPUT_SWIFT_ENTERPRISE_ZIP=`pwd`/$OUTPUT_DIR/couchbase-lite-swift_enterprise$VERSION_SUFFIX.zip
 
+OUTPUT_DOCS_DIR=$OUTPUT_DIR/docs
+OUTOUT_OBJC_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLite
+OUTOUT_OBJC_DOCS_ZIP=`pwd`/$OUTPUT_DIR/couchbase-lite-objc-documentation$VERSION_SUFFIX.zip
+OUTOUT_SWIFT_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLiteSwift
+OUTOUT_SWIFT_DOCS_ZIP=`pwd`/$OUTPUT_DIR/couchbase-lite-swift-documentation$VERSION_SUFFIX.zip
+
 rm -rf "$OUTPUT_DIR"
 
 sh Scripts/build_framework.sh -s "CBL ObjC" -p iOS -o "$BUILD_DIR" -v "$VERSION"
@@ -95,7 +101,21 @@ popd
 
 # Generate MD5 file:
 pushd "$OUTPUT_DIR"
-md5 *.zip > MD5.txt
+md5 couchbase-lite-objc_community$VERSION_SUFFIX.zip > couchbase-lite-objc_community$VERSION_SUFFIX.zip.md5
+md5 couchbase-lite-objc_enterprise$VERSION_SUFFIX.zip > couchbase-lite-objc_enterprise$VERSION_SUFFIX.zip.md5
+md5 couchbase-lite-swift_community$VERSION_SUFFIX.zip > couchbase-lite-swift_community$VERSION_SUFFIX.zip.md5
+md5 couchbase-lite-swift_enterprise$VERSION_SUFFIX.zip > couchbase-lite-swift_enterprise$VERSION_SUFFIX.zip.md5
+popd
+
+# Generate API docs:
+sh Scripts/generate_api_docs.sh -o "$OUTPUT_DOCS_DIR"
+# >> Objective-C API
+pushd "$OUTOUT_OBJC_DOCS_DIR"
+zip -ry "$OUTOUT_OBJC_DOCS_ZIP" *
+popd
+# >> Swift API docs
+pushd "$OUTOUT_SWIFT_DOCS_DIR"
+zip -ry "$OUTOUT_SWIFT_DOCS_ZIP" *
 popd
 
 # Cleanup
@@ -104,3 +124,4 @@ rm -rf "$OUTPUT_OBJC_COMMUNITY_DIR"
 rm -rf "$OUTPUT_OBJC_ENTERPRISE_DIR"
 rm -rf "$OUTPUT_SWIFT_COMMUNITY_DIR"
 rm -rf "$OUTPUT_SWIFT_ENTERPRISE_DIR"
+rm -rf "$OUTPUT_DOCS_DIR"

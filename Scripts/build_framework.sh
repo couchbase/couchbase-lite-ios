@@ -91,7 +91,7 @@ for SDK in "${SDKS[@]}"
       BUILD_VERSION="CBL_VERSION_STRING=${VERSION}"
     fi
 
-    xcodebuild -scheme "${SCHEME}" -configuration Release -sdk ${SDK} ${BUILD_VERSION} OHTER_CFLAGS="-fembed-bitcode" ${CLEAN_CMD} build
+    xcodebuild -scheme "${SCHEME}" -configuration Release -sdk ${SDK} ${BUILD_VERSION} OHTER_CFLAGS="-fembed-bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" ${CLEAN_CMD} build
 
     # Get the XCode built framework and dsym file path:
     PRODUCTS_DIR=`xcodebuild -scheme "${SCHEME}" -configuration Release -sdk "${SDK}" -showBuildSettings|grep -w BUILT_PRODUCTS_DIR|head -n 1|awk '{ print $3 }'`
