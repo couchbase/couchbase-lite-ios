@@ -5,7 +5,6 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-CODE_SIGN_IDENTITY           = 
 DEFINES_MODULE               = YES
 DYLIB_COMPATIBILITY_VERSION  = 1
 DYLIB_CURRENT_VERSION        = 1
