@@ -190,6 +190,11 @@ static inline NSNumber* numberProperty(NSDictionary* dict, NSString* key) {
 }
 
 
+- (nullable CBLBlob*) blobForKey: (NSString*)key {
+    return $castIf(CBLBlob, self[key]);
+}
+
+
 - (nullable CBLSubdocument*) subdocumentForKey: (NSString*)key {
     return $castIf(CBLSubdocument, self[key]);
 }

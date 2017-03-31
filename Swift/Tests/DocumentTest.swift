@@ -40,7 +40,7 @@ class DocumentTest: CBLTestCase {
         let s: String? = doc["prop"]
         XCTAssertNil(s)
 
-        let a: Any? = doc.property("prop")
+        let a: Any? = doc.getValue("prop")
         XCTAssertNil(a)
 
         try doc.save()
@@ -79,8 +79,8 @@ class DocumentTest: CBLTestCase {
             XCTAssertEqual(dict?.properties?.count, 3)
             XCTAssert(dict?["miney"] == "moe")
             
-            XCTAssert(self.doc.property("null") as? NSNull != nil)
-            XCTAssertNil(self.doc.property("none"))
+            XCTAssert(self.doc.getValue("null") as? NSNull != nil)
+            XCTAssertNil(self.doc.getValue("none"))
             XCTAssertFalse(self.doc.contains("none"))
         }
 
@@ -121,13 +121,13 @@ class DocumentTest: CBLTestCase {
         doc["name"] = nil
 
         XCTAssert(!doc.contains("name"))
-        XCTAssertNil(doc.property("name"))
+        XCTAssertNil(doc.getValue("name"))
 
         try doc.save()
         try reopenDB()
 
         XCTAssert(!doc.contains("name"))
-        XCTAssertNil(doc.property("name"))
+        XCTAssertNil(doc.getValue("name"))
     }
 
     func testBlob() throws {
@@ -140,7 +140,7 @@ class DocumentTest: CBLTestCase {
         try reopenDB()
 
         XCTAssertEqual(doc["name"], "Jim")
-        XCTAssert(doc.property("data") as? Blob != nil)
+        XCTAssert(doc.getValue("data") as? Blob != nil)
         let data2: Blob? = doc["data"]
         XCTAssert(data2 != nil)
         XCTAssertEqual(data2?.contentType, "text/plain")

@@ -85,6 +85,14 @@ public class Document : Properties {
     public static func == (doc1: Document, doc: Document) -> Bool {
         return doc._docimpl === doc._docimpl
     }
+    
+    // MARK: Properties
+    
+    @discardableResult public override func setValue(_ key: String, _ value: Any?) -> Self {
+        // Overriding to be able to return the right Self
+        super.setValue(key, value)
+        return self
+    }
 
     // MARK: Internal
     
