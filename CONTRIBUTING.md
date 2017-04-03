@@ -4,6 +4,8 @@ We also want to hear about your ideas for new features and improvements. You can
 
 And while we welcome questions, **we prefer to answer questions on our [developer forums](https://forums.couchbase.com)** rather than in Github issues.
 
+All posts are expected to meet the [Couchbase Code of Conduct](https://www.couchbase.com/code-of-conduct). 
+
 # 0. Where's The Bug Tracker?
 
 We use Github Issues, so there is one bug tracker for each repo. For your convenience, here's a list:
