@@ -213,7 +213,7 @@ static NSString* const kBlobType = @"blob";
     C4BlobKey key;
     bool success = true;
     if (_content) {
-        success = c4blob_create(store, data2slice(_content), &key, &err);
+        success = c4blob_create(store, data2slice(_content), nullptr, &key, &err);
     } else {
         Assert(_initialContentStream);
         C4WriteStream* blobOut = c4blob_openWriteStream(store, &err);
@@ -240,7 +240,7 @@ static NSString* const kBlobType = @"blob";
         [contentStream close];
         if (success) {
             key = c4stream_computeBlobKey(blobOut);
-            success = c4stream_install(blobOut, &err);
+            success = c4stream_install(blobOut, nullptr, &err);
         }
         c4stream_closeWriter(blobOut);
         if (bytesRead < 0)
