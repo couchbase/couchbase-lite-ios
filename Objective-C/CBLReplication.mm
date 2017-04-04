@@ -10,7 +10,9 @@
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
 #import "CBLInternal.h"
-#import <CouchbaseLiteReplicator/CouchbaseLiteReplicator.h>
+#import "c4Replicator.h"
+#import "c4Socket.h"
+#import "CBLWebSocket.h"
 
 
 static C4LogDomain kCBLSyncLogDomain;
