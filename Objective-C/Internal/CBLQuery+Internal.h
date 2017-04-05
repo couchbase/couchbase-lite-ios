@@ -75,8 +75,12 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLQueryExpression ()
 /** This constructor is currently for hiding the public -init: */
 - (instancetype) initWithNone: (nullable id)none;
+
 - (id) asJSON;
+
 @end
+
+/////
 
 @interface CBLAggregateExpression: CBLQueryExpression
 
@@ -85,6 +89,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithExpressions: (NSArray*)subs;
 
 @end
+
+/////
 
 typedef NS_ENUM(NSInteger, CBLBinaryExpType) {
     CBLAddBinaryExpType,
@@ -119,6 +125,8 @@ typedef NS_ENUM(NSInteger, CBLBinaryExpType) {
 
 @end
 
+/////
+
 typedef NS_ENUM(NSInteger, CBLCompoundExpType) {
     CBLAndCompundExpType,
     CBLOrCompundExpType,
@@ -135,6 +143,7 @@ typedef NS_ENUM(NSInteger, CBLCompoundExpType) {
 
 @end
 
+/////
 
 @interface CBLKeyPathExpression : CBLQueryExpression
 
@@ -180,6 +189,8 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 - (instancetype) initWithExpression: (CBLQueryExpression*)expression;
 
 @end
+
+/////
 
 @interface CBLQueryResultSet: CBLQueryEnumerator
 
