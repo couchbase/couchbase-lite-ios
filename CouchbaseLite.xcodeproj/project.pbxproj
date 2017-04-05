@@ -211,6 +211,13 @@
 		93BB726B1E446FC500427251 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
 		93BB72781E446FE000427251 /* CouchbaseLite.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		93CD016E1E94923900AFB3FA /* CBLQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 933208291E774171000D9993 /* CBLQuery+Internal.h */; };
+		93CD018C1E95546200AFB3FA /* NotificationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A0E1E32E858008466FF /* NotificationTest.m */; };
+		93CD018D1E95546200AFB3FA /* PredicateQueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A931E298E26004748DF /* PredicateQueryTest.m */; };
+		93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332082B1E774419000D9993 /* QueryTest.m */; };
+		93CD018F1E95546200AFB3FA /* ReplicationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A811E8B3B3A00E103F9 /* ReplicationTest.m */; };
+		93CD01901E95546200AFB3FA /* SubdocumentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9352945E1E51708E005CE4E8 /* SubdocumentTest.m */; };
+		93CD01911E95546200AFB3FA /* names_100.json in Resources */ = {isa = PBXBuildFile; fileRef = 27EF6A951E2AC609004748DF /* names_100.json */; };
+		93CD01921E95546200AFB3FA /* sentences.json in Resources */ = {isa = PBXBuildFile; fileRef = 273ADF7C1E36B514001E977F /* sentences.json */; };
 		93DD40E31E5CDAA500DD9196 /* SubdocumentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DD40E21E5CDAA500DD9196 /* SubdocumentTest.swift */; };
 /* End PBXBuildFile section */
 
@@ -1322,6 +1329,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				93CD01921E95546200AFB3FA /* sentences.json in Resources */,
+				93CD01911E95546200AFB3FA /* names_100.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1435,8 +1444,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				93CD018F1E95546200AFB3FA /* ReplicationTest.m in Sources */,
+				93CD018C1E95546200AFB3FA /* NotificationTest.m in Sources */,
 				938CFA2F1E442B5700291631 /* DatabaseTest.m in Sources */,
 				938CFA2D1E442B4200291631 /* DocumentTest.m in Sources */,
+				93CD018D1E95546200AFB3FA /* PredicateQueryTest.m in Sources */,
+				93CD01901E95546200AFB3FA /* SubdocumentTest.m in Sources */,
+				93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */,
 				938CFA2E1E442B5300291631 /* CBLTestCase.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
