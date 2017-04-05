@@ -39,26 +39,16 @@
     return [[CBLQuerySortOrder alloc] initWithExpression: expression];
 }
 
-
-- (NSArray*) asSortDescriptors {
-    NSMutableArray* descriptors = [NSMutableArray array];
-    if ([self isKindOfClass: [CBLQuerySortOrder class]]) {
-        CBLQuerySortOrder* so = (CBLQuerySortOrder*)self;
-        NSExpression* exp = [$castIf(CBLQueryTypeExpression, so.expression) asNSExpression];
-        if (exp.expressionType == NSKeyPathExpressionType) {
-            if (so.isAscending)
-                [descriptors addObject: exp.keyPath];
-            else
-                [descriptors addObject: [NSString stringWithFormat:@"-%@", exp.keyPath]];
-        } else
-            [descriptors addObject: exp];
-    } else {
-        for (CBLQueryOrderBy* o in self.orders)
-            [descriptors addObjectsFromArray: [o asSortDescriptors]];
+- (id) asJSON {
+    NSMutableArray* json = [NSMutableArray array];
+    for (CBLQueryOrderBy* o in _orders) {
+        if ([o isKindOfClass:[CBLQuerySortOrder class]])
+            [json addObject: [o asJSON]];
+        else
+            [json addObjectsFromArray: [o asJSON]];
     }
-    return descriptors;
+    return json;
 }
-
 
 @end
 
@@ -90,5 +80,9 @@
     return self;
 }
 
+- (id) asJSON {
+    id json = _isAscending ? [_expression asJSON] : @[@"DESC", [_expression asJSON]];
+    return json;
+}
 
 @end

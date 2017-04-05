@@ -16,12 +16,17 @@
     return [super init];
 }
 
+- (id) asJSON {
+    // Subclass needs to implement this method:
+    return [NSNull null];
+}
+
 
 #pragma mark - Property:
 
 
 + (CBLQueryExpression*) property: (NSString*)property {
-    return [[CBLQueryTypeExpression alloc] initWithKeypath: property];
+    return [[CBLKeyPathExpression alloc] initWithKeyPath: property];
 }
 
 
@@ -29,25 +34,13 @@
 
 
 + (CBLQueryExpression*) negated: (id)expression {
-    return [[CBLQueryCompoundPredicate alloc] initWithType: NSNotPredicateType
-                                             subpredicates: @[expression]];
+    return [[CBLCompoundExpression alloc] initWithExpressions: @[expression]
+                                                         type: CBLNotCompundExpType];
 }
 
 
 + (CBLQueryExpression*) not: (id)expression {
     return [self negated: expression];
-}
-
-
-- (CBLQueryExpression*) operatorExpressionWithType: (NSPredicateOperatorType)type
-                                 againstExpression: (id)expression
-{
-    CBLQueryExpression* rhs = $castIf(CBLQueryExpression, expression);
-    if (!rhs)
-        rhs = [[CBLQueryTypeExpression alloc] initWithConstantValue: expression];
-    return [[CBLQueryComparisonPredicate alloc] initWithLeftExpression: self
-                                                       rightExpression: rhs
-                                                                  type: type];
 }
 
 
@@ -60,37 +53,37 @@
 
 
 - (CBLQueryExpression*) multiply: (id)expression {
-    return [[CBLQueryTypeExpression alloc] initWithFunction: @"multiply:by:"
-                                                    operand: nil
-                                                  arguments: @[self, expression]];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLMultiplyBinaryExpType];
 }
 
 
 - (CBLQueryExpression*) divide: (id)expression {
-    return [[CBLQueryTypeExpression alloc] initWithFunction: @"divide:by:"
-                                                    operand: nil
-                                                  arguments: @[self, expression]];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLDivideBinaryExpType];
 }
 
 
 - (CBLQueryExpression*) modulo: (id)expression {
-    return [[CBLQueryTypeExpression alloc] initWithFunction: @"modulus:by:"
-                                                    operand: nil
-                                                  arguments: @[self, expression]];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLModulusBinaryExpType];
 }
 
 
 - (CBLQueryExpression*) add: (id)expression {
-    return [[CBLQueryTypeExpression alloc] initWithFunction: @"add:to:"
-                                                    operand: nil
-                                                  arguments: @[self, expression]];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLAddBinaryExpType];
 }
 
 
 - (CBLQueryExpression*) subtract: (id)expression {
-    return [[CBLQueryTypeExpression alloc] initWithFunction: @"from:subtract:"
-                                                    operand: nil
-                                                  arguments: @[self, expression]];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLSubtractBinaryExpType];
 }
 
 
@@ -98,63 +91,64 @@
 
 
 - (CBLQueryExpression*) lessThan: (id)expression {
-    return [self operatorExpressionWithType: NSLessThanPredicateOperatorType
-                          againstExpression: expression];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLLessThanBinaryExpType];
 }
 
 
 - (CBLQueryExpression*) notLessThan: (id)expression {
-    return [self operatorExpressionWithType: NSGreaterThanOrEqualToPredicateOperatorType
-                          againstExpression: expression];
+    return [self greaterThanOrEqualTo: expression];
 }
 
 
 - (CBLQueryExpression*) lessThanOrEqualTo: (id)expression {
-    return [self operatorExpressionWithType: NSLessThanOrEqualToPredicateOperatorType
-                          againstExpression: expression];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLLessThanOrEqualToBinaryExpType];
 }
 
 
 - (CBLQueryExpression*) notLessThanOrEqualTo: (id)expression {
-    return [self operatorExpressionWithType: NSGreaterThanPredicateOperatorType
-                          againstExpression: expression];
-
+    return [self greaterThan: expression];
 }
 
 
 - (CBLQueryExpression*) greaterThan: (id)expression {
-    return [self operatorExpressionWithType: NSGreaterThanPredicateOperatorType
-                          againstExpression: expression];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLGreaterThanBinaryExpType];
 }
 
 
 - (CBLQueryExpression*) notGreaterThan: (id)expression {
-    return [self operatorExpressionWithType: NSLessThanOrEqualToPredicateOperatorType
-                          againstExpression: expression];
+    return [self lessThanOrEqualTo: expression];
 }
 
 
 - (CBLQueryExpression*) greaterThanOrEqualTo: (id)expression {
-    return [self operatorExpressionWithType: NSGreaterThanOrEqualToPredicateOperatorType
-                          againstExpression: expression];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLGreaterThanOrEqualToBinaryExpType];
 }
 
 
 - (CBLQueryExpression*) notGreaterThanOrEqualTo: (id)expression {
-    return [self operatorExpressionWithType: NSLessThanPredicateOperatorType
-                          againstExpression: expression];
+    return [self lessThan: expression];
 }
 
 
 - (CBLQueryExpression*) equalTo: (id)expression {
-    return [self operatorExpressionWithType: NSEqualToPredicateOperatorType
-                          againstExpression: expression];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLEqualToBinaryExpType];
 }
 
 
 - (CBLQueryExpression*) notEqualTo: (id)expression {
-    return [self operatorExpressionWithType: NSNotEqualToPredicateOperatorType
-                          againstExpression: expression];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLNotEqualToBinaryExpType];
 }
 
 
@@ -162,14 +156,14 @@
 
 
 - (CBLQueryExpression*) and: (id)expression {
-    return [[CBLQueryCompoundPredicate alloc] initWithType: NSAndPredicateType
-                                             subpredicates: @[self, expression]];
+    return [[CBLCompoundExpression alloc] initWithExpressions: @[self, expression]
+                                                         type: CBLAndCompundExpType];
 }
 
 
 - (CBLQueryExpression*) or: (id)expression {
-    return [[CBLQueryCompoundPredicate alloc] initWithType: NSOrPredicateType
-                                             subpredicates: @[self, expression]];
+    return [[CBLCompoundExpression alloc] initWithExpressions: @[self, expression]
+                                                         type: CBLOrCompundExpType];
 }
 
 
@@ -177,8 +171,9 @@
 
 
 - (CBLQueryExpression*) like: (id)expression {
-    return [self operatorExpressionWithType: NSLikePredicateOperatorType
-                          againstExpression: expression];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLLikeBinaryExpType];
 }
 
 
@@ -191,11 +186,9 @@
 
 
 - (CBLQueryExpression*) regex: (id)expression {
-    CBLQueryExpression *regexp = [[CBLQueryTypeExpression alloc] initWithFunction: @"REGEXP_LIKE"
-                                                                          operand: self
-                                                                        arguments: @[expression]];
-    return [self operatorExpressionWithType: NSEqualToPredicateOperatorType
-                          againstExpression: regexp];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLRegexLikeBinaryExpType];
 }
 
 
@@ -208,8 +201,9 @@
 
 
 - (CBLQueryExpression*) match: (id)expression {
-    return [self operatorExpressionWithType: NSMatchesPredicateOperatorType
-                          againstExpression: expression];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLMatchesBinaryExpType];
 }
 
 
@@ -222,12 +216,12 @@
 
 
 - (CBLQueryExpression*) isNull {
-    return [self equalTo: nil];
+    return [[CBLUnaryExpression alloc] initWithExpression: self type: CBLNullUnaryExpType];
 }
 
 
 - (CBLQueryExpression*) notNull {
-    return [self notEqualTo: nil];
+    return [[CBLUnaryExpression alloc] initWithExpression: self type: CBLNotNullUnaryExpType];
 }
 
 
@@ -235,12 +229,16 @@
 
 
 - (CBLQueryExpression*) is: (id)expression {
-    return [self equalTo: expression];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLIsBinaryExpType];
 }
 
 
 - (CBLQueryExpression*) isNot: (id)expression {
-    return [self notEqualTo: expression];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: expression
+                                                          type: CBLIsNotBinaryExpType];
 }
 
 
@@ -248,17 +246,11 @@
 
 
 - (CBLQueryExpression*) between: (id)expression1 and: (id)expression2 {
-    CBLQueryExpression* exp1 = $castIf(CBLQueryExpression, expression1);
-    if (!exp1)
-        exp1 = [[CBLQueryTypeExpression alloc] initWithConstantValue: expression1];
-    CBLQueryExpression* exp2 = $castIf(CBLQueryExpression, expression1);
-    if (!exp2)
-        exp2 = [[CBLQueryTypeExpression alloc] initWithConstantValue: expression2];
-    
-    id rhs = [[CBLQueryTypeExpression alloc] initWithAggregateExpressions: @[exp1, exp2]];
-    return [[CBLQueryComparisonPredicate alloc] initWithLeftExpression: self
-                                                       rightExpression: rhs
-                                                                  type: NSBetweenPredicateOperatorType];
+    CBLQueryExpression* aggr =
+        [[CBLAggregateExpression alloc] initWithExpressions: @[expression1, expression2]];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: aggr
+                                                          type: CBLBetweenBinaryExpType];
 }
 
 
@@ -268,10 +260,11 @@
 
 
 - (CBLQueryExpression*) in: (NSArray*)expressions {
-    CBLQueryTypeExpression* rhs = [[CBLQueryTypeExpression alloc] initWithAggregateExpressions: expressions];
-    return [[CBLQueryComparisonPredicate alloc] initWithLeftExpression: self
-                                                       rightExpression: rhs
-                                                                  type: NSInPredicateOperatorType];
+    CBLQueryExpression* aggr =
+    [[CBLAggregateExpression alloc] initWithExpressions: expressions];
+    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
+                                               rightExpression: aggr
+                                                          type: CBLInBinaryExpType];
 }
 
 
@@ -285,214 +278,231 @@
 
 /////
 
+@implementation CBLAggregateExpression
 
-@implementation CBLQueryComparisonPredicate
-
-@synthesize leftExpression=_leftExpression, rightExpression=_rightExpression;
-@synthesize predicateOperatorType=_predicateOperatorType;
-
-
-- (instancetype) initWithLeftExpression: (CBLQueryExpression*)lhs
-                        rightExpression: (CBLQueryExpression*)rhs
-                                   type: (NSPredicateOperatorType)type
-{
-    self = [super initWithNone: nil];
-    if (self) {
-        _leftExpression = lhs;
-        _rightExpression = rhs;
-        _predicateOperatorType = type;
-    }
-    return self;
-}
-
-
-- (NSPredicate*) asNSPredicate {
-    NSExpression* lhs;
-    if ([self.leftExpression respondsToSelector:@selector(asNSExpression)])
-        lhs = [self.leftExpression performSelector: @selector(asNSExpression)];
-    Assert(lhs != nil, @"The LHS expression of the comparison expression is invalid.");
-    
-    NSExpression* rhs;
-    if ([self.rightExpression respondsToSelector:@selector(asNSExpression)])
-        rhs = [self.rightExpression performSelector: @selector(asNSExpression)];
-    Assert(rhs != nil, @"The RHS expression of the comparsion expression is invalid.");
-    
-    return [NSComparisonPredicate predicateWithLeftExpression: lhs
-                                              rightExpression: rhs
-                                                     modifier: NSDirectPredicateModifier
-                                                         type: self.predicateOperatorType
-                                                      options: 0];
-}
-
-
-- (NSString*) description {
-    return [[self asNSPredicate] description];
-}
-
-
-@end
-
-
-/////
-
-
-@implementation CBLQueryCompoundPredicate
-
-@synthesize compoundPredicateType=_compoundPredicateType, subpredicates=_subpredicates;
-
-
-- (instancetype) initWithType: (NSCompoundPredicateType)type subpredicates: (NSArray*)subs {
-    self = [super initWithNone: nil];
-    if (self) {
-        _compoundPredicateType = type;
-        _subpredicates = [subs copy];
-    }
-    return self;
-}
-
-
-- (NSPredicate*) asNSPredicate {
-    NSMutableArray* subs = [NSMutableArray array];
-    for (id s in self.subpredicates) {
-        Assert([s conformsToProtocol: @protocol(CBLNSPredicateCoding)]);
-        [subs addObject: [s asNSPredicate]];
-    }
-    
-    NSPredicate* p = nil;
-    switch (self.compoundPredicateType) {
-        case NSAndPredicateType:
-            p = [NSCompoundPredicate andPredicateWithSubpredicates: subs];
-            break;
-        case NSOrPredicateType:
-            p = [NSCompoundPredicate orPredicateWithSubpredicates: subs];
-            break;
-        default:
-            Assert(subs.count > 0);
-            p = [NSCompoundPredicate notPredicateWithSubpredicate: subs[0]];
-            break;
-    }
-    return p;
-}
-
-
-- (NSString*) description {
-    return [[self asNSPredicate] description];
-}
-
-
-@end
-
-
-/////
-
-
-@implementation CBLQueryTypeExpression
-
-@synthesize expressionType=_expressionType;
-@synthesize constantValue=_constantValue, keyPath=_keyPath;
-@synthesize function=_function, operand=_operand, arguments=_arguments;
 @synthesize subexpressions=_subexpressions;
 
-
-- (instancetype) initWithType: (NSExpressionType)type {
+- (instancetype) initWithExpressions: (NSArray *)subs {
     self = [super initWithNone: nil];
     if (self) {
-        _expressionType = type;
+        _subexpressions = [subs copy];
     }
     return self;
 }
 
+- (id) asJSON {
+    NSMutableArray *json = [NSMutableArray array];
+    for (id exp in _subexpressions) {
+        if ([exp isKindOfClass:[CBLQueryExpression class]])
+            [json addObject: [(CBLQueryExpression *)exp asJSON]];
+        else
+            [json addObject: exp];
+    }
+    return json;
+}
 
-- (instancetype) initWithConstantValue: (id)value {
-    self = [self initWithType: NSConstantValueExpressionType];
+@end
+
+
+@implementation CBLBinaryExpression
+
+@synthesize lhs=_lhs, rhs=_rhs, type=_type;
+
+- (instancetype) initWithLeftExpression:(id)lhs
+                        rightExpression:(id)rhs
+                                   type:(CBLBinaryExpType)type {
+    self = [super initWithNone: nil];
     if (self) {
-        _constantValue = value;
+        _lhs = lhs;
+        _rhs = rhs;
+        _type = type;
     }
     return self;
 }
 
+- (id) asJSON {
+    NSMutableArray *json = [NSMutableArray array];
+    switch (_type) {
+        case CBLAddBinaryExpType:
+            [json addObject: @"+"];
+            break;
+        case CBLBetweenBinaryExpType:
+            [json addObject: @"BETWEEN"];
+            break;
+        case CBLDivideBinaryExpType:
+            [json addObject: @"/"];
+            break;
+        case CBLEqualToBinaryExpType:
+            [json addObject: @"="];
+            break;
+        case CBLGreaterThanBinaryExpType:
+            [json addObject: @">"];
+            break;
+        case CBLGreaterThanOrEqualToBinaryExpType:
+            [json addObject: @">="];
+            break;
+        case CBLInBinaryExpType:
+            [json addObject: @"IN"];
+            break;
+        case CBLIsBinaryExpType:
+            [json addObject: @"IS"];
+            break;
+        case CBLIsNotBinaryExpType:
+            [json addObject: @"IS NOT"];
+            break;
+        case CBLLessThanBinaryExpType:
+            [json addObject: @"<"];
+            break;
+        case CBLLessThanOrEqualToBinaryExpType:
+            [json addObject: @"<="];
+            break;
+        case CBLLikeBinaryExpType:
+            [json addObject: @"LIKE"];
+            break;
+        case CBLMatchesBinaryExpType:
+            [json addObject: @"MATCH"];
+            break;
+        case CBLModulusBinaryExpType:
+            [json addObject: @"%"];
+            break;
+        case CBLMultiplyBinaryExpType:
+            [json addObject: @"*"];
+            break;
+        case CBLNotEqualToBinaryExpType:
+            [json addObject: @"!="];
+            break;
+        case CBLRegexLikeBinaryExpType:
+            [json addObject: @"regexp_like()"];
+            break;
+        case CBLSubtractBinaryExpType:
+            [json addObject: @"-"];
+            break;
+        default:
+            break;
+    }
+    
+    if ([_lhs isKindOfClass: [CBLQueryExpression class]])
+        [json addObject: [(CBLQueryExpression *)_lhs asJSON]];
+    else
+        [json addObject: _lhs];
+    
+    if ([_rhs isKindOfClass: [CBLAggregateExpression class]])
+        [json addObjectsFromArray: [(CBLAggregateExpression*)_rhs asJSON]];
+    else if ([_rhs isKindOfClass: [CBLQueryExpression class]])
+        [json addObject: [(CBLQueryExpression *)_rhs asJSON]];
+    else
+        [json addObject: _rhs];
+    
+    return json;
+}
 
-- (instancetype) initWithKeypath: (NSString*)keyPath {
-    self = [self initWithType: NSKeyPathExpressionType];
+@end
+
+@implementation CBLCompoundExpression
+
+@synthesize subexpressions=_subexpressions, type=_type;
+
+- (instancetype) initWithExpressions:(NSArray *)subs type:(CBLCompoundExpType)type {
+    self = [super initWithNone: nil];
+    if (self) {
+        _subexpressions = [subs copy];
+        _type = type;
+    }
+    return self;
+}
+
+- (id) asJSON {
+    NSMutableArray *json = [NSMutableArray array];
+    switch (self.type) {
+        case CBLAndCompundExpType:
+            [json addObject: @"AND"];
+            break;
+        case CBLOrCompundExpType:
+            [json addObject: @"OR"];
+            break;
+        case CBLNotCompundExpType:
+            [json addObject: @"NOT"];
+            break;
+        default:
+            break;
+    }
+    
+    for (id exp in _subexpressions) {
+        if ([exp isKindOfClass: [CBLQueryExpression class]])
+            [json addObject: [(CBLQueryExpression *)exp asJSON]];
+        else
+            [json addObject: exp];
+    }
+    return json;
+}
+
+@end
+
+@implementation CBLKeyPathExpression
+
+@synthesize keyPath=_keyPath;
+
+- (instancetype) initWithKeyPath:(NSString *)keyPath {
+    self = [super initWithNone: nil];
     if (self) {
         _keyPath = [keyPath copy];
     }
     return self;
 }
 
+- (id) asJSON {
+    NSMutableArray *json = [NSMutableArray array];
+    if ([_keyPath hasPrefix: @"rank("]) {
+        [json addObject: @"rank()"];
+        [json addObject: @[@".",
+                           [_keyPath substringWithRange:
+                                NSMakeRange(5, _keyPath.length - 6)]]];
+    } else
+        [json addObject: [NSString stringWithFormat: @".%@", _keyPath]];
+    
+    return json;
+}
 
-- (instancetype) initWithFunction: (NSString*)function
-                          operand:(CBLQueryExpression *)operand
-                        arguments:(NSArray *)arguments
-{
-    self = [self initWithType: NSFunctionExpressionType];
+@end
+
+
+@implementation CBLUnaryExpression
+
+@synthesize operand=_operand, type=_type;
+
+- (instancetype) initWithExpression:(id)operand type:(CBLUnaryExpType)type {
     if (self) {
-        _function = [function copy];
         _operand = operand;
-        _arguments = [arguments copy];
+        _type = type;
     }
     return self;
 }
 
-
-- (instancetype) initWithAggregateExpressions: (NSArray*)subexpressions {
-    self = [self initWithType: NSAggregateExpressionType];
-    if (self) {
-        _subexpressions = [subexpressions copy];
-    }
-    return self;
-}
-
-
-- (NSExpression*) asNSExpression {
-    NSExpression* exp = nil;
-    switch (self.expressionType) {
-        case NSConstantValueExpressionType:
-            exp = [NSExpression expressionForConstantValue: self.constantValue];
+- (id) asJSON {
+    NSMutableArray *json = [NSMutableArray array];
+    switch (_type) {
+        case CBLMissingUnaryExpType:
+            [json addObject: @"IS MISSING"];
             break;
-        case NSKeyPathExpressionType:
-            Assert(self.keyPath);
-            exp = [NSExpression expressionForKeyPath: self.keyPath];
+        case CBLNotMissingUnaryExpType:
+            [json addObject: @"IS NOT MISSING"];
             break;
-        case NSFunctionExpressionType: {
-            NSArray* args = [self toNSExpressionArray: self.arguments];
-            if (self.operand && [self.operand respondsToSelector:@selector(asNSExpression)]) {
-                NSExpression* operandExp = [self.operand performSelector: @selector(asNSExpression)];
-                exp = [NSExpression expressionForFunction: operandExp
-                                             selectorName: self.function
-                                                arguments: args];
-            } else
-                exp = [NSExpression expressionForFunction: self.function arguments: args];
+        case CBLNotNullUnaryExpType:
+            [json addObject: @"IS NOT NULL"];
             break;
-        }
-        case NSAggregateExpressionType: {
-            NSArray* subs = [self toNSExpressionArray: self.subexpressions];
-            exp = [NSExpression expressionForAggregate: subs];
+        case CBLNullUnaryExpType:
+            [json addObject: @"IS NULL"];
             break;
-        }
         default:
-            Assert(false, @"Unsupported expression type: %d", self.expressionType);
             break;
     }
-    return exp;
+    
+    if ([_operand isKindOfClass: [CBLQueryExpression class]])
+        [json addObject: [(CBLQueryExpression *)_operand asJSON]];
+    else
+        [json addObject: _operand];
+    
+    return json;
 }
-
-
-- (NSArray*) toNSExpressionArray: (NSArray*)expressions {
-    NSMutableArray* array = [NSMutableArray array];
-    for (id exp in expressions) {
-        if ([exp respondsToSelector:@selector(asNSExpression)])
-            [array addObject: [exp performSelector: @selector(asNSExpression)]];
-        else
-            [array addObject: [NSExpression expressionForConstantValue: exp]];
-    }
-    return array;
-}
-
-
-- (NSString*) description {
-    return [[self asNSExpression] description];
-}
-
 
 @end

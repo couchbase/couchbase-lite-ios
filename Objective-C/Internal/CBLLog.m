@@ -11,6 +11,7 @@
 
 
 C4LogDomain kCBLDatabaseLogDomain;
+C4LogDomain kCBLQueryLogDomain;
 
 static const char* kLevelNames[6] = {"Debug", "Verbose", "Info", "WARNING", "ERROR", "none"};
 
@@ -58,6 +59,7 @@ void CBLLog_Init() {
         NSLog(@"CouchbaseLite default log level is %s and above", kLevelNames[defaultLevel]);
 
     kCBLDatabaseLogDomain = c4log_getDomain("Database", true);
+    kCBLQueryLogDomain = c4log_getDomain("Query", true);
 
     // Now map user defaults starting with CBLLog... to log levels:
     NSDictionary* defaults = [NSUserDefaults.standardUserDefaults dictionaryRepresentation];

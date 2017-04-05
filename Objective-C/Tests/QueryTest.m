@@ -246,8 +246,7 @@
 }
 
 
-- (void) failingTest_WhereLike {
-    // https://github.com/couchbase/couchbase-lite-ios/issues/1667
+- (void) test_WhereLike {
     [self loadJSONResource: @"names_100"];
     
     CBLQueryExpression* where = [[CBLQueryExpression property: @"name.first"] like: @"%Mar%"];
@@ -268,8 +267,7 @@
 }
 
 
-- (void) failingTest_WhereRegex {
-    // https://github.com/couchbase/couchbase-lite-ios/issues/1668
+- (void) test_WhereRegex {
     [self loadJSONResource: @"names_100"];
     
     CBLQueryExpression* where = [[CBLQueryExpression property: @"name.first"] regex: @"^Mar.*"];
