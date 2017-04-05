@@ -19,8 +19,6 @@ NS_ASSUME_NONNULL_BEGIN
 #define mkError(ERR, FMT, ...)  MYReturnError(ERR, kBadQuerySpecError, CBLErrorDomain, \
                                               FMT, ## __VA_ARGS__)
 
-extern C4LogDomain QueryLog;
-
 
 @interface CBLPredicateQuery ()
 

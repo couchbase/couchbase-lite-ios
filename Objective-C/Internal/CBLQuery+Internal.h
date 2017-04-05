@@ -12,6 +12,7 @@
 #import "CBLQuerySelect.h"
 #import "CBLQueryExpression.h"
 #import "CBLQueryOrderBy.h"
+#import "CBLPredicateQuery+Internal.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -19,6 +20,8 @@ NS_ASSUME_NONNULL_BEGIN
 /////
 
 @interface CBLQuery ()
+
+@property (nonatomic, readonly) CBLDatabase* database;
 
 @property (readonly, nonatomic) CBLQuerySelect* select;
 
@@ -70,74 +73,90 @@ NS_ASSUME_NONNULL_BEGIN
 /////
 
 @interface CBLQueryExpression ()
-
 /** This constructor is currently for hiding the public -init: */
 - (instancetype) initWithNone: (nullable id)none;
+- (id) asJSON;
+@end
+
+@interface CBLAggregateExpression: CBLQueryExpression
+
+@property(readonly, copy, nonatomic) NSArray* subexpressions;
+
+- (instancetype)initWithExpressions: (NSArray*)subs;
 
 @end
 
-/////
+typedef NS_ENUM(NSInteger, CBLBinaryExpType) {
+    CBLAddBinaryExpType,
+    CBLBetweenBinaryExpType,
+    CBLDivideBinaryExpType,
+    CBLEqualToBinaryExpType,
+    CBLGreaterThanBinaryExpType,
+    CBLGreaterThanOrEqualToBinaryExpType,
+    CBLInBinaryExpType,
+    CBLIsBinaryExpType,
+    CBLIsNotBinaryExpType,
+    CBLLessThanBinaryExpType,
+    CBLLessThanOrEqualToBinaryExpType,
+    CBLLikeBinaryExpType,
+    CBLMatchesBinaryExpType,
+    CBLModulusBinaryExpType,
+    CBLMultiplyBinaryExpType,
+    CBLNotEqualToBinaryExpType,
+    CBLSubtractBinaryExpType,
+    CBLRegexLikeBinaryExpType
+};
 
-@protocol CBLNSPredicateCoding <NSObject>
-- (NSPredicate*) asNSPredicate;
+@interface CBLBinaryExpression: CBLQueryExpression
+
+@property(readonly, nonatomic) id lhs;
+@property(readonly, nonatomic) id rhs;
+@property(readonly, nonatomic) CBLBinaryExpType type;
+
+- (instancetype) initWithLeftExpression: (id)lhs
+                        rightExpression: (id)rhs
+                                   type: (CBLBinaryExpType)type;
+
 @end
 
-@interface CBLQueryComparisonPredicate: CBLQueryExpression <CBLNSPredicateCoding>
+typedef NS_ENUM(NSInteger, CBLCompoundExpType) {
+    CBLAndCompundExpType,
+    CBLOrCompundExpType,
+    CBLNotCompundExpType
+};
 
-@property(readonly, nonatomic) CBLQueryExpression* leftExpression;
-@property(readonly, nonatomic) CBLQueryExpression* rightExpression;
-@property(readonly, nonatomic) NSPredicateOperatorType predicateOperatorType;
+@interface CBLCompoundExpression: CBLQueryExpression
 
-- (instancetype) initWithLeftExpression: (CBLQueryExpression*)lhs
-                        rightExpression: (CBLQueryExpression*)rhs
-                                   type: (NSPredicateOperatorType)type;
+@property(readonly, copy, nonatomic) NSArray* subexpressions;
+@property(readonly, nonatomic) CBLCompoundExpType type;
 
-@end
 
-/////
-
-@interface CBLQueryCompoundPredicate: CBLQueryExpression <CBLNSPredicateCoding>
-
-@property(readonly, nonatomic) NSCompoundPredicateType compoundPredicateType;
-@property(readonly, copy, nonatomic) NSArray* subpredicates;
-
-- (instancetype)initWithType: (NSCompoundPredicateType)type subpredicates: (NSArray*)subs;
+- (instancetype)initWithExpressions: (NSArray*)subs type: (CBLCompoundExpType)type;
 
 @end
 
-/////
 
-@protocol CBLNSExpressionCoding <NSObject>
-- (NSExpression*) asNSExpression;
+@interface CBLKeyPathExpression : CBLQueryExpression
+
+@property(readonly, copy, nonatomic) NSString* keyPath;
+
+- (instancetype)initWithKeyPath: (NSString*)keyPath;
+
 @end
 
-@interface CBLQueryTypeExpression: CBLQueryExpression <CBLNSExpressionCoding>
+typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
+    CBLMissingUnaryExpType,
+    CBLNotMissingUnaryExpType,
+    CBLNotNullUnaryExpType,
+    CBLNullUnaryExpType
+};
 
-@property(readonly, nonatomic) NSExpressionType expressionType;
+@interface CBLUnaryExpression : CBLQueryExpression
 
-// Constant Value Expression:
-@property(nullable, readonly, nonatomic) id constantValue;
+@property(readonly, nonatomic) CBLUnaryExpType type;
+@property(readonly, nonatomic) id operand;
 
-// Keypath Expression:
-@property(nullable, readonly, copy, nonatomic) NSString* keyPath;
-
-// Functional Expression:
-@property(nullable, readonly, copy, nonatomic) NSString* function;
-@property(nullable, readonly, copy, nonatomic) NSArray*arguments;
-@property(nullable, readonly, nonatomic) CBLQueryExpression* operand;
-
-// Aggregrate Expression:
-@property(nullable, readonly, copy, nonatomic) NSArray*subexpressions;
-
-- (instancetype) initWithConstantValue: (id)value;
-
-- (instancetype) initWithKeypath: (NSString*)keyPath;
-
-- (instancetype) initWithFunction: (NSString*)function
-                          operand: (nullable CBLQueryExpression*)operand
-                        arguments: (nullable NSArray*)arguments;
-
-- (instancetype) initWithAggregateExpressions: (NSArray*)subexpressions;
+- (instancetype)initWithExpression: (id)operand type: (CBLUnaryExpType)type;
 
 @end
 
@@ -149,7 +168,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithOrders: (nullable NSArray*)orders;
 
-- (NSArray*) asSortDescriptors;
+- (id) asJSON;
 
 @end
 
@@ -162,5 +181,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+@interface CBLQueryResultSet: CBLQueryEnumerator
+
+- (instancetype) initWithTheQuery: (CBLQuery*)query
+                          c4Query: (C4Query*)c4Query
+                       enumerator: (C4QueryEnumerator*)e;
+
+@property (readonly, nonatomic) CBLDatabase* database;
+@property (readonly, nonatomic) C4Query* c4Query;
+
+@end
 
 NS_ASSUME_NONNULL_END

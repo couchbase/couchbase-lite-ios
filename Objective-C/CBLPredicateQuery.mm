@@ -20,13 +20,8 @@ extern "C" {
 }
 
 
-C4LogDomain kCBLQueryLogDomain;
-
-
 @interface CBLDocEnumerator : CBLQueryEnumerator
 @end
-
-
 
 
 @implementation CBLPredicateQuery
@@ -39,12 +34,6 @@ C4LogDomain kCBLQueryLogDomain;
 @synthesize having=_having, distinct=_distinct, returning=_returning;
 @synthesize offset=_offset, limit=_limit, parameters=_parameters;
 
-
-+ (void) initialize {
-    if (self == [CBLPredicateQuery class]) {
-        kCBLQueryLogDomain = c4log_getDomain("Query", true);
-    }
-}
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db
