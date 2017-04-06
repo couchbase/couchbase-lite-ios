@@ -158,8 +158,12 @@
         // Using iterator:
         _generating = YES;
         CBLQueryRow* row = [self generateNextRow];
-        if (row)
+        if (row) {
             [row moveToDatabase: _database view: _view];
+            
+            // increment next row index, as this is used by currentIndex
+            _nextRowIndex++;
+        }
         return row;
     }
 }
@@ -192,6 +196,10 @@
 
 - (CBLQueryRow*) rowAtIndex: (NSUInteger)index {
     return self.allObjects[index];
+}
+
+- (NSInteger) currentRowIndex {
+    return ((NSInteger)_nextRowIndex) - 1;
 }
 
 

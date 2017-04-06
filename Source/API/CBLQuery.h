@@ -203,6 +203,9 @@ typedef NS_ENUM(unsigned, CBLIndexUpdateMode) {
 /** Random access to a row in the result */
 - (CBLQueryRow*) rowAtIndex: (NSUInteger)index;
 
+/** Returns the zero-based index of the last read row. If no rows have been read, returns -1 */
+- (NSInteger) currentRowIndex;
+
 /** Re-sorts the rows based on the given sort descriptors.
     This operation requires that all rows be loaded into memory, so you can't have previously
     called -nextObject, -nextRow or for...in on this enumerator. (But it's fine to use them
