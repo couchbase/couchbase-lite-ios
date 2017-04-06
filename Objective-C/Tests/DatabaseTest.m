@@ -98,4 +98,56 @@
 }
 
 
+#if TARGET_OS_IPHONE
+#if !TARGET_IPHONE_SIMULATOR
+- (void) testFileProtection {
+    NSError* error;
+    NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent:
+                     @"CouchbaseLite-test-file-protection"];
+    [[NSFileManager defaultManager] removeItemAtPath:dir error: nil];
+    
+    // Check default file protection, NSFileProtectionCompleteUnlessOpen:
+    CBLDatabaseOptions* options = [CBLDatabaseOptions defaultOptions];
+    options.directory = dir;
+    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" options: options error: &error];
+    
+    // Add a document with a blob:
+    CBLDocument* doc = [db document];
+    doc[@"foo"] = @"bar";
+    NSString* str = @"This is a blob.";
+    NSData* data = [str dataUsingEncoding: NSUTF8StringEncoding];
+    doc[@"blob"] = [[CBLBlob alloc] initWithContentType :@"text/plain" data :data error: &error];
+    [doc save: &error];
+    
+    [self verifyFileProtection: NSFileProtectionCompleteUnlessOpen forDir: dir];
+    Assert([db close: &error], @"Couldn't close db: %@", error);
+    
+    // Change file protection to NSFileProtectionNone:
+    options.fileProtection = NSDataWritingFileProtectionNone;
+    db = [[CBLDatabase alloc] initWithName: @"db" options: options error: &error];
+    [self verifyFileProtection: NSFileProtectionNone forDir: dir];
+    
+    // Clean up:
+    Assert([db close: &error], @"Couldn't close db: %@", error);
+    Assert([[NSFileManager defaultManager]
+            removeItemAtPath:dir error: &error], @"Cannot delete directory: %@", error);
+}
+
+
+- (void) verifyFileProtection: (NSFileProtectionType)protection forDir: (NSString*)dir {
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    NSArray* paths = [[fmgr subpathsAtPath: dir] arrayByAddingObject: @"."];
+    for (NSString* path in paths) {
+        NSString* absPath = [dir stringByAppendingPathComponent: path];
+        id p = [[fmgr attributesOfItemAtPath: absPath error: nil] objectForKey: NSFileProtectionKey];
+        // Not checking -shm file as it will have NSFileProtectionNone by default regardless of its
+        // parent directory projection level. However, the -shm file contains non-sensitive info.
+        if (![path hasSuffix:@"-shm"])
+            AssertEqual(p, protection);
+    }
+}
+#endif
+#endif
+
+
 @end

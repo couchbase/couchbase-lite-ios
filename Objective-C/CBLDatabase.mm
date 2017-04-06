@@ -46,6 +46,7 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
 - (instancetype) copyWithZone:(NSZone *)zone {
     CBLDatabaseOptions* o = [[self.class alloc] init];
     o.directory = self.directory;
+    o.fileProtection = self.fileProtection;
     o.encryptionKey = self.encryptionKey;
     o.readOnly = self.readOnly;
     return o;
@@ -161,11 +162,11 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
          fileProtection: (NSDataWritingOptions)fileProtection
                   error: (NSError**)outError
 {
-    NSDictionary* attributes = nil;
+    NSFileProtectionType protection;
+    NSDictionary* attributes;
 #if TARGET_OS_IPHONE
     // Set the iOS file protection mode of the manager's top-level directory.
     // This mode will be inherited by all files created in that directory.
-    NSString* protection;
     switch (fileProtection & NSDataWritingFileProtectionMask) {
         case NSDataWritingFileProtectionNone:
             protection = NSFileProtectionNone;
@@ -184,25 +185,80 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 #endif
     
     NSError* error;
-    if (![[NSFileManager defaultManager] createDirectoryAtPath: dir
-                                   withIntermediateDirectories: YES
-                                                    attributes: attributes
-                                                         error: &error]) {
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    if (![fmgr createDirectoryAtPath: dir
+         withIntermediateDirectories: YES
+                          attributes: attributes
+                               error: &error]) {
         if (!CBLIsFileExistsError(error)) {
             if (outError) *outError = error;
             return NO;
         }
     }
     
-    if (attributes) {
-        // TODO: Optimization - Check the existing file protection level.
-        if (![[NSFileManager defaultManager] setAttributes: attributes
-                                              ofItemAtPath: dir
-                                                     error: outError])
-            return NO;
+    // Check if need to change file protection level or not:
+    if (protection) {
+        id curProt = [[fmgr attributesOfItemAtPath: dir error: nil] objectForKey: NSFileProtectionKey];
+        if (![curProt isEqual: protection]) {
+            // Change file protection level:
+            if (![self changeFileProtection: protection onDir: dir error: outError]) {
+                // Rollback:
+                [self changeFileProtection: curProt onDir: dir error: nil];
+                return NO;
+            }
+        }
     }
     
     return YES;
+}
+
+
+- (BOOL) changeFileProtection: (NSFileProtectionType)prot
+                        onDir: (NSString*)dir error: (NSError**)outError
+{
+    BOOL success = YES;
+    NSError *error;
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    NSArray* paths = [[fmgr subpathsAtPath: dir] arrayByAddingObject: @"."];
+    for (NSString* path in paths) {
+        NSString* absPath = [dir stringByAppendingPathComponent: path];
+        if (![absPath hasSuffix:@"-shm"]) {
+            // Not changing -shm file as it has NSFileProtectionNone by default regardless
+            // of its parent directory's file protection level. The -shm file contains
+            // non-sensitive information.
+            NSNumber* curPermission = [[fmgr attributesOfItemAtPath: absPath error: &error]
+                                       objectForKey: NSFilePosixPermissions];
+            if (!curPermission) {
+                CBLWarn(Default, @"Couldn't read file permission for %@: %@", absPath, error);
+                success = NO;
+                break;
+            }
+            
+            NSMutableDictionary* attributes = $mdict({NSFileProtectionKey, prot});
+            BOOL switchPermission = NO;
+            if ([curPermission integerValue] < 384) { // 384 == rw-------
+                attributes[NSFilePosixPermissions] = @384;
+                switchPermission = YES;
+            }
+            
+            success = [fmgr setAttributes: attributes ofItemAtPath: absPath error: &error];
+            if (!success)
+                CBLWarn(Default, @"Couldn't change file attributes for %@: %@", absPath, error);
+            
+            if (switchPermission) {
+                if (![fmgr setAttributes: @{NSFilePosixPermissions: curPermission}
+                            ofItemAtPath: absPath error: &error]) {
+                    CBLWarn(Default, @"Couldn't rollback file permission for %@: %@", absPath, error);
+                    success = NO;
+                }
+            }
+            if (!success)
+                break;
+        }
+    }
+    
+    if (outError) *outError = error;
+    return success;
 }
 
 
