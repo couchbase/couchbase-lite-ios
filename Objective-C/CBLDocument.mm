@@ -66,6 +66,9 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 }
 
 
+#pragma mark - API:
+
+
 - (BOOL) exists {
     return (_c4doc->flags & kExists) != 0;
 }

@@ -96,6 +96,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
+#pragma mark - API:
+
+
 - (instancetype) initWithName: (NSString*)name
                         error: (NSError**)outError {
     return [self initWithName: name
@@ -117,6 +120,22 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         _activeReplications = [NSMutableSet new];
     }
     return self;
+}
+
+
+- (instancetype) copyWithZone: (NSZone*)zone {
+    return [[[self class] alloc] initWithName: _name options: _options error: nil];
+}
+
+
+- (void) dealloc {
+    c4dbobs_free(_obs);
+    c4db_free(_c4db);
+}
+
+
+- (NSString*) description {
+    return [NSString stringWithFormat: @"%@[%@]", self.class, _name];
 }
 
 
@@ -157,71 +176,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-- (BOOL) setupDirectory: (NSString*)dir
-         fileProtection: (NSDataWritingOptions)fileProtection
-                  error: (NSError**)outError
-{
-    NSDictionary* attributes = nil;
-#if TARGET_OS_IPHONE
-    // Set the iOS file protection mode of the manager's top-level directory.
-    // This mode will be inherited by all files created in that directory.
-    NSString* protection;
-    switch (fileProtection & NSDataWritingFileProtectionMask) {
-        case NSDataWritingFileProtectionNone:
-            protection = NSFileProtectionNone;
-            break;
-        case NSDataWritingFileProtectionComplete:
-            protection = NSFileProtectionComplete;
-            break;
-        case NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication:
-            protection = NSFileProtectionCompleteUntilFirstUserAuthentication;
-            break;
-        default:
-            protection = NSFileProtectionCompleteUnlessOpen;
-            break;
-    }
-    attributes = @{NSFileProtectionKey: protection};
-#endif
-    
-    NSError* error;
-    if (![[NSFileManager defaultManager] createDirectoryAtPath: dir
-                                   withIntermediateDirectories: YES
-                                                    attributes: attributes
-                                                         error: &error]) {
-        if (!CBLIsFileExistsError(error)) {
-            if (outError) *outError = error;
-            return NO;
-        }
-    }
-    
-    if (attributes) {
-        // TODO: Optimization - Check the existing file protection level.
-        if (![[NSFileManager defaultManager] setAttributes: attributes
-                                              ofItemAtPath: dir
-                                                     error: outError])
-            return NO;
-    }
-    
-    return YES;
-}
-
-
-- (instancetype) copyWithZone: (NSZone*)zone {
-    return [[[self class] alloc] initWithName: _name options: _options error: nil];
-}
-
-
-- (void) dealloc {
-    c4dbobs_free(_obs);
-    c4db_free(_c4db);
-}
-
-
-- (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@]", self.class, _name];
-}
-
-
 - (NSString*) path {
     return _c4db != nullptr ? sliceResult2FilesystemPath(c4db_getPath(_c4db)) : nil;
 }
@@ -249,11 +203,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     _obs = nullptr;
 
     return YES;
-}
-
-
-- (BOOL) mustBeOpen: (NSError**)outError {
-    return _c4db != nullptr || convertError({LiteCoreDomain, kC4ErrorNotOpen}, outError);
 }
 
 
@@ -331,126 +280,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-#pragma mark - INTERNAL
-
-
-- (void) document: (CBLDocument*)doc hasUnsavedChanges: (bool)unsaved {
-    if (unsaved)
-        [_unsavedDocuments addObject: doc];
-    else
-        [_unsavedDocuments removeObject: doc];
-}
-
-
-#pragma mark - PRIVATE
-
-
-static NSString* defaultDirectory() {
-    NSSearchPathDirectory dirID = NSApplicationSupportDirectory;
-#if TARGET_OS_TV
-    dirID = NSCachesDirectory; // Apple TV only allows apps to store data in the Caches directory
-#endif
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(dirID, NSUserDomainMask, YES);
-    NSString* path = paths[0];
-#if !TARGET_OS_IPHONE
-    NSString* bundleID = [[NSBundle mainBundle] bundleIdentifier];
-    NSCAssert(bundleID, @"No bundle ID");
-    path = [path stringByAppendingPathComponent: bundleID];
-#endif
-    return [path stringByAppendingPathComponent: @"CouchbaseLite"];
-}
-
-
-static NSString* databasePath(NSString* name, NSString* dir) {
-    name = [[name stringByReplacingOccurrencesOfString: @"/" withString: @":"]
-            stringByAppendingPathExtension: kDBExtension];
-    NSString* path = [dir stringByAppendingPathComponent: name];
-    return path.stringByStandardizingPath;
-}
-
-
-- (void)postDatabaseChanged {
-    if (!_obs || !_c4db || c4db_isInTransaction(_c4db))
-        return;
-
-    const uint32_t kMaxChanges = 100u;
-    C4DatabaseChange changes[kMaxChanges];
-    C4SequenceNumber lastSequence = 0;
-    bool external = false;
-    uint32_t nChanges = 0u;
-    NSMutableArray* docIDs = [NSMutableArray new];
-    do {
-        // Read changes in batches of kMaxChanges:
-        bool newExternal;
-        nChanges = c4dbobs_getChanges(_obs, changes, kMaxChanges, &newExternal);
-        if (nChanges == 0 || external != newExternal || docIDs.count > 1000) {
-            if(docIDs.count > 0) {
-                // Only notify if there are actually changes to send
-                NSDictionary *userInfo = @{kCBLDatabaseChangesUserInfoKey: docIDs,
-                                           kCBLDatabaseLastSequenceUserInfoKey: @(lastSequence),
-                                           kCBLDatabaseIsExternalUserInfoKey: @(external)};
-                [[NSNotificationCenter defaultCenter] postNotificationName:kCBLDatabaseChangeNotification object:self userInfo:userInfo];
-                docIDs = [NSMutableArray new];
-            }
-        }
-
-        external = newExternal;
-        for(uint32_t i = 0; i < nChanges; i++) {
-            NSString *docID =slice2string(changes[i].docID);
-            [docIDs addObject:docID];
-            if(external) {
-                [[_documents objectForKey:docID] changedExternally];
-            }
-        }
-        if (nChanges > 0)
-            lastSequence = changes[nChanges-1].sequence;
-    } while(nChanges > 0);
-}
-
-
-- (C4BlobStore*) getBlobStore: (NSError**)outError {
-    if (![self mustBeOpen: outError])
-        return nil;
-    C4Error err;
-    C4BlobStore *blobStore = c4db_getBlobStore(_c4db, &err);
-    if (!blobStore)
-        convertError(err, outError);
-    return blobStore;
-}
-
-
-#pragma mark - PRIVATE: DOCUMENT
-
-
-- (NSString*) generateDocID {
-    return CBLCreateUUID();
-}
-
-
-- (CBLDocument*) documentWithID: (NSString*)docID
-                     mustExist: (bool)mustExist
-                         error: (NSError**)outError
-{
-    CBLDocument *doc = [_documents objectForKey: docID];
-    if (!doc) {
-        doc = [[CBLDocument alloc] initWithDatabase: self docID: docID
-                                          mustExist: mustExist
-                                              error: outError];
-        if (!doc)
-            return nil;
-        [_documents setObject: doc forKey: docID];
-    } else {
-        if (mustExist && !doc.exists) {
-            // Don't return a pre-instantiated CBLDocument if it doesn't exist
-            convertError(C4Error{LiteCoreDomain, kC4ErrorNotFound},  outError);
-            return nil;
-        }
-    }
-    return doc;
-}
-
-
-#pragma mark - QUERIES:
+#pragma mark - API: QUERIES:
 
 
 - (NSEnumerator<CBLDocument*>*) allDocuments {
@@ -493,7 +323,7 @@ static NSString* databasePath(NSString* name, NSString* dir) {
                             (C4IndexType)type,
                             (const C4IndexOptions*)options,
                             &c4err)
-                || convertError(c4err, outError);
+    || convertError(c4err, outError);
 }
 
 
@@ -506,7 +336,179 @@ static NSString* databasePath(NSString* name, NSString* dir) {
         return NO;
     C4Error c4err;
     return c4db_deleteIndex(_c4db, {json.bytes, json.length}, (C4IndexType)type, &c4err)
-            || convertError(c4err, outError);
+    || convertError(c4err, outError);
+}
+
+
+#pragma mark - INTERNAL
+
+
+- (void) document: (CBLDocument*)doc hasUnsavedChanges: (bool)unsaved {
+    if (unsaved)
+        [_unsavedDocuments addObject: doc];
+    else
+        [_unsavedDocuments removeObject: doc];
+}
+
+
+#pragma mark - PRIVATE
+
+
+static NSString* defaultDirectory() {
+    NSSearchPathDirectory dirID = NSApplicationSupportDirectory;
+#if TARGET_OS_TV
+    dirID = NSCachesDirectory; // Apple TV only allows apps to store data in the Caches directory
+#endif
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(dirID, NSUserDomainMask, YES);
+    NSString* path = paths[0];
+#if !TARGET_OS_IPHONE
+    NSString* bundleID = [[NSBundle mainBundle] bundleIdentifier];
+    NSCAssert(bundleID, @"No bundle ID");
+    path = [path stringByAppendingPathComponent: bundleID];
+#endif
+    return [path stringByAppendingPathComponent: @"CouchbaseLite"];
+}
+
+
+static NSString* databasePath(NSString* name, NSString* dir) {
+    name = [[name stringByReplacingOccurrencesOfString: @"/" withString: @":"]
+            stringByAppendingPathExtension: kDBExtension];
+    NSString* path = [dir stringByAppendingPathComponent: name];
+    return path.stringByStandardizingPath;
+}
+
+
+- (BOOL) setupDirectory: (NSString*)dir
+         fileProtection: (NSDataWritingOptions)fileProtection
+                  error: (NSError**)outError
+{
+    NSDictionary* attributes = nil;
+#if TARGET_OS_IPHONE
+    // Set the iOS file protection mode of the manager's top-level directory.
+    // This mode will be inherited by all files created in that directory.
+    NSString* protection;
+    switch (fileProtection & NSDataWritingFileProtectionMask) {
+        case NSDataWritingFileProtectionNone:
+            protection = NSFileProtectionNone;
+            break;
+        case NSDataWritingFileProtectionComplete:
+            protection = NSFileProtectionComplete;
+            break;
+        case NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication:
+            protection = NSFileProtectionCompleteUntilFirstUserAuthentication;
+            break;
+        default:
+            protection = NSFileProtectionCompleteUnlessOpen;
+            break;
+    }
+    attributes = @{NSFileProtectionKey: protection};
+#endif
+    
+    NSError* error;
+    if (![[NSFileManager defaultManager] createDirectoryAtPath: dir
+                                   withIntermediateDirectories: YES
+                                                    attributes: attributes
+                                                         error: &error]) {
+        if (!CBLIsFileExistsError(error)) {
+            if (outError) *outError = error;
+            return NO;
+        }
+    }
+    
+    if (attributes) {
+        // TODO: Optimization - Check the existing file protection level.
+        if (![[NSFileManager defaultManager] setAttributes: attributes
+                                              ofItemAtPath: dir
+                                                     error: outError])
+            return NO;
+    }
+    
+    return YES;
+}
+
+
+- (void)postDatabaseChanged {
+    if (!_obs || !_c4db || c4db_isInTransaction(_c4db))
+        return;
+
+    const uint32_t kMaxChanges = 100u;
+    C4DatabaseChange changes[kMaxChanges];
+    C4SequenceNumber lastSequence = 0;
+    bool external = false;
+    uint32_t nChanges = 0u;
+    NSMutableArray* docIDs = [NSMutableArray new];
+    do {
+        // Read changes in batches of kMaxChanges:
+        bool newExternal;
+        nChanges = c4dbobs_getChanges(_obs, changes, kMaxChanges, &newExternal);
+        if (nChanges == 0 || external != newExternal || docIDs.count > 1000) {
+            if(docIDs.count > 0) {
+                // Only notify if there are actually changes to send
+                NSDictionary *userInfo = @{kCBLDatabaseChangesUserInfoKey: docIDs,
+                                           kCBLDatabaseLastSequenceUserInfoKey: @(lastSequence),
+                                           kCBLDatabaseIsExternalUserInfoKey: @(external)};
+                [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDatabaseChangeNotification
+                                                                    object: self
+                                                                  userInfo: userInfo];
+                docIDs = [NSMutableArray new];
+            }
+        }
+
+        external = newExternal;
+        for(uint32_t i = 0; i < nChanges; i++) {
+            NSString *docID =slice2string(changes[i].docID);
+            [docIDs addObject: docID];
+            if(external) {
+                [[_documents objectForKey: docID] changedExternally];
+            }
+        }
+        if (nChanges > 0)
+            lastSequence = changes[nChanges-1].sequence;
+    } while(nChanges > 0);
+}
+
+
+- (C4BlobStore*) getBlobStore: (NSError**)outError {
+    if (![self mustBeOpen: outError])
+        return nil;
+    C4Error err;
+    C4BlobStore *blobStore = c4db_getBlobStore(_c4db, &err);
+    if (!blobStore)
+        convertError(err, outError);
+    return blobStore;
+}
+
+
+- (BOOL) mustBeOpen: (NSError**)outError {
+    return _c4db != nullptr || convertError({LiteCoreDomain, kC4ErrorNotOpen}, outError);
+}
+
+
+- (NSString*) generateDocID {
+    return CBLCreateUUID();
+}
+
+
+- (CBLDocument*) documentWithID: (NSString*)docID
+                     mustExist: (bool)mustExist
+                         error: (NSError**)outError
+{
+    CBLDocument *doc = [_documents objectForKey: docID];
+    if (!doc) {
+        doc = [[CBLDocument alloc] initWithDatabase: self docID: docID
+                                          mustExist: mustExist
+                                              error: outError];
+        if (!doc)
+            return nil;
+        [_documents setObject: doc forKey: docID];
+    } else {
+        if (mustExist && !doc.exists) {
+            // Don't return a pre-instantiated CBLDocument if it doesn't exist
+            convertError(C4Error{LiteCoreDomain, kC4ErrorNotFound},  outError);
+            return nil;
+        }
+    }
+    return doc;
 }
 
 
