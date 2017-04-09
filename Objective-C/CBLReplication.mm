@@ -6,7 +6,7 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLReplication.h"
+#import "CBLReplication+Internal.h"
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
 #import "CBLInternal.h"
@@ -32,7 +32,8 @@ NSString* const kCBLReplicationStatusChangeNotification = @"CBLReplicationStatus
     C4Replicator* _repl;
 }
 
-@synthesize database=_database, remoteURL=_remoteURL, otherDatabase=_otherDB, delegate=_delegate;
+@synthesize database=_database, remoteURL=_remoteURL, otherDatabase=_otherDB;
+@synthesize delegate=_delegate, delegateBridge=_delegateBridge;
 @synthesize push=_push, pull=_pull, continuous=_continuous, status=_status, lastError=_lastError;
 
 

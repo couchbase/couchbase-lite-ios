@@ -93,11 +93,16 @@ public final class Replication {
     /** An object that will receive progress and error notifications. */
     public var delegate: ReplicationDelegate? {
         get {
-            return _bridge?.swiftDelegate
+            let bridge = _impl.delegate as? DelegateBridge
+            return bridge?.swiftDelegate
         }
         set {
-            let bridge = _bridge ?? DelegateBridge()
-            bridge.swiftDelegate = newValue
+            var bridge = _impl.delegateBridge as? DelegateBridge
+            if bridge == nil {
+                bridge = DelegateBridge()
+                _impl.delegateBridge = _bridge
+            }
+            bridge!.swiftDelegate = newValue
             _impl.delegate = bridge
         }
     }
@@ -131,7 +136,7 @@ public final class Replication {
     // MARK: Internal
 
     private let _impl: CBLReplication
-    private var _bridge: DelegateBridge?
+    private weak var _bridge: DelegateBridge?
 
     init(impl: CBLReplication, database: Database, otherDatabase: Database? = nil) {
         self._impl = impl
