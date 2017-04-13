@@ -179,6 +179,7 @@ static void usage(void) {
             "\t[--sslas <identityname>] Identity pref name to use for SSL serving\n"
             "\t[--storage <engine>]     Set default storage engine: 'SQLite' or 'ForestDB'\n"
             "\t[--dbpassword <dbname>=<password>]  Register password to open a database\n"
+            "\t[--cors]                 Enable CORS\n"
             "Runs Couchbase Lite as a faceless server.\n");
 }
 
@@ -186,7 +187,7 @@ static void usage(void) {
 CBLManagerOptions options = {};
 const char* replArg = NULL, *user = NULL, *password = NULL, *realm = NULL;
 const char* identityName = NULL;
-BOOL auth = NO, useSSL = NO;
+BOOL auth = NO, useSSL = NO, enableCORS = NO;
 
 
 static void startListener(CBLListener* listener) {
@@ -308,6 +309,8 @@ int main (int argc, const char * argv[])
                 AlwaysLog(@"Using password for encrypted database '%@'", items[0]);
             } else if (strcmp(argv[i], "--revs_limit") == 0) {
                 maxRevTreeDepth = str2long(argv[++i]);
+            } else if (strcmp(argv[i], "--cors") == 0) {
+                enableCORS = YES;
             } else if (strncmp(argv[i], "-Log", 4) == 0) {
                 ++i; // Ignore MYUtilities logging flags
             } else {
@@ -336,6 +339,9 @@ int main (int argc, const char * argv[])
 
         for (NSString* dbName in dbPasswords)
             [server registerEncryptionKey: dbPasswords[dbName] forDatabaseNamed: dbName];
+
+        if (enableCORS)
+            [server.customHTTPHeaders setObject:@"*" forKey:@"Access-Control-Allow-Origin"];
 
         // Start a listener socket:
         CBLListener* listener = [[CBLListener alloc] initWithManager: server port: port];
