@@ -252,20 +252,6 @@
 			remoteGlobalIDString = 27EF80F91917EEC600A327B9;
 			remoteInfo = "LiteCore static";
 		};
-		933207BD1E773CFB000D9993 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 27CCC7C91E525E6D00CE1989;
-			remoteInfo = Replicator;
-		};
-		933207BF1E773CFB000D9993 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 275CE0F41E5B769C0084E014;
-			remoteInfo = ReplicatorTests;
-		};
 		936483901E442F15008D08B3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9091E03434200464432 /* Project object */;
@@ -784,9 +770,9 @@
 				9398D9FC1E03531A00464432 /* Objective-C */,
 				9378C5D11E26CC46001BB196 /* xcconfigs */,
 				275FF6651E428A1E005F90DD /* Documentation */,
-				9398D9131E03434200464432 /* Products */,
 				9398D92D1E03467C00464432 /* vendor */,
 				27EF6AF01E32D12C004748DF /* Frameworks */,
+				9398D9131E03434200464432 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
@@ -818,11 +804,9 @@
 			children = (
 				9398D9441E0347B600464432 /* libLiteCore-static.a */,
 				9398D9461E0347B600464432 /* libLiteCore.dylib */,
-				9398D9481E0347B600464432 /* LiteCore Tests.xctest */,
 				9398D94A1E0347B600464432 /* LiteCoreCppTests */,
 				9398D94C1E0347B600464432 /* C4Tests */,
-				933207BE1E773CFB000D9993 /* CouchbaseLiteReplicator.framework */,
-				933207C01E773CFB000D9993 /* ReplicatorTests */,
+				9398D9481E0347B600464432 /* LiteCore Tests.xctest */,
 				9398D94E1E0347B600464432 /* libLiteCoreJNI.dylib */,
 				9398D9501E0347B600464432 /* libTokenizer.a */,
 				9398D95A1E0347B600464432 /* LiteCore-iOS.app */,
@@ -1232,20 +1216,6 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		933207BE1E773CFB000D9993 /* CouchbaseLiteReplicator.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = CouchbaseLiteReplicator.framework;
-			remoteRef = 933207BD1E773CFB000D9993 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		933207C01E773CFB000D9993 /* ReplicatorTests */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = ReplicatorTests;
-			remoteRef = 933207BF1E773CFB000D9993 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		9398D9441E0347B600464432 /* libLiteCore-static.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
