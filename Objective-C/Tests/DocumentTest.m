@@ -11,7 +11,7 @@
 #import "CBLBlob.h"
 #import "CBLInternal.h"
 #import "CBLJSON.h"
-#import "CBLSubdocument+Internal.h"
+#import "CBLDocument+Internal.h"
 
 #include "c4.h"
 #include "c4Document+Fleece.h"
@@ -24,11 +24,8 @@
 
 @implementation TheirsWins
 
-- (NSDictionary *)resolveMine:(NSDictionary *)mine
-                   withTheirs:(NSDictionary *)theirs
-                      andBase:(NSDictionary *)base
-{
-    return theirs;
+- (CBLReadOnlyDocument*) resolve: (CBLConflict *)conflict {
+    return conflict.target;
 }
 
 @end
@@ -39,27 +36,23 @@
 
 @implementation MergeThenTheirsWins
 
-- (NSDictionary *)resolveMine:(NSDictionary *)mine
-                   withTheirs:(NSDictionary *)theirs
-                      andBase:(NSDictionary *)base
-{
-    NSMutableDictionary *resolved = [NSMutableDictionary new];
-    for (NSString *key in base) {
-        resolved[key] = base[key];
+- (CBLReadOnlyDocument*) resolve: (CBLConflict *)conflict {
+    CBLDocument* resolved = [[CBLDocument alloc] init];
+    for (NSString* key in [conflict.commonAncestor allKeys]) {
+        [resolved setObject: [conflict.commonAncestor objectForKey: key] forKey: key];
     }
     
     NSMutableSet *changed = [NSMutableSet new];
-    for (NSString *key in theirs) {
-        resolved[key] = theirs[key];
-        [changed addObject:key];
+    for (NSString* key in [conflict.target allKeys]) {
+        [resolved setObject: [conflict.target objectForKey: key] forKey: key];
+        [changed addObject: key];
     }
     
-    for (NSString *key in mine) {
-        if(![changed containsObject:key]) {
-            resolved[key] = mine[key];
+    for (NSString* key in [conflict.source allKeys]) {
+        if(![changed containsObject: key]) {
+            [resolved setObject: [conflict.source objectForKey: key] forKey: key];
         }
     }
-    
     return resolved;
 }
 
@@ -71,10 +64,7 @@
 
 @implementation GiveUp
 
-- (NSDictionary *)resolveMine:(NSDictionary *)mine
-                   withTheirs:(NSDictionary *)theirs
-                      andBase:(NSDictionary *)base
-{
+- (CBLReadOnlyDocument*) resolve: (CBLConflict *)conflict {
     return nil;
 }
 
@@ -86,10 +76,7 @@
 
 @implementation DoNotResolve
 
-- (NSDictionary *)resolveMine:(NSDictionary *)mine
-                   withTheirs:(NSDictionary *)theirs
-                      andBase:(NSDictionary *)base
-{
+- (CBLReadOnlyDocument*) resolve: (CBLConflict*)conflict {
     NSAssert(NO, @"Resolver should not have been called!");
     return nil;
 }
@@ -113,14 +100,12 @@
     // Make sure resolver isn't being called at inappropriate times by defaulting to one that
     // will raise an exception:
     self.db.conflictResolver = [DoNotResolve new];
-    doc = [self.db documentWithID: @"doc1"];
+    
+    doc = [[CBLDocument alloc] initWithID: @"doc1"];
 }
 
 
 - (void) tearDown {
-    // Avoid "Closing database with 1 unsaved docs" warning:
-    [doc revert];
-
     [super tearDown];
 }
 
@@ -129,15 +114,19 @@
     [super reopenDB];
     
     self.db.conflictResolver = [DoNotResolve new];
+    
     doc = [self.db documentWithID: @"doc1"];
+    if (!doc) {
+        doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    }
 }
 
 
-- (BOOL)saveProperties:(NSDictionary *)props toDocWithID:(NSString *)docID error:(NSError **)error {
+- (BOOL)saveProperties: (NSDictionary*)props toDocWithID: (NSString*)docID error: (NSError**)error {
     // Save to database:
-    BOOL ok = [self.db inBatch:error do: ^{
-        C4Slice docIDSlice = c4str([docID cStringUsingEncoding:NSASCIIStringEncoding]);
-        C4Document *tricky = c4doc_get(self.db.c4db, docIDSlice, true, NULL);
+    BOOL ok = [self.db inBatch: error do: ^{
+        C4Slice docIDSlice = c4str([docID cStringUsingEncoding: NSASCIIStringEncoding]);
+        C4Document* tricky = c4doc_get(self.db.c4db, docIDSlice, true, NULL);
         
         C4DocPutRequest put = {
             .docID = tricky->docID,
@@ -166,54 +155,46 @@
 }
 
 - (void) testNewDoc {
+    CBLDocument* newDoc = [[CBLDocument alloc] init];
+    AssertNotNil(newDoc);
+    AssertNotNil(newDoc.documentID);
+    Assert(newDoc.documentID.length > 0);
+    AssertFalse(newDoc.exists);
+    AssertFalse(newDoc.isDeleted);
+    
+    AssertEqualObjects([newDoc toDictionary], @{});
+    AssertFalse([newDoc booleanForKey: @"prop"]);
+    AssertEqual([newDoc integerForKey: @"prop"], 0);
+    AssertEqual([newDoc floatForKey: @"prop"], 0.0);
+    AssertEqual([newDoc doubleForKey: @"prop"], 0.0);
+    AssertNil([newDoc dateForKey: @"prop"]);
+    AssertNil([newDoc stringForKey: @"prop"]);
+    AssertNil([newDoc objectForKey: @"prop"]);
+    AssertNil([newDoc blobForKey: @"prop"]);
+    
     NSError* error;
-    
-    doc = [self.db document];
-    AssertNotNil(doc);
-    AssertNotNil(doc.documentID);
-    Assert(doc.documentID.length > 0);
-    AssertEqual(doc.database, self.db);
-    AssertFalse(doc.exists);
-    AssertFalse(doc.isDeleted);
-    AssertNil(doc.properties);
-    AssertEqual(doc[@"prop"], nil);
-    AssertFalse([doc booleanForKey: @"prop"]);
-    AssertEqual([doc integerForKey: @"prop"], 0);
-    AssertEqual([doc floatForKey: @"prop"], 0.0);
-    AssertEqual([doc doubleForKey: @"prop"], 0.0);
-    AssertNil([doc dateForKey: @"prop"]);
-    AssertNil([doc stringForKey: @"prop"]);
-    
-    Assert([doc save: &error], @"Error saving: %@", error);
-    Assert(doc.exists);
-    AssertFalse(doc.isDeleted);
-    AssertNil(doc.properties);
+    Assert([_db saveDocument: newDoc error: &error], @"Error saving: %@", error);
 }
 
 
 - (void) testNewDocWithId {
+    CBLDocument* newDoc = [[CBLDocument alloc] initWithID: @"doc-a"];
+    AssertNotNil(newDoc);
+    AssertEqual(newDoc.documentID, @"doc-a");
+    AssertFalse(newDoc.isDeleted);
+    
+    AssertEqualObjects([newDoc toDictionary], @{});
+    AssertFalse([newDoc booleanForKey: @"prop"]);
+    AssertEqual([newDoc integerForKey: @"prop"], 0);
+    AssertEqual([newDoc floatForKey: @"prop"], 0.0);
+    AssertEqual([newDoc doubleForKey: @"prop"], 0.0);
+    AssertNil([newDoc dateForKey: @"prop"]);
+    AssertNil([newDoc stringForKey: @"prop"]);
+    AssertNil([newDoc objectForKey: @"prop"]);
+    AssertNil([newDoc blobForKey: @"prop"]);
+    
     NSError* error;
-    
-    AssertEqual(doc, self.db[@"doc1"]);
-    AssertNotNil(doc);
-    AssertEqual(doc.documentID, @"doc1");
-    AssertEqual(doc.database, self.db);
-    AssertFalse(doc.exists);
-    AssertFalse(doc.isDeleted);
-    AssertNil(doc.properties);
-    AssertEqual(doc[@"prop"], nil);
-    AssertFalse([doc booleanForKey: @"prop"]);
-    AssertEqual([doc integerForKey: @"prop"], 0);
-    AssertEqual([doc floatForKey: @"prop"], 0.0);
-    AssertEqual([doc doubleForKey: @"prop"], 0.0);
-    AssertNil([doc dateForKey: @"prop"]);
-    AssertNil([doc stringForKey: @"prop"]);
-    
-    Assert([doc save: &error], @"Error saving: %@", error);
-    Assert(doc.exists);
-    AssertFalse(doc.isDeleted);
-    AssertNil(doc.properties);
-    AssertEqual(doc, self.db[@"doc1"]);
+    Assert([_db saveDocument: newDoc error: &error], @"Error saving: %@", error);
 }
 
 
@@ -242,6 +223,7 @@
     [doc setObject: @"str" forKey: @"string"];
     [doc setObject: @(YES) forKey: @"boolObj"];
     [doc setObject: @(1) forKey: @"number"];
+    
     [doc setObject: @{@"foo": @"bar"} forKey: @"dict"];
     [doc setObject: @[@"1", @"2"] forKey: @"array"];
     
@@ -260,7 +242,7 @@
     [doc setObject: date forKey: @"date"];
     
     NSError* error;
-    Assert([doc save: &error], @"Error saving: %@", error);
+    Assert([_db saveDocument: doc error: &error], @"Error saving: %@", error);
     
     // Primitives:
     AssertEqual([doc booleanForKey: @"yes"], YES);
@@ -274,8 +256,8 @@
     AssertEqualObjects([doc objectForKey: @"string"], @"str");
     AssertEqualObjects([doc objectForKey: @"boolObj"], @(YES));
     AssertEqualObjects([doc objectForKey: @"number"], @(1));
-    AssertEqualObjects([doc objectForKey: @"array"], (@[@"1", @"2"]));
-    AssertEqualObjects(((CBLSubdocument*)[doc objectForKey: @"dict"]).properties, @{@"foo": @"bar"});
+    AssertEqualObjects([((CBLArray*)[doc objectForKey: @"array"]) toArray], (@[@"1", @"2"]));
+    AssertEqualObjects([((CBLSubdocument*)[doc objectForKey: @"dict"]) toDictionary], @{@"foo": @"bar"});
     
     // String:
     AssertEqualObjects([doc stringForKey: @"string"], @"str");
@@ -288,8 +270,8 @@
     AssertEqualObjects([subdoc objectForKey: @"lastname"], @"zebra");
     
     // NSNull:
-    AssertEqualObjects([doc objectForKey: @"null"], [NSNull null]);
-    AssertEqualObjects([doc objectForKey: @"nullarray"], (@[[NSNull null], [NSNull null]]));
+    AssertNil([doc objectForKey: @"null"]);
+    AssertEqualObjects([((CBLArray*)[doc objectForKey: @"nullarray"]) toArray], (@[[NSNull null], [NSNull null]]));
     
     // Date:
     AssertEqualObjects([CBLJSON JSONObjectWithDate: [doc dateForKey: @"date"]],
@@ -321,8 +303,8 @@
     AssertEqualObjects([doc objectForKey: @"string"], @"str");
     AssertEqualObjects([doc objectForKey: @"boolObj"], @(YES));
     AssertEqualObjects([doc objectForKey: @"number"], @(1));
-    AssertEqualObjects([doc objectForKey: @"array"], (@[@"1", @"2"]));
-    AssertEqualObjects(((CBLSubdocument*)[doc objectForKey: @"dict"]).properties, @{@"foo": @"bar"});
+    AssertEqualObjects([((CBLArray*)[doc objectForKey: @"array"]) toArray], (@[@"1", @"2"]));
+    AssertEqualObjects([((CBLSubdocument*)[doc objectForKey: @"dict"]) toDictionary], @{@"foo": @"bar"});
     
     // String:
     AssertEqualObjects([doc stringForKey: @"string"], @"str");
@@ -335,8 +317,8 @@
     AssertEqualObjects([subdoc objectForKey: @"lastname"], @"zebra");
     
     // NSNull:
-    AssertEqualObjects([doc objectForKey: @"null"], [NSNull null]);
-    AssertEqualObjects([doc objectForKey: @"nullarray"], (@[[NSNull null], [NSNull null]]));
+    AssertNil([doc objectForKey: @"null"]);
+    AssertEqualObjects([((CBLArray*)[doc objectForKey: @"nullarray"]) toArray], (@[[NSNull null], [NSNull null]]));
     
     // Date:
     AssertEqualObjects([CBLJSON JSONObjectWithDate: [doc dateForKey: @"date"]],
@@ -354,38 +336,26 @@
 }
 
 
-- (void) testProperties {
-    doc[@"type"] = @"demo";
-    doc[@"weight"] = @12.5;
-    doc[@"tags"] = @[@"useless", @"temporary"];
-    
-    AssertEqualObjects(doc[@"type"], @"demo");
-    AssertEqual([doc doubleForKey: @"weight"], 12.5);
-    AssertEqualObjects(doc.properties,
-        (@{@"type": @"demo", @"weight": @12.5, @"tags": @[@"useless", @"temporary"]}));
-}
-
-
 - (void) testRemoveKeys {
-    doc.properties = @{ @"type": @"profile",
-                        @"name": @"Jason",
-                        @"weight": @130.5,
-                        @"active": @YES,
-                        @"age": @30,
-                        @"address": @{
-                                @"street": @"1 milky way.",
-                                @"city": @"galaxy city",
-                                @"zip" : @12345
-                                }
-                        };
+    [doc setDictionary: @{ @"type": @"profile",
+                           @"name": @"Jason",
+                           @"weight": @130.5,
+                           @"active": @YES,
+                           @"age": @30,
+                           @"address": @{
+                                   @"street": @"1 milky way.",
+                                   @"city": @"galaxy city",
+                                   @"zip" : @12345
+                                   }
+                           }];
     NSError* error;
-    Assert([doc save: &error], @"Error saving: %@", error);
+    Assert([_db saveDocument: doc error: &error], @"Error saving: %@", error);
     
-    doc[@"name"] = nil;
-    doc[@"weight"] = nil;
-    doc[@"age"] = nil;
-    doc[@"active"] = nil;
-    doc[@"address"][@"city"] = nil;
+    [doc setObject: nil forKey: @"name"];
+    [doc setObject: nil forKey: @"weight"];
+    [doc setObject: nil forKey: @"age"];
+    [doc setObject: nil forKey: @"active"];;
+    [[doc subdocumentForKey: @"address"] setObject: nil forKey: @"city"];
     
     AssertNil([doc stringForKey: @"name"]);
     AssertEqual([doc floatForKey: @"weight"], 0.0);
@@ -393,246 +363,157 @@
     AssertEqual([doc integerForKey: @"age"], 0);
     AssertEqual([doc booleanForKey: @"active"], NO);
     
-    AssertNil(doc[@"name"]);
-    AssertNil(doc[@"weight"]);
-    AssertNil(doc[@"age"]);
-    AssertNil(doc[@"active"]);
-    AssertNil(doc[@"address"][@"city"]);
+    AssertNil([doc objectForKey: @"name"]);
+    AssertNil([doc objectForKey: @"weight"]);
+    AssertNil([doc objectForKey: @"age"]);
+    AssertNil([doc objectForKey: @"active"]);
+    AssertNil([[doc subdocumentForKey: @"address"] objectForKey: @"city"]);
     
     CBLSubdocument* address = doc[@"address"];
-    AssertEqualObjects(doc.properties, (@{ @"type": @"profile",
-                                           @"address": address }));
-    AssertEqualObjects(address.properties, (@{ @"street": @"1 milky way.",
-                                               @"zip" : @12345 }));
+    AssertEqualObjects([doc toDictionary], (@{ @"type": @"profile",
+                                               @"address": @{
+                                                       @"street": @"1 milky way.",
+                                                       @"zip" : @12345
+                                                       }
+                                               }));
+    AssertEqualObjects([address toDictionary], (@{ @"street": @"1 milky way.", @"zip" : @12345 }));
     
     // Remove the rest:
-    doc[@"type"] = nil;
+    [doc setObject: nil forKey: @"type"];
+    [doc setObject: nil forKey: @"address"];
     doc[@"address"] = nil;
-    AssertNil(doc[@"type"]);
-    AssertNil(doc[@"address"]);
-    AssertEqualObjects(doc.properties, @{});
+    AssertNil([doc objectForKey: @"type"]);
+    AssertNil([doc objectForKey: @"address"]);
+    AssertEqualObjects([doc toDictionary], @{});
 }
 
 
 - (void) testContainsKey {
-    doc.properties = @{ @"type": @"profile",
-                        @"name": @"Jason",
-                        @"age": @"30",
-                        @"address": @{
-                                @"street": @"1 milky way.",
-                                }
-                        };
+    [doc setDictionary: @{ @"type": @"profile",
+                           @"name": @"Jason",
+                           @"age": @"30",
+                           @"address": @{
+                                   @"street": @"1 milky way.",
+                                   }
+                           }];
     
     Assert([doc containsObjectForKey: @"type"]);
     Assert([doc containsObjectForKey: @"name"]);
     Assert([doc containsObjectForKey: @"address"]);
-    AssertFalse([doc containsObjectForKey: @"weight"]);
-    
-    NSError* error;
-    Assert([doc save: &error], @"Error saving: %@", error);
-    
-    [self reopenDB];
-    
-    doc[@"modified"] = @(YES);
-    
-    // Access a subdocument to load the subdocument into cache:
-    AssertNotNil(doc[@"address"]);
-    
-    Assert([doc containsObjectForKey: @"type"]);
-    Assert([doc containsObjectForKey: @"name"]);
-    Assert([doc containsObjectForKey: @"age"]);
-    Assert([doc containsObjectForKey: @"address"]);
-    Assert([doc containsObjectForKey: @"modified"]);
     AssertFalse([doc containsObjectForKey: @"weight"]);
 }
 
 
 - (void) testDelete {
-    doc[@"type"] = @"profile";
-    doc[@"name"] = @"Scott";
-    AssertFalse(doc.exists);
+    [doc setObject: @"profile" forKey: @"type"];
+    [doc setObject: @"Scott" forKey: @"name"];
     AssertFalse(doc.isDeleted);
     
     // Delete before save:
-    AssertFalse([doc deleteDocument: nil]);
-    AssertEqualObjects(doc[@"type"], @"profile");
-    AssertEqualObjects(doc[@"name"], @"Scott");
+    NSError* error;
+    AssertFalse([_db deleteDocument: doc error: &error]);
+    AssertEqualObjects([doc objectForKey: @"type"], @"profile");
+    AssertEqualObjects([doc objectForKey: @"name"], @"Scott");
     
     // Save:
-    NSError* error;
-    Assert([doc save: &error], @"Saving error: %@", error);
-    Assert(doc.exists);
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     AssertFalse(doc.isDeleted);
     
     // Delete:
-    Assert([doc deleteDocument: &error], @"Deleting error: %@", error);
-    Assert(doc.exists);
+    Assert([_db deleteDocument: doc error: &error], @"Deleting error: %@", error);
     Assert(doc.isDeleted);
-    AssertNil(doc.properties);
+    AssertEqualObjects([doc toDictionary], @{});
 }
 
 
 - (void) testPurge {
-    doc[@"type"] = @"profile";
-    doc[@"name"] = @"Scott";
+    [doc setObject: @"profile" forKey: @"type"];
+    [doc setObject: @"Scott" forKey: @"name"];
     AssertFalse(doc.exists);
     AssertFalse(doc.isDeleted);
     
     // Purge before save:
-    AssertFalse([doc purge: nil]);
-    AssertEqualObjects(doc[@"type"], @"profile");
-    AssertEqualObjects(doc[@"name"], @"Scott");
+    NSError* error;
+    AssertFalse([_db purgeDocument: doc error: &error]);
+    AssertEqualObjects([doc objectForKey: @"type"], @"profile");
+    AssertEqualObjects([doc objectForKey: @"name"], @"Scott");
     
     // Save:
-    NSError* error;
-    Assert([doc save: &error], @"Saving error: %@", error);
-    Assert(doc.exists);
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     AssertFalse(doc.isDeleted);
     
     // Purge:
-    Assert([doc purge: &error], @"Purging error: %@", error);
-    AssertFalse(doc.exists);
+    Assert([_db purgeDocument: doc error: &error], @"Purging error: %@", error);
     AssertFalse(doc.isDeleted);
-}
-
-
-- (void) testRevert {
-    doc[@"type"] = @"profile";
-    doc[@"name"] = @"Scott";
-    CBLSubdocument* address = [CBLSubdocument subdocument];
-    address[@"street"] = @"1 Star Way.";
-    doc[@"address"] = address;
-    
-    // Revert before save:
-    [doc revert];
-    AssertNil(doc[@"type"]);
-    AssertNil(doc[@"name"]);
-    AssertNil(doc[@"address"]);
-    AssertNil(address.parent);
-    AssertNil(address.document);
-    AssertNil(address.properties);
-    
-    // Save:
-    doc[@"type"] = @"profile";
-    doc[@"name"] = @"Scott";
-    address = [CBLSubdocument subdocument];
-    address[@"street"] = @"1 Star Way.";
-    doc[@"address"] = address;
-    
-    CBLSubdocument* phones = [CBLSubdocument subdocument];
-    phones[@"mobile"] = @"650-123-4567";
-    doc[@"phones"] = phones;
-    
-    CBLSubdocument* r1 = [CBLSubdocument subdocument];
-    r1[@"name"] = @"Jason";
-    CBLSubdocument* r2 = [CBLSubdocument subdocument];
-    r2[@"name"] = @"John";
-    doc[@"references"] = @[r1, r2];
-    
-    NSError* error;
-    Assert([doc save: &error], @"Saving error: %@", error);
-    AssertEqualObjects(doc[@"type"], @"profile");
-    AssertEqualObjects(doc[@"name"], @"Scott");
-    AssertEqualObjects(doc[@"address"][@"street"], @"1 Star Way.");
-    AssertEqualObjects(doc[@"phones"][@"mobile"], @"650-123-4567");
-    AssertEqualObjects(doc[@"references"][0][@"name"], @"Jason");
-    AssertEqualObjects(doc[@"references"][1][@"name"], @"John");
-    
-    // Make some changes:
-    doc[@"type"] = @"user";
-    doc[@"name"] = nil;
-    AssertNil(doc[@"name"]);
-    doc[@"address"][@"street"] = @"1 Space Dr.";
-    doc[@"address"][@"zip"] = @"88888";
-    doc[@"phones"] = nil;
-    
-    CBLSubdocument* r3 = [CBLSubdocument subdocument];
-    r3[@"name"] = @"Jack";
-    doc[@"references"] = @[r3, r2, r1];
-    
-    AssertEqualObjects(doc[@"type"], @"user");
-    AssertNil(doc[@"name"]);
-    AssertEqualObjects(doc[@"address"][@"street"], @"1 Space Dr.");
-    AssertEqualObjects(doc[@"address"][@"zip"], @"88888");
-    AssertNil(doc[@"phones"]);
-    AssertEqualObjects(doc[@"references"][0][@"name"], @"Jack");
-    AssertEqualObjects(doc[@"references"][1][@"name"], @"John");
-    AssertEqualObjects(doc[@"references"][2][@"name"], @"Jason");
-    
-    // Revert:
-    [doc revert];
-    AssertEqualObjects(doc[@"type"], @"profile");
-    AssertEqualObjects(doc[@"name"], @"Scott");
-    AssertEqualObjects(doc[@"address"][@"street"], @"1 Star Way.");
-    AssertNil(doc[@"address"][@"zip"]);
-    AssertEqualObjects(doc[@"phones"][@"mobile"], @"650-123-4567");
-    AssertEqualObjects(doc[@"references"][0][@"name"], @"Jason");
-    AssertEqualObjects(doc[@"references"][1][@"name"], @"John");
 }
 
 
 - (void) testReopenDB {
     [doc setObject: @"str" forKey: @"string"];
-    AssertEqualObjects(doc.properties, @{@"string": @"str"});
     NSError* error;
-    Assert([doc save: &error], @"Error saving: %@", error);
+    Assert([_db saveDocument: doc error: &error], @"Error saving: %@", error);
 
     [self reopenDB];
 
     doc = [self.db documentWithID: @"doc1"];
-    AssertEqualObjects(doc.properties, @{@"string": @"str"});
-    AssertEqualObjects(doc[@"string"], @"str");
+    AssertEqualObjects([doc stringForKey: @"string"], @"str");
+    AssertEqualObjects([doc toDictionary], @{@"string": @"str"});
 }
 
 
 - (CBLDocument*) setupConflict {
     // Setup a default database conflict resolver
-    doc[@"type"] = @"profile";
-    doc[@"name"] = @"Scott";
+    [doc setObject: @"profile" forKey: @"type"];
+    [doc setObject: @"Scott" forKey: @"name"];
     NSError* error;
-    Assert([doc save: &error], @"Saving error: %@", error);
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     
     // Force a conflict
-    NSMutableDictionary *properties = [doc.properties mutableCopy];
+    NSMutableDictionary *properties = [[doc toDictionary] mutableCopy];
     properties[@"name"] = @"Scotty";
-    BOOL ok = [self saveProperties:properties toDocWithID:[doc documentID] error:&error];
+    BOOL ok = [self saveProperties: properties toDocWithID: [doc documentID] error: &error];
     Assert(ok);
     
     // Change document in memory, so save will trigger a conflict
-    doc[@"name"] = @"Scott Pilgrim";
+    [doc setObject: @"Scott Pilgrim" forKey: @"name"];
+    
     return doc;
 }
 
 
 - (void)testConflict {
+    NSError* error;
     self.db.conflictResolver = [TheirsWins new];
     doc = [self setupConflict];
-    NSError* error;
-    Assert([doc save: &error], @"Saving error: %@", error);
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     AssertEqualObjects(doc[@"name"], @"Scotty");
     
     // Get a new document with its own conflict resolver
-    doc = [self.db documentWithID: @"doc2"];
-    doc.conflictResolver = [MergeThenTheirsWins new];
-    doc[@"type"] = @"profile";
-    doc[@"name"] = @"Scott";
-    Assert([doc save: &error], @"Saving error: %@", error);
+    doc = [[CBLDocument alloc] initWithID: @"doc2"];
+    
+    self.db.conflictResolver = [MergeThenTheirsWins new];
+    [doc setObject: @"profile" forKey: @"type"];
+    [doc setObject: @"Scott" forKey: @"name"];
+    
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     
     // Force a conflict again
-    NSMutableDictionary* properties = [doc.properties mutableCopy];
+    NSMutableDictionary* properties = [[doc toDictionary] mutableCopy];
     properties[@"type"] = @"bio";
     properties[@"gender"] = @"male";
-    BOOL ok = [self saveProperties:properties toDocWithID:[doc documentID] error:&error];
+    BOOL ok = [self saveProperties: properties toDocWithID: [doc documentID] error: &error];
     Assert(ok);
     
     // Save and make sure that the correct conflict resolver won
-    doc[@"type"] = @"biography";
-    doc[@"age"] = @(31);
-    Assert([doc save: &error], @"Saving error: %@", error);
-    AssertEqual([doc[@"age"] intValue], 31);
-    AssertEqualObjects(doc[@"type"], @"bio");
-    AssertEqualObjects(doc[@"gender"], @"male");
-    AssertEqualObjects(doc[@"name"], @"Scott");
+    [doc setObject:@"biography" forKey: @"type"];
+    [doc setObject: @(31) forKey: @"age"];
+    
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
+    
+    AssertEqual([doc integerForKey: @"age"], 31);
+    AssertEqualObjects([doc stringForKey: @"type"], @"bio");
+    AssertEqualObjects([doc stringForKey: @"gender"], @"male");
+    AssertEqualObjects([doc stringForKey: @"name"], @"Scott");
 }
 
 
@@ -640,10 +521,9 @@
     self.db.conflictResolver = [GiveUp new];
     doc = [self setupConflict];
     NSError* error;
-    AssertFalse([doc save: &error], @"Save should have failed!");
+    AssertFalse([_db saveDocument: doc error: &error], @"Save should have failed!");
     AssertEqualObjects(error.domain, @"LiteCore");      //TODO: Should have CBL error domain/code
     AssertEqual(error.code, kC4ErrorConflict);
-    Assert(doc.hasChanges);
 }
 
 
@@ -654,7 +534,7 @@
     Assert([doc deleteDocument: &error], @"Deletion error: %@", error);
     Assert(doc.exists);
     AssertFalse(doc.isDeleted);
-    AssertEqualObjects(doc[@"name"], @"Scotty");
+    AssertEqualObjects([doc stringForKey: @"name"], @"Scotty");
 }
 
 
@@ -662,8 +542,8 @@
     self.db.conflictResolver = nil;
     doc = [self setupConflict];
     NSError* error;
-    Assert([doc save: &error], @"Saving error: %@", error);
-    AssertEqualObjects(doc[@"name"], @"Scott Pilgrim");
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
+    AssertEqualObjects([doc stringForKey: @"name"], @"Scott Pilgrim");
 }
 
 
@@ -672,13 +552,13 @@
     doc = [self setupConflict];
 
     // Add another revision to the conflict, so it'll have a higher generation:
-    NSMutableDictionary *properties = [doc.properties mutableCopy];
+    NSMutableDictionary *properties = [[doc toDictionary] mutableCopy];
     properties[@"name"] = @"Scott of the Sahara";
     NSError* error;
     [self saveProperties:properties toDocWithID:[doc documentID] error:&error];
 
-    Assert([doc save: &error], @"Saving error: %@", error);
-    AssertEqualObjects(doc[@"name"], @"Scott of the Sahara");
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
+    AssertEqualObjects([doc stringForKey: @"name"], @"Scott of the Sahara");
 }
 
 
@@ -689,7 +569,7 @@
     Assert(data, @"Failed to create blob: %@", error);
     doc[@"data"] = data;
     doc[@"name"] = @"Jim";
-    Assert([doc save: &error], @"Saving error: %@", error);
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     
     CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
     AssertEqualObjects(doc[@"name"], @"Jim");
@@ -713,7 +593,7 @@
     Assert(data, @"Failed to create blob: %@", error);
     doc[@"data"] = data;
     
-    Assert([doc save: &error], @"Saving error: %@", error);
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
     Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
     data = doc1[@"data"];
@@ -737,7 +617,7 @@
     doc[@"data"] = data;
     
     
-    Assert([doc save: &error], @"Saving error: %@", error);
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
     Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
     data = doc1[@"data"];
@@ -771,7 +651,7 @@
         AssertEqual(bytesRead, 5);
     }
    
-    Assert([doc save: &error], @"Saving error: %@", error);
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
     Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
     data = doc1[@"data"];
@@ -794,7 +674,7 @@
     Assert(data, @"Failed to create blob: %@", error);
     doc[@"data"] = data;
     doc[@"name"] = @"Jim";
-    Assert([doc save: &error], @"Saving error: %@", error);
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
 
     [self reopenDB];
 
@@ -805,7 +685,7 @@
     [self reopenDB];
 
     doc[@"foo"] = @"bar";
-    Assert([doc save: &error], @"Saving error: %@", error);
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     Assert([doc[@"data"] isKindOfClass:[CBLBlob class]]);
     data = doc[@"data"];
     AssertEqualObjects(data.content, content);

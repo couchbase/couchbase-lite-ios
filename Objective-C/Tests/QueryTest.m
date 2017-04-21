@@ -39,13 +39,13 @@
     BOOL ok = [self.db inBatch: &batchError do: ^{
         for (NSInteger i = 1; i <= num; i++) {
             NSError* error;
-            NSString* docId= [NSString stringWithFormat: @"doc%ld", (long)i];
-            CBLDocument* doc = [self.db documentWithID: docId];
+            NSString* docID= [NSString stringWithFormat: @"doc%ld", (long)i];
+            CBLDocument* doc = [[CBLDocument alloc] initWithID: docID];
             doc[@"number1"] = @(i);
             doc[@"number2"] = @(num-i);
-            bool saved = [doc save: &error];
+            BOOL saved = [_db saveDocument: doc error: &error];
             Assert(saved, @"Couldn't save document: %@", error);
-            [numbers addObject: doc.properties];
+            [numbers addObject: [doc toDictionary]];
         }
     }];
     Assert(ok, @"Error when inserting documents: %@", batchError);
@@ -62,9 +62,9 @@
         NSMutableArray* result = [[numbers filteredArrayUsingPredicate: p] mutableCopy];
         NSInteger total = result.count;
         NSInteger rows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
-            id props = row.document.properties;
-            Assert([result containsObject: props]);
-            [result removeObject: props];
+            id dict = [row.document toDictionary];
+            Assert([result containsObject: dict]);
+            [result removeObject: dict];
         }];
         AssertEqual(result.count, 0u);
         AssertEqual(rows, total);
@@ -147,13 +147,13 @@
     CBLDocument* doc1 = [self.db documentWithID: @"doc1"];
     doc1[@"name"] = @"Scott";
     doc1[@"address"] = [NSNull null];
-    Assert([doc1 save: &error], @"Error when saving a document: %@", error);
+    Assert([_db saveDocument: doc1 error: &error], @"Error when saving a document: %@", error);
     
     CBLDocument* doc2 = [self.db documentWithID: @"doc2"];
     doc2[@"name"] = @"Tiger";
     doc2[@"address"] = @"123 1st ave.";
     doc2[@"age"] = @(20);
-    Assert([doc2 save: &error], @"Error when saving a document: %@", error);
+    Assert([_db saveDocument: doc2 error: &error], @"Error when saving a document: %@", error);
     
     CBLQueryExpression* name = [CBLQueryExpression property: @"name"];
     CBLQueryExpression* address = [CBLQueryExpression property: @"address"];
@@ -190,9 +190,9 @@
 
 - (void) testWhereIs {
     NSError* error;
-    CBLDocument* doc1 = [self.db document];
+    CBLDocument* doc1 = [[CBLDocument alloc] init];
     doc1 [@"string"] = @"string";
-    Assert([doc1 save: &error], @"Error when creating a document: %@", error);
+    Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
     
     CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
                               from: [CBLQueryDatabase database: self.db]
@@ -352,13 +352,13 @@
 - (void) failingTest_SelectDistinct {
     // https://github.com/couchbase/couchbase-lite-ios/issues/1669
     NSError* error;
-    CBLDocument* doc1 = [self.db document];
+    CBLDocument* doc1 = [[CBLDocument alloc] init];
     doc1[@"number"] = @(1);
-    Assert([doc1 save: &error], @"Error when creating a document: %@", error);
+    Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
     
-    CBLDocument* doc2 = [self.db document];
+    CBLDocument* doc2 = [[CBLDocument alloc] init];
     doc2[@"number"] = @(1);
-    Assert([doc2 save: &error], @"Error when creating a document: %@", error);
+    Assert([_db saveDocument: doc2 error: &error], @"Error when creating a document: %@", error);
     
     CBLQuery* q = [CBLQuery selectDistinct: [CBLQuerySelect all]
                                      from: [CBLQueryDatabase database: self.db]];

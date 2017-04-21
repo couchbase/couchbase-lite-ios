@@ -203,7 +203,7 @@
     
     CBLDocument* doc = ((CBLQueryRow*)rows[0]).document;
     AssertNotNil(doc);
-    Assert([doc deleteDocument: &error], @"Couldn't delete a document: %@", error);
+    Assert([_db deleteDocument: doc error: &error], @"Couldn't delete a document: %@", error);
 }
 
 
@@ -293,9 +293,9 @@
     // https://github.com/couchbase/couchbase-lite-ios/issues/1669
     for (int i = 0; i < 10; i++) {
         NSError* error;
-        CBLDocument* doc = [self.db document];
+        CBLDocument* doc = [[CBLDocument alloc] init];
         doc[@"number"] = @(1);
-        Assert([doc save: &error], @"Error when creating a document: %@", error);
+        Assert([_db saveDocument: doc error:&error], @"Error when creating a document: %@", error);
     }
     
     CBLPredicateQuery *q = [self.db createQueryWhere: nil];
@@ -303,7 +303,7 @@
     q.distinct = YES;
     Assert(q);
     uint64_t numRows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
-        AssertEqualObjects(row.document.properties, @{@"number": @(1)});
+        AssertEqualObjects(row.document.toDictionary, @{@"number": @(1)});
     }];
     AssertEqual(numRows, 1u);
 }
@@ -315,13 +315,13 @@
     CBLDocument* doc1 = [self.db documentWithID: @"doc1"];
     doc1[@"name"] = @"Scott";
     doc1[@"address"] = [NSNull null];
-    Assert([doc1 save: &error], @"Error when saving a document: %@", error);
+    Assert([_db saveDocument: doc1 error: &error], @"Error when saving a document: %@", error);
     
     CBLDocument* doc2 = [self.db documentWithID: @"doc2"];
     doc2[@"name"] = @"Tiger";
     doc2[@"address"] = @"123 1st ave.";
     doc2[@"age"] = @(20);
-    Assert([doc2 save: &error], @"Error when saving a document: %@", error);
+    Assert([_db saveDocument: doc2 error: &error], @"Error when saving a document: %@", error);
     
     NSArray* tests = @[
                        @[@"name != null",    @[doc1, doc2]],

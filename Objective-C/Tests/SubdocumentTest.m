@@ -9,7 +9,7 @@
 #import "CBLTestCase.h"
 #import "CBLInternal.h"
 #import "CBLJSON.h"
-#import "CBLSubdocument+Internal.h"
+#import "CBLDocument+Internal.h"
 
 @interface SubdocumentTest : CBLTestCase
 
@@ -24,14 +24,11 @@
 - (void) setUp {
     [super setUp];
 
-    doc = [self.db documentWithID: @"doc1"];
+    doc = [[CBLDocument alloc] initWithID: @"doc1"];
 }
 
 
 - (void) tearDown {
-    // Avoid "Closing database with 1 unsaved docs" warning:
-    [doc revert];
-    
     [super tearDown];
 }
 
@@ -40,542 +37,215 @@
     [super reopenDB];
     
     doc = [self.db documentWithID: @"doc1"];
+    if (!doc)
+        doc = [[CBLDocument alloc] initWithID: @"doc1"];
 }
 
 
 - (void) testNewSubdocument {
-    AssertNil([doc subdocumentForKey: @"address"]);
-    AssertNil(doc[@"address"]);
-    
     CBLSubdocument* address = [CBLSubdocument subdocument];
-    AssertFalse(address.exists);
-    AssertNil(address.document);
-    AssertNil(address.parent);
-    AssertNil(address.properties);
+    [address setObject: @"1 Space Ave." forKey: @"street"];
+    AssertEqualObjects([address stringForKey: @"street"], @"1 Space Ave.");
     
-    address[@"street"] = @"1 Space Ave.";
-    AssertEqualObjects(address[@"street"], @"1 Space Ave.");
-    AssertEqualObjects(address.properties, (@{@"street": @"1 Space Ave."}));
-    
-    doc[@"address"] = address;
+    [doc setObject: address forKey: @"address"];
     AssertEqualObjects([doc subdocumentForKey: @"address"], address);
-    AssertEqualObjects(doc[@"address"], address);
-    AssertEqualObjects(address.document, doc);
-    AssertEqualObjects(address.parent, doc);
     
     NSError* error;
-    Assert([doc save: &error], @"Saving error: %@", error);
-    Assert(address.exists);
-    AssertEqualObjects(address[@"street"], @"1 Space Ave.");
-    AssertEqualObjects(address.properties, (@{@"street": @"1 Space Ave."}));
-    AssertEqualObjects(address.document, doc);
-    AssertEqualObjects(address.parent, doc);
-    AssertEqualObjects(doc.properties, (@{@"address": address}));
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     
     [self reopenDB];
     
     address = [doc subdocumentForKey: @"address"];
-    Assert(address.exists);
-    AssertEqualObjects(address.document, doc);
-    AssertEqualObjects(address.parent, doc);
-    AssertEqualObjects(address[@"street"], @"1 Space Ave.");
-    AssertEqualObjects(address.properties, (@{@"street": @"1 Space Ave."}));
-    AssertEqualObjects(doc.properties, (@{@"address": address}));
+    AssertEqualObjects([address stringForKey: @"street"], @"1 Space Ave.");
 }
 
 
 - (void) testGetSubdocument {
+    [doc setDictionary: @{@"address": @{@"street": @"1 Space Ave."}}];
+    
     CBLSubdocument* address = [doc subdocumentForKey: @"address"];
-    AssertNil(address);
-    
-    doc.properties = @{@"address": @{@"street": @"1 Space Ave."}};
-    
-    address = [doc subdocumentForKey: @"address"];
     Assert(address);
     AssertEqualObjects([doc subdocumentForKey: @"address"], address);
-    AssertEqualObjects(address.document, doc);
-    AssertEqualObjects(address.parent, doc);
-    AssertEqualObjects(address.properties, (@{@"street": @"1 Space Ave."}));
-    AssertEqualObjects(address[@"street"], @"1 Space Ave.");
+    AssertEqualObjects([address stringForKey: @"street"], @"1 Space Ave.");
     
     NSError* error;
-    Assert([doc save: &error], @"Saving error: %@", error);
-    AssertEqualObjects([doc subdocumentForKey: @"address"], address);
-    AssertEqualObjects(address.document, doc);
-    AssertEqualObjects(address.parent, doc);
-    AssertEqualObjects(address.properties, (@{@"street": @"1 Space Ave."}));
-    AssertEqualObjects(address[@"street"], @"1 Space Ave.");
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     
     [self reopenDB];
+    
     address = [doc subdocumentForKey: @"address"];
     Assert(address);
     AssertEqualObjects([doc subdocumentForKey: @"address"], address);
-    AssertEqualObjects(address.document, doc);
-    AssertEqualObjects(address.parent, doc);
-    AssertEqualObjects(address.properties, (@{@"street": @"1 Space Ave."}));
-    AssertEqualObjects(address[@"street"], @"1 Space Ave.");
+    AssertEqualObjects([address stringForKey: @"street"], @"1 Space Ave.");
 }
 
 
 - (void) testNestedSubdocuments {
-    doc[@"level1"] = [CBLSubdocument subdocument];
-    doc[@"level1"][@"name"] = @"n1";
+    CBLSubdocument *level1 = [CBLSubdocument subdocument];
+    [level1 setObject: @"n1" forKey: @"name"];
+    [doc setObject: level1 forKey: @"level1"];
     
-    doc[@"level1"][@"level2"] = [CBLSubdocument subdocument];
-    doc[@"level1"][@"level2"][@"name"] = @"n2";
+    CBLSubdocument *level2 = [CBLSubdocument subdocument];
+    [level2 setObject: @"n2" forKey: @"name"];
+    [level1 setObject: level2 forKey: @"level2"];
     
-    doc[@"level1"][@"level2"][@"level3"] = [CBLSubdocument subdocument];
-    doc[@"level1"][@"level2"][@"level3"][@"name"] = @"n3";
+    CBLSubdocument *level3 = [CBLSubdocument subdocument];
+    [level3 setObject: @"n3" forKey: @"name"];
+    [level2 setObject: level3 forKey: @"level3"];
     
-    CBLSubdocument *level1 = doc[@"level1"];
-    CBLSubdocument *level2 = doc[@"level1"][@"level2"];
-    CBLSubdocument *level3 = doc[@"level1"][@"level2"][@"level3"];
-    
-    AssertFalse(level1.exists);
-    AssertFalse(level2.exists);
-    AssertFalse(level3.exists);
-    
-    AssertEqualObjects(doc.properties, (@{@"level1": level1}));
-    AssertEqualObjects(level1.properties, (@{@"name": @"n1", @"level2": level2}));
-    AssertEqualObjects(level2.properties, (@{@"name": @"n2", @"level3": level3}));
-    AssertEqualObjects(level3.properties, (@{@"name": @"n3"}));
+    AssertEqualObjects([doc subdocumentForKey: @"level1"], level1);
+    AssertEqualObjects([[doc subdocumentForKey: @"level1"]
+                                subdocumentForKey: @"level2"], level2);
+    AssertEqualObjects([[[doc subdocumentForKey: @"level1"]
+                                subdocumentForKey: @"level2"]
+                                    subdocumentForKey: @"level3"], level3);
 }
 
 
-- (void) testSetDictionary {
-    doc[@"address"] = @{@"street": @"1 Space Ave."};
+- (void) testSetDocumentDictionary {
+    [doc setDictionary: @{ @"name": @"Jason",
+                           @"address": @{
+                                   @"street": @"1 Star Way.",
+                                   @"phones": @{@"mobile": @"650-123-4567"}
+                                   },
+                           @"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]
+                           }];
     
-    CBLSubdocument* address = doc[@"address"];
-    AssertEqualObjects(address.properties, @{@"street": @"1 Space Ave."});
+    CBLSubdocument* address = [doc subdocumentForKey: @"address"];
+    AssertEqualObjects([address stringForKey: @"street"], @"1 Star Way.");
     
-    NSError* error;
-    Assert([doc save: &error], @"Saving error: %@", error);
-    [self reopenDB];
+    CBLSubdocument* phones = [address subdocumentForKey: @"phones"];
+    AssertEqualObjects([phones stringForKey: @"mobile"], @"650-123-4567");
     
-    address = doc[@"address"];
-    AssertEqualObjects(address, doc[@"address"]);
-    AssertEqualObjects(address.properties, @{@"street": @"1 Space Ave."});
+    CBLArray* references = [doc arrayForKey: @"references"];
+    AssertEqual(references.count, 2u);
+    
+    CBLSubdocument* r1 = [references objectAtIndex: 0];
+    AssertEqualObjects([r1 stringForKey: @"name"], @"Scott");
+    
+    CBLSubdocument* r2 = [references objectAtIndex: 1];
+    AssertEqualObjects([r2 stringForKey: @"name"], @"Sam");
 }
 
 
-- (void) testSetDocumentProperties {
-    doc.properties = @{ @"name": @"Jason",
-                        @"address": @{
-                                @"street": @"1 Star Way.",
-                                @"phones": @{@"mobile": @"650-123-4567"}
-                                },
-                        @"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]
-                        };
+- (void) testSetSubdocumentToAnotherKey {
+    [doc setDictionary: @{ @"name": @"Jason",
+                           @"address": @{
+                                   @"street": @"1 Star Way.",
+                                   @"phones": @{@"mobile": @"650-123-4567"}
+                                   }
+                           }];
     
-    CBLSubdocument* address = doc[@"address"];
-    AssertEqualObjects(address.document, doc);
-    AssertEqualObjects(address.parent, doc);
-    AssertEqualObjects(address[@"street"], @"1 Star Way.");
-    
-    CBLSubdocument* phones = address[@"phones"];
-    AssertEqualObjects(phones.document, doc);
-    AssertEqualObjects(phones.parent, address);
-    AssertEqualObjects(phones[@"mobile"], @"650-123-4567");
-    
-    NSArray* references = doc[@"references"];
-    AssertEqual([references count], 2u);
-    
-    CBLSubdocument* r1 = references[0];
-    AssertEqualObjects(r1.document, doc);
-    AssertEqualObjects(r1.parent, doc);
-    AssertEqualObjects(r1[@"name"], @"Scott");
-    
-    CBLSubdocument* r2 = references[1];
-    AssertEqualObjects(r2.document, doc);
-    AssertEqualObjects(r2.parent, doc);
-    AssertEqualObjects(r2[@"name"], @"Sam");
-}
-
-
-- (void) testCopySubdocument {
-    doc.properties = @{ @"name": @"Jason",
-                        @"address": @{
-                                @"street": @"1 Star Way.",
-                                @"phones": @{@"mobile": @"650-123-4567"}
-                                }
-                        };
-    
-    CBLSubdocument* address = doc[@"address"];
-    AssertEqualObjects(address.document, doc);
-    AssertEqualObjects(address.parent, doc);
-    
-    CBLSubdocument* phones = address[@"phones"];
-    AssertEqualObjects(phones.document, doc);
-    AssertEqualObjects(phones.parent, address);
-    
-    CBLSubdocument* address2 = [address copy];
-    AssertFalse(address2 == address);
-    AssertNil(address2.document);
-    AssertNil(address2.parent);
-    AssertEqualObjects(address2[@"street"], address[@"street"]);
-    
-    CBLSubdocument* phones2 = address2[@"phones"];
-    AssertFalse(phones2 == phones);
-    AssertNil(phones2.document);
-    AssertEqualObjects(phones2.parent, address2);
-    AssertEqualObjects(phones2[@"mobile"], phones[@"mobile"]);
-}
-
-
-- (void) testSetSubdocumentFromAnotherKey {
-    doc.properties = @{ @"name": @"Jason",
-                        @"address": @{
-                                @"street": @"1 Star Way.",
-                                @"phones": @{@"mobile": @"650-123-4567"}
-                                }
-                        };
-    
-    CBLSubdocument* address = doc[@"address"];
-    AssertEqualObjects(address.document, doc);
-    AssertEqualObjects(address.parent, doc);
-    
-    CBLSubdocument* phones = address[@"phones"];
-    AssertEqualObjects(phones.document, doc);
-    AssertEqualObjects(phones.parent, address);
-    
-    doc[@"address2"] = address;
-    CBLSubdocument* address2 = doc[@"address2"];
-    AssertFalse(address2 == address);
-    AssertEqualObjects(address2.document, doc);
-    AssertEqualObjects(address2.parent, doc);
-    AssertEqualObjects(address2[@"street"], address[@"street"]);
-    
-    CBLSubdocument* phones2 = address2[@"phones"];
-    AssertFalse(phones2 == phones);
-    AssertEqualObjects(phones2.document, doc);
-    AssertEqualObjects(phones2.parent, address2);
-    AssertEqualObjects(phones2[@"mobile"], phones[@"mobile"]);
+    CBLSubdocument* address = [doc subdocumentForKey: @"address"];
+    [doc setObject: address forKey: @"address2"];
+    CBLSubdocument* address2 = [doc objectForKey: @"address2"];
+    Assert(address == address2);
 }
 
 
 - (void) testSubdocumentArray {
     NSArray* dicts = @[@{@"name": @"1"}, @{@"name": @"2"}, @{@"name": @"3"}, @{@"name": @"4"}];
-    doc.properties = @{@"subdocs": dicts};
+    [doc setDictionary: @{@"subdocs": dicts}];
     
-    NSArray* subdocs = doc[@"subdocs"];
+    CBLArray* subdocs = [doc arrayForKey: @"subdocs"];
     AssertEqual([subdocs count], 4u);
     
-    CBLSubdocument* s1 = subdocs[0];
-    CBLSubdocument* s2 = subdocs[1];
-    CBLSubdocument* s3 = subdocs[2];
-    CBLSubdocument* s4 = subdocs[3];
+    CBLSubdocument* s1 = [subdocs subdocumentAtIndex: 0];
+    CBLSubdocument* s2 = [subdocs subdocumentAtIndex: 1];
+    CBLSubdocument* s3 = [subdocs subdocumentAtIndex: 2];
+    CBLSubdocument* s4 = [subdocs subdocumentAtIndex: 3];
     
-    AssertEqualObjects(s1[@"name"], @"1");
-    AssertEqualObjects(s2[@"name"], @"2");
-    AssertEqualObjects(s3[@"name"], @"3");
-    AssertEqualObjects(s4[@"name"], @"4");
-    
-    // Make Changes:
-    
-    CBLSubdocument* s5 = [CBLSubdocument subdocument];
-    s5[@"name"] = @"5";
-    
-    NSArray* nuSubdocs1 = @[s5, @"dummy", s2, @{@"name": @"6"}, s1];
-    doc[@"subdocs"] = nuSubdocs1;
-    
-    NSArray* nuSubdocs2 = doc[@"subdocs"];
-    AssertEqual([nuSubdocs2 count], 5u);
-    AssertEqualObjects(nuSubdocs2[0], s5);
-    AssertEqualObjects(nuSubdocs2[1], @"dummy");
-    AssertEqualObjects(nuSubdocs2[2], s2);
-    AssertEqualObjects(nuSubdocs2[3], s4);
-    AssertEqualObjects(nuSubdocs2[4], s1);
-    
-    AssertEqualObjects(s1[@"name"], @"1");
-    AssertEqualObjects(s2[@"name"], @"2");
-    AssertEqualObjects(s4[@"name"], @"6");
-    AssertEqualObjects(s5[@"name"], @"5");
-    
-    // Check invalidated:
-    AssertNil(s3[@"name"]);
-    AssertNil(s3.document);
+    AssertEqualObjects([s1 stringForKey: @"name"], @"1");
+    AssertEqualObjects([s2 stringForKey: @"name"], @"2");
+    AssertEqualObjects([s3 stringForKey: @"name"], @"3");
+    AssertEqualObjects([s4 stringForKey: @"name"], @"4");
 }
 
 
 - (void) testSetSubdocumentPropertiesNil {
-    doc.properties = @{ @"name": @"Jason",
-                        @"address": @{
-                                @"street": @"1 Star Way.",
-                                @"phones": @{@"mobile": @"650-123-4567"}
-                                },
-                        @"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]
-                        };
+    [doc setDictionary: @{ @"name": @"Jason",
+                           @"address": @{
+                                   @"street": @"1 Star Way.",
+                                   @"phones": @{@"mobile": @"650-123-4567"}
+                                   },
+                           @"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]
+                           }];
     
-    CBLSubdocument* address = doc[@"address"];
-    CBLSubdocument* phones = address[@"phones"];
+    CBLSubdocument* address = [doc subdocumentForKey: @"address"];
+    CBLSubdocument* phones = [address subdocumentForKey: @"phones"];
     AssertNotNil(address);
     AssertNotNil(phones);
     
-    NSArray* references = doc[@"references"];
-    AssertEqual([references count], 2u);
-    CBLSubdocument* r1 = references[0];
-    CBLSubdocument* r2 = references[1];
+    CBLArray* references = [doc arrayForKey: @"references"];
+    AssertEqual(references.count, 2u);
+    CBLSubdocument* r1 = [references subdocumentAtIndex: 0];
+    CBLSubdocument* r2 = [references subdocumentAtIndex: 1];
     AssertNotNil(r1);
     AssertNotNil(r2);
     
-    doc[@"address"] = nil;
-    doc[@"references"] = nil;
+    [doc setObject: nil forKey: @"address"];
+    [doc setObject: nil forKey: @"references"];
     
     // Check address:
-    AssertNil(address.document);
-    AssertNil(address.parent);
-    AssertNil(address.properties);
-    AssertNil(address[@"street"]);
-    AssertNil(address[@"phones"]);
+    AssertEqualObjects([address stringForKey: @"street"], @"1 Star Way.");
+    AssertEqualObjects([address subdocumentForKey: @"phones"], phones);
     
     // Check phones:
-    AssertNil(phones.document);
-    AssertNil(phones.parent);
-    AssertNil(phones.properties);
-    AssertNil(phones[@"mobile"]);
+    AssertEqualObjects([phones stringForKey: @"mobile"], @"650-123-4567");
     
-    // Check references:
-    AssertNil(r1.document);
-    AssertNil(r1.parent);
-    AssertNil(r1.properties);
-    AssertNil(r1[@"name"]);
+    // Check references"
+    AssertEqual(references.count, 2u);
+    AssertEqualObjects([references subdocumentAtIndex: 0], r1);
+    AssertEqualObjects([references subdocumentAtIndex: 1], r2);
     
-    AssertNil(r2.document);
-    AssertNil(r2.parent);
-    AssertNil(r2.properties);
-    AssertNil(r2[@"name"]);
-}
-
-
-- (void) testSetDocumentPropertiesNil {
-    doc.properties = @{ @"name": @"Jason",
-                        @"address": @{
-                                @"street": @"1 Star Way.",
-                                @"phones": @{@"mobile": @"650-123-4567"}
-                                },
-                        @"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]
-                        };
+    AssertEqualObjects([r1 stringForKey: @"name"], @"Scott");
+    AssertEqualObjects([r2 stringForKey: @"name"], @"Sam");
     
-    CBLSubdocument* address = doc[@"address"];
-    CBLSubdocument* phones = address[@"phones"];
-    AssertNotNil(address);
-    AssertNotNil(phones);
-    
-    NSArray* references = doc[@"references"];
-    AssertEqual([references count], 2u);
-    CBLSubdocument* r1 = references[0];
-    CBLSubdocument* r2 = references[1];
-    AssertNotNil(r1);
-    AssertNotNil(r2);
-    
-    doc.properties = nil;
-    
-    // Check address:
-    AssertNil(address.document);
-    AssertNil(address.parent);
-    AssertNil(address.properties);
-    AssertNil(address[@"street"]);
-    AssertNil(address[@"phones"]);
-    
-    // Check phones:
-    AssertNil(phones.document);
-    AssertNil(phones.parent);
-    AssertNil(phones.properties);
-    AssertNil(phones[@"mobile"]);
-    
-    // Check references:
-    AssertNil(r1.document);
-    AssertNil(r1.parent);
-    AssertNil(r1.properties);
-    AssertNil(r1[@"name"]);
-    
-    AssertNil(r2.document);
-    AssertNil(r2.parent);
-    AssertNil(r2.properties);
-    AssertNil(r2[@"name"]);
-}
-
-
-- (void) testReplaceWithNonDict {
-    CBLSubdocument* address = [CBLSubdocument subdocument];
-    address[@"street"] = @"1 Star Way.";
-    AssertEqualObjects(address[@"street"], @"1 Star Way.");
-    AssertEqualObjects(address.properties, (@{@"street": @"1 Star Way."}));
-    
-    doc[@"address"] = address;
-    AssertEqualObjects(doc[@"address"], address);
-    AssertEqualObjects(address.document, doc);
-    
-    doc[@"address"] = @"123 Space Dr.";
-    AssertEqualObjects(doc[@"address"], @"123 Space Dr.");
-    AssertNil(address.document);
-    AssertNil(address.properties);
-}
-
-
-- (void) testReplaceWithNewSubdocument {
-    CBLSubdocument* address = [CBLSubdocument subdocument];
-    address[@"street"] = @"1 Star Way.";
-    AssertEqualObjects(address[@"street"], @"1 Star Way.");
-    AssertEqualObjects(address.properties, (@{@"street": @"1 Star Way."}));
-    
-    doc[@"address"] = address;
-    AssertEqualObjects(doc[@"address"], address);
-    AssertEqualObjects(address.document, doc);
-    
-    CBLSubdocument* nuAddress = [CBLSubdocument subdocument];
-    nuAddress[@"street"] = @"123 Space Dr.";
-    doc[@"address"] = nuAddress;
-    
-    AssertEqualObjects(doc[@"address"], nuAddress);
-    AssertNil(address.document);
-    AssertNil(address.properties);
-}
-
-
-- (void) testReplaceWithNewDocProperties {
-    doc.properties = @{ @"name": @"Jason",
-                        @"address": @{
-                                @"street": @"1 Star Way.",
-                                @"phones": @{@"mobile": @"650-123-4567"}
-                                },
-                        @"work": @{@"company": @"Couchbase"},
-                        @"subscription": @{@"type": @"silver"},
-                        @"expiration": @{@"date": @"2017-03-03T07:13:46.536Z"},
-                        @"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]
-                        };
-    
-    CBLSubdocument* address = doc[@"address"];
-    CBLSubdocument* phones = address[@"phones"];
-    AssertNotNil(address);
-    AssertNotNil(phones);
-    
-    CBLSubdocument* work = doc[@"work"];
-    AssertNotNil(work);
-    
-    CBLSubdocument* subscription = doc[@"subscription"];
-    AssertNotNil(subscription);
-    
-    CBLSubdocument* expiration = doc[@"expiration"];
-    AssertNotNil(expiration);
-    
-    NSArray* references = doc[@"references"];
-    AssertEqual([references count], 2u);
-    CBLSubdocument* r1 = references[0];
-    CBLSubdocument* r2 = references[1];
-    AssertNotNil(r1);
-    AssertNotNil(r2);
-    
-    CBLSubdocument* nuSubscription = [CBLSubdocument subdocument];
-    nuSubscription[@"type"] = @"platinum";
-    
-    NSDate* date = [NSDate date];
-    doc.properties = @{ @"name": @"Jason",
-                        @"address": @"1 Star Way.",
-                        @"work": @{ @"company": @"Couchbase", @"position": @"Engineer" },
-                        @"subscription": nuSubscription,
-                        @"expiration": date,
-                        @"references": @[@{@"name": @"Smith"}]
-                        };
-    
-    AssertEqualObjects(doc[@"address"], @"1 Star Way.");
-    AssertNil(address.document);
-    AssertNil(address.parent);
-    AssertNil(address.properties);
-    
-    AssertNil(phones.document);
-    AssertNil(phones.parent);
-    AssertNil(phones.properties);
-    
-    AssertEqual(doc[@"work"], work);
-    AssertEqualObjects(work[@"company"], @"Couchbase");
-    AssertEqualObjects(work[@"position"], @"Engineer");
-    
-    AssertEqualObjects(doc[@"subscription"], nuSubscription);
-    AssertEqualObjects(nuSubscription[@"type"], @"platinum");
-    AssertNil(subscription.document);
-    AssertNil(subscription.parent);
-    AssertNil(subscription.properties);
-    
-    AssertEqualObjects([CBLJSON JSONObjectWithDate: [doc dateForKey: @"expiration"]],
-                       [CBLJSON JSONObjectWithDate: date]);
-    AssertNil(expiration.document);
-    AssertNil(expiration.parent);
-    AssertNil(expiration.properties);
-    
-    references = doc[@"references"];
-    AssertEqual([references count], 1u);
-    AssertEqualObjects(references[0], r1);
-    AssertEqualObjects(r1.document, doc);
-    AssertEqualObjects(r1.parent, doc);
-    AssertEqualObjects(r1[@"name"], @"Smith");
-    AssertNil(r2.document);
-    AssertNil(r2.parent);
-    AssertNil(r2.properties);
+    Assert([doc subdocumentForKey: @"address"] != address);
+    Assert([doc arrayForKey: @"references"] != references);
 }
 
 
 - (void) testDeleteDocument {
-    doc.properties = @{ @"name": @"Jason",
-                        @"address": @{
-                                @"street": @"1 Star Way.",
-                                @"phones": @{@"mobile": @"650-123-4567"}
-                                },
-                        @"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]
-                        };
-    
+    [doc setDictionary: @{ @"name": @"Jason",
+                           @"address": @{
+                                   @"street": @"1 Star Way.",
+                                   @"phones": @{@"mobile": @"650-123-4567"}
+                                   },
+                           @"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]
+                           }];
     NSError* error;
-    Assert([doc save: &error], @"Saving error: %@", error);
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     
-    CBLSubdocument* address = doc[@"address"];
-    CBLSubdocument* phones = address[@"phones"];
+    CBLSubdocument* address = [doc subdocumentForKey: @"address"];
+    CBLSubdocument* phones = [address subdocumentForKey: @"phones"];
     AssertNotNil(address);
     AssertNotNil(phones);
     
-    NSArray* references = doc[@"references"];
-    AssertEqual([references count], 2u);
-    CBLSubdocument* r1 = references[0];
-    CBLSubdocument* r2 = references[1];
+    CBLArray* references = [doc arrayForKey: @"references"];
+    AssertEqual(references.count, 2u);
+    CBLSubdocument* r1 = [references subdocumentAtIndex: 0];
+    CBLSubdocument* r2 = [references subdocumentAtIndex: 1];
     AssertNotNil(r1);
     AssertNotNil(r2);
-
+    
+    
     Assert([doc deleteDocument: &error], @"Deleting error: %@", error);
     
-    // Check doc:
-    Assert(doc.exists);
-    AssertNil(doc.properties);
-    AssertNil(doc[@"name"]);
-    AssertNil(doc[@"address"]);
-    AssertNil(doc[@"references"]);
-    
     // Check address:
-    AssertNil(address.document);
-    AssertNil(address.parent);
-    AssertFalse(address.exists);
-    AssertNil(address.properties);
-    AssertNil(address[@"street"]);
-    AssertNil(address[@"phones"]);
+    AssertEqualObjects([address stringForKey: @"street"], @"1 Star Way.");
+    AssertEqualObjects([address subdocumentForKey: @"phones"], phones);
     
     // Check phones:
-    AssertNil(phones.document);
-    AssertNil(phones.parent);
-    AssertFalse(phones.exists);
-    AssertNil(phones.properties);
-    AssertNil(phones[@"mobile"]);
+    AssertEqualObjects([phones stringForKey: @"mobile"], @"650-123-4567");
     
-    // Check references:
-    AssertNil(r1.document);
-    AssertNil(r1.parent);
-    AssertFalse(r1.exists);
-    AssertNil(r1.properties);
-    AssertNil(r1[@"name"]);
+    // Check references"
+    AssertEqual(references.count, 2u);
+    AssertEqualObjects([references subdocumentAtIndex: 0], r1);
+    AssertEqualObjects([references subdocumentAtIndex: 1], r2);
     
-    AssertNil(r2.document);
-    AssertNil(r2.parent);
-    AssertFalse(r2.exists);
-    AssertNil(r2.properties);
-    AssertNil(r2[@"name"]);
+    AssertEqualObjects([r1 stringForKey: @"name"], @"Scott");
+    AssertEqualObjects([r2 stringForKey: @"name"], @"Sam");
 }
-
 
 @end
