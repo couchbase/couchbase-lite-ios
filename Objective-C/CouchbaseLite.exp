@@ -7,28 +7,30 @@
 #  All public global symbols -- classes, functions, constants -- need to be declared here.
 
 #  Public classes:
+.objc_class_name_CBLArray
 .objc_class_name_CBLBlob
+.objc_class_name_CBLDictionary
 .objc_class_name_CBLDatabase
 .objc_class_name_CBLDatabaseOptions
 .objc_class_name_CBLDocument
 .objc_class_name_CBLFullTextQueryRow
 .objc_class_name_CBLProperties
 .objc_class_name_CBLQuery
-.objc_class_name_CBLQueryRow
-.objc_class_name_CBLReplication
-.objc_class_name_CBLSubdocument
-
 .objc_class_name_CBLQueryDataSource
 .objc_class_name_CBLQueryExpression
 .objc_class_name_CBLQueryOrderBy
 .objc_class_name_CBLQuerySelect
+.objc_class_name_CBLQueryRow
+.objc_class_name_CBLReadOnlyArray
+.objc_class_name_CBLReadOnlyDocument
+.objc_class_name_CBLReadOnlySubdocument
+.objc_class_name_CBLReadOnlyDictionary
+.objc_class_name_CBLSubdocument
+.objc_class_name_CBLReplication
 
 #  Public constants:
 _kCBLDatabaseChangeNotification
 _kCBLDatabaseChangesUserInfoKey
 _kCBLDatabaseIsExternalUserInfoKey
 _kCBLDatabaseLastSequenceUserInfoKey
-_kCBLDocumentChangeNotification
-_kCBLDocumentIsExternalUserInfoKey
-_kCBLDocumentSavedNotification
 _kCBLReplicationStatusChangeNotification
