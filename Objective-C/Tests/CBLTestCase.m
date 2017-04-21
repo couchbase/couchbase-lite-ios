@@ -114,14 +114,13 @@
             [contents enumerateLinesUsingBlock: ^(NSString *line, BOOL *stop) {
                 NSString* docID = [NSString stringWithFormat: @"doc-%03llu", ++n];
                 NSData* json = [line dataUsingEncoding: NSUTF8StringEncoding];
-                CBLDocument* doc = [self.db documentWithID: docID];
+                CBLDocument* doc = [[CBLDocument alloc] initWithID: docID];
                 NSError* error;
-                NSDictionary* properties = [NSJSONSerialization JSONObjectWithData: (NSData*)json
-                                                                           options: 0
-                                                                             error: &error];
-                Assert(properties, @"Couldn't parse line %llu of %@.json: %@", n, resourceName, error);
-                doc.properties = properties;
-                bool saved = [doc save: &error];
+                NSDictionary* dict = [NSJSONSerialization JSONObjectWithData: (NSData*)json
+                                                                     options: 0 error: &error];
+                Assert(dict, @"Couldn't parse line %llu of %@.json: %@", n, resourceName, error);
+                [doc setDictionary: dict];
+                BOOL saved = [_db saveDocument: doc error: &error];
                 Assert(saved, @"Couldn't save document: %@", error);
             }];
         }];

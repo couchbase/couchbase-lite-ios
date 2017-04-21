@@ -89,7 +89,7 @@
                 doc.properties = props;
 
                 NSError* error;
-                if (![doc save: &error])
+                if (![_db saveDocument: doc error: &error])
                     NSAssert(NO, @"Couldn't save doc: %@", error);
             }
         }
