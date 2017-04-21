@@ -37,7 +37,7 @@ end
 
 ### Carthage
 
-You can use [Carthage](https://github.com/Carthage/Carthage) to install `CouchbaseLite` by adding it in your [Carfile](https://github.com/Carthage/Carthage/blob/master/Documentation/Artifacts.md#cartfile):
+You can use [Carthage](https://github.com/Carthage/Carthage) to install `CouchbaseLite` by adding it in your [Cartfile](https://github.com/Carthage/Carthage/blob/master/Documentation/Artifacts.md#cartfile):
 
 ```
 github "couchbase/couchbase-lite-ios" "2.0DB004"
