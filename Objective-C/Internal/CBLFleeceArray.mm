@@ -54,7 +54,7 @@
 }
 
 
-- (id <CBLReadOnlyArray>) data {
+- (id<CBLReadOnlyArray>) data {
     return self;
 }
 

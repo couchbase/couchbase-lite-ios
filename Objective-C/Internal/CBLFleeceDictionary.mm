@@ -55,7 +55,7 @@
 }
 
 
-- (id <CBLReadOnlyDictionary>) data {
+- (id<CBLReadOnlyDictionary>) data {
     return self;
 }
 
@@ -146,7 +146,7 @@
 }
 
 
-- (NSDictionary<NSString*, id>*) toDictionary {
+- (NSDictionary<NSString*,id>*) toDictionary {
     NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithCapacity: FLDict_Count(_dict)];
     FLDictIterator iter;
     FLDictIterator_Begin(_dict, &iter);

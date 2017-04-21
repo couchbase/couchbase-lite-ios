@@ -8,8 +8,9 @@
 
 #import <Foundation/Foundation.h>
 @class CBLBlob;
-@class CBLReadOnlySubdocument;
 @class CBLReadOnlyArray;
+@class CBLReadOnlySubdocument;
+
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -75,7 +76,7 @@ NS_ASSUME_NONNULL_BEGIN
  NSObject for the property value. */
 - (BOOL) containsObjectForKey: (NSString*)key;
 
-- (NSDictionary<NSString*, id>*) toDictionary;
+- (NSDictionary<NSString*,id>*) toDictionary;
 
 - (NSArray*) allKeys; // TODO: This is temporary until implementing NSFastEnumeration protocol.
 

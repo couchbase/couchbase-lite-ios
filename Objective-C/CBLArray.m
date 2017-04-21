@@ -8,14 +8,14 @@
 
 #import "CBLArray.h"
 #import "CBLBlob.h"
+#import "CBLData.h"
 #import "CBLDocument+Internal.h"
 #import "CBLFleeceArray.h"
 #import "CBLJSON.h"
-#import "CBLMissing.h"
 #import "CBLSubdocument.h"
 
 @implementation CBLArray {
-    NSMutableArray *_array;
+    NSMutableArray* _array;
     NSMapTable* _changeListeners;
     BOOL _changed;
 }
@@ -31,7 +31,16 @@
 }
 
 
-- (instancetype) initWithData: (id <CBLReadOnlyArray>)data {
+- (instancetype) initWithArray: (NSArray*)array {
+    self = [self init];
+    if (self) {
+        [self setArray: array];
+    }
+    return self;
+}
+
+
+- /*internal */ (instancetype) initWithData: (id<CBLReadOnlyArray>)data {
     self = [super initWithData: data];
     if (self ) {
         _array = [NSMutableArray array];
@@ -124,9 +133,9 @@
     for (id item in _array) {
         id value = item;
         if ([value conformsToProtocol: @protocol(CBLReadOnlyDictionary)])
-            value = [((id <CBLReadOnlyDictionary>) value) toDictionary];
+            value = [value toDictionary];
         else if ([value conformsToProtocol: @protocol(CBLReadOnlyArray)])
-            value = [((id <CBLReadOnlyArray>) value) toArray];
+            value = [value toArray];
         [array addObject: value];
     }
     return array;
@@ -245,7 +254,7 @@
 
 - (nullable id) prepareValue: (nullable id)value {
     value = [self convertValue: value];
-    Assert([self validateValue: value], @"Unsupported value type.");
+    Assert([CBLData validateValue: value], @"Unsupported value type.");
     return value;
 }
 
@@ -325,22 +334,6 @@
         _changed = YES;
         [self notifyChangeListeners];
     }
-}
-
-
-- (BOOL) validateValue: (id)value {
-    // TODO: This validation could have performance impact.
-    return value == nil || value == [NSNull null] ||
-            [value isKindOfClass: [NSString class]] ||
-            [value isKindOfClass: [NSNumber class]] ||
-            [value isKindOfClass: [NSDate class]] ||
-            [value isKindOfClass: [CBLBlob class]] ||
-            [value isKindOfClass: [CBLSubdocument class]] ||
-            [value isKindOfClass: [CBLArray class]] ||
-            [value isKindOfClass: [CBLReadOnlySubdocument class]] ||
-            [value isKindOfClass: [CBLReadOnlyArray class]] ||
-            [value isKindOfClass: [NSDictionary class]] ||
-            [value isKindOfClass: [NSArray class]];
 }
 
 

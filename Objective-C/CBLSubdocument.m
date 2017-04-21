@@ -26,17 +26,21 @@
 }
 
 
-- (instancetype) initWithData: (id <CBLReadOnlyDictionary>)data {
-    self = [super initWithData: data];
+- (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary {
+    self = [self init];
     if (self) {
-        _dict = [[CBLDictionary alloc] initWithData: data];
+        [self setDictionary: dictionary];
     }
     return self;
 }
 
 
-- (CBLDictionary *)dictionary {
-    return _dict;
+- /* internal */ (instancetype) initWithData: (id<CBLReadOnlyDictionary>)data {
+    self = [super initWithData: data];
+    if (self) {
+        _dict = [[CBLDictionary alloc] initWithData: data];
+    }
+    return self;
 }
 
 
@@ -164,12 +168,22 @@
 }
 
 
+#pragma mark - INTERNAL
+
+
+- (CBLDictionary*)dictionary {
+    return _dict;
+}
+
+
 #pragma mark - FLEECE ENCODING
 
 
-- (void) fleeceEncode:(FLEncoder)encoder {
-    
+- (BOOL) fleeceEncode: (FLEncoder)encoder
+             database: (CBLDatabase*)database
+                error: (NSError**)outError
+{
+    return [_dict fleeceEncode: encoder database: database error: outError];
 }
-
 
 @end

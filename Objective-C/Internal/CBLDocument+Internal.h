@@ -71,7 +71,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithDocumentID: (NSString*)documentID
                               c4Doc: (nullable CBLC4Document*)c4Doc
-                               data: (id <CBLReadOnlyDictionary>)data;
+                               data: (id<CBLReadOnlyDictionary>)data;
 
 @end
 
@@ -105,9 +105,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLReadOnlyArray () <CBLFleeceEncodable>
 
-@property (nonatomic) id <CBLReadOnlyArray> data;
+@property (nonatomic) id<CBLReadOnlyArray> data;
 
-- (instancetype) initWithData: (id <CBLReadOnlyArray>)data;
+- (instancetype) initWithData: (id<CBLReadOnlyArray>)data;
 
 @end
 
@@ -115,11 +115,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLReadOnlyDictionary () <CBLFleeceEncodable>
 
-@property (nonatomic) id <CBLReadOnlyDictionary> data;
+@property (nonatomic) id<CBLReadOnlyDictionary> data;
 
 @property (nonatomic, readonly) BOOL isEmpty;
 
-- (instancetype) initWithData: (id <CBLReadOnlyDictionary>)data;
+- (instancetype) initWithData: (id<CBLReadOnlyDictionary>)data;
+
+- (BOOL) isFleeceEncodableValue: (id)value;
 
 @end
 

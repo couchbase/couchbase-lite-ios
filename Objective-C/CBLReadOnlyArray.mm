@@ -14,17 +14,12 @@
 
 @synthesize data=_data;
 
-- /* internal */ (instancetype) initWithData: (id <CBLReadOnlyArray>)data {
+- /* internal */ (instancetype) initWithData: (id<CBLReadOnlyArray>)data {
     self = [super init];
     if (self) {
         _data = data;
     }
     return self;
-}
-
-
-- (void) setData: (id <CBLReadOnlyArray>)data {
-    _data = data;
 }
 
 
@@ -94,12 +89,20 @@
     for (NSUInteger i = 0; i < count; i++) {
         id value = [self objectAtIndex: i];
         if ([value conformsToProtocol: @protocol(CBLReadOnlyDictionary)])
-            value = [((id <CBLReadOnlyDictionary>) value) toDictionary];
+            value = [value toDictionary];
         else if ([value conformsToProtocol: @protocol(CBLReadOnlyArray)])
-            value = [((id <CBLReadOnlyArray>) value) toArray];
+            value = [value toArray];
         [array addObject: value];
     }
     return array;
+}
+
+
+#pragma mark - INTERNAL
+
+
+- (void) setData: (id <CBLReadOnlyArray>)data {
+    _data = data;
 }
 
 
@@ -115,9 +118,8 @@
     for (NSUInteger i = 0; i < count; i++) {
         id value = [self objectAtIndex: i];
         if (!value) value = [NSNull null];
-        if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]){
-            id<CBLFleeceEncodable> encodable = (id<CBLFleeceEncodable>)value;
-            if (![encodable fleeceEncode: encoder database: database error: outError])
+        if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]) {
+            if (![value fleeceEncode: encoder database: database error: outError])
                 return NO;
         } else
            FLEncoder_WriteNSObject(encoder, value);

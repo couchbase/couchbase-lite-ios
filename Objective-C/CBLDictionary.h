@@ -36,7 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable CBLArray*) arrayForKey: (NSString*)key;
 
-- (void) setDictionary: (NSDictionary<NSString*, id>*)dictionary;
+- (void) setDictionary: (NSDictionary<NSString*,id>*)dictionary;
 
 @end
 

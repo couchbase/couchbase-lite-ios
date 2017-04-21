@@ -9,7 +9,6 @@
 #import "CBLReadOnlyDictionary.h"
 #import "CBLCoreBridge.h"
 #import "CBLDocument+Internal.h"
-#import "CBLMissing.h"
 #import "CBLStringBytes.h"
 
 
@@ -26,11 +25,6 @@
         _data = data;
     }
     return self;
-}
-
-
-- /* internal */ (void) setData: (id <CBLReadOnlyDictionary>)data {
-    _data = data;
 }
 
 
@@ -104,15 +98,15 @@
 }
 
 
-- (NSDictionary<NSString*, id>*) toDictionary {
+- (NSDictionary<NSString*,id>*) toDictionary {
     NSMutableDictionary* dict = [NSMutableDictionary dictionary];
     NSArray* keys = [self allKeys];
     for (NSString* key in keys) {
         id value = [self objectForKey: key];
         if ([value conformsToProtocol: @protocol(CBLReadOnlyDictionary)])
-            value = [((id <CBLReadOnlyDictionary>) value) toDictionary];
+            value = [value toDictionary];
         else if ([value conformsToProtocol: @protocol(CBLReadOnlyArray)])
-            value = [((id <CBLReadOnlyArray>) value) toArray];
+            value = [value toArray];
         dict[key] = value;
     }
     return dict;
@@ -122,12 +116,23 @@
 #pragma mark INTERNAL
 
 
+- (void) setData: (id<CBLReadOnlyDictionary>)data {
+    _data = data;
+}
+
+
 - (BOOL) isEmpty {
     return _data.count == 0;
 }
 
 
-#pragma mark FLEECE ENCODABLE
+
+#pragma mark FLEECE ENCODING
+
+
+- (BOOL) isFleeceEncodableValue: (id)value {
+    return YES;
+}
 
 
 - (BOOL) fleeceEncode: (FLEncoder)encoder
@@ -140,17 +145,14 @@
         CBLStringBytes bKey(key);
         FLEncoder_WriteKey(encoder, bKey);
         id value = [self objectForKey: key];
-        if (value == [CBLMissing value])
-            continue;
-        else if (!value)
-            value = [NSNull null];
-        
-        if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]){
-            id<CBLFleeceEncodable> encodable = (id<CBLFleeceEncodable>)value;
-            if (![encodable fleeceEncode: encoder database: database error: outError])
-                return NO;
-        } else {
-            FLEncoder_WriteNSObject(encoder, value);
+        if ([self isFleeceEncodableValue: value]) {
+            if (!value)
+                value = [NSNull null];
+            if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]){
+                if (![value fleeceEncode: encoder database: database error: outError])
+                    return NO;
+            } else
+                FLEncoder_WriteNSObject(encoder, value);
         }
     }
     FLEncoder_EndDict(encoder);

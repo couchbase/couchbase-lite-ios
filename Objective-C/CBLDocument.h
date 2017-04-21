@@ -21,10 +21,22 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLDocument : CBLReadOnlyDocument <CBLDictionary>
 
 /**  */
++ (instancetype) document;
+
+/**  */
++ (instancetype) documentWithID: (NSString*)documentID;
+
+/**  */
 - (instancetype) init;
 
 /**  */
 - (instancetype) initWithID: (NSString*)documentID;
+
+/** */
+- (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary;
+
+/** */
+- (instancetype) initWithID: (NSString*)documentID dictionary: (NSDictionary<NSString*,id>*)dictionary;
 
 @end
 

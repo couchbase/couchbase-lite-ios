@@ -14,7 +14,6 @@
 //  and limitations under the License.
 
 #import "CBLDocument.h"
-#import "c4Observer.h"
 #import "CBLArray.h"
 #import "CBLC4Document.h"
 #import "CBLConflictResolver.h"
@@ -29,11 +28,6 @@
 #import "CBLSubdocument.h"
 
 
-NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChangeNotification";
-NSString* const kCBLDocumentSavedNotification = @"CBLDocumentSavedNotification";
-NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserInfoKey";
-
-
 @implementation CBLDocument {
     C4Database* _c4db;      // nullable
     CBLDictionary* _dict;
@@ -44,13 +38,23 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 @synthesize swiftDocument=_swiftDocument;
 
 
++ (instancetype) document {
+    return [[self alloc] init];
+}
+
+
++ (instancetype) documentWithID: (NSString*)documentID {
+    return [[self alloc] initWithID: documentID];
+}
+
+
 - (instancetype) init {
     return [self initWithID: CBLCreateUUID()];
 }
 
 
 - (instancetype) initWithID: (NSString*)documentID {
-    self = [super initWithDocumentID: documentID c4Doc: nil  data: [CBLFleeceDictionary empty]];
+    self = [super initWithDocumentID: documentID c4Doc: nil data: [CBLFleeceDictionary empty]];
     if (self) {
         _dict = [[CBLDictionary alloc] initWithData: self.data];
     }
@@ -58,10 +62,30 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 }
 
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                       documentID: (NSString*)documentID
-                        mustExist: (BOOL)mustExist
-                            error: (NSError**)outError
+- (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary {
+    self = [self init];
+    if (self) {
+        [self setDictionary: dictionary];
+    }
+    return self;
+}
+
+
+- (instancetype) initWithID: (NSString*)documentID
+                 dictionary: (NSDictionary<NSString*,id>*)dictionary
+{
+    self = [self initWithID: documentID];
+    if (self) {
+        [self setDictionary: dictionary];
+    }
+    return self;
+}
+
+
+- /* internal */ (instancetype) initWithDatabase: (CBLDatabase*)database
+                                      documentID: (NSString*)documentID
+                                       mustExist: (BOOL)mustExist
+                                           error: (NSError**)outError
 {
     self = [super initWithDocumentID: documentID c4Doc: nil data: [CBLFleeceDictionary empty]];
     if (self) {
@@ -141,7 +165,7 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 }
 
 
-- (NSDictionary<NSString*, id>*) toDictionary {
+- (NSDictionary<NSString*,id>*) toDictionary {
     return [_dict toDictionary];
 }
 
@@ -291,11 +315,9 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     
     // Update super:
     [super setC4Doc: c4doc];
-    self.data = [CBLFleeceDictionary withDict: root
-                                     document: c4doc
-                                     database: _database];
+    super.data = [CBLFleeceDictionary withDict: root document: c4doc database: _database];
     
-    // Update data:
+    // Update delegate dictionary:
     _dict = [[CBLDictionary alloc] initWithData: self.data];
 }
 
@@ -411,7 +433,6 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     
     // Create the current readonly document with the current revision:
     CBLC4Document* curC4doc = [CBLC4Document document: rawDoc];
-    
     CBLFleeceDictionary* curDict = [CBLFleeceDictionary withDict: curRoot document: curC4doc
                                                         database: self.database];
     CBLReadOnlyDocument* current = [[CBLReadOnlyDocument alloc] initWithDocumentID: self.documentID
@@ -447,8 +468,8 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     }
 
     // Now update my state to the current C4Document and the merged/resolved properties:
-    if (!$equal(resolved, current)) { // TODO: Implement deep comparison
-        NSDictionary* dict = [resolved toDictionary]; // TODO: toDictionary is expensive
+    if (!$equal(resolved, current)) {                   // TODO: Implement deep comparison
+        NSDictionary* dict = [resolved toDictionary];   // TODO: toDictionary is expensive
         [self setC4Doc: curC4doc];
         [self setDictionary: dict];
     } else

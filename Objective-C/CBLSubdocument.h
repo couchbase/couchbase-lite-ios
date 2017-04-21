@@ -18,6 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) init;
 
+- (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary;
+
 @end
 
 /** Define Subscription methods for CBLDocument. */

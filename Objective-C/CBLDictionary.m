@@ -9,9 +9,9 @@
 #import "CBLDictionary.h"
 #import "CBLArray.h"
 #import "CBLBlob.h"
+#import "CBLData.h"
 #import "CBLDocument+Internal.h"
 #import "CBLJSON.h"
-#import "CBLMissing.h"
 #import "CBLSubdocument.h"
 
 
@@ -25,7 +25,14 @@
 @synthesize changed=_changed;
 
 
-- /* internal */ (instancetype) initWithData: (id <CBLReadOnlyDictionary>)data {
+static id kRemovedValue;
++ (void) initialize {
+    if (self == [CBLDictionary class]) {
+        kRemovedValue = [[NSObject alloc] init];
+    }
+}
+
+- /* internal */ (instancetype) initWithData: (id<CBLReadOnlyDictionary>)data {
     self = [super initWithData: data];
     if (self) {
         _dict = [NSMutableDictionary dictionary];
@@ -45,7 +52,7 @@
     }
     
     [_dict enumerateKeysAndObjectsUsingBlock: ^(NSString *key, id value, BOOL *stop) {
-        if (value == [CBLMissing value])
+        if (value == kRemovedValue)
             count -= 1;
     }];
     return count;
@@ -63,7 +70,7 @@
             value = [self convertReadOnlyArray: value];
             [self setValue: value forKey: key isChange: NO];
         }
-    } else if (value == [CBLMissing value])
+    } else if (value == kRemovedValue)
         value = nil;
     if (value == [NSNull null])
         value = nil; // Cross-platform behavior
@@ -76,7 +83,7 @@
     if (!value)
         return [super booleanForKey: key];
     else {
-        if (value == [CBLMissing value])
+        if (value == kRemovedValue)
             return NO;
         else if (value == [NSNull null])
             return NO;
@@ -180,7 +187,7 @@
     if (!value)
         return [super containsObjectForKey: key];
     else
-        return value != [CBLMissing value] ? YES : NO;
+        return value != kRemovedValue ? YES : NO;
 }
 
 
@@ -192,7 +199,7 @@
     }
     
     [_dict enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
-        if (value == [CBLMissing value])
+        if (value == kRemovedValue)
             [result removeObject: key];
     }];
     
@@ -200,10 +207,10 @@
 }
 
 
-- (NSDictionary<NSString*, id>*) toDictionary {
+- (NSDictionary<NSString*,id>*) toDictionary {
     NSMutableDictionary* result = [_dict mutableCopy];
     
-    // Bring the backing data up:
+    // Backing data:
     NSDictionary* backingData = [super toDictionary];
     [backingData enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         if (!result[key])
@@ -212,12 +219,12 @@
     
     for (NSString* key in [result allKeys]) {
         id value = result[key];
-        if (value == [CBLMissing value])
+        if (value == kRemovedValue)
             result[key] = nil; // Remove key
         else if ([value conformsToProtocol: @protocol(CBLReadOnlyDictionary)])
-            result[key] = [((id <CBLReadOnlyDictionary>) value) toDictionary];
+            result[key] = [value toDictionary];
         else if ([value conformsToProtocol: @protocol(CBLReadOnlyArray)])
-            result[key] = [((id <CBLReadOnlyArray>) value) toArray];
+            result[key] = [value toArray];
     }
     
     return result;
@@ -262,7 +269,7 @@
 }
 
 
-- (void) setDictionary: (NSDictionary<NSString*, id>*)dictionary {
+- (void) setDictionary: (NSDictionary<NSString*,id>*)dictionary {
     // Detach all objects that we are listening to for changes:
     [self detachChildChangeListeners];
     
@@ -275,7 +282,7 @@
     NSDictionary* backingData = [super toDictionary];
     [backingData enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         if (!result[key])
-            result[key] = [CBLMissing value];
+            result[key] = kRemovedValue;
     }];
     
     _dict = result;
@@ -290,7 +297,7 @@
 - (BOOL) isEmpty {
     __block BOOL isEmpty = YES;
     [_dict enumerateKeysAndObjectsUsingBlock: ^(NSString *key, id value, BOOL *stop) {
-        if (value != [CBLMissing value]) {
+        if (value != kRemovedValue) {
             isEmpty = NO;
             *stop = YES;
         }
@@ -302,34 +309,26 @@
 }
 
 
+#pragma mark - FLEECE ENCODING
+
+
+- (BOOL) isFleeceEncodableValue: (id)value {
+    return value != kRemovedValue;
+}
+
+
 #pragma mark - PRIVATE
 
 
 - (nullable id) prepareValue: (nullable id)value {
-    Assert([self validateValue: value], @"Unsupported value type.");
+    Assert([CBLData validateValue: value], @"Unsupported value type.");
     return [self convertValue: value];
-}
-
-
-- (BOOL) validateValue: (id)value {
-    // TODO: This validation could have performance impact.
-    return value == nil || value == [NSNull null] ||
-            [value isKindOfClass: [NSString class]] ||
-            [value isKindOfClass: [NSNumber class]] ||
-            [value isKindOfClass: [NSDate class]] ||
-            [value isKindOfClass: [CBLBlob class]] ||
-            [value isKindOfClass: [CBLSubdocument class]] ||
-            [value isKindOfClass: [CBLArray class]] ||
-            [value isKindOfClass: [CBLReadOnlySubdocument class]] ||
-            [value isKindOfClass: [CBLReadOnlyArray class]] ||
-            [value isKindOfClass: [NSDictionary class]] ||
-            [value isKindOfClass: [NSArray class]];
 }
 
 
 - (id) convertValue: (id)value {
     if (!value)
-        return [CBLMissing value]; // Represent removed key
+        return kRemovedValue; // Represent removed key
     else if ([value isKindOfClass: [CBLSubdocument class]])
         return [self convertSubdocument: value];
     else if ([value isKindOfClass: [CBLArray class]])
@@ -444,7 +443,7 @@
 
 
 - (void) notifyChangeListeners {
-    for (id <CBLObjectChangeListener> listener in _changeListeners) {
+    for (id<CBLObjectChangeListener> listener in _changeListeners) {
         [listener objectDidChange: self];
     }
 }
