@@ -211,13 +211,8 @@
 #pragma mark - SUBSCRIPTION
 
 
-- (nullable id) objectForKeyedSubscript: (NSString*)key {
-    return [_dict objectForKey: key];
-}
-
-
-- (void) setObject: (nullable id)value forKeyedSubscript: (NSString*)key {
-    [_dict setObject: value forKey: key];
+- (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
+    return [_dict objectForKeyedSubscript: key];
 }
 
 
@@ -399,7 +394,7 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
         }
         
         put.body = {body.buf, body.size};
-        docTypeSlice = self[@"type"];
+        docTypeSlice = [self objectForKey: @"type"];
         put.docType = docTypeSlice;
     }
     

@@ -11,6 +11,7 @@
 #import "CBLBlob.h"
 #import "CBLData.h"
 #import "CBLDocument+Internal.h"
+#import "CBLFragment.h"
 #import "CBLJSON.h"
 #import "CBLSubdocument.h"
 
@@ -288,6 +289,15 @@ static id kRemovedValue;
     _dict = result;
     
     [self setChanged];
+}
+
+
+#pragma mark - SUBSCRIPTION
+
+
+- (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
+    id value = [self objectForKey: key];
+    return [[CBLFragment alloc] initWithValue: value parent: self parentKey: key];
 }
 
 

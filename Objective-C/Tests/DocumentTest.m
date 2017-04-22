@@ -369,7 +369,7 @@
     AssertNil([doc objectForKey: @"active"]);
     AssertNil([[doc subdocumentForKey: @"address"] objectForKey: @"city"]);
     
-    CBLSubdocument* address = doc[@"address"];
+    CBLSubdocument* address = [doc subdocumentForKey: @"address"];
     AssertEqualObjects([doc toDictionary], (@{ @"type": @"profile",
                                                @"address": @{
                                                        @"street": @"1 milky way.",
@@ -381,7 +381,6 @@
     // Remove the rest:
     [doc setObject: nil forKey: @"type"];
     [doc setObject: nil forKey: @"address"];
-    doc[@"address"] = nil;
     AssertNil([doc objectForKey: @"type"]);
     AssertNil([doc objectForKey: @"address"]);
     AssertEqualObjects([doc toDictionary], @{});
@@ -486,7 +485,7 @@
     self.db.conflictResolver = [TheirsWins new];
     doc = [self setupConflict];
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
-    AssertEqualObjects(doc[@"name"], @"Scotty");
+    AssertEqualObjects([doc objectForKey: @"name"], @"Scotty");
     
     // Get a new document with its own conflict resolver
     doc = [[CBLDocument alloc] initWithID: @"doc2"];
@@ -567,14 +566,14 @@
     NSError* error;
     CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
     Assert(data, @"Failed to create blob: %@", error);
-    doc[@"data"] = data;
-    doc[@"name"] = @"Jim";
+    [doc setObject: data forKey: @"data"];
+    [doc setObject: @"Jim" forKey: @"name"];
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     
     CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
-    AssertEqualObjects(doc[@"name"], @"Jim");
-    Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
-    data = doc1[@"data"];
+    AssertEqualObjects([doc objectForKey: @"name"], @"Jim");
+    Assert([[doc1 objectForKey: @"data"] isKindOfClass:[CBLBlob class]]);
+    data = [doc1 objectForKey: @"data"];
     AssertEqual(data.length, 5ull);
     AssertEqualObjects(data.content, content);
     NSInputStream *contentStream = data.contentStream;
@@ -591,12 +590,12 @@
     NSError* error;
     CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
     Assert(data, @"Failed to create blob: %@", error);
-    doc[@"data"] = data;
+    [doc setObject: data forKey: @"data"];
     
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
-    Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
-    data = doc1[@"data"];
+    Assert([[doc1 objectForKey: @"data"] isKindOfClass:[CBLBlob class]]);
+    data = [doc1 objectForKey: @"data"];
     AssertEqual(data.length, 0ull);
     AssertEqualObjects(data.content, content);
     NSInputStream *contentStream = data.contentStream;
@@ -614,13 +613,12 @@
     NSError* error;
     CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" contentStream:contentStream];
     Assert(data, @"Failed to create blob: %@", error);
-    doc[@"data"] = data;
-    
+    [doc setObject: data forKey: @"data"];
     
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
-    Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
-    data = doc1[@"data"];
+    Assert([[doc1 objectForKey: @"data"] isKindOfClass:[CBLBlob class]]);
+    data = [doc1 objectForKey: @"data"];
     AssertEqual(data.length, 0ull);
     AssertEqualObjects(data.content, content);
     contentStream = data.contentStream;
@@ -638,9 +636,9 @@
     
     CBLBlob* data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
     Assert(data, @"Failed to create blob: %@", error);
-    doc[@"data"] = data;
+    [doc setObject: data forKey: @"data"];
     
-    data = doc[@"data"];
+    data = [doc objectForKey: @"data"];
     for(int i = 0; i < 5; i++) {
         AssertEqualObjects(data.content, content);
         NSInputStream *contentStream = data.contentStream;
@@ -653,8 +651,8 @@
    
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     CBLDocument* doc1 = [[self.db copy] documentWithID: @"doc1"];
-    Assert([doc1[@"data"] isKindOfClass:[CBLBlob class]]);
-    data = doc1[@"data"];
+    Assert([[doc1 objectForKey: @"data"] isKindOfClass:[CBLBlob class]]);
+    data = [doc1 objectForKey: @"data"];
     for(int i = 0; i < 5; i++) {
         AssertEqualObjects(data.content, content);
         NSInputStream *contentStream = data.contentStream;
@@ -672,22 +670,22 @@
     NSError* error;
     CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
     Assert(data, @"Failed to create blob: %@", error);
-    doc[@"data"] = data;
-    doc[@"name"] = @"Jim";
+    [doc setObject: data forKey: @"data"];
+    [doc setObject: @"Jim" forKey: @"name"];
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
 
     [self reopenDB];
 
-    Assert([doc[@"data"] isKindOfClass:[CBLBlob class]]);
-    data = doc[@"data"];
+    Assert([[doc objectForKey: @"data"] isKindOfClass:[CBLBlob class]]);
+    data = [doc objectForKey: @"data"];
     AssertEqualObjects(data.content, content);
     
     [self reopenDB];
 
-    doc[@"foo"] = @"bar";
+    [doc setObject: @"bar" forKey: @"foo"];
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
-    Assert([doc[@"data"] isKindOfClass:[CBLBlob class]]);
-    data = doc[@"data"];
+    Assert([[doc objectForKey: @"data"] isKindOfClass:[CBLBlob class]]);
+    data = [doc objectForKey: @"data"];
     AssertEqualObjects(data.content, content);
 }
 

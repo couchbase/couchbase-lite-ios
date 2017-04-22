@@ -188,6 +188,15 @@
 }
 
 
+#pragma mark - SUBSCRIPTION
+
+
+- (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index {
+    id value = index < self.count ? [self objectAtIndex: index] : nil;
+    return [[CBLFragment alloc] initWithValue: value parent: self parentKey: @(index)];
+}
+
+
 #pragma mark - CHANGE LISTENER
 
 

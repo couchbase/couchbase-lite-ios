@@ -113,7 +113,15 @@
 }
 
 
-#pragma mark INTERNAL
+#pragma mark - SUBSCRIPTION
+
+
+- (CBLReadOnlyFragment*) objectForKeyedSubscript: (NSString*)key {
+    return [[CBLReadOnlyFragment alloc] initWithValue: [self objectForKey: key]];
+}
+
+
+#pragma mark - INTERNAL
 
 
 - (void) setData: (id<CBLReadOnlyDictionary>)data {
@@ -127,7 +135,7 @@
 
 
 
-#pragma mark FLEECE ENCODING
+#pragma mark - FLEECE ENCODING
 
 
 - (BOOL) isFleeceEncodableValue: (id)value {

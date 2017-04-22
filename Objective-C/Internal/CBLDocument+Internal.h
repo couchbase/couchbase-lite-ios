@@ -13,9 +13,11 @@
 #import "CBLDatabase.h"
 #import "CBLDictionary.h"
 #import "CBLDocument.h"
+#import "CBLFragment.h"
 #import "CBLReadOnlyArray.h"
 #import "CBLReadOnlyDocument.h"
 #import "CBLReadOnlyDictionary.h"
+#import "CBLReadOnlyFragment.h"
 #import "CBLReadOnlySubdocument.h"
 #import "CBLSubdocument.h"
 #import "Fleece.h"
@@ -132,6 +134,24 @@ NS_ASSUME_NONNULL_BEGIN
 // @property (weak, nonatomic, nullable) id swiftSubdocument;
 
 @property (readonly, nonatomic) CBLDictionary* dictionary;
+
+@end
+
+/////////////////
+
+@interface CBLReadOnlyFragment ()
+
+- (instancetype) initWithValue: (nullable id)value;
+
+@end
+
+/////////////////
+
+@interface CBLFragment ()
+
+- (instancetype) initWithValue: (nullable id)value
+                        parent: (nullable id)parent
+                     parentKey: (nullable id)parentKey;
 
 @end
 

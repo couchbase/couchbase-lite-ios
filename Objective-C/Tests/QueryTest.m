@@ -41,8 +41,8 @@
             NSError* error;
             NSString* docID= [NSString stringWithFormat: @"doc%ld", (long)i];
             CBLDocument* doc = [[CBLDocument alloc] initWithID: docID];
-            doc[@"number1"] = @(i);
-            doc[@"number2"] = @(num-i);
+            [doc setObject: @(i) forKey: @"number1"];
+            [doc setObject: @(num-i) forKey: @"number2"];
             BOOL saved = [_db saveDocument: doc error: &error];
             Assert(saved, @"Couldn't save document: %@", error);
             [numbers addObject: [doc toDictionary]];
@@ -145,14 +145,14 @@
     // https://github.com/couchbase/couchbase-lite-ios/issues/1670
     NSError* error;
     CBLDocument* doc1 = [self.db documentWithID: @"doc1"];
-    doc1[@"name"] = @"Scott";
-    doc1[@"address"] = [NSNull null];
+    [doc1 setObject: @"Scott" forKey: @"name"];
+    [doc1 setObject: [NSNull null] forKey: @"address"];
     Assert([_db saveDocument: doc1 error: &error], @"Error when saving a document: %@", error);
     
     CBLDocument* doc2 = [self.db documentWithID: @"doc2"];
-    doc2[@"name"] = @"Tiger";
-    doc2[@"address"] = @"123 1st ave.";
-    doc2[@"age"] = @(20);
+    [doc2 setObject: @"Scott" forKey: @"name"];
+    [doc2 setObject: @"123 1st ave." forKey: @"address"];
+    [doc2 setObject: @(20) forKey: @"age"];
     Assert([_db saveDocument: doc2 error: &error], @"Error when saving a document: %@", error);
     
     CBLQueryExpression* name = [CBLQueryExpression property: @"name"];
@@ -191,7 +191,7 @@
 - (void) testWhereIs {
     NSError* error;
     CBLDocument* doc1 = [[CBLDocument alloc] init];
-    doc1 [@"string"] = @"string";
+    [doc1 setObject: @"string" forKey: @"string"];
     Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
     
     CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
@@ -202,7 +202,7 @@
     uint64_t numRows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
         CBLDocument* doc = row.document;
         AssertEqualObjects(doc.documentID, doc1.documentID);
-        AssertEqualObjects(doc[@"string"], @"string");
+        AssertEqualObjects([doc objectForKey: @"string"], @"string");
     }];
     AssertEqual(numRows, 1u);
     
@@ -214,7 +214,7 @@
     numRows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
         CBLDocument* doc = row.document;
         AssertEqualObjects(doc.documentID, doc1.documentID);
-        AssertEqualObjects(doc[@"string"], @"string");
+        AssertEqualObjects([doc objectForKey: @"string"], @"string");
     }];
     AssertEqual(numRows, 1u);
 }
@@ -258,7 +258,7 @@
     NSMutableArray* firstNames = [NSMutableArray array];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         CBLDocument* doc = row.document;
-        NSString* firstName = doc[@"name"][@"first"];
+        NSString* firstName = [[doc objectForKey:@"name"] objectForKey: @"first"];
         if (firstName)
             [firstNames addObject: firstName];
     }];
@@ -279,7 +279,7 @@
     NSMutableArray* firstNames = [NSMutableArray array];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         CBLDocument* doc = row.document;
-        NSString* firstName = doc[@"name"][@"first"];
+        NSString* firstName = [[doc objectForKey:@"name"] objectForKey: @"first"];
         if (firstName)
             [firstNames addObject: firstName];
     }];
@@ -334,7 +334,7 @@
         NSMutableArray* firstNames = [NSMutableArray array];
         uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
             CBLDocument* doc = row.document;
-            NSString* firstName = doc[@"name"][@"first"];
+            NSString* firstName = [[doc objectForKey:@"name"] objectForKey: @"first"];
             if (firstName)
                 [firstNames addObject: firstName];
         }];
@@ -353,11 +353,11 @@
     // https://github.com/couchbase/couchbase-lite-ios/issues/1669
     NSError* error;
     CBLDocument* doc1 = [[CBLDocument alloc] init];
-    doc1[@"number"] = @(1);
+    [doc1 setObject: @(1) forKey: @"number"];
     Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
     
     CBLDocument* doc2 = [[CBLDocument alloc] init];
-    doc2[@"number"] = @(1);
+    [doc2 setObject: @(1) forKey: @"number"];
     Assert([_db saveDocument: doc2 error: &error], @"Error when creating a document: %@", error);
     
     CBLQuery* q = [CBLQuery selectDistinct: [CBLQuerySelect all]

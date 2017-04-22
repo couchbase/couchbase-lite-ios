@@ -8,12 +8,13 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLReadOnlyArray.h"
+#import "CBLArrayFragment.h"
 @class CBLSubdocument;
 @class CBLArray;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol CBLArray <CBLReadOnlyArray>
+@protocol CBLArray <CBLReadOnlyArray, CBLArrayFragment>
 
 - (void) setObject: (nullable id)object atIndex: (NSUInteger)index;
 
@@ -28,6 +29,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable CBLArray*) arrayAtIndex: (NSUInteger)index;
 
 - (void) setArray: (NSArray*)array;
+
+- (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index;
 
 @end
 

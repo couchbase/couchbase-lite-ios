@@ -132,7 +132,7 @@
             CBLDocument* doc = row.document;
             AssertEqualObjects(doc.documentID, @"doc-009");
             AssertEqual(doc.sequence, 9llu);
-            AssertEqualObjects([doc[@"name"] objectForKey: @"first"], @"Claude");
+            AssertEqualObjects([[doc objectForKey: @"name"] objectForKey: @"first"], @"Claude");
         }];
         AssertEqual(numRows, 1llu);
 
@@ -294,7 +294,7 @@
     for (int i = 0; i < 10; i++) {
         NSError* error;
         CBLDocument* doc = [[CBLDocument alloc] init];
-        doc[@"number"] = @(1);
+        [doc setObject: @(1) forKey: @"number"];
         Assert([_db saveDocument: doc error:&error], @"Error when creating a document: %@", error);
     }
     
@@ -313,14 +313,14 @@
     // https://github.com/couchbase/couchbase-lite-ios/issues/1670
     NSError* error;
     CBLDocument* doc1 = [self.db documentWithID: @"doc1"];
-    doc1[@"name"] = @"Scott";
-    doc1[@"address"] = [NSNull null];
+    [doc1 setObject: @"Scott" forKey: @"name"];
+    [doc1 setObject: [NSNull null] forKey: @"address"];
     Assert([_db saveDocument: doc1 error: &error], @"Error when saving a document: %@", error);
     
     CBLDocument* doc2 = [self.db documentWithID: @"doc2"];
-    doc2[@"name"] = @"Tiger";
-    doc2[@"address"] = @"123 1st ave.";
-    doc2[@"age"] = @(20);
+    [doc2 setObject: @"Tiger" forKey: @"name"];
+    [doc2 setObject: @"123 1st ave." forKey: @"address"];
+    [doc2 setObject: @(20) forKey: @"age"];
     Assert([_db saveDocument: doc2 error: &error], @"Error when saving a document: %@", error);
     
     NSArray* tests = @[

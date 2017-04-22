@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "CBLReadOnlyDictionaryFragment.h"
 @class CBLBlob;
 @class CBLReadOnlyArray;
 @class CBLReadOnlySubdocument;
@@ -14,7 +15,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol CBLReadOnlyDictionary <NSObject>
+@protocol CBLReadOnlyDictionary <NSObject, CBLReadOnlyDictionaryFragment>
 
 @property (readonly, nonatomic) NSUInteger count;
 

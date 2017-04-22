@@ -164,6 +164,13 @@
 }
 
 
+#pragma mark - SUBSCRIPTION
+
+
+- (CBLReadOnlyFragment*) objectForKeyedSubscript: (NSString*)key {
+    return [[CBLReadOnlyFragment alloc] initWithValue: [self objectForKey: key]];
+}
+
 
 #pragma mark - FLEECE
 

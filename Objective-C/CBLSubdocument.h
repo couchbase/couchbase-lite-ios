@@ -22,15 +22,4 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-/** Define Subscription methods for CBLDocument. */
-@interface CBLSubdocument (Subscripts)
-
-/** Same as objectForKey: */
- - (nullable id) objectForKeyedSubscript: (NSString*)key;
-
-/** Same as setObject:forKey: */
- - (void) setObject: (nullable id)value forKeyedSubscript: (NSString*)key;
-
-@end
-
 NS_ASSUME_NONNULL_END

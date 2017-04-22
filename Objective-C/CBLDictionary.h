@@ -8,12 +8,13 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLReadOnlyDictionary.h"
-@class CBLSubdocument;
+#import "CBLDictionaryFragment.h"
 @class CBLArray;
+@class CBLSubdocument;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol CBLDictionary <CBLReadOnlyDictionary>
+@protocol CBLDictionary <CBLReadOnlyDictionary, CBLDictionaryFragment>
 
 - (void) setObject: (nullable id)value forKey: (NSString*)key;
 
@@ -38,8 +39,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) setDictionary: (NSDictionary<NSString*,id>*)dictionary;
 
-@end
+- (CBLFragment*) objectForKeyedSubscript: (NSString*)key;
 
+@end
 
 @interface CBLDictionary : CBLReadOnlyDictionary <CBLDictionary>
 

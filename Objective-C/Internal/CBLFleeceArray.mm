@@ -134,6 +134,15 @@
 }
 
 
+#pragma mark - SUBSCRIPTION
+
+
+- (CBLReadOnlyFragment*) objectAtIndexedSubscript: (NSUInteger)index {
+    id value = index < self.count ? [self objectAtIndex: index] : nil;
+    return [[CBLReadOnlyFragment alloc] initWithValue: value];
+}
+
+
 #pragma mark - FLEECE
 
 

@@ -158,15 +158,9 @@
 #pragma mark - SUBSCRIPTION
 
 
-- (nullable id) objectForKeyedSubscript: (NSString*)key {
-    return [_dict objectForKey: key];
+- (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
+    return [_dict objectForKeyedSubscript: key];
 }
-
-
-- (void) setObject: (nullable id)value forKeyedSubscript: (NSString*)key {
-    [_dict setObject: value forKey: key];
-}
-
 
 #pragma mark - INTERNAL
 
