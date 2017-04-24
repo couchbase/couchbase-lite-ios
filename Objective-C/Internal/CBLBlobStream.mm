@@ -7,8 +7,7 @@
 //
 
 #import "CBLBlobStream.h"
-#import "CBLCoreBridge.h"
-
+#import "CBLStatus.h"
 
 @implementation CBLBlobStream
 {

@@ -19,12 +19,12 @@
 #import "CBLConflictResolver.h"
 #import "CBLCoreBridge.h"
 #import "CBLDocument+Internal.h"
-#import "CBLFleeceDictionary.h"
 #import "CBLInternal.h"
 #import "CBLJSON.h"
 #import "CBLMisc.h"
 #import "CBLSharedKeys.hh"
 #import "CBLStringBytes.h"
+#import "CBLStatus.h"
 #import "CBLSubdocument.h"
 
 
@@ -39,32 +39,31 @@
 
 
 + (instancetype) document {
-    return [[self alloc] init];
+    return [[self alloc] initWithID: nil];
 }
 
 
-+ (instancetype) documentWithID: (NSString*)documentID {
++ (instancetype) documentWithID: (nullable NSString*)documentID {
     return [[self alloc] initWithID: documentID];
 }
 
 
 - (instancetype) init {
-    return [self initWithID: CBLCreateUUID()];
+    return [self initWithID: nil];
 }
 
 
-- (instancetype) initWithID: (NSString*)documentID {
-    documentID = documentID ? documentID : CBLCreateUUID();
-    self = [super initWithDocumentID: documentID c4Doc: nil data: [CBLFleeceDictionary empty]];
+- (instancetype) initWithID: (nullable NSString*)documentID {
+    self = [super initWithDocumentID: (documentID ?: CBLCreateUUID()) c4Doc: nil fleeceData: nil];
     if (self) {
-        _dict = [[CBLDictionary alloc] initWithData: self.data];
+        _dict = [[CBLDictionary alloc] initWithFleeceData: self.data];
     }
     return self;
 }
 
 
 - (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary {
-    self = [self init];
+    self = [self initWithID: nil];
     if (self) {
         [self setDictionary: dictionary];
     }
@@ -72,7 +71,7 @@
 }
 
 
-- (instancetype) initWithID: (NSString*)documentID
+- (instancetype) initWithID: (nullable NSString*)documentID
                  dictionary: (NSDictionary<NSString*,id>*)dictionary
 {
     self = [self initWithID: documentID];
@@ -88,7 +87,7 @@
                                        mustExist: (BOOL)mustExist
                                            error: (NSError**)outError
 {
-    self = [super initWithDocumentID: documentID c4Doc: nil data: [CBLFleeceDictionary empty]];
+    self = [super initWithDocumentID: documentID c4Doc: nil fleeceData: nil];
     if (self) {
         self.database = database;
         if (![self loadDoc_mustExist: mustExist error: outError])
@@ -104,6 +103,7 @@
 - (NSUInteger) count {
     return _dict.count;
 }
+
 
 - (nullable id) objectForKey: (NSString*)key {
     return [_dict objectForKey: key];
@@ -165,8 +165,6 @@
 }
 
 
-
-
 - (NSArray*) allKeys {
     return [_dict allKeys];
 }
@@ -182,26 +180,6 @@
 
 - (void) setObject: (nullable id)value forKey: (NSString*)key {
     [_dict setObject: value forKey: key];
-}
-
-
-- (void) setBoolean: (BOOL)value forKey: (NSString*)key {
-    [_dict setBoolean: value forKey: key];
-}
-
-
-- (void) setInteger: (NSInteger)value forKey: (NSString*)key {
-    [_dict setInteger: value forKey: key];
-}
-
-
-- (void) setFloat: (float)value forKey: (NSString*)key {
-    [_dict setFloat: value forKey: key];
-}
-
-
-- (void) setDouble: (double)value forKey: (NSString*)key {
-    [_dict setDouble: value forKey: key];
 }
 
 
@@ -249,8 +227,9 @@
 - (BOOL) purge: (NSError**)outError {
     assert(_database && _c4db);
     
-    if (!self.exists)
-        return NO;
+    if (!self.exists) {
+        return createError(kCBLStatusNotFound, outError);
+    }
     
     C4Transaction transaction(_c4db);
     if (!transaction.begin())
@@ -260,13 +239,11 @@
     if (c4doc_purgeRevision(self.c4Doc.rawDoc, C4Slice(), &err) >= 0) {
         if (c4doc_save(self.c4Doc.rawDoc, 0, &err)) {
             // Save succeeded; now commit:
-            if (!transaction.commit()) {
+            if (!transaction.commit())
                 return convertError(transaction.error(), outError);
-            }
             
-            // Reload:
-            if (![self loadDoc_mustExist: NO error: outError])
-                return NO;
+            // Reset:
+            [self setC4Doc: nil];
             return YES;
         }
     }
@@ -305,17 +282,19 @@
 
 // Sets c4doc and updates my root dict
 - (void) setC4Doc: (CBLC4Document*)c4doc {
-    FLDict root = nullptr;
-    C4Slice body = c4doc.selectedRev.body;
-    if (body.size > 0)
-        root = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
-    
-    // Update super:
     [super setC4Doc: c4doc];
-    super.data = [CBLFleeceDictionary withDict: root document: c4doc database: _database];
+    
+    if (c4doc) {
+        FLDict root = nullptr;
+        C4Slice body = c4doc.selectedRev.body;
+        if (body.size > 0)
+            root = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
+        self.data = [[CBLFLDict alloc] initWithDict: root c4doc: c4doc database: _database];
+    } else
+        self.data = nil;
     
     // Update delegate dictionary:
-    _dict = [[CBLDictionary alloc] initWithData: self.data];
+    _dict = [[CBLDictionary alloc] initWithFleeceData: self.data];
 }
 
 
@@ -416,7 +395,7 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
                              error: (NSError**)outError
 {
     // Read the current revision from the database:
-    C4Document *rawDoc = [self readC4Doc_mustExist: YES error: outError];
+    C4Document* rawDoc = [self readC4Doc_mustExist: YES error: outError];
     if (!rawDoc)
         return NO;
     
@@ -427,11 +406,12 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     
     // Create the current readonly document with the current revision:
     CBLC4Document* curC4doc = [CBLC4Document document: rawDoc];
-    CBLFleeceDictionary* curDict = [CBLFleeceDictionary withDict: curRoot document: curC4doc
-                                                        database: self.database];
+    CBLFLDict* curDict = [[CBLFLDict alloc] initWithDict: curRoot
+                                                   c4doc: curC4doc
+                                                database: _database];
     CBLReadOnlyDocument* current = [[CBLReadOnlyDocument alloc] initWithDocumentID: self.documentID
                                                                              c4Doc: curC4doc
-                                                                              data: curDict];
+                                                                        fleeceData: curDict];
     // Resolve conflict:
     CBLReadOnlyDocument* resolved;
     if (deletion) {
@@ -440,8 +420,8 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     } else if (resolver) {
         // Call the custom conflict resolver:
         CBLReadOnlyDocument* base = [[CBLReadOnlyDocument alloc] initWithDocumentID: self.documentID
-                                                                              c4Doc: self.c4Doc
-                                                                               data: super.data];
+                                                                              c4Doc: super.c4Doc
+                                                                         fleeceData: super.data];
         CBLConflict* conflict = [[CBLConflict alloc] initWithSource: self
                                                              target: current
                                                      commonAncestor: base
@@ -483,6 +463,9 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     // No-op case of unchanged document:
     if (!self.changed && !deletion && self.exists)
         return YES;
+    
+    if (deletion && !self.exists)
+        return createError(kCBLStatusNotFound, outError);
     
     // Begin a db transaction:
     C4Transaction transaction(_c4db);

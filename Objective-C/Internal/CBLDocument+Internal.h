@@ -13,6 +13,9 @@
 #import "CBLDatabase.h"
 #import "CBLDictionary.h"
 #import "CBLDocument.h"
+#import "CBLDocumentFragment.h"
+#import "CBLFLArray.h"
+#import "CBLFLDict.h"
 #import "CBLFragment.h"
 #import "CBLReadOnlyArray.h"
 #import "CBLReadOnlyDocument.h"
@@ -21,6 +24,7 @@
 #import "CBLReadOnlySubdocument.h"
 #import "CBLSubdocument.h"
 #import "Fleece.h"
+
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -73,7 +77,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithDocumentID: (NSString*)documentID
                               c4Doc: (nullable CBLC4Document*)c4Doc
-                               data: (id<CBLReadOnlyDictionary>)data;
+                         fleeceData: (nullable CBLFLDict*)data;
 
 @end
 
@@ -107,9 +111,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLReadOnlyArray () <CBLFleeceEncodable>
 
-@property (nonatomic) id<CBLReadOnlyArray> data;
+@property (nonatomic, readonly, nullable) CBLFLArray* data;
 
-- (instancetype) initWithData: (id<CBLReadOnlyArray>)data;
+- (instancetype) initWithFleeceData: (nullable CBLFLArray*)data;
 
 @end
 
@@ -117,11 +121,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLReadOnlyDictionary () <CBLFleeceEncodable>
 
-@property (nonatomic) id<CBLReadOnlyDictionary> data;
+@property (nonatomic, nullable) CBLFLDict* data;
 
 @property (nonatomic, readonly) BOOL isEmpty;
 
-- (instancetype) initWithData: (id<CBLReadOnlyDictionary>)data;
+- (instancetype) initWithFleeceData: (nullable CBLFLDict*)data;
 
 - (BOOL) isFleeceEncodableValue: (id)value;
 
@@ -152,6 +156,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithValue: (nullable id)value
                         parent: (nullable id)parent
                      parentKey: (nullable id)parentKey;
+
+@end
+
+/////////////////
+
+@interface CBLDocumentFragment ()
+
+- (instancetype) initWithDocument: (CBLDocument*)document;
 
 @end
 

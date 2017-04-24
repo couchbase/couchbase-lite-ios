@@ -13,6 +13,7 @@
 #import "CBLInternal.h"
 #import "CBLLog.h"
 #import "CBLStringBytes.h"
+#import "CBLStatus.h"
 #import "c4BlobStore.h"
 
 extern "C" {

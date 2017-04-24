@@ -8,93 +8,100 @@
 
 #import "CBLReadOnlyArray.h"
 #import "CBLDocument+Internal.h"
-#import "CBLCoreBridge.h"
+#import "CBLInternal.h"
+#import "CBLJSON.h"
+#import "CBLSharedKeys.hh"
+#import "CBLData.h"
 
-@implementation CBLReadOnlyArray
+
+@implementation CBLReadOnlyArray {
+    CBLFLArray* _data;
+    FLArray _array;
+    cbl::SharedKeys _sharedKeys;
+}
+
 
 @synthesize data=_data;
 
-- /* internal */ (instancetype) initWithData: (id<CBLReadOnlyArray>)data {
+- /* internal */ (instancetype) initWithFleeceData: (nullable CBLFLArray*)data {
     self = [super init];
     if (self) {
         _data = data;
+        _array = _data.array;
+        _sharedKeys = _data.database.sharedKeys;
     }
     return self;
 }
 
 
+#pragma mark - GETTER
+
+
 - (nullable id) objectAtIndex: (NSUInteger)index {
-    return [_data objectAtIndex: index];
+    return [self fleeceValueToObject: [self fleeceValueForIndex: index]];
 }
 
 
 - (BOOL) booleanAtIndex: (NSUInteger)index {
-    return [_data booleanAtIndex: index];
+    return FLValue_AsBool([self fleeceValueForIndex: index]);
 }
 
 
 - (NSInteger) integerAtIndex: (NSUInteger)index {
-    return [_data integerAtIndex: index];
+    return (NSInteger)FLValue_AsInt([self fleeceValueForIndex: index]);
 }
 
 
 - (float) floatAtIndex: (NSUInteger)index {
-    return [_data floatAtIndex: index];
+    return FLValue_AsFloat([self fleeceValueForIndex: index]);
 }
 
 
 - (double) doubleAtIndex: (NSUInteger)index {
-    return [_data doubleAtIndex: index];
+    return FLValue_AsDouble([self fleeceValueForIndex: index]);
 }
 
 
 - (nullable NSString*) stringAtIndex: (NSUInteger)index {
-    return [_data stringAtIndex: index];
+    return $castIf(NSString, [self objectAtIndex: index]);
 }
 
 
 - (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
-    return [_data numberAtIndex: index];
+    return $castIf(NSNumber, [self objectAtIndex: index]);
 }
 
 
 - (nullable NSDate*) dateAtIndex: (NSUInteger)index {
-    return [_data dateAtIndex: index];
+    return [CBLJSON dateWithJSONObject: [self stringAtIndex: index]];
 }
 
 
 - (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
-    return [_data blobAtIndex: index];
+    return $castIf(CBLBlob, [self objectAtIndex: index]);
 }
 
 
-- (CBLReadOnlySubdocument*) subdocumentAtIndex: (NSUInteger)index {
-    return [_data subdocumentAtIndex: index];
+- (nullable CBLReadOnlySubdocument*) subdocumentAtIndex: (NSUInteger)index {
+    return $castIf(CBLReadOnlySubdocument, [self objectAtIndex: index]);
 }
 
 
-- (CBLReadOnlyArray*) arrayAtIndex: (NSUInteger)index {
-    return [_data arrayAtIndex: index];
+- (nullable CBLReadOnlyArray*) arrayAtIndex: (NSUInteger)index {
+    return $castIf(CBLReadOnlyArray, [self objectAtIndex: index]);
 }
 
 
 - (NSUInteger) count {
-    return [_data count];
+    return FLArray_Count(_array);
 }
 
 
 - (NSArray*) toArray {
-    NSMutableArray* array = [NSMutableArray array];
-    NSUInteger count = self.count;
-    for (NSUInteger i = 0; i < count; i++) {
-        id value = [self objectAtIndex: i];
-        if ([value conformsToProtocol: @protocol(CBLReadOnlyDictionary)])
-            value = [value toDictionary];
-        else if ([value conformsToProtocol: @protocol(CBLReadOnlyArray)])
-            value = [value toArray];
-        [array addObject: value];
-    }
-    return array;
+    if (_array != nullptr)
+        return FLValue_GetNSObject((FLValue)_array, &_sharedKeys);
+    else
+        return @[];
 }
 
 
@@ -104,14 +111,6 @@
 - (CBLReadOnlyFragment*) objectAtIndexedSubscript: (NSUInteger)index {
     id value = index < self.count ? [self objectAtIndex: index] : nil;
     return [[CBLReadOnlyFragment alloc] initWithValue: value];
-}
-
-
-#pragma mark - INTERNAL
-
-
-- (void) setData: (id <CBLReadOnlyArray>)data {
-    _data = data;
 }
 
 
@@ -135,5 +134,22 @@
     FLEncoder_EndArray(encoder);
     return YES;
 }
+
+
+#pragma mark - FLEECE
+
+
+- (FLValue) fleeceValueForIndex: (NSUInteger)index {
+    return FLArray_Get(_array, (uint)index);
+}
+
+
+- (id) fleeceValueToObject: (FLValue)value {
+    if (value != nullptr)
+        return [CBLData fleeceValueToObject: value c4doc: _data.c4doc database: _data.database];
+    else
+        return nil;
+}
+
 
 @end

@@ -14,11 +14,11 @@
 @synthesize documentID=_documentID, c4Doc=_c4Doc;
 
 
-- /* internal */ (instancetype) initWithDocumentID: (NSString*)documentID
-                                             c4Doc: (nullable CBLC4Document*)c4Doc
-                                              data: (id <CBLReadOnlyDictionary>)data
+- (instancetype) initWithDocumentID: (NSString*)documentID
+                              c4Doc: (nullable CBLC4Document*)c4Doc
+                         fleeceData: (nullable CBLFLDict*)data
 {
-    self = [super initWithData: data];
+    self = [super initWithFleeceData: data];
     if (self) {
         _documentID = documentID;
         _c4Doc = c4Doc;
@@ -51,6 +51,7 @@
 - (NSUInteger) generation {
     return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.revID) : 0;
 }
+
 
 - (BOOL) exists {
     return _c4Doc != nil ? (_c4Doc.flags & kExists) != 0 : NO;

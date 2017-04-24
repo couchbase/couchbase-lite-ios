@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDocument, CBLPredicateQuery;
+@class CBLDocument, CBLDocumentFragment, CBLPredicateQuery;
 @protocol CBLConflictResolver;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -146,8 +146,8 @@ typedef struct {
     */
 - (nullable CBLDocument*) documentWithID: (NSString*)documentID;
 
-/** Same as -documentWithID: */
-- (nullable CBLDocument*) objectForKeyedSubscript: (NSString*)documentID;
+/** Gets a document fragment with the given document ID. */
+- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID;
 
 /** Checks whether the document of the given ID exists in the database or not. */
 - (BOOL) documentExists: (NSString*)documentID;

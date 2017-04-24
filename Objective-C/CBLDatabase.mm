@@ -19,12 +19,13 @@
 #import "CBLCoreBridge.h"
 #import "CBLDocument.h"
 #import "CBLDocument+Internal.h"
-#import "CBLError.h"
+#import "CBLDocumentFragment.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLPredicateQuery+Internal.h"
 #import "CBLSharedKeys.hh"
 #import "CBLStringBytes.h"
+#import "CBLStatus.h"
 
 
 NSString* const kCBLDatabaseChangeNotification = @"CBLDatabaseChangeNotification";
@@ -93,9 +94,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         CBLLog_Init();
     }
 }
-
-
-#pragma mark - API:
 
 
 - (instancetype) initWithName: (NSString*)name
@@ -252,13 +250,13 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-- (CBLDocument*) documentWithID: (NSString*)docID {
-    return [self documentWithID: docID mustExist: YES error: nil];
+- (CBLDocument*) documentWithID: (NSString*)documentID {
+    return [self documentWithID: documentID mustExist: YES error: nil];
 }
 
 
-- (CBLDocument*) objectForKeyedSubscript: (NSString*)docID {
-    return [self documentWithID: docID mustExist: YES error: nil];
+- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
+    return [[CBLDocumentFragment alloc] initWithDocument: [self documentWithID: documentID]];
 }
 
 
@@ -268,49 +266,34 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-#pragma mark - API: SAVE
+#pragma mark - SAVE
 
 
 - (BOOL) saveDocument: (CBLDocument*)document error: (NSError**)error {
-    if (!document.database) {
-        document.database = self;
-    } else if (document.database != self) {
-        if (error) *error =
-            [CBLError createError: kCBLErrorStatusForbidden
-                      description: @"Cannot save the document from the different database."];
+    if ([self prepareDocument: document error: error])
+        return [document save: error];
+    else
         return NO;
-    }
-    return [document save: error];
 }
 
 
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error {
-    if (!document.database) {
-        document.database = self;
-    } else if (document.database != self) {
-        if (error) *error =
-            [CBLError createError: kCBLErrorStatusForbidden
-                      description: @"Cannot delete the document from the different database."];
+    if ([self prepareDocument: document error: error])
+        return [document deleteDocument: error];
+    else
         return NO;
-    }
-    return [document deleteDocument: error];
 }
 
 
-- (BOOL) purgeDocument:(CBLDocument *)document error: (NSError**)error {
-    if (!document.database) {
-        document.database = self;
-    } else if (document.database != self) {
-        if (error) *error =
-            [CBLError createError: kCBLErrorStatusForbidden
-                      description: @"Cannot purge the document from the different database."];
+- (BOOL) purgeDocument: (CBLDocument *)document error: (NSError**)error {
+    if ([self prepareDocument: document error: error])
+        return [document purge: error];
+    else
         return NO;
-    }
-    return [document purge: error];
 }
 
 
-#pragma mark - API: QUERIES:
+#pragma mark - QUERIES:
 
 
 - (NSEnumerator<CBLDocument*>*) allDocuments {
@@ -331,9 +314,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-- (BOOL) createIndexOn: (NSArray<NSExpression*>*)expressions
-                 error: (NSError**)outError
-{
+- (BOOL) createIndexOn: (NSArray<NSExpression*>*)expressions error: (NSError**)outError {
     return [self createIndexOn: expressions type: kCBLValueIndex options: NULL error: outError];
 }
 
@@ -519,12 +500,16 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 }
 
 
+- (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error {
+    if (!document.database) {
+        document.database = self;
+    } else if (document.database != self) {
+        return createError(kCBLStatusForbidden,
+                           @"The document is from the different database.", error);
+    }
+    return YES;
+}
+
+
 @end
 
-// TODO:
-// * Close all other database handles when deleting the database
-//   and changing the encryption key
-// * Encryption key and rekey
-//     * [MacOS] Support encryption key from the Keychain
-// * Error Domain: Should LiteCore error domain transfer to CouchbaseLite?
-//

@@ -33,8 +33,8 @@ static id kRemovedValue;
     }
 }
 
-- /* internal */ (instancetype) initWithData: (id<CBLReadOnlyDictionary>)data {
-    self = [super initWithData: data];
+- /* internal */ (instancetype) initWithFleeceData: (CBLFLDict *)data {
+    self = [super initWithFleeceData: data];
     if (self) {
         _dict = [NSMutableDictionary dictionary];
     }
@@ -84,12 +84,8 @@ static id kRemovedValue;
     else {
         if (value == kRemovedValue)
             return NO;
-        else if (value == [NSNull null])
-            return NO;
-        else {
-            id n = $castIf(NSNumber, value);
-            return n ? [n boolValue] : YES;
-        }
+        else
+            return [CBLData booleanValueForObject: value];
     }
 }
 
@@ -243,31 +239,6 @@ static id kRemovedValue;
 }
 
 
-- (void) setBoolean: (BOOL)value forKey: (NSString*)key {
-    [self setObject: @(value) forKey: key];
-}
-
-
-- (void) setInteger: (NSInteger)value forKey: (NSString*)key {
-    [self setObject: @(value) forKey: key];
-}
-
-
-- (void) setFloat: (float)value forKey: (NSString*)key {
-    [self setObject: @(value) forKey: key];
-}
-
-
-- (void) setDouble: (double)value forKey: (NSString*)key {
-    [self setObject: @(value) forKey: key];
-}
-
-
-- (void) removeObjectForKey: (NSString*)key {
-    [self setObject: nil forKey: key];
-}
-
-
 - (void) setDictionary: (NSDictionary<NSString*,id>*)dictionary {
     // Detach all objects that we are listening to for changes:
     [self detachChildChangeListeners];
@@ -287,6 +258,11 @@ static id kRemovedValue;
     _dict = result;
     
     [self setChanged];
+}
+
+
+- (void) removeObjectForKey: (NSString*)key {
+    [self setObject: nil forKey: key];
 }
 
 
@@ -368,14 +344,14 @@ static id kRemovedValue;
 
 
 - (id) convertReadOnlySubdocument: (CBLReadOnlySubdocument*)readOnlySubdoc {
-    CBLSubdocument* subdocument = [[CBLSubdocument alloc] initWithData: readOnlySubdoc.data];
+    CBLSubdocument* subdocument = [[CBLSubdocument alloc] initWithFleeceData: readOnlySubdoc.data];
     [subdocument.dictionary addChangeListener: self];
     return subdocument;
 }
 
 
 - (id) convertReadOnlyArray: (CBLReadOnlyArray*)readOnlyArray {
-    CBLArray* array = [[CBLArray alloc] initWithData: readOnlyArray.data];
+    CBLArray* array = [[CBLArray alloc] initWithFleeceData: readOnlyArray.data];
     [array addChangeListener: self];
     return array;
 }

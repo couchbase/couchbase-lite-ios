@@ -17,12 +17,31 @@
 
 
 - (void) testGetDocFragmentWithID {
-    // TODO: DocumentFragment is not implemented
+    NSDictionary* dict = @{@"address": @{
+                                   @"street": @"1 Main street",
+                                   @"city": @"Mountain View",
+                                   @"state": @"CA"}};
+    [self saveDocument: [self createDocument: @"doc1" dictionary: dict]];
+    
+    CBLDocumentFragment* doc = _db[@"doc1"];
+    AssertNotNil(doc);
+    Assert(doc.exists);
+    AssertNotNil(doc.document);
+    AssertEqualObjects(doc[@"address"][@"street"].string, @"1 Main street");
+    AssertEqualObjects(doc[@"address"][@"city"].string, @"Mountain View");
+    AssertEqualObjects(doc[@"address"][@"state"].string, @"CA");
+    
 }
 
 
 - (void) testGetDocFragmentWithNonExistingID {
-    // TODO: DocumentFragment is not implemented
+    CBLDocumentFragment* doc = _db[@"doc1"];
+    AssertNotNil(doc);
+    AssertFalse(doc.exists);
+    AssertNil(doc.document);
+    AssertNil(doc[@"address"][@"street"].string);
+    AssertNil(doc[@"address"][@"city"].string);
+    AssertNil(doc[@"address"][@"state"].string);
 }
 
 
@@ -42,7 +61,7 @@
         AssertEqual(fragment.integerValue, 0);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);
-        AssertFalse(fragment.boolValue);
+        AssertEqual(fragment.boolValue, YES);
         AssertNil(fragment.array);
         AssertNotNil(fragment.object);
         AssertNotNil(fragment.value);
@@ -67,7 +86,7 @@
         AssertEqual(fragment.integerValue, 0);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);
-        AssertFalse(fragment.boolValue);
+        AssertEqual(fragment.boolValue, YES);
         AssertNil(fragment.subdocument);
         AssertNotNil(fragment.object);
         AssertNotNil(fragment.value);
@@ -130,10 +149,9 @@
 }
 
 
-// get all types of fragments from double
 - (void) testGetFragmentFromDouble {
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [doc setObject: @99.99 forKey: @"double"];
+    [doc setObject: @(99.99) forKey: @"double"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         CBLFragment* fragment = d[@"double"];
         AssertNotNil(fragment);
@@ -147,7 +165,7 @@
         AssertNotNil(fragment.value); 
         AssertEqualObjects(fragment.number, fragment.object);
         AssertEqualObjects(fragment.number, fragment.value);
-        AssertEqualObjects(fragment.number, @99.99);
+        AssertEqualObjects(fragment.number, @(99.99));
         AssertEqual(fragment.integerValue, 99);
         AssertEqual(fragment.floatValue, 99.99f);
         AssertEqual(fragment.doubleValue, 99.99);
@@ -156,7 +174,6 @@
 }
 
 
-// get all types of fragments from boolean
 - (void) testGetFragmentFromBoolean {
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @YES forKey: @"boolean"];
@@ -302,7 +319,7 @@
         AssertEqual(0, fragment.integerValue);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);;
-        AssertEqual(false, fragment.boolValue);
+        AssertEqual(fragment.boolValue, YES);
         AssertNotNil(fragment.object); 
         AssertNotNil(fragment.value); 
         AssertNotNil(fragment.array);
@@ -323,10 +340,10 @@
         AssertFalse(fragment.exists);
         AssertNil(fragment.string); 
         AssertNil(fragment.date); 
-        AssertNil(fragment.subdocument); 
+        AssertNil(fragment.subdocument);
         AssertNil(fragment.object);    
         AssertNil(fragment.value);    
-        AssertNil(fragment.array); 
+        AssertNil(fragment.array);
         AssertEqual(0, fragment.integerValue);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);;

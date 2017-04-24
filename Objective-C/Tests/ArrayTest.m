@@ -593,7 +593,7 @@
 }
 
 
-- (void) testSetGetMinMaxNumber {
+- (void) testSetGetMinMaxNumbers {
     CBLArray* array = [[CBLArray alloc] init];
     [array addObject: @(NSIntegerMin)];
     [array addObject: @(NSIntegerMax)];
@@ -624,6 +624,49 @@
         AssertEqualObjects([a objectAtIndex: 5], @(DBL_MAX));
         AssertEqual([a doubleAtIndex: 4], DBL_MIN);
         AssertEqual([a doubleAtIndex: 5], DBL_MAX);
+    }];
+}
+
+
+- (void) testSetGetFloatNumbers {
+    CBLArray* array = [[CBLArray alloc] init];
+    [array addObject: @(1.00)];
+    [array addObject: @(1.49)];
+    [array addObject: @(1.50)];
+    [array addObject: @(1.51)];
+    [array addObject: @(1.99)];
+    
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
+        AssertEqualObjects([a objectAtIndex: 0], @(1.00));
+        AssertEqualObjects([a numberAtIndex: 0], @(1.00));
+        AssertEqual([a integerAtIndex: 0], 1);
+        AssertEqual([a floatAtIndex: 0], 1.00f);
+        AssertEqual([a doubleAtIndex: 0], 1.00);
+        
+        AssertEqualObjects([a objectAtIndex: 1], @(1.49));
+        AssertEqualObjects([a numberAtIndex: 1], @(1.49));
+        AssertEqual([a integerAtIndex: 1], 1);
+        AssertEqual([a floatAtIndex: 1], 1.49f);
+        AssertEqual([a doubleAtIndex: 1], 1.49);
+        
+        AssertEqualObjects([a objectAtIndex: 2], @(1.50));
+        AssertEqualObjects([a numberAtIndex: 2], @(1.50));
+        AssertEqual([a integerAtIndex: 2], 1);
+        AssertEqual([a floatAtIndex: 2], 1.50f);
+        AssertEqual([a doubleAtIndex: 2], 1.50);
+        
+        AssertEqualObjects([a objectAtIndex: 3], @(1.51));
+        AssertEqualObjects([a numberAtIndex: 3], @(1.51));
+        AssertEqual([a integerAtIndex: 3], 1);
+        AssertEqual([a floatAtIndex: 3], 1.51f);
+        AssertEqual([a doubleAtIndex: 3], 1.51);
+        
+        AssertEqualObjects([a objectAtIndex: 4], @(1.99));
+        AssertEqualObjects([a numberAtIndex: 4], @(1.99));
+        AssertEqual([a integerAtIndex: 4], 1);
+        AssertEqual([a floatAtIndex: 4], 1.99f);
+        AssertEqual([a doubleAtIndex: 4], 1.99);
     }];
 }
 

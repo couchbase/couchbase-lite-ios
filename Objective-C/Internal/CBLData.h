@@ -7,9 +7,23 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "Fleece.h"
+@class CBLDatabase;
+@class CBLC4Document;
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLData : NSObject
 
 + (BOOL) validateValue: (id)value;
 
++ (BOOL) booleanValueForObject: (id)object;
+
++ (nullable id) fleeceValueToObject: (FLValue)value
+                              c4doc: (CBLC4Document*)c4doc
+                           database: (CBLDatabase*)database;
+
+
 @end
+
+NS_ASSUME_NONNULL_END

@@ -28,8 +28,8 @@
 }
 
 
-// hellper method to delete database
-- (void)deleteDatabase: (CBLDatabase *)db {
+// helper method to delete database
+- (void) deleteDatabase: (CBLDatabase*)db {
     NSError* error;
     NSString* path = db.path;
     Assert([[NSFileManager defaultManager] fileExistsAtPath: path]);
@@ -40,7 +40,7 @@
 
 
 // helper method to close database
-- (void)closeDatabase: (CBLDatabase*)db{
+- (void) closeDatabase: (CBLDatabase*)db{
     NSError* error;
     Assert([db close:&error]);
     AssertNil(error);
@@ -124,7 +124,7 @@
 
 
 // helper method to check error
-- (void)checkError: (NSError*)error domain: (NSErrorDomain)domain code: (NSInteger)code {
+- (void) checkError: (NSError*)error domain: (NSErrorDomain)domain code: (NSInteger)code {
     AssertNotNil(error);
     AssertEqualObjects(domain, error.domain);
     AssertEqual(code, error.code);
@@ -179,7 +179,7 @@
 }
 
 
-- (void) testCreateWithEmpttyDBNames {
+- (void) testCreateWithEmptyDBNames {
     // create db with default options
     NSError* error;
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @""
@@ -276,7 +276,7 @@
 
 
 // TODO: crash in native layer
-- (void) CRASH_testGetDocToClosedDB {
+- (void) failingTestGetDocFromClosedDB {
     // store doc
     [self generateDocument: @"doc1"];
     
@@ -289,7 +289,7 @@
 
 
 // TODO: crash in native layer
-- (void) CRASH_testGetDocToDeletedDB {
+- (void) failingTestGetDocFromDeletedDB {
     // store doc
     [self generateDocument: @"doc1"];
     
@@ -366,8 +366,7 @@
 }
 
 
-// TODO: DB close & delete operation causes internal error with transaction level.
-- (void) CRASH_testSaveDocInDifferentDB {
+- (void) testSaveDocInDifferentDB {
     NSError* error;
     NSString* docID = @"doc1";
     
@@ -383,9 +382,6 @@
     [doc setObject: @2 forKey: @"key"];
     AssertFalse([otherDB saveDocument: doc error: &error]);
     [self checkError: error domain:@"CouchbaseLite" code: 403]; // forbidden
-    
-    // close otherDB
-    [self closeDatabase: otherDB];
     
     // delete otherDB
     [self deleteDatabase: otherDB];
@@ -420,7 +416,7 @@
 
 
 // TODO: cause crash
-- (void) CRASH_testSaveDocToClosedDB {
+- (void) failingTestSaveDocToClosedDB {
     NSError* error;
     
     // close db
@@ -435,7 +431,7 @@
 
 
 // TODO: cause crash
-- (void) CRASH_testSaveDocToDeletedDB {
+- (void) failingTestSaveDocToDeletedDB {
     NSError* error;
     
     // delete db
@@ -457,7 +453,7 @@
     [doc setObject: @1 forKey: @"key"];
     
     AssertFalse([self.db deleteDocument: doc error: &error]);
-    [self checkError:error domain: @"LiteCore" code: 12]; // Not Found
+    [self checkError:error domain: @"CouchbaseLite" code: 404]; // Not Found
     AssertEqual(0, (long)self.db.documentCount);
 }
 
@@ -505,7 +501,7 @@
 }
 
 
-- (void)CRASH_testDeleteDocInDifferentDB {
+- (void) testDeleteDocInDifferentDB {
     NSError* error;
     NSString* docID = @"doc1";
     
@@ -526,8 +522,6 @@
     
     AssertFalse(doc.isDeleted);
     
-    // close otherDB
-    [self closeDatabase: otherDB];
     // delete otherDB
     [self deleteDatabase: otherDB];
 }
@@ -582,9 +576,9 @@
 
 
 // TODO: cause crash
-- (void)CRASH_testDeleteDocToClosedDB {
+- (void) failingTestDeleteDocOnClosedDB {
     NSError* error;
-
+    
     // store doc
     CBLDocument* doc = [self generateDocument: @"doc1"];
     
@@ -598,7 +592,7 @@
 
 
 // TODO: cause crash
-- (void)CRASH_testDeleteDocToDeletedDB {
+- (void) failingTestDeleteDocOnDeletedDB {
     NSError* error;
 
     // store doc
@@ -620,12 +614,13 @@
     NSError* error;
     CBLDocument* doc = [self createDocument: @"doc1"];
     AssertFalse([self.db purgeDocument: doc error: &error]);
-    [self checkError: error domain: @"LiteCore" code: 12]; // Not Found
+    [self checkError: error domain: @"CouchbaseLite" code: 404];
     AssertEqual(0, (long)self.db.documentCount);
 }
 
 
-- (void) testPurgeDoc {
+// TODO: Check whether purge operation incrases the seq number or not
+- (void) failingTestPurgeDoc {
     NSString* docID = @"doc1";
     // store doc
     CBLDocument* doc = [self generateDocument: docID];
@@ -635,7 +630,7 @@
     [self purgeDocAndVerify: doc];
     AssertEqual(0, (long)self.db.documentCount);
     
-    // Save to check sequence number -> 3
+    // Save to check sequence number -> 3 (should it be 2 or 3?)
     [self saveDocument: doc];
     AssertEqual(3L, (long)doc.sequence);
 }
@@ -666,7 +661,7 @@
 }
 
 
-- (void) CRASH_testPurgeDocInDifferentDB {
+- (void) testPurgeDocInDifferentDB {
     NSError* error;
     NSString* docID = @"doc1";
     // store doc
@@ -686,7 +681,6 @@
     AssertEqual(1, (long)self.db.documentCount);
     AssertFalse(doc.isDeleted);
     
-    Assert([otherDB close: &error]);
     [self deleteDatabase: otherDB];
 }
 
@@ -731,7 +725,7 @@
 
 
 // TODO: cause crash
-- (void) CRASH_testPurgeDocToClosedDB {
+- (void) failingTestPurgeDocOnClosedDB {
     // store doc
     CBLDocument* doc = [self generateDocument: @"doc1"];
     
@@ -746,7 +740,7 @@
 
 
 // TODO: cause crash
-- (void) CRASH_testPurgeDocToDeletedDB {
+- (void) failingTestPurgeDocOnDeletedDB {
     // store doc
     CBLDocument* doc = [self generateDocument: @"doc1"];
    
@@ -829,15 +823,15 @@
     BOOL sucess = [self.db inBatch: &error do: ^{
         NSError* err;
         [self.db close: &err];
-        // 25 -> kC4ErrorNotInTransaction: Function cannot be called while in a transaction
-        [self checkError: err domain: @"LiteCore" code: 25];
+        // 26 -> kC4ErrorTransactionNotClosed
+        [self checkError: err domain: @"LiteCore" code: 26];
     }];
     Assert(sucess);
     AssertNil(error);
 }
 
 
-- (void) CRASH_testCloseThenDeleteDatabase {
+- (void) falingTestCloseThenDeleteDatabase {
     [self closeDatabase: self.db];
     [self deleteDatabase: self.db];
 }
@@ -852,7 +846,7 @@
 }
 
 
-- (void) CRASH_testDeleteTwice {
+- (void) failingTestDeleteTwice {
     // delete db twice
     [self deleteDatabase: self.db];
     [self deleteDatabase: self.db];
@@ -912,8 +906,8 @@
     BOOL sucess = [self.db inBatch: &error do:^{
         NSError* err;
         [self.db deleteDatabase: &err];
-        // 25 -> kC4ErrorNotInTransaction: Function cannot be called while in a transaction
-        [self checkError: err domain: @"LiteCore" code: 25];
+        // 26 -> kC4ErrorTransactionNotClosed: Function cannot be called while in a transaction
+        [self checkError: err domain: @"LiteCore" code: 26];
     }];
     Assert(sucess);
     AssertNil(error);
@@ -942,7 +936,7 @@
     
     // open db with default dir
     CBLDatabase* db = [self openDatabase:@"db"];
-    NSString* path = db.path;
+    AssertNotNil(db);
     
     // close db before delete
     [self closeDatabase: db];
@@ -950,7 +944,7 @@
     // delete db with nil directory
     Assert([CBLDatabase deleteDatabase: @"db" inDirectory: nil error: &error]);
     AssertNil(error);
-    AssertFalse([[NSFileManager defaultManager] fileExistsAtPath: path]);
+    AssertFalse([[NSFileManager defaultManager] fileExistsAtPath: db.path]);
 }
 
 
@@ -958,7 +952,8 @@
     NSError* error;
     
     // open db with default dir
-    [self openDatabase: @"db"];
+    CBLDatabase* db = [self openDatabase: @"db"];
+    AssertNotNil(db);
     
     // delete db with nil directory
     AssertFalse([CBLDatabase deleteDatabase: @"db" inDirectory: nil error: &error]);
@@ -1030,7 +1025,7 @@
 #pragma mark - Database Existing
 
 
-- (void) CRASH_testDatabaseExistsWithDefaultDir {
+- (void) failingTestDatabaseExistsWithDefaultDir {
     AssertFalse([CBLDatabase databaseExists: @"db" inDirectory: nil]);
     
     // open db with default dir
@@ -1043,7 +1038,7 @@
     
     Assert([CBLDatabase databaseExists: @"db" inDirectory: nil]);
     
-    // deleete db
+    // delete db
     [self deleteDatabase: db];
     
     AssertFalse([CBLDatabase databaseExists: @"db" inDirectory: nil]);

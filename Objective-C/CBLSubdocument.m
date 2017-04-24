@@ -9,7 +9,6 @@
 #import "CBLSubdocument.h"
 #import "CBLArray.h"
 #import "CBLDocument+Internal.h"
-#import "CBLFleeceDictionary.h"
 
 @implementation CBLSubdocument {
     CBLDictionary* _dict;
@@ -22,7 +21,7 @@
 
 
 - (instancetype) init {
-    return [self initWithData: [CBLFleeceDictionary empty]]; // EMPTY DATA
+    return [self initWithFleeceData: nil];
 }
 
 
@@ -35,10 +34,10 @@
 }
 
 
-- /* internal */ (instancetype) initWithData: (id<CBLReadOnlyDictionary>)data {
-    self = [super initWithData: data];
+- /* internal */ (instancetype) initWithFleeceData: (CBLFLDict *)data {
+    self = [super initWithFleeceData: data];
     if (self) {
-        _dict = [[CBLDictionary alloc] initWithData: data];
+        _dict = [[CBLDictionary alloc] initWithFleeceData: data];
     }
     return self;
 }
@@ -122,26 +121,6 @@
 
 - (void) setObject: (nullable id)value forKey: (NSString*)key {
     [_dict setObject: value forKey: key];
-}
-
-
-- (void) setBoolean: (BOOL)value forKey: (NSString*)key {
-    [_dict setBoolean: value forKey: key];
-}
-
-
-- (void) setInteger: (NSInteger)value forKey: (NSString*)key {
-    [_dict setInteger: value forKey: key];
-}
-
-
-- (void) setFloat: (float)value forKey: (NSString*)key {
-    [_dict setFloat: value forKey: key];
-}
-
-
-- (void) setDouble: (double)value forKey: (NSString*)key {
-    [_dict setDouble: value forKey: key];
 }
 
 

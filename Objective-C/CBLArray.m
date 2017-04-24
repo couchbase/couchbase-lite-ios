@@ -10,9 +10,9 @@
 #import "CBLBlob.h"
 #import "CBLData.h"
 #import "CBLDocument+Internal.h"
-#import "CBLFleeceArray.h"
 #import "CBLJSON.h"
 #import "CBLSubdocument.h"
+
 
 @implementation CBLArray {
     NSMutableArray* _array;
@@ -27,7 +27,7 @@
 
 
 - (instancetype) init {
-    return [self initWithData: [CBLFleeceArray empty]];
+    return [self initWithFleeceData: nil];
 }
 
 
@@ -40,11 +40,11 @@
 }
 
 
-- /*internal */ (instancetype) initWithData: (id<CBLReadOnlyArray>)data {
-    self = [super initWithData: data];
+- /*internal */ (instancetype) initWithFleeceData: (CBLFLArray*)data {
+    self = [super initWithFleeceData: data];
     if (self ) {
         _array = [NSMutableArray array];
-        [self loadBackingData];
+        [self loadBackingFleeceData];
     }
     return self;
 }
@@ -60,12 +60,7 @@
 
 - (BOOL) booleanAtIndex: (NSUInteger)index {
     id value = _array[index];
-    if (value == [NSNull null])
-        return NO;
-    else {
-        id n = $castIf(NSNumber, value);
-        return n ? [n boolValue] : YES;
-    }
+    return [CBLData booleanValueForObject: value];
 }
 
 
@@ -251,7 +246,7 @@
 #pragma mark - PRIVATE
 
 
-- (void) loadBackingData {
+- (void) loadBackingFleeceData {
     NSUInteger count = [super count];
     for (NSUInteger i = 0; i < count; i++) {
         id value = [super objectAtIndex: i];
@@ -301,14 +296,14 @@
 
 
 - (id) convertReadOnlySubdocument: (CBLReadOnlySubdocument*)readOnlySubdoc {
-    CBLSubdocument* subdocument = [[CBLSubdocument alloc] initWithData: readOnlySubdoc.data];
+    CBLSubdocument* subdocument = [[CBLSubdocument alloc] initWithFleeceData: readOnlySubdoc.data];
     [subdocument.dictionary addChangeListener: self];
     return subdocument;
 }
 
 
 - (id) convertReadOnlyArray: (CBLReadOnlyArray*)readOnlyArray {
-    CBLArray* array = [[CBLArray alloc] initWithData: readOnlyArray.data];
+    CBLArray* array = [[CBLArray alloc] initWithFleeceData: readOnlyArray.data];
     [array addChangeListener: self];
     return array;
 }

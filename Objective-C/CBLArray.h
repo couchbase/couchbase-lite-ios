@@ -14,7 +14,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/** CBLDictionary protocol defines a set of methods for getting and setting array data. */
+/** CBLArray protocol defines a set of methods for getting and setting array data. */
 @protocol CBLArray <CBLReadOnlyArray, CBLArrayFragment>
 
 /** Sets an object at the given index. Setting a nil value is eqivalent to setting an NSNull object.
@@ -47,7 +47,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Set an array as a content. Allowed value types are NSArray, NSDate, NSDictionary, NSNumber,
     NSNull, NSString, CBLArray, CBLBlob, CBLSubdocument. The NSArrays and NSDictionaries must
-    contain only the above types.
+    contain only the above types. Setting the new array content will replace the current data 
+    including the existing CBLArray and CBLSubdocument objects.
     @param array  the array. */
 - (void) setArray: (NSArray*)array;
 

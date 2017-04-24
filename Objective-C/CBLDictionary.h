@@ -25,29 +25,10 @@ NS_ASSUME_NONNULL_BEGIN
     @param key      the key. */
 - (void) setObject: (nullable id)value forKey: (NSString*)key;
 
-/** Sets a boolean value by key. 
-    @param value    the boolean value.
-    @param key      the key. */
-- (void) setBoolean: (BOOL)value forKey: (NSString*)key;
-
-/** Sets an integer value by key. 
-    @param value    the integer value.
-    @param key      the key. */
-- (void) setInteger: (NSInteger)value forKey: (NSString*)key;
-
-/** Sets an integer value by key.
-    @param value    the float value.
-    @param key      the key. */
-- (void) setFloat: (float)value forKey: (NSString*)key;
-
-/** Sets an integer value by key.
-    @param value    the double value.
-    @param key      the key. */
-- (void) setDouble: (double)value forKey: (NSString*)key;
-
 /** Set a dictionary as a content. Allowed value types are NSArray, NSDate, NSDictionary, NSNumber, 
     NSNull, NSString, CBLArray, CBLBlob, CBLSubdocument. The NSArrays and NSDictionaries must 
-    contain only the above types.
+    contain only the above types. Setting the new dictionary content will replace the current data 
+    including the existing CBLArray and CBLSubdocument objects.
     @param dictionary  the dictionary. */
 - (void) setDictionary: (NSDictionary<NSString*,id>*)dictionary;
 

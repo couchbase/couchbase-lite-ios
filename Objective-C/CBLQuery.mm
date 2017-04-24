@@ -11,6 +11,7 @@
 #import "CBLInternal.h"
 #import "CBLPredicateQuery+Internal.h"
 #import "CBLQuery+Internal.h"
+#import "CBLStatus.h"
 #import "c4Query.h"
 
 

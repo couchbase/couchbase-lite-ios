@@ -19,9 +19,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-BOOL convertError(const C4Error&, NSError **outError);
-BOOL convertError(const FLError&, NSError **outError);
-
 NSString* slice2string(C4Slice s);
 
 static inline NSString* slice2string(FLSlice s) {

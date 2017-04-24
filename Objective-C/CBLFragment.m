@@ -7,6 +7,7 @@
 //
 
 #import "CBLFragment.h"
+#import "CBLData.h"
 #import "CBLDocument+Internal.h"
 #import "CBLJSON.h"
 
@@ -83,8 +84,7 @@
 
 
 - (BOOL) boolValue {
-    // TODO:
-    return [$castIf(NSNumber, _value) boolValue];
+    return [CBLData booleanValueForObject: _value];
 }
 
 

@@ -13,6 +13,7 @@
 .objc_class_name_CBLDatabase
 .objc_class_name_CBLDatabaseOptions
 .objc_class_name_CBLDocument
+.objc_class_name_CBLDocumentFragment
 .objc_class_name_CBLFragment
 .objc_class_name_CBLFullTextQueryRow
 .objc_class_name_CBLProperties

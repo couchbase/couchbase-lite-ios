@@ -91,7 +91,9 @@
     
     // Make sure resolver isn't being called at inappropriate times by defaulting to one that
     // will raise an exception:
-    self.db.conflictResolver = [DoNotResolve new];
+    @autoreleasepool {
+        self.db.conflictResolver = [DoNotResolve new];
+    }
 }
 
 
@@ -147,7 +149,9 @@
         C4Error err;
         C4Document* newDoc = c4doc_put(self.db.c4db, &put, NULL, &err);
         c4slice_free(put.body);
-        Assert(newDoc);
+        Assert(newDoc, @"Couldn't save c4doc: %d/%d", err.domain, err.code);
+        c4doc_free(newDoc);
+        c4doc_free(tricky);
     }];
     
     Assert(ok);

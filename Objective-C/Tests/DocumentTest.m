@@ -10,7 +10,6 @@
 
 #import "CBLBlob.h"
 #import "CBLJSON.h"
-#import "CBLError.h"
 
 
 @interface DocumentTest : CBLTestCase
@@ -87,10 +86,10 @@
     AssertFalse(doc1a.isDeleted);
     AssertEqualObjects([doc1a toDictionary], @{});
     
-    CBLDocument* doc1b = [self saveDocument: doc1a];;
-    Assert(doc1b != doc1a);
-    AssertNotNil(doc1b);
-    AssertEqualObjects(doc1b.documentID, doc1a.documentID);
+    NSError *error;
+    AssertFalse([_db saveDocument: doc1a error: &error]);
+    AssertEqual(error.code, 38); // Invalid docID
+    AssertEqualObjects(error.domain, @"LiteCore");
 }
 
 
@@ -124,7 +123,7 @@
     AssertFalse(doc1a.isDeleted);
     AssertEqualObjects([doc1a toDictionary], dict);
     
-    CBLDocument* doc1b = [self saveDocument: doc1a];;
+    CBLDocument* doc1b = [self saveDocument: doc1a];
     Assert(doc1b != doc1a);
     AssertNotNil(doc1b);
     AssertEqualObjects(doc1b.documentID, doc1a.documentID);
@@ -435,7 +434,7 @@
 }
 
 
-- (void) testSetGetMinMaxNumber {
+- (void) testSetGetMinMaxNumbers {
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @(NSIntegerMin) forKey: @"min_int"];
     [doc setObject: @(NSIntegerMax) forKey: @"max_int"];
@@ -465,6 +464,49 @@
         AssertEqualObjects([d objectForKey: @"max_double"], @(DBL_MAX));
         AssertEqual([d doubleForKey: @"min_double"], DBL_MIN);
         AssertEqual([d doubleForKey: @"max_double"], DBL_MAX);
+    }];
+}
+
+
+- (void) failingTestSetGetFloatNumbers {
+    // TODO: Fleece asInt() does round up
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    [doc setObject: @(1.00) forKey: @"number1"];
+    [doc setObject: @(1.49) forKey: @"number2"];
+    [doc setObject: @(1.50) forKey: @"number3"];
+    [doc setObject: @(1.51) forKey: @"number4"];
+    [doc setObject: @(1.99) forKey: @"number5"];
+    
+    [self saveDocument: doc eval: ^(CBLDocument* d) {
+        AssertEqualObjects([d objectForKey: @"number1"], @(1.00));
+        AssertEqualObjects([d numberForKey: @"number1"], @(1.00));
+        AssertEqual([d integerForKey: @"number1"], 1);
+        AssertEqual([d floatForKey: @"number1"], 1.00f);
+        AssertEqual([d doubleForKey: @"number1"], 1.00);
+        
+        AssertEqualObjects([d objectForKey: @"number2"], @(1.49));
+        AssertEqualObjects([d numberForKey: @"number2"], @(1.49));
+        AssertEqual([d integerForKey: @"number2"], 1);
+        AssertEqual([d floatForKey: @"number2"], 1.49f);
+        AssertEqual([d doubleForKey: @"number2"], 1.49);
+        
+        AssertEqualObjects([d objectForKey: @"number3"], @(1.50));
+        AssertEqualObjects([d numberForKey: @"number3"], @(1.50));
+        AssertEqual([d integerForKey: @"number3"], 1);
+        AssertEqual([d floatForKey: @"number3"], 1.50f);
+        AssertEqual([d doubleForKey: @"number3"], 1.50);
+        
+        AssertEqualObjects([d objectForKey: @"number4"], @(1.51));
+        AssertEqualObjects([d numberForKey: @"number4"], @(1.51));
+        AssertEqual([d integerForKey: @"number4"], 1);
+        AssertEqual([d floatForKey: @"number4"], 1.51f);
+        AssertEqual([d doubleForKey: @"number4"], 1.51);
+        
+        AssertEqualObjects([d objectForKey: @"number5"], @(1.99));
+        AssertEqualObjects([d numberForKey: @"number5"], @(1.99));
+        AssertEqual([d integerForKey: @"number5"], 1);
+        AssertEqual([d floatForKey: @"number5"], 1.99f);
+        AssertEqual([d doubleForKey: @"number5"], 1.99);
     }];
 }
 
@@ -1148,7 +1190,7 @@
     
     NSError* error;
     AssertFalse([_db deleteDocument: doc error: &error]);
-    AssertEqual(error.code, kCBLErrorStatusNotFound);
+    AssertEqual(error.code, 404);
     AssertFalse(doc.isDeleted);
     AssertEqualObjects([doc objectForKey: @"name"], @"Scott Tiger");
     
