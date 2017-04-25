@@ -139,17 +139,18 @@ typedef struct {
     improving performance. */
 - (BOOL) inBatch: (NSError**)error do: (void (NS_NOESCAPE ^)())block;
 
-/** Gets or creates a CBLDocument object with the given ID.
-    The existence of the CBLDocument in the database can be checked by checking its .exists.
-    CBLDocuments are cached, so there will never be more than one instance in this CBLDatabase
-    object at a time with the same documentID. */
-- (nullable CBLDocument*) documentWithID: (NSString*)docID;
+/** Gets an existing CBLDocument object with the given ID. If the document with the given ID 
+    doesn't exist in the database, the value returned will be nil.
+    @param documentID   the document ID.
+    @result the CBLDocument object.
+    */
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID;
 
 /** Same as -documentWithID: */
-- (nullable CBLDocument*) objectForKeyedSubscript: (NSString*)docID;
+- (nullable CBLDocument*) objectForKeyedSubscript: (NSString*)documentID;
 
 /** Checks whether the document of the given ID exists in the database or not. */
-- (BOOL) documentExists: (NSString*)docID;
+- (BOOL) documentExists: (NSString*)documentID;
 
 /** The conflict resolver for this database.
     If nil, a default algorithm will be used, where the revision with more history wins.

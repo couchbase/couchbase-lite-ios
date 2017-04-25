@@ -8,8 +8,13 @@
 
 @class CBLReadOnlyFragment;
 
+/** CBLReadOnlyArrayFragment protocol provides subscription access to CBLReadOnlyFragment 
+    objects by index. */
 @protocol CBLReadOnlyArrayFragment <NSObject>
 
+/** Gets a CBLReadOnlyFragment object by index.
+    @param index  the index.
+    @result the CBLReadOnlyFragment object. */
 - (CBLReadOnlyFragment*) objectAtIndexedSubscript: (NSUInteger)index;
 
 @end

@@ -14,35 +14,63 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** CBLDictionary protocol defines a set of methods for getting and setting dictionary data. */
 @protocol CBLDictionary <CBLReadOnlyDictionary, CBLDictionaryFragment>
 
+/** Set an object value by key. Setting the value to nil will remove the property. Allowed value 
+    types are NSArray, NSDate, NSDictionary, NSNumber, NSNull, NSString, CBLArray, CBLBlob,
+    CBLSubdocument. The NSArrays and NSDictionaries must contain only the above types. An NSDate 
+    object will be converted to an ISO-8601 format string. 
+    @param value    the object value.
+    @param key      the key. */
 - (void) setObject: (nullable id)value forKey: (NSString*)key;
 
-/** Sets a boolean value by key. */
+/** Sets a boolean value by key. 
+    @param value    the boolean value.
+    @param key      the key. */
 - (void) setBoolean: (BOOL)value forKey: (NSString*)key;
 
-/** Sets an integer value by key. */
+/** Sets an integer value by key. 
+    @param value    the integer value.
+    @param key      the key. */
 - (void) setInteger: (NSInteger)value forKey: (NSString*)key;
 
-/** Sets a float value by key. */
+/** Sets an integer value by key.
+    @param value    the float value.
+    @param key      the key. */
 - (void) setFloat: (float)value forKey: (NSString*)key;
 
-/** Sets a double value by key. */
+/** Sets an integer value by key.
+    @param value    the double value.
+    @param key      the key. */
 - (void) setDouble: (double)value forKey: (NSString*)key;
 
-/** Removes a property by key. This is the same as setting its value to nil. */
-- (void) removeObjectForKey: (NSString*)key;
-
-- (nullable CBLSubdocument*) subdocumentForKey: (NSString*)key;
-
-- (nullable CBLArray*) arrayForKey: (NSString*)key;
-
+/** Set a dictionary as a content. Allowed value types are NSArray, NSDate, NSDictionary, NSNumber, 
+    NSNull, NSString, CBLArray, CBLBlob, CBLSubdocument. The NSArrays and NSDictionaries must 
+    contain only the above types.
+    @param dictionary  the dictionary. */
 - (void) setDictionary: (NSDictionary<NSString*,id>*)dictionary;
 
+/** Get a property's value as a CBLSubdocument, which is a mapping object of a dictionary
+    value. Returns nil if the property doesn't exists, or its value is not a dictionary.
+    @param key  the key.
+    @result the CBLSubdocument object or nil if the key doesn't exist. */
+- (nullable CBLSubdocument*) subdocumentForKey: (NSString*)key;
+
+/** Get a property's value as a CBLArray, which is a mapping object of an array value.
+    Returns nil if the property doesn't exists, or its value is not an array.
+    @param key  the key.
+    @result the CBLArray object or nil if the property doesn't exist. */
+- (nullable CBLArray*) arrayForKey: (NSString*)key;
+
+/** Subscripting access to a CBLFragment object that represents the value of the dictionary by key.
+    @param key  the key.
+    @result the CBLFragment object. */
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key;
 
 @end
 
+/** CBLDictionary provides access to dictionary data. */
 @interface CBLDictionary : CBLReadOnlyDictionary <CBLDictionary>
 
 - (instancetype) init NS_UNAVAILABLE;

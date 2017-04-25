@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "CBLReadOnlyDictionary.h"
 
+/** Readonly version of the CBLSubdocument. */
 @interface CBLReadOnlySubdocument : CBLReadOnlyDictionary
 
 - (instancetype) init NS_UNAVAILABLE;

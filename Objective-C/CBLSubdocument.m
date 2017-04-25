@@ -145,11 +145,6 @@
 }
 
 
-- (void) removeObjectForKey: (NSString*)key {
-    [_dict removeObjectForKey: key];
-}
-
-
 - (void) setDictionary:(NSDictionary<NSString *,id> *)dictionary {
     [_dict setDictionary: dictionary];
 }

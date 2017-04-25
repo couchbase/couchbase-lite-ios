@@ -10,8 +10,13 @@
 #import "CBLReadOnlyDictionaryFragment.h"
 @class CBLFragment;
 
+/** CBLDictionaryFragment protocol provides subscription access to CBLFragment 
+    objects by key. */
 @protocol CBLDictionaryFragment <CBLReadOnlyDictionaryFragment>
 
+/** Gets a CBLFragment object by key.
+    @param key  the key.
+    @result the CBLFragment object. */
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key;
 
 @end

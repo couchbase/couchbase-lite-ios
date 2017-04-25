@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "CBLReadOnlyDictionary.h"
 
+/** Readonly version of the CBLDocument. */
 @interface CBLReadOnlyDocument : CBLReadOnlyDictionary
 
 /** The document's ID. */
