@@ -356,7 +356,8 @@
     
     NSArray* expected = @[@"Marcy", @"Margaretta", @"Margrett", @"Marlen", @"Maryjo"];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        AssertEqualObjects(row.document[@"name"][@"first"], expected[n-1]);
+        NSString* first = [[row.document objectForKey: @"name"] objectForKey: @"first"];
+        AssertEqualObjects(first, expected[n-1]);
     }];
     AssertEqual((int)numRows, (int)expected.count);
 }
