@@ -204,7 +204,7 @@
     if (!_changeListeners)
         _changeListeners = [NSMapTable weakToStrongObjectsMapTable];
     NSInteger count = [[_changeListeners objectForKey: listener] integerValue] + 1;
-    [_changeListeners setObject: listener forKey: @(count)];
+    [_changeListeners setObject: @(count) forKey: listener];
 }
 
 
