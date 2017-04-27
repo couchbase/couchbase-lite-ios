@@ -20,9 +20,18 @@
 }
 
 
-- (void)setUp {
+- (void) setUp {
     [super setUp];
     otherDB = [self openDBNamed: @"otherdb"];
+}
+
+
+- (void) tearDown {
+    NSError* error;
+    Assert([otherDB close: &error]);
+    otherDB = nil;
+    repl = nil;
+    [super tearDown];
 }
 
 

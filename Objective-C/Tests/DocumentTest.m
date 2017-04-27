@@ -110,16 +110,21 @@
 
 - (void) setUp {
     [super setUp];
-    // Make sure resolver isn't being called at inappropriate times by defaulting to one that
-    // will raise an exception:
-    self.db.conflictResolver = [DoNotResolve new];
-    doc = [self.db documentWithID: @"doc1"];
+    @autoreleasepool {
+        // Make sure resolver isn't being called at inappropriate times by defaulting to one that
+        // will raise an exception:
+        self.db.conflictResolver = [DoNotResolve new];
+        doc = [self.db documentWithID: @"doc1"];
+    }
 }
 
 
 - (void) tearDown {
-    // Avoid "Closing database with 1 unsaved docs" warning:
-    [doc revert];
+    @autoreleasepool {
+        // Avoid "Closing database with 1 unsaved docs" warning:
+        [doc revert];
+        doc = nil;
+    }
 
     [super tearDown];
 }
@@ -145,7 +150,7 @@
             .historyCount = 1,
             .save = true,
         };
-        
+
         NSMutableDictionary* properties = [props mutableCopy];
         FLEncoder enc = c4db_createFleeceEncoder(self.db.c4db);
         FLEncoder_WriteNSObject(enc, properties);
@@ -158,7 +163,9 @@
         C4Error err;
         C4Document* newDoc = c4doc_put(self.db.c4db, &put, NULL, &err);
         c4slice_free(put.body);
-        Assert(newDoc);
+        Assert(newDoc, @"Couldn't save c4doc: %d/%d", err.domain, err.code);
+        c4doc_free(newDoc);
+        c4doc_free(tricky);
     }];
     
     Assert(ok);

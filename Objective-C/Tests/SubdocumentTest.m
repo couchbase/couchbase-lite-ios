@@ -24,13 +24,18 @@
 - (void) setUp {
     [super setUp];
 
-    doc = [self.db documentWithID: @"doc1"];
+    @autoreleasepool {
+        doc = [self.db documentWithID: @"doc1"];
+    }
 }
 
 
 - (void) tearDown {
-    // Avoid "Closing database with 1 unsaved docs" warning:
-    [doc revert];
+    @autoreleasepool {
+        // Avoid "Closing database with 1 unsaved docs" warning:
+        [doc revert];
+        doc = nil;
+    }
     
     [super tearDown];
 }

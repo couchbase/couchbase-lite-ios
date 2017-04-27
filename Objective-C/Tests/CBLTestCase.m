@@ -36,14 +36,21 @@
 
 - (void) tearDown {
     if (_db) {
-        NSError* error;
-        Assert([_db close: &error]);
-        _db = nil;
+        @autoreleasepool {
+            NSError* error;
+            Assert([_db close: &error]);
+            _db = nil;
+        }
+    }
+
+    // Wait a little while for objects to be cleaned up:
+    for (int i = 0; i < 10; i++) {
+        if (c4_getObjectCount() == _c4ObjectCount)
+            break;
+        else
+            [NSThread sleepForTimeInterval: 0.1];
     }
     AssertEqual(c4_getObjectCount(), _c4ObjectCount);
-    NSError *error;
-    Assert([[NSFileManager defaultManager] removeItemAtPath: [[self class] directory] error: &error],
-           @"Error deleting CouchbaseLite folder: %@", error);
     [super tearDown];
 }
 
