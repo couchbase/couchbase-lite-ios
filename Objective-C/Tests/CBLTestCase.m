@@ -13,13 +13,17 @@
 
 
 @implementation CBLTestCase
+{
+    int _c4ObjectCount;
+}
 
 @synthesize db=_db;
 
 
 - (void) setUp {
     [super setUp];
-    
+
+    _c4ObjectCount = c4_getObjectCount();
     NSString* dir = [[self class] directory];
     if ([[NSFileManager defaultManager] fileExistsAtPath: dir]) {
         NSError* error;
@@ -36,6 +40,10 @@
         Assert([_db close: &error]);
         _db = nil;
     }
+    AssertEqual(c4_getObjectCount(), _c4ObjectCount);
+    NSError *error;
+    Assert([[NSFileManager defaultManager] removeItemAtPath: [[self class] directory] error: &error],
+           @"Error deleting CouchbaseLite folder: %@", error);
     [super tearDown];
 }
 

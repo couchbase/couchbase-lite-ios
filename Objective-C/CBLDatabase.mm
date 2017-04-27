@@ -192,6 +192,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     
     _documents = nil;
     _unsavedDocuments = nil;
+    _allDocsQuery = nil;
     
     C4Error err;
     if (!c4db_close(_c4db, &err))
