@@ -308,8 +308,6 @@ static bool containsBlob(__unsafe_unretained NSDictionary* dict) {
         }
 
         put.body = {body.buf, body.size};
-        docTypeSlice = self[@"type"];
-        put.docType = docTypeSlice;
     }
     
     // Save to database:
