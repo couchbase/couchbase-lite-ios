@@ -54,6 +54,7 @@
 
 
 - (instancetype) initWithID: (NSString*)documentID {
+    documentID = documentID ? documentID : CBLCreateUUID();
     self = [super initWithDocumentID: documentID c4Doc: nil data: [CBLFleeceDictionary empty]];
     if (self) {
         _dict = [[CBLDictionary alloc] initWithData: self.data];

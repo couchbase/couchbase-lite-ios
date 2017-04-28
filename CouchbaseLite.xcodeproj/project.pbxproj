@@ -102,6 +102,8 @@
 		9332081B1E77415E000D9993 /* CBLQuery.mm in Sources */ = {isa = PBXBuildFile; fileRef = 933208111E77415E000D9993 /* CBLQuery.mm */; };
 		9332082A1E774171000D9993 /* CBLQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 933208291E774171000D9993 /* CBLQuery+Internal.h */; };
 		9332082C1E774419000D9993 /* QueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332082B1E774419000D9993 /* QueryTest.m */; };
+		93384F741EB14ABA00976B41 /* ConflictTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93384F731EB14ABA00976B41 /* ConflictTest.m */; };
+		93384F8C1EB151C100976B41 /* MiscTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93384F8B1EB151C100976B41 /* MiscTest.m */; };
 		933A432A1EA81C2500AE9084 /* CBLError.h in Headers */ = {isa = PBXBuildFile; fileRef = 933A43281EA81C2500AE9084 /* CBLError.h */; };
 		933A432B1EA81C2500AE9084 /* CBLError.m in Sources */ = {isa = PBXBuildFile; fileRef = 933A43291EA81C2500AE9084 /* CBLError.m */; };
 		934F4C101E1EF19000F90659 /* CollectionUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4BD01E1EF19000F90659 /* CollectionUtils.h */; };
@@ -468,6 +470,8 @@
 		933208111E77415E000D9993 /* CBLQuery.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLQuery.mm; sourceTree = "<group>"; };
 		933208291E774171000D9993 /* CBLQuery+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLQuery+Internal.h"; sourceTree = "<group>"; };
 		9332082B1E774419000D9993 /* QueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QueryTest.m; sourceTree = "<group>"; };
+		93384F731EB14ABA00976B41 /* ConflictTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConflictTest.m; sourceTree = "<group>"; };
+		93384F8B1EB151C100976B41 /* MiscTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MiscTest.m; sourceTree = "<group>"; };
 		933A43281EA81C2500AE9084 /* CBLError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLError.h; sourceTree = "<group>"; };
 		933A43291EA81C2500AE9084 /* CBLError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLError.m; sourceTree = "<group>"; };
 		9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
@@ -909,19 +913,21 @@
 			children = (
 				9378C5951E25B473001BB196 /* CBLTestCase.h */,
 				9378C5961E25B473001BB196 /* CBLTestCase.m */,
+				93384F731EB14ABA00976B41 /* ConflictTest.m */,
 				9378C5901E25B3F0001BB196 /* DatabaseTest.m */,
 				9378C59D1E269F14001BB196 /* DocumentTest.m */,
 				931C14691EAAF08C0094F9B2 /* FragmentTest.m */,
+				93384F8B1EB151C100976B41 /* MiscTest.m */,
 				72A87A0E1E32E858008466FF /* NotificationTest.m */,
 				27EF6A931E298E26004748DF /* PredicateQueryTest.m */,
 				9332082B1E774419000D9993 /* QueryTest.m */,
 				27E35A811E8B3B3A00E103F9 /* ReplicationTest.m */,
 				9352945E1E51708E005CE4E8 /* SubdocumentTest.m */,
-				93BFCD951E0380A300E52F8A /* Info.plist */,
-				27EF6A951E2AC609004748DF /* names_100.json */,
-				273ADF7C1E36B514001E977F /* sentences.json */,
 				275FF5FA1E3FBD3B005F90DD /* Performance */,
 				936483AA1E4431C6008D08B3 /* iOS */,
+				27EF6A951E2AC609004748DF /* names_100.json */,
+				273ADF7C1E36B514001E977F /* sentences.json */,
+				93BFCD951E0380A300E52F8A /* Info.plist */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -1609,9 +1615,11 @@
 			files = (
 				27EF6A941E298E26004748DF /* PredicateQueryTest.m in Sources */,
 				72A87A0F1E32E858008466FF /* NotificationTest.m in Sources */,
+				93384F8C1EB151C100976B41 /* MiscTest.m in Sources */,
 				9378C5971E25B473001BB196 /* CBLTestCase.m in Sources */,
 				9378C5911E25B3F0001BB196 /* DatabaseTest.m in Sources */,
 				9378C59E1E269F14001BB196 /* DocumentTest.m in Sources */,
+				93384F741EB14ABA00976B41 /* ConflictTest.m in Sources */,
 				9352945F1E51708E005CE4E8 /* SubdocumentTest.m in Sources */,
 				27E35A821E8B3B3A00E103F9 /* ReplicationTest.m in Sources */,
 				931C146A1EAAF08C0094F9B2 /* FragmentTest.m in Sources */,
