@@ -9,7 +9,8 @@
 #import <Foundation/Foundation.h>
 
 typedef enum {
-    kCBLErrorStatusForbidden = 403
+    kCBLErrorStatusForbidden = 403,
+    kCBLErrorStatusNotFound = 404
 } CBLErrorStatus;
 
 NS_ASSUME_NONNULL_BEGIN

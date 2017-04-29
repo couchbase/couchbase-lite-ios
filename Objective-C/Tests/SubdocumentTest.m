@@ -16,72 +16,98 @@
 @end
 
 @implementation SubdocumentTest
-{
-    CBLDocument* doc;
-}
 
 
-- (void) setUp {
-    [super setUp];
-
-    doc = [[CBLDocument alloc] initWithID: @"doc1"];
-}
-
-
-- (void) tearDown {
-    [super tearDown];
-}
-
-
-- (void) reopenDB {
-    [super reopenDB];
+- (void) testCreateSubdocument {
+    CBLSubdocument* address = [[CBLSubdocument alloc] init];
+    AssertEqualObjects([address toDictionary], @{});
     
-    doc = [self.db documentWithID: @"doc1"];
-    if (!doc)
-        doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    CBLDocument* doc1 = [[CBLDocument alloc] initWithID: @"doc1"];
+    [doc1 setObject: address forKey: @"address"];
+    AssertEqual([doc1 subdocumentForKey: @"address"], address);
+    
+    NSError* error;
+    Assert([_db saveDocument: doc1 error: &error], @"Saving error: %@", error);
+    doc1 = [_db documentWithID: @"doc1"];
+    
+    AssertNotNil([doc1 subdocumentForKey: @"address"]);
+    Assert([doc1 subdocumentForKey: @"address"] != address);
+    AssertEqualObjects([[doc1 subdocumentForKey: @"address"] toDictionary], @{});
 }
 
 
-- (void) testNewSubdocument {
-    CBLSubdocument* address = [CBLSubdocument subdocument];
-    [address setObject: @"1 Space Ave." forKey: @"street"];
-    AssertEqualObjects([address stringForKey: @"street"], @"1 Space Ave.");
+- (void) testCreateSubdocumentWithDict {
+    NSDictionary* dict = @{@"street": @"1 Main street",
+                           @"city": @"Mountain View",
+                           @"state": @"CA"};
+    CBLSubdocument* address = [[CBLSubdocument alloc] initWithDictionary: dict];
+    AssertEqualObjects([address objectForKey: @"street"], @"1 Main street");
+    AssertEqualObjects([address objectForKey: @"city"], @"Mountain View");
+    AssertEqualObjects([address objectForKey: @"state"], @"CA");
+    AssertEqualObjects([address toDictionary], dict);
     
-    [doc setObject: address forKey: @"address"];
-    AssertEqualObjects([doc subdocumentForKey: @"address"], address);
+    CBLDocument* doc1 = [[CBLDocument alloc] initWithID: @"doc1"];
+    [doc1 setObject: address forKey: @"address"];
+    AssertEqual([doc1 subdocumentForKey: @"address"], address);
+    
+    NSError* error;
+    Assert([_db saveDocument: doc1 error: &error], @"Saving error: %@", error);
+    doc1 = [_db documentWithID: @"doc1"];
+    
+    AssertNotNil([doc1 subdocumentForKey: @"address"]);
+    Assert([doc1 subdocumentForKey: @"address"] != address);
+    
+    address = [doc1 subdocumentForKey: @"address"];
+    AssertEqualObjects([address objectForKey: @"street"], @"1 Main street");
+    AssertEqualObjects([address objectForKey: @"city"], @"Mountain View");
+    AssertEqualObjects([address objectForKey: @"state"], @"CA");
+    AssertEqualObjects([address toDictionary], dict);
+}
+
+
+- (void) testGetValueFromNewEmptySubdoc {
+    CBLSubdocument* subdoc = [[CBLSubdocument alloc] init];
+    
+    AssertEqual([subdoc integerForKey: @"key"], 0);
+    AssertEqual([subdoc floatForKey: @"key"], 0.0f);
+    AssertEqual([subdoc doubleForKey: @"key"], 0.0);
+    AssertEqual([subdoc booleanForKey: @"key"], NO);
+    AssertNil([subdoc blobForKey: @"key"]);
+    AssertNil([subdoc dateForKey: @"key"]);
+    AssertNil([subdoc numberForKey: @"key"]);
+    AssertNil([subdoc objectForKey: @"key"]);
+    AssertNil([subdoc stringForKey: @"key"]);
+    AssertNil([subdoc subdocumentForKey: @"key"]);
+    AssertNil([subdoc arrayForKey: @"key"]);
+    AssertEqualObjects([subdoc toDictionary], @{});
+    
+    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    [doc setObject: subdoc forKey: @"subdoc"];
     
     NSError* error;
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
+    doc = [_db documentWithID: @"doc1"];
     
-    [self reopenDB];
-    
-    address = [doc subdocumentForKey: @"address"];
-    AssertEqualObjects([address stringForKey: @"street"], @"1 Space Ave.");
+    subdoc = [doc subdocumentForKey: @"subdoc"];
+    AssertEqual([subdoc integerForKey: @"key"], 0);
+    AssertEqual([subdoc floatForKey: @"key"], 0.0f);
+    AssertEqual([subdoc doubleForKey: @"key"], 0.0);
+    AssertEqual([subdoc booleanForKey: @"key"], NO);
+    AssertNil([subdoc blobForKey: @"key"]);
+    AssertNil([subdoc dateForKey: @"key"]);
+    AssertNil([subdoc numberForKey: @"key"]);
+    AssertNil([subdoc objectForKey: @"key"]);
+    AssertNil([subdoc stringForKey: @"key"]);
+    AssertNil([subdoc subdocumentForKey: @"key"]);
+    AssertNil([subdoc arrayForKey: @"key"]);
+    AssertEqualObjects([subdoc toDictionary], @{});
 }
 
 
-- (void) testGetSubdocument {
-    [doc setDictionary: @{@"address": @{@"street": @"1 Space Ave."}}];
+- (void) testSetNestedSubdocuments {
+    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
     
-    CBLSubdocument* address = [doc subdocumentForKey: @"address"];
-    Assert(address);
-    AssertEqualObjects([doc subdocumentForKey: @"address"], address);
-    AssertEqualObjects([address stringForKey: @"street"], @"1 Space Ave.");
-    
-    NSError* error;
-    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
-    
-    [self reopenDB];
-    
-    address = [doc subdocumentForKey: @"address"];
-    Assert(address);
-    AssertEqualObjects([doc subdocumentForKey: @"address"], address);
-    AssertEqualObjects([address stringForKey: @"street"], @"1 Space Ave.");
-}
-
-
-- (void) testNestedSubdocuments {
-    CBLSubdocument *level1 = [CBLSubdocument subdocument];
+    CBLSubdocument *level1 = [[CBLSubdocument alloc] init];
     [level1 setObject: @"n1" forKey: @"name"];
     [doc setObject: level1 forKey: @"level1"];
     
@@ -94,61 +120,35 @@
     [level2 setObject: level3 forKey: @"level3"];
     
     AssertEqualObjects([doc subdocumentForKey: @"level1"], level1);
-    AssertEqualObjects([[doc subdocumentForKey: @"level1"]
-                                subdocumentForKey: @"level2"], level2);
-    AssertEqualObjects([[[doc subdocumentForKey: @"level1"]
-                                subdocumentForKey: @"level2"]
-                                    subdocumentForKey: @"level3"], level3);
-}
-
-
-- (void) testSetDocumentDictionary {
-    [doc setDictionary: @{ @"name": @"Jason",
-                           @"address": @{
-                                   @"street": @"1 Star Way.",
-                                   @"phones": @{@"mobile": @"650-123-4567"}
-                                   },
-                           @"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]
-                           }];
+    AssertEqualObjects([level1 subdocumentForKey: @"level2"], level2);
+    AssertEqualObjects([level2 subdocumentForKey: @"level3"], level3);
+    NSDictionary* dict = @{@"level1": @{@"name": @"n1",
+                                        @"level2": @{@"name": @"n2",
+                                                     @"level3": @{@"name": @"n3"}}}};
+    AssertEqualObjects([doc toDictionary], dict);
     
-    CBLSubdocument* address = [doc subdocumentForKey: @"address"];
-    AssertEqualObjects([address stringForKey: @"street"], @"1 Star Way.");
+    NSError* error;
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
+    doc = [_db documentWithID: @"doc1"];
     
-    CBLSubdocument* phones = [address subdocumentForKey: @"phones"];
-    AssertEqualObjects([phones stringForKey: @"mobile"], @"650-123-4567");
+    Assert([doc subdocumentForKey: @"level1"] != level1);
+    level1 = [doc subdocumentForKey: @"level1"];
+    level2 = [level1 subdocumentForKey: @"level2"];
+    level3 = [level2 subdocumentForKey: @"level3"];
     
-    CBLArray* references = [doc arrayForKey: @"references"];
-    AssertEqual(references.count, 2u);
-    
-    CBLSubdocument* r1 = [references objectAtIndex: 0];
-    AssertEqualObjects([r1 stringForKey: @"name"], @"Scott");
-    
-    CBLSubdocument* r2 = [references objectAtIndex: 1];
-    AssertEqualObjects([r2 stringForKey: @"name"], @"Sam");
-}
-
-
-- (void) testSetSubdocumentToAnotherKey {
-    [doc setDictionary: @{ @"name": @"Jason",
-                           @"address": @{
-                                   @"street": @"1 Star Way.",
-                                   @"phones": @{@"mobile": @"650-123-4567"}
-                                   }
-                           }];
-    
-    CBLSubdocument* address = [doc subdocumentForKey: @"address"];
-    [doc setObject: address forKey: @"address2"];
-    CBLSubdocument* address2 = [doc objectForKey: @"address2"];
-    Assert(address == address2);
+    AssertEqualObjects([level1 subdocumentForKey: @"level2"], level2);
+    AssertEqualObjects([level2 subdocumentForKey: @"level3"], level3);
+    AssertEqualObjects([doc toDictionary], dict);
 }
 
 
 - (void) testSubdocumentArray {
+    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
     NSArray* dicts = @[@{@"name": @"1"}, @{@"name": @"2"}, @{@"name": @"3"}, @{@"name": @"4"}];
     [doc setDictionary: @{@"subdocs": dicts}];
     
     CBLArray* subdocs = [doc arrayForKey: @"subdocs"];
-    AssertEqual([subdocs count], 4u);
+    AssertEqual(subdocs.count, 4u);
     
     CBLSubdocument* s1 = [subdocs subdocumentAtIndex: 0];
     CBLSubdocument* s2 = [subdocs subdocumentAtIndex: 1];
@@ -159,93 +159,84 @@
     AssertEqualObjects([s2 stringForKey: @"name"], @"2");
     AssertEqualObjects([s3 stringForKey: @"name"], @"3");
     AssertEqualObjects([s4 stringForKey: @"name"], @"4");
-}
-
-
-- (void) testSetSubdocumentPropertiesNil {
-    [doc setDictionary: @{ @"name": @"Jason",
-                           @"address": @{
-                                   @"street": @"1 Star Way.",
-                                   @"phones": @{@"mobile": @"650-123-4567"}
-                                   },
-                           @"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]
-                           }];
     
-    CBLSubdocument* address = [doc subdocumentForKey: @"address"];
-    CBLSubdocument* phones = [address subdocumentForKey: @"phones"];
-    AssertNotNil(address);
-    AssertNotNil(phones);
-    
-    CBLArray* references = [doc arrayForKey: @"references"];
-    AssertEqual(references.count, 2u);
-    CBLSubdocument* r1 = [references subdocumentAtIndex: 0];
-    CBLSubdocument* r2 = [references subdocumentAtIndex: 1];
-    AssertNotNil(r1);
-    AssertNotNil(r2);
-    
-    [doc setObject: nil forKey: @"address"];
-    [doc setObject: nil forKey: @"references"];
-    
-    // Check address:
-    AssertEqualObjects([address stringForKey: @"street"], @"1 Star Way.");
-    AssertEqualObjects([address subdocumentForKey: @"phones"], phones);
-    
-    // Check phones:
-    AssertEqualObjects([phones stringForKey: @"mobile"], @"650-123-4567");
-    
-    // Check references"
-    AssertEqual(references.count, 2u);
-    AssertEqualObjects([references subdocumentAtIndex: 0], r1);
-    AssertEqualObjects([references subdocumentAtIndex: 1], r2);
-    
-    AssertEqualObjects([r1 stringForKey: @"name"], @"Scott");
-    AssertEqualObjects([r2 stringForKey: @"name"], @"Sam");
-    
-    Assert([doc subdocumentForKey: @"address"] != address);
-    Assert([doc arrayForKey: @"references"] != references);
-}
-
-
-- (void) testDeleteDocument {
-    [doc setDictionary: @{ @"name": @"Jason",
-                           @"address": @{
-                                   @"street": @"1 Star Way.",
-                                   @"phones": @{@"mobile": @"650-123-4567"}
-                                   },
-                           @"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]
-                           }];
     NSError* error;
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
+    doc = [_db documentWithID: @"doc1"];
     
-    CBLSubdocument* address = [doc subdocumentForKey: @"address"];
-    CBLSubdocument* phones = [address subdocumentForKey: @"phones"];
-    AssertNotNil(address);
-    AssertNotNil(phones);
+    subdocs = [doc arrayForKey: @"subdocs"];
+    AssertEqual(subdocs.count, 4u);
     
-    CBLArray* references = [doc arrayForKey: @"references"];
-    AssertEqual(references.count, 2u);
-    CBLSubdocument* r1 = [references subdocumentAtIndex: 0];
-    CBLSubdocument* r2 = [references subdocumentAtIndex: 1];
-    AssertNotNil(r1);
-    AssertNotNil(r2);
+    s1 = [subdocs subdocumentAtIndex: 0];
+    s2 = [subdocs subdocumentAtIndex: 1];
+    s3 = [subdocs subdocumentAtIndex: 2];
+    s4 = [subdocs subdocumentAtIndex: 3];
     
-    
-    Assert([doc deleteDocument: &error], @"Deleting error: %@", error);
-    
-    // Check address:
-    AssertEqualObjects([address stringForKey: @"street"], @"1 Star Way.");
-    AssertEqualObjects([address subdocumentForKey: @"phones"], phones);
-    
-    // Check phones:
-    AssertEqualObjects([phones stringForKey: @"mobile"], @"650-123-4567");
-    
-    // Check references"
-    AssertEqual(references.count, 2u);
-    AssertEqualObjects([references subdocumentAtIndex: 0], r1);
-    AssertEqualObjects([references subdocumentAtIndex: 1], r2);
-    
-    AssertEqualObjects([r1 stringForKey: @"name"], @"Scott");
-    AssertEqualObjects([r2 stringForKey: @"name"], @"Sam");
+    AssertEqualObjects([s1 stringForKey: @"name"], @"1");
+    AssertEqualObjects([s2 stringForKey: @"name"], @"2");
+    AssertEqualObjects([s3 stringForKey: @"name"], @"3");
+    AssertEqualObjects([s4 stringForKey: @"name"], @"4");
 }
+
+
+- (void) testReplaceSubdocument {
+    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    CBLSubdocument *profile1 = [[CBLSubdocument alloc] init];
+    [profile1 setObject: @"Scott Tiger" forKey: @"name"];
+    [doc setObject: profile1 forKey: @"profile"];
+    AssertEqualObjects([doc subdocumentForKey: @"profile"], profile1);
+    
+    CBLSubdocument *profile2 = [[CBLSubdocument alloc] init];
+    [profile2 setObject: @"Daniel Tiger" forKey: @"name"];
+    [doc setObject: profile2 forKey: @"profile"];
+    AssertEqualObjects([doc subdocumentForKey: @"profile"], profile2);
+    
+    // Profile1 should be now detached:
+    [profile1 setObject: @(20) forKey: @"age"];
+    AssertEqualObjects([profile1 objectForKey: @"name"], @"Scott Tiger");
+    AssertEqualObjects([profile1 objectForKey: @"age"], @(20));
+    
+    // Check profile2:
+    AssertEqualObjects([profile2 objectForKey: @"name"], @"Daniel Tiger");
+    AssertNil([profile2 objectForKey: @"age"]);
+    
+    // Save:
+    NSError* error;
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
+    doc = [_db documentWithID: @"doc1"];
+    
+    Assert([doc subdocumentForKey: @"profile"] != profile2);
+    profile2 = [doc subdocumentForKey: @"profile"];
+    AssertEqualObjects([profile2 objectForKey: @"name"], @"Daniel Tiger");
+}
+
+
+- (void) testReplaceSubdocumentDifferentType {
+    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    CBLSubdocument *profile1 = [[CBLSubdocument alloc] init];
+    [profile1 setObject: @"Scott Tiger" forKey: @"name"];
+    [doc setObject: profile1 forKey: @"profile"];
+    AssertEqualObjects([doc subdocumentForKey: @"profile"], profile1);
+    
+    // Set string value to profile:
+    [doc setObject: @"Daniel Tiger" forKey: @"profile"];
+    AssertEqualObjects([doc objectForKey: @"profile"], @"Daniel Tiger");
+    
+    // Profile1 should be now detached:
+    [profile1 setObject: @(20) forKey: @"age"];
+    AssertEqualObjects([profile1 objectForKey: @"name"], @"Scott Tiger");
+    AssertEqualObjects([profile1 objectForKey: @"age"], @(20));
+
+    // Check whether the profile value has no change:
+    AssertEqualObjects([doc objectForKey: @"profile"], @"Daniel Tiger");
+    
+    // Save:
+    NSError* error;
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
+    doc = [_db documentWithID: @"doc1"];
+    
+    AssertEqualObjects([doc objectForKey: @"profile"], @"Daniel Tiger");
+}
+
 
 @end

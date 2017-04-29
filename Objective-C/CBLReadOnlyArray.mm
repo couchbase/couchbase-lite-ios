@@ -126,7 +126,6 @@
     FLEncoder_BeginArray(encoder, count);
     for (NSUInteger i = 0; i < count; i++) {
         id value = [self objectAtIndex: i];
-        if (!value) value = [NSNull null];
         if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]) {
             if (![value fleeceEncode: encoder database: database error: outError])
                 return NO;

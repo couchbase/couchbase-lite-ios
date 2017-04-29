@@ -101,6 +101,10 @@
 #pragma mark - GETTER
 
 
+- (NSUInteger) count {
+    return _dict.count;
+}
+
 - (nullable id) objectForKey: (NSString*)key {
     return [_dict objectForKey: key];
 }
@@ -159,6 +163,8 @@
 - (BOOL) containsObjectForKey: (NSString*)key {
     return [_dict containsObjectForKey: key];
 }
+
+
 
 
 - (NSArray*) allKeys {

@@ -154,8 +154,6 @@
         FLEncoder_WriteKey(encoder, bKey);
         id value = [self objectForKey: key];
         if ([self isFleeceEncodableValue: value]) {
-            if (!value)
-                value = [NSNull null];
             if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]){
                 if (![value fleeceEncode: encoder database: database error: outError])
                     return NO;

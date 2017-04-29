@@ -73,8 +73,6 @@ static id kRemovedValue;
         }
     } else if (value == kRemovedValue)
         value = nil;
-    if (value == [NSNull null])
-        value = nil; // Cross-platform behavior
     return value;
 }
 
@@ -279,7 +277,7 @@ static id kRemovedValue;
         result[key] = [self prepareValue: value];
     }];
     
-    // Marked the key as removed by setting the value to NSNull:
+    // Marked the key as removed by setting the value to kRemovedValue:
     NSDictionary* backingData = [super toDictionary];
     [backingData enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         if (!result[key])
