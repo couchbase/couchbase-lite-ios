@@ -955,7 +955,7 @@
     NSString* path = db.path;
     
     // close db before delete
-    [self closeDatabase:self.db];
+    [self closeDatabase:db];
     
     Assert([CBLDatabase deleteDatabase:@"db" inDirectory:dir error:&error]);
     AssertNil(error);
@@ -1022,7 +1022,6 @@
     NSError* error;
     NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
     
-    
     AssertFalse([CBLDatabase databaseExists:@"db" inDirectory:dir]);
     
     // create db with custom directory
@@ -1038,7 +1037,7 @@
     Assert([CBLDatabase databaseExists:@"db" inDirectory:dir]);
     
     // close db
-    [self closeDatabase:self.db];
+    [self closeDatabase:db];
     
     Assert([CBLDatabase databaseExists:@"db" inDirectory:dir]);
     
