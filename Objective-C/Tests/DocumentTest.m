@@ -22,7 +22,6 @@
 
 
 - (void) populateData: (CBLDocument*)doc {
-    [doc setDictionary: @{@"null": [NSNull null]}];
     [doc setObject: @(YES) forKey: @"true"];
     [doc setObject: @(NO) forKey: @"false"];
     [doc setObject: @"string" forKey: @"string"];
@@ -31,6 +30,7 @@
     [doc setObject: @(-1) forKey: @"minus_one"];
     [doc setObject: @(1.1) forKey: @"one_dot_one"];
     [doc setObject: [NSDate date] forKey: @"date"];
+    [doc setObject: [NSNull null] forKey: @"null"];
     
     // Subdocument:
     CBLSubdocument* subdoc = [[CBLSubdocument alloc] init];

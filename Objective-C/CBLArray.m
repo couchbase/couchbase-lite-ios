@@ -54,8 +54,7 @@
 
 
 - (nullable id) objectAtIndex: (NSUInteger)index {
-    id value = _array[index];
-    return value != [NSNull null] ? value : nil; // Cross-platform behavior
+    return _array[index];
 }
 
 

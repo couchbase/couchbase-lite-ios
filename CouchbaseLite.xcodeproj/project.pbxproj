@@ -246,6 +246,7 @@
 		93CD02E61EA0382D00AFB3FA /* CBLDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 93CD02E41EA0382C00AFB3FA /* CBLDictionary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93CD02E71EA0382D00AFB3FA /* CBLDictionary.m in Sources */ = {isa = PBXBuildFile; fileRef = 93CD02E51EA0382D00AFB3FA /* CBLDictionary.m */; };
 		93DD40E31E5CDAA500DD9196 /* SubdocumentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DD40E21E5CDAA500DD9196 /* SubdocumentTest.swift */; };
+		93DD9BA81EB419BB00E502A2 /* ArrayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DD9BA71EB419BB00E502A2 /* ArrayTest.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -574,6 +575,7 @@
 		93CD02E41EA0382C00AFB3FA /* CBLDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDictionary.h; sourceTree = "<group>"; };
 		93CD02E51EA0382D00AFB3FA /* CBLDictionary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDictionary.m; sourceTree = "<group>"; };
 		93DD40E21E5CDAA500DD9196 /* SubdocumentTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SubdocumentTest.swift; sourceTree = "<group>"; };
+		93DD9BA71EB419BB00E502A2 /* ArrayTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArrayTest.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -913,6 +915,7 @@
 			children = (
 				9378C5951E25B473001BB196 /* CBLTestCase.h */,
 				9378C5961E25B473001BB196 /* CBLTestCase.m */,
+				93DD9BA71EB419BB00E502A2 /* ArrayTest.m */,
 				93384F731EB14ABA00976B41 /* ConflictTest.m */,
 				9378C5901E25B3F0001BB196 /* DatabaseTest.m */,
 				9378C59D1E269F14001BB196 /* DocumentTest.m */,
@@ -1622,6 +1625,7 @@
 				93384F741EB14ABA00976B41 /* ConflictTest.m in Sources */,
 				9352945F1E51708E005CE4E8 /* SubdocumentTest.m in Sources */,
 				27E35A821E8B3B3A00E103F9 /* ReplicationTest.m in Sources */,
+				93DD9BA81EB419BB00E502A2 /* ArrayTest.m in Sources */,
 				931C146A1EAAF08C0094F9B2 /* FragmentTest.m in Sources */,
 				9332082C1E774419000D9993 /* QueryTest.m in Sources */,
 			);

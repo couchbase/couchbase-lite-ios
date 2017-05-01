@@ -7,9 +7,6 @@
 //
 
 #import "CBLTestCase.h"
-#import "CBLInternal.h"
-#import "CBLJSON.h"
-#import "CBLDocument+Internal.h"
 
 @interface SubdocumentTest : CBLTestCase
 
@@ -20,6 +17,7 @@
 
 - (void) testCreateSubdocument {
     CBLSubdocument* address = [[CBLSubdocument alloc] init];
+    AssertEqual(address.count, 0u);
     AssertEqualObjects([address toDictionary], @{});
     
     CBLDocument* doc1 = [[CBLDocument alloc] initWithID: @"doc1"];
@@ -29,9 +27,6 @@
     NSError* error;
     Assert([_db saveDocument: doc1 error: &error], @"Saving error: %@", error);
     doc1 = [_db documentWithID: @"doc1"];
-    
-    AssertNotNil([doc1 subdocumentForKey: @"address"]);
-    Assert([doc1 subdocumentForKey: @"address"] != address);
     AssertEqualObjects([[doc1 subdocumentForKey: @"address"] toDictionary], @{});
 }
 
@@ -53,15 +48,7 @@
     NSError* error;
     Assert([_db saveDocument: doc1 error: &error], @"Saving error: %@", error);
     doc1 = [_db documentWithID: @"doc1"];
-    
-    AssertNotNil([doc1 subdocumentForKey: @"address"]);
-    Assert([doc1 subdocumentForKey: @"address"] != address);
-    
-    address = [doc1 subdocumentForKey: @"address"];
-    AssertEqualObjects([address objectForKey: @"street"], @"1 Main street");
-    AssertEqualObjects([address objectForKey: @"city"], @"Mountain View");
-    AssertEqualObjects([address objectForKey: @"state"], @"CA");
-    AssertEqualObjects([address toDictionary], dict);
+    AssertEqualObjects([[doc1 subdocumentForKey: @"address"] toDictionary], dict);
 }
 
 
