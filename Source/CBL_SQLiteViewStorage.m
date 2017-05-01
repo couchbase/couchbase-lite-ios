@@ -379,13 +379,14 @@
         NSMutableString* sql = [@"SELECT revs.doc_id, sequence, docid, revid, json, deleted " mutableCopy];
         if (checkDocTypes)
             [sql appendString: @", doc_type "];
-        [sql appendString: @"FROM revs, docs WHERE sequence>? AND current!=0 "];
+        [sql appendString: @"FROM revs "
+                            "JOIN docs ON docs.doc_id = revs.doc_id "
+                            "WHERE sequence>? AND +current>0 "];
         if (minLastSequence == 0)
-            [sql appendString: @"AND deleted=0 "];
+            [sql appendString: @"AND +deleted=0 "];
         if (!allDocTypes && docTypes.count > 0)
             [sql appendFormat: @"AND doc_type IN (%@) ", CBLJoinSQLQuotedStrings(docTypes.allObjects)];
-        [sql appendString: @"AND revs.doc_id = docs.doc_id "
-                            "ORDER BY revs.doc_id, deleted, revid DESC"];
+        [sql appendString: @"ORDER BY +revs.doc_id, +deleted, +revid DESC"];
         CBL_FMResultSet* r = [fmdb executeQuery: sql, @(minLastSequence)];
         if (!r)
             return dbStorage.lastDbError;
@@ -422,7 +423,7 @@
                     // Find conflicts with documents from previous indexings.
                     CBL_FMResultSet* r2 = [fmdb executeQuery:
                                     @"SELECT revid, sequence FROM revs "
-                                     "WHERE doc_id=? AND sequence<=? AND current!=0 AND deleted=0 "
+                                     "WHERE doc_id=? AND sequence<=? AND current>0 AND deleted=0 "
                                      "ORDER BY revID DESC",
                                     @(doc_id), @(minLastSequence)];
                     if (!r2) {
