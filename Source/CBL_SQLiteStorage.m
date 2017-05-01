@@ -447,7 +447,6 @@ DefineLogDomain(SQL);
             CREATE TABLE docs (\
                 doc_id INTEGER PRIMARY KEY,\
                 docid TEXT UNIQUE NOT NULL);\
-            CREATE INDEX docs_docid ON docs(docid);\
             \
             CREATE TABLE revs (\
                 sequence INTEGER PRIMARY KEY AUTOINCREMENT,\
@@ -467,7 +466,6 @@ DefineLogDomain(SQL);
                 docid TEXT UNIQUE NOT NULL,\
                 revid TEXT NOT NULL COLLATE REVID,\
                 json BLOB);\
-            CREATE INDEX localdocs_by_docid ON localdocs(docid);\
             \
             CREATE TABLE views (\
                 view_id INTEGER PRIMARY KEY,\
@@ -475,7 +473,6 @@ DefineLogDomain(SQL);
                 version TEXT,\
                 lastsequence INTEGER DEFAULT 0,\
                 total_docs INTEGER DEFAULT -1);\
-            CREATE INDEX views_by_name ON views(name);\
             \
             CREATE TABLE info (\
                 key TEXT PRIMARY KEY,\
@@ -1208,10 +1205,10 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
     if (!options) options = &kDefaultCBLChangesOptions;
     BOOL includeDocs = options->includeDocs || (filter != NULL);
 
-    NSString* sql = $sprintf(@"SELECT sequence, revs.doc_id, docid, revid, deleted %@ FROM revs, docs "
-                             "WHERE sequence > ? AND current=1 "
-                             "AND revs.doc_id = docs.doc_id "
-                             "ORDER BY revs.doc_id, deleted, revid DESC",
+    NSString* sql = $sprintf(@"SELECT sequence, revs.doc_id, docid, revid, deleted %@ FROM revs "
+                             "JOIN docs ON docs.doc_id = revs.doc_id "
+                             "WHERE sequence > ? AND +current=1 "
+                             "ORDER BY +revs.doc_id, +deleted, revid DESC",
                              (includeDocs ? @", json" : @""));
     CBL_FMResultSet* r = [_fmdb executeQuery: sql, @(lastSequence)];
     if (!r)
@@ -2004,7 +2001,7 @@ NSString* CBLJoinSQLQuotedStrings(NSArray* strings) {
         // Mark the latest local rev as no longer current:
         if (commonAncestor) {
             if (![_fmdb executeUpdate: @"UPDATE revs SET current=0, doc_type=null"
-                                        " WHERE sequence=? AND current!=0",
+                                        " WHERE sequence=? AND current>0",
                   @(commonAncestor.sequence)])
                 return self.lastDbError;
             if (_fmdb.changes == 0)
