@@ -60,8 +60,8 @@
                                  where: c[0]];
         NSPredicate* p = [NSPredicate predicateWithFormat: c[1]];
         NSMutableArray* result = [[numbers filteredArrayUsingPredicate: p] mutableCopy];
-        NSInteger total = result.count;
-        NSInteger rows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
+        uint64_t total = result.count;
+        uint64_t rows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
             id props = row.document.properties;
             Assert([result containsObject: props]);
             [result removeObject: props];
@@ -179,7 +179,7 @@
                                  where: exp];
         uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
             if (expectedDocs.count <= n) {
-                CBLDocument* doc = expectedDocs[n-1];
+                CBLDocument* doc = expectedDocs[(NSUInteger)(n-1)];
                 AssertEqualObjects(doc.documentID, row.documentID, @"Failed case: %@", exp);
             }
         }];
@@ -240,7 +240,7 @@
                              where: [firstName in: expected]
                            orderBy: [CBLQuerySortOrder property: @"name.first"]];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        AssertEqualObjects(row.document[@"name"][@"first"], expected[n-1]);
+        AssertEqualObjects(row.document[@"name"][@"first"], expected[(NSUInteger)(n-1)]);
     }];
     AssertEqual((int)numRows, (int)expected.count);
 }

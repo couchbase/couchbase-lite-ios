@@ -157,11 +157,11 @@
     q.returning = @[@"contact.address.zip", @"contact.email"];
     q.parameters = @{@"STATE": @"MN"};
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        AssertEqualObjects(row.documentID, expectedDocs[n-1]);
+        AssertEqualObjects(row.documentID, expectedDocs[(NSUInteger)(n-1)]); //annoying...32-bit
         NSString* zip = [row stringAtIndex: 0];
         NSArray *email = [row valueAtIndex: 1];
-        AssertEqualObjects(zip, expectedZips[n-1]);
-        AssertEqualObjects(email, expectedEmails[n-1]);
+        AssertEqualObjects(zip, expectedZips[(NSUInteger)(n-1)]);
+        AssertEqualObjects(email, expectedEmails[(NSUInteger)(n-1)]);
     }];
     AssertEqual((int)numRows, 3);
 }
@@ -249,9 +249,9 @@
         NSString* maxZip = [row stringAtIndex: 2];
         //Log(@"State = %@, count = %d, maxZip = %@", state, (int)count,maxZip);
         if (n-1 < expectedStates.count) {
-            AssertEqualObjects(state,  expectedStates[n-1]);
-            AssertEqual       (count,  [expectedCounts[n-1] integerValue]);
-            AssertEqualObjects(maxZip, expectedMaxZips[n-1]);
+            AssertEqualObjects(state,  expectedStates[(NSUInteger)(n-1)]);
+            AssertEqual       (count,  [expectedCounts[(NSUInteger)(n-1)] integerValue]);
+            AssertEqualObjects(maxZip, expectedMaxZips[(NSUInteger)(n-1)]);
         }
     }];
     AssertEqual((int)numRows, 31);
@@ -267,7 +267,7 @@
     
     NSArray* expected = @[@"Marcy", @"Marlen", @"Maryjo", @"Margaretta", @"Margrett"];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        AssertEqualObjects(row.document[@"name"][@"first"], expected[n-1]);
+        AssertEqualObjects(row.document[@"name"][@"first"], expected[(NSUInteger)(n-1)]);
     }];
     AssertEqual((int)numRows, (int)expected.count);
 }
@@ -283,7 +283,7 @@
     
     NSArray* expected = @[@"Marcy", @"Marlen", @"Maryjo", @"Margaretta", @"Margrett"];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        AssertEqualObjects(row.document[@"name"][@"first"], expected[n-1]);
+        AssertEqualObjects(row.document[@"name"][@"first"], expected[(NSUInteger)(n-1)]);
     }];
     AssertEqual((int)numRows, (int)expected.count);
 }
@@ -356,7 +356,7 @@
     
     NSArray* expected = @[@"Marcy", @"Margaretta", @"Margrett", @"Marlen", @"Maryjo"];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        AssertEqualObjects(row.document[@"name"][@"first"], expected[n-1]);
+        AssertEqualObjects(row.document[@"name"][@"first"], expected[(NSUInteger)(n-1)]);
     }];
     AssertEqual((int)numRows, (int)expected.count);
 }
