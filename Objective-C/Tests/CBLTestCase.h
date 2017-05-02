@@ -30,6 +30,20 @@
 
 - (void) reopenDB;
 
+/** Create a new document with the given document ID. */
+- (CBLDocument*) createDocument: (NSString*)documentID;
+
+/** Create a new document with the given document ID and dictionary content. */
+- (CBLDocument*) createDocument:(NSString *)documentID dictionary: (NSDictionary*)dictionary;
+
+/** Save a document return a new instance of the document from the database. */
+- (CBLDocument*) saveDocument: (CBLDocument*)document;
+
+/** Save a document return a new instance of the document from the database. The eval block
+ will be called twice before save and after save. When calling the eval block after save, 
+ the new instance of the document will be given. */
+- (CBLDocument*) saveDocument: (CBLDocument*)doc eval: (void(^)(CBLDocument*))block;
+
 /** Reads a bundle resource file into an NSData. */
 - (NSData*) dataFromResource: (NSString*)resourceName ofType: (NSString*)type;
 

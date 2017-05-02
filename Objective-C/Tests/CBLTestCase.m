@@ -84,6 +84,31 @@
 }
 
 
+- (CBLDocument*) createDocument: (NSString*)documentID {
+    return [[CBLDocument alloc] initWithID: documentID];
+}
+
+
+- (CBLDocument*) createDocument:(NSString *)documentID dictionary:(NSDictionary *)dictionary {
+    return [[CBLDocument alloc] initWithID: documentID dictionary: dictionary];
+}
+
+
+- (CBLDocument*) saveDocument: (CBLDocument*)document {
+    NSError* error;
+    Assert([_db saveDocument: document error: &error], @"Saving error: %@", error);
+    return [_db documentWithID: document.documentID];
+}
+
+
+- (CBLDocument*) saveDocument: (CBLDocument*)doc eval: (void(^)(CBLDocument*))block {
+    block(doc);
+    doc = [self saveDocument: doc];
+    block(doc);
+    return doc;
+}
+
+
 - (NSData*) dataFromResource: (NSString*)resourceName ofType: (NSString*)type {
     NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: resourceName
                                                                        ofType: type];

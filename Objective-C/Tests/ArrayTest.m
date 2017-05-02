@@ -58,10 +58,10 @@
 }
 
 
-- (void) evaluateArray: (CBLArray*)array
-          withDocument: (CBLDocument*)doc
-                forKey: (NSString*)key
-             withBlock: (void(^)(CBLArray*))block
+- (void) saveArray: (CBLArray*)array
+        onDocument: (CBLDocument*)doc
+            forKey: (NSString*)key
+              eval: (void(^)(CBLArray*))block
 {
     block(array);
     
@@ -74,18 +74,6 @@
     array = [doc arrayForKey: @"array"];
     
     block(array);
-}
-
-
-- (CBLDocument*) createDocument: (NSString*)documentID {
-    return [[CBLDocument alloc] initWithID: documentID];
-}
-
-
-- (CBLDocument*) saveDocument: (CBLDocument*)doc {
-    NSError* error;
-    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
-    return [_db documentWithID: doc.documentID];
 }
 
 
@@ -152,8 +140,8 @@
     // Add objects of all types:
     [self populateData: array];
     
-    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual(a.count, 12u);
         AssertEqualObjects([a objectAtIndex: 0], @(YES));
         AssertEqualObjects([a objectAtIndex: 1], @(NO));
@@ -195,7 +183,7 @@
     // Update:
     [self populateData: array];
     
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual(a.count, 24u);
         AssertEqualObjects([a objectAtIndex: 12], @(YES));
         AssertEqualObjects([a objectAtIndex: 13], @(NO));
@@ -236,7 +224,7 @@
     }
     
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual(a.count, data.count);
         AssertEqualObjects([a objectAtIndex: 0], @(YES));
         AssertEqualObjects([a objectAtIndex: 1], @(NO));
@@ -280,7 +268,7 @@
         [array setObject: data[data.count - i - 1]  atIndex: i];
     }
     
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual(a.count, data.count);
         AssertEqualObjects([a objectAtIndex: 11], @(YES));
         AssertEqualObjects([a objectAtIndex: 10], @(NO));
@@ -367,20 +355,20 @@
     AssertNotNil(array);
     
     [array insertObject:@"a" atIndex: 0];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual (a.count, 1u);
         AssertEqualObjects([a objectAtIndex: 0], @"a");
     }];
     
     [array insertObject:@"c" atIndex: 0];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual (a.count, 2u);
         AssertEqualObjects([a objectAtIndex: 0], @"c");
         AssertEqualObjects([a objectAtIndex: 1], @"a");
     }];
     
     [array insertObject:@"d" atIndex: 1];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual (a.count, 3u);
         AssertEqualObjects([a objectAtIndex: 0], @"c");
         AssertEqualObjects([a objectAtIndex: 1], @"d");
@@ -388,7 +376,7 @@
     }];
     
     [array insertObject:@"e" atIndex: 2];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual (a.count, 4u);
         AssertEqualObjects([a objectAtIndex: 0], @"c");
         AssertEqualObjects([a objectAtIndex: 1], @"d");
@@ -397,7 +385,7 @@
     }];
  
     [array insertObject:@"f" atIndex: 4];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual (a.count, 5u);
         AssertEqualObjects([a objectAtIndex: 0], @"c");
         AssertEqualObjects([a objectAtIndex: 1], @"d");
@@ -435,7 +423,7 @@
     }
     
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [self evaluateArray: array withDocument: doc  forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc  forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual(a.count, 0u);
         AssertEqualObjects([a toArray], (@[]));
     }];
@@ -455,7 +443,7 @@
         [array removeObjectAtIndex: i];
     }
     
-    [self evaluateArray: array withDocument: doc  forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc  forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual(a.count, 0u);
         AssertEqualObjects([a toArray], (@[]));
     }];
@@ -484,7 +472,7 @@
     [self populateData: array];
     
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual(a.count, 12u);
     }];
 }
@@ -496,7 +484,7 @@
     Assert(array.count == 12);
     
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertNil([a stringAtIndex: 0]);
         AssertNil([a stringAtIndex: 1]);
         AssertEqualObjects([a stringAtIndex: 2], @"string");
@@ -519,7 +507,7 @@
     Assert(array.count == 12);
     
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqualObjects([a numberAtIndex: 0], @(1));
         AssertEqualObjects([a numberAtIndex: 1], @(0));
         AssertNil([a numberAtIndex: 2]);
@@ -542,7 +530,7 @@
     Assert(array.count == 12);
     
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual([a integerAtIndex: 0], 1);
         AssertEqual([a integerAtIndex: 1], 0);
         AssertEqual([a integerAtIndex: 2], 0);
@@ -565,7 +553,7 @@
     Assert(array.count == 12);
     
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual([a floatAtIndex: 0], 1.0f);
         AssertEqual([a floatAtIndex: 1], 0.0f);
         AssertEqual([a floatAtIndex: 2], 0.0f);
@@ -588,7 +576,7 @@
     Assert(array.count == 12);
     
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual([a doubleAtIndex: 0], 1.0);
         AssertEqual([a doubleAtIndex: 1], 0.0);
         AssertEqual([a doubleAtIndex: 2], 0.0);
@@ -615,7 +603,7 @@
     [array addObject: @(DBL_MAX)];
     
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqualObjects([a numberAtIndex: 0], @(NSIntegerMin));
         AssertEqualObjects([a numberAtIndex: 1], @(NSIntegerMax));
         AssertEqualObjects([a objectAtIndex: 0], @(NSIntegerMin));
@@ -646,7 +634,7 @@
     Assert(array.count == 12);
     
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual([a booleanAtIndex: 0], YES);
         AssertEqual([a booleanAtIndex: 1], NO);
         AssertEqual([a booleanAtIndex: 2], YES);
@@ -669,7 +657,7 @@
     Assert(array.count == 12);
     
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertNil([a dateAtIndex: 0]);
         AssertNil([a dateAtIndex: 1]);
         AssertNil([a dateAtIndex: 2]);
@@ -692,7 +680,7 @@
     Assert(array.count == 12);
     
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertNil([a subdocumentAtIndex: 0]);
         AssertNil([a subdocumentAtIndex: 1]);
         AssertNil([a subdocumentAtIndex: 2]);
@@ -715,7 +703,7 @@
     Assert(array.count == 12);
     
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [self evaluateArray: array withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertNil([a arrayAtIndex: 0]);
         AssertNil([a arrayAtIndex: 1]);
         AssertNil([a arrayAtIndex: 2]);
@@ -744,7 +732,7 @@
     [array3 addObject: @"c"];
     
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [self evaluateArray: array1 withDocument: doc forKey: @"array" withBlock: ^(CBLArray* a) {
+    [self saveArray: array1 onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         CBLArray* a1 = a;
         AssertEqual(a1.count, 1u);
         CBLArray* a2 = [a1 objectAtIndex: 0];
