@@ -17,19 +17,18 @@ static const char* kLevelNames[6] = {"Debug", "Verbose", "Info", "WARNING", "ERR
 
 
 void cbllog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
-    @autoreleasepool {
-        va_list args;
-        va_start(args, msg);
-        NSString* message = [[NSString alloc] initWithFormat: msg arguments: args];
-        c4log(domain, level, message.UTF8String);
-        va_end(args);
-    }
+    const char *cmsg = CFStringGetCStringPtr((__bridge CFStringRef)msg, kCFStringEncodingUTF8);
+    Assert(cmsg, @"Couldn't convert cbllog string to C string; maybe it's not a literal?");
+    va_list args;
+    va_start(args, msg);
+    c4vlog(domain, level, cmsg, args);
+    va_end(args);
 }
 
 
-static void logCallback(C4LogDomain domain, C4LogLevel level, C4Slice message) {
-    NSLog(@"CouchbaseLite %s %s: %.*s", c4log_getDomainName(domain), kLevelNames[level],
-          (int)message.size, (char*)message.buf);
+static void logCallback(C4LogDomain domain, C4LogLevel level, const char *fmt, va_list args) {
+    NSString* message = [[NSString alloc] initWithFormat: @(fmt) arguments: args];
+    NSLog(@"CouchbaseLite %s %s: %@", c4log_getDomainName(domain), kLevelNames[level], message);
     if (level >= kC4LogWarning && [NSUserDefaults.standardUserDefaults boolForKey: @"CBLBreakOnWarning"])
         MYBreakpoint();     // stops debugger at breakpoint. You can resume normally.
 }

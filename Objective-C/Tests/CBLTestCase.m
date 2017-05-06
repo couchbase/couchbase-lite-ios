@@ -20,6 +20,16 @@
 @synthesize db=_db;
 
 
++ (void) initialize {
+    if (self == [CBLTestCase class]) {
+        NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLiteTests.c4log"];
+        C4Error error;
+        NSAssert(c4log_writeToBinaryFile(c4str(path.UTF8String), &error), @"Couldn't initialize logging");
+        NSLog(@"Writing log to %@", path);
+    }
+}
+
+
 - (void) setUp {
     [super setUp];
 
