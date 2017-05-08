@@ -31,12 +31,12 @@
     [doc setObject: [NSDate date] forKey: @"date"];
     [doc setObject: [NSNull null] forKey: @"null"];
     
-    // Subdocument:
-    CBLSubdocument* subdoc = [[CBLSubdocument alloc] init];
-    [subdoc setObject: @"1 Main street" forKey: @"street"];
-    [subdoc setObject: @"Mountain View" forKey: @"city"];
-    [subdoc setObject: @"CA" forKey: @"state"];
-    [doc setObject: subdoc forKey: @"subdoc"];
+    // Dictionary:
+    CBLDictionary* dict = [[CBLDictionary alloc] init];
+    [dict setObject: @"1 Main street" forKey: @"street"];
+    [dict setObject: @"Mountain View" forKey: @"city"];
+    [dict setObject: @"CA" forKey: @"state"];
+    [doc setObject: dict forKey: @"dict"];
     
     // Array:
     CBLArray* array = [[CBLArray alloc] init];
@@ -200,7 +200,7 @@
         AssertNil([d numberForKey: @"key"]);
         AssertNil([d objectForKey: @"key"]);
         AssertNil([d stringForKey: @"key"]);
-        AssertNil([d subdocumentForKey: @"key"]);
+        AssertNil([d dictionaryForKey: @"key"]);
         AssertNil([d arrayForKey: @"key"]);
         AssertEqualObjects([d toDictionary], @{});
     }];
@@ -222,7 +222,7 @@
     AssertNil([doc objectForKey: @"key"]);
     AssertNil([doc stringForKey: @"key"]);
     
-    AssertNil([doc subdocumentForKey: @"key"]);
+    AssertNil([doc dictionaryForKey: @"key"]);
     AssertNil([doc arrayForKey: @"key"]);
     
     AssertEqualObjects([doc toDictionary], @{});
@@ -314,7 +314,7 @@
         AssertNil([d stringForKey: @"one_dot_one"]);
         AssertEqualObjects([d stringForKey: @"date"],
                            [CBLJSON JSONObjectWithDate: [d dateForKey: @"date"]]);
-        AssertNil([d stringForKey: @"subdoc"]);
+        AssertNil([d stringForKey: @"dict"]);
         AssertNil([d stringForKey: @"array"]);
         AssertNil([d stringForKey: @"blob"]);
         AssertNil([d stringForKey: @"non_existing_key"]);
@@ -365,7 +365,7 @@
         AssertEqualObjects([d numberForKey: @"minus_one"], @(-1));
         AssertEqualObjects([d numberForKey: @"one_dot_one"], @(1.1));
         AssertNil([d numberForKey: @"date"]);
-        AssertNil([d numberForKey: @"subdoc"]);
+        AssertNil([d numberForKey: @"dict"]);
         AssertNil([d numberForKey: @"array"]);
         AssertNil([d numberForKey: @"blob"]);
         AssertNil([d numberForKey: @"non_existing_key"]);
@@ -386,7 +386,7 @@
         AssertEqual([d integerForKey: @"minus_one"], -1);
         AssertEqual([d integerForKey: @"one_dot_one"], 1);
         AssertEqual([d integerForKey: @"date"], 0);
-        AssertEqual([d integerForKey: @"subdoc"], 0);
+        AssertEqual([d integerForKey: @"dict"], 0);
         AssertEqual([d integerForKey: @"array"], 0);
         AssertEqual([d integerForKey: @"blob"], 0);
         AssertEqual([d integerForKey: @"non_existing_key"], 0);
@@ -407,7 +407,7 @@
         AssertEqual([d floatForKey: @"minus_one"], -1.0f);
         AssertEqual([d floatForKey: @"one_dot_one"], 1.1f);
         AssertEqual([d floatForKey: @"date"], 0.0f);
-        AssertEqual([d floatForKey: @"subdoc"], 0.0f);
+        AssertEqual([d floatForKey: @"dict"], 0.0f);
         AssertEqual([d floatForKey: @"array"], 0.0f);
         AssertEqual([d floatForKey: @"blob"], 0.0f);
         AssertEqual([d floatForKey: @"non_existing_key"], 0.0f);
@@ -428,7 +428,7 @@
         AssertEqual([d doubleForKey: @"minus_one"], -1.0);
         AssertEqual([d doubleForKey: @"one_dot_one"], 1.1);
         AssertEqual([d doubleForKey: @"date"], 0.0);
-        AssertEqual([d doubleForKey: @"subdoc"], 0.0);
+        AssertEqual([d doubleForKey: @"dict"], 0.0);
         AssertEqual([d doubleForKey: @"array"], 0.0);
         AssertEqual([d doubleForKey: @"blob"], 0.0);
         AssertEqual([d doubleForKey: @"non_existing_key"], 0.0);
@@ -552,7 +552,7 @@
         AssertEqual([d booleanForKey: @"minus_one"], YES);
         AssertEqual([d booleanForKey: @"one_dot_one"], YES);
         AssertEqual([d booleanForKey: @"date"], YES);
-        AssertEqual([d booleanForKey: @"subdoc"], YES);
+        AssertEqual([d booleanForKey: @"dict"], YES);
         AssertEqual([d booleanForKey: @"array"], YES);
         AssertEqual([d booleanForKey: @"blob"], YES);
         AssertEqual([d booleanForKey: @"non_existing_key"], NO);
@@ -602,7 +602,7 @@
         AssertNotNil([d dateForKey: @"date"]);
         AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date"]],
                            [d stringForKey: @"date"]);
-        AssertNil([d dateForKey: @"subdoc"]);
+        AssertNil([d dateForKey: @"dict"]);
         AssertNil([d dateForKey: @"array"]);
         AssertNil([d dateForKey: @"blob"]);
         AssertNil([d dateForKey: @"non_existing_key"]);
@@ -649,7 +649,7 @@
         AssertNil([d blobForKey: @"minus_one"]);
         AssertNil([d blobForKey: @"one_dot_one"]);
         AssertNil([d blobForKey: @"date"]);
-        AssertNil([d dateForKey: @"subdoc"]);
+        AssertNil([d dateForKey: @"dict"]);
         AssertNil([d dateForKey: @"array"]);
         AssertEqualObjects([d blobForKey: @"blob"].content,
                            [@"12345" dataUsingEncoding: NSUTF8StringEncoding]);
@@ -658,55 +658,55 @@
 }
 
 
-- (void) testSetSubdocument {
+- (void) testSetDictionary {
     CBLDocument* doc = [self createDocument: @"doc1"];
-    CBLSubdocument* subdoc = [[CBLSubdocument alloc] init];
-    [subdoc setObject: @"1 Main street" forKey: @"street"];
-    [doc setObject: subdoc forKey: @"subdoc"];
+    CBLDictionary* dict = [[CBLDictionary alloc] init];
+    [dict setObject: @"1 Main street" forKey: @"street"];
+    [doc setObject: dict forKey: @"dict"];
     
-    AssertEqual([doc objectForKey: @"subdoc"], subdoc);
+    AssertEqual([doc objectForKey: @"dict"], dict);
     doc = [self saveDocument: doc];
     
-    Assert([doc objectForKey: @"subdoc"] != subdoc);
-    AssertEqual([doc objectForKey: @"subdoc"], [doc subdocumentForKey: @"subdoc"]);
-    AssertEqualObjects([[doc subdocumentForKey: @"subdoc"] toDictionary], [subdoc toDictionary]);
+    Assert([doc objectForKey: @"dict"] != dict);
+    AssertEqual([doc objectForKey: @"dict"], [doc dictionaryForKey: @"dict"]);
+    AssertEqualObjects([[doc dictionaryForKey: @"dict"] toDictionary], [dict toDictionary]);
     
     // Update:
     
-    subdoc = [doc subdocumentForKey: @"subdoc"];
-    [subdoc setObject: @"Mountain View" forKey: @"city"];
+    dict = [doc dictionaryForKey: @"dict"];
+    [dict setObject: @"Mountain View" forKey: @"city"];
     
-    AssertEqual([doc objectForKey: @"subdoc"], [doc subdocumentForKey: @"subdoc"]);
-    NSDictionary* dict = @{@"street": @"1 Main street", @"city": @"Mountain View"};
-    AssertEqualObjects([[doc subdocumentForKey: @"subdoc"] toDictionary], dict);
+    AssertEqual([doc objectForKey: @"dict"], [doc dictionaryForKey: @"dict"]);
+    NSDictionary* nsdict = @{@"street": @"1 Main street", @"city": @"Mountain View"};
+    AssertEqualObjects([[doc dictionaryForKey: @"dict"] toDictionary], nsdict);
     
     doc = [self saveDocument: doc];
     
-    Assert([doc objectForKey: @"subdoc"] != subdoc);
-    AssertEqual([doc objectForKey: @"subdoc"], [doc subdocumentForKey: @"subdoc"]);
-    AssertEqualObjects([[doc subdocumentForKey: @"subdoc"] toDictionary], dict);
+    Assert([doc objectForKey: @"dict"] != dict);
+    AssertEqual([doc objectForKey: @"dict"], [doc dictionaryForKey: @"dict"]);
+    AssertEqualObjects([[doc dictionaryForKey: @"dict"] toDictionary], nsdict);
 }
 
 
-- (void) testGetSubdocument {
+- (void) testGetDictionary {
     CBLDocument* doc = [self createDocument: @"doc1"];
     [self populateData: doc];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
-        AssertNil([d subdocumentForKey: @"null"]);
-        AssertNil([d subdocumentForKey: @"true"]);
-        AssertNil([d subdocumentForKey: @"false"]);
-        AssertNil([d subdocumentForKey: @"string"]);
-        AssertNil([d subdocumentForKey: @"zero"]);
-        AssertNil([d subdocumentForKey: @"one"]);
-        AssertNil([d subdocumentForKey: @"minus_one"]);
-        AssertNil([d subdocumentForKey: @"one_dot_one"]);
-        AssertNil([d subdocumentForKey: @"date"]);
-        AssertNotNil([d subdocumentForKey: @"subdoc"]);
+        AssertNil([d dictionaryForKey: @"null"]);
+        AssertNil([d dictionaryForKey: @"true"]);
+        AssertNil([d dictionaryForKey: @"false"]);
+        AssertNil([d dictionaryForKey: @"string"]);
+        AssertNil([d dictionaryForKey: @"zero"]);
+        AssertNil([d dictionaryForKey: @"one"]);
+        AssertNil([d dictionaryForKey: @"minus_one"]);
+        AssertNil([d dictionaryForKey: @"one_dot_one"]);
+        AssertNil([d dictionaryForKey: @"date"]);
+        AssertNotNil([d dictionaryForKey: @"dict"]);
         NSDictionary* dict = @{@"street": @"1 Main street", @"city": @"Mountain View", @"state": @"CA"};
-        AssertEqualObjects([[d subdocumentForKey: @"subdoc"] toDictionary], dict);
-        AssertNil([d subdocumentForKey: @"array"]);
-        AssertNil([d subdocumentForKey: @"blob"]);
-        AssertNil([d subdocumentForKey: @"non_existing_key"]);
+        AssertEqualObjects([[d dictionaryForKey: @"dict"] toDictionary], dict);
+        AssertNil([d dictionaryForKey: @"array"]);
+        AssertNil([d dictionaryForKey: @"blob"]);
+        AssertNil([d dictionaryForKey: @"non_existing_key"]);
     }];
 }
 
@@ -756,7 +756,7 @@
         AssertNil([d arrayForKey: @"minus_one"]);
         AssertNil([d arrayForKey: @"one_dot_one"]);
         AssertNil([d arrayForKey: @"date"]);
-        AssertNil([d arrayForKey: @"subdoc"]);
+        AssertNil([d arrayForKey: @"dict"]);
         AssertNotNil([d arrayForKey: @"array"]);
         AssertEqualObjects([[d arrayForKey: @"array"] toArray],
                            (@[@"650-123-0001", @"650-123-0002"]));
@@ -784,7 +784,7 @@
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: dict forKey: @"address"];
     
-    CBLSubdocument* address = [doc subdocumentForKey: @"address"];
+    CBLDictionary* address = [doc dictionaryForKey: @"address"];
     AssertNotNil(address);
     AssertEqual(address, [doc objectForKey: @"address"]);
     AssertEqualObjects([address stringForKey: @"street"], @"1 Main street");
@@ -798,15 +798,15 @@
                              @"state": @"CA"};
     [doc setObject: nuDict forKey: @"address"];
     
-    // Check whether the old address subdocument is still accessible:
-    Assert(address != [doc subdocumentForKey: @"address"]);
+    // Check whether the old address dictionary is still accessible:
+    Assert(address != [doc dictionaryForKey: @"address"]);
     AssertEqualObjects([address stringForKey: @"street"], @"1 Main street");
     AssertEqualObjects([address stringForKey: @"city"], @"Mountain View");
     AssertEqualObjects([address stringForKey: @"state"], @"CA");
     AssertEqualObjects([address toDictionary], dict);
     
-    // The old address subdocument should be detached:
-    CBLSubdocument* nuAddress = [doc subdocumentForKey: @"address"];
+    // The old address dictionary should be detached:
+    CBLDictionary* nuAddress = [doc dictionaryForKey: @"address"];
     Assert(address != nuAddress);
     
     // Update nuAddress:
@@ -851,11 +851,11 @@
     AssertEqualObjects([members objectAtIndex: 2], @"c");
     AssertEqualObjects([members toArray], (@[@"a", @"b", @"c"]));
     
-    // The old address subdocument should be detached:
+    // The old members array should be detached:
     CBLArray* nuMembers = [doc arrayForKey: @"members"];
     Assert(members != nuMembers);
     
-    // Update nuAddress:
+    // Update nuMembers:
     [nuMembers addObject: @"g"];
     AssertEqual(nuMembers.count, 4u);
     AssertEqualObjects([nuMembers objectAtIndex: 3], @"g");
@@ -868,12 +868,12 @@
 }
 
 
-- (void) testUpdateNestedSubdocument {
+- (void) testUpdateNestedDictionary {
     CBLDocument* doc = [self createDocument: @"doc1"];
-    CBLSubdocument* addresses = [[CBLSubdocument alloc] init];
+    CBLDictionary* addresses = [[CBLDictionary alloc] init];
     [doc setObject: addresses forKey: @"addresses"];
     
-    CBLSubdocument* shipping = [[CBLSubdocument alloc] init];
+    CBLDictionary* shipping = [[CBLDictionary alloc] init];
     [shipping setObject: @"1 Main street" forKey: @"street"];
     [shipping setObject: @"Mountain View" forKey: @"city"];
     [shipping setObject: @"CA" forKey: @"state"];
@@ -881,7 +881,7 @@
     
     doc = [self saveDocument: doc];
     
-    shipping = [[doc subdocumentForKey: @"addresses"] subdocumentForKey: @"shipping"];
+    shipping = [[doc dictionaryForKey: @"addresses"] dictionaryForKey: @"shipping"];
     [shipping setObject: @"94042" forKey: @"zip"];
     
     doc = [self saveDocument: doc];
@@ -896,18 +896,18 @@
 }
 
 
-- (void) testUpdateSubdocumentInArray {
+- (void) testUpdateDictionaryInArray {
     CBLDocument* doc = [self createDocument: @"doc1"];
     CBLArray* addresses = [[CBLArray alloc] init];
     [doc setObject: addresses forKey: @"addresses"];
     
-    CBLSubdocument* address1 = [[CBLSubdocument alloc] init];
+    CBLDictionary* address1 = [[CBLDictionary alloc] init];
     [address1 setObject: @"1 Main street" forKey: @"street"];
     [address1 setObject: @"Mountain View" forKey: @"city"];
     [address1 setObject: @"CA" forKey: @"state"];
     [addresses addObject: address1];
     
-    CBLSubdocument* address2 = [[CBLSubdocument alloc] init];
+    CBLDictionary* address2 = [[CBLDictionary alloc] init];
     [address2 setObject: @"1 Second street" forKey: @"street"];
     [address2 setObject: @"Palo Alto" forKey: @"city"];
     [address2 setObject: @"CA" forKey: @"state"];
@@ -915,11 +915,11 @@
     
     doc = [self saveDocument: doc];
     
-    address1 = [[doc arrayForKey: @"addresses"] subdocumentAtIndex: 0];
+    address1 = [[doc arrayForKey: @"addresses"] dictionaryAtIndex: 0];
     [address1 setObject: @"2 Main street" forKey: @"street"];
     [address1 setObject: @"94042" forKey: @"zip"];
     
-    address2 = [[doc arrayForKey: @"addresses"] subdocumentAtIndex: 1];
+    address2 = [[doc arrayForKey: @"addresses"] dictionaryAtIndex: 1];
     [address2 setObject: @"2 Second street" forKey: @"street"];
     [address2 setObject: @"94302" forKey: @"zip"];
     
@@ -975,10 +975,10 @@
 }
 
 
-- (void) testUpdateArrayInSubdocument {
+- (void) testUpdateArrayInDictionary {
     CBLDocument* doc = [self createDocument: @"doc1"];
     
-    CBLSubdocument* group1 = [[CBLSubdocument alloc] init];
+    CBLDictionary* group1 = [[CBLDictionary alloc] init];
     CBLArray* member1 = [[CBLArray alloc] init];
     [member1 addObject: @"a"];
     [member1 addObject: @"b"];
@@ -986,7 +986,7 @@
     [group1 setObject: member1 forKey: @"member"];
     [doc setObject: group1 forKey: @"group1"];
     
-    CBLSubdocument* group2 = [[CBLSubdocument alloc] init];
+    CBLDictionary* group2 = [[CBLDictionary alloc] init];
     CBLArray* member2 = [[CBLArray alloc] init];
     [member2 addObject: @(1)];
     [member2 addObject: @(2)];
@@ -996,12 +996,12 @@
     
     doc = [self saveDocument: doc];
     
-    member1 = [[doc subdocumentForKey: @"group1"] arrayForKey: @"member"];
+    member1 = [[doc dictionaryForKey: @"group1"] arrayForKey: @"member"];
     [member1 setObject: @"d" atIndex: 0];
     [member1 setObject: @"e" atIndex: 1];
     [member1 setObject: @"f" atIndex: 2];
     
-    member2 = [[doc subdocumentForKey: @"group2"] arrayForKey: @"member"];
+    member2 = [[doc dictionaryForKey: @"group2"] arrayForKey: @"member"];
     [member2 setObject: @(4) atIndex: 0];
     [member2 setObject: @(5) atIndex: 1];
     [member2 setObject: @(6) atIndex: 2];
@@ -1014,10 +1014,10 @@
 }
 
 
-- (void) testSetSubdocToMultipleKeys {
+- (void) testSetDictionaryToMultipleKeys {
     CBLDocument* doc = [self createDocument: @"doc1"];
     
-    CBLSubdocument* address = [[CBLSubdocument alloc] init];
+    CBLDictionary* address = [[CBLDictionary alloc] init];
     [address setObject: @"1 Main street" forKey: @"street"];
     [address setObject: @"Mountain View" forKey: @"city"];
     [address setObject: @"CA" forKey: @"state"];
@@ -1029,13 +1029,13 @@
     
     // Update address: both shipping and billing should get the update.
     [address setObject: @"94042" forKey: @"zip"];
-    AssertEqualObjects([[doc subdocumentForKey: @"shipping"] stringForKey: @"zip"], @"94042");
-    AssertEqualObjects([[doc subdocumentForKey: @"billing"] stringForKey: @"zip"], @"94042");
+    AssertEqualObjects([[doc dictionaryForKey: @"shipping"] stringForKey: @"zip"], @"94042");
+    AssertEqualObjects([[doc dictionaryForKey: @"billing"] stringForKey: @"zip"], @"94042");
     
     doc = [self saveDocument: doc];
     
-    CBLSubdocument* shipping = [doc subdocumentForKey: @"shipping"];
-    CBLSubdocument* billing = [doc subdocumentForKey: @"billing"];
+    CBLDictionary* shipping = [doc dictionaryForKey: @"shipping"];
+    CBLDictionary* billing = [doc dictionaryForKey: @"billing"];
     
     // After save: both shipping and billing address are now independent to each other
     Assert(shipping != address);
@@ -1048,8 +1048,8 @@
     // Save update:
     doc = [self saveDocument: doc];
     
-    AssertEqualObjects([[doc subdocumentForKey: @"shipping"] stringForKey: @"street"], @"2 Main street");
-    AssertEqualObjects([[doc subdocumentForKey: @"billing"] stringForKey: @"street"], @"3 Main street");
+    AssertEqualObjects([[doc dictionaryForKey: @"shipping"] stringForKey: @"street"], @"2 Main street");
+    AssertEqualObjects([[doc dictionaryForKey: @"billing"] stringForKey: @"street"], @"3 Main street");
 }
 
 
@@ -1136,7 +1136,7 @@
     [doc setObject: nil forKey: @"weight"];
     [doc setObject: nil forKey: @"age"];
     [doc setObject: nil forKey: @"active"];;
-    [[doc subdocumentForKey: @"address"] setObject: nil forKey: @"city"];
+    [[doc dictionaryForKey: @"address"] setObject: nil forKey: @"city"];
     
     AssertNil([doc stringForKey: @"name"]);
     AssertEqual([doc floatForKey: @"weight"], 0.0);
@@ -1148,9 +1148,9 @@
     AssertNil([doc objectForKey: @"weight"]);
     AssertNil([doc objectForKey: @"age"]);
     AssertNil([doc objectForKey: @"active"]);
-    AssertNil([[doc subdocumentForKey: @"address"] objectForKey: @"city"]);
+    AssertNil([[doc dictionaryForKey: @"address"] objectForKey: @"city"]);
     
-    CBLSubdocument* address = [doc subdocumentForKey: @"address"];
+    CBLDictionary* address = [doc dictionaryForKey: @"address"];
     AssertEqualObjects([doc toDictionary], (@{ @"type": @"profile",
                                                @"address": @{
                                                        @"street": @"1 milky way.",
@@ -1217,7 +1217,7 @@
 }
 
 
-- (void) testSubdocumentAfterDeleteDocument {
+- (void) testDictionaryAfterDeleteDocument {
     NSDictionary* dict = @{@"address": @{
                                    @"street": @"1 Main street",
                                    @"city": @"Mountain View",
@@ -1226,7 +1226,7 @@
     CBLDocument* doc = [self createDocument: @"doc1" dictionary: dict];
     [self saveDocument: doc];
     
-    CBLSubdocument* address = [doc subdocumentForKey: @"address"];
+    CBLDictionary* address = [doc dictionaryForKey: @"address"];
     AssertEqualObjects([address objectForKey: @"street"], @"1 Main street");
     AssertEqualObjects([address objectForKey: @"city"], @"Mountain View");
     AssertEqualObjects([address objectForKey: @"state"], @"CA");
@@ -1234,17 +1234,17 @@
     NSError* error;
     Assert([_db deleteDocument: doc error: &error]);
     AssertNil(error);
-    AssertNil([doc subdocumentForKey: @"address"]);
+    AssertNil([doc dictionaryForKey: @"address"]);
     AssertEqualObjects([doc toDictionary], @{});
     
-    // The subdocument still has data but is detached:
+    // The dictionary still has data but is detached:
     AssertEqualObjects([address objectForKey: @"street"], @"1 Main street");
     AssertEqualObjects([address objectForKey: @"city"], @"Mountain View");
     AssertEqualObjects([address objectForKey: @"state"], @"CA");
     
-    // Make changes to the subdocument shouldn't affect the document.
+    // Make changes to the dictionary shouldn't affect the document.
     [address setObject: @"94042" forKey: @"zip"];
-    AssertNil([doc subdocumentForKey: @"address"]);
+    AssertNil([doc dictionaryForKey: @"address"]);
     AssertEqualObjects([doc toDictionary], @{});
 }
 
@@ -1264,7 +1264,7 @@
     NSError* error;
     Assert([_db deleteDocument: doc error: &error]);
     AssertNil(error);
-    AssertNil([doc subdocumentForKey: @"members"]);
+    AssertNil([doc dictionaryForKey: @"members"]);
     AssertEqualObjects([doc toDictionary], @{});
     
     // The array still has data but is detached:

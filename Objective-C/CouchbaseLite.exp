@@ -26,9 +26,7 @@
 .objc_class_name_CBLReadOnlyArray
 .objc_class_name_CBLReadOnlyDocument
 .objc_class_name_CBLReadOnlyFragment
-.objc_class_name_CBLReadOnlySubdocument
 .objc_class_name_CBLReadOnlyDictionary
-.objc_class_name_CBLSubdocument
 .objc_class_name_CBLReplication
 
 #  Public constants:

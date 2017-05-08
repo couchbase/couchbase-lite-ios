@@ -14,7 +14,6 @@
 #import "CBLDatabase.h"
 #import "CBLDocument.h"
 #import "CBLJSONCoding.h"
-#import "CBLSubdocument.h"
 
 
 struct c4BlobStore;

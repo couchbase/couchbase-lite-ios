@@ -31,9 +31,9 @@
     [array addObject: [CBLJSON dateWithJSONObject: kArrayTestDate]];
     [array addObject: [NSNull null]];
     
-    CBLSubdocument* subdoc = [[CBLSubdocument alloc] init];
-    [subdoc setObject: @"Scott Tiger" forKey: @"name"];
-    [array addObject: subdoc];
+    CBLDictionary* dict = [[CBLDictionary alloc] init];
+    [dict setObject: @"Scott Tiger" forKey: @"name"];
+    [array addObject: dict];
     
     CBLArray* subarray = [[CBLArray alloc] init];
     [subarray addObject: @"a"];
@@ -153,9 +153,9 @@
         AssertEqualObjects([a objectAtIndex: 7], kArrayTestDate);
         AssertEqual([a objectAtIndex: 8], [NSNull null]);
         
-        // Subdocument:
-        CBLSubdocument* subdoc = [a objectAtIndex: 9];
-        AssertEqualObjects([subdoc toDictionary], (@{@"name": @"Scott Tiger"}));
+        // Dictionary:
+        CBLDictionary* subdict = [a objectAtIndex: 9];
+        AssertEqualObjects([subdict toDictionary], (@{@"name": @"Scott Tiger"}));
         
         CBLArray* subarray = [a objectAtIndex: 10];
         AssertEqualObjects([subarray toArray], (@[@"a", @"b", @"c"]));
@@ -195,9 +195,9 @@
         AssertEqualObjects([a objectAtIndex: 19], kArrayTestDate);
         AssertEqual([a objectAtIndex: 20], [NSNull null]);
         
-        // Subdocument:
-        CBLSubdocument* subdoc = [a objectAtIndex: 21];
-        AssertEqualObjects([subdoc toDictionary], (@{@"name": @"Scott Tiger"}));
+        // Dictionary:
+        CBLDictionary* subdict = [a objectAtIndex: 21];
+        AssertEqualObjects([subdict toDictionary], (@{@"name": @"Scott Tiger"}));
         
         CBLArray* subarray = [a objectAtIndex: 22];
         AssertEqualObjects([subarray toArray], (@[@"a", @"b", @"c"]));
@@ -236,9 +236,9 @@
         AssertEqualObjects([a objectAtIndex: 7], kArrayTestDate);
         AssertEqual([a objectAtIndex: 8], [NSNull null]);
         
-        // Subdocument:
-        CBLSubdocument* subdoc = [a objectAtIndex: 9];
-        AssertEqualObjects([subdoc toDictionary], (@{@"name": @"Scott Tiger"}));
+        // Dictionary:
+        CBLDictionary* subdict = [a objectAtIndex: 9];
+        AssertEqualObjects([subdict toDictionary], (@{@"name": @"Scott Tiger"}));
         
         CBLArray* subarray = [a objectAtIndex: 10];
         AssertEqualObjects([subarray toArray], (@[@"a", @"b", @"c"]));
@@ -280,9 +280,9 @@
         AssertEqualObjects([a objectAtIndex: 4], kArrayTestDate);
         AssertEqual([a objectAtIndex: 3], [NSNull null]);
         
-        // Subdocument:
-        CBLSubdocument* subdoc = [a objectAtIndex: 2];
-        AssertEqualObjects([subdoc toDictionary], (@{@"name": @"Scott Tiger"}));
+        // Dictionary:
+        CBLDictionary* subdict = [a objectAtIndex: 2];
+        AssertEqualObjects([subdict toDictionary], (@{@"name": @"Scott Tiger"}));
         
         CBLArray* subarray = [a objectAtIndex: 1];
         AssertEqualObjects([subarray toArray], (@[@"a", @"b", @"c"]));
@@ -717,25 +717,25 @@
 }
 
 
-- (void) testGetSubdocument {
+- (void) testGetDictionary {
     CBLArray* array = [[CBLArray alloc] init];
     [self populateData: array];
     Assert(array.count == 12);
     
     CBLDocument* doc = [self createDocument: @"doc1"];
     [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
-        AssertNil([a subdocumentAtIndex: 0]);
-        AssertNil([a subdocumentAtIndex: 1]);
-        AssertNil([a subdocumentAtIndex: 2]);
-        AssertNil([a subdocumentAtIndex: 3]);
-        AssertNil([a subdocumentAtIndex: 4]);
-        AssertNil([a subdocumentAtIndex: 5]);
-        AssertNil([a subdocumentAtIndex: 6]);
-        AssertNil([a subdocumentAtIndex: 7]);
-        AssertNil([a subdocumentAtIndex: 8]);
-        AssertEqualObjects([[a subdocumentAtIndex: 9] toDictionary], (@{@"name": @"Scott Tiger"}));
-        AssertNil([a subdocumentAtIndex: 10]);
-        AssertNil([a subdocumentAtIndex: 11]);
+        AssertNil([a dictionaryAtIndex: 0]);
+        AssertNil([a dictionaryAtIndex: 1]);
+        AssertNil([a dictionaryAtIndex: 2]);
+        AssertNil([a dictionaryAtIndex: 3]);
+        AssertNil([a dictionaryAtIndex: 4]);
+        AssertNil([a dictionaryAtIndex: 5]);
+        AssertNil([a dictionaryAtIndex: 6]);
+        AssertNil([a dictionaryAtIndex: 7]);
+        AssertNil([a dictionaryAtIndex: 8]);
+        AssertEqualObjects([[a dictionaryAtIndex: 9] toDictionary], (@{@"name": @"Scott Tiger"}));
+        AssertNil([a dictionaryAtIndex: 10]);
+        AssertNil([a dictionaryAtIndex: 11]);
     }];
 }
 

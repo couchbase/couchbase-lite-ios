@@ -9,9 +9,9 @@
 #import <Foundation/Foundation.h>
 #import "CBLArray.h"
 #import "CBLArrayFragment.h"
+#import "CBLDictionary.h"
 #import "CBLDictionaryFragment.h"
 #import "CBLReadOnlyFragment.h"
-#import "CBLSubdocument.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -28,9 +28,9 @@ NS_ASSUME_NONNULL_BEGIN
     Returns nil if the value is nil, or the value is not an array. */
 @property (nonatomic, readonly, nullable) CBLArray* array;
 
-/** Get a property's value as a CBLSubdocument, a mapping object of a dictionary value.
+/** Get a property's value as a CBLDictionary, a mapping object of a dictionary value.
     Returns nil if the value is nil, or the value is not a dictionary. */
-@property (nonatomic, readonly, nullable) CBLSubdocument* subdocument;
+@property (nonatomic, readonly, nullable) CBLDictionary* dictionary;
 
 @end
 

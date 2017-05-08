@@ -14,7 +14,6 @@
 #import "CBLFragment.h"
 #import "CBLJSON.h"
 #import "CBLStringBytes.h"
-#import "CBLSubdocument.h"
 
 
 @implementation CBLDictionary {
@@ -25,6 +24,25 @@
 
 
 @synthesize changed=_changed;
+
+
++ (instancetype) dictionary {
+    return [[self alloc] init];
+}
+
+
+- (instancetype) init {
+    return [self initWithFleeceData: nil];
+}
+
+
+- (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary {
+    self = [self initWithFleeceData: nil];
+    if (self) {
+        [self setDictionary: dictionary];
+    }
+    return self;
+}
 
 
 #pragma mark - GETTER
@@ -52,7 +70,7 @@
     id value = _dict[key];
     if (!value) {
         value = [super objectForKey: key];
-        if ([value isKindOfClass: [CBLReadOnlySubdocument class]]) {
+        if ([value isKindOfClass: [CBLReadOnlyDictionary class]]) {
             value = [CBLData convertValue: value listener: self];
             [self setValue: value forKey: key isChange: NO];
         } else if ([value isKindOfClass: [CBLReadOnlyArray class]]) {
@@ -125,8 +143,8 @@
 }
 
 
-- (nullable CBLSubdocument*) subdocumentForKey: (NSString*)key {
-    return $castIf(CBLSubdocument, [self objectForKey:key]);
+- (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
+    return $castIf(CBLDictionary, [self objectForKey: key]);
 }
 
 
@@ -305,9 +323,9 @@
 
 
 - (void) detachChangeListenerForObject: (id)object {
-    if ([object isKindOfClass: [CBLSubdocument class]]) {
-        CBLSubdocument* subdocument = (CBLSubdocument*)object;
-        [subdocument.dictionary removeChangeListener: self];
+    if ([object isKindOfClass: [CBLDictionary class]]) {
+        CBLDictionary* dict = (CBLDictionary*)object;
+        [dict removeChangeListener: self];
     } else if ([object isKindOfClass: [CBLArray class]]) {
         CBLArray* array = (CBLArray*)object;
         [array removeChangeListener: self];

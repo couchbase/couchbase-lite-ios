@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "CBLReadOnlyArray.h"
 #import "CBLArrayFragment.h"
-@class CBLSubdocument;
+@class CBLDictionary;
 @class CBLArray;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -37,18 +37,18 @@ NS_ASSUME_NONNULL_BEGIN
     @param index    the index. This value must not exceed the bounds of the array. */
 - (void) removeObjectAtIndex: (NSUInteger)index;
 
-/** Gets a CBLSubdocument at the given index. Returns nil if the value is not a dictionary. 
+/** Gets a CBLDictionary at the given index. Returns nil if the value is not a dictionary.
     @param index    the index. This value must not exceed the bounds of the array. */
-- (nullable CBLSubdocument*) subdocumentAtIndex: (NSUInteger)index;
+- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index;
 
 /** Gets a CBLArray at the given index. Returns nil if the value is not an array. 
     @param index    the index. This value must not exceed the bounds of the array. */
 - (nullable CBLArray*) arrayAtIndex: (NSUInteger)index;
 
 /** Set an array as a content. Allowed value types are NSArray, NSDate, NSDictionary, NSNumber,
-    NSNull, NSString, CBLArray, CBLBlob, CBLSubdocument. The NSArrays and NSDictionaries must
+    NSNull, NSString, CBLArray, CBLBlob, CBLDictionary. The NSArrays and NSDictionaries must
     contain only the above types. Setting the new array content will replace the current data 
-    including the existing CBLArray and CBLSubdocument objects.
+    including the existing CBLArray and CBLDictionary objects.
     @param array  the array. */
 - (void) setArray: (NSArray*)array;
 
@@ -72,7 +72,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) init;
 
 /** Initialize a new CBLArray object with an array content. Allowed value types are NSArray, 
-    NSDate, NSDictionary, NSNumber, NSNull, NSString, CBLArray, CBLBlob, CBLSubdocument. 
+    NSDate, NSDictionary, NSNumber, NSNull, NSString, CBLArray, CBLBlob, CBLDictionary.
     The NSArrays and NSDictionaries must contain only the above types.
     @param array    the array object.
     @result the CBLArray object. */

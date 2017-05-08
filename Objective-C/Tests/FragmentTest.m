@@ -45,7 +45,7 @@
 }
 
 
-- (void) testGetFragmentFromSubdocValue {
+- (void) testGetFragmentFromDictionaryValue {
     NSDictionary* dict = @{@"address": @{
                                    @"street": @"1 Main street",
                                    @"city": @"Mountain View",
@@ -65,10 +65,10 @@
         AssertNil(fragment.array);
         AssertNotNil(fragment.object);
         AssertNotNil(fragment.value);
-        AssertNotNil(fragment.subdocument);
-        AssertEqual(fragment.subdocument, fragment.object);
-        AssertEqual(fragment.subdocument, fragment.value);
-        AssertEqualObjects([fragment.subdocument toDictionary], dict[@"address"]);
+        AssertNotNil(fragment.dictionary);
+        AssertEqual(fragment.dictionary, fragment.object);
+        AssertEqual(fragment.dictionary, fragment.value);
+        AssertEqualObjects([fragment.dictionary toDictionary], dict[@"address"]);
     }];
 }
 
@@ -87,7 +87,7 @@
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);
         AssertEqual(fragment.boolValue, YES);
-        AssertNil(fragment.subdocument);
+        AssertNil(fragment.dictionary);
         AssertNotNil(fragment.object);
         AssertNotNil(fragment.value);
         AssertNotNil(fragment.array);
@@ -108,7 +108,7 @@
         Assert(fragment.exists);
         AssertNil(fragment.string);
         AssertNil(fragment.date);
-        AssertNil(fragment.subdocument);
+        AssertNil(fragment.dictionary);
         AssertNil(fragment.array);
         AssertNotNil(fragment.number);
         AssertNotNil(fragment.object);
@@ -133,7 +133,7 @@
         Assert(fragment.exists);
         AssertNil(fragment.string);
         AssertNil(fragment.date);
-        AssertNil(fragment.subdocument);
+        AssertNil(fragment.dictionary);
         AssertNil(fragment.array);
         AssertNotNil(fragment.number);
         AssertNotNil(fragment.object);
@@ -158,7 +158,7 @@
         Assert(fragment.exists);
         AssertNil(fragment.string); 
         AssertNil(fragment.date); 
-        AssertNil(fragment.subdocument); 
+        AssertNil(fragment.dictionary); 
         AssertNil(fragment.array); 
         AssertNotNil(fragment.number); 
         AssertNotNil(fragment.object); 
@@ -183,7 +183,7 @@
         Assert(fragment.exists);
         AssertNil(fragment.string);
         AssertNil(fragment.date);
-        AssertNil(fragment.subdocument);
+        AssertNil(fragment.dictionary);
         AssertNil(fragment.array);
         AssertNotNil(fragment.number);
         AssertNotNil(fragment.object);
@@ -210,7 +210,7 @@
         Assert(fragment.exists);
         AssertNotNil(fragment.string);
         AssertNotNil(fragment.date);
-        AssertNil(fragment.subdocument); 
+        AssertNil(fragment.dictionary); 
         AssertNil(fragment.array); 
         AssertNil(fragment.number);    
         AssertNotNil(fragment.object); 
@@ -238,7 +238,7 @@
         Assert(fragment.exists);
         AssertNotNil(fragment.string);
         AssertNil(fragment.date); 
-        AssertNil(fragment.subdocument); 
+        AssertNil(fragment.dictionary); 
         AssertNil(fragment.array); 
         AssertNil(fragment.number);    
         AssertNotNil(fragment.object); 
@@ -254,7 +254,7 @@
 }
 
 
-- (void) testGetNestedSubdocFragment {
+- (void) testGetNestedDictionaryFragment {
     NSDictionary* dict = @{@"address": @{
                                    @"street": @"1 Main Street",
                                    @"phones": @{@"mobile": @"650-123-4567"}
@@ -271,18 +271,18 @@
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);;
         AssertEqual(fragment.boolValue, YES);
-        AssertNotNil(fragment.subdocument); 
+        AssertNotNil(fragment.dictionary); 
         AssertNotNil(fragment.object);    
         AssertNotNil(fragment.value);    
-        AssertEqual(fragment.subdocument, fragment.object);
-        AssertEqual(fragment.subdocument, fragment.value);
-        AssertEqualObjects([fragment.subdocument toDictionary], dict[@"address"][@"phones"]);
-        AssertEqual(1, (int)[[fragment.subdocument toDictionary] count]);
+        AssertEqual(fragment.dictionary, fragment.object);
+        AssertEqual(fragment.dictionary, fragment.value);
+        AssertEqualObjects([fragment.dictionary toDictionary], dict[@"address"][@"phones"]);
+        AssertEqual(1, (int)[[fragment.dictionary toDictionary] count]);
     }];
 }
 
 
-- (void) testGetNestedNonExistingSubdocumentFragment {
+- (void) testGetNestedNonExistingDictionaryFragment {
     NSDictionary* dict = @{@"address": @{
                                    @"street": @"1 Main Street",
                                    @"phones": @{@"mobile": @"650-123-4567"}
@@ -295,7 +295,7 @@
         AssertNil(fragment.string);       
         AssertNil(fragment.date);       
         AssertNil(fragment.array);       
-        AssertNil(fragment.subdocument);       
+        AssertNil(fragment.dictionary);       
         AssertNil(fragment.object);          
         AssertNil(fragment.value);          
         AssertEqual(0, fragment.integerValue);
@@ -315,7 +315,7 @@
         Assert(fragment.exists);
         AssertNil(fragment.string); 
         AssertNil(fragment.date); 
-        AssertNil(fragment.subdocument); 
+        AssertNil(fragment.dictionary); 
         AssertEqual(0, fragment.integerValue);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);;
@@ -340,7 +340,7 @@
         AssertFalse(fragment.exists);
         AssertNil(fragment.string); 
         AssertNil(fragment.date); 
-        AssertNil(fragment.subdocument);
+        AssertNil(fragment.dictionary);
         AssertNil(fragment.object);    
         AssertNil(fragment.value);    
         AssertNil(fragment.array);
@@ -352,7 +352,7 @@
 }
 
 
-- (void) testSubdocFragmentSet {
+- (void) testDictionaryFragmentSet {
     NSDate* date = [NSDate date];
     CBLDocument* doc = [self createDocument: @"doc1"];
     doc[@"string"].value = @"value";
@@ -374,24 +374,24 @@
 }
 
 
-- (void) testSubdocFragmentSetSubdocument {
+- (void) testDictionaryFragmentSetDictionary {
     CBLDocument* doc = [self createDocument: @"doc1"];
-    CBLSubdocument *subdoc = [[CBLSubdocument alloc] init];
-    [subdoc setObject: @"Jason" forKey:@"name"];
-    [subdoc setObject: @{@"street": @"1 Main Street",
+    CBLDictionary *dict = [[CBLDictionary alloc] init];
+    [dict setObject: @"Jason" forKey:@"name"];
+    [dict setObject: @{@"street": @"1 Main Street",
                          @"phones": @{@"mobile": @"650-123-4567"}}
                forKey: @"address"];
-    doc[@"subdoc"].value = subdoc;
+    doc[@"dict"].value = dict;
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
-        AssertEqualObjects(d[@"subdoc"][@"name"].string, @"Jason");
-        AssertEqualObjects(d[@"subdoc"][@"address"][@"street"].string, @"1 Main Street");
-        AssertEqualObjects(d[@"subdoc"][@"address"][@"phones"][@"mobile"].string, @"650-123-4567");
+        AssertEqualObjects(d[@"dict"][@"name"].string, @"Jason");
+        AssertEqualObjects(d[@"dict"][@"address"][@"street"].string, @"1 Main Street");
+        AssertEqualObjects(d[@"dict"][@"address"][@"phones"][@"mobile"].string, @"650-123-4567");
     }];
 }
 
 
-- (void) testSubdocFragmentSetArrayObject {
+- (void) testDictionaryFragmentSetArray {
     CBLDocument* doc = [self createDocument: @"doc1"];
     CBLArray *array = [[CBLArray alloc] init];
     [array setArray: @[@0, @1, @2]];
@@ -409,7 +409,7 @@
 }
 
 
-- (void) testSubdocFragmentSetDictionary {
+- (void) testDictionaryFragmentSetNSDictionary {
     CBLDocument* doc = [self createDocument: @"doc1"];
     doc[@"dict"].value = @{ @"name": @"Jason",
                             @"address": @{
@@ -424,7 +424,7 @@
 }
 
 
-- (void) testSubdocFragmentSetArray {
+- (void) testDictionaryFragmentSetNSArray {
     CBLDocument* doc = [self createDocument: @"doc1"];
     doc[@"dict"].value = @{};
     doc[@"dict"][@"array"].value = @[@0, @1, @2];
@@ -441,7 +441,7 @@
 }
 
 
-- (void) testNonSubdocFragmentSetObject {
+- (void) testNonDictionaryFragmentSetObject {
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @"value1" forKey: @"string1"];
     [doc setObject: @"value2" forKey: @"string2"];
@@ -484,14 +484,14 @@
 }
 
 
-- (void) testArrayFragmentSetSubdocument {
+- (void) testArrayFragmentSetDictionary {
     CBLDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
-    CBLSubdocument *subdoc = [[CBLSubdocument alloc] init];
-    [subdoc setObject: @"Jason" forKey: @"name"];
-    [subdoc setObject: @{@"street": @"1 Main Street",@"phones": @{@"mobile": @"650-123-4567"}}
+    CBLDictionary *dict = [[CBLDictionary alloc] init];
+    [dict setObject: @"Jason" forKey: @"name"];
+    [dict setObject: @{@"street": @"1 Main Street",@"phones": @{@"mobile": @"650-123-4567"}}
                forKey: @"address"];
-    [doc[@"array"].array addObject: subdoc];
+    [doc[@"array"].array addObject: dict];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertNotNil(d[@"array"][-1]);
@@ -508,7 +508,7 @@
 }
 
 
-- (void) testArrayFragmentSetDictionary {
+- (void) testArrayFragmentSetNSDictionary {
     CBLDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
     [doc[@"array"].array addObject: @{@"name":@"Jason",
@@ -615,9 +615,9 @@
     CBLDocument* doc = [self createDocument: @"doc1"];
     doc[@"name"].value = @"Jason";
     
-    doc[@"address"].value = [[CBLSubdocument alloc] init];
+    doc[@"address"].value = [[CBLDictionary alloc] init];
     doc[@"address"][@"street"].value = @"1 Main Street";
-    doc[@"address"][@"phones"].value = [[CBLSubdocument alloc] init];
+    doc[@"address"][@"phones"].value = [[CBLDictionary alloc] init];
     doc[@"address"][@"phones"][@"mobile"].value = @"650-123-4567";
     
     AssertEqualObjects(doc[@"name"].string, @"Jason");

@@ -10,7 +10,7 @@
 #import "CBLReadOnlyDictionary.h"
 #import "CBLDictionaryFragment.h"
 @class CBLArray;
-@class CBLSubdocument;
+@class CBLDictionary;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -19,24 +19,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Set an object value by key. Setting the value to nil will remove the property. Allowed value 
     types are NSArray, NSDate, NSDictionary, NSNumber, NSNull, NSString, CBLArray, CBLBlob,
-    CBLSubdocument. The NSArrays and NSDictionaries must contain only the above types. An NSDate 
+    CBLDictionary. The NSArrays and NSDictionaries must contain only the above types. An NSDate 
     object will be converted to an ISO-8601 format string. 
     @param value    the object value.
     @param key      the key. */
 - (void) setObject: (nullable id)value forKey: (NSString*)key;
 
 /** Set a dictionary as a content. Allowed value types are NSArray, NSDate, NSDictionary, NSNumber, 
-    NSNull, NSString, CBLArray, CBLBlob, CBLSubdocument. The NSArrays and NSDictionaries must 
+    NSNull, NSString, CBLArray, CBLBlob, CBLDictionary. The NSArrays and NSDictionaries must
     contain only the above types. Setting the new dictionary content will replace the current data 
-    including the existing CBLArray and CBLSubdocument objects.
+    including the existing CBLArray and CBLDictionary objects.
     @param dictionary  the dictionary. */
 - (void) setDictionary: (NSDictionary<NSString*,id>*)dictionary;
 
-/** Get a property's value as a CBLSubdocument, which is a mapping object of a dictionary
+/** Get a property's value as a CBLDictionary, which is a mapping object of a dictionary
     value. Returns nil if the property doesn't exists, or its value is not a dictionary.
     @param key  the key.
-    @result the CBLSubdocument object or nil if the key doesn't exist. */
-- (nullable CBLSubdocument*) subdocumentForKey: (NSString*)key;
+    @result the CBLDictionary object or nil if the key doesn't exist. */
+- (nullable CBLDictionary*) dictionaryForKey: (NSString*)key;
 
 /** Get a property's value as a CBLArray, which is a mapping object of an array value.
     Returns nil if the property doesn't exists, or its value is not an array.
@@ -54,7 +54,19 @@ NS_ASSUME_NONNULL_BEGIN
 /** CBLDictionary provides access to dictionary data. */
 @interface CBLDictionary : CBLReadOnlyDictionary <CBLDictionary>
 
-- (instancetype) init NS_UNAVAILABLE;
+/** Creates a new empty CBLDictionary object.
+    @result the CBLDictionary object. */
++ (instancetype) dictionary;
+
+/** Initialize a new empty CBLDictionary object.
+    @result the CBLDictionary object. */
+- (instancetype) init;
+
+
+/** Initialzes a new CBLDictionary object with dictionary content. Allowed value types are NSArray,
+    NSDate, NSDictionary, NSNumber, NSNull, NSString, CBLArray, CBLBlob, CBLDictionary.
+    The NSArrays and NSDictionaries must contain only the above types.*/
+- (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary;
 
 @end
 

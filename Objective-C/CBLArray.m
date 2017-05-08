@@ -11,7 +11,6 @@
 #import "CBLData.h"
 #import "CBLDocument+Internal.h"
 #import "CBLJSON.h"
-#import "CBLSubdocument.h"
 
 
 @implementation CBLArray {
@@ -32,7 +31,7 @@
 
 
 - (instancetype) initWithArray: (NSArray*)array {
-    self = [self init];
+    self = [self initWithFleeceData: nil];
     if (self) {
         [self setArray: array];
     }
@@ -105,9 +104,9 @@
 }
 
 
-- (nullable CBLSubdocument*) subdocumentAtIndex: (NSUInteger)index {
+- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
     id value = _array[index];
-    return $castIf(CBLSubdocument, value);
+    return $castIf(CBLDictionary, value);
 }
 
 
@@ -219,9 +218,9 @@
 
 
 - (void) detachChangeListenerForObject: (id)object {
-    if ([object isKindOfClass: [CBLSubdocument class]]) {
-        CBLSubdocument* subdocument = (CBLSubdocument*)object;
-        [subdocument.dictionary removeChangeListener: self];
+    if ([object isKindOfClass: [CBLDictionary class]]) {
+        CBLDictionary* dict = (CBLDictionary*)object;
+        [dict removeChangeListener: self];
     } else if ([object isKindOfClass: [CBLArray class]]) {
         CBLArray* array = (CBLArray*)object;
         [array removeChangeListener: self];

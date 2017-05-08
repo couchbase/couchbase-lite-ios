@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "CBLReadOnlyArrayFragment.h"
 @class CBLBlob;
-@class CBLReadOnlySubdocument;
+@class CBLReadOnlyDictionary;
 @class CBLReadOnlyArray;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -82,12 +82,12 @@ NS_ASSUME_NONNULL_BEGIN
     @result the CBLBlob object or nil. */
 - (nullable CBLBlob*) blobAtIndex: (NSUInteger)index;
 
-/** Get value at the given index as a CBLReadOnlySubdocument, which is a mapping object of 
+/** Get value at the given index as a CBLReadOnlyDictionary, which is a mapping object of 
     a dictionary value.
     Returns nil if the property doesn't exists, or its value is not a dictionary.
     @param index    the index.
-    @result the CBLReadOnlySubdocument object or nil. */
-- (nullable CBLReadOnlySubdocument*) subdocumentAtIndex: (NSUInteger)index;
+    @result the CBLReadOnlyDictionary object or nil. */
+- (nullable CBLReadOnlyDictionary*) dictionaryAtIndex: (NSUInteger)index;
 
 /** Get value as a CBLReadOnlyArray, which is a mapping object of an array value.
     Returns nil if the property doesn't exists, or its value is not an array.

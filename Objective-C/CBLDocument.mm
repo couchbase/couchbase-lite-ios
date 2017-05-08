@@ -25,7 +25,6 @@
 #import "CBLSharedKeys.hh"
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
-#import "CBLSubdocument.h"
 
 
 @implementation CBLDocument {
@@ -150,8 +149,8 @@
 }
 
 
-- (nullable CBLSubdocument*) subdocumentForKey: (NSString*)key {
-    return [_dict subdocumentForKey: key];
+- (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
+    return [_dict dictionaryForKey: key];
 }
 
 
@@ -308,8 +307,8 @@
 static bool objectContainsBlob(__unsafe_unretained id value) {
     if ([value isKindOfClass: [CBLBlob class]])
         return true;
-    else if ([value isKindOfClass: [CBLSubdocument class]])
-        return subdocContainsBlob(value);
+    else if ([value isKindOfClass: [CBLDictionary class]])
+        return dictionaryContainsBlob(value);
     else if ([value isKindOfClass: [NSArray class]])
         return arrayContainsBlob(value);
     else
@@ -323,10 +322,10 @@ static bool arrayContainsBlob(__unsafe_unretained NSArray* array) {
     return false;
 }
 
-static bool subdocContainsBlob(__unsafe_unretained CBLSubdocument* subdoc) {
+static bool dictionaryContainsBlob(__unsafe_unretained CBLDictionary* dict) {
     __block bool containsBlob = false;
-    for (NSString* key in [subdoc allKeys]) {
-        containsBlob = objectContainsBlob([subdoc objectForKey: key]);
+    for (NSString* key in [dict allKeys]) {
+        containsBlob = objectContainsBlob([dict objectForKey: key]);
         if (containsBlob)
             break;
     }

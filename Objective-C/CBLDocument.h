@@ -49,7 +49,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Initializes a new CBLDocument object with a new random UUID and the dictionary as the content.
     Allowed dictionary value types are NSArray, NSDate, NSDictionary, NSNumber, NSNull, NSString,
-    CBLArray, CBLBlob, CBLSubdocument. The NSArrays and NSDictionaries must contain only
+    CBLArray, CBLBlob, CBLDictionary. The NSArrays and NSDictionaries must contain only
     the above types. The created document will be saved into a database when you call the 
     CBLDatabase's -save: method with the document object given.
     @param dictionary   the dictionary object.
@@ -59,7 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** Initializes a new CBLDocument object with a given ID and the dictionary as the content. If a 
     nil ID value is given, the document will be created with a new random UUID.
     Allowed dictionary value types are NSArray, NSDate, NSDictionary, NSNumber, NSNull, NSString,
-    CBLArray, CBLBlob, CBLSubdocument. The NSArrays and NSDictionaries must contain only
+    CBLArray, CBLBlob, CBLDictionary. The NSArrays and NSDictionaries must contain only
     the above types. The created document will be saved into a database when you call the
     CBLDatabase's -save: method with the document object given.
     @param documentID   the document ID.

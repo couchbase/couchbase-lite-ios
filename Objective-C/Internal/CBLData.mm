@@ -18,33 +18,34 @@
 
 NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 
+
 @implementation CBLData
 
 
 + (id) convertValue: (id)value listener: (id<CBLObjectChangeListener>)listener {
     if (!value) {
         return kCBLRemovedValue; // Represent removed key
-    } else if ([value isKindOfClass: [CBLSubdocument class]]) {
-        [((CBLSubdocument*)value).dictionary addChangeListener: listener];
+    } else if ([value isKindOfClass: [CBLDictionary class]]) {
+        [value addChangeListener: listener];
         return value;
     } else if ([value isKindOfClass: [CBLArray class]]) {
         [value addChangeListener: listener];
         return value;
-    } else if ([value isKindOfClass: [CBLReadOnlySubdocument class]]) {
-        CBLReadOnlySubdocument* readonly = (CBLReadOnlySubdocument*)value;
-        CBLSubdocument* subdocument = [[CBLSubdocument alloc] initWithFleeceData: readonly.data];
-        [subdocument.dictionary addChangeListener: listener];
-        return subdocument;
+    } else if ([value isKindOfClass: [CBLReadOnlyDictionary class]]) {
+        CBLReadOnlyDictionary* readonly = (CBLReadOnlyDictionary*)value;
+        CBLDictionary* dict = [[CBLDictionary alloc] initWithFleeceData: readonly.data];
+        [dict addChangeListener: listener];
+        return dict;
     } else if ([value isKindOfClass: [CBLReadOnlyArray class]]) {
         CBLReadOnlyArray* readonly = (CBLReadOnlyArray*)value;
         CBLArray* array = [[CBLArray alloc] initWithFleeceData: readonly.data];
         [array addChangeListener: listener];
         return array;
     } else if ([value isKindOfClass: [NSDictionary class]]) {
-        CBLSubdocument* subdocument = [[CBLSubdocument alloc] init];
-        [subdocument setDictionary: value];
-        [subdocument.dictionary addChangeListener: self];
-        return subdocument;
+        CBLDictionary* dict = [[CBLDictionary alloc] init];
+        [dict setDictionary: value];
+        [dict addChangeListener: self];
+        return dict;
     } else if ([value isKindOfClass: [NSArray class]]) {
         CBLArray* array = [[CBLArray alloc] init];
         [array setArray: value];
@@ -89,7 +90,7 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
             FLSlice type = FLValue_AsString(FLDict_GetSharedKey(dict, typeKey, &sk));
             if(!type.buf) {
                 id data = [[CBLFLDict alloc] initWithDict: dict c4doc: c4doc database: database];
-                return [[CBLReadOnlySubdocument alloc] initWithFleeceData: data];
+                return [[CBLReadOnlyDictionary alloc] initWithFleeceData: data];
             } else {
                 id result = FLValue_GetNSObject(value, &sk);
                 return [self dictionaryToCBLObject: result database: database];

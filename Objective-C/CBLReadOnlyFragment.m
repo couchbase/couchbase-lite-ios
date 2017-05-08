@@ -10,7 +10,7 @@
 #import "CBLBlob.h"
 #import "CBLJSON.h"
 #import "CBLReadOnlyArray.h"
-#import "CBLReadOnlySubdocument.h"
+#import "CBLReadOnlyDictionary.h"
 
 @implementation CBLReadOnlyFragment {
     id _value;
@@ -79,8 +79,8 @@
 }
 
 
-- (CBLReadOnlySubdocument*) subdocument {
-    return $castIf(CBLReadOnlySubdocument, _value);
+- (CBLReadOnlyDictionary*) dictionary {
+    return $castIf(CBLReadOnlyDictionary, _value);
 }
 
 

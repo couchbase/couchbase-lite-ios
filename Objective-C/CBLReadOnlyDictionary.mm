@@ -82,8 +82,8 @@
 }
 
 
-- (nullable CBLReadOnlySubdocument*) subdocumentForKey: (NSString*)key {
-    return $castIf(CBLReadOnlySubdocument, [self fleeceValueToObjectForKey: key]);
+- (nullable CBLReadOnlyDictionary*) dictionaryForKey: (NSString*)key {
+    return $castIf(CBLReadOnlyDictionary, [self fleeceValueToObjectForKey: key]);
 }
 
 

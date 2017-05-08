@@ -11,7 +11,7 @@
 #import "CBLReadOnlyDictionaryFragment.h"
 @class CBLBlob;
 @class CBLReadOnlyArray;
-@class CBLReadOnlySubdocument;
+@class CBLReadOnlyDictionary;
 @class CBLReadOnlyFragment;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -68,9 +68,9 @@ NS_ASSUME_NONNULL_BEGIN
     Returns nil if the value is nil, or the value is not an array. */
 @property (nonatomic, readonly, nullable) CBLReadOnlyArray* array;
 
-/** Get a property's value as a CBLReadOnlySubdocument, a mapping object of a dictionary value.
+/** Get a property's value as a CBLReadOnlyDictionary, a mapping object of a dictionary value.
     Returns nil if the value is nil, or the value is not a dictionary. */
-@property (nonatomic, readonly, nullable) CBLReadOnlySubdocument* subdocument;
+@property (nonatomic, readonly, nullable) CBLReadOnlyDictionary* dictionary;
 
 /** Same as getting the value as an object. */
 @property (nonatomic, readonly, nullable) NSObject* value;

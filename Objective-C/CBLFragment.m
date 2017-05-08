@@ -118,8 +118,8 @@
 }
 
 
-- (CBLSubdocument*) subdocument {
-    return $castIf(CBLSubdocument, _value);
+- (CBLDictionary*) dictionary {
+    return $castIf(CBLDictionary, _value);
 }
 
 

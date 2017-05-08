@@ -10,7 +10,7 @@
 #import "CBLReadOnlyDictionaryFragment.h"
 @class CBLBlob;
 @class CBLReadOnlyArray;
-@class CBLReadOnlySubdocument;
+@class CBLReadOnlyDictionary;
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -83,12 +83,12 @@ NS_ASSUME_NONNULL_BEGIN
     @result the CBLBlob object or nil. */
 - (nullable CBLBlob*) blobForKey: (NSString*)key;
 
-/** Get a property's value as a CBLReadOnlySubdocument, which is a mapping object of a dictionary
-    value. 
+/** Get a property's value as a CBLReadOnlyDictionary, which is a mapping object of 
+    a dictionary value.
     Returns nil if the property doesn't exists, or its value is not a dictionary.
     @param key  the key.
-    @result the CBLReadOnlySubdocument object or nil. */
-- (nullable CBLReadOnlySubdocument*) subdocumentForKey: (NSString*)key;
+    @result the CBLReadOnlyDictionary object or nil. */
+- (nullable CBLReadOnlyDictionary*) dictionaryForKey: (NSString*)key;
 
 /** Get a property's value as a CBLReadOnlyArray, which is a mapping object of an array value. 
     Returns nil if the property doesn't exists, or its value is not an array. 
