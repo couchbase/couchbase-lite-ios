@@ -127,8 +127,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithFleeceData: (nullable CBLFLDict*)data;
 
-- (BOOL) isFleeceEncodableValue: (id)value;
-
 @end
 
 //////////////////

@@ -10,7 +10,7 @@
 #import "CBLReadOnlyDictionaryFragment.h"
 @class CBLFragment;
 
-/** CBLDictionaryFragment protocol provides subscription access to CBLFragment 
+/** CBLDictionaryFragment protocol provides subscript access to CBLFragment 
     objects by key. */
 @protocol CBLDictionaryFragment <CBLReadOnlyDictionaryFragment>
 

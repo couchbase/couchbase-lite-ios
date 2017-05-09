@@ -38,7 +38,7 @@
 
 
 - (nullable id) objectForKey: (NSString*)key {
-    return [self fleeceValueToObject: [self fleeceValueForKey: key]];
+    return [self fleeceValueToObjectForKey: key];
 }
 
 
@@ -63,32 +63,32 @@
 
 
 - (nullable NSString*) stringForKey: (NSString*)key {
-    return $castIf(NSString, [self objectForKey: key]);
+    return $castIf(NSString, [self fleeceValueToObjectForKey: key]);
 }
 
 
 - (nullable NSNumber*) numberForKey: (NSString*)key {
-    return $castIf(NSNumber, [self objectForKey: key]);
+    return $castIf(NSNumber, [self fleeceValueToObjectForKey: key]);
 }
 
 
 - (nullable NSDate*) dateForKey: (NSString*)key {
-    return [CBLJSON dateWithJSONObject: [self stringForKey: key]];
+    return [CBLJSON dateWithJSONObject: [self fleeceValueToObjectForKey: key]];
 }
 
 
 - (nullable CBLBlob*) blobForKey: (NSString*)key {
-    return $castIf(CBLBlob, [self objectForKey: key]);
+    return $castIf(CBLBlob, [self fleeceValueToObjectForKey: key]);
 }
 
 
 - (nullable CBLReadOnlySubdocument*) subdocumentForKey: (NSString*)key {
-    return $castIf(CBLReadOnlySubdocument, [self objectForKey: key]);
+    return $castIf(CBLReadOnlySubdocument, [self fleeceValueToObjectForKey: key]);
 }
 
 
 - (nullable CBLReadOnlyArray*) arrayForKey: (NSString*)key {
-    return $castIf(CBLReadOnlyArray, [self objectForKey: key]);
+    return $castIf(CBLReadOnlyArray, [self fleeceValueToObjectForKey: key]);
 }
 
 
@@ -121,11 +121,11 @@
 }
 
 
-#pragma mark - SUBSCRIPTION
+#pragma mark - SUBSCRIPTING
 
 
 - (CBLReadOnlyFragment*) objectForKeyedSubscript: (NSString*)key {
-    return [[CBLReadOnlyFragment alloc] initWithValue: [self objectForKey: key]];
+    return [[CBLReadOnlyFragment alloc] initWithValue: [self fleeceValueToObjectForKey: key]];
 }
 
 
@@ -147,31 +147,11 @@
 #pragma mark - FLEECE ENCODING
 
 
-- (BOOL) isFleeceEncodableValue: (id)value {
-    return YES;
-}
-
-
 - (BOOL) fleeceEncode: (FLEncoder)encoder
              database: (CBLDatabase*)database
                 error: (NSError**)outError
 {
-    NSArray* keys = [self allKeys];
-    FLEncoder_BeginDict(encoder, keys.count);
-    for (NSString* key in keys) {
-        id value = [self objectForKey: key];
-        if ([self isFleeceEncodableValue: value]) {
-            CBLStringBytes bKey(key);
-            FLEncoder_WriteKey(encoder, bKey);
-            if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]){
-                if (![value fleeceEncode: encoder database: database error: outError])
-                    return NO;
-            } else
-                FLEncoder_WriteNSObject(encoder, value);
-        }
-    }
-    FLEncoder_EndDict(encoder);
-    return YES;
+    return FLEncoder_WriteValue(encoder, (FLValue)_dict);
 }
 
 
@@ -183,7 +163,8 @@
 }
 
 
-- (id) fleeceValueToObject: (FLValue)value {
+- (id) fleeceValueToObjectForKey: (NSString*)key {
+    FLValue value = [self fleeceValueForKey: key];
     if (value != nullptr)
         return [CBLData fleeceValueToObject: value c4doc: _data.c4doc database: _data.database];
     else

@@ -1,5 +1,5 @@
 //
-//  CBLArraym
+//  CBLArray.m
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 4/12/17.
@@ -143,8 +143,8 @@
     [self detachChildChangeListeners];
     
     NSMutableArray* result = [NSMutableArray arrayWithCapacity: [array count]];
-    for (id item in array) {
-        [result addObject: [self prepareValue: item]];
+    for (id value in array) {
+        [result addObject: [CBLData convertValue: value listener: self]];
     }
     
     _array = result;
@@ -155,7 +155,7 @@
 - (void) setObject: (id)value atIndex: (NSUInteger)index {
     id oldValue = [self objectAtIndex: index];
     if (!$equal(value, oldValue)) {
-        value = [self prepareValue: value];
+        value = [CBLData convertValue: value listener: self];
         [self detachChangeListenerForObject: oldValue];
         [self setValue: value atIndex: index isChange: YES];
     }
@@ -163,13 +163,13 @@
 
 
 - (void) addObject: (id)value  {
-    [_array addObject: [self prepareValue: value]];
+    [_array addObject: [CBLData convertValue: value listener: self]];
     [self setChanged];
 }
 
 
 - (void) insertObject: (id)value atIndex: (NSUInteger)index {
-    [_array insertObject: [self prepareValue: value] atIndex: index];
+    [_array insertObject: [CBLData convertValue: value listener: self] atIndex: index];
     [self setChanged];
 }
 
@@ -182,7 +182,7 @@
 }
 
 
-#pragma mark - SUBSCRIPTION
+#pragma mark - SUBSCRIPTING
 
 
 - (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index {
@@ -243,6 +243,28 @@
 }
 
 
+#pragma mark - FLEECE ENCODABLE
+
+
+- (BOOL) fleeceEncode: (FLEncoder)encoder
+             database: (CBLDatabase*)database
+                error: (NSError**)outError
+{
+    NSUInteger count = self.count;
+    FLEncoder_BeginArray(encoder, count);
+    for (NSUInteger i = 0; i < count; i++) {
+        id value = [self objectAtIndex: i];
+        if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]) {
+            if (![value fleeceEncode: encoder database: database error: outError])
+                return NO;
+        } else
+            FLEncoder_WriteNSObject(encoder, value);
+    }
+    FLEncoder_EndArray(encoder);
+    return YES;
+}
+
+
 #pragma mark - PRIVATE
 
 
@@ -250,78 +272,8 @@
     NSUInteger count = [super count];
     for (NSUInteger i = 0; i < count; i++) {
         id value = [super objectAtIndex: i];
-        [_array addObject: [self prepareValue: value]];
+        [_array addObject: [CBLData convertValue: value listener: self]];
     }
-}
-
-
-- (nullable id) prepareValue: (nullable id)value {
-    value = [self convertValue: value];
-    Assert([CBLData validateValue: value], @"Unsupported value type.");
-    return value;
-}
-
-
-- (id) convertValue: (id)value {
-    if (!value)
-        return [NSNull null];
-    else if ([value isKindOfClass: [CBLSubdocument class]])
-        return [self convertSubdocument: value];
-    else if ([value isKindOfClass: [CBLArray class]])
-        return [self convertArrayObject: value];
-    else if ([value isKindOfClass: [CBLReadOnlySubdocument class]])
-        return [self convertReadOnlySubdocument: value];
-    else if ([value isKindOfClass: [CBLReadOnlyArray class]])
-        return [self convertReadOnlyArray: value];
-    else if ([value isKindOfClass: [NSDictionary class]])
-        return [self convertDictionary: value];
-    else if ([value isKindOfClass: [NSArray class]])
-        return [self convertArray: value];
-    else if ([value isKindOfClass: [NSDate class]])
-        return [CBLJSON JSONObjectWithDate: value];
-    return value;
-}
-
-
-- (id) convertSubdocument: (CBLSubdocument*)subdocument {
-    [subdocument.dictionary addChangeListener: self];
-    return subdocument;
-}
-
-
-- (id) convertArrayObject: (CBLArray*)array {
-    [array addChangeListener: self];
-    return array;
-}
-
-
-- (id) convertReadOnlySubdocument: (CBLReadOnlySubdocument*)readOnlySubdoc {
-    CBLSubdocument* subdocument = [[CBLSubdocument alloc] initWithFleeceData: readOnlySubdoc.data];
-    [subdocument.dictionary addChangeListener: self];
-    return subdocument;
-}
-
-
-- (id) convertReadOnlyArray: (CBLReadOnlyArray*)readOnlyArray {
-    CBLArray* array = [[CBLArray alloc] initWithFleeceData: readOnlyArray.data];
-    [array addChangeListener: self];
-    return array;
-}
-
-
-- (id) convertDictionary: (NSDictionary*)dictionary {
-    CBLSubdocument* subdocument = [[CBLSubdocument alloc] init];
-    [subdocument setDictionary: dictionary];
-    [subdocument.dictionary addChangeListener: self];
-    return subdocument;
-}
-
-
-- (id) convertArray: (NSArray*)array {
-    CBLArray* arrayObject = [[CBLArray alloc] init];
-    [arrayObject setArray: array];
-    [arrayObject addChangeListener: self];
-    return arrayObject;
 }
 
 

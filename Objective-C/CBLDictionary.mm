@@ -1,5 +1,5 @@
 //
-//  CBLDictionary.m
+//  CBLDictionary.mm
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 4/12/17.
@@ -13,6 +13,7 @@
 #import "CBLDocument+Internal.h"
 #import "CBLFragment.h"
 #import "CBLJSON.h"
+#import "CBLStringBytes.h"
 #import "CBLSubdocument.h"
 
 
@@ -26,34 +27,21 @@
 @synthesize changed=_changed;
 
 
-static id kRemovedValue;
-+ (void) initialize {
-    if (self == [CBLDictionary class]) {
-        kRemovedValue = [[NSObject alloc] init];
-    }
-}
-
-- /* internal */ (instancetype) initWithFleeceData: (CBLFLDict *)data {
-    self = [super initWithFleeceData: data];
-    if (self) {
-        _dict = [NSMutableDictionary dictionary];
-    }
-    return self;
-}
-
-
 #pragma mark - GETTER
 
 
 - (NSUInteger) count {
     __block NSUInteger count = _dict.count;
+    if (count == 0)
+        return super.count;
+    
     for (NSString* key in [super allKeys]) {
         if (!_dict[key])
             count += 1;
     }
     
     [_dict enumerateKeysAndObjectsUsingBlock: ^(NSString *key, id value, BOOL *stop) {
-        if (value == kRemovedValue)
+        if (value == kCBLRemovedValue)
             count -= 1;
     }];
     return count;
@@ -65,13 +53,13 @@ static id kRemovedValue;
     if (!value) {
         value = [super objectForKey: key];
         if ([value isKindOfClass: [CBLReadOnlySubdocument class]]) {
-            value = [self convertReadOnlySubdocument: value];
+            value = [CBLData convertValue: value listener: self];
             [self setValue: value forKey: key isChange: NO];
         } else if ([value isKindOfClass: [CBLReadOnlyArray class]]) {
-            value = [self convertReadOnlyArray: value];
+            value = [CBLData convertValue: value listener: self];
             [self setValue: value forKey: key isChange: NO];
         }
-    } else if (value == kRemovedValue)
+    } else if (value == kCBLRemovedValue)
         value = nil;
     return value;
 }
@@ -82,7 +70,7 @@ static id kRemovedValue;
     if (!value)
         return [super booleanForKey: key];
     else {
-        if (value == kRemovedValue)
+        if (value == kCBLRemovedValue)
             return NO;
         else
             return [CBLData booleanValueForObject: value];
@@ -118,62 +106,32 @@ static id kRemovedValue;
 
 
 - (nullable NSString*) stringForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value)
-        return [super stringForKey: key];
-    else
-        return $castIf(NSString, value);
+    return $castIf(NSString, [self objectForKey: key]);
 }
 
 
 - (nullable NSNumber*) numberForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value)
-        return [super numberForKey: key];
-    else
-        return $castIf(NSNumber, value);
+    return $castIf(NSNumber, [self objectForKey: key]);
 }
 
 
 - (nullable NSDate*) dateForKey: (NSString*)key {
-    return [CBLJSON dateWithJSONObject: [self stringForKey: key]];
+    return [CBLJSON dateWithJSONObject: [self objectForKey: key]];
 }
 
 
 - (nullable CBLBlob*) blobForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value)
-        return [super blobForKey: key];
-    else
-        return $castIf(CBLBlob, value);
+    return $castIf(CBLBlob, [self objectForKey:key]);
 }
 
 
 - (nullable CBLSubdocument*) subdocumentForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value) {
-        value = [super subdocumentForKey: key];
-        if ([value isKindOfClass: [CBLReadOnlySubdocument class]]) {
-            value = [self convertReadOnlySubdocument: value];
-            [self setValue: value forKey: key isChange: NO];
-        }
-        return value;
-    } else
-        return $castIf(CBLSubdocument, value);
+    return $castIf(CBLSubdocument, [self objectForKey:key]);
 }
 
 
 - (nullable CBLArray*) arrayForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value) {
-        value = [super arrayForKey: key];
-        if ([value isKindOfClass: [CBLReadOnlyArray class]]) {
-            value = [self convertReadOnlyArray: value];
-            [self setValue: value forKey: key isChange: NO];
-        }
-        return value;
-    } else
-        return $castIf(CBLArray, value);
+    return $castIf(CBLArray, [self objectForKey: key]);
 }
 
 
@@ -182,7 +140,7 @@ static id kRemovedValue;
     if (!value)
         return [super containsObjectForKey: key];
     else
-        return value != kRemovedValue ? YES : NO;
+        return value != kCBLRemovedValue;
 }
 
 
@@ -194,7 +152,7 @@ static id kRemovedValue;
     }
     
     [_dict enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
-        if (value == kRemovedValue)
+        if (value == kCBLRemovedValue)
             [result removeObject: key];
     }];
     
@@ -203,7 +161,7 @@ static id kRemovedValue;
 
 
 - (NSDictionary<NSString*,id>*) toDictionary {
-    NSMutableDictionary* result = [_dict mutableCopy];
+    NSMutableDictionary* result = _dict ? [_dict mutableCopy] : [NSMutableDictionary dictionary];
     
     // Backing data:
     NSDictionary* backingData = [super toDictionary];
@@ -214,7 +172,7 @@ static id kRemovedValue;
     
     for (NSString* key in [result allKeys]) {
         id value = result[key];
-        if (value == kRemovedValue)
+        if (value == kCBLRemovedValue)
             result[key] = nil; // Remove key
         else if ([value conformsToProtocol: @protocol(CBLReadOnlyDictionary)])
             result[key] = [value toDictionary];
@@ -232,7 +190,7 @@ static id kRemovedValue;
 - (void) setObject: (nullable id)value forKey: (NSString*)key {
     id oldValue = [self objectForKey: key];
     if (!$equal(value, oldValue)) {
-        value = [self prepareValue: value];
+        value = [CBLData convertValue: value listener: self];
         [self detachChangeListenerForObject: oldValue];
         [self setValue: value forKey: key isChange: YES];
     }
@@ -245,14 +203,14 @@ static id kRemovedValue;
     
     NSMutableDictionary* result = [NSMutableDictionary dictionary];
     [dictionary enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
-        result[key] = [self prepareValue: value];
+        result[key] = [CBLData convertValue: value listener: self];
     }];
     
     // Marked the key as removed by setting the value to kRemovedValue:
     NSDictionary* backingData = [super toDictionary];
     [backingData enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         if (!result[key])
-            result[key] = kRemovedValue;
+            result[key] = kCBLRemovedValue;
     }];
     
     _dict = result;
@@ -266,7 +224,7 @@ static id kRemovedValue;
 }
 
 
-#pragma mark - SUBSCRIPTION
+#pragma mark - SUBSCRIPTING
 
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
@@ -279,101 +237,32 @@ static id kRemovedValue;
 
 
 - (BOOL) isEmpty {
+    if (_dict.count == 0)
+        return super.count == 0;
+    
+    for (NSString* key in [super allKeys]) {
+        if (!_dict[key])
+            return NO;
+    }
+    
     __block BOOL isEmpty = YES;
     [_dict enumerateKeysAndObjectsUsingBlock: ^(NSString *key, id value, BOOL *stop) {
-        if (value != kRemovedValue) {
+        if (value != kCBLRemovedValue) {
             isEmpty = NO;
             *stop = YES;
         }
     }];
-    
-    if (isEmpty)
-        isEmpty = super.isEmpty;
     return isEmpty;
-}
-
-
-#pragma mark - FLEECE ENCODING
-
-
-- (BOOL) isFleeceEncodableValue: (id)value {
-    return value != kRemovedValue;
 }
 
 
 #pragma mark - PRIVATE
 
 
-- (nullable id) prepareValue: (nullable id)value {
-    Assert([CBLData validateValue: value], @"Unsupported value type.");
-    return [self convertValue: value];
-}
-
-
-- (id) convertValue: (id)value {
-    if (!value)
-        return kRemovedValue; // Represent removed key
-    else if ([value isKindOfClass: [CBLSubdocument class]])
-        return [self convertSubdocument: value];
-    else if ([value isKindOfClass: [CBLArray class]])
-        return [self convertArrayObject: value];
-    else if ([value isKindOfClass: [CBLReadOnlySubdocument class]])
-        return [self convertReadOnlySubdocument: value];
-    else if ([value isKindOfClass: [CBLReadOnlyArray class]])
-        return [self convertReadOnlyArray: value];
-    else if ([value isKindOfClass: [NSDictionary class]])
-        return [self convertDictionary: value];
-    else if ([value isKindOfClass: [NSArray class]])
-        return [self convertArray: value];
-    else if ([value isKindOfClass: [NSDate class]])
-        return [CBLJSON JSONObjectWithDate: value];
-    return value;
-}
-
-
-- (id) convertSubdocument: (CBLSubdocument*)subdocument {
-    [subdocument.dictionary addChangeListener: self];
-    return subdocument;
-}
-
-
-- (id) convertArrayObject: (CBLArray*)array {
-    [array addChangeListener: self];
-    return array;
-}
-
-
-- (id) convertReadOnlySubdocument: (CBLReadOnlySubdocument*)readOnlySubdoc {
-    CBLSubdocument* subdocument = [[CBLSubdocument alloc] initWithFleeceData: readOnlySubdoc.data];
-    [subdocument.dictionary addChangeListener: self];
-    return subdocument;
-}
-
-
-- (id) convertReadOnlyArray: (CBLReadOnlyArray*)readOnlyArray {
-    CBLArray* array = [[CBLArray alloc] initWithFleeceData: readOnlyArray.data];
-    [array addChangeListener: self];
-    return array;
-}
-
-
-- (id) convertDictionary: (NSDictionary*)dictionary {
-    CBLSubdocument* subdocument = [[CBLSubdocument alloc] init];
-    [subdocument setDictionary: dictionary];
-    [subdocument.dictionary addChangeListener: self];
-    return subdocument;
-}
-
-
-- (id) convertArray: (NSArray*)array {
-    CBLArray* arrayObject = [[CBLArray alloc] init];
-    [arrayObject setArray: array];
-    [arrayObject addChangeListener: self];
-    return arrayObject;
-}
-
-
 - (void) setValue: (id)value forKey: (NSString*)key isChange: (BOOL)isChange {
+    if (!_dict)
+        _dict = [NSMutableDictionary dictionary];
+    
     _dict[key] = value;
     if (isChange)
         [self setChanged];
@@ -439,6 +328,33 @@ static id kRemovedValue;
 - (void) objectDidChange: (id)object {
     [self setChanged];
 }
+
+
+#pragma mark - FLEECE ENCODABLE
+
+
+- (BOOL) fleeceEncode: (FLEncoder)encoder
+             database: (CBLDatabase*)database
+                error: (NSError**)outError
+{
+    NSArray* keys = [self allKeys];
+    FLEncoder_BeginDict(encoder, keys.count);
+    for (NSString* key in keys) {
+        id value = [self objectForKey: key];
+        if (value != kCBLRemovedValue) {
+            CBLStringBytes bKey(key);
+            FLEncoder_WriteKey(encoder, bKey);
+            if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]){
+                if (![value fleeceEncode: encoder database: database error: outError])
+                    return NO;
+            } else
+                FLEncoder_WriteNSObject(encoder, value);
+        }
+    }
+    FLEncoder_EndDict(encoder);
+    return YES;
+}
+
 
 
 @end

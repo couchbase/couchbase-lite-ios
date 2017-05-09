@@ -97,7 +97,7 @@
 }
 
 
-#pragma mark SUBSCRIPTION
+#pragma mark SUBSCRIPTING
 
 
 - (CBLReadOnlyFragment*) objectForKeyedSubscript: (NSString*)key {

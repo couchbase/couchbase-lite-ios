@@ -10,12 +10,15 @@
 #import "Fleece.h"
 @class CBLDatabase;
 @class CBLC4Document;
+@protocol CBLObjectChangeListener;
 
 NS_ASSUME_NONNULL_BEGIN
 
+extern NSObject * const kCBLRemovedValue;
+
 @interface CBLData : NSObject
 
-+ (BOOL) validateValue: (id)value;
++ (id) convertValue: (id)value listener: (id<CBLObjectChangeListener>)listener;
 
 + (BOOL) booleanValueForObject: (id)object;
 

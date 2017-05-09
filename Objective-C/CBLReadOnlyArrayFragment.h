@@ -8,7 +8,7 @@
 
 @class CBLReadOnlyFragment;
 
-/** CBLReadOnlyArrayFragment protocol provides subscription access to CBLReadOnlyFragment 
+/** CBLReadOnlyArrayFragment protocol provides subscript access to CBLReadOnlyFragment 
     objects by index. */
 @protocol CBLReadOnlyArrayFragment <NSObject>
 

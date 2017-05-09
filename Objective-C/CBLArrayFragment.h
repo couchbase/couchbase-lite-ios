@@ -9,7 +9,7 @@
 #import "CBLReadOnlyArrayFragment.h"
 @class CBLFragment;
 
-/** CBLArrayFragment protocol provides subscription access to CBLFragment objects by index. */
+/** CBLArrayFragment protocol provides subscript access to CBLFragment objects by index. */
 @protocol CBLArrayFragment <CBLReadOnlyArrayFragment>
 
 /** Gets a CBLFragment object by index.

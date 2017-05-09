@@ -81,7 +81,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 /** CBLReadOnlyFragment provides readonly access to data value. CBLReadOnlyFragment also provides
-    subscription access by either key or index to the nested values which are wrapped by the
+    subscript access by either key or index to the nested values which are wrapped by the
     CBLReadOnlyFragment objects. */
 @interface CBLReadOnlyFragment : NSObject <CBLReadOnlyFragment, CBLReadOnlyDictionaryFragment,
                                            CBLReadOnlyArrayFragment>

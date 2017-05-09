@@ -129,7 +129,7 @@
 }
 
 
-#pragma mark - SUBSCRIPTION
+#pragma mark - SUBSCRIPTING
 
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {

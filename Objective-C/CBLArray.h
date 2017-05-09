@@ -74,7 +74,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** Initialize a new CBLArray object with an array content. Allowed value types are NSArray, 
     NSDate, NSDictionary, NSNumber, NSNull, NSString, CBLArray, CBLBlob, CBLSubdocument. 
     The NSArrays and NSDictionaries must contain only the above types.
-    @parem array    the array object.
+    @param array    the array object.
     @result the CBLArray object. */
 - (instancetype) initWithArray: (NSArray*)array;
 

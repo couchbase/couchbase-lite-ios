@@ -273,6 +273,8 @@
     XCTAssertNotEqualObjects([doc1b toDictionary], [doc1a toDictionary]);
     XCTAssertNotEqualObjects([doc1b toDictionary], [doc1c toDictionary]);
     XCTAssertNotEqualObjects([doc1b toDictionary], [doc1d toDictionary]);
+    
+    [anotherDb close: nil];
 }
 
 

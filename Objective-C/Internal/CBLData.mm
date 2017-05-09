@@ -9,29 +9,56 @@
 #import "CBLData.h"
 #import "CBLDocument+Internal.h"
 #import "CBLInternal.h"
+#import "CBLJSON.h"
 #import "CBLSharedKeys.hh"
 #import "CBLStringBytes.h"
 
 #define kCBLDictionaryTypeKey @"_cbltype"
-
 #define kCBLBlobTypeName @"blob"
+
+NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 
 @implementation CBLData
 
 
-+ (BOOL) validateValue: (id)value {
-    // TODO: This validation could have performance impact.
-    return value == nil || value == [NSNull null] ||
-        [value isKindOfClass: [NSString class]] ||
-        [value isKindOfClass: [NSNumber class]] ||
-        [value isKindOfClass: [NSDate class]] ||
-        [value isKindOfClass: [CBLBlob class]] ||
-        [value isKindOfClass: [CBLSubdocument class]] ||
-        [value isKindOfClass: [CBLArray class]] ||
-        [value isKindOfClass: [CBLReadOnlySubdocument class]] ||
-        [value isKindOfClass: [CBLReadOnlyArray class]] ||
-        [value isKindOfClass: [NSDictionary class]] ||
-        [value isKindOfClass: [NSArray class]];
++ (id) convertValue: (id)value listener: (id<CBLObjectChangeListener>)listener {
+    if (!value) {
+        return kCBLRemovedValue; // Represent removed key
+    } else if ([value isKindOfClass: [CBLSubdocument class]]) {
+        [((CBLSubdocument*)value).dictionary addChangeListener: listener];
+        return value;
+    } else if ([value isKindOfClass: [CBLArray class]]) {
+        [value addChangeListener: listener];
+        return value;
+    } else if ([value isKindOfClass: [CBLReadOnlySubdocument class]]) {
+        CBLReadOnlySubdocument* readonly = (CBLReadOnlySubdocument*)value;
+        CBLSubdocument* subdocument = [[CBLSubdocument alloc] initWithFleeceData: readonly.data];
+        [subdocument.dictionary addChangeListener: listener];
+        return subdocument;
+    } else if ([value isKindOfClass: [CBLReadOnlyArray class]]) {
+        CBLReadOnlyArray* readonly = (CBLReadOnlyArray*)value;
+        CBLArray* array = [[CBLArray alloc] initWithFleeceData: readonly.data];
+        [array addChangeListener: listener];
+        return array;
+    } else if ([value isKindOfClass: [NSDictionary class]]) {
+        CBLSubdocument* subdocument = [[CBLSubdocument alloc] init];
+        [subdocument setDictionary: value];
+        [subdocument.dictionary addChangeListener: self];
+        return subdocument;
+    } else if ([value isKindOfClass: [NSArray class]]) {
+        CBLArray* array = [[CBLArray alloc] init];
+        [array setArray: value];
+        [array addChangeListener: self];
+        return array;
+    } else if ([value isKindOfClass: [NSDate class]]) {
+        return [CBLJSON JSONObjectWithDate: value];
+    } else {
+        Assert(value == [NSNull null] ||
+               [value isKindOfClass: [NSString class]] ||
+               [value isKindOfClass: [NSNumber class]] ||
+               [value isKindOfClass: [CBLBlob class]], @"Unsupported value type.");
+    }
+    return value;
 }
 
 

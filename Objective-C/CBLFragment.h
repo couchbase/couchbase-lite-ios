@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 /** CBLFragment provides read and write access to data value. CBLFragment also provides
-    subscription access by either key or index to the nested values which are wrapped by the
+    subscript access by either key or index to the nested values which are wrapped by the
     CBLFragment objects. */
 @interface CBLFragment : CBLReadOnlyFragment <CBLFragment, CBLDictionaryFragment, CBLArrayFragment>
 

@@ -38,57 +38,57 @@
 
 
 - (nullable id) objectAtIndex: (NSUInteger)index {
-    return [self fleeceValueToObject: [self fleeceValueForIndex: index]];
+    return [self fleeceValueToObjectAtIndex: index];
 }
 
 
 - (BOOL) booleanAtIndex: (NSUInteger)index {
-    return FLValue_AsBool([self fleeceValueForIndex: index]);
+    return FLValue_AsBool(FLArray_Get(_array, (uint)index));
 }
 
 
 - (NSInteger) integerAtIndex: (NSUInteger)index {
-    return (NSInteger)FLValue_AsInt([self fleeceValueForIndex: index]);
+    return (NSInteger)FLValue_AsInt(FLArray_Get(_array, (uint)index));
 }
 
 
 - (float) floatAtIndex: (NSUInteger)index {
-    return FLValue_AsFloat([self fleeceValueForIndex: index]);
+    return FLValue_AsFloat(FLArray_Get(_array, (uint)index));
 }
 
 
 - (double) doubleAtIndex: (NSUInteger)index {
-    return FLValue_AsDouble([self fleeceValueForIndex: index]);
+    return FLValue_AsDouble(FLArray_Get(_array, (uint)index));
 }
 
 
 - (nullable NSString*) stringAtIndex: (NSUInteger)index {
-    return $castIf(NSString, [self objectAtIndex: index]);
+    return $castIf(NSString, [self fleeceValueToObjectAtIndex: index]);
 }
 
 
 - (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
-    return $castIf(NSNumber, [self objectAtIndex: index]);
+    return $castIf(NSNumber, [self fleeceValueToObjectAtIndex: index]);
 }
 
 
 - (nullable NSDate*) dateAtIndex: (NSUInteger)index {
-    return [CBLJSON dateWithJSONObject: [self stringAtIndex: index]];
+    return [CBLJSON dateWithJSONObject: [self fleeceValueToObjectAtIndex: index]];
 }
 
 
 - (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
-    return $castIf(CBLBlob, [self objectAtIndex: index]);
+    return $castIf(CBLBlob, [self fleeceValueToObjectAtIndex: index]);
 }
 
 
 - (nullable CBLReadOnlySubdocument*) subdocumentAtIndex: (NSUInteger)index {
-    return $castIf(CBLReadOnlySubdocument, [self objectAtIndex: index]);
+    return $castIf(CBLReadOnlySubdocument, [self fleeceValueToObjectAtIndex: index]);
 }
 
 
 - (nullable CBLReadOnlyArray*) arrayAtIndex: (NSUInteger)index {
-    return $castIf(CBLReadOnlyArray, [self objectAtIndex: index]);
+    return $castIf(CBLReadOnlyArray, [self fleeceValueToObjectAtIndex: index]);
 }
 
 
@@ -105,11 +105,11 @@
 }
 
 
-#pragma mark - SUBSCRIPTION
+#pragma mark - SUBSCRIPTING
 
 
 - (CBLReadOnlyFragment*) objectAtIndexedSubscript: (NSUInteger)index {
-    id value = index < self.count ? [self objectAtIndex: index] : nil;
+    id value = index < self.count ? [self fleeceValueToObjectAtIndex: index] : nil;
     return [[CBLReadOnlyFragment alloc] initWithValue: value];
 }
 
@@ -121,35 +121,22 @@
              database: (CBLDatabase*)database
                 error: (NSError**)outError
 {
-    NSUInteger count = self.count;
-    FLEncoder_BeginArray(encoder, count);
-    for (NSUInteger i = 0; i < count; i++) {
-        id value = [self objectAtIndex: i];
-        if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]) {
-            if (![value fleeceEncode: encoder database: database error: outError])
-                return NO;
-        } else
-           FLEncoder_WriteNSObject(encoder, value);
-    }
-    FLEncoder_EndArray(encoder);
-    return YES;
+    
+    return FLEncoder_WriteValue(encoder, (FLValue)_array);
 }
 
 
 #pragma mark - FLEECE
 
 
-- (FLValue) fleeceValueForIndex: (NSUInteger)index {
-    return FLArray_Get(_array, (uint)index);
-}
-
-
-- (id) fleeceValueToObject: (FLValue)value {
+- (id) fleeceValueToObjectAtIndex: (NSUInteger)index {
+    FLValue value = FLArray_Get(_array, (uint)index);
     if (value != nullptr)
         return [CBLData fleeceValueToObject: value c4doc: _data.c4doc database: _data.database];
     else
         return nil;
 }
+
 
 
 @end
