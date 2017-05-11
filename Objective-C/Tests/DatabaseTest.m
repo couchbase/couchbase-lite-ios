@@ -925,6 +925,9 @@
     AssertNil(error);
     AssertNotNil(db);
     
+    // close db before delete
+    [self closeDatabase: db];
+    
     // delete db with nil directory
     Assert([CBLDatabase deleteDatabase: @"db" inDirectory: nil error: &error]);
     AssertNil(error);
