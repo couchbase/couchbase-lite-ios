@@ -26,8 +26,11 @@
 
 @property (readonly, atomic) CBLDatabase* db;
 
-- (CBLDatabase*) openDBNamed: (NSString*)name;
+/** Open a database with the given name for testing. Note that the database will be opened at 
+    the temp directory to avoid no bundle id issue when running the unit tests on Mac. */
+- (CBLDatabase*) openDBNamed: (NSString*)name error: (NSError**)error;
 
+/** Reopen the default test database (.db property). */
 - (void) reopenDB;
 
 /** Create a new document with the given document ID. */

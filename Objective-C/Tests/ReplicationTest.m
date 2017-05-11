@@ -22,7 +22,11 @@
 
 - (void) setUp {
     [super setUp];
-    otherDB = [self openDBNamed: @"otherdb"];
+    
+    NSError* error;
+    otherDB = [self openDBNamed: @"otherdb" error: &error];
+    AssertNil(error);
+    AssertNotNil(otherDB);
 }
 
 

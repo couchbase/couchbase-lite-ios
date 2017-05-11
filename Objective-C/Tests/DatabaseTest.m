@@ -16,18 +16,6 @@
 @implementation DatabaseTest
 
 
-- (CBLDatabase*) openDatabase: (NSString*)dbName{
-    NSError* error;
-    CBLDatabase* db = [[CBLDatabase alloc] initWithName: dbName error: &error];
-    AssertNil(error);
-    AssertNotNil(db, @"Couldn't open db: %@", error);
-    AssertEqualObjects(dbName, db.name);
-    Assert([db.path.lastPathComponent hasSuffix: @".cblite2"]);
-    AssertEqual(0, (long)db.documentCount);
-    return db;
-}
-
-
 // helper method to delete database
 - (void) deleteDatabase: (CBLDatabase*)db {
     NSError* error;
@@ -136,7 +124,9 @@
 
 - (void) testCreate {
     // create db with default
-    CBLDatabase* db =  [self openDatabase: @"db"];
+    NSError* error;
+    CBLDatabase* db = [self openDBNamed: @"db" error: &error];
+    AssertNil(error);
     AssertNotNil(db);
     AssertEqual(0, (long)db.documentCount);
     
@@ -145,6 +135,7 @@
 }
 
 
+#if TARGET_OS_IPHONE
 - (void) testCreateWithDefaultOption {
     // create db with default options
     NSError* error;
@@ -160,16 +151,15 @@
     // delete database
     [self deleteDatabase: db];
 }
+#endif
 
 
 - (void) testCreateWithSpecialCharacterDBNames {
     // create db with default options
     NSError* error;
-    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"`~@#$%^&*()_+{}|\\][=-/.,<>?\":;'"
-                                                options: [CBLDatabaseOptions defaultOptions]
-                                                  error: &error];
+    CBLDatabase* db = [self openDBNamed: @"`~@#$%^&*()_+{}|\\][=-/.,<>?\":;'" error: &error];
     AssertNil(error);
-    AssertNotNil(db, @"Couldn't open db: %@", error);
+    AssertNotNil(db, @"Couldn't open db: %@", db.name);
     AssertEqualObjects(db.name, @"`~@#$%^&*()_+{}|\\][=-/.,<>?\":;'");
     Assert([db.path.lastPathComponent hasSuffix: @".cblite2"]);
     AssertEqual(0, (long)db.documentCount);
@@ -182,9 +172,7 @@
 - (void) testCreateWithEmptyDBNames {
     // create db with default options
     NSError* error;
-    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @""
-                                                options: [CBLDatabaseOptions defaultOptions]
-                                                  error: &error];
+    CBLDatabase* db = [self openDBNamed: @"" error: &error];
     [self checkError: error domain: @"LiteCore" code: 30]; // kC4ErrorWrongFormat
     AssertNil(db, @"Should be fail to open db: %@", error);
 }
@@ -193,7 +181,6 @@
 - (void) testCreateWithCustomDirectory {
     NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
     [CBLDatabase deleteDatabase: @"db" inDirectory: dir error: nil];
-    
     AssertFalse([CBLDatabase databaseExists: @"db" inDirectory: dir]);
     
     // create db with custom directory
@@ -230,9 +217,8 @@
 
 
 - (void) testGetExistingDocWithID {
-    NSString* docID = @"doc1";
-    
     // store doc
+    NSString* docID = @"doc1";
     [self generateDocument: docID];
     
     // validate document by getDocument.
@@ -241,14 +227,16 @@
 
 
 - (void) testGetExistingDocWithIDFromDifferentDBInstance {
-    NSString* docID = @"doc1";
-    
     // store doc
+    NSString* docID = @"doc1";
     [self generateDocument: docID];
     
     // open db with same db name and default option
-    CBLDatabase* otherDB = [self openDBNamed: [self.db name]];
-    XCTAssertNotEqual(self.db, otherDB);
+    NSError* error;
+    CBLDatabase* otherDB = [self openDBNamed: [self.db name] error: &error];
+    AssertNil(error);
+    AssertNotNil(otherDB);
+    Assert(otherDB != self.db);
     
     // get doc from other DB.
     AssertEqual(1, (long)otherDB.documentCount);
@@ -327,9 +315,8 @@
 
 
 - (void) testSaveDoc {
-    NSString* docID = @"doc1";
-    
     // store doc
+    NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument: docID];
     
     // update doc
@@ -345,16 +332,17 @@
 
 
 - (void) testSaveDocInDifferentDBInstance {
-    NSError* error;
-    NSString* docID = @"doc1";
-    
     // store doc
+    NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument: docID];
     
     // create db with default
-    CBLDatabase* otherDB = [self openDBNamed: [self.db name]];
+    NSError* error;
+    CBLDatabase* otherDB = [self openDBNamed: [self.db name] error: &error];
+    AssertNil(error);
+    AssertNotNil(otherDB);
+    Assert(otherDB != self.db);
     AssertEqual(1, (long)otherDB.documentCount);
-    XCTAssertNotEqual(self.db, otherDB);
     
     // update doc & store it into different instance
     [doc setObject: @2 forKey: @"key"];
@@ -367,16 +355,17 @@
 
 
 - (void) testSaveDocInDifferentDB {
-    NSError* error;
-    NSString* docID = @"doc1";
-    
     // store doc
+    NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument: docID];
     
     // create db with default
-    CBLDatabase* otherDB =  [self openDatabase:@"otherDB"];
+    NSError* error;
+    CBLDatabase* otherDB = [self openDBNamed: @"otherDB" error: &error];
+    AssertNil(error);
+    AssertNotNil(otherDB);
+    Assert(otherDB != self.db);
     AssertEqual(0, (long)otherDB.documentCount);
-    XCTAssertNotEqual(self.db, otherDB);
     
     // update doc & store it into different db
     [doc setObject: @2 forKey: @"key"];
@@ -389,9 +378,8 @@
 
 
 - (void) testSaveSameDocTwice {
-    NSString* docID = @"doc1";
-    
     // store doc
+    NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument: docID];
     
     // second store
@@ -417,14 +405,13 @@
 
 // TODO: cause crash
 - (void) failingTestSaveDocToClosedDB {
-    NSError* error;
-    
     // close db
     [self closeDatabase: self.db];
     
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject:@1 forKey:@"key"];
     
+    NSError* error;
     AssertFalse([self.db saveDocument: doc error: &error]);
     [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
 }
@@ -432,13 +419,13 @@
 
 // TODO: cause crash
 - (void) failingTestSaveDocToDeletedDB {
-    NSError* error;
-    
     // delete db
     [self deleteDatabase: self.db];
     
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @1 forKey: @"key"];
+    
+    NSError* error;
     AssertFalse([self.db saveDocument: doc error: &error]);
     [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
 }
@@ -448,10 +435,10 @@
 
 
 - (void) testDeletePreSaveDoc {
-    NSError* error;
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @1 forKey: @"key"];
     
+    NSError* error;
     AssertFalse([self.db deleteDocument: doc error: &error]);
     [self checkError:error domain: @"CouchbaseLite" code: 404]; // Not Found
     AssertEqual(0, (long)self.db.documentCount);
@@ -459,12 +446,11 @@
 
 
 - (void) testDeleteDoc {
-    NSError* error;
-    NSString* docID = @"doc1";
-    
     // store doc
+    NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument: docID];
     
+    NSError* error;
     Assert([self.db deleteDocument: doc error: &error]);
     AssertNil(error);
     AssertEqual(0, (long)self.db.documentCount);
@@ -477,17 +463,18 @@
 
 
 - (void) testDeleteDocInDifferentDBInstance {
-    NSError* error;
-    NSString* docID = @"doc1";
-    
     // store doc
+    NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument: docID];
     
     // create db with same name
-    CBLDatabase* otherDB = [self openDBNamed: [self.db name]];
+    NSError* error;
+    CBLDatabase* otherDB = [self openDBNamed: [self.db name] error: &error];
+    AssertNil(error);
+    AssertNotNil(otherDB);
+    Assert(otherDB != self.db);
     Assert([otherDB documentExists:docID]);
     AssertEqual(1, (long)otherDB.documentCount);
-    XCTAssertNotEqual(self.db, otherDB);
     
     AssertFalse([otherDB deleteDocument: doc error: &error]);
     [self checkError:error domain: @"CouchbaseLite" code: 403]; // forbidden
@@ -502,17 +489,18 @@
 
 
 - (void) testDeleteDocInDifferentDB {
-    NSError* error;
-    NSString* docID = @"doc1";
-    
     // store doc
+    NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument: docID];
     
     // create db with different name
-    CBLDatabase* otherDB = [self openDatabase: @"otherDB"];
+    NSError* error;
+    CBLDatabase* otherDB = [self openDBNamed: @"otherDB" error: &error];
+    AssertNil(error);
+    AssertNotNil(otherDB);
+    Assert(otherDB != self.db);
     AssertFalse([otherDB documentExists: docID]);
     AssertEqual(0, (long)otherDB.documentCount);
-    XCTAssertNotEqual(self.db, otherDB);
     
     AssertFalse([otherDB deleteDocument: doc error: &error]);
     [self checkError:error domain: @"CouchbaseLite" code: 403]; // forbidden
@@ -528,13 +516,12 @@
 
 
 - (void) testDeleteSameDocTwice {
-    NSError* error;
-    NSString* docID = @"doc1";
-    
     // store doc
+    NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument:docID];
     
     // first time deletion
+    NSError* error;
     Assert([self.db deleteDocument: doc error: &error]);
     AssertNil(error);
     AssertEqual(0, (long)self.db.documentCount);
@@ -577,8 +564,6 @@
 
 // TODO: cause crash
 - (void) failingTestDeleteDocOnClosedDB {
-    NSError* error;
-    
     // store doc
     CBLDocument* doc = [self generateDocument: @"doc1"];
     
@@ -586,6 +571,7 @@
     [self closeDatabase: self.db];
     
     // delete doc from db.
+    NSError* error;
     AssertFalse([self.db deleteDocument: doc error: &error]);
     [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
 }
@@ -593,8 +579,6 @@
 
 // TODO: cause crash
 - (void) failingTestDeleteDocOnDeletedDB {
-    NSError* error;
-
     // store doc
     CBLDocument* doc = [self generateDocument:@"doc1"];
     
@@ -602,6 +586,7 @@
     [self deleteDatabase: self.db];
     
     // delete doc from db.
+    NSError* error;
     AssertFalse([self.db deleteDocument: doc error: &error]);
     [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
 }
@@ -611,8 +596,9 @@
 
 
 - (void) testPurgePreSaveDoc {
-    NSError* error;
     CBLDocument* doc = [self createDocument: @"doc1"];
+    
+    NSError* error;
     AssertFalse([self.db purgeDocument: doc error: &error]);
     [self checkError: error domain: @"CouchbaseLite" code: 404];
     AssertEqual(0, (long)self.db.documentCount);
@@ -621,9 +607,8 @@
 
 // TODO: Check whether purge operation incrases the seq number or not
 - (void) failingTestPurgeDoc {
-    NSString* docID = @"doc1";
     // store doc
-    CBLDocument* doc = [self generateDocument: docID];
+    CBLDocument* doc = [self generateDocument: @"doc1"];
     
     // Purge Doc
     // Note: After purge: sequence -> 2
@@ -637,17 +622,18 @@
 
 
 - (void) testPurgeDocInDifferentDBInstance {
-    NSError* error;
-    NSString* docID = @"doc1";
-    
     // store doc
+    NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument: docID];
     
     // create db instance with same name
-    CBLDatabase* otherDB = [self openDBNamed: [self.db name]];
+    NSError* error;
+    CBLDatabase* otherDB = [self openDBNamed: [self.db name] error: &error];
+    AssertNil(error);
+    AssertNotNil(otherDB);
+    Assert(otherDB != self.db);
     Assert([otherDB documentExists:docID]);
     AssertEqual(1, (long)otherDB.documentCount);
-    XCTAssertNotEqual(self.db, otherDB);
     
     // purge document against other db instance
     AssertFalse([otherDB purgeDocument: doc error: &error]);
@@ -662,16 +648,18 @@
 
 
 - (void) testPurgeDocInDifferentDB {
-    NSError* error;
-    NSString* docID = @"doc1";
     // store doc
+    NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument: docID];
     
     // create db with different name
-    CBLDatabase* otherDB =  [self openDatabase: @"otherDB"];
+    NSError* error;
+    CBLDatabase* otherDB =  [self openDBNamed: @"otherDB" error: &error];
+    AssertNil(error);
+    AssertNotNil(otherDB);
+    Assert(otherDB != self.db);
     AssertFalse([otherDB documentExists: docID]);
     AssertEqual(0, (long)otherDB.documentCount);
-    XCTAssertNotEqual(self.db, otherDB);
     
     // purge document against other db
     AssertFalse([otherDB purgeDocument: doc error: &error]);
@@ -686,8 +674,8 @@
 
 
 - (void) testPurgeSameDocTwice {
-    NSString* docID = @"doc1";
     // store doc
+    NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument: docID];
     
     // get document for second purge
@@ -771,9 +759,8 @@
 
 
 - (void) testCloseThenAccessDoc {
-    NSString* docID = @"doc1";
-    
     // store doc
+    NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument: docID];
     
     // clsoe db
@@ -854,9 +841,8 @@
 
 
 - (void) testDeleteThenAccessDoc {
-    NSString* docID = @"doc1";
-    
     // store doc
+    NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument: docID];
     
     // delete db
@@ -915,11 +901,11 @@
 
 
 - (void) testDeleteDBOpendByOtherInstance {
-    NSError* error;
-    
     // open db with same db name and default option
-    CBLDatabase* otherDB = [self openDBNamed: [self.db name]];
-    XCTAssertNotEqual(self.db, otherDB);
+    NSError* error;
+    CBLDatabase* otherDB = [self openDBNamed: [self.db name] error: &error];
+    AssertNil(error);
+    AssertNotNil(otherDB);
     
     // delete db
     AssertFalse([self.db deleteDatabase: &error]);
@@ -931,28 +917,28 @@
 #pragma mark - Delate Database (static)
 
 
+#if TARGET_OS_IPHONE
 - (void) testDeleteWithDefaultDirDB {
-    NSError* error;
-    
     // open db with default dir
-    CBLDatabase* db = [self openDatabase:@"db"];
+    NSError* error;
+    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" error: &error];
+    AssertNil(error);
     AssertNotNil(db);
-    
-    // close db before delete
-    [self closeDatabase: db];
     
     // delete db with nil directory
     Assert([CBLDatabase deleteDatabase: @"db" inDirectory: nil error: &error]);
     AssertNil(error);
     AssertFalse([[NSFileManager defaultManager] fileExistsAtPath: db.path]);
 }
+#endif
 
 
+#if TARGET_OS_IPHONE
 - (void) testDeleteOpeningDBWithDefaultDir {
-    NSError* error;
-    
     // open db with default dir
-    CBLDatabase* db = [self openDatabase: @"db"];
+    NSError* error;
+    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" error: &error];
+    AssertNil(error);
     AssertNotNil(db);
     
     // delete db with nil directory
@@ -960,12 +946,12 @@
     // 24 -> kC4ErrorBusy: Database is busy/locked
     [self checkError: error domain: @"LiteCore" code: 24];
 }
+#endif
 
 
 - (void) testDeleteByStaticMethod {
-    NSError* error;
-    
     // create db with custom directory
+    NSError* error;
     NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
     CBLDatabaseOptions* options = [CBLDatabaseOptions defaultOptions];
     options.directory = dir;
@@ -987,9 +973,8 @@
 
 
 - (void) testDeleteOpeningDBByStaticMethod {
-    NSError* error;
-    
     // create db with custom directory
+    NSError* error;
     NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
     CBLDatabaseOptions* options = [CBLDatabaseOptions defaultOptions];
     options.directory = dir;
@@ -1005,12 +990,14 @@
 }
 
 
+#if TARGET_OS_IPHONE
 - (void) testDeleteNonExistingDBWithDefaultDir {
     // Expectation: No operation
     NSError* error;
     Assert([CBLDatabase deleteDatabase: @"notexistdb" inDirectory: nil error: &error]);
     AssertNil(error);
 }
+#endif
 
 
 - (void) testDeleteNonExistingDB {
@@ -1025,12 +1012,13 @@
 #pragma mark - Database Existing
 
 
+#if TARGET_OS_IPHONE
 - (void) failingTestDatabaseExistsWithDefaultDir {
     AssertFalse([CBLDatabase databaseExists: @"db" inDirectory: nil]);
     
     // open db with default dir
-    CBLDatabase* db = [self openDatabase: @"db"];
-    
+    NSError* error;
+    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" error: &error];
     Assert([CBLDatabase databaseExists: @"db" inDirectory: nil]);
     
     // close db
@@ -1042,7 +1030,9 @@
     [self deleteDatabase: db];
     
     AssertFalse([CBLDatabase databaseExists: @"db" inDirectory: nil]);
+
 }
+#endif
 
 
 - (void) testDatabaseExistsWithDir {
@@ -1077,9 +1067,11 @@
 }
 
 
+#if TARGET_OS_IPHONE
 - (void) testDatabaseExistsAgainstNonExistDBWithDefaultDir {
     AssertFalse([CBLDatabase databaseExists: @"nonexist" inDirectory: nil]);
 }
+#endif
 
 
 - (void) testDatabaseExistsAgainstNonExistDB {
