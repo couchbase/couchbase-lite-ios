@@ -354,7 +354,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 #pragma mark - INTERNAL
 
 
-- (NSUInteger) documentCount {
+- (uint64_t) documentCount {
     return c4db_getDocumentCount(_c4db);
 }
 

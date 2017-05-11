@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nonatomic, nullable) C4Database* c4db;
 
-@property (readonly, nonatomic) NSUInteger documentCount; // For unit tests
+@property (readonly, nonatomic) uint64_t documentCount; // For unit tests
 
 @property (readonly, nonatomic) NSMapTable<NSURL*,CBLReplication*>* replications;
 @property (readonly, nonatomic) NSMutableSet* activeReplications;
