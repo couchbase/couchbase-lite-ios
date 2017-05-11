@@ -8,10 +8,12 @@
 
 #import "CBLBlob.h"
 #import "CBLBlobStream.h"
-#import "CBLInternal.h"
+#import "CBLDocument+Internal.h"
 #import "CBLCoreBridge.h"
-#import "CBLStringBytes.h"
+#import "CBLInternal.h"
 #import "CBLLog.h"
+#import "CBLStringBytes.h"
+#import "CBLStatus.h"
 #import "c4BlobStore.h"
 
 extern "C" {
@@ -91,7 +93,6 @@ static NSString* const kBlobType = @"blob";
 // Initializer for an existing blob being read from a document
 - (instancetype) initWithDatabase: (CBLDatabase*)db
                        properties: (NSDictionary *)properties
-                            error: (NSError**)outError
 {
     Assert(db);
     Assert(properties);
@@ -252,6 +253,29 @@ static NSString* const kBlobType = @"blob";
 
     _digest = sliceResult2string(c4blob_keyToString(key));
     _db = db;
+    return YES;
+}
+
+
+#pragma mark FLEECE ENCODABLE
+
+
+- (BOOL) fleeceEncode: (FLEncoder)encoder
+             database: (CBLDatabase*)database
+                error: (NSError**)outError
+{
+    if(![self installInDatabase: database error: outError])
+        return NO;
+    
+    NSDictionary* dict = self.jsonRepresentation;
+    FLEncoder_BeginDict(encoder, [dict count]);
+    for (NSString *key in dict) {
+        CBLStringBytes bKey(key);
+        FLEncoder_WriteKey(encoder, bKey);
+        id value = dict[key];
+        FLEncoder_WriteNSObject(encoder, value);
+    }
+    FLEncoder_EndDict(encoder);
     return YES;
 }
 

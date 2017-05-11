@@ -54,7 +54,7 @@
     }
 
     // Wait a little while for objects to be cleaned up:
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 20; i++) {
         if (c4_getObjectCount() == _c4ObjectCount)
             break;
         else
@@ -94,6 +94,31 @@
 }
 
 
+- (CBLDocument*) createDocument: (NSString*)documentID {
+    return [[CBLDocument alloc] initWithID: documentID];
+}
+
+
+- (CBLDocument*) createDocument:(NSString *)documentID dictionary:(NSDictionary *)dictionary {
+    return [[CBLDocument alloc] initWithID: documentID dictionary: dictionary];
+}
+
+
+- (CBLDocument*) saveDocument: (CBLDocument*)document {
+    NSError* error;
+    Assert([_db saveDocument: document error: &error], @"Saving error: %@", error);
+    return [_db documentWithID: document.documentID];
+}
+
+
+- (CBLDocument*) saveDocument: (CBLDocument*)doc eval: (void(^)(CBLDocument*))block {
+    block(doc);
+    doc = [self saveDocument: doc];
+    block(doc);
+    return doc;
+}
+
+
 - (NSData*) dataFromResource: (NSString*)resourceName ofType: (NSString*)type {
     NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: resourceName
                                                                        ofType: type];
@@ -124,14 +149,13 @@
             [contents enumerateLinesUsingBlock: ^(NSString *line, BOOL *stop) {
                 NSString* docID = [NSString stringWithFormat: @"doc-%03llu", ++n];
                 NSData* json = [line dataUsingEncoding: NSUTF8StringEncoding];
-                CBLDocument* doc = [self.db documentWithID: docID];
+                CBLDocument* doc = [[CBLDocument alloc] initWithID: docID];
                 NSError* error;
-                NSDictionary* properties = [NSJSONSerialization JSONObjectWithData: (NSData*)json
-                                                                           options: 0
-                                                                             error: &error];
-                Assert(properties, @"Couldn't parse line %llu of %@.json: %@", n, resourceName, error);
-                doc.properties = properties;
-                bool saved = [doc save: &error];
+                NSDictionary* dict = [NSJSONSerialization JSONObjectWithData: (NSData*)json
+                                                                     options: 0 error: &error];
+                Assert(dict, @"Couldn't parse line %llu of %@.json: %@", n, resourceName, error);
+                [doc setDictionary: dict];
+                BOOL saved = [_db saveDocument: doc error: &error];
                 Assert(saved, @"Couldn't save document: %@", error);
             }];
         }];

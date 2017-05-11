@@ -12,6 +12,7 @@
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
 #import "CBLJSON.h"
+#import "CBLStatus.h"
 #import "c4Document.h"
 #import "c4Query.h"
 #import "Fleece.h"
@@ -323,7 +324,7 @@ extern "C" {
 
 - (id) currentObject {
     NSString* documentID = slice2string(_c4enum->docID);
-    return _query.database[documentID];
+    return [_query.database documentWithID: documentID];
 }
 
 

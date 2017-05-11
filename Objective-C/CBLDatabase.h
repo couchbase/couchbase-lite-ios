@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDocument, CBLPredicateQuery;
+@class CBLDocument, CBLDocumentFragment, CBLPredicateQuery;
 @protocol CBLConflictResolver;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -139,26 +139,47 @@ typedef struct {
     improving performance. */
 - (BOOL) inBatch: (NSError**)error do: (void (NS_NOESCAPE ^)())block;
 
-/** Creates a new CBLDocument object with no properties and a new (random) UUID. 
-    The document will be saved to the database when you call -save: on it. */
-- (CBLDocument*) document;
+/** Gets an existing CBLDocument object with the given ID. If the document with the given ID 
+    doesn't exist in the database, the value returned will be nil.
+    @param documentID   the document ID.
+    @result the CBLDocument object.
+    */
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID;
 
-/** Gets or creates a CBLDocument object with the given ID.
-    The existence of the CBLDocument in the database can be checked by checking its .exists.
-    CBLDocuments are cached, so there will never be more than one instance in this CBLDatabase
-    object at a time with the same documentID. */
-- (CBLDocument*) documentWithID: (NSString*)docID;
-
-/** Same as -documentWithID: */
-- (CBLDocument*) objectForKeyedSubscript: (NSString*)docID;
+/** Gets a document fragment with the given document ID. */
+- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID;
 
 /** Checks whether the document of the given ID exists in the database or not. */
-- (BOOL) documentExists: (NSString*)docID;
+- (BOOL) documentExists: (NSString*)documentID;
 
 /** The conflict resolver for this database.
     If nil, a default algorithm will be used, where the revision with more history wins.
     An individual document can override this for itself by setting its own property. */
 @property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
+
+
+#pragma mark - SAVE DELETE PURGE
+
+
+/** Saves property changes back to the database.
+ If the document in the database has been updated since it was read by this CBLDocument, a
+ conflict occurs, which will be resolved by invoking the conflict handler. This can happen if
+ multiple application threads are writing to the database, or a pull replication is copying
+ changes from a server. */
+- (BOOL) saveDocument: (CBLDocument*)document error: (NSError**)error;
+
+/** Deletes this document. All properties are removed, and subsequent calls to -documentWithID:
+ will return nil.
+ Deletion adds a special "tombstone" revision to the database, as bookkeeping so that the
+ change can be replicated to other databases. Thus, it does not free up all of the disk space
+ occupied by the document.
+ To delete a document entirely (but without the ability to replicate this), use -purge:. */
+- (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error;
+
+/** Purges this document from the database.
+ This is more drastic than deletion: it removes all traces of the document.
+ The purge will NOT be replicated to other databases. */
+- (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error;
 
 
 #pragma mark - QUERYING:

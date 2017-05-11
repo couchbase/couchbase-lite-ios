@@ -14,41 +14,82 @@
 //  and limitations under the License.
 
 #import "CBLDocument.h"
-#import "c4Observer.h"
+#import "CBLArray.h"
+#import "CBLC4Document.h"
 #import "CBLConflictResolver.h"
 #import "CBLCoreBridge.h"
 #import "CBLDocument+Internal.h"
 #import "CBLInternal.h"
 #import "CBLJSON.h"
+#import "CBLMisc.h"
 #import "CBLSharedKeys.hh"
 #import "CBLStringBytes.h"
+#import "CBLStatus.h"
 #import "CBLSubdocument.h"
 
 
-NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChangeNotification";
-NSString* const kCBLDocumentSavedNotification = @"CBLDocumentSavedNotification";
-NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserInfoKey";
-
-
 @implementation CBLDocument {
-    C4Database* _c4db;
-    C4Document* _c4doc;
+    C4Database* _c4db;      // nullable
+    CBLDictionary* _dict;
 }
 
 
-@synthesize documentID=_documentID, database=_database, conflictResolver=_conflictResolver;
+@synthesize database=_database;
 @synthesize swiftDocument=_swiftDocument;
 
 
-- (instancetype) initWithDatabase: (CBLDatabase*)db
-                            docID: (NSString*)docID
-                        mustExist: (BOOL)mustExist
-                            error: (NSError**)outError {
-    self = [super initWithSharedKeys: db.sharedKeys];
++ (instancetype) document {
+    return [[self alloc] initWithID: nil];
+}
+
+
++ (instancetype) documentWithID: (nullable NSString*)documentID {
+    return [[self alloc] initWithID: documentID];
+}
+
+
+- (instancetype) init {
+    return [self initWithID: nil];
+}
+
+
+- (instancetype) initWithID: (nullable NSString*)documentID {
+    self = [super initWithDocumentID: (documentID ?: CBLCreateUUID()) c4Doc: nil fleeceData: nil];
     if (self) {
-        _database = db;
-        _documentID = docID;
-        _c4db = db.c4db;
+        _dict = [[CBLDictionary alloc] initWithFleeceData: self.data];
+    }
+    return self;
+}
+
+
+- (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary {
+    self = [self initWithID: nil];
+    if (self) {
+        [self setDictionary: dictionary];
+    }
+    return self;
+}
+
+
+- (instancetype) initWithID: (nullable NSString*)documentID
+                 dictionary: (NSDictionary<NSString*,id>*)dictionary
+{
+    self = [self initWithID: documentID];
+    if (self) {
+        [self setDictionary: dictionary];
+    }
+    return self;
+}
+
+
+- /* internal */ (instancetype) initWithDatabase: (CBLDatabase*)database
+                                      documentID: (NSString*)documentID
+                                       mustExist: (BOOL)mustExist
+                                           error: (NSError**)outError
+{
+    self = [super initWithDocumentID: documentID c4Doc: nil fleeceData: nil];
+    if (self) {
+        self.database = database;
         if (![self loadDoc_mustExist: mustExist error: outError])
             return nil;
     }
@@ -56,41 +97,116 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 }
 
 
-- (void) dealloc {
-    c4doc_free(_c4doc);
+#pragma mark - GETTER
+
+
+- (NSUInteger) count {
+    return _dict.count;
 }
 
 
-- (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@]", self.class, _documentID];
+- (nullable id) objectForKey: (NSString*)key {
+    return [_dict objectForKey: key];
 }
 
 
-#pragma mark - API:
-
-
-- (BOOL) exists {
-    return (_c4doc->flags & kExists) != 0;
+- (BOOL) booleanForKey: (NSString*)key {
+    return [_dict booleanForKey: key];
 }
 
 
-- (BOOL) isDeleted {
-    return (_c4doc->flags & kDeleted) != 0;
+- (NSInteger) integerForKey: (NSString*)key {
+    return [_dict integerForKey: key];
 }
 
 
-- (uint64_t) sequence {
-    return _c4doc->sequence;
+- (float) floatForKey: (NSString*)key {
+    return [_dict floatForKey: key];
 }
 
 
-- (NSString*) revisionID {
-    return slice2string(_c4doc->revID);
+- (double) doubleForKey: (NSString*)key {
+    return [_dict doubleForKey: key];
 }
 
 
-- (NSUInteger) generation {
-    return c4rev_getGeneration(_c4doc->revID);
+- (nullable NSString*) stringForKey: (NSString*)key {
+    return [_dict stringForKey: key];
+}
+
+
+- (nullable NSNumber*) numberForKey: (NSString*)key {
+    return [_dict numberForKey: key];
+}
+
+
+- (nullable NSDate*) dateForKey: (NSString*)key {
+    return [_dict dateForKey: key];
+}
+
+
+- (nullable CBLBlob*) blobForKey: (NSString*)key {
+    return [_dict blobForKey: key];
+}
+
+
+- (nullable CBLSubdocument*) subdocumentForKey: (NSString*)key {
+    return [_dict subdocumentForKey: key];
+}
+
+
+- (nullable CBLArray*) arrayForKey: (NSString*)key {
+    return [_dict arrayForKey: key];
+}
+
+
+- (BOOL) containsObjectForKey: (NSString*)key {
+    return [_dict containsObjectForKey: key];
+}
+
+
+- (NSArray*) allKeys {
+    return [_dict allKeys];
+}
+
+
+- (NSDictionary<NSString*,id>*) toDictionary {
+    return [_dict toDictionary];
+}
+
+
+#pragma mark - SETTER
+
+
+- (void) setObject: (nullable id)value forKey: (NSString*)key {
+    [_dict setObject: value forKey: key];
+}
+
+
+- (void) setDictionary: (NSDictionary<NSString *,id> *)dictionary {
+    [_dict setDictionary: dictionary];
+}
+
+
+#pragma mark - SUBSCRIPTING
+
+
+- (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
+    return [_dict objectForKeyedSubscript: key];
+}
+
+
+#pragma mark - INTERNAL
+
+
+- (void) setDatabase: (CBLDatabase *)database {
+    _database = database;
+    _c4db = _database.c4db;
+}
+
+
+- (BOOL) isEmpty {
+    return _dict.isEmpty;
 }
 
 
@@ -109,28 +225,25 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 
 
 - (BOOL) purge: (NSError**)outError {
-    if (!self.exists)
-        return NO;
+    assert(_database && _c4db);
+    
+    if (!self.exists) {
+        return createError(kCBLStatusNotFound, outError);
+    }
     
     C4Transaction transaction(_c4db);
     if (!transaction.begin())
         return convertError(transaction.error(),  outError);
     
     C4Error err;
-    if (c4doc_purgeRevision(_c4doc, C4Slice(), &err) >= 0) {
-        if (c4doc_save(_c4doc, 0, &err)) {
+    if (c4doc_purgeRevision(self.c4Doc.rawDoc, C4Slice(), &err) >= 0) {
+        if (c4doc_save(self.c4Doc.rawDoc, 0, &err)) {
             // Save succeeded; now commit:
-            if (!transaction.commit()) {
+            if (!transaction.commit())
                 return convertError(transaction.error(), outError);
-            }
             
-            // Reload:
-            if (![self loadDoc_mustExist: NO error: outError])
-                return NO;
-            
-            self.properties = nil;
-            [self resetChangesKeys];
-            
+            // Reset:
+            [self setC4Doc: nil];
             return YES;
         }
     }
@@ -138,62 +251,12 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 }
 
 
-#pragma mark - CBLProperties
+#pragma mark - PRIVATE
 
 
-- (CBLBlob *)blobWithProperties:(NSDictionary *)properties error:(NSError **)error {
-    return [[CBLBlob alloc] initWithDatabase: _database properties:properties error:error];
+- (BOOL) changed {
+    return _dict.changed;
 }
-
-
-- (BOOL)storeBlob:(CBLBlob *)blob error:(NSError **)error {
-    return [blob installInDatabase: _database error: error];
-}
-
-
-- (void) setHasChanges: (BOOL)hasChanges {
-    if (self.hasChanges != hasChanges) {
-        [super setHasChanges: hasChanges];
-        [_database document: self hasUnsavedChanges: hasChanges];
-    }
-}
-
-
-// Called by CBLProperties superclass after a change is made to the properties.
-- (void) markChangedKey: (NSString*)key {
-    [super markChangedKey: key];
-    [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDocumentChangeNotification
-                                                        object: self];
-}
-
-
-#pragma mark - INTERNAL
-
-
-// Called by the CBLDatabase when the document has changed on disk.
-- (void)changedExternally {
-    // The current API design decision is that when a document has unsaved changes, it should
-    // not update with external changes and should not post notifications. Instead the conflict
-    // resolution will happen when the app saves the document.
-
-    if(!self.hasChanges) {
-        NSError* error;
-        if (![self loadDoc_mustExist: YES error: &error])
-            CBLWarn(Default, @"%@ failed to load external changes: %@", self, error);
-        [self postChangedNotificationExternal:YES];
-    }
-}
-
-
-- (void)postChangedNotificationExternal:(BOOL)external {
-    NSDictionary* userInfo = external ? @{kCBLDocumentIsExternalUserInfoKey: @YES} : nil;
-    [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDocumentSavedNotification
-                                                        object: self
-                                                      userInfo: userInfo];
-}
-
-
-#pragma mark - LOADING:
 
 
 // (Re)loads the document from the db, updating _c4doc and other state.
@@ -201,15 +264,14 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
     auto doc = [self readC4Doc_mustExist: mustExist error: outError];
     if (!doc)
         return NO;
-    [self setC4Doc: doc];
-    self.hasChanges = NO;
+    [self setC4Doc: [CBLC4Document document: doc]];
     return YES;
 }
 
 
 // Reads the document from the db into a new C4Document and returns it, w/o affecting my state.
 - (C4Document*) readC4Doc_mustExist: (BOOL)mustExist error: (NSError**)outError {
-    CBLStringBytes docId(_documentID);
+    CBLStringBytes docId(self.documentID);
     C4Error err;
     auto doc = c4doc_get(_c4db, docId, mustExist, &err);
     if (!doc)
@@ -218,27 +280,26 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 }
 
 
-// Sets _c4doc and updates my root dict
-- (void) setC4Doc: (nullable C4Document*)doc {
-    c4doc_free(_c4doc);
-    _c4doc = doc;
-    [self setRootDict: nullptr];
-    if (_c4doc) {
-        C4Slice body = _c4doc->selectedRev.body;
-        if (body.size > 0) {
-            FLDict root = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
-            [self setRootDict: root];
-        }
-    }
-    [self useNewRoot];
+// Sets c4doc and updates my root dict
+- (void) setC4Doc: (CBLC4Document*)c4doc {
+    [super setC4Doc: c4doc];
+    
+    if (c4doc) {
+        FLDict root = nullptr;
+        C4Slice body = c4doc.selectedRev.body;
+        if (body.size > 0)
+            root = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
+        self.data = [[CBLFLDict alloc] initWithDict: root c4doc: c4doc database: _database];
+    } else
+        self.data = nil;
+    
+    // Update delegate dictionary:
+    _dict = [[CBLDictionary alloc] initWithFleeceData: self.data];
 }
 
 
-#pragma mark - SAVING:
-
-
 - (id<CBLConflictResolver>) effectiveConflictResolver {
-    return _conflictResolver ?: _database.conflictResolver;
+    return _database.conflictResolver;
 }
 
 
@@ -264,17 +325,21 @@ static bool arrayContainsBlob(__unsafe_unretained NSArray* array) {
 
 static bool subdocContainsBlob(__unsafe_unretained CBLSubdocument* subdoc) {
     __block bool containsBlob = false;
-    [subdoc.properties enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL *stop) {
-        *stop = containsBlob = objectContainsBlob(value);
-    }];
+    for (NSString* key in [subdoc allKeys]) {
+        containsBlob = objectContainsBlob([subdoc objectForKey: key]);
+        if (containsBlob)
+            break;
+    }
     return containsBlob;
 }
 
-static bool containsBlob(__unsafe_unretained NSDictionary* dict) {
+static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     __block bool containsBlob = false;
-    [dict enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL *stop) {
-        *stop = containsBlob = objectContainsBlob(value);
-    }];
+    for (NSString* key in [doc allKeys]) {
+        containsBlob = objectContainsBlob([doc objectForKey: key]);
+        if (containsBlob)
+            break;
+    }
     return containsBlob;
 }
 
@@ -284,20 +349,22 @@ static bool containsBlob(__unsafe_unretained NSDictionary* dict) {
          asDelete: (BOOL)deletion
             error: (NSError **)outError
 {
-    //TODO: Need to be able to save a deletion that has properties in it
-    NSDictionary* propertiesToSave = deletion ? nil : self.properties;
     CBLStringBytes docTypeSlice;
-    C4DocPutRequest put = {
-        .docID = _c4doc->docID,
-        .history = &_c4doc->revID,
-        .historyCount = 1,
-        .save = true,
-    };
+    
+    C4DocPutRequest put = {};
+    CBLStringBytes docId(self.documentID);
+    put.docID = docId;
+    if (self.c4Doc) {
+        put.history = &self.c4Doc.rawDoc->revID;
+        put.historyCount = 1;
+    }
+    put.save = true;
+    
     if (deletion)
         put.revFlags = kRevDeleted;
-    if (containsBlob(propertiesToSave))
+    if (containsBlob(self))
         put.revFlags |= kRevHasAttachments;
-    if (propertiesToSave.count > 0) {
+    if (!deletion && !self.isEmpty) {
         // Encode properties to Fleece data:
         auto enc = c4db_createFleeceEncoder(_c4db);
         auto body = [self encodeWith:enc error: outError];
@@ -306,7 +373,6 @@ static bool containsBlob(__unsafe_unretained NSDictionary* dict) {
             *outDoc = nullptr;
             return NO;
         }
-
         put.body = {body.buf, body.size};
     }
     
@@ -328,52 +394,61 @@ static bool containsBlob(__unsafe_unretained NSDictionary* dict) {
                           deletion: (bool)deletion
                              error: (NSError**)outError
 {
-    // Read the current revision from the database, and parse it into an NSDictionary:
-    C4Document *currentDoc = [self readC4Doc_mustExist: YES error: outError];
-    if (!currentDoc)
+    // Read the current revision from the database:
+    C4Document* rawDoc = [self readC4Doc_mustExist: YES error: outError];
+    if (!rawDoc)
         return NO;
-    NSDictionary *current = nil;
-    auto currentData = currentDoc->selectedRev.body;
-    if (currentData.size > 0) {
-        FLValue currentRoot = FLValue_FromTrustedData({currentData.buf, currentData.size});
-        cbl::SharedKeys currentKeys(*self.sharedKeys, (FLDict)currentRoot);
-        current = FLValue_GetNSObject(currentRoot, &currentKeys);
-    }
-
-    NSDictionary* resolved;
+    
+    FLDict curRoot = nullptr;
+    auto curBody = rawDoc->selectedRev.body;
+    if (curBody.size > 0)
+        curRoot = (FLDict) FLValue_FromTrustedData({curBody.buf, curBody.size});
+    
+    // Create the current readonly document with the current revision:
+    CBLC4Document* curC4doc = [CBLC4Document document: rawDoc];
+    CBLFLDict* curDict = [[CBLFLDict alloc] initWithDict: curRoot
+                                                   c4doc: curC4doc
+                                                database: _database];
+    CBLReadOnlyDocument* current = [[CBLReadOnlyDocument alloc] initWithDocumentID: self.documentID
+                                                                             c4Doc: curC4doc
+                                                                        fleeceData: curDict];
+    // Resolve conflict:
+    CBLReadOnlyDocument* resolved;
     if (deletion) {
-        // Deletion always loses a conflict.
+        // Deletion always loses a conflict:
         resolved = current;
-
     } else if (resolver) {
         // Call the custom conflict resolver:
-        resolved = [resolver resolveMine: (self.properties ?: @{})
-                              withTheirs: (current ?: @{})
-                                 andBase: self.savedProperties];
-        if (resolved == nil) {
-            // Resolver gave up:
-            c4doc_free(currentDoc);
+        CBLReadOnlyDocument* base = [[CBLReadOnlyDocument alloc] initWithDocumentID: self.documentID
+                                                                              c4Doc: super.c4Doc
+                                                                         fleeceData: super.data];
+        CBLConflict* conflict = [[CBLConflict alloc] initWithSource: self
+                                                             target: current
+                                                     commonAncestor: base
+                                                      operationType: kCBLDatabaseWrite];
+        resolved = [resolver resolve: conflict];
+        if (resolved == nil)
             return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
-        }
-
     } else {
         // Default resolution algorithm is "most active wins", i.e. higher generation number.
-        //TODO: Once conflict resolvers can access the document generation, move this logic
-        //      into a default CBLConflictResolver.
+        // TODO: Once conflict resolvers can access the document generation, move this logic
+        // into a default CBLConflictResolver.
         NSUInteger myGgggeneration = self.generation + 1;
-        NSUInteger theirGgggeneration = c4rev_getGeneration(currentDoc->revID);
+        NSUInteger theirGgggeneration = c4rev_getGeneration(curC4doc.revID);
         if (myGgggeneration >= theirGgggeneration)       // hope I die before I get old
-            resolved = self.properties;
+            resolved = self;
         else
             resolved = current;
     }
 
     // Now update my state to the current C4Document and the merged/resolved properties:
-    [self setC4Doc: currentDoc];
-    self.properties = resolved;
-    if ($equal(resolved, current)) {
-        self.hasChanges = NO;   // Document is now identical to current revision
-    }
+    if (!$equal(resolved, current)) {                   // TODO: Implement deep comparison
+        NSDictionary* dict = [resolved toDictionary];   // TODO: toDictionary is expensive
+        [self setC4Doc: curC4doc];
+        [self setDictionary: dict];
+    } else
+        [self setC4Doc: curC4doc];
+    
     return YES;
 }
 
@@ -383,26 +458,31 @@ static bool containsBlob(__unsafe_unretained NSDictionary* dict) {
                          deletion: (bool)deletion
                             error: (NSError**)outError
 {
+    assert(_database && _c4db);
+    
     // No-op case of unchanged document:
-    if (!self.hasChanges && !deletion && self.exists)
+    if (!self.changed && !deletion && self.exists)
         return YES;
-
+    
+    if (deletion && !self.exists)
+        return createError(kCBLStatusNotFound, outError);
+    
     // Begin a db transaction:
     C4Transaction transaction(_c4db);
     if (!transaction.begin())
-        return convertError(transaction.error(),  outError);
+        return convertError(transaction.error(), outError);
 
     // Attempt to save. (On conflict, this will succeed but newDoc will be null.)
     C4Document* newDoc;
     if (![self saveInto: &newDoc asDelete: deletion error: outError])
         return NO;
-
+    
     if (!newDoc) {
         // There's been a conflict; first merge with the new saved revision:
         if (![self mergeWithConflictResolver: resolver deletion: deletion error: outError])
             return NO;
         // The merge might have turned the save into a no-op:
-        if (!self.hasChanges)
+        if (!self.changed)
             return YES;
         // Now save the merged properties:
         if (![self saveInto: &newDoc asDelete: deletion error: outError])
@@ -417,14 +497,26 @@ static bool containsBlob(__unsafe_unretained NSDictionary* dict) {
     }
 
     // Update my state and post a notification:
-    [self setC4Doc: newDoc];
-    if (deletion) {
-        self.properties = nil;
-    }
-    [self resetChangesKeys];
+    [self setC4Doc: [CBLC4Document document: newDoc]];
     
-    [self postChangedNotificationExternal:NO];
     return YES;
+}
+
+
+#pragma mark - FLEECE ENCODING
+
+
+- (FLSliceResult) encodeWith: (FLEncoder)encoder error: (NSError**)outError {
+    if (![_dict fleeceEncode: encoder database: self.database error: outError])
+        return (FLSliceResult){nullptr, 0};
+    
+    FLError flErr;
+    auto body = FLEncoder_Finish(encoder, &flErr);
+    if(!body.buf) {
+        convertError(flErr, outError);
+        return (FLSliceResult){nullptr, 0};
+    }
+    return body;
 }
 
 

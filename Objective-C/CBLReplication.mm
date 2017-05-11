@@ -10,6 +10,8 @@
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
 #import "CBLInternal.h"
+#import "CBLStatus.h"
+
 #import "c4Replicator.h"
 #import "c4Socket.h"
 #import "CBLWebSocket.h"

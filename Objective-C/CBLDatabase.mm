@@ -19,11 +19,13 @@
 #import "CBLCoreBridge.h"
 #import "CBLDocument.h"
 #import "CBLDocument+Internal.h"
+#import "CBLDocumentFragment.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLPredicateQuery+Internal.h"
 #import "CBLSharedKeys.hh"
 #import "CBLStringBytes.h"
+#import "CBLStatus.h"
 
 
 NSString* const kCBLDatabaseChangeNotification = @"CBLDatabaseChangeNotification";
@@ -64,8 +66,6 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
     NSString* _name;
     CBLDatabaseOptions* _options;
     C4DatabaseObserver* _obs;
-    NSMapTable<NSString*, CBLDocument*>* _documents;
-    NSMutableSet<CBLDocument*>* _unsavedDocuments;
     CBLPredicateQuery* _allDocsQuery;
 }
 
@@ -94,9 +94,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         CBLLog_Init();
     }
 }
-
-
-#pragma mark - API:
 
 
 - (instancetype) initWithName: (NSString*)name
@@ -169,8 +166,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
     _sharedKeys = cbl::SharedKeys(_c4db);
     _obs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
-    _documents = [NSMapTable strongToWeakObjectsMapTable];
-    _unsavedDocuments = [NSMutableSet setWithCapacity: 100];
     
     return YES;
 }
@@ -186,12 +181,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         return YES;
     
     CBLLog(Database, @"Closing %@ at path %@", self, self.path);
-    if (_unsavedDocuments.count > 0)
-        CBLWarn(Database, @"Closing %@ with %lu unsaved docs, such as %@",
-                self, (unsigned long)_unsavedDocuments.count, _unsavedDocuments.anyObject);
     
-    _documents = nil;
-    _unsavedDocuments = nil;
     _allDocsQuery = nil;
     
     C4Error err;
@@ -260,18 +250,13 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-- (CBLDocument*) document {
-    return [self documentWithID: [self generateDocID]];
+- (CBLDocument*) documentWithID: (NSString*)documentID {
+    return [self documentWithID: documentID mustExist: YES error: nil];
 }
 
 
-- (CBLDocument*) documentWithID: (NSString*)docID {
-    return [self documentWithID: docID mustExist: NO error: nil];
-}
-
-
-- (CBLDocument*) objectForKeyedSubscript: (NSString*)docID {
-    return [self documentWithID: docID mustExist: NO error: nil];
+- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
+    return [[CBLDocumentFragment alloc] initWithDocument: [self documentWithID: documentID]];
 }
 
 
@@ -281,7 +266,34 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-#pragma mark - API: QUERIES:
+#pragma mark - SAVE
+
+
+- (BOOL) saveDocument: (CBLDocument*)document error: (NSError**)error {
+    if ([self prepareDocument: document error: error])
+        return [document save: error];
+    else
+        return NO;
+}
+
+
+- (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error {
+    if ([self prepareDocument: document error: error])
+        return [document deleteDocument: error];
+    else
+        return NO;
+}
+
+
+- (BOOL) purgeDocument: (CBLDocument *)document error: (NSError**)error {
+    if ([self prepareDocument: document error: error])
+        return [document purge: error];
+    else
+        return NO;
+}
+
+
+#pragma mark - QUERIES:
 
 
 - (NSEnumerator<CBLDocument*>*) allDocuments {
@@ -302,9 +314,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-- (BOOL) createIndexOn: (NSArray<NSExpression*>*)expressions
-                 error: (NSError**)outError
-{
+- (BOOL) createIndexOn: (NSArray<NSExpression*>*)expressions error: (NSError**)outError {
     return [self createIndexOn: expressions type: kCBLValueIndex options: NULL error: outError];
 }
 
@@ -344,11 +354,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 #pragma mark - INTERNAL
 
 
-- (void) document: (CBLDocument*)doc hasUnsavedChanges: (bool)unsaved {
-    if (unsaved)
-        [_unsavedDocuments addObject: doc];
-    else
-        [_unsavedDocuments removeObject: doc];
+- (NSUInteger) documentCount {
+    return c4db_getDocumentCount(_c4db);
 }
 
 
@@ -459,9 +466,6 @@ static NSString* databasePath(NSString* name, NSString* dir) {
         for(uint32_t i = 0; i < nChanges; i++) {
             NSString *docID =slice2string(changes[i].docID);
             [docIDs addObject: docID];
-            if(external) {
-                [[_documents objectForKey: docID] changedExternally];
-            }
         }
         if (nChanges > 0)
             lastSequence = changes[nChanges-1].sequence;
@@ -485,42 +489,27 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 }
 
 
-- (NSString*) generateDocID {
-    return CBLCreateUUID();
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID
+                               mustExist: (bool)mustExist
+                                   error: (NSError**)outError
+{
+    return [[CBLDocument alloc] initWithDatabase: self
+                                      documentID: documentID
+                                       mustExist: mustExist
+                                           error: outError];
 }
 
 
-- (CBLDocument*) documentWithID: (NSString*)docID
-                     mustExist: (bool)mustExist
-                         error: (NSError**)outError
-{
-    CBLDocument *doc = [_documents objectForKey: docID];
-    if (!doc) {
-        doc = [[CBLDocument alloc] initWithDatabase: self docID: docID
-                                          mustExist: mustExist
-                                              error: outError];
-        if (!doc)
-            return nil;
-        [_documents setObject: doc forKey: docID];
-    } else {
-        if (mustExist && !doc.exists) {
-            // Don't return a pre-instantiated CBLDocument if it doesn't exist
-            convertError(C4Error{LiteCoreDomain, kC4ErrorNotFound},  outError);
-            return nil;
-        }
+- (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error {
+    if (!document.database) {
+        document.database = self;
+    } else if (document.database != self) {
+        return createError(kCBLStatusForbidden,
+                           @"The document is from the different database.", error);
     }
-    return doc;
+    return YES;
 }
 
 
 @end
 
-// TODO:
-// * Close all other database handles when deleting the database
-//   and changing the encryption key
-// * Database Change Notification in save and when inBatch.
-// * Encryption key and rekey
-//     * [MacOS] Support encryption key from the Keychain
-// * Error Domain: Should LiteCore error domain transfer to CouchbaseLite?
-// *. Live Object and Change from external
-//

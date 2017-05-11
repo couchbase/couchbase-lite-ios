@@ -7,9 +7,28 @@
 //
 
 #import <Foundation/Foundation.h>
+@class CBLReadOnlyDocument;
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** Activity level of a replication. */
+typedef enum {
+    kCBLDatabaseWrite,
+    kCBLPushReplication,
+    kCBLPullReplication
+} CBLOperationType;
+
+@interface CBLConflict : NSObject
+
+@property (nonatomic, readonly) CBLOperationType operationType;
+
+@property (nonatomic, readonly) CBLReadOnlyDocument* source;
+
+@property (nonatomic, readonly) CBLReadOnlyDocument* target;
+
+@property (nonatomic, readonly, nullable) CBLReadOnlyDocument* commonAncestor;
+
+@end
 
 /** Abstract interface for an application-defined object that can resolve a conflict between two
     revisions of a document. Called when saving a CBLDocument, when there is a a newer revision
@@ -17,17 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
     with a locally-saved revision. */
 @protocol CBLConflictResolver <NSObject>
 
-/** Resolves conflicting edits of a document against their common base.
-    @param localProperties  The revision that is being saved, or the revision in the local
-                database for which there is a server-side conflict.
-    @param conflictingProperties  The conflicting revision that is already stored in the
-                database, or on the server.
-    @param baseProperties  The common parent revision of these two revisions, if available.
-    @return  The resolved set of properties for the document to store, or nil to give up if
-                automatic resolution isn't possible. */
-- (nullable NSDictionary<NSString*,id>*) resolveMine: (NSDictionary<NSString*,id>*)localProperties
-                                          withTheirs: (NSDictionary<NSString*,id>*)conflictingProperties
-                                             andBase: (NSDictionary<NSString*,id>*)baseProperties;
+- (nullable CBLReadOnlyDocument*) resolve: (CBLConflict*)conflict;
 
 @end
 
