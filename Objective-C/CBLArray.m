@@ -7,6 +7,7 @@
 //
 
 #import "CBLArray.h"
+#import "CBLArray+Swift.h"
 #import "CBLBlob.h"
 #import "CBLData.h"
 #import "CBLDocument+Internal.h"
@@ -18,6 +19,8 @@
     NSMapTable* _changeListeners;
     BOOL _changed;
 }
+
+@synthesize swiftObject=_swiftObject;
 
 
 + (instancetype) array {
@@ -137,7 +140,7 @@
 
 #pragma mark - SETTER
 
-- (void) setArray:(NSArray *)array {
+- (void) setArray:(nullable NSArray *)array {
     // Detach all objects that we are listening to for changes:
     [self detachChildChangeListeners];
     

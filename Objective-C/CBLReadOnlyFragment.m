@@ -43,7 +43,7 @@
 }
 
 
-- (BOOL) boolValue {
+- (BOOL) booleanValue {
     // TODO:
     return [$castIf(NSNumber, _value) boolValue];
 }

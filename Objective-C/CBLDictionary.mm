@@ -7,6 +7,7 @@
 //
 
 #import "CBLDictionary.h"
+#import "CBLDictionary+Swift.h"
 #import "CBLArray.h"
 #import "CBLBlob.h"
 #import "CBLData.h"
@@ -23,7 +24,7 @@
 }
 
 
-@synthesize changed=_changed;
+@synthesize changed=_changed, swiftObject=_swiftObject;
 
 
 + (instancetype) dictionary {
@@ -215,7 +216,7 @@
 }
 
 
-- (void) setDictionary: (NSDictionary<NSString*,id>*)dictionary {
+- (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary {
     // Detach all objects that we are listening to for changes:
     [self detachChildChangeListeners];
     

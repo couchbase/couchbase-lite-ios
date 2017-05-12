@@ -7,6 +7,7 @@
 //
 
 #import "CBLReadOnlyArray.h"
+#import "CBLReadOnlyArray+Swift.h"
 #import "CBLDocument+Internal.h"
 #import "CBLInternal.h"
 #import "CBLJSON.h"
@@ -21,7 +22,7 @@
 }
 
 
-@synthesize data=_data;
+@synthesize data=_data, swiftObject=_swiftObject;
 
 - /* internal */ (instancetype) initWithFleeceData: (nullable CBLFLArray*)data {
     self = [super init];

@@ -50,7 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
     contain only the above types. Setting the new array content will replace the current data 
     including the existing CBLArray and CBLDictionary objects.
     @param array  the array. */
-- (void) setArray: (NSArray*)array;
+- (void) setArray: (nullable NSArray*)array;
 
 /** Subscripting access to a CBLFragment object that represents the value at the given index. 
     @param index    the index. If the index value exceeds the bounds of the array, 

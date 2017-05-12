@@ -83,7 +83,7 @@
 }
 
 
-- (BOOL) boolValue {
+- (BOOL) booleanValue {
     return [CBLData booleanValueForObject: _value];
 }
 

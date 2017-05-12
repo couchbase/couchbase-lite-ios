@@ -103,33 +103,38 @@ public final class Database {
     public var path: String? { return _impl.path }
     
     
-    /** Changes the database's encryption key, or removes encryption if the new key is nil.
-        @param key  The encryption key in the form of an NSString (a password) or an
-        NSData object exactly 32 bytes in length (a raw AES key.) If a string is given,
-        it will be internally converted to a raw key using 64,000 rounds of PBKDF2 hashing.
-        A nil value will decrypt the database. */
-    public func changeEncryptionKey(_ key: EncryptionKey?) throws {
-        try _impl.changeEncryptionKey(key?.asObject)
+    /** The conflict resolver for this database.
+     If nil, a default algorithm will be used, where the revision with more history wins.
+     An individual document can override this for itself by setting its own property. */
+    public var conflictResolver: ConflictResolver? {
+        get {return _impl.conflictResolver}
+        set {_impl.conflictResolver = newValue}
     }
-
-
-    /** Deletes a database. */
-    public func delete() throws {
-        try _impl.delete()
+    
+    
+    /** Gets a Document object with the given ID. */
+    public func getDocument(_ id: String) -> Document? {
+        if let implDoc = _impl.document(withID: id) {
+            return Document(implDoc)
+        }
+        return nil;
     }
-
-
-    /** Deletes a database of the given name in the given directory. */
-    public class func delete(_ name: String, inDirectory directory: String? = nil) throws {
-        try CBLDatabase.delete(name, inDirectory: directory)
+    
+    
+    public func save(_ document: Document) throws {
+        try _impl.save(document._impl as! CBLDocument)
     }
-
-
-    /** Checks whether a database of the given name exists in the given directory or not. */
-    public class func exists(_ name: String, inDirectory directory: String? = nil) -> Bool {
-        return CBLDatabase.databaseExists(name, inDirectory: directory)
+    
+    
+    public func delete(_ document: Document) throws {
+        try _impl.delete(document._impl as! CBLDocument)
     }
-
+    
+    
+    public func purge(_ document: Document) throws {
+        try _impl.purgeDocument(document._impl as! CBLDocument)
+    }
+    
 
     /** Runs a group of database operations in a batch. Use this when performing bulk write operations
         like multiple inserts/updates; it saves the overhead of multiple database commits, greatly
@@ -148,45 +153,49 @@ public final class Database {
         }
     }
 
-
-    /** Creates a new Document object with no properties and a new (random) UUID.
-        The document will be saved to the database when you call -save: on it. */
-    public func document() -> Document {
-        return Document(_impl.document(), inDatabase: self)
+    
+    public func compact() throws {
+        // TODO:
+    }
+    
+    
+    /** Deletes a database. */
+    public func delete() throws {
+        try _impl.delete()
+    }
+    
+    
+    /** Changes the database's encryption key, or removes encryption if the new key is nil.
+     @param key  The encryption key in the form of an NSString (a password) or an
+     NSData object exactly 32 bytes in length (a raw AES key.) If a string is given,
+     it will be internally converted to a raw key using 64,000 rounds of PBKDF2 hashing.
+     A nil value will decrypt the database. */
+    public func changeEncryptionKey(_ key: EncryptionKey?) throws {
+        try _impl.changeEncryptionKey(key?.asObject)
+    }
+    
+    
+    /** Deletes a database of the given name in the given directory. */
+    public class func delete(_ name: String, inDirectory directory: String? = nil) throws {
+        try CBLDatabase.delete(name, inDirectory: directory)
+    }
+    
+    
+    /** Checks whether a database of the given name exists in the given directory or not. */
+    public class func exists(_ name: String, inDirectory directory: String? = nil) -> Bool {
+        return CBLDatabase.databaseExists(name, inDirectory: directory)
     }
 
 
-    /** Gets or creates a Document object with the given ID.
-        The existence of the Document in the database can be checked by checking its .exists.
-        Documents are cached, so there will never be more than one instance in this Database
-        object at a time with the same documentID. */
-    public func document(withID docID: String) -> Document {
-        let implDoc = _impl.document(withID: docID)
-        if let doc = implDoc.swiftDocument as? Document {
-            return doc
-        }
-        return Document(implDoc, inDatabase: self)
-    }
-
-
-    /** Same as document(withID:) */
-    public subscript(docID: String) -> Document {
-        return self.document(withID: docID)
+    /** Gets document fragment object by the given document ID. */
+    public subscript(id: String) -> DocumentFragment {
+        return DocumentFragment(_impl[id])
     }
 
 
     /** Checks whether the document of the given ID exists in the database or not. */
     public func contains(_ docID: String) -> Bool {
         return _impl.documentExists(docID)
-    }
-
-
-    /** The conflict resolver for this database.
-        If nil, a default algorithm will be used, where the revision with more history wins.
-        An individual document can override this for itself by setting its own property. */
-    public var conflictResolver: ConflictResolver? {
-        get {return _impl.conflictResolver}
-        set {_impl.conflictResolver = newValue}
     }
 
 

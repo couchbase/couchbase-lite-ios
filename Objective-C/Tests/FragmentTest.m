@@ -61,7 +61,7 @@
         AssertEqual(fragment.integerValue, 0);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);
-        AssertEqual(fragment.boolValue, YES);
+        AssertEqual(fragment.booleanValue, YES);
         AssertNil(fragment.array);
         AssertNotNil(fragment.object);
         AssertNotNil(fragment.value);
@@ -86,7 +86,7 @@
         AssertEqual(fragment.integerValue, 0);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);
-        AssertEqual(fragment.boolValue, YES);
+        AssertEqual(fragment.booleanValue, YES);
         AssertNil(fragment.dictionary);
         AssertNotNil(fragment.object);
         AssertNotNil(fragment.value);
@@ -98,7 +98,6 @@
 }
 
 
-// get all types of fragments from integer
 - (void) testGetFragmentFromInteger {
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @10 forKey: @"integer"];
@@ -119,7 +118,7 @@
         AssertEqual(fragment.integerValue, 10);
         AssertEqual(fragment.floatValue, 10.0f);
         AssertEqual(fragment.doubleValue, 10.0);
-        AssertEqual(fragment.boolValue, YES);
+        AssertEqual(fragment.booleanValue, YES);
     }];
 }
 
@@ -144,7 +143,7 @@
         AssertEqual(fragment.integerValue, 100);
         AssertEqual(fragment.floatValue, 100.10f);
         AssertEqual(fragment.doubleValue, 100.10);
-        AssertEqual(fragment.boolValue, YES);
+        AssertEqual(fragment.booleanValue, YES);
     }];
 }
 
@@ -169,7 +168,7 @@
         AssertEqual(fragment.integerValue, 99);
         AssertEqual(fragment.floatValue, 99.99f);
         AssertEqual(fragment.doubleValue, 99.99);
-        AssertEqual(fragment.boolValue, YES);
+        AssertEqual(fragment.booleanValue, YES);
     }];
 }
 
@@ -194,7 +193,7 @@
         AssertEqual(fragment.integerValue, 1);
         AssertEqual(fragment.floatValue, 1.0f);
         AssertEqual(fragment.doubleValue, 1.0);
-        AssertEqual(fragment.boolValue, YES);
+        AssertEqual(fragment.booleanValue, YES);
     }];
 }
 
@@ -224,7 +223,7 @@
         AssertEqual(fragment.integerValue, 0);
         AssertEqual(fragment.floatValue, 0.0f); 
         AssertEqual(fragment.doubleValue, 0.0);; 
-        AssertEqual(fragment.boolValue, YES); 
+        AssertEqual(fragment.booleanValue, YES);
     }];
 }
 
@@ -249,7 +248,7 @@
         AssertEqual(fragment.integerValue, 0);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);;
-        AssertEqual(fragment.boolValue, YES);
+        AssertEqual(fragment.booleanValue, YES);
     }];
 }
 
@@ -270,7 +269,7 @@
         AssertEqual(0, fragment.integerValue);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);;
-        AssertEqual(fragment.boolValue, YES);
+        AssertEqual(fragment.booleanValue, YES);
         AssertNotNil(fragment.dictionary); 
         AssertNotNil(fragment.object);    
         AssertNotNil(fragment.value);    
@@ -301,7 +300,7 @@
         AssertEqual(0, fragment.integerValue);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);; 
-        AssertEqual(false, fragment.boolValue);
+        AssertEqual(false, fragment.booleanValue);
     }];
 }
 
@@ -319,7 +318,7 @@
         AssertEqual(0, fragment.integerValue);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);;
-        AssertEqual(fragment.boolValue, YES);
+        AssertEqual(fragment.booleanValue, YES);
         AssertNotNil(fragment.object); 
         AssertNotNil(fragment.value); 
         AssertNotNil(fragment.array);
@@ -347,7 +346,7 @@
         AssertEqual(0, fragment.integerValue);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);;
-        AssertFalse(fragment.boolValue);
+        AssertFalse(fragment.booleanValue);
     }];
 }
 
@@ -364,7 +363,7 @@
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects(@"value", d[@"string"].string);
-        AssertEqual(YES, d[@"bool"].boolValue);
+        AssertEqual(YES, d[@"bool"].booleanValue);
         AssertEqual(d[@"int"].integerValue, 7);
         AssertEqual(d[@"float"].floatValue, 2.2f);
         AssertEqual(d[@"double"].doubleValue, 3.3);
@@ -541,7 +540,7 @@
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects(d[@"array"][0][0].string, @"Jason");
         AssertEqualObjects(d[@"array"][0][1].number, @5.5);
-        AssertEqual(d[@"array"][0][2].boolValue, YES);
+        AssertEqual(d[@"array"][0][2].booleanValue, YES);
     }];
 }
 
@@ -554,7 +553,7 @@
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects(d[@"array"][0][0].string, @"Jason");
         AssertEqualObjects(d[@"array"][0][1].number, @5.5);
-        AssertEqual(d[@"array"][0][2].boolValue, YES);
+        AssertEqual(d[@"array"][0][2].booleanValue, YES);
     }];
 }
 

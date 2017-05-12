@@ -20,35 +20,28 @@ class DatabaseTest: CBLTestCase {
     }
 
     func testCreateUntitledDocument() throws {
-        let doc = db.document()
-        XCTAssertFalse(doc.documentID.isEmpty)
-        XCTAssert(doc.database === db!)
-        XCTAssertFalse(doc.exists)
+        let doc = Document()
+        XCTAssertFalse(doc.id.isEmpty)
         XCTAssertFalse(doc.isDeleted)
-        XCTAssertNil(doc.properties)
+        XCTAssertTrue(doc.toDictionary() == [:] as [String: Any])
     }
 
     func testCreateNamedDocument() throws {
         XCTAssertFalse(db.contains("doc1"))
 
-        let doc = db.document(withID: "doc1")
-        XCTAssertEqual(doc.documentID, "doc1")
-        XCTAssert(doc.database === db!)
-        XCTAssertFalse(doc.exists)
+        let doc = Document("doc1")
+        XCTAssertEqual(doc.id, "doc1")
         XCTAssertFalse(doc.isDeleted)
-        XCTAssertNil(doc.properties)
-
-        XCTAssertFalse(db.contains("doc1"))
-        try doc.save()
-
-        XCTAssertTrue(db.contains("doc1"))
+        XCTAssertTrue(doc.toDictionary() == [:] as [String: Any])
+        
+        try db.save(doc)
     }
 
     func testInBatch() throws {
         try db.inBatch {
             for i in 0...10 {
-                let doc = db["doc\(i)"]
-                try doc.save()
+                let doc = Document("doc\(i)")
+                try db.save(doc)
             }
         }
         for i in 0...10 {

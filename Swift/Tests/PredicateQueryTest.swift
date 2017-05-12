@@ -11,14 +11,13 @@ import CouchbaseLiteSwift
 
 
 class PredicateQueryTest: CBLTestCase {
-
     func testAllDocs() throws {
         try loadJSONResource(resourceName: "names_100")
         var n: UInt64 = 0;
         for doc in db.allDocuments {
             n += 1
             let expectedID = String(format: "doc-%03llu", n);
-            XCTAssertEqual(doc.documentID, expectedID);
+            XCTAssertEqual(doc.id, expectedID);
             XCTAssertEqual(doc.sequence, n);
         }
         XCTAssertEqual(n, 100);
@@ -33,7 +32,7 @@ class PredicateQueryTest: CBLTestCase {
             XCTAssertEqual(row.documentID, expectedID);
             XCTAssertEqual(row.sequence, n);
             let doc = row.document;
-            XCTAssertEqual(doc.documentID, expectedID);
+            XCTAssertEqual(doc.id, expectedID);
             XCTAssertEqual(doc.sequence, n);
         }
         XCTAssertEqual(n, 100);
@@ -50,7 +49,7 @@ class PredicateQueryTest: CBLTestCase {
                 XCTAssertEqual(row.documentID, "doc-009");
                 XCTAssertEqual(row.sequence, 9);
                 let doc = row.document;
-                XCTAssertEqual(doc.documentID, "doc-009");
+                XCTAssertEqual(doc.id, "doc-009");
                 XCTAssertEqual(doc.sequence, 9);
             }
             XCTAssertEqual(n, 1);
@@ -90,5 +89,4 @@ class PredicateQueryTest: CBLTestCase {
         }
         return n
     }
-
 }

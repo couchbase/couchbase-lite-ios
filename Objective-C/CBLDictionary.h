@@ -30,7 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
     contain only the above types. Setting the new dictionary content will replace the current data 
     including the existing CBLArray and CBLDictionary objects.
     @param dictionary  the dictionary. */
-- (void) setDictionary: (NSDictionary<NSString*,id>*)dictionary;
+- (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary;
 
 /** Get a property's value as a CBLDictionary, which is a mapping object of a dictionary
     value. Returns nil if the property doesn't exists, or its value is not a dictionary.

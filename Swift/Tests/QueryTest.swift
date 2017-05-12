@@ -10,7 +10,6 @@ import XCTest
 import CouchbaseLiteSwift
 
 class QueryTest: CBLTestCase {
-    
     func verifyQuery(_ query: Query, block: (UInt64, QueryRow) throws ->Void) throws -> UInt64 {
         var n: UInt64 = 0
         for row in try query.run() {
@@ -20,19 +19,21 @@ class QueryTest: CBLTestCase {
         return n
     }
     
+    
     func loadNumbers(_ num: Int) throws -> [[String: Any]] {
         var numbers:[[String: Any]] = []
         try db.inBatch {
             for i in 1...num {
-                let doc = db["doc\(i)"]
-                doc["number1"] = i
-                doc["number2"] = num - i
-                try doc.save()
-                numbers.append(doc.properties!)
+                let doc = createDocument("doc\(i)")
+                doc.set(i, forKey: "number1")
+                doc.set(num - i, forKey: "number2")
+                try saveDocument(doc)
+                numbers.append(doc.toDictionary())
             }
         }
         return numbers
     }
+    
     
     func runTestWithNumbers(_ numbers: [[String: Any]], cases: [[Any]]) throws {
         for c in cases {
@@ -43,7 +44,7 @@ class QueryTest: CBLTestCase {
             let w = c[0] as! Expression
             let q = Query.select().from(DataSource.database(db)).where(w)
             let rows = try verifyQuery(q, block: { (n, row) in
-                let props = row.document.properties!
+                let props = row.document.toDictionary()
                 let number1 = props["number1"] as! Int
                 if let index = result.index(where: {($0["number1"] as! Int) == number1}) {
                     result.remove(at: index)
@@ -54,6 +55,7 @@ class QueryTest: CBLTestCase {
         }
     }
     
+    
     func testNoWhereQuery() throws {
         try loadJSONResource(resourceName: "names_100")
         
@@ -63,11 +65,12 @@ class QueryTest: CBLTestCase {
             XCTAssertEqual(row.documentID, expectedID);
             XCTAssertEqual(row.sequence, n);
             let doc = row.document;
-            XCTAssertEqual(doc.documentID, expectedID);
+            XCTAssertEqual(doc.id, expectedID);
             XCTAssertEqual(doc.sequence, n);
         }
         XCTAssertEqual(numRows, 100);
     }
+    
     
     func testWhereComparison() throws {
         let n1 = Expression.property("number1")
@@ -86,6 +89,7 @@ class QueryTest: CBLTestCase {
         let numbers = try loadNumbers(10)
         try runTestWithNumbers(numbers, cases: cases)
     }
+    
     
     func testWhereArithmetic() throws {
         let n1 = Expression.property("number1")
@@ -106,6 +110,7 @@ class QueryTest: CBLTestCase {
         try runTestWithNumbers(numbers, cases: cases)
     }
     
+    
     func testWhereAndOr() throws {
         let n1 = Expression.property("number1")
         let n2 = Expression.property("number2")
@@ -117,17 +122,18 @@ class QueryTest: CBLTestCase {
         try runTestWithNumbers(numbers, cases: cases)
     }
     
+    
     func failingTestWhereCheckNull() throws {
         // https://github.com/couchbase/couchbase-lite-ios/issues/1670
-        let doc1 = db.document(withID: "doc1")
-        doc1["name"] = "Scott"
-        doc1["address"] = NSNull()
-        try doc1.save()
+        let doc1 = createDocument("doc1")
+        doc1.set("Scott", forKey: "name")
+        doc1.set(NSNull(), forKey: "address")
+        try saveDocument(doc1)
         
-        let doc2 = db.document(withID: "doc2")
-        doc2["name"] = "Tiger"
-        doc2["address"] = "123 1st ave."
-        try doc2.save()
+        let doc2 = createDocument("doc1")
+        doc2.set("Tiger", forKey: "name")
+        doc2.set("address", forKey: "123 1st ave.")
+        try saveDocument(doc2)
         
         let name = Expression.property("name")
         let address = Expression.property("address")
@@ -152,24 +158,25 @@ class QueryTest: CBLTestCase {
             let numRows = try verifyQuery(q, block: { (n, row) in
                 if (Int(n) <= expectedDocs.count) {
                     let doc = expectedDocs[Int(n)-1]
-                    XCTAssertEqual(doc.documentID, row.documentID)
+                    XCTAssertEqual(doc.id, row.documentID)
                 }
             })
             XCTAssertEqual(Int(numRows), expectedDocs.count);
         }
     }
     
+    
     func testWhereIs() throws {
-        let doc1 = db.document()
-        doc1["string"] = "string"
-        try doc1.save()
+        let doc1 = Document()
+        doc1.set("string", forKey: "string")
+        try saveDocument(doc1)
         
         var q = Query.select().from(DataSource.database(db)).where(
             Expression.property("string").is("string"))
         var numRows = try verifyQuery(q) { (n, row) in
             let doc = row.document
-            XCTAssertEqual(doc.documentID, doc1.documentID);
-            XCTAssertEqual(doc["string"], "string");
+            XCTAssertEqual(doc.id, doc1.id);
+            XCTAssertEqual(doc.getString("string")!, "string");
         }
         XCTAssertEqual(numRows, 1);
         
@@ -177,11 +184,12 @@ class QueryTest: CBLTestCase {
             Expression.property("string").isNot("string1"))
         numRows = try verifyQuery(q) { (n, row) in
             let doc = row.document
-            XCTAssertEqual(doc.documentID, doc1.documentID);
-            XCTAssertEqual(doc["string"], "string");
+            XCTAssertEqual(doc.id, doc1.id);
+            XCTAssertEqual(doc.getString("string")!, "string");
         }
         XCTAssertEqual(numRows, 1);
     }
+    
     
     func testWhereBetween() throws {
         let n1 = Expression.property("number1")
@@ -191,6 +199,7 @@ class QueryTest: CBLTestCase {
         let numbers = try loadNumbers(10)
         try runTestWithNumbers(numbers, cases: cases)
     }
+    
     
     func failingTestWhereLike() throws {
         // https://github.com/couchbase/couchbase-lite-ios/issues/1667
@@ -206,7 +215,7 @@ class QueryTest: CBLTestCase {
         var firstNames: [String] = []
         let numRows = try verifyQuery(q, block: { (n, row) in
             let doc = row.document
-            let v: String? = doc["name"]?["first"]
+            let v: String? = doc.getDictionary("name")?.getString("first")
             if let firstName = v {
                 firstNames.append(firstName)
             }
@@ -214,6 +223,7 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRows, 5);
         XCTAssertEqual(firstNames.count, 5);
     }
+    
     
     func testWhereIn() throws {
         try loadJSONResource(resourceName: "names_100")
@@ -223,10 +233,11 @@ class QueryTest: CBLTestCase {
         let q = Query.select().from(DataSource.database(db)).where(w).orderBy(o)
         let numRows = try verifyQuery(q, block: { (n, row) in
             let firstName = expected[Int(n)-1]
-            XCTAssertEqual(row.document["name"]!["first"], firstName)
+            XCTAssertEqual(row.document.getDictionary("name")!.getString("first")!, firstName)
         })
         XCTAssertEqual(Int(numRows), expected.count);
     }
+    
     
     func failingTestWhereRegex() throws {
         // https://github.com/couchbase/couchbase-lite-ios/issues/1668
@@ -242,7 +253,7 @@ class QueryTest: CBLTestCase {
         var firstNames: [String] = []
         let numRows = try verifyQuery(q, block: { (n, row) in
             let doc = row.document
-            let v: String? = doc["name"]?["first"]
+            let v: String? = doc.getDictionary("name")?.getString("first")
             if let firstName = v {
                 firstNames.append(firstName)
             }
@@ -250,6 +261,7 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRows, 5);
         XCTAssertEqual(firstNames.count, 5);
     }
+    
     
     func testWhereMatch() throws {
         try loadJSONResource(resourceName: "sentences")
@@ -271,6 +283,7 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRows, 2)
     }
 
+    
     func testOrderBy() throws {
         try loadJSONResource(resourceName: "names_100")
         
@@ -286,7 +299,7 @@ class QueryTest: CBLTestCase {
             var firstNames: [String] = []
             let numRows = try verifyQuery(q, block: { (n, row) in
                 let doc = row.document
-                if let firstName: String = doc["name"]?["first"] {
+                if let firstName = doc.getDictionary("name")?.getString("first") {
                     firstNames.append(firstName)
                 }
             })
@@ -299,19 +312,20 @@ class QueryTest: CBLTestCase {
         }
     }
     
+    
     func failingTestSelectDistinct() throws {
         // https://github.com/couchbase/couchbase-lite-ios/issues/1669
-        let doc1 = db.document()
-        doc1["number"] = 1
-        try doc1.save()
+        let doc1 = Document()
+        doc1.set(1, forKey: "number")
+        try saveDocument(doc1)
         
-        let doc2 = db.document()
-        doc2["number"] = 1
-        try doc1.save()
+        let doc2 = Document()
+        doc2.set(1, forKey: "number")
+        try saveDocument(doc2)
         
         let q = Query.selectDistinct().from(DataSource.database(db))
         let numRow = try verifyQuery(q, block: { (n, row) in
-            XCTAssertEqual(row.documentID, doc1.documentID)
+            XCTAssertEqual(row.documentID, doc1.id)
         })
         XCTAssertEqual(numRow, 1)
     }

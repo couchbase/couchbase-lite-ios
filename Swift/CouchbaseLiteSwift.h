@@ -15,7 +15,9 @@ FOUNDATION_EXPORT double CouchbaseLiteSwiftVersionNumber;
 FOUNDATION_EXPORT const unsigned char CouchbaseLiteSwiftVersionString[];
 
 #import "CouchbaseLite.h"
-#import "CBLDocument+Internal.h"
 #import "CBLPredicateQuery.h"
+#import "CBLArray+Swift.h"
+#import "CBLDictionary+Swift.h"
+#import "CBLReadOnlyArray+Swift.h"
+#import "CBLReadOnlyDictionary+Swift.h"
 #import "CBLReplication+Internal.h"
-#import "CBLSubdocument+Internal.h"

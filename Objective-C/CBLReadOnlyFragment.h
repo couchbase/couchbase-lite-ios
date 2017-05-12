@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Gets the value as a boolean.
     Returns YES if the value is not nil nor NSNull, and is either `true` or a nonzero number. */
-@property (nonatomic, readonly) BOOL boolValue;
+@property (nonatomic, readonly) BOOL booleanValue;
 
 /** Gets the value as an object. 
     The object types are CBLBlob, CBLReadOnlyArray, CBLReadOnlyDictionary, NSNumber, or NSString 

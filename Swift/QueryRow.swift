@@ -18,7 +18,7 @@ public class QueryRow {
     
     /** The document that produced this row. */
     public var document: Document {
-        return Document(impl.document, inDatabase: database)
+        return Document(impl.document)
     }
     
     /** The projecting result value at the given index. */

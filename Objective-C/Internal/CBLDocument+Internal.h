@@ -46,8 +46,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLDocument ()
 
-@property (weak, nonatomic, nullable) id swiftDocument;
-
 @property (nonatomic, nullable) CBLDatabase *database;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database

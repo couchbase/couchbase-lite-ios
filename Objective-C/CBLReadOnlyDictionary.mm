@@ -7,6 +7,7 @@
 //
 
 #import "CBLReadOnlyDictionary.h"
+#import "CBLReadOnlyDictionary+Swift.h"
 #import "CBLData.h"
 #import "CBLDocument+Internal.h"
 #import "CBLInternal.h"
@@ -21,7 +22,7 @@
     cbl::SharedKeys _sharedKeys;
 }
 
-@synthesize data=_data;
+@synthesize data=_data, swiftObject=_swiftObject;
 
 - /* internal */ (instancetype) initWithFleeceData: (nullable CBLFLDict*)data {
     self = [super init];

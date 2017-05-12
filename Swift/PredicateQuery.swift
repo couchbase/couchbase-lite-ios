@@ -128,7 +128,7 @@ public struct DocumentIterator : Sequence, IteratorProtocol {
 
     public mutating func next() -> Document? {
         if let doc = _enumerator.nextObject() as? CBLDocument {
-            return Document(doc, inDatabase: _database)
+            return Document(doc)
         } else {
             return nil
         }

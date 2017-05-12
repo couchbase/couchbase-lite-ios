@@ -34,7 +34,6 @@
 
 
 @synthesize database=_database;
-@synthesize swiftDocument=_swiftDocument;
 
 
 + (instancetype) document {
