@@ -8,6 +8,7 @@
 
 #import "CBLDocumentFragment.h"
 #import "CBLDocument.h"
+#import "CBLDocument+Internal.h"
 
 @implementation CBLDocumentFragment {
     CBLDocument* _doc;
@@ -33,7 +34,7 @@
 
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
-    return [_doc objectForKeyedSubscript: key];
+    return _doc ? _doc[key] : [[CBLFragment alloc] initWithValue: nil parent: nil parentKey: nil];
 }
 
 
