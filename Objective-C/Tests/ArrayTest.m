@@ -299,14 +299,8 @@
     [array addObject: @"a"];
     
     for (id index in @[@(-1), @(1)]) {
-        NSException* e;
-        @try {
-            [array setObject: @"b" atIndex: [index integerValue]];
-        } @catch (NSException *exception) {
-            e = exception;
-        }
-        AssertNotNil(e);
-        AssertEqualObjects(e.name, @"NSRangeException");
+        XCTAssertThrowsSpecificNamed([array setObject: @"b" atIndex: [index integerValue]],
+                                     NSException, @"NSRangeException");
     }
 }
 
@@ -401,15 +395,9 @@
     [array addObject: @"a"];
     
     for (id index in @[@(-1), @(2)]) {
-        NSException* e;
-        @try {
-            NSInteger i = [index integerValue];
-            [array insertObject: @"b" atIndex: i];
-        } @catch (NSException *exception) {
-            e = exception;
-        }
-        AssertNotNil(e);
-        AssertEqualObjects(e.name, @"NSRangeException");
+        NSInteger i = [index integerValue];
+        XCTAssertThrowsSpecificNamed([array insertObject: @"b" atIndex: i],
+                                     NSException, @"NSRangeException");
     }
 }
 
@@ -455,14 +443,8 @@
     [array addObject: @"a"];
     
     for (id index in @[@(-1), @(1)]) {
-        NSException* e;
-        @try {
-            [array removeObjectAtIndex: [index integerValue]];
-        } @catch (NSException *exception) {
-            e = exception;
-        }
-        AssertNotNil(e);
-        AssertEqualObjects(e.name, @"NSRangeException");
+        XCTAssertThrowsSpecificNamed([array removeObjectAtIndex: [index integerValue]],
+                                     NSException, @"NSRangeException");
     }
 }
 
