@@ -64,7 +64,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLQueryEnumerator : NSEnumerator
 - (instancetype) initWithQuery: (CBLPredicateQuery*)query
                        c4Query: (C4Query*)c4Query
-                    enumerator: (C4QueryEnumerator*)e;
+                    enumerator: (C4QueryEnumerator*)e
+               returnDocuments: (bool)returnDocuments;
 
 @property (readonly, nonatomic) CBLDatabase* database;
 @property (readonly, nonatomic) C4Query* c4Query;
@@ -74,6 +75,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLQueryRow ()
 - (instancetype) initWithEnumerator: (CBLQueryEnumerator*)enumerator
                        c4Enumerator: (C4QueryEnumerator*)e;
+- (void) stopBeingCurrent;
 @end
 
 

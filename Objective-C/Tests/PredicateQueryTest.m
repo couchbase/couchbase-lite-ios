@@ -244,6 +244,7 @@
 
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         //AssertEqualObjects(row.documentID, nil);
+        AssertEqual(row.valueCount, 3u);
         NSString* state = [row stringAtIndex: 0];
         NSInteger count = [row integerAtIndex: 1];
         NSString* maxZip = [row stringAtIndex: 2];

@@ -21,8 +21,8 @@
 {
     @protected
     CBLQueryEnumerator *_enum;
-    C4SliceResult _customColumnsData;
-    FLArray _customColumns;
+    FLArrayIterator _columns;
+    bool _current;
 }
 
 @synthesize documentID=_documentID, sequence=_sequence;
@@ -35,17 +35,10 @@
         _enum = enumerator;
         _documentID = slice2string(e->docID);
         _sequence = e->docSequence;
-        _customColumnsData = c4queryenum_customColumns(e);
-        if (_customColumnsData.buf)
-            _customColumns = FLValue_AsArray(FLValue_FromTrustedData({_customColumnsData.buf,
-                                                                      _customColumnsData.size}));
+        _columns = e->columns;
+        _current = true;
     }
     return self;
-}
-
-
-- (void) dealloc {
-    c4slice_free(_customColumnsData);
 }
 
 
@@ -60,32 +53,44 @@
 
 
 - (NSUInteger) valueCount {
-    return FLArray_Count(_customColumns);
+    return c4query_columnCount(_enum.c4Query);
+}
+
+
+- (void) stopBeingCurrent {
+    _current = false;
+}
+
+- (FLValue) flValueAtIndex: (NSUInteger)index {
+    if (!_current)
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"You cannot access a CBLQueryRow value after the enumerator has "
+                             "advanced past that row"];
+    return FLArrayIterator_GetValueAt(&_columns, (uint32_t)index);
 }
 
 - (id) valueAtIndex: (NSUInteger)index {
-    return FLValue_GetNSObject(FLArray_Get(_customColumns, (uint32_t)index), nullptr, nil);
+    return FLValue_GetNSObject([self flValueAtIndex: index], nullptr, nil);
 }
 
 - (bool) booleanAtIndex: (NSUInteger)index {
-    return FLValue_AsBool(FLArray_Get(_customColumns, (uint32_t)index));
+    return FLValue_AsBool([self flValueAtIndex: index]);
 }
 
 - (NSInteger) integerAtIndex: (NSUInteger)index {
-    return (NSInteger)FLValue_AsInt(FLArray_Get(_customColumns, (uint32_t)index));
+    return (NSInteger)FLValue_AsInt([self flValueAtIndex: index]);
 }
 
 - (float) floatAtIndex: (NSUInteger)index {
-    return FLValue_AsFloat(FLArray_Get(_customColumns, (uint32_t)index));
+    return FLValue_AsFloat([self flValueAtIndex: index]);
 }
 
 - (double) doubleAtIndex: (NSUInteger)index {
-    return FLValue_AsDouble(FLArray_Get(_customColumns, (uint32_t)index));
+    return FLValue_AsDouble([self flValueAtIndex: index]);
 }
 
 - (NSString*) stringAtIndex: (NSUInteger)index {
-    id value = [self valueAtIndex: index];
-    return [value isKindOfClass: [NSString class]] ? value : nil;
+    return $castIf(NSString, [self valueAtIndex: index]);
 }
 
 - (NSDate*) dateAtIndex: (NSUInteger)index {

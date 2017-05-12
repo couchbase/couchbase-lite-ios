@@ -16,50 +16,61 @@ NS_ASSUME_NONNULL_BEGIN
     The NSEnumeration returned by -[CBLQuery run:] produces these. */
 @interface CBLQueryRow : NSObject
 
-/** The ID of the document that produced this row. */
+/** The ID of the document that produced this row.
+    This will be nil if the query uses aggregate functions, since it will then be composed of
+    aggregate data from multiple rows. */
 @property (readonly, nonatomic) NSString* documentID;
 
-/** The sequence number of the document revision that produced this row. */
+/** The sequence number of the document revision that produced this row.
+    This will be 0 if the query uses aggregate functions, since it will then be composed of
+    aggregate data from multiple rows. */
 @property (readonly, nonatomic) uint64_t sequence;
 
-/** The document that produced this row. */
+/** The document that produced this row.
+    This will be nil if the query uses aggregate functions, since it will then be composed of
+    aggregate data from multiple rows. */
 @property (readonly, nonatomic) CBLDocument* document;
 
-/** The result value at the given index (if the query has a "returning" specification.) */
+/** The number of values in this row (if the query has a "returning" specification.) */
+@property (readonly, nonatomic) NSUInteger valueCount;
+
+/** The result value at the given index (if the query has a "returning" specification.)
+    @param index    the value index.
+    @return the result value. */
 - (nullable id) valueAtIndex: (NSUInteger)index;
 
 /** The result boolean value at the given index. 
-    @param index    the returning value index.
+    @param index    the value index.
     @return the result boolean value. */
 - (bool)                booleanAtIndex: (NSUInteger)index;
 
 /** The result integer value at the given index. 
-    @param index    the returning value index.
+    @param index    the value index.
     @return the result integer value. */
 - (NSInteger)           integerAtIndex: (NSUInteger)index;
 
 /** The result float value at the given index.
-    @param index    the returnning value index.
+    @param index    the value index.
     @return the result float value. */
 - (float)               floatAtIndex:   (NSUInteger)index;
 
 /** The result double value at the given index. 
-    @param index    the returning value index.
+    @param index    the value index.
     @return the result double value. */
 - (double)              doubleAtIndex:  (NSUInteger)index;
 
 /** The result string value at the given index. 
-    @param index    the returning value index.
+    @param index    the value index.
     @return the result string value. */
 - (nullable NSString*)  stringAtIndex:  (NSUInteger)index;
 
 /** The result date value at the given index. 
-    @param index    the returning value index.
+    @param index    the value index.
     @return the result date value. */
 - (nullable NSDate*)    dateAtIndex:    (NSUInteger)index;
 
 /** The result object value at the given index. 
-    @param subscript    the returning value index.
+    @param subscript    the value index.
     @return  the result object value. */
 - (nullable id) objectAtIndexedSubscript: (NSUInteger)subscript;
 
