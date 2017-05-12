@@ -53,7 +53,7 @@ static C4LogLevel string2level(NSString* value) {
 void CBLLog_Init() {
     // First set the default log level, and register the log callback:
     C4LogLevel defaultLevel = string2level([NSUserDefaults.standardUserDefaults objectForKey: @"CBLLogLevel"]);
-    c4log_register(defaultLevel, &logCallback);
+    c4log_writeToCallback(defaultLevel, &logCallback, false);
     if (defaultLevel != kC4LogWarning)
         NSLog(@"CouchbaseLite default log level is %s and above", kLevelNames[defaultLevel]);
 
