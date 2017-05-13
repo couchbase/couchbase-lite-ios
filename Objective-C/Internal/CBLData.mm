@@ -44,12 +44,12 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
     } else if ([value isKindOfClass: [NSDictionary class]]) {
         CBLDictionary* dict = [[CBLDictionary alloc] init];
         [dict setDictionary: value];
-        [dict addChangeListener: self];
+        [dict addChangeListener: listener];
         return dict;
     } else if ([value isKindOfClass: [NSArray class]]) {
         CBLArray* array = [[CBLArray alloc] init];
         [array setArray: value];
-        [array addChangeListener: self];
+        [array addChangeListener: listener];
         return array;
     } else if ([value isKindOfClass: [NSDate class]]) {
         return [CBLJSON JSONObjectWithDate: value];
