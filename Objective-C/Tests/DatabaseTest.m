@@ -606,18 +606,17 @@
 
 
 // TODO: Check whether purge operation incrases the seq number or not
-- (void) failingTestPurgeDoc {
-    // store doc
+- (void) testPurgeDoc {
+    // Store doc:
     CBLDocument* doc = [self generateDocument: @"doc1"];
     
-    // Purge Doc
-    // Note: After purge: sequence -> 2
+    // Purge Doc:
     [self purgeDocAndVerify: doc];
     AssertEqual(0, (long)self.db.documentCount);
     
-    // Save to check sequence number -> 3 (should it be 2 or 3?)
+    // Save to check sequence number -> 2
     [self saveDocument: doc];
-    AssertEqual(3L, (long)doc.sequence);
+    AssertEqual(2L, (long)doc.sequence);
 }
 
 
@@ -882,7 +881,7 @@
 
 - (void) testDeleteThenGetDatabasePath{
     // delete db
-    [self closeDatabase: self.db];
+    [self deleteDatabase: self.db];
     AssertNil(self.db.path);
 }
 

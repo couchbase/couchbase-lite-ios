@@ -520,17 +520,15 @@ class FragmentTest: CBLTestCase {
     
     func testNonExistingArrayFragmentSetObject() throws {
         let doc = createDocument("doc1")
-        doc["array"].value = []
-        doc["array"].array!.add(["Jason", 5.5, true])
-        
         doc["array"][0][0].value = 1
         doc["array"][0][1].value = false
         doc["array"][0][2].value = "hello"
         
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(d["array"][0][0].int, 1)
-            XCTAssertEqual(d["array"][0][1].boolean, false)
-            XCTAssertEqual(d["array"][0][2].string!, "hello")
+            XCTAssertNil(d["array"][0][0].value)
+            XCTAssertNil(d["array"][0][1].value)
+            XCTAssertNil(d["array"][0][2].value)
+            XCTAssert(d.toDictionary() == [:] as [String: Any])
         })
     }
     

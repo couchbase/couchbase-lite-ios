@@ -597,17 +597,15 @@
 
 - (void) testNonExistingArrayFragmentSetObject {
     CBLDocument* doc = [self createDocument: @"doc1"];
-    doc[@"array"].value = @[];
-    [doc[@"array"].array addObject:@[@"Jason", @5.5, @YES]];
-    
     doc[@"array"][0][0].value = @1;
     doc[@"array"][0][1].value = @NO;
     doc[@"array"][0][2].value = @"hello";
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
-        AssertEqualObjects(d[@"array"][0][0].value, @1);
-        AssertEqualObjects(d[@"array"][0][1].value, @NO);
-        AssertEqualObjects(d[@"array"][0][2].value, @"hello");
+        AssertNil(d[@"array"][0][0].value);
+        AssertNil(d[@"array"][0][1].value);
+        AssertNil(d[@"array"][0][2].value);
+        AssertEqualObjects(d.toDictionary, @{});
     }];
 }
 
