@@ -17,6 +17,13 @@ NS_ASSUME_NONNULL_BEGIN
 /** CBLArray protocol defines a set of methods for getting and setting array data. */
 @protocol CBLArray <CBLReadOnlyArray, CBLArrayFragment>
 
+/** Set an array as a content. Allowed value types are NSArray, NSDate, NSDictionary, NSNumber,
+ NSNull, NSString, CBLArray, CBLBlob, CBLDictionary. The NSArrays and NSDictionaries must
+ contain only the above types. Setting the new array content will replace the current data
+ including the existing CBLArray and CBLDictionary objects.
+ @param array  the array. */
+- (void) setArray: (nullable NSArray*)array;
+
 /** Sets an object at the given index. Setting a nil value is eqivalent to setting an NSNull object.
     @param object   the object.
     @param index    the index. This value must not exceed the bounds of the array. */
@@ -37,20 +44,16 @@ NS_ASSUME_NONNULL_BEGIN
     @param index    the index. This value must not exceed the bounds of the array. */
 - (void) removeObjectAtIndex: (NSUInteger)index;
 
-/** Gets a CBLDictionary at the given index. Returns nil if the value is not a dictionary.
-    @param index    the index. This value must not exceed the bounds of the array. */
-- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index;
-
-/** Gets a CBLArray at the given index. Returns nil if the value is not an array. 
-    @param index    the index. This value must not exceed the bounds of the array. */
+/** Gets a CBLArray at the given index. Returns nil if the value is not an array.
+    @param index    the index. This value must not exceed the bounds of the array. 
+    @result the CBLArray object.
+ */
 - (nullable CBLArray*) arrayAtIndex: (NSUInteger)index;
 
-/** Set an array as a content. Allowed value types are NSArray, NSDate, NSDictionary, NSNumber,
-    NSNull, NSString, CBLArray, CBLBlob, CBLDictionary. The NSArrays and NSDictionaries must
-    contain only the above types. Setting the new array content will replace the current data 
-    including the existing CBLArray and CBLDictionary objects.
-    @param array  the array. */
-- (void) setArray: (nullable NSArray*)array;
+/** Gets a CBLDictionary at the given index. Returns nil if the value is not a dictionary.
+    @param index    the index. This value must not exceed the bounds of the array. 
+    @result the CBLDictionary object. */
+- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index;
 
 /** Subscripting access to a CBLFragment object that represents the value at the given index. 
     @param index    the index. If the index value exceeds the bounds of the array, 

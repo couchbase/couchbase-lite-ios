@@ -12,7 +12,7 @@
     objects by index. */
 @protocol CBLReadOnlyArrayFragment <NSObject>
 
-/** Gets a CBLReadOnlyFragment object by index.
+/** Subscript access to a CBLReadOnlyFragment object by index.
     @param index  the index.
     @result the CBLReadOnlyFragment object. */
 - (CBLReadOnlyFragment*) objectAtIndexedSubscript: (NSUInteger)index;

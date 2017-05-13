@@ -21,7 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** The number of entries in the dictionary. */
 @property (readonly, nonatomic) NSUInteger count;
 
-/** Gets an property's value as an object. The object types are CBLBlob, CBLReadOnlyArray, 
+/** Gets a property's value as an object. The object types are CBLBlob, CBLReadOnlyArray,
     CBLReadOnlyDictionary, NSNumber, or NSString based on the underlying data type; or nil if the
     property value is NSNull or the property doesn't exist. 
     @param key  the key.
@@ -105,7 +105,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Gets content of the current object as an NSDictionary. The values contained in the 
     returned NSDictionary object are JSON based values.
-    @result the NSArray object representing the content of the current object in the JSON format. */
+    @result the NSDictionary object representing the content of the current object in the 
+            JSON format. */
 - (NSDictionary<NSString*,id>*) toDictionary;
 
 /** Gets all keys. 

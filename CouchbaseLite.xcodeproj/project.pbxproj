@@ -919,6 +919,7 @@
 			isa = PBXGroup;
 			children = (
 				938196071EC10E930032CC51 /* ArrayObject.swift */,
+				933F45F91EC2B47500863ECB /* DataConverter.swift */,
 				938196051EC10E890032CC51 /* DictionaryObject.swift */,
 				275F92A51E4D3A91007FD5A2 /* Document.swift */,
 				93765EAB1EC17FFE005E4050 /* DocumentFragment.swift */,
@@ -927,7 +928,6 @@
 				938196011EC10BA40032CC51 /* ReadOnlyDictionaryObject.swift */,
 				938196291EC152410032CC51 /* ReadOnlyDocument.swift */,
 				93765EA71EC17FDF005E4050 /* ReadOnlyFragment.swift */,
-				933F45F91EC2B47500863ECB /* DataConverter.swift */,
 			);
 			name = Document;
 			sourceTree = "<group>";

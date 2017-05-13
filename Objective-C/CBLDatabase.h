@@ -161,24 +161,24 @@ typedef struct {
 #pragma mark - SAVE DELETE PURGE
 
 
-/** Saves property changes back to the database.
- If the document in the database has been updated since it was read by this CBLDocument, a
- conflict occurs, which will be resolved by invoking the conflict handler. This can happen if
- multiple application threads are writing to the database, or a pull replication is copying
- changes from a server. */
+/** Saves the given document to the database.
+    If the document in the database has been updated since it was read by this CBLDocument, a
+    conflict occurs, which will be resolved by invoking the conflict handler. This can happen if
+    multiple application threads are writing to the database, or a pull replication is copying
+    changes from a server. */
 - (BOOL) saveDocument: (CBLDocument*)document error: (NSError**)error;
 
-/** Deletes this document. All properties are removed, and subsequent calls to -documentWithID:
- will return nil.
- Deletion adds a special "tombstone" revision to the database, as bookkeeping so that the
- change can be replicated to other databases. Thus, it does not free up all of the disk space
- occupied by the document.
- To delete a document entirely (but without the ability to replicate this), use -purge:. */
+/** Deletes the given document. All properties are removed, and subsequent calls 
+    to -documentWithID: will return nil.
+    Deletion adds a special "tombstone" revision to the database, as bookkeeping so that the
+    change can be replicated to other databases. Thus, it does not free up all of the disk space
+    occupied by the document.
+    To delete a document entirely (but without the ability to replicate this), use -purge:error:. */
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error;
 
-/** Purges this document from the database.
- This is more drastic than deletion: it removes all traces of the document.
- The purge will NOT be replicated to other databases. */
+/** Purges the given document from the database.
+    This is more drastic than deletion: it removes all traces of the document.
+    The purge will NOT be replicated to other databases. */
 - (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error;
 
 

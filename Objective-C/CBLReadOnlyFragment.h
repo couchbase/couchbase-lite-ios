@@ -61,7 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly, nullable) NSDate* date;
 
 /** Get the value as a CBLBlob.
-    Returns nil if the value is nil, or the value is not a CBLBlob.*/
+    Returns nil if the value is nil, or the value is not a CBLBlob. */
 @property (nonatomic, readonly, nullable) CBLBlob* blob;
 
 /** Get the value as a CBLReadOnlyArray, a mapping object of an array value.

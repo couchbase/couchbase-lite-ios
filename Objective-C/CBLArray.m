@@ -107,15 +107,15 @@
 }
 
 
-- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
-    id value = _array[index];
-    return $castIf(CBLDictionary, value);
-}
-
-
 - (nullable CBLArray*) arrayAtIndex: (NSUInteger)index {
     id value = _array[index];
     return $castIf(CBLArray, value);
+}
+
+
+- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
+    id value = _array[index];
+    return $castIf(CBLDictionary, value);
 }
 
 

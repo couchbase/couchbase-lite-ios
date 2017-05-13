@@ -8,32 +8,88 @@
 
 import Foundation
 
+/// ReadOnlyArrayProtocol defines a set of methods for readonly accessing array data. */
 protocol ReadOnlyArrayProtocol: ReadOnlyArrayFragment {
+    /// Gets a number of the items in the array.
     var count: Int { get }
     
+    /// Gets value at the given index. The value types are Blob, ReadOnlyArrayObject, 
+    /// ReadOnlyDictionaryObject, Number, or String based on the underlying data type; or nil 
+    /// if the value is nil.
+    /// - Parameter index: the index.
+    /// - Returns: the value or nil.
     func getValue(_ index: Int) -> Any?
     
+    /// Gets value at the given index as a string.
+    /// Returns nil if the value doesn't exist, or its value is not a string.
+    /// - Parameter index: the index.
+    /// - Returns: the String value or nil.
     func getString(_ index: Int) -> String?
     
+    /// Gets value at the given index as an integer.
+    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    /// Returns 0 if the value doesn't exist or does not have a numeric value.
+    /// - Parameter index: the index.
+    /// - Returns: the Int value.
     func getInt(_ index: Int) -> Int
     
+    /// Gets value at the given index as a float.
+    /// Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
+    /// Returns 0.0 if the value doesn't exist or does not have a numeric value.
+    /// - Parameter index: the index.
+    /// - Returns: the Float value.
     func getFloat(_ index: Int) -> Float
     
+    /// Gets value at the given index as a double.
+    /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
+    /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
+    /// - Parameter index: the index.
+    /// - Returns: the Double value.
     func getDouble(_ index: Int) -> Double
     
+    /// Gets value at the given index as a boolean.
+    /// Returns true if the value exists, and is either `true` or a nonzero number.
+    /// - Parameter index: the index.
+    /// - Returns: the Bool value.
     func getBoolean(_ index: Int) -> Bool
     
+    /// Get value at the given index as a blob.
+    /// Returns nil if the value doesn't exist, or its value is not a blob.
+    /// - Parameter index: the index.
+    /// - Returns: the Blob object or nil.
     func getBlob(_ index: Int) -> Blob?
     
+    /// Gets value at the given index as an Date.
+    /// JSON does not directly support dates, so the actual property value must be a string, which 
+    /// is then parsed according to the ISO-8601 date format (the default used in JSON.)
+    /// Returns nil if the value doesn't exist, is not a string, or is not parseable as a date.
+    /// NOTE: This is not a generic date parser! It only recognizes the ISO-8601 format, with or
+    /// without milliseconds.
+    /// - Parameter index: the index.
+    /// - Returns: the Date object or nil.
     func getDate(_ index: Int) -> Date?
     
+    /// Gets value as a ReadOnlyArrayObject, which is a mapping object of an array value.
+    /// Returns nil if the value doesn't exists, or its value is not an array.
+    /// - Parameter index: the index.
+    /// - Returns: the ReadOnlyArrayObject object or nil.
     func getArray(_ index: Int) -> ReadOnlyArrayObject?
     
+    /// Get value at the given index as a ReadOnlyDictionaryObject, which is a mapping object of
+    /// a dictionary value.
+    /// Returns nil if the value doesn't exists, or its value is not a dictionary.
+    /// - Parameter index: the index.
+    /// - Returns: the ReadOnlyDictionaryObject object or nil.
     func getDictionary(_ index: Int) -> ReadOnlyDictionaryObject?
     
+    /// Gets content of the current object as an Array object. The values contained in the
+    /// returned Array object are all JSON based values.
+    /// - Returns: the Array object representing the content of the current object in
+    ///            the JSON format.
     func toArray() -> Array<Any>
 }
 
+/// ReadOnlyArrayObject provides readonly access to array data.
 public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     public var count: Int {
         return Int(_impl.count)

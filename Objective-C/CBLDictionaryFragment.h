@@ -14,7 +14,7 @@
     objects by key. */
 @protocol CBLDictionaryFragment <CBLReadOnlyDictionaryFragment>
 
-/** Gets a CBLFragment object by key.
+/** Subscript access to a CBLFragment object by key.
     @param key  the key.
     @result the CBLFragment object. */
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key;

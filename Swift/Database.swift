@@ -121,16 +121,31 @@ public final class Database {
     }
     
     
+    /** Saves the given document to the database.
+        If the document in the database has been updated since it was read by this Document, a
+        conflict occurs, which will be resolved by invoking the conflict handler. This can happen if
+        multiple application threads are writing to the database, or a pull replication is copying
+        changes from a server. */
     public func save(_ document: Document) throws {
         try _impl.save(document._impl as! CBLDocument)
     }
     
     
+    /** Deletes the given document. All properties are removed, and subsequent calls
+        to the getDocument(id) method will return nil.
+        Deletion adds a special "tombstone" revision to the database, as bookkeeping so that the
+        change can be replicated to other databases. Thus, it does not free up all of the disk space
+        occupied by the document.
+        To delete a document entirely (but without the ability to replicate this), 
+        use purge(document) method */
     public func delete(_ document: Document) throws {
         try _impl.delete(document._impl as! CBLDocument)
     }
     
     
+    /** Purges the given document from the database.
+        This is more drastic than deletion: it removes all traces of the document.
+        The purge will NOT be replicated to other databases. */
     public func purge(_ document: Document) throws {
         try _impl.purgeDocument(document._impl as! CBLDocument)
     }
@@ -151,11 +166,6 @@ public final class Database {
         if let caught = caught {
             throw caught
         }
-    }
-
-    
-    public func compact() throws {
-        // TODO:
     }
     
     

@@ -12,7 +12,7 @@
     objects by key. */
 @protocol CBLReadOnlyDictionaryFragment <NSObject>
 
-/** Gets a CBLReadOnlyFragment object by key.
+/** Subscript access to a CBLReadOnlyFragment object by key.
     @param key  the key.
     @result the CBLReadOnlyFragment object. */
 - (CBLReadOnlyFragment*) objectForKeyedSubscript: (NSString*)key;

@@ -206,16 +206,6 @@
 #pragma mark - SETTER
 
 
-- (void) setObject: (nullable id)value forKey: (NSString*)key {
-    id oldValue = [self objectForKey: key];
-    if (!$equal(value, oldValue)) {
-        value = [CBLData convertValue: value listener: self];
-        [self detachChangeListenerForObject: oldValue];
-        [self setValue: value forKey: key isChange: YES];
-    }
-}
-
-
 - (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary {
     // Detach all objects that we are listening to for changes:
     [self detachChildChangeListeners];
@@ -235,6 +225,16 @@
     _dict = result;
     
     [self setChanged];
+}
+
+
+- (void) setObject: (nullable id)value forKey: (NSString*)key {
+    id oldValue = [self objectForKey: key];
+    if (!$equal(value, oldValue)) {
+        value = [CBLData convertValue: value listener: self];
+        [self detachChangeListenerForObject: oldValue];
+        [self setValue: value forKey: key isChange: YES];
+    }
 }
 
 

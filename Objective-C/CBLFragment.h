@@ -15,13 +15,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/** CBLFragment protocol provides read and write access to the data value wrapped by 
-    a fragment object. */
+/** CBLFragment protocol provides read and write access to the data value wrapped by a 
+    fragment object. */
 @protocol CBLFragment <CBLReadOnlyFragment>
 
-/** Gets or sets the value as an object. The object types are CBLBlob, CBLReadOnlyArray, 
-    CBLReadOnlyDictionary, NSNumber, or NSString based on the underlying data type; or nil 
-    if the value is nil. */
+/** Gets the value from or sets the value to the fragment object. The object types are CBLArray,
+    CBLBlob, CBLDictionary, NSNumber, NSString, NSNull, or nil. */
 @property (nonatomic, nullable) NSObject* value;
 
 /** Get the value as a CBLArray, a mapping object of an array value. 
@@ -35,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 /** CBLFragment provides read and write access to data value. CBLFragment also provides
-    subscript access by either key or index to the nested values which are wrapped by the
+    subscript access by either key or index to the nested values which are wrapped by 
     CBLFragment objects. */
 @interface CBLFragment : CBLReadOnlyFragment <CBLFragment, CBLDictionaryFragment, CBLArrayFragment>
 
