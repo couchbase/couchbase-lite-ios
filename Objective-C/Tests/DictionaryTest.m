@@ -26,7 +26,7 @@
     
     NSError* error;
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
-    doc1 = [_db documentWithID: @"doc1"];
+    doc = [_db documentWithID: @"doc1"];
     AssertEqualObjects([[doc dictionaryForKey: @"address"] toDictionary], @{});
 }
 
@@ -47,7 +47,7 @@
     
     NSError* error;
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
-    doc1 = [_db documentWithID: @"doc1"];
+    doc = [_db documentWithID: @"doc1"];
     AssertEqualObjects([[doc dictionaryForKey: @"address"] toDictionary], dict);
 }
 

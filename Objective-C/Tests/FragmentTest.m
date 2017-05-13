@@ -405,7 +405,7 @@
         AssertEqual(d[@"float"].floatValue, 2.2f);
         AssertEqual(d[@"double"].doubleValue, 3.3);
         AssertEqualObjects([CBLJSON JSONObjectWithDate: d[@"date"].date],
-                           [CBLJSON JSONObjectWithDate: date])
+                           [CBLJSON JSONObjectWithDate: date]);
     }];
 }
 
