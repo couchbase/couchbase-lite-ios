@@ -16,6 +16,43 @@
 @implementation FragmentTest
 
 
+- (void) testBasicGetFragmentValues {
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    [doc setDictionary: @{ @"name": @"Jason",
+                           @"address": @{
+                                   @"street": @"1 Main Street",
+                                   @"phones": @{@"mobile": @"650-123-4567"}
+                                   },
+                           @"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]
+                           }];
+    
+    AssertEqualObjects(doc[@"name"].string, @"Jason");
+    AssertEqualObjects(doc[@"address"][@"street"].string, @"1 Main Street");
+    AssertEqualObjects(doc[@"address"][@"phones"][@"mobile"].string, @"650-123-4567");
+    AssertEqualObjects(doc[@"references"][0][@"name"].string, @"Scott");
+    AssertEqualObjects(doc[@"references"][1][@"name"].string, @"Sam");
+    
+    AssertNil(doc[@"references"][2][@"name"].value);
+    AssertNil(doc[@"dummy"][@"dummy"][@"dummy"].value);
+    AssertNil(doc[@"dummy"][@"dummy"][0][@"dummy"].value);
+}
+
+
+- (void) testBasicSetFragmentValues {
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    doc[@"name"].value = @"Jason";
+    
+    doc[@"address"].value = [[CBLDictionary alloc] init];
+    doc[@"address"][@"street"].value = @"1 Main Street";
+    doc[@"address"][@"phones"].value = [[CBLDictionary alloc] init];
+    doc[@"address"][@"phones"][@"mobile"].value = @"650-123-4567";
+    
+    AssertEqualObjects(doc[@"name"].string, @"Jason");
+    AssertEqualObjects(doc[@"address"][@"street"].string, @"1 Main Street");
+    AssertEqualObjects(doc[@"address"][@"phones"][@"mobile"].string, @"650-123-4567");
+}
+
+
 - (void) testGetDocFragmentWithID {
     NSDictionary* dict = @{@"address": @{
                                    @"street": @"1 Main street",
@@ -266,7 +303,7 @@
         AssertNil(fragment.string);
         AssertNil(fragment.date);
         AssertNil(fragment.array);
-        AssertEqual(0, fragment.integerValue);
+        AssertEqual(fragment.integerValue, 0);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);;
         AssertEqual(fragment.booleanValue, YES);
@@ -297,10 +334,10 @@
         AssertNil(fragment.dictionary);       
         AssertNil(fragment.object);          
         AssertNil(fragment.value);          
-        AssertEqual(0, fragment.integerValue);
+        AssertEqual(fragment.integerValue, 0);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);; 
-        AssertEqual(false, fragment.booleanValue);
+        AssertEqual(fragment.booleanValue, NO);
     }];
 }
 
@@ -315,7 +352,7 @@
         AssertNil(fragment.string); 
         AssertNil(fragment.date); 
         AssertNil(fragment.dictionary); 
-        AssertEqual(0, fragment.integerValue);
+        AssertEqual(fragment.integerValue, 0);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);;
         AssertEqual(fragment.booleanValue, YES);
@@ -343,7 +380,7 @@
         AssertNil(fragment.object);    
         AssertNil(fragment.value);    
         AssertNil(fragment.array);
-        AssertEqual(0, fragment.integerValue);
+        AssertEqual(fragment.integerValue, 0);
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);;
         AssertFalse(fragment.booleanValue);
@@ -362,13 +399,13 @@
     doc[@"date"].value = date;
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
-        AssertEqualObjects(@"value", d[@"string"].string);
-        AssertEqual(YES, d[@"bool"].booleanValue);
+        AssertEqualObjects(d[@"string"].string, @"value");
+        AssertEqual(d[@"bool"].booleanValue, YES);
         AssertEqual(d[@"int"].integerValue, 7);
         AssertEqual(d[@"float"].floatValue, 2.2f);
         AssertEqual(d[@"double"].doubleValue, 3.3);
-        XCTAssertEqualWithAccuracy([d[@"date"].date timeIntervalSinceReferenceDate],
-                                   [date timeIntervalSinceReferenceDate], 0.001);
+        AssertEqualObjects([CBLJSON JSONObjectWithDate: d[@"date"].date],
+                           [CBLJSON JSONObjectWithDate: date])
     }];
 }
 
@@ -448,7 +485,7 @@
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         d[@"string1"].value = @10;
         AssertEqualObjects(d[@"string1"].value, @10);
-        AssertEqualObjects(@"value2", d[@"string2"].value);
+        AssertEqualObjects(d[@"string2"].value, @"value2");
     }];
 }
 
@@ -587,41 +624,5 @@
     }];
 }
 
-
-- (void) testGetFragmentValues {
-    CBLDocument* doc = [self createDocument: @"doc1"];
-    [doc setDictionary: @{ @"name": @"Jason",
-                           @"address": @{
-                                   @"street": @"1 Main Street",
-                                   @"phones": @{@"mobile": @"650-123-4567"}
-                                   },
-                           @"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]
-                           }];
-    
-    AssertEqualObjects(doc[@"name"].string, @"Jason");
-    AssertEqualObjects(doc[@"address"][@"street"].string, @"1 Main Street");
-    AssertEqualObjects(doc[@"address"][@"phones"][@"mobile"].string, @"650-123-4567");
-    AssertEqualObjects(doc[@"references"][0][@"name"].string, @"Scott");
-    AssertEqualObjects(doc[@"references"][1][@"name"].string, @"Sam");
-    
-    AssertNil(doc[@"references"][2][@"name"].value);
-    AssertNil(doc[@"dummy"][@"dummy"][@"dummy"].value);
-    AssertNil(doc[@"dummy"][@"dummy"][0][@"dummy"].value);
-}
-
-
-- (void) testSetFragmentValues {
-    CBLDocument* doc = [self createDocument: @"doc1"];
-    doc[@"name"].value = @"Jason";
-    
-    doc[@"address"].value = [[CBLDictionary alloc] init];
-    doc[@"address"][@"street"].value = @"1 Main Street";
-    doc[@"address"][@"phones"].value = [[CBLDictionary alloc] init];
-    doc[@"address"][@"phones"][@"mobile"].value = @"650-123-4567";
-    
-    AssertEqualObjects(doc[@"name"].string, @"Jason");
-    AssertEqualObjects(doc[@"address"][@"street"].string, @"1 Main Street");
-    AssertEqualObjects(doc[@"address"][@"phones"][@"mobile"].string, @"650-123-4567");
-}
 
 @end

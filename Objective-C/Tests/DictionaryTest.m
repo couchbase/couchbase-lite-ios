@@ -20,14 +20,14 @@
     AssertEqual(address.count, 0u);
     AssertEqualObjects([address toDictionary], @{});
     
-    CBLDocument* doc1 = [[CBLDocument alloc] initWithID: @"doc1"];
-    [doc1 setObject: address forKey: @"address"];
-    AssertEqual([doc1 dictionaryForKey: @"address"], address);
+    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    [doc setObject: address forKey: @"address"];
+    AssertEqual([doc dictionaryForKey: @"address"], address);
     
     NSError* error;
-    Assert([_db saveDocument: doc1 error: &error], @"Saving error: %@", error);
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     doc1 = [_db documentWithID: @"doc1"];
-    AssertEqualObjects([[doc1 dictionaryForKey: @"address"] toDictionary], @{});
+    AssertEqualObjects([[doc dictionaryForKey: @"address"] toDictionary], @{});
 }
 
 
@@ -41,14 +41,14 @@
     AssertEqualObjects([address objectForKey: @"state"], @"CA");
     AssertEqualObjects([address toDictionary], dict);
     
-    CBLDocument* doc1 = [[CBLDocument alloc] initWithID: @"doc1"];
-    [doc1 setObject: address forKey: @"address"];
-    AssertEqual([doc1 dictionaryForKey: @"address"], address);
+    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    [doc setObject: address forKey: @"address"];
+    AssertEqual([doc dictionaryForKey: @"address"], address);
     
     NSError* error;
-    Assert([_db saveDocument: doc1 error: &error], @"Saving error: %@", error);
+    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     doc1 = [_db documentWithID: @"doc1"];
-    AssertEqualObjects([[doc1 dictionaryForKey: @"address"] toDictionary], dict);
+    AssertEqualObjects([[doc dictionaryForKey: @"address"] toDictionary], dict);
 }
 
 
@@ -119,12 +119,6 @@
     doc = [_db documentWithID: @"doc1"];
     
     Assert([doc dictionaryForKey: @"level1"] != level1);
-    level1 = [doc dictionaryForKey: @"level1"];
-    level2 = [level1 dictionaryForKey: @"level2"];
-    level3 = [level2 dictionaryForKey: @"level3"];
-    
-    AssertEqualObjects([level1 dictionaryForKey: @"level2"], level2);
-    AssertEqualObjects([level2 dictionaryForKey: @"level3"], level3);
     AssertEqualObjects([doc toDictionary], dict);
 }
 

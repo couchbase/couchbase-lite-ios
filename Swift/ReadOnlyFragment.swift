@@ -9,11 +9,9 @@
 import Foundation
 
 protocol ReadOnlyFragmentProtocol {
-    var object: Any? { get }
+    var value: Any? { get }
     
     var string: String? { get }
-    
-    var number: NSNumber? { get }
     
     var int: Int { get }
     
@@ -28,8 +26,6 @@ protocol ReadOnlyFragmentProtocol {
     var array: ReadOnlyArrayObject? { get }
     
     var dictionary: ReadOnlyDictionaryObject? { get }
-    
-    var value: Any? { get }
     
     var exists: Bool { get }
 }
@@ -48,18 +44,13 @@ protocol ReadOnlyArrayFragment {
 public class ReadOnlyFragment: ReadOnlyFragmentProtocol,
                                ReadOnlyDictionaryFragment, ReadOnlyArrayFragment
 {
-    public var object: Any? {
+    public var value: Any? {
         return DataConverter.convertGETValue(_impl.object)
     }
     
     
     public var string: String? {
         return _impl.string
-    }
-    
-    
-    public var number: NSNumber? {
-        return _impl.number
     }
     
     
@@ -95,11 +86,6 @@ public class ReadOnlyFragment: ReadOnlyFragmentProtocol,
     
     public var dictionary: ReadOnlyDictionaryObject? {
         return DataConverter.convertGETValue(_impl.dictionary) as? ReadOnlyDictionaryObject
-    }
-    
-    
-    public var value: Any? {
-        return DataConverter.convertGETValue(_impl.object)
     }
     
     
