@@ -8,7 +8,8 @@
 
 import Foundation
 
-protocol ArrayProtocol: ReadOnlyArrayProtocol {
+/** ArrayProtocol protocol defines a set of methods for getting and setting array data. */
+protocol ArrayProtocol: ReadOnlyArrayProtocol, ArrayFragment {
     @discardableResult func setArray(_ array: Array<Any>?) -> Self
     
     @discardableResult func set(_ value: Any?, at index: Int) -> Self
@@ -24,6 +25,7 @@ protocol ArrayProtocol: ReadOnlyArrayProtocol {
     /* override */ func getDictionary(_ index: Int) -> DictionaryObject?
 }
 
+/** ArrayObject  */
 public class ArrayObject: ReadOnlyArrayObject, ArrayProtocol {
     public init() {
         super.init(CBLArray())
@@ -73,6 +75,14 @@ public class ArrayObject: ReadOnlyArrayObject, ArrayProtocol {
     
     public override func getDictionary(_ index: Int) -> DictionaryObject? {
         return getValue(index) as? DictionaryObject
+    }
+    
+    
+    // MARK: ArrayFragment
+    
+    
+    public override subscript(index: Int) -> Fragment {
+        return Fragment(arrayImpl[UInt(index)])
     }
     
     

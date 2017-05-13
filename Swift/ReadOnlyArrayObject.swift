@@ -8,7 +8,7 @@
 
 import Foundation
 
-protocol ReadOnlyArrayProtocol {
+protocol ReadOnlyArrayProtocol: ReadOnlyArrayFragment {
     var count: Int { get }
     
     func getValue(_ index: Int) -> Any?
@@ -92,6 +92,14 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     
     public func toArray() -> Array<Any> {
         return _impl.toArray()
+    }
+    
+    
+    // MARK: ReadOnlyArrayFragment
+    
+    
+    public subscript(index: Int) -> ReadOnlyFragment {
+        return ReadOnlyFragment(_impl[UInt(index)])
     }
     
     
