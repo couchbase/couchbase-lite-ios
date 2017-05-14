@@ -7,7 +7,22 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "c4.h"
+@protocol CBLQueryInternal;
+@class CBLDatabase;
 
-@interface CBLQueryEnumerator : NSObject
+NS_ASSUME_NONNULL_BEGIN
+
+@interface CBLQueryEnumerator : NSEnumerator
+
+- (instancetype) initWithQuery: (id<CBLQueryInternal>)query
+                       c4Query: (C4Query*)c4Query
+                    enumerator: (C4QueryEnumerator*)e
+               returnDocuments: (bool)returnDocuments;
+
+@property (readonly, nonatomic) CBLDatabase* database;
+@property (readonly, nonatomic) C4Query* c4Query;
 
 @end
+
+NS_ASSUME_NONNULL_END

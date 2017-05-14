@@ -7,6 +7,7 @@
 //
 
 #import "CBLQuery.h"
+#import "CBLQueryEnumerator.h"
 #import "CBLCoreBridge.h"
 #import "CBLInternal.h"
 #import "CBLPredicateQuery+Internal.h"
@@ -149,7 +150,10 @@
         convertError(c4Err, outError);
         return nullptr;
     }
-    return [[CBLQueryResultSet alloc] initWithTheQuery: self c4Query: _c4Query enumerator: e];
+    return [[CBLQueryEnumerator alloc] initWithQuery: self
+                                             c4Query: _c4Query
+                                          enumerator: e
+                                     returnDocuments: false];
 }
 
 
@@ -194,71 +198,5 @@
     }
     return json;
 }
-
-@end
-
-@implementation CBLQueryResultSet
-{
-@protected
-    CBLQuery *_query;
-    C4Query *_c4Query;
-    C4QueryEnumerator* _c4enum;
-    C4Error _error;
-}
-
-@synthesize database=_database, c4Query=_c4Query;
-
-
-- (instancetype) initWithTheQuery: (CBLQuery*)query
-                          c4Query: (C4Query*)c4Query
-                       enumerator: (C4QueryEnumerator*)e
-{
-    self = [super init];
-    if (self) {
-        if (!e)
-            return nil;
-        _query = query;
-        _database = query.database;
-        _c4Query = c4Query;
-        _c4enum = e;
-        CBLLog(Query, @"Beginning query enumeration (%p)", _c4enum);
-    }
-    return self;
-}
-
-
-- (void) dealloc {
-    c4queryenum_free(_c4enum);
-}
-
-
-- (id) nextObject {
-    if (c4queryenum_next(_c4enum, &_error)) {
-        return self.currentObject;
-    } else if (_error.code) {
-        CBLWarnError(Query, @"%@[%p] error: %d/%d", [self class], self, _error.domain, _error.code);
-        return nil;
-    } else {
-        CBLLog(Query, @"End of query enumeration (%p)", _c4enum);
-        return nil;
-    }
-}
-
-
-- (id) currentObject {
-    Class c = _c4enum->fullTextTermCount ? [CBLFullTextQueryRow class] : [CBLQueryRow class];
-    return [[c alloc] initWithEnumerator: self c4Enumerator: _c4enum];
-}
-
-
-//???: Should we make this public? How else can the app find the error?
-- (NSError*) error {
-    if (_error.code == 0)
-        return nil;
-    NSError* error;
-    convertError(_error, &error);
-    return error;
-}
-
 
 @end

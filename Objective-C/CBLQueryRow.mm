@@ -7,6 +7,7 @@
 //
 
 #import "CBLQueryRow.h"
+#import "CBLQueryEnumerator.h"
 #import "CBLPredicateQuery+Internal.h"
 #import "CBLInternal.h"
 #import "CBLCoreBridge.h"

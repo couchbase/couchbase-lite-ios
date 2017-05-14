@@ -19,9 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /////
 
-@interface CBLQuery ()
-
-@property (nonatomic, readonly) CBLDatabase* database;
+@interface CBLQuery () <CBLQueryInternal>
 
 @property (readonly, nonatomic) CBLQuerySelect* select;
 
@@ -187,19 +185,6 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 @property (readonly, nonatomic) BOOL isAscending;
 
 - (instancetype) initWithExpression: (CBLQueryExpression*)expression;
-
-@end
-
-/////
-
-@interface CBLQueryResultSet: CBLQueryEnumerator
-
-- (instancetype) initWithTheQuery: (CBLQuery*)query
-                          c4Query: (C4Query*)c4Query
-                       enumerator: (C4QueryEnumerator*)e;
-
-@property (readonly, nonatomic) CBLDatabase* database;
-@property (readonly, nonatomic) C4Query* c4Query;
 
 @end
 

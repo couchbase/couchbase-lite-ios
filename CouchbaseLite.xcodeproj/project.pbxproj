@@ -508,7 +508,7 @@
 		275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CouchbaseLite.exp; sourceTree = "<group>"; };
 		27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CBLSharedKeys.hh; sourceTree = "<group>"; };
 		27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLSharedKeys.mm; sourceTree = "<group>"; };
-		27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryEnumerator.h; sourceTree = "<group>"; };
+		27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLQueryEnumerator.h; path = ../CBLQueryEnumerator.h; sourceTree = "<group>"; };
 		27A8B5121EC5351000BB4C07 /* CBLQueryEnumerator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLQueryEnumerator.mm; sourceTree = "<group>"; };
 		27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Swift.xcconfig"; sourceTree = "<group>"; };
 		27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CBLTestCase.swift; sourceTree = "<group>"; };
@@ -1029,6 +1029,7 @@
 		93B75BF71E79B0A20033B61B /* Query */ = {
 			isa = PBXGroup;
 			children = (
+				27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */,
 				933208291E774171000D9993 /* CBLQuery+Internal.h */,
 				9317621E1E2D439700563506 /* CBLPredicateQuery+Internal.h */,
 			);
@@ -1093,7 +1094,6 @@
 				9332080D1E77415E000D9993 /* CBLQueryOrderBy.m */,
 				275FF66E1E43E013005F90DD /* CBLQueryRow.h */,
 				275FF66F1E43E013005F90DD /* CBLQueryRow.mm */,
-				27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */,
 				27A8B5121EC5351000BB4C07 /* CBLQueryEnumerator.mm */,
 				9332080E1E77415E000D9993 /* CBLQuerySelect.h */,
 				9332080F1E77415E000D9993 /* CBLQuerySelect.m */,

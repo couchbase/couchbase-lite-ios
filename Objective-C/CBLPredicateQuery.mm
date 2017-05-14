@@ -8,6 +8,7 @@
 
 #import "CBLPredicateQuery.h"
 #import "CBLPredicateQuery+Internal.h"
+#import "CBLQueryEnumerator.h"
 #import "CBLInternal.h"
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"

@@ -9,6 +9,7 @@
 #import "CBLPredicateQuery.h"
 #import "CBLQueryRow.h"
 #import "c4.h"
+@class CBLQueryEnumerator;
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -19,8 +20,13 @@ NS_ASSUME_NONNULL_BEGIN
 #define mkError(ERR, FMT, ...)  MYReturnError(ERR, kBadQuerySpecError, CBLErrorDomain, \
                                               FMT, ## __VA_ARGS__)
 
+/** Common API of CBLQuery and CBLPredicateQuery (used by CBLQueryEnumerator) */
+@protocol CBLQueryInternal <NSObject>
+@property (readonly, nonatomic) CBLDatabase* database;
+@end
 
-@interface CBLPredicateQuery ()
+
+@interface CBLPredicateQuery () <CBLQueryInternal>
 
 /** Initializer. See -[CBLDatabase createQuery:...] for parameter descriptions.
     NOTE: There are some extra undocumented types that `where` accepts:
@@ -58,17 +64,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NSString*) json5ToJSON: (const char*)json5;
 #endif
 
-@end
-
-
-@interface CBLQueryEnumerator : NSEnumerator
-- (instancetype) initWithQuery: (CBLPredicateQuery*)query
-                       c4Query: (C4Query*)c4Query
-                    enumerator: (C4QueryEnumerator*)e
-               returnDocuments: (bool)returnDocuments;
-
-@property (readonly, nonatomic) CBLDatabase* database;
-@property (readonly, nonatomic) C4Query* c4Query;
 @end
 
 

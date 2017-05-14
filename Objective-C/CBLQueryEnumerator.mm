@@ -6,6 +6,7 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
+#import "CBLQueryEnumerator.h"
 #import "CBLPredicateQuery+Internal.h"
 #import "CBLInternal.h"
 #import "CBLCoreBridge.h"
@@ -21,7 +22,7 @@ extern "C" {
 @implementation CBLQueryEnumerator
 {
     @protected
-    CBLPredicateQuery *_query;
+    id<CBLQueryInternal> _query;
     C4Query *_c4Query;
     C4QueryEnumerator* _c4enum;
     __weak CBLQueryRow *_currentRow;
@@ -29,10 +30,10 @@ extern "C" {
     bool _returnDocuments;
 }
 
-@synthesize database=_database, c4Query=_c4Query;
+@synthesize c4Query=_c4Query;
 
 
-- (instancetype) initWithQuery: (CBLPredicateQuery*)query
+- (instancetype) initWithQuery: (id<CBLQueryInternal>)query
                        c4Query: (C4Query*)c4Query
                     enumerator: (C4QueryEnumerator*)e
                returnDocuments: (bool)returnDocuments
@@ -42,7 +43,6 @@ extern "C" {
         if (!e)
             return nil;
         _query = query;
-        _database = query.database;
         _c4Query = c4Query;
         _c4enum = e;
         _returnDocuments = returnDocuments;
@@ -54,6 +54,11 @@ extern "C" {
 
 - (void) dealloc {
     c4queryenum_free(_c4enum);
+}
+
+
+- (CBLDatabase*) database {
+    return _query.database;
 }
 
 
