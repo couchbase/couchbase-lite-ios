@@ -836,4 +836,43 @@
 }
 
 
+- (void) testEnumeratingArray {
+    CBLArray* array = [[CBLArray alloc] init];
+    [array addObject: @"a"];
+    [array addObject: @"b"];
+    [array addObject: @"c"];
+    
+    __block NSMutableArray* items = [NSMutableArray array];
+    for (NSString* item in array) {
+        AssertNotNil(item);
+        [items addObject: item];
+    }
+    AssertEqualObjects(items, (@[@"a", @"b", @"c"]));
+    
+    // Update:
+    [array removeObjectAtIndex: 1];
+    [array addObject: @"d"];
+    [array addObject: @"e"];
+    
+    items = [NSMutableArray array];
+    for (NSString* item in array) {
+        AssertNotNil(item);
+        [items addObject: item];
+    }
+    AssertEqualObjects(items, (@[@"a", @"c", @"d", @"e"]));
+    
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    [doc setObject: array forKey: @"array"];
+    
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
+        items = [NSMutableArray array];
+        for (NSString* item in a) {
+            AssertNotNil(item);
+            [items addObject: item];
+        }
+        AssertEqualObjects(items, (@[@"a", @"c", @"d", @"e"]));
+    }];
+}
+
+
 @end

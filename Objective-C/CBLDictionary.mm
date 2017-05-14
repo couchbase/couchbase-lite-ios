@@ -21,6 +21,7 @@
     NSMutableDictionary<NSString*, id>* _dict;
     NSMapTable* _changeListeners;
     BOOL _changed;
+    NSArray* _keys; // key cache
 }
 
 
@@ -54,7 +55,7 @@
     if (count == 0)
         return super.count;
     
-    for (NSString* key in [super allKeys]) {
+    for (NSString* key in super.allKeys) {
         if (!_dict[key])
             count += 1;
     }
@@ -163,22 +164,6 @@
 }
 
 
-- (NSArray*) allKeys {
-    NSMutableSet* result = [NSMutableSet setWithArray: [_dict allKeys]];
-    for (NSString* key in [super allKeys]) {
-        if (![result containsObject: key])
-            [result addObject: key];
-    }
-    
-    [_dict enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
-        if (value == kCBLRemovedValue)
-            [result removeObject: key];
-    }];
-    
-    return [result allObjects];
-}
-
-
 - (NSDictionary<NSString*,id>*) toDictionary {
     NSMutableDictionary* result = _dict ? [_dict mutableCopy] : [NSMutableDictionary dictionary];
     
@@ -189,7 +174,7 @@
             result[key] = value;
     }];
     
-    for (NSString* key in [result allKeys]) {
+    for (NSString* key in result.allKeys) {
         id value = result[key];
         if (value == kCBLRemovedValue)
             result[key] = nil; // Remove key
@@ -234,12 +219,22 @@
         value = [CBLData convertValue: value listener: self];
         [self detachChangeListenerForObject: oldValue];
         [self setValue: value forKey: key isChange: YES];
+        _keys = nil;    // Reset key cahche
     }
 }
 
 
-- (void) removeObjectForKey: (NSString*)key {
-    [self setObject: nil forKey: key];
+#pragma mark - NSFastEnumeration
+
+
+- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState *)state
+                                  objects: (id __unsafe_unretained [])buffer
+                                    count: (NSUInteger)len
+{
+    if (_dict.count == 0)
+        return [super countByEnumeratingWithState: state objects: buffer count: len];
+    else
+        return [self.allKeys countByEnumeratingWithState: state objects: buffer count: len];
 }
 
 
@@ -259,7 +254,7 @@
     if (_dict.count == 0)
         return super.count == 0;
     
-    for (NSString* key in [super allKeys]) {
+    for (NSString* key in super.allKeys) {
         if (!_dict[key])
             return NO;
     }
@@ -272,6 +267,24 @@
         }
     }];
     return isEmpty;
+}
+
+
+- (NSArray*) allKeys {
+    if (!_keys) {
+        NSMutableSet* result = [NSMutableSet setWithArray: _dict.allKeys];
+        for (NSString* key in [super allKeys]) {
+            if (![result containsObject: key])
+                [result addObject: key];
+        }
+        
+        [_dict enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
+            if (value == kCBLRemovedValue)
+                [result removeObject: key];
+        }];
+        _keys = [result allObjects];
+    }
+    return _keys;
 }
 
 
@@ -356,7 +369,7 @@
              database: (CBLDatabase*)database
                 error: (NSError**)outError
 {
-    NSArray* keys = [self allKeys];
+    NSArray* keys = self.allKeys;
     FLEncoder_BeginDict(encoder, keys.count);
     for (NSString* key in keys) {
         id value = [self objectForKey: key];

@@ -20,6 +20,7 @@
     CBLFLDict* _data;
     FLDict _dict;
     cbl::SharedKeys _sharedKeys;
+    NSArray* _keys;                 // dictionary key cache
 }
 
 @synthesize data=_data, swiftObject=_swiftObject;
@@ -99,26 +100,22 @@
 }
 
 
-- (NSArray*) allKeys {
-    NSMutableArray* keys = [NSMutableArray array];
-    if (_dict != nullptr) {
-        FLDictIterator iter;
-        FLDictIterator_Begin(_dict, &iter);
-        NSString *key;
-        while (nullptr != (key = FLDictIterator_GetKey(&iter, &_sharedKeys))) {
-            [keys addObject: key];
-            FLDictIterator_Next(&iter);
-        }
-    }
-    return keys;
-}
-
-
 - (NSDictionary<NSString*,id>*) toDictionary {
     if (_dict != nullptr)
         return FLValue_GetNSObject((FLValue)_dict, &_sharedKeys);
     else
         return @{};
+}
+
+
+#pragma mark - NSFastEnumeration
+
+
+- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState *)state
+                                  objects: (id __unsafe_unretained [])buffer
+                                    count: (NSUInteger)len
+{
+    return [self.allKeys countByEnumeratingWithState: state objects: buffer count: len];
 }
 
 
@@ -142,6 +139,24 @@
 
 - (BOOL) isEmpty {
     return self.count == 0;
+}
+
+
+- (NSArray*) allKeys {
+    if (!_keys) {
+        NSMutableArray* keys = [NSMutableArray array];
+        if (_dict != nullptr) {
+            FLDictIterator iter;
+            FLDictIterator_Begin(_dict, &iter);
+            NSString *key;
+            while (nullptr != (key = FLDictIterator_GetKey(&iter, &_sharedKeys))) {
+                [keys addObject: key];
+                FLDictIterator_Next(&iter);
+            }
+        }
+        _keys= keys;
+    }
+    return _keys;
 }
 
 

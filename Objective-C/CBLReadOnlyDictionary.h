@@ -16,7 +16,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /** CBLReadOnlyDictionary protocol defines a set of methods for readonly accessing dictionary data. */
-@protocol CBLReadOnlyDictionary <NSObject, CBLReadOnlyDictionaryFragment>
+@protocol CBLReadOnlyDictionary <NSObject, CBLReadOnlyDictionaryFragment, NSFastEnumeration>
 
 /** The number of entries in the dictionary. */
 @property (readonly, nonatomic) NSUInteger count;
@@ -108,10 +108,6 @@ NS_ASSUME_NONNULL_BEGIN
     @result the NSDictionary object representing the content of the current object in the 
             JSON format. */
 - (NSDictionary<NSString*,id>*) toDictionary;
-
-/** Gets all keys. 
-    @result the array of all keys. */
-- (NSArray*) allKeys; // TODO: This is temporary until implementing NSFastEnumeration protocol.
 
 @end
 

@@ -15,7 +15,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /** CBLReadOnlyArray protocol defines a set of methods for readonly accessing array data. */
-@protocol CBLReadOnlyArray <NSObject, CBLReadOnlyArrayFragment>
+@protocol CBLReadOnlyArray <NSObject, CBLReadOnlyArrayFragment, NSFastEnumeration>
 
 /** Gets a number of the items in the array. */
 @property (readonly) NSUInteger count;

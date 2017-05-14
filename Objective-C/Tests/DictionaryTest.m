@@ -220,4 +220,51 @@
 }
 
 
+- (void) testEnumeratingKeys {
+    CBLDictionary *dict = [[CBLDictionary alloc] init];
+    [dict setObject: @"a" forKey: @"key1"];
+    [dict setObject: @"b" forKey: @"key2"];
+    [dict setObject: @"c" forKey: @"key3"];
+    
+    __block NSMutableDictionary* result = [NSMutableDictionary dictionary];
+    __block NSInteger count = 0;
+    for (NSString* key in dict) {
+        result[key] = [dict objectForKey: key];
+        count++;
+    }
+    AssertEqualObjects(result, (@{@"key1": @"a", @"key2": @"b", @"key3": @"c"}));
+    AssertEqual(count, 3);
+    
+    // Update:
+    
+    [dict setObject: nil forKey: @"key2"];
+    [dict setObject: @"d" forKey: @"key4"];
+    [dict setObject: @"e" forKey: @"key5"];
+    
+    result = [NSMutableDictionary dictionary];
+    count = 0;
+    for (NSString* key in dict) {
+        result[key] = [dict objectForKey: key];
+        count++;
+    }
+    AssertEqualObjects(result, (@{@"key1": @"a", @"key3": @"c", @"key4": @"d", @"key5": @"e"}));
+    AssertEqual(count, 4);
+    
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    [doc setObject: dict forKey: @"dict"];
+    
+    [self saveDocument: doc eval:^(CBLDocument *d) {
+        result = [NSMutableDictionary dictionary];
+        count = 0;
+        CBLDictionary* dictObj = [d dictionaryForKey: @"dict"];
+        for (NSString* key in dictObj) {
+            result[key] = [dictObj objectForKey: key];
+            count++;
+        }
+        AssertEqualObjects(result, (@{@"key1": @"a", @"key3": @"c", @"key4": @"d", @"key5": @"e"}));
+        AssertEqual(count, 4);
+    }];
+}
+
+
 @end

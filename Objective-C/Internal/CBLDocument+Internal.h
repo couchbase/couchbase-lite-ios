@@ -121,6 +121,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) BOOL isEmpty;
 
+@property (nonatomic, readonly) NSArray* allKeys;
+
 - (instancetype) initWithFleeceData: (nullable CBLFLDict*)data;
 
 @end

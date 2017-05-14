@@ -184,6 +184,17 @@
 }
 
 
+#pragma mark - NSFastEnumeration
+
+
+- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState *)state
+                                  objects: (id __unsafe_unretained [])buffer
+                                    count: (NSUInteger)len
+{
+    return [_array countByEnumeratingWithState: state objects: buffer count: len];
+}
+
+
 #pragma mark - SUBSCRIPTING
 
 

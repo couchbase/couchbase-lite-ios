@@ -163,11 +163,6 @@
 }
 
 
-- (NSArray*) allKeys {
-    return [_dict allKeys];
-}
-
-
 - (NSDictionary<NSString*,id>*) toDictionary {
     return [_dict toDictionary];
 }
@@ -183,6 +178,17 @@
 
 - (void) setDictionary: (NSDictionary<NSString *,id> *)dictionary {
     [_dict setDictionary: dictionary];
+}
+
+
+#pragma mark - NSFastEnumeration
+
+
+- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState *)state
+                                  objects: (id __unsafe_unretained [])buffer
+                                    count: (NSUInteger)len
+{
+    return [_dict countByEnumeratingWithState: state objects: buffer count: len];
 }
 
 
@@ -308,13 +314,13 @@ static bool objectContainsBlob(__unsafe_unretained id value) {
         return true;
     else if ([value isKindOfClass: [CBLDictionary class]])
         return dictionaryContainsBlob(value);
-    else if ([value isKindOfClass: [NSArray class]])
+    else if ([value isKindOfClass: [CBLArray class]])
         return arrayContainsBlob(value);
     else
         return false;
 }
 
-static bool arrayContainsBlob(__unsafe_unretained NSArray* array) {
+static bool arrayContainsBlob(__unsafe_unretained CBLArray* array) {
     for (id value in array)
         if (objectContainsBlob(value))
             return true;
@@ -323,7 +329,7 @@ static bool arrayContainsBlob(__unsafe_unretained NSArray* array) {
 
 static bool dictionaryContainsBlob(__unsafe_unretained CBLDictionary* dict) {
     __block bool containsBlob = false;
-    for (NSString* key in [dict allKeys]) {
+    for (NSString* key in dict) {
         containsBlob = objectContainsBlob([dict objectForKey: key]);
         if (containsBlob)
             break;
@@ -333,7 +339,7 @@ static bool dictionaryContainsBlob(__unsafe_unretained CBLDictionary* dict) {
 
 static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     __block bool containsBlob = false;
-    for (NSString* key in [doc allKeys]) {
+    for (NSString* key in doc) {
         containsBlob = objectContainsBlob([doc objectForKey: key]);
         if (containsBlob)
             break;

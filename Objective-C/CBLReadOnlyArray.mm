@@ -106,6 +106,32 @@
 }
 
 
+#pragma mark - NSFastEnumeration
+
+
+- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState *)state
+                                  objects: (id __unsafe_unretained [])buffer
+                                    count: (NSUInteger)len
+{
+    if (state->state == 0) {
+        state->state = 1;
+        state->mutationsPtr = &state->extra[0]; // Placeholder for no mutation
+        state->extra[1] = 0;                    // Next start index
+    }
+    
+    NSUInteger start = state->extra[1];
+    NSUInteger end = MIN((start + len), self.count);
+    NSUInteger i = 0;
+    for (NSUInteger index = start; index < end; index++) {
+        i++;
+        buffer[i] = [self objectAtIndex: index];
+    }
+    state->extra[1] = i;
+    state->itemsPtr = buffer;
+    return i;
+}
+
+
 #pragma mark - SUBSCRIPTING
 
 

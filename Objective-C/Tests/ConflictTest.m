@@ -33,17 +33,17 @@
 
 - (CBLReadOnlyDocument*) resolve: (CBLConflict *)conflict {
     CBLDocument* resolved = [[CBLDocument alloc] init];
-    for (NSString* key in [conflict.commonAncestor allKeys]) {
+    for (NSString* key in conflict.commonAncestor) {
         [resolved setObject: [conflict.commonAncestor objectForKey: key] forKey: key];
     }
     
     NSMutableSet *changed = [NSMutableSet new];
-    for (NSString* key in [conflict.target allKeys]) {
+    for (NSString* key in conflict.target) {
         [resolved setObject: [conflict.target objectForKey: key] forKey: key];
         [changed addObject: key];
     }
     
-    for (NSString* key in [conflict.source allKeys]) {
+    for (NSString* key in conflict.source) {
         if(![changed containsObject: key]) {
             [resolved setObject: [conflict.source objectForKey: key] forKey: key];
         }
