@@ -36,22 +36,20 @@ public class Query {
         }
         
         if queryImpl == nil {
-            guard let selectImpl = selectImpl, let fromImpl = fromImpl else {
-                throw CouchbaseLiteError.invalidQuery
-            }
-            
-            if self.distinct {
-                queryImpl = CBLQuery.selectDistinct(
-                    selectImpl, from: fromImpl, where: whereImpl, orderBy: orderByImpl)
-            } else {
-                queryImpl = CBLQuery.select(
-                    selectImpl, from: fromImpl, where: whereImpl, orderBy: orderByImpl)
-            }
+            try query()
         }
         
         return try QueryIterator(database: database, enumerator: queryImpl!.run())
     }
     
+    public func explain() throws -> String {
+        if queryImpl == nil {
+            try query()
+        }
+
+        return try queryImpl!.explain()
+    }
+
     // MARK: Internal
     
     var queryImpl: CBLQuery?
@@ -70,6 +68,20 @@ public class Query {
     
     init() { }
     
+    func query() throws {
+        guard let selectImpl = selectImpl, let fromImpl = fromImpl else {
+            throw CouchbaseLiteError.invalidQuery
+        }
+
+        if self.distinct {
+            queryImpl = CBLQuery.selectDistinct(
+                selectImpl, from: fromImpl, where: whereImpl, orderBy: orderByImpl)
+        } else {
+            queryImpl = CBLQuery.select(
+                selectImpl, from: fromImpl, where: whereImpl, orderBy: orderByImpl)
+        }
+    }
+
     func copy(_ query: Query) {
         self.database = query.database
         self.selectImpl = query.selectImpl
