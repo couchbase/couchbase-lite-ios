@@ -48,6 +48,7 @@ public class ReadOnlyDocument : ReadOnlyDictionaryObject {
     
     // MARK: Private
     
+    
     private var impl: CBLReadOnlyDocument {
         return _impl as! CBLReadOnlyDocument
     }

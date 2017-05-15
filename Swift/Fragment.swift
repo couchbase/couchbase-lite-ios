@@ -11,34 +11,22 @@ import Foundation
 /// FragmentProtocol provides read and write access to the data value wrapped by
 /// a fragment object.
 protocol FragmentProtocol: ReadOnlyFragmentProtocol {
-    /// Gets the value from or sets the value to the fragment object. The object types are Array, 
-    /// Blob, Dictionary, Number, String, NSNull, or nil.
     var value: Any? { get set }
     
-    /// Get the value as an ArrayObject, a mapping object of an array value.
-    /// Returns nil if the value is nil, or the value is not an array.
     var array: ArrayObject? { get }
     
-    /// Get a property's value as a DictionaryObject, a mapping object of a dictionary value.
-    /// Returns nil if the value is nil, or the value is not a dictionary.
     var dictionary: DictionaryObject? { get }
 }
 
 
 /// ArrayFragment protocol provides subscript access to Fragment objects by index.
 protocol ArrayFragment {
-    /// Subscript access to a CBLFragment object by index.
-    /// - Parameter index: the index.
-    /// - Returns: the CBLFragment object.
     subscript(index: Int) -> Fragment { get }
 }
 
 
 /// CBLDictionaryFragment protocol provides subscript access to CBLFragment objects by key.
 protocol DictionaryFragment {
-    /// Subscript access to a CBLFragment object by key.
-    /// - Parameter key: the key.
-    /// - Returns: the CBLFragment object.
     subscript(key: String) -> Fragment { get }
 }
 
