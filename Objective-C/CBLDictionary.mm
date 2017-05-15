@@ -51,10 +51,10 @@
 
 
 - (NSUInteger) count {
-    __block NSUInteger count = _dict.count;
-    if (count == 0)
+    if (!_changed)
         return super.count;
     
+    __block NSUInteger count = _dict.count;
     for (NSString* key in super.allKeys) {
         if (!_dict[key])
             count += 1;
@@ -65,6 +65,15 @@
             count -= 1;
     }];
     return count;
+}
+
+
+- (NSArray*) allKeys {
+    if (!_changed)
+        return super.allKeys;
+    
+    [self loadAllKeys];
+    return [_keys copy];
 }
 
 
@@ -231,10 +240,12 @@
                                   objects: (id __unsafe_unretained [])buffer
                                     count: (NSUInteger)len
 {
-    if (_dict.count == 0)
+    if (!_changed)
         return [super countByEnumeratingWithState: state objects: buffer count: len];
-    else
-        return [self.allKeys countByEnumeratingWithState: state objects: buffer count: len];
+    else {
+        [self loadAllKeys];
+        return [_keys countByEnumeratingWithState: state objects: buffer count: len];
+    }
 }
 
 
@@ -251,8 +262,8 @@
 
 
 - (BOOL) isEmpty {
-    if (_dict.count == 0)
-        return super.count == 0;
+    if (!_changed)
+        return super.isEmpty;
     
     for (NSString* key in super.allKeys) {
         if (!_dict[key])
@@ -270,24 +281,6 @@
 }
 
 
-- (NSArray*) allKeys {
-    if (!_keys) {
-        NSMutableSet* result = [NSMutableSet setWithArray: _dict.allKeys];
-        for (NSString* key in [super allKeys]) {
-            if (![result containsObject: key])
-                [result addObject: key];
-        }
-        
-        [_dict enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
-            if (value == kCBLRemovedValue)
-                [result removeObject: key];
-        }];
-        _keys = [result allObjects];
-    }
-    return _keys;
-}
-
-
 #pragma mark - PRIVATE
 
 
@@ -298,6 +291,23 @@
     _dict[key] = value;
     if (isChange)
         [self setChanged];
+}
+
+
+- (void) loadAllKeys {
+    if (!_keys) {
+        NSMutableSet* result = [NSMutableSet setWithArray: _dict.allKeys];
+        for (NSString* key in super.allKeys) {
+            if (![result containsObject: key])
+                [result addObject: key];
+        }
+        
+        [_dict enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
+            if (value == kCBLRemovedValue)
+                [result removeObject: key];
+        }];
+        _keys = [result allObjects];
+    }
 }
 
 

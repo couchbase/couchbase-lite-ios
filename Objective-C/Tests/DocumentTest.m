@@ -1455,4 +1455,40 @@
 }
 
 
+- (void) testEnumeratingKeys {
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    for (NSInteger i = 0; i < 20; i++) {
+        [doc setObject: @(i) forKey: [NSString stringWithFormat:@"key%ld", (long)i]];
+    }
+    NSDictionary* content = [doc toDictionary];
+    
+    __block NSMutableDictionary* result = [NSMutableDictionary dictionary];
+    __block NSUInteger count = 0;
+    for (NSString* key in doc) {
+        result[key] = [doc objectForKey: key];
+        count++;
+    }
+    AssertEqualObjects(result, content);
+    AssertEqual(count, content.count);
+    
+    // Update:
+    
+    [doc setObject: nil forKey: @"key2"];
+    [doc setObject: @(20) forKey: @"key20"];
+    [doc setObject: @(21) forKey: @"key21"];
+    content = [doc toDictionary];
+    
+    [self saveDocument: doc eval:^(CBLDocument *d) {
+        result = [NSMutableDictionary dictionary];
+        count = 0;
+        for (NSString* key in d) {
+            result[key] = [d objectForKey: key];
+            count++;
+        }
+        AssertEqualObjects(result, content);
+        AssertEqual(count, content.count);
+    }];
+}
+
+
 @end

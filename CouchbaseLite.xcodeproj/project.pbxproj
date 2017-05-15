@@ -132,6 +132,7 @@
 		934F4CB81E241FB500F90659 /* CBLSymmetricKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4CA51E241FB500F90659 /* CBLSymmetricKey.h */; };
 		934F4CB91E241FB500F90659 /* CBLSymmetricKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4CA61E241FB500F90659 /* CBLSymmetricKey.m */; };
 		9352945F1E51708E005CE4E8 /* DictionaryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9352945E1E51708E005CE4E8 /* DictionaryTest.m */; };
+		93629D011EC96DE700F79834 /* ArrayTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93629CFF1EC96D9500F79834 /* ArrayTest.swift */; };
 		936483B71E4431C6008D08B3 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 936483AC1E4431C6008D08B3 /* AppDelegate.m */; };
 		936483B81E4431C6008D08B3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 936483AD1E4431C6008D08B3 /* Assets.xcassets */; };
 		936483B91E4431C6008D08B3 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 936483AE1E4431C6008D08B3 /* LaunchScreen.storyboard */; };
@@ -585,6 +586,7 @@
 		934F4CA51E241FB500F90659 /* CBLSymmetricKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLSymmetricKey.h; sourceTree = "<group>"; };
 		934F4CA61E241FB500F90659 /* CBLSymmetricKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLSymmetricKey.m; sourceTree = "<group>"; };
 		9352945E1E51708E005CE4E8 /* DictionaryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DictionaryTest.m; sourceTree = "<group>"; };
+		93629CFF1EC96D9500F79834 /* ArrayTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArrayTest.swift; sourceTree = "<group>"; };
 		936483AB1E4431C6008D08B3 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		936483AC1E4431C6008D08B3 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		936483AD1E4431C6008D08B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -771,10 +773,11 @@
 		27BE3B491E4E45CB0012B74A /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				93629CFF1EC96D9500F79834 /* ArrayTest.swift */,
 				27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */,
 				27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */,
-				27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */,
 				93C3985E1EC66A89005A7A96 /* DictionaryTest.swift */,
+				27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */,
 				93F74A8A1EC5549C001289F8 /* FragmentTest.swift */,
 				939B79241E679017009A70EF /* Info.plist */,
 				27BE3B501E4E8F6F0012B74A /* PredicateQueryTest.swift */,
@@ -1730,6 +1733,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27BE3B4F1E4E65EB0012B74A /* DocumentTest.swift in Sources */,
+				93629D011EC96DE700F79834 /* ArrayTest.swift in Sources */,
 				27BE3B511E4E8F6F0012B74A /* PredicateQueryTest.swift in Sources */,
 				27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */,
 				93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */,

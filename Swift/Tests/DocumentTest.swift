@@ -1290,4 +1290,40 @@ class DocumentTest: CBLTestCase {
         XCTAssert(doc.getValue("data") as? Blob != nil)
         XCTAssertEqual(doc.getBlob("data")!.content!, content)
     }
+    
+    
+    func testEnumeratingKeys() throws {
+        let doc = createDocument("doc1")
+        for i in 0...19 {
+            doc.set(i, forKey: "key\(i)")
+        }
+        var content = doc.toDictionary()
+        
+        var result: [String: Any] = [:]
+        var count = 0
+        for key in doc {
+            result[key] = doc.getInt(key)
+            count = count + 1
+        }
+        XCTAssert(result == content)
+        XCTAssertEqual(count, content.count)
+        
+        // Update:
+        
+        doc.set(nil, forKey: "key2")
+        doc.set(20, forKey: "key20")
+        doc.set(22, forKey: "key21")
+        content = doc.toDictionary()
+        
+        try saveDocument(doc) { (d) in
+            result = [:]
+            count = 0
+            for key in d {
+                result[key] = d.getInt(key)
+                count = count + 1
+            }
+            XCTAssert(result == content)
+            XCTAssertEqual(count, content.count)
+        }
+    }
 }

@@ -103,6 +103,11 @@
 }
 
 
+- (NSArray*) allKeys {
+    return _dict.allKeys;
+}
+
+
 - (nullable id) objectForKey: (NSString*)key {
     return [_dict objectForKey: key];
 }

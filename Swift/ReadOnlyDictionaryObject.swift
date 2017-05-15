@@ -9,9 +9,12 @@
 import Foundation
 
 /// ReadOnlyDictionaryProtocol defines a set of methods for readonly accessing dictionary data.
-protocol ReadOnlyDictionaryProtocol: ReadOnlyDictionaryFragment {
+protocol ReadOnlyDictionaryProtocol: ReadOnlyDictionaryFragment, Sequence {
     /// The number of entries in the dictionary.
     var count: Int { get }
+    
+    /// An array containing all keys, or an empty array if the dictionary has no entries.
+    var allKeys: Array<String> { get }
     
     /// Gets a property's value. The value types are Blob, ReadOnlyArrayObject,
     /// ReadOnlyDictionaryObject, Number, or String based on the underlying data type; or nil
@@ -101,6 +104,12 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
         return Int(_impl.count)
     }
     
+    
+    public var allKeys: Array<String> {
+        return _impl.allKeys
+    }
+    
+    
     public func getValue(_ key: String) -> Any? {
         return DataConverter.convertGETValue(_impl.object(forKey: key))
     }
@@ -158,6 +167,14 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     
     public func toDictionary() -> Dictionary<String, Any> {
         return _impl.toDictionary()
+    }
+    
+    
+    // MARK: Sequence
+    
+    
+    public func makeIterator() -> IndexingIterator<[String]> {
+        return _impl.allKeys.makeIterator();
     }
     
     

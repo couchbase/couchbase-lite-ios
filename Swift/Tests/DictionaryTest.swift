@@ -6,8 +6,6 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-import Foundation
-
 
 import XCTest
 import CouchbaseLiteSwift
@@ -94,4 +92,53 @@ class DictionaryTest: CBLTestCase {
             XCTAssert(doc.toDictionary() == dict)
         })
     }
+    
+    
+    func testEnumeratingKeys() throws {
+        var dict = DictionaryObject()
+        for i in 0...19 {
+            dict.set(i, forKey: "key\(i)")
+        }
+        var content = dict.toDictionary()
+        
+        var result: [String: Any] = [:]
+        var count = 0
+        for key in dict {
+            result[key] = dict.getInt(key)
+            count = count + 1
+        }
+        XCTAssert(result == content)
+        XCTAssertEqual(count, content.count)
+        
+        // Update:
+        
+        dict.set(nil, forKey: "key2")
+        dict.set(20, forKey: "key20")
+        dict.set(22, forKey: "key21")
+        content = dict.toDictionary()
+        
+        result = [:]
+        count = 0
+        for key in dict {
+            result[key] = dict.getInt(key)
+            count = count + 1
+        }
+        XCTAssert(result == content)
+        XCTAssertEqual(count, content.count)
+        
+        let doc = createDocument("doc1")
+        doc.set(dict, forKey: "dict")
+        
+        try saveDocument(doc) { (d) in
+            result = [:]
+            count = 0
+            dict = doc.getDictionary("dict")!
+            for key in dict {
+                result[key] = dict.getInt(key)
+                count = count + 1
+            }
+            XCTAssert(result == content)
+            XCTAssertEqual(count, content.count)
+        }
+    } 
 }

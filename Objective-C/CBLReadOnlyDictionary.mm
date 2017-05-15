@@ -20,7 +20,7 @@
     CBLFLDict* _data;
     FLDict _dict;
     cbl::SharedKeys _sharedKeys;
-    NSArray* _keys;                 // dictionary key cache
+    NSArray* _keys;                 // all keys cache
 }
 
 @synthesize data=_data, swiftObject=_swiftObject;
@@ -36,6 +36,12 @@
 
 - (NSUInteger) count {
     return FLDict_Count(_dict);
+}
+
+
+- (NSArray*) allKeys {
+    [self loadFleeceAllKeys];
+    return [_keys copy];
 }
 
 
@@ -115,7 +121,8 @@
                                   objects: (id __unsafe_unretained [])buffer
                                     count: (NSUInteger)len
 {
-    return [self.allKeys countByEnumeratingWithState: state objects: buffer count: len];
+    [self loadFleeceAllKeys];
+    return [_keys countByEnumeratingWithState: state objects: buffer count: len];
 }
 
 
@@ -139,24 +146,6 @@
 
 - (BOOL) isEmpty {
     return self.count == 0;
-}
-
-
-- (NSArray*) allKeys {
-    if (!_keys) {
-        NSMutableArray* keys = [NSMutableArray array];
-        if (_dict != nullptr) {
-            FLDictIterator iter;
-            FLDictIterator_Begin(_dict, &iter);
-            NSString *key;
-            while (nullptr != (key = FLDictIterator_GetKey(&iter, &_sharedKeys))) {
-                [keys addObject: key];
-                FLDictIterator_Next(&iter);
-            }
-        }
-        _keys= keys;
-    }
-    return _keys;
 }
 
 
@@ -185,6 +174,23 @@
         return [CBLData fleeceValueToObject: value c4doc: _data.c4doc database: _data.database];
     else
         return nil;
+}
+
+
+- (void) loadFleeceAllKeys {
+    if (!_keys) {
+        NSMutableArray* keys = [NSMutableArray array];
+        if (_dict != nullptr) {
+            FLDictIterator iter;
+            FLDictIterator_Begin(_dict, &iter);
+            NSString *key;
+            while (nullptr != (key = FLDictIterator_GetKey(&iter, &_sharedKeys))) {
+                [keys addObject: key];
+                FLDictIterator_Next(&iter);
+            }
+        }
+        _keys= keys;
+    }
 }
 
 

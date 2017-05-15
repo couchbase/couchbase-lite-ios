@@ -123,10 +123,11 @@
     NSUInteger end = MIN((start + len), self.count);
     NSUInteger i = 0;
     for (NSUInteger index = start; index < end; index++) {
+        id v = [self objectAtIndex: index];
+        buffer[i] = v;
         i++;
-        buffer[i] = [self objectAtIndex: index];
     }
-    state->extra[1] = i;
+    state->extra[1] = end;
     state->itemsPtr = buffer;
     return i;
 }

@@ -9,7 +9,7 @@
 import Foundation
 
 /// ReadOnlyArrayProtocol defines a set of methods for readonly accessing array data. */
-protocol ReadOnlyArrayProtocol: ReadOnlyArrayFragment {
+protocol ReadOnlyArrayProtocol: ReadOnlyArrayFragment, Sequence {
     /// Gets a number of the items in the array.
     var count: Int { get }
     
@@ -148,6 +148,23 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     
     public func toArray() -> Array<Any> {
         return _impl.toArray()
+    }
+    
+    
+    // MARK: Sequence
+    
+    
+    public func makeIterator() -> AnyIterator<Any> {
+        var index = 0;
+        let count = self.count
+        return AnyIterator {
+            if index < count {
+                let v = self.getValue(index)
+                index += 1
+                return v;
+            }
+            return nil
+        }
     }
     
     

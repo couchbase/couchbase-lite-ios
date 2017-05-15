@@ -838,39 +838,41 @@
 
 - (void) testEnumeratingArray {
     CBLArray* array = [[CBLArray alloc] init];
-    [array addObject: @"a"];
-    [array addObject: @"b"];
-    [array addObject: @"c"];
+    for (NSInteger i = 0; i < 20; i++) {
+        [array addObject: @(i)];
+    }
+    NSArray* content = [array toArray];
     
-    __block NSMutableArray* items = [NSMutableArray array];
+    __block NSMutableArray* result = [NSMutableArray array];
     for (NSString* item in array) {
         AssertNotNil(item);
-        [items addObject: item];
+        [result addObject: item];
     }
-    AssertEqualObjects(items, (@[@"a", @"b", @"c"]));
+    AssertEqualObjects(result, content);
     
     // Update:
     [array removeObjectAtIndex: 1];
-    [array addObject: @"d"];
-    [array addObject: @"e"];
+    [array addObject: @"20"];
+    [array addObject: @"21"];
+    content = [array toArray];
     
-    items = [NSMutableArray array];
+    result = [NSMutableArray array];
     for (NSString* item in array) {
         AssertNotNil(item);
-        [items addObject: item];
+        [result addObject: item];
     }
-    AssertEqualObjects(items, (@[@"a", @"c", @"d", @"e"]));
+    AssertEqualObjects(result, content);
     
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: array forKey: @"array"];
     
     [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
-        items = [NSMutableArray array];
+        result = [NSMutableArray array];
         for (NSString* item in a) {
             AssertNotNil(item);
-            [items addObject: item];
+            [result addObject: item];
         }
-        AssertEqualObjects(items, (@[@"a", @"c", @"d", @"e"]));
+        AssertEqualObjects(result, content);
     }];
 }
 
