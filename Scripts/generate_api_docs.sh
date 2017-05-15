@@ -36,4 +36,4 @@ then
 fi
 
 jazzy --clean --xcodebuild-arguments "-scheme,CBL Swift" --module CouchbaseLiteSwift --theme Scripts/Support/Theme --output ${OUTPUT_DIR}/CouchbaseLiteSwift 
-jazzy --clean --objc --umbrella-header Objective-C/CouchbaseLite.h --framework-root . -m CouchbaseLite --theme Scripts/Support/Theme --output ${OUTPUT_DIR}/CouchbaseLite
+jazzy --clean --objc --xcodebuild-arguments --objc,Objective-C/CouchbaseLite.h,--,-x,objective-c,-isysroot,$(xcrun --show-sdk-path),-I,$(pwd) --module CouchbaseLite --theme Scripts/Support/Theme --output ${OUTPUT_DIR}/CouchbaseLite
