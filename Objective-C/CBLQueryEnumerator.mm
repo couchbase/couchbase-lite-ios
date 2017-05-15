@@ -7,6 +7,7 @@
 //
 
 #import "CBLQueryEnumerator.h"
+#import "CBLQueryResultsArray.h"
 #import "CBLPredicateQuery+Internal.h"
 #import "CBLInternal.h"
 #import "CBLCoreBridge.h"
@@ -21,13 +22,13 @@ extern "C" {
 
 @implementation CBLQueryEnumerator
 {
-    @protected
     id<CBLQueryInternal> _query;
     C4Query *_c4Query;
     C4QueryEnumerator* _c4enum;
     __weak CBLQueryRow *_currentRow;
     C4Error _error;
     bool _returnDocuments;
+    bool _randomAccess;
 }
 
 @synthesize c4Query=_c4Query;
@@ -63,26 +64,55 @@ extern "C" {
 
 
 - (id) nextObject {
+    if (_randomAccess)
+        return nil;
+
     CBLQueryRow* current = _currentRow;
-    if (current) {
+    _currentRow = nil;
+    if (!_returnDocuments)
         [current stopBeingCurrent];
-        _currentRow = nil;
-    }
 
     id row = nil;   // row may be either a CBLQuery Row or a CBLDocument
     if (c4queryenum_next(_c4enum, &_error)) {
-        if (_returnDocuments) {
-            row = [_query.database documentWithID: slice2string(_c4enum->docID)];
-        } else {
-            Class c = _c4enum->fullTextTermCount ? [CBLFullTextQueryRow class] : [CBLQueryRow class];
-            row = [[c alloc] initWithEnumerator: self c4Enumerator: _c4enum];
-            _currentRow = row;
-        }
+        row = self.currentObject;
+        _currentRow = row;
     } else if (_error.code)
         CBLWarnError(Query, @"%@[%p] error: %d/%d", [self class], self, _error.domain, _error.code);
     else
         CBLLog(Query, @"End of query enumeration (%p)", _c4enum);
     return row;
+}
+
+
+- (id) currentObject {
+    if (_returnDocuments) {
+        return [_query.database documentWithID: slice2string(_c4enum->docID)];
+    } else {
+        Class c = _c4enum->fullTextTermCount ? [CBLFullTextQueryRow class] : [CBLQueryRow class];
+        return [[c alloc] initWithEnumerator: self c4Enumerator: _c4enum];
+    }
+}
+
+
+// Called by CBLQueryResultsArray
+- (id) objectAtIndex: (NSUInteger)index {
+    if (!c4queryenum_seek(_c4enum, index, &_error)) {
+        NSString* message = sliceResult2string(c4error_getMessage(_error));
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"CBLQueryEnumerator couldn't get a value: %@", message];
+    }
+    return self.currentObject;
+}
+
+
+- (NSArray*) allObjects {
+    NSInteger count = c4queryenum_getRowCount(_c4enum, nullptr);
+    if (count >= 0) {
+        _randomAccess = true;
+        return [[CBLQueryResultsArray alloc] initWithEnumerator: self count: count];
+    } else {
+        return super.allObjects;
+    }
 }
 
 

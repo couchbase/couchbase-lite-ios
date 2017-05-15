@@ -20,7 +20,9 @@
 @implementation QueryTest
 
 
-- (uint64_t) verifyQuery: (CBLQuery*)q test: (void (^)(uint64_t n, CBLQueryRow *row))block {
+- (uint64_t) verifyQuery: (CBLQuery*)q
+            randomAccess: (BOOL)randomAccess
+                    test: (void (^)(uint64_t n, CBLQueryRow *row))block {
     NSError* error;
     NSEnumerator* e = [q run: &error];
     Assert(e, @"Query failed: %@", error);
@@ -28,6 +30,15 @@
     for (CBLQueryRow *row in e) {
         //Log(@"Row: docID='%@', sequence=%llu", row.documentID, row.sequence);
         block(++n, row);
+    }
+
+    NSArray* all = e.allObjects;
+    AssertEqual(all.count, n);
+    if (randomAccess && n > 0) {
+        // Note: the block's 1st parameter is 1-based, while NSArray is 0-based
+        block(n,       all[n-1]);
+        block(1,       all[0]);
+        block(n/2 + 1, all[n/2]);
     }
     return n;
 }
@@ -61,7 +72,8 @@
         NSPredicate* p = [NSPredicate predicateWithFormat: c[1]];
         NSMutableArray* result = [[numbers filteredArrayUsingPredicate: p] mutableCopy];
         uint64_t total = result.count;
-        uint64_t rows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
+        uint64_t rows = [self verifyQuery: q randomAccess: NO
+                                     test: ^(uint64_t n, CBLQueryRow *row) {
             id dict = [row.document toDictionary];
             Assert([result containsObject: dict]);
             [result removeObject: dict];
@@ -78,7 +90,8 @@
     CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
                               from: [CBLQueryDatabase database: self.db]];
     Assert(q);
-    uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES
+                                    test:^(uint64_t n, CBLQueryRow *row) {
         NSString* expectedID = [NSString stringWithFormat: @"doc-%03llu", n];
         AssertEqualObjects(row.documentID, expectedID);
         AssertEqual(row.sequence, n);
@@ -177,7 +190,8 @@
         CBLQuery *q = [CBLQuery select: [CBLQuerySelect all]
                                   from: [CBLQueryDatabase database: self.db]
                                  where: exp];
-        uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+        uint64_t numRows = [self verifyQuery: q randomAccess: YES
+                                        test:^(uint64_t n, CBLQueryRow *row) {
             if (expectedDocs.count <= n) {
                 CBLDocument* doc = expectedDocs[(NSUInteger)(n-1)];
                 AssertEqualObjects(doc.documentID, row.documentID, @"Failed case: %@", exp);
@@ -199,7 +213,8 @@
                              where: [[CBLQueryExpression property: @"string"] is: @"string"]];
     
     Assert(q);
-    uint64_t numRows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES
+                                    test: ^(uint64_t n, CBLQueryRow *row) {
         CBLDocument* doc = row.document;
         AssertEqualObjects(doc.documentID, doc1.documentID);
         AssertEqualObjects([doc objectForKey: @"string"], @"string");
@@ -211,7 +226,7 @@
                    where: [[CBLQueryExpression property: @"string"] isNot: @"string1"]];
     
     Assert(q);
-    numRows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
         CBLDocument* doc = row.document;
         AssertEqualObjects(doc.documentID, doc1.documentID);
         AssertEqualObjects([doc objectForKey: @"string"], @"string");
@@ -239,7 +254,8 @@
                               from: [CBLQueryDataSource database: self.db]
                              where: [firstName in: expected]
                            orderBy: [CBLQuerySortOrder property: @"name.first"]];
-    uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES
+                                    test:^(uint64_t n, CBLQueryRow *row) {
         NSString* first = [[row.document objectForKey: @"name"] objectForKey: @"first"];
         AssertEqualObjects(first, expected[(NSUInteger)(n-1)]);
     }];
@@ -257,7 +273,8 @@
                            orderBy: [[CBLQueryOrderBy property: @"name.first"] ascending]];
     
     NSMutableArray* firstNames = [NSMutableArray array];
-    uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+    uint64_t numRows = [self verifyQuery: q randomAccess: NO
+                                    test:^(uint64_t n, CBLQueryRow *row) {
         CBLDocument* doc = row.document;
         NSString* firstName = [[doc objectForKey:@"name"] objectForKey: @"first"];
         if (firstName)
@@ -278,7 +295,8 @@
                            orderBy: [[CBLQueryOrderBy property: @"name.first"] ascending]];
     
     NSMutableArray* firstNames = [NSMutableArray array];
-    uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+    uint64_t numRows = [self verifyQuery: q randomAccess: NO
+                                    test:^(uint64_t n, CBLQueryRow *row) {
         CBLDocument* doc = row.document;
         NSString* firstName = [[doc objectForKey:@"name"] objectForKey: @"first"];
         if (firstName)
@@ -301,7 +319,8 @@
                               from: [CBLQueryDatabase database: self.db]
                              where: where
                            orderBy: order];
-    uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+    uint64_t numRows = [self verifyQuery: q  randomAccess: YES
+                                    test:^(uint64_t n, CBLQueryRow *row) {
         CBLFullTextQueryRow* ftsRow = (id)row;
         NSString* text = ftsRow.fullTextMatched;
         //        Log(@"    full text = \"%@\"", text);
@@ -333,7 +352,8 @@
         Assert(q);
         
         NSMutableArray* firstNames = [NSMutableArray array];
-        uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+        uint64_t numRows = [self verifyQuery: q randomAccess: NO
+                                        test:^(uint64_t n, CBLQueryRow *row) {
             CBLDocument* doc = row.document;
             NSString* firstName = [[doc objectForKey:@"name"] objectForKey: @"first"];
             if (firstName)
@@ -364,7 +384,8 @@
     CBLQuery* q = [CBLQuery selectDistinct: [CBLQuerySelect all]
                                      from: [CBLQueryDatabase database: self.db]];
     Assert(q);
-    uint64_t numRows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES
+                                    test: ^(uint64_t n, CBLQueryRow *row) {
         AssertEqualObjects(row.documentID, doc1.documentID);
     }];
     AssertEqual(numRows, 1u);

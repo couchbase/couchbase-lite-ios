@@ -23,6 +23,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic) CBLDatabase* database;
 @property (readonly, nonatomic) C4Query* c4Query;
 
+- (id) objectAtIndex: (NSUInteger)index;
+
 @end
 
 NS_ASSUME_NONNULL_END

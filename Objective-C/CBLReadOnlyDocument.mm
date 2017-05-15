@@ -18,6 +18,7 @@
                               c4Doc: (nullable CBLC4Document*)c4Doc
                          fleeceData: (nullable CBLFLDict*)data
 {
+    NSParameterAssert(documentID != nil);
     self = [super initWithFleeceData: data];
     if (self) {
         _documentID = documentID;
