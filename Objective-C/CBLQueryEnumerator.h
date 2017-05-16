@@ -20,10 +20,12 @@ NS_ASSUME_NONNULL_BEGIN
                     enumerator: (C4QueryEnumerator*)e
                returnDocuments: (bool)returnDocuments;
 
-@property (readonly, nonatomic) CBLDatabase* database;
+@property (readonly, weak, nonatomic) CBLDatabase* database;
 @property (readonly, nonatomic) C4Query* c4Query;
 
 - (id) objectAtIndex: (NSUInteger)index;
+
+- (nullable CBLQueryEnumerator*) refresh: (NSError**)outError;
 
 @end
 

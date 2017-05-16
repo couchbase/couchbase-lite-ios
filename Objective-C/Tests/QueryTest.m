@@ -8,6 +8,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLQuery.h"
+#import "CBLLiveQuery.h"
 #import "CBLQuerySelect.h"
 #import "CBLQueryDataSource.h"
 #import "CBLQueryOrderBy.h"
@@ -44,18 +45,24 @@
 }
 
 
+- (CBLDocument*) createDocNumbered: (NSInteger)i of: (NSInteger)num {
+    NSString* docID= [NSString stringWithFormat: @"doc%ld", (long)i];
+    CBLDocument* doc = [[CBLDocument alloc] initWithID: docID];
+    [doc setObject: @(i) forKey: @"number1"];
+    [doc setObject: @(num-i) forKey: @"number2"];
+    NSError *error;
+    BOOL saved = [_db saveDocument: doc error: &error];
+    Assert(saved, @"Couldn't save document: %@", error);
+    return doc;
+}
+
+
 - (NSArray*)loadNumbers:(NSInteger)num {
     NSMutableArray* numbers = [NSMutableArray array];
     NSError *batchError;
     BOOL ok = [self.db inBatch: &batchError do: ^{
         for (NSInteger i = 1; i <= num; i++) {
-            NSError* error;
-            NSString* docID= [NSString stringWithFormat: @"doc%ld", (long)i];
-            CBLDocument* doc = [[CBLDocument alloc] initWithID: docID];
-            [doc setObject: @(i) forKey: @"number1"];
-            [doc setObject: @(num-i) forKey: @"number2"];
-            BOOL saved = [_db saveDocument: doc error: &error];
-            Assert(saved, @"Couldn't save document: %@", error);
+            CBLDocument* doc = [self createDocNumbered: i of: num];
             [numbers addObject: [doc toDictionary]];
         }
     }];
@@ -389,6 +396,33 @@
         AssertEqualObjects(row.documentID, doc1.documentID);
     }];
     AssertEqual(numRows, 1u);
+}
+
+
+- (void) testLiveQuery {
+    [self loadNumbers: 100];
+    CBLLiveQuery* q = [CBLLiveQuery select: [CBLQuerySelect all]
+                                      from: [CBLQueryDatabase database: self.db]
+                                     where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
+                                   orderBy: [CBLQueryOrderBy property: @"number1"]];
+    NSArray<CBLQueryRow*>* rows = q.rows;
+    AssertEqual(rows.count, 9u);
+
+    [self keyValueObservingExpectationForObject: q keyPath: @"rows"
+                                        handler: ^BOOL(id obj, NSDictionary *change)
+    {
+        NSArray<CBLQueryRow*>* newRows = change[NSKeyValueChangeNewKey];
+        AssertEqual(newRows.count, 10u);
+        AssertEqualObjects([newRows[0].document objectForKey: @"number1"], @(-1));
+        return YES;
+    }];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self createDocNumbered: -1 of: 100];
+    });
+
+    [self waitForExpectationsWithTimeout: 2.0 handler: ^(NSError *error) { }];
+    NSLog(@"Done!");
 }
 
 

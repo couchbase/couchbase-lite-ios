@@ -22,7 +22,7 @@ extern "C" {
 
 @implementation CBLQueryEnumerator
 {
-    id<CBLQueryInternal> _query;
+    __weak id<CBLQueryInternal> _query;
     C4Query *_c4Query;
     C4QueryEnumerator* _c4enum;
     __weak CBLQueryRow *_currentRow;
@@ -123,6 +123,24 @@ extern "C" {
     NSError* error;
     convertError(_error, &error);
     return error;
+}
+
+
+- (CBLQueryEnumerator*) refresh: (NSError**)outError {
+    auto query = _query;
+    if (!query)
+        return nil;
+
+    C4Error c4error;
+    C4QueryEnumerator *newEnum = c4queryenum_refresh(_c4enum, &c4error);
+    if (!newEnum) {
+        convertError(c4error, outError);
+        return nil;
+    }
+    return [[CBLQueryEnumerator alloc] initWithQuery: query
+                                             c4Query: _c4Query
+                                          enumerator: newEnum
+                                     returnDocuments: _returnDocuments];
 }
 
 
