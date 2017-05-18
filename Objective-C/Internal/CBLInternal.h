@@ -68,10 +68,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLConflict ()
 
-- (instancetype) initWithSource: (CBLReadOnlyDocument*)source
-                         target: (CBLReadOnlyDocument*)target
-                 commonAncestor: (nullable CBLReadOnlyDocument*)commonAncestor
-                  operationType: (CBLOperationType)operationType;
+- (instancetype) initWithMine: (CBLReadOnlyDocument*)mine
+                       theirs: (CBLReadOnlyDocument*)theirs
+                         base: (nullable CBLReadOnlyDocument*)base;
 
 @end
 

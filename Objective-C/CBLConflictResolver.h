@@ -11,22 +11,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/** Activity level of a replication. */
-typedef enum {
-    kCBLDatabaseWrite,
-    kCBLPushReplication,
-    kCBLPullReplication
-} CBLOperationType;
-
 @interface CBLConflict : NSObject
 
-@property (nonatomic, readonly) CBLOperationType operationType;
+@property (nonatomic, readonly) CBLReadOnlyDocument* mine;
 
-@property (nonatomic, readonly) CBLReadOnlyDocument* source;
+@property (nonatomic, readonly) CBLReadOnlyDocument* theirs;
 
-@property (nonatomic, readonly) CBLReadOnlyDocument* target;
-
-@property (nonatomic, readonly, nullable) CBLReadOnlyDocument* commonAncestor;
+@property (nonatomic, readonly, nullable) CBLReadOnlyDocument* base;
 
 @end
 

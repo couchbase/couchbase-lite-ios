@@ -20,7 +20,7 @@
 @implementation TheirsWins
 
 - (CBLReadOnlyDocument*) resolve: (CBLConflict *)conflict {
-    return conflict.target;
+    return conflict.theirs;
 }
 
 @end
@@ -33,19 +33,19 @@
 
 - (CBLReadOnlyDocument*) resolve: (CBLConflict *)conflict {
     CBLDocument* resolved = [[CBLDocument alloc] init];
-    for (NSString* key in conflict.commonAncestor) {
-        [resolved setObject: [conflict.commonAncestor objectForKey: key] forKey: key];
+    for (NSString* key in conflict.base) {
+        [resolved setObject: [conflict.base objectForKey: key] forKey: key];
     }
     
     NSMutableSet *changed = [NSMutableSet new];
-    for (NSString* key in conflict.target) {
-        [resolved setObject: [conflict.target objectForKey: key] forKey: key];
+    for (NSString* key in conflict.theirs) {
+        [resolved setObject: [conflict.theirs objectForKey: key] forKey: key];
         [changed addObject: key];
     }
     
-    for (NSString* key in conflict.source) {
+    for (NSString* key in conflict.mine) {
         if(![changed containsObject: key]) {
-            [resolved setObject: [conflict.source objectForKey: key] forKey: key];
+            [resolved setObject: [conflict.mine objectForKey: key] forKey: key];
         }
     }
     return resolved;

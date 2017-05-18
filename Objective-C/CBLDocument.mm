@@ -431,10 +431,7 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
         CBLReadOnlyDocument* base = [[CBLReadOnlyDocument alloc] initWithDocumentID: self.documentID
                                                                               c4Doc: super.c4Doc
                                                                          fleeceData: super.data];
-        CBLConflict* conflict = [[CBLConflict alloc] initWithSource: self
-                                                             target: current
-                                                     commonAncestor: base
-                                                      operationType: kCBLDatabaseWrite];
+        CBLConflict* conflict = [[CBLConflict alloc] initWithMine: self theirs: current base: base];
         resolved = [resolver resolve: conflict];
         if (resolved == nil)
             return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);

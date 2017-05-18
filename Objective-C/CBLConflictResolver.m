@@ -11,23 +11,22 @@
 
 @implementation CBLConflict
 
-@synthesize operationType=_operartionType;
-@synthesize source=_source, target=_target, commonAncestor=_commonAncestor;
+
+@synthesize mine=_mine, theirs=_theirs, base=_base;
 
 
-- (instancetype) initWithSource: (CBLReadOnlyDocument*)source
-                         target: (CBLReadOnlyDocument*)target
-                 commonAncestor: (CBLReadOnlyDocument*)commonAncestor
-                  operationType: (CBLOperationType)operationType
+- (instancetype) initWithMine: (CBLReadOnlyDocument*)mine
+                       theirs: (CBLReadOnlyDocument*)theirs
+                         base: (CBLReadOnlyDocument*)base
 {
     self = [super init];
     if (self) {
-        _source = source;
-        _target = target;
-        _commonAncestor = commonAncestor;
-        _operartionType = operationType;
+        _mine = mine;
+        _theirs = theirs;
+        _base = base;
     }
     return self;
 }
+
 
 @end
