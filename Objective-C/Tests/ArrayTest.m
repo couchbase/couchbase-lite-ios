@@ -852,8 +852,8 @@
     
     // Update:
     [array removeObjectAtIndex: 1];
-    [array addObject: @"20"];
-    [array addObject: @"21"];
+    [array addObject: @(20)];
+    [array addObject: @(21)];
     content = [array toArray];
     
     result = [NSMutableArray array];

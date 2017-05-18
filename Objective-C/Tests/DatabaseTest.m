@@ -762,7 +762,7 @@
     NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument: docID];
     
-    // clsoe db
+    // close db
     [self closeDatabase: self.db];
     
     // content should be accessible & modifiable without error
