@@ -127,6 +127,7 @@ extern "C" {
 
 
 - (CBLQueryEnumerator*) refresh: (NSError**)outError {
+    if (outError) *outError = nil;
     auto query = _query;
     if (!query)
         return nil;
@@ -134,7 +135,8 @@ extern "C" {
     C4Error c4error;
     C4QueryEnumerator *newEnum = c4queryenum_refresh(_c4enum, &c4error);
     if (!newEnum) {
-        convertError(c4error, outError);
+        if (c4error.code)
+            convertError(c4error, outError);
         return nil;
     }
     return [[CBLQueryEnumerator alloc] initWithQuery: query

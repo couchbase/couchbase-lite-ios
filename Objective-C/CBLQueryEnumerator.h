@@ -25,6 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (id) objectAtIndex: (NSUInteger)index;
 
+// If query results have changed, returns a new enumerator, else nil.
 - (nullable CBLQueryEnumerator*) refresh: (NSError**)outError;
 
 @end

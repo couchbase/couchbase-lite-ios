@@ -127,7 +127,6 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     if (_willUpdate)
         return;  // Already a pending update scheduled
     _willUpdate = YES;
-    CBLLog(Query, @"%@: Will update after %g sec...", self, updateDelay);
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(updateDelay * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{        //FIX: Use a different queue
         if (_willUpdate)
@@ -138,6 +137,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 - (void) update {
     //TODO: Make this asynchronous (as in 1.x)
+    CBLLog(Query, @"%@: Querying...", self);
     NSError *error;
     CBLQueryEnumerator* oldEnum = _enum;
     CBLQueryEnumerator* newEnum;
@@ -149,30 +149,20 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     _willUpdate = _forceReload = false;
     _lastUpdatedAt = CFAbsoluteTimeGetCurrent();
 
-    if (newEnum != oldEnum) {
-        CBLLog(Query, @"%@: Changed!", self);
+    if (newEnum) {
+        if (oldEnum)
+            CBLLog(Query, @"%@: Changed!", self);
         _enum = newEnum;
         self.rows = newEnum.allObjects;     // triggers KVO
+        error = nil;
+    } else if (error == nil) {
+        CBLLogVerbose(Query, @"%@: ...no change", self);
+    } else {
+        CBLWarnError(Query, @"%@: Update failed: %@", self, error.localizedDescription);
     }
 
-    if (error || _lastError) {
-        if (error)
-            CBLWarnError(Query, @"%@: Update failed: %@", self, error.localizedDescription);
+    if (error || _lastError)
         self.lastError = error;             // triggers KVO
-    }
-}
-
-
-- (BOOL) waitForRows {
-    if (!_rows && !_lastError)
-        [self update];
-    return _rows != nil;
-}
-
- 
-- (void) queryOptionsChanged {
-    _forceReload = true;
-    [self updateAfter: 0.0];
 }
 
 

@@ -426,4 +426,51 @@
 }
 
 
+- (void) testLiveQueryNoUpdate {
+    [self loadNumbers: 100];
+    CBLLiveQuery* q = [CBLLiveQuery select: [CBLQuerySelect all]
+                                      from: [CBLQueryDatabase database: self.db]
+                                     where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
+                                   orderBy: [CBLQueryOrderBy property: @"number1"]];
+    NSArray<CBLQueryRow*>* rows = q.rows;
+    AssertEqual(rows.count, 9u);
+
+    // The LiveQuery should _not_ trigger a KVO notification. Unfortunately XCTestCase doesn't
+    // have a way to do this (there are no negative expectations!) so we have to check for KVO
+    // the regular way.
+    [q addObserver: self forKeyPath: @"rows"
+           options: NSKeyValueObservingOptionNew
+           context: @selector(testLiveQueryNoUpdate)];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+        // This change will not affect the query results because 'number1 < 10' is not true.
+        [self createDocNumbered: 111 of: 100];
+    });
+
+    // Wait 2 seconds, then fulfil the expectation:
+    XCTestExpectation *x = [self expectationWithDescription: @"Timeout"];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+        [x fulfill];
+    });
+
+    NSLog(@"Waiting...");
+    [self waitForExpectationsWithTimeout: 5.0 handler: ^(NSError *error) { }];
+    NSLog(@"Done!");
+
+    [q removeObserver: self forKeyPath: @"rows"];
+}
+
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if (context == @selector(testLiveQueryNoUpdate)) {
+        XCTFail(@"Unexpected KVO notification from LiveQuery");
+    } else {
+        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+    }
+}
+
+
 @end
