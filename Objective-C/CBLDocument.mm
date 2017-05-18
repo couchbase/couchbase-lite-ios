@@ -308,7 +308,7 @@
 
 
 - (id<CBLConflictResolver>) effectiveConflictResolver {
-    return _database.conflictResolver;
+    return _database.config.conflictResolver;
 }
 
 

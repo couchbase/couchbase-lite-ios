@@ -13,6 +13,19 @@
 @interface DatabaseTest : CBLTestCase
 @end
 
+@interface DummyResolver : NSObject <CBLConflictResolver>
+@end
+
+@implementation DummyResolver
+
+- (CBLReadOnlyDocument*) resolve: (CBLConflict*)conflict {
+    NSAssert(NO, @"Resolver should not have been called!");
+    return nil;
+}
+
+@end
+
+
 @implementation DatabaseTest
 
 
@@ -119,6 +132,76 @@
 }
 
 
+#pragma mark - DatabaseConfiguration
+
+
+- (void) testCreateConfiguration {
+    // Default:
+    CBLDatabaseConfiguration* config1 = [[CBLDatabaseConfiguration alloc] init];
+    AssertNotNil(config1.directory);
+    Assert(config1.directory.length > 0);
+    AssertNil(config1.conflictResolver);
+    AssertEqual(config1.fileProtection, 0);
+    AssertNil(config1.encryptionKey);
+    
+    // Default + Copy:
+    CBLDatabaseConfiguration* config1a = [config1 copy];
+    AssertNotNil(config1a.directory);
+    Assert(config1a.directory.length > 0);
+    AssertNil(config1a.conflictResolver);
+    AssertEqual(config1a.fileProtection, 0);
+    AssertNil(config1a.encryptionKey);
+    
+    // Custom:
+    DummyResolver *resolver = [DummyResolver new];
+    CBLDatabaseConfiguration* config2 = [[CBLDatabaseConfiguration alloc] init];
+    config2.directory = @"/tmp/mydb";
+    config2.conflictResolver = resolver;
+    config2.encryptionKey = @"key";
+    config2.fileProtection = NSDataWritingFileProtectionComplete;
+    AssertEqualObjects(config2.directory, @"/tmp/mydb");
+    AssertEqual(config2.conflictResolver, resolver);
+    AssertEqualObjects(config2.encryptionKey, @"key");
+    AssertEqual(config2.fileProtection, NSDataWritingFileProtectionComplete);
+    
+    // Custom + Copy:
+    CBLDatabaseConfiguration* config2a = [config2 copy];
+    AssertEqualObjects(config2a.directory, @"/tmp/mydb");
+    AssertEqual(config2a.conflictResolver, resolver);
+    AssertEqualObjects(config2a.encryptionKey, @"key");
+    AssertEqual(config2a.fileProtection, NSDataWritingFileProtectionComplete);
+}
+
+
+- (void) testGetSetConfiguration {
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    NSError* error;
+    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db"
+                                                 config: config
+                                                  error: &error];
+    AssertNotNil(db.config);
+    Assert(db.config != config);
+    AssertEqualObjects(db.config.directory, config.directory);
+    AssertEqualObjects(db.config.conflictResolver, config.conflictResolver);
+    AssertEqual(db.config.encryptionKey, config.encryptionKey);
+    AssertEqual(db.config.fileProtection, config.fileProtection);
+    
+}
+
+
+- (void) testConfigurationIsCopiedWhenGetSet {
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    NSError* error;
+    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db"
+                                                 config: config
+                                                  error: &error];
+    config.conflictResolver = [DummyResolver new];
+    AssertNotNil(db.config);
+    Assert(db.config != config);
+    Assert(db.config.conflictResolver != config.conflictResolver);
+}
+
+
 #pragma mark - Create Database
 
 
@@ -136,11 +219,11 @@
 
 
 #if TARGET_OS_IPHONE
-- (void) testCreateWithDefaultOption {
-    // create db with default options
+- (void) testCreateWithDefaultConfiguration {
+    // create db with default configuration
     NSError* error;
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db"
-                                                options: [CBLDatabaseOptions defaultOptions]
+                                                 config: [CBLDatabaseConfiguration new]
                                                   error: &error];
     AssertNil(error);
     AssertNotNil(db, @"Couldn't open db: %@", error);
@@ -155,7 +238,7 @@
 
 
 - (void) testCreateWithSpecialCharacterDBNames {
-    // create db with default options
+    // create db with default configuration
     NSError* error;
     CBLDatabase* db = [self openDBNamed: @"`~@#$%^&*()_+{}|\\][=-/.,<>?\":;'" error: &error];
     AssertNil(error);
@@ -170,7 +253,7 @@
 
 
 - (void) testCreateWithEmptyDBNames {
-    // create db with default options
+    // create db with default configuration
     NSError* error;
     CBLDatabase* db = [self openDBNamed: @"" error: &error];
     [self checkError: error domain: @"LiteCore" code: 30]; // kC4ErrorWrongFormat
@@ -185,11 +268,9 @@
     
     // create db with custom directory
     NSError* error;
-    CBLDatabaseOptions* options = [CBLDatabaseOptions defaultOptions];
-    options.directory = dir;
-    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db"
-                                                options: options
-                                                  error: &error];
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    config.directory = dir;
+    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNil(error);
     AssertNotNil(db, @"Couldn't open db: %@", error);
     AssertEqualObjects(db.name, @"db");
@@ -200,11 +281,6 @@
 
     // delete database
     [self deleteDatabase: db];
-}
-
-
-- (void) testCreateWithCustomConflictResolver {
-    // TODO: DatabaseConfiguration.conflictResolver is not implemented yet.
 }
 
 
@@ -955,11 +1031,9 @@
     // create db with custom directory
     NSError* error;
     NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
-    CBLDatabaseOptions* options = [CBLDatabaseOptions defaultOptions];
-    options.directory = dir;
-    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db"
-                                                options: options
-                                                  error: &error];
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    config.directory = dir;
+    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
     AssertNil(error);
     
@@ -978,11 +1052,9 @@
     // create db with custom directory
     NSError* error;
     NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
-    CBLDatabaseOptions* options = [CBLDatabaseOptions defaultOptions];
-    options.directory = dir;
-    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db"
-                                                options: options
-                                                  error: &error];
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    config.directory = dir;
+    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
     AssertNil(error);
     
@@ -1044,11 +1116,9 @@
     AssertFalse([CBLDatabase databaseExists:@"db" inDirectory:dir]);
     
     // create db with custom directory
-    CBLDatabaseOptions* options = [CBLDatabaseOptions defaultOptions];
-    options.directory = dir;
-    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db"
-                                                options: options
-                                                  error: &error];
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    config.directory = dir;
+    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
     AssertNil(error);
     NSString* path = db.path;

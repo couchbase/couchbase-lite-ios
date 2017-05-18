@@ -37,25 +37,44 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
 #define kDBExtension @"cblite2"
 
 
-@implementation CBLDatabaseOptions
+@implementation CBLDatabaseConfiguration
 
-@synthesize directory=_directory;
+@synthesize directory=_directory, conflictResolver = _conflictResolver, encryptionKey=_encryptionKey;
 @synthesize fileProtection=_fileProtection;
-@synthesize encryptionKey=_encryptionKey;
-@synthesize readOnly=_readOnly;
+
+
+- (instancetype) init {
+    self = [super init];
+    if (self) {
+        _directory = defaultDirectory();
+    }
+    return self;
+}
 
 
 - (instancetype) copyWithZone:(NSZone *)zone {
-    CBLDatabaseOptions* o = [[self.class alloc] init];
-    o.directory = self.directory;
-    o.encryptionKey = self.encryptionKey;
-    o.readOnly = self.readOnly;
+    CBLDatabaseConfiguration* o = [[self.class alloc] init];
+    o.directory = _directory;
+    o.conflictResolver = _conflictResolver;
+    o.encryptionKey = _encryptionKey;
+    o.fileProtection = _fileProtection;
     return o;
 }
 
 
-+ (instancetype) defaultOptions {
-    return [[CBLDatabaseOptions alloc] init];
+static NSString* defaultDirectory() {
+    NSSearchPathDirectory dirID = NSApplicationSupportDirectory;
+#if TARGET_OS_TV
+    dirID = NSCachesDirectory; // Apple TV only allows apps to store data in the Caches directory
+#endif
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(dirID, NSUserDomainMask, YES);
+    NSString* path = paths[0];
+#if !TARGET_OS_IPHONE
+    NSString* bundleID = [[NSBundle mainBundle] bundleIdentifier];
+    NSCAssert(bundleID, @"No bundle ID");
+    path = [path stringByAppendingPathComponent: bundleID];
+#endif
+    return [path stringByAppendingPathComponent: @"CouchbaseLite"];
 }
 
 
@@ -64,13 +83,14 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
 
 @implementation CBLDatabase {
     NSString* _name;
-    CBLDatabaseOptions* _options;
+    CBLDatabaseConfiguration* _config;
     C4DatabaseObserver* _obs;
     CBLPredicateQuery* _allDocsQuery;
 }
 
 
-@synthesize name=_name, c4db=_c4db, sharedKeys=_sharedKeys, conflictResolver = _conflictResolver;
+@synthesize name=_name;
+@synthesize c4db=_c4db, sharedKeys=_sharedKeys;
 @synthesize replications=_replications, activeReplications=_activeReplications;
 
 
@@ -99,18 +119,18 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 - (instancetype) initWithName: (NSString*)name
                         error: (NSError**)outError {
     return [self initWithName: name
-                      options: [CBLDatabaseOptions defaultOptions]
+                       config: [CBLDatabaseConfiguration new]
                         error: outError];
 }
 
 
 - (instancetype) initWithName: (NSString*)name
-                      options: (nullable CBLDatabaseOptions*)options
+                       config: (nullable CBLDatabaseConfiguration*)config
                         error: (NSError**)outError {
     self = [super init];
     if (self) {
         _name = name;
-        _options = options != nil? [options copy] : [CBLDatabaseOptions defaultOptions];
+        _config = config != nil? [config copy] : [CBLDatabaseConfiguration new];
         if (![self open: outError])
             return nil;
         _replications = [NSMapTable strongToWeakObjectsMapTable];
@@ -121,7 +141,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 
 - (instancetype) copyWithZone: (NSZone*)zone {
-    return [[[self class] alloc] initWithName: _name options: _options error: nil];
+    return [[[self class] alloc] initWithName: _name config: _config error: nil];
 }
 
 
@@ -136,31 +156,40 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-- (BOOL) open: (NSError**)outError {
+- (CBLDatabaseConfiguration*) config {
+    return [_config copy];
+}
+
+
+- (NSString*) path {
+    return _c4db != nullptr ? sliceResult2FilesystemPath(c4db_getPath(_c4db)) : nil;
+}
+
+
+- /* private */ (BOOL) open: (NSError**)outError {
     if (_c4db)
         return YES;
     
-    NSString* dir = _options.directory ?: defaultDirectory();
+    NSString* dir = _config.directory;
+    Assert(dir != nil);
     if (![self setupDirectory: dir
-               fileProtection: _options.fileProtection
+               fileProtection: _config.fileProtection
                         error: outError])
         return NO;
     
     NSString* path = databasePath(_name, dir);
     CBLStringBytes bPath(path);
     
-    C4DatabaseConfig config = kDBConfig;
-    if (_options.readOnly)
-        config.flags = config.flags | kC4DB_ReadOnly;
-    if (_options.encryptionKey != nil) {
+    C4DatabaseConfig c4config = kDBConfig;
+    if (_config.encryptionKey != nil) {
         CBLSymmetricKey* key = [[CBLSymmetricKey alloc]
-                                initWithKeyOrPassword: _options.encryptionKey];
-        config.encryptionKey = symmetricKey2C4Key(key);
+                                initWithKeyOrPassword: _config.encryptionKey];
+        c4config.encryptionKey = symmetricKey2C4Key(key);
     }
 
     CBLLog(Database, @"Opening %@ at path %@", self, path);
     C4Error err;
-    _c4db = c4db_open(bPath, &config, &err);
+    _c4db = c4db_open(bPath, &c4config, &err);
     if (!_c4db)
         return convertError(err, outError);
 
@@ -168,11 +197,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     _obs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
     
     return YES;
-}
-
-
-- (NSString*) path {
-    return _c4db != nullptr ? sliceResult2FilesystemPath(c4db_getPath(_c4db)) : nil;
 }
 
 
@@ -361,23 +385,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 #pragma mark - PRIVATE
 
-
-static NSString* defaultDirectory() {
-    NSSearchPathDirectory dirID = NSApplicationSupportDirectory;
-#if TARGET_OS_TV
-    dirID = NSCachesDirectory; // Apple TV only allows apps to store data in the Caches directory
-#endif
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(dirID, NSUserDomainMask, YES);
-    NSString* path = paths[0];
-#if !TARGET_OS_IPHONE
-    NSString* bundleID = [[NSBundle mainBundle] bundleIdentifier];
-    NSCAssert(bundleID, @"No bundle ID");
-    path = [path stringByAppendingPathComponent: bundleID];
-#endif
-    return [path stringByAppendingPathComponent: @"CouchbaseLite"];
-}
-
-
 static NSString* databasePath(NSString* name, NSString* dir) {
     name = [[name stringByReplacingOccurrencesOfString: @"/" withString: @":"]
             stringByAppendingPathExtension: kDBExtension];
@@ -438,7 +445,7 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 - (void)postDatabaseChanged {
     if (!_obs || !_c4db || c4db_isInTransaction(_c4db))
         return;
-
+    
     const uint32_t kMaxChanges = 100u;
     C4DatabaseChange changes[kMaxChanges];
     C4SequenceNumber lastSequence = 0;

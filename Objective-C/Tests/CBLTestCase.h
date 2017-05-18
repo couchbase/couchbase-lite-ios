@@ -24,7 +24,11 @@
     CBLDatabase* _db;
 }
 
-@property (readonly, atomic) CBLDatabase* db;
+@property (readonly, nonatomic) CBLDatabase* db;
+
+/** Default conflict resolver set to the database configuration when (re)opening 
+    the default test database (.db property) or when calling the -openDBNamed:error: mehtod. */
+@property (nonatomic) id <CBLConflictResolver> conflictResolver;
 
 /** Open a database with the given name for testing. Note that the database will be opened at 
     the temp directory to avoid no bundle id issue when running the unit tests on Mac. */

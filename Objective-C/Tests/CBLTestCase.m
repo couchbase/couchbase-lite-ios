@@ -17,7 +17,7 @@
     int _c4ObjectCount;
 }
 
-@synthesize db=_db;
+@synthesize db=_db, conflictResolver=_conflictResolver;
 
 
 + (void) initialize {
@@ -71,9 +71,10 @@
 
 
 - (CBLDatabase*) openDBNamed: (NSString*)name error: (NSError**)error {
-    CBLDatabaseOptions* options = [CBLDatabaseOptions defaultOptions];
-    options.directory = [[self class] directory];
-    return [[CBLDatabase alloc] initWithName: name options: options error: error];
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    config.directory = [[self class] directory];
+    config.conflictResolver = self.conflictResolver;
+    return [[CBLDatabase alloc] initWithName: name config: config error: error];
 }
 
 

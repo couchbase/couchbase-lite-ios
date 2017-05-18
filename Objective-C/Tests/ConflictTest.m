@@ -88,18 +88,7 @@
 
 - (void) setUp {
     [super setUp];
-    
-    // Make sure resolver isn't being called at inappropriate times by defaulting to one that
-    // will raise an exception:
-    @autoreleasepool {
-        self.db.conflictResolver = [DoNotResolve new];
-    }
-}
-
-
-- (void) reopenDB {
-    [super reopenDB];
-    self.db.conflictResolver = [DoNotResolve new];
+    self.conflictResolver = [DoNotResolve new];
 }
 
 
@@ -161,18 +150,20 @@
 
 - (void)testConflict {
     NSError* error;
-    self.db.conflictResolver = [TheirsWins new];
+    self.conflictResolver = [TheirsWins new];
+    [self reopenDB];
+    
     CBLDocument* doc1 = [self setupConflict];
     Assert([_db saveDocument: doc1 error: &error], @"Saving error: %@", error);
     AssertEqualObjects([doc1 objectForKey: @"name"], @"Scotty");
     
     // Get a new document with its own conflict resolver
-    CBLDocument* doc2 = [[CBLDocument alloc] initWithID: @"doc2"];
+    self.conflictResolver = [MergeThenTheirsWins new];
+    [self reopenDB];
     
-    self.db.conflictResolver = [MergeThenTheirsWins new];
+    CBLDocument* doc2 = [[CBLDocument alloc] initWithID: @"doc2"];
     [doc2 setObject: @"profile" forKey: @"type"];
     [doc2 setObject: @"Scott" forKey: @"name"];
-    
     Assert([_db saveDocument: doc2 error: &error], @"Saving error: %@", error);
     
     // Force a conflict again
@@ -196,7 +187,9 @@
 
 
 - (void)testConflictResolverGivesUp {
-    self.db.conflictResolver = [GiveUp new];
+    self.conflictResolver = [GiveUp new];
+    [self reopenDB];
+    
     CBLDocument* doc = [self setupConflict];
     NSError* error;
     AssertFalse([_db saveDocument: doc error: &error], @"Save should have failed!");
@@ -206,7 +199,9 @@
 
 
 - (void)testDeletionConflict {
-    self.db.conflictResolver = [DoNotResolve new];
+    self.conflictResolver = [DoNotResolve new];
+    [self reopenDB];
+    
     CBLDocument* doc = [self setupConflict];
     NSError* error;
     Assert([_db deleteDocument: doc error: &error], @"Deletion error: %@", error);
@@ -216,7 +211,9 @@
 
 
 - (void)testConflictMineIsDeeper {
-    self.db.conflictResolver = nil;
+    self.conflictResolver = nil;
+    [self reopenDB];
+    
     CBLDocument* doc = [self setupConflict];
     NSError* error;
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
@@ -225,7 +222,9 @@
 
 
 - (void)testConflictTheirsIsDeeper {
-    self.db.conflictResolver = nil;
+    self.conflictResolver = nil;
+    [self reopenDB];
+    
     CBLDocument* doc = [self setupConflict];
     
     // Add another revision to the conflict, so it'll have a higher generation:

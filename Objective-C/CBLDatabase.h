@@ -43,23 +43,20 @@ typedef struct {
 } CBLIndexOptions;
 
 
-/** Options for opening a database. All properties default to NO or nil. */
-@interface CBLDatabaseOptions : NSObject <NSCopying>
+/** Configuration for opening a database. */
+@interface CBLDatabaseConfiguration : NSObject <NSCopying>
 
 /** Path to the directory to store the database in. If the directory doesn't already exist it will
-    be created when the database is opened.
-    A nil value (the default) means to use the default directory, in Application Support. You
-    won't usually need to change this. */
+    be created when the database is opened. The default directory will be in Application Support. 
+    You won't usually need to change this. */
 @property (nonatomic, copy, nullable) NSString* directory;
 
-/** File protection/encryption options (iOS only.)
-    Defaults to whatever file protection settings you've specified in your app's entitlements.
-    Specifying a nonzero value here overrides those settings for the database files.
-    If file protection is at the highest level, NSDataWritingFileProtectionCompleteUnlessOpen or
-    NSDataWritingFileProtectionComplete, it will not be possible to read or write the database
-    when the device is locked. This can make it impossible to run replications in the background
-    or respond to push notifications. */
-@property (nonatomic) NSDataWritingOptions fileProtection;
+
+/** The conflict resolver for this database. The default value is nil, which means the default
+    algorithm will be used, where the revision with more history wins.
+    An individual document can override this for itself by setting its own property. */
+@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
+
 
 /** A key to encrypt the database with. If the database does not exist and is being created, it
     will use this key, and the same key must be given every time it's opened.
@@ -72,11 +69,17 @@ typedef struct {
     * A default nil value, of course, means the database is unencrypted. */
 @property (nonatomic, strong, nullable) id encryptionKey;
 
-/** If YES, the database will be opened read-only. */
-@property (nonatomic) BOOL readOnly;
 
-/** Creates a new instance with a default set of options for a CBLDatabase. */
-+ (instancetype) defaultOptions;
+/** File protection/encryption options (iOS only.)
+    Defaults to whatever file protection settings you've specified in your app's entitlements.
+    Specifying a nonzero value here overrides those settings for the database files.
+    If file protection is at the highest level, NSDataWritingFileProtectionCompleteUnlessOpen or
+    NSDataWritingFileProtectionComplete, it will not be possible to read or write the database
+    when the device is locked. This can make it impossible to run replications in the background
+    or respond to push notifications. */
+@property (nonatomic) NSDataWritingOptions fileProtection;
+
+- (instancetype) init;
 
 @end
 
@@ -90,20 +93,24 @@ typedef struct {
 /** The database's path. If the database is closed or deleted, nil value will be returned. */
 @property (readonly, nonatomic, nullable) NSString* path;
 
-/** Initializes a database object with a given name and the default database options.
+/** The database's configuration. If the configuration is not specify when initializing 
+    the database, the default configuration will be returned. */
+@property (readonly, copy, nonatomic) CBLDatabaseConfiguration *config;
+
+/** Initializes a database object with a given name and the default database configuration.
     If the database does not yet exist, it will be created.
     @param name  The name of the database. May NOT contain capital letters!
     @param error  On return, the error if any. */
 - (nullable instancetype) initWithName: (NSString*)name
                                  error: (NSError**)error;
 
-/** Initializes a Couchbase Lite database with a given name and database options.
+/** Initializes a Couchbase Lite database with a given name and database configuration.
     If the database does not yet exist, it will be created, unless the `readOnly` option is used.
     @param name  The name of the database. May NOT contain capital letters!
-    @param options  The database options, or nil for the default options.
+    @param config   The database configuration, or nil for the default configuration.
     @param error  On return, the error if any. */
 - (nullable instancetype) initWithName: (NSString*)name
-                               options: (nullable CBLDatabaseOptions*)options
+                                config: (nullable CBLDatabaseConfiguration*)config
                                  error: (NSError**)error
     NS_DESIGNATED_INITIALIZER;
 
@@ -151,11 +158,6 @@ typedef struct {
 
 /** Checks whether the document of the given ID exists in the database or not. */
 - (BOOL) documentExists: (NSString*)documentID;
-
-/** The conflict resolver for this database.
-    If nil, a default algorithm will be used, where the revision with more history wins.
-    An individual document can override this for itself by setting its own property. */
-@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
 
 
 #pragma mark - SAVE DELETE PURGE
