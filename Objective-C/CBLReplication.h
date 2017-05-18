@@ -70,6 +70,9 @@ extern NSString* const kCBLReplicationStatusChangeNotification;
 /** Should the replication stay active indefinitely, and push/pull changed documents? */
 @property (nonatomic) BOOL continuous;
 
+/** Extra options that can affect replication. There should be a list of keys somewhere :) */
+@property (nonatomic) NSDictionary<NSString*,id>* options;
+
 /** An object that will receive progress and error notifications. */
 @property (weak, nonatomic, nullable) id<CBLReplicationDelegate> delegate;
 

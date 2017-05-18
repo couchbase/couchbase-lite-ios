@@ -8,22 +8,18 @@
 
 #import "CBLWebSocket.h"
 #import "CBLHTTPLogic.h"
+#import "CBLCoreBridge.h"
 #import "c4Socket.h"
 #import <CommonCrypto/CommonDigest.h>
 #import <dispatch/dispatch.h>
 #import <memory>
 
+using namespace fleece;
+using namespace fleeceapi;
 
 static constexpr size_t kMaxReceivedBytesPending = 100 * 1024;
 static constexpr NSTimeInterval kConnectTimeout = 15.0;
 static constexpr NSTimeInterval kIdleTimeout = 300.0;
-
-static NSString* slice2string(C4Slice s) {
-    if (!s.buf)
-        return nil;
-    return [[NSString alloc] initWithBytes: s.buf length: s.size
-                                  encoding:NSUTF8StringEncoding];
-}
 
 
 @interface CBLWebSocket ()
@@ -33,6 +29,7 @@ static NSString* slice2string(C4Slice s) {
 
 @implementation CBLWebSocket
 {
+    AllocedDict _options;
     NSOperationQueue* _queue;
     dispatch_queue_t _c4Queue;
     NSURLSession* _session;
@@ -73,7 +70,7 @@ static bool sLogEnabled;
     });
 }
 
-static void doOpen(C4Socket* s, const C4Address* addr) {
+static void doOpen(C4Socket* s, const C4Address* addr, FLSlice optionsFleece) {
     NSURLComponents* c = [NSURLComponents new];
     c.scheme = slice2string(addr->scheme);
     c.host = slice2string(addr->hostname);
@@ -84,7 +81,7 @@ static void doOpen(C4Socket* s, const C4Address* addr) {
         c4socket_closed(s, {LiteCoreDomain, kC4ErrorInvalidParameter});
         return;
     }
-    auto socket = [[CBLWebSocket alloc] initWithURL: url c4socket: s];
+    auto socket = [[CBLWebSocket alloc] initWithURL: url c4socket: s options: optionsFleece];
     s->nativeHandle = (__bridge void*)socket;
     [socket start];
 }
@@ -102,12 +99,13 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 }
 
 
-- (instancetype) initWithURL: (NSURL*)url c4socket: (C4Socket*)c4socket {
+- (instancetype) initWithURL: (NSURL*)url c4socket: (C4Socket*)c4socket options: (slice)options {
     self = [super init];
     if (self) {
         sLogEnabled = c4log_getLevel(LogWS) <= kC4LogInfo;
 
         _c4socket = c4socket;
+        _options = AllocedDict(options);
 
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
         _logic = [[CBLHTTPLogic alloc] initWithURLRequest: request];
@@ -129,8 +127,7 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
 
 #if DEBUG
-- (void)dealloc
-{
+- (void)dealloc {
     LogVerbose("DEALLOC CBLWebSocket");
 }
 #endif
@@ -157,6 +154,9 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
                                           @"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"]);
 
     // Construct the HTTP request:
+    for (Dict::iterator header(_options["headers"_sl].asDict()); header; ++header)
+        _logic[slice2string(header.keyString())] = slice2string(header.value().asString());
+
     _logic[@"Connection"] = @"Upgrade";
     _logic[@"Upgrade"] = @"websocket";
     _logic[@"Sec-WebSocket-Version"] = @"13";
@@ -171,7 +171,7 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
     if (_logic.useTLS)
         [_task startSecureConnection];
 
-    [_task writeData: [_logic HTTPRequestData] timeout: kConnectTimeout
+    [_task writeData: _logic.HTTPRequestData timeout: kConnectTimeout
            completionHandler: ^(NSError* error) {
        LogVerbose("CBLWebSocket Sent HTTP request...");
        if (![self checkError: error])
@@ -215,8 +215,20 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
         [_task cancel];
         _task = nil;
         [self start];
+        return;
+    }
 
-    } else if (httpStatus != 101) {
+    // Post the response headers to LiteCore:
+    NSDictionary *headers =  CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(httpResponse));
+    Encoder enc;
+    enc << headers;
+    alloc_slice headersFleece = enc.finish();
+    auto socket = _c4socket;
+    dispatch_async(_c4Queue, ^{
+        c4socket_gotHTTPResponse(socket, (int)httpStatus, {headersFleece.buf, headersFleece.size});
+    });
+
+    if (httpStatus != 101) {
         // Unexpected HTTP status:
         C4WebSocketCloseCode closeCode = kWebSocketClosePolicyError;
         if (httpStatus >= 300 && httpStatus < 1000)
@@ -224,26 +236,25 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
         NSString* reason = CFBridgingRelease(CFHTTPMessageCopyResponseStatusLine(httpResponse));
         [self didCloseWithCode: closeCode reason: reason];
 
-    } else if (!checkHeader(httpResponse, @"Connection", @"Upgrade", NO)) {
+    } else if (!checkHeader(headers, @"Connection", @"Upgrade", NO)) {
         [self didCloseWithCode: kWebSocketCloseProtocolError
                         reason: @"Invalid 'Connection' header"];
-    } else if (!checkHeader(httpResponse, @"Upgrade", @"websocket", NO)) {
+    } else if (!checkHeader(headers, @"Upgrade", @"websocket", NO)) {
         [self didCloseWithCode: kWebSocketCloseProtocolError
                         reason: @"Invalid 'Upgrade' header"];
-    } else if (!checkHeader(httpResponse, @"Sec-WebSocket-Accept", _expectedAcceptHeader, YES)) {
+    } else if (!checkHeader(headers, @"Sec-WebSocket-Accept", _expectedAcceptHeader, YES)) {
         [self didCloseWithCode: kWebSocketCloseProtocolError
                         reason: @"Invalid 'Sec-WebSocket-Accept' header"];
     } else {
-        self.protocol = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(
-                                                httpResponse, CFSTR("Sec-WebSocket-Protocol")));
+        self.protocol = headers[@"Sec-WebSocket-Protocol"];
         // TODO: Check Sec-WebSocket-Extensions for unknown extensions
         // Now I can start the WebSocket protocol:
-        [self connected];
+        [self connected: headers];
     }
 }
 
 
-- (void) connected {
+- (void) connected: (NSDictionary*)responseHeaders {
     Log("CBLWebSocket CONNECTED!");
     _lastReadTime = CFAbsoluteTimeGetCurrent();
     [self receive];
@@ -405,9 +416,8 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
 
 // Tests whether a header value matches the expected string.
-static BOOL checkHeader(CFHTTPMessageRef msg, NSString* header, NSString* expected, BOOL caseSens) {
-    NSString* value = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(msg,
-                                                                  (__bridge CFStringRef)header));
+static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expected, BOOL caseSens) {
+    NSString* value = headers[header];
     if (caseSens)
         return [value isEqualToString: expected];
     else
