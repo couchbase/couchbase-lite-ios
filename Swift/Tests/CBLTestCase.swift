@@ -34,9 +34,9 @@ class CBLTestCase: XCTestCase {
     
     
     func createDB() throws -> Database {
-        var options = DatabaseOptions()
+        var options = DatabaseConfiguration()
         options.directory = kDirectory
-        return try Database(name: kDatabaseName, options: options)
+        return try Database(name: kDatabaseName, config: options)
     }
     
     

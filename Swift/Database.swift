@@ -31,14 +31,49 @@ public enum EncryptionKey {
 
 
 /** Options for opening a database. All properties default to NO or nil. */
-public struct DatabaseOptions {
+public struct DatabaseConfiguration {
 
     /** Path to the directory to store the database in. If the directory doesn't already exist it will
          be created when the database is opened.
          A nil value (the default) means to use the default directory, in Application Support. You
          won't usually need to change this. */
-    public var directory: String? = nil
+    public var directory: String? {
+        get { return _impl.directory }
+        set { _impl.directory = newValue }
+    }
+    
+    
+    /** The conflict resolver for this database.
+        If nil, a default algorithm will be used, where the revision with more history wins.
+        An individual document can override this for itself by setting its own property. */
+    public var conflictResolver: ConflictResolver? {
+        get { return _impl.conflictResolver }
+        set { _impl.conflictResolver = newValue }
+    }
+    
 
+    /** A key to encrypt the database with. If the database does not exist and is being created, it
+     will use this key, and the same key must be given every time it's opened.
+     
+     * The primary form of key is an NSData object 32 bytes in length: this is interpreted as a raw
+     AES-256 key. To create a key, generate random data using a secure cryptographic randomizer
+     like SecRandomCopyBytes or CCRandomGenerateBytes.
+     * Alternatively, the value may be an NSString containing a passphrase. This will be run through
+     64,000 rounds of the PBKDF algorithm to securely convert it into an AES-256 key.
+     * A default nil value, of course, means the database is unencrypted. */
+    public var encryptionKey: EncryptionKey? {
+        get {
+            if let password = _impl.encryptionKey as? String {
+                return EncryptionKey.password(password)
+            } else if let data = _impl.encryptionKey as? Data {
+                return EncryptionKey.aes256(data)
+            } else {
+                return nil
+            }
+        }
+        set { _impl.encryptionKey = newValue }
+    }
+    
     /** File protection/encryption options (iOS only.)
          Defaults to whatever file protection settings you've specified in your app's entitlements.
          Specifying a nonzero value here overrides those settings for the database files.
@@ -47,23 +82,13 @@ public struct DatabaseOptions {
          when the device is locked. This can make it impossible to run replications in the background
          or respond to push notifications. */
     public var fileProtection: NSData.WritingOptions = []
-
-    /** A key to encrypt the database with. If the database does not exist and is being created, it
-         will use this key, and the same key must be given every time it's opened.
-
-         * The primary form of key is an NSData object 32 bytes in length: this is interpreted as a raw
-         AES-256 key. To create a key, generate random data using a secure cryptographic randomizer
-         like SecRandomCopyBytes or CCRandomGenerateBytes.
-         * Alternatively, the value may be an NSString containing a passphrase. This will be run through
-         64,000 rounds of the PBKDF algorithm to securely convert it into an AES-256 key.
-         * A default nil value, of course, means the database is unencrypted. */
-    public var encryptionKey: EncryptionKey? = nil
-
-    /** If YES, the database will be opened read-only. */
-    public var readOnly: Bool = false
     
-    /** Initialize a new DatabaseOptions with default properties. */
-    public init() { }
+    /** Initialize a new DatabaseConfiguration with default properties. */
+    public init() {
+        _impl = CBLDatabaseConfiguration()
+    }
+    
+    let _impl : CBLDatabaseConfiguration
 }
 
 
@@ -75,14 +100,13 @@ public final class Database {
          If the database does not yet exist, it will be created, unless the `readOnly` option is used.
          @param name  The name of the database. May NOT contain capital letters!
          @param options  The database options, or nil for the default options. */
-    public init(name: String, options: DatabaseOptions? = nil) throws {
-        if let opts = options {
-            let cblOpts = CBLDatabaseOptions()
-            cblOpts.directory = opts.directory
-            cblOpts.fileProtection = opts.fileProtection
-            cblOpts.readOnly = opts.readOnly
-            cblOpts.encryptionKey = opts.encryptionKey?.asObject
-            _impl = try CBLDatabase(name: name, options: cblOpts)
+    public init(name: String, config: DatabaseConfiguration? = nil) throws {
+        if let c = config {
+            let cblConfig = CBLDatabaseConfiguration()
+            cblConfig.directory = c.directory
+            cblConfig.fileProtection = c.fileProtection
+            cblConfig.encryptionKey = c.encryptionKey?.asObject
+            _impl = try CBLDatabase(name: name, config: cblConfig)
         } else {
             _impl = try CBLDatabase(name: name)
         }
@@ -101,15 +125,6 @@ public final class Database {
 
     /** The database's path. If the database is closed or deleted, nil value will be returned. */
     public var path: String? { return _impl.path }
-    
-    
-    /** The conflict resolver for this database.
-     If nil, a default algorithm will be used, where the revision with more history wins.
-     An individual document can override this for itself by setting its own property. */
-    public var conflictResolver: ConflictResolver? {
-        get {return _impl.conflictResolver}
-        set {_impl.conflictResolver = newValue}
-    }
     
     
     /** Gets a Document object with the given ID. */
