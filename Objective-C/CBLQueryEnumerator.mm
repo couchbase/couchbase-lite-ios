@@ -106,7 +106,7 @@ extern "C" {
 
 
 - (NSArray*) allObjects {
-    NSInteger count = c4queryenum_getRowCount(_c4enum, nullptr);
+    NSInteger count = (NSInteger)c4queryenum_getRowCount(_c4enum, nullptr);
     if (count >= 0) {
         _randomAccess = true;
         return [[CBLQueryResultsArray alloc] initWithEnumerator: self count: count];
