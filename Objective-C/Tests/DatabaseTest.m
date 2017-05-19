@@ -138,19 +138,26 @@
 - (void) testCreateConfiguration {
     // Default:
     CBLDatabaseConfiguration* config1 = [[CBLDatabaseConfiguration alloc] init];
+#if !TARGET_OS_IPHONE
+    // MacOS needs directory as there is no bundle in mac unit test:
+    config1.directory = @"/tmp";
+#endif
     AssertNotNil(config1.directory);
     Assert(config1.directory.length > 0);
     AssertNil(config1.conflictResolver);
+    AssertNil(config1.encryptionKey);AssertNil(config1.encryptionKey);
     AssertEqual(config1.fileProtection, 0);
-    AssertNil(config1.encryptionKey);
+    
     
     // Default + Copy:
     CBLDatabaseConfiguration* config1a = [config1 copy];
     AssertNotNil(config1a.directory);
     Assert(config1a.directory.length > 0);
     AssertNil(config1a.conflictResolver);
-    AssertEqual(config1a.fileProtection, 0);
     AssertNil(config1a.encryptionKey);
+#if TARGET_OS_IPHONE
+    AssertEqual(config1a.fileProtection, 0);
+#endif
     
     // Custom:
     DummyResolver *resolver = [DummyResolver new];
@@ -158,23 +165,35 @@
     config2.directory = @"/tmp/mydb";
     config2.conflictResolver = resolver;
     config2.encryptionKey = @"key";
+#if TARGET_OS_IPHONE
     config2.fileProtection = NSDataWritingFileProtectionComplete;
+#endif
+    
     AssertEqualObjects(config2.directory, @"/tmp/mydb");
     AssertEqual(config2.conflictResolver, resolver);
     AssertEqualObjects(config2.encryptionKey, @"key");
+#if TARGET_OS_IPHONE
     AssertEqual(config2.fileProtection, NSDataWritingFileProtectionComplete);
+#endif
     
     // Custom + Copy:
     CBLDatabaseConfiguration* config2a = [config2 copy];
     AssertEqualObjects(config2a.directory, @"/tmp/mydb");
     AssertEqual(config2a.conflictResolver, resolver);
     AssertEqualObjects(config2a.encryptionKey, @"key");
+#if TARGET_OS_IPHONE
     AssertEqual(config2a.fileProtection, NSDataWritingFileProtectionComplete);
+#endif
 }
 
 
 - (void) testGetSetConfiguration {
     CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+#if !TARGET_OS_IPHONE
+    // MacOS needs directory as there is no bundle in mac unit test:
+    config.directory = _db.config.directory;
+#endif
+    
     NSError* error;
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db"
                                                  config: config
@@ -191,6 +210,11 @@
 
 - (void) testConfigurationIsCopiedWhenGetSet {
     CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+#if !TARGET_OS_IPHONE
+    // MacOS needs directory as there is no bundle in mac unit test:
+    config.directory = _db.config.directory;
+#endif
+    
     NSError* error;
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db"
                                                  config: config

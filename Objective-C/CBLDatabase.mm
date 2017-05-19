@@ -44,11 +44,7 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
 
 
 - (instancetype) init {
-    self = [super init];
-    if (self) {
-        _directory = defaultDirectory();
-    }
-    return self;
+    return [super init];
 }
 
 
@@ -59,6 +55,13 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
     o.encryptionKey = _encryptionKey;
     o.fileProtection = _fileProtection;
     return o;
+}
+
+
+- (NSString*) directory {
+    if (!_directory)
+        _directory = defaultDirectory();
+    return _directory;
 }
 
 
