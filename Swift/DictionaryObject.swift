@@ -27,6 +27,11 @@ protocol DictionaryProtocol: ReadOnlyDictionaryProtocol, DictionaryFragment {
     /// - Returns: the DictionaryProtocol object.
     @discardableResult func set(_ value: Any?, forKey key: String) -> Self
     
+    /// Removes a given key and its value from the dictionary.
+    /// - Parameter key:  the key.
+    /// - Returns: the DictionaryProtocol object.
+    @discardableResult func removeValue(forKey key: String) -> Self
+    
     /// Get a property's value as an ArrayObject, which is a mapping object of an array value.
     /// Returns nil if the property doesn't exists, or its value is not an array.
     /// - Parameter key: the key.
@@ -81,6 +86,16 @@ public class DictionaryObject: ReadOnlyDictionaryObject, DictionaryProtocol {
         dictImpl.setObject(DataConverter.convertSETValue(value), forKey: key)
         return self
     }
+    
+    
+    /// Removes a given key and its value from the dictionary.
+    /// - Parameter key:  the key.
+    /// - Returns: the DictionaryObject object.
+    @discardableResult public func removeValue(forKey key: String) -> Self {
+        dictImpl.removeObject(forKey: key)
+        return self
+    }
+    
     
     /// Get a property's value as an ArrayObject, which is a mapping object of an array value.
     /// Returns nil if the property doesn't exists, or its value is not an array.

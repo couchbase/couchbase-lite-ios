@@ -81,6 +81,12 @@ public class Document : ReadOnlyDocument, DictionaryProtocol {
     }
     
     
+    @discardableResult public func removeValue(forKey key: String) -> Self {
+        docImpl.removeObject(forKey: key)
+        return self
+    }
+    
+    
     /// Get a property's value as an ArrayObject, which is a mapping object of an array value.
     /// Returns nil if the property doesn't exists, or its value is not an array.
     /// - Parameter key: the key.

@@ -20,13 +20,11 @@
     AssertEqual(address.count, 0u);
     AssertEqualObjects([address toDictionary], @{});
     
-    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: address forKey: @"address"];
     AssertEqual([doc dictionaryForKey: @"address"], address);
     
-    NSError* error;
-    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
-    doc = [_db documentWithID: @"doc1"];
+    doc = [self saveDocument: doc];
     AssertEqualObjects([[doc dictionaryForKey: @"address"] toDictionary], @{});
 }
 
@@ -41,13 +39,11 @@
     AssertEqualObjects([address objectForKey: @"state"], @"CA");
     AssertEqualObjects([address toDictionary], dict);
     
-    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: address forKey: @"address"];
     AssertEqual([doc dictionaryForKey: @"address"], address);
     
-    NSError* error;
-    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
-    doc = [_db documentWithID: @"doc1"];
+    doc = [self saveDocument: doc];
     AssertEqualObjects([[doc dictionaryForKey: @"address"] toDictionary], dict);
 }
 
@@ -71,9 +67,7 @@
     CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
     [doc setObject: dict forKey: @"dict"];
     
-    NSError* error;
-    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
-    doc = [_db documentWithID: @"doc1"];
+    doc = [self saveDocument: doc];
     
     dict = [doc dictionaryForKey: @"dict"];
     AssertEqual([dict integerForKey: @"key"], 0);
@@ -92,7 +86,7 @@
 
 
 - (void) testSetNestedDictionaries {
-    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    CBLDocument* doc = [self createDocument: @"doc1"];
     
     CBLDictionary *level1 = [[CBLDictionary alloc] init];
     [level1 setObject: @"n1" forKey: @"name"];
@@ -114,9 +108,7 @@
                                                      @"level3": @{@"name": @"n3"}}}};
     AssertEqualObjects([doc toDictionary], dict);
     
-    NSError* error;
-    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
-    doc = [_db documentWithID: @"doc1"];
+    doc = [self saveDocument: doc];
     
     Assert([doc dictionaryForKey: @"level1"] != level1);
     AssertEqualObjects([doc toDictionary], dict);
@@ -124,7 +116,7 @@
 
 
 - (void) testDictionaryArray {
-    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    CBLDocument* doc = [self createDocument: @"doc1"];
     NSArray* data = @[@{@"name": @"1"}, @{@"name": @"2"}, @{@"name": @"3"}, @{@"name": @"4"}];
     [doc setDictionary: @{@"dicts": data}];
     
@@ -141,9 +133,7 @@
     AssertEqualObjects([d3 stringForKey: @"name"], @"3");
     AssertEqualObjects([d4 stringForKey: @"name"], @"4");
     
-    NSError* error;
-    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
-    doc = [_db documentWithID: @"doc1"];
+    doc = [self saveDocument: doc];
     
     dicts = [doc arrayForKey: @"dicts"];
     AssertEqual(dicts.count, 4u);
@@ -161,7 +151,7 @@
 
 
 - (void) testReplaceDictionary {
-    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    CBLDocument* doc = [self createDocument: @"doc1"];
     CBLDictionary *profile1 = [[CBLDictionary alloc] init];
     [profile1 setObject: @"Scott Tiger" forKey: @"name"];
     [doc setObject: profile1 forKey: @"profile"];
@@ -182,9 +172,7 @@
     AssertNil([profile2 objectForKey: @"age"]);
     
     // Save:
-    NSError* error;
-    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
-    doc = [_db documentWithID: @"doc1"];
+    doc = [self saveDocument: doc];
     
     Assert([doc dictionaryForKey: @"profile"] != profile2);
     profile2 = [doc dictionaryForKey: @"profile"];
@@ -193,7 +181,7 @@
 
 
 - (void) testReplaceDictionaryDifferentType {
-    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    CBLDocument* doc = [self createDocument: @"doc1"];
     CBLDictionary *profile1 = [[CBLDictionary alloc] init];
     [profile1 setObject: @"Scott Tiger" forKey: @"name"];
     [doc setObject: profile1 forKey: @"profile"];
@@ -212,11 +200,38 @@
     AssertEqualObjects([doc objectForKey: @"profile"], @"Daniel Tiger");
     
     // Save:
-    NSError* error;
-    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
-    doc = [_db documentWithID: @"doc1"];
+    doc = [self saveDocument: doc];
     
     AssertEqualObjects([doc objectForKey: @"profile"], @"Daniel Tiger");
+}
+
+
+- (void) testRemoveDictionary {
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLDictionary *profile1 = [[CBLDictionary alloc] init];
+    [profile1 setObject: @"Scott Tiger" forKey: @"name"];
+    [doc setObject: profile1 forKey: @"profile"];
+    AssertEqualObjects([doc dictionaryForKey: @"profile"], profile1);
+    Assert([doc containsObjectForKey: @"profile"]);
+    
+    // Remove profile
+    [doc removeObjectForKey: @"profile"];
+    AssertNil([doc objectForKey: @"profile"]);
+    AssertFalse([doc containsObjectForKey: @"profile"]);
+    
+    // Profile1 should be now detached:
+    [profile1 setObject: @(20) forKey: @"age"];
+    AssertEqualObjects([profile1 objectForKey: @"name"], @"Scott Tiger");
+    AssertEqualObjects([profile1 objectForKey: @"age"], @(20));
+    
+    // Check whether the profile value has no change:
+    AssertNil([doc objectForKey: @"profile"]);
+    
+    // Save:
+    doc = [self saveDocument: doc];
+    
+    AssertNil([doc objectForKey: @"profile"]);
+    AssertFalse([doc containsObjectForKey: @"profile"]);
 }
 
 

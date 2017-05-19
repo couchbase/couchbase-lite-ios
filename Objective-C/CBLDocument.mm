@@ -176,13 +176,18 @@
 #pragma mark - SETTER
 
 
+- (void) setDictionary: (NSDictionary<NSString *,id> *)dictionary {
+    [_dict setDictionary: dictionary];
+}
+
+
 - (void) setObject: (nullable id)value forKey: (NSString*)key {
     [_dict setObject: value forKey: key];
 }
 
 
-- (void) setDictionary: (NSDictionary<NSString *,id> *)dictionary {
-    [_dict setDictionary: dictionary];
+- (void) removeObjectForKey:(NSString *)key {
+    [_dict removeObjectForKey: key];
 }
 
 

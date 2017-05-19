@@ -24,13 +24,17 @@ NS_ASSUME_NONNULL_BEGIN
     @param dictionary  the dictionary. */
 - (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary;
 
-/** Set an object value by key. Setting the value to nil will remove the property. Allowed value
-    types are NSArray, NSDate, NSDictionary, NSNumber, NSNull, NSString, CBLArray, CBLBlob,
-    CBLDictionary. The NSArrays and NSDictionaries must contain only the above types. An NSDate 
-    object will be converted to an ISO-8601 format string. 
+/** Set an object value by key. Allowed value types are NSArray, NSDate, NSDictionary, NSNumber, 
+    NSNull, NSString, CBLArray, CBLBlob, CBLDictionary. The NSArrays and NSDictionaries must 
+    contain only the above types. An NSDate value will be converted to an ISO-8601 format string. 
+    A nil value will be converted an NSNull object.
     @param value    the object value.
     @param key      the key. */
 - (void) setObject: (nullable id)value forKey: (NSString*)key;
+
+/** Removes a given key and its value from the dictionary. 
+    @param key  the key. */
+- (void) removeObjectForKey: (NSString*)key;
 
 /** Get a property's value as a CBLArray, which is a mapping object of an array value.
     Returns nil if the property doesn't exists, or its value is not an array.

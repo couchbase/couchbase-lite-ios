@@ -94,6 +94,31 @@ class DictionaryTest: CBLTestCase {
     }
     
     
+    func testRemoveDictionary() throws {
+        let doc = createDocument("doc1")
+        let profile1 = DictionaryObject()
+        profile1.set("Scott Tiger", forKey: "name")
+        doc.set(profile1, forKey: "profile")
+        XCTAssert(doc.getDictionary("profile") === profile1)
+        
+        // Remove profile
+        doc.removeValue(forKey: "profile")
+        XCTAssertNil(doc.getValue("profile"))
+        XCTAssertFalse(doc.contains("profile"))
+        
+        // Profile1 should be now detachd:
+        profile1.set(20, forKey: "age")
+        XCTAssertEqual(profile1.getString("name")!, "Scott Tiger")
+        XCTAssertEqual(profile1.getInt("age"), 20)
+        
+        // Check whether the profile value has no change:
+        try saveDocument(doc, eval: { (d) in
+            XCTAssertNil(d.getValue("profile"))
+            XCTAssertFalse(d.contains("profile"))
+        })
+    }
+    
+    
     func testEnumeratingKeys() throws {
         var dict = DictionaryObject()
         for i in 0...19 {
@@ -111,8 +136,7 @@ class DictionaryTest: CBLTestCase {
         XCTAssertEqual(count, content.count)
         
         // Update:
-        
-        dict.set(nil, forKey: "key2")
+        dict.removeValue(forKey: "key2")
         dict.set(20, forKey: "key20")
         dict.set(22, forKey: "key21")
         content = dict.toDictionary()
@@ -134,7 +158,7 @@ class DictionaryTest: CBLTestCase {
             count = 0
             dict = doc.getDictionary("dict")!
             for key in dict {
-                result[key] = dict.getInt(key)
+                result[key] = dict.getValue(key)
                 count = count + 1
             }
             XCTAssert(result == content)

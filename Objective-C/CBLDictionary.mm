@@ -223,12 +223,20 @@
 
 
 - (void) setObject: (nullable id)value forKey: (NSString*)key {
+    if (!value) value = [NSNull null]; // nil conversion only for apple platform
     id oldValue = [self objectForKey: key];
     if (!$equal(value, oldValue)) {
         value = [CBLData convertValue: value listener: self];
         [self detachChangeListenerForObject: oldValue];
         [self setValue: value forKey: key isChange: YES];
-        _keys = nil;    // Reset key cahche
+        _keys = nil; // Reset key cahche
+    }
+}
+
+
+- (void) removeObjectForKey:(NSString *)key {
+    if ([self containsObjectForKey: key]) {
+        [self setObject: kCBLRemovedValue forKey: key];
     }
 }
 

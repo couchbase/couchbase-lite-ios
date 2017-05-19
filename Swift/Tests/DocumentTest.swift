@@ -1025,6 +1025,21 @@ class DocumentTest: CBLTestCase {
     }
     
     
+    func testContainsKey() throws {
+        let doc = createDocument("doc1")
+        let dict: [String: Any] = ["type": "profile",
+                                   "name": "Jason",
+                                   "age": "30",
+                                   "address": ["street": "1 milky way."]]
+        doc.setDictionary(dict)
+        XCTAssert(doc.contains("type"))
+        XCTAssert(doc.contains("name"))
+        XCTAssert(doc.contains("age"))
+        XCTAssert(doc.contains("address"))
+        XCTAssertFalse(doc.contains("weight"))
+    }
+    
+    
     func testRemoveKeys() throws {
         let doc = createDocument("doc1")
         let dict: [String: Any] = ["type": "profile",
@@ -1040,11 +1055,11 @@ class DocumentTest: CBLTestCase {
         
         try saveDocument(doc)
         
-        doc.set(nil, forKey: "name")
-        doc.set(nil, forKey: "weight")
-        doc.set(nil, forKey: "age")
-        doc.set(nil, forKey: "active")
-        doc.getDictionary("address")?.set(nil, forKey: "city")
+        doc.removeValue(forKey: "name")
+        doc.removeValue(forKey: "weight")
+        doc.removeValue(forKey: "age")
+        doc.removeValue(forKey: "active")
+        doc.getDictionary("address")?.removeValue(forKey: "city")
         
         XCTAssertNil(doc.getString("name"))
         XCTAssertEqual(doc.getFloat("weight"), 0.0)
@@ -1058,6 +1073,12 @@ class DocumentTest: CBLTestCase {
         XCTAssertNil(doc.getValue("active"))
         XCTAssertNil(doc.getDictionary("address")!.getValue("city"))
         
+        XCTAssertFalse(doc.contains("name"))
+        XCTAssertFalse(doc.contains("weight"))
+        XCTAssertFalse(doc.contains("age"))
+        XCTAssertFalse(doc.contains("active"))
+        XCTAssertFalse(doc.getDictionary("address")!.contains("city"))
+        
         let docDict: [String: Any] = ["type": "profile",
                                       "address": ["street": "1 milky way.", "zip": 12345]];
         XCTAssert(doc.toDictionary() == docDict)
@@ -1067,26 +1088,13 @@ class DocumentTest: CBLTestCase {
         XCTAssert(address.toDictionary() == addressDict)
         
         // Remove the rest:
-        doc.set(nil, forKey: "type")
-        doc.set(nil, forKey: "address")
+        doc.removeValue(forKey: "type")
+        doc.removeValue(forKey: "address")
         XCTAssertNil(doc.getValue("type"))
         XCTAssertNil(doc.getValue("address"))
+        XCTAssertFalse(doc.contains("type"))
+        XCTAssertFalse(doc.contains("address"))
         XCTAssert(doc.toDictionary() == [:] as [String: Any])
-    }
-    
-    
-    func testContainsKey() throws {
-        let doc = createDocument("doc1")
-        let dict: [String: Any] = ["type": "profile",
-                                   "name": "Jason",
-                                   "age": "30",
-                                   "address": ["street": "1 milky way."]]
-        doc.setDictionary(dict)
-        XCTAssert(doc.contains("type"))
-        XCTAssert(doc.contains("name"))
-        XCTAssert(doc.contains("age"))
-        XCTAssert(doc.contains("address"))
-        XCTAssertFalse(doc.contains("weight"))
     }
     
     
@@ -1310,16 +1318,16 @@ class DocumentTest: CBLTestCase {
         
         // Update:
         
-        doc.set(nil, forKey: "key2")
+        doc.removeValue(forKey: "key2")
         doc.set(20, forKey: "key20")
-        doc.set(22, forKey: "key21")
+        doc.set(21, forKey: "key21")
         content = doc.toDictionary()
         
         try saveDocument(doc) { (d) in
             result = [:]
             count = 0
             for key in d {
-                result[key] = d.getInt(key)
+                result[key] = d.getValue(key)
                 count = count + 1
             }
             XCTAssert(result == content)

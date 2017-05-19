@@ -155,7 +155,7 @@
 
 
 - (void) setObject: (id)value atIndex: (NSUInteger)index {
-    if (!value) value = [NSNull null];
+    if (!value) value = [NSNull null]; // nil conversion only for apple platform
     id oldValue = [self objectAtIndex: index];
     if (!$equal(value, oldValue)) {
         value = [CBLData convertValue: value listener: self];

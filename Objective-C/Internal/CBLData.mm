@@ -23,9 +23,7 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 
 
 + (id) convertValue: (id)value listener: (id<CBLObjectChangeListener>)listener {
-    if (!value) {
-        return kCBLRemovedValue; // Represent removed key
-    } else if ([value isKindOfClass: [CBLDictionary class]]) {
+    if ([value isKindOfClass: [CBLDictionary class]]) {
         [value addChangeListener: listener];
         return value;
     } else if ([value isKindOfClass: [CBLArray class]]) {
@@ -54,10 +52,11 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
     } else if ([value isKindOfClass: [NSDate class]]) {
         return [CBLJSON JSONObjectWithDate: value];
     } else {
-        Assert(value == [NSNull null] ||
-               [value isKindOfClass: [NSString class]] ||
-               [value isKindOfClass: [NSNumber class]] ||
-               [value isKindOfClass: [CBLBlob class]], @"Unsupported value type.");
+        NSParameterAssert(value == kCBLRemovedValue ||
+                          value == [NSNull null] ||
+                          [value isKindOfClass: [NSString class]] ||
+                          [value isKindOfClass: [NSNumber class]] ||
+                          [value isKindOfClass: [CBLBlob class]]);
     }
     return value;
 }

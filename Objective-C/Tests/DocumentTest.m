@@ -773,6 +773,16 @@
 }
 
 
+- (void) testSetNil {
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    [doc setObject: nil forKey: @"null"];
+    [self saveDocument: doc eval: ^(CBLDocument* d) {
+        AssertEqual([d objectForKey: @"null"], [NSNull null]);
+        AssertEqual(d.count, 1u);
+    }];
+}
+
+
 - (void) testSetNSDictionary {
     NSDictionary* dict = @{@"street": @"1 Main street",
                            @"city": @"Mountain View",
@@ -1114,57 +1124,6 @@
 }
 
 
-- (void) testRemoveKeys {
-    CBLDocument* doc = [self createDocument: @"doc1"];
-    [doc setDictionary: @{ @"type": @"profile",
-                           @"name": @"Jason",
-                           @"weight": @130.5,
-                           @"active": @YES,
-                           @"age": @30,
-                           @"address": @{
-                                   @"street": @"1 milky way.",
-                                   @"city": @"galaxy city",
-                                   @"zip" : @12345
-                                   }
-                           }];
-    [self saveDocument: doc];
-    
-    [doc setObject: nil forKey: @"name"];
-    [doc setObject: nil forKey: @"weight"];
-    [doc setObject: nil forKey: @"age"];
-    [doc setObject: nil forKey: @"active"];;
-    [[doc dictionaryForKey: @"address"] setObject: nil forKey: @"city"];
-    
-    AssertNil([doc stringForKey: @"name"]);
-    AssertEqual([doc floatForKey: @"weight"], 0.0);
-    AssertEqual([doc doubleForKey: @"weight"], 0.0);
-    AssertEqual([doc integerForKey: @"age"], 0);
-    AssertEqual([doc booleanForKey: @"active"], NO);
-    
-    AssertNil([doc objectForKey: @"name"]);
-    AssertNil([doc objectForKey: @"weight"]);
-    AssertNil([doc objectForKey: @"age"]);
-    AssertNil([doc objectForKey: @"active"]);
-    AssertNil([[doc dictionaryForKey: @"address"] objectForKey: @"city"]);
-    
-    CBLDictionary* address = [doc dictionaryForKey: @"address"];
-    AssertEqualObjects([doc toDictionary], (@{ @"type": @"profile",
-                                               @"address": @{
-                                                       @"street": @"1 milky way.",
-                                                       @"zip" : @12345
-                                                       }
-                                               }));
-    AssertEqualObjects([address toDictionary], (@{ @"street": @"1 milky way.", @"zip" : @12345 }));
-    
-    // Remove the rest:
-    [doc setObject: nil forKey: @"type"];
-    [doc setObject: nil forKey: @"address"];
-    AssertNil([doc objectForKey: @"type"]);
-    AssertNil([doc objectForKey: @"address"]);
-    AssertEqualObjects([doc toDictionary], @{});
-}
-
-
 - (void) testContainsKey {
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setDictionary: @{ @"type": @"profile",
@@ -1180,6 +1139,65 @@
     Assert([doc containsObjectForKey: @"age"]);
     Assert([doc containsObjectForKey: @"address"]);
     AssertFalse([doc containsObjectForKey: @"weight"]);
+}
+
+
+- (void) testRemoveKeys {
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    [doc setDictionary: @{ @"type": @"profile",
+                           @"name": @"Jason",
+                           @"weight": @130.5,
+                           @"active": @YES,
+                           @"age": @30,
+                           @"address": @{
+                                   @"street": @"1 milky way.",
+                                   @"city": @"galaxy city",
+                                   @"zip" : @12345
+                                   }
+                           }];
+    [self saveDocument: doc];
+    
+    [doc removeObjectForKey: @"name"];
+    [doc removeObjectForKey: @"weight"];
+    [doc removeObjectForKey: @"age"];
+    [doc removeObjectForKey: @"active"];
+    [[doc dictionaryForKey: @"address"] removeObjectForKey: @"city"];
+    
+    AssertNil([doc stringForKey: @"name"]);
+    AssertEqual([doc floatForKey: @"weight"], 0.0);
+    AssertEqual([doc doubleForKey: @"weight"], 0.0);
+    AssertEqual([doc integerForKey: @"age"], 0);
+    AssertEqual([doc booleanForKey: @"active"], NO);
+    
+    AssertNil([doc objectForKey: @"name"]);
+    AssertNil([doc objectForKey: @"weight"]);
+    AssertNil([doc objectForKey: @"age"]);
+    AssertNil([doc objectForKey: @"active"]);
+    AssertNil([[doc dictionaryForKey: @"address"] objectForKey: @"city"]);
+    
+    AssertFalse([doc containsObjectForKey: @"name"]);
+    AssertFalse([doc containsObjectForKey: @"weight"]);
+    AssertFalse([doc containsObjectForKey: @"age"]);
+    AssertFalse([doc containsObjectForKey: @"active"]);
+    AssertFalse([[doc dictionaryForKey: @"address"] containsObjectForKey: @"city"]);
+    
+    CBLDictionary* address = [doc dictionaryForKey: @"address"];
+    AssertEqualObjects([doc toDictionary], (@{ @"type": @"profile",
+                                               @"address": @{
+                                                       @"street": @"1 milky way.",
+                                                       @"zip" : @12345
+                                                       }
+                                               }));
+    AssertEqualObjects([address toDictionary], (@{ @"street": @"1 milky way.", @"zip" : @12345 }));
+    
+    // Remove the rest:
+    [doc removeObjectForKey: @"type"];
+    [doc removeObjectForKey: @"address"];
+    AssertNil([doc objectForKey: @"type"]);
+    AssertNil([doc objectForKey: @"address"]);
+    AssertFalse([doc containsObjectForKey: @"type"]);
+    AssertFalse([doc containsObjectForKey: @"address"]);
+    AssertEqualObjects([doc toDictionary], @{});
 }
 
 
@@ -1473,7 +1491,7 @@
     
     // Update:
     
-    [doc setObject: nil forKey: @"key2"];
+    [doc removeObjectForKey: @"key2"];
     [doc setObject: @(20) forKey: @"key20"];
     [doc setObject: @(21) forKey: @"key21"];
     content = [doc toDictionary];
