@@ -30,7 +30,8 @@
 
 
 - (instancetype) initWithEnumerator: (CBLQueryEnumerator*)enumerator
-                       c4Enumerator: (C4QueryEnumerator*)e {
+                       c4Enumerator: (C4QueryEnumerator*)e
+{
     self = [super init];
     if (self) {
         _enum = enumerator;
@@ -48,8 +49,18 @@
 }
 
 
+#if 0 //TEMP
+- (BOOL) isEqual: (id)other {
+    CBLQueryRow *otherRow = $cast(CBLQueryRow, other);
+    if (!otherRow)
+        return NO;
+    return _enum == otherRow->_enum;
+}
+#endif
+
+
 - (CBLDocument*) document {
-    return [_enum.database documentWithID: _documentID];
+    return _documentID ? [_enum.database documentWithID: _documentID] : nil;
 }
 
 

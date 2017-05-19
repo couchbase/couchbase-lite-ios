@@ -39,7 +39,7 @@ static C4LogLevel string2level(NSString* value) {
         return kC4LogWarning;
     switch (value.length > 0 ? toupper([value characterAtIndex: 0]) : 'Y') {
         case 'N': case 'F': case '0':
-            return kC4LogError + 1;
+            return kC4LogNone;
         case 'V': case '2':
             return kC4LogVerbose;
         case 'D': case '3'...'9':
