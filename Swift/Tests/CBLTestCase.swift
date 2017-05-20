@@ -14,6 +14,8 @@ import CouchbaseLiteSwift
 class CBLTestCase: XCTestCase {
 
     var db: Database!
+    
+    var conflictResolver: ConflictResolver?
 
     let kDatabaseName = "testdb"
     
@@ -34,9 +36,10 @@ class CBLTestCase: XCTestCase {
     
     
     func createDB() throws -> Database {
-        var options = DatabaseConfiguration()
-        options.directory = kDirectory
-        return try Database(name: kDatabaseName, config: options)
+        var config = DatabaseConfiguration()
+        config.directory = kDirectory
+        config.conflictResolver = conflictResolver
+        return try Database(name: kDatabaseName, config: config)
     }
     
     

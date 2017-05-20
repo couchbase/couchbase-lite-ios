@@ -302,6 +302,8 @@
 		93CD02E61EA0382D00AFB3FA /* CBLDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 93CD02E41EA0382C00AFB3FA /* CBLDictionary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93CD02E71EA0382D00AFB3FA /* CBLDictionary.mm in Sources */ = {isa = PBXBuildFile; fileRef = 93CD02E51EA0382D00AFB3FA /* CBLDictionary.mm */; };
 		93DD9BA81EB419BB00E502A2 /* ArrayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DD9BA71EB419BB00E502A2 /* ArrayTest.m */; };
+		93E17EED1ECF7D8600671CA1 /* ConflictResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EEC1ECF7D8600671CA1 /* ConflictResolver.swift */; };
+		93E17EEF1ECFA7B800671CA1 /* ConflictTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EEE1ECFA7B800671CA1 /* ConflictTest.swift */; };
 		93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F74A8A1EC5549C001289F8 /* FragmentTest.swift */; };
 /* End PBXBuildFile section */
 
@@ -683,6 +685,8 @@
 		93CD02E41EA0382C00AFB3FA /* CBLDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDictionary.h; sourceTree = "<group>"; };
 		93CD02E51EA0382D00AFB3FA /* CBLDictionary.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLDictionary.mm; sourceTree = "<group>"; };
 		93DD9BA71EB419BB00E502A2 /* ArrayTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArrayTest.m; sourceTree = "<group>"; };
+		93E17EEC1ECF7D8600671CA1 /* ConflictResolver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictResolver.swift; sourceTree = "<group>"; };
+		93E17EEE1ECFA7B800671CA1 /* ConflictTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictTest.swift; sourceTree = "<group>"; };
 		93F74A8A1EC5549C001289F8 /* FragmentTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FragmentTest.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -753,14 +757,12 @@
 			isa = PBXGroup;
 			children = (
 				938195F31EC10B780032CC51 /* Document */,
+				938CDF071E807E98002EE790 /* Query */,
 				275F928B1E4D3119007FD5A2 /* Database.swift */,
-				93A2AFB91E830BF800A08CAE /* QueryRow.swift */,
-				27BE3B551E4E93000012B74A /* PredicateQuery.swift */,
-				27BE3B531E4E92210012B74A /* Database+Query.swift */,
+				93E17EEC1ECF7D8600671CA1 /* ConflictResolver.swift */,
 				27E35A911E8C4F4300E103F9 /* Replication.swift */,
 				93AF51C81E80C42300E200F0 /* CouchbaseLiteError.swift */,
 				275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */,
-				938CDF071E807E98002EE790 /* Query */,
 				27BE3B491E4E45CB0012B74A /* Tests */,
 				275F92771E4D30A4007FD5A2 /* Info.plist */,
 			);
@@ -787,6 +789,7 @@
 			children = (
 				93629CFF1EC96D9500F79834 /* ArrayTest.swift */,
 				27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */,
+				93E17EEE1ECFA7B800671CA1 /* ConflictTest.swift */,
 				27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */,
 				93C3985E1EC66A89005A7A96 /* DictionaryTest.swift */,
 				27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */,
@@ -950,15 +953,18 @@
 		938CDF071E807E98002EE790 /* Query */ = {
 			isa = PBXGroup;
 			children = (
+				27BE3B531E4E92210012B74A /* Database+Query.swift */,
 				938CDF1F1E807F45002EE790 /* DataSource.swift */,
 				938CDF211E807F51002EE790 /* Expression.swift */,
 				938CDF191E807F14002EE790 /* From.swift */,
+				938CDF241E807F86002EE790 /* FromRouter.swift */,
 				938CDF1D1E807F35002EE790 /* OrderBy.swift */,
+				938CDF281E807F9F002EE790 /* OrderByRouter.swift */,
+				27BE3B551E4E93000012B74A /* PredicateQuery.swift */,
 				938CDF151E807EEB002EE790 /* Query.swift */,
+				93A2AFB91E830BF800A08CAE /* QueryRow.swift */,
 				938CDF171E807F08002EE790 /* Select.swift */,
 				938CDF1B1E807F23002EE790 /* Where.swift */,
-				938CDF241E807F86002EE790 /* FromRouter.swift */,
-				938CDF281E807F9F002EE790 /* OrderByRouter.swift */,
 				938CDF261E807F8F002EE790 /* WhereRouter.swift */,
 			);
 			name = Query;
@@ -1681,6 +1687,7 @@
 				93B5035E1E64B063002C4680 /* CBLConflictResolver.m in Sources */,
 				93B5036C1E64B096002C4680 /* CBLJSON.m in Sources */,
 				27BE3B541E4E92210012B74A /* Database+Query.swift in Sources */,
+				93E17EED1ECF7D8600671CA1 /* ConflictResolver.swift in Sources */,
 				938CDF201E807F45002EE790 /* DataSource.swift in Sources */,
 				9308F4071E64B22A00F53EE4 /* MYErrorUtils.m in Sources */,
 				27DF4BDB1ECA442400EE6B8D /* CBLLiveQuery.mm in Sources */,
@@ -1755,6 +1762,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27BE3B4F1E4E65EB0012B74A /* DocumentTest.swift in Sources */,
+				93E17EEF1ECFA7B800671CA1 /* ConflictTest.swift in Sources */,
 				93629D011EC96DE700F79834 /* ArrayTest.swift in Sources */,
 				27BE3B511E4E8F6F0012B74A /* PredicateQueryTest.swift in Sources */,
 				27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */,

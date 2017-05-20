@@ -9,9 +9,6 @@
 import Foundation
 
 
-public typealias ConflictResolver = CBLConflictResolver
-
-
 /** A database encryption key consists of a password string, or a 32-byte AES256 key. */
 public enum EncryptionKey {
     /** Password string */
@@ -47,8 +44,15 @@ public struct DatabaseConfiguration {
         If nil, a default algorithm will be used, where the revision with more history wins.
         An individual document can override this for itself by setting its own property. */
     public var conflictResolver: ConflictResolver? {
-        get { return _impl.conflictResolver }
-        set { _impl.conflictResolver = newValue }
+        get { return _conflictResolver }
+        set {
+            _conflictResolver = newValue
+            if let r = _conflictResolver {
+                _impl.conflictResolver = BridgingConflictResolver(resolver: r)
+            } else {
+                _impl.conflictResolver = nil
+            }
+        }
     }
     
 
@@ -88,7 +92,28 @@ public struct DatabaseConfiguration {
         _impl = CBLDatabaseConfiguration()
     }
     
+    // MARK: INTERNAL
+    
     let _impl : CBLDatabaseConfiguration
+    
+    
+    var _conflictResolver: ConflictResolver?
+    
+    
+    class BridgingConflictResolver: NSObject, CBLConflictResolver {
+        let _resovler: ConflictResolver
+        
+        
+        init(resolver: ConflictResolver) {
+            _resovler = resolver
+        }
+    
+        
+        public func resolve(_ conflict: CBLConflict) -> CBLReadOnlyDocument? {
+            let resolved = _resovler.resolve(conflict: Conflict(impl: conflict))
+            return resolved?._impl as? CBLReadOnlyDocument
+        }
+    }
 }
 
 
@@ -102,11 +127,7 @@ public final class Database {
          @param options  The database options, or nil for the default options. */
     public init(name: String, config: DatabaseConfiguration? = nil) throws {
         if let c = config {
-            let cblConfig = CBLDatabaseConfiguration()
-            cblConfig.directory = c.directory
-            cblConfig.fileProtection = c.fileProtection
-            cblConfig.encryptionKey = c.encryptionKey?.asObject
-            _impl = try CBLDatabase(name: name, config: cblConfig)
+            _impl = try CBLDatabase(name: name, config: c._impl)
         } else {
             _impl = try CBLDatabase(name: name)
         }

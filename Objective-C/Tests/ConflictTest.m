@@ -87,8 +87,8 @@
 
 
 - (void) setUp {
-    [super setUp];
     self.conflictResolver = [DoNotResolve new];
+    [super setUp];
 }
 
 
