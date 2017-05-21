@@ -23,19 +23,19 @@ class ConflictTest: CBLTestCase {
             let resolved = Document()
             if let base = conflict.base {
                 for key in base {
-                    resolved.set(base.getValue(key), forKey: key)
+                    resolved.set(base.value(forKey: key), forKey: key)
                 }
             }
             
             var changed = Set<String>()
             for key in conflict.theirs {
-                resolved.set(conflict.theirs.getValue(key) , forKey: key)
+                resolved.set(conflict.theirs.value(forKey: key), forKey: key)
                 changed.insert(key)
             }
             
             for key in conflict.mine {
                 if !changed.contains(key) {
-                    resolved.set(conflict.mine.getValue(key) , forKey: key)
+                    resolved.set(conflict.mine.value(forKey: key), forKey: key)
                 }
             }
             return resolved
@@ -95,7 +95,7 @@ class ConflictTest: CBLTestCase {
         
         let doc1 = try setupConflict()
         try saveDocument(doc1)
-        XCTAssertEqual(doc1.getString("name")!, "Scotty")
+        XCTAssertEqual(doc1.string(forKey: "name")!, "Scotty")
         
         // Get a new document with its own conflict resolver:
         self.conflictResolver = MergeThenTheirsWins()
@@ -116,10 +116,10 @@ class ConflictTest: CBLTestCase {
         doc2.set(31, forKey: "age")
         try saveDocument(doc2)
         
-        XCTAssertEqual(doc2.getInt("age"), 31)
-        XCTAssertEqual(doc2.getString("type")!, "bio")
-        XCTAssertEqual(doc2.getString("gender")!, "male")
-        XCTAssertEqual(doc2.getString("name")!, "Scott")
+        XCTAssertEqual(doc2.int(forKey: "age"), 31)
+        XCTAssertEqual(doc2.string(forKey: "type")!, "bio")
+        XCTAssertEqual(doc2.string(forKey: "gender")!, "male")
+        XCTAssertEqual(doc2.string(forKey: "name")!, "Scott")
     }
     
     
@@ -143,7 +143,7 @@ class ConflictTest: CBLTestCase {
         let doc = try setupConflict()
         try db.delete(doc)
         XCTAssertFalse(doc.isDeleted)
-        XCTAssertEqual(doc.getString("name")!, "Scotty")
+        XCTAssertEqual(doc.string(forKey: "name")!, "Scotty")
     }
     
     
@@ -153,7 +153,7 @@ class ConflictTest: CBLTestCase {
         
         let doc = try setupConflict()
         try saveDocument(doc)
-        XCTAssertEqual(doc.getString("name")!, "Scott Pilgrim")
+        XCTAssertEqual(doc.string(forKey: "name")!, "Scott Pilgrim")
     }
     
     
@@ -169,7 +169,7 @@ class ConflictTest: CBLTestCase {
         try saveProperties(properties, docID: doc.id)
         
         try saveDocument(doc)
-        XCTAssertEqual(doc.getString("name")!, "Scott of the Sahara")
+        XCTAssertEqual(doc.string(forKey: "name")!, "Scott of the Sahara")
     }
 }
 

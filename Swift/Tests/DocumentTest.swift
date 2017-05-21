@@ -156,16 +156,16 @@ class DocumentTest: CBLTestCase {
     func testGetValueFromNewEmptyDoc() throws {
         let doc = createDocument("doc1")
         try saveDocument(doc) { (d) in
-            XCTAssertEqual(d.getInt("key"), 0);
-            XCTAssertEqual(d.getFloat("key"), 0.0);
-            XCTAssertEqual(d.getDouble("key"), 0.0);
-            XCTAssertEqual(d.getBoolean("key"), false);
-            XCTAssertNil(d.getBlob("key"));
-            XCTAssertNil(d.getDate("key"));
-            XCTAssertNil(d.getValue("key"));
-            XCTAssertNil(d.getString("key"));
-            XCTAssertNil(d.getDictionary("key"));
-            XCTAssertNil(d.getArray("key"));
+            XCTAssertEqual(d.int(forKey: "key"), 0);
+            XCTAssertEqual(d.float(forKey: "key"), 0.0);
+            XCTAssertEqual(d.double(forKey: "key"), 0.0);
+            XCTAssertEqual(d.boolean(forKey: "key"), false);
+            XCTAssertNil(d.blob(forKey: "key"));
+            XCTAssertNil(d.date(forKey: "key"));
+            XCTAssertNil(d.value(forKey: "key"));
+            XCTAssertNil(d.string(forKey: "key"));
+            XCTAssertNil(d.dictionary(forKey: "key"));
+            XCTAssertNil(d.array(forKey: "key"));
             XCTAssertEqual(d.toDictionary().count, 0);
         }
     }
@@ -175,16 +175,16 @@ class DocumentTest: CBLTestCase {
         var doc = createDocument("doc1")
         doc = try saveDocument(doc)
         
-        XCTAssertEqual(doc.getInt("key"), 0);
-        XCTAssertEqual(doc.getFloat("key"), 0.0);
-        XCTAssertEqual(doc.getDouble("key"), 0.0);
-        XCTAssertEqual(doc.getBoolean("key"), false);
-        XCTAssertNil(doc.getBlob("key"));
-        XCTAssertNil(doc.getDate("key"));
-        XCTAssertNil(doc.getValue("key"));
-        XCTAssertNil(doc.getString("key"));
-        XCTAssertNil(doc.getDictionary("key"));
-        XCTAssertNil(doc.getArray("key"));
+        XCTAssertEqual(doc.int(forKey: "key"), 0);
+        XCTAssertEqual(doc.float(forKey: "key"), 0.0);
+        XCTAssertEqual(doc.double(forKey: "key"), 0.0);
+        XCTAssertEqual(doc.boolean(forKey: "key"), false);
+        XCTAssertNil(doc.blob(forKey: "key"));
+        XCTAssertNil(doc.date(forKey: "key"));
+        XCTAssertNil(doc.value(forKey: "key"));
+        XCTAssertNil(doc.string(forKey: "key"));
+        XCTAssertNil(doc.dictionary(forKey: "key"));
+        XCTAssertNil(doc.array(forKey: "key"));
         XCTAssertEqual(doc.toDictionary().count, 0);
     }
     
@@ -249,8 +249,8 @@ class DocumentTest: CBLTestCase {
         doc.set("string", forKey: "string2")
         
         try saveDocument(doc) { (d) in
-            XCTAssertEqual(d.getString("string1"), "")
-            XCTAssertEqual(d.getString("string2"), "string")
+            XCTAssertEqual(d.string(forKey: "string1"), "")
+            XCTAssertEqual(d.string(forKey: "string2"), "string")
         }
         
         // Update:
@@ -259,8 +259,8 @@ class DocumentTest: CBLTestCase {
         doc.set("", forKey: "string2")
         
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(d.getString("string1"), "string")
-            XCTAssertEqual(d.getString("string2"), "")
+            XCTAssertEqual(d.string(forKey: "string1"), "string")
+            XCTAssertEqual(d.string(forKey: "string2"), "")
         })
     }
     
@@ -269,19 +269,19 @@ class DocumentTest: CBLTestCase {
         let doc = createDocument("doc1")
         populateData(doc)
         try saveDocument(doc, eval: { (d) in
-            XCTAssertNil(d.getString("null"))
-            XCTAssertNil(d.getString("true"))
-            XCTAssertNil(d.getString("false"))
-            XCTAssertEqual(d.getString("string"), "string");
-            XCTAssertNil(d.getString("zero"))
-            XCTAssertNil(d.getString("one"))
-            XCTAssertNil(d.getString("minus_one"))
-            XCTAssertNil(d.getString("one_dot_one"))
-            XCTAssertEqual(d.getString("date"), kTestDate);
-            XCTAssertNil(d.getString("dict"))
-            XCTAssertNil(d.getString("array"))
-            XCTAssertNil(d.getString("blob"))
-            XCTAssertNil(d.getString("non_existing_key"))
+            XCTAssertNil(d.string(forKey: "null"))
+            XCTAssertNil(d.string(forKey: "true"))
+            XCTAssertNil(d.string(forKey: "false"))
+            XCTAssertEqual(d.string(forKey: "string"), "string");
+            XCTAssertNil(d.string(forKey: "zero"))
+            XCTAssertNil(d.string(forKey: "one"))
+            XCTAssertNil(d.string(forKey: "minus_one"))
+            XCTAssertNil(d.string(forKey: "one_dot_one"))
+            XCTAssertEqual(d.string(forKey: "date"), kTestDate);
+            XCTAssertNil(d.string(forKey: "dict"))
+            XCTAssertNil(d.string(forKey: "array"))
+            XCTAssertNil(d.string(forKey: "blob"))
+            XCTAssertNil(d.string(forKey: "non_existing_key"))
         })
     }
     
@@ -294,11 +294,11 @@ class DocumentTest: CBLTestCase {
         doc.set(1.1, forKey: "number4")
         
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(doc.getInt("number1"), 1)
-            XCTAssertEqual(doc.getInt("number2"), 0)
-            XCTAssertEqual(doc.getInt("number3"), -1)
-            XCTAssertEqual(doc.getFloat("number4"), 1.1)
-            XCTAssertEqual(doc.getDouble("number4"), 1.1)
+            XCTAssertEqual(doc.int(forKey: "number1"), 1)
+            XCTAssertEqual(doc.int(forKey: "number2"), 0)
+            XCTAssertEqual(doc.int(forKey: "number3"), -1)
+            XCTAssertEqual(doc.float(forKey: "number4"), 1.1)
+            XCTAssertEqual(doc.double(forKey: "number4"), 1.1)
         })
         
         // Update:
@@ -309,11 +309,11 @@ class DocumentTest: CBLTestCase {
         doc.set(-1, forKey: "number4")
         
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(doc.getInt("number1"), 0)
-            XCTAssertEqual(doc.getInt("number2"), 1)
-            XCTAssertEqual(doc.getFloat("number3"), 1.1)
-            XCTAssertEqual(doc.getDouble("number3"), 1.1)
-            XCTAssertEqual(doc.getInt("number4"), -1)
+            XCTAssertEqual(doc.int(forKey: "number1"), 0)
+            XCTAssertEqual(doc.int(forKey: "number2"), 1)
+            XCTAssertEqual(doc.float(forKey: "number3"), 1.1)
+            XCTAssertEqual(doc.double(forKey: "number3"), 1.1)
+            XCTAssertEqual(doc.int(forKey: "number4"), -1)
         })
     }
     
@@ -322,19 +322,19 @@ class DocumentTest: CBLTestCase {
         let doc = createDocument("doc1")
         populateData(doc)
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(d.getInt("null"), 0)
-            XCTAssertEqual(d.getInt("true"), 1)
-            XCTAssertEqual(d.getInt("false"), 0)
-            XCTAssertEqual(d.getInt("string"), 0);
-            XCTAssertEqual(d.getInt("zero"),0)
-            XCTAssertEqual(d.getInt("one"), 1)
-            XCTAssertEqual(d.getInt("minus_one"), -1)
-            XCTAssertEqual(d.getInt("one_dot_one"), 1)
-            XCTAssertEqual(d.getInt("date"), 0)
-            XCTAssertEqual(d.getInt("dict"), 0)
-            XCTAssertEqual(d.getInt("array"), 0)
-            XCTAssertEqual(d.getInt("blob"), 0)
-            XCTAssertEqual(d.getInt("non_existing_key"), 0)
+            XCTAssertEqual(d.int(forKey: "null"), 0)
+            XCTAssertEqual(d.int(forKey: "true"), 1)
+            XCTAssertEqual(d.int(forKey: "false"), 0)
+            XCTAssertEqual(d.int(forKey: "string"), 0);
+            XCTAssertEqual(d.int(forKey: "zero"),0)
+            XCTAssertEqual(d.int(forKey: "one"), 1)
+            XCTAssertEqual(d.int(forKey: "minus_one"), -1)
+            XCTAssertEqual(d.int(forKey: "one_dot_one"), 1)
+            XCTAssertEqual(d.int(forKey: "date"), 0)
+            XCTAssertEqual(d.int(forKey: "dict"), 0)
+            XCTAssertEqual(d.int(forKey: "array"), 0)
+            XCTAssertEqual(d.int(forKey: "blob"), 0)
+            XCTAssertEqual(d.int(forKey: "non_existing_key"), 0)
         })
     }
 
@@ -343,19 +343,19 @@ class DocumentTest: CBLTestCase {
         let doc = createDocument("doc1")
         populateData(doc)
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(d.getFloat("null"), 0.0)
-            XCTAssertEqual(d.getFloat("true"), 1.0)
-            XCTAssertEqual(d.getFloat("false"), 0.0)
-            XCTAssertEqual(d.getFloat("string"), 0.0);
-            XCTAssertEqual(d.getFloat("zero"),0.0)
-            XCTAssertEqual(d.getFloat("one"), 1.0)
-            XCTAssertEqual(d.getFloat("minus_one"), -1.0)
-            XCTAssertEqual(d.getFloat("one_dot_one"), 1.1)
-            XCTAssertEqual(d.getFloat("date"), 0.0)
-            XCTAssertEqual(d.getFloat("dict"), 0.0)
-            XCTAssertEqual(d.getFloat("array"), 0.0)
-            XCTAssertEqual(d.getFloat("blob"), 0.0)
-            XCTAssertEqual(d.getFloat("non_existing_key"), 0.0)
+            XCTAssertEqual(d.float(forKey: "null"), 0.0)
+            XCTAssertEqual(d.float(forKey: "true"), 1.0)
+            XCTAssertEqual(d.float(forKey: "false"), 0.0)
+            XCTAssertEqual(d.float(forKey: "string"), 0.0);
+            XCTAssertEqual(d.float(forKey: "zero"),0.0)
+            XCTAssertEqual(d.float(forKey: "one"), 1.0)
+            XCTAssertEqual(d.float(forKey: "minus_one"), -1.0)
+            XCTAssertEqual(d.float(forKey: "one_dot_one"), 1.1)
+            XCTAssertEqual(d.float(forKey: "date"), 0.0)
+            XCTAssertEqual(d.float(forKey: "dict"), 0.0)
+            XCTAssertEqual(d.float(forKey: "array"), 0.0)
+            XCTAssertEqual(d.float(forKey: "blob"), 0.0)
+            XCTAssertEqual(d.float(forKey: "non_existing_key"), 0.0)
         })
     }
     
@@ -364,19 +364,19 @@ class DocumentTest: CBLTestCase {
         let doc = createDocument("doc1")
         populateData(doc)
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(d.getDouble("null"), 0.0)
-            XCTAssertEqual(d.getDouble("true"), 1.0)
-            XCTAssertEqual(d.getDouble("false"), 0.0)
-            XCTAssertEqual(d.getDouble("string"), 0.0);
-            XCTAssertEqual(d.getDouble("zero"),0.0)
-            XCTAssertEqual(d.getDouble("one"), 1.0)
-            XCTAssertEqual(d.getDouble("minus_one"), -1.0)
-            XCTAssertEqual(d.getDouble("one_dot_one"), 1.1)
-            XCTAssertEqual(d.getDouble("date"), 0.0)
-            XCTAssertEqual(d.getDouble("dict"), 0.0)
-            XCTAssertEqual(d.getDouble("array"), 0.0)
-            XCTAssertEqual(d.getDouble("blob"), 0.0)
-            XCTAssertEqual(d.getDouble("non_existing_key"), 0.0)
+            XCTAssertEqual(d.double(forKey: "null"), 0.0)
+            XCTAssertEqual(d.double(forKey: "true"), 1.0)
+            XCTAssertEqual(d.double(forKey: "false"), 0.0)
+            XCTAssertEqual(d.double(forKey: "string"), 0.0);
+            XCTAssertEqual(d.double(forKey: "zero"),0.0)
+            XCTAssertEqual(d.double(forKey: "one"), 1.0)
+            XCTAssertEqual(d.double(forKey: "minus_one"), -1.0)
+            XCTAssertEqual(d.double(forKey: "one_dot_one"), 1.1)
+            XCTAssertEqual(d.double(forKey: "date"), 0.0)
+            XCTAssertEqual(d.double(forKey: "dict"), 0.0)
+            XCTAssertEqual(d.double(forKey: "array"), 0.0)
+            XCTAssertEqual(d.double(forKey: "blob"), 0.0)
+            XCTAssertEqual(d.double(forKey: "non_existing_key"), 0.0)
         })
     }
     
@@ -391,20 +391,20 @@ class DocumentTest: CBLTestCase {
         doc.set(Double.greatestFiniteMagnitude, forKey: "max_double")
         
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(d.getInt("min_int"), Int.min);
-            XCTAssertEqual(d.getInt("max_int"), Int.max);
-            XCTAssertEqual(d.getValue("min_int") as! Int, Int.min);
-            XCTAssertEqual(d.getValue("max_int") as! Int, Int.max);
+            XCTAssertEqual(d.int(forKey: "min_int"), Int.min);
+            XCTAssertEqual(d.int(forKey: "max_int"), Int.max);
+            XCTAssertEqual(d.value(forKey: "min_int") as! Int, Int.min);
+            XCTAssertEqual(d.value(forKey: "max_int") as! Int, Int.max);
             
-            XCTAssertEqual(d.getFloat("min_float"), Float.leastNormalMagnitude);
-            XCTAssertEqual(d.getFloat("max_float"), Float.greatestFiniteMagnitude);
-            XCTAssertEqual(d.getValue("min_float") as! Float, Float.leastNormalMagnitude);
-            XCTAssertEqual(d.getValue("max_float") as! Float, Float.greatestFiniteMagnitude);
+            XCTAssertEqual(d.float(forKey: "min_float"), Float.leastNormalMagnitude);
+            XCTAssertEqual(d.float(forKey: "max_float"), Float.greatestFiniteMagnitude);
+            XCTAssertEqual(d.value(forKey: "min_float") as! Float, Float.leastNormalMagnitude);
+            XCTAssertEqual(d.value(forKey: "max_float") as! Float, Float.greatestFiniteMagnitude);
             
-            XCTAssertEqual(d.getDouble("min_double"), Double.leastNormalMagnitude);
-            XCTAssertEqual(d.getDouble("max_double"), Double.greatestFiniteMagnitude);
-            XCTAssertEqual(d.getValue("min_double") as! Double, Double.leastNormalMagnitude);
-            XCTAssertEqual(d.getValue("max_double") as! Double, Double.greatestFiniteMagnitude);
+            XCTAssertEqual(d.double(forKey: "min_double"), Double.leastNormalMagnitude);
+            XCTAssertEqual(d.double(forKey: "max_double"), Double.greatestFiniteMagnitude);
+            XCTAssertEqual(d.value(forKey: "min_double") as! Double, Double.leastNormalMagnitude);
+            XCTAssertEqual(d.value(forKey: "max_double") as! Double, Double.greatestFiniteMagnitude);
         })
     }
     
@@ -418,25 +418,25 @@ class DocumentTest: CBLTestCase {
         doc.set(1.99, forKey: "number5")
         
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(d.getInt("number1"), 1);
-            XCTAssertEqual(d.getFloat("number1"), 1.00);
-            XCTAssertEqual(d.getDouble("number1"), 1.00);
+            XCTAssertEqual(d.int(forKey: "number1"), 1);
+            XCTAssertEqual(d.float(forKey: "number1"), 1.00);
+            XCTAssertEqual(d.double(forKey: "number1"), 1.00);
             
-            XCTAssertEqual(d.getInt("number2"), 1);
-            XCTAssertEqual(d.getFloat("number2"), 1.49);
-            XCTAssertEqual(d.getDouble("number2"), 1.49);
+            XCTAssertEqual(d.int(forKey: "number2"), 1);
+            XCTAssertEqual(d.float(forKey: "number2"), 1.49);
+            XCTAssertEqual(d.double(forKey: "number2"), 1.49);
             
-            XCTAssertEqual(d.getInt("number3"), 1);
-            XCTAssertEqual(d.getFloat("number3"), 1.50);
-            XCTAssertEqual(d.getDouble("number3"), 1.50);
+            XCTAssertEqual(d.int(forKey: "number3"), 1);
+            XCTAssertEqual(d.float(forKey: "number3"), 1.50);
+            XCTAssertEqual(d.double(forKey: "number3"), 1.50);
             
-            XCTAssertEqual(d.getInt("number4"), 1);
-            XCTAssertEqual(d.getFloat("number4"), 1.51);
-            XCTAssertEqual(d.getDouble("number4"), 1.51);
+            XCTAssertEqual(d.int(forKey: "number4"), 1);
+            XCTAssertEqual(d.float(forKey: "number4"), 1.51);
+            XCTAssertEqual(d.double(forKey: "number4"), 1.51);
             
-            XCTAssertEqual(d.getInt("number5"), 1);
-            XCTAssertEqual(d.getFloat("number5"), 1.99);
-            XCTAssertEqual(d.getDouble("number5"), 1.99);
+            XCTAssertEqual(d.int(forKey: "number5"), 1);
+            XCTAssertEqual(d.float(forKey: "number5"), 1.99);
+            XCTAssertEqual(d.double(forKey: "number5"), 1.99);
         })
     }
     
@@ -447,8 +447,8 @@ class DocumentTest: CBLTestCase {
         doc.set(false, forKey: "boolean2")
         
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(d.getBoolean("boolean1"), true);
-            XCTAssertEqual(d.getBoolean("boolean2"), false);
+            XCTAssertEqual(d.boolean(forKey: "boolean1"), true);
+            XCTAssertEqual(d.boolean(forKey: "boolean2"), false);
         })
         
         // Update:
@@ -457,8 +457,8 @@ class DocumentTest: CBLTestCase {
         doc.set(true, forKey: "boolean2")
         
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(d.getBoolean("boolean1"), false);
-            XCTAssertEqual(d.getBoolean("boolean2"), true);
+            XCTAssertEqual(d.boolean(forKey: "boolean1"), false);
+            XCTAssertEqual(d.boolean(forKey: "boolean2"), true);
         })
     }
     
@@ -467,19 +467,19 @@ class DocumentTest: CBLTestCase {
         let doc = createDocument("doc1")
         populateData(doc)
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(d.getBoolean("null"), false)
-            XCTAssertEqual(d.getBoolean("true"), true)
-            XCTAssertEqual(d.getBoolean("false"),false)
-            XCTAssertEqual(d.getBoolean("string"), true);
-            XCTAssertEqual(d.getBoolean("zero"), false)
-            XCTAssertEqual(d.getBoolean("one"), true)
-            XCTAssertEqual(d.getBoolean("minus_one"), true)
-            XCTAssertEqual(d.getBoolean("one_dot_one"), true)
-            XCTAssertEqual(d.getBoolean("date"), true)
-            XCTAssertEqual(d.getBoolean("dict"), true)
-            XCTAssertEqual(d.getBoolean("array"), true)
-            XCTAssertEqual(d.getBoolean("blob"), true)
-            XCTAssertEqual(d.getBoolean("non_existing_key"), false)
+            XCTAssertEqual(d.boolean(forKey: "null"), false)
+            XCTAssertEqual(d.boolean(forKey: "true"), true)
+            XCTAssertEqual(d.boolean(forKey: "false"),false)
+            XCTAssertEqual(d.boolean(forKey: "string"), true);
+            XCTAssertEqual(d.boolean(forKey: "zero"), false)
+            XCTAssertEqual(d.boolean(forKey: "one"), true)
+            XCTAssertEqual(d.boolean(forKey: "minus_one"), true)
+            XCTAssertEqual(d.boolean(forKey: "one_dot_one"), true)
+            XCTAssertEqual(d.boolean(forKey: "date"), true)
+            XCTAssertEqual(d.boolean(forKey: "dict"), true)
+            XCTAssertEqual(d.boolean(forKey: "array"), true)
+            XCTAssertEqual(d.boolean(forKey: "blob"), true)
+            XCTAssertEqual(d.boolean(forKey: "non_existing_key"), false)
         })
     }
     
@@ -492,9 +492,9 @@ class DocumentTest: CBLTestCase {
         doc.set(date, forKey: "date")
         
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(d.getValue("date") as! String, dateStr);
-            XCTAssertEqual(d.getString("date"), dateStr);
-            XCTAssertEqual(jsonFromDate(d.getDate("date")!), dateStr);
+            XCTAssertEqual(d.value(forKey: "date") as! String, dateStr);
+            XCTAssertEqual(d.string(forKey: "date"), dateStr);
+            XCTAssertEqual(jsonFromDate(d.date(forKey: "date")!), dateStr);
         })
         
         // Update:
@@ -504,9 +504,9 @@ class DocumentTest: CBLTestCase {
         doc.set(nuDate, forKey: "date")
         
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(d.getValue("date") as! String, nuDateStr);
-            XCTAssertEqual(d.getString("date"), nuDateStr);
-            XCTAssertEqual(jsonFromDate(d.getDate("date")!), nuDateStr);
+            XCTAssertEqual(d.value(forKey: "date") as! String, nuDateStr);
+            XCTAssertEqual(d.string(forKey: "date"), nuDateStr);
+            XCTAssertEqual(jsonFromDate(d.date(forKey: "date")!), nuDateStr);
         })
     }
     
@@ -515,19 +515,19 @@ class DocumentTest: CBLTestCase {
         let doc = createDocument("doc1")
         populateData(doc)
         try saveDocument(doc, eval: { (d) in
-            XCTAssertNil(d.getDate("null"))
-            XCTAssertNil(d.getDate("true"))
-            XCTAssertNil(d.getDate("false"))
-            XCTAssertNil(d.getDate("string"));
-            XCTAssertNil(d.getDate("zero"))
-            XCTAssertNil(d.getDate("one"))
-            XCTAssertNil(d.getDate("minus_one"))
-            XCTAssertNil(d.getDate("one_dot_one"))
-            XCTAssertEqual(jsonFromDate(d.getDate("date")!), kTestDate);
-            XCTAssertNil(d.getDate("dict"))
-            XCTAssertNil(d.getDate("array"))
-            XCTAssertNil(d.getDate("blob"))
-            XCTAssertNil(d.getDate("non_existing_key"))
+            XCTAssertNil(d.date(forKey: "null"))
+            XCTAssertNil(d.date(forKey: "true"))
+            XCTAssertNil(d.date(forKey: "false"))
+            XCTAssertNil(d.date(forKey: "string"));
+            XCTAssertNil(d.date(forKey: "zero"))
+            XCTAssertNil(d.date(forKey: "one"))
+            XCTAssertNil(d.date(forKey: "minus_one"))
+            XCTAssertNil(d.date(forKey: "one_dot_one"))
+            XCTAssertEqual(jsonFromDate(d.date(forKey: "date")!), kTestDate);
+            XCTAssertNil(d.date(forKey: "dict"))
+            XCTAssertNil(d.date(forKey: "array"))
+            XCTAssertNil(d.date(forKey: "blob"))
+            XCTAssertNil(d.date(forKey: "non_existing_key"))
         })
     }
     
@@ -539,8 +539,8 @@ class DocumentTest: CBLTestCase {
         doc.set(blob, forKey: "blob")
         
         try saveDocument(doc, eval: { (d) in
-            XCTAssertTrue(d.getBlob("blob")!.properties == blob.properties)
-            XCTAssertEqual(d.getBlob("blob")!.content, content)
+            XCTAssertTrue(d.blob(forKey: "blob")!.properties == blob.properties)
+            XCTAssertEqual(d.blob(forKey: "blob")!.content, content)
         })
         
         // Update:
@@ -550,8 +550,8 @@ class DocumentTest: CBLTestCase {
         doc.set(nuBlob, forKey: "blob")
         
         try saveDocument(doc, eval: { (d) in
-            XCTAssertTrue(d.getBlob("blob")!.properties == nuBlob.properties)
-            XCTAssertEqual(d.getBlob("blob")!.content, nuContent)
+            XCTAssertTrue(d.blob(forKey: "blob")!.properties == nuBlob.properties)
+            XCTAssertEqual(d.blob(forKey: "blob")!.content, nuContent)
         })
     }
     
@@ -560,19 +560,19 @@ class DocumentTest: CBLTestCase {
         let doc = createDocument("doc1")
         populateData(doc)
         try saveDocument(doc, eval: { (d) in
-            XCTAssertNil(d.getBlob("null"))
-            XCTAssertNil(d.getBlob("true"))
-            XCTAssertNil(d.getBlob("false"))
-            XCTAssertNil(d.getBlob("string"));
-            XCTAssertNil(d.getBlob("zero"))
-            XCTAssertNil(d.getBlob("one"))
-            XCTAssertNil(d.getBlob("minus_one"))
-            XCTAssertNil(d.getBlob("one_dot_one"))
-            XCTAssertNil(d.getBlob("date"))
-            XCTAssertNil(d.getBlob("dict"))
-            XCTAssertNil(d.getBlob("array"))
-            XCTAssertEqual(d.getBlob("blob")!.content, kTestBlob.data(using: .utf8))
-            XCTAssertNil(d.getBlob("non_existing_key"))
+            XCTAssertNil(d.blob(forKey: "null"))
+            XCTAssertNil(d.blob(forKey: "true"))
+            XCTAssertNil(d.blob(forKey: "false"))
+            XCTAssertNil(d.blob(forKey: "string"));
+            XCTAssertNil(d.blob(forKey: "zero"))
+            XCTAssertNil(d.blob(forKey: "one"))
+            XCTAssertNil(d.blob(forKey: "minus_one"))
+            XCTAssertNil(d.blob(forKey: "one_dot_one"))
+            XCTAssertNil(d.blob(forKey: "date"))
+            XCTAssertNil(d.blob(forKey: "dict"))
+            XCTAssertNil(d.blob(forKey: "array"))
+            XCTAssertEqual(d.blob(forKey: "blob")!.content, kTestBlob.data(using: .utf8))
+            XCTAssertNil(d.blob(forKey: "non_existing_key"))
         })
     }
     
@@ -583,26 +583,26 @@ class DocumentTest: CBLTestCase {
         dict.set("1 Main street", forKey: "street")
         doc.set(dict, forKey: "dict")
         
-        XCTAssertTrue(doc.getValue("dict") as! DictionaryObject === dict)
+        XCTAssertTrue(doc.value(forKey: "dict") as! DictionaryObject === dict)
         doc = try saveDocument(doc)
         
-        XCTAssertTrue(doc.getValue("dict") as! DictionaryObject !== dict)
-        XCTAssertTrue(doc.getValue("dict") as! DictionaryObject === doc.getDictionary("dict")!)
+        XCTAssertTrue(doc.value(forKey: "dict") as! DictionaryObject !== dict)
+        XCTAssertTrue(doc.value(forKey: "dict") as! DictionaryObject === doc.dictionary(forKey: "dict")!)
         
         // Update:
         
-        dict = doc.getDictionary("dict")!
+        dict = doc.dictionary(forKey: "dict")!
         dict.set("Mountain View", forKey: "city")
         
-        XCTAssertTrue(doc.getValue("dict") as! DictionaryObject === doc.getDictionary("dict")!)
+        XCTAssertTrue(doc.value(forKey: "dict") as! DictionaryObject === doc.dictionary(forKey: "dict")!)
         let nsDict: [String: Any] = ["street": "1 Main street", "city": "Mountain View"]
-        XCTAssertTrue(doc.getDictionary("dict")!.toDictionary() == nsDict)
+        XCTAssertTrue(doc.dictionary(forKey: "dict")!.toDictionary() == nsDict)
         
         doc = try saveDocument(doc)
         
-        XCTAssertTrue(doc.getValue("dict") as! DictionaryObject !== dict)
-        XCTAssertTrue(doc.getValue("dict") as! DictionaryObject === doc.getDictionary("dict")!)
-        XCTAssertTrue(doc.getDictionary("dict")!.toDictionary() == nsDict)
+        XCTAssertTrue(doc.value(forKey: "dict") as! DictionaryObject !== dict)
+        XCTAssertTrue(doc.value(forKey: "dict") as! DictionaryObject === doc.dictionary(forKey: "dict")!)
+        XCTAssertTrue(doc.dictionary(forKey: "dict")!.toDictionary() == nsDict)
     }
     
     
@@ -610,20 +610,20 @@ class DocumentTest: CBLTestCase {
         let doc = createDocument("doc1")
         populateData(doc)
         try saveDocument(doc, eval: { (d) in
-            XCTAssertNil(d.getDictionary("null"))
-            XCTAssertNil(d.getDictionary("true"))
-            XCTAssertNil(d.getDictionary("false"))
-            XCTAssertNil(d.getDictionary("string"));
-            XCTAssertNil(d.getDictionary("zero"))
-            XCTAssertNil(d.getDictionary("one"))
-            XCTAssertNil(d.getDictionary("minus_one"))
-            XCTAssertNil(d.getDictionary("one_dot_one"))
-            XCTAssertNil(d.getDictionary("date"))
+            XCTAssertNil(d.dictionary(forKey: "null"))
+            XCTAssertNil(d.dictionary(forKey: "true"))
+            XCTAssertNil(d.dictionary(forKey: "false"))
+            XCTAssertNil(d.dictionary(forKey: "string"));
+            XCTAssertNil(d.dictionary(forKey: "zero"))
+            XCTAssertNil(d.dictionary(forKey: "one"))
+            XCTAssertNil(d.dictionary(forKey: "minus_one"))
+            XCTAssertNil(d.dictionary(forKey: "one_dot_one"))
+            XCTAssertNil(d.dictionary(forKey: "date"))
             let dict: [String: Any] = ["street": "1 Main street", "city": "Mountain View", "state": "CA"]
-            XCTAssertTrue(doc.getDictionary("dict")!.toDictionary() == dict)
-            XCTAssertNil(d.getDictionary("array"))
-            XCTAssertNil(d.getDictionary("blob"))
-            XCTAssertNil(d.getDictionary("non_existing_key"))
+            XCTAssertTrue(doc.dictionary(forKey: "dict")!.toDictionary() == dict)
+            XCTAssertNil(d.dictionary(forKey: "array"))
+            XCTAssertNil(d.dictionary(forKey: "blob"))
+            XCTAssertNil(d.dictionary(forKey: "non_existing_key"))
         })
     }
     
@@ -636,27 +636,27 @@ class DocumentTest: CBLTestCase {
         array.add("item3")
         doc.set(array, forKey: "array")
         
-        XCTAssertTrue(doc.getValue("array") as! ArrayObject === array)
-        XCTAssertTrue(doc.getArray("array")! === array)
-        XCTAssertTrue(doc.getArray("array")!.toArray() == ["item1", "item2", "item3"])
+        XCTAssertTrue(doc.value(forKey: "array") as! ArrayObject === array)
+        XCTAssertTrue(doc.array(forKey: "array")! === array)
+        XCTAssertTrue(doc.array(forKey: "array")!.toArray() == ["item1", "item2", "item3"])
         
         doc = try saveDocument(doc)
         
-        XCTAssertTrue(doc.getValue("array") as! ArrayObject !== array)
-        XCTAssertTrue(doc.getValue("array") as! ArrayObject === doc.getArray("array")!)
-        XCTAssertTrue(doc.getArray("array")!.toArray() == ["item1", "item2", "item3"])
+        XCTAssertTrue(doc.value(forKey: "array") as! ArrayObject !== array)
+        XCTAssertTrue(doc.value(forKey: "array") as! ArrayObject === doc.array(forKey: "array")!)
+        XCTAssertTrue(doc.array(forKey: "array")!.toArray() == ["item1", "item2", "item3"])
      
         // Update:
         
-        array = doc.getArray("array")!
+        array = doc.array(forKey: "array")!
         array.add("item4")
         array.add("item5")
         
         doc = try saveDocument(doc)
         
-        XCTAssertTrue(doc.getValue("array") as! ArrayObject !== array)
-        XCTAssertTrue(doc.getValue("array") as! ArrayObject === doc.getArray("array")!)
-        XCTAssertTrue(doc.getArray("array")!.toArray() == ["item1", "item2", "item3", "item4", "item5"])
+        XCTAssertTrue(doc.value(forKey: "array") as! ArrayObject !== array)
+        XCTAssertTrue(doc.value(forKey: "array") as! ArrayObject === doc.array(forKey: "array")!)
+        XCTAssertTrue(doc.array(forKey: "array")!.toArray() == ["item1", "item2", "item3", "item4", "item5"])
     }
     
     
@@ -664,19 +664,19 @@ class DocumentTest: CBLTestCase {
         let doc = createDocument("doc1")
         populateData(doc)
         try saveDocument(doc, eval: { (d) in
-            XCTAssertNil(d.getArray("null"))
-            XCTAssertNil(d.getArray("true"))
-            XCTAssertNil(d.getArray("false"))
-            XCTAssertNil(d.getArray("string"));
-            XCTAssertNil(d.getArray("zero"))
-            XCTAssertNil(d.getArray("one"))
-            XCTAssertNil(d.getArray("minus_one"))
-            XCTAssertNil(d.getArray("one_dot_one"))
-            XCTAssertNil(d.getArray("date"))
-            XCTAssertNil(d.getArray("dict"))
-            XCTAssertTrue(d.getArray("array")!.toArray() == ["650-123-0001", "650-123-0002"])
-            XCTAssertNil(d.getArray("blob"))
-            XCTAssertNil(d.getArray("non_existing_key"))
+            XCTAssertNil(d.array(forKey: "null"))
+            XCTAssertNil(d.array(forKey: "true"))
+            XCTAssertNil(d.array(forKey: "false"))
+            XCTAssertNil(d.array(forKey: "string"));
+            XCTAssertNil(d.array(forKey: "zero"))
+            XCTAssertNil(d.array(forKey: "one"))
+            XCTAssertNil(d.array(forKey: "minus_one"))
+            XCTAssertNil(d.array(forKey: "one_dot_one"))
+            XCTAssertNil(d.array(forKey: "date"))
+            XCTAssertNil(d.array(forKey: "dict"))
+            XCTAssertTrue(d.array(forKey: "array")!.toArray() == ["650-123-0001", "650-123-0002"])
+            XCTAssertNil(d.array(forKey: "blob"))
+            XCTAssertNil(d.array(forKey: "non_existing_key"))
         })
     }
     
@@ -685,7 +685,7 @@ class DocumentTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc.set(NSNull(), forKey: "null")
         try saveDocument(doc, eval: { (d) in
-            XCTAssertEqual(d.getValue("null") as! NSNull, NSNull())
+            XCTAssertEqual(d.value(forKey: "null") as! NSNull, NSNull())
             XCTAssertEqual(d.count, 1)
         })
     }
@@ -699,11 +699,11 @@ class DocumentTest: CBLTestCase {
         var doc = createDocument("doc1")
         doc.set(dict, forKey: "address")
         
-        let address = doc.getDictionary("address")!
-        XCTAssertTrue(address === doc.getValue("address") as! DictionaryObject)
-        XCTAssertEqual(address.getString("street"), "1 Main street")
-        XCTAssertEqual(address.getString("city"), "Mountain View")
-        XCTAssertEqual(address.getString("state"), "CA")
+        let address = doc.dictionary(forKey: "address")!
+        XCTAssertTrue(address === doc.value(forKey: "address") as! DictionaryObject)
+        XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
+        XCTAssertEqual(address.string(forKey: "city"), "Mountain View")
+        XCTAssertEqual(address.string(forKey: "state"), "CA")
         XCTAssertTrue(address.toDictionary() == dict)
         
         // Update with a new dictionary:
@@ -713,19 +713,19 @@ class DocumentTest: CBLTestCase {
         doc.set(nuDict, forKey: "address")
         
         // Check whether the old address dictionary is still accessible:
-        XCTAssertEqual(address.getString("street"), "1 Main street")
-        XCTAssertEqual(address.getString("city"), "Mountain View")
-        XCTAssertEqual(address.getString("state"), "CA")
+        XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
+        XCTAssertEqual(address.string(forKey: "city"), "Mountain View")
+        XCTAssertEqual(address.string(forKey: "state"), "CA")
         XCTAssertTrue(address.toDictionary() == dict)
         
         // The old address dictionary should be detached:
-        let nuAddress = doc.getDictionary("address")!
+        let nuAddress = doc.dictionary(forKey: "address")!
         XCTAssertTrue(address !== nuAddress)
         
         // Update nuAddress:
         nuAddress.set("94032", forKey: "zip")
-        XCTAssertEqual(nuAddress.getString("zip"), "94032")
-        XCTAssertNil(address.getString("zip"))
+        XCTAssertEqual(nuAddress.string(forKey: "zip"), "94032")
+        XCTAssertNil(address.string(forKey: "zip"))
         
         // Save:
         doc = try saveDocument(doc)
@@ -744,12 +744,12 @@ class DocumentTest: CBLTestCase {
         var doc = createDocument("doc1")
         doc.set(array, forKey: "members")
         
-        let members = doc.getArray("members")!
-        XCTAssertTrue(members === doc.getValue("members") as! ArrayObject)
+        let members = doc.array(forKey: "members")!
+        XCTAssertTrue(members === doc.value(forKey: "members") as! ArrayObject)
         XCTAssertEqual(members.count, 3)
-        XCTAssertEqual(members.getString(0), "a")
-        XCTAssertEqual(members.getString(1), "b")
-        XCTAssertEqual(members.getString(2), "c")
+        XCTAssertEqual(members.string(at: 0), "a")
+        XCTAssertEqual(members.string(at: 1), "b")
+        XCTAssertEqual(members.string(at: 2), "c")
         XCTAssertTrue(members.toArray() == ["a", "b", "c"])
         
         // Update with a new array:
@@ -758,19 +758,19 @@ class DocumentTest: CBLTestCase {
         
         // Check whether the old members array is still accessible:
         XCTAssertEqual(members.count, 3)
-        XCTAssertEqual(members.getString(0), "a")
-        XCTAssertEqual(members.getString(1), "b")
-        XCTAssertEqual(members.getString(2), "c")
+        XCTAssertEqual(members.string(at: 0), "a")
+        XCTAssertEqual(members.string(at: 1), "b")
+        XCTAssertEqual(members.string(at: 2), "c")
         XCTAssertTrue(members.toArray() == ["a", "b", "c"])
         
         // The old members array should be detached:
-        let nuMembers = doc.getArray("members")!
+        let nuMembers = doc.array(forKey: "members")!
         XCTAssertTrue(nuMembers !== members)
         
         // Update nuMembers:
         nuMembers.add("g")
         XCTAssertEqual(nuMembers.count, 4)
-        XCTAssertEqual(nuMembers.getString(3), "g")
+        XCTAssertEqual(nuMembers.string(at: 3), "g")
         
         // Save:
         doc = try saveDocument(doc)
@@ -793,7 +793,7 @@ class DocumentTest: CBLTestCase {
         
         doc = try saveDocument(doc)
         
-        shipping = doc.getDictionary("addresses")!.getDictionary("shipping")!
+        shipping = doc.dictionary(forKey: "addresses")!.dictionary(forKey: "shipping")!
         shipping.set("94042", forKey: "zip")
         
         doc = try saveDocument(doc)
@@ -827,11 +827,11 @@ class DocumentTest: CBLTestCase {
         
         doc = try saveDocument(doc)
         
-        address1 = doc.getArray("addresses")!.getDictionary(0)!
+        address1 = doc.array(forKey: "addresses")!.dictionary(at: 0)!
         address1.set("2 Main street", forKey: "street")
         address1.set("94042", forKey: "zip")
         
-        address2 = doc.getArray("addresses")!.getDictionary(1)!
+        address2 = doc.array(forKey: "addresses")!.dictionary(at: 1)!
         address2.set("2 Second street", forKey: "street")
         address2.set("94302", forKey: "zip")
         
@@ -868,12 +868,12 @@ class DocumentTest: CBLTestCase {
         
         doc = try saveDocument(doc)
         
-        group1 = doc.getArray("groups")!.getArray(0)!
+        group1 = doc.array(forKey: "groups")!.array(at: 0)!
         group1.set("d", at: 0)
         group1.set("e", at: 1)
         group1.set("f", at: 2)
         
-        group2 = doc.getArray("groups")!.getArray(1)!
+        group2 = doc.array(forKey: "groups")!.array(at: 1)!
         group2.set(4, at: 0)
         group2.set(5, at: 1)
         group2.set(6, at: 2)
@@ -906,12 +906,12 @@ class DocumentTest: CBLTestCase {
         
         doc = try saveDocument(doc)
         
-        member1 = doc.getDictionary("group1")!.getArray("member")!
+        member1 = doc.dictionary(forKey: "group1")!.array(forKey: "member")!
         member1.set("d", at: 0)
         member1.set("e", at: 1)
         member1.set("f", at: 2)
         
-        member2 = doc.getDictionary("group2")!.getArray("member")!
+        member2 = doc.dictionary(forKey: "group2")!.array(forKey: "member")!
         member2.set(4, at: 0)
         member2.set(5, at: 1)
         member2.set(6, at: 2)
@@ -934,17 +934,17 @@ class DocumentTest: CBLTestCase {
         doc.set(address, forKey: "shipping")
         doc.set(address, forKey: "billing")
         
-        XCTAssert(doc.getDictionary("shipping")! === address)
-        XCTAssert(doc.getDictionary("billing")! === address)
+        XCTAssert(doc.dictionary(forKey: "shipping")! === address)
+        XCTAssert(doc.dictionary(forKey: "billing")! === address)
         
         address.set("94042", forKey: "zip")
-        XCTAssertEqual(doc.getDictionary("shipping")!.getString("zip"), "94042")
-        XCTAssertEqual(doc.getDictionary("billing")!.getString("zip"), "94042")
+        XCTAssertEqual(doc.dictionary(forKey: "shipping")!.string(forKey: "zip"), "94042")
+        XCTAssertEqual(doc.dictionary(forKey: "billing")!.string(forKey: "zip"), "94042")
         
         doc = try saveDocument(doc)
         
-        let shipping = doc.getDictionary("shipping")!
-        let billing = doc.getDictionary("billing")!
+        let shipping = doc.dictionary(forKey: "shipping")!
+        let billing = doc.dictionary(forKey: "billing")!
         
         // After save: both shipping and billing address are now independent to each other
         XCTAssert(shipping !== address)
@@ -957,8 +957,8 @@ class DocumentTest: CBLTestCase {
         // Save update:
         doc = try saveDocument(doc)
         
-        XCTAssertEqual(doc.getDictionary("shipping")!.getString("street")!, "2 Main street")
-        XCTAssertEqual(doc.getDictionary("billing")!.getString("street")!, "3 Main street")
+        XCTAssertEqual(doc.dictionary(forKey: "shipping")!.string(forKey: "street")!, "2 Main street")
+        XCTAssertEqual(doc.dictionary(forKey: "billing")!.string(forKey: "street")!, "3 Main street")
     }
     
     
@@ -972,21 +972,21 @@ class DocumentTest: CBLTestCase {
         doc.set(phones, forKey: "mobile")
         doc.set(phones, forKey: "home")
         
-        XCTAssert(doc.getArray("mobile")! === phones)
-        XCTAssert(doc.getArray("home")! === phones)
+        XCTAssert(doc.array(forKey: "mobile")! === phones)
+        XCTAssert(doc.array(forKey: "home")! === phones)
         
         // Update phones: both mobile and home should get the update
         phones.add("650-000-0003")
-        XCTAssert(doc.getArray("mobile")!.toArray() ==
+        XCTAssert(doc.array(forKey: "mobile")!.toArray() ==
             ["650-000-0001", "650-000-0002", "650-000-0003"])
-        XCTAssert(doc.getArray("home")!.toArray() ==
+        XCTAssert(doc.array(forKey: "home")!.toArray() ==
             ["650-000-0001", "650-000-0002", "650-000-0003"])
         
         doc = try saveDocument(doc)
         
         // After save: both mobile and home are not independent to each other
-        let mobile = doc.getArray("mobile")!
-        let home = doc.getArray("home")!
+        let mobile = doc.array(forKey: "mobile")!
+        let home = doc.array(forKey: "home")!
         XCTAssert(mobile !== phones)
         XCTAssert(home !== phones)
         XCTAssert(mobile !== home)
@@ -997,9 +997,9 @@ class DocumentTest: CBLTestCase {
         
         doc = try saveDocument(doc)
         
-        XCTAssert(doc.getArray("mobile")!.toArray() ==
+        XCTAssert(doc.array(forKey: "mobile")!.toArray() ==
             ["650-000-0001", "650-000-0002", "650-000-0003", "650-000-1234"])
-        XCTAssert(doc.getArray("home")!.toArray() ==
+        XCTAssert(doc.array(forKey: "home")!.toArray() ==
             ["650-000-0001", "650-000-0002", "650-000-0003", "650-000-5678"])
     }
     
@@ -1055,43 +1055,43 @@ class DocumentTest: CBLTestCase {
         
         try saveDocument(doc)
         
-        doc.removeValue(forKey: "name")
-        doc.removeValue(forKey: "weight")
-        doc.removeValue(forKey: "age")
-        doc.removeValue(forKey: "active")
-        doc.getDictionary("address")?.removeValue(forKey: "city")
+        doc.remove(forKey: "name")
+        doc.remove(forKey: "weight")
+        doc.remove(forKey: "age")
+        doc.remove(forKey: "active")
+        doc.dictionary(forKey: "address")?.remove(forKey: "city")
         
-        XCTAssertNil(doc.getString("name"))
-        XCTAssertEqual(doc.getFloat("weight"), 0.0)
-        XCTAssertEqual(doc.getDouble("weight"), 0.0)
-        XCTAssertEqual(doc.getInt("age"), 0)
-        XCTAssertEqual(doc.getBoolean("active"), false)
+        XCTAssertNil(doc.string(forKey: "name"))
+        XCTAssertEqual(doc.float(forKey: "weight"), 0.0)
+        XCTAssertEqual(doc.double(forKey: "weight"), 0.0)
+        XCTAssertEqual(doc.int(forKey: "age"), 0)
+        XCTAssertEqual(doc.boolean(forKey: "active"), false)
         
-        XCTAssertNil(doc.getValue("name"))
-        XCTAssertNil(doc.getValue("weight"))
-        XCTAssertNil(doc.getValue("age"))
-        XCTAssertNil(doc.getValue("active"))
-        XCTAssertNil(doc.getDictionary("address")!.getValue("city"))
+        XCTAssertNil(doc.value(forKey: "name"))
+        XCTAssertNil(doc.value(forKey: "weight"))
+        XCTAssertNil(doc.value(forKey: "age"))
+        XCTAssertNil(doc.value(forKey: "active"))
+        XCTAssertNil(doc.dictionary(forKey: "address")!.value(forKey: "city"))
         
         XCTAssertFalse(doc.contains("name"))
         XCTAssertFalse(doc.contains("weight"))
         XCTAssertFalse(doc.contains("age"))
         XCTAssertFalse(doc.contains("active"))
-        XCTAssertFalse(doc.getDictionary("address")!.contains("city"))
+        XCTAssertFalse(doc.dictionary(forKey: "address")!.contains("city"))
         
         let docDict: [String: Any] = ["type": "profile",
                                       "address": ["street": "1 milky way.", "zip": 12345]];
         XCTAssert(doc.toDictionary() == docDict)
         
-        let address = doc.getDictionary("address")!
+        let address = doc.dictionary(forKey: "address")!
         let addressDict: [String: Any] = ["street": "1 milky way.", "zip": 12345]
         XCTAssert(address.toDictionary() == addressDict)
         
         // Remove the rest:
-        doc.removeValue(forKey: "type")
-        doc.removeValue(forKey: "address")
-        XCTAssertNil(doc.getValue("type"))
-        XCTAssertNil(doc.getValue("address"))
+        doc.remove(forKey: "type")
+        doc.remove(forKey: "address")
+        XCTAssertNil(doc.value(forKey: "type"))
+        XCTAssertNil(doc.value(forKey: "address"))
         XCTAssertFalse(doc.contains("type"))
         XCTAssertFalse(doc.contains("address"))
         XCTAssert(doc.toDictionary() == [:] as [String: Any])
@@ -1113,7 +1113,7 @@ class DocumentTest: CBLTestCase {
         XCTAssertNotNil(error)
         XCTAssertEqual(error!.code, 404)
         XCTAssertFalse(doc.isDeleted)
-        XCTAssertEqual(doc.getString("name")!, "Scott Tiger")
+        XCTAssertEqual(doc.string(forKey: "name")!, "Scott Tiger")
     }
     
     
@@ -1127,7 +1127,7 @@ class DocumentTest: CBLTestCase {
         
         // Delete:
         try self.db.delete(doc)
-        XCTAssertNil(doc.getValue("name"))
+        XCTAssertNil(doc.value(forKey: "name"))
         XCTAssert(doc.toDictionary() == [:] as [String: Any])
         XCTAssert(doc.isDeleted)
     }
@@ -1141,23 +1141,23 @@ class DocumentTest: CBLTestCase {
         let doc = createDocument("doc1", dictionary: dict)
         try saveDocument(doc)
         
-        let address = doc.getDictionary("address")!
-        XCTAssertEqual(address.getString("street"), "1 Main street")
-        XCTAssertEqual(address.getString("city"), "Mountain View")
-        XCTAssertEqual(address.getString("state"), "CA")
+        let address = doc.dictionary(forKey: "address")!
+        XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
+        XCTAssertEqual(address.string(forKey: "city"), "Mountain View")
+        XCTAssertEqual(address.string(forKey: "state"), "CA")
         
         try self.db.delete(doc)
-        XCTAssertNil(doc.getDictionary("address"))
+        XCTAssertNil(doc.dictionary(forKey: "address"))
         XCTAssert(doc.toDictionary() == [:] as [String: Any])
         
         // The dictionary still has data but is detached:
-        XCTAssertEqual(address.getString("street"), "1 Main street")
-        XCTAssertEqual(address.getString("city"), "Mountain View")
-        XCTAssertEqual(address.getString("state"), "CA")
+        XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
+        XCTAssertEqual(address.string(forKey: "city"), "Mountain View")
+        XCTAssertEqual(address.string(forKey: "state"), "CA")
         
         // Make changes to the dictionary shouldn't affect the document.
         address.set("94042", forKey: "zip")
-        XCTAssertNil(doc.getDictionary("address"))
+        XCTAssertNil(doc.dictionary(forKey: "address"))
         XCTAssert(doc.toDictionary() == [:] as [String: Any])
     }
     
@@ -1170,8 +1170,8 @@ class DocumentTest: CBLTestCase {
         
         // Purge before save:
         try? self.db.purge(doc)
-        XCTAssertEqual(doc.getString("type"), "profile")
-        XCTAssertEqual(doc.getString("name"), "Scott")
+        XCTAssertEqual(doc.string(forKey: "type"), "profile")
+        XCTAssertEqual(doc.string(forKey: "name"), "Scott")
         
         // Save:
         try saveDocument(doc)
@@ -1191,7 +1191,7 @@ class DocumentTest: CBLTestCase {
         try self.reopenDB()
         
         doc = self.db.getDocument("doc1")!
-        XCTAssertEqual(doc.getString("string"), "str")
+        XCTAssertEqual(doc.string(forKey: "string"), "str")
         XCTAssert(doc.toDictionary() == ["string": "str"] as [String: Any])
     }
     
@@ -1207,10 +1207,10 @@ class DocumentTest: CBLTestCase {
         try reopenDB()
         
         doc = db.getDocument("doc1")!
-        XCTAssertEqual(doc.getString("name"), "Jim")
-        XCTAssert(doc.getValue("data") as? Blob != nil)
+        XCTAssertEqual(doc.string(forKey: "name"), "Jim")
+        XCTAssert(doc.value(forKey: "data") as? Blob != nil)
         
-        blob = doc.getBlob("data")!
+        blob = doc.blob(forKey: "data")!
         XCTAssertEqual(blob.contentType, "text/plain")
         XCTAssertEqual(blob.length, UInt64(kTestBlob.characters.count))
         XCTAssertEqual(blob.content, content)
@@ -1235,7 +1235,7 @@ class DocumentTest: CBLTestCase {
         
         doc = try saveDocument(doc)
         
-        blob = doc.getBlob("data")!
+        blob = doc.blob(forKey: "data")!
         stream = blob.contentStream!
         stream.open()
         var buffer = Array<UInt8>(repeating: 0, count: 10)
@@ -1251,7 +1251,7 @@ class DocumentTest: CBLTestCase {
         var doc = createDocument("doc1")
         doc.set(blob, forKey: "data")
         
-        blob = doc.getBlob("data")!
+        blob = doc.blob(forKey: "data")!
         for _ in 1...5 {
             XCTAssertEqual(blob.content!, content)
             let stream = blob.contentStream!
@@ -1264,7 +1264,7 @@ class DocumentTest: CBLTestCase {
         
         doc = try saveDocument(doc)
         
-        blob = doc.getBlob("data")!
+        blob = doc.blob(forKey: "data")!
         for _ in 1...5 {
             XCTAssertEqual(blob.content!, content)
             let stream = blob.contentStream!
@@ -1286,8 +1286,8 @@ class DocumentTest: CBLTestCase {
         
         try saveDocument(doc)
         
-        XCTAssert(doc.getValue("data") as? Blob != nil)
-        XCTAssertEqual(doc.getBlob("data")!.content!, content)
+        XCTAssert(doc.value(forKey: "data") as? Blob != nil)
+        XCTAssertEqual(doc.blob(forKey: "data")!.content!, content)
         
         try reopenDB()
         
@@ -1295,8 +1295,8 @@ class DocumentTest: CBLTestCase {
         doc.set("bar", forKey: "foo")
         try saveDocument(doc)
         
-        XCTAssert(doc.getValue("data") as? Blob != nil)
-        XCTAssertEqual(doc.getBlob("data")!.content!, content)
+        XCTAssert(doc.value(forKey: "data") as? Blob != nil)
+        XCTAssertEqual(doc.blob(forKey: "data")!.content!, content)
     }
     
     
@@ -1310,7 +1310,7 @@ class DocumentTest: CBLTestCase {
         var result: [String: Any] = [:]
         var count = 0
         for key in doc {
-            result[key] = doc.getInt(key)
+            result[key] = doc.int(forKey: key)
             count = count + 1
         }
         XCTAssert(result == content)
@@ -1318,7 +1318,7 @@ class DocumentTest: CBLTestCase {
         
         // Update:
         
-        doc.removeValue(forKey: "key2")
+        doc.remove(forKey: "key2")
         doc.set(20, forKey: "key20")
         doc.set(21, forKey: "key21")
         content = doc.toDictionary()
@@ -1327,7 +1327,7 @@ class DocumentTest: CBLTestCase {
             result = [:]
             count = 0
             for key in d {
-                result[key] = d.getValue(key)
+                result[key] = d.value(forKey: key)
                 count = count + 1
             }
             XCTAssert(result == content)

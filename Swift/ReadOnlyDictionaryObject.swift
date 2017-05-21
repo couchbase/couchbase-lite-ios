@@ -12,27 +12,27 @@ import Foundation
 protocol ReadOnlyDictionaryProtocol: ReadOnlyDictionaryFragment, Sequence {
     var count: Int { get }
     
-    var allKeys: Array<String> { get }
+    var keys: Array<String> { get }
     
-    func getValue(_ key: String) -> Any?
+    func value(forKey key: String) -> Any?
     
-    func getString(_ key: String) -> String?
+    func string(forKey key: String) -> String?
     
-    func getInt(_ key: String) -> Int
+    func int(forKey key: String) -> Int
     
-    func getFloat(_ key: String) -> Float
+    func float(forKey key: String) -> Float
     
-    func getDouble(_ key: String) -> Double
+    func double(forKey key: String) -> Double
     
-    func getBoolean(_ key: String) -> Bool
+    func boolean(forKey key: String) -> Bool
     
-    func getBlob(_ key: String) -> Blob?
+    func blob(forKey key: String) -> Blob?
     
-    func getDate(_ key: String) -> Date?
+    func date(forKey key: String) -> Date?
     
-    func getArray(_ key: String) -> ReadOnlyArrayObject?
+    func array(forKey key: String) -> ReadOnlyArrayObject?
     
-    func getDictionary(_ key: String) -> ReadOnlyDictionaryObject?
+    func dictionary(forKey key: String) -> ReadOnlyDictionaryObject?
     
     func contains(_ key: String) -> Bool
     
@@ -48,7 +48,7 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     
     
     /// An array containing all keys, or an empty array if the dictionary has no entries.
-    public var allKeys: Array<String> {
+    public var keys: Array<String> {
         return _impl.allKeys
     }
     
@@ -58,7 +58,7 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     /// if the value is nil or the property doesn't exist.
     /// - Parameter key: the key.
     /// - Returns: the object value or nil.
-    public func getValue(_ key: String) -> Any? {
+    public func value(forKey key: String) -> Any? {
         return DataConverter.convertGETValue(_impl.object(forKey: key))
     }
     
@@ -67,7 +67,7 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     /// Returns nil if the property doesn't exist, or its value is not a string.
     /// - Parameter key: the key.
     /// - Returns: the String object or nil.
-    public func getString(_ key: String) -> String? {
+    public func string(forKey key: String) -> String? {
         return _impl.string(forKey: key)
     }
     
@@ -77,7 +77,7 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     /// Returns 0 if the property doesn't exist or does not have a numeric value.
     /// - Parameter key: the key.
     /// - Returns: the Int value.
-    public func getInt(_ key: String) -> Int {
+    public func int(forKey key: String) -> Int {
         return _impl.integer(forKey: key)
     }
     
@@ -87,7 +87,7 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
     /// - Parameter key: the key.
     /// - Returns: the Float value.
-    public func getFloat(_ key: String) -> Float {
+    public func float(forKey key: String) -> Float {
         return _impl.float(forKey: key)
     }
     
@@ -97,7 +97,7 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
     /// - Parameter key: the key.
     /// - Returns: the Double value.
-    public func getDouble(_ key: String) -> Double {
+    public func double(forKey key: String) -> Double {
         return _impl.double(forKey: key)
     }
     
@@ -106,7 +106,7 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     /// Returns true if the value exists, and is either `true` or a nonzero number.
     /// - Parameter key: the key.
     /// - Returns: the Bool value.
-    public func getBoolean(_ key: String) -> Bool {
+    public func boolean(forKey key: String) -> Bool {
         return _impl.boolean(forKey: key)
     }
     
@@ -115,7 +115,7 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     /// Returns nil if the property doesn't exist, or its value is not a blob.
     /// - Parameter key: the key.
     /// - Returns: the Blob object or nil.
-    public func getBlob(_ key: String) -> Blob? {
+    public func blob(forKey key: String) -> Blob? {
         return _impl.blob(forKey: key)
     }
     
@@ -128,7 +128,7 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     /// without milliseconds.
     /// - Parameter key: the key.
     /// - Returns: the Date object or nil.
-    public func getDate(_ key: String) -> Date? {
+    public func date(forKey key: String) -> Date? {
         return _impl.date(forKey: key)
     }
     
@@ -137,8 +137,8 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     /// Returns nil if the property doesn't exists, or its value is not an array.
     /// - Parameter key: the key.
     /// - Returns: the ReadOnlyArrayObject object or nil.
-    public func getArray(_ key: String) -> ReadOnlyArrayObject? {
-        return getValue(key) as? ReadOnlyArrayObject
+    public func array(forKey key: String) -> ReadOnlyArrayObject? {
+        return value(forKey: key) as? ReadOnlyArrayObject
     }
     
     
@@ -147,8 +147,8 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     /// Returns nil if the property doesn't exists, or its value is not a dictionary.
     /// - Parameter key: the key.
     /// - Returns: the ReadOnlyDictionaryObject object or nil.
-    public func getDictionary(_ key: String) -> ReadOnlyDictionaryObject? {
-        return getValue(key) as? ReadOnlyDictionaryObject
+    public func dictionary(forKey key: String) -> ReadOnlyDictionaryObject? {
+        return value(forKey: key) as? ReadOnlyDictionaryObject
     }
     
     

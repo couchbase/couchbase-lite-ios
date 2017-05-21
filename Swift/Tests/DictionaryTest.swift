@@ -19,10 +19,10 @@ class DictionaryTest: CBLTestCase {
         
         let doc = createDocument("doc1")
         doc.set(address, forKey: "address")
-        XCTAssert(doc.getDictionary("address")! === address)
+        XCTAssert(doc.dictionary(forKey: "address")! === address)
         
         try saveDocument(doc) { (d) in
-            XCTAssert(doc.getDictionary("address")!.toDictionary() == [:] as [String: Any])
+            XCTAssert(doc.dictionary(forKey: "address")!.toDictionary() == [:] as [String: Any])
         }
     }
     
@@ -32,17 +32,17 @@ class DictionaryTest: CBLTestCase {
                                    "city": "Mountain View",
                                    "state": "CA"];
         let address = DictionaryObject(dictionary: dict)
-        XCTAssertEqual(address.getString("street"), "1 Main street")
-        XCTAssertEqual(address.getString("city"), "Mountain View")
-        XCTAssertEqual(address.getString("state"), "CA")
+        XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
+        XCTAssertEqual(address.string(forKey: "city"), "Mountain View")
+        XCTAssertEqual(address.string(forKey: "state"), "CA")
         XCTAssert(address.toDictionary() == dict)
         
         let doc = createDocument("doc1")
         doc.set(address, forKey: "address")
-        XCTAssert(doc.getDictionary("address")! === address)
+        XCTAssert(doc.dictionary(forKey: "address")! === address)
         
         try saveDocument(doc, eval: { (d) in
-            XCTAssert(doc.getDictionary("address")!.toDictionary() == dict)
+            XCTAssert(doc.dictionary(forKey: "address")!.toDictionary() == dict)
         })
     }
     
@@ -52,17 +52,17 @@ class DictionaryTest: CBLTestCase {
         doc.set(DictionaryObject(), forKey: "dict")
         
         try saveDocument(doc, eval: { (d) in
-            let dict = d.getDictionary("dict")!
-            XCTAssertEqual(dict.getInt("key"), 0)
-            XCTAssertEqual(dict.getFloat("key"), 0.0)
-            XCTAssertEqual(dict.getDouble("key"), 0.0)
-            XCTAssertEqual(dict.getBoolean("key"), false)
-            XCTAssertNil(dict.getBlob("key"))
-            XCTAssertNil(dict.getDate("key"))
-            XCTAssertNil(dict.getString("key"))
-            XCTAssertNil(dict.getValue("key"))
-            XCTAssertNil(dict.getDictionary("key"))
-            XCTAssertNil(dict.getArray("key"))
+            let dict = d.dictionary(forKey: "dict")!
+            XCTAssertEqual(dict.int(forKey: "key"), 0)
+            XCTAssertEqual(dict.float(forKey: "key"), 0.0)
+            XCTAssertEqual(dict.double(forKey: "key"), 0.0)
+            XCTAssertEqual(dict.boolean(forKey: "key"), false)
+            XCTAssertNil(dict.blob(forKey: "key"))
+            XCTAssertNil(dict.date(forKey: "key"))
+            XCTAssertNil(dict.string(forKey: "key"))
+            XCTAssertNil(dict.value(forKey: "key"))
+            XCTAssertNil(dict.dictionary(forKey: "key"))
+            XCTAssertNil(dict.array(forKey: "key"))
         })
     }
     
@@ -82,9 +82,9 @@ class DictionaryTest: CBLTestCase {
         level3.set("n3", forKey: "name")
         level2.set(level3, forKey: "level3")
         
-        XCTAssert(doc.getDictionary("level1")! === level1)
-        XCTAssert(level1.getDictionary("level2")! === level2)
-        XCTAssert(level2.getDictionary("level3")! === level3)
+        XCTAssert(doc.dictionary(forKey: "level1")! === level1)
+        XCTAssert(level1.dictionary(forKey: "level2")! === level2)
+        XCTAssert(level2.dictionary(forKey: "level3")! === level3)
         let dict: [String: Any] = ["level1": ["name": "n1",
                                               "level2": ["name": "n2",
                                                          "level3": ["name": "n3"]]]]
@@ -99,21 +99,21 @@ class DictionaryTest: CBLTestCase {
         let profile1 = DictionaryObject()
         profile1.set("Scott Tiger", forKey: "name")
         doc.set(profile1, forKey: "profile")
-        XCTAssert(doc.getDictionary("profile") === profile1)
+        XCTAssert(doc.dictionary(forKey: "profile") === profile1)
         
         // Remove profile
-        doc.removeValue(forKey: "profile")
-        XCTAssertNil(doc.getValue("profile"))
+        doc.remove(forKey: "profile")
+        XCTAssertNil(doc.value(forKey: "profile"))
         XCTAssertFalse(doc.contains("profile"))
         
         // Profile1 should be now detachd:
         profile1.set(20, forKey: "age")
-        XCTAssertEqual(profile1.getString("name")!, "Scott Tiger")
-        XCTAssertEqual(profile1.getInt("age"), 20)
+        XCTAssertEqual(profile1.string(forKey: "name")!, "Scott Tiger")
+        XCTAssertEqual(profile1.int(forKey: "age"), 20)
         
         // Check whether the profile value has no change:
         try saveDocument(doc, eval: { (d) in
-            XCTAssertNil(d.getValue("profile"))
+            XCTAssertNil(d.value(forKey: "profile"))
             XCTAssertFalse(d.contains("profile"))
         })
     }
@@ -129,14 +129,14 @@ class DictionaryTest: CBLTestCase {
         var result: [String: Any] = [:]
         var count = 0
         for key in dict {
-            result[key] = dict.getInt(key)
+            result[key] = dict.int(forKey: key)
             count = count + 1
         }
         XCTAssert(result == content)
         XCTAssertEqual(count, content.count)
         
         // Update:
-        dict.removeValue(forKey: "key2")
+        dict.remove(forKey: "key2")
         dict.set(20, forKey: "key20")
         dict.set(22, forKey: "key21")
         content = dict.toDictionary()
@@ -144,7 +144,7 @@ class DictionaryTest: CBLTestCase {
         result = [:]
         count = 0
         for key in dict {
-            result[key] = dict.getInt(key)
+            result[key] = dict.int(forKey: key)
             count = count + 1
         }
         XCTAssert(result == content)
@@ -156,9 +156,9 @@ class DictionaryTest: CBLTestCase {
         try saveDocument(doc) { (d) in
             result = [:]
             count = 0
-            dict = doc.getDictionary("dict")!
+            dict = doc.dictionary(forKey: "dict")!
             for key in dict {
-                result[key] = dict.getValue(key)
+                result[key] = dict.value(forKey: key)
                 count = count + 1
             }
             XCTAssert(result == content)

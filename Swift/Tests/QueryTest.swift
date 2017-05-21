@@ -176,7 +176,7 @@ class QueryTest: CBLTestCase {
         var numRows = try verifyQuery(q) { (n, row) in
             let doc = row.document
             XCTAssertEqual(doc.id, doc1.id);
-            XCTAssertEqual(doc.getString("string")!, "string");
+            XCTAssertEqual(doc.string(forKey: "string")!, "string");
         }
         XCTAssertEqual(numRows, 1);
         
@@ -185,7 +185,7 @@ class QueryTest: CBLTestCase {
         numRows = try verifyQuery(q) { (n, row) in
             let doc = row.document
             XCTAssertEqual(doc.id, doc1.id);
-            XCTAssertEqual(doc.getString("string")!, "string");
+            XCTAssertEqual(doc.string(forKey: "string")!, "string");
         }
         XCTAssertEqual(numRows, 1);
     }
@@ -215,7 +215,7 @@ class QueryTest: CBLTestCase {
         var firstNames: [String] = []
         let numRows = try verifyQuery(q, block: { (n, row) in
             let doc = row.document
-            let v: String? = doc.getDictionary("name")?.getString("first")
+            let v: String? = doc.dictionary(forKey: "name")?.string(forKey: "first")
             if let firstName = v {
                 firstNames.append(firstName)
             }
@@ -233,7 +233,7 @@ class QueryTest: CBLTestCase {
         let q = Query.select().from(DataSource.database(db)).where(w).orderBy(o)
         let numRows = try verifyQuery(q, block: { (n, row) in
             let firstName = expected[Int(n)-1]
-            XCTAssertEqual(row.document.getDictionary("name")!.getString("first")!, firstName)
+            XCTAssertEqual(row.document.dictionary(forKey: "name")!.string(forKey: "first")!, firstName)
         })
         XCTAssertEqual(Int(numRows), expected.count);
     }
@@ -253,7 +253,7 @@ class QueryTest: CBLTestCase {
         var firstNames: [String] = []
         let numRows = try verifyQuery(q, block: { (n, row) in
             let doc = row.document
-            let v: String? = doc.getDictionary("name")?.getString("first")
+            let v: String? = doc.dictionary(forKey: "name")?.string(forKey: "first")
             if let firstName = v {
                 firstNames.append(firstName)
             }
@@ -299,7 +299,7 @@ class QueryTest: CBLTestCase {
             var firstNames: [String] = []
             let numRows = try verifyQuery(q, block: { (n, row) in
                 let doc = row.document
-                if let firstName = doc.getDictionary("name")?.getString("first") {
+                if let firstName = doc.dictionary(forKey: "name")?.string(forKey: "first") {
                     firstNames.append(firstName)
                 }
             })

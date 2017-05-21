@@ -12,25 +12,25 @@ import Foundation
 protocol ReadOnlyArrayProtocol: ReadOnlyArrayFragment, Sequence {
     var count: Int { get }
     
-    func getValue(_ index: Int) -> Any?
+    func value(at index: Int) -> Any?
     
-    func getString(_ index: Int) -> String?
+    func string(at index: Int) -> String?
     
-    func getInt(_ index: Int) -> Int
+    func int(at index: Int) -> Int
     
-    func getFloat(_ index: Int) -> Float
+    func float(at index: Int) -> Float
     
-    func getDouble(_ index: Int) -> Double
+    func double(at index: Int) -> Double
     
-    func getBoolean(_ index: Int) -> Bool
+    func boolean(at index: Int) -> Bool
     
-    func getBlob(_ index: Int) -> Blob?
+    func blob(at index: Int) -> Blob?
     
-    func getDate(_ index: Int) -> Date?
+    func date(at index: Int) -> Date?
     
-    func getArray(_ index: Int) -> ReadOnlyArrayObject?
+    func array(at index: Int) -> ReadOnlyArrayObject?
     
-    func getDictionary(_ index: Int) -> ReadOnlyDictionaryObject?
+    func dictionary(at index: Int) -> ReadOnlyDictionaryObject?
     
     func toArray() -> Array<Any>
 }
@@ -48,7 +48,7 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     /// if the value is nil.
     /// - Parameter index: the index.
     /// - Returns: the value or nil.
-    public func getValue(_ index: Int) -> Any? {
+    public func value(at index: Int) -> Any? {
         return DataConverter.convertGETValue(_impl.object(at: UInt(index)))
     }
     
@@ -57,7 +57,7 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     /// Returns nil if the value doesn't exist, or its value is not a string.
     /// - Parameter index: the index.
     /// - Returns: the String value or nil.
-    public func getString(_ index: Int) -> String? {
+    public func string(at index: Int) -> String? {
         return _impl.string(at: UInt(index))
     }
     
@@ -67,7 +67,7 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     /// Returns 0 if the value doesn't exist or does not have a numeric value.
     /// - Parameter index: the index.
     /// - Returns: the Int value.
-    public func getInt(_ index: Int) -> Int {
+    public func int(at index: Int) -> Int {
         return _impl.integer(at: UInt(index))
     }
     
@@ -77,7 +77,7 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     /// Returns 0.0 if the value doesn't exist or does not have a numeric value.
     /// - Parameter index: the index.
     /// - Returns: the Float value.
-    public func getFloat(_ index: Int) -> Float {
+    public func float(at index: Int) -> Float {
         return _impl.float(at: UInt(index))
     }
     
@@ -87,7 +87,7 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
     /// - Parameter index: the index.
     /// - Returns: the Double value.
-    public func getDouble(_ index: Int) -> Double {
+    public func double(at index: Int) -> Double {
         return _impl.double(at: UInt(index))
     }
     
@@ -96,7 +96,7 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     /// Returns true if the value exists, and is either `true` or a nonzero number.
     /// - Parameter index: the index.
     /// - Returns: the Bool value.
-    public func getBoolean(_ index: Int) -> Bool {
+    public func boolean(at index: Int) -> Bool {
         return _impl.boolean(at: UInt(index))
     }
     
@@ -105,7 +105,7 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     /// Returns nil if the value doesn't exist, or its value is not a blob.
     /// - Parameter index: the index.
     /// - Returns: the Blob object or nil.
-    public func getBlob(_ index: Int) -> Blob? {
+    public func blob(at index: Int) -> Blob? {
         return _impl.blob(at: UInt(index))
     }
     
@@ -118,7 +118,7 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     /// without milliseconds.
     /// - Parameter index: the index.
     /// - Returns: the Date object or nil.
-    public func getDate(_ index: Int) -> Date? {
+    public func date(at index: Int) -> Date? {
         return _impl.date(at: UInt(index))
     }
     
@@ -127,8 +127,8 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     /// Returns nil if the value doesn't exists, or its value is not an array.
     /// - Parameter index: the index.
     /// - Returns: the ReadOnlyArrayObject object or nil.
-    public func getArray(_ index: Int) -> ReadOnlyArrayObject? {
-        return getValue(index) as? ReadOnlyArrayObject
+    public func array(at index: Int) -> ReadOnlyArrayObject? {
+        return value(at: index) as? ReadOnlyArrayObject
     }
     
     
@@ -137,8 +137,8 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     /// Returns nil if the value doesn't exists, or its value is not a dictionary.
     /// - Parameter index: the index.
     /// - Returns: the ReadOnlyDictionaryObject object or nil.
-    public func getDictionary(_ index: Int) -> ReadOnlyDictionaryObject? {
-        return getValue(index) as? ReadOnlyDictionaryObject
+    public func dictionary(at index: Int) -> ReadOnlyDictionaryObject? {
+        return value(at: index) as? ReadOnlyDictionaryObject
     }
     
     
@@ -161,7 +161,7 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
         let count = self.count
         return AnyIterator {
             if index < count {
-                let v = self.getValue(index)
+                let v = self.value(at: index)
                 index += 1
                 return v;
             }

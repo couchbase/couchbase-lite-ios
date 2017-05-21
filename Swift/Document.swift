@@ -81,7 +81,7 @@ public class Document : ReadOnlyDocument, DictionaryProtocol {
     }
     
     
-    @discardableResult public func removeValue(forKey key: String) -> Self {
+    @discardableResult public func remove(forKey key: String) -> Self {
         docImpl.removeObject(forKey: key)
         return self
     }
@@ -91,8 +91,8 @@ public class Document : ReadOnlyDocument, DictionaryProtocol {
     /// Returns nil if the property doesn't exists, or its value is not an array.
     /// - Parameter key: the key.
     /// - Returns: the ArrayObject object or nil if the property doesn't exist.
-    public override func getArray(_ key: String) -> ArrayObject? {
-        return getValue(key) as? ArrayObject
+    public override func array(forKey key: String) -> ArrayObject? {
+        return value(forKey: key) as? ArrayObject
     }
     
     
@@ -100,8 +100,8 @@ public class Document : ReadOnlyDocument, DictionaryProtocol {
     /// value. Returns nil if the property doesn't exists, or its value is not a dictionary.
     /// - Parameter key: the key.
     /// - Returns: the DictionaryObject object or nil if the key doesn't exist.
-    public override func getDictionary(_ key: String) -> DictionaryObject? {
-        return getValue(key) as? DictionaryObject
+    public override func dictionary(forKey key: String) -> DictionaryObject? {
+        return value(forKey: key) as? DictionaryObject
     }
     
     

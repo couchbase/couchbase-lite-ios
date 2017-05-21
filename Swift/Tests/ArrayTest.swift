@@ -22,7 +22,7 @@ class ArrayTest: CBLTestCase {
         
         // Re-get the document and the array:
         let nuDoc = db.getDocument(doc.id)!
-        let nuArray = nuDoc.getArray(key)!
+        let nuArray = nuDoc.array(forKey: key)!
         
         eval(nuArray)
     }
@@ -42,7 +42,7 @@ class ArrayTest: CBLTestCase {
         XCTAssert(result == content)
         
         // Update:
-        array.remove(1)
+        array.remove(at: 1)
         array.add(20)
         array.add(21)
         content = array.toArray()

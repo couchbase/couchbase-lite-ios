@@ -41,17 +41,17 @@ protocol ArrayProtocol: ReadOnlyArrayProtocol, ArrayFragment {
     /// Removes the object at the given index.
     /// - Parameter index: the index. This value must not exceed the bounds of the array.
     /// - Returns: the ArrayProtocol object.
-    @discardableResult func remove(_ index: Int) -> Self
+    @discardableResult func remove(at index: Int) -> Self
     
     /// Gets an ArrayObject at the given index. Returns nil if the value is not an array.
     /// - Parameter index: the index. This value must not exceed the bounds of the array.
     /// - Returns: the ArrayObject.
-    /* override */ func getArray(_ index: Int) -> ArrayObject?
+    /* override */ func array(at index: Int) -> ArrayObject?
     
     /// Gets a DictionaryObject at the given index. Returns nil if the value is not a dictionary.
     /// - Parameter index: the index. This value must not exceed the bounds of the array.
     /// - Returns: the DictionaryObject object.
-    /* override */ func getDictionary(_ index: Int) -> DictionaryObject?
+    /* override */ func dictionary(at index: Int) -> DictionaryObject?
 }
 
 /// ArrayObject provides access to array data.
@@ -119,7 +119,7 @@ public class ArrayObject: ReadOnlyArrayObject, ArrayProtocol {
     /// Removes the object at the given index.
     /// - Parameter index: the index. This value must not exceed the bounds of the array.
     /// - Returns: the ArrayObject object.
-    @discardableResult public func remove(_ index: Int) -> Self {
+    @discardableResult public func remove(at index: Int) -> Self {
         arrayImpl.removeObject(at: UInt(index))
         return self
     }
@@ -128,16 +128,16 @@ public class ArrayObject: ReadOnlyArrayObject, ArrayProtocol {
     /// Gets an ArrayObject at the given index. Returns nil if the value is not an array.
     /// - Parameter index: the index. This value must not exceed the bounds of the array.
     /// - Returns: the ArrayObject.
-    public override func getArray(_ index: Int) -> ArrayObject? {
-        return getValue(index) as? ArrayObject
+    public override func array(at index: Int) -> ArrayObject? {
+        return value(at: index) as? ArrayObject
     }
     
     
     /// Gets a DictionaryObject at the given index. Returns nil if the value is not a dictionary.
     /// - Parameter index: the index. This value must not exceed the bounds of the array.
     /// - Returns: the DictionaryObject object.
-    public override func getDictionary(_ index: Int) -> DictionaryObject? {
-        return getValue(index) as? DictionaryObject
+    public override func dictionary(at index: Int) -> DictionaryObject? {
+        return value(at: index) as? DictionaryObject
     }
     
     
