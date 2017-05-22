@@ -49,7 +49,7 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     
     /// An array containing all keys, or an empty array if the dictionary has no entries.
     public var keys: Array<String> {
-        return _impl.allKeys
+        return _impl.keys
     }
     
     
@@ -177,7 +177,7 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     /// Gets  an iterator over the keys of the dictionary entries
     /// - Returns: a key iterator.
     public func makeIterator() -> IndexingIterator<[String]> {
-        return _impl.allKeys.makeIterator();
+        return _impl.keys.makeIterator();
     }
     
     

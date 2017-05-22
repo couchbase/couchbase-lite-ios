@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 // https://github.com/couchbaselabs/couchbase-lite-apiv2/issues/94
 
 /** An array containing all keys, or an empty array if the dictionary has no entries. */
-@property (readonly, copy, nonatomic) NSArray<NSString*>* allKeys;
+@property (readonly, copy, nonatomic) NSArray<NSString*>* keys;
 
 /** Gets a property's value as an object. The object types are CBLBlob, CBLReadOnlyArray,
     CBLReadOnlyDictionary, NSNumber, or NSString based on the underlying data type; or nil if the

@@ -39,9 +39,8 @@
 }
 
 
-- (NSArray*) allKeys {
-    [self loadFleeceAllKeys];
-    return [_keys copy];
+- (NSArray*) keys {
+    return [[self fleeceKeys] copy];
 }
 
 
@@ -121,8 +120,7 @@
                                   objects: (id __unsafe_unretained [])buffer
                                     count: (NSUInteger)len
 {
-    [self loadFleeceAllKeys];
-    return [_keys countByEnumeratingWithState: state objects: buffer count: len];
+    return [[self fleeceKeys] countByEnumeratingWithState: state objects: buffer count: len];
 }
 
 
@@ -177,7 +175,7 @@
 }
 
 
-- (void) loadFleeceAllKeys {
+- (NSArray*) fleeceKeys {
     if (!_keys) {
         NSMutableArray* keys = [NSMutableArray array];
         if (_dict != nullptr) {
@@ -191,6 +189,7 @@
         }
         _keys= keys;
     }
+    return _keys;
 }
 
 

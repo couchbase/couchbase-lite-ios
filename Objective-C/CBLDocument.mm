@@ -103,8 +103,8 @@
 }
 
 
-- (NSArray*) allKeys {
-    return _dict.allKeys;
+- (NSArray*) keys {
+    return _dict.keys;
 }
 
 

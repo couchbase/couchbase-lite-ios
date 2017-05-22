@@ -55,7 +55,7 @@
         return super.count;
     
     __block NSUInteger count = _dict.count;
-    for (NSString* key in super.allKeys) {
+    for (NSString* key in super.keys) {
         if (!_dict[key])
             count += 1;
     }
@@ -68,12 +68,11 @@
 }
 
 
-- (NSArray*) allKeys {
+- (NSArray*) keys {
     if (!_changed)
-        return super.allKeys;
-    
-    [self loadAllKeys];
-    return [_keys copy];
+        return super.keys;
+    else
+        return [[self allKeys] copy];
 }
 
 
@@ -250,10 +249,8 @@
 {
     if (!_changed)
         return [super countByEnumeratingWithState: state objects: buffer count: len];
-    else {
-        [self loadAllKeys];
-        return [_keys countByEnumeratingWithState: state objects: buffer count: len];
-    }
+    else
+        return [[self allKeys] countByEnumeratingWithState: state objects: buffer count: len];
 }
 
 
@@ -273,7 +270,7 @@
     if (!_changed)
         return super.isEmpty;
     
-    for (NSString* key in super.allKeys) {
+    for (NSString* key in super.keys) {
         if (!_dict[key])
             return NO;
     }
@@ -302,10 +299,10 @@
 }
 
 
-- (void) loadAllKeys {
+- (NSArray*) allKeys {
     if (!_keys) {
         NSMutableSet* result = [NSMutableSet setWithArray: _dict.allKeys];
-        for (NSString* key in super.allKeys) {
+        for (NSString* key in super.keys) {
             if (![result containsObject: key])
                 [result addObject: key];
         }
@@ -316,6 +313,7 @@
         }];
         _keys = [result allObjects];
     }
+    return _keys;
 }
 
 
