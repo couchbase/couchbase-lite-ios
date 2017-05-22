@@ -93,9 +93,16 @@ typedef struct {
 /** The database's path. If the database is closed or deleted, nil value will be returned. */
 @property (readonly, nonatomic, nullable) NSString* path;
 
+/** The number of documents in the database. */
+@property (readonly, nonatomic) NSUInteger count;
+
 /** The database's configuration. If the configuration is not specify when initializing 
     the database, the default configuration will be returned. */
 @property (readonly, copy, nonatomic) CBLDatabaseConfiguration *config;
+
+
+#pragma mark - INITIALIZER
+
 
 /** Initializes a database object with a given name and the default database configuration.
     If the database does not yet exist, it will be created.
@@ -117,34 +124,9 @@ typedef struct {
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
 
-/** Closes a database. */
-- (BOOL) close: (NSError**)error;
 
-/** Changes the database's encryption key, or removes encryption if the new key is nil.
-    @param key  The encryption key in the form of an NSString (a password) or an
-                NSData object exactly 32 bytes in length (a raw AES key.) If a string is given,
-                it will be internally converted to a raw key using 64,000 rounds of PBKDF2 hashing.
-                A nil value will decrypt the database.
-    @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
-    @result  YES if the database was successfully re-keyed, or NO on error. */
-- (BOOL) changeEncryptionKey: (nullable id)key error: (NSError**)error;
+#pragma mark - GET EXISTING DOCUMENT
 
-/** Deletes a database. */
-- (BOOL) deleteDatabase: (NSError**)error;
-
-/** Deletes a database of the given name in the given directory. */
-+ (BOOL) deleteDatabase: (NSString*)name
-            inDirectory: (nullable NSString*)directory
-                  error: (NSError**)error;
-
-/** Checks whether a database of the given name exists in the given directory or not. */
-+ (BOOL) databaseExists: (NSString*)name
-            inDirectory: (nullable NSString*)directory;
-
-/** Runs a group of database operations in a batch. Use this when performing bulk write operations
-    like multiple inserts/updates; it saves the overhead of multiple database commits, greatly
-    improving performance. */
-- (BOOL) inBatch: (NSError**)error do: (void (NS_NOESCAPE ^)())block;
 
 /** Gets an existing CBLDocument object with the given ID. If the document with the given ID 
     doesn't exist in the database, the value returned will be nil.
@@ -153,11 +135,19 @@ typedef struct {
     */
 - (nullable CBLDocument*) documentWithID: (NSString*)documentID;
 
-/** Gets a document fragment with the given document ID. */
-- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID;
+
+#pragma mark - CHECK DOCUMENT EXISTS
+
 
 /** Checks whether the document of the given ID exists in the database or not. */
-- (BOOL) documentExists: (NSString*)documentID;
+- (BOOL) contains: (NSString*)documentID;
+
+
+#pragma mark - SUBSCRIPTION
+
+
+/** Gets a document fragment with the given document ID. */
+- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID;
 
 
 #pragma mark - SAVE DELETE PURGE
@@ -182,6 +172,47 @@ typedef struct {
     This is more drastic than deletion: it removes all traces of the document.
     The purge will NOT be replicated to other databases. */
 - (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error;
+
+
+#pragma mark - BATCH OPERATION
+
+
+/** Runs a group of database operations in a batch. Use this when performing bulk write operations
+ like multiple inserts/updates; it saves the overhead of multiple database commits, greatly
+ improving performance. */
+- (BOOL) inBatch: (NSError**)error do: (void (NS_NOESCAPE ^)())block;
+
+
+#pragma mark - DATABASE MAINTENANCE
+
+
+/** Closes a database. */
+- (BOOL) close: (NSError**)error;
+
+/** Deletes a database. */
+- (BOOL) deleteDatabase: (NSError**)error;
+
+/** Compacts the database file by deleting unused attachment files and 
+    vacuuming the SQLite database */
+- (BOOL) compact: (NSError**)error;
+
+/** Changes the database's encryption key, or removes encryption if the new key is nil.
+ @param key  The encryption key in the form of an NSString (a password) or an
+ NSData object exactly 32 bytes in length (a raw AES key.) If a string is given,
+ it will be internally converted to a raw key using 64,000 rounds of PBKDF2 hashing.
+ A nil value will decrypt the database.
+ @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
+ @result  YES if the database was successfully re-keyed, or NO on error. */
+- (BOOL) changeEncryptionKey: (nullable id)key error: (NSError**)error;
+
+/** Deletes a database of the given name in the given directory. */
++ (BOOL) deleteDatabase: (NSString*)name
+            inDirectory: (nullable NSString*)directory
+                  error: (NSError**)error;
+
+/** Checks whether a database of the given name exists in the given directory or not. */
++ (BOOL) databaseExists: (NSString*)name
+            inDirectory: (nullable NSString*)directory;
 
 
 #pragma mark - QUERYING:

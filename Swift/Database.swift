@@ -78,6 +78,7 @@ public struct DatabaseConfiguration {
         set { _impl.encryptionKey = newValue }
     }
     
+    
     /** File protection/encryption options (iOS only.)
          Defaults to whatever file protection settings you've specified in your app's entitlements.
          Specifying a nonzero value here overrides those settings for the database files.
@@ -87,12 +88,19 @@ public struct DatabaseConfiguration {
          or respond to push notifications. */
     public var fileProtection: NSData.WritingOptions = []
     
+    
     /** Initialize a new DatabaseConfiguration with default properties. */
     public init() {
-        _impl = CBLDatabaseConfiguration()
+        self.init(impl: CBLDatabaseConfiguration())
     }
     
+    
     // MARK: INTERNAL
+    
+    init(impl: CBLDatabaseConfiguration) {
+        _impl = impl
+    }
+    
     
     let _impl : CBLDatabaseConfiguration
     
@@ -120,7 +128,6 @@ public struct DatabaseConfiguration {
 
 /** A Couchbase Lite database. */
 public final class Database {
-
     /** Initializes a Couchbase Lite database with a given name and database options.
          If the database does not yet exist, it will be created, unless the `readOnly` option is used.
          @param name  The name of the database. May NOT contain capital letters!
@@ -133,13 +140,6 @@ public final class Database {
         }
     }
 
-
-    /** Closes a database. */
-    public func close() throws {
-        try _impl.close()
-    }
-
-
     /** The database's name. */
     public var name: String { return _impl.name }
 
@@ -148,12 +148,29 @@ public final class Database {
     public var path: String? { return _impl.path }
     
     
+    public var config: DatabaseConfiguration {
+        return DatabaseConfiguration(impl: _impl.config)
+    }
+    
+    
     /** Gets a Document object with the given ID. */
     public func getDocument(_ id: String) -> Document? {
         if let implDoc = _impl.document(withID: id) {
             return Document(implDoc)
         }
         return nil;
+    }
+    
+    
+    /** Checks whether the document of the given ID exists in the database or not. */
+    public func contains(_ docID: String) -> Bool {
+        return _impl.contains(docID)
+    }
+    
+    
+    /** Gets document fragment object by the given document ID. */
+    public subscript(id: String) -> DocumentFragment {
+        return DocumentFragment(_impl[id])
     }
     
     
@@ -205,9 +222,22 @@ public final class Database {
     }
     
     
+    /** Closes a database. */
+    public func close() throws {
+        try _impl.close()
+    }
+    
+    
     /** Deletes a database. */
     public func delete() throws {
         try _impl.delete()
+    }
+    
+    
+    /** Compacts the database file by deleting unused attachment files and
+        vacuuming the SQLite database */
+    public func compact() throws {
+        try _impl.compact()
     }
     
     
@@ -230,18 +260,6 @@ public final class Database {
     /** Checks whether a database of the given name exists in the given directory or not. */
     public class func exists(_ name: String, inDirectory directory: String? = nil) -> Bool {
         return CBLDatabase.databaseExists(name, inDirectory: directory)
-    }
-
-
-    /** Gets document fragment object by the given document ID. */
-    public subscript(id: String) -> DocumentFragment {
-        return DocumentFragment(_impl[id])
-    }
-
-
-    /** Checks whether the document of the given ID exists in the database or not. */
-    public func contains(_ docID: String) -> Bool {
-        return _impl.documentExists(docID)
     }
 
 

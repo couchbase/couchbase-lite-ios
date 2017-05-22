@@ -54,7 +54,7 @@
     [doc setObject:@1 forKey:@"key"];
     
     [self saveDocument: doc];
-    AssertEqual(1, (long)self.db.documentCount);
+    AssertEqual(1, (long)self.db.count);
     AssertEqual(1L, (long)doc.sequence);
     return doc;
 }
@@ -94,13 +94,16 @@
 
 
 // helper method to save n number of docs
-- (void) createDocs: (int)n {
+- (NSArray*) createDocs: (int)n {
+    NSMutableArray* docs = [NSMutableArray arrayWithCapacity: n];
     for(int i = 0; i < n; i++){
         CBLDocument* doc = [self createDocument: [NSString stringWithFormat: @"doc_%03d", i]];
         [doc setObject: @(i) forKey:@"key"];
         [self saveDocument: doc];
+        [docs addObject: doc];
     }
-    AssertEqual(n, (long)self.db.documentCount);
+    AssertEqual(n, (long)self.db.count);
+    return docs;
 }
 
 
@@ -235,7 +238,7 @@
     CBLDatabase* db = [self openDBNamed: @"db" error: &error];
     AssertNil(error);
     AssertNotNil(db);
-    AssertEqual(0, (long)db.documentCount);
+    AssertEqual(0, (long)db.count);
     
     // delete database
     [self deleteDatabase: db];
@@ -253,7 +256,7 @@
     AssertNotNil(db, @"Couldn't open db: %@", error);
     AssertEqualObjects(db.name, @"db");
     Assert([db.path.lastPathComponent hasSuffix: @".cblite2"]);
-    AssertEqual(0, (long)db.documentCount);
+    AssertEqual(0, (long)db.count);
     
     // delete database
     [self deleteDatabase: db];
@@ -269,7 +272,7 @@
     AssertNotNil(db, @"Couldn't open db: %@", db.name);
     AssertEqualObjects(db.name, @"`~@#$%^&*()_+{}|\\][=-/.,<>?\":;'");
     Assert([db.path.lastPathComponent hasSuffix: @".cblite2"]);
-    AssertEqual(0, (long)db.documentCount);
+    AssertEqual(0, (long)db.count);
     
     // delete database
     [self deleteDatabase: db];
@@ -301,7 +304,7 @@
     Assert([db.path.lastPathComponent hasSuffix: @".cblite2"]);
     Assert([db.path containsString: dir]);
     Assert([CBLDatabase databaseExists: @"db" inDirectory: dir]);
-    AssertEqual(0, (long)db.documentCount);
+    AssertEqual(0, (long)db.count);
 
     // delete database
     [self deleteDatabase: db];
@@ -339,8 +342,8 @@
     Assert(otherDB != self.db);
     
     // get doc from other DB.
-    AssertEqual(1, (long)otherDB.documentCount);
-    Assert([otherDB documentExists:docID]);
+    AssertEqual(1, (long)otherDB.count);
+    Assert([otherDB contains:docID]);
     
     [self verifyGetDocument: otherDB docID: docID];
     
@@ -396,8 +399,8 @@
     // store doc
     [self generateDocument: docID];
     
-    AssertEqual(1, (long)self.db.documentCount);
-    Assert([self.db documentExists: docID]);
+    AssertEqual(1, (long)self.db.count);
+    Assert([self.db contains: docID]);
     
     // validate doc
     [self verifyGetDocument: docID];
@@ -423,8 +426,8 @@
     [doc setObject:@2 forKey:@"key"];
     [self saveDocument: doc];
     
-    AssertEqual(1, (long)self.db.documentCount);
-    Assert([self.db documentExists: docID]);
+    AssertEqual(1, (long)self.db.count);
+    Assert([self.db contains: docID]);
     
     // verify
     [self verifyGetDocument: docID value: 2];
@@ -442,7 +445,7 @@
     AssertNil(error);
     AssertNotNil(otherDB);
     Assert(otherDB != self.db);
-    AssertEqual(1, (long)otherDB.documentCount);
+    AssertEqual(1, (long)otherDB.count);
     
     // update doc & store it into different instance
     [doc setObject: @2 forKey: @"key"];
@@ -465,7 +468,7 @@
     AssertNil(error);
     AssertNotNil(otherDB);
     Assert(otherDB != self.db);
-    AssertEqual(0, (long)otherDB.documentCount);
+    AssertEqual(0, (long)otherDB.count);
     
     // update doc & store it into different db
     [doc setObject: @2 forKey: @"key"];
@@ -486,7 +489,7 @@
     [self saveDocument: doc];
     
     AssertEqualObjects(docID, doc.documentID);
-    AssertEqual(1, (long)self.db.documentCount);
+    AssertEqual(1, (long)self.db.count);
 }
 
 
@@ -497,7 +500,7 @@
         [self createDocs: 10];
     }];
     Assert(success);
-    AssertEqual(10, (long)self.db.documentCount);
+    AssertEqual(10, (long)self.db.count);
     
     [self validateDocs: 10];
 }
@@ -541,7 +544,7 @@
     NSError* error;
     AssertFalse([self.db deleteDocument: doc error: &error]);
     [self checkError:error domain: @"CouchbaseLite" code: 404]; // Not Found
-    AssertEqual(0, (long)self.db.documentCount);
+    AssertEqual(0, (long)self.db.count);
 }
 
 
@@ -553,7 +556,7 @@
     NSError* error;
     Assert([self.db deleteDocument: doc error: &error]);
     AssertNil(error);
-    AssertEqual(0, (long)self.db.documentCount);
+    AssertEqual(0, (long)self.db.count);
     
     AssertEqualObjects(docID, doc.documentID);
     Assert(doc.isDeleted);
@@ -573,14 +576,14 @@
     AssertNil(error);
     AssertNotNil(otherDB);
     Assert(otherDB != self.db);
-    Assert([otherDB documentExists:docID]);
-    AssertEqual(1, (long)otherDB.documentCount);
+    Assert([otherDB contains:docID]);
+    AssertEqual(1, (long)otherDB.count);
     
     AssertFalse([otherDB deleteDocument: doc error: &error]);
     [self checkError:error domain: @"CouchbaseLite" code: 403]; // forbidden
     
-    AssertEqual(1, (long)otherDB.documentCount);
-    AssertEqual(1, (long)self.db.documentCount);
+    AssertEqual(1, (long)otherDB.count);
+    AssertEqual(1, (long)self.db.count);
     AssertFalse(doc.isDeleted);
     
     // close otherDB
@@ -599,14 +602,14 @@
     AssertNil(error);
     AssertNotNil(otherDB);
     Assert(otherDB != self.db);
-    AssertFalse([otherDB documentExists: docID]);
-    AssertEqual(0, (long)otherDB.documentCount);
+    AssertFalse([otherDB contains: docID]);
+    AssertEqual(0, (long)otherDB.count);
     
     AssertFalse([otherDB deleteDocument: doc error: &error]);
     [self checkError:error domain: @"CouchbaseLite" code: 403]; // forbidden
     
-    AssertEqual(0, (long)otherDB.documentCount);
-    AssertEqual(1, (long)self.db.documentCount);
+    AssertEqual(0, (long)otherDB.count);
+    AssertEqual(1, (long)self.db.count);
     
     AssertFalse(doc.isDeleted);
     
@@ -624,7 +627,7 @@
     NSError* error;
     Assert([self.db deleteDocument: doc error: &error]);
     AssertNil(error);
-    AssertEqual(0, (long)self.db.documentCount);
+    AssertEqual(0, (long)self.db.count);
     AssertNil([doc objectForKey: @"key"]);
     AssertEqual(2, (int)doc.sequence);
     Assert(doc.isDeleted);
@@ -632,7 +635,7 @@
     // second time deletion
     Assert([self.db deleteDocument: doc error: &error]);
     AssertNil(error);
-    AssertEqual(0, (long)self.db.documentCount);
+    AssertEqual(0, (long)self.db.count);
     AssertNil([doc objectForKey: @"key"]);
     AssertEqual(3, (int)doc.sequence);
     Assert(doc.isDeleted);
@@ -653,12 +656,12 @@
             AssertNil(err);
             AssertNil([doc objectForKey: @"key"]);
             Assert(doc.isDeleted);
-            AssertEqual(9 - i, (long)self.db.documentCount);
+            AssertEqual(9 - i, (long)self.db.count);
         }
     }];
     Assert(success);
     AssertNil(error);
-    AssertEqual(0, (long)self.db.documentCount);
+    AssertEqual(0, (long)self.db.count);
 }
 
 
@@ -701,7 +704,7 @@
     NSError* error;
     AssertFalse([self.db purgeDocument: doc error: &error]);
     [self checkError: error domain: @"CouchbaseLite" code: 404];
-    AssertEqual(0, (long)self.db.documentCount);
+    AssertEqual(0, (long)self.db.count);
 }
 
 
@@ -712,7 +715,7 @@
     
     // Purge Doc:
     [self purgeDocAndVerify: doc];
-    AssertEqual(0, (long)self.db.documentCount);
+    AssertEqual(0, (long)self.db.count);
     
     // Save to check sequence number -> 2
     [self saveDocument: doc];
@@ -731,14 +734,14 @@
     AssertNil(error);
     AssertNotNil(otherDB);
     Assert(otherDB != self.db);
-    Assert([otherDB documentExists:docID]);
-    AssertEqual(1, (long)otherDB.documentCount);
+    Assert([otherDB contains:docID]);
+    AssertEqual(1, (long)otherDB.count);
     
     // purge document against other db instance
     AssertFalse([otherDB purgeDocument: doc error: &error]);
     [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
-    AssertEqual(1, (long)otherDB.documentCount);
-    AssertEqual(1, (long)self.db.documentCount);
+    AssertEqual(1, (long)otherDB.count);
+    AssertEqual(1, (long)self.db.count);
     AssertFalse(doc.isDeleted);
     
     // close otherDB
@@ -757,15 +760,15 @@
     AssertNil(error);
     AssertNotNil(otherDB);
     Assert(otherDB != self.db);
-    AssertFalse([otherDB documentExists: docID]);
-    AssertEqual(0, (long)otherDB.documentCount);
+    AssertFalse([otherDB contains: docID]);
+    AssertEqual(0, (long)otherDB.count);
     
     // purge document against other db
     AssertFalse([otherDB purgeDocument: doc error: &error]);
     [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
     
-    AssertEqual(0, (long)otherDB.documentCount);
-    AssertEqual(1, (long)self.db.documentCount);
+    AssertEqual(0, (long)otherDB.count);
+    AssertEqual(1, (long)self.db.count);
     AssertFalse(doc.isDeleted);
     
     [self deleteDatabase: otherDB];
@@ -783,11 +786,11 @@
     
     // Purge Doc first time
     [self purgeDocAndVerify: doc];
-    AssertEqual(0, (long)self.db.documentCount);
+    AssertEqual(0, (long)self.db.count);
     
     // Purge Doc second time
     [self purgeDocAndVerify: doc1];
-    AssertEqual(0, (long)self.db.documentCount);
+    AssertEqual(0, (long)self.db.count);
 }
 
 
@@ -802,12 +805,12 @@
             NSString* docID = [[NSString alloc] initWithFormat: @"doc_%03d", i];
             CBLDocument* doc = [self.db documentWithID: docID];
             [self purgeDocAndVerify: doc];
-            AssertEqual(9 - i, (long)self.db.documentCount);
+            AssertEqual(9 - i, (long)self.db.count);
         }
     }];
     Assert(success);
     AssertNil(error);
-    AssertEqual(0, (long)self.db.documentCount);
+    AssertEqual(0, (long)self.db.count);
 }
 
 
@@ -1173,6 +1176,52 @@
 - (void) testDatabaseExistsAgainstNonExistDB {
     NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
     AssertFalse([CBLDatabase databaseExists: @"nonexist" inDirectory: dir]);
+}
+
+
+- (void) failingTestCompact {
+    NSArray* docs = [self createDocs: 20];
+    
+    // Update each doc 25 times:
+    NSError* error;
+    [_db inBatch: &error do: ^{
+        for (CBLDocument* doc in docs) {
+            for (NSUInteger i = 0; i < 25; i++) {
+                [doc setObject: @(i) forKey: @"number"];
+                [self saveDocument: doc];
+            }
+        }
+    }];
+    
+    // Add each doc with a blob object:
+    for (CBLDocument* doc in docs) {
+        NSData* content = [doc.documentID dataUsingEncoding: NSUTF8StringEncoding];
+        CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
+        [doc setObject: blob forKey: @"blob"];
+        [self saveDocument: doc];
+    }
+    
+    AssertEqual(_db.count, 20u);
+    
+    NSString* attsDir = [_db.path stringByAppendingPathComponent:@"Attachments"];
+    NSArray* atts = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: attsDir error: nil];
+    AssertEqual(atts.count, 20u);
+    
+    // Compact:
+    Assert([_db compact: &error], @"Error when compacting the database");
+    
+    // Delete all docs:
+    for (CBLDocument* doc in docs) {
+        Assert([_db deleteDocument: doc error: &error], @"Error when deleting doc: %@", error);
+        Assert(doc.isDeleted);
+    }
+    AssertEqual(_db.count, 0u);
+    
+    // Compact:
+    Assert([_db compact: &error], @"Error when compacting the database: %@", error);
+    
+    atts = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: attsDir error: nil];
+    AssertEqual(atts.count, 0u);
 }
 
 

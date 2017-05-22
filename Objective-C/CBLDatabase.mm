@@ -159,122 +159,22 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-- (CBLDatabaseConfiguration*) config {
-    return [_config copy];
-}
-
-
 - (NSString*) path {
     return _c4db != nullptr ? sliceResult2FilesystemPath(c4db_getPath(_c4db)) : nil;
 }
 
 
-- /* private */ (BOOL) open: (NSError**)outError {
-    if (_c4db)
-        return YES;
-    
-    NSString* dir = _config.directory;
-    Assert(dir != nil);
-    if (![self setupDirectory: dir
-               fileProtection: _config.fileProtection
-                        error: outError])
-        return NO;
-    
-    NSString* path = databasePath(_name, dir);
-    CBLStringBytes bPath(path);
-    
-    C4DatabaseConfig c4config = kDBConfig;
-    if (_config.encryptionKey != nil) {
-        CBLSymmetricKey* key = [[CBLSymmetricKey alloc]
-                                initWithKeyOrPassword: _config.encryptionKey];
-        c4config.encryptionKey = symmetricKey2C4Key(key);
-    }
-
-    CBLLog(Database, @"Opening %@ at path %@", self, path);
-    C4Error err;
-    _c4db = c4db_open(bPath, &c4config, &err);
-    if (!_c4db)
-        return convertError(err, outError);
-
-    _sharedKeys = cbl::SharedKeys(_c4db);
-    _obs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
-    
-    return YES;
+- (NSUInteger) count {
+    return c4db_getDocumentCount(_c4db);
 }
 
 
-- (BOOL) close: (NSError**)outError {
-    if (!_c4db)
-        return YES;
-    
-    CBLLog(Database, @"Closing %@ at path %@", self, self.path);
-    
-    _allDocsQuery = nil;
-    
-    C4Error err;
-    if (!c4db_close(_c4db, &err))
-        return convertError(err, outError);
-    
-    c4db_free(_c4db);
-    c4dbobs_free(_obs);
-    _c4db = nullptr;
-    _obs = nullptr;
-
-    return YES;
+- (CBLDatabaseConfiguration*) config {
+    return [_config copy];
 }
 
 
-- (BOOL) changeEncryptionKey: (nullable id)key error: (NSError**)outError {
-    // TODO:
-    return NO;
-}
-
-
-- (BOOL) deleteDatabase: (NSError**)outError {
-    C4Error err;
-    if (!c4db_delete(_c4db, &err))
-        return convertError(err, outError);
-    c4db_free(_c4db);
-    _c4db = nullptr;
-    c4dbobs_free(_obs);
-    _obs = nullptr;
-    return YES;
-}
-
-
-+ (BOOL) deleteDatabase: (NSString*)name
-            inDirectory: (nullable NSString*)directory
-                  error: (NSError**)outError {
-    NSString* path = databasePath(name, directory ?: defaultDirectory());
-    CBLStringBytes bPath(path);
-    C4Error err;
-    return c4db_deleteAtPath(bPath, &kDBConfig, &err) || err.code==0 || convertError(err, outError);
-}
-
-
-+ (BOOL) databaseExists: (NSString*)name
-            inDirectory: (nullable NSString*)directory {
-    NSString* path = databasePath(name, directory ?: defaultDirectory());
-    return [[NSFileManager defaultManager] fileExistsAtPath: path];
-}
-
-
-- (BOOL) inBatch: (NSError**)outError do: (void (^)())block {
-    C4Transaction transaction(_c4db);
-    if (outError)
-        *outError = nil;
-    
-    if (!transaction.begin())
-        return convertError(transaction.error(), outError);
-    
-    block();
-
-    if (!transaction.commit())
-        return convertError(transaction.error(), outError);
-    
-    [self postDatabaseChanged];
-    return YES;
-}
+#pragma mark - GET EXISTING DOCUMENT
 
 
 - (CBLDocument*) documentWithID: (NSString*)documentID {
@@ -282,14 +182,20 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
-    return [[CBLDocumentFragment alloc] initWithDocument: [self documentWithID: documentID]];
+#pragma mark - CHECK DOCUMENT EXISTS
+
+
+- (BOOL) contains: (NSString*)docID {
+    id doc = [self documentWithID: docID mustExist: YES error: nil];
+    return doc != nil;
 }
 
 
-- (BOOL) documentExists: (NSString*)docID {
-    id doc = [self documentWithID: docID mustExist: YES error: nil];
-    return doc != nil;
+#pragma mark - SUBSCRIPTION
+
+
+- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
+    return [[CBLDocumentFragment alloc] initWithDocument: [self documentWithID: documentID]];
 }
 
 
@@ -318,6 +224,94 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     else
         return NO;
 }
+
+
+#pragma mark - BATCH OPERATION
+
+
+- (BOOL) inBatch: (NSError**)outError do: (void (^)())block {
+    C4Transaction transaction(_c4db);
+    if (outError)
+        *outError = nil;
+    
+    if (!transaction.begin())
+        return convertError(transaction.error(), outError);
+    
+    block();
+    
+    if (!transaction.commit())
+        return convertError(transaction.error(), outError);
+    
+    [self postDatabaseChanged];
+    return YES;
+}
+
+
+#pragma mark - DATABASE MAINTENANCE
+
+
+- (BOOL) close: (NSError**)outError {
+    if (!_c4db)
+        return YES;
+    
+    CBLLog(Database, @"Closing %@ at path %@", self, self.path);
+    
+    _allDocsQuery = nil;
+    
+    C4Error err;
+    if (!c4db_close(_c4db, &err))
+        return convertError(err, outError);
+    
+    c4db_free(_c4db);
+    c4dbobs_free(_obs);
+    _c4db = nullptr;
+    _obs = nullptr;
+    
+    return YES;
+}
+
+
+- (BOOL) deleteDatabase: (NSError**)outError {
+    C4Error err;
+    if (!c4db_delete(_c4db, &err))
+        return convertError(err, outError);
+    c4db_free(_c4db);
+    _c4db = nullptr;
+    c4dbobs_free(_obs);
+    _obs = nullptr;
+    return YES;
+}
+
+
+- (BOOL) compact: (NSError**)outError {
+    C4Error err;
+    if (!c4db_compact(_c4db, &err))
+        return convertError(err, outError);
+    return YES;
+}
+
+
+- (BOOL) changeEncryptionKey: (nullable id)key error: (NSError**)outError {
+    return NO; // TODO
+}
+
+
++ (BOOL) deleteDatabase: (NSString*)name
+            inDirectory: (nullable NSString*)directory
+                  error: (NSError**)outError {
+    NSString* path = databasePath(name, directory ?: defaultDirectory());
+    CBLStringBytes bPath(path);
+    C4Error err;
+    return c4db_deleteAtPath(bPath, &kDBConfig, &err) || err.code==0 || convertError(err, outError);
+}
+
+
++ (BOOL) databaseExists: (NSString*)name
+            inDirectory: (nullable NSString*)directory {
+    NSString* path = databasePath(name, directory ?: defaultDirectory());
+    return [[NSFileManager defaultManager] fileExistsAtPath: path];
+}
+
 
 
 #pragma mark - QUERIES:
@@ -378,15 +372,42 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
-#pragma mark - INTERNAL
+#pragma mark - PRIVATE
 
 
-- (uint64_t) documentCount {
-    return c4db_getDocumentCount(_c4db);
+- (BOOL) open: (NSError**)outError {
+    if (_c4db)
+        return YES;
+    
+    NSString* dir = _config.directory;
+    Assert(dir != nil);
+    if (![self setupDirectory: dir
+               fileProtection: _config.fileProtection
+                        error: outError])
+        return NO;
+    
+    NSString* path = databasePath(_name, dir);
+    CBLStringBytes bPath(path);
+    
+    C4DatabaseConfig c4config = kDBConfig;
+    if (_config.encryptionKey != nil) {
+        CBLSymmetricKey* key = [[CBLSymmetricKey alloc]
+                                initWithKeyOrPassword: _config.encryptionKey];
+        c4config.encryptionKey = symmetricKey2C4Key(key);
+    }
+    
+    CBLLog(Database, @"Opening %@ at path %@", self, path);
+    C4Error err;
+    _c4db = c4db_open(bPath, &c4config, &err);
+    if (!_c4db)
+        return convertError(err, outError);
+    
+    _sharedKeys = cbl::SharedKeys(_c4db);
+    _obs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
+    
+    return YES;
 }
 
-
-#pragma mark - PRIVATE
 
 static NSString* databasePath(NSString* name, NSString* dir) {
     name = [[name stringByReplacingOccurrencesOfString: @"/" withString: @":"]
