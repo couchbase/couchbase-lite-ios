@@ -304,6 +304,15 @@
 		93DD9BA81EB419BB00E502A2 /* ArrayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DD9BA71EB419BB00E502A2 /* ArrayTest.m */; };
 		93E17EED1ECF7D8600671CA1 /* ConflictResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EEC1ECF7D8600671CA1 /* ConflictResolver.swift */; };
 		93E17EEF1ECFA7B800671CA1 /* ConflictTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EEE1ECFA7B800671CA1 /* ConflictTest.swift */; };
+		93E17EF81ED3ABE200671CA1 /* CBLDocumentChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E17EF61ED3ABE200671CA1 /* CBLDocumentChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		93E17EF91ED3ABE200671CA1 /* CBLDocumentChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EF71ED3ABE200671CA1 /* CBLDocumentChange.m */; };
+		93E17F0B1ED3AC8100671CA1 /* CBLDatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E17F091ED3AC8100671CA1 /* CBLDatabaseChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		93E17F0C1ED3AC8100671CA1 /* CBLDatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 93E17F0A1ED3AC8100671CA1 /* CBLDatabaseChange.m */; };
+		93E17F0D1ED3BA6300671CA1 /* CBLDocumentChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E17EF61ED3ABE200671CA1 /* CBLDocumentChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		93E17F0E1ED3BA6E00671CA1 /* CBLDatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E17F091ED3AC8100671CA1 /* CBLDatabaseChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		93E17F0F1ED3BA7500671CA1 /* CBLDatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 93E17F0A1ED3AC8100671CA1 /* CBLDatabaseChange.m */; };
+		93E17F101ED3BA7800671CA1 /* CBLDocumentChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EF71ED3ABE200671CA1 /* CBLDocumentChange.m */; };
+		93E17F151ED4ED4000671CA1 /* NotificationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17F141ED4ED4000671CA1 /* NotificationTest.swift */; };
 		93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F74A8A1EC5549C001289F8 /* FragmentTest.swift */; };
 /* End PBXBuildFile section */
 
@@ -687,6 +696,11 @@
 		93DD9BA71EB419BB00E502A2 /* ArrayTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArrayTest.m; sourceTree = "<group>"; };
 		93E17EEC1ECF7D8600671CA1 /* ConflictResolver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictResolver.swift; sourceTree = "<group>"; };
 		93E17EEE1ECFA7B800671CA1 /* ConflictTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictTest.swift; sourceTree = "<group>"; };
+		93E17EF61ED3ABE200671CA1 /* CBLDocumentChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDocumentChange.h; sourceTree = "<group>"; };
+		93E17EF71ED3ABE200671CA1 /* CBLDocumentChange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDocumentChange.m; sourceTree = "<group>"; };
+		93E17F091ED3AC8100671CA1 /* CBLDatabaseChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseChange.h; sourceTree = "<group>"; };
+		93E17F0A1ED3AC8100671CA1 /* CBLDatabaseChange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDatabaseChange.m; sourceTree = "<group>"; };
+		93E17F141ED4ED4000671CA1 /* NotificationTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationTest.swift; sourceTree = "<group>"; };
 		93F74A8A1EC5549C001289F8 /* FragmentTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FragmentTest.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -795,6 +809,7 @@
 				27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */,
 				93F74A8A1EC5549C001289F8 /* FragmentTest.swift */,
 				939B79241E679017009A70EF /* Info.plist */,
+				93E17F141ED4ED4000671CA1 /* NotificationTest.swift */,
 				27BE3B501E4E8F6F0012B74A /* PredicateQueryTest.swift */,
 				93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */,
 			);
@@ -817,6 +832,10 @@
 				2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */,
 				93BFCD9E1E0385EA00E52F8A /* CBLDatabase.h */,
 				93BFCD9F1E0385EA00E52F8A /* CBLDatabase.mm */,
+				93E17EF61ED3ABE200671CA1 /* CBLDocumentChange.h */,
+				93E17EF71ED3ABE200671CA1 /* CBLDocumentChange.m */,
+				93E17F091ED3AC8100671CA1 /* CBLDatabaseChange.h */,
+				93E17F0A1ED3AC8100671CA1 /* CBLDatabaseChange.m */,
 			);
 			name = Database;
 			sourceTree = "<group>";
@@ -1198,6 +1217,7 @@
 				275F929E1E4D377C007FD5A2 /* CBLDatabase.h in Headers */,
 				272850A71E99CAA4009CA22F /* CBLReplication+Internal.h in Headers */,
 				9381962B1EC15F410032CC51 /* CBLC4Document.h in Headers */,
+				93E17F0D1ED3BA6300671CA1 /* CBLDocumentChange.h in Headers */,
 				93B5036B1E64B093002C4680 /* CBLJSON.h in Headers */,
 				938196321EC15F620032CC51 /* CBLFLDict.h in Headers */,
 				93B75C1D1E79EF750033B61B /* CBLQuerySelect.h in Headers */,
@@ -1210,6 +1230,7 @@
 				938196141EC113590032CC51 /* CBLArrayFragment.h in Headers */,
 				93B503721E64B0A8002C4680 /* CBLParseDate.h in Headers */,
 				93B503791E64B0C1002C4680 /* CBLPredicateQuery+Internal.h in Headers */,
+				93E17F0E1ED3BA6E00671CA1 /* CBLDatabaseChange.h in Headers */,
 				9308F4061E64B22800F53EE4 /* MYErrorUtils.h in Headers */,
 				93C3985D1EC5768B005A7A96 /* CBLQueryEnumerator.h in Headers */,
 				9381961B1EC113810032CC51 /* CBLReadOnlyFragment.h in Headers */,
@@ -1238,6 +1259,7 @@
 				933208161E77415E000D9993 /* CBLQueryOrderBy.h in Headers */,
 				9332082A1E774171000D9993 /* CBLQuery+Internal.h in Headers */,
 				27DF4BD81ECA442400EE6B8D /* CBLLiveQuery.h in Headers */,
+				93E17F0B1ED3AC8100671CA1 /* CBLDatabaseChange.h in Headers */,
 				9380C72A1E16E7D00011E8CB /* CBLDatabase.h in Headers */,
 				93CD02721EA0004500AFB3FA /* CBLReadOnlyDocument.h in Headers */,
 				27A8B5021EC5350A00BB4C07 /* CBLQueryEnumerator.h in Headers */,
@@ -1268,6 +1290,7 @@
 				93CD02DE1EA037B200AFB3FA /* CBLReadOnlyDictionary.h in Headers */,
 				9381959C1EB9A6FC0032CC51 /* CBLStatus.h in Headers */,
 				934F4CAD1E241FB500F90659 /* CBLJSON.h in Headers */,
+				93E17EF81ED3ABE200671CA1 /* CBLDocumentChange.h in Headers */,
 				934F4CAB1E241FB500F90659 /* CBLInternal.h in Headers */,
 				931C145E1EAACAAA0094F9B2 /* CBLReadOnlyDictionaryFragment.h in Headers */,
 				934F4CAF1E241FB500F90659 /* CBLLog.h in Headers */,
@@ -1697,10 +1720,12 @@
 				93A2AFBA1E830BF800A08CAE /* QueryRow.swift in Sources */,
 				27E35A921E8C4F4300E103F9 /* Replication.swift in Sources */,
 				938CDF251E807F86002EE790 /* FromRouter.swift in Sources */,
+				93E17F101ED3BA7800671CA1 /* CBLDocumentChange.m in Sources */,
 				93B503711E64B0A5002C4680 /* CBLParseDate.c in Sources */,
 				9381962C1EC15F430032CC51 /* CBLC4Document.mm in Sources */,
 				93C3984D1EC57688005A7A96 /* CBLQueryEnumerator.mm in Sources */,
 				933F45F61EC2A62000863ECB /* DocumentFragment.swift in Sources */,
+				93E17F0F1ED3BA7500671CA1 /* CBLDatabaseChange.m in Sources */,
 				937441D61E7B8B0500CB8F11 /* CBLPredicateQuery.mm in Sources */,
 				9381961C1EC113860032CC51 /* CBLReadOnlyFragment.m in Sources */,
 				938CDF291E807F9F002EE790 /* OrderByRouter.swift in Sources */,
@@ -1765,6 +1790,7 @@
 				93E17EEF1ECFA7B800671CA1 /* ConflictTest.swift in Sources */,
 				93629D011EC96DE700F79834 /* ArrayTest.swift in Sources */,
 				27BE3B511E4E8F6F0012B74A /* PredicateQueryTest.swift in Sources */,
+				93E17F151ED4ED4000671CA1 /* NotificationTest.swift in Sources */,
 				27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */,
 				93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */,
 				93A91C6C1E81CE4D003D01A2 /* QueryTest.swift in Sources */,
@@ -1825,6 +1851,7 @@
 				72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */,
 				934F4CAE1E241FB500F90659 /* CBLJSON.m in Sources */,
 				934F4CB31E241FB500F90659 /* CBLParseDate.c in Sources */,
+				93E17F0C1ED3AC8100671CA1 /* CBLDatabaseChange.m in Sources */,
 				933208171E77415E000D9993 /* CBLQueryOrderBy.m in Sources */,
 				27A0C85F1E3E7AB600F68646 /* CBLSharedKeys.mm in Sources */,
 				931C14541EAABCE70094F9B2 /* CBLReadOnlyFragment.m in Sources */,
@@ -1857,6 +1884,7 @@
 				934F4C701E1EFAF600F90659 /* Test_Assertions.m in Sources */,
 				937441D51E7B8B0500CB8F11 /* CBLPredicateQuery.mm in Sources */,
 				934F4CB01E241FB500F90659 /* CBLLog.m in Sources */,
+				93E17EF91ED3ABE200671CA1 /* CBLDocumentChange.m in Sources */,
 				933208191E77415E000D9993 /* CBLQuerySelect.m in Sources */,
 				93CD02E71EA0382D00AFB3FA /* CBLDictionary.mm in Sources */,
 				938195991EB97E7A0032CC51 /* CBLDocumentFragment.m in Sources */,

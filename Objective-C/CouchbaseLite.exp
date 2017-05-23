@@ -11,8 +11,10 @@
 .objc_class_name_CBLBlob
 .objc_class_name_CBLDictionary
 .objc_class_name_CBLDatabase
+.objc_class_name_CBLDatabaseChange
 .objc_class_name_CBLDatabaseOptions
 .objc_class_name_CBLDocument
+.objc_class_name_CBLDocumentChange
 .objc_class_name_CBLDocumentFragment
 .objc_class_name_CBLFragment
 .objc_class_name_CBLFullTextQueryRow
@@ -32,6 +34,4 @@
 #  Public constants:
 _kCBLDatabaseChangeNotification
 _kCBLDatabaseChangesUserInfoKey
-_kCBLDatabaseIsExternalUserInfoKey
-_kCBLDatabaseLastSequenceUserInfoKey
 _kCBLReplicationStatusChangeNotification

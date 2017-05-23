@@ -19,6 +19,7 @@
 #import "CBLCoreBridge.h"
 #import "CBLDocument.h"
 #import "CBLDocument+Internal.h"
+#import "CBLDocumentChange.h"
 #import "CBLDocumentFragment.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
@@ -89,6 +90,8 @@ static NSString* defaultDirectory() {
     CBLDatabaseConfiguration* _config;
     C4DatabaseObserver* _obs;
     CBLPredicateQuery* _allDocsQuery;
+    NSMutableDictionary* _docChangeListeners;
+    NSMutableDictionary* _docObs;
 }
 
 
@@ -108,6 +111,15 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBLDatabase *db = (__bridge CBLDatabase *)context;
     dispatch_async(dispatch_get_main_queue(), ^{        //TODO: Support other queues
         [db postDatabaseChanged];
+    });
+}
+
+static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4SequenceNumber seq,
+                                void *context)
+{
+    CBLDatabase *db = (__bridge CBLDatabase *)context;
+    dispatch_async(dispatch_get_main_queue(), ^{        //TODO: Support other queues
+        [db postDocumentChanged: slice2string(docID)];
     });
 }
 
@@ -149,6 +161,10 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 
 - (void) dealloc {
+    for (NSValue* obsValue in _docObs.allValues) {
+        C4DocumentObserver* obs = (C4DocumentObserver*)obsValue.pointerValue;
+        c4docobs_free(obs);
+    }
     c4dbobs_free(_obs);
     c4db_free(_c4db);
 }
@@ -313,6 +329,48 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 }
 
 
+#pragma mark - DOCUMENT CHANGES
+
+
+- (void) addChangeListener: (id <CBLDocumentChangeListener>)listener
+             forDocumentID: (NSString*)documentID
+{
+    if (!_docChangeListeners)
+        _docChangeListeners = [NSMutableDictionary dictionary];
+    
+    NSMutableSet* listeners = _docChangeListeners[documentID];
+    if (!listeners) {
+        listeners = [NSMutableSet set];
+        [_docChangeListeners setObject: listeners forKey: documentID];
+        
+        CBLStringBytes bDocID(documentID);
+        C4DocumentObserver* o =
+            c4docobs_create(_c4db, bDocID, docObserverCallback, (__bridge void *)self);
+        if (!_docObs)
+            _docObs = [NSMutableDictionary dictionary];
+        [_docObs setObject: [NSValue valueWithPointer: o] forKey: documentID];
+    }
+    [listeners addObject: listener];
+}
+
+
+- (void) removeChangeListener: (id <CBLDocumentChangeListener>)listener
+                forDocumentID: (NSString*)documentID
+{
+    NSMutableSet* listeners = _docChangeListeners[documentID];
+    if (listeners) {
+        [listeners removeObject: listener];
+        if (listeners.count == 0) {
+            NSValue* obsValue = [_docObs objectForKey: documentID];
+            if (obsValue) {
+                C4DocumentObserver* obs = (C4DocumentObserver*)obsValue.pointerValue;
+                c4docobs_free(obs);
+            }
+            [_docObs removeObjectForKey: documentID];
+        }
+    }
+}
+
 
 #pragma mark - QUERIES:
 
@@ -369,6 +427,66 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     C4Error c4err;
     return c4db_deleteIndex(_c4db, {json.bytes, json.length}, (C4IndexType)type, &c4err)
     || convertError(c4err, outError);
+}
+
+
+#pragma mark - INTERNAL
+
+- (void) postDatabaseChanged {
+    if (!_obs || !_c4db || c4db_isInTransaction(_c4db))
+        return;
+    
+    const uint32_t kMaxChanges = 100u;
+    C4DatabaseChange changes[kMaxChanges];
+    bool external = false;
+    uint32_t nChanges = 0u;
+    NSMutableArray* docIDs = [NSMutableArray new];
+    do {
+        // Read changes in batches of kMaxChanges:
+        bool newExternal;
+        nChanges = c4dbobs_getChanges(_obs, changes, kMaxChanges, &newExternal);
+        if (nChanges == 0 || external != newExternal || docIDs.count > 1000) {
+            if(docIDs.count > 0) {
+                CBLDatabaseChange* change = [[CBLDatabaseChange alloc] initWithDocumentIDs: docIDs
+                                                                                isExternal: external];
+                // Only notify if there are actually changes to send
+                NSDictionary *userInfo = @{ kCBLDatabaseChangesUserInfoKey: change };
+                [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDatabaseChangeNotification
+                                                                    object: self
+                                                                  userInfo: userInfo];
+                docIDs = [NSMutableArray new];
+            }
+        }
+        
+        external = newExternal;
+        for(uint32_t i = 0; i < nChanges; i++) {
+            NSString *docID =slice2string(changes[i].docID);
+            [docIDs addObject: docID];
+        }
+    } while(nChanges > 0);
+}
+
+
+- (void) postDocumentChanged: (NSString*)documentID {
+    if (!_docObs[documentID] || !_c4db ||  c4db_isInTransaction(_c4db))
+        return;
+    
+    CBLDocumentChange* change = [[CBLDocumentChange alloc] initWithDocumentID: documentID];
+    NSSet* listeners = [_docChangeListeners objectForKey: documentID];
+    for (id<CBLDocumentChangeListener> listener in listeners) {
+        [listener documentDidChange: change];
+    }
+}
+
+
+- (C4BlobStore*) getBlobStore: (NSError**)outError {
+    if (![self mustBeOpen: outError])
+        return nil;
+    C4Error err;
+    C4BlobStore *blobStore = c4db_getBlobStore(_c4db, &err);
+    if (!blobStore)
+        convertError(err, outError);
+    return blobStore;
 }
 
 
@@ -463,55 +581,6 @@ static NSString* databasePath(NSString* name, NSString* dir) {
     }
     
     return YES;
-}
-
-
-- (void)postDatabaseChanged {
-    if (!_obs || !_c4db || c4db_isInTransaction(_c4db))
-        return;
-    
-    const uint32_t kMaxChanges = 100u;
-    C4DatabaseChange changes[kMaxChanges];
-    C4SequenceNumber lastSequence = 0;
-    bool external = false;
-    uint32_t nChanges = 0u;
-    NSMutableArray* docIDs = [NSMutableArray new];
-    do {
-        // Read changes in batches of kMaxChanges:
-        bool newExternal;
-        nChanges = c4dbobs_getChanges(_obs, changes, kMaxChanges, &newExternal);
-        if (nChanges == 0 || external != newExternal || docIDs.count > 1000) {
-            if(docIDs.count > 0) {
-                // Only notify if there are actually changes to send
-                NSDictionary *userInfo = @{kCBLDatabaseChangesUserInfoKey: docIDs,
-                                           kCBLDatabaseLastSequenceUserInfoKey: @(lastSequence),
-                                           kCBLDatabaseIsExternalUserInfoKey: @(external)};
-                [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDatabaseChangeNotification
-                                                                    object: self
-                                                                  userInfo: userInfo];
-                docIDs = [NSMutableArray new];
-            }
-        }
-
-        external = newExternal;
-        for(uint32_t i = 0; i < nChanges; i++) {
-            NSString *docID =slice2string(changes[i].docID);
-            [docIDs addObject: docID];
-        }
-        if (nChanges > 0)
-            lastSequence = changes[nChanges-1].sequence;
-    } while(nChanges > 0);
-}
-
-
-- (C4BlobStore*) getBlobStore: (NSError**)outError {
-    if (![self mustBeOpen: outError])
-        return nil;
-    C4Error err;
-    C4BlobStore *blobStore = c4db_getBlobStore(_c4db, &err);
-    if (!blobStore)
-        convertError(err, outError);
-    return blobStore;
 }
 
 

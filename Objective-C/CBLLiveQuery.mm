@@ -113,7 +113,9 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
     // Use double the update interval if this is a remote change (coming from a pull replication):
     NSTimeInterval updateInterval = _updateInterval;
-    if ([n.userInfo[kCBLDatabaseIsExternalUserInfoKey] boolValue])
+    
+    CBLDatabaseChange* change = n.userInfo[kCBLDatabaseChangesUserInfoKey];
+    if (change.isExternal)
         updateInterval *= 2;
 
     // Schedule an update, respecting the updateInterval:

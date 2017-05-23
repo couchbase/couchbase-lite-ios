@@ -8,6 +8,11 @@
 
 import Foundation
 
+/** This notification is posted by a Dtabase in response to document changes. */
+public let DatabaseChangeNotification = NSNotification.Name.cblDatabaseChange.rawValue
+
+/** The key to access a DatabaseChange object containing information about the change. */
+public let DatabaseChangesUserInfoKey = kCBLDatabaseChangesUserInfoKey
 
 /** A database encryption key consists of a password string, or a 32-byte AES256 key. */
 public enum EncryptionKey {
@@ -125,7 +130,6 @@ public struct DatabaseConfiguration {
 }
 
 
-
 /** A Couchbase Lite database. */
 public final class Database {
     /** Initializes a Couchbase Lite database with a given name and database options.
@@ -221,6 +225,17 @@ public final class Database {
         }
     }
     
+    /** Add a document change listener to the document. */
+    public func addChangeListener(_ listener: DocumentChangeListener, forDocumentID id: String) {
+        _impl.add(listener, forDocumentID: id)
+    }
+    
+    
+    /** Remove the document change listener from the document. */
+    public func removeChangeListener(_ listener: DocumentChangeListener, forDocumentID id: String) {
+        _impl.remove(listener, forDocumentID: id)
+    }
+    
     
     /** Closes a database. */
     public func close() throws {
@@ -265,3 +280,9 @@ public final class Database {
 
     let _impl : CBLDatabase
 }
+
+public typealias DatabaseChange = CBLDatabaseChange
+
+public typealias DocumentChange = CBLDocumentChange
+
+public typealias DocumentChangeListener = CBLDocumentChangeListener

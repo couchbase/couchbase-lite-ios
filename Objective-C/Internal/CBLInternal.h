@@ -12,7 +12,9 @@
 #import "CBLBlob.h"
 #import "CBLConflictResolver.h"
 #import "CBLDatabase.h"
+#import "CBLDatabaseChange.h"
 #import "CBLDocument.h"
+#import "CBLDocumentChange.h"
 #import "CBLJSONCoding.h"
 
 
@@ -68,6 +70,24 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithMine: (CBLReadOnlyDocument*)mine
                        theirs: (CBLReadOnlyDocument*)theirs
                          base: (nullable CBLReadOnlyDocument*)base;
+
+@end
+
+
+// CBLDocumentChange:
+
+@interface CBLDocumentChange ()
+
+- (instancetype) initWithDocumentID: (NSString*)documentID;
+
+@end
+
+
+// CBLDatabaseChange:
+
+@interface CBLDatabaseChange ()
+
+- (instancetype) initWithDocumentIDs: (NSArray*)documentIDs isExternal: (BOOL)isExternal;
 
 @end
 

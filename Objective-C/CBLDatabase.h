@@ -8,21 +8,15 @@
 
 #import <Foundation/Foundation.h>
 @class CBLDocument, CBLDocumentFragment, CBLPredicateQuery;
-@protocol CBLConflictResolver;
+@protocol CBLConflictResolver, CBLDocumentChangeListener;
 
 NS_ASSUME_NONNULL_BEGIN
 
 /** This notification is posted by a CBLDatabase in response to document changes. */
 extern NSString* const kCBLDatabaseChangeNotification;
 
-/** The key to access the document IDs of the documents that has been changed. */
+/** The key to access a CBLDatabaseChange object containing information about the change. */
 extern NSString* const kCBLDatabaseChangesUserInfoKey;
-
-/** The key to access the last sequence number as of the notified changes. */
-extern NSString* const kCBLDatabaseLastSequenceUserInfoKey;
-
-/** The key to check whether the changes are from the current database object or not. */
-extern NSString* const kCBLDatabaseIsExternalUserInfoKey;
 
 
 /** Types of database indexes. */
@@ -213,6 +207,23 @@ typedef struct {
 /** Checks whether a database of the given name exists in the given directory or not. */
 + (BOOL) databaseExists: (NSString*)name
             inDirectory: (nullable NSString*)directory;
+
+
+#pragma mark - DOCUMENT CHANGES
+
+
+/** Add a document change listener to the document.
+    @param listener the listener.
+    @param documentID the document ID. */
+- (void) addChangeListener: (id <CBLDocumentChangeListener>)listener
+             forDocumentID: (NSString*)documentID;
+
+
+/** Remove the document change listener from the document. 
+    @param listener the listener.
+    @param documentID the document ID. */
+- (void) removeChangeListener: (id <CBLDocumentChangeListener>)listener
+                forDocumentID: (NSString*)documentID;
 
 
 #pragma mark - QUERYING:
