@@ -30,7 +30,6 @@ struct CBLStringBytes  {
     
     void operator= (NSString*);
     
-    operator FLSlice() const {return {buf, size};}
     operator C4Slice() const {return {buf, size};}
     
     const char *buf;

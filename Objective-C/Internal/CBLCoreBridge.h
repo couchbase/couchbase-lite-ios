@@ -21,20 +21,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 NSString* slice2string(C4Slice s);
 
-static inline NSString* slice2string(FLSlice s) {
-    return slice2string(C4Slice{s.buf, s.size});
-}
-
 C4Slice data2slice(NSData*);
 
 // The sliceResult2... functions take care of freeing the C4SliceResult, or adopting its data.
 NSData*   sliceResult2data(C4SliceResult);
 NSString* sliceResult2string(C4SliceResult);
 NSString* sliceResult2FilesystemPath(C4SliceResult);
-
-static inline NSString* sliceResult2string(FLSliceResult s) {
-    return sliceResult2string(C4SliceResult{s.buf, s.size});
-}
 
 C4EncryptionKey symmetricKey2C4Key(CBLSymmetricKey* key);
 

@@ -378,10 +378,11 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
         put.revFlags = kRevDeleted;
     if (containsBlob(self))
         put.revFlags |= kRevHasAttachments;
+    FLSliceResult body = {};
     if (!deletion && !self.isEmpty) {
         // Encode properties to Fleece data:
         auto enc = c4db_createFleeceEncoder(_c4db);
-        auto body = [self encodeWith:enc error: outError];
+        body = [self encodeWith:enc error: outError];
         FLEncoder_Free(enc);
         if (!body.buf) {
             *outDoc = nullptr;
@@ -393,7 +394,7 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     // Save to database:
     C4Error err;
     *outDoc = c4doc_put(_c4db, &put, nullptr, &err);
-    c4slice_free(put.body);
+    c4slice_free(body);
     
     if (!*outDoc && err.code != kC4ErrorConflict) {     // conflict is not an error, here
         return convertError(err, outError);

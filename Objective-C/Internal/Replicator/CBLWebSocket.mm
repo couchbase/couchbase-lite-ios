@@ -70,7 +70,7 @@ static bool sLogEnabled;
     });
 }
 
-static void doOpen(C4Socket* s, const C4Address* addr, FLSlice optionsFleece) {
+static void doOpen(C4Socket* s, const C4Address* addr, C4Slice optionsFleece) {
     NSURLComponents* c = [NSURLComponents new];
     c.scheme = slice2string(addr->scheme);
     c.host = slice2string(addr->hostname);
@@ -185,7 +185,7 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
     [_task readDataOfMinLength: 1 maxLength: NSUIntegerMax timeout: kConnectTimeout
              completionHandler: ^(NSData* data, BOOL atEOF, NSError* error)
     {
-        LogVerbose("Received %zu bytes of HTTP response", data.length);
+        LogVerbose("Received %zu bytes of HTTP response", (size_t)data.length);
         if (error) {
             [self didCloseWithError: error];
             return;
@@ -305,7 +305,8 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
             [self didCloseWithError: error];
         else {
             self->_receivedBytesPending += data.length;
-            LogVerbose("<<< received %zu bytes%s [now %zu pending]", data.length, (atEOF ? " (EOF)" : ""), self->_receivedBytesPending);
+            LogVerbose("<<< received %zu bytes%s [now %zu pending]", (size_t)data.length,
+                       (atEOF ? " (EOF)" : ""), self->_receivedBytesPending);
             if (data) {
                 auto socket = self->_c4socket;
                 dispatch_async(self->_c4Queue, ^{
