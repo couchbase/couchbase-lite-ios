@@ -25,6 +25,10 @@ static C4LogDomain kCBLSyncLogDomain;
 
 NSString* const kCBLReplicationStatusChangeNotification = @"CBLReplicationStatusChange";
 
+NSString* const kCBLReplicationAuthOption   = @"auth";
+NSString* const kCBLReplicationAuthUserName = @"username";
+NSString* const kCBLReplicationAuthPassword = @"password";
+
 
 @interface CBLReplication ()
 @property (readwrite, nonatomic) CBLReplicationStatus status;
@@ -93,6 +97,7 @@ static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
         return;
     }
     NSAssert(_push || _pull, @"Replication must either push or pull, or both");
+    // Fill out the C4Address:
     CBLStringBytes scheme(_remoteURL.scheme);
     CBLStringBytes host(_remoteURL.host);
     CBLStringBytes path(_remoteURL.path.stringByDeletingLastPathComponent);
@@ -104,11 +109,23 @@ static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
         .path = path
     };
 
-    // Encode options:
+    // If the URL has a hardcoded username/password, add them as an "auth" option:
+    NSDictionary* options = _options;
+    NSString* username = _remoteURL.user;
+    if (username && !options[kCBLReplicationAuthOption]) {
+        NSMutableDictionary *auth = [NSMutableDictionary new];
+        auth[kCBLReplicationAuthUserName] = username;
+        auth[kCBLReplicationAuthPassword] = _remoteURL.password;
+        NSMutableDictionary *nuOptions = options ? [options mutableCopy] :  [NSMutableDictionary new];
+        nuOptions[kCBLReplicationAuthOption] = auth;
+        options = nuOptions;
+    }
+
+    // Encode the options:
     alloc_slice optionsFleece;
-    if (_options.count) {
+    if (options.count) {
         Encoder enc;
-        enc << _options;
+        enc << options;
         optionsFleece = enc.finish();
     }
 

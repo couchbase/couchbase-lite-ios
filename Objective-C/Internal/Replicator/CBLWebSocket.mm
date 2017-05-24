@@ -9,6 +9,8 @@
 #import "CBLWebSocket.h"
 #import "CBLHTTPLogic.h"
 #import "CBLCoreBridge.h"
+#import "CBLReplication.h"  // for the options constants
+#import "CBLLog.h"
 #import "c4Socket.h"
 #import <CommonCrypto/CommonDigest.h>
 #import <dispatch/dispatch.h>
@@ -47,11 +49,10 @@ static constexpr NSTimeInterval kIdleTimeout = 300.0;
 @synthesize protocol=_protocol;
 
 
-static C4LogDomain LogWS;
-static bool sLogEnabled;
+static C4LogDomain kCBLWSLogDomain;
 
-#define Log(FMT, ...) ({ if (sLogEnabled) c4log(LogWS, kC4LogInfo, FMT, ##__VA_ARGS__); })
-#define LogVerbose(FMT, ...) ({ if (sLogEnabled) c4log(LogWS, kC4LogVerbose, FMT, ##__VA_ARGS__); })
+#define Log(FMT, ...)        CBLLog(       WS, @"" FMT, ##__VA_ARGS__)
+#define LogVerbose(FMT, ...) CBLLogVerbose(WS, @"" FMT, ##__VA_ARGS__)
 
 
 + (void) registerWithC4 {
@@ -64,8 +65,7 @@ static bool sLogEnabled;
             .write = &doWrite,
             .completedReceive = &doCompletedReceive
         });
-        LogWS = c4log_getDomain("WS", true);
-        sLogEnabled = c4log_getLevel(LogWS) <= kC4LogInfo;
+        kCBLWSLogDomain = c4log_getDomain("WS", true);
         Log("CBLWebSocket registered as C4SocketFactory");
     });
 }
@@ -102,14 +102,14 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 - (instancetype) initWithURL: (NSURL*)url c4socket: (C4Socket*)c4socket options: (slice)options {
     self = [super init];
     if (self) {
-        sLogEnabled = c4log_getLevel(LogWS) <= kC4LogInfo;
-
         _c4socket = c4socket;
         _options = AllocedDict(options);
 
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
         _logic = [[CBLHTTPLogic alloc] initWithURLRequest: request];
         _logic.handleRedirects = YES;
+
+        [self setupAuth];
 
         _queue = [[NSOperationQueue alloc] init];
         _queue.maxConcurrentOperationCount = 1;     // make it serial!
@@ -131,6 +131,20 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
     LogVerbose("DEALLOC CBLWebSocket");
 }
 #endif
+
+
+- (void) setupAuth {
+    Dict auth = _options[kCBLReplicationAuthOption.UTF8String].asDict();
+    if (auth) {
+        NSString* username = slice2string(auth[kCBLReplicationAuthUserName.UTF8String].asString());
+        NSString* password = slice2string(auth[kCBLReplicationAuthPassword.UTF8String].asString());
+        if (username && password) {
+            _logic.credential = [NSURLCredential credentialWithUser: username
+                                                           password: password
+                                                  persistence: NSURLCredentialPersistenceNone];
+        }
+    }
+}
 
 
 #pragma mark - HANDSHAKE:
@@ -377,13 +391,19 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
 
 - (void) didCloseWithCode: (C4WebSocketCloseCode)code reason: (NSString*)reason {
-    NSError* error = nil;
-    if (code != kWebSocketCloseNormal) {
-        error = [NSError errorWithDomain: @"WebSocket"
-                                    code: code
-                                userInfo: @{NSLocalizedFailureReasonErrorKey: reason}];
+    if (code == kWebSocketCloseNormal) {
+        [self didCloseWithError: nil];
+        return;
     }
-    [self didCloseWithError: error];
+
+    if (!_task)
+        return;
+    _task = nil;
+
+    Log("CBLWebSocket CLOSED WITH STATUS %d \"%@\"", (int)code, reason);
+    nsstring_slice reasonSlice(reason);
+    C4Error c4err = c4error_make(WebSocketDomain, code, reasonSlice);
+    c4socket_closed(_c4socket, c4err);
 }
 
 - (void) didCloseWithError: (NSError*)error {

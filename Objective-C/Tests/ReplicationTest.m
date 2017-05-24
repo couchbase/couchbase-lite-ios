@@ -41,6 +41,17 @@
 
 - (void) push: (BOOL)push pull: (BOOL)pull {
     repl = [self.db replicationWithDatabase: otherDB];
+    [self runReplicationWithPush: push pull: pull];
+}
+
+
+- (void) push: (BOOL)push pull: (BOOL)pull URL: (NSString*)urlStr {
+    repl = [self.db replicationWithURL: [NSURL URLWithString: urlStr]];
+    [self runReplicationWithPush: push pull: pull];
+}
+
+
+- (void) runReplicationWithPush: (BOOL)push pull: (BOOL)pull {
     Assert(repl);
     repl.push = push;
     repl.pull = pull;
@@ -73,6 +84,33 @@
 
 - (void)testEmptyPush {
     [self push: YES pull: NO];
+    AssertNil(repl.lastError);
+}
+
+
+// These test are disabled because they require a password-protected database 'seekrit' to exist
+// on localhost:4984, with a user 'pupshaw' whose password is 'frank'.
+
+- (void) dontTestAuthenticationFailure {
+    repl = [self.db replicationWithURL: [NSURL URLWithString: @"blip://localhost:4984/seekrit"]];
+    [self runReplicationWithPush: NO pull: YES];
+    AssertEqualObjects(repl.lastError.domain, @"WebSocket");
+    AssertEqual(repl.lastError.code, 401);
+}
+
+
+- (void) dontTestAuthenticatedPullHardcoded {
+    repl = [self.db replicationWithURL: [NSURL URLWithString: @"blip://pupshaw:frank@localhost:4984/seekrit"]];
+    [self runReplicationWithPush: NO pull: YES];
+    AssertNil(repl.lastError);
+}
+
+
+- (void) dontTestAuthenticatedPull {
+    repl = [self.db replicationWithURL: [NSURL URLWithString: @"blip://localhost:4984/seekrit"]];
+    repl.options = @{@"auth": @{@"username": @"pupshaw", @"password": @"frank"}};
+    [self runReplicationWithPush: NO pull: YES];
+    AssertNil(repl.lastError);
 }
 
 @end

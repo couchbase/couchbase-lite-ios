@@ -44,6 +44,11 @@ typedef struct {
 extern NSString* const kCBLReplicationStatusChangeNotification;
 
 
+extern NSString* const kCBLReplicationAuthOption;   ///< Options key for authentication dictionary
+extern NSString* const kCBLReplicationAuthUserName; ///< Auth key for username string
+extern NSString* const kCBLReplicationAuthPassword; ///< Auth key for password string
+
+
 /** A replication between a local and a target database.
     The target is usually remote, identified by a URL, but may instead be local.
     Replications are by default bidirectional; to change this, set either the `push` or `pull`

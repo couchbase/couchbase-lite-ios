@@ -19,8 +19,8 @@ static NSDictionary* statusDesc = @{
 
 BOOL convertError(const C4Error &c4err, NSError** outError) {
     NSCAssert(c4err.code != 0 && c4err.domain != 0, @"No C4Error");
-    static NSString* const kDomains[] = {nil, @"LiteCore", NSPOSIXErrorDomain, @"ForestDB",
-        @"SQLite", @"Fleece"};
+    static NSString* const kDomains[] = {nil, @"LiteCore", NSPOSIXErrorDomain, @"3",
+                                              @"SQLite", @"Fleece", @"DNS", @"WebSocket"};
     if (outError) {
         NSString* msgStr = sliceResult2string(c4error_getMessage(c4err));
         *outError = [NSError errorWithDomain: kDomains[c4err.domain] code: c4err.code
