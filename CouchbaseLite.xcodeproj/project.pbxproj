@@ -770,14 +770,13 @@
 		275F92631E4D2FD7007FD5A2 /* Swift */ = {
 			isa = PBXGroup;
 			children = (
+				9338BED21ED5473300634873 /* Database */,
 				938195F31EC10B780032CC51 /* Document */,
 				938CDF071E807E98002EE790 /* Query */,
-				275F928B1E4D3119007FD5A2 /* Database.swift */,
-				93E17EEC1ECF7D8600671CA1 /* ConflictResolver.swift */,
-				27E35A911E8C4F4300E103F9 /* Replication.swift */,
+				9338BEE21ED5475200634873 /* Replication */,
+				27BE3B491E4E45CB0012B74A /* Tests */,
 				93AF51C81E80C42300E200F0 /* CouchbaseLiteError.swift */,
 				275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */,
-				27BE3B491E4E45CB0012B74A /* Tests */,
 				275F92771E4D30A4007FD5A2 /* Info.plist */,
 			);
 			path = Swift;
@@ -823,6 +822,23 @@
 				27EF6AF11E32D12C004748DF /* libsqlite3.tbd */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		9338BED21ED5473300634873 /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				275F928B1E4D3119007FD5A2 /* Database.swift */,
+				93E17EEC1ECF7D8600671CA1 /* ConflictResolver.swift */,
+			);
+			name = Database;
+			sourceTree = "<group>";
+		};
+		9338BEE21ED5475200634873 /* Replication */ = {
+			isa = PBXGroup;
+			children = (
+				27E35A911E8C4F4300E103F9 /* Replication.swift */,
+			);
+			name = Replication;
 			sourceTree = "<group>";
 		};
 		933A42E81EA6CB8200AE9084 /* Database */ = {

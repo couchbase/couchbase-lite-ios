@@ -8,11 +8,6 @@
 
 import Foundation
 
-/** This notification is posted by a Dtabase in response to document changes. */
-public let DatabaseChangeNotification = "DatabaseChangeNotification"
-
-/** The key to access a DatabaseChange object containing information about the change. */
-public let DatabaseChangesUserInfoKey = kCBLDatabaseChangesUserInfoKey
 
 /** A database encryption key consists of a password string, or a 32-byte AES256 key. */
 public enum EncryptionKey {
@@ -128,6 +123,16 @@ public struct DatabaseConfiguration {
         }
     }
 }
+
+
+extension Notification.Name {
+    /** This notification is posted by a Dtabase in response to document changes. */
+    public static let DatabaseChange = Notification.Name(rawValue: "DatabaseChangeNotification")
+}
+
+
+/** The key to access a DatabaseChange object containing information about the change. */
+public let DatabaseChangesUserInfoKey = kCBLDatabaseChangesUserInfoKey
 
 
 /** A Couchbase Lite database. */
@@ -294,7 +299,7 @@ public final class Database {
     
     
     @objc func databaseChanged(notification: Notification) {
-        NotificationCenter.default.post(name: NSNotification.Name(rawValue: DatabaseChangeNotification),
+        NotificationCenter.default.post(name: .DatabaseChange,
                                         object: self, userInfo: notification.userInfo)
     }
     

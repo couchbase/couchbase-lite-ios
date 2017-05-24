@@ -23,12 +23,13 @@ class NotificationTest: CBLTestCase, DocumentChangeListener {
     
     
     func testDatabaseChange() throws {
-        expectation(forNotification: DatabaseChangeNotification, object: db) { (n) -> Bool in
-            let change = n.userInfo![DatabaseChangesUserInfoKey] as! DatabaseChange
-            XCTAssertEqual(change.documentIDs.count, 10)
-            return true
+        expectation(forNotification: Notification.Name.DatabaseChange.rawValue, object: db) {
+            (n) -> Bool in
+                let change = n.userInfo![DatabaseChangesUserInfoKey] as! DatabaseChange
+                XCTAssertEqual(change.documentIDs.count, 10)
+                return true
         }
-        
+       
         try db.inBatch {
             for i in 0...9 {
                 let doc = createDocument("doc-\(i)")
