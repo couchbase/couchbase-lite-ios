@@ -23,7 +23,7 @@ class NotificationTest: CBLTestCase, DocumentChangeListener {
     
     
     func testDatabaseChange() throws {
-        expectation(forNotification: DatabaseChangeNotification, object: nil) { (n) -> Bool in
+        expectation(forNotification: DatabaseChangeNotification, object: db) { (n) -> Bool in
             let change = n.userInfo![DatabaseChangesUserInfoKey] as! DatabaseChange
             XCTAssertEqual(change.documentIDs.count, 10)
             return true

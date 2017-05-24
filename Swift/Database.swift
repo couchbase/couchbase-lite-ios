@@ -9,7 +9,7 @@
 import Foundation
 
 /** This notification is posted by a Dtabase in response to document changes. */
-public let DatabaseChangeNotification = NSNotification.Name.cblDatabaseChange.rawValue
+public let DatabaseChangeNotification = "DatabaseChangeNotification"
 
 /** The key to access a DatabaseChange object containing information about the change. */
 public let DatabaseChangesUserInfoKey = kCBLDatabaseChangesUserInfoKey
@@ -142,7 +142,9 @@ public final class Database {
         } else {
             _impl = try CBLDatabase(name: name)
         }
+        self.setupDatabaseChangeNotification()
     }
+    
 
     /** The database's name. */
     public var name: String { return _impl.name }
@@ -277,8 +279,32 @@ public final class Database {
         return CBLDatabase.databaseExists(name, inDirectory: directory)
     }
 
+    
+    // MARK: Internal
+    
 
     let _impl : CBLDatabase
+    
+    
+    func setupDatabaseChangeNotification() {
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(databaseChanged(notification:)),
+            name: Notification.Name.cblDatabaseChange, object: _impl)
+    }
+    
+    
+    @objc func databaseChanged(notification: Notification) {
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: DatabaseChangeNotification),
+                                        object: self, userInfo: notification.userInfo)
+    }
+    
+    
+    // MARK: Deinit
+    
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
 }
 
 public typealias DatabaseChange = CBLDatabaseChange
