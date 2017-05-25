@@ -165,10 +165,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (void) dealloc {
-    for (NSValue* obsValue in _docObs.allValues) {
-        C4DocumentObserver* obs = (C4DocumentObserver*)obsValue.pointerValue;
-        c4docobs_free(obs);
-    }
+    freeC4DocObservers(_docObs);
     c4dbobs_free(_obs);
     c4db_free(_c4db);
 }
@@ -185,7 +182,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (NSUInteger) count {
-    return c4db_getDocumentCount(_c4db);
+    return (NSUInteger) c4db_getDocumentCount(_c4db);
 }
 
 
@@ -287,6 +284,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     _c4db = nullptr;
     _obs = nullptr;
     
+    [self removeDocChangeListeners];
+    
     return YES;
 }
 
@@ -295,10 +294,14 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     C4Error err;
     if (!c4db_delete(_c4db, &err))
         return convertError(err, outError);
+    
     c4db_free(_c4db);
     _c4db = nullptr;
     c4dbobs_free(_obs);
     _obs = nullptr;
+    
+    [self removeDocChangeListeners];
+    
     return YES;
 }
 
@@ -614,6 +617,21 @@ static NSString* databasePath(NSString* name, NSString* dir) {
     return YES;
 }
 
+
+static void freeC4DocObservers(NSDictionary* docObs) {
+    for (NSValue* obsValue in docObs.allValues) {
+        C4DocumentObserver* obs = (C4DocumentObserver*)obsValue.pointerValue;
+        c4docobs_free(obs);
+    }
+}
+
+
+- (void) removeDocChangeListeners {
+    freeC4DocObservers(_docObs);
+    
+    _docObs = nil;
+    _docChangeListeners = nil;
+}
 
 @end
 
