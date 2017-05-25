@@ -70,7 +70,9 @@ typedef struct {
     If file protection is at the highest level, NSDataWritingFileProtectionCompleteUnlessOpen or
     NSDataWritingFileProtectionComplete, it will not be possible to read or write the database
     when the device is locked. This can make it impossible to run replications in the background
-    or respond to push notifications. */
+    or respond to push notifications. The default value is 
+    NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication which is the same default 
+    protection level as the iOS application data. */
 @property (nonatomic) NSDataWritingOptions fileProtection;
 
 - (instancetype) init;

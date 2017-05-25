@@ -148,9 +148,11 @@
     AssertNotNil(config1.directory);
     Assert(config1.directory.length > 0);
     AssertNil(config1.conflictResolver);
-    AssertNil(config1.encryptionKey);AssertNil(config1.encryptionKey);
-    AssertEqual(config1.fileProtection, 0);
-    
+    AssertNil(config1.encryptionKey);
+    AssertNil(config1.encryptionKey);
+#if TARGET_OS_IPHONE
+    AssertEqual(config1.fileProtection, NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication);
+#endif
     
     // Default + Copy:
     CBLDatabaseConfiguration* config1a = [config1 copy];
@@ -159,7 +161,7 @@
     AssertNil(config1a.conflictResolver);
     AssertNil(config1a.encryptionKey);
 #if TARGET_OS_IPHONE
-    AssertEqual(config1a.fileProtection, 0);
+    AssertEqual(config1a.fileProtection, NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication);
 #endif
     
     // Custom:

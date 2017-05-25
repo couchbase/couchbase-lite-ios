@@ -31,8 +31,6 @@
 
 NSString* const kCBLDatabaseChangeNotification = @"CBLDatabaseChangeNotification";
 NSString* const kCBLDatabaseChangesUserInfoKey = @"CBLDatbaseChangesUserInfoKey";
-NSString* const kCBLDatabaseLastSequenceUserInfoKey = @"CBLDatabaseLastSequenceUserInfoKey";
-NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserInfoKey";
 
 
 #define kDBExtension @"cblite2"
@@ -45,7 +43,13 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
 
 
 - (instancetype) init {
-    return [super init];
+    self = [super init];
+    if (self) {
+#if TARGET_OS_IPHONE
+        _fileProtection = NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication;
+#endif
+    }
+    return self;
 }
 
 
