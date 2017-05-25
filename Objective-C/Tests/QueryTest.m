@@ -37,9 +37,9 @@
     AssertEqual(all.count, n);
     if (randomAccess && n > 0) {
         // Note: the block's 1st parameter is 1-based, while NSArray is 0-based
-        block(n,       all[n-1]);
+        block(n,       all[(NSUInteger)(n-1)]);
         block(1,       all[0]);
-        block(n/2 + 1, all[n/2]);
+        block(n/2 + 1, all[(NSUInteger)(n/2)]);
     }
     return n;
 }
