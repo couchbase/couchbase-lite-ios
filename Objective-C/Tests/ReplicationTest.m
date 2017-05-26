@@ -16,13 +16,15 @@
 {
     CBLDatabase* otherDB;
     CBLReplication* repl;
+    NSTimeInterval timeout;
     BOOL _stopped;
 }
 
 
 - (void) setUp {
     [super setUp];
-    
+
+    timeout = 5.0;
     NSError* error;
     otherDB = [self openDBNamed: @"otherdb" error: &error];
     AssertNil(error);
@@ -63,23 +65,35 @@
         return repl.status.activity == kCBLStopped;
     }];
     [repl start];
-    [self waitForExpectations: @[x] timeout: 5.0];
+    [self waitForExpectations: @[x] timeout: timeout];
 }
 
 
 - (void) replication: (CBLReplication*)replication
      didChangeStatus: (CBLReplicationStatus)status
 {
-    NSLog(@"replication:didChangestatus:");
+    static const char* const kActivityNames[5] = {
+        "stopped", "offline", "connecting", "idle", "busy"
+    };
+    NSLog(@"---Status: %s (%llu / %llu), lastError = %@",
+          kActivityNames[status.activity], status.progress.completed, status.progress.total,
+          replication.lastError.localizedDescription);
 }
 
 
 - (void) replication: (CBLReplication*)replication
     didStopWithError: (nullable NSError*)error
 {
-    NSLog(@"replication:didStopWithError:");
+    NSLog(@"---Stopped with error: %@", error);
 }
 
+
+
+- (void) testBadURL {
+    repl = [self.db replicationWithURL: [NSURL URLWithString: @"blxp://localhost/db"]];
+    [self runReplicationWithPush: NO pull: YES];
+    Assert(repl.lastError.code != 0);   //TODO: Get a real error code for this
+}
 
 
 - (void)testEmptyPush {
@@ -109,6 +123,15 @@
 - (void) dontTestAuthenticatedPull {
     repl = [self.db replicationWithURL: [NSURL URLWithString: @"blip://localhost:4984/seekrit"]];
     repl.options = @{@"auth": @{@"username": @"pupshaw", @"password": @"frank"}};
+    [self runReplicationWithPush: NO pull: YES];
+    AssertNil(repl.lastError);
+}
+
+
+- (void) dontTestMissingHost {
+    repl = [self.db replicationWithURL: [NSURL URLWithString: @"blip://foo.couchbase.com/db"]];
+    repl.continuous = true;
+    timeout = 200;
     [self runReplicationWithPush: NO pull: YES];
     AssertNil(repl.lastError);
 }

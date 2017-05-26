@@ -8,6 +8,10 @@
 
 #import "CBLReplication.h"
 
+
+extern C4LogDomain kCBLSyncLogDomain;
+
+
 @interface CBLReplication ()
 
 // Used by Swift bridge
