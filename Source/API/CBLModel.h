@@ -13,7 +13,6 @@ NS_ASSUME_NONNULL_BEGIN
 @class CBLAttachment, CBLDatabase;
 
 
-NS_REQUIRES_PROPERTY_DEFINITIONS  // Don't let compiler auto-synthesize properties in subclasses
 /** Generic model class for CouchbaseLite documents.
     There's a 1::1 mapping between these and CBLDocuments; call +modelForDocument: to get (or create) a model object for a document, and .document to get the document of a model.
     You should subclass this and declare properties in the subclass's @@interface. As with NSManagedObject, you don't need to implement their accessor methods or declare instance variables; simply note them as '@@dynamic' in the class @@implementation. The property value will automatically be fetched from or stored to the document, using the same name.
