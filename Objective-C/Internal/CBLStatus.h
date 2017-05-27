@@ -22,6 +22,9 @@ BOOL convertError(const C4Error &error, NSError* _Nullable * outError);
 
 BOOL convertError(const FLError &error, NSError* _Nullable * outError);
 
+// Converts an NSError back to a C4Error (used by the WebSocket implementation)
+void convertError(NSError* error, C4Error *outError);
+
 BOOL createError(CBLStatus status, NSError* _Nullable * outError);
 
 BOOL createError(CBLStatus status, NSString  * _Nullable  desc, NSError* _Nullable * outError);

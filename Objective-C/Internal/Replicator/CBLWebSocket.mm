@@ -9,6 +9,7 @@
 #import "CBLWebSocket.h"
 #import "CBLHTTPLogic.h"
 #import "CBLCoreBridge.h"
+#import "CBLStatus.h"
 #import "CBLReplication.h"  // for the options constants
 #import "CBLLog.h"
 #import "c4Socket.h"
@@ -408,17 +409,6 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 }
 
 
-static const struct {int code; C4Error c4err;} kCFNetworkErrorMap[] = {
-    {kCFHostErrorHostNotFound,          {DNSDomain, HOST_NOT_FOUND}},
-    {kCFErrorHTTPConnectionLost,        {POSIXDomain, ECONNRESET}},
-    {kCFErrorHTTPBadProxyCredentials,   {WebSocketDomain, 407}},
-    {kCFURLErrorTimedOut,               {POSIXDomain, ETIMEDOUT}},
-    {kCFURLErrorCannotConnectToHost,    {POSIXDomain, ECONNREFUSED}},
-    {kCFURLErrorNetworkConnectionLost,  {POSIXDomain, ECONNRESET}},
-    {0}
-    //TODO: Finish filling this out (see CFNetworkErrors.h)
-};
-
 - (void) didCloseWithError: (NSError*)error {
     if (!_task)
         return;
@@ -426,31 +416,12 @@ static const struct {int code; C4Error c4err;} kCFNetworkErrorMap[] = {
 
     C4Error c4err;
     if (error) {
-        c4err = {LiteCoreDomain, kC4ErrorRemoteError};
-        NSString* domain = error.domain;
-        const char *message = error.localizedFailureReason.UTF8String ?: "";
-        Log("CBLWebSocket CLOSED WITH ERROR: %s %ld \"%s\"", domain.UTF8String, (long)error.code, message);
-        auto code = error.code;
-        if ([domain isEqualToString: NSPOSIXErrorDomain]) {
-            c4err = {POSIXDomain, (int)code};
-        } else if ([domain isEqualToString: NSURLErrorDomain]
-                        || [domain isEqualToString: (__bridge id)kCFErrorDomainCFNetwork]) {
-            if (code == kCFHostErrorUnknown) {
-                c4err.domain = DNSDomain;
-                c4err.code = [error.userInfo[(__bridge id)kCFGetAddrInfoFailureKey] intValue] ?: -1;
-            } else {
-                for (int i = 0; kCFNetworkErrorMap[i].code; ++i) {
-                    if (kCFNetworkErrorMap[i].code == code) {
-                        c4err = kCFNetworkErrorMap[i].c4err;
-                        break;
-                    }
-                }
-            }
-        }
-        c4err = c4error_make(c4err.domain, c4err.code, c4str(message));
+        Log("CBLWebSocket CLOSED WITH ERROR: %@ %ld \"%@\"",
+            error.domain, (long)error.code, error.localizedFailureReason);
+        convertError(error, &c4err);
     } else {
-        c4err = {};
         Log("CBLWebSocket CLOSED");
+        c4err = {};
     }
     c4socket_closed(_c4socket, c4err);
 }
