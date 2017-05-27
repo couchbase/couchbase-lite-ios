@@ -10,8 +10,6 @@ import Foundation
 
 
 /// A Couchbase Lite document.
-/// A document has key/value properties like a Dictionary; their API is defined by the
-/// superclass Properties. To learn how to work with properties, see that class's documentation.
 public class Document : ReadOnlyDocument, DictionaryProtocol {
     /// Initializes a new Document object with a new random UUID. The created document will be
     /// saved into a database when you call the Database's save() method with the document

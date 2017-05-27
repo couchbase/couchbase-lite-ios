@@ -14,10 +14,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/** A Couchbase Lite document.
-    A document has key/value properties like an NSDictionary; their API is defined by the
-    protocol CBLProperties. To learn how to work with properties, see that protocol's
-    documentation. */
+/** A Couchbase Lite document. */
 @interface CBLDocument : CBLReadOnlyDocument <CBLDictionary>
 
 /** Creates a new CBLDocument object with a new random UUID. The created document will be
