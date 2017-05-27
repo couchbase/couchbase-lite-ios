@@ -12,13 +12,12 @@
 .objc_class_name_CBLDictionary
 .objc_class_name_CBLDatabase
 .objc_class_name_CBLDatabaseChange
-.objc_class_name_CBLDatabaseOptions
+.objc_class_name_CBLDatabaseConfiguration
 .objc_class_name_CBLDocument
 .objc_class_name_CBLDocumentChange
 .objc_class_name_CBLDocumentFragment
 .objc_class_name_CBLFragment
 .objc_class_name_CBLFullTextQueryRow
-.objc_class_name_CBLProperties
 .objc_class_name_CBLQuery
 .objc_class_name_CBLQueryDataSource
 .objc_class_name_CBLQueryExpression
@@ -35,9 +34,9 @@
 #  Public constants:
 _kCBLDatabaseChangeNotification
 _kCBLDatabaseChangesUserInfoKey
-_kCBLReplicatorAuthOption;
-_kCBLReplicatorAuthUserName;
-_kCBLReplicatorAuthPassword;
+_kCBLReplicatorAuthOption
+_kCBLReplicatorAuthUserName
+_kCBLReplicatorAuthPassword
 _kCBLReplicatorChangeNotification
-_kCBLReplicatorStatusUserInfoKey;
-_kCBLReplicatorErrorUserInfoKey;
+_kCBLReplicatorStatusUserInfoKey
+_kCBLReplicatorErrorUserInfoKey
