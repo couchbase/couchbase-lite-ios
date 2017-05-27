@@ -195,7 +195,7 @@ class DocumentTest: CBLTestCase {
         
         try saveDocument(doc1a)
         
-        let anotherDb = try createDB()
+        let anotherDb = try openDB(name: db.name)
         
         let doc1b = anotherDb.getDocument("doc1")
         XCTAssertNotNil(doc1b)
@@ -216,7 +216,7 @@ class DocumentTest: CBLTestCase {
         let doc1b = db.getDocument("doc1")
         let doc1c = db.getDocument("doc1")
         
-        let anotherDb = try createDB()
+        let anotherDb = try openDB(name: db.name)
         let doc1d = anotherDb.getDocument("doc1")
         
         XCTAssertTrue(doc1a !== doc1b)

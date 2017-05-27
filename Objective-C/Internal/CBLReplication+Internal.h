@@ -6,15 +6,12 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLReplication.h"
-
+#import "CBLReplicator.h"
+#import "c4.h"
 
 extern C4LogDomain kCBLSyncLogDomain;
 
 
-@interface CBLReplication ()
-
-// Used by Swift bridge
-@property (strong, nonatomic) id<CBLReplicationDelegate> delegateBridge;
+@interface CBLReplicator ()
 
 @end

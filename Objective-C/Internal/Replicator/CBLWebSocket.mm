@@ -10,7 +10,7 @@
 #import "CBLHTTPLogic.h"
 #import "CBLCoreBridge.h"
 #import "CBLStatus.h"
-#import "CBLReplication.h"  // for the options constants
+#import "CBLReplicatorConfiguration.h"  // for the options constants
 #import "CBLLog.h"
 #import "c4Socket.h"
 #import <CommonCrypto/CommonDigest.h>
@@ -136,10 +136,10 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
 
 - (void) setupAuth {
-    Dict auth = _options[kCBLReplicationAuthOption.UTF8String].asDict();
+    Dict auth = _options[kCBLReplicatorAuthOption.UTF8String].asDict();
     if (auth) {
-        NSString* username = slice2string(auth[kCBLReplicationAuthUserName.UTF8String].asString());
-        NSString* password = slice2string(auth[kCBLReplicationAuthPassword.UTF8String].asString());
+        NSString* username = slice2string(auth[kCBLReplicatorAuthUserName.UTF8String].asString());
+        NSString* password = slice2string(auth[kCBLReplicatorAuthPassword.UTF8String].asString());
         if (username && password) {
             _logic.credential = [NSURLCredential credentialWithUser: username
                                                            password: password

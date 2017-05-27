@@ -35,16 +35,16 @@ class CBLTestCase: XCTestCase {
     }
     
     
-    func createDB() throws -> Database {
+    func openDB(name: String) throws -> Database {
         var config = DatabaseConfiguration()
         config.directory = kDirectory
         config.conflictResolver = conflictResolver
-        return try Database(name: kDatabaseName, config: config)
+        return try Database(name: name, config: config)
     }
     
     
     func openDB() throws {
-        db = try createDB()
+        db = try openDB(name: kDatabaseName)
     }
 
     

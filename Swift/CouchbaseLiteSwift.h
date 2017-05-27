@@ -20,4 +20,3 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteSwiftVersionString[];
 #import "CBLDictionary+Swift.h"
 #import "CBLReadOnlyArray+Swift.h"
 #import "CBLReadOnlyDictionary+Swift.h"
-#import "CBLReplication+Internal.h"
