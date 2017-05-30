@@ -6,7 +6,7 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLReplication+Internal.h"
+#import "CBLReplicator+Internal.h"
 #import "CBLReplicatorConfiguration.h"
 #import "CBLReachability.h"
 #import "CBLCoreBridge.h"

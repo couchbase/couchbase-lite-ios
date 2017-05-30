@@ -9,8 +9,8 @@
 /* Begin PBXBuildFile section */
 		2704F1C91E395F3300A3B405 /* CBLConflictResolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 2704F1C71E395F3300A3B405 /* CBLConflictResolver.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2704F1CA1E395F3300A3B405 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */; };
-		272850A71E99CAA4009CA22F /* CBLReplication+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2728509C1E99CA4D009CA22F /* CBLReplication+Internal.h */; };
-		272850A81E99CAA4009CA22F /* CBLReplication+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2728509C1E99CA4D009CA22F /* CBLReplication+Internal.h */; };
+		272850A71E99CAA4009CA22F /* CBLReplicator+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */; };
+		272850A81E99CAA4009CA22F /* CBLReplicator+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */; };
 		273ADF7D1E36B514001E977F /* sentences.json in Resources */ = {isa = PBXBuildFile; fileRef = 273ADF7C1E36B514001E977F /* sentences.json */; };
 		275229C71E776BC100E630FA /* CBLReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 275229C51E776BC100E630FA /* CBLReplicator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275229C81E776BC100E630FA /* CBLReplicator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275229C61E776BC100E630FA /* CBLReplicator.mm */; };
@@ -523,7 +523,7 @@
 /* Begin PBXFileReference section */
 		2704F1C71E395F3300A3B405 /* CBLConflictResolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLConflictResolver.h; sourceTree = "<group>"; };
 		2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLConflictResolver.m; sourceTree = "<group>"; };
-		2728509C1E99CA4D009CA22F /* CBLReplication+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CBLReplication+Internal.h"; path = "../CBLReplication+Internal.h"; sourceTree = "<group>"; };
+		2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CBLReplicator+Internal.h"; path = "../CBLReplicator+Internal.h"; sourceTree = "<group>"; };
 		273ADF7C1E36B514001E977F /* sentences.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = sentences.json; sourceTree = "<group>"; };
 		275229C51E776BC100E630FA /* CBLReplicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReplicator.h; sourceTree = "<group>"; };
 		275229C61E776BC100E630FA /* CBLReplicator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLReplicator.mm; sourceTree = "<group>"; };
@@ -808,7 +808,7 @@
 				2753AFF21EC39CA200C12E98 /* CBLHTTPLogic.m */,
 				27F961971ED8D9440060F804 /* CBLReachability.h */,
 				27F961981ED8D9440060F804 /* CBLReachability.m */,
-				2728509C1E99CA4D009CA22F /* CBLReplication+Internal.h */,
+				2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */,
 				2753AFF31EC39CA200C12E98 /* CBLWebSocket.h */,
 				2753AFF41EC39CA200C12E98 /* CBLWebSocket.mm */,
 			);
@@ -1286,7 +1286,7 @@
 				27E35A9C1E8C522200E103F9 /* CBLReplicator.h in Headers */,
 				275F92A01E4D377C007FD5A2 /* CBLConflictResolver.h in Headers */,
 				275F929E1E4D377C007FD5A2 /* CBLDatabase.h in Headers */,
-				272850A71E99CAA4009CA22F /* CBLReplication+Internal.h in Headers */,
+				272850A71E99CAA4009CA22F /* CBLReplicator+Internal.h in Headers */,
 				9381962B1EC15F410032CC51 /* CBLC4Document.h in Headers */,
 				93E17F0D1ED3BA6300671CA1 /* CBLDocumentChange.h in Headers */,
 				93B5036B1E64B093002C4680 /* CBLJSON.h in Headers */,
@@ -1340,7 +1340,7 @@
 				93655B7B1EB8F85B00AC7E2A /* CBLFLDict.h in Headers */,
 				9380C6EF1E15B8C20011E8CB /* CBLDocument.h in Headers */,
 				934F4CB81E241FB500F90659 /* CBLSymmetricKey.h in Headers */,
-				272850A81E99CAA4009CA22F /* CBLReplication+Internal.h in Headers */,
+				272850A81E99CAA4009CA22F /* CBLReplicator+Internal.h in Headers */,
 				2753AFF51EC39CA200C12E98 /* CBLHTTPLogic.h in Headers */,
 				275FF6701E43E013005F90DD /* CBLQueryRow.h in Headers */,
 				934F4CA71E241FB500F90659 /* CBLBase64.h in Headers */,

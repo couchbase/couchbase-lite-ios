@@ -1,5 +1,5 @@
 //
-//  CBLReplication+Internal.h
+//  CBLReplicator+Internal.h
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 4/8/17.

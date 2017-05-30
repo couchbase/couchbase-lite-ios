@@ -14,7 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLReachability.h"
-#import "CBLReplication+Internal.h"
+#import "CBLReplicator+Internal.h"
 #import <SystemConfiguration/SystemConfiguration.h>
 #import <arpa/inet.h>
 

@@ -29,24 +29,24 @@ typedef enum {
 /** A local database */
 @property (readonly, nonatomic, nullable) CBLDatabase* database;
 
-/** Create a CBLReplicationTarget with a URL to the remote database. 
+/** Create a CBLReplicatorTarget with a URL to the remote database.
     @param url  the url to the remote database.
-    @result the CBLReplicationTarget initialized the the given url. */
+    @result the CBLReplicatorTarget initialized the the given url. */
 + (instancetype) url: (NSURL*)url;
 
-/** Create a CBLReplicationTarget with a local database. 
+/** Create a CBLReplicatorTarget with a local database.
     @param database the local database.
-    @result the CBLReplicationTarget initialized with the given local database. */
+    @result the CBLReplicatorTarget initialized with the given local database. */
 + (instancetype) database: (CBLDatabase*)database;
 
-/** Initialze a CBLReplicationTarget with a URL to the remote database.
+/** Initialze a CBLReplicatorTarget with a URL to the remote database.
     @param url  the url to the remote database.
-    @result the CBLReplicationTarget initialized the the given url. */
+    @result the CBLReplicatorTarget initialized the the given url. */
 - (instancetype) initWithURL: (NSURL*)url;
 
-/** Initialze a CBLReplicationTarget with a local database.
+/** Initialze a CBLReplicatorTarget with a local database.
     @param database the local database.
-    @result the CBLReplicationTarget initialized with the given local database. */
+    @result the CBLReplicatorTarget initialized with the given local database. */
 - (instancetype) initWithDatabase: (CBLDatabase*)database;
 
 @end
