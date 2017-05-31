@@ -159,6 +159,9 @@ public final class Database {
     public var path: String? { return _impl.path }
     
     
+    public var count: UInt64 { return _impl.count }
+    
+    
     public var config: DatabaseConfiguration {
         return DatabaseConfiguration(impl: _impl.config)
     }

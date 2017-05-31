@@ -181,8 +181,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
-- (NSUInteger) count {
-    return (NSUInteger) c4db_getDocumentCount(_c4db);
+- (uint64_t) count {
+    return c4db_getDocumentCount(_c4db);
 }
 
 

@@ -90,7 +90,7 @@ typedef struct {
 @property (readonly, nonatomic, nullable) NSString* path;
 
 /** The number of documents in the database. */
-@property (readonly, nonatomic) NSUInteger count;
+@property (readonly, nonatomic) uint64_t count;
 
 /** The database's configuration. If the configuration is not specify when initializing 
     the database, the default configuration will be returned. */
