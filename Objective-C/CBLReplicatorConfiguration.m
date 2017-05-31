@@ -93,6 +93,7 @@ NSString* const kCBLReplicatorAuthPassword         = @"" kC4ReplicatorAuthPasswo
     c.replicatorType = _replicatorType;
     c.options = _options;
     c.conflictResolver = _conflictResolver;
+    c.continuous = _continuous;
     return c;
 }
 
