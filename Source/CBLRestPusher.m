@@ -400,16 +400,9 @@
                           if (CBLStatusIsError(status)) {
                               // One of the docs failed to save.
                               Warn(@"%@: _bulk_docs got an error: %@", self, item);
-                              // 403/Forbidden means validation failed; don't treat it as an error
-                              // because I did my job in sending the revision. Other statuses are
-                              // actual replication errors.
-                              if (status != kCBLStatusForbidden && status != kCBLStatusUnauthorized) {
+                              if ([self handleUploadRevisionError: CBLStatusToNSError(status)
+                                                       isBulkDocs: YES]) {
                                   [failedIDs addObject: item[@"id"]];
-                                  if (CBLMayBeTransientError(CBLStatusToNSError(status)))
-                                      [self revisionFailed];    // retry after replicator finishes
-                                  // Don't set self.error ... we used to do this, but it stops the
-                                  // replicator, so if the error were repeatable it prevented all
-                                  // later documents from being pushed. (See #1279.)
                               }
                           }
                       }
@@ -559,13 +552,8 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                           // Server doesn't like multipart, eh? Fall back to JSON.
                           _dontSendMultipart = YES;
                           [self uploadJSONRevision: rev];
-                      } else {
-                          // 403/Forbidden means validation failed; don't treat it as an error
-                          // because I did my job in sending the revision.
-                          if (error.code != kCBLStatusForbidden)
-                              self.error = error;
-                          [self revisionFailed];
-                      }
+                      } else
+                          [self handleUploadRevisionError: error isBulkDocs: NO];
                   } else {
                       LogVerbose(Sync, @"%@: Sent multipart %@", self, rev);
                       [self removePending: rev];
@@ -605,13 +593,9 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
                       path: path
                       body: rev.properties
               onCompletion: ^(id response, NSError *error) {
-                  if (error) {
-                      // 403/Forbidden means validation failed; don't treat it as an error
-                      // because I did my job in sending the revision.
-                      if (error.code != kCBLStatusForbidden)
-                          self.error = error;
-                      [self revisionFailed];
-                  } else {
+                  if (error)
+                      [self handleUploadRevisionError: error isBulkDocs: NO];
+                  else {
                       LogVerbose(Sync, @"%@: Sent %@ (JSON), response=%@", self, rev, response);
                       [self removePending: rev];
                   }
@@ -639,6 +623,24 @@ CBLStatus CBLStatusFromBulkDocsResponseItem(NSDictionary* item) {
 
     [super stopRemoteRequests];
 
+}
+
+
+- (BOOL) handleUploadRevisionError: (NSError*)error isBulkDocs :(BOOL)isBulkDocs {
+    // 403/Forbidden or 401/unauthorized (for bulkDocs result) means validation failed;
+    // don't treat it as an error because I did my job in sending the revision.
+    if (error.code != kCBLStatusForbidden && (!isBulkDocs || error.code != kCBLStatusUnauthorized)) {
+        // uploadBulkDocs:changes: manages its own error reporting (see note here):
+        //   > Don't set self.error ... we used to do this, but it stops the replicator,
+        //   > so if the error were repeatable it prevented all
+        //   > later documents from being pushed. (See #1279.)
+        if (!isBulkDocs)
+            self.error = error;
+        if (CBLMayBeTransientError(error))
+            [self revisionFailed];
+        return YES;
+    }
+    return NO;
 }
 
 
