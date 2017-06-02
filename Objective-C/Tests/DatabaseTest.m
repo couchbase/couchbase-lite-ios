@@ -1181,7 +1181,7 @@
 }
 
 
-- (void) failingTestCompact {
+- (void) testCompact {
     NSArray* docs = [self createDocs: 20];
     
     // Update each doc 25 times:
