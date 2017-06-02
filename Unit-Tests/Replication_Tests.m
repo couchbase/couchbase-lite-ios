@@ -1821,4 +1821,45 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 }
 
 
+- (void) test30_PushForbiddenDocs {
+    // Readonly remote db:
+    NSURL* remoteDbURL = [self remoteTestDBURL: kAttachTestDBName];
+    if (!remoteDbURL)
+        return;
+    [self eraseRemoteDB: remoteDbURL];
+    
+    // First push:
+    [db inTransaction:^BOOL{
+        for (int i = 1; i <= 10; i++) {
+            @autoreleasepool {
+                CBLDocument* doc = db[ $sprintf(@"doc-%d", i) ];
+                NSError* error;
+                [doc putProperties: @{@"index": @(i), @"bar": $false} error: &error];
+                AssertNil(error);
+            }
+        }
+        return YES;
+    }];
+    
+    // Attach a big attachment (> 2M) to doc-1:
+    int size = 3 * 1024;
+    unsigned char attachbytes[3 * 1024];
+    for(int i=0; i<size; i++) {
+        attachbytes[i] = 1;
+    }
+    NSData* attach1 = [NSData dataWithBytes: attachbytes length: size];
+    CBLUnsavedRevision *rev2 = [db[@"dco-1"] newRevision];
+    [rev2 setAttachmentNamed: @"attach" withContentType: @"text/plain" content:attach1];
+    NSError* error;
+    Assert([rev2 save: &error], @"Error saving an attachment: %@", error);
+    
+    // Avoid warning raised from uploadBulkDocs:changes: when there is an error occurred:
+    [CBLManager setWarningsRaiseExceptions: NO];
+    CBLReplication* repl = [db createPushReplication: remoteDbURL];
+    [self runReplication: repl expectedChangesCount: 0];
+    AssertNil(repl.lastError);
+    [CBLManager setWarningsRaiseExceptions: YES];
+}
+
+
 @end
