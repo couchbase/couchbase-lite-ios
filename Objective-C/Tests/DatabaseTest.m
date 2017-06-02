@@ -710,7 +710,6 @@
 }
 
 
-// TODO: Check whether purge operation incrases the seq number or not
 - (void) testPurgeDoc {
     // Store doc:
     CBLDocument* doc = [self generateDocument: @"doc1"];

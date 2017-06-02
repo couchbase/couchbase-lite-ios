@@ -468,8 +468,7 @@
 }
 
 
-- (void) failingTestSetGetFloatNumbers {
-    // TODO: Fleece asInt() does round up
+- (void) testSetGetFloatNumbers {
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @(1.00) forKey: @"number1"];
     [doc setObject: @(1.49) forKey: @"number2"];

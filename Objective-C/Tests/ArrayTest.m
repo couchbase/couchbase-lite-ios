@@ -610,7 +610,7 @@
 }
 
 
-- (void) failingTestSetGetFloatNumbers {
+- (void) testSetGetFloatNumbers {
     CBLArray* array = [[CBLArray alloc] init];
     [array addObject: @(1.00)];
     [array addObject: @(1.49)];

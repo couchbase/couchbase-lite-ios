@@ -409,7 +409,7 @@ class DocumentTest: CBLTestCase {
     }
     
     
-    func failingTestSetGetFloatNumbers() throws {
+    func testSetGetFloatNumbers() throws {
         let doc = createDocument("doc1")
         doc.set(1.00, forKey: "number1")
         doc.set(1.49, forKey: "number2")
