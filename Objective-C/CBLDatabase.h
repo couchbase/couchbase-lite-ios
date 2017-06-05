@@ -176,7 +176,7 @@ typedef struct {
 /** Runs a group of database operations in a batch. Use this when performing bulk write operations
  like multiple inserts/updates; it saves the overhead of multiple database commits, greatly
  improving performance. */
-- (BOOL) inBatch: (NSError**)error do: (void (NS_NOESCAPE ^)())block;
+- (BOOL) inBatch: (NSError**)error do: (void (NS_NOESCAPE ^)(void))block;
 
 
 #pragma mark - DATABASE MAINTENANCE

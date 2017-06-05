@@ -152,11 +152,11 @@ NSString* const kCBLReplicatorErrorUserInfoKey = @"kCBLReplicatorErrorUserInfoKe
     CBLDatabase* otherDB;
     NSURL* remoteURL = _config.target.url;
     CBLStringBytes dbName(remoteURL.path.lastPathComponent);
+    CBLStringBytes scheme(remoteURL.scheme);
+    CBLStringBytes host(remoteURL.host);
+    CBLStringBytes path(remoteURL.path.stringByDeletingLastPathComponent);
     if (remoteURL) {
         // Fill out the C4Address:
-        CBLStringBytes scheme(remoteURL.scheme);
-        CBLStringBytes host(remoteURL.host);
-        CBLStringBytes path(remoteURL.path.stringByDeletingLastPathComponent);
         addr = {
             .scheme = scheme,
             .hostname = host,

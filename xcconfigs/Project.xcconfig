@@ -42,7 +42,9 @@ VERSIONING_SYSTEM                  = apple-generic
 
 // Warnings:
 CLANG_ANALYZER_NONNULL                                     = YES
+CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING                     = YES
 CLANG_WARN_BOOL_CONVERSION                                 = YES
+CLANG_WARN_COMMA                                           = NO
 CLANG_WARN_CONSTANT_CONVERSION                             = YES
 CLANG_WARN_DIRECT_OBJC_ISA_USAGE                           = YES_ERROR
 CLANG_WARN__DUPLICATE_METHOD_MATCH                         = YES
@@ -55,6 +57,8 @@ CLANG_WARN_OBJC_IMPLICIT_ATOMIC_PROPERTIES                 = YES
 CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS                 = YES
 CLANG_WARN_OBJC_REPEATED_USE_OF_WEAK                       = YES
 CLANG_WARN_OBJC_ROOT_CLASS                                 = YES_ERROR
+CLANG_WARN_RANGE_LOOP_ANALYSIS                             = YES
+CLANG_WARN_STRICT_PROTOTYPES                               = YES
 CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION                  = YES
 CLANG_WARN_SUSPICIOUS_MOVE                                 = YES
 CLANG_WARN_UNREACHABLE_CODE                                = YES
