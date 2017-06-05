@@ -30,7 +30,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
     NSMutableURLRequest* _request;
     id<CBLAuthorizer> _authorizer;
     CBLCookieStorage* _cookieStorage;
-    id<CBLRemoteRequestDelegate> _delegate;
+    __weak id<CBLRemoteRequestDelegate> _delegate;
     CBLRemoteRequestCompletionBlock _onCompletion;
     NSURLSessionTask* _task;
     int _status;
@@ -49,7 +49,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 
 @property NSTimeInterval timeoutInterval;
 @property (strong, nonatomic) id<CBLAuthorizer> authorizer;
-@property (strong, nonatomic) id<CBLRemoteRequestDelegate> delegate;
+@property (weak, nonatomic) id<CBLRemoteRequestDelegate> delegate;
 @property (strong, nonatomic) CBLCookieStorage* cookieStorage;
 @property (nonatomic) bool autoRetry;   // Default value is YES
 @property (nonatomic) bool dontStop;
