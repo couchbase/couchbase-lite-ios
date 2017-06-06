@@ -34,7 +34,7 @@
     NSError* error;
     NSString* path = db.path;
     Assert([[NSFileManager defaultManager] fileExistsAtPath: path]);
-    Assert([db deleteDatabase:&error]);
+    Assert([db deleteDatabase: &error]);
     AssertNil(error);
     AssertFalse([[NSFileManager defaultManager] fileExistsAtPath: path]);
 }
@@ -368,54 +368,54 @@
 }
 
 
-// TODO: crash in native layer
-- (void) failingTestGetDocFromClosedDB {
+- (void) testGetDocFromClosedDB {
     // store doc
     [self generateDocument: @"doc1"];
     
     // close db
     [self closeDatabase: self.db];
     
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
-    AssertNil(doc);
+    XCTAssertThrowsSpecificNamed([self.db documentWithID: @"doc1"], NSException,
+                                 NSInternalInconsistencyException);
 }
 
 
-// TODO: crash in native layer
-- (void) failingTestGetDocFromDeletedDB {
+- (void) testGetDocFromDeletedDB {
     // store doc
     [self generateDocument: @"doc1"];
     
     // delete db
     [self deleteDatabase: self.db];
     
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
-    AssertNil(doc);
+    XCTAssertThrowsSpecificNamed([self.db documentWithID: @"doc1"], NSException,
+                                 NSInternalInconsistencyException);
 }
 
 
 #pragma mark - Save Document
 
 
-- (void) _testSaveNewDocWithID: (NSString*)docID {
-    // store doc
+- (void) testSaveNewDocWithID {
+    NSString* docID = @"doc1";
+    
     [self generateDocument: docID];
     
     AssertEqual(1, (long)self.db.count);
     Assert([self.db contains: docID]);
     
-    // validate doc
     [self verifyGetDocument: docID];
 }
 
 
-- (void) testSaveNewDocWithID {
-    [self _testSaveNewDocWithID: @"doc1"];
-}
-
-
 - (void) testSaveNewDocWithSpecialCharactersDocID {
-    [self _testSaveNewDocWithID: @"`~@#$%^&*()_+{}|\\][=-/.,<>?\":;'"];
+    NSString* docID = @"`~@#$%^&*()_+{}|\\][=-/.,<>?\":;'";
+    
+    [self generateDocument: docID];
+    
+    AssertEqual(1, (long)self.db.count);
+    Assert([self.db contains: docID]);
+    
+    [self verifyGetDocument: docID];
 }
 
 
@@ -508,31 +508,26 @@
 }
 
 
-// TODO: cause crash
-- (void) failingTestSaveDocToClosedDB {
-    // close db
+- (void) testSaveDocToClosedDB {
     [self closeDatabase: self.db];
     
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject:@1 forKey:@"key"];
     
-    NSError* error;
-    AssertFalse([self.db saveDocument: doc error: &error]);
-    [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
+    XCTAssertThrowsSpecificNamed([self.db saveDocument: doc error: nil], NSException,
+                                 NSInternalInconsistencyException);
 }
 
 
-// TODO: cause crash
-- (void) failingTestSaveDocToDeletedDB {
+- (void) testSaveDocToDeletedDB {
     // delete db
     [self deleteDatabase: self.db];
     
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @1 forKey: @"key"];
     
-    NSError* error;
-    AssertFalse([self.db saveDocument: doc error: &error]);
-    [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
+    XCTAssertThrowsSpecificNamed([self.db saveDocument: doc error: nil], NSException,
+                                 NSInternalInconsistencyException);
 }
 
 
@@ -667,8 +662,7 @@
 }
 
 
-// TODO: cause crash
-- (void) failingTestDeleteDocOnClosedDB {
+- (void) testDeleteDocOnClosedDB {
     // store doc
     CBLDocument* doc = [self generateDocument: @"doc1"];
     
@@ -676,14 +670,12 @@
     [self closeDatabase: self.db];
     
     // delete doc from db.
-    NSError* error;
-    AssertFalse([self.db deleteDocument: doc error: &error]);
-    [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
+    XCTAssertThrowsSpecificNamed([self.db deleteDocument: doc error: nil], NSException,
+                                 NSInternalInconsistencyException);
 }
 
 
-// TODO: cause crash
-- (void) failingTestDeleteDocOnDeletedDB {
+- (void) testDeleteDocOnDeletedDB {
     // store doc
     CBLDocument* doc = [self generateDocument:@"doc1"];
     
@@ -691,9 +683,8 @@
     [self deleteDatabase: self.db];
     
     // delete doc from db.
-    NSError* error;
-    AssertFalse([self.db deleteDocument: doc error: &error]);
-    [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
+    XCTAssertThrowsSpecificNamed([self.db deleteDocument: doc error: nil], NSException,
+                                 NSInternalInconsistencyException);
 }
 
 
@@ -815,8 +806,7 @@
 }
 
 
-// TODO: cause crash
-- (void) failingTestPurgeDocOnClosedDB {
+- (void) testPurgeDocOnClosedDB {
     // store doc
     CBLDocument* doc = [self generateDocument: @"doc1"];
     
@@ -824,14 +814,12 @@
     [self closeDatabase:self.db];
     
     // purge doc
-    NSError* error;
-    AssertFalse([self.db purgeDocument: doc error: &error]);
-    [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
+    XCTAssertThrowsSpecificNamed([self.db purgeDocument: doc error: nil], NSException,
+                                 NSInternalInconsistencyException);
 }
 
 
-// TODO: cause crash
-- (void) failingTestPurgeDocOnDeletedDB {
+- (void) testPurgeDocOnDeletedDB {
     // store doc
     CBLDocument* doc = [self generateDocument: @"doc1"];
    
@@ -839,9 +827,8 @@
     [self deleteDatabase: self.db];
     
     // purge doc
-    NSError* error;
-    AssertFalse([self.db purgeDocument: doc error: &error]);
-    [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
+    XCTAssertThrowsSpecificNamed([self.db purgeDocument: doc error: nil], NSException,
+                                 NSInternalInconsistencyException);
 }
 
 
@@ -904,6 +891,8 @@
     // clsoe db
     [self closeDatabase:self.db];
     
+    
+    
     AssertNil(self.db.path);
 }
 
@@ -936,10 +925,11 @@
 }
 
 
-- (void) failingTestDeleteTwice {
-    // delete db twice
-    [self deleteDatabase: self.db];
-    [self deleteDatabase: self.db];
+- (void) testDeleteTwice {
+    NSError* error;
+    Assert([self.db deleteDatabase: &error]);
+    XCTAssertThrowsSpecificNamed([self.db deleteDatabase: &error], NSException,
+                                 NSInternalInconsistencyException);
 }
 
 
@@ -986,6 +976,8 @@
 - (void) testDeleteThenGetDatabasePath{
     // delete db
     [self deleteDatabase: self.db];
+    
+    
     AssertNil(self.db.path);
 }
 
@@ -1028,13 +1020,17 @@
     AssertNil(error);
     AssertNotNil(db);
     
+    // Get path
+    NSString* path = db.path;
+    AssertNotNil(path);
+    
     // close db before delete
     [self closeDatabase: db];
     
     // delete db with nil directory
     Assert([CBLDatabase deleteDatabase: @"db" inDirectory: nil error: &error]);
     AssertNil(error);
-    AssertFalse([[NSFileManager defaultManager] fileExistsAtPath: db.path]);
+    AssertFalse([[NSFileManager defaultManager] fileExistsAtPath: path]);
 }
 #endif
 
@@ -1115,7 +1111,7 @@
 
 
 #if TARGET_OS_IPHONE
-- (void) failingTestDatabaseExistsWithDefaultDir {
+- (void) testDatabaseExistsWithDefaultDir {
     AssertFalse([CBLDatabase databaseExists: @"db" inDirectory: nil]);
     
     // open db with default dir
@@ -1123,16 +1119,10 @@
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" error: &error];
     Assert([CBLDatabase databaseExists: @"db" inDirectory: nil]);
     
-    // close db
-    [self closeDatabase: db];
-    
-    Assert([CBLDatabase databaseExists: @"db" inDirectory: nil]);
-    
     // delete db
     [self deleteDatabase: db];
     
     AssertFalse([CBLDatabase databaseExists: @"db" inDirectory: nil]);
-
 }
 #endif
 

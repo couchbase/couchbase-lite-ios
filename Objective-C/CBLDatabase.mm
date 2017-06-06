@@ -118,6 +118,7 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     });
 }
 
+
 static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4SequenceNumber seq,
                                 void *context)
 {
@@ -182,7 +183,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (uint64_t) count {
-    return c4db_getDocumentCount(_c4db);
+    return _c4db != nullptr ? c4db_getDocumentCount(_c4db) : 0;
 }
 
 
@@ -247,6 +248,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) inBatch: (NSError**)outError do: (void (^)())block {
+    [self mustBeOpen];
+    
     C4Transaction transaction(_c4db);
     if (outError)
         *outError = nil;
@@ -268,7 +271,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) close: (NSError**)outError {
-    if (!_c4db)
+    if (_c4db == nullptr)
         return YES;
     
     CBLLog(Database, @"Closing %@ at path %@", self, self.path);
@@ -291,6 +294,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) deleteDatabase: (NSError**)outError {
+    [self mustBeOpen];
+    
     C4Error err;
     if (!c4db_delete(_c4db, &err))
         return convertError(err, outError);
@@ -307,6 +312,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) compact: (NSError**)outError {
+    [self mustBeOpen];
+    
     C4Error err;
     if (!c4db_compact(_c4db, &err))
         return convertError(err, outError);
@@ -342,6 +349,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 - (void) addChangeListener: (id <CBLDocumentChangeListener>)listener
              forDocumentID: (NSString*)documentID
 {
+    [self mustBeOpen];
+    
     if (!_docChangeListeners)
         _docChangeListeners = [NSMutableDictionary dictionary];
     
@@ -364,6 +373,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 - (void) removeChangeListener: (id <CBLDocumentChangeListener>)listener
                 forDocumentID: (NSString*)documentID
 {
+    [self mustBeOpen];
+    
     NSMutableSet* listeners = _docChangeListeners[documentID];
     if (listeners) {
         [listeners removeObject: listener];
@@ -383,6 +394,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (NSEnumerator<CBLDocument*>*) allDocuments {
+    [self mustBeOpen];
+    
     if (!_allDocsQuery) {
         _allDocsQuery = [[CBLPredicateQuery alloc] initWithDatabase: self];
         _allDocsQuery.orderBy = @[@"_id"];
@@ -394,6 +407,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (CBLPredicateQuery*) createQueryWhere: (nullable id)where {
+    [self mustBeOpen];
+    
     auto query = [[CBLPredicateQuery alloc] initWithDatabase: self];
     query.where = where;
     return query;
@@ -410,6 +425,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
                options: (const CBLIndexOptions*)options
                  error: (NSError**)outError
 {
+    [self mustBeOpen];
+    
     static_assert(sizeof(CBLIndexOptions) == sizeof(C4IndexOptions), "Index options incompatible");
     NSData* json = [CBLPredicateQuery encodeExpressionsToJSON: expressions error: outError];
     if (!json)
@@ -428,6 +445,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
                   type: (CBLIndexType)type
                  error: (NSError**)outError
 {
+    [self mustBeOpen];
+    
     NSData* json = [CBLPredicateQuery encodeExpressionsToJSON: expressions error: outError];
     if (!json)
         return NO;
@@ -591,6 +610,14 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 }
 
 
+- (void) mustBeOpen {
+    if (_c4db == nullptr) {
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"Database is not open."];
+    }
+}
+
+
 - (BOOL) mustBeOpen: (NSError**)outError {
     return _c4db != nullptr || convertError({LiteCoreDomain, kC4ErrorNotOpen}, outError);
 }
@@ -600,6 +627,8 @@ static NSString* databasePath(NSString* name, NSString* dir) {
                                mustExist: (bool)mustExist
                                    error: (NSError**)outError
 {
+    [self mustBeOpen];
+    
     return [[CBLDocument alloc] initWithDatabase: self
                                       documentID: documentID
                                        mustExist: mustExist
@@ -608,6 +637,8 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 
 
 - (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error {
+    [self mustBeOpen];
+    
     if (!document.database) {
         document.database = self;
     } else if (document.database != self) {
