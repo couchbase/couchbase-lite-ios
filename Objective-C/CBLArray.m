@@ -12,12 +12,15 @@
 #import "CBLData.h"
 #import "CBLDocument+Internal.h"
 #import "CBLJSON.h"
+#import "CBLLock.h"
 
 
 @implementation CBLArray {
     NSMutableArray* _array;
     NSMapTable* _changeListeners;
     BOOL _changed;
+    CBLLock* _lock; // Recursive lock
+    CBLLock* _changedLock;
 }
 
 @synthesize swiftObject=_swiftObject;
@@ -28,13 +31,23 @@
 }
 
 
+- /* internal */ (instancetype) initWithFleeceData: (nullable CBLFLArray*)data {
+    self = [super initWithFleeceData: data];
+    if (self) {
+        _lock = [[CBLLock alloc] initWithName: @"Array" recursive: YES];
+        _changedLock = [[CBLLock alloc] initWithName: @"Array-Changed"];
+    }
+    return self;
+}
+
+
 - (instancetype) init {
     return [self initWithFleeceData: nil];
 }
 
 
 - (instancetype) initWithArray: (NSArray*)array {
-    self = [self initWithFleeceData: nil];
+    self = [self init];
     if (self) {
         [self setArray: array];
     }
@@ -46,55 +59,67 @@
 
 
 - (nullable id) objectAtIndex: (NSUInteger)index {
-    if (!_array) {
-        id value = [super objectAtIndex: index];
-        if ([value isKindOfClass: [CBLReadOnlyDictionary class]] ||
-            [value isKindOfClass: [CBLReadOnlyArray class]]) {
-            [self copyFleeceData];
-        } else
-            return value;
-    }
-    return _array[index];
+    __block id value = nil;
+    [_lock withLock: ^{
+        if (!_array) {
+            value = [super objectAtIndex: index];
+            if ([value isKindOfClass: [CBLReadOnlyDictionary class]] ||
+                [value isKindOfClass: [CBLReadOnlyArray class]]) {
+                [self copyFleeceData];
+            } else
+                return;
+        }
+        value = _array[index];
+    }];
+    return value;
 }
 
 
 - (BOOL) booleanAtIndex: (NSUInteger)index {
-    if (!_array)
-        return [super booleanAtIndex: index];
-    else {
-        id value = _array[index];
-        return [CBLData booleanValueForObject: value];
-    }
+    __block BOOL value;
+    [_lock withLock: ^{
+        if (!_array)
+            value = [super booleanAtIndex: index];
+        else
+            value = [CBLData booleanValueForObject: _array[index]];
+    }];
+    return value;
 }
 
 
 - (NSInteger) integerAtIndex: (NSUInteger)index {
-    if (!_array)
-        return [super integerAtIndex: index];
-    else {
-        id value = _array[index];
-        return [$castIf(NSNumber, value) integerValue];
-    }
+    __block NSInteger value;
+    [_lock withLock: ^{
+        if (!_array)
+            value = [super integerAtIndex: index];
+        else
+            value = [$castIf(NSNumber, _array[index]) integerValue];
+    }];
+    return value;
 }
 
 
 - (float) floatAtIndex: (NSUInteger)index {
-    if (!_array)
-        return [super floatAtIndex: index];
-    else {
-        id value = _array[index];
-        return [$castIf(NSNumber, value) floatValue];
-    }
+    __block float value;
+    [_lock withLock: ^{
+        if (!_array)
+            value = [super floatAtIndex: index];
+        else
+            value = [$castIf(NSNumber, _array[index]) floatValue];
+    }];
+    return value;
 }
 
 
 - (double) doubleAtIndex: (NSUInteger)index {
-    if (!_array)
-        return [super doubleAtIndex: index];
-    else {
-        id value = _array[index];
-        return [$castIf(NSNumber, value) doubleValue];
-    }
+    __block double value;
+    [_lock withLock: ^{
+        if (!_array)
+            value = [super doubleAtIndex: index];
+        else
+            value = [$castIf(NSNumber, _array[index]) doubleValue];
+    }];
+    return value;
 }
 
 
@@ -129,26 +154,31 @@
 
 
 - (NSUInteger) count {
-    if (!_array)
-        return super.count;
-    else
-        return _array.count;
+    __block NSUInteger count;
+    [_lock withLock: ^{
+        if (!_array) {
+            count = super.count;
+        } else
+            count = _array.count;
+    }];
+    return count;
 }
 
 
 - (NSArray*) toArray {
-    if (!_array)
-        [self copyFleeceData];
-    
-    NSMutableArray* array = [NSMutableArray array];
-    for (id item in _array) {
-        id value = item;
-        if ([value conformsToProtocol: @protocol(CBLReadOnlyDictionary)])
-            value = [value toDictionary];
-        else if ([value conformsToProtocol: @protocol(CBLReadOnlyArray)])
-            value = [value toArray];
-        [array addObject: value];
-    }
+    __block NSMutableArray* array = [NSMutableArray array];
+    [_lock withLock: ^{
+        if (!_array)
+            [self copyFleeceData];
+        for (id item in _array) {
+            id value = item;
+            if ([value conformsToProtocol: @protocol(CBLReadOnlyDictionary)])
+                value = [value toDictionary];
+            else if ([value conformsToProtocol: @protocol(CBLReadOnlyArray)])
+                value = [value toArray];
+            [array addObject: value];
+        }
+    }];
     return array;
 }
 
@@ -157,73 +187,83 @@
 
 
 - (void) setArray:(nullable NSArray *)array {
-    // Detach all objects that we are listening to for changes:
-    [self detachChildChangeListeners];
-    
-    NSMutableArray* result = [NSMutableArray arrayWithCapacity: [array count]];
-    for (id value in array) {
-        [result addObject: [CBLData convertValue: value listener: self]];
-    }
-    
-    _array = result;
-    [self setChanged];
+    [_lock withLock: ^{
+        // Detach all objects that we are listening to for changes:
+        [self detachChildChangeListeners];
+        
+        NSMutableArray* result = [NSMutableArray arrayWithCapacity: [array count]];
+        for (id value in array) {
+            [result addObject: [CBLData convertValue: value listener: self]];
+        }
+        
+        _array = result;
+        [self setChanged];
+    }];
 }
 
 
 - (void) setObject: (id)value atIndex: (NSUInteger)index {
-    if (!value) value = [NSNull null]; // nil conversion only for apple platform
-    
-    id oldValue = [self objectAtIndex: index];
-    if (!$equal(value, oldValue)) {
-        value = [CBLData convertValue: value listener: self];
-        [self detachChangeListenerForObject: oldValue];
-        [self setValue: value atIndex: index isChange: YES];
-    }
+    __block id v = value ? value : [NSNull null]; // nil conversion only for apple platform
+    [_lock withLock: ^{
+        id oldValue = [self objectAtIndex: index];
+        if (!$equal(value, oldValue)) {
+            v = [CBLData convertValue: v listener: self];
+            [self detachChangeListenerForObject: oldValue];
+            [self setValue: v atIndex: index isChange: YES];
+        }
+    }];
 }
 
 
 - (void) addObject: (id)value  {
-    if (!_array)
-        [self copyFleeceData];
-    
     if (!value) value = [NSNull null]; // nil conversion only for apple platform
-    [_array addObject: [CBLData convertValue: value listener: self]];
-    [self setChanged];
+    [_lock withLock: ^{
+        if (!_array)
+            [self copyFleeceData];
+        [_array addObject: [CBLData convertValue: value listener: self]];
+        [self setChanged];
+    }];
 }
 
 
 - (void) insertObject: (id)value atIndex: (NSUInteger)index {
-    if (!_array)
-        [self copyFleeceData];
-    
     if (!value) value = [NSNull null]; // nil conversion only for apple platform
-    [_array insertObject: [CBLData convertValue: value listener: self] atIndex: index];
-    [self setChanged];
+    [_lock withLock: ^{
+        if (!_array)
+            [self copyFleeceData];
+        [_array insertObject: [CBLData convertValue: value listener: self] atIndex: index];
+        [self setChanged];
+    }];
 }
 
 
-- (void) removeObjectAtIndex:(NSUInteger)index {
-    if (!_array)
-        [self copyFleeceData];
-    
-    id value = _array[index];
-    [self detachChangeListenerForObject: value];
-    [_array removeObjectAtIndex: index];
-    [self setChanged];
+- (void) removeObjectAtIndex: (NSUInteger)index {
+    [_lock withLock: ^{
+        if (!_array)
+            [self copyFleeceData];
+        id value = _array[index];
+        [self detachChangeListenerForObject: value];
+        [_array removeObjectAtIndex: index];
+        [self setChanged];
+    }];
 }
 
 
 #pragma mark - NSFastEnumeration
 
 
-- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState *)state
-                                  objects: (id __unsafe_unretained [])buffer
-                                    count: (NSUInteger)len
+- (NSUInteger) countByEnumeratingWithState: (NSFastEnumerationState *)state
+                                   objects: (id __unsafe_unretained [])buffer
+                                     count: (NSUInteger)len
 {
+    NSUInteger count;
+    [_lock lock];
     if (!_array)
-        return [super countByEnumeratingWithState: state objects: buffer count: len];
+        count = [super countByEnumeratingWithState: state objects: buffer count: len];
     else
-        return [_array countByEnumeratingWithState: state objects: buffer count: len];
+        count = [_array countByEnumeratingWithState: state objects: buffer count: len];
+    [_lock unlock];
+    return count;
 }
 
 
@@ -240,19 +280,23 @@
 
 
 - (void) addChangeListener: (id<CBLObjectChangeListener>)listener {
+    [_changedLock lock];
     if (!_changeListeners)
         _changeListeners = [NSMapTable weakToStrongObjectsMapTable];
     NSInteger count = [[_changeListeners objectForKey: listener] integerValue] + 1;
     [_changeListeners setObject: @(count) forKey: listener];
+    [_changedLock unlock];
 }
 
 
 - (void) removeChangeListener: (id<CBLObjectChangeListener>)listener {
+    [_changedLock lock];
     NSInteger count = [[_changeListeners objectForKey: listener] integerValue] - 1;
     if (count > 0)
         [_changeListeners setObject: @(count) forKey: listener];
     else
         [_changeListeners removeObjectForKey: listener];
+    [_changedLock unlock];
 }
 
 
@@ -273,14 +317,31 @@
     }
 }
 
-- (void) notifyChangeListeners {
-    for (id <CBLObjectChangeListener> listener in _changeListeners) {
-        [listener objectDidChange: self];
-    }
+
+#pragma mark - CHANGED
+
+
+- (BOOL) changed {
+    // Has it own _changedLock instead of using the _lock to avoid deadlock when encoding
+    // the object into fleece and at the same time there are some changes in a child
+    // dictionary or array by another thread. There is one side effect of doing this is that
+    // the changed status could be NO when one thread is trying to get the changed status
+    // but the other thread is modifying the object at the same time.
+    [_changedLock lock];
+    BOOL isChanged = _changed;
+    [_changedLock unlock];
+    return isChanged;
 }
 
 
-#pragma mark - CHANGE LISTENING
+- (void) setChanged {
+    [_changedLock lock];
+    if (!_changed) {
+        _changed = YES;
+        [self notifyChangeListeners];
+    }
+    [_changedLock unlock];
+}
 
 
 - (void) objectDidChange: (id)object {
@@ -288,25 +349,36 @@
 }
 
 
+- (void) notifyChangeListeners {
+    for (id <CBLObjectChangeListener> listener in _changeListeners) {
+        [listener objectDidChange: self];
+    }
+}
+
 #pragma mark - FLEECE ENCODABLE
 
 
 - (BOOL) fleeceEncode: (FLEncoder)encoder
              database: (CBLDatabase*)database
-                error: (NSError**)outError
+                error: (NSError* __autoreleasing *)outError
 {
-    NSUInteger count = self.count;
-    FLEncoder_BeginArray(encoder, count);
-    for (NSUInteger i = 0; i < count; i++) {
-        id value = [self objectAtIndex: i];
-        if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]) {
-            if (![value fleeceEncode: encoder database: database error: outError])
-                return NO;
-        } else
-            FLEncoder_WriteNSObject(encoder, value);
-    }
-    FLEncoder_EndArray(encoder);
-    return YES;
+    __block BOOL success = YES;
+    [_lock withLock: ^{
+        NSUInteger count = self.count;
+        FLEncoder_BeginArray(encoder, count);
+        for (NSUInteger i = 0; i < count; i++) {
+            id value = [self objectAtIndex: i];
+            if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]) {
+                if (![value fleeceEncode: encoder database: database error: outError]) {
+                    success = NO;
+                    return;
+                }
+            } else
+                FLEncoder_WriteNSObject(encoder, value);
+        }
+        FLEncoder_EndArray(encoder);
+    }];
+    return success;
 }
 
 
@@ -332,14 +404,5 @@
     if (isChange)
         [self setChanged];
 }
-
-
-- (void) setChanged {
-    if (!_changed) {
-        _changed = YES;
-        [self notifyChangeListeners];
-    }
-}
-
 
 @end
