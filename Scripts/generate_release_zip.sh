@@ -2,9 +2,9 @@
 
 set -e
 
-function usage 
+function usage
 {
-  echo "\nUsage: ${0} -o <Output Directory> [-v <Version String>]\n" 
+  echo "\nUsage: ${0} -o <Output Directory> [-v <Version String>] [--notest]\n"
 }
 
 while [[ $# -gt 1 ]]
@@ -19,6 +19,9 @@ do
       OUTPUT_DIR=${2}
       shift
       ;;
+      --notest)
+      NO_TEST=YES
+      ;;
       *)
       usage
       exit 3
@@ -31,6 +34,21 @@ if [ -z "$OUTPUT_DIR" ]
 then
   usage
   exit 4
+fi
+
+if [ -z "$NO_TEST" ]
+then
+  echo "Running ObjC macOS Test ..."
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL ObjC" -sdk macosx
+
+  echo "Running ObjC iOS Test ..."
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL ObjC" -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 6,OS=10.2'
+
+  echo "Running Swift macOS Test ..."
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL Swift" -sdk macosx
+
+  echo "Running Swift iOS Test ..."
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL Swift" -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 6,OS=10.2'
 fi
 
 VERSION_SUFFIX=""
