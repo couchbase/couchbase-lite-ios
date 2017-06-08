@@ -36,19 +36,26 @@ then
   exit 4
 fi
 
+# Check xcodebuild version:
+echo "Checking xcodebuild version "
+xcodebuild -version
+
 if [ -z "$NO_TEST" ]
 then
+  echo "Checking devices ..."
+  instruments -s devices
+
   echo "Running ObjC macOS Test ..."
   xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL ObjC" -sdk macosx
 
   echo "Running ObjC iOS Test ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL ObjC" -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 6,OS=10.2'
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL ObjC" -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 6'
 
   echo "Running Swift macOS Test ..."
   xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL Swift" -sdk macosx
 
   echo "Running Swift iOS Test ..."
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL Swift" -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 6,OS=10.2'
+  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL Swift" -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 6'
 fi
 
 VERSION_SUFFIX=""
