@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <Security/SecCertificate.h>
 @class CBLDatabase;
 @protocol CBLConflictResolver;
 
@@ -78,6 +79,10 @@ extern NSString* const kCBLReplicatorAuthPassword; ///< Auth key for password st
 /** The conflict resolver for this replicator. The default value is nil, which means the default
     algorithm will be used, where the revision with more history wins. */
 @property (nonatomic, nullable) id <CBLConflictResolver> conflictResolver;
+
+/** If this property is non-null, the server is required to have this exact SSL/TLS certificate,
+    or the connection will fail. */
+@property (nonatomic, nullable) SecCertificateRef pinnedServerCertificate;
 
 /** Extra options that can affect replication. */
 @property (nonatomic, nullable) NSDictionary<NSString*,id>* options;

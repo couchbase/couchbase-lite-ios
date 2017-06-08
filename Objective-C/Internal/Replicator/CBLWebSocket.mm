@@ -8,6 +8,7 @@
 
 #import "CBLWebSocket.h"
 #import "CBLHTTPLogic.h"
+#import "CBLTrustCheck.h"
 #import "CBLCoreBridge.h"
 #import "CBLStatus.h"
 #import "CBLReplicatorConfiguration.h"  // for the options constants
@@ -42,7 +43,7 @@ static constexpr NSTimeInterval kIdleTimeout = 300.0;
     NSArray* _protocols;
     CBLHTTPLogic* _logic;
     C4Socket* _c4socket;
-    NSTimer* _pingTimer;
+    NSError* _authError;
     BOOL _receiving;
     size_t _receivedBytesPending, _sentBytesPending;
     CFAbsoluteTime _lastReadTime;
@@ -55,6 +56,7 @@ static C4LogDomain kCBLWSLogDomain;
 
 #define Log(FMT, ...)        CBLLog(       WS, @"" FMT, ##__VA_ARGS__)
 #define LogVerbose(FMT, ...) CBLLogVerbose(WS, @"" FMT, ##__VA_ARGS__)
+#define Warn(FMT, ...)       CBLWarn(      WS, @"" FMT, ##__VA_ARGS__)
 
 
 + (void) registerWithC4 {
@@ -74,7 +76,10 @@ static C4LogDomain kCBLWSLogDomain;
 
 static void doOpen(C4Socket* s, const C4Address* addr, C4Slice optionsFleece) {
     NSURLComponents* c = [NSURLComponents new];
-    c.scheme = slice2string(addr->scheme);
+    if (addr->scheme == "blips"_sl || addr->scheme == "wss"_sl)
+        c.scheme = @"https";
+    else
+        c.scheme = @"http";
     c.host = slice2string(addr->hostname);
     c.port = @(addr->port);
     c.path = slice2string(addr->path);
@@ -161,6 +166,8 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
 - (void) _start {
     Log("CBLWebSocket connecting to %s:%hd...", _logic.URL.host.UTF8String, _logic.port);
+    _authError = nil;
+
     // Configure the nonce/key for the request:
     uint8_t nonceBytes[16];
     (void)SecRandomCopyBytes(kSecRandomDefault, sizeof(nonceBytes), nonceBytes);
@@ -357,6 +364,44 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 #pragma mark - URL SESSION DELEGATE:
 
 
+- (void) URLSession: (NSURLSession *)session
+         didReceiveChallenge: (NSURLAuthenticationChallenge *)challenge
+          completionHandler: (void (^)(NSURLSessionAuthChallengeDisposition,
+                                       NSURLCredential *))completionHandler
+{
+    auto disposition = NSURLSessionAuthChallengePerformDefaultHandling;
+    NSURLCredential* credential = nil;
+    NSString* authMethod = challenge.protectionSpace.authenticationMethod;
+    if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
+        // Check server's SSL cert:
+        auto check = [[CBLTrustCheck alloc] initWithChallenge: challenge];
+        Value pin = _options[kC4ReplicatorOptionPinnedServerCert];
+        if (pin) {
+            check.pinnedCertData = slice(pin.asData()).copiedNSData();
+            if (!check.pinnedCertData) {
+                Warn(@"Invalid value for replicator %s property (must be NSData)",
+                     kC4ReplicatorOptionPinnedServerCert);
+                completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
+                return;
+            }
+        }
+
+        NSError* error;
+        credential = [check checkTrust: &error];
+        if (credential) {
+            Log(@"    useCredential for trust: %@", credential);
+            disposition = NSURLSessionAuthChallengeUseCredential;
+        } else {
+            _authError = error;
+            Warn(@"TLS handshake failed: %@: %@",
+                 challenge.protectionSpace, error.localizedDescription);
+            disposition = NSURLSessionAuthChallengeCancelAuthenticationChallenge;
+        }
+    }
+    completionHandler(disposition, credential);
+}
+
+
 #if DEBUG
 - (void)URLSession:(NSURLSession *)session readClosedForStreamTask:(NSURLSessionStreamTask *)streamTask
 {
@@ -416,6 +461,8 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
     C4Error c4err;
     if (error) {
+        if (error.code ==kCFURLErrorCancelled && [error.domain isEqualToString: NSURLErrorDomain])
+            error = _authError;
         Log("CBLWebSocket CLOSED WITH ERROR: %@ %ld \"%@\"",
             error.domain, (long)error.code, error.localizedFailureReason);
         convertError(error, &c4err);

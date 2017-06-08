@@ -168,20 +168,9 @@ NSString* const kCBLReplicatorErrorUserInfoKey = @"kCBLReplicatorErrorUserInfoKe
         Assert(otherDB);
     }
 
-    // If the URL has a hardcoded username/password, add them as an "auth" option:
-    NSMutableDictionary* options = _config.options.mutableCopy;
-    NSString* username = remoteURL.user;
-    if (username && !options[kCBLReplicatorAuthOption]) {
-        NSMutableDictionary *auth = [NSMutableDictionary new];
-        auth[kCBLReplicatorAuthUserName] = username;
-        auth[kCBLReplicatorAuthPassword] = remoteURL.password;
-        if (!options)
-            options = [NSMutableDictionary new];
-        options[kCBLReplicatorAuthOption] = auth;
-    }
-
     // Encode the options:
     alloc_slice optionsFleece;
+    NSDictionary* options = _config.effectiveOptions;
     if (options.count) {
         Encoder enc;
         enc << options;

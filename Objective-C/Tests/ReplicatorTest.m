@@ -140,4 +140,25 @@
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
+
+// This test assumes an SG is serving SSL at port 4994 with a self-signed cert.
+- (void) dontTestSelfSignedSSLFailure {
+    CBLReplicatorConfiguration* config = [self push: NO pull: YES url: @"blips://localhost:4994/beer"];
+    [self run: config errorCode: kCFURLErrorServerCertificateHasUnknownRoot errorDomain: NSURLErrorDomain];
+}
+
+
+// This test assumes an SG is serving SSL at port 4994 with a self-signed cert equal to the one
+// stored in the test resource SelfSigned.cer. (This is the same cert used in the 1.x unit tests.)
+- (void) dontTestSelfSignedSSLPinned {
+    NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: @"SelfSigned" ofType: @"cer"];
+    NSData* certData = [NSData dataWithContentsOfFile: path];
+    SecCertificateRef cert = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
+    Assert(cert);
+    CBLReplicatorConfiguration* config = [self push: NO pull: YES url: @"blips://localhost:4994/beer"];
+    config.pinnedServerCertificate = cert;
+    [self run: config errorCode: 0 errorDomain: nil];
+}
+
+
 @end

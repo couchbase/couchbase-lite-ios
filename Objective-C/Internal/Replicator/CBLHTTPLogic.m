@@ -73,7 +73,8 @@
 
 - (BOOL) useTLS {
     NSString* scheme = self.URL.scheme.lowercaseString;
-    return [scheme isEqualToString: @"https"] || [scheme isEqualToString: @"wss"];
+    return [scheme isEqualToString: @"https"] || [scheme isEqualToString: @"wss"]
+                                              || [scheme isEqualToString: @"blips"];
 }
 
 

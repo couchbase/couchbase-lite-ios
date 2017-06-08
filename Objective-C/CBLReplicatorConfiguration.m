@@ -7,6 +7,7 @@
 //
 
 #import "CBLReplicatorConfiguration.h"
+#import "CBLReplicator+Internal.h"
 #import "CBLDatabase.h"
 
 NSString* const kCBLReplicatorAuthOption           = @"" kC4ReplicatorOptionAuthentication;
@@ -75,6 +76,7 @@ NSString* const kCBLReplicatorAuthPassword         = @"" kC4ReplicatorAuthPasswo
 @synthesize replicatorType=_replicatorType, continuous=_continuous;
 @synthesize options=_options;
 @synthesize conflictResolver=_conflictResolver;
+@synthesize pinnedServerCertificate=_pinnedServerCertificate;
 
 
 - (instancetype) init {
@@ -94,7 +96,26 @@ NSString* const kCBLReplicatorAuthPassword         = @"" kC4ReplicatorAuthPasswo
     c.options = _options;
     c.conflictResolver = _conflictResolver;
     c.continuous = _continuous;
+    c.pinnedServerCertificate = _pinnedServerCertificate;
     return c;
+}
+
+
+- (NSDictionary*) effectiveOptions {
+    // If the URL has a hardcoded username/password, add them as an "auth" option:
+    NSMutableDictionary* options = _options.mutableCopy ?: [NSMutableDictionary dictionary];
+    NSString* username = _target.url.user;
+    if (username && !options[kCBLReplicatorAuthOption]) {
+        NSMutableDictionary *auth = [NSMutableDictionary new];
+        auth[kCBLReplicatorAuthUserName] = username;
+        auth[kCBLReplicatorAuthPassword] = _target.url.password;
+        options[kCBLReplicatorAuthOption] = auth;
+    }
+    if (_pinnedServerCertificate) {
+        NSData* certData = CFBridgingRelease(SecCertificateCopyData(_pinnedServerCertificate));
+        options[@kC4ReplicatorOptionPinnedServerCert] = certData;
+    }
+    return options;
 }
 
 

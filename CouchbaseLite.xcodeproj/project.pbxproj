@@ -42,6 +42,11 @@
 		275FF6711E43E013005F90DD /* CBLQueryRow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF66F1E43E013005F90DD /* CBLQueryRow.mm */; };
 		275FF6B81E47B2FC005F90DD /* ExceptionUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 275FF6B61E47B2FC005F90DD /* ExceptionUtils.h */; };
 		275FF6B91E47B2FC005F90DD /* ExceptionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6B71E47B2FC005F90DD /* ExceptionUtils.m */; };
+		276740B71EE7381E0036DE42 /* CBLTrustCheck.h in Headers */ = {isa = PBXBuildFile; fileRef = 276740B51EE7381E0036DE42 /* CBLTrustCheck.h */; };
+		276740B81EE7381E0036DE42 /* CBLTrustCheck.h in Headers */ = {isa = PBXBuildFile; fileRef = 276740B51EE7381E0036DE42 /* CBLTrustCheck.h */; };
+		276740B91EE7381E0036DE42 /* CBLTrustCheck.m in Sources */ = {isa = PBXBuildFile; fileRef = 276740B61EE7381E0036DE42 /* CBLTrustCheck.m */; };
+		276740BA1EE7381E0036DE42 /* CBLTrustCheck.m in Sources */ = {isa = PBXBuildFile; fileRef = 276740B61EE7381E0036DE42 /* CBLTrustCheck.m */; };
+		276740CF1EE89E170036DE42 /* SelfSigned.cer in Resources */ = {isa = PBXBuildFile; fileRef = 276740CE1EE89E170036DE42 /* SelfSigned.cer */; };
 		27A0C85E1E3E7AB600F68646 /* CBLSharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */; };
 		27A0C85F1E3E7AB600F68646 /* CBLSharedKeys.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */; };
 		27A8B5021EC5350A00BB4C07 /* CBLQueryEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */; };
@@ -383,6 +388,13 @@
 			remoteGlobalIDString = 9398D9111E03434200464432;
 			remoteInfo = "CBL ObjC";
 		};
+		276740CC1EE7381F0036DE42 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 93FA3F481EE21A4D00D15CF5;
+			remoteInfo = "LiteCoreServ-iOS";
+		};
 		27F961951ED777EA0060F804 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
@@ -553,6 +565,9 @@
 		275FF6B71E47B2FC005F90DD /* ExceptionUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExceptionUtils.m; sourceTree = "<group>"; };
 		275FF6BD1E4807C3005F90DD /* CBL ObjC_Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC_Release.xcconfig"; sourceTree = "<group>"; };
 		275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CouchbaseLite.exp; sourceTree = "<group>"; };
+		276740B51EE7381E0036DE42 /* CBLTrustCheck.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLTrustCheck.h; sourceTree = "<group>"; };
+		276740B61EE7381E0036DE42 /* CBLTrustCheck.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLTrustCheck.m; sourceTree = "<group>"; };
+		276740CE1EE89E170036DE42 /* SelfSigned.cer */ = {isa = PBXFileReference; lastKnownFileType = file; name = SelfSigned.cer; path = ../../../CouchbaseLite/TestData/SelfSigned.cer; sourceTree = "<group>"; };
 		27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CBLSharedKeys.hh; sourceTree = "<group>"; };
 		27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLSharedKeys.mm; sourceTree = "<group>"; };
 		27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLQueryEnumerator.h; path = ../CBLQueryEnumerator.h; sourceTree = "<group>"; };
@@ -804,13 +819,15 @@
 		2753AFF01EC39CA200C12E98 /* Replicator */ = {
 			isa = PBXGroup;
 			children = (
+				2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */,
+				2753AFF41EC39CA200C12E98 /* CBLWebSocket.mm */,
+				2753AFF31EC39CA200C12E98 /* CBLWebSocket.h */,
 				2753AFF11EC39CA200C12E98 /* CBLHTTPLogic.h */,
 				2753AFF21EC39CA200C12E98 /* CBLHTTPLogic.m */,
 				27F961971ED8D9440060F804 /* CBLReachability.h */,
 				27F961981ED8D9440060F804 /* CBLReachability.m */,
-				2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */,
-				2753AFF31EC39CA200C12E98 /* CBLWebSocket.h */,
-				2753AFF41EC39CA200C12E98 /* CBLWebSocket.mm */,
+				276740B51EE7381E0036DE42 /* CBLTrustCheck.h */,
+				276740B61EE7381E0036DE42 /* CBLTrustCheck.m */,
 			);
 			path = Replicator;
 			sourceTree = "<group>";
@@ -1111,6 +1128,7 @@
 				2749B97F1EB25A660068DBF9 /* libcivetweb.a */,
 				9398D9481E0347B600464432 /* LiteCore Tests.xctest */,
 				9398D95A1E0347B600464432 /* LiteCore-iOS.app */,
+				276740CD1EE7381F0036DE42 /* LiteCoreServ-iOS.app */,
 				9398D95C1E0347B600464432 /* LiteCore-iOS Tests.xctest */,
 			);
 			name = Products;
@@ -1162,6 +1180,7 @@
 				936483AA1E4431C6008D08B3 /* iOS */,
 				27EF6A951E2AC609004748DF /* names_100.json */,
 				273ADF7C1E36B514001E977F /* sentences.json */,
+				276740CE1EE89E170036DE42 /* SelfSigned.cer */,
 				93BFCD951E0380A300E52F8A /* Info.plist */,
 			);
 			path = Tests;
@@ -1267,6 +1286,7 @@
 				9381962F1EC15F580032CC51 /* CBLDocument+Internal.h in Headers */,
 				938196091EC111E20032CC51 /* CBLArray.h in Headers */,
 				938196111EC112240032CC51 /* CBLReadOnlyDocument.h in Headers */,
+				276740B81EE7381E0036DE42 /* CBLTrustCheck.h in Headers */,
 				938196341EC15F890032CC51 /* CBLStatus.h in Headers */,
 				9381962D1EC15F470032CC51 /* CBLData.h in Headers */,
 				933207AF1E773CFB000D9993 /* CBLJSONCoding.h in Headers */,
@@ -1363,6 +1383,7 @@
 				938196271EC1230E0032CC51 /* CBLArray+Swift.h in Headers */,
 				93CD02DE1EA037B200AFB3FA /* CBLReadOnlyDictionary.h in Headers */,
 				9381959C1EB9A6FC0032CC51 /* CBLStatus.h in Headers */,
+				276740B71EE7381E0036DE42 /* CBLTrustCheck.h in Headers */,
 				934F4CAD1E241FB500F90659 /* CBLJSON.h in Headers */,
 				93E17EF81ED3ABE200671CA1 /* CBLDocumentChange.h in Headers */,
 				934F4CAB1E241FB500F90659 /* CBLInternal.h in Headers */,
@@ -1662,6 +1683,13 @@
 			remoteRef = 2749B97E1EB25A660068DBF9 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		276740CD1EE7381F0036DE42 /* LiteCoreServ-iOS.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "LiteCoreServ-iOS.app";
+			remoteRef = 276740CC1EE7381F0036DE42 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		27F961961ED777EA0060F804 /* libSupport.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -1776,6 +1804,7 @@
 			files = (
 				275FF6091E3FC24D005F90DD /* iTunesMusicLibrary.json in Resources */,
 				273ADF7D1E36B514001E977F /* sentences.json in Resources */,
+				276740CF1EE89E170036DE42 /* SelfSigned.cer in Resources */,
 				27EF6A971E2AC61B004748DF /* names_100.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1808,6 +1837,7 @@
 				93B503711E64B0A5002C4680 /* CBLParseDate.c in Sources */,
 				9381962C1EC15F430032CC51 /* CBLC4Document.mm in Sources */,
 				93C3984D1EC57688005A7A96 /* CBLQueryEnumerator.mm in Sources */,
+				276740BA1EE7381E0036DE42 /* CBLTrustCheck.m in Sources */,
 				933F45F61EC2A62000863ECB /* DocumentFragment.swift in Sources */,
 				93E17F0F1ED3BA7500671CA1 /* CBLDatabaseChange.m in Sources */,
 				937441D61E7B8B0500CB8F11 /* CBLPredicateQuery.mm in Sources */,
@@ -1949,6 +1979,7 @@
 				933208131E77415E000D9993 /* CBLQueryDataSource.m in Sources */,
 				93655B7C1EB8F85B00AC7E2A /* CBLFLDict.mm in Sources */,
 				2753AFF71EC39CA200C12E98 /* CBLHTTPLogic.m in Sources */,
+				276740B91EE7381E0036DE42 /* CBLTrustCheck.m in Sources */,
 				933208151E77415E000D9993 /* CBLQueryExpression.m in Sources */,
 				931C14641EAAD3420094F9B2 /* CBLFragment.m in Sources */,
 				934F4CA81E241FB500F90659 /* CBLBase64.m in Sources */,

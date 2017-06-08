@@ -7,9 +7,15 @@
 //
 
 #import "CBLReplicator.h"
+#import "CBLReplicatorConfiguration.h"
 #import "c4.h"
 
 extern C4LogDomain kCBLSyncLogDomain;
+
+
+@interface CBLReplicatorConfiguration ()
+@property (readonly, nonatomic) NSDictionary* effectiveOptions;
+@end
 
 
 @interface CBLReplicator ()

@@ -32,8 +32,14 @@ BOOL convertError(const C4Error &c4err, NSError** outError) {
         NSString* domain = kNSErrorDomains[c4err.domain];
         int code = c4err.code;
 
-        if (toCFNetworkError(c4err, &code))
-            domain = (__bridge id)kCFErrorDomainCFNetwork;
+        if (toCFNetworkError(c4err, &code)) {
+            // NSURLDomain is more commonly seen in Cocoa APIs, but kCFErrorDomainCFNetwork is a
+            // superset with more error codes. Use the former if the code is in range:
+            if (code <= -995 && code >= -3007)
+                domain = NSURLErrorDomain;
+            else
+                domain = (__bridge id)kCFErrorDomainCFNetwork;
+        }
 
         *outError = [NSError errorWithDomain: domain code: code
                                     userInfo: @{NSLocalizedDescriptionKey: msgStr}];
@@ -105,7 +111,7 @@ static const struct {int code; C4Error c4err;} kCFNetworkErrorMap[] = {
     {kCFURLErrorServerCertificateHasBadDate,    {NetworkDomain, kC4NetErrTLSCertExpired}},
     {kCFURLErrorServerCertificateNotYetValid,   {NetworkDomain, kC4NetErrTLSCertExpired}},
     {kCFURLErrorServerCertificateUntrusted,     {NetworkDomain, kC4NetErrTLSCertUntrusted}},
-    {kCFURLErrorServerCertificateHasUnknownRoot,{NetworkDomain, kC4NetErrTLSCertUntrusted}},
+    {kCFURLErrorServerCertificateHasUnknownRoot,{NetworkDomain, kC4NetErrTLSCertUnknownRoot}},
     {kCFURLErrorClientCertificateRequired,      {NetworkDomain, kC4NetErrTLSClientCertRequired}},
     {kCFURLErrorClientCertificateRejected,      {NetworkDomain, kC4NetErrTLSClientCertRejected}},
     {kCFErrorHTTPBadProxyCredentials,           {WebSocketDomain, 407}},
