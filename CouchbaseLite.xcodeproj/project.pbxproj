@@ -46,7 +46,7 @@
 		276740B81EE7381E0036DE42 /* CBLTrustCheck.h in Headers */ = {isa = PBXBuildFile; fileRef = 276740B51EE7381E0036DE42 /* CBLTrustCheck.h */; };
 		276740B91EE7381E0036DE42 /* CBLTrustCheck.m in Sources */ = {isa = PBXBuildFile; fileRef = 276740B61EE7381E0036DE42 /* CBLTrustCheck.m */; };
 		276740BA1EE7381E0036DE42 /* CBLTrustCheck.m in Sources */ = {isa = PBXBuildFile; fileRef = 276740B61EE7381E0036DE42 /* CBLTrustCheck.m */; };
-		276740CF1EE89E170036DE42 /* SelfSigned.cer in Resources */ = {isa = PBXBuildFile; fileRef = 276740CE1EE89E170036DE42 /* SelfSigned.cer */; };
+		276740E71EE9141C0036DE42 /* SelfSigned.cer in Resources */ = {isa = PBXBuildFile; fileRef = 276740E61EE9141C0036DE42 /* SelfSigned.cer */; };
 		27A0C85E1E3E7AB600F68646 /* CBLSharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */; };
 		27A0C85F1E3E7AB600F68646 /* CBLSharedKeys.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */; };
 		27A8B5021EC5350A00BB4C07 /* CBLQueryEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */; };
@@ -567,7 +567,7 @@
 		275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CouchbaseLite.exp; sourceTree = "<group>"; };
 		276740B51EE7381E0036DE42 /* CBLTrustCheck.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLTrustCheck.h; sourceTree = "<group>"; };
 		276740B61EE7381E0036DE42 /* CBLTrustCheck.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLTrustCheck.m; sourceTree = "<group>"; };
-		276740CE1EE89E170036DE42 /* SelfSigned.cer */ = {isa = PBXFileReference; lastKnownFileType = file; name = SelfSigned.cer; path = ../../../CouchbaseLite/TestData/SelfSigned.cer; sourceTree = "<group>"; };
+		276740E61EE9141C0036DE42 /* SelfSigned.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = SelfSigned.cer; sourceTree = "<group>"; };
 		27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CBLSharedKeys.hh; sourceTree = "<group>"; };
 		27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLSharedKeys.mm; sourceTree = "<group>"; };
 		27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLQueryEnumerator.h; path = ../CBLQueryEnumerator.h; sourceTree = "<group>"; };
@@ -1180,7 +1180,7 @@
 				936483AA1E4431C6008D08B3 /* iOS */,
 				27EF6A951E2AC609004748DF /* names_100.json */,
 				273ADF7C1E36B514001E977F /* sentences.json */,
-				276740CE1EE89E170036DE42 /* SelfSigned.cer */,
+				276740E61EE9141C0036DE42 /* SelfSigned.cer */,
 				93BFCD951E0380A300E52F8A /* Info.plist */,
 			);
 			path = Tests;
@@ -1804,7 +1804,7 @@
 			files = (
 				275FF6091E3FC24D005F90DD /* iTunesMusicLibrary.json in Resources */,
 				273ADF7D1E36B514001E977F /* sentences.json in Resources */,
-				276740CF1EE89E170036DE42 /* SelfSigned.cer in Resources */,
+				276740E71EE9141C0036DE42 /* SelfSigned.cer in Resources */,
 				27EF6A971E2AC61B004748DF /* names_100.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
