@@ -84,6 +84,11 @@ extern NSString* const kCBLReplicatorAuthPassword; ///< Auth key for password st
     or the connection will fail. */
 @property (nonatomic, nullable) SecCertificateRef pinnedServerCertificate;
 
+/** HTTP cookies to send to the server.
+    These are assumed to be valid to send with the request; they are not checked to ensure that
+    their hostname/path/etc. are compatible, or that they haven't expired. */
+@property (nonatomic, nullable) NSArray<NSHTTPCookie*>* cookies;
+
 /** Extra options that can affect replication. */
 @property (nonatomic, nullable) NSDictionary<NSString*,id>* options;
 

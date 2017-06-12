@@ -77,6 +77,7 @@ NSString* const kCBLReplicatorAuthPassword         = @"" kC4ReplicatorAuthPasswo
 @synthesize options=_options;
 @synthesize conflictResolver=_conflictResolver;
 @synthesize pinnedServerCertificate=_pinnedServerCertificate;
+@synthesize cookies=_cookies;
 
 
 - (instancetype) init {
@@ -97,6 +98,7 @@ NSString* const kCBLReplicatorAuthPassword         = @"" kC4ReplicatorAuthPasswo
     c.conflictResolver = _conflictResolver;
     c.continuous = _continuous;
     c.pinnedServerCertificate = _pinnedServerCertificate;
+    c.cookies = _cookies;
     return c;
 }
 
@@ -111,9 +113,21 @@ NSString* const kCBLReplicatorAuthPassword         = @"" kC4ReplicatorAuthPasswo
         auth[kCBLReplicatorAuthPassword] = _target.url.password;
         options[kCBLReplicatorAuthOption] = auth;
     }
+    // Add the pinned certificate if any:
     if (_pinnedServerCertificate) {
         NSData* certData = CFBridgingRelease(SecCertificateCopyData(_pinnedServerCertificate));
         options[@kC4ReplicatorOptionPinnedServerCert] = certData;
+    }
+    // Add custom cookies if any:
+    if (_cookies.count > 0) {
+        NSMutableString *cookieStr = [NSMutableString new];
+        for (NSHTTPCookie* cookie in _cookies) {
+            if (cookieStr.length > 0)
+                [cookieStr appendString: @"; "];
+            Assert([cookie isKindOfClass: [NSHTTPCookie class]]);
+            [cookieStr appendFormat: @"%@=%@", cookie.name, cookie.value];
+        }
+        options[@kC4ReplicatorOptionCookies] = cookieStr;
     }
     return options;
 }
