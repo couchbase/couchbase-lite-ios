@@ -82,7 +82,9 @@ GCC_WARN_UNUSED_FUNCTION                                   = YES
 GCC_WARN_UNUSED_VARIABLE                                   = YES
 WARNING_CFLAGS                                             = -Wall -Wformat-security -Wmissing-declarations -Woverriding-method-mismatch -Weffc++
 
+// Sanitizer Behaviors:
 CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW                 = YES    // range-check C++ STL containers
+CLANG_UNDEFINED_BEHAVIOR_SANITIZER_NULLABILITY             = YES
 
 // Static Analyzer - Analysis Policy
 RUN_CLANG_STATIC_ANALYZER                                  = YES // Run during 'Build' as well as 'Analyze'
