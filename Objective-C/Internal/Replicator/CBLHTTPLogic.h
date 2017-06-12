@@ -20,6 +20,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) setValue: (nullable NSString*)value forHTTPHeaderField:(NSString*)header;
 - (void) setObject: (nullable NSString*)value forKeyedSubscript: (NSString*)key;
 
+/** Can be used to add multiple instances of a header. */
+- (void) addValue: (nullable NSString*)value forHTTPHeaderField:(NSString*)header;
+
 /** Set this to YES to handle redirects.
     If enabled, redirects are handled by updating the URL and setting shouldRetry. */
 @property (nonatomic) BOOL handleRedirects;
