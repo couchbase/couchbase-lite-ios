@@ -97,6 +97,10 @@
     [_urlRequest setValue: value forHTTPHeaderField: header];
 }
 
+- (void) addValue: (NSString*)value forHTTPHeaderField:(NSString*)header {
+    [_urlRequest addValue: value forHTTPHeaderField: header];
+}
+
 - (void) setObject: (NSString*)value forKeyedSubscript: (NSString*)key {
     [_urlRequest setValue: value forHTTPHeaderField: key];
 }

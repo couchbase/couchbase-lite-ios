@@ -125,6 +125,9 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
         _c4Queue = dispatch_queue_create("Websocket C4 dispatch", DISPATCH_QUEUE_SERIAL);
 
         NSURLSessionConfiguration* conf = [NSURLSessionConfiguration defaultSessionConfiguration];
+        conf.HTTPShouldSetCookies = NO;
+        conf.HTTPCookieStorage = nil;
+        conf.URLCache = nil;
         _session = [NSURLSession sessionWithConfiguration: conf
                                                  delegate: self
                                             delegateQueue: _queue];
@@ -177,8 +180,11 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
                                           @"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"]);
 
     // Construct the HTTP request:
-    for (Dict::iterator header(_options["headers"_sl].asDict()); header; ++header)
+    for (Dict::iterator header(_options[kC4ReplicatorOptionExtraHeaders].asDict()); header; ++header)
         _logic[slice2string(header.keyString())] = slice2string(header.value().asString());
+    slice cookies = _options[kC4ReplicatorOptionCookies].asString();
+    if (cookies)
+        [_logic addValue: (NSString*)cookies forHTTPHeaderField: @"Cookie"];
 
     _logic[@"Connection"] = @"Upgrade";
     _logic[@"Upgrade"] = @"websocket";
@@ -243,6 +249,13 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
     // Post the response headers to LiteCore:
     NSDictionary *headers =  CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(httpResponse));
+    NSString* cookie = headers[@"Set-Cookie"];
+    if ([cookie containsString: @", "]) {
+        // CFHTTPMessage incorrectly merges multiple Set-Cookie headers. Undo that:
+        NSMutableDictionary* newHeaders = [headers mutableCopy];
+        newHeaders[@"Set-Cookie"] = [cookie componentsSeparatedByString: @", "];
+        headers = newHeaders;
+    }
     Encoder enc;
     enc << headers;
     alloc_slice headersFleece = enc.finish();
