@@ -7,7 +7,7 @@ Couchbase Lite 2.0 has a completely new set of APIs. The implementation is on to
 
 THIS IS NOT A RELEASED PRODUCT. THIS IS NOT FINISHED CODE. This is currently in a very early stage of the implementation.
 
- 
+
 ## Requirements
 - iOS 8.0+ | macOS 10.10+ | tvOS 9.0+
 - Xcode 8
@@ -23,7 +23,7 @@ You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` for O
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB008', :submodules => true
+  pod 'CouchbaseLite', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB009', :submodules => true
 end
 ```
 
@@ -31,7 +31,7 @@ end
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLiteSwift', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB008', :submodules => true
+  pod 'CouchbaseLiteSwift', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB009', :submodules => true
 end
 ```
 
