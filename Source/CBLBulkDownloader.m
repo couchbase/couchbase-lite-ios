@@ -102,6 +102,7 @@
         // those docs again and confuse the replicator.
         return NO;
     }
+    _docReader = nil;
     return [super retry];
 }
 
