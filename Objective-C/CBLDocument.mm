@@ -358,26 +358,16 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
 }
 
 
-// Lower-level save method. On conflict, returns YES but sets *outDoc to NULL. */
+// Lower-level save method. On conflict, returns YES but sets *outDoc to NULL.
 - (BOOL) saveInto: (C4Document **)outDoc
          asDelete: (BOOL)deletion
             error: (NSError **)outError
 {
-    CBLStringBytes docTypeSlice;
-    
-    C4DocPutRequest put = {};
-    CBLStringBytes docId(self.documentID);
-    put.docID = docId;
-    if (self.c4Doc) {
-        put.history = &self.c4Doc.rawDoc->revID;
-        put.historyCount = 1;
-    }
-    put.save = true;
-    
+    C4RevisionFlags revFlags = 0;
     if (deletion)
-        put.revFlags = kRevDeleted;
+        revFlags = kRevDeleted;
     if (containsBlob(self))
-        put.revFlags |= kRevHasAttachments;
+        revFlags |= kRevHasAttachments;
     FLSliceResult body = {};
     if (!deletion && !self.isEmpty) {
         // Encode properties to Fleece data:
@@ -388,15 +378,21 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
             *outDoc = nullptr;
             return NO;
         }
-        put.body = {body.buf, body.size};
     }
     
     // Save to database:
     C4Error err;
-    *outDoc = c4doc_put(_c4db, &put, nullptr, &err);
+    C4Document *c4Doc = self.c4Doc.rawDoc;
+    if (c4Doc) {
+        *outDoc = c4doc_update(c4Doc, {body.buf, body.size}, revFlags, &err);
+    } else {
+        CBLStringBytes docID(self.documentID);
+        *outDoc = c4doc_create(_c4db, docID, {body.buf, body.size}, revFlags, &err);
+    }
     c4slice_free(body);
     
-    if (!*outDoc && err.code != kC4ErrorConflict) {     // conflict is not an error, here
+    if (!*outDoc && !(err.domain == LiteCoreDomain && err.code == kC4ErrorConflict)) {
+        // conflict is not an error, at this level
         return convertError(err, outError);
     }
     return YES;
