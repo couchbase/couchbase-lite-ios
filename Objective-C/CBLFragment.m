@@ -57,10 +57,10 @@
         _value = [_parent objectForKey: key];
     } else if ([_parent conformsToProtocol: @protocol(CBLArray)]) {
         NSInteger index = [_parentKey integerValue];
-        @try {
+        if (index >= 0 && (NSUInteger)index < ((CBLArray*)_parent).count) {
             [_parent setObject: value atIndex: index];
             _value = [_parent objectAtIndex: index];
-        } @catch (NSException *exception) { }
+        }
     }
 }
 
