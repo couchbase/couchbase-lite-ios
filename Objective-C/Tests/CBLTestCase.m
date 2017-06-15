@@ -165,4 +165,23 @@
 }
 
 
+// helper method to check error
+- (void) expectError: (NSErrorDomain)domain code: (NSInteger)code
+                  in: (BOOL (^)(NSError**))block
+{
+    ++gC4ExpectExceptions;
+    NSError* error;
+    BOOL succeeded = block(&error);
+    --gC4ExpectExceptions;
+
+    if (succeeded) {
+        XCTFail("Block expected to fail but didn't");
+    } else {
+        XCTAssert([domain isEqualToString: error.domain] && code == error.code,
+                  "Block expected to return error (%@ %ld), but instead returned %@",
+                  domain, code, error);
+    }
+}
+
+
 @end

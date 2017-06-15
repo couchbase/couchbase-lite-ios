@@ -8,6 +8,7 @@
 
 #import <XCTest/XCTest.h>
 #import "CouchbaseLite.h"
+#import <stdatomic.h>
 
 #define Assert             XCTAssert
 #define AssertNil          XCTAssertNil
@@ -18,6 +19,8 @@
 
 #define Log                NSLog
 #define Warn(FMT, ...)     NSLog(@"WARNING: " FMT, ##__VA_ARGS__)
+
+extern atomic_int gC4ExpectExceptions;
 
 @interface CBLTestCase : XCTestCase {
 @protected
@@ -61,5 +64,10 @@
     Each line of the file should be a complete JSON object, which will become a document.
     The document IDs will be of the form "doc-#" where "#" is the line number, starting at 1. */
 - (void) loadJSONResource: (NSString*)resourceName;
+
+/** Utility to check a failure case. This method asserts that the block returns NO, and that
+    it sets the NSError to the given domain and code. */
+- (void) expectError: (NSErrorDomain)domain code: (NSInteger)code
+                  in: (BOOL (^)(NSError**))block;
 
 @end

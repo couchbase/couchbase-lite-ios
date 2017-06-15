@@ -127,14 +127,6 @@
 }
 
 
-// helper method to check error
-- (void) checkError: (NSError*)error domain: (NSErrorDomain)domain code: (NSInteger)code {
-    AssertNotNil(error);
-    AssertEqualObjects(domain, error.domain);
-    AssertEqual(code, error.code);
-}
-
-
 #pragma mark - DatabaseConfiguration
 
 
@@ -283,10 +275,9 @@
 
 - (void) testCreateWithEmptyDBNames {
     // create db with default configuration
-    NSError* error;
-    CBLDatabase* db = [self openDBNamed: @"" error: &error];
-    [self checkError: error domain: @"LiteCore" code: 30]; // kC4ErrorWrongFormat
-    AssertNil(db, @"Should be fail to open db: %@", error);
+    [self expectError: @"LiteCore" code: 30 in: ^BOOL(NSError** error) {
+        return [self openDBNamed: @"" error: error] != nil;
+    }];
 }
 
 
@@ -375,8 +366,10 @@
     // close db
     [self closeDatabase: self.db];
     
+    ++gC4ExpectExceptions;
     XCTAssertThrowsSpecificNamed([self.db documentWithID: @"doc1"], NSException,
                                  NSInternalInconsistencyException);
+    --gC4ExpectExceptions;
 }
 
 
@@ -387,8 +380,10 @@
     // delete db
     [self deleteDatabase: self.db];
     
+    ++gC4ExpectExceptions;
     XCTAssertThrowsSpecificNamed([self.db documentWithID: @"doc1"], NSException,
                                  NSInternalInconsistencyException);
+    --gC4ExpectExceptions;
 }
 
 
@@ -451,8 +446,9 @@
     
     // update doc & store it into different instance
     [doc setObject: @2 forKey: @"key"];
-    AssertFalse([otherDB saveDocument: doc error: &error]);
-    [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
+    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
+        return [otherDB saveDocument: doc error: error2];
+    }]; // forbidden
     
     // close otherDB
     [self closeDatabase: otherDB];
@@ -474,8 +470,9 @@
     
     // update doc & store it into different db
     [doc setObject: @2 forKey: @"key"];
-    AssertFalse([otherDB saveDocument: doc error: &error]);
-    [self checkError: error domain:@"CouchbaseLite" code: 403]; // forbidden
+    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
+        return [otherDB saveDocument: doc error: error2];
+    }]; // forbidden
     
     // delete otherDB
     [self deleteDatabase: otherDB];
@@ -514,8 +511,10 @@
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject:@1 forKey:@"key"];
     
+    ++gC4ExpectExceptions;
     XCTAssertThrowsSpecificNamed([self.db saveDocument: doc error: nil], NSException,
                                  NSInternalInconsistencyException);
+    --gC4ExpectExceptions;
 }
 
 
@@ -526,8 +525,10 @@
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @1 forKey: @"key"];
     
+    ++gC4ExpectExceptions;
     XCTAssertThrowsSpecificNamed([self.db saveDocument: doc error: nil], NSException,
                                  NSInternalInconsistencyException);
+    --gC4ExpectExceptions;
 }
 
 
@@ -538,9 +539,9 @@
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @1 forKey: @"key"];
     
-    NSError* error;
-    AssertFalse([self.db deleteDocument: doc error: &error]);
-    [self checkError:error domain: @"CouchbaseLite" code: 404]; // Not Found
+    [self expectError: @"CouchbaseLite" code: 404 in: ^BOOL(NSError** error) {
+        return [self.db deleteDocument: doc error: error];
+    }];
     AssertEqual(0, (long)self.db.count);
 }
 
@@ -576,9 +577,10 @@
     Assert([otherDB contains:docID]);
     AssertEqual(1, (long)otherDB.count);
     
-    AssertFalse([otherDB deleteDocument: doc error: &error]);
-    [self checkError:error domain: @"CouchbaseLite" code: 403]; // forbidden
-    
+    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
+        return [otherDB deleteDocument: doc error: error2];
+    }]; // forbidden
+
     AssertEqual(1, (long)otherDB.count);
     AssertEqual(1, (long)self.db.count);
     AssertFalse(doc.isDeleted);
@@ -602,8 +604,9 @@
     AssertFalse([otherDB contains: docID]);
     AssertEqual(0, (long)otherDB.count);
     
-    AssertFalse([otherDB deleteDocument: doc error: &error]);
-    [self checkError:error domain: @"CouchbaseLite" code: 403]; // forbidden
+    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
+        return [otherDB deleteDocument: doc error: error2];
+    }]; // forbidden
     
     AssertEqual(0, (long)otherDB.count);
     AssertEqual(1, (long)self.db.count);
@@ -670,8 +673,10 @@
     [self closeDatabase: self.db];
     
     // delete doc from db.
+    ++gC4ExpectExceptions;
     XCTAssertThrowsSpecificNamed([self.db deleteDocument: doc error: nil], NSException,
                                  NSInternalInconsistencyException);
+    --gC4ExpectExceptions;
 }
 
 
@@ -683,8 +688,10 @@
     [self deleteDatabase: self.db];
     
     // delete doc from db.
+    ++gC4ExpectExceptions;
     XCTAssertThrowsSpecificNamed([self.db deleteDocument: doc error: nil], NSException,
                                  NSInternalInconsistencyException);
+    --gC4ExpectExceptions;
 }
 
 
@@ -694,9 +701,9 @@
 - (void) testPurgePreSaveDoc {
     CBLDocument* doc = [self createDocument: @"doc1"];
     
-    NSError* error;
-    AssertFalse([self.db purgeDocument: doc error: &error]);
-    [self checkError: error domain: @"CouchbaseLite" code: 404];
+    [self expectError: @"CouchbaseLite" code: 404 in: ^BOOL(NSError** error) {
+        return [self.db purgeDocument: doc error: error];
+    }];
     AssertEqual(0, (long)self.db.count);
 }
 
@@ -730,8 +737,9 @@
     AssertEqual(1, (long)otherDB.count);
     
     // purge document against other db instance
-    AssertFalse([otherDB purgeDocument: doc error: &error]);
-    [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
+    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
+        return [otherDB purgeDocument: doc error: error2];
+    }]; // forbidden
     AssertEqual(1, (long)otherDB.count);
     AssertEqual(1, (long)self.db.count);
     AssertFalse(doc.isDeleted);
@@ -756,8 +764,9 @@
     AssertEqual(0, (long)otherDB.count);
     
     // purge document against other db
-    AssertFalse([otherDB purgeDocument: doc error: &error]);
-    [self checkError: error domain: @"CouchbaseLite" code: 403]; // forbidden
+    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
+        return [otherDB purgeDocument: doc error: error2];
+    }]; // forbidden
     
     AssertEqual(0, (long)otherDB.count);
     AssertEqual(1, (long)self.db.count);
@@ -814,8 +823,10 @@
     [self closeDatabase:self.db];
     
     // purge doc
+    ++gC4ExpectExceptions;
     XCTAssertThrowsSpecificNamed([self.db purgeDocument: doc error: nil], NSException,
                                  NSInternalInconsistencyException);
+    --gC4ExpectExceptions;
 }
 
 
@@ -827,8 +838,10 @@
     [self deleteDatabase: self.db];
     
     // purge doc
+    ++gC4ExpectExceptions;
     XCTAssertThrowsSpecificNamed([self.db purgeDocument: doc error: nil], NSException,
                                  NSInternalInconsistencyException);
+    --gC4ExpectExceptions;
 }
 
 
@@ -899,13 +912,13 @@
 
 - (void) testCloseThenCallInBatch {
     NSError* error;
-    BOOL sucess = [self.db inBatch: &error do: ^{
-        NSError* err;
-        [self.db close: &err];
+    BOOL success = [self.db inBatch: &error do: ^{
+        [self expectError: @"LiteCore" code: 26 in: ^BOOL(NSError** error2) {
+            return [self.db close: error2];
+        }];
         // 26 -> kC4ErrorTransactionNotClosed
-        [self checkError: err domain: @"LiteCore" code: 26];
     }];
-    Assert(sucess);
+    Assert(success);
     AssertNil(error);
 }
 
@@ -928,8 +941,10 @@
 - (void) testDeleteTwice {
     NSError* error;
     Assert([self.db deleteDatabase: &error]);
+    ++gC4ExpectExceptions;
     XCTAssertThrowsSpecificNamed([self.db deleteDatabase: &error], NSException,
                                  NSInternalInconsistencyException);
+    --gC4ExpectExceptions;
 }
 
 
@@ -985,10 +1000,10 @@
 - (void) testDeleteThenCallInBatch {
     NSError* error;
     BOOL sucess = [self.db inBatch: &error do:^{
-        NSError* err;
-        [self.db deleteDatabase: &err];
+        [self expectError: @"LiteCore" code: 26 in: ^BOOL(NSError** error2) {
+            return [self.db deleteDatabase: error2];
+        }];
         // 26 -> kC4ErrorTransactionNotClosed: Function cannot be called while in a transaction
-        [self checkError: err domain: @"LiteCore" code: 26];
     }];
     Assert(sucess);
     AssertNil(error);
@@ -1003,9 +1018,10 @@
     AssertNotNil(otherDB);
     
     // delete db
-    AssertFalse([self.db deleteDatabase: &error]);
+    [self expectError: @"LiteCore" code: 24 in: ^BOOL(NSError** error2) {
+        return [self.db deleteDatabase: error2];
+    }];
     // 24 -> kC4ErrorBusy: Database is busy/locked
-    [self checkError: error domain: @"LiteCore" code: 24];
 }
 
 
@@ -1044,7 +1060,9 @@
     AssertNotNil(db);
     
     // delete db with nil directory
+    ++gC4ExpectExceptions;
     AssertFalse([CBLDatabase deleteDatabase: @"db" inDirectory: nil error: &error]);
+    --gC4ExpectExceptions;
     // 24 -> kC4ErrorBusy: Database is busy/locked
     [self checkError: error domain: @"LiteCore" code: 24];
 }
@@ -1082,9 +1100,10 @@
     AssertNotNil(db);
     AssertNil(error);
     
-    AssertFalse([CBLDatabase deleteDatabase: @"db" inDirectory: dir error: &error]);
+    [self expectError: @"LiteCore" code: 24 in: ^BOOL(NSError** error2) {
+        return [CBLDatabase deleteDatabase: @"db" inDirectory: dir error: error2];
+    }];
     // 24 -> kC4ErrorBusy: Database is busy/locked
-    [self checkError: error domain: @"LiteCore" code: 24];
 }
 
 
