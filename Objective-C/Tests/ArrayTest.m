@@ -298,10 +298,12 @@
     CBLArray* array = [[CBLArray alloc] init];
     [array addObject: @"a"];
     
+    ++gC4ExpectExceptions;
     for (id index in @[@(-1), @(1)]) {
         XCTAssertThrowsSpecificNamed([array setObject: @"b" atIndex: [index integerValue]],
                                      NSException, @"NSRangeException");
     }
+    --gC4ExpectExceptions;
 }
 
 
@@ -393,12 +395,14 @@
 - (void) testInsertObjectOutOfBound {
     CBLArray* array = [[CBLArray alloc] init];
     [array addObject: @"a"];
-    
+
+    ++gC4ExpectExceptions;
     for (id index in @[@(-1), @(2)]) {
         NSInteger i = [index integerValue];
         XCTAssertThrowsSpecificNamed([array insertObject: @"b" atIndex: i],
                                      NSException, @"NSRangeException");
     }
+    --gC4ExpectExceptions;
 }
 
 
@@ -442,10 +446,12 @@
     CBLArray* array = [[CBLArray alloc] init];
     [array addObject: @"a"];
     
+    ++gC4ExpectExceptions;
     for (id index in @[@(-1), @(1)]) {
         XCTAssertThrowsSpecificNamed([array removeObjectAtIndex: [index integerValue]],
                                      NSException, @"NSRangeException");
     }
+    --gC4ExpectExceptions;
 }
 
 
