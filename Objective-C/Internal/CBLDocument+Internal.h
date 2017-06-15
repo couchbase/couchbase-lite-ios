@@ -34,13 +34,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-//////////////////
-
-@protocol CBLObjectChangeListener <NSObject>
-
-- (void) objectDidChange: (id)object;
-
-@end
 
 //////////////////
 
@@ -79,27 +72,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 //////////////////
 
-@interface CBLArray () <CBLObjectChangeListener>
-
-- (void) addChangeListener: (id<CBLObjectChangeListener>)listener;
-
-- (void) removeChangeListener: (id<CBLObjectChangeListener>)listener;
-
-@end
-
 @interface CBLBlob() <CBLFleeceEncodable>
 
 @end
 
 //////////////////
 
-@interface CBLDictionary () <CBLObjectChangeListener>
+@interface CBLDictionary ()
 
 @property (nonatomic) BOOL changed;
-
-- (void) addChangeListener: (id<CBLObjectChangeListener>)listener;
-
-- (void) removeChangeListener: (id<CBLObjectChangeListener>)listener;
 
 @end
 
