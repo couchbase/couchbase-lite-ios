@@ -111,6 +111,27 @@
 }
 
 
+- (void) testPullDoc {
+    // For https://github.com/couchbase/couchbase-lite-core/issues/156
+    NSError* error;
+    CBLDocument* doc1 = [[CBLDocument alloc] initWithID:@"doc1"];
+    [doc1 setObject: @"Tiger" forKey: @"name"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    AssertEqual(self.db.count, 1u);
+
+    CBLDocument* doc2 = [[CBLDocument alloc] initWithID:@"doc2"];
+    [doc2 setObject: @"Cat" forKey: @"name"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+
+    CBLReplicatorConfiguration* config = [self push: NO pull: YES];
+    [self run: config errorCode: 0 errorDomain: nil];
+
+    AssertEqual(self.db.count, 2u);
+    doc2 = [self.db documentWithID:@"doc2"];
+    AssertEqualObjects([doc2 stringForKey:@"name"], @"Cat");
+}
+
+
 // These test are disabled because they require a password-protected database 'seekrit' to exist
 // on localhost:4984, with a user 'pupshaw' whose password is 'frank'.
 
