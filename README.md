@@ -23,7 +23,7 @@ You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` for O
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLite', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB009', :submodules => true
+  pod 'CouchbaseLite', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB010', :submodules => true
 end
 ```
 
@@ -31,7 +31,7 @@ end
 ```
 target '<your target name>' do
   use_frameworks!
-  pod 'CouchbaseLiteSwift', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB009', :submodules => true
+  pod 'CouchbaseLiteSwift', :git => 'https://github.com/couchbase/couchbase-lite-ios.git', :tag => '2.0DB010', :submodules => true
 end
 ```
 
