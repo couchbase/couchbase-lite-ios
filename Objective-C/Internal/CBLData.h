@@ -18,7 +18,7 @@ extern NSObject * const kCBLRemovedValue;
 
 @interface CBLData : NSObject
 
-+ (id) convertValue: (id)value listener: (id<CBLObjectChangeListener>)listener;
++ (id) convertValue: (id)value;
 
 + (BOOL) booleanValueForObject: (id)object;
 
