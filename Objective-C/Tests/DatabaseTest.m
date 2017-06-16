@@ -1060,11 +1060,10 @@
     AssertNotNil(db);
     
     // delete db with nil directory
-    ++gC4ExpectExceptions;
-    AssertFalse([CBLDatabase deleteDatabase: @"db" inDirectory: nil error: &error]);
-    --gC4ExpectExceptions;
     // 24 -> kC4ErrorBusy: Database is busy/locked
-    [self checkError: error domain: @"LiteCore" code: 24];
+    [self expectError: @"LiteCore" code: 24 in: ^BOOL(NSError** error2) {
+        return [CBLDatabase deleteDatabase: @"db" inDirectory: nil error: error2];
+    }];
 }
 #endif
 
