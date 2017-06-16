@@ -40,7 +40,7 @@ end
 You can use [Carthage](https://github.com/Carthage/Carthage) to install `CouchbaseLite` by adding it in your [Cartfile](https://github.com/Carthage/Carthage/blob/master/Documentation/Artifacts.md#cartfile):
 
 ```
-github "couchbase/couchbase-lite-ios" "2.0DB008"
+github "couchbase/couchbase-lite-ios" "2.0DB010"
 ```
 
 > When running `carthage update or build`, Carthage will build both CouchbaseLite and CouchbaseLiteSwift framework.
