@@ -14,6 +14,7 @@
 #import "CBLDocument+Internal.h"
 #import "CBLFragment.h"
 #import "CBLJSON.h"
+#import "CBLLock.h"
 #import "CBLStringBytes.h"
 
 
@@ -22,6 +23,8 @@
     NSMapTable* _changeListeners;
     BOOL _changed;
     NSArray* _keys; // key cache
+    CBLLock* _lock; // Recursive lock
+    CBLLock* _changedLock;
 }
 
 
@@ -33,13 +36,23 @@
 }
 
 
+- /* internal */ (instancetype) initWithFleeceData: (nullable CBLFLDict*)data {
+    self = [super initWithFleeceData: data];
+    if (self) {
+        _lock = [[CBLLock alloc] initWithName: @"Dictionary" recursive: YES];
+        _changedLock = [[CBLLock alloc] initWithName: @"Dictionary-Changed"];self.data = data;
+    }
+    return self;
+}
+
+
 - (instancetype) init {
     return [self initWithFleeceData: nil];
 }
 
 
 - (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary {
-    self = [self initWithFleeceData: nil];
+    self = [self init];
     if (self) {
         [self setDictionary: dictionary];
     }
@@ -51,8 +64,12 @@
 
 
 - (NSUInteger) count {
-    if (!_changed)
+    [_lock lock];
+    
+    if (!_changed) {
+        [_lock unlock];
         return super.count;
+    }
     
     __block NSUInteger count = _dict.count;
     for (NSString* key in super.keys) {
@@ -64,19 +81,30 @@
         if (value == kCBLRemovedValue)
             count -= 1;
     }];
+    
+    [_lock unlock];
+    
     return count;
 }
 
 
 - (NSArray*) keys {
+    [_lock lock];
+    
+    NSArray* keys;
     if (!_changed)
-        return super.keys;
+        keys = super.keys;
     else
-        return [[self allKeys] copy];
+        keys = [[self allKeys] copy];
+    
+    [_lock unlock];
+    
+    return keys;
 }
 
 
 - (nullable id) objectForKey: (NSString*)key {
+    [_lock lock];
     id value = _dict[key];
     if (!value) {
         value = [super objectForKey: key];
@@ -89,12 +117,16 @@
         }
     } else if (value == kCBLRemovedValue)
         value = nil;
+    [_lock unlock];
     return value;
 }
 
 
 - (BOOL) booleanForKey: (NSString*)key {
+    [_lock lock];
     id value = _dict[key];
+    [_lock unlock];
+    
     if (!value)
         return [super booleanForKey: key];
     else {
@@ -107,7 +139,10 @@
 
 
 - (NSInteger) integerForKey: (NSString*)key {
+    [_lock lock];
     id value = _dict[key];
+    [_lock unlock];
+    
     if (!value)
         return [super integerForKey: key];
     else
@@ -116,7 +151,10 @@
 
 
 - (float) floatForKey: (NSString*)key {
+    [_lock lock];
     id value = _dict[key];
+    [_lock unlock];
+    
     if (!value)
         return [super floatForKey: key];
     else
@@ -125,7 +163,10 @@
 
 
 - (double) doubleForKey: (NSString*)key {
+    [_lock lock];
     id value = _dict[key];
+    [_lock unlock];
+    
     if (!value)
         return [super doubleForKey: key];
     else
@@ -164,7 +205,10 @@
 
 
 - (BOOL) containsObjectForKey: (NSString*)key {
+    [_lock lock];
     id value = _dict[key];
+    [_lock unlock];
+    
     if (!value)
         return [super containsObjectForKey: key];
     else
@@ -173,7 +217,9 @@
 
 
 - (NSDictionary<NSString*,id>*) toDictionary {
+    [_lock lock];
     NSMutableDictionary* result = _dict ? [_dict mutableCopy] : [NSMutableDictionary dictionary];
+    [_lock unlock];
     
     // Backing data:
     NSDictionary* backingData = [super toDictionary];
@@ -200,6 +246,8 @@
 
 
 - (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary {
+    [_lock lock];
+    
     // Detach all objects that we are listening to for changes:
     [self detachChildChangeListeners];
     
@@ -218,11 +266,15 @@
     _dict = result;
     
     [self setChanged];
+    
+    [_lock unlock];
 }
 
 
 - (void) setObject: (nullable id)value forKey: (NSString*)key {
     if (!value) value = [NSNull null]; // nil conversion only for apple platform
+    
+    [_lock lock];
     id oldValue = [self objectForKey: key];
     if (!$equal(value, oldValue)) {
         value = [CBLData convertValue: value listener: self];
@@ -230,10 +282,11 @@
         [self setValue: value forKey: key isChange: YES];
         _keys = nil; // Reset key cahche
     }
+    [_lock unlock];
 }
 
 
-- (void) removeObjectForKey:(NSString *)key {
+- (void) removeObjectForKey: (NSString *)key {
     if ([self containsObjectForKey: key]) {
         [self setObject: kCBLRemovedValue forKey: key];
     }
@@ -243,14 +296,18 @@
 #pragma mark - NSFastEnumeration
 
 
-- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState *)state
-                                  objects: (id __unsafe_unretained [])buffer
-                                    count: (NSUInteger)len
+- (NSUInteger) countByEnumeratingWithState: (NSFastEnumerationState *)state
+                                   objects: (id __unsafe_unretained [])buffer
+                                     count: (NSUInteger)len
 {
+    NSUInteger count;
+    [_lock lock];
     if (!_changed)
-        return [super countByEnumeratingWithState: state objects: buffer count: len];
+        count = [super countByEnumeratingWithState: state objects: buffer count: len];
     else
-        return [[self allKeys] countByEnumeratingWithState: state objects: buffer count: len];
+        count = [[self allKeys] countByEnumeratingWithState: state objects: buffer count: len];
+    [_lock unlock];
+    return count;
 }
 
 
@@ -266,13 +323,24 @@
 #pragma mark - INTERNAL
 
 
+- (BOOL) changed {
+    [_changedLock lock];
+    BOOL isChanged = _changed;
+    [_changedLock unlock];
+    return isChanged;
+}
+
+
 - (BOOL) isEmpty {
+    [_lock lock];
     if (!_changed)
         return super.isEmpty;
     
     for (NSString* key in super.keys) {
-        if (!_dict[key])
+        if (!_dict[key]) {
+            [_lock unlock];
             return NO;
+        }
     }
     
     __block BOOL isEmpty = YES;
@@ -282,6 +350,7 @@
             *stop = YES;
         }
     }];
+    [_lock unlock];
     return isEmpty;
 }
 
@@ -321,27 +390,45 @@
 
 
 - (void) setChanged {
+    // Has it own _changedLock instead of using the _lock to avoid deadlock when encoding
+    // the object into fleece and at the same time there are some changes in a child
+    // dictionary or array by another thread. There is one side effect of doing this is that
+    // the changed status could be NO when one thread is trying to get the changed status
+    // but the other thread is modifying the object at the same time.
+    [_changedLock lock];
     if (!_changed) {
         _changed = YES;
         [self notifyChangeListeners];
     }
+    [_changedLock unlock];
 }
 
 
 - (void) addChangeListener: (id<CBLObjectChangeListener>)listener {
+    [_changedLock lock];
     if (!_changeListeners)
         _changeListeners = [NSMapTable weakToStrongObjectsMapTable];
     NSInteger count = [[_changeListeners objectForKey: listener] integerValue] + 1;
     [_changeListeners setObject: @(count) forKey: listener];
+    [_changedLock unlock];
 }
 
 
 - (void) removeChangeListener: (id<CBLObjectChangeListener>)listener {
+    [_changedLock lock];
     NSInteger count = [[_changeListeners objectForKey: listener] integerValue] - 1;
     if (count > 0)
         [_changeListeners setObject: listener forKey: @(count)];
     else
         [_changeListeners removeObjectForKey: listener];
+    [_changedLock unlock];
+}
+
+
+- (void) notifyChangeListeners {
+    for (id<CBLObjectChangeListener> listener in _changeListeners) {
+        [listener objectDidChange: self];
+    }
 }
 
 
@@ -363,13 +450,6 @@
 }
 
 
-- (void) notifyChangeListeners {
-    for (id<CBLObjectChangeListener> listener in _changeListeners) {
-        [listener objectDidChange: self];
-    }
-}
-
-
 #pragma mark - CBLObjectChangeListener
 
 
@@ -383,26 +463,30 @@
 
 - (BOOL) fleeceEncode: (FLEncoder)encoder
              database: (CBLDatabase*)database
-                error: (NSError**)outError
+                error: (NSError* __autoreleasing *)outError
 {
-    NSArray* keys = self.allKeys;
-    FLEncoder_BeginDict(encoder, keys.count);
-    for (NSString* key in keys) {
-        id value = [self objectForKey: key];
-        if (value != kCBLRemovedValue) {
-            CBLStringBytes bKey(key);
-            FLEncoder_WriteKey(encoder, bKey);
-            if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]){
-                if (![value fleeceEncode: encoder database: database error: outError])
-                    return NO;
-            } else
-                FLEncoder_WriteNSObject(encoder, value);
+    __block BOOL success = YES;
+    [_lock withLock: ^{
+        NSArray* keys = self.allKeys;
+        FLEncoder_BeginDict(encoder, keys.count);
+        for (NSString* key in keys) {
+            id value = [self objectForKey: key];
+            if (value != kCBLRemovedValue) {
+                CBLStringBytes bKey(key);
+                FLEncoder_WriteKey(encoder, bKey);
+                if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]){
+                    if (![value fleeceEncode: encoder database: database error: outError]) {
+                        success = NO;
+                        return;
+                    }
+                } else
+                    FLEncoder_WriteNSObject(encoder, value);
+            }
         }
-    }
-    FLEncoder_EndDict(encoder);
-    return YES;
+        FLEncoder_EndDict(encoder);
+    }];
+    return success;
 }
-
 
 
 @end
