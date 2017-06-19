@@ -22,32 +22,26 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 @implementation CBLData
 
 
-+ (id) convertValue: (id)value listener: (id<CBLObjectChangeListener>)listener {
++ (id) convertValue: (id)value {
     if ([value isKindOfClass: [CBLDictionary class]]) {
-        [value addChangeListener: listener];
         return value;
     } else if ([value isKindOfClass: [CBLArray class]]) {
-        [value addChangeListener: listener];
         return value;
     } else if ([value isKindOfClass: [CBLReadOnlyDictionary class]]) {
         CBLReadOnlyDictionary* readonly = (CBLReadOnlyDictionary*)value;
         CBLDictionary* dict = [[CBLDictionary alloc] initWithFleeceData: readonly.data];
-        [dict addChangeListener: listener];
         return dict;
     } else if ([value isKindOfClass: [CBLReadOnlyArray class]]) {
         CBLReadOnlyArray* readonly = (CBLReadOnlyArray*)value;
         CBLArray* array = [[CBLArray alloc] initWithFleeceData: readonly.data];
-        [array addChangeListener: listener];
         return array;
     } else if ([value isKindOfClass: [NSDictionary class]]) {
         CBLDictionary* dict = [[CBLDictionary alloc] init];
         [dict setDictionary: value];
-        [dict addChangeListener: listener];
         return dict;
     } else if ([value isKindOfClass: [NSArray class]]) {
         CBLArray* array = [[CBLArray alloc] init];
         [array setArray: value];
-        [array addChangeListener: listener];
         return array;
     } else if ([value isKindOfClass: [NSDate class]]) {
         return [CBLJSON JSONObjectWithDate: value];

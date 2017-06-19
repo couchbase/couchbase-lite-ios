@@ -157,12 +157,9 @@
 
 
 - (void) setArray:(nullable NSArray *)array {
-    // Detach all objects that we are listening to for changes:
-    [self detachChildChangeListeners];
-    
     NSMutableArray* result = [NSMutableArray arrayWithCapacity: [array count]];
     for (id value in array) {
-        [result addObject: [CBLData convertValue: value listener: self]];
+        [result addObject: [CBLData convertValue: value]];
     }
     
     _array = result;
@@ -175,8 +172,7 @@
     
     id oldValue = [self objectAtIndex: index];
     if (!$equal(value, oldValue)) {
-        value = [CBLData convertValue: value listener: self];
-        [self detachChangeListenerForObject: oldValue];
+        value = [CBLData convertValue: value];
         [self setValue: value atIndex: index isChange: YES];
     }
 }
@@ -187,7 +183,7 @@
         [self copyFleeceData];
     
     if (!value) value = [NSNull null]; // nil conversion only for apple platform
-    [_array addObject: [CBLData convertValue: value listener: self]];
+    [_array addObject: [CBLData convertValue: value]];
     [self setChanged];
 }
 
@@ -197,7 +193,7 @@
         [self copyFleeceData];
     
     if (!value) value = [NSNull null]; // nil conversion only for apple platform
-    [_array insertObject: [CBLData convertValue: value listener: self] atIndex: index];
+    [_array insertObject: [CBLData convertValue: value] atIndex: index];
     [self setChanged];
 }
 
@@ -206,8 +202,6 @@
     if (!_array)
         [self copyFleeceData];
     
-    id value = _array[index];
-    [self detachChangeListenerForObject: value];
     [_array removeObjectAtIndex: index];
     [self setChanged];
 }
@@ -233,50 +227,6 @@
 - (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index {
     id value = index < self.count ? [self objectAtIndex: index] : nil;
     return [[CBLFragment alloc] initWithValue: value parent: self parentKey: @(index)];
-}
-
-
-#pragma mark - CHANGE LISTENER
-
-
-- (void) addChangeListener: (id<CBLObjectChangeListener>)listener {
-    if (!_changeListeners)
-        _changeListeners = [NSMapTable weakToStrongObjectsMapTable];
-    NSInteger count = [[_changeListeners objectForKey: listener] integerValue] + 1;
-    [_changeListeners setObject: @(count) forKey: listener];
-}
-
-
-- (void) removeChangeListener: (id<CBLObjectChangeListener>)listener {
-    NSInteger count = [[_changeListeners objectForKey: listener] integerValue] - 1;
-    if (count > 0)
-        [_changeListeners setObject: @(count) forKey: listener];
-    else
-        [_changeListeners removeObjectForKey: listener];
-}
-
-
-- (void) detachChildChangeListeners {
-    for (id object in _array) {
-        [self detachChangeListenerForObject: object];
-    }
-}
-
-
-- (void) detachChangeListenerForObject: (id)object {
-    if ([object isKindOfClass: [CBLDictionary class]]) {
-        CBLDictionary* dict = (CBLDictionary*)object;
-        [dict removeChangeListener: self];
-    } else if ([object isKindOfClass: [CBLArray class]]) {
-        CBLArray* array = (CBLArray*)object;
-        [array removeChangeListener: self];
-    }
-}
-
-- (void) notifyChangeListeners {
-    for (id <CBLObjectChangeListener> listener in _changeListeners) {
-        [listener objectDidChange: self];
-    }
 }
 
 
@@ -319,7 +269,7 @@
     _array = [NSMutableArray arrayWithCapacity: count];
     for (NSUInteger i = 0; i < count; i++) {
         id value = [super objectAtIndex: i];
-        [_array addObject: [CBLData convertValue: value listener: self]];
+        [_array addObject: [CBLData convertValue: value]];
     }
 }
 
@@ -337,7 +287,6 @@
 - (void) setChanged {
     if (!_changed) {
         _changed = YES;
-        [self notifyChangeListeners];
     }
 }
 

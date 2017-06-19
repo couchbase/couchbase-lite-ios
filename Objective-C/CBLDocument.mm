@@ -268,6 +268,8 @@
 #pragma mark - PRIVATE
 
 
+// Reflects only direct changes to the document. Changes on sub dictionaries or arrays will
+// not be propagated here.
 - (BOOL) changed {
     return _dict.changed;
 }
@@ -467,10 +469,6 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
                             error: (NSError**)outError
 {
     assert(_database && _c4db);
-    
-    // No-op case of unchanged document:
-    if (!self.changed && !deletion && self.exists)
-        return YES;
     
     if (deletion && !self.exists)
         return createError(kCBLStatusNotFound, outError);

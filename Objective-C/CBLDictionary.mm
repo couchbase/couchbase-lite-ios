@@ -81,10 +81,10 @@
     if (!value) {
         value = [super objectForKey: key];
         if ([value isKindOfClass: [CBLReadOnlyDictionary class]]) {
-            value = [CBLData convertValue: value listener: self];
+            value = [CBLData convertValue: value];
             [self setValue: value forKey: key isChange: NO];
         } else if ([value isKindOfClass: [CBLReadOnlyArray class]]) {
-            value = [CBLData convertValue: value listener: self];
+            value = [CBLData convertValue: value];
             [self setValue: value forKey: key isChange: NO];
         }
     } else if (value == kCBLRemovedValue)
@@ -200,12 +200,9 @@
 
 
 - (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary {
-    // Detach all objects that we are listening to for changes:
-    [self detachChildChangeListeners];
-    
     NSMutableDictionary* result = [NSMutableDictionary dictionary];
     [dictionary enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
-        result[key] = [CBLData convertValue: value listener: self];
+        result[key] = [CBLData convertValue: value];
     }];
     
     // Marked the key as removed by setting the value to kRemovedValue:
@@ -225,8 +222,7 @@
     if (!value) value = [NSNull null]; // nil conversion only for apple platform
     id oldValue = [self objectForKey: key];
     if (!$equal(value, oldValue)) {
-        value = [CBLData convertValue: value listener: self];
-        [self detachChangeListenerForObject: oldValue];
+        value = [CBLData convertValue: value];
         [self setValue: value forKey: key isChange: YES];
         _keys = nil; // Reset key cahche
     }
@@ -323,58 +319,7 @@
 - (void) setChanged {
     if (!_changed) {
         _changed = YES;
-        [self notifyChangeListeners];
     }
-}
-
-
-- (void) addChangeListener: (id<CBLObjectChangeListener>)listener {
-    if (!_changeListeners)
-        _changeListeners = [NSMapTable weakToStrongObjectsMapTable];
-    NSInteger count = [[_changeListeners objectForKey: listener] integerValue] + 1;
-    [_changeListeners setObject: @(count) forKey: listener];
-}
-
-
-- (void) removeChangeListener: (id<CBLObjectChangeListener>)listener {
-    NSInteger count = [[_changeListeners objectForKey: listener] integerValue] - 1;
-    if (count > 0)
-        [_changeListeners setObject: listener forKey: @(count)];
-    else
-        [_changeListeners removeObjectForKey: listener];
-}
-
-
-- (void) detachChildChangeListeners {
-    for (NSString* key in _dict) {
-        [self detachChangeListenerForObject: _dict[key]];
-    }
-}
-
-
-- (void) detachChangeListenerForObject: (id)object {
-    if ([object isKindOfClass: [CBLDictionary class]]) {
-        CBLDictionary* dict = (CBLDictionary*)object;
-        [dict removeChangeListener: self];
-    } else if ([object isKindOfClass: [CBLArray class]]) {
-        CBLArray* array = (CBLArray*)object;
-        [array removeChangeListener: self];
-    }
-}
-
-
-- (void) notifyChangeListeners {
-    for (id<CBLObjectChangeListener> listener in _changeListeners) {
-        [listener objectDidChange: self];
-    }
-}
-
-
-#pragma mark - CBLObjectChangeListener
-
-
-- (void) objectDidChange: (id)object {
-    [self setChanged];
 }
 
 
