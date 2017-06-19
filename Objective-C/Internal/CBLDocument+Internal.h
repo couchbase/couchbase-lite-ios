@@ -60,6 +60,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, nullable) CBLC4Document* c4Doc;
 
+@property (nonatomic, readonly) NSObject* lock;
+
 @property (nonatomic, readonly) BOOL exists;
 
 @property (nonatomic, readonly) NSUInteger generation;
