@@ -96,6 +96,7 @@ static NSString* defaultDirectory() {
     CBLPredicateQuery* _allDocsQuery;
     NSMutableDictionary* _docChangeListeners;
     NSMutableDictionary* _docObs;
+    NSObject* _lock;
 }
 
 
@@ -149,6 +150,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
                         error: (NSError**)outError {
     self = [super init];
     if (self) {
+        _lock = [[NSObject alloc] init];
         _name = name;
         _config = config != nil? [config copy] : [CBLDatabaseConfiguration new];
         if (![self open: outError])
@@ -178,12 +180,16 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (NSString*) path {
-    return _c4db != nullptr ? sliceResult2FilesystemPath(c4db_getPath(_c4db)) : nil;
+    @synchronized (_lock) {
+        return _c4db != nullptr ? sliceResult2FilesystemPath(c4db_getPath(_c4db)) : nil;
+    }
 }
 
 
 - (uint64_t) count {
-    return _c4db != nullptr ? c4db_getDocumentCount(_c4db) : 0;
+    @synchronized (_lock) {
+        return _c4db != nullptr ? c4db_getDocumentCount(_c4db) : 0;
+    }
 }
 
 
@@ -204,8 +210,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) contains: (NSString*)docID {
-    id doc = [self documentWithID: docID mustExist: YES error: nil];
-    return doc != nil;
+    return [self documentWithID: docID mustExist: YES error: nil] != nil;
 }
 
 
@@ -221,26 +226,29 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) saveDocument: (CBLDocument*)document error: (NSError**)error {
-    if ([self prepareDocument: document error: error])
-        return [document save: error];
-    else
+    @synchronized (_lock) {
+        if ([self prepareDocument: document error: error])
+            return [document save: error];
         return NO;
+    }
 }
 
 
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error {
-    if ([self prepareDocument: document error: error])
-        return [document deleteDocument: error];
-    else
+    @synchronized (_lock) {
+        if ([self prepareDocument: document error: error])
+            return [document deleteDocument: error];
         return NO;
+    }
 }
 
 
 - (BOOL) purgeDocument: (CBLDocument *)document error: (NSError**)error {
-    if ([self prepareDocument: document error: error])
-        return [document purge: error];
-    else
+    @synchronized (_lock) {
+        if ([self prepareDocument: document error: error])
+            return [document purge: error];
         return NO;
+    }
 }
 
 
@@ -248,22 +256,24 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) inBatch: (NSError**)outError do: (void (^)())block {
-    [self mustBeOpen];
-    
-    C4Transaction transaction(_c4db);
-    if (outError)
-        *outError = nil;
-    
-    if (!transaction.begin())
-        return convertError(transaction.error(), outError);
-    
-    block();
-    
-    if (!transaction.commit())
-        return convertError(transaction.error(), outError);
-    
-    [self postDatabaseChanged];
-    return YES;
+    @synchronized (_lock) {
+        [self mustBeOpen];
+        C4Transaction transaction(_c4db);
+        if (outError)
+            *outError = nil;
+        
+        if (!transaction.begin())
+            return convertError(transaction.error(), outError);
+        
+        block();
+        
+        if (!transaction.commit())
+            return convertError(transaction.error(), outError);
+        
+        [self postDatabaseChanged];
+        
+        return YES;
+    }
 }
 
 
@@ -271,53 +281,58 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) close: (NSError**)outError {
-    if (_c4db == nullptr)
+    @synchronized (_lock) {
+        if (outError)
+            *outError = nil;
+        
+        if (_c4db == nullptr)
+            return YES;
+        
+        CBLLog(Database, @"Closing %@ at path %@", self, self.path);
+        
+        _allDocsQuery = nil;
+        
+        C4Error err;
+        if (!c4db_close(_c4db, &err))
+            return convertError(err, outError);
+        
+        [self cleanup];
+        
         return YES;
-    
-    CBLLog(Database, @"Closing %@ at path %@", self, self.path);
-    
-    _allDocsQuery = nil;
-    
-    C4Error err;
-    if (!c4db_close(_c4db, &err))
-        return convertError(err, outError);
-    
-    c4db_free(_c4db);
-    c4dbobs_free(_obs);
-    _c4db = nullptr;
-    _obs = nullptr;
-    
-    [self removeDocChangeListeners];
-    
-    return YES;
+    }
 }
 
 
 - (BOOL) deleteDatabase: (NSError**)outError {
-    [self mustBeOpen];
-    
-    C4Error err;
-    if (!c4db_delete(_c4db, &err))
-        return convertError(err, outError);
-    
-    c4db_free(_c4db);
-    _c4db = nullptr;
-    c4dbobs_free(_obs);
-    _obs = nullptr;
-    
-    [self removeDocChangeListeners];
-    
-    return YES;
+    @synchronized (_lock) {
+        [self mustBeOpen];
+        
+        if (outError)
+            *outError = nil;
+        
+        C4Error err;
+        if (!c4db_delete(_c4db, &err))
+            return convertError(err, outError);
+        
+        [self cleanup];
+        
+        return YES;
+    }
 }
 
 
 - (BOOL) compact: (NSError**)outError {
-    [self mustBeOpen];
-    
-    C4Error err;
-    if (!c4db_compact(_c4db, &err))
-        return convertError(err, outError);
-    return YES;
+    @synchronized (_lock) {
+        [self mustBeOpen];
+        
+        if (outError)
+            *outError = nil;
+        
+        C4Error err;
+        if (!c4db_compact(_c4db, &err))
+            return convertError(err, outError);
+        return YES;
+    }
 }
 
 
@@ -349,42 +364,46 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 - (void) addChangeListener: (id <CBLDocumentChangeListener>)listener
              forDocumentID: (NSString*)documentID
 {
-    [self mustBeOpen];
-    
-    if (!_docChangeListeners)
-        _docChangeListeners = [NSMutableDictionary dictionary];
-    
-    NSMutableSet* listeners = _docChangeListeners[documentID];
-    if (!listeners) {
-        listeners = [NSMutableSet set];
-        [_docChangeListeners setObject: listeners forKey: documentID];
+    @synchronized (_lock) {
+        [self mustBeOpen];
         
-        CBLStringBytes bDocID(documentID);
-        C4DocumentObserver* o =
+        if (!_docChangeListeners)
+            _docChangeListeners = [NSMutableDictionary dictionary];
+        
+        NSMutableSet* listeners = _docChangeListeners[documentID];
+        if (!listeners) {
+            listeners = [NSMutableSet set];
+            [_docChangeListeners setObject: listeners forKey: documentID];
+            
+            CBLStringBytes bDocID(documentID);
+            C4DocumentObserver* o =
             c4docobs_create(_c4db, bDocID, docObserverCallback, (__bridge void *)self);
-        if (!_docObs)
-            _docObs = [NSMutableDictionary dictionary];
-        [_docObs setObject: [NSValue valueWithPointer: o] forKey: documentID];
+            if (!_docObs)
+                _docObs = [NSMutableDictionary dictionary];
+            [_docObs setObject: [NSValue valueWithPointer: o] forKey: documentID];
+        }
+        [listeners addObject: listener];
     }
-    [listeners addObject: listener];
 }
 
 
 - (void) removeChangeListener: (id <CBLDocumentChangeListener>)listener
                 forDocumentID: (NSString*)documentID
 {
-    [self mustBeOpen];
-    
-    NSMutableSet* listeners = _docChangeListeners[documentID];
-    if (listeners) {
-        [listeners removeObject: listener];
-        if (listeners.count == 0) {
-            NSValue* obsValue = [_docObs objectForKey: documentID];
-            if (obsValue) {
-                C4DocumentObserver* obs = (C4DocumentObserver*)obsValue.pointerValue;
-                c4docobs_free(obs);
+    @synchronized (_lock) {
+        [self mustBeOpen];
+        
+        NSMutableSet* listeners = _docChangeListeners[documentID];
+        if (listeners) {
+            [listeners removeObject: listener];
+            if (listeners.count == 0) {
+                NSValue* obsValue = [_docObs objectForKey: documentID];
+                if (obsValue) {
+                    C4DocumentObserver* obs = (C4DocumentObserver*)obsValue.pointerValue;
+                    c4docobs_free(obs);
+                }
+                [_docObs removeObjectForKey: documentID];
             }
-            [_docObs removeObjectForKey: documentID];
         }
     }
 }
@@ -394,12 +413,15 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (NSEnumerator<CBLDocument*>*) allDocuments {
-    [self mustBeOpen];
-    
-    if (!_allDocsQuery) {
-        _allDocsQuery = [[CBLPredicateQuery alloc] initWithDatabase: self];
-        _allDocsQuery.orderBy = @[@"_id"];
+    @synchronized (_lock) {
+        [self mustBeOpen];
+        
+        if (!_allDocsQuery) {
+            _allDocsQuery = [[CBLPredicateQuery alloc] initWithDatabase: self];
+            _allDocsQuery.orderBy = @[@"_id"];
+        }
     }
+    
     auto e = [_allDocsQuery allDocuments: nullptr];
     Assert(e, @"allDocuments failed?!");
     return e;
@@ -407,7 +429,9 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (CBLPredicateQuery*) createQueryWhere: (nullable id)where {
-    [self mustBeOpen];
+    @synchronized (_lock) {
+        [self mustBeOpen];
+    }
     
     auto query = [[CBLPredicateQuery alloc] initWithDatabase: self];
     query.where = where;
@@ -425,19 +449,21 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
                options: (const CBLIndexOptions*)options
                  error: (NSError**)outError
 {
-    [self mustBeOpen];
-    
-    static_assert(sizeof(CBLIndexOptions) == sizeof(C4IndexOptions), "Index options incompatible");
-    NSData* json = [CBLPredicateQuery encodeExpressionsToJSON: expressions error: outError];
-    if (!json)
-        return NO;
-    C4Error c4err;
-    return c4db_createIndex(_c4db,
-                            {json.bytes, json.length},
-                            (C4IndexType)type,
-                            (const C4IndexOptions*)options,
-                            &c4err)
-    || convertError(c4err, outError);
+    @synchronized (_lock) {
+        [self mustBeOpen];
+        
+        static_assert(sizeof(CBLIndexOptions) == sizeof(C4IndexOptions), "Index options incompatible");
+        NSData* json = [CBLPredicateQuery encodeExpressionsToJSON: expressions error: outError];
+        if (!json)
+            return NO;
+        C4Error c4err;
+        return c4db_createIndex(_c4db,
+                                {json.bytes, json.length},
+                                (C4IndexType)type,
+                                (const C4IndexOptions*)options,
+                                &c4err)
+        || convertError(c4err, outError);
+    }
 }
 
 
@@ -445,60 +471,73 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
                   type: (CBLIndexType)type
                  error: (NSError**)outError
 {
-    [self mustBeOpen];
-    
-    NSData* json = [CBLPredicateQuery encodeExpressionsToJSON: expressions error: outError];
-    if (!json)
-        return NO;
-    C4Error c4err;
-    return c4db_deleteIndex(_c4db, {json.bytes, json.length}, (C4IndexType)type, &c4err)
-    || convertError(c4err, outError);
+    @synchronized (_lock) {
+        [self mustBeOpen];
+        
+        NSData* json = [CBLPredicateQuery encodeExpressionsToJSON: expressions error: outError];
+        if (!json)
+            return NO;
+        C4Error c4err;
+        return c4db_deleteIndex(_c4db, {json.bytes, json.length}, (C4IndexType)type, &c4err)
+        || convertError(c4err, outError);
+    }
 }
 
 
 #pragma mark - INTERNAL
 
+- (C4Database*) c4db {
+    @synchronized (_lock) {
+        [self mustBeOpen];
+        return _c4db;
+    }
+}
+
 - (void) postDatabaseChanged {
-    if (!_obs || !_c4db || c4db_isInTransaction(_c4db))
-        return;
-    
-    const uint32_t kMaxChanges = 100u;
-    C4DatabaseChange changes[kMaxChanges];
-    bool external = false;
-    uint32_t nChanges = 0u;
-    NSMutableArray* docIDs = [NSMutableArray new];
-    do {
-        // Read changes in batches of kMaxChanges:
-        bool newExternal;
-        nChanges = c4dbobs_getChanges(_obs, changes, kMaxChanges, &newExternal);
-        if (nChanges == 0 || external != newExternal || docIDs.count > 1000) {
-            if(docIDs.count > 0) {
-                CBLDatabaseChange* change = [[CBLDatabaseChange alloc] initWithDocumentIDs: docIDs
-                                                                                isExternal: external];
-                // Only notify if there are actually changes to send
-                NSDictionary *userInfo = @{ kCBLDatabaseChangesUserInfoKey: change };
-                [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDatabaseChangeNotification
-                                                                    object: self
-                                                                  userInfo: userInfo];
-                docIDs = [NSMutableArray new];
-            }
-        }
+    @synchronized (_lock) {
+        if (!_obs || !_c4db || c4db_isInTransaction(_c4db))
+            return;
         
-        external = newExternal;
-        for(uint32_t i = 0; i < nChanges; i++) {
-            NSString *docID =slice2string(changes[i].docID);
-            [docIDs addObject: docID];
-        }
-    } while(nChanges > 0);
+        const uint32_t kMaxChanges = 100u;
+        C4DatabaseChange changes[kMaxChanges];
+        bool external = false;
+        uint32_t nChanges = 0u;
+        NSMutableArray* docIDs = [NSMutableArray new];
+        do {
+            // Read changes in batches of kMaxChanges:
+            bool newExternal;
+            nChanges = c4dbobs_getChanges(_obs, changes, kMaxChanges, &newExternal);
+            if (nChanges == 0 || external != newExternal || docIDs.count > 1000) {
+                if(docIDs.count > 0) {
+                    CBLDatabaseChange* change = [[CBLDatabaseChange alloc] initWithDocumentIDs: docIDs
+                                                                                    isExternal: external];
+                    NSDictionary *userInfo = @{ kCBLDatabaseChangesUserInfoKey: change };
+                    [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDatabaseChangeNotification
+                                                                        object: self
+                                                                      userInfo: userInfo];
+                    docIDs = [NSMutableArray new];
+                }
+            }
+            
+            external = newExternal;
+            for(uint32_t i = 0; i < nChanges; i++) {
+                NSString *docID =slice2string(changes[i].docID);
+                [docIDs addObject: docID];
+            }
+        } while(nChanges > 0);
+    }
 }
 
 
 - (void) postDocumentChanged: (NSString*)documentID {
-    if (!_docObs[documentID] || !_c4db ||  c4db_isInTransaction(_c4db))
-        return;
+    NSSet* listeners;
+    @synchronized (_lock) {
+        if (!_docObs[documentID] || !_c4db)
+            return;
+        listeners = [[_docChangeListeners objectForKey: documentID] copy];
+    }
     
     CBLDocumentChange* change = [[CBLDocumentChange alloc] initWithDocumentID: documentID];
-    NSSet* listeners = [_docChangeListeners objectForKey: documentID];
     for (id<CBLDocumentChangeListener> listener in listeners) {
         [listener documentDidChange: change];
     }
@@ -506,13 +545,15 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (C4BlobStore*) getBlobStore: (NSError**)outError {
-    if (![self mustBeOpen: outError])
-        return nil;
-    C4Error err;
-    C4BlobStore *blobStore = c4db_getBlobStore(_c4db, &err);
-    if (!blobStore)
-        convertError(err, outError);
-    return blobStore;
+    @synchronized (_lock) {
+        if (![self mustBeOpen: outError])
+            return nil;
+        C4Error err;
+        C4BlobStore *blobStore = c4db_getBlobStore(_c4db, &err);
+        if (!blobStore)
+            convertError(err, outError);
+        return blobStore;
+    }
 }
 
 
@@ -627,8 +668,9 @@ static NSString* databasePath(NSString* name, NSString* dir) {
                                mustExist: (bool)mustExist
                                    error: (NSError**)outError
 {
-    [self mustBeOpen];
-    
+    @synchronized (_lock) {
+        [self mustBeOpen];
+    }
     return [[CBLDocument alloc] initWithDatabase: self
                                       documentID: documentID
                                        mustExist: mustExist
@@ -638,7 +680,6 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 
 - (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error {
     [self mustBeOpen];
-    
     if (!document.database) {
         document.database = self;
     } else if (document.database != self) {
@@ -662,6 +703,18 @@ static void freeC4DocObservers(NSDictionary* docObs) {
     
     _docObs = nil;
     _docChangeListeners = nil;
+}
+
+
+- (void) cleanup {
+    c4db_free(_c4db);
+    c4dbobs_free(_obs);
+    
+    _c4db = nullptr;
+    _obs = nullptr;
+    _allDocsQuery = nil;
+    
+    [self removeDocChangeListeners];
 }
 
 @end
