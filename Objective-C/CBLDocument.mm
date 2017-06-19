@@ -360,12 +360,9 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
 }
 
 
-// Lower-level save method.
-// On conflict, returns YES but sets *outDoc to NULL and *outConflict to YES.
-// On no changes, no obs, returns YES but sets *outDoc to NULL and *outConflict to NO.
+// Lower-level save method. On conflict, returns YES but sets *outDoc to NULL.
 - (BOOL) saveInto: (C4Document **)outDoc
          asDelete: (BOOL)deletion
-         conflict: (BOOL*)outConflict
             error: (NSError **)outError
 {
     C4RevisionFlags revFlags = 0;
@@ -373,7 +370,6 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
         revFlags = kRevDeleted;
     if (containsBlob(self))
         revFlags |= kRevHasAttachments;
-    
     FLSliceResult body = {};
     if (!deletion && !self.isEmpty) {
         // Encode properties to Fleece data:
@@ -382,14 +378,7 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
         FLEncoder_Free(enc);
         if (!body.buf) {
             *outDoc = nullptr;
-            *outConflict = NO;
             return NO;
-        }
-        
-        if (!self.changed && c4SliceEqual(self.c4Doc.selectedRev.body, {body.buf, body.size})) {
-            *outDoc = nullptr;
-            *outConflict = NO;
-            return YES;
         }
     }
     
@@ -404,8 +393,7 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     }
     c4slice_free(body);
     
-    *outConflict = (err.domain == LiteCoreDomain && err.code == kC4ErrorConflict);
-    if (!*outDoc && !*outConflict) {
+    if (!*outDoc && !(err.domain == LiteCoreDomain && err.code == kC4ErrorConflict)) {
         // conflict is not an error, at this level
         return convertError(err, outError);
     }
@@ -492,14 +480,10 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
 
     // Attempt to save. (On conflict, this will succeed but newDoc will be null.)
     C4Document* newDoc;
-    BOOL conflict;
-    if (![self saveInto: &newDoc asDelete: deletion conflict:&conflict error: outError])
+    if (![self saveInto: &newDoc asDelete: deletion error: outError])
         return NO;
     
     if (!newDoc) {
-        // If no conflict, it means no changes, no obs.
-        if (!conflict)
-            return YES;
         // There's been a conflict; first merge with the new saved revision:
         if (![self mergeWithConflictResolver: resolver deletion: deletion error: outError])
             return NO;
@@ -507,10 +491,9 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
         if (!self.changed)
             return YES;
         // Now save the merged properties:
-        if (![self saveInto: &newDoc asDelete: deletion conflict: &conflict error: outError])
+        if (![self saveInto: &newDoc asDelete: deletion error: outError])
             return NO;
         Assert(newDoc);     // In a transaction we can't have a second conflict after merging!
-        Assert(!conflict);
     }
     
     // Save succeeded; now commit the transaction:
