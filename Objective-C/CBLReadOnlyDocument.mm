@@ -9,9 +9,11 @@
 #import "CBLReadOnlyDocument.h"
 #import "CBLDocument+Internal.h"
 
-@implementation CBLReadOnlyDocument
+@implementation CBLReadOnlyDocument {
+    NSObject* _lock;
+}
 
-@synthesize documentID=_documentID, c4Doc=_c4Doc;
+@synthesize documentID=_documentID, c4Doc=_c4Doc, lock=_lock;
 
 
 - (instancetype) initWithDocumentID: (NSString*)documentID
@@ -21,6 +23,7 @@
     NSParameterAssert(documentID != nil);
     self = [super initWithFleeceData: data];
     if (self) {
+        _lock = [[NSObject alloc] init];
         _documentID = documentID;
         _c4Doc = c4Doc;
     }
@@ -37,12 +40,16 @@
 
 
 - (BOOL) isDeleted {
-    return _c4Doc != nil ? (_c4Doc.flags & kDeleted) != 0 : NO;
+    @synchronized (_lock) {
+        return _c4Doc != nil ? (_c4Doc.flags & kDeleted) != 0 : NO;
+    }
 }
 
 
 - (uint64_t) sequence {
-    return _c4Doc != nil ? _c4Doc.sequence : 0;
+    @synchronized (_lock) {
+        return _c4Doc != nil ? _c4Doc.sequence : 0;
+    }
 }
 
 
@@ -50,12 +57,16 @@
 
 
 - (NSUInteger) generation {
-    return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.revID) : 0;
+    @synchronized (_lock) {
+        return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.revID) : 0;
+    }
 }
 
 
 - (BOOL) exists {
-    return _c4Doc != nil ? (_c4Doc.flags & kExists) != 0 : NO;
+    @synchronized (_lock) {
+        return _c4Doc != nil ? (_c4Doc.flags & kExists) != 0 : NO;
+    }
 }
 
 
