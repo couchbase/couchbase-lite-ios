@@ -154,7 +154,7 @@
              database: (CBLDatabase*)database
                 error: (NSError**)outError
 {
-    return FLEncoder_WriteValue(encoder, (FLValue)_dict);
+    return FLEncoder_WriteValueWithSharedKeys(encoder, (FLValue)_dict, _sharedKeys);
 }
 
 

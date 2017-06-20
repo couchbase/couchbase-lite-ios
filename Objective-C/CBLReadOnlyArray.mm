@@ -150,7 +150,7 @@
                 error: (NSError**)outError
 {
     
-    return FLEncoder_WriteValue(encoder, (FLValue)_array);
+    return FLEncoder_WriteValueWithSharedKeys(encoder, (FLValue)_array, _sharedKeys);
 }
 
 
