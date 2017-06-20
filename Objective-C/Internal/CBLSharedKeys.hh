@@ -23,6 +23,10 @@ namespace cbl {
         SharedKeys(const SharedKeys &sk)            :_sharedKeys(sk._sharedKeys) { }
         SharedKeys& operator= (const SharedKeys &sk) noexcept;
 
+        operator FLSharedKeys __nullable () const {
+            return _sharedKeys;
+        }
+        
         void useDocumentRoot(FLDict);
 
         id __nullable valueToObject(FLValue __nullable value) {
