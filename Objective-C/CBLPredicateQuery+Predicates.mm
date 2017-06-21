@@ -187,13 +187,15 @@ static id EncodePredicate(NSPredicate* pred, NSError** outError) {
 
         id rhs = EncodeExpression(rightExpression, outError);
         if (!rhs) return nil;
+        updateOpForMissingOperand(rhs, opType, &op);
 
         if (opType == NSInPredicateOperatorType) {
             // IN needs translation if RHS is not a literal or property
             NSExpressionType rtype = rightExpression.expressionType;
             NSExpression* lhs = EncodeExpression(leftExpression, outError);
+            if (!lhs) return nil;
+            updateOpForMissingOperand(lhs, opType, &op);
             if (rtype != NSVariableExpressionType && rtype != NSAggregateExpressionType) {
-                if (!lhs) return nil;
                 return @[@"ANY", @"X", rhs, @[@"=", @[@"?X"], lhs]];
             } else if (rtype == NSAggregateExpressionType)
                 return [@[op, lhs] arrayByAddingObjectsFromArray: rhs];
@@ -204,6 +206,7 @@ static id EncodePredicate(NSPredicate* pred, NSError** outError) {
         if (mod == nil) {
             NSExpression* lhs = EncodeExpression(leftExpression, outError);
             if (!lhs) return nil;
+            updateOpForMissingOperand(lhs, opType, &op);
             return @[op, lhs, rhs];
         } else {
             // ANY or EVERY modifiers: (I'm assuming they will always have a key-path as the LHS.)
@@ -244,7 +247,7 @@ static id EncodePredicate(NSPredicate* pred, NSError** outError) {
 static id EncodeExpression(NSExpression* expr, NSError **outError, bool aggregate =false) {
     switch (expr.expressionType) {
         case NSConstantValueExpressionType:
-            return expr.constantValue ? expr.constantValue : [NSNull null];
+            return expr.constantValue ? expr.constantValue : @[@"MISSING"];
         case NSVariableExpressionType:
             return @[ [@"$" stringByAppendingString: expr.variable] ];
         case NSKeyPathExpressionType:
@@ -370,6 +373,17 @@ static NSString* predicateOperatorName(NSPredicateOperatorType op) {
         n = sizeof(kPredicateOpNames99) / sizeof(NSString*);
     }
     return (iop < n) ? table[iop] : nil;
+}
+
+
+// (In)equality comparisons against a value of 'missing' need to be expressed as IS / IS NOT.
+static void updateOpForMissingOperand(id operand, NSPredicateOperatorType opType, NSString** op) {
+    if ([operand isEqual: @[@"MISSING"]]) {
+        if (opType == NSEqualToPredicateOperatorType)
+            *op = @"IS";
+        else if (opType == NSNotEqualToPredicateOperatorType)
+            *op = @"IS NOT";
+    }
 }
 
 
