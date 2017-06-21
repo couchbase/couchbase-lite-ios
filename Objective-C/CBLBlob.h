@@ -48,23 +48,23 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Gets the contents of a CBLBlob as a block of memory.
     Not recommended for very large blobs, as it may be slow and use up lots of RAM. */
-@property (readonly, nonatomic, nullable) NSData* content;
+@property (atomic, readonly, nullable) NSData* content;
 
 /** A stream of the content of a CBLBlob.
     The caller is responsible for opening the stream, and closing it when finished. */
-@property (readonly, nonatomic, nullable) NSInputStream *contentStream;
+@property (atomic, readonly, nullable) NSInputStream *contentStream;
 
 /** The type of content this CBLBlob represents; by convention this is a MIME type. */
-@property (readonly, nonatomic, nullable) NSString* contentType;
+@property (atomic, readonly, nullable) NSString* contentType;
 
 /** The binary length of this CBLBlob. */
-@property (readonly, nonatomic) uint64_t length;
+@property (atomic, readonly) uint64_t length;
 
 /** The cryptographic digest of this CBLBlob's contents, which uniquely identifies it. */
-@property (readonly, nonatomic, nullable) NSString* digest;
+@property (atomic, readonly, nullable) NSString* digest;
 
 /** The metadata associated with this CBLBlob */
-@property (readonly, nonatomic) NSDictionary<NSString*,id>* properties;
+@property (atomic, readonly) NSDictionary<NSString*,id>* properties;
 
 @end
 

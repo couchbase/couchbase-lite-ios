@@ -131,6 +131,8 @@
 		9322DCE21F14603400C4ACF7 /* CBLQueryLimit.m in Sources */ = {isa = PBXBuildFile; fileRef = 9322DCDE1F14603400C4ACF7 /* CBLQueryLimit.m */; };
 		9322DCF51F14654E00C4ACF7 /* Limit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9322DCF41F14654E00C4ACF7 /* Limit.swift */; };
 		9322DCF71F14671F00C4ACF7 /* LimitRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9322DCF61F14671F00C4ACF7 /* LimitRouter.swift */; };
+		9322DD9F1F1D28C100C4ACF7 /* ConcurrentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9322DD9E1F1D28C100C4ACF7 /* ConcurrentTest.m */; };
+		9322DDB11F1D28CE00C4ACF7 /* ConcurrentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9322DD9E1F1D28C100C4ACF7 /* ConcurrentTest.m */; };
 		933207AE1E773CFB000D9993 /* CBLJSONCoding.h in Headers */ = {isa = PBXBuildFile; fileRef = 933207AD1E773CFB000D9993 /* CBLJSONCoding.h */; };
 		933207AF1E773CFB000D9993 /* CBLJSONCoding.h in Headers */ = {isa = PBXBuildFile; fileRef = 933207AD1E773CFB000D9993 /* CBLJSONCoding.h */; };
 		933208121E77415E000D9993 /* CBLQueryDataSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 933208081E77415E000D9993 /* CBLQueryDataSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -433,6 +435,8 @@
 		93E17F0F1ED3BA7500671CA1 /* CBLDatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 93E17F0A1ED3AC8100671CA1 /* CBLDatabaseChange.m */; };
 		93E17F101ED3BA7800671CA1 /* CBLDocumentChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EF71ED3ABE200671CA1 /* CBLDocumentChange.m */; };
 		93E17F151ED4ED4000671CA1 /* NotificationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17F141ED4ED4000671CA1 /* NotificationTest.swift */; };
+		93F1026C1F1E6BCE00E32CAA /* CBLThreadSafe.h in Headers */ = {isa = PBXBuildFile; fileRef = 93F1026B1F1E6BCE00E32CAA /* CBLThreadSafe.h */; };
+		93F1026D1F1E6BCE00E32CAA /* CBLThreadSafe.h in Headers */ = {isa = PBXBuildFile; fileRef = 93F1026B1F1E6BCE00E32CAA /* CBLThreadSafe.h */; };
 		93F5D19F1EFAE90200E2DF53 /* CBLBasicAuthenticator.h in Headers */ = {isa = PBXBuildFile; fileRef = 93F5D19D1EFAE90200E2DF53 /* CBLBasicAuthenticator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		93F5D1A01EFAE90200E2DF53 /* CBLBasicAuthenticator.m in Sources */ = {isa = PBXBuildFile; fileRef = 93F5D19E1EFAE90200E2DF53 /* CBLBasicAuthenticator.m */; };
 		93F5D1A61EFAEA2400E2DF53 /* CBLSessionAuthenticator.h in Headers */ = {isa = PBXBuildFile; fileRef = 93F5D1A41EFAEA2400E2DF53 /* CBLSessionAuthenticator.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -721,6 +725,7 @@
 		9322DCDE1F14603400C4ACF7 /* CBLQueryLimit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryLimit.m; sourceTree = "<group>"; };
 		9322DCF41F14654E00C4ACF7 /* Limit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Limit.swift; sourceTree = "<group>"; };
 		9322DCF61F14671F00C4ACF7 /* LimitRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LimitRouter.swift; sourceTree = "<group>"; };
+		9322DD9E1F1D28C100C4ACF7 /* ConcurrentTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConcurrentTest.m; sourceTree = "<group>"; };
 		933207AD1E773CFB000D9993 /* CBLJSONCoding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSONCoding.h; sourceTree = "<group>"; };
 		933208081E77415E000D9993 /* CBLQueryDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryDataSource.h; sourceTree = "<group>"; };
 		933208091E77415E000D9993 /* CBLQueryDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryDataSource.m; sourceTree = "<group>"; };
@@ -908,6 +913,7 @@
 		93E17F091ED3AC8100671CA1 /* CBLDatabaseChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseChange.h; sourceTree = "<group>"; };
 		93E17F0A1ED3AC8100671CA1 /* CBLDatabaseChange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDatabaseChange.m; sourceTree = "<group>"; };
 		93E17F141ED4ED4000671CA1 /* NotificationTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationTest.swift; sourceTree = "<group>"; };
+		93F1026B1F1E6BCE00E32CAA /* CBLThreadSafe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLThreadSafe.h; sourceTree = "<group>"; };
 		93F5D19D1EFAE90200E2DF53 /* CBLBasicAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLBasicAuthenticator.h; sourceTree = "<group>"; };
 		93F5D19E1EFAE90200E2DF53 /* CBLBasicAuthenticator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLBasicAuthenticator.m; sourceTree = "<group>"; };
 		93F5D1A41EFAEA2400E2DF53 /* CBLSessionAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLSessionAuthenticator.h; sourceTree = "<group>"; };
@@ -1204,6 +1210,7 @@
 				9381959B1EB9A6FC0032CC51 /* CBLStatus.mm */,
 				934F4CA51E241FB500F90659 /* CBLSymmetricKey.h */,
 				934F4CA61E241FB500F90659 /* CBLSymmetricKey.m */,
+				93F1026B1F1E6BCE00E32CAA /* CBLThreadSafe.h */,
 			);
 			name = Support;
 			sourceTree = "<group>";
@@ -1408,6 +1415,7 @@
 				9378C5951E25B473001BB196 /* CBLTestCase.h */,
 				9378C5961E25B473001BB196 /* CBLTestCase.m */,
 				93DD9BA71EB419BB00E502A2 /* ArrayTest.m */,
+				9322DD9E1F1D28C100C4ACF7 /* ConcurrentTest.m */,
 				27FDBF411F02FE5C0087CC1C /* ConflictTest.h */,
 				93384F731EB14ABA00976B41 /* ConflictTest.m */,
 				9378C5901E25B3F0001BB196 /* DatabaseTest.m */,
@@ -1554,6 +1562,7 @@
 				93B41D7F1F05B60000A7F114 /* CBLQueryJoin.h in Headers */,
 				93B5037A1E64B0E3002C4680 /* CBLPrefix.h in Headers */,
 				9381960B1EC112010032CC51 /* CBLDictionary.h in Headers */,
+				93F1026D1F1E6BCE00E32CAA /* CBLThreadSafe.h in Headers */,
 				9381960D1EC112130032CC51 /* CBLReadOnlyArray.h in Headers */,
 				27DF4BD91ECA442400EE6B8D /* CBLLiveQuery.h in Headers */,
 				93B503691E64B08E002C4680 /* CBLBase64.h in Headers */,
@@ -1647,6 +1656,7 @@
 				934F4CA71E241FB500F90659 /* CBLBase64.h in Headers */,
 				93B41D641F0580E700A7F114 /* CBLQueryJoin.h in Headers */,
 				937F02551EFC62B200060D64 /* CBLLiveQueryChange.h in Headers */,
+				93F1026C1F1E6BCE00E32CAA /* CBLThreadSafe.h in Headers */,
 				93CD02661E9FFEC500AFB3FA /* CBLArray.h in Headers */,
 				934F4C101E1EF19000F90659 /* CollectionUtils.h in Headers */,
 				931C14681EAAD6730094F9B2 /* CBLArrayFragment.h in Headers */,
@@ -2288,6 +2298,7 @@
 				93CD018C1E95546200AFB3FA /* NotificationTest.m in Sources */,
 				938CFA2F1E442B5700291631 /* DatabaseTest.m in Sources */,
 				938CFA2D1E442B4200291631 /* DocumentTest.m in Sources */,
+				9322DDB11F1D28CE00C4ACF7 /* ConcurrentTest.m in Sources */,
 				93CD018D1E95546200AFB3FA /* PredicateQueryTest.m in Sources */,
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
 				93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */,
@@ -2377,6 +2388,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27EF6A941E298E26004748DF /* PredicateQueryTest.m in Sources */,
+				9322DD9F1F1D28C100C4ACF7 /* ConcurrentTest.m in Sources */,
 				72A87A0F1E32E858008466FF /* NotificationTest.m in Sources */,
 				93384F8C1EB151C100976B41 /* MiscTest.m in Sources */,
 				9378C5971E25B473001BB196 /* CBLTestCase.m in Sources */,

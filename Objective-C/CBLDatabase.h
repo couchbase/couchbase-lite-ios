@@ -37,13 +37,13 @@ typedef struct {
 /** Path to the directory to store the database in. If the directory doesn't already exist it will
     be created when the database is opened. The default directory will be in Application Support. 
     You won't usually need to change this. */
-@property (nonatomic, copy, nullable) NSString* directory;
+@property (atomic, copy, nullable) NSString* directory;
 
 
 /** The conflict resolver for this database. The default value is nil, which means the default
     algorithm will be used, where the revision with more history wins.
     An individual document can override this for itself by setting its own property. */
-@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
+@property (atomic, nullable) id<CBLConflictResolver> conflictResolver;
 
 
 /** A key to encrypt the database with. If the database does not exist and is being created, it
@@ -55,7 +55,7 @@ typedef struct {
     * Alternatively, the value may be an NSString containing a passphrase. This will be run through
     64,000 rounds of the PBKDF algorithm to securely convert it into an AES-256 key.
     * A default nil value, of course, means the database is unencrypted. */
-@property (nonatomic, strong, nullable) id encryptionKey;
+@property (atomic, strong, nullable) id encryptionKey;
 
 
 /** File protection/encryption options (iOS only.)
@@ -67,7 +67,7 @@ typedef struct {
     or respond to push notifications. The default value is 
     NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication which is the same default 
     protection level as the iOS application data. */
-@property (nonatomic) NSDataWritingOptions fileProtection;
+@property (atomic) NSDataWritingOptions fileProtection;
 
 - (instancetype) init;
 
@@ -78,17 +78,17 @@ typedef struct {
 @interface CBLDatabase : NSObject
 
 /** The database's name. */
-@property (readonly, nonatomic) NSString* name;
+@property (atomic, readonly) NSString* name;
 
 /** The database's path. If the database is closed or deleted, nil value will be returned. */
-@property (readonly, nonatomic, nullable) NSString* path;
+@property (atomic, readonly, nullable) NSString* path;
 
 /** The number of documents in the database. */
-@property (readonly, nonatomic) uint64_t count;
+@property (atomic, readonly) uint64_t count;
 
 /** The database's configuration. If the configuration is not specify when initializing 
     the database, the default configuration will be returned. */
-@property (readonly, copy, nonatomic) CBLDatabaseConfiguration *config;
+@property (atomic, readonly, copy) CBLDatabaseConfiguration *config;
 
 
 #pragma mark - INITIALIZER
@@ -132,7 +132,7 @@ typedef struct {
 - (BOOL) contains: (NSString*)documentID;
 
 
-#pragma mark - SUBSCRIPTION
+#pragma mark - SUBSCRIPT
 
 
 /** Gets a document fragment with the given document ID. */
