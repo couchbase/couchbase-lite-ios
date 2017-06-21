@@ -11,17 +11,14 @@
 #import "Benchmark.hh"
 #import <string>
 
-// Define this to limit the number of docs imported into the database.
-//#define kMaxDocsToImport 1000
-
 
 @implementation PerfTest
 {
-    CBLDatabaseOptions* _dbOptions;
+    CBLDatabaseConfiguration* _dbConfig;
     NSString* _dbName;
+    CBLDatabase* _db;
 }
 
-@synthesize db=_db;
 
 static NSString* sResourceDir;
 
@@ -31,44 +28,62 @@ static NSString* sResourceDir;
 }
 
 
-- (instancetype) initWithDatabaseOptions: (CBLDatabaseOptions*)dbOptions
-{
++ (CBLDatabaseConfiguration*) defaultConfig {
+    CBLDatabaseConfiguration* config = [CBLDatabaseConfiguration new];
+    config.directory = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
+    return config;
+}
+
+
++ (void) runWithConfig: (CBLDatabaseConfiguration*)config {
+    [[[self alloc] initWithDatabaseConfig: config] run];
+}
+
+
+- (instancetype) initWithDatabaseConfig: (CBLDatabaseConfiguration*)dbConfig {
     self = [super init];
     if (self) {
-        _dbOptions = dbOptions;
+        _dbConfig = dbConfig ?: [[self class] defaultConfig];
         _dbName = @"perfdb";
 
-        if (_dbOptions)
-            Assert([CBLDatabase deleteDatabase: _dbName inDirectory: _dbOptions.directory
+        if (_dbConfig)
+            Assert([CBLDatabase deleteDatabase: _dbName
+                                   inDirectory: _dbConfig.directory
                                          error: nil]);
-}
+    }
     return self;
 }
 
-- (instancetype) initWithDatabase: (CBLDatabase*)db
-{
-    CBLDatabaseOptions* options = nil; // db.options;   //TODO: Use this when property is added
-    self = [self initWithDatabaseOptions: options];
+
+- (instancetype) init {
+    return [self initWithDatabaseConfig: nil];
+}
+
+
+// unused, currently
+- (instancetype) initWithDatabase: (CBLDatabase*)db {
+    self = [self initWithDatabaseConfig: db.config];
     if (self) {
         _db = db;
-        //_dbName = db.name;    //TODO: Use this when property is added
+        _dbName = db.name;
     }
     return self;
 }
 
 
 - (void) dealloc {
-    [_db close: NULL];
+    NSError *error;
+    if (![_db close: &error])
+        NSLog(@"WARNING: Error closing database: %@", error);
 }
 
 
 - (NSData*) dataFromResource: (NSString*)resourceName ofType: (NSString*)type {
-    NSString* path = [[sResourceDir stringByAppendingPathComponent: resourceName]
-                                                      stringByAppendingPathExtension: type];
-    NSData* contents = [NSData dataWithContentsOfFile: path
-                                              options: 0
-                                                error: NULL];
-    Assert(contents);
+    NSString *dir = sResourceDir ?: [[NSBundle bundleForClass: [self class]] resourcePath];
+    NSString* path = [[dir stringByAppendingPathComponent: resourceName]
+                                                          stringByAppendingPathExtension: type];
+    NSData* contents = [NSData dataWithContentsOfFile: path options: 0 error: NULL];
+    Assert(contents, @"Couldn't load resource file %@", path);
     return contents;
 }
 
@@ -77,7 +92,7 @@ static NSString* sResourceDir;
     Assert(_dbName);
     Assert(!_db);
     NSError* error;
-    _db = [[CBLDatabase alloc] initWithName: _dbName options: _dbOptions error: &error];
+    _db = [[CBLDatabase alloc] initWithName: _dbName config: _dbConfig error: &error];
     Assert(_db, @"Couldn't open db: %@", error);
 }
 
@@ -95,29 +110,40 @@ static NSString* sResourceDir;
         Assert([_db close: &error]);
         _db = nil;
     }
-    Assert([CBLDatabase deleteDatabase: _dbName inDirectory: _dbOptions.directory error: nil]);
+    Assert([CBLDatabase deleteDatabase: _dbName inDirectory: _dbConfig.directory error: nil]);
     [self openDB];
 }
 
 
-- (void) setUp { }
+- (CBLDatabase*) db {
+    if (!_db)
+        [self openDB];
+    return _db;
+}
 
-- (void) test {AssertAbstractMethod();}
+
+- (void) setUp {
+    // Subclasses can override this.
+}
+
+
+- (void) test {
+    AssertAbstractMethod(); // Subclasses MUST override this
+}
+
 
 - (void) tearDown {
+    // Subclasses can override this but must call 'super' last.
     [_db close: NULL];
     _db = nil;
 }
+
 
 - (void) run {
     NSLog(@"====== %@ ======", [self class]);
     [self setUp];
     [self test];
     [self tearDown];
-}
-
-+ (void) runWithOptions: (CBLDatabaseOptions*)options {
-    [[[self alloc] initWithDatabaseOptions: options] run];
 }
 
 

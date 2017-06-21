@@ -18,12 +18,12 @@ int main(int argc, const char * argv[]) {
         [PerfTest setResourceDirectory: resourceDir];
         NSLog(@"Reading resources from %@", resourceDir);
 
-        CBLDatabaseOptions* options = [CBLDatabaseOptions defaultOptions];
-        options.directory = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
+        CBLDatabaseConfiguration* config = [CBLDatabaseConfiguration new];
+        config.directory = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
 
         NSLog(@"Starting test...");
-        [DocPerfTest runWithOptions: options];
-        [TunesPerfTest runWithOptions: options];
+        [DocPerfTest runWithConfig: config];
+        [TunesPerfTest runWithConfig: config];
     }
     return 0;
 }

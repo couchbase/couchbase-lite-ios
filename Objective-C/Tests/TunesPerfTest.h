@@ -8,5 +8,6 @@
 
 #import "PerfTest.h"
 
+/** Implements the highly official TuneMark benchmark. */
 @interface TunesPerfTest : PerfTest
 @end

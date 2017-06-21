@@ -8,6 +8,7 @@
 
 #import "PerfTest.h"
 
-@interface DocPerfTest : PerfTest
 
+/** Simple test that adds 10,000 revisions to a document. */
+@interface DocPerfTest : PerfTest
 @end

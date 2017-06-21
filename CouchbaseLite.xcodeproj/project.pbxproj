@@ -63,6 +63,13 @@
 		27DF4BD91ECA442400EE6B8D /* CBLLiveQuery.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DF4BD61ECA442400EE6B8D /* CBLLiveQuery.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27DF4BDA1ECA442400EE6B8D /* CBLLiveQuery.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DF4BD71ECA442400EE6B8D /* CBLLiveQuery.mm */; };
 		27DF4BDB1ECA442400EE6B8D /* CBLLiveQuery.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DF4BD71ECA442400EE6B8D /* CBLLiveQuery.mm */; };
+		27E216801EFB03E2006AFDC5 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4BD11E1EF19000F90659 /* CollectionUtils.m */; };
+		27E216921EFB1993006AFDC5 /* PerfTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6381E3FFBC0005F90DD /* PerfTest.mm */; };
+		27E216931EFB1993006AFDC5 /* TunesPerfTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF60B1E3FCA20005F90DD /* TunesPerfTest.mm */; };
+		27E216941EFB1993006AFDC5 /* DocPerfTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 275FF6581E412C66005F90DD /* DocPerfTest.m */; };
+		27E216961EFB1A29006AFDC5 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4BD11E1EF19000F90659 /* CollectionUtils.m */; };
+		27E216971EFB1B1C006AFDC5 /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C6F1E1EFAF600F90659 /* Test_Assertions.m */; };
+		27E216981EFB1C06006AFDC5 /* iTunesMusicLibrary.json in Resources */ = {isa = PBXBuildFile; fileRef = 275FF6081E3FC24D005F90DD /* iTunesMusicLibrary.json */; };
 		27E35A821E8B3B3A00E103F9 /* ReplicatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */; };
 		27E35A921E8C4F4300E103F9 /* Replicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A911E8C4F4300E103F9 /* Replicator.swift */; };
 		27E35A9C1E8C522200E103F9 /* CBLReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 275229C51E776BC100E630FA /* CBLReplicator.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1784,6 +1791,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				936483BA1E4431C6008D08B3 /* Main.storyboard in Resources */,
+				27E216981EFB1C06006AFDC5 /* iTunesMusicLibrary.json in Resources */,
 				936483B81E4431C6008D08B3 /* Assets.xcassets in Resources */,
 				936483B91E4431C6008D08B3 /* LaunchScreen.storyboard in Resources */,
 			);
@@ -1923,6 +1931,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27BE3B461E4D662B0012B74A /* Test_Assertions.m in Sources */,
+				27E216801EFB03E2006AFDC5 /* CollectionUtils.m in Sources */,
 				275FF6161E3FE9DB005F90DD /* PerfTestMain.m in Sources */,
 				275FF6291E3FECD2005F90DD /* TunesPerfTest.mm in Sources */,
 				275FF6391E3FFBC0005F90DD /* PerfTest.mm in Sources */,
@@ -1934,9 +1943,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27E216921EFB1993006AFDC5 /* PerfTest.mm in Sources */,
+				27E216961EFB1A29006AFDC5 /* CollectionUtils.m in Sources */,
 				936483BE1E4431C6008D08B3 /* ViewController.m in Sources */,
 				936483BD1E4431C6008D08B3 /* main.m in Sources */,
+				27E216931EFB1993006AFDC5 /* TunesPerfTest.mm in Sources */,
 				936483B71E4431C6008D08B3 /* AppDelegate.m in Sources */,
+				27E216971EFB1B1C006AFDC5 /* Test_Assertions.m in Sources */,
+				27E216941EFB1993006AFDC5 /* DocPerfTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2400,6 +2414,13 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
+					"$(SRCROOT)/vendor/couchbase-lite-core/C",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
+					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
+				);
 			};
 			name = Debug;
 		};
@@ -2407,6 +2428,13 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/vendor/couchbase-lite-core/C/include",
+					"$(SRCROOT)/vendor/couchbase-lite-core/C",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/Fleece",
+					"$(SRCROOT)/vendor/couchbase-lite-core/vendor/fleece/ObjC",
+					"$(SRCROOT)/vendor/couchbase-lite-core/Replicator/Obj-C",
+				);
 			};
 			name = Release;
 		};

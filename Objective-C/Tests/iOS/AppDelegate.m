@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import "TunesPerfTest.h"
 
 @interface AppDelegate ()
 
@@ -16,7 +17,11 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
+#ifndef DEBUG
+    // In an optimized build, run the performance tests:
+    [TunesPerfTest runWithConfig: nil];
+    exit(0);
+#endif
     return YES;
 }
 

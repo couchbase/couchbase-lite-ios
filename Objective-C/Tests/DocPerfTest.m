@@ -8,7 +8,9 @@
 
 #import "DocPerfTest.h"
 
+
 @implementation DocPerfTest
+
 
 - (void) test {
     const unsigned revs = 10000;
@@ -20,12 +22,16 @@
 
 
 - (void) addRevisions: (unsigned)numRevisions {
-    CBLDocument* doc = self.db[@"doc"];
+    CBLDocument* doc = [CBLDocument documentWithID: @"doc"];
+    Assert(doc, @"Couldn't create doc");
     NSError *error;
     BOOL ok = [self.db inBatch: &error do: ^{
         for (unsigned i = 0; i < numRevisions; ++i) {
-            [doc setInteger: i forKey: @"count"];
-            NSAssert([doc save: NULL], @"Save failed");
+            @autoreleasepool {
+                [doc setObject: @(i) forKey: @"count"];
+                NSError *error2;
+                Assert([self.db saveDocument: doc error: &error2], @"Save failed: %@", error2);
+            }
         }
     }];
     Assert(ok);
