@@ -80,6 +80,7 @@ public final class Replicator {
         c.replicatorType = CBLReplicatorType(rawValue: UInt32(config.replicatorType.rawValue))
         c.conflictResolver = nil // TODO
         c.authenticator = config.authenticator
+        c.pinnedServerCertificate = config.pinnedServerCertificate
         
         _impl = CBLReplicator(config: c);
         _config = config

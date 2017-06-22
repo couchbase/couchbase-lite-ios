@@ -48,6 +48,10 @@ public struct ReplicatorConfiguration {
         the authenticators, BasicAuthenticator and SessionAuthenticator, supported. */
     public var authenticator: Authenticator?
     
+    /** If this property is non-null, the server is required to have this exact SSL/TLS certificate,
+     or the connection will fail. */
+    public var pinnedServerCertificate: SecCertificate?
+    
     /** Initialize a ReplicatorConfiguration with the default values. */
     public init() {
         replicatorType = .pushAndPull
