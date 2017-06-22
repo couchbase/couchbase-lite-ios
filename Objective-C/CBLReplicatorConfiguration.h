@@ -25,11 +25,11 @@ typedef enum {
 /** Replicator configuration. */
 @interface CBLReplicatorConfiguration : NSObject <NSCopying>
 
-/** The local database to replicate with the target database. The database property is required. */
+/** The local database to replicate with the target database. */
 @property (nonatomic, readonly, nullable) CBLDatabase* database;
 
 /** The replication target to replicate with. The replication target can be either a URL to
-    the remote database or a local databaes. The target property is required. */
+    the remote database or a local databaes. */
 @property (nonatomic, readonly, nullable) id target;
 
 /** Replication type indicating the direction of the replication. The default value is

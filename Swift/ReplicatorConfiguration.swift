@@ -18,13 +18,12 @@ public enum ReplicatorType: UInt8 {
 
 /** Replicator configuration. */
 public struct ReplicatorConfiguration {
-    /** The local database to replicate with the target database. The database property is
-        required. */
-    public var database: Database
+    /** The local database to replicate with the target database. */
+    public let database: Database
     
     /** The replication target to replicate with. The replication target can be either a URL to
-        the remote database or a local databaes. The target property is required. */
-    public var target: Any
+        the remote database or a local databaes. */
+    public let target: Any
     
     /** Replication type indicating the direction of the replication. The default value is
         .pushAndPull which is bidrectional. */
