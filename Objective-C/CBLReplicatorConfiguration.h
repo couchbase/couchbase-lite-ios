@@ -22,47 +22,15 @@ typedef enum {
 } CBLReplicatorType;
 
 
-/** Replicator target, which can be either a URL to the remote database or a local database. */
-@interface CBLReplicatorTarget : NSObject
-
-/** A URL to the remote database */
-@property (readonly, nonatomic, nullable) NSURL* url;
-
-/** A local database */
-@property (readonly, nonatomic, nullable) CBLDatabase* database;
-
-/** Create a CBLReplicatorTarget with a URL to the remote database.
-    @param url  the url to the remote database.
-    @result the CBLReplicatorTarget initialized the the given url. */
-+ (instancetype) url: (NSURL*)url;
-
-/** Create a CBLReplicatorTarget with a local database.
-    @param database the local database.
-    @result the CBLReplicatorTarget initialized with the given local database. */
-+ (instancetype) database: (CBLDatabase*)database;
-
-/** Initialze a CBLReplicatorTarget with a URL to the remote database.
-    @param url  the url to the remote database.
-    @result the CBLReplicatorTarget initialized the the given url. */
-- (instancetype) initWithURL: (NSURL*)url;
-
-/** Initialze a CBLReplicatorTarget with a local database.
-    @param database the local database.
-    @result the CBLReplicatorTarget initialized with the given local database. */
-- (instancetype) initWithDatabase: (CBLDatabase*)database;
-
-@end
-
-
 /** Replicator configuration. */
 @interface CBLReplicatorConfiguration : NSObject <NSCopying>
 
 /** The local database to replicate with the target database. The database property is required. */
-@property (nonatomic, nullable) CBLDatabase* database;
+@property (nonatomic, readonly, nullable) CBLDatabase* database;
 
 /** The replication target to replicate with. The replication target can be either a URL to
     the remote database or a local databaes. The target property is required. */
-@property (nonatomic, nullable) CBLReplicatorTarget* target;
+@property (nonatomic, readonly, nullable) id target;
 
 /** Replication type indicating the direction of the replication. The default value is
     .pushAndPull which is bidrectional. */
@@ -84,8 +52,11 @@ typedef enum {
     the authenticators, CBLBasicAuthenticator and CBLSessionAuthenticator, supported. */
 @property (nonatomic, nullable) CBLAuthenticator* authenticator;
 
-/** Initialize a CBLReplicatorConfiguration with the default values. */
-- (instancetype) init;
+/** Initialize a CBLReplicatorConfiguration with the given local database and remote database URL. */
+- (instancetype) initWithDatabase: (CBLDatabase*)database targetURL: (NSURL*)url;
+
+/** Initialize a CBLReplicatorConfiguration with the given local database and another local database. */
+- (instancetype) initWithDatabase: (CBLDatabase*)database targetDatabase: (CBLDatabase*)targetDatabase;
 
 @end
 

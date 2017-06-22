@@ -142,15 +142,12 @@ NSString* const kCBLReplicatorErrorUserInfoKey = @"kCBLReplicatorErrorUserInfoKe
 
 
 - (void) _start {
-    Assert(_config.database);
-    Assert(_config.target);
-    
     _desc = self.description;   // cache description; it may be called a lot when logging
     
     // Target:
     C4Address addr;
     CBLDatabase* otherDB;
-    NSURL* remoteURL = _config.target.url;
+    NSURL* remoteURL = $castIf(NSURL, _config.target);
     CBLStringBytes dbName(remoteURL.path.lastPathComponent);
     CBLStringBytes scheme(remoteURL.scheme);
     CBLStringBytes host(remoteURL.host);
@@ -164,7 +161,7 @@ NSString* const kCBLReplicatorErrorUserInfoKey = @"kCBLReplicatorErrorUserInfoKe
             .path = path
         };
     } else {
-        otherDB = _config.target.database;
+        otherDB = _config.target;
         Assert(otherDB);
     }
 
@@ -229,8 +226,12 @@ static BOOL isPull(CBLReplicatorType type) {
 - (void) startReachabilityObserver {
     if (_reachability)
         return;
-    NSURL *remoteURL = _config.target.url;
-    NSString *hostname = remoteURL.host;
+    
+    NSURL* remoteURL = $castIf(NSURL, _config.target);
+    if (!remoteURL)
+        return;
+    
+    NSString* hostname = remoteURL.host;
     if ([hostname isEqualToString: @"localhost"] || [hostname isEqualToString: @"127.0.0.1"])
         return;
     _reachability = [[CBLReachability alloc] initWithURL: remoteURL];

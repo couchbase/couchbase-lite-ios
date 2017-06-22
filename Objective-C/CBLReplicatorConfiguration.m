@@ -12,61 +12,6 @@
 #import "CBLDatabase.h"
 
 
-@implementation CBLReplicatorTarget {
-    id _target;
-}
-
-
-+ (instancetype) url: (NSURL*)url {
-    return [[self alloc] initWithURL: url];
-}
-
-
-+ (instancetype) database: (CBLDatabase*)database {
-    return [[self alloc] initWithDatabase: database];
-}
-
-
-- (instancetype) initWithURL:(NSURL *)url {
-    return [self initWithTarget: url];
-}
-
-
-- (instancetype) initWithDatabase:(CBLDatabase *)database {
-    return [self initWithTarget: database];
-}
-
-
-- /* private */ (instancetype) initWithTarget: (id)target {
-    self = [super init];
-    if (self) {
-        _target = target;
-    }
-    return self;
-}
-
-
-- (CBLDatabase*) database {
-    return $castIf(CBLDatabase, _target);
-}
-
-
-- (NSURL*) url {
-    return $castIf(NSURL, _target);
-}
-
-
-- (NSString*) description {
-    NSURL* remoteURL = self.url;
-    if (remoteURL)
-        return remoteURL.absoluteString;
-    else
-        return self.database.name;
-}
-
-@end
-
-
 @implementation CBLReplicatorConfiguration
 
 @synthesize database=_database, target=_target;
@@ -76,19 +21,32 @@
 @synthesize authenticator=_authenticator;
 
 
-- (instancetype) init {
+- (instancetype) initWithDatabase:(CBLDatabase *)database targetURL: (NSURL*)targetURL {
     self = [super init];
     if (self) {
         _replicatorType = kCBLPushAndPull;
+        _database = database;
+        _target = targetURL;
+    }
+    return self;
+}
+
+
+- (instancetype) initWithDatabase:(CBLDatabase *)database targetDatabase: (CBLDatabase*)targetDatabase {
+    self = [super init];
+    if (self) {
+        _replicatorType = kCBLPushAndPull;
+        _database = database;
+        _target = targetDatabase;
     }
     return self;
 }
 
 
 - (instancetype) copyWithZone:(NSZone *)zone {
-    CBLReplicatorConfiguration* c = [[self.class alloc] init];
-    c.database = _database;
-    c.target = _target;
+    CBLReplicatorConfiguration* c = [_target isKindOfClass: [NSURL class]] ?
+        [[self.class alloc] initWithDatabase: _database targetURL: _target] :
+        [[self.class alloc] initWithDatabase: _database targetDatabase: _target];
     c.replicatorType = _replicatorType;
     c.conflictResolver = _conflictResolver;
     c.continuous = _continuous;
@@ -101,12 +59,14 @@
 - (NSDictionary*) effectiveOptions {
     NSMutableDictionary* options = [NSMutableDictionary dictionary];
     
+    NSURL* targetURL = $castIf(NSURL, _target);
+    
     // If the URL has a hardcoded username/password, add them as an "auth" option:
-    NSString* username = _target.url.user;
+    NSString* username = targetURL.user;
     if (username) {
         NSMutableDictionary *auth = [NSMutableDictionary new];
         auth[@kC4ReplicatorAuthUserName] = username;
-        auth[@kC4ReplicatorAuthPassword] = _target.url.password;
+        auth[@kC4ReplicatorAuthPassword] = targetURL.password;
         options[@kC4ReplicatorOptionAuthentication] = auth;
     } else
         [_authenticator authenticate: options];

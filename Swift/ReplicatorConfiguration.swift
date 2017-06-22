@@ -16,21 +16,15 @@ public enum ReplicatorType: UInt8 {
 }
 
 
-/** Replicator target, which can be either a URL to the remote database or a local database. */
-public enum ReplicatorTarget {
-    case url (URL)              ///< A URL to the remote database
-    case database (Database)    ///< A local database
-}
-
 /** Replicator configuration. */
 public struct ReplicatorConfiguration {
     /** The local database to replicate with the target database. The database property is
         required. */
-    public var database: Database?
+    public var database: Database
     
     /** The replication target to replicate with. The replication target can be either a URL to
         the remote database or a local databaes. The target property is required. */
-    public var target: ReplicatorTarget?
+    public var target: Any
     
     /** Replication type indicating the direction of the replication. The default value is
         .pushAndPull which is bidrectional. */
@@ -52,10 +46,20 @@ public struct ReplicatorConfiguration {
      or the connection will fail. */
     public var pinnedServerCertificate: SecCertificate?
     
-    /** Initialize a ReplicatorConfiguration with the default values. */
-    public init() {
-        replicatorType = .pushAndPull
-        continuous = false
+    /** Initialize a ReplicatorConfiguration with the given local database and remote database URL. */
+    public init(database: Database, targetURL: URL) {
+        self.database = database
+        self.target = targetURL
+        self.replicatorType = .pushAndPull
+        self.continuous = false
+    }
+    
+    /** Initialize a ReplicatorConfiguration with the given local database and another local database. */
+    public init(database: Database, targetDatabase: Database) {
+        self.database = database
+        self.target = targetDatabase
+        self.replicatorType = .pushAndPull
+        self.continuous = false
     }
 }
 

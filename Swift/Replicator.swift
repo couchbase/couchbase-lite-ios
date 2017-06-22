@@ -64,16 +64,12 @@ public final class Replicator {
     
     /** Initializes a replicator with the given configuration. */
     public init(config: ReplicatorConfiguration) {
-        precondition(config.database != nil && config.target != nil)
-        
-        let c = CBLReplicatorConfiguration()
-        c.database = config.database!._impl
-        
-        switch config.target! {
-        case .url(let url):
-            c.target = CBLReplicatorTarget(url: url)
-        case .database(let db):
-            c.target = CBLReplicatorTarget(database: db._impl)
+        let c: CBLReplicatorConfiguration;
+        if let url = config.target as? URL {
+            c = CBLReplicatorConfiguration(database: config.database._impl, targetURL: url)
+        } else {
+            let db = (config.target as! Database)._impl
+            c = CBLReplicatorConfiguration(database: config.database._impl, targetDatabase: db)
         }
         
         c.continuous = config.continuous

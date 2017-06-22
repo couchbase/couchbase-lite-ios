@@ -28,18 +28,14 @@ class ReplicatorTest: CBLTestCase {
     
     
     func run(push: Bool, pull: Bool, expectedError: Int?) {
-        var config = ReplicatorConfiguration()
-        config.database = db
-        config.target = .database(otherDB!)
+        var config = ReplicatorConfiguration(database: db, targetDatabase: otherDB!)
         config.replicatorType = push && pull ? .pushAndPull : (push ? .push : .pull)
         run(config: config, expectedError: expectedError)
     }
     
     
     func run(push: Bool, pull: Bool, url: URL, expectedError: Int?) {
-        var config = ReplicatorConfiguration()
-        config.database = db
-        config.target = .url(url)
+        var config = ReplicatorConfiguration(database: db, targetURL: url)
         config.replicatorType = push && pull ? .pushAndPull : (push ? .push : .pull)
         run(config: config, expectedError: expectedError)
     }

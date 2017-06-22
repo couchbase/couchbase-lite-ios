@@ -42,26 +42,19 @@
 
 
 - (CBLReplicatorConfiguration*) push: (BOOL)push pull: (BOOL)pull {
-    CBLReplicatorTarget* target = [CBLReplicatorTarget database: otherDB];
-    return [self push: push pull: pull target: target];
+    CBLReplicatorConfiguration* c = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
+                                                                          targetDatabase: otherDB];
+    c.replicatorType = push && pull ? kCBLPushAndPull : (push ? kCBLPush : kCBLPull);
+    return c;
 }
 
 
 - (CBLReplicatorConfiguration*) push: (BOOL)push pull: (BOOL)pull url: (NSString*)url {
-    CBLReplicatorTarget* target = [CBLReplicatorTarget url: [NSURL URLWithString: url]];
-    return [self push: push pull: pull target: target];
-}
-
-
-- (CBLReplicatorConfiguration*) push: (BOOL)push
-                                pull: (BOOL)pull
-                              target: (CBLReplicatorTarget*)target
-{
-    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] init];
-    config.database = self.db;
-    config.target = target;
-    config.replicatorType = push && pull ? kCBLPushAndPull : (push ? kCBLPush : kCBLPull);
-    return config;
+    NSURL* u = [NSURL URLWithString: url];
+    CBLReplicatorConfiguration* c = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
+                                                                               targetURL: u];
+    c.replicatorType = push && pull ? kCBLPushAndPull : (push ? kCBLPush : kCBLPull);
+    return c;
 }
 
 
