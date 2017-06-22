@@ -8,5 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
+/** CBLAuthenticator is an opaque based authenticator class and not intended for application to
+    implement a custom authenticator by subclassing the CBLAuthenticator class. */
 @interface CBLAuthenticator : NSObject
 @end

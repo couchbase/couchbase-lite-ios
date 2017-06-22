@@ -44,6 +44,8 @@ public struct ReplicatorConfiguration {
         algorithm will be used, where the revision with more history wins. */
     public var conflictResolver: ConflictResolver?
     
+    /** An Authenticator to authenticate with a remote server. Currently there are two types of
+        the authenticators, BasicAuthenticator and SessionAuthenticator, supported. */
     public var authenticator: Authenticator?
     
     /** Initialize a ReplicatorConfiguration with the default values. */

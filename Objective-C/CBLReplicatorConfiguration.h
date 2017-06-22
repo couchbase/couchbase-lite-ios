@@ -80,6 +80,8 @@ typedef enum {
     or the connection will fail. */
 @property (nonatomic, nullable) SecCertificateRef pinnedServerCertificate;
 
+/** An Authenticator to authenticate with a remote server. Currently there are two types of
+    the authenticators, CBLBasicAuthenticator and CBLSessionAuthenticator, supported. */
 @property (nonatomic, nullable) CBLAuthenticator* authenticator;
 
 /** Initialize a CBLReplicatorConfiguration with the default values. */
