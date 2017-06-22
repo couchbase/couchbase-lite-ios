@@ -192,7 +192,7 @@
     _artists = [self collectQueryResults: query];
     bench.stop();
     NSLog(@"%u artists, from %@ to %@", (unsigned)_artists.count, _artists.firstObject, _artists.lastObject);
-    Assert(_artists.count >= 1100, @"Unexpected artist count");
+    AssertEq(_artists.count, 1115u);
     return (unsigned)_artists.count;
 }
 
@@ -232,8 +232,9 @@
             //NSLog(@"Albums by %@: '%@'", artist, [albums componentsJoinedByString: @"', '"]);
         }
     }
-    NSLog(@"%u albums total", albumCount);
     bench.stop();
+    NSLog(@"%u albums total", albumCount);
+    AssertEq(albumCount, 1887u);
     return albumCount;
 }
 
