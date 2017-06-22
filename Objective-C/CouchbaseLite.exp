@@ -8,6 +8,8 @@
 
 #  Public classes:
 .objc_class_name_CBLArray
+.objc_class_name_CBLAuthenticator
+.objc_class_name_CBLBasicAuthenticator
 .objc_class_name_CBLBlob
 .objc_class_name_CBLDictionary
 .objc_class_name_CBLDatabase
@@ -31,13 +33,11 @@
 .objc_class_name_CBLReplicator
 .objc_class_name_CBLReplicatorConfiguration
 .objc_class_name_CBLReplicatorTarget
+.objc_class_name_CBLSessionAuthenticator
 
 #  Public constants:
 _kCBLDatabaseChangeNotification
 _kCBLDatabaseChangesUserInfoKey
-_kCBLReplicatorAuthOption
-_kCBLReplicatorAuthUserName
-_kCBLReplicatorAuthPassword
 _kCBLReplicatorChangeNotification
 _kCBLReplicatorStatusUserInfoKey
 _kCBLReplicatorErrorUserInfoKey

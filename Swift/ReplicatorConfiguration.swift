@@ -22,15 +22,6 @@ public enum ReplicatorTarget {
     case database (Database)    ///< A local database
 }
 
-
-/**  Options key for authentication dictionary */
-public let kReplicatorAuthOption = kCBLReplicatorAuthOption
-/** Auth key for username string */
-public let kReplicatorAuthUserName = kCBLReplicatorAuthUserName
-/** Auth key for password string */
-public let kReplicatorAuthPassword = kCBLReplicatorAuthPassword
-
-
 /** Replicator configuration. */
 public struct ReplicatorConfiguration {
     /** The local database to replicate with the target database. The database property is
@@ -53,8 +44,7 @@ public struct ReplicatorConfiguration {
         algorithm will be used, where the revision with more history wins. */
     public var conflictResolver: ConflictResolver?
     
-    /** Extra options that can affect replication. */
-    public var options: Dictionary<String, Any>?
+    public var authenticator: Authenticator?
     
     /** Initialize a ReplicatorConfiguration with the default values. */
     public init() {
@@ -62,3 +52,9 @@ public struct ReplicatorConfiguration {
         continuous = false
     }
 }
+
+public typealias Authenticator = CBLAuthenticator
+
+public typealias BasicAuthenticator = CBLBasicAuthenticator
+
+public typealias SessionAuthenticator = CBLSessionAuthenticator

@@ -27,22 +27,20 @@ class ReplicatorTest: CBLTestCase {
     }
     
     
-    func run(push: Bool, pull: Bool, opts: Dictionary<String, Any>?, expectedError: Int?) {
+    func run(push: Bool, pull: Bool, expectedError: Int?) {
         var config = ReplicatorConfiguration()
         config.database = db
         config.target = .database(otherDB!)
         config.replicatorType = push && pull ? .pushAndPull : (push ? .push : .pull)
-        config.options = opts
         run(config: config, expectedError: expectedError)
     }
     
     
-    func run(push: Bool, pull: Bool, url: URL, opts: Dictionary<String, Any>?, expectedError: Int?) {
+    func run(push: Bool, pull: Bool, url: URL, expectedError: Int?) {
         var config = ReplicatorConfiguration()
         config.database = db
         config.target = .url(url)
         config.replicatorType = push && pull ? .pushAndPull : (push ? .push : .pull)
-        config.options = opts
         run(config: config, expectedError: expectedError)
     }
     
@@ -67,6 +65,6 @@ class ReplicatorTest: CBLTestCase {
     
     
     func testEmptyPush() {
-        run(push: true, pull: false, opts: nil, expectedError: nil)
+        run(push: true, pull: false, expectedError: nil)
     }
 }

@@ -78,8 +78,8 @@ public final class Replicator {
         
         c.continuous = config.continuous
         c.replicatorType = CBLReplicatorType(rawValue: UInt32(config.replicatorType.rawValue))
-        c.options = config.options
         c.conflictResolver = nil // TODO
+        c.authenticator = config.authenticator
         
         _impl = CBLReplicator(config: c);
         _config = config

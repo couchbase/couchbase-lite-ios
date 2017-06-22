@@ -149,7 +149,7 @@
 
 - (void) dontTestAuthenticatedPull {
     CBLReplicatorConfiguration* config = [self push: NO pull: YES url: @"blip://localhost:4984/seekrit"];
-    config.options = @{@"auth": @{@"username": @"pupshaw", @"password": @"frank"}};
+    config.authenticator = [[CBLBasicAuthenticator alloc] initWithUsername: @"pupshaw" password: @"frank"];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 

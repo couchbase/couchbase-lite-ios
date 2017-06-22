@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <Security/SecCertificate.h>
 @class CBLDatabase;
+@class CBLAuthenticator;
 @protocol CBLConflictResolver;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -53,11 +54,6 @@ typedef enum {
 @end
 
 
-extern NSString* const kCBLReplicatorAuthOption;   ///< Options key for authentication dictionary
-extern NSString* const kCBLReplicatorAuthUserName; ///< Auth key for username string
-extern NSString* const kCBLReplicatorAuthPassword; ///< Auth key for password string
-
-
 /** Replicator configuration. */
 @interface CBLReplicatorConfiguration : NSObject <NSCopying>
 
@@ -84,13 +80,7 @@ extern NSString* const kCBLReplicatorAuthPassword; ///< Auth key for password st
     or the connection will fail. */
 @property (nonatomic, nullable) SecCertificateRef pinnedServerCertificate;
 
-/** HTTP cookies to send to the server.
-    These are assumed to be valid to send with the request; they are not checked to ensure that
-    their hostname/path/etc. are compatible, or that they haven't expired. */
-@property (nonatomic, nullable) NSArray<NSHTTPCookie*>* cookies;
-
-/** Extra options that can affect replication. */
-@property (nonatomic, nullable) NSDictionary<NSString*,id>* options;
+@property (nonatomic, nullable) CBLAuthenticator* authenticator;
 
 /** Initialize a CBLReplicatorConfiguration with the default values. */
 - (instancetype) init;

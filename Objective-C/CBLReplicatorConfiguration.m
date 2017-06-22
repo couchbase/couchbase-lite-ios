@@ -7,12 +7,9 @@
 //
 
 #import "CBLReplicatorConfiguration.h"
+#import "CBLAuthenticator+Internal.h"
 #import "CBLReplicator+Internal.h"
 #import "CBLDatabase.h"
-
-NSString* const kCBLReplicatorAuthOption           = @"" kC4ReplicatorOptionAuthentication;
-NSString* const kCBLReplicatorAuthUserName         = @"" kC4ReplicatorAuthUserName;
-NSString* const kCBLReplicatorAuthPassword         = @"" kC4ReplicatorAuthPassword;
 
 
 @implementation CBLReplicatorTarget {
@@ -74,10 +71,9 @@ NSString* const kCBLReplicatorAuthPassword         = @"" kC4ReplicatorAuthPasswo
 
 @synthesize database=_database, target=_target;
 @synthesize replicatorType=_replicatorType, continuous=_continuous;
-@synthesize options=_options;
 @synthesize conflictResolver=_conflictResolver;
 @synthesize pinnedServerCertificate=_pinnedServerCertificate;
-@synthesize cookies=_cookies;
+@synthesize authenticator=_authenticator;
 
 
 - (instancetype) init {
@@ -94,41 +90,33 @@ NSString* const kCBLReplicatorAuthPassword         = @"" kC4ReplicatorAuthPasswo
     c.database = _database;
     c.target = _target;
     c.replicatorType = _replicatorType;
-    c.options = _options;
     c.conflictResolver = _conflictResolver;
     c.continuous = _continuous;
     c.pinnedServerCertificate = _pinnedServerCertificate;
-    c.cookies = _cookies;
+    c.authenticator = _authenticator;
     return c;
 }
 
 
 - (NSDictionary*) effectiveOptions {
+    NSMutableDictionary* options = [NSMutableDictionary dictionary];
+    
     // If the URL has a hardcoded username/password, add them as an "auth" option:
-    NSMutableDictionary* options = _options.mutableCopy ?: [NSMutableDictionary dictionary];
     NSString* username = _target.url.user;
-    if (username && !options[kCBLReplicatorAuthOption]) {
+    if (username) {
         NSMutableDictionary *auth = [NSMutableDictionary new];
-        auth[kCBLReplicatorAuthUserName] = username;
-        auth[kCBLReplicatorAuthPassword] = _target.url.password;
-        options[kCBLReplicatorAuthOption] = auth;
-    }
+        auth[@kC4ReplicatorAuthUserName] = username;
+        auth[@kC4ReplicatorAuthPassword] = _target.url.password;
+        options[@kC4ReplicatorOptionAuthentication] = auth;
+    } else
+        [_authenticator authenticate: options];
+    
     // Add the pinned certificate if any:
     if (_pinnedServerCertificate) {
         NSData* certData = CFBridgingRelease(SecCertificateCopyData(_pinnedServerCertificate));
         options[@kC4ReplicatorOptionPinnedServerCert] = certData;
     }
-    // Add custom cookies if any:
-    if (_cookies.count > 0) {
-        NSMutableString *cookieStr = [NSMutableString new];
-        for (NSHTTPCookie* cookie in _cookies) {
-            if (cookieStr.length > 0)
-                [cookieStr appendString: @"; "];
-            Assert([cookie isKindOfClass: [NSHTTPCookie class]]);
-            [cookieStr appendFormat: @"%@=%@", cookie.name, cookie.value];
-        }
-        options[@kC4ReplicatorOptionCookies] = cookieStr;
-    }
+    
     return options;
 }
 

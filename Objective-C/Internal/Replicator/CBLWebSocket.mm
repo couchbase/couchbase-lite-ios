@@ -144,10 +144,10 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
 
 - (void) setupAuth {
-    Dict auth = _options[kCBLReplicatorAuthOption.UTF8String].asDict();
+    Dict auth = _options[kC4ReplicatorOptionAuthentication].asDict();
     if (auth) {
-        NSString* username = slice2string(auth[kCBLReplicatorAuthUserName.UTF8String].asString());
-        NSString* password = slice2string(auth[kCBLReplicatorAuthPassword.UTF8String].asString());
+        NSString* username = slice2string(auth[kC4ReplicatorAuthUserName].asString());
+        NSString* password = slice2string(auth[kC4ReplicatorAuthPassword].asString());
         if (username && password) {
             _logic.credential = [NSURLCredential credentialWithUser: username
                                                            password: password
