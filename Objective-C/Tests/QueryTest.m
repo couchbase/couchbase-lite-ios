@@ -401,46 +401,62 @@
 
 - (void) testLiveQuery {
     [self loadNumbers: 100];
-    CBLLiveQuery* q = [CBLLiveQuery select: [CBLQuerySelect all]
-                                      from: [CBLQueryDatabase database: self.db]
-                                     where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
-                                   orderBy: [CBLQueryOrderBy property: @"number1"]];
-    NSArray<CBLQueryRow*>* rows = q.rows;
-    AssertEqual(rows.count, 9u);
-
-    [self keyValueObservingExpectationForObject: q keyPath: @"rows"
-                                        handler: ^BOOL(id obj, NSDictionary *change)
-    {
-        NSArray<CBLQueryRow*>* newRows = change[NSKeyValueChangeNewKey];
-        AssertEqual(newRows.count, 10u);
-        AssertEqualObjects([newRows[0].document objectForKey: @"number1"], @(-1));
-        return YES;
+    
+    __block int count = 0;
+    XCTestExpectation* x = [self expectationWithDescription: @"changes"];
+    CBLLiveQuery* q = [[CBLQuery select: [CBLQuerySelect all]
+                                   from: [CBLQueryDatabase database: self.db]
+                                  where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
+                                orderBy: [CBLQueryOrderBy property: @"number1"]] toLive];
+    id listener = [q addChangeListener:^(CBLLiveQueryChange* change) {
+        count++;
+        AssertNotNil(change.query);
+        AssertNil(change.error);
+        NSArray<CBLQueryRow*>* rows = [change.rows allObjects];
+        if (count == 1) {
+            AssertEqual(rows.count, 9u);
+        } else {
+            AssertEqual(rows.count, 10u);
+            AssertEqualObjects([rows[0].document objectForKey: @"number1"], @(-1));
+            [x fulfill];
+        }
     }];
-
+    
+    [q run];
+    
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [self createDocNumbered: -1 of: 100];
     });
 
     [self waitForExpectationsWithTimeout: 2.0 handler: ^(NSError *error) { }];
     NSLog(@"Done!");
+    
+    [q removeChangeListener: listener];
 }
 
 
 - (void) testLiveQueryNoUpdate {
     [self loadNumbers: 100];
-    CBLLiveQuery* q = [CBLLiveQuery select: [CBLQuerySelect all]
-                                      from: [CBLQueryDatabase database: self.db]
-                                     where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
-                                   orderBy: [CBLQueryOrderBy property: @"number1"]];
-    NSArray<CBLQueryRow*>* rows = q.rows;
-    AssertEqual(rows.count, 9u);
-
-    // The LiveQuery should _not_ trigger a KVO notification. Unfortunately XCTestCase doesn't
-    // have a way to do this (there are no negative expectations!) so we have to check for KVO
-    // the regular way.
-    [q addObserver: self forKeyPath: @"rows"
-           options: NSKeyValueObservingOptionNew
-           context: @selector(testLiveQueryNoUpdate)];
+    
+    __block int count = 0;
+    CBLLiveQuery* q = [[CBLQuery select: [CBLQuerySelect all]
+                                   from: [CBLQueryDatabase database: self.db]
+                                  where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
+                                orderBy: [CBLQueryOrderBy property: @"number1"]] toLive];
+    
+    id listener = [q addChangeListener:^(CBLLiveQueryChange* change) {
+        count++;
+        AssertNotNil(change.query);
+        AssertNil(change.error);
+        NSArray<CBLQueryRow*>* rows = [change.rows allObjects];
+        if (count == 1) {
+            AssertEqual(rows.count, 9u);
+        } else {
+            XCTFail(@"Unexpected update from LiveQuery");
+        }
+    }];
+    
+    [q run];
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
@@ -454,23 +470,14 @@
                    dispatch_get_main_queue(), ^{
         [x fulfill];
     });
-
+    
     NSLog(@"Waiting...");
     [self waitForExpectationsWithTimeout: 5.0 handler: ^(NSError *error) { }];
     NSLog(@"Done!");
-
-    [q removeObserver: self forKeyPath: @"rows"];
+    
+    AssertEqual(count, 1);
+    
+    [q removeChangeListener: listener];
 }
-
-
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
-{
-    if (context == @selector(testLiveQueryNoUpdate)) {
-        XCTFail(@"Unexpected KVO notification from LiveQuery");
-    } else {
-        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
-    }
-}
-
 
 @end

@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
+/** Database Change information  */
 @interface CBLDatabaseChange : NSObject
 
 /** The ID of the document that changed. */

@@ -10,6 +10,7 @@
 #import "CBLQueryEnumerator.h"
 #import "CBLCoreBridge.h"
 #import "CBLInternal.h"
+#import "CBLLiveQuery+Internal.h"
 #import "CBLPredicateQuery+Internal.h"
 #import "CBLQuery+Internal.h"
 #import "CBLStatus.h"
@@ -20,7 +21,6 @@
 {
     C4Query* _c4Query;
 }
-
 
 @synthesize database=_database;
 @synthesize select=_select, from=_from, where=_where, orderBy=_orderBy, distinct=_distinct;
@@ -157,7 +157,24 @@
 }
 
 
-#pragma mark - PRIVATE
+- (CBLLiveQuery*) toLive {
+    return [[CBLLiveQuery alloc] initWithQuery: [self copy]];
+}
+            
+            
+#pragma mark - Internal
+
+
+- (instancetype) copyWithZone:(NSZone *)zone {
+    return [[[self class] alloc] initWithSelect: _select
+                                       distinct: _distinct
+                                           from: _from
+                                          where: _where
+                                        orderBy: _orderBy];
+}
+
+
+#pragma mark - Private
 
 
 - (BOOL) check: (NSError**)outError {
@@ -178,9 +195,11 @@
     return YES;
 }
 
+
 - (nullable NSData*) encodeAsJSON: (NSError**)outError {
     return [NSJSONSerialization dataWithJSONObject: [self asJSON] options: 0 error: outError];
 }
+
 
 - (id) asJSON {
     NSMutableDictionary *json = [NSMutableDictionary dictionary];

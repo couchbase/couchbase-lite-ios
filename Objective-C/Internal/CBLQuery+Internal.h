@@ -19,7 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /////
 
-@interface CBLQuery () <CBLQueryInternal>
+@interface CBLQuery () <CBLQueryInternal, NSCopying>
 
 @property (readonly, nonatomic) CBLQuerySelect* select;
 

@@ -19,21 +19,24 @@ class QueryTest: CBLTestCase {
         return n
     }
     
+    @discardableResult  func createDoc(numbered i: (Int), of number: (Int)) throws -> Document {
+        let doc = createDocument("doc\(i)")
+        doc.set(i, forKey: "number1")
+        doc.set(number - i, forKey: "number2")
+        try saveDocument(doc)
+        return doc
+    }
     
-    func loadNumbers(_ num: Int) throws -> [[String: Any]] {
+    @discardableResult func loadNumbers(_ num: Int) throws -> [[String: Any]] {
         var numbers:[[String: Any]] = []
         try db.inBatch {
             for i in 1...num {
-                let doc = createDocument("doc\(i)")
-                doc.set(i, forKey: "number1")
-                doc.set(num - i, forKey: "number2")
-                try saveDocument(doc)
+                let doc = try createDoc(numbered: i, of: num)
                 numbers.append(doc.toDictionary())
             }
         }
         return numbers
     }
-    
     
     func runTestWithNumbers(_ numbers: [[String: Any]], cases: [[Any]]) throws {
         for c in cases {
@@ -328,5 +331,83 @@ class QueryTest: CBLTestCase {
             XCTAssertEqual(row.documentID, doc1.id)
         })
         XCTAssertEqual(numRow, 1)
+    }
+    
+    
+    func testLiveQuery() throws {
+        try loadNumbers(100);
+        var count = 0;
+        let q = try Query
+            .select()
+            .from(DataSource.database(db))
+            .where(Expression.property("number1").lessThan(10))
+            .orderBy(OrderBy.property("number1"))
+            .toLive()
+        
+        let x = expectation(description: "changes")
+        
+        let listener = q.addChangeListener { (change) in
+            count = count + 1
+            XCTAssertNotNil(change.query)
+            XCTAssertNil(change.error)
+            let rows =  Array(change.rows!)
+            if count == 1 {
+                XCTAssertEqual(rows.count, 9)
+            } else {
+                XCTAssertEqual(rows.count, 10)
+                x.fulfill()
+            }
+        }
+        
+        q.run()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            try! self.createDoc(numbered: -1, of: 100)
+        }
+        
+        waitForExpectations(timeout: 2.0) { (error) in }
+        
+        q.removeChangeListener(listener)
+    }
+    
+    
+    func testLiveQueryNoUpdate() throws {
+        try loadNumbers(100);
+        var count = 0;
+        let q = try Query
+            .select()
+            .from(DataSource.database(db))
+            .where(Expression.property("number1").lessThan(10))
+            .orderBy(OrderBy.property("number1"))
+            .toLive()
+        
+        let listener = q.addChangeListener { (change) in
+            count = count + 1
+            XCTAssertNotNil(change.query)
+            XCTAssertNil(change.error)
+            let rows =  Array(change.rows!)
+            if count == 1 {
+                XCTAssertEqual(rows.count, 9)
+            } else {
+                XCTFail("Unexpected update from LiveQuery")
+            }
+        }
+        
+        q.run()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            try! self.createDoc(numbered: 111, of: 100)
+        }
+        
+        let x = expectation(description: "timeout")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            x.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5.0) { (error) in }
+        
+        XCTAssertEqual(count, 1)
+        
+        q.removeChangeListener(listener)
     }
 }

@@ -6,44 +6,35 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLLiveQuery.h"
+#import "CBLLiveQuery+Internal.h"
+#import "CBLLiveQueryChange+Internal.h"
+#import "CBLChangeListener.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQueryEnumerator.h"
 #import "CBLLog.h"
-#import "c4.h"
 
 
 // Default value of CBLLiveQuery.updateInterval
 static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
-
-@interface CBLLiveQuery ()
-@property (readwrite, nullable, nonatomic) NSArray* rows;
-@property (readwrite, nullable, nonatomic) NSError* lastError;
-@end
-
-
 @implementation CBLLiveQuery
 {
-    bool _observing, _willUpdate, _forceReload;
-    NSUInteger _observerCount;
+    CBLQuery* _query;
+    NSTimeInterval _updateInterval;
+    
+    bool _observing, _willUpdate;
     CFAbsoluteTime _lastUpdatedAt;
     CBLQueryEnumerator* _enum;
-    NSArray* _rows;
+    
+    NSMutableSet* _changeListeners;
 }
 
 
-@synthesize lastError=_lastError, updateInterval=_updateInterval;
-
-
-- (instancetype) initWithSelect: (CBLQuerySelect*)select
-                       distinct: (BOOL)distinct
-                           from: (CBLQueryDataSource*)from
-                          where: (CBLQueryExpression*)where
-                        orderBy: (CBLQueryOrderBy*)orderBy
-{
-    self = [super initWithSelect: select distinct: distinct from: from where: where orderBy: orderBy];
+- (instancetype) initWithQuery: (CBLQuery*)query {
+    self = [super init];
     if (self) {
+        _query = query;
+        // Note: We could make the updateInternal property public in the future
         _updateInterval = kDefaultLiveQueryUpdateInterval;
     }
     return self;
@@ -55,15 +46,16 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 }
 
 
-- (void) start {
+- (void) run {
     if (!_observing) {
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self 
                                                  selector: @selector(databaseChanged:)
                                                      name: kCBLDatabaseChangeNotification 
-                                                   object: self.database];
-        [self update];
+                                                   object: _query.database];
     }
+    _enum = nil;
+    [self update];
 }
 
 
@@ -76,35 +68,23 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 }
 
 
-- (NSArray*) rows {
-    [self start];
-    return _rows;
-}
-
-
-- (void) setRows:(NSArray*)rows {
-    _rows = rows;
-}
-
-
-- (void) addObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath
-             options:(NSKeyValueObservingOptions)options context:(void *)context
-{
-    if ([keyPath isEqualToString: @"rows"]) {
-        if (++_observerCount == 1)
-            [self start];
+- (id<NSObject>) addChangeListener: (void (^)(CBLLiveQueryChange*))block {
+    if (!_changeListeners) {
+        _changeListeners = [NSMutableSet set];
     }
-    [super addObserver: observer forKeyPath: keyPath options: options context: context];
+    
+    CBLChangeListener* listener = [[CBLChangeListener alloc] initWithBlock: block];
+    [_changeListeners addObject: listener];
+    return listener;
 }
 
 
-- (void) removeObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath {
-    if ([keyPath isEqualToString: @"rows"]) {
-        if (--_observerCount == 0)
-            [self stop];
-    }
-    [super removeObserver: observer forKeyPath: keyPath];
+- (void) removeChangeListener: (id<NSObject>)listener {
+    [_changeListeners removeObject: listener];
 }
+
+
+#pragma mark Private
 
 
 - (void) databaseChanged: (NSNotification*)n {
@@ -143,28 +123,37 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     NSError *error;
     CBLQueryEnumerator* oldEnum = _enum;
     CBLQueryEnumerator* newEnum;
-    if (oldEnum == nil || _forceReload)
-        newEnum = (CBLQueryEnumerator*) [self run: &error];
+    if (oldEnum == nil)
+        newEnum = (CBLQueryEnumerator*) [_query run: &error];
     else
         newEnum = [oldEnum refresh: &error];
 
-    _willUpdate = _forceReload = false;
+    _willUpdate = false;
     _lastUpdatedAt = CFAbsoluteTimeGetCurrent();
-
+    
+    BOOL changed = YES;
     if (newEnum) {
         if (oldEnum)
             CBLLog(Query, @"%@: Changed!", self);
         _enum = newEnum;
-        self.rows = newEnum.allObjects;     // triggers KVO
-        error = nil;
-    } else if (error == nil) {
-        CBLLogVerbose(Query, @"%@: ...no change", self);
-    } else {
+    } else if (error != nil) {
         CBLWarnError(Query, @"%@: Update failed: %@", self, error.localizedDescription);
+    } else {
+        changed = NO;
+        CBLLogVerbose(Query, @"%@: ...no change", self);
     }
+    
+    if (changed)
+        [self notifyChange: [[CBLLiveQueryChange alloc] initWithQuery: self
+                                                                 rows: newEnum error: error]];
+}
 
-    if (error || _lastError)
-        self.lastError = error;             // triggers KVO
+
+- (void) notifyChange: (CBLLiveQueryChange*)change {
+    for (CBLChangeListener* listener in _changeListeners) {
+        void (^block)(CBLLiveQueryChange*) = listener.block;
+        block(change);
+    }
 }
 
 

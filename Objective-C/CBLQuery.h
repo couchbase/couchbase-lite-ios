@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 @class CBLDatabase, CBLQueryRow, CBLDocument;
 @class CBLQuerySelect, CBLQueryDataSource, CBLQueryExpression, CBLQueryOrderBy;
+@class CBLLiveQuery;
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -100,6 +101,10 @@ NS_ASSUME_NONNULL_BEGIN
     @return an enumerator of the query result.
  */
 - (nullable NSEnumerator<CBLQueryRow*>*) run: (NSError**)outError;
+
+/** Returns a live query based on the current query.
+    @return a live query object. */
+- (CBLLiveQuery*) toLive;
 
 - (instancetype) init NS_UNAVAILABLE;
 

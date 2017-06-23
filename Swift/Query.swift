@@ -60,6 +60,20 @@ public class Query {
         }
         return try queryImpl!.explain()
     }
+    
+    /** Returns a live query based on the current query.
+        @return a live query object. */
+    public func toLive() throws -> LiveQuery {
+        guard let database = database else {
+            throw CouchbaseLiteError.invalidQuery
+        }
+        
+        if queryImpl == nil {
+            try prepareQuery()
+        }
+        
+        return LiveQuery(database: database, impl: queryImpl!.toLive())
+    }
 
     // MARK: Internal
     
