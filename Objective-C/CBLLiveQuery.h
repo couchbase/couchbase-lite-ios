@@ -6,38 +6,30 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLQuery.h"
+#import <Foundation/Foundation.h>
+@class CBLLiveQueryChange;
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** A CBLLiveQuery automatically observes database changes and re-run the query that the CBLLiveQuery
+    object is created from. If there is a new query result or an error occurred, the CBLLiveQuery will
+    report the changed result via the added listener blocks. */
+@interface CBLLiveQuery : NSObject
 
-// *** WARNING ***  This is an unofficial placeholder API. It WILL change.
+/** Starts observing database changes and reports changes in the query result. */
+- (void) run;
 
-
-/** A CBLQuery subclass that automatically refreshes the result rows every time the database
-    changes. All you need to do is use KVO to observe changes to the .rows property. */
-@interface CBLLiveQuery : CBLQuery
-
-/** The shortest interval at which the query will update, regardless of how often the
-    database changes. Defaults to 0.2 sec. Increase this if the query is expensive and
-    the database updates frequently, to limit CPU consumption. */
-@property (nonatomic) NSTimeInterval updateInterval;
-
-/** Starts observing database changes. The .rows property will now update automatically. (You 
-    usually don't need to call this yourself, since accessing or observing the .rows property will
-    call -start for you.) */
-- (void) start;
-
-/** Stops observing database changes. Calling -start or .rows will restart it. */
+/** Stops observing database changes. */
 - (void) stop;
 
-/** The current query results; this updates as the database changes, and can be observed using KVO.
-    Its value will be nil until the initial asynchronous query finishes. */
-@property (readonly, nullable, nonatomic) NSArray<CBLQueryRow*>* rows;
+/** Adds a query result change listener block.
+    @param block    a change listener block
+    @return the opaque listener object used for removing the added change listener block. */
+- (id<NSObject>) addChangeListener: (void (^)(CBLLiveQueryChange*))block;
 
-/** If non-nil, the error of the last execution of the query.
-    If nil, the last execution of the query was successful. */
-@property (readonly, nullable, nonatomic) NSError* lastError;
+/** Removed a change listener.
+    @param listener  a listener object received when adding the change listener block. */
+- (void) removeChangeListener: (id<NSObject>)listener;
 
 @end
 
