@@ -76,7 +76,7 @@ UNIVERSAL_NAME_iphonesimulator                             = iOS
 
 // Versioning:
 CBL_SOURCE_REVISION                                        =
-CBL_VERSION_STRING                                         = 1.3.1
+CBL_VERSION_STRING                                         = 1.4.1
 CURRENT_PROJECT_VERSION                                    = 0
 VERSION_INFO_FILE                                          = $(PRODUCT_NAME)_vers.c
 VERSIONING_SYSTEM                                          = apple-generic
