@@ -432,6 +432,7 @@
     NSLog(@"Done!");
     
     [q removeChangeListener: listener];
+    [q stop];
 }
 
 
@@ -478,6 +479,7 @@
     AssertEqual(count, 1);
     
     [q removeChangeListener: listener];
+    [q stop];
 }
 
 @end

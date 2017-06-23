@@ -368,6 +368,7 @@ class QueryTest: CBLTestCase {
         waitForExpectations(timeout: 2.0) { (error) in }
         
         q.removeChangeListener(listener)
+        q.stop()
     }
     
     
@@ -409,5 +410,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(count, 1)
         
         q.removeChangeListener(listener)
+        q.stop()
     }
 }
