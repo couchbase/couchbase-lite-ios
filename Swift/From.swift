@@ -25,7 +25,7 @@ public final class From: Query, WhereRouter, OrderByRouter  {
     }
     
     /** An internal constructor. */
-    init(query: Query, impl: CBLQueryDataSource, database: Database?) {
+    init(query: Query, impl: CBLQueryDataSource, database: Database) {
         super.init()
         
         self.copy(query)

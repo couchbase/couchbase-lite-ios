@@ -21,7 +21,7 @@ public class DataSource {
     
     let impl: CBLQueryDataSource
     
-    var database: Database?
+    let database: Database
     
     init(impl: CBLQueryDataSource, database: Database) {
         self.impl = impl
