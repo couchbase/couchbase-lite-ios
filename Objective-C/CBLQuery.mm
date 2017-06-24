@@ -22,7 +22,6 @@
     C4Query* _c4Query;
 }
 
-@synthesize database=_database;
 @synthesize select=_select, from=_from, where=_where, orderBy=_orderBy, distinct=_distinct;
 
 
@@ -165,6 +164,11 @@
 #pragma mark - Internal
 
 
+- (CBLDatabase*) database {
+    return (CBLDatabase*)_from.source;
+}
+
+
 - (instancetype) copyWithZone:(NSZone *)zone {
     return [[[self class] alloc] initWithSelect: _select
                                        distinct: _distinct
@@ -183,9 +187,8 @@
         return NO;
     CBLLog(Query, @"Query encoded as %.*s", (int)jsonData.length, (char*)jsonData.bytes);
     
-    _database = (CBLDatabase*) _from.source;
     C4Error c4Err;
-    auto query = c4query_new(_database.c4db, {jsonData.bytes, jsonData.length}, &c4Err);
+    auto query = c4query_new(self.database.c4db, {jsonData.bytes, jsonData.length}, &c4Err);
     if (!query) {
         convertError(c4Err, outError);
         return NO;

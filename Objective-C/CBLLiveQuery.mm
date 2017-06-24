@@ -48,11 +48,14 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 - (void) run {
     if (!_observing) {
+        CBLDatabase* database = _query.database;
+        Assert(database);
+        
         _observing = YES;
         [[NSNotificationCenter defaultCenter] addObserver: self 
                                                  selector: @selector(databaseChanged:)
                                                      name: kCBLDatabaseChangeNotification 
-                                                   object: _query.database];
+                                                   object: database];
     }
     _enum = nil;
     [self update];
