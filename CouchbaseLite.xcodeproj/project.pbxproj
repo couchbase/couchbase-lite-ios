@@ -287,7 +287,6 @@
 		93AF51C51E80A70100E200F0 /* CBLQueryExpression.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332080B1E77415E000D9993 /* CBLQueryExpression.m */; };
 		93AF51C61E80A70500E200F0 /* CBLQueryDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 933208091E77415E000D9993 /* CBLQueryDataSource.m */; };
 		93AF51C71E80A70900E200F0 /* CBLQuery.mm in Sources */ = {isa = PBXBuildFile; fileRef = 933208111E77415E000D9993 /* CBLQuery.mm */; };
-		93AF51CA1E80C42C00E200F0 /* CouchbaseLiteError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93AF51C81E80C42300E200F0 /* CouchbaseLiteError.swift */; };
 		93B5035B1E64B053002C4680 /* CBLDatabase.mm in Sources */ = {isa = PBXBuildFile; fileRef = 93BFCD9F1E0385EA00E52F8A /* CBLDatabase.mm */; };
 		93B5035E1E64B063002C4680 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */; };
 		93B503611E64B06E002C4680 /* CBLQueryRow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275FF66F1E43E013005F90DD /* CBLQueryRow.mm */; };
@@ -765,7 +764,6 @@
 		939B79241E679017009A70EF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		93A2AFB91E830BF800A08CAE /* QueryRow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QueryRow.swift; sourceTree = "<group>"; };
 		93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QueryTest.swift; sourceTree = "<group>"; };
-		93AF51C81E80C42300E200F0 /* CouchbaseLiteError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CouchbaseLiteError.swift; sourceTree = "<group>"; };
 		93BFCD951E0380A300E52F8A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		93BFCD9E1E0385EA00E52F8A /* CBLDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabase.h; sourceTree = "<group>"; };
 		93BFCD9F1E0385EA00E52F8A /* CBLDatabase.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLDatabase.mm; sourceTree = "<group>"; };
@@ -889,7 +887,6 @@
 				938CDF071E807E98002EE790 /* Query */,
 				9338BEE21ED5475200634873 /* Replication */,
 				27BE3B491E4E45CB0012B74A /* Tests */,
-				93AF51C81E80C42300E200F0 /* CouchbaseLiteError.swift */,
 				275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */,
 				275F92771E4D30A4007FD5A2 /* Info.plist */,
 			);
@@ -1908,7 +1905,6 @@
 				27DF4BDB1ECA442400EE6B8D /* CBLLiveQuery.mm in Sources */,
 				933F45F51EC29EF100863ECB /* Fragment.swift in Sources */,
 				938196161EC113650032CC51 /* CBLDocumentFragment.m in Sources */,
-				93AF51CA1E80C42C00E200F0 /* CouchbaseLiteError.swift in Sources */,
 				93A2AFBA1E830BF800A08CAE /* QueryRow.swift in Sources */,
 				27E35A921E8C4F4300E103F9 /* Replicator.swift in Sources */,
 				938CDF251E807F86002EE790 /* FromRouter.swift in Sources */,

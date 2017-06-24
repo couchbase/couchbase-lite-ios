@@ -31,15 +31,8 @@ public class Query {
         The results come from a snapshot of the database taken at the moment -run: is called, so they
         will not reflect any changes made to the database afterwards. */
     public func run() throws -> QueryIterator {
-        guard let database = database else {
-            throw CouchbaseLiteError.invalidQuery
-        }
-        
-        if queryImpl == nil {
-            try prepareQuery()
-        }
-        
-        return try QueryIterator(database: database, enumerator: queryImpl!.run())
+        prepareQuery()
+        return try QueryIterator(database: database!, enumerator: queryImpl!.run())
     }
     
     /** Returns a string describing the implementation of the compiled query.
@@ -55,31 +48,18 @@ public class Query {
         @param outError If an error occurs, it will be stored here if this parameter is non-NULL.
         @return a string describing the implementation of the compiled query. */
     public func explain() throws -> String {
-        if queryImpl == nil {
-            try prepareQuery()
-        }
+        prepareQuery()
         return try queryImpl!.explain()
     }
     
     /** Returns a live query based on the current query.
         @return a live query object. */
-    public func toLive() throws -> LiveQuery {
-        guard let database = database else {
-            throw CouchbaseLiteError.invalidQuery
-        }
-        
-        if queryImpl == nil {
-            try prepareQuery()
-        }
-        
-        return LiveQuery(database: database, impl: queryImpl!.toLive())
+    public func toLive() -> LiveQuery {
+        prepareQuery()
+        return LiveQuery(database: database!, impl: queryImpl!.toLive())
     }
 
     // MARK: Internal
-    
-    var queryImpl: CBLQuery?
-    
-    var database: Database?
     
     var selectImpl: CBLQuerySelect?
     
@@ -87,23 +67,29 @@ public class Query {
     
     var fromImpl: CBLQueryDataSource?
     
+    var database: Database?
+    
     var whereImpl: CBLQueryExpression?
     
     var orderByImpl: CBLQueryOrderBy?
     
+    var queryImpl: CBLQuery?
+    
     init() { }
     
-    func prepareQuery() throws {
-        guard let selectImpl = selectImpl, let fromImpl = fromImpl else {
-            throw CouchbaseLiteError.invalidQuery
+    func prepareQuery() {
+        if queryImpl != nil {
+            return
         }
-
+        
+        precondition(fromImpl != nil, "From statement is required.")
+        assert(selectImpl != nil && database != nil)
         if self.distinct {
             queryImpl = CBLQuery.selectDistinct(
-                selectImpl, from: fromImpl, where: whereImpl, orderBy: orderByImpl)
+                selectImpl!, from: fromImpl!, where: whereImpl, orderBy: orderByImpl)
         } else {
             queryImpl = CBLQuery.select(
-                selectImpl, from: fromImpl, where: whereImpl, orderBy: orderByImpl)
+                selectImpl!, from: fromImpl!, where: whereImpl, orderBy: orderByImpl)
         }
     }
 

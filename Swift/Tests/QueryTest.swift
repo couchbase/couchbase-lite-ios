@@ -337,7 +337,7 @@ class QueryTest: CBLTestCase {
     func testLiveQuery() throws {
         try loadNumbers(100);
         var count = 0;
-        let q = try Query
+        let q = Query
             .select()
             .from(DataSource.database(db))
             .where(Expression.property("number1").lessThan(10))
@@ -375,7 +375,7 @@ class QueryTest: CBLTestCase {
     func testLiveQueryNoUpdate() throws {
         try loadNumbers(100);
         var count = 0;
-        let q = try Query
+        let q = Query
             .select()
             .from(DataSource.database(db))
             .where(Expression.property("number1").lessThan(10))
