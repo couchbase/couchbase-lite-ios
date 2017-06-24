@@ -21,6 +21,16 @@
 @synthesize authenticator=_authenticator;
 
 
++ (instancetype) withDatabase: (CBLDatabase*)database targetURL: (NSURL*)targetURL {
+    return [[self alloc] initWithDatabase: database targetURL: targetURL];
+}
+
+
++ (instancetype) withDatabase: (CBLDatabase*)database targetDatabase: (CBLDatabase*)targetDatabase {
+    return [[self alloc] initWithDatabase: database targetDatabase: targetDatabase];
+}
+
+
 - (instancetype) initWithDatabase:(CBLDatabase *)database targetURL: (NSURL*)targetURL {
     self = [super init];
     if (self) {

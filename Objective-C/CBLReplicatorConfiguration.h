@@ -52,10 +52,16 @@ typedef enum {
     the authenticators, CBLBasicAuthenticator and CBLSessionAuthenticator, supported. */
 @property (nonatomic, nullable) CBLAuthenticator* authenticator;
 
-/** Initialize a CBLReplicatorConfiguration with the given local database and remote database URL. */
-- (instancetype) initWithDatabase: (CBLDatabase*)database targetURL: (NSURL*)url;
+/** Creates a CBLReplicatorConfiguration with the given local database and remote database URL. */
++ (instancetype) withDatabase: (CBLDatabase*)database targetURL: (NSURL*)targetURL;
 
-/** Initialize a CBLReplicatorConfiguration with the given local database and another local database. */
+/** Creates a CBLReplicatorConfiguration with the given local database and another local database. */
++ (instancetype) withDatabase: (CBLDatabase*)database targetDatabase: (CBLDatabase*)targetDatabase;
+
+/** Initializes a CBLReplicatorConfiguration with the given local database and remote database URL. */
+- (instancetype) initWithDatabase: (CBLDatabase*)database targetURL: (NSURL*)targetURL;
+
+/** Initializes a CBLReplicatorConfiguration with the given local database and another local database. */
 - (instancetype) initWithDatabase: (CBLDatabase*)database targetDatabase: (CBLDatabase*)targetDatabase;
 
 @end
