@@ -45,6 +45,24 @@ github "couchbase/couchbase-lite-ios" "2.0DB011"
 
 > When running `carthage update or build`, Carthage will build both CouchbaseLite and CouchbaseLiteSwift framework.
 
+## How to build the framework files.
+
+1. Clone the repo and update submodules
+
+```
+$ git clone https://github.com/couchbase/couchbase-lite-ios.git
+$ git checkout feature/2.0
+$ git submodule update --init --recursive
+$ cd couchbase-lite-ios
+```
+
+2. Run ./Scripts/build_framework.sh to build a platform framework which could be either an Objective-C or a Swift framework. The supported platforms include iOS, tvOS, and macOS.
+
+```
+$ ./Scripts/build_framework.sh -s "CBL ObjC" -p iOS -o output    // For building the ObjC framework for iOS
+$ ./Scripts/build_framework.sh -s "CBL Swift" -p iOS -o output   // For building the Swift framework for iOS
+```
+
 ## Sample Apps
 
 - [Todo](https://github.com/couchbaselabs/mobile-training-todo/tree/feature/2.0) : Objective-C and Swift
