@@ -26,6 +26,7 @@ public class LiveQuery {
     /** Adds a query result change listener block.
      @param block    a change listener block
      @return the opaque listener object used for removing the added change listener block. */
+    @discardableResult
     public func addChangeListener(_ block: @escaping (LiveQueryChange) -> Void) -> NSObjectProtocol {
         return impl.addChangeListener { (c) in
             let rows: QueryIterator?;
