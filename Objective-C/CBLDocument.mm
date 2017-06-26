@@ -213,6 +213,11 @@
 #pragma mark - INTERNAL
 
 
+- (NSUInteger) generation {
+    return super.generation + !!self.changed;
+}
+
+
 - (BOOL) isEmpty {
     return _dict.isEmpty;
 }
@@ -267,11 +272,6 @@
 }
 
 
-- (id<CBLConflictResolver>) effectiveConflictResolver {
-    return self.database.config.conflictResolver;
-}
-
-
 // The next three functions search recursively for a property "_cbltype":"blob".
 
 static bool objectContainsBlob(__unsafe_unretained id value) {
@@ -323,13 +323,11 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
         revFlags = kRevDeleted;
     if (containsBlob(self))
         revFlags |= kRevHasAttachments;
-    FLSliceResult body = {};
+    NSData* body = nil;
     if (!deletion && !self.isEmpty) {
         // Encode properties to Fleece data:
-        auto enc = c4db_createFleeceEncoder(self.c4db);
-        body = [self encodeWith:enc error: outError];
-        FLEncoder_Free(enc);
-        if (!body.buf) {
+        body = [self encode: outError];
+        if (!body) {
             *outDoc = nullptr;
             return NO;
         }
@@ -339,13 +337,12 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     C4Error err;
     C4Document *c4Doc = self.c4Doc.rawDoc;
     if (c4Doc) {
-        *outDoc = c4doc_update(c4Doc, {body.buf, body.size}, revFlags, &err);
+        *outDoc = c4doc_update(c4Doc, data2slice(body), revFlags, &err);
     } else {
         CBLStringBytes docID(self.documentID);
-        *outDoc = c4doc_create(self.c4db, docID, {body.buf, body.size}, revFlags, &err);
+        *outDoc = c4doc_create(self.c4db, docID, data2slice(body), revFlags, &err);
     }
-    c4slice_free(body);
-    
+
     if (!*outDoc && !(err.domain == LiteCoreDomain && err.code == kC4ErrorConflict)) {
         // conflict is not an error, at this level
         return convertError(err, outError);
@@ -360,6 +357,9 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
                           deletion: (bool)deletion
                              error: (NSError**)outError
 {
+    if (!resolver)
+        return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
+
     // Read the current revision from the database:
     auto database = self.database;
     CBLReadOnlyDocument* current = [[CBLReadOnlyDocument alloc] initWithDatabase: database
@@ -375,8 +375,8 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     if (deletion) {
         // Deletion always loses a conflict:
         resolved = current;
-    } else if (resolver) {
-        // Call the custom conflict resolver:
+    } else {
+        // Call the conflict resolver:
         CBLReadOnlyDocument* base = [[CBLReadOnlyDocument alloc] initWithDatabase: database
                                                                        documentID: self.documentID
                                                                             c4Doc: super.c4Doc
@@ -385,16 +385,6 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
         resolved = [resolver resolve: conflict];
         if (resolved == nil)
             return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
-    } else {
-        // Default resolution algorithm is "most active wins", i.e. higher generation number.
-        // TODO: Once conflict resolvers can access the document generation, move this logic
-        // into a default CBLConflictResolver.
-        NSUInteger myGgggeneration = self.generation + 1;
-        NSUInteger theirGgggeneration = c4rev_getGeneration(curC4doc.revID);
-        if (myGgggeneration >= theirGgggeneration)       // hope I die before I get old
-            resolved = self;
-        else
-            resolved = current;
     }
 
     // Now update my state to the current C4Document and the merged/resolved properties:
@@ -456,17 +446,15 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
 #pragma mark - FLEECE ENCODING
 
 
-- (FLSliceResult) encodeWith: (FLEncoder)encoder error: (NSError**)outError {
+- (NSData*) encode: (NSError**)outError {
+    auto encoder = c4db_createFleeceEncoder(self.c4db);
     if (![_dict fleeceEncode: encoder database: self.database error: outError])
-        return (FLSliceResult){nullptr, 0};
-    
+        return nil;
     FLError flErr;
-    auto body = FLEncoder_Finish(encoder, &flErr);
-    if(!body.buf) {
+    FLSliceResult body = FLEncoder_Finish(encoder, &flErr);
+    if (!body.buf)
         convertError(flErr, outError);
-        return (FLSliceResult){nullptr, 0};
-    }
-    return body;
+    return sliceResult2data(body);
 }
 
 

@@ -74,6 +74,13 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
+// CBLDefaultConflictResolver:
+
+
+@interface CBLDefaultConflictResolver : NSObject <CBLConflictResolver>
+@end
+
+
 // CBLDocumentChange:
 
 @interface CBLDocumentChange ()

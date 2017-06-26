@@ -9,6 +9,7 @@
 #import "CBLReadOnlyDocument.h"
 #import "CBLDocument+Internal.h"
 #import "CBLInternal.h"
+#import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
 
@@ -99,13 +100,114 @@
 }
 
 
+- (BOOL) selectConflictingRevision {
+    if (!_c4Doc || !c4doc_selectNextLeafRevision(_c4Doc.rawDoc, false, true, nullptr))
+        return NO;
+    self.c4Doc = _c4Doc;     // This will update to the selected revision
+    return YES;
+}
+
+
+- (BOOL) selectCommonAncestorOfDoc: (CBLReadOnlyDocument*)doc1
+                            andDoc: (CBLReadOnlyDocument*)doc2
+{
+    CBLStringBytes rev1(doc1.revID), rev2(doc2.revID);
+    if (!_c4Doc || !c4doc_selectCommonAncestorRevision(_c4Doc.rawDoc, rev1, rev2))
+        return NO;
+    self.c4Doc = _c4Doc;     // This will update to the selected revision
+    return YES;
+}
+
+
+- (NSString*) revID {
+    return _c4Doc != nil ?  slice2string(_c4Doc.rawDoc->selectedRev.revID) : nil;
+}
+
+
 - (NSUInteger) generation {
-    return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.revID) : 0;
+    // CBLDocument overrides this
+    return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.rawDoc->selectedRev.revID) : 0;
 }
 
 
 - (BOOL) exists {
     return _c4Doc != nil ? (_c4Doc.flags & kExists) != 0 : NO;
+}
+
+
+- (id<CBLConflictResolver>) effectiveConflictResolver {
+    return self.database.config.conflictResolver ?: [CBLDefaultConflictResolver new];
+}
+
+
+- (NSData*) encode: (NSError**)outError {
+    // CBLDocument overrides this
+    fleece::slice body = _c4Doc.rawDoc->selectedRev.body;
+    return body ? body.copiedNSData() : [NSData data];
+}
+
+
+#pragma mark - RESOLVING REPLICATED CONFLICTS:
+
+
+- (bool) resolveExistingConflict: (NSError**)outError {
+    // Read the conflicting remote revision:
+    auto otherDoc = [[CBLReadOnlyDocument alloc] initWithDatabase: self.database
+                                                       documentID: self.documentID
+                                                        mustExist: YES
+                                                            error: outError];
+    if (!otherDoc || ![otherDoc selectConflictingRevision])
+        return false;
+
+    // Read the common ancestor revision (if it's available):
+    auto baseDoc = [[CBLReadOnlyDocument alloc] initWithDatabase: self.database
+                                                      documentID: self.documentID
+                                                       mustExist: YES
+                                                           error: outError];
+    if (![baseDoc selectCommonAncestorOfDoc: self andDoc: otherDoc] || !baseDoc.data)
+        baseDoc = nil;
+
+    // Call the conflict resolver:
+    CBLReadOnlyDocument* resolved;
+    if (otherDoc.isDeleted) {
+        resolved = self;
+    } else if (self.isDeleted) {
+        resolved = otherDoc;
+    } else {
+        auto resolver = self.effectiveConflictResolver;
+        auto conflict = [[CBLConflict alloc] initWithMine: self theirs: otherDoc base: baseDoc];
+        resolved = [resolver resolve: conflict];
+        if (!resolved)
+            return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
+    }
+
+    // Figure out what revision to delete and what if anything to add:
+    CBLStringBytes winningRevID, losingRevID;
+    NSData* mergedBody = nil;
+    if (resolved == otherDoc) {
+        winningRevID = otherDoc.revID;
+        losingRevID = self.revID;
+    } else {
+        winningRevID = self.revID;
+        losingRevID = otherDoc.revID;
+        if (resolved != self) {
+            mergedBody = [resolved encode: outError];
+            if (!mergedBody)
+                return false;
+        }
+    }
+
+    // Tell LiteCore to do the resolution:
+    C4Error c4err;
+    if (!c4doc_resolveConflict(self.c4Doc.rawDoc,
+                               winningRevID,
+                               losingRevID,
+                               data2slice(mergedBody),
+                               &c4err)) {
+        return convertError(c4err, outError);
+    }
+
+    return true;
 }
 
 

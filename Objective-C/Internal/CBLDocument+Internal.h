@@ -59,7 +59,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) BOOL exists;
 
+@property (nonatomic, readonly) NSString* revID;
+
 @property (nonatomic, readonly) NSUInteger generation;
+
+@property (nonatomic, readonly) id<CBLConflictResolver> effectiveConflictResolver;
 
 - (instancetype) initWithDatabase: (nullable CBLDatabase*)database
                        documentID: (NSString*)documentID
@@ -70,6 +74,14 @@ NS_ASSUME_NONNULL_BEGIN
                        documentID: (NSString*)documentID
                         mustExist: (BOOL)mustExist
                             error: (NSError**)outError;
+
+- (BOOL) selectConflictingRevision;
+- (BOOL) selectCommonAncestorOfDoc: (CBLReadOnlyDocument*)doc1
+                            andDoc: (CBLReadOnlyDocument*)doc2;
+
+- (nullable NSData*) encode: (NSError**)outError;
+
+- (bool) resolveExistingConflict: (NSError**)outError;
 
 @end
 
