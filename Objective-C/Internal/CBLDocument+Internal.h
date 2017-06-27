@@ -81,8 +81,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSData*) encode: (NSError**)outError;
 
-- (bool) resolveExistingConflict: (NSError**)outError;
-
 @end
 
 //////////////////

@@ -390,10 +390,11 @@ static void onDocError(C4Replicator *repl,
     if (!pushing && c4err.domain == LiteCoreDomain && c4err.code == kC4ErrorConflict) {
         // Conflict pulling a document -- the revision was added but app needs to resolve it:
         CBLLog(Sync, @"%@: pulled conflicting version of '%@'", self, docID);
-        auto doc = [_config.database documentWithID: docID];
         NSError* error;
-        if (![doc resolveExistingConflict: &error])
+        if (![_config.database resolveConflictInDocument: docID error: &error]) {
             CBLWarn(Sync, @"Conflict resolution of '%@' failed: %@", docID, error);
+            // TODO: Should pass error along to listener
+        }
     } else {
         NSError* error;
         convertError(c4err, &error);

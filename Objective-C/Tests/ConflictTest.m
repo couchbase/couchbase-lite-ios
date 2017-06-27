@@ -6,7 +6,7 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLTestCase.h"
+#import "ConflictTest.h"
 #import "CBLInternal.h"
 
 #include "c4.h"
@@ -14,8 +14,6 @@
 #include "Fleece.h"
 #include "Fleece+CoreFoundation.h"
 
-@interface TheirsWins : NSObject <CBLConflictResolver>
-@end
 
 @implementation TheirsWins
 
@@ -26,8 +24,6 @@
 @end
 
 
-@interface MergeThenTheirsWins : NSObject <CBLConflictResolver>
-@end
 
 @implementation MergeThenTheirsWins
 
@@ -54,8 +50,6 @@
 @end
 
 
-@interface GiveUp : NSObject <CBLConflictResolver>
-@end
 
 @implementation GiveUp
 
@@ -66,8 +60,6 @@
 @end
 
 
-@interface DoNotResolve : NSObject <CBLConflictResolver>
-@end
 
 @implementation DoNotResolve
 

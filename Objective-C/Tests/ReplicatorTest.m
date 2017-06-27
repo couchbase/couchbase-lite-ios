@@ -7,6 +7,8 @@
 //
 
 #import "CBLTestCase.h"
+#import "ConflictTest.h"
+
 
 @interface ReplicatorTest : CBLTestCase
 @end
@@ -22,6 +24,7 @@
 
 
 - (void) setUp {
+    self.conflictResolver = [MergeThenTheirsWins new];
     [super setUp];
 
     timeout = 5.0;
@@ -122,6 +125,31 @@
     AssertEqual(self.db.count, 2u);
     doc2 = [self.db documentWithID:@"doc2"];
     AssertEqualObjects([doc2 stringForKey:@"name"], @"Cat");
+}
+
+
+- (void) testPullConflict {
+    NSError* error;
+    CBLDocument* doc1 = [[CBLDocument alloc] initWithID:@"doc"];
+    [doc1 setObject: @"Tiger" forKey: @"species"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    [doc1 setObject: @"Hobbes" forKey: @"name"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+
+    CBLDocument* doc2 = [[CBLDocument alloc] initWithID:@"doc"];
+    [doc2 setObject: @"Tiger" forKey: @"species"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+    [doc2 setObject: @"striped" forKey: @"pattern"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+
+    CBLReplicatorConfiguration* config = [self push: NO pull: YES];
+    [self run: config errorCode: 0 errorDomain: nil];
+
+    AssertEqual(self.db.count, 1u);
+    doc1 = [self.db documentWithID:@"doc"];
+    AssertEqualObjects(doc1.toDictionary, (@{@"species": @"Tiger",
+                                             @"name": @"Hobbes",
+                                             @"pattern": @"striped"}));
 }
 
 
