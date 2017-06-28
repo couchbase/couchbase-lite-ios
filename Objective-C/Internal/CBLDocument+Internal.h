@@ -39,13 +39,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLDocument ()
 
-@property (nonatomic, nullable) CBLDatabase *database;
-
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                       documentID: (NSString*)documentID
-                        mustExist: (BOOL)mustExist
-                            error: (NSError**)outError;
-
 - (BOOL) save: (NSError**)error;
 
 - (BOOL) deleteDocument: (NSError**)error;
@@ -58,15 +51,35 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLReadOnlyDocument ()
 
+@property (nonatomic, nullable) CBLDatabase* database;
+
+@property (nonatomic, readonly) C4Database* c4db;   // Throws assertion-failure if null
+
 @property (nonatomic, nullable) CBLC4Document* c4Doc;
 
 @property (nonatomic, readonly) BOOL exists;
 
+@property (nonatomic, readonly) NSString* revID;
+
 @property (nonatomic, readonly) NSUInteger generation;
 
-- (instancetype) initWithDocumentID: (NSString*)documentID
-                              c4Doc: (nullable CBLC4Document*)c4Doc
-                         fleeceData: (nullable CBLFLDict*)data;
+@property (nonatomic, readonly) id<CBLConflictResolver> effectiveConflictResolver;
+
+- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
+                       documentID: (NSString*)documentID
+                            c4Doc: (nullable CBLC4Document*)c4Doc
+                       fleeceData: (nullable CBLFLDict*)data NS_DESIGNATED_INITIALIZER;
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                       documentID: (NSString*)documentID
+                        mustExist: (BOOL)mustExist
+                            error: (NSError**)outError;
+
+- (BOOL) selectConflictingRevision;
+- (BOOL) selectCommonAncestorOfDoc: (CBLReadOnlyDocument*)doc1
+                            andDoc: (CBLReadOnlyDocument*)doc2;
+
+- (nullable NSData*) encode: (NSError**)outError;
 
 @end
 

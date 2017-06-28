@@ -8,6 +8,7 @@
 
 #import "CBLReplicator+Internal.h"
 #import "CBLReplicatorConfiguration.h"
+#import "CBLDocument+Internal.h"
 #import "CBLReachability.h"
 #import "CBLCoreBridge.h"
 #import "CBLStringBytes.h"
@@ -174,17 +175,18 @@ NSString* const kCBLReplicatorErrorUserInfoKey = @"kCBLReplicatorErrorUserInfoKe
         optionsFleece = enc.finish();
     }
     
-    // Push / Pull / Continuous:
-    BOOL push = isPush(_config.replicatorType);
-    BOOL pull = isPull(_config.replicatorType);
-    BOOL continuous = _config.continuous;
-
     // Create a C4Replicator:
+    C4ReplicatorParameters params = {
+        .push = mkmode(isPush(_config.replicatorType), _config.continuous),
+        .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
+        .optionsDictFleece = {optionsFleece.buf, optionsFleece.size},
+        .onStatusChanged = &statusChanged,
+        .onDocumentError = &onDocError,
+        .callbackContext = (__bridge void*)self,
+        // TODO: Add .validationFunc (public API TBD)
+    };
     C4Error err;
-    _repl = c4repl_new(_config.database.c4db, addr, dbName, otherDB.c4db,
-                       mkmode(push, continuous), mkmode(pull, continuous),
-                       {optionsFleece.buf, optionsFleece.size},
-                       &statusChanged, (__bridge void*)self, &err);
+    _repl = c4repl_new(_config.database.c4db, addr, dbName, otherDB.c4db, params, &err);
     C4ReplicatorStatus status;
     if (_repl) {
         status = c4repl_getStatus(_repl);
@@ -249,6 +251,9 @@ static BOOL isPull(CBLReplicatorType type) {
         [self retry];
     }
 }
+
+
+#pragma mark - STATUS CHANGES:
 
 
 static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *context) {
@@ -355,6 +360,51 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     CBLLog(Sync, @"%@ is %s, progress %llu/%llu, error: %@",
            self, kC4ReplicatorActivityLevelNames[c4Status.level],
            c4Status.progress.completed, c4Status.progress.total, error);
+}
+
+
+#pragma mark - DOCUMENT-LEVEL ERRORS:
+
+
+static void onDocError(C4Replicator *repl,
+                       bool pushing,
+                       C4String docID,
+                       C4Error error,
+                       bool transient,
+                       void *context)
+{
+    NSString* docIDStr = slice2string(docID);
+    auto replicator = (__bridge CBLReplicator*)context;
+    dispatch_async(replicator->_dispatchQueue, ^{
+        if (repl == replicator->_repl)
+            [replicator onDocError: error pushing: pushing docID: docIDStr isTransient: transient];
+    });
+}
+
+
+- (void) onDocError: (C4Error)c4err
+            pushing: (bool)pushing
+              docID: (NSString*)docID
+        isTransient: (bool)isTransient
+{
+    if (!pushing && c4err.domain == LiteCoreDomain && c4err.code == kC4ErrorConflict) {
+        // Conflict pulling a document -- the revision was added but app needs to resolve it:
+        CBLLog(Sync, @"%@: pulled conflicting version of '%@'", self, docID);
+        NSError* error;
+        if (![_config.database resolveConflictInDocument: docID error: &error]) {
+            CBLWarn(Sync, @"Conflict resolution of '%@' failed: %@", docID, error);
+            // TODO: Should pass error along to listener
+        }
+    } else {
+        NSError* error;
+        convertError(c4err, &error);
+        CBLLog(Sync, @"%@: %serror %s '%@': %@",
+               self,
+               (isTransient ? "transient " : ""),
+               (pushing ? "pushing" : "pulling"),
+               docID, error);
+        // TODO: Call an optional listener (API TBD)
+    }
 }
 
 

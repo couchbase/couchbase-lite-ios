@@ -664,5 +664,87 @@ static void freeC4DocObservers(NSDictionary* docObs) {
     _docChangeListeners = nil;
 }
 
+
+#pragma mark - RESOLVING REPLICATED CONFLICTS:
+
+
+- (bool) resolveConflictInDocument: (NSString*)docID error: (NSError**)outError {
+    C4Transaction t(_c4db);
+    t.begin();
+
+    auto doc = [[CBLReadOnlyDocument alloc] initWithDatabase: self
+                                                  documentID: docID
+                                                   mustExist: YES
+                                                       error: outError];
+    if (!doc)
+        return false;
+
+    // Read the conflicting remote revision:
+    auto otherDoc = [[CBLReadOnlyDocument alloc] initWithDatabase: self
+                                                       documentID: docID
+                                                        mustExist: YES
+                                                            error: outError];
+    if (!otherDoc || ![otherDoc selectConflictingRevision])
+        return false;
+
+    // Read the common ancestor revision (if it's available):
+    auto baseDoc = [[CBLReadOnlyDocument alloc] initWithDatabase: self
+                                                      documentID: docID
+                                                       mustExist: YES
+                                                           error: outError];
+    if (![baseDoc selectCommonAncestorOfDoc: doc andDoc: otherDoc] || !baseDoc.data)
+        baseDoc = nil;
+
+    // Call the conflict resolver:
+    CBLReadOnlyDocument* resolved;
+    if (otherDoc.isDeleted) {
+        resolved = doc;
+    } else if (doc.isDeleted) {
+        resolved = otherDoc;
+    } else {
+        auto resolver = doc.effectiveConflictResolver;
+        auto conflict = [[CBLConflict alloc] initWithMine: doc theirs: otherDoc base: baseDoc];
+        CBLLog(Database, @"Resolving doc '%@' with %@ (mine=%@, theirs=%@, base=%@",
+               docID, resolver.class, doc.revID, otherDoc.revID, baseDoc.revID);
+        resolved = [resolver resolve: conflict];
+        if (!resolved)
+            return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
+    }
+
+    // Figure out what revision to delete and what if anything to add:
+    CBLStringBytes winningRevID, losingRevID;
+    NSData* mergedBody = nil;
+    if (resolved == otherDoc) {
+        winningRevID = otherDoc.revID;
+        losingRevID = doc.revID;
+    } else {
+        winningRevID = doc.revID;
+        losingRevID = otherDoc.revID;
+        if (resolved != doc) {
+            resolved.database = self;
+            mergedBody = [resolved encode: outError];
+            if (!mergedBody)
+                return false;
+        }
+    }
+
+    // Tell LiteCore to do the resolution:
+    C4Document *rawDoc = doc.c4Doc.rawDoc;
+    C4Error c4err;
+    if (!c4doc_resolveConflict(rawDoc,
+                               winningRevID,
+                               losingRevID,
+                               data2slice(mergedBody),
+                               &c4err)
+            || !c4doc_save(rawDoc, 0, &c4err)) {
+        return convertError(c4err, outError);
+    }
+    CBLLog(Database, @"Conflict resolved as doc '%@' rev %.*s",
+           docID, (int)rawDoc->revID.size, rawDoc->revID.buf);
+
+    return t.commit() || convertError(t.error(), outError);
+}
+
+
 @end
 

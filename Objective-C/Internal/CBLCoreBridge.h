@@ -19,14 +19,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString* slice2string(C4Slice s);
+NSString* __nullable slice2string(C4Slice s);
 
-C4Slice data2slice(NSData*);
+C4Slice data2slice(NSData* __nullable);
 
 // The sliceResult2... functions take care of freeing the C4SliceResult, or adopting its data.
-NSData*   sliceResult2data(C4SliceResult);
-NSString* sliceResult2string(C4SliceResult);
-NSString* sliceResult2FilesystemPath(C4SliceResult);
+NSData* __nullable   sliceResult2data(C4SliceResult);
+NSString* __nullable sliceResult2string(C4SliceResult);
+NSString* __nullable sliceResult2FilesystemPath(C4SliceResult);
 
 C4EncryptionKey symmetricKey2C4Key(CBLSymmetricKey* key);
 

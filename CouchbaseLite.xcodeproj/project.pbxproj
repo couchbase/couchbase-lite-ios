@@ -622,6 +622,7 @@
 		27EF6AF11E32D12C004748DF /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		27F961971ED8D9440060F804 /* CBLReachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReachability.h; sourceTree = "<group>"; };
 		27F961981ED8D9440060F804 /* CBLReachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReachability.m; sourceTree = "<group>"; };
+		27FDBF411F02FE5C0087CC1C /* ConflictTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConflictTest.h; sourceTree = "<group>"; };
 		72A879EF1E2DD51C008466FF /* CBLBlob.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBlob.mm; sourceTree = "<group>"; };
 		72A879FE1E2DD536008466FF /* CBLBlob.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLBlob.h; sourceTree = "<group>"; };
 		72A87A031E2E0E70008466FF /* CBLBlobStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBlobStream.h; sourceTree = "<group>"; };
@@ -1225,6 +1226,7 @@
 				9378C5961E25B473001BB196 /* CBLTestCase.m */,
 				93DD9BA71EB419BB00E502A2 /* ArrayTest.m */,
 				93384F731EB14ABA00976B41 /* ConflictTest.m */,
+				27FDBF411F02FE5C0087CC1C /* ConflictTest.h */,
 				9378C5901E25B3F0001BB196 /* DatabaseTest.m */,
 				9352945E1E51708E005CE4E8 /* DictionaryTest.m */,
 				9378C59D1E269F14001BB196 /* DocumentTest.m */,
