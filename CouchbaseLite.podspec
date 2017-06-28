@@ -20,7 +20,7 @@ Pod::Spec.new do |s|
   s.osx.preserve_paths = 'frameworks/CBL ObjC/macOS/CouchbaseLite.framework'
   s.osx.vendored_frameworks = 'frameworks/CBL ObjC/macOS/CouchbaseLite.framework'
 
-  s.ios.deployment_target  = '8.0'
+  s.ios.deployment_target  = '9.0'
   s.tvos.deployment_target = '9.0'
-  s.osx.deployment_target  = '10.10'
+  s.osx.deployment_target  = '10.11'
 end
