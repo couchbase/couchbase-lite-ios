@@ -538,6 +538,7 @@ static BOOL sAutoCompact = YES;
 
 
 - (void) dbChanged: (NSNotification*)n {
+    [self doAsync: ^{
     CBLDatabase* senderDB = n.object;
     // Was this posted by a _different_ CBLDatabase instance on the same database as me?
     if (senderDB != self && [senderDB.dir isEqualToString: _dir]) {
@@ -551,22 +552,17 @@ static BOOL sAutoCompact = YES;
             if (echoedChanges.count > 0) {
                 LogVerbose(Database, @"%@: Notified of %u changes by %@",
                            self, (unsigned)echoedChanges.count, senderDB);
-                [self doAsync: ^{
                     [self notifyChanges: echoedChanges];
-                }];
             }
         } else if ([[n name] isEqualToString: CBL_DatabaseWillBeDeletedNotification]) {
-            [self doAsync: ^{
                 LogTo(Database, @"%@: Notified of deletion; closing", self);
                 [self _close];
-            }];
         } else if ([[n name] isEqualToString: CBL_DatabaseWillBeRekeyedNotification]) {
-            [self doAsync: ^{
                 LogTo(Database, @"%@: Notified of rekeying; closing", self);
                 [self _close];
-            }];
         }
     }
+    }];
 }
 
 
