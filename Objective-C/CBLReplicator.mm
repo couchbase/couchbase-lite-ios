@@ -7,7 +7,9 @@
 //
 
 #import "CBLReplicator+Internal.h"
+#import "CBLReplicatorChange+Internal.h"
 #import "CBLReplicatorConfiguration.h"
+#import "CBLChangeListener.h"
 #import "CBLDocument+Internal.h"
 #import "CBLReachability.h"
 #import "CBLCoreBridge.h"
@@ -43,20 +45,15 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
 C4LogDomain kCBLSyncLogDomain;
 
 
-NSString* const kCBLReplicatorChangeNotification = @"kCBLReplicatorChangeNotification";
-NSString* const kCBLReplicatorStatusUserInfoKey = @"kCBLReplicatorStatusUserInfoKey";
-NSString* const kCBLReplicatorErrorUserInfoKey = @"kCBLReplicatorErrorUserInfoKey";
-
-
 @interface CBLReplicatorStatus ()
 - (instancetype) initWithActivity: (CBLReplicatorActivityLevel)activity
-                         progress: (CBLReplicatorProgress)progress;
+                         progress: (CBLReplicatorProgress)progress
+                            error: (NSError*)error;
 @end
 
 
 @interface CBLReplicator ()
 @property (readwrite, nonatomic) CBLReplicatorStatus* status;
-@property (readwrite, nonatomic) NSError* lastError;
 @end
 
 
@@ -69,10 +66,11 @@ NSString* const kCBLReplicatorErrorUserInfoKey = @"kCBLReplicatorErrorUserInfoKe
     C4ReplicatorStatus _rawStatus;
     unsigned _retryCount;
     CBLReachability* _reachability;
+    NSMutableSet* _changeListeners;
 }
 
 @synthesize config=_config;
-@synthesize status=_status, lastError=_lastError;
+@synthesize status=_status;
 
 
 + (void) initialize {
@@ -253,6 +251,22 @@ static BOOL isPull(CBLReplicatorType type) {
 }
 
 
+- (id<NSObject>) addChangeListener: (void (^)(CBLReplicatorChange*))block {
+    if (!_changeListeners) {
+        _changeListeners = [NSMutableSet set];
+    }
+    
+    CBLChangeListener* listener = [[CBLChangeListener alloc] initWithBlock:block];
+    [_changeListeners addObject:listener];
+    return listener;
+}
+
+
+- (void) removeChangeListener: (id<NSObject>)listener {
+    [_changeListeners removeObject: listener];
+}
+
+
 #pragma mark - STATUS CHANGES:
 
 
@@ -285,12 +299,13 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     // Update my properties:
     [self updateStateProperties: c4Status];
 
-    // Post a NSNotification:
-    NSMutableDictionary* userinfo = [NSMutableDictionary new];
-    userinfo[kCBLReplicatorStatusUserInfoKey] = self.status;
-    userinfo[kCBLReplicatorErrorUserInfoKey] = self.lastError;
-    [NSNotificationCenter.defaultCenter postNotificationName: kCBLReplicatorChangeNotification
-                                                      object: self userInfo: userinfo];
+    // Post change
+    CBLReplicatorChange* change = [[CBLReplicatorChange alloc] initWithReplicator: self
+                                                                           status: self.status];
+    for (CBLChangeListener* listener in _changeListeners) {
+        void (^block)(CBLReplicatorChange*) = listener.block;
+        block(change);
+    }
     
     // If Stopped:
     if (c4Status.level == kC4Stopped) {
@@ -336,9 +351,7 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     NSError *error = nil;
     if (c4Status.error.code)
         convertError(c4Status.error, &error);
-    if (error != _lastError)
-        self.lastError = error;
-
+    
     _rawStatus = c4Status;
     
     CBLReplicatorActivityLevel level;
@@ -355,7 +368,9 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
             break;
     }
     CBLReplicatorProgress progress = { c4Status.progress.completed, c4Status.progress.total };
-    self.status = [[CBLReplicatorStatus alloc] initWithActivity: level progress: progress];
+    self.status = [[CBLReplicatorStatus alloc] initWithActivity: level
+                                                       progress: progress
+                                                          error: error];
     
     CBLLog(Sync, @"%@ is %s, progress %llu/%llu, error: %@",
            self, kC4ReplicatorActivityLevelNames[c4Status.level],
@@ -416,15 +431,17 @@ static void onDocError(C4Replicator *repl,
 
 @implementation CBLReplicatorStatus
 
-@synthesize activity=_activity, progress=_progress;
+@synthesize activity=_activity, progress=_progress, error=_error;
 
 - (instancetype) initWithActivity: (CBLReplicatorActivityLevel)activity
                          progress: (CBLReplicatorProgress)progress
+                            error: (NSError*)error
 {
     self = [super init];
     if (self) {
         _activity = activity;
         _progress = progress;
+        _error = error;
     }
     return self;
 }

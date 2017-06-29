@@ -33,12 +33,6 @@
 .objc_class_name_CBLReadOnlyFragment
 .objc_class_name_CBLReadOnlyDictionary
 .objc_class_name_CBLReplicator
+.objc_class_name_CBLReplicatorChange
 .objc_class_name_CBLReplicatorConfiguration
 .objc_class_name_CBLSessionAuthenticator
-
-#  Public constants:
-_kCBLDatabaseChangeNotification
-_kCBLDatabaseChangesUserInfoKey
-_kCBLReplicatorChangeNotification
-_kCBLReplicatorStatusUserInfoKey
-_kCBLReplicatorErrorUserInfoKey

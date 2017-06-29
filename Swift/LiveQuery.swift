@@ -23,24 +23,26 @@ public class LiveQuery {
         impl.stop()
     }
     
-    /** Adds a query result change listener block.
-     @param block    a change listener block
-     @return the opaque listener object used for removing the added change listener block. */
+    /** Adds a query change listener block.
+        @param block   The block to be executed when the change is received.
+        @return An opaque object to act as the listener and for removing the listener
+                when calling the removeChangeListener() method. */
     @discardableResult
     public func addChangeListener(_ block: @escaping (LiveQueryChange) -> Void) -> NSObjectProtocol {
-        return impl.addChangeListener { (c) in
+        return impl.addChangeListener { [unowned self] change in
             let rows: QueryIterator?;
-            if let rowsEnum = c.rows {
+            if let rowsEnum = change.rows {
                 rows = QueryIterator(database: self.database, enumerator: rowsEnum)
             } else {
                 rows = nil;
             }
-            block(LiveQueryChange(query: self, rows: rows, error: c.error))
+            block(LiveQueryChange(query: self, rows: rows, error: change.error))
         }
     }
     
-    /** Removed a change listener.
-     @param listener  a listener object received when adding the change listener block. */
+    /** Removes a change listener. The given change listener is the opaque object
+        returned by the addChangeListener() method.
+        @param listener The listener object to be removed. */
     public func removeChangeListener(_ listener: NSObjectProtocol) {
         impl.removeChangeListener(listener)
     }

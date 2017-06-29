@@ -7,6 +7,7 @@
 //
 
 #import "CBLDatabase.h"
+@class CBLReplicatorChange;
 @class CBLReplicatorConfiguration;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -38,19 +39,11 @@ typedef struct {
 /** The current progress of the replicator. */
 @property (readonly, nonatomic) CBLReplicatorProgress progress;
 
+/** The current error of the replicator. */
+@property (readonly, nonatomic) NSError* error;
+
 @end
 
-
-/** This notification is posted by a CBLReplicator when its status/progress changes or when
- an error occurred. */
-extern NSString* const kCBLReplicatorChangeNotification;
-
-/** The key to access a CBLReplicatorStatus object containing information about 
-    the current status of the replicator. */
-extern NSString* const kCBLReplicatorStatusUserInfoKey;
-
-/** The key to access an NSError object if an error occurred. */
-extern NSString* const kCBLReplicatorErrorUserInfoKey;
 
 /** A replicator for replicating document changes between a local database and a target database.
  The replicator can be bidirectional or either push or pull. The replicator can also be one-short
@@ -75,6 +68,17 @@ extern NSString* const kCBLReplicatorErrorUserInfoKey;
     stops, the replicator will change its status's activity level to `kCBLStopped` 
     and the replicator change notification will be notified accordingly. */
 - (void) stop;
+
+/** Adds a replicator change listener block.
+    @param block   The block to be executed when the change is received.
+    @return An opaque object to act as the listener and for removing the listener 
+            when calling the -removeChangeListener: method. */
+- (id<NSObject>) addChangeListener: (void (^)(CBLReplicatorChange*))block;
+
+/** Removes a change listener. The given change listener is the opaque object
+    returned by the -addChangeListener: method.
+    @param listener The listener object to be removed. */
+- (void) removeChangeListener: (id<NSObject>)listener;
 
 @end
 

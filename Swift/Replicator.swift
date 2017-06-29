@@ -9,19 +9,6 @@
 import Foundation
 
 
-extension Notification.Name {
-    /** This notification is posted by a Replicator when its status/progress changes or when
-     an error occurred. */
-    public static let ReplicatorChange = Notification.Name(rawValue: "ReplicatorChangeNotification")
-}
-
-/** The key to access the replicator status object. */
-public let ReplicatorStatusUserInfoKey = kCBLReplicatorStatusUserInfoKey
-
-/** The key to access the replicator error object if an error occurred. */
-public let ReplicatorErrorUserInfoKey = kCBLReplicatorErrorUserInfoKey
-
-
 /** A replicator for replicating document changes between a local database and a target database.
     The replicator can be bidirectional or either push or pull. The replicator can also be one-short 
     or continuous. The replicator runs asynchronously, so observe the status property to 
@@ -56,9 +43,13 @@ public final class Replicator {
         /** The current progress of the replicator. */
         public let progress: Progress
         
+        /** The current error if there is an error occurred. */
+        public let error: Error?
+        
         /* internal */ init(_ status: CBLReplicatorStatus) {
             activity = ActivityLevel(rawValue: UInt8(status.activity.rawValue))!
             progress = Progress(completed: status.progress.completed, total: status.progress.total)
+            error = status.error
         }
     }
     
@@ -80,8 +71,17 @@ public final class Replicator {
         
         _impl = CBLReplicator(config: c);
         _config = config
-        
-        setupNotificationBridge()
+    }
+    
+    /** The replicator's configuration. */
+    public var config: ReplicatorConfiguration {
+        return _config
+    }
+    
+    
+    /** The replicator's current status: its activity level and progress. Observable. */
+    public var status: Status {
+        return Status(_impl.status)
     }
     
     
@@ -100,15 +100,23 @@ public final class Replicator {
     }
     
     
-    /** The replicator's configuration. */
-    public var config: ReplicatorConfiguration {
-        return _config
+    /** Adds a replicator change listener block.
+        @param block   The block to be executed when the change is received.
+        @return An opaque object to act as the listener and for removing the listener
+        when calling the removeChangeListener() method. */
+    @discardableResult
+    public func addChangeListener(_ block: @escaping (ReplicatorChange) -> Void) -> NSObjectProtocol {
+        return _impl.addChangeListener({ [unowned self] change in
+            block(ReplicatorChange(replicator: self, status: Status(change.status)))
+        })
     }
     
     
-    /** The replicator's current status: its activity level and progress. Observable. */
-    public var status: Status {
-        return Status(_impl.status)
+    /** Removes a change listener. The given change listener is the opaque object
+        returned by the addChangeListener() method.
+        @param listener The listener object to be removed. */
+    public func removeChangeListener(_ listener: NSObjectProtocol) {
+        _impl.removeChangeListener(listener)
     }
     
     
@@ -118,27 +126,6 @@ public final class Replicator {
     private let _impl: CBLReplicator
     
     private let _config: ReplicatorConfiguration
-    
-    
-    private func setupNotificationBridge() {
-        NotificationCenter.default.addObserver(
-            self, selector: #selector(replicatorChanged(notification:)),
-            name: Notification.Name.cblReplicatorChange, object: _impl)
-    }
-    
-    
-    @objc func replicatorChanged(notification: Notification) {
-        var userinfo = Dictionary<String, Any>()
-        
-        let s = notification.userInfo![kCBLReplicatorStatusUserInfoKey] as! CBLReplicatorStatus
-        userinfo[ReplicatorStatusUserInfoKey] = Status(s)
-        
-        if let error = notification.userInfo![kCBLReplicatorErrorUserInfoKey] as? NSError {
-            userinfo[ReplicatorErrorUserInfoKey] = error
-        }
-        
-        NotificationCenter.default.post(name: .ReplicatorChange, object: self, userInfo: userinfo)
-    }
     
     
     // MARK: deinit

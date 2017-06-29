@@ -125,16 +125,6 @@ public struct DatabaseConfiguration {
 }
 
 
-extension Notification.Name {
-    /** This notification is posted by a Dtabase in response to document changes. */
-    public static let DatabaseChange = Notification.Name(rawValue: "DatabaseChangeNotification")
-}
-
-
-/** The key to access a DatabaseChange object containing information about the change. */
-public let DatabaseChangesUserInfoKey = kCBLDatabaseChangesUserInfoKey
-
-
 /** A Couchbase Lite database. */
 public final class Database {
     /** Initializes a Couchbase Lite database with a given name and database options.
@@ -147,7 +137,6 @@ public final class Database {
         } else {
             _impl = try CBLDatabase(name: name)
         }
-        self.setupDatabaseChangeNotification()
     }
     
 
@@ -235,15 +224,37 @@ public final class Database {
         }
     }
     
-    /** Add a document change listener to the document. */
-    public func addChangeListener(_ listener: DocumentChangeListener, forDocumentID id: String) {
-        _impl.add(listener, forDocumentID: id)
+    /** Adds a database change listener block.
+        @param block   The block to be executed when the change is received.
+        @return An opaque object to act as the listener and for removing the listener
+        when calling the removeChangeListener() method. */
+    @discardableResult
+    public func addChangeListener(_ block: @escaping (DatabaseChange) -> Void) -> NSObjectProtocol {
+        return _impl.addChangeListener({ (change) in
+            block(change)
+        })
     }
     
     
-    /** Remove the document change listener from the document. */
-    public func removeChangeListener(_ listener: DocumentChangeListener, forDocumentID id: String) {
-        _impl.remove(listener, forDocumentID: id)
+    /** Adds a document change listener block for the given document ID.
+        @param documentID  The document.
+        @param block   The block to be executed when the change is received.
+        @return An opaque object to act as the listener and for removing the listener
+                when calling the removeChangeListener() method */
+    public func addChangeListener(documentID: String,
+                                  using block: @escaping (DocumentChange) -> Void) -> NSObjectProtocol
+    {
+        return _impl.addChangeListener(forDocumentID: documentID) { (change) in
+            block(change)
+        }
+    }
+    
+    
+    /** Removes a change listener. The given change listener is the opaque object
+        returned by the addChangeListener() method.
+        @param listener The listener object to be removed. */
+    public func removeChangeListener(_ listener: NSObjectProtocol) {
+        _impl.removeChangeListener(listener)
     }
     
     
@@ -292,19 +303,6 @@ public final class Database {
     
 
     let _impl : CBLDatabase
-    
-    
-    func setupDatabaseChangeNotification() {
-        NotificationCenter.default.addObserver(
-            self, selector: #selector(databaseChanged(notification:)),
-            name: Notification.Name.cblDatabaseChange, object: _impl)
-    }
-    
-    
-    @objc func databaseChanged(notification: Notification) {
-        NotificationCenter.default.post(name: .DatabaseChange,
-                                        object: self, userInfo: notification.userInfo)
-    }
     
     
     // MARK: Deinit

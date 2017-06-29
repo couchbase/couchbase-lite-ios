@@ -9,48 +9,20 @@
 #import "CBLTestCase.h"
 #import "CBLInternal.h"
 
-@interface NotificationTest : CBLTestCase <CBLDocumentChangeListener>
+@interface NotificationTest : CBLTestCase
 
 @end
 
 @implementation NotificationTest
-{
-    void* _testContext;
-    NSMutableSet* _expectedDocumentChanges;
-    XCTestExpectation* _documentChangeExpectation;
-}
-
-
-- (void) setUp {
-    [super setUp];
-    _testContext = nil;
-    _expectedDocumentChanges = nil;
-    _expectedDocumentChanges = nil;
-    
-}
-
-
-- (void) documentDidChange: (CBLDocumentChange*)change {
-    if (_testContext == @selector(testRemoveDocumentChangeListener)) {
-        XCTFail(@"Unexpected Document Change Notification");
-    } else {
-        Assert([_expectedDocumentChanges containsObject: change.documentID]);
-        [_expectedDocumentChanges removeObject: change.documentID];
-        if (_expectedDocumentChanges.count == 0)
-            [_documentChangeExpectation fulfill];
-    }
-}
 
 
 - (void) testDatabaseChange {
-    [self expectationForNotification: kCBLDatabaseChangeNotification
-                              object: self.db
-                             handler: ^BOOL(NSNotification *n)
-     {
-         CBLDatabaseChange* change = n.userInfo[kCBLDatabaseChangesUserInfoKey];
-         AssertEqual(change.documentIDs.count, 10ul);
-         return YES;
-     }];
+    XCTestExpectation* x = [self expectationWithDescription:@"change"];
+    id listener = [self.db addChangeListener: ^(CBLDatabaseChange* change) {
+        AssertEqual(change.documentIDs.count, 10ul);
+        [x fulfill];
+    }];
+    AssertNotNil(listener);
     
     __block NSError* error;
     bool ok = [self.db inBatch: &error do: ^{
@@ -63,6 +35,9 @@
     Assert(ok);
     
     [self waitForExpectationsWithTimeout: 5 handler: NULL];
+    
+    // Remove listener:
+    [self.db removeChangeListener:listener];
 }
 
 
@@ -76,17 +51,20 @@
     [doc2 setObject: @"Daniel" forKey: @"name"];
     [self saveDocument: doc2];
     
+    // Expectation:
+    XCTestExpectation* x = [self expectationWithDescription: @"document change"];
+    NSMutableSet* docs = [NSMutableSet setWithObjects:@"doc1", @"doc2", @"doc3", nil];
+    
     // Add change listeners:
-    [_db addChangeListener: self forDocumentID: @"doc1"];
-    [_db addChangeListener: self forDocumentID: @"doc2"];
-    [_db addChangeListener: self forDocumentID: @"doc3"];
+    id block = ^void(CBLDocumentChange* change) {
+        [docs removeObject:change.documentID];
+        if (docs.count == 0)
+            [x fulfill];
+    };
     
-    _documentChangeExpectation = [self expectationWithDescription: @"document change"];
-    
-    _expectedDocumentChanges = [NSMutableSet set];
-    [_expectedDocumentChanges addObject: @"doc1"];
-    [_expectedDocumentChanges addObject: @"doc2"];
-    [_expectedDocumentChanges addObject: @"doc3"];
+    id listener1 = [_db addChangeListenerForDocumentID:@"doc1" usingBlock:block];
+    id listener2 = [_db addChangeListenerForDocumentID:@"doc2" usingBlock:block];
+    id listener3 = [_db addChangeListenerForDocumentID:@"doc3" usingBlock:block];
     
     // Update doc1
     [doc1 setObject: @"Scott Tiger" forKey: @"name"];
@@ -102,6 +80,11 @@
     [self saveDocument: doc3];
     
     [self waitForExpectationsWithTimeout: 5 handler: NULL];
+    
+    // Remove listeners:
+    [_db removeChangeListener:listener1];
+    [_db removeChangeListener:listener2];
+    [_db removeChangeListener:listener3];
 }
 
 
@@ -111,30 +94,33 @@
     [self saveDocument: doc1];
     
     // Add change listeners:
-    [_db addChangeListener: self forDocumentID: @"doc1"];
-    [_db addChangeListener: self forDocumentID: @"doc1"];
-    [_db addChangeListener: self forDocumentID: @"doc1"];
-    [_db addChangeListener: self forDocumentID: @"doc1"];
-    [_db addChangeListener: self forDocumentID: @"doc1"];
-    
-    _documentChangeExpectation = [self expectationWithDescription: @"document change"];
-    
-    _expectedDocumentChanges = [NSMutableSet set];
-    [_expectedDocumentChanges addObject: @"doc1"];
+    XCTestExpectation* x = [self expectationWithDescription: @"document change"];
+    __block NSInteger count = 0;
+    id block = ^void(CBLDocumentChange* change) {
+        count++;
+    };
+   
+    id listener1 = [_db addChangeListenerForDocumentID:@"doc1" usingBlock:block];
+    id listener2 = [_db addChangeListenerForDocumentID:@"doc1" usingBlock:block];
+    id listener3 = [_db addChangeListenerForDocumentID:@"doc1" usingBlock:block];
     
     // Update doc1:
     [doc1 setObject: @"Scott Tiger" forKey: @"name"];
     [self saveDocument: doc1];
     
-    // Let's wait for 0.5 second to make sure that no duplication changes fired which
-    // will cause the assertion in documentDidChange: to fail:
-    XCTestExpectation *x = [self expectationWithDescription: @"No Changes"];
+    // Let's wait for 0.5 second to make sure that no more changes fired:
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
         dispatch_get_main_queue(), ^{
-            [x fulfill];
+            if (count == 3)
+                [x fulfill];
     });
     
     [self waitForExpectationsWithTimeout: 5 handler: NULL];
+    
+    // Remove listeners:
+    [_db removeChangeListener:listener1];
+    [_db removeChangeListener:listener2];
+    [_db removeChangeListener:listener3];
 }
 
 
@@ -144,12 +130,13 @@
     [self saveDocument: doc1];
     
     // Add change listener:
-    [_db addChangeListener: self forDocumentID: @"doc1"];
+    XCTestExpectation* x1 = [self expectationWithDescription: @"document change"];
+    id block = ^void(CBLDocumentChange* change) {
+        [x1 fulfill];
+    };
     
-    _documentChangeExpectation = [self expectationWithDescription: @"document change"];
-    
-    _expectedDocumentChanges = [NSMutableSet set];
-    [_expectedDocumentChanges addObject: @"doc1"];
+    id listener1 = [_db addChangeListenerForDocumentID:@"doc1" usingBlock:block];
+    AssertNotNil(listener1);
     
     // Update doc1:
     [doc1 setObject: @"Scott Tiger" forKey: @"name"];
@@ -158,26 +145,22 @@
     [self waitForExpectationsWithTimeout: 5 handler: NULL];
     
     // Remove change listener:
-    [_db removeChangeListener: self forDocumentID: @"doc1"];
+    [_db removeChangeListener:listener1];
     
     // Update doc1 again:
-    _testContext = @selector(testRemoveDocumentChangeListener);
     [doc1 setObject: @"Scott Tiger" forKey: @"name"];
     [self saveDocument: doc1];
     
     // Let's wait for 0.5 seconds:
-    XCTestExpectation *x = [self expectationWithDescription: @"No Changes"];
+    XCTestExpectation *x2 = [self expectationWithDescription: @"No Changes"];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
         dispatch_get_main_queue(), ^{
-            [x fulfill];
+            [x2 fulfill];
     });
     [self waitForExpectationsWithTimeout: 5 handler: NULL];
     
     // Remove again:
-    [_db removeChangeListener: self forDocumentID: @"doc1"];
-    
-    // Remove before add:
-    [_db removeChangeListener: self forDocumentID: @"doc2"];
+    [_db removeChangeListener:listener1];
 }
 
 

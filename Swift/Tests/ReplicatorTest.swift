@@ -12,7 +12,6 @@ import CouchbaseLiteSwift
 
 class ReplicatorTest: CBLTestCase {
     var otherDB: Database?
-    var repl: Replicator?
     
     override func setUp() {
         super.setUp()
@@ -42,21 +41,23 @@ class ReplicatorTest: CBLTestCase {
     
     
     func run(config: ReplicatorConfiguration, expectedError: Int?) {
-        repl = Replicator(config: config);
-        let x = self.expectation(forNotification: Notification.Name.ReplicatorChange.rawValue, object: repl!)
-        { (n) -> Bool in
-            let status = n.userInfo![ReplicatorStatusUserInfoKey] as! Replicator.Status
+        let x = self.expectation(description: "change")
+        let repl = Replicator(config: config);
+        let listener = repl.addChangeListener({ (change) in
+            let status = change.status
             if status.activity == .stopped {
                 if let err = expectedError {
-                    let error = n.userInfo![ReplicatorErrorUserInfoKey] as! NSError
-                    XCTAssertEqual(error.code, err)
+                    let error = status.error as NSError?
+                    XCTAssertNotNil(error)
+                    XCTAssertEqual(error!.code, err)
                 }
-                return true
+                x.fulfill()
             }
-            return false
-        }
-        repl!.start()
+        })
+        
+        repl.start()
         wait(for: [x], timeout: 5.0)
+        repl.removeChangeListener(listener)
     }
     
     

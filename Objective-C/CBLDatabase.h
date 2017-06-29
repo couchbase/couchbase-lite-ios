@@ -7,16 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDocument, CBLDocumentFragment, CBLPredicateQuery;
+@class CBLDocument, CBLDocumentFragment, CBLDatabaseChange, CBLDocumentChange, CBLPredicateQuery;
 @protocol CBLConflictResolver, CBLDocumentChangeListener;
 
 NS_ASSUME_NONNULL_BEGIN
-
-/** This notification is posted by a CBLDatabase in response to document changes. */
-extern NSString* const kCBLDatabaseChangeNotification;
-
-/** The key to access a CBLDatabaseChange object containing information about the change. */
-extern NSString* const kCBLDatabaseChangesUserInfoKey;
 
 
 /** Types of database indexes. */
@@ -127,8 +121,7 @@ typedef struct {
 /** Gets an existing CBLDocument object with the given ID. If the document with the given ID 
     doesn't exist in the database, the value returned will be nil.
     @param documentID   the document ID.
-    @result the CBLDocument object.
-    */
+    @result the CBLDocument object. */
 - (nullable CBLDocument*) documentWithID: (NSString*)documentID;
 
 
@@ -193,12 +186,12 @@ typedef struct {
 - (BOOL) compact: (NSError**)error;
 
 /** Changes the database's encryption key, or removes encryption if the new key is nil.
- @param key  The encryption key in the form of an NSString (a password) or an
- NSData object exactly 32 bytes in length (a raw AES key.) If a string is given,
- it will be internally converted to a raw key using 64,000 rounds of PBKDF2 hashing.
- A nil value will decrypt the database.
- @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
- @result  YES if the database was successfully re-keyed, or NO on error. */
+    @param key  The encryption key in the form of an NSString (a password) or an
+                NSData object exactly 32 bytes in length (a raw AES key.) If a string is given,
+                it will be internally converted to a raw key using 64,000 rounds of PBKDF2 hashing.
+                A nil value will decrypt the database.
+    @param error   If an error occurs, it will be stored here if this parameter is non-NULL.
+    @result    YES if the database was successfully re-keyed, or NO on error. */
 - (BOOL) changeEncryptionKey: (nullable id)key error: (NSError**)error;
 
 /** Deletes a database of the given name in the given directory. */
@@ -211,21 +204,27 @@ typedef struct {
             inDirectory: (nullable NSString*)directory;
 
 
-#pragma mark - DOCUMENT CHANGES
+#pragma mark - CHANGE LISTENER:
 
 
-/** Add a document change listener to the document.
-    @param listener the listener.
-    @param documentID the document ID. */
-- (void) addChangeListener: (id <CBLDocumentChangeListener>)listener
-             forDocumentID: (NSString*)documentID;
+/** Adds a database change listener block.
+    @param block   The block to be executed when the change is received.
+    @return An opaque object to act as the listener and for removing the listener
+            when calling the -removeChangeListener: method. */
+- (id<NSObject>) addChangeListener: (void (^)(CBLDatabaseChange*))block;
 
+/** Adds a document change listener block for the given document ID.
+    @param documentID  The document.
+    @param block   The block to be executed when the change is received.
+    @return An opaque object to act as the listener and for removing the listener
+            when calling the -removeChangeListener: method. */
+- (id<NSObject>) addChangeListenerForDocumentID: (NSString*)documentID
+                                     usingBlock: (void (^)(CBLDocumentChange*))block;
 
-/** Remove the document change listener from the document. 
-    @param listener the listener.
-    @param documentID the document ID. */
-- (void) removeChangeListener: (id <CBLDocumentChangeListener>)listener
-                forDocumentID: (NSString*)documentID;
+/** Removes a change listener. The given change listener is the opaque object
+    returned by the -addChangeListener: or -addChangeListenerForDocumentID:usingBlock: method. 
+    @param listener The listener object to be removed. */
+- (void) removeChangeListener: (id<NSObject>)listener;
 
 
 #pragma mark - QUERYING:
@@ -235,18 +234,18 @@ typedef struct {
 - (NSEnumerator<CBLDocument*>*) allDocuments;
 
 /** Compiles a database query, from any of several input formats.
- Once compiled, the query can be run many times with different parameter values.
- The rows will be sorted by ascending document ID, and no custom values are returned.
- @param where  The query specification. This can be an NSPredicate, or an NSString (interpreted
- as an NSPredicate format string), or nil to return all documents.
- @return  The CBLQuery. */
+    Once compiled, the query can be run many times with different parameter values.
+    The rows will be sorted by ascending document ID, and no custom values are returned.
+    @param where    The query specification. This can be an NSPredicate, or an NSString (interpreted
+                    as an NSPredicate format string), or nil to return all documents.
+    @return The CBLQuery. */
 - (CBLPredicateQuery*) createQueryWhere: (nullable id)where;
 
 /** Creates a value index (type kCBLValueIndex) on a given document property.
     This will speed up queries that test that property, at the expense of making database writes a
     little bit slower.
     @param expressions  Expressions to index, typically key-paths. Can be NSExpression objects,
-                    or NSStrings that are expression format strings.
+                        or NSStrings that are expression format strings.
     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
     @return  True on success, false on failure. */
 - (BOOL) createIndexOn: (NSArray*)expressions
@@ -256,7 +255,7 @@ typedef struct {
     This will speed up queries that test that property, at the expense of making database writes a
     little bit slower.
     @param expressions  Expressions to index, typically key-paths. Can be NSExpression objects,
-                    or NSStrings that are expression format strings.
+                        or NSStrings that are expression format strings.
     @param type  Type of index to create (value, full-text or geospatial.)
     @param options  Options affecting the index, or NULL for default settings.
     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.

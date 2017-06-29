@@ -10,8 +10,9 @@
 #import "CBLReplicatorConfiguration.h"
 #import "c4.h"
 
-extern C4LogDomain kCBLSyncLogDomain;
+NS_ASSUME_NONNULL_BEGIN
 
+extern C4LogDomain kCBLSyncLogDomain;
 
 @interface CBLReplicatorConfiguration ()
 @property (readonly, nonatomic) NSDictionary* effectiveOptions;
@@ -21,3 +22,5 @@ extern C4LogDomain kCBLSyncLogDomain;
 @interface CBLReplicator ()
 
 @end
+
+NS_ASSUME_NONNULL_END

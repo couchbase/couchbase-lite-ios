@@ -62,36 +62,45 @@
 
 
 - (void) run: (CBLReplicatorConfiguration*)config
-   errorCode: (NSInteger)code
+   errorCode: (NSInteger)errorCode
  errorDomain: (NSString*)errorDomain
 {
     repl = [[CBLReplicator alloc] initWithConfig: config];
-    XCTestExpectation *x =
-        [self expectationForNotification: kCBLReplicatorChangeNotification
-                                  object: repl
-                                 handler: ^BOOL(NSNotification *n)
-    {
-        CBLReplicatorStatus* status =  n.userInfo[kCBLReplicatorStatusUserInfoKey];
-        NSError* error = n.userInfo[kCBLReplicatorErrorUserInfoKey];
-        
-        static const char* const kActivityNames[5] = { "stopped", "idle", "busy" };
-        NSLog(@"---Status: %s (%llu / %llu), lastError = %@",
-              kActivityNames[status.activity], status.progress.completed, status.progress.total,
-              error.localizedDescription);
-        
-        if (status.activity == kCBLStopped) {
-            if (code != 0) {
-                AssertEqual(error.code, code);
-                if (errorDomain)
-                    AssertEqualObjects(error.domain, errorDomain);
-            } else
-                AssertNil(error);
-            return YES;
-        }
-        return NO;
+    
+    XCTestExpectation *x = [self expectationWithDescription: @"Replicator Change"];
+    
+    __weak typeof(self) wSelf = self;
+    id listener = [repl addChangeListener: ^(CBLReplicatorChange* change) {
+        [wSelf verifyChange: change errorCode: errorCode errorDomain:errorDomain];
+        if (change.status.activity == kCBLStopped)
+            [x fulfill];
     }];
+    
     [repl start];
     [self waitForExpectations: @[x] timeout: 5.0];
+    [repl removeChangeListener: listener];
+}
+
+
+- (void) verifyChange: (CBLReplicatorChange*)change
+            errorCode: (NSInteger)code
+          errorDomain: (NSString*)domain
+{
+    CBLReplicatorStatus* s = change.status;
+    
+    static const char* const kActivityNames[5] = { "stopped", "idle", "busy" };
+    NSLog(@"---Status: %s (%llu / %llu), lastError = %@",
+          kActivityNames[s.activity], s.progress.completed, s.progress.total,
+          s.error.localizedDescription);
+    
+    if (s.activity == kCBLStopped) {
+        if (code != 0) {
+            AssertEqual(s.error.code, code);
+            if (domain)
+                AssertEqualObjects(s.error.domain, domain);
+        } else
+            AssertNil(s.error);
+    }
 }
 
 

@@ -10,24 +10,13 @@ import XCTest
 import CouchbaseLiteSwift
 
 
-class NotificationTest: CBLTestCase, DocumentChangeListener {
-    var testContext: String?
-    var expectedDocumentChanges: Set<String>?
-    var documentChangeExpectation: XCTestExpectation?
-    
-    override func setUp() {
-        super.setUp()
-        expectedDocumentChanges = nil
-        documentChangeExpectation = nil
-    }
-    
-    
+class NotificationTest: CBLTestCase {
     func testDatabaseChange() throws {
-        expectation(forNotification: Notification.Name.DatabaseChange.rawValue, object: db) {
-            (n) -> Bool in
-                let change = n.userInfo![DatabaseChangesUserInfoKey] as! DatabaseChange
-                XCTAssertEqual(change.documentIDs.count, 10)
-                return true
+        let x = self.expectation(description: "change")
+        
+        let listener = db.addChangeListener { (change) in
+            XCTAssertEqual(change.documentIDs.count, 10)
+            x.fulfill()
         }
        
         try db.inBatch {
@@ -38,17 +27,8 @@ class NotificationTest: CBLTestCase, DocumentChangeListener {
             }
         }
         waitForExpectations(timeout: 5, handler: nil)
-    }
-    
-    
-    public func documentDidChange(_ change: CBLDocumentChange) {
-        if let expectation = documentChangeExpectation {
-            XCTAssertTrue(expectedDocumentChanges!.contains(change.documentID))
-            expectedDocumentChanges!.remove(change.documentID)
-            if (expectedDocumentChanges!.count == 0) {
-                expectation.fulfill()
-            }
-        }
+        
+        db.removeChangeListener(listener)
     }
     
     
@@ -61,17 +41,24 @@ class NotificationTest: CBLTestCase, DocumentChangeListener {
         doc2.set("Daniel", forKey: "name")
         try saveDocument(doc2)
         
+        let x = self.expectation(description: "Got all changes")
+        
+        var changes = Set<String>()
+        changes.insert("doc1")
+        changes.insert("doc2")
+        changes.insert("doc3")
+        
+        let handler = { (change: DocumentChange) in
+            changes.remove(change.documentID)
+            if changes.count == 0 {
+                x.fulfill()
+            }
+        }
+        
         // Add change listeners:
-        db.addChangeListener(self, forDocumentID: "doc1")
-        db.addChangeListener(self, forDocumentID: "doc2")
-        db.addChangeListener(self, forDocumentID: "doc3")
-        
-        documentChangeExpectation = expectation(description: "document change")
-        
-        expectedDocumentChanges = Set()
-        expectedDocumentChanges!.insert("doc1")
-        expectedDocumentChanges!.insert("doc2")
-        expectedDocumentChanges!.insert("doc3")
+        let listener1 = db.addChangeListener(documentID: "doc1", using: handler)
+        let listener2 = db.addChangeListener(documentID: "doc2", using: handler)
+        let listener3 = db.addChangeListener(documentID: "doc3", using: handler)
         
         // Update doc1:
         doc1.set("Scott Tiger", forKey: "name")
@@ -86,6 +73,10 @@ class NotificationTest: CBLTestCase, DocumentChangeListener {
         try saveDocument(doc3)
         
         waitForExpectations(timeout: 5, handler: nil)
+        
+        db.removeChangeListener(listener1)
+        db.removeChangeListener(listener2)
+        db.removeChangeListener(listener3)
     }
     
     
@@ -94,27 +85,30 @@ class NotificationTest: CBLTestCase, DocumentChangeListener {
         doc1.set("Scott", forKey: "name")
         try saveDocument(doc1)
         
+        let x = self.expectation(description: "Got all changes")
+        
+        var count = 0
+        let handler = { (change: DocumentChange) in
+            count = count + 1
+            if count == 3 {
+                x.fulfill()
+            }
+        }
+        
         // Add change listeners:
-        db.addChangeListener(self, forDocumentID: "doc1")
-        db.addChangeListener(self, forDocumentID: "doc1")
-        db.addChangeListener(self, forDocumentID: "doc1")
-        db.addChangeListener(self, forDocumentID: "doc1")
-        db.addChangeListener(self, forDocumentID: "doc1")
-        
-        documentChangeExpectation = expectation(description: "document change")
-        
-        expectedDocumentChanges = Set()
-        expectedDocumentChanges!.insert("doc1")
+        let listener1 = db.addChangeListener(documentID: "doc1", using: handler)
+        let listener2 = db.addChangeListener(documentID: "doc1", using: handler)
+        let listener3 = db.addChangeListener(documentID: "doc1", using: handler)
         
         // Update doc1:
         doc1.set("Scott Tiger", forKey: "name")
         try saveDocument(doc1)
         
-        let x = expectation(description: "No changes")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            x.fulfill()
-        }
         waitForExpectations(timeout: 5, handler: nil)
+        
+        db.removeChangeListener(listener1)
+        db.removeChangeListener(listener2)
+        db.removeChangeListener(listener3)
     }
     
     
@@ -123,13 +117,12 @@ class NotificationTest: CBLTestCase, DocumentChangeListener {
         doc1.set("Scott", forKey: "name")
         try saveDocument(doc1)
         
+        let x1 = self.expectation(description: "change")
+        
         // Add change listener:
-        db.addChangeListener(self, forDocumentID: "doc1")
-        
-        documentChangeExpectation = expectation(description: "document change")
-        
-        expectedDocumentChanges = Set()
-        expectedDocumentChanges!.insert("doc1")
+        let listener = db.addChangeListener(documentID: "doc1") { (change) in
+            x1.fulfill()
+        }
         
         // Update doc1:
         doc1.set("Scott Tiger", forKey: "name")
@@ -138,23 +131,19 @@ class NotificationTest: CBLTestCase, DocumentChangeListener {
         waitForExpectations(timeout: 5, handler: nil)
         
         // Remove change listener:
-        db.removeChangeListener(self, forDocumentID: "doc1")
+        db.removeChangeListener(listener)
         
-        testContext = "testRemoveDocumentChangeListener"
         doc1.set("Scott Tiger", forKey: "name")
         try saveDocument(doc1)
         
         // Let's wait for 0.5 seconds:
-        let x = expectation(description: "No changes")
+        let x2 = expectation(description: "No changes")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            x.fulfill()
+            x2.fulfill()
         }
         waitForExpectations(timeout: 5, handler: nil)
         
         // Remove again:
-        db.removeChangeListener(self, forDocumentID: "doc1")
-        
-        // Remove before add:
-        db.removeChangeListener(self, forDocumentID: "doc2")
+        db.removeChangeListener(listener)
     }
 }

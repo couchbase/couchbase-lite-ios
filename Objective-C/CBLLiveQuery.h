@@ -22,13 +22,15 @@ NS_ASSUME_NONNULL_BEGIN
 /** Stops observing database changes. */
 - (void) stop;
 
-/** Adds a query result change listener block.
-    @param block    a change listener block
-    @return the opaque listener object used for removing the added change listener block. */
+/** Adds a query change listener block.
+    @param block   The block to be executed when the change is received.
+    @return An opaque object to act as the listener and for removing the listener
+            when calling the -removeChangeListener: method. */
 - (id<NSObject>) addChangeListener: (void (^)(CBLLiveQueryChange*))block;
 
-/** Removed a change listener.
-    @param listener  a listener object received when adding the change listener block. */
+/** Removes a change listener. The given change listener is the opaque object
+    returned by the -addChangeListener: method.
+    @param listener The listener object to be removed. */
 - (void) removeChangeListener: (id<NSObject>)listener;
 
 @end

@@ -25,6 +25,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     bool _observing, _willUpdate;
     CFAbsoluteTime _lastUpdatedAt;
     CBLQueryEnumerator* _enum;
+    id _dbChangeListener;
     
     NSMutableSet* _changeListeners;
 }
@@ -42,20 +43,19 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 
 - (void) dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
+    [self stop];
 }
 
 
 - (void) run {
-    if (!_observing) {
+    if (!_dbChangeListener) {
         CBLDatabase* database = _query.database;
         Assert(database);
         
-        _observing = YES;
-        [[NSNotificationCenter defaultCenter] addObserver: self 
-                                                 selector: @selector(databaseChanged:)
-                                                     name: kCBLDatabaseChangeNotification 
-                                                   object: database];
+        __weak typeof(self) wSelf = self;
+        _dbChangeListener = [database addChangeListener:^(CBLDatabaseChange *change) {
+            [wSelf databaseChanged: change];
+        }];
     }
     _enum = nil;
     [self update];
@@ -63,9 +63,9 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 
 - (void) stop {
-    if (_observing) {
-        _observing = NO;
-        [[NSNotificationCenter defaultCenter] removeObserver: self];
+    if (_dbChangeListener) {
+        [_query.database removeChangeListener: _dbChangeListener];
+        _dbChangeListener = nil;
     }
     _willUpdate = NO; // cancels the delayed update started by -databaseChanged
 }
@@ -90,14 +90,12 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 #pragma mark Private
 
 
-- (void) databaseChanged: (NSNotification*)n {
+- (void) databaseChanged: (CBLDatabaseChange*)change {
     if (_willUpdate)
         return;  // Already a pending update scheduled
 
     // Use double the update interval if this is a remote change (coming from a pull replication):
     NSTimeInterval updateInterval = _updateInterval;
-    
-    CBLDatabaseChange* change = n.userInfo[kCBLDatabaseChangesUserInfoKey];
     if (change.isExternal)
         updateInterval *= 2;
 
