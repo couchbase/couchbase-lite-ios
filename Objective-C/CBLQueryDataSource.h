@@ -17,23 +17,15 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLQueryDataSource : NSObject
 
 /** Create a database data source. 
-    @param database the database used as the data source as the query.
-    @return a CBLQueryDatabase instance, which is also a CBLQueryDataSource instance. */
-+ (CBLQueryDatabase*) database: (CBLDatabase*)database;
+    @param database The database used as the data source as the query.
+    @return A CBLQueryDatabase instance */
++ (instancetype) database: (CBLDatabase*)database;
 
-/** Not available. */
-- (instancetype) init NS_UNAVAILABLE;
-
-@end
-
-/** A database data source. You could also create an alias data source by calling 
- the -as: method with a given alias name. */
-@interface CBLQueryDatabase : CBLQueryDataSource
-
-/** Create an alias data source. 
-    @param as the alias name of the data source.
-    @return an alias CBLQueryDataSource. */
-- (CBLQueryDataSource*) as: (NSString*)as;
+/** Create a database data source with the given alias name.
+    @param database The database used as the data source as the query.
+    @alias  The alias name of the data source.
+    @return A CBLQueryDatabase instance */
++ (instancetype) database: (CBLDatabase*)database as: (nullable NSString*)alias;
 
 /** Not available. */
 - (instancetype) init NS_UNAVAILABLE;
@@ -43,4 +35,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 NS_ASSUME_NONNULL_END
 
+// TODO:
+// * Support subquery
 

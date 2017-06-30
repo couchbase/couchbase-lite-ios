@@ -10,6 +10,6 @@ import Foundation
 
 /** WhereRouter for creating and chaning a query ORDER BY clause. */
 protocol OrderByRouter {
-    /** Create and chain an ORDER BY clause component to specify the order of the query result. */
+    /** Create and chain ORDER BY components to specify the order of the query result. */
     func orderBy(_ orderBy: OrderBy...) -> OrderBy
 }

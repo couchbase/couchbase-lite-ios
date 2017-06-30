@@ -9,19 +9,21 @@
 import Foundation
 
 /** A From component representing a FROM clause for specifying the data source of the query. */
-public final class From: Query, WhereRouter, OrderByRouter  {
+public final class From: Query, JoinRouter, WhereRouter, OrderByRouter  {
     
     /** Create and chain a WHERE component for specifying the WHERE clause of the query. */
     public func `where`(_ whereExpression: Expression) -> Where {
         return Where(query: self, impl: whereExpression.impl)
     }
     
-    /** Create and chain an ORDER BY component for specifying the order of the query result. */
+    /** Create and chain ORDER BY components for specifying the order of the query result. */
     public func orderBy(_ orders: OrderBy...) -> OrderBy {
-        let implOrders = orders.map { (o) -> CBLQueryOrderBy in
-            return o.impl
-        }
-        return OrderBy(query: self, impl: CBLQueryOrderBy(implOrders))
+        return OrderBy(query: self, impl: OrderBy.toImpl(orders: orders))
+    }
+    
+    /** Create and chain JOIN components for specifying the JOIN clause of the query. */
+    public func join(_ joins: Join...) -> Join {
+        return Join(query: self, impl: Join.toImpl(joins: joins))
     }
     
     /** An internal constructor. */

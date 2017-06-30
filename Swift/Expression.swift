@@ -9,13 +9,13 @@
 import Foundation
 
 /** An Expression represents an expression used for constructing a query statement. */
-public final class Expression {
+public class Expression {
     
     /** Create a property expression representing the value of the given property name.
         @param property property name in the key path format.
         @return a property expression. */
-    public static func property(_ property: String) -> Expression {
-        return Expression(CBLQueryExpression.property(property))
+    public static func property(_ property: String) -> PropertyExpression {
+        return PropertyExpression(property: property);
     }
     
     /** Create a negated expression representing the negated result of the given expression.
@@ -302,4 +302,19 @@ public final class Expression {
         return exp
     }
     
+}
+
+/** A property expression. */
+public class PropertyExpression: Expression {
+    let property: String
+    
+    init (property: String) {
+        self.property = property
+        super.init(CBLQueryExpression.property(property))
+    }
+    
+    /** Specifies an alias name of the data source of the property. */
+    public func from(_ alias: String) -> Expression {
+        return Expression(CBLQueryExpression.property(property, from: alias))
+    }
 }

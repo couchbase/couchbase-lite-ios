@@ -9,6 +9,7 @@
 #import "CBLQuery.h"
 #import "CBLInternal.h"
 #import "CBLQueryDataSource.h"
+#import "CBLQueryJoin.h"
 #import "CBLQuerySelect.h"
 #import "CBLQueryExpression.h"
 #import "CBLQueryOrderBy.h"
@@ -25,9 +26,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nonatomic) CBLQueryDataSource* from;
 
+@property (readonly, nullable, nonatomic) NSArray<CBLQueryJoin*>* join;
+
 @property (readonly, nullable, nonatomic) CBLQueryExpression* where;
 
-@property (readonly, nullable, nonatomic) CBLQueryOrderBy* orderBy;
+@property (readonly, nullable, nonatomic) NSArray<CBLQueryOrderBy*>* orderBy;
 
 @property (readonly, nonatomic) BOOL distinct;
 
@@ -35,8 +38,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithSelect: (CBLQuerySelect*)select
                        distinct: (BOOL)distinct
                            from: (CBLQueryDataSource*)from
+                           join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
-                        orderBy: (nullable CBLQueryOrderBy*)orderBy;
+                        orderBy: (nullable NSArray<CBLQueryOrderBy*>*)orderBy;
 
 @end
 
@@ -44,17 +48,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQueryDataSource ()
 
-@property (readonly, nonatomic) id source;
+@property (nonatomic, readonly) id source;
 
-- (instancetype) initWithDataSource: (id)source;
+@property (nonatomic, readonly, nullable) NSString* alias;
 
-@end
+- (instancetype) initWithDataSource: (id)source as: (nullable NSString*)alias;
 
-/////
-
-@interface CBLQueryDatabase ()
-
-- (instancetype) initWithDatabase: (CBLDatabase*)database;
+- (id) asJSON;
 
 @end
 
@@ -65,6 +65,18 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nullable, nonatomic) id select;
 
 - (instancetype) initWithSelect: (nullable id)select;
+
+@end
+
+/////
+
+@interface CBLQueryJoin ()
+
+- (instancetype) initWithType: (NSString*)type
+                   dataSource: (CBLQueryDataSource*)dataSource
+                           on: (CBLQueryExpression*)expression;
+
+- (id) asJSON;
 
 @end
 
@@ -145,9 +157,11 @@ typedef NS_ENUM(NSInteger, CBLCompoundExpType) {
 
 @interface CBLKeyPathExpression : CBLQueryExpression
 
-@property(readonly, copy, nonatomic) NSString* keyPath;
+@property(nonatomic, readonly, copy) NSString* keyPath;
 
-- (instancetype)initWithKeyPath: (NSString*)keyPath;
+@property(nonatomic, readonly, copy, nullable) NSString* from; // Data Source Alias
+
+- (instancetype)initWithKeyPath: (NSString*)keyPath from: (nullable NSString*)from;
 
 @end
 

@@ -26,7 +26,12 @@
 
 
 + (CBLQueryExpression*) property: (NSString*)property {
-    return [[CBLKeyPathExpression alloc] initWithKeyPath: property];
+    return [[CBLKeyPathExpression alloc] initWithKeyPath: property from: nil];
+}
+
+
++ (CBLQueryExpression*) property: (NSString*)property from:(NSString *)from {
+    return [[CBLKeyPathExpression alloc] initWithKeyPath: property from: from];
 }
 
 
@@ -440,26 +445,30 @@
 
 @implementation CBLKeyPathExpression
 
-@synthesize keyPath=_keyPath;
+@synthesize keyPath=_keyPath, from=_from;
 
-- (instancetype) initWithKeyPath:(NSString *)keyPath {
+- (instancetype) initWithKeyPath: (NSString*)keyPath from: (NSString*)from {
     self = [super initWithNone: nil];
     if (self) {
         _keyPath = [keyPath copy];
+        _from = [from copy];
     }
     return self;
 }
 
 - (id) asJSON {
-    NSMutableArray *json = [NSMutableArray array];
+    NSMutableArray* json = [NSMutableArray array];
     if ([_keyPath hasPrefix: @"rank("]) {
         [json addObject: @"rank()"];
         [json addObject: @[@".",
                            [_keyPath substringWithRange:
                                 NSMakeRange(5, _keyPath.length - 6)]]];
-    } else
-        [json addObject: [NSString stringWithFormat: @".%@", _keyPath]];
-    
+    } else {
+        if (_from)
+            [json addObject: [NSString stringWithFormat: @".%@.%@", _from, _keyPath]];
+        else
+            [json addObject: [NSString stringWithFormat: @".%@", _keyPath]];
+    }
     return json;
 }
 
@@ -470,7 +479,7 @@
 
 @synthesize operand=_operand, type=_type;
 
-- (instancetype) initWithExpression:(id)operand type:(CBLUnaryExpType)type {
+- (instancetype) initWithExpression: (id)operand type: (CBLUnaryExpType)type {
     if (self) {
         _operand = operand;
         _type = type;
@@ -479,7 +488,7 @@
 }
 
 - (id) asJSON {
-    NSMutableArray *json = [NSMutableArray array];
+    NSMutableArray* json = [NSMutableArray array];
     switch (_type) {
         case CBLMissingUnaryExpType:
             [json addObject: @"IS MISSING"];
@@ -498,7 +507,7 @@
     }
     
     if ([_operand isKindOfClass: [CBLQueryExpression class]])
-        [json addObject: [(CBLQueryExpression *)_operand asJSON]];
+        [json addObject: [(CBLQueryExpression*)_operand asJSON]];
     else
         [json addObject: _operand];
     

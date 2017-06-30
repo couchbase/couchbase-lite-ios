@@ -21,6 +21,7 @@ public class DataSource {
     
     let impl: CBLQueryDataSource
     
+    // TODO: Move to DatabaseSource when we support sub query.
     let database: Database
     
     init(impl: CBLQueryDataSource, database: Database) {
@@ -36,7 +37,8 @@ public class DatabaseSource: DataSource {
     
     /** Create an alias data source. */
     public func `as`(_ alias: String) -> DataSource {
-        return self
+        return DatabaseSource(impl: CBLQueryDataSource.database(database._impl, as: alias),
+                              database: database)
     }
     
 }

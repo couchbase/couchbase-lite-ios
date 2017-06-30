@@ -22,20 +22,23 @@
     C4Query* _c4Query;
 }
 
-@synthesize select=_select, from=_from, where=_where, orderBy=_orderBy, distinct=_distinct;
+@synthesize select=_select, from=_from, join=_join;
+@synthesize where=_where, orderBy=_orderBy, distinct=_distinct;
 
 
-- (instancetype) initWithSelect: (CBLQuerySelect*)select
-                       distinct: (BOOL)distinct
-                           from: (CBLQueryDataSource*)from
-                          where: (CBLQueryExpression*)where
-                        orderBy: (CBLQueryOrderBy*)orderBy
+- /* internal */ (instancetype) initWithSelect: (CBLQuerySelect*)select
+                                      distinct: (BOOL)distinct
+                                          from: (CBLQueryDataSource*)from
+                                          join: (nullable NSArray<CBLQueryJoin*>*)join
+                                         where: (CBLQueryExpression*)where
+                                       orderBy: (NSArray<CBLQueryOrderBy*>*)orderBy
 {
     self = [super init];
     if (self) {
-        _from = from;
-        _distinct = distinct;
         _select = select;
+        _distinct = distinct;
+        _from = from;
+        _join = join;
         _where = where;
         _orderBy = orderBy;
     }
@@ -57,6 +60,7 @@
     return [[[self class] alloc] initWithSelect: select
                                        distinct: NO
                                            from: from
+                                           join: nil
                                           where: nil
                                         orderBy: nil];
 }
@@ -65,8 +69,10 @@
 + (instancetype) selectDistinct: (CBLQuerySelect*)select
                            from: (CBLQueryDataSource*)from
 {
-    return [[[self class] alloc] initWithSelect: select distinct: YES
+    return [[[self class] alloc] initWithSelect: select
+                                       distinct: YES
                                            from: from
+                                           join: nil
                                           where: nil
                                         orderBy: nil];
 }
@@ -82,6 +88,7 @@
     return [[[self class] alloc] initWithSelect: select
                                        distinct: NO
                                            from: from
+                                           join: nil
                                           where: where
                                         orderBy: nil];
 }
@@ -94,6 +101,7 @@
     return [[[self class] alloc] initWithSelect: select
                                        distinct: YES
                                            from: from
+                                           join: nil
                                           where: where
                                         orderBy: nil];
 }
@@ -105,11 +113,12 @@
 + (instancetype) select: (CBLQuerySelect*)select
                    from: (CBLQueryDataSource*)from
                   where: (CBLQueryExpression*)where
-                orderBy: (CBLQueryOrderBy*)orderBy
+                orderBy: (NSArray<CBLQueryOrderBy*>*)orderBy
 {
     return [[[self class] alloc] initWithSelect: select
                                        distinct: NO
                                            from: from
+                                           join: nil
                                           where: where
                                         orderBy: orderBy];
 }
@@ -118,11 +127,105 @@
 + (instancetype) selectDistinct: (CBLQuerySelect*)select
                            from: (CBLQueryDataSource*)from
                           where: (CBLQueryExpression*)where
-                        orderBy: (CBLQueryOrderBy*)orderBy
+                        orderBy: (NSArray<CBLQueryOrderBy*>*)orderBy
 {
     return [[[self class] alloc] initWithSelect: select
                                        distinct: YES
                                            from: from
+                                           join: nil
+                                          where: where
+                                        orderBy: orderBy];
+}
+
+
+#pragma mark - SELECT > FROM > JOIN
+
+
++ (instancetype) select: (CBLQuerySelect*)select
+                   from: (CBLQueryDataSource*)from
+                   join: (nullable NSArray<CBLQueryJoin*>*)join
+{
+    return [[[self class] alloc] initWithSelect: select
+                                       distinct: NO
+                                           from: from
+                                           join: join
+                                          where: nil
+                                        orderBy: nil];
+}
+
+
++ (instancetype) selectDistinct: (CBLQuerySelect*)select
+                           from: (CBLQueryDataSource*)from
+                           join: (nullable NSArray<CBLQueryJoin*>*)join
+{
+    return [[[self class] alloc] initWithSelect: select
+                                       distinct: YES
+                                           from: from
+                                           join: join
+                                          where: nil
+                                        orderBy: nil];
+}
+
+
+#pragma mark - SELECT > FROM > JOIN > WHERE
+
+
++ (instancetype) select: (CBLQuerySelect*)select
+                   from: (CBLQueryDataSource*)from
+                   join: (nullable NSArray<CBLQueryJoin*>*)join
+                  where: (nullable CBLQueryExpression*)where
+{
+    return [[[self class] alloc] initWithSelect: select
+                                       distinct: NO
+                                           from: from
+                                           join: join
+                                          where: where
+                                        orderBy: nil];
+}
+
+
++ (instancetype) selectDistinct: (CBLQuerySelect*)select
+                           from: (CBLQueryDataSource*)from
+                           join: (nullable NSArray<CBLQueryJoin*>*)join
+                          where: (nullable CBLQueryExpression*)where
+{
+    return [[[self class] alloc] initWithSelect: select
+                                       distinct: YES
+                                           from: from
+                                           join: join
+                                          where: where
+                                        orderBy: nil];
+}
+
+
+#pragma mark - SELECT > FROM > JOIN > WHERE > ORDER BY
+
+
++ (instancetype) select: (CBLQuerySelect*)select
+                   from: (CBLQueryDataSource*)from
+                   join: (nullable NSArray<CBLQueryJoin*>*)join
+                  where: (nullable CBLQueryExpression*)where
+                orderBy: (nullable NSArray<CBLQueryOrderBy*>*)orderBy
+{
+    return [[[self class] alloc] initWithSelect: select
+                                       distinct: NO
+                                           from: from
+                                           join: join
+                                          where: where
+                                        orderBy: orderBy];
+}
+
+
++ (instancetype) selectDistinct: (CBLQuerySelect*)select
+                           from: (CBLQueryDataSource*)from
+                           join: (nullable NSArray<CBLQueryJoin*>*)join
+                          where: (nullable CBLQueryExpression*)where
+                        orderBy: (nullable NSArray<CBLQueryOrderBy*>*)orderBy
+{
+    return [[[self class] alloc] initWithSelect: select
+                                       distinct: YES
+                                           from: from
+                                           join: join
                                           where: where
                                         orderBy: orderBy];
 }
@@ -173,6 +276,7 @@
     return [[[self class] alloc] initWithSelect: _select
                                        distinct: _distinct
                                            from: _from
+                                           join: _join
                                           where: _where
                                         orderBy: _orderBy];
 }
@@ -206,18 +310,38 @@
 
 - (id) asJSON {
     NSMutableDictionary *json = [NSMutableDictionary dictionary];
+    
     if (_distinct)
         json[@"DISTINCT"] = @(YES);
+    
+    // Join:
+    NSMutableArray* from;
+    NSDictionary* as = [_from asJSON];
+    if (as.count > 0) {
+        if (!from)
+            from = [NSMutableArray array];
+        [from addObject: as];
+    } if (_join) {
+        if (!from)
+            from = [NSMutableArray array];
+        for (CBLQueryJoin* j in _join) {
+            [from addObject: [j asJSON]];
+        }
+    }
+    if (from.count > 0)
+        json[@"FROM"] = from;
     
     if (_where)
         json[@"WHERE"] = [_where asJSON];
     
     if (_orderBy) {
-        if ([_orderBy isKindOfClass: [CBLQuerySortOrder class]])
-            json[@"ORDER_BY"] = @[[_orderBy asJSON]];
-        else
-            json[@"ORDER_BY"] = [_orderBy asJSON];
+        NSMutableArray* orderBy = [NSMutableArray array];
+        for (CBLQueryOrderBy* o in _orderBy) {
+            [orderBy addObject: [o asJSON]];
+        }
+        json[@"ORDER_BY"] = orderBy;
     }
+    
     return json;
 }
 

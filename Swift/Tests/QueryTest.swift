@@ -334,6 +334,30 @@ class QueryTest: CBLTestCase {
     }
     
     
+    func testJoin() throws {
+        try loadNumbers(100);
+        
+        let doc = createDocument("joinme")
+        doc.set(42, forKey: "theone")
+        try saveDocument(doc)
+        
+        let q = Query
+            .select()
+            .from(DataSource.database(db).as("main"))
+            .join(
+                Join.join(DataSource.database(db).as("secondary"))
+                    .on(Expression.property("number1").from("main")
+                        .equalTo(Expression.property("theone").from("secondary"))))
+        
+        NSLog("%@", try! q.explain())
+        
+        let numRow = try verifyQuery(q, block: { (n, row) in
+            XCTAssertEqual(row.document.int(forKey: "number1"), 42)
+        })
+        XCTAssertEqual(numRow, 1)
+    }
+    
+    
     func testLiveQuery() throws {
         try loadNumbers(100);
         var count = 0;

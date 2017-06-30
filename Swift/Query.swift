@@ -67,11 +67,13 @@ public class Query {
     
     var fromImpl: CBLQueryDataSource?
     
+    var joinImpl: [CBLQueryJoin]?
+    
     var database: Database?
     
     var whereImpl: CBLQueryExpression?
     
-    var orderByImpl: CBLQueryOrderBy?
+    var orderByImpl: [CBLQueryOrderBy]?
     
     var queryImpl: CBLQuery?
     
@@ -86,10 +88,10 @@ public class Query {
         assert(selectImpl != nil && database != nil)
         if self.distinct {
             queryImpl = CBLQuery.selectDistinct(
-                selectImpl!, from: fromImpl!, where: whereImpl, orderBy: orderByImpl)
+                selectImpl!, from: fromImpl!, join: joinImpl, where: whereImpl, orderBy: orderByImpl)
         } else {
             queryImpl = CBLQuery.select(
-                selectImpl!, from: fromImpl!, where: whereImpl, orderBy: orderByImpl)
+                selectImpl!, from: fromImpl!, join: joinImpl, where: whereImpl, orderBy: orderByImpl)
         }
     }
 
@@ -98,6 +100,7 @@ public class Query {
         self.selectImpl = query.selectImpl
         self.distinct = query.distinct
         self.fromImpl = query.fromImpl
+        self.joinImpl = query.joinImpl
         self.whereImpl = query.whereImpl
         self.orderByImpl = query.orderByImpl
     }

@@ -28,21 +28,26 @@ public class OrderBy: Query {
     
     // MARK: Internal
     
-    let impl: CBLQueryOrderBy
-    
-    init(query: Query, impl: CBLQueryOrderBy) {
-        self.impl = impl
+    init(query: Query, impl: [CBLQueryOrderBy]) {
         super.init()
-        
         self.copy(query)
         self.orderByImpl = impl
     }
     
     init(impl: CBLQueryOrderBy) {
-        self.impl = impl
         super.init()
+        self.orderByImpl = [impl]
     }
     
+    static func toImpl(orders: [OrderBy]) -> [CBLQueryOrderBy] {
+        var implOrders: [CBLQueryOrderBy] = []
+        for o in orders {
+            for impl in o.orderByImpl! {
+                implOrders.append(impl)
+            }
+        }
+        return implOrders;
+    }
 }
 
 public final class SortOrder: OrderBy {
@@ -52,12 +57,14 @@ public final class SortOrder: OrderBy {
     }
     
     public func ascending() -> OrderBy {
-        let orderBy = self.impl as! CBLQuerySortOrder
+        assert(self.orderByImpl!.count == 1)
+        let orderBy = self.orderByImpl![0] as! CBLQuerySortOrder
         return OrderBy(impl: orderBy.ascending())
     }
     
     public func descending() -> OrderBy {
-        let orderBy = self.impl as! CBLQuerySortOrder
+        assert(self.self.orderByImpl!.count == 1)
+        let orderBy = self.orderByImpl![0] as! CBLQuerySortOrder
         return OrderBy(impl: orderBy.descending())
     }
     

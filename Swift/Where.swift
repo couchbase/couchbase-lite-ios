@@ -12,10 +12,7 @@ public final class Where: Query, OrderByRouter {
     
     /** Create and chain an ORDER BY clause component to specify the order of the query result. */
     public func orderBy(_ orders: OrderBy...) -> OrderBy {
-        let implOrders = orders.map { (o) -> CBLQueryOrderBy in
-            return o.impl
-        }
-        return OrderBy(query: self, impl: CBLQueryOrderBy(implOrders))
+        return OrderBy(query: self, impl: OrderBy.toImpl(orders: orders))
     }
     
     /** An internal constructor. */

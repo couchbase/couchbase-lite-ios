@@ -13,34 +13,28 @@
 @implementation CBLQueryDataSource
 
 
-@synthesize source=_source;
+@synthesize source=_source, alias=_alias;
 
 
-- (instancetype) initWithDataSource:(id)source {
+- (instancetype) initWithDataSource:(id)source as:(nullable NSString*)alias {
     _source = source;
+    _alias = alias;
     return [super init];
 }
 
 
-+ (CBLQueryDatabase*) database: (CBLDatabase*)database {
-    return [[CBLQueryDatabase alloc] initWithDatabase: database];
+- (id) asJSON {
+    return _alias ?  @{@"AS": _alias} : @{ };
 }
 
 
-@end
-
-
-@implementation CBLQueryDatabase
-
-
-- (instancetype) initWithDatabase: (CBLDatabase*)database {
-    return [super initWithDataSource: database];
++ (instancetype) database: (CBLDatabase*)database {
+    return [CBLQueryDataSource database: database as: nil];
 }
 
 
-- (CBLQueryDataSource *) as: (NSString*)as {
-    // TODO: Implement this when supporting JOINS query.
-    return self;
++ (instancetype) database: (CBLDatabase*)database as: (nullable NSString*)alias {
+    return [[CBLQueryDataSource alloc] initWithDataSource: database as: alias];
 }
 
 
