@@ -283,6 +283,7 @@
 
 /////
 
+
 @implementation CBLAggregateExpression
 
 @synthesize subexpressions=_subexpressions;
@@ -387,14 +388,14 @@
     }
     
     if ([_lhs isKindOfClass: [CBLQueryExpression class]])
-        [json addObject: [(CBLQueryExpression *)_lhs asJSON]];
+        [json addObject: [(CBLQueryExpression*)_lhs asJSON]];
     else
         [json addObject: _lhs];
     
     if ([_rhs isKindOfClass: [CBLAggregateExpression class]])
         [json addObjectsFromArray: [(CBLAggregateExpression*)_rhs asJSON]];
     else if ([_rhs isKindOfClass: [CBLQueryExpression class]])
-        [json addObject: [(CBLQueryExpression *)_rhs asJSON]];
+        [json addObject: [(CBLQueryExpression*)_rhs asJSON]];
     else
         [json addObject: _rhs];
     
@@ -407,7 +408,7 @@
 
 @synthesize subexpressions=_subexpressions, type=_type;
 
-- (instancetype) initWithExpressions:(NSArray *)subs type:(CBLCompoundExpType)type {
+- (instancetype) initWithExpressions: (NSArray*)subs type: (CBLCompoundExpType)type {
     self = [super initWithNone: nil];
     if (self) {
         _subexpressions = [subs copy];
@@ -417,7 +418,7 @@
 }
 
 - (id) asJSON {
-    NSMutableArray *json = [NSMutableArray array];
+    NSMutableArray* json = [NSMutableArray array];
     switch (self.type) {
         case CBLAndCompundExpType:
             [json addObject: @"AND"];

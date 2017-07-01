@@ -24,8 +24,34 @@
 }
 
 
+- (id) asJSON {
+    if ([_select isKindOfClass: [CBLQueryExpression class]]) {
+        CBLQueryExpression* exp = (CBLQueryExpression*)_select;
+        return @[[exp asJSON]];
+    } else if ([_select isKindOfClass: [NSArray class]]) {
+        NSMutableArray* result = [NSMutableArray array];
+        for (CBLQuerySelect* s in _select) {
+            for (id subselect in [s asJSON])
+                [result addObject: subselect];
+        }
+        return result;
+    } else
+        return @[];
+}
+
+
 + (instancetype) all {
     return [[[self class] alloc] initWithSelect: nil];
+}
+
+
++ (CBLQuerySelect*) expression: (CBLQueryExpression*)expression {
+    return [[[self class] alloc] initWithSelect: expression];
+}
+
+
++ (CBLQuerySelect*) select: (NSArray<CBLQuerySelect*>*)selects {
+    return [[[self class] alloc] initWithSelect: selects];
 }
 
 

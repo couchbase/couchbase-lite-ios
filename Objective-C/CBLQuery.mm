@@ -7,12 +7,12 @@
 //
 
 #import "CBLQuery.h"
+#import "CBLQuery+Internal.h"
 #import "CBLQueryEnumerator.h"
 #import "CBLCoreBridge.h"
 #import "CBLInternal.h"
 #import "CBLLiveQuery+Internal.h"
 #import "CBLPredicateQuery+Internal.h"
-#import "CBLQuery+Internal.h"
 #import "CBLStatus.h"
 #import "c4Query.h"
 
@@ -23,15 +23,18 @@
 }
 
 @synthesize select=_select, from=_from, join=_join;
-@synthesize where=_where, orderBy=_orderBy, distinct=_distinct;
+@synthesize where=_where, orderBy=_orderBy, groupBy=_groupBy, having=_having;
+@synthesize distinct=_distinct;
 
 
-- /* internal */ (instancetype) initWithSelect: (CBLQuerySelect*)select
-                                      distinct: (BOOL)distinct
-                                          from: (CBLQueryDataSource*)from
-                                          join: (nullable NSArray<CBLQueryJoin*>*)join
-                                         where: (CBLQueryExpression*)where
-                                       orderBy: (NSArray<CBLQueryOrderBy*>*)orderBy
+- (instancetype) initWithSelect: (CBLQuerySelect*)select
+                       distinct: (BOOL)distinct
+                           from: (CBLQueryDataSource*)from
+                           join: (nullable NSArray<CBLQueryJoin*>*)join
+                          where: (nullable CBLQueryExpression*)where
+                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                         having: (nullable CBLQueryExpression*)having
+                        orderBy: (nullable NSArray<CBLQueryOrderBy*>*)orderBy
 {
     self = [super init];
     if (self) {
@@ -40,6 +43,8 @@
         _from = from;
         _join = join;
         _where = where;
+        _groupBy = groupBy;
+        _having = having;
         _orderBy = orderBy;
     }
     return self;
@@ -57,11 +62,11 @@
 + (instancetype) select: (CBLQuerySelect*)select
                    from: (CBLQueryDataSource*)from
 {
-    return [[[self class] alloc] initWithSelect: select
-                                       distinct: NO
-                                           from: from
+    return [[[self class] alloc] initWithSelect: select distinct: NO from: from
                                            join: nil
                                           where: nil
+                                        groupBy: nil
+                                         having: nil
                                         orderBy: nil];
 }
 
@@ -69,11 +74,11 @@
 + (instancetype) selectDistinct: (CBLQuerySelect*)select
                            from: (CBLQueryDataSource*)from
 {
-    return [[[self class] alloc] initWithSelect: select
-                                       distinct: YES
-                                           from: from
+    return [[[self class] alloc] initWithSelect: select distinct: YES from: from
                                            join: nil
                                           where: nil
+                                        groupBy: nil
+                                         having: nil
                                         orderBy: nil];
 }
 
@@ -85,11 +90,11 @@
                    from: (CBLQueryDataSource*)from
                   where: (CBLQueryExpression*)where
 {
-    return [[[self class] alloc] initWithSelect: select
-                                       distinct: NO
-                                           from: from
+    return [[[self class] alloc] initWithSelect: select distinct: NO from: from
                                            join: nil
                                           where: where
+                                        groupBy: nil
+                                         having: nil
                                         orderBy: nil];
 }
 
@@ -98,11 +103,74 @@
                            from: (CBLQueryDataSource*)from
                           where: (CBLQueryExpression*)where
 {
-    return [[[self class] alloc] initWithSelect: select
-                                       distinct: YES
-                                           from: from
+    return [[[self class] alloc] initWithSelect: select distinct: YES from: from
                                            join: nil
                                           where: where
+                                        groupBy: nil
+                                         having: nil
+                                        orderBy: nil];
+}
+
+
+#pragma mark - SELECT > FROM > WHERE > GROUP BY
+
++ (instancetype) select: (CBLQuerySelect*)select
+                   from: (CBLQueryDataSource*)from
+                  where: (nullable CBLQueryExpression*)where
+                groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+{
+    return [[[self class] alloc] initWithSelect: select distinct: NO from: from
+                                           join: nil
+                                          where: where
+                                        groupBy: groupBy
+                                         having: nil
+                                        orderBy: nil];
+}
+
+
++ (instancetype) selectDistinct: (CBLQuerySelect*)select
+                           from: (CBLQueryDataSource*)from
+                          where: (nullable CBLQueryExpression*)where
+                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+{
+    return [[[self class] alloc] initWithSelect: select distinct: YES from: from
+                                           join: nil
+                                          where: where
+                                        groupBy: groupBy
+                                         having: nil
+                                        orderBy: nil];
+}
+
+
+#pragma mark - SELECT > FROM > WHERE > GROUP BY > HAVING
+
+
++ (instancetype) select: (CBLQuerySelect*)select
+                   from: (CBLQueryDataSource*)from
+                  where: (nullable CBLQueryExpression*)where
+                groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                 having: (nullable CBLQueryExpression*)having
+{
+    return [[[self class] alloc] initWithSelect: select distinct: NO from: from
+                                           join: nil
+                                          where: where
+                                        groupBy: groupBy
+                                         having: having
+                                        orderBy: nil];
+}
+
+
++ (instancetype) selectDistinct: (CBLQuerySelect*)select
+                           from: (CBLQueryDataSource*)from
+                          where: (nullable CBLQueryExpression*)where
+                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                         having: (nullable CBLQueryExpression*)having
+{
+    return [[[self class] alloc] initWithSelect: select distinct: YES from: from
+                                           join: nil
+                                          where: where
+                                        groupBy: groupBy
+                                         having: having
                                         orderBy: nil];
 }
 
@@ -115,11 +183,11 @@
                   where: (CBLQueryExpression*)where
                 orderBy: (NSArray<CBLQueryOrderBy*>*)orderBy
 {
-    return [[[self class] alloc] initWithSelect: select
-                                       distinct: NO
-                                           from: from
+    return [[[self class] alloc] initWithSelect: select distinct: NO from: from
                                            join: nil
                                           where: where
+                                        groupBy: nil
+                                         having: nil
                                         orderBy: orderBy];
 }
 
@@ -129,11 +197,46 @@
                           where: (CBLQueryExpression*)where
                         orderBy: (NSArray<CBLQueryOrderBy*>*)orderBy
 {
-    return [[[self class] alloc] initWithSelect: select
-                                       distinct: YES
-                                           from: from
+    return [[[self class] alloc] initWithSelect: select distinct: YES from: from
                                            join: nil
                                           where: where
+                                        groupBy: nil
+                                         having: nil
+                                        orderBy: orderBy];
+}
+
+
+#pragma mark - SELECT > FROM > WHERE > GROUP BY > HAVING > ORDER BY
+
+
++ (instancetype) select: (CBLQuerySelect*)select
+                   from: (CBLQueryDataSource*)from
+                  where: (nullable CBLQueryExpression*)where
+                groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                 having: (nullable CBLQueryExpression*)having
+                orderBy: (nullable NSArray<CBLQueryOrderBy*>*)orderBy
+{
+    return [[[self class] alloc] initWithSelect: select distinct: NO from: from
+                                           join: nil
+                                          where: where
+                                        groupBy: groupBy
+                                         having: having
+                                        orderBy: orderBy];
+}
+
+
++ (instancetype) selectDistinct: (CBLQuerySelect*)select
+                           from: (CBLQueryDataSource*)from
+                          where: (nullable CBLQueryExpression*)where
+                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                         having: (nullable CBLQueryExpression*)having
+                        orderBy: (nullable NSArray<CBLQueryOrderBy*>*)orderBy
+{
+    return [[[self class] alloc] initWithSelect: select distinct: YES from: from
+                                           join: nil
+                                          where: where
+                                        groupBy: groupBy
+                                         having: having
                                         orderBy: orderBy];
 }
 
@@ -145,11 +248,11 @@
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
 {
-    return [[[self class] alloc] initWithSelect: select
-                                       distinct: NO
-                                           from: from
+    return [[[self class] alloc] initWithSelect: select distinct: NO from: from
                                            join: join
                                           where: nil
+                                        groupBy: nil
+                                         having: nil
                                         orderBy: nil];
 }
 
@@ -158,11 +261,11 @@
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
 {
-    return [[[self class] alloc] initWithSelect: select
-                                       distinct: YES
-                                           from: from
+    return [[[self class] alloc] initWithSelect: select distinct: YES from: from
                                            join: join
                                           where: nil
+                                        groupBy: nil
+                                         having: nil
                                         orderBy: nil];
 }
 
@@ -175,11 +278,11 @@
                    join: (nullable NSArray<CBLQueryJoin*>*)join
                   where: (nullable CBLQueryExpression*)where
 {
-    return [[[self class] alloc] initWithSelect: select
-                                       distinct: NO
-                                           from: from
+    return [[[self class] alloc] initWithSelect: select distinct: NO from: from
                                            join: join
                                           where: where
+                                        groupBy: nil
+                                         having: nil
                                         orderBy: nil];
 }
 
@@ -189,11 +292,79 @@
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
 {
-    return [[[self class] alloc] initWithSelect: select
-                                       distinct: YES
-                                           from: from
+    return [[[self class] alloc] initWithSelect: select distinct: YES from: from
                                            join: join
                                           where: where
+                                        groupBy: nil
+                                         having: nil
+                                        orderBy: nil];
+}
+
+
+#pragma mark - SELECT > FROM > JOIN > WHERE > GROUP BY
+
+
++ (instancetype) select: (CBLQuerySelect*)select
+                   from: (CBLQueryDataSource*)from
+                   join: (nullable NSArray<CBLQueryJoin*>*)join
+                  where: (nullable CBLQueryExpression*)where
+                groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+{
+    return [[[self class] alloc] initWithSelect: select distinct: NO from: from
+                                           join: join
+                                          where: where
+                                        groupBy: groupBy
+                                         having: nil
+                                        orderBy: nil];
+}
+
+
++ (instancetype) selectDistinct: (CBLQuerySelect*)select
+                           from: (CBLQueryDataSource*)from
+                           join: (nullable NSArray<CBLQueryJoin*>*)join
+                          where: (nullable CBLQueryExpression*)where
+                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+{
+    return [[[self class] alloc] initWithSelect: select distinct: YES from: from
+                                           join: join
+                                          where: where
+                                        groupBy: groupBy
+                                         having: nil
+                                        orderBy: nil];
+}
+
+
+#pragma mark - SELECT > FROM > JOIN > WHERE > GROUP BY > HAVING
+
+
++ (instancetype) select: (CBLQuerySelect*)select
+                   from: (CBLQueryDataSource*)from
+                   join: (nullable NSArray<CBLQueryJoin*>*)join
+                  where: (nullable CBLQueryExpression*)where
+                groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                 having: (nullable CBLQueryExpression*)having
+{
+    return [[[self class] alloc] initWithSelect: select distinct: NO from: from
+                                           join: join
+                                          where: where
+                                        groupBy: groupBy
+                                         having: having
+                                        orderBy: nil];
+}
+
+
++ (instancetype) selectDistinct: (CBLQuerySelect*)select
+                           from: (CBLQueryDataSource*)from
+                           join: (nullable NSArray<CBLQueryJoin*>*)join
+                          where: (nullable CBLQueryExpression*)where
+                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                         having: (nullable CBLQueryExpression*)having
+{
+    return [[[self class] alloc] initWithSelect: select distinct: YES from: from
+                                           join: join
+                                          where: where
+                                        groupBy: groupBy
+                                         having: having
                                         orderBy: nil];
 }
 
@@ -207,11 +378,11 @@
                   where: (nullable CBLQueryExpression*)where
                 orderBy: (nullable NSArray<CBLQueryOrderBy*>*)orderBy
 {
-    return [[[self class] alloc] initWithSelect: select
-                                       distinct: NO
-                                           from: from
+    return [[[self class] alloc] initWithSelect: select distinct: NO from: from
                                            join: join
                                           where: where
+                                        groupBy: nil
+                                         having: nil
                                         orderBy: orderBy];
 }
 
@@ -222,11 +393,48 @@
                           where: (nullable CBLQueryExpression*)where
                         orderBy: (nullable NSArray<CBLQueryOrderBy*>*)orderBy
 {
-    return [[[self class] alloc] initWithSelect: select
-                                       distinct: YES
-                                           from: from
+    return [[[self class] alloc] initWithSelect: select distinct: YES from: from
                                            join: join
                                           where: where
+                                        groupBy: nil
+                                         having: nil
+                                        orderBy: orderBy];
+}
+
+
+#pragma mark -  SELECT > FROM > JOIN > WHERE > GROUP BY> HAVING > ORDER BY
+
+
++ (instancetype) select: (CBLQuerySelect*)select
+                   from: (CBLQueryDataSource*)from
+                   join: (nullable NSArray<CBLQueryJoin*>*)join
+                  where: (nullable CBLQueryExpression*)where
+                groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                 having: (nullable CBLQueryExpression*)having
+                orderBy: (nullable NSArray<CBLQueryOrderBy*>*)orderBy
+{
+    return [[[self class] alloc] initWithSelect: select distinct: NO from: from
+                                           join: join
+                                          where: where
+                                        groupBy: groupBy
+                                         having: having
+                                        orderBy: orderBy];
+}
+
+
++ (instancetype) selectDistinct: (CBLQuerySelect*)select
+                           from: (CBLQueryDataSource*)from
+                           join: (nullable NSArray<CBLQueryJoin*>*)join
+                          where: (nullable CBLQueryExpression*)where
+                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                         having: (nullable CBLQueryExpression*)having
+                        orderBy: (nullable NSArray<CBLQueryOrderBy*>*)orderBy
+{
+    return [[[self class] alloc] initWithSelect: select distinct: YES from: from
+                                           join: join
+                                          where: where
+                                        groupBy: groupBy
+                                         having: having
                                         orderBy: orderBy];
 }
 
@@ -278,6 +486,8 @@
                                            from: _from
                                            join: _join
                                           where: _where
+                                        groupBy: _groupBy
+                                         having: _having
                                         orderBy: _orderBy];
 }
 
@@ -314,6 +524,10 @@
     if (_distinct)
         json[@"DISTINCT"] = @(YES);
     
+    NSArray* selects = [_select asJSON];
+    if (selects.count > 0)
+        json[@"WHAT"] = selects;
+    
     // Join:
     NSMutableArray* from;
     NSDictionary* as = [_from asJSON];
@@ -333,6 +547,17 @@
     
     if (_where)
         json[@"WHERE"] = [_where asJSON];
+    
+    if (_groupBy) {
+        NSMutableArray* groupBy = [NSMutableArray array];
+        for (CBLQueryGroupBy* g in _groupBy) {
+            [groupBy addObject: [g asJSON]];
+        }
+        json[@"GROUP_BY"] = groupBy;
+    }
+    
+    if (_having)
+        json[@"HAVING"] = [_having asJSON];
     
     if (_orderBy) {
         NSMutableArray* orderBy = [NSMutableArray array];

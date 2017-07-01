@@ -16,15 +16,6 @@
 @synthesize orders=_orders;
 
 
-- (instancetype) initWithOrders: (NSArray *)orders {
-    self = [super init];
-    if (self) {
-        _orders = [orders copy];
-    }
-    return self;
-}
-
-
 + (CBLQueryOrderBy*) orderBy: (NSArray<CBLQueryOrderBy*>*)orders {
     return [[[self class] alloc] initWithOrders: orders];
 }
@@ -39,6 +30,19 @@
     return [[CBLQuerySortOrder alloc] initWithExpression: expression];
 }
 
+
+#pragma mark - Internal
+
+
+- (instancetype) initWithOrders: (NSArray *)orders {
+    self = [super init];
+    if (self) {
+        _orders = [orders copy];
+    }
+    return self;
+}
+
+
 - (id) asJSON {
     NSMutableArray* json = [NSMutableArray array];
     for (CBLQueryOrderBy* o in _orders) {
@@ -49,6 +53,7 @@
     }
     return json;
 }
+
 
 @end
 

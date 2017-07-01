@@ -9,6 +9,8 @@
 #import "CBLQuery.h"
 #import "CBLInternal.h"
 #import "CBLQueryDataSource.h"
+#import "CBLQueryFunction.h"
+#import "CBLQueryGroupBy.h"
 #import "CBLQueryJoin.h"
 #import "CBLQuerySelect.h"
 #import "CBLQueryExpression.h"
@@ -17,6 +19,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+
+/////
+
+@protocol CBLQueryJSONEncoding <NSObject>
+
+/** Encode as a JSON object. */
+- (id) asJSON;
+
+@end
 
 /////
 
@@ -30,6 +41,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nullable, nonatomic) CBLQueryExpression* where;
 
+@property (readonly, nullable, nonatomic) NSArray<CBLQueryGroupBy*>* groupBy;
+
+@property (readonly, nullable, nonatomic) CBLQueryExpression* having;
+
 @property (readonly, nullable, nonatomic) NSArray<CBLQueryOrderBy*>* orderBy;
 
 @property (readonly, nonatomic) BOOL distinct;
@@ -40,13 +55,15 @@ NS_ASSUME_NONNULL_BEGIN
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
+                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                         having: (nullable CBLQueryExpression*)having
                         orderBy: (nullable NSArray<CBLQueryOrderBy*>*)orderBy;
 
 @end
 
 /////
 
-@interface CBLQueryDataSource ()
+@interface CBLQueryDataSource () <CBLQueryJSONEncoding>
 
 @property (nonatomic, readonly) id source;
 
@@ -54,15 +71,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithDataSource: (id)source as: (nullable NSString*)alias;
 
-- (id) asJSON;
-
 @end
 
 /////
 
-@interface CBLQuerySelect ()
+@interface CBLQuerySelect () <CBLQueryJSONEncoding>
 
-@property (readonly, nullable, nonatomic) id select;
+@property (nonatomic, readonly, nullable) id select;
 
 - (instancetype) initWithSelect: (nullable id)select;
 
@@ -70,23 +85,47 @@ NS_ASSUME_NONNULL_BEGIN
 
 /////
 
-@interface CBLQueryJoin ()
+@interface CBLQueryJoin () <CBLQueryJSONEncoding>
 
 - (instancetype) initWithType: (NSString*)type
                    dataSource: (CBLQueryDataSource*)dataSource
                            on: (CBLQueryExpression*)expression;
 
-- (id) asJSON;
+@end
+
+/////
+
+@interface CBLQueryGroupBy () <CBLQueryJSONEncoding>
+
+- (instancetype) initWithExpression: (CBLQueryExpression*)expression;
 
 @end
 
 /////
 
-@interface CBLQueryExpression ()
-/** This constructor is currently for hiding the public -init: */
-- (instancetype) initWithNone: (nullable id)none;
+@interface CBLQueryOrderBy () <CBLQueryJSONEncoding>
 
-- (id) asJSON;
+@property (readonly, nullable, copy, nonatomic) NSArray* orders;
+
+- (instancetype) initWithOrders: (nullable NSArray*)orders;
+
+@end
+
+@interface CBLQuerySortOrder ()
+
+@property (readonly, nonatomic) CBLQueryExpression* expression;
+@property (readonly, nonatomic) BOOL isAscending;
+
+- (instancetype) initWithExpression: (CBLQueryExpression*)expression;
+
+@end
+
+/////
+
+@interface CBLQueryExpression () <CBLQueryJSONEncoding>
+
+/** This constructor is for hiding the public -init: */
+- (instancetype) initWithNone: (nullable id)none;
 
 @end
 
@@ -172,6 +211,8 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
     CBLNullUnaryExpType
 };
 
+/////
+
 @interface CBLUnaryExpression : CBLQueryExpression
 
 @property(readonly, nonatomic) CBLUnaryExpType type;
@@ -183,22 +224,9 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 
 /////
 
-@interface CBLQueryOrderBy ()
+@interface CBLQueryFunction () <CBLQueryJSONEncoding>
 
-@property (readonly, nullable, copy, nonatomic) NSArray* orders;
-
-- (instancetype) initWithOrders: (nullable NSArray*)orders;
-
-- (id) asJSON;
-
-@end
-
-@interface CBLQuerySortOrder ()
-
-@property (readonly, nonatomic) CBLQueryExpression* expression;
-@property (readonly, nonatomic) BOOL isAscending;
-
-- (instancetype) initWithExpression: (CBLQueryExpression*)expression;
+- (instancetype) initWithFunction: (NSString*)function parameter: (id)param;
 
 @end
 

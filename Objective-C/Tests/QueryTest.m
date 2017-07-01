@@ -50,6 +50,9 @@
     CBLDocument* doc = [[CBLDocument alloc] initWithID: docID];
     [doc setObject: @(i) forKey: @"number1"];
     [doc setObject: @(num-i) forKey: @"number2"];
+    
+    NSLog(@"%@ / %@", [doc objectForKey:@"number1"], [doc objectForKey:@"number2"]);
+
     NSError *error;
     BOOL saved = [_db saveDocument: doc error: &error];
     Assert(saved, @"Couldn't save document: %@", error);
@@ -419,6 +422,99 @@
                                         AssertEqual([row.document integerForKey:@"number1"], 42);
                                     }];
     AssertEqual(numRows, 1u);
+}
+
+
+- (void) testAggregateFunctions {
+    [self loadNumbers: 100];
+    
+    CBLQueryExpression* avg = [CBLQueryFunction avg: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* cnt = [CBLQueryFunction count: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* min = [CBLQueryFunction min: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* max = [CBLQueryFunction max: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* sum = [CBLQueryFunction sum: [CBLQueryExpression property: @"number1"]];
+    
+    NSArray* cols = @[[CBLQuerySelect expression: avg],
+                      [CBLQuerySelect expression: cnt],
+                      [CBLQuerySelect expression: min],
+                      [CBLQuerySelect expression: max],
+                      [CBLQuerySelect expression: sum]];
+    
+    CBLQuery* q = [CBLQuery select: [CBLQuerySelect select: cols]
+                              from: [CBLQueryDataSource database: self.db]];
+    Assert(q);
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
+        AssertEqual([row doubleAtIndex:0], 50.5);
+        AssertEqual([row integerAtIndex:1], 100);
+        AssertEqual([row integerAtIndex:2], 1);
+        AssertEqual([row integerAtIndex:3], 100);
+        AssertEqual([row integerAtIndex:4], 5050);
+    }];
+    AssertEqual(numRows, 1u);
+}
+
+
+- (void) testGroupBy {
+    NSArray* expectedStates = @[@"AL",    @"CA",    @"CO",    @"FL",    @"IA"];
+    NSArray* expectedCounts = @[@1,       @6,       @1,       @1,       @3];
+    NSArray* expectedMaxZips= @[@"35243", @"94153", @"81223", @"33612", @"50801"];
+    
+    [self loadJSONResource: @"names_100"];
+    
+    CBLQueryExpression* STATE = [CBLQueryExpression property: @"contact.address.state"];
+    CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
+    CBLQueryExpression* COUNT = [CBLQueryFunction count: @(1)];
+    CBLQueryExpression* ZIP = [CBLQueryExpression property: @"contact.address.zip"];
+    CBLQueryExpression* MAXZIP = [CBLQueryFunction max: ZIP];
+    
+    NSArray* cols = @[[CBLQuerySelect expression: STATE],
+                      [CBLQuerySelect expression: COUNT],
+                      [CBLQuerySelect expression: MAXZIP]];
+    
+    CBLQuery* q = [CBLQuery select: [CBLQuerySelect select: cols]
+                              from: [CBLQueryDataSource database: self.db]
+                             where: [GENDER equalTo: @"female"]
+                           groupBy: @[[CBLQueryGroupBy expression: STATE]]
+                            having: nil
+                           orderBy:@[[CBLQueryOrderBy expression: STATE]]];
+    
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
+        NSString* state = [row stringAtIndex: 0];
+        NSInteger count = [row integerAtIndex: 1];
+        NSString* maxZip = [row stringAtIndex: 2];
+        // Log(@"State = %@, count = %d, maxZip = %@", state, (int)count, maxZip);
+        if (n-1 < expectedStates.count) {
+            AssertEqualObjects(state,  expectedStates[(NSUInteger)(n-1)]);
+            AssertEqual       (count,  [expectedCounts[(NSUInteger)(n-1)] integerValue]);
+            AssertEqualObjects(maxZip, expectedMaxZips[(NSUInteger)(n-1)]);
+        }
+    }];
+    AssertEqual(numRows, 31u);
+    
+    // With HAVING:
+    expectedStates = @[@"CA",    @"IA",     @"IN"];
+    expectedCounts = @[@6,       @3,        @2];
+    expectedMaxZips= @[@"94153", @"50801",  @"47952"];
+    
+    q = [CBLQuery select: [CBLQuerySelect select: cols]
+                    from: [CBLQueryDataSource database: self.db]
+                   where: [GENDER equalTo: @"female"]
+                 groupBy: @[[CBLQueryGroupBy expression: STATE]]
+                  having: [COUNT greaterThan: @(1)]
+                 orderBy: @[[CBLQueryOrderBy expression: STATE]]];
+    
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
+        NSString* state = [row stringAtIndex: 0];
+        NSInteger count = [row integerAtIndex: 1];
+        NSString* maxZip = [row stringAtIndex: 2];
+        // Log(@"State = %@, count = %d, maxZip = %@", state, (int)count, maxZip);
+        if (n-1 < expectedStates.count) {
+            AssertEqualObjects(state,  expectedStates[(NSUInteger)(n-1)]);
+            AssertEqual       (count,  [expectedCounts[(NSUInteger)(n-1)] integerValue]);
+            AssertEqualObjects(maxZip, expectedMaxZips[(NSUInteger)(n-1)]);
+        }
+    }];
+    AssertEqual(numRows, 15u);
 }
 
 
