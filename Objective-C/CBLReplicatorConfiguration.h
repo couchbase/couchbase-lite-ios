@@ -40,8 +40,8 @@ typedef enum {
     default value is NO. */
 @property (nonatomic) BOOL continuous;
 
-/** The conflict resolver for this replicator. The default value is nil, which means the default
-    algorithm will be used, where the revision with more history wins. */
+/** The conflict resolver for this replicator.
+    The default value is nil, which means the local database's conflict resolver will be used. */
 @property (nonatomic, nullable) id <CBLConflictResolver> conflictResolver;
 
 /** If this property is non-null, the server is required to have this exact SSL/TLS certificate,

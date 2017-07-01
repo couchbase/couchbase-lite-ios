@@ -714,7 +714,9 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 #pragma mark - RESOLVING REPLICATED CONFLICTS:
 
 
-- (bool) resolveConflictInDocument: (NSString*)docID error: (NSError**)outError {
+- (bool) resolveConflictInDocument: (NSString*)docID
+                     usingResolver: (id<CBLConflictResolver>)resolver
+                             error: (NSError**)outError {
     C4Transaction t(_c4db);
     t.begin();
 
@@ -748,7 +750,8 @@ static NSString* databasePath(NSString* name, NSString* dir) {
     } else if (doc.isDeleted) {
         resolved = otherDoc;
     } else {
-        auto resolver = doc.effectiveConflictResolver;
+        if (!resolver)
+            resolver = doc.effectiveConflictResolver;
         auto conflict = [[CBLConflict alloc] initWithMine: doc theirs: otherDoc base: baseDoc];
         CBLLog(Database, @"Resolving doc '%@' with %@ (mine=%@, theirs=%@, base=%@",
                docID, resolver.class, doc.revID, otherDoc.revID, baseDoc.revID);
