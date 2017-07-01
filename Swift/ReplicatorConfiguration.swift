@@ -44,6 +44,15 @@ public struct ReplicatorConfiguration {
     /** If this property is non-null, the server is required to have this exact SSL/TLS certificate,
      or the connection will fail. */
     public var pinnedServerCertificate: SecCertificate?
+
+    /** A set of Sync Gateway channel names to pull from. Ignored for push replication.
+        If unset, all accessible channels will be pulled.
+        Note: channels that are not accessible to the user will be ignored by Sync Gateway. */
+    public var channels: [String]?
+
+    /** A set of document IDs to filter by: if given, only documents with these IDs will be pushed
+        and/or pulled. */
+    public var documentIDs: [String]?
     
     /** Initialize a ReplicatorConfiguration with the given local database and remote database URL. */
     public init(database: Database, targetURL: URL) {

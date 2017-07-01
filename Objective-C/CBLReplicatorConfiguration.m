@@ -18,7 +18,7 @@
 @synthesize replicatorType=_replicatorType, continuous=_continuous;
 @synthesize conflictResolver=_conflictResolver;
 @synthesize pinnedServerCertificate=_pinnedServerCertificate;
-@synthesize authenticator=_authenticator;
+@synthesize authenticator=_authenticator, documentIDs=_documentIDs, channels=_channels;
 
 
 + (instancetype) withDatabase: (CBLDatabase*)database targetURL: (NSURL*)targetURL {
@@ -62,6 +62,8 @@
     c.continuous = _continuous;
     c.pinnedServerCertificate = _pinnedServerCertificate;
     c.authenticator = _authenticator;
+    c.documentIDs = _documentIDs;
+    c.channels = _channels;
     return c;
 }
 
@@ -86,7 +88,10 @@
         NSData* certData = CFBridgingRelease(SecCertificateCopyData(_pinnedServerCertificate));
         options[@kC4ReplicatorOptionPinnedServerCert] = certData;
     }
-    
+
+    options[@kC4ReplicatorOptionDocIDs] = _documentIDs;
+    options[@kC4ReplicatorOptionChannels] = _channels;
+
     return options;
 }
 

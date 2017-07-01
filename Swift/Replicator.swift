@@ -68,6 +68,8 @@ public final class Replicator {
         c.conflictResolver = nil // TODO
         c.authenticator = config.authenticator
         c.pinnedServerCertificate = config.pinnedServerCertificate
+        c.channels = config.channels
+        c.documentIDs = config.documentIDs
         
         _impl = CBLReplicator(config: c);
         _config = config

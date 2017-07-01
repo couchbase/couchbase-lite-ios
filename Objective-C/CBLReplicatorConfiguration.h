@@ -52,6 +52,15 @@ typedef enum {
     the authenticators, CBLBasicAuthenticator and CBLSessionAuthenticator, supported. */
 @property (nonatomic, nullable) CBLAuthenticator* authenticator;
 
+/** A set of Sync Gateway channel names to pull from. Ignored for push replication.
+    The default value is nil, meaning that all accessible channels will be pulled.
+    Note: channels that are not accessible to the user will be ignored by Sync Gateway. */
+@property (nonatomic, nullable) NSArray<NSString*>* channels;
+
+/** A set of document IDs to filter by: if not nil, only documents with these IDs will be pushed
+    and/or pulled. */
+@property (nonatomic, nullable) NSArray<NSString*>* documentIDs;
+
 /** Creates a CBLReplicatorConfiguration with the given local database and remote database URL. */
 + (instancetype) withDatabase: (CBLDatabase*)database targetURL: (NSURL*)targetURL;
 
