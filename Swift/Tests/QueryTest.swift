@@ -60,7 +60,7 @@ class QueryTest: CBLTestCase {
     
     
     func testNoWhereQuery() throws {
-        try loadJSONResource(resourceName: "names_100")
+        try loadJSONResource(name: "names_100")
         
         let q = Query.select().from(DataSource.database(db))
         let numRows = try verifyQuery(q) { (n, row) in
@@ -206,7 +206,7 @@ class QueryTest: CBLTestCase {
     
     func failingTestWhereLike() throws {
         // https://github.com/couchbase/couchbase-lite-ios/issues/1667
-        try loadJSONResource(resourceName: "names_100")
+        try loadJSONResource(name: "names_100")
         
         let w = Expression.property("name.first").like("%Mar%")
         let q = Query
@@ -229,7 +229,7 @@ class QueryTest: CBLTestCase {
     
     
     func testWhereIn() throws {
-        try loadJSONResource(resourceName: "names_100")
+        try loadJSONResource(name: "names_100")
         let expected = ["Marcy", "Margaretta", "Margrett", "Marlen", "Maryjo"]
         let w = Expression.property("name.first").in(expected)
         let o = OrderBy.property("name.first")
@@ -244,7 +244,7 @@ class QueryTest: CBLTestCase {
     
     func failingTestWhereRegex() throws {
         // https://github.com/couchbase/couchbase-lite-ios/issues/1668
-        try loadJSONResource(resourceName: "names_100")
+        try loadJSONResource(name: "names_100")
         
         let w = Expression.property("name.first").regex("^Mar.*")
         let q = Query
@@ -267,7 +267,7 @@ class QueryTest: CBLTestCase {
     
     
     func testWhereMatch() throws {
-        try loadJSONResource(resourceName: "sentences")
+        try loadJSONResource(name: "sentences")
         
         try db.createIndex(["sentence"], options:
             IndexOptions.fullTextIndex(language: nil, ignoreDiacritics: false))
@@ -288,7 +288,7 @@ class QueryTest: CBLTestCase {
 
     
     func testOrderBy() throws {
-        try loadJSONResource(resourceName: "names_100")
+        try loadJSONResource(name: "names_100")
         
         for ascending in [true, false] {
             var o: OrderBy;
@@ -335,7 +335,7 @@ class QueryTest: CBLTestCase {
     
     
     func testJoin() throws {
-        try loadNumbers(100);
+        try loadNumbers(100)
         
         let doc = createDocument("joinme")
         doc.set(42, forKey: "theone")
@@ -349,8 +349,6 @@ class QueryTest: CBLTestCase {
                     .on(Expression.property("number1").from("main")
                         .equalTo(Expression.property("theone").from("secondary"))))
         
-        NSLog("%@", try! q.explain())
-        
         let numRow = try verifyQuery(q, block: { (n, row) in
             XCTAssertEqual(row.document.int(forKey: "number1"), 42)
         })
@@ -358,8 +356,98 @@ class QueryTest: CBLTestCase {
     }
     
     
+    func testAggregateFunctions() throws {
+        try loadNumbers(100)
+        
+        let AVG = SelectResult.expression(Function.avg(Expression.property("number1")))
+        let CNT = SelectResult.expression(Function.count(Expression.property("number1")))
+        let MIN = SelectResult.expression(Function.min(Expression.property("number1")))
+        let MAX = SelectResult.expression(Function.max(Expression.property("number1")))
+        let SUM = SelectResult.expression(Function.sum(Expression.property("number1")))
+        
+        let q = Query
+            .select(AVG, CNT, MIN, MAX, SUM)
+            .from(DataSource.database(db))
+        
+        let numRow = try verifyQuery(q, block: { (n, row) in
+            XCTAssertEqual(row.value(at: 0) as! Double, 50.5)
+            XCTAssertEqual(row.value(at: 1) as! Int, 100)
+            XCTAssertEqual(row.value(at: 2) as! Int , 1)
+            XCTAssertEqual(row.value(at: 3) as! Int, 100)
+            XCTAssertEqual(row.value(at: 4) as! Int, 5050)
+        })
+        XCTAssertEqual(numRow, 1)
+    }
+    
+    
+    func testGroupBy() throws {
+        var expectedStates  = ["AL",    "CA",    "CO",    "FL",    "IA"]
+        var expectedCounts  = [1,       6,       1,       1,       3]
+        var expectedMaxZips = ["35243", "94153", "81223", "33612", "50801"]
+        
+        try loadJSONResource(name: "names_100")
+        
+        let STATE  = Expression.property("contact.address.state");
+        let COUNT  = Function.count(1)
+        let MAXZIP = Function.max(Expression.property("contact.address.zip"))
+        let GENDER = Expression.property("gender")
+        
+        let RES_STATE  = SelectResult.expression(STATE)
+        let RES_COUNT  = SelectResult.expression(COUNT)
+        let RES_MAXZIP = SelectResult.expression(MAXZIP)
+        
+        var q = Query
+            .select(RES_STATE, RES_COUNT, RES_MAXZIP)
+            .from(DataSource.database(db))
+            .where(GENDER.equalTo("female"))
+            .groupBy(GroupBy.expression(STATE))
+            .orderBy(OrderBy.expression(STATE))
+        
+        var numRow = try verifyQuery(q, block: { (n, row) in
+            let state = row.value(at: 0) as! String
+            let count = row.value(at: 1) as! Int
+            let maxzip = row.value(at: 2) as! String
+            
+            let i: Int = Int(n-1)
+            if i < expectedStates.count {
+                XCTAssertEqual(state, expectedStates[i])
+                XCTAssertEqual(count, expectedCounts[i])
+                XCTAssertEqual(maxzip, expectedMaxZips[i])
+            }
+        })
+        XCTAssertEqual(numRow, 31)
+        
+        // With Having
+        expectedStates  = ["CA",    "IA",    "IN"]
+        expectedCounts  = [6,       3,       2]
+        expectedMaxZips = ["94153", "50801", "47952"]
+        
+        q = Query
+            .select(RES_STATE, RES_COUNT, RES_MAXZIP)
+            .from(DataSource.database(db))
+            .where(GENDER.equalTo("female"))
+            .groupBy(GroupBy.expression(STATE))
+            .having(COUNT.greaterThan(1))
+            .orderBy(OrderBy.expression(STATE))
+        
+        numRow = try verifyQuery(q, block: { (n, row) in
+            let state = row.value(at: 0) as! String
+            let count = row.value(at: 1) as! Int
+            let maxzip = row.value(at: 2) as! String
+            
+            let i: Int = Int(n-1)
+            if i < expectedStates.count {
+                XCTAssertEqual(state, expectedStates[i])
+                XCTAssertEqual(count, expectedCounts[i])
+                XCTAssertEqual(maxzip, expectedMaxZips[i])
+            }
+        })
+        XCTAssertEqual(numRow, 15)
+    }
+    
+    
     func testLiveQuery() throws {
-        try loadNumbers(100);
+        try loadNumbers(100)
         var count = 0;
         let q = Query
             .select()

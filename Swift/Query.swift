@@ -10,26 +10,31 @@ import Foundation
 
 
 /** A database query.
- A Query instance can be constructed by calling one of the select class methods. */
+    A Query instance can be constructed by calling one of the select class methods. */
 public class Query {
     
-    /** Create a SELECT ALL (*) statement instance. You can then call the Select instance's
-        methods such as from() method to construct the complete Query instance. */
-    public static func select() -> Select {
-        return Select(impl: CBLQuerySelect.all(), distict: false)
+    /** Create a SELECT statement instance that you can use further 
+        (e.g. calling the from() function) to construct the complete query statement.
+        @param results  The array of the SelectResult object for specifying the returned values.
+        @return A Select object. */
+    public static func select(_ results: SelectResult...) -> Select {
+        return Select(impl: SelectResult.toImpl(results: results), distict: false)
     }
     
-    /** Create a SELECT DISTINCT ALL (*) statement instance. You can then call the Select instance's
-        methods such as from() method to construct the complete Query instance. */
-    public static func selectDistinct() -> Select {
-        return Select(impl: CBLQuerySelect.all(), distict: true)
+    /** Create a SELECT DISTINCT statement instance that you can use further
+        (e.g. calling the from() function) to construct the complete query statement.
+        @param results  The array of the SelectResult object for specifying the returned values.
+        @return A Select distinct object. */
+    public static func selectDistinct(_ results: SelectResult...) -> Select {
+        return Select(impl: SelectResult.toImpl(results: results), distict: true)
     }
     
     /** Runs the query. The returning an enumerator that returns result rows one at a time.
         You can run the query any number of times, and you can even have multiple enumerators active at
         once.
         The results come from a snapshot of the database taken at the moment -run: is called, so they
-        will not reflect any changes made to the database afterwards. */
+        will not reflect any changes made to the database afterwards. 
+        @return A QueryIterator object. */
     public func run() throws -> QueryIterator {
         prepareQuery()
         return try QueryIterator(database: database!, enumerator: queryImpl!.run())
@@ -61,7 +66,7 @@ public class Query {
 
     // MARK: Internal
     
-    var selectImpl: CBLQuerySelect?
+    var selectImpl: [CBLQuerySelectResult]?
     
     var distinct = false
     
@@ -72,6 +77,10 @@ public class Query {
     var database: Database?
     
     var whereImpl: CBLQueryExpression?
+    
+    var groupByImpl: [CBLQueryGroupBy]?
+    
+    var havingImpl: CBLQueryExpression?
     
     var orderByImpl: [CBLQueryOrderBy]?
     
@@ -88,10 +97,22 @@ public class Query {
         assert(selectImpl != nil && database != nil)
         if self.distinct {
             queryImpl = CBLQuery.selectDistinct(
-                selectImpl!, from: fromImpl!, join: joinImpl, where: whereImpl, orderBy: orderByImpl)
+                selectImpl!,
+                from: fromImpl!,
+                join: joinImpl,
+                where: whereImpl,
+                groupBy: groupByImpl,
+                having: havingImpl,
+                orderBy: orderByImpl)
         } else {
             queryImpl = CBLQuery.select(
-                selectImpl!, from: fromImpl!, join: joinImpl, where: whereImpl, orderBy: orderByImpl)
+                selectImpl!,
+                from: fromImpl!,
+                join: joinImpl,
+                where: whereImpl,
+                groupBy: groupByImpl,
+                having: havingImpl,
+                orderBy: orderByImpl)
         }
     }
 
@@ -102,6 +123,8 @@ public class Query {
         self.fromImpl = query.fromImpl
         self.joinImpl = query.joinImpl
         self.whereImpl = query.whereImpl
+        self.groupByImpl = query.groupByImpl
+        self.havingImpl = query.havingImpl
         self.orderByImpl = query.orderByImpl
     }
     

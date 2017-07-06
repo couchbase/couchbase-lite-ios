@@ -12,7 +12,7 @@ import CouchbaseLiteSwift
 
 class PredicateQueryTest: CBLTestCase {
     func testAllDocs() throws {
-        try loadJSONResource(resourceName: "names_100")
+        try loadJSONResource(name: "names_100")
         var n: UInt64 = 0;
         for doc in db.allDocuments {
             n += 1
@@ -24,7 +24,7 @@ class PredicateQueryTest: CBLTestCase {
     }
 
     func testNoWhereQuery() throws {
-        try loadJSONResource(resourceName: "names_100")
+        try loadJSONResource(name: "names_100")
 
         let query = db.createQuery()
         let n = try verifyQuery(query) { (n, row) in
@@ -39,7 +39,7 @@ class PredicateQueryTest: CBLTestCase {
     }
 
     func testPropertyQuery() throws {
-        try loadJSONResource(resourceName: "names_100")
+        try loadJSONResource(name: "names_100")
 
         for _ in 0...1 {
             let query = db.createQuery(where: "name.first == $FIRSTNAME")
@@ -65,7 +65,7 @@ class PredicateQueryTest: CBLTestCase {
                                ["jennefer.menning@nosql-matters.org", "jennefer@nosql-matters.org"],
                                ["stephen.jakovac@nosql-matters.org"] ]
 
-        try loadJSONResource(resourceName: "names_100")
+        try loadJSONResource(name: "names_100")
         let query = db.createQuery(where: "contact.address.state == $STATE",
                                    returning: ["contact.address.zip", "contact.email"],
                                    orderBy: ["contact.address.zip"])

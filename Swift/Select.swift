@@ -17,7 +17,7 @@ public final class Select: Query, FromRouter {
     }
     
     /** An internal constructor. */
-    init(impl: CBLQuerySelect, distict: Bool) {
+    init(impl: [CBLQuerySelectResult], distict: Bool) {
         super.init()
         
         self.selectImpl = impl

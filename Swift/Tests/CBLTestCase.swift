@@ -93,9 +93,9 @@ class CBLTestCase: XCTestCase {
     }
 
     
-    func loadJSONResource(resourceName: String) throws {
+    func loadJSONResource(name: String) throws {
         try autoreleasepool {
-            let contents = try stringFromResource(name: resourceName, ofType: "json")
+            let contents = try stringFromResource(name: name, ofType: "json")
             var n = 0
             try db.inBatch {
                 contents.enumerateLines(invoking: { (line: String, stop: inout Bool) in
