@@ -17,12 +17,6 @@ NS_ASSUME_NONNULL_BEGIN
     or an expression instance or as a chain of multiple CBLQueryOrderBy instances. */
 @interface CBLQueryOrderBy : NSObject
 
-/** Create a chain of multiple CBLQueryOrderBy instances for constructing an ORDER BY clause of 
-    the query.
-    @param orders   an array of CBLQueryOrderBy.
-    @return a CBLQueryOrderBy instance. */
-+ (CBLQueryOrderBy*) orderBy: (NSArray<CBLQueryOrderBy*>*)orders;
-
 /** Create a sort order instance with a given property name.
     @param name a propert name in key path format.
     @return a sort order instance.

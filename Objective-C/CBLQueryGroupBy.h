@@ -11,8 +11,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/** A CBLQueryGroupBy represents a query GROUP BY clause to aggregate data returned 
-    in the result set. */
+/** A CBLQueryGroupBy represents a query GROUP BY clause to group the query result. 
+    The GROUP BY statement is normally used with aggregate functions (AVG, COUNT, MAX, MIN, SUM) 
+    to aggregate the group of the values. */
 @interface CBLQueryGroupBy : NSObject
 
 /** Creates a CBLQueryGroupBy object from an expression. */

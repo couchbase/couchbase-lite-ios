@@ -13,14 +13,6 @@
 @implementation CBLQueryOrderBy
 
 
-@synthesize orders=_orders;
-
-
-+ (CBLQueryOrderBy*) orderBy: (NSArray<CBLQueryOrderBy*>*)orders {
-    return [[[self class] alloc] initWithOrders: orders];
-}
-
-
 + (CBLQuerySortOrder *) property: (NSString*)name {
     return [[self class] expression: [CBLQueryExpression property: name]];
 }
@@ -33,25 +25,14 @@
 
 #pragma mark - Internal
 
-
-- (instancetype) initWithOrders: (NSArray *)orders {
-    self = [super init];
-    if (self) {
-        _orders = [orders copy];
-    }
-    return self;
+- (instancetype) initWithNone {
+    return [super init];
 }
 
 
 - (id) asJSON {
-    NSMutableArray* json = [NSMutableArray array];
-    for (CBLQueryOrderBy* o in _orders) {
-        if ([o isKindOfClass:[CBLQuerySortOrder class]])
-            [json addObject: [o asJSON]];
-        else
-            [json addObjectsFromArray: [o asJSON]];
-    }
-    return json;
+    // Subclass implement
+    return @[];
 }
 
 
@@ -65,7 +46,7 @@
 
 
 - (instancetype) initWithExpression: (CBLQueryExpression*)expression {
-    self = [super initWithOrders: nil];
+    self = [super initWithNone];
     if (self) {
         _expression = expression;
         _isAscending = YES;
@@ -85,9 +66,11 @@
     return self;
 }
 
+
 - (id) asJSON {
     id json = _isAscending ? [_expression asJSON] : @[@"DESC", [_expression asJSON]];
     return json;
 }
+
 
 @end

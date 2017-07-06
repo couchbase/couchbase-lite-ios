@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 @class CBLDatabase, CBLQueryRow, CBLDocument;
-@class CBLQuerySelect, CBLQueryDataSource, CBLQueryJoin, CBLQueryOrderBy, CBLQueryGroupBy;
+@class CBLQuerySelectResult, CBLQueryDataSource, CBLQueryJoin, CBLQueryOrderBy, CBLQueryGroupBy;
 @class CBLQueryExpression;
 @class CBLLiveQuery;
 
@@ -26,13 +26,15 @@ NS_ASSUME_NONNULL_BEGIN
     @param select   The select component reresenting the SELECT clause of the query.
     @param from     The from component representing the FROM clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) select: (CBLQuerySelect*)select from: (CBLQueryDataSource*)from;
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
+                   from: (CBLQueryDataSource*)from;
 
 /** Create a distinct query from the select and from component.
     @param select   The select component representing the SELECT clause of the query.
     @param from     The from component representing the FROM clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select from: (CBLQueryDataSource*)from;
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
+                           from: (CBLQueryDataSource*)from;
 
 // SELECT > FROM > WHERE
 
@@ -41,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param from     The from component representing the FROM clause of the query.
     @param where    The where component representing the WHERE clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                   where: (nullable CBLQueryExpression*)where;
 
@@ -50,7 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param from     The from component representing the FROM clause of the query.
     @param where    The where component representing the WHERE clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                           from: (CBLQueryDataSource*)from
                          where: (nullable CBLQueryExpression*)where;
 
@@ -62,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param where    The where component representing the WHERE clause of the query.
     @param orderBy  The order by components representing the ORDER BY clause of the query.
     @return the CBLQuery instance. */
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                   where: (nullable CBLQueryExpression*)where
                 orderBy: (nullable NSArray<CBLQueryOrderBy*>*)orderBy;
@@ -73,7 +75,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param where    The where component representing the WHERE clause of the query.
     @param orderBy  The order by components representing the ORDER BY clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                           from: (CBLQueryDataSource*)from
                          where: (nullable CBLQueryExpression*)where
                        orderBy: (nullable NSArray<CBLQueryOrderBy*>*)orderBy;
@@ -86,7 +88,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param where    The where component representing the WHERE clause of the query.
  @param groupBy  The group by component representing the GROUP BY clause of the query.
  @return The CBLQuery instance. */
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                   where: (nullable CBLQueryExpression*)where
                 groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy;
@@ -97,7 +99,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param where    The where component representing the WHERE clause of the query.
  @param groupBy  The group by component representing the GROUP BY clause of the query.
  @return The CBLQuery instance. */
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                           where: (nullable CBLQueryExpression*)where
                         groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy;
@@ -111,7 +113,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param groupBy  The group by component representing the GROUP BY clause of the query.
     @param having   The having component representing the HAVING clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                   where: (nullable CBLQueryExpression*)where
                 groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
@@ -124,7 +126,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param groupBy  The group by component representing the GROUP BY clause of the query.
     @param having   The having component representing the HAVING clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                           where: (nullable CBLQueryExpression*)where
                         groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
@@ -140,7 +142,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param having   The having component representing the HAVING clause of the query.
     @param orderBy  The order by components representing the ORDER BY clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                   where: (nullable CBLQueryExpression*)where
                 groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
@@ -155,7 +157,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param having   The having component representing the HAVING clause of the query.
     @param orderBy  The order by components representing the ORDER BY clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                           where: (nullable CBLQueryExpression*)where
                         groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
@@ -169,7 +171,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param from    The from component representing the FROM clause of the query.
     @param join    The join components representing the JOIN clause of the query.
     @return the CBLQuery instance. */
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join;
 
@@ -178,7 +180,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param from     The from component representing the FROM clause of the query.
     @param join     The join components representing the JOIN clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join;
 
@@ -190,7 +192,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param join     The join components representing the JOIN clause of the query.
     @param where    The where component representing the WHERE clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
                   where: (nullable CBLQueryExpression*)where;
@@ -201,7 +203,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param join     The join components representing the JOIN clause of the query.
     @param where    The where component representing the WHERE clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where;
@@ -215,7 +217,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param where    The where component representing the WHERE clause of the query.
  @param groupBy  The group by component representing the GROUP BY clause of the query.
  @return The CBLQuery instance. */
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
                   where: (nullable CBLQueryExpression*)where
@@ -229,7 +231,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param where    The where component representing the WHERE clause of the query.
  @param groupBy  The group by component representing the GROUP BY clause of the query.
  @return The CBLQuery instance. */
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
@@ -245,7 +247,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param groupBy  The group by component representing the GROUP BY clause of the query.
     @param having   The having component representing the HAVING clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
                   where: (nullable CBLQueryExpression*)where
@@ -261,7 +263,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param groupBy  The group by component representing the GROUP BY clause of the query.
     @param having   The having component representing the HAVING clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
@@ -277,7 +279,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param where    The where component representing the WHERE clause of the query.
     @param orderBy  The order by components representing the ORDER BY clause of the query.
     @return the CBLQuery instance. */
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
                   where: (nullable CBLQueryExpression*)where
@@ -290,7 +292,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param where    The where component representing the WHERE clause of the query.
     @param orderBy  The order by components representing the ORDER BY clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
@@ -307,7 +309,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param having   The having component representing the HAVING clause of the query.
     @param orderBy  The order by components representing the ORDER BY clause of the query.
     @return the CBLQuery instance. */
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
                   where: (nullable CBLQueryExpression*)where
@@ -324,7 +326,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param having   The having component representing the HAVING clause of the query.
     @param orderBy  The order by components representing the ORDER BY clause of the query.
     @return The CBLQuery instance. */
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where

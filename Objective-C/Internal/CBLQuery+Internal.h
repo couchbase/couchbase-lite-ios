@@ -12,7 +12,7 @@
 #import "CBLQueryFunction.h"
 #import "CBLQueryGroupBy.h"
 #import "CBLQueryJoin.h"
-#import "CBLQuerySelect.h"
+#import "CBLQuerySelectResult.h"
 #import "CBLQueryExpression.h"
 #import "CBLQueryOrderBy.h"
 #import "CBLPredicateQuery+Internal.h"
@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQuery () <CBLQueryInternal, NSCopying>
 
-@property (readonly, nonatomic) CBLQuerySelect* select;
+@property (readonly, nonatomic) NSArray<CBLQuerySelectResult*>* select;
 
 @property (readonly, nonatomic) CBLQueryDataSource* from;
 
@@ -50,7 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic) BOOL distinct;
 
 /** Initializer. */
-- (instancetype) initWithSelect: (CBLQuerySelect*)select
+- (instancetype) initWithSelect: (NSArray<CBLQuerySelectResult*>*)select
                        distinct: (BOOL)distinct
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
@@ -75,11 +75,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /////
 
-@interface CBLQuerySelect () <CBLQueryJSONEncoding>
+@interface CBLQuerySelectResult () <CBLQueryJSONEncoding>
 
-@property (nonatomic, readonly, nullable) id select;
-
-- (instancetype) initWithSelect: (nullable id)select;
+- (instancetype) initWithExpression: (CBLQueryExpression*)expression;
 
 @end
 
@@ -105,9 +103,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQueryOrderBy () <CBLQueryJSONEncoding>
 
-@property (readonly, nullable, copy, nonatomic) NSArray* orders;
-
-- (instancetype) initWithOrders: (nullable NSArray*)orders;
+- (instancetype) initWithNone;
 
 @end
 

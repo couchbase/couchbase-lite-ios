@@ -9,7 +9,7 @@
 #import "CBLTestCase.h"
 #import "CBLQuery.h"
 #import "CBLLiveQuery.h"
-#import "CBLQuerySelect.h"
+#import "CBLQuerySelectResult.h"
 #import "CBLQueryDataSource.h"
 #import "CBLQueryOrderBy.h"
 
@@ -76,7 +76,7 @@
 
 - (void) runTestWithNumbers: (NSArray*)numbers cases: (NSArray*)cases {
     for (NSArray* c in cases) {
-        CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
+        CBLQuery* q = [CBLQuery select: @[]
                                   from: [CBLQueryDataSource database: self.db]
                                  where: c[0]];
         NSPredicate* p = [NSPredicate predicateWithFormat: c[1]];
@@ -97,7 +97,7 @@
 - (void) testNoWhereQuery {
     [self loadJSONResource: @"names_100"];
     
-    CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
+    CBLQuery* q = [CBLQuery select: @[]
                               from: [CBLQueryDataSource database: self.db]];
     Assert(q);
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
@@ -197,7 +197,7 @@
     for (NSArray* test in tests) {
         CBLQueryExpression* exp = test[0];
         NSArray* expectedDocs = test[1];
-        CBLQuery *q = [CBLQuery select: [CBLQuerySelect all]
+        CBLQuery *q = [CBLQuery select: @[]
                                   from: [CBLQueryDataSource database: self.db]
                                  where: exp];
         uint64_t numRows = [self verifyQuery: q randomAccess: YES
@@ -218,7 +218,7 @@
     [doc1 setObject: @"string" forKey: @"string"];
     Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
     
-    CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
+    CBLQuery* q = [CBLQuery select: @[]
                               from: [CBLQueryDataSource database: self.db]
                              where: [[CBLQueryExpression property: @"string"] is: @"string"]];
     
@@ -231,7 +231,7 @@
     }];
     AssertEqual(numRows, 1u);
     
-    q = [CBLQuery select: [CBLQuerySelect all]
+    q = [CBLQuery select: @[]
                     from: [CBLQueryDataSource database: self.db]
                    where: [[CBLQueryExpression property: @"string"] isNot: @"string1"]];
     
@@ -260,7 +260,7 @@
     
     NSArray* expected = @[@"Marcy", @"Margaretta", @"Margrett", @"Marlen", @"Maryjo"];
     CBLQueryExpression* firstName = [CBLQueryExpression property: @"name.first"];
-    CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
+    CBLQuery* q = [CBLQuery select: @[]
                               from: [CBLQueryDataSource database: self.db]
                              where: [firstName in: expected]
                            orderBy: @[[CBLQuerySortOrder property: @"name.first"]]];
@@ -277,7 +277,7 @@
     [self loadJSONResource: @"names_100"];
     
     CBLQueryExpression* where = [[CBLQueryExpression property: @"name.first"] like: @"%Mar%"];
-    CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
+    CBLQuery* q = [CBLQuery select: @[]
                               from: [CBLQueryDataSource database: self.db]
                              where: where
                            orderBy: @[[[CBLQueryOrderBy property: @"name.first"] ascending]]];
@@ -299,7 +299,7 @@
     [self loadJSONResource: @"names_100"];
     
     CBLQueryExpression* where = [[CBLQueryExpression property: @"name.first"] regex: @"^Mar.*"];
-    CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
+    CBLQuery* q = [CBLQuery select: @[]
                               from: [CBLQueryDataSource database: self.db]
                              where: where
                            orderBy: @[[[CBLQueryOrderBy property: @"name.first"] ascending]]];
@@ -325,7 +325,7 @@
     
     CBLQueryExpression* where = [[CBLQueryExpression property: @"sentence"] match: @"'Dummie woman'"];
     CBLQueryOrderBy* order = [[CBLQueryOrderBy property: @"rank(sentence)"] descending];
-    CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
+    CBLQuery* q = [CBLQuery select: @[]
                               from: [CBLQueryDataSource database: self.db]
                              where: where
                            orderBy: @[order]];
@@ -355,7 +355,7 @@
         else
             order = [[CBLQueryOrderBy property: @"name.first"] descending];
         
-        CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
+        CBLQuery* q = [CBLQuery select: @[]
                                   from: [CBLQueryDataSource database: self.db]
                                  where: nil
                                orderBy: @[order]];
@@ -391,7 +391,7 @@
     [doc2 setObject: @(1) forKey: @"number"];
     Assert([_db saveDocument: doc2 error: &error], @"Error when creating a document: %@", error);
     
-    CBLQuery* q = [CBLQuery selectDistinct: [CBLQuerySelect all]
+    CBLQuery* q = [CBLQuery selectDistinct: @[]
                                      from: [CBLQueryDataSource database: self.db]];
     Assert(q);
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
@@ -413,7 +413,7 @@
                               equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
     CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
                                          on: on];
-    CBLQuery* q = [CBLQuery select: [CBLQuerySelect all]
+    CBLQuery* q = [CBLQuery select: @[]
                               from: [CBLQueryDataSource database: self.db as: @"main"]
                               join: @[join]];
     Assert(q);
@@ -428,19 +428,19 @@
 - (void) testAggregateFunctions {
     [self loadNumbers: 100];
     
-    CBLQueryExpression* avg = [CBLQueryFunction avg: [CBLQueryExpression property: @"number1"]];
-    CBLQueryExpression* cnt = [CBLQueryFunction count: [CBLQueryExpression property: @"number1"]];
-    CBLQueryExpression* min = [CBLQueryFunction min: [CBLQueryExpression property: @"number1"]];
-    CBLQueryExpression* max = [CBLQueryFunction max: [CBLQueryExpression property: @"number1"]];
-    CBLQueryExpression* sum = [CBLQueryFunction sum: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* AVG = [CBLQueryFunction avg: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* CNT = [CBLQueryFunction count: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* MIN = [CBLQueryFunction min: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* MAX = [CBLQueryFunction max: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* SUM = [CBLQueryFunction sum: [CBLQueryExpression property: @"number1"]];
     
-    NSArray* cols = @[[CBLQuerySelect expression: avg],
-                      [CBLQuerySelect expression: cnt],
-                      [CBLQuerySelect expression: min],
-                      [CBLQuerySelect expression: max],
-                      [CBLQuerySelect expression: sum]];
+    NSArray* results = @[[CBLQuerySelectResult expression: AVG],
+                         [CBLQuerySelectResult expression: CNT],
+                         [CBLQuerySelectResult expression: MIN],
+                         [CBLQuerySelectResult expression: MAX],
+                         [CBLQuerySelectResult expression: SUM]];
     
-    CBLQuery* q = [CBLQuery select: [CBLQuerySelect select: cols]
+    CBLQuery* q = [CBLQuery select: results
                               from: [CBLQueryDataSource database: self.db]];
     Assert(q);
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
@@ -455,23 +455,23 @@
 
 
 - (void) testGroupBy {
-    NSArray* expectedStates = @[@"AL",    @"CA",    @"CO",    @"FL",    @"IA"];
-    NSArray* expectedCounts = @[@1,       @6,       @1,       @1,       @3];
-    NSArray* expectedMaxZips= @[@"35243", @"94153", @"81223", @"33612", @"50801"];
+    NSArray* expectedStates  = @[@"AL",    @"CA",    @"CO",    @"FL",    @"IA"];
+    NSArray* expectedCounts  = @[@1,       @6,       @1,       @1,       @3];
+    NSArray* expectedMaxZips = @[@"35243", @"94153", @"81223", @"33612", @"50801"];
     
     [self loadJSONResource: @"names_100"];
     
-    CBLQueryExpression* STATE = [CBLQueryExpression property: @"contact.address.state"];
-    CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
-    CBLQueryExpression* COUNT = [CBLQueryFunction count: @(1)];
-    CBLQueryExpression* ZIP = [CBLQueryExpression property: @"contact.address.zip"];
+    CBLQueryExpression* STATE  = [CBLQueryExpression property: @"contact.address.state"];
+    CBLQueryExpression* COUNT  = [CBLQueryFunction count: @(1)];
+    CBLQueryExpression* ZIP    = [CBLQueryExpression property: @"contact.address.zip"];
     CBLQueryExpression* MAXZIP = [CBLQueryFunction max: ZIP];
+    CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
     
-    NSArray* cols = @[[CBLQuerySelect expression: STATE],
-                      [CBLQuerySelect expression: COUNT],
-                      [CBLQuerySelect expression: MAXZIP]];
+    NSArray* results = @[[CBLQuerySelectResult expression: STATE],
+                         [CBLQuerySelectResult expression: COUNT],
+                         [CBLQuerySelectResult expression: MAXZIP]];
     
-    CBLQuery* q = [CBLQuery select: [CBLQuerySelect select: cols]
+    CBLQuery* q = [CBLQuery select: results
                               from: [CBLQueryDataSource database: self.db]
                              where: [GENDER equalTo: @"female"]
                            groupBy: @[[CBLQueryGroupBy expression: STATE]]
@@ -492,11 +492,11 @@
     AssertEqual(numRows, 31u);
     
     // With HAVING:
-    expectedStates = @[@"CA",    @"IA",     @"IN"];
-    expectedCounts = @[@6,       @3,        @2];
-    expectedMaxZips= @[@"94153", @"50801",  @"47952"];
+    expectedStates  = @[@"CA",    @"IA",     @"IN"];
+    expectedCounts  = @[@6,       @3,        @2];
+    expectedMaxZips = @[@"94153", @"50801",  @"47952"];
     
-    q = [CBLQuery select: [CBLQuerySelect select: cols]
+    q = [CBLQuery select: results
                     from: [CBLQueryDataSource database: self.db]
                    where: [GENDER equalTo: @"female"]
                  groupBy: @[[CBLQueryGroupBy expression: STATE]]
@@ -518,12 +518,14 @@
 }
 
 
+
+
 - (void) testLiveQuery {
     [self loadNumbers: 100];
     
     __block int count = 0;
     XCTestExpectation* x = [self expectationWithDescription: @"changes"];
-    CBLLiveQuery* q = [[CBLQuery select: [CBLQuerySelect all]
+    CBLLiveQuery* q = [[CBLQuery select: @[]
                                    from: [CBLQueryDataSource database: self.db]
                                   where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
                                 orderBy: @[[CBLQueryOrderBy property: @"number1"]]] toLive];
@@ -559,7 +561,7 @@
     [self loadNumbers: 100];
     
     __block int count = 0;
-    CBLLiveQuery* q = [[CBLQuery select: [CBLQuerySelect all]
+    CBLLiveQuery* q = [[CBLQuery select: @[]
                                    from: [CBLQueryDataSource database: self.db]
                                   where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
                                 orderBy: @[[CBLQueryOrderBy property: @"number1"]]] toLive];

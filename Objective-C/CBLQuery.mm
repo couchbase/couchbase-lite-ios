@@ -27,7 +27,7 @@
 @synthesize distinct=_distinct;
 
 
-- (instancetype) initWithSelect: (CBLQuerySelect*)select
+- (instancetype) initWithSelect: (NSArray<CBLQuerySelectResult*>*)select
                        distinct: (BOOL)distinct
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
@@ -59,7 +59,7 @@
 #pragma mark - SELECT > FROM
 
 
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
 {
     return [[[self class] alloc] initWithSelect: select distinct: NO from: from
@@ -71,7 +71,7 @@
 }
 
 
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
 {
     return [[[self class] alloc] initWithSelect: select distinct: YES from: from
@@ -86,7 +86,7 @@
 #pragma mark - SELECT > FROM > WHERE
 
 
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                   where: (CBLQueryExpression*)where
 {
@@ -99,7 +99,7 @@
 }
 
 
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                           where: (CBLQueryExpression*)where
 {
@@ -114,7 +114,7 @@
 
 #pragma mark - SELECT > FROM > WHERE > GROUP BY
 
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                   where: (nullable CBLQueryExpression*)where
                 groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
@@ -128,7 +128,7 @@
 }
 
 
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                           where: (nullable CBLQueryExpression*)where
                         groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
@@ -145,7 +145,7 @@
 #pragma mark - SELECT > FROM > WHERE > GROUP BY > HAVING
 
 
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                   where: (nullable CBLQueryExpression*)where
                 groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
@@ -160,7 +160,7 @@
 }
 
 
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                           where: (nullable CBLQueryExpression*)where
                         groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
@@ -178,7 +178,7 @@
 #pragma mark - SELECT > FROM > WHERE > ORDER BY
 
 
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                   where: (CBLQueryExpression*)where
                 orderBy: (NSArray<CBLQueryOrderBy*>*)orderBy
@@ -192,7 +192,7 @@
 }
 
 
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                           where: (CBLQueryExpression*)where
                         orderBy: (NSArray<CBLQueryOrderBy*>*)orderBy
@@ -209,7 +209,7 @@
 #pragma mark - SELECT > FROM > WHERE > GROUP BY > HAVING > ORDER BY
 
 
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                   where: (nullable CBLQueryExpression*)where
                 groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
@@ -225,7 +225,7 @@
 }
 
 
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                           where: (nullable CBLQueryExpression*)where
                         groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
@@ -244,7 +244,7 @@
 #pragma mark - SELECT > FROM > JOIN
 
 
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
 {
@@ -257,7 +257,7 @@
 }
 
 
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
 {
@@ -273,7 +273,7 @@
 #pragma mark - SELECT > FROM > JOIN > WHERE
 
 
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
                   where: (nullable CBLQueryExpression*)where
@@ -287,7 +287,7 @@
 }
 
 
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
@@ -304,7 +304,7 @@
 #pragma mark - SELECT > FROM > JOIN > WHERE > GROUP BY
 
 
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
                   where: (nullable CBLQueryExpression*)where
@@ -319,7 +319,7 @@
 }
 
 
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
@@ -337,7 +337,7 @@
 #pragma mark - SELECT > FROM > JOIN > WHERE > GROUP BY > HAVING
 
 
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
                   where: (nullable CBLQueryExpression*)where
@@ -353,7 +353,7 @@
 }
 
 
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
@@ -372,7 +372,7 @@
 #pragma mark - SELECT > FROM > JOIN > WHERE > ORDER BY
 
 
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
                   where: (nullable CBLQueryExpression*)where
@@ -387,7 +387,7 @@
 }
 
 
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
@@ -405,7 +405,7 @@
 #pragma mark -  SELECT > FROM > JOIN > WHERE > GROUP BY> HAVING > ORDER BY
 
 
-+ (instancetype) select: (CBLQuerySelect*)select
++ (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
                   where: (nullable CBLQueryExpression*)where
@@ -422,7 +422,7 @@
 }
 
 
-+ (instancetype) selectDistinct: (CBLQuerySelect*)select
++ (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
@@ -524,9 +524,13 @@
     if (_distinct)
         json[@"DISTINCT"] = @(YES);
     
-    NSArray* selects = [_select asJSON];
-    if (selects.count > 0)
+    if (_select.count > 0) {
+        NSMutableArray* selects = [NSMutableArray array];
+        for (CBLQuerySelectResult* select in _select) {
+            [selects addObject: [select asJSON]];
+        }
         json[@"WHAT"] = selects;
+    }
     
     // Join:
     NSMutableArray* from;
