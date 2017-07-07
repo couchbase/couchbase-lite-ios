@@ -82,7 +82,7 @@ public class Query {
     
     var havingImpl: CBLQueryExpression?
     
-    var orderByImpl: [CBLQueryOrderBy]?
+    var orderingsImpl: [CBLQueryOrdering]?
     
     var queryImpl: CBLQuery?
     
@@ -103,7 +103,7 @@ public class Query {
                 where: whereImpl,
                 groupBy: groupByImpl,
                 having: havingImpl,
-                orderBy: orderByImpl)
+                orderBy: orderingsImpl)
         } else {
             queryImpl = CBLQuery.select(
                 selectImpl!,
@@ -112,7 +112,7 @@ public class Query {
                 where: whereImpl,
                 groupBy: groupByImpl,
                 having: havingImpl,
-                orderBy: orderByImpl)
+                orderBy: orderingsImpl)
         }
     }
 
@@ -125,7 +125,7 @@ public class Query {
         self.whereImpl = query.whereImpl
         self.groupByImpl = query.groupByImpl
         self.havingImpl = query.havingImpl
-        self.orderByImpl = query.orderByImpl
+        self.orderingsImpl = query.orderingsImpl
     }
     
 }

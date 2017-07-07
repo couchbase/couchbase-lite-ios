@@ -14,7 +14,7 @@
 #import "CBLQueryJoin.h"
 #import "CBLQuerySelectResult.h"
 #import "CBLQueryExpression.h"
-#import "CBLQueryOrderBy.h"
+#import "CBLQueryOrdering.h"
 #import "CBLPredicateQuery+Internal.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nullable, nonatomic) CBLQueryExpression* having;
 
-@property (readonly, nullable, nonatomic) NSArray<CBLQueryOrderBy*>* orderBy;
+@property (readonly, nullable, nonatomic) NSArray<CBLQueryOrdering*>* orderings;
 
 @property (readonly, nonatomic) BOOL distinct;
 
@@ -57,7 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
                           where: (nullable CBLQueryExpression*)where
                         groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
                          having: (nullable CBLQueryExpression*)having
-                        orderBy: (nullable NSArray<CBLQueryOrderBy*>*)orderBy;
+                        orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings;
 
 @end
 
@@ -101,18 +101,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 /////
 
-@interface CBLQueryOrderBy () <CBLQueryJSONEncoding>
+@interface CBLQueryOrdering () <CBLQueryJSONEncoding>
 
-- (instancetype) initWithNone;
+@property (readonly, nonatomic) CBLQueryExpression* expression;
+
+- (instancetype) initWithExpression: (CBLQueryExpression*)expression;
 
 @end
 
 @interface CBLQuerySortOrder ()
 
-@property (readonly, nonatomic) CBLQueryExpression* expression;
 @property (readonly, nonatomic) BOOL isAscending;
-
-- (instancetype) initWithExpression: (CBLQueryExpression*)expression;
 
 @end
 

@@ -1,17 +1,18 @@
 //
-//  CBLQueryOrderBy.m
+//  CBLQueryOrdering.m
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 3/8/17.
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLQueryOrderBy.h"
+#import "CBLQueryOrdering.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQueryExpression.h"
 
-@implementation CBLQueryOrderBy
+@implementation CBLQueryOrdering
 
+@synthesize expression=_expression;
 
 + (CBLQuerySortOrder *) property: (NSString*)name {
     return [[self class] expression: [CBLQueryExpression property: name]];
@@ -25,14 +26,17 @@
 
 #pragma mark - Internal
 
-- (instancetype) initWithNone {
-    return [super init];
+- (instancetype) initWithExpression: (CBLQueryExpression*)expression {
+    self = [super init];
+    if (self) {
+        _expression = expression;
+    }
+    return self;
 }
 
 
 - (id) asJSON {
-    // Subclass implement
-    return @[];
+    return [self.expression asJSON];
 }
 
 
@@ -41,34 +45,32 @@
 
 @implementation CBLQuerySortOrder
 
-
-@synthesize expression=_expression, isAscending=_isAscending;
+@synthesize isAscending=_isAscending;
 
 
 - (instancetype) initWithExpression: (CBLQueryExpression*)expression {
-    self = [super initWithNone];
+    self = [super initWithExpression: expression];
     if (self) {
-        _expression = expression;
         _isAscending = YES;
     }
     return self;
 }
 
 
-- (CBLQueryOrderBy*) ascending {
+- (CBLQueryOrdering*) ascending {
     _isAscending = YES;
     return self;
 }
 
 
-- (CBLQueryOrderBy*) descending {
+- (CBLQueryOrdering*) descending {
     _isAscending = NO;
     return self;
 }
 
 
 - (id) asJSON {
-    id json = _isAscending ? [_expression asJSON] : @[@"DESC", [_expression asJSON]];
+    id json = _isAscending ? [super asJSON] : @[@"DESC", [super asJSON]];
     return json;
 }
 

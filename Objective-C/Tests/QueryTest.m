@@ -11,7 +11,7 @@
 #import "CBLLiveQuery.h"
 #import "CBLQuerySelectResult.h"
 #import "CBLQueryDataSource.h"
-#import "CBLQueryOrderBy.h"
+#import "CBLQueryOrdering.h"
 
 
 @interface QueryTest : CBLTestCase
@@ -280,7 +280,7 @@
     CBLQuery* q = [CBLQuery select: @[]
                               from: [CBLQueryDataSource database: self.db]
                              where: where
-                           orderBy: @[[[CBLQueryOrderBy property: @"name.first"] ascending]]];
+                           orderBy: @[[[CBLQueryOrdering property: @"name.first"] ascending]]];
     
     NSMutableArray* firstNames = [NSMutableArray array];
     uint64_t numRows = [self verifyQuery: q randomAccess: NO
@@ -302,7 +302,7 @@
     CBLQuery* q = [CBLQuery select: @[]
                               from: [CBLQueryDataSource database: self.db]
                              where: where
-                           orderBy: @[[[CBLQueryOrderBy property: @"name.first"] ascending]]];
+                           orderBy: @[[[CBLQueryOrdering property: @"name.first"] ascending]]];
     
     NSMutableArray* firstNames = [NSMutableArray array];
     uint64_t numRows = [self verifyQuery: q randomAccess: NO
@@ -324,7 +324,7 @@
     Assert([_db createIndexOn: @[@"sentence"] type: kCBLFullTextIndex options: NULL error: &error]);
     
     CBLQueryExpression* where = [[CBLQueryExpression property: @"sentence"] match: @"'Dummie woman'"];
-    CBLQueryOrderBy* order = [[CBLQueryOrderBy property: @"rank(sentence)"] descending];
+    CBLQueryOrdering* order = [[CBLQueryOrdering property: @"rank(sentence)"] descending];
     CBLQuery* q = [CBLQuery select: @[]
                               from: [CBLQueryDataSource database: self.db]
                              where: where
@@ -349,11 +349,11 @@
     for (id ascending in @[@(YES), @(NO)]) {
         BOOL isAscending = [ascending boolValue];
         
-        CBLQueryOrderBy* order;
+        CBLQueryOrdering* order;
         if (isAscending)
-            order = [[CBLQueryOrderBy property: @"name.first"] ascending];
+            order = [[CBLQueryOrdering property: @"name.first"] ascending];
         else
-            order = [[CBLQueryOrderBy property: @"name.first"] descending];
+            order = [[CBLQueryOrdering property: @"name.first"] descending];
         
         CBLQuery* q = [CBLQuery select: @[]
                                   from: [CBLQueryDataSource database: self.db]
@@ -476,7 +476,7 @@
                              where: [GENDER equalTo: @"female"]
                            groupBy: @[[CBLQueryGroupBy expression: STATE]]
                             having: nil
-                           orderBy:@[[CBLQueryOrderBy expression: STATE]]];
+                           orderBy:@[[CBLQueryOrdering expression: STATE]]];
     
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
         NSString* state = [row stringAtIndex: 0];
@@ -501,7 +501,7 @@
                    where: [GENDER equalTo: @"female"]
                  groupBy: @[[CBLQueryGroupBy expression: STATE]]
                   having: [COUNT greaterThan: @(1)]
-                 orderBy: @[[CBLQueryOrderBy expression: STATE]]];
+                 orderBy: @[[CBLQueryOrdering expression: STATE]]];
     
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
         NSString* state = [row stringAtIndex: 0];
@@ -528,7 +528,7 @@
     CBLLiveQuery* q = [[CBLQuery select: @[]
                                    from: [CBLQueryDataSource database: self.db]
                                   where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
-                                orderBy: @[[CBLQueryOrderBy property: @"number1"]]] toLive];
+                                orderBy: @[[CBLQueryOrdering property: @"number1"]]] toLive];
     id listener = [q addChangeListener:^(CBLLiveQueryChange* change) {
         count++;
         AssertNotNil(change.query);
@@ -564,7 +564,7 @@
     CBLLiveQuery* q = [[CBLQuery select: @[]
                                    from: [CBLQueryDataSource database: self.db]
                                   where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
-                                orderBy: @[[CBLQueryOrderBy property: @"number1"]]] toLive];
+                                orderBy: @[[CBLQueryOrdering property: @"number1"]]] toLive];
     
     id listener = [q addChangeListener:^(CBLLiveQueryChange* change) {
         count++;

@@ -24,9 +24,9 @@ public class GroupBy: Query, HavingRouter, OrderByRouter {
         return Having(query: self, impl: expression.impl)
     }
     
-    /** Create and chain ORDER BY components for specifying the order of the query result. */
-    public func orderBy(_ orders: OrderBy...) -> OrderBy {
-        return OrderBy(query: self, impl: OrderBy.toImpl(orders: orders))
+    /** Create and chain an ORDER BY component for specifying the orderings of the query result. */
+    public func orderBy(_ orderings: Ordering...) -> OrderBy {
+        return OrderBy(query: self, impl: Ordering.toImpl(orderings: orderings))
     }
     
     // MARK: Internal

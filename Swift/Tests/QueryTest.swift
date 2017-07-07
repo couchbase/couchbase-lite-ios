@@ -213,7 +213,7 @@ class QueryTest: CBLTestCase {
             .select()
             .from(DataSource.database(db))
             .where(w)
-            .orderBy(OrderBy.property("name.first").ascending())
+            .orderBy(Ordering.property("name.first").ascending())
         
         var firstNames: [String] = []
         let numRows = try verifyQuery(q, block: { (n, row) in
@@ -232,7 +232,7 @@ class QueryTest: CBLTestCase {
         try loadJSONResource(name: "names_100")
         let expected = ["Marcy", "Margaretta", "Margrett", "Marlen", "Maryjo"]
         let w = Expression.property("name.first").in(expected)
-        let o = OrderBy.property("name.first")
+        let o = Ordering.property("name.first")
         let q = Query.select().from(DataSource.database(db)).where(w).orderBy(o)
         let numRows = try verifyQuery(q, block: { (n, row) in
             let firstName = expected[Int(n)-1]
@@ -251,7 +251,7 @@ class QueryTest: CBLTestCase {
             .select()
             .from(DataSource.database(db))
             .where(w)
-            .orderBy(OrderBy.property("name.first").ascending())
+            .orderBy(Ordering.property("name.first").ascending())
         
         var firstNames: [String] = []
         let numRows = try verifyQuery(q, block: { (n, row) in
@@ -273,7 +273,7 @@ class QueryTest: CBLTestCase {
             IndexOptions.fullTextIndex(language: nil, ignoreDiacritics: false))
         
         let w = Expression.property("sentence").match("'Dummie woman'")
-        let o = OrderBy.expression(Expression.property("rank(sentence)")).descending()
+        let o = Ordering.expression(Expression.property("rank(sentence)")).descending()
         let q = Query.select().from(DataSource.database(db)).where(w).orderBy(o)
         let numRows = try verifyQuery(q) { (n, row) in
             let ftsRow = row as! FullTextQueryRow
@@ -291,11 +291,11 @@ class QueryTest: CBLTestCase {
         try loadJSONResource(name: "names_100")
         
         for ascending in [true, false] {
-            var o: OrderBy;
+            var o: Ordering;
             if (ascending) {
-                o = OrderBy.expression(Expression.property("name.first")).ascending()
+                o = Ordering.expression(Expression.property("name.first")).ascending()
             } else {
-                o = OrderBy.expression(Expression.property("name.first")).descending()
+                o = Ordering.expression(Expression.property("name.first")).descending()
             }
             
             let q = Query.select().from(DataSource.database(db)).orderBy(o)
@@ -401,7 +401,7 @@ class QueryTest: CBLTestCase {
             .from(DataSource.database(db))
             .where(GENDER.equalTo("female"))
             .groupBy(GroupBy.expression(STATE))
-            .orderBy(OrderBy.expression(STATE))
+            .orderBy(Ordering.expression(STATE))
         
         var numRow = try verifyQuery(q, block: { (n, row) in
             let state = row.value(at: 0) as! String
@@ -428,7 +428,7 @@ class QueryTest: CBLTestCase {
             .where(GENDER.equalTo("female"))
             .groupBy(GroupBy.expression(STATE))
             .having(COUNT.greaterThan(1))
-            .orderBy(OrderBy.expression(STATE))
+            .orderBy(Ordering.expression(STATE))
         
         numRow = try verifyQuery(q, block: { (n, row) in
             let state = row.value(at: 0) as! String
@@ -453,7 +453,7 @@ class QueryTest: CBLTestCase {
             .select()
             .from(DataSource.database(db))
             .where(Expression.property("number1").lessThan(10))
-            .orderBy(OrderBy.property("number1"))
+            .orderBy(Ordering.property("number1"))
             .toLive()
         
         let x = expectation(description: "changes")
@@ -491,7 +491,7 @@ class QueryTest: CBLTestCase {
             .select()
             .from(DataSource.database(db))
             .where(Expression.property("number1").lessThan(10))
-            .orderBy(OrderBy.property("number1"))
+            .orderBy(Ordering.property("number1"))
             .toLive()
         
         let listener = q.addChangeListener { (change) in

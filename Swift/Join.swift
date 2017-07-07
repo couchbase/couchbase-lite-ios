@@ -16,9 +16,9 @@ public class Join: Query, WhereRouter, OrderByRouter  {
         return Where(query: self, impl: whereExpression.impl)
     }
     
-    /** Create and chain an ORDER BY component for specifying the order of the query result. */
-    public func orderBy(_ orders: OrderBy...) -> OrderBy {
-        return OrderBy(query: self, impl: OrderBy.toImpl(orders: orders))
+    /** Create and chain an ORDER BY component for specifying the orderings of the query result. */
+    public func orderBy(_ orderings: Ordering...) -> OrderBy {
+        return OrderBy(query: self, impl: Ordering.toImpl(orderings: orderings))
     }
     
     /** Create a JOIN (same as INNER JOIN) component with the given data source. 
