@@ -72,7 +72,7 @@ public class Query {
     
     var fromImpl: CBLQueryDataSource?
     
-    var joinImpl: [CBLQueryJoin]?
+    var joinsImpl: [CBLQueryJoin]?
     
     var database: Database?
     
@@ -99,7 +99,7 @@ public class Query {
             queryImpl = CBLQuery.selectDistinct(
                 selectImpl!,
                 from: fromImpl!,
-                join: joinImpl,
+                join: joinsImpl,
                 where: whereImpl,
                 groupBy: groupByImpl,
                 having: havingImpl,
@@ -108,7 +108,7 @@ public class Query {
             queryImpl = CBLQuery.select(
                 selectImpl!,
                 from: fromImpl!,
-                join: joinImpl,
+                join: joinsImpl,
                 where: whereImpl,
                 groupBy: groupByImpl,
                 having: havingImpl,
@@ -121,7 +121,7 @@ public class Query {
         self.selectImpl = query.selectImpl
         self.distinct = query.distinct
         self.fromImpl = query.fromImpl
-        self.joinImpl = query.joinImpl
+        self.joinsImpl = query.joinsImpl
         self.whereImpl = query.whereImpl
         self.groupByImpl = query.groupByImpl
         self.havingImpl = query.havingImpl

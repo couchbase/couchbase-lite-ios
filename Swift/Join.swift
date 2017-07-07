@@ -8,18 +8,8 @@
 
 import Foundation
 
-/** A Join component representing a JSON clause of the query. */
-public class Join: Query, WhereRouter, OrderByRouter  {
-    
-    /** Create and chain a WHERE component for specifying the WHERE clause of the query. */
-    public func `where`(_ whereExpression: Expression) -> Where {
-        return Where(query: self, impl: whereExpression.impl)
-    }
-    
-    /** Create and chain an ORDER BY component for specifying the orderings of the query result. */
-    public func orderBy(_ orderings: Ordering...) -> OrderBy {
-        return OrderBy(query: self, impl: Ordering.toImpl(orderings: orderings))
-    }
+/** A Join component representing a single join clause in the query statement. */
+public class Join {
     
     /** Create a JOIN (same as INNER JOIN) component with the given data source. 
         Use the returned On component to specify join conditions. */
@@ -53,32 +43,20 @@ public class Join: Query, WhereRouter, OrderByRouter  {
     
     // MARK: Internal
     
-    init(query: Query, impl: [CBLQueryJoin]) {
-        super.init()
-        
-        self.copy(query)
-        self.joinImpl = impl
-    }
+    let impl: CBLQueryJoin?
     
-    init(impl: CBLQueryJoin) {
-        super.init()
-        self.joinImpl = [impl]
-    }
-    
-    override init() {
-        super.init()
+    init(impl: CBLQueryJoin?) {
+        self.impl = impl
     }
     
     static func toImpl(joins: [Join]) -> [CBLQueryJoin] {
-        var implJoins: [CBLQueryJoin] = []
+        var joinsImpl: [CBLQueryJoin] = []
         for o in joins {
-            if let joinImpl = o.joinImpl { // Skip JOIN without ON
-                for impl in joinImpl {
-                    implJoins.append(impl)
-                }
+            if let impl = o.impl {
+                joinsImpl.append(impl)
             }
         }
-        return implJoins;
+        return joinsImpl;
     }
     
 }
@@ -97,10 +75,10 @@ public final class On : Join {
     init(datasource: DataSource, type: JoinType) {
         self.datasource = datasource
         self.type = type
-        super.init()
+        super.init(impl: nil)
     }
     
-    /** Specifies join conditions from the given query expression. */
+    /** Specify join conditions from the given expression. */
     public func on(_ expression: Expression) -> Join {
         let impl: CBLQueryJoin;
         switch self.type {

@@ -11,5 +11,5 @@ import Foundation
 /** JoinRouter for creating and chaning he JOIN components to specify a query JOIN clause. */
 protocol JoinRouter {
     /** Create and chain the JOIN components to specify a query JOIN clause. */
-    func join(_ join: Join...) -> Join
+    func join(_ join: Join...) -> Joins
 }

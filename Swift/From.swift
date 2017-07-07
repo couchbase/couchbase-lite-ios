@@ -27,8 +27,8 @@ public final class From: Query, JoinRouter, WhereRouter, GroupByRouter, OrderByR
     }
     
     /** Create and chain JOIN components for specifying the JOIN clause of the query. */
-    public func join(_ joins: Join...) -> Join {
-        return Join(query: self, impl: Join.toImpl(joins: joins))
+    public func join(_ joins: Join...) -> Joins {
+        return Joins(query: self, impl: Join.toImpl(joins: joins))
     }
     
     /** An internal constructor. */
