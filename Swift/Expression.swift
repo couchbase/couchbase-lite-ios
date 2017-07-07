@@ -22,49 +22,49 @@ public class Expression {
         @param expression   the expression to be negated.
         @return a negated expression. */
     public static func negated(_ expression: Any) -> Expression {
-        return Expression(CBLQueryExpression.negated(toCBLExp(expression)))
+        return Expression(CBLQueryExpression.negated(toImpl(expression)))
     }
     
     /** Create a negated expression representing the negated result of the given expression.
         @param expression   the expression to be negated.
         @return a negated expression */
     public static func not(_ expression: Any) -> Expression {
-        return Expression(CBLQueryExpression.not(toCBLExp(expression)))
+        return Expression(CBLQueryExpression.not(toImpl(expression)))
     }
     
     /** Create a multiply expression to multiply the current expression by the given expression.
         @param expression   the expression to be multipled by.
         @return a multiply expression. */
     public func multiply(_ expression: Any) -> Expression {
-        return Expression(self.impl.multiply(Expression.toCBLExp(expression)));
+        return Expression(self.impl.multiply(Expression.toImpl(expression)));
     }
     
     /** Create a divide expression to divide the current expression by the given expression.
         @param expression   the expression to be devided by.
         @return a divide expression. */
     public func divide(_ expression: Any) -> Expression {
-        return Expression(self.impl.divide(Expression.toCBLExp(expression)));
+        return Expression(self.impl.divide(Expression.toImpl(expression)));
     }
     
     /** Create a modulo expression to modulo the current expression by the given expression.
         @param expression   the expression to be moduloed by.
         @return a modulo expression. */
     public func modulo(_ expression: Any) -> Expression {
-        return Expression(self.impl.modulo(Expression.toCBLExp(expression)));
+        return Expression(self.impl.modulo(Expression.toImpl(expression)));
     }
     
     /** Create an add expression to add the given expression to the current expression.
         @param expression   the expression to add to the current expression.
         @return an add expression. */
     public func add(_ expression: Any) -> Expression {
-        return Expression(self.impl.add(Expression.toCBLExp(expression)));
+        return Expression(self.impl.add(Expression.toImpl(expression)));
     }
     
     /** Create a subtract expression to subtract the given expression from the current expression.
         @param expression   the expression to substract from the current expression.
         @return a subtract expression. */
     public func subtract(_ expression: Any) -> Expression {
-        return Expression(self.impl.subtract(Expression.toCBLExp(expression)));
+        return Expression(self.impl.subtract(Expression.toImpl(expression)));
     }
     
     /** Create a less than expression that evaluates whether or not the current expression
@@ -72,7 +72,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a less than expression. */
     public func lessThan(_ expression: Any) -> Expression {
-        return Expression(self.impl.lessThan(Expression.toCBLExp(expression)));
+        return Expression(self.impl.lessThan(Expression.toImpl(expression)));
     }
     
     /** Create a NOT less than expression that evaluates whether or not the current expression
@@ -80,7 +80,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a NOT less than expression. */
     public func notLessThan(_ expression: Any) -> Expression {
-        return Expression(self.impl.notLessThan(Expression.toCBLExp(expression)));
+        return Expression(self.impl.notLessThan(Expression.toImpl(expression)));
     }
     
     /** Create a less than or equal to expression that evaluates whether or not the current
@@ -88,7 +88,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a less than or equal to expression. */
     public func lessThanOrEqualTo(_ expression: Any) -> Expression {
-        return Expression(self.impl.lessThanOrEqual(to: Expression.toCBLExp(expression)));
+        return Expression(self.impl.lessThanOrEqual(to: Expression.toImpl(expression)));
     }
     
     /** Create a NOT less than or equal to expression that evaluates whether or not the current
@@ -96,7 +96,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a NOT less than or equal to expression. */
     public func notLessThanOrEqualTo(_ expression: Any) -> Expression {
-        return Expression(self.impl.notLessThanOrEqual(to: Expression.toCBLExp(expression)));
+        return Expression(self.impl.notLessThanOrEqual(to: Expression.toImpl(expression)));
     }
     
     /** Create a greater than expression that evaluates whether or not the current expression
@@ -104,7 +104,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a greater than expression. */
     public func greaterThan(_ expression: Any) -> Expression {
-        return Expression(self.impl.greaterThan(Expression.toCBLExp(expression)));
+        return Expression(self.impl.greaterThan(Expression.toImpl(expression)));
     }
     
     /** Create a NOT greater than expression that evaluates whether or not the current expression
@@ -112,7 +112,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a NOT greater than expression. */
     public func notGreaterThan(_ expression: Any) -> Expression {
-        return Expression(self.impl.notGreaterThan(Expression.toCBLExp(expression)));
+        return Expression(self.impl.notGreaterThan(Expression.toImpl(expression)));
     }
     
     /** Create a greater than or equal to expression that evaluates whether or not the current
@@ -120,7 +120,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a greater than or equal to expression. */
     public func greaterThanOrEqualTo(_ expression: Any) -> Expression {
-        return Expression(self.impl.greaterThanOrEqual(to: Expression.toCBLExp(expression)));
+        return Expression(self.impl.greaterThanOrEqual(to: Expression.toImpl(expression)));
     }
     
     /** Create a NOT greater than or equal to expression that evaluates whether or not the current
@@ -128,7 +128,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a NOT greater than or equal to expression. */
     public func notGreaterThanOrEqualTo(_ expression: Any) -> Expression {
-        return Expression(self.impl.notGreaterThanOrEqual(to: Expression.toCBLExp(expression)));
+        return Expression(self.impl.notGreaterThanOrEqual(to: Expression.toImpl(expression)));
     }
     
     /** Create an equal to expression that evaluates whether or not the current expression is equal
@@ -136,7 +136,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return an equal to expression. */
     public func equalTo(_ expression: Any) -> Expression {
-        return Expression(self.impl.equal(to: Expression.toCBLExp(expression)));
+        return Expression(self.impl.equal(to: Expression.toImpl(expression)));
     }
     
     /** Create a NOT equal to expression that evaluates whether or not the current expression
@@ -144,7 +144,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a NOT equal to expression. */
     public func notEqualTo(_ expression: Any) -> Expression {
-        return Expression(self.impl.notEqual(to: Expression.toCBLExp(expression)));
+        return Expression(self.impl.notEqual(to: Expression.toImpl(expression)));
     }
     
     /** Create a logical AND expression that performs logical AND operation with the current 
@@ -152,7 +152,7 @@ public class Expression {
         @param expression   the expression to AND with the current expression.
         @return a logical AND expression. */
     public func and(_ expression: Any) -> Expression {
-        return Expression(self.impl.and(Expression.toCBLExp(expression)));
+        return Expression(self.impl.and(Expression.toImpl(expression)));
     }
     
     /** Create a logical OR expression that performs logical OR operation with the current 
@@ -160,7 +160,7 @@ public class Expression {
         @param expression   the expression to OR with the current expression.
         @return a logical OR Expression. */
     public func or(_ expression: Any) -> Expression {
-        return Expression(self.impl.or(Expression.toCBLExp(expression)));
+        return Expression(self.impl.or(Expression.toImpl(expression)));
     }
     
     /** Create a Like expression that evaluates whether or not the current expression is LIKE
@@ -168,7 +168,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a Like expression. */
     public func like(_ expression: Any) -> Expression {
-        return Expression(self.impl.like(Expression.toCBLExp(expression)));
+        return Expression(self.impl.like(Expression.toImpl(expression)));
     }
     
     /** Create a NOT Like expression that evaluates whether or not the current expression is 
@@ -176,7 +176,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a NOT Like expression. */
     public func notLike(_ expression: Any) -> Expression {
-        return Expression(self.impl.notLike(Expression.toCBLExp(expression)));
+        return Expression(self.impl.notLike(Expression.toImpl(expression)));
     }
     
     /** Create a regex match expression that evaluates whether or not the current expression
@@ -184,7 +184,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a regex match expression. */
     public func regex(_ expression: Any) -> Expression {
-        return Expression(self.impl.regex(Expression.toCBLExp(expression)));
+        return Expression(self.impl.regex(Expression.toImpl(expression)));
     }
     
     /** Create a regex NOT match expression that evaluates whether or not the current expression
@@ -192,7 +192,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a regex NOT match expression. */
     public func notRegex(_ expression: Any) -> Expression {
-        return Expression(self.impl.notRegex(Expression.toCBLExp(expression)));
+        return Expression(self.impl.notRegex(Expression.toImpl(expression)));
     }
     
     /** Create a full text match expression that evaluates whether or not the current expression
@@ -200,7 +200,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a full text match expression. */
     public func match(_ expression: Any) -> Expression {
-        return Expression(self.impl.match(Expression.toCBLExp(expression)));
+        return Expression(self.impl.match(Expression.toImpl(expression)));
     }
     
     /** Create a full text NOT match expression that evaluates whether or not the current expression
@@ -208,7 +208,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return a full text NOT match expression. */
     public func notMatch(_ expression: Any) -> Expression {
-        return Expression(self.impl.notMatch(Expression.toCBLExp(expression)));
+        return Expression(self.impl.notMatch(Expression.toImpl(expression)));
     }
     
     /** Create an IS NULL expression that evaluates whether or not the current expression is null.
@@ -229,7 +229,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return an IS expression. */
     public func `is`(_ expression: Any) -> Expression {
-        return Expression(self.impl.is(Expression.toCBLExp(expression)));
+        return Expression(self.impl.is(Expression.toImpl(expression)));
     }
     
     /** Create an IS NOT expression that evaluates whether or not the current expression is not 
@@ -237,7 +237,7 @@ public class Expression {
         @param expression   the expression to be compared with the current expression.
         @return an IS NOT expression. */
     public func isNot(_ expression: Any) -> Expression {
-        return Expression(self.impl.isNot(to: Expression.toCBLExp(expression)));
+        return Expression(self.impl.isNot(to: Expression.toImpl(expression)));
     }
     
     /** Create a between expression that evaluates whether or not the current expression is
@@ -246,8 +246,8 @@ public class Expression {
         @param expression2  the inclusive upper bound expression.
         @return a between expression. */
     public func between(_ expression1: Any, and expression2: Any) -> Expression {
-        return Expression(self.impl.between(Expression.toCBLExp(expression1),
-                                                   and: Expression.toCBLExp(expression2)));
+        return Expression(self.impl.between(Expression.toImpl(expression1),
+                                                   and: Expression.toImpl(expression2)));
     }
     
     /** Create a NOT between expression that evaluates whether or not the current expression is not
@@ -256,8 +256,8 @@ public class Expression {
         @param expression2  the inclusive upper bound expression.
         @return a NOT between expression. */
     public func notBetween(_ expression1: Any, and expression2: Any) -> Expression {
-        return Expression(self.impl.notBetween(Expression.toCBLExp(expression1),
-                                                      and: Expression.toCBLExp(expression2)));
+        return Expression(self.impl.notBetween(Expression.toImpl(expression1),
+                                                      and: Expression.toImpl(expression2)));
     }
     
     /** Create an IN expression that evaluates whether or not the current expression is in the
@@ -267,7 +267,7 @@ public class Expression {
     public func `in`(_ expressions: [Any]) -> Expression {
         var impls: [Any] = []
         for exp in expressions {
-            impls.append(Expression.toCBLExp(exp))
+            impls.append(Expression.toImpl(exp))
         }
         return Expression(self.impl.in(impls))
     }
@@ -279,7 +279,7 @@ public class Expression {
     public func notIn(_ expressions:[Any]) -> Expression {
         var impls: [Any] = []
         for exp in expressions {
-            impls.append(Expression.toCBLExp(exp))
+            impls.append(Expression.toImpl(exp))
         }
         return Expression(self.impl.not(in: impls))
     }
@@ -292,7 +292,7 @@ public class Expression {
         self.impl = expression
     }
     
-    static func toCBLExp(_ expression: Any) -> Any {
+    static func toImpl(_ expression: Any) -> Any {
         var exp: Any
         if let xexp = expression as? Expression {
             exp = xexp.impl
@@ -300,6 +300,14 @@ public class Expression {
             exp = expression
         }
         return exp
+    }
+    
+    static func toImpl(expressions: [Expression]) -> [CBLQueryExpression] {
+        var impls: [CBLQueryExpression] = []
+        for expr in expressions {
+            impls.append(expr.impl)
+        }
+        return impls;
     }
     
 }

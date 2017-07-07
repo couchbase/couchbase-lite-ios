@@ -32,7 +32,7 @@
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
-                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                        groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                          having: (nullable CBLQueryExpression*)having
                         orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
 {
@@ -117,7 +117,7 @@
 + (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                   where: (nullable CBLQueryExpression*)where
-                groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
 {
     return [[[self class] alloc] initWithSelect: select distinct: NO from: from
                                            join: nil
@@ -131,7 +131,7 @@
 + (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                           where: (nullable CBLQueryExpression*)where
-                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                        groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
 {
     return [[[self class] alloc] initWithSelect: select distinct: YES from: from
                                            join: nil
@@ -148,7 +148,7 @@
 + (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                   where: (nullable CBLQueryExpression*)where
-                groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                  having: (nullable CBLQueryExpression*)having
 {
     return [[[self class] alloc] initWithSelect: select distinct: NO from: from
@@ -163,7 +163,7 @@
 + (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                           where: (nullable CBLQueryExpression*)where
-                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                        groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                          having: (nullable CBLQueryExpression*)having
 {
     return [[[self class] alloc] initWithSelect: select distinct: YES from: from
@@ -212,7 +212,7 @@
 + (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                   where: (nullable CBLQueryExpression*)where
-                groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                  having: (nullable CBLQueryExpression*)having
                 orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
 {
@@ -228,7 +228,7 @@
 + (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                           where: (nullable CBLQueryExpression*)where
-                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                        groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                          having: (nullable CBLQueryExpression*)having
                         orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
 {
@@ -308,7 +308,7 @@
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
                   where: (nullable CBLQueryExpression*)where
-                groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
 {
     return [[[self class] alloc] initWithSelect: select distinct: NO from: from
                                            join: join
@@ -323,7 +323,7 @@
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
-                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                        groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
 {
     return [[[self class] alloc] initWithSelect: select distinct: YES from: from
                                            join: join
@@ -341,7 +341,7 @@
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
                   where: (nullable CBLQueryExpression*)where
-                groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                  having: (nullable CBLQueryExpression*)having
 {
     return [[[self class] alloc] initWithSelect: select distinct: NO from: from
@@ -357,7 +357,7 @@
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
-                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                        groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                          having: (nullable CBLQueryExpression*)having
 {
     return [[[self class] alloc] initWithSelect: select distinct: YES from: from
@@ -409,7 +409,7 @@
                    from: (CBLQueryDataSource*)from
                    join: (nullable NSArray<CBLQueryJoin*>*)join
                   where: (nullable CBLQueryExpression*)where
-                groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                  having: (nullable CBLQueryExpression*)having
                 orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
 {
@@ -426,7 +426,7 @@
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
-                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                        groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                          having: (nullable CBLQueryExpression*)having
                         orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
 {
@@ -554,8 +554,8 @@
     
     if (_groupBy) {
         NSMutableArray* groupBy = [NSMutableArray array];
-        for (CBLQueryGroupBy* g in _groupBy) {
-            [groupBy addObject: [g asJSON]];
+        for (CBLQueryExpression* expr in _groupBy) {
+            [groupBy addObject: [expr asJSON]];
         }
         json[@"GROUP_BY"] = groupBy;
     }

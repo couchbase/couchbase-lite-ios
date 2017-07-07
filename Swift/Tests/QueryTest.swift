@@ -400,7 +400,7 @@ class QueryTest: CBLTestCase {
             .select(RES_STATE, RES_COUNT, RES_MAXZIP)
             .from(DataSource.database(db))
             .where(GENDER.equalTo("female"))
-            .groupBy(GroupBy.expression(STATE))
+            .groupBy(STATE)
             .orderBy(Ordering.expression(STATE))
         
         var numRow = try verifyQuery(q, block: { (n, row) in
@@ -426,7 +426,7 @@ class QueryTest: CBLTestCase {
             .select(RES_STATE, RES_COUNT, RES_MAXZIP)
             .from(DataSource.database(db))
             .where(GENDER.equalTo("female"))
-            .groupBy(GroupBy.expression(STATE))
+            .groupBy(STATE)
             .having(COUNT.greaterThan(1))
             .orderBy(Ordering.expression(STATE))
         
@@ -524,4 +524,5 @@ class QueryTest: CBLTestCase {
         q.removeChangeListener(listener)
         q.stop()
     }
+    
 }

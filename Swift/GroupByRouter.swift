@@ -11,5 +11,5 @@ import Foundation
 /** GroupByRouter for creating and chaning a query GROUP BY clause. */
 protocol GroupByRouter {
     /** Create and chain a GROUP BY component. */
-    func groupBy(_ groupBy: GroupBy...) -> GroupBy
+    func groupBy(_ expressions: Expression...) -> GroupBy
 }

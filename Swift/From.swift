@@ -17,8 +17,8 @@ public final class From: Query, JoinRouter, WhereRouter, GroupByRouter, OrderByR
     }
     
     /** Create and chain a GROUP BY component to group the query result. */
-    public func groupBy(_ groupBy: GroupBy...) -> GroupBy {
-        return GroupBy(query: self, impl: GroupBy.toImpl(groupBies: groupBy))
+    public func groupBy(_ expressions: Expression...) -> GroupBy {
+        return GroupBy(query: self, impl: Expression.toImpl(expressions: expressions))
     }
     
     /** Create and chain an ORDER BY component for specifying the orderings of the query result. */

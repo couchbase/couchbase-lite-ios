@@ -12,11 +12,6 @@ import Foundation
     The GROUP BY statement is normally used with aggregate functions (AVG, COUNT, MAX, MIN, SUM)
     to aggregate the group of the values. */
 public class GroupBy: Query, HavingRouter, OrderByRouter {
-    /** */
-    public static func expression(_ expression: Expression) -> GroupBy {
-        let gropuBy = CBLQueryGroupBy.expression(expression.impl)
-        return GroupBy(impl: gropuBy)
-    }
     
     /** Create and chain a HAVING component for filtering the aggregated values 
         from the the GROUP BY clause. */
@@ -31,24 +26,10 @@ public class GroupBy: Query, HavingRouter, OrderByRouter {
     
     // MARK: Internal
     
-    init(query: Query, impl: [CBLQueryGroupBy]) {
+    init(query: Query, impl: [CBLQueryExpression]) {
         super.init()
         self.copy(query)
         self.groupByImpl = impl
     }
     
-    init(impl: CBLQueryGroupBy) {
-        super.init()
-        self.groupByImpl = [impl]
-    }
-    
-    static func toImpl(groupBies: [GroupBy]) -> [CBLQueryGroupBy] {
-        var impls: [CBLQueryGroupBy] = []
-        for g in groupBies {
-            for impl in g.groupByImpl! {
-                impls.append(impl)
-            }
-        }
-        return impls;
-    }
 }

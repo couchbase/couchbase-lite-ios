@@ -166,10 +166,6 @@
 		934F4CB71E241FB500F90659 /* CBLStringBytes.mm in Sources */ = {isa = PBXBuildFile; fileRef = 934F4CA41E241FB500F90659 /* CBLStringBytes.mm */; };
 		934F4CB81E241FB500F90659 /* CBLSymmetricKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4CA51E241FB500F90659 /* CBLSymmetricKey.h */; };
 		934F4CB91E241FB500F90659 /* CBLSymmetricKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4CA61E241FB500F90659 /* CBLSymmetricKey.m */; };
-		934FD4961F0706C50033989C /* CBLQueryGroupBy.h in Headers */ = {isa = PBXBuildFile; fileRef = 934FD4941F0706C50033989C /* CBLQueryGroupBy.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		934FD4971F0706C50033989C /* CBLQueryGroupBy.h in Headers */ = {isa = PBXBuildFile; fileRef = 934FD4941F0706C50033989C /* CBLQueryGroupBy.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		934FD4981F0706C50033989C /* CBLQueryGroupBy.m in Sources */ = {isa = PBXBuildFile; fileRef = 934FD4951F0706C50033989C /* CBLQueryGroupBy.m */; };
-		934FD4991F0706C50033989C /* CBLQueryGroupBy.m in Sources */ = {isa = PBXBuildFile; fileRef = 934FD4951F0706C50033989C /* CBLQueryGroupBy.m */; };
 		9352945F1E51708E005CE4E8 /* DictionaryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9352945E1E51708E005CE4E8 /* DictionaryTest.m */; };
 		93629D011EC96DE700F79834 /* ArrayTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93629CFF1EC96D9500F79834 /* ArrayTest.swift */; };
 		936483B71E4431C6008D08B3 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 936483AC1E4431C6008D08B3 /* AppDelegate.m */; };
@@ -721,8 +717,6 @@
 		934F4CA41E241FB500F90659 /* CBLStringBytes.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLStringBytes.mm; sourceTree = "<group>"; };
 		934F4CA51E241FB500F90659 /* CBLSymmetricKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLSymmetricKey.h; sourceTree = "<group>"; };
 		934F4CA61E241FB500F90659 /* CBLSymmetricKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLSymmetricKey.m; sourceTree = "<group>"; };
-		934FD4941F0706C50033989C /* CBLQueryGroupBy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryGroupBy.h; sourceTree = "<group>"; };
-		934FD4951F0706C50033989C /* CBLQueryGroupBy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryGroupBy.m; sourceTree = "<group>"; };
 		9352945E1E51708E005CE4E8 /* DictionaryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DictionaryTest.m; sourceTree = "<group>"; };
 		93629CFF1EC96D9500F79834 /* ArrayTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArrayTest.swift; sourceTree = "<group>"; };
 		936483AB1E4431C6008D08B3 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -1356,8 +1350,6 @@
 				9332080B1E77415E000D9993 /* CBLQueryExpression.m */,
 				937A69011F0731230058277F /* CBLQueryFunction.h */,
 				937A69021F0731230058277F /* CBLQueryFunction.m */,
-				934FD4941F0706C50033989C /* CBLQueryGroupBy.h */,
-				934FD4951F0706C50033989C /* CBLQueryGroupBy.m */,
 				93B41D621F0580E700A7F114 /* CBLQueryJoin.h */,
 				93B41D631F0580E700A7F114 /* CBLQueryJoin.m */,
 				9332080C1E77415E000D9993 /* CBLQueryOrdering.h */,
@@ -1483,7 +1475,6 @@
 				93B75C1A1E79EF5F0033B61B /* CBLQueryDataSource.h in Headers */,
 				937A69041F0731230058277F /* CBLQueryFunction.h in Headers */,
 				9381960F1EC1121B0032CC51 /* CBLReadOnlyDictionary.h in Headers */,
-				934FD4971F0706C50033989C /* CBLQueryGroupBy.h in Headers */,
 				275F92A31E4D377C007FD5A2 /* CBLBlob.h in Headers */,
 				93B503771E64B0BB002C4680 /* CBLInternal.h in Headers */,
 				93CD016E1E94923900AFB3FA /* CBLQuery+Internal.h in Headers */,
@@ -1569,7 +1560,6 @@
 				934F4C291E1EF19000F90659 /* MYErrorUtils.h in Headers */,
 				937A69031F0731230058277F /* CBLQueryFunction.h in Headers */,
 				9381961E1EC11A8C0032CC51 /* CBLReadOnlyDictionary+Swift.h in Headers */,
-				934FD4961F0706C50033989C /* CBLQueryGroupBy.h in Headers */,
 				937F026F1EFC694900060D64 /* CBLLiveQueryChange+Internal.h in Headers */,
 				933208121E77415E000D9993 /* CBLQueryDataSource.h in Headers */,
 				931C14531EAABCE70094F9B2 /* CBLReadOnlyFragment.h in Headers */,
@@ -2056,7 +2046,6 @@
 				93AF51C71E80A70900E200F0 /* CBLQuery.mm in Sources */,
 				9308F4111E64B2B300F53EE4 /* CBLDocument.mm in Sources */,
 				9308F4091E64B23000F53EE4 /* MYLogging.m in Sources */,
-				934FD4991F0706C50033989C /* CBLQueryGroupBy.m in Sources */,
 				938196041EC10DBA0032CC51 /* ReadOnlyArrayObject.swift in Sources */,
 				938CDF221E807F51002EE790 /* Expression.swift in Sources */,
 				2753AFF81EC39CA200C12E98 /* CBLHTTPLogic.m in Sources */,
@@ -2163,7 +2152,6 @@
 				937441D71E7B8B0500CB8F11 /* CBLPredicateQuery+Predicates.mm in Sources */,
 				934F4CB21E241FB500F90659 /* CBLMisc.m in Sources */,
 				930AE46E1EAA6C9100E92E9A /* CBLData.mm in Sources */,
-				934FD4981F0706C50033989C /* CBLQueryGroupBy.m in Sources */,
 				934F4C111E1EF19000F90659 /* CollectionUtils.m in Sources */,
 				934F4C5B1E1EF25E00F90659 /* Test.m in Sources */,
 				72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */,

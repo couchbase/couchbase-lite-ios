@@ -10,7 +10,6 @@
 #import "CBLInternal.h"
 #import "CBLQueryDataSource.h"
 #import "CBLQueryFunction.h"
-#import "CBLQueryGroupBy.h"
 #import "CBLQueryJoin.h"
 #import "CBLQuerySelectResult.h"
 #import "CBLQueryExpression.h"
@@ -41,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nullable, nonatomic) CBLQueryExpression* where;
 
-@property (readonly, nullable, nonatomic) NSArray<CBLQueryGroupBy*>* groupBy;
+@property (readonly, nullable, nonatomic) NSArray<CBLQueryExpression*>* groupBy;
 
 @property (readonly, nullable, nonatomic) CBLQueryExpression* having;
 
@@ -55,7 +54,7 @@ NS_ASSUME_NONNULL_BEGIN
                            from: (CBLQueryDataSource*)from
                            join: (nullable NSArray<CBLQueryJoin*>*)join
                           where: (nullable CBLQueryExpression*)where
-                        groupBy: (nullable NSArray<CBLQueryGroupBy*>*)groupBy
+                        groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                          having: (nullable CBLQueryExpression*)having
                         orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings;
 
@@ -88,14 +87,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithType: (NSString*)type
                    dataSource: (CBLQueryDataSource*)dataSource
                            on: (CBLQueryExpression*)expression;
-
-@end
-
-/////
-
-@interface CBLQueryGroupBy () <CBLQueryJSONEncoding>
-
-- (instancetype) initWithExpression: (CBLQueryExpression*)expression;
 
 @end
 

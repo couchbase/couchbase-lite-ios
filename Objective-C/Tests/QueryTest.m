@@ -474,9 +474,9 @@
     CBLQuery* q = [CBLQuery select: results
                               from: [CBLQueryDataSource database: self.db]
                              where: [GENDER equalTo: @"female"]
-                           groupBy: @[[CBLQueryGroupBy expression: STATE]]
+                           groupBy: @[STATE]
                             having: nil
-                           orderBy:@[[CBLQueryOrdering expression: STATE]]];
+                           orderBy: @[[CBLQueryOrdering expression: STATE]]];
     
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
         NSString* state = [row stringAtIndex: 0];
@@ -499,7 +499,7 @@
     q = [CBLQuery select: results
                     from: [CBLQueryDataSource database: self.db]
                    where: [GENDER equalTo: @"female"]
-                 groupBy: @[[CBLQueryGroupBy expression: STATE]]
+                 groupBy: @[STATE]
                   having: [COUNT greaterThan: @(1)]
                  orderBy: @[[CBLQueryOrdering expression: STATE]]];
     

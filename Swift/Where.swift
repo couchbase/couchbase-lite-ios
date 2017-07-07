@@ -16,8 +16,8 @@ public final class Where: Query, GroupByRouter, OrderByRouter {
     }
     
     /** Create and chain a GROUP BY component to group the query result. */
-    public func groupBy(_ groupBy: GroupBy...) -> GroupBy {
-        return GroupBy(query: self, impl: GroupBy.toImpl(groupBies: groupBy))
+    public func groupBy(_ expressions: Expression...) -> GroupBy {
+        return GroupBy(query: self, impl: Expression.toImpl(expressions: expressions))
     }
     
     /** An internal constructor. */

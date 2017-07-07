@@ -78,7 +78,7 @@ public class Query {
     
     var whereImpl: CBLQueryExpression?
     
-    var groupByImpl: [CBLQueryGroupBy]?
+    var groupByImpl: [CBLQueryExpression]?
     
     var havingImpl: CBLQueryExpression?
     
