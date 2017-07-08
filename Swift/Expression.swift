@@ -18,6 +18,12 @@ public class Expression {
         return PropertyExpression(property: property)
     }
     
+    /** Get a Meta object which is a factory object for creating metadata property expressions.
+        @return A Meta object. */
+    public static func meta() -> Meta {
+        return Meta()
+    }
+    
     /** Create a parameter expression with the given parameter name.
         @param name The parameter name
         @return A parameter expression. */
@@ -317,19 +323,4 @@ public class Expression {
         return impls;
     }
     
-}
-
-/** A property expression. */
-public class PropertyExpression: Expression {
-    let property: String
-    
-    init (property: String) {
-        self.property = property
-        super.init(CBLQueryExpression.property(property))
-    }
-    
-    /** Specifies an alias name of the data source of the property. */
-    public func from(_ alias: String) -> Expression {
-        return Expression(CBLQueryExpression.property(property, from: alias))
-    }
 }

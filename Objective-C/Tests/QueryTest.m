@@ -523,8 +523,6 @@
     CBLQueryExpression* PARAM_N1 = [CBLQueryExpression parameterNamed: @"num1"];
     CBLQueryExpression* PARAM_N2 = [CBLQueryExpression parameterNamed: @"num2"];
     
-    
-    
     CBLQuery* q= [CBLQuery select: @[[CBLQuerySelectResult expression: NUMBER1]]
                              from: [CBLQueryDataSource database: self.db]
                             where: [NUMBER1 between: PARAM_N1 and: PARAM_N2]
@@ -536,9 +534,42 @@
     NSArray* expectedNumbers = @[@2, @3, @4, @5];
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
         NSInteger number = [row integerAtIndex: 0];
-        AssertEqual(number,  [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
+        AssertEqual(number, [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
     }];
     AssertEqual(numRows, 4u);
+}
+
+
+- (void) testMeta {
+    [self loadNumbers: 5];
+    
+    CBLQueryExpression* DOC_ID  = [CBLQueryExpression meta].documentID;
+    CBLQueryExpression* DOC_SEQ = [CBLQueryExpression meta].sequence;
+    CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1"];
+    
+    CBLQuerySelectResult* RES_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
+    CBLQuerySelectResult* RES_DOC_SEQ = [CBLQuerySelectResult expression: DOC_SEQ];
+    CBLQuerySelectResult* RES_NUMBER1 = [CBLQuerySelectResult expression: NUMBER1];
+    
+    CBLQuery* q = [CBLQuery select: @[RES_DOC_ID, RES_DOC_SEQ, RES_NUMBER1]
+                              from: [CBLQueryDataSource database: self.db]
+                             where: nil
+                           orderBy: @[[CBLQueryOrdering expression: DOC_SEQ]]];
+    
+    NSArray* expectedDocIDs  = @[@"doc1", @"doc2", @"doc3", @"doc4", @"doc5"];
+    NSArray* expectedSeqs    = @[@1, @2, @3, @4, @5];
+    NSArray* expectedNumbers = @[@1, @2, @3, @4, @5];
+    
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
+        NSString* docID = [row stringAtIndex:0];
+        NSInteger seq = [row integerAtIndex:1];
+        NSInteger number = [row integerAtIndex: 2];
+        
+        AssertEqualObjects(docID,  expectedDocIDs[(NSUInteger)(n-1)]);
+        AssertEqual(seq, [expectedSeqs[(NSUInteger)(n-1)] integerValue]);
+        AssertEqual(number, [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
+    }];
+    AssertEqual(numRows, 5u);
 }
 
 

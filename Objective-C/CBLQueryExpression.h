@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 @class CBLQuery;
+@class CBLQueryMeta;
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -25,9 +26,22 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Create a property expression representing the value of the given property name.
     @param property Property name in the key path format.
-    @param from The data source alias name.
+    @param alias The data source alias name.
     @return A property expression. */
-+ (CBLQueryExpression*) property: (NSString*)property from: (nullable NSString*)from;
++ (CBLQueryExpression*) property: (NSString*)property from: (nullable NSString*)alias;
+
+#pragma mark - Meta:
+
+/** Get a CBLQueryMeta object, which is a factory object for creating metadata property 
+    expressions.
+    @return A CBLQueryMeta object. */
++ (CBLQueryMeta*) meta;
+
+/** Get a CBLQueryMeta object for the given data source. The CBLQueryMeta object is a factory
+    object for creating metadata property expressions.
+    @from   The data source alias name.
+    @return A CBLQueryMeta object. */
++ (CBLQueryMeta*) metaFrom: (nullable NSString*)alias;
 
 #pragma mark - Parameter:
 
@@ -35,6 +49,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param name The parameter name
     @return A parameter expression. */
 + (CBLQueryExpression *) parameterNamed:(NSString *)name;
+
 
 #pragma mark - Unary operators:
 

@@ -22,8 +22,8 @@
     C4Query* _c4Query;
 }
 
-@synthesize select=_select, from=_from, join=_join;
-@synthesize where=_where, orderings=_orderings, groupBy=_groupBy, having=_having;
+@synthesize select=_select, from=_from, join=_join, where=_where, orderings=_orderings;
+@synthesize groupBy=_groupBy, having=_having;
 @synthesize distinct=_distinct;
 @synthesize parameters=_parameters;
 

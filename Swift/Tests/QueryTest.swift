@@ -471,6 +471,38 @@ class QueryTest: CBLTestCase {
     }
     
     
+    func testMeta() throws {
+        try loadNumbers(5)
+        
+        let DOC_ID  = Expression.meta().documentID
+        let DOC_SEQ = Expression.meta().sequence
+        let NUMBER1 = Expression.property("number1")
+        
+        let RES_DOC_ID  = SelectResult.expression(DOC_ID)
+        let RES_DOC_SEQ = SelectResult.expression(DOC_SEQ)
+        let RES_NUMBER1 = SelectResult.expression(NUMBER1)
+        
+        let q = Query
+            .select(RES_DOC_ID, RES_DOC_SEQ, RES_NUMBER1)
+            .from(DataSource.database(db))
+            .orderBy(Ordering.expression(DOC_SEQ))
+        
+        let expectedDocIDs  = ["doc1", "doc2", "doc3", "doc4", "doc5"]
+        let expectedSeqs    = [1, 2, 3, 4, 5]
+        let expectedNumbers = [1, 2, 3, 4, 5]
+        
+        let numRow = try verifyQuery(q, block: { (n, row) in
+            let docID = row.value(at: 0) as! String
+            let seq = row.value(at: 1) as! Int
+            let number = row.value(at: 2) as! Int
+            XCTAssertEqual(docID, expectedDocIDs[Int(n-1)])
+            XCTAssertEqual(seq, expectedSeqs[Int(n-1)])
+            XCTAssertEqual(number, expectedNumbers[Int(n-1)])
+        })
+        XCTAssertEqual(numRow, 5)
+    }
+    
+    
     func testLiveQuery() throws {
         try loadNumbers(100)
         var count = 0;

@@ -27,6 +27,7 @@
 .objc_class_name_CBLQueryExpression
 .objc_class_name_CBLQueryFunction
 .objc_class_name_CBLQueryJoin
+.objc_class_name_CBLQueryMeta
 .objc_class_name_CBLQueryOrdering
 .objc_class_name_CBLQueryParameters
 .objc_class_name_CBLQuerySelectResult

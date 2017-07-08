@@ -11,6 +11,7 @@
 #import "CBLQueryDataSource.h"
 #import "CBLQueryFunction.h"
 #import "CBLQueryJoin.h"
+#import "CBLQueryMeta.h"
 #import "CBLQueryParameters.h"
 #import "CBLQuerySelectResult.h"
 #import "CBLQueryExpression.h"
@@ -237,6 +238,15 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 - (instancetype) initWithParameters: (nullable NSDictionary*)params;
 
 - (nullable NSData*) encodeAsJSON: (NSError**)outError;
+
+@end
+
+
+/////
+
+@interface CBLQueryMeta ()
+
+- (instancetype) initWithFrom: (nullable NSString*)alias;
 
 @end
 

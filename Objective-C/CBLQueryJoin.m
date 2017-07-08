@@ -46,6 +46,9 @@
 }
 
 
+#pragma mark - Internal
+
+
 - (instancetype) initWithType: (NSString*)type
                    dataSource: (CBLQueryDataSource*)dataSource
                            on: (CBLQueryExpression*)expression

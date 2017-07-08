@@ -26,12 +26,25 @@
 
 
 + (CBLQueryExpression*) property: (NSString*)property {
-    return [[CBLKeyPathExpression alloc] initWithKeyPath: property from: nil];
+    return [self property: property from: nil];
 }
 
 
-+ (CBLQueryExpression*) property: (NSString*)property from:(NSString *)from {
-    return [[CBLKeyPathExpression alloc] initWithKeyPath: property from: from];
++ (CBLQueryExpression*) property: (NSString*)property from:(NSString *)alias {
+    return [[CBLKeyPathExpression alloc] initWithKeyPath: property from: alias];
+}
+
+
+#pragma mark - Meta:
+
+
++ (CBLQueryMeta*) meta {
+    return [self metaFrom: nil];
+}
+
+
++ (CBLQueryMeta*) metaFrom: (NSString*)alias {
+    return [[CBLQueryMeta alloc] initWithFrom: alias];
 }
 
 
