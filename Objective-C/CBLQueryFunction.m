@@ -45,7 +45,7 @@
 
 
 - (instancetype) initWithFunction:(NSString *)function parameter: (id)param {
-    self = [super initWithNone: nil];
+    self = [super initWithNone];
     if (self) {
         _function = function;
         _param = param;

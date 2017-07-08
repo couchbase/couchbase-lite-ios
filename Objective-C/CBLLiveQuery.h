@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 @class CBLLiveQueryChange;
+@class CBLQueryParameters;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -15,6 +16,8 @@ NS_ASSUME_NONNULL_BEGIN
     object is created from. If there is a new query result or an error occurred, the CBLLiveQuery will
     report the changed result via the added listener blocks. */
 @interface CBLLiveQuery : NSObject
+
+@property (nonatomic, readonly) CBLQueryParameters* parameters;
 
 /** Starts observing database changes and reports changes in the query result. */
 - (void) run;

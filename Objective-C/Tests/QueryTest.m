@@ -50,8 +50,6 @@
     CBLDocument* doc = [[CBLDocument alloc] initWithID: docID];
     [doc setObject: @(i) forKey: @"number1"];
     [doc setObject: @(num-i) forKey: @"number2"];
-    
-    NSLog(@"%@ / %@", [doc objectForKey:@"number1"], [doc objectForKey:@"number2"]);
 
     NSError *error;
     BOOL saved = [_db saveDocument: doc error: &error];
@@ -518,6 +516,30 @@
 }
 
 
+- (void) testParameters {
+    [self loadNumbers: 10];
+    
+    CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1"];
+    CBLQueryExpression* PARAM_N1 = [CBLQueryExpression parameterNamed: @"num1"];
+    CBLQueryExpression* PARAM_N2 = [CBLQueryExpression parameterNamed: @"num2"];
+    
+    
+    
+    CBLQuery* q= [CBLQuery select: @[[CBLQuerySelectResult expression: NUMBER1]]
+                             from: [CBLQueryDataSource database: self.db]
+                            where: [NUMBER1 between: PARAM_N1 and: PARAM_N2]
+                          orderBy: @[[CBLQueryOrdering expression: NUMBER1]]];
+    
+    [q.parameters setValue: @(2) forName: @"num1"];
+    [q.parameters setValue: @(5) forName: @"num2"];
+    
+    NSArray* expectedNumbers = @[@2, @3, @4, @5];
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
+        NSInteger number = [row integerAtIndex: 0];
+        AssertEqual(number,  [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
+    }];
+    AssertEqual(numRows, 4u);
+}
 
 
 - (void) testLiveQuery {

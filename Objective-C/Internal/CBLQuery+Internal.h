@@ -11,6 +11,7 @@
 #import "CBLQueryDataSource.h"
 #import "CBLQueryFunction.h"
 #import "CBLQueryJoin.h"
+#import "CBLQueryParameters.h"
 #import "CBLQuerySelectResult.h"
 #import "CBLQueryExpression.h"
 #import "CBLQueryOrdering.h"
@@ -32,21 +33,23 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQuery () <CBLQueryInternal, NSCopying>
 
-@property (readonly, nonatomic) NSArray<CBLQuerySelectResult*>* select;
+@property (nonatomic, readonly) NSArray<CBLQuerySelectResult*>* select;
 
-@property (readonly, nonatomic) CBLQueryDataSource* from;
+@property (nonatomic, readonly) CBLQueryDataSource* from;
 
-@property (readonly, nullable, nonatomic) NSArray<CBLQueryJoin*>* join;
+@property (nonatomic, readonly, nullable) NSArray<CBLQueryJoin*>* join;
 
-@property (readonly, nullable, nonatomic) CBLQueryExpression* where;
+@property (nonatomic, readonly, nullable) CBLQueryExpression* where;
 
-@property (readonly, nullable, nonatomic) NSArray<CBLQueryExpression*>* groupBy;
+@property (nonatomic, readonly, nullable) NSArray<CBLQueryExpression*>* groupBy;
 
-@property (readonly, nullable, nonatomic) CBLQueryExpression* having;
+@property (nonatomic, readonly, nullable) CBLQueryExpression* having;
 
-@property (readonly, nullable, nonatomic) NSArray<CBLQueryOrdering*>* orderings;
+@property (nonatomic, readonly, nullable) NSArray<CBLQueryOrdering*>* orderings;
 
-@property (readonly, nonatomic) BOOL distinct;
+@property (nonatomic, readonly) BOOL distinct;
+
+@property (nonatomic) CBLQueryParameters* parameters;
 
 /** Initializer. */
 - (instancetype) initWithSelect: (NSArray<CBLQuerySelectResult*>*)select
@@ -59,6 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
                         orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings;
 
 @end
+
 
 /////
 
@@ -111,7 +115,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLQueryExpression () <CBLQueryJSONEncoding>
 
 /** This constructor is for hiding the public -init: */
-- (instancetype) initWithNone: (nullable id)none;
+- (instancetype) initWithNone;
 
 @end
 
@@ -174,7 +178,7 @@ typedef NS_ENUM(NSInteger, CBLCompoundExpType) {
 @property(readonly, nonatomic) CBLCompoundExpType type;
 
 
-- (instancetype)initWithExpressions: (NSArray*)subs type: (CBLCompoundExpType)type;
+- (instancetype) initWithExpressions: (NSArray*)subs type: (CBLCompoundExpType)type;
 
 @end
 
@@ -186,7 +190,7 @@ typedef NS_ENUM(NSInteger, CBLCompoundExpType) {
 
 @property(nonatomic, readonly, copy, nullable) NSString* from; // Data Source Alias
 
-- (instancetype)initWithKeyPath: (NSString*)keyPath from: (nullable NSString*)from;
+- (instancetype) initWithKeyPath: (NSString*)keyPath from: (nullable NSString*)from;
 
 @end
 
@@ -204,7 +208,17 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 @property(readonly, nonatomic) CBLUnaryExpType type;
 @property(readonly, nonatomic) id operand;
 
-- (instancetype)initWithExpression: (id)operand type: (CBLUnaryExpType)type;
+- (instancetype) initWithExpression: (id)operand type: (CBLUnaryExpType)type;
+
+@end
+
+/////
+
+@interface CBLParameterExpression : CBLQueryExpression
+
+@property(nonatomic, readonly) id name;
+
+- (instancetype) initWithName: (id)name;
 
 @end
 
@@ -215,5 +229,16 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 - (instancetype) initWithFunction: (NSString*)function parameter: (id)param;
 
 @end
+
+/////
+
+@interface CBLQueryParameters () <NSCopying>
+
+- (instancetype) initWithParameters: (nullable NSDictionary*)params;
+
+- (nullable NSData*) encodeAsJSON: (NSError**)outError;
+
+@end
+
 
 NS_ASSUME_NONNULL_END

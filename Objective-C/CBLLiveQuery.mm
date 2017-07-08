@@ -34,7 +34,8 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 - (instancetype) initWithQuery: (CBLQuery*)query {
     self = [super init];
     if (self) {
-        _query = query;
+        _query = [query copy];
+        
         // Note: We could make the updateInternal property public in the future
         _updateInterval = kDefaultLiveQueryUpdateInterval;
     }
@@ -44,6 +45,11 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 - (void) dealloc {
     [self stop];
+}
+
+
+- (CBLQueryParameters*) parameters {
+    return _query.parameters;
 }
 
 

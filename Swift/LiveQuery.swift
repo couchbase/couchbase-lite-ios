@@ -12,9 +12,16 @@ import Foundation
  object is created from. If there is a new query result or an error occurred, the LiveQuery object
  will report the changed result via the added listener blocks. */
 public class LiveQuery {
-    
+    public var parameters: Parameters {
+        if params == nil {
+            params = Parameters(params: nil)
+        }
+        return params!
+    }
+
     /** Starts observing database changes and reports changes in the query result. */
     public func run() {
+        applyParameters()
         impl.run()
     }
     
@@ -53,8 +60,19 @@ public class LiveQuery {
     
     let database: Database
     
-    init(database: Database, impl: CBLLiveQuery) {
+    var params: Parameters?
+    
+    init(database: Database, impl: CBLLiveQuery, params: Parameters?) {
         self.impl = impl
         self.database = database
+        self.params = params?.copy()
+    }
+    
+    func applyParameters() {
+        if let p = self.params, let paramDict = p.params {
+            for (name, value) in paramDict {
+                impl.parameters.setValue(value, forName: name)
+            }
+        }
     }
 }

@@ -12,7 +12,7 @@
 @implementation CBLQueryExpression
 
 
-- (instancetype) initWithNone: (id)none {
+- (instancetype) initWithNone {
     return [super init];
 }
 
@@ -32,6 +32,14 @@
 
 + (CBLQueryExpression*) property: (NSString*)property from:(NSString *)from {
     return [[CBLKeyPathExpression alloc] initWithKeyPath: property from: from];
+}
+
+
+#pragma mark - Parameter:
+
+
++ (CBLQueryExpression *) parameterNamed:(NSString *)name {
+    return [[CBLParameterExpression alloc] initWithName:name];
 }
 
 
@@ -289,7 +297,7 @@
 @synthesize subexpressions=_subexpressions;
 
 - (instancetype) initWithExpressions: (NSArray *)subs {
-    self = [super initWithNone: nil];
+    self = [super initWithNone];
     if (self) {
         _subexpressions = [subs copy];
     }
@@ -317,7 +325,7 @@
 - (instancetype) initWithLeftExpression:(id)lhs
                         rightExpression:(id)rhs
                                    type:(CBLBinaryExpType)type {
-    self = [super initWithNone: nil];
+    self = [super initWithNone];
     if (self) {
         _lhs = lhs;
         _rhs = rhs;
@@ -409,7 +417,7 @@
 @synthesize subexpressions=_subexpressions, type=_type;
 
 - (instancetype) initWithExpressions: (NSArray*)subs type: (CBLCompoundExpType)type {
-    self = [super initWithNone: nil];
+    self = [super initWithNone];
     if (self) {
         _subexpressions = [subs copy];
         _type = type;
@@ -449,7 +457,7 @@
 @synthesize keyPath=_keyPath, from=_from;
 
 - (instancetype) initWithKeyPath: (NSString*)keyPath from: (NSString*)from {
-    self = [super initWithNone: nil];
+    self = [super initWithNone];
     if (self) {
         _keyPath = [keyPath copy];
         _from = [from copy];
@@ -481,6 +489,7 @@
 @synthesize operand=_operand, type=_type;
 
 - (instancetype) initWithExpression: (id)operand type: (CBLUnaryExpType)type {
+    self = [super initWithNone];
     if (self) {
         _operand = operand;
         _type = type;
@@ -513,6 +522,25 @@
         [json addObject: _operand];
     
     return json;
+}
+
+@end
+
+
+@implementation CBLParameterExpression
+
+@synthesize name=_name;
+
+- (instancetype)initWithName: (id)name {
+    self = [super initWithNone];
+    if (self) {
+        _name = name;
+    }
+    return self;
+}
+
+- (id) asJSON {
+    return @[[NSString stringWithFormat: @"$%@", _name]];
 }
 
 @end

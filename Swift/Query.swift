@@ -13,6 +13,16 @@ import Foundation
     A Query instance can be constructed by calling one of the select class methods. */
 public class Query {
     
+    /** A Parameters object used for setting values to the query parameters defined
+        in the query. All parameters defined in the query must be given values
+        before running the query, or the query will fail. */
+    public var parameters: Parameters {
+        if params == nil {
+            params = Parameters(params: nil)
+        }
+        return params!
+    }
+    
     /** Create a SELECT statement instance that you can use further 
         (e.g. calling the from() function) to construct the complete query statement.
         @param results  The array of the SelectResult object for specifying the returned values.
@@ -37,6 +47,7 @@ public class Query {
         @return A QueryIterator object. */
     public func run() throws -> QueryIterator {
         prepareQuery()
+        applyParameters()
         return try QueryIterator(database: database!, enumerator: queryImpl!.run())
     }
     
@@ -61,7 +72,7 @@ public class Query {
         @return a live query object. */
     public func toLive() -> LiveQuery {
         prepareQuery()
-        return LiveQuery(database: database!, impl: queryImpl!.toLive())
+        return LiveQuery(database: database!, impl: queryImpl!.toLive(), params: params)
     }
 
     // MARK: Internal
@@ -85,6 +96,8 @@ public class Query {
     var orderingsImpl: [CBLQueryOrdering]?
     
     var queryImpl: CBLQuery?
+    
+    var params: Parameters?
     
     init() { }
     
@@ -115,6 +128,14 @@ public class Query {
                 orderBy: orderingsImpl)
         }
     }
+    
+    func applyParameters() {
+        if let p = self.params, let paramDict = p.params {
+            for (name, value) in paramDict {
+                queryImpl!.parameters.setValue(value, forName: name)
+            }
+        }
+    }
 
     func copy(_ query: Query) {
         self.database = query.database
@@ -126,6 +147,10 @@ public class Query {
         self.groupByImpl = query.groupByImpl
         self.havingImpl = query.havingImpl
         self.orderingsImpl = query.orderingsImpl
+        
+        if let queryParams = query.params {
+            self.params = queryParams.copy()
+        }
     }
     
 }

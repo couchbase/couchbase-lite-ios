@@ -25,6 +25,7 @@
 @synthesize select=_select, from=_from, join=_join;
 @synthesize where=_where, orderings=_orderings, groupBy=_groupBy, having=_having;
 @synthesize distinct=_distinct;
+@synthesize parameters=_parameters;
 
 
 - (instancetype) initWithSelect: (NSArray<CBLQuerySelectResult*>*)select
@@ -53,6 +54,17 @@
 
 - (void) dealloc {
     c4query_free(_c4Query);
+}
+
+
+#pragma mark - Parameters
+
+
+- (CBLQueryParameters*) parameters {
+    if (!_parameters) {
+        _parameters = [[CBLQueryParameters alloc] initWithParameters: nil];
+    }
+    return _parameters;
 }
 
 
@@ -451,7 +463,9 @@
         return nil;
     
     C4QueryOptions options = kC4DefaultQueryOptions;
-    NSData* paramJSON = nil;
+    NSData* paramJSON = [_parameters encodeAsJSON: outError];
+    if (_parameters && !paramJSON)
+        return nil;
     
     C4Error c4Err;
     auto e = c4query_run(_c4Query, &options, {paramJSON.bytes, paramJSON.length}, &c4Err);
@@ -468,7 +482,7 @@
 
 
 - (CBLLiveQuery*) toLive {
-    return [[CBLLiveQuery alloc] initWithQuery: [self copy]];
+    return [[CBLLiveQuery alloc] initWithQuery: self];
 }
             
             
@@ -481,14 +495,16 @@
 
 
 - (instancetype) copyWithZone:(NSZone *)zone {
-    return [[[self class] alloc] initWithSelect: _select
-                                       distinct: _distinct
-                                           from: _from
-                                           join: _join
-                                          where: _where
-                                        groupBy: _groupBy
-                                         having: _having
-                                        orderBy: _orderings];
+    CBLQuery* q =  [[[self class] alloc] initWithSelect: _select
+                                               distinct: _distinct
+                                                   from: _from
+                                                   join: _join
+                                                  where: _where
+                                                groupBy: _groupBy
+                                                 having: _having
+                                                orderBy: _orderings];
+    q.parameters = [_parameters copy];
+    return q;
 }
 
 

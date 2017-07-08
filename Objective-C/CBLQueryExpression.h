@@ -29,6 +29,13 @@ NS_ASSUME_NONNULL_BEGIN
     @return A property expression. */
 + (CBLQueryExpression*) property: (NSString*)property from: (nullable NSString*)from;
 
+#pragma mark - Parameter:
+
+/** Create a parameter expression with the given parameter name. 
+    @param name The parameter name
+    @return A parameter expression. */
++ (CBLQueryExpression *) parameterNamed:(NSString *)name;
+
 #pragma mark - Unary operators:
 
 /** Create a negated expression representing the negated result of the given expression.

@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 @class CBLDatabase, CBLQueryRow, CBLDocument;
 @class CBLQuerySelectResult, CBLQueryDataSource, CBLQueryJoin, CBLQueryOrdering, CBLQueryGroupBy;
-@class CBLQueryExpression;
+@class CBLQueryExpression, CBLQueryParameters;
 @class CBLLiveQuery;
 
 
@@ -17,8 +17,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /** A database query.
- A CBLQuery instance can be constructed by calling one of the select methods. */
+    A CBLQuery instance can be constructed by calling one of the select methods. */
 @interface CBLQuery : NSObject
+
+/** A CBLQueryParameters object used for setting values to the query parameters defined 
+    in the query. All parameters defined in the query must be given values 
+    before running the query, or the query will fail. */
+@property (nonatomic, readonly) CBLQueryParameters* parameters;
 
 // SELECT > FROM
 

@@ -446,6 +446,31 @@ class QueryTest: CBLTestCase {
     }
     
     
+    func testParameters() throws {
+        try loadNumbers(10)
+        
+        let NUMBER1  = Expression.property("number1")
+        let PARAM_N1 = Expression.parameter("num1")
+        let PARAM_N2 = Expression.parameter("num2")
+        
+        let q = Query
+            .select(SelectResult.expression(NUMBER1))
+            .from(DataSource.database(db))
+            .where(NUMBER1.between(PARAM_N1, and: PARAM_N2))
+            .orderBy(Ordering.expression(NUMBER1))
+        
+        q.parameters.set(2, forName: "num1")
+        q.parameters.set(5, forName: "num2")
+        
+        let expectedNumbers = [2, 3, 4, 5]
+        let numRow = try verifyQuery(q, block: { (n, row) in
+            let number = row.value(at: 0) as! Int
+            XCTAssertEqual(number, expectedNumbers[Int(n-1)])
+        })
+        XCTAssertEqual(numRow, 4)
+    }
+    
+    
     func testLiveQuery() throws {
         try loadNumbers(100)
         var count = 0;
