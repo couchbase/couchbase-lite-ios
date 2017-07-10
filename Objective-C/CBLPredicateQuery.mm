@@ -31,7 +31,9 @@ extern "C" {
 @synthesize where=_where, orderBy=_orderBy, groupBy=_groupBy;
 @synthesize having=_having, distinct=_distinct, returning=_returning;
 @synthesize offset=_offset, limit=_limit, parameters=_parameters;
-
+#if DEBUG
+@synthesize disableOffsetAndLimit=_disableOffsetAndLimit;
+#endif
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)db
@@ -160,6 +162,15 @@ extern "C" {
         q[@"WHAT"] = select;
     }
 
+#if DEBUG
+    if (!_disableOffsetAndLimit) {
+#endif
+    q[@"OFFSET"] = @[@"ifmissing()", @[@"$x_offset"], @0];
+    q[@"LIMIT"]  = @[@"ifmissing()", @[@"$x_limit"],  @(-1)];
+#if DEBUG
+    }
+#endif
+
     return [NSJSONSerialization dataWithJSONObject: q options: 0 error: outError];
 }
 
@@ -210,19 +221,23 @@ extern "C" {
     if (!_c4Query && ![self check: outError])
         return nullptr;
 
-    C4QueryOptions options = kC4DefaultQueryOptions;
-    options.skip = _offset;
-    options.limit = _limit;
+    NSDictionary* parameters = _parameters;
+    if (_offset > 0 || _limit < NSUIntegerMax) {
+        NSMutableDictionary* p = parameters ? [parameters mutableCopy] : [NSMutableDictionary new];
+        p[@"x_offset"] = @(_offset);
+        p[@"x_limit"]  = @(_limit);
+        parameters = p;
+    }
     NSData* paramJSON = nil;
-    if (_parameters.count > 0) {
-        paramJSON = [NSJSONSerialization dataWithJSONObject: _parameters
+    if (parameters.count > 0) {
+        paramJSON = [NSJSONSerialization dataWithJSONObject: parameters
                                                     options: 0
                                                       error: outError];
         if (!paramJSON)
             return nullptr;
     }
     C4Error c4Err;
-    auto e = c4query_run(_c4Query, &options, {paramJSON.bytes, paramJSON.length}, &c4Err);
+    auto e = c4query_run(_c4Query, nullptr, {paramJSON.bytes, paramJSON.length}, &c4Err);
     if (!e) {
         CBLWarnError(Query, @"CBLQuery failed: %d/%d", c4Err.domain, c4Err.code);
         convertError(c4Err, outError);

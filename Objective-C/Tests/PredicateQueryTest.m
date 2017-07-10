@@ -68,6 +68,7 @@
         NSString* expectedJson = [CBLPredicateQuery json5ToJSON: kTests[i].json5];
         CBLPredicateQuery* query = [self.db createQueryWhere: pred];
         query.orderBy = nil; // ignore ordering in this test
+        query.disableOffsetAndLimit = true;
         NSData* actual = [query encodeAsJSON: &error];
         Assert(actual, @"Encode failed: %@", error);
         NSString* actualJSON = [[NSString alloc] initWithData: actual encoding: NSUTF8StringEncoding];
@@ -93,6 +94,30 @@
         AssertEqual(doc.sequence, n);
     }];
     AssertEqual(numRows, 100llu);
+}
+
+
+- (void) testOffsetAndLimit {
+    [self loadJSONResource: @"names_100"];
+    NSError *error;
+    CBLPredicateQuery* q = [self.db createQueryWhere: @"gender = 'male'"];
+    Assert(q, @"Couldn't create query: %@", error);
+    q.offset = 5;
+    q.limit = 10;
+    __block NSMutableArray* docIDs = [NSMutableArray new];
+    [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
+        [docIDs addObject: row.documentID];
+    }];
+    AssertEqualObjects(docIDs, (@[@"doc-011",
+                                  @"doc-014",
+                                  @"doc-015",
+                                  @"doc-017",
+                                  @"doc-020",
+                                  @"doc-021",
+                                  @"doc-024",
+                                  @"doc-025",
+                                  @"doc-026",
+                                  @"doc-027"]));
 }
 
 

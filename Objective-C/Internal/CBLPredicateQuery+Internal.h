@@ -38,6 +38,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** Just encodes the query into the JSON form parsed by LiteCore. (Exposed for testing.) */
 - (nullable NSData*) encodeAsJSON: (NSError**)outError;
 
+#if DEBUG
+@property (nonatomic) bool disableOffsetAndLimit;   // for testing only
+#endif
 @end
 
 
