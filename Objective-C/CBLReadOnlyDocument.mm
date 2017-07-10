@@ -66,7 +66,7 @@
 
 
 - (BOOL) isDeleted {
-    return _c4Doc != nil ? (_c4Doc.flags & kDeleted) != 0 : NO;
+    return _c4Doc != nil ? (_c4Doc.flags & kDocDeleted) != 0 : NO;
 }
 
 
@@ -131,7 +131,7 @@
 
 
 - (BOOL) exists {
-    return _c4Doc != nil ? (_c4Doc.flags & kExists) != 0 : NO;
+    return _c4Doc != nil ? (_c4Doc.flags & kDocExists) != 0 : NO;
 }
 
 
