@@ -596,7 +596,7 @@
         }
     }];
     
-    [q run];
+    [q start];
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [self createDocNumbered: -1 of: 100];
@@ -631,7 +631,7 @@
         }
     }];
     
-    [q run];
+    [q start];
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{

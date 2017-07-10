@@ -53,7 +53,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 }
 
 
-- (void) run {
+- (void) start {
     if (!_dbChangeListener) {
         CBLDatabase* database = _query.database;
         Assert(database);
@@ -74,6 +74,11 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
         _dbChangeListener = nil;
     }
     _willUpdate = NO; // cancels the delayed update started by -databaseChanged
+}
+
+
+- (nullable NSString*) explain: (NSError**)outError {
+    return [_query explain: outError];
 }
 
 

@@ -528,7 +528,7 @@ class QueryTest: CBLTestCase {
             }
         }
         
-        q.run()
+        q.start()
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             try! self.createDoc(numbered: -1, of: 100)
@@ -563,7 +563,7 @@ class QueryTest: CBLTestCase {
             }
         }
         
-        q.run()
+        q.start()
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             try! self.createDoc(numbered: 111, of: 100)

@@ -20,10 +20,15 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) CBLQueryParameters* parameters;
 
 /** Starts observing database changes and reports changes in the query result. */
-- (void) run;
+- (void) start;
 
 /** Stops observing database changes. */
 - (void) stop;
+
+/** Returns a string describing the implementation of the compiled query.
+ This is intended to be read by a developer for purposes of optimizing the query, especially
+ to add database indexes. It's not machine-readable and its format may change. */
+- (nullable NSString*) explain: (NSError**)outError;
 
 /** Adds a query change listener block.
     @param block   The block to be executed when the change is received.

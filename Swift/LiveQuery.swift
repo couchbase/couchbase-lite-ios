@@ -20,14 +20,21 @@ public class LiveQuery {
     }
 
     /** Starts observing database changes and reports changes in the query result. */
-    public func run() {
+    public func start() {
         applyParameters()
-        impl.run()
+        impl.start()
     }
     
     /** Stops observing database changes. */
     public func stop() {
         impl.stop()
+    }
+    
+    /** Returns a string describing the implementation of the compiled query.
+     This is intended to be read by a developer for purposes of optimizing the query, especially
+     to add database indexes. It's not machine-readable and its format may change. */
+    public func explain() throws -> String {
+        return try impl.explain()
     }
     
     /** Adds a query change listener block.
