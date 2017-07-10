@@ -112,7 +112,8 @@
                             andDoc: (CBLReadOnlyDocument*)doc2
 {
     CBLStringBytes rev1(doc1.revID), rev2(doc2.revID);
-    if (!_c4Doc || !c4doc_selectCommonAncestorRevision(_c4Doc.rawDoc, rev1, rev2))
+    if (!_c4Doc || !c4doc_selectCommonAncestorRevision(_c4Doc.rawDoc, rev1, rev2)
+                || !c4doc_hasRevisionBody(_c4Doc.rawDoc))
         return NO;
     self.c4Doc = _c4Doc;     // This will update to the selected revision
     return YES;
