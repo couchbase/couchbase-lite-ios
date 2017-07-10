@@ -24,7 +24,6 @@
 
 
 - (void) setUp {
-    self.conflictResolver = [MergeThenTheirsWins new];
     [super setUp];
 
     timeout = 5.0;
@@ -138,6 +137,46 @@
 
 
 - (void) testPullConflict {
+    // Create a document and push it to otherDB:
+    NSError* error;
+    CBLDocument* doc1 = [[CBLDocument alloc] initWithID:@"doc"];
+    [doc1 setObject: @"Tiger" forKey: @"species"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+
+    CBLReplicatorConfiguration* config = [self push: YES pull: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+
+    // Now make different changes in db and otherDB:
+    doc1 = [self.db documentWithID: @"doc"];
+    [doc1 setObject: @"Hobbes" forKey: @"name"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+
+    CBLDocument* doc2 = [otherDB documentWithID: @"doc"];
+    Assert(doc2);
+    [doc2 setObject: @"striped" forKey: @"pattern"];
+    Assert([otherDB saveDocument: doc2 error: &error]);
+
+    // Pull from otherDB, creating a conflict to resolve:
+    config = [self push: NO pull: YES];
+    MergeThenTheirsWins* resolver = [MergeThenTheirsWins new];
+    resolver.requireBaseRevision = true;
+    config.conflictResolver = resolver;
+    [self run: config errorCode: 0 errorDomain: nil];
+
+    // Check that it was resolved:
+    AssertEqual(self.db.count, 1u);
+    doc1 = [self.db documentWithID:@"doc"];
+    AssertEqualObjects(doc1.toDictionary, (@{@"species": @"Tiger",
+                                             @"name": @"Hobbes",
+                                             @"pattern": @"striped"}));
+}
+
+
+- (void) testPullConflictNoBaseRevision {
+    // Create the conflicting docs separately in each database. They have the same base revID
+    // because the contents are identical, but because the db never pushed revision 1, it doesn't
+    // think it needs to preserve its body; so when it pulls a conflict, there won't be a base
+    // revision for the resolver.
     NSError* error;
     CBLDocument* doc1 = [[CBLDocument alloc] initWithID:@"doc"];
     [doc1 setObject: @"Tiger" forKey: @"species"];
@@ -152,6 +191,7 @@
     Assert([otherDB saveDocument: doc2 error: &error]);
 
     CBLReplicatorConfiguration* config = [self push: NO pull: YES];
+    config.conflictResolver = [MergeThenTheirsWins new];
     [self run: config errorCode: 0 errorDomain: nil];
 
     AssertEqual(self.db.count, 1u);

@@ -27,7 +27,11 @@
 
 @implementation MergeThenTheirsWins
 
+@synthesize requireBaseRevision=_requireBaseRevision;
+
 - (CBLReadOnlyDocument*) resolve: (CBLConflict *)conflict {
+    if (_requireBaseRevision)
+        NSAssert(conflict.base != nil, @"Missing base");
     CBLDocument* resolved = [[CBLDocument alloc] init];
     for (NSString* key in conflict.base) {
         [resolved setObject: [conflict.base objectForKey: key] forKey: key];

@@ -12,6 +12,7 @@
 @end
 
 @interface MergeThenTheirsWins : NSObject <CBLConflictResolver>
+@property (atomic) bool requireBaseRevision;
 @end
 
 @interface GiveUp : NSObject <CBLConflictResolver>
