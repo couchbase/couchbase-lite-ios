@@ -29,32 +29,30 @@ public enum EncryptionKey {
 
 /** Options for opening a database. All properties default to NO or nil. */
 public struct DatabaseConfiguration {
-
+    /** Initialize a DatabaseConfiguration with the default configuration. */
+    public init() { }
+    
     /** Path to the directory to store the database in. If the directory doesn't already exist it will
          be created when the database is opened.
          A nil value (the default) means to use the default directory, in Application Support. You
          won't usually need to change this. */
     public var directory: String? {
-        get { return _impl.directory }
-        set { _impl.directory = newValue }
+        mutating get {
+            if _directory == nil {
+                _directory = CBLDatabaseConfiguration().directory
+            }
+            return _directory
+        }
+        set {
+            _directory = newValue
+        }
     }
     
     
     /** The conflict resolver for this database.
         If nil, a default algorithm will be used, where the revision with more history wins.
         An individual document can override this for itself by setting its own property. */
-    public var conflictResolver: ConflictResolver? {
-        get { return _conflictResolver }
-        set {
-            _conflictResolver = newValue
-            if let r = _conflictResolver {
-                _impl.conflictResolver = BridgingConflictResolver(resolver: r)
-            } else {
-                _impl.conflictResolver = nil
-            }
-        }
-    }
-    
+    public var conflictResolver: ConflictResolver?
 
     /** A key to encrypt the database with. If the database does not exist and is being created, it
      will use this key, and the same key must be given every time it's opened.
@@ -65,18 +63,7 @@ public struct DatabaseConfiguration {
      * Alternatively, the value may be an NSString containing a passphrase. This will be run through
      64,000 rounds of the PBKDF algorithm to securely convert it into an AES-256 key.
      * A default nil value, of course, means the database is unencrypted. */
-    public var encryptionKey: EncryptionKey? {
-        get {
-            if let password = _impl.encryptionKey as? String {
-                return EncryptionKey.password(password)
-            } else if let data = _impl.encryptionKey as? Data {
-                return EncryptionKey.aes256(data)
-            } else {
-                return nil
-            }
-        }
-        set { _impl.encryptionKey = newValue }
-    }
+    public var encryptionKey: EncryptionKey?
     
     
     /** File protection/encryption options (iOS only.)
@@ -89,24 +76,27 @@ public struct DatabaseConfiguration {
     public var fileProtection: NSData.WritingOptions = []
     
     
-    /** Initialize a new DatabaseConfiguration with default properties. */
-    public init() {
-        self.init(impl: CBLDatabaseConfiguration())
+    // MARK: Internal
+    
+    var _directory: String?
+    
+    func toImpl() -> CBLDatabaseConfiguration {
+        let config = CBLDatabaseConfiguration()
+        
+        if let dir = _directory {
+            config.directory = dir
+        }
+        
+        if let cr = self.conflictResolver {
+            config.conflictResolver = BridgingConflictResolver(resolver: cr)
+        }
+        
+        config.encryptionKey = self.encryptionKey?.asObject
+        
+        config.fileProtection = self.fileProtection
+        
+        return config
     }
-    
-    
-    // MARK: INTERNAL
-    
-    init(impl: CBLDatabaseConfiguration) {
-        _impl = impl
-    }
-    
-    
-    let _impl : CBLDatabaseConfiguration
-    
-    
-    var _conflictResolver: ConflictResolver?
-    
     
     class BridgingConflictResolver: NSObject, CBLConflictResolver {
         let _resovler: ConflictResolver
@@ -131,12 +121,9 @@ public final class Database {
          If the database does not yet exist, it will be created, unless the `readOnly` option is used.
          @param name  The name of the database. May NOT contain capital letters!
          @param options  The database options, or nil for the default options. */
-    public init(name: String, config: DatabaseConfiguration? = nil) throws {
-        if let c = config {
-            _impl = try CBLDatabase(name: name, config: c._impl)
-        } else {
-            _impl = try CBLDatabase(name: name)
-        }
+    public init(name: String, config: DatabaseConfiguration = DatabaseConfiguration()) throws {
+        _config = config
+        _impl = try CBLDatabase(name: name, config: _config.toImpl())
     }
     
 
@@ -152,7 +139,7 @@ public final class Database {
     
     
     public var config: DatabaseConfiguration {
-        return DatabaseConfiguration(impl: _impl.config)
+        return _config
     }
     
     
@@ -304,13 +291,7 @@ public final class Database {
 
     let _impl : CBLDatabase
     
-    
-    // MARK: Deinit
-    
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
+    let _config: DatabaseConfiguration
 }
 
 public typealias DatabaseChange = CBLDatabaseChange
