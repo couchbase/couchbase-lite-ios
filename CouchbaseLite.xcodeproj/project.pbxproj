@@ -637,7 +637,6 @@
 		275FF6381E3FFBC0005F90DD /* PerfTest.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PerfTest.mm; sourceTree = "<group>"; };
 		275FF6571E412C66005F90DD /* DocPerfTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DocPerfTest.h; sourceTree = "<group>"; };
 		275FF6581E412C66005F90DD /* DocPerfTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DocPerfTest.m; sourceTree = "<group>"; };
-		275FF6651E428A1E005F90DD /* Documentation */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Documentation; sourceTree = "<group>"; };
 		275FF66E1E43E013005F90DD /* CBLQueryRow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryRow.h; sourceTree = "<group>"; };
 		275FF66F1E43E013005F90DD /* CBLQueryRow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLQueryRow.mm; sourceTree = "<group>"; };
 		275FF6B61E47B2FC005F90DD /* ExceptionUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExceptionUtils.h; sourceTree = "<group>"; };
@@ -1236,7 +1235,6 @@
 				275F92631E4D2FD7007FD5A2 /* Swift */,
 				9398D9FC1E03531A00464432 /* Objective-C */,
 				9378C5D11E26CC46001BB196 /* xcconfigs */,
-				275FF6651E428A1E005F90DD /* Documentation */,
 				9398D92D1E03467C00464432 /* vendor */,
 				27EF6AF01E32D12C004748DF /* Frameworks */,
 				9398D9131E03434200464432 /* Products */,
