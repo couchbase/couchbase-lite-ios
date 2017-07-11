@@ -255,7 +255,7 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 
 /////
 
-@interface CBLQueryLimit ()
+@interface CBLQueryLimit () <CBLQueryJSONEncoding>
 
 @property(readonly, nonatomic) id limit;
 

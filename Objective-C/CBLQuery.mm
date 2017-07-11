@@ -568,9 +568,11 @@
 - (id) asJSON {
     NSMutableDictionary *json = [NSMutableDictionary dictionary];
     
+    // DISTINCT:
     if (_distinct)
         json[@"DISTINCT"] = @(YES);
     
+    // SELECT:
     if (_select.count > 0) {
         NSMutableArray* selects = [NSMutableArray array];
         for (CBLQuerySelectResult* select in _select) {
@@ -579,7 +581,7 @@
         json[@"WHAT"] = selects;
     }
     
-    // Join:
+    // JOIN / FROM:
     NSMutableArray* from;
     NSDictionary* as = [_from asJSON];
     if (as.count > 0) {
@@ -589,16 +591,18 @@
     } if (_join) {
         if (!from)
             from = [NSMutableArray array];
-        for (CBLQueryJoin* j in _join) {
-            [from addObject: [j asJSON]];
+        for (CBLQueryJoin* join in _join) {
+            [from addObject: [join asJSON]];
         }
     }
     if (from.count > 0)
         json[@"FROM"] = from;
     
+    // WHERE:
     if (_where)
         json[@"WHERE"] = [_where asJSON];
     
+    // GROUPBY:
     if (_groupBy) {
         NSMutableArray* groupBy = [NSMutableArray array];
         for (CBLQueryExpression* expr in _groupBy) {
@@ -607,9 +611,11 @@
         json[@"GROUP_BY"] = groupBy;
     }
     
+    // HAVING:
     if (_having)
         json[@"HAVING"] = [_having asJSON];
     
+    // ORDERBY:
     if (_orderings) {
         NSMutableArray* orderBy = [NSMutableArray array];
         for (CBLQueryOrdering* o in _orderings) {
@@ -618,14 +624,12 @@
         json[@"ORDER_BY"] = orderBy;
     }
     
+    // LIMIT/OFFSET:
     if (_limit) {
-        CBLQueryExpression* limitExpr = $castIf(CBLQueryExpression, _limit.limit);
-        json[@"LIMIT"] = limitExpr ? [limitExpr asJSON] : _limit.limit;
-        
-        if (_limit.offset) {
-            CBLQueryExpression* offsetExpr = $castIf(CBLQueryExpression, _limit.offset);
-            json[@"OFFSET"] = limitExpr ? [offsetExpr asJSON] : _limit.offset;
-        }
+        NSArray* limit = [_limit asJSON];
+        json[@"LIMIT"] = limit[0];
+        if (limit.count > 1)
+            json[@"OFFSET"] = limit[1];
     }
     
     return json;
