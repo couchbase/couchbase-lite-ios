@@ -42,7 +42,7 @@
     [newTask setObject:[NSDate date] forKey:@"createdAt"];
     NSDate* date = [newTask dateForKey:@"createdAt"];
     
-    // database transaction
+    // database batch operation
     [database inBatch:&error do:^{
         for (int i = 1; i <= 10; i++)
         {
@@ -72,7 +72,7 @@
     UIImage* taskImage = [UIImage imageWithData:taskBlob.content];
     
     // query
-    CBLQuery* query = [CBLQuery select:[CBLQuerySelect all]
+    CBLQuery* query = [CBLQuery select:@[]
                                   from:[CBLQueryDataSource database:database]
                                  where:[
                                         [[CBLQueryExpression property:@"type"] equalTo:@"user"]
@@ -105,7 +105,7 @@
     }
     
     CBLQueryExpression* where = [[CBLQueryExpression property:@"name"] match:@"'buy'"];
-    CBLQuery *ftsQuery = [CBLQuery select:[CBLQuerySelect all]
+    CBLQuery *ftsQuery = [CBLQuery select:@[]
                                      from:[CBLQueryDataSource database:database]
                                     where:where];
     
