@@ -40,7 +40,7 @@ typedef struct {
 @property (readonly, nonatomic) CBLReplicatorProgress progress;
 
 /** The current error of the replicator. */
-@property (readonly, nonatomic) NSError* error;
+@property (readonly, nonatomic, nullable) NSError* error;
 
 @end
 
