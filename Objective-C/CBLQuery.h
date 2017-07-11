@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 @class CBLDatabase, CBLQueryRow, CBLDocument;
 @class CBLQuerySelectResult, CBLQueryDataSource, CBLQueryJoin, CBLQueryOrdering, CBLQueryGroupBy;
-@class CBLQueryExpression, CBLQueryParameters;
+@class CBLQueryLimit, CBLQueryExpression, CBLQueryParameters;
 @class CBLLiveQuery;
 
 
@@ -140,34 +140,38 @@ NS_ASSUME_NONNULL_BEGIN
 // SELECT > FROM > WHERE > GROUP BY > HAVING > ORDER BY
 
 /** Create a query from the select, from, and where component.
-    @param select   The select component representing the SELECT clause of the query.
-    @param from     The from component representing the FROM clause of the query.
-    @param where    The where component representing the WHERE clause of the query.
-    @param groupBy  The group by expressions representing the GROUP BY clause of the query.
-    @param having   The having component representing the HAVING clause of the query.
+    @param select    The select component representing the SELECT clause of the query.
+    @param from      The from component representing the FROM clause of the query.
+    @param where     The where component representing the WHERE clause of the query.
+    @param groupBy   The group by expressions representing the GROUP BY clause of the query.
+    @param having    The having component representing the HAVING clause of the query.
     @param orderings The ordering components representing the ORDER BY clause of the query.
+    @param limit     The limit component representing the LIMIT clause of the query.
     @return The CBLQuery instance. */
 + (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
                   where: (nullable CBLQueryExpression*)where
                 groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                  having: (nullable CBLQueryExpression*)having
-                orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings;
+                orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
+                  limit: (nullable CBLQueryLimit*)limit;
 
 /** Create a distinct query from the select, from, and where component.
-    @param select   The select component representing the SELECT clause of the query.
-    @param from     The from component representing the FROM clause of the query.
-    @param where    The where component representing the WHERE clause of the query.
-    @param groupBy  The group by expressions representing the GROUP BY clause of the query.
-    @param having   The having component representing the HAVING clause of the query.
+    @param select    The select component representing the SELECT clause of the query.
+    @param from      The from component representing the FROM clause of the query.
+    @param where     The where component representing the WHERE clause of the query.
+    @param groupBy   The group by expressions representing the GROUP BY clause of the query.
+    @param having    The having component representing the HAVING clause of the query.
     @param orderings The ordering components representing the ORDER BY clause of the query.
+    @param limit     The limit component representing the LIMIT clause of the query.
     @return The CBLQuery instance. */
 + (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
                           where: (nullable CBLQueryExpression*)where
                         groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                          having: (nullable CBLQueryExpression*)having
-                        orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings;
+                        orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
+                          limit: (nullable CBLQueryLimit*)limit;
 
 // SELECT > FROM > JOIN
 
@@ -313,6 +317,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param groupBy   The group by expressions representing the GROUP BY clause of the query.
     @param having    The having component representing the HAVING clause of the query.
     @param orderings The orderings components representing the ORDER BY clause of the query.
+    @param limit     The limit component representing the LIMIT clause of the query.
     @return the CBLQuery instance. */
 + (instancetype) select: (NSArray<CBLQuerySelectResult*>*)select
                    from: (CBLQueryDataSource*)from
@@ -320,7 +325,8 @@ NS_ASSUME_NONNULL_BEGIN
                   where: (nullable CBLQueryExpression*)where
                 groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                  having: (nullable CBLQueryExpression*)having
-                orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings;
+                orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
+                  limit: (nullable CBLQueryLimit*)limit;
 
 /** Create a distinct query Create a query from the select, from, where, and order by component.
     @param select    The select component representing the SELECT clause of the query.
@@ -330,6 +336,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param groupBy   The group by expressions representing the GROUP BY clause of the query.
     @param having    The having component representing the HAVING clause of the query.
     @param orderings The ordering components representing the ORDER BY clause of the query.
+    @param limit     The limit component representing the LIMIT clause of the query.
     @return The CBLQuery instance. */
 + (instancetype) selectDistinct: (NSArray<CBLQuerySelectResult*>*)select
                            from: (CBLQueryDataSource*)from
@@ -337,7 +344,8 @@ NS_ASSUME_NONNULL_BEGIN
                           where: (nullable CBLQueryExpression*)where
                         groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                          having: (nullable CBLQueryExpression*)having
-                        orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings;
+                        orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
+                          limit: (nullable CBLQueryLimit*)limit;
 
 
 /** Checks whether the query is valid, recompiling it if necessary, without running it.

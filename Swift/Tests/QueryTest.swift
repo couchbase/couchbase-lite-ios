@@ -503,6 +503,75 @@ class QueryTest: CBLTestCase {
     }
     
     
+    func testLimit() throws {
+        try loadNumbers(10)
+        
+        let NUMBER1  = Expression.property("number1")
+        
+        var q = Query
+            .select(SelectResult.expression(NUMBER1))
+            .from(DataSource.database(db))
+            .orderBy(Ordering.expression(NUMBER1))
+            .limit(5)
+        
+        var expectedNumbers = [1, 2, 3, 4, 5]
+        var numRow = try verifyQuery(q, block: { (n, row) in
+            let number = row.value(at: 0) as! Int
+            XCTAssertEqual(number, expectedNumbers[Int(n-1)])
+        })
+        XCTAssertEqual(numRow, 5)
+        
+        q = Query
+            .select(SelectResult.expression(NUMBER1))
+            .from(DataSource.database(db))
+            .orderBy(Ordering.expression(NUMBER1))
+            .limit(Expression.parameter("LIMIT_NUM"))
+        q.parameters.set(3, forName: "LIMIT_NUM")
+        
+        expectedNumbers = [1, 2, 3]
+        numRow = try verifyQuery(q, block: { (n, row) in
+            let number = row.value(at: 0) as! Int
+            XCTAssertEqual(number, expectedNumbers[Int(n-1)])
+        })
+        XCTAssertEqual(numRow, 3)
+    }
+    
+    
+    func testLimitOffset() throws {
+        try loadNumbers(10)
+        
+        let NUMBER1  = Expression.property("number1")
+        
+        var q = Query
+            .select(SelectResult.expression(NUMBER1))
+            .from(DataSource.database(db))
+            .orderBy(Ordering.expression(NUMBER1))
+            .limit(5, offset: 3)
+        
+        var expectedNumbers = [4, 5, 6, 7, 8]
+        var numRow = try verifyQuery(q, block: { (n, row) in
+            let number = row.value(at: 0) as! Int
+            XCTAssertEqual(number, expectedNumbers[Int(n-1)])
+        })
+        XCTAssertEqual(numRow, 5)
+        
+        q = Query
+            .select(SelectResult.expression(NUMBER1))
+            .from(DataSource.database(db))
+            .orderBy(Ordering.expression(NUMBER1))
+            .limit(Expression.parameter("LIMIT_NUM"), offset: Expression.parameter("OFFSET_NUM"))
+        q.parameters.set(3, forName: "LIMIT_NUM")
+        q.parameters.set(5, forName: "OFFSET_NUM")
+        
+        expectedNumbers = [6, 7, 8]
+        numRow = try verifyQuery(q, block: { (n, row) in
+            let number = row.value(at: 0) as! Int
+            XCTAssertEqual(number, expectedNumbers[Int(n-1)])
+        })
+        XCTAssertEqual(numRow, 3)
+    }
+    
+    
     func testLiveQuery() throws {
         try loadNumbers(100)
         var count = 0;

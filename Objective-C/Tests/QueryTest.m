@@ -474,7 +474,8 @@
                              where: [GENDER equalTo: @"female"]
                            groupBy: @[STATE]
                             having: nil
-                           orderBy: @[[CBLQueryOrdering expression: STATE]]];
+                           orderBy: @[[CBLQueryOrdering expression: STATE]]
+                             limit: nil];
     
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
         NSString* state = [row stringAtIndex: 0];
@@ -499,7 +500,8 @@
                    where: [GENDER equalTo: @"female"]
                  groupBy: @[STATE]
                   having: [COUNT greaterThan: @(1)]
-                 orderBy: @[[CBLQueryOrdering expression: STATE]]];
+                 orderBy: @[[CBLQueryOrdering expression: STATE]]
+                   limit: nil];
     
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
         NSString* state = [row stringAtIndex: 0];
@@ -570,6 +572,76 @@
         AssertEqual(number, [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
     }];
     AssertEqual(numRows, 5u);
+}
+
+
+- (void) testLimit {
+    [self loadNumbers: 10];
+    
+    CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1"];
+    
+    CBLQuery* q= [CBLQuery select: @[[CBLQuerySelectResult expression: NUMBER1]]
+                             from: [CBLQueryDataSource database: self.db]
+                            where: nil groupBy: nil having: nil
+                          orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
+                            limit: [CBLQueryLimit limit: @5]];
+    
+    NSArray* expectedNumbers = @[@1, @2, @3, @4, @5];
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
+        NSInteger number = [row integerAtIndex: 0];
+        AssertEqual(number, [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
+    }];
+    AssertEqual(numRows, 5u);
+    
+    q= [CBLQuery select: @[[CBLQuerySelectResult expression: NUMBER1]]
+                   from: [CBLQueryDataSource database: self.db]
+                  where: nil groupBy: nil having: nil
+                orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
+                  limit: [CBLQueryLimit limit: [CBLQueryExpression parameterNamed: @"LIMIT_NUM"]]];
+    [q.parameters setValue: @3 forName: @"LIMIT_NUM"];
+    
+    expectedNumbers = @[@1, @2, @3];
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
+        NSInteger number = [row integerAtIndex: 0];
+        AssertEqual(number, [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
+    }];
+    AssertEqual(numRows, 3u);
+}
+
+
+- (void) testLimitOffset {
+    [self loadNumbers: 10];
+    
+    CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1"];
+    
+    CBLQuery* q= [CBLQuery select: @[[CBLQuerySelectResult expression: NUMBER1]]
+                             from: [CBLQueryDataSource database: self.db]
+                            where: nil groupBy: nil having: nil
+                          orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
+                            limit: [CBLQueryLimit limit: @5 offset: @3]];
+    
+    NSArray* expectedNumbers = @[@4, @5, @6, @7, @8];
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
+        NSInteger number = [row integerAtIndex: 0];
+        AssertEqual(number, [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
+    }];
+    AssertEqual(numRows, 5u);
+    
+    q= [CBLQuery select: @[[CBLQuerySelectResult expression: NUMBER1]]
+                   from: [CBLQueryDataSource database: self.db]
+                  where: nil groupBy: nil having: nil
+                orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
+                  limit: [CBLQueryLimit limit: [CBLQueryExpression parameterNamed: @"LIMIT_NUM"]
+                                       offset: [CBLQueryExpression parameterNamed:@"OFFSET_NUM"]]];
+    [q.parameters setValue: @3 forName: @"LIMIT_NUM"];
+    [q.parameters setValue: @5 forName: @"OFFSET_NUM"];
+    
+    expectedNumbers = @[@6, @7, @8];
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryRow *row) {
+        NSInteger number = [row integerAtIndex: 0];
+        AssertEqual(number, [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
+    }];
+    AssertEqual(numRows, 3u);
 }
 
 

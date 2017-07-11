@@ -11,6 +11,7 @@
 #import "CBLQueryDataSource.h"
 #import "CBLQueryFunction.h"
 #import "CBLQueryJoin.h"
+#import "CBLQueryLimit.h"
 #import "CBLQueryMeta.h"
 #import "CBLQueryParameters.h"
 #import "CBLQuerySelectResult.h"
@@ -48,6 +49,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) NSArray<CBLQueryOrdering*>* orderings;
 
+@property (nonatomic, readonly, nullable) CBLQueryLimit* limit;
+
 @property (nonatomic, readonly) BOOL distinct;
 
 @property (nonatomic) CBLQueryParameters* parameters;
@@ -60,7 +63,8 @@ NS_ASSUME_NONNULL_BEGIN
                           where: (nullable CBLQueryExpression*)where
                         groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                          having: (nullable CBLQueryExpression*)having
-                        orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings;
+                        orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
+                          limit: (nullable CBLQueryLimit*)limit;
 
 @end
 
@@ -241,12 +245,23 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 
 @end
 
-
 /////
 
 @interface CBLQueryMeta ()
 
 - (instancetype) initWithFrom: (nullable NSString*)alias;
+
+@end
+
+/////
+
+@interface CBLQueryLimit ()
+
+@property(readonly, nonatomic) id limit;
+
+@property(readonly, nonatomic, nullable) id offset;
+
+- (instancetype) initWithLimit: (id)limit offset: (nullable id)offset;
 
 @end
 

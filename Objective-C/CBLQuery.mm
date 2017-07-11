@@ -22,7 +22,7 @@
     C4Query* _c4Query;
 }
 
-@synthesize select=_select, from=_from, join=_join, where=_where, orderings=_orderings;
+@synthesize select=_select, from=_from, join=_join, where=_where, orderings=_orderings, limit=_limit;
 @synthesize groupBy=_groupBy, having=_having;
 @synthesize distinct=_distinct;
 @synthesize parameters=_parameters;
@@ -36,6 +36,7 @@
                         groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                          having: (nullable CBLQueryExpression*)having
                         orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
+                          limit: (nullable CBLQueryLimit*)limit;
 {
     self = [super init];
     if (self) {
@@ -47,6 +48,7 @@
         _groupBy = groupBy;
         _having = having;
         _orderings = orderings;
+        _limit = limit;
     }
     return self;
 }
@@ -79,7 +81,8 @@
                                           where: nil
                                         groupBy: nil
                                          having: nil
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -91,7 +94,8 @@
                                           where: nil
                                         groupBy: nil
                                          having: nil
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -107,7 +111,8 @@
                                           where: where
                                         groupBy: nil
                                          having: nil
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -120,7 +125,8 @@
                                           where: where
                                         groupBy: nil
                                          having: nil
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -136,7 +142,8 @@
                                           where: where
                                         groupBy: groupBy
                                          having: nil
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -150,7 +157,8 @@
                                           where: where
                                         groupBy: groupBy
                                          having: nil
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -168,7 +176,8 @@
                                           where: where
                                         groupBy: groupBy
                                          having: having
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -183,7 +192,8 @@
                                           where: where
                                         groupBy: groupBy
                                          having: having
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -200,7 +210,8 @@
                                           where: where
                                         groupBy: nil
                                          having: nil
-                                        orderBy: orderings];
+                                        orderBy: orderings
+                                          limit: nil];
 }
 
 
@@ -214,7 +225,8 @@
                                           where: where
                                         groupBy: nil
                                          having: nil
-                                        orderBy: orderings];
+                                        orderBy: orderings
+                                          limit: nil];
 }
 
 
@@ -227,13 +239,15 @@
                 groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                  having: (nullable CBLQueryExpression*)having
                 orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
+                  limit: (nullable CBLQueryLimit*)limit
 {
     return [[[self class] alloc] initWithSelect: select distinct: NO from: from
                                            join: nil
                                           where: where
                                         groupBy: groupBy
                                          having: having
-                                        orderBy: orderings];
+                                        orderBy: orderings
+                                          limit: limit];
 }
 
 
@@ -243,13 +257,15 @@
                         groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                          having: (nullable CBLQueryExpression*)having
                         orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
+                          limit: (nullable CBLQueryLimit*)limit
 {
     return [[[self class] alloc] initWithSelect: select distinct: YES from: from
                                            join: nil
                                           where: where
                                         groupBy: groupBy
                                          having: having
-                                        orderBy: orderings];
+                                        orderBy: orderings
+                                          limit: limit];
 }
 
 
@@ -265,7 +281,8 @@
                                           where: nil
                                         groupBy: nil
                                          having: nil
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -278,7 +295,8 @@
                                           where: nil
                                         groupBy: nil
                                          having: nil
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -295,7 +313,8 @@
                                           where: where
                                         groupBy: nil
                                          having: nil
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -309,7 +328,8 @@
                                           where: where
                                         groupBy: nil
                                          having: nil
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -327,7 +347,8 @@
                                           where: where
                                         groupBy: groupBy
                                          having: nil
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -342,7 +363,8 @@
                                           where: where
                                         groupBy: groupBy
                                          having: nil
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -361,7 +383,8 @@
                                           where: where
                                         groupBy: groupBy
                                          having: having
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -377,7 +400,8 @@
                                           where: where
                                         groupBy: groupBy
                                          having: having
-                                        orderBy: nil];
+                                        orderBy: nil
+                                          limit: nil];
 }
 
 
@@ -395,7 +419,8 @@
                                           where: where
                                         groupBy: nil
                                          having: nil
-                                        orderBy: orderings];
+                                        orderBy: orderings
+                                          limit: nil];
 }
 
 
@@ -410,7 +435,8 @@
                                           where: where
                                         groupBy: nil
                                          having: nil
-                                        orderBy: orderings];
+                                        orderBy: orderings
+                                          limit: nil];
 }
 
 
@@ -424,13 +450,15 @@
                 groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                  having: (nullable CBLQueryExpression*)having
                 orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
+                  limit: (nullable CBLQueryLimit*)limit
 {
     return [[[self class] alloc] initWithSelect: select distinct: NO from: from
                                            join: join
                                           where: where
                                         groupBy: groupBy
                                          having: having
-                                        orderBy: orderings];
+                                        orderBy: orderings
+                                          limit: limit];
 }
 
 
@@ -441,13 +469,15 @@
                         groupBy: (nullable NSArray<CBLQueryExpression*>*)groupBy
                          having: (nullable CBLQueryExpression*)having
                         orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
+                          limit: (nullable CBLQueryLimit*)limit
 {
     return [[[self class] alloc] initWithSelect: select distinct: YES from: from
                                            join: join
                                           where: where
                                         groupBy: groupBy
                                          having: having
-                                        orderBy: orderings];
+                                        orderBy: orderings
+                                          limit: limit];
 }
 
 
@@ -502,7 +532,8 @@
                                                   where: _where
                                                 groupBy: _groupBy
                                                  having: _having
-                                                orderBy: _orderings];
+                                                orderBy: _orderings
+                                                  limit: _limit];
     q.parameters = [_parameters copy];
     return q;
 }
@@ -585,6 +616,16 @@
             [orderBy addObject: [o asJSON]];
         }
         json[@"ORDER_BY"] = orderBy;
+    }
+    
+    if (_limit) {
+        CBLQueryExpression* limitExpr = $castIf(CBLQueryExpression, _limit.limit);
+        json[@"LIMIT"] = limitExpr ? [limitExpr asJSON] : _limit.limit;
+        
+        if (_limit.offset) {
+            CBLQueryExpression* offsetExpr = $castIf(CBLQueryExpression, _limit.offset);
+            json[@"OFFSET"] = limitExpr ? [offsetExpr asJSON] : _limit.offset;
+        }
     }
     
     return json;

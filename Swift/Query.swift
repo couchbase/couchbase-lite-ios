@@ -95,6 +95,8 @@ public class Query {
     
     var orderingsImpl: [CBLQueryOrdering]?
     
+    var limitImpl: CBLQueryLimit?
+    
     var queryImpl: CBLQuery?
     
     var params: Parameters?
@@ -116,7 +118,8 @@ public class Query {
                 where: whereImpl,
                 groupBy: groupByImpl,
                 having: havingImpl,
-                orderBy: orderingsImpl)
+                orderBy: orderingsImpl,
+                limit: limitImpl)
         } else {
             queryImpl = CBLQuery.select(
                 selectImpl!,
@@ -125,7 +128,8 @@ public class Query {
                 where: whereImpl,
                 groupBy: groupByImpl,
                 having: havingImpl,
-                orderBy: orderingsImpl)
+                orderBy: orderingsImpl,
+                limit: limitImpl)
         }
     }
     
@@ -147,6 +151,7 @@ public class Query {
         self.groupByImpl = query.groupByImpl
         self.havingImpl = query.havingImpl
         self.orderingsImpl = query.orderingsImpl
+        self.limitImpl = query.limitImpl
         
         if let queryParams = query.params {
             self.params = queryParams.copy()
