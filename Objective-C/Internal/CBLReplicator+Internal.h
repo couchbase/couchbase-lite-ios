@@ -16,6 +16,7 @@ extern C4LogDomain kCBLSyncLogDomain;
 
 @interface CBLReplicatorConfiguration ()
 @property (readonly, nonatomic) NSDictionary* effectiveOptions;
+@property (nonatomic) NSTimeInterval checkpointInterval;
 @end
 
 

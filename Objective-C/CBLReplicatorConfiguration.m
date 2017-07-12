@@ -19,6 +19,7 @@
 @synthesize conflictResolver=_conflictResolver;
 @synthesize pinnedServerCertificate=_pinnedServerCertificate;
 @synthesize authenticator=_authenticator, documentIDs=_documentIDs, channels=_channels;
+@synthesize checkpointInterval=_checkpointInterval;
 
 
 + (instancetype) withDatabase: (CBLDatabase*)database targetURL: (NSURL*)targetURL {
@@ -64,6 +65,7 @@
     c.authenticator = _authenticator;
     c.documentIDs = _documentIDs;
     c.channels = _channels;
+    c.checkpointInterval = _checkpointInterval;
     return c;
 }
 
@@ -91,6 +93,9 @@
 
     options[@kC4ReplicatorOptionDocIDs] = _documentIDs;
     options[@kC4ReplicatorOptionChannels] = _channels;
+
+    if (_checkpointInterval > 0)
+        options[@kC4ReplicatorCheckpointInterval] = @(_checkpointInterval);
 
     return options;
 }
