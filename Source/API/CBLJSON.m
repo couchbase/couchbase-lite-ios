@@ -17,6 +17,8 @@
 #import "CBLParseDate.h"
 #import "CBLBase64.h"
 #import "CBLMisc.h"
+#import "CBLStatus.h"
+#import "ExceptionUtils.h"
 
 
 @implementation CBLJSON
@@ -37,17 +39,25 @@ static NSTimeInterval k1970ToReferenceDate;
                        options:(NSJSONWritingOptions)options
                          error:(NSError **)error
 {
-    if ((options & CBLJSONWritingAllowFragments)
+    @try {
+        if ((options & CBLJSONWritingAllowFragments)
             && ![object isKindOfClass: [NSDictionary class]]
             && ![object isKindOfClass: [NSArray class]]) {
-        // NSJSONSerialization won't write fragments, so if I get one wrap it in an array first:
-        object = [[NSArray alloc] initWithObjects: &object count: 1];
-        NSData* json = [super dataWithJSONObject: object 
-                                         options: (options & ~CBLJSONWritingAllowFragments)
-                                           error: NULL];
-        return [json subdataWithRange: NSMakeRange(1, json.length - 2)];
-    } else {
-        return [super dataWithJSONObject: object options: options error: error];
+            // NSJSONSerialization won't write fragments, so if I get one wrap it in an array first:
+            object = [[NSArray alloc] initWithObjects: &object count: 1];
+            NSData* json = [super dataWithJSONObject: object
+                                             options: (options & ~CBLJSONWritingAllowFragments)
+                                               error: NULL];
+            return [json subdataWithRange: NSMakeRange(1, json.length - 2)];
+        } else {
+            return [super dataWithJSONObject: object options: options error: error];
+        }
+    } @catch (NSException* x) {
+        // From https://developer.apple.com/documentation/foundation/nsjsonserialization
+        // + (id)dataWithJSONObject:options:error could throw an exception if JSON data is invalid.
+        MYReportException(x, @"Invalid JSON Object");
+        CBLStatusToOutNSError(kCBLStatusCallbackError, error);
+        return nil;
     }
 }
 
