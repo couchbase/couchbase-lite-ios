@@ -18,7 +18,7 @@ public final class Replicator {
     /** Activity level of a replicator. */
     public enum ActivityLevel : UInt8 {
         case stopped = 0    ///< The replication is finished or hit a fatal error.
-        case idle           ///< The replication is unactive; either waiting for changes or offline
+        case idle           ///< The replication is inactive; either waiting for changes or offline
                             ///< as the remote host is unreachable.
         case busy           ///< The replication is actively transferring data.
     }

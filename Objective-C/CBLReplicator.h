@@ -16,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** Activity level of a replicator. */
 typedef enum {
     kCBLStopped,    ///< The replication is finished or hit a fatal error.
-    kCBLIdle,       ///< The replication is unactive; either waiting for changes or offline
+    kCBLIdle,       ///< The replication is inactive; either waiting for changes or offline
                     ///< as the remote host is unreachable.
     kCBLBusy        ///< The replication is actively transferring data.
 } CBLReplicatorActivityLevel;
