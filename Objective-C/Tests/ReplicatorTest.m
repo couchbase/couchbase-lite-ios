@@ -7,6 +7,7 @@
 //
 
 #import "CBLTestCase.h"
+#import "CBLReplicator+Internal.h"
 #import "ConflictTest.h"
 
 
@@ -73,19 +74,19 @@
     
     __weak typeof(self) wSelf = self;
     id listener = [repl addChangeListener: ^(CBLReplicatorChange* change) {
-        [wSelf verifyChange: change errorCode: errorCode errorDomain:errorDomain];
-        if (config.continuous) {
-            if (change.status.activity == kCBLIdle &&
-                change.status.progress.completed == change.status.progress.total)
-                [x fulfill];
-        } else {
-            if (change.status.activity == kCBLStopped)
-                [x fulfill];
+        typeof(self) strongSelf = wSelf;
+        [strongSelf verifyChange: change errorCode: errorCode errorDomain:errorDomain];
+        if (config.continuous && change.status.activity == kCBLIdle
+                    && change.status.progress.completed == change.status.progress.total) {
+            [strongSelf->repl stop];
+        }
+        if (change.status.activity == kCBLStopped) {
+            [x fulfill];
         }
     }];
     
     [repl start];
-    [self waitForExpectations: @[x] timeout: 5.0];
+    [self waitForExpectations: @[x] timeout: 7.0];
     [repl removeChangeListener: listener];
 }
 
@@ -145,7 +146,7 @@
 }
 
 
-- (void) failingTestPushDocContinuous {
+- (void) testPushDocContinuous {
     NSError* error;
     CBLDocument* doc1 = [[CBLDocument alloc] initWithID:@"doc1"];
     [doc1 setObject: @"Tiger" forKey: @"name"];
@@ -157,6 +158,7 @@
     Assert([otherDB saveDocument: doc2 error: &error]);
     
     CBLReplicatorConfiguration* config = [self push: YES pull: NO continuous: YES];
+    config.checkpointInterval = 1.0;
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(otherDB.count, 2u);
@@ -186,7 +188,7 @@
 }
 
 
-- (void) failingTestPullDocContinuous {
+- (void) testPullDocContinuous {
     // For https://github.com/couchbase/couchbase-lite-core/issues/156
     NSError* error;
     CBLDocument* doc1 = [[CBLDocument alloc] initWithID:@"doc1"];
@@ -199,6 +201,7 @@
     Assert([otherDB saveDocument: doc2 error: &error]);
     
     CBLReplicatorConfiguration* config = [self push: NO pull: YES continuous: YES];
+    config.checkpointInterval = 1.0;
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(self.db.count, 2u);
