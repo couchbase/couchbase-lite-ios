@@ -13,8 +13,8 @@
 #import "CBLSharedKeys.hh"
 #import "CBLStringBytes.h"
 
-#define kCBLDictionaryTypeKey @"_cbltype"
-#define kCBLBlobTypeName @"blob"
+#define kCBLDictionaryTypeKey @kC4ObjectTypeProperty
+#define kCBLBlobTypeName @kC4ObjectType_Blob
 
 NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 

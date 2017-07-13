@@ -27,8 +27,8 @@ static const size_t kMaxCachedContentLength = 8*1024;
 // Stack buffer size when reading NSInputStream
 static const size_t kReadBufferSize = 8*1024;
 
-static NSString* const kTypeMetaProperty = @"_cbltype";
-static NSString* const kBlobType = @"blob";
+static NSString* const kTypeMetaProperty = @kC4ObjectTypeProperty;
+static NSString* const kBlobType = @kC4ObjectType_Blob;
 
 
 @implementation CBLBlob
