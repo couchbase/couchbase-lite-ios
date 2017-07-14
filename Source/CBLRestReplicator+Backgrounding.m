@@ -84,7 +84,7 @@
     if (_active && [_bgMonitor beginBackgroundTaskNamed: self.description]) {
         LogTo(Sync, @"%@: App backgrounding; starting temporary background task", self);
     } else {
-        LogTo(Sync, @"%@: App backgrounding, but can't run background task; suspending", self);
+        LogTo(Sync, @"%@: App backgrounding, but replication is inactive; suspending", self);
         _deepBackground = YES;
         [self updateSuspended];
     }
