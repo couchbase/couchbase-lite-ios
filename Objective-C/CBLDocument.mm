@@ -452,6 +452,7 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
         return nil;
     FLError flErr;
     FLSliceResult body = FLEncoder_Finish(encoder, &flErr);
+    FLEncoder_Free(encoder);
     if (!body.buf)
         convertError(flErr, outError);
     return sliceResult2data(body);
