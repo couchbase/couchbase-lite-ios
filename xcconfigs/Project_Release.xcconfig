@@ -10,6 +10,7 @@
 DEAD_CODE_STRIPPING             = YES                   // Strip dead code
 DEBUG_INFORMATION_FORMAT        = dwarf-with-dsym       // Debug symbols in external .dSYM file
 DEPLOYMENT_POSTPROCESSING       = YES                   // Enable symbol stripping
+STRIP_STYLE                     = non-global
 ENABLE_NS_ASSERTIONS            = NO                    // Disable NSAssert
 ENABLE_TESTABILITY              = NO
 GCC_OPTIMIZATION_LEVEL          = s                     // s=Small, fast=Fastest
