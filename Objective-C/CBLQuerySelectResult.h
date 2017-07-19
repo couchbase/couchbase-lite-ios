@@ -19,6 +19,8 @@ NS_ASSUME_NONNULL_BEGIN
     @return A CBLQuerySelectResult for the given expression. */
 + (instancetype) expression: (CBLQueryExpression*)expression;
 
++ (instancetype) expression: (CBLQueryExpression*)expression as: (nullable NSString*)alias;
+
 /** Not available. */
 - (instancetype) init NS_UNAVAILABLE;
 

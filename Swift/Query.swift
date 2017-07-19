@@ -45,10 +45,10 @@ public class Query {
         The results come from a snapshot of the database taken at the moment -run: is called, so they
         will not reflect any changes made to the database afterwards. 
         @return A QueryIterator object. */
-    public func run() throws -> QueryIterator {
+    public func run() throws -> ResultSet {
         prepareQuery()
         applyParameters()
-        return try QueryIterator(database: database!, enumerator: queryImpl!.run())
+        return try ResultSet(impl: queryImpl!.run())
     }
     
     /** Returns a string describing the implementation of the compiled query.

@@ -7,11 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "CBLFLDataSource.h"
 #import "c4.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLC4Document : NSObject
+@interface CBLC4Document : NSObject <CBLFLDataSource>
 
 @property (readonly, nonatomic) C4Document* rawDoc;
 

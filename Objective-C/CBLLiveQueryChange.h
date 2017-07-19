@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 @class CBLLiveQuery;
-@class CBLQueryRow;
+@class CBLQueryResultSet;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -20,7 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) CBLLiveQuery* query;
 
 /** The new query result. */
-@property (nonatomic, readonly, nullable) NSEnumerator<CBLQueryRow*>* rows;
+@property (nonatomic, readonly, nullable) CBLQueryResultSet* rows;
 
 /** The error occurred when running the query. */
 @property (nonatomic, readonly, nullable) NSError* error;

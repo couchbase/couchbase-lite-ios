@@ -15,7 +15,7 @@ public struct LiveQueryChange {
     public let query: LiveQuery
     
     /** The new query result. */
-    public let rows: QueryIterator?
+    public let rows: ResultSet?
     
     /** The error occurred when running the query. */
     public let error: Error?

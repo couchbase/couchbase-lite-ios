@@ -9,10 +9,10 @@
 #import <Foundation/Foundation.h>
 @class CBLQueryEnumerator;
 
-
 @interface CBLQueryResultsArray : NSArray
 
-- (instancetype) initWithEnumerator: (CBLQueryEnumerator*)enumerator
+// TODO: We should define a protocol here:
+- (instancetype) initWithEnumerator: (id)enumerator
                               count: (NSUInteger)count;
 
 @end

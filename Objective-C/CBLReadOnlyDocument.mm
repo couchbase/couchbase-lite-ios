@@ -93,7 +93,7 @@
         C4Slice body = c4doc.selectedRev.body;
         if (body.size > 0)
             root = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
-        self.data = [[CBLFLDict alloc] initWithDict: root c4doc: c4doc database: _database];
+        self.data = [[CBLFLDict alloc] initWithDict: root datasource: c4doc database: _database];
     } else {
         self.data = nil;
     }

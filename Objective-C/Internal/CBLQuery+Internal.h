@@ -21,7 +21,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-
 /////
 
 @protocol CBLQueryJSONEncoding <NSObject>
@@ -33,7 +32,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /////
 
-@interface CBLQuery () <CBLQueryInternal, NSCopying>
+@interface CBLQuery () <NSCopying>
+
+@property (nonatomic, readonly) CBLDatabase* database;
 
 @property (nonatomic, readonly) NSArray<CBLQuerySelectResult*>* select;
 
@@ -85,7 +86,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQuerySelectResult () <CBLQueryJSONEncoding>
 
-- (instancetype) initWithExpression: (CBLQueryExpression*)expression;
+- (instancetype) initWithExpression: (CBLQueryExpression*)expression as: (nullable NSString*)alias;
+
+- (nullable NSString*) columnName;
 
 @end
 

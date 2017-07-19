@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLLiveQueryChange ()
 
 - (instancetype) initWithQuery: (CBLLiveQuery*)query
-                          rows: (nullable NSEnumerator<CBLQueryRow*>*)rows
+                          rows: (nullable CBLQueryResultSet*)rows
                          error: (nullable NSError*)error;
 
 @end

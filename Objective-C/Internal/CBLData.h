@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "CBLFLDataSource.h"
 #import "Fleece.h"
 @class CBLDatabase;
 @class CBLC4Document;
@@ -23,7 +24,7 @@ extern NSObject * const kCBLRemovedValue;
 + (BOOL) booleanValueForObject: (id)object;
 
 + (nullable id) fleeceValueToObject: (FLValue)value
-                              c4doc: (CBLC4Document*)c4doc
+                         datasource: (id<CBLFLDataSource>)datasource
                            database: (CBLDatabase*)database;
 
 

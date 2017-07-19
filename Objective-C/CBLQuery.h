@@ -10,6 +10,7 @@
 @class CBLDatabase, CBLQueryRow, CBLDocument;
 @class CBLQuerySelectResult, CBLQueryDataSource, CBLQueryJoin, CBLQueryOrdering, CBLQueryGroupBy;
 @class CBLQueryLimit, CBLQueryExpression, CBLQueryParameters;
+@class CBLQueryResultSet;
 @class CBLLiveQuery;
 
 
@@ -376,7 +377,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param outError If an error occurs, it will be stored here if this parameter is non-NULL.
     @return An enumerator of the query result.
  */
-- (nullable NSEnumerator<CBLQueryRow*>*) run: (NSError**)outError;
+- (nullable CBLQueryResultSet*) run: (NSError**)outError;
 
 /** Returns a live query based on the current query.
     @return A live query object. */

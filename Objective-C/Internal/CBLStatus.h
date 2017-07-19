@@ -15,7 +15,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef enum {
     kCBLStatusForbidden = 403,
-    kCBLStatusNotFound = 404
+    kCBLStatusNotFound = 404,
+    
+    // Non-HTTP error:
+    kCBLStatusInvalidQuery = 490
 } CBLStatus;
 
 BOOL convertError(const C4Error &error, NSError* _Nullable * outError);

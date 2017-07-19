@@ -20,7 +20,7 @@
     NSUInteger _count;
 }
 
-- (instancetype) initWithEnumerator: (CBLQueryEnumerator*)enumerator
+- (instancetype) initWithEnumerator: (id)enumerator
                               count: (NSUInteger)count
 {
     self = [super init];

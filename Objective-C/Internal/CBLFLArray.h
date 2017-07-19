@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "Fleece+CoreFoundation.h"
+#import "CBLFLDataSource.h"
 @class CBLC4Document;
 @class CBLDatabase;
 
@@ -17,14 +18,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLArray array;
 
-@property (nonatomic, readonly) CBLC4Document* c4doc;
+@property (nonatomic, readonly) id<CBLFLDataSource> datasource;
 
 @property (nonatomic, readonly) CBLDatabase* database;
 
 - (instancetype) initWithArray: (nullable FLArray) array
-                         c4doc: (CBLC4Document*)c4doc
+                    datasource: (id<CBLFLDataSource>)datasource
                       database: (CBLDatabase*)database;
-
 
 @end
 
