@@ -399,8 +399,20 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
                  error: (NSError**)outError
 {
     [self mustBeOpen];
-    
+
     static_assert(sizeof(CBLIndexOptions) == sizeof(C4IndexOptions), "Index options incompatible");
+    C4IndexOptions c4options = { };
+    if (options)
+        c4options = *(C4IndexOptions*)options;
+    NSString* languageCode;
+    if (!c4options.language) {
+        // Get default language code:
+        languageCode = NSLocale.currentLocale.languageCode;
+        c4options.language = languageCode.UTF8String;
+        if (!options)
+            c4options.ignoreDiacritics = (strcmp(c4options.language, "en") == 0);
+    }
+    
     NSData* json = [CBLPredicateQuery encodeExpressionsToJSON: expressions error: outError];
     if (!json)
         return NO;
@@ -408,7 +420,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     return c4db_createIndex(_c4db,
                             {json.bytes, json.length},
                             (C4IndexType)type,
-                            (const C4IndexOptions*)options,
+                            &c4options,
                             &c4err)
     || convertError(c4err, outError);
 }

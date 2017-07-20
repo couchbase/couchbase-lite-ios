@@ -261,8 +261,8 @@
     _queryFTSBench.stop();
     Assert(!error, @"Query failed: %@", error);
 
-    NSLog(@"%u 'rock' songs: \"%@\"", (unsigned)results.count, [results componentsJoinedByString: @"\", \""]);
-    AssertEq(results.count, 27u);
+//    NSLog(@"%u 'rock' songs: \"%@\"", (unsigned)results.count, [results componentsJoinedByString: @"\", \""]);
+    AssertEq(results.count, 30u);
     return (unsigned)results.count;
 }
 
