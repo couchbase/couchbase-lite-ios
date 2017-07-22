@@ -19,7 +19,7 @@
 #import "Fleece.h"
 
 @implementation CBLQueryResultSet {
-    __weak CBLQuery* _query;
+    CBLQuery* _query;
     C4QueryEnumerator* _c4enum;
     C4Error _error;
     bool _randomAccess;
@@ -29,6 +29,7 @@
 
 
 - (instancetype) initWithQuery: (CBLQuery*)query
+                       c4Query: (C4Query*)c4Query
                     enumerator: (C4QueryEnumerator*)e
                    columnNames: (NSDictionary*)columnNames
 {
@@ -37,6 +38,7 @@
         if (!e)
             return nil;
         _query = query;
+        _c4Query = c4Query; // freed when query is dealloc
         _c4enum = e;
         _columnNames = columnNames;
         CBLLog(Query, @"Beginning query enumeration (%p)", _c4enum);
@@ -110,10 +112,6 @@
     if (outError)
         *outError = nil;
     
-    auto query = _query;
-    if (!query)
-        return nil;
-    
     C4Error c4error;
     C4QueryEnumerator *newEnum = c4queryenum_refresh(_c4enum, &c4error);
     if (!newEnum) {
@@ -121,7 +119,9 @@
             convertError(c4error, outError);
         return nil;
     }
-    return [[CBLQueryResultSet alloc] initWithQuery: query enumerator: newEnum
+    return [[CBLQueryResultSet alloc] initWithQuery: _query
+                                            c4Query: _c4Query
+                                         enumerator: newEnum
                                         columnNames: _columnNames];
 }
 

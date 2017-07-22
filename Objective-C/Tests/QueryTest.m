@@ -695,6 +695,7 @@
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
                                     test: ^(uint64_t n, CBLQueryResult* r)
     {
+        AssertEqual(r.count, 4u);
         AssertEqualObjects([r objectForKey: @"firstname"], [r objectAtIndex: 0]);
         AssertEqualObjects([r objectForKey: @"lastname"], [r objectAtIndex: 1]);
         AssertEqualObjects([r objectForKey: @"gender"], [r objectAtIndex: 2]);
@@ -724,6 +725,7 @@
     Assert(q);
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
     {
+        AssertEqual(r.count, 5u);
         AssertEqual([r doubleForKey: @"$1"], [r doubleAtIndex: 0]);
         AssertEqual([r integerForKey: @"$2"], [r integerAtIndex: 1]);
         AssertEqual([r integerForKey: @"min"], [r integerAtIndex: 2]);

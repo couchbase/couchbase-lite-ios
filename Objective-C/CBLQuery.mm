@@ -505,7 +505,10 @@
         return nullptr;
     }
     
-    return [[CBLQueryResultSet alloc] initWithQuery: self enumerator: e columnNames: _columnNames];
+    return [[CBLQueryResultSet alloc] initWithQuery: self
+                                            c4Query: _c4Query
+                                         enumerator: e
+                                        columnNames: _columnNames];
 }
 
 

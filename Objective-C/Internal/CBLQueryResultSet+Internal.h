@@ -16,6 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLQueryResultSet () <CBLFLDataSource>
 
 - (instancetype) initWithQuery: (CBLQuery*)query
+                       c4Query: (C4Query*)c4Query
                     enumerator: (C4QueryEnumerator*)e
                    columnNames: (NSDictionary*)columnNames;
 

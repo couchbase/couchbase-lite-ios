@@ -601,6 +601,7 @@ class QueryTest: CBLTestCase {
             .from(DataSource.database(db))
         
         let numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.count, 4)
             XCTAssertEqual(r.value(forKey: "firstname") as! String, r.value(at: 0) as! String)
             XCTAssertEqual(r.value(forKey: "lastname") as! String, r.value(at: 1) as! String)
             XCTAssertEqual(r.value(forKey: "gender") as! String, r.value(at: 2) as! String)
@@ -624,6 +625,7 @@ class QueryTest: CBLTestCase {
             .from(DataSource.database(db))
         
         let numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.count, 5)
             XCTAssertEqual(r.double(forKey: "$1"), r.double(at: 0))
             XCTAssertEqual(r.int(forKey: "$2"), r.int(at: 1))
             XCTAssertEqual(r.int(forKey: "min"), r.int(at: 2))
