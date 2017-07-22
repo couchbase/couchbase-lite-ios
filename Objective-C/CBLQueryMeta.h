@@ -16,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLQueryMeta : NSObject
 
 /** An expression refering to the ID of the document. */
-@property (nonatomic, readonly) CBLQueryExpression* documentID;
+@property (nonatomic, readonly) CBLQueryExpression* id;
 
 /** An expression refering to the sequence number of the document. 
     The sequence number indicates how recently the document has been changed. If one document's

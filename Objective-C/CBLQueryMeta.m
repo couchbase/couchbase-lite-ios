@@ -14,7 +14,7 @@
 }
 
 
-- (CBLQueryExpression*) documentID {
+- (CBLQueryExpression*) id {
     return [CBLQueryExpression property: @"_id" from: _alias];
 }
 

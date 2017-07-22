@@ -12,7 +12,7 @@ import Foundation
     the metadata properties of the document. */
 public class Meta {
     /** A metadata expression refering to the ID of the document. */
-    public var documentID: MetaExpression {
+    public var id: MetaExpression {
         return MetaExpression(property: "_id")
     }
     

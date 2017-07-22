@@ -13,7 +13,7 @@
 #import "CBLQueryDataSource.h"
 #import "CBLQueryOrdering.h"
 
-#define kDOCID      [CBLQuerySelectResult expression: [CBLQueryExpression meta].documentID]
+#define kDOCID      [CBLQuerySelectResult expression: [CBLQueryExpression meta].id]
 #define kSEQUENCE   [CBLQuerySelectResult expression: [CBLQueryExpression meta].sequence]
 
 @interface QueryTest : CBLTestCase
@@ -428,7 +428,7 @@
     [self saveDocument: joinme];
     
     CBLQuerySelectResult* MAIN_DOC_ID =
-        [CBLQuerySelectResult expression: [CBLQueryExpression metaFrom: @"main"].documentID];
+        [CBLQuerySelectResult expression: [CBLQueryExpression metaFrom: @"main"].id];
     
     CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
                               equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
@@ -572,7 +572,7 @@
 - (void) testMeta {
     [self loadNumbers: 5];
     
-    CBLQueryExpression* DOC_ID  = [CBLQueryExpression meta].documentID;
+    CBLQueryExpression* DOC_ID  = [CBLQueryExpression meta].id;
     CBLQueryExpression* DOC_SEQ = [CBLQueryExpression meta].sequence;
     CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1"];
     

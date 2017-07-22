@@ -10,7 +10,7 @@ import XCTest
 import CouchbaseLiteSwift
 
 class QueryTest: CBLTestCase {
-    let kDOCID = SelectResult.expression(Expression.meta().documentID)
+    let kDOCID = SelectResult.expression(Expression.meta().id)
     
     let kSEQUENCE = SelectResult.expression(Expression.meta().sequence)
     
@@ -349,7 +349,7 @@ class QueryTest: CBLTestCase {
         doc.set(42, forKey: "theone")
         try saveDocument(doc)
         
-        let DOCID = SelectResult.expression(Expression.meta().documentID.from("main"))
+        let DOCID = SelectResult.expression(Expression.meta().id.from("main"))
         
         let q = Query
             .select(DOCID)
@@ -485,7 +485,7 @@ class QueryTest: CBLTestCase {
     func testMeta() throws {
         try loadNumbers(5)
         
-        let DOC_ID  = Expression.meta().documentID
+        let DOC_ID  = Expression.meta().id
         let DOC_SEQ = Expression.meta().sequence
         let NUMBER1 = Expression.property("number1")
         
