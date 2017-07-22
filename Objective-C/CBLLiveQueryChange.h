@@ -13,7 +13,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /** CBLLiveQueryChange contains the information about the query result changes reported
- by a live query object. */
+    by a live query object. */
 @interface CBLLiveQueryChange : NSObject
 
 /** The source live query object. */

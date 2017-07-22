@@ -704,7 +704,7 @@
 }
 
 
-- (void) testQueryProvResultKeys {
+- (void) testQueryProjectingKeys {
     [self loadNumbers: 100];
     
     CBLQueryExpression* AVG = [CBLQueryFunction avg: [CBLQueryExpression property: @"number1"]];

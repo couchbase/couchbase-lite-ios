@@ -8,10 +8,13 @@
 
 import Foundation
 
-public struct ResultSet : Sequence, IteratorProtocol {
+/** ResultSet is a result returned from a query. */
+public class ResultSet : Sequence, IteratorProtocol {
     public typealias Element = Result
     
-    public mutating func next() -> Result? {
+    /** Advances to and return the next result row.
+        @return A Result object. */
+    public func next() -> Result? {
         if let row = impl.nextObject() as? CBLQueryResult {
             return Result(impl: row)
         } else {

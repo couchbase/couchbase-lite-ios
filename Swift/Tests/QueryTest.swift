@@ -610,7 +610,7 @@ class QueryTest: CBLTestCase {
     }
     
     
-    func testQueryProvResultKeys() throws {
+    func testQueryProjectingKeys() throws {
         try loadNumbers(100)
         
         let AVG = SelectResult.expression(Function.avg(Expression.property("number1")))
