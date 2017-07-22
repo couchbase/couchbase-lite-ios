@@ -4,10 +4,10 @@ set -e
 
 function usage
 {
-  echo "\nUsage: ${0} -o <Output Directory> [-v <Version String>] [--notest]\n"
+  echo "Usage: ${0} -o <Output Directory> [-v <Version String>] [--notest]"
 }
 
-while [[ $# -gt 1 ]]
+while [[ $# -gt 0 ]]
 do
   key=${1}
   case $key in
