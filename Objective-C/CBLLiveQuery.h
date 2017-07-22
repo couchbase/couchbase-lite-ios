@@ -26,8 +26,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) stop;
 
 /** Returns a string describing the implementation of the compiled query.
- This is intended to be read by a developer for purposes of optimizing the query, especially
- to add database indexes. It's not machine-readable and its format may change. */
+    This is intended to be read by a developer for purposes of optimizing the query, especially
+    to add database indexes. It's not machine-readable and its format may change. */
 - (nullable NSString*) explain: (NSError**)outError;
 
 /** Adds a query change listener block.

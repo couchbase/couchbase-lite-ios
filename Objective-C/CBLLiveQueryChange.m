@@ -7,13 +7,15 @@
 //
 
 #import "CBLLiveQueryChange+Internal.h"
+#import "CBLLiveQuery.h"
+#import "CBLQueryResultSet.h"
 
 @implementation CBLLiveQueryChange
 
 @synthesize query=_query, rows=_rows, error=_error;
 
 - (instancetype) initWithQuery: (CBLLiveQuery*)query
-                          rows: (NSEnumerator<CBLQueryRow*>*)rows
+                          rows: (CBLQueryResultSet*)rows
                          error: (NSError*)error {
     self = [super init];
     if (self) {

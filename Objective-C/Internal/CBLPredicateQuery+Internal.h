@@ -20,11 +20,10 @@ NS_ASSUME_NONNULL_BEGIN
 #define mkError(ERR, FMT, ...)  MYReturnError(ERR, kBadQuerySpecError, CBLErrorDomain, \
                                               FMT, ## __VA_ARGS__)
 
-/** Common API of CBLQuery and CBLPredicateQuery (used by CBLQueryEnumerator) */
+/** Used by CBLQueryEnumerator) */
 @protocol CBLQueryInternal <NSObject>
 @property (readonly, nonatomic) CBLDatabase* database;
 @end
-
 
 @interface CBLPredicateQuery () <CBLQueryInternal>
 

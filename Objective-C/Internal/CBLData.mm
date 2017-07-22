@@ -67,14 +67,15 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 
 
 + (id) fleeceValueToObject: (FLValue)value
-                     c4doc: (CBLC4Document*)c4doc
+                datasource: (id <CBLFLDataSource>)datasource
                   database: (CBLDatabase*)database
 {
     switch (FLValue_GetType(value)) {
         case kFLArray: {
             FLArray array = FLValue_AsArray(value);
-            id data = [[CBLFLArray alloc] initWithArray: array c4doc: c4doc database: database];
-            return [[CBLReadOnlyArray alloc] initWithFleeceData: data];
+            id flData = [[CBLFLArray alloc] initWithArray: array
+                                               datasource: datasource database: database];
+            return [[CBLReadOnlyArray alloc] initWithFleeceData: flData];
         }
         case kFLDict: {
             FLDict dict = FLValue_AsDict(value);
@@ -82,8 +83,9 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
             cbl::SharedKeys sk = database.sharedKeys;
             FLSlice type = FLValue_AsString(FLDict_GetSharedKey(dict, typeKey, &sk));
             if(!type.buf) {
-                id data = [[CBLFLDict alloc] initWithDict: dict c4doc: c4doc database: database];
-                return [[CBLReadOnlyDictionary alloc] initWithFleeceData: data];
+                id flData = [[CBLFLDict alloc] initWithDict: dict
+                                                 datasource: datasource database: database];
+                return [[CBLReadOnlyDictionary alloc] initWithFleeceData: flData];
             } else {
                 id result = FLValue_GetNSObject(value, &sk);
                 return [self dictionaryToCBLObject: result database: database];

@@ -16,8 +16,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Creates a CBLQuerySelectResult for the given expression.
     @param expression   The expression.
-    @return A CBLQuerySelectResult for the given expression. */
+    @return A CBLQuerySelectResult. */
 + (instancetype) expression: (CBLQueryExpression*)expression;
+
+/** Creates a CBLQuerySelectResult for the given expression and the alias name.
+    @param expression   The expression.
+    @param alias   The alias name.
+    @return A CBLQuerySelectResult. */
++ (instancetype) expression: (CBLQueryExpression*)expression as: (nullable NSString*)alias;
 
 /** Not available. */
 - (instancetype) init NS_UNAVAILABLE;

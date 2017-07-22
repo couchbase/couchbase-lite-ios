@@ -44,9 +44,9 @@ public class LiveQuery {
     @discardableResult
     public func addChangeListener(_ block: @escaping (LiveQueryChange) -> Void) -> NSObjectProtocol {
         return impl.addChangeListener { [unowned self] change in
-            let rows: QueryIterator?;
-            if let rowsEnum = change.rows {
-                rows = QueryIterator(database: self.database, enumerator: rowsEnum)
+            let rows: ResultSet?;
+            if let rs = change.rows {
+                rows = ResultSet(impl: rs)
             } else {
                 rows = nil;
             }

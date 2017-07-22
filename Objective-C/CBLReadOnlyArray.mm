@@ -160,7 +160,8 @@
 - (id) fleeceValueToObjectAtIndex: (NSUInteger)index {
     FLValue value = FLArray_Get(_array, (uint)index);
     if (value != nullptr)
-        return [CBLData fleeceValueToObject: value c4doc: _data.c4doc database: _data.database];
+        return [CBLData fleeceValueToObject: value
+                                 datasource: _data.datasource database: _data.database];
     else
         return nil;
 }

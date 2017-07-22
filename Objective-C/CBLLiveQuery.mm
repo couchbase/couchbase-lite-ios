@@ -10,7 +10,7 @@
 #import "CBLLiveQueryChange+Internal.h"
 #import "CBLChangeListener.h"
 #import "CBLQuery+Internal.h"
-#import "CBLQueryEnumerator.h"
+#import "CBLQueryResultSet+Internal.h"
 #import "CBLLog.h"
 
 
@@ -24,7 +24,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     
     bool _observing, _willUpdate;
     CFAbsoluteTime _lastUpdatedAt;
-    CBLQueryEnumerator* _enum;
+    CBLQueryResultSet* _rs;
     id _dbChangeListener;
     
     NSMutableSet* _changeListeners;
@@ -63,7 +63,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
             [wSelf databaseChanged: change];
         }];
     }
-    _enum = nil;
+    _rs = nil;
     [self update];
 }
 
@@ -133,21 +133,21 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     //TODO: Make this asynchronous (as in 1.x)
     CBLLog(Query, @"%@: Querying...", self);
     NSError *error;
-    CBLQueryEnumerator* oldEnum = _enum;
-    CBLQueryEnumerator* newEnum;
-    if (oldEnum == nil)
-        newEnum = (CBLQueryEnumerator*) [_query run: &error];
+    CBLQueryResultSet* oldRs = _rs;
+    CBLQueryResultSet* newRs;
+    if (oldRs == nil)
+        newRs = (CBLQueryResultSet*) [_query run: &error];
     else
-        newEnum = [oldEnum refresh: &error];
+        newRs = [oldRs refresh: &error];
 
     _willUpdate = false;
     _lastUpdatedAt = CFAbsoluteTimeGetCurrent();
     
     BOOL changed = YES;
-    if (newEnum) {
-        if (oldEnum)
+    if (newRs) {
+        if (oldRs)
             CBLLog(Query, @"%@: Changed!", self);
-        _enum = newEnum;
+        _rs = newRs;
     } else if (error != nil) {
         CBLWarnError(Query, @"%@: Update failed: %@", self, error.localizedDescription);
     } else {
@@ -157,7 +157,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     
     if (changed)
         [self notifyChange: [[CBLLiveQueryChange alloc] initWithQuery: self
-                                                                 rows: newEnum error: error]];
+                                                                 rows: newRs error: error]];
 }
 
 

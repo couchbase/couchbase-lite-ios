@@ -46,7 +46,7 @@ public class QueryRow {
         return impl.double(at: UInt(index))
     }
     
-    /** The projecting result value at the given index as an Integer value. */
+    /** The projecting result value at the given index as an String value. */
     public subscript(index: Int) -> String? {
         return impl.string(at: UInt(index))
     }

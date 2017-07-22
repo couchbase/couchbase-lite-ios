@@ -32,6 +32,8 @@
 .objc_class_name_CBLQueryOrdering
 .objc_class_name_CBLQueryParameters
 .objc_class_name_CBLQuerySelectResult
+.objc_class_name_CBLQueryResult
+.objc_class_name_CBLQueryResultSet
 .objc_class_name_CBLQueryRow
 .objc_class_name_CBLReadOnlyArray
 .objc_class_name_CBLReadOnlyDocument

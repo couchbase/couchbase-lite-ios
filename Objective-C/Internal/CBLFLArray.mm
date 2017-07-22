@@ -10,22 +10,18 @@
 #import "CBLC4Document.h"
 #import "CBLDatabase.h"
 
-@implementation CBLFLArray {
-    FLArray _array;
-    CBLC4Document* _c4doc;
-    CBLDatabase* _database;
-}
+@implementation CBLFLArray
 
-@synthesize array=_array, c4doc=_c4doc, database=_database;
+@synthesize array=_array, datasource=_datasource, database=_database;
 
 - (instancetype) initWithArray: (nullable FLArray) array
-                         c4doc: (CBLC4Document*)c4doc
+                    datasource: (id<CBLFLDataSource>)datasource
                       database: (CBLDatabase*)database
 {
     self = [super init];
     if (self) {
         _array = array;
-        _c4doc = c4doc;
+        _datasource = datasource;
         _database = database;
     }
     return self;

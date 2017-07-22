@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "Fleece+CoreFoundation.h"
+#import "CBLFLDataSource.h"
 @class CBLC4Document;
 @class CBLDatabase;
 
@@ -17,12 +18,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLDict dict;
 
-@property (nonatomic, readonly) CBLC4Document* c4doc;
+@property (nonatomic, readonly) id<CBLFLDataSource> datasource;
 
 @property (nonatomic, readonly) CBLDatabase* database;
 
 - (instancetype) initWithDict: (nullable FLDict) dict
-                        c4doc: (CBLC4Document*)c4doc
+                   datasource: (id <CBLFLDataSource>)datasource
                      database: (CBLDatabase*)database;
 
 @end

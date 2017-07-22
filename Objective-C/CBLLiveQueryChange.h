@@ -8,19 +8,19 @@
 
 #import <Foundation/Foundation.h>
 @class CBLLiveQuery;
-@class CBLQueryRow;
+@class CBLQueryResultSet;
 
 NS_ASSUME_NONNULL_BEGIN
 
 /** CBLLiveQueryChange contains the information about the query result changes reported
- by a live query object. */
+    by a live query object. */
 @interface CBLLiveQueryChange : NSObject
 
 /** The source live query object. */
 @property (nonatomic, readonly) CBLLiveQuery* query;
 
 /** The new query result. */
-@property (nonatomic, readonly, nullable) NSEnumerator<CBLQueryRow*>* rows;
+@property (nonatomic, readonly, nullable) CBLQueryResultSet* rows;
 
 /** The error occurred when running the query. */
 @property (nonatomic, readonly, nullable) NSError* error;

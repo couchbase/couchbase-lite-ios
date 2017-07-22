@@ -7,12 +7,11 @@
 //
 
 #import "CBLQuery.h"
-#import "CBLQuery+Internal.h"
-#import "CBLQueryEnumerator.h"
 #import "CBLCoreBridge.h"
 #import "CBLInternal.h"
 #import "CBLLiveQuery+Internal.h"
-#import "CBLPredicateQuery+Internal.h"
+#import "CBLQuery+Internal.h"
+#import "CBLQueryResultSet+Internal.h"
 #import "CBLStatus.h"
 #import "c4Query.h"
 
@@ -20,6 +19,7 @@
 @implementation CBLQuery
 {
     C4Query* _c4Query;
+    NSDictionary* _columnNames;
 }
 
 @synthesize select=_select, from=_from, join=_join, where=_where, orderings=_orderings, limit=_limit;
@@ -488,7 +488,7 @@
 }
 
 
-- (nullable NSEnumerator<CBLQueryRow*>*) run: (NSError**)outError {
+- (nullable CBLQueryResultSet*) run: (NSError**)outError {
     if (!_c4Query && ![self check: outError])
         return nil;
     
@@ -504,18 +504,16 @@
         convertError(c4Err, outError);
         return nullptr;
     }
-    return [[CBLQueryEnumerator alloc] initWithQuery: self
-                                             c4Query: _c4Query
-                                          enumerator: e
-                                     returnDocuments: false];
+    
+    return [[CBLQueryResultSet alloc] initWithQuery: self enumerator: e columnNames: _columnNames];
 }
 
 
 - (CBLLiveQuery*) toLive {
     return [[CBLLiveQuery alloc] initWithQuery: self];
 }
-            
-            
+
+
 #pragma mark - Internal
 
 
@@ -546,6 +544,13 @@
     NSData* jsonData = [self encodeAsJSON: outError];
     if (!jsonData)
         return NO;
+    
+    if (!_columnNames) {
+        _columnNames = [self generateColumnNames: outError];
+        if (!_columnNames)
+            return NO;
+    }
+    
     CBLLog(Query, @"Query encoded as %.*s", (int)jsonData.length, (char*)jsonData.bytes);
     
     C4Error c4Err;
@@ -557,6 +562,30 @@
     c4query_free(_c4Query);
     _c4Query = query;
     return YES;
+}
+
+
+- (NSDictionary*) generateColumnNames: (NSError**)outError {
+    NSMutableDictionary* map = [NSMutableDictionary dictionary];
+    NSUInteger index = 0;
+    NSUInteger provisionKeyIndex = 0;
+    for (CBLQuerySelectResult* select in _select) {
+        // TODO: Support SELECT *
+        NSString* name = select.columnName;
+        if (!name)
+            name = [NSString stringWithFormat:@"$%lu", (unsigned long)(++provisionKeyIndex)];
+        
+        if ([map objectForKey: name]) {
+            NSString* desc = [NSString stringWithFormat: @"Duplicate select result named %@", name];
+            createError(kCBLStatusInvalidQuery, desc, outError);
+            return nil;
+        }
+        
+        [map setObject: @(index) forKey: name];
+        index++;
+    }
+    
+    return map;
 }
 
 
@@ -634,5 +663,6 @@
     
     return json;
 }
+
 
 @end
