@@ -17,7 +17,7 @@
 @implementation CBLReadOnlyDocument
 
 
-@synthesize database=_database, documentID=_documentID, c4Doc=_c4Doc;
+@synthesize database=_database, id=_id, c4Doc=_c4Doc;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -29,7 +29,7 @@
     self = [super initWithFleeceData: data];
     if (self) {
         _database = database;
-        _documentID = documentID;
+        _id = documentID;
         _c4Doc = c4Doc;
     }
     return self;
@@ -61,7 +61,7 @@
 
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@]", self.class, self.documentID];
+    return [NSString stringWithFormat: @"%@[%@]", self.class, self.id];
 }
 
 

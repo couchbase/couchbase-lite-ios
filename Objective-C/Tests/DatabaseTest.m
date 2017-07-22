@@ -87,7 +87,7 @@
 - (void) verifyGetDocument: (CBLDatabase*)db docID: (NSString*)docID value: (int)value {
     CBLDocument* doc = [db documentWithID: docID];
     AssertNotNil(doc);
-    AssertEqualObjects(docID, doc.documentID);
+    AssertEqualObjects(docID, doc.id);
     AssertFalse(doc.isDeleted);
     AssertEqualObjects(@(value), [doc objectForKey: @"key"]);
 }
@@ -117,10 +117,10 @@
 // helper method to purge doc and verify doc.
 - (void) purgeDocAndVerify: (CBLDocument*)doc {
     NSError* error;
-    NSString* docID = doc.documentID;
+    NSString* docID = doc.id;
     Assert([self.db purgeDocument: doc error: &error]);
     AssertNil(error);
-    AssertEqualObjects(docID, doc.documentID); // docID should be same
+    AssertEqualObjects(docID, doc.id); // docID should be same
     AssertEqual(0L, (long)doc.sequence);       // sequence should be reset to 0
     AssertFalse(doc.isDeleted);                // delete flag should be reset to true
     AssertNil([doc objectForKey:@"key"]);      // content should be empty
@@ -487,7 +487,7 @@
     // second store
     [self saveDocument: doc];
     
-    AssertEqualObjects(docID, doc.documentID);
+    AssertEqualObjects(docID, doc.id);
     AssertEqual(1, (long)self.db.count);
 }
 
@@ -556,7 +556,7 @@
     AssertNil(error);
     AssertEqual(0, (long)self.db.count);
     
-    AssertEqualObjects(docID, doc.documentID);
+    AssertEqualObjects(docID, doc.id);
     Assert(doc.isDeleted);
     AssertEqual(2, (int)doc.sequence);
     AssertNil([doc objectForKey: @"key"]);
@@ -870,7 +870,7 @@
     [self closeDatabase: self.db];
     
     // content should be accessible & modifiable without error
-    AssertEqualObjects(docID, doc.documentID);
+    AssertEqualObjects(docID, doc.id);
     AssertEqualObjects(@(1), [doc objectForKey: @"key"]);
     [doc setObject:@(2) forKey: @"key"];
     [doc setObject: @"value" forKey: @"key1"];
@@ -957,7 +957,7 @@
     [self deleteDatabase: self.db];
     
     // content should be accessible & modifiable without error
-    AssertEqualObjects(docID, doc.documentID);
+    AssertEqualObjects(docID, doc.id);
     AssertEqualObjects(@(1), [doc objectForKey: @"key"]);
     [doc setObject: @(2) forKey: @"key"];
     [doc setObject: @"value" forKey: @"key1"];
@@ -1204,7 +1204,7 @@
     
     // Add each doc with a blob object:
     for (CBLDocument* doc in docs) {
-        NSData* content = [doc.documentID dataUsingEncoding: NSUTF8StringEncoding];
+        NSData* content = [doc.id dataUsingEncoding: NSUTF8StringEncoding];
         CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
         [doc setObject: blob forKey: @"blob"];
         [self saveDocument: doc];

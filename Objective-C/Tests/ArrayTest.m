@@ -70,7 +70,7 @@
     [self saveDocument: doc];
     
     // Re-get the document and the array:
-    doc = [_db documentWithID: doc.documentID];
+    doc = [_db documentWithID: doc.id];
     array = [doc arrayForKey: @"array"];
     
     block(array);

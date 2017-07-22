@@ -112,7 +112,7 @@
         AssertEqual(seq, n);
         
         CBLDocument* doc = [self.db documentWithID: docID];
-        AssertEqualObjects(doc.documentID, expectedID);
+        AssertEqualObjects(doc.id, expectedID);
         AssertEqual(doc.sequence, n);
     }];
     AssertEqual(numRows, 100llu);
@@ -212,7 +212,7 @@
             if (expectedDocs.count <= n) {
                 NSString* documentID = [r objectAtIndex: 0];
                 CBLDocument* expDoc = expectedDocs[(NSUInteger)(n-1)];
-                AssertEqualObjects(expDoc.documentID, documentID, @"Failed case: %@", exp);
+                AssertEqualObjects(expDoc.id, documentID, @"Failed case: %@", exp);
             }
         }];
         AssertEqual((int)numRows, (int)expectedDocs.count, @"Failed case: %@", exp);
@@ -235,7 +235,7 @@
                                     test: ^(uint64_t n, CBLQueryResult* r)
     {
         CBLDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
-        AssertEqualObjects(doc.documentID, doc1.documentID);
+        AssertEqualObjects(doc.id, doc1.id);
         AssertEqualObjects([doc objectForKey: @"string"], @"string");
     }];
     AssertEqual(numRows, 1u);
@@ -248,7 +248,7 @@
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
     {
         CBLDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
-        AssertEqualObjects(doc.documentID, doc1.documentID);
+        AssertEqualObjects(doc.id, doc1.id);
         AssertEqualObjects([doc objectForKey: @"string"], @"string");
     }];
     AssertEqual(numRows, 1u);
@@ -414,7 +414,7 @@
                                     test: ^(uint64_t n, CBLQueryResult* r)
     {
         NSString* docID = [r objectAtIndex: 0];
-        AssertEqualObjects(docID, doc1.documentID);
+        AssertEqualObjects(docID, doc1.id);
     }];
     AssertEqual(numRows, 1u);
 }

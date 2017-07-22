@@ -13,7 +13,7 @@
 @interface CBLReadOnlyDocument : CBLReadOnlyDictionary
 
 /** The document's ID. */
-@property (readonly, nonatomic) NSString* documentID;
+@property (readonly, nonatomic) NSString* id;
 
 /** Is the document deleted? */
 @property (readonly, nonatomic) BOOL isDeleted;

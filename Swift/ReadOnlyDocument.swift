@@ -12,7 +12,7 @@ import Foundation
 public class ReadOnlyDocument : ReadOnlyDictionaryObject {
     /// The document's ID.
     public var id: String {
-        return self.impl.documentID
+        return self.impl.id
     }
     
     

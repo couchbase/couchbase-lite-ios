@@ -108,7 +108,7 @@
 - (CBLDocument*) saveDocument: (CBLDocument*)document {
     NSError* error;
     Assert([_db saveDocument: document error: &error], @"Saving error: %@", error);
-    return [_db documentWithID: document.documentID];
+    return [_db documentWithID: document.id];
 }
 
 

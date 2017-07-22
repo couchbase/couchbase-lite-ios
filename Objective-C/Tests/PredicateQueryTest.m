@@ -90,7 +90,7 @@
         AssertEqualObjects(row.documentID, expectedID);
         AssertEqual(row.sequence, n);
         CBLDocument* doc = row.document;
-        AssertEqualObjects(doc.documentID, expectedID);
+        AssertEqualObjects(doc.id, expectedID);
         AssertEqual(doc.sequence, n);
     }];
     AssertEqual(numRows, 100llu);
@@ -127,7 +127,7 @@
     for (CBLDocument* doc in self.db.allDocuments) {
         ++n;
         NSString* expectedID = [NSString stringWithFormat: @"doc-%03llu", n];
-        AssertEqualObjects(doc.documentID, expectedID);
+        AssertEqualObjects(doc.id, expectedID);
         AssertEqual(doc.sequence, n);
     }
     AssertEqual(n, 100llu);
@@ -157,7 +157,7 @@
             AssertEqualObjects(row.documentID, @"doc-009");
             AssertEqual(row.sequence, 9llu);
             CBLDocument* doc = row.document;
-            AssertEqualObjects(doc.documentID, @"doc-009");
+            AssertEqualObjects(doc.id, @"doc-009");
             AssertEqual(doc.sequence, 9llu);
             AssertEqualObjects([[doc objectForKey: @"name"] objectForKey: @"first"], @"Claude");
         }];

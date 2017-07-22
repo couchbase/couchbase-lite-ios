@@ -339,7 +339,7 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     if (c4Doc) {
         *outDoc = c4doc_update(c4Doc, data2slice(body), revFlags, &err);
     } else {
-        CBLStringBytes docID(self.documentID);
+        CBLStringBytes docID(self.id);
         *outDoc = c4doc_create(self.c4db, docID, data2slice(body), revFlags, &err);
     }
 
@@ -363,7 +363,7 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     // Read the current revision from the database:
     auto database = self.database;
     CBLReadOnlyDocument* current = [[CBLReadOnlyDocument alloc] initWithDatabase: database
-                                                                      documentID: self.documentID
+                                                                      documentID: self.id
                                                                        mustExist: YES
                                                                            error: outError];
     if (!current)
@@ -378,7 +378,7 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     } else {
         // Call the conflict resolver:
         CBLReadOnlyDocument* base = [[CBLReadOnlyDocument alloc] initWithDatabase: database
-                                                                       documentID: self.documentID
+                                                                       documentID: self.id
                                                                             c4Doc: super.c4Doc
                                                                        fleeceData: super.data];
         CBLConflict* conflict = [[CBLConflict alloc] initWithMine: self theirs: current base: base];

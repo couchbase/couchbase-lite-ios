@@ -57,28 +57,28 @@
 - (void) testCreateDoc {
     CBLDocument* doc1a = [[CBLDocument alloc] init];
     AssertNotNil(doc1a);
-    Assert(doc1a.documentID.length > 0);
+    Assert(doc1a.id.length > 0);
     AssertFalse(doc1a.isDeleted);
     AssertEqualObjects([doc1a toDictionary], @{});
     
     CBLDocument* doc1b = [self saveDocument: doc1a];
     Assert(doc1b != doc1a);
     AssertNotNil(doc1b);
-    AssertEqualObjects(doc1b.documentID, doc1a.documentID);
+    AssertEqualObjects(doc1b.id, doc1a.id);
 }
 
 
 - (void) testCreateDocWithID {
     CBLDocument* doc1a = [[CBLDocument alloc] initWithID: @"doc1"];
     AssertNotNil(doc1a);
-    AssertEqualObjects(doc1a.documentID, @"doc1");
+    AssertEqualObjects(doc1a.id, @"doc1");
     AssertFalse(doc1a.isDeleted);
     AssertEqualObjects([doc1a toDictionary], @{});
     
     CBLDocument* doc1b = [self saveDocument: doc1a];
     Assert(doc1b != doc1a);
     AssertNotNil(doc1b);
-    AssertEqualObjects(doc1b.documentID, doc1a.documentID);
+    AssertEqualObjects(doc1b.id, doc1a.id);
 }
 
 
@@ -96,14 +96,14 @@
 - (void) testCreateDocWithNilID {
     CBLDocument* doc1a = [[CBLDocument alloc] initWithID: nil];
     AssertNotNil(doc1a);
-    Assert(doc1a.documentID.length > 0);
+    Assert(doc1a.id.length > 0);
     AssertFalse(doc1a.isDeleted);
     AssertEqualObjects([doc1a toDictionary], @{});
     
     CBLDocument* doc1b = [self saveDocument: doc1a];;
     Assert(doc1b != doc1a);
     AssertNotNil(doc1b);
-    AssertEqualObjects(doc1b.documentID, doc1a.documentID);
+    AssertEqualObjects(doc1b.id, doc1a.id);
 }
 
 
@@ -119,14 +119,14 @@
     
     CBLDocument* doc1a = [[CBLDocument alloc] initWithDictionary: dict];
     AssertNotNil(doc1a);
-    Assert(doc1a.documentID.length > 0);
+    Assert(doc1a.id.length > 0);
     AssertFalse(doc1a.isDeleted);
     AssertEqualObjects([doc1a toDictionary], dict);
     
     CBLDocument* doc1b = [self saveDocument: doc1a];
     Assert(doc1b != doc1a);
     AssertNotNil(doc1b);
-    AssertEqualObjects(doc1b.documentID, doc1a.documentID);
+    AssertEqualObjects(doc1b.id, doc1a.id);
     AssertEqualObjects([doc1b toDictionary], dict);
 }
 
@@ -143,14 +143,14 @@
     
     CBLDocument* doc1a = [[CBLDocument alloc] initWithID: @"doc1" dictionary: dict];
     AssertNotNil(doc1a);
-    AssertEqualObjects(doc1a.documentID, @"doc1");
+    AssertEqualObjects(doc1a.id, @"doc1");
     AssertFalse(doc1a.isDeleted);
     AssertEqualObjects([doc1a toDictionary], dict);
     
     CBLDocument* doc1b = [self saveDocument: doc1a];;
     Assert(doc1b != doc1a);
     AssertNotNil(doc1b);
-    AssertEqualObjects(doc1b.documentID, doc1a.documentID);
+    AssertEqualObjects(doc1b.id, doc1a.id);
     AssertEqualObjects([doc1b toDictionary], dict);
 }
 
@@ -233,9 +233,9 @@
     [self saveDocument: doc1a];
     
     CBLDatabase* anotherDb = [_db copy];
-    CBLDocument* doc1b = [anotherDb documentWithID: doc1a.documentID];
+    CBLDocument* doc1b = [anotherDb documentWithID: doc1a.id];
     Assert(doc1b != doc1a);
-    AssertEqualObjects(doc1b.documentID, doc1a.documentID);
+    AssertEqualObjects(doc1b.id, doc1a.id);
     AssertEqualObjects([doc1b toDictionary], [doc1a toDictionary]);
     
     [anotherDb close: nil];

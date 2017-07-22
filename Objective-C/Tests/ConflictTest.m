@@ -99,7 +99,7 @@
     // Force a conflict
     NSMutableDictionary *properties = [[doc toDictionary] mutableCopy];
     properties[@"name"] = @"Scotty";
-    BOOL ok = [self saveProperties: properties toDocWithID: [doc documentID] error: &error];
+    BOOL ok = [self saveProperties: properties toDocWithID: doc.id error: &error];
     Assert(ok);
     
     // Change document in memory, so save will trigger a conflict
@@ -166,7 +166,7 @@
     NSMutableDictionary* properties = [[doc2 toDictionary] mutableCopy];
     properties[@"type"] = @"bio";
     properties[@"gender"] = @"male";
-    BOOL ok = [self saveProperties: properties toDocWithID: doc2.documentID error: &error];
+    BOOL ok = [self saveProperties: properties toDocWithID: doc2.id error: &error];
     Assert(ok);
     
     // Save and make sure that the correct conflict resolver won
@@ -227,7 +227,7 @@
     NSMutableDictionary *properties = [[doc toDictionary] mutableCopy];
     properties[@"name"] = @"Scott of the Sahara";
     NSError* error;
-    [self saveProperties:properties toDocWithID:[doc documentID] error:&error];
+    [self saveProperties:properties toDocWithID: doc.id error:&error];
     
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     AssertEqualObjects([doc stringForKey: @"name"], @"Scott of the Sahara");
