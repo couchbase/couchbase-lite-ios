@@ -73,7 +73,7 @@ static NSString* sResourceDir;
 
 - (void) dealloc {
     NSError *error;
-    if (![_db close: &error])
+    if (_db && ![_db close: &error])
         NSLog(@"WARNING: Error closing database: %@", error);
 }
 

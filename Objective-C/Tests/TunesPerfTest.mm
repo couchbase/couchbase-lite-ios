@@ -8,6 +8,20 @@
 
 #import "TunesPerfTest.h"
 #import "Benchmark.hh"
+#include <chrono>
+#include <thread>
+
+using namespace std::chrono;
+
+#define PROFILING 0
+
+#if PROFILING
+static constexpr int kNumIterations = 1;
+static constexpr auto kInterTestSleep = milliseconds(500);
+#else
+static constexpr int kNumIterations = 10;
+static constexpr auto kInterTestSleep = milliseconds(0);
+#endif
 
 
 @implementation TunesPerfTest
@@ -37,20 +51,34 @@
 }
 
 
+- (void) pause {
+    std::this_thread::sleep_for(kInterTestSleep);
+}
+
+
 - (void) test {
     unsigned numDocs = 0, numUpdates = 0, numArtists = 0, numAlbums = 0, numFTS = 0;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < kNumIterations; i++) {
         fprintf(stderr, "Starting iteration #%d...\n", i+1);
         @autoreleasepool {
             [self eraseDB];
+            [self pause];
             numDocs = [self importLibrary];
+            [self pause];
             [self reopenDB];
+            [self pause];
             numUpdates = [self updateArtistNames];
+            [self pause];
             numArtists = [self queryAllArtists: _queryArtistsBench];
+            [self pause];
             [self createArtistsIndex];
+            [self pause];
             [self queryAllArtists: _queryIndexedArtistsBench];
+            [self pause];
             numAlbums = [self queryAlbums: _queryAlbumsBench];
+            [self pause];
             numFTS = [self fullTextSearch];
+            [self pause];
         }
     }
     fprintf(stderr, "\n\n");
