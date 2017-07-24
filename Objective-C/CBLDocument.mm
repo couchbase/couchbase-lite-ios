@@ -302,16 +302,6 @@ static bool dictionaryContainsBlob(__unsafe_unretained CBLDictionary* dict) {
     return containsBlob;
 }
 
-static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
-    __block bool containsBlob = false;
-    for (NSString* key in doc) {
-        containsBlob = objectContainsBlob([doc objectForKey: key]);
-        if (containsBlob)
-            break;
-    }
-    return containsBlob;
-}
-
 
 // Lower-level save method. On conflict, returns YES but sets *outDoc to NULL.
 - (BOOL) saveInto: (C4Document **)outDoc
@@ -321,9 +311,8 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
     C4RevisionFlags revFlags = 0;
     if (deletion)
         revFlags = kRevDeleted;
-    if (containsBlob(self))
-        revFlags |= kRevHasAttachments;
     NSData* body = nil;
+    C4Slice bodySlice = {};
     if (!deletion && !self.isEmpty) {
         // Encode properties to Fleece data:
         body = [self encode: outError];
@@ -331,13 +320,17 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
             *outDoc = nullptr;
             return NO;
         }
+        bodySlice = data2slice(body);
+        auto root = FLValue_FromTrustedData(bodySlice);
+        if (c4doc_dictContainsBlobs((FLDict)root, self.database.sharedKeys))
+            revFlags |= kRevHasAttachments;
     }
     
     // Save to database:
     C4Error err;
     C4Document *c4Doc = self.c4Doc.rawDoc;
     if (c4Doc) {
-        *outDoc = c4doc_update(c4Doc, data2slice(body), revFlags, &err);
+        *outDoc = c4doc_update(c4Doc, bodySlice, revFlags, &err);
     } else {
         CBLStringBytes docID(self.id);
         *outDoc = c4doc_create(self.c4db, docID, data2slice(body), revFlags, &err);
