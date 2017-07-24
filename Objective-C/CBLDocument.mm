@@ -377,10 +377,14 @@ static bool containsBlob(__unsafe_unretained CBLDocument* doc) {
         resolved = current;
     } else {
         // Call the conflict resolver:
-        CBLReadOnlyDocument* base = [[CBLReadOnlyDocument alloc] initWithDatabase: database
-                                                                       documentID: self.id
-                                                                            c4Doc: super.c4Doc
-                                                                       fleeceData: super.data];
+        CBLReadOnlyDocument* base = nil;
+        if (super.c4Doc) {
+            base = [[CBLReadOnlyDocument alloc] initWithDatabase: database
+                                                      documentID: self.id
+                                                           c4Doc: super.c4Doc
+                                                      fleeceData: super.data];
+        }
+        
         CBLConflict* conflict = [[CBLConflict alloc] initWithMine: self theirs: current base: base];
         resolved = [resolver resolve: conflict];
         if (resolved == nil)

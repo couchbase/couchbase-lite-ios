@@ -15,6 +15,16 @@
 #include "Fleece+CoreFoundation.h"
 
 
+@implementation DoNotResolve
+
+- (CBLReadOnlyDocument*) resolve: (CBLConflict*)conflict {
+    NSAssert(NO, @"Resolver should not have been called!");
+    return nil;
+}
+
+@end
+
+
 @implementation TheirsWins
 
 - (CBLReadOnlyDocument*) resolve: (CBLConflict *)conflict {
@@ -22,7 +32,6 @@
 }
 
 @end
-
 
 
 @implementation MergeThenTheirsWins
@@ -54,7 +63,6 @@
 @end
 
 
-
 @implementation GiveUp
 
 - (CBLReadOnlyDocument*) resolve: (CBLConflict *)conflict {
@@ -64,16 +72,23 @@
 @end
 
 
+@implementation BlockResolver
 
-@implementation DoNotResolve
+@synthesize block=_block;
 
-- (CBLReadOnlyDocument*) resolve: (CBLConflict*)conflict {
-    NSAssert(NO, @"Resolver should not have been called!");
-    return nil;
+- (instancetype) initWithBlock: (nullable CBLReadOnlyDocument* (^)(CBLConflict*))block {
+    self = [super init];
+    if (self) {
+        _block = block;
+    }
+    return self;
+}
+
+- (CBLReadOnlyDocument*) resolve: (CBLConflict *)conflict {
+    return self.block(conflict);
 }
 
 @end
-
 
 @interface ConflictTest : CBLTestCase
 
@@ -109,7 +124,7 @@
 }
 
 
-- (BOOL)saveProperties: (NSDictionary*)props toDocWithID: (NSString*)docID error: (NSError**)error {
+- (BOOL) saveProperties: (NSDictionary*)props toDocWithID: (NSString*)docID error: (NSError**)error {
     // Save to database:
     BOOL ok = [self.db inBatch: error do: ^{
         C4Slice docIDSlice = c4str([docID cStringUsingEncoding: NSASCIIStringEncoding]);
@@ -144,7 +159,7 @@
 }
 
 
-- (void)testConflict {
+- (void) testConflict {
     NSError* error;
     self.conflictResolver = [TheirsWins new];
     [self reopenDB];
@@ -182,7 +197,7 @@
 }
 
 
-- (void)testConflictResolverGivesUp {
+- (void) testConflictResolverGivesUp {
     self.conflictResolver = [GiveUp new];
     [self reopenDB];
     
@@ -194,7 +209,7 @@
 }
 
 
-- (void)testDeletionConflict {
+- (void) testDeletionConflict {
     self.conflictResolver = [DoNotResolve new];
     [self reopenDB];
     
@@ -206,7 +221,7 @@
 }
 
 
-- (void)testConflictMineIsDeeper {
+- (void) testConflictMineIsDeeper {
     self.conflictResolver = nil;
     [self reopenDB];
     
@@ -217,7 +232,7 @@
 }
 
 
-- (void)testConflictTheirsIsDeeper {
+- (void) testConflictTheirsIsDeeper {
     self.conflictResolver = nil;
     [self reopenDB];
     
@@ -231,6 +246,29 @@
     
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     AssertEqualObjects([doc stringForKey: @"name"], @"Scott of the Sahara");
+}
+
+
+- (void) testNoBase {
+    self.conflictResolver = [[BlockResolver alloc] initWithBlock:
+                             ^CBLReadOnlyDocument* (CBLConflict* conflict)
+    {
+        AssertEqualObjects([conflict.mine objectForKey:@"name"], @"Tiger");
+        AssertEqualObjects([conflict.theirs objectForKey:@"name"], @"Daniel");
+        AssertNil(conflict.base);
+        return conflict.mine;
+    }];
+    [self reopenDB];
+    
+    CBLDocument* doc1a = [[CBLDocument alloc] initWithID: @"doc1"];
+    [doc1a setObject: @"Daniel" forKey: @"name"];
+    [self saveDocument: doc1a];
+    
+    CBLDocument* doc1b = [[CBLDocument alloc] initWithID: @"doc1"];
+    [doc1b setObject: @"Tiger" forKey: @"name"];
+    [self saveDocument: doc1b];
+    
+    AssertEqualObjects([doc1b objectForKey:@"name"], @"Tiger");
 }
 
 

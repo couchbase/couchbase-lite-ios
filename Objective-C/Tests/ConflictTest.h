@@ -8,15 +8,35 @@
 
 #import "CBLTestCase.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
+/** Default Conflict Resolution set to ConflictTest which 
+    will just make the assertion false as shouldn't be called. */
+@interface DoNotResolve : NSObject <CBLConflictResolver>
+@end
+
+/** Select theirs version. */
 @interface TheirsWins : NSObject <CBLConflictResolver>
 @end
 
+
+/** Merge or select theirs version. */
 @interface MergeThenTheirsWins : NSObject <CBLConflictResolver>
-@property (atomic) bool requireBaseRevision;
+@property (atomic) BOOL requireBaseRevision;
 @end
 
+/** Return nil to give up the conflict resolving. The document save operation will return 
+    the conflicting error. */
 @interface GiveUp : NSObject <CBLConflictResolver>
 @end
 
-@interface DoNotResolve : NSObject <CBLConflictResolver>
+/** Block based resolver */
+@interface BlockResolver : NSObject <CBLConflictResolver>
+
+@property (atomic, readonly) CBLReadOnlyDocument* (^block)(CBLConflict*);
+
+- (instancetype) initWithBlock: (nullable CBLReadOnlyDocument* (^)(CBLConflict*))block;
+
 @end
+
+NS_ASSUME_NONNULL_END
