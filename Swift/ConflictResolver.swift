@@ -9,32 +9,15 @@
 import Foundation
 
 public struct Conflict {
-    public var mine: ReadOnlyDocument {
-        return _mine
-    }
-    
-    public var theirs: ReadOnlyDocument {
-        return _theirs
-    }
-    
-    public var base: ReadOnlyDocument? {
-        return _base
-    }
-    
+    public let mine: ReadOnlyDocument
+    public let theirs: ReadOnlyDocument
+    public let base: ReadOnlyDocument?
+
     init(impl: CBLConflict) {
-        _mine = ReadOnlyDocument(impl.mine)
-        _theirs = ReadOnlyDocument(impl.theirs)
-        
-        if let base = impl.base {
-            _base = ReadOnlyDocument(base)
-        } else {
-            _base = nil
-        }
+        mine = ReadOnlyDocument(impl.mine)
+        theirs = ReadOnlyDocument(impl.theirs)
+        base = impl.base.flatMap({ReadOnlyDocument($0)})
     }
-    
-    let _mine: ReadOnlyDocument
-    let _theirs: ReadOnlyDocument
-    let _base: ReadOnlyDocument?
 }
 
 public protocol ConflictResolver {
