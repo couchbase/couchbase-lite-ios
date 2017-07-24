@@ -17,6 +17,7 @@
 #import "CBLArray.h"
 #import "CBLC4Document.h"
 #import "CBLConflictResolver.h"
+#import "CBLData.h"
 #import "CBLCoreBridge.h"
 #import "CBLDocument+Internal.h"
 #import "CBLInternal.h"
@@ -445,7 +446,7 @@ static bool dictionaryContainsBlob(__unsafe_unretained CBLDictionary* dict) {
 
 - (NSData*) encode: (NSError**)outError {
     auto encoder = c4db_createFleeceEncoder(self.c4db);
-    if (![_dict fleeceEncode: encoder database: self.database error: outError])
+    if (![_dict cbl_fleeceEncode: encoder database: self.database error: outError])
         return nil;
     FLError flErr;
     FLSliceResult body = FLEncoder_Finish(encoder, &flErr);

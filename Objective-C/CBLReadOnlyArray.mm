@@ -106,6 +106,16 @@
 }
 
 
+- (id) cbl_toPlainObject {
+    return [self toArray];
+}
+
+
+- (id) cbl_toCBLObject {
+    return [[CBLArray alloc] initWithFleeceData: self.data];
+}
+
+
 #pragma mark - NSFastEnumeration
 
 
@@ -145,9 +155,9 @@
 #pragma mark - FLEECE ENCODABLE
 
 
-- (BOOL) fleeceEncode: (FLEncoder)encoder
-             database: (CBLDatabase*)database
-                error: (NSError**)outError
+- (BOOL) cbl_fleeceEncode: (FLEncoder)encoder
+                 database: (CBLDatabase*)database
+                    error: (NSError**)outError
 {
     
     return FLEncoder_WriteValueWithSharedKeys(encoder, (FLValue)_array, _sharedKeys);

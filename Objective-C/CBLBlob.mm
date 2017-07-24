@@ -260,9 +260,14 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 #pragma mark FLEECE ENCODABLE
 
 
-- (BOOL) fleeceEncode: (FLEncoder)encoder
-             database: (CBLDatabase*)database
-                error: (NSError**)outError
+- (id) cbl_toCBLObject {
+    return self;
+}
+
+
+- (BOOL) cbl_fleeceEncode: (FLEncoder)encoder
+                 database: (CBLDatabase*)database
+                    error: (NSError**)outError
 {
     if(![self installInDatabase: database error: outError])
         return NO;

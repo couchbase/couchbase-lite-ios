@@ -69,10 +69,26 @@
 
 
 - (NSArray*) keys {
+    if (_keys)
+        return _keys;
+
+    NSArray* superKeys = super.keys;
     if (!_changed)
-        return super.keys;
-    else
-        return [[self allKeys] copy];
+        return superKeys;
+
+    if (superKeys.count == 0) {
+        _keys = _dict.allKeys;
+    } else {
+        NSMutableSet* result = [NSMutableSet setWithArray: superKeys];
+        [_dict enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
+            if (value != kCBLRemovedValue)
+                [result addObject: key];
+            else
+                [result removeObject: key];
+        }];
+        _keys = result.allObjects;
+    }
+    return _keys;
 }
 
 
@@ -81,10 +97,10 @@
     if (!value) {
         value = [super objectForKey: key];
         if ([value isKindOfClass: [CBLReadOnlyDictionary class]]) {
-            value = [CBLData convertValue: value];
+            value = [value cbl_toCBLObject];
             [self setValue: value forKey: key isChange: NO];
         } else if ([value isKindOfClass: [CBLReadOnlyArray class]]) {
-            value = [CBLData convertValue: value];
+            value = [value cbl_toCBLObject];
             [self setValue: value forKey: key isChange: NO];
         }
     } else if (value == kCBLRemovedValue)
@@ -173,26 +189,23 @@
 
 
 - (NSDictionary<NSString*,id>*) toDictionary {
-    NSMutableDictionary* result = _dict ? [_dict mutableCopy] : [NSMutableDictionary dictionary];
-    
-    // Backing data:
     NSDictionary* backingData = [super toDictionary];
-    [backingData enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
-        if (!result[key])
-            result[key] = value;
-    }];
-    
-    for (NSString* key in result.allKeys) {
-        id value = result[key];
+    if (_dict.count == 0)
+        return backingData; // No changes
+
+    NSMutableDictionary* result = [backingData mutableCopy];
+    [_dict enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         if (value == kCBLRemovedValue)
             result[key] = nil; // Remove key
-        else if ([value conformsToProtocol: @protocol(CBLReadOnlyDictionary)])
-            result[key] = [value toDictionary];
-        else if ([value conformsToProtocol: @protocol(CBLReadOnlyArray)])
-            result[key] = [value toArray];
-    }
-    
+        else
+            result[key] = [value cbl_toPlainObject];
+    }];
     return result;
+}
+
+
+- (id) cbl_toCBLObject {
+    return self;
 }
 
 
@@ -200,17 +213,19 @@
 
 
 - (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary {
-    NSMutableDictionary* result = [NSMutableDictionary dictionary];
+    NSArray* inheritedKeys = [super keys];
+    NSUInteger capacity = MAX(dictionary.count, inheritedKeys.count);
+    NSMutableDictionary* result = [NSMutableDictionary dictionaryWithCapacity: capacity];
+
     [dictionary enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
-        result[key] = [CBLData convertValue: value];
+        result[key] = [value cbl_toCBLObject];
     }];
     
-    // Marked the key as removed by setting the value to kRemovedValue:
-    NSDictionary* backingData = [super toDictionary];
-    [backingData enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
+    // Mark pre-existing keys as removed by setting the value to kRemovedValue:
+    for (NSString* key in inheritedKeys) {
         if (!result[key])
             result[key] = kCBLRemovedValue;
-    }];
+    };
     
     _dict = result;
     
@@ -221,17 +236,19 @@
 - (void) setObject: (nullable id)value forKey: (NSString*)key {
     if (!value) value = [NSNull null]; // nil conversion only for apple platform
     id oldValue = [self objectForKey: key];
+    value = [value cbl_toCBLObject];
     if (!$equal(value, oldValue)) {
-        value = [CBLData convertValue: value];
         [self setValue: value forKey: key isChange: YES];
-        _keys = nil; // Reset key cahche
+        _keys = nil; // Reset key cache
     }
 }
 
 
 - (void) removeObjectForKey:(NSString *)key {
-    if ([self containsObjectForKey: key]) {
-        [self setObject: kCBLRemovedValue forKey: key];
+    id value = [super containsObjectForKey: key] ? kCBLRemovedValue : nil;
+    if (value != _dict[key]) {
+        [self setValue: value forKey: key isChange: YES];
+        _keys = nil; // Reset key cache
     }
 }
 
@@ -246,7 +263,7 @@
     if (!_changed)
         return [super countByEnumeratingWithState: state objects: buffer count: len];
     else
-        return [[self allKeys] countByEnumeratingWithState: state objects: buffer count: len];
+        return [[self keys] countByEnumeratingWithState: state objects: buffer count: len];
 }
 
 
@@ -295,24 +312,6 @@
 }
 
 
-- (NSArray*) allKeys {
-    if (!_keys) {
-        NSMutableSet* result = [NSMutableSet setWithArray: _dict.allKeys];
-        for (NSString* key in super.keys) {
-            if (![result containsObject: key])
-                [result addObject: key];
-        }
-        
-        [_dict enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
-            if (value == kCBLRemovedValue)
-                [result removeObject: key];
-        }];
-        _keys = [result allObjects];
-    }
-    return _keys;
-}
-
-
 #pragma mark - CHANGE
 
 
@@ -326,22 +325,19 @@
 #pragma mark - FLEECE ENCODABLE
 
 
-- (BOOL) fleeceEncode: (FLEncoder)encoder
-             database: (CBLDatabase*)database
-                error: (NSError**)outError
+- (BOOL) cbl_fleeceEncode: (FLEncoder)encoder
+                 database: (CBLDatabase*)database
+                    error: (NSError**)outError
 {
-    NSArray* keys = self.allKeys;
+    NSArray* keys = self.keys;
     FLEncoder_BeginDict(encoder, keys.count);
     for (NSString* key in keys) {
         id value = [self objectForKey: key];
         if (value != kCBLRemovedValue) {
             CBLStringBytes bKey(key);
             FLEncoder_WriteKey(encoder, bKey);
-            if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]){
-                if (![value fleeceEncode: encoder database: database error: outError])
-                    return NO;
-            } else
-                FLEncoder_WriteNSObject(encoder, value);
+            if (![value cbl_fleeceEncode: encoder database: database error: outError])
+                return NO;
         }
     }
     FLEncoder_EndDict(encoder);
