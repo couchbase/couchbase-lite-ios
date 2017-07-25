@@ -113,6 +113,16 @@
 }
 
 
+- (id) cbl_toPlainObject {
+    return [self toDictionary];
+}
+
+
+- (id) cbl_toCBLObject {
+    return [[CBLDictionary alloc] initWithFleeceData: self.data];
+}
+
+
 #pragma mark - NSFastEnumeration
 
 
@@ -150,9 +160,9 @@
 #pragma mark - FLEECE ENCODING
 
 
-- (BOOL) fleeceEncode: (FLEncoder)encoder
-             database: (CBLDatabase*)database
-                error: (NSError**)outError
+- (BOOL) cbl_fleeceEncode: (FLEncoder)encoder
+                 database: (CBLDatabase*)database
+                    error: (NSError**)outError
 {
     return FLEncoder_WriteValueWithSharedKeys(encoder, (FLValue)_dict, _sharedKeys);
 }
@@ -178,7 +188,7 @@
 
 - (NSArray*) fleeceKeys {
     if (!_keys) {
-        NSMutableArray* keys = [NSMutableArray array];
+        NSMutableArray* keys = [NSMutableArray arrayWithCapacity: FLDict_Count(_dict)];
         if (_dict != nullptr) {
             FLDictIterator iter;
             FLDictIterator_Begin(_dict, &iter);

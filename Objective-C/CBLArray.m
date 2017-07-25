@@ -140,16 +140,16 @@
     if (!_array)
         [self copyFleeceData];
     
-    NSMutableArray* array = [NSMutableArray array];
+    NSMutableArray* array = [NSMutableArray arrayWithCapacity: _array.count];
     for (id item in _array) {
-        id value = item;
-        if ([value conformsToProtocol: @protocol(CBLReadOnlyDictionary)])
-            value = [value toDictionary];
-        else if ([value conformsToProtocol: @protocol(CBLReadOnlyArray)])
-            value = [value toArray];
-        [array addObject: value];
+        [array addObject: [item cbl_toPlainObject]];
     }
     return array;
+}
+
+
+- (id) cbl_toCBLObject {
+    return self;
 }
 
 
@@ -159,7 +159,7 @@
 - (void) setArray:(nullable NSArray *)array {
     NSMutableArray* result = [NSMutableArray arrayWithCapacity: [array count]];
     for (id value in array) {
-        [result addObject: [CBLData convertValue: value]];
+        [result addObject: [value cbl_toCBLObject]];
     }
     
     _array = result;
@@ -172,8 +172,7 @@
     
     id oldValue = [self objectAtIndex: index];
     if (!$equal(value, oldValue)) {
-        value = [CBLData convertValue: value];
-        [self setValue: value atIndex: index isChange: YES];
+        [self setValue: [value cbl_toCBLObject] atIndex: index isChange: YES];
     }
 }
 
@@ -183,7 +182,7 @@
         [self copyFleeceData];
     
     if (!value) value = [NSNull null]; // nil conversion only for apple platform
-    [_array addObject: [CBLData convertValue: value]];
+    [_array addObject: [value cbl_toCBLObject]];
     [self setChanged];
 }
 
@@ -193,7 +192,7 @@
         [self copyFleeceData];
     
     if (!value) value = [NSNull null]; // nil conversion only for apple platform
-    [_array insertObject: [CBLData convertValue: value] atIndex: index];
+    [_array insertObject: [value cbl_toCBLObject] atIndex: index];
     [self setChanged];
 }
 
@@ -241,19 +240,16 @@
 #pragma mark - FLEECE ENCODABLE
 
 
-- (BOOL) fleeceEncode: (FLEncoder)encoder
-             database: (CBLDatabase*)database
-                error: (NSError**)outError
+- (BOOL) cbl_fleeceEncode: (FLEncoder)encoder
+                 database: (CBLDatabase*)database
+                    error: (NSError**)outError
 {
     NSUInteger count = self.count;
     FLEncoder_BeginArray(encoder, count);
     for (NSUInteger i = 0; i < count; i++) {
         id value = [self objectAtIndex: i];
-        if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]) {
-            if (![value fleeceEncode: encoder database: database error: outError])
-                return NO;
-        } else
-            FLEncoder_WriteNSObject(encoder, value);
+        if (![value cbl_fleeceEncode: encoder database: database error: outError])
+            return NO;
     }
     FLEncoder_EndArray(encoder);
     return YES;
@@ -269,7 +265,7 @@
     _array = [NSMutableArray arrayWithCapacity: count];
     for (NSUInteger i = 0; i < count; i++) {
         id value = [super objectAtIndex: i];
-        [_array addObject: [CBLData convertValue: value]];
+        [_array addObject: [value cbl_toCBLObject]];
     }
 }
 

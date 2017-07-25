@@ -19,41 +19,75 @@
 NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 
 
-@implementation CBLData
+@implementation NSObject (CBLConversions)
 
-
-+ (id) convertValue: (id)value {
-    if ([value isKindOfClass: [CBLDictionary class]]) {
-        return value;
-    } else if ([value isKindOfClass: [CBLArray class]]) {
-        return value;
-    } else if ([value isKindOfClass: [CBLReadOnlyDictionary class]]) {
-        CBLReadOnlyDictionary* readonly = (CBLReadOnlyDictionary*)value;
-        CBLDictionary* dict = [[CBLDictionary alloc] initWithFleeceData: readonly.data];
-        return dict;
-    } else if ([value isKindOfClass: [CBLReadOnlyArray class]]) {
-        CBLReadOnlyArray* readonly = (CBLReadOnlyArray*)value;
-        CBLArray* array = [[CBLArray alloc] initWithFleeceData: readonly.data];
-        return array;
-    } else if ([value isKindOfClass: [NSDictionary class]]) {
-        CBLDictionary* dict = [[CBLDictionary alloc] init];
-        [dict setDictionary: value];
-        return dict;
-    } else if ([value isKindOfClass: [NSArray class]]) {
-        CBLArray* array = [[CBLArray alloc] init];
-        [array setArray: value];
-        return array;
-    } else if ([value isKindOfClass: [NSDate class]]) {
-        return [CBLJSON JSONObjectWithDate: value];
-    } else {
-        NSParameterAssert(value == kCBLRemovedValue ||
-                          value == [NSNull null] ||
-                          [value isKindOfClass: [NSString class]] ||
-                          [value isKindOfClass: [NSNumber class]] ||
-                          [value isKindOfClass: [CBLBlob class]]);
-    }
-    return value;
+- (BOOL) cbl_fleeceEncode: (FLEncoder)encoder
+                 database: (CBLDatabase*)database
+                    error: (NSError**)outError
+{
+    // This is overridden by CBL content classes like CBLDictionary and CBLBlob...
+    FLEncoder_WriteNSObject(encoder, self);
+    return YES;
 }
+
+- (id) cbl_toPlainObject {
+    return self;
+}
+
+- (id) cbl_toCBLObject {
+    if (self != kCBLRemovedValue) {
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"Instances of %@ cannot be added to Couchbase Lite documents",
+                             [self class]];
+    }
+    return self;
+}
+
+@end
+
+
+@implementation NSArray (CBLConversions)
+- (id) cbl_toCBLObject {
+    CBLArray* array = [[CBLArray alloc] init];
+    [array setArray: self];
+    return array;
+}
+@end
+
+@implementation NSDictionary (CBLConversions)
+- (id) cbl_toCBLObject {
+    CBLDictionary* dict = [[CBLDictionary alloc] init];
+    [dict setDictionary: self];
+    return dict;
+}
+@end
+
+@implementation NSDate (CBLConversions)
+- (id) cbl_toCBLObject {
+    return [CBLJSON JSONObjectWithDate: self];
+}
+@end
+
+@implementation NSString (CBLConversions)
+- (id) cbl_toCBLObject {
+    return self;
+}
+@end
+
+@implementation NSNumber (CBLConversions)
+- (id) cbl_toCBLObject {
+    return self;
+}
+@end
+
+@implementation NSNull (CBLConversions)
+- (id) cbl_toCBLObject {
+    return self;
+}
+@end
+
+
+@implementation CBLData
 
 
 + (BOOL) booleanValueForObject: (id)object {

@@ -1,5 +1,5 @@
 //
-//  CBLDocumentObjectInternal.h
+//  CBLDocument+Internal.h
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 4/14/17.
@@ -25,15 +25,6 @@
 
 
 NS_ASSUME_NONNULL_BEGIN
-
-@protocol CBLFleeceEncodable <NSObject>
-
-- (BOOL) fleeceEncode: (FLEncoder)encoder
-             database: (CBLDatabase*)database
-                error: (NSError**)outError;
-
-@end
-
 
 //////////////////
 
@@ -85,12 +76,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 //////////////////
 
-@interface CBLBlob() <CBLFleeceEncodable>
-
-@end
-
-//////////////////
-
 @interface CBLDictionary ()
 
 @property (nonatomic) BOOL changed;
@@ -99,7 +84,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 //////////////////
 
-@interface CBLReadOnlyArray () <CBLFleeceEncodable>
+@interface CBLReadOnlyArray ()
 
 @property (nonatomic, readonly, nullable) CBLFLArray* data;
 
@@ -109,7 +94,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 //////////////////
 
-@interface CBLReadOnlyDictionary () <CBLFleeceEncodable>
+@interface CBLReadOnlyDictionary ()
 
 @property (nonatomic, nullable) CBLFLDict* data;
 
