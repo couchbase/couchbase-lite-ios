@@ -22,6 +22,7 @@
 #import "CBLDocumentChange.h"
 #import "CBLDocumentChangeListener.h"
 #import "CBLDocumentFragment.h"
+#import "CBLQuery+Internal.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "CBLPredicateQuery+Internal.h"
@@ -388,7 +389,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
-- (BOOL) createIndexOn: (NSArray<NSExpression*>*)expressions error: (NSError**)outError {
+- (BOOL) createIndexOn: (NSArray*)expressions error: (NSError**)outError {
     return [self createIndexOn: expressions type: kCBLValueIndex options: NULL error: outError];
 }
 
@@ -413,7 +414,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
             c4options.ignoreDiacritics = (strcmp(c4options.language, "en") == 0);
     }
     
-    NSData* json = [CBLPredicateQuery encodeExpressionsToJSON: expressions error: outError];
+    NSData* json = [CBLQuery encodeExpressions: expressions error: outError];
     if (!json)
         return NO;
     C4Error c4err;
@@ -432,10 +433,10 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 {
     [self mustBeOpen];
     
-    NSData* json = [CBLPredicateQuery encodeExpressionsToJSON: expressions error: outError];
+    NSData* json = [CBLQuery encodeExpressions: expressions error: outError];
     if (!json)
         return NO;
-    C4Error c4err;
+    C4Error c4err; 
     return c4db_deleteIndex(_c4db, {json.bytes, json.length}, (C4IndexType)type, &c4err)
     || convertError(c4err, outError);
 }

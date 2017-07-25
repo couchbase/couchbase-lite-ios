@@ -142,6 +142,7 @@
 		933F45F51EC29EF100863ECB /* Fragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93765EA91EC17FEA005E4050 /* Fragment.swift */; };
 		933F45F61EC2A62000863ECB /* DocumentFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93765EAB1EC17FFE005E4050 /* DocumentFragment.swift */; };
 		933F45FA1EC2B47500863ECB /* DataConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933F45F91EC2B47500863ECB /* DataConverter.swift */; };
+		934A27381F26A6F3003946A7 /* Database+PredicateQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934A27371F26A6F3003946A7 /* Database+PredicateQuery.swift */; };
 		934F4C101E1EF19000F90659 /* CollectionUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4BD01E1EF19000F90659 /* CollectionUtils.h */; };
 		934F4C111E1EF19000F90659 /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4BD11E1EF19000F90659 /* CollectionUtils.m */; };
 		934F4C291E1EF19000F90659 /* MYErrorUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4BE91E1EF19000F90659 /* MYErrorUtils.h */; };
@@ -726,6 +727,7 @@
 		933F45F91EC2B47500863ECB /* DataConverter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataConverter.swift; sourceTree = "<group>"; };
 		9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
 		9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests - iOS.xcconfig"; sourceTree = "<group>"; };
+		934A27371F26A6F3003946A7 /* Database+PredicateQuery.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Database+PredicateQuery.swift"; sourceTree = "<group>"; };
 		934F4BD01E1EF19000F90659 /* CollectionUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CollectionUtils.h; sourceTree = "<group>"; };
 		934F4BD11E1EF19000F90659 /* CollectionUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CollectionUtils.m; sourceTree = "<group>"; };
 		934F4BE91E1EF19000F90659 /* MYErrorUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYErrorUtils.h; sourceTree = "<group>"; };
@@ -1045,6 +1047,7 @@
 		93140EEE1F22A99F006E18EF /* Predicate */ = {
 			isa = PBXGroup;
 			children = (
+				934A27371F26A6F3003946A7 /* Database+PredicateQuery.swift */,
 				27BE3B551E4E93000012B74A /* PredicateQuery.swift */,
 				93A2AFB91E830BF800A08CAE /* QueryRow.swift */,
 			);
@@ -2153,6 +2156,7 @@
 				93AF51C41E80A6FC00E200F0 /* CBLQueryOrdering.m in Sources */,
 				93DB7FEF1ED8E1C000C4F845 /* CBLReplicatorConfiguration.m in Sources */,
 				93B503631E64B079002C4680 /* CBLCoreBridge.mm in Sources */,
+				934A27381F26A6F3003946A7 /* Database+PredicateQuery.swift in Sources */,
 				938196121EC112280032CC51 /* CBLReadOnlyDocument.mm in Sources */,
 				933F45FA1EC2B47500863ECB /* DataConverter.swift in Sources */,
 				938196061EC10E890032CC51 /* DictionaryObject.swift in Sources */,

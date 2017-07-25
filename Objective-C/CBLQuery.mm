@@ -520,11 +520,6 @@
 #pragma mark - Internal
 
 
-- (CBLDatabase*) database {
-    return (CBLDatabase*)_from.source;
-}
-
-
 - (instancetype) copyWithZone:(NSZone *)zone {
     CBLQuery* q =  [[[self class] alloc] initWithSelect: _select
                                                distinct: _distinct
@@ -537,6 +532,29 @@
                                                   limit: _limit];
     q.parameters = [_parameters copy];
     return q;
+}
+
+
+- (CBLDatabase*) database {
+    return (CBLDatabase*)_from.source;
+}
+
+
++ (NSData*) encodeExpressions: (NSArray*)expressions error: (NSError**)outError {
+    NSMutableArray* json = [NSMutableArray arrayWithCapacity: expressions.count];
+    for (id exp in expressions) {
+        if ([exp isKindOfClass: [CBLQueryExpression class]]) {
+            [json addObject: [exp asJSON]];
+        } else if ([exp isKindOfClass: [NSString class]]) {
+            NSExpression* e = [NSExpression expressionWithFormat: exp argumentArray: @[]];
+            id encoded = [CBLPredicateQuery encodeExpression: e aggregate: NO error: outError];
+            [json addObject: encoded];
+        } else if ([exp isKindOfClass: [NSExpression class]]) {
+            id encoded = [CBLPredicateQuery encodeExpression: exp aggregate: NO error: outError];
+            [json addObject: encoded];
+        }
+    }
+    return [NSJSONSerialization dataWithJSONObject: json options: 0 error: outError];
 }
 
 
@@ -666,6 +684,7 @@
     
     return json;
 }
+
 
 
 @end

@@ -244,8 +244,8 @@ typedef struct {
 /** Creates a value index (type kCBLValueIndex) on a given document property.
     This will speed up queries that test that property, at the expense of making database writes a
     little bit slower.
-    @param expressions  Expressions to index, typically key-paths. Can be NSExpression objects,
-                        or NSStrings that are expression format strings.
+    @param expressions  Expressions to index, typically key-paths. Can be CBLQueryExpression,
+                        NSExpression objects, or NSStrings that are expression format strings.
     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
     @return  True on success, false on failure. */
 - (BOOL) createIndexOn: (NSArray*)expressions
@@ -254,8 +254,8 @@ typedef struct {
 /** Creates an index on a given document property.
     This will speed up queries that test that property, at the expense of making database writes a
     little bit slower.
-    @param expressions  Expressions to index, typically key-paths. Can be NSExpression objects,
-                        or NSStrings that are expression format strings.
+    @param expressions  Expressions to index, typically key-paths. Can be CBLQueryExpression, 
+                        NSExpression objects, or NSStrings that are expression format strings.
     @param type  Type of index to create (value, full-text or geospatial.)
     @param options  Options affecting the index, or NULL for default settings.
     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.

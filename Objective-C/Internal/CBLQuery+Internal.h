@@ -67,6 +67,8 @@ NS_ASSUME_NONNULL_BEGIN
                         orderBy: (nullable NSArray<CBLQueryOrdering*>*)orderings
                           limit: (nullable CBLQueryLimit*)limit;
 
++ (NSData*) encodeExpressions: (NSArray*)expressions error: (NSError**)outError;
+
 @end
 
 
