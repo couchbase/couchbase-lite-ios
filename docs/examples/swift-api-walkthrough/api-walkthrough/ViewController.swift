@@ -76,7 +76,7 @@ class ViewController: UIViewController {
         do {
             let rows = try query.run()
             for row in rows {
-                print("doc ID :: \(row.documentID)")
+                print("doc ID :: \(row.string(forKey: "_id"))")
             }
         } catch let error {
             print(error.localizedDescription)
@@ -105,7 +105,7 @@ class ViewController: UIViewController {
         do {
             let ftsQueryResult = try ftsQuery.run()
             for row in ftsQueryResult {
-                print("document properties \(row.document.toDictionary())")
+                print("document properties \(row.string(forKey: "_id"))")
             }
         } catch let error {
             print(error.localizedDescription)
@@ -113,12 +113,10 @@ class ViewController: UIViewController {
         
         // replication
         let url = URL(string: "blip://localhost:4984/db")!
-        var config = ReplicatorConfiguration()
-        config.database = database
-        config.target = .url(url)
+        var config = ReplicatorConfiguration(database: database, targetURL: url)
         config.continuous = true
         
-        let replication = Replicator(config: config);
+        let replication = Replicator(config: config)
         replication.start()
         
         // background thread operation

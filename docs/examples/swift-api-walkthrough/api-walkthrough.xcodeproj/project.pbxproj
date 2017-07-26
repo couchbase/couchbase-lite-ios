@@ -7,14 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		BE6DFE881F02DCB4005F47B2 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE7EDCA71F02D5D300275629 /* CouchbaseLiteSwift.framework */; };
-		BE6DFE891F02DCB4005F47B2 /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BE7EDCA71F02D5D300275629 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BE5E550E1F28CCF9001F25B1 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE5E550B1F28CC28001F25B1 /* CouchbaseLiteSwift.framework */; };
+		BE5E550F1F28CD2D001F25B1 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE5E550B1F28CC28001F25B1 /* CouchbaseLiteSwift.framework */; };
+		BE5E55101F28CD2D001F25B1 /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BE5E550B1F28CC28001F25B1 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BE7EDC951F02AFE600275629 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE7EDC941F02AFE600275629 /* AppDelegate.swift */; };
 		BE7EDC971F02AFE600275629 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE7EDC961F02AFE600275629 /* ViewController.swift */; };
 		BE7EDC9A1F02AFE600275629 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BE7EDC981F02AFE600275629 /* Main.storyboard */; };
 		BE7EDC9C1F02AFE600275629 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BE7EDC9B1F02AFE600275629 /* Assets.xcassets */; };
 		BE7EDC9F1F02AFE600275629 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BE7EDC9D1F02AFE600275629 /* LaunchScreen.storyboard */; };
-		BE7EDCA81F02D5D300275629 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE7EDCA71F02D5D300275629 /* CouchbaseLiteSwift.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,7 +24,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				BE6DFE891F02DCB4005F47B2 /* CouchbaseLiteSwift.framework in Embed Frameworks */,
+				BE5E55101F28CD2D001F25B1 /* CouchbaseLiteSwift.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -32,6 +32,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BE5E550B1F28CC28001F25B1 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Carthage/Build/iOS/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
 		BE7EDC911F02AFE600275629 /* api-walkthrough.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "api-walkthrough.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE7EDC941F02AFE600275629 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		BE7EDC961F02AFE600275629 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -39,7 +40,6 @@
 		BE7EDC9B1F02AFE600275629 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BE7EDC9E1F02AFE600275629 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		BE7EDCA01F02AFE600275629 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		BE7EDCA71F02D5D300275629 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,8 +47,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BE6DFE881F02DCB4005F47B2 /* CouchbaseLiteSwift.framework in Frameworks */,
-				BE7EDCA81F02D5D300275629 /* CouchbaseLiteSwift.framework in Frameworks */,
+				BE5E550F1F28CD2D001F25B1 /* CouchbaseLiteSwift.framework in Frameworks */,
+				BE5E550E1F28CCF9001F25B1 /* CouchbaseLiteSwift.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -88,7 +88,7 @@
 		BE7EDCA61F02B00D00275629 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				BE7EDCA71F02D5D300275629 /* CouchbaseLiteSwift.framework */,
+				BE5E550B1F28CC28001F25B1 /* CouchbaseLiteSwift.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -293,6 +293,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS",
 				);
 				INFOPLIST_FILE = "api-walkthrough/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -309,6 +310,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS",
 				);
 				INFOPLIST_FILE = "api-walkthrough/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
