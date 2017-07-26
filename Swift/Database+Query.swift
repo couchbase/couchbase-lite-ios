@@ -13,11 +13,11 @@ extension Database {
     /** Creates a value index (type kValueIndex) on a given document property.
      This will speed up queries that test that property, at the expense of making database writes a
      little bit slower.
-     @param expressions  Expressions to index, typically key-paths. Can be Expression, 
-                         NSExpression objects, or NSStrings that are expression format strings.
+     @param expressions  Expressions to index, typically key-paths. Can be Expression objects,
+                         NSExpression objects, or Strings that are expression format strings.
      @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
      @return  True on success, false on failure. */
-    public func createIndex(_ expressions: [Expression]) throws {
+    public func createIndex(_ expressions: [Any]) throws {
         try _impl.createIndex(on: expressions)
     }
 
@@ -25,13 +25,13 @@ extension Database {
     /** Creates an index on a given document property.
      This will speed up queries that test that property, at the expense of making database writes a
      little bit slower.
-     @param expressions  Expressions to index, typically key-paths. Can be Expression, 
-                         NSExpression objects, or NSStrings that are expression format strings.
+     @param expressions  Expressions to index, typically key-paths. Can be Expression objects,
+                         NSExpression objects, or Strings that are expression format strings.
      @param type  Type of index to create (value, full-text or geospatial.)
      @param options  Options affecting the index, or NULL for default settings.
      @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
      @return  True on success, false on failure. */
-    public func createIndex(_ expressions: [Expression], options: IndexOptions) throws {
+    public func createIndex(_ expressions: [Any], options: IndexOptions) throws {
         var cblType: CBLIndexType
         var cblOptions = CBLIndexOptions()
         var language: String?
@@ -46,9 +46,13 @@ extension Database {
             cblType = CBLIndexType.geoIndex
         }
         
-        var expImpls: [CBLQueryExpression] = []
+        var expImpls: [Any] = []
         for exp in expressions {
-            expImpls.append(exp.impl)
+            if let x = exp as? Expression {
+                expImpls.append(x.impl)
+            } else {
+                expImpls.append(exp)
+            }
         }
 
         if let language = language {
@@ -67,10 +71,14 @@ extension Database {
      @param type  Type of index.
      @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
      @return  True if the index existed and was deleted, false if it did not exist. */
-    public func deleteIndex(_ expressions: [Expression], type: IndexType) throws {
-        var expImpls: [CBLQueryExpression] = []
+    public func deleteIndex(_ expressions: [Any], type: IndexType) throws {
+        var expImpls: [Any] = []
         for exp in expressions {
-            expImpls.append(exp.impl)
+            if let x = exp as? Expression {
+                expImpls.append(x.impl)
+            } else {
+                expImpls.append(exp)
+            }
         }
         try _impl.deleteIndex(on: expImpls, type: type)
     }
