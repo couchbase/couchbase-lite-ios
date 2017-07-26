@@ -112,12 +112,34 @@ class ViewController: UIViewController {
         }
         
         // replication
+        /**
+         * Tested with SG 1.5 https://www.couchbase.com/downloads
+         * Config file:
+         * {
+            "databases": {
+                "db": {
+                    "server":"walrus:",
+                    "users": {
+                        "GUEST": {"disabled": false, "admin_channels": ["*"]}
+                    },
+                    "unsupported": {
+                        "replicator_2":true
+                    }
+                }
+            }
+         }
+        */
         let url = URL(string: "blip://localhost:4984/db")!
-        var config = ReplicatorConfiguration(database: database, targetURL: url)
-        config.continuous = true
-        
+        let config = ReplicatorConfiguration(database: database, targetURL: url)
         let replication = Replicator(config: config)
         replication.start()
+        
+        // replication change listener
+        replication.addChangeListener { (change) in
+            if (change.status.activity == .stopped) {
+                print("Replication was completed.")
+            }
+        }
         
         // background thread operation
         DispatchQueue.global(qos: .background).async {
