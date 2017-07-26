@@ -116,12 +116,16 @@
     
     // replication
     NSURL *url = [[NSURL alloc] initWithString:@"blip://localhost:4984/db"];
-    
     CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithDatabase:database targetURL:url];
-    config.continuous = YES;
-    
     CBLReplicator *replication = [[CBLReplicator alloc] initWithConfig: config];
     [replication start];
+    
+    // replication change listener
+    [replication addChangeListener:^(CBLReplicatorChange * _Nonnull change) {
+        if (change.status.activity == kCBLStopped) {
+            NSLog(@"Replication was completed.");
+        }
+    }];
 }
 
 
