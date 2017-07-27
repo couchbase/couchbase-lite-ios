@@ -41,11 +41,9 @@
     if (_alias)
         return _alias;
     
-    CBLKeyPathExpression* keyPathExpr = $castIf(CBLKeyPathExpression, _expression);
-    if (keyPathExpr) {
-        NSArray* paths = [keyPathExpr.keyPath componentsSeparatedByString: @"."];
-        return paths.lastObject;
-    }
+    CBLPropertyExpression* property = $castIf(CBLPropertyExpression, _expression);
+    if (property)
+        return property.columnName;
     
     return nil;
 }

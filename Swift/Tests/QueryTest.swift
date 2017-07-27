@@ -503,11 +503,20 @@ class QueryTest: CBLTestCase {
         let expectedNumbers = [1, 2, 3, 4, 5]
         
         let numRow = try verifyQuery(q, block: { (n, r) in
-            let docID = r.string(at: 0)!
-            let seq = r.int(at: 1)
+            let id1 = r.string(at: 0)!
+            let id2 = r.string(forKey: "id")
+            
+            let sequence1 = r.int(at: 1)
+            let sequence2 = r.int(forKey: "sequence")
+            
             let number = r.int(at: 2)
-            XCTAssertEqual(docID, expectedDocIDs[Int(n-1)])
-            XCTAssertEqual(seq, expectedSeqs[Int(n-1)])
+            
+            XCTAssertEqual(id1, id2)
+            XCTAssertEqual(id1, expectedDocIDs[Int(n-1)])
+            
+            XCTAssertEqual(sequence1, sequence2)
+            XCTAssertEqual(sequence1, expectedSeqs[Int(n-1)])
+            
             XCTAssertEqual(number, expectedNumbers[Int(n-1)])
         })
         XCTAssertEqual(numRow, 5)

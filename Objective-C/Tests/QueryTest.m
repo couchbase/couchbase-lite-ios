@@ -590,12 +590,20 @@
     NSArray* expectedNumbers = @[@1, @2, @3, @4, @5];
     
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) {
-        NSString* docID = [r objectAtIndex: 0];
-        NSInteger seq = [[r objectAtIndex: 1] integerValue];
+        NSString* id1 = [r stringAtIndex: 0];
+        NSString* id2 = [r stringForKey: @"id"];
+        
+        NSInteger sequence1 = [r integerAtIndex: 1];
+        NSInteger sequence2 = [r integerForKey: @"sequence"];
+        
         NSInteger number = [[r objectAtIndex: 2] integerValue];
         
-        AssertEqualObjects(docID,  expectedDocIDs[(NSUInteger)(n-1)]);
-        AssertEqual(seq, [expectedSeqs[(NSUInteger)(n-1)] integerValue]);
+        AssertEqualObjects(id1,  id2);
+        AssertEqualObjects(id1,  expectedDocIDs[(NSUInteger)(n-1)]);
+        
+        AssertEqual(sequence1, sequence2);
+        AssertEqual(sequence1, [expectedSeqs[(NSUInteger)(n-1)] integerValue]);
+        
         AssertEqual(number, [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
     }];
     AssertEqual(numRows, 5u);

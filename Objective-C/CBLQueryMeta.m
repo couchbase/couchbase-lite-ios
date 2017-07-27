@@ -9,18 +9,28 @@
 #import "CBLQueryMeta.h"
 #import "CBLQuery+Internal.h"
 
+#define kCBLQueryMetaIDKeyPath @"_id"
+#define kCBLQueryMetaIDColumnName @"id"
+
+#define kCBLQueryMetaSequenceKeyPath @"_sequence"
+#define kCBLQueryMetaSequenceColumnName @"sequence"
+
 @implementation CBLQueryMeta {
     NSString* _alias;
 }
 
 
 - (CBLQueryExpression*) id {
-    return [CBLQueryExpression property: @"_id" from: _alias];
+    return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaIDKeyPath
+                                               columnName: kCBLQueryMetaIDColumnName
+                                                     from: _alias];
 }
 
 
 - (CBLQueryExpression*) sequence {
-    return [CBLQueryExpression property: @"_sequence" from: _alias];
+    return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaSequenceKeyPath
+                                               columnName: kCBLQueryMetaSequenceColumnName
+                                                     from: _alias];
 }
 
 

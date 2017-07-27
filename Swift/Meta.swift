@@ -13,13 +13,13 @@ import Foundation
 public class Meta {
     /** A metadata expression refering to the ID of the document. */
     public var id: MetaExpression {
-        return MetaExpression(property: "_id")
+        return MetaExpression(type: .id)
     }
     
     /** A metadata expression refering to the sequence number of the document. 
         The sequence number indicates how recently the document has been changed. If one document's 
         `sequence` is greater than another's, that means it was changed more recently. */
     public var sequence: MetaExpression {
-        return MetaExpression(property: "_sequence")
+        return MetaExpression(type: .sequence)
     }
 }

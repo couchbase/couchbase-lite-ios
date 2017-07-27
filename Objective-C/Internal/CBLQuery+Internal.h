@@ -108,7 +108,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQueryOrdering () <CBLQueryJSONEncoding>
 
-@property (readonly, nonatomic) CBLQueryExpression* expression;
+@property (nonatomic, readonly) CBLQueryExpression* expression;
 
 - (instancetype) initWithExpression: (CBLQueryExpression*)expression;
 
@@ -116,7 +116,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQuerySortOrder ()
 
-@property (readonly, nonatomic) BOOL isAscending;
+@property (nonatomic, readonly) BOOL isAscending;
 
 @end
 
@@ -133,7 +133,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLAggregateExpression: CBLQueryExpression
 
-@property(readonly, copy, nonatomic) NSArray* subexpressions;
+@property(nonatomic, readonly) NSArray* subexpressions;
 
 - (instancetype)initWithExpressions: (NSArray*)subs;
 
@@ -164,9 +164,9 @@ typedef NS_ENUM(NSInteger, CBLBinaryExpType) {
 
 @interface CBLBinaryExpression: CBLQueryExpression
 
-@property(readonly, nonatomic) id lhs;
-@property(readonly, nonatomic) id rhs;
-@property(readonly, nonatomic) CBLBinaryExpType type;
+@property(nonatomic, readonly) id lhs;
+@property(nonatomic, readonly) id rhs;
+@property(nonatomic, readonly) CBLBinaryExpType type;
 
 - (instancetype) initWithLeftExpression: (id)lhs
                         rightExpression: (id)rhs
@@ -184,8 +184,8 @@ typedef NS_ENUM(NSInteger, CBLCompoundExpType) {
 
 @interface CBLCompoundExpression: CBLQueryExpression
 
-@property(readonly, copy, nonatomic) NSArray* subexpressions;
-@property(readonly, nonatomic) CBLCompoundExpType type;
+@property(nonatomic, readonly) NSArray* subexpressions;
+@property(nonatomic, readonly) CBLCompoundExpType type;
 
 
 - (instancetype) initWithExpressions: (NSArray*)subs type: (CBLCompoundExpType)type;
@@ -194,13 +194,17 @@ typedef NS_ENUM(NSInteger, CBLCompoundExpType) {
 
 /////
 
-@interface CBLKeyPathExpression : CBLQueryExpression
+@interface CBLPropertyExpression : CBLQueryExpression
 
-@property(nonatomic, readonly, copy) NSString* keyPath;
+@property(nonatomic, readonly) NSString* keyPath;
 
-@property(nonatomic, readonly, copy, nullable) NSString* from; // Data Source Alias
+@property(nonatomic, readonly) NSString* columnName;
 
-- (instancetype) initWithKeyPath: (NSString*)keyPath from: (nullable NSString*)from;
+@property(nonatomic, readonly, nullable) NSString* from; // Data Source Alias
+
+- (instancetype) initWithKeyPath: (NSString*)keyPath
+                      columnName: (nullable NSString*)columnName
+                            from: (nullable NSString*)from;
 
 @end
 
@@ -215,8 +219,8 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 
 @interface CBLUnaryExpression : CBLQueryExpression
 
-@property(readonly, nonatomic) CBLUnaryExpType type;
-@property(readonly, nonatomic) id operand;
+@property(nonatomic, readonly) CBLUnaryExpType type;
+@property(nonatomic, readonly) id operand;
 
 - (instancetype) initWithExpression: (id)operand type: (CBLUnaryExpType)type;
 
@@ -262,9 +266,9 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 
 @interface CBLQueryLimit () <CBLQueryJSONEncoding>
 
-@property(readonly, nonatomic) id limit;
+@property(nonatomic, readonly) id limit;
 
-@property(readonly, nonatomic, nullable) id offset;
+@property(nonatomic, readonly, nullable) id offset;
 
 - (instancetype) initWithLimit: (id)limit offset: (nullable id)offset;
 

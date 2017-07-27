@@ -8,21 +8,34 @@
 
 import Foundation
 
+/* internal */ enum MetaType {
+    case id, sequence
+}
+
 /** A meta property expression. */
 public class MetaExpression: Expression {
     
     /** Specifies an alias name of the data source to query the data from. */
     public func from(_ alias: String) -> Expression {
-        return Expression(CBLQueryExpression.property(property, from: alias))
+        return Expression(MetaExpression.toImpl(type: self.type, from: alias))
     }
     
     // MARK: Internal
     
-    let property: String
+    let type: MetaType
     
-    init(property: String) {
-        self.property = property
-        super.init(CBLQueryExpression.property(property))
+    init(type: MetaType) {
+        self.type = type
+        super.init(MetaExpression.toImpl(type: type, from: nil))
+    }
+    
+    static func toImpl(type: MetaType, from: String?) -> CBLQueryExpression {
+        switch type {
+        case .id:
+            return CBLQueryExpression.meta(from: from).id
+        case .sequence:
+            return CBLQueryExpression.meta(from: from).sequence
+        }
     }
     
 }

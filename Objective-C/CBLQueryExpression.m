@@ -31,7 +31,9 @@
 
 
 + (CBLQueryExpression*) property: (NSString*)property from:(NSString *)alias {
-    return [[CBLKeyPathExpression alloc] initWithKeyPath: property from: alias];
+    return [[CBLPropertyExpression alloc] initWithKeyPath: property
+                                               columnName: nil
+                                                     from: alias];
 }
 
 
@@ -465,15 +467,18 @@
 
 @end
 
-@implementation CBLKeyPathExpression
+@implementation CBLPropertyExpression
 
-@synthesize keyPath=_keyPath, from=_from;
+@synthesize keyPath=_keyPath, columnName=_columnName, from=_from;
 
-- (instancetype) initWithKeyPath: (NSString*)keyPath from: (NSString*)from {
+- (instancetype) initWithKeyPath: (NSString*)keyPath
+                      columnName: (nullable NSString*)columnName
+                            from: (NSString*)from {
     self = [super initWithNone];
     if (self) {
-        _keyPath = [keyPath copy];
-        _from = [from copy];
+        _keyPath = keyPath;
+        _columnName = columnName;
+        _from = from;
     }
     return self;
 }
@@ -492,6 +497,12 @@
             [json addObject: [NSString stringWithFormat: @".%@", _keyPath]];
     }
     return json;
+}
+
+- (NSString*) columnName {
+    if (!_columnName)
+        _columnName = [_keyPath componentsSeparatedByString: @"."].lastObject;
+    return _columnName;
 }
 
 @end
