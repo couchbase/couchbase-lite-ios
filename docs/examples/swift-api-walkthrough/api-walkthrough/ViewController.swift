@@ -14,9 +14,11 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        var config = DatabaseConfiguration()
+        config.conflictResolver = ExampleConflictResolver()
         let database: Database
         do {
-            database = try Database(name: "my-database")
+            database = try Database(name: "my-database", config: config)
         } catch let error as NSError {
             NSLog("Cannot open the database: %@", error)
             return
@@ -111,6 +113,27 @@ class ViewController: UIViewController {
             print(error.localizedDescription)
         }
         
+        // create conflict
+        /*
+         * 1. Create a document twice with the same ID.
+         * 2. The `theirs` properties in the conflict resolver represents the current rev and
+         * `mine` is what's being saved.
+         * 3. Read the document after the second save operation and verify its property is as expected.
+         */
+        let theirs = Document("buzz")
+        theirs.set("theirs", forKey: "status")
+        let mine = Document("buzz")
+        mine.set("mine", forKey: "status")
+        do {
+            try database.save(theirs)
+            try database.save(mine)
+        } catch let error {
+            print(error.localizedDescription)
+        }
+        
+        let conflictResolverResult = database.getDocument("buzz")
+        print("conflictResolverResult doc.status ::: \(conflictResolverResult?.string(forKey: "status"))")
+        
         // replication
         /**
          * Tested with SG 1.5 https://www.couchbase.com/downloads
@@ -130,8 +153,8 @@ class ViewController: UIViewController {
          }
         */
         let url = URL(string: "blip://localhost:4984/db")!
-        let config = ReplicatorConfiguration(database: database, targetURL: url)
-        let replication = Replicator(config: config)
+        let replConfig = ReplicatorConfiguration(database: database, targetURL: url)
+        let replication = Replicator(config: replConfig)
         replication.start()
         
         // replication change listener
