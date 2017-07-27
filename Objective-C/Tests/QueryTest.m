@@ -396,25 +396,26 @@
 }
 
 
-- (void) failingTest_SelectDistinct {
-    // https://github.com/couchbase/couchbase-lite-ios/issues/1669
+- (void) test_SelectDistinct {
     NSError* error;
     CBLDocument* doc1 = [[CBLDocument alloc] init];
-    [doc1 setObject: @(1) forKey: @"number"];
+    [doc1 setObject: @(20) forKey: @"number"];
     Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
     
     CBLDocument* doc2 = [[CBLDocument alloc] init];
-    [doc2 setObject: @(1) forKey: @"number"];
+    [doc2 setObject: @(20) forKey: @"number"];
     Assert([_db saveDocument: doc2 error: &error], @"Error when creating a document: %@", error);
     
-    CBLQuery* q = [CBLQuery selectDistinct: @[kDOCID]
+    CBLQueryExpression* NUMBER  = [CBLQueryExpression property: @"number"];
+    CBLQuerySelectResult* RES_NUMBER = [CBLQuerySelectResult expression: NUMBER];
+    
+    CBLQuery* q = [CBLQuery selectDistinct: @[RES_NUMBER]
                                       from: [CBLQueryDataSource database: self.db]];
     Assert(q);
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
                                     test: ^(uint64_t n, CBLQueryResult* r)
     {
-        NSString* docID = [r objectAtIndex: 0];
-        AssertEqualObjects(docID, doc1.id);
+        AssertEqual([r integerAtIndex: 0], 20);
     }];
     AssertEqual(numRows, 1u);
 }

@@ -323,20 +323,20 @@ class QueryTest: CBLTestCase {
     }
     
     
-    func failingTestSelectDistinct() throws {
-        // https://github.com/couchbase/couchbase-lite-ios/issues/1669
+    func testSelectDistinct() throws {
         let doc1 = Document()
-        doc1.set(1, forKey: "number")
+        doc1.set(20, forKey: "number")
         try saveDocument(doc1)
         
         let doc2 = Document()
-        doc2.set(1, forKey: "number")
+        doc2.set(20, forKey: "number")
         try saveDocument(doc2)
         
-        let q = Query.selectDistinct().from(DataSource.database(db))
+        let NUMBER  = Expression.property("number")
+        
+        let q = Query.selectDistinct(SelectResult.expression(NUMBER)).from(DataSource.database(db))
         let numRow = try verifyQuery(q, block: { (n, r) in
-            let doc = db.getDocument(r.string(at: 0)!)!
-            XCTAssertEqual(doc.id, doc1.id)
+            XCTAssertEqual(r.int(at: 0), 20)
         })
         XCTAssertEqual(numRow, 1)
     }

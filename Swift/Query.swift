@@ -28,7 +28,7 @@ public class Query {
         @param results  The array of the SelectResult object for specifying the returned values.
         @return A Select object. */
     public static func select(_ results: SelectResult...) -> Select {
-        return Select(impl: SelectResult.toImpl(results: results), distict: false)
+        return Select(impl: SelectResult.toImpl(results: results), distinct: false)
     }
     
     /** Create a SELECT DISTINCT statement instance that you can use further
@@ -36,7 +36,7 @@ public class Query {
         @param results  The array of the SelectResult object for specifying the returned values.
         @return A Select distinct object. */
     public static func selectDistinct(_ results: SelectResult...) -> Select {
-        return Select(impl: SelectResult.toImpl(results: results), distict: true)
+        return Select(impl: SelectResult.toImpl(results: results), distinct: true)
     }
     
     /** Runs the query. The returning an enumerator that returns result rows one at a time.
