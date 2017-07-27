@@ -13,11 +13,16 @@
 #import "CBLStatus.h"
 #import "CBLReplicatorConfiguration.h"  // for the options constants
 #import "CBLLog.h"
+#import "CBLReplicator+Internal.h"
 #import "c4Socket.h"
 #import <CommonCrypto/CommonDigest.h>
 #import <dispatch/dispatch.h>
 #import <memory>
 #import <netdb.h>
+
+extern "C" {
+#import "MYAnonymousIdentity.h"
+}
 
 using namespace fleece;
 using namespace fleeceapi;
@@ -42,6 +47,7 @@ static constexpr NSTimeInterval kIdleTimeout = 300.0;
     NSString* _expectedAcceptHeader;
     NSArray* _protocols;
     CBLHTTPLogic* _logic;
+    NSString* _clientCertID;
     C4Socket* _c4socket;
     NSError* _authError;
     BOOL _receiving;
@@ -145,15 +151,27 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
 - (void) setupAuth {
     Dict auth = _options[kC4ReplicatorOptionAuthentication].asDict();
-    if (auth) {
+    if (!auth)
+        return;
+
+    NSString* authType = slice2string(auth[kC4ReplicatorAuthType].asString());
+    if (authType == nil || [authType isEqualToString: @kC4AuthTypeBasic]) {
         NSString* username = slice2string(auth[kC4ReplicatorAuthUserName].asString());
         NSString* password = slice2string(auth[kC4ReplicatorAuthPassword].asString());
         if (username && password) {
             _logic.credential = [NSURLCredential credentialWithUser: username
                                                            password: password
-                                                  persistence: NSURLCredentialPersistenceNone];
+                                                     persistence: NSURLCredentialPersistenceNone];
+            return;
         }
+
+    } else if ([authType isEqualToString: @ kC4AuthTypeClientCert]) {
+        _clientCertID = slice2string(auth[kC4ReplicatorAuthClientCert].asString());
+        if (_clientCertID)
+            return;
     }
+
+    CBLWarn(Sync, @"Unknown auth type or missing parameters for auth");
 }
 
 
@@ -410,7 +428,24 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
                  challenge.protectionSpace, error.localizedDescription);
             disposition = NSURLSessionAuthChallengeCancelAuthenticationChallenge;
         }
+
+    } else if ($equal(authMethod, NSURLAuthenticationMethodClientCertificate)) {
+        // Server is checking client cert:
+        if (_clientCertID) {
+            SecIdentityRef identity = MYFindIdentity(_clientCertID);
+            if (identity) {
+                credential = [NSURLCredential credentialWithIdentity: identity
+                                                        certificates: @[]
+                                                   persistence: NSURLCredentialPersistenceNone];
+                disposition = NSURLSessionAuthChallengeUseCredential;
+                CFRelease(identity);
+            } else {
+                CBLWarn(Sync, @"Can't find SecIdentityRef with id '%@'", _clientCertID);
+                disposition = NSURLSessionAuthChallengeCancelAuthenticationChallenge;
+            }
+        }
     }
+
     completionHandler(disposition, credential);
 }
 

@@ -51,6 +51,12 @@
 		27A0C85F1E3E7AB600F68646 /* CBLSharedKeys.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */; };
 		27A8B5021EC5350A00BB4C07 /* CBLQueryEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */; };
 		27A8B5131EC5351000BB4C07 /* CBLQueryEnumerator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A8B5121EC5351000BB4C07 /* CBLQueryEnumerator.mm */; };
+		27B699FD1F2A449900782145 /* CBLClientCertAuthenticator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B699FB1F2A449800782145 /* CBLClientCertAuthenticator.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27B699FE1F2A449900782145 /* CBLClientCertAuthenticator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B699FB1F2A449800782145 /* CBLClientCertAuthenticator.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27B699FF1F2A449900782145 /* CBLClientCertAuthenticator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B699FC1F2A449800782145 /* CBLClientCertAuthenticator.m */; };
+		27B69A001F2A449900782145 /* CBLClientCertAuthenticator.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B699FC1F2A449800782145 /* CBLClientCertAuthenticator.m */; };
+		27B69A141F2A4C6D00782145 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B69A131F2A4B7400782145 /* MYAnonymousIdentity.m */; };
+		27B69A151F2A4C6D00782145 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B69A131F2A4B7400782145 /* MYAnonymousIdentity.m */; };
 		27BE3B461E4D662B0012B74A /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C6F1E1EFAF600F90659 /* Test_Assertions.m */; };
 		27BE3B4B1E4E46120012B74A /* CBLTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */; };
 		27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */; };
@@ -667,6 +673,10 @@
 		27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLSharedKeys.mm; sourceTree = "<group>"; };
 		27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLQueryEnumerator.h; path = ../CBLQueryEnumerator.h; sourceTree = "<group>"; };
 		27A8B5121EC5351000BB4C07 /* CBLQueryEnumerator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLQueryEnumerator.mm; sourceTree = "<group>"; };
+		27B699FB1F2A449800782145 /* CBLClientCertAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLClientCertAuthenticator.h; sourceTree = "<group>"; };
+		27B699FC1F2A449800782145 /* CBLClientCertAuthenticator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLClientCertAuthenticator.m; sourceTree = "<group>"; };
+		27B69A121F2A4B7400782145 /* MYAnonymousIdentity.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MYAnonymousIdentity.h; sourceTree = "<group>"; };
+		27B69A131F2A4B7400782145 /* MYAnonymousIdentity.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MYAnonymousIdentity.m; sourceTree = "<group>"; };
 		27BE3B451E4D63AF0012B74A /* CBL Swift.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL Swift.xcconfig"; sourceTree = "<group>"; };
 		27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CBLTestCase.swift; sourceTree = "<group>"; };
 		27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DatabaseTest.swift; sourceTree = "<group>"; };
@@ -1035,6 +1045,21 @@
 			path = Tests;
 			sourceTree = "<group>";
 		};
+		27D7ECFC1F2A851600828ECF /* Authenticators */ = {
+			isa = PBXGroup;
+			children = (
+				937F01DF1EFB269300060D64 /* CBLAuthenticator.h */,
+				937F01E01EFB269300060D64 /* CBLAuthenticator.m */,
+				93F5D19D1EFAE90200E2DF53 /* CBLBasicAuthenticator.h */,
+				93F5D19E1EFAE90200E2DF53 /* CBLBasicAuthenticator.m */,
+				27B699FB1F2A449800782145 /* CBLClientCertAuthenticator.h */,
+				27B699FC1F2A449800782145 /* CBLClientCertAuthenticator.m */,
+				93F5D1A41EFAEA2400E2DF53 /* CBLSessionAuthenticator.h */,
+				93F5D1A51EFAEA2400E2DF53 /* CBLSessionAuthenticator.m */,
+			);
+			name = Authenticators;
+			sourceTree = "<group>";
+		};
 		27EF6AF01E32D12C004748DF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -1095,6 +1120,8 @@
 				934F4BD11E1EF19000F90659 /* CollectionUtils.m */,
 				275FF6B61E47B2FC005F90DD /* ExceptionUtils.h */,
 				275FF6B71E47B2FC005F90DD /* ExceptionUtils.m */,
+				27B69A121F2A4B7400782145 /* MYAnonymousIdentity.h */,
+				27B69A131F2A4B7400782145 /* MYAnonymousIdentity.m */,
 				934F4BE91E1EF19000F90659 /* MYErrorUtils.h */,
 				934F4BEA1E1EF19000F90659 /* MYErrorUtils.m */,
 				934F4BEB1E1EF19000F90659 /* MYLogging.h */,
@@ -1197,18 +1224,13 @@
 		938195D91EBCD5F70032CC51 /* Replicator */ = {
 			isa = PBXGroup;
 			children = (
-				937F01DF1EFB269300060D64 /* CBLAuthenticator.h */,
-				937F01E01EFB269300060D64 /* CBLAuthenticator.m */,
-				93F5D19D1EFAE90200E2DF53 /* CBLBasicAuthenticator.h */,
-				93F5D19E1EFAE90200E2DF53 /* CBLBasicAuthenticator.m */,
 				275229C51E776BC100E630FA /* CBLReplicator.h */,
 				275229C61E776BC100E630FA /* CBLReplicator.mm */,
 				93B41CAE1F04706100A7F114 /* CBLReplicatorChange.h */,
 				93B41CAF1F04706100A7F114 /* CBLReplicatorChange.m */,
 				93DB7FEA1ED8E1C000C4F845 /* CBLReplicatorConfiguration.h */,
 				93DB7FEB1ED8E1C000C4F845 /* CBLReplicatorConfiguration.m */,
-				93F5D1A41EFAEA2400E2DF53 /* CBLSessionAuthenticator.h */,
-				93F5D1A51EFAEA2400E2DF53 /* CBLSessionAuthenticator.m */,
+				27D7ECFC1F2A851600828ECF /* Authenticators */,
 			);
 			name = Replicator;
 			sourceTree = "<group>";
@@ -1539,6 +1561,7 @@
 				937A69241F1039370058277F /* CBLQueryParameters.h in Headers */,
 				9308F40A1E64B23300F53EE4 /* Test.h in Headers */,
 				938196171EC1136E0032CC51 /* CBLFragment.h in Headers */,
+				27B699FE1F2A449900782145 /* CBLClientCertAuthenticator.h in Headers */,
 				938196251EC122F20032CC51 /* CBLDictionary+Swift.h in Headers */,
 				9380D26F1F0D8C1A007DD84A /* CBLQuerySelectResult.h in Headers */,
 				93B503671E64B085002C4680 /* CBLSharedKeys.hh in Headers */,
@@ -1632,6 +1655,7 @@
 				934F4CB11E241FB500F90659 /* CBLMisc.h in Headers */,
 				9398D9FF1E03531A00464432 /* CouchbaseLite.h in Headers */,
 				937F01E11EFB269300060D64 /* CBLAuthenticator.h in Headers */,
+				27B699FD1F2A449900782145 /* CBLClientCertAuthenticator.h in Headers */,
 				934F4CB51E241FB500F90659 /* CBLPrefix.h in Headers */,
 				9380D26E1F0D8C1A007DD84A /* CBLQuerySelectResult.h in Headers */,
 				934F4CA91E241FB500F90659 /* CBLCoreBridge.h in Headers */,
@@ -2123,6 +2147,7 @@
 				9381962C1EC15F430032CC51 /* CBLC4Document.mm in Sources */,
 				93C3984D1EC57688005A7A96 /* CBLQueryEnumerator.mm in Sources */,
 				93B41CB31F04706100A7F114 /* CBLReplicatorChange.m in Sources */,
+				27B69A001F2A449900782145 /* CBLClientCertAuthenticator.m in Sources */,
 				276740BA1EE7381E0036DE42 /* CBLTrustCheck.m in Sources */,
 				933F45F61EC2A62000863ECB /* DocumentFragment.swift in Sources */,
 				93140F031F22AA68006E18EF /* Result.swift in Sources */,
@@ -2151,6 +2176,7 @@
 				9322DCBE1F0F161A00C4ACF7 /* Joins.swift in Sources */,
 				93140F011F22AA5E006E18EF /* ResultSet.swift in Sources */,
 				937F02A41EFC7DD000060D64 /* CBLChangeListener.m in Sources */,
+				27B69A151F2A4C6D00782145 /* MYAnonymousIdentity.m in Sources */,
 				9322DCF51F14654E00C4ACF7 /* Limit.swift in Sources */,
 				93B503611E64B06E002C4680 /* CBLQueryRow.mm in Sources */,
 				93AF51C41E80A6FC00E200F0 /* CBLQueryOrdering.m in Sources */,
@@ -2285,6 +2311,7 @@
 				930AE46E1EAA6C9100E92E9A /* CBLData.mm in Sources */,
 				934F4C111E1EF19000F90659 /* CollectionUtils.m in Sources */,
 				934F4C5B1E1EF25E00F90659 /* Test.m in Sources */,
+				27B69A141F2A4C6D00782145 /* MYAnonymousIdentity.m in Sources */,
 				72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */,
 				934F4CAE1E241FB500F90659 /* CBLJSON.m in Sources */,
 				934F4CB31E241FB500F90659 /* CBLParseDate.c in Sources */,
@@ -2330,6 +2357,7 @@
 				9322DCE11F14603400C4ACF7 /* CBLQueryLimit.m in Sources */,
 				934F4C2A1E1EF19000F90659 /* MYErrorUtils.m in Sources */,
 				93DB7FEE1ED8E1C000C4F845 /* CBLReplicatorConfiguration.m in Sources */,
+				27B699FF1F2A449900782145 /* CBLClientCertAuthenticator.m in Sources */,
 				934F4C2C1E1EF19000F90659 /* MYLogging.m in Sources */,
 				934F4C701E1EFAF600F90659 /* Test_Assertions.m in Sources */,
 				9380D2701F0D8C1A007DD84A /* CBLQuerySelectResult.m in Sources */,

@@ -26,6 +26,7 @@
 
 - (void) authenticate: (NSMutableDictionary *)options {
     NSMutableDictionary *auth = [NSMutableDictionary new];
+    auth[@kC4ReplicatorAuthType] = @kC4ReplicatorAuthPassword;
     auth[@kC4ReplicatorAuthUserName] = _username;
     auth[@kC4ReplicatorAuthPassword] = _password;
     options[@kC4ReplicatorOptionAuthentication] = auth;

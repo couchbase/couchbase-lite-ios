@@ -75,4 +75,6 @@ public typealias Authenticator = CBLAuthenticator
 
 public typealias BasicAuthenticator = CBLBasicAuthenticator
 
+public typealias ClientCertAuthenticator = CBLClientCertAuthenticator
+
 public typealias SessionAuthenticator = CBLSessionAuthenticator
