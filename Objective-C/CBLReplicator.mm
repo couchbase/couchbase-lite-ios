@@ -354,19 +354,8 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     
     _rawStatus = c4Status;
     
-    CBLReplicatorActivityLevel level;
-    switch (c4Status.level) {
-        case kC4Stopped:
-            level = kCBLStopped;
-            break;
-        case kC4Idle:
-        case kC4Offline:
-            level = kCBLIdle;
-            break;
-        default:
-            level = kCBLBusy;
-            break;
-    }
+    // Note: c4Status.level is current matched with CBLReplicatorActivityLevel:
+    CBLReplicatorActivityLevel level = (CBLReplicatorActivityLevel)c4Status.level;
     CBLReplicatorProgress progress = { c4Status.progress.completed, c4Status.progress.total };
     self.status = [[CBLReplicatorStatus alloc] initWithActivity: level
                                                        progress: progress

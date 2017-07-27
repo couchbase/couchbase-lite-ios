@@ -76,11 +76,11 @@
     id listener = [repl addChangeListener: ^(CBLReplicatorChange* change) {
         typeof(self) strongSelf = wSelf;
         [strongSelf verifyChange: change errorCode: errorCode errorDomain:errorDomain];
-        if (config.continuous && change.status.activity == kCBLIdle
+        if (config.continuous && change.status.activity == kCBLReplicatorIdle
                     && change.status.progress.completed == change.status.progress.total) {
             [strongSelf->repl stop];
         }
-        if (change.status.activity == kCBLStopped) {
+        if (change.status.activity == kCBLReplicatorStopped) {
             [x fulfill];
         }
     }];
@@ -97,12 +97,12 @@
 {
     CBLReplicatorStatus* s = change.status;
     
-    static const char* const kActivityNames[5] = { "stopped", "idle", "busy" };
+    static const char* const kActivityNames[5] = { "stopped", "offline", "connecting", "idle", "busy" };
     NSLog(@"---Status: %s (%llu / %llu), lastError = %@",
           kActivityNames[s.activity], s.progress.completed, s.progress.total,
           s.error.localizedDescription);
     
-    if (s.activity == kCBLStopped) {
+    if (s.activity == kCBLReplicatorStopped) {
         if (code != 0) {
             AssertEqual(s.error.code, code);
             if (domain)
