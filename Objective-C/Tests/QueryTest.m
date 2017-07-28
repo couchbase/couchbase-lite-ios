@@ -449,36 +449,6 @@
 }
 
 
-- (void) testAggregateFunctions {
-    [self loadNumbers: 100];
-    
-    CBLQueryExpression* AVG = [CBLQueryFunction avg: [CBLQueryExpression property: @"number1"]];
-    CBLQueryExpression* CNT = [CBLQueryFunction count: [CBLQueryExpression property: @"number1"]];
-    CBLQueryExpression* MIN = [CBLQueryFunction min: [CBLQueryExpression property: @"number1"]];
-    CBLQueryExpression* MAX = [CBLQueryFunction max: [CBLQueryExpression property: @"number1"]];
-    CBLQueryExpression* SUM = [CBLQueryFunction sum: [CBLQueryExpression property: @"number1"]];
-    
-    NSArray* results = @[[CBLQuerySelectResult expression: AVG],
-                         [CBLQuerySelectResult expression: CNT],
-                         [CBLQuerySelectResult expression: MIN],
-                         [CBLQuerySelectResult expression: MAX],
-                         [CBLQuerySelectResult expression: SUM]];
-    
-    CBLQuery* q = [CBLQuery select: results
-                              from: [CBLQueryDataSource database: self.db]];
-    Assert(q);
-    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
-    {
-        AssertEqual([[r objectAtIndex:0] doubleValue], 50.5);
-        AssertEqual([[r objectAtIndex:1] integerValue], 100);
-        AssertEqual([[r objectAtIndex:2] integerValue], 1);
-        AssertEqual([[r objectAtIndex:3] integerValue], 100);
-        AssertEqual([[r objectAtIndex:4] integerValue], 5050);
-    }];
-    AssertEqual(numRows, 1u);
-}
-
-
 - (void) testGroupBy {
     NSArray* expectedStates  = @[@"AL",    @"CA",    @"CO",    @"FL",    @"IA"];
     NSArray* expectedCounts  = @[@1,       @6,       @1,       @1,       @3];
@@ -741,6 +711,212 @@
         AssertEqual([r integerForKey: @"$3"], [r integerAtIndex: 3]);
         AssertEqual([r integerForKey: @"sum"], [r integerAtIndex: 4]);
     }];
+    AssertEqual(numRows, 1u);
+}
+
+
+- (void) testAggregateFunctions {
+    [self loadNumbers: 100];
+    
+    CBLQueryExpression* AVG = [CBLQueryFunction avg: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* CNT = [CBLQueryFunction count: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* MIN = [CBLQueryFunction min: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* MAX = [CBLQueryFunction max: [CBLQueryExpression property: @"number1"]];
+    CBLQueryExpression* SUM = [CBLQueryFunction sum: [CBLQueryExpression property: @"number1"]];
+    
+    NSArray* results = @[[CBLQuerySelectResult expression: AVG],
+                         [CBLQuerySelectResult expression: CNT],
+                         [CBLQuerySelectResult expression: MIN],
+                         [CBLQuerySelectResult expression: MAX],
+                         [CBLQuerySelectResult expression: SUM]];
+    
+    CBLQuery* q = [CBLQuery select: results
+                              from: [CBLQueryDataSource database: self.db]];
+    
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+                        {
+                            AssertEqual([[r objectAtIndex:0] doubleValue], 50.5);
+                            AssertEqual([[r objectAtIndex:1] integerValue], 100);
+                            AssertEqual([[r objectAtIndex:2] integerValue], 1);
+                            AssertEqual([[r objectAtIndex:3] integerValue], 100);
+                            AssertEqual([[r objectAtIndex:4] integerValue], 5050);
+                        }];
+    AssertEqual(numRows, 1u);
+}
+
+
+- (void) testArrayFunctions {
+    CBLDocument* doc = [self createDocument:@"doc1"];
+    CBLArray* array = [[CBLArray alloc] init];
+    [array addObject: @"650-123-0001"];
+    [array addObject: @"650-123-0002"];
+    [doc setObject: array forKey: @"array"];
+    [self saveDocument: doc];
+    
+    CBLQueryExpression* ARRAY_LENGTH = [CBLQueryFunction arrayLength:
+                                        [CBLQueryExpression property: @"array"]];
+    CBLQuery* q = [CBLQuery select: @[[CBLQuerySelectResult expression: ARRAY_LENGTH]]
+                              from: [CBLQueryDataSource database: self.db]];
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+                        {
+                            AssertEqual([r integerAtIndex: 0], 2);
+                        }];
+    AssertEqual(numRows, 1u);
+    
+    CBLQueryExpression* ARRAY_CONTAINS1 = [CBLQueryFunction arrayContains: [CBLQueryExpression property: @"array"]
+                                                                    value: @"650-123-0001"];
+    CBLQueryExpression* ARRAY_CONTAINS2 = [CBLQueryFunction arrayContains: [CBLQueryExpression property: @"array"]
+                                                                    value: @"650-123-0003"];
+    q = [CBLQuery select: @[[CBLQuerySelectResult expression: ARRAY_CONTAINS1],
+                            [CBLQuerySelectResult expression: ARRAY_CONTAINS2]]
+                    from: [CBLQueryDataSource database: self.db]];
+    
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+               {
+                   AssertEqual([r booleanAtIndex: 0], YES);
+                   AssertEqual([r booleanAtIndex: 1], NO);
+               }];
+    AssertEqual(numRows, 1u);
+}
+
+
+- (void) testMathFunctions {
+    double num = 0.6;
+    CBLDocument* doc = [self createDocument:@"doc1"];
+    [doc setObject: @(num) forKey: @"number"];
+    [self saveDocument: doc];
+    
+    NSArray* expectedValues = @[@(0.6), @(acos(num)),
+                                @(asin(num)), @(atan(num)),
+                                @(atan2(num, 90.0)), @(ceil(num)),
+                                @(cos(num)), @(num * 180.0 / M_PI),
+                                @(exp(num)), @(floor(num)),
+                                @(log(num)), @(log10(num)),
+                                @(pow(num, 2)), @(num * M_PI / 180.0),
+                                @(round(num)), @(round(num * 10.0) / 10.0),
+                                @(1), @(sin(num)),
+                                @(sqrt(num)), @(tan(num)),
+                                @(trunc(num)), @(trunc(num * 10.0) / 10.0)];
+    
+    CBLQueryExpression* p = [CBLQueryExpression property: @"number"];
+    NSArray* functions = @[[CBLQueryFunction abs: p], [CBLQueryFunction acos: p],
+                           [CBLQueryFunction asin: p], [CBLQueryFunction atan: p],
+                           [CBLQueryFunction atan2: p y: @(90)], [CBLQueryFunction ceil: p],
+                           [CBLQueryFunction cos: p], [CBLQueryFunction degrees: p],
+                           [CBLQueryFunction exp: p], [CBLQueryFunction floor: p],
+                           [CBLQueryFunction ln: p], [CBLQueryFunction log: p],
+                           [CBLQueryFunction power: p exponent: @(2)], [CBLQueryFunction radians: p],
+                           [CBLQueryFunction round: p], [CBLQueryFunction round: p digits: 1],
+                           [CBLQueryFunction sign: p], [CBLQueryFunction sin: p],
+                           [CBLQueryFunction sqrt: p], [CBLQueryFunction tan: p],
+                           [CBLQueryFunction trunc: p], [CBLQueryFunction trunc: p digits: 1]];
+    
+    int index = 0;
+    for (CBLQueryFunction *f in functions) {
+        CBLQuery* q = [CBLQuery select: @[[CBLQuerySelectResult expression: f]]
+                                  from: [CBLQueryDataSource database: self.db]];
+        
+        uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+                            {
+                                double expected = [expectedValues[index] doubleValue];
+                                AssertEqual([r doubleAtIndex: 0], expected);
+                            }];
+        AssertEqual(numRows, 1u);
+        index++;
+    }
+}
+
+
+- (void) testStringFunctions {
+    NSString* str = @"  See you 18r  ";
+    CBLDocument* doc = [self createDocument:@"doc1"];
+    [doc setObject: str forKey: @"greeting"];
+    [self saveDocument: doc];
+    
+    CBLQueryExpression* p = [CBLQueryExpression property: @"greeting"];
+    
+    // Contains:
+    CBLQueryFunction* CONTAINS1 = [CBLQueryFunction contains: p substring: @"8"];
+    CBLQueryFunction* CONTAINS2 = [CBLQueryFunction contains: p substring: @"9"];
+    CBLQuery* q = [CBLQuery select: @[[CBLQuerySelectResult expression: CONTAINS1],
+                                      [CBLQuerySelectResult expression: CONTAINS2]]
+                              from: [CBLQueryDataSource database: self.db]];
+    
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+                        {
+                            AssertEqual([r booleanAtIndex: 0], YES);
+                            AssertEqual([r booleanAtIndex: 1], NO);
+                        }];
+    AssertEqual(numRows, 1u);
+    
+    // Length:
+    CBLQueryFunction* LENGTH = [CBLQueryFunction length: p];
+    q = [CBLQuery select: @[[CBLQuerySelectResult expression: LENGTH]]
+                    from: [CBLQueryDataSource database: self.db]];
+    
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+               {
+                   AssertEqual([r integerAtIndex: 0], (NSInteger)str.length);
+               }];
+    AssertEqual(numRows, 1u);
+    
+    // Lower, Ltrim, Rtrim, Trim, Upper:
+    CBLQueryFunction* LOWER = [CBLQueryFunction lower: p];
+    CBLQueryFunction* LTRIM = [CBLQueryFunction ltrim: p];
+    CBLQueryFunction* RTRIM = [CBLQueryFunction rtrim: p];
+    CBLQueryFunction* TRIM = [CBLQueryFunction trim: p];
+    CBLQueryFunction* UPPER = [CBLQueryFunction upper: p];
+    
+    q = [CBLQuery select: @[[CBLQuerySelectResult expression: LOWER],
+                            [CBLQuerySelectResult expression: LTRIM],
+                            [CBLQuerySelectResult expression: RTRIM],
+                            [CBLQuerySelectResult expression: TRIM],
+                            [CBLQuerySelectResult expression: UPPER]]
+                    from: [CBLQueryDataSource database: self.db]];
+    
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+               {
+                   AssertEqualObjects([r stringAtIndex: 0], [str lowercaseString]);
+                   AssertEqualObjects([r stringAtIndex: 1], @"See you 18r  ");
+                   AssertEqualObjects([r stringAtIndex: 2], @"  See you 18r");
+                   AssertEqualObjects([r stringAtIndex: 3], @"See you 18r");
+                   AssertEqualObjects([r stringAtIndex: 4], [str uppercaseString]);
+               }];
+    AssertEqual(numRows, 1u);
+}
+
+
+- (void) testTypeFunctions {
+    CBLDocument* doc = [self createDocument:@"doc1"];
+    [doc setObject: [[CBLArray alloc] initWithArray: @[@"a", @"b"]] forKey: @"array"];
+    [doc setObject: [[CBLDictionary alloc] initWithDictionary: @{@"foo": @"bar"}] forKey: @"dictionary"];
+    [doc setObject: @(3.14) forKey: @"number"];
+    [doc setObject: @"string" forKey: @"string"];
+    [self saveDocument: doc];
+    
+    CBLQueryExpression* ARRAY = [CBLQueryExpression property: @"array"];
+    CBLQueryExpression* DICT = [CBLQueryExpression property: @"dictionary"];
+    CBLQueryExpression* NUM = [CBLQueryExpression property: @"number"];
+    CBLQueryExpression* STR = [CBLQueryExpression property: @"string"];
+    
+    CBLQueryFunction* ISARRAY = [CBLQueryFunction isArray: ARRAY];
+    CBLQueryFunction* ISDICT = [CBLQueryFunction isDictionary: DICT];
+    CBLQueryFunction* ISNUMBER = [CBLQueryFunction isNumber: NUM];
+    CBLQueryFunction* ISSTR = [CBLQueryFunction isString: STR];
+    
+    CBLQuery* q = [CBLQuery select: @[[CBLQuerySelectResult expression: ISARRAY],
+                                      [CBLQuerySelectResult expression: ISDICT],
+                                      [CBLQuerySelectResult expression: ISNUMBER],
+                                      [CBLQuerySelectResult expression: ISSTR]]
+                    from: [CBLQueryDataSource database: self.db]];
+    
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+                        {
+                            AssertEqual([r booleanAtIndex: 0], YES);
+                            AssertEqual([r booleanAtIndex: 1], YES);
+                            AssertEqual([r booleanAtIndex: 2], YES);
+                            AssertEqual([r booleanAtIndex: 3], YES);
+                        }];
     AssertEqual(numRows, 1u);
 }
 

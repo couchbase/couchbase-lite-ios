@@ -240,7 +240,7 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 
 @interface CBLQueryFunction () <CBLQueryJSONEncoding>
 
-- (instancetype) initWithFunction: (NSString*)function parameter: (id)param;
+- (instancetype) initWithFunction: (NSString*)function params: (nullable NSArray*)params;
 
 @end
 
