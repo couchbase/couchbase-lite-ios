@@ -367,30 +367,6 @@ class QueryTest: CBLTestCase {
     }
     
     
-    func testAggregateFunctions() throws {
-        try loadNumbers(100)
-        
-        let AVG = SelectResult.expression(Function.avg(Expression.property("number1")))
-        let CNT = SelectResult.expression(Function.count(Expression.property("number1")))
-        let MIN = SelectResult.expression(Function.min(Expression.property("number1")))
-        let MAX = SelectResult.expression(Function.max(Expression.property("number1")))
-        let SUM = SelectResult.expression(Function.sum(Expression.property("number1")))
-        
-        let q = Query
-            .select(AVG, CNT, MIN, MAX, SUM)
-            .from(DataSource.database(db))
-        
-        let numRow = try verifyQuery(q, block: { (n, r) in
-            XCTAssertEqual(r.double(at: 0), 50.5)
-            XCTAssertEqual(r.int(at: 1), 100)
-            XCTAssertEqual(r.int(at: 2), 1)
-            XCTAssertEqual(r.int(at: 3), 100)
-            XCTAssertEqual(r.int(at: 4), 5050)
-        })
-        XCTAssertEqual(numRow, 1)
-    }
-    
-    
     func testGroupBy() throws {
         var expectedStates  = ["AL",    "CA",    "CO",    "FL",    "IA"]
         var expectedCounts  = [1,       6,       1,       1,       3]
@@ -640,6 +616,199 @@ class QueryTest: CBLTestCase {
             XCTAssertEqual(r.int(forKey: "min"), r.int(at: 2))
             XCTAssertEqual(r.int(forKey: "$3"), r.int(at: 3))
             XCTAssertEqual(r.int(forKey: "sum"), r.int(at: 4))
+        })
+        XCTAssertEqual(numRow, 1)
+    }
+    
+    
+    func testAggregateFunctions() throws {
+        try loadNumbers(100)
+        
+        let AVG = SelectResult.expression(Function.avg(Expression.property("number1")))
+        let CNT = SelectResult.expression(Function.count(Expression.property("number1")))
+        let MIN = SelectResult.expression(Function.min(Expression.property("number1")))
+        let MAX = SelectResult.expression(Function.max(Expression.property("number1")))
+        let SUM = SelectResult.expression(Function.sum(Expression.property("number1")))
+        
+        let q = Query
+            .select(AVG, CNT, MIN, MAX, SUM)
+            .from(DataSource.database(db))
+        
+        let numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.double(at: 0), 50.5)
+            XCTAssertEqual(r.int(at: 1), 100)
+            XCTAssertEqual(r.int(at: 2), 1)
+            XCTAssertEqual(r.int(at: 3), 100)
+            XCTAssertEqual(r.int(at: 4), 5050)
+        })
+        XCTAssertEqual(numRow, 1)
+    }
+    
+    
+    func testArrayFunctions() throws {
+        let doc = Document("doc1")
+        let array = ArrayObject()
+        array.add("650-123-0001")
+        array.add("650-123-0002")
+        doc.set(array, forKey: "array")
+        try self.db.save(doc)
+        
+        let ARRAY_LENGTH = Function.arrayLength(Expression.property("array"))
+        var q = Query
+            .select(SelectResult.expression(ARRAY_LENGTH))
+            .from(DataSource.database(db))
+        
+        var numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.int(at: 0), 2)
+        })
+        XCTAssertEqual(numRow, 1)
+        
+        let ARRAY_CONTAINS1 = Function.arrayContains(Expression.property("array"), value: "650-123-0001")
+        let ARRAY_CONTAINS2 = Function.arrayContains(Expression.property("array"), value: "650-123-0003")
+        q = Query
+            .select(SelectResult.expression(ARRAY_CONTAINS1), SelectResult.expression(ARRAY_CONTAINS2))
+            .from(DataSource.database(db))
+        
+        numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.boolean(at: 0), true)
+            XCTAssertEqual(r.boolean(at: 1), false)
+        })
+        XCTAssertEqual(numRow, 1)
+    }
+    
+    func testMathFunctions() throws {
+        let num = 0.6
+        let doc = Document("doc1")
+        doc.set(num, forKey: "number")
+        try db.save(doc)
+        
+        let expectedValues  = [0.6, acos(num),
+                               asin(num), atan(num),
+                               atan2(num, 90.0), ceil(num),
+                               cos(num), num * 180.0 / Double.pi,
+                               exp(num), floor(num),
+                               log(num), log10(num),
+                               pow(num, 2), num * Double.pi / 180.0,
+                               round(num), round(num * 10.0) / 10.0,
+                               1, sin(num),
+                               sqrt(num), tan(num),
+                               trunc(num), trunc(num * 10.0) / 10.0]
+        
+        let p = Expression.property("number")
+        let functions = [Function.abs(p), Function.acos(p),
+                         Function.asin(p), Function.atan(p),
+                         Function.atan2(x: p, y: 90), Function.ceil(p),
+                         Function.cos(p), Function.degrees(p),
+                         Function.exp(p), Function.floor(p),
+                         Function.ln(p), Function.log(p),
+                         Function.power(base: p, exponent: 2), Function.radians(p),
+                         Function.round(p), Function.round(p, digits: 1),
+                         Function.sign(p), Function.sin(p),
+                         Function.sqrt(p), Function.tan(p),
+                         Function.trunc(p), Function.trunc(p, digits: 1)]
+        
+        var index = 0
+        for f in functions {
+            let q = Query
+                .select(SelectResult.expression(f))
+                .from(DataSource.database(db))
+            let numRow = try verifyQuery(q, block: { (n, r) in
+                let expected = expectedValues[index]
+                XCTAssertEqual(r.double(at: 0), expected)
+            })
+            XCTAssertEqual(numRow, 1)
+            index = index + 1
+        }
+    }
+    
+    func testStringFunctions() throws {
+        let str = "  See you 18r  "
+        let doc = Document("doc1")
+        doc.set(str, forKey: "greeting")
+        try db.save(doc)
+        
+        let p = Expression.property("greeting")
+        
+        // Contains:
+        let CONTAINS1 = Function.contains(p, substring: "8")
+        let CONTAINS2 = Function.contains(p, substring: "9")
+        var q = Query
+            .select(SelectResult.expression(CONTAINS1), SelectResult.expression(CONTAINS2))
+            .from(DataSource.database(db))
+        
+        var numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.boolean(at: 0), true)
+            XCTAssertEqual(r.boolean(at: 1), false)
+        })
+        XCTAssertEqual(numRow, 1)
+        
+        // Length:
+        let LENGTH = Function.length(p)
+        q = Query
+            .select(SelectResult.expression(LENGTH))
+            .from(DataSource.database(db))
+        
+        numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.int(at: 0), str.characters.count)
+        })
+        XCTAssertEqual(numRow, 1)
+     
+        // Lower, Ltrim, Rtrim, Trim, Upper
+        let LOWER = Function.lower(p)
+        let LTRIM = Function.ltrim(p)
+        let RTRIM = Function.rtrim(p)
+        let TRIM = Function.trim(p)
+        let UPPER = Function.upper(p)
+        
+        q = Query
+            .select(SelectResult.expression(LOWER),
+                    SelectResult.expression(LTRIM),
+                    SelectResult.expression(RTRIM),
+                    SelectResult.expression(TRIM),
+                    SelectResult.expression(UPPER))
+            .from(DataSource.database(db))
+        
+        numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.string(at: 0), str.lowercased())
+            XCTAssertEqual(r.string(at: 1), "See you 18r  ")
+            XCTAssertEqual(r.string(at: 2), "  See you 18r")
+            XCTAssertEqual(r.string(at: 3), "See you 18r")
+            XCTAssertEqual(r.string(at: 4), str.uppercased())
+        })
+        XCTAssertEqual(numRow, 1)
+    }
+    
+    
+    func testTypeFunctions() throws {
+        let doc = Document("doc1")
+        doc.set(ArrayObject(array: ["a", "b"]), forKey: "array")
+        doc.set(DictionaryObject(dictionary: ["foo": "bar"]), forKey: "dictionary")
+        doc.set(3.14, forKey: "number")
+        doc.set("string", forKey: "string")
+        try db.save(doc)
+        
+        let ARRAY = Expression.property("array")
+        let DICT = Expression.property("dictionary")
+        let NUM = Expression.property("number")
+        let STR = Expression.property("string")
+        
+        let ISARRAY = Function.isArray(ARRAY)
+        let ISDICT = Function.isDictionary(DICT)
+        let ISNUMBER = Function.isNumber(NUM)
+        let ISSTRING = Function.isString(STR)
+        
+        let q = Query
+            .select(SelectResult.expression(ISARRAY),
+                    SelectResult.expression(ISDICT),
+                    SelectResult.expression(ISNUMBER),
+                    SelectResult.expression(ISSTRING))
+            .from(DataSource.database(db))
+        
+        let numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.boolean(at: 0), true)
+            XCTAssertEqual(r.boolean(at: 1), true)
+            XCTAssertEqual(r.boolean(at: 2), true)
+            XCTAssertEqual(r.boolean(at: 3), true)
         })
         XCTAssertEqual(numRow, 1)
     }
