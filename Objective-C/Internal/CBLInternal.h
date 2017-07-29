@@ -34,12 +34,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// CBLDatabase:
 
-
 @interface CBLDatabase ()
 
-@property (readonly, nonatomic, nullable) C4Database* c4db;
-@property (readonly, nonatomic) NSMapTable<NSURL*,CBLReplicator*>* replications;
-@property (readonly, nonatomic) NSMutableSet* activeReplications;
+@property (atomic, readonly, nullable) C4Database* c4db;
+@property (atomic, readonly) NSMapTable<NSURL*,CBLReplicator*>* replications;
+@property (atomic, readonly) NSMutableSet* activeReplications;
+@property (atomic, readonly) NSObject* lock;
 
 #ifdef __cplusplus
 @property (readonly, nonatomic) cbl::SharedKeys sharedKeys;
@@ -49,7 +49,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (bool) resolveConflictInDocument: (NSString*)docID
                      usingResolver: (nullable id<CBLConflictResolver>)resolver
                              error: (NSError**)outError;
-
 @end
 
 

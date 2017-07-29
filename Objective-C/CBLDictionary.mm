@@ -20,8 +20,8 @@
 @implementation CBLDictionary {
     NSMutableDictionary<NSString*, id>* _dict;
     NSMapTable* _changeListeners;
-    BOOL _changed;
     NSArray* _keys; // key cache
+    NSObject* _lock;
 }
 
 
@@ -32,6 +32,14 @@
     return [[self alloc] init];
 }
 
+
+- /* internal */ (instancetype) initWithFleeceData: (nullable CBLFLDict*)data {
+    self = [super initWithFleeceData: data];
+    if (self) {
+        _lock = [[NSObject alloc] init];
+    }
+    return self;
+}
 
 - (instancetype) init {
     return [self initWithFleeceData: nil];
@@ -51,101 +59,115 @@
 
 
 - (NSUInteger) count {
-    if (!_changed)
-        return super.count;
-    
-    __block NSUInteger count = _dict.count;
-    for (NSString* key in super.keys) {
-        if (!_dict[key])
-            count += 1;
+    CBL_LOCK(_lock) {
+        if (!_changed)
+            return super.count;
+        
+        __block NSUInteger count = _dict.count;
+        for (NSString* key in super.keys) {
+            if (!_dict[key])
+                count += 1;
+        }
+        
+        [_dict enumerateKeysAndObjectsUsingBlock: ^(NSString *key, id value, BOOL *stop) {
+            if (value == kCBLRemovedValue)
+                count -= 1;
+        }];
+        return count;
     }
-    
-    [_dict enumerateKeysAndObjectsUsingBlock: ^(NSString *key, id value, BOOL *stop) {
-        if (value == kCBLRemovedValue)
-            count -= 1;
-    }];
-    return count;
 }
 
 
 - (NSArray*) keys {
-    if (_keys)
+    CBL_LOCK(_lock) {
+        if (_keys)
+            return _keys;
+        
+        NSArray* superKeys = super.keys;
+        if (!_changed)
+            return superKeys;
+        
+        if (superKeys.count == 0) {
+            _keys = _dict.allKeys;
+        } else {
+            NSMutableSet* result = [NSMutableSet setWithArray: superKeys];
+            [_dict enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
+                if (value != kCBLRemovedValue)
+                    [result addObject: key];
+                else
+                    [result removeObject: key];
+            }];
+            _keys = result.allObjects;
+        }
         return _keys;
-
-    NSArray* superKeys = super.keys;
-    if (!_changed)
-        return superKeys;
-
-    if (superKeys.count == 0) {
-        _keys = _dict.allKeys;
-    } else {
-        NSMutableSet* result = [NSMutableSet setWithArray: superKeys];
-        [_dict enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
-            if (value != kCBLRemovedValue)
-                [result addObject: key];
-            else
-                [result removeObject: key];
-        }];
-        _keys = result.allObjects;
     }
-    return _keys;
 }
 
 
 - (nullable id) objectForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value) {
-        value = [super objectForKey: key];
-        if ([value isKindOfClass: [CBLReadOnlyDictionary class]]) {
-            value = [value cbl_toCBLObject];
-            [self setValue: value forKey: key isChange: NO];
-        } else if ([value isKindOfClass: [CBLReadOnlyArray class]]) {
-            value = [value cbl_toCBLObject];
-            [self setValue: value forKey: key isChange: NO];
-        }
-    } else if (value == kCBLRemovedValue)
-        value = nil;
-    return value;
+    CBL_LOCK(_lock) {
+        id value = _dict[key];
+        if (!value) {
+            value = [super objectForKey: key];
+            if ([value isKindOfClass: [CBLReadOnlyDictionary class]]) {
+                value = [value cbl_toCBLObject];
+                [self setValue: value forKey: key isChange: NO];
+            } else if ([value isKindOfClass: [CBLReadOnlyArray class]]) {
+                value = [value cbl_toCBLObject];
+                [self setValue: value forKey: key isChange: NO];
+            }
+        } else if (value == kCBLRemovedValue)
+            value = nil;
+        return value;
+    }
 }
 
 
 - (BOOL) booleanForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value)
-        return [super booleanForKey: key];
-    else {
-        if (value == kCBLRemovedValue)
-            return NO;
-        else
-            return [CBLData booleanValueForObject: value];
+    CBL_LOCK(_lock) {
+        id value = _dict[key];
+        if (!value)
+            return [super booleanForKey: key];
+        else {
+            if (value == kCBLRemovedValue)
+                return NO;
+            else
+                return [CBLData booleanValueForObject: value];
+        }
     }
 }
 
 
 - (NSInteger) integerForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value)
-        return [super integerForKey: key];
-    else
-        return [$castIf(NSNumber, value) integerValue];
+    CBL_LOCK(_lock) {
+        id value = _dict[key];
+        if (!value)
+            return [super integerForKey: key];
+        else
+            return [$castIf(NSNumber, value) integerValue];
+    }
 }
 
 
 - (float) floatForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value)
-        return [super floatForKey: key];
-    else
-        return [$castIf(NSNumber, value) floatValue];
+    CBL_LOCK(_lock) {
+        id value = _dict[key];
+        if (!value)
+            return [super floatForKey: key];
+        else
+            return [$castIf(NSNumber, value) floatValue];
+    }
 }
 
 
 - (double) doubleForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value)
-        return [super doubleForKey: key];
-    else
-        return [$castIf(NSNumber, value) doubleValue];
+    CBL_LOCK(_lock) {
+        id value = _dict[key];
+        if (!value)
+            return [super doubleForKey: key];
+        else
+            return [$castIf(NSNumber, value) doubleValue];
+    }
 }
 
 
@@ -180,27 +202,31 @@
 
 
 - (BOOL) containsObjectForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value)
-        return [super containsObjectForKey: key];
-    else
-        return value != kCBLRemovedValue;
+    CBL_LOCK(_lock) {
+        id value = _dict[key];
+        if (!value)
+            return [super containsObjectForKey: key];
+        else
+            return value != kCBLRemovedValue;
+    }
 }
 
 
 - (NSDictionary<NSString*,id>*) toDictionary {
-    NSDictionary* backingData = [super toDictionary];
-    if (_dict.count == 0)
-        return backingData; // No changes
-
-    NSMutableDictionary* result = [backingData mutableCopy];
-    [_dict enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
-        if (value == kCBLRemovedValue)
-            result[key] = nil; // Remove key
-        else
-            result[key] = [value cbl_toPlainObject];
-    }];
-    return result;
+    CBL_LOCK(_lock) {
+        NSDictionary* backingData = [super toDictionary];
+        if (_dict.count == 0)
+            return backingData; // No changes
+        
+        NSMutableDictionary* result = [backingData mutableCopy];
+        [_dict enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
+            if (value == kCBLRemovedValue)
+                result[key] = nil; // Remove key
+            else
+                result[key] = [value cbl_toPlainObject];
+        }];
+        return result;
+    }
 }
 
 
@@ -227,28 +253,33 @@
             result[key] = kCBLRemovedValue;
     };
     
-    _dict = result;
-    
-    [self setChanged];
+    CBL_LOCK(_lock) {
+        _dict = result;
+        [self setChanged];
+    }
 }
 
 
 - (void) setObject: (nullable id)value forKey: (NSString*)key {
-    if (!value) value = [NSNull null]; // nil conversion only for apple platform
-    id oldValue = [self objectForKey: key];
-    value = [value cbl_toCBLObject];
-    if (!$equal(value, oldValue)) {
-        [self setValue: value forKey: key isChange: YES];
-        _keys = nil; // Reset key cache
+    CBL_LOCK(_lock) {
+        if (!value) value = [NSNull null]; // nil conversion only for apple platform
+        id oldValue = [self objectForKey: key];
+        value = [value cbl_toCBLObject];
+        if (!$equal(value, oldValue)) {
+            [self setValue: value forKey: key isChange: YES];
+            _keys = nil; // Reset key cache
+        }
     }
 }
 
 
 - (void) removeObjectForKey:(NSString *)key {
-    id value = [super containsObjectForKey: key] ? kCBLRemovedValue : nil;
-    if (value != _dict[key]) {
-        [self setValue: value forKey: key isChange: YES];
-        _keys = nil; // Reset key cache
+    CBL_LOCK(_lock) {
+        id value = [super containsObjectForKey: key] ? kCBLRemovedValue : nil;
+        if (value != _dict[key]) {
+            [self setValue: value forKey: key isChange: YES];
+            _keys = nil; // Reset key cache
+        }
     }
 }
 
@@ -260,10 +291,12 @@
                                   objects: (id __unsafe_unretained [])buffer
                                     count: (NSUInteger)len
 {
-    if (!_changed)
-        return [super countByEnumeratingWithState: state objects: buffer count: len];
-    else
-        return [[self keys] countByEnumeratingWithState: state objects: buffer count: len];
+    CBL_LOCK(_lock) {
+        if (!_changed)
+            return [super countByEnumeratingWithState: state objects: buffer count: len];
+        else
+            return [[self keys] countByEnumeratingWithState: state objects: buffer count: len];
+    }
 }
 
 
@@ -280,22 +313,24 @@
 
 
 - (BOOL) isEmpty {
-    if (!_changed)
-        return super.isEmpty;
-    
-    for (NSString* key in super.keys) {
-        if (!_dict[key])
-            return NO;
-    }
-    
-    __block BOOL isEmpty = YES;
-    [_dict enumerateKeysAndObjectsUsingBlock: ^(NSString *key, id value, BOOL *stop) {
-        if (value != kCBLRemovedValue) {
-            isEmpty = NO;
-            *stop = YES;
+    CBL_LOCK(_lock) {
+        if (!_changed)
+            return super.isEmpty;
+        
+        for (NSString* key in super.keys) {
+            if (!_dict[key])
+                return NO;
         }
-    }];
-    return isEmpty;
+        
+        __block BOOL isEmpty = YES;
+        [_dict enumerateKeysAndObjectsUsingBlock: ^(NSString *key, id value, BOOL *stop) {
+            if (value != kCBLRemovedValue) {
+                isEmpty = NO;
+                *stop = YES;
+            }
+        }];
+        return isEmpty;
+    }
 }
 
 
@@ -303,6 +338,7 @@
 
 
 - (void) setValue: (id)value forKey: (NSString*)key isChange: (BOOL)isChange {
+    //  This method is always called under _lock.
     if (!_dict)
         _dict = [NSMutableDictionary dictionary];
     
@@ -316,8 +352,16 @@
 
 
 - (void) setChanged {
+    //  This is always called under _lock.
     if (!_changed) {
         _changed = YES;
+    }
+}
+
+
+- (BOOL) changed {
+    CBL_LOCK(_lock) {
+        return _changed;
     }
 }
 
@@ -329,21 +373,22 @@
                  database: (CBLDatabase*)database
                     error: (NSError**)outError
 {
-    NSArray* keys = self.keys;
-    FLEncoder_BeginDict(encoder, keys.count);
-    for (NSString* key in keys) {
-        id value = [self objectForKey: key];
-        if (value != kCBLRemovedValue) {
-            CBLStringBytes bKey(key);
-            FLEncoder_WriteKey(encoder, bKey);
-            if (![value cbl_fleeceEncode: encoder database: database error: outError])
-                return NO;
+    CBL_LOCK(_lock) {
+        NSArray* keys = self.keys;
+        FLEncoder_BeginDict(encoder, keys.count);
+        for (NSString* key in keys) {
+            id value = [self objectForKey: key];
+            if (value != kCBLRemovedValue) {
+                CBLStringBytes bKey(key);
+                FLEncoder_WriteKey(encoder, bKey);
+                if (![value cbl_fleeceEncode: encoder database: database error: outError])
+                    return NO;
+            }
         }
+        FLEncoder_EndDict(encoder);
+        return YES;
     }
-    FLEncoder_EndDict(encoder);
-    return YES;
 }
-
 
 
 @end

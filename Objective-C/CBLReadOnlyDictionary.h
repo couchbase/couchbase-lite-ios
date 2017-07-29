@@ -19,7 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol CBLReadOnlyDictionary <NSObject, CBLReadOnlyDictionaryFragment, NSFastEnumeration>
 
 /** The number of entries in the dictionary. */
-@property (readonly, nonatomic) NSUInteger count;
+@property (atomic, readonly) NSUInteger count;
 
 // Note:
 // The allKeys property is not in the spec yet. Beside the functionality,
@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 // https://github.com/couchbaselabs/couchbase-lite-apiv2/issues/94
 
 /** An array containing all keys, or an empty array if the dictionary has no entries. */
-@property (readonly, copy, nonatomic) NSArray<NSString*>* keys;
+@property (atomic, readonly, copy) NSArray<NSString*>* keys;
 
 /** Gets a property's value as an object. The object types are CBLBlob, CBLReadOnlyArray,
     CBLReadOnlyDictionary, NSNumber, or NSString based on the underlying data type; or nil if the

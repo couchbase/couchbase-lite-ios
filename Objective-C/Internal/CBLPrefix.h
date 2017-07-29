@@ -16,7 +16,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+    
+#ifndef CBL_THREADSAFE
+#define CBL_THREADSAFE 1
+#endif
+    
+#import "CBLThreadSafe.h"
 #import "CollectionUtils.h"
 #import "Test.h"
 

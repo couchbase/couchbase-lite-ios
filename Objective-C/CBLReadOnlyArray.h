@@ -18,7 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol CBLReadOnlyArray <NSObject, CBLReadOnlyArrayFragment, NSFastEnumeration>
 
 /** Gets a number of the items in the array. */
-@property (readonly) NSUInteger count;
+@property (atomic, readonly) NSUInteger count;
 
 /** Gets value at the given index as an object. The object types are CBLBlob,
     CBLReadOnlyArray, CBLReadOnlyDictionary, NSNumber, or NSString based on the underlying

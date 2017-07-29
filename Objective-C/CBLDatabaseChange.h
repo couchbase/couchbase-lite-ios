@@ -12,9 +12,9 @@
 @interface CBLDatabaseChange : NSObject
 
 /** The ID of the document that changed. */
-@property (readonly, nonatomic) NSArray* documentIDs;
+@property (atomic, readonly) NSArray* documentIDs;
 
 /** check whether the changes are from the current database object or not. */
-@property (readonly, nonatomic) BOOL isExternal;
+@property (atomic, readonly) BOOL isExternal;
 
 @end

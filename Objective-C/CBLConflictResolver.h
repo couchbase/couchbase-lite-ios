@@ -13,11 +13,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLConflict : NSObject
 
-@property (nonatomic, readonly) CBLReadOnlyDocument* mine;
+@property (atomic, readonly) CBLReadOnlyDocument* mine;
 
-@property (nonatomic, readonly) CBLReadOnlyDocument* theirs;
+@property (atomic, readonly) CBLReadOnlyDocument* theirs;
 
-@property (nonatomic, readonly, nullable) CBLReadOnlyDocument* base;
+@property (atomic, readonly, nullable) CBLReadOnlyDocument* base;
 
 @end
 
