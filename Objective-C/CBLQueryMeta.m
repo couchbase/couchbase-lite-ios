@@ -8,6 +8,7 @@
 
 #import "CBLQueryMeta.h"
 #import "CBLQuery+Internal.h"
+#import "CBLPropertyExpression.h"
 
 #define kCBLQueryMetaIDKeyPath @"_id"
 #define kCBLQueryMetaIDColumnName @"id"

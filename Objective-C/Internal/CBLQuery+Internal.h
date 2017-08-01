@@ -21,8 +21,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/////
-
 @protocol CBLQueryJSONEncoding <NSObject>
 
 /** Encode as a JSON object. */
@@ -30,7 +28,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-/////
 
 @interface CBLQuery () <NSCopying>
 
@@ -72,8 +69,6 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
-/////
-
 @interface CBLQueryDataSource () <CBLQueryJSONEncoding>
 
 @property (nonatomic, readonly) id source;
@@ -84,7 +79,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-/////
 
 @interface CBLQuerySelectResult () <CBLQueryJSONEncoding>
 
@@ -94,7 +88,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-/////
 
 @interface CBLQueryJoin () <CBLQueryJSONEncoding>
 
@@ -104,7 +97,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-/////
 
 @interface CBLQueryOrdering () <CBLQueryJSONEncoding>
 
@@ -114,13 +106,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+
 @interface CBLQuerySortOrder ()
 
 @property (nonatomic, readonly) BOOL isAscending;
 
 @end
 
-/////
 
 @interface CBLQueryExpression () <CBLQueryJSONEncoding>
 
@@ -129,114 +121,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-/////
-
-@interface CBLAggregateExpression: CBLQueryExpression
-
-@property(nonatomic, readonly) NSArray* subexpressions;
-
-- (instancetype)initWithExpressions: (NSArray*)subs;
-
-@end
-
-/////
-
-typedef NS_ENUM(NSInteger, CBLBinaryExpType) {
-    CBLAddBinaryExpType,
-    CBLBetweenBinaryExpType,
-    CBLDivideBinaryExpType,
-    CBLEqualToBinaryExpType,
-    CBLGreaterThanBinaryExpType,
-    CBLGreaterThanOrEqualToBinaryExpType,
-    CBLInBinaryExpType,
-    CBLIsBinaryExpType,
-    CBLIsNotBinaryExpType,
-    CBLLessThanBinaryExpType,
-    CBLLessThanOrEqualToBinaryExpType,
-    CBLLikeBinaryExpType,
-    CBLMatchesBinaryExpType,
-    CBLModulusBinaryExpType,
-    CBLMultiplyBinaryExpType,
-    CBLNotEqualToBinaryExpType,
-    CBLSubtractBinaryExpType,
-    CBLRegexLikeBinaryExpType
-};
-
-@interface CBLBinaryExpression: CBLQueryExpression
-
-@property(nonatomic, readonly) id lhs;
-@property(nonatomic, readonly) id rhs;
-@property(nonatomic, readonly) CBLBinaryExpType type;
-
-- (instancetype) initWithLeftExpression: (id)lhs
-                        rightExpression: (id)rhs
-                                   type: (CBLBinaryExpType)type;
-
-@end
-
-/////
-
-typedef NS_ENUM(NSInteger, CBLCompoundExpType) {
-    CBLAndCompundExpType,
-    CBLOrCompundExpType,
-    CBLNotCompundExpType
-};
-
-@interface CBLCompoundExpression: CBLQueryExpression
-
-@property(nonatomic, readonly) NSArray* subexpressions;
-@property(nonatomic, readonly) CBLCompoundExpType type;
-
-
-- (instancetype) initWithExpressions: (NSArray*)subs type: (CBLCompoundExpType)type;
-
-@end
-
-/////
-
-@interface CBLPropertyExpression : CBLQueryExpression
-
-@property(nonatomic, readonly) NSString* keyPath;
-
-@property(nonatomic, readonly) NSString* columnName;
-
-@property(nonatomic, readonly, nullable) NSString* from; // Data Source Alias
-
-- (instancetype) initWithKeyPath: (NSString*)keyPath
-                      columnName: (nullable NSString*)columnName
-                            from: (nullable NSString*)from;
-
-@end
-
-typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
-    CBLMissingUnaryExpType,
-    CBLNotMissingUnaryExpType,
-    CBLNotNullUnaryExpType,
-    CBLNullUnaryExpType
-};
-
-/////
-
-@interface CBLUnaryExpression : CBLQueryExpression
-
-@property(nonatomic, readonly) CBLUnaryExpType type;
-@property(nonatomic, readonly) id operand;
-
-- (instancetype) initWithExpression: (id)operand type: (CBLUnaryExpType)type;
-
-@end
-
-/////
-
-@interface CBLParameterExpression : CBLQueryExpression
-
-@property(nonatomic, readonly) id name;
-
-- (instancetype) initWithName: (id)name;
-
-@end
-
-/////
 
 @interface CBLQueryFunction () <CBLQueryJSONEncoding>
 
@@ -244,7 +128,6 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 
 @end
 
-/////
 
 @interface CBLQueryParameters () <NSCopying>
 
@@ -254,7 +137,6 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 
 @end
 
-/////
 
 @interface CBLQueryMeta ()
 
@@ -262,7 +144,6 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 
 @end
 
-/////
 
 @interface CBLQueryLimit () <CBLQueryJSONEncoding>
 

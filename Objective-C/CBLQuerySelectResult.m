@@ -8,6 +8,7 @@
 
 #import "CBLQuerySelectResult.h"
 #import "CBLQuery+Internal.h"
+#import "CBLPropertyExpression.h"
 
 @implementation CBLQuerySelectResult {
     CBLQueryExpression* _expression;

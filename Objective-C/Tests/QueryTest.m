@@ -921,6 +921,54 @@
 }
 
 
+- (void) testQuantifiedOperators {
+    [self loadJSONResource: @"names_100"];
+    
+    CBLQueryExpression* DOC_ID  = [CBLQueryExpression meta].id;
+    CBLQuerySelectResult* RES_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
+    
+    CBLQueryExpression* LIKES  = [CBLQueryExpression property: @"likes"];
+    CBLQueryExpression* VAR_LIKE = [CBLQueryExpression variableNamed: @"LIKE"];
+    
+    // ANY:
+    CBLQuery* q = [CBLQuery select: @[RES_DOC_ID]
+                              from: [CBLQueryDataSource database: self.db]
+                             where: [CBLQueryExpression any: @"LIKE"
+                                                         in: LIKES
+                                                  satisfies: [VAR_LIKE equalTo: @"climbing"]]];
+    
+    NSArray* expected = @[@"doc-017", @"doc-021", @"doc-023", @"doc-045", @"doc-060"];
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+    {
+        AssertEqualObjects([r stringAtIndex: 0], expected[n-1]);
+    }];
+    AssertEqual(numRows, expected.count);
+    
+    // EVERY:
+    q = [CBLQuery select: @[RES_DOC_ID]
+                    from: [CBLQueryDataSource database: self.db]
+                   where: [CBLQueryExpression every: @"LIKE"
+                                                 in: LIKES
+                                          satisfies: [VAR_LIKE equalTo: @"taxes"]]];
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+    {
+        if (n == 1) {
+            AssertEqualObjects([r stringAtIndex: 0], @"doc-007");
+        }
+    }];
+    AssertEqual(numRows, 42u);
+    
+    // ANY AND EVERY
+    q = [CBLQuery select: @[RES_DOC_ID]
+                    from: [CBLQueryDataSource database: self.db]
+                   where: [CBLQueryExpression anyAndEvery: @"LIKE"
+                                                       in: LIKES
+                                                satisfies: [VAR_LIKE equalTo: @"taxes"]]];
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) { }];
+    AssertEqual(numRows, 0u);
+}
+
+
 - (void) testLiveQuery {
     [self loadNumbers: 100];
     

@@ -9,6 +9,15 @@
 #import "CBLQueryExpression.h"
 #import "CBLQuery+Internal.h"
 
+#import "CBLAggregateExpression.h"
+#import "CBLBinaryExpression.h"
+#import "CBLCompoundExpression.h"
+#import "CBLParameterExpression.h"
+#import "CBLPropertyExpression.h"
+#import "CBLQuantifiedExpression.h"
+#import "CBLUnaryExpression.h"
+#import "CBLVariableExpression.h"
+
 @implementation CBLQueryExpression
 
 
@@ -287,6 +296,9 @@
 }
 
 
+#pragma mark - Collection operations:
+
+
 - (CBLQueryExpression*) in: (NSArray*)expressions {
     CBLQueryExpression* aggr =
     [[CBLAggregateExpression alloc] initWithExpressions: expressions];
@@ -301,270 +313,44 @@
 }
 
 
-@end
+#pragma mark - Quantified operations:
 
 
-/////
-
-
-@implementation CBLAggregateExpression
-
-@synthesize subexpressions=_subexpressions;
-
-- (instancetype) initWithExpressions: (NSArray *)subs {
-    self = [super initWithNone];
-    if (self) {
-        _subexpressions = [subs copy];
-    }
-    return self;
++ (CBLQueryExpression*) variableNamed: (NSString*)name {
+    return [[CBLVariableExpression alloc] initWithVariableNamed: name];
 }
 
-- (id) asJSON {
-    NSMutableArray *json = [NSMutableArray array];
-    for (id exp in _subexpressions) {
-        if ([exp isKindOfClass:[CBLQueryExpression class]])
-            [json addObject: [(CBLQueryExpression *)exp asJSON]];
-        else
-            [json addObject: exp];
-    }
-    return json;
+
++ (CBLQueryExpression*) any: (NSString*)variableName
+                         in: (id)inExpression
+                  satisfies: (id)satisfiesExpression
+{
+    return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeAny
+                                                variable: variableName
+                                                      in: inExpression
+                                               satisfies: satisfiesExpression];
 }
 
-@end
 
-
-@implementation CBLBinaryExpression
-
-@synthesize lhs=_lhs, rhs=_rhs, type=_type;
-
-- (instancetype) initWithLeftExpression:(id)lhs
-                        rightExpression:(id)rhs
-                                   type:(CBLBinaryExpType)type {
-    self = [super initWithNone];
-    if (self) {
-        _lhs = lhs;
-        _rhs = rhs;
-        _type = type;
-    }
-    return self;
++ (CBLQueryExpression*) anyAndEvery: (NSString*)variableName
+                                 in: (id)inExpression
+                          satisfies: (id)satisfiesExpression
+{
+    return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeAnyAndEvery
+                                                variable: variableName
+                                                      in: inExpression
+                                               satisfies: satisfiesExpression];
 }
 
-- (id) asJSON {
-    NSMutableArray *json = [NSMutableArray array];
-    switch (_type) {
-        case CBLAddBinaryExpType:
-            [json addObject: @"+"];
-            break;
-        case CBLBetweenBinaryExpType:
-            [json addObject: @"BETWEEN"];
-            break;
-        case CBLDivideBinaryExpType:
-            [json addObject: @"/"];
-            break;
-        case CBLEqualToBinaryExpType:
-            [json addObject: @"="];
-            break;
-        case CBLGreaterThanBinaryExpType:
-            [json addObject: @">"];
-            break;
-        case CBLGreaterThanOrEqualToBinaryExpType:
-            [json addObject: @">="];
-            break;
-        case CBLInBinaryExpType:
-            [json addObject: @"IN"];
-            break;
-        case CBLIsBinaryExpType:
-            [json addObject: @"IS"];
-            break;
-        case CBLIsNotBinaryExpType:
-            [json addObject: @"IS NOT"];
-            break;
-        case CBLLessThanBinaryExpType:
-            [json addObject: @"<"];
-            break;
-        case CBLLessThanOrEqualToBinaryExpType:
-            [json addObject: @"<="];
-            break;
-        case CBLLikeBinaryExpType:
-            [json addObject: @"LIKE"];
-            break;
-        case CBLMatchesBinaryExpType:
-            [json addObject: @"MATCH"];
-            break;
-        case CBLModulusBinaryExpType:
-            [json addObject: @"%"];
-            break;
-        case CBLMultiplyBinaryExpType:
-            [json addObject: @"*"];
-            break;
-        case CBLNotEqualToBinaryExpType:
-            [json addObject: @"!="];
-            break;
-        case CBLRegexLikeBinaryExpType:
-            [json addObject: @"regexp_like()"];
-            break;
-        case CBLSubtractBinaryExpType:
-            [json addObject: @"-"];
-            break;
-        default:
-            break;
-    }
-    
-    if ([_lhs isKindOfClass: [CBLQueryExpression class]])
-        [json addObject: [(CBLQueryExpression*)_lhs asJSON]];
-    else
-        [json addObject: _lhs];
-    
-    if ([_rhs isKindOfClass: [CBLAggregateExpression class]])
-        [json addObjectsFromArray: [(CBLAggregateExpression*)_rhs asJSON]];
-    else if ([_rhs isKindOfClass: [CBLQueryExpression class]])
-        [json addObject: [(CBLQueryExpression*)_rhs asJSON]];
-    else
-        [json addObject: _rhs];
-    
-    return json;
-}
 
-@end
-
-@implementation CBLCompoundExpression
-
-@synthesize subexpressions=_subexpressions, type=_type;
-
-- (instancetype) initWithExpressions: (NSArray*)subs type: (CBLCompoundExpType)type {
-    self = [super initWithNone];
-    if (self) {
-        _subexpressions = [subs copy];
-        _type = type;
-    }
-    return self;
-}
-
-- (id) asJSON {
-    NSMutableArray* json = [NSMutableArray array];
-    switch (self.type) {
-        case CBLAndCompundExpType:
-            [json addObject: @"AND"];
-            break;
-        case CBLOrCompundExpType:
-            [json addObject: @"OR"];
-            break;
-        case CBLNotCompundExpType:
-            [json addObject: @"NOT"];
-            break;
-        default:
-            break;
-    }
-    
-    for (id exp in _subexpressions) {
-        if ([exp isKindOfClass: [CBLQueryExpression class]])
-            [json addObject: [(CBLQueryExpression *)exp asJSON]];
-        else
-            [json addObject: exp];
-    }
-    return json;
-}
-
-@end
-
-@implementation CBLPropertyExpression
-
-@synthesize keyPath=_keyPath, columnName=_columnName, from=_from;
-
-- (instancetype) initWithKeyPath: (NSString*)keyPath
-                      columnName: (nullable NSString*)columnName
-                            from: (NSString*)from {
-    self = [super initWithNone];
-    if (self) {
-        _keyPath = keyPath;
-        _columnName = columnName;
-        _from = from;
-    }
-    return self;
-}
-
-- (id) asJSON {
-    NSMutableArray* json = [NSMutableArray array];
-    if ([_keyPath hasPrefix: @"rank("]) {
-        [json addObject: @"rank()"];
-        [json addObject: @[@".",
-                           [_keyPath substringWithRange:
-                                NSMakeRange(5, _keyPath.length - 6)]]];
-    } else {
-        if (_from)
-            [json addObject: [NSString stringWithFormat: @".%@.%@", _from, _keyPath]];
-        else
-            [json addObject: [NSString stringWithFormat: @".%@", _keyPath]];
-    }
-    return json;
-}
-
-- (NSString*) columnName {
-    if (!_columnName)
-        _columnName = [_keyPath componentsSeparatedByString: @"."].lastObject;
-    return _columnName;
-}
-
-@end
-
-
-@implementation CBLUnaryExpression
-
-@synthesize operand=_operand, type=_type;
-
-- (instancetype) initWithExpression: (id)operand type: (CBLUnaryExpType)type {
-    self = [super initWithNone];
-    if (self) {
-        _operand = operand;
-        _type = type;
-    }
-    return self;
-}
-
-- (id) asJSON {
-    NSMutableArray* json = [NSMutableArray array];
-    switch (_type) {
-        case CBLMissingUnaryExpType:
-            [json addObject: @"IS MISSING"];
-            break;
-        case CBLNotMissingUnaryExpType:
-            [json addObject: @"IS NOT MISSING"];
-            break;
-        case CBLNotNullUnaryExpType:
-            [json addObject: @"IS NOT NULL"];
-            break;
-        case CBLNullUnaryExpType:
-            [json addObject: @"IS NULL"];
-            break;
-        default:
-            break;
-    }
-    
-    if ([_operand isKindOfClass: [CBLQueryExpression class]])
-        [json addObject: [(CBLQueryExpression*)_operand asJSON]];
-    else
-        [json addObject: _operand];
-    
-    return json;
-}
-
-@end
-
-
-@implementation CBLParameterExpression
-
-@synthesize name=_name;
-
-- (instancetype)initWithName: (id)name {
-    self = [super initWithNone];
-    if (self) {
-        _name = name;
-    }
-    return self;
-}
-
-- (id) asJSON {
-    return @[[NSString stringWithFormat: @"$%@", _name]];
++ (CBLQueryExpression*) every: (NSString*)variableName
+                           in: (id)inExpression
+                    satisfies: (id)satisfiesExpression
+{
+    return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeEvery
+                                                variable: variableName
+                                                      in: inExpression
+                                               satisfies: satisfiesExpression];
 }
 
 @end

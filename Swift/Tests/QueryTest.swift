@@ -814,6 +814,51 @@ class QueryTest: CBLTestCase {
     }
     
     
+    func testQuantifiedOperators() throws {
+        try loadJSONResource(name: "names_100")
+        
+        let DOC_ID  = Expression.meta().id
+        let RES_DOC_ID  = SelectResult.expression(DOC_ID)
+        
+        let LIKES = Expression.property("likes")
+        let VAR_LIKE = Expression.variable("LIKE")
+        
+        // ANY:
+        var q = Query
+            .select(RES_DOC_ID)
+            .from(DataSource.database(db))
+            .where(Expression.any("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("climbing")))
+        
+        let expected = ["doc-017", "doc-021", "doc-023", "doc-045", "doc-060"]
+        var numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.string(at: 0), expected[Int(n)-1])
+        })
+        XCTAssertEqual(numRow, UInt64(expected.count))
+        
+        // EVERY:
+        q = Query
+            .select(RES_DOC_ID)
+            .from(DataSource.database(db))
+            .where(Expression.every("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("taxes")))
+        
+        numRow = try verifyQuery(q, block: { (n, r) in
+            if n == 1 {
+                XCTAssertEqual(r.string(at: 0), "doc-007")
+            }
+        })
+        XCTAssertEqual(numRow, 42)
+        
+        // ANY AND EVERY:
+        q = Query
+            .select(RES_DOC_ID)
+            .from(DataSource.database(db))
+            .where(Expression.anyAndEvery("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("taxes")))
+        
+        numRow = try verifyQuery(q, block: { (n, r) in })
+        XCTAssertEqual(numRow, 0)
+    }
+    
+    
     func testLiveQuery() throws {
         try loadNumbers(100)
         var count = 0;
