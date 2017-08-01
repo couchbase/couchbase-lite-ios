@@ -23,30 +23,25 @@
 }
 
 - (id) asJSON {
-    NSMutableArray* json = [NSMutableArray array];
+    id operand;
+    if ([_operand isKindOfClass: [CBLQueryExpression class]])
+        operand = [(CBLQueryExpression*)_operand asJSON];
+    else
+        operand = _operand;
+    
     switch (_type) {
-        case CBLMissingUnaryExpType:
-            [json addObject: @"IS MISSING"];
-            break;
-        case CBLNotMissingUnaryExpType:
-            [json addObject: @"IS NOT MISSING"];
-            break;
-        case CBLNotNullUnaryExpType:
-            [json addObject: @"IS NOT NULL"];
-            break;
-        case CBLNullUnaryExpType:
-            [json addObject: @"IS NULL"];
-            break;
+        case CBLUnaryTypeMissing:
+            return @[@"IS", operand, @[@"MISSING"]];
+        case CBLUnaryTypeNotMissing:
+            return @[@"IS NOT", operand, @[@"MISSING"]];
+        case CBLUnaryTypeNull:
+            return @[@"IS", operand, [NSNull null]];
+        case CBLUnaryTypeNotNull:
+            return @[@"IS NOT", operand, [NSNull null]];
         default:
             break;
     }
-    
-    if ([_operand isKindOfClass: [CBLQueryExpression class]])
-        [json addObject: [(CBLQueryExpression*)_operand asJSON]];
-    else
-        [json addObject: _operand];
-    
-    return json;
+    return @[]; // Shouldn't happen
 }
 
 @end

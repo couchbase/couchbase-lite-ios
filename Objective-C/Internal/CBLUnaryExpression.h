@@ -12,10 +12,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
-    CBLMissingUnaryExpType,
-    CBLNotMissingUnaryExpType,
-    CBLNotNullUnaryExpType,
-    CBLNullUnaryExpType
+    CBLUnaryTypeMissing,
+    CBLUnaryTypeNotMissing,
+    CBLUnaryTypeNull,
+    CBLUnaryTypeNotNull
 };
 
 @interface CBLUnaryExpression : CBLQueryExpression

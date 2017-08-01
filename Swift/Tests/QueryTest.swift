@@ -131,16 +131,16 @@ class QueryTest: CBLTestCase {
     }
     
     
-    func failingTestWhereCheckNull() throws {
-        // https://github.com/couchbase/couchbase-lite-ios/issues/1670
+    func testWhereNullOrMissing() throws {
         let doc1 = createDocument("doc1")
         doc1.set("Scott", forKey: "name")
-        doc1.set(NSNull(), forKey: "address")
+        doc1.set(nil, forKey: "address")
         try saveDocument(doc1)
         
-        let doc2 = createDocument("doc1")
+        let doc2 = createDocument("doc2")
         doc2.set("Tiger", forKey: "name")
-        doc2.set("address", forKey: "123 1st ave.")
+        doc2.set("123 1st ave", forKey: "address")
+        doc2.set(20, forKey: "age")
         try saveDocument(doc2)
         
         let name = Expression.property("name")
@@ -149,14 +149,14 @@ class QueryTest: CBLTestCase {
         let work = Expression.property("work")
         
         let tests: [[Any]] = [
-            [name.notNull(), [doc1, doc2]],
-            [name.isNull(), []],
-            [address.notNull(), [doc2]],
-            [address.isNull(), [doc1]],
-            [age.notNull(), [doc2]],
-            [age.isNull(), [doc1]],
-            [work.notNull(), []],
-            [work.isNull(), [doc1, doc2]]
+            [name.isNullOrMissing(), []],
+            [name.notNullOrMissing(), [doc1, doc2]],
+            [address.isNullOrMissing(), [doc1]],
+            [address.notNullOrMissing(), [doc2]],
+            [age.isNullOrMissing(), [doc1]],
+            [age.notNullOrMissing(), [doc2]],
+            [work.isNullOrMissing(), [doc1, doc2]],
+            [work.notNullOrMissing(), []]
         ]
         
         for test in tests {

@@ -213,14 +213,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - NULL check operators:
 
-/** Creates an IS NULL expression that evaluates whether or not the current expression is null.
-    @return An IS NULL expression. */
-- (CBLQueryExpression*) isNull;
+/** Creates an IS NULL OR MISSING expression that evaluates whether or not the current expression 
+    is null or missing.
+    @return An IS NULL OR MISSING expression. */
+- (CBLQueryExpression*) isNullOrMissing;
 
-/** Creates an IS NOT NULL expression that evaluates whether or not the current expression
-    is NOT null.
-    @return An IS NOT NULL expression. */
-- (CBLQueryExpression*) notNull;
+/** Creates an IS NOT NULL OR MISSING expression that evaluates whether or not the current expression
+    is NOT null or missing.
+    @return An IS NOT NULL OR MISSING expression. */
+- (CBLQueryExpression*) notNullOrMissing;
 
 #pragma mark - Is operators:
 

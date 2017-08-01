@@ -170,19 +170,18 @@
 }
 
 
-- (void) failingTest_WhereCheckNull {
+- (void) test_WhereNullOrMissing {
     // https://github.com/couchbase/couchbase-lite-ios/issues/1670
-    NSError* error;
-    CBLDocument* doc1 = [self.db documentWithID: @"doc1"];
+    CBLDocument* doc1 = [self createDocument: @"doc1"];
     [doc1 setObject: @"Scott" forKey: @"name"];
-    [doc1 setObject: [NSNull null] forKey: @"address"];
-    Assert([_db saveDocument: doc1 error: &error], @"Error when saving a document: %@", error);
+    [doc1 setObject: nil forKey: @"address"];
+    [self saveDocument: doc1];
     
-    CBLDocument* doc2 = [self.db documentWithID: @"doc2"];
+    CBLDocument* doc2 = [self createDocument: @"doc2"];
     [doc2 setObject: @"Scott" forKey: @"name"];
     [doc2 setObject: @"123 1st ave." forKey: @"address"];
     [doc2 setObject: @(20) forKey: @"age"];
-    Assert([_db saveDocument: doc2 error: &error], @"Error when saving a document: %@", error);
+    [self saveDocument: doc2];
     
     CBLQueryExpression* name = [CBLQueryExpression property: @"name"];
     CBLQueryExpression* address = [CBLQueryExpression property: @"address"];
@@ -190,14 +189,14 @@
     CBLQueryExpression* work = [CBLQueryExpression property: @"work"];
     
     NSArray* tests = @[
-       @[[name notNull],    @[doc1, doc2]],
-       @[[name isNull],     @[]],
-       @[[address notNull], @[doc2]],
-       @[[address isNull],  @[doc1]],
-       @[[age notNull],     @[doc2]],
-       @[[age isNull],      @[doc1]],
-       @[[work notNull],    @[]],
-       @[[work isNull],     @[doc1, doc2]],
+       @[[name isNullOrMissing],     @[]],
+       @[[name notNullOrMissing],    @[doc1, doc2]],
+       @[[address isNullOrMissing],  @[doc1]],
+       @[[address notNullOrMissing], @[doc2]],
+       @[[age isNullOrMissing],      @[doc1]],
+       @[[age notNullOrMissing],     @[doc2]],
+       @[[work isNullOrMissing],     @[doc1, doc2]],
+       @[[work notNullOrMissing],    @[]],
     ];
     
     for (NSArray* test in tests) {

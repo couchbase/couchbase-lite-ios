@@ -252,13 +252,14 @@
 #pragma mark - Null check operators:
 
 
-- (CBLQueryExpression*) isNull {
-    return [[CBLUnaryExpression alloc] initWithExpression: self type: CBLNullUnaryExpType];
+- (CBLQueryExpression*) isNullOrMissing {
+    return [[[CBLUnaryExpression alloc] initWithExpression: self type: CBLUnaryTypeNull] or:
+            [[CBLUnaryExpression alloc] initWithExpression: self type: CBLUnaryTypeMissing]];
 }
 
 
-- (CBLQueryExpression*) notNull {
-    return [[CBLUnaryExpression alloc] initWithExpression: self type: CBLNotNullUnaryExpType];
+- (CBLQueryExpression*) notNullOrMissing {
+    return [[self class] negated: [self isNullOrMissing]];
 }
 
 

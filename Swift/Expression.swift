@@ -246,17 +246,18 @@ public class Expression {
     
     // MARK: NULL check operators
     
-    /** Creates an IS NULL expression that evaluates whether or not the current expression is null.
+    /** Creates an IS NULL OR MISSING expression that evaluates whether or not the current 
+        expression is null or missing.
         @return An IS NULL expression. */
-    public func isNull() -> Expression {
-        return Expression(self.impl.isNull())
+    public func isNullOrMissing() -> Expression {
+        return Expression(self.impl.isNullOrMissing())
     }
     
-    /** Creates an IS NOT NULL expression that evaluates whether or not the current expression
-        is NOT null.
+    /** Creates an IS NOT NULL OR MISSING expression that evaluates whether or not the current 
+        expression is NOT null or missing.
         @return An IS NOT NULL expression. */
-    public func notNull() -> Expression {
-        return Expression(self.impl.notNull())
+    public func notNullOrMissing() -> Expression {
+        return Expression(self.impl.notNullOrMissing())
     }
     
     // MARK: Is operators
@@ -325,7 +326,7 @@ public class Expression {
         return Expression(self.impl.not(in: impls))
     }
     
-    // MARL: Quantified operators:
+    // MARK: Quantified operators:
     
     /** Creates a variable expression. The variable are used to represent each item in an array
         in the quantified operators (ANY/ANY AND EVERY/EVERY <variable name> IN <expr> SATISFIES <expr>)
