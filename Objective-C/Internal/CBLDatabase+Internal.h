@@ -37,12 +37,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLDatabase ()
 
-@property (readonly, nonatomic, nullable) C4Database* c4db;
-@property (readonly, nonatomic) NSMapTable<NSURL*,CBLReplicator*>* replications;
-@property (readonly, nonatomic) NSMutableSet* activeReplications;
+@property (atomic, readonly, nullable) C4Database* c4db;
+@property (atomic, readonly) NSMapTable<NSURL*,CBLReplicator*>* replications;
+@property (atomic, readonly) NSMutableSet* activeReplications;
 
 #ifdef __cplusplus
-@property (readonly, nonatomic) cbl::SharedKeys sharedKeys;
+@property (atomic, readonly) cbl::SharedKeys sharedKeys;
 #endif
 
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
