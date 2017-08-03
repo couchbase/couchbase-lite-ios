@@ -34,53 +34,26 @@
 }
 
 
+#pragma mark - Counting Entries
+
+
 - (NSUInteger) count {
     return FLDict_Count(_dict);
 }
 
+
+#pragma mark - Accessing Keys
 
 - (NSArray*) keys {
     return [[self fleeceKeys] copy];
 }
 
 
-- (nullable id) objectForKey: (NSString*)key {
-    return [self fleeceValueToObjectForKey: key];
-}
+#pragma mark - Type Setters
 
 
-- (BOOL) booleanForKey: (NSString*)key {
-    return FLValue_AsBool([self fleeceValueForKey: key]);
-}
-
-
-- (NSInteger) integerForKey: (NSString*)key {
-    return (NSInteger)FLValue_AsInt([self fleeceValueForKey: key]);
-}
-
-
-- (float) floatForKey: (NSString*)key {
-    return FLValue_AsFloat([self fleeceValueForKey: key]);
-}
-
-
-- (double) doubleForKey: (NSString*)key {
-    return FLValue_AsDouble([self fleeceValueForKey: key]);
-}
-
-
-- (nullable NSString*) stringForKey: (NSString*)key {
-    return $castIf(NSString, [self fleeceValueToObjectForKey: key]);
-}
-
-
-- (nullable NSNumber*) numberForKey: (NSString*)key {
-    return $castIf(NSNumber, [self fleeceValueToObjectForKey: key]);
-}
-
-
-- (nullable NSDate*) dateForKey: (NSString*)key {
-    return [CBLJSON dateWithJSONObject: [self fleeceValueToObjectForKey: key]];
+- (nullable CBLReadOnlyArray*) arrayForKey: (NSString*)key {
+    return $castIf(CBLReadOnlyArray, [self fleeceValueToObjectForKey: key]);
 }
 
 
@@ -89,14 +62,52 @@
 }
 
 
+- (BOOL) booleanForKey: (NSString*)key {
+    return FLValue_AsBool([self fleeceValueForKey: key]);
+}
+
+
+- (nullable NSDate*) dateForKey: (NSString*)key {
+    return [CBLJSON dateWithJSONObject: [self fleeceValueToObjectForKey: key]];
+}
+
+
 - (nullable CBLReadOnlyDictionary*) dictionaryForKey: (NSString*)key {
     return $castIf(CBLReadOnlyDictionary, [self fleeceValueToObjectForKey: key]);
 }
 
 
-- (nullable CBLReadOnlyArray*) arrayForKey: (NSString*)key {
-    return $castIf(CBLReadOnlyArray, [self fleeceValueToObjectForKey: key]);
+- (nullable id) objectForKey: (NSString*)key {
+    return [self fleeceValueToObjectForKey: key];
 }
+
+
+- (double) doubleForKey: (NSString*)key {
+    return FLValue_AsDouble([self fleeceValueForKey: key]);
+}
+
+
+- (float) floatForKey: (NSString*)key {
+    return FLValue_AsFloat([self fleeceValueForKey: key]);
+}
+
+
+- (NSInteger) integerForKey: (NSString*)key {
+    return (NSInteger)FLValue_AsInt([self fleeceValueForKey: key]);
+}
+
+
+- (nullable NSNumber*) numberForKey: (NSString*)key {
+    return $castIf(NSNumber, [self fleeceValueToObjectForKey: key]);
+}
+
+
+- (nullable NSString*) stringForKey: (NSString*)key {
+    return $castIf(NSString, [self fleeceValueToObjectForKey: key]);
+}
+
+
+#pragma mark - Check Existence
 
 
 - (BOOL) containsObjectForKey: (NSString*)key {
@@ -105,21 +116,14 @@
 }
 
 
+#pragma mark - Convert to NSDictionary
+
+
 - (NSDictionary<NSString*,id>*) toDictionary {
     if (_dict != nullptr)
         return FLValue_GetNSObject((FLValue)_dict, &_sharedKeys);
     else
         return @{};
-}
-
-
-- (id) cbl_toPlainObject {
-    return [self toDictionary];
-}
-
-
-- (id) cbl_toCBLObject {
-    return [[CBLDictionary alloc] initWithFleeceData: self.data];
 }
 
 
@@ -154,6 +158,19 @@
 
 - (BOOL) isEmpty {
     return self.count == 0;
+}
+
+
+#pragma mark - CBLConversion
+
+
+- (id) cbl_toPlainObject {
+    return [self toDictionary];
+}
+
+
+- (id) cbl_toCBLObject {
+    return [[CBLDictionary alloc] initWithFleeceData: self.data];
 }
 
 

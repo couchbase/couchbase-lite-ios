@@ -25,8 +25,8 @@ class QueryTest: CBLTestCase {
     
     @discardableResult  func createDoc(numbered i: (Int), of number: (Int)) throws -> Document {
         let doc = createDocument("doc\(i)")
-        doc.set(i, forKey: "number1")
-        doc.set(number - i, forKey: "number2")
+        doc.setValue(i, forKey: "number1")
+        doc.setValue(number - i, forKey: "number2")
         try saveDocument(doc)
         return doc
     }
@@ -133,14 +133,14 @@ class QueryTest: CBLTestCase {
     
     func testWhereNullOrMissing() throws {
         let doc1 = createDocument("doc1")
-        doc1.set("Scott", forKey: "name")
-        doc1.set(nil, forKey: "address")
+        doc1.setValue("Scott", forKey: "name")
+        doc1.setValue(nil, forKey: "address")
         try saveDocument(doc1)
         
         let doc2 = createDocument("doc2")
-        doc2.set("Tiger", forKey: "name")
-        doc2.set("123 1st ave", forKey: "address")
-        doc2.set(20, forKey: "age")
+        doc2.setValue("Tiger", forKey: "name")
+        doc2.setValue("123 1st ave", forKey: "address")
+        doc2.setValue(20, forKey: "age")
         try saveDocument(doc2)
         
         let name = Expression.property("name")
@@ -176,7 +176,7 @@ class QueryTest: CBLTestCase {
     
     func testWhereIs() throws {
         let doc1 = Document()
-        doc1.set("string", forKey: "string")
+        doc1.setValue("string", forKey: "string")
         try saveDocument(doc1)
         
         var q = Query.select(kDOCID).from(DataSource.database(db)).where(
@@ -325,11 +325,11 @@ class QueryTest: CBLTestCase {
     
     func testSelectDistinct() throws {
         let doc1 = Document()
-        doc1.set(20, forKey: "number")
+        doc1.setValue(20, forKey: "number")
         try saveDocument(doc1)
         
         let doc2 = Document()
-        doc2.set(20, forKey: "number")
+        doc2.setValue(20, forKey: "number")
         try saveDocument(doc2)
         
         let NUMBER  = Expression.property("number")
@@ -346,7 +346,7 @@ class QueryTest: CBLTestCase {
         try loadNumbers(100)
         
         let doc = createDocument("joinme")
-        doc.set(42, forKey: "theone")
+        doc.setValue(42, forKey: "theone")
         try saveDocument(doc)
         
         let DOCID = SelectResult.expression(Expression.meta().id.from("main"))
@@ -446,8 +446,8 @@ class QueryTest: CBLTestCase {
             .where(NUMBER1.between(PARAM_N1, and: PARAM_N2))
             .orderBy(Ordering.expression(NUMBER1))
         
-        q.parameters.set(2, forName: "num1")
-        q.parameters.set(5, forName: "num2")
+        q.parameters.setValue(2, forName: "num1")
+        q.parameters.setValue(5, forName: "num2")
         
         let expectedNumbers = [2, 3, 4, 5]
         let numRow = try verifyQuery(q, block: { (n, r) in
@@ -522,7 +522,7 @@ class QueryTest: CBLTestCase {
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(NUMBER1))
             .limit(Expression.parameter("LIMIT_NUM"))
-        q.parameters.set(3, forName: "LIMIT_NUM")
+        q.parameters.setValue(3, forName: "LIMIT_NUM")
         
         expectedNumbers = [1, 2, 3]
         numRow = try verifyQuery(q, block: { (n, r) in
@@ -556,8 +556,8 @@ class QueryTest: CBLTestCase {
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(NUMBER1))
             .limit(Expression.parameter("LIMIT_NUM"), offset: Expression.parameter("OFFSET_NUM"))
-        q.parameters.set(3, forName: "LIMIT_NUM")
-        q.parameters.set(5, forName: "OFFSET_NUM")
+        q.parameters.setValue(3, forName: "LIMIT_NUM")
+        q.parameters.setValue(5, forName: "OFFSET_NUM")
         
         expectedNumbers = [6, 7, 8]
         numRow = try verifyQuery(q, block: { (n, r) in
@@ -648,9 +648,9 @@ class QueryTest: CBLTestCase {
     func testArrayFunctions() throws {
         let doc = Document("doc1")
         let array = ArrayObject()
-        array.add("650-123-0001")
-        array.add("650-123-0002")
-        doc.set(array, forKey: "array")
+        array.addValue("650-123-0001")
+        array.addValue("650-123-0002")
+        doc.setValue(array, forKey: "array")
         try self.db.save(doc)
         
         let ARRAY_LENGTH = Function.arrayLength(Expression.property("array"))
@@ -679,7 +679,7 @@ class QueryTest: CBLTestCase {
     func testMathFunctions() throws {
         let num = 0.6
         let doc = Document("doc1")
-        doc.set(num, forKey: "number")
+        doc.setValue(num, forKey: "number")
         try db.save(doc)
         
         let expectedValues  = [0.6, acos(num),
@@ -724,7 +724,7 @@ class QueryTest: CBLTestCase {
     func testStringFunctions() throws {
         let str = "  See you 18r  "
         let doc = Document("doc1")
-        doc.set(str, forKey: "greeting")
+        doc.setValue(str, forKey: "greeting")
         try db.save(doc)
         
         let p = Expression.property("greeting")
@@ -781,10 +781,10 @@ class QueryTest: CBLTestCase {
     
     func testTypeFunctions() throws {
         let doc = Document("doc1")
-        doc.set(ArrayObject(array: ["a", "b"]), forKey: "array")
-        doc.set(DictionaryObject(dictionary: ["foo": "bar"]), forKey: "dictionary")
-        doc.set(3.14, forKey: "number")
-        doc.set("string", forKey: "string")
+        doc.setValue(ArrayObject(array: ["a", "b"]), forKey: "array")
+        doc.setValue(DictionaryObject(dictionary: ["foo": "bar"]), forKey: "dictionary")
+        doc.setValue(3.14, forKey: "number")
+        doc.setValue("string", forKey: "string")
         try db.save(doc)
         
         let ARRAY = Expression.property("array")

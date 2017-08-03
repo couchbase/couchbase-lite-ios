@@ -32,6 +32,7 @@
     CBLDictionary* _dict;
 }
 
+#pragma mark - Initializer
 
 + (instancetype) document {
     return [[self alloc] initWithID: nil];
@@ -89,7 +90,7 @@
 }
 
 
-#pragma mark - GETTER
+#pragma mark - CBLReadOnlyDictionary
 
 
 - (NSUInteger) count {
@@ -102,43 +103,8 @@
 }
 
 
-- (nullable id) objectForKey: (NSString*)key {
-    return [_dict objectForKey: key];
-}
-
-
-- (BOOL) booleanForKey: (NSString*)key {
-    return [_dict booleanForKey: key];
-}
-
-
-- (NSInteger) integerForKey: (NSString*)key {
-    return [_dict integerForKey: key];
-}
-
-
-- (float) floatForKey: (NSString*)key {
-    return [_dict floatForKey: key];
-}
-
-
-- (double) doubleForKey: (NSString*)key {
-    return [_dict doubleForKey: key];
-}
-
-
-- (nullable NSString*) stringForKey: (NSString*)key {
-    return [_dict stringForKey: key];
-}
-
-
-- (nullable NSNumber*) numberForKey: (NSString*)key {
-    return [_dict numberForKey: key];
-}
-
-
-- (nullable NSDate*) dateForKey: (NSString*)key {
-    return [_dict dateForKey: key];
+- (nullable CBLArray*) arrayForKey: (NSString*)key {
+    return [_dict arrayForKey: key];
 }
 
 
@@ -147,13 +113,47 @@
 }
 
 
+- (BOOL) booleanForKey: (NSString*)key {
+    return [_dict booleanForKey: key];
+}
+
+
+- (nullable NSDate*) dateForKey: (NSString*)key {
+    return [_dict dateForKey: key];
+}
+
+
 - (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
     return [_dict dictionaryForKey: key];
 }
 
+- (double) doubleForKey: (NSString*)key {
+    return [_dict doubleForKey: key];
+}
 
-- (nullable CBLArray*) arrayForKey: (NSString*)key {
-    return [_dict arrayForKey: key];
+
+- (float) floatForKey: (NSString*)key {
+    return [_dict floatForKey: key];
+}
+
+
+- (NSInteger) integerForKey: (NSString*)key {
+    return [_dict integerForKey: key];
+}
+
+
+- (nullable NSNumber*) numberForKey: (NSString*)key {
+    return [_dict numberForKey: key];
+}
+
+
+- (nullable id) objectForKey: (NSString*)key {
+    return [_dict objectForKey: key];
+}
+
+
+- (nullable NSString*) stringForKey: (NSString*)key {
+    return [_dict stringForKey: key];
 }
 
 
@@ -167,18 +167,51 @@
 }
 
 
-#pragma mark - SETTER
+#pragma mark - CBLDictionary
 
 
-- (void) setC4Doc: (CBLC4Document*)c4doc {
-    [super setC4Doc: c4doc];
-    // Update delegate dictionary:
-    _dict = [[CBLDictionary alloc] initWithFleeceData: self.data];
+- (void) setArray: (nullable CBLArray *)value forKey: (NSString *)key {
+    [_dict setArray: value forKey: key];
 }
 
 
-- (void) setDictionary: (NSDictionary<NSString *,id> *)dictionary {
-    [_dict setDictionary: dictionary];
+- (void) setBoolean: (BOOL)value forKey: (NSString *)key {
+    [_dict setBoolean: value forKey: key];
+}
+
+
+- (void) setBlob: (nullable CBLBlob*)value forKey: (NSString *)key {
+    [_dict setBlob: value forKey: key];
+}
+
+
+- (void) setDate: (nullable NSDate *)value forKey: (NSString *)key {
+    [_dict setDate: value forKey: key];
+}
+
+
+- (void) setDictionary: (nullable CBLDictionary *)value forKey: (NSString *)key {
+    [_dict setDictionary: value forKey: key];
+}
+
+
+- (void) setDouble: (double)value forKey: (NSString *)key {
+    [_dict setDouble: value forKey: key];
+}
+
+
+- (void) setFloat: (float)value forKey: (NSString *)key {
+    [_dict setFloat: value forKey: key];
+}
+
+
+- (void) setInteger: (NSInteger)value forKey: (NSString *)key {
+    [_dict setInteger: value forKey: key];
+}
+
+
+- (void) setNumber: (nullable NSNumber*)value forKey: (NSString *)key {
+    [self setNumber: value forKey: key];
 }
 
 
@@ -187,8 +220,18 @@
 }
 
 
-- (void) removeObjectForKey:(NSString *)key {
+- (void) setString: (nullable NSString *)value forKey: (NSString *)key {
+    [_dict setString: value forKey: key];
+}
+
+
+- (void) removeObjectForKey: (NSString *)key {
     [_dict removeObjectForKey: key];
+}
+
+
+- (void) setDictionary: (NSDictionary<NSString *,id> *)dictionary {
+    [_dict setDictionary: dictionary];
 }
 
 
@@ -203,7 +246,7 @@
 }
 
 
-#pragma mark - SUBSCRIPTING
+#pragma mark - Subscript
 
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
@@ -211,7 +254,14 @@
 }
 
 
-#pragma mark - INTERNAL
+#pragma mark - Internal
+
+
+- (void) setC4Doc: (CBLC4Document*)c4doc {
+    [super setC4Doc: c4doc];
+    // Update delegate dictionary:
+    _dict = [[CBLDictionary alloc] initWithFleeceData: self.data];
+}
 
 
 - (NSUInteger) generation {
@@ -263,7 +313,7 @@
 }
 
 
-#pragma mark - PRIVATE
+#pragma mark - Private
 
 
 // Reflects only direct changes to the document. Changes on sub dictionaries or arrays will
@@ -441,7 +491,7 @@ static bool dictionaryContainsBlob(__unsafe_unretained CBLDictionary* dict) {
 }
 
 
-#pragma mark - FLEECE ENCODING
+#pragma mark - Fleece Encodable
 
 
 - (NSData*) encode: (NSError**)outError {

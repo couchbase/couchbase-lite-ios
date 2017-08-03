@@ -136,7 +136,7 @@ public class Query {
     func applyParameters() {
         if let p = self.params, let paramDict = p.params {
             for (name, value) in paramDict {
-                queryImpl!.parameters.setValue(value, forName: name)
+                queryImpl!.parameters.setObject(value, forName: name)
             }
         }
     }

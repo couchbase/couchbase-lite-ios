@@ -24,8 +24,10 @@
     NSArray* _keys; // key cache
 }
 
-
 @synthesize changed=_changed, swiftObject=_swiftObject;
+
+
+#pragma mark - Initializers
 
 
 + (instancetype) dictionary {
@@ -47,7 +49,7 @@
 }
 
 
-#pragma mark - GETTER
+#pragma mark - CBLReadOnlyDictionary
 
 
 - (NSUInteger) count {
@@ -92,6 +94,71 @@
 }
 
 
+- (nullable CBLArray*) arrayForKey: (NSString*)key {
+    return $castIf(CBLArray, [self objectForKey: key]);
+}
+
+
+- (nullable CBLBlob*) blobForKey: (NSString*)key {
+    return $castIf(CBLBlob, [self objectForKey:key]);
+}
+
+
+- (BOOL) booleanForKey: (NSString*)key {
+    id value = _dict[key];
+    if (!value)
+        return [super booleanForKey: key];
+    else {
+        if (value == kCBLRemovedValue)
+            return NO;
+        else
+            return [CBLData booleanValueForObject: value];
+    }
+}
+
+
+- (nullable NSDate*) dateForKey: (NSString*)key {
+    return [CBLJSON dateWithJSONObject: [self objectForKey: key]];
+}
+
+
+- (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
+    return $castIf(CBLDictionary, [self objectForKey: key]);
+}
+
+
+- (double) doubleForKey: (NSString*)key {
+    id value = _dict[key];
+    if (!value)
+        return [super doubleForKey: key];
+    else
+        return [$castIf(NSNumber, value) doubleValue];
+}
+
+
+- (float) floatForKey: (NSString*)key {
+    id value = _dict[key];
+    if (!value)
+        return [super floatForKey: key];
+    else
+        return [$castIf(NSNumber, value) floatValue];
+}
+
+
+- (NSInteger) integerForKey: (NSString*)key {
+    id value = _dict[key];
+    if (!value)
+        return [super integerForKey: key];
+    else
+        return [$castIf(NSNumber, value) integerValue];
+}
+
+
+- (nullable NSNumber*) numberForKey: (NSString*)key {
+    return $castIf(NSNumber, [self objectForKey: key]);
+}
+
+
 - (nullable id) objectForKey: (NSString*)key {
     id value = _dict[key];
     if (!value) {
@@ -109,73 +176,8 @@
 }
 
 
-- (BOOL) booleanForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value)
-        return [super booleanForKey: key];
-    else {
-        if (value == kCBLRemovedValue)
-            return NO;
-        else
-            return [CBLData booleanValueForObject: value];
-    }
-}
-
-
-- (NSInteger) integerForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value)
-        return [super integerForKey: key];
-    else
-        return [$castIf(NSNumber, value) integerValue];
-}
-
-
-- (float) floatForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value)
-        return [super floatForKey: key];
-    else
-        return [$castIf(NSNumber, value) floatValue];
-}
-
-
-- (double) doubleForKey: (NSString*)key {
-    id value = _dict[key];
-    if (!value)
-        return [super doubleForKey: key];
-    else
-        return [$castIf(NSNumber, value) doubleValue];
-}
-
-
 - (nullable NSString*) stringForKey: (NSString*)key {
     return $castIf(NSString, [self objectForKey: key]);
-}
-
-
-- (nullable NSNumber*) numberForKey: (NSString*)key {
-    return $castIf(NSNumber, [self objectForKey: key]);
-}
-
-
-- (nullable NSDate*) dateForKey: (NSString*)key {
-    return [CBLJSON dateWithJSONObject: [self objectForKey: key]];
-}
-
-
-- (nullable CBLBlob*) blobForKey: (NSString*)key {
-    return $castIf(CBLBlob, [self objectForKey:key]);
-}
-
-
-- (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
-    return $castIf(CBLDictionary, [self objectForKey: key]);
-}
-
-
-- (nullable CBLArray*) arrayForKey: (NSString*)key {
-    return $castIf(CBLArray, [self objectForKey: key]);
 }
 
 
@@ -204,32 +206,51 @@
 }
 
 
-- (id) cbl_toCBLObject {
-    return self;
+#pragma mark - Type Setters
+
+
+- (void) setArray: (nullable CBLArray *)value forKey: (NSString *)key {
+    [self setObject: value forKey: key];
 }
 
 
-#pragma mark - SETTER
+- (void) setBoolean: (BOOL)value forKey: (NSString *)key {
+    [self setObject: @(value) forKey: key];
+}
 
 
-- (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary {
-    NSArray* inheritedKeys = [super keys];
-    NSUInteger capacity = MAX(dictionary.count, inheritedKeys.count);
-    NSMutableDictionary* result = [NSMutableDictionary dictionaryWithCapacity: capacity];
+- (void) setBlob: (nullable CBLBlob*)value forKey: (NSString *)key {
+    [self setObject: value forKey: key];
+}
 
-    [dictionary enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
-        result[key] = [value cbl_toCBLObject];
-    }];
-    
-    // Mark pre-existing keys as removed by setting the value to kRemovedValue:
-    for (NSString* key in inheritedKeys) {
-        if (!result[key])
-            result[key] = kCBLRemovedValue;
-    };
-    
-    _dict = result;
-    
-    [self setChanged];
+
+- (void) setDate: (nullable NSDate *)value forKey: (NSString *)key {
+    [self setObject: value forKey: key];
+}
+
+
+- (void) setDictionary: (nullable CBLDictionary *)value forKey: (NSString *)key {
+    [self setObject: value forKey: key];
+}
+
+
+- (void) setDouble: (double)value forKey: (NSString *)key {
+    [self setObject: @(value) forKey: key];
+}
+
+
+- (void) setFloat: (float)value forKey: (NSString *)key {
+    [self setObject: @(value) forKey: key];
+}
+
+
+- (void) setInteger: (NSInteger)value forKey: (NSString *)key {
+    [self setObject: @(value) forKey: key];
+}
+
+
+- (void) setNumber: (nullable NSNumber*)value forKey: (NSString *)key {
+    [self setObject: value forKey: key];
 }
 
 
@@ -244,12 +265,38 @@
 }
 
 
-- (void) removeObjectForKey:(NSString *)key {
+- (void) setString: (nullable NSString *)value forKey: (NSString *)key {
+    [self setObject: value forKey: key];
+}
+
+
+- (void) removeObjectForKey: (NSString *)key {
     id value = [super containsObjectForKey: key] ? kCBLRemovedValue : nil;
     if (value != _dict[key]) {
         [self setValue: value forKey: key isChange: YES];
         _keys = nil; // Reset key cache
     }
+}
+
+
+- (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary {
+    NSArray* inheritedKeys = [super keys];
+    NSUInteger capacity = MAX(dictionary.count, inheritedKeys.count);
+    NSMutableDictionary* result = [NSMutableDictionary dictionaryWithCapacity: capacity];
+    
+    [dictionary enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
+        result[key] = [value cbl_toCBLObject];
+    }];
+    
+    // Mark pre-existing keys as removed by setting the value to kRemovedValue:
+    for (NSString* key in inheritedKeys) {
+        if (!result[key])
+            result[key] = kCBLRemovedValue;
+    };
+    
+    _dict = result;
+    
+    [self setChanged];
 }
 
 
@@ -267,7 +314,7 @@
 }
 
 
-#pragma mark - SUBSCRIPTING
+#pragma mark - Subscript
 
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
@@ -276,7 +323,7 @@
 }
 
 
-#pragma mark - INTERNAL
+#pragma mark - Internal
 
 
 - (BOOL) isEmpty {
@@ -299,7 +346,15 @@
 }
 
 
-#pragma mark - PRIVATE
+#pragma mark - CBLConversion
+
+
+- (id) cbl_toCBLObject {
+    return self;
+}
+
+
+#pragma mark - Private
 
 
 - (void) setValue: (id)value forKey: (NSString*)key isChange: (BOOL)isChange {
@@ -312,7 +367,7 @@
 }
 
 
-#pragma mark - CHANGE
+#pragma mark - Change
 
 
 - (void) setChanged {
@@ -322,7 +377,7 @@
 }
 
 
-#pragma mark - FLEECE ENCODABLE
+#pragma mark - Fleece Encodable
 
 
 - (BOOL) cbl_fleeceEncode: (FLEncoder)encoder

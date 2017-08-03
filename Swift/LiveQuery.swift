@@ -78,7 +78,7 @@ public class LiveQuery {
     func applyParameters() {
         if let p = self.params, let paramDict = p.params {
             for (name, value) in paramDict {
-                impl.parameters.setValue(value, forName: name)
+                impl.parameters.setObject(value, forName: name)
             }
         }
     }

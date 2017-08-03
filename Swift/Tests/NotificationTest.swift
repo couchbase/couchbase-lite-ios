@@ -22,7 +22,7 @@ class NotificationTest: CBLTestCase {
         try db.inBatch {
             for i in 0...9 {
                 let doc = createDocument("doc-\(i)")
-                doc.set("demo", forKey: "type")
+                doc.setValue("demo", forKey: "type")
                 try saveDocument(doc)
             }
         }
@@ -34,11 +34,11 @@ class NotificationTest: CBLTestCase {
     
     func testDocumentChange() throws {
         let doc1 = createDocument("doc1")
-        doc1.set("Scott", forKey: "name")
+        doc1.setValue("Scott", forKey: "name")
         try saveDocument(doc1)
         
         let doc2 = createDocument("doc2")
-        doc2.set("Daniel", forKey: "name")
+        doc2.setValue("Daniel", forKey: "name")
         try saveDocument(doc2)
         
         let x = self.expectation(description: "Got all changes")
@@ -61,7 +61,7 @@ class NotificationTest: CBLTestCase {
         let listener3 = db.addChangeListener(documentID: "doc3", using: handler)
         
         // Update doc1:
-        doc1.set("Scott Tiger", forKey: "name")
+        doc1.setValue("Scott Tiger", forKey: "name")
         try saveDocument(doc1)
         
         // Delete doc2:
@@ -69,7 +69,7 @@ class NotificationTest: CBLTestCase {
         
         // Create doc3:
         let doc3 = createDocument("doc3")
-        doc3.set("Jack", forKey: "name")
+        doc3.setValue("Jack", forKey: "name")
         try saveDocument(doc3)
         
         waitForExpectations(timeout: 5, handler: nil)
@@ -82,7 +82,7 @@ class NotificationTest: CBLTestCase {
     
     func testAddSameChangeListeners() throws {
         let doc1 = createDocument("doc1")
-        doc1.set("Scott", forKey: "name")
+        doc1.setValue("Scott", forKey: "name")
         try saveDocument(doc1)
         
         let x = self.expectation(description: "Got all changes")
@@ -101,7 +101,7 @@ class NotificationTest: CBLTestCase {
         let listener3 = db.addChangeListener(documentID: "doc1", using: handler)
         
         // Update doc1:
-        doc1.set("Scott Tiger", forKey: "name")
+        doc1.setValue("Scott Tiger", forKey: "name")
         try saveDocument(doc1)
         
         waitForExpectations(timeout: 5, handler: nil)
@@ -114,7 +114,7 @@ class NotificationTest: CBLTestCase {
     
     func testRemoveDocumentChangeListener() throws {
         let doc1 = createDocument("doc1")
-        doc1.set("Scott", forKey: "name")
+        doc1.setValue("Scott", forKey: "name")
         try saveDocument(doc1)
         
         let x1 = self.expectation(description: "change")
@@ -125,7 +125,7 @@ class NotificationTest: CBLTestCase {
         }
         
         // Update doc1:
-        doc1.set("Scott Tiger", forKey: "name")
+        doc1.setValue("Scott Tiger", forKey: "name")
         try saveDocument(doc1)
         
         waitForExpectations(timeout: 5, handler: nil)
@@ -133,7 +133,7 @@ class NotificationTest: CBLTestCase {
         // Remove change listener:
         db.removeChangeListener(listener)
         
-        doc1.set("Scott Tiger", forKey: "name")
+        doc1.setValue("Scott Tiger", forKey: "name")
         try saveDocument(doc1)
         
         // Let's wait for 0.5 seconds:

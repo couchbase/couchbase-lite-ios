@@ -17,7 +17,7 @@ class ArrayTest: CBLTestCase {
         eval(array)
         
         // Set and Save:
-        doc.set(array, forKey: key)
+        doc.setValue(array, forKey: key)
         try saveDocument(doc)
         
         // Re-get the document and the array:
@@ -31,7 +31,7 @@ class ArrayTest: CBLTestCase {
     func testEnumeratingArray() throws {
         let array = ArrayObject()
         for i in 0...19 {
-            array.add(i)
+            array.addValue(i)
         }
         var content = array.toArray()
         
@@ -43,8 +43,8 @@ class ArrayTest: CBLTestCase {
         
         // Update:
         array.remove(at: 1)
-        array.add(20)
-        array.add(21)
+        array.addValue(20)
+        array.addValue(21)
         content = array.toArray()
         
         result = []
@@ -54,7 +54,7 @@ class ArrayTest: CBLTestCase {
         XCTAssert(result == content)
         
         let doc = createDocument("doc1")
-        doc.set(array, forKey: "array")
+        doc.setValue(array, forKey: "array")
         
         try saveArray(array, onDocument: doc, forKey: "array") { (a) in
             result = []

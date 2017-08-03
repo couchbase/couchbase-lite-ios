@@ -125,7 +125,7 @@ class FragmentTest: CBLTestCase {
     
     func testGetFragmentFromInteger() throws {
         let doc = createDocument("doc1")
-        doc.set(10, forKey: "integer")
+        doc.setValue(10, forKey: "integer")
         try saveDocument(doc, eval: { (d) in
             let fragment = d["integer"]
             XCTAssertNotNil(fragment)
@@ -145,7 +145,7 @@ class FragmentTest: CBLTestCase {
     
     func testGetFragmentFromFloat() throws {
         let doc = createDocument("doc1")
-        doc.set(Float(100.10), forKey: "float")
+        doc.setValue(Float(100.10), forKey: "float")
         try saveDocument(doc, eval: { (d) in
             let fragment = d["float"]
             XCTAssertNotNil(fragment)
@@ -165,7 +165,7 @@ class FragmentTest: CBLTestCase {
     
     func testGetFragmentFromDouble() throws {
         let doc = createDocument("doc1")
-        doc.set(Double(99.99), forKey: "double")
+        doc.setValue(Double(99.99), forKey: "double")
         try saveDocument(doc, eval: { (d) in
             let fragment = d["double"]
             XCTAssertNotNil(fragment)
@@ -185,7 +185,7 @@ class FragmentTest: CBLTestCase {
     
     func testGetFragmentFromBoolean() throws {
         let doc = createDocument("doc1")
-        doc.set(true, forKey: "boolean")
+        doc.setValue(true, forKey: "boolean")
         try saveDocument(doc, eval: { (d) in
             let fragment = d["boolean"]
             XCTAssertNotNil(fragment)
@@ -207,7 +207,7 @@ class FragmentTest: CBLTestCase {
         let date = Date()
         let dateStr = jsonFromDate(date)
         let doc = createDocument("doc1")
-        doc.set(date, forKey: "date")
+        doc.setValue(date, forKey: "date")
         try saveDocument(doc, eval: { (d) in
             let fragment = d["date"]
             XCTAssertNotNil(fragment)
@@ -227,7 +227,7 @@ class FragmentTest: CBLTestCase {
     
     func testGetFragmentFromString() throws {
         let doc = createDocument("doc1")
-        doc.set("hello world", forKey: "string")
+        doc.setValue("hello world", forKey: "string")
         try saveDocument(doc, eval: { (d) in
             let fragment = d["string"]
             XCTAssertNotNil(fragment)
@@ -429,8 +429,8 @@ class FragmentTest: CBLTestCase {
     
     func testNonDictionaryFragmentSetObject() throws {
         let doc = createDocument("doc1")
-        doc.set("value1", forKey: "string1")
-        doc.set("value2", forKey: "string2")
+        doc.setValue("value1", forKey: "string1")
+        doc.setValue("value2", forKey: "string2")
         
         try saveDocument(doc, eval: { (d) in
             d["string1"].value = 10
@@ -450,7 +450,7 @@ class FragmentTest: CBLTestCase {
         doc["array"].value = []
         
         let dict = DictionaryObject(dictionary: data)
-        doc["array"].array!.add(dict)
+        doc["array"].array!.addValue(dict)
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertNotNil(d["array"][0])
@@ -473,7 +473,7 @@ class FragmentTest: CBLTestCase {
         
         let doc = createDocument("doc1")
         doc["array"].value = []
-        doc["array"].array!.add(data)
+        doc["array"].array!.addValue(data)
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertNotNil(d["array"][0])
@@ -492,10 +492,10 @@ class FragmentTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc["array"].value = []
         let array = ArrayObject()
-        array.add("Jason")
-        array.add(5.5)
-        array.add(true)
-        doc["array"].array!.add(array)
+        array.addValue("Jason")
+        array.addValue(5.5)
+        array.addValue(true)
+        doc["array"].array!.addValue(array)
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d["array"][0][0].string!, "Jason")
@@ -508,7 +508,7 @@ class FragmentTest: CBLTestCase {
     func testArrayFragmentSetArray() throws {
         let doc = createDocument("doc1")
         doc["array"].value = []
-        doc["array"].array!.add(["Jason", 5.5, true])
+        doc["array"].array!.addValue(["Jason", 5.5, true])
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d["array"][0][0].string!, "Jason")
@@ -536,7 +536,7 @@ class FragmentTest: CBLTestCase {
     func testOutOfRangeArrayFragmentSetObject() throws {
         let doc = createDocument("doc1")
         doc["array"].value = []
-        doc["array"].array?.add(["Jason", 5.5, true])
+        doc["array"].array?.addValue(["Jason", 5.5, true])
         doc["array"][0][3].value = 1
         
         try saveDocument(doc, eval: { (d) in

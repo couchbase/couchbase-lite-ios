@@ -23,6 +23,9 @@
 @synthesize swiftObject=_swiftObject;
 
 
+#pragma mark - Initializers
+
+
 + (instancetype) array {
     return [[self alloc] init];
 }
@@ -42,7 +45,7 @@
 }
 
 
-#pragma mark - GETTER
+#pragma mark - Type Getters
 
 
 - (nullable id) objectAtIndex: (NSUInteger)index {
@@ -148,22 +151,51 @@
 }
 
 
-- (id) cbl_toCBLObject {
-    return self;
+#pragma mark - Type Setters
+
+
+- (void) setArray: (nullable CBLArray*)value atIndex: (NSUInteger)index {
+    [self setObject: value atIndex: index];
 }
 
 
-#pragma mark - SETTER
+- (void) setBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index {
+    [self setObject: value atIndex: index];
+}
 
 
-- (void) setArray:(nullable NSArray *)array {
-    NSMutableArray* result = [NSMutableArray arrayWithCapacity: [array count]];
-    for (id value in array) {
-        [result addObject: [value cbl_toCBLObject]];
-    }
-    
-    _array = result;
-    [self setChanged];
+- (void) setBoolean: (BOOL)value atIndex: (NSUInteger)index {
+    [self setObject: @(value) atIndex: index];
+}
+
+
+- (void) setDate: (nullable NSDate*)value atIndex: (NSUInteger)index {
+    [self setObject: value atIndex: index];
+}
+
+
+- (void) setDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index {
+    [self setObject: value atIndex: index];
+}
+
+
+- (void) setDouble: (double)value atIndex: (NSUInteger)index {
+    [self setObject: @(value) atIndex: index];
+}
+
+
+- (void) setFloat: (float)value atIndex: (NSUInteger)index {
+    [self setObject: @(value) atIndex: index];
+}
+
+
+- (void) setInteger: (NSInteger)value atIndex: (NSUInteger)index {
+    [self setObject: @(value) atIndex: index];
+}
+
+
+- (void) setNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index {
+    [self setObject: value atIndex: index];
 }
 
 
@@ -177,6 +209,62 @@
 }
 
 
+/** Sets an String object at the given index. A nil value will be converted to an NSNull.
+ @param value    The String object.
+ @param index    The index. This value must not exceed the bounds of the array. */
+- (void) setString: (nullable NSString*)value atIndex: (NSUInteger)index {
+    [self setObject: value atIndex: index];
+}
+
+
+#pragma mark - Type Appenders
+
+
+- (void) addArray: (nullable CBLArray*)value {
+    [self addObject: value];
+}
+
+
+- (void) addBlob: (nullable CBLBlob*)value {
+    [self addObject: value];
+}
+
+
+- (void) addBoolean: (BOOL)value {
+    [self addObject: @(value)];
+}
+
+
+- (void) addDate: (nullable NSDate*)value {
+    [self addObject: value];
+}
+
+
+- (void) addDictionary: (nullable CBLDictionary*)value {
+    [self addObject: value];
+}
+
+
+- (void) addDouble: (double)value {
+    [self addObject: @(value)];
+}
+
+
+- (void) addFloat: (float)value {
+    [self addObject: @(value)];
+}
+
+
+- (void) addInteger: (NSInteger)value {
+    [self addObject: @(value)];
+}
+
+
+- (void) addNumber: (nullable NSNumber*)value {
+    [self addObject: value];
+}
+
+
 - (void) addObject: (id)value  {
     if (!_array)
         [self copyFleeceData];
@@ -184,6 +272,59 @@
     if (!value) value = [NSNull null]; // nil conversion only for apple platform
     [_array addObject: [value cbl_toCBLObject]];
     [self setChanged];
+}
+
+
+- (void) addString: (nullable NSString*)value {
+    [self addObject: value];
+}
+
+
+#pragma mark - Type Inserters
+
+
+- (void) insertArray: (nullable CBLArray*)value atIndex: (NSUInteger)index {
+    [self insertObject: value atIndex: index];
+}
+
+
+- (void) insertBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index {
+    [self insertObject: value atIndex: index];
+}
+
+
+- (void) insertBoolean: (BOOL)value atIndex: (NSUInteger)index {
+    [self insertObject: @(value) atIndex: index];
+}
+
+
+- (void) insertDate: (nullable NSDate*)value atIndex: (NSUInteger)index {
+    [self insertObject: value atIndex: index];
+}
+
+
+- (void) insertDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index {
+    [self insertObject: value atIndex: index];
+}
+
+
+- (void) insertDouble: (double)value atIndex: (NSUInteger)index {
+    [self insertObject: @(value) atIndex: index];
+}
+
+
+- (void) insertFloat: (float)value atIndex: (NSUInteger)index {
+    [self insertObject: @(value) atIndex: index];
+}
+
+
+- (void) insertInteger: (NSInteger)value atIndex: (NSUInteger)index {
+    [self insertObject: @(value) atIndex: index];
+}
+
+
+- (void) insertNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index {
+    [self insertObject: value atIndex: index];
 }
 
 
@@ -195,6 +336,28 @@
     [_array insertObject: [value cbl_toCBLObject] atIndex: index];
     [self setChanged];
 }
+
+
+- (void) insertString: (nullable NSString*)value atIndex: (NSUInteger)index {
+    [self insertObject: value atIndex: index];
+}
+
+
+#pragma mark - Set Content with an Array
+
+
+- (void) setArray:(nullable NSArray *)array {
+    NSMutableArray* result = [NSMutableArray arrayWithCapacity: [array count]];
+    for (id value in array) {
+        [result addObject: [value cbl_toCBLObject]];
+    }
+    
+    _array = result;
+    [self setChanged];
+}
+
+
+#pragma mark - Remove value
 
 
 - (void) removeObjectAtIndex:(NSUInteger)index {
@@ -220,7 +383,7 @@
 }
 
 
-#pragma mark - SUBSCRIPTING
+#pragma mark - Subscript
 
 
 - (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index {
@@ -229,7 +392,7 @@
 }
 
 
-#pragma mark - CHANGE LISTENING
+#pragma mark - Change Listener
 
 
 - (void) objectDidChange: (id)object {
@@ -237,7 +400,15 @@
 }
 
 
-#pragma mark - FLEECE ENCODABLE
+#pragma mark - CBLConversion
+
+
+- (id) cbl_toCBLObject {
+    return self;
+}
+
+
+#pragma mark - Fleece Encodable
 
 
 - (BOOL) cbl_fleeceEncode: (FLEncoder)encoder
@@ -256,7 +427,7 @@
 }
 
 
-#pragma mark - PRIVATE
+#pragma mark - Private
 
 
 - (void) copyFleeceData {

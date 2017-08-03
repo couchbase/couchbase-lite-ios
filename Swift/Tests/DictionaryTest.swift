@@ -18,7 +18,7 @@ class DictionaryTest: CBLTestCase {
         XCTAssert(address.toDictionary() == [:] as [String: Any])
         
         let doc = createDocument("doc1")
-        doc.set(address, forKey: "address")
+        doc.setValue(address, forKey: "address")
         XCTAssert(doc.dictionary(forKey: "address")! === address)
         
         try saveDocument(doc) { (d) in
@@ -38,7 +38,7 @@ class DictionaryTest: CBLTestCase {
         XCTAssert(address.toDictionary() == dict)
         
         let doc = createDocument("doc1")
-        doc.set(address, forKey: "address")
+        doc.setValue(address, forKey: "address")
         XCTAssert(doc.dictionary(forKey: "address")! === address)
         
         try saveDocument(doc, eval: { (d) in
@@ -49,7 +49,7 @@ class DictionaryTest: CBLTestCase {
     
     func testGetValueFromNewEmptyDictionary() throws {
         let doc = createDocument("doc1")
-        doc.set(DictionaryObject(), forKey: "dict")
+        doc.setValue(DictionaryObject(), forKey: "dict")
         
         try saveDocument(doc, eval: { (d) in
             let dict = d.dictionary(forKey: "dict")!
@@ -71,16 +71,16 @@ class DictionaryTest: CBLTestCase {
         let doc = createDocument("doc1")
         
         let level1 = DictionaryObject()
-        level1.set("n1", forKey: "name")
-        doc.set(level1, forKey: "level1")
+        level1.setValue("n1", forKey: "name")
+        doc.setValue(level1, forKey: "level1")
         
         let level2 = DictionaryObject()
-        level2.set("n2", forKey: "name")
-        level1.set(level2, forKey: "level2")
+        level2.setValue("n2", forKey: "name")
+        level1.setValue(level2, forKey: "level2")
         
         let level3 = DictionaryObject()
-        level3.set("n3", forKey: "name")
-        level2.set(level3, forKey: "level3")
+        level3.setValue("n3", forKey: "name")
+        level2.setValue(level3, forKey: "level3")
         
         XCTAssert(doc.dictionary(forKey: "level1")! === level1)
         XCTAssert(level1.dictionary(forKey: "level2")! === level2)
@@ -97,8 +97,8 @@ class DictionaryTest: CBLTestCase {
     func testRemoveDictionary() throws {
         let doc = createDocument("doc1")
         let profile1 = DictionaryObject()
-        profile1.set("Scott Tiger", forKey: "name")
-        doc.set(profile1, forKey: "profile")
+        profile1.setValue("Scott Tiger", forKey: "name")
+        doc.setValue(profile1, forKey: "profile")
         XCTAssert(doc.dictionary(forKey: "profile") === profile1)
         
         // Remove profile
@@ -107,7 +107,7 @@ class DictionaryTest: CBLTestCase {
         XCTAssertFalse(doc.contains("profile"))
         
         // Profile1 should be now detachd:
-        profile1.set(20, forKey: "age")
+        profile1.setValue(20, forKey: "age")
         XCTAssertEqual(profile1.string(forKey: "name")!, "Scott Tiger")
         XCTAssertEqual(profile1.int(forKey: "age"), 20)
         
@@ -122,7 +122,7 @@ class DictionaryTest: CBLTestCase {
     func testEnumeratingKeys() throws {
         var dict = DictionaryObject()
         for i in 0...19 {
-            dict.set(i, forKey: "key\(i)")
+            dict.setValue(i, forKey: "key\(i)")
         }
         var content = dict.toDictionary()
         
@@ -137,8 +137,8 @@ class DictionaryTest: CBLTestCase {
         
         // Update:
         dict.remove(forKey: "key2")
-        dict.set(20, forKey: "key20")
-        dict.set(22, forKey: "key21")
+        dict.setValue(20, forKey: "key20")
+        dict.setValue(22, forKey: "key21")
         content = dict.toDictionary()
         
         result = [:]
@@ -151,7 +151,7 @@ class DictionaryTest: CBLTestCase {
         XCTAssertEqual(count, content.count)
         
         let doc = createDocument("doc1")
-        doc.set(dict, forKey: "dict")
+        doc.setValue(dict, forKey: "dict")
         
         try saveDocument(doc) { (d) in
             result = [:]

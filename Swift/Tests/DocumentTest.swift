@@ -16,33 +16,33 @@ class DocumentTest: CBLTestCase {
     let kTestBlob = "i'm blob"
     
     func populateData(_ doc: Document) {
-        doc.set(true, forKey: "true")
-        doc.set(false, forKey: "false")
-        doc.set("string", forKey: "string")
-        doc.set(0, forKey: "zero")
-        doc.set(1, forKey: "one")
-        doc.set(-1, forKey: "minus_one")
-        doc.set(1.1, forKey: "one_dot_one")
-        doc.set(dateFromJson(kTestDate), forKey: "date")
-        doc.set(NSNull(), forKey: "null")
+        doc.setValue(true, forKey: "true")
+        doc.setValue(false, forKey: "false")
+        doc.setValue("string", forKey: "string")
+        doc.setValue(0, forKey: "zero")
+        doc.setValue(1, forKey: "one")
+        doc.setValue(-1, forKey: "minus_one")
+        doc.setValue(1.1, forKey: "one_dot_one")
+        doc.setValue(dateFromJson(kTestDate), forKey: "date")
+        doc.setValue(NSNull(), forKey: "null")
         
         // Dictionary:
         let dict = DictionaryObject()
-        dict.set("1 Main street", forKey: "street")
-        dict.set("Mountain View", forKey: "city")
-        dict.set("CA", forKey: "state")
-        doc.set(dict, forKey: "dict")
+        dict.setValue("1 Main street", forKey: "street")
+        dict.setValue("Mountain View", forKey: "city")
+        dict.setValue("CA", forKey: "state")
+        doc.setValue(dict, forKey: "dict")
         
         // Array:
         let array = ArrayObject()
-        array.add("650-123-0001")
-        array.add("650-123-0002")
-        doc.set(array, forKey: "array")
+        array.addValue("650-123-0001")
+        array.addValue("650-123-0002")
+        doc.setValue(array, forKey: "array")
         
         // Blob
         let content = kTestBlob.data(using: .utf8)!
         let blob = Blob(contentType: "text/plain", data: content)
-        doc.set(blob, forKey: "blob")
+        doc.setValue(blob, forKey: "blob")
     }
     
     
@@ -191,7 +191,7 @@ class DocumentTest: CBLTestCase {
     
     func testSaveThenGetFromAnotherDB() throws {
         let doc1a = createDocument("doc1")
-        doc1a.set("Scott Tiger", forKey: "name")
+        doc1a.setValue("Scott Tiger", forKey: "name")
         
         try saveDocument(doc1a)
         
@@ -209,7 +209,7 @@ class DocumentTest: CBLTestCase {
     
     func testNoCacheNoLive() throws {
         let doc1a = createDocument("doc1")
-        doc1a.set("Scott Tiger", forKey: "name")
+        doc1a.setValue("Scott Tiger", forKey: "name")
         
         try saveDocument(doc1a)
         
@@ -232,7 +232,7 @@ class DocumentTest: CBLTestCase {
         
         // Update:
         
-        doc1b!.set("Daniel Tiger", forKey: "name")
+        doc1b!.setValue("Daniel Tiger", forKey: "name")
         try saveDocument(doc1b!)
         
         XCTAssertFalse(doc1b!.toDictionary() == doc1a.toDictionary())
@@ -245,8 +245,8 @@ class DocumentTest: CBLTestCase {
     
     func testSetString() throws {
         let doc = createDocument("doc1")
-        doc.set("", forKey: "string1")
-        doc.set("string", forKey: "string2")
+        doc.setValue("", forKey: "string1")
+        doc.setValue("string", forKey: "string2")
         
         try saveDocument(doc) { (d) in
             XCTAssertEqual(d.string(forKey: "string1"), "")
@@ -255,8 +255,8 @@ class DocumentTest: CBLTestCase {
         
         // Update:
         
-        doc.set("string", forKey: "string1")
-        doc.set("", forKey: "string2")
+        doc.setValue("string", forKey: "string1")
+        doc.setValue("", forKey: "string2")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.string(forKey: "string1"), "string")
@@ -288,10 +288,10 @@ class DocumentTest: CBLTestCase {
     
     func testSetNumber() throws {
         let doc = createDocument("doc1")
-        doc.set(1, forKey: "number1")
-        doc.set(0, forKey: "number2")
-        doc.set(-1, forKey: "number3")
-        doc.set(1.1, forKey: "number4")
+        doc.setValue(1, forKey: "number1")
+        doc.setValue(0, forKey: "number2")
+        doc.setValue(-1, forKey: "number3")
+        doc.setValue(1.1, forKey: "number4")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(doc.int(forKey: "number1"), 1)
@@ -303,10 +303,10 @@ class DocumentTest: CBLTestCase {
         
         // Update:
         
-        doc.set(0, forKey: "number1")
-        doc.set(1, forKey: "number2")
-        doc.set(1.1, forKey: "number3")
-        doc.set(-1, forKey: "number4")
+        doc.setValue(0, forKey: "number1")
+        doc.setValue(1, forKey: "number2")
+        doc.setValue(1.1, forKey: "number3")
+        doc.setValue(-1, forKey: "number4")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(doc.int(forKey: "number1"), 0)
@@ -383,12 +383,12 @@ class DocumentTest: CBLTestCase {
     
     func testSetGetMinMaxNumbers() throws {
         let doc = createDocument("doc1")
-        doc.set(Int.min, forKey: "min_int")
-        doc.set(Int.max, forKey: "max_int")
-        doc.set(Float.leastNormalMagnitude, forKey: "min_float")
-        doc.set(Float.greatestFiniteMagnitude, forKey: "max_float")
-        doc.set(Double.leastNormalMagnitude, forKey: "min_double")
-        doc.set(Double.greatestFiniteMagnitude, forKey: "max_double")
+        doc.setValue(Int.min, forKey: "min_int")
+        doc.setValue(Int.max, forKey: "max_int")
+        doc.setValue(Float.leastNormalMagnitude, forKey: "min_float")
+        doc.setValue(Float.greatestFiniteMagnitude, forKey: "max_float")
+        doc.setValue(Double.leastNormalMagnitude, forKey: "min_double")
+        doc.setValue(Double.greatestFiniteMagnitude, forKey: "max_double")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.int(forKey: "min_int"), Int.min);
@@ -411,11 +411,11 @@ class DocumentTest: CBLTestCase {
     
     func testSetGetFloatNumbers() throws {
         let doc = createDocument("doc1")
-        doc.set(1.00, forKey: "number1")
-        doc.set(1.49, forKey: "number2")
-        doc.set(1.50, forKey: "number3")
-        doc.set(1.51, forKey: "number4")
-        doc.set(1.99, forKey: "number5")
+        doc.setValue(1.00, forKey: "number1")
+        doc.setValue(1.49, forKey: "number2")
+        doc.setValue(1.50, forKey: "number3")
+        doc.setValue(1.51, forKey: "number4")
+        doc.setValue(1.99, forKey: "number5")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.int(forKey: "number1"), 1);
@@ -443,8 +443,8 @@ class DocumentTest: CBLTestCase {
     
     func testSetBoolean() throws {
         let doc = createDocument("doc1")
-        doc.set(true, forKey: "boolean1")
-        doc.set(false, forKey: "boolean2")
+        doc.setValue(true, forKey: "boolean1")
+        doc.setValue(false, forKey: "boolean2")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.boolean(forKey: "boolean1"), true);
@@ -453,8 +453,8 @@ class DocumentTest: CBLTestCase {
         
         // Update:
         
-        doc.set(false, forKey: "boolean1")
-        doc.set(true, forKey: "boolean2")
+        doc.setValue(false, forKey: "boolean1")
+        doc.setValue(true, forKey: "boolean2")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.boolean(forKey: "boolean1"), false);
@@ -489,7 +489,7 @@ class DocumentTest: CBLTestCase {
         let date = Date()
         let dateStr = jsonFromDate(date)
         XCTAssertTrue(dateStr.characters.count > 0)
-        doc.set(date, forKey: "date")
+        doc.setValue(date, forKey: "date")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.value(forKey: "date") as! String, dateStr);
@@ -501,7 +501,7 @@ class DocumentTest: CBLTestCase {
         
         let nuDate = Date(timeInterval: 60.0, since: date)
         let nuDateStr = jsonFromDate(nuDate)
-        doc.set(nuDate, forKey: "date")
+        doc.setValue(nuDate, forKey: "date")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.value(forKey: "date") as! String, nuDateStr);
@@ -536,7 +536,7 @@ class DocumentTest: CBLTestCase {
         let doc = createDocument("doc1")
         let content = kTestBlob.data(using: .utf8)!
         let blob = Blob(contentType: "text/plain", data: content)
-        doc.set(blob, forKey: "blob")
+        doc.setValue(blob, forKey: "blob")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertTrue(d.blob(forKey: "blob")!.properties == blob.properties)
@@ -547,7 +547,7 @@ class DocumentTest: CBLTestCase {
         
         let nuContent = "1234567890".data(using: .utf8)!
         let nuBlob = Blob(contentType: "text/plain", data: nuContent)
-        doc.set(nuBlob, forKey: "blob")
+        doc.setValue(nuBlob, forKey: "blob")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertTrue(d.blob(forKey: "blob")!.properties == nuBlob.properties)
@@ -580,8 +580,8 @@ class DocumentTest: CBLTestCase {
     func testSetDictionary() throws {
         var doc = createDocument("doc1")
         var dict = DictionaryObject()
-        dict.set("1 Main street", forKey: "street")
-        doc.set(dict, forKey: "dict")
+        dict.setValue("1 Main street", forKey: "street")
+        doc.setValue(dict, forKey: "dict")
         
         XCTAssertTrue(doc.value(forKey: "dict") as! DictionaryObject === dict)
         doc = try saveDocument(doc)
@@ -592,7 +592,7 @@ class DocumentTest: CBLTestCase {
         // Update:
         
         dict = doc.dictionary(forKey: "dict")!
-        dict.set("Mountain View", forKey: "city")
+        dict.setValue("Mountain View", forKey: "city")
         
         XCTAssertTrue(doc.value(forKey: "dict") as! DictionaryObject === doc.dictionary(forKey: "dict")!)
         let nsDict: [String: Any] = ["street": "1 Main street", "city": "Mountain View"]
@@ -631,10 +631,10 @@ class DocumentTest: CBLTestCase {
     func testSetArray() throws {
         var doc = createDocument("doc1")
         var array = ArrayObject()
-        array.add("item1")
-        array.add("item2")
-        array.add("item3")
-        doc.set(array, forKey: "array")
+        array.addValue("item1")
+        array.addValue("item2")
+        array.addValue("item3")
+        doc.setValue(array, forKey: "array")
         
         XCTAssertTrue(doc.value(forKey: "array") as! ArrayObject === array)
         XCTAssertTrue(doc.array(forKey: "array")! === array)
@@ -649,8 +649,8 @@ class DocumentTest: CBLTestCase {
         // Update:
         
         array = doc.array(forKey: "array")!
-        array.add("item4")
-        array.add("item5")
+        array.addValue("item4")
+        array.addValue("item5")
         
         doc = try saveDocument(doc)
         
@@ -683,7 +683,7 @@ class DocumentTest: CBLTestCase {
     
     func testSetNSNull() throws {
         let doc = createDocument("doc1")
-        doc.set(NSNull(), forKey: "null")
+        doc.setValue(NSNull(), forKey: "null")
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.value(forKey: "null") as! NSNull, NSNull())
             XCTAssertEqual(d.count, 1)
@@ -697,7 +697,7 @@ class DocumentTest: CBLTestCase {
                     "state": "CA"]
         
         var doc = createDocument("doc1")
-        doc.set(dict, forKey: "address")
+        doc.setValue(dict, forKey: "address")
         
         let address = doc.dictionary(forKey: "address")!
         XCTAssertTrue(address === doc.value(forKey: "address") as! DictionaryObject)
@@ -710,7 +710,7 @@ class DocumentTest: CBLTestCase {
         let nuDict = ["street": "1 Second street",
                       "city": "Palo Alto",
                       "state": "CA"]
-        doc.set(nuDict, forKey: "address")
+        doc.setValue(nuDict, forKey: "address")
         
         // Check whether the old address dictionary is still accessible:
         XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
@@ -723,7 +723,7 @@ class DocumentTest: CBLTestCase {
         XCTAssertTrue(address !== nuAddress)
         
         // Update nuAddress:
-        nuAddress.set("94032", forKey: "zip")
+        nuAddress.setValue("94032", forKey: "zip")
         XCTAssertEqual(nuAddress.string(forKey: "zip"), "94032")
         XCTAssertNil(address.string(forKey: "zip"))
         
@@ -742,7 +742,7 @@ class DocumentTest: CBLTestCase {
         let array = ["a", "b", "c"]
         
         var doc = createDocument("doc1")
-        doc.set(array, forKey: "members")
+        doc.setValue(array, forKey: "members")
         
         let members = doc.array(forKey: "members")!
         XCTAssertTrue(members === doc.value(forKey: "members") as! ArrayObject)
@@ -754,7 +754,7 @@ class DocumentTest: CBLTestCase {
         
         // Update with a new array:
         let nuArray = ["d", "e", "f"]
-        doc.set(nuArray, forKey: "members")
+        doc.setValue(nuArray, forKey: "members")
         
         // Check whether the old members array is still accessible:
         XCTAssertEqual(members.count, 3)
@@ -768,7 +768,7 @@ class DocumentTest: CBLTestCase {
         XCTAssertTrue(nuMembers !== members)
         
         // Update nuMembers:
-        nuMembers.add("g")
+        nuMembers.addValue("g")
         XCTAssertEqual(nuMembers.count, 4)
         XCTAssertEqual(nuMembers.string(at: 3), "g")
         
@@ -783,18 +783,18 @@ class DocumentTest: CBLTestCase {
     func testUpdateNestedDictionary() throws {
         var doc = createDocument("doc1")
         let addresses = DictionaryObject()
-        doc.set(addresses, forKey: "addresses")
+        doc.setValue(addresses, forKey: "addresses")
         
         var shipping = DictionaryObject()
-        shipping.set("1 Main street", forKey: "street")
-        shipping.set("Mountain View", forKey: "city")
-        shipping.set("CA", forKey: "state")
-        addresses.set(shipping, forKey: "shipping")
+        shipping.setValue("1 Main street", forKey: "street")
+        shipping.setValue("Mountain View", forKey: "city")
+        shipping.setValue("CA", forKey: "state")
+        addresses.setValue(shipping, forKey: "shipping")
         
         doc = try saveDocument(doc)
         
         shipping = doc.dictionary(forKey: "addresses")!.dictionary(forKey: "shipping")!
-        shipping.set("94042", forKey: "zip")
+        shipping.setValue("94042", forKey: "zip")
         
         doc = try saveDocument(doc)
         
@@ -811,29 +811,29 @@ class DocumentTest: CBLTestCase {
     func testUpdateDictionaryInArray() throws {
         var doc = createDocument("doc1")
         let addresses = ArrayObject()
-        doc.set(addresses, forKey: "addresses")
+        doc.setValue(addresses, forKey: "addresses")
         
         var address1 = DictionaryObject()
-        address1.set("1 Main street", forKey: "street")
-        address1.set("Mountain View", forKey: "city")
-        address1.set("CA", forKey: "state")
-        addresses.add(address1)
+        address1.setValue("1 Main street", forKey: "street")
+        address1.setValue("Mountain View", forKey: "city")
+        address1.setValue("CA", forKey: "state")
+        addresses.addValue(address1)
         
         var address2 = DictionaryObject()
-        address2.set("1 Second street", forKey: "street")
-        address2.set("Palo Alto", forKey: "city")
-        address2.set("CA", forKey: "state")
-        addresses.add(address2)
+        address2.setValue("1 Second street", forKey: "street")
+        address2.setValue("Palo Alto", forKey: "city")
+        address2.setValue("CA", forKey: "state")
+        addresses.addValue(address2)
         
         doc = try saveDocument(doc)
         
         address1 = doc.array(forKey: "addresses")!.dictionary(at: 0)!
-        address1.set("2 Main street", forKey: "street")
-        address1.set("94042", forKey: "zip")
+        address1.setValue("2 Main street", forKey: "street")
+        address1.setValue("94042", forKey: "zip")
         
         address2 = doc.array(forKey: "addresses")!.dictionary(at: 1)!
-        address2.set("2 Second street", forKey: "street")
-        address2.set("94302", forKey: "zip")
+        address2.setValue("2 Second street", forKey: "street")
+        address2.setValue("94302", forKey: "zip")
         
         doc = try saveDocument(doc)
         
@@ -852,31 +852,31 @@ class DocumentTest: CBLTestCase {
     func testUpdateNestedArray() throws {
         var doc = createDocument("doc1")
         let groups = ArrayObject()
-        doc.set(groups, forKey: "groups")
+        doc.setValue(groups, forKey: "groups")
         
         var group1 = ArrayObject()
-        group1.add("a")
-        group1.add("b")
-        group1.add("c")
-        groups.add(group1)
+        group1.addValue("a")
+        group1.addValue("b")
+        group1.addValue("c")
+        groups.addValue(group1)
         
         var group2 = ArrayObject()
-        group2.add(1)
-        group2.add(2)
-        group2.add(3)
-        groups.add(group2)
+        group2.addValue(1)
+        group2.addValue(2)
+        group2.addValue(3)
+        groups.addValue(group2)
         
         doc = try saveDocument(doc)
         
         group1 = doc.array(forKey: "groups")!.array(at: 0)!
-        group1.set("d", at: 0)
-        group1.set("e", at: 1)
-        group1.set("f", at: 2)
+        group1.setValue("d", at: 0)
+        group1.setValue("e", at: 1)
+        group1.setValue("f", at: 2)
         
         group2 = doc.array(forKey: "groups")!.array(at: 1)!
-        group2.set(4, at: 0)
-        group2.set(5, at: 1)
-        group2.set(6, at: 2)
+        group2.setValue(4, at: 0)
+        group2.setValue(5, at: 1)
+        group2.setValue(6, at: 2)
         
         doc = try saveDocument(doc)
         
@@ -890,31 +890,31 @@ class DocumentTest: CBLTestCase {
         
         let group1 = DictionaryObject()
         var member1 = ArrayObject()
-        member1.add("a")
-        member1.add("b")
-        member1.add("c")
-        group1.set(member1, forKey: "member")
-        doc.set(group1, forKey: "group1")
+        member1.addValue("a")
+        member1.addValue("b")
+        member1.addValue("c")
+        group1.setValue(member1, forKey: "member")
+        doc.setValue(group1, forKey: "group1")
         
         let group2 = DictionaryObject()
         var member2 = ArrayObject()
-        member2.add(1)
-        member2.add(2)
-        member2.add(3)
-        group2.set(member2, forKey: "member")
-        doc.set(group2, forKey: "group2")
+        member2.addValue(1)
+        member2.addValue(2)
+        member2.addValue(3)
+        group2.setValue(member2, forKey: "member")
+        doc.setValue(group2, forKey: "group2")
         
         doc = try saveDocument(doc)
         
         member1 = doc.dictionary(forKey: "group1")!.array(forKey: "member")!
-        member1.set("d", at: 0)
-        member1.set("e", at: 1)
-        member1.set("f", at: 2)
+        member1.setValue("d", at: 0)
+        member1.setValue("e", at: 1)
+        member1.setValue("f", at: 2)
         
         member2 = doc.dictionary(forKey: "group2")!.array(forKey: "member")!
-        member2.set(4, at: 0)
-        member2.set(5, at: 1)
-        member2.set(6, at: 2)
+        member2.setValue(4, at: 0)
+        member2.setValue(5, at: 1)
+        member2.setValue(6, at: 2)
         
         doc = try saveDocument(doc)
         
@@ -928,16 +928,16 @@ class DocumentTest: CBLTestCase {
         var doc = createDocument("doc1")
         
         let address = DictionaryObject()
-        address.set("1 Main street", forKey: "street")
-        address.set("Mountain View", forKey: "city")
-        address.set("CA", forKey: "state")
-        doc.set(address, forKey: "shipping")
-        doc.set(address, forKey: "billing")
+        address.setValue("1 Main street", forKey: "street")
+        address.setValue("Mountain View", forKey: "city")
+        address.setValue("CA", forKey: "state")
+        doc.setValue(address, forKey: "shipping")
+        doc.setValue(address, forKey: "billing")
         
         XCTAssert(doc.dictionary(forKey: "shipping")! === address)
         XCTAssert(doc.dictionary(forKey: "billing")! === address)
         
-        address.set("94042", forKey: "zip")
+        address.setValue("94042", forKey: "zip")
         XCTAssertEqual(doc.dictionary(forKey: "shipping")!.string(forKey: "zip"), "94042")
         XCTAssertEqual(doc.dictionary(forKey: "billing")!.string(forKey: "zip"), "94042")
         
@@ -951,8 +951,8 @@ class DocumentTest: CBLTestCase {
         XCTAssert(billing !== address)
         XCTAssert(shipping !== billing)
         
-        shipping.set("2 Main street", forKey: "street")
-        billing.set("3 Main street", forKey: "street")
+        shipping.setValue("2 Main street", forKey: "street")
+        billing.setValue("3 Main street", forKey: "street")
         
         // Save update:
         doc = try saveDocument(doc)
@@ -966,17 +966,17 @@ class DocumentTest: CBLTestCase {
         var doc = createDocument("doc1")
         
         let phones = ArrayObject()
-        phones.add("650-000-0001")
-        phones.add("650-000-0002")
+        phones.addValue("650-000-0001")
+        phones.addValue("650-000-0002")
         
-        doc.set(phones, forKey: "mobile")
-        doc.set(phones, forKey: "home")
+        doc.setValue(phones, forKey: "mobile")
+        doc.setValue(phones, forKey: "home")
         
         XCTAssert(doc.array(forKey: "mobile")! === phones)
         XCTAssert(doc.array(forKey: "home")! === phones)
         
         // Update phones: both mobile and home should get the update
-        phones.add("650-000-0003")
+        phones.addValue("650-000-0003")
         XCTAssert(doc.array(forKey: "mobile")!.toArray() ==
             ["650-000-0001", "650-000-0002", "650-000-0003"])
         XCTAssert(doc.array(forKey: "home")!.toArray() ==
@@ -992,8 +992,8 @@ class DocumentTest: CBLTestCase {
         XCTAssert(mobile !== home)
         
         // Update mobile and home:
-        mobile.add("650-000-1234")
-        home.add("650-000-5678")
+        mobile.addValue("650-000-1234")
+        home.addValue("650-000-5678")
         
         doc = try saveDocument(doc)
         
@@ -1100,7 +1100,7 @@ class DocumentTest: CBLTestCase {
     
     func failingTestDeleteNewDocument() throws {
         let doc = createDocument("doc1")
-        doc.set("Scott Tiger", forKey: "name")
+        doc.setValue("Scott Tiger", forKey: "name")
         XCTAssertFalse(doc.isDeleted)
         
         var error: NSError?
@@ -1119,7 +1119,7 @@ class DocumentTest: CBLTestCase {
     
     func testDeleteDocument() throws {
         let doc = createDocument("doc1")
-        doc.set("Scott Tiger", forKey: "name")
+        doc.setValue("Scott Tiger", forKey: "name")
         XCTAssertFalse(doc.isDeleted)
         
         // Save:
@@ -1156,7 +1156,7 @@ class DocumentTest: CBLTestCase {
         XCTAssertEqual(address.string(forKey: "state"), "CA")
         
         // Make changes to the dictionary shouldn't affect the document.
-        address.set("94042", forKey: "zip")
+        address.setValue("94042", forKey: "zip")
         XCTAssertNil(doc.dictionary(forKey: "address"))
         XCTAssert(doc.toDictionary() == [:] as [String: Any])
     }
@@ -1164,8 +1164,8 @@ class DocumentTest: CBLTestCase {
     
     func testPurgeDocument() throws {
         let doc = createDocument("doc1")
-        doc.set("profile", forKey: "type")
-        doc.set("Scott", forKey: "name")
+        doc.setValue("profile", forKey: "type")
+        doc.setValue("Scott", forKey: "name")
         XCTAssertFalse(doc.isDeleted)
         
         // Purge before save:
@@ -1184,7 +1184,7 @@ class DocumentTest: CBLTestCase {
     
     func testReopenDB() throws {
         var doc = createDocument("doc1")
-        doc.set("str", forKey: "string")
+        doc.setValue("str", forKey: "string")
         
         try saveDocument(doc)
         
@@ -1200,8 +1200,8 @@ class DocumentTest: CBLTestCase {
         let content = kTestBlob.data(using: String.Encoding.utf8)!
         var blob = Blob(contentType: "text/plain", data: content)
         var doc = createDocument("doc1")
-        doc.set(blob, forKey: "data")
-        doc.set("Jim", forKey: "name")
+        doc.setValue(blob, forKey: "data")
+        doc.setValue("Jim", forKey: "name")
         
         try saveDocument(doc)
         try reopenDB()
@@ -1231,7 +1231,7 @@ class DocumentTest: CBLTestCase {
         XCTAssertNotNil(blob)
         
         var doc = createDocument("doc1")
-        doc.set(blob, forKey: "data")
+        doc.setValue(blob, forKey: "data")
         
         doc = try saveDocument(doc)
         
@@ -1249,7 +1249,7 @@ class DocumentTest: CBLTestCase {
         let content = kTestBlob.data(using: String.Encoding.utf8)!
         var blob = Blob(contentType: "text/plain", data: content)
         var doc = createDocument("doc1")
-        doc.set(blob, forKey: "data")
+        doc.setValue(blob, forKey: "data")
         
         blob = doc.blob(forKey: "data")!
         for _ in 1...5 {
@@ -1281,8 +1281,8 @@ class DocumentTest: CBLTestCase {
         let content = kTestBlob.data(using: String.Encoding.utf8)!
         let blob = Blob(contentType: "text/plain", data: content)
         var doc = createDocument("doc1")
-        doc.set(blob, forKey: "data")
-        doc.set("Jim", forKey: "name")
+        doc.setValue(blob, forKey: "data")
+        doc.setValue("Jim", forKey: "name")
         
         try saveDocument(doc)
         
@@ -1292,7 +1292,7 @@ class DocumentTest: CBLTestCase {
         try reopenDB()
         
         doc = db.getDocument("doc1")!
-        doc.set("bar", forKey: "foo")
+        doc.setValue("bar", forKey: "foo")
         try saveDocument(doc)
         
         XCTAssert(doc.value(forKey: "data") as? Blob != nil)
@@ -1303,7 +1303,7 @@ class DocumentTest: CBLTestCase {
     func testEnumeratingKeys() throws {
         let doc = createDocument("doc1")
         for i in 0...19 {
-            doc.set(i, forKey: "key\(i)")
+            doc.setValue(i, forKey: "key\(i)")
         }
         var content = doc.toDictionary()
         
@@ -1319,8 +1319,8 @@ class DocumentTest: CBLTestCase {
         // Update:
         
         doc.remove(forKey: "key2")
-        doc.set(20, forKey: "key20")
-        doc.set(21, forKey: "key21")
+        doc.setValue(20, forKey: "key20")
+        doc.setValue(21, forKey: "key21")
         content = doc.toDictionary()
         
         try saveDocument(doc) { (d) in

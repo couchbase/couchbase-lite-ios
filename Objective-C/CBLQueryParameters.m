@@ -14,13 +14,48 @@
 }
 
 
-- (void) setValue: (id)value forName: (NSString*)name {
+- (void) setBoolean: (BOOL)value forName: (NSString*)name {
+    [self setObject: @(value) forName: name];
+}
+
+
+- (void) setDate: (nullable NSDate*)value forName: (NSString*)name {
+    [self setObject: value forName: name];
+}
+
+
+- (void) setDouble: (double)value forName: (NSString*)name {
+    [self setObject: @(value) forName: name];
+}
+
+
+- (void) setFloat: (float)value forName: (NSString*)name {
+    [self setObject: @(value) forName: name];
+}
+
+
+- (void) setInteger: (NSInteger)value forName: (NSString*)name {
+    [self setObject: @(value) forName: name];
+}
+
+
+- (void) setNumber: (nullable NSNumber*)value forName: (NSString*)name {
+    [self setObject: value forName: name];
+}
+
+
+- (void) setObject: (id)value forName: (NSString*)name {
     if (!_params) {
         _params = [NSMutableDictionary dictionary];
     }
     if (!value)
         value = [NSNull null]; // Only for Apple platform
     _params[name] = value;
+}
+
+
+- (void) setString: (nullable NSString*)value forName: (NSString*)name {
+    [self setObject: value forName: name];
 }
 
 

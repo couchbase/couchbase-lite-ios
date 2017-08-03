@@ -527,8 +527,8 @@
                             where: [NUMBER1 between: PARAM_N1 and: PARAM_N2]
                           orderBy: @[[CBLQueryOrdering expression: NUMBER1]]];
     
-    [q.parameters setValue: @(2) forName: @"num1"];
-    [q.parameters setValue: @(5) forName: @"num2"];
+    [q.parameters setObject: @(2) forName: @"num1"];
+    [q.parameters setObject: @(5) forName: @"num2"];
     
     NSArray* expectedNumbers = @[@2, @3, @4, @5];
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) {
@@ -604,7 +604,7 @@
                   where: nil groupBy: nil having: nil
                 orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
                   limit: [CBLQueryLimit limit: [CBLQueryExpression parameterNamed: @"LIMIT_NUM"]]];
-    [q.parameters setValue: @3 forName: @"LIMIT_NUM"];
+    [q.parameters setObject: @3 forName: @"LIMIT_NUM"];
     
     expectedNumbers = @[@1, @2, @3];
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
@@ -641,8 +641,8 @@
                 orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
                   limit: [CBLQueryLimit limit: [CBLQueryExpression parameterNamed: @"LIMIT_NUM"]
                                        offset: [CBLQueryExpression parameterNamed:@"OFFSET_NUM"]]];
-    [q.parameters setValue: @3 forName: @"LIMIT_NUM"];
-    [q.parameters setValue: @5 forName: @"OFFSET_NUM"];
+    [q.parameters setObject: @3 forName: @"LIMIT_NUM"];
+    [q.parameters setObject: @5 forName: @"OFFSET_NUM"];
     
     expectedNumbers = @[@6, @7, @8];
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)

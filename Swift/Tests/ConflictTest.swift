@@ -23,19 +23,19 @@ class ConflictTest: CBLTestCase {
             let resolved = Document()
             if let base = conflict.base {
                 for key in base {
-                    resolved.set(base.value(forKey: key), forKey: key)
+                    resolved.setValue(base.value(forKey: key), forKey: key)
                 }
             }
             
             var changed = Set<String>()
             for key in conflict.theirs {
-                resolved.set(conflict.theirs.value(forKey: key), forKey: key)
+                resolved.setValue(conflict.theirs.value(forKey: key), forKey: key)
                 changed.insert(key)
             }
             
             for key in conflict.mine {
                 if !changed.contains(key) {
-                    resolved.set(conflict.mine.value(forKey: key), forKey: key)
+                    resolved.setValue(conflict.mine.value(forKey: key), forKey: key)
                 }
             }
             return resolved
@@ -61,8 +61,8 @@ class ConflictTest: CBLTestCase {
     func setupConflict() throws -> Document {
         // Setup a default database conflict resolver:
         let doc = createDocument("doc1")
-        doc.set("profile", forKey: "type")
-        doc.set("Scott", forKey: "name")
+        doc.setValue("profile", forKey: "type")
+        doc.setValue("Scott", forKey: "name")
         try saveDocument(doc)
         
         // Force a conflict:
@@ -70,7 +70,7 @@ class ConflictTest: CBLTestCase {
         try saveProperties(properties, docID: doc.id)
         
         // Change document in memory, so save will trigger a conflict
-        doc.set("Scott Pilgrim", forKey: "name")
+        doc.setValue("Scott Pilgrim", forKey: "name")
         return doc
     }
     
@@ -102,8 +102,8 @@ class ConflictTest: CBLTestCase {
         try reopenDB()
         
         let doc2 = createDocument("doc2")
-        doc2.set("profile", forKey: "type")
-        doc2.set("Scott", forKey: "name")
+        doc2.setValue("profile", forKey: "type")
+        doc2.setValue("Scott", forKey: "name")
         try saveDocument(doc2)
         
         // Force a conflict again:
@@ -112,8 +112,8 @@ class ConflictTest: CBLTestCase {
         properties["gender"] = "male"
         try saveProperties(properties, docID: doc2.id)
         
-        doc2.set("biography", forKey: "type")
-        doc2.set(31, forKey: "age")
+        doc2.setValue("biography", forKey: "type")
+        doc2.setValue(31, forKey: "age")
         try saveDocument(doc2)
         
         XCTAssertEqual(doc2.int(forKey: "age"), 31)

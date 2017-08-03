@@ -11,7 +11,7 @@
 /** Document change information  */
 @interface CBLDocumentChange : NSObject
 
-/** The ID of the document that changed. */
+/** The ID  of the document that changed. */
 @property (readonly, nonatomic) NSString* documentID;
 
 @end
