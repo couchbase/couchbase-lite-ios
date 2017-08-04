@@ -281,11 +281,11 @@ NS_ASSUME_NONNULL_BEGIN
     if at least one of the items in the array satisfies the given satisfies expression.
     @param variableName The variable name represent to an item in the array.
     @param inExpression The array expression that can be evaluated as an array.
-    @param satisfiesExpression  The expression to be evaluated with. 
+    @param satisfies  The expression to be evaluated with.
     @return An ANY quantifies operator. */
 + (CBLQueryExpression*) any: (NSString*)variableName
                          in: (id)inExpression
-                  satisfies: (id)satisfiesExpression;
+                  satisfies: (CBLQueryExpression*)satisfies;
 
 /** Creates an ANY AND EVERY quantified operator (ANY AND EVERY <variable name> IN <expr>
     SATISFIES <expr>) to evaluate expressions over an array. The ANY AND EVERY operator
@@ -293,22 +293,22 @@ NS_ASSUME_NONNULL_BEGIN
     satisfies the given satisfies expression.
     @param variableName The variable name represent to an item in the array.
     @param inExpression The array expression that can be evaluated as an array.
-    @param satisfiesExpression  The expression to be evaluated with. 
+    @param satisfies  The expression to be evaluated with.
     @return An ANY AND EVERY quantifies operator. */
 + (CBLQueryExpression*) anyAndEvery: (NSString*)variableName
                                  in: (id)inExpression
-                          satisfies: (id)satisfiesExpression;
+                          satisfies: (CBLQueryExpression*)satisfies;
 
 /** Creates an EVERY quantified operator (ANY <variable name> IN <expr> SATISFIES <expr>)
     to evaluate expressions over an array. The EVERY operator returns TRUE
     if the array is empty OR every item in the array satisfies the given satisfies expression.
     @param variableName The variable name represent to an item in the array.
     @param inExpression The array expression that can be evaluated as an array.
-    @param satisfiesExpression  The expression to be evaluated with.
+    @param satisfies  The expression to be evaluated with.
     @return An EVERY quantifies operator. */
 + (CBLQueryExpression*) every: (NSString*)variableName
                            in: (id)inExpression
-                    satisfies: (id)satisfiesExpression;
+                    satisfies: (CBLQueryExpression*)satisfies;
 
 /** Not available. */
 - (instancetype) init NS_UNAVAILABLE;

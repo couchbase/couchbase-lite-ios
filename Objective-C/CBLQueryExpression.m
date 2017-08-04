@@ -302,7 +302,7 @@
 
 - (CBLQueryExpression*) in: (NSArray*)expressions {
     CBLQueryExpression* aggr =
-    [[CBLAggregateExpression alloc] initWithExpressions: expressions];
+        [[CBLAggregateExpression alloc] initWithExpressions: expressions];
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: aggr
                                                           type: CBLInBinaryExpType];
@@ -324,34 +324,34 @@
 
 + (CBLQueryExpression*) any: (NSString*)variableName
                          in: (id)inExpression
-                  satisfies: (id)satisfiesExpression
+                  satisfies: (CBLQueryExpression*)satisfies
 {
     return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeAny
                                                 variable: variableName
                                                       in: inExpression
-                                               satisfies: satisfiesExpression];
+                                               satisfies: satisfies];
 }
 
 
 + (CBLQueryExpression*) anyAndEvery: (NSString*)variableName
                                  in: (id)inExpression
-                          satisfies: (id)satisfiesExpression
+                          satisfies: (CBLQueryExpression*)satisfies
 {
     return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeAnyAndEvery
                                                 variable: variableName
                                                       in: inExpression
-                                               satisfies: satisfiesExpression];
+                                               satisfies: satisfies];
 }
 
 
 + (CBLQueryExpression*) every: (NSString*)variableName
                            in: (id)inExpression
-                    satisfies: (id)satisfiesExpression
+                    satisfies: (CBLQueryExpression*)satisfies
 {
     return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeEvery
                                                 variable: variableName
                                                       in: inExpression
-                                               satisfies: satisfiesExpression];
+                                               satisfies: satisfies];
 }
 
 @end

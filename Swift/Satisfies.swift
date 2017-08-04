@@ -20,9 +20,9 @@ public class Satisfies {
     /** Creates a complete quantified operator with the given satisfies expression.
         @param expression   The satisfies expression used for evaluating each item in the array.
         @return A quantified expression. */
-    public func satisfies(_ expression: Any) -> Expression {
+    public func satisfies(_ expression: Expression) -> Expression {
         let impl = Satisfies.toImpl(type: self.type, variable: self.variable,
-                                    inExpression: self.inExpression, satisfiesExpression: expression)
+                                    inExpression: self.inExpression, satisfies: expression)
         return Expression(impl)
     }
     
@@ -38,11 +38,11 @@ public class Satisfies {
         self.inExpression = inExpression
     }
     
-    static func toImpl(type: QuantifiesType, variable: String,
-                       inExpression: Any, satisfiesExpression: Any) -> CBLQueryExpression
+    static func toImpl(type: QuantifiesType, variable: String, inExpression: Any,
+                       satisfies: Expression) -> CBLQueryExpression
     {
         let inImpl = Expression.toImpl(inExpression)
-        let satisfiesImpl = Expression.toImpl(satisfiesExpression)
+        let satisfiesImpl = satisfies.impl
         switch type {
         case .any:
             return CBLQueryExpression.any(variable, in: inImpl, satisfies: satisfiesImpl)
