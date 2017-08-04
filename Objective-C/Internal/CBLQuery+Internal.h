@@ -75,6 +75,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) NSString* alias;
 
+@property (nonatomic, readonly, nullable) NSString* columnName;
+
 - (instancetype) initWithDataSource: (id)source as: (nullable NSString*)alias;
 
 @end
@@ -82,9 +84,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQuerySelectResult () <CBLQueryJSONEncoding>
 
-- (instancetype) initWithExpression: (CBLQueryExpression*)expression as: (nullable NSString*)alias;
+- (instancetype) initWithExpression: (CBLQueryExpression*)expression
+                                 as: (nullable NSString*)alias;
 
-- (nullable NSString*) columnName;
+@property (nonatomic, readonly, nullable) NSString* columnName;
 
 @end
 

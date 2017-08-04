@@ -11,6 +11,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+extern NSString* kCBLAllPropertiesName;
+
 @interface CBLPropertyExpression : CBLQueryExpression
 
 @property(nonatomic, readonly) NSString* keyPath;
@@ -22,6 +24,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithKeyPath: (NSString*)keyPath
                       columnName: (nullable NSString*)columnName
                             from: (nullable NSString*)from;
+
+
++ (instancetype) allFrom: (nullable NSString*)from;
 
 @end
 

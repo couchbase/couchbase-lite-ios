@@ -880,6 +880,87 @@ class QueryTest: CBLTestCase {
     }
     
     
+    func testSelectAll() throws {
+        try loadNumbers(100)
+        
+        let NUMBER1 = Expression.property("number1")
+        let RES_STAR = SelectResult.all()
+        let RES_NUMBER1 = SelectResult.expression(NUMBER1)
+        
+        let TESTDB_NUMBER1 = Expression.property("number1").from("testdb")
+        let RES_TESTDB_STAR = SelectResult.all().from("testdb")
+        let RES_TESTDB_NUMBER1 = SelectResult.expression(TESTDB_NUMBER1)
+        
+        // SELECT *
+        var q = Query
+            .select(RES_STAR)
+            .from(DataSource.database(db))
+        
+        var numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.count, 1)
+            let a1 = r.dictionary(at: 0)!
+            let a2 = r.dictionary(forKey: db.name)!
+            XCTAssertEqual(a1.int(forKey: "number1"), Int(n))
+            XCTAssertEqual(a1.int(forKey: "number2"), Int(100 - n))
+            XCTAssertEqual(a2.int(forKey: "number1"), Int(n))
+            XCTAssertEqual(a2.int(forKey: "number2"), Int(100 - n))
+        })
+        XCTAssertEqual(numRow, 100)
+        
+        // SELECT testdb.*
+        q = Query
+            .select(RES_TESTDB_STAR)
+            .from(DataSource.database(db).as("testdb"))
+        
+        numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.count, 1)
+            let a1 = r.dictionary(at: 0)!
+            let a2 = r.dictionary(forKey: "testdb")!
+            XCTAssertEqual(a1.int(forKey: "number1"), Int(n))
+            XCTAssertEqual(a1.int(forKey: "number2"), Int(100 - n))
+            XCTAssertEqual(a2.int(forKey: "number1"), Int(n))
+            XCTAssertEqual(a2.int(forKey: "number2"), Int(100 - n))
+        })
+        XCTAssertEqual(numRow, 100)
+        
+        // SELECT *, number1
+        q = Query
+            .select(RES_STAR, RES_NUMBER1)
+            .from(DataSource.database(db))
+        
+        numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.count, 2)
+            let a1 = r.dictionary(at: 0)!
+            let a2 = r.dictionary(forKey: db.name)!
+            XCTAssertEqual(a1.int(forKey: "number1"), Int(n))
+            XCTAssertEqual(a1.int(forKey: "number2"), Int(100 - n))
+            XCTAssertEqual(a2.int(forKey: "number1"), Int(n))
+            XCTAssertEqual(a2.int(forKey: "number2"), Int(100 - n))
+            XCTAssertEqual(r.int(at: 1), Int(n))
+            XCTAssertEqual(r.int(forKey: "number1"), Int(n))
+        })
+        XCTAssertEqual(numRow, 100)
+        
+        // SELECT testdb.*, testdb.number1
+        q = Query
+            .select(RES_TESTDB_STAR, RES_TESTDB_NUMBER1)
+            .from(DataSource.database(db).as("testdb"))
+        
+        numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.count, 2)
+            let a1 = r.dictionary(at: 0)!
+            let a2 = r.dictionary(forKey: "testdb")!
+            XCTAssertEqual(a1.int(forKey: "number1"), Int(n))
+            XCTAssertEqual(a1.int(forKey: "number2"), Int(100 - n))
+            XCTAssertEqual(a2.int(forKey: "number1"), Int(n))
+            XCTAssertEqual(a2.int(forKey: "number2"), Int(100 - n))
+            XCTAssertEqual(r.int(at: 1), Int(n))
+            XCTAssertEqual(r.int(forKey: "number1"), Int(n))
+        })
+        XCTAssertEqual(numRow, 100)
+    }
+    
+    
     func testLiveQuery() throws {
         try loadNumbers(100)
         var count = 0;

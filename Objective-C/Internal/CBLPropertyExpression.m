@@ -9,6 +9,8 @@
 #import "CBLPropertyExpression.h"
 #import "CBLQuery+Internal.h"
 
+NSString* kCBLAllPropertiesName = @"";
+
 @implementation CBLPropertyExpression
 
 @synthesize keyPath=_keyPath, columnName=_columnName, from=_from;
@@ -25,6 +27,14 @@
     return self;
 }
 
+
++ (instancetype) allFrom: (nullable NSString*)from {
+    // Use data source alias name as the column name if specified:
+    NSString* colName = from ? from : kCBLAllPropertiesName;
+    return [[self alloc] initWithKeyPath: kCBLAllPropertiesName columnName: colName from: from];
+}
+
+
 - (id) asJSON {
     NSMutableArray* json = [NSMutableArray array];
     if ([_keyPath hasPrefix: @"rank("]) {
@@ -40,6 +50,7 @@
     }
     return json;
 }
+
 
 - (NSString*) columnName {
     if (!_columnName)

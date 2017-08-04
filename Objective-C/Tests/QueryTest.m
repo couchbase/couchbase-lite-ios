@@ -990,6 +990,87 @@
 }
 
 
+- (void) testSelectAll {
+    [self loadNumbers: 100];
+    
+    CBLQueryExpression* NUMBER1 = [CBLQueryExpression property: @"number1"];
+    CBLQuerySelectResult* RES_NUMBER1 = [CBLQuerySelectResult expression: NUMBER1];
+    CBLQuerySelectResult* RES_STAR = [CBLQuerySelectResult all];
+    
+    CBLQueryExpression* TESTDB_NUMBER1 = [CBLQueryExpression property: @"number1" from: @"testdb"];
+    CBLQuerySelectResult* RES_TESTDB_NUMBER1 = [CBLQuerySelectResult expression: TESTDB_NUMBER1];
+    CBLQuerySelectResult* RES_TESTDB_STAR = [CBLQuerySelectResult allFrom: @"testdb"];
+    
+    // SELECT *
+    CBLQuery* q = [CBLQuery select: @[RES_STAR]
+                              from: [CBLQueryDataSource database: self.db]];
+    
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+    {
+        AssertEqual(r.count, 1u);
+        CBLDictionary* a1 = [r objectAtIndex: 0];
+        CBLDictionary* a2 = [r objectForKey: self.db.name];
+        AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
+        AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
+        AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
+        AssertEqual([a2 integerForKey: @"number2"], (NSInteger)(100 - n));
+    }];
+    AssertEqual(numRows, 100u);
+    
+    // SELECT testdb.*
+    q = [CBLQuery select: @[RES_TESTDB_STAR]
+                    from: [CBLQueryDataSource database: self.db as: @"testdb"]];
+    
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+    {
+        AssertEqual(r.count, 1u);
+        CBLDictionary* a1 = [r objectAtIndex: 0];
+        CBLDictionary* a2 = [r objectForKey: @"testdb"];
+        AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
+        AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
+        AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
+        AssertEqual([a2 integerForKey: @"number2"], (NSInteger)(100 - n));
+    }];
+    AssertEqual(numRows, 100u);
+    
+    // SELECT *, number1
+    q = [CBLQuery select: @[RES_STAR, RES_NUMBER1]
+                    from: [CBLQueryDataSource database: self.db]];
+    
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+    {
+        AssertEqual(r.count, 2u);
+        CBLDictionary* a1 = [r objectAtIndex: 0];
+        CBLDictionary* a2 = [r objectForKey: self.db.name];
+        AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
+        AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
+        AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
+        AssertEqual([a2 integerForKey: @"number2"], (NSInteger)(100 - n));
+        AssertEqual([r integerAtIndex: 1], (NSInteger)n);
+        AssertEqual([r integerForKey: @"number1"], (NSInteger)n);
+    }];
+    AssertEqual(numRows, 100u);
+    
+    // SELECT testdb.*, testdb.number1
+    q = [CBLQuery select: @[RES_TESTDB_STAR, RES_TESTDB_NUMBER1]
+                    from: [CBLQueryDataSource database: self.db as: @"testdb"]];
+    
+    numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+    {
+        AssertEqual(r.count, 2u);
+        CBLDictionary* a1 = [r objectAtIndex: 0];
+        CBLDictionary* a2 = [r objectForKey: @"testdb"];
+        AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
+        AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
+        AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
+        AssertEqual([a2 integerForKey: @"number2"], (NSInteger)(100 - n));
+        AssertEqual([r integerAtIndex: 1], (NSInteger)n);
+        AssertEqual([r integerForKey: @"number1"], (NSInteger)n);
+    }];
+    AssertEqual(numRows, 100u);
+}
+
+
 - (void) testLiveQuery {
     [self loadNumbers: 100];
     

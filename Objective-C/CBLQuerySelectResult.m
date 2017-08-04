@@ -15,7 +15,6 @@
     NSString* _alias;
 }
 
-
 + (instancetype) expression: (CBLQueryExpression*)expression {
     return [self expression: expression as: nil];
 }
@@ -26,10 +25,23 @@
 }
 
 
++ (instancetype) all {
+    return [self allFrom: nil];
+}
+
+
++ (instancetype) allFrom: (nullable NSString*)alias {
+    CBLPropertyExpression* expr = [CBLPropertyExpression allFrom: alias];
+    return [[self alloc] initWithExpression: expr  as: alias];
+}
+
+
 #pragma mark - Internal
 
 
-- (instancetype) initWithExpression: (CBLQueryExpression*)expression as: (nullable NSString*)alias {
+- (instancetype) initWithExpression: (CBLQueryExpression*)expression
+                                 as: (nullable NSString*)alias
+{
     self = [super init];
     if (self) {
         _expression = expression;
@@ -37,6 +49,7 @@
     }
     return self;
 }
+
 
 - (nullable NSString*) columnName {
     if (_alias)

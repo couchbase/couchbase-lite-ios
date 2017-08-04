@@ -11,6 +11,7 @@
 #import "CBLInternal.h"
 #import "CBLLiveQuery+Internal.h"
 #import "CBLQuery+Internal.h"
+#import "CBLPropertyExpression.h"
 #import "CBLQueryResultSet+Internal.h"
 #import "CBLStatus.h"
 #import "c4Query.h"
@@ -590,9 +591,13 @@
     NSMutableDictionary* map = [NSMutableDictionary dictionary];
     NSUInteger index = 0;
     NSUInteger provisionKeyIndex = 0;
+    
     for (CBLQuerySelectResult* select in _select) {
-        // TODO: Support SELECT *
         NSString* name = select.columnName;
+        
+        if ([name isEqualToString: kCBLAllPropertiesName])
+            name = _from.columnName;
+        
         if (!name)
             name = [NSString stringWithFormat:@"$%lu", (unsigned long)(++provisionKeyIndex)];
         

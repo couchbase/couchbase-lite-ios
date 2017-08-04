@@ -28,6 +28,18 @@
 }
 
 
+- (nullable NSString*) columnName {
+    if (_alias)
+        return _alias;
+    else {
+        CBLDatabase* db = $castIf(CBLDatabase, _source);
+        if (db)
+            return db.name;
+    }
+    return nil;
+}
+
+
 + (instancetype) database: (CBLDatabase*)database {
     return [CBLQueryDataSource database: database as: nil];
 }
