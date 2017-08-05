@@ -8,8 +8,13 @@
 
 import Foundation
 
-/** GroupByRouter for creating and chaning a query GROUP BY clause. */
+/// GroupByRouter for creating and chaning a query GROUP BY clause.
 protocol GroupByRouter {
-    /** Create and chain a GROUP BY component. */
+    
+    /// Creates and chains a GroupBy object to group the query result.
+    ///
+    /// - Parameter expressions: The group by expression.
+    /// - Returns: The GroupBy object that represents the GROUP BY clause of the query.
     func groupBy(_ expressions: Expression...) -> GroupBy
+    
 }

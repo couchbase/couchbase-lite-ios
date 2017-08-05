@@ -16,6 +16,7 @@
 
 @end
 
+
 /** A protocol defining a document change listener. */
 @protocol CBLDocumentChangeListener <NSObject>
 

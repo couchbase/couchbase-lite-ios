@@ -8,7 +8,8 @@
 
 import Foundation
 
-/** ReadOnlyArrayProtocol defines a set of methods for readonly accessing array data. */
+
+/// ReadOnlyArrayProtocol defines a set of methods for readonly accessing array data.
 protocol ReadOnlyArrayProtocol: ReadOnlyArrayFragment, Sequence {
     var count: Int { get }
     
@@ -35,117 +36,130 @@ protocol ReadOnlyArrayProtocol: ReadOnlyArrayFragment, Sequence {
     func toArray() -> Array<Any>
 }
 
-/** ReadOnlyArrayObject provides readonly access to array data. */
+
+/// ReadOnlyArrayObject provides readonly access to array data.
 public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
+    
     /// Gets a number of the items in the array.
     public var count: Int {
         return Int(_impl.count)
     }
     
     
-    /** Gets value at the given index. The value types are Blob, ReadOnlyArrayObject,
-        ReadOnlyDictionaryObject, Number, or String based on the underlying data type; or nil
-        if the value is nil.
-        - Parameter index: the index.
-        - Returns: the value or nil. */
+    /// Gets the value at the given index. The value types are Blob, ReadOnlyArrayObject,
+    /// ReadOnlyDictionaryObject, Number, or String based on the underlying data type.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The value located at the index.
     public func value(at index: Int) -> Any? {
         return DataConverter.convertGETValue(_impl.object(at: UInt(index)))
     }
     
     
-    /** Gets value at the given index as a string.
-        Returns nil if the value doesn't exist, or its value is not a string.
-        - Parameter index: the index.
-        - Returns: the String value or nil. */
+    /// Gets the value at the given index as a string.
+    /// Returns nil if the value doesn't exist, or its value is not a string
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The String object.
     public func string(at index: Int) -> String? {
         return _impl.string(at: UInt(index))
     }
     
     
-    /** Gets value at the given index as an integer.
-        Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
-        Returns 0 if the value doesn't exist or does not have a numeric value.
-        - Parameter index: the index.
-        - Returns: the Int value. */
+    /// Gets value at the given index as an integer value.
+    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    /// Returns 0 if the value doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The integer value located at the index.
     public func int(at index: Int) -> Int {
         return _impl.integer(at: UInt(index))
     }
     
     
-    /** Gets value at the given index as a float.
-        Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
-        Returns 0.0 if the value doesn't exist or does not have a numeric value.
-        - Parameter index: the index.
-        - Returns: the Float value. */
+    /// Gets the value at the given index as a float value.
+    /// Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
+    //// Returns 0.0 if the value doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The Float value located at the index.
     public func float(at index: Int) -> Float {
         return _impl.float(at: UInt(index))
     }
     
     
-    /** Gets value at the given index as a double.
-        Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
-        Returns 0.0 if the property doesn't exist or does not have a numeric value.
-        - Parameter index: the index.
-        - Returns: the Double value. */
+    /// Gets the value at the given index as a double value.
+    /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
+    /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The Double value located at the index.
     public func double(at index: Int) -> Double {
         return _impl.double(at: UInt(index))
     }
     
     
-    /** Gets value at the given index as a boolean.
-        Returns true if the value exists, and is either `true` or a nonzero number.
-        - Parameter index: the index.
-        - Returns: the Bool value. */
+    /// Gets the value at the given index as a boolean value.
+    /// Returns true if the value exists, and is either `true` or a nonzero number.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The Bool value located at the index.
     public func boolean(at index: Int) -> Bool {
         return _impl.boolean(at: UInt(index))
     }
     
     
-    /** Get value at the given index as a blob.
-        Returns nil if the value doesn't exist, or its value is not a blob.
-        - Parameter index: the index.
-        - Returns: the Blob object or nil. */
+    /// Get the Blob value at the given index.
+    /// Returns nil if the value doesn't exist, or its value is not a blob.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The Blob value located at the index.
     public func blob(at index: Int) -> Blob? {
         return _impl.blob(at: UInt(index))
     }
     
     
-    /** Gets value at the given index as an Date.
-        JSON does not directly support dates, so the actual property value must be a string, which
-        is then parsed according to the ISO-8601 date format (the default used in JSON.)
-        Returns nil if the value doesn't exist, is not a string, or is not parseable as a date.
-        NOTE: This is not a generic date parser! It only recognizes the ISO-8601 format, with or
-        without milliseconds.
-        - Parameter index: the index.
-        - Returns: the Date object or nil. */
+    /// Gets value at the given index as an Date.
+    /// JSON does not directly support dates, so the actual property value must be a string, which
+    /// is then parsed according to the ISO-8601 date format (the default used in JSON.)
+    /// Returns nil if the value doesn't exist, is not a string, or is not parseable as a date.
+    /// NOTE: This is not a generic date parser! It only recognizes the ISO-8601 format, with or
+    /// without milliseconds.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The Date value at the given index.
     public func date(at index: Int) -> Date? {
         return _impl.date(at: UInt(index))
     }
     
     
-    /** Gets value as a ReadOnlyArrayObject, which is a mapping object of an array value.
-        Returns nil if the value doesn't exists, or its value is not an array.
-        - Parameter index: the index.
-        - Returns: the ReadOnlyArrayObject object or nil. */
+    /// Gets the value at the given index as a ReadOnlyArrayObject value, which is a mapping object 
+    /// of an array value.
+    /// Returns nil if the value doesn't exists, or its value is not an array.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The ReadOnlyArrayObject at the given index.
     public func array(at index: Int) -> ReadOnlyArrayObject? {
         return value(at: index) as? ReadOnlyArrayObject
     }
     
     
-    /** Get value at the given index as a ReadOnlyDictionaryObject, which is a mapping object of
-        a dictionary value.
-        Returns nil if the value doesn't exists, or its value is not a dictionary.
-        - Parameter index: the index.
-        - Returns: the ReadOnlyDictionaryObject object or nil. */
+    /// Get the value at the given index as a ReadOnlyDictionaryObject value, which is a 
+    /// mapping object of a dictionary value.
+    /// Returns nil if the value doesn't exists, or its value is not a dictionary.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The ReadOnlyDictionaryObject
     public func dictionary(at index: Int) -> ReadOnlyDictionaryObject? {
         return value(at: index) as? ReadOnlyDictionaryObject
     }
     
     
-    /** Gets content of the current object as an Array object. The values contained in the
-        returned Array object are all JSON based values.
-        - Returns: the Array object representing the content of the current object in 
-          the JSON format. */
+    /// Gets content of the current object as an Array object. The values contained in the
+    /// returned Array object are all JSON based values.
+    ///
+    /// - Returns: The Array object representing the content of the current object in
+    ///            the JSON format.
     public func toArray() -> Array<Any> {
         return _impl.toArray()
     }
@@ -154,8 +168,9 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     // MARK: Sequence
     
     
-    /** Gets  an iterator over items in the array.
-        - Returns: an array item iterator. */
+    /// Gets an iterator over items in the array.
+    ///
+    /// - Returns: The array item iterator.
     public func makeIterator() -> AnyIterator<Any> {
         var index = 0;
         let count = self.count
@@ -173,9 +188,9 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     // MARK: Subscript
     
     
-    /** Subscript access to a ReadOnlyFragment object by index.
-        - Parameter index: the index.
-        - Returns: the ReadOnlyFragment object. */
+    /// Subscript access to a ReadOnlyFragment object by index
+    ///
+    /// - Parameter index: The Index.
     public subscript(index: Int) -> ReadOnlyFragment {
         return ReadOnlyFragment(_impl[UInt(index)])
     }
@@ -196,4 +211,5 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     
     
     let _impl: CBLReadOnlyArray
+    
 }

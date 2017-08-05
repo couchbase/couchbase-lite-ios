@@ -12,19 +12,27 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/** A query data source. used for specifiying the data source for your query. 
- The current data source supported is the database. */
+/** 
+ A query data source. used for specifiying the data source for your query.
+ The current data source supported is the database.
+ */
 @interface CBLQueryDataSource : NSObject
 
-/** Create a database data source. 
-    @param database The database used as the data source as the query.
-    @return A CBLQueryDatabase instance */
+/** 
+ Create a database data source.
+ 
+ @param database The database used as the data source as the query.
+ @return The CBLQueryDatabase instance.
+ */
 + (instancetype) database: (CBLDatabase*)database;
 
-/** Create a database data source with the given alias name.
-    @param database The database used as the data source as the query.
-    @alias  The alias name of the data source.
-    @return A CBLQueryDatabase instance */
+/** 
+ Create a database data source with the given alias name.
+ 
+ @param database The database used as the data source as the query.
+ @alias The alias name of the data source.
+ @return The CBLQueryDatabase instance.
+ */
 + (instancetype) database: (CBLDatabase*)database as: (nullable NSString*)alias;
 
 /** Not available. */
@@ -32,9 +40,4 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-
 NS_ASSUME_NONNULL_END
-
-// TODO:
-// * Support subquery
-

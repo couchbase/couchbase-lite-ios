@@ -8,8 +8,20 @@
 
 import Foundation
 
-/** A property expression. */
+
+/// A property expression.
 public class PropertyExpression: Expression {
+    
+    /// Specifies an alias name of the data source to query the data from.
+    ///
+    /// - Parameter alias: The alias name of the data source.
+    /// - Returns: The property Expression with the given data source alias name.
+    public func from(_ alias: String) -> Expression {
+        return Expression(CBLQueryExpression.property(property, from: alias))
+    }
+    
+    // Internal
+    
     let property: String
     
     init(property: String) {
@@ -17,8 +29,4 @@ public class PropertyExpression: Expression {
         super.init(CBLQueryExpression.property(property))
     }
     
-    /** Specifies an alias name of the data source to query the data from. */
-    public func from(_ alias: String) -> Expression {
-        return Expression(CBLQueryExpression.property(property, from: alias))
-    }
 }

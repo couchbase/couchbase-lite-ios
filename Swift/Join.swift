@@ -8,35 +8,55 @@
 
 import Foundation
 
-/** A Join component representing a single join clause in the query statement. */
+
+/// A Join component representing a single JOIN clause in the query statement.
 public class Join {
     
-    /** Create a JOIN (same as INNER JOIN) component with the given data source. 
-        Use the returned On component to specify join conditions. */
+    /// Create a JOIN (same as INNER JOIN) component with the given data source.
+    /// Use the returned On component to specify join conditions.
+    ///
+    /// - Parameter datasource: The DataSource object of the JOIN clause.
+    /// - Returns: The On object used for specifying join conditions.
     public static func join(_ datasource: DataSource) -> On {
         return On(datasource: datasource, type: .inner)
     }
     
-    /** Create a LEFT JOIN (same as LEFT OUTER JOIN) component with the given data source. 
-        Use the returned On component to specify join conditions. */
+    
+    /// Create a LEFT JOIN (same as LEFT OUTER JOIN) component with the given data source.
+    /// Use the returned On component to specify join conditions.
+    ///
+    /// - Parameter datasource: The DataSource object of the JOIN clause.
+    /// - Returns: The On object used for specifying join conditions.
     public static func leftJoin(_ datasource: DataSource) -> On {
         return On(datasource: datasource, type: .leftOuter)
     }
     
-    /** Create a LEFT OUTER JOIN component with the given data source.
-        Use the returned On component to specify join conditions. */
+    
+    /// Create a LEFT OUTER JOIN component with the given data source.
+    /// Use the returned On component to specify join conditions.
+    ///
+    /// - Parameter datasource: The DataSource object of the JOIN clause.
+    /// - Returns: The On object used for specifying join conditions.
     public static func leftOuterJoin(_ datasource: DataSource) -> On {
         return On(datasource: datasource, type: .leftOuter)
     }
     
-    /** Create an INNER JOIN component with the given data source.
-        Use the returned On component to specify join conditions. */
+    
+    /// Create an INNER JOIN component with the given data source.
+    /// Use the returned On component to specify join conditions.
+    ///
+    /// - Parameter datasource: The DataSource object of the JOIN clause.
+    /// - Returns: The On object used for specifying join conditions.
     public static func innerJoin(_ datasource: DataSource) -> On {
         return On(datasource: datasource, type: .inner)
     }
     
-    /** Create an CROSS JOIN component with the given data source. 
-        Use the returned On component to specify join conditions. */
+    
+    /// Create an CROSS JOIN component with the given data source.
+    /// Use the returned On component to specify join conditions.
+    ///
+    /// - Parameter datasource: The DataSource object of the JOIN clause.
+    /// - Returns: The On object used for specifying join conditions.
     public static func crossJoin(_ datasource: DataSource) -> On {
         return On(datasource: datasource, type: .cross)
     }
@@ -65,7 +85,7 @@ public class Join {
     case inner, leftOuter, cross
 }
 
-/** On component used for specifying join conditions. */
+/// On component used for specifying join conditions.
 public final class On : Join {
     
     let datasource: DataSource
@@ -78,7 +98,11 @@ public final class On : Join {
         super.init(impl: nil)
     }
     
-    /** Specify join conditions from the given expression. */
+    
+    /// Specify join conditions from the given expression.
+    ///
+    /// - Parameter expression: The Expression object specifying the join conditions.
+    /// - Returns: The Join object that represents a single JOIN clause of the query.
     public func on(_ expression: Expression) -> Join {
         let impl: CBLQueryJoin;
         switch self.type {

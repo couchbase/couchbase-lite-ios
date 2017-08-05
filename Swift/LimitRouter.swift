@@ -8,14 +8,24 @@
 
 import Foundation
 
-/** LimitRouter for creating and chaning a query LIMIT clause to constraint 
-    the number of results returned by a query. */
+
+/// LimitRouter for creating and chaning a query LIMIT clause to constraint
+/// the number of results returned by a query.
 protocol LimitRouter {
-    /** Create and chain a LIMIT component to limit the number of results to not more than 
-        the given limit value. */
+    
+    /// Creates and chains a Limit object to limit the number query results.
+    ///
+    /// - Parameter limit: The limit expression.
+    /// - Returns: The Limit object that represents the LIMIT clause of the query.
     func limit(_ limit: Any) -> Limit
     
-    /** Create and chain a LIMIT component to skip the returned results for the given offset position 
-        and to limit the number of results to not more than the given limit value. */
+    ///  Creates and chains a Limit object to skip the returned results for the given offset
+    ///  position and to limit the number of results to not more than the given limit value.
+    ///
+    /// - Parameters:
+    ///   - limit: The limit expression.
+    ///   - offset: The offset expression.
+    /// - Returns: The Limit object that represents the LIMIT clause of the query.
     func limit(_ limit: Any, offset: Any?) -> Limit
+    
 }

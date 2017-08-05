@@ -77,8 +77,8 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 }
 
 
-- (nullable NSString*) explain: (NSError**)outError {
-    return [_query explain: outError];
+- (nullable NSString*) explain: (NSError**)error {
+    return [_query explain: error];
 }
 
 

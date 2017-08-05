@@ -9,28 +9,30 @@
 import Foundation
 
 
+// MARK: - <#Description#>
 extension Database {
-    /** Creates a value index (type kValueIndex) on a given document property.
-     This will speed up queries that test that property, at the expense of making database writes a
-     little bit slower.
-     @param expressions  Expressions to index, typically key-paths. Can be Expression objects,
-                         NSExpression objects, or Strings that are expression format strings.
-     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
-     @return  True on success, false on failure. */
+    
+    /// Creates a value index (type kValueIndex) on a given document property.
+    /// This will speed up queries that test that property, at the expense of making database writes 
+    /// a little bit slower.
+    ///
+    /// - Parameter expressions: Expressions to index, typically key-paths. Can be Expression objects,
+    ///                          NSExpression objects, or Strings that are expression format strings.
+    /// - Throws: An error on failure.
     public func createIndex(_ expressions: [Any]) throws {
         try _impl.createIndex(on: expressions)
     }
 
-
-    /** Creates an index on a given document property.
-     This will speed up queries that test that property, at the expense of making database writes a
-     little bit slower.
-     @param expressions  Expressions to index, typically key-paths. Can be Expression objects,
-                         NSExpression objects, or Strings that are expression format strings.
-     @param type  Type of index to create (value, full-text or geospatial.)
-     @param options  Options affecting the index, or NULL for default settings.
-     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
-     @return  True on success, false on failure. */
+    
+    /// Creates an index on a given document property.
+    /// This will speed up queries that test that property, at the expense of making database writes 
+    /// a little bit slower.
+    ///
+    /// - Parameters:
+    ///   - expressions: Expressions to index, typically key-paths. Can be Expression objects,
+    ///                  NSExpression objects, or Strings that are expression format strings.
+    ///   - options: Options affecting the index, or NULL for default settings.
+    /// - Throws: An error on failure.
     public func createIndex(_ expressions: [Any], options: IndexOptions) throws {
         var cblType: CBLIndexType
         var cblOptions = CBLIndexOptions()
@@ -65,12 +67,13 @@ extension Database {
         }
     }
 
-
-    /** Deletes an existing index. Returns NO if the index did not exist.
-     @param expressions  Expressions indexed (same parameter given to -createIndexOn:.)
-     @param type  Type of index.
-     @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
-     @return  True if the index existed and was deleted, false if it did not exist. */
+    
+    /// Deletes an existing index. Returns NO if the index did not exist.
+    ///
+    /// - Parameters:
+    ///   - expressions: Expressions indexed (same parameter given to -createIndexOn:.)
+    ///   - type: Type of index.
+    /// - Throws: An error on failure.
     public func deleteIndex(_ expressions: [Any], type: IndexType) throws {
         var expImpls: [Any] = []
         for exp in expressions {
@@ -82,18 +85,20 @@ extension Database {
         }
         try _impl.deleteIndex(on: expImpls, type: type)
     }
+    
 }
 
 
+/// IndexType.
 public typealias IndexType = CBLIndexType
 
-
-/** Specifies the type of index to create, and parameters for certain types of indexes. */
+/// Specifies the type of index to create, and parameters for certain types of indexes.
+///
+/// - valueIndex:  Regular value index.
+/// - fullTextIndex: Full-Text search index.
+/// - geoIndex: Geo searcg index.
 public enum IndexOptions {
-    /** Regular value index. */
     case valueIndex
-    /** Full-Text search index. */
     case fullTextIndex (language: String?, ignoreDiacritics: Bool)
-    /** Geo searcg index. */
     case geoIndex
 }

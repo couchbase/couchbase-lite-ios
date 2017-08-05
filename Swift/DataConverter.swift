@@ -8,6 +8,7 @@
 
 import Foundation
 
+
 /* internal */ class DataConverter {
     static func convertGETValue(_ value: Any?) -> Any? {
         switch value {

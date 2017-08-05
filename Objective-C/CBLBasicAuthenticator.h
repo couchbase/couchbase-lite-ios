@@ -11,9 +11,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/** The CBLBasicAuthenticator class is an authenticator that will authenticate using HTTP Basic
+/** 
+ The CBLBasicAuthenticator class is an authenticator that will authenticate using HTTP Basic
  auth with the given username and password. This should only be used over an SSL/TLS connection,
- as otherwise it's very easy for anyone sniffing network traffic to read the password. */
+ as otherwise it's very easy for anyone sniffing network traffic to read the password.
+ */
 @interface CBLBasicAuthenticator : CBLAuthenticator
 
 /** The username set to the CBLBasicAuthenticator. */

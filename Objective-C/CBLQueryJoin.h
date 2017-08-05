@@ -11,22 +11,35 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ A CBLQueryJoin represents the JOIN clause in the query statement.
+ */
 @interface CBLQueryJoin : NSObject
 
-/** Create a JOIN (same as INNER JOIN) component with the given data source and the on expression */
+/** 
+ Create a JOIN (same as INNER JOIN) component with the given data source and the on expression. 
+ */
 + (instancetype) join: (CBLQueryDataSource*)dataSource on: (CBLQueryExpression*)expression;
 
-/** Create a LEFT JOIN (same as LEFT OUTER JOIN) component with the given data source 
-    and the on expression */
+/** 
+ Create a LEFT JOIN (same as LEFT OUTER JOIN) component with the given data source 
+ and the on expression. 
+ */
 + (instancetype) leftJoin: (CBLQueryDataSource*)dataSource on: (CBLQueryExpression*)expression;
 
-/** Create a LEFT OUTER JOIN component with the given data source and the on expression */
+/** 
+ Create a LEFT OUTER JOIN component with the given data source and the on expression.
+ */
 + (instancetype) leftOuterJoin: (CBLQueryDataSource*)dataSource on: (CBLQueryExpression*)expression;
 
-/** Create an INNER JOIN component with the given data source and the on expression */
+/** 
+ Create an INNER JOIN component with the given data source and the on expression. 
+ */
 + (instancetype) innerJoin: (CBLQueryDataSource*)dataSource on: (CBLQueryExpression*)expression;
 
-/** Create a CROSS JOIN component with the given data source and the on expression */
+/** 
+ Create a CROSS JOIN component with the given data source and the on expression. 
+ */
 + (instancetype) crossJoin: (CBLQueryDataSource*)dataSource on: (CBLQueryExpression*)expression;
 
 /** Not available. */

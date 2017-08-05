@@ -11,37 +11,48 @@
 NS_ASSUME_NONNULL_BEGIN
 
 
-/** A CBLBlob appears as a property of a CBLDocument; it contains arbitrary binary data,
-    tagged with a MIME type.
-    Blobs can be arbitrarily large, and their data is loaded only on demand (when the `content`
-    or `contentStream` properties are accessed), not when the document is loaded.
-    The document's raw JSON form only contains the CBLBlob's metadata (type, length and a digest of
-    the data) in a small object. The data itself is stored externally to the document, keyed by
-    the digest. */
+/** 
+ A CBLBlob appears as a property of a CBLDocument; it contains arbitrary binary data,
+ tagged with a MIME type.
+ Blobs can be arbitrarily large, and their data is loaded only on demand (when the `content`
+ or `contentStream` properties are accessed), not when the document is loaded.
+ The document's raw JSON form only contains the CBLBlob's metadata (type, length and a digest of
+ the data) in a small object. The data itself is stored externally to the document, keyed by
+ the digest.
+ */
 @interface CBLBlob : NSObject
 
-/** Initializes a CBLBlob with the given in-memory data.
-    The blob can then be added as a property of a CBLDocument.
-    @param contentType  The type of content this CBLBlob will represent.
-    @param data  The data that this CBLBlob will contain. 
-    @result The CBLBlob object. */
+/** 
+ Initializes a CBLBlob with the given in-memory data.
+ The blob can then be added as a property of a CBLDocument.
+ 
+ @param contentType The type of content this CBLBlob will represent.
+ @param data The data that this CBLBlob will contain.
+ @return The CBLBlob object.
+ */
 - (instancetype) initWithContentType: (NSString *)contentType
                                 data: (NSData *)data;
 
-/** Initializes a CBLBlob with the given stream of data.
-    The blob can then be added as a property of a CBLDocument.
-    @param contentType  The type of content this CBLBlob will represent.
-    @param stream  The stream of data that this CBLBlob will consume.
-    @result The CBLBlob object. */
+/** 
+ Initializes a CBLBlob with the given stream of data.
+ The blob can then be added as a property of a CBLDocument.
+ 
+ @param contentType The type of content this CBLBlob will represent.
+ @param stream The stream of data that this CBLBlob will consume.
+ @return The CBLBlob object.
+ */
 - (instancetype) initWithContentType: (NSString *)contentType
                        contentStream: (NSInputStream *)stream;
 
-/** Initializes a CBLBlob with the contents of a file.
-    The blob can then be added as a property of a CBLDocument.
-    @param contentType  The type of content this CBLBlob will represent.
-    @param fileURL  A URL to a file containing the data that this CBLBlob will represent.
-    @param error  On return, the error if any.
-    @result The CBLBlob object. */
+/** 
+ Initializes a CBLBlob with the contents of a file.
+ The blob can then be added as a property of a CBLDocument.
+ 
+ @param contentType The type of content this CBLBlob will represent.
+ @param fileURL A URL to a file containing the data that this CBLBlob will represent.
+ @param error On return, the error if any.
+ @return The CBLBlob object.
+ */
 - (nullable instancetype) initWithContentType: (NSString *)contentType
                                       fileURL: (NSURL*)fileURL
                                         error: (NSError**)error;

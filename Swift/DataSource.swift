@@ -8,11 +8,15 @@
 
 import Foundation
 
-/** A query data source. used for specifiying the data source for your query.
- The current data source supported is the database. */
+
+/// A query data source. used for specifiying the data source for your query.
+/// The current data source supported is the database.
 public class DataSource {
     
-    /** Create a database data source. */
+    /// Create a database data source.
+    ///
+    /// - Parameter database: The database object.
+    /// - Returns: The database data source.
     public static func database(_ database: Database) -> DatabaseSource {
         return DatabaseSource(impl: CBLQueryDataSource.database(database._impl), database: database)
     }
@@ -31,11 +35,14 @@ public class DataSource {
     
 }
 
-/** A database data source. You could also create an alias data source by calling the as(alias) 
- method with a given alias name. */
+/// A database data source. You could also create an alias data source by calling the as(alias)
+/// method with an alias name.
 public class DatabaseSource: DataSource {
     
-    /** Create an alias data source. */
+    /// Create an alias data source.
+    ///
+    /// - Parameter alias: The alias name.
+    /// - Returns: The DataSource object.
     public func `as`(_ alias: String) -> DataSource {
         return DatabaseSource(impl: CBLQueryDataSource.database(database._impl, as: alias),
                               database: database)

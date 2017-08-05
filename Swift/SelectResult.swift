@@ -8,48 +8,56 @@
 
 import Foundation
 
-/** SelectResult represents a signle return value of the query statement. */
+/// SelectResult represents a signle return value of the query statement.
 public class SelectResult {
     
-    /** Creates a SelectResult object with the given expression.
-        - Parameter expression: The expression.
-        - Returns: The SelectResult.As object that you can give the alias name to
-          the returned value. */
+    /// Creates a SelectResult object with the given expression.
+    ///
+    /// - Parameter expression: The expression.
+    /// - Returns: The SelectResult.As object that you can give the alias name to
+    ///            the returned value.
     public static func expression(_ expression: Expression) -> As {
         return As(expression: expression, alias: nil, from: nil)
     }
     
     
-    /** Creates a SelectResult object that returns all properties data. The query returned result
-        will be grouped into a single CBLDictionary object under the key of the data source name.
-        - Returns: The SelectResult.From object that you can specify the data source alias name. */
+    /// Creates a SelectResult object that returns all properties data. The query returned result
+    /// will be grouped into a single CBLDictionary object under the key of the data source name.
+    ///
+    /// - Returns: The SelectResult.From object that you can specify the data source alias name.
     public static func all() -> From {
         return From(expression: nil, alias: nil, from: nil)
 
     }
     
     
-    /** SelectResult.As is a SelectResult that you can specify an alias name to it. The
-        alias name can be used as the key for accessing the result value from the query Result
-        object. */
-    public class As: SelectResult {
-        /** Specifies the alias name to the SelectResult object. 
-            - Parameter alias: The alias name.
-            - Returns: The SelectResult object with the alias name specified. */
+    /// SelectResult.As is a SelectResult that you can specify an alias name to it. The
+    /// alias name can be used as the key for accessing the result value from the query Result
+    /// object.
+    public final class As: SelectResult {
+        
+        /// Specifies the alias name to the SelectResult object.
+        ///
+        /// - Parameter alias: The alias name.
+        /// - Returns: The SelectResult object with the alias name specified.
         public func `as`(_ alias: String) -> SelectResult {
             return SelectResult(expression: self.expression, alias: alias, from: nil)
         }
+        
     }
     
     
-    /** SelectResult.From is a SelectResult that you can specify the data source alias name. */
-    public class From: SelectResult {
-        /** Species the data source alias name to the SelectResult object.
-            - Parameter alias    The data source alias name.
-            - Returns: The SelectResult object with the data source alias name specified. */
+    /// SelectResult.From is a SelectResult that you can specify the data source alias name.
+    public final class From: SelectResult {
+        
+        /// Species the data source alias name to the SelectResult object.
+        ///
+        /// - Parameter alias: The data source alias name.
+        /// - Returns: The SelectResult object with the data source alias name specified.
         public func from(_ alias: String) -> SelectResult {
             return SelectResult(expression: nil, alias: nil, from: alias)
         }
+        
     }
     
     // MARK: Internal

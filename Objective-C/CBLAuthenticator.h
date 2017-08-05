@@ -8,8 +8,10 @@
 
 #import <Foundation/Foundation.h>
 
-/** Authenticator objects provide server authentication credentials to the replicator.
-    CBLAuthenticator is an abstract superclass; you must instantiate one of its subclasses.
-    CBLAuthenticator is not meant to be subclassed by applications. */
+/** 
+ Authenticator objects provide server authentication credentials to the replicator.
+ CBLAuthenticator is an abstract superclass; you must instantiate one of its subclasses.
+ CBLAuthenticator is not meant to be subclassed by applications.
+ */
 @interface CBLAuthenticator : NSObject
 @end

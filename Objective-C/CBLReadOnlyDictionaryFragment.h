@@ -8,13 +8,18 @@
 
 @class CBLReadOnlyFragment;
 
-/** CBLReadOnlyDictionaryFragment protocol provides subscript access to CBLReadOnlyFragment
-    objects by key. */
+/** 
+ CBLReadOnlyDictionaryFragment protocol provides subscript access to CBLReadOnlyFragment
+ objects by key.
+ */
 @protocol CBLReadOnlyDictionaryFragment <NSObject>
 
-/** Subscript access to a CBLReadOnlyFragment object by key.
-    @param key  the key.
-    @result the CBLReadOnlyFragment object. */
+/** 
+ Subscript access to a CBLReadOnlyFragment object by key.
+ 
+ @param key The key.
+ @return The CBLReadOnlyFragment object.
+ */
 - (CBLReadOnlyFragment*) objectForKeyedSubscript: (NSString*)key;
 
 @end

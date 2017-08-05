@@ -8,36 +8,62 @@
 
 import Foundation
 
-/** A From component representing a FROM clause for specifying the data source of the query. */
+
+/// A From component representing a FROM clause for specifying the data source of the query.
 public final class From: Query, JoinRouter, WhereRouter, GroupByRouter, OrderByRouter, LimitRouter  {
     
-    /** Create and chain JOIN components for specifying the JOIN clause of the query. */
+    /// Creates and chains a Joins object for specifying the JOIN clause of the query.
+    ///
+    /// - Parameter joins: The Join objects.
+    /// - Returns: The Joins object that represents the JOIN clause of the query.
     public func join(_ joins: Join...) -> Joins {
         return Joins(query: self, impl: Join.toImpl(joins: joins))
     }
     
-    /** Create and chain a WHERE component for specifying the WHERE clause of the query. */
+    
+    /// Creates and chains a Where object for specifying the WHERE clause of the query.
+    ///
+    /// - Parameter whereExpression: The where expression.
+    /// - Returns: The Where object that represents the WHERE clause of the query.
     public func `where`(_ whereExpression: Expression) -> Where {
         return Where(query: self, impl: whereExpression.impl)
     }
     
-    /** Create and chain a GROUP BY component to group the query result. */
+    
+    /// Creates and chains a GroupBy object to group the query result.
+    ///
+    /// - Parameter expressions: The group by expression.
+    /// - Returns: The GroupBy object that represents the GROUP BY clause of the query.
     public func groupBy(_ expressions: Expression...) -> GroupBy {
         return GroupBy(query: self, impl: Expression.toImpl(expressions: expressions))
     }
     
-    /** Create and chain an ORDER BY component for specifying the orderings of the query result. */
+    
+    /// Creates and chains an OrderBy object for specifying the orderings of the query result.
+    ///
+    /// - Parameter orderings: The Ordering objects.
+    /// - Returns: The OrderBy object that represents the ORDER BY clause of the query.
     public func orderBy(_ orderings: Ordering...) -> OrderBy {
         return OrderBy(query: self, impl: Ordering.toImpl(orderings: orderings))
     }
     
-    /** Create and chain a LIMIT component to limit the number query results. */
+    
+    /// Creates and chains a Limit object to limit the number query results.
+    ///
+    /// - Parameter limit: The limit expression.
+    /// - Returns: The Limit object that represents the LIMIT clause of the query.
     public func limit(_ limit: Any) -> Limit {
         return self.limit(limit, offset: nil)
     }
     
-    /** Create and chain a LIMIT component to skip the returned results for the given offset 
-        position and to limit the number of results to not more than the given limit value. */
+    
+    ///  Creates and chains a Limit object to skip the returned results for the given offset
+    ///  position and to limit the number of results to not more than the given limit value.
+    ///
+    /// - Parameters:
+    ///   - limit: The limit expression.
+    ///   - offset: The offset expression.
+    /// - Returns: The Limit object that represents the LIMIT clause of the query.
     public func limit(_ limit: Any, offset: Any?) -> Limit {
         return Limit(query: self, impl: Limit.toImpl(limit: limit, offset: offset))
     }

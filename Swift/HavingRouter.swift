@@ -8,8 +8,15 @@
 
 import Foundation
 
-/** HavingRouter for creating and chaning a query HAVING clause. */
+
+/// HavingRouter for creating and chaning a query HAVING clause.
 protocol HavingRouter {
-    /** Create and chain a HAVING component. */
+    
+    /// Creates and chain a Having object for filtering the aggregated values
+    /// from the the GROUP BY clause.
+    ///
+    /// - Parameter expression: The expression.
+    /// - Returns: The Having object that represents the HAVING clause of the query.
     func having(_ expression: Expression) -> Having
+    
 }

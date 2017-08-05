@@ -8,15 +8,18 @@
 
 import Foundation
 
-/** LiveQueryChange contains the information about the query result changes reported
- by a live query object. */
+
+/// LiveQueryChange contains the information about the query result changes reported
+/// by a live query object.
 public struct LiveQueryChange {
-    /** The source live query object. */
+    
+    /// The source live query object.
     public let query: LiveQuery
     
-    /** The new query result. */
+    /// The new query result.
     public let rows: ResultSet?
     
-    /** The error occurred when running the query. */
+    /// The error occurred when running the query.
     public let error: Error?
+    
 }

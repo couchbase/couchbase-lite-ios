@@ -11,16 +11,20 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/** CBLQueryMeta is a factory class for creating the expressions that refer to 
-    the metadata properties of the document. */
+/** 
+ CBLQueryMeta is a factory class for creating the expressions that refer to
+ the metadata properties of the document.
+ */
 @interface CBLQueryMeta : NSObject
 
 /** An expression refering to the ID of the document. */
 @property (nonatomic, readonly) CBLQueryExpression* id;
 
-/** An expression refering to the sequence number of the document. 
-    The sequence number indicates how recently the document has been changed. If one document's
-    `sequence` is greater than another's, that means it was changed more recently. */
+/** 
+ An expression refering to the sequence number of the document.
+ The sequence number indicates how recently the document has been changed. If one document's
+ `sequence` is greater than another's, that means it was changed more recently.
+ */
 @property (nonatomic, readonly) CBLQueryExpression* sequence;
 
 @end

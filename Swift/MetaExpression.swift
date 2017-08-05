@@ -12,10 +12,14 @@ import Foundation
     case id, sequence
 }
 
-/** A meta property expression. */
+
+/// A meta property expression.
 public class MetaExpression: Expression {
     
-    /** Specifies an alias name of the data source to query the data from. */
+    /// Specifies an alias name of the data source to query the data from. */
+    ///
+    /// - Parameter alias: The data source alias name.
+    /// - Returns: The Meta expression with the given alias name specified.
     public func from(_ alias: String) -> Expression {
         return Expression(MetaExpression.toImpl(type: self.type, from: alias))
     }

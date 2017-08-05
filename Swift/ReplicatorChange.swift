@@ -8,11 +8,13 @@
 
 import Foundation
 
-/** ReplicatorChange contains the replicator status information. */
+
+/// ReplicatorChange contains the replicator status information.
 public struct ReplicatorChange {
-    /** The source replicator object. */
+    
+    /// The source replicator object.
     public let replicator: Replicator
     
-    /** The replicator status. */
+    /// The replicator status.
     public let status: Replicator.Status
 }

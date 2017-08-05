@@ -8,12 +8,17 @@
 
 import Foundation
 
-/** ResultSet is a result returned from a query. */
+
+/// ResultSet is a result returned from a query.
 public class ResultSet : Sequence, IteratorProtocol {
+    
+    /// The Element.
     public typealias Element = Result
     
-    /** Advances to and return the next result row.
-        @return A Result object. */
+    
+    /// Advances to the next result row and returns the advanced result row.
+    ///
+    /// - Returns: The advanced Result object.
     public func next() -> Result? {
         if let row = impl.nextObject() as? CBLQueryResult {
             return Result(impl: row)
@@ -27,4 +32,5 @@ public class ResultSet : Sequence, IteratorProtocol {
     init(impl: CBLQueryResultSet) {
         self.impl = impl
     }
+    
 }

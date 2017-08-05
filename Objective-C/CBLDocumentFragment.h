@@ -10,9 +10,11 @@
 #import "CBLDictionaryFragment.h"
 @class CBLDocument;
 
-/** CBLDocumentFragment provides access to a document object. CBLDocumentFragment also provides
-    subscript access by either key or index to the data values of the document which are
-    wrapped by CBLFragment objects. */
+/** 
+ CBLDocumentFragment provides access to a document object. CBLDocumentFragment also provides
+ subscript access by either key or index to the data values of the document which are
+ wrapped by CBLFragment objects.
+ */
 @interface CBLDocumentFragment : NSObject <CBLDictionaryFragment>
 
 /** Checks whether the document exists in the database or not. */

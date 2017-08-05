@@ -10,10 +10,13 @@
 @class CBLReplicator;
 @class CBLReplicatorStatus;
 
+/** Replicator status change details. */
 @interface CBLReplicatorChange : NSObject
 
+/** The replicator. */
 @property (nonatomic, readonly) CBLReplicator* replicator;
 
+/** The changed status. */
 @property (nonatomic, readonly) CBLReplicatorStatus* status;
 
 @end

@@ -8,8 +8,14 @@
 
 import Foundation
 
-/** FromRouter for creating and chaning a query FROM clause. */
+
+/// FromRouter for creating and chaning a query FROM clause.
 protocol FromRouter {
-    /** Create and chain a FROM clause component to specify a data source of the query. */
+    
+    /// Create and chain a FROM clause component to specify a data source of the query.
+    ///
+    /// - Parameter dataSource: The DataSource object.
+    /// - Returns: The From object that represent the FROM clause of the query.
     func from(_ dataSource: DataSource) -> From
+    
 }
