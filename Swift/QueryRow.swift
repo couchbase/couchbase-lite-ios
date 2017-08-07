@@ -51,6 +51,14 @@ public class QueryRow {
     }
     
     
+    /// The projecting result value at the given index as an Integer value.
+    ///
+    /// - Parameter index: The index.
+    public subscript(index: Int) -> Int64 {
+        return impl.longLong(at: UInt(index))
+    }
+    
+    
     /// The projecting result value at the given index as a Float value.
     ///
     /// - Parameter index: The index.

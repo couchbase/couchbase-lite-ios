@@ -48,16 +48,13 @@
 #pragma mark - Type Getters
 
 
-- (nullable id) objectAtIndex: (NSUInteger)index {
-    if (!_array) {
-        id value = [super objectAtIndex: index];
-        if ([value isKindOfClass: [CBLReadOnlyDictionary class]] ||
-            [value isKindOfClass: [CBLReadOnlyArray class]]) {
-            [self copyFleeceData];
-        } else
-            return value;
-    }
-    return _array[index];
+- (nullable CBLArray*) arrayAtIndex: (NSUInteger)index {
+    return $castIf(CBLArray, [self objectAtIndex: index]);
+}
+
+
+- (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
+    return $castIf(CBLBlob, [self objectAtIndex: index]);
 }
 
 
@@ -71,12 +68,22 @@
 }
 
 
-- (NSInteger) integerAtIndex: (NSUInteger)index {
+- (nullable NSDate*) dateAtIndex: (NSUInteger)index {
+    return [CBLJSON dateWithJSONObject: [self objectAtIndex: index]];
+}
+
+
+- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
+    return $castIf(CBLDictionary, [self objectAtIndex: index]);
+}
+
+
+- (double) doubleAtIndex: (NSUInteger)index {
     if (!_array)
-        return [super integerAtIndex: index];
+        return [super doubleAtIndex: index];
     else {
         id value = _array[index];
-        return [$castIf(NSNumber, value) integerValue];
+        return [$castIf(NSNumber, value) doubleValue];
     }
 }
 
@@ -91,18 +98,23 @@
 }
 
 
-- (double) doubleAtIndex: (NSUInteger)index {
+- (NSInteger) integerAtIndex: (NSUInteger)index {
     if (!_array)
-        return [super doubleAtIndex: index];
+        return [super integerAtIndex: index];
     else {
         id value = _array[index];
-        return [$castIf(NSNumber, value) doubleValue];
+        return [$castIf(NSNumber, value) integerValue];
     }
 }
 
 
-- (nullable NSString*) stringAtIndex: (NSUInteger)index {
-    return $castIf(NSString, [self objectAtIndex: index]);
+- (long long) longLongAtIndex: (NSUInteger)index {
+    if (!_array)
+        return [super longLongAtIndex: index];
+    else {
+        id value = _array[index];
+        return [$castIf(NSNumber, value) longLongValue];
+    }
 }
 
 
@@ -111,23 +123,21 @@
 }
 
 
-- (nullable NSDate*) dateAtIndex: (NSUInteger)index {
-    return [CBLJSON dateWithJSONObject: [self objectAtIndex: index]];
+- (nullable NSString*) stringAtIndex: (NSUInteger)index {
+    return $castIf(NSString, [self objectAtIndex: index]);
 }
 
 
-- (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
-    return $castIf(CBLBlob, [self objectAtIndex: index]);
-}
-
-
-- (nullable CBLArray*) arrayAtIndex: (NSUInteger)index {
-    return $castIf(CBLArray, [self objectAtIndex: index]);
-}
-
-
-- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
-    return $castIf(CBLDictionary, [self objectAtIndex: index]);
+- (nullable id) objectAtIndex: (NSUInteger)index {
+    if (!_array) {
+        id value = [super objectAtIndex: index];
+        if ([value isKindOfClass: [CBLReadOnlyDictionary class]] ||
+            [value isKindOfClass: [CBLReadOnlyArray class]]) {
+            [self copyFleeceData];
+        } else
+            return value;
+    }
+    return _array[index];
 }
 
 
@@ -190,6 +200,11 @@
 
 
 - (void) setInteger: (NSInteger)value atIndex: (NSUInteger)index {
+    [self setObject: @(value) atIndex: index];
+}
+
+
+- (void) setLongLong: (long long)value atIndex: (NSUInteger)index {
     [self setObject: @(value) atIndex: index];
 }
 
@@ -260,6 +275,11 @@
 }
 
 
+- (void) addLongLong: (long long)value {
+    [self addObject: @(value)];
+}
+
+
 - (void) addNumber: (nullable NSNumber*)value {
     [self addObject: value];
 }
@@ -319,6 +339,11 @@
 
 
 - (void) insertInteger: (NSInteger)value atIndex: (NSUInteger)index {
+    [self insertObject: @(value) atIndex: index];
+}
+
+
+- (void) insertLongLong: (long long)value atIndex: (NSUInteger)index {
     [self insertObject: @(value) atIndex: index];
 }
 

@@ -81,7 +81,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable CBLReadOnlyDictionary*) dictionaryForKey: (NSString*)key;
 
 /** 
- Gets a property's value as a double.
+ Gets a property's value as a double value.
  Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
  Returns 0.0 if the property doesn't exist or does not have a numeric value.
  
@@ -91,7 +91,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (double) doubleForKey: (NSString*)key;
 
 /** 
- Gets a property's value as a float.
+ Gets a property's value as a float value.
  Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
  Returns 0.0 if the property doesn't exist or does not have a numeric value.
  
@@ -101,7 +101,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (float) floatForKey: (NSString*)key;
 
 /** 
- Gets a property's value as an integer.
+ Gets a property's value as an integer value.
  Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
  Returns 0 if the property doesn't exist or does not have a numeric value.
  
@@ -109,6 +109,16 @@ NS_ASSUME_NONNULL_BEGIN
  @return The integer value.
  */
 - (NSInteger) integerForKey: (NSString*)key;
+
+/**
+ Gets a property's value as a long long value.
+ Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+ Returns 0 if the property doesn't exist or does not have a numeric value.
+ 
+ @param key The key.
+ @return The long long value.
+ */
+- (long long) longLongForKey: (NSString*)key;
 
 /** 
  Gets a property's value as a number.

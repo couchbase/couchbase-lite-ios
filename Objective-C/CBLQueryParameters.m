@@ -39,6 +39,11 @@
 }
 
 
+- (void) setLongLong: (long long)value forName: (NSString*)name {
+    [self setObject: @(value) forName: name];
+}
+
+
 - (void) setNumber: (nullable NSNumber*)value forName: (NSString*)name {
     [self setObject: value forName: name];
 }

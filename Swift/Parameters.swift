@@ -60,14 +60,26 @@ public class Parameters {
     }
     
     
-    /// Set an integer value to the query parameter referenced by the given name. A query parameter
+    /// Set an int value to the query parameter referenced by the given name. A query parameter
     /// is defined by using the Expression's parameter(_ name: String) function.
     ///
     /// - Parameters:
-    ///   - value: The integer value.
+    ///   - value: The int value.
     ///   - name: The parameter name.
     /// - Returns: The Parameters object.
-    @discardableResult public func setInteger(_ value: Int, forName name: String) -> Self {
+    @discardableResult public func setInt(_ value: Int, forName name: String) -> Self {
+        return setValue(value, forName: name)
+    }
+    
+    
+    /// Set an int64 value to the query parameter referenced by the given name. A query parameter
+    /// is defined by using the Expression's parameter(_ name: String) function.
+    ///
+    /// - Parameters:
+    ///   - value: The int64 value.
+    ///   - name: The parameter name.
+    /// - Returns: The Parameters object.
+    @discardableResult public func setInt64(_ value: Int64, forName name: String) -> Self {
         return setValue(value, forName: name)
     }
     

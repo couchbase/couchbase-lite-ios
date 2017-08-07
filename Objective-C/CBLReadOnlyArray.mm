@@ -38,43 +38,8 @@
 #pragma mark - GETTER
 
 
-- (nullable id) objectAtIndex: (NSUInteger)index {
-    return [self fleeceValueToObjectAtIndex: index];
-}
-
-
-- (BOOL) booleanAtIndex: (NSUInteger)index {
-    return FLValue_AsBool(FLArray_Get(_array, (uint)index));
-}
-
-
-- (NSInteger) integerAtIndex: (NSUInteger)index {
-    return (NSInteger)FLValue_AsInt(FLArray_Get(_array, (uint)index));
-}
-
-
-- (float) floatAtIndex: (NSUInteger)index {
-    return FLValue_AsFloat(FLArray_Get(_array, (uint)index));
-}
-
-
-- (double) doubleAtIndex: (NSUInteger)index {
-    return FLValue_AsDouble(FLArray_Get(_array, (uint)index));
-}
-
-
-- (nullable NSString*) stringAtIndex: (NSUInteger)index {
-    return $castIf(NSString, [self fleeceValueToObjectAtIndex: index]);
-}
-
-
-- (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
-    return $castIf(NSNumber, [self fleeceValueToObjectAtIndex: index]);
-}
-
-
-- (nullable NSDate*) dateAtIndex: (NSUInteger)index {
-    return [CBLJSON dateWithJSONObject: [self fleeceValueToObjectAtIndex: index]];
+- (nullable CBLReadOnlyArray*) arrayAtIndex: (NSUInteger)index {
+    return $castIf(CBLReadOnlyArray, [self fleeceValueToObjectAtIndex: index]);
 }
 
 
@@ -83,13 +48,53 @@
 }
 
 
+- (BOOL) booleanAtIndex: (NSUInteger)index {
+    return FLValue_AsBool(FLArray_Get(_array, (uint)index));
+}
+
+
+- (nullable NSDate*) dateAtIndex: (NSUInteger)index {
+    return [CBLJSON dateWithJSONObject: [self fleeceValueToObjectAtIndex: index]];
+}
+
+
 - (nullable CBLReadOnlyDictionary*) dictionaryAtIndex: (NSUInteger)index {
     return $castIf(CBLReadOnlyDictionary, [self fleeceValueToObjectAtIndex: index]);
 }
 
 
-- (nullable CBLReadOnlyArray*) arrayAtIndex: (NSUInteger)index {
-    return $castIf(CBLReadOnlyArray, [self fleeceValueToObjectAtIndex: index]);
+- (double) doubleAtIndex: (NSUInteger)index {
+    return FLValue_AsDouble(FLArray_Get(_array, (uint)index));
+}
+
+
+- (float) floatAtIndex: (NSUInteger)index {
+    return FLValue_AsFloat(FLArray_Get(_array, (uint)index));
+}
+
+
+- (NSInteger) integerAtIndex: (NSUInteger)index {
+    return (NSInteger)FLValue_AsInt(FLArray_Get(_array, (uint)index));
+}
+
+
+- (long long) longLongAtIndex: (NSUInteger)index {
+    return FLValue_AsInt(FLArray_Get(_array, (uint)index));
+}
+
+
+- (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
+    return $castIf(NSNumber, [self fleeceValueToObjectAtIndex: index]);
+}
+
+
+- (nullable NSString*) stringAtIndex: (NSUInteger)index {
+    return $castIf(NSString, [self fleeceValueToObjectAtIndex: index]);
+}
+
+
+- (nullable id) objectAtIndex: (NSUInteger)index {
+    return [self fleeceValueToObjectAtIndex: index];
 }
 
 

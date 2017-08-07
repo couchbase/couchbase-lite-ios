@@ -19,6 +19,8 @@ protocol ReadOnlyArrayProtocol: ReadOnlyArrayFragment, Sequence {
     
     func int(at index: Int) -> Int
     
+    func int64(at index: Int) -> Int64
+    
     func float(at index: Int) -> Float
     
     func double(at index: Int) -> Double
@@ -46,36 +48,61 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     }
     
     
-    /// Gets the value at the given index. The value types are Blob, ReadOnlyArrayObject,
-    /// ReadOnlyDictionaryObject, Number, or String based on the underlying data type.
+    /// Gets the value at the given index as a ReadOnlyArrayObject value, which is a mapping object
+    /// of an array value.
+    /// Returns nil if the value doesn't exists, or its value is not an array.
     ///
     /// - Parameter index: The index.
-    /// - Returns: The value located at the index.
-    public func value(at index: Int) -> Any? {
-        return DataConverter.convertGETValue(_impl.object(at: UInt(index)))
+    /// - Returns: The ReadOnlyArrayObject at the given index.
+    public func array(at index: Int) -> ReadOnlyArrayObject? {
+        return value(at: index) as? ReadOnlyArrayObject
     }
     
     
-    /// Gets the value at the given index as a string.
-    /// Returns nil if the value doesn't exist, or its value is not a string
+    /// Get the Blob value at the given index.
+    /// Returns nil if the value doesn't exist, or its value is not a blob.
     ///
     /// - Parameter index: The index.
-    /// - Returns: The String object.
-    public func string(at index: Int) -> String? {
-        return _impl.string(at: UInt(index))
+    /// - Returns: The Blob value located at the index.
+    public func blob(at index: Int) -> Blob? {
+        return _impl.blob(at: UInt(index))
+    }
+
+    
+    /// Gets the value at the given index as a boolean value.
+    /// Returns true if the value exists, and is either `true` or a nonzero number.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The Bool value located at the index.
+    public func boolean(at index: Int) -> Bool {
+        return _impl.boolean(at: UInt(index))
     }
     
     
-    /// Gets value at the given index as an integer value.
-    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
-    /// Returns 0 if the value doesn't exist or does not have a numeric value.
+    /// Gets value at the given index as an Date.
+    /// JSON does not directly support dates, so the actual property value must be a string, which
+    /// is then parsed according to the ISO-8601 date format (the default used in JSON.)
+    /// Returns nil if the value doesn't exist, is not a string, or is not parseable as a date.
+    /// NOTE: This is not a generic date parser! It only recognizes the ISO-8601 format, with or
+    /// without milliseconds.
     ///
     /// - Parameter index: The index.
-    /// - Returns: The integer value located at the index.
-    public func int(at index: Int) -> Int {
-        return _impl.integer(at: UInt(index))
+    /// - Returns: The Date value at the given index.
+    public func date(at index: Int) -> Date? {
+        return _impl.date(at: UInt(index))
     }
     
+    
+    /// Get the value at the given index as a ReadOnlyDictionaryObject value, which is a
+    /// mapping object of a dictionary value.
+    /// Returns nil if the value doesn't exists, or its value is not a dictionary.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The ReadOnlyDictionaryObject
+    public func dictionary(at index: Int) -> ReadOnlyDictionaryObject? {
+        return value(at: index) as? ReadOnlyDictionaryObject
+    }
+
     
     /// Gets the value at the given index as a float value.
     /// Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
@@ -99,59 +126,45 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     }
     
     
-    /// Gets the value at the given index as a boolean value.
-    /// Returns true if the value exists, and is either `true` or a nonzero number.
+    /// Gets value at the given index as an integer value.
+    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    /// Returns 0 if the value doesn't exist or does not have a numeric value.
     ///
     /// - Parameter index: The index.
-    /// - Returns: The Bool value located at the index.
-    public func boolean(at index: Int) -> Bool {
-        return _impl.boolean(at: UInt(index))
+    /// - Returns: The integer value located at the index.
+    public func int(at index: Int) -> Int {
+        return _impl.integer(at: UInt(index))
     }
     
     
-    /// Get the Blob value at the given index.
-    /// Returns nil if the value doesn't exist, or its value is not a blob.
+    /// Gets value at the given index as an integer value.
+    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    /// Returns 0 if the value doesn't exist or does not have a numeric value.
     ///
     /// - Parameter index: The index.
-    /// - Returns: The Blob value located at the index.
-    public func blob(at index: Int) -> Blob? {
-        return _impl.blob(at: UInt(index))
+    /// - Returns: The integer value located at the index.
+    public func int64(at index: Int) -> Int64 {
+        return _impl.longLong(at: UInt(index))
+    }
+
+
+    /// Gets the value at the given index as a string.
+    /// Returns nil if the value doesn't exist, or its value is not a string
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The String object.
+    public func string(at index: Int) -> String? {
+        return _impl.string(at: UInt(index))
     }
     
     
-    /// Gets value at the given index as an Date.
-    /// JSON does not directly support dates, so the actual property value must be a string, which
-    /// is then parsed according to the ISO-8601 date format (the default used in JSON.)
-    /// Returns nil if the value doesn't exist, is not a string, or is not parseable as a date.
-    /// NOTE: This is not a generic date parser! It only recognizes the ISO-8601 format, with or
-    /// without milliseconds.
+    /// Gets the value at the given index. The value types are Blob, ReadOnlyArrayObject,
+    /// ReadOnlyDictionaryObject, Number, or String based on the underlying data type.
     ///
     /// - Parameter index: The index.
-    /// - Returns: The Date value at the given index.
-    public func date(at index: Int) -> Date? {
-        return _impl.date(at: UInt(index))
-    }
-    
-    
-    /// Gets the value at the given index as a ReadOnlyArrayObject value, which is a mapping object 
-    /// of an array value.
-    /// Returns nil if the value doesn't exists, or its value is not an array.
-    ///
-    /// - Parameter index: The index.
-    /// - Returns: The ReadOnlyArrayObject at the given index.
-    public func array(at index: Int) -> ReadOnlyArrayObject? {
-        return value(at: index) as? ReadOnlyArrayObject
-    }
-    
-    
-    /// Get the value at the given index as a ReadOnlyDictionaryObject value, which is a 
-    /// mapping object of a dictionary value.
-    /// Returns nil if the value doesn't exists, or its value is not a dictionary.
-    ///
-    /// - Parameter index: The index.
-    /// - Returns: The ReadOnlyDictionaryObject
-    public func dictionary(at index: Int) -> ReadOnlyDictionaryObject? {
-        return value(at: index) as? ReadOnlyDictionaryObject
+    /// - Returns: The value located at the index.
+    public func value(at index: Int) -> Any? {
+        return DataConverter.convertGETValue(_impl.object(at: UInt(index)))
     }
     
     

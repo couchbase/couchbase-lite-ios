@@ -61,6 +61,15 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void) setInteger: (NSInteger)value forName: (NSString*)name;
 
+/**
+ Set the long long value to the query parameter referenced by the given name. A query parameter
+ is defined by using the CBLQueryExpression's + parameterNamed: method.
+ 
+ @param value The long long value.
+ @pram name The parameter name.
+ */
+- (void) setLongLong: (long long)value forName: (NSString*)name;
+
 /** 
  Set the NSNumber value to the query parameter referenced by the given name. A query parameter
  is defined by using the CBLQueryExpression's + parameterNamed: method.

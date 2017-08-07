@@ -41,8 +41,8 @@
 }
 
 
-- (nullable id) objectAtIndex: (NSUInteger)index {
-    return [self fleeceValueToObjectAtIndex: index];
+- (nullable CBLReadOnlyArray*) arrayAtIndex: (NSUInteger)index {
+    return $castIf(CBLReadOnlyArray, [self fleeceValueToObjectAtIndex: index]);
 }
 
 
@@ -51,8 +51,18 @@
 }
 
 
-- (NSInteger) integerAtIndex: (NSUInteger)index {
-    return (NSInteger)FLValue_AsInt([self fleeceValueAtIndex: index]);
+- (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
+    return $castIf(CBLBlob, [self fleeceValueToObjectAtIndex: index]);
+}
+
+
+- (nullable NSDate*) dateAtIndex: (NSUInteger)index {
+    return [CBLJSON dateWithJSONObject: [self fleeceValueToObjectAtIndex: index]];
+}
+
+
+- (nullable CBLReadOnlyDictionary*) dictionaryAtIndex: (NSUInteger)index {
+    return $castIf(CBLReadOnlyDictionary, [self fleeceValueToObjectAtIndex: index]);
 }
 
 
@@ -66,8 +76,13 @@
 }
 
 
-- (nullable NSString*) stringAtIndex: (NSUInteger)index {
-    return $castIf(NSString, [self fleeceValueToObjectAtIndex: index]);
+- (NSInteger) integerAtIndex: (NSUInteger)index {
+    return (NSInteger)FLValue_AsInt([self fleeceValueAtIndex: index]);
+}
+
+
+- (long long) longLongAtIndex: (NSUInteger)index {
+    return FLValue_AsInt([self fleeceValueAtIndex: index]);
 }
 
 
@@ -76,23 +91,13 @@
 }
 
 
-- (nullable NSDate*) dateAtIndex: (NSUInteger)index {
-    return [CBLJSON dateWithJSONObject: [self fleeceValueToObjectAtIndex: index]];
+- (nullable id) objectAtIndex: (NSUInteger)index {
+    return [self fleeceValueToObjectAtIndex: index];
 }
 
 
-- (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
-    return $castIf(CBLBlob, [self fleeceValueToObjectAtIndex: index]);
-}
-
-
-- (nullable CBLReadOnlyDictionary*) dictionaryAtIndex: (NSUInteger)index {
-    return $castIf(CBLReadOnlyDictionary, [self fleeceValueToObjectAtIndex: index]);
-}
-
-
-- (nullable CBLReadOnlyArray*) arrayAtIndex: (NSUInteger)index {
-    return $castIf(CBLReadOnlyArray, [self fleeceValueToObjectAtIndex: index]);
+- (nullable NSString*) stringAtIndex: (NSUInteger)index {
+    return $castIf(NSString, [self fleeceValueToObjectAtIndex: index]);
 }
 
 
@@ -122,66 +127,10 @@
 }
 
 
-- (id) objectForKey: (NSString*)key {
+- (nullable CBLReadOnlyArray*) arrayForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
-        return [self objectAtIndex: index];
-    return nil;
-}
-
-
-- (BOOL) booleanForKey: (NSString*)key {
-    NSInteger index = [self indexForColumnName: key];
-    if (index >= 0)
-        return [self booleanAtIndex: index];
-    return NO;
-}
-
-
-- (NSInteger) integerForKey: (NSString*)key {
-    NSInteger index = [self indexForColumnName: key];
-    if (index >= 0)
-        return [self integerAtIndex: index];
-    return 0;
-}
-
-
-- (float) floatForKey: (NSString*)key {
-    NSInteger index = [self indexForColumnName: key];
-    if (index >= 0)
-        return [self floatAtIndex: index];
-    return 0.0f;
-}
-
-
-- (double) doubleForKey: (NSString*)key {
-    NSInteger index = [self indexForColumnName: key];
-    if (index >= 0)
-        return [self doubleAtIndex: index];
-    return 0.0;
-}
-
-
-- (nullable NSString*) stringForKey: (NSString*)key {
-    NSInteger index = [self indexForColumnName: key];
-    if (index >= 0)
-        return [self stringAtIndex: index];
-    return nil;
-}
-
-
-- (nullable NSNumber*) numberForKey: (NSString*)key {
-    NSInteger index = [self indexForColumnName: key];
-    if (index >= 0)
-        return [self numberAtIndex: index];
-    return nil;
-}
-
-
-- (nullable NSDate*) dateForKey: (NSString*)key {
-    NSInteger index = [self indexForColumnName: key];
-    if (index >= 0)
-        return [self dateAtIndex: index];
+        return [self arrayAtIndex: index];
     return nil;
 }
 
@@ -194,6 +143,22 @@
 }
 
 
+- (BOOL) booleanForKey: (NSString*)key {
+    NSInteger index = [self indexForColumnName: key];
+    if (index >= 0)
+        return [self booleanAtIndex: index];
+    return NO;
+}
+
+
+- (nullable NSDate*) dateForKey: (NSString*)key {
+    NSInteger index = [self indexForColumnName: key];
+    if (index >= 0)
+        return [self dateAtIndex: index];
+    return nil;
+}
+
+
 - (nullable CBLReadOnlyDictionary*) dictionaryForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
@@ -202,12 +167,61 @@
 }
 
 
-- (nullable CBLReadOnlyArray*) arrayForKey: (NSString*)key {
+- (double) doubleForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
-        return [self arrayAtIndex: index];
+        return [self doubleAtIndex: index];
+    return 0.0;
+}
+
+
+- (float) floatForKey: (NSString*)key {
+    NSInteger index = [self indexForColumnName: key];
+    if (index >= 0)
+        return [self floatAtIndex: index];
+    return 0.0f;
+}
+
+
+- (NSInteger) integerForKey: (NSString*)key {
+    NSInteger index = [self indexForColumnName: key];
+    if (index >= 0)
+        return [self integerAtIndex: index];
+    return 0;
+}
+
+
+- (long long) longLongForKey: (NSString*)key {
+    NSInteger index = [self indexForColumnName: key];
+    if (index >= 0)
+        return [self longLongAtIndex: index];
+    return 0;
+}
+
+
+- (nullable NSNumber*) numberForKey: (NSString*)key {
+    NSInteger index = [self indexForColumnName: key];
+    if (index >= 0)
+        return [self numberAtIndex: index];
     return nil;
 }
+
+
+- (nullable NSString*) stringForKey: (NSString*)key {
+    NSInteger index = [self indexForColumnName: key];
+    if (index >= 0)
+        return [self stringAtIndex: index];
+    return nil;
+}
+
+
+- (id) objectForKey: (NSString*)key {
+    NSInteger index = [self indexForColumnName: key];
+    if (index >= 0)
+        return [self objectAtIndex: index];
+    return nil;
+}
+
 
 
 - (BOOL) containsObjectForKey: (NSString*)key {

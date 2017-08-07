@@ -28,7 +28,9 @@ protocol ArrayProtocol: ReadOnlyArrayProtocol, ArrayFragment {
     
     @discardableResult func setFloat(_ value: Float, at index: Int) -> Self
     
-    @discardableResult func setInteger(_ value: Int, at index: Int) -> Self
+    @discardableResult func setInt(_ value: Int, at index: Int) -> Self
+    
+    @discardableResult func setInt64(_ value: Int64, at index: Int) -> Self
     
     @discardableResult func setValue(_ value: Any?, at index: Int) -> Self
     
@@ -50,7 +52,9 @@ protocol ArrayProtocol: ReadOnlyArrayProtocol, ArrayFragment {
     
     @discardableResult func addFloat(_ value: Float) -> Self
     
-    @discardableResult func addInteger(_ value: Int) -> Self
+    @discardableResult func addInt(_ value: Int) -> Self
+    
+    @discardableResult func addInt64(_ value: Int64) -> Self
     
     @discardableResult func addValue(_ value: Any?) -> Self
     
@@ -72,7 +76,9 @@ protocol ArrayProtocol: ReadOnlyArrayProtocol, ArrayFragment {
     
     @discardableResult func insertFloat(_ value: Float, at index: Int) -> Self
     
-    @discardableResult func insertInteger(_ value: Int, at index: Int) -> Self
+    @discardableResult func insertInt(_ value: Int, at index: Int) -> Self
+    
+    @discardableResult func insertInt64(_ value: Int64, at index: Int) -> Self
     
     @discardableResult func insertValue(_ value: Any?, at index: Int) -> Self
     
@@ -196,13 +202,24 @@ public class ArrayObject: ReadOnlyArrayObject, ArrayProtocol {
     }
     
     
-    /// Sets an integer value at the given index.
+    /// Sets an int value at the given index.
     ///
     /// - Parameters:
-    ///   - value: The integer value.
+    ///   - value: The int value.
     ///   - index: The index. This value must not exceed the bounds of the array.
     /// - Returns: The ArrayObject object.
-    @discardableResult public func setInteger(_ value: Int, at index: Int) -> Self {
+    @discardableResult public func setInt(_ value: Int, at index: Int) -> Self {
+        return setValue(value, at: index)
+    }
+    
+    
+    /// Sets an int64 value at the given index.
+    ///
+    /// - Parameters:
+    ///   - value: The int64 value.
+    ///   - index: The index. This value must not exceed the bounds of the array.
+    /// - Returns: The ArrayObject object.
+    @discardableResult public func setInt64(_ value: Int64, at index: Int) -> Self {
         return setValue(value, at: index)
     }
     
@@ -296,11 +313,20 @@ public class ArrayObject: ReadOnlyArrayObject, ArrayProtocol {
     }
     
     
-    /// Adds an integer value to the end of the array.
+    /// Adds an int value to the end of the array.
     ///
     /// - Parameter value: The integer value.
     /// - Returns: The ArrayObject object.
-    @discardableResult public func addInteger(_ value: Int) -> Self {
+    @discardableResult public func addInt(_ value: Int) -> Self {
+        return addValue(value)
+    }
+    
+    
+    /// Adds an int64 value to the end of the array.
+    ///
+    /// - Parameter value: The integer value.
+    /// - Returns: The ArrayObject object.
+    @discardableResult public func addInt64(_ value: Int64) -> Self {
         return addValue(value)
     }
     
@@ -404,13 +430,24 @@ public class ArrayObject: ReadOnlyArrayObject, ArrayProtocol {
     }
     
     
-    /// Inserts an integer value at the given index. A nil value will be converted to an NSNull.
+    /// Inserts an int value at the given index. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
-    ///   - value: The integer value.
+    ///   - value: The int value.
     ///   - index: The index. This value must not exceed the bounds of the array.
     /// - Returns: The ArrayObject object.
-    @discardableResult public func insertInteger(_ value: Int, at index: Int) -> Self {
+    @discardableResult public func insertInt(_ value: Int, at index: Int) -> Self {
+        return insertValue(value, at: index)
+    }
+    
+    
+    /// Inserts an int64 value at the given index. A nil value will be converted to an NSNull.
+    ///
+    /// - Parameters:
+    ///   - value: The int64 value.
+    ///   - index: The index. This value must not exceed the bounds of the array.
+    /// - Returns: The ArrayObject object.
+    @discardableResult public func insertInt64(_ value: Int64, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
     

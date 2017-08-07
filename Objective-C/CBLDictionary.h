@@ -75,6 +75,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void) setInteger: (NSInteger)value forKey: (NSString*)key;
 
+/**
+ Set a long long value for the given key.
+ 
+ @param value The long long value.
+ */
+- (void) setLongLong: (long long)value forKey: (NSString*)key;
+
 /** 
  Set an NSNumber object for the given key. A nil value will be converted to an NSNull.
  

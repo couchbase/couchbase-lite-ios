@@ -93,6 +93,10 @@
     return (NSInteger)FLValue_AsInt([self flValueAtIndex: index]);
 }
 
+- (long long) longLongAtIndex: (NSUInteger)index {
+    return FLValue_AsInt([self flValueAtIndex: index]);
+}
+
 - (float) floatAtIndex: (NSUInteger)index {
     return FLValue_AsFloat([self flValueAtIndex: index]);
 }

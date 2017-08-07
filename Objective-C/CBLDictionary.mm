@@ -154,6 +154,15 @@
 }
 
 
+- (long long) longLongForKey: (NSString*)key {
+    id value = _dict[key];
+    if (!value)
+        return [super longLongForKey: key];
+    else
+        return [$castIf(NSNumber, value) longLongValue];
+}
+
+
 - (nullable NSNumber*) numberForKey: (NSString*)key {
     return $castIf(NSNumber, [self objectForKey: key]);
 }
@@ -245,6 +254,11 @@
 
 
 - (void) setInteger: (NSInteger)value forKey: (NSString *)key {
+    [self setObject: @(value) forKey: key];
+}
+
+
+- (void) setLongLong: (long long)value forKey: (NSString *)key {
     [self setObject: @(value) forKey: key];
 }
 

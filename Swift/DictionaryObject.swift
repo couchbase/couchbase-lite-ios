@@ -28,7 +28,9 @@ protocol DictionaryProtocol: ReadOnlyDictionaryProtocol, DictionaryFragment {
     
     @discardableResult func setFloat(_ value: Float, forKey key: String) -> Self
     
-    @discardableResult func setInteger(_ value: Int, forKey key: String) -> Self
+    @discardableResult func setInt(_ value: Int, forKey key: String) -> Self
+    
+    @discardableResult func setInt64(_ value: Int64, forKey key: String) -> Self
     
     @discardableResult func setString(_ value: String?, forKey key: String) -> Self
     
@@ -154,13 +156,24 @@ public class DictionaryObject: ReadOnlyDictionaryObject, DictionaryProtocol {
     }
     
     
-    /// Set an integer value for the given key.
+    /// Set an int value for the given key.
     ///
     /// - Parameters:
-    ///   - value: The integer value.
+    ///   - value: The int value.
     ///   - key: The key.
     /// - Returns: The DictionaryObject object.
-    @discardableResult func setInteger(_ value: Int, forKey key: String) -> Self {
+    @discardableResult func setInt(_ value: Int, forKey key: String) -> Self {
+        return setValue(value, forKey: key)
+    }
+    
+    
+    /// Set an int64 value for the given key.
+    ///
+    /// - Parameters:
+    ///   - value: The int64 value.
+    ///   - key: The key.
+    /// - Returns: The DictionaryObject object.
+    @discardableResult func setInt64(_ value: Int64, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     

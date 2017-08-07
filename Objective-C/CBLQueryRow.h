@@ -66,6 +66,14 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (NSInteger) integerAtIndex: (NSUInteger)index;
 
+/**
+ The result long long value at the given index.
+ 
+ @param index The value index.
+ @return The result long long value.
+ */
+- (long long) longLongAtIndex: (NSUInteger)index;
+
 /** 
  The result float value at the given index.
  

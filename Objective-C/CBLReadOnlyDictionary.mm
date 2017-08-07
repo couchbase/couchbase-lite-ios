@@ -97,6 +97,11 @@
 }
 
 
+- (long long) longLongForKey: (NSString*)key {
+    return FLValue_AsInt([self fleeceValueForKey: key]);
+}
+
+
 - (nullable NSNumber*) numberForKey: (NSString*)key {
     return $castIf(NSNumber, [self fleeceValueToObjectForKey: key]);
 }

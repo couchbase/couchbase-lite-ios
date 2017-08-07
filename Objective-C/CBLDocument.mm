@@ -142,6 +142,11 @@
 }
 
 
+- (long long) longLongForKey: (NSString*)key {
+    return [_dict longLongForKey: key];
+}
+
+
 - (nullable NSNumber*) numberForKey: (NSString*)key {
     return [_dict numberForKey: key];
 }
@@ -207,6 +212,11 @@
 
 - (void) setInteger: (NSInteger)value forKey: (NSString *)key {
     [_dict setInteger: value forKey: key];
+}
+
+
+- (void) setLongLong: (long long)value forKey: (NSString *)key {
+    [_dict setLongLong: value forKey: key];
 }
 
 

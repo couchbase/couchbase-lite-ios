@@ -25,7 +25,7 @@ public class Function: Expression {
     }
     
     
-    ///  Create a COUNT(expr) function expression that returns the count of all values
+    /// Create a COUNT(expr) function expression that returns the count of all values
     /// in the group of the values expressed by the given expression.
     ///
     /// - Parameter expression: The expression.
@@ -239,7 +239,7 @@ public class Function: Expression {
     }
     
     
-    ///  Creates a RADIANS(expr) function that returns the radians value of the given degrees
+    /// Creates a RADIANS(expr) function that returns the radians value of the given degrees
     /// value expression.
     ///
     /// - Parameter expression: The numeric expression to evaluate as a degrees value.
@@ -259,7 +259,7 @@ public class Function: Expression {
     }
 
     
-    ///  Creates a ROUND(expr, digits) function that returns the rounded value to the given
+    /// Creates a ROUND(expr, digits) function that returns the rounded value to the given
     /// number of digits of the given numeric expression.
     ///
     /// - Parameters:
@@ -364,7 +364,7 @@ public class Function: Expression {
     }
     
     
-    ///  Creates a LTRIM(expr) function that removes the whitespace from the beginning of the
+    /// Creates a LTRIM(expr) function that removes the whitespace from the beginning of the
     /// given string expression.
     ///
     /// - Parameter expression: The string expression.
@@ -374,7 +374,7 @@ public class Function: Expression {
     }
     
     
-    ///  Creates a RTRIM(expr) function that removes the whitespace from the end of the
+    /// Creates a RTRIM(expr) function that removes the whitespace from the end of the
     /// given string expression.
     ///
     /// - Parameter expression: The string expression.

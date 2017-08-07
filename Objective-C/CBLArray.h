@@ -84,6 +84,14 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void) setInteger: (NSInteger)value atIndex: (NSUInteger)index;
 
+/**
+ Sets a long long value at the given index.
+ 
+ @param value The long long value.
+ @param index The index. This value must not exceed the bounds of the array.
+ */
+- (void) setLongLong: (long long)value atIndex: (NSUInteger)index;
+
 /** 
  Sets an NSNumber object at the given index. A nil value will be converted to an NSNull.
  
@@ -165,6 +173,13 @@ NS_ASSUME_NONNULL_BEGIN
  @param value The integer value.
  */
 - (void) addInteger: (NSInteger)value;
+
+/**
+ Adds a long long value to the end of the array.
+ 
+ @param value The long long value.
+ */
+- (void) addLongLong: (long long)value;
 
 /** 
  Adds an NSNumber object to the end of the array. A nil value will be converted to an NSNull.
@@ -254,6 +269,14 @@ NS_ASSUME_NONNULL_BEGIN
  @param index The index. This value must not exceed the bounds of the array.
  */
 - (void) insertInteger: (NSInteger)value atIndex: (NSUInteger)index;
+
+/**
+ Inserts a long long value at the given index.
+ 
+ @param value The long long value.
+ @param index The index. This value must not exceed the bounds of the array.
+ */
+- (void) insertLongLong: (long long)value atIndex: (NSUInteger)index;
 
 /** 
  Inserts an NSNumber object at the given index. A nil value will be converted to an NSNull.

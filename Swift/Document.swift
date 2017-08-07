@@ -142,13 +142,24 @@ public class Document : ReadOnlyDocument, DictionaryProtocol {
     }
     
     
-    /// Set an integer value for the given key.
+    /// Set an int value for the given key.
     ///
     /// - Parameters:
     ///   - value: The integer value.
     ///   - key: The key.
     /// - Returns: The Document object.
-    @discardableResult public func setInteger(_ value: Int, forKey key: String) -> Self {
+    @discardableResult public func setInt(_ value: Int, forKey key: String) -> Self {
+        return setValue(value, forKey: key)
+    }
+    
+    
+    /// Set an int64 value for the given key.
+    ///
+    /// - Parameters:
+    ///   - value: The int64 value.
+    ///   - key: The key.
+    /// - Returns: The Document object.
+    @discardableResult public func setInt64(_ value: Int64, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     
