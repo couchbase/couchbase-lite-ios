@@ -5,7 +5,7 @@
 // https://github.com/dempseyatgithub/BuildSettingExtractor
 //
 
-CBL_VERSION_STRING                 = 2.0DB013
+CBL_VERSION_STRING                 = 2.0DB014
 
 IPHONEOS_DEPLOYMENT_TARGET         = 9.0
 MACOSX_DEPLOYMENT_TARGET           = 10.11
