@@ -19,7 +19,7 @@ class CBLTestCase: XCTestCase {
 
     let kDatabaseName = "testdb"
     
-    let kDirectory = NSTemporaryDirectory().appending("/CouchbaseLite")
+    let kDirectory = NSTemporaryDirectory().appending("CouchbaseLite")
 
     override func setUp() {
         super.setUp()
