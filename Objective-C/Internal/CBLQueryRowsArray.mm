@@ -1,12 +1,12 @@
 //
-//  CBLQueryResultsArray.m
+//  CBLQueryRowsArray.m
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 5/13/17.
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLQueryResultsArray.h"
+#import "CBLQueryRowsArray.h"
 #import "CBLQueryEnumerator.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQueryRow.h"
@@ -14,13 +14,13 @@
 #import "CBLCoreBridge.h"
 
 
-@implementation CBLQueryResultsArray
+@implementation CBLQueryRowsArray
 {
-    id _enum;
+    CBLQueryEnumerator* _enum;
     NSUInteger _count;
 }
 
-- (instancetype) initWithEnumerator: (id)enumerator
+- (instancetype) initWithEnumerator: (CBLQueryEnumerator*)enumerator
                               count: (NSUInteger)count
 {
     self = [super init];

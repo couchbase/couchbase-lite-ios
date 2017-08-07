@@ -1,5 +1,5 @@
 //
-//  CBLQueryResultsArray.h
+//  CBLQueryRowsArray.h
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 5/13/17.
@@ -9,10 +9,10 @@
 #import <Foundation/Foundation.h>
 @class CBLQueryEnumerator;
 
-@interface CBLQueryResultsArray : NSArray
+@interface CBLQueryRowsArray : NSArray
 
 // TODO: We should define a protocol here:
-- (instancetype) initWithEnumerator: (id)enumerator
+- (instancetype) initWithEnumerator: (CBLQueryEnumerator*)enumerator
                               count: (NSUInteger)count;
 
 @end

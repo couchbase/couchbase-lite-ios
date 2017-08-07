@@ -13,7 +13,7 @@
 #import "CBLQueryResult.h"
 #import "CBLQueryResultSet+Internal.h"
 #import "CBLQueryResult+Internal.h"
-#import "CBLQueryResultsArray.h"
+#import "CBLQueryResultArray.h"
 #import "CBLStatus.h"
 #import "c4Query.h"
 #import "Fleece.h"
@@ -92,7 +92,7 @@
     NSInteger count = (NSInteger)c4queryenum_getRowCount(_c4enum, nullptr);
     if (count >= 0) {
         _randomAccess = true;
-        return [[CBLQueryResultsArray alloc] initWithEnumerator: self count: count];
+        return [[CBLQueryResultArray alloc] initWithResultSet: self count: count];
     } else
         return super.allObjects;
 }

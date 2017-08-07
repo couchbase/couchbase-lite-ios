@@ -7,7 +7,7 @@
 //
 
 #import "CBLQueryEnumerator.h"
-#import "CBLQueryResultsArray.h"
+#import "CBLQueryRowsArray.h"
 #import "CBLPredicateQuery+Internal.h"
 #import "CBLInternal.h"
 #import "CBLCoreBridge.h"
@@ -109,7 +109,7 @@ extern "C" {
     NSInteger count = (NSInteger)c4queryenum_getRowCount(_c4enum, nullptr);
     if (count >= 0) {
         _randomAccess = true;
-        return [[CBLQueryResultsArray alloc] initWithEnumerator: self count: count];
+        return [[CBLQueryRowsArray alloc] initWithEnumerator: self count: count];
     } else {
         return super.allObjects;
     }
