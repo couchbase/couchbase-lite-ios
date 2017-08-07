@@ -16,7 +16,7 @@
 
 @implementation CBLQueryResultsArray
 {
-    CBLQueryEnumerator* _enum;
+    id _enum;
     NSUInteger _count;
 }
 
