@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BE0AD4381F2A36CE008B4EE5 /* ExampleConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = BE0AD4371F2A36CE008B4EE5 /* ExampleConflictResolver.m */; };
 		BE6DFE991F02DDBC005F47B2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = BE6DFE981F02DDBC005F47B2 /* main.m */; };
 		BE6DFE9C1F02DDBC005F47B2 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = BE6DFE9B1F02DDBC005F47B2 /* AppDelegate.m */; };
 		BE6DFE9F1F02DDBC005F47B2 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = BE6DFE9E1F02DDBC005F47B2 /* ViewController.m */; };
@@ -33,6 +34,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BE0AD4361F2A36CE008B4EE5 /* ExampleConflictResolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExampleConflictResolver.h; sourceTree = "<group>"; };
+		BE0AD4371F2A36CE008B4EE5 /* ExampleConflictResolver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExampleConflictResolver.m; sourceTree = "<group>"; };
 		BE6DFE941F02DDBC005F47B2 /* objc-api-walkthrough.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "objc-api-walkthrough.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE6DFE981F02DDBC005F47B2 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		BE6DFE9A1F02DDBC005F47B2 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -83,6 +86,8 @@
 				BE6DFE9B1F02DDBC005F47B2 /* AppDelegate.m */,
 				BE6DFE9D1F02DDBC005F47B2 /* ViewController.h */,
 				BE6DFE9E1F02DDBC005F47B2 /* ViewController.m */,
+				BE0AD4361F2A36CE008B4EE5 /* ExampleConflictResolver.h */,
+				BE0AD4371F2A36CE008B4EE5 /* ExampleConflictResolver.m */,
 				BE6DFEA01F02DDBC005F47B2 /* Main.storyboard */,
 				BE6DFEA31F02DDBC005F47B2 /* Assets.xcassets */,
 				BE6DFEA51F02DDBC005F47B2 /* LaunchScreen.storyboard */,
@@ -180,6 +185,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE0AD4381F2A36CE008B4EE5 /* ExampleConflictResolver.m in Sources */,
 				BE6DFE9F1F02DDBC005F47B2 /* ViewController.m in Sources */,
 				BE6DFE9C1F02DDBC005F47B2 /* AppDelegate.m in Sources */,
 				BE6DFE991F02DDBC005F47B2 /* main.m in Sources */,

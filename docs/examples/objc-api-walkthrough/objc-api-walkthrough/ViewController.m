@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #include <CouchbaseLite/CouchbaseLite.h>
+#import "ExampleConflictResolver.h"
 
 @interface ViewController ()
 
@@ -21,7 +22,9 @@
     
     // create database
     NSError *error;
-    CBLDatabase* database = [[CBLDatabase alloc] initWithName:@"my-database" error:&error];
+    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    [config setConflictResolver:[[ExampleConflictResolver alloc] init]];
+    CBLDatabase* database = [[CBLDatabase alloc] initWithName:@"my-database" config:config error:&error];
     if (!database) {
         NSLog(@"Cannot open the database: %@", error);
     }
@@ -114,10 +117,27 @@
         NSLog(@"document properties :: %@", [row.document toDictionary]);
     }
     
+    // create conflict
+    /*
+     * 1. Create a document twice with the same ID.
+     * 2. The `theirs` properties in the conflict resolver represents the current rev and
+     * `mine` is what's being saved.
+     * 3. Read the document after the second save operation and verify its property is as expected.
+     */
+    CBLDocument* theirs = [[CBLDocument alloc] initWithID:@"buzz"];
+    [theirs setObject:@"theirs" forKey:@"status"];
+    CBLDocument* mine = [[CBLDocument alloc] initWithID:@"buzz"];
+    [mine setObject:@"mine" forKey:@"status"];
+    [database saveDocument:theirs error:nil];
+    [database saveDocument:mine error:nil];
+    
+    CBLDocument* conflictResolverResult = [database documentWithID:@"buzz"];
+    NSLog(@"conflictResolverResult doc.status ::: %@", [conflictResolverResult stringForKey:@"status"]);
+    
     // replication
     NSURL *url = [[NSURL alloc] initWithString:@"blip://localhost:4984/db"];
-    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithDatabase:database targetURL:url];
-    CBLReplicator *replication = [[CBLReplicator alloc] initWithConfig: config];
+    CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:database targetURL:url];
+    CBLReplicator *replication = [[CBLReplicator alloc] initWithConfig: replConfig];
     [replication start];
     
     // replication change listener

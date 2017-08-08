@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BE0AD43A1F2A3C2B008B4EE5 /* ExampleConflictResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AD4391F2A3C2B008B4EE5 /* ExampleConflictResolver.swift */; };
 		BE5E550E1F28CCF9001F25B1 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE5E550B1F28CC28001F25B1 /* CouchbaseLiteSwift.framework */; };
 		BE5E550F1F28CD2D001F25B1 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE5E550B1F28CC28001F25B1 /* CouchbaseLiteSwift.framework */; };
 		BE5E55101F28CD2D001F25B1 /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BE5E550B1F28CC28001F25B1 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -32,6 +33,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BE0AD4391F2A3C2B008B4EE5 /* ExampleConflictResolver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExampleConflictResolver.swift; sourceTree = "<group>"; };
 		BE5E550B1F28CC28001F25B1 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Carthage/Build/iOS/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
 		BE7EDC911F02AFE600275629 /* api-walkthrough.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "api-walkthrough.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE7EDC941F02AFE600275629 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -76,6 +78,7 @@
 			isa = PBXGroup;
 			children = (
 				BE7EDC941F02AFE600275629 /* AppDelegate.swift */,
+				BE0AD4391F2A3C2B008B4EE5 /* ExampleConflictResolver.swift */,
 				BE7EDC961F02AFE600275629 /* ViewController.swift */,
 				BE7EDC981F02AFE600275629 /* Main.storyboard */,
 				BE7EDC9B1F02AFE600275629 /* Assets.xcassets */,
@@ -168,6 +171,7 @@
 			files = (
 				BE7EDC971F02AFE600275629 /* ViewController.swift in Sources */,
 				BE7EDC951F02AFE600275629 /* AppDelegate.swift in Sources */,
+				BE0AD43A1F2A3C2B008B4EE5 /* ExampleConflictResolver.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
