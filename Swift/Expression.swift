@@ -47,6 +47,21 @@ public class Expression {
     }
     
     
+    // MARK: Collation
+    
+    
+    /// Creates a Collate expression with the given Collation specification. Commonly
+    /// the collate expression is used in the Order BY clause or the string comparison
+    /// expression (e.g. equalTo or lessThan) to specify how the two strings are
+    /// compared.
+    ///
+    /// - Parameter collation: The collation object.
+    /// - Returns: A Collate expression.
+    public func collate(_ collation: Collation) -> Expression {
+        return Expression(self.impl.collate(collation.impl!))
+    }
+    
+    
     // MARK: Unary operators
     
     

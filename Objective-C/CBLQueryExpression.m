@@ -11,6 +11,7 @@
 
 #import "CBLAggregateExpression.h"
 #import "CBLBinaryExpression.h"
+#import "CBLCollationExpression.h"
 #import "CBLCompoundExpression.h"
 #import "CBLParameterExpression.h"
 #import "CBLPropertyExpression.h"
@@ -62,8 +63,16 @@
 #pragma mark - Parameter:
 
 
-+ (CBLQueryExpression *) parameterNamed:(NSString *)name {
-    return [[CBLParameterExpression alloc] initWithName:name];
++ (CBLQueryExpression*) parameterNamed: (NSString*)name {
+    return [[CBLParameterExpression alloc] initWithName: name];
+}
+
+
+#pragma mark - Collation:
+
+
+- (CBLQueryExpression*) collate: (CBLQueryCollation*)collation {
+    return [[CBLCollationExpression alloc] initWithOperand: self collation: collation];
 }
 
 

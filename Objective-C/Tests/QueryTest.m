@@ -7,7 +7,7 @@
 //
 
 #import "CBLTestCase.h"
-#import "CBLQuery.h"
+#import "CBLQuery+internal.h"
 #import "CBLLiveQuery.h"
 #import "CBLQuerySelectResult.h"
 #import "CBLQueryDataSource.h"
@@ -406,9 +406,9 @@
     Assert([_db saveDocument: doc2 error: &error], @"Error when creating a document: %@", error);
     
     CBLQueryExpression* NUMBER  = [CBLQueryExpression property: @"number"];
-    CBLQuerySelectResult* RES_NUMBER = [CBLQuerySelectResult expression: NUMBER];
+    CBLQuerySelectResult* S_NUMBER = [CBLQuerySelectResult expression: NUMBER];
     
-    CBLQuery* q = [CBLQuery selectDistinct: @[RES_NUMBER]
+    CBLQuery* q = [CBLQuery selectDistinct: @[S_NUMBER]
                                       from: [CBLQueryDataSource database: self.db]];
     Assert(q);
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
@@ -546,11 +546,11 @@
     CBLQueryExpression* DOC_SEQ = [CBLQueryExpression meta].sequence;
     CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1"];
     
-    CBLQuerySelectResult* RES_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
-    CBLQuerySelectResult* RES_DOC_SEQ = [CBLQuerySelectResult expression: DOC_SEQ];
-    CBLQuerySelectResult* RES_NUMBER1 = [CBLQuerySelectResult expression: NUMBER1];
+    CBLQuerySelectResult* S_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
+    CBLQuerySelectResult* S_DOC_SEQ = [CBLQuerySelectResult expression: DOC_SEQ];
+    CBLQuerySelectResult* S_NUMBER1 = [CBLQuerySelectResult expression: NUMBER1];
     
-    CBLQuery* q = [CBLQuery select: @[RES_DOC_ID, RES_DOC_SEQ, RES_NUMBER1]
+    CBLQuery* q = [CBLQuery select: @[S_DOC_ID, S_DOC_SEQ, S_NUMBER1]
                               from: [CBLQueryDataSource database: self.db]
                              where: nil
                            orderBy: @[[CBLQueryOrdering expression: DOC_SEQ]]];
@@ -662,12 +662,12 @@
     CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
     CBLQueryExpression* CITY = [CBLQueryExpression property: @"contact.address.city"];
     
-    CBLQuerySelectResult* RES_FNAME = [CBLQuerySelectResult expression: FNAME as: @"firstname"];
-    CBLQuerySelectResult* RES_LNAME = [CBLQuerySelectResult expression: LNAME as: @"lastname"];
-    CBLQuerySelectResult* RES_GENDER = [CBLQuerySelectResult expression: GENDER];
-    CBLQuerySelectResult* RES_CITY = [CBLQuerySelectResult expression: CITY];
+    CBLQuerySelectResult* S_FNAME = [CBLQuerySelectResult expression: FNAME as: @"firstname"];
+    CBLQuerySelectResult* S_LNAME = [CBLQuerySelectResult expression: LNAME as: @"lastname"];
+    CBLQuerySelectResult* S_GENDER = [CBLQuerySelectResult expression: GENDER];
+    CBLQuerySelectResult* S_CITY = [CBLQuerySelectResult expression: CITY];
     
-    CBLQuery* q = [CBLQuery select: @[RES_FNAME, RES_LNAME, RES_GENDER, RES_CITY]
+    CBLQuery* q = [CBLQuery select: @[S_FNAME, S_LNAME, S_GENDER, S_CITY]
                               from: [CBLQueryDataSource database: self.db]];
     
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
@@ -946,13 +946,13 @@
     [self loadJSONResource: @"names_100"];
     
     CBLQueryExpression* DOC_ID  = [CBLQueryExpression meta].id;
-    CBLQuerySelectResult* RES_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
+    CBLQuerySelectResult* S_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
     
     CBLQueryExpression* LIKES  = [CBLQueryExpression property: @"likes"];
     CBLQueryExpression* VAR_LIKE = [CBLQueryExpression variableNamed: @"LIKE"];
     
     // ANY:
-    CBLQuery* q = [CBLQuery select: @[RES_DOC_ID]
+    CBLQuery* q = [CBLQuery select: @[S_DOC_ID]
                               from: [CBLQueryDataSource database: self.db]
                              where: [CBLQueryExpression any: @"LIKE"
                                                          in: LIKES
@@ -966,7 +966,7 @@
     AssertEqual(numRows, expected.count);
     
     // EVERY:
-    q = [CBLQuery select: @[RES_DOC_ID]
+    q = [CBLQuery select: @[S_DOC_ID]
                     from: [CBLQueryDataSource database: self.db]
                    where: [CBLQueryExpression every: @"LIKE"
                                                  in: LIKES
@@ -980,7 +980,7 @@
     AssertEqual(numRows, 42u);
     
     // ANY AND EVERY
-    q = [CBLQuery select: @[RES_DOC_ID]
+    q = [CBLQuery select: @[S_DOC_ID]
                     from: [CBLQueryDataSource database: self.db]
                    where: [CBLQueryExpression anyAndEvery: @"LIKE"
                                                        in: LIKES
@@ -994,15 +994,15 @@
     [self loadNumbers: 100];
     
     CBLQueryExpression* NUMBER1 = [CBLQueryExpression property: @"number1"];
-    CBLQuerySelectResult* RES_NUMBER1 = [CBLQuerySelectResult expression: NUMBER1];
-    CBLQuerySelectResult* RES_STAR = [CBLQuerySelectResult all];
+    CBLQuerySelectResult* S_NUMBER1 = [CBLQuerySelectResult expression: NUMBER1];
+    CBLQuerySelectResult* S_STAR = [CBLQuerySelectResult all];
     
     CBLQueryExpression* TESTDB_NUMBER1 = [CBLQueryExpression property: @"number1" from: @"testdb"];
-    CBLQuerySelectResult* RES_TESTDB_NUMBER1 = [CBLQuerySelectResult expression: TESTDB_NUMBER1];
-    CBLQuerySelectResult* RES_TESTDB_STAR = [CBLQuerySelectResult allFrom: @"testdb"];
+    CBLQuerySelectResult* S_TESTDB_NUMBER1 = [CBLQuerySelectResult expression: TESTDB_NUMBER1];
+    CBLQuerySelectResult* S_TESTDB_STAR = [CBLQuerySelectResult allFrom: @"testdb"];
     
     // SELECT *
-    CBLQuery* q = [CBLQuery select: @[RES_STAR]
+    CBLQuery* q = [CBLQuery select: @[S_STAR]
                               from: [CBLQueryDataSource database: self.db]];
     
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
@@ -1018,7 +1018,7 @@
     AssertEqual(numRows, 100u);
     
     // SELECT testdb.*
-    q = [CBLQuery select: @[RES_TESTDB_STAR]
+    q = [CBLQuery select: @[S_TESTDB_STAR]
                     from: [CBLQueryDataSource database: self.db as: @"testdb"]];
     
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
@@ -1034,7 +1034,7 @@
     AssertEqual(numRows, 100u);
     
     // SELECT *, number1
-    q = [CBLQuery select: @[RES_STAR, RES_NUMBER1]
+    q = [CBLQuery select: @[S_STAR, S_NUMBER1]
                     from: [CBLQueryDataSource database: self.db]];
     
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
@@ -1052,7 +1052,7 @@
     AssertEqual(numRows, 100u);
     
     // SELECT testdb.*, testdb.number1
-    q = [CBLQuery select: @[RES_TESTDB_STAR, RES_TESTDB_NUMBER1]
+    q = [CBLQuery select: @[S_TESTDB_STAR, S_TESTDB_NUMBER1]
                     from: [CBLQueryDataSource database: self.db as: @"testdb"]];
     
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
@@ -1068,6 +1068,175 @@
         AssertEqual([r integerForKey: @"number1"], (NSInteger)n);
     }];
     AssertEqual(numRows, 100u);
+}
+
+
+- (void) testGenerateJSONCollation {
+    NSArray* collations =
+        @[[CBLQueryCollation asciiWithIgnoreCase: NO],
+          [CBLQueryCollation asciiWithIgnoreCase: YES],
+          [CBLQueryCollation unicodeWithLocale: nil   ignoreCase: NO  ignoreAccents: NO],
+          [CBLQueryCollation unicodeWithLocale: nil   ignoreCase: YES ignoreAccents: NO],
+          [CBLQueryCollation unicodeWithLocale: nil   ignoreCase: YES ignoreAccents: YES],
+          [CBLQueryCollation unicodeWithLocale: @"en" ignoreCase: NO  ignoreAccents: NO],
+          [CBLQueryCollation unicodeWithLocale: @"en" ignoreCase: YES ignoreAccents: NO],
+          [CBLQueryCollation unicodeWithLocale: @"en" ignoreCase: YES ignoreAccents: YES]];
+    
+    NSArray* expected =
+        @[
+          @{@"UNICODE": @(NO),  @"LOCALE": [NSNull null] ,@"CASE": @(YES), @"DIAC": @(YES)},
+          @{@"UNICODE": @(NO),  @"LOCALE": [NSNull null] ,@"CASE": @(NO) , @"DIAC": @(YES)},
+          @{@"UNICODE": @(YES), @"LOCALE": [NSNull null] ,@"CASE": @(YES), @"DIAC": @(YES)},
+          @{@"UNICODE": @(YES), @"LOCALE": [NSNull null] ,@"CASE": @(NO),  @"DIAC": @(YES)},
+          @{@"UNICODE": @(YES), @"LOCALE": [NSNull null] ,@"CASE": @(NO),  @"DIAC": @(NO)},
+          @{@"UNICODE": @(YES), @"LOCALE": @"en"         ,@"CASE": @(YES), @"DIAC": @(YES)},
+          @{@"UNICODE": @(YES), @"LOCALE": @"en"         ,@"CASE": @(NO),  @"DIAC": @(YES)},
+          @{@"UNICODE": @(YES), @"LOCALE": @"en"         ,@"CASE": @(NO),  @"DIAC": @(NO)}
+          ];
+    
+    NSInteger i = 0;
+    for (CBLQueryCollation* c in collations) {
+        AssertEqualObjects([c asJSON], expected[i++]);
+    }
+}
+
+
+- (void) testUnicodeCollationWithLocale {
+    NSArray* letters = @[@"B", @"A", @"Z", @"Å"];
+    for (NSString* letter in letters) {
+        CBLDocument* doc = [self createDocument];
+        [doc setObject: letter forKey: @"string"];
+        [self saveDocument: doc];
+    }
+    
+    CBLQueryExpression* STRING = [CBLQueryExpression property: @"string"];
+    CBLQuerySelectResult* S_STRING = [CBLQuerySelectResult expression: STRING];
+    
+    // Without locale:
+    CBLQueryCollation* NO_LOCALE = [CBLQueryCollation unicodeWithLocale: nil
+                                                             ignoreCase: NO
+                                                          ignoreAccents: NO];
+    CBLQuery* q = [CBLQuery select: @[S_STRING]
+                              from: [CBLQueryDataSource database: self.db]
+                             where: nil
+                           orderBy: @[[CBLQueryOrdering expression: [STRING collate: NO_LOCALE]]]];
+    
+    NSArray* expected = @[@"A", @"Å", @"B", @"Z"];
+    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
+    {
+        AssertEqualObjects([r stringAtIndex: 0], expected[n-1]);
+    }];
+    AssertEqual(numRows, expected.count);
+    
+    // With locale:
+    CBLQueryCollation* WITH_LOCALE = [CBLQueryCollation unicodeWithLocale: @"se"
+                                                               ignoreCase: NO
+                                                            ignoreAccents: NO];
+    q = [CBLQuery select: @[S_STRING]
+                    from: [CBLQueryDataSource database: self.db]
+                   where: nil
+                 orderBy: @[[CBLQueryOrdering expression: [STRING collate: WITH_LOCALE]]]];
+    
+    expected = @[@"A", @"B", @"Z", @"Å"];
+    numRows = [self verifyQuery: q randomAccess: NO test: ^(uint64_t n, CBLQueryResult* r)
+    {
+        AssertEqualObjects([r stringAtIndex: 0], expected[n-1]);
+    }];
+    AssertEqual(numRows, expected.count);
+}
+
+
+- (void) testCompareWithUnicodeCollation {
+    id bothSensitive = [CBLQueryCollation unicodeWithLocale: nil ignoreCase: NO ignoreAccents: NO];
+    id accentSensitive = [CBLQueryCollation unicodeWithLocale: nil ignoreCase: YES ignoreAccents: NO];
+    id caseSensitive = [CBLQueryCollation unicodeWithLocale: nil ignoreCase: NO ignoreAccents: YES];
+    id noSensitive = [CBLQueryCollation unicodeWithLocale: nil ignoreCase: YES ignoreAccents: YES];
+    
+    NSArray* testData =
+    @[// Edge cases: empty and 1-char strings:
+      @[@"", @"", @YES, bothSensitive],
+      @[@"", @"a", @NO, bothSensitive],
+      @[@"a", @"a", @YES, bothSensitive],
+      
+      // Case sensitive: lowercase come first by unicode rules:
+      @[@"a", @"A", @NO, bothSensitive],
+      @[@"abc", @"abc", @YES, bothSensitive],
+      @[@"Aaa", @"abc", @NO, bothSensitive],
+      @[@"abc", @"abC", @NO, bothSensitive],
+      @[@"AB", @"abc", @NO, bothSensitive],
+      
+      // Case insenstive:
+      @[@"ABCDEF", @"ZYXWVU", @NO, accentSensitive],
+      @[@"ABCDEF", @"Z", @NO, accentSensitive],
+      
+      @[@"a", @"A", @YES, accentSensitive],
+      @[@"abc", @"ABC", @YES, accentSensitive],
+      @[@"ABA", @"abc", @NO, accentSensitive],
+      
+      @[@"commonprefix1", @"commonprefix2", @NO, accentSensitive],
+      @[@"commonPrefix1", @"commonprefix2", @NO, accentSensitive],
+      
+      @[@"abcdef", @"abcdefghijklm", @NO, accentSensitive],
+      @[@"abcdeF", @"abcdefghijklm", @NO, accentSensitive],
+      
+      // Now bring in non-ASCII characters:
+      @[@"a", @"á", @NO, accentSensitive],
+      @[@"", @"á", @NO, accentSensitive],
+      @[@"á", @"á", @YES, accentSensitive],
+      @[@"•a", @"•A", @YES, accentSensitive],
+      
+      @[@"test a", @"test á", @NO, accentSensitive],
+      @[@"test á", @"test b", @NO, accentSensitive],
+      @[@"test á", @"test Á", @YES, accentSensitive],
+      @[@"test á1", @"test Á2", @NO, accentSensitive],
+      
+      // Case sensitive, diacritic sensitive:
+      @[@"ABCDEF", @"ZYXWVU", @NO, bothSensitive],
+      @[@"ABCDEF", @"Z", @NO, bothSensitive],
+      @[@"a", @"A", @NO, bothSensitive],
+      @[@"abc", @"ABC", @NO, bothSensitive],
+      @[@"•a", @"•A", @NO, bothSensitive],
+      @[@"test a", @"test á", @NO, bothSensitive],
+      @[@"Ähnlichkeit", @"apple", @NO, bothSensitive], // Because 'h'-vs-'p' beats 'Ä'-vs-'a'
+      @[@"ax", @"Äz", @NO, bothSensitive],
+      @[@"test a", @"test Á", @NO, bothSensitive],
+      @[@"test Á", @"test e", @NO, bothSensitive],
+      @[@"test á", @"test Á", @NO, bothSensitive],
+      @[@"test á", @"test b", @NO, bothSensitive],
+      @[@"test u", @"test Ü", @NO, bothSensitive],
+      
+      // Case sensitive, diacritic insensitive
+      @[@"abc", @"ABC", @NO, caseSensitive],
+      @[@"test á", @"test a", @YES, caseSensitive],
+      @[@"test á", @"test A", @NO, caseSensitive],
+      @[@"test á", @"test b", @NO, caseSensitive],
+      @[@"test á", @"test Á", @NO, caseSensitive],
+      
+      // Case and diacritic insensitive
+      @[@"test á", @"test Á", @YES, noSensitive]
+    ];
+    
+    for (NSArray* data in testData) {
+        CBLDocument* doc = [self createDocument];
+        [doc setObject: data[0] forKey: @"value"];
+        [self saveDocument: doc];
+        
+        CBLQueryExpression* VALUE = [CBLQueryExpression property: @"value"];
+        CBLQueryExpression* comparison = [data[2] boolValue] ?
+            [[VALUE collate: data[3]] equalTo: data[1]] :
+            [[VALUE collate: data[3]] lessThan: data[1]];
+        
+        // NSLog(@"Compare %@ and %@, result = %@", data[0], data[1], data[2]);
+        
+        CBLQuery* q = [CBLQuery select: @[]
+                                  from: [CBLQueryDataSource database: self.db]
+                                 where: comparison];
+        uint64_t numRows = [self verifyQuery: q randomAccess: NO
+                                        test: ^(uint64_t n, CBLQueryResult* r) { }];
+        AssertEqual(numRows, 1u);
+        
+        Assert([self.db deleteDocument: doc error: nil]);
+    }
 }
 
 

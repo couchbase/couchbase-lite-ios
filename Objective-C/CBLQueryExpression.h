@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 @class CBLQuery;
+@class CBLQueryCollation;
 @class CBLQueryMeta;
 
 
@@ -65,7 +66,20 @@ NS_ASSUME_NONNULL_BEGIN
  @param name The parameter name
  @return The parameter expression.
  */
-+ (CBLQueryExpression *) parameterNamed:(NSString *)name;
++ (CBLQueryExpression*) parameterNamed: (NSString*)name;
+
+#pragma mark - Collation:
+
+/**
+ Creates a collate expression with the given Collation specification. Commonly
+ the collate expression is used in the Order BY clause or the string comparison
+ expression (e.g. equalTo or lessThan) to specify how the two strings are
+ compared.
+
+ @param collation The Collation object.
+ @return The collate expression.
+ */
+- (CBLQueryExpression*) collate: (CBLQueryCollation*)collation;
 
 #pragma mark - Unary operators:
 

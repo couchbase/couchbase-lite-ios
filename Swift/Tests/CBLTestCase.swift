@@ -55,6 +55,11 @@ class CBLTestCase: XCTestCase {
     }
     
     
+    func createDocument() -> Document {
+        return Document()
+    }
+    
+    
     func createDocument(_ id: String) -> Document {
         return Document(id)
     }

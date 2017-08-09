@@ -379,12 +379,12 @@ class QueryTest: CBLTestCase {
         let MAXZIP = Function.max(Expression.property("contact.address.zip"))
         let GENDER = Expression.property("gender")
         
-        let RES_STATE  = SelectResult.expression(STATE)
-        let RES_COUNT  = SelectResult.expression(COUNT)
-        let RES_MAXZIP = SelectResult.expression(MAXZIP)
+        let S_STATE  = SelectResult.expression(STATE)
+        let S_COUNT  = SelectResult.expression(COUNT)
+        let S_MAXZIP = SelectResult.expression(MAXZIP)
         
         var q = Query
-            .select(RES_STATE, RES_COUNT, RES_MAXZIP)
+            .select(S_STATE, S_COUNT, S_MAXZIP)
             .from(DataSource.database(db))
             .where(GENDER.equalTo("female"))
             .groupBy(STATE)
@@ -410,7 +410,7 @@ class QueryTest: CBLTestCase {
         expectedMaxZips = ["94153", "50801", "47952"]
         
         q = Query
-            .select(RES_STATE, RES_COUNT, RES_MAXZIP)
+            .select(S_STATE, S_COUNT, S_MAXZIP)
             .from(DataSource.database(db))
             .where(GENDER.equalTo("female"))
             .groupBy(STATE)
@@ -465,12 +465,12 @@ class QueryTest: CBLTestCase {
         let DOC_SEQ = Expression.meta().sequence
         let NUMBER1 = Expression.property("number1")
         
-        let RES_DOC_ID  = SelectResult.expression(DOC_ID)
-        let RES_DOC_SEQ = SelectResult.expression(DOC_SEQ)
-        let RES_NUMBER1 = SelectResult.expression(NUMBER1)
+        let S_DOC_ID  = SelectResult.expression(DOC_ID)
+        let S_DOC_SEQ = SelectResult.expression(DOC_SEQ)
+        let S_NUMBER1 = SelectResult.expression(NUMBER1)
         
         let q = Query
-            .select(RES_DOC_ID, RES_DOC_SEQ, RES_NUMBER1)
+            .select(S_DOC_ID, S_DOC_SEQ, S_NUMBER1)
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(DOC_SEQ))
         
@@ -576,13 +576,13 @@ class QueryTest: CBLTestCase {
         let GENDER = Expression.property("gender")
         let CITY = Expression.property("contact.address.city")
         
-        let RES_FNAME  = SelectResult.expression(FNAME).as("firstname")
-        let RES_LNAME  = SelectResult.expression(LNAME).as("lastname")
-        let RES_GENDER  = SelectResult.expression(GENDER)
-        let RES_CITY  = SelectResult.expression(CITY)
+        let S_FNAME  = SelectResult.expression(FNAME).as("firstname")
+        let S_LNAME  = SelectResult.expression(LNAME).as("lastname")
+        let S_GENDER  = SelectResult.expression(GENDER)
+        let S_CITY  = SelectResult.expression(CITY)
         
         let q = Query
-            .select(RES_FNAME, RES_LNAME, RES_GENDER, RES_CITY)
+            .select(S_FNAME, S_LNAME, S_GENDER, S_CITY)
             .from(DataSource.database(db))
         
         let numRow = try verifyQuery(q, block: { (n, r) in
@@ -839,14 +839,14 @@ class QueryTest: CBLTestCase {
         try loadJSONResource(name: "names_100")
         
         let DOC_ID  = Expression.meta().id
-        let RES_DOC_ID  = SelectResult.expression(DOC_ID)
+        let S_DOC_ID  = SelectResult.expression(DOC_ID)
         
         let LIKES = Expression.property("likes")
         let VAR_LIKE = Expression.variable("LIKE")
         
         // ANY:
         var q = Query
-            .select(RES_DOC_ID)
+            .select(S_DOC_ID)
             .from(DataSource.database(db))
             .where(Expression.any("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("climbing")))
         
@@ -858,7 +858,7 @@ class QueryTest: CBLTestCase {
         
         // EVERY:
         q = Query
-            .select(RES_DOC_ID)
+            .select(S_DOC_ID)
             .from(DataSource.database(db))
             .where(Expression.every("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("taxes")))
         
@@ -871,7 +871,7 @@ class QueryTest: CBLTestCase {
         
         // ANY AND EVERY:
         q = Query
-            .select(RES_DOC_ID)
+            .select(S_DOC_ID)
             .from(DataSource.database(db))
             .where(Expression.anyAndEvery("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("taxes")))
         
@@ -884,16 +884,16 @@ class QueryTest: CBLTestCase {
         try loadNumbers(100)
         
         let NUMBER1 = Expression.property("number1")
-        let RES_STAR = SelectResult.all()
-        let RES_NUMBER1 = SelectResult.expression(NUMBER1)
+        let S_STAR = SelectResult.all()
+        let S_NUMBER1 = SelectResult.expression(NUMBER1)
         
         let TESTDB_NUMBER1 = Expression.property("number1").from("testdb")
-        let RES_TESTDB_STAR = SelectResult.all().from("testdb")
-        let RES_TESTDB_NUMBER1 = SelectResult.expression(TESTDB_NUMBER1)
+        let S_TESTDB_STAR = SelectResult.all().from("testdb")
+        let S_TESTDB_NUMBER1 = SelectResult.expression(TESTDB_NUMBER1)
         
         // SELECT *
         var q = Query
-            .select(RES_STAR)
+            .select(S_STAR)
             .from(DataSource.database(db))
         
         var numRow = try verifyQuery(q, block: { (n, r) in
@@ -909,7 +909,7 @@ class QueryTest: CBLTestCase {
         
         // SELECT testdb.*
         q = Query
-            .select(RES_TESTDB_STAR)
+            .select(S_TESTDB_STAR)
             .from(DataSource.database(db).as("testdb"))
         
         numRow = try verifyQuery(q, block: { (n, r) in
@@ -925,7 +925,7 @@ class QueryTest: CBLTestCase {
         
         // SELECT *, number1
         q = Query
-            .select(RES_STAR, RES_NUMBER1)
+            .select(S_STAR, S_NUMBER1)
             .from(DataSource.database(db))
         
         numRow = try verifyQuery(q, block: { (n, r) in
@@ -943,7 +943,7 @@ class QueryTest: CBLTestCase {
         
         // SELECT testdb.*, testdb.number1
         q = Query
-            .select(RES_TESTDB_STAR, RES_TESTDB_NUMBER1)
+            .select(S_TESTDB_STAR, S_TESTDB_NUMBER1)
             .from(DataSource.database(db).as("testdb"))
         
         numRow = try verifyQuery(q, block: { (n, r) in
@@ -958,6 +958,134 @@ class QueryTest: CBLTestCase {
             XCTAssertEqual(r.int(forKey: "number1"), Int(n))
         })
         XCTAssertEqual(numRow, 100)
+    }
+    
+    
+    func testUnicodeCollationWithLocale() throws {
+        let letters = ["B", "A", "Z", "Å"]
+        for letter in letters {
+            let doc = createDocument()
+            doc.setValue(letter, forKey: "string")
+            try saveDocument(doc)
+        }
+        
+        let STRING = Expression.property("string")
+        let S_STRING = SelectResult.expression(STRING)
+        
+        // Without locale:
+        let NO_LOCALE = Collation.unicode()
+        var q = Query
+            .select(S_STRING)
+            .from(DataSource.database(db))
+            .orderBy(Ordering.expression(STRING.collate(NO_LOCALE)))
+        
+        var expected = ["A", "Å", "B", "Z"]
+        var numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.string(at: 0), expected[Int(n)-1])
+        })
+        XCTAssertEqual(numRow, UInt64(expected.count))
+        
+        // With locale
+        let WITH_LOCALE = Collation.unicode().locale("se")
+        q = Query
+            .select(S_STRING)
+            .from(DataSource.database(db))
+            .orderBy(Ordering.expression(STRING.collate(WITH_LOCALE)))
+        
+        expected = ["A", "B", "Z", "Å"]
+        numRow = try verifyQuery(q, block: { (n, r) in
+            XCTAssertEqual(r.string(at: 0), expected[Int(n)-1])
+        })
+        XCTAssertEqual(numRow, UInt64(expected.count))
+    }
+    
+    
+    func testCompareWithUnicodeCollation() throws {
+        let bothSensitive = Collation.unicode()
+        let accentSensitive = Collation.unicode().ignoreCase(true)
+        let caseSensitive = Collation.unicode().ignoreAccents(true)
+        let noSensitive = Collation.unicode().ignoreCase(true).ignoreCase(true)
+        
+        let testCases = [
+            // Edge cases: empty and 1-char strings:
+            ("", "", true, bothSensitive),
+            ("", "a", false, bothSensitive),
+            ("a", "a", true, bothSensitive),
+            
+            // Case sensitive: lowercase come first by unicode rules:
+            ("a", "A", false, bothSensitive),
+            ("abc", "abc", true, bothSensitive),
+            ("Aaa", "abc", false, bothSensitive),
+            ("abc", "abC", false, bothSensitive),
+            ("AB", "abc", false, bothSensitive),
+            
+            // Case insenstive:
+            ("ABCDEF", "ZYXWVU", false, accentSensitive),
+            ("ABCDEF", "Z", false, accentSensitive),
+            
+            ("a", "A", true, accentSensitive),
+            ("abc", "ABC", true, accentSensitive),
+            ("ABA", "abc", false, accentSensitive),
+            
+            ("commonprefix1", "commonprefix2", false, accentSensitive),
+            ("commonPrefix1", "commonprefix2", false, accentSensitive),
+            
+            ("abcdef", "abcdefghijklm", false, accentSensitive),
+            ("abcdeF", "abcdefghijklm", false, accentSensitive),
+            
+            // Now bring in non-ASCII characters:
+            ("a", "á", false, accentSensitive),
+            ("", "á", false, accentSensitive),
+            ("á", "á", true, accentSensitive),
+            ("•a", "•A", true, accentSensitive),
+            
+            ("test a", "test á", false, accentSensitive),
+            ("test á", "test b", false, accentSensitive),
+            ("test á", "test Á", true, accentSensitive),
+            ("test á1", "test Á2", false, accentSensitive),
+            
+            // Case sensitive, diacritic sensitive:
+            ("ABCDEF", "ZYXWVU", false, bothSensitive),
+            ("ABCDEF", "Z", false, bothSensitive),
+            ("a", "A", false, bothSensitive),
+            ("abc", "ABC", false, bothSensitive),
+            ("•a", "•A", false, bothSensitive),
+            ("test a", "test á", false, bothSensitive),
+            ("Ähnlichkeit", "apple", false, bothSensitive), // Because 'h'-vs-'p' beats 'Ä'-vs-'a'
+            ("ax", "Äz", false, bothSensitive),
+            ("test a", "test Á", false, bothSensitive),
+            ("test Á", "test e", false, bothSensitive),
+            ("test á", "test Á", false, bothSensitive),
+            ("test á", "test b", false, bothSensitive),
+            ("test u", "test Ü", false, bothSensitive),
+            
+            // Case sensitive, diacritic insensitive
+            ("abc", "ABC", false, caseSensitive),
+            ("test á", "test a", true, caseSensitive),
+            ("test á", "test A", false, caseSensitive),
+            ("test á", "test b", false, caseSensitive),
+            ("test á", "test Á", false, caseSensitive),
+            
+            // Case and diacritic insensitive
+            ("test á", "test Á", true, noSensitive)
+        ]
+        
+        for data in testCases {
+            let doc = createDocument()
+            doc.setValue(data.0, forKey: "value")
+            try saveDocument(doc)
+            
+            let VALUE = Expression.property("value")
+            let comparison = data.2 ?
+                VALUE.collate(data.3).equalTo(data.1) :
+                VALUE.collate(data.3).lessThan(data.1)
+            
+            let q = Query.select().from(DataSource.database(db)).where(comparison)
+            let numRow = try verifyQuery(q, block: { (n, r) in })
+            XCTAssertEqual(numRow, 1)
+            
+            try db.delete(doc)
+        }
     }
     
     

@@ -8,6 +8,7 @@
 
 #import "CBLQuery.h"
 #import "CBLInternal.h"
+#import "CBLQueryCollation.h"
 #import "CBLQueryDataSource.h"
 #import "CBLQueryFunction.h"
 #import "CBLQueryJoin.h"
@@ -155,6 +156,15 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly, nullable) id offset;
 
 - (instancetype) initWithLimit: (id)limit offset: (nullable id)offset;
+
+@end
+
+@interface CBLQueryCollation () <CBLQueryJSONEncoding>
+
+- (instancetype) initWithUnicode: (BOOL)unicode
+                          locale: (nullable NSString*)locale
+                      ignoreCase: (BOOL)ignoreCase
+                   ignoreAccents: (BOOL)ignoreAccents;
 
 @end
 

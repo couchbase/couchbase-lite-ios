@@ -40,6 +40,9 @@ extern atomic_int gC4ExpectExceptions;
 /** Reopen the default test database (.db property). */
 - (void) reopenDB;
 
+/** Create a new document */
+- (CBLDocument*) createDocument;
+
 /** Create a new document with the given document ID. */
 - (CBLDocument*) createDocument: (NSString*)documentID;
 

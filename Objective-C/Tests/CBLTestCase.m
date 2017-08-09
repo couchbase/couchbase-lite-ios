@@ -95,6 +95,11 @@
 }
 
 
+- (CBLDocument*) createDocument {
+    return [[CBLDocument alloc] init];
+}
+
+
 - (CBLDocument*) createDocument: (NSString*)documentID {
     return [[CBLDocument alloc] initWithID: documentID];
 }

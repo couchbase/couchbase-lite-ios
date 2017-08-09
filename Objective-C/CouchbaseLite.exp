@@ -23,6 +23,7 @@
 .objc_class_name_CBLLiveQuery
 .objc_class_name_CBLLiveQueryChange
 .objc_class_name_CBLQuery
+.objc_class_name_CBLQueryCollation
 .objc_class_name_CBLQueryDataSource
 .objc_class_name_CBLQueryExpression
 .objc_class_name_CBLQueryFunction
