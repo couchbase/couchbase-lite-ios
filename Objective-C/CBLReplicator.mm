@@ -9,13 +9,14 @@
 #import "CBLReplicator+Internal.h"
 #import "CBLReplicatorChange+Internal.h"
 #import "CBLReplicatorConfiguration.h"
+
 #import "CBLChangeListener.h"
+#import "CBLCoreBridge.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
 #import "CBLReachability.h"
-#import "CBLCoreBridge.h"
-#import "CBLStringBytes.h"
-#import "CBLInternal.h"
 #import "CBLStatus.h"
+#import "CBLStringBytes.h"
 
 #import "c4Replicator.h"
 #import "c4Socket.h"

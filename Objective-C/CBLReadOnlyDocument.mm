@@ -7,11 +7,11 @@
 //
 
 #import "CBLReadOnlyDocument.h"
-#import "CBLDocument+Internal.h"
-#import "CBLInternal.h"
 #import "CBLCoreBridge.h"
-#import "CBLStringBytes.h"
+#import "CBLDatabase+Internal.h"
+#import "CBLDocument+Internal.h"
 #import "CBLStatus.h"
+#import "CBLStringBytes.h"
 
 
 @implementation CBLReadOnlyDocument

@@ -8,7 +8,7 @@
 
 #import "CBLQueryResultSet.h"
 #import "CBLCoreBridge.h"
-#import "CBLInternal.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQueryResult.h"
 #import "CBLQueryResultSet+Internal.h"

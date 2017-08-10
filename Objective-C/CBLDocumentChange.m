@@ -7,7 +7,7 @@
 //
 
 #import "CBLDocumentChange.h"
-#import "CBLInternal.h"
+#import "CBLDatabase+Internal.h"
 
 @implementation CBLDocumentChange
 

@@ -20,7 +20,7 @@
 #import "CBLData.h"
 #import "CBLCoreBridge.h"
 #import "CBLDocument+Internal.h"
-#import "CBLInternal.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLJSON.h"
 #import "CBLMisc.h"
 #import "CBLSharedKeys.hh"

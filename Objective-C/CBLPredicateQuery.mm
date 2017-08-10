@@ -8,12 +8,14 @@
 
 #import "CBLPredicateQuery.h"
 #import "CBLPredicateQuery+Internal.h"
-#import "CBLQueryEnumerator.h"
-#import "CBLInternal.h"
+
 #import "CBLCoreBridge.h"
-#import "CBLStringBytes.h"
+#import "CBLDatabase+Internal.h"
+#import "CBLQueryEnumerator.h"
 #import "CBLJSON.h"
 #import "CBLStatus.h"
+#import "CBLStringBytes.h"
+
 #import "c4Document.h"
 #import "c4Query.h"
 #import "Fleece.h"
@@ -191,7 +193,7 @@ extern "C" {
                 keyStr = descending ? [sd substringFromIndex: 1] : sd;
             } else {
                 Assert([sd isKindOfClass: [NSSortDescriptor class]]);
-                descending = ![sd ascending];
+                descending = ![(NSSortDescriptor*)sd ascending];
                 keyStr = [sd key];
             }
 

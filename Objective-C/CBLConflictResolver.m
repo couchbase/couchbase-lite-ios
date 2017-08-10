@@ -9,7 +9,7 @@
 #import "CBLConflictResolver.h"
 #import "CBLReadOnlyDocument.h"
 #import "CBLDocument+Internal.h"
-#import "CBLInternal.h"
+#import "CBLDatabase+Internal.h"
 
 
 @implementation CBLDefaultConflictResolver

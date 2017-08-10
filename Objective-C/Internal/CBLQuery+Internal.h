@@ -7,7 +7,7 @@
 //
 
 #import "CBLQuery.h"
-#import "CBLInternal.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLQueryCollation.h"
 #import "CBLQueryDataSource.h"
 #import "CBLQueryFunction.h"
@@ -19,6 +19,7 @@
 #import "CBLQueryExpression.h"
 #import "CBLQueryOrdering.h"
 #import "CBLPredicateQuery+Internal.h"
+
 
 NS_ASSUME_NONNULL_BEGIN
 

@@ -200,8 +200,7 @@
 		934F4CA81E241FB500F90659 /* CBLBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C951E241FB500F90659 /* CBLBase64.m */; };
 		934F4CA91E241FB500F90659 /* CBLCoreBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4C961E241FB500F90659 /* CBLCoreBridge.h */; };
 		934F4CAA1E241FB500F90659 /* CBLCoreBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C971E241FB500F90659 /* CBLCoreBridge.mm */; };
-		934F4CAB1E241FB500F90659 /* CBLInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4C981E241FB500F90659 /* CBLInternal.h */; };
-		934F4CAC1E241FB500F90659 /* CBLInternal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C991E241FB500F90659 /* CBLInternal.mm */; };
+		934F4CAB1E241FB500F90659 /* CBLDatabase+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4C981E241FB500F90659 /* CBLDatabase+Internal.h */; };
 		934F4CAD1E241FB500F90659 /* CBLJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4C9A1E241FB500F90659 /* CBLJSON.h */; };
 		934F4CAE1E241FB500F90659 /* CBLJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C9B1E241FB500F90659 /* CBLJSON.m */; };
 		934F4CAF1E241FB500F90659 /* CBLLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4C9C1E241FB500F90659 /* CBLLog.h */; };
@@ -428,8 +427,7 @@
 		93B503741E64B0B0002C4680 /* CBLSymmetricKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4CA61E241FB500F90659 /* CBLSymmetricKey.m */; };
 		93B503751E64B0B4002C4680 /* CBLBlobStream.h in Headers */ = {isa = PBXBuildFile; fileRef = 72A87A031E2E0E70008466FF /* CBLBlobStream.h */; };
 		93B503761E64B0B7002C4680 /* CBLBlobStream.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A041E2E0E70008466FF /* CBLBlobStream.mm */; };
-		93B503771E64B0BB002C4680 /* CBLInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4C981E241FB500F90659 /* CBLInternal.h */; };
-		93B503781E64B0BE002C4680 /* CBLInternal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C991E241FB500F90659 /* CBLInternal.mm */; };
+		93B503771E64B0BB002C4680 /* CBLDatabase+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4C981E241FB500F90659 /* CBLDatabase+Internal.h */; };
 		93B503791E64B0C1002C4680 /* CBLPredicateQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 9317621E1E2D439700563506 /* CBLPredicateQuery+Internal.h */; };
 		93B5037A1E64B0E3002C4680 /* CBLPrefix.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4CA21E241FB500F90659 /* CBLPrefix.h */; };
 		93B75C1A1E79EF5F0033B61B /* CBLQueryDataSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 933208081E77415E000D9993 /* CBLQueryDataSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -818,8 +816,7 @@
 		934F4C951E241FB500F90659 /* CBLBase64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLBase64.m; sourceTree = "<group>"; };
 		934F4C961E241FB500F90659 /* CBLCoreBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLCoreBridge.h; sourceTree = "<group>"; };
 		934F4C971E241FB500F90659 /* CBLCoreBridge.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLCoreBridge.mm; sourceTree = "<group>"; };
-		934F4C981E241FB500F90659 /* CBLInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLInternal.h; sourceTree = "<group>"; };
-		934F4C991E241FB500F90659 /* CBLInternal.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLInternal.mm; sourceTree = "<group>"; };
+		934F4C981E241FB500F90659 /* CBLDatabase+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Internal.h"; sourceTree = "<group>"; };
 		934F4C9A1E241FB500F90659 /* CBLJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSON.h; sourceTree = "<group>"; };
 		934F4C9B1E241FB500F90659 /* CBLJSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLJSON.m; sourceTree = "<group>"; };
 		934F4C9C1E241FB500F90659 /* CBLLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLLog.h; sourceTree = "<group>"; };
@@ -1185,6 +1182,14 @@
 			name = Database;
 			sourceTree = "<group>";
 		};
+		933F1AC31F3D015A00338C6A /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				934F4C981E241FB500F90659 /* CBLDatabase+Internal.h */,
+			);
+			name = Database;
+			sourceTree = "<group>";
+		};
 		934A27961F30E5CF003946A7 /* Expression */ = {
 			isa = PBXGroup;
 			children = (
@@ -1233,14 +1238,13 @@
 		934F4C931E241FB500F90659 /* Internal */ = {
 			isa = PBXGroup;
 			children = (
+				933F1AC31F3D015A00338C6A /* Database */,
 				93CD021B1E9D8E3700AFB3FA /* Document */,
 				9383A5691F1EE6BD0083053D /* Predicate */,
 				93B75BF71E79B0A20033B61B /* Query */,
 				2753AFF01EC39CA200C12E98 /* Replicator */,
 				9378C5E91E26F101001BB196 /* Bridge */,
 				9378C5E81E26F0E1001BB196 /* Support */,
-				934F4C981E241FB500F90659 /* CBLInternal.h */,
-				934F4C991E241FB500F90659 /* CBLInternal.mm */,
 				933207AD1E773CFB000D9993 /* CBLJSONCoding.h */,
 				934F4CA21E241FB500F90659 /* CBLPrefix.h */,
 			);
@@ -1724,7 +1728,7 @@
 				937A69041F0731230058277F /* CBLQueryFunction.h in Headers */,
 				9381960F1EC1121B0032CC51 /* CBLReadOnlyDictionary.h in Headers */,
 				275F92A31E4D377C007FD5A2 /* CBLBlob.h in Headers */,
-				93B503771E64B0BB002C4680 /* CBLInternal.h in Headers */,
+				93B503771E64B0BB002C4680 /* CBLDatabase+Internal.h in Headers */,
 				93CD016E1E94923900AFB3FA /* CBLQuery+Internal.h in Headers */,
 				93B75C1E1E79EF7D0033B61B /* CBLQuery.h in Headers */,
 				937F02A11EFC7DBF00060D64 /* CBLLiveQueryChange.h in Headers */,
@@ -1803,7 +1807,7 @@
 				934F4CAD1E241FB500F90659 /* CBLJSON.h in Headers */,
 				93E17EF81ED3ABE200671CA1 /* CBLDocumentChange.h in Headers */,
 				9383A5841F1EE7C00083053D /* CBLQueryResultSet.h in Headers */,
-				934F4CAB1E241FB500F90659 /* CBLInternal.h in Headers */,
+				934F4CAB1E241FB500F90659 /* CBLDatabase+Internal.h in Headers */,
 				931C145E1EAACAAA0094F9B2 /* CBLReadOnlyDictionaryFragment.h in Headers */,
 				27F961991ED8D9440060F804 /* CBLReachability.h in Headers */,
 				934F4CAF1E241FB500F90659 /* CBLLog.h in Headers */,
@@ -2348,7 +2352,6 @@
 				938CDF1A1E807F14002EE790 /* From.swift in Sources */,
 				9380D2661F0D7BF7007DD84A /* GroupByRouter.swift in Sources */,
 				93AF51C61E80A70500E200F0 /* CBLQueryDataSource.m in Sources */,
-				93B503781E64B0BE002C4680 /* CBLInternal.mm in Sources */,
 				938CDF181E807F08002EE790 /* Select.swift in Sources */,
 				93AF51C51E80A70100E200F0 /* CBLQueryExpression.m in Sources */,
 				938CDF1E1E807F35002EE790 /* OrderBy.swift in Sources */,
@@ -2495,7 +2498,6 @@
 				934F4CB91E241FB500F90659 /* CBLSymmetricKey.m in Sources */,
 				93CD02671E9FFEC500AFB3FA /* CBLArray.m in Sources */,
 				937A69251F1039370058277F /* CBLQueryParameters.m in Sources */,
-				934F4CAC1E241FB500F90659 /* CBLInternal.mm in Sources */,
 				937F02561EFC62B200060D64 /* CBLLiveQueryChange.m in Sources */,
 				934A27941F30E5CA003946A7 /* CBLBinaryExpression.m in Sources */,
 				275FF6B91E47B2FC005F90DD /* ExceptionUtils.m in Sources */,

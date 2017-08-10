@@ -8,10 +8,10 @@
 
 #import "CBLQuery.h"
 #import "CBLCoreBridge.h"
-#import "CBLInternal.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLLiveQuery+Internal.h"
-#import "CBLQuery+Internal.h"
 #import "CBLPropertyExpression.h"
+#import "CBLQuery+Internal.h"
 #import "CBLQueryResultSet+Internal.h"
 #import "CBLStatus.h"
 #import "c4Query.h"

@@ -9,11 +9,12 @@
 #import "CBLReadOnlyDictionary.h"
 #import "CBLReadOnlyDictionary+Swift.h"
 #import "CBLData.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
-#import "CBLInternal.h"
 #import "CBLJSON.h"
-#import "CBLStringBytes.h"
 #import "CBLSharedKeys.hh"
+#import "CBLStringBytes.h"
+
 
 
 @implementation CBLReadOnlyDictionary {

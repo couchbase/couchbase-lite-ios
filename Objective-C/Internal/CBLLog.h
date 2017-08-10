@@ -37,8 +37,10 @@ void CBLLog_Init(void);
 //    kCBLQueryLogDomain = c4log_getDomain("Query", true);
 
 #define kCBLDefaultLogDomain kC4DefaultLog
+
 extern C4LogDomain kCBLDatabaseLogDomain;
 extern C4LogDomain kCBLQueryLogDomain;
+extern C4LogDomain kCBLSyncLogDomain;
 
 // Logging functions. For the domain, just use the part of the name between kCBL… and …LogDomain.
 #define CBLLogToAt(DOMAIN, LEVEL, FMT, ...)        \

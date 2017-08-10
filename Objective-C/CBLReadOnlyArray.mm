@@ -8,11 +8,11 @@
 
 #import "CBLReadOnlyArray.h"
 #import "CBLReadOnlyArray+Swift.h"
+#import "CBLData.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
-#import "CBLInternal.h"
 #import "CBLJSON.h"
 #import "CBLSharedKeys.hh"
-#import "CBLData.h"
 
 
 @implementation CBLReadOnlyArray {

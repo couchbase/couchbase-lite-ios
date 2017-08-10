@@ -7,7 +7,7 @@
 //
 
 #import "CBLPredicateQuery+Internal.h"
-#import "CBLInternal.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLCoreBridge.h"
 #import "Fleece.h"
 

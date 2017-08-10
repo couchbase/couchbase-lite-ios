@@ -1,5 +1,5 @@
 //
-//  CBLInternal.h
+//  CBLDatabase+Internal.h
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 1/3/17.

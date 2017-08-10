@@ -12,7 +12,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern C4LogDomain kCBLSyncLogDomain;
 
 @interface CBLReplicatorConfiguration ()
 @property (readonly, nonatomic) NSDictionary* effectiveOptions;

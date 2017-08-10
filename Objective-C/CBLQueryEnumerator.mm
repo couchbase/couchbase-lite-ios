@@ -8,10 +8,12 @@
 
 #import "CBLQueryEnumerator.h"
 #import "CBLQueryRowsArray.h"
-#import "CBLPredicateQuery+Internal.h"
-#import "CBLInternal.h"
+
 #import "CBLCoreBridge.h"
+#import "CBLDatabase+Internal.h"
+#import "CBLPredicateQuery+Internal.h"
 #import "CBLStatus.h"
+
 #import "c4Document.h"
 #import "c4Query.h"
 #import "Fleece.h"
