@@ -100,3 +100,12 @@ public class LiveQuery {
         }
     }
 }
+
+
+extension LiveQuery: CustomStringConvertible {
+    
+    public var description: String {
+        return "\(type(of: self))[\(self.impl.description)]"
+    }
+    
+}

@@ -171,3 +171,13 @@ public class Query {
     }
     
 }
+
+
+extension Query: CustomStringConvertible {
+    
+    public var description: String {
+        prepareQuery()
+        return "\(type(of: self))[\(self.queryImpl!.description)]"
+    }
+    
+}

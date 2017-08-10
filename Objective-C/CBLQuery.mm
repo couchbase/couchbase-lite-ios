@@ -60,6 +60,13 @@
 }
 
 
+- (NSString*) description {
+    NSData* data = [NSJSONSerialization dataWithJSONObject: [self asJSON] options: 0 error: nil];
+    NSString* desc = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
+    return [NSString stringWithFormat: @"%@[json=%@]", self.class, desc];
+}
+
+
 #pragma mark - Parameters
 
 

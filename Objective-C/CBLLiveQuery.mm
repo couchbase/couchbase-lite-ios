@@ -48,6 +48,11 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 }
 
 
+- (NSString*) description {
+    return [NSString stringWithFormat:@"%@[%@]", self.class, [_query description]];
+}
+
+
 - (CBLQueryParameters*) parameters {
     return _query.parameters;
 }

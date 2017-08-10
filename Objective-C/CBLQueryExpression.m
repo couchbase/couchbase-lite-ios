@@ -22,16 +22,6 @@
 @implementation CBLQueryExpression
 
 
-- (instancetype) initWithNone {
-    return [super init];
-}
-
-- (id) asJSON {
-    // Subclass needs to implement this method:
-    return [NSNull null];
-}
-
-
 #pragma mark - Property:
 
 
@@ -361,6 +351,27 @@
                                                 variable: variableName
                                                       in: inExpression
                                                satisfies: satisfies];
+}
+
+
+#pragma mark - Internal 
+
+
+- (instancetype) initWithNone {
+    return [super init];
+}
+
+
+- (id) asJSON {
+    // Subclass needs to implement this method:
+    return [NSNull null];
+}
+
+
+- (NSString*) description {
+    NSData* data = [NSJSONSerialization dataWithJSONObject: [self asJSON] options: 0 error: nil];
+    NSString* desc = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
+    return [NSString stringWithFormat: @"%@[json=%@]", self.class, desc];
 }
 
 @end

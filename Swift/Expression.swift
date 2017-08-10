@@ -514,3 +514,12 @@ public class Expression {
     }
     
 }
+
+
+extension Expression: CustomStringConvertible {
+    
+    public var description: String {
+        return "\(type(of: self))[\(self.impl.description)]"
+    }
+    
+}
