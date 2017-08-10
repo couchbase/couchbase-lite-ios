@@ -7,7 +7,7 @@
 //
 
 #import "CBLTestCase.h"
-#import "CBLInternal.h"
+#import "CBLDatabase+Internal.h"
 
 
 @interface DatabaseTest : CBLTestCase

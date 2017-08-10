@@ -7,7 +7,7 @@
 //
 
 #import "ConflictTest.h"
-#import "CBLInternal.h"
+#import "CBLDatabase+Internal.h"
 
 #include "c4.h"
 #include "c4Document+Fleece.h"

@@ -7,8 +7,8 @@
 //
 
 #import "CBLTestCase.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLPredicateQuery+Internal.h"
-#import "CBLInternal.h"
 
 
 @interface PredicateQueryTest : CBLTestCase
