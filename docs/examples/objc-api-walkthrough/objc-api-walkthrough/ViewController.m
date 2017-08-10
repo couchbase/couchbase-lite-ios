@@ -53,6 +53,7 @@
             CBLDocument *doc = [[CBLDocument alloc] init];
             [doc setObject:@"user" forKey:@"type"];
             [doc setObject:[NSString stringWithFormat:@"user %d", i] forKey:@"name"];
+            [doc setBoolean:@FALSE forKey:@"admin"];
             [database saveDocument:doc error:&error];
             NSLog(@"saved user document %@", [doc stringForKey:@"name"]);
         }
@@ -75,7 +76,7 @@
     UIImage* taskImage = [UIImage imageWithData:taskBlob.content];
     
     // query
-    CBLQuery* query = [CBLQuery select:@[]
+    CBLQuery* query = [CBLQuery select:@[[CBLQueryExpression property:@"name"]]
                                   from:[CBLQueryDataSource database:database]
                                  where:[
                                         [[CBLQueryExpression property:@"type"] equalTo:@"user"]
@@ -83,7 +84,7 @@
     
     NSEnumerator* rows = [query run:&error];
     for (CBLQueryRow *row in rows) {
-        NSLog(@"doc ID :: %@", row.documentID);
+        NSLog(@"user name :: %@", [row stringAtIndex:0]);
     }
     
     // fts example
@@ -142,7 +143,7 @@
     
     // replication change listener
     [replication addChangeListener:^(CBLReplicatorChange * _Nonnull change) {
-        if (change.status.activity == kCBLStopped) {
+        if (change.status.activity == kCBLReplicatorStopped) {
             NSLog(@"Replication was completed.");
         }
     }];
