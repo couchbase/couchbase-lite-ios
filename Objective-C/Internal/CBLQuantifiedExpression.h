@@ -22,7 +22,7 @@ typedef NS_ENUM(NSInteger, CBLQuantifiedType) {
 - (instancetype) initWithType: (CBLQuantifiedType)type
                      variable: (NSString*)variable
                            in: (id)inExpression
-                    satisfies: (id)satisfiesExpression;
+                    satisfies: (id)satisfies;
 
 @end
 

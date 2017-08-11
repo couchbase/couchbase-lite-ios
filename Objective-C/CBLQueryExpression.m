@@ -362,16 +362,25 @@
 }
 
 
-- (id) asJSON {
-    // Subclass needs to implement this method:
-    return [NSNull null];
-}
-
-
 - (NSString*) description {
     NSData* data = [NSJSONSerialization dataWithJSONObject: [self asJSON] options: 0 error: nil];
     NSString* desc = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
     return [NSString stringWithFormat: @"%@[json=%@]", self.class, desc];
 }
+
+
+- (id) jsonValue: (id)value {
+    if ([value isKindOfClass: [CBLQueryExpression class]])
+        return [value asJSON];
+    else
+        return value;
+}
+
+
+- (id) asJSON {
+    // Subclass needs to implement this method:
+    return [NSNull null];
+}
+
 
 @end

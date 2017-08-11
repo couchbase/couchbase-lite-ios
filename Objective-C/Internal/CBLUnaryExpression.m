@@ -9,9 +9,11 @@
 #import "CBLUnaryExpression.h"
 #import "CBLQuery+Internal.h"
 
-@implementation CBLUnaryExpression
+@implementation CBLUnaryExpression {
+    CBLUnaryExpType _type;
+    id _operand;
+}
 
-@synthesize operand=_operand, type=_type;
 
 - (instancetype) initWithExpression: (id)operand type: (CBLUnaryExpType)type {
     self = [super initWithNone];
@@ -22,12 +24,9 @@
     return self;
 }
 
+
 - (id) asJSON {
-    id operand;
-    if ([_operand isKindOfClass: [CBLQueryExpression class]])
-        operand = [(CBLQueryExpression*)_operand asJSON];
-    else
-        operand = _operand;
+    id operand = [self jsonValue: _operand];
     
     switch (_type) {
         case CBLUnaryTypeMissing:
@@ -41,6 +40,7 @@
         default:
             break;
     }
+    
     return @[]; // Shouldn't happen
 }
 

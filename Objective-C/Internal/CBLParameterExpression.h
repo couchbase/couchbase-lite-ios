@@ -13,8 +13,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLParameterExpression : CBLQueryExpression
 
-@property(nonatomic, readonly) id name;
-
 - (instancetype) initWithName: (id)name;
 
 @end

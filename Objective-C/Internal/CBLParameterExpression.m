@@ -9,9 +9,10 @@
 #import "CBLParameterExpression.h"
 #import "CBLQuery+Internal.h"
 
-@implementation CBLParameterExpression
+@implementation CBLParameterExpression {
+    NSString* _name;
+}
 
-@synthesize name=_name;
 
 - (instancetype)initWithName: (id)name {
     self = [super initWithNone];
@@ -21,8 +22,10 @@
     return self;
 }
 
+
 - (id) asJSON {
     return @[[NSString stringWithFormat: @"$%@", _name]];
 }
+
 
 @end

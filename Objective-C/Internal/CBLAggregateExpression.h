@@ -13,9 +13,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLAggregateExpression: CBLQueryExpression
 
-@property(nonatomic, readonly) NSArray* subexpressions;
+@property(nonatomic, readonly) NSArray* expressions;
 
-- (instancetype)initWithExpressions: (NSArray*)subs;
+- (instancetype)initWithExpressions: (NSArray*)expressions;
 
 @end
 

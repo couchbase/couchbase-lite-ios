@@ -15,6 +15,7 @@ NSString* kCBLAllPropertiesName = @"";
 
 @synthesize keyPath=_keyPath, columnName=_columnName, from=_from;
 
+
 - (instancetype) initWithKeyPath: (NSString*)keyPath
                       columnName: (nullable NSString*)columnName
                             from: (NSString*)from {

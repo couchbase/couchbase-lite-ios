@@ -11,23 +11,20 @@
 
 @implementation CBLAggregateExpression
 
-@synthesize subexpressions=_subexpressions;
+@synthesize expressions=_expressions;
 
-- (instancetype) initWithExpressions: (NSArray *)subs {
+- (instancetype) initWithExpressions: (NSArray*)expressions {
     self = [super initWithNone];
     if (self) {
-        _subexpressions = [subs copy];
+        _expressions = expressions;
     }
     return self;
 }
 
 - (id) asJSON {
     NSMutableArray *json = [NSMutableArray arrayWithObject: @"[]"];
-    for (id exp in _subexpressions) {
-        if ([exp isKindOfClass:[CBLQueryExpression class]])
-            [json addObject: [(CBLQueryExpression *)exp asJSON]];
-        else
-            [json addObject: exp];
+    for (id expr in _expressions) {
+        [json addObject: [self jsonValue: expr]];
     }
     return json;
 }

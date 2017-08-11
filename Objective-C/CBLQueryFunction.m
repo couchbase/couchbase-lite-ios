@@ -226,12 +226,7 @@
     [json addObject: _function];
     
     for (id param in _params) {
-        id p;
-        if ([param isKindOfClass: [CBLQueryExpression class]])
-            p = [param asJSON];
-        else
-            p = param;
-        [json addObject: p];
+        [json addObject: [self jsonValue: param]];
     }
     
     return json;

@@ -10,9 +10,11 @@
 #import "CBLQuery+Internal.h"
 #import "CBLAggregateExpression.h"
 
-@implementation CBLBinaryExpression
-
-@synthesize lhs=_lhs, rhs=_rhs, type=_type;
+@implementation CBLBinaryExpression {
+    id _lhs;
+    id _rhs;
+    CBLBinaryExpType _type;
+}
 
 - (instancetype) initWithLeftExpression:(id)lhs
                         rightExpression:(id)rhs
@@ -87,26 +89,18 @@
             break;
     }
     
-    [json addObject: valueAsJSON(_lhs)];
+    [json addObject: [self jsonValue:_lhs]];
 
     if (_type == CBLBetweenBinaryExpType) {
         // "between"'s RHS is an aggregate of the min and max, but the min and max need to be
         // written out as parameters to the BETWEEN operation:
-        NSArray* rangeExprs = ((CBLAggregateExpression*)_rhs).subexpressions;
-        [json addObject: valueAsJSON(rangeExprs[0])];
-        [json addObject: valueAsJSON(rangeExprs[1])];
-    } else {
-        [json addObject: valueAsJSON(_rhs)];
-    }
+        NSArray* rangeExprs = ((CBLAggregateExpression*)_rhs).expressions;
+        [json addObject: [self jsonValue: rangeExprs[0]]];
+        [json addObject: [self jsonValue: rangeExprs[1]]];
+    } else
+        [json addObject:  [self jsonValue: _rhs]];
     
     return json;
-}
-
-static id valueAsJSON(id val) {
-    if ([val isKindOfClass: [CBLQueryExpression class]])
-        return [(CBLQueryExpression*)val asJSON];
-    else
-        return val;
 }
 
 @end

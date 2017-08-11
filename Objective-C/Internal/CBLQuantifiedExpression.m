@@ -13,21 +13,21 @@
     CBLQuantifiedType _type;
     NSString* _variable;
     id _inExpression;
-    id _satisfiesExpression;
+    id _satisfies;
 }
 
 
 - (instancetype) initWithType: (CBLQuantifiedType)type
                      variable: (NSString*)variable
                            in: (id)inExpression
-                    satisfies: (id)satisfiesExpression
+                    satisfies: (id)satisfies
 {
     self = [super initWithNone];
     if (self) {
         _type = type;
         _variable = variable;
         _inExpression = inExpression;
-        _satisfiesExpression = satisfiesExpression;
+        _satisfies = satisfies;
     }
     return self;
 }
@@ -35,6 +35,7 @@
 
 - (id) asJSON {
     NSMutableArray* json = [NSMutableArray arrayWithCapacity: 4];
+    
     switch (_type) {
         case CBLQuantifiedTypeAny:
             [json addObject: @"ANY"];
@@ -50,16 +51,8 @@
     }
     
     [json addObject: _variable];
-    
-    if ([_inExpression isKindOfClass: [CBLQueryExpression class]])
-        [json addObject: [(CBLQueryExpression*)_inExpression asJSON]];
-    else
-        [json addObject: _inExpression];
-    
-    if ([_satisfiesExpression isKindOfClass: [CBLQueryExpression class]])
-        [json addObject: [(CBLQueryExpression*)_satisfiesExpression asJSON]];
-    else
-        [json addObject: _satisfiesExpression];
+    [json addObject: [self jsonValue: _inExpression]];
+    [json addObject: [self jsonValue: _satisfies]];
     
     return json;
 }

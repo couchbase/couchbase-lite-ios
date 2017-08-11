@@ -9,22 +9,26 @@
 #import "CBLCompoundExpression.h"
 #import "CBLQuery+Internal.h"
 
-@implementation CBLCompoundExpression
+@implementation CBLCompoundExpression {
+    NSArray* _expressions;
+    CBLCompoundExpType _type;
+}
 
-@synthesize subexpressions=_subexpressions, type=_type;
 
-- (instancetype) initWithExpressions: (NSArray*)subs type: (CBLCompoundExpType)type {
+- (instancetype) initWithExpressions: (NSArray*)expressions type: (CBLCompoundExpType)type {
     self = [super initWithNone];
     if (self) {
-        _subexpressions = [subs copy];
+        _expressions = expressions;
         _type = type;
     }
     return self;
 }
 
+
 - (id) asJSON {
     NSMutableArray* json = [NSMutableArray array];
-    switch (self.type) {
+    
+    switch (_type) {
         case CBLAndCompundExpType:
             [json addObject: @"AND"];
             break;
@@ -38,13 +42,12 @@
             break;
     }
     
-    for (id exp in _subexpressions) {
-        if ([exp isKindOfClass: [CBLQueryExpression class]])
-            [json addObject: [(CBLQueryExpression *)exp asJSON]];
-        else
-            [json addObject: exp];
+    for (id expr in _expressions) {
+        [json addObject: [self jsonValue: expr]];
     }
+    
     return json;
 }
+
 
 @end

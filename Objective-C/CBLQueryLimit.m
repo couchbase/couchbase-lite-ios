@@ -39,6 +39,7 @@
 
 - (id) asJSON {
     NSMutableArray* json = [NSMutableArray array];
+    
     if ([_limit isKindOfClass: [CBLQueryExpression class]])
         [json addObject: [(CBLQueryExpression*)_limit asJSON]];
     else
@@ -50,6 +51,7 @@
         else
             [json addObject: _offset];
     }
+    
     return json;
 }
 

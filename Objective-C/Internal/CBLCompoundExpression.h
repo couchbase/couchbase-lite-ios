@@ -19,11 +19,7 @@ typedef NS_ENUM(NSInteger, CBLCompoundExpType) {
 
 @interface CBLCompoundExpression: CBLQueryExpression
 
-@property(nonatomic, readonly) NSArray* subexpressions;
-@property(nonatomic, readonly) CBLCompoundExpType type;
-
-
-- (instancetype) initWithExpressions: (NSArray*)subs type: (CBLCompoundExpType)type;
+- (instancetype) initWithExpressions: (NSArray*)expressions type: (CBLCompoundExpType)type;
 
 @end
 
