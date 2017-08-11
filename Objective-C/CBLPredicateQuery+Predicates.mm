@@ -198,7 +198,7 @@ static id EncodePredicate(NSPredicate* pred, NSError** outError) {
             if (rtype != NSVariableExpressionType && rtype != NSAggregateExpressionType) {
                 return @[@"ANY", @"X", rhs, @[@"=", @[@"?X"], lhs]];
             } else if (rtype == NSAggregateExpressionType)
-                return [@[op, lhs] arrayByAddingObjectsFromArray: rhs];
+                return @[op, lhs, rhs];
         }
 
         static NSString* const kModifiers[3] = {nil, @"EVERY", @"ANY"};
@@ -267,7 +267,7 @@ static id EncodeExpression(NSExpression* expr, NSError **outError, bool aggregat
             return @[@"CASE", [NSNull null], condition, ifTrue, ifFalse];
         }
         case NSAggregateExpressionType: {
-            NSMutableArray* collection = [NSMutableArray array];
+            NSMutableArray* collection = [NSMutableArray arrayWithObject: @"[]"];
             for (id exp in expr.collection) {
                 if ([exp isKindOfClass: [NSExpression class]])
                     [collection addObject: EncodeExpression(exp, outError, aggregate)];

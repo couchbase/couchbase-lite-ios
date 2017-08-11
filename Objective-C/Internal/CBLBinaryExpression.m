@@ -87,19 +87,26 @@
             break;
     }
     
-    if ([_lhs isKindOfClass: [CBLQueryExpression class]])
-        [json addObject: [(CBLQueryExpression*)_lhs asJSON]];
-    else
-        [json addObject: _lhs];
-    
-    if ([_rhs isKindOfClass: [CBLAggregateExpression class]])
-        [json addObjectsFromArray: [(CBLAggregateExpression*)_rhs asJSON]];
-    else if ([_rhs isKindOfClass: [CBLQueryExpression class]])
-        [json addObject: [(CBLQueryExpression*)_rhs asJSON]];
-    else
-        [json addObject: _rhs];
+    [json addObject: valueAsJSON(_lhs)];
+
+    if (_type == CBLBetweenBinaryExpType) {
+        // "between"'s RHS is an aggregate of the min and max, but the min and max need to be
+        // written out as parameters to the BETWEEN operation:
+        NSArray* rangeExprs = ((CBLAggregateExpression*)_rhs).subexpressions;
+        [json addObject: valueAsJSON(rangeExprs[0])];
+        [json addObject: valueAsJSON(rangeExprs[1])];
+    } else {
+        [json addObject: valueAsJSON(_rhs)];
+    }
     
     return json;
+}
+
+static id valueAsJSON(id val) {
+    if ([val isKindOfClass: [CBLQueryExpression class]])
+        return [(CBLQueryExpression*)val asJSON];
+    else
+        return val;
 }
 
 @end
