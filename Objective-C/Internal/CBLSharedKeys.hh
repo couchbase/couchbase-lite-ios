@@ -33,11 +33,11 @@ namespace cbl {
             return FLValue_GetNSObject(value, _sharedKeys, _documentStrings);
         }
 
-        FLValue getDictValue(FLDict __nullable dict, FLSlice key) {
+        FLValue __nullable getDictValue(FLDict __nullable dict, FLSlice key) {
             return FLDict_GetSharedKey(dict, key, _sharedKeys);
         }
 
-        NSString* getDictIterKey(FLDictIterator* iter) {
+        NSString* __nullable getDictIterKey(FLDictIterator* iter) {
             return FLDictIterator_GetKeyAsNSString(iter, _documentStrings, _sharedKeys);
         }
 
@@ -50,15 +50,18 @@ namespace cbl {
 }
 
 
-static inline id FLValue_GetNSObject(FLValue __nullable value, cbl::SharedKeys *sk) {
+static inline id __nullable
+FLValue_GetNSObject(FLValue __nullable value, cbl::SharedKeys *sk) {
     return sk->valueToObject(value);
 }
 
-static inline FLValue FLDict_GetSharedKey(FLDict __nullable dict, FLSlice key, cbl::SharedKeys *sk) {
+static inline FLValue __nullable
+FLDict_GetSharedKey(FLDict __nullable dict, FLSlice key, cbl::SharedKeys *sk) {
     return sk->getDictValue(dict, key);
 }
 
-static inline NSString* FLDictIterator_GetKey(FLDictIterator *iter, cbl::SharedKeys *sk) {
+static inline NSString* __nullable
+FLDictIterator_GetKey(FLDictIterator *iter, cbl::SharedKeys *sk) {
     return sk->getDictIterKey(iter);
 }
 
