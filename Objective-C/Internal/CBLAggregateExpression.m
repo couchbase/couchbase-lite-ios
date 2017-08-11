@@ -22,7 +22,7 @@
 }
 
 - (id) asJSON {
-    NSMutableArray *json = [NSMutableArray array];
+    NSMutableArray *json = [NSMutableArray arrayWithObject: @"[]"];
     for (id exp in _subexpressions) {
         if ([exp isKindOfClass:[CBLQueryExpression class]])
             [json addObject: [(CBLQueryExpression *)exp asJSON]];
