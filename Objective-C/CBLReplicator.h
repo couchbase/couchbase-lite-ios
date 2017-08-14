@@ -6,7 +6,8 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLDatabase.h"
+#import <Foundation/Foundation.h>
+@class CBLDatabase;
 @class CBLReplicatorChange;
 @class CBLReplicatorConfiguration;
 

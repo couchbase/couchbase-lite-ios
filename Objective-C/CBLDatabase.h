@@ -85,6 +85,31 @@ typedef struct {
 @end
 
 
+/**
+ Log domain. The log domains here are tentative and subject to change.
+ */
+typedef NS_ENUM(uint32_t, CBLLogDomain) {
+    kCBLLogDomainAll,
+    kCBLLogDomainDatabase,
+    kCBLLogDomainQuery,
+    kCBLLogDomainReplicator,
+    kCBLLogDomainNetwork,
+};
+
+
+/**
+ Log level. The default log level for all domains is kCBLLogLevelWarning.
+ The log levels here are tentative and subject to change.
+ */
+typedef NS_ENUM(uint32_t, CBLLogLevel) {
+    kCBLLogLevelDebug,
+    kCBLLogLevelVerbose,
+    kCBLLogLevelInfo,
+    kCBLLogLevelWarning,
+    kCBLLogLevelError,
+    kCBLLogLevelNone
+};
+
 /** A Couchbase Lite database. */
 @interface CBLDatabase : NSObject
 
@@ -307,6 +332,15 @@ typedef struct {
                config: (nullable CBLDatabaseConfiguration*)config
                 error: (NSError**)error;
 
+#pragma mark - Logging
+
+/**
+ Sets log level for the given log domain.
+
+ @param level The log level.
+ @param domain The log domain.
+ */
++ (void) setLogLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain;
 
 #pragma mark - Change Listener
 

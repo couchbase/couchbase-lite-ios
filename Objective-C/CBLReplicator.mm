@@ -43,9 +43,6 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
 }
 
 
-C4LogDomain kCBLSyncLogDomain;
-
-
 @interface CBLReplicatorStatus ()
 - (instancetype) initWithActivity: (CBLReplicatorActivityLevel)activity
                          progress: (CBLReplicatorProgress)progress
@@ -75,7 +72,7 @@ C4LogDomain kCBLSyncLogDomain;
 
 + (void) initialize {
     if (self == [CBLReplicator class]) {
-        kCBLSyncLogDomain = c4log_getDomain("Sync", true);
+        kCBL_LogDomainSync = c4log_getDomain("Sync", true);
         [CBLWebSocket registerWithC4];
     }
 }
