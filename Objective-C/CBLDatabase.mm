@@ -408,7 +408,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     NSString* languageCode;
     if (!c4options.language) {
         // Get default language code:
-        languageCode = NSLocale.currentLocale.languageCode;
+        languageCode = [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
         c4options.language = languageCode.UTF8String;
         if (!options)
             c4options.ignoreDiacritics = (strcmp(c4options.language, "en") == 0);

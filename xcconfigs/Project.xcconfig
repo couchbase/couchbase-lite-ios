@@ -40,6 +40,9 @@ SWIFT_VERSION                      = 3.2
 VERSION_INFO_PREFIX                = 
 VERSIONING_SYSTEM                  = apple-generic
 
+// Warn about using newer-than-deployment-target APIs without dynamic checks: (Xcode 9+)
+CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE
+
 // Warnings:
 CLANG_ANALYZER_NONNULL                                     = YES
 CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING                     = YES
