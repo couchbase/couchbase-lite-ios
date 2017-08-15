@@ -102,7 +102,6 @@
 		9308F40B1E64B23600F53EE4 /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C591E1EF25E00F90659 /* Test.m */; };
 		9308F40C1E64B23800F53EE4 /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C6F1E1EFAF600F90659 /* Test_Assertions.m */; };
 		9308F40F1E64B28800F53EE4 /* libLiteCore-static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9441E0347B600464432 /* libLiteCore-static.a */; };
-		9308F4101E64B29000F53EE4 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27EF6AF11E32D12C004748DF /* libsqlite3.tbd */; };
 		9308F4111E64B2B300F53EE4 /* CBLDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9380C6EE1E15B8C20011E8CB /* CBLDocument.mm */; };
 		930AE46D1EAA6C9100E92E9A /* CBLData.h in Headers */ = {isa = PBXBuildFile; fileRef = 930AE46B1EAA6C9100E92E9A /* CBLData.h */; };
 		930AE46E1EAA6C9100E92E9A /* CBLData.mm in Sources */ = {isa = PBXBuildFile; fileRef = 930AE46C1EAA6C9100E92E9A /* CBLData.mm */; };
@@ -380,7 +379,6 @@
 		9398D91C1E03434200464432 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9121E03434200464432 /* CouchbaseLite.framework */; };
 		9398D9FF1E03531A00464432 /* CouchbaseLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 9398D9FD1E03531A00464432 /* CouchbaseLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9399E4B01E932EF200B57600 /* libLiteCore-static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9398D9441E0347B600464432 /* libLiteCore-static.a */; };
-		9399E4B11E932F0C00B57600 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 27EF6AF11E32D12C004748DF /* libsqlite3.tbd */; };
 		9399E4B31E932F4700B57600 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9399E4B21E932F4700B57600 /* libz.tbd */; };
 		9399E4B41E932FDB00B57600 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9399E4B21E932F4700B57600 /* libz.tbd */; };
 		93A2AFBA1E830BF800A08CAE /* QueryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A2AFB91E830BF800A08CAE /* QueryRow.swift */; };
@@ -541,6 +539,13 @@
 			proxyType = 2;
 			remoteGlobalIDString = 93FA3F481EE21A4D00D15CF5;
 			remoteInfo = "LiteCoreServ-iOS";
+		};
+		27DF7D831F424C840022F3DF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 27DF7D631F4236500022F3DF;
+			remoteInfo = SQLite;
 		};
 		27F961951ED777EA0060F804 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -735,7 +740,6 @@
 		27E35A911E8C4F4300E103F9 /* Replicator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Replicator.swift; sourceTree = "<group>"; };
 		27EF6A931E298E26004748DF /* PredicateQueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PredicateQueryTest.m; sourceTree = "<group>"; };
 		27EF6A951E2AC609004748DF /* names_100.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = names_100.json; sourceTree = "<group>"; };
-		27EF6AF11E32D12C004748DF /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		27F961971ED8D9440060F804 /* CBLReachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReachability.h; sourceTree = "<group>"; };
 		27F961981ED8D9440060F804 /* CBLReachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReachability.m; sourceTree = "<group>"; };
 		27FDBF411F02FE5C0087CC1C /* ConflictTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConflictTest.h; sourceTree = "<group>"; };
@@ -990,7 +994,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				9399E4B41E932FDB00B57600 /* libz.tbd in Frameworks */,
-				9308F4101E64B29000F53EE4 /* libsqlite3.tbd in Frameworks */,
 				9308F40F1E64B28800F53EE4 /* libLiteCore-static.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1031,7 +1034,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				9399E4B31E932F4700B57600 /* libz.tbd in Frameworks */,
-				9399E4B11E932F0C00B57600 /* libsqlite3.tbd in Frameworks */,
 				9399E4B01E932EF200B57600 /* libLiteCore-static.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1133,7 +1135,6 @@
 			isa = PBXGroup;
 			children = (
 				9399E4B21E932F4700B57600 /* libz.tbd */,
-				27EF6AF11E32D12C004748DF /* libsqlite3.tbd */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1467,6 +1468,7 @@
 				2749B97D1EB25A660068DBF9 /* litecp */,
 				93765EE71EC4C874005E4050 /* litecorelog */,
 				9398D94E1E0347B600464432 /* libLiteCoreJNI.dylib */,
+				27DF7D841F424C840022F3DF /* libSQLite.a */,
 				9398D9501E0347B600464432 /* libTokenizer.a */,
 				2749B97F1EB25A660068DBF9 /* libcivetweb.a */,
 				9398D9481E0347B600464432 /* LiteCore Tests.xctest */,
@@ -2115,6 +2117,13 @@
 			fileType = wrapper.application;
 			path = "LiteCoreServ-iOS.app";
 			remoteRef = 276740CC1EE7381F0036DE42 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		27DF7D841F424C840022F3DF /* libSQLite.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libSQLite.a;
+			remoteRef = 27DF7D831F424C840022F3DF /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		27F961961ED777EA0060F804 /* libSupport.a */ = {
