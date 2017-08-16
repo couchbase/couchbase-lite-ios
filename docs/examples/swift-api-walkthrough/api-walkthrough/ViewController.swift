@@ -259,10 +259,9 @@ class ViewController: UIViewController {
         }
     }
     
-    // missing the count
-    // see https://developer.couchbase.com/documentation/server/4.6/n1ql/n1ql-language-reference/selectintro.html
     func groupByQuery() {
         let query = Query.select(
+                SelectResult.expression(Function.count("*")),
                 SelectResult.expression(Expression.property("country")),
                 SelectResult.expression(Expression.property("tz"))
             )
