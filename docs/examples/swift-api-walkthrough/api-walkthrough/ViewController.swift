@@ -26,6 +26,16 @@ class ViewController: UIViewController {
             return
         }
         
+        // database change listener
+        database.addChangeListener { (change) in
+            if (change.isExternal) {
+                print("The change is external (replicated from Sync Gateway or another Couchbase Lite database)")
+            }
+            for id in change.documentIDs {
+                print("Document \(id) changed.", change.documentIDs)
+            }
+        }
+        
         // create document
         let dict: [String: Any] = ["type": "task",
                                    "owner": "todo",
