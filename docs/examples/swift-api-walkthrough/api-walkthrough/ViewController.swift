@@ -194,6 +194,7 @@ class ViewController: UIViewController {
         groupByQuery()
         inOperatorQuery()
         inOperatorSatisfiesQuery()
+        metaDocIDQuery()
     }
 
     func loadTravelSample() {
@@ -202,6 +203,23 @@ class ViewController: UIViewController {
         do {
             let destinationPath = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("CouchbaseLite").appendingPathComponent("mini-travel-sample.cblite2").path
             try fileManager.copyItem(atPath: dbPath, toPath: destinationPath)
+        } catch let error {
+            print(error.localizedDescription)
+        }
+    }
+    
+    func metaDocIDQuery() {
+        let query = Query.select(
+            SelectResult.expression(Expression.meta().id)
+        )
+        .from(DataSource.database(database!))
+        .where(
+            Expression.property("type").equalTo("airport")
+        )
+        do {
+            for row in try query.run() {
+                print("\(row.toDictionary()))")
+            }
         } catch let error {
             print(error.localizedDescription)
         }
