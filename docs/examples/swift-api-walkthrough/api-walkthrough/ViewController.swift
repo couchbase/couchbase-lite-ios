@@ -218,7 +218,7 @@ class ViewController: UIViewController {
         )
         do {
             for row in try query.run() {
-                print("\(row.toDictionary()))")
+                print("document ID \(row.string(forKey: "id")))")
             }
         } catch let error {
             print(error.localizedDescription)
