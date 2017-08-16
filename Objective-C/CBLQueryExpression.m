@@ -18,6 +18,7 @@
 #import "CBLQuantifiedExpression.h"
 #import "CBLUnaryExpression.h"
 #import "CBLVariableExpression.h"
+#import "CBLJSON.h"
 
 @implementation CBLQueryExpression
 
@@ -363,8 +364,7 @@
 
 
 - (NSString*) description {
-    NSData* data = [NSJSONSerialization dataWithJSONObject: [self asJSON] options: 0 error: nil];
-    NSString* desc = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
+    NSString* desc = [CBLJSON stringWithJSONObject: [self asJSON] options: 0 error: nil];
     return [NSString stringWithFormat: @"%@[json=%@]", self.class, desc];
 }
 

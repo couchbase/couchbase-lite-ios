@@ -55,11 +55,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable NSArray*) encodeExpressions: (NSArray*)exprs
                               aggregate: (BOOL)aggregate
+                              collation: (BOOL)collation
                                   error: (NSError**)outError;
 
 /** Translates an array of NSExpressions or NSStrings into JSON data. */
 + (nullable NSData*) encodeExpressionsToJSON: (NSArray*)expressions
                                        error: (NSError**)error;
+
++ (nullable NSArray*) encodeSortDescriptors: (NSArray*)sortDescriptors
+                                      error: (NSError**)outError;
 
 #if DEBUG // these methods are only for tests
 + (void) dumpPredicate: (NSPredicate*)pred;

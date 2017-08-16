@@ -22,6 +22,13 @@ extern "C" {
                                               FMT, ## __VA_ARGS__)
 
 
+typedef NS_OPTIONS(NSUInteger, CollationOptions) {
+    kUnicode                = 1,
+    kCaseInsensitive        = 2,
+    kDiacriticInsensitive   = 4,
+};
+
+
 @implementation CBLPredicateQuery (Predicates)
 
 
@@ -54,6 +61,7 @@ extern "C" {
 // Encodes an array of NSExpressions (or NSStrings that compile into them) into JSON format.
 + (NSArray*) encodeExpressions: (NSArray*)exprs
                      aggregate: (BOOL)aggregate
+                     collation: (BOOL)collation
                          error: (NSError**)outError
 {
     NSMutableArray* result = [NSMutableArray new];
@@ -63,8 +71,12 @@ extern "C" {
             jsonObj = r;
         } else {
             NSExpression* expr = nil;
+            CollationOptions compareOptions = 0;
             if ([r isKindOfClass: [NSString class]]) {
-                expr = [NSExpression expressionWithFormat: r argumentArray: @[]];
+                NSString* str = r;
+                if (collation)
+                    str = ExtractCollationSuffix(str, &compareOptions);
+                expr = [NSExpression expressionWithFormat: str argumentArray: @[]];
             } else {
                 Assert([r isKindOfClass: [NSExpression class]]);
                 expr = r;
@@ -72,6 +84,8 @@ extern "C" {
             jsonObj = [self encodeExpression: expr aggregate: aggregate error: outError];
             if (!jsonObj)
                 return nil;
+            if (compareOptions)
+                jsonObj = AddCollation(jsonObj, compareOptions);
         }
         [result addObject: jsonObj];
     }
@@ -83,10 +97,103 @@ extern "C" {
 + (NSData*) encodeExpressionsToJSON: (NSArray*)expressions
                               error: (NSError**)outError
 {
-    NSArray* exprs = [self encodeExpressions: expressions aggregate: NO error: outError];
+    NSArray* exprs = [self encodeExpressions: expressions
+                                   aggregate: NO collation: NO
+                                       error: outError];
     if (!exprs)
         return nil;
     return [NSJSONSerialization dataWithJSONObject: exprs options: 0 error: outError];
+}
+
+
++ (NSArray*) encodeSortDescriptors: (NSArray*)sortDescriptors error: (NSError**)outError {
+    NSMutableArray* sorts = [NSMutableArray new];
+    for (id sd in sortDescriptors) {
+        bool descending = false;
+        CollationOptions collateOptions = 0;
+        id key;
+        // Each item of sortDescriptors can be an NSSortDescriptor, NSString or NSExpression:
+        if ([sd isKindOfClass: [NSExpression class]]) {
+            // ----NSExpression:
+            key = [self encodeExpression: sd aggregate: true error: outError];
+        } else {
+            NSString* keyStr;
+            if ([sd isKindOfClass: [NSString class]]) {
+                // ----NSString:
+                // Prefixing string with "-" signals descending order
+                keyStr = sd;
+                if ([keyStr hasPrefix: @"-"]) {
+                    descending = true;
+                    keyStr = [keyStr substringFromIndex: 1];
+                }
+                // Suffixing string with "[…]" sets collation
+                if ([keyStr hasSuffix: @"]"]) {
+                    keyStr = ExtractCollationSuffix(keyStr, &collateOptions);
+                    if (!keyStr) {
+                        mkError(outError, @"Invalid collation options in sort string \"%@\"", sd);
+                        return nil;
+                    }
+                }
+
+            } else {
+                // ----NSSortDescriptor:
+                Assert([sd isKindOfClass: [NSSortDescriptor class]]);
+                descending = ![(NSSortDescriptor*)sd ascending];
+                keyStr = [sd key];
+                SEL selector = [sd selector];
+                if (selector == @selector(localizedCompare:) ||
+                            selector == @selector(localizedCaseInsensitiveCompare:)) {
+                    collateOptions |= kUnicode;
+                }
+                if (selector == @selector(caseInsensitiveCompare:) ||
+                            selector == @selector(localizedCaseInsensitiveCompare:)) {
+                    collateOptions |= kCaseInsensitive;
+                }
+                // there's no NSString method for diacritic-insensitive compare...
+            }
+
+            // Convert keyStr to JSON as a rank() call or expression:
+            if ([keyStr hasPrefix: @"rank("]) {
+                if (![keyStr hasSuffix: @")"])
+                    return mkError(outError, @"Invalid rank sort descriptor"), nil;
+                NSString* keyPath = [keyStr substringWithRange: {5, [keyStr length] - 6}];
+                key = @[@"rank()", @[@".", keyPath]];
+            } else {
+                NSExpression* expr = [NSExpression expressionWithFormat: keyStr argumentArray: @[]];
+                key = [self encodeExpression: expr aggregate: true error: outError];
+            }
+        }
+        if (!key)
+            return nil;
+
+        key = AddCollation(key, collateOptions);
+        if (descending)
+            key = @[@"DESC", key];
+        [sorts addObject: key];
+    }
+    return sorts;
+}
+
+
+// Removes any bracketed set of collation flags from the end of a string and sets the corresponding
+// flags in `outOptions`. Returns nil if there's a syntax error.
+static NSString* ExtractCollationSuffix(NSString* sd, CollationOptions *outOptions) {
+    if (![sd hasSuffix: @"]"])
+        return sd;
+    *outOptions |= kUnicode;
+    NSInteger last = sd.length - 2;
+    for (; last >= 0; --last) {
+        unichar c = [sd characterAtIndex: last];
+        if (c == '[')
+            return [sd substringWithRange: {0, (NSUInteger)last}];
+        else if (c == 'c')
+            *outOptions |= kCaseInsensitive;
+        else if (c == 'd')
+            *outOptions |= kDiacriticInsensitive;
+        else
+            return nil;
+    }
+    return nil;
 }
 
 
@@ -154,73 +261,16 @@ static id EncodePredicate(NSPredicate* pred, NSError** outError) {
     if ([pred isKindOfClass: [NSComparisonPredicate class]]) {
         // Comparison of expressions, e.g. "a < b":
         NSComparisonPredicate* cp = (NSComparisonPredicate*)pred;
-        NSPredicateOperatorType opType = cp.predicateOperatorType;
-        NSString *op = predicateOperatorName(opType);
-        if (!op)
-            return mkError(outError, @"Unsupported comparison operator %u", (unsigned)opType), nil;
-
-        NSExpression* leftExpression = cp.leftExpression;
-        NSExpression* rightExpression = cp.rightExpression;
-        if (cp.options & NSCaseInsensitivePredicateOption) {
-            // N1QL doesn't have case-insensitive comparions, so lowercase both sides instead:
-            leftExpression = [NSExpression expressionForFunction: @"lowercase:"
-                                                       arguments: @[leftExpression]];
-            rightExpression = [NSExpression expressionForFunction: @"lowercase:"
-                                                        arguments: @[rightExpression]];
-        }
-        if (cp.options & NSDiacriticInsensitivePredicateOption) {
-            // TODO: Support NSDiacriticInsensitivePredicateOption
-            return mkError(outError, @"Diacritic-insensitive comparison not supported yet"), nil;
-        }
-
-        if (opType == NSBetweenPredicateOperatorType) {
-            // BETWEEN needs some translation -- the range is in an array encoded in the RHS
-            NSExpression* lhs = EncodeExpression(leftExpression, outError);
-            if (!lhs) return nil;
-            NSArray* range = rightExpression.collection;
-            id min = EncodeExpression(range[0], outError);
-            if (!min) return nil;
-            id max = EncodeExpression(range[1], outError);
-            if (!max) return nil;
-            return @[op, lhs, min, max];
-        }
-
-        id rhs = EncodeExpression(rightExpression, outError);
-        if (!rhs) return nil;
-        updateOpForMissingOperand(rhs, opType, &op);
-
-        if (opType == NSInPredicateOperatorType) {
-            // IN needs translation if RHS is not a literal or property
-            NSExpressionType rtype = rightExpression.expressionType;
-            NSExpression* lhs = EncodeExpression(leftExpression, outError);
-            if (!lhs) return nil;
-            updateOpForMissingOperand(lhs, opType, &op);
-            if (rtype != NSVariableExpressionType && rtype != NSAggregateExpressionType) {
-                return @[@"ANY", @"X", rhs, @[@"=", @[@"?X"], lhs]];
-            } else if (rtype == NSAggregateExpressionType)
-                return @[op, lhs, rhs];
-        }
-
-        static NSString* const kModifiers[3] = {nil, @"EVERY", @"ANY"};
-        NSString* mod = kModifiers[cp.comparisonPredicateModifier];
-        if (mod == nil) {
-            NSExpression* lhs = EncodeExpression(leftExpression, outError);
-            if (!lhs) return nil;
-            updateOpForMissingOperand(lhs, opType, &op);
-            return @[op, lhs, rhs];
-        } else {
-            // ANY or EVERY modifiers: (I'm assuming they will always have a key-path as the LHS.)
-            NSString* keyPath = leftExpression.keyPath;
-            NSString* lastProp = nil;
-            NSRange dot = [keyPath rangeOfString: @"." options: NSBackwardsSearch];
-            if (dot.length > 0) {
-                lastProp = [keyPath substringFromIndex: NSMaxRange(dot)];
-                keyPath = [keyPath substringToIndex: dot.location];
-            }
-            return @[mod, @"X", encodeKeyPath(keyPath),
-                     @[op, (lastProp ? @[@"?X", lastProp] : @[@"?X"]),
-                       rhs]];
-        }
+        id result = EncodeComparisonPredicate(cp, outError);
+        if (!result)
+            return nil;
+        CollationOptions options = 0;
+        if (cp.options & NSCaseInsensitivePredicateOption)
+            options |= kCaseInsensitive | kUnicode;
+        if (cp.options & NSDiacriticInsensitivePredicateOption)
+            options |= kDiacriticInsensitive | kUnicode;
+        result = AddCollation(result, options);
+        return result;
 
     } else if ([pred isKindOfClass: [NSCompoundPredicate class]]) {
         // Logical compound of sub-predicates, e.g. "a AND b AND c":
@@ -239,7 +289,81 @@ static id EncodePredicate(NSPredicate* pred, NSError** outError) {
     } else {
         return mkError(outError, @"Unsupported NSPredicate type %@", [pred class]), nil;
     }
+}
 
+
+// Encodes a predicate comparing expressions, e.g. "a < b". Does not apply collation.
+static id EncodeComparisonPredicate(NSComparisonPredicate* cp, NSError** outError) {
+    NSPredicateOperatorType opType = cp.predicateOperatorType;
+    NSString *op = predicateOperatorName(opType);
+    if (!op)
+        return mkError(outError, @"Unsupported comparison operator %u", (unsigned)opType), nil;
+    NSExpression* leftExpression = cp.leftExpression;
+    NSExpression* rightExpression = cp.rightExpression;
+
+    if (opType == NSBetweenPredicateOperatorType) {
+        // BETWEEN needs some translation -- the range is in an array encoded in the RHS
+        NSExpression* lhs = EncodeExpression(leftExpression, outError);
+        if (!lhs) return nil;
+        NSArray* range = rightExpression.collection;
+        id min = EncodeExpression(range[0], outError);
+        if (!min) return nil;
+        id max = EncodeExpression(range[1], outError);
+        if (!max) return nil;
+        return @[op, lhs, min, max];
+    }
+
+    id rhs = EncodeExpression(rightExpression, outError);
+    if (!rhs) return nil;
+    updateOpForMissingOperand(rhs, opType, &op);
+
+    if (opType == NSInPredicateOperatorType) {
+        // IN needs translation if RHS is not a literal or property
+        NSExpressionType rtype = rightExpression.expressionType;
+        NSExpression* lhs = EncodeExpression(leftExpression, outError);
+        if (!lhs) return nil;
+        updateOpForMissingOperand(lhs, opType, &op);
+        if (rtype != NSVariableExpressionType && rtype != NSAggregateExpressionType) {
+            return @[@"ANY", @"X", rhs, @[@"=", @[@"?X"], lhs]];
+        } else if (rtype == NSAggregateExpressionType)
+            return @[op, lhs, rhs];
+    }
+
+    static NSString* const kModifiers[3] = {nil, @"EVERY", @"ANY"};
+    NSString* mod = kModifiers[cp.comparisonPredicateModifier];
+    if (mod == nil) {
+        NSExpression* lhs = EncodeExpression(leftExpression, outError);
+        if (!lhs) return nil;
+        updateOpForMissingOperand(lhs, opType, &op);
+        return @[op, lhs, rhs];
+    } else {
+        // ANY or EVERY modifiers: (I'm assuming they will always have a key-path as the LHS.)
+        NSString* keyPath = leftExpression.keyPath;
+        NSString* lastProp = nil;
+        NSRange dot = [keyPath rangeOfString: @"." options: NSBackwardsSearch];
+        if (dot.length > 0) {
+            lastProp = [keyPath substringFromIndex: NSMaxRange(dot)];
+            keyPath = [keyPath substringToIndex: dot.location];
+        }
+        return @[mod, @"X", encodeKeyPath(keyPath),
+                 @[op, (lastProp ? @[@"?X", lastProp] : @[@"?X"]),
+                   rhs]];
+    }
+}
+
+
+static NSArray* AddCollation(id jsonExpr, CollationOptions optionFlags) {
+    if (optionFlags != 0) {
+        NSMutableDictionary* options = [NSMutableDictionary new];
+        if (optionFlags & (kUnicode | kDiacriticInsensitive))
+            options[@"UNICODE"] = @YES;
+        if (optionFlags & kCaseInsensitive)
+            options[@"CASE"] = @NO;
+        if (optionFlags & kDiacriticInsensitive)
+            options[@"DIAC"] = @NO;
+        jsonExpr = @[@"COLLATE", options, jsonExpr];
+    }
+    return jsonExpr;
 }
 
 

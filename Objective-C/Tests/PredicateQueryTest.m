@@ -9,6 +9,7 @@
 #import "CBLTestCase.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLPredicateQuery+Internal.h"
+#import "CBLJSON.h"
 
 
 @interface PredicateQueryTest : CBLTestCase
@@ -52,7 +53,9 @@
         {"coords[LAST] < 180",      "{WHERE: ['<', ['.coords[-1]'], 180]}"},
         {"coords[SIZE] == 2",       "{WHERE: ['=', ['ARRAY_COUNT()', ['.coords']], 2]}"},
         {"lowercase(name) == 'bobo'","{WHERE: ['=', ['LOWER()', ['.name']], 'bobo']}"},
-        {"name ==[c] 'Bobo'",       "{WHERE: ['=', ['LOWER()', ['.name']], ['LOWER()', 'Bobo']]}"},
+        {"name ==[c] 'Bobo'",       "{WHERE: ['COLLATE', {UNICODE:true, CASE:false}, ['=', ['.name'], 'Bobo']]}"},
+        {"name ==[d] 'Bobo'",       "{WHERE: ['COLLATE', {UNICODE:true, DIAC:false}, ['=', ['.name'], 'Bobo']]}"},
+        {"name ==[cd] 'Bobo'",      "{WHERE: ['COLLATE', {UNICODE:true, CASE:false, DIAC:false}, ['=', ['.name'], 'Bobo']]}"},
         {"sum(prices) > 100",       "{WHERE: ['>', ['ARRAY_SUM()', ['.prices']], 100]}"},
         {"age + 10 == 62",          "{WHERE: ['=', ['+', ['.age'], 10], 62]}"},
         {"foo + 'bar' == 'foobar'", "{WHERE: ['=', ['||', ['.foo'], 'bar'], 'foobar']}"},
@@ -118,6 +121,49 @@
                                   @"doc-025",
                                   @"doc-026",
                                   @"doc-027"]));
+}
+
+
+- (void) testSortDescriptors {
+    // Strings:
+    [self testSortDescriptor: @"name" expectingJSON: "['.name']"];
+    [self testSortDescriptor: @"name.first" expectingJSON: "['.name.first']"];
+    [self testSortDescriptor: @"name[]" expectingJSON: "['COLLATE', {UNICODE:true}, ['.name']]"];
+    [self testSortDescriptor: @"name[c]" expectingJSON: "['COLLATE', {UNICODE:true, CASE:false}, ['.name']]"];
+    [self testSortDescriptor: @"name[d]" expectingJSON: "['COLLATE', {UNICODE:true, DIAC:false}, ['.name']]"];
+    [self testSortDescriptor: @"name[cd]" expectingJSON: "['COLLATE', {UNICODE:true, CASE:false, DIAC:false}, ['.name']]"];
+
+    [self testSortDescriptor: @"-name" expectingJSON: "['DESC', ['.name']]"];
+    [self testSortDescriptor: @"-name[c]" expectingJSON: "['DESC', ['COLLATE', {UNICODE:true, CASE:false}, ['.name']]]"];
+
+    // NSSortDescriptors:
+    [self testSortDescriptor: [NSSortDescriptor sortDescriptorWithKey: @"name" ascending: YES]
+               expectingJSON: "['.name']"];
+    [self testSortDescriptor: [NSSortDescriptor sortDescriptorWithKey: @"name" ascending: NO]
+               expectingJSON: "['DESC', ['.name']]"];
+    [self testSortDescriptor: [NSSortDescriptor sortDescriptorWithKey: @"name" ascending: YES
+                                                             selector: @selector(compare:)]
+               expectingJSON: "['.name']"];
+    [self testSortDescriptor: [NSSortDescriptor sortDescriptorWithKey: @"name" ascending: YES
+                                                             selector: @selector(localizedCompare:)]
+               expectingJSON: "['COLLATE', {UNICODE:true}, ['.name']]"];
+    [self testSortDescriptor: [NSSortDescriptor sortDescriptorWithKey: @"name" ascending: YES
+                                                             selector: @selector(localizedCaseInsensitiveCompare:)]
+               expectingJSON: "['COLLATE', {UNICODE:true, CASE:false}, ['.name']]"];
+    [self testSortDescriptor: [NSSortDescriptor sortDescriptorWithKey: @"name" ascending: YES
+                                                             selector: @selector(caseInsensitiveCompare:)]
+               expectingJSON: "['COLLATE', {CASE:false}, ['.name']]"];
+    [self testSortDescriptor: [NSSortDescriptor sortDescriptorWithKey: @"name" ascending: NO
+                                                             selector: @selector(localizedCompare:)]
+               expectingJSON: "['DESC', ['COLLATE', {UNICODE:true}, ['.name']]]"];
+}
+
+- (void) testSortDescriptor: (id)sd expectingJSON: (const char*)json5 {
+    NSError* error;
+    NSArray* sorts = [CBLPredicateQuery encodeSortDescriptors: @[sd] error: &error];
+    Assert(sorts, @"encodeSortDescriptors failed: %@", error);
+    NSString* actual = [CBLJSON stringWithJSONObject: sorts[0] options: 0 error: &error];
+    AssertEqualObjects(actual, [CBLPredicateQuery json5ToJSON: json5]);
 }
 
 
@@ -260,7 +306,7 @@
     NSArray* expectedMaxZips= @[@"35243", @"94153", @"81223", @"33612", @"50801"];
 
     [self loadJSONResource: @"names_100"];
-    CBLPredicateQuery *q = [self.db createQueryWhere: @"gender == 'female'"];
+    CBLPredicateQuery *q = [self.db createQueryWhere: @"gender ==[c] 'FEMALE'"];
     q.groupBy = @[@"contact.address.state"];
     q.orderBy = @[@"contact.address.state"];
     q.returning = @[@"contact.address.state", @"count(1)", @"max(contact.address.zip)"];
@@ -268,6 +314,7 @@
     NSData* json = [q encodeAsJSON: NULL];
     NSString* jsonStr = [[NSString alloc] initWithData: json encoding: NSUTF8StringEncoding];
     Log(@"%@", jsonStr);
+    Log(@"%@", [q explain: NULL]);
 
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         //AssertEqualObjects(row.documentID, nil);

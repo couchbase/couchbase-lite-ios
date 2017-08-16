@@ -25,8 +25,8 @@ typedef NSUInteger CBLJSONWritingOptions;
 @interface CBLJSON : NSJSONSerialization
 
 /** Encodes an NSDate as a string in ISO-8601 format. */
-+ (NSString*) JSONObjectWithDate: (NSDate*)date;
-+ (NSString*) JSONObjectWithDate: (NSDate*)date timeZone:(NSTimeZone *)tz;
++ (nullable NSString*) JSONObjectWithDate: (nullable NSDate*)date;
++ (nullable NSString*) JSONObjectWithDate: (nullable NSDate*)date timeZone:(NSTimeZone *)tz;
 
 /** Parses an ISO-8601 formatted date string to an NSDate object.
  If the object is not a string, or not valid ISO-8601, or nil, it returns nil. */
@@ -36,6 +36,10 @@ typedef NSUInteger CBLJSONWritingOptions;
  If the object is not a string, or not valid ISO-8601, or nil, it returns a NAN value. */
 + (CFAbsoluteTime) absoluteTimeWithJSONObject: (nullable id)jsonObject;
 
+/** Encodes an object to a JSON string. */
++ (nullable NSString *)stringWithJSONObject:(id)object
+                                    options:(NSJSONWritingOptions)options
+                                      error:(NSError **)error;
 
 @end
 

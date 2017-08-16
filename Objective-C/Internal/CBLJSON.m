@@ -50,6 +50,16 @@ static NSTimeInterval k1970ToReferenceDate;
     }
 }
 
++ (NSString *)stringWithJSONObject:(id)object
+                           options:(NSJSONWritingOptions)options
+                             error:(NSError **)error
+{
+    NSData* data = [NSJSONSerialization dataWithJSONObject: object options: options error: error];
+    if (!data)
+        return nil;
+    return [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
+}
+
 
 // These functions are not thread-safe, nor are the NSDateFormatter instances they return.
 // Make sure that this function and the formatter are called on only one thread at a time.

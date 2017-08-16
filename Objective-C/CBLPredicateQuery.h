@@ -36,10 +36,21 @@ NS_ASSUME_NONNULL_BEGIN
 @property (copy, nullable, nonatomic) id where;
 
 /** 
- An array of NSSortDescriptors or NSStrings, specifying properties or expressions that the
- result rows should be sorted by; corresponds to the ORDER BY clause of a SQL or N1QL query.
- These strings, or sort-descriptor names, can name key-paths or be NSExpresson format strings.
- If nil, no sorting occurs; this is faster but the order of rows is undefined.
+ An array of NSSortDescriptors, NSStrings, or NSExpressions, specifying properties or expressions
+ that the result rows should be sorted by; corresponds to the ORDER BY clause of a SQL/N1QL query.
+
+ If an item is an NSString, it can be a key-path or an NSExpression format string.
+ To reverse the sort, prefix it with "-".
+ To request Unicode string collation, append "[]"; you can put a "c" and/or a "d" inside the
+ brackets to request case- or diacritic- insensitive collation.
+
+ If an item is an NSSortDescriptor, its `key` string property can be a key-path or an NSExpression
+ format string. If its `ascending` property is NO, the ordering will of course be descending.
+ Its `selector` property will change the string collation if set to `caseInsensitiveCompare:`,
+ `localizedCompare:`, or `localizedCaseInsensitiveCompare`.
+
+ If this property is set to nil, no sorting occurs; this is faster, but the order of rows is
+ undefined.
  The default value sorts by document ID.
  If this property is changed, the query will be recompiled the next time it is run.
  */
