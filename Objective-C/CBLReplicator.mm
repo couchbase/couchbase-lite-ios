@@ -63,7 +63,6 @@ C4LogDomain kCBLSyncLogDomain;
     dispatch_queue_t _dispatchQueue;
     C4Replicator* _repl;
     NSString* _desc;
-    AllocedDict _responseHeaders;   //TODO: Do something with these (for auth)
     C4ReplicatorStatus _rawStatus;
     unsigned _retryCount;
     CBLReachability* _reachability;
@@ -281,11 +280,6 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 
 
 - (void) c4StatusChanged: (C4ReplicatorStatus)c4Status {
-    if (!_responseHeaders && _repl) {
-        C4Slice h = c4repl_getResponseHeaders(_repl);
-        _responseHeaders = AllocedDict(slice{h.buf, h.size});
-    }
-
     if (c4Status.level == kC4Stopped) {
         if ([self handleError: c4Status.error]) {
             // Change c4Status to offline, so my state will reflect that, and proceed:
