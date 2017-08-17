@@ -14,6 +14,7 @@
 using namespace std::chrono;
 
 #define PROFILING 0
+#define VERBOSE   0
 
 #if PROFILING
 static constexpr int kNumIterations = 1;
@@ -29,8 +30,10 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     NSArray* _tracks;
     NSUInteger _documentCount;
     NSArray* _artists;
-    Benchmark _importBench, _updatePlayCountBench, _queryArtistsBench, _indexArtistsBench,
-              _queryIndexedArtistsBench, _queryAlbumsBench, _indexFTSBench, _queryFTSBench;
+    Benchmark _importBench, _updatePlayCountBench, _updateArtistsBench, _indexArtistsBench,
+              _queryArtistsBench, _queryIndexedArtistsBench,
+              _queryAlbumsBench, _queryIndexedAlbumsBench,
+              _indexFTSBench, _queryFTSBench;
 }
 
 
@@ -69,14 +72,22 @@ static constexpr auto kInterTestSleep = milliseconds(0);
             [self pause];
             numUpdates = [self updateArtistNames];
             [self pause];
+
             numArtists = [self queryAllArtists: _queryArtistsBench];
-            [self pause];
-            [self createArtistsIndex];
-            [self pause];
-            [self queryAllArtists: _queryIndexedArtistsBench];
             [self pause];
             numAlbums = [self queryAlbums: _queryAlbumsBench];
             [self pause];
+            
+            [self createArtistsIndex];
+            [self pause];
+
+            unsigned numArtists2 = [self queryAllArtists: _queryIndexedArtistsBench];
+            Assert(numArtists2 == numArtists);
+            [self pause];
+            unsigned numAlbums2 = [self queryAlbums: _queryIndexedAlbumsBench];
+            Assert(numAlbums2 == numAlbums);
+            [self pause];
+
             numFTS = [self fullTextSearch];
             [self pause];
         }
@@ -84,16 +95,24 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     fprintf(stderr, "\n\n");
     fprintf(stderr, "Import %5d docs:  ", numDocs); _importBench.printReport();
     fprintf(stderr, "                    "); _importBench.printReport(1.0/numDocs, "doc");
-    fprintf(stderr, "Update %4d docs:   ", numUpdates); _updatePlayCountBench.printReport();
-    fprintf(stderr, "                    "); _updatePlayCountBench.printReport(1.0/numUpdates, "update");
+    fprintf(stderr, "                     Rate: %.0f docs/sec\n", numDocs/_importBench.median());
+    if (!_updatePlayCountBench.empty()) {
+        fprintf(stderr, "Update all docs:    "); _updatePlayCountBench.printReport();
+        fprintf(stderr, "                    "); _updatePlayCountBench.printReport(1.0/numDocs, "update");
+    }
+    fprintf(stderr, "Update %4d docs:   ", numUpdates); _updateArtistsBench.printReport();
+    fprintf(stderr, "                     Rate: %.0f docs/sec\n", numUpdates/_updateArtistsBench.median());
+    fprintf(stderr, "                    "); _updateArtistsBench.printReport(1.0/numUpdates, "update");
     fprintf(stderr, "Query %4d artists: ", numArtists); _queryArtistsBench.printReport();
     fprintf(stderr, "                    "); _queryArtistsBench.printReport(1.0/numArtists, "row");
-    fprintf(stderr, "Index by artist:    "); _indexArtistsBench.printReport();
-    fprintf(stderr, "                    "); _indexArtistsBench.printReport(1.0/numDocs, "doc");
-    fprintf(stderr, "Query %4d artists: ", numArtists); _queryIndexedArtistsBench.printReport();
-    fprintf(stderr, "                    "); _queryIndexedArtistsBench.printReport(1.0/numArtists, "row");
     fprintf(stderr, "Query %4d albums:  ", numAlbums); _queryAlbumsBench.printReport();
     fprintf(stderr, "                    "); _queryAlbumsBench.printReport(1.0/numArtists, "artist");
+    fprintf(stderr, "Index by artist:    "); _indexArtistsBench.printReport();
+    fprintf(stderr, "                    "); _indexArtistsBench.printReport(1.0/numDocs, "doc");
+    fprintf(stderr, "Re-query artists:   "); _queryIndexedArtistsBench.printReport();
+    fprintf(stderr, "                    "); _queryIndexedArtistsBench.printReport(1.0/numArtists, "row");
+    fprintf(stderr, "Re-query albums:    "); _queryIndexedAlbumsBench.printReport();
+    fprintf(stderr, "                    "); _queryIndexedAlbumsBench.printReport(1.0/numArtists, "artist");
     fprintf(stderr, "FTS indexing:       "); _indexFTSBench.printReport();
     fprintf(stderr, "                    "); _indexFTSBench.printReport(1.0/numDocs, "doc");
     fprintf(stderr, "FTS query:          "); _queryFTSBench.printReport();
@@ -142,6 +161,9 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     }];
     _importBench.stop();
     Assert(ok, @"Batch operation failed");
+#if VERBOSE >= 1
+    NSLog(@"Imported %u documents", (unsigned)_documentCount);
+#endif
     return (unsigned)_documentCount;
 }
 
@@ -169,14 +191,16 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     }];
     _updatePlayCountBench.stop();
     Assert(ok, @"Batch operation failed");
-//    NSLog(@"Updated %u documents' playCount", count);
+#if VERBOSE >= 1
+    NSLog(@"Updated %u documents' playCount", count);
+#endif
     return count;
 }
 
 
 // Strips "The " from the names of all artists.
 - (unsigned) updateArtistNames {
-    _updatePlayCountBench.start();
+    _updateArtistsBench.start();
     __block unsigned count = 0;
     BOOL ok = [self.db inBatch: NULL do: ^{
         for (CBLDocument* doc in self.db.allDocuments) {
@@ -190,7 +214,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
             }
         }
     }];
-    _updatePlayCountBench.stop();
+    _updateArtistsBench.stop();
     Assert(ok, @"Batch operation failed");
     return count;
 }
@@ -211,42 +235,58 @@ static constexpr auto kInterTestSleep = milliseconds(0);
 - (unsigned) queryAllArtists: (Benchmark&)bench {
     CBLPredicateQuery* query = [self.db createQueryWhere: @"Artist != nil && Compilation == nil"];
     query.returning = @[@"Artist"];
-    query.groupBy = @[@"lowercase(Artist)"];
-    query.orderBy = @[@"lowercase(Artist)"];
+    query.groupBy = @[@"Artist[cd]"];
+    query.orderBy = @[@"Artist[cd]"];
 
     Assert([query check: NULL]);
-//    NSLog(@"%@", [query explain: NULL]);
+#if VERBOSE >= 2
+    NSLog(@"%@", [query explain: NULL]);
+#endif
     bench.start();
     _artists = [self collectQueryResults: query];
     bench.stop();
+#if VERBOSE >= 2
+    NSLog(@"%u artists:\n'%@'", (unsigned)_artists.count, [_artists componentsJoinedByString: @"'\n'"]);
+#elif VERBOSE >= 1
     NSLog(@"%u artists, from %@ to %@", (unsigned)_artists.count, _artists.firstObject, _artists.lastObject);
-    AssertEq(_artists.count, 1115u);
+#endif
+    AssertEq(_artists.count, 1111u);
     return (unsigned)_artists.count;
 }
 
 
 // Creates an index on the Artist property (case-insensitive.)
 - (void) createArtistsIndex {
+#if VERBOSE >= 1
     NSLog(@"Indexing artists...");
-    _indexArtistsBench.start();
-#if 1
-    Assert(([self.db createIndexOn: @[@"lowercase(Artist)", @"Compilation"] error: NULL]));
-#else
-    Assert([self.db createIndexOn: @[@"TERNARY(Compilation == true, '--Compilation--', lowercase(Artist))"] error: NULL]);
 #endif
+    _indexArtistsBench.start();
+#if 0
+    CBLQueryExpression* artist = [CBLQueryExpression property: @"Artist"];
+    CBLQueryExpression* comp = [CBLQueryExpression property: @"Compilation"];
+#else
+    CBLQueryCollation* collation = [CBLQueryCollation unicodeWithLocale: nil
+                                                             ignoreCase: YES
+                                                          ignoreAccents: YES];
+    CBLQueryExpression* artist = [[CBLQueryExpression property: @"Artist"] collate: collation];
+    CBLQueryExpression* comp = [CBLQueryExpression property: @"Compilation"];
+#endif
+    Assert(([self.db createIndexOn: @[comp, artist] error: NULL]));
     _indexArtistsBench.stop();
 }
 
 
 // Queries to find the albums by every artist.
 - (unsigned) queryAlbums: (Benchmark&)bench {
-    CBLPredicateQuery* query = [self.db createQueryWhere: @"lowercase(Artist) == lowercase($ARTIST) && Compilation == nil"];
+    CBLPredicateQuery* query = [self.db createQueryWhere: @"Artist ==[cd] $ARTIST && Compilation == nil"];
     query.returning = @[@"Album"];
-    query.groupBy = @[@"lowercase(Album)"];
-    query.orderBy = @[@"lowercase(Album)"];
+    query.groupBy = @[@"Album[cd]"];
+    query.orderBy = @[@"Album[cd]"];
 
     Assert([query check: NULL]);
-//    NSLog(@"%@", [query explain: NULL]);
+#if VERBOSE >= 2
+    NSLog(@"%@", [query explain: NULL]);
+#endif
     bench.start();
 
     // Run one query per artist to find their albums. We could write a single query to get all of
@@ -261,8 +301,10 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         }
     }
     bench.stop();
+#if VERBOSE >= 1
     NSLog(@"%u albums total", albumCount);
-    AssertEq(albumCount, 1887u);
+#endif
+    AssertEq(albumCount, 1886u);
     return albumCount;
 }
 
@@ -280,8 +322,9 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     CBLPredicateQuery* query = [self.db createQueryWhere: @"Name matches 'Rock'"];
     query.returning = @[@"Artist", @"Album", @"Name"];
     query.orderBy = @[@"lowercase(Artist)", @"lowercase(Album)"];
-//    NSLog(@"%@", [query explain: NULL]);
-
+#if VERBOSE >= 2
+    NSLog(@"%@", [query explain: NULL]);
+#endif
     _queryFTSBench.start();
     NSMutableArray* results = [NSMutableArray array];
     for (CBLFullTextQueryRow* row in [query run: &error])
@@ -289,7 +332,11 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     _queryFTSBench.stop();
     Assert(!error, @"Query failed: %@", error);
 
-//    NSLog(@"%u 'rock' songs: \"%@\"", (unsigned)results.count, [results componentsJoinedByString: @"\", \""]);
+#if VERBOSE >= 2
+    NSLog(@"%u 'rock' songs: \"%@\"", (unsigned)results.count, [results componentsJoinedByString: @"\", \""]);
+#elif VERBOSE >= 1
+    NSLog(@"%u 'rock' songs", (unsigned)results.count);
+#endif
     AssertEq(results.count, 30u);
     return (unsigned)results.count;
 }
