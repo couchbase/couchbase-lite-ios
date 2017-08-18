@@ -162,8 +162,8 @@
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
     CBLQueryExpression* n2 = [CBLQueryExpression property: @"number2"];
     NSArray* cases = @[
-        @[[[n1 greaterThan: @(3)] and: [n2 greaterThan: @(3)]], @"number1 > 3 AND number2 > 3"],
-        @[[[n1 lessThan: @(3)] or: [n2 lessThan: @(3)]], @"number1 < 3 OR number2 < 3"]
+        @[[[n1 greaterThan: @(3)] andExpression: [n2 greaterThan: @(3)]], @"number1 > 3 AND number2 > 3"],
+        @[[[n1 lessThan: @(3)] orExpression: [n2 lessThan: @(3)]], @"number1 < 3 OR number2 < 3"]
     ];
     NSArray* numbers = [self loadNumbers: 10];
     [self runTestWithNumbers: numbers cases: cases];

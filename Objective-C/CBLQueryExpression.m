@@ -192,13 +192,13 @@
 #pragma mark - Bitwise operators:
 
 
-- (CBLQueryExpression*) and: (id)expression {
+- (CBLQueryExpression*) andExpression: (id)expression {
     return [[CBLCompoundExpression alloc] initWithExpressions: @[self, expression]
                                                          type: CBLAndCompundExpType];
 }
 
 
-- (CBLQueryExpression*) or: (id)expression {
+- (CBLQueryExpression*) orExpression: (id)expression {
     return [[CBLCompoundExpression alloc] initWithExpressions: @[self, expression]
                                                          type: CBLOrCompundExpType];
 }
@@ -253,7 +253,7 @@
 
 
 - (CBLQueryExpression*) isNullOrMissing {
-    return [[[CBLUnaryExpression alloc] initWithExpression: self type: CBLUnaryTypeNull] or:
+    return [[[CBLUnaryExpression alloc] initWithExpression: self type: CBLUnaryTypeNull] orExpression:
             [[CBLUnaryExpression alloc] initWithExpression: self type: CBLUnaryTypeMissing]];
 }
 

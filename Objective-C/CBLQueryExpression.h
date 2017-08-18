@@ -249,7 +249,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to AND with the current expression.
  @return The logical AND expression.
  */
-- (CBLQueryExpression*) and: (id)expression;
+- (CBLQueryExpression*) andExpression: (id)expression;
 
 /** 
  Creates a logical OR expression that performs logical OR operation with the current expression.
@@ -257,7 +257,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to OR with the current expression.
  @return The logical OR Expression.
  */
-- (CBLQueryExpression*) or: (id)expression;
+- (CBLQueryExpression*) orExpression: (id)expression;
 
 #pragma mark - Like operators:
 

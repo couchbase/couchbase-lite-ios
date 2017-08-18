@@ -243,7 +243,7 @@ public class Expression {
     /// - Parameter expression: The expression to AND with the current expression.
     /// - Returns: A logical AND expression.
     public func and(_ expression: Any) -> Expression {
-        return Expression(self.impl.and(Expression.toImpl(expression)))
+        return Expression(self.impl.andExpression(Expression.toImpl(expression)))
     }
     
     
@@ -253,7 +253,7 @@ public class Expression {
     /// - Parameter expression: The expression to OR with the current expression.
     /// - Returns: A logical OR Expression.
     public func or(_ expression: Any) -> Expression {
-        return Expression(self.impl.or(Expression.toImpl(expression)))
+        return Expression(self.impl.orExpression(Expression.toImpl(expression)))
     }
     
     
