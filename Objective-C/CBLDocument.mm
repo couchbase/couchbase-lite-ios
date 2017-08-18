@@ -28,9 +28,10 @@
 #import "CBLStatus.h"
 
 
-@implementation CBLDocument {
-    CBLDictionary* _dict;
-}
+@implementation CBLDocument
+
+@synthesize dict=_dict;
+
 
 #pragma mark - Initializer
 
@@ -94,81 +95,81 @@
 
 
 - (NSUInteger) count {
-    return _dict.count;
+    return self.dict.count;
 }
 
 
 - (NSArray*) keys {
-    return _dict.keys;
+    return self.dict.keys;
 }
 
 
 - (nullable CBLArray*) arrayForKey: (NSString*)key {
-    return [_dict arrayForKey: key];
+    return [self.dict arrayForKey: key];
 }
 
 
 - (nullable CBLBlob*) blobForKey: (NSString*)key {
-    return [_dict blobForKey: key];
+    return [self.dict blobForKey: key];
 }
 
 
 - (BOOL) booleanForKey: (NSString*)key {
-    return [_dict booleanForKey: key];
+    return [self.dict booleanForKey: key];
 }
 
 
 - (nullable NSDate*) dateForKey: (NSString*)key {
-    return [_dict dateForKey: key];
+    return [self.dict dateForKey: key];
 }
 
 
 - (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
-    return [_dict dictionaryForKey: key];
+    return [self.dict dictionaryForKey: key];
 }
 
 - (double) doubleForKey: (NSString*)key {
-    return [_dict doubleForKey: key];
+    return [self.dict doubleForKey: key];
 }
 
 
 - (float) floatForKey: (NSString*)key {
-    return [_dict floatForKey: key];
+    return [self.dict floatForKey: key];
 }
 
 
 - (NSInteger) integerForKey: (NSString*)key {
-    return [_dict integerForKey: key];
+    return [self.dict integerForKey: key];
 }
 
 
 - (long long) longLongForKey: (NSString*)key {
-    return [_dict longLongForKey: key];
+    return [self.dict longLongForKey: key];
 }
 
 
 - (nullable NSNumber*) numberForKey: (NSString*)key {
-    return [_dict numberForKey: key];
+    return [self.dict numberForKey: key];
 }
 
 
 - (nullable id) objectForKey: (NSString*)key {
-    return [_dict objectForKey: key];
+    return [self.dict objectForKey: key];
 }
 
 
 - (nullable NSString*) stringForKey: (NSString*)key {
-    return [_dict stringForKey: key];
+    return [self.dict stringForKey: key];
 }
 
 
 - (BOOL) containsObjectForKey: (NSString*)key {
-    return [_dict containsObjectForKey: key];
+    return [self.dict containsObjectForKey: key];
 }
 
 
 - (NSDictionary<NSString*,id>*) toDictionary {
-    return [_dict toDictionary];
+    return [self.dict toDictionary];
 }
 
 
@@ -176,72 +177,72 @@
 
 
 - (void) setArray: (nullable CBLArray *)value forKey: (NSString *)key {
-    [_dict setArray: value forKey: key];
+    [self.dict setArray: value forKey: key];
 }
 
 
 - (void) setBoolean: (BOOL)value forKey: (NSString *)key {
-    [_dict setBoolean: value forKey: key];
+    [self.dict setBoolean: value forKey: key];
 }
 
 
 - (void) setBlob: (nullable CBLBlob*)value forKey: (NSString *)key {
-    [_dict setBlob: value forKey: key];
+    [self.dict setBlob: value forKey: key];
 }
 
 
 - (void) setDate: (nullable NSDate *)value forKey: (NSString *)key {
-    [_dict setDate: value forKey: key];
+    [self.dict setDate: value forKey: key];
 }
 
 
 - (void) setDictionary: (nullable CBLDictionary *)value forKey: (NSString *)key {
-    [_dict setDictionary: value forKey: key];
+    [self.dict setDictionary: value forKey: key];
 }
 
 
 - (void) setDouble: (double)value forKey: (NSString *)key {
-    [_dict setDouble: value forKey: key];
+    [self.dict setDouble: value forKey: key];
 }
 
 
 - (void) setFloat: (float)value forKey: (NSString *)key {
-    [_dict setFloat: value forKey: key];
+    [self.dict setFloat: value forKey: key];
 }
 
 
 - (void) setInteger: (NSInteger)value forKey: (NSString *)key {
-    [_dict setInteger: value forKey: key];
+    [self.dict setInteger: value forKey: key];
 }
 
 
 - (void) setLongLong: (long long)value forKey: (NSString *)key {
-    [_dict setLongLong: value forKey: key];
+    [self.dict setLongLong: value forKey: key];
 }
 
 
 - (void) setNumber: (nullable NSNumber*)value forKey: (NSString *)key {
-    [self setNumber: value forKey: key];
+    [self.dict setNumber: value forKey: key];
 }
 
 
 - (void) setObject: (nullable id)value forKey: (NSString*)key {
-    [_dict setObject: value forKey: key];
+    [self.dict setObject: value forKey: key];
 }
 
 
 - (void) setString: (nullable NSString *)value forKey: (NSString *)key {
-    [_dict setString: value forKey: key];
+    [self.dict setString: value forKey: key];
 }
 
 
 - (void) removeObjectForKey: (NSString *)key {
-    [_dict removeObjectForKey: key];
+    [self.dict removeObjectForKey: key];
 }
 
 
 - (void) setDictionary: (NSDictionary<NSString *,id> *)dictionary {
-    [_dict setDictionary: dictionary];
+    [self.dict setDictionary: dictionary];
 }
 
 
@@ -252,7 +253,7 @@
                                   objects: (id __unsafe_unretained [])buffer
                                     count: (NSUInteger)len
 {
-    return [_dict countByEnumeratingWithState: state objects: buffer count: len];
+    return [self.dict countByEnumeratingWithState: state objects: buffer count: len];
 }
 
 
@@ -260,7 +261,7 @@
 
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
-    return [_dict objectForKeyedSubscript: key];
+    return [self.dict objectForKeyedSubscript: key];
 }
 
 
@@ -269,8 +270,9 @@
 
 - (void) setC4Doc: (CBLC4Document*)c4doc {
     [super setC4Doc: c4doc];
+    
     // Update delegate dictionary:
-    _dict = [[CBLDictionary alloc] initWithFleeceData: self.data];
+    self.dict = [[CBLDictionary alloc] initWithFleeceData: self.data];
 }
 
 
@@ -280,11 +282,13 @@
 
 
 - (BOOL) isEmpty {
-    return _dict.isEmpty;
+    return self.dict.isEmpty;
 }
 
 
 - (BOOL) save: (NSError**)outError {
+    // This method is only called from the CBLDatabase class under
+    // the CBLDatabase's lock.
     return [self saveWithConflictResolver: self.effectiveConflictResolver
                                  deletion: NO
                                     error: outError];
@@ -292,6 +296,8 @@
 
 
 - (BOOL) deleteDocument: (NSError**)outError {
+    // This method is only called from the CBLDatabase class under
+    // the CBLDatabase's lock.
     return [self saveWithConflictResolver: self.effectiveConflictResolver
                                  deletion: YES
                                     error: outError];
@@ -299,6 +305,8 @@
 
 
 - (BOOL) purge: (NSError**)outError {
+    // This method is only called from the CBLDatabase class under
+    // the CBLDatabase's lock.
     if (!self.exists) {
         return createError(kCBLStatusNotFound, outError);
     }
@@ -329,7 +337,7 @@
 // Reflects only direct changes to the document. Changes on sub dictionaries or arrays will
 // not be propagated here.
 - (BOOL) changed {
-    return _dict.changed;
+    return self.dict.changed;
 }
 
 
@@ -506,7 +514,7 @@ static bool dictionaryContainsBlob(__unsafe_unretained CBLDictionary* dict) {
 
 - (NSData*) encode: (NSError**)outError {
     auto encoder = c4db_createFleeceEncoder(self.c4db);
-    if (![_dict cbl_fleeceEncode: encoder database: self.database error: outError])
+    if (![self.dict cbl_fleeceEncode: encoder database: self.database error: outError])
         return nil;
     FLError flErr;
     FLSliceResult body = FLEncoder_Finish(encoder, &flErr);

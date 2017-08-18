@@ -18,6 +18,7 @@
     NSMutableArray* _array;
     NSMapTable* _changeListeners;
     BOOL _changed;
+    NSObject* _lock;
 }
 
 @synthesize swiftObject=_swiftObject;
@@ -31,13 +32,22 @@
 }
 
 
+- /* override */ (instancetype) initWithFleeceData: (nullable CBLFLArray*)data {
+    self = [super initWithFleeceData: data];
+    if (self) {
+        _lock = [[NSObject alloc] init];
+    }
+    return self;
+}
+
+
 - (instancetype) init {
     return [self initWithFleeceData: nil];
 }
 
 
 - (instancetype) initWithArray: (NSArray*)array {
-    self = [self initWithFleeceData: nil];
+    self = [self init];
     if (self) {
         [self setArray: array];
     }
@@ -59,11 +69,13 @@
 
 
 - (BOOL) booleanAtIndex: (NSUInteger)index {
-    if (!_array)
-        return [super booleanAtIndex: index];
-    else {
-        id value = _array[index];
-        return [CBLData booleanValueForObject: value];
+    CBL_LOCK(_lock) {
+        if (!_array)
+            return [super booleanAtIndex: index];
+        else {
+            id value = _array[index];
+            return [CBLData booleanValueForObject: value];
+        }
     }
 }
 
@@ -79,41 +91,49 @@
 
 
 - (double) doubleAtIndex: (NSUInteger)index {
-    if (!_array)
-        return [super doubleAtIndex: index];
-    else {
-        id value = _array[index];
-        return [$castIf(NSNumber, value) doubleValue];
+    CBL_LOCK(_lock) {
+        if (!_array)
+            return [super doubleAtIndex: index];
+        else {
+            id value = _array[index];
+            return [$castIf(NSNumber, value) doubleValue];
+        }
     }
 }
 
 
 - (float) floatAtIndex: (NSUInteger)index {
-    if (!_array)
-        return [super floatAtIndex: index];
-    else {
-        id value = _array[index];
-        return [$castIf(NSNumber, value) floatValue];
+    CBL_LOCK(_lock) {
+        if (!_array)
+            return [super floatAtIndex: index];
+        else {
+            id value = _array[index];
+            return [$castIf(NSNumber, value) floatValue];
+        }
     }
 }
 
 
 - (NSInteger) integerAtIndex: (NSUInteger)index {
-    if (!_array)
-        return [super integerAtIndex: index];
-    else {
-        id value = _array[index];
-        return [$castIf(NSNumber, value) integerValue];
+    CBL_LOCK(_lock) {
+        if (!_array)
+            return [super integerAtIndex: index];
+        else {
+            id value = _array[index];
+            return [$castIf(NSNumber, value) integerValue];
+        }
     }
 }
 
 
 - (long long) longLongAtIndex: (NSUInteger)index {
-    if (!_array)
-        return [super longLongAtIndex: index];
-    else {
-        id value = _array[index];
-        return [$castIf(NSNumber, value) longLongValue];
+    CBL_LOCK(_lock) {
+        if (!_array)
+            return [super longLongAtIndex: index];
+        else {
+            id value = _array[index];
+            return [$castIf(NSNumber, value) longLongValue];
+        }
     }
 }
 
@@ -129,35 +149,41 @@
 
 
 - (nullable id) objectAtIndex: (NSUInteger)index {
-    if (!_array) {
-        id value = [super objectAtIndex: index];
-        if ([value isKindOfClass: [CBLReadOnlyDictionary class]] ||
-            [value isKindOfClass: [CBLReadOnlyArray class]]) {
-            [self copyFleeceData];
-        } else
-            return value;
+    CBL_LOCK(_lock) {
+        if (!_array) {
+            id value = [super objectAtIndex: index];
+            if ([value isKindOfClass: [CBLReadOnlyDictionary class]] ||
+                [value isKindOfClass: [CBLReadOnlyArray class]]) {
+                [self copyFleeceData];
+            } else
+                return value;
+        }
+        return _array[index];
     }
-    return _array[index];
 }
 
 
 - (NSUInteger) count {
-    if (!_array)
-        return super.count;
-    else
-        return _array.count;
+    CBL_LOCK(_lock) {
+        if (!_array)
+            return super.count;
+        else
+            return _array.count;
+    }
 }
 
 
 - (NSArray*) toArray {
-    if (!_array)
-        [self copyFleeceData];
-    
-    NSMutableArray* array = [NSMutableArray arrayWithCapacity: _array.count];
-    for (id item in _array) {
-        [array addObject: [item cbl_toPlainObject]];
+    CBL_LOCK(_lock) {
+        if (!_array)
+            [self copyFleeceData];
+        
+        NSMutableArray* array = [NSMutableArray arrayWithCapacity: _array.count];
+        for (id item in _array) {
+            [array addObject: [item cbl_toPlainObject]];
+        }
+        return array;
     }
-    return array;
 }
 
 
@@ -215,11 +241,13 @@
 
 
 - (void) setObject: (id)value atIndex: (NSUInteger)index {
-    if (!value) value = [NSNull null]; // nil conversion only for apple platform
-    
-    id oldValue = [self objectAtIndex: index];
-    if (!$equal(value, oldValue)) {
-        [self setValue: [value cbl_toCBLObject] atIndex: index isChange: YES];
+    CBL_LOCK(_lock) {
+        if (!value) value = [NSNull null]; // nil conversion only for apple platform
+        
+        id oldValue = [self objectAtIndex: index];
+        if (!$equal(value, oldValue)) {
+            [self setValue: [value cbl_toCBLObject] atIndex: index isChange: YES];
+        }
     }
 }
 
@@ -286,12 +314,14 @@
 
 
 - (void) addObject: (id)value  {
-    if (!_array)
-        [self copyFleeceData];
-    
-    if (!value) value = [NSNull null]; // nil conversion only for apple platform
-    [_array addObject: [value cbl_toCBLObject]];
-    [self setChanged];
+    CBL_LOCK(_lock) {
+        if (!_array)
+            [self copyFleeceData];
+        
+        if (!value) value = [NSNull null]; // nil conversion only for apple platform
+        [_array addObject: [value cbl_toCBLObject]];
+        [self setChanged];
+    }
 }
 
 
@@ -354,12 +384,14 @@
 
 
 - (void) insertObject: (id)value atIndex: (NSUInteger)index {
-    if (!_array)
-        [self copyFleeceData];
-    
-    if (!value) value = [NSNull null]; // nil conversion only for apple platform
-    [_array insertObject: [value cbl_toCBLObject] atIndex: index];
-    [self setChanged];
+    CBL_LOCK(_lock) {
+        if (!_array)
+            [self copyFleeceData];
+        
+        if (!value) value = [NSNull null]; // nil conversion only for apple platform
+        [_array insertObject: [value cbl_toCBLObject] atIndex: index];
+        [self setChanged];
+    }
 }
 
 
@@ -377,8 +409,10 @@
         [result addObject: [value cbl_toCBLObject]];
     }
     
-    _array = result;
-    [self setChanged];
+    CBL_LOCK(_lock) {
+        _array = result;
+        [self setChanged];
+    }
 }
 
 
@@ -386,11 +420,13 @@
 
 
 - (void) removeObjectAtIndex:(NSUInteger)index {
-    if (!_array)
-        [self copyFleeceData];
-    
-    [_array removeObjectAtIndex: index];
-    [self setChanged];
+    CBL_LOCK(_lock) {
+        if (!_array)
+            [self copyFleeceData];
+        
+        [_array removeObjectAtIndex: index];
+        [self setChanged];
+    }
 }
 
 
@@ -401,10 +437,12 @@
                                   objects: (id __unsafe_unretained [])buffer
                                     count: (NSUInteger)len
 {
-    if (!_array)
-        return [super countByEnumeratingWithState: state objects: buffer count: len];
-    else
-        return [_array countByEnumeratingWithState: state objects: buffer count: len];
+    CBL_LOCK(_lock) {
+        if (!_array)
+            return [super countByEnumeratingWithState: state objects: buffer count: len];
+        else
+            return [_array countByEnumeratingWithState: state objects: buffer count: len];
+    }
 }
 
 
@@ -412,16 +450,10 @@
 
 
 - (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index {
-    id value = index < self.count ? [self objectAtIndex: index] : nil;
-    return [[CBLFragment alloc] initWithValue: value parent: self parentKey: @(index)];
-}
-
-
-#pragma mark - Change Listener
-
-
-- (void) objectDidChange: (id)object {
-    [self setChanged];
+    CBL_LOCK(_lock) {
+        id value = index < self.count ? [self objectAtIndex: index] : nil;
+        return [[CBLFragment alloc] initWithValue: value parent: self parentKey: @(index)];
+    }
 }
 
 
@@ -440,15 +472,17 @@
                  database: (CBLDatabase*)database
                     error: (NSError**)outError
 {
-    NSUInteger count = self.count;
-    FLEncoder_BeginArray(encoder, count);
-    for (NSUInteger i = 0; i < count; i++) {
-        id value = [self objectAtIndex: i];
-        if (![value cbl_fleeceEncode: encoder database: database error: outError])
-            return NO;
+    CBL_LOCK(_lock) {
+        NSUInteger count = self.count;
+        FLEncoder_BeginArray(encoder, count);
+        for (NSUInteger i = 0; i < count; i++) {
+            id value = [self objectAtIndex: i];
+            if (![value cbl_fleeceEncode: encoder database: database error: outError])
+                return NO;
+        }
+        FLEncoder_EndArray(encoder);
+        return YES;
     }
-    FLEncoder_EndArray(encoder);
-    return YES;
 }
 
 

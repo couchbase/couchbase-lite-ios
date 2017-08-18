@@ -21,12 +21,12 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Counting Entries
 
 /** The number of entries in the dictionary. */
-@property (readonly, nonatomic) NSUInteger count;
+@property (atomic, readonly) NSUInteger count;
 
 #pragma mark - Accessing Keys
 
 /** An array containing all keys, or an empty array if the dictionary has no entries. */
-@property (readonly, copy, nonatomic) NSArray<NSString*>* keys;
+@property (atomic, readonly, copy) NSArray<NSString*>* keys;
 
 #pragma mark - Type Setters
 

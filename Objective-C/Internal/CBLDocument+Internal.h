@@ -30,6 +30,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLDocument ()
 
+@property (atomic) CBLDictionary* dict;
+
 - (BOOL) save: (NSError**)error;
 
 - (BOOL) deleteDocument: (NSError**)error;
@@ -42,19 +44,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLReadOnlyDocument ()
 
-@property (nonatomic, nullable) CBLDatabase* database;
+@property (atomic, nullable) CBLDatabase* database;
 
-@property (nonatomic, readonly) C4Database* c4db;   // Throws assertion-failure if null
+@property (atomic, readonly) C4Database* c4db;   // Throws assertion-failure if null
 
-@property (nonatomic, nullable) CBLC4Document* c4Doc;
+@property (atomic, nullable) CBLC4Document* c4Doc;
 
-@property (nonatomic, readonly) BOOL exists;
+@property (atomic, readonly) BOOL exists;
 
-@property (nonatomic, readonly) NSString* revID;
+@property (atomic, readonly) NSString* revID;
 
-@property (nonatomic, readonly) NSUInteger generation;
+@property (atomic, readonly) NSUInteger generation;
 
-@property (nonatomic, readonly) id<CBLConflictResolver> effectiveConflictResolver;
+@property (atomic, readonly) id<CBLConflictResolver> effectiveConflictResolver;
 
 - (instancetype) initWithDatabase: (nullable CBLDatabase*)database
                        documentID: (NSString*)documentID
@@ -78,7 +80,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLDictionary ()
 
-@property (nonatomic) BOOL changed;
+@property (atomic, readonly) BOOL changed;
 
 @end
 
@@ -86,7 +88,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLReadOnlyArray ()
 
-@property (nonatomic, readonly, nullable) CBLFLArray* data;
+@property (atomic, readonly, nullable) CBLFLArray* data;
 
 - (instancetype) initWithFleeceData: (nullable CBLFLArray*)data;
 
@@ -96,9 +98,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLReadOnlyDictionary ()
 
-@property (nonatomic, nullable) CBLFLDict* data;
+@property (atomic, nullable) CBLFLDict* data;
 
-@property (nonatomic, readonly) BOOL isEmpty;
+@property (atomic, readonly) BOOL isEmpty;
+
+@property (nonatomic, readonly) NSObject* lock;
 
 - (instancetype) initWithFleeceData: (nullable CBLFLDict*)data;
 

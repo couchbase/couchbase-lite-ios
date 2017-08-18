@@ -14,10 +14,12 @@
 #import "CBLStringBytes.h"
 
 
-@implementation CBLReadOnlyDocument
+@implementation CBLReadOnlyDocument {
+    CBLC4Document* _c4Doc;
+}
 
 
-@synthesize database=_database, id=_id, c4Doc=_c4Doc;
+@synthesize database=_database, id=_id;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -66,12 +68,16 @@
 
 
 - (BOOL) isDeleted {
-    return _c4Doc != nil ? (_c4Doc.flags & kDocDeleted) != 0 : NO;
+    CBL_LOCK(self.lock) {
+        return _c4Doc != nil ? (_c4Doc.flags & kDocDeleted) != 0 : NO;
+    }
 }
 
 
 - (uint64_t) sequence {
-    return _c4Doc != nil ? _c4Doc.sequence : 0;
+    CBL_LOCK(self.lock) {
+        return _c4Doc != nil ? _c4Doc.sequence : 0;
+    }
 }
 
 
@@ -86,53 +92,72 @@
 
 
 - (void) setC4Doc: (CBLC4Document*)c4doc {
-    _c4Doc = c4doc;
+    CBL_LOCK(self.lock) {
+        _c4Doc = c4doc;
+        
+        if (c4doc) {
+            FLDict root = nullptr;
+            C4Slice body = c4doc.selectedRev.body;
+            if (body.size > 0)
+                root = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
+            self.data = [[CBLFLDict alloc] initWithDict: root datasource: c4doc database: _database];
+        } else {
+            self.data = nil;
+        }
+    }
+}
 
-    if (c4doc) {
-        FLDict root = nullptr;
-        C4Slice body = c4doc.selectedRev.body;
-        if (body.size > 0)
-            root = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
-        self.data = [[CBLFLDict alloc] initWithDict: root datasource: c4doc database: _database];
-    } else {
-        self.data = nil;
+
+- (CBLC4Document*) c4Doc {
+    CBL_LOCK(self.lock) {
+        return _c4Doc;
     }
 }
 
 
 - (BOOL) selectConflictingRevision {
-    if (!_c4Doc || !c4doc_selectNextLeafRevision(_c4Doc.rawDoc, false, true, nullptr))
-        return NO;
-    self.c4Doc = _c4Doc;     // This will update to the selected revision
-    return YES;
+    CBL_LOCK(self.lock) {
+        if (!_c4Doc || !c4doc_selectNextLeafRevision(_c4Doc.rawDoc, false, true, nullptr))
+            return NO;
+        self.c4Doc = _c4Doc;     // This will update to the selected revision
+        return YES;
+    }
 }
 
 
 - (BOOL) selectCommonAncestorOfDoc: (CBLReadOnlyDocument*)doc1
                             andDoc: (CBLReadOnlyDocument*)doc2
 {
-    CBLStringBytes rev1(doc1.revID), rev2(doc2.revID);
-    if (!_c4Doc || !c4doc_selectCommonAncestorRevision(_c4Doc.rawDoc, rev1, rev2)
-                || !c4doc_hasRevisionBody(_c4Doc.rawDoc))
-        return NO;
-    self.c4Doc = _c4Doc;     // This will update to the selected revision
-    return YES;
+    CBL_LOCK(self.lock) {
+        CBLStringBytes rev1(doc1.revID), rev2(doc2.revID);
+        if (!_c4Doc || !c4doc_selectCommonAncestorRevision(_c4Doc.rawDoc, rev1, rev2)
+            || !c4doc_hasRevisionBody(_c4Doc.rawDoc))
+            return NO;
+        self.c4Doc = _c4Doc;     // This will update to the selected revision
+        return YES;
+    }
 }
 
 
 - (NSString*) revID {
-    return _c4Doc != nil ?  slice2string(_c4Doc.rawDoc->selectedRev.revID) : nil;
+    CBL_LOCK(self.lock) {
+        return _c4Doc != nil ?  slice2string(_c4Doc.rawDoc->selectedRev.revID) : nil;
+    }
 }
 
 
 - (NSUInteger) generation {
     // CBLDocument overrides this
-    return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.rawDoc->selectedRev.revID) : 0;
+    CBL_LOCK(self.lock) {
+        return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.rawDoc->selectedRev.revID) : 0;
+    }
 }
 
 
 - (BOOL) exists {
-    return _c4Doc != nil ? (_c4Doc.flags & kDocExists) != 0 : NO;
+    CBL_LOCK(self.lock) {
+        return _c4Doc != nil ? (_c4Doc.flags & kDocExists) != 0 : NO;
+    }
 }
 
 
@@ -142,9 +167,11 @@
 
 
 - (NSData*) encode: (NSError**)outError {
-    // CBLDocument overrides this
-    fleece::slice body = _c4Doc.rawDoc->selectedRev.body;
-    return body ? body.copiedNSData() : [NSData data];
+    CBL_LOCK(self.lock) {
+        // CBLDocument overrides this
+        fleece::slice body = _c4Doc.rawDoc->selectedRev.body;
+        return body ? body.copiedNSData() : [NSData data];
+    }
 }
 
 
