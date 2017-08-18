@@ -18,52 +18,156 @@
 @implementation ConcurrentTest
 
 
-- (CBLDocument*) createDocumentWithTag: (NSString*)tag {
-    CBLDocument* doc = [[CBLDocument alloc] init];
-    
-    // Tag:
-    [doc setObject: tag forKey: @"tag"];
-    
+- (void) updateDictionary: (id <CBLDictionary>)dictionary
+                   custom: (nullable NSDictionary*)custom
+                   number: (NSUInteger)number
+{
     // String:
-    [doc setObject: @"firstName" forKey: @"Daniel"];
-    [doc setObject: @"lastName" forKey: @"Tiger"];
+    NSString* string = [NSString stringWithFormat: @"String%lu", (unsigned long)number];
+    [dictionary setObject: string forKey: @"string"];
+    
+    // Number:
+    [dictionary setObject: @(number + 1) forKey: @"integer"];
+    [dictionary setObject: @(number + 1.9) forKey: @"float"];
+    
+    // Boolean:
+    [dictionary setObject: @(YES) forKey: @"true"];
+    [dictionary setObject: @(NO) forKey: @"false"];
+    [dictionary setObject: @((number % 2) == 0) forKey: @"even"];
+    
+    // Blob:
+    NSData* data = [@"Concurrent Test" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: data];
+    [dictionary setObject: blob forKey: @"blob"];
     
     // Dictionary:
-    CBLDictionary* address = [[CBLDictionary alloc] init];
-    [address setObject: @"1 Main street" forKey: @"street"];
-    [address setObject: @"Mountain View" forKey: @"city"];
-    [address setObject: @"CA" forKey: @"state"];
-    [doc setObject: address forKey: @"address"];
+    CBLDictionary* dict = [dictionary objectForKey: @"dict"];
+    if (!dict) {
+        dict = [[CBLDictionary alloc] init];
+        [dict setObject: @"1 Main street" forKey: @"street"];
+        [dict setObject: @"Mountain View" forKey: @"city"];
+        [dict setObject: @"CA" forKey: @"state"];
+    } else {
+        NSString* street = [NSString stringWithFormat: @"%lu street.", (unsigned long)number];
+        [dict setObject: street forKey: @"street"];
+    }
+    [dictionary setObject: dict forKey: @"dict"];
+    
+    // Another Dictionary:
+    CBLDictionary* anotherDict = [[CBLDictionary alloc] init];
+    [anotherDict setObject: @"string" forKey: @"string"];
+    [anotherDict setObject: @(1.5) forKey: @"number"];
+    [anotherDict setObject: @(YES) forKey: @"boolean"];
+    [anotherDict setObject: [NSDate date] forKey: @"date"];
+    [dictionary setObject: anotherDict forKey: @"anotherDict"];
     
     // Array:
-    CBLArray* phones = [[CBLArray alloc] init];
-    [phones addObject: @"650-123-0001"];
-    [phones addObject: @"650-123-0002"];
-    [doc setObject: phones forKey: @"phones"];
+    CBLArray* array = [dictionary objectForKey: @"array"];
+    if (!array) {
+        array = [[CBLArray alloc] init];
+        [array addObject: @"650-123-0001"];
+        [array addObject: @"650-123-0002"];
+    } else {
+        NSString* nuNumber = [NSString stringWithFormat: @"650-000-%lu", (unsigned long)number];
+        [array setObject: nuNumber atIndex: 0];
+    }
+    [dictionary setObject: array forKey: @"array"];
+    
+    // Another Array:
+    CBLArray* anotherArray = [[CBLArray alloc] init];
+    [anotherArray addObject: @"string"];
+    [anotherArray addObject: @(1.5)];
+    [anotherArray addObject: @(YES)];
+    [anotherArray addObject: [NSDate date]];
+    [dictionary setObject: anotherArray forKey: @"anotherArray"];
     
     // Date:
-    [doc setObject: [NSDate date] forKey: @"updated"];
+    [dictionary setObject: [NSDate date] forKey: @"date"];
     
+    // Custom:
+    for (NSString* key in custom) {
+        [dictionary setObject: custom[key] forKey: key];
+    }
+}
+
+
+- (void) readDictionary: (id<CBLDictionary>)dictionary {
+    // String:
+    AssertNotNil([dictionary objectForKey: @"string"]);
+    AssertNotNil([dictionary stringForKey: @"string"]);
+    
+    // Number:
+    Assert([dictionary integerForKey: @"integer"] >= 1);
+    Assert([dictionary doubleForKey: @"float"] >= 1.0);
+    Assert([dictionary floatForKey: @"float"] >= 1.0f);
+    
+    // Boolean:
+    Assert([dictionary booleanForKey: @"true"]);
+    AssertFalse([dictionary booleanForKey: @"false"]);
+    Assert([dictionary objectForKey: @"even"]);
+    
+    // Blob:
+    CBLBlob* blob = [dictionary blobForKey: @"blob"];
+    NSString* blobStr = [[NSString alloc] initWithData: blob.content
+                                              encoding: NSUTF8StringEncoding];
+    Assert(blobStr.length > 0);
+    
+    // Dictionary:
+    CBLDictionary* dict = [dictionary dictionaryForKey: @"dict"];
+    AssertEqual(dict.count, 3u);
+    AssertNotNil([dict stringForKey: @"street"]);
+    AssertNotNil([dict stringForKey: @"city"]);
+    AssertNotNil([dict stringForKey: @"state"]);
+    
+    // Another Dictionary:
+    CBLDictionary* anotherDict = [dictionary dictionaryForKey: @"anotherDict"];
+    AssertEqual(anotherDict.count, 4u);
+    AssertEqualObjects([anotherDict stringForKey: @"string"], @"string");
+    AssertEqual([anotherDict doubleForKey: @"number"], 1.5);
+    Assert([anotherDict booleanForKey: @"boolean"]);
+    AssertNotNil([anotherDict dateForKey: @"date"]);
+    
+    // Array:
+    CBLArray* array = [dictionary arrayForKey: @"array"];
+    AssertEqual(array.count, 2u);
+    AssertNotNil([array stringAtIndex: 0]);
+    AssertNotNil([array stringAtIndex: 1]);
+    
+    // Another Array:
+    CBLArray* anotherArray = [dictionary arrayForKey: @"anotherArray"];
+    AssertEqual(anotherArray.count, 4u);
+    AssertEqualObjects([anotherArray objectAtIndex: 0], @"string");
+    AssertEqual([anotherArray doubleAtIndex: 1], 1.5);
+    Assert([anotherArray booleanAtIndex: 2]);
+    AssertNotNil([anotherArray dateAtIndex: 3]);
+    
+    // Date:
+    AssertNotNil([dictionary dateForKey: @"date"]);
+}
+
+
+- (CBLDocument*) createDoc {
+    CBLDocument* doc = [[CBLDocument alloc] init];
+    [self updateDictionary: doc custom: nil number: 0];
     return doc;
 }
 
 
-- (NSArray*) createDocs: (NSUInteger)nDocs tag: (NSString*)tag {
+- (NSArray*) createAndSaveDocs: (NSUInteger)nDocs  error: (NSError**)error {
     NSMutableArray* docs = [NSMutableArray arrayWithCapacity: nDocs];
     for (NSUInteger i = 0; i < nDocs; i++) {
-        CBLDocument* doc = [self createDocumentWithTag: tag];
-        NSError* error;
-        Assert([self.db saveDocument: doc error: &error], @"Error when creating docs: %@", error);
+        CBLDocument* doc = [self createDoc];
+        if (![self.db saveDocument: doc error: error])
+            return nil;
         [docs addObject: doc];
     }
     return docs;
 }
 
 
-- (BOOL) createDocs: (NSUInteger)nDocs tag: (NSString*)tag error: (NSError**)error {
-    for (NSUInteger i = 1; i <= nDocs; i++) {
-        CBLDocument* doc = [self createDocumentWithTag: tag];
-        NSLog(@"[%@] rounds: %lu saving %@", tag, (unsigned long)i, doc.id);
+- (BOOL) tryCreateAndSaveDocs: (NSUInteger)nDocs  error: (NSError**)error {
+    for (NSUInteger i = 0; i < nDocs; i++) {
+        CBLDocument* doc = [self createDoc];
         if (![self.db saveDocument: doc error: error])
             return NO;
     }
@@ -71,32 +175,44 @@
 }
 
 
-- (BOOL) updateDocs: (NSArray*)docIds rounds: (NSUInteger)rounds tag: (NSString*)tag
+- (BOOL) updateDoc: (CBLDocument*)doc
+            custom: (nullable NSDictionary*)custom
+            number: (NSUInteger)number
+             error: (NSError**)error
+{
+    [self updateDictionary: doc custom: custom number: number];
+    if (![self.db saveDocument: doc error: error]) {
+        return NO;
+    }
+    return YES;
+}
+
+
+- (BOOL) updateDocIDs: (NSArray*)docIds
+               rounds: (NSUInteger)rounds
+               custom: (nullable NSDictionary*)custom
+                error: (NSError**)error
+{
+    NSUInteger n = 0;
+    for (NSUInteger r = 0; r < rounds; r++) {
+        for (NSString* docId in docIds) {
+            CBLDocument* doc = [self.db documentWithID: docId];
+            [self updateDoc: doc custom: custom number: n++ error: error];
+        }
+    }
+    return YES;
+}
+
+
+- (BOOL) updateDocs: (NSArray*)docs
+             rounds: (NSUInteger)rounds
+             custom: (nullable NSDictionary*)custom
               error: (NSError**)error
 {
     NSUInteger n = 0;
-    for (NSUInteger r = 1; r <= rounds; r++) {
-        for (NSString* docId in docIds) {
-            CBLDocument* doc = [self.db documentWithID: docId];
-            [doc setObject: tag forKey: @"tag"];
-            
-            CBLDictionary* address = [doc dictionaryForKey: @"address"];
-            Assert(address);
-            NSString* street = [NSString stringWithFormat: @"%lu street.", (unsigned long)n];
-            [address setObject: street forKey: @"street"];
-            
-            CBLArray* phones = [doc arrayForKey: @"phones"];
-            Assert(phones.count == 2);
-            
-            NSString* phone = [NSString stringWithFormat: @"650-000-%lu", (unsigned long)n];
-            [phones setObject: phone atIndex: 0];
-            
-            [doc setObject: [NSDate date] forKey: @"updated"];
-            
-            NSLog(@"[%@] rounds: %lu updating %@", tag, (unsigned long)r, doc.id);
-            if (![self.db saveDocument: doc error: error]) {
-                return NO;
-            }
+    for (NSUInteger r = 0; r < rounds; r++) {
+        for (CBLDocument* doc in docs) {
+            [self updateDoc: doc custom: custom number: n++ error: error];
         }
     }
     return YES;
@@ -104,25 +220,22 @@
 
 
 - (void) readDocIDs: (NSArray<NSString*>*)docIDs rounds: (NSUInteger)rounds {
-    for (NSUInteger r = 1; r <= rounds; r++) {
+    for (NSUInteger r = 0; r < rounds; r++) {
         for (NSString* docID in docIDs) {
             CBLDocument* doc = [_db documentWithID: docID];
             AssertNotNil(doc);
             AssertEqualObjects(doc.id, docID);
+            [self readDictionary: doc];
         }
     }
 }
 
 
-- (void) verifyByTagName: (NSString*)name test: (void (^)(uint64_t n, CBLQueryRow *row))block {
-    CBLQueryExpression* TAG = [CBLQueryExpression property: @"tag"];
-    CBLQuerySelectResult* DOCID = [CBLQuerySelectResult expression:
-                                   [CBLQueryExpression meta].id];
-    CBLQuery* q = [CBLQuery select: @[DOCID]
+- (void) verifyWhere: (nullable CBLQueryExpression*)expr
+                test: (void (^)(uint64_t n, CBLQueryRow *row))block {
+    CBLQuery* q = [CBLQuery select: @[[CBLQuerySelectResult expression: [CBLQueryExpression meta].id]]
                               from: [CBLQueryDataSource database: self.db]
-                             where: [TAG equalTo: name]];
-    NSLog(@"%@", [q explain:nil]);
-    
+                             where: expr];
     NSError* error;
     NSEnumerator* e = [q run: &error];
     Assert(e, @"Query failed: %@", error);
@@ -133,19 +246,15 @@
 }
 
 
-- (void) verifyByTagName: (NSString*)name numRows: (NSUInteger)nRows {
-    __block NSUInteger count = 0;
-    [self verifyByTagName: name test: ^(uint64_t n, CBLQueryRow *row) {
-        count++;
-    }];
-    AssertEqual(count, nRows);
-}
-
-
-- (void) concurrentRuns: (NSUInteger)nRuns withBlock: (void (^)(NSUInteger rIndex))block {
+- (void) concurrentRuns: (NSUInteger)nRuns
+          waitUntilDone: (BOOL)wait
+              withBlock: (void (^)(NSUInteger rIndex))block
+{
+    NSMutableArray* expects = [NSMutableArray arrayWithCapacity: nRuns];
     for (NSUInteger i = 0; i < nRuns; i++) {
         NSString* name = [NSString stringWithFormat: @"Queue-%ld", (long)i];
         XCTestExpectation* exp = [self expectationWithDescription: name];
+        [expects addObject: exp];
         dispatch_queue_t queue = dispatch_queue_create([name UTF8String],  NULL);
         dispatch_async(queue, ^{
             block(i);
@@ -153,41 +262,43 @@
         });
     }
     
-    [self waitForExpectationsWithTimeout: 60.0 handler: NULL];
-}
-
-
-- (void) testConcurrentCreate {
-    const NSUInteger kNDocs = 1000;
-    const NSUInteger kNConcurrents = 10;
-    
-    [self concurrentRuns: kNConcurrents withBlock: ^(NSUInteger rIndex) {
-        NSError* error;
-        NSString* tag = [NSString stringWithFormat:@"Create%ld", (long)rIndex];
-        Assert([self createDocs: kNDocs tag: tag error: &error], @"Error creating docs: %@", error);
-    }];
-    
-    for (NSUInteger i = 0; i < kNConcurrents; i++) {
-        NSString* tag = [NSString stringWithFormat:@"Create%ld", (long)i];
-        [self verifyByTagName: tag numRows: kNDocs];
+    if (wait && expects.count > 0) {
+        [self waitForExpectations: expects timeout: 60.0];
     }
 }
 
 
-- (void) testConcurrentUpdate {
-    const NSUInteger kNDocs = 10;
-    const NSUInteger kNRounds = 10;
-    const NSUInteger kNConcurrents = 10;
+#pragma mark - Database
+
+
+- (void) testConcurrentCreateDocs {
+    const NSUInteger kNDocs = 100;
+    const NSUInteger kNConcurrents = 5;
     
-    NSArray* docs = [self createDocs: kNDocs tag: @"Create"];
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
+        NSError* error;
+        Assert([self createAndSaveDocs: kNDocs error: &error],
+               @"Error creating docs: %@", error);
+    }];
+    
+    AssertEqual(self.db.count, kNDocs * kNConcurrents);
+}
+
+
+- (void) testConcurrentUpdateSeperateDocInstances {
+    const NSUInteger kNDocs = 1;
+    const NSUInteger kNRounds = 100;
+    const NSUInteger kNConcurrents = 5;
+    
+    NSArray* docs = [self createAndSaveDocs: kNDocs error: nil];
     NSArray* docIDs = [docs my_map: ^id(CBLDocument* doc) {
         return doc.id;
     }];
     
-    [self concurrentRuns: kNConcurrents withBlock: ^(NSUInteger rIndex) {
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         NSString* tag = [NSString stringWithFormat:@"Update%ld", (long)rIndex];
         NSError* error;
-        Assert([self updateDocs: docIDs rounds: kNRounds tag: tag error: &error],
+        Assert([self updateDocIDs: docIDs rounds: kNRounds custom: @{@"tag": tag} error: &error],
                @"Error updating doc: %@", error);
     }];
     
@@ -195,7 +306,8 @@
     
     for (NSUInteger i = 0; i < kNConcurrents; i++) {
         NSString* tag = [NSString stringWithFormat:@"Update%ld", (long)i];
-        [self verifyByTagName: tag test:^(uint64_t n, CBLQueryRow *row) {
+        CBLQueryExpression* expr = [[CBLQueryExpression property: @"tag"] equalTo: tag];
+        [self verifyWhere: expr test: ^(uint64_t n, CBLQueryRow *row) {
             count++;
         }];
     }
@@ -204,81 +316,83 @@
 }
 
 
-- (void) testConcurrentRead {
-    const NSUInteger kNDocs = 10;
+// Enable when CBLDictionary is thread safe:
+- (void) testConcurrentUpateDocs {
+    const NSUInteger kNDocs = 1;
+    const NSUInteger kNRounds = 1;
+    const NSUInteger kNConcurrents = 1;
+    
+    NSArray* docs = [self createAndSaveDocs: kNDocs error: nil];
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
+        NSError* error;
+        Assert([self updateDocs: docs rounds: kNRounds custom: nil error: &error],
+               @"Error when updating docs: %@", error);
+    }];
+    
+    // Verify:
+    NSArray* docIDs = [docs my_map: ^id(CBLDocument* doc) {
+        return doc.id;
+    }];
+    [self readDocIDs: docIDs rounds: kNRounds];
+}
+
+
+- (void) _testConcurrentGetDocs {
+    const NSUInteger kNDocs = 1;
     const NSUInteger kNRounds = 100;
-    const NSUInteger kNConcurrents = 10;
-   
-    NSArray* docs = [self createDocs: kNDocs tag: @"Create"];
+    const NSUInteger kNConcurrents = 5;
+    
+    NSArray* docs = [self createAndSaveDocs: kNDocs error: nil];
     NSArray* docIDs = [docs my_map: ^id(CBLDocument* doc) {
         return doc.id;
     }];
     
-    [self concurrentRuns: kNConcurrents withBlock: ^(NSUInteger rIndex) {
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         [self readDocIDs: docIDs rounds: kNRounds];
     }];
 }
 
 
-- (void) testConcurrentDelete {
-    const NSUInteger kNDocs = 1000;
+- (void) testConcurrentDeleteDocs {
+    const NSUInteger kNDocs = 5;
+    const NSUInteger kNConcurrents = 5;
     
-    NSArray* docs = [self createDocs: kNDocs tag: @"Create"];
-    AssertEqual(docs.count, kNDocs);
-    
-    XCTestExpectation* exp1 = [self expectationWithDescription: @"Delete1"];
-    dispatch_queue_t queue1 = dispatch_queue_create("Delete1",  NULL);
-    dispatch_async(queue1, ^{
+    NSArray* docs = [self createAndSaveDocs: kNDocs error: nil];
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         for (CBLDocument* doc in docs) {
             NSError* error;
             Assert([self.db deleteDocument: doc error: &error], @"Error when delete: %@", error);
         }
-        [exp1 fulfill];
-    });
+    }];
     
-    XCTestExpectation* exp2 = [self expectationWithDescription: @"Delete2"];
-    dispatch_queue_t queue2 = dispatch_queue_create("Delete2",  NULL);
-    dispatch_async(queue2, ^{
-        for (CBLDocument* doc in docs) {
-            NSError* error;
-            Assert([self.db deleteDocument: doc error: &error], @"Error when delete: %@", error);
-        }
-        [exp2 fulfill];
-    });
-    
-    [self waitForExpectationsWithTimeout: 60.0 handler: NULL];
     AssertEqual(self.db.count, 0u);
 }
 
 
 - (void) testConcurrentInBatch {
-    const NSUInteger kNDocs = 1000;
-    const NSUInteger kNConcurrents = 10;
+    const NSUInteger kNDocs = 100;
+    const NSUInteger kNConcurrents = 5;
     
-    [self concurrentRuns: kNConcurrents withBlock: ^(NSUInteger rIndex) {
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         NSError* error;
-        [self.db inBatch: &error do:^{
-            NSString* tag = [NSString stringWithFormat:@"Create%ld", (long)rIndex];
+        [self.db inBatch: &error do: ^{
             NSError* err;
-            Assert([self createDocs: kNDocs tag: tag error: &err], @"Error creating docs: %@", err);
+            Assert([self createAndSaveDocs: kNDocs error: &err],
+                   @"Error creating docs: %@", err);
         }];
     }];
     
-    for (NSUInteger i = 0; i < kNConcurrents; i++) {
-        NSString* tag = [NSString stringWithFormat:@"Create%ld", (long)i];
-        [self verifyByTagName: tag numRows: kNDocs];
-    }
+    AssertEqual(self.db.count, kNDocs * kNConcurrents);
 }
 
 
-- (void) testConcurrentPurge {
-    const NSUInteger kNDocs = 1000;
-    const NSUInteger kNConcurrents = 10;
+- (void) testConcurrentPurgeDocs {
+    const NSUInteger kNDocs = 100;
+    const NSUInteger kNConcurrents = 5;
     
-    NSArray* docs = [self createDocs: kNDocs tag: @"Create"];
-    AssertEqual(docs.count, kNDocs);
+    NSArray* docs = [self createAndSaveDocs: kNDocs error: nil];
     
-    [self concurrentRuns: kNConcurrents withBlock: ^(NSUInteger rIndex) {
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         for (CBLDocument* doc in docs) {
             NSError* error;
             if (![self.db purgeDocument: doc error: &error])
@@ -290,13 +404,12 @@
 
 
 - (void) testConcurrentCompact {
-    const NSUInteger kNDocs = 1000;
+    const NSUInteger kNDocs = 100;
     const NSUInteger kNRounds = 10;
-    const NSUInteger kNConcurrents = 10;
+    const NSUInteger kNConcurrents = 5;
     
-    [self createDocs: kNDocs tag: @"Create"];
-    
-    [self concurrentRuns: kNConcurrents withBlock: ^(NSUInteger rIndex) {
+    [self createAndSaveDocs: kNDocs error: nil];
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         for (NSUInteger i = 0; i < kNRounds; i++) {
             NSError* error;
             Assert([self.db compact: &error], @"Error when compact: %@", error);
@@ -305,69 +418,70 @@
 }
 
 
-- (void) testConcurrentCreateAndCloseDB {
+- (void) testConcurrentCreateDocsAndCloseDB {
     const NSUInteger kNDocs = 1000;
+    const NSUInteger kNConcurrents = 1;
     
-    NSString* tag1 = @"Create";
-    XCTestExpectation* exp1 = [self expectationWithDescription: tag1];
-    dispatch_queue_t queue1 = dispatch_queue_create([tag1 UTF8String],  NULL);
-    dispatch_async(queue1, ^{
+    __block BOOL hasException = NO;
+    [self concurrentRuns: kNConcurrents waitUntilDone: NO withBlock: ^(NSUInteger rIndex) {
         ++gC4ExpectExceptions;
-        XCTAssertThrowsSpecificNamed([self createDocs: kNDocs tag: tag1 error: nil],
-                                     NSException, NSInternalInconsistencyException);
+        @try {
+            [self tryCreateAndSaveDocs: kNDocs error: nil];
+        }
+        @catch(NSException* exception) {
+            AssertEqualObjects(exception.name, @"NSInternalInconsistencyException");
+            hasException = YES;
+        }
         --gC4ExpectExceptions;
-        [exp1 fulfill];
-    });
-    
-    // Sleep for 0.1 seconds:
-    [NSThread sleepForTimeInterval: 0.1];
+    }];
     
     NSError* error;
     Assert([self.db close: &error], @"Error when closing the database: %@", error);
-    
     [self waitForExpectationsWithTimeout: 60.0 handler: NULL];
+    
+    Assert(hasException);
 }
 
 
-- (void) testConcurrentCreateAndDeleteDB {
+- (void) testConcurrentCreateDocsAndDeleteDB {
     const NSUInteger kNDocs = 1000;
+    const NSUInteger kNConcurrents = 1;
     
-    NSString* tag1 = @"Create";
-    XCTestExpectation* exp1 = [self expectationWithDescription: tag1];
-    dispatch_queue_t queue1 = dispatch_queue_create([tag1 UTF8String],  NULL);
-    dispatch_async(queue1, ^{
+    __block BOOL hasException = NO;
+    [self concurrentRuns: kNConcurrents waitUntilDone: NO withBlock: ^(NSUInteger rIndex) {
         ++gC4ExpectExceptions;
-        XCTAssertThrowsSpecificNamed([self createDocs: kNDocs tag: tag1 error: nil],
-                                     NSException, NSInternalInconsistencyException);
+        @try {
+            [self tryCreateAndSaveDocs: kNDocs error: nil];
+        }
+        @catch(NSException* exception) {
+            AssertEqualObjects(exception.name, @"NSInternalInconsistencyException");
+            hasException = YES;
+        }
         --gC4ExpectExceptions;
-        [exp1 fulfill];
-    });
-    
-    // Sleep for 0.1 seconds:
-    [NSThread sleepForTimeInterval: 0.1];
+    }];
     
     NSError* error;
-    Assert([self.db deleteDatabase: &error], @"Error when closing the database: %@", error);
-    
+    Assert([self.db deleteDatabase: &error], @"Error when deleting the database: %@", error);
     [self waitForExpectationsWithTimeout: 60.0 handler: NULL];
+    
+    Assert(hasException);
 }
 
 
 - (void) testDatabaseChange {
     XCTestExpectation* exp1 = [self expectationWithDescription: @"Create"];
     XCTestExpectation* exp2 = [self expectationWithDescription: @"Change"];
-    [self.db addChangeListener:^(CBLDatabaseChange *change) {
-        [self waitForExpectations: @[exp1] timeout: 20.0]; // Test deadlock
+    [self.db addChangeListener: ^(CBLDatabaseChange *change) {
+        [self waitForExpectations: @[exp1] timeout: 5.0]; // Test deadlock
         [exp2 fulfill];
     }];
     
-    dispatch_queue_t queue1 = dispatch_queue_create("Create",  NULL);
-    dispatch_async(queue1, ^{
+    [self concurrentRuns: 1 waitUntilDone: NO withBlock: ^(NSUInteger rIndex) {
         [_db saveDocument: [[CBLDocument alloc] initWithID: @"doc1"]  error: nil];
         [exp1 fulfill];
-    });
+    }];
     
-    [self waitForExpectationsWithTimeout: 10.0 handler: NULL];
+    [self waitForExpectationsWithTimeout: 10.0 handler:^(NSError * _Nullable error) { }];
 }
 
 
@@ -375,18 +489,215 @@
     XCTestExpectation* exp1 = [self expectationWithDescription: @"Create"];
     XCTestExpectation* exp2 = [self expectationWithDescription: @"Change"];
     [self.db addChangeListenerForDocumentID: @"doc1" usingBlock:^(CBLDocumentChange *change) {
-        [self waitForExpectations: @[exp1] timeout: 20.0]; // Test deadlock
+        [self waitForExpectations: @[exp1] timeout: 5.0]; // Test deadlock
         [exp2 fulfill];
     }];
     
-    dispatch_queue_t queue1 = dispatch_queue_create("Create",  NULL);
-    dispatch_async(queue1, ^{
+    [self concurrentRuns: 1 waitUntilDone: NO withBlock: ^(NSUInteger rIndex) {
         [_db saveDocument: [[CBLDocument alloc] initWithID: @"doc1"]  error: nil];
         [exp1 fulfill];
-    });
+    }];
     
-    [self waitForExpectationsWithTimeout: 10.0 handler: NULL];
+    [self waitForExpectationsWithTimeout: 10.0 handler:^(NSError * _Nullable error) { }];
 }
 
 
+#pragma mark - Dictionary
+
+
+- (void) updateDictionary: (CBLDictionary*)dict rounds: (NSUInteger)rounds  {
+    for (NSUInteger r = 0; r < rounds; r++) {
+        [self updateDictionary: dict custom: nil number: r];
+    }
+}
+
+
+- (void) readDictionary: (CBLDictionary*)dict rounds: (NSUInteger)rounds {
+    for (NSUInteger r = 1; r <= rounds; r++) {
+        [self readDictionary: dict];
+    }
+}
+
+
+// Enable when CBLDictionary is thread safe:
+- (void) _testConcurrentUpdateNewDictionary {
+    const NSUInteger kNRounds = 100;
+    const NSUInteger kNConcurrents = 10;
+    
+    __block CBLDictionary* dict = [[CBLDictionary alloc] init];
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
+        [self updateDictionary: dict rounds:kNRounds];
+    }];
+    
+    // Verify:
+    [self readDictionary: dict rounds: 1];
+}
+
+
+// Enable when CBLDictionary is thread safe:
+- (void) _testConcurrentUpdateExistingDictionary {
+    const NSUInteger kNRounds = 100;
+    const NSUInteger kNConcurrents = 10;
+    
+    CBLDictionary* dict = [[CBLDictionary alloc] init];
+    [self updateDictionary: dict rounds: 1];
+    
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    [doc setObject: dict forKey: @"dict"];
+    [self saveDocument: doc];
+    
+    doc = [self.db documentWithID: @"doc1"];
+    dict = [doc dictionaryForKey: @"dict"];
+    Assert(dict);
+    
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
+        [self updateDictionary: dict rounds:kNRounds];
+    }];
+    
+    // Verify:
+    [self readDictionary: dict rounds: 1];
+}
+
+
+- (void) _testConcurrentReadNewDictionary {
+    const NSUInteger kNRounds = 100;
+    const NSUInteger kNConcurrents = 10;
+    
+    CBLDictionary* dict = [[CBLDictionary alloc] init];
+    [self updateDictionary: dict rounds: 1];
+    
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
+        [self readDictionary: dict rounds: kNRounds];
+    }];
+}
+
+
+- (void) _testConcurrentReadExistingDictionary {
+    const NSUInteger kNRounds = 100;
+    const NSUInteger kNConcurrents = 10;
+    
+    CBLDictionary* dict = [[CBLDictionary alloc] init];
+    [self updateDictionary: dict rounds: 1];
+    
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    [doc setObject: dict forKey: @"dict"];
+    [self saveDocument: doc];
+    
+    doc = [self.db documentWithID: @"doc1"];
+    dict = [doc dictionaryForKey: @"dict"];
+    Assert(dict);
+    
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
+        [self readDictionary: dict rounds: kNRounds];
+    }];
+}
+
+
+#pragma mark - Array
+
+
+- (void) updateArray: (CBLArray*)array rounds: (NSUInteger)rounds  {
+    for (NSUInteger r = 0; r < rounds; r++) {
+        [array addObject: @"an added string"];
+        [array insertObject: @"an inserted string" atIndex: 0];
+        [array removeObjectAtIndex: 0];
+    }
+}
+
+
+- (void) readArray: (CBLArray*)array rounds: (NSUInteger)rounds {
+    for (NSUInteger r = 0; r < rounds; r++) {
+        NSUInteger count = array.count;
+        Assert(count > 0); // Assume something in there
+        
+        for (NSUInteger i = 0; i < count; i++) {
+            Assert([array objectAtIndex: i]);
+        }
+        
+        NSUInteger nums = 0;
+        for (id obj in array) {
+            Assert(obj);
+            nums++;
+        }
+        AssertEqual(nums, count);
+    }
+}
+
+
+// Enable when CBLArray is thread safe:
+- (void) _testConcurrentUpdateNewArray {
+    const NSUInteger kNRounds = 100;
+    const NSUInteger kNConcurrents = 10;
+    
+    CBLArray* array = [[CBLArray alloc] init];
+    [array addObject: @"a string"];
+    
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
+        [self updateArray: array rounds: kNRounds];
+    }];
+    
+    AssertEqual(array.count, (1 + kNRounds * kNConcurrents));
+}
+
+
+// Enable when CBLArray is thread safe:
+- (void) _testConcurrentUpdateExistingArray {
+    const NSUInteger kNRounds = 100;
+    const NSUInteger kNConcurrents = 10;
+    
+    CBLArray* array = [[CBLArray alloc] init];
+    [self updateArray: array rounds: 1];
+    
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    [doc setObject: array forKey: @"array"];
+    [self saveDocument: doc];
+    
+    doc = [self.db documentWithID: @"doc1"];
+    array = [doc arrayForKey: @"array"];
+    Assert(array);
+    
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
+        [self updateArray: array rounds: kNRounds];
+    }];
+    
+    AssertEqual(array.count, (1 + kNRounds * kNConcurrents));
+}
+
+
+// Enable when CBLArray is thread safe:
+- (void) _testConcurrentReadNewArray {
+    const NSUInteger kNRounds = 100;
+    const NSUInteger kNConcurrents = 10;
+    
+    CBLArray* array = [[CBLArray alloc] init];
+    [self updateArray: array rounds: 100];
+    
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
+        [self readArray: array rounds: kNRounds];
+    }];
+}
+
+
+// Enable when CBLArray is thread safe:
+- (void) _testConcurrentReadExistingArray {
+    const NSUInteger kNRounds = 100;
+    const NSUInteger kNConcurrents = 10;
+    
+    CBLArray* array = [[CBLArray alloc] init];
+    [self updateArray: array rounds: 100];
+    
+    CBLDocument* doc = [self createDocument: @"doc1"];
+    [doc setObject: array forKey: @"array"];
+    [self saveDocument: doc];
+    
+    doc = [self.db documentWithID: @"doc1"];
+    array = [doc arrayForKey: @"array"];
+    Assert(array);
+    
+    [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
+        [self readArray: array rounds: kNRounds];
+    }];
+}
+
 @end
+
