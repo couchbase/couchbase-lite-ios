@@ -114,20 +114,18 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
         case kFLDict: {
             FLDict dict = FLValue_AsDict(value);
             CBLStringBytes typeKey(kCBLDictionaryTypeKey);
-            cbl::SharedKeys sk = database.sharedKeys;
-            FLSlice type = FLValue_AsString(FLDict_GetSharedKey(dict, typeKey, &sk));
+            FLSlice type = FLValue_AsString(FLDict_GetValue(dict, typeKey, database.sharedKeys));
             if(!type.buf) {
                 id flData = [[CBLFLDict alloc] initWithDict: dict
                                                  datasource: datasource database: database];
                 return [[CBLReadOnlyDictionary alloc] initWithFleeceData: flData];
             } else {
-                id result = FLValue_GetNSObject(value, &sk);
+                id result = FLValue_GetNSObject(value, database.sharedKeys);
                 return [self dictionaryToCBLObject: result database: database];
             }
         }
         default: {
-            cbl::SharedKeys sk = database.sharedKeys;
-            return FLValue_GetNSObject(value, &sk);
+            return FLValue_GetNSObject(value, database.sharedKeys);
         }
     }
 }

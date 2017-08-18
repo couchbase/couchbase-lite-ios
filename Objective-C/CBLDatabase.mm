@@ -95,6 +95,7 @@ static NSString* defaultDirectory() {
     CBLPredicateQuery* _allDocsQuery;
     
     C4Database* _c4db;
+    cbl::SharedKeys _sharedKeys;
     
     C4DatabaseObserver* _dbObs;
     NSMutableSet* _dbChangeListeners;
@@ -107,7 +108,6 @@ static NSString* defaultDirectory() {
 
 
 @synthesize name=_name;
-@synthesize sharedKeys=_sharedKeys;
 @synthesize replications=_replications, activeReplications=_activeReplications;
 
 
@@ -541,6 +541,11 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     CBL_LOCK(_lock) {
         return _c4db;
     }
+}
+
+
+- (cbl::SharedKeys*) sharedKeys {
+    return &_sharedKeys;
 }
 
 

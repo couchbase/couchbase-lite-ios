@@ -18,7 +18,6 @@
 @implementation CBLReadOnlyArray {
     CBLFLArray* _data;
     FLArray _array;
-    cbl::SharedKeys _sharedKeys;
 }
 
 
@@ -29,7 +28,6 @@
     if (self) {
         _data = data;
         _array = _data.array;
-        _sharedKeys = _data.database.sharedKeys;
     }
     return self;
 }
@@ -105,7 +103,7 @@
 
 - (NSArray*) toArray {
     if (_array != nullptr)
-        return FLValue_GetNSObject((FLValue)_array, &_sharedKeys);
+        return FLValue_GetNSObject((FLValue)_array, _data.database.sharedKeys);
     else
         return @[];
 }
@@ -164,8 +162,7 @@
                  database: (CBLDatabase*)database
                     error: (NSError**)outError
 {
-    
-    return FLEncoder_WriteValueWithSharedKeys(encoder, (FLValue)_array, _sharedKeys);
+    return FL_WriteValue(encoder, (FLValue)_array, database.sharedKeys);
 }
 
 
@@ -176,7 +173,8 @@
     FLValue value = FLArray_Get(_array, (uint)index);
     if (value != nullptr)
         return [CBLData fleeceValueToObject: value
-                                 datasource: _data.datasource database: _data.database];
+                                 datasource: _data.datasource
+                                   database: _data.database];
     else
         return nil;
 }

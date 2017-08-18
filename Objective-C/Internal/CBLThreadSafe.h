@@ -10,9 +10,16 @@
 #define CBLThreadSafe_h
 
 #if CBL_THREADSAFE
-#define CBL_LOCK(m) @synchronized(m)
+#if DEBUG
+#define CBL_LOCK(m) assert(m); @synchronized(m)
 #else
-#define CBL_LOCK(m) 
+#define CBL_LOCK(m) @synchronized(m)
+#endif
+
+#define CBL_LOCK_GUARD(m) std::lock_guard<std::mutex> lock(m);
+#else
+#define CBL_LOCK(m)
+#define CBL_LOCK_GUARD(m)
 #endif
 
 #endif /* CBLThreadSafe_h */

@@ -42,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (atomic, readonly) NSMutableSet* activeReplications;
 
 #ifdef __cplusplus
-@property (atomic, readonly) cbl::SharedKeys sharedKeys;
+@property (atomic, readonly) cbl::SharedKeys* sharedKeys;
 #endif
 
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;

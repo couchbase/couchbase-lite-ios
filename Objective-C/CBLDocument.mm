@@ -383,7 +383,7 @@ static bool dictionaryContainsBlob(__unsafe_unretained CBLDictionary* dict) {
         }
         bodySlice = data2slice(body);
         auto root = FLValue_FromTrustedData(bodySlice);
-        if (c4doc_dictContainsBlobs((FLDict)root, self.database.sharedKeys))
+        if (C4Doc_ContainsBlobs((FLDict)root, self.database.sharedKeys))
             revFlags |= kRevHasAttachments;
     }
     

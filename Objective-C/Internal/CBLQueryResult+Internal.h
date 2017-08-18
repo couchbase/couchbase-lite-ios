@@ -14,6 +14,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQueryResult ()
 
+@property (nonatomic, readonly) CBLDatabase* database;
+
 - (instancetype) initWithResultSet: (CBLQueryResultSet*)rs
                       c4Enumerator: (C4QueryEnumerator*)e;
 
