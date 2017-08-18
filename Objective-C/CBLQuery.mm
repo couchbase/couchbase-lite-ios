@@ -556,9 +556,13 @@
         } else if ([exp isKindOfClass: [NSString class]]) {
             NSExpression* e = [NSExpression expressionWithFormat: exp argumentArray: @[]];
             id encoded = [CBLPredicateQuery encodeExpression: e aggregate: NO error: outError];
+            if (!encoded)
+                return nil;
             [json addObject: encoded];
         } else if ([exp isKindOfClass: [NSExpression class]]) {
             id encoded = [CBLPredicateQuery encodeExpression: exp aggregate: NO error: outError];
+            if (!encoded)
+                return nil;
             [json addObject: encoded];
         }
     }
