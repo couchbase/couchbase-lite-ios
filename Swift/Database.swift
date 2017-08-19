@@ -39,11 +39,8 @@ public struct DatabaseConfiguration {
     /// A nil value (the default) means to use the default directory, in Application Support. You
     /// won't usually need to change this.
     public var directory: String? {
-        mutating get {
-            if _directory == nil {
-                _directory = CBLDatabaseConfiguration().directory
-            }
-            return _directory
+        get {
+            return _directory ?? CBLDatabaseConfiguration().directory
         }
         set {
             _directory = newValue
@@ -322,7 +319,24 @@ public final class Database {
     public class func exists(_ name: String, inDirectory directory: String? = nil) -> Bool {
         return CBLDatabase.databaseExists(name, inDirectory: directory)
     }
-
+    
+    
+    /// Copies a canned databaes from the given path to a new database with the given name and
+    /// the configuration. The new database will be created at the directory specified in the
+    /// configuration. Without given the database configuration, the default configuration that
+    /// is equivalent to setting all properties in the configuration to nil will be used.
+    ///
+    /// - Parameters:
+    ///   - path: The source database path.
+    ///   - name: The new database name to be created.
+    ///   - config: The database configuration for the new database name.
+    /// - Throws: An error on a failure.
+    public class func copy(fromPath path: String, toDatabase name: String,
+                           config: DatabaseConfiguration?) throws
+    {
+        try CBLDatabase.copy(fromPath: path, toDatabase: name, config: config?.toImpl())
+    }
+    
     
     // MARK: Internal
     

@@ -1234,4 +1234,62 @@
 }
 
 
+- (void) testCopy {
+    for (NSUInteger i = 0; i < 10; i++) {
+        NSString* docID = [NSString stringWithFormat: @"doc%lu", (unsigned long)i];
+        CBLDocument* doc = [self createDocument: docID];
+        [doc setObject: docID forKey: @"name"];
+        
+        NSData* data = [docID dataUsingEncoding: NSUTF8StringEncoding];
+        CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: data];
+        [doc setObject: blob forKey: @"data"];
+        
+        [self saveDocument: doc];
+    }
+    
+    NSString* dbName = @"nudb";
+    CBLDatabaseConfiguration* config = _db.config;
+    NSString* dir = config.directory;
+    
+    // Make sure no an existing database at the new location:
+    Assert([CBLDatabase deleteDatabase: dbName inDirectory: dir error: nil]);
+    
+    // Copy:
+    NSError* error;
+    Assert([CBLDatabase copyFromPath: _db.path toDatabase: dbName config: config error: &error],
+           @"Error when copying the database: %@", error);
+    
+    // Verify:
+    Assert([CBLDatabase databaseExists: dbName inDirectory: dir]);
+    CBLDatabase* nudb = [[CBLDatabase alloc] initWithName: dbName config: config  error: &error];
+    Assert(nudb, @"Cannot open the new database: %@", error);
+    AssertEqual(nudb.count, 10u);
+    
+    CBLQueryExpression* DOCID = [CBLQueryExpression meta].id;
+    CBLQuerySelectResult* S_DOCID = [CBLQuerySelectResult expression: DOCID];
+    CBLQuery* query = [CBLQuery select: @[S_DOCID]
+                                  from: [CBLQueryDataSource database: nudb]];
+    CBLQueryResultSet* rs = [query run: &error];
+    
+    for (CBLQueryResult* r in rs) {
+        NSString* docID = [r stringAtIndex: 0];
+        Assert(docID);
+        
+        CBLDocument* doc = [nudb documentWithID: docID];
+        Assert(doc);
+        AssertEqualObjects([doc stringForKey:@"name"], docID);
+        
+        CBLBlob* blob = [doc blobForKey: @"data"];
+        Assert(blob);
+        
+        NSString* data = [[NSString alloc] initWithData: blob.content encoding: NSUTF8StringEncoding];
+        AssertEqualObjects(data, docID);
+    }
+    
+    // Clean up:
+    Assert([nudb close: nil]);
+    Assert([CBLDatabase deleteDatabase: dbName inDirectory: dir error: nil]);
+}
+
+
 @end

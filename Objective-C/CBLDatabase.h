@@ -119,7 +119,7 @@ typedef struct {
 
 /**
  Initializes a Couchbase Lite database with a given name and database configuration.
- If the database does not yet exist, it will be created, unless the `readOnly` option is used.
+ If the database does not yet exist, it will be created.
  
  @param name The name of the database. May NOT contain capital letters!
  @param config The database configuration, or nil for the default configuration.
@@ -288,6 +288,24 @@ typedef struct {
  */
 + (BOOL) databaseExists: (NSString*)name
             inDirectory: (nullable NSString*)directory;
+
+
+/**
+ Copies a canned databaes from the given path to a new database with the given name and
+ the configuration. The new database will be created at the directory specified in the
+ configuration. Without given the database configuration, the default configuration that
+ is equivalent to setting all properties in the configuration to nil will be used.
+ 
+ @param path The source database path.
+ @param name The new database name to be created.
+ @param config The database configuration for the new database.
+ @param error On return, the error if any.
+ @return True on success, false on failure.
+ */
++ (BOOL) copyFromPath: (NSString*)path
+           toDatabase: (NSString*)name
+               config: (nullable CBLDatabaseConfiguration*)config
+                error: (NSError**)error;
 
 
 #pragma mark - Change Listener
