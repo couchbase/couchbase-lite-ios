@@ -13,8 +13,10 @@
 
 using namespace std::chrono;
 
-#define PROFILING 0
-#define VERBOSE   0
+#define PROFILING 1
+#define VERBOSE   1
+
+#define VerboseLog(LEVEL, FORMAT, ...) if (VERBOSE < LEVEL) { } else NSLog(FORMAT, ##__VA_ARGS__)
 
 #if PROFILING
 static constexpr int kNumIterations = 1;
@@ -77,7 +79,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
             [self pause];
             numAlbums = [self queryAlbums: _queryAlbumsBench];
             [self pause];
-            
+
             [self createArtistsIndex];
             [self pause];
 
@@ -122,10 +124,12 @@ static constexpr auto kInterTestSleep = milliseconds(0);
 
 /** Adds all the tracks to the database. */
 - (unsigned) importLibrary {
+    @autoreleasepool {
     NSArray* keysToCopy = nil; /*@[@"Name", @"Artist", @"Album", @"Genre", @"Year", @"Total Time", @"Track Number", @"Compilation"];*/
 
     _importBench.start();
     _documentCount = 0;
+    __block CFAbsoluteTime startTransaction;
     BOOL ok = [self.db inBatch: NULL do: ^{
         for (NSDictionary* track in _tracks) {
             NSString* trackType = track[@"Track Type"];
@@ -158,13 +162,14 @@ static constexpr auto kInterTestSleep = milliseconds(0);
                     Assert(NO, @"Couldn't save doc: %@", error);
             }
         }
+        startTransaction = CFAbsoluteTimeGetCurrent();
     }];
-    _importBench.stop();
+    double commitTime = CFAbsoluteTimeGetCurrent() - startTransaction;
+    double t = _importBench.stop();
     Assert(ok, @"Batch operation failed");
-#if VERBOSE >= 1
-    NSLog(@"Imported %u documents", (unsigned)_documentCount);
-#endif
+    VerboseLog(1, @"Imported %u documents in %.06f sec (import %g, commit %g)", (unsigned)_documentCount, t, t - commitTime, commitTime);
     return (unsigned)_documentCount;
+    }
 }
 
 
@@ -177,6 +182,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
 
 // Increments the "Play Count" property of every document in the database.
 - (unsigned) updatePlayCounts {
+    @autoreleasepool {
     _updatePlayCountBench.start();
     __block unsigned count = 0;
     BOOL ok = [self.db inBatch: NULL do: ^{
@@ -189,19 +195,20 @@ static constexpr auto kInterTestSleep = milliseconds(0);
             }
         }
     }];
-    _updatePlayCountBench.stop();
+    double t = _updatePlayCountBench.stop();
     Assert(ok, @"Batch operation failed");
-#if VERBOSE >= 1
-    NSLog(@"Updated %u documents' playCount", count);
-#endif
+    VerboseLog(1, @"Updated %u documents' playCount in %.06f sec", count, t);
     return count;
+    }
 }
 
 
 // Strips "The " from the names of all artists.
 - (unsigned) updateArtistNames {
+    @autoreleasepool {
     _updateArtistsBench.start();
     __block unsigned count = 0;
+    __block CFAbsoluteTime startTransaction;
     BOOL ok = [self.db inBatch: NULL do: ^{
         for (CBLDocument* doc in self.db.allDocuments) {
             @autoreleasepool {
@@ -213,80 +220,87 @@ static constexpr auto kInterTestSleep = milliseconds(0);
                 }
             }
         }
+        startTransaction = CFAbsoluteTimeGetCurrent();
     }];
-    _updateArtistsBench.stop();
+    double commitTime = CFAbsoluteTimeGetCurrent() - startTransaction;
+    double t = _updateArtistsBench.stop();
+    VerboseLog(1, @"Updated %u docs in %.06f sec (update %g, commit %g)", count, t, t - commitTime, commitTime);
     Assert(ok, @"Batch operation failed");
     return count;
+    }
 }
 
 
 // Subroutine that runs a query and returns an array of the first 'returning' property
 - (NSArray*) collectQueryResults: (CBLPredicateQuery*)query {
-    NSMutableArray* results = [NSMutableArray array];
-    NSError* error = nil;
-    for (CBLQueryRow* row in [query run: &error])
-        [results addObject: row[0]];
-    Assert(!error, @"Query failed: %@", error);
-    return results;
+    @autoreleasepool {
+        NSMutableArray* results = [NSMutableArray array];
+        NSError* error = nil;
+        for (CBLQueryRow* row in [query run: &error])
+            [results addObject: row[0]];
+        Assert(!error, @"Query failed: %@", error);
+        return results;
+    }
 }
 
 
 // Collects the names of all artists in the database using a query.
 - (unsigned) queryAllArtists: (Benchmark&)bench {
+    @autoreleasepool {
     CBLPredicateQuery* query = [self.db createQueryWhere: @"Artist != nil && Compilation == nil"];
     query.returning = @[@"Artist"];
     query.groupBy = @[@"Artist[cd]"];
     query.orderBy = @[@"Artist[cd]"];
 
     Assert([query check: NULL]);
-#if VERBOSE >= 2
-    NSLog(@"%@", [query explain: NULL]);
-#endif
+    VerboseLog(2, @"%@", [query explain: NULL]);
     bench.start();
     _artists = [self collectQueryResults: query];
-    bench.stop();
-#if VERBOSE >= 2
-    NSLog(@"%u artists:\n'%@'", (unsigned)_artists.count, [_artists componentsJoinedByString: @"'\n'"]);
-#elif VERBOSE >= 1
-    NSLog(@"%u artists, from %@ to %@", (unsigned)_artists.count, _artists.firstObject, _artists.lastObject);
-#endif
+    double t = bench.stop();
+    VerboseLog(1, @"Artist query took %.06f sec", t);
+
+    VerboseLog(2, @"%u artists:\n'%@'", (unsigned)_artists.count, [_artists componentsJoinedByString: @"'\n'"]);
+    VerboseLog(1, @"%u artists, from %@ to %@", (unsigned)_artists.count, _artists.firstObject, _artists.lastObject);
     AssertEq(_artists.count, 1111u);
     return (unsigned)_artists.count;
+    }
 }
 
 
 // Creates an index on the Artist property (case-insensitive.)
 - (void) createArtistsIndex {
-#if VERBOSE >= 1
-    NSLog(@"Indexing artists...");
-#endif
-    _indexArtistsBench.start();
+    @autoreleasepool {
+        VerboseLog(1, @"Indexing artists...");
+        _indexArtistsBench.start();
 #if 0
-    CBLQueryExpression* artist = [CBLQueryExpression property: @"Artist"];
-    CBLQueryExpression* comp = [CBLQueryExpression property: @"Compilation"];
+        CBLQueryExpression* artist = [CBLQueryExpression property: @"Artist"];
+        CBLQueryExpression* comp = [CBLQueryExpression property: @"Compilation"];
 #else
-    CBLQueryCollation* collation = [CBLQueryCollation unicodeWithLocale: nil
-                                                             ignoreCase: YES
-                                                          ignoreAccents: YES];
-    CBLQueryExpression* artist = [[CBLQueryExpression property: @"Artist"] collate: collation];
-    CBLQueryExpression* comp = [CBLQueryExpression property: @"Compilation"];
+        CBLQueryCollation* collation = [CBLQueryCollation unicodeWithLocale: nil
+                                                                 ignoreCase: YES
+                                                              ignoreAccents: YES];
+        CBLQueryExpression* artist = [[CBLQueryExpression property: @"Artist"] collate: collation];
+        CBLQueryExpression* comp = [CBLQueryExpression property: @"Compilation"];
 #endif
-    Assert(([self.db createIndexOn: @[comp, artist] error: NULL]));
-    _indexArtistsBench.stop();
+        CBLIndex *index = [CBLIndex valueIndexOn: @[[CBLValueIndexItem expression: artist],
+                                                    [CBLValueIndexItem expression: comp]]];
+        Assert(([self.db createIndex: index forName: @"byArtist" error: NULL]));
+        double t = _indexArtistsBench.stop();
+        VerboseLog(1, @"Indexed artists in %.06f sec", t);
+    }
 }
 
 
 // Queries to find the albums by every artist.
 - (unsigned) queryAlbums: (Benchmark&)bench {
+    @autoreleasepool {
     CBLPredicateQuery* query = [self.db createQueryWhere: @"Artist ==[cd] $ARTIST && Compilation == nil"];
     query.returning = @[@"Album"];
     query.groupBy = @[@"Album[cd]"];
     query.orderBy = @[@"Album[cd]"];
 
     Assert([query check: NULL]);
-#if VERBOSE >= 2
-    NSLog(@"%@", [query explain: NULL]);
-#endif
+    VerboseLog(2, @"%@", [query explain: NULL]);
     bench.start();
 
     // Run one query per artist to find their albums. We could write a single query to get all of
@@ -300,45 +314,49 @@ static constexpr auto kInterTestSleep = milliseconds(0);
             //NSLog(@"Albums by %@: '%@'", artist, [albums componentsJoinedByString: @"', '"]);
         }
     }
-    bench.stop();
-#if VERBOSE >= 1
-    NSLog(@"%u albums total", albumCount);
-#endif
+    double t = bench.stop();
+    VerboseLog(1, @"%u albums total, in %.06f sec", albumCount, t);
     AssertEq(albumCount, 1886u);
     return albumCount;
+    }
 }
 
 
 // Finds all the song titles containing the word "rock", using Full-Text Search.
 - (unsigned) fullTextSearch {
-    NSError *error;
-    _indexFTSBench.start();
-    Assert(([self.db createIndexOn: @[@"Name"]
-                              type: kCBLFullTextIndex options: NULL
-                             error: &error]),
-             @"Full-text indexing failed: %@", error);
-    _indexFTSBench.stop();
+    @autoreleasepool {
+        NSError *error;
+        _indexFTSBench.start();
+        CBLQueryExpression* nameExpr = [CBLQueryExpression property: @"Name"];
+        CBLIndex *index = [CBLIndex ftsIndexOn: [CBLFTSIndexItem expression: nameExpr]
+                                       options: nil];
+        Assert(([self.db createIndex: index forName: @"nameFTS" error: &error]),
+               @"Full-text indexing failed: %@", error);
+        _indexFTSBench.stop();
+        [self pause];
 
-    CBLPredicateQuery* query = [self.db createQueryWhere: @"Name matches 'Rock'"];
-    query.returning = @[@"Artist", @"Album", @"Name"];
-    query.orderBy = @[@"lowercase(Artist)", @"lowercase(Album)"];
-#if VERBOSE >= 2
-    NSLog(@"%@", [query explain: NULL]);
-#endif
-    _queryFTSBench.start();
-    NSMutableArray* results = [NSMutableArray array];
-    for (CBLFullTextQueryRow* row in [query run: &error])
-        [results addObject: row.fullTextMatched];
-    _queryFTSBench.stop();
-    Assert(!error, @"Query failed: %@", error);
+        CBLPredicateQuery* query = [self.db createQueryWhere: @"Name matches 'Rock'"];
+        query.returning = @[@"Artist", @"Album", @"Name"];
+        query.orderBy = @[@"Artist[cd]", @"Album[cd]"];
+        Assert([query check: &error], @"FTS query failed: %@", error);
+        VerboseLog(2, @"%@", [query explain: NULL]);
+        [self pause];
 
-#if VERBOSE >= 2
-    NSLog(@"%u 'rock' songs: \"%@\"", (unsigned)results.count, [results componentsJoinedByString: @"\", \""]);
-#elif VERBOSE >= 1
-    NSLog(@"%u 'rock' songs", (unsigned)results.count);
-#endif
-    AssertEq(results.count, 30u);
-    return (unsigned)results.count;
+        _queryFTSBench.start();
+        NSMutableArray* results = [NSMutableArray array];
+        for (CBLFullTextQueryRow* row in [query run: &error]) {
+            @autoreleasepool {
+                [results addObject: row.fullTextMatched];
+            }
+        }
+        double t = _queryFTSBench.stop();
+        Assert(!error, @"Query failed: %@", error);
+
+        VerboseLog(2, @"%u 'rock' songs in %.06f sec: \"%@\"", (unsigned)results.count, t, [results componentsJoinedByString: @"\", \""]);
+        VerboseLog(1, @"%u 'rock' songs in %.06f sec", (unsigned)results.count, t);
+        AssertEq(results.count, 30u);
+        return (unsigned)results.count;
+    }
 }
 
 
