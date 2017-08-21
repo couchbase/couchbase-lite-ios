@@ -320,7 +320,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 + (BOOL) deleteDatabase: (NSString*)name
             inDirectory: (nullable NSString*)directory
-                  error: (NSError**)outError {
+                  error: (NSError**)outError
+{
     NSString* path = databasePath(name, directory ?: defaultDirectory());
     CBLStringBytes bPath(path);
     C4Error err;
@@ -332,6 +333,30 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
             inDirectory: (nullable NSString*)directory {
     NSString* path = databasePath(name, directory ?: defaultDirectory());
     return [[NSFileManager defaultManager] fileExistsAtPath: path];
+}
+
+
++ (BOOL) copyFromPath: (NSString*)path
+           toDatabase: (NSString*)name
+               config: (nullable CBLDatabaseConfiguration*)config
+                error: (NSError**)outError
+{
+    NSString* toPathStr = databasePath(name, config.directory ?: defaultDirectory());
+    CBLStringBytes toPath(toPathStr);
+    CBLStringBytes fromPath(path);
+    
+    C4Error err;
+    C4DatabaseConfig c4Config = c4DatabaseConfig(config ?: [CBLDatabaseConfiguration new]);
+    if (c4db_copy(fromPath, toPath, &c4Config, &err) || err.code==0 || convertError(err, outError)) {
+        BOOL success = setupDatabaseDirectory(toPathStr, config.fileProtection, outError);
+        if (!success) {
+            NSError* removeError;
+            if (![[NSFileManager defaultManager] removeItemAtPath: toPathStr error: &removeError])
+                CBLWarn(Database, @"Error when deleting the copied database dir: %@", removeError);
+        }
+        return success;
+    } else
+        return NO;
 }
 
 
@@ -465,21 +490,13 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     
     NSString* dir = _config.directory;
     Assert(dir != nil);
-    if (![self setupDirectory: dir
-               fileProtection: _config.fileProtection
-                        error: outError])
+    if (!setupDatabaseDirectory(dir, _config.fileProtection, outError))
         return NO;
     
     NSString* path = databasePath(_name, dir);
     CBLStringBytes bPath(path);
     
-    C4DatabaseConfig c4config = kDBConfig;
-    if (_config.encryptionKey != nil) {
-        CBLSymmetricKey* key = [[CBLSymmetricKey alloc]
-                                initWithKeyOrPassword: _config.encryptionKey];
-        c4config.encryptionKey = symmetricKey2C4Key(key);
-    }
-    
+    C4DatabaseConfig c4config = c4DatabaseConfig(_config);
     CBLLog(Database, @"Opening %@ at path %@", self, path);
     C4Error err;
     _c4db = c4db_open(bPath, &c4config, &err);
@@ -500,9 +517,9 @@ static NSString* databasePath(NSString* name, NSString* dir) {
 }
 
 
-- (BOOL) setupDirectory: (NSString*)dir
-         fileProtection: (NSDataWritingOptions)fileProtection
-                  error: (NSError**)outError
+static BOOL setupDatabaseDirectory(NSString* dir,
+                                   NSDataWritingOptions fileProtection,
+                                   NSError** outError)
 {
     NSDictionary* attributes = nil;
 #if TARGET_OS_IPHONE
@@ -546,6 +563,17 @@ static NSString* databasePath(NSString* name, NSString* dir) {
     }
     
     return YES;
+}
+
+
+static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
+    C4DatabaseConfig c4config = kDBConfig;
+    if (config.encryptionKey != nil) {
+        CBLSymmetricKey* key = [[CBLSymmetricKey alloc]
+                                initWithKeyOrPassword: config.encryptionKey];
+        c4config.encryptionKey = symmetricKey2C4Key(key);
+    }
+    return c4config;
 }
 
 
