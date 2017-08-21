@@ -170,7 +170,7 @@
 }
 
 
-- (void) test_WhereNullOrMissing {
+- (void) testWhereNullOrMissing {
     // https://github.com/couchbase/couchbase-lite-ios/issues/1670
     CBLDocument* doc1 = [self createDocument: @"doc1"];
     [doc1 setObject: @"Scott" forKey: @"name"];
@@ -284,7 +284,7 @@
 }
 
 
-- (void) test_WhereLike {
+- (void) testWhereLike {
     [self loadJSONResource: @"names_100"];
     
     CBLQueryExpression* where = [[CBLQueryExpression property: @"name.first"] like: @"%Mar%"];
@@ -306,7 +306,7 @@
 }
 
 
-- (void) test_WhereRegex {
+- (void) testWhereRegex {
     [self loadJSONResource: @"names_100"];
     
     CBLQueryExpression* where = [[CBLQueryExpression property: @"name.first"] regex: @"^Mar.*"];
@@ -335,23 +335,20 @@
     NSError* error;
     Assert([_db createIndexOn: @[@"sentence"] type: kCBLFullTextIndex options: NULL error: &error]);
     
-    CBLQueryExpression* where = [[CBLQueryExpression property: @"sentence"] match: @"'Dummie woman'"];
-    CBLQueryOrdering* order = [[CBLQueryOrdering property: @"rank(sentence)"] descending];
-    CBLQuery* q = [CBLQuery select: @[]
+    CBLQueryExpression* SENTENCE = [CBLQueryExpression property: @"sentence"];
+    CBLQuerySelectResult* S_SENTENCE = [CBLQuerySelectResult expression: SENTENCE];
+    CBLQueryExpression* where = [SENTENCE match: @"'Dummie woman'"];
+    CBLQueryOrdering* order = [[CBLQueryOrdering expression:
+                                [[CBLQueryExpression fts] rank: @"sentence"]] descending];
+    CBLQuery* q = [CBLQuery select: @[kDOCID, S_SENTENCE]
                               from: [CBLQueryDataSource database: self.db]
                              where: where
                            orderBy: @[order]];
     uint64_t numRows = [self verifyQuery: q  randomAccess: YES
                                     test:^(uint64_t n, CBLQueryResult* r)
     {
-        // TODO: Wait for the FTS API:
-        // CBLFullTextQueryRow* ftsRow = (id)r;
-        // NSString* text = ftsRow.fullTextMatched;
-        //        Log(@"    full text = \"%@\"", text);
-        //        Log(@"    matchCount = %u", (unsigned)ftsRow.matchCount);
-        // Assert([text containsString: @"Dummie"]);
-        // Assert([text containsString: @"woman"]);
-        // AssertEqual(ftsRow.matchCount, 2ul);
+        // AssertNotNil([r stringAtIndex:0]);
+        // AssertNotNil([r stringAtIndex:1]);
     }];
     AssertEqual(numRows, 2u);
 }
@@ -395,7 +392,7 @@
 }
 
 
-- (void) test_SelectDistinct {
+- (void) testSelectDistinct {
     NSError* error;
     CBLDocument* doc1 = [[CBLDocument alloc] init];
     [doc1 setObject: @(20) forKey: @"number"];

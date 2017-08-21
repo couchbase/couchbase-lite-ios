@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 @class CBLQuery;
 @class CBLQueryCollation;
+@class CBLQueryFTS;
 @class CBLQueryMeta;
 
 
@@ -42,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Meta:
 
 /** 
- Get a CBLQueryMeta object, which is a factory object for creating metadata property
+ Gets a CBLQueryMeta object, which is a factory object for creating metadata property
  expressions.
  
  @return The CBLQueryMeta object.
@@ -50,13 +51,24 @@ NS_ASSUME_NONNULL_BEGIN
 + (CBLQueryMeta*) meta;
 
 /** 
- Get a CBLQueryMeta object for the given data source. The CBLQueryMeta object is a factory
+ Gets a CBLQueryMeta object for the given data source. The CBLQueryMeta object is a factory
  object for creating metadata property expressions.
  
  @param alias The data source alias name.
  @return The CBLQueryMeta object.
  */
 + (CBLQueryMeta*) metaFrom: (nullable NSString*)alias;
+
+#pragma mark - FTS:
+
+
+/**
+ Gets a CBLQueryFTS object, which is a factory object for creating full-text search related
+ expressions.
+
+ @return The CBBLQueryFTS object.
+ */
++ (CBLQueryFTS*) fts;
 
 #pragma mark - Parameter:
 
@@ -80,6 +92,7 @@ NS_ASSUME_NONNULL_BEGIN
  @return The collate expression.
  */
 - (CBLQueryExpression*) collate: (CBLQueryCollation*)collation;
+
 
 #pragma mark - Unary operators:
 

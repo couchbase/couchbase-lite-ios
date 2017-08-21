@@ -278,17 +278,14 @@ class QueryTest: CBLTestCase {
         try db.createIndex(["sentence"], options:
             IndexOptions.fullTextIndex(language: nil, ignoreDiacritics: false))
         
-        let w = Expression.property("sentence").match("'Dummie woman'")
-        let o = Ordering.expression(Expression.property("rank(sentence)")).descending()
-        let q = Query.select().from(DataSource.database(db)).where(w).orderBy(o)
+        let sentence = Expression.property("sentence")
+        let s_sentence = SelectResult.expression(sentence)
+        
+        let w = sentence.match("'Dummie woman'")
+        let o = Ordering.expression(Expression.fts().rank("sentences")).descending()
+        let q = Query.select(kDOCID, s_sentence).from(DataSource.database(db)).where(w).orderBy(o)
         let numRows = try verifyQuery(q) { (n, r) in
-            // TODO: Wait for the FTS API:
-            // let ftsRow = r as! FullTextQueryRow
-            // let text = ftsRow.fullTextMatched
-            // XCTAssert(text != nil)
-            // XCTAssert(text!.contains("Dummie"))
-            // XCTAssert(text!.contains("woman"))
-            // XCTAssertEqual(ftsRow.matchCount, 2)
+            
         }
         XCTAssertEqual(numRows, 2)
     }

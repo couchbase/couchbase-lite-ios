@@ -38,17 +38,10 @@ NSString* kCBLAllPropertiesName = @"";
 
 - (id) asJSON {
     NSMutableArray* json = [NSMutableArray array];
-    if ([_keyPath hasPrefix: @"rank("]) {
-        [json addObject: @"rank()"];
-        [json addObject: @[@".",
-                           [_keyPath substringWithRange:
-                            NSMakeRange(5, _keyPath.length - 6)]]];
-    } else {
-        if (_from)
-            [json addObject: [NSString stringWithFormat: @".%@.%@", _from, _keyPath]];
-        else
-            [json addObject: [NSString stringWithFormat: @".%@", _keyPath]];
-    }
+    if (_from)
+        [json addObject: [NSString stringWithFormat: @".%@.%@", _from, _keyPath]];
+    else
+        [json addObject: [NSString stringWithFormat: @".%@", _keyPath]];
     return json;
 }
 

@@ -12,7 +12,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /** 
- CBLQueryMeta is a factory class for creating the expressions that refer to
+ CBLQueryMeta is a factory class for creating the expressions that refers to
  the metadata properties of the document.
  */
 @interface CBLQueryMeta : NSObject

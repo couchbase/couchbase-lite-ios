@@ -13,6 +13,7 @@
 #import "CBLBinaryExpression.h"
 #import "CBLCollationExpression.h"
 #import "CBLCompoundExpression.h"
+#import "CBLQueryFTS.h"
 #import "CBLParameterExpression.h"
 #import "CBLPropertyExpression.h"
 #import "CBLQuantifiedExpression.h"
@@ -48,6 +49,14 @@
 
 + (CBLQueryMeta*) metaFrom: (NSString*)alias {
     return [[CBLQueryMeta alloc] initWithFrom: alias];
+}
+
+
+#pragma mark - FTS:
+
+
++ (CBLQueryFTS*) fts {
+    return [[CBLQueryFTS alloc] init];
 }
 
 
