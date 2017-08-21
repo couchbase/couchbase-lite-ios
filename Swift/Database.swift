@@ -328,7 +328,7 @@ public final class Database {
     ///
     /// - Parameters:
     ///   - path: The source database path.
-    ///   - name: The new database name to be created.
+    ///   - name: The name of the new database to be created.
     ///   - config: The database configuration for the new database name.
     /// - Throws: An error on a failure.
     public class func copy(fromPath path: String, toDatabase name: String,

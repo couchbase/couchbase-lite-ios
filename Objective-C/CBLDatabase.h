@@ -297,7 +297,7 @@ typedef struct {
  is equivalent to setting all properties in the configuration to nil will be used.
  
  @param path The source database path.
- @param name The new database name to be created.
+ @param name The name of the new database to be created.
  @param config The database configuration for the new database.
  @param error On return, the error if any.
  @return True on success, false on failure.
