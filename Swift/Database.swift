@@ -110,6 +110,27 @@ public struct DatabaseConfiguration {
 }
 
 
+/// Log domain. The logging domains listed here are tentative and subject to change.
+public enum LogDomain: UInt8 {
+    case all = 0
+    case database
+    case query
+    case replicator
+    case network
+}
+
+/// Log level. The default log level for all domains is warning.
+/// The log levels here are tentative and subject to change.
+public enum LogLevel: UInt8 {
+    case debug = 0
+    case verbose
+    case info
+    case warning
+    case error
+    case none
+}
+
+
 /// A Couchbase Lite database.
 public final class Database {
     
@@ -335,6 +356,18 @@ public final class Database {
                            config: DatabaseConfiguration?) throws
     {
         try CBLDatabase.copy(fromPath: path, toDatabase: name, config: config?.toImpl())
+    }
+    
+    
+    /// Set log level for the given log domain.
+    ///
+    /// - Parameters:
+    ///   - level: The log level.
+    ///   - domain: The log domain.
+    public class func setLogLevel(_ level: LogLevel, domain: LogDomain) {
+        let l = CBLLogLevel.init(rawValue: UInt32(level.rawValue))!
+        let d = CBLLogDomain.init(rawValue: UInt32(domain.rawValue))!
+        return CBLDatabase.setLogLevel(l, domain: d)
     }
     
     

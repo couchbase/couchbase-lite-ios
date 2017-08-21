@@ -10,13 +10,20 @@
 #import "ExceptionUtils.h"
 
 
-C4LogDomain kCBLDatabaseLogDomain;
-C4LogDomain kCBLQueryLogDomain;
+C4LogDomain kCBL_LogDomainDatabase;
+C4LogDomain kCBL_LogDomainDB;
+C4LogDomain kCBL_LogDomainQuery;
+C4LogDomain kCBL_LogDomainSQL;
+C4LogDomain kCBL_LogDomainSync;
+C4LogDomain kCBL_LogDomainBLIP;
+C4LogDomain kCBL_LogDomainActor;
+C4LogDomain kCBL_LogDomainWebSocket;
+C4LogDomain kCBL_LogDomainWSMock;
 
 static const char* kLevelNames[6] = {"Debug", "Verbose", "Info", "WARNING", "ERROR", "none"};
 
 
-void cbllog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
+void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
     const char *cmsg = CFStringGetCStringPtr((__bridge CFStringRef)msg, kCFStringEncodingUTF8);
     Assert(cmsg, @"Couldn't convert cbllog string to C string; maybe it's not a literal?");
     va_list args;
@@ -35,8 +42,14 @@ static void logCallback(C4LogDomain domain, C4LogLevel level, const char *fmt, v
 
 
 static C4LogLevel string2level(NSString* value) {
-    if (value == nil)
-        return kC4LogWarning;
+    if (value == nil) {
+#ifdef DEBUG
+        return kC4LogDebug;
+#else
+        return kC4LogVerbose;
+#endif
+    }
+    
     switch (value.length > 0 ? toupper([value characterAtIndex: 0]) : 'Y') {
         case 'N': case 'F': case '0':
             return kC4LogNone;
@@ -57,8 +70,36 @@ void CBLLog_Init() {
     if (defaultLevel != kC4LogWarning)
         NSLog(@"CouchbaseLite default log level is %s and above", kLevelNames[defaultLevel]);
 
-    kCBLDatabaseLogDomain = c4log_getDomain("Database", true);
-    kCBLQueryLogDomain = c4log_getDomain("Query", true);
+    C4LogLevel domainLevel = (C4LogLevel) MAX(defaultLevel, kC4LogWarning);
+    
+    // TODO: Sync Lite and LiteCore log domains:
+    
+    kCBL_LogDomainDatabase = c4log_getDomain("Database", true);
+    c4log_setLevel(kCBL_LogDomainDatabase, domainLevel);
+    
+    kCBL_LogDomainDB = c4log_getDomain("DB", true);
+    c4log_setLevel(kCBL_LogDomainDB, domainLevel);
+    
+    kCBL_LogDomainQuery = c4log_getDomain("Query", true);
+    c4log_setLevel(kCBL_LogDomainQuery, domainLevel);
+    
+    kCBL_LogDomainSQL = c4log_getDomain("SQL", true);
+    c4log_setLevel(kCBL_LogDomainSQL, domainLevel);
+    
+    kCBL_LogDomainSync = c4log_getDomain("Sync", true);
+    c4log_setLevel(kCBL_LogDomainSync, domainLevel);
+    
+    kCBL_LogDomainBLIP = c4log_getDomain("BLIP", true);
+    c4log_setLevel(kCBL_LogDomainBLIP, domainLevel);
+    
+    kCBL_LogDomainActor = c4log_getDomain("Actor", true);
+    c4log_setLevel(kCBL_LogDomainActor, domainLevel);
+    
+    kCBL_LogDomainWebSocket = c4log_getDomain("WebSocket", true);
+    c4log_setLevel(kCBL_LogDomainWebSocket, domainLevel);
+    
+    kCBL_LogDomainWSMock = c4log_getDomain("WSMock", true);
+    c4log_setLevel(kCBL_LogDomainWSMock, domainLevel);
 
     // Now map user defaults starting with CBLLog... to log levels:
     NSDictionary* defaults = [NSUserDefaults.standardUserDefaults dictionaryRepresentation];

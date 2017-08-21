@@ -360,6 +360,43 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
+#pragma mark - Logging
+
+
++ (void) setLogLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain {
+    C4LogLevel c4level = level != kCBLLogLevelNone ? (C4LogLevel)level : kC4LogNone;
+    switch (domain) {
+        case kCBLLogDomainAll:
+            CBLSetLogLevel(Database, c4level);
+            CBLSetLogLevel(DB, c4level);
+            CBLSetLogLevel(Query, c4level);
+            CBLSetLogLevel(SQL, c4level);
+            CBLSetLogLevel(Sync, c4level);
+            CBLSetLogLevel(BLIP, c4level);
+            CBLSetLogLevel(Actor, c4level);
+            CBLSetLogLevel(WebSocket, c4level);
+            break;
+        case kCBLLogDomainDatabase:
+            CBLSetLogLevel(Database, c4level);
+            CBLSetLogLevel(DB, c4level);
+            break;
+        case kCBLLogDomainQuery:
+            CBLSetLogLevel(Query, c4level);
+            CBLSetLogLevel(SQL, c4level);
+            break;
+        case kCBLLogDomainReplicator:
+            CBLSetLogLevel(Sync, c4level);
+            break;
+        case kCBLLogDomainNetwork:
+            CBLSetLogLevel(BLIP, c4level);
+            CBLSetLogLevel(Actor, c4level);
+            CBLSetLogLevel(WebSocket, c4level);
+        default:
+            break;
+    }
+}
+
+
 #pragma mark - DOCUMENT CHANGES
 
 

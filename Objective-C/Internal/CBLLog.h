@@ -36,16 +36,23 @@ void CBLLog_Init(void);
 //    ... then inside a +initialize method:
 //    kCBLQueryLogDomain = c4log_getDomain("Query", true);
 
-#define kCBLDefaultLogDomain kC4DefaultLog
+#define kCBL_LogDomainDefault kC4DefaultLog
 
-extern C4LogDomain kCBLDatabaseLogDomain;
-extern C4LogDomain kCBLQueryLogDomain;
-extern C4LogDomain kCBLSyncLogDomain;
+// TODO: Sync Lite and LiteCore log domains:
+extern C4LogDomain kCBL_LogDomainDatabase;
+extern C4LogDomain kCBL_LogDomainDB;        // LiteCore Domain
+extern C4LogDomain kCBL_LogDomainQuery;
+extern C4LogDomain kCBL_LogDomainSQL;       // LiteCore Domain
+extern C4LogDomain kCBL_LogDomainSync;      // LiteCore Domain
+extern C4LogDomain kCBL_LogDomainBLIP;      // LiteCore Domain
+extern C4LogDomain kCBL_LogDomainActor;     // LiteCore Domain
+extern C4LogDomain kCBL_LogDomainWebSocket; // LiteCore Domain
+extern C4LogDomain kCBL_LogDomainWSMock;    // LiteCore Domain
 
 // Logging functions. For the domain, just use the part of the name between kCBL… and …LogDomain.
 #define CBLLogToAt(DOMAIN, LEVEL, FMT, ...)        \
-        ({if (__builtin_expect(c4log_getLevel(kCBL##DOMAIN##LogDomain) <= LEVEL, false))   \
-              cbllog(kCBL##DOMAIN##LogDomain, LEVEL, FMT, ## __VA_ARGS__);})
+        ({if (__builtin_expect(c4log_getLevel(kCBL_LogDomain##DOMAIN) <= LEVEL, false))   \
+              cblLog(kCBL_LogDomain##DOMAIN, LEVEL, FMT, ## __VA_ARGS__);})
 #define CBLLogVerbose(DOMAIN, FMT, ...) CBLLogToAt(DOMAIN, kC4LogVerbose, FMT, ## __VA_ARGS__)
 #define CBLLog(DOMAIN, FMT, ...)        CBLLogToAt(DOMAIN, kC4LogInfo,    FMT, ## __VA_ARGS__)
 #define CBLWarn(DOMAIN, FMT, ...)       CBLLogToAt(DOMAIN, kC4LogWarning, FMT, ## __VA_ARGS__)
@@ -57,9 +64,10 @@ extern C4LogDomain kCBLSyncLogDomain;
 #else
 #define CBLDebug(DOMAIN, FMT, ...)      ({ })
 #endif
+    
+#define CBLSetLogLevel(DOMAIN, LEVEL) c4log_setLevel(kCBL_LogDomain##DOMAIN, LEVEL)
 
-
-void cbllog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...)
+void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...)
     __attribute__((format(__NSString__, 3, 4)));
 
 NS_ASSUME_NONNULL_END
