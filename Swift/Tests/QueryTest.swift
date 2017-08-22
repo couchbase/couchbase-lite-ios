@@ -209,8 +209,7 @@ class QueryTest: CBLTestCase {
     }
     
     
-    func failingTestWhereLike() throws {
-        // https://github.com/couchbase/couchbase-lite-ios/issues/1667
+    func testWhereLike() throws {
         try loadJSONResource(name: "names_100")
         
         let w = Expression.property("name.first").like("%Mar%")
@@ -248,7 +247,7 @@ class QueryTest: CBLTestCase {
     }
     
     
-    func failingTestWhereRegex() throws {
+    func testWhereRegex() throws {
         // https://github.com/couchbase/couchbase-lite-ios/issues/1668
         try loadJSONResource(name: "names_100")
         

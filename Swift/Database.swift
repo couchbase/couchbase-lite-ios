@@ -110,7 +110,7 @@ public struct DatabaseConfiguration {
 }
 
 
-/// Log domain. The logging domains listed here are tentative and subject to change.
+/// Log domain. The log domains here are tentative and subject to change.
 public enum LogDomain: UInt8 {
     case all = 0
     case database
