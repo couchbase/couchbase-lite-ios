@@ -1391,6 +1391,7 @@
 				938CDF211E807F51002EE790 /* Expression.swift */,
 				938CDF191E807F14002EE790 /* From.swift */,
 				938CDF241E807F86002EE790 /* FromRouter.swift */,
+				93C618741F4B85AC00AD3AE8 /* FTS.swift */,
 				9380D2691F0D832C007DD84A /* Function.swift */,
 				9380D2631F0D7BD6007DD84A /* GroupBy.swift */,
 				9380D2651F0D7BF7007DD84A /* GroupByRouter.swift */,
@@ -1417,7 +1418,6 @@
 				9380D2721F0DBD79007DD84A /* SelectResult.swift */,
 				938CDF1B1E807F23002EE790 /* Where.swift */,
 				938CDF261E807F8F002EE790 /* WhereRouter.swift */,
-				93C618741F4B85AC00AD3AE8 /* FTS.swift */,
 			);
 			name = Query;
 			sourceTree = "<group>";
