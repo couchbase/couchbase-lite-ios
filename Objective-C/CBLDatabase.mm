@@ -23,6 +23,7 @@
 #import "CBLDocumentChange.h"
 #import "CBLDocumentChangeListener.h"
 #import "CBLDocumentFragment.h"
+#import "CBLIndex+Internal.h"
 #import "CBLQuery+Internal.h"
 #import "CBLMisc.h"
 #import "CBLPredicateQuery+Internal.h"
@@ -426,6 +427,46 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
+#pragma mark - Index:
+
+
+- (NSArray<NSString*>*) indexes {
+    [self mustBeOpen];
+    
+    C4SliceResult data = c4db_getIndexes(_c4db, nullptr);
+    FLValue value = FLValue_FromTrustedData((FLSlice)data);
+    return FLValue_GetNSObject(value, &_sharedKeys);
+}
+
+
+- (BOOL) createIndex: (CBLIndex*)index forName: (NSString*)name error: (NSError**)outError {
+    [self mustBeOpen];
+    
+    NSData* json = [NSJSONSerialization dataWithJSONObject: index.indexItems
+                                                   options: 0
+                                                     error: outError];
+    if (!json)
+        return NO;
+    
+    CBLStringBytes bName(name);
+    C4IndexType type = index.indexType;
+    C4IndexOptions options = index.indexOptions;
+    
+    C4Error c4err;
+    return c4db_createIndex(_c4db, bName, {json.bytes, json.length}, type, &options, &c4err) ||
+        convertError(c4err, outError);
+}
+
+
+- (BOOL)deleteIndexForName:(NSString *)name error:(NSError **)outError {
+    [self mustBeOpen];
+    
+    CBLStringBytes bName(name);
+    C4Error c4err;
+    return c4db_deleteIndex(_c4db, bName, &c4err) || convertError(c4err, outError);
+}
+
+
 #pragma mark - QUERIES:
 
 
@@ -448,59 +489,6 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     auto query = [[CBLPredicateQuery alloc] initWithDatabase: self];
     query.where = where;
     return query;
-}
-
-
-- (BOOL) createIndexOn: (NSArray*)expressions error: (NSError**)outError {
-    return [self createIndexOn: expressions type: kCBLValueIndex options: NULL error: outError];
-}
-
-
-- (BOOL) createIndexOn: (NSArray*)expressions
-                  type: (CBLIndexType)type
-               options: (const CBLIndexOptions*)options
-                 error: (NSError**)outError
-{
-    [self mustBeOpen];
-
-    static_assert(sizeof(CBLIndexOptions) == sizeof(C4IndexOptions), "Index options incompatible");
-    C4IndexOptions c4options = { };
-    if (options)
-        c4options = *(C4IndexOptions*)options;
-    NSString* languageCode;
-    if (!c4options.language) {
-        // Get default language code:
-        languageCode = [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
-        c4options.language = languageCode.UTF8String;
-        if (!options)
-            c4options.ignoreDiacritics = (strcmp(c4options.language, "en") == 0);
-    }
-    
-    NSData* json = [CBLQuery encodeExpressions: expressions error: outError];
-    if (!json)
-        return NO;
-    C4Error c4err;
-    return c4db_createIndex(_c4db,
-                            {json.bytes, json.length},
-                            (C4IndexType)type,
-                            &c4options,
-                            &c4err)
-    || convertError(c4err, outError);
-}
-
-
-- (BOOL) deleteIndexOn: (NSArray<NSExpression*>*)expressions
-                  type: (CBLIndexType)type
-                 error: (NSError**)outError
-{
-    [self mustBeOpen];
-    
-    NSData* json = [CBLQuery encodeExpressions: expressions error: outError];
-    if (!json)
-        return NO;
-    C4Error c4err; 
-    return c4db_deleteIndex(_c4db, {json.bytes, json.length}, (C4IndexType)type, &c4err)
-    || convertError(c4err, outError);
 }
 
 

@@ -27,6 +27,7 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import "CBLDocumentChange.h"
 #import "CBLDocumentFragment.h"
 #import "CBLFragment.h"
+#import "CBLIndex.h"
 #import "CBLPredicateQuery.h"
 #import "CBLLiveQuery.h"
 #import "CBLLiveQueryChange.h"

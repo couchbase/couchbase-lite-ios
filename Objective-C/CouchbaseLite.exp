@@ -19,7 +19,10 @@
 .objc_class_name_CBLDocumentChange
 .objc_class_name_CBLDocumentFragment
 .objc_class_name_CBLFragment
+.objc_class_name_CBLFTSIndexItem
+.objc_class_name_CBLFTSIndexOptions
 .objc_class_name_CBLFullTextQueryRow
+.objc_class_name_CBLIndex
 .objc_class_name_CBLLiveQuery
 .objc_class_name_CBLLiveQueryChange
 .objc_class_name_CBLQuery
@@ -44,3 +47,4 @@
 .objc_class_name_CBLReplicatorChange
 .objc_class_name_CBLReplicatorConfiguration
 .objc_class_name_CBLSessionAuthenticator
+.objc_class_name_CBLValueIndexItem

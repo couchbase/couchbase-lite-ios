@@ -332,11 +332,15 @@
 - (void) testWhereMatch {
     [self loadJSONResource: @"sentences"];
     
-    NSError* error;
-    Assert([_db createIndexOn: @[@"sentence"] type: kCBLFullTextIndex options: NULL error: &error]);
-    
     CBLQueryExpression* SENTENCE = [CBLQueryExpression property: @"sentence"];
     CBLQuerySelectResult* S_SENTENCE = [CBLQuerySelectResult expression: SENTENCE];
+    
+    NSError* error;
+    CBLIndex* index = [CBLIndex ftsIndexOn: [CBLFTSIndexItem expression: SENTENCE] options: nil];
+    Assert([self.db createIndex: index forName: @"sentence" error: &error],
+           @"Error when creating the index: %@", error);
+    
+    
     CBLQueryExpression* where = [SENTENCE match: @"'Dummie woman'"];
     CBLQueryOrdering* order = [[CBLQueryOrdering expression: [CBLQueryFunction rank: SENTENCE]]
                                descending];

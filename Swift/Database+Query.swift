@@ -9,96 +9,33 @@
 import Foundation
 
 
-// MARK: - <#Description#>
 extension Database {
     
-    /// Creates a value index (type kValueIndex) on a given document property.
-    /// This will speed up queries that test that property, at the expense of making database writes 
-    /// a little bit slower.
-    ///
-    /// - Parameter expressions: Expressions to index, typically key-paths. Can be Expression objects,
-    ///                          NSExpression objects, or Strings that are expression format strings.
-    /// - Throws: An error on failure.
-    public func createIndex(_ expressions: [Any]) throws {
-        try _impl.createIndex(on: expressions)
-    }
-
+    /// All index names.
+    public var indexes: Array<String> { return _impl.indexes }
     
-    /// Creates an index on a given document property.
-    /// This will speed up queries that test that property, at the expense of making database writes 
-    /// a little bit slower.
+    
+    /// Creates an index which could be a value index or a full-text search index with the given
+    /// name. The name can be used for deleting the index. Creating a new different index with an
+    /// existing index name will replace the old index; creating the same index with the same name
+    /// will be no-ops.
     ///
     /// - Parameters:
-    ///   - expressions: Expressions to index, typically key-paths. Can be Expression objects,
-    ///                  NSExpression objects, or Strings that are expression format strings.
-    ///   - options: Options affecting the index, or NULL for default settings.
-    /// - Throws: An error on failure.
-    public func createIndex(_ expressions: [Any], options: IndexOptions) throws {
-        var cblType: CBLIndexType
-        var cblOptions = CBLIndexOptions()
-        var language: String?
-        switch(options) {
-        case .valueIndex:
-            cblType = CBLIndexType.valueIndex
-        case .fullTextIndex(let lang, let ignoreDiacritics):
-            cblType = CBLIndexType.fullTextIndex
-            language = lang
-            cblOptions.ignoreDiacritics = ObjCBool(ignoreDiacritics)
-        case .geoIndex:
-            cblType = CBLIndexType.geoIndex
-        }
+    ///   - index: The index.
+    ///   - name: The index name.
+    /// - Throws: An error on a failure.
+    public func createIndex(_ index: Index, forName name: String) throws {
         
-        var expImpls: [Any] = []
-        for exp in expressions {
-            if let x = exp as? Expression {
-                expImpls.append(x.impl)
-            } else {
-                expImpls.append(exp)
-            }
-        }
-
-        if let language = language {
-            try language.withCString({ (cLanguage: UnsafePointer<Int8>) in
-                cblOptions.language = cLanguage
-                try _impl.createIndex(on: expImpls, type: cblType, options: &cblOptions)
-            })
-        } else {
-            try _impl.createIndex(on: expImpls, type: cblType, options: &cblOptions)
-        }
+        try _impl.createIndex(index.impl, forName: name)
     }
-
     
-    /// Deletes an existing index. Returns NO if the index did not exist.
+    
+    /// Deletes the index of the given index name.
     ///
-    /// - Parameters:
-    ///   - expressions: Expressions indexed (same parameter given to -createIndexOn:.)
-    ///   - type: Type of index.
-    /// - Throws: An error on failure.
-    public func deleteIndex(_ expressions: [Any], type: IndexType) throws {
-        var expImpls: [Any] = []
-        for exp in expressions {
-            if let x = exp as? Expression {
-                expImpls.append(x.impl)
-            } else {
-                expImpls.append(exp)
-            }
-        }
-        try _impl.deleteIndex(on: expImpls, type: type)
+    /// - Parameter name: The index name.
+    /// - Throws: An error on a failure.
+    public func deleteIndex(forName name: String) throws {
+        try _impl.deleteIndex(forName: name)
     }
     
-}
-
-
-/// IndexType.
-public typealias IndexType = CBLIndexType
-
-/// Specifies the type of index to create, and parameters for certain types of indexes.
-///
-/// - valueIndex:  Regular value index.
-/// - fullTextIndex: Full-Text search index.
-/// - geoIndex: Geo searcg index.
-public enum IndexOptions {
-    case valueIndex
-    case fullTextIndex (language: String?, ignoreDiacritics: Bool)
-    case geoIndex
 }

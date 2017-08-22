@@ -94,4 +94,111 @@ class DatabaseTest: CBLTestCase {
         try nudb.close()
         try Database.delete(dbName, inDirectory: dir)
     }
+    
+    func testCreateIndex() throws {
+        // Precheck:
+        XCTAssertEqual(db.indexes.count, 0)
+        
+        // Create value index:
+        let fNameItem = ValueIndexItem.expression(Expression.property("firstName"))
+        let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
+        
+        let index1 = Index.valueIndex().on(fNameItem, lNameItem)
+        try db.createIndex(index1, forName: "index1")
+        
+        // Create FTS index:
+        let detailItem = FTSIndexItem.expression(Expression.property("detail"))
+        let index2 = Index.ftsIndex().on(detailItem)
+        try db.createIndex(index2, forName: "index2")
+        
+        let detailItem2 = FTSIndexItem.expression(Expression.property("es-detail"))
+        let index3 = Index.ftsIndex().on(detailItem2).locale("es").ignoreAccents(true)
+        try db.createIndex(index3, forName: "index3")
+        
+        XCTAssertEqual(db.indexes.count, 3)
+        XCTAssertEqual(db.indexes, ["index1", "index2", "index3"])
+    }
+    
+    func testCreateSameIndexTwice() throws {
+        let item = ValueIndexItem.expression(Expression.property("firstName"))
+        
+        // Create index with first name:
+        let index = Index.valueIndex().on(item)
+        try db.createIndex(index, forName: "myindex")
+        
+        // Call create index again:
+        try db.createIndex(index, forName: "myindex")
+        
+        XCTAssertEqual(db.indexes.count, 1)
+        XCTAssertEqual(db.indexes, ["myindex"])
+    }
+    
+    func failingTestCreateSameNameIndexes() throws {
+        // Create value index with first name:
+        let fNameItem = ValueIndexItem.expression(Expression.property("firstName"))
+        let fNameIndex = Index.valueIndex().on(fNameItem)
+        try db.createIndex(fNameIndex, forName: "myindex")
+        
+        // Create value index with last name:
+        let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
+        let lNameIndex = Index.valueIndex().on(lNameItem)
+        try db.createIndex(lNameIndex, forName: "myindex")
+        
+        // Check:
+        XCTAssertEqual(db.indexes.count, 1)
+        XCTAssertEqual(db.indexes, ["myindex"])
+        
+        // Create FTS index:
+        let detailItem = FTSIndexItem.expression(Expression.property("detail"))
+        let detailIndex = Index.ftsIndex().on(detailItem)
+        try db.createIndex(detailIndex, forName: "myindex")
+        
+        // Check:
+        XCTAssertEqual(db.indexes.count, 1)
+        XCTAssertEqual(db.indexes, ["myindex"])
+    }
+    
+    func testDeleteIndex() throws {
+        // Precheck:
+        XCTAssertEqual(db.indexes.count, 0)
+        
+        // Create value index:
+        let fNameItem = ValueIndexItem.expression(Expression.property("firstName"))
+        let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
+        
+        let index1 = Index.valueIndex().on(fNameItem, lNameItem)
+        try db.createIndex(index1, forName: "index1")
+        
+        // Create FTS index:
+        let detailItem = FTSIndexItem.expression(Expression.property("detail"))
+        let index2 = Index.ftsIndex().on(detailItem)
+        try db.createIndex(index2, forName: "index2")
+        
+        let detailItem2 = FTSIndexItem.expression(Expression.property("es-detail"))
+        let index3 = Index.ftsIndex().on(detailItem2).locale("es").ignoreAccents(true)
+        try db.createIndex(index3, forName: "index3")
+        
+        XCTAssertEqual(db.indexes.count, 3)
+        XCTAssertEqual(db.indexes, ["index1", "index2", "index3"])
+        
+        // Delete indexes:
+        try db.deleteIndex(forName: "index1")
+        XCTAssertEqual(db.indexes.count, 2)
+        XCTAssertEqual(db.indexes, ["index2", "index3"])
+        
+        try db.deleteIndex(forName: "index2")
+        XCTAssertEqual(db.indexes.count, 1)
+        XCTAssertEqual(db.indexes, ["index3"])
+        
+        try db.deleteIndex(forName: "index3")
+        XCTAssertEqual(db.indexes.count, 0)
+        
+        // Delete non existing index:
+        try db.deleteIndex(forName: "dummy")
+        
+        // Delete deleted indexes:
+        try db.deleteIndex(forName: "index1")
+        try db.deleteIndex(forName: "index2")
+        try db.deleteIndex(forName: "index3")
+    }
 }
