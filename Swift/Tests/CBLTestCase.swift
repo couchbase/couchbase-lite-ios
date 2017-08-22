@@ -17,14 +17,16 @@ class CBLTestCase: XCTestCase {
     
     var conflictResolver: ConflictResolver?
 
-    let kDatabaseName = "testdb"
+    let databaseName = "testdb"
     
-    let kDirectory = NSTemporaryDirectory().appending("CouchbaseLite")
+    let directory = NSTemporaryDirectory().appending("CouchbaseLite")
 
     override func setUp() {
         super.setUp()
-
-        try! Database.delete(kDatabaseName, inDirectory: kDirectory)
+        
+        if FileManager.default.fileExists(atPath: self.directory) {
+            try! FileManager.default.removeItem(atPath: self.directory)
+        }
         try! openDB()
     }
     
@@ -37,14 +39,14 @@ class CBLTestCase: XCTestCase {
     
     func openDB(name: String) throws -> Database {
         var config = DatabaseConfiguration()
-        config.directory = kDirectory
+        config.directory = directory
         config.conflictResolver = conflictResolver
         return try Database(name: name, config: config)
     }
     
     
     func openDB() throws {
-        db = try openDB(name: kDatabaseName)
+        db = try openDB(name: databaseName)
     }
 
     
@@ -60,12 +62,12 @@ class CBLTestCase: XCTestCase {
     }
     
     
-    func createDocument(_ id: String) -> Document {
+    func createDocument(_ id: String?) -> Document {
         return Document(id)
     }
     
     
-    func createDocument(_ id: String, dictionary: [String:Any]) -> Document {
+    func createDocument(_ id: String?, dictionary: [String:Any]) -> Document {
         return Document(id, dictionary: dictionary)
     }
     
@@ -129,6 +131,23 @@ class CBLTestCase: XCTestCase {
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
         formatter.timeZone = NSTimeZone.local
         return formatter.date(from: date)!
+    }
+    
+    
+    func expectError(domain: String, code: Int, block: @escaping () throws -> Void) {
+        CBLTestHelper.allowException {
+            var error: NSError?
+            do {
+                try block()
+            }
+            catch let e as NSError {
+                error = e
+            }
+            
+            XCTAssertNotNil(error, "Block expected to fail but didn't")
+            XCTAssertEqual(error?.domain, domain)
+            XCTAssertEqual(error?.code, code)
+        }
     }
 }
 

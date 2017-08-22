@@ -23,6 +23,7 @@
 #import "CBLDocumentChange.h"
 #import "CBLDocumentChangeListener.h"
 #import "CBLDocumentFragment.h"
+#import "CBLEncryptionKey+Internal.h"
 #import "CBLIndex+Internal.h"
 #import "CBLQuery+Internal.h"
 #import "CBLMisc.h"
@@ -314,8 +315,15 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
-- (BOOL) changeEncryptionKey: (nullable id)key error: (NSError**)outError {
-    return NO; // TODO
+- (BOOL) setEncryptionKey: (nullable CBLEncryptionKey*)key error: (NSError**)outError {
+    [self mustBeOpen];
+    
+    C4Error err;
+    C4EncryptionKey encKey = c4EncryptionKey(key);
+    if (!c4db_rekey(_c4db, &encKey, &err))
+        return convertError(err, outError);
+    
+    return YES;
 }
 
 
@@ -593,12 +601,21 @@ static BOOL setupDatabaseDirectory(NSString* dir,
 
 static C4DatabaseConfig c4DatabaseConfig (CBLDatabaseConfiguration* config) {
     C4DatabaseConfig c4config = kDBConfig;
-    if (config.encryptionKey != nil) {
-        CBLSymmetricKey* key = [[CBLSymmetricKey alloc]
-                                initWithKeyOrPassword: config.encryptionKey];
-        c4config.encryptionKey = symmetricKey2C4Key(key);
-    }
+    if (config.encryptionKey != nil)
+        c4config.encryptionKey = c4EncryptionKey(config.encryptionKey);
     return c4config;
+}
+
+
+static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
+    C4EncryptionKey cKey;
+    if (key) {
+        cKey.algorithm = kC4EncryptionAES256;
+        Assert(key.key.length == sizeof(cKey.bytes), @"Invalid key size");
+        memcpy(cKey.bytes, key.key.bytes, sizeof(cKey.bytes));
+    } else
+        cKey.algorithm = kC4EncryptionNone;
+    return cKey;
 }
 
 

@@ -52,15 +52,3 @@ NSString* sliceResult2FilesystemPath(C4SliceResult str) {
     c4slice_free(str);
     return path;
 }
-
-C4EncryptionKey symmetricKey2C4Key(CBLSymmetricKey* key) {
-    C4EncryptionKey cKey;
-    if (key) {
-        cKey.algorithm = kC4EncryptionAES256;
-        NSCAssert(key.keyData.length == sizeof(cKey.bytes), @"Invalid key size");
-        memcpy(cKey.bytes, key.keyData.bytes, sizeof(cKey.bytes));
-    } else {
-        cKey.algorithm = kC4EncryptionNone;
-    }
-    return cKey;
-}

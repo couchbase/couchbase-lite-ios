@@ -29,6 +29,8 @@ extern atomic_int gC4ExpectExceptions;
 
 @property (readonly, nonatomic) CBLDatabase* db;
 
+@property (readonly, nonatomic) NSString* directory;
+
 /** Default conflict resolver set to the database configuration when (re)opening 
     the default test database (.db property) or when calling the -openDBNamed:error: mehtod. */
 @property (nonatomic) id <CBLConflictResolver> conflictResolver;

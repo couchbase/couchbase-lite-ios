@@ -9,20 +9,24 @@
 import Foundation
 
 
-/// A database encryption key consists of a password string, or a 32-byte AES256 key.
+/// The encryption key, a raw AES-256 key data which has exactly 32 bytes in length
+/// or a password string. If the password string is given, it will be internally converted to a
+/// raw AES key using 64,000 rounds of PBKDF2 hashing.
 ///
-/// - password: Password string
-/// - aes256: 32-byte AES256 data key
+/// - key: 32-byte AES-256 data key. To create a key, generate random data using a secure
+///        cryptographic randomizer like SecRandomCopyBytes or CCRandomGenerateBytes.
+/// - password: Password string that will be internally converted to a raw AES-256 key
+///             using 64,000 rounds of PBKDF2 hashing.
 public enum EncryptionKey {
+    case key (Data)
     case password (String)
-    case aes256   (Data)
     
-    var asObject: Any {
+    var asObject: CBLEncryptionKey {
         switch (self) {
+        case .key (let data):
+            return CBLEncryptionKey(key: data)
         case .password(let pwd):
-            return pwd
-        case .aes256 (let data):
-            return data
+            return CBLEncryptionKey(password: pwd)
         }
     }
 }
@@ -55,10 +59,10 @@ public struct DatabaseConfiguration {
     /// A key to encrypt the database with. If the database does not exist and is being created, it
     /// will use this key, and the same key must be given every time it's opened.
     ///
-    /// * The primary form of key is an NSData object 32 bytes in length: this is interpreted as a raw
+    /// * The primary form of key is a Data object 32 bytes in length: this is interpreted as a raw
     ///   AES-256 key. To create a key, generate random data using a secure cryptographic randomizer
     ///   like SecRandomCopyBytes or CCRandomGenerateBytes.
-    /// * Alternatively, the value may be an NSString containing a passphrase. This will be run through
+    /// * Alternatively, the value may be a string containing a password. This will be run through
     ///   64,000 rounds of the PBKDF algorithm to securely convert it into an AES-256 key.
     /// * A default nil value, of course, means the database is unencrypted.
     public var encryptionKey: EncryptionKey?
@@ -308,15 +312,12 @@ public final class Database {
     }
 
     
-    /// Changes the database's encryption key, or removes encryption if the new key is nil
+    /// Changes the database's encryption key, or removes encryption if the new key is nil.
     ///
-    /// - Parameter key: The encryption key in the form of an NSString (a password) or an
-    ///                  NSData object exactly 32 bytes in length (a raw AES key.) If a string 
-    ///                  is given, it will be internally converted to a raw key using 64,000 
-    ///                  rounds of PBKDF2 hashing. A nil value will decrypt the database.
-    /// - Throws: An error on a failure
-    public func changeEncryptionKey(_ key: EncryptionKey?) throws {
-        try _impl.changeEncryptionKey(key?.asObject)
+    /// - Parameter key: The encryption key.
+    /// - Throws: An error on a failure.
+    public func setEncryptionKey(_ key: EncryptionKey?) throws {
+        try _impl.setEncryptionKey(key?.asObject)
     }
     
 

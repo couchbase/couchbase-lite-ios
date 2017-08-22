@@ -15,7 +15,6 @@
 #import "Fleece+CoreFoundation.h"
 #import "c4.h"
 #import "c4Document+Fleece.h"
-#import "CBLSymmetricKey.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -27,8 +26,6 @@ C4Slice data2slice(NSData* __nullable);
 NSData* __nullable   sliceResult2data(C4SliceResult);
 NSString* __nullable sliceResult2string(C4SliceResult);
 NSString* __nullable sliceResult2FilesystemPath(C4SliceResult);
-
-C4EncryptionKey symmetricKey2C4Key(CBLSymmetricKey* key);
 
 class C4Transaction {
 public:

@@ -157,18 +157,19 @@
 #endif
     
     // Custom:
+    CBLEncryptionKey* key = [[CBLEncryptionKey alloc] initWithPassword: @"key"];
     DummyResolver *resolver = [DummyResolver new];
     CBLDatabaseConfiguration* config2 = [[CBLDatabaseConfiguration alloc] init];
     config2.directory = @"/tmp/mydb";
     config2.conflictResolver = resolver;
-    config2.encryptionKey = @"key";
+    config2.encryptionKey = key;
 #if TARGET_OS_IPHONE
     config2.fileProtection = NSDataWritingFileProtectionComplete;
 #endif
     
     AssertEqualObjects(config2.directory, @"/tmp/mydb");
     AssertEqual(config2.conflictResolver, resolver);
-    AssertEqualObjects(config2.encryptionKey, @"key");
+    AssertEqualObjects(config2.encryptionKey, key);
 #if TARGET_OS_IPHONE
     AssertEqual(config2.fileProtection, NSDataWritingFileProtectionComplete);
 #endif
@@ -177,7 +178,7 @@
     CBLDatabaseConfiguration* config2a = [config2 copy];
     AssertEqualObjects(config2a.directory, @"/tmp/mydb");
     AssertEqual(config2a.conflictResolver, resolver);
-    AssertEqualObjects(config2a.encryptionKey, @"key");
+    AssertEqualObjects(config2a.encryptionKey, key);
 #if TARGET_OS_IPHONE
     AssertEqual(config2a.fileProtection, NSDataWritingFileProtectionComplete);
 #endif

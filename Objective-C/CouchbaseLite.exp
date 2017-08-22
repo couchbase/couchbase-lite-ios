@@ -18,6 +18,7 @@
 .objc_class_name_CBLDocument
 .objc_class_name_CBLDocumentChange
 .objc_class_name_CBLDocumentFragment
+.objc_class_name_CBLEncryptionKey
 .objc_class_name_CBLFragment
 .objc_class_name_CBLFTSIndexItem
 .objc_class_name_CBLFTSIndexOptions

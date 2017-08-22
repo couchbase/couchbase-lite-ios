@@ -8,8 +8,8 @@
 
 #import <Foundation/Foundation.h>
 @class CBLDocument, CBLDocumentFragment, CBLDatabaseChange, CBLDocumentChange;
-@class CBLIndex;
-@class CBLPredicateQuery;
+@class CBLEncryptionKey;
+@class CBLIndex, CBLPredicateQuery;
 @protocol CBLConflictResolver, CBLDocumentChangeListener;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -39,13 +39,13 @@ NS_ASSUME_NONNULL_BEGIN
  will use this key, and the same key must be given every time it's opened.
  
  * The primary form of key is an NSData object 32 bytes in length: this is interpreted as a raw
- AES-256 key. To create a key, generate random data using a secure cryptographic randomizer
- like SecRandomCopyBytes or CCRandomGenerateBytes.
- * Alternatively, the value may be an NSString containing a passphrase. This will be run through
- 64,000 rounds of the PBKDF algorithm to securely convert it into an AES-256 key.
+   AES-256 key. To create a key, generate random data using a secure cryptographic randomizer
+   like SecRandomCopyBytes or CCRandomGenerateBytes.
+ * Alternatively, the value may be an NSString containing a password. This will be run through
+   64,000 rounds of the PBKDF algorithm to securely convert it into an AES-256 key.
  * A default nil value, of course, means the database is unencrypted.
  */
-@property (nonatomic, strong, nullable) id encryptionKey;
+@property (nonatomic, nullable) CBLEncryptionKey* encryptionKey;
 
 
 /** 
@@ -267,15 +267,12 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
 
 /**
  Changes the database's encryption key, or removes encryption if the new key is nil.
- @param key  The encryption key in the form of an NSString (a password) or an
- NSData object exactly 32 bytes in length (a raw AES key.) If a string is given,
- it will be internally converted to a raw key using 64,000 rounds of PBKDF2 hashing.
- A nil value will decrypt the database.
  
- @param error If an error occurs, it will be stored here if this parameter is non-NULL.
+ @param key  The encryption key.
+ @param error On return, the error if any.
  @return True if the database was successfully re-keyed, or false on failure.
  */
-- (BOOL) changeEncryptionKey: (nullable id)key error: (NSError**)error;
+- (BOOL) setEncryptionKey: (nullable CBLEncryptionKey*)key error: (NSError**)error;
 
 /**
  Deletes a database of the given name in the given directory.

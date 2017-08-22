@@ -13,9 +13,9 @@ import CouchbaseLiteSwift
 class DatabaseTest: CBLTestCase {
 
     func testProperties() throws {
-        XCTAssertEqual(db.name, kDatabaseName)
-        XCTAssert(db.path!.contains(kDatabaseName))
-        XCTAssert(Database.exists(kDatabaseName, inDirectory: kDirectory))
+        XCTAssertEqual(db.name, self.databaseName)
+        XCTAssert(db.path!.contains(self.databaseName))
+        XCTAssert(Database.exists(self.databaseName, inDirectory: self.directory))
     }
 
     func testCreateUntitledDocument() throws {

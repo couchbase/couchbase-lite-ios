@@ -34,7 +34,7 @@
     [super setUp];
 
     _c4ObjectCount = c4_getObjectCount();
-    NSString* dir = [[self class] directory];
+    NSString* dir = self.directory;
     if ([[NSFileManager defaultManager] fileExistsAtPath: dir]) {
         NSError* error;
         Assert([[NSFileManager defaultManager] removeItemAtPath: dir error: &error],
@@ -65,14 +65,14 @@
 }
 
 
-+ (NSString*) directory {
+- (NSString*) directory {
     return [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
 }
 
 
 - (CBLDatabase*) openDBNamed: (NSString*)name error: (NSError**)error {
     CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
-    config.directory = [[self class] directory];
+    config.directory = self.directory;
     config.conflictResolver = self.conflictResolver;
     return [[CBLDatabase alloc] initWithName: name config: config error: error];
 }

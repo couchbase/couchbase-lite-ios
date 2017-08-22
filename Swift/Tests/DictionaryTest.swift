@@ -12,6 +12,7 @@ import CouchbaseLiteSwift
 
 
 class DictionaryTest: CBLTestCase {
+    
     func testCreateDictionary() throws {
         let address = DictionaryObject()
         XCTAssertEqual(address.count, 0)
@@ -164,5 +165,6 @@ class DictionaryTest: CBLTestCase {
             XCTAssert(result == content)
             XCTAssertEqual(count, content.count)
         }
-    } 
+    }
+    
 }
