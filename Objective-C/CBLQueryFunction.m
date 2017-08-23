@@ -208,6 +208,12 @@
     return [[self alloc] initWithFunction: @"ISSTRING()" params: @[expression]];
 }
 
+#pragma mark - FTS
+
++ (instancetype) rank: (CBLQueryExpression*)property {
+    return [[self alloc] initWithFunction: @"RANK()" params: @[property]];
+}
+
 #pragma mark - Internal
 
 

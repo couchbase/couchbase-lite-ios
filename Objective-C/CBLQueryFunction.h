@@ -396,6 +396,18 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (instancetype) isString:(id)expression;
 
+#pragma mark - FTS
+
+
+/**
+ Creates a full-text ranking value function indicating how well the current
+ query result matches the full-text query when performing the match comparison.
+
+ @param property The property expression used in the full-text match expression.
+ @return The full-text ranking value.
+ */
++ (instancetype) rank: (CBLQueryExpression*)property;
+
 @end
 
 NS_ASSUME_NONNULL_END

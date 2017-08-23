@@ -281,7 +281,7 @@ class QueryTest: CBLTestCase {
         let s_sentence = SelectResult.expression(sentence)
         
         let w = sentence.match("'Dummie woman'")
-        let o = Ordering.expression(Expression.fts().rank("sentences")).descending()
+        let o = Ordering.expression(Function.rank(sentence)).descending()
         let q = Query.select(kDOCID, s_sentence).from(DataSource.database(db)).where(w).orderBy(o)
         let numRows = try verifyQuery(q) { (n, r) in
             

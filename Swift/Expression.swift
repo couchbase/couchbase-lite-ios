@@ -35,17 +35,6 @@ public class Expression {
     }
     
     
-    // MARK: FTS
-    
-    
-    ///  Get a FTS object which is a factory object for creating FTS releated expressions.
-    ///
-    /// - Returns: A FTS object.
-    public static func fts() -> FTS {
-        return FTS()
-    }
-    
-    
     // MARK: Parameter
     
     

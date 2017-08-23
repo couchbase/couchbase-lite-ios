@@ -338,8 +338,8 @@
     CBLQueryExpression* SENTENCE = [CBLQueryExpression property: @"sentence"];
     CBLQuerySelectResult* S_SENTENCE = [CBLQuerySelectResult expression: SENTENCE];
     CBLQueryExpression* where = [SENTENCE match: @"'Dummie woman'"];
-    CBLQueryOrdering* order = [[CBLQueryOrdering expression:
-                                [[CBLQueryExpression fts] rank: @"sentence"]] descending];
+    CBLQueryOrdering* order = [[CBLQueryOrdering expression: [CBLQueryFunction rank: SENTENCE]]
+                               descending];
     CBLQuery* q = [CBLQuery select: @[kDOCID, S_SENTENCE]
                               from: [CBLQueryDataSource database: self.db]
                              where: where

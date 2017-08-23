@@ -59,17 +59,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (CBLQueryMeta*) metaFrom: (nullable NSString*)alias;
 
-#pragma mark - FTS:
-
-
-/**
- Gets a CBLQueryFTS object, which is a factory object for creating full-text search related
- expressions.
-
- @return The CBBLQueryFTS object.
- */
-+ (CBLQueryFTS*) fts;
-
 #pragma mark - Parameter:
 
 /** 
