@@ -274,8 +274,11 @@ class QueryTest: CBLTestCase {
     func testWhereMatch() throws {
         try loadJSONResource(name: "sentences")
         
-        try db.createIndex(["sentence"], options:
-            IndexOptions.fullTextIndex(language: nil, ignoreDiacritics: false))
+        let index = Index.ftsIndex()
+            .on(FTSIndexItem.expression(Expression.property("sentence")))
+            .locale(nil)
+            .ignoreAccents(false)
+        try db.createIndex(index, forName: "sentence")
         
         let sentence = Expression.property("sentence")
         let s_sentence = SelectResult.expression(sentence)

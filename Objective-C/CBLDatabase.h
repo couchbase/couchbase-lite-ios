@@ -7,27 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDocument, CBLDocumentFragment, CBLDatabaseChange, CBLDocumentChange, CBLPredicateQuery;
+@class CBLDocument, CBLDocumentFragment, CBLDatabaseChange, CBLDocumentChange;
+@class CBLIndex;
+@class CBLPredicateQuery;
 @protocol CBLConflictResolver, CBLDocumentChangeListener;
 
 NS_ASSUME_NONNULL_BEGIN
-
-
-/** Types of database indexes. */
-typedef NS_ENUM(uint32_t, CBLIndexType) {
-    kCBLValueIndex,         ///< Regular index of property values
-    kCBLFullTextIndex,      ///< Full-text index
-    kCBLGeoIndex,           ///< Geospatial index of GeoJSON values
-};
-
-
-/** Options for creating a database index. */
-typedef struct {
-    const char * _Nullable language;    ///< Full-text: Language code, e.g. "en" or "de". This
-                                        ///<    affects how word breaks and word stems are parsed.
-                                        ///<    NULL for current locale, "" to disable stemming.
-    BOOL ignoreDiacritics;              ///< Full-text: True to ignore accents/diacritical marks.
-} CBLIndexOptions;
 
 
 /** Configuration for opening a database. */
@@ -374,6 +359,35 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
 - (void) removeChangeListener: (id<NSObject>)listener;
 
 
+#pragma mark - Index
+
+
+/** All index names. */
+@property (atomic, readonly) NSArray<NSString*>* indexes;
+
+/**
+ Creates an index which could be a value index or a full-text search index with the given name.
+ The name can be used for deleting the index. Creating a new different index with an existing
+ index name will replace the old index; creating the same index with the same name will be no-ops.
+ 
+ @param index The index.
+ @param name The index name.
+ @param error error On return, the error if any.
+ @return True on success, false on failure.
+ */
+- (BOOL) createIndex: (CBLIndex*)index forName: (NSString*)name error: (NSError**)error;
+
+
+/**
+ Deletes the index of the given index name.
+
+ @param name The index name.
+ @param error error On return, the error if any.
+ @return True on success, false on failure.
+ */
+- (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)error;
+
+
 #pragma mark - Querying
 
 
@@ -394,48 +408,6 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  @return The CBLQuery.
  */
 - (CBLPredicateQuery*) createQueryWhere: (nullable id)where;
-
-/** 
- Creates a value index (type kCBLValueIndex) on a given document property.
- This will speed up queries that test that property, at the expense of making database writes a
- little bit slower.
- 
- @param expressions Expressions to index, typically key-paths. Can be CBLQueryExpression,
-                    NSExpression objects, or NSStrings that are expression format strings.
- @param error If an error occurs, it will be stored here if this parameter is non-NULL.
- @return True on success, false on failure.
- */
-- (BOOL) createIndexOn: (NSArray*)expressions
-                 error: (NSError**)error;
-
-/** 
- Creates an index on a given document property.
- This will speed up queries that test that property, at the expense of making database writes a
- little bit slower.
- 
- @param expressions Expressions to index, typically key-paths. Can be CBLQueryExpression,
-                    NSExpression objects, or NSStrings that are expression format strings.
- @param type Type of index to create (value, full-text or geospatial.)
- @param options Options affecting the index, or NULL for default settings.
- @param error If an error occurs, it will be stored here if this parameter is non-NULL.
- @return True on success, false on failure.
- */
-- (BOOL) createIndexOn: (NSArray*)expressions
-                  type: (CBLIndexType)type
-               options: (nullable const CBLIndexOptions*)options
-                 error: (NSError**)error;
-
-/** 
- Deletes an existing index. Returns NO if the index did not exist.
- 
- @param expressions  Expressions indexed (same parameter given to -createIndexOn:.)
- @param type  Type of index.
- @param error  If an error occurs, it will be stored here if this parameter is non-NULL.
- @return  True if the index existed and was deleted, false if it did not exist. 
- */
-- (BOOL) deleteIndexOn: (NSArray*)expressions
-                  type: (CBLIndexType)type
-                 error: (NSError**)error;
 
 @end
 

@@ -1292,4 +1292,162 @@
 }
 
 
+- (void) testCreateIndex {
+    // Precheck:
+    Assert(self.db.indexes);
+    AssertEqual(self.db.indexes.count, 0u);
+    
+    // Create value index:
+    CBLQueryExpression* fName = [CBLQueryExpression property: @"firstName"];
+    CBLQueryExpression* lName = [CBLQueryExpression property: @"lastName"];
+    
+    CBLValueIndexItem* fNameItem = [CBLValueIndexItem expression: fName];
+    CBLValueIndexItem* lNameItem = [CBLValueIndexItem expression: lName];
+    
+    NSError* error;
+    
+    CBLIndex* index1 = [CBLIndex valueIndexOn: @[fNameItem, lNameItem]];
+    Assert([self.db createIndex: index1 forName: @"index1" error: &error],
+           @"Error when creating value index: %@", error);
+    
+    // Create FTS index:
+    CBLQueryExpression* detail  = [CBLQueryExpression property: @"detail"];
+    CBLFTSIndexItem* detailItem = [CBLFTSIndexItem expression: detail];
+    CBLIndex* index2 = [CBLIndex ftsIndexOn: detailItem options: nil];
+    Assert([self.db createIndex: index2 forName: @"index2" error: &error],
+           @"Error when creating FTS index without options: %@", error);
+    
+    CBLQueryExpression* detail2 = [CBLQueryExpression property: @"es-detail"];
+    CBLFTSIndexItem* detailItem2 = [CBLFTSIndexItem expression: detail2];
+    CBLFTSIndexOptions* options = [[CBLFTSIndexOptions alloc] init];
+    options.locale = @"es";
+    options.ignoreAccents = YES;
+    CBLIndex* index3 = [CBLIndex ftsIndexOn: detailItem2 options: options];
+    Assert([self.db createIndex: index3 forName: @"index3" error: &error],
+           @"Error when creating FTS index with options: %@", error);
+    
+    NSArray* names = self.db.indexes;
+    AssertEqual(names.count, 3u);
+    AssertEqualObjects(names, (@[@"index1", @"index2", @"index3"]));
+}
+
+
+- (void) testCreateSameIndexTwice {
+    // Create index with first name:
+    NSError* error;
+    CBLValueIndexItem* item = [CBLValueIndexItem expression:
+                               [CBLQueryExpression property: @"firstName"]];
+    CBLIndex* index = [CBLIndex valueIndexOn: @[item]];
+    Assert([self.db createIndex: index forName: @"myindex" error: &error],
+           @"Error when creating value index: %@", error);
+    
+    // Call create index again:
+    Assert([self.db createIndex: index forName: @"myindex" error: &error],
+           @"Error when creating value index: %@", error);
+    
+    NSArray* names = self.db.indexes;
+    AssertEqual(names.count, 1u);
+    AssertEqualObjects(names, (@[@"myindex"]));
+}
+
+
+- (void) failingTestCreateSameNameIndexes {
+    NSError* error;
+    
+    CBLQueryExpression* fName = [CBLQueryExpression property: @"firstName"];
+    CBLQueryExpression* lName = [CBLQueryExpression property: @"lastName"];
+    CBLQueryExpression* detail  = [CBLQueryExpression property: @"detail"];
+    
+    // Create value index with first name:
+    CBLValueIndexItem* fNameItem = [CBLValueIndexItem expression: fName];
+    CBLIndex* fNameIndex = [CBLIndex valueIndexOn: @[fNameItem]];
+    Assert([self.db createIndex: fNameIndex forName: @"myindex" error: &error],
+           @"Error when creating value index: %@", error);
+
+    // Create value index with last name:
+    CBLValueIndexItem* lNameItem = [CBLValueIndexItem expression: lName];
+    CBLIndex* lNameIndex = [CBLIndex valueIndexOn: @[lNameItem]];
+    Assert([self.db createIndex: lNameIndex forName: @"myindex" error: &error],
+           @"Error when creating value index: %@", error);
+    
+    // Check:
+    NSArray* names = self.db.indexes;
+    AssertEqual(names.count, 1u);
+    AssertEqualObjects(names, (@[@"myindex"]));
+    
+    // Create FTS index:
+    CBLFTSIndexItem* detailItem = [CBLFTSIndexItem expression: detail];
+    CBLIndex* detailIndex = [CBLIndex ftsIndexOn: detailItem options: nil];
+    Assert([self.db createIndex: detailIndex forName: @"myindex" error: &error],
+           @"Error when creating FTS index without options: %@", error);
+    
+    // Check:
+    names = self.db.indexes;
+    AssertEqual(names.count, 1u);
+    AssertEqualObjects(names, (@[@"myindex"]));
+}
+
+
+- (void) testDeleteIndex {
+    // Precheck:
+    AssertEqual(self.db.indexes.count, 0u);
+    
+    // Create value index:
+    CBLQueryExpression* fName = [CBLQueryExpression property: @"firstName"];
+    CBLQueryExpression* lName = [CBLQueryExpression property: @"lastName"];
+    
+    CBLValueIndexItem* fNameItem = [CBLValueIndexItem expression: fName];
+    CBLValueIndexItem* lNameItem = [CBLValueIndexItem expression: lName];
+    
+    NSError* error;
+    
+    CBLIndex* index1 = [CBLIndex valueIndexOn: @[fNameItem, lNameItem]];
+    Assert([self.db createIndex: index1 forName: @"index1" error: &error],
+           @"Error when creating value index: %@", error);
+    
+    // Create FTS index:
+    CBLQueryExpression* detail  = [CBLQueryExpression property: @"detail"];
+    CBLFTSIndexItem* detailItem = [CBLFTSIndexItem expression: detail];
+    CBLIndex* index2 = [CBLIndex ftsIndexOn: detailItem options: nil];
+    Assert([self.db createIndex: index2 forName: @"index2" error: &error],
+           @"Error when creating FTS index without options: %@", error);
+    
+    CBLQueryExpression* detail2 = [CBLQueryExpression property: @"es-detail"];
+    CBLFTSIndexItem* detail2Item = [CBLFTSIndexItem expression: detail2];
+    CBLFTSIndexOptions* options = [[CBLFTSIndexOptions alloc] init];
+    options.locale = @"es";
+    options.ignoreAccents = YES;
+    CBLIndex* index3 = [CBLIndex ftsIndexOn: detail2Item options: options];
+    Assert([self.db createIndex: index3 forName: @"index3" error: &error],
+           @"Error when creating FTS index with options: %@", error);
+    
+    NSArray* names = self.db.indexes;
+    AssertEqual(names.count, 3u);
+    AssertEqualObjects(names, (@[@"index1", @"index2", @"index3"]));
+    
+    // Delete indexes:
+    Assert([self.db deleteIndexForName: @"index1" error: &error]);
+    names = self.db.indexes;
+    AssertEqual(names.count, 2u);
+    AssertEqualObjects(names, (@[@"index2", @"index3"]));
+    
+    Assert([self.db deleteIndexForName: @"index2" error: &error]);
+    names = self.db.indexes;
+    AssertEqual(names.count, 1u);
+    AssertEqualObjects(names, (@[@"index3"]));
+    
+    Assert([self.db deleteIndexForName: @"index3" error: &error]);
+    names = self.db.indexes;
+    Assert(names);
+    AssertEqual(names.count, 0u);
+    
+    // Delete non existing index:
+    Assert([self.db deleteIndexForName: @"dummy" error: &error]);
+    
+    // Delete deleted indexes:
+    Assert([self.db deleteIndexForName: @"index1" error: &error]);
+    Assert([self.db deleteIndexForName: @"index2" error: &error]);
+    Assert([self.db deleteIndexForName: @"index3" error: &error]);
+}
+
 @end

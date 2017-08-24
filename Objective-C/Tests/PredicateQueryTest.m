@@ -36,7 +36,9 @@
 - (void) testPredicates {
     // The query with the 'matches' operator requires there to be a FTS index on 'blurb':
     NSError* error;
-    Assert([_db createIndexOn: @[@"blurb"] type: kCBLFullTextIndex options: NULL error: &error]);
+    CBLQueryExpression* blurb = [CBLQueryExpression property: @"blurb"];
+    CBLIndex* index = [CBLIndex ftsIndexOn: [CBLFTSIndexItem expression: blurb] options: nil];
+    Assert([_db createIndex: index forName: @"blurb" error: &error]);
     
     const struct {const char *pred; const char *json5;} kTests[] = {
         {"nickname == 'Bobo'",      "{WHERE: ['=', ['.nickname'],'Bobo']}"},
@@ -190,7 +192,9 @@
 
     // Try a query involving a property. The first pass will be unindexed, the 2nd indexed.
     NSError *error;
-    NSArray* indexSpec = @[ [NSExpression expressionForKeyPath: @"name.first"] ];
+    CBLQueryExpression* firstName = [CBLQueryExpression property: @"name.first"];
+    CBLIndex* index = [CBLIndex valueIndexOn: @[[CBLValueIndexItem expression: firstName]]];
+    
     for (int pass = 0; pass < 2; ++pass) {
         Log(@"---- Pass %d", pass);
         CBLPredicateQuery *q = [self.db createQueryWhere: @"name.first == $FIRSTNAME"];
@@ -208,12 +212,11 @@
             AssertEqualObjects([[doc objectForKey: @"name"] objectForKey: @"first"], @"Claude");
         }];
         AssertEqual(numRows, 1llu);
-
-        if (pass == 0) {
-            Assert([self.db createIndexOn: indexSpec type: kCBLValueIndex options: NULL error: &error]);
-        }
+        if (pass == 0)
+            Assert([_db createIndex: index forName: @"name.first" error: &error]);
     }
-    Assert([self.db deleteIndexOn: indexSpec type: kCBLValueIndex error: &error]);
+    
+    Assert([self.db deleteIndexForName: @"name.first" error: &error]);
 }
 
 
@@ -243,7 +246,10 @@
 - (void) testFTS {
     [self loadJSONResource: @"sentences"];
     NSError* error;
-    Assert([_db createIndexOn: @[@"sentence"] type: kCBLFullTextIndex options: NULL error: &error]);
+    CBLQueryExpression* sentence = [CBLQueryExpression property: @"sentence"];
+    CBLIndex* index = [CBLIndex ftsIndexOn: [CBLFTSIndexItem expression: sentence] options: nil];
+    Assert([_db createIndex: index forName: @"sentence" error: &error]);
+    
     CBLPredicateQuery *q = [self.db createQueryWhere: @"sentence matches 'Dummie woman'"];
     q.orderBy = @[@"-rank(sentence)"];
     q.returning = nil;
@@ -264,8 +270,9 @@
     [self loadJSONResource: @"names_100"];
     
     NSError* error;
-    NSArray* indexSpec = @[ [NSExpression expressionForKeyPath: @"name.first"] ];
-    Assert([self.db createIndexOn: indexSpec type: kCBLValueIndex options: NULL error: &error]);
+    CBLQueryExpression* firstName = [CBLQueryExpression property: @"name.first"];
+    CBLIndex* index = [CBLIndex valueIndexOn: @[[CBLValueIndexItem expression: firstName]]];
+    Assert([_db createIndex: index forName: @"name.first" error: &error]);
     
     CBLPredicateQuery *q = [self.db createQueryWhere: @"name.first == $FIRSTNAME"];
     q.parameters = @{@"FIRSTNAME": @"Claude"};

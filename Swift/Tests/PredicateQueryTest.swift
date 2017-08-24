@@ -53,8 +53,10 @@ class PredicateQueryTest: CBLTestCase {
                 XCTAssertEqual(doc.sequence, 9);
             }
             XCTAssertEqual(n, 1);
-
-            try db.createIndex([NSExpression(forKeyPath: "name.first")])
+            
+            let item = ValueIndexItem.expression(Expression.property("name.first"))
+            let index = Index.valueIndex().on(item)
+            try db.createIndex(index, forName: "name.first")
         }
     }
 
