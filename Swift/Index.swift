@@ -124,7 +124,8 @@ public class FTSIndex: Index {
     public func ignoreAccents(_ ignoreAccents: Bool) -> Self {
         if ignoreAccents != self.ignoreAccents {
             self.ignoreAccents = ignoreAccents
-            self.impl = CBLIndex.ftsIndex(on: item.impl, options: self.options())
+            let options = FTSIndex.options(ignoreAccents: self.ignoreAccents, locale: self.locale)
+            self.impl = CBLIndex.ftsIndex(on: item.impl, options: options)
         }
         return self
     }
@@ -140,7 +141,8 @@ public class FTSIndex: Index {
     public func locale(_ locale: String?) -> Self {
         if locale != self.locale {
             self.locale = locale
-            self.impl = CBLIndex.ftsIndex(on: item.impl, options: self.options())
+            let options = FTSIndex.options(ignoreAccents: self.ignoreAccents, locale: self.locale)
+            self.impl = CBLIndex.ftsIndex(on: item.impl, options: options)
         }
         return self
     }
@@ -155,10 +157,11 @@ public class FTSIndex: Index {
         self.item = item
         self.ignoreAccents = ignoreAccents
         self.locale = locale
-        super.init(impl: CBLIndex.ftsIndex(on: item.impl, options: self.options()))
+        let options = FTSIndex.options(ignoreAccents: self.ignoreAccents, locale: self.locale)
+        super.init(impl: CBLIndex.ftsIndex(on: item.impl, options: options))
     }
     
-    func options() -> CBLFTSIndexOptions? {
+    class func options(ignoreAccents: Bool?, locale: String?) -> CBLFTSIndexOptions? {
         let options = CBLFTSIndexOptions()
         options.ignoreAccents = ignoreAccents ?? false
         options.locale = locale

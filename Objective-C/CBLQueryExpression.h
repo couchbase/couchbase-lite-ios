@@ -9,7 +9,6 @@
 #import <Foundation/Foundation.h>
 @class CBLQuery;
 @class CBLQueryCollation;
-@class CBLQueryFTS;
 @class CBLQueryMeta;
 
 
