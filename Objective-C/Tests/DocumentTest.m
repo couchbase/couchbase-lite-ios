@@ -326,12 +326,14 @@
     [doc setObject: @(0) forKey: @"number2"];
     [doc setObject: @(-1) forKey: @"number3"];
     [doc setObject: @(1.1) forKey: @"number4"];
+    [doc setObject: @(12345678) forKey: @"number5"];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d objectForKey: @"number1"], @(1));
         AssertEqualObjects([d objectForKey: @"number2"], @(0));
         AssertEqualObjects([d objectForKey: @"number3"], @(-1));
         AssertEqualObjects([d objectForKey: @"number4"], @(1.1));
+        AssertEqualObjects([d objectForKey: @"number5"], @(12345678));
     }];
     
     // Update:
@@ -340,12 +342,14 @@
     [doc setObject: @(1) forKey: @"number2"];
     [doc setObject: @(1.1) forKey: @"number3"];
     [doc setObject: @(-1) forKey: @"number4"];
+    [doc setObject: @(-12345678) forKey: @"number5"];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d objectForKey: @"number1"], @(0));
         AssertEqualObjects([d objectForKey: @"number2"], @(1));
         AssertEqualObjects([d objectForKey: @"number3"], @(1.1));
         AssertEqualObjects([d objectForKey: @"number4"], @(-1));
+        AssertEqualObjects([d objectForKey: @"number5"], @(-12345678));
     }];
 }
 

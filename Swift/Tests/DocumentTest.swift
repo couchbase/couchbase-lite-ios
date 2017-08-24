@@ -292,6 +292,7 @@ class DocumentTest: CBLTestCase {
         doc.setValue(0, forKey: "number2")
         doc.setValue(-1, forKey: "number3")
         doc.setValue(1.1, forKey: "number4")
+        doc.setValue(12345678, forKey: "number5")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(doc.int(forKey: "number1"), 1)
@@ -299,6 +300,7 @@ class DocumentTest: CBLTestCase {
             XCTAssertEqual(doc.int(forKey: "number3"), -1)
             XCTAssertEqual(doc.float(forKey: "number4"), 1.1)
             XCTAssertEqual(doc.double(forKey: "number4"), 1.1)
+            XCTAssertEqual(doc.int(forKey: "number5"), 12345678)
         })
         
         // Update:
@@ -307,6 +309,7 @@ class DocumentTest: CBLTestCase {
         doc.setValue(1, forKey: "number2")
         doc.setValue(1.1, forKey: "number3")
         doc.setValue(-1, forKey: "number4")
+        doc.setValue(-12345678, forKey: "number5")
         
         try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(doc.int(forKey: "number1"), 0)
@@ -314,6 +317,7 @@ class DocumentTest: CBLTestCase {
             XCTAssertEqual(doc.float(forKey: "number3"), 1.1)
             XCTAssertEqual(doc.double(forKey: "number3"), 1.1)
             XCTAssertEqual(doc.int(forKey: "number4"), -1)
+            XCTAssertEqual(doc.int(forKey: "number5"), -12345678)
         })
     }
     
