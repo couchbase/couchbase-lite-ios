@@ -72,7 +72,10 @@ extern atomic_int gC4ExpectExceptions;
 
 /** Utility to check a failure case. This method asserts that the block returns NO, and that
     it sets the NSError to the given domain and code. */
-- (void) expectError: (NSErrorDomain)domain code: (NSInteger)code
-                  in: (BOOL (^)(NSError**))block;
+- (void) expectError: (NSErrorDomain)domain code: (NSInteger)code in: (BOOL (^)(NSError**))block;
+
+/** Utility to check exception. This method asserts that the block has thrown the exception of the
+    given name or not. */
+- (void) expectException: (NSString*)name in: (void (^) (void))block;
 
 @end

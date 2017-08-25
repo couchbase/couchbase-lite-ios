@@ -171,9 +171,7 @@
 
 
 // helper method to check error
-- (void) expectError: (NSErrorDomain)domain code: (NSInteger)code
-                  in: (BOOL (^)(NSError**))block
-{
+- (void) expectError: (NSErrorDomain)domain code: (NSInteger)code in: (BOOL (^)(NSError**))block {
     ++gC4ExpectExceptions;
     NSError* error;
     BOOL succeeded = block(&error);
@@ -188,5 +186,11 @@
     }
 }
 
+
+- (void) expectException: (NSString*)name in: (void (^) (void))block {
+    ++gC4ExpectExceptions;
+    XCTAssertThrowsSpecificNamed(block(), NSException, name);
+    --gC4ExpectExceptions;
+}
 
 @end

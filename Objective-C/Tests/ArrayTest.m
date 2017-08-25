@@ -298,12 +298,11 @@
     CBLArray* array = [[CBLArray alloc] init];
     [array addObject: @"a"];
     
-    ++gC4ExpectExceptions;
     for (id index in @[@(-1), @(1)]) {
-        XCTAssertThrowsSpecificNamed([array setObject: @"b" atIndex: [index integerValue]],
-                                     NSException, @"NSRangeException");
+        [self expectException: @"NSRangeException" in: ^{
+            [array setObject: @"b" atIndex: [index integerValue]];
+        }];
     }
-    --gC4ExpectExceptions;
 }
 
 
@@ -396,13 +395,12 @@
     CBLArray* array = [[CBLArray alloc] init];
     [array addObject: @"a"];
 
-    ++gC4ExpectExceptions;
     for (id index in @[@(-1), @(2)]) {
         NSInteger i = [index integerValue];
-        XCTAssertThrowsSpecificNamed([array insertObject: @"b" atIndex: i],
-                                     NSException, @"NSRangeException");
+        [self expectException: @"NSRangeException" in: ^{
+            [array insertObject: @"b" atIndex: i];
+        }];
     }
-    --gC4ExpectExceptions;
 }
 
 
@@ -446,12 +444,11 @@
     CBLArray* array = [[CBLArray alloc] init];
     [array addObject: @"a"];
     
-    ++gC4ExpectExceptions;
     for (id index in @[@(-1), @(1)]) {
-        XCTAssertThrowsSpecificNamed([array removeObjectAtIndex: [index integerValue]],
-                                     NSException, @"NSRangeException");
+        [self expectException: @"NSRangeException" in: ^{
+            [array removeObjectAtIndex: [index integerValue]];
+        }];
     }
-    --gC4ExpectExceptions;
 }
 
 

@@ -367,10 +367,10 @@
     // close db
     [self closeDatabase: self.db];
     
-    ++gC4ExpectExceptions;
-    XCTAssertThrowsSpecificNamed([self.db documentWithID: @"doc1"], NSException,
-                                 NSInternalInconsistencyException);
-    --gC4ExpectExceptions;
+    // Get doc
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [self.db documentWithID: @"doc1"];
+    }];
 }
 
 
@@ -381,10 +381,9 @@
     // delete db
     [self deleteDatabase: self.db];
     
-    ++gC4ExpectExceptions;
-    XCTAssertThrowsSpecificNamed([self.db documentWithID: @"doc1"], NSException,
-                                 NSInternalInconsistencyException);
-    --gC4ExpectExceptions;
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [self.db documentWithID: @"doc1"];
+    }];
 }
 
 
@@ -512,10 +511,9 @@
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject:@1 forKey:@"key"];
     
-    ++gC4ExpectExceptions;
-    XCTAssertThrowsSpecificNamed([self.db saveDocument: doc error: nil], NSException,
-                                 NSInternalInconsistencyException);
-    --gC4ExpectExceptions;
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [self.db saveDocument: doc error: nil];
+    }];
 }
 
 
@@ -526,10 +524,9 @@
     CBLDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @1 forKey: @"key"];
     
-    ++gC4ExpectExceptions;
-    XCTAssertThrowsSpecificNamed([self.db saveDocument: doc error: nil], NSException,
-                                 NSInternalInconsistencyException);
-    --gC4ExpectExceptions;
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [self.db saveDocument: doc error: nil];
+    }];
 }
 
 
@@ -674,10 +671,9 @@
     [self closeDatabase: self.db];
     
     // delete doc from db.
-    ++gC4ExpectExceptions;
-    XCTAssertThrowsSpecificNamed([self.db deleteDocument: doc error: nil], NSException,
-                                 NSInternalInconsistencyException);
-    --gC4ExpectExceptions;
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [self.db deleteDocument: doc error: nil];
+    }];
 }
 
 
@@ -689,10 +685,9 @@
     [self deleteDatabase: self.db];
     
     // delete doc from db.
-    ++gC4ExpectExceptions;
-    XCTAssertThrowsSpecificNamed([self.db deleteDocument: doc error: nil], NSException,
-                                 NSInternalInconsistencyException);
-    --gC4ExpectExceptions;
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [self.db deleteDocument: doc error: nil];
+    }];
 }
 
 
@@ -824,10 +819,9 @@
     [self closeDatabase:self.db];
     
     // purge doc
-    ++gC4ExpectExceptions;
-    XCTAssertThrowsSpecificNamed([self.db purgeDocument: doc error: nil], NSException,
-                                 NSInternalInconsistencyException);
-    --gC4ExpectExceptions;
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [self.db purgeDocument: doc error: nil];
+    }];
 }
 
 
@@ -839,10 +833,9 @@
     [self deleteDatabase: self.db];
     
     // purge doc
-    ++gC4ExpectExceptions;
-    XCTAssertThrowsSpecificNamed([self.db purgeDocument: doc error: nil], NSException,
-                                 NSInternalInconsistencyException);
-    --gC4ExpectExceptions;
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [self.db purgeDocument: doc error: nil];
+    }];
 }
 
 
@@ -942,10 +935,9 @@
 - (void) testDeleteTwice {
     NSError* error;
     Assert([self.db deleteDatabase: &error]);
-    ++gC4ExpectExceptions;
-    XCTAssertThrowsSpecificNamed([self.db deleteDatabase: &error], NSException,
-                                 NSInternalInconsistencyException);
-    --gC4ExpectExceptions;
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [self.db deleteDatabase: nil];
+    }];
 }
 
 
