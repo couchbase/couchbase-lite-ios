@@ -1344,7 +1344,7 @@
 }
 
 
-- (void) failingTestCreateSameNameIndexes {
+- (void) testCreateSameNameIndexes {
     NSError* error;
     
     CBLQueryExpression* fName = [CBLQueryExpression property: @"firstName"];
