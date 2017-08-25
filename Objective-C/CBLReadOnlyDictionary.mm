@@ -20,13 +20,17 @@
     CBLFLDict* _data;
     FLDict _dict;
     NSArray* _keys;                 // all keys cache
+    NSObject* _lock;
 }
 
-@synthesize data=_data, swiftObject=_swiftObject;
+@synthesize lock=_lock;
+@synthesize swiftObject=_swiftObject;
 
 - /* internal */ (instancetype) initWithFleeceData: (nullable CBLFLDict*)data {
     self = [super init];
     if (self) {
+        _lock = [[NSObject alloc] init];
+        
         self.data = data;
     }
     return self;
@@ -37,11 +41,14 @@
 
 
 - (NSUInteger) count {
-    return FLDict_Count(_dict);
+    CBL_LOCK(_lock) {
+        return FLDict_Count(_dict);
+    }
 }
 
 
 #pragma mark - Accessing Keys
+
 
 - (NSArray*) keys {
     return [[self fleeceKeys] copy];
@@ -124,10 +131,12 @@
 
 
 - (NSDictionary<NSString*,id>*) toDictionary {
-    if (_dict != nullptr)
-        return FLValue_GetNSObject((FLValue)_dict, _data.database.sharedKeys);
-    else
-        return @{};
+    CBL_LOCK(_lock) {
+        if (_dict != nullptr)
+            return FLValue_GetNSObject((FLValue)_dict, _data.database.sharedKeys);
+        else
+            return @{};
+    }
 }
 
 
@@ -154,8 +163,17 @@
 
 
 - (void) setData: (CBLFLDict*)data {
-    _data = data;
-    _dict = data.dict;
+    CBL_LOCK(_lock) {
+        _data = data;
+        _dict = data.dict;
+    }
+}
+
+
+- (CBLFLDict*) data {
+    CBL_LOCK(_lock) {
+        return _data;
+    }
 }
 
 
@@ -184,7 +202,9 @@
                  database: (CBLDatabase*)database
                     error: (NSError**)outError
 {
-    return FL_WriteValue(encoder, (FLValue)_dict, database.sharedKeys);
+    CBL_LOCK(_lock) {
+        return FL_WriteValue(encoder, (FLValue)_dict, database.sharedKeys);
+    }
 }
 
 
@@ -192,38 +212,45 @@
 
 
 - (FLValue) fleeceValueForKey: (NSString*)key {
-    if (_dict != nullptr)
-        return FLDict_GetValue(_dict, CBLStringBytes(key), _data.database.sharedKeys);
-    else
-        return nullptr;
+    CBL_LOCK(_lock) {
+        if (_dict != nullptr)
+            return FLDict_GetValue(_dict, CBLStringBytes(key), _data.database.sharedKeys);
+        else
+            return nullptr;
+    }
 }
 
 
 - (id) fleeceValueToObjectForKey: (NSString*)key {
-    FLValue value = [self fleeceValueForKey: key];
-    if (value != nullptr)
-        return [CBLData fleeceValueToObject: value datasource: _data.datasource
-                                   database: _data.database];
-    else
-        return nil;
+    CBL_LOCK(_lock) {
+        FLValue value = [self fleeceValueForKey: key];
+        if (value != nullptr) {
+            return [CBLData fleeceValueToObject: value
+                                     datasource: _data.datasource
+                                       database: _data.database];
+        } else
+            return nil;
+    }
 }
 
 
 - (NSArray*) fleeceKeys {
-    if (!_keys) {
-        NSMutableArray* keys = [NSMutableArray arrayWithCapacity: FLDict_Count(_dict)];
-        if (_dict != nullptr) {
-            FLDictIterator iter;
-            FLDictIterator_Begin(_dict, &iter);
-            NSString *key;
-            while (nullptr != (key = FLDictIterator_GetKey(&iter, _data.database.sharedKeys))) {
-                [keys addObject: key];
-                FLDictIterator_Next(&iter);
+    CBL_LOCK(_lock) {
+        if (!_keys) {
+            NSMutableArray* keys = [NSMutableArray arrayWithCapacity: FLDict_Count(_dict)];
+            if (_dict != nullptr) {
+                FLDictIterator iter;
+                FLDictIterator_Begin(_dict, &iter);
+                NSString *key;
+                while (nullptr != (key = FLDictIterator_GetKey(&iter, _data.database.sharedKeys))) {
+                    [keys addObject: key];
+                    FLDictIterator_Next(&iter);
+                }
             }
+            _keys= keys;
         }
-        _keys= keys;
+        return _keys;
     }
-    return _keys;
 }
 
 

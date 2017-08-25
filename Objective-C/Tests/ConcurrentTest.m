@@ -316,8 +316,7 @@
 }
 
 
-// Enable when CBLDictionary is thread safe:
-- (void) testConcurrentUpateDocs {
+- (void) testConcurrentUpdateDocs {
     const NSUInteger kNDocs = 1;
     const NSUInteger kNRounds = 1;
     const NSUInteger kNConcurrents = 1;
@@ -337,7 +336,7 @@
 }
 
 
-- (void) _testConcurrentGetDocs {
+- (void) testConcurrentGetDocs {
     const NSUInteger kNDocs = 1;
     const NSUInteger kNRounds = 100;
     const NSUInteger kNConcurrents = 5;
@@ -519,8 +518,7 @@
 }
 
 
-// Enable when CBLDictionary is thread safe:
-- (void) _testConcurrentUpdateNewDictionary {
+- (void) testConcurrentUpdateNewDictionary {
     const NSUInteger kNRounds = 100;
     const NSUInteger kNConcurrents = 10;
     
@@ -534,8 +532,7 @@
 }
 
 
-// Enable when CBLDictionary is thread safe:
-- (void) _testConcurrentUpdateExistingDictionary {
+- (void) testConcurrentUpdateExistingDictionary {
     const NSUInteger kNRounds = 100;
     const NSUInteger kNConcurrents = 10;
     
@@ -559,7 +556,7 @@
 }
 
 
-- (void) _testConcurrentReadNewDictionary {
+- (void) testConcurrentReadNewDictionary {
     const NSUInteger kNRounds = 100;
     const NSUInteger kNConcurrents = 10;
     
@@ -572,7 +569,7 @@
 }
 
 
-- (void) _testConcurrentReadExistingDictionary {
+- (void) testConcurrentReadExistingDictionary {
     const NSUInteger kNRounds = 100;
     const NSUInteger kNConcurrents = 10;
     
@@ -624,8 +621,7 @@
 }
 
 
-// Enable when CBLArray is thread safe:
-- (void) _testConcurrentUpdateNewArray {
+- (void) testConcurrentUpdateNewArray {
     const NSUInteger kNRounds = 100;
     const NSUInteger kNConcurrents = 10;
     
@@ -640,8 +636,7 @@
 }
 
 
-// Enable when CBLArray is thread safe:
-- (void) _testConcurrentUpdateExistingArray {
+- (void) testConcurrentUpdateExistingArray {
     const NSUInteger kNRounds = 100;
     const NSUInteger kNConcurrents = 10;
     
@@ -664,8 +659,7 @@
 }
 
 
-// Enable when CBLArray is thread safe:
-- (void) _testConcurrentReadNewArray {
+- (void) testConcurrentReadNewArray {
     const NSUInteger kNRounds = 100;
     const NSUInteger kNConcurrents = 10;
     
@@ -678,8 +672,7 @@
 }
 
 
-// Enable when CBLArray is thread safe:
-- (void) _testConcurrentReadExistingArray {
+- (void) testConcurrentReadExistingArray {
     const NSUInteger kNRounds = 100;
     const NSUInteger kNConcurrents = 10;
     

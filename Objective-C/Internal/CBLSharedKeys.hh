@@ -102,3 +102,4 @@ C4Doc_ContainsBlobs(FLDict root, cbl::SharedKeys *sk) {
 }
 
 NS_ASSUME_NONNULL_END
+
