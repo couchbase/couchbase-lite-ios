@@ -60,7 +60,6 @@
                                             name: UIApplicationProtectedDataDidBecomeAvailable
                                           object: nil];
     [_bgMonitor stop];
-    _bgMonitor = nil;
 }
 
 
