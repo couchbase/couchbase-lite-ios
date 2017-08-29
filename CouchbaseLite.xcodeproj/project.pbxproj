@@ -1943,6 +1943,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 275F92851E4D30A4007FD5A2 /* Build configuration list for PBXNativeTarget "CBL Swift" */;
 			buildPhases = (
+				93D119001F5604C8000F6D3E /* Check Git Commit */,
 				275F926F1E4D30A4007FD5A2 /* Sources */,
 				275F92701E4D30A4007FD5A2 /* Frameworks */,
 				275F92711E4D30A4007FD5A2 /* Headers */,
@@ -2034,6 +2035,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9398D9261E03434200464432 /* Build configuration list for PBXNativeTarget "CBL ObjC" */;
 			buildPhases = (
+				93D118ED1F560232000F6D3E /* Check Git Commit */,
 				9398D90D1E03434200464432 /* Sources */,
 				9398D90E1E03434200464432 /* Frameworks */,
 				9398D90F1E03434200464432 /* Headers */,
@@ -2325,6 +2327,41 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		93D118ED1F560232000F6D3E /* Check Git Commit */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Scripts/get_repo_version.sh",
+			);
+			name = "Check Git Commit";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/repo_version.h",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
+		};
+		93D119001F5604C8000F6D3E /* Check Git Commit */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Scripts/get_repo_version.sh",
+			);
+			name = "Check Git Commit";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/repo_version.h",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "source \"$SCRIPT_INPUT_FILE_0\"";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		275F926F1E4D30A4007FD5A2 /* Sources */ = {

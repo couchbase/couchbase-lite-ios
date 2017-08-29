@@ -4,7 +4,7 @@ set -e
 
 function usage 
 {
-  echo "\nUsage: ${0} -s <Scheme Name: \"CBL ObjC\" or \"CBL Swift\"> -p <Platform Name: iOS, tvOS, or macOS> -o <Output Directory> [-v <Version String>]\n" 
+  echo "Usage: ${0} -s <Scheme: \"CBL ObjC\" or \"CBL Swift\"> -p <Platform: iOS, tvOS, or macOS> -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>]" 
 }
 
 while [[ $# -gt 1 ]]
@@ -86,12 +86,20 @@ for SDK in "${SDKS[@]}"
 
     #Run xcodebuild:
     BUILD_VERSION=""
+    BUILD_NUMBER=""
     if [ ! -z "$VERSION" ]
     then
-      BUILD_VERSION="CBL_VERSION_STRING=${VERSION}"
+      IFS='-' read -a VERSION_ITEMS <<< "${VERSION}"
+      if [[ ${#VERSION_ITEMS[@]} > 1 ]]
+      then
+        BUILD_VERSION="CBL_VERSION_STRING=${VERSION_ITEMS[0]}"
+        BUILD_NUMBER="CBL_BUILD_NUMBER=${VERSION_ITEMS[1]}"
+      else
+        BUILD_VERSION="CBL_VERSION_STRING=${VERSION}"
+      fi
     fi
 
-    xcodebuild -scheme "${SCHEME}" -configuration Release -sdk ${SDK} ${BUILD_VERSION} OTHER_CFLAGS="-fembed-bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" ${CLEAN_CMD} build
+    xcodebuild -scheme "${SCHEME}" -configuration Release -sdk ${SDK} ${BUILD_VERSION}  ${BUILD_NUMBER} OTHER_CFLAGS="-fembed-bitcode" "CODE_SIGNING_REQUIRED=NO" "CODE_SIGN_IDENTITY=" ${CLEAN_CMD} build
 
     # Get the XCode built framework and dsym file path:
     PRODUCTS_DIR=`xcodebuild -scheme "${SCHEME}" -configuration Release -sdk "${SDK}" -showBuildSettings|grep -w BUILT_PRODUCTS_DIR|head -n 1|awk '{ print $3 }'`

@@ -4,7 +4,7 @@ set -e
 
 function usage
 {
-  echo "Usage: ${0} -o <Output Directory> [-v <Version String>] [--notest]"
+  echo "Usage: ${0} -o <Output Directory> [-v <Version (<Version Number>[-<Build Number>])>] [--notest]"
 }
 
 while [[ $# -gt 0 ]]
