@@ -991,6 +991,48 @@
 }
 
 
+- (void) testQuantifiedOperatorVariableKeyPath {
+    NSArray* data = @[
+       @[@{@"city": @"San Francisco"}, @{@"city": @"Palo Alto"}, @{@"city": @"San Jose"}],
+       @[@{@"city": @"Mountain View"}, @{@"city": @"Palo Alto"}, @{@"city": @"Belmont"}],
+       @[@{@"city": @"San Francisco"}, @{@"city": @"Redwood City"}, @{@"city": @"San Mateo"}]
+    ];
+    
+    // Create documents:
+    NSInteger i = 0;
+    for (NSArray* cities in data) {
+        NSString* docID = [NSString stringWithFormat: @"doc-%ld", (long)i++];
+        CBLDocument* doc = [self createDocument: docID];
+        [doc setObject: cities forKey: @"paths"];
+        
+        NSData* d = [NSJSONSerialization dataWithJSONObject: [doc toDictionary] options: 0 error: nil];
+        NSString* str = [[NSString alloc] initWithData: d encoding:NSUTF8StringEncoding];
+        NSLog(@"%@", str);
+        [self saveDocument: doc];
+    }
+    
+    CBLQueryExpression* DOC_ID  = [CBLQueryExpression meta].id;
+    CBLQuerySelectResult* S_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
+    
+    CBLQueryExpression* PATHS  = [CBLQueryExpression property: @"paths"];
+    CBLQueryExpression* VAR_PATH  = [CBLQueryExpression variableNamed: @"path.city"];
+    CBLQueryExpression* where = [CBLQueryExpression any: @"path"
+                                                     in: PATHS
+                                              satisfies: [VAR_PATH equalTo: @"San Francisco"]];
+    
+    CBLQuery* q = [CBLQuery select: @[S_DOC_ID]
+                              from: [CBLQueryDataSource database: self.db]
+                             where: where];
+    
+    NSArray* expected = @[@"doc-0", @"doc-2"];
+    uint64_t numRows = [self verifyQuery: q randomAccess: NO test: ^(uint64_t n, CBLQueryResult* r)
+    {
+        AssertEqualObjects([r stringAtIndex: 0], expected[n-1]);
+    }];
+    AssertEqual(numRows, expected.count);
+}
+
+
 - (void) testSelectAll {
     [self loadNumbers: 100];
     
