@@ -8,12 +8,14 @@
 
 #import "CBLDictionary.h"
 #import "CBLDictionary+Swift.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLArray.h"
 #import "CBLBlob.h"
 #import "CBLData.h"
 #import "CBLDocument+Internal.h"
 #import "CBLFragment.h"
 #import "CBLJSON.h"
+#import "CBLSharedKeys.hh"
 #import "CBLStringBytes.h"
 
 
@@ -404,7 +406,7 @@
         id value = [self objectForKey: key];
         if (value != kCBLRemovedValue) {
             CBLStringBytes bKey(key);
-            FLEncoder_WriteKey(encoder, bKey);
+            FL_WriteKey(encoder, bKey, database.sharedKeys);
             if (![value cbl_fleeceEncode: encoder database: database error: outError])
                 return NO;
         }

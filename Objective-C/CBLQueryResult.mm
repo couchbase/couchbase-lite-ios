@@ -102,11 +102,9 @@
 
 
 - (NSArray*) toArray {
-    cbl::SharedKeys sk = [self database].sharedKeys;
-    
     NSMutableArray* array = [NSMutableArray array];
     for (NSUInteger i = 0; i < self.count; i++) {
-        [array addObject: FLValue_GetNSObject([self fleeceValueAtIndex: i], &sk)];
+        [array addObject: FLValue_GetNSObject([self fleeceValueAtIndex: i], self.database.sharedKeys)];
     }
     return array;
 }

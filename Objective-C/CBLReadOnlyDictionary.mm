@@ -16,11 +16,9 @@
 #import "CBLStringBytes.h"
 
 
-
 @implementation CBLReadOnlyDictionary {
     CBLFLDict* _data;
     FLDict _dict;
-    cbl::SharedKeys _sharedKeys;
     NSArray* _keys;                 // all keys cache
 }
 
@@ -127,7 +125,7 @@
 
 - (NSDictionary<NSString*,id>*) toDictionary {
     if (_dict != nullptr)
-        return FLValue_GetNSObject((FLValue)_dict, &_sharedKeys);
+        return FLValue_GetNSObject((FLValue)_dict, _data.database.sharedKeys);
     else
         return @{};
 }
@@ -158,7 +156,6 @@
 - (void) setData: (CBLFLDict*)data {
     _data = data;
     _dict = data.dict;
-    _sharedKeys = data.database.sharedKeys;
 }
 
 
@@ -187,7 +184,7 @@
                  database: (CBLDatabase*)database
                     error: (NSError**)outError
 {
-    return FLEncoder_WriteValueWithSharedKeys(encoder, (FLValue)_dict, _sharedKeys);
+    return FL_WriteValue(encoder, (FLValue)_dict, database.sharedKeys);
 }
 
 
@@ -195,7 +192,10 @@
 
 
 - (FLValue) fleeceValueForKey: (NSString*)key {
-    return FLDict_GetSharedKey(_dict, CBLStringBytes(key), &_sharedKeys);
+    if (_dict != nullptr)
+        return FLDict_GetValue(_dict, CBLStringBytes(key), _data.database.sharedKeys);
+    else
+        return nullptr;
 }
 
 
@@ -216,7 +216,7 @@
             FLDictIterator iter;
             FLDictIterator_Begin(_dict, &iter);
             NSString *key;
-            while (nullptr != (key = FLDictIterator_GetKey(&iter, &_sharedKeys))) {
+            while (nullptr != (key = FLDictIterator_GetKey(&iter, _data.database.sharedKeys))) {
                 [keys addObject: key];
                 FLDictIterator_Next(&iter);
             }

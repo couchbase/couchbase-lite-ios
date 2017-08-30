@@ -12,6 +12,7 @@
 #import "CBLDocument+Internal.h"
 #import "CBLCoreBridge.h"
 #import "CBLLog.h"
+#import "CBLSharedKeys.hh"
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
 #import "c4BlobStore.h"
@@ -276,7 +277,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
     FLEncoder_BeginDict(encoder, [dict count]);
     for (NSString *key in dict) {
         CBLStringBytes bKey(key);
-        FLEncoder_WriteKey(encoder, bKey);
+        FL_WriteKey(encoder, bKey, database.sharedKeys);
         id value = dict[key];
         FLEncoder_WriteNSObject(encoder, value);
     }
