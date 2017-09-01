@@ -8,6 +8,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLReplicator+Internal.h"
+#import "CBLReplicator+Backgrounding.h"
 #import "ConflictTest.h"
 
 
@@ -331,6 +332,156 @@
 }
 
 
+#if TARGET_OS_IPHONE
+
+
+- (void) testSwitchBackgroundForeground {
+    CBLReplicatorConfiguration* config = [self configForPush: YES pull: YES continuous: YES];
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+    
+    static NSInteger numRounds = 10;
+    
+    NSMutableArray* foregroundExps = [NSMutableArray arrayWithCapacity: numRounds + 1];
+    NSMutableArray* backgroundExps = [NSMutableArray arrayWithCapacity: numRounds];
+    for (NSInteger i = 0; i < numRounds; i++) {
+        [foregroundExps addObject: [self expectationWithDescription: @"Foregrounding"]];
+        [backgroundExps addObject: [self expectationWithDescription: @"Backgrounding"]];
+    }
+    [foregroundExps addObject: [self expectationWithDescription: @"Foregrounding"]];
+    
+    __block NSInteger backgroundCount = 0;
+    __block NSInteger foregroundCount = 0;
+    
+    XCTestExpectation* stopped = [self expectationWithDescription: @"Stopped"];
+    
+    id listener = [r addChangeListener: ^(CBLReplicatorChange* change) {
+        AssertNil(change.status.error);
+        if (change.status.activity == kCBLReplicatorBusy) {
+            [foregroundExps[foregroundCount++] fulfill];
+        } else if (change.status.activity == kCBLReplicatorOffline) {
+            [backgroundExps[backgroundCount++] fulfill];
+        } else if (change.status.activity == kCBLReplicatorStopped) {
+            [stopped fulfill];
+        }
+    }];
+    
+    [r start];
+    [self waitForExpectations: @[foregroundExps[0]] timeout: 5.0];
+    
+    for (int i = 0; i < numRounds; i++) {
+        [r appBackgrounding];
+        [self waitForExpectations: @[backgroundExps[i]] timeout: 5.0];
+        
+        [r appForegrounding];
+        [self waitForExpectations: @[foregroundExps[i+1]] timeout: 5.0];
+    }
+    
+    [r stop];
+    [self waitForExpectations: @[stopped] timeout: 5.0];
+    
+    AssertEqual(foregroundCount, numRounds + 1);
+    AssertEqual(backgroundCount, numRounds);
+    
+    [r removeChangeListener: listener];
+    r = nil;
+}
+
+
+- (void) testFastSwitchBackgroundForeground {
+    CBLReplicatorConfiguration* config = [self configForPush: YES pull: YES continuous: YES];
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+    
+    __block NSInteger backgroundCount = 0;
+    __block NSInteger foregroundCount = 0;
+    
+    XCTestExpectation* stopped = [self expectationWithDescription: @"Stopped"];
+    XCTestExpectation* done = [self expectationWithDescription: @"Done"];
+    
+    id listener = [r addChangeListener: ^(CBLReplicatorChange* change) {
+        AssertNil(change.status.error);
+        if (change.status.activity == kCBLReplicatorIdle) {
+            foregroundCount++;
+        } else if (change.status.activity == kCBLReplicatorOffline) {
+            backgroundCount++;
+        } else if (change.status.activity == kCBLReplicatorStopped) {
+            [stopped fulfill];
+        }
+    }];
+    
+    [r start];
+    
+    for (int i = 0; i < 10; i++) {
+        [r appBackgrounding];
+        [r appForegrounding];
+    }
+    
+    id block = [NSBlockOperation blockOperationWithBlock: ^{ [done fulfill]; }];
+    [NSTimer scheduledTimerWithTimeInterval: 0.3
+                                     target: block
+                                   selector: @selector(main) userInfo: nil repeats: NO];
+    [self waitForExpectations: @[done] timeout: 1.0];
+    
+    Assert(r.status.activity == kCBLReplicatorIdle);
+    
+    [r stop];
+    [self waitForExpectations: @[stopped] timeout: 5.0];
+    
+    [r removeChangeListener: listener];
+    r = nil;
+}
+
+
+- (void) testBackgroundingWhenStopping {
+    CBLReplicatorConfiguration* config = [self configForPush: YES pull: YES continuous: YES];
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+    
+    __block BOOL foregrounding = NO;
+    
+    XCTestExpectation* idle = [self expectationWithDescription: @"Idle after starting"];
+    XCTestExpectation* stopped = [self expectationWithDescription: @"Stopped"];
+    XCTestExpectation* done = [self expectationWithDescription: @"Done"];
+    
+    id listener = [r addChangeListener: ^(CBLReplicatorChange* change) {
+        Assert(!foregrounding);
+        AssertNil(change.status.error);
+        Assert(change.status.activity != kCBLReplicatorOffline);
+        
+        if (change.status.activity == kCBLReplicatorIdle) {
+            [idle fulfill];
+        } else if (change.status.activity == kCBLReplicatorStopped) {
+            [stopped fulfill];
+        }
+    }];
+    
+    [r start];
+    [self waitForExpectations: @[idle] timeout: 5.0];
+    
+    [r stop];
+    
+    // This shouldn't prevent the replicator to stop:
+    [r appBackgrounding];
+    [self waitForExpectations: @[stopped] timeout: 5.0];
+    
+    // This shouldn't wake up the replicator:
+    foregrounding = YES;
+    [r appForegrounding];
+    
+    // Wait for 0.3 seconds to ensure no more changes notified and cause !foregrounding to fail:
+    id block = [NSBlockOperation blockOperationWithBlock: ^{ [done fulfill]; }];
+    [NSTimer scheduledTimerWithTimeInterval: 0.3
+                                     target: block
+                                   selector: @selector(main) userInfo: nil repeats: NO];
+    [self waitForExpectations: @[done] timeout: 1.0];
+    
+    [r removeChangeListener: listener];
+    r = nil;
+}
+
+
+#endif
+
+
+>>>>>>> Implement replicator backgrounding option
 // These test are disabled because they require a password-protected database 'seekrit' to exist
 // on localhost:4984, with a user 'pupshaw' whose password is 'frank'.
 
