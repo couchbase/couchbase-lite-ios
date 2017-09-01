@@ -38,7 +38,7 @@
     NSError* error;
     CBLQueryExpression* blurb = [CBLQueryExpression property: @"blurb"];
     CBLIndex* index = [CBLIndex ftsIndexOn: [CBLFTSIndexItem expression: blurb] options: nil];
-    Assert([_db createIndex: index forName: @"blurb" error: &error]);
+    Assert([_db createIndex: index withName: @"blurb" error: &error]);
     
     const struct {const char *pred; const char *json5;} kTests[] = {
         {"nickname == 'Bobo'",      "{WHERE: ['=', ['.nickname'],'Bobo']}"},
@@ -213,7 +213,7 @@
         }];
         AssertEqual(numRows, 1llu);
         if (pass == 0)
-            Assert([_db createIndex: index forName: @"name.first" error: &error]);
+            Assert([_db createIndex: index withName: @"name.first" error: &error]);
     }
     
     Assert([self.db deleteIndexForName: @"name.first" error: &error]);
@@ -248,7 +248,7 @@
     NSError* error;
     CBLQueryExpression* sentence = [CBLQueryExpression property: @"sentence"];
     CBLIndex* index = [CBLIndex ftsIndexOn: [CBLFTSIndexItem expression: sentence] options: nil];
-    Assert([_db createIndex: index forName: @"sentence" error: &error]);
+    Assert([_db createIndex: index withName: @"sentence" error: &error]);
     
     CBLPredicateQuery *q = [self.db createQueryWhere: @"sentence matches 'Dummie woman'"];
     q.orderBy = @[@"-rank(sentence)"];
@@ -272,7 +272,7 @@
     NSError* error;
     CBLQueryExpression* firstName = [CBLQueryExpression property: @"name.first"];
     CBLIndex* index = [CBLIndex valueIndexOn: @[[CBLValueIndexItem expression: firstName]]];
-    Assert([_db createIndex: index forName: @"name.first" error: &error]);
+    Assert([_db createIndex: index withName: @"name.first" error: &error]);
     
     CBLPredicateQuery *q = [self.db createQueryWhere: @"name.first == $FIRSTNAME"];
     q.parameters = @{@"FIRSTNAME": @"Claude"};

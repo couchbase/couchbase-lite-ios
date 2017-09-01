@@ -447,7 +447,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
-- (BOOL) createIndex: (CBLIndex*)index forName: (NSString*)name error: (NSError**)outError {
+- (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)outError {
     [self mustBeOpen];
     
     NSData* json = [NSJSONSerialization dataWithJSONObject: index.indexItems

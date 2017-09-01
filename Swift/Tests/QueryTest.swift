@@ -278,7 +278,7 @@ class QueryTest: CBLTestCase {
             .on(FTSIndexItem.expression(Expression.property("sentence")))
             .locale(nil)
             .ignoreAccents(false)
-        try db.createIndex(index, forName: "sentence")
+        try db.createIndex(index, withName: "sentence")
         
         let sentence = Expression.property("sentence")
         let s_sentence = SelectResult.expression(sentence)

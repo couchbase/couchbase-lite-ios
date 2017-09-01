@@ -56,7 +56,7 @@ class PredicateQueryTest: CBLTestCase {
             
             let item = ValueIndexItem.expression(Expression.property("name.first"))
             let index = Index.valueIndex().on(item)
-            try db.createIndex(index, forName: "name.first")
+            try db.createIndex(index, withName: "name.first")
         }
     }
 

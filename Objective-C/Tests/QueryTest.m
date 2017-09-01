@@ -337,7 +337,7 @@
     
     NSError* error;
     CBLIndex* index = [CBLIndex ftsIndexOn: [CBLFTSIndexItem expression: SENTENCE] options: nil];
-    Assert([self.db createIndex: index forName: @"sentence" error: &error],
+    Assert([self.db createIndex: index withName: @"sentence" error: &error],
            @"Error when creating the index: %@", error);
     
     

@@ -104,16 +104,16 @@ class DatabaseTest: CBLTestCase {
         let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
         
         let index1 = Index.valueIndex().on(fNameItem, lNameItem)
-        try db.createIndex(index1, forName: "index1")
+        try db.createIndex(index1, withName: "index1")
         
         // Create FTS index:
         let detailItem = FTSIndexItem.expression(Expression.property("detail"))
         let index2 = Index.ftsIndex().on(detailItem)
-        try db.createIndex(index2, forName: "index2")
+        try db.createIndex(index2, withName: "index2")
         
         let detailItem2 = FTSIndexItem.expression(Expression.property("es-detail"))
         let index3 = Index.ftsIndex().on(detailItem2).locale("es").ignoreAccents(true)
-        try db.createIndex(index3, forName: "index3")
+        try db.createIndex(index3, withName: "index3")
         
         XCTAssertEqual(db.indexes.count, 3)
         XCTAssertEqual(db.indexes, ["index1", "index2", "index3"])
@@ -124,10 +124,10 @@ class DatabaseTest: CBLTestCase {
         
         // Create index with first name:
         let index = Index.valueIndex().on(item)
-        try db.createIndex(index, forName: "myindex")
+        try db.createIndex(index, withName: "myindex")
         
         // Call create index again:
-        try db.createIndex(index, forName: "myindex")
+        try db.createIndex(index, withName: "myindex")
         
         XCTAssertEqual(db.indexes.count, 1)
         XCTAssertEqual(db.indexes, ["myindex"])
@@ -137,12 +137,12 @@ class DatabaseTest: CBLTestCase {
         // Create value index with first name:
         let fNameItem = ValueIndexItem.expression(Expression.property("firstName"))
         let fNameIndex = Index.valueIndex().on(fNameItem)
-        try db.createIndex(fNameIndex, forName: "myindex")
+        try db.createIndex(fNameIndex, withName: "myindex")
         
         // Create value index with last name:
         let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
         let lNameIndex = Index.valueIndex().on(lNameItem)
-        try db.createIndex(lNameIndex, forName: "myindex")
+        try db.createIndex(lNameIndex, withName: "myindex")
         
         // Check:
         XCTAssertEqual(db.indexes.count, 1)
@@ -151,7 +151,7 @@ class DatabaseTest: CBLTestCase {
         // Create FTS index:
         let detailItem = FTSIndexItem.expression(Expression.property("detail"))
         let detailIndex = Index.ftsIndex().on(detailItem)
-        try db.createIndex(detailIndex, forName: "myindex")
+        try db.createIndex(detailIndex, withName: "myindex")
         
         // Check:
         XCTAssertEqual(db.indexes.count, 1)
@@ -167,16 +167,16 @@ class DatabaseTest: CBLTestCase {
         let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
         
         let index1 = Index.valueIndex().on(fNameItem, lNameItem)
-        try db.createIndex(index1, forName: "index1")
+        try db.createIndex(index1, withName: "index1")
         
         // Create FTS index:
         let detailItem = FTSIndexItem.expression(Expression.property("detail"))
         let index2 = Index.ftsIndex().on(detailItem)
-        try db.createIndex(index2, forName: "index2")
+        try db.createIndex(index2, withName: "index2")
         
         let detailItem2 = FTSIndexItem.expression(Expression.property("es-detail"))
         let index3 = Index.ftsIndex().on(detailItem2).locale("es").ignoreAccents(true)
-        try db.createIndex(index3, forName: "index3")
+        try db.createIndex(index3, withName: "index3")
         
         XCTAssertEqual(db.indexes.count, 3)
         XCTAssertEqual(db.indexes, ["index1", "index2", "index3"])

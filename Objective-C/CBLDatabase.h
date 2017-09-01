@@ -372,7 +372,7 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  @param error error On return, the error if any.
  @return True on success, false on failure.
  */
-- (BOOL) createIndex: (CBLIndex*)index forName: (NSString*)name error: (NSError**)error;
+- (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)error;
 
 
 /**

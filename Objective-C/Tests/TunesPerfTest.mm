@@ -284,7 +284,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
 #endif
         CBLIndex *index = [CBLIndex valueIndexOn: @[[CBLValueIndexItem expression: artist],
                                                     [CBLValueIndexItem expression: comp]]];
-        Assert(([self.db createIndex: index forName: @"byArtist" error: NULL]));
+        Assert(([self.db createIndex: index withName: @"byArtist" error: NULL]));
         double t = _indexArtistsBench.stop();
         VerboseLog(1, @"Indexed artists in %.06f sec", t);
     }
@@ -330,7 +330,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         CBLQueryExpression* nameExpr = [CBLQueryExpression property: @"Name"];
         CBLIndex *index = [CBLIndex ftsIndexOn: [CBLFTSIndexItem expression: nameExpr]
                                        options: nil];
-        Assert(([self.db createIndex: index forName: @"nameFTS" error: &error]),
+        Assert(([self.db createIndex: index withName: @"nameFTS" error: &error]),
                @"Full-text indexing failed: %@", error);
         _indexFTSBench.stop();
         [self pause];
