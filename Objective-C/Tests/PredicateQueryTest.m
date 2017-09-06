@@ -20,6 +20,15 @@
 @implementation PredicateQueryTest
 
 
+- (CBLDocument*) docForRow: (CBLQueryRow*)row {
+    NSString* docID = [row stringAtIndex: 0];
+    C4SequenceNumber sequence = [row integerAtIndex: 1];
+    CBLDocument* doc = [_db documentWithID: docID];
+    AssertEqual(doc.sequence, sequence);
+    return doc;
+}
+
+
 - (uint64_t) verifyQuery: (CBLPredicateQuery*)q test: (void (^)(uint64_t n, CBLQueryRow *row))block {
     NSError* error;
     NSEnumerator* e = [q run: &error];
@@ -92,11 +101,8 @@
     Assert(q, @"Couldn't create query: %@", error);
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         NSString* expectedID = [NSString stringWithFormat: @"doc-%03llu", n];
-        AssertEqualObjects(row.documentID, expectedID);
-        AssertEqual(row.sequence, n);
-        CBLDocument* doc = row.document;
-        AssertEqualObjects(doc.id, expectedID);
-        AssertEqual(doc.sequence, n);
+        AssertEqualObjects([row stringAtIndex: 0], expectedID);
+        AssertEqual((uint64_t)[row integerAtIndex: 1], n);
     }];
     AssertEqual(numRows, 100llu);
 }
@@ -111,7 +117,7 @@
     q.limit = 10;
     __block NSMutableArray* docIDs = [NSMutableArray new];
     [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        [docIDs addObject: row.documentID];
+        [docIDs addObject: [row stringAtIndex: 0]];
     }];
     AssertEqualObjects(docIDs, (@[@"doc-011",
                                   @"doc-014",
@@ -204,9 +210,10 @@
         //fprintf(stderr, "%s\n", explain.UTF8String);
         q.parameters = @{@"FIRSTNAME": @"Claude"};
         uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-            AssertEqualObjects(row.documentID, @"doc-009");
-            AssertEqual(row.sequence, 9llu);
-            CBLDocument* doc = row.document;
+            NSString* docID = [row stringAtIndex: 0];
+            AssertEqualObjects(docID, @"doc-009");
+            AssertEqual((uint64_t)[row integerAtIndex: 1], 9llu);
+            CBLDocument* doc = [self docForRow: row];
             AssertEqualObjects(doc.id, @"doc-009");
             AssertEqual(doc.sequence, 9llu);
             AssertEqualObjects([[doc objectForKey: @"name"] objectForKey: @"first"], @"Claude");
@@ -221,7 +228,6 @@
 
 
 - (void) testProjection {
-    NSArray* expectedDocs = @[@"doc-076", @"doc-008", @"doc-014"];
     NSArray* expectedZips = @[@"55587", @"56307", @"56308"];
     NSArray* expectedEmails = @[ @[@"monte.mihlfeld@nosql-matters.org"],
                                  @[@"jennefer.menning@nosql-matters.org", @"jennefer@nosql-matters.org"],
@@ -233,7 +239,6 @@
     q.returning = @[@"contact.address.zip", @"contact.email"];
     q.parameters = @{@"STATE": @"MN"};
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        AssertEqualObjects(row.documentID, expectedDocs[(NSUInteger)(n-1)]); //annoying...32-bit
         NSString* zip = [row stringAtIndex: 0];
         NSArray *email = [row valueAtIndex: 1];
         AssertEqualObjects(zip, expectedZips[(NSUInteger)(n-1)]);
@@ -266,27 +271,6 @@
 }
 
 
-- (void) testDeleteQueriedDoc {
-    [self loadJSONResource: @"names_100"];
-    
-    NSError* error;
-    CBLQueryExpression* firstName = [CBLQueryExpression property: @"name.first"];
-    CBLIndex* index = [CBLIndex valueIndexOn: @[[CBLValueIndexItem expression: firstName]]];
-    Assert([_db createIndex: index withName: @"name.first" error: &error]);
-    
-    CBLPredicateQuery *q = [self.db createQueryWhere: @"name.first == $FIRSTNAME"];
-    q.parameters = @{@"FIRSTNAME": @"Claude"};
-    
-    NSArray* rows = [[q run: &error] allObjects];
-    Assert(rows, @"Couldn't run query: %@", error);
-    AssertEqual(rows.count, 1llu);
-    
-    CBLDocument* doc = ((CBLQueryRow*)rows[0]).document;
-    AssertNotNil(doc);
-    Assert([_db deleteDocument: doc error: &error], @"Couldn't delete a document: %@", error);
-}
-
-
 - (void) testAggregate {
     [self loadJSONResource: @"names_100"];
     CBLPredicateQuery *q = [self.db createQueryWhere: @"gender == 'female'"];
@@ -297,7 +281,6 @@
     Log(@"%@", jsonStr);
 
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        //AssertEqualObjects(row.documentID, nil);
         NSString* minZip = [row stringAtIndex: 0];
         NSString* maxZip = [row stringAtIndex: 1];
         AssertEqualObjects(minZip, @"01910");
@@ -324,7 +307,6 @@
     Log(@"%@", [q explain: NULL]);
 
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        //AssertEqualObjects(row.documentID, nil);
         AssertEqual(row.valueCount, 3u);
         NSString* state = [row stringAtIndex: 0];
         NSInteger count = [row integerAtIndex: 1];
@@ -349,7 +331,8 @@
     
     NSArray* expected = @[@"Marcy", @"Marlen", @"Maryjo", @"Margaretta", @"Margrett"];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        AssertEqualObjects(row.document[@"name"][@"first"], expected[(NSUInteger)(n-1)]);
+        CBLDocument* doc = [self docForRow: row];
+        AssertEqualObjects(doc[@"name"][@"first"], expected[(NSUInteger)(n-1)]);
     }];
     AssertEqual((int)numRows, (int)expected.count);
 }
@@ -365,7 +348,8 @@
     
     NSArray* expected = @[@"Marcy", @"Marlen", @"Maryjo", @"Margaretta", @"Margrett"];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        AssertEqualObjects(row.document[@"name"][@"first"], expected[(NSUInteger)(n-1)]);
+        CBLDocument* doc = [self docForRow: row];
+        AssertEqualObjects(doc[@"name"][@"first"], expected[(NSUInteger)(n-1)]);
     }];
     AssertEqual((int)numRows, (int)expected.count);
 }
@@ -385,7 +369,8 @@
     q.distinct = YES;
     Assert(q);
     uint64_t numRows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
-        AssertEqualObjects(row.document.toDictionary, @{@"number": @(1)});
+        CBLDocument* doc = [self docForRow: row];
+        AssertEqualObjects(doc.toDictionary, @{@"number": @(1)});
     }];
     AssertEqual(numRows, 1u);
 }
@@ -438,7 +423,8 @@
     
     NSArray* expected = @[@"Marcy", @"Margaretta", @"Margrett", @"Marlen", @"Maryjo"];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        NSString* first = [[row.document objectForKey: @"name"] objectForKey: @"first"];
+        CBLDocument* doc = [self docForRow: row];
+        NSString* first = [[doc objectForKey: @"name"] objectForKey: @"first"];
         AssertEqualObjects(first, expected[(NSUInteger)(n-1)]);
     }];
     AssertEqual((int)numRows, (int)expected.count);

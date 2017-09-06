@@ -29,8 +29,6 @@
     bool _current;
 }
 
-@synthesize documentID=_documentID, sequence=_sequence;
-
 
 - (instancetype) initWithEnumerator: (CBLQueryEnumerator*)enumerator
                        c4Enumerator: (C4QueryEnumerator*)e
@@ -38,17 +36,10 @@
     self = [super init];
     if (self) {
         _enum = enumerator;
-        _documentID = slice2string(e->docID);
-        _sequence = e->docSequence;
         _columns = e->columns;
         _current = true;
     }
     return self;
-}
-
-
-- (NSString*) description {
-    return [NSString stringWithFormat: @"%@[docID='%@']", self.class, _documentID];
 }
 
 
@@ -60,11 +51,6 @@
     return _enum == otherRow->_enum;
 }
 #endif
-
-
-- (CBLDocument*) document {
-    return _documentID ? [_enum.database documentWithID: _documentID] : nil;
-}
 
 
 - (NSUInteger) valueCount {
@@ -80,7 +66,7 @@
     if (!_current)
         [NSException raise: NSInternalInconsistencyException
                     format: @"You cannot access a CBLQueryRow value after the enumerator has "
-                             "advanced past that row"];
+         "advanced past that row"];
     return FLArrayIterator_GetValueAt(&_columns, (uint32_t)index);
 }
 
@@ -128,6 +114,7 @@
 
 @implementation CBLFullTextQueryRow
 {
+    C4FullTextID _fullTextID;
     C4FullTextTerm* _matches;
 }
 
@@ -139,6 +126,7 @@
 {
     self = [super initWithEnumerator: enumerator c4Enumerator: e];
     if (self) {
+        _fullTextID = e->fullTextID;
         _matchCount = e->fullTextTermCount;
         if (_matchCount > 0) {
             _matches = new C4FullTextTerm[_matchCount];
@@ -155,9 +143,7 @@
 
 
 - (NSData*) fullTextUTF8Data {
-    CBLStringBytes docIDSlice(self.documentID);
-    return sliceResult2data(c4query_fullTextMatched(_enum.c4Query, docIDSlice,
-                                                    self.sequence, nullptr));
+    return sliceResult2data(c4query_fullTextMatched(_enum.c4Query, _fullTextID, nullptr));
 }
 
 

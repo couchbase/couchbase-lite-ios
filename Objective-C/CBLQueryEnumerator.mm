@@ -88,7 +88,8 @@ extern "C" {
 
 - (id) currentObject {
     if (_returnDocuments) {
-        return [_query.database documentWithID: slice2string(_c4enum->docID)];
+        fleece::slice docID = FLValue_AsString(FLArrayIterator_GetValueAt(&_c4enum->columns, 0));
+        return [_query.database documentWithID: slice2string(docID)];
     } else {
         Class c = _c4enum->fullTextTermCount ? [CBLFullTextQueryRow class] : [CBLQueryRow class];
         return [[c alloc] initWithEnumerator: self c4Enumerator: _c4enum];

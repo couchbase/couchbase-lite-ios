@@ -18,27 +18,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface CBLQueryRow : NSObject
 
-/** 
- The ID of the document that produced this row.
- This will be nil if the query uses aggregate functions, since it will then be composed of
- aggregate data from multiple rows.
- */
-@property (readonly, nonatomic) NSString* documentID;
-
-/** 
- The sequence number of the document revision that produced this row.
- This will be 0 if the query uses aggregate functions, since it will then be composed of
- aggregate data from multiple rows.
- */
-@property (readonly, nonatomic) uint64_t sequence;
-
-/** 
- The document that produced this row.
- This will be nil if the query uses aggregate functions, since it will then be composed of
- aggregate data from multiple rows.
- */
-@property (readonly, nonatomic) CBLDocument* document;
-
 /** The number of values in this row (if the query has a "returning" specification.) */
 @property (readonly, nonatomic) NSUInteger valueCount;
 
