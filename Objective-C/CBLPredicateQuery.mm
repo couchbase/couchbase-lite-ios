@@ -167,8 +167,8 @@ extern "C" {
 #if DEBUG
     if (!_disableOffsetAndLimit) {
 #endif
-    q[@"OFFSET"] = @[@"ifmissing()", @[@"$x_offset"], @0];
-    q[@"LIMIT"]  = @[@"ifmissing()", @[@"$x_limit"],  @(-1)];
+    q[@"OFFSET"] = @[@"ifmissing()", @[@"$opt_offset"], @0];
+    q[@"LIMIT"]  = @[@"ifmissing()", @[@"$opt_limit"],  @(-1)];
 #if DEBUG
     }
 #endif
@@ -184,8 +184,8 @@ extern "C" {
     NSDictionary* parameters = _parameters;
     if (_offset > 0 || _limit < NSUIntegerMax) {
         NSMutableDictionary* p = parameters ? [parameters mutableCopy] : [NSMutableDictionary new];
-        p[@"x_offset"] = @(_offset);
-        p[@"x_limit"]  = @(_limit);
+        p[@"opt_offset"] = @(_offset);
+        p[@"opt_limit"]  = @(_limit);
         parameters = p;
     }
     NSData* paramJSON = nil;
