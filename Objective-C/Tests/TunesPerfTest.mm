@@ -13,12 +13,14 @@
 
 using namespace std::chrono;
 
-#define PROFILING 1
-#define VERBOSE   1
+#define PROFILING 0
+#define VERBOSE   0
 
 #define VerboseLog(LEVEL, FORMAT, ...) if (VERBOSE < LEVEL) { } else NSLog(FORMAT, ##__VA_ARGS__)
 
 #if PROFILING
+// Settings for use with Instruments: only run one iteration, and sleep for 0.5sec between
+// sub-tests to make them easy to distinguish in the Instruments time trace.
 static constexpr int kNumIterations = 1;
 static constexpr auto kInterTestSleep = milliseconds(500);
 #else
@@ -253,7 +255,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     query.orderBy = @[@"Artist[cd]"];
 
     Assert([query check: NULL]);
-    VerboseLog(2, @"%@", [query explain: NULL]);
+    VerboseLog(1, @"%@", [query explain: NULL]);
     bench.start();
     _artists = [self collectQueryResults: query];
     double t = bench.stop();
@@ -272,16 +274,11 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     @autoreleasepool {
         VerboseLog(1, @"Indexing artists...");
         _indexArtistsBench.start();
-#if 0
-        CBLQueryExpression* artist = [CBLQueryExpression property: @"Artist"];
-        CBLQueryExpression* comp = [CBLQueryExpression property: @"Compilation"];
-#else
         CBLQueryCollation* collation = [CBLQueryCollation unicodeWithLocale: nil
                                                                  ignoreCase: YES
                                                               ignoreAccents: YES];
         CBLQueryExpression* artist = [[CBLQueryExpression property: @"Artist"] collate: collation];
         CBLQueryExpression* comp = [CBLQueryExpression property: @"Compilation"];
-#endif
         CBLIndex *index = [CBLIndex valueIndexOn: @[[CBLValueIndexItem expression: artist],
                                                     [CBLValueIndexItem expression: comp]]];
         Assert(([self.db createIndex: index withName: @"byArtist" error: NULL]));
@@ -300,7 +297,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     query.orderBy = @[@"Album[cd]"];
 
     Assert([query check: NULL]);
-    VerboseLog(2, @"%@", [query explain: NULL]);
+    VerboseLog(1, @"%@", [query explain: NULL]);
     bench.start();
 
     // Run one query per artist to find their albums. We could write a single query to get all of
