@@ -44,7 +44,10 @@
 }
 
 
-- (CBLReplicatorConfiguration*) push: (BOOL)push pull: (BOOL)pull continuous: (BOOL)continuous {
+- (CBLReplicatorConfiguration*) configForPush: (BOOL)push
+                                         pull: (BOOL)pull
+                                   continuous: (BOOL)continuous
+{
     CBLReplicatorConfiguration* c = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
                                                                           targetDatabase: otherDB];
     c.replicatorType = push && pull ? kCBLPushAndPull : (push ? kCBLPush : kCBLPull);
@@ -53,8 +56,11 @@
 }
 
 
-- (CBLReplicatorConfiguration*) push: (BOOL)push pull: (BOOL)pull continuous: (BOOL)continuous
-                                 url: (NSString*)url {
+- (CBLReplicatorConfiguration*) configForPush: (BOOL)push
+                                         pull: (BOOL)pull
+                                   continuous: (BOOL)continuous
+                                          url: (NSString*)url
+{
     NSURL* u = [NSURL URLWithString: url];
     CBLReplicatorConfiguration* c = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
                                                                                targetURL: u];
@@ -71,7 +77,6 @@
     repl = [[CBLReplicator alloc] initWithConfig: config];
     
     XCTestExpectation *x = [self expectationWithDescription: @"Replicator Change"];
-    
     __weak typeof(self) wSelf = self;
     id listener = [repl addChangeListener: ^(CBLReplicatorChange* change) {
         typeof(self) strongSelf = wSelf;
@@ -114,14 +119,14 @@
 
 
 - (void) testBadURL {
-    CBLReplicatorConfiguration* config = [self push: NO pull: YES continuous: NO
-                                                url: @"blxp://localhost/db"];
+    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO
+                                                         url: @"blxp://localhost/db"];
     [self run: config errorCode: 15 errorDomain: @"LiteCore"];
 }
 
 
 - (void)testEmptyPush {
-    CBLReplicatorConfiguration* config = [self push: YES pull: NO continuous: NO];
+    CBLReplicatorConfiguration* config = [self configForPush: YES pull: NO continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
@@ -137,7 +142,7 @@
     [doc2 setObject: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
-    CBLReplicatorConfiguration* config = [self push: YES pull: NO continuous: NO];
+    CBLReplicatorConfiguration* config = [self configForPush: YES pull: NO continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(otherDB.count, 2u);
@@ -157,7 +162,7 @@
     [doc2 setObject: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
-    CBLReplicatorConfiguration* config = [self push: YES pull: NO continuous: YES];
+    CBLReplicatorConfiguration* config = [self configForPush: YES pull: NO continuous: YES];
     config.checkpointInterval = 1.0;
     [self run: config errorCode: 0 errorDomain: nil];
     
@@ -179,7 +184,7 @@
     [doc2 setObject: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
 
-    CBLReplicatorConfiguration* config = [self push: NO pull: YES continuous: NO];
+    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
 
     AssertEqual(self.db.count, 2u);
@@ -200,7 +205,7 @@
     [doc2 setObject: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
-    CBLReplicatorConfiguration* config = [self push: NO pull: YES continuous: YES];
+    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: YES];
     config.checkpointInterval = 1.0;
     [self run: config errorCode: 0 errorDomain: nil];
     
@@ -217,7 +222,7 @@
     [doc1 setObject: @"Tiger" forKey: @"species"];
     Assert([self.db saveDocument: doc1 error: &error]);
 
-    CBLReplicatorConfiguration* config = [self push: YES pull: NO continuous: NO];
+    CBLReplicatorConfiguration* config = [self configForPush: YES pull: NO continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
 
     // Now make different changes in db and otherDB:
@@ -231,7 +236,7 @@
     Assert([otherDB saveDocument: doc2 error: &error]);
 
     // Pull from otherDB, creating a conflict to resolve:
-    config = [self push: NO pull: YES continuous: NO];
+    config = [self configForPush: NO pull: YES continuous: NO];
     MergeThenTheirsWins* resolver = [MergeThenTheirsWins new];
     resolver.requireBaseRevision = true;
     config.conflictResolver = resolver;
@@ -264,7 +269,7 @@
     [doc2 setObject: @"striped" forKey: @"pattern"];
     Assert([otherDB saveDocument: doc2 error: &error]);
 
-    CBLReplicatorConfiguration* config = [self push: NO pull: YES continuous: NO];
+    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO];
     config.conflictResolver = [MergeThenTheirsWins new];
     [self run: config errorCode: 0 errorDomain: nil];
 
@@ -276,26 +281,58 @@
 }
 
 
+- (void) failingTestStopContinuousReplicator {
+    [CBLDatabase setLogLevel: kCBLLogLevelDebug domain: kCBLLogDomainReplicator];
+    
+    CBLReplicatorConfiguration* config = [self configForPush: YES pull: YES continuous: YES];
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+    
+    NSArray* stopWhen = @[@(kCBLReplicatorConnecting), @(kCBLReplicatorBusy),
+                          @(kCBLReplicatorIdle), @(kCBLReplicatorIdle)];
+    for (id when in stopWhen) {
+        XCTestExpectation* x = [self expectationWithDescription: @"Replicator Change"];
+        __weak typeof(self) wSelf = self;
+        id listener = [r addChangeListener: ^(CBLReplicatorChange *change) {
+            [wSelf verifyChange: change errorCode: 0 errorDomain: nil];
+            if (change.status.activity == [when intValue]) {
+                NSLog(@"***** Stop Replicator ******");
+                [change.replicator stop];
+            } else if (change.status.activity == kCBLReplicatorStopped) {
+                [x fulfill];
+            }
+        }];
+        
+        NSLog(@"***** Start Replicator ******");
+        [r start];
+        [self waitForExpectations: @[x] timeout: 5.0];
+        [r removeChangeListener: listener];
+        
+        // Add some delay:
+        [NSThread sleepForTimeInterval: 0.1];
+    }
+}
+
+
 // These test are disabled because they require a password-protected database 'seekrit' to exist
 // on localhost:4984, with a user 'pupshaw' whose password is 'frank'.
 
 - (void) dontTestAuthenticationFailure {
-    CBLReplicatorConfiguration* config = [self push: NO pull: YES continuous: NO
-                                                url: @"blip://localhost:4984/seekrit"];
+    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO
+                                                         url: @"blip://localhost:4984/seekrit"];
     [self run: config errorCode: 401 errorDomain: @"WebSocket"];
 }
 
 
 - (void) dontTestAuthenticatedPullHardcoded {
-    CBLReplicatorConfiguration* config = [self push: NO pull: YES continuous: NO
-                                                url: @"blip://pupshaw:frank@localhost:4984/seekrit"];
+    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO
+                                                         url: @"blip://pupshaw:frank@localhost:4984/seekrit"];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
 
 - (void) dontTestAuthenticatedPull {
-    CBLReplicatorConfiguration* config = [self push: NO pull: YES continuous: NO
-                                                url: @"blip://localhost:4984/seekrit"];
+    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO
+                                                         url: @"blip://localhost:4984/seekrit"];
     config.authenticator = [[CBLBasicAuthenticator alloc] initWithUsername: @"pupshaw" password: @"frank"];
     [self run: config errorCode: 0 errorDomain: nil];
 }
@@ -303,7 +340,7 @@
 
 - (void) dontTestMissingHost {
     timeout = 200;
-    CBLReplicatorConfiguration* config = [self push: NO pull: YES continuous: NO
+    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO
                                                 url: @"blip://foo.couchbase.com/db"];
     config.continuous = YES;
     [self run: config errorCode: 0 errorDomain: nil];
@@ -312,8 +349,8 @@
 
 // This test assumes an SG is serving SSL at port 4994 with a self-signed cert.
 - (void) dontTestSelfSignedSSLFailure {
-    CBLReplicatorConfiguration* config = [self push: NO pull: YES continuous: NO
-                                                url: @"blips://localhost:4994/beer"];
+    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO
+                                                         url: @"blips://localhost:4994/beer"];
     [self run: config errorCode: kCFURLErrorServerCertificateHasUnknownRoot errorDomain: NSURLErrorDomain];
 }
 
@@ -325,8 +362,8 @@
     NSData* certData = [NSData dataWithContentsOfFile: path];
     SecCertificateRef cert = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
     Assert(cert);
-    CBLReplicatorConfiguration* config = [self push: NO pull: YES continuous: NO
-                                                url: @"blips://localhost:4994/beer"];
+    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO
+                                                         url: @"blips://localhost:4994/beer"];
     config.pinnedServerCertificate = cert;
     [self run: config errorCode: 0 errorDomain: nil];
 }
