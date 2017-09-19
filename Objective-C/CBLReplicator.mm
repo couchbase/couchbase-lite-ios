@@ -118,18 +118,15 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
 
 
 - (void) start {
-    dispatch_async(self.dispatchQueue, ^{
+    dispatch_async(_dispatchQueue, ^{
         if (_repl) {
-            // Allow to resume if the replicator is suspended:
-            if (self.suspended)
-                self.suspended = NO;
-            else
-                CBLWarn(Sync, @"%@ has already started", self);
+            CBLWarn(Sync, @"%@ has already started", self);
             return;
         }
         
         CBLLog(Sync, @"%@: Starting", self);
         _retryCount = 0;
+        _suspended = NO;
         [self _start];
     });
 }
@@ -137,9 +134,6 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
 
 - (void) retry {
     if (_repl || _rawStatus.level != kC4Offline)
-        return;
-    
-    if (_retryCount == 0 && !_reachability) /* retry was cancelled. */
         return;
     
     CBLLog(Sync, @"%@: Retrying...", self);
@@ -191,10 +185,6 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
         // TODO: Add .validationFunc (public API TBD)
     };
     
-    // When the replicator resumes from offline or background, the _repl is not nil:
-    if (_repl)
-        [self clearRepl];
-    
     C4Error err;
     _repl = c4repl_new(_config.database.c4db, addr, dbName, otherDB.c4db, params, &err);
     C4ReplicatorStatus status;
@@ -234,7 +224,7 @@ static BOOL isPull(CBLReplicatorType type) {
 
 
 - (void) stop {
-    dispatch_async(self.dispatchQueue, ^{
+    dispatch_async(_dispatchQueue, ^{
         if (_repl)
             c4repl_stop(_repl);     // this is async; status will change when repl actually stops
         
@@ -298,8 +288,7 @@ static BOOL isPull(CBLReplicatorType type) {
     // This is called under _dispatchQueue:
     if (suspended != _suspended) {
         if (_isStopping || _rawStatus.level == kC4Stopped) {
-            CBLLog(Sync, @"%@: Ignore %@ request as the replicator is stopping or was stopped.",
-                   self, (suspended ? @"suspending" : @"resuming"));
+            CBLLog(Sync, @"%@: Ignore suspending, the replicator is stopping or already stopped.", self);
             _suspended = NO;
             return;
         }
@@ -307,30 +296,19 @@ static BOOL isPull(CBLReplicatorType type) {
         // Update suspended flag:
         _suspended = suspended;
         
-        if (_isSuspending) {
-            // if not _suspened, the replicator will be resumed right after suspended.
+        if (_isSuspending) // Already in process:
             return;
-        }
         
         if(_suspended) {
             CBLLog(Sync, @"%@: Suspending ...", self);
-            
             _isSuspending = YES;
-            if (_rawStatus.level == kC4Offline)
-                [self notifyStopped];
-            else
+            if (_repl)
                 c4repl_stop(_repl);
+            else /* offline */
+                [self notifyStopped];
         } else
-            [self resume];
+            [self retry];
     }
-}
-
-
-- (void) resume {
-    // This is called under _dispatchQueue:
-    Assert(_rawStatus.level == kC4Offline);
-    CBLLog(Sync, @"%@: Resuming ...", self);
-    [self _start];
 }
 
 
@@ -367,8 +345,10 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
 
 - (void) c4StatusChanged: (C4ReplicatorStatus)c4Status {
     BOOL shouldResume = NO;
+    BOOL didSuspend = NO;
     if (c4Status.level == kC4Stopped) {
-        if ([self handleSuspending: &shouldResume] || [self handleError: c4Status.error]) {
+        didSuspend = [self handleSuspending: &shouldResume];
+        if (didSuspend || [self handleError: c4Status.error]) {
             // Change c4Status to offline, so my state will reflect that, and proceed:
             c4Status.level = kC4Offline;
         }
@@ -396,13 +376,13 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
         _isStopping = NO;
         
         [self clearRepl];
-        [_config.database.activeReplications removeObject: self];      // this is likely to dealloc me
-    } else if (c4Status.level == kC4Idle) {
+        [_config.database.activeReplications removeObject: self];  // this is likely to dealloc me
+    } else if (!self.isActive && !didSuspend) {
 #if TARGET_OS_IPHONE
         [self okToEndBackgrounding];
 #endif
     } else if (shouldResume)
-        [self resume];
+        [self retry];
 }
 
 
@@ -427,13 +407,14 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     if (!_config.continuous)
         return NO;
     
+    [self clearRepl];
+    
     // Cancel retry and reachability:
     _retryCount = 0;
     [_reachability stop];
     _reachability = nil;
     
-    _isSuspended = _suspended;
-    if (_isSuspended)
+    if (_suspended)
         CBLLog(Sync, @"%@: Suspended", self);
     
     *resume = !_suspended;
@@ -460,7 +441,8 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
                self, error.localizedDescription, delay);
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)),
                        _dispatchQueue, ^{
-                           [self retry];
+                           if (_retryCount > 0)
+                               [self retry];
                        });
     } else {
         CBLLog(Sync, @"%@: Network error (%@); will retry when network changes...",
