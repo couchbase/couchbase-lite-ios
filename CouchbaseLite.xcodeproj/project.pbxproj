@@ -1415,20 +1415,6 @@
 			remoteGlobalIDString = 27E66A571A7305B10091DA3F;
 			remoteInfo = "CBL SQLite Storage";
 		};
-		27F370771DC00C4D0096F717 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 72EFA6141D8A392600D17CFE;
-			remoteInfo = "Tokenizer-Interop";
-		};
-		27F370791DC00C4D0096F717 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 72EFA6631D8A5FA000D17CFE;
-			remoteInfo = "Tokenizer-Interop Static";
-		};
 		27FA99EF1917FFD000912F96 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
@@ -2450,6 +2436,7 @@
 				2753154D14ACEF350065964D /* vendor */,
 				27C70696148864BA00F0F099 /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
+				93AB91301F730E7800897658 /* Recovered References */,
 			);
 			name = CouchLite;
 			sourceTree = "<group>";
@@ -3200,10 +3187,6 @@
 				27B7E10D18F8FE2800044EBA /* libforestdb.a */,
 				2773D0241DF7459B00880394 /* libTokenizer-Interop.dylib */,
 				2773D0261DF7459B00880394 /* libTokenizer.a */,
-				2747355C1CCE983000515EB2 /* SwiftForest.framework */,
-				2747355E1CCE983000515EB2 /* SwiftForestTests.xctest */,
-				27F370781DC00C4D0096F717 /* libTokenizer-Interop.dylib */,
-				27F3707A1DC00C4D0096F717 /* libTokenizer.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -3559,6 +3542,17 @@
 				792867CF178DE03E00248AF0 /* CBLJSViewCompiler.m */,
 			);
 			name = JSViewCompiler;
+			sourceTree = "<group>";
+		};
+		93AB91301F730E7800897658 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				279EB2D91491C34300E74185 /* CBLCollateJSON.h */,
+				271EC6A0198C53DD009C9E05 /* CBJSONEncoder.h */,
+				27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */,
+				277B5DCC1821AE990088881E /* CBLJSONReader.h */,
+			);
+			name = "Recovered References";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -4544,7 +4538,6 @@
 		2773D0241DF7459B00880394 /* libTokenizer-Interop.dylib */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
-			name = "libTokenizer-Interop.dylib";
 			path = libTokenizer.dylib;
 			remoteRef = 2773D0231DF7459B00880394 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -4624,21 +4617,6 @@
 			fileType = "compiled.mach-o.dylib";
 			path = "libCBForest-Interop.dylib";
 			remoteRef = 27E11A5B1BD0646E00D8DB7D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		27F370781DC00C4D0096F717 /* libTokenizer-Interop.dylib */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			name = "libTokenizer-Interop.dylib";
-			path = libTokenizer.dylib;
-			remoteRef = 27F370771DC00C4D0096F717 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		27F3707A1DC00C4D0096F717 /* libTokenizer.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libTokenizer.a;
-			remoteRef = 27F370791DC00C4D0096F717 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		27FA99F01917FFD000912F96 /* libCBForest.a */ = {
