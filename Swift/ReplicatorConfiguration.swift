@@ -51,6 +51,10 @@ public struct ReplicatorConfiguration {
     /// or the connection will fail.
     public var pinnedServerCertificate: SecCertificate?
     
+    
+    /// Extra HTTP headers to send in all requests to the remote target.
+    public var headers: Dictionary<String, String>?
+    
     /// A set of Sync Gateway channel names to pull from. Ignored for push replication.
     /// If unset, all accessible channels will be pulled.
     /// Note: channels that are not accessible to the user will be ignored by Sync Gateway.

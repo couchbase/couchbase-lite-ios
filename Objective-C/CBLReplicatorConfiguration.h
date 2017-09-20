@@ -52,17 +52,22 @@ typedef enum {
  */
 @property (nonatomic, nullable) id <CBLConflictResolver> conflictResolver;
 
+/**
+ An Authenticator to authenticate with a remote server. Currently there are two types of
+ the authenticators, CBLBasicAuthenticator and CBLSessionAuthenticator, supported.
+ */
+@property (nonatomic, nullable) CBLAuthenticator* authenticator;
+
 /** 
  If this property is non-null, the server is required to have this exact SSL/TLS certificate,
  or the connection will fail.
  */
 @property (nonatomic, nullable) SecCertificateRef pinnedServerCertificate;
 
-/** 
- An Authenticator to authenticate with a remote server. Currently there are two types of
- the authenticators, CBLBasicAuthenticator and CBLSessionAuthenticator, supported.
+/**
+ Extra HTTP headers to send in all requests to the remote target.
  */
-@property (nonatomic, nullable) CBLAuthenticator* authenticator;
+@property (nonatomic, nullable) NSDictionary<NSString*, NSString*>* headers;
 
 /** 
  A set of Sync Gateway channel names to pull from. Ignored for push replication.

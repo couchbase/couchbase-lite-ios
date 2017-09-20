@@ -22,8 +22,10 @@
 @synthesize database=_database, target=_target;
 @synthesize replicatorType=_replicatorType, continuous=_continuous;
 @synthesize conflictResolver=_conflictResolver;
+@synthesize authenticator=_authenticator;
 @synthesize pinnedServerCertificate=_pinnedServerCertificate;
-@synthesize authenticator=_authenticator, documentIDs=_documentIDs, channels=_channels;
+@synthesize headers=_headers;
+@synthesize documentIDs=_documentIDs, channels=_channels;
 @synthesize checkpointInterval=_checkpointInterval;
 
 
@@ -66,8 +68,9 @@
     c.replicatorType = _replicatorType;
     c.conflictResolver = _conflictResolver;
     c.continuous = _continuous;
-    c.pinnedServerCertificate = _pinnedServerCertificate;
     c.authenticator = _authenticator;
+    c.pinnedServerCertificate = _pinnedServerCertificate;
+    c.headers = _headers;
     c.documentIDs = _documentIDs;
     c.channels = _channels;
     c.checkpointInterval = _checkpointInterval;
@@ -95,15 +98,21 @@
         NSData* certData = CFBridgingRelease(SecCertificateCopyData(_pinnedServerCertificate));
         options[@kC4ReplicatorOptionPinnedServerCert] = certData;
     }
+    
+    // User-Agent and HTTP headers:
+    NSMutableDictionary* httpHeaders = [NSMutableDictionary dictionary];
+    httpHeaders[@"User-Agent"] = [self.class userAgentHeader];
+    if (self.headers)
+        [httpHeaders addEntriesFromDictionary: self.headers];
+    options[@kC4ReplicatorOptionExtraHeaders] = httpHeaders;
 
+    // Filters:
     options[@kC4ReplicatorOptionDocIDs] = _documentIDs;
     options[@kC4ReplicatorOptionChannels] = _channels;
 
+    // Checkpoint Interval (no public api now):
     if (_checkpointInterval > 0)
         options[@kC4ReplicatorCheckpointInterval] = @(_checkpointInterval);
-    
-    // User-Agent:
-    options[@kC4ReplicatorOptionExtraHeaders] = @{@"User-Agent": [self.class userAgentHeader]};
     
     return options;
 }
