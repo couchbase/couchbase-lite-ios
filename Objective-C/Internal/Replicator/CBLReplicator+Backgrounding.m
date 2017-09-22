@@ -47,6 +47,12 @@
 
 
 - (void) endBackgrounding {
+    [NSNotificationCenter.defaultCenter removeObserver: self
+                                                  name: UIApplicationProtectedDataWillBecomeUnavailable
+                                                object: nil];
+    [NSNotificationCenter.defaultCenter removeObserver: self
+                                                  name: UIApplicationProtectedDataDidBecomeAvailable
+                                                object: nil];
     [self.bgMonitor stop];
 }
 
