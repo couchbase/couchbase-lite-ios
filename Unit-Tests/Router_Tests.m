@@ -567,6 +567,57 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
 }
 
 
+- (void) test_UpdateMapFunction {
+    [CBLView setCompiler: [[CBLJSViewCompiler alloc] init]];
+    [CBLDatabase setFilterCompiler: [[CBLJSFilterCompiler alloc] init]];
+    
+    // PUT:
+    SendBody(self, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kCBLStatusCreated, nil);
+    SendBody(self, @"PUT", @"/db/doc2", $dict({@"message", @"bonjour"}), kCBLStatusCreated, nil);
+    SendBody(self, @"PUT", @"/db/doc3", $dict({@"message", @"hello"}), kCBLStatusCreated, nil);
+    
+    NSString* designDoc = @"/db/_design/design";
+    NSDictionary* result = SendBody(self, @"PUT", designDoc,
+        @{@"views":
+              @{@"view":
+                    @{@"map":
+                          @"function(doc){if(doc.message == 'hello') emit(doc.message, null);}"
+                      }
+                }
+          }, kCBLStatusCreated, nil);
+    
+    NSLog(@"%@", result);
+    
+    // Query view and check the result:
+    id null = [NSNull null];
+    Send(self, @"GET", @"/db/_design/design/_view/view", kCBLStatusOK,
+         $dict({@"offset", @0},
+               {@"rows", $array($dict({@"id", @"doc1"}, {@"key", @"hello"}, {@"value", null}),
+                                $dict({@"id", @"doc3"}, {@"key", @"hello"}, {@"value", null}) )},
+               {@"total_rows", @2}));
+    
+    // Update Map function:
+    designDoc = [designDoc stringByAppendingFormat: @"?rev=%@", result[@"rev"]];
+    result = SendBody(self, @"PUT", designDoc,
+          @{@"views":
+                @{@"view":
+                      @{@"map":
+                            @"function(doc){if(doc.message == 'bonjour') emit(doc.message, null);}"
+                        }
+                  }
+               },
+             kCBLStatusCreated, nil);
+    
+    Send(self, @"GET", @"/db/_design/design/_view/view", kCBLStatusOK,
+         $dict({@"offset", @0},
+               {@"rows", $array($dict({@"id", @"doc2"}, {@"key", @"bonjour"}, {@"value", null}))},
+               {@"total_rows", @1}));
+    
+    [CBLView setCompiler: nil];
+    [CBLDatabase setFilterCompiler: nil];
+}
+
+
 - (void) test_NoMappedSelectors {
     __unused NSDictionary* response = nil;
 
