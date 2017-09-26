@@ -286,7 +286,7 @@
     
     CBLReplicatorConfiguration* config = [self configForPush: YES pull: YES continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
-    
+
     NSArray* stopWhen = @[@(kCBLReplicatorConnecting), @(kCBLReplicatorBusy),
                           @(kCBLReplicatorIdle), @(kCBLReplicatorIdle)];
     for (id when in stopWhen) {
@@ -301,14 +301,32 @@
                 [x fulfill];
             }
         }];
-        
+
         NSLog(@"***** Start Replicator ******");
         [r start];
         [self waitForExpectations: @[x] timeout: 5.0];
         [r removeChangeListener: listener];
-        
+
         // Add some delay:
         [NSThread sleepForTimeInterval: 0.1];
+    }
+}
+
+
+// Runs -testStopContinuousReplicator over and over again indefinitely. (Disabled, obviously)
+- (void) _testStopContinuousReplicatorForever {
+    for (int i = 0; true; i++) {
+        @autoreleasepool {
+            Log(@"**** Begin iteration %d ****", i);
+            @autoreleasepool {
+                [self testStopContinuousReplicator];
+            }
+            Log(@"**** End iteration %d ****", i);
+            fprintf(stderr, "\n\n");
+            [self tearDown];
+            [NSThread sleepForTimeInterval: 1.0];
+            [self setUp];
+        }
     }
 }
 

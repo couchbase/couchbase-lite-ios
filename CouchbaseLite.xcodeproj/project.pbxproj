@@ -12,6 +12,9 @@
 		272850A71E99CAA4009CA22F /* CBLReplicator+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */; };
 		272850A81E99CAA4009CA22F /* CBLReplicator+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */; };
 		273ADF7D1E36B514001E977F /* sentences.json in Resources */ = {isa = PBXBuildFile; fileRef = 273ADF7C1E36B514001E977F /* sentences.json */; };
+		273E55471F79AF5E000182F1 /* ConflictTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93384F731EB14ABA00976B41 /* ConflictTest.m */; };
+		273E555D1F79AF69000182F1 /* ArrayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DD9BA71EB419BB00E502A2 /* ArrayTest.m */; };
+		273E555E1F79AF79000182F1 /* MiscTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93384F8B1EB151C100976B41 /* MiscTest.m */; };
 		275229C71E776BC100E630FA /* CBLReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 275229C51E776BC100E630FA /* CBLReplicator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		275229C81E776BC100E630FA /* CBLReplicator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275229C61E776BC100E630FA /* CBLReplicator.mm */; };
 		2753AFF51EC39CA200C12E98 /* CBLHTTPLogic.h in Headers */ = {isa = PBXBuildFile; fileRef = 2753AFF11EC39CA200C12E98 /* CBLHTTPLogic.h */; };
@@ -503,6 +506,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		273E555B1F79AF5E000182F1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 272AEC5B1F560FF600051F0A;
+			remoteInfo = cblite;
+		};
 		2749B9761EB25A660068DBF9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
@@ -1532,6 +1542,7 @@
 				9398D94C1E0347B600464432 /* C4Tests */,
 				2749B97B1EB25A660068DBF9 /* LiteCoreServ */,
 				2749B97D1EB25A660068DBF9 /* litecp */,
+				273E555C1F79AF5E000182F1 /* cblite */,
 				93765EE71EC4C874005E4050 /* litecorelog */,
 				9398D94E1E0347B600464432 /* libLiteCoreJNI.dylib */,
 				27DF7D841F424C840022F3DF /* libSQLCipher.a */,
@@ -2157,6 +2168,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		273E555C1F79AF5E000182F1 /* cblite */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = cblite;
+			remoteRef = 273E555B1F79AF5E000182F1 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		2749B9771EB25A660068DBF9 /* libLiteCoreREST-static.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -2557,6 +2575,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				93CD018F1E95546200AFB3FA /* ReplicatorTest.m in Sources */,
+				273E55471F79AF5E000182F1 /* ConflictTest.m in Sources */,
 				93CD018C1E95546200AFB3FA /* NotificationTest.m in Sources */,
 				938CFA2F1E442B5700291631 /* DatabaseTest.m in Sources */,
 				932A88581F4CDDB60005AFB8 /* DatabaseEncryptionTest.m in Sources */,
@@ -2564,7 +2583,9 @@
 				93CD018D1E95546200AFB3FA /* PredicateQueryTest.m in Sources */,
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
 				93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */,
+				273E555D1F79AF69000182F1 /* ArrayTest.m in Sources */,
 				931C146B1EAAF0960094F9B2 /* FragmentTest.m in Sources */,
+				273E555E1F79AF79000182F1 /* MiscTest.m in Sources */,
 				938CFA2E1E442B5300291631 /* CBLTestCase.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

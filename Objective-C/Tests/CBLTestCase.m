@@ -54,13 +54,20 @@
     }
 
     // Wait a little while for objects to be cleaned up:
+    int leaks;
     for (int i = 0; i < 20; i++) {
-        if (c4_getObjectCount() == _c4ObjectCount)
+        leaks = c4_getObjectCount() - _c4ObjectCount;
+        if (leaks == 0)
             break;
         else
             [NSThread sleepForTimeInterval: 0.1];
     }
-    AssertEqual(c4_getObjectCount(), _c4ObjectCount);
+    if (leaks) {
+        fprintf(stderr, "**** LITECORE OBJECTS STILL NOT FREED: ");
+        c4_dumpInstances();
+        fprintf(stderr, " ***\n");
+        XCTFail("%d LiteCore objects have not been freed (see above)", leaks);
+    }
     [super tearDown];
 }
 
