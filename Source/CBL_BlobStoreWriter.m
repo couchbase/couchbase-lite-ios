@@ -47,30 +47,15 @@ typedef struct {
         _store = store;
         SHA1_Init(&_shaCtx);
         MD5_Init(&_md5Ctx);
-                
-        // Open a temporary file in the store's temporary directory: 
-        NSString* filename = [CBLCreateUUID() stringByAppendingPathExtension: @"blobtmp"];
-        _tempPath = [[_store.tempDir stringByAppendingPathComponent: filename] copy];
-        if (!_tempPath) {
-            return nil;
-        }
-        // -fileHandleForWritingAtPath stupidly fails if the file doesn't exist, so we first have
-        // to create it:
-        int fd = open(_tempPath.fileSystemRepresentation, O_CREAT | O_TRUNC | O_WRONLY, 0600);
-        if (fd < 0) {
-            Warn(@"CBL_BlobStoreWriter can't create temp file at %@ (errno %d)", _tempPath, errno);
-            return nil;
-        }
-        close(fd);
+
         if (![self openFile])
             return nil;
         CBLSymmetricKey* encryptionKey = _store.encryptionKey;
         if (encryptionKey)
             _encryptor = [encryptionKey createEncryptor];
-}
+    }
     return self;
 }
-
 
 - (void) setProgress:(CBLProgressGroup *)progress {
     _progress = progress;
@@ -129,10 +114,37 @@ typedef struct {
     _out = nil;    
 }
 
+- (BOOL)createTempFilePath
+{
+    // Open a temporary file in the store's temporary directory:
+    NSString* filename = [CBLCreateUUID() stringByAppendingPathExtension: @"blobtmp"];
+    _tempPath = [[_store.tempDir stringByAppendingPathComponent: filename] copy];
+    if (!_tempPath) {
+        return NO;
+    }
+    // -fileHandleForWritingAtPath stupidly fails if the file doesn't exist, so we first have
+    // to create it:
+    int fd = open(_tempPath.fileSystemRepresentation, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+    if (fd < 0) {
+        Warn(@"CBL_BlobStoreWriter can't create temp file at %@ (errno %d)", _tempPath, errno);
+        _tempPath = nil;
+        return NO;
+    }
+    close(fd);
+    return YES;
+}
 
 - (BOOL) openFile {
     if (_out)
         return YES;
+    
+    if (_tempPath == nil) {
+        BOOL created = [self createTempFilePath];
+        if (!created) {
+            return NO;
+        }
+    }
+    
     _out = [NSFileHandle fileHandleForWritingAtPath: _tempPath];
     if (!_out) {
         BOOL exists = [[NSFileManager defaultManager] fileExistsAtPath: _tempPath];

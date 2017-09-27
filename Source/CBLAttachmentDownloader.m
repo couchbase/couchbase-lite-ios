@@ -91,8 +91,12 @@ BOOL CBLAttachmentDownloaderFakeTransientFailures;
 
 
 - (NSURLSessionTask*) createTaskInURLSession:(NSURLSession *)session {
-    [_writer openFile];
-
+    BOOL writerOpened = [_writer openFile];
+    if (!writerOpened) {
+        LogTo(RemoteRequest, @"%@: Opening writer failed", self);
+        return nil;
+    }
+    
     uint64_t bytesRead = _writer.bytesWritten;
     NSString* eTag = _writer.eTag;
     if (bytesRead > 0) {
