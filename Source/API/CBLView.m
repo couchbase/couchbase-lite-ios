@@ -92,7 +92,7 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 }
 
 
-@synthesize name=_name, storage=_storage, collation=_collation;
+@synthesize name=_name, storage=_storage, collation=_collation, isDesignDoc=_isDesignDoc;
 
 
 - (NSString*) description {
@@ -153,9 +153,11 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 - (CBLMapBlock) mapBlock {
     CBLMapBlock map = self.registeredMapBlock;
     // Invoke view compiler if it's available:
-    if (!map && [self respondsToSelector: @selector(compileFromDesignDoc)])
+    if (self.isDesignDoc ||
+        (!map && [self respondsToSelector: @selector(compileFromDesignDoc)])) {
         if ([self compileFromDesignDoc] == kCBLStatusOK)
             map = self.registeredMapBlock;
+    }
     return map;
 }
 

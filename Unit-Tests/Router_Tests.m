@@ -586,8 +586,6 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
                 }
           }, kCBLStatusCreated, nil);
     
-    NSLog(@"%@", result);
-    
     // Query view and check the result:
     id null = [NSNull null];
     Send(self, @"GET", @"/db/_design/design/_view/view", kCBLStatusOK,
