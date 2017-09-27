@@ -1376,18 +1376,27 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 #pragma mark - MISC
 
 
-- (NSDictionary*) generateSyncGatewayCookieForURL: (NSURL*)remoteURL {
+- (NSDictionary*) generateSyncGatewayCookieForURL: (NSURL*)remoteURL
+                                              ttl: (NSNumber*)ttl
+{
     // Get SyncGatewaySession cookie:
     __block NSDictionary* cookie;
     NSURLComponents* comp = [NSURLComponents componentsWithURL: remoteURL
                                        resolvingAgainstBaseURL: YES];
     comp.port = @(comp.port.intValue + 1); // admin port
     comp.path = [comp.path stringByAppendingPathComponent: @"_session"];
-    XCTestExpectation* complete = [self expectationWithDescription: @"didComplete"];
+    
+    NSMutableDictionary* body = [NSMutableDictionary dictionary];
+    body[@"name"] = @"test";
+    body[@"password"] = @"abc123";
+    if (ttl)
+        body[@"ttl"] = ttl;
+    
+    XCTestExpectation* complete = [self expectationWithDescription: @"complete"];
     CBLRemoteRequest *req =
         [[CBLRemoteJSONRequest alloc] initWithMethod: @"POST"
                                                  URL: comp.URL
-                                                body: @{@"name": @"test", @"password": @"abc123"}
+                                                body: body
                                         onCompletion:^(id result, NSError *error) {
                                             AssertNil(error);
                                             cookie = result;
@@ -1399,6 +1408,29 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     [self waitForExpectationsWithTimeout: 2.0 handler: nil];
     return cookie;
 }
+
+
+- (void) deleteSyncGatewaySessionForURL: (NSURL*)remoteURL {
+    NSURLComponents* comp = [NSURLComponents componentsWithURL: remoteURL
+                                       resolvingAgainstBaseURL: YES];
+    comp.port = @(comp.port.intValue + 1); // admin port
+    comp.path = [comp.path stringByAppendingPathComponent: @"_user/test/_session"];
+    
+    XCTestExpectation* complete = [self expectationWithDescription: @"complete"];
+    CBLRemoteRequest *req =
+    [[CBLRemoteJSONRequest alloc] initWithMethod: @"DELETE"
+                                             URL: comp.URL
+                                            body: nil
+                                    onCompletion: ^(id result, NSError *error) {
+                                        AssertNil(error);
+                                        [complete fulfill];
+                                    }];
+    req.debugAlwaysTrust = YES;
+    CBLRemoteSession* session = [[CBLRemoteSession alloc] initWithDelegate: nil];
+    [session startRequest: req];
+    [self waitForExpectationsWithTimeout: 2.0 handler: nil];
+}
+
 
 - (void) runReplicationWithSyncGatewayCookie: (NSDictionary*)cookie URL: (NSURL*)remoteURL {
     // Create a continuous pull replicator and set SyncGatewaySession cookie:
@@ -1414,7 +1446,8 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     
     // Stop the pull replicator:
     [self keyValueObservingExpectationForObject: repl
-                                        keyPath: @"status" expectedValue: @(kCBLReplicationStopped)];
+                                        keyPath: @"status"
+                                  expectedValue: @(kCBLReplicationStopped)];
     [repl stop];
     [self waitForExpectationsWithTimeout: 2.0 handler: nil];
 }
@@ -1424,7 +1457,8 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];
     if (!remoteURL)
         return;
-    NSDictionary* cookie = [self generateSyncGatewayCookieForURL: remoteURL];
+    NSDictionary* cookie = [self generateSyncGatewayCookieForURL: remoteURL
+                                                             ttl: nil];
     [self runReplicationWithSyncGatewayCookie: cookie URL: remoteURL];
 }
 
@@ -1433,9 +1467,50 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
     NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];
     if (!remoteURL)
         return;
-    NSMutableDictionary* cookie = [[self generateSyncGatewayCookieForURL: remoteURL] mutableCopy];
+    NSMutableDictionary* cookie =
+        [[self generateSyncGatewayCookieForURL: remoteURL ttl: nil] mutableCopy];
     [cookie removeObjectForKey: @"expires"];    // Makes it a session (non-persistent) cookie
     [self runReplicationWithSyncGatewayCookie: cookie URL: remoteURL];
+}
+
+
+- (void) test22c_SetCookieInHeader {
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1757
+    NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];
+    if (!remoteURL)
+        return;
+    
+    for (NSInteger i = 0; i < 2; i ++) {
+        NSDictionary* cookie =
+            [self generateSyncGatewayCookieForURL: remoteURL ttl: @(5)];
+        NSString* cookieStr = [NSString stringWithFormat:@"%@=%@",
+                               cookie[@"cookie_name"], cookie[@"session_id"]];
+        CBLReplication* repl = [db createPushReplication: remoteURL];
+        repl.continuous = YES;
+        repl.headers = @{@"Cookie": cookieStr};
+        [self runReplication: repl expectedChangesCount: 0u];
+        Assert(!repl.lastError);
+        
+        // Sleep for more than 10% of the TTL to trigger auto session refresh
+        // by SGW:
+        [NSThread sleepForTimeInterval: 1.0];
+        
+        // Create a document to push to SGW:
+        [self createDocumentWithProperties: @{@"foo": @"bar"}];
+        [self keyValueObservingExpectationForObject: repl
+                                            keyPath: @"completedChangesCount"
+                                      expectedValue: @(1)];
+        [self waitForExpectationsWithTimeout: 2.0 handler: nil];
+        
+        // Stop the replicator:
+        [self keyValueObservingExpectationForObject: repl
+                                            keyPath: @"status"
+                                      expectedValue: @(kCBLReplicationStopped)];
+        [repl stop];
+        [self waitForExpectationsWithTimeout: 2.0 handler: nil];
+        
+        [self deleteSyncGatewaySessionForURL: remoteURL];
+    }
 }
 
 

@@ -56,4 +56,6 @@ extern NSString* const CBLCookieStorageCookiesChangedNotification;
 
 - (void) setCookieFromResponse: (NSHTTPURLResponse*)response;
 
+- (void) setCookieFromString: (NSString*)string forURL: (NSURL*)url;
+
 @end

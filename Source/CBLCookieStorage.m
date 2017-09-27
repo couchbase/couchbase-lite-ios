@@ -467,4 +467,12 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
         [self setCookie: cookie];
 }
 
+- (void) setCookieFromString: (NSString*)string forURL: (NSURL*)url {
+    NSDictionary* header = @{@"Set-Cookie": string};
+    NSArray* cookies = [NSHTTPCookie cookiesWithResponseHeaderFields: header
+                                                              forURL: url];
+    for (NSHTTPCookie* cookie in cookies)
+        [self setCookie: cookie];
+}
+
 @end
