@@ -348,14 +348,14 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     
     // Note: c4Status.level is current matched with CBLReplicatorActivityLevel:
     CBLReplicatorActivityLevel level = (CBLReplicatorActivityLevel)c4Status.level;
-    CBLReplicatorProgress progress = { c4Status.progress.completed, c4Status.progress.total };
+    CBLReplicatorProgress progress = { c4Status.progress.unitsCompleted, c4Status.progress.unitsTotal };
     self.status = [[CBLReplicatorStatus alloc] initWithActivity: level
                                                        progress: progress
                                                           error: error];
     
     CBLLog(Sync, @"%@ is %s, progress %llu/%llu, error: %@",
            self, kC4ReplicatorActivityLevelNames[c4Status.level],
-           c4Status.progress.completed, c4Status.progress.total, error);
+           c4Status.progress.unitsCompleted, c4Status.progress.unitsTotal, error);
 }
 
 
