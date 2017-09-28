@@ -618,9 +618,15 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             if (rev)
                 rev = [self applyOptions: options toRevision: rev status: &status];
             if (!rev) {
-                if (status == kCBLStatusDeleted)
-                    _response.statusReason = @"deleted";
-                else
+                if (status == kCBLStatusDeleted) {
+                    if (revID) {
+                        status = kCBLStatusOK;
+                        _response.bodyObject = $dict({@"_id", docID},
+                                                     {@"_rev", revID.asString},
+                                                     {@"_deleted", $true});
+                    } else
+                        _response.statusReason = @"deleted";
+                } else
                     _response.statusReason = @"missing";
                 return status;
             }
