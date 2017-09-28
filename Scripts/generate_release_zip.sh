@@ -92,10 +92,19 @@ sh Scripts/build_framework.sh -s "CBL Swift" -p iOS -o "$BUILD_DIR" -v "$VERSION
 sh Scripts/build_framework.sh -s "CBL Swift" -p tvOS -o "$BUILD_DIR" -v "$VERSION"
 sh Scripts/build_framework.sh -s "CBL Swift" -p macOS -o "$BUILD_DIR" -v "$VERSION"
 
+# Build tools:
+TOOLS_DIR="$BUILD_DIR/Tools"
+mkdir "$TOOLS_DIR"
+cp vendor/couchbase-lite-core/tools/README.md "$TOOLS_DIR"
+vendor/couchbase-lite-core/Xcode/build_tool.sh -t 'cblite' -o "$TOOLS_DIR" -v "$VERSION"
+vendor/couchbase-lite-core/Xcode/build_tool.sh -t 'litecp' -o "$TOOLS_DIR" -v "$VERSION"
+vendor/couchbase-lite-core/Xcode/build_tool.sh -t 'litecorelog' -o "$TOOLS_DIR" -v "$VERSION"
+
 # Objective-C Community
 mkdir -p "$OUTPUT_OBJC_COMMUNITY_DIR"
 cp -R "$BUILD_DIR/CBL ObjC"/* "$OUTPUT_OBJC_COMMUNITY_DIR"
 cp Scripts/Support/License/LICENSE_community.txt "$OUTPUT_OBJC_COMMUNITY_DIR"/LICENSE.txt
+cp -R "$TOOLS_DIR" "$OUTPUT_OBJC_COMMUNITY_DIR"
 pushd "$OUTPUT_OBJC_COMMUNITY_DIR"
 zip -ry "$OUTPUT_OBJC_COMMUNITY_ZIP" *
 popd
@@ -104,6 +113,7 @@ popd
 mkdir -p "$OUTPUT_OBJC_ENTERPRISE_DIR"
 cp -R "$BUILD_DIR/CBL ObjC"/* "$OUTPUT_OBJC_ENTERPRISE_DIR"
 cp Scripts/Support/License/LICENSE_enterprise.txt "$OUTPUT_OBJC_ENTERPRISE_DIR/LICENSE.txt"
+cp -R "$TOOLS_DIR" "$OUTPUT_OBJC_ENTERPRISE_DIR"
 pushd "$OUTPUT_OBJC_ENTERPRISE_DIR"
 zip -ry "$OUTPUT_OBJC_ENTERPRISE_ZIP" *
 popd
@@ -112,6 +122,7 @@ popd
 mkdir -p "$OUTPUT_SWIFT_COMMUNITY_DIR"
 cp -R "$BUILD_DIR/CBL Swift"/* "$OUTPUT_SWIFT_COMMUNITY_DIR"
 cp Scripts/Support/License/LICENSE_community.txt "$OUTPUT_SWIFT_COMMUNITY_DIR"/LICENSE.txt
+cp -R "$TOOLS_DIR" "$OUTPUT_SWIFT_COMMUNITY_DIR"
 pushd "$OUTPUT_SWIFT_COMMUNITY_DIR"
 zip -ry "$OUTPUT_SWIFT_COMMUNITY_ZIP" *
 popd
@@ -120,6 +131,7 @@ popd
 mkdir -p "$OUTPUT_SWIFT_ENTERPRISE_DIR"
 cp -R "$BUILD_DIR/CBL Swift"/* "$OUTPUT_SWIFT_ENTERPRISE_DIR"
 cp Scripts/Support/License/LICENSE_enterprise.txt "$OUTPUT_SWIFT_ENTERPRISE_DIR/LICENSE.txt"
+cp -R "$TOOLS_DIR" "$OUTPUT_SWIFT_ENTERPRISE_DIR"
 pushd "$OUTPUT_SWIFT_ENTERPRISE_DIR"
 zip -ry "$OUTPUT_SWIFT_ENTERPRISE_ZIP" *
 popd
