@@ -379,6 +379,7 @@ NSString* const kCBLDocumentChangeNotification = @"CBLDocumentChange";
     CBLStatus status = [_database forceInsert: rev
                               revisionHistory: revIDs
                                        source: sourceURL
+                         allowStubAttachments: NO
                                         error: outError];
     return !CBLStatusIsError(status);
 }

@@ -341,6 +341,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
 /** Given a revision, updates its _attachments dictionary for storage in the database. */
 - (BOOL) processAttachmentsForRevision: (CBL_MutableRevision*)rev
                               ancestry: (NSArray<CBL_RevID*>*)ancestry
+                  allowStubAttachments: (BOOL)allowStubAttachments
                                 status: (CBLStatus*)outStatus
 {
     AssertContainsRevIDs(ancestry);
@@ -383,7 +384,7 @@ static UInt64 smallestLength(NSDictionary* attachment) {
             *outStatus = [self installAttachment: attachment];
             if (CBLStatusIsError(*outStatus))
                 return nil;
-        } else if ([attachInfo[@"stub"] isEqual: $true] && attachment->revpos < generation) {
+        } else if ([attachInfo[@"stub"] isEqual: $true] && attachment->revpos < generation && !allowStubAttachments) {
             // "stub" on an incoming revision means the attachment is the same as in the parent.
             // (Either that or the replicator just decided to defer downloading the attachment;
             // that's why the 'if' above tests the revpos.)
