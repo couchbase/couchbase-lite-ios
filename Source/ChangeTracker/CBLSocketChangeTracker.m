@@ -220,7 +220,7 @@ UsingLogDomain(Sync);
     Assert(_readyToRead);
     _readyToRead = false;
     uint8_t buffer[kReadLength];
-    while (_trackingInput.hasBytesAvailable) {
+    while (!self.paused && _trackingInput.hasBytesAvailable) {
         NSInteger bytesRead = [_trackingInput read: buffer maxLength: sizeof(buffer)];
         if (bytesRead > 0) {
             if (_gzip)
