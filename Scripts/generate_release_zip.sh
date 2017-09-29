@@ -68,19 +68,19 @@ BUILD_DIR=$OUTPUT_DIR/build
 
 OUTPUT_OBJC_COMMUNITY_DIR=$OUTPUT_DIR/objc_community
 OUTPUT_OBJC_ENTERPRISE_DIR=$OUTPUT_DIR/objc_enterprise
-OUTPUT_OBJC_COMMUNITY_ZIP=`pwd`/$OUTPUT_DIR/couchbase-lite-objc_community$VERSION_SUFFIX.zip
-OUTPUT_OBJC_ENTERPRISE_ZIP=`pwd`/$OUTPUT_DIR/couchbase-lite-objc_enterprise$VERSION_SUFFIX.zip
+OUTPUT_OBJC_COMMUNITY_ZIP=../couchbase-lite-objc_community$VERSION_SUFFIX.zip
+OUTPUT_OBJC_ENTERPRISE_ZIP=../couchbase-lite-objc_enterprise$VERSION_SUFFIX.zip
 
 OUTPUT_SWIFT_COMMUNITY_DIR=$OUTPUT_DIR/swift_community
 OUTPUT_SWIFT_ENTERPRISE_DIR=$OUTPUT_DIR/swift_enterprise
-OUTPUT_SWIFT_COMMUNITY_ZIP=`pwd`/$OUTPUT_DIR/couchbase-lite-swift_community$VERSION_SUFFIX.zip
-OUTPUT_SWIFT_ENTERPRISE_ZIP=`pwd`/$OUTPUT_DIR/couchbase-lite-swift_enterprise$VERSION_SUFFIX.zip
+OUTPUT_SWIFT_COMMUNITY_ZIP=../couchbase-lite-swift_community$VERSION_SUFFIX.zip
+OUTPUT_SWIFT_ENTERPRISE_ZIP=../couchbase-lite-swift_enterprise$VERSION_SUFFIX.zip
 
 OUTPUT_DOCS_DIR=$OUTPUT_DIR/docs
-OUTOUT_OBJC_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLite
-OUTOUT_OBJC_DOCS_ZIP=`pwd`/$OUTPUT_DIR/couchbase-lite-objc-documentation$VERSION_SUFFIX.zip
-OUTOUT_SWIFT_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLiteSwift
-OUTOUT_SWIFT_DOCS_ZIP=`pwd`/$OUTPUT_DIR/couchbase-lite-swift-documentation$VERSION_SUFFIX.zip
+OUTPUT_OBJC_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLite
+OUTPUT_OBJC_DOCS_ZIP=../../couchbase-lite-objc-documentation$VERSION_SUFFIX.zip
+OUTPUT_SWIFT_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLiteSwift
+OUTPUT_SWIFT_DOCS_ZIP=../../couchbase-lite-swift-documentation$VERSION_SUFFIX.zip
 
 rm -rf "$OUTPUT_DIR"
 
@@ -92,10 +92,19 @@ sh Scripts/build_framework.sh -s "CBL Swift" -p iOS -o "$BUILD_DIR" -v "$VERSION
 sh Scripts/build_framework.sh -s "CBL Swift" -p tvOS -o "$BUILD_DIR" -v "$VERSION"
 sh Scripts/build_framework.sh -s "CBL Swift" -p macOS -o "$BUILD_DIR" -v "$VERSION"
 
+# Build tools:
+TOOLS_DIR="$BUILD_DIR/Tools"
+mkdir "$TOOLS_DIR"
+cp vendor/couchbase-lite-core/tools/README.md "$TOOLS_DIR"
+vendor/couchbase-lite-core/Xcode/build_tool.sh -t 'cblite' -o "$TOOLS_DIR" -v "$VERSION"
+vendor/couchbase-lite-core/Xcode/build_tool.sh -t 'litecp' -o "$TOOLS_DIR" -v "$VERSION"
+vendor/couchbase-lite-core/Xcode/build_tool.sh -t 'litecorelog' -o "$TOOLS_DIR" -v "$VERSION"
+
 # Objective-C Community
 mkdir -p "$OUTPUT_OBJC_COMMUNITY_DIR"
 cp -R "$BUILD_DIR/CBL ObjC"/* "$OUTPUT_OBJC_COMMUNITY_DIR"
 cp Scripts/Support/License/LICENSE_community.txt "$OUTPUT_OBJC_COMMUNITY_DIR"/LICENSE.txt
+cp -R "$TOOLS_DIR" "$OUTPUT_OBJC_COMMUNITY_DIR"
 pushd "$OUTPUT_OBJC_COMMUNITY_DIR"
 zip -ry "$OUTPUT_OBJC_COMMUNITY_ZIP" *
 popd
@@ -104,6 +113,7 @@ popd
 mkdir -p "$OUTPUT_OBJC_ENTERPRISE_DIR"
 cp -R "$BUILD_DIR/CBL ObjC"/* "$OUTPUT_OBJC_ENTERPRISE_DIR"
 cp Scripts/Support/License/LICENSE_enterprise.txt "$OUTPUT_OBJC_ENTERPRISE_DIR/LICENSE.txt"
+cp -R "$TOOLS_DIR" "$OUTPUT_OBJC_ENTERPRISE_DIR"
 pushd "$OUTPUT_OBJC_ENTERPRISE_DIR"
 zip -ry "$OUTPUT_OBJC_ENTERPRISE_ZIP" *
 popd
@@ -112,6 +122,7 @@ popd
 mkdir -p "$OUTPUT_SWIFT_COMMUNITY_DIR"
 cp -R "$BUILD_DIR/CBL Swift"/* "$OUTPUT_SWIFT_COMMUNITY_DIR"
 cp Scripts/Support/License/LICENSE_community.txt "$OUTPUT_SWIFT_COMMUNITY_DIR"/LICENSE.txt
+cp -R "$TOOLS_DIR" "$OUTPUT_SWIFT_COMMUNITY_DIR"
 pushd "$OUTPUT_SWIFT_COMMUNITY_DIR"
 zip -ry "$OUTPUT_SWIFT_COMMUNITY_ZIP" *
 popd
@@ -120,6 +131,7 @@ popd
 mkdir -p "$OUTPUT_SWIFT_ENTERPRISE_DIR"
 cp -R "$BUILD_DIR/CBL Swift"/* "$OUTPUT_SWIFT_ENTERPRISE_DIR"
 cp Scripts/Support/License/LICENSE_enterprise.txt "$OUTPUT_SWIFT_ENTERPRISE_DIR/LICENSE.txt"
+cp -R "$TOOLS_DIR" "$OUTPUT_SWIFT_ENTERPRISE_DIR"
 pushd "$OUTPUT_SWIFT_ENTERPRISE_DIR"
 zip -ry "$OUTPUT_SWIFT_ENTERPRISE_ZIP" *
 popd
@@ -135,12 +147,12 @@ popd
 # Generate API docs:
 sh Scripts/generate_api_docs.sh -o "$OUTPUT_DOCS_DIR"
 # >> Objective-C API
-pushd "$OUTOUT_OBJC_DOCS_DIR"
-zip -ry "$OUTOUT_OBJC_DOCS_ZIP" *
+pushd "$OUTPUT_OBJC_DOCS_DIR"
+zip -ry "$OUTPUT_OBJC_DOCS_ZIP" *
 popd
 # >> Swift API docs
-pushd "$OUTOUT_SWIFT_DOCS_DIR"
-zip -ry "$OUTOUT_SWIFT_DOCS_ZIP" *
+pushd "$OUTPUT_SWIFT_DOCS_DIR"
+zip -ry "$OUTPUT_SWIFT_DOCS_ZIP" *
 popd
 
 # Cleanup
