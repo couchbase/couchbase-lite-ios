@@ -261,12 +261,23 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
     
     // Delete doc:
     result = Send(self, @"DELETE", $sprintf(@"/db/doc1?rev=%@", revID), kCBLStatusOK, nil);
-    Assert([result[@"rev"] hasPrefix: @"2-"]);
+    NSString* newRevID = result[@"rev"];
+    Assert([newRevID hasPrefix: @"2-"]);
     
     // Get the deletes doc:
     Send(self, @"GET", @"/db/doc1", kCBLStatusDeleted, $dict({@"error", @"not_found"},
                                                              {@"reason", @"deleted"},
                                                              {@"status", @(404)}));
+    
+    // Get the deletes doc with previous revision id:
+    Send(self, @"GET", $sprintf(@"/db/doc1?rev=%@", revID), kCBLStatusOK, $dict({@"_id", @"doc1"},
+                                                                                {@"_rev", revID},
+                                                                                {@"foo", @"bar"}));
+    
+    // Get the deletes doc with the new revision id:
+    Send(self, @"GET", $sprintf(@"/db/doc1?rev=%@", newRevID), kCBLStatusOK, $dict({@"_id", @"doc1"},
+                                                                                   {@"_rev", newRevID},
+                                                                                   {@"_deleted", $true}));
 }
 
 
