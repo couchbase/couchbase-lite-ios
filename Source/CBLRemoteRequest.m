@@ -115,9 +115,8 @@ typedef enum {
 - (void) setCookieStorage:(CBLCookieStorage *)cookieStorage {
     if (_cookieStorage != cookieStorage) {
         _cookieStorage = cookieStorage;
-        // Let the cookie storage add a Cookie: header, unless the app has specified its own cookes:
-        if (![_request valueForHTTPHeaderField: @"Cookie"])
-            [_cookieStorage addCookieHeaderToRequest: _request];
+        // Let the cookie storage add a Cookie header:
+        [_cookieStorage addCookieHeaderToRequest: _request];
     }
 }
 

@@ -290,7 +290,16 @@ static NSString* const kSyncGatewayServerHeaderPrefix = @"Couchbase Sync Gateway
     config.allowsCellularAccess = _settings.canUseCellNetwork;
     NSMutableDictionary* headers = _settings.requestHeaders.mutableCopy;
     if (headers) {
-        if( config.HTTPAdditionalHeaders)
+        if (headers[@"Cookie"]) {
+            // https://github.com/couchbase/couchbase-lite-ios/issues/1757:
+            // Put the cookie in the cookie storage; the same cookie in the
+            // cookie storagte will be overwritten if they are matched:
+            [db.cookieStorage setCookieFromString: headers[@"Cookie"]
+                                           forURL: _settings.remote];
+            [headers removeObjectForKey: @"Cookie"];
+        }
+        
+        if (config.HTTPAdditionalHeaders)
             [headers addEntriesFromDictionary: config.HTTPAdditionalHeaders];
         config.HTTPAdditionalHeaders = headers;
     }
