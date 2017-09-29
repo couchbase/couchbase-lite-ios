@@ -218,9 +218,9 @@ UsingLogDomain(Sync);
 
 - (void) readFromInput {
     Assert(_readyToRead);
+    _readyToRead = false;
     uint8_t buffer[kReadLength];
-    BOOL hasMore = NO;
-    while ((hasMore = _trackingInput.hasBytesAvailable) && !self.paused) {
+    while (_trackingInput.hasBytesAvailable) {
         NSInteger bytesRead = [_trackingInput read: buffer maxLength: sizeof(buffer)];
         if (bytesRead > 0) {
             if (_gzip)
@@ -229,7 +229,6 @@ UsingLogDomain(Sync);
                 [self parseBytes: buffer length: bytesRead];
         }
     }
-    _readyToRead = hasMore;
 }
 
 
