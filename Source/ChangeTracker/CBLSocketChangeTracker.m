@@ -44,6 +44,7 @@ UsingLogDomain(Sync);
     CBLGZip* _gzip;
     bool _gotResponseHeaders;
     bool _readyToRead;
+    bool _endStream;
     NSString* _serverName;
 }
 
@@ -88,6 +89,7 @@ UsingLogDomain(Sync);
 
     _gotResponseHeaders = false;
     _readyToRead = NO;
+    _endStream = NO;
     _gzip = nil;
     _serverName = nil;
 
@@ -221,6 +223,11 @@ UsingLogDomain(Sync);
     _readyToRead = false;
     uint8_t buffer[kReadLength];
     while (_trackingInput.hasBytesAvailable) {
+        if (self.paused && !_endStream) {
+            _readyToRead = YES;
+            break;
+        }
+        
         NSInteger bytesRead = [_trackingInput read: buffer maxLength: sizeof(buffer)];
         if (bytesRead > 0) {
             if (_gzip)
@@ -238,6 +245,7 @@ UsingLogDomain(Sync);
         if (!_gotResponseHeaders)
             return;
     }
+    _endStream = YES;
     self.paused = NO;   // parse any incoming bytes that have been waiting
     if (_gzip) {
         [self readGzippedBytes: NULL length: 0]; // flush gzip decoder
