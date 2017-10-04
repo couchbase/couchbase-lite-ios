@@ -320,7 +320,7 @@
     NSString* bodyString = @"This is the body of attach1";
     CBL_Revision* rev1 = [self putDoc: nil withAttachment: bodyString compressed: YES];
     AssertEqual(rev1[@"_attachments"], $dict({@"attach", $dict({@"content_type", @"text/plain"},
-                                                                {@"digest", @"sha1-Wk8g89eb0Y+5DtvMKkf+/g90Mhc="},
+                                                                {@"digest", @"sha1-q+PX8H2eAj2p1K0JsQSApSg2o/o="},
                                                                 {@"length", @(27)},
                                                                 {@"encoded_length", @(45)},
                                                                 {@"encoding", @"gzip"},
@@ -334,7 +334,7 @@
     CBL_Revision* gotRev1 = [db getDocumentWithID: rev1.docID revisionID: rev1.revID];
     NSDictionary* attachmentDict = gotRev1[@"_attachments"];
     AssertEqual(attachmentDict, $dict({@"attach", $dict({@"content_type", @"text/plain"},
-                                                         {@"digest", @"sha1-Wk8g89eb0Y+5DtvMKkf+/g90Mhc="},
+                                                         {@"digest", @"sha1-q+PX8H2eAj2p1K0JsQSApSg2o/o="},
                                                          {@"length", @(27)},
                                                          {@"encoded_length", @(45)},
                                                          {@"encoding", @"gzip"},
@@ -353,7 +353,7 @@
     NSString* encoded = [CBLBase64 encode: [CBLGZip dataByCompressingData: [bodyString dataUsingEncoding: NSUTF8StringEncoding]]];
     AssertEqual(expandedRev[@"_attachments"],
                 $dict({@"attach", $dict({@"content_type", @"text/plain"},
-                                        {@"digest", @"sha1-Wk8g89eb0Y+5DtvMKkf+/g90Mhc="},
+                                        {@"digest", @"sha1-q+PX8H2eAj2p1K0JsQSApSg2o/o="},
                                         {@"length", @(27)},
                                         {@"encoded_length", @(45)},
                                         {@"encoding", @"gzip"},
@@ -372,7 +372,7 @@
     encoded = [CBLBase64 encode: [bodyString dataUsingEncoding: NSUTF8StringEncoding]];
     AssertEqual(expandedRev[@"_attachments"],
                 $dict({@"attach", $dict({@"content_type", @"text/plain"},
-                                        {@"digest", @"sha1-Wk8g89eb0Y+5DtvMKkf+/g90Mhc="},
+                                        {@"digest", @"sha1-q+PX8H2eAj2p1K0JsQSApSg2o/o="},
                                         {@"length", @(27)},
                                         {@"data", encoded},
                                         {@"revpos", @1})}));
