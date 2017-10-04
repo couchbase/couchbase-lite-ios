@@ -166,7 +166,10 @@ static BOOL acceptProblems(SecTrustRef trust, NSString* host) {
 #if !TARGET_OS_IPHONE
             else if ([problem isEqualToString: @"StatusCodes"]) {
                 // Same thing, but on Mac they express the problem differently :-p
-                if ([details[problem] isEqual: @[@(CSSMERR_APPLETP_HOSTNAME_MISMATCH)]])
+                // From #1912:
+                // 10.13 (High Sierra) : @[CSSMERR_APPLETP_HOSTNAME_MISMATCH and CSSMERR_TP_NOT_TRUSTED]
+                // Less than 10.13     : @[CSSMERR_APPLETP_HOSTNAME_MISMATCH]
+                if ([details[problem] containsObject: @(CSSMERR_APPLETP_HOSTNAME_MISMATCH)])
                     accept = (i == 0 && SecTrustGetCertificateCount(trust) == 1 && localDomain);
             }
 #endif
