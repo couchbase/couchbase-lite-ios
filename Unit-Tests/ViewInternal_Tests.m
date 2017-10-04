@@ -960,6 +960,11 @@ static NSArray* reverse(NSArray* a) {
     AssertEqual(rowsToDicts(query), expectedRows);
 }
 
+static NSString* stringWithJSONObject(id obj) {
+    return [CBLJSON stringWithJSONObject: obj
+                                 options: CBLJSONWritingAllowFragments
+                                   error: NULL];
+}
 
 - (void) test16_Reduce {
     RequireTestCase(Query);
@@ -981,9 +986,14 @@ static NSArray* reverse(NSArray* a) {
     AssertEq([view _updateIndex], kCBLStatusOK);
     NSArray* dump = [view.storage dump];
     Log(@"View dump: %@", dump);
-    AssertEqual(dump, $array($dict({@"key", @"\"App\""}, {@"value", @"1.95"}, {@"seq", @2}),
-                              $dict({@"key", @"\"CD\""}, {@"value", @"8.99"}, {@"seq", @1}),
-                              $dict({@"key", @"\"Dessert\""}, {@"value", @"6.5"}, {@"seq", @3}) ));
+    
+    NSString* value1 = stringWithJSONObject(@(8.99));
+    NSString* value2 = stringWithJSONObject(@(1.95));
+    NSString* value3 = stringWithJSONObject(@(6.50));
+    
+    AssertEqual(dump, $array($dict({@"key", @"\"App\""}, {@"value", value2}, {@"seq", @2}),
+                             $dict({@"key", @"\"CD\""}, {@"value", value1}, {@"seq", @1}),
+                             $dict({@"key", @"\"Dessert\""}, {@"value", value3}, {@"seq", @3}) ));
 
     CBLQueryOptions *options = [CBLQueryOptions new];
     CBLStatus status;
