@@ -911,21 +911,30 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
 #if TARGET_OS_IPHONE
 #if !TARGET_IPHONE_SIMULATOR
 - (void) test25_FileProtection {
+    // Create a non database file in the manager's directory:
+    NSError* error;
+    NSString* nonDbDir = [db.manager.directory stringByAppendingPathComponent: @"nondb"];
+    Assert([[NSFileManager defaultManager] createDirectoryAtPath: nonDbDir
+                              withIntermediateDirectories: NO
+                                               attributes: nil
+                                                    error: &error],
+           @"Error when creating a nondb directory: %@", error);
+    
     // Check that every file has the file protection set for the CBLManager (which defaults to
     // NSFileProtectionCompleteUnlessOpen.)
-    [self verifyFileProtection: NSFileProtectionCompleteUnlessOpen forDir: db.dir];
-    
-    
+    [self verifyFileProtection: NSFileProtectionCompleteUnlessOpen forDir: db.manager.directory];
     
     // Change file protection to NSFileProtectionNone:
-    NSError* error;
     CBLManagerOptions options = {.fileProtection=NSDataWritingFileProtectionNone};
     CBLManager* manager = [[CBLManager alloc] initWithDirectory: db.manager.directory
                                                         options: &options
                                                           error: &error];
     Assert(manager, @"Error when creating a new manager: %@", error);
-    [self verifyFileProtection: NSFileProtectionNone forDir: db.dir];
+    [self verifyFileProtection: NSFileProtectionNone forDir: db.manager.directory];
     [manager close];
+    
+    // Clean up:
+    [[NSFileManager defaultManager] removeItemAtPath: nonDbDir error: nil];
 }
 
 
@@ -936,9 +945,14 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
         NSString* absPath = [dir stringByAppendingPathComponent: path];
         id prot = [[fmgr attributesOfItemAtPath: absPath error: nil] objectForKey: NSFileProtectionKey];
         Log(@"Protection of %@ --> %@", path, prot);
-        // Not checking -shm file as it will have NSFileProtectionNone by default regardless of its
-        // parent directory projection level. However, the -shm file contains non-sensitive information.
-        if (![path hasSuffix:@"-shm"])
+        if ([path hasSuffix: @"-shm"]) {
+            // -shm file will have NSFileProtectionNone by default regardless of its
+            // parent directory projection level. However, the -shm file contains non-sensitive information.
+            AssertEqual(prot, NSFileProtectionNone);
+        } else if ([path hasSuffix: @"nondb"]) {
+            // File protection shouldn't be changed
+            AssertEqual(prot, NSFileProtectionCompleteUnlessOpen);
+        } else
             AssertEqual(prot, protection);
     }
 }
