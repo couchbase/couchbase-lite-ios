@@ -245,16 +245,19 @@ NSString* const CBLCookieStorageCookiesChangedNotification = @"CookieStorageCook
 
 # pragma mark - Private
 
-- (BOOL) deleteCookie: (NSHTTPCookie*)aCookie outIndex: (NSUInteger*)outIndex {
+- (BOOL) deleteCookie: (NSHTTPCookie*)cookie outIndex: (NSUInteger*)outIndex {
     @synchronized (_cookies) {
         NSInteger foundIndex = -1;
         NSInteger idx = 0;
-        for (NSHTTPCookie* cookie in _cookies) {
-            if ([aCookie.name caseInsensitiveCompare: cookie.name] == 0 &&
-                [aCookie.domain caseInsensitiveCompare: cookie.domain] == 0 &&
-                [aCookie.path caseInsensitiveCompare: cookie.path] == 0) {
-                foundIndex = idx;
-                break;
+        for (NSHTTPCookie* c in _cookies) {
+            if ([cookie.name caseInsensitiveCompare: c.name] == 0 &&
+                [cookie.domain caseInsensitiveCompare: c.domain] == 0) {
+                NSString* path1 = cookie.path.length > 0 ? cookie.path : @"/";
+                NSString* path2 = c.path.length  > 0 ? c.path  : @"/";
+                if ([path1 caseInsensitiveCompare: path2] == 0) {
+                    foundIndex = idx;
+                    break;
+                }
             }
             idx++;
         }

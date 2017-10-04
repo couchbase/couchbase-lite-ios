@@ -215,14 +215,13 @@
                                              }];
     [_cookieStore setCookie: cookie7];
 
-    AssertEq(_cookieStore.cookies.count, 7u);
+    AssertEq(_cookieStore.cookies.count, 6u);
     AssertEqual(_cookieStore.cookies[0], cookie1);
-    AssertEqual(_cookieStore.cookies[1], cookie2);
-    AssertEqual(_cookieStore.cookies[2], cookie3);
-    AssertEqual(_cookieStore.cookies[3], cookie4);
-    AssertEqual(_cookieStore.cookies[4], cookie5);
-    AssertEqual(_cookieStore.cookies[5], cookie6);
-    AssertEqual(_cookieStore.cookies[6], cookie7);
+    AssertEqual(_cookieStore.cookies[1], cookie3);
+    AssertEqual(_cookieStore.cookies[2], cookie4);
+    AssertEqual(_cookieStore.cookies[3], cookie5);
+    AssertEqual(_cookieStore.cookies[4], cookie6);
+    AssertEqual(_cookieStore.cookies[5], cookie7);
 
     NSHTTPCookie* cookie8 = [self cookie: @{ NSHTTPCookieName: @"cookie1",
                                              NSHTTPCookieDomain: @"mycookie.com",
@@ -231,14 +230,13 @@
                                              }];
     [_cookieStore setCookie: cookie8];
 
-    AssertEq(_cookieStore.cookies.count, 7u);
+    AssertEq(_cookieStore.cookies.count, 6u);
     AssertEqual(_cookieStore.cookies[0], cookie8);
-    AssertEqual(_cookieStore.cookies[1], cookie2);
-    AssertEqual(_cookieStore.cookies[2], cookie3);
-    AssertEqual(_cookieStore.cookies[3], cookie4);
-    AssertEqual(_cookieStore.cookies[4], cookie5);
-    AssertEqual(_cookieStore.cookies[5], cookie6);
-    AssertEqual(_cookieStore.cookies[6], cookie7);
+    AssertEqual(_cookieStore.cookies[1], cookie3);
+    AssertEqual(_cookieStore.cookies[2], cookie4);
+    AssertEqual(_cookieStore.cookies[3], cookie5);
+    AssertEqual(_cookieStore.cookies[4], cookie6);
+    AssertEqual(_cookieStore.cookies[5], cookie7);
 }
 
 - (void) test_SetCookie_SessionOnly {
