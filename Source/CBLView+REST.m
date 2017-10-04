@@ -16,9 +16,9 @@
 
 
 - (CBLStatus) compileFromDesignDoc {
-    if (self.registeredMapBlock != nil)
+    if (!self.isDesignDoc && self.registeredMapBlock) /* Native design doc like view */
         return kCBLStatusOK;
-
+    
     // see if there's a design doc with a CouchDB-style view definition we can compile:
     NSString* language;
     NSDictionary* viewProps = $castIf(NSDictionary, [self.database getDesignDocFunction: self.name
@@ -26,6 +26,7 @@
                                                                                language: &language]);
     if (!viewProps)
         return kCBLStatusNotFound;
+    
     LogTo(View, @"%@: Attempting to compile %@ from design doc", self.name, language);
     if (![CBLView compiler])
         return kCBLStatusNotImplemented;
@@ -34,6 +35,15 @@
 
 
 - (CBLStatus) compileFromProperties: (NSDictionary*)viewProps language: (NSString*)language {
+    // Version string is based on a digest of the properties:
+    NSError* error;
+    NSString* version = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: viewProps error: &error]);
+    if (!version)
+        Warn(@"View %@ could not generate version string from the view properties: %@", self, error);
+    
+    if ([version isEqualToString: self.mapVersion])
+        return kCBLStatusOK; // Same as the current version
+    
     if (!language)
         language = @"javascript";
     NSString* mapSource = viewProps[@"map"];
@@ -53,16 +63,17 @@
             return kCBLStatusCallbackError;
         }
     }
-
-    // Version string is based on a digest of the properties:
-    NSError* error;
-    NSString* version = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: viewProps error: &error]);
+    
     [self setMapBlock: mapBlock reduceBlock: reduceBlock version: version];
 
     self.documentType = $castIf(NSString, viewProps[@"documentType"]);
     NSDictionary* options = $castIf(NSDictionary, viewProps[@"options"]);
     self.collation = ($equal(options[@"collation"], @"raw")) ? kCBLViewCollationRaw
                                                              : kCBLViewCollationUnicode;
+    
+    // Mark as a design doc view:
+    self.isDesignDoc = YES;
+    
     return kCBLStatusOK;
 }
 
