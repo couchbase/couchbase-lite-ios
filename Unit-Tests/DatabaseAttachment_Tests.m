@@ -466,7 +466,7 @@
            @"expandAttachments failed: status %d", status);
     AssertEqualish(expandedRev[@"_attachments"],
                 $dict({@"attach", $dict({@"content_type", @"text/plain"},
-                                        {@"digest", @"sha1-xow/vyonQ4VegLAEKRwLSFfVqNs="},
+                                        {@"digest", @"sha1-OXRSfNeXJL/IKZ6fgOj8ROdLFuQ="},
                                         {@"length", @(12288)},
                                         {@"revpos", @1},
                                         {@"follows", @YES})}));
@@ -484,7 +484,7 @@
     NSString* base64 = [CBLBase64 encode: zipped];
     AssertEqualish(expandedRev[@"_attachments"],
                 $dict({@"attach", $dict({@"content_type", @"text/plain"},
-                                        {@"digest", @"sha1-xow/vyonQ4VegLAEKRwLSFfVqNs="},
+                                        {@"digest", @"sha1-OXRSfNeXJL/IKZ6fgOj8ROdLFuQ="},
                                         {@"length", @(12288)},
                                         {@"encoding", @"gzip"},
                                         {@"encoded_length", @61},
