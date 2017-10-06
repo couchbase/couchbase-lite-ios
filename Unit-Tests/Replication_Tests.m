@@ -1542,9 +1542,12 @@ static UInt8 sEncryptionIV[kCCBlockSizeAES128];
 
 - (void) test22c_SetCookieInHeader {
     // https://github.com/couchbase/couchbase-lite-ios/issues/1757
-    NSURL* remoteURL = [self remoteTestDBURL: @"cbl_auth_test"];
+    NSURL* remoteURL = [self remoteSSLTestDBURL: @"cbl_auth_test"];
     if (!remoteURL)
         return;
+    
+    NSArray* serverCerts = [self remoteTestDBAnchorCerts];
+    [CBLReplication setAnchorCerts: serverCerts onlyThese: NO];
     
     for (NSInteger i = 0; i < 2; i ++) {
         NSDictionary* cookie =
