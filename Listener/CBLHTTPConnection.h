@@ -24,7 +24,7 @@
 /** Trivial HTTPServer subclass that just adds synthesized `listener` and `cblServer` properties. */
 @interface CBLHTTPServer : HTTPServer
 
-@property (retain) CBLListener* listener;
+@property (weak) CBLListener* listener;
 @property (retain) CBL_Server* cblServer;
 
 @end
