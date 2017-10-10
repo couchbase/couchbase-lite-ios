@@ -41,6 +41,10 @@ NS_ASSUME_NONNULL_BEGIN
 //////////////////
 
 @interface CBLReadOnlyDocument ()
+{
+    @protected
+    CBLReadOnlyDictionary* _dict;
+}
 
 @property (nonatomic, nullable) CBLDatabase* database;
 
@@ -56,6 +60,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) id<CBLConflictResolver> effectiveConflictResolver;
 
+@property (nonatomic, readonly, nullable) CBLFLDict* data;
+
 - (instancetype) initWithDatabase: (nullable CBLDatabase*)database
                        documentID: (NSString*)documentID
                             c4Doc: (nullable CBLC4Document*)c4Doc
@@ -65,6 +71,8 @@ NS_ASSUME_NONNULL_BEGIN
                        documentID: (NSString*)documentID
                         mustExist: (BOOL)mustExist
                             error: (NSError**)outError;
+
+- (void) setDictionaryFromData: (CBLFLDict*)data;
 
 - (BOOL) selectConflictingRevision;
 - (BOOL) selectCommonAncestorOfDoc: (CBLReadOnlyDocument*)doc1

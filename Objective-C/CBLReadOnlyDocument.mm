@@ -26,8 +26,9 @@
                        fleeceData: (nullable CBLFLDict*)data
 {
     NSParameterAssert(documentID != nil);
-    self = [super initWithFleeceData: data];
+    self = [super init];
     if (self) {
+        [self setDictionaryFromData: data];
         _database = database;
         _id = documentID;
         _c4Doc = c4Doc;
@@ -85,6 +86,12 @@
 }
 
 
+- (void) setDictionaryFromData: (CBLFLDict*)data {
+    // CBLDocument overrides this
+    _dict = [[CBLReadOnlyDictionary alloc] initWithFleeceData: data];
+}
+
+
 - (void) setC4Doc: (CBLC4Document*)c4doc {
     _c4Doc = c4doc;
 
@@ -93,9 +100,9 @@
         C4Slice body = c4doc.selectedRev.body;
         if (body.size > 0)
             root = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
-        self.data = [[CBLFLDict alloc] initWithDict: root datasource: c4doc database: _database];
+        [self setDictionaryFromData: [[CBLFLDict alloc] initWithDict: root datasource: c4doc database: _database]];
     } else {
-        self.data = nil;
+        _dict = nil;
     }
 }
 
@@ -147,5 +154,87 @@
     return body ? body.copiedNSData() : [NSData data];
 }
 
+
+#pragma mark - CBLReadOnlyDictionary
+
+
+- (NSUInteger) count {
+    return _dict.count;
+}
+
+- (NSArray*) keys {
+    return _dict.keys;
+}
+
+- (CBLFLDict*) data {
+    return _dict.data;
+}
+
+- (nullable CBLReadOnlyArray *)arrayForKey:(nonnull NSString *)key {
+    return [_dict arrayForKey: key];
+}
+
+- (nullable CBLBlob *)blobForKey:(nonnull NSString *)key {
+    return [_dict blobForKey: key];
+}
+
+- (BOOL)booleanForKey:(nonnull NSString *)key {
+    return [_dict booleanForKey: key];
+}
+
+- (BOOL)containsObjectForKey:(nonnull NSString *)key {
+    return [_dict booleanForKey: key];
+}
+
+- (nullable NSDate *)dateForKey:(nonnull NSString *)key {
+    return [_dict dateForKey: key];
+}
+
+- (nullable CBLReadOnlyDictionary *)dictionaryForKey:(nonnull NSString *)key {
+    return [_dict dictionaryForKey: key];
+}
+
+- (double)doubleForKey:(nonnull NSString *)key {
+    return [_dict doubleForKey: key];
+}
+
+- (float)floatForKey:(nonnull NSString *)key {
+    return [_dict floatForKey: key];
+}
+
+- (NSInteger)integerForKey:(nonnull NSString *)key {
+    return [_dict integerForKey: key];
+}
+
+- (long long)longLongForKey:(nonnull NSString *)key {
+    return [_dict longLongForKey: key];
+}
+
+- (nullable NSNumber *)numberForKey:(nonnull NSString *)key {
+    return [_dict numberForKey: key];
+}
+
+- (nullable id)objectForKey:(nonnull NSString *)key {
+    return [_dict objectForKey: key];
+}
+
+- (nullable NSString *)stringForKey:(nonnull NSString *)key {
+    return [_dict stringForKey: key];
+}
+
+- (CBLReadOnlyFragment *)objectForKeyedSubscript:(NSString *)key {
+    return [_dict objectForKeyedSubscript: key];
+}
+
+- (NSUInteger)countByEnumeratingWithState:(nonnull NSFastEnumerationState *)state
+                                  objects:(id  _Nullable __unsafe_unretained * _Nonnull)buffer
+                                    count:(NSUInteger)len
+{
+    return [_dict countByEnumeratingWithState: state objects: buffer count: len];
+}
+
+- (nonnull NSDictionary<NSString *,id> *)toDictionary {
+    return [_dict toDictionary];
+}
 
 @end
