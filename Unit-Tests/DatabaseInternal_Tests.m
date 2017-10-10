@@ -740,11 +740,11 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     
     // Check the possible ancestors:
     BOOL haveBodies;
-    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind1 limit: 0 haveBodies: &haveBodies],
+    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind1 limit: 0 haveBodies: &haveBodies withBodiesOnly: NO],
                  (@[doc1r2.revID, doc1r1.revID]));
-    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind1 limit: 1 haveBodies: &haveBodies],
+    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind1 limit: 1 haveBodies: &haveBodies withBodiesOnly: NO],
                  (@[doc1r2.revID]));
-    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind3 limit: 0 haveBodies: &haveBodies],
+    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind3 limit: 0 haveBodies: &haveBodies withBodiesOnly: NO],
                  nil);
 }
 
@@ -1181,6 +1181,21 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
     Log(@"After pull, conflicts = %@", all);
     AssertEq(all.count, 1u);
     AssertEqual(all.firstObject.revisionID, longBranch.revID.asString);
+}
+
+
+- (void) test31_getPossibleAncestorRevIDsWithRemovalRev {
+    CBL_Revision* r1 = [self putDoc: $dict({@"_id", @"doc1"}, {@"key", @"one"})];
+    CBL_Revision* r2 = [self putDoc: $dict({@"_id", @"doc1"}, {@"_rev", r1.revIDString}, {@"key", @"one+"})];
+    CBL_Revision* r3 = [self putDoc: $dict({@"_id", @"doc1"}, {@"_rev", r2.revIDString}, {@"_removed", $true})];
+    CBL_Revision* r4 = [self putDoc: $dict({@"_id", @"doc1"}, {@"_rev", r3.revIDString}, {@"key", @"one++"})];
+    
+    BOOL haveBodies;
+    CBL_Revision* revToFind = [[CBL_Revision alloc] initWithDocID: @"doc1" revID: r4.revID deleted: NO];
+    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind limit: 0 haveBodies: &haveBodies withBodiesOnly: NO],
+                (@[r3.revID, r2.revID, r1.revID]));
+    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind limit: 0 haveBodies: &haveBodies withBodiesOnly: YES],
+                (@[r2.revID, r1.revID]));
 }
 
 

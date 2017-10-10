@@ -54,7 +54,8 @@
         NSArray<CBL_RevID*>* possibleAncestors;
         possibleAncestors = [database.storage getPossibleAncestorRevisionIDs: rev
                                                        limit: kMaxNumberOfAttsSince
-                                                  haveBodies: (attachments ? &haveBodies : NULL)];
+                                                  haveBodies: (attachments ? &haveBodies : NULL)
+                                              withBodiesOnly: attachments];
         NSMutableDictionary* key = $mdict({@"id",  rev.docID},
                                           {@"rev", rev.revIDString});
         if (possibleAncestors) {

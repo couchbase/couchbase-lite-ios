@@ -378,7 +378,8 @@
         CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: docID revID: maxRevID deleted: NO];
         NSArray<CBL_RevID*>* ancestors = [_db.storage getPossibleAncestorRevisionIDs: rev
                                                                                limit: 0
-                                                                          haveBodies: NULL];
+                                                                          haveBodies: NULL
+                                                                      withBodiesOnly: NO];
         if (ancestors.count > 0)
             docInfo[@"possible_ancestors"] = [ancestors my_map:^id(CBL_RevID* rev) {
                 return rev.asString;
