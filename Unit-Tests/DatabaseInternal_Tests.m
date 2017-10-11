@@ -1196,6 +1196,10 @@ static CBLDatabaseChange* announcement(CBLDatabase* db, CBL_Revision* rev, CBL_R
                 (@[r3.revID, r2.revID, r1.revID]));
     AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind limit: 0 haveBodies: &haveBodies withBodiesOnly: YES],
                 (@[r2.revID, r1.revID]));
+    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind limit: 0 haveBodies: NULL withBodiesOnly: NO],
+                (@[r3.revID, r2.revID, r1.revID]));
+    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind limit: 0 haveBodies: NULL withBodiesOnly: YES],
+                (@[r2.revID, r1.revID]));
 }
 
 
