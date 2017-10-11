@@ -80,7 +80,7 @@
                                   from:[CBLQueryDataSource database:database]
                                  where:[
                                         [[CBLQueryExpression property:@"type"] equalTo:@"user"]
-                                        and: [[CBLQueryExpression property:@"admin"] equalTo:@FALSE]]];
+                                        andExpression: [[CBLQueryExpression property:@"admin"] equalTo:@FALSE]]];
     
     NSEnumerator* rows = [query run:&error];
     for (CBLQueryRow *row in rows) {
@@ -103,7 +103,9 @@
     }
     
     // create index
-    [database createIndexOn:@[@"name"] type:kCBLFullTextIndex options:NULL error:&error];
+    CBLQueryExpression* name = [CBLQueryExpression property: @"name"];
+    CBLIndex* index = [CBLIndex ftsIndexOn: [CBLFTSIndexItem expression: name] options: nil];
+    [database createIndex: index withName: @"name_idx" error: &error];
     if (error) {
         NSLog(@"Cannot create index %@", error);
     }

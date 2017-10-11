@@ -16,7 +16,6 @@
 		BE7EDC9A1F02AFE600275629 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BE7EDC981F02AFE600275629 /* Main.storyboard */; };
 		BE7EDC9C1F02AFE600275629 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BE7EDC9B1F02AFE600275629 /* Assets.xcassets */; };
 		BE7EDC9F1F02AFE600275629 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BE7EDC9D1F02AFE600275629 /* LaunchScreen.storyboard */; };
-		BEBFCBF01F3C81DF00F08548 /* mini-travel-sample.cblite2 in Resources */ = {isa = PBXBuildFile; fileRef = BEBFCBEF1F3C81DF00F08548 /* mini-travel-sample.cblite2 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -43,7 +42,6 @@
 		BE7EDC9B1F02AFE600275629 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BE7EDC9E1F02AFE600275629 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		BE7EDCA01F02AFE600275629 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		BEBFCBEF1F3C81DF00F08548 /* mini-travel-sample.cblite2 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "mini-travel-sample.cblite2"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,7 +60,6 @@
 		BE7EDC881F02AFE600275629 = {
 			isa = PBXGroup;
 			children = (
-				BEBFCBEF1F3C81DF00F08548 /* mini-travel-sample.cblite2 */,
 				BE7EDC931F02AFE600275629 /* api-walkthrough */,
 				BE7EDC921F02AFE600275629 /* Products */,
 				BE7EDCA61F02B00D00275629 /* Frameworks */,
@@ -159,7 +156,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BEBFCBF01F3C81DF00F08548 /* mini-travel-sample.cblite2 in Resources */,
 				BE7EDC9F1F02AFE600275629 /* LaunchScreen.storyboard in Resources */,
 				BE7EDC9C1F02AFE600275629 /* Assets.xcassets in Resources */,
 				BE7EDC9A1F02AFE600275629 /* Main.storyboard in Resources */,

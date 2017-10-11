@@ -99,7 +99,11 @@ class ViewController: UIViewController {
         
         // Create index
         do {
-            try database.createIndex(["name"], options: .fullTextIndex(language: nil, ignoreDiacritics: false))
+            let index = Index.ftsIndex()
+                .on(FTSIndexItem.expression(Expression.property("name")))
+                .locale(nil)
+                .ignoreAccents(false)
+            try database.createIndex(index, withName: "name-idx")
         } catch let error {
             print(error.localizedDescription)
         }
