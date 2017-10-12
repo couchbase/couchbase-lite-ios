@@ -96,11 +96,14 @@ UsingLogDomain(Sync);
 
 
 - (void) close {
-    [_session.delegateQueue addOperationWithBlock:^{
+    // Create a strong session in block to prevent race when _session
+    // is set to nil in the -URLSession:didBecomeInvalidWithError: method.
+    NSURLSession* session = _session;
+    [_session.delegateQueue addOperationWithBlock: ^{
         // Do this on the queue so that it's properly ordered with the tasks being started in
         // the -startRequest method.
         LogTo(RemoteRequest, @"CBLRemoteSession closing");
-        [_session finishTasksAndInvalidate];
+        [session finishTasksAndInvalidate];
         _requestDelegate = nil;
     }];
 }
