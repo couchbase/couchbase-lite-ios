@@ -36,26 +36,35 @@ then
   exit 4
 fi
 
+#Clean output directory:
+rm -rf "$OUTPUT_DIR"
+
 # Check xcodebuild version:
-echo "Checking xcodebuild version "
+echo "Check xcodebuild version ..."
 xcodebuild -version
 
 if [ -z "$NO_TEST" ]
 then
-  echo "Checking devices ..."
+  echo "Check devices ..."
   instruments -s devices
 
-  echo "Running ObjC macOS Test ..."
+  echo "Run ObjC macOS Test ..."
   xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL ObjC" -sdk macosx
 
-  echo "Running ObjC iOS Test ..."
+  echo "Run ObjC iOS Test ..."
   xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL ObjC" -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 6'
 
-  echo "Running Swift macOS Test ..."
+  echo "Run Swift macOS Test ..."
   xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL Swift" -sdk macosx
 
-  echo "Running Swift iOS Test ..."
+  echo "Run Swift iOS Test ..."
   xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL Swift" -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 6'
+
+  echo "Generate Test Coverage Reports ..."
+  OUTPUT_COVERAGE_DIR=$OUTPUT_DIR/test_coverage
+  sh Scripts/generate_coverage.sh -o "$OUTPUT_COVERAGE_DIR"
+  zip -ry "$OUTPUT_DIR/test_coverage.zip" "$OUTPUT_COVERAGE_DIR"
+  rm -rf "$OUTPUT_COVERAGE_DIR"
 fi
 
 VERSION_SUFFIX=""
@@ -63,6 +72,9 @@ if [ ! -z "$VERSION" ]
 then
   VERSION_SUFFIX="_$VERSION"
 fi
+
+# Build frameworks:
+echo "Build CouchbaseLite framework ..."
 
 BUILD_DIR=$OUTPUT_DIR/build
 
@@ -82,8 +94,6 @@ OUTPUT_OBJC_DOCS_ZIP=../../couchbase-lite-objc-documentation$VERSION_SUFFIX.zip
 OUTPUT_SWIFT_DOCS_DIR=$OUTPUT_DOCS_DIR/CouchbaseLiteSwift
 OUTPUT_SWIFT_DOCS_ZIP=../../couchbase-lite-swift-documentation$VERSION_SUFFIX.zip
 
-rm -rf "$OUTPUT_DIR"
-
 sh Scripts/build_framework.sh -s "CBL ObjC" -p iOS -o "$BUILD_DIR" -v "$VERSION"
 sh Scripts/build_framework.sh -s "CBL ObjC" -p tvOS -o "$BUILD_DIR" -v "$VERSION"
 sh Scripts/build_framework.sh -s "CBL ObjC" -p macOS -o "$BUILD_DIR" -v "$VERSION"
@@ -93,6 +103,7 @@ sh Scripts/build_framework.sh -s "CBL Swift" -p tvOS -o "$BUILD_DIR" -v "$VERSIO
 sh Scripts/build_framework.sh -s "CBL Swift" -p macOS -o "$BUILD_DIR" -v "$VERSION"
 
 # Build tools:
+echo "Build Development Tools ..."
 TOOLS_DIR="$BUILD_DIR/Tools"
 mkdir "$TOOLS_DIR"
 cp vendor/couchbase-lite-core/tools/README.md "$TOOLS_DIR"
@@ -137,6 +148,7 @@ zip -ry "$OUTPUT_SWIFT_ENTERPRISE_ZIP" *
 popd
 
 # Generate MD5 file:
+echo "Generate MD5 files ..."
 pushd "$OUTPUT_DIR"
 md5 couchbase-lite-objc_community$VERSION_SUFFIX.zip > couchbase-lite-objc_community$VERSION_SUFFIX.zip.md5
 md5 couchbase-lite-objc_enterprise$VERSION_SUFFIX.zip > couchbase-lite-objc_enterprise$VERSION_SUFFIX.zip.md5
@@ -145,6 +157,7 @@ md5 couchbase-lite-swift_enterprise$VERSION_SUFFIX.zip > couchbase-lite-swift_en
 popd
 
 # Generate API docs:
+echo "Generate API docs ..."
 sh Scripts/generate_api_docs.sh -o "$OUTPUT_DOCS_DIR"
 # >> Objective-C API
 pushd "$OUTPUT_OBJC_DOCS_DIR"
