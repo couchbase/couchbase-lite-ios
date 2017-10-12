@@ -777,10 +777,15 @@
 
 
 - (void) testSetNil {
+    // Note: As of Oct 2017 we've decided to change the behavior of storing nil into a CBLDictionary
+    // to make it correspond to Cocoa idioms, i.e. it removes the value, instead of storing NSNull.
     CBLDocument* doc = [self createDocument: @"doc1"];
-    [doc setObject: nil forKey: @"null"];
+    [doc setObject: @"something" forKey: @"nil"];
+    [doc setObject: nil forKey: @"nil"];
+    [doc setObject: [NSNull null] forKey: @"null"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
-        AssertEqual([d objectForKey: @"null"], [NSNull null]);
+        AssertEqual([d objectForKey: @"nil"], nil);
+        AssertEqualObjects([d objectForKey: @"null"], [NSNull null]);
         AssertEqual(d.count, 1u);
     }];
 }

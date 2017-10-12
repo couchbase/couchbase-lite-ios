@@ -12,26 +12,36 @@
 #import "CBLDocument+Internal.h"
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
+#import "CBLSharedKeys.hh"
+#import "CBLFleece.hh"
+#import "MRoot.hh"
+
+using namespace fleece;
+using namespace fleeceapi;
 
 
 @implementation CBLReadOnlyDocument
+{
+    std::unique_ptr<MRoot<id>> _root;
+}
 
 
-@synthesize database=_database, id=_id, c4Doc=_c4Doc;
+@synthesize database=_database, id=_id, c4Doc=_c4Doc, data=_data;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
                             c4Doc: (nullable CBLC4Document*)c4Doc
-                       fleeceData: (nullable CBLFLDict*)data
+                       fleeceData: (nullable FLDict)data
 {
     NSParameterAssert(documentID != nil);
     self = [super init];
     if (self) {
-        [self setDictionaryFromData: data];
         _database = database;
         _id = documentID;
         _c4Doc = c4Doc;
+        _data = data;
+        [self updateDictionary];
     }
     return self;
 }
@@ -86,24 +96,34 @@
 }
 
 
-- (void) setDictionaryFromData: (CBLFLDict*)data {
+- (bool) isMutable {
     // CBLDocument overrides this
-    _dict = [[CBLReadOnlyDictionary alloc] initWithFleeceData: data];
+    return false;
+}
+
+
+- (void) updateDictionary {
+    if (_data) {
+        _root.reset(new MRoot<id>(new DocContext(_database, _c4Doc), Dict(_data), self.isMutable));
+        _dict = _root->asNative();
+    } else {
+        _root.reset();
+        _dict = self.isMutable ? [[CBLDictionary alloc] init]
+                               : [[CBLReadOnlyDictionary alloc] initEmpty];
+    }
 }
 
 
 - (void) setC4Doc: (CBLC4Document*)c4doc {
     _c4Doc = c4doc;
+    _data = nullptr;
 
     if (c4doc) {
-        FLDict root = nullptr;
         C4Slice body = c4doc.selectedRev.body;
         if (body.size > 0)
-            root = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
-        [self setDictionaryFromData: [[CBLFLDict alloc] initWithDict: root datasource: c4doc database: _database]];
-    } else {
-        _dict = nil;
+            _data = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
     }
+    [self updateDictionary];
 }
 
 
@@ -164,10 +184,6 @@
 
 - (NSArray*) keys {
     return _dict.keys;
-}
-
-- (CBLFLDict*) data {
-    return _dict.data;
 }
 
 - (nullable CBLReadOnlyArray *)arrayForKey:(nonnull NSString *)key {

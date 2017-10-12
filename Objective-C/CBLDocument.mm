@@ -29,6 +29,9 @@
 
 
 @implementation CBLDocument
+{
+    NSError* _encodingError;
+}
 
 
 #pragma mark - Initializer
@@ -152,16 +155,9 @@
 #pragma mark - Internal
 
 
-// Overridden to create a mutable dictionary
-- (void) setDictionaryFromData: (CBLFLDict*)data {
-    _dict = [[CBLDictionary alloc] initWithFleeceData: data];
-}
-
-
-- (void) setC4Doc: (CBLC4Document*)c4doc {
-    [super setC4Doc: c4doc];
-    // Update delegate dictionary:
-    [self setDictionaryFromData: self.data];
+- (bool) isMutable {
+    // CBLDocument overrides this
+    return true;
 }
 
 
@@ -396,15 +392,30 @@ static bool dictionaryContainsBlob(__unsafe_unretained CBLDictionary* dict) {
 
 
 - (NSData*) encode: (NSError**)outError {
+    _encodingError = nil;
     auto encoder = c4db_createFleeceEncoder(self.c4db);
-    if (![_dict cbl_fleeceEncode: encoder database: self.database error: outError])
+    FLEncoder_SetExtraInfo(encoder, (__bridge void*)self);
+    [_dict fl_encodeToFLEncoder: encoder];
+    if (_encodingError != nil) {
+        FLEncoder_Free(encoder);
+        if (outError)
+            *outError = _encodingError;
+        _encodingError = nil;
         return nil;
+    }
     FLError flErr;
     FLSliceResult body = FLEncoder_Finish(encoder, &flErr);
     FLEncoder_Free(encoder);
     if (!body.buf)
         convertError(flErr, outError);
     return sliceResult2data(body);
+}
+
+
+// Objects being encoded can call this
+- (void) setEncodingError: (NSError*)error {
+    if (!_encodingError)
+        _encodingError = error;
 }
 
 

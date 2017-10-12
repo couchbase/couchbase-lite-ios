@@ -265,12 +265,14 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 }
 
 
-- (BOOL) cbl_fleeceEncode: (FLEncoder)encoder
-                 database: (CBLDatabase*)database
-                    error: (NSError**)outError
-{
-    if(![self installInDatabase: database error: outError])
-        return NO;
+- (void) fl_encodeToFLEncoder: (FLEncoder)encoder {
+    CBLDocument *document = (__bridge CBLDocument*)FLEncoder_GetExtraInfo(encoder);
+    CBLDatabase* database = document.database;
+    NSError *error;
+    if (![self installInDatabase: database error: &error]) {
+        [document setEncodingError: error];
+        return;
+    }
     
     NSDictionary* dict = self.jsonRepresentation;
     FLEncoder_BeginDict(encoder, [dict count]);
@@ -281,7 +283,6 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         FLEncoder_WriteNSObject(encoder, value);
     }
     FLEncoder_EndDict(encoder);
-    return YES;
 }
 
 

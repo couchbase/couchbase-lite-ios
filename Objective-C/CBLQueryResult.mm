@@ -14,20 +14,29 @@
 #import "CBLPropertyExpression.h"
 #import "CBLQueryResultSet+Internal.h"
 #import "CBLSharedKeys.hh"
+#import "MRoot.hh"
+
+
+using namespace fleece;
+using namespace fleeceapi;
 
 
 @implementation CBLQueryResult {
     CBLQueryResultSet* _rs;
     FLArrayIterator _columns;
+    MContext* _context;
 }
 
 
 - (instancetype) initWithResultSet: (CBLQueryResultSet*)rs
-                      c4Enumerator: (C4QueryEnumerator*)e {
+                      c4Enumerator: (C4QueryEnumerator*)e
+                           context: (MContext*)context
+{
     self = [super init];
     if (self) {
         _rs = rs;
         _columns = e->columns;
+        _context = context;
     }
     return self;
 }
@@ -276,10 +285,10 @@
 
 - (id) fleeceValueToObjectAtIndex: (NSUInteger)index {
     FLValue value = [self fleeceValueAtIndex: index];
-    if (value != nullptr)
-        return [CBLData fleeceValueToObject: value datasource: _rs database: [self database]];
-    else
+    if (value == nullptr)
         return nil;
+    MRoot<id> root(_context, value, false);
+    return root.asNative();
 }
 
 

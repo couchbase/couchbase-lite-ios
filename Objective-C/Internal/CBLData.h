@@ -7,7 +7,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLFLDataSource.h"
 #import "Fleece.h"
 @class CBLDatabase;
 @class CBLC4Document;
@@ -22,11 +21,6 @@ extern NSObject * const kCBLRemovedValue;
 
 /** Category methods for value conversions, added to all objects. */
 @interface NSObject (CBLConversions)
-
-/** Encodes this object to Fleece. */
-- (BOOL) cbl_fleeceEncode: (FLEncoder)encoder
-                 database: (CBLDatabase*)database
-                    error: (NSError**)outError;
 
 /** Returns this object represented as a plain Cocoa object, like an NSArray, NSDictionary,
     NSString, etc.
@@ -46,12 +40,6 @@ extern NSObject * const kCBLRemovedValue;
 /** Returns the boolean interpretation of an object.
     nil, NSNull, and NSNumbers with a 0 or NO value are NO. All others are YES. */
 + (BOOL) booleanValueForObject: (id)object;
-
-/** Decodes a Fleece value to an NSObject. Creates CBL containers like CBLDictionary. */
-+ (nullable id) fleeceValueToObject: (FLValue)value
-                         datasource: (id<CBLFLDataSource>)datasource
-                           database: (CBLDatabase*)database;
-
 
 @end
 

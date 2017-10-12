@@ -63,9 +63,8 @@
             [NSThread sleepForTimeInterval: 0.1];
     }
     if (leaks) {
-        fprintf(stderr, "**** LITECORE OBJECTS STILL NOT FREED: ");
+        fprintf(stderr, "**** LITECORE OBJECTS STILL NOT FREED: ****\n");
         c4_dumpInstances();
-        fprintf(stderr, " ***\n");
         XCTFail("%d LiteCore objects have not been freed (see above)", leaks);
     }
     [super tearDown];
