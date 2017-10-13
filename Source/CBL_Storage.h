@@ -126,10 +126,12 @@
     @param limit  The maximum number of results to return, or if 0, unlimited.
     @param outHaveBodies  On return, if not NULL, then *outHaveBodies will be YES if all the
                           revisions returned have their JSON bodies available, otherwise NO.
+    @param withBodiesOnly  Specifies whether or not to search for non-empty and non-removed revisions.
     @return  An array of revIDs of existing revisions that could be ancestors of `rev`. */
 - (NSArray<CBL_RevID*>*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
                                                   limit: (unsigned)limit
-                                             haveBodies: (BOOL*)outHaveBodies;
+                                             haveBodies: (BOOL*)outHaveBodies
+                                         withBodiesOnly: (BOOL)withBodiesOnly;
 
 /** Returns the most recent member of revIDs that appears in rev's ancestry.
     In other words: Look at the revID properties of rev, its parent, grandparent, etc.

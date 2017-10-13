@@ -429,6 +429,7 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
 - (NSArray<CBL_RevID*>*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
                                                   limit: (unsigned)limit
                                              haveBodies: (BOOL*)outHaveBodies
+                                         withBodiesOnly: (BOOL)withBodiesOnly
 {
     unsigned generation = rev.revID.generation;
     if (generation <= 1)
@@ -445,9 +446,32 @@ static CBLStatus selectRev(C4Document* doc, CBL_RevID* revID, BOOL withBody) {
             C4RevisionFlags flags = doc->selectedRev.flags;
             if (((flags & kRevLeaf) != 0) == leaf
                     && c4rev_getGeneration(doc->selectedRev.revID) < generation) {
+                BOOL haveBodies = c4doc_hasRevisionBody(doc);
+                if (!haveBodies) {
+                    if (outHaveBodies)
+                        *outHaveBodies = NO;
+                    if (withBodiesOnly)
+                        continue;
+                }
+                
+                if (withBodiesOnly) {
+                    C4Error c4Err;
+                    if (!c4doc_loadRevisionBody(doc, &c4Err)) {
+                        Warn(@"Unable to load revision body for doc '%@, rev '%@': CBForest error %d/%d",
+                             slice2string(doc->docID),
+                             slice2string(doc->selectedRev.revID),
+                             c4Err.domain, c4Err.code);
+                        return nil;
+                    }
+       
+                    C4Slice rawBody = doc->selectedRev.body;
+                    NSDictionary* body = slice2jsonObject(rawBody, CBLJSONReadingAllowFragments);
+                    if ($castIf(NSNumber, body[@"_removed"]).boolValue)
+                        continue;
+                }
+                
                 [revIDs addObject: slice2revID(doc->selectedRev.revID)];
-                if (outHaveBodies && !c4doc_hasRevisionBody(doc))
-                    *outHaveBodies = NO;
+                
                 if (limit && revIDs.count >= limit)
                     break;
             }

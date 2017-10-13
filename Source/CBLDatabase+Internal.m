@@ -678,7 +678,8 @@ static BOOL sAutoCompact = YES;
         return @[revID];  // Already have it!
     return [_storage getPossibleAncestorRevisionIDs: rev
                                               limit: (unsigned)limit
-                                         haveBodies: NULL];
+                                         haveBodies: NULL
+                                     withBodiesOnly: NO];
 }
 
 

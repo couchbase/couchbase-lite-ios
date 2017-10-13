@@ -1114,6 +1114,7 @@ DefineLogDomain(SQL);
 - (NSArray<CBL_RevID*>*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
                                                   limit: (unsigned)limit
                                              haveBodies: (BOOL*)outHaveBodies
+                                         withBodiesOnly: (BOOL)withBodiesOnly
 {
     int generation = rev.generation;
     if (generation <= 1)
@@ -1128,19 +1129,39 @@ DefineLogDomain(SQL);
 
         // First look only for current revisions; if none match, go to non-current ones.
         for (int current = 1; current >= 0; --current) {
-            CBL_FMResultSet* r = [_fmdb executeQuery: @"SELECT revid, json is not null FROM revs "
-                                                       "WHERE doc_id=? and current=? and revid < ? "
-                                                       "ORDER BY revid DESC LIMIT ?",
-                                            @(docNumericID), @(current), $sprintf(@"%d-", generation),
-                                            @(sqlLimit)];
+            CBL_FMResultSet* r;
+            if (withBodiesOnly) {
+                r = [_fmdb executeQuery: @"SELECT revid, json is not null, json FROM revs "
+                     "WHERE doc_id=? and current=? and revid < ? "
+                     "ORDER BY revid DESC LIMIT ?",
+                     @(docNumericID), @(current), $sprintf(@"%d-", generation),
+                     @(sqlLimit)];
+            } else {
+                r = [_fmdb executeQuery: @"SELECT revid, json is not null FROM revs "
+                     "WHERE doc_id=? and current=? and revid < ? "
+                     "ORDER BY revid DESC LIMIT ?",
+                     @(docNumericID), @(current), $sprintf(@"%d-", generation),
+                     @(sqlLimit)];
+            }
             if (!r)
                 return self.lastDbError;
             while ([r next]) {
+                BOOL haveBodies = [r boolForColumnIndex: 1];
+                if (!haveBodies) {
+                    if (outHaveBodies)
+                        *outHaveBodies = NO;
+                    if (withBodiesOnly)
+                        continue;
+                } else if (withBodiesOnly) {
+                    NSDictionary* body = [CBLJSON JSONObjectWithData: [r dataNoCopyForColumnIndex: 2]
+                                                             options: 0 error: NULL];
+                    if ($castIf(NSNumber, body[@"_removed"]).boolValue)
+                        continue;
+                }
+                
                 if (!revIDs)
                     revIDs = [NSMutableArray new];
                 [revIDs addObject: [r revIDForColumnIndex: 0]];
-                if (outHaveBodies && ![r boolForColumnIndex: 1])
-                    *outHaveBodies = NO;
             }
             [r close];
             if (revIDs)

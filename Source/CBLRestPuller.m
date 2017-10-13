@@ -425,7 +425,8 @@
     NSArray<CBL_RevID*>* possibleAncestors;
     possibleAncestors = [db.storage getPossibleAncestorRevisionIDs: rev
                                                          limit: kMaxNumberOfAttsSince
-                                                    haveBodies: (attachments ? &haveBodies : NULL)];
+                                                    haveBodies: (attachments ? &haveBodies : NULL)
+                                                withBodiesOnly: attachments];
     if (possibleAncestors) {
         [path appendString: (haveBodies ? @"&atts_since=" : @"&revs_from=")];
         [path appendString: escapedRevIDArray(possibleAncestors)];
