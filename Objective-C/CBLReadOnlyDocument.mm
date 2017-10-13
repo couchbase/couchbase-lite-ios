@@ -10,6 +10,7 @@
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
+#import "CBLNewDictionary.h"
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
 #import "CBLSharedKeys.hh"
@@ -107,8 +108,9 @@ using namespace fleeceapi;
         _root.reset(new MRoot<id>(new DocContext(_database, _c4Doc), Dict(_data), self.isMutable));
         _dict = _root->asNative();
     } else {
+        // New document:
         _root.reset();
-        _dict = self.isMutable ? [[CBLDictionary alloc] init]
+        _dict = self.isMutable ? (id)[[CBLNewDictionary alloc] init]
                                : [[CBLReadOnlyDictionary alloc] initEmpty];
     }
 }

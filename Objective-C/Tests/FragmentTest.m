@@ -493,6 +493,7 @@
     NSDate* date = [NSDate date];
     CBLDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
+    Assert([[doc objectForKey: @"array"] isKindOfClass: [CBLArray class]]);
     [doc[@"array"].array addObject: @"string"];
     [doc[@"array"].array addObject: @10];
     [doc[@"array"].array addObject: @10.10];
