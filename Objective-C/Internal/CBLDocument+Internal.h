@@ -102,8 +102,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initEmpty;
 
-@property (nonatomic, readonly) BOOL isEmpty;
-
 @end
 
 /////////////////

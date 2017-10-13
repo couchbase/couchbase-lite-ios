@@ -215,14 +215,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 }
 
 
-#pragma mark - INTERNAL
-
-
-- (BOOL) isEmpty {
-    return self.count == 0;
-}
-
-
 #pragma mark - CBLConversion
 
 

@@ -167,7 +167,7 @@
 
 
 - (BOOL) isEmpty {
-    return _dict.isEmpty;
+    return _dict.count == 0;
 }
 
 
@@ -393,11 +393,11 @@ static bool dictionaryContainsBlob(__unsafe_unretained CBLDictionary* dict) {
 
 - (NSData*) encode: (NSError**)outError {
     _encodingError = nil;
-    auto encoder = c4db_createFleeceEncoder(self.c4db);
+    auto encoder = c4db_getSharedFleeceEncoder(self.c4db);
     FLEncoder_SetExtraInfo(encoder, (__bridge void*)self);
     [_dict fl_encodeToFLEncoder: encoder];
     if (_encodingError != nil) {
-        FLEncoder_Free(encoder);
+        FLEncoder_Reset(encoder);
         if (outError)
             *outError = _encodingError;
         _encodingError = nil;
@@ -405,7 +405,6 @@ static bool dictionaryContainsBlob(__unsafe_unretained CBLDictionary* dict) {
     }
     FLError flErr;
     FLSliceResult body = FLEncoder_Finish(encoder, &flErr);
-    FLEncoder_Free(encoder);
     if (!body.buf)
         convertError(flErr, outError);
     return sliceResult2data(body);

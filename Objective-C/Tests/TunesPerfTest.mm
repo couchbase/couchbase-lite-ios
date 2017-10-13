@@ -166,8 +166,8 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         }
         startTransaction = CFAbsoluteTimeGetCurrent();
     }];
-    double commitTime = CFAbsoluteTimeGetCurrent() - startTransaction;
-    double t = _importBench.stop();
+    __unused double commitTime = CFAbsoluteTimeGetCurrent() - startTransaction;
+    __unused double t = _importBench.stop();
     Assert(ok, @"Batch operation failed");
     VerboseLog(1, @"Imported %u documents in %.06f sec (import %g, commit %g)", (unsigned)_documentCount, t, t - commitTime, commitTime);
     return (unsigned)_documentCount;
@@ -197,7 +197,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
             }
         }
     }];
-    double t = _updatePlayCountBench.stop();
+    __unused double t = _updatePlayCountBench.stop();
     Assert(ok, @"Batch operation failed");
     VerboseLog(1, @"Updated %u documents' playCount in %.06f sec", count, t);
     return count;
@@ -224,8 +224,8 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         }
         startTransaction = CFAbsoluteTimeGetCurrent();
     }];
-    double commitTime = CFAbsoluteTimeGetCurrent() - startTransaction;
-    double t = _updateArtistsBench.stop();
+    __unused double commitTime = CFAbsoluteTimeGetCurrent() - startTransaction;
+    __unused double t = _updateArtistsBench.stop();
     VerboseLog(1, @"Updated %u docs in %.06f sec (update %g, commit %g)", count, t, t - commitTime, commitTime);
     Assert(ok, @"Batch operation failed");
     return count;
@@ -258,7 +258,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     VerboseLog(1, @"%@", [query explain: NULL]);
     bench.start();
     _artists = [self collectQueryResults: query];
-    double t = bench.stop();
+    __unused double t = bench.stop();
     VerboseLog(1, @"Artist query took %.06f sec", t);
 
     VerboseLog(2, @"%u artists:\n'%@'", (unsigned)_artists.count, [_artists componentsJoinedByString: @"'\n'"]);
@@ -282,7 +282,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         CBLIndex *index = [CBLIndex valueIndexOn: @[[CBLValueIndexItem expression: artist],
                                                     [CBLValueIndexItem expression: comp]]];
         Assert(([self.db createIndex: index withName: @"byArtist" error: NULL]));
-        double t = _indexArtistsBench.stop();
+        __unused double t = _indexArtistsBench.stop();
         VerboseLog(1, @"Indexed artists in %.06f sec", t);
     }
 }
@@ -311,7 +311,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
             //NSLog(@"Albums by %@: '%@'", artist, [albums componentsJoinedByString: @"', '"]);
         }
     }
-    double t = bench.stop();
+    __unused double t = bench.stop();
     VerboseLog(1, @"%u albums total, in %.06f sec", albumCount, t);
     AssertEq(albumCount, 1886u);
     return albumCount;
@@ -346,7 +346,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
                 [results addObject: row.fullTextMatched];
             }
         }
-        double t = _queryFTSBench.stop();
+        __unused double t = _queryFTSBench.stop();
         Assert(!error, @"Query failed: %@", error);
 
         VerboseLog(2, @"%u 'rock' songs in %.06f sec: \"%@\"", (unsigned)results.count, t, [results componentsJoinedByString: @"\", \""]);
