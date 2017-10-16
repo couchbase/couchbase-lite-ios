@@ -19,6 +19,7 @@
 #import "MDict.hh"
 #import "MDictIterator.hh"
 
+using namespace cbl;
 using namespace fleeceapi;
 
 
@@ -131,7 +132,7 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (nullable NSDate*) dateForKey: (NSString*)key {
-    return [CBLJSON dateWithJSONObject: _getObject(_dict, key, nil)];
+    return asDate(_getObject(_dict, key, nil));
 }
 
 

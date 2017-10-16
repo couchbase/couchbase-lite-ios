@@ -15,6 +15,9 @@
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
 #import "c4BlobStore.h"
+#import "CBLData.h"
+
+using namespace cbl;
 
 extern "C" {
 #import "MYErrorUtils.h"
@@ -103,9 +106,9 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         tempProps[kTypeMetaProperty] = nil;
         _properties = tempProps;
 
-        _length = $castIf(NSNumber, _properties[@"length"]).unsignedLongLongValue;
-        _digest = $castIf(NSString, _properties[@"digest"]);
-        _contentType = $castIf(NSString, _properties[@"content-type"]);
+        _length = asNumber(_properties[@"length"]).unsignedLongLongValue;
+        _digest = asString(_properties[@"digest"]);
+        _contentType = asString(_properties[@"content-type"]);
         if (!_digest) {
             C4Warn("Blob read from database has missing digest");
             _digest = @"";

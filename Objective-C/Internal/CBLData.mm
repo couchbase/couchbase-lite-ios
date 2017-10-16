@@ -78,18 +78,22 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 @end
 
 
-@implementation CBLData
-
-
-+ (BOOL) booleanValueForObject: (id)object {
-    if (!object || object == [NSNull null])
-        return NO;
-    else {
-        id n = $castIf(NSNumber, object);
-        return n ? [n boolValue] : YES;
+namespace cbl {
+    bool asBool (id object) {
+        // Boolean conversion is a special case because any non-numeric non-null JSON value is true.
+        if (object == nil)
+            return false;
+        else if ([object isKindOfClass: [NSNumber class]])
+            return [object boolValue];
+        else
+            return object != (__bridge id)kCFNull;
     }
+
+    NSInteger asInteger (id object)    {return [$castIf(NSNumber, object) integerValue];}
+    long long asLongLong(id object)    {return [$castIf(NSNumber, object) longLongValue];}
+    float     asFloat   (id object)    {return [$castIf(NSNumber, object) floatValue];}
+    double    asDouble  (id object)    {return [$castIf(NSNumber, object) doubleValue];}
+    NSNumber* asNumber  (id object)    {return $castIf(NSNumber, object);}
+    NSString* asString  (id object)    {return $castIf(NSString, object);}
+    NSDate*   asDate    (id object)    {return [CBLJSON dateWithJSONObject: object];}
 }
-
-
-@end
-

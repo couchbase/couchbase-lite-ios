@@ -17,6 +17,7 @@
 #import "MRoot.hh"
 
 
+using namespace cbl;
 using namespace fleece;
 using namespace fleeceapi;
 
@@ -66,7 +67,7 @@ using namespace fleeceapi;
 
 
 - (nullable NSDate*) dateAtIndex: (NSUInteger)index {
-    return [CBLJSON dateWithJSONObject: [self fleeceValueToObjectAtIndex: index]];
+    return asDate([self fleeceValueToObjectAtIndex: index]);
 }
 
 
@@ -96,7 +97,7 @@ using namespace fleeceapi;
 
 
 - (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
-    return $castIf(NSNumber, [self fleeceValueToObjectAtIndex: index]);
+    return asNumber([self fleeceValueToObjectAtIndex: index]);
 }
 
 
@@ -106,7 +107,7 @@ using namespace fleeceapi;
 
 
 - (nullable NSString*) stringAtIndex: (NSUInteger)index {
-    return $castIf(NSString, [self fleeceValueToObjectAtIndex: index]);
+    return asString([self fleeceValueToObjectAtIndex: index]);
 }
 
 

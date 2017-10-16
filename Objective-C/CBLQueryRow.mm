@@ -10,6 +10,7 @@
 #import "CBLQueryEnumerator.h"
 
 #import "CBLCoreBridge.h"
+#import "CBLData.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLJSON.h"
 #import "CBLPredicateQuery+Internal.h"
@@ -19,6 +20,8 @@
 #import "c4Document.h"
 #import "c4Query.h"
 #import "Fleece.h"
+
+using namespace cbl;
 
 
 @implementation CBLQueryRow
@@ -95,11 +98,11 @@
 }
 
 - (NSString*) stringAtIndex: (NSUInteger)index {
-    return $castIf(NSString, [self valueAtIndex: index]);
+    return asString([self valueAtIndex: index]);
 }
 
 - (NSDate*) dateAtIndex: (NSUInteger)index {
-    return [CBLJSON dateWithJSONObject: [self valueAtIndex: index]];
+    return asDate([self valueAtIndex: index]);
 }
 
 - (nullable id) objectAtIndexedSubscript: (NSUInteger)subscript {

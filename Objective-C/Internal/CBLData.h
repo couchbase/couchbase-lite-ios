@@ -35,12 +35,18 @@ extern NSObject * const kCBLRemovedValue;
 @end
 
 
-@interface CBLData : NSObject
+#ifdef __cplusplus
+namespace cbl {
+    bool      asBool    (id);
+    NSInteger asInteger (id);
+    long long asLongLong(id);
+    float     asFloat   (id);
+    double    asDouble  (id);
+    NSNumber* asNumber  (id);
+    NSString* asString  (id);
+    NSDate*   asDate    (id);
+}
+#endif
 
-/** Returns the boolean interpretation of an object.
-    nil, NSNull, and NSNumbers with a 0 or NO value are NO. All others are YES. */
-+ (BOOL) booleanValueForObject: (id)object;
-
-@end
 
 NS_ASSUME_NONNULL_END

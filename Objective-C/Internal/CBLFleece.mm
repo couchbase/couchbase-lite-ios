@@ -23,6 +23,7 @@ DocContext::DocContext(CBLDatabase *db, CBLC4Document *doc)
 
 
 namespace fleeceapi {
+    using namespace cbl;
 
 
     // Instantiate an Objective-C object for a Fleece dictionary with an "@type" key. */
@@ -102,7 +103,7 @@ bool asBool(const MValue<id> &val, const MCollection<id> &container) {
     if (val.value())
         return val.value().asBool();
     else
-        return [CBLData booleanValueForObject: val.asNative(&container)];
+        return asBool(val.asNative(&container));
 }
 
 
@@ -110,7 +111,7 @@ NSInteger asInteger(const MValue<id> &val, const MCollection<id> &container) {
     if (val.value())
         return val.value().asInt();
     else
-        return [$castIf(NSNumber, val.asNative(&container)) integerValue];
+        return asInteger(val.asNative(&container));
 }
 
 
@@ -118,7 +119,7 @@ long long asLongLong(const MValue<id> &val, const MCollection<id> &container) {
     if (val.value())
         return val.value().asInt();
     else
-        return [$castIf(NSNumber, val.asNative(&container)) longLongValue];
+        return asLongLong(val.asNative(&container));
 }
 
 
@@ -126,7 +127,7 @@ float asFloat(const MValue<id> &val, const MCollection<id> &container) {
     if (val.value())
         return val.value().asFloat();
     else
-        return [$castIf(NSNumber, val.asNative(&container)) floatValue];
+        return asFloat(val.asNative(&container));
 }
 
 
@@ -134,5 +135,5 @@ double asDouble(const MValue<id> &val, const MCollection<id> &container) {
     if (val.value())
         return val.value().asDouble();
     else
-        return [$castIf(NSNumber, val.asNative(&container)) doubleValue];
+        return asDouble(val.asNative(&container));
 }

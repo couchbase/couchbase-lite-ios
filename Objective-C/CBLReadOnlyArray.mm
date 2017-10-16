@@ -17,6 +17,7 @@
 #import "CBLFleece.hh"
 #import "MArray.hh"
 
+using namespace cbl;
 using namespace fleeceapi;
 
 
@@ -117,7 +118,7 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
 
 
 - (nullable NSDate*) dateAtIndex: (NSUInteger)index {
-    return [CBLJSON dateWithJSONObject: _getObject(_array, index)];
+    return asDate(_getObject(_array, index));
 }
 
 

@@ -1,5 +1,5 @@
 //
-//  CBLNewDictionary.m
+//  CBLNewDictionary.mm
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 10/12/17.
@@ -14,6 +14,8 @@
 #import "CBLJSON.h"
 #import "CBLFragment.h"
 #import "CBLDocument+Internal.h"
+
+using namespace cbl;
 
 
 @implementation CBLNewDictionary
@@ -93,12 +95,12 @@
 
 
 - (BOOL) booleanForKey: (NSString*)key {
-    return [CBLData booleanValueForObject: _dict[key]];
+    return asBool(_dict[key]);
 }
 
 
 - (nullable NSDate*) dateForKey: (NSString*)key {
-    return [CBLJSON dateWithJSONObject: _dict[key]];
+    return asDate(_dict[key]);
 }
 
 
@@ -117,32 +119,32 @@
 
 
 - (double) doubleForKey: (NSString*)key {
-    return [self numberForKey: key].doubleValue;
+    return asDouble(_dict[key]);
 }
 
 
 - (float) floatForKey: (NSString*)key {
-    return [self numberForKey: key].floatValue;
+    return asFloat(_dict[key]);
 }
 
 
 - (NSInteger) integerForKey: (NSString*)key {
-    return [self numberForKey: key].integerValue;
+    return asInteger(_dict[key]);
 }
 
 
 - (long long) longLongForKey: (NSString*)key {
-    return [self numberForKey: key].longLongValue;
+    return asLongLong(_dict[key]);
 }
 
 
 - (nullable NSNumber*) numberForKey: (NSString*)key {
-    return $castIf(NSNumber, [self objectForKey: key]);
+    return asNumber(_dict[key]);
 }
 
 
 - (nullable NSString*) stringForKey: (NSString*)key {
-    return $castIf(NSString, [self objectForKey: key]);
+    return asString(_dict[key]);
 }
 
 
@@ -263,8 +265,7 @@
 
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
-    id value = [self objectForKey: key];
-    return [[CBLFragment alloc] initWithValue: value parent: self parentKey: key];
+    return [[CBLFragment alloc] initWithParent: self key: key];
 }
 
 
