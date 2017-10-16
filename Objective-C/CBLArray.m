@@ -412,8 +412,9 @@
 
 
 - (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index {
-    id value = index < self.count ? [self objectAtIndex: index] : nil;
-    return [[CBLFragment alloc] initWithValue: value parent: self parentKey: @(index)];
+    if (index >= self.count)
+        return nil;
+    return [[CBLFragment alloc] initWithParent: self index: index];
 }
 
 

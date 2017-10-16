@@ -372,7 +372,6 @@
     CBLDocument* doc = [self createDocument: @"doc1" dictionary: dict];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         CBLFragment* fragment = d[@"nested-array"][2];
-        AssertNotNil(fragment);
         AssertFalse(fragment.exists);
         AssertNil(fragment.string); 
         AssertNil(fragment.date); 
@@ -499,15 +498,14 @@
     [doc[@"array"].array addObject: @10.10];
     [doc[@"array"].array addObject: @YES];
     [doc[@"array"].array addObject: date];
-    
+    Assert([[doc objectForKey: @"array"] isKindOfClass: [CBLArray class]]);
+
     [self saveDocument: doc eval: ^(CBLDocument* d) {
-        AssertNotNil(d[@"array"][-1]);
         AssertFalse(d[@"array"][-1].exists);
         for(int i = 0; i < 5; i++){
             AssertNotNil(d[@"array"][i]);
             Assert(d[@"array"][i].exists);
         }
-        AssertNotNil(d[@"array"][5]);
         AssertFalse(d[@"array"][5].exists);
         
         AssertEqualObjects(@"string", d[@"array"][0].value);
@@ -530,11 +528,9 @@
     [doc[@"array"].array addObject: dict];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
-        AssertNotNil(d[@"array"][-1]);
         AssertFalse(d[@"array"][-1].exists);
         AssertNotNil(d[@"array"][0]);
         Assert(d[@"array"][0].exists);
-        AssertNotNil(d[@"array"][1]);
         AssertFalse(d[@"array"][1].exists);
         
         AssertEqualObjects(d[@"array"][0][@"name"].string, @"Jason");
@@ -551,11 +547,9 @@
                                       @"address": @{@"street": @"1 Main Street",
                                                    @"phones": @{@"mobile": @"650-123-4567"}}}];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
-        AssertNotNil(d[@"array"][-1]);
         AssertFalse(d[@"array"][-1].exists);
         AssertNotNil(d[@"array"][0]);
         Assert(d[@"array"][0].exists);
-        AssertNotNil(d[@"array"][1]);
         AssertFalse(d[@"array"][1].exists);
         
         AssertEqualObjects(d[@"array"][0][@"name"].string, @"Jason");
@@ -617,7 +611,6 @@
     doc[@"array"][0][3].value = @1;
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
-        AssertNotNil(d[@"array"][0][3]);
         AssertFalse(d[@"array"][0][3].exists);
     }];
 }

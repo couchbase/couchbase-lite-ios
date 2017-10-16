@@ -7,19 +7,27 @@
 //
 
 #import "CBLReadOnlyFragment.h"
-#import "CBLBlob.h"
-#import "CBLJSON.h"
-#import "CBLReadOnlyArray.h"
-#import "CBLReadOnlyDictionary.h"
+#import "CBLDocument+Internal.h"
 
-@implementation CBLReadOnlyFragment {
-    id _value;
-}
 
-- /* internal */ (instancetype) initWithValue: (id)value {
+@implementation CBLReadOnlyFragment
+
+
+- /* internal */ (instancetype) initWithParent: (id)parent key: (NSString*)parentKey {
     self = [super init];
     if (self) {
-        _value = value;
+        _parent = parent;
+        _key = parentKey;
+    }
+    return self;
+}
+
+
+- /* internal */ (instancetype) initWithParent: (id)parent index: (NSUInteger)parentIndex {
+    self = [super init];
+    if (self) {
+        _parent = parent;
+        _index = parentIndex;
     }
     return self;
 }
@@ -29,63 +37,95 @@
 
 
 - (NSInteger) integerValue {
-    return [$castIf(NSNumber, _value) integerValue];
+    if (_key)
+        return [_parent integerForKey: _key];
+    else
+        return [_parent integerAtIndex: _index];
 }
 
 
 - (float) floatValue {
-    return [$castIf(NSNumber, _value) floatValue];
+    if (_key)
+        return [_parent floatForKey: _key];
+    else
+        return [_parent floatAtIndex: _index];
 }
 
 
 - (double) doubleValue {
-    return [$castIf(NSNumber, _value) doubleValue];
+    if (_key)
+        return [_parent doubleForKey: _key];
+    else
+        return [_parent doubleAtIndex: _index];
 }
 
 
 - (BOOL) booleanValue {
-    // TODO:
-    return [$castIf(NSNumber, _value) boolValue];
+    if (_key)
+        return [_parent booleanForKey: _key];
+    else
+        return [_parent booleanAtIndex: _index];
 }
 
 
 - (NSObject*) object {
-    return _value;
+    return self.value;
 }
 
 
 - (NSString*) string {
-    return $castIf(NSString, _value);
+    if (_key)
+        return [_parent stringForKey: _key];
+    else
+        return [_parent stringAtIndex: _index];
 }
 
 
 - (NSNumber*) number {
-    return $castIf(NSNumber, _value);
+    if (_key)
+        return [_parent numberForKey: _key];
+    else
+        return [_parent numberAtIndex: _index];
 }
 
 
 - (NSDate*) date {
-    return [CBLJSON dateWithJSONObject: self.string];
+    if (_key)
+        return [_parent dateForKey: _key];
+    else
+        return [_parent dateAtIndex: _index];
 }
 
 
 - (CBLBlob*) blob {
-    return $castIf(CBLBlob, _value);
+    if (_key)
+        return [_parent blobForKey: _key];
+    else
+        return [_parent blobAtIndex: _index];
 }
 
 
 - (CBLReadOnlyArray*) array {
-    return $castIf(CBLReadOnlyArray, _value);
+    if (_key)
+        return [(CBLReadOnlyDictionary*)_parent arrayForKey: _key];
+    else
+        return [(CBLReadOnlyArray*)_parent arrayAtIndex: _index];
 }
 
 
 - (CBLReadOnlyDictionary*) dictionary {
-    return $castIf(CBLReadOnlyDictionary, _value);
+    if (_key)
+        return [(CBLReadOnlyDictionary*)_parent dictionaryForKey: _key];
+    else
+        return [(CBLReadOnlyArray*)_parent dictionaryAtIndex: _index];
 }
 
 
 - (NSObject*) value {
-    return _value;
+    if (_key)
+        return [_parent objectForKey: _key];
+    else
+        return [_parent objectAtIndex: _index];
 }
 
 
@@ -93,7 +133,7 @@
 
 
 - (BOOL) exists {
-    return _value != nil;
+    return self.value != nil;
 }
 
 
@@ -101,16 +141,26 @@
 
 
 - (CBLReadOnlyFragment*) objectForKeyedSubscript: (NSString*)key {
-    if ([_value conformsToProtocol: @protocol(CBLReadOnlyDictionary)])
-        return [_value objectForKeyedSubscript: key];
-    return [[CBLReadOnlyFragment alloc] initWithValue: nil];
+    NSParameterAssert(key);
+    id value = self.value;
+    if (![value respondsToSelector: @selector(objectForKeyedSubscript:)])
+        return nil;
+    _parent = value;
+    _key = key;
+    return self;
 }
 
 
 - (CBLReadOnlyFragment*) objectAtIndexedSubscript: (NSUInteger)index {
-    if ([_value conformsToProtocol: @protocol(CBLReadOnlyArray)])
-        return [_value objectAtIndexedSubscript: index];
-    return [[CBLReadOnlyFragment alloc] initWithValue: nil];
+    id value = self.value;
+    if (![value respondsToSelector: @selector(objectAtIndexedSubscript:)])
+        return nil;
+    if (index >= [value count])
+        return nil;
+    _parent = value;
+    _index = index;
+    _key = nil;
+    return self;
 }
 
 

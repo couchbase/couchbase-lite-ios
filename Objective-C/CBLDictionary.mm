@@ -332,8 +332,7 @@
 
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
-    id value = [self objectForKey: key];
-    return [[CBLFragment alloc] initWithValue: value parent: self parentKey: key];
+    return [[CBLFragment alloc] initWithParent: self key: key];
 }
 
 

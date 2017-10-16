@@ -10,6 +10,8 @@
 #import "CBLReadOnlyDictionaryFragment.h"
 @class CBLFragment;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /** 
  CBLDictionaryFragment protocol provides subscript access to CBLFragment objects by key. 
  */
@@ -21,7 +23,8 @@
  @param key The key.
  @return The CBLFragment object.
  */
-- (CBLFragment*) objectForKeyedSubscript: (NSString*)key;
+- (nullable CBLFragment*) objectForKeyedSubscript: (NSString*)key;
 
 @end
 
+NS_ASSUME_NONNULL_END

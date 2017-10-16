@@ -8,6 +8,8 @@
 
 @class CBLReadOnlyFragment;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /** 
  CBLReadOnlyArrayFragment protocol provides subscript access to CBLReadOnlyFragment
  objects by index. 
@@ -20,6 +22,9 @@
  @param index The index.
  @return The CBLReadOnlyFragment object.
  */
-- (CBLReadOnlyFragment*) objectAtIndexedSubscript: (NSUInteger)index;
+- (nullable CBLReadOnlyFragment*) objectAtIndexedSubscript: (NSUInteger)index;
 
 @end
+
+NS_ASSUME_NONNULL_END
+

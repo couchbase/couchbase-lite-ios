@@ -88,8 +88,8 @@ public class Fragment: ReadOnlyFragment, DictionaryFragment, ArrayFragment {
     // MARK: Internal
     
     
-    init(_ impl: CBLFragment) {
-        super.init(impl)
+    init(_ impl: CBLFragment?) {
+        super.init(impl ?? Fragment.kNonexistent)
     }
     
     
@@ -99,5 +99,8 @@ public class Fragment: ReadOnlyFragment, DictionaryFragment, ArrayFragment {
     private var fragmentImpl: CBLFragment {
         return _impl as! CBLFragment
     }
-    
+
+
+    static let kNonexistent = CBLFragment()
+
 }
