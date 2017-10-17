@@ -29,11 +29,10 @@ class PredicateQueryTest: CBLTestCase {
         let query = db.createQuery()
         let n = try verifyQuery(query) { (n, row) in
             let expectedID = String(format: "doc-%03llu", n);
-            XCTAssertEqual(row.documentID, expectedID);
-            XCTAssertEqual(row.sequence, n);
-            let doc = row.document;
-            XCTAssertEqual(doc.id, expectedID);
-            XCTAssertEqual(doc.sequence, n);
+            let documentID :String? = row[0]
+            let sequence :Int64 = row[1]
+            XCTAssertEqual(documentID, expectedID);
+            XCTAssertEqual(UInt64(sequence), n);
         }
         XCTAssertEqual(n, 100);
     }
@@ -46,11 +45,10 @@ class PredicateQueryTest: CBLTestCase {
             print("Query = \(try query.explain())")
             query.parameters = ["FIRSTNAME": "Claude"]
             let n = try verifyQuery(query) { (n, row) in
-                XCTAssertEqual(row.documentID, "doc-009");
-                XCTAssertEqual(row.sequence, 9);
-                let doc = row.document;
-                XCTAssertEqual(doc.id, "doc-009");
-                XCTAssertEqual(doc.sequence, 9);
+                let documentID :String? = row[0]
+                let sequence :Int64 = row[1]
+                XCTAssertEqual(documentID, "doc-009");
+                XCTAssertEqual(sequence, 9);
             }
             XCTAssertEqual(n, 1);
             
@@ -74,7 +72,6 @@ class PredicateQueryTest: CBLTestCase {
         query.parameters = ["STATE": "MN"]
         let numRows = try verifyQuery(query) {(n: UInt64, row) in
             let i = Int(n - UInt64(1))
-            XCTAssertEqual(row.documentID, expectedDocs[i])
             let zip: String? = row[0]
             let emails = row.value(at: 1) as? [String]
             XCTAssertEqual(zip, expectedZips[i])
