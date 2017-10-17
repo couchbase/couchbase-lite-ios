@@ -107,18 +107,15 @@ NS_ASSUME_NONNULL_BEGIN
 /////////////////
 
 @interface CBLReadOnlyFragment ()
+{
+    @protected
+    id _parent;
+    NSString* _key;           // Nil if this is an indexed subscript
+    NSUInteger _index;        // Ignored if this is a keyed subscript
+}
 
-- (instancetype) initWithValue: (nullable id)value;
-
-@end
-
-/////////////////
-
-@interface CBLFragment ()
-
-- (instancetype) initWithValue: (nullable id)value
-                        parent: (nullable id)parent
-                     parentKey: (nullable id)parentKey;
+- (instancetype) initWithParent: (id)parent key: (NSString*)parentKey;
+- (instancetype) initWithParent: (id)parent index: (NSUInteger)parentIndex;
 
 @end
 

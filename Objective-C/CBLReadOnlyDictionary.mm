@@ -117,8 +117,7 @@
 
 
 - (BOOL) containsObjectForKey: (NSString*)key {
-    FLValueType type = FLValue_GetType([self fleeceValueForKey: key]);
-    return type != kFLUndefined;
+    return [self fleeceValueForKey: key] != nullptr;
 }
 
 
@@ -148,7 +147,9 @@
 
 
 - (CBLReadOnlyFragment*) objectForKeyedSubscript: (NSString*)key {
-    return [[CBLReadOnlyFragment alloc] initWithValue: [self fleeceValueToObjectForKey: key]];
+    if (![self containsObjectForKey: key])
+        return nil;
+    return [[CBLReadOnlyFragment alloc] initWithParent: self key: key];
 }
 
 

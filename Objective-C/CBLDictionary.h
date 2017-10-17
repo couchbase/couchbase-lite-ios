@@ -156,7 +156,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param key The key.
  @return The CBLFragment object.
  */
-- (CBLFragment*) objectForKeyedSubscript: (NSString*)key;
+- (nullable CBLFragment*) objectForKeyedSubscript: (NSString*)key;
 
 @end
 

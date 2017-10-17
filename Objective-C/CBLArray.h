@@ -351,7 +351,7 @@ NS_ASSUME_NONNULL_BEGIN
                the CBLFragment will represent a nil value.
  @return The CBLFragment object.
  */
-- (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index;
+- (nullable CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index;
 
 @end
 

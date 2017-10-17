@@ -113,8 +113,9 @@
 
 
 - (CBLReadOnlyFragment*) objectAtIndexedSubscript: (NSUInteger)index {
-    id value = index < self.count ? [self fleeceValueToObjectAtIndex: index] : nil;
-    return [[CBLReadOnlyFragment alloc] initWithValue: value];
+    if (index >= self.count)
+        return nil;
+    return [[CBLReadOnlyFragment alloc] initWithParent: self index: index];
 }
 
 
