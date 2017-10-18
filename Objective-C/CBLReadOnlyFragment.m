@@ -155,7 +155,7 @@
     id value = self.value;
     if (![value respondsToSelector: @selector(objectAtIndexedSubscript:)])
         return nil;
-    if (index >= [value count])
+    if (index >= [(CBLReadOnlyArray*)value count])
         return nil;
     _parent = value;
     _index = index;
