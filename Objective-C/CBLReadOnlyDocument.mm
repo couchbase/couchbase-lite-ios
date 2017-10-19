@@ -13,7 +13,6 @@
 #import "CBLNewDictionary.h"
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
-#import "CBLSharedKeys.hh"
 #import "CBLFleece.hh"
 #import "MRoot.hh"
 
@@ -105,7 +104,7 @@ using namespace fleeceapi;
 
 - (void) updateDictionary {
     if (_data) {
-        _root.reset(new MRoot<id>(new DocContext(_database, _c4Doc), Dict(_data), self.isMutable));
+        _root.reset(new MRoot<id>(new cbl::DocContext(_database, _c4Doc), Dict(_data), self.isMutable));
         _dict = _root->asNative();
     } else {
         // New document:

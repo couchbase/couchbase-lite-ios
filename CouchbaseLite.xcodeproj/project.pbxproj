@@ -50,8 +50,6 @@
 		276740B91EE7381E0036DE42 /* CBLTrustCheck.m in Sources */ = {isa = PBXBuildFile; fileRef = 276740B61EE7381E0036DE42 /* CBLTrustCheck.m */; };
 		276740BA1EE7381E0036DE42 /* CBLTrustCheck.m in Sources */ = {isa = PBXBuildFile; fileRef = 276740B61EE7381E0036DE42 /* CBLTrustCheck.m */; };
 		276740E71EE9141C0036DE42 /* SelfSigned.cer in Resources */ = {isa = PBXBuildFile; fileRef = 276740E61EE9141C0036DE42 /* SelfSigned.cer */; };
-		27A0C85E1E3E7AB600F68646 /* CBLSharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */; };
-		27A0C85F1E3E7AB600F68646 /* CBLSharedKeys.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */; };
 		27A8B5021EC5350A00BB4C07 /* CBLQueryEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */; };
 		27A8B5131EC5351000BB4C07 /* CBLQueryEnumerator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A8B5121EC5351000BB4C07 /* CBLQueryEnumerator.mm */; };
 		27B699FD1F2A449900782145 /* CBLClientCertAuthenticator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B699FB1F2A449800782145 /* CBLClientCertAuthenticator.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -427,8 +425,6 @@
 		93B503641E64B07C002C4680 /* CBLCoreBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4C961E241FB500F90659 /* CBLCoreBridge.h */; };
 		93B503651E64B07F002C4680 /* CBLStringBytes.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4CA31E241FB500F90659 /* CBLStringBytes.h */; };
 		93B503661E64B083002C4680 /* CBLStringBytes.mm in Sources */ = {isa = PBXBuildFile; fileRef = 934F4CA41E241FB500F90659 /* CBLStringBytes.mm */; };
-		93B503671E64B085002C4680 /* CBLSharedKeys.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */; };
-		93B503681E64B088002C4680 /* CBLSharedKeys.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */; };
 		93B503691E64B08E002C4680 /* CBLBase64.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4C941E241FB500F90659 /* CBLBase64.h */; };
 		93B5036A1E64B091002C4680 /* CBLBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C951E241FB500F90659 /* CBLBase64.m */; };
 		93B5036B1E64B093002C4680 /* CBLJSON.h in Headers */ = {isa = PBXBuildFile; fileRef = 934F4C9A1E241FB500F90659 /* CBLJSON.h */; };
@@ -742,8 +738,6 @@
 		276740B51EE7381E0036DE42 /* CBLTrustCheck.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLTrustCheck.h; sourceTree = "<group>"; };
 		276740B61EE7381E0036DE42 /* CBLTrustCheck.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLTrustCheck.m; sourceTree = "<group>"; };
 		276740E61EE9141C0036DE42 /* SelfSigned.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = SelfSigned.cer; sourceTree = "<group>"; };
-		27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CBLSharedKeys.hh; sourceTree = "<group>"; };
-		27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLSharedKeys.mm; sourceTree = "<group>"; };
 		27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLQueryEnumerator.h; path = ../CBLQueryEnumerator.h; sourceTree = "<group>"; };
 		27A8B5121EC5351000BB4C07 /* CBLQueryEnumerator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLQueryEnumerator.mm; sourceTree = "<group>"; };
 		27B699FB1F2A449800782145 /* CBLClientCertAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLClientCertAuthenticator.h; sourceTree = "<group>"; };
@@ -1372,8 +1366,6 @@
 			children = (
 				934F4C961E241FB500F90659 /* CBLCoreBridge.h */,
 				934F4C971E241FB500F90659 /* CBLCoreBridge.mm */,
-				27A0C85C1E3E7AB600F68646 /* CBLSharedKeys.hh */,
-				27A0C85D1E3E7AB600F68646 /* CBLSharedKeys.mm */,
 				934F4CA31E241FB500F90659 /* CBLStringBytes.h */,
 				934F4CA41E241FB500F90659 /* CBLStringBytes.mm */,
 			);
@@ -1747,7 +1739,6 @@
 				938196171EC1136E0032CC51 /* CBLFragment.h in Headers */,
 				27B699FE1F2A449900782145 /* CBLClientCertAuthenticator.h in Headers */,
 				9380D26F1F0D8C1A007DD84A /* CBLQuerySelectResult.h in Headers */,
-				93B503671E64B085002C4680 /* CBLSharedKeys.hh in Headers */,
 				938196131EC113540032CC51 /* CBLDictionaryFragment.h in Headers */,
 				937F01DD1EFB1A2500060D64 /* CBLSessionAuthenticator.h in Headers */,
 				934A27B81F30E810003946A7 /* CBLQuantifiedExpression.h in Headers */,
@@ -1854,7 +1845,6 @@
 				934F4CB51E241FB500F90659 /* CBLPrefix.h in Headers */,
 				9380D26E1F0D8C1A007DD84A /* CBLQuerySelectResult.h in Headers */,
 				934F4CA91E241FB500F90659 /* CBLCoreBridge.h in Headers */,
-				27A0C85E1E3E7AB600F68646 /* CBLSharedKeys.hh in Headers */,
 				931C14661EAAD6610094F9B2 /* CBLDictionaryFragment.h in Headers */,
 				934A27B71F30E810003946A7 /* CBLQuantifiedExpression.h in Headers */,
 				9383A58F1F1EE9550083053D /* CBLQueryResultSet+Internal.h in Headers */,
@@ -2475,7 +2465,6 @@
 				275F92A61E4D3A91007FD5A2 /* Document.swift in Sources */,
 				937F02A01EFC7D1A00060D64 /* LiveQueryChange.swift in Sources */,
 				937F01DE1EFB1A2900060D64 /* CBLSessionAuthenticator.m in Sources */,
-				93B503681E64B088002C4680 /* CBLSharedKeys.mm in Sources */,
 				275F928C1E4D3119007FD5A2 /* Database.swift in Sources */,
 				938CDF1A1E807F14002EE790 /* From.swift in Sources */,
 				9380D2661F0D7BF7007DD84A /* GroupByRouter.swift in Sources */,
@@ -2595,7 +2584,6 @@
 				9383A5861F1EE7C00083053D /* CBLQueryResultSet.mm in Sources */,
 				93E17F0C1ED3AC8100671CA1 /* CBLDatabaseChange.m in Sources */,
 				933208171E77415E000D9993 /* CBLQueryOrdering.m in Sources */,
-				27A0C85F1E3E7AB600F68646 /* CBLSharedKeys.mm in Sources */,
 				931C14541EAABCE70094F9B2 /* CBLReadOnlyFragment.m in Sources */,
 				934A27B31F30E802003946A7 /* CBLVariableExpression.m in Sources */,
 				9380C6F01E15B8C20011E8CB /* CBLDocument.mm in Sources */,

@@ -13,7 +13,6 @@
 #import "CBLJSON.h"
 #import "CBLPropertyExpression.h"
 #import "CBLQueryResultSet+Internal.h"
-#import "CBLSharedKeys.hh"
 #import "MRoot.hh"
 
 
@@ -112,11 +111,11 @@ using namespace fleeceapi;
 
 
 - (NSArray*) toArray {
-    cbl::SharedKeys sk = [self database].sharedKeys;
+    FLSharedKeys sk = [self database].sharedKeys;
     
     NSMutableArray* array = [NSMutableArray array];
     for (NSUInteger i = 0; i < self.count; i++) {
-        [array addObject: FLValue_GetNSObject([self fleeceValueAtIndex: i], &sk)];
+        [array addObject: FLValue_GetNSObject([self fleeceValueAtIndex: i], sk, nullptr)];
     }
     return array;
 }

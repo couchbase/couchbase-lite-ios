@@ -20,12 +20,6 @@
 
 struct c4BlobStore;
 
-#ifdef __cplusplus
-namespace cbl {
-    class SharedKeys;
-}
-#endif
-
 @class CBLBlobStream;
 @class CBLReplicator;
 
@@ -41,9 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic) NSMapTable<NSURL*,CBLReplicator*>* replications;
 @property (readonly, nonatomic) NSMutableSet* activeReplications;
 
-#ifdef __cplusplus
-@property (readonly, nonatomic) cbl::SharedKeys sharedKeys;
-#endif
+@property (readonly, nonatomic) FLSharedKeys sharedKeys;
 
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
 - (bool) resolveConflictInDocument: (NSString*)docID

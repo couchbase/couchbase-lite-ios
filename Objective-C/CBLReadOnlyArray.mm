@@ -12,7 +12,6 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
 #import "CBLJSON.h"
-#import "CBLSharedKeys.hh"
 #import "PlatformCompat.hh"
 #import "CBLFleece.hh"
 #import "MArray.hh"

@@ -28,7 +28,6 @@
 #import "CBLQuery+Internal.h"
 #import "CBLMisc.h"
 #import "CBLPredicateQuery+Internal.h"
-#import "CBLSharedKeys.hh"
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
 
@@ -443,7 +442,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     
     C4SliceResult data = c4db_getIndexes(_c4db, nullptr);
     FLValue value = FLValue_FromTrustedData((FLSlice)data);
-    return FLValue_GetNSObject(value, &_sharedKeys);
+    return FLValue_GetNSObject(value, _sharedKeys, nullptr);
 }
 
 
@@ -536,7 +535,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     if (!_c4db)
         return convertError(err, outError);
     
-    _sharedKeys = cbl::SharedKeys(_c4db);
+    _sharedKeys = c4db_getFLSharedKeys(_c4db);
     
     return YES;
 }

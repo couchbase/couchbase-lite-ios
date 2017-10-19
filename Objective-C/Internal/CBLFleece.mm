@@ -10,16 +10,23 @@
 #import "CBLData.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
-#import "CBLSharedKeys.hh"
 #import "MCollection.hh"
 #import "c4Document+Fleece.h"
 
 
-DocContext::DocContext(CBLDatabase *db, CBLC4Document *doc)
-:fleeceapi::MContext({}, db.sharedKeys)
-,_db(db)
-,_doc(doc)
-{ }
+namespace cbl {
+    DocContext::DocContext(CBLDatabase *db, CBLC4Document *doc)
+    :fleeceapi::MContext({}, db.sharedKeys)
+    ,_db(db)
+    ,_doc(doc)
+    ,_fleeceToNSStrings(FLCreateSharedStringsTable())
+    { }
+
+
+    id DocContext::toObject(fleeceapi::Value value) {
+        return value.asNSObject(sharedKeys(), _fleeceToNSStrings);
+    }
+}
 
 
 namespace fleeceapi {
@@ -30,7 +37,7 @@ namespace fleeceapi {
     static id createSpecialObjectOfType(slice type, Dict properties, DocContext *context) {
         if (type == C4STR(kC4ObjectType_Blob)) {
             return [[CBLBlob alloc] initWithDatabase: context->database()
-                                          properties: properties.asNSObject(context->sharedKeys())];
+                                          properties: context->toObject(properties)];
         }
         return nil;
     }
@@ -62,8 +69,9 @@ namespace fleeceapi {
                                                     : [CBLReadOnlyDictionary class];
                 return [[c alloc] initWithMValue: mv inParent: parent];
             }
-            default:
-                return value.asNSObject(parent->context()->sharedKeys());
+            default: {
+                return ((DocContext*)parent->context())->toObject(value);
+            }
         }
     }
 

@@ -23,7 +23,6 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLJSON.h"
 #import "CBLMisc.h"
-#import "CBLSharedKeys.hh"
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
 

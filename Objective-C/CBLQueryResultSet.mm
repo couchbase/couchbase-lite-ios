@@ -16,37 +16,38 @@
 #import "CBLQueryResultArray.h"
 #import "CBLStatus.h"
 #import "c4Query.h"
-#import "CBLSharedKeys.hh"
-#import "Fleece.h"
+#import "CBLFleece.hh"
 #import "MRoot.hh"
 
 using namespace fleeceapi;
 
 
-// This class is responsible for holding the Fleece data in memory, while objects are using it.
-// The data happens to belong to the C4QueryEnumerator.
-class QueryResultContext : public MContext {
-public:
-    QueryResultContext(CBLDatabase *db, C4QueryEnumerator *enumerator)
-    :MContext({}, db.sharedKeys)
-    ,_enumerator(enumerator)
-    { }
+namespace cbl {
+    // This class is responsible for holding the Fleece data in memory, while objects are using it.
+    // The data happens to belong to the C4QueryEnumerator.
+    class QueryResultContext : public DocContext {
+    public:
+        QueryResultContext(CBLDatabase *db, C4QueryEnumerator *enumerator)
+        :DocContext(db, nullptr)
+        ,_enumerator(enumerator)
+        { }
 
-    virtual ~QueryResultContext() {
-        c4queryenum_free(_enumerator);
-    }
+        virtual ~QueryResultContext() {
+            c4queryenum_free(_enumerator);
+        }
 
-    C4QueryEnumerator* enumerator() const   {return _enumerator;}
+        C4QueryEnumerator* enumerator() const   {return _enumerator;}
 
-private:
-    C4QueryEnumerator *_enumerator;
-};
+    private:
+        C4QueryEnumerator *_enumerator;
+    };
+}
 
 
 @implementation CBLQueryResultSet {
     CBLQuery* _query;
     C4QueryEnumerator* _c4enum;
-    QueryResultContext* _context;
+    cbl::QueryResultContext* _context;
     C4Error _error;
     bool _randomAccess;
 }
@@ -66,7 +67,7 @@ private:
         _query = query;
         _c4Query = c4Query; // freed when query is dealloc
         _c4enum = e;
-        _context = (QueryResultContext*)(new QueryResultContext(query.database, e))->retain();
+        _context = (cbl::QueryResultContext*)(new cbl::QueryResultContext(query.database, e))->retain();
         _columnNames = columnNames;
         CBLLog(Query, @"Beginning query enumeration (%p)", _c4enum);
     }

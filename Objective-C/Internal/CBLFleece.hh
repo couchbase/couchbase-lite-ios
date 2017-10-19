@@ -18,17 +18,23 @@
 NS_ASSUME_NONNULL_BEGIN
 
 
-class DocContext : public fleeceapi::MContext {
-public:
-    DocContext(CBLDatabase *db, CBLC4Document *doc);
+namespace cbl {
+    class DocContext : public fleeceapi::MContext {
+    public:
+        DocContext(CBLDatabase *db, CBLC4Document* __nullable doc);
 
-    CBLDatabase* database() const   {return _db;}
-    CBLC4Document* document() const {return _doc;}
+        CBLDatabase* database() const   {return _db;}
+        CBLC4Document* __nullable document() const {return _doc;}
+        NSMapTable* fleeceToNSStrings() const {return _fleeceToNSStrings;}
 
-private:
-    CBLDatabase *_db;
-    CBLC4Document* _doc;
-};
+        id toObject(fleeceapi::Value);
+
+    private:
+        CBLDatabase *_db;
+        CBLC4Document* _doc;
+        NSMapTable* _fleeceToNSStrings;
+    };
+}
 
 
 @interface NSObject (CBLFleece)
