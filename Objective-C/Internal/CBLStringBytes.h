@@ -10,33 +10,28 @@
 //
 
 #import <Foundation/Foundation.h>
-
-#pragma once
-#import <Foundation/Foundation.h>
 #import "c4Base.h"
 #import "Fleece.h"
 
 
 /** A slice holding the data of an NSString. If possible, it points the slice into the data of the
- NSString, requiring no copying. Otherwise it copies the characters into a small internal
- buffer, or into a temporary heap block.
- 
- NOTE: Since the slice may point directly into the NSString, if the string is mutable do not
- mutate it while the stringBytes object is in scope! (Releasing the string is OK, as
- stringBytes retains it.) */
-struct CBLStringBytes  {
+    NSString, requiring no copying. Otherwise it copies the characters into a small internal
+    buffer, or into a temporary heap block.
+
+    NOTE: Since the slice may point directly into the NSString, if the string is mutable do not
+    mutate it while the stringBytes object is in scope! (Releasing the string is OK, as
+    stringBytes retains it.) */
+struct CBLStringBytes {
     CBLStringBytes(NSString* =nil);
-    ~CBLStringBytes();
-    
+
     void operator= (NSString*);
-    
-    operator C4Slice() const {return {buf, size};}
-    
-    const char *buf;
-    size_t size;
-    
+
+    operator C4Slice() const        {return bytes;}
+    operator fleece::slice() const  {return bytes;}
+
+    fleece::slice bytes;
+
 private:
-    __strong NSString *_string {nullptr};
-    char _local[127];
-    bool _needsFree {false};
+    __strong id _storage {nullptr};       // keeps string alive, if `buf` points into it
+    char _local[64];
 };

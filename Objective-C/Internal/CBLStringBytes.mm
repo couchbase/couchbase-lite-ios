@@ -18,55 +18,46 @@
 
 #import "CBLStringBytes.h"
 
+using namespace fleece;
+
+
 CBLStringBytes::CBLStringBytes(__unsafe_unretained NSString* str) {
     *this = str;
 }
 
 void CBLStringBytes::operator= (__unsafe_unretained NSString* str) {
-    _string = str;
-    if (_needsFree)
-        ::free((void*)buf);
-    
     if (!str) {
-        buf = nullptr;
-        size = 0;
+        bytes = nullslice;
+        _storage = nil;
         return;
     }
     
     // First try to use a direct pointer to the bytes:
     auto cstr = CFStringGetCStringPtr((__bridge CFStringRef)str, kCFStringEncodingUTF8);
     if (cstr) {
-        size = strlen(cstr);
-        buf = cstr;
+        bytes = slice(cstr);
+        _storage = str;
         return;
     }
-    
+
     NSUInteger byteCount;
-    if (str.length <= sizeof(_local)) {
+    NSUInteger length = str.length;
+    if (length <= sizeof(_local)) {
         // Next try to copy the UTF-8 into a smallish stack-based buffer:
         NSRange remaining;
         BOOL ok = [str getBytes: _local maxLength: sizeof(_local) usedLength: &byteCount
                        encoding: NSUTF8StringEncoding options: 0
-                          range: NSMakeRange(0, str.length) remainingRange: &remaining];
+                          range: NSMakeRange(0, length) remainingRange: &remaining];
         if (ok && remaining.length == 0) {
-            buf = _local;
-            size = byteCount;
+            bytes = slice(_local, byteCount);
+            _storage = nil;
             return;
         }
     }
     
-    // Otherwise malloc a buffer to copy the UTF-8 into:
-    NSUInteger maxByteCount = [str maximumLengthOfBytesUsingEncoding: NSUTF8StringEncoding];
-    buf = (const char *)malloc(maxByteCount);
-    _needsFree = true;
-    __unused BOOL ok = [str getBytes: (void*)buf maxLength: maxByteCount usedLength: &byteCount
-                            encoding: NSUTF8StringEncoding options: 0
-                               range: NSMakeRange(0, str.length) remainingRange: nullptr];
-    NSCAssert(ok, @"Couldn't get NSString bytes");
-    size = byteCount;
+    // Otherwise allocate the UTF-8 in an autoreleased heap block:
+    NSData* data = [str dataUsingEncoding: NSUTF8StringEncoding];
+    _storage = data;
+    bytes = slice(data);
 }
 
-CBLStringBytes::~CBLStringBytes() {
-    if (_needsFree)
-        ::free((void*)buf);
-}

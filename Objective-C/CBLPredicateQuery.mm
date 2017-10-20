@@ -14,7 +14,6 @@
 #import "CBLQueryEnumerator.h"
 #import "CBLJSON.h"
 #import "CBLStatus.h"
-#import "CBLStringBytes.h"
 
 #import "c4Document.h"
 #import "c4Query.h"

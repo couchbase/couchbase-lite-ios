@@ -116,7 +116,7 @@ using namespace fleeceapi;
 
 
 static const MValue<id>& _get(MDict<id> &dict, NSString* key) {
-    fleece::nsstring_slice keySlice(key);
+    CBLStringBytes keySlice(key);
     return dict.get(keySlice);
 }
 

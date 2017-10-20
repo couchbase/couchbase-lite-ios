@@ -10,7 +10,6 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
 #import "CBLJSON.h"
-#import "CBLStringBytes.h"
 
 #define kCBLDictionaryTypeKey @kC4ObjectTypeProperty
 #define kCBLBlobTypeName @kC4ObjectType_Blob

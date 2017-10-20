@@ -15,8 +15,6 @@
 #import "CBLJSON.h"
 #import "CBLPredicateQuery+Internal.h"
 
-#import "CBLStringBytes.h"
-
 #import "c4Document.h"
 #import "c4Query.h"
 #import "Fleece.h"
