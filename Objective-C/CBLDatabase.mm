@@ -31,6 +31,7 @@
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
 
+using namespace fleece;
 
 #define kDBExtension @"cblite2"
 
@@ -331,7 +332,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
                   error: (NSError**)outError
 {
     NSString* path = databasePath(name, directory ?: defaultDirectory());
-    CBLStringBytes bPath(path);
+    slice bPath(path.fileSystemRepresentation);
     C4Error err;
     return c4db_deleteAtPath(bPath, &kDBConfig, &err) || err.code==0 || convertError(err, outError);
 }
@@ -350,9 +351,9 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
                 error: (NSError**)outError
 {
     NSString* toPathStr = databasePath(name, config.directory ?: defaultDirectory());
-    CBLStringBytes toPath(toPathStr);
-    CBLStringBytes fromPath(path);
-    
+    slice toPath(toPathStr.fileSystemRepresentation);
+    slice fromPath(path.fileSystemRepresentation);
+
     C4Error err;
     C4DatabaseConfig c4Config = c4DatabaseConfig(config ?: [CBLDatabaseConfiguration new]);
     if (c4db_copy(fromPath, toPath, &c4Config, &err) || err.code==0 || convertError(err, outError)) {
@@ -526,8 +527,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
         return NO;
     
     NSString* path = databasePath(_name, dir);
-    CBLStringBytes bPath(path);
-    
+    slice bPath(path.fileSystemRepresentation);
+
     C4DatabaseConfig c4config = c4DatabaseConfig(_config);
     CBLLog(Database, @"Opening %@ at path %@", self, path);
     C4Error err;
