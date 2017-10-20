@@ -45,7 +45,7 @@ using namespace fleeceapi;
 
 
 - (id) copyWithZone:(NSZone *)zone {
-    return [[CBLReadOnlyDictionary alloc] initWithCopyOfMDict: _dict isMutable: false];
+    return [[CBLDictionary alloc] initWithCopyOfMDict: _dict isMutable: true];
 }
 
 
