@@ -10,12 +10,17 @@
 #import "c4.h"
 @class CBLQueryResultSet;
 
+namespace fleeceapi {
+    class MContext;
+}
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLQueryResult ()
 
 - (instancetype) initWithResultSet: (CBLQueryResultSet*)rs
-                      c4Enumerator: (C4QueryEnumerator*)e;
+                      c4Enumerator: (C4QueryEnumerator*)e
+                           context: (fleeceapi::MContext*)context;
 
 @end
 

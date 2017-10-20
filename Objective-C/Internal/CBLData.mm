@@ -21,15 +21,6 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 
 @implementation NSObject (CBLConversions)
 
-- (BOOL) cbl_fleeceEncode: (FLEncoder)encoder
-                 database: (CBLDatabase*)database
-                    error: (NSError**)outError
-{
-    // This is overridden by CBL content classes like CBLDictionary and CBLBlob...
-    FLEncoder_WriteNSObject(encoder, self);
-    return YES;
-}
-
 - (id) cbl_toPlainObject {
     return self;
 }
@@ -87,61 +78,22 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 @end
 
 
-@implementation CBLData
-
-
-+ (BOOL) booleanValueForObject: (id)object {
-    if (!object || object == [NSNull null])
-        return NO;
-    else {
-        id n = $castIf(NSNumber, object);
-        return n ? [n boolValue] : YES;
+namespace cbl {
+    bool asBool (id object) {
+        // Boolean conversion is a special case because any non-numeric non-null JSON value is true.
+        if (object == nil)
+            return false;
+        else if ([object isKindOfClass: [NSNumber class]])
+            return [object boolValue];
+        else
+            return object != (__bridge id)kCFNull;
     }
+
+    NSInteger asInteger (id object)    {return [$castIf(NSNumber, object) integerValue];}
+    long long asLongLong(id object)    {return [$castIf(NSNumber, object) longLongValue];}
+    float     asFloat   (id object)    {return [$castIf(NSNumber, object) floatValue];}
+    double    asDouble  (id object)    {return [$castIf(NSNumber, object) doubleValue];}
+    NSNumber* asNumber  (id object)    {return $castIf(NSNumber, object);}
+    NSString* asString  (id object)    {return $castIf(NSString, object);}
+    NSDate*   asDate    (id object)    {return [CBLJSON dateWithJSONObject: object];}
 }
-
-
-+ (id) fleeceValueToObject: (FLValue)value
-                datasource: (id <CBLFLDataSource>)datasource
-                  database: (CBLDatabase*)database
-{
-    switch (FLValue_GetType(value)) {
-        case kFLArray: {
-            FLArray array = FLValue_AsArray(value);
-            id flData = [[CBLFLArray alloc] initWithArray: array
-                                               datasource: datasource database: database];
-            return [[CBLReadOnlyArray alloc] initWithFleeceData: flData];
-        }
-        case kFLDict: {
-            FLDict dict = FLValue_AsDict(value);
-            CBLStringBytes typeKey(kCBLDictionaryTypeKey);
-            cbl::SharedKeys sk = database.sharedKeys;
-            FLSlice type = FLValue_AsString(FLDict_GetSharedKey(dict, typeKey, &sk));
-            if(!type.buf) {
-                id flData = [[CBLFLDict alloc] initWithDict: dict
-                                                 datasource: datasource database: database];
-                return [[CBLReadOnlyDictionary alloc] initWithFleeceData: flData];
-            } else {
-                id result = FLValue_GetNSObject(value, &sk);
-                return [self dictionaryToCBLObject: result database: database];
-            }
-        }
-        default: {
-            cbl::SharedKeys sk = database.sharedKeys;
-            return FLValue_GetNSObject(value, &sk);
-        }
-    }
-}
-
-
-+ /* private */ (id) dictionaryToCBLObject: (NSDictionary*)dict database: (CBLDatabase*)database {
-    NSString* type = dict[kCBLDictionaryTypeKey];
-    if (type) {
-        if ([type isEqualToString: kCBLBlobTypeName])
-            return [[CBLBlob alloc] initWithDatabase: database properties: dict];
-    }
-    return nil;
-}
-
-
-@end
-

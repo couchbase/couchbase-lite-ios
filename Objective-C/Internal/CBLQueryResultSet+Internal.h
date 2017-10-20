@@ -7,13 +7,12 @@
 //
 
 #import "CBLQueryResultSet.h"
-#import "CBLFLDataSource.h"
 #import "c4.h"
 @class CBLDatabase, CBLQuery;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLQueryResultSet () <CBLFLDataSource>
+@interface CBLQueryResultSet ()
 
 - (instancetype) initWithQuery: (CBLQuery*)query
                        c4Query: (C4Query*)c4Query

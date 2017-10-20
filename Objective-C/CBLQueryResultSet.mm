@@ -16,11 +16,37 @@
 #import "CBLQueryResultArray.h"
 #import "CBLStatus.h"
 #import "c4Query.h"
+#import "CBLSharedKeys.hh"
 #import "Fleece.h"
+#import "MRoot.hh"
+
+using namespace fleeceapi;
+
+
+// This class is responsible for holding the Fleece data in memory, while objects are using it.
+// The data happens to belong to the C4QueryEnumerator.
+class QueryResultContext : public MContext {
+public:
+    QueryResultContext(CBLDatabase *db, C4QueryEnumerator *enumerator)
+    :MContext({}, db.sharedKeys)
+    ,_enumerator(enumerator)
+    { }
+
+    virtual ~QueryResultContext() {
+        c4queryenum_free(_enumerator);
+    }
+
+    C4QueryEnumerator* enumerator() const   {return _enumerator;}
+
+private:
+    C4QueryEnumerator *_enumerator;
+};
+
 
 @implementation CBLQueryResultSet {
     CBLQuery* _query;
     C4QueryEnumerator* _c4enum;
+    QueryResultContext* _context;
     C4Error _error;
     bool _randomAccess;
 }
@@ -40,6 +66,7 @@
         _query = query;
         _c4Query = c4Query; // freed when query is dealloc
         _c4enum = e;
+        _context = (QueryResultContext*)(new QueryResultContext(query.database, e))->retain();
         _columnNames = columnNames;
         CBLLog(Query, @"Beginning query enumeration (%p)", _c4enum);
     }
@@ -48,7 +75,8 @@
 
 
 - (void) dealloc {
-    c4queryenum_free(_c4enum);
+    if (_context)
+        _context->release();
 }
 
 
@@ -73,7 +101,9 @@
 
 
 - (id) currentObject {
-    return [[CBLQueryResult alloc] initWithResultSet: self c4Enumerator: _c4enum];
+    return [[CBLQueryResult alloc] initWithResultSet: self
+                                        c4Enumerator: _c4enum
+                                             context: _context];
 }
 
 

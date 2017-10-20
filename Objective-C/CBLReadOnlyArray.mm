@@ -13,101 +13,166 @@
 #import "CBLDocument+Internal.h"
 #import "CBLJSON.h"
 #import "CBLSharedKeys.hh"
+#import "PlatformCompat.hh"
+#import "CBLFleece.hh"
+#import "MArray.hh"
+
+using namespace cbl;
+using namespace fleeceapi;
 
 
-@implementation CBLReadOnlyArray {
-    CBLFLArray* _data;
-    FLArray _array;
-    cbl::SharedKeys _sharedKeys;
+@implementation CBLReadOnlyArray 
+
+
+@synthesize swiftObject=_swiftObject;
+
+
+- (instancetype) initEmpty {
+    return [super init];
 }
 
 
-@synthesize data=_data, swiftObject=_swiftObject;
-
-- /* internal */ (instancetype) initWithFleeceData: (nullable CBLFLArray*)data {
+- (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
+                       inParent: (fleeceapi::MCollection<id>*)parent
+{
     self = [super init];
     if (self) {
-        _data = data;
-        _array = _data.array;
-        _sharedKeys = _data.database.sharedKeys;
+        _array.initInSlot(mv, parent);
     }
     return self;
+}
+
+
+- (instancetype) initWithCopyOfMArray: (const MArray<id>&)mArray
+                            isMutable: (bool)isMutable
+{
+    self = [super init];
+    if (self) {
+        _array.initAsCopyOf(mArray, isMutable);
+    }
+    return self;
+}
+
+
+- (id) copyWithZone:(NSZone *)zone {
+    return self;
+}
+
+
+- (CBLArray*) mutableCopyWithZone:(NSZone *)zone {
+    return [[CBLArray alloc] initWithCopyOfMArray: _array isMutable: true];
+}
+
+
+- (void) fl_encodeToFLEncoder: (FLEncoder)enc {
+    Encoder encoder(enc);
+    _array.encodeTo(encoder);
+    encoder.release();
+}
+
+
+- (MCollection<id>*) fl_collection {
+    return &_array;
+}
+
+
+[[noreturn]] static void throwRangeException(NSUInteger index) {
+    [NSException raise: NSRangeException format: @"CBLArray index %zu is out of range", index];
+    abort();
 }
 
 
 #pragma mark - GETTER
 
 
+static const MValue<id>& _get(MArray<id> &array, NSUInteger index) {
+    auto &val = array.get(index);
+    if (_usuallyFalse(val.isEmpty()))
+        throwRangeException(index);
+    return val;
+}
+
+
+static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
+    //OPT: Can return nil before calling asNative, if MValue.value exists and is wrong type
+    id obj = _get(array, index).asNative(&array);
+    if (asClass && ![obj isKindOfClass: asClass])
+        obj = nil;
+    return obj;
+}
+
+
 - (nullable CBLReadOnlyArray*) arrayAtIndex: (NSUInteger)index {
-    return $castIf(CBLReadOnlyArray, [self fleeceValueToObjectAtIndex: index]);
+    return _getObject(_array, index, [CBLReadOnlyArray class]);
 }
 
 
 - (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
-    return $castIf(CBLBlob, [self fleeceValueToObjectAtIndex: index]);
+    return _getObject(_array, index, [CBLBlob class]);
 }
 
 
 - (BOOL) booleanAtIndex: (NSUInteger)index {
-    return FLValue_AsBool(FLArray_Get(_array, (uint)index));
+    return asBool(_get(_array, index), _array);
 }
 
 
 - (nullable NSDate*) dateAtIndex: (NSUInteger)index {
-    return [CBLJSON dateWithJSONObject: [self fleeceValueToObjectAtIndex: index]];
+    return asDate(_getObject(_array, index));
 }
 
 
 - (nullable CBLReadOnlyDictionary*) dictionaryAtIndex: (NSUInteger)index {
-    return $castIf(CBLReadOnlyDictionary, [self fleeceValueToObjectAtIndex: index]);
+    return _getObject(_array, index, [CBLReadOnlyDictionary class]);
 }
 
 
 - (double) doubleAtIndex: (NSUInteger)index {
-    return FLValue_AsDouble(FLArray_Get(_array, (uint)index));
+    return asDouble(_get(_array, index), _array);
 }
 
 
 - (float) floatAtIndex: (NSUInteger)index {
-    return FLValue_AsFloat(FLArray_Get(_array, (uint)index));
+    return asFloat(_get(_array, index), _array);
 }
 
 
 - (NSInteger) integerAtIndex: (NSUInteger)index {
-    return (NSInteger)FLValue_AsInt(FLArray_Get(_array, (uint)index));
+    return asInteger(_get(_array, index), _array);
 }
 
 
 - (long long) longLongAtIndex: (NSUInteger)index {
-    return FLValue_AsInt(FLArray_Get(_array, (uint)index));
+    return asLongLong(_get(_array, index), _array);
 }
 
 
 - (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
-    return $castIf(NSNumber, [self fleeceValueToObjectAtIndex: index]);
+    return _getObject(_array, index, [NSNumber class]);
 }
 
 
 - (nullable NSString*) stringAtIndex: (NSUInteger)index {
-    return $castIf(NSString, [self fleeceValueToObjectAtIndex: index]);
+    return _getObject(_array, index, [NSString class]);
 }
 
 
 - (nullable id) objectAtIndex: (NSUInteger)index {
-    return [self fleeceValueToObjectAtIndex: index];
+    return _getObject(_array, index);
 }
 
 
 - (NSUInteger) count {
-    return FLArray_Count(_array);
+    return _array.count();
 }
 
 
 - (NSArray*) toArray {
-    if (_array != nullptr)
-        return FLValue_GetNSObject((FLValue)_array, &_sharedKeys);
-    else
-        return @[];
+    auto count = _array.count();
+    NSMutableArray* result = [NSMutableArray arrayWithCapacity: count];
+    for (NSUInteger i = 0; i < count; i++)
+        [result addObject: [_getObject(_array, i) cbl_toPlainObject]];
+    return result;
 }
 
 
@@ -117,7 +182,7 @@
 
 
 - (id) cbl_toCBLObject {
-    return [[CBLArray alloc] initWithFleeceData: self.data];
+    return [self mutableCopy];
 }
 
 
@@ -152,36 +217,10 @@
 
 
 - (CBLReadOnlyFragment*) objectAtIndexedSubscript: (NSUInteger)index {
-    if (index >= self.count)
+    if (index >= _array.count())
         return nil;
     return [[CBLReadOnlyFragment alloc] initWithParent: self index: index];
 }
-
-
-#pragma mark - FLEECE ENCODABLE
-
-
-- (BOOL) cbl_fleeceEncode: (FLEncoder)encoder
-                 database: (CBLDatabase*)database
-                    error: (NSError**)outError
-{
-    
-    return FLEncoder_WriteValueWithSharedKeys(encoder, (FLValue)_array, _sharedKeys);
-}
-
-
-#pragma mark - FLEECE
-
-
-- (id) fleeceValueToObjectAtIndex: (NSUInteger)index {
-    FLValue value = FLArray_Get(_array, (uint)index);
-    if (value != nullptr)
-        return [CBLData fleeceValueToObject: value
-                                 datasource: _data.datasource database: _data.database];
-    else
-        return nil;
-}
-
 
 
 @end

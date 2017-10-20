@@ -1,5 +1,5 @@
 //
-//  CBLReadOnlyDictionary.m
+//  CBLReadOnlyDictionary.mm
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 4/11/17.
@@ -14,24 +14,68 @@
 #import "CBLJSON.h"
 #import "CBLSharedKeys.hh"
 #import "CBLStringBytes.h"
+#import "PlatformCompat.hh"
+#import "CBLFleece.hh"
+#import "MDict.hh"
+#import "MDictIterator.hh"
+
+using namespace cbl;
+using namespace fleeceapi;
+
+
+@implementation CBLReadOnlyDictionary
+
+
+@synthesize swiftObject=_swiftObject;
 
 
 
-@implementation CBLReadOnlyDictionary {
-    CBLFLDict* _data;
-    FLDict _dict;
-    cbl::SharedKeys _sharedKeys;
-    NSArray* _keys;                 // all keys cache
+- (instancetype) initEmpty {
+    return [super init];
 }
 
-@synthesize data=_data, swiftObject=_swiftObject;
 
-- /* internal */ (instancetype) initWithFleeceData: (nullable CBLFLDict*)data {
+- (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
+                       inParent: (fleeceapi::MCollection<id>*)parent
+{
     self = [super init];
     if (self) {
-        self.data = data;
+        _dict.initInSlot(mv, parent);
     }
     return self;
+}
+
+
+- (instancetype) initWithCopyOfMDict: (const MDict<id>&)mDict
+                           isMutable: (bool)isMutable
+{
+    self = [super init];
+    if (self) {
+        _dict.initAsCopyOf(mDict, isMutable);
+    }
+    return self;
+}
+
+
+- (id) copyWithZone:(NSZone *)zone {
+    return self;
+}
+
+
+- (CBLDictionary*) mutableCopyWithZone:(NSZone *)zone {
+    return [[CBLDictionary alloc] initWithCopyOfMDict: _dict isMutable: true];
+}
+
+
+- (void) fl_encodeToFLEncoder: (FLEncoder)enc {
+    Encoder encoder(enc);
+    _dict.encodeTo(encoder);
+    encoder.release();
+}
+
+
+- (MCollection<id>*) fl_collection {
+    return &_dict;
 }
 
 
@@ -39,77 +83,96 @@
 
 
 - (NSUInteger) count {
-    return FLDict_Count(_dict);
+    return _dict.count();
 }
 
 
 #pragma mark - Accessing Keys
 
+
 - (NSArray*) keys {
-    return [[self fleeceKeys] copy];
+    NSMutableArray* keys = [NSMutableArray arrayWithCapacity: _dict.count()];
+    for (MDict<id>::iterator i(_dict); i; ++i)
+        [keys addObject: (NSString*)i.key()];
+    return keys;
 }
 
 
-#pragma mark - Type Setters
+#pragma mark - Type Getters
+
+
+static const MValue<id>& _get(MDict<id> &dict, NSString* key) {
+    fleece::nsstring_slice keySlice(key);
+    return dict.get(keySlice);
+}
+
+
+static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
+    //OPT: Can return nil before calling asNative, if MValue.value exists and is wrong type
+    id obj = _get(dict, key).asNative(&dict);
+    if (asClass && ![obj isKindOfClass: asClass])
+        obj = nil;
+    return obj;
+}
 
 
 - (nullable CBLReadOnlyArray*) arrayForKey: (NSString*)key {
-    return $castIf(CBLReadOnlyArray, [self fleeceValueToObjectForKey: key]);
+    return _getObject(_dict, key, [CBLReadOnlyArray class]);
 }
 
 
 - (nullable CBLBlob*) blobForKey: (NSString*)key {
-    return $castIf(CBLBlob, [self fleeceValueToObjectForKey: key]);
+    return _getObject(_dict, key, [CBLBlob class]);
 }
 
 
 - (BOOL) booleanForKey: (NSString*)key {
-    return FLValue_AsBool([self fleeceValueForKey: key]);
+    return asBool(_get(_dict, key), _dict);
 }
 
 
 - (nullable NSDate*) dateForKey: (NSString*)key {
-    return [CBLJSON dateWithJSONObject: [self fleeceValueToObjectForKey: key]];
+    return asDate(_getObject(_dict, key, nil));
 }
 
 
 - (nullable CBLReadOnlyDictionary*) dictionaryForKey: (NSString*)key {
-    return $castIf(CBLReadOnlyDictionary, [self fleeceValueToObjectForKey: key]);
+    return _getObject(_dict, key, [CBLReadOnlyDictionary class]);
 }
 
 
 - (nullable id) objectForKey: (NSString*)key {
-    return [self fleeceValueToObjectForKey: key];
+    return _getObject(_dict, key, nil);
 }
 
 
 - (double) doubleForKey: (NSString*)key {
-    return FLValue_AsDouble([self fleeceValueForKey: key]);
+    return asDouble(_get(_dict, key), _dict);
 }
 
 
 - (float) floatForKey: (NSString*)key {
-    return FLValue_AsFloat([self fleeceValueForKey: key]);
+    return asFloat(_get(_dict, key), _dict);
 }
 
 
 - (NSInteger) integerForKey: (NSString*)key {
-    return (NSInteger)FLValue_AsInt([self fleeceValueForKey: key]);
+    return asInteger(_get(_dict, key), _dict);
 }
 
 
 - (long long) longLongForKey: (NSString*)key {
-    return FLValue_AsInt([self fleeceValueForKey: key]);
+    return asLongLong(_get(_dict, key), _dict);
 }
 
 
 - (nullable NSNumber*) numberForKey: (NSString*)key {
-    return $castIf(NSNumber, [self fleeceValueToObjectForKey: key]);
+    return _getObject(_dict, key, [NSNumber class]);
 }
 
 
 - (nullable NSString*) stringForKey: (NSString*)key {
-    return $castIf(NSString, [self fleeceValueToObjectForKey: key]);
+    return _getObject(_dict, key, [NSString class]);
 }
 
 
@@ -117,7 +180,7 @@
 
 
 - (BOOL) containsObjectForKey: (NSString*)key {
-    return [self fleeceValueForKey: key] != nullptr;
+    return !_get(_dict, key).isEmpty();
 }
 
 
@@ -125,10 +188,10 @@
 
 
 - (NSDictionary<NSString*,id>*) toDictionary {
-    if (_dict != nullptr)
-        return FLValue_GetNSObject((FLValue)_dict, &_sharedKeys);
-    else
-        return @{};
+    NSMutableDictionary* result = [NSMutableDictionary dictionaryWithCapacity: _dict.count()];
+    for (MDict<id>::iterator i(_dict); i; ++i)
+        result[(NSString*)i.key()] = [i.nativeValue() cbl_toPlainObject];
+    return result;
 }
 
 
@@ -139,7 +202,7 @@
                                   objects: (id __unsafe_unretained [])buffer
                                     count: (NSUInteger)len
 {
-    return [[self fleeceKeys] countByEnumeratingWithState: state objects: buffer count: len];
+    return [self.keys countByEnumeratingWithState: state objects: buffer count: len];
 }
 
 
@@ -153,21 +216,6 @@
 }
 
 
-#pragma mark - INTERNAL
-
-
-- (void) setData: (CBLFLDict*)data {
-    _data = data;
-    _dict = data.dict;
-    _sharedKeys = data.database.sharedKeys;
-}
-
-
-- (BOOL) isEmpty {
-    return self.count == 0;
-}
-
-
 #pragma mark - CBLConversion
 
 
@@ -177,54 +225,7 @@
 
 
 - (id) cbl_toCBLObject {
-    return [[CBLDictionary alloc] initWithFleeceData: self.data];
-}
-
-
-#pragma mark - FLEECE ENCODING
-
-
-- (BOOL) cbl_fleeceEncode: (FLEncoder)encoder
-                 database: (CBLDatabase*)database
-                    error: (NSError**)outError
-{
-    return FLEncoder_WriteValueWithSharedKeys(encoder, (FLValue)_dict, _sharedKeys);
-}
-
-
-#pragma mark - FLEECE
-
-
-- (FLValue) fleeceValueForKey: (NSString*)key {
-    return FLDict_GetSharedKey(_dict, CBLStringBytes(key), &_sharedKeys);
-}
-
-
-- (id) fleeceValueToObjectForKey: (NSString*)key {
-    FLValue value = [self fleeceValueForKey: key];
-    if (value != nullptr)
-        return [CBLData fleeceValueToObject: value datasource: _data.datasource
-                                   database: _data.database];
-    else
-        return nil;
-}
-
-
-- (NSArray*) fleeceKeys {
-    if (!_keys) {
-        NSMutableArray* keys = [NSMutableArray arrayWithCapacity: FLDict_Count(_dict)];
-        if (_dict != nullptr) {
-            FLDictIterator iter;
-            FLDictIterator_Begin(_dict, &iter);
-            NSString *key;
-            while (nullptr != (key = FLDictIterator_GetKey(&iter, &_sharedKeys))) {
-                [keys addObject: key];
-                FLDictIterator_Next(&iter);
-            }
-        }
-        _keys= keys;
-    }
-    return _keys;
+    return [self mutableCopy];
 }
 
 

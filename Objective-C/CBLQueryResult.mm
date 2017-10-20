@@ -14,20 +14,30 @@
 #import "CBLPropertyExpression.h"
 #import "CBLQueryResultSet+Internal.h"
 #import "CBLSharedKeys.hh"
+#import "MRoot.hh"
+
+
+using namespace cbl;
+using namespace fleece;
+using namespace fleeceapi;
 
 
 @implementation CBLQueryResult {
     CBLQueryResultSet* _rs;
     FLArrayIterator _columns;
+    MContext* _context;
 }
 
 
 - (instancetype) initWithResultSet: (CBLQueryResultSet*)rs
-                      c4Enumerator: (C4QueryEnumerator*)e {
+                      c4Enumerator: (C4QueryEnumerator*)e
+                           context: (MContext*)context
+{
     self = [super init];
     if (self) {
         _rs = rs;
         _columns = e->columns;
+        _context = context;
     }
     return self;
 }
@@ -57,7 +67,7 @@
 
 
 - (nullable NSDate*) dateAtIndex: (NSUInteger)index {
-    return [CBLJSON dateWithJSONObject: [self fleeceValueToObjectAtIndex: index]];
+    return asDate([self fleeceValueToObjectAtIndex: index]);
 }
 
 
@@ -87,7 +97,7 @@
 
 
 - (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
-    return $castIf(NSNumber, [self fleeceValueToObjectAtIndex: index]);
+    return asNumber([self fleeceValueToObjectAtIndex: index]);
 }
 
 
@@ -97,7 +107,7 @@
 
 
 - (nullable NSString*) stringAtIndex: (NSUInteger)index {
-    return $castIf(NSString, [self fleeceValueToObjectAtIndex: index]);
+    return asString([self fleeceValueToObjectAtIndex: index]);
 }
 
 
@@ -276,10 +286,10 @@
 
 - (id) fleeceValueToObjectAtIndex: (NSUInteger)index {
     FLValue value = [self fleeceValueAtIndex: index];
-    if (value != nullptr)
-        return [CBLData fleeceValueToObject: value datasource: _rs database: [self database]];
-    else
+    if (value == nullptr)
         return nil;
+    MRoot<id> root(_context, value, false);
+    return root.asNative();
 }
 
 

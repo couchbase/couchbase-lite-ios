@@ -15,6 +15,9 @@
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
 #import "c4BlobStore.h"
+#import "CBLData.h"
+
+using namespace cbl;
 
 extern "C" {
 #import "MYErrorUtils.h"
@@ -103,9 +106,9 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         tempProps[kTypeMetaProperty] = nil;
         _properties = tempProps;
 
-        _length = $castIf(NSNumber, _properties[@"length"]).unsignedLongLongValue;
-        _digest = $castIf(NSString, _properties[@"digest"]);
-        _contentType = $castIf(NSString, _properties[@"content-type"]);
+        _length = asNumber(_properties[@"length"]).unsignedLongLongValue;
+        _digest = asString(_properties[@"digest"]);
+        _contentType = asString(_properties[@"content-type"]);
         if (!_digest) {
             C4Warn("Blob read from database has missing digest");
             _digest = @"";
@@ -265,12 +268,14 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 }
 
 
-- (BOOL) cbl_fleeceEncode: (FLEncoder)encoder
-                 database: (CBLDatabase*)database
-                    error: (NSError**)outError
-{
-    if(![self installInDatabase: database error: outError])
-        return NO;
+- (void) fl_encodeToFLEncoder: (FLEncoder)encoder {
+    CBLDocument *document = (__bridge CBLDocument*)FLEncoder_GetExtraInfo(encoder);
+    CBLDatabase* database = document.database;
+    NSError *error;
+    if (![self installInDatabase: database error: &error]) {
+        [document setEncodingError: error];
+        return;
+    }
     
     NSDictionary* dict = self.jsonRepresentation;
     FLEncoder_BeginDict(encoder, [dict count]);
@@ -281,7 +286,6 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         FLEncoder_WriteNSObject(encoder, value);
     }
     FLEncoder_EndDict(encoder);
-    return YES;
 }
 
 

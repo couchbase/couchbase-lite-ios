@@ -10,7 +10,7 @@
 #import "CBLReadOnlyDictionary.h"
 
 /** Readonly version of the CBLDocument. */
-@interface CBLReadOnlyDocument : CBLReadOnlyDictionary
+@interface CBLReadOnlyDocument : NSObject <CBLReadOnlyDictionary>
 
 /** The document's ID. */
 @property (readonly, nonatomic) NSString* id;
