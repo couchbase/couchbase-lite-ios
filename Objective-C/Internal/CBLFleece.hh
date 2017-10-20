@@ -19,6 +19,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 namespace cbl {
+
+    // Returns true if newValue is different from oldValue. May return false positives.
+    bool valueWouldChange(id newValue,
+                          const fleeceapi::MValue<id> &oldValue,
+                          fleeceapi::MCollection<id> &container);
+
+    bool      asBool    (const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
+    NSInteger asInteger (const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
+    long long asLongLong(const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
+    float     asFloat   (const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
+    double    asDouble  (const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
+    
     class DocContext : public fleeceapi::MContext {
     public:
         DocContext(CBLDatabase *db, CBLC4Document* __nullable doc);
@@ -34,6 +46,7 @@ namespace cbl {
         CBLC4Document* _doc;
         NSMapTable* _fleeceToNSStrings;
     };
+
 }
 
 
@@ -66,17 +79,5 @@ namespace cbl {
 - (instancetype) initWithCopyOfMDict: (const fleeceapi::MDict<id>&)mDict
                            isMutable: (bool)isMutable;
 @end
-
-
-// Returns true if newValue is different from oldValue. May return false positives.
-bool valueWouldChange(id newValue,
-                      const fleeceapi::MValue<id> &oldValue,
-                      fleeceapi::MCollection<id> &container);
-
-bool      asBool    (const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
-NSInteger asInteger (const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
-long long asLongLong(const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
-float     asFloat   (const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
-double    asDouble  (const fleeceapi::MValue<id>&, const fleeceapi::MCollection<id> &container);
 
 NS_ASSUME_NONNULL_END

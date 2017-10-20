@@ -14,6 +14,13 @@
 #import "c4Document+Fleece.h"
 
 
+@implementation NSObject (CBLFleece)
+- (fleeceapi::MCollection<id>*) fl_collection {
+    return nullptr;
+}
+@end
+
+
 namespace cbl {
     DocContext::DocContext(CBLDatabase *db, CBLC4Document *doc)
     :fleeceapi::MContext({}, db.sharedKeys)
@@ -87,65 +94,61 @@ namespace fleeceapi {
 
 }
 
-using namespace fleeceapi;
+
+namespace cbl {
+    using namespace fleeceapi;
+
+    bool valueWouldChange(id newValue, const MValue<id> &oldValue, MCollection<id> &container) {
+        // As a simplification we assume that array and dict values are always different, to avoid
+        // a possibly expensive comparison.
+        auto oldType = oldValue.value().type();
+        if (oldType == kFLUndefined || oldType == kFLDict || oldType == kFLArray)
+            return true;
+        else if ([newValue isKindOfClass: [CBLReadOnlyArray class]]
+                || [newValue isKindOfClass: [CBLReadOnlyArray class]])
+            return true;
+        else
+            return ![newValue isEqual: oldValue.asNative(&container)];
+    }
 
 
-bool valueWouldChange(id newValue, const MValue<id> &oldValue, MCollection<id> &container) {
-    // As a simplification we assume that array and dict values are always different, to avoid
-    // a possibly expensive comparison.
-    auto oldType = oldValue.value().type();
-    if (oldType == kFLUndefined || oldType == kFLDict || oldType == kFLArray)
-        return true;
-    else if ([newValue isKindOfClass: [CBLReadOnlyArray class]]
-            || [newValue isKindOfClass: [CBLReadOnlyArray class]])
-        return true;
-    else
-        return ![newValue isEqual: oldValue.asNative(&container)];
-}
+    bool asBool(const MValue<id> &val, const MCollection<id> &container) {
+        if (val.value())
+            return val.value().asBool();
+        else
+            return asBool(val.asNative(&container));
+    }
 
 
-@implementation NSObject (CBLFleece)
-- (fleeceapi::MCollection<id>*) fl_collection {
-    return nullptr;
-}
-@end
+    NSInteger asInteger(const MValue<id> &val, const MCollection<id> &container) {
+        if (val.value())
+            return val.value().asInt();
+        else
+            return asInteger(val.asNative(&container));
+    }
 
 
-bool asBool(const MValue<id> &val, const MCollection<id> &container) {
-    if (val.value())
-        return val.value().asBool();
-    else
-        return asBool(val.asNative(&container));
-}
+    long long asLongLong(const MValue<id> &val, const MCollection<id> &container) {
+        if (val.value())
+            return val.value().asInt();
+        else
+            return asLongLong(val.asNative(&container));
+    }
 
 
-NSInteger asInteger(const MValue<id> &val, const MCollection<id> &container) {
-    if (val.value())
-        return val.value().asInt();
-    else
-        return asInteger(val.asNative(&container));
-}
+    float asFloat(const MValue<id> &val, const MCollection<id> &container) {
+        if (val.value())
+            return val.value().asFloat();
+        else
+            return asFloat(val.asNative(&container));
+    }
 
 
-long long asLongLong(const MValue<id> &val, const MCollection<id> &container) {
-    if (val.value())
-        return val.value().asInt();
-    else
-        return asLongLong(val.asNative(&container));
-}
+    double asDouble(const MValue<id> &val, const MCollection<id> &container) {
+        if (val.value())
+            return val.value().asDouble();
+        else
+            return asDouble(val.asNative(&container));
+    }
 
-
-float asFloat(const MValue<id> &val, const MCollection<id> &container) {
-    if (val.value())
-        return val.value().asFloat();
-    else
-        return asFloat(val.asNative(&container));
-}
-
-
-double asDouble(const MValue<id> &val, const MCollection<id> &container) {
-    if (val.value())
-        return val.value().asDouble();
-    else
-        return asDouble(val.asNative(&container));
 }

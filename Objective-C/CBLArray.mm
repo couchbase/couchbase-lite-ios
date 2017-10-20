@@ -60,7 +60,7 @@
     // by translating them to an NSNull so they have the same behavior in the document.
     if (!value) value = [NSNull null];
 
-    if (valueWouldChange(value, _array.get(index), _array)) {
+    if (cbl::valueWouldChange(value, _array.get(index), _array)) {
         if (!_array.set(index, [value cbl_toCBLObject]))
             throwRangeException(index);
     }

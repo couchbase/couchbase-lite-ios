@@ -113,7 +113,7 @@ using namespace fleeceapi;
 
     if (value) {
         value = [value cbl_toCBLObject];
-        if (valueWouldChange(value, oldValue, _dict)) {
+        if (cbl::valueWouldChange(value, oldValue, _dict)) {
             _dict.set(keySlice, value);
             [self keysChanged];
         }
