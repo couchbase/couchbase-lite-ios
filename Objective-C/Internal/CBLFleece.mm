@@ -43,9 +43,11 @@ namespace fleeceapi {
     id MValue<id>::toNative(MValue *mv, MCollection<id> *parent, bool &cacheIt) {
         Value value = mv->value();
         switch (value.type()) {
-            case kFLArray:
+            case kFLArray: {
                 cacheIt = true;
-                return [[CBLArray alloc] initWithMValue: mv inParent: parent];
+                Class c = parent->mutableChildren() ? [CBLArray class] : [CBLReadOnlyArray class];
+                return [[c alloc] initWithMValue: mv inParent: parent];
+            }
             case kFLDict: {
                 cacheIt = true;
                 auto context = (DocContext*)parent->context();
@@ -56,7 +58,9 @@ namespace fleeceapi {
                     if (obj)
                         return obj;
                 }
-                return [[CBLDictionary alloc] initWithMValue: mv inParent: parent];
+                Class c = parent->mutableChildren() ? [CBLDictionary class]
+                                                    : [CBLReadOnlyDictionary class];
+                return [[c alloc] initWithMValue: mv inParent: parent];
             }
             default:
                 return value.asNSObject(parent->context()->sharedKeys());
