@@ -107,7 +107,7 @@ public struct DatabaseConfiguration {
         
         public func resolve(_ conflict: CBLConflict) -> CBLReadOnlyDocument? {
             let resolved = _resovler.resolve(conflict: Conflict(impl: conflict))
-            return resolved?._impl as? CBLReadOnlyDocument
+            return resolved?._impl
         }
     }
     
