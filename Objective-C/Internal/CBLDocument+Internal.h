@@ -101,7 +101,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLReadOnlyDictionary ()
 
 - (instancetype) initEmpty;
-
+- (void) keysChanged;
 @end
 
 /////////////////

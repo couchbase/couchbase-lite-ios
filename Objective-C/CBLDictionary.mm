@@ -113,13 +113,17 @@ using namespace fleeceapi;
 
     if (value) {
         value = [value cbl_toCBLObject];
-        if (valueWouldChange(value, oldValue, _dict))
+        if (valueWouldChange(value, oldValue, _dict)) {
             _dict.set(keySlice, value);
+            [self keysChanged];
+        }
     } else {
         // On Apple platforms, storing a nil value for a key means to delete the key.
         // (On other platforms, the null would be stored into the collection as a JSON null.)
-        if (!oldValue.isEmpty())
+        if (!oldValue.isEmpty()) {
             _dict.remove(keySlice);
+            [self keysChanged];
+        }
     }
 }
 
@@ -132,6 +136,7 @@ using namespace fleeceapi;
 - (void) removeObjectForKey: (NSString *)key {
     fleece::nsstring_slice keySlice(key);
     _dict.remove(keySlice);
+    [self keysChanged];
 }
 
 
@@ -142,6 +147,7 @@ using namespace fleeceapi;
         fleece::nsstring_slice keySlice(key);
         _dict.set(keySlice, [value cbl_toCBLObject]);
     }];
+    [self keysChanged];
 }
 
 
