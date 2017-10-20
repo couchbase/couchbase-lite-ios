@@ -24,6 +24,9 @@ using namespace fleeceapi;
 
 
 @implementation CBLReadOnlyDictionary
+{
+    NSArray* _keys;
+}
 
 
 @synthesize swiftObject=_swiftObject;
@@ -91,10 +94,22 @@ using namespace fleeceapi;
 
 
 - (NSArray*) keys {
-    NSMutableArray* keys = [NSMutableArray arrayWithCapacity: _dict.count()];
-    for (MDict<id>::iterator i(_dict); i; ++i)
-        [keys addObject: (NSString*)i.key()];
-    return keys;
+    // I cache the keys array because my -countByEnumeratingWithState method delegates to it,
+    // but it's not actually retained by anything related to the enumeration, so it's otherwise
+    // possible for the array to be dealloced while the enumeration is going on.
+    if (!_keys) {
+        NSMutableArray* keys = [NSMutableArray arrayWithCapacity: _dict.count()];
+        for (MDict<id>::iterator i(_dict); i; ++i)
+            [keys addObject: (NSString*)i.key()];
+        _keys = keys;
+    }
+    return _keys;
+}
+
+
+- (void) keysChanged {
+    // My subclass CBLDictionary calls this when it's mutated, to invalidate the array
+    _keys = nil;
 }
 
 
