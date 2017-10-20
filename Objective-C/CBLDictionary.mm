@@ -108,7 +108,7 @@ using namespace fleeceapi;
 
 
 - (void) setObject: (nullable id)value forKey: (NSString*)key {
-    fleece::nsstring_slice keySlice(key);
+    CBLStringBytes keySlice(key);
     const MValue<id> &oldValue = _dict.get(keySlice);
 
     if (value) {
@@ -134,7 +134,7 @@ using namespace fleeceapi;
 
 
 - (void) removeObjectForKey: (NSString *)key {
-    fleece::nsstring_slice keySlice(key);
+    CBLStringBytes keySlice(key);
     _dict.remove(keySlice);
     [self keysChanged];
 }
@@ -144,7 +144,7 @@ using namespace fleeceapi;
     _dict.clear();
     
     [dictionary enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
-        fleece::nsstring_slice keySlice(key);
+        CBLStringBytes keySlice(key);
         _dict.set(keySlice, [value cbl_toCBLObject]);
     }];
     [self keysChanged];

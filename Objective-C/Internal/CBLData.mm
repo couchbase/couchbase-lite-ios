@@ -37,17 +37,13 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 
 @implementation NSArray (CBLConversions)
 - (id) cbl_toCBLObject {
-    CBLArray* array = [[CBLArray alloc] init];
-    [array setArray: self];
-    return array;
+    return [[CBLArray alloc] initWithArray: self];
 }
 @end
 
 @implementation NSDictionary (CBLConversions)
 - (id) cbl_toCBLObject {
-    CBLDictionary* dict = [[CBLDictionary alloc] init];
-    [dict setDictionary: self];
-    return dict;
+    return [[CBLDictionary alloc] initWithDictionary: self];
 }
 @end
 

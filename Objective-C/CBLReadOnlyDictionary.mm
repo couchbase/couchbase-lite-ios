@@ -99,7 +99,7 @@ using namespace fleeceapi;
     if (!_keys) {
         NSMutableArray* keys = [NSMutableArray arrayWithCapacity: _dict.count()];
         for (MDict<id>::iterator i(_dict); i; ++i)
-            [keys addObject: (NSString*)i.key()];
+            [keys addObject: i.nativeKey()];
         _keys = keys;
     }
     return _keys;
@@ -203,8 +203,9 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 - (NSDictionary<NSString*,id>*) toDictionary {
     NSMutableDictionary* result = [NSMutableDictionary dictionaryWithCapacity: _dict.count()];
-    for (MDict<id>::iterator i(_dict); i; ++i)
-        result[(NSString*)i.key()] = [i.nativeValue() cbl_toPlainObject];
+    for (MDict<id>::iterator i(_dict); i; ++i) {
+        result[i.nativeKey()] = [i.nativeValue() cbl_toPlainObject];
+    }
     return result;
 }
 

@@ -11,6 +11,7 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
 #import "MCollection.hh"
+#import "MDictIterator.hh"
 #import "c4Document+Fleece.h"
 
 
@@ -91,6 +92,17 @@ namespace fleeceapi {
     void MValue<id>::encodeNative(Encoder &enc, id obj) {
         enc << obj;
     }
+
+    template<>
+    id MDictIterator<id>::nativeKey() const {
+        if (_iteratingMap) {
+            return key().asNSString();
+        } else {
+            auto sharedStrings = ((DocContext*)_dict.context())->fleeceToNSStrings();
+            return _dictIter.keyAsNSString(sharedStrings);
+        }
+    }
+
 
 }
 

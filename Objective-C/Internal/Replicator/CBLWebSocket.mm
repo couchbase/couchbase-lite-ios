@@ -199,7 +199,7 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
         _logic[slice2string(header.keyString())] = slice2string(header.value().asString());
     slice cookies = _options[kC4ReplicatorOptionCookies].asString();
     if (cookies)
-        [_logic addValue: (NSString*)cookies forHTTPHeaderField: @"Cookie"];
+        [_logic addValue: cookies.asNSString() forHTTPHeaderField: @"Cookie"];
 
     _logic[@"Connection"] = @"Upgrade";
     _logic[@"Upgrade"] = @"websocket";
