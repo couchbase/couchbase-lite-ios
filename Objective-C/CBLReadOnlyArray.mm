@@ -76,7 +76,8 @@ using namespace fleeceapi;
 
 
 [[noreturn]] static void throwRangeException(NSUInteger index) {
-    [NSException raise: NSRangeException format: @"CBLArray index %zu is out of range", index];
+    [NSException raise: NSRangeException format: @"CBLArray index %lu is out of range",
+        (unsigned long)index];
     abort();
 }
 
