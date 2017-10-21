@@ -134,7 +134,7 @@ namespace cbl {
 
     NSInteger asInteger(const MValue<id> &val, const MCollection<id> &container) {
         if (val.value())
-            return val.value().asInt();
+            return (NSInteger)val.value().asInt();
         else
             return asInteger(val.asNative(&container));
     }
