@@ -108,7 +108,7 @@ static NSString* defaultDirectory() {
 
 
 static const C4DatabaseConfig kDBConfig = {
-    .flags = (kC4DB_Create | kC4DB_AutoCompact | kC4DB_Bundled | kC4DB_SharedKeys),
+    .flags = (kC4DB_Create | kC4DB_AutoCompact | kC4DB_SharedKeys),
     .storageEngine = kC4SQLiteStorageEngine,
     .versioning = kC4RevisionTrees,
 };
@@ -334,7 +334,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     NSString* path = databasePath(name, directory ?: defaultDirectory());
     slice bPath(path.fileSystemRepresentation);
     C4Error err;
-    return c4db_deleteAtPath(bPath, &kDBConfig, &err) || err.code==0 || convertError(err, outError);
+    return c4db_deleteAtPath(bPath, &err) || err.code==0 || convertError(err, outError);
 }
 
 
