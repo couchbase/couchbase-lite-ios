@@ -42,7 +42,7 @@ using namespace fleeceapi;
 }
 
 
-#pragma mark - CBLReadOnlyArray
+#pragma mark - CBLArray
 
 
 - (NSUInteger) count {
@@ -50,8 +50,8 @@ using namespace fleeceapi;
 }
 
 
-- (nullable CBLReadOnlyArray*) arrayAtIndex: (NSUInteger)index {
-    return $castIf(CBLReadOnlyArray, [self fleeceValueToObjectAtIndex: index]);
+- (nullable CBLArray*) arrayAtIndex: (NSUInteger)index {
+    return $castIf(CBLArray, [self fleeceValueToObjectAtIndex: index]);
 }
 
 
@@ -70,8 +70,8 @@ using namespace fleeceapi;
 }
 
 
-- (nullable CBLReadOnlyDictionary*) dictionaryAtIndex: (NSUInteger)index {
-    return $castIf(CBLReadOnlyDictionary, [self fleeceValueToObjectAtIndex: index]);
+- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
+    return $castIf(CBLDictionary, [self fleeceValueToObjectAtIndex: index]);
 }
 
 
@@ -121,14 +121,14 @@ using namespace fleeceapi;
 }
 
 
-- (CBLReadOnlyFragment*) objectAtIndexedSubscript: (NSUInteger)index {
+- (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index {
     if (index >= self.count)
         return nil;
-    return [[CBLReadOnlyFragment alloc] initWithParent: self index: index];
+    return [[CBLFragment alloc] initWithParent: self index: index];
 }
 
 
-#pragma mark - CBLReadOnlyDictionary
+#pragma mark - CBLDictionary
 
 
 - (NSArray*) keys {
@@ -137,7 +137,7 @@ using namespace fleeceapi;
 }
 
 
-- (nullable CBLReadOnlyArray*) arrayForKey: (NSString*)key {
+- (nullable CBLArray*) arrayForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
         return [self arrayAtIndex: index];
@@ -169,7 +169,7 @@ using namespace fleeceapi;
 }
 
 
-- (nullable CBLReadOnlyDictionary*) dictionaryForKey: (NSString*)key {
+- (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
         return [self dictionaryAtIndex: index];
@@ -251,7 +251,7 @@ using namespace fleeceapi;
 }
 
 
-- (CBLReadOnlyFragment*) objectForKeyedSubscript: (NSString*)key {
+- (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
     return [self objectAtIndexedSubscript: [self indexForColumnName: key]];
 }
 

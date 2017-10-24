@@ -222,7 +222,7 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     // MARK: Internal
     
     
-    init(_ impl: CBLReadOnlyDictionary) {
+    init(_ impl: CBLDictionary) {
         _impl = impl
         _impl.swiftObject = self
     }
@@ -233,6 +233,6 @@ public class ReadOnlyDictionaryObject: ReadOnlyDictionaryProtocol {
     }
     
     
-    let _impl: CBLReadOnlyDictionary
+    let _impl: CBLDictionary
     
 }

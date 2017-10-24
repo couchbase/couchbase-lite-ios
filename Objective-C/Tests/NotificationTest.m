@@ -27,7 +27,7 @@
     __block NSError* error;
     bool ok = [self.db inBatch: &error do: ^{
         for (unsigned i = 0; i < 10; i++) {
-            CBLDocument* doc = [[CBLDocument alloc] initWithID: [NSString stringWithFormat: @"doc-%u", i]];
+            CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: [NSString stringWithFormat: @"doc-%u", i]];
             [doc setObject: @"demo" forKey: @"type"];
             Assert([_db saveDocument: doc error: &error], @"Error saving: %@", error);
         }
@@ -43,11 +43,11 @@
 
 - (void) testDocumentChange {
     // Create doc1 and doc2
-    CBLDocument *doc1 = [self createDocument: @"doc1"];
+    CBLMutableDocument *doc1 = [self createDocument: @"doc1"];
     [doc1 setObject: @"Scott" forKey: @"name"];
     [self saveDocument: doc1];
     
-    CBLDocument *doc2 = [self createDocument: @"doc2"];
+    CBLMutableDocument *doc2 = [self createDocument: @"doc2"];
     [doc2 setObject: @"Daniel" forKey: @"name"];
     [self saveDocument: doc2];
     
@@ -75,7 +75,7 @@
     Assert([_db deleteDocument: doc2 error: &error], @"Error deleting: %@", error);
     
     // Create doc3
-    CBLDocument *doc3 = [self createDocument: @"doc3"];
+    CBLMutableDocument *doc3 = [self createDocument: @"doc3"];
     [doc3 setObject: @"Jack" forKey: @"name"];
     [self saveDocument: doc3];
     
@@ -89,7 +89,7 @@
 
 
 - (void) testAddSameChangeListeners {
-    CBLDocument *doc1 = [self createDocument: @"doc1"];
+    CBLMutableDocument *doc1 = [self createDocument: @"doc1"];
     [doc1 setObject: @"Scott" forKey: @"name"];
     [self saveDocument: doc1];
     
@@ -125,7 +125,7 @@
 
 
 - (void) testRemoveDocumentChangeListener {
-    CBLDocument *doc1 = [self createDocument: @"doc1"];
+    CBLMutableDocument *doc1 = [self createDocument: @"doc1"];
     [doc1 setObject: @"Scott" forKey: @"name"];
     [self saveDocument: doc1];
     

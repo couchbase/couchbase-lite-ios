@@ -7,16 +7,16 @@
 //
 
 #import "CBLConflictResolver.h"
-#import "CBLReadOnlyDocument.h"
+#import "CBLDocument.h"
 #import "CBLDocument+Internal.h"
 #import "CBLDatabase+Internal.h"
 
 
 @implementation CBLDefaultConflictResolver
 
-- (nullable CBLReadOnlyDocument*) resolve: (CBLConflict*)conflict {
+- (nullable CBLDocument*) resolve: (CBLConflict*)conflict {
     // Default resolution algorithm is "most active wins", i.e. higher generation number.
-    CBLReadOnlyDocument *mine = conflict.mine, *theirs = conflict.theirs;
+    CBLDocument *mine = conflict.mine, *theirs = conflict.theirs;
     if (mine.generation >= theirs.generation)       // hope I die before I get old
         return mine;
     else
@@ -34,9 +34,9 @@
 @synthesize mine=_mine, theirs=_theirs, base=_base;
 
 
-- (instancetype) initWithMine: (CBLReadOnlyDocument*)mine
-                       theirs: (CBLReadOnlyDocument*)theirs
-                         base: (CBLReadOnlyDocument*)base
+- (instancetype) initWithMine: (CBLDocument*)mine
+                       theirs: (CBLDocument*)theirs
+                         base: (CBLDocument*)base
 {
     self = [super init];
     if (self) {

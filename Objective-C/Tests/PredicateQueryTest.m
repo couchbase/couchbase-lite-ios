@@ -20,10 +20,10 @@
 @implementation PredicateQueryTest
 
 
-- (CBLDocument*) docForRow: (CBLQueryRow*)row {
+- (CBLMutableDocument*) docForRow: (CBLQueryRow*)row {
     NSString* docID = [row stringAtIndex: 0];
     C4SequenceNumber sequence = [row integerAtIndex: 1];
-    CBLDocument* doc = [_db documentWithID: docID];
+    CBLMutableDocument* doc = [_db documentWithID: docID];
     AssertEqual(doc.sequence, sequence);
     return doc;
 }
@@ -178,7 +178,7 @@
 - (void) testAllDocsQuery {
     [self loadJSONResource: @"names_100"];
     uint64_t n = 0;
-    for (CBLDocument* doc in self.db.allDocuments) {
+    for (CBLMutableDocument* doc in self.db.allDocuments) {
         ++n;
         NSString* expectedID = [NSString stringWithFormat: @"doc-%03llu", n];
         AssertEqualObjects(doc.id, expectedID);
@@ -213,7 +213,7 @@
             NSString* docID = [row stringAtIndex: 0];
             AssertEqualObjects(docID, @"doc-009");
             AssertEqual((uint64_t)[row integerAtIndex: 1], 9llu);
-            CBLDocument* doc = [self docForRow: row];
+            CBLMutableDocument* doc = [self docForRow: row];
             AssertEqualObjects(doc.id, @"doc-009");
             AssertEqual(doc.sequence, 9llu);
             AssertEqualObjects([[doc objectForKey: @"name"] objectForKey: @"first"], @"Claude");
@@ -331,7 +331,7 @@
     
     NSArray* expected = @[@"Marcy", @"Marlen", @"Maryjo", @"Margaretta", @"Margrett"];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        CBLDocument* doc = [self docForRow: row];
+        CBLMutableDocument* doc = [self docForRow: row];
         AssertEqualObjects(doc[@"name"][@"first"], expected[(NSUInteger)(n-1)]);
     }];
     AssertEqual((int)numRows, (int)expected.count);
@@ -348,7 +348,7 @@
     
     NSArray* expected = @[@"Marcy", @"Marlen", @"Maryjo", @"Margaretta", @"Margrett"];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        CBLDocument* doc = [self docForRow: row];
+        CBLMutableDocument* doc = [self docForRow: row];
         AssertEqualObjects(doc[@"name"][@"first"], expected[(NSUInteger)(n-1)]);
     }];
     AssertEqual((int)numRows, (int)expected.count);
@@ -359,7 +359,7 @@
     // https://github.com/couchbase/couchbase-lite-ios/issues/1669
     for (int i = 0; i < 10; i++) {
         NSError* error;
-        CBLDocument* doc = [[CBLDocument alloc] init];
+        CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
         [doc setObject: @(1) forKey: @"number"];
         Assert([_db saveDocument: doc error:&error], @"Error when creating a document: %@", error);
     }
@@ -369,7 +369,7 @@
     q.distinct = YES;
     Assert(q);
     uint64_t numRows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
-        CBLDocument* doc = [self docForRow: row];
+        CBLMutableDocument* doc = [self docForRow: row];
         AssertEqualObjects(doc.toDictionary, @{@"number": @(1)});
     }];
     AssertEqual(numRows, 1u);
@@ -379,12 +379,12 @@
 - (void) failingTest13_Null {
     // https://github.com/couchbase/couchbase-lite-ios/issues/1670
     NSError* error;
-    CBLDocument* doc1 = [self.db documentWithID: @"doc1"];
+    CBLMutableDocument* doc1 = [self.db documentWithID: @"doc1"];
     [doc1 setObject: @"Scott" forKey: @"name"];
     [doc1 setObject: [NSNull null] forKey: @"address"];
     Assert([_db saveDocument: doc1 error: &error], @"Error when saving a document: %@", error);
     
-    CBLDocument* doc2 = [self.db documentWithID: @"doc2"];
+    CBLMutableDocument* doc2 = [self.db documentWithID: @"doc2"];
     [doc2 setObject: @"Tiger" forKey: @"name"];
     [doc2 setObject: @"123 1st ave." forKey: @"address"];
     [doc2 setObject: @(20) forKey: @"age"];
@@ -423,7 +423,7 @@
     
     NSArray* expected = @[@"Marcy", @"Margaretta", @"Margrett", @"Marlen", @"Maryjo"];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
-        CBLDocument* doc = [self docForRow: row];
+        CBLMutableDocument* doc = [self docForRow: row];
         NSString* first = [[doc objectForKey: @"name"] objectForKey: @"first"];
         AssertEqualObjects(first, expected[(NSUInteger)(n-1)]);
     }];

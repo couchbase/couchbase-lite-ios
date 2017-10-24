@@ -7,18 +7,18 @@
 //
 
 #pragma once
-#import "CBLArray.h"
+#import "CBLMutableArray.h"
 #import "CBLBlob.h"
 #import "CBLC4Document.h"
 #import "CBLDatabase.h"
-#import "CBLDictionary.h"
-#import "CBLDocument.h"
+#import "CBLMutableDictionary.h"
+#import "CBLMutableDocument.h"
 #import "CBLDocumentFragment.h"
+#import "CBLMutableFragment.h"
+#import "CBLArray.h"
+#import "CBLDocument.h"
+#import "CBLDictionary.h"
 #import "CBLFragment.h"
-#import "CBLReadOnlyArray.h"
-#import "CBLReadOnlyDocument.h"
-#import "CBLReadOnlyDictionary.h"
-#import "CBLReadOnlyFragment.h"
 #import "Fleece.h"
 
 
@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 //////////////////
 
-@interface CBLDocument ()
+@interface CBLMutableDocument ()
 
 - (BOOL) save: (NSError**)error;
 
@@ -40,10 +40,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 //////////////////
 
-@interface CBLReadOnlyDocument ()
+@interface CBLDocument ()
 {
     @protected
-    CBLReadOnlyDictionary* _dict;
+    CBLDictionary* _dict;
 }
 
 @property (nonatomic, nullable) CBLDatabase* database;
@@ -73,8 +73,8 @@ NS_ASSUME_NONNULL_BEGIN
                             error: (NSError**)outError;
 
 - (BOOL) selectConflictingRevision;
-- (BOOL) selectCommonAncestorOfDoc: (CBLReadOnlyDocument*)doc1
-                            andDoc: (CBLReadOnlyDocument*)doc2;
+- (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
+                            andDoc: (CBLDocument*)doc2;
 
 - (nullable NSData*) encode: (NSError**)outError;
 
@@ -82,7 +82,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 //////////////////
 
-@interface CBLDictionary ()
+@interface CBLMutableDictionary ()
 
 @property (readonly, nonatomic) BOOL changed;
 
@@ -90,7 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 //////////////////
 
-@interface CBLReadOnlyArray ()
+@interface CBLArray ()
 
 - (instancetype) initEmpty;
 
@@ -98,7 +98,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 //////////////////
 
-@interface CBLReadOnlyDictionary ()
+@interface CBLDictionary ()
 
 - (instancetype) initEmpty;
 - (void) keysChanged;
@@ -106,7 +106,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /////////////////
 
-@interface CBLReadOnlyFragment ()
+@interface CBLFragment ()
 {
     @protected
     id _parent;
@@ -121,9 +121,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /////////////////
 
-@interface CBLDocumentFragment ()
+@interface CBLMutableDocumentFragment ()
 
-- (instancetype) initWithDocument: (CBLDocument*)document;
+- (instancetype) initWithDocument: (CBLMutableDocument*)document;
 
 @end
 

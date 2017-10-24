@@ -214,7 +214,7 @@ extern "C" {
 }
 
 
-- (nullable NSEnumerator<CBLDocument*>*) allDocuments: (NSError**)outError {
+- (nullable NSEnumerator<CBLMutableDocument*>*) allDocuments: (NSError**)outError {
     return [self startEnumeratorForDocs: true error: outError];
 }
 

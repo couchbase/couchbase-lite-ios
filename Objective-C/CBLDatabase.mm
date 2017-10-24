@@ -18,7 +18,7 @@
 #import "c4Observer.h"
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
-#import "CBLDocument.h"
+#import "CBLMutableDocument.h"
 #import "CBLDocument+Internal.h"
 #import "CBLDocumentChange.h"
 #import "CBLDocumentChangeListener.h"
@@ -197,7 +197,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 #pragma mark - GET EXISTING DOCUMENT
 
 
-- (CBLDocument*) documentWithID: (NSString*)documentID {
+- (CBLMutableDocument*) documentWithID: (NSString*)documentID {
     return [self documentWithID: documentID mustExist: YES error: nil];
 }
 
@@ -214,15 +214,15 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 #pragma mark - SUBSCRIPTION
 
 
-- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
-    return [[CBLDocumentFragment alloc] initWithDocument: [self documentWithID: documentID]];
+- (CBLMutableDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
+    return [[CBLMutableDocumentFragment alloc] initWithDocument: [self documentWithID: documentID]];
 }
 
 
 #pragma mark - SAVE
 
 
-- (BOOL) saveDocument: (CBLDocument*)document error: (NSError**)error {
+- (BOOL) saveDocument: (CBLMutableDocument*)document error: (NSError**)error {
     if ([self prepareDocument: document error: error])
         return [document save: error];
     else
@@ -230,7 +230,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
-- (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error {
+- (BOOL) deleteDocument: (CBLMutableDocument*)document error: (NSError**)error {
     if ([self prepareDocument: document error: error])
         return [document deleteDocument: error];
     else
@@ -238,7 +238,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
-- (BOOL) purgeDocument: (CBLDocument *)document error: (NSError**)error {
+- (BOOL) purgeDocument: (CBLMutableDocument *)document error: (NSError**)error {
     if ([self prepareDocument: document error: error])
         return [document purge: error];
     else
@@ -478,7 +478,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 #pragma mark - QUERIES:
 
 
-- (NSEnumerator<CBLDocument*>*) allDocuments {
+- (NSEnumerator<CBLMutableDocument*>*) allDocuments {
     [self mustBeOpen];
     
     if (!_allDocsQuery) {
@@ -632,20 +632,20 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 }
 
 
-- (nullable CBLDocument*) documentWithID: (NSString*)documentID
+- (nullable CBLMutableDocument*) documentWithID: (NSString*)documentID
                                mustExist: (bool)mustExist
                                    error: (NSError**)outError
 {
     [self mustBeOpen];
     
-    return [[CBLDocument alloc] initWithDatabase: self
+    return [[CBLMutableDocument alloc] initWithDatabase: self
                                       documentID: documentID
                                        mustExist: mustExist
                                            error: outError];
 }
 
 
-- (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error {
+- (BOOL) prepareDocument: (CBLMutableDocument*)document error: (NSError**)error {
     [self mustBeOpen];
     
     if (!document.database) {
@@ -803,7 +803,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
     C4Transaction t(_c4db);
     t.begin();
 
-    auto doc = [[CBLReadOnlyDocument alloc] initWithDatabase: self
+    auto doc = [[CBLDocument alloc] initWithDatabase: self
                                                   documentID: docID
                                                    mustExist: YES
                                                        error: outError];
@@ -811,7 +811,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
         return false;
 
     // Read the conflicting remote revision:
-    auto otherDoc = [[CBLReadOnlyDocument alloc] initWithDatabase: self
+    auto otherDoc = [[CBLDocument alloc] initWithDatabase: self
                                                        documentID: docID
                                                         mustExist: YES
                                                             error: outError];
@@ -819,7 +819,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
         return false;
 
     // Read the common ancestor revision (if it's available):
-    auto baseDoc = [[CBLReadOnlyDocument alloc] initWithDatabase: self
+    auto baseDoc = [[CBLDocument alloc] initWithDatabase: self
                                                       documentID: docID
                                                        mustExist: YES
                                                            error: outError];
@@ -827,7 +827,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
         baseDoc = nil;
 
     // Call the conflict resolver:
-    CBLReadOnlyDocument* resolved;
+    CBLDocument* resolved;
     if (otherDoc.isDeleted) {
         resolved = doc;
     } else if (doc.isDeleted) {

@@ -59,9 +59,9 @@ public class DictionaryObject: ReadOnlyDictionaryObject, DictionaryProtocol {
     // MARK: Initializers
     
     
-    /// Initialize a new empty CBLDictionary object.
+    /// Initialize a new empty CBLMutableDictionary object.
     public init() {
-        super.init(CBLDictionary())
+        super.init(CBLMutableDictionary())
     }
     
     
@@ -71,7 +71,7 @@ public class DictionaryObject: ReadOnlyDictionaryObject, DictionaryProtocol {
     ///
     /// - Parameter dictionary: the dictionary object.
     public init(dictionary: Dictionary<String, Any>?) {
-        super.init(CBLDictionary())
+        super.init(CBLMutableDictionary())
         setDictionary(dictionary)
     }
     
@@ -273,7 +273,7 @@ public class DictionaryObject: ReadOnlyDictionaryObject, DictionaryProtocol {
     // MARK: Internal
     
     
-    init(_ impl: CBLDictionary) {
+    init(_ impl: CBLMutableDictionary) {
         super.init(impl)
     }
     
@@ -281,8 +281,8 @@ public class DictionaryObject: ReadOnlyDictionaryObject, DictionaryProtocol {
     // MARK: Private
     
     
-    private var dictImpl: CBLDictionary {
-        return _impl as! CBLDictionary
+    private var dictImpl: CBLMutableDictionary {
+        return _impl as! CBLMutableDictionary
     }
     
 }

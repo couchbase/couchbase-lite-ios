@@ -1009,7 +1009,7 @@ class DocumentTest: CBLTestCase {
     
     
     func failingTestToDictionary() throws {
-        // CBLDocument* doc1 = [self createDocument: @"doc1"];
+        // CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
         // [self populateData: doc1];
         // TODO: Should blob be serialized into JSON dictionary?
     }

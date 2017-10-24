@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDatabase, CBLQueryRow, CBLDocument;
+@class CBLDatabase, CBLQueryRow, CBLMutableDocument;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -138,10 +138,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSEnumerator<CBLQueryRow*>*) run: (NSError**)error;
 
 /** 
- A convenience method equivalent to -run: except that its enumerator returns CBLDocuments
+ A convenience method equivalent to -run: except that its enumerator returns CBLMutableDocuments
  directly, not CBLQueryRows.
  */
-- (nullable NSEnumerator<CBLDocument*>*) allDocuments: (NSError**)error;
+- (nullable NSEnumerator<CBLMutableDocument*>*) allDocuments: (NSError**)error;
 
 /** Not available. */
 - (instancetype) init NS_UNAVAILABLE;

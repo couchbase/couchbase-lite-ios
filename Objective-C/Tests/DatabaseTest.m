@@ -18,7 +18,7 @@
 
 @implementation DummyResolver
 
-- (CBLReadOnlyDocument*) resolve: (CBLConflict*)conflict {
+- (CBLDocument*) resolve: (CBLConflict*)conflict {
     NSAssert(NO, @"Resolver should not have been called!");
     return nil;
 }
@@ -49,8 +49,8 @@
 
 
 // helper method to save document
-- (CBLDocument*) generateDocument: (NSString*)docID {
-    CBLDocument* doc = [self createDocument: docID];
+- (CBLMutableDocument*) generateDocument: (NSString*)docID {
+    CBLMutableDocument* doc = [self createDocument: docID];
     [doc setObject:@1 forKey:@"key"];
     
     [self saveDocument: doc];
@@ -61,7 +61,7 @@
 
 
 // helper method to store Blob
-- (void) storeBlob: (CBLDatabase*)db doc: (CBLDocument*)doc content: (NSData*)content {
+- (void) storeBlob: (CBLDatabase*)db doc: (CBLMutableDocument*)doc content: (NSData*)content {
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
     [doc setObject: blob forKey: @"data"];
     [self saveDocument: doc];
@@ -85,7 +85,7 @@
 
 
 - (void) verifyGetDocument: (CBLDatabase*)db docID: (NSString*)docID value: (int)value {
-    CBLDocument* doc = [db documentWithID: docID];
+    CBLMutableDocument* doc = [db documentWithID: docID];
     AssertNotNil(doc);
     AssertEqualObjects(docID, doc.id);
     AssertFalse(doc.isDeleted);
@@ -97,7 +97,7 @@
 - (NSArray*) createDocs: (int)n {
     NSMutableArray* docs = [NSMutableArray arrayWithCapacity: n];
     for(int i = 0; i < n; i++){
-        CBLDocument* doc = [self createDocument: [NSString stringWithFormat: @"doc_%03d", i]];
+        CBLMutableDocument* doc = [self createDocument: [NSString stringWithFormat: @"doc_%03d", i]];
         [doc setObject: @(i) forKey:@"key"];
         [self saveDocument: doc];
         [docs addObject: doc];
@@ -115,7 +115,7 @@
 
 
 // helper method to purge doc and verify doc.
-- (void) purgeDocAndVerify: (CBLDocument*)doc {
+- (void) purgeDocAndVerify: (CBLMutableDocument*)doc {
     NSError* error;
     NSString* docID = doc.id;
     Assert([self.db purgeDocument: doc error: &error]);
@@ -417,7 +417,7 @@
 - (void) testSaveDoc {
     // store doc
     NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument: docID];
+    CBLMutableDocument* doc = [self generateDocument: docID];
     
     // update doc
     [doc setObject:@2 forKey:@"key"];
@@ -434,7 +434,7 @@
 - (void) testSaveDocInDifferentDBInstance {
     // store doc
     NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument: docID];
+    CBLMutableDocument* doc = [self generateDocument: docID];
     
     // create db with default
     NSError* error;
@@ -458,7 +458,7 @@
 - (void) testSaveDocInDifferentDB {
     // store doc
     NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument: docID];
+    CBLMutableDocument* doc = [self generateDocument: docID];
     
     // create db with default
     NSError* error;
@@ -482,7 +482,7 @@
 - (void) testSaveSameDocTwice {
     // store doc
     NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument: docID];
+    CBLMutableDocument* doc = [self generateDocument: docID];
     
     // second store
     [self saveDocument: doc];
@@ -508,7 +508,7 @@
 - (void) testSaveDocToClosedDB {
     [self closeDatabase: self.db];
     
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject:@1 forKey:@"key"];
     
     [self expectException: @"NSInternalInconsistencyException" in: ^{
@@ -521,7 +521,7 @@
     // delete db
     [self deleteDatabase: self.db];
     
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @1 forKey: @"key"];
     
     [self expectException: @"NSInternalInconsistencyException" in: ^{
@@ -534,7 +534,7 @@
 
 
 - (void) testDeletePreSaveDoc {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @1 forKey: @"key"];
     
     [self expectError: @"CouchbaseLite" code: 404 in: ^BOOL(NSError** error) {
@@ -547,7 +547,7 @@
 - (void) testDeleteDoc {
     // store doc
     NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument: docID];
+    CBLMutableDocument* doc = [self generateDocument: docID];
     
     NSError* error;
     Assert([self.db deleteDocument: doc error: &error]);
@@ -564,7 +564,7 @@
 - (void) testDeleteDocInDifferentDBInstance {
     // store doc
     NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument: docID];
+    CBLMutableDocument* doc = [self generateDocument: docID];
     
     // create db with same name
     NSError* error;
@@ -591,7 +591,7 @@
 - (void) testDeleteDocInDifferentDB {
     // store doc
     NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument: docID];
+    CBLMutableDocument* doc = [self generateDocument: docID];
     
     // create db with different name
     NSError* error;
@@ -619,7 +619,7 @@
 - (void) testDeleteSameDocTwice {
     // store doc
     NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument:docID];
+    CBLMutableDocument* doc = [self generateDocument:docID];
     
     // first time deletion
     NSError* error;
@@ -649,7 +649,7 @@
         for(int i = 0; i < 10; i++){
             NSError* err;
             NSString* docID = [[NSString alloc] initWithFormat: @"doc_%03d", i];
-            CBLDocument* doc = [self.db documentWithID: docID];
+            CBLMutableDocument* doc = [self.db documentWithID: docID];
             Assert([self.db deleteDocument: doc error: &err]);
             AssertNil(err);
             AssertNil([doc objectForKey: @"key"]);
@@ -665,7 +665,7 @@
 
 - (void) testDeleteDocOnClosedDB {
     // store doc
-    CBLDocument* doc = [self generateDocument: @"doc1"];
+    CBLMutableDocument* doc = [self generateDocument: @"doc1"];
     
     // close db
     [self closeDatabase: self.db];
@@ -679,7 +679,7 @@
 
 - (void) testDeleteDocOnDeletedDB {
     // store doc
-    CBLDocument* doc = [self generateDocument:@"doc1"];
+    CBLMutableDocument* doc = [self generateDocument:@"doc1"];
     
     // delete db
     [self deleteDatabase: self.db];
@@ -695,7 +695,7 @@
 
 
 - (void) testPurgePreSaveDoc {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     
     [self expectError: @"CouchbaseLite" code: 404 in: ^BOOL(NSError** error) {
         return [self.db purgeDocument: doc error: error];
@@ -706,7 +706,7 @@
 
 - (void) testPurgeDoc {
     // Store doc:
-    CBLDocument* doc = [self generateDocument: @"doc1"];
+    CBLMutableDocument* doc = [self generateDocument: @"doc1"];
     
     // Purge Doc:
     [self purgeDocAndVerify: doc];
@@ -721,7 +721,7 @@
 - (void) testPurgeDocInDifferentDBInstance {
     // store doc
     NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument: docID];
+    CBLMutableDocument* doc = [self generateDocument: docID];
     
     // create db instance with same name
     NSError* error;
@@ -748,7 +748,7 @@
 - (void) testPurgeDocInDifferentDB {
     // store doc
     NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument: docID];
+    CBLMutableDocument* doc = [self generateDocument: docID];
     
     // create db with different name
     NSError* error;
@@ -775,10 +775,10 @@
 - (void) testPurgeSameDocTwice {
     // store doc
     NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument: docID];
+    CBLMutableDocument* doc = [self generateDocument: docID];
     
     // get document for second purge
-    CBLDocument* doc1 = [self.db documentWithID: docID];
+    CBLMutableDocument* doc1 = [self.db documentWithID: docID];
     AssertNotNil(doc1);
     
     // Purge Doc first time
@@ -800,7 +800,7 @@
         for(int i = 0; i < 10; i++){
             //NSError* err;
             NSString* docID = [[NSString alloc] initWithFormat: @"doc_%03d", i];
-            CBLDocument* doc = [self.db documentWithID: docID];
+            CBLMutableDocument* doc = [self.db documentWithID: docID];
             [self purgeDocAndVerify: doc];
             AssertEqual(9 - i, (long)self.db.count);
         }
@@ -813,7 +813,7 @@
 
 - (void) testPurgeDocOnClosedDB {
     // store doc
-    CBLDocument* doc = [self generateDocument: @"doc1"];
+    CBLMutableDocument* doc = [self generateDocument: @"doc1"];
     
     // close db
     [self closeDatabase:self.db];
@@ -827,7 +827,7 @@
 
 - (void) testPurgeDocOnDeletedDB {
     // store doc
-    CBLDocument* doc = [self generateDocument: @"doc1"];
+    CBLMutableDocument* doc = [self generateDocument: @"doc1"];
    
     // delete db
     [self deleteDatabase: self.db];
@@ -858,7 +858,7 @@
 - (void) testCloseThenAccessDoc {
     // store doc
     NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument: docID];
+    CBLMutableDocument* doc = [self generateDocument: docID];
     
     // close db
     [self closeDatabase: self.db];
@@ -873,7 +873,7 @@
 
 - (void)testCloseThenAccessBlob {
     // store doc with blob
-    CBLDocument* doc = [self generateDocument: @"doc1"];
+    CBLMutableDocument* doc = [self generateDocument: @"doc1"];
     [self storeBlob: self.db doc: doc content: [@"12345" dataUsingEncoding: NSUTF8StringEncoding]];
     
     // clsoe db
@@ -944,7 +944,7 @@
 - (void) testDeleteThenAccessDoc {
     // store doc
     NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument: docID];
+    CBLMutableDocument* doc = [self generateDocument: docID];
     
     // delete db
     [self deleteDatabase: self.db];
@@ -959,7 +959,7 @@
 
 - (void) testDeleteThenAccessBlob {
     // store doc with blob
-    CBLDocument* doc = [self generateDocument: @"doc1"];
+    CBLMutableDocument* doc = [self generateDocument: @"doc1"];
     [self storeBlob: self.db doc: doc content: [@"12345" dataUsingEncoding: NSUTF8StringEncoding]];
     
     // delete db
@@ -1187,7 +1187,7 @@
     // Update each doc 25 times:
     NSError* error;
     [_db inBatch: &error do: ^{
-        for (CBLDocument* doc in docs) {
+        for (CBLMutableDocument* doc in docs) {
             for (NSUInteger i = 0; i < 25; i++) {
                 [doc setObject: @(i) forKey: @"number"];
                 [self saveDocument: doc];
@@ -1196,7 +1196,7 @@
     }];
     
     // Add each doc with a blob object:
-    for (CBLDocument* doc in docs) {
+    for (CBLMutableDocument* doc in docs) {
         NSData* content = [doc.id dataUsingEncoding: NSUTF8StringEncoding];
         CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
         [doc setObject: blob forKey: @"blob"];
@@ -1213,7 +1213,7 @@
     Assert([_db compact: &error], @"Error when compacting the database");
     
     // Delete all docs:
-    for (CBLDocument* doc in docs) {
+    for (CBLMutableDocument* doc in docs) {
         Assert([_db deleteDocument: doc error: &error], @"Error when deleting doc: %@", error);
         Assert(doc.isDeleted);
     }
@@ -1230,7 +1230,7 @@
 - (void) testCopy {
     for (NSUInteger i = 0; i < 10; i++) {
         NSString* docID = [NSString stringWithFormat: @"doc%lu", (unsigned long)i];
-        CBLDocument* doc = [self createDocument: docID];
+        CBLMutableDocument* doc = [self createDocument: docID];
         [doc setObject: docID forKey: @"name"];
         
         NSData* data = [docID dataUsingEncoding: NSUTF8StringEncoding];
@@ -1268,7 +1268,7 @@
         NSString* docID = [r stringAtIndex: 0];
         Assert(docID);
         
-        CBLDocument* doc = [nudb documentWithID: docID];
+        CBLMutableDocument* doc = [nudb documentWithID: docID];
         Assert(doc);
         AssertEqualObjects([doc stringForKey:@"name"], docID);
         

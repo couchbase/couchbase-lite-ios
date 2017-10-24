@@ -17,7 +17,7 @@
 
 
 - (void) testBasicGetFragmentValues {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setDictionary: @{ @"name": @"Jason",
                            @"address": @{
                                    @"street": @"1 Main Street",
@@ -39,12 +39,12 @@
 
 
 - (void) testBasicSetFragmentValues {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"name"].value = @"Jason";
     
-    doc[@"address"].value = [[CBLDictionary alloc] init];
+    doc[@"address"].value = [[CBLMutableDictionary alloc] init];
     doc[@"address"][@"street"].value = @"1 Main Street";
-    doc[@"address"][@"phones"].value = [[CBLDictionary alloc] init];
+    doc[@"address"][@"phones"].value = [[CBLMutableDictionary alloc] init];
     doc[@"address"][@"phones"][@"mobile"].value = @"650-123-4567";
     
     AssertEqualObjects(doc[@"name"].string, @"Jason");
@@ -60,7 +60,7 @@
                                    @"state": @"CA"}};
     [self saveDocument: [self createDocument: @"doc1" dictionary: dict]];
     
-    CBLDocumentFragment* doc = _db[@"doc1"];
+    CBLMutableDocumentFragment* doc = _db[@"doc1"];
     AssertNotNil(doc);
     Assert(doc.exists);
     AssertNotNil(doc.document);
@@ -72,7 +72,7 @@
 
 
 - (void) testGetDocFragmentWithNonExistingID {
-    CBLDocumentFragment* doc = _db[@"doc1"];
+    CBLMutableDocumentFragment* doc = _db[@"doc1"];
     AssertNotNil(doc);
     AssertFalse(doc.exists);
     AssertNil(doc.document);
@@ -87,9 +87,9 @@
                                    @"street": @"1 Main street",
                                    @"city": @"Mountain View",
                                    @"state": @"CA"}};
-    CBLDocument* doc = [self createDocument: @"doc1" dictionary: dict];
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
-        CBLFragment* fragment = d[@"address"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1" dictionary: dict];
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
+        CBLMutableFragment* fragment = d[@"address"];
         AssertNotNil(fragment);
         Assert(fragment.exists);
         AssertNil(fragment.string);
@@ -112,9 +112,9 @@
 
 - (void) testGetFragmentFromArrayValue {
     NSDictionary* dict = @{@"references": @[@{@"name": @"Scott"}, @{@"name": @"Sam"}]};
-    CBLDocument* doc = [self createDocument: @"doc1" dictionary: dict];
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
-        CBLFragment* fragment = d[@"references"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1" dictionary: dict];
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
+        CBLMutableFragment* fragment = d[@"references"];
         AssertNotNil(fragment);
         Assert(fragment.exists);
         AssertNil(fragment.string);
@@ -136,10 +136,10 @@
 
 
 - (void) testGetFragmentFromInteger {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @10 forKey: @"integer"];
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
-        CBLFragment* fragment = d[@"integer"];
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
+        CBLMutableFragment* fragment = d[@"integer"];
         AssertNotNil(fragment);
         Assert(fragment.exists);
         AssertNil(fragment.string);
@@ -161,10 +161,10 @@
 
 
 - (void) testGetFragmentFromFloat {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @100.10 forKey: @"float"];
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
-        CBLFragment* fragment = d[@"float"];
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
+        CBLMutableFragment* fragment = d[@"float"];
         AssertNotNil(fragment);
         Assert(fragment.exists);
         AssertNil(fragment.string);
@@ -186,10 +186,10 @@
 
 
 - (void) testGetFragmentFromDouble {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @(99.99) forKey: @"double"];
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
-        CBLFragment* fragment = d[@"double"];
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
+        CBLMutableFragment* fragment = d[@"double"];
         AssertNotNil(fragment);
         Assert(fragment.exists);
         AssertNil(fragment.string); 
@@ -211,10 +211,10 @@
 
 
 - (void) testGetFragmentFromBoolean {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @YES forKey: @"boolean"];
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
-        CBLFragment* fragment = d[@"boolean"];
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
+        CBLMutableFragment* fragment = d[@"boolean"];
         AssertNotNil(fragment);
         Assert(fragment.exists);
         AssertNil(fragment.string);
@@ -238,10 +238,10 @@
 // get all types of fragments from date
 - (void) testGetFragmentFromDate {
     NSDate* date = [NSDate date];
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: date forKey: @"date"];
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
-        CBLFragment* fragment = d[@"date"];
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
+        CBLMutableFragment* fragment = d[@"date"];
         AssertNotNil(fragment);
         Assert(fragment.exists);
         AssertNotNil(fragment.string);
@@ -266,10 +266,10 @@
 
 
 - (void) testGetFragmentFromString {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @"hello world" forKey: @"string"];
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
-        CBLFragment* fragment = d[@"string"];
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
+        CBLMutableFragment* fragment = d[@"string"];
         AssertNotNil(fragment);
         Assert(fragment.exists);
         AssertNotNil(fragment.string);
@@ -295,9 +295,9 @@
                                    @"street": @"1 Main Street",
                                    @"phones": @{@"mobile": @"650-123-4567"}
                                    }};
-    CBLDocument* doc = [self createDocument: @"doc1" dictionary: dict];
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
-        CBLFragment* fragment = d[@"address"][@"phones"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1" dictionary: dict];
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
+        CBLMutableFragment* fragment = d[@"address"][@"phones"];
         AssertNotNil(fragment);
         Assert(fragment.exists);
         AssertNil(fragment.string);
@@ -323,9 +323,9 @@
                                    @"street": @"1 Main Street",
                                    @"phones": @{@"mobile": @"650-123-4567"}
                                    }};
-    CBLDocument* doc = [self createDocument: @"doc1" dictionary: dict];
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
-        CBLFragment* fragment = d[@"address"][@"country"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1" dictionary: dict];
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
+        CBLMutableFragment* fragment = d[@"address"][@"country"];
         AssertNotNil(fragment);
         AssertFalse(fragment.exists);
         AssertNil(fragment.string);       
@@ -344,9 +344,9 @@
 
 - (void)testGetNestedArrayFragments {
     NSDictionary* dict = @{@"nested-array": @[@[@1, @2, @3], @[@4, @5, @6]]};
-    CBLDocument* doc = [self createDocument: @"doc1" dictionary: dict];
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
-        CBLFragment* fragment = d[@"nested-array"][1];
+    CBLMutableDocument* doc = [self createDocument: @"doc1" dictionary: dict];
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
+        CBLMutableFragment* fragment = d[@"nested-array"][1];
         AssertNotNil(fragment);
         Assert(fragment.exists);
         AssertNil(fragment.string); 
@@ -369,9 +369,9 @@
 
 - (void) testGetNestedNonExistingArrayFragments {
     NSDictionary* dict = @{@"nested-array": @[@[@1, @2, @3], @[@4, @5, @6]]};
-    CBLDocument* doc = [self createDocument: @"doc1" dictionary: dict];
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
-        CBLFragment* fragment = d[@"nested-array"][2];
+    CBLMutableDocument* doc = [self createDocument: @"doc1" dictionary: dict];
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
+        CBLMutableFragment* fragment = d[@"nested-array"][2];
         AssertFalse(fragment.exists);
         AssertNil(fragment.string); 
         AssertNil(fragment.date); 
@@ -389,7 +389,7 @@
 
 - (void) testDictionaryFragmentSet {
     NSDate* date = [NSDate date];
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"string"].value = @"value";
     doc[@"bool"].value = @YES;
     doc[@"int"].value = @7;
@@ -397,7 +397,7 @@
     doc[@"double"].value = @3.3;
     doc[@"date"].value = date;
     
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
         AssertEqualObjects(d[@"string"].string, @"value");
         AssertEqual(d[@"bool"].booleanValue, YES);
         AssertEqual(d[@"int"].integerValue, 7);
@@ -410,15 +410,15 @@
 
 
 - (void) testDictionaryFragmentSetDictionary {
-    CBLDocument* doc = [self createDocument: @"doc1"];
-    CBLDictionary *dict = [[CBLDictionary alloc] init];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDictionary *dict = [[CBLMutableDictionary alloc] init];
     [dict setObject: @"Jason" forKey:@"name"];
     [dict setObject: @{@"street": @"1 Main Street",
                          @"phones": @{@"mobile": @"650-123-4567"}}
                forKey: @"address"];
     doc[@"dict"].value = dict;
     
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
         AssertEqualObjects(d[@"dict"][@"name"].string, @"Jason");
         AssertEqualObjects(d[@"dict"][@"address"][@"street"].string, @"1 Main Street");
         AssertEqualObjects(d[@"dict"][@"address"][@"phones"][@"mobile"].string, @"650-123-4567");
@@ -427,12 +427,12 @@
 
 
 - (void) testDictionaryFragmentSetArray {
-    CBLDocument* doc = [self createDocument: @"doc1"];
-    CBLArray *array = [[CBLArray alloc] init];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableArray *array = [[CBLMutableArray alloc] init];
     [array setArray: @[@0, @1, @2]];
     doc[@"array"].value = array;
     
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
         AssertNil(d[@"array"][-1].number);
         AssertFalse(d[@"array"][-1].exists);
         AssertEqualObjects(d[@"array"][0].number, @0);
@@ -445,13 +445,13 @@
 
 
 - (void) testDictionaryFragmentSetNSDictionary {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"dict"].value = @{ @"name": @"Jason",
                             @"address": @{
                                     @"street": @"1 Main Street",
                                     @"phones": @{@"mobile": @"650-123-4567"}}};
     
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
         AssertEqualObjects(d[@"dict"][@"name"].string, @"Jason");
         AssertEqualObjects(d[@"dict"][@"address"][@"street"].string, @"1 Main Street");
         AssertEqualObjects(d[@"dict"][@"address"][@"phones"][@"mobile"].string, @"650-123-4567");
@@ -460,11 +460,11 @@
 
 
 - (void) testDictionaryFragmentSetNSArray {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"dict"].value = @{};
     doc[@"dict"][@"array"].value = @[@0, @1, @2];
     
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
         AssertNil(d[@"dict"][@"array"][-1].number);
         AssertFalse(d[@"dict"][@"array"][-1].exists);
         AssertEqualObjects(d[@"dict"][@"array"][0].number, @0);
@@ -477,11 +477,11 @@
 
 
 - (void) testNonDictionaryFragmentSetObject {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @"value1" forKey: @"string1"];
     [doc setObject: @"value2" forKey: @"string2"];
     
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
         d[@"string1"].value = @10;
         AssertEqualObjects(d[@"string1"].value, @10);
         AssertEqualObjects(d[@"string2"].value, @"value2");
@@ -491,17 +491,17 @@
 
 - (void) testArrayFragmentSet {
     NSDate* date = [NSDate date];
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
-    Assert([[doc objectForKey: @"array"] isKindOfClass: [CBLArray class]]);
+    Assert([[doc objectForKey: @"array"] isKindOfClass: [CBLMutableArray class]]);
     [doc[@"array"].array addObject: @"string"];
     [doc[@"array"].array addObject: @10];
     [doc[@"array"].array addObject: @10.10];
     [doc[@"array"].array addObject: @YES];
     [doc[@"array"].array addObject: date];
-    Assert([[doc objectForKey: @"array"] isKindOfClass: [CBLArray class]]);
+    Assert([[doc objectForKey: @"array"] isKindOfClass: [CBLMutableArray class]]);
 
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
         AssertFalse(d[@"array"][-1].exists);
         for(int i = 0; i < 5; i++){
             AssertNotNil(d[@"array"][i]);
@@ -520,15 +520,15 @@
 
 
 - (void) testArrayFragmentSetDictionary {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
-    CBLDictionary *dict = [[CBLDictionary alloc] init];
+    CBLMutableDictionary *dict = [[CBLMutableDictionary alloc] init];
     [dict setObject: @"Jason" forKey: @"name"];
     [dict setObject: @{@"street": @"1 Main Street",@"phones": @{@"mobile": @"650-123-4567"}}
                forKey: @"address"];
     [doc[@"array"].array addObject: dict];
     
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
         AssertFalse(d[@"array"][-1].exists);
         AssertNotNil(d[@"array"][0]);
         Assert(d[@"array"][0].exists);
@@ -542,12 +542,12 @@
 
 
 - (void) testArrayFragmentSetNSDictionary {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
     [doc[@"array"].array addObject: @{@"name":@"Jason",
                                       @"address": @{@"street": @"1 Main Street",
                                                    @"phones": @{@"mobile": @"650-123-4567"}}}];
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
         AssertFalse(d[@"array"][-1].exists);
         AssertNotNil(d[@"array"][0]);
         Assert(d[@"array"][0].exists);
@@ -561,15 +561,15 @@
 
 
 - (void) testArrayFragmentSetArrayObject {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
-    CBLArray* array = [[CBLArray alloc] init];
+    CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [array addObject: @"Jason"];
     [array addObject: @5.5];
     [array addObject: @YES];
     [doc[@"array"].array addObject:array];
     
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
         AssertEqualObjects(d[@"array"][0][0].string, @"Jason");
         AssertEqualObjects(d[@"array"][0][1].number, @5.5);
         AssertEqual(d[@"array"][0][2].booleanValue, YES);
@@ -578,11 +578,11 @@
 
 
 - (void) testArrayFragmentSetArray {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
     [doc[@"array"].array addObject:@[@"Jason", @5.5, @YES]];
     
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
         AssertEqualObjects(d[@"array"][0][0].string, @"Jason");
         AssertEqualObjects(d[@"array"][0][1].number, @5.5);
         AssertEqual(d[@"array"][0][2].booleanValue, YES);
@@ -591,12 +591,12 @@
 
 
 - (void) testNonExistingArrayFragmentSetObject {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"][0][0].value = @1;
     doc[@"array"][0][1].value = @NO;
     doc[@"array"][0][2].value = @"hello";
     
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
         AssertNil(d[@"array"][0][0].value);
         AssertNil(d[@"array"][0][1].value);
         AssertNil(d[@"array"][0][2].value);
@@ -606,12 +606,12 @@
 
 
 - (void) testOutOfRangeArrayFragmentSetObject {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
     [doc[@"array"].array addObject:@[@"Jason", @5.5, @YES]];
     doc[@"array"][0][3].value = @1;
     
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
+    [self saveDocument: doc eval: ^(CBLMutableDocument* d) {
         AssertFalse(d[@"array"][0][3].exists);
     }];
 }

@@ -43,11 +43,11 @@ public class DocumentFragment: DictionaryFragment {
     // MARK: Internal
     
     
-    init(_ impl: CBLDocumentFragment) {
+    init(_ impl: CBLMutableDocumentFragment) {
         _impl = impl
     }
     
     
-    let _impl: CBLDocumentFragment
+    let _impl: CBLMutableDocumentFragment
     
 }

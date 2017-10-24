@@ -15,7 +15,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 
-/** A unique object instance that's used as a value in CBLDictionary to represent a removed value. */
+/** A unique object instance that's used as a value in CBLMutableDictionary to represent a removed value. */
 extern NSObject * const kCBLRemovedValue;
 
 
@@ -28,7 +28,7 @@ extern NSObject * const kCBLRemovedValue;
 - (id) cbl_toPlainObject;
 
 /** Returns this object as it will appear in a Couchbase Lite document, if there's a different
-    form for that. For example, converts NSArray to CBLArray.
+    form for that. For example, converts NSArray to CBLMutableArray.
     For classes that can't be stored in a document, throws an exception. */
 - (id) cbl_toCBLObject;
 

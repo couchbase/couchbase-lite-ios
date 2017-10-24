@@ -212,7 +212,7 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     // MARK: Internal
     
     
-    init(_ impl: CBLReadOnlyArray) {
+    init(_ impl: CBLArray) {
         _impl = impl
         _impl.swiftObject = self
     }
@@ -223,6 +223,6 @@ public class ReadOnlyArrayObject: ReadOnlyArrayProtocol {
     }
     
     
-    let _impl: CBLReadOnlyArray
+    let _impl: CBLArray
     
 }

@@ -133,12 +133,12 @@
 
 - (void) testPushDoc {
     NSError* error;
-    CBLDocument* doc1 = [[CBLDocument alloc] initWithID:@"doc1"];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc1"];
     [doc1 setObject: @"Tiger" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
     
-    CBLDocument* doc2 = [[CBLDocument alloc] initWithID:@"doc2"];
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID:@"doc2"];
     [doc2 setObject: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
@@ -153,12 +153,12 @@
 
 - (void) testPushDocContinuous {
     NSError* error;
-    CBLDocument* doc1 = [[CBLDocument alloc] initWithID:@"doc1"];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc1"];
     [doc1 setObject: @"Tiger" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
     
-    CBLDocument* doc2 = [[CBLDocument alloc] initWithID:@"doc2"];
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID:@"doc2"];
     [doc2 setObject: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
@@ -175,12 +175,12 @@
 - (void) testPullDoc {
     // For https://github.com/couchbase/couchbase-lite-core/issues/156
     NSError* error;
-    CBLDocument* doc1 = [[CBLDocument alloc] initWithID:@"doc1"];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc1"];
     [doc1 setObject: @"Tiger" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
 
-    CBLDocument* doc2 = [[CBLDocument alloc] initWithID:@"doc2"];
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID:@"doc2"];
     [doc2 setObject: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
 
@@ -196,12 +196,12 @@
 - (void) testPullDocContinuous {
     // For https://github.com/couchbase/couchbase-lite-core/issues/156
     NSError* error;
-    CBLDocument* doc1 = [[CBLDocument alloc] initWithID:@"doc1"];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc1"];
     [doc1 setObject: @"Tiger" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
     
-    CBLDocument* doc2 = [[CBLDocument alloc] initWithID:@"doc2"];
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID:@"doc2"];
     [doc2 setObject: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
@@ -218,7 +218,7 @@
 - (void) testPullConflict {
     // Create a document and push it to otherDB:
     NSError* error;
-    CBLDocument* doc1 = [[CBLDocument alloc] initWithID:@"doc"];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
     [doc1 setObject: @"Tiger" forKey: @"species"];
     Assert([self.db saveDocument: doc1 error: &error]);
 
@@ -230,7 +230,7 @@
     [doc1 setObject: @"Hobbes" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
 
-    CBLDocument* doc2 = [otherDB documentWithID: @"doc"];
+    CBLMutableDocument* doc2 = [otherDB documentWithID: @"doc"];
     Assert(doc2);
     [doc2 setObject: @"striped" forKey: @"pattern"];
     Assert([otherDB saveDocument: doc2 error: &error]);
@@ -257,13 +257,13 @@
     // think it needs to preserve its body; so when it pulls a conflict, there won't be a base
     // revision for the resolver.
     NSError* error;
-    CBLDocument* doc1 = [[CBLDocument alloc] initWithID:@"doc"];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
     [doc1 setObject: @"Tiger" forKey: @"species"];
     Assert([self.db saveDocument: doc1 error: &error]);
     [doc1 setObject: @"Hobbes" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
 
-    CBLDocument* doc2 = [[CBLDocument alloc] initWithID:@"doc"];
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID:@"doc"];
     [doc2 setObject: @"Tiger" forKey: @"species"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     [doc2 setObject: @"striped" forKey: @"pattern"];

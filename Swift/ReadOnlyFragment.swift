@@ -160,14 +160,14 @@ public class ReadOnlyFragment: ReadOnlyFragmentProtocol,
     // MARK: Internal
     
     
-    init(_ impl: CBLReadOnlyFragment?) {
+    init(_ impl: CBLFragment?) {
         _impl = impl ?? ReadOnlyFragment.kNonexistentRO
     }
     
     
-    let _impl: CBLReadOnlyFragment
+    let _impl: CBLFragment
 
 
-    static let kNonexistentRO = CBLReadOnlyFragment()
+    static let kNonexistentRO = CBLFragment()
     
 }

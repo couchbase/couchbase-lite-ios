@@ -33,9 +33,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** Block based resolver */
 @interface BlockResolver : NSObject <CBLConflictResolver>
 
-@property (atomic, readonly) CBLReadOnlyDocument* (^block)(CBLConflict*);
+@property (atomic, readonly) CBLDocument* (^block)(CBLConflict*);
 
-- (instancetype) initWithBlock: (nullable CBLReadOnlyDocument* (^)(CBLConflict*))block;
+- (instancetype) initWithBlock: (nullable CBLDocument* (^)(CBLConflict*))block;
 
 @end
 

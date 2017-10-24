@@ -11,7 +11,7 @@
 #import "CBLDocument+Internal.h"
 #import "CBLJSON.h"
 
-#define kCBLDictionaryTypeKey @kC4ObjectTypeProperty
+#define kCBLMutableDictionaryTypeKey @kC4ObjectTypeProperty
 #define kCBLBlobTypeName @kC4ObjectType_Blob
 
 NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
@@ -37,13 +37,13 @@ NSObject *const kCBLRemovedValue = [[NSObject alloc] init];
 
 @implementation NSArray (CBLConversions)
 - (id) cbl_toCBLObject {
-    return [[CBLArray alloc] initWithArray: self];
+    return [[CBLMutableArray alloc] initWithArray: self];
 }
 @end
 
 @implementation NSDictionary (CBLConversions)
 - (id) cbl_toCBLObject {
-    return [[CBLDictionary alloc] initWithDictionary: self];
+    return [[CBLMutableDictionary alloc] initWithDictionary: self];
 }
 @end
 

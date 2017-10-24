@@ -74,7 +74,7 @@ extern "C" {
     if (!_returnDocuments)
         [current stopBeingCurrent];
 
-    id row = nil;   // row may be either a CBLQuery Row or a CBLDocument
+    id row = nil;   // row may be either a CBLQuery Row or a CBLMutableDocument
     if (c4queryenum_next(_c4enum, &_error)) {
         row = self.currentObject;
         _currentRow = row;

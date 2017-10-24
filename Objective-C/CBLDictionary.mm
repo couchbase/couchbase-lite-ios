@@ -2,159 +2,231 @@
 //  CBLDictionary.mm
 //  CouchbaseLite
 //
-//  Created by Pasin Suriyentrakorn on 4/12/17.
+//  Created by Pasin Suriyentrakorn on 4/11/17.
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
 #import "CBLDictionary.h"
-#import "CBLArray.h"
-#import "CBLBlob.h"
+#import "CBLReadOnlyDictionary+Swift.h"
 #import "CBLData.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
-#import "CBLFragment.h"
 #import "CBLJSON.h"
 #import "CBLStringBytes.h"
+#import "PlatformCompat.hh"
 #import "CBLFleece.hh"
+#import "MDict.hh"
+#import "MDictIterator.hh"
 
+using namespace cbl;
 using namespace fleeceapi;
 
 
 @implementation CBLDictionary
-
-
-#pragma mark - Initializers
-
-
-+ (instancetype) dictionary {
-    return [[self alloc] init];
+{
+    NSArray* _keys;
 }
 
 
-- (instancetype) init {
-    return [super initEmpty];
+@synthesize swiftObject=_swiftObject;
+
+
+
+- (instancetype) initEmpty {
+    return [super init];
 }
 
 
-- (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary {
-    self = [self init];
+- (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
+                       inParent: (fleeceapi::MCollection<id>*)parent
+{
+    self = [super init];
     if (self) {
-        [self setDictionary: dictionary];
+        _dict.initInSlot(mv, parent);
+    }
+    return self;
+}
+
+
+- (instancetype) initWithCopyOfMDict: (const MDict<id>&)mDict
+                           isMutable: (bool)isMutable
+{
+    self = [super init];
+    if (self) {
+        _dict.initAsCopyOf(mDict, isMutable);
     }
     return self;
 }
 
 
 - (id) copyWithZone:(NSZone *)zone {
-    return [[CBLDictionary alloc] initWithCopyOfMDict: _dict isMutable: true];
+    return self;
 }
 
 
-- (BOOL) changed {
-    return _dict.isMutated();
+- (CBLMutableDictionary*) mutableCopyWithZone:(NSZone *)zone {
+    return [[CBLMutableDictionary alloc] initWithCopyOfMDict: _dict isMutable: true];
 }
 
 
-#pragma mark - Type Setters
-
-
-- (void) setArray: (nullable CBLArray *)value forKey: (NSString *)key {
-    [self setObject: value forKey: key];
+- (void) fl_encodeToFLEncoder: (FLEncoder)enc {
+    Encoder encoder(enc);
+    _dict.encodeTo(encoder);
+    encoder.release();
 }
 
 
-- (void) setBoolean: (BOOL)value forKey: (NSString *)key {
-    [self setObject: @(value) forKey: key];
+- (MCollection<id>*) fl_collection {
+    return &_dict;
 }
 
 
-- (void) setBlob: (nullable CBLBlob*)value forKey: (NSString *)key {
-    [self setObject: value forKey: key];
+#pragma mark - Counting Entries
+
+
+- (NSUInteger) count {
+    return _dict.count();
 }
 
 
-- (void) setDate: (nullable NSDate *)value forKey: (NSString *)key {
-    [self setObject: value forKey: key];
-}
+#pragma mark - Accessing Keys
 
 
-- (void) setDictionary: (nullable CBLDictionary *)value forKey: (NSString *)key {
-    [self setObject: value forKey: key];
-}
-
-
-- (void) setDouble: (double)value forKey: (NSString *)key {
-    [self setObject: @(value) forKey: key];
-}
-
-
-- (void) setFloat: (float)value forKey: (NSString *)key {
-    [self setObject: @(value) forKey: key];
-}
-
-
-- (void) setInteger: (NSInteger)value forKey: (NSString *)key {
-    [self setObject: @(value) forKey: key];
-}
-
-
-- (void) setLongLong: (long long)value forKey: (NSString *)key {
-    [self setObject: @(value) forKey: key];
-}
-
-
-- (void) setNumber: (nullable NSNumber*)value forKey: (NSString *)key {
-    [self setObject: value forKey: key];
-}
-
-
-- (void) setObject: (nullable id)value forKey: (NSString*)key {
-    CBLStringBytes keySlice(key);
-    const MValue<id> &oldValue = _dict.get(keySlice);
-
-    if (value) {
-        value = [value cbl_toCBLObject];
-        if (cbl::valueWouldChange(value, oldValue, _dict)) {
-            _dict.set(keySlice, value);
-            [self keysChanged];
-        }
-    } else {
-        // On Apple platforms, storing a nil value for a key means to delete the key.
-        // (On other platforms, the null would be stored into the collection as a JSON null.)
-        if (!oldValue.isEmpty()) {
-            _dict.remove(keySlice);
-            [self keysChanged];
-        }
+- (NSArray*) keys {
+    // I cache the keys array because my -countByEnumeratingWithState method delegates to it,
+    // but it's not actually retained by anything related to the enumeration, so it's otherwise
+    // possible for the array to be dealloced while the enumeration is going on.
+    if (!_keys) {
+        NSMutableArray* keys = [NSMutableArray arrayWithCapacity: _dict.count()];
+        for (MDict<id>::iterator i(_dict); i; ++i)
+            [keys addObject: i.nativeKey()];
+        _keys = keys;
     }
+    return _keys;
 }
 
 
-- (void) setString: (nullable NSString *)value forKey: (NSString *)key {
-    [self setObject: value forKey: key];
+- (void) keysChanged {
+    // My subclass CBLMutableDictionary calls this when it's mutated, to invalidate the array
+    _keys = nil;
 }
 
 
-- (void) removeObjectForKey: (NSString *)key {
+#pragma mark - Type Getters
+
+
+static const MValue<id>& _get(MDict<id> &dict, NSString* key) {
     CBLStringBytes keySlice(key);
-    _dict.remove(keySlice);
-    [self keysChanged];
+    return dict.get(keySlice);
 }
 
 
-- (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary {
-    _dict.clear();
-    
-    [dictionary enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
-        CBLStringBytes keySlice(key);
-        _dict.set(keySlice, [value cbl_toCBLObject]);
-    }];
-    [self keysChanged];
+static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
+    //OPT: Can return nil before calling asNative, if MValue.value exists and is wrong type
+    id obj = _get(dict, key).asNative(&dict);
+    if (asClass && ![obj isKindOfClass: asClass])
+        obj = nil;
+    return obj;
 }
 
 
-#pragma mark - Subscript
+- (nullable CBLArray*) arrayForKey: (NSString*)key {
+    return _getObject(_dict, key, [CBLArray class]);
+}
+
+
+- (nullable CBLBlob*) blobForKey: (NSString*)key {
+    return _getObject(_dict, key, [CBLBlob class]);
+}
+
+
+- (BOOL) booleanForKey: (NSString*)key {
+    return asBool(_get(_dict, key), _dict);
+}
+
+
+- (nullable NSDate*) dateForKey: (NSString*)key {
+    return asDate(_getObject(_dict, key, nil));
+}
+
+
+- (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
+    return _getObject(_dict, key, [CBLDictionary class]);
+}
+
+
+- (nullable id) objectForKey: (NSString*)key {
+    return _getObject(_dict, key, nil);
+}
+
+
+- (double) doubleForKey: (NSString*)key {
+    return asDouble(_get(_dict, key), _dict);
+}
+
+
+- (float) floatForKey: (NSString*)key {
+    return asFloat(_get(_dict, key), _dict);
+}
+
+
+- (NSInteger) integerForKey: (NSString*)key {
+    return asInteger(_get(_dict, key), _dict);
+}
+
+
+- (long long) longLongForKey: (NSString*)key {
+    return asLongLong(_get(_dict, key), _dict);
+}
+
+
+- (nullable NSNumber*) numberForKey: (NSString*)key {
+    return _getObject(_dict, key, [NSNumber class]);
+}
+
+
+- (nullable NSString*) stringForKey: (NSString*)key {
+    return _getObject(_dict, key, [NSString class]);
+}
+
+
+#pragma mark - Check Existence
+
+
+- (BOOL) containsObjectForKey: (NSString*)key {
+    return !_get(_dict, key).isEmpty();
+}
+
+
+#pragma mark - Convert to NSDictionary
+
+
+- (NSDictionary<NSString*,id>*) toDictionary {
+    NSMutableDictionary* result = [NSMutableDictionary dictionaryWithCapacity: _dict.count()];
+    for (MDict<id>::iterator i(_dict); i; ++i) {
+        result[i.nativeKey()] = [i.nativeValue() cbl_toPlainObject];
+    }
+    return result;
+}
+
+
+#pragma mark - NSFastEnumeration
+
+
+- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState *)state
+                                  objects: (id __unsafe_unretained [])buffer
+                                    count: (NSUInteger)len
+{
+    return [self.keys countByEnumeratingWithState: state objects: buffer count: len];
+}
+
+
+#pragma mark - SUBSCRIPTING
 
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
+    if (![self containsObjectForKey: key])
+        return nil;
     return [[CBLFragment alloc] initWithParent: self key: key];
 }
 
@@ -162,9 +234,13 @@ using namespace fleeceapi;
 #pragma mark - CBLConversion
 
 
+- (id) cbl_toPlainObject {
+    return [self toDictionary];
+}
+
+
 - (id) cbl_toCBLObject {
-    // Overrides CBLReadOnlyDictionary
-    return self;
+    return [self mutableCopy];
 }
 
 

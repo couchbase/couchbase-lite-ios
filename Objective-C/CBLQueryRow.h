@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDocument;
+@class CBLMutableDocument;
 
 NS_ASSUME_NONNULL_BEGIN
 

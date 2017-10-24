@@ -105,7 +105,7 @@ public struct DatabaseConfiguration {
             _resovler = resolver
         }
         
-        public func resolve(_ conflict: CBLConflict) -> CBLReadOnlyDocument? {
+        public func resolve(_ conflict: CBLConflict) -> CBLDocument? {
             let resolved = _resovler.resolve(conflict: Conflict(impl: conflict))
             return resolved?._impl
         }
@@ -199,7 +199,7 @@ public final class Database {
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
     public func save(_ document: Document) throws {
-        try _impl.save(document._impl as! CBLDocument)
+        try _impl.save(document._impl as! CBLMutableDocument)
     }
     
     
@@ -212,7 +212,7 @@ public final class Database {
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
     public func delete(_ document: Document) throws {
-        try _impl.delete(document._impl as! CBLDocument)
+        try _impl.delete(document._impl as! CBLMutableDocument)
     }
     
     
@@ -223,7 +223,7 @@ public final class Database {
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
     public func purge(_ document: Document) throws {
-        try _impl.purgeDocument(document._impl as! CBLDocument)
+        try _impl.purgeDocument(document._impl as! CBLMutableDocument)
     }
     
     

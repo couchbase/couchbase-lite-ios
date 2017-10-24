@@ -219,7 +219,7 @@ public class ReadOnlyDocument : ReadOnlyDictionaryProtocol {
     // MARK: Internal
     
     
-    init(_ impl: CBLReadOnlyDocument) {
+    init(_ impl: CBLDocument) {
         _impl = impl
     }
     
@@ -227,6 +227,6 @@ public class ReadOnlyDocument : ReadOnlyDictionaryProtocol {
     // MARK: Private
     
     
-    let _impl: CBLReadOnlyDocument
+    let _impl: CBLDocument
     
 }

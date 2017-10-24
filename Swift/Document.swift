@@ -19,7 +19,7 @@ public class Document : ReadOnlyDocument, DictionaryProtocol {
     /// saved into a database when you call the Database's save() method with the document
     /// object given.
     public convenience init() {
-        self.init(CBLDocument())
+        self.init(CBLMutableDocument())
     }
 
     
@@ -29,7 +29,7 @@ public class Document : ReadOnlyDocument, DictionaryProtocol {
     ///
     /// - Parameter id: The document ID.
     public convenience init(_ id: String?) {
-        self.init(CBLDocument(id: id))
+        self.init(CBLMutableDocument(id: id))
     }
     
     
@@ -41,7 +41,7 @@ public class Document : ReadOnlyDocument, DictionaryProtocol {
     ///
     /// - Parameter dictionary: The dictionary object.
     public convenience init(dictionary: Dictionary<String, Any>?) {
-        self.init(CBLDocument())
+        self.init(CBLMutableDocument())
         setDictionary(dictionary)
     }
     
@@ -57,7 +57,7 @@ public class Document : ReadOnlyDocument, DictionaryProtocol {
     ///   - id: The document ID.
     ///   - dictionary: The dictionary object.
     public convenience init(_ id: String?, dictionary: Dictionary<String, Any>?) {
-        self.init(CBLDocument(id: id))
+        self.init(CBLMutableDocument(id: id))
         setDictionary(dictionary)
     }
     
@@ -266,7 +266,7 @@ public class Document : ReadOnlyDocument, DictionaryProtocol {
     // MARK: Internal
     
     
-    init(_ impl: CBLDocument) {
+    init(_ impl: CBLMutableDocument) {
         super.init(impl)
     }
     
@@ -274,8 +274,8 @@ public class Document : ReadOnlyDocument, DictionaryProtocol {
     // MARK: Private
     
     
-    private var docImpl: CBLDocument {
-        return _impl as! CBLDocument
+    private var docImpl: CBLMutableDocument {
+        return _impl as! CBLMutableDocument
     }
     
 }

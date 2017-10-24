@@ -2,183 +2,181 @@
 //  CBLDictionary.h
 //  CouchbaseLite
 //
-//  Created by Pasin Suriyentrakorn on 4/12/17.
+//  Created by Pasin Suriyentrakorn on 4/11/17.
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLReadOnlyDictionary.h"
 #import "CBLDictionaryFragment.h"
+@class CBLBlob;
 @class CBLArray;
 @class CBLDictionary;
 
+
 NS_ASSUME_NONNULL_BEGIN
 
-/** CBLDictionary protocol defines a set of methods for getting and setting dictionary data. */
-@protocol CBLDictionary <CBLReadOnlyDictionary, CBLDictionaryFragment>
+/** CBLDictionary protocol defines a set of methods for readonly accessing dictionary data. */
+@protocol CBLDictionary <NSObject, CBLDictionaryFragment, NSFastEnumeration>
+
+#pragma mark - Counting Entries
+
+/** The number of entries in the dictionary. */
+@property (readonly, nonatomic) NSUInteger count;
+
+#pragma mark - Accessing Keys
+
+/** An array containing all keys, or an empty array if the dictionary has no entries. */
+@property (readonly, copy, nonatomic) NSArray<NSString*>* keys;
 
 #pragma mark - Type Setters
-
-/**
- Set a CBLArray object for the given key. A nil value will be converted to an NSNull.
- 
- @param value The CBLArray object.
- */
-- (void) setArray: (nullable CBLArray*)value forKey: (NSString*)key;
-
-/** 
- Set a CBLBlob object for the given key. A nil value will be converted to an NSNull.
- 
- @param value The CBLBolb object.
- */
-- (void) setBlob: (nullable CBLBlob*)value forKey: (NSString*)key;
-
-/** 
- Set a boolean value for the given key.
- 
- @param value The boolean value.
- */
-- (void) setBoolean: (BOOL)value forKey: (NSString*)key;
-
-/** 
- Set a Date object for the given key. A nil value will be converted to an NSNull.
- 
- @param value The Date object.
- */
-- (void) setDate: (nullable NSDate*)value forKey: (NSString*)key;
-
-/** 
- Set a CBLDictionary object for the given key. A nil value will be converted to an NSNull.
- 
- @param value The CBLDictionary object.
- */
-- (void) setDictionary: (nullable CBLDictionary*)value forKey: (NSString*)key;
-
-/** 
- Set a double value for the given key.
- 
- @param value The double value.
- */
-- (void) setDouble: (double)value forKey: (NSString*)key;
-
-/** 
- Set a float value for the given key.
- 
- @param value The float value.
- */
-- (void) setFloat: (float)value forKey: (NSString*)key;
-
-/** 
- Set an integer value for the given key.
- 
- @param value The integer value.
- */
-- (void) setInteger: (NSInteger)value forKey: (NSString*)key;
-
-/**
- Set a long long value for the given key.
- 
- @param value The long long value.
- */
-- (void) setLongLong: (long long)value forKey: (NSString*)key;
-
-/** 
- Set an NSNumber object for the given key. A nil value will be converted to an NSNull.
- 
- @param value The NSNumber object.
- */
-- (void) setNumber: (nullable NSNumber*)value forKey: (NSString*)key;
-
-/** 
- Set an object value for the given key. Allowed value types are CBLArray, CBLBlob, CBLDictionary,
- NSArray, NSDate, NSDictionary, NSNumber, NSNull, NSString. The NSArrays and NSDictionaries must
- contain only the above types. An NSDate value will be converted to an ISO-8601 format string.
- A nil value will be converted an NSNull.
- 
- @param value The object value.
- @param key The key.
- */
-- (void) setObject: (nullable id)value forKey: (NSString*)key;
-
-/** 
- Set an String object for the given key. A nil value will be converted to an NSNull.
- 
- @param value The String object.
- */
-- (void) setString: (nullable NSString*)value forKey: (NSString*)key;
-
-#pragma mark - Setting content with an NSDictionary
-
-/** 
- Set a dictionary as a content. Allowed value types are CBLArray, CBLBlob, CBLDictionary,
- NSArray, NSDate, NSDictionary, NSNumber, NSNull, NSString. The NSArrays and NSDictionaries must
- contain only the above types. Setting the new dictionary content will replace the current data
- including the existing CBLArray and CBLDictionary objects.
- 
- @param dictionary The dictionary.
- */
-- (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary;
-
-#pragma mark - Removing Entries
-
-/** 
- Removes a given key and its value from the dictionary.
- 
- @param key The key.
- */
-- (void) removeObjectForKey: (NSString*)key;
-
-#pragma mark - Getting dictionary and array object
 
 /** 
  Get a property's value as a CBLArray, which is a mapping object of an array value.
  Returns nil if the property doesn't exists, or its value is not an array.
  
  @param key The key.
- @return The CBLArray object or nil if the property doesn't exist.
+ @return The CBLArray object or nil.
  */
 - (nullable CBLArray*) arrayForKey: (NSString*)key;
 
 /** 
- Get a property's value as a CBLDictionary, which is a mapping object of a dictionary
- value. Returns nil if the property doesn't exists, or its value is not a dictionary.
+ Get a property's value as a CBLBlob.
+ Returns nil if the property doesn't exist, or its value is not a CBLBlob.
  
  @param key The key.
- @return The CBLDictionary object or nil if the key doesn't exist.
+ @return The CBLBlob object or nil.
+ */
+- (nullable CBLBlob*) blobForKey: (NSString*)key;
+
+/** 
+ Gets a property's value as a boolean.
+ Returns YES if the value exists, and is either `true` or a nonzero number.
+ 
+ @param key The key.
+ @return The boolean value.
+ */
+- (BOOL) booleanForKey: (NSString*)key;
+
+/** 
+ Gets a property's value as an NSDate.
+ JSON does not directly support dates, so the actual property value must be a string, which is
+ then parsed according to the ISO-8601 date format (the default used in JSON.)
+ Returns nil if the value doesn't exist, is not a string, or is not parseable as a date.
+ NOTE: This is not a generic date parser! It only recognizes the ISO-8601 format, with or
+ without milliseconds.
+ 
+ @param key The key.
+ @return The NSDate object or nil.
+ */
+- (nullable NSDate*) dateForKey: (NSString*)key;
+
+/** 
+ Get a property's value as a CBLDictionary, which is a mapping object of
+ a dictionary value.
+ Returns nil if the property doesn't exists, or its value is not a dictionary.
+ 
+ @param key The key.
+ @return The CBLDictionary object or nil.
  */
 - (nullable CBLDictionary*) dictionaryForKey: (NSString*)key;
 
-#pragma mark - Subscript
-
 /** 
- Subscripting access to a CBLFragment object that represents the value of the dictionary by key.
+ Gets a property's value as a double value.
+ Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
+ Returns 0.0 if the property doesn't exist or does not have a numeric value.
  
  @param key The key.
- @return The CBLFragment object.
+ @return The double value.
  */
-- (nullable CBLFragment*) objectForKeyedSubscript: (NSString*)key;
+- (double) doubleForKey: (NSString*)key;
+
+/** 
+ Gets a property's value as a float value.
+ Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
+ Returns 0.0 if the property doesn't exist or does not have a numeric value.
+ 
+ @param key The key.
+ @return The float value.
+ */
+- (float) floatForKey: (NSString*)key;
+
+/** 
+ Gets a property's value as an integer value.
+ Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+ Returns 0 if the property doesn't exist or does not have a numeric value.
+ 
+ @param key The key.
+ @return The integer value.
+ */
+- (NSInteger) integerForKey: (NSString*)key;
+
+/**
+ Gets a property's value as a long long value.
+ Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+ Returns 0 if the property doesn't exist or does not have a numeric value.
+ 
+ @param key The key.
+ @return The long long value.
+ */
+- (long long) longLongForKey: (NSString*)key;
+
+/** 
+ Gets a property's value as a number.
+ Returns nil if the property doesn't exist, or its value is not a number.
+ 
+ @param key The key.
+ @return The NSNumber object or nil.
+ */
+- (nullable NSNumber*) numberForKey: (NSString*)key;
+
+/**
+ Gets a property's value as an object. The object types are CBLBlob, CBLArray,
+ CBLDictionary, NSNumber, or NSString based on the underlying data type; or nil if the
+ property value is NSNull or the property doesn't exist.
+ 
+ @param key The key.
+ @return The object value or nil.
+ */
+- (nullable id) objectForKey: (NSString*)key;
+
+/** 
+ Gets a property's value as a string.
+ Returns nil if the property doesn't exist, or its value is not a string.
+ 
+ @param key The key.
+ @return The NSString object or nil.
+ */
+- (nullable NSString*) stringForKey: (NSString*)key;
+
+#pragma mark - Check existence
+
+/** 
+ Tests whether a property exists or not.
+ This can be less expensive than -objectForKey:, because it does not have to allocate an
+ NSObject for the property value.
+ 
+ @param key The key.
+ @return The boolean value representing whether a property exists or not.
+ */
+- (BOOL) containsObjectForKey: (NSString*)key;
+
+#pragma mark - Convert to NSDictionary
+
+/** 
+ Gets content of the current object as an NSDictionary. The values contained in the
+ returned NSDictionary object are JSON based values.
+ 
+ @return The NSDictionary object representing the content of the current object in the
+         JSON format.
+ */
+- (NSDictionary<NSString*,id>*) toDictionary;
 
 @end
 
-/** CBLDictionary provides access to dictionary data. */
-@interface CBLDictionary : CBLReadOnlyDictionary <CBLDictionary>
+/** CBLDictionary provides readonly access to dictionary data. */
+@interface CBLDictionary : NSObject <CBLDictionary>
 
-#pragma mark - Initializers
-
-/** Creates a new empty CBLDictionary object. */
-+ (instancetype) dictionary;
-
-/** Initialize a new empty CBLDictionary object. */
-- (instancetype) init;
-
-/** 
- Initialzes a new CBLDictionary object with dictionary content. Allowed value types are NSArray,
- NSDate, NSDictionary, NSNumber, NSNull, NSString, CBLArray, CBLBlob, CBLDictionary.
- The NSArrays and NSDictionaries must contain only the above types.
- 
- @param dictionary The dictionary object.
- */
-- (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary;
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

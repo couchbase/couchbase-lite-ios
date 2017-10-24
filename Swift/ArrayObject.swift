@@ -105,9 +105,9 @@ public class ArrayObject: ReadOnlyArrayObject, ArrayProtocol {
     // MARK: Initializers
     
     
-    /// Initialize a new empty CBLArray object.
+    /// Initialize a new empty CBLMutableArray object.
     public init() {
-        super.init(CBLArray())
+        super.init(CBLMutableArray())
     }
     
     
@@ -117,7 +117,7 @@ public class ArrayObject: ReadOnlyArrayObject, ArrayProtocol {
     ///
     /// - Parameter array: The array object.
     public init(array: Array<Any>?) {
-        super.init(CBLArray())
+        super.init(CBLMutableArray())
         setArray(array)
     }
     
@@ -541,7 +541,7 @@ public class ArrayObject: ReadOnlyArrayObject, ArrayProtocol {
     // MARK: Internal
     
     
-    init(_ impl: CBLArray) {
+    init(_ impl: CBLMutableArray) {
         super.init(impl)
     }
     
@@ -549,8 +549,8 @@ public class ArrayObject: ReadOnlyArrayObject, ArrayProtocol {
     // MARK: Private
     
     
-    private var arrayImpl: CBLArray {
-        return _impl as! CBLArray
+    private var arrayImpl: CBLMutableArray {
+        return _impl as! CBLMutableArray
     }
     
 }

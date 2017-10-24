@@ -16,11 +16,11 @@
 
 
 - (void) testCreateDictionary {
-    CBLDictionary* address = [[CBLDictionary alloc] init];
+    CBLMutableDictionary* address = [[CBLMutableDictionary alloc] init];
     AssertEqual(address.count, 0u);
     AssertEqualObjects([address toDictionary], @{});
     
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: address forKey: @"address"];
     AssertEqual([doc dictionaryForKey: @"address"], address);
     
@@ -33,13 +33,13 @@
     NSDictionary* dict = @{@"street": @"1 Main street",
                            @"city": @"Mountain View",
                            @"state": @"CA"};
-    CBLDictionary* address = [[CBLDictionary alloc] initWithDictionary: dict];
+    CBLMutableDictionary* address = [[CBLMutableDictionary alloc] initWithDictionary: dict];
     AssertEqualObjects([address objectForKey: @"street"], @"1 Main street");
     AssertEqualObjects([address objectForKey: @"city"], @"Mountain View");
     AssertEqualObjects([address objectForKey: @"state"], @"CA");
     AssertEqualObjects([address toDictionary], dict);
     
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: address forKey: @"address"];
     AssertEqual([doc dictionaryForKey: @"address"], address);
     
@@ -49,7 +49,7 @@
 
 
 - (void) testGetValueFromNewEmptyDictionary {
-    CBLDictionary* dict = [[CBLDictionary alloc] init];
+    CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
     
     AssertEqual([dict integerForKey: @"key"], 0);
     AssertEqual([dict floatForKey: @"key"], 0.0f);
@@ -64,7 +64,7 @@
     AssertNil([dict arrayForKey: @"key"]);
     AssertEqualObjects([dict toDictionary], @{});
     
-    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc setObject: dict forKey: @"dict"];
     
     doc = [self saveDocument: doc];
@@ -86,17 +86,17 @@
 
 
 - (void) testSetNestedDictionaries {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     
-    CBLDictionary *level1 = [[CBLDictionary alloc] init];
+    CBLMutableDictionary *level1 = [[CBLMutableDictionary alloc] init];
     [level1 setObject: @"n1" forKey: @"name"];
     [doc setObject: level1 forKey: @"level1"];
     
-    CBLDictionary *level2 = [[CBLDictionary alloc] init];
+    CBLMutableDictionary *level2 = [[CBLMutableDictionary alloc] init];
     [level2 setObject: @"n2" forKey: @"name"];
     [level1 setObject: level2 forKey: @"level2"];
     
-    CBLDictionary *level3 = [[CBLDictionary alloc] init];
+    CBLMutableDictionary *level3 = [[CBLMutableDictionary alloc] init];
     [level3 setObject: @"n3" forKey: @"name"];
     [level2 setObject: level3 forKey: @"level3"];
     
@@ -116,17 +116,17 @@
 
 
 - (void) testDictionaryArray {
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     NSArray* data = @[@{@"name": @"1"}, @{@"name": @"2"}, @{@"name": @"3"}, @{@"name": @"4"}];
     [doc setDictionary: @{@"dicts": data}];
     
-    CBLArray* dicts = [doc arrayForKey: @"dicts"];
+    CBLMutableArray* dicts = [doc arrayForKey: @"dicts"];
     AssertEqual(dicts.count, 4u);
     
-    CBLDictionary* d1 = [dicts dictionaryAtIndex: 0];
-    CBLDictionary* d2 = [dicts dictionaryAtIndex: 1];
-    CBLDictionary* d3 = [dicts dictionaryAtIndex: 2];
-    CBLDictionary* d4 = [dicts dictionaryAtIndex: 3];
+    CBLMutableDictionary* d1 = [dicts dictionaryAtIndex: 0];
+    CBLMutableDictionary* d2 = [dicts dictionaryAtIndex: 1];
+    CBLMutableDictionary* d3 = [dicts dictionaryAtIndex: 2];
+    CBLMutableDictionary* d4 = [dicts dictionaryAtIndex: 3];
     
     AssertEqualObjects([d1 stringForKey: @"name"], @"1");
     AssertEqualObjects([d2 stringForKey: @"name"], @"2");
@@ -151,13 +151,13 @@
 
 
 - (void) testReplaceDictionary {
-    CBLDocument* doc = [self createDocument: @"doc1"];
-    CBLDictionary *profile1 = [[CBLDictionary alloc] init];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDictionary *profile1 = [[CBLMutableDictionary alloc] init];
     [profile1 setObject: @"Scott Tiger" forKey: @"name"];
     [doc setObject: profile1 forKey: @"profile"];
     AssertEqualObjects([doc dictionaryForKey: @"profile"], profile1);
     
-    CBLDictionary *profile2 = [[CBLDictionary alloc] init];
+    CBLMutableDictionary *profile2 = [[CBLMutableDictionary alloc] init];
     [profile2 setObject: @"Daniel Tiger" forKey: @"name"];
     [doc setObject: profile2 forKey: @"profile"];
     AssertEqualObjects([doc dictionaryForKey: @"profile"], profile2);
@@ -181,8 +181,8 @@
 
 
 - (void) testReplaceDictionaryDifferentType {
-    CBLDocument* doc = [self createDocument: @"doc1"];
-    CBLDictionary *profile1 = [[CBLDictionary alloc] init];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDictionary *profile1 = [[CBLMutableDictionary alloc] init];
     [profile1 setObject: @"Scott Tiger" forKey: @"name"];
     [doc setObject: profile1 forKey: @"profile"];
     AssertEqualObjects([doc dictionaryForKey: @"profile"], profile1);
@@ -207,8 +207,8 @@
 
 
 - (void) testRemoveDictionary {
-    CBLDocument* doc = [self createDocument: @"doc1"];
-    CBLDictionary *profile1 = [[CBLDictionary alloc] init];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDictionary *profile1 = [[CBLMutableDictionary alloc] init];
     [profile1 setObject: @"Scott Tiger" forKey: @"name"];
     [doc setObject: profile1 forKey: @"profile"];
     AssertEqualObjects([doc dictionaryForKey: @"profile"], profile1);
@@ -236,7 +236,7 @@
 
 
 - (void) testEnumeratingKeys {
-    CBLDictionary *dict = [[CBLDictionary alloc] init];
+    CBLMutableDictionary *dict = [[CBLMutableDictionary alloc] init];
     for (NSInteger i = 0; i < 20; i++) {
         [dict setObject: @(i) forKey: [NSString stringWithFormat:@"key%ld", (long)i]];
     }
@@ -267,13 +267,13 @@
     AssertEqualObjects(result, content);
     AssertEqual(count, content.count);
     
-    CBLDocument* doc = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: dict forKey: @"dict"];
     
-    [self saveDocument: doc eval:^(CBLDocument *d) {
+    [self saveDocument: doc eval:^(CBLMutableDocument *d) {
         result = [NSMutableDictionary dictionary];
         count = 0;
-        CBLDictionary* dictObj = [d dictionaryForKey: @"dict"];
+        CBLMutableDictionary* dictObj = [d dictionaryForKey: @"dict"];
         for (NSString* key in dictObj) {
             result[key] = [dictObj objectForKey: key];
             count++;

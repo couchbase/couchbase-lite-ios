@@ -147,7 +147,7 @@ public struct DocumentIterator : Sequence, IteratorProtocol {
     public typealias Element = Document
 
     public mutating func next() -> Document? {
-        if let doc = _enumerator.nextObject() as? CBLDocument {
+        if let doc = _enumerator.nextObject() as? CBLMutableDocument {
             return Document(doc)
         } else {
             return nil

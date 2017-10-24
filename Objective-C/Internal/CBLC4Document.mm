@@ -1,5 +1,5 @@
 //
-//  CBLDocumentData.mm
+//  CBLMutableDocumentData.mm
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 4/11/17.

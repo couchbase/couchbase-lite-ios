@@ -22,7 +22,7 @@ public class SelectResult {
     
     
     /// Creates a SelectResult object that returns all properties data. The query returned result
-    /// will be grouped into a single CBLDictionary object under the key of the data source name.
+    /// will be grouped into a single CBLMutableDictionary object under the key of the data source name.
     ///
     /// - Returns: The SelectResult.From object that you can specify the data source alias name.
     public static func all() -> From {

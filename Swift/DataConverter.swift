@@ -12,22 +12,22 @@ import Foundation
 /* internal */ class DataConverter {
     static func convertGETValue(_ value: Any?) -> Any? {
         switch value {
-        case let implDict as CBLDictionary:
+        case let implDict as CBLMutableDictionary:
             if let dict = implDict.swiftObject {
                 return dict
             }
             return DictionaryObject(implDict)
-        case let implArray as CBLArray:
+        case let implArray as CBLMutableArray:
             if let array = implArray.swiftObject {
                 return array
             }
             return ArrayObject(implArray)
-        case let implDict as CBLReadOnlyDictionary:
+        case let implDict as CBLDictionary:
             if let dict = implDict.swiftObject {
                 return dict
             }
             return ReadOnlyDictionaryObject(implDict)
-        case let implArray as CBLReadOnlyArray:
+        case let implArray as CBLArray:
             if let array = implArray.swiftObject {
                 return array
             }

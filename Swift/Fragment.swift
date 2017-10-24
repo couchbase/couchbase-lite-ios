@@ -28,7 +28,7 @@ protocol ArrayFragment {
 }
 
 
-/// CBLDictionaryFragment protocol provides subscript access to CBLFragment objects by key.
+/// CBLMutableDictionaryFragment protocol provides subscript access to CBLMutableFragment objects by key.
 protocol DictionaryFragment {
     subscript(key: String) -> Fragment { get }
 }
@@ -69,7 +69,7 @@ public class Fragment: ReadOnlyFragment, DictionaryFragment, ArrayFragment {
     // MARK: Subscripts
     
     
-    /// Subscript access to a CBLFragment object by index.
+    /// Subscript access to a CBLMutableFragment object by index.
     ///
     /// - Parameter index: The index.
     public override subscript(index: Int) -> Fragment {
@@ -77,7 +77,7 @@ public class Fragment: ReadOnlyFragment, DictionaryFragment, ArrayFragment {
     }
     
     
-    /// Subscript access to a CBLFragment object by key.
+    /// Subscript access to a CBLMutableFragment object by key.
     ///
     /// - Parameter key: The key.
     public override subscript(key: String) -> Fragment {
@@ -88,7 +88,7 @@ public class Fragment: ReadOnlyFragment, DictionaryFragment, ArrayFragment {
     // MARK: Internal
     
     
-    init(_ impl: CBLFragment?) {
+    init(_ impl: CBLMutableFragment?) {
         super.init(impl ?? Fragment.kNonexistent)
     }
     
@@ -96,11 +96,11 @@ public class Fragment: ReadOnlyFragment, DictionaryFragment, ArrayFragment {
     // MARK: Private
     
     
-    private var fragmentImpl: CBLFragment {
-        return _impl as! CBLFragment
+    private var fragmentImpl: CBLMutableFragment {
+        return _impl as! CBLMutableFragment
     }
 
 
-    static let kNonexistent = CBLFragment()
+    static let kNonexistent = CBLMutableFragment()
 
 }

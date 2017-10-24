@@ -7,8 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLArray.h"
-#import "CBLDictionary.h"
+#import "CBLMutableArray.h"
+#import "CBLMutableDictionary.h"
 #import "FleeceCpp.hh"
 #import "MArray.hh"
 #import "MDict.hh"
@@ -55,7 +55,7 @@ namespace cbl {
 @end
 
 
-@interface CBLReadOnlyArray ()
+@interface CBLArray ()
 {
     @protected
     fleeceapi::MArray<id> _array;
@@ -68,7 +68,7 @@ namespace cbl {
 @end
 
 
-@interface CBLReadOnlyDictionary ()
+@interface CBLDictionary ()
 {
     @protected
     fleeceapi::MDict<id> _dict;
