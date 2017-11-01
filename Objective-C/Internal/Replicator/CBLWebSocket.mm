@@ -116,6 +116,7 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
         _options = AllocedDict(options);
 
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
+        request.HTTPShouldHandleCookies = NO;
         _logic = [[CBLHTTPLogic alloc] initWithURLRequest: request];
         _logic.handleRedirects = YES;
 
