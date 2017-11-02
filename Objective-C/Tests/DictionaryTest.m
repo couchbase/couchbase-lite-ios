@@ -24,8 +24,8 @@
     [doc setObject: address forKey: @"address"];
     AssertEqual([doc dictionaryForKey: @"address"], address);
     
-    doc = [self saveDocument: doc];
-    AssertEqualObjects([[doc dictionaryForKey: @"address"] toDictionary], @{});
+    CBLDocument* savedDoc = [self saveDocument: doc];
+    AssertEqualObjects([[savedDoc dictionaryForKey: @"address"] toDictionary], @{});
 }
 
 
@@ -43,8 +43,8 @@
     [doc setObject: address forKey: @"address"];
     AssertEqual([doc dictionaryForKey: @"address"], address);
     
-    doc = [self saveDocument: doc];
-    AssertEqualObjects([[doc dictionaryForKey: @"address"] toDictionary], dict);
+    CBLDocument* savedDoc = [self saveDocument: doc];
+    AssertEqualObjects([[savedDoc dictionaryForKey: @"address"] toDictionary], dict);
 }
 
 
@@ -67,21 +67,20 @@
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc setObject: dict forKey: @"dict"];
     
-    doc = [self saveDocument: doc];
-    
-    dict = [doc dictionaryForKey: @"dict"];
-    AssertEqual([dict integerForKey: @"key"], 0);
-    AssertEqual([dict floatForKey: @"key"], 0.0f);
-    AssertEqual([dict doubleForKey: @"key"], 0.0);
-    AssertEqual([dict booleanForKey: @"key"], NO);
-    AssertNil([dict blobForKey: @"key"]);
-    AssertNil([dict dateForKey: @"key"]);
-    AssertNil([dict numberForKey: @"key"]);
-    AssertNil([dict objectForKey: @"key"]);
-    AssertNil([dict stringForKey: @"key"]);
-    AssertNil([dict dictionaryForKey: @"key"]);
-    AssertNil([dict arrayForKey: @"key"]);
-    AssertEqualObjects([dict toDictionary], @{});
+    CBLDocument* savedDoc = [self saveDocument: doc];
+    CBLDictionary* savedDict = [savedDoc dictionaryForKey: @"dict"];
+    AssertEqual([savedDict integerForKey: @"key"], 0);
+    AssertEqual([savedDict floatForKey: @"key"], 0.0f);
+    AssertEqual([savedDict doubleForKey: @"key"], 0.0);
+    AssertEqual([savedDict booleanForKey: @"key"], NO);
+    AssertNil([savedDict blobForKey: @"key"]);
+    AssertNil([savedDict dateForKey: @"key"]);
+    AssertNil([savedDict numberForKey: @"key"]);
+    AssertNil([savedDict objectForKey: @"key"]);
+    AssertNil([savedDict stringForKey: @"key"]);
+    AssertNil([savedDict dictionaryForKey: @"key"]);
+    AssertNil([savedDict arrayForKey: @"key"]);
+    AssertEqualObjects([savedDict toDictionary], @{});
 }
 
 
@@ -108,10 +107,10 @@
                                                      @"level3": @{@"name": @"n3"}}}};
     AssertEqualObjects([doc toDictionary], dict);
     
-    doc = [self saveDocument: doc];
+    CBLDocument* savedDoc = [self saveDocument: doc];
     
-    Assert([doc dictionaryForKey: @"level1"] != level1);
-    AssertEqualObjects([doc toDictionary], dict);
+    Assert([savedDoc dictionaryForKey: @"level1"] != level1);
+    AssertEqualObjects([savedDoc toDictionary], dict);
 }
 
 
@@ -133,20 +132,20 @@
     AssertEqualObjects([d3 stringForKey: @"name"], @"3");
     AssertEqualObjects([d4 stringForKey: @"name"], @"4");
     
-    doc = [self saveDocument: doc];
+    CBLDocument* savedDoc = [self saveDocument: doc];
     
-    dicts = [doc arrayForKey: @"dicts"];
-    AssertEqual(dicts.count, 4u);
+    CBLArray* savedDicts = [savedDoc arrayForKey: @"dicts"];
+    AssertEqual(savedDicts.count, 4u);
     
-    d1 = [dicts dictionaryAtIndex: 0];
-    d2 = [dicts dictionaryAtIndex: 1];
-    d3 = [dicts dictionaryAtIndex: 2];
-    d4 = [dicts dictionaryAtIndex: 3];
+    CBLDictionary* savedD1 = [savedDicts dictionaryAtIndex: 0];
+    CBLDictionary* savedD2 = [savedDicts dictionaryAtIndex: 1];
+    CBLDictionary* savedD3 = [savedDicts dictionaryAtIndex: 2];
+    CBLDictionary* savedD4 = [savedDicts dictionaryAtIndex: 3];
     
-    AssertEqualObjects([d1 stringForKey: @"name"], @"1");
-    AssertEqualObjects([d2 stringForKey: @"name"], @"2");
-    AssertEqualObjects([d3 stringForKey: @"name"], @"3");
-    AssertEqualObjects([d4 stringForKey: @"name"], @"4");
+    AssertEqualObjects([savedD1 stringForKey: @"name"], @"1");
+    AssertEqualObjects([savedD2 stringForKey: @"name"], @"2");
+    AssertEqualObjects([savedD3 stringForKey: @"name"], @"3");
+    AssertEqualObjects([savedD4 stringForKey: @"name"], @"4");
 }
 
 
@@ -172,11 +171,11 @@
     AssertNil([profile2 objectForKey: @"age"]);
     
     // Save:
-    doc = [self saveDocument: doc];
+    CBLDocument* savedDoc = [self saveDocument: doc];
     
-    Assert([doc dictionaryForKey: @"profile"] != profile2);
-    profile2 = [doc dictionaryForKey: @"profile"];
-    AssertEqualObjects([profile2 objectForKey: @"name"], @"Daniel Tiger");
+    Assert([savedDoc dictionaryForKey: @"profile"] != profile2);
+    CBLDictionary* savedProfile2 = [savedDoc dictionaryForKey: @"profile"];
+    AssertEqualObjects([savedProfile2 objectForKey: @"name"], @"Daniel Tiger");
 }
 
 
@@ -200,9 +199,9 @@
     AssertEqualObjects([doc objectForKey: @"profile"], @"Daniel Tiger");
     
     // Save:
-    doc = [self saveDocument: doc];
+    CBLDocument* savedDoc = [self saveDocument: doc];
     
-    AssertEqualObjects([doc objectForKey: @"profile"], @"Daniel Tiger");
+    AssertEqualObjects([savedDoc objectForKey: @"profile"], @"Daniel Tiger");
 }
 
 
@@ -228,10 +227,10 @@
     AssertNil([doc objectForKey: @"profile"]);
     
     // Save:
-    doc = [self saveDocument: doc];
+    CBLDocument* savedDoc = [self saveDocument: doc];
     
-    AssertNil([doc objectForKey: @"profile"]);
-    AssertFalse([doc containsObjectForKey: @"profile"]);
+    AssertNil([savedDoc objectForKey: @"profile"]);
+    AssertFalse([savedDoc containsObjectForKey: @"profile"]);
 }
 
 
@@ -270,10 +269,10 @@
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: dict forKey: @"dict"];
     
-    [self saveDocument: doc eval:^(CBLMutableDocument *d) {
+    [self saveDocument: doc eval: ^(CBLDocument *d) {
         result = [NSMutableDictionary dictionary];
         count = 0;
-        CBLMutableDictionary* dictObj = [d dictionaryForKey: @"dict"];
+        CBLDictionary* dictObj = [d dictionaryForKey: @"dict"];
         for (NSString* key in dictObj) {
             result[key] = [dictObj objectForKey: key];
             count++;

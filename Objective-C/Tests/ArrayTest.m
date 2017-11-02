@@ -58,22 +58,22 @@
 }
 
 
-- (void) saveArray: (CBLMutableArray*)array
-        onDocument: (CBLMutableDocument*)doc
-            forKey: (NSString*)key
-              eval: (void(^)(CBLMutableArray*))block
+- (CBLDocument*) saveArray: (CBLMutableArray*)array
+                onDocument: (CBLMutableDocument*)doc
+                    forKey: (NSString*)key
+                      eval: (void(^)(CBLArray*))block
 {
     block(array);
     
     // Set and Save:
     [doc setObject: array forKey: key];
-    [self saveDocument: doc];
+    CBLDocument* savedDoc = [self saveDocument: doc];
     
     // Re-get the document and the array:
-    doc = [_db documentWithID: doc.id];
-    array = [doc arrayForKey: @"array"];
+    CBLArray* savedArray = [savedDoc arrayForKey: @"array"];
+    block(savedArray);
     
-    block(array);
+    return savedDoc;
 }
 
 
@@ -91,8 +91,8 @@
     [doc setObject: array forKey: @"array"];
     AssertEqual([doc arrayForKey: @"array"], array);
     
-    doc = [self saveDocument: doc];
-    AssertEqualObjects([[doc arrayForKey: @"array"] toArray], @[]);
+    CBLDocument* savedDoc = [self saveDocument: doc];
+    AssertEqualObjects([[savedDoc arrayForKey: @"array"] toArray], @[]);
 }
 
 
@@ -106,8 +106,8 @@
     [doc setObject: array forKey: @"array"];
     AssertEqual([doc arrayForKey: @"array"], array);
     
-    doc = [self saveDocument: doc];
-    AssertEqualObjects([[doc arrayForKey: @"array"] toArray], data);
+    CBLDocument* savedDoc = [self saveDocument: doc];
+    AssertEqualObjects([[savedDoc arrayForKey: @"array"] toArray], data);
 }
 
 
@@ -122,9 +122,10 @@
     // Save:
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: array forKey: @"array"];
-    doc = [self saveDocument: doc];
+    CBLDocument* savedDoc = [self saveDocument: doc];
     
     // Update:
+    doc = [savedDoc edit];
     array = [doc arrayForKey: @"array"];
     data = @[@"4", @"5", @"6"];
     [array setArray: data];
@@ -141,7 +142,7 @@
     [self populateData: array];
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual(a.count, 12u);
         AssertEqualObjects([a objectAtIndex: 0], @(YES));
         AssertEqualObjects([a objectAtIndex: 1], @(NO));
@@ -174,7 +175,7 @@
     // Save:
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: array forKey: @"array"];
-    doc = [self saveDocument: doc];
+    doc = [[self saveDocument: doc] edit];
     
     // Get an existing array:
     array = [doc arrayForKey: @"array"];
@@ -183,7 +184,7 @@
     // Update:
     [self populateData: array];
     
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual(a.count, 24u);
         AssertEqualObjects([a objectAtIndex: 12], @(YES));
         AssertEqualObjects([a objectAtIndex: 13], @(NO));
@@ -224,7 +225,7 @@
     }
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual(a.count, data.count);
         AssertEqualObjects([a objectAtIndex: 0], @(YES));
         AssertEqualObjects([a objectAtIndex: 1], @(NO));
@@ -256,7 +257,7 @@
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: array forKey: @"array"];
-    doc = [self saveDocument: doc];
+    doc = [[self saveDocument: doc] edit];
     array = [doc arrayForKey: @"array"];
 
     // Get test data:
@@ -268,7 +269,7 @@
         [array setObject: data[data.count - i - 1]  atIndex: i];
     }
     
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual(a.count, data.count);
         AssertEqualObjects([a objectAtIndex: 11], @(YES));
         AssertEqualObjects([a objectAtIndex: 10], @(NO));
@@ -344,50 +345,54 @@
 - (void) testInsertObjectToExistingArray {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: [[CBLMutableArray alloc] init]  forKey: @"array"];
-    doc = [self saveDocument: doc];
+    doc = [[self saveDocument: doc] edit];
     
     CBLMutableArray* array = [doc arrayForKey: @"array"];
     AssertNotNil(array);
     
     [array insertObject:@"a" atIndex: 0];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    doc = [[self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual (a.count, 1u);
         AssertEqualObjects([a objectAtIndex: 0], @"a");
-    }];
+    }] edit];
     
+    array = [doc arrayForKey: @"array"];
     [array insertObject:@"c" atIndex: 0];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    doc = [[self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual (a.count, 2u);
         AssertEqualObjects([a objectAtIndex: 0], @"c");
         AssertEqualObjects([a objectAtIndex: 1], @"a");
-    }];
+    }] edit];
     
+    array = [doc arrayForKey: @"array"];
     [array insertObject:@"d" atIndex: 1];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    doc = [[self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual (a.count, 3u);
         AssertEqualObjects([a objectAtIndex: 0], @"c");
         AssertEqualObjects([a objectAtIndex: 1], @"d");
         AssertEqualObjects([a objectAtIndex: 2], @"a");
-    }];
+    }] edit];
     
+    array = [doc arrayForKey: @"array"];
     [array insertObject:@"e" atIndex: 2];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    doc = [[self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual (a.count, 4u);
         AssertEqualObjects([a objectAtIndex: 0], @"c");
         AssertEqualObjects([a objectAtIndex: 1], @"d");
         AssertEqualObjects([a objectAtIndex: 2], @"e");
         AssertEqualObjects([a objectAtIndex: 3], @"a");
-    }];
+    }] edit];
  
+    array = [doc arrayForKey: @"array"];
     [array insertObject:@"f" atIndex: 4];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    doc = [[self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual (a.count, 5u);
         AssertEqualObjects([a objectAtIndex: 0], @"c");
         AssertEqualObjects([a objectAtIndex: 1], @"d");
         AssertEqualObjects([a objectAtIndex: 2], @"e");
         AssertEqualObjects([a objectAtIndex: 3], @"a");
         AssertEqualObjects([a objectAtIndex: 4], @"f");
-    }];
+    }] edit];
 }
 
 
@@ -413,7 +418,7 @@
     }
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc  forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc  forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual(a.count, 0u);
         AssertEqualObjects([a toArray], (@[]));
     }];
@@ -426,14 +431,14 @@
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: array forKey: @"array"];
-    doc = [self saveDocument: doc];
+    doc = [[self saveDocument: doc] edit];
     array = [doc arrayForKey: @"array"];
     
     for (NSInteger i = array.count - 1; i >= 0; i--) {
         [array removeObjectAtIndex: i];
     }
     
-    [self saveArray: array onDocument: doc  forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc  forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual(a.count, 0u);
         AssertEqualObjects([a toArray], (@[]));
     }];
@@ -457,7 +462,7 @@
     [self populateData: array];
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual(a.count, 12u);
     }];
 }
@@ -469,7 +474,7 @@
     Assert(array.count == 12);
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertNil([a stringAtIndex: 0]);
         AssertNil([a stringAtIndex: 1]);
         AssertEqualObjects([a stringAtIndex: 2], @"string");
@@ -492,7 +497,7 @@
     Assert(array.count == 12);
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqualObjects([a numberAtIndex: 0], @(1));
         AssertEqualObjects([a numberAtIndex: 1], @(0));
         AssertNil([a numberAtIndex: 2]);
@@ -515,7 +520,7 @@
     Assert(array.count == 12);
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual([a integerAtIndex: 0], 1);
         AssertEqual([a integerAtIndex: 1], 0);
         AssertEqual([a integerAtIndex: 2], 0);
@@ -538,7 +543,7 @@
     Assert(array.count == 12);
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual([a floatAtIndex: 0], 1.0f);
         AssertEqual([a floatAtIndex: 1], 0.0f);
         AssertEqual([a floatAtIndex: 2], 0.0f);
@@ -561,7 +566,7 @@
     Assert(array.count == 12);
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual([a doubleAtIndex: 0], 1.0);
         AssertEqual([a doubleAtIndex: 1], 0.0);
         AssertEqual([a doubleAtIndex: 2], 0.0);
@@ -588,7 +593,7 @@
     [array addObject: @(DBL_MAX)];
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqualObjects([a numberAtIndex: 0], @(NSIntegerMin));
         AssertEqualObjects([a numberAtIndex: 1], @(NSIntegerMax));
         AssertEqualObjects([a objectAtIndex: 0], @(NSIntegerMin));
@@ -622,7 +627,7 @@
     [array addObject: @(1.99)];
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqualObjects([a objectAtIndex: 0], @(1.00));
         AssertEqualObjects([a numberAtIndex: 0], @(1.00));
         AssertEqual([a integerAtIndex: 0], 1);
@@ -662,7 +667,7 @@
     Assert(array.count == 12);
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual([a booleanAtIndex: 0], YES);
         AssertEqual([a booleanAtIndex: 1], NO);
         AssertEqual([a booleanAtIndex: 2], YES);
@@ -685,7 +690,7 @@
     Assert(array.count == 12);
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertNil([a dateAtIndex: 0]);
         AssertNil([a dateAtIndex: 1]);
         AssertNil([a dateAtIndex: 2]);
@@ -708,7 +713,7 @@
     Assert(array.count == 12);
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertNil([a dictionaryAtIndex: 0]);
         AssertNil([a dictionaryAtIndex: 1]);
         AssertNil([a dictionaryAtIndex: 2]);
@@ -731,7 +736,7 @@
     Assert(array.count == 12);
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertNil([a arrayAtIndex: 0]);
         AssertNil([a arrayAtIndex: 1]);
         AssertNil([a arrayAtIndex: 2]);
@@ -760,8 +765,8 @@
     [array3 addObject: @"c"];
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [self saveArray: array1 onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
-        CBLMutableArray* a1 = a;
+    [self saveArray: array1 onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
+        CBLArray* a1 = a;
         AssertEqual(a1.count, 1u);
         CBLMutableArray* a2 = [a1 objectAtIndex: 0];
         AssertEqual(a2.count, 1u);
@@ -804,13 +809,13 @@
     AssertEqualObjects([array2 toArray], (@[@"x", @"y", @"z"]));
     
     // Save:
-    doc = [self saveDocument: doc];
+    CBLDocument* savedDoc = [self saveDocument: doc];
     
     // Check current array:
-    Assert([doc arrayForKey: @"array"] != array2);
-    array2 = [doc arrayForKey: @"array"];
-    AssertEqual(array2.count, 3u);
-    AssertEqualObjects([array2 toArray], (@[@"x", @"y", @"z"]));
+    Assert([savedDoc arrayForKey: @"array"] != array2);
+    CBLArray* savedArray = [savedDoc arrayForKey: @"array"];
+    AssertEqual(savedArray.count, 3u);
+    AssertEqualObjects([savedArray toArray], (@[@"x", @"y", @"z"]));
 }
 
 
@@ -834,8 +839,8 @@
     AssertEqualObjects([array1 toArray], (@[@"a", @"b", @"c", @"d"]));
     
     // Save:
-    doc = [self saveDocument: doc];
-    AssertEqualObjects([doc objectForKey: @"array"], @"Daniel Tiger");   
+    CBLDocument* savedDoc = [self saveDocument: doc];
+    AssertEqualObjects([savedDoc objectForKey: @"array"], @"Daniel Tiger");
 }
 
 
@@ -869,7 +874,7 @@
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: array forKey: @"array"];
     
-    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLMutableArray* a) {
+    [self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         result = [NSMutableArray array];
         for (NSString* item in a) {
             AssertNotNil(item);

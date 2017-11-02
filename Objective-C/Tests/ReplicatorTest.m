@@ -133,12 +133,12 @@
 
 - (void) testPushDoc {
     NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc1"];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setObject: @"Tiger" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
     
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID:@"doc2"];
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setObject: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
@@ -146,19 +146,19 @@
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(otherDB.count, 2u);
-    doc2 = [otherDB documentWithID:@"doc1"];
-    AssertEqualObjects([doc2 stringForKey:@"name"], @"Tiger");
+    CBLDocument* savedDoc1 = [otherDB documentWithID: @"doc1"];
+    AssertEqualObjects([savedDoc1 stringForKey:@"name"], @"Tiger");
 }
 
 
 - (void) testPushDocContinuous {
     NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc1"];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setObject: @"Tiger" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
     
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID:@"doc2"];
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setObject: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
@@ -167,20 +167,20 @@
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(otherDB.count, 2u);
-    doc2 = [otherDB documentWithID:@"doc1"];
-    AssertEqualObjects([doc2 stringForKey:@"name"], @"Tiger");
+    CBLDocument* savedDoc1 = [otherDB documentWithID: @"doc1"];
+    AssertEqualObjects([savedDoc1 stringForKey:@"name"], @"Tiger");
 }
 
 
 - (void) testPullDoc {
     // For https://github.com/couchbase/couchbase-lite-core/issues/156
     NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc1"];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setObject: @"Tiger" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
 
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID:@"doc2"];
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setObject: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
 
@@ -188,8 +188,8 @@
     [self run: config errorCode: 0 errorDomain: nil];
 
     AssertEqual(self.db.count, 2u);
-    doc2 = [self.db documentWithID:@"doc2"];
-    AssertEqualObjects([doc2 stringForKey:@"name"], @"Cat");
+    CBLDocument* savedDoc2 = [self.db documentWithID:@"doc2"];
+    AssertEqualObjects([savedDoc2 stringForKey:@"name"], @"Cat");
 }
 
 
@@ -210,8 +210,8 @@
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(self.db.count, 2u);
-    doc2 = [self.db documentWithID:@"doc2"];
-    AssertEqualObjects([doc2 stringForKey:@"name"], @"Cat");
+    CBLDocument* savedDoc2 = [self.db documentWithID: @"doc2"];
+    AssertEqualObjects([savedDoc2 stringForKey:@"name"], @"Cat");
 }
 
 
@@ -226,11 +226,11 @@
     [self run: config errorCode: 0 errorDomain: nil];
 
     // Now make different changes in db and otherDB:
-    doc1 = [self.db documentWithID: @"doc"];
+    doc1 = [[self.db documentWithID: @"doc"] edit];
     [doc1 setObject: @"Hobbes" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
 
-    CBLMutableDocument* doc2 = [otherDB documentWithID: @"doc"];
+    CBLMutableDocument* doc2 = [[otherDB documentWithID: @"doc"] edit];
     Assert(doc2);
     [doc2 setObject: @"striped" forKey: @"pattern"];
     Assert([otherDB saveDocument: doc2 error: &error]);
@@ -244,10 +244,10 @@
 
     // Check that it was resolved:
     AssertEqual(self.db.count, 1u);
-    doc1 = [self.db documentWithID:@"doc"];
-    AssertEqualObjects(doc1.toDictionary, (@{@"species": @"Tiger",
-                                             @"name": @"Hobbes",
-                                             @"pattern": @"striped"}));
+    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
+    AssertEqualObjects(savedDoc.toDictionary, (@{@"species": @"Tiger",
+                                                 @"name": @"Hobbes",
+                                                 @"pattern": @"striped"}));
 }
 
 
@@ -257,13 +257,13 @@
     // think it needs to preserve its body; so when it pulls a conflict, there won't be a base
     // revision for the resolver.
     NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc"];
     [doc1 setObject: @"Tiger" forKey: @"species"];
     Assert([self.db saveDocument: doc1 error: &error]);
     [doc1 setObject: @"Hobbes" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
 
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID:@"doc"];
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc"];
     [doc2 setObject: @"Tiger" forKey: @"species"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     [doc2 setObject: @"striped" forKey: @"pattern"];
@@ -274,10 +274,10 @@
     [self run: config errorCode: 0 errorDomain: nil];
 
     AssertEqual(self.db.count, 1u);
-    doc1 = [self.db documentWithID:@"doc"];
-    AssertEqualObjects(doc1.toDictionary, (@{@"species": @"Tiger",
-                                             @"name": @"Hobbes",
-                                             @"pattern": @"striped"}));
+    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
+    AssertEqualObjects(savedDoc.toDictionary, (@{@"species": @"Tiger",
+                                                 @"name": @"Hobbes",
+                                                 @"pattern": @"striped"}));
 }
 
 

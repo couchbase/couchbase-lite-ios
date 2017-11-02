@@ -116,18 +116,19 @@
 }
 
 
-- (CBLMutableDocument*) saveDocument: (CBLMutableDocument*)document {
+- (CBLDocument*) saveDocument: (CBLMutableDocument*)document {
     NSError* error;
-    Assert([_db saveDocument: document error: &error], @"Saving error: %@", error);
-    return [_db documentWithID: document.id];
+    CBLDocument* newDoc = [_db saveDocument: document error: &error];
+    Assert(newDoc != nil, @"Saving error: %@", error);
+    return newDoc;
 }
 
 
-- (CBLMutableDocument*) saveDocument: (CBLMutableDocument*)doc eval: (void(^)(CBLMutableDocument*))block {
+- (CBLDocument*) saveDocument: (CBLMutableDocument*)doc eval: (void(^)(CBLDocument*))block {
     block(doc);
-    doc = [self saveDocument: doc];
-    block(doc);
-    return doc;
+    CBLDocument* newDoc = [self saveDocument: doc];
+    block(newDoc);
+    return newDoc;
 }
 
 

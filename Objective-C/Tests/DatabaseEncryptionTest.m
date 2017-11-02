@@ -176,8 +176,8 @@
         Assert([raw isEqualToData: body], @"Oops, attachment was encrypted");
     
     // Check blob content:
-    doc = [_seekrit documentWithID: @"att"];
-    blob = [doc blobForKey: @"blob"];
+    CBLDocument* savedDoc = [_seekrit documentWithID: @"att"];
+    blob = [savedDoc blobForKey: @"blob"];
     Assert(blob.digest);
     NSString* content = [[NSString alloc] initWithData: blob.content encoding: NSUTF8StringEncoding];
     AssertEqualObjects(content, @"This is a blob!");
@@ -233,7 +233,7 @@
     _seekrit = seekrit2;
     
     // Check the document and its attachment:
-    CBLMutableDocument* doc = [_seekrit documentWithID: @"att"];
+    CBLDocument* doc = [_seekrit documentWithID: @"att"];
     CBLBlob* blob = [doc blobForKey: @"blob"];
     Assert(blob.content);
     NSString* content = [[NSString alloc] initWithData: blob.content encoding: NSUTF8StringEncoding];

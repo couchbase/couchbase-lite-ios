@@ -84,7 +84,7 @@
         uint64_t rows = [self verifyQuery: q randomAccess: NO
                                      test: ^(uint64_t n, CBLQueryResult *r)
         {
-            CBLMutableDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
+            CBLDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
             id dict = [doc toDictionary];
             Assert([result containsObject: dict]);
             [result removeObject: dict];
@@ -111,7 +111,7 @@
         NSUInteger seq = [[r objectAtIndex: 1] unsignedIntegerValue];
         AssertEqual(seq, n);
         
-        CBLMutableDocument* doc = [self.db documentWithID: docID];
+        CBLDocument* doc = [self.db documentWithID: docID];
         AssertEqualObjects(doc.id, expectedID);
         AssertEqual(doc.sequence, n);
     }];
@@ -233,7 +233,7 @@
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
                                     test: ^(uint64_t n, CBLQueryResult* r)
     {
-        CBLMutableDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
+        CBLDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
         AssertEqualObjects(doc.id, doc1.id);
         AssertEqualObjects([doc objectForKey: @"string"], @"string");
     }];
@@ -246,7 +246,7 @@
     Assert(q);
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
     {
-        CBLMutableDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
+        CBLDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
         AssertEqualObjects(doc.id, doc1.id);
         AssertEqualObjects([doc objectForKey: @"string"], @"string");
     }];
@@ -276,7 +276,7 @@
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
                                     test:^(uint64_t n, CBLQueryResult* r)
     {
-        CBLMutableDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
+        CBLDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
         NSString* first = [[doc objectForKey: @"name"] objectForKey: @"first"];
         AssertEqualObjects(first, expected[(NSUInteger)(n-1)]);
     }];
@@ -296,7 +296,7 @@
     NSMutableArray* firstNames = [NSMutableArray array];
     uint64_t numRows = [self verifyQuery: q randomAccess: NO
                                     test:^(uint64_t n, CBLQueryResult* r) {
-        CBLMutableDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
+        CBLDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
         NSString* firstName = [[doc objectForKey:@"name"] objectForKey: @"first"];
         if (firstName)
             [firstNames addObject: firstName];
@@ -319,7 +319,7 @@
     uint64_t numRows = [self verifyQuery: q randomAccess: NO
                                     test:^(uint64_t n, CBLQueryResult* r)
     {
-        CBLMutableDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
+        CBLDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
         NSString* firstName = [[doc objectForKey:@"name"] objectForKey: @"first"];
         if (firstName)
             [firstNames addObject: firstName];
@@ -380,7 +380,7 @@
         uint64_t numRows = [self verifyQuery: q randomAccess: NO
                                         test: ^(uint64_t n, CBLQueryResult* r)
         {
-            CBLMutableDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
+            CBLDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
             NSString* firstName = [[doc objectForKey:@"name"] objectForKey: @"first"];
             if (firstName)
                 [firstNames addObject: firstName];
@@ -442,7 +442,7 @@
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
                                     test: ^(uint64_t n, CBLQueryResult* r)
     {
-        CBLMutableDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
+        CBLDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
         AssertEqual([doc integerForKey:@"number1"], 42);
     }];
     AssertEqual(numRows, 1u);
@@ -1262,7 +1262,7 @@
     for (NSArray* data in testData) {
         CBLMutableDocument* doc = [self createDocument];
         [doc setObject: data[0] forKey: @"value"];
-        [self saveDocument: doc];
+        CBLDocument* savedDoc = [self saveDocument: doc];
         
         CBLQueryExpression* VALUE = [CBLQueryExpression property: @"value"];
         CBLQueryExpression* comparison = [data[2] boolValue] ?
@@ -1278,7 +1278,7 @@
                                         test: ^(uint64_t n, CBLQueryResult* r) { }];
         AssertEqual(numRows, 1u);
         
-        Assert([self.db deleteDocument: doc error: nil]);
+        Assert([self.db deleteDocument: savedDoc error: nil]);
     }
 }
 
@@ -1301,7 +1301,7 @@
             AssertEqual(rows.count, 9u);
         } else {
             AssertEqual(rows.count, 10u);
-            CBLMutableDocument* doc = [self.db documentWithID: [rows[0] objectAtIndex: 0]];
+            CBLDocument* doc = [self.db documentWithID: [rows[0] objectAtIndex: 0]];
             AssertEqualObjects([doc objectForKey: @"number1"], @(-1));
             [x fulfill];
         }
