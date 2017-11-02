@@ -7,7 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLMutableDocument, CBLMutableDocumentFragment, CBLDatabaseChange, CBLDocumentChange;
+@class CBLDocument, CBLMutableDocument, CBLDocumentFragment;
+@class CBLDatabaseChange, CBLDocumentChange;
 @class CBLEncryptionKey;
 @class CBLIndex, CBLPredicateQuery;
 @protocol CBLConflictResolver, CBLDocumentChangeListener;
@@ -153,7 +154,7 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  @param documentID The document ID.
  @return The CBLMutableDocument object.
  */
-- (nullable CBLMutableDocument*) documentWithID: (NSString*)documentID;
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID;
 
 
 #pragma mark - Check Document Exists
@@ -175,26 +176,26 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  Gets a document fragment with the given document ID.
  
  @param documentID The document ID.
- @return The CBLMutableDocumentFragment object.
+ @return The CBLDocumentFragment object.
  */
-- (CBLMutableDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID;
+- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID;
 
 
 #pragma mark - Save, Delete, Purge
 
 
-/** 
+/**
  Saves the given document to the database.
- If the document in the database has been updated since it was read by this CBLMutableDocument, a
+ If the document in the database has been updated since it was read by the given document, a
  conflict occurs, which will be resolved by invoking the conflict handler. This can happen if
  multiple application threads are writing to the database, or a pull replication is copying
  changes from a server.
- 
+
  @param document The document to be saved.
  @param error On return, the error if any.
- @return True on success, false on failure.
+ @return The saved CBLDocument object.
  */
-- (BOOL) saveDocument: (CBLMutableDocument*)document error: (NSError**)error;
+- (nullable CBLDocument*) saveDocument: (CBLMutableDocument*)document error: (NSError**)error;
 
 /** 
  Deletes the given document.
@@ -208,7 +209,7 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  @param error On return, the error if any.
  @return True on success, false on failure.
  */
-- (BOOL) deleteDocument: (CBLMutableDocument*)document error: (NSError**)error;
+- (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error;
 
 /** 
  Purges the given document from the database.
@@ -219,7 +220,7 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  @param error On return, the error if any.
  @return True on success, false on failure.
  */
-- (BOOL) purgeDocument: (CBLMutableDocument*)document error: (NSError**)error;
+- (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error;
 
 
 #pragma mark - Batch Operation

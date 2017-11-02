@@ -15,7 +15,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/** CBLDictionary protocol defines a set of methods for readonly accessing dictionary data. */
+/** CBLDictionary protocol defines a set of methods for reading dictionary data. */
 @protocol CBLDictionary <NSObject, CBLDictionaryFragment, NSFastEnumeration>
 
 #pragma mark - Counting Entries
@@ -173,7 +173,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-/** CBLDictionary provides readonly access to dictionary data. */
+/** CBLDictionary provides read access to dictionary data. */
 @interface CBLDictionary : NSObject <CBLDictionary>
 
 - (instancetype) init NS_UNAVAILABLE;

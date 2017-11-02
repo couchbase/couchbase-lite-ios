@@ -159,7 +159,7 @@ using namespace cbl;
 #pragma mark - Type Setters
 
 
-- (void) setArray: (nullable CBLMutableArray *)value forKey: (NSString *)key {
+- (void) setArray: (nullable CBLArray *)value forKey: (NSString *)key {
     [self setObject: value forKey: key];
 }
 
@@ -179,7 +179,7 @@ using namespace cbl;
 }
 
 
-- (void) setDictionary: (nullable CBLMutableDictionary *)value forKey: (NSString *)key {
+- (void) setDictionary: (nullable CBLDictionary *)value forKey: (NSString *)key {
     [self setObject: value forKey: key];
 }
 

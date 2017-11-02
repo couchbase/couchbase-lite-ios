@@ -7,20 +7,20 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLMutableDictionaryFragment.h"
-@class CBLMutableDocument;
+#import "CBLDictionaryFragment.h"
+@class CBLDocument;
 
 /** 
- CBLMutableDocumentFragment provides access to a document object. CBLMutableDocumentFragment also provides
+ CBLDocumentFragment provides access to a document object. CBLDocumentFragment also provides
  subscript access by either key or index to the data values of the document which are
- wrapped by CBLMutableFragment objects.
+ wrapped by CBLFragment objects.
  */
-@interface CBLMutableDocumentFragment : NSObject <CBLMutableDictionaryFragment>
+@interface CBLDocumentFragment : NSObject <CBLDictionaryFragment>
 
 /** Checks whether the document exists in the database or not. */
 @property (nonatomic, readonly) BOOL exists;
 
 /** Gets the document from the document fragment object. */
-@property (nonatomic, readonly, nullable) CBLMutableDocument* document;
+@property (nonatomic, readonly, nullable) CBLDocument* document;
 
 @end

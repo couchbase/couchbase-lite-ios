@@ -68,7 +68,7 @@
 }
 
 
-- (void) setArray: (nullable CBLMutableArray*)value atIndex: (NSUInteger)index {
+- (void) setArray: (nullable CBLArray*)value atIndex: (NSUInteger)index {
     [self setObject: value atIndex: index];
 }
 
@@ -88,7 +88,7 @@
 }
 
 
-- (void) setDictionary: (nullable CBLMutableDictionary*)value atIndex: (NSUInteger)index {
+- (void) setDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index {
     [self setObject: value atIndex: index];
 }
 
@@ -133,7 +133,7 @@
 }
 
 
-- (void) addArray: (nullable CBLMutableArray*)value {
+- (void) addArray: (nullable CBLArray*)value {
     [self addObject: value];
 }
 
@@ -153,7 +153,7 @@
 }
 
 
-- (void) addDictionary: (nullable CBLMutableDictionary*)value {
+- (void) addDictionary: (nullable CBLDictionary*)value {
     [self addObject: value];
 }
 
@@ -199,7 +199,7 @@
 }
 
 
-- (void) insertArray: (nullable CBLMutableArray*)value atIndex: (NSUInteger)index {
+- (void) insertArray: (nullable CBLArray*)value atIndex: (NSUInteger)index {
     [self insertObject: value atIndex: index];
 }
 
@@ -219,7 +219,7 @@
 }
 
 
-- (void) insertDictionary: (nullable CBLMutableDictionary*)value atIndex: (NSUInteger)index {
+- (void) insertDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index {
     [self insertObject: value atIndex: index];
 }
 

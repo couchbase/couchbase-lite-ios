@@ -21,12 +21,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /** 
- Sets a CBLMutableArray object at the given index. A nil value will be converted to an NSNull.
+ Sets a CBLArray object at the given index. A nil value will be converted to an NSNull.
  
- @param value The CBLMutableArray object.
+ @param value The CBLArray object.
  @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) setArray: (nullable CBLMutableArray*)value atIndex: (NSUInteger)index;
+- (void) setArray: (nullable CBLArray*)value atIndex: (NSUInteger)index;
 
 /** 
  Sets a CBLBlob object at the given index. A nil value will be converted to an NSNull.
@@ -53,12 +53,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) setDate: (nullable NSDate*)value atIndex: (NSUInteger)index;
 
 /** 
- Sets a CBLMutableDictionary object at the given index. A nil value will be converted to an NSNull.
+ Sets a CBLDictionary object at the given index. A nil value will be converted to an NSNull.
  
- @param value The CBLMutableDictionary object.
+ @param value The CBLDictionary object.
  @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) setDictionary: (nullable CBLMutableDictionary*)value atIndex: (NSUInteger)index;
+- (void) setDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index;
 
 /** 
  Sets a double value at the given index.
@@ -119,11 +119,11 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Type Appenders
 
 /** 
- Adds a CBLMutableArray object to the end of the array. A nil value will be converted to an NSNull.
+ Adds a CBLArray object to the end of the array. A nil value will be converted to an NSNull.
  
- @param value The CBLMutableArray object.
+ @param value The CBLArray object.
  */
-- (void) addArray: (nullable CBLMutableArray*)value;
+- (void) addArray: (nullable CBLArray*)value;
 
 /** 
  Adds a CBLBlob object to the end of the array. A nil value will be converted to an NSNull.
@@ -147,11 +147,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) addDate: (nullable NSDate*)value;
 
 /** 
- Adds a CBLMutableDictionary object to the end of the array. A nil value will be converted to an NSNull.
+ Adds a CBLDictionary object to the end of the array. A nil value will be converted to an NSNull.
  
- @param value The CBLMutableDictionary object.
+ @param value The CBLDictionary object.
  */
-- (void) addDictionary: (nullable CBLMutableDictionary*)value;
+- (void) addDictionary: (nullable CBLDictionary*)value;
 
 /** 
  Adds a double value to the end of the array.
@@ -207,12 +207,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /** 
- Inserts a CBLMutableArray object at the given index. A nil value will be converted to an NSNull.
+ Inserts a CBLArray object at the given index. A nil value will be converted to an NSNull.
  
- @param value The CBLMutableArray object.
+ @param value The CBLArray object.
  @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) insertArray: (nullable CBLMutableArray*)value atIndex: (NSUInteger)index;
+- (void) insertArray: (nullable CBLArray*)value atIndex: (NSUInteger)index;
 
 /** 
  Inserts a CBLBlob object at the given index. A nil value will be converted to an NSNull.
@@ -239,12 +239,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) insertDate: (nullable NSDate*)value atIndex: (NSUInteger)index;
 
 /** 
- Inserts a CBLMutableDictionary object at the given index. A nil value will be converted to an NSNull.
+ Inserts a CBLDictionary object at the given index. A nil value will be converted to an NSNull.
  
- @param value The CBLMutableDictionary object.
+ @param value The CBLDictionary object.
  @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) insertDictionary: (nullable CBLMutableDictionary*)value atIndex: (NSUInteger)index;
+- (void) insertDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index;
 
 /** 
  Inserts a double value at the given index.

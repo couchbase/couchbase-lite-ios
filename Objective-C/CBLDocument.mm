@@ -32,16 +32,13 @@ using namespace fleeceapi;
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
                             c4Doc: (nullable CBLC4Document*)c4Doc
-                       fleeceData: (nullable FLDict)data
 {
     NSParameterAssert(documentID != nil);
     self = [super init];
     if (self) {
         _database = database;
         _id = documentID;
-        _c4Doc = c4Doc;
-        _data = data;
-        [self updateDictionary];
+        [self setC4Doc: c4Doc];
     }
     return self;
 }
@@ -52,7 +49,7 @@ using namespace fleeceapi;
                         mustExist: (BOOL)mustExist
                             error: (NSError**)outError
 {
-    self = [self initWithDatabase: database documentID: documentID c4Doc: nil fleeceData: nil];
+    self = [self initWithDatabase: database documentID: documentID c4Doc: nil];
     if (self) {
         _database = database;
         CBLStringBytes docId(documentID);
@@ -86,6 +83,11 @@ using namespace fleeceapi;
 }
 
 
+- (CBLMutableDocument*) edit {
+    return [[CBLMutableDocument alloc] initWithDocument: self];
+}
+
+
 #pragma mark - Internal
 
 
@@ -99,6 +101,11 @@ using namespace fleeceapi;
 - (bool) isMutable {
     // CBLMutableDocument overrides this
     return false;
+}
+
+
+- (BOOL) isEmpty {
+    return _dict.count == 0;
 }
 
 

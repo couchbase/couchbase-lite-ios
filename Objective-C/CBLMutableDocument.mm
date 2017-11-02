@@ -53,8 +53,7 @@
 - (instancetype) initWithID: (nullable NSString*)documentID {
     return [self initWithDatabase: nil
                        documentID: (documentID ?: CBLCreateUUID())
-                            c4Doc: nil
-                       fleeceData: nil];
+                            c4Doc: nil];
 }
 
 
@@ -78,10 +77,28 @@
 }
 
 
+/* internal */ - (instancetype) initWithDocument: (CBLDocument*)doc {
+    return [self initWithDatabase: doc.database
+                       documentID: doc.id
+                            c4Doc: doc.c4Doc];
+    
+}
+
+#pragma mark - Edit
+
+- (CBLMutableDocument*) mutableCopyWithZone:(NSZone *)zone {
+    return [[CBLMutableDocument alloc] initWithDocument: self];
+}
+
+- (CBLMutableDocument*) edit {
+    return self;
+}
+
+
 #pragma mark - CBLMutableDictionary
 
 
-- (void) setArray: (nullable CBLMutableArray *)value forKey: (NSString *)key {
+- (void) setArray: (nullable CBLArray *)value forKey: (NSString *)key {
     [((CBLMutableDictionary*)_dict) setArray: value forKey: key];
 }
 
@@ -101,7 +118,7 @@
 }
 
 
-- (void) setDictionary: (nullable CBLMutableDictionary *)value forKey: (NSString *)key {
+- (void) setDictionary: (nullable CBLDictionary *)value forKey: (NSString *)key {
     [((CBLMutableDictionary*)_dict) setDictionary: value forKey: key];
 }
 
@@ -165,50 +182,6 @@
 }
 
 
-- (BOOL) isEmpty {
-    return _dict.count == 0;
-}
-
-
-- (BOOL) save: (NSError**)outError {
-    return [self saveWithConflictResolver: self.effectiveConflictResolver
-                                 deletion: NO
-                                    error: outError];
-}
-
-
-- (BOOL) deleteDocument: (NSError**)outError {
-    return [self saveWithConflictResolver: self.effectiveConflictResolver
-                                 deletion: YES
-                                    error: outError];
-}
-
-
-- (BOOL) purge: (NSError**)outError {
-    if (!self.exists) {
-        return createError(kCBLStatusNotFound, outError);
-    }
-    
-    C4Transaction transaction(self.c4db);
-    if (!transaction.begin())
-        return convertError(transaction.error(),  outError);
-    
-    C4Error err;
-    if (c4doc_purgeRevision(self.c4Doc.rawDoc, C4Slice(), &err) >= 0) {
-        if (c4doc_save(self.c4Doc.rawDoc, 0, &err)) {
-            // Save succeeded; now commit:
-            if (!transaction.commit())
-                return convertError(transaction.error(), outError);
-            
-            // Reset:
-            [self setC4Doc: nil];
-            return YES;
-        }
-    }
-    return convertError(err, outError);
-}
-
-
 #pragma mark - Private
 
 
@@ -216,174 +189,6 @@
 // not be propagated here.
 - (BOOL) changed {
     return ((CBLMutableDictionary*)_dict).changed;
-}
-
-
-// The next three functions search recursively for a property "_cbltype":"blob".
-
-static bool objectContainsBlob(__unsafe_unretained id value) {
-    if ([value isKindOfClass: [CBLBlob class]])
-        return true;
-    else if ([value isKindOfClass: [CBLMutableDictionary class]])
-        return dictionaryContainsBlob(value);
-    else if ([value isKindOfClass: [CBLMutableArray class]])
-        return arrayContainsBlob(value);
-    else
-        return false;
-}
-
-static bool arrayContainsBlob(__unsafe_unretained CBLMutableArray* array) {
-    for (id value in array)
-        if (objectContainsBlob(value))
-            return true;
-    return false;
-}
-
-static bool dictionaryContainsBlob(__unsafe_unretained CBLMutableDictionary* dict) {
-    __block bool containsBlob = false;
-    for (NSString* key in dict) {
-        containsBlob = objectContainsBlob([dict objectForKey: key]);
-        if (containsBlob)
-            break;
-    }
-    return containsBlob;
-}
-
-
-// Lower-level save method. On conflict, returns YES but sets *outDoc to NULL.
-- (BOOL) saveInto: (C4Document **)outDoc
-         asDelete: (BOOL)deletion
-            error: (NSError **)outError
-{
-    C4RevisionFlags revFlags = 0;
-    if (deletion)
-        revFlags = kRevDeleted;
-    NSData* body = nil;
-    C4Slice bodySlice = {};
-    if (!deletion && !self.isEmpty) {
-        // Encode properties to Fleece data:
-        body = [self encode: outError];
-        if (!body) {
-            *outDoc = nullptr;
-            return NO;
-        }
-        bodySlice = data2slice(body);
-        auto root = FLValue_FromTrustedData(bodySlice);
-        if (c4doc_dictContainsBlobs((FLDict)root, self.database.sharedKeys))
-            revFlags |= kRevHasAttachments;
-    }
-    
-    // Save to database:
-    C4Error err;
-    C4Document *c4Doc = self.c4Doc.rawDoc;
-    if (c4Doc) {
-        *outDoc = c4doc_update(c4Doc, bodySlice, revFlags, &err);
-    } else {
-        CBLStringBytes docID(self.id);
-        *outDoc = c4doc_create(self.c4db, docID, data2slice(body), revFlags, &err);
-    }
-
-    if (!*outDoc && !(err.domain == LiteCoreDomain && err.code == kC4ErrorConflict)) {
-        // conflict is not an error, at this level
-        return convertError(err, outError);
-    }
-    return YES;
-}
-
-
-// "Pulls" from the database, merging the latest revision into the in-memory properties,
-//  without saving. */
-- (BOOL) mergeWithConflictResolver: (id<CBLConflictResolver>)resolver
-                          deletion: (bool)deletion
-                             error: (NSError**)outError
-{
-    if (!resolver)
-        return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
-
-    // Read the current revision from the database:
-    auto database = self.database;
-    CBLDocument* current = [[CBLDocument alloc] initWithDatabase: database
-                                                                      documentID: self.id
-                                                                       mustExist: YES
-                                                                           error: outError];
-    if (!current)
-        return NO;
-    CBLC4Document* curC4doc = current.c4Doc;
-
-    // Resolve conflict:
-    CBLDocument* resolved;
-    if (deletion) {
-        // Deletion always loses a conflict:
-        resolved = current;
-    } else {
-        // Call the conflict resolver:
-        CBLDocument* base = nil;
-        if (super.c4Doc) {
-            base = [[CBLDocument alloc] initWithDatabase: database
-                                                      documentID: self.id
-                                                           c4Doc: super.c4Doc
-                                                      fleeceData: super.data];
-        }
-        
-        CBLConflict* conflict = [[CBLConflict alloc] initWithMine: self theirs: current base: base];
-        resolved = [resolver resolve: conflict];
-        if (resolved == nil)
-            return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
-    }
-
-    // Now update my state to the current C4Document and the merged/resolved properties:
-    if (!$equal(resolved, current)) {                   // TODO: Implement deep comparison
-        NSDictionary* dict = [resolved toDictionary];   // TODO: toDictionary is expensive
-        [self setC4Doc: curC4doc];
-        [self setDictionary: dict];
-    } else
-        [self setC4Doc: curC4doc];
-    
-    return YES;
-}
-
-
-// The main save method.
-- (BOOL) saveWithConflictResolver: (id<CBLConflictResolver>)resolver
-                         deletion: (bool)deletion
-                            error: (NSError**)outError
-{
-    if (deletion && !self.exists)
-        return createError(kCBLStatusNotFound, outError);
-    
-    // Begin a db transaction:
-    C4Transaction transaction(self.c4db);
-    if (!transaction.begin())
-        return convertError(transaction.error(), outError);
-
-    // Attempt to save. (On conflict, this will succeed but newDoc will be null.)
-    C4Document* newDoc;
-    if (![self saveInto: &newDoc asDelete: deletion error: outError])
-        return NO;
-    
-    if (!newDoc) {
-        // There's been a conflict; first merge with the new saved revision:
-        if (![self mergeWithConflictResolver: resolver deletion: deletion error: outError])
-            return NO;
-        // The merge might have turned the save into a no-op:
-        if (!self.changed)
-            return YES;
-        // Now save the merged properties:
-        if (![self saveInto: &newDoc asDelete: deletion error: outError])
-            return NO;
-        Assert(newDoc);     // In a transaction we can't have a second conflict after merging!
-    }
-    
-    // Save succeeded; now commit the transaction:
-    if (!transaction.commit()) {
-        c4doc_free(newDoc);
-        return convertError(transaction.error(), outError);
-    }
-
-    // Update my state and post a notification:
-    [self setC4Doc: [CBLC4Document document: newDoc]];
-    
-    return YES;
 }
 
 

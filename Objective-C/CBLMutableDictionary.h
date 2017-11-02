@@ -14,17 +14,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/** CBLMutableDictionary protocol defines a set of methods for getting and setting dictionary data. */
+/** CBLMutableDictionary protocol defines a set of methods for writing dictionary data. */
 @protocol CBLMutableDictionary <CBLDictionary, CBLMutableDictionaryFragment>
 
 #pragma mark - Type Setters
 
 /**
- Set a CBLMutableArray object for the given key. A nil value will be converted to an NSNull.
+ Set a CBLArray object for the given key. A nil value will be converted to an NSNull.
  
- @param value The CBLMutableArray object.
+ @param value The CBLArray object.
  */
-- (void) setArray: (nullable CBLMutableArray*)value forKey: (NSString*)key;
+- (void) setArray: (nullable CBLArray*)value forKey: (NSString*)key;
 
 /** 
  Set a CBLBlob object for the given key. A nil value will be converted to an NSNull.
@@ -48,11 +48,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) setDate: (nullable NSDate*)value forKey: (NSString*)key;
 
 /** 
- Set a CBLMutableDictionary object for the given key. A nil value will be converted to an NSNull.
+ Set a CBLDictionary object for the given key. A nil value will be converted to an NSNull.
  
- @param value The CBLMutableDictionary object.
+ @param value The CBLDictionary object.
  */
-- (void) setDictionary: (nullable CBLMutableDictionary*)value forKey: (NSString*)key;
+- (void) setDictionary: (nullable CBLDictionary*)value forKey: (NSString*)key;
 
 /** 
  Set a double value for the given key.
@@ -160,7 +160,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-/** CBLMutableDictionary provides access to dictionary data. */
+/** CBLMutableDictionary is a mutable version of the CBLDictionary. */
 @interface CBLMutableDictionary : CBLDictionary <CBLMutableDictionary>
 
 #pragma mark - Initializers

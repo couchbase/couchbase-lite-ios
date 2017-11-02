@@ -13,7 +13,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/** A Couchbase Lite document. */
+/** The mutable version of the CBLDocument. */
 @interface CBLMutableDocument : CBLDocument <CBLMutableDictionary>
 
 /** 

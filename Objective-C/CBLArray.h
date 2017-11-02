@@ -14,7 +14,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/** CBLArray protocol defines a set of methods for readonly accessing array data. */
+/** CBLArray protocol defines a set of methods for reading array data. */
 @protocol CBLArray <NSObject, CBLArrayFragment, NSFastEnumeration>
 
 /** Gets a number of the items in the array. */
@@ -149,7 +149,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-/** CBLArray provides readonly access to array data. */
+/** CBLArray provides read access to array data. */
 @interface CBLArray : NSObject <CBLArray>
 
 - (instancetype) init NS_UNAVAILABLE;

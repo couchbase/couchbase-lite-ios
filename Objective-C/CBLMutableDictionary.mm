@@ -57,7 +57,7 @@ using namespace fleeceapi;
 #pragma mark - Type Setters
 
 
-- (void) setArray: (nullable CBLMutableArray *)value forKey: (NSString *)key {
+- (void) setArray: (nullable CBLArray *)value forKey: (NSString *)key {
     [self setObject: value forKey: key];
 }
 
@@ -77,7 +77,7 @@ using namespace fleeceapi;
 }
 
 
-- (void) setDictionary: (nullable CBLMutableDictionary *)value forKey: (NSString *)key {
+- (void) setDictionary: (nullable CBLDictionary *)value forKey: (NSString *)key {
     [self setObject: value forKey: key];
 }
 

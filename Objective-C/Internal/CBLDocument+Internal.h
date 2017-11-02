@@ -28,11 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLMutableDocument ()
 
-- (BOOL) save: (NSError**)error;
-
-- (BOOL) deleteDocument: (NSError**)error;
-
-- (BOOL) purge: (NSError**)error;
+- (instancetype) initWithDocument: (CBLDocument*)doc;
 
 - (void) setEncodingError: (NSError*)error;
 
@@ -54,18 +50,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) BOOL exists;
 
+@property (nonatomic, readonly) BOOL isEmpty;
+
 @property (nonatomic, readonly) NSString* revID;
 
 @property (nonatomic, readonly) NSUInteger generation;
 
-@property (nonatomic, readonly) id<CBLConflictResolver> effectiveConflictResolver;
-
 @property (nonatomic, readonly, nullable) FLDict data;
 
+/*
 - (instancetype) initWithDatabase: (nullable CBLDatabase*)database
                        documentID: (NSString*)documentID
                             c4Doc: (nullable CBLC4Document*)c4Doc
                        fleeceData: (nullable FLDict)data NS_DESIGNATED_INITIALIZER;
+*/
+
+- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
+                       documentID: (NSString*)documentID
+                            c4Doc: (nullable CBLC4Document*)c4Doc NS_DESIGNATED_INITIALIZER;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
@@ -121,9 +123,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /////////////////
 
-@interface CBLMutableDocumentFragment ()
+@interface CBLDocumentFragment ()
 
-- (instancetype) initWithDocument: (CBLMutableDocument*)document;
+- (instancetype) initWithDocument: (CBLDocument*)document;
 
 @end
 

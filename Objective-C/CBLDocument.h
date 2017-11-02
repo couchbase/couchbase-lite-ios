@@ -8,8 +8,9 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLDictionary.h"
+@class CBLMutableDocument;
 
-/** Readonly version of the CBLMutableDocument. */
+/** A Couchbase Lite document. The CBLDocument is immutable. */
 @interface CBLDocument : NSObject <CBLDictionary>
 
 /** The document's ID. */
@@ -27,6 +28,14 @@
  */
 @property (readonly, nonatomic) uint64_t sequence;
 
+/**
+ Returns a mutable copy of the document.
+ 
+ @return The CBLMutableDocument object.
+ */
+- (CBLMutableDocument*) edit;
+
 - (instancetype) init NS_UNAVAILABLE;
+
 
 @end

@@ -1,5 +1,5 @@
 //
-//  CBLMutableDocumentFragment.m
+//  CBLDocumentFragment.m
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 5/2/17.
@@ -7,14 +7,14 @@
 //
 
 #import "CBLDocumentFragment.h"
-#import "CBLMutableDocument.h"
+#import "CBLDocument.h"
 #import "CBLDocument+Internal.h"
 
-@implementation CBLMutableDocumentFragment {
-    CBLMutableDocument* _doc;
+@implementation CBLDocumentFragment {
+    CBLDocument* _doc;
 }
 
-- /* internal */ (instancetype) initWithDocument: (CBLMutableDocument*)document {
+- /* internal */ (instancetype) initWithDocument: (CBLDocument*)document {
     self = [super init];
     if (self) {
         _doc = document;
@@ -28,12 +28,12 @@
 }
 
 
-- (CBLMutableDocument*) document {
+- (CBLDocument*) document {
     return _doc;
 }
 
 
-- (CBLMutableFragment*) objectForKeyedSubscript: (NSString*)key {
+- (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
     return _doc ? _doc[key] : nil;
 }
 

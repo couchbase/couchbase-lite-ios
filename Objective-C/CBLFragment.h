@@ -17,7 +17,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /** 
- CBLFragment protocol provides readonly access to the data value wrapped by
+ CBLFragment protocol provides read access to the data value wrapped by
  a fragment object.
  */
 @protocol CBLFragment <NSObject>
@@ -109,7 +109,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 /** 
- CBLFragment provides readonly access to data value. CBLFragment also provides
+ CBLFragment provides read access to data value. CBLFragment also provides
  subscript access by either key or index to the nested values which are wrapped by the
  CBLFragment objects.
  */
