@@ -134,8 +134,12 @@
 #endif
         NSString* platform = strcmp(CBL_PRODUCT_NAME, "CouchbaseLiteSwift") == 0 ?
             @"Swift" : @"ObjC";
-        sUserAgent = [NSString stringWithFormat: @"CouchbaseLite/%s (%@; %@) Build/%d Commit/%.8s%s",
-                      CBL_VERSION_STRING, platform, system, CBL_BUILD_NUMBER, GitCommit, GitDirty];
+        
+        NSString* commit = strlen(GitCommit) > (0) ?
+            [NSString stringWithFormat: @"Commit/%.8s%s", GitCommit, GitDirty] : @"NA";
+        
+        sUserAgent = [NSString stringWithFormat: @"CouchbaseLite/%s (%@; %@) Build/%d %@",
+                      CBL_VERSION_STRING, platform, system, CBL_BUILD_NUMBER, commit];
     });
     return sUserAgent;
 }

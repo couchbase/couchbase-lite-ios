@@ -6,7 +6,7 @@
 OUTPUT_FILE="$DERIVED_FILE_DIR/repo_version.h"
 
 GIT_BRANCH=`git rev-parse --symbolic-full-name HEAD | sed -e 's/refs\/heads\///'`
-GIT_COMMIT=`git rev-parse HEAD`
+GIT_COMMIT=`git rev-parse HEAD || true`
 GIT_DIRTY=$(test -n "`git status --porcelain`" && echo "+CHANGES" || true)
 
 echo "static const char* const GitCommit = \"$GIT_COMMIT\"; " \
