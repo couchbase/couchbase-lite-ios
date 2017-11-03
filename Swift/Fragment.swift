@@ -9,16 +9,29 @@
 import Foundation
 
 
-/// FragmentProtocol provides read and write access to the data value wrapped by
-/// a fragment object.
-protocol FragmentProtocol: ReadOnlyFragmentProtocol {
+/// FragmentProtocol provides readonly access to the data value wrapped by a fragment object.
+protocol FragmentProtocol {
+    var value: Any? { get }
     
-    var value: Any? { get set }
+    var string: String? { get }
+    
+    var int: Int { get }
+    
+    var float: Float { get }
+    
+    var double: Double { get }
+    
+    var boolean: Bool { get }
+    
+    var blob: Blob? { get }
+    
+    var date: Date? { get }
     
     var array: ArrayObject? { get }
     
     var dictionary: DictionaryObject? { get }
     
+    var exists: Bool { get }
 }
 
 
@@ -28,79 +41,132 @@ protocol ArrayFragment {
 }
 
 
-/// CBLMutableDictionaryFragment protocol provides subscript access to CBLMutableFragment objects by key.
+/// DictionaryFragment protocol provides subscript access to Fragment objects by key.
 protocol DictionaryFragment {
     subscript(key: String) -> Fragment { get }
 }
 
 
-/// Fragment provides read and write access to data value. Fragment also provides
+/// Fragment provides readonly access to data value. Fragment also provides
 /// subscript access by either key or index to the nested values which are wrapped by
 /// Fragment objects.
-public class Fragment: ReadOnlyFragment, DictionaryFragment, ArrayFragment {
+public class Fragment: FragmentProtocol, ArrayFragment, DictionaryFragment
+{
     
-    /// Gets the value from or sets the value to the fragment object. The object types are
-    /// ArrayObject, Blob, DictionaryObject, Number, String, NSNull, or nil
-    public override var value: Any? {
-        set {
-            fragmentImpl.value = (DataConverter.convertSETValue(newValue) as! NSObject)
-        }
-        
-        get {
-            return DataConverter.convertGETValue(fragmentImpl.value)
-        }
+    /// Gets the fragment value.
+    /// The value types are Blob, Array, Dictionary, Number, or String
+    /// based on the underlying data type; or nil if the value is nil.
+    public var value: Any? {
+        return DataConverter.convertGETValue(_impl.object)
     }
     
     
-    /// Get the value as an ArrayObject object, a mapping object of an array value.
+    /// Gets the value as a string.
+    /// Returns nil if the value is nil, or the value is not a string.
+    public var string: String? {
+        return _impl.string
+    }
+    
+    
+    /// Gets the value as an integer.
+    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    /// Returns 0 if the value is nil or is not a numeric value.
+    public var int: Int {
+        return _impl.integerValue
+    }
+    
+    
+    /// Gets the value as a float.
+    /// Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
+    /// Returns 0.0 if the value is nil or is not a numeric value.
+    public var float: Float {
+        return _impl.floatValue
+    }
+    
+    
+    /// Gets the value as a double.
+    /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
+    /// Returns 0.0 if the value is nil or is not a numeric value.
+    public var double: Double {
+        return _impl.doubleValue
+    }
+    
+    
+    /// Gets the value as a boolean.
+    /// Returns true if the value is not nil nor NSNull, and is either `true` or a nonzero number.
+    public var boolean: Bool {
+        return _impl.booleanValue
+    }
+    
+    
+    /// Get the value as a Blob.
+    /// Returns nil if the value is nil, or the value is not a Blob.
+    public var blob: Blob? {
+        return _impl.blob
+    }
+    
+    
+    /// Gets the value as an Date.
+    /// JSON does not directly support dates, so the actual property value must be a string, which is
+    /// then parsed according to the ISO-8601 date format (the default used in JSON.)
+    /// Returns nil if the value is nil, is not a string, or is not parseable as a date.
+    /// NOTE: This is not a generic date parser! It only recognizes the ISO-8601 format, with or
+    /// without milliseconds.
+    public var date: Date? {
+        return _impl.date
+    }
+    
+    
+    /// Get the value as a ArrayObject, a mapping object of an array value.
     /// Returns nil if the value is nil, or the value is not an array.
-    public override var array: ArrayObject? {
-        return DataConverter.convertGETValue(fragmentImpl.array) as? ArrayObject
+    public var array: ArrayObject? {
+        return DataConverter.convertGETValue(_impl.array) as? ArrayObject
     }
     
     
-    /// Get a property's value as a DictionaryObject object, a mapping object of
-    /// a dictionary value. Returns nil if the value is nil, or the value is not a dictionary.
-    public override var dictionary: DictionaryObject? {
-        return DataConverter.convertGETValue(fragmentImpl.dictionary) as? DictionaryObject
+    /// Get a property's value as a DictionaryObject, a mapping object of a dictionary value.
+    /// Returns nil if the value is nil, or the value is not a dictionary.
+    public var dictionary: DictionaryObject? {
+        return DataConverter.convertGETValue(_impl.dictionary) as? DictionaryObject
     }
     
     
-    // MARK: Subscripts
+    /// Checks whether the value held by the fragment object exists or is nil value or not.
+    public var exists: Bool {
+        return _impl.exists
+    }
     
     
-    /// Subscript access to a CBLMutableFragment object by index.
+    // MARK: Subscript
+    
+    
+    /// Subscript access to a Fragment object by index.
     ///
-    /// - Parameter index: The index.
-    public override subscript(index: Int) -> Fragment {
-        return Fragment(fragmentImpl[UInt(index)])
+    /// - Parameter index: The index
+    public subscript(index: Int) -> Fragment {
+        return Fragment(_impl[UInt(index)])
     }
     
     
-    /// Subscript access to a CBLMutableFragment object by key.
+    /// Subscript access to a Fragment object by key.
     ///
     /// - Parameter key: The key.
-    public override subscript(key: String) -> Fragment {
-        return Fragment(fragmentImpl[key])
+    public subscript(key: String) -> Fragment {
+        return Fragment(_impl[key])
     }
     
-    
+
     // MARK: Internal
     
     
-    init(_ impl: CBLMutableFragment?) {
-        super.init(impl ?? Fragment.kNonexistent)
+    init(_ impl: CBLFragment?) {
+        _impl = impl ?? Fragment.kNonexistentRO
     }
     
     
-    // MARK: Private
+    let _impl: CBLFragment
+
+
+    static let kNonexistentRO = CBLFragment()
     
-    
-    private var fragmentImpl: CBLMutableFragment {
-        return _impl as! CBLMutableFragment
-    }
-
-
-    static let kNonexistent = CBLMutableFragment()
-
 }

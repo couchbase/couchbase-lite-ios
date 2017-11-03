@@ -7,7 +7,7 @@
 //
 
 #import "CBLDictionary.h"
-#import "CBLReadOnlyDictionary+Swift.h"
+#import "CBLDictionary+Swift.h"
 #import "CBLData.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"

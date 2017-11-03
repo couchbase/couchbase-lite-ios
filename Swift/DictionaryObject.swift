@@ -9,280 +9,230 @@
 import Foundation
 
 
-/// DictionaryProtocol defines a set of methods for getting and setting dictionary data.
-protocol DictionaryProtocol: ReadOnlyDictionaryProtocol, DictionaryFragment {
-
-    // MARK: Type Setters
+/// DictionaryProtocol defines a set of methods for readonly accessing dictionary data.
+protocol DictionaryProtocol: DictionaryFragment, Sequence {
+    var count: Int { get }
     
-    @discardableResult func setArray(_ value: ArrayObject?, forKey key: String) -> Self
+    var keys: Array<String> { get }
     
-    @discardableResult func setBlob(_ value: Blob?, forKey key: String) -> Self
+    func value(forKey key: String) -> Any?
     
-    @discardableResult func setBoolean(_ value: Bool, forKey key: String) -> Self
+    func string(forKey key: String) -> String?
     
-    @discardableResult func setDate(_ value: Date?, forKey key: String) -> Self
+    func int(forKey key: String) -> Int
     
-    @discardableResult func setDictionary(_ value: DictionaryObject?, forKey key: String) -> Self
+    func int64(forKey key: String) -> Int64
     
-    @discardableResult func setDouble(_ value: Double, forKey key: String) -> Self
+    func float(forKey key: String) -> Float
     
-    @discardableResult func setFloat(_ value: Float, forKey key: String) -> Self
+    func double(forKey key: String) -> Double
     
-    @discardableResult func setInt(_ value: Int, forKey key: String) -> Self
+    func boolean(forKey key: String) -> Bool
     
-    @discardableResult func setInt64(_ value: Int64, forKey key: String) -> Self
+    func blob(forKey key: String) -> Blob?
     
-    @discardableResult func setString(_ value: String?, forKey key: String) -> Self
+    func date(forKey key: String) -> Date?
     
-    @discardableResult func setValue(_ value: Any?, forKey key: String) -> Self
+    func array(forKey key: String) -> ArrayObject?
     
-    // MARK: Setting content with a Dictionary
+    func dictionary(forKey key: String) -> DictionaryObject?
     
-    @discardableResult func setDictionary(_ dictionary: Dictionary<String, Any>?) -> Self
+    func contains(_ key: String) -> Bool
     
-    // MARK: Removing Entries
-    
-    @discardableResult func remove(forKey key: String) -> Self
-    
-    // MARK: Getting DictionaryObject and ArrayObject
-    
-    func array(forKey key: String) -> ArrayObject? /* override */
-    
-    func dictionary(forKey key: String) -> DictionaryObject? /* override */
-    
+    func toDictionary() -> Dictionary<String, Any>
 }
 
 
-/// DictionaryObject provides access to dictionary data.
-public class DictionaryObject: ReadOnlyDictionaryObject, DictionaryProtocol {
+/// DictionaryObject provides readonly access to dictionary data.
+public class DictionaryObject: DictionaryProtocol {
     
-    // MARK: Initializers
-    
-    
-    /// Initialize a new empty CBLMutableDictionary object.
-    public init() {
-        super.init(CBLMutableDictionary())
+    /// The number of entries in the dictionary.
+    public var count: Int {
+        return Int(_impl.count)
     }
     
     
-    /// Initialzes a new DictionaryObject object with dictionary content. Allowed value types are
-    /// Array, Date, Dictionary, Number, NSNull, String, ArrayObject, Blob, DictionaryObject.
-    /// The Arrays and Dictionaries must contain only the above types.
-    ///
-    /// - Parameter dictionary: the dictionary object.
-    public init(dictionary: Dictionary<String, Any>?) {
-        super.init(CBLMutableDictionary())
-        setDictionary(dictionary)
+    /// An array containing all keys, or an empty array if the dictionary has no entries.
+    public var keys: Array<String> {
+        return _impl.keys
     }
     
     
-    // MARK: Type Setters
-    
-    
-    /// Set an ArrayObject object for the given key. A nil value will be converted to an NSNull.
-    ///
-    /// - Parameters:
-    ///   - value: The ArrayObject object.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult func setArray(_ value: ArrayObject?, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a Blob object for the given key. A nil value will be converted to an NSNull.
-    ///
-    /// - Parameters:
-    ///   - value: The Blob object.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult func setBlob(_ value: Blob?, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a boolean value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value: The boolean value.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult func setBoolean(_ value: Bool, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a Date object for the given key. A nil value will be converted to an NSNull.
-    ///
-    /// - Parameters:
-    ///   - value: The Date object.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult func setDate(_ value: Date?, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a DictionaryObject object for the given key. A nil value will be converted to an NSNull.
-    ///
-    /// - Parameters:
-    ///   - value: The DictionaryObject object.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult func setDictionary(_ value: DictionaryObject?, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a double value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value:  The double value.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult func setDouble(_ value: Double, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a float value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value: The float value.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult func setFloat(_ value: Float, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set an int value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value: The int value.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult func setInt(_ value: Int, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set an int64 value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value: The int64 value.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult func setInt64(_ value: Int64, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a String value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value: The String value.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult func setString(_ value: String?, forKey key: String) -> Self {
-        return setValue(value, forKey:  key)
-    }
-
-
-    /// Set a value for the given key. Allowed value types are Array, Date, Dictionary,
-    /// Number types, NSNull, String, ArrayObject, Blob, DictionaryObject and nil.
-    /// The Arrays and Dictionaries must contain only the above types. A nil value will be
-    /// converted to an NSNull. An Date object will be converted to an ISO-8601 format string.
-    ///
-    /// - Parameters:
-    ///   - value: The value.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult public func setValue(_ value: Any?, forKey key: String) -> Self {
-        dictImpl.setObject(DataConverter.convertSETValue(value), forKey: key)
-        return self
-    }
-    
-    
-    // MARK: Setting content with a Dictionary
-    
-    
-    /// Set a dictionary as a content. Allowed value types are Array, Date, Dictionary,
-    /// Number types, NSNull, String, ArrayObject, Blob, DictionaryObject. The Arrays and
-    /// Dictionaries must contain only the above types. Setting the new dictionary content
-    /// will replace the current data including the existing ArrayObject and DictionaryObject
-    /// objects.
-    ///
-    /// - Parameter dictionary: The dictionary.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult public func setDictionary(_ dictionary: Dictionary<String, Any>?) -> Self {
-        dictImpl.setDictionary(DataConverter.convertSETDictionary(dictionary))
-        return self
-    }
-    
-    
-    // MARK: Removing Entries
-    
-    
-    /// Removes a given key and its value from the dictionary.
-    ///
-    /// - Parameter key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult public func remove(forKey key: String) -> Self {
-        dictImpl.removeObject(forKey: key)
-        return self
-    }
-    
-    
-    // MARK: Getting DictionaryObject and ArrayObject
-    
-    
-    /// Get a property's value as an ArrayObject, which is a mapping object of an array value.
+    /// Get a property's value as a ArrayObject, which is a mapping object of an array value.
     /// Returns nil if the property doesn't exists, or its value is not an array.
     ///
     /// - Parameter key: The key.
-    /// - Returns: The ArrayObject object or nil if the property doesn't exist.
-    public override func array(forKey key: String) -> ArrayObject? {
-        return self.value(forKey: key) as? ArrayObject
+    /// - Returns: The ArrayObject object or nil.
+    public func array(forKey key: String) -> ArrayObject? {
+        return value(forKey: key) as? ArrayObject
     }
     
     
-    /// Get a property's value as a DictionaryObject, which is a mapping object of a dictionary
-    /// value. Returns nil if the property doesn't exists, or its value is not a dictionary.
+    /// Get a property's value as a Blob object.
+    /// Returns nil if the property doesn't exist, or its value is not a blob.
     ///
     /// - Parameter key: The key.
-    /// - Returns: The DictionaryObject object.
-    public override func dictionary(forKey key: String) -> DictionaryObject? {
+    /// - Returns: The Blob object or nil.
+    public func blob(forKey key: String) -> Blob? {
+        return _impl.blob(forKey: key)
+    }
+    
+    
+    /// Gets a property's value as a boolean value.
+    /// Returns true if the value exists, and is either `true` or a nonzero number.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Bool value.
+    public func boolean(forKey key: String) -> Bool {
+        return _impl.boolean(forKey: key)
+    }
+    
+    
+    /// Gets a property's value as a Date value.
+    /// JSON does not directly support dates, so the actual property value must be a string, which is
+    /// then parsed according to the ISO-8601 date format (the default used in JSON.)
+    /// Returns nil if the value doesn't exist, is not a string, or is not parseable as a date.
+    /// NOTE: This is not a generic date parser! It only recognizes the ISO-8601 format, with or
+    /// without milliseconds.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Date value or nil
+    public func date(forKey key: String) -> Date? {
+        return _impl.date(forKey: key)
+    }
+    
+    
+    /// Get a property's value as a DictionaryObject, which is a mapping object of
+    /// a dictionary value.
+    /// Returns nil if the property doesn't exists, or its value is not a dictionary.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: THe DictionaryObject object or nil.
+    public func dictionary(forKey key: String) -> DictionaryObject? {
         return value(forKey: key) as? DictionaryObject
+    }
+    
+    
+    /// Gets a property's value as a float value.
+    /// Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
+    /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Float value.
+    public func float(forKey key: String) -> Float {
+        return _impl.float(forKey: key)
+    }
+    
+    
+    /// Gets a property's value as a double value.
+    /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
+    /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Double value.
+    public func double(forKey key: String) -> Double {
+        return _impl.double(forKey: key)
+    }
+    
+    
+    /// Gets a property's value as an int value.
+    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    /// Returns 0 if the property doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Int value.
+    public func int(forKey key: String) -> Int {
+        return _impl.integer(forKey: key)
+    }
+    
+    
+    /// Gets a property's value as an int64 value.
+    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    /// Returns 0 if the property doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Int64 value.
+    public func int64(forKey key: String) -> Int64 {
+        return _impl.longLong(forKey: key)
+    }
+
+    
+    ///  Gets a property's value as a string.
+    ///  Returns nil if the property doesn't exist, or its value is not a string.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The String object or nil.
+    public func string(forKey key: String) -> String? {
+        return _impl.string(forKey: key)
+    }
+    
+    /// Gets a property's value. The value types are Blob, ArrayObject,
+    /// DictionaryObject, Number, or String based on the underlying data type; or nil
+    /// if the value is nil or the property doesn't exist.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The value or nil.
+    public func value(forKey key: String) -> Any? {
+        return DataConverter.convertGETValue(_impl.object(forKey: key))
+    }
+    
+    /// Tests whether a property exists or not.
+    /// This can be less expensive than -objectForKey:, because it does not have to allocate an
+    /// NSObject for the property value.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: True of the property exists, otherwise false.
+    public func contains(_ key: String) -> Bool {
+        return _impl.containsObject(forKey: key)
+    }
+    
+    
+    /// Gets content of the current object as a Dictionary. The values contained in the
+    /// returned Dictionary object are all JSON based values.
+    ///
+    /// - Returns: The Dictionary object representing the content of the current object in the
+    ///            JSON format.
+    public func toDictionary() -> Dictionary<String, Any> {
+        return _impl.toDictionary()
+    }
+    
+    
+    // MARK: Sequence
+    
+    
+    /// Gets  an iterator over the keys of the dictionary entries
+    ///
+    /// - Returns: The key iterator.
+    public func makeIterator() -> IndexingIterator<[String]> {
+        return _impl.keys.makeIterator();
     }
     
     
     // MARK: Subscript
     
     
-    /// Subscripting access to a Fragment object that represents the value of the dictionary
-    /// by key.
+    /// Subscript access to a Fragment object by key.
     ///
     /// - Parameter key: The key.
-    /// - Returns: The Fragment object.
-    public override subscript(key: String) -> Fragment {
-        return Fragment(dictImpl[key])
+    public subscript(key: String) -> Fragment {
+        return Fragment(_impl[key])
     }
     
     
     // MARK: Internal
     
     
-    init(_ impl: CBLMutableDictionary) {
-        super.init(impl)
+    init(_ impl: CBLDictionary) {
+        _impl = impl
+        _impl.swiftObject = self
     }
     
     
-    // MARK: Private
-    
-    
-    private var dictImpl: CBLMutableDictionary {
-        return _impl as! CBLMutableDictionary
+    deinit {
+        _impl.swiftObject = nil
     }
+    
+    
+    let _impl: CBLDictionary
     
 }

@@ -37,9 +37,9 @@ class FragmentTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc["name"].value = "Jason"
         
-        doc["address"].value = DictionaryObject()
+        doc["address"].value = MutableDictionaryObject()
         doc["address"]["street"].value = "1 Main Street"
-        doc["address"]["phones"].value = DictionaryObject()
+        doc["address"]["phones"].value = MutableDictionaryObject()
         doc["address"]["phones"]["mobile"].value = "650-123-4567"
         
         XCTAssertEqual(doc["name"].string!, "Jason")
@@ -154,7 +154,7 @@ class FragmentTest: CBLTestCase {
             XCTAssertNil(fragment.date)
             XCTAssertEqual(fragment.int, 100)
             XCTAssertEqual(fragment.float, 100.10)
-            XCTAssertEqualWithAccuracy(fragment.double, 100.10, accuracy: 0.1)
+            XCTAssertEqual(fragment.double, 100.10, accuracy: 0.1)
             XCTAssertTrue(fragment.boolean)
             XCTAssertNil(fragment.array)
             XCTAssertEqual(fragment.value as! Float, 100.10)
@@ -364,7 +364,7 @@ class FragmentTest: CBLTestCase {
                                     "street": "1 Main street",
                                     "phones": ["mobile": "650-123-4567"]]]
         let doc = createDocument("doc1")
-        let dict = DictionaryObject(dictionary: data)
+        let dict = MutableDictionaryObject(dictionary: data)
         doc["dict"].value = dict
         
         try saveDocument(doc, eval: { (d) in
@@ -377,14 +377,10 @@ class FragmentTest: CBLTestCase {
     
     func testDictionaryFragmentSetArray() throws {
         let doc = createDocument("doc1")
-        let array = ArrayObject(array: [0, 1, 2])
+        let array = MutableArrayObject(array: [0, 1, 2])
         doc["array"].value = array
         
         try saveDocument(doc, eval: { (d) in
-            // TODO: Should swift fragment array use index as uint?
-            //XCTAssertNil(d["array"][-1].value)
-            //XCTAssertFalse(d["array"][-1].exists)
-            //XCTAssertEqual(d["array"][-1].int, 0)
             XCTAssertEqual(d["array"][0].int, 0)
             XCTAssertEqual(d["array"][1].int, 1)
             XCTAssertEqual(d["array"][2].int, 2)
@@ -433,9 +429,10 @@ class FragmentTest: CBLTestCase {
         doc.setValue("value2", forKey: "string2")
         
         try saveDocument(doc, eval: { (d) in
-            d["string1"].value = 10
-            XCTAssertEqual(d["string1"].value as! Int, 10)
-            XCTAssertEqual(d["string2"].value as! String, "value2")
+            let mDoc = d.edit()
+            mDoc["string1"].value = 10
+            XCTAssertEqual(mDoc["string1"].value as! Int, 10)
+            XCTAssertEqual(mDoc["string2"].value as! String, "value2")
         })
     }
     
@@ -449,7 +446,7 @@ class FragmentTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc["array"].value = []
         
-        let dict = DictionaryObject(dictionary: data)
+        let dict = MutableDictionaryObject(dictionary: data)
         doc["array"].array!.addValue(dict)
         
         try saveDocument(doc, eval: { (d) in
@@ -491,7 +488,7 @@ class FragmentTest: CBLTestCase {
     func testArrayFragmentSetArrayObject() throws {
         let doc = createDocument("doc1")
         doc["array"].value = []
-        let array = ArrayObject()
+        let array = MutableArrayObject()
         array.addValue("Jason")
         array.addValue(5.5)
         array.addValue(true)

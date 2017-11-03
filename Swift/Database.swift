@@ -190,16 +190,25 @@ public final class Database {
     }
     
     
-    /// Saves the given document to the database.
-    /// If the document in the database has been updated since it was read by this Document, a
-    /// conflict occurs, which will be resolved by invoking the conflict handler. This can happen 
-    /// if multiple application threads are writing to the database, or a pull replication 
-    //  is copying changes from a server.
+    
     ///
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
-    public func save(_ document: Document) throws {
-        try _impl.save(document._impl as! CBLMutableDocument)
+    
+    
+    /// Saves the given mutable document to the database.
+    /// If the document in the database has been updated since it was read by
+    /// this Document, a conflict occurs, which will be resolved by invoking
+    /// the conflict handler. This can happen if multiple application threads
+    /// are writing to the database, or a pull replication is copying changes
+    /// from a server.
+    ///
+    /// - Parameter document: The document.
+    /// - Returns: The saved Document.
+    /// - Throws: An error on a failure.
+    @discardableResult public func save(_ document: MutableDocument) throws -> Document {
+        let doc = try _impl.save(document._impl as! CBLMutableDocument)
+        return Document(doc)
     }
     
     
@@ -212,7 +221,7 @@ public final class Database {
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
     public func delete(_ document: Document) throws {
-        try _impl.delete(document._impl as! CBLMutableDocument)
+        try _impl.delete(document._impl)
     }
     
     
@@ -223,7 +232,7 @@ public final class Database {
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
     public func purge(_ document: Document) throws {
-        try _impl.purgeDocument(document._impl as! CBLMutableDocument)
+        try _impl.purgeDocument(document._impl)
     }
     
     

@@ -12,15 +12,15 @@ import CouchbaseLiteSwift
 
 class ConflictTest: CBLTestCase {
     class TheirsWins: ConflictResolver {
-        func resolve(conflict: Conflict) -> ReadOnlyDocument? {
+        func resolve(conflict: Conflict) -> Document? {
             return conflict.theirs
         }
     }
     
     
     class MergeThenTheirsWins: ConflictResolver {
-        func resolve(conflict: Conflict) -> ReadOnlyDocument? {
-            let resolved = Document()
+        func resolve(conflict: Conflict) -> Document? {
+            let resolved = MutableDocument()
             if let base = conflict.base {
                 for key in base {
                     resolved.setValue(base.value(forKey: key), forKey: key)
@@ -44,32 +44,33 @@ class ConflictTest: CBLTestCase {
     
     
     class GiveUp: ConflictResolver {
-        func resolve(conflict: Conflict) -> ReadOnlyDocument? {
+        func resolve(conflict: Conflict) -> Document? {
             return nil
         }
     }
     
     
     class DoNotResolve: ConflictResolver {
-        func resolve(conflict: Conflict) -> ReadOnlyDocument? {
+        func resolve(conflict: Conflict) -> Document? {
             XCTAssert(false, "Resolver should not have been called!")
             return nil
         }
     }
     
     
-    func setupConflict() throws -> Document {
+    func setupConflict() throws -> MutableDocument {
         // Setup a default database conflict resolver:
-        let doc = createDocument("doc1")
+        var doc = createDocument("doc1")
         doc.setValue("profile", forKey: "type")
         doc.setValue("Scott", forKey: "name")
-        try saveDocument(doc)
+        let savedDoc = try saveDocument(doc)
         
         // Force a conflict:
         let properties: [String: Any] = ["name": "Scotty"];
         try saveProperties(properties, docID: doc.id)
         
         // Change document in memory, so save will trigger a conflict
+        doc = savedDoc.edit()
         doc.setValue("Scott Pilgrim", forKey: "name")
         return doc
     }
@@ -77,7 +78,7 @@ class ConflictTest: CBLTestCase {
     
     func saveProperties(_ props: Dictionary<String, Any>, docID: String) throws {
         // Save to database
-        let doc = db.getDocument(docID)!
+        let doc = db.getDocument(docID)!.edit()
         doc.setDictionary(props)
         try saveDocument(doc)
     }
@@ -94,32 +95,33 @@ class ConflictTest: CBLTestCase {
         try reopenDB()
         
         let doc1 = try setupConflict()
-        try saveDocument(doc1)
-        XCTAssertEqual(doc1.string(forKey: "name")!, "Scotty")
+        let savedDoc1 = try saveDocument(doc1)
+        XCTAssertEqual(savedDoc1.string(forKey: "name")!, "Scotty")
         
         // Get a new document with its own conflict resolver:
         self.conflictResolver = MergeThenTheirsWins()
         try reopenDB()
         
-        let doc2 = createDocument("doc2")
+        var doc2 = createDocument("doc2")
         doc2.setValue("profile", forKey: "type")
         doc2.setValue("Scott", forKey: "name")
-        try saveDocument(doc2)
+        var savedDoc2 = try saveDocument(doc2)
         
         // Force a conflict again:
-        var properties = doc2.toDictionary()
+        var properties = savedDoc2.toDictionary()
         properties["type"] = "bio"
         properties["gender"] = "male"
-        try saveProperties(properties, docID: doc2.id)
+        try saveProperties(properties, docID: savedDoc2.id)
         
+        doc2 = savedDoc2.edit()
         doc2.setValue("biography", forKey: "type")
         doc2.setValue(31, forKey: "age")
-        try saveDocument(doc2)
+        savedDoc2 = try saveDocument(doc2)
         
-        XCTAssertEqual(doc2.int(forKey: "age"), 31)
-        XCTAssertEqual(doc2.string(forKey: "type")!, "bio")
-        XCTAssertEqual(doc2.string(forKey: "gender")!, "male")
-        XCTAssertEqual(doc2.string(forKey: "name")!, "Scott")
+        XCTAssertEqual(savedDoc2.int(forKey: "age"), 31)
+        XCTAssertEqual(savedDoc2.string(forKey: "type")!, "bio")
+        XCTAssertEqual(savedDoc2.string(forKey: "gender")!, "male")
+        XCTAssertEqual(savedDoc2.string(forKey: "name")!, "Scott")
     }
     
     
@@ -142,8 +144,10 @@ class ConflictTest: CBLTestCase {
         
         let doc = try setupConflict()
         try db.delete(doc)
-        XCTAssertFalse(doc.isDeleted)
-        XCTAssertEqual(doc.string(forKey: "name")!, "Scotty")
+        
+        let deletedDoc = self.db.getDocument(doc.id)!
+        XCTAssertFalse(deletedDoc.isDeleted)
+        XCTAssertEqual(deletedDoc.string(forKey: "name")!, "Scotty")
     }
     
     
@@ -168,8 +172,8 @@ class ConflictTest: CBLTestCase {
         properties["name"] = "Scott of the Sahara"
         try saveProperties(properties, docID: doc.id)
         
-        try saveDocument(doc)
-        XCTAssertEqual(doc.string(forKey: "name")!, "Scott of the Sahara")
+        let savedDoc = try saveDocument(doc)
+        XCTAssertEqual(savedDoc.string(forKey: "name")!, "Scott of the Sahara")
     }
 }
 

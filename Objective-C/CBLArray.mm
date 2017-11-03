@@ -7,7 +7,7 @@
 //
 
 #import "CBLArray.h"
-#import "CBLReadOnlyArray+Swift.h"
+#import "CBLArray+Swift.h"
 #import "CBLData.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"

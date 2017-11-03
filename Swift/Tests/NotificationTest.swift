@@ -33,13 +33,13 @@ class NotificationTest: CBLTestCase {
     
     
     func testDocumentChange() throws {
-        let doc1 = createDocument("doc1")
+        var doc1 = createDocument("doc1")
         doc1.setValue("Scott", forKey: "name")
-        try saveDocument(doc1)
+        let savedDoc1 = try saveDocument(doc1)
         
         let doc2 = createDocument("doc2")
         doc2.setValue("Daniel", forKey: "name")
-        try saveDocument(doc2)
+        let savedDoc2 = try saveDocument(doc2)
         
         let x = self.expectation(description: "Got all changes")
         
@@ -61,11 +61,12 @@ class NotificationTest: CBLTestCase {
         let listener3 = db.addChangeListener(documentID: "doc3", using: handler)
         
         // Update doc1:
+        doc1 = savedDoc1.edit()
         doc1.setValue("Scott Tiger", forKey: "name")
         try saveDocument(doc1)
         
         // Delete doc2:
-        try db.delete(doc2)
+        try db.delete(savedDoc2)
         
         // Create doc3:
         let doc3 = createDocument("doc3")

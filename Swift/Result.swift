@@ -21,7 +21,7 @@ import Foundation
 ///   an alias name specified or is not a property expression such as an aggregate function
 ///   expression (e.g. count(), avg(), min(), max(), sum() and etc). The number suffix
 ///   after the '$' character is a running number starting from one.
-public class Result : ReadOnlyArrayProtocol, ReadOnlyDictionaryProtocol {
+public class Result : ArrayProtocol, DictionaryProtocol {
     
     // MARK: ReadOnlyArrayProtocol
     
@@ -37,8 +37,8 @@ public class Result : ReadOnlyArrayProtocol, ReadOnlyDictionaryProtocol {
     ///
     /// - Parameter index: The select result index.
     /// - Returns: The ReadOnlyArrayObject or nil.
-    public func array(at index: Int) -> ReadOnlyArrayObject? {
-        return value(at: index) as? ReadOnlyArrayObject
+    public func array(at index: Int) -> ArrayObject? {
+        return value(at: index) as? ArrayObject
     }
     
     
@@ -116,8 +116,8 @@ public class Result : ReadOnlyArrayProtocol, ReadOnlyDictionaryProtocol {
     ///
     /// - Parameter index: The select result index.
     /// - Returns: The ReadOnlyDictionaryObject or nil.
-    public func dictionary(at index: Int) -> ReadOnlyDictionaryObject? {
-        return value(at: index) as? ReadOnlyDictionaryObject
+    public func dictionary(at index: Int) -> DictionaryObject? {
+        return value(at: index) as? DictionaryObject
     }
     
     
@@ -156,8 +156,8 @@ public class Result : ReadOnlyArrayProtocol, ReadOnlyDictionaryProtocol {
     /// value at the given index.
     ///
     /// - Parameter index: The select result index.
-    public subscript(index: Int) -> ReadOnlyFragment {
-        return ReadOnlyFragment(impl[UInt(index)])
+    public subscript(index: Int) -> Fragment {
+        return Fragment(impl[UInt(index)])
     }
     
     
@@ -267,8 +267,8 @@ public class Result : ReadOnlyArrayProtocol, ReadOnlyDictionaryProtocol {
     ///
     /// - Parameter key: The select result key.
     /// - Returns: The ReadOnlyArrayObject value or nil.
-    public func array(forKey key: String) -> ReadOnlyArrayObject? {
-        return value(forKey: key) as? ReadOnlyArrayObject
+    public func array(forKey key: String) -> ArrayObject? {
+        return value(forKey: key) as? ArrayObject
     }
     
     
@@ -277,8 +277,8 @@ public class Result : ReadOnlyArrayProtocol, ReadOnlyDictionaryProtocol {
     ///
     /// - Parameter key: The select result key.
     /// - Returns: The ReadOnlyDictionaryObject or nil.
-    public func dictionary(forKey key: String) -> ReadOnlyDictionaryObject? {
-        return value(forKey: key) as? ReadOnlyDictionaryObject
+    public func dictionary(forKey key: String) -> DictionaryObject? {
+        return value(forKey: key) as? DictionaryObject
     }
     
     
@@ -311,15 +311,15 @@ public class Result : ReadOnlyArrayProtocol, ReadOnlyDictionaryProtocol {
     }
     
     
-    // MARK: ReadOnlyDictionaryFragment
+    // MARK: DictionaryFragment
     
     
     /// Subscript access to a ReadOnlyFragment object of the projecting result
     /// value for the given key.
     ///
     /// - Parameter key: The select result key.
-    public subscript(key: String) -> ReadOnlyFragment {
-        return ReadOnlyFragment(impl[key])
+    public subscript(key: String) -> Fragment {
+        return Fragment(impl[key])
     }
     
     // MARK: Internal

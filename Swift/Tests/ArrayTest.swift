@@ -11,25 +11,20 @@ import CouchbaseLiteSwift
 
 
 class ArrayTest: CBLTestCase {
-    func saveArray(_ array: ArrayObject, onDocument doc: Document, forKey key: String,
-                   eval: (ArrayObject) -> Void) throws
+    func saveArray(_ array: MutableArrayObject, onDocument doc: MutableDocument,
+                   forKey key: String, eval: (ArrayObject) -> Void) throws
     {
         eval(array)
-        
         // Set and Save:
         doc.setValue(array, forKey: key)
-        try saveDocument(doc)
-        
-        // Re-get the document and the array:
-        let nuDoc = db.getDocument(doc.id)!
-        let nuArray = nuDoc.array(forKey: key)!
-        
-        eval(nuArray)
+        let savedDoc = try saveDocument(doc)
+        let savedArray = savedDoc.array(forKey: key)!
+        eval(savedArray)
     }
     
     
     func testEnumeratingArray() throws {
-        let array = ArrayObject()
+        let array = MutableArrayObject()
         for i in 0...19 {
             array.addValue(i)
         }

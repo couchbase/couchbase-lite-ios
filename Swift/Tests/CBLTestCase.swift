@@ -57,30 +57,27 @@ class CBLTestCase: XCTestCase {
     }
     
     
-    func createDocument() -> Document {
-        return Document()
+    func createDocument() -> MutableDocument {
+        return MutableDocument()
     }
     
     
-    func createDocument(_ id: String?) -> Document {
-        return Document(id)
+    func createDocument(_ id: String?) -> MutableDocument {
+        return MutableDocument(id)
     }
     
     
-    func createDocument(_ id: String?, dictionary: [String:Any]) -> Document {
-        return Document(id, dictionary: dictionary)
+    func createDocument(_ id: String?, dictionary: [String:Any]) -> MutableDocument {
+        return MutableDocument(id, dictionary: dictionary)
     }
     
     
-    @discardableResult func saveDocument(_ document: Document) throws -> Document {
-        try db.save(document)
-        let doc = db.getDocument(document.id)
-        XCTAssertNotNil(doc)
-        return doc!
+    @discardableResult func saveDocument(_ document: MutableDocument) throws -> Document {
+        return try db.save(document)
     }
     
     
-    @discardableResult func saveDocument(_ document: Document, eval: (Document) -> Void) throws -> Document {
+    @discardableResult func saveDocument(_ document: MutableDocument, eval: (Document) -> Void) throws -> Document {
         eval(document)
         let doc = try saveDocument(document)
         eval(doc)
@@ -110,7 +107,7 @@ class CBLTestCase: XCTestCase {
                     let json = line.data(using: String.Encoding.utf8, allowLossyConversion: false)
                     let dict = try! JSONSerialization.jsonObject(with: json!, options: []) as! [String:Any]
                     let docID = String(format: "doc-%03llu", n)
-                    let doc = Document(docID, dictionary: dict)
+                    let doc = MutableDocument(docID, dictionary: dict)
                     try! self.db.save(doc)
                 })
             }

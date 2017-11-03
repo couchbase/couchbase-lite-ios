@@ -19,16 +19,16 @@ class DatabaseTest: CBLTestCase {
     }
 
     func testCreateUntitledDocument() throws {
-        let doc = Document()
+        let doc = MutableDocument()
         XCTAssertFalse(doc.id.isEmpty)
         XCTAssertFalse(doc.isDeleted)
         XCTAssertTrue(doc.toDictionary() == [:] as [String: Any])
     }
-
+    
     func testCreateNamedDocument() throws {
         XCTAssertFalse(db.contains("doc1"))
 
-        let doc = Document("doc1")
+        let doc = MutableDocument("doc1")
         XCTAssertEqual(doc.id, "doc1")
         XCTAssertFalse(doc.isDeleted)
         XCTAssertTrue(doc.toDictionary() == [:] as [String: Any])
@@ -39,7 +39,7 @@ class DatabaseTest: CBLTestCase {
     func testInBatch() throws {
         try db.inBatch {
             for i in 0...9{
-                let doc = Document("doc\(i)")
+                let doc = MutableDocument("doc\(i)")
                 try db.save(doc)
             }
         }
