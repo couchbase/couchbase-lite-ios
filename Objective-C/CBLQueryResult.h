@@ -7,8 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLReadOnlyArray.h"
-#import "CBLReadOnlyDictionary.h"
+#import "CBLArray.h"
+#import "CBLDictionary.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
  expression (e.g. count(), avg(), min(), max(), sum() and etc). The number suffix
  after the '$' character is a running number starting from one.
  */
-@interface CBLQueryResult : NSObject <CBLReadOnlyArray, CBLReadOnlyDictionary>
+@interface CBLQueryResult : NSObject <CBLArray, CBLDictionary>
 
 /** Not Available. */
 - (instancetype) init NS_UNAVAILABLE;

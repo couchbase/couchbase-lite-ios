@@ -175,7 +175,7 @@ class QueryTest: CBLTestCase {
     
     
     func testWhereIs() throws {
-        let doc1 = Document()
+        let doc1 = MutableDocument()
         doc1.setValue("string", forKey: "string")
         try saveDocument(doc1)
         
@@ -323,11 +323,11 @@ class QueryTest: CBLTestCase {
     
     
     func testSelectDistinct() throws {
-        let doc1 = Document()
+        let doc1 = MutableDocument()
         doc1.setValue(20, forKey: "number")
         try saveDocument(doc1)
         
-        let doc2 = Document()
+        let doc2 = MutableDocument()
         doc2.setValue(20, forKey: "number")
         try saveDocument(doc2)
         
@@ -645,8 +645,8 @@ class QueryTest: CBLTestCase {
     
     
     func testArrayFunctions() throws {
-        let doc = Document("doc1")
-        let array = ArrayObject()
+        let doc = MutableDocument("doc1")
+        let array = MutableArrayObject()
         array.addValue("650-123-0001")
         array.addValue("650-123-0002")
         doc.setValue(array, forKey: "array")
@@ -677,7 +677,7 @@ class QueryTest: CBLTestCase {
     
     func testMathFunctions() throws {
         let num = 0.6
-        let doc = Document("doc1")
+        let doc = MutableDocument("doc1")
         doc.setValue(num, forKey: "number")
         try db.save(doc)
         
@@ -743,7 +743,7 @@ class QueryTest: CBLTestCase {
     
     func testStringFunctions() throws {
         let str = "  See you 18r  "
-        let doc = Document("doc1")
+        let doc = MutableDocument("doc1")
         doc.setValue(str, forKey: "greeting")
         try db.save(doc)
         
@@ -769,7 +769,7 @@ class QueryTest: CBLTestCase {
             .from(DataSource.database(db))
         
         numRow = try verifyQuery(q, block: { (n, r) in
-            XCTAssertEqual(r.int(at: 0), str.characters.count)
+            XCTAssertEqual(r.int(at: 0), str.count)
         })
         XCTAssertEqual(numRow, 1)
      
@@ -800,9 +800,9 @@ class QueryTest: CBLTestCase {
     
     
     func testTypeFunctions() throws {
-        let doc = Document("doc1")
-        doc.setValue(ArrayObject(array: ["a", "b"]), forKey: "array")
-        doc.setValue(DictionaryObject(dictionary: ["foo": "bar"]), forKey: "dictionary")
+        let doc = MutableDocument("doc1")
+        doc.setValue(MutableArrayObject(array: ["a", "b"]), forKey: "array")
+        doc.setValue(MutableDictionaryObject(dictionary: ["foo": "bar"]), forKey: "dictionary")
         doc.setValue(3.14, forKey: "number")
         doc.setValue("string", forKey: "string")
         try db.save(doc)
@@ -1072,7 +1072,7 @@ class QueryTest: CBLTestCase {
         for data in testCases {
             let doc = createDocument()
             doc.setValue(data.0, forKey: "value")
-            try saveDocument(doc)
+            let savedDoc = try saveDocument(doc)
             
             let VALUE = Expression.property("value")
             let comparison = data.2 ?
@@ -1083,7 +1083,7 @@ class QueryTest: CBLTestCase {
             let numRow = try verifyQuery(q, block: { (n, r) in })
             XCTAssertEqual(numRow, 1)
             
-            try db.delete(doc)
+            try db.delete(savedDoc)
         }
     }
     

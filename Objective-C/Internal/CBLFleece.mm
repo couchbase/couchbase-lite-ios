@@ -60,7 +60,7 @@ namespace fleeceapi {
         switch (value.type()) {
             case kFLArray: {
                 cacheIt = true;
-                Class c = parent->mutableChildren() ? [CBLArray class] : [CBLReadOnlyArray class];
+                Class c = parent->mutableChildren() ? [CBLMutableArray class] : [CBLArray class];
                 return [[c alloc] initWithMValue: mv inParent: parent];
             }
             case kFLDict: {
@@ -73,8 +73,8 @@ namespace fleeceapi {
                     if (obj)
                         return obj;
                 }
-                Class c = parent->mutableChildren() ? [CBLDictionary class]
-                                                    : [CBLReadOnlyDictionary class];
+                Class c = parent->mutableChildren() ? [CBLMutableDictionary class]
+                                                    : [CBLDictionary class];
                 return [[c alloc] initWithMValue: mv inParent: parent];
             }
             default: {
@@ -116,8 +116,8 @@ namespace cbl {
         auto oldType = oldValue.value().type();
         if (oldType == kFLUndefined || oldType == kFLDict || oldType == kFLArray)
             return true;
-        else if ([newValue isKindOfClass: [CBLReadOnlyArray class]]
-                || [newValue isKindOfClass: [CBLReadOnlyArray class]])
+        else if ([newValue isKindOfClass: [CBLArray class]]
+                || [newValue isKindOfClass: [CBLArray class]])
             return true;
         else
             return ![newValue isEqual: oldValue.asNative(&container)];

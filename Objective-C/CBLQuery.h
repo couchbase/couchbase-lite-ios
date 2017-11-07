@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLDatabase, CBLQueryRow, CBLDocument;
+@class CBLDatabase, CBLQueryRow, CBLMutableDocument;
 @class CBLQuerySelectResult, CBLQueryDataSource, CBLQueryJoin, CBLQueryOrdering, CBLQueryGroupBy;
 @class CBLQueryLimit, CBLQueryExpression, CBLQueryParameters;
 @class CBLQueryResultSet;

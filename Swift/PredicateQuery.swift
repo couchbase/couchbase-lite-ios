@@ -144,11 +144,11 @@ extension String : SortDescriptor { }
 /// returned by Database.allDocuments or Query.allDocuments.
 public struct DocumentIterator : Sequence, IteratorProtocol {
 
-    public typealias Element = Document
+    public typealias Element = MutableDocument
 
-    public mutating func next() -> Document? {
-        if let doc = _enumerator.nextObject() as? CBLDocument {
-            return Document(doc)
+    public mutating func next() -> MutableDocument? {
+        if let doc = _enumerator.nextObject() as? CBLMutableDocument {
+            return MutableDocument(doc)
         } else {
             return nil
         }

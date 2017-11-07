@@ -1,14 +1,14 @@
 //
-//  CBLReadOnlyArray+Swift.h
+//  CBLDictionary+Swift.h
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 5/8/17.
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLReadOnlyArray.h"
+#import "CBLDictionary.h"
 
-@interface CBLReadOnlyArray ()
+@interface CBLDictionary ()
 
 @property (weak, nonatomic, nullable) id swiftObject;
 

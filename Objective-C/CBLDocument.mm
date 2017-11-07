@@ -1,167 +1,106 @@
 //
-//  CBLDocument.m
+//  CBLDocument.mm
 //  CouchbaseLite
 //
-//  Created by Pasin Suriyentrakorn on 12/29/16.
-//  Copyright © 2016 Couchbase. All rights reserved.
+//  Created by Pasin Suriyentrakorn on 4/13/17.
+//  Copyright © 2017 Couchbase. All rights reserved.
 //
-//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
-//  except in compliance with the License. You may obtain a copy of the License at
-//    http://www.apache.org/licenses/LICENSE-2.0
-//  Unless required by applicable law or agreed to in writing, software distributed under the
-//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-//  either express or implied. See the License for the specific language governing permissions
-//  and limitations under the License.
 
 #import "CBLDocument.h"
-#import "CBLArray.h"
-#import "CBLC4Document.h"
-#import "CBLConflictResolver.h"
-#import "CBLData.h"
 #import "CBLCoreBridge.h"
-#import "CBLDocument+Internal.h"
 #import "CBLDatabase+Internal.h"
-#import "CBLJSON.h"
-#import "CBLMisc.h"
-#import "CBLStringBytes.h"
+#import "CBLDocument+Internal.h"
+#import "CBLNewDictionary.h"
 #import "CBLStatus.h"
+#import "CBLStringBytes.h"
+#import "CBLFleece.hh"
+#import "MRoot.hh"
+
+using namespace fleece;
+using namespace fleeceapi;
 
 
 @implementation CBLDocument
 {
-    NSError* _encodingError;
+    std::unique_ptr<MRoot<id>> _root;
 }
 
 
-#pragma mark - Initializer
-
-+ (instancetype) document {
-    return [[self alloc] initWithID: nil];
-}
+@synthesize database=_database, id=_id, c4Doc=_c4Doc, data=_data;
 
 
-+ (instancetype) documentWithID: (nullable NSString*)documentID {
-    return [[self alloc] initWithID: documentID];
-}
-
-
-- (instancetype) init {
-    return [self initWithID: nil];
-}
-
-
-- (instancetype) initWithID: (nullable NSString*)documentID {
-    return [self initWithDatabase: nil
-                       documentID: (documentID ?: CBLCreateUUID())
-                            c4Doc: nil
-                       fleeceData: nil];
-}
-
-
-- (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary {
-    self = [self initWithID: nil];
-    if (self) {
-        [self setDictionary: dictionary];
-    }
-    return self;
-}
-
-
-- (instancetype) initWithID: (nullable NSString*)documentID
-                 dictionary: (NSDictionary<NSString*,id>*)dictionary
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                       documentID: (NSString*)documentID
+                            c4Doc: (nullable CBLC4Document*)c4Doc
 {
-    self = [self initWithID: documentID];
+    NSParameterAssert(documentID != nil);
+    self = [super init];
     if (self) {
-        [self setDictionary: dictionary];
+        _database = database;
+        _id = documentID;
+        [self setC4Doc: c4Doc];
     }
     return self;
 }
 
 
-#pragma mark - CBLDictionary
-
-
-- (void) setArray: (nullable CBLArray *)value forKey: (NSString *)key {
-    [((CBLDictionary*)_dict) setArray: value forKey: key];
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                       documentID: (NSString*)documentID
+                        mustExist: (BOOL)mustExist
+                            error: (NSError**)outError
+{
+    self = [self initWithDatabase: database documentID: documentID c4Doc: nil];
+    if (self) {
+        _database = database;
+        CBLStringBytes docId(documentID);
+        C4Error err;
+        auto doc = c4doc_get(database.c4db, docId, mustExist, &err);
+        if (!doc) {
+            convertError(err, outError);
+            return nil;
+        }
+        [self setC4Doc: [CBLC4Document document: doc]];
+    }
+    return self;
 }
 
 
-- (void) setBoolean: (BOOL)value forKey: (NSString *)key {
-    [((CBLDictionary*)_dict) setBoolean: value forKey: key];
+#pragma mark - Public
+
+
+- (NSString*) description {
+    return [NSString stringWithFormat: @"%@[%@]", self.class, self.id];
 }
 
 
-- (void) setBlob: (nullable CBLBlob*)value forKey: (NSString *)key {
-    [((CBLDictionary*)_dict) setBlob: value forKey: key];
+- (BOOL) isDeleted {
+    return _c4Doc != nil ? (_c4Doc.flags & kDocDeleted) != 0 : NO;
 }
 
 
-- (void) setDate: (nullable NSDate *)value forKey: (NSString *)key {
-    [((CBLDictionary*)_dict) setDate: value forKey: key];
+- (uint64_t) sequence {
+    return _c4Doc != nil ? _c4Doc.sequence : 0;
 }
 
 
-- (void) setDictionary: (nullable CBLDictionary *)value forKey: (NSString *)key {
-    [((CBLDictionary*)_dict) setDictionary: value forKey: key];
-}
-
-
-- (void) setDouble: (double)value forKey: (NSString *)key {
-    [((CBLDictionary*)_dict) setDouble: value forKey: key];
-}
-
-
-- (void) setFloat: (float)value forKey: (NSString *)key {
-    [((CBLDictionary*)_dict) setFloat: value forKey: key];
-}
-
-
-- (void) setInteger: (NSInteger)value forKey: (NSString *)key {
-    [((CBLDictionary*)_dict) setInteger: value forKey: key];
-}
-
-
-- (void) setLongLong: (long long)value forKey: (NSString *)key {
-    [((CBLDictionary*)_dict) setLongLong: value forKey: key];
-}
-
-
-- (void) setNumber: (nullable NSNumber*)value forKey: (NSString *)key {
-    [self setNumber: value forKey: key];
-}
-
-
-- (void) setObject: (nullable id)value forKey: (NSString*)key {
-    [((CBLDictionary*)_dict) setObject: value forKey: key];
-}
-
-
-- (void) setString: (nullable NSString *)value forKey: (NSString *)key {
-    [((CBLDictionary*)_dict) setString: value forKey: key];
-}
-
-
-- (void) removeObjectForKey: (NSString *)key {
-    [((CBLDictionary*)_dict) removeObjectForKey: key];
-}
-
-
-- (void) setDictionary: (NSDictionary<NSString *,id> *)dictionary {
-    [((CBLDictionary*)_dict) setDictionary: dictionary];
+- (CBLMutableDocument*) toMutable {
+    return [[CBLMutableDocument alloc] initWithDocument: self];
 }
 
 
 #pragma mark - Internal
 
 
-- (bool) isMutable {
-    // CBLDocument overrides this
-    return true;
+- (C4Database*) c4db {
+    C4Database* db = _database.c4db;
+    Assert(db, @"%@ does not belong to a database", self);
+    return db;
 }
 
 
-- (NSUInteger) generation {
-    return super.generation + !!self.changed;
+- (bool) isMutable {
+    // CBLMutableDocument overrides this
+    return false;
 }
 
 
@@ -170,251 +109,156 @@
 }
 
 
-- (BOOL) save: (NSError**)outError {
-    return [self saveWithConflictResolver: self.effectiveConflictResolver
-                                 deletion: NO
-                                    error: outError];
-}
-
-
-- (BOOL) deleteDocument: (NSError**)outError {
-    return [self saveWithConflictResolver: self.effectiveConflictResolver
-                                 deletion: YES
-                                    error: outError];
-}
-
-
-- (BOOL) purge: (NSError**)outError {
-    if (!self.exists) {
-        return createError(kCBLStatusNotFound, outError);
-    }
-    
-    C4Transaction transaction(self.c4db);
-    if (!transaction.begin())
-        return convertError(transaction.error(),  outError);
-    
-    C4Error err;
-    if (c4doc_purgeRevision(self.c4Doc.rawDoc, C4Slice(), &err) >= 0) {
-        if (c4doc_save(self.c4Doc.rawDoc, 0, &err)) {
-            // Save succeeded; now commit:
-            if (!transaction.commit())
-                return convertError(transaction.error(), outError);
-            
-            // Reset:
-            [self setC4Doc: nil];
-            return YES;
-        }
-    }
-    return convertError(err, outError);
-}
-
-
-#pragma mark - Private
-
-
-// Reflects only direct changes to the document. Changes on sub dictionaries or arrays will
-// not be propagated here.
-- (BOOL) changed {
-    return ((CBLDictionary*)_dict).changed;
-}
-
-
-// The next three functions search recursively for a property "_cbltype":"blob".
-
-static bool objectContainsBlob(__unsafe_unretained id value) {
-    if ([value isKindOfClass: [CBLBlob class]])
-        return true;
-    else if ([value isKindOfClass: [CBLDictionary class]])
-        return dictionaryContainsBlob(value);
-    else if ([value isKindOfClass: [CBLArray class]])
-        return arrayContainsBlob(value);
-    else
-        return false;
-}
-
-static bool arrayContainsBlob(__unsafe_unretained CBLArray* array) {
-    for (id value in array)
-        if (objectContainsBlob(value))
-            return true;
-    return false;
-}
-
-static bool dictionaryContainsBlob(__unsafe_unretained CBLDictionary* dict) {
-    __block bool containsBlob = false;
-    for (NSString* key in dict) {
-        containsBlob = objectContainsBlob([dict objectForKey: key]);
-        if (containsBlob)
-            break;
-    }
-    return containsBlob;
-}
-
-
-// Lower-level save method. On conflict, returns YES but sets *outDoc to NULL.
-- (BOOL) saveInto: (C4Document **)outDoc
-         asDelete: (BOOL)deletion
-            error: (NSError **)outError
-{
-    C4RevisionFlags revFlags = 0;
-    if (deletion)
-        revFlags = kRevDeleted;
-    NSData* body = nil;
-    C4Slice bodySlice = {};
-    if (!deletion && !self.isEmpty) {
-        // Encode properties to Fleece data:
-        body = [self encode: outError];
-        if (!body) {
-            *outDoc = nullptr;
-            return NO;
-        }
-        bodySlice = data2slice(body);
-        auto root = FLValue_FromTrustedData(bodySlice);
-        if (c4doc_dictContainsBlobs((FLDict)root, self.database.sharedKeys))
-            revFlags |= kRevHasAttachments;
-    }
-    
-    // Save to database:
-    C4Error err;
-    C4Document *c4Doc = self.c4Doc.rawDoc;
-    if (c4Doc) {
-        *outDoc = c4doc_update(c4Doc, bodySlice, revFlags, &err);
+- (void) updateDictionary {
+    if (_data) {
+        _root.reset(new MRoot<id>(new cbl::DocContext(_database, _c4Doc), Dict(_data), self.isMutable));
+        _dict = _root->asNative();
     } else {
-        CBLStringBytes docID(self.id);
-        *outDoc = c4doc_create(self.c4db, docID, data2slice(body), revFlags, &err);
+        // New document:
+        _root.reset();
+        _dict = self.isMutable ? (id)[[CBLNewDictionary alloc] init]
+                               : [[CBLDictionary alloc] initEmpty];
     }
-
-    if (!*outDoc && !(err.domain == LiteCoreDomain && err.code == kC4ErrorConflict)) {
-        // conflict is not an error, at this level
-        return convertError(err, outError);
-    }
-    return YES;
 }
 
 
-// "Pulls" from the database, merging the latest revision into the in-memory properties,
-//  without saving. */
-- (BOOL) mergeWithConflictResolver: (id<CBLConflictResolver>)resolver
-                          deletion: (bool)deletion
-                             error: (NSError**)outError
-{
-    if (!resolver)
-        return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
+- (void) setC4Doc: (CBLC4Document*)c4doc {
+    _c4Doc = c4doc;
+    _data = nullptr;
 
-    // Read the current revision from the database:
-    auto database = self.database;
-    CBLReadOnlyDocument* current = [[CBLReadOnlyDocument alloc] initWithDatabase: database
-                                                                      documentID: self.id
-                                                                       mustExist: YES
-                                                                           error: outError];
-    if (!current)
+    if (c4doc) {
+        C4Slice body = c4doc.selectedRev.body;
+        if (body.size > 0)
+            _data = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
+    }
+    [self updateDictionary];
+}
+
+
+- (BOOL) selectConflictingRevision {
+    if (!_c4Doc || !c4doc_selectNextLeafRevision(_c4Doc.rawDoc, false, true, nullptr))
         return NO;
-    CBLC4Document* curC4doc = current.c4Doc;
-
-    // Resolve conflict:
-    CBLReadOnlyDocument* resolved;
-    if (deletion) {
-        // Deletion always loses a conflict:
-        resolved = current;
-    } else {
-        // Call the conflict resolver:
-        CBLReadOnlyDocument* base = nil;
-        if (super.c4Doc) {
-            base = [[CBLReadOnlyDocument alloc] initWithDatabase: database
-                                                      documentID: self.id
-                                                           c4Doc: super.c4Doc
-                                                      fleeceData: super.data];
-        }
-        
-        CBLConflict* conflict = [[CBLConflict alloc] initWithMine: self theirs: current base: base];
-        resolved = [resolver resolve: conflict];
-        if (resolved == nil)
-            return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
-    }
-
-    // Now update my state to the current C4Document and the merged/resolved properties:
-    if (!$equal(resolved, current)) {                   // TODO: Implement deep comparison
-        NSDictionary* dict = [resolved toDictionary];   // TODO: toDictionary is expensive
-        [self setC4Doc: curC4doc];
-        [self setDictionary: dict];
-    } else
-        [self setC4Doc: curC4doc];
-    
+    self.c4Doc = _c4Doc;     // This will update to the selected revision
     return YES;
 }
 
 
-// The main save method.
-- (BOOL) saveWithConflictResolver: (id<CBLConflictResolver>)resolver
-                         deletion: (bool)deletion
-                            error: (NSError**)outError
+- (BOOL) selectCommonAncestorOfDoc: (CBLDocument*)doc1
+                            andDoc: (CBLDocument*)doc2
 {
-    if (deletion && !self.exists)
-        return createError(kCBLStatusNotFound, outError);
-    
-    // Begin a db transaction:
-    C4Transaction transaction(self.c4db);
-    if (!transaction.begin())
-        return convertError(transaction.error(), outError);
-
-    // Attempt to save. (On conflict, this will succeed but newDoc will be null.)
-    C4Document* newDoc;
-    if (![self saveInto: &newDoc asDelete: deletion error: outError])
+    CBLStringBytes rev1(doc1.revID), rev2(doc2.revID);
+    if (!_c4Doc || !c4doc_selectCommonAncestorRevision(_c4Doc.rawDoc, rev1, rev2)
+                || !c4doc_hasRevisionBody(_c4Doc.rawDoc))
         return NO;
-    
-    if (!newDoc) {
-        // There's been a conflict; first merge with the new saved revision:
-        if (![self mergeWithConflictResolver: resolver deletion: deletion error: outError])
-            return NO;
-        // The merge might have turned the save into a no-op:
-        if (!self.changed)
-            return YES;
-        // Now save the merged properties:
-        if (![self saveInto: &newDoc asDelete: deletion error: outError])
-            return NO;
-        Assert(newDoc);     // In a transaction we can't have a second conflict after merging!
-    }
-    
-    // Save succeeded; now commit the transaction:
-    if (!transaction.commit()) {
-        c4doc_free(newDoc);
-        return convertError(transaction.error(), outError);
-    }
-
-    // Update my state and post a notification:
-    [self setC4Doc: [CBLC4Document document: newDoc]];
-    
+    self.c4Doc = _c4Doc;     // This will update to the selected revision
     return YES;
 }
 
 
-#pragma mark - Fleece Encodable
+- (NSString*) revID {
+    return _c4Doc != nil ?  slice2string(_c4Doc.rawDoc->selectedRev.revID) : nil;
+}
+
+
+- (NSUInteger) generation {
+    // CBLMutableDocument overrides this
+    return _c4Doc != nil ? c4rev_getGeneration(_c4Doc.rawDoc->selectedRev.revID) : 0;
+}
+
+
+- (BOOL) exists {
+    return _c4Doc != nil ? (_c4Doc.flags & kDocExists) != 0 : NO;
+}
+
+
+- (id<CBLConflictResolver>) effectiveConflictResolver {
+    return self.database.config.conflictResolver ?: [CBLDefaultConflictResolver new];
+}
 
 
 - (NSData*) encode: (NSError**)outError {
-    _encodingError = nil;
-    auto encoder = c4db_getSharedFleeceEncoder(self.c4db);
-    FLEncoder_SetExtraInfo(encoder, (__bridge void*)self);
-    [_dict fl_encodeToFLEncoder: encoder];
-    if (_encodingError != nil) {
-        FLEncoder_Reset(encoder);
-        if (outError)
-            *outError = _encodingError;
-        _encodingError = nil;
-        return nil;
-    }
-    FLError flErr;
-    FLSliceResult body = FLEncoder_Finish(encoder, &flErr);
-    if (!body.buf)
-        convertError(flErr, outError);
-    return sliceResult2data(body);
+    // CBLMutableDocument overrides this
+    fleece::slice body = _c4Doc.rawDoc->selectedRev.body;
+    return body ? body.copiedNSData() : [NSData data];
 }
 
 
-// Objects being encoded can call this
-- (void) setEncodingError: (NSError*)error {
-    if (!_encodingError)
-        _encodingError = error;
+#pragma mark - CBLDictionary
+
+
+- (NSUInteger) count {
+    return _dict.count;
 }
 
+- (NSArray*) keys {
+    return _dict.keys;
+}
+
+- (nullable CBLArray *)arrayForKey:(nonnull NSString *)key {
+    return [_dict arrayForKey: key];
+}
+
+- (nullable CBLBlob *)blobForKey:(nonnull NSString *)key {
+    return [_dict blobForKey: key];
+}
+
+- (BOOL)booleanForKey:(nonnull NSString *)key {
+    return [_dict booleanForKey: key];
+}
+
+- (BOOL)containsObjectForKey:(nonnull NSString *)key {
+    return [_dict booleanForKey: key];
+}
+
+- (nullable NSDate *)dateForKey:(nonnull NSString *)key {
+    return [_dict dateForKey: key];
+}
+
+- (nullable CBLDictionary *)dictionaryForKey:(nonnull NSString *)key {
+    return [_dict dictionaryForKey: key];
+}
+
+- (double)doubleForKey:(nonnull NSString *)key {
+    return [_dict doubleForKey: key];
+}
+
+- (float)floatForKey:(nonnull NSString *)key {
+    return [_dict floatForKey: key];
+}
+
+- (NSInteger)integerForKey:(nonnull NSString *)key {
+    return [_dict integerForKey: key];
+}
+
+- (long long)longLongForKey:(nonnull NSString *)key {
+    return [_dict longLongForKey: key];
+}
+
+- (nullable NSNumber *)numberForKey:(nonnull NSString *)key {
+    return [_dict numberForKey: key];
+}
+
+- (nullable id)objectForKey:(nonnull NSString *)key {
+    return [_dict objectForKey: key];
+}
+
+- (nullable NSString *)stringForKey:(nonnull NSString *)key {
+    return [_dict stringForKey: key];
+}
+
+- (CBLFragment *)objectForKeyedSubscript:(NSString *)key {
+    return [_dict objectForKeyedSubscript: key];
+}
+
+- (NSUInteger)countByEnumeratingWithState:(nonnull NSFastEnumerationState *)state
+                                  objects:(id  _Nullable __unsafe_unretained * _Nonnull)buffer
+                                    count:(NSUInteger)len
+{
+    return [_dict countByEnumeratingWithState: state objects: buffer count: len];
+}
+
+- (nonnull NSDictionary<NSString *,id> *)toDictionary {
+    return [_dict toDictionary];
+}
 
 @end

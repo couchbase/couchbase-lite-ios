@@ -13,7 +13,7 @@
 #import "CBLConflictResolver.h"
 #import "CBLDatabase.h"
 #import "CBLDatabaseChange.h"
-#import "CBLDocument.h"
+#import "CBLMutableDocument.h"
 #import "CBLDocumentChange.h"
 #import "CBLJSONCoding.h"
 
@@ -62,9 +62,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLConflict ()
 
-- (instancetype) initWithMine: (CBLReadOnlyDocument*)mine
-                       theirs: (CBLReadOnlyDocument*)theirs
-                         base: (nullable CBLReadOnlyDocument*)base;
+- (instancetype) initWithMine: (CBLDocument*)mine
+                       theirs: (CBLDocument*)theirs
+                         base: (nullable CBLDocument*)base;
 
 @end
 

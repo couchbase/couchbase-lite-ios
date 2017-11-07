@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** 
  Creates a CBLQuerySelectResult that returns all properties data. The query returned result
- will be grouped into a single CBLDictionary object under the key of the data source name.
+ will be grouped into a single CBLMutableDictionary object under the key of the data source name.
  
  @return The CBLQuerySelectResult.
  */
@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** 
  Creates a CBLQuerySelectResult that returns all properties data. The query returned result
- will be grouped into a single CBLDictionary object under the key of the data source name key or
+ will be grouped into a single CBLMutableDictionary object under the key of the data source name key or
  the given alias data source name if specified.
  
  @param alias The data source alias name

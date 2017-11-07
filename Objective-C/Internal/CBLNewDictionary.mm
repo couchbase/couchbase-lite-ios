@@ -7,12 +7,12 @@
 //
 
 #import "CBLNewDictionary.h"
-#import "CBLDictionary.h"
+#import "CBLMutableDictionary.h"
 #import "CBLData.h"
-#import "CBLArray.h"
+#import "CBLMutableArray.h"
 #import "CBLBlob.h"
 #import "CBLJSON.h"
-#import "CBLFragment.h"
+#import "CBLMutableFragment.h"
 #import "CBLDocument+Internal.h"
 
 using namespace cbl;
@@ -50,7 +50,7 @@ using namespace cbl;
 }
 
 
-- (CBLDictionary*) mutableCopyWithZone:(NSZone *)zone {
+- (CBLMutableDictionary*) mutableCopyWithZone:(NSZone *)zone {
     return [[[self class] alloc] initWithDictionary: _dict];
 }
 
@@ -84,8 +84,8 @@ using namespace cbl;
 #pragma mark - Type Getters
 
 
-- (nullable CBLArray*) arrayForKey: (NSString*)key {
-    return $castIf(CBLArray, [self objectForKey: key]);
+- (nullable CBLMutableArray*) arrayForKey: (NSString*)key {
+    return $castIf(CBLMutableArray, [self objectForKey: key]);
 }
 
 
@@ -104,8 +104,8 @@ using namespace cbl;
 }
 
 
-- (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
-    return $castIf(CBLDictionary, [self objectForKey: key]);
+- (nullable CBLMutableDictionary*) dictionaryForKey: (NSString*)key {
+    return $castIf(CBLMutableDictionary, [self objectForKey: key]);
 }
 
 
@@ -264,8 +264,8 @@ using namespace cbl;
 #pragma mark - SUBSCRIPTING
 
 
-- (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
-    return [[CBLFragment alloc] initWithParent: self key: key];
+- (CBLMutableFragment*) objectForKeyedSubscript: (NSString*)key {
+    return [[CBLMutableFragment alloc] initWithParent: self key: key];
 }
 
 

@@ -2,282 +2,242 @@
 //  Document.swift
 //  CouchbaseLite
 //
-//  Created by Jens Alfke on 2/9/17.
+//  Created by Pasin Suriyentrakorn on 5/8/17.
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
 import Foundation
 
 
-/// A Couchbase Lite document.
-public class Document : ReadOnlyDocument, DictionaryProtocol {
+/// Couchbase Lite document. The Document is immutable.
+public class Document : DictionaryProtocol {
     
-    // MARK: Initializers
-    
-    
-    /// Initializes a new Document object with a new random UUID. The created document will be
-    /// saved into a database when you call the Database's save() method with the document
-    /// object given.
-    public convenience init() {
-        self.init(CBLDocument())
-    }
-
-    
-    /// Initializes a new Document object with the given ID. If a nil ID value is given,
-    /// the document will be created with a new random UUID. The created document will be saved
-    /// into a database when you call the Database's save() method with the document object given.
-    ///
-    /// - Parameter id: The document ID.
-    public convenience init(_ id: String?) {
-        self.init(CBLDocument(id: id))
+    /// The document's ID.
+    public var id: String {
+        return _impl.id
     }
     
     
-    /// Initializes a new Document object with a new random UUID and the dictionary as the content.
-    /// Allowed dictionary value types are Array, Date, Dictionary, Number, NSNull, String,
-    /// ArrayObject, Blob, DictionaryObject. The Arrays and Dictionaries must contain only
-    /// the above types. The created document will be saved into a database when you call the
-    /// Database's save() method with the document object given.
-    ///
-    /// - Parameter dictionary: The dictionary object.
-    public convenience init(dictionary: Dictionary<String, Any>?) {
-        self.init(CBLDocument())
-        setDictionary(dictionary)
+    /// Sequence number of the document in the database.
+    /// This indicates how recently the document has been changed: every time any document is updated,
+    /// the database assigns it the next sequential sequence number. Thus, if a document's `sequence`
+    /// property changes that means it's been changed (on-disk); and if one document's `sequence`
+    /// is greater than another's, that means it was changed more recently.
+    public var sequence: UInt64 {
+        return _impl.sequence
     }
     
     
-    /// Initializes a new Document object with a given ID and the dictionary as the content.
-    /// If a nil ID value is given, the document will be created with a new random UUID.
-    /// Allowed dictionary value types are Array, Date, Dictionary, Number, NSNull, String,
-    /// ArrayObject, Blob, DictionaryObject. The Arrays and Dictionaries must contain only
-    /// the above types. The created document will be saved into a database when you call the
-    /// Database's save() method with the document object given.
-    ///
-    /// - Parameters:
-    ///   - id: The document ID.
-    ///   - dictionary: The dictionary object.
-    public convenience init(_ id: String?, dictionary: Dictionary<String, Any>?) {
-        self.init(CBLDocument(id: id))
-        setDictionary(dictionary)
+    /// Is the document deleted?
+    public var isDeleted: Bool {
+        return _impl.isDeleted
     }
     
     
-    // MARK: Type Setters
-    
-    
-    /// Set an ArrayObject object for the given key. A nil value will be converted to an NSNull.
-    ///
-    /// - Parameters:
-    ///   - value: The ArrayObject object.
-    ///   - key: The key.
-    /// - Returns: The Document object.
-    @discardableResult public func setArray(_ value: ArrayObject?, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a Blob object for the given key. A nil value will be converted to an NSNull.
-    ///
-    /// - Parameters:
-    ///   - value: The Blob object
-    ///   - key: The key.
-    /// - Returns: The Document object.
-    @discardableResult public func setBlob(_ value: Blob?, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a boolean value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value: The boolean value.
-    ///   - key: The key.
-    /// - Returns: The Document object.
-    @discardableResult public func setBoolean(_ value: Bool, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a Date object for the given key. A nil value will be converted to an NSNull.
-    ///
-    /// - Parameters:
-    ///   - value: The Date object.
-    ///   - key: The key.
-    /// - Returns: The Document object.
-    @discardableResult public func setDate(_ value: Date?, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a DictionaryObject object for the given key. A nil value will be converted to an NSNull.
-    ///
-    /// - Parameters:
-    ///   - value: The DictionaryObject object.
-    ///   - key: The key.
-    /// - Returns: The Document object.
-    @discardableResult public func setDictionary(_ value: DictionaryObject?, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a double value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value: The double value.
-    ///   - key: The key.
-    /// - Returns: The Document object.
-    @discardableResult public func setDouble(_ value: Double, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a float value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value: The float value.
-    ///   - key: The key.
-    /// - Returns: The Document object.
-    @discardableResult public func setFloat(_ value: Float, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set an int value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value: The integer value.
-    ///   - key: The key.
-    /// - Returns: The Document object.
-    @discardableResult public func setInt(_ value: Int, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set an int64 value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value: The int64 value.
-    ///   - key: The key.
-    /// - Returns: The Document object.
-    @discardableResult public func setInt64(_ value: Int64, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a String value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value: The String value.
-    ///   - key: The Document object.
-    /// - Returns: The Document object.
-    @discardableResult public func setString(_ value: String?, forKey key: String) -> Self {
-        return setValue(value, forKey:  key)
-    }
-    
-    
-    /// Set a value for the given key. Allowed value types are Array, Date, Dictionary,
-    /// Number types, NSNull, String, ArrayObject, Blob, DictionaryObject and nil.
-    /// The Arrays and Dictionaries must contain only the above types. A nil value will be
-    /// converted to an NSNull. An Date object will be converted to an ISO-8601 format string.
-    ///
-    /// - Parameters:
-    ///   - value: The value.
-    ///   - key: The key.
-    /// - Returns: The Document object.
-    @discardableResult public func setValue(_ value: Any?, forKey key: String) -> Self {
-        docImpl.setObject(DataConverter.convertSETValue(value), forKey: key)
-        return self
-    }
-    
-    
-    // MARK: Setting content with a Dictionary
-    
-    
-    /// Set a dictionary as a content. Allowed value types are Array, Date, Dictionary,
-    /// Number, NSNull, String, ArrayObject, Blob, DictionaryObject. The Arrays and
-    /// Dictionaries must contain only the above types. Setting the new dictionary content
-    /// will replace the current data including the existing ArrayObject and DictionaryObject
-    /// objects.
-    ///
-    /// - Parameter dictionary: The dictionary.
-    /// - Returns: The Document object.
-    @discardableResult public func setDictionary(_ dictionary: Dictionary<String, Any>?) -> Self {
-        docImpl.setDictionary(DataConverter.convertSETDictionary(dictionary))
-        return self
-    }
-    
-    
-    // MARK: Removing Entries
-    
-    
-    /// Removes a given key and its value.
-    ///
-    /// - Parameter key: The key.
-    /// - Returns: The Document object.
-    @discardableResult public func remove(forKey key: String) -> Self {
-        docImpl.removeObject(forKey: key)
-        return self
-    }
-    
-    
-    // MARK: Getting DictionaryObject and ArrayObject
-    
-    
-    /// Get a property's value as an ArrayObject, which is a mapping object of an array value.
-    /// Returns nil if the property doesn't exists, or its value is not an array.
-    ///
-    /// - Parameter key: The key.
-    /// - Returns: The ArrayObject object or nil if the property doesn't exist.
-    public override func array(forKey key: String) -> ArrayObject? {
-        return value(forKey: key) as? ArrayObject
-    }
-    
-    
-    /// Get a property's value as a DictionaryObject, which is a mapping object of a dictionary
-    /// value. Returns nil if the property doesn't exists, or its value is not a dictionary.
-    ///
-    /// - Parameter key: The key.
-    /// - Returns: The DictionaryObject object or nil if the key doesn't exist.
-    public override func dictionary(forKey key: String) -> DictionaryObject? {
-        return value(forKey: key) as? DictionaryObject
-    }
-    
-    
-    // MARK: Operators
-    
-    
-    /// Equal to operator for comparing two Documents object.
+    /// Equal to operator for comparing two Document object.
     public static func == (doc1: Document, doc: Document) -> Bool {
         return doc._impl === doc._impl
     }
     
     
-    // MARK: Subscript
+    // MARK: Edit
     
     
-    /// Subscripting access to a Fragment object that represents the value of the dictionary by key.
+    /// Returns a mutable copy of the document.
     ///
-    /// - Parameter key: The key.
-    public override subscript(key: String) -> Fragment {
-        return Fragment(docImpl[key])
+    /// - Returns: The MutableDocument object.
+    public func toMutable() -> MutableDocument {
+        return MutableDocument(_impl.toMutable())
     }
     
+
+    // MARK: DictionaryProtocol
+
     
+    /// The number of properties in the document.
+    public var count: Int {
+        return Int(_impl.count)
+    }
+
+
+    /// An array containing all keys, or an empty array if the document has no properties.
+    public var keys: Array<String> {
+        return _impl.keys
+    }
+
+
+    /// Get a property's value as a ArrayObject, which is a mapping object of an array value.
+    /// Returns nil if the property doesn't exists, or its value is not an array.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The ArrayObject object or nil.
+    public func array(forKey key: String) -> ArrayObject? {
+        return value(forKey: key) as? ArrayObject
+    }
+
+
+    /// Get a property's value as a Blob object.
+    /// Returns nil if the property doesn't exist, or its value is not a blob.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Blob object or nil.
+    public func blob(forKey key: String) -> Blob? {
+        return _impl.blob(forKey: key)
+    }
+
+
+    /// Gets a property's value as a boolean value.
+    /// Returns true if the value exists, and is either `true` or a nonzero number.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Bool value.
+    public func boolean(forKey key: String) -> Bool {
+        return _impl.boolean(forKey: key)
+    }
+
+
+    /// Gets a property's value as a Date value.
+    /// JSON does not directly support dates, so the actual property value must be a string, which is
+    /// then parsed according to the ISO-8601 date format (the default used in JSON.)
+    /// Returns nil if the value doesn't exist, is not a string, or is not parseable as a date.
+    /// NOTE: This is not a generic date parser! It only recognizes the ISO-8601 format, with or
+    /// without milliseconds.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Date value or nil
+    public func date(forKey key: String) -> Date? {
+        return _impl.date(forKey: key)
+    }
+
+
+    /// Get a property's value as a DictionaryObject, which is a mapping object of
+    /// a dictionary value.
+    /// Returns nil if the property doesn't exists, or its value is not a dictionary.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: THe DictionaryObject object or nil.
+    public func dictionary(forKey key: String) -> DictionaryObject? {
+        return value(forKey: key) as? DictionaryObject
+    }
+
+
+    /// Gets a property's value as a float value.
+    /// Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
+    /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Float value.
+    public func float(forKey key: String) -> Float {
+        return _impl.float(forKey: key)
+    }
+
+
+    /// Gets a property's value as a double value.
+    /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
+    /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Double value.
+    public func double(forKey key: String) -> Double {
+        return _impl.double(forKey: key)
+    }
+
+
+    /// Gets a property's value as an int value.
+    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    /// Returns 0 if the property doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Int value.
+    public func int(forKey key: String) -> Int {
+        return _impl.integer(forKey: key)
+    }
+
+
+    /// Gets a property's value as an int64 value.
+    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    /// Returns 0 if the property doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Int64 value.
+    public func int64(forKey key: String) -> Int64 {
+        return _impl.longLong(forKey: key)
+    }
+
+
+    ///  Gets a property's value as a string.
+    ///  Returns nil if the property doesn't exist, or its value is not a string.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The String object or nil.
+    public func string(forKey key: String) -> String? {
+        return _impl.string(forKey: key)
+    }
+
+    /// Gets a property's value. The value types are Blob, ArrayObject,
+    /// DictionaryObject, Number, or String based on the underlying data type; or nil
+    /// if the value is nil or the property doesn't exist.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The value or nil.
+    public func value(forKey key: String) -> Any? {
+        return DataConverter.convertGETValue(_impl.object(forKey: key))
+    }
+
+    /// Tests whether a property exists or not.
+    /// This can be less expensive than value(forKey:), because it does not have to allocate an
+    /// object for the property value.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: True of the property exists, otherwise false.
+    public func contains(_ key: String) -> Bool {
+        return _impl.containsObject(forKey: key)
+    }
+
+
+    /// Gets content of the document as a Dictionary. The values contained in the
+    /// returned Dictionary object are all JSON based values.
+    ///
+    /// - Returns: The Dictionary object representing the content of the current object in the
+    ///            JSON format.
+    public func toDictionary() -> Dictionary<String, Any> {
+        return _impl.toDictionary()
+    }
+
+
+    // MARK: Sequence
+
+
+    /// Gets  an iterator over the keys of the document's properties
+    ///
+    /// - Returns: The key iterator.
+    public func makeIterator() -> IndexingIterator<[String]> {
+        return _impl.keys.makeIterator();
+    }
+
+
+    // MARK: Subscript
+
+
+    /// Subscript access to a Fragment object by key.
+    ///
+    /// - Parameter key: The key.
+    public subscript(key: String) -> Fragment {
+        return Fragment(_impl[key])
+    }
+
+
     // MARK: Internal
     
     
     init(_ impl: CBLDocument) {
-        super.init(impl)
+        _impl = impl
     }
     
     
     // MARK: Private
     
     
-    private var docImpl: CBLDocument {
-        return _impl as! CBLDocument
-    }
+    let _impl: CBLDocument
     
 }
-
-public typealias Blob = CBLBlob

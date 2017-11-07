@@ -157,7 +157,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
                 ++_documentCount;
                 /*NSLog(@"#%4u: %@ \"%@\"",
                         count, [props objectForKey: @"Artist"], [props objectForKey: @"Name"]);*/
-                CBLDocument* doc = [CBLDocument documentWithID: documentID];
+                CBLMutableDocument* doc = [CBLMutableDocument documentWithID: documentID];
                 [doc setDictionary: props];
                 NSError* error;
                 if (![self.db saveDocument: doc error: &error])
@@ -177,7 +177,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
 
 - (void) loadOneDocument {
     NSString* docID = [_tracks[4321] objectForKey: @"Persistent ID"];
-    CBLDocument* doc = [self.db documentWithID: docID];
+    CBLMutableDocument* doc = [self.db documentWithID: docID];
     __unused NSDictionary* properties = doc.toDictionary;
 }
 
@@ -188,7 +188,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     _updatePlayCountBench.start();
     __block unsigned count = 0;
     BOOL ok = [self.db inBatch: NULL do: ^{
-        for (CBLDocument* doc in self.db.allDocuments) {
+        for (CBLMutableDocument* doc in self.db.allDocuments) {
             @autoreleasepool {
                 NSInteger playCount = [doc integerForKey: @"Play Count"];
                 [doc setObject: @(playCount + 1) forKey: @"Play Count"];
@@ -212,7 +212,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     __block unsigned count = 0;
     __block CFAbsoluteTime startTransaction;
     BOOL ok = [self.db inBatch: NULL do: ^{
-        for (CBLDocument* doc in self.db.allDocuments) {
+        for (CBLMutableDocument* doc in self.db.allDocuments) {
             @autoreleasepool {
                 NSString* artist = [doc stringForKey: @"Artist"];
                 if ([artist hasPrefix: @"The "]) {

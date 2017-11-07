@@ -6,14 +6,14 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLDictionary.h"
+#import "CBLMutableDictionary.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 
-/** An implementation of a CBLDictionary with no storage, i.e. that's just been added to a doc.
-     This class is an optimization that does less work than the regular CBLDictionary. */
-@interface CBLNewDictionary : NSObject <CBLDictionary>
+/** An implementation of a CBLMutableDictionary with no storage, i.e. that's just been added to a doc.
+     This class is an optimization that does less work than the regular CBLMutableDictionary. */
+@interface CBLNewDictionary : NSObject <CBLMutableDictionary>
 
 - (instancetype) initWithDictionary: (NSDictionary*)dictionary;
 

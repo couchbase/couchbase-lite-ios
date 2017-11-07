@@ -269,7 +269,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 
 
 - (void) fl_encodeToFLEncoder: (FLEncoder)encoder {
-    CBLDocument *document = (__bridge CBLDocument*)FLEncoder_GetExtraInfo(encoder);
+    CBLMutableDocument *document = (__bridge CBLMutableDocument*)FLEncoder_GetExtraInfo(encoder);
     CBLDatabase* database = document.database;
     NSError *error;
     if (![self installInDatabase: database error: &error]) {

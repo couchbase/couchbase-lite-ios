@@ -132,7 +132,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = try openSeekrit(password: password)
         
         // Save a doc with a blob:
-        var doc = createDocument("att")
+        let doc = createDocument("att")
         let body = "This is a blob!".data(using: .utf8)!
         var blob = Blob(contentType: "text/plain", data: body)
         doc.setValue(blob, forKey: "blob")
@@ -154,9 +154,9 @@ class DatabaseEncryptionTest: CBLTestCase {
         }
         
         // Check blob content:
-        doc = seekrit!.getDocument("att")!
-        XCTAssertNotNil(doc)
-        blob = doc.blob(forKey: "blob")!
+        let savedDoc = seekrit!.getDocument("att")!
+        XCTAssertNotNil(savedDoc)
+        blob = savedDoc.blob(forKey: "blob")!
         XCTAssertNotNil(blob.digest)
         XCTAssertNotNil(blob.content)
         let content = String.init(data: blob.content!, encoding: .utf8)

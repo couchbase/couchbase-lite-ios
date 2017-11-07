@@ -22,7 +22,7 @@
 
 
 - (void) addRevisions: (unsigned)numRevisions {
-    CBLDocument* doc = [CBLDocument documentWithID: @"doc"];
+    CBLMutableDocument* doc = [CBLMutableDocument documentWithID: @"doc"];
     Assert(doc, @"Couldn't create doc");
     NSError *error;
     BOOL ok = [self.db inBatch: &error do: ^{

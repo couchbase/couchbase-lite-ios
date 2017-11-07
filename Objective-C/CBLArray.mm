@@ -1,5 +1,5 @@
 //
-//  CBLArray.mm
+//  CBLArray.m
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 4/12/17.
@@ -7,288 +7,219 @@
 //
 
 #import "CBLArray.h"
-#import "CBLBlob.h"
+#import "CBLArray+Swift.h"
 #import "CBLData.h"
+#import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
 #import "CBLJSON.h"
+#import "PlatformCompat.hh"
 #import "CBLFleece.hh"
+#import "MArray.hh"
+
+using namespace cbl;
+using namespace fleeceapi;
 
 
-@implementation CBLArray
+@implementation CBLArray 
 
 
-#pragma mark - Initializers
+@synthesize swiftObject=_swiftObject;
 
 
-+ (instancetype) array {
-    return [[self alloc] init];
+- (instancetype) initEmpty {
+    return [super init];
 }
 
 
-- (instancetype) init {
-    return [super initEmpty];
-}
-
-
-- (instancetype) initWithArray: (NSArray*)array {
-    self = [self init];
+- (instancetype) initWithMValue: (fleeceapi::MValue<id>*)mv
+                       inParent: (fleeceapi::MCollection<id>*)parent
+{
+    self = [super init];
     if (self) {
-        [self setArray: array];
+        _array.initInSlot(mv, parent);
+    }
+    return self;
+}
+
+
+- (instancetype) initWithCopyOfMArray: (const MArray<id>&)mArray
+                            isMutable: (bool)isMutable
+{
+    self = [super init];
+    if (self) {
+        _array.initAsCopyOf(mArray, isMutable);
     }
     return self;
 }
 
 
 - (id) copyWithZone:(NSZone *)zone {
-    return [[CBLReadOnlyArray alloc] initWithCopyOfMArray: _array isMutable: false];
+    return self;
 }
 
 
-#pragma mark - Type Setters
+- (CBLMutableArray*) mutableCopyWithZone:(NSZone *)zone {
+    return [[CBLMutableArray alloc] initWithCopyOfMArray: _array isMutable: true];
+}
+
+
+- (void) fl_encodeToFLEncoder: (FLEncoder)enc {
+    Encoder encoder(enc);
+    _array.encodeTo(encoder);
+    encoder.release();
+}
+
+
+- (MCollection<id>*) fl_collection {
+    return &_array;
+}
 
 
 [[noreturn]] static void throwRangeException(NSUInteger index) {
-    [NSException raise: NSRangeException format: @"CBLArray index %lu is out of range",
+    [NSException raise: NSRangeException format: @"CBLMutableArray index %lu is out of range",
         (unsigned long)index];
     abort();
 }
 
 
-- (void) setObject: (id)value atIndex: (NSUInteger)index {
-    // NOTE: Java and C# allow storing a null value in an array; this gets saved in the document as
-    // a JSON "null". But Cocoa doesn't allow this and throws an exception.
-    // For cross-platform consistency we're allowing nil values on Apple platforms too,
-    // by translating them to an NSNull so they have the same behavior in the document.
-    if (!value) value = [NSNull null];
+#pragma mark - GETTER
 
-    if (cbl::valueWouldChange(value, _array.get(index), _array)) {
-        if (!_array.set(index, [value cbl_toCBLObject]))
-            throwRangeException(index);
+
+static const MValue<id>& _get(MArray<id> &array, NSUInteger index) {
+    auto &val = array.get(index);
+    if (_usuallyFalse(val.isEmpty()))
+        throwRangeException(index);
+    return val;
+}
+
+
+static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
+    //OPT: Can return nil before calling asNative, if MValue.value exists and is wrong type
+    id obj = _get(array, index).asNative(&array);
+    if (asClass && ![obj isKindOfClass: asClass])
+        obj = nil;
+    return obj;
+}
+
+
+- (nullable CBLArray*) arrayAtIndex: (NSUInteger)index {
+    return _getObject(_array, index, [CBLArray class]);
+}
+
+
+- (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
+    return _getObject(_array, index, [CBLBlob class]);
+}
+
+
+- (BOOL) booleanAtIndex: (NSUInteger)index {
+    return asBool(_get(_array, index), _array);
+}
+
+
+- (nullable NSDate*) dateAtIndex: (NSUInteger)index {
+    return asDate(_getObject(_array, index));
+}
+
+
+- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
+    return _getObject(_array, index, [CBLDictionary class]);
+}
+
+
+- (double) doubleAtIndex: (NSUInteger)index {
+    return asDouble(_get(_array, index), _array);
+}
+
+
+- (float) floatAtIndex: (NSUInteger)index {
+    return asFloat(_get(_array, index), _array);
+}
+
+
+- (NSInteger) integerAtIndex: (NSUInteger)index {
+    return asInteger(_get(_array, index), _array);
+}
+
+
+- (long long) longLongAtIndex: (NSUInteger)index {
+    return asLongLong(_get(_array, index), _array);
+}
+
+
+- (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
+    return _getObject(_array, index, [NSNumber class]);
+}
+
+
+- (nullable NSString*) stringAtIndex: (NSUInteger)index {
+    return _getObject(_array, index, [NSString class]);
+}
+
+
+- (nullable id) objectAtIndex: (NSUInteger)index {
+    return _getObject(_array, index);
+}
+
+
+- (NSUInteger) count {
+    return _array.count();
+}
+
+
+- (NSArray*) toArray {
+    auto count = _array.count();
+    NSMutableArray* result = [NSMutableArray arrayWithCapacity: count];
+    for (NSUInteger i = 0; i < count; i++)
+        [result addObject: [_getObject(_array, i) cbl_toPlainObject]];
+    return result;
+}
+
+
+- (id) cbl_toPlainObject {
+    return [self toArray];
+}
+
+
+- (id) cbl_toCBLObject {
+    return [self mutableCopy];
+}
+
+
+#pragma mark - NSFastEnumeration
+
+
+- (NSUInteger)countByEnumeratingWithState: (NSFastEnumerationState *)state
+                                  objects: (id __unsafe_unretained [])buffer
+                                    count: (NSUInteger)len
+{
+    if (state->state == 0) {
+        state->state = 1;
+        state->mutationsPtr = &state->extra[0]; // Placeholder for no mutation
+        state->extra[1] = 0;                    // Next start index
     }
+    
+    NSUInteger start = state->extra[1];
+    NSUInteger end = MIN((start + len), self.count);
+    NSUInteger i = 0;
+    for (NSUInteger index = start; index < end; index++) {
+        id v = [self objectAtIndex: index];
+        buffer[i] = v;
+        i++;
+    }
+    state->extra[1] = end;
+    state->itemsPtr = buffer;
+    return i;
 }
 
 
-- (void) setArray: (nullable CBLArray*)value atIndex: (NSUInteger)index {
-    [self setObject: value atIndex: index];
-}
-
-
-- (void) setBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index {
-    [self setObject: value atIndex: index];
-}
-
-
-- (void) setBoolean: (BOOL)value atIndex: (NSUInteger)index {
-    [self setObject: @(value) atIndex: index];
-}
-
-
-- (void) setDate: (nullable NSDate*)value atIndex: (NSUInteger)index {
-    [self setObject: value atIndex: index];
-}
-
-
-- (void) setDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index {
-    [self setObject: value atIndex: index];
-}
-
-
-- (void) setDouble: (double)value atIndex: (NSUInteger)index {
-    [self setObject: @(value) atIndex: index];
-}
-
-
-- (void) setFloat: (float)value atIndex: (NSUInteger)index {
-    [self setObject: @(value) atIndex: index];
-}
-
-
-- (void) setInteger: (NSInteger)value atIndex: (NSUInteger)index {
-    [self setObject: @(value) atIndex: index];
-}
-
-
-- (void) setLongLong: (long long)value atIndex: (NSUInteger)index {
-    [self setObject: @(value) atIndex: index];
-}
-
-
-- (void) setNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index {
-    [self setObject: value atIndex: index];
-}
-
-
-- (void) setString: (nullable NSString*)value atIndex: (NSUInteger)index {
-    [self setObject: value atIndex: index];
-}
-
-
-#pragma mark - Type Appenders
-
-
-- (void) addObject: (id)value  {
-    // NOTE: nil conversion only for Apple platforms (see comment on -setObject:atIndex:)
-    if (!value) value = [NSNull null];
-    _array.append([value cbl_toCBLObject]);
-}
-
-
-- (void) addArray: (nullable CBLArray*)value {
-    [self addObject: value];
-}
-
-
-- (void) addBlob: (nullable CBLBlob*)value {
-    [self addObject: value];
-}
-
-
-- (void) addBoolean: (BOOL)value {
-    [self addObject: @(value)];
-}
-
-
-- (void) addDate: (nullable NSDate*)value {
-    [self addObject: value];
-}
-
-
-- (void) addDictionary: (nullable CBLDictionary*)value {
-    [self addObject: value];
-}
-
-
-- (void) addDouble: (double)value {
-    [self addObject: @(value)];
-}
-
-
-- (void) addFloat: (float)value {
-    [self addObject: @(value)];
-}
-
-
-- (void) addInteger: (NSInteger)value {
-    [self addObject: @(value)];
-}
-
-
-- (void) addLongLong: (long long)value {
-    [self addObject: @(value)];
-}
-
-
-- (void) addNumber: (nullable NSNumber*)value {
-    [self addObject: value];
-}
-
-
-- (void) addString: (nullable NSString*)value {
-    [self addObject: value];
-}
-
-
-#pragma mark - Type Inserters
-
-
-- (void) insertObject: (id)value atIndex: (NSUInteger)index {
-    // NOTE: nil conversion only for Apple platforms (see comment on -setObject:atIndex:)
-    if (!value) value = [NSNull null];
-    if (!_array.insert(index, [value cbl_toCBLObject]))
-        throwRangeException(index);
-}
-
-
-- (void) insertArray: (nullable CBLArray*)value atIndex: (NSUInteger)index {
-    [self insertObject: value atIndex: index];
-}
-
-
-- (void) insertBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index {
-    [self insertObject: value atIndex: index];
-}
-
-
-- (void) insertBoolean: (BOOL)value atIndex: (NSUInteger)index {
-    [self insertObject: @(value) atIndex: index];
-}
-
-
-- (void) insertDate: (nullable NSDate*)value atIndex: (NSUInteger)index {
-    [self insertObject: value atIndex: index];
-}
-
-
-- (void) insertDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index {
-    [self insertObject: value atIndex: index];
-}
-
-
-- (void) insertDouble: (double)value atIndex: (NSUInteger)index {
-    [self insertObject: @(value) atIndex: index];
-}
-
-
-- (void) insertFloat: (float)value atIndex: (NSUInteger)index {
-    [self insertObject: @(value) atIndex: index];
-}
-
-
-- (void) insertInteger: (NSInteger)value atIndex: (NSUInteger)index {
-    [self insertObject: @(value) atIndex: index];
-}
-
-
-- (void) insertLongLong: (long long)value atIndex: (NSUInteger)index {
-    [self insertObject: @(value) atIndex: index];
-}
-
-
-- (void) insertNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index {
-    [self insertObject: value atIndex: index];
-}
-
-
-- (void) insertString: (nullable NSString*)value atIndex: (NSUInteger)index {
-    [self insertObject: value atIndex: index];
-}
-
-
-#pragma mark - Set Content with an Array
-
-
-- (void) setArray:(nullable NSArray *)array {
-    _array.clear();
-    for (id obj in array)
-        _array.append([obj cbl_toCBLObject]);
-}
-
-
-#pragma mark - Remove value
-
-
-- (void) removeObjectAtIndex:(NSUInteger)index {
-    if (!_array.remove(index))
-        throwRangeException(index);
-}
-
-
-#pragma mark - Subscript
+#pragma mark - SUBSCRIPTING
 
 
 - (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index {
     if (index >= _array.count())
         return nil;
     return [[CBLFragment alloc] initWithParent: self index: index];
-}
-
-
-#pragma mark - CBLConversion
-
-
-- (id) cbl_toCBLObject {
-    // Overrides CBLReadOnlyArray
-    return self;
 }
 
 

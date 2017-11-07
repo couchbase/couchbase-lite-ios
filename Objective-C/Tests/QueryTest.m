@@ -46,9 +46,9 @@
 }
 
 
-- (CBLDocument*) createDocNumbered: (NSInteger)i of: (NSInteger)num {
+- (CBLMutableDocument*) createDocNumbered: (NSInteger)i of: (NSInteger)num {
     NSString* docID= [NSString stringWithFormat: @"doc%ld", (long)i];
-    CBLDocument* doc = [[CBLDocument alloc] initWithID: docID];
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
     [doc setObject: @(i) forKey: @"number1"];
     [doc setObject: @(num-i) forKey: @"number2"];
 
@@ -64,7 +64,7 @@
     NSError *batchError;
     BOOL ok = [self.db inBatch: &batchError do: ^{
         for (NSInteger i = 1; i <= num; i++) {
-            CBLDocument* doc = [self createDocNumbered: i of: num];
+            CBLMutableDocument* doc = [self createDocNumbered: i of: num];
             [numbers addObject: [doc toDictionary]];
         }
     }];
@@ -172,12 +172,12 @@
 
 - (void) testWhereNullOrMissing {
     // https://github.com/couchbase/couchbase-lite-ios/issues/1670
-    CBLDocument* doc1 = [self createDocument: @"doc1"];
+    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
     [doc1 setObject: @"Scott" forKey: @"name"];
     [doc1 setObject: nil forKey: @"address"];
     [self saveDocument: doc1];
     
-    CBLDocument* doc2 = [self createDocument: @"doc2"];
+    CBLMutableDocument* doc2 = [self createDocument: @"doc2"];
     [doc2 setObject: @"Scott" forKey: @"name"];
     [doc2 setObject: @"123 1st ave." forKey: @"address"];
     [doc2 setObject: @(20) forKey: @"age"];
@@ -210,7 +210,7 @@
         {
             if (expectedDocs.count <= n) {
                 NSString* documentID = [r objectAtIndex: 0];
-                CBLDocument* expDoc = expectedDocs[(NSUInteger)(n-1)];
+                CBLMutableDocument* expDoc = expectedDocs[(NSUInteger)(n-1)];
                 AssertEqualObjects(expDoc.id, documentID, @"Failed case: %@", exp);
             }
         }];
@@ -221,7 +221,7 @@
 
 - (void) testWhereIs {
     NSError* error;
-    CBLDocument* doc1 = [[CBLDocument alloc] init];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
     [doc1 setObject: @"string" forKey: @"string"];
     Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
     
@@ -398,11 +398,11 @@
 
 - (void) testSelectDistinct {
     NSError* error;
-    CBLDocument* doc1 = [[CBLDocument alloc] init];
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
     [doc1 setObject: @(20) forKey: @"number"];
     Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
     
-    CBLDocument* doc2 = [[CBLDocument alloc] init];
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
     [doc2 setObject: @(20) forKey: @"number"];
     Assert([_db saveDocument: doc2 error: &error], @"Error when creating a document: %@", error);
     
@@ -424,7 +424,7 @@
 - (void) testJoin {
     [self loadNumbers: 100];
     
-    CBLDocument* joinme = [[CBLDocument alloc] initWithID: @"joinme"];
+    CBLMutableDocument* joinme = [[CBLMutableDocument alloc] initWithID: @"joinme"];
     [joinme setObject: @42 forKey: @"theone"];
     [self saveDocument: joinme];
     
@@ -746,8 +746,8 @@
 
 
 - (void) testArrayFunctions {
-    CBLDocument* doc = [self createDocument:@"doc1"];
-    CBLArray* array = [[CBLArray alloc] init];
+    CBLMutableDocument* doc = [self createDocument:@"doc1"];
+    CBLMutableArray* array = [[CBLMutableArray alloc] init];
     [array addObject: @"650-123-0001"];
     [array addObject: @"650-123-0002"];
     [doc setObject: array forKey: @"array"];
@@ -782,7 +782,7 @@
 
 - (void) testMathFunctions {
     double num = 0.6;
-    CBLDocument* doc = [self createDocument:@"doc1"];
+    CBLMutableDocument* doc = [self createDocument:@"doc1"];
     [doc setObject: @(num) forKey: @"number"];
     [self saveDocument: doc];
     
@@ -851,7 +851,7 @@
 
 - (void) testStringFunctions {
     NSString* str = @"  See you 18r  ";
-    CBLDocument* doc = [self createDocument:@"doc1"];
+    CBLMutableDocument* doc = [self createDocument:@"doc1"];
     [doc setObject: str forKey: @"greeting"];
     [self saveDocument: doc];
     
@@ -909,9 +909,9 @@
 
 
 - (void) testTypeFunctions {
-    CBLDocument* doc = [self createDocument:@"doc1"];
-    [doc setObject: [[CBLArray alloc] initWithArray: @[@"a", @"b"]] forKey: @"array"];
-    [doc setObject: [[CBLDictionary alloc] initWithDictionary: @{@"foo": @"bar"}] forKey: @"dictionary"];
+    CBLMutableDocument* doc = [self createDocument:@"doc1"];
+    [doc setObject: [[CBLMutableArray alloc] initWithArray: @[@"a", @"b"]] forKey: @"array"];
+    [doc setObject: [[CBLMutableDictionary alloc] initWithDictionary: @{@"foo": @"bar"}] forKey: @"dictionary"];
     [doc setObject: @(3.14) forKey: @"number"];
     [doc setObject: @"string" forKey: @"string"];
     [self saveDocument: doc];
@@ -1002,7 +1002,7 @@
     NSInteger i = 0;
     for (NSArray* cities in data) {
         NSString* docID = [NSString stringWithFormat: @"doc-%ld", (long)i++];
-        CBLDocument* doc = [self createDocument: docID];
+        CBLMutableDocument* doc = [self createDocument: docID];
         [doc setObject: cities forKey: @"paths"];
         
         NSData* d = [NSJSONSerialization dataWithJSONObject: [doc toDictionary] options: 0 error: nil];
@@ -1051,8 +1051,8 @@
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
     {
         AssertEqual(r.count, 1u);
-        CBLDictionary* a1 = [r objectAtIndex: 0];
-        CBLDictionary* a2 = [r objectForKey: self.db.name];
+        CBLMutableDictionary* a1 = [r objectAtIndex: 0];
+        CBLMutableDictionary* a2 = [r objectForKey: self.db.name];
         AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
         AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
         AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
@@ -1067,8 +1067,8 @@
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
     {
         AssertEqual(r.count, 1u);
-        CBLDictionary* a1 = [r objectAtIndex: 0];
-        CBLDictionary* a2 = [r objectForKey: @"testdb"];
+        CBLMutableDictionary* a1 = [r objectAtIndex: 0];
+        CBLMutableDictionary* a2 = [r objectForKey: @"testdb"];
         AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
         AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
         AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
@@ -1083,8 +1083,8 @@
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
     {
         AssertEqual(r.count, 2u);
-        CBLDictionary* a1 = [r objectAtIndex: 0];
-        CBLDictionary* a2 = [r objectForKey: self.db.name];
+        CBLMutableDictionary* a1 = [r objectAtIndex: 0];
+        CBLMutableDictionary* a2 = [r objectForKey: self.db.name];
         AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
         AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
         AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
@@ -1101,8 +1101,8 @@
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
     {
         AssertEqual(r.count, 2u);
-        CBLDictionary* a1 = [r objectAtIndex: 0];
-        CBLDictionary* a2 = [r objectForKey: @"testdb"];
+        CBLMutableDictionary* a1 = [r objectAtIndex: 0];
+        CBLMutableDictionary* a2 = [r objectForKey: @"testdb"];
         AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
         AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
         AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
@@ -1147,7 +1147,7 @@
 - (void) testUnicodeCollationWithLocale {
     NSArray* letters = @[@"B", @"A", @"Z", @"Å"];
     for (NSString* letter in letters) {
-        CBLDocument* doc = [self createDocument];
+        CBLMutableDocument* doc = [self createDocument];
         [doc setObject: letter forKey: @"string"];
         [self saveDocument: doc];
     }
@@ -1260,9 +1260,9 @@
     ];
     
     for (NSArray* data in testData) {
-        CBLDocument* doc = [self createDocument];
+        CBLMutableDocument* doc = [self createDocument];
         [doc setObject: data[0] forKey: @"value"];
-        [self saveDocument: doc];
+        CBLDocument* savedDoc = [self saveDocument: doc];
         
         CBLQueryExpression* VALUE = [CBLQueryExpression property: @"value"];
         CBLQueryExpression* comparison = [data[2] boolValue] ?
@@ -1278,7 +1278,7 @@
                                         test: ^(uint64_t n, CBLQueryResult* r) { }];
         AssertEqual(numRows, 1u);
         
-        Assert([self.db deleteDocument: doc error: nil]);
+        Assert([self.db deleteDocument: savedDoc error: nil]);
     }
 }
 

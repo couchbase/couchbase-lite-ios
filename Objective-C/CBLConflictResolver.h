@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLReadOnlyDocument;
+@class CBLDocument;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -17,13 +17,13 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLConflict : NSObject
 
 /** Mine version of the document. */
-@property (nonatomic, readonly) CBLReadOnlyDocument* mine;
+@property (nonatomic, readonly) CBLDocument* mine;
 
 /** Theirs version of the document. */
-@property (nonatomic, readonly) CBLReadOnlyDocument* theirs;
+@property (nonatomic, readonly) CBLDocument* theirs;
 
 /** Base or common anchester version of the document. */
-@property (nonatomic, readonly, nullable) CBLReadOnlyDocument* base;
+@property (nonatomic, readonly, nullable) CBLDocument* base;
 
 @end
 
@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** 
  A protocol for an application-defined object that can resolve a conflict between two versions 
  of a document along with the base or the common ancester document if available. Called when saving 
- a CBLDocument, when there is a a newer revision already in the database; and also when the 
+ a CBLMutableDocument, when there is a a newer revision already in the database; and also when the 
  replicator pulls a remote revision that conflicts with a locally-saved revision. 
  */
 @protocol CBLConflictResolver <NSObject>
@@ -43,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param conflict The conflict object.
  @return The result document of the conflict resolution.
  */
-- (nullable CBLReadOnlyDocument*) resolve: (CBLConflict*)conflict;
+- (nullable CBLDocument*) resolve: (CBLConflict*)conflict;
 
 @end
 

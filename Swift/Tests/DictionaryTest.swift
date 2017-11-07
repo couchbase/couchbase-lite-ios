@@ -14,7 +14,7 @@ import CouchbaseLiteSwift
 class DictionaryTest: CBLTestCase {
     
     func testCreateDictionary() throws {
-        let address = DictionaryObject()
+        let address = MutableDictionaryObject()
         XCTAssertEqual(address.count, 0)
         XCTAssert(address.toDictionary() == [:] as [String: Any])
         
@@ -32,7 +32,7 @@ class DictionaryTest: CBLTestCase {
         let dict: [String: Any] = ["street": "1 Main street",
                                    "city": "Mountain View",
                                    "state": "CA"];
-        let address = DictionaryObject(dictionary: dict)
+        let address = MutableDictionaryObject(dictionary: dict)
         XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
         XCTAssertEqual(address.string(forKey: "city"), "Mountain View")
         XCTAssertEqual(address.string(forKey: "state"), "CA")
@@ -50,7 +50,7 @@ class DictionaryTest: CBLTestCase {
     
     func testGetValueFromNewEmptyDictionary() throws {
         let doc = createDocument("doc1")
-        doc.setValue(DictionaryObject(), forKey: "dict")
+        doc.setValue(MutableDictionaryObject(), forKey: "dict")
         
         try saveDocument(doc, eval: { (d) in
             let dict = d.dictionary(forKey: "dict")!
@@ -71,15 +71,15 @@ class DictionaryTest: CBLTestCase {
     func testSetNestedDictionaries() throws {
         let doc = createDocument("doc1")
         
-        let level1 = DictionaryObject()
+        let level1 = MutableDictionaryObject()
         level1.setValue("n1", forKey: "name")
         doc.setValue(level1, forKey: "level1")
         
-        let level2 = DictionaryObject()
+        let level2 = MutableDictionaryObject()
         level2.setValue("n2", forKey: "name")
         level1.setValue(level2, forKey: "level2")
         
-        let level3 = DictionaryObject()
+        let level3 = MutableDictionaryObject()
         level3.setValue("n3", forKey: "name")
         level2.setValue(level3, forKey: "level3")
         
@@ -90,14 +90,14 @@ class DictionaryTest: CBLTestCase {
                                               "level2": ["name": "n2",
                                                          "level3": ["name": "n3"]]]]
         try saveDocument(doc, eval: { (d) in
-            XCTAssert(doc.toDictionary() == dict)
+            XCTAssert(d.toDictionary() == dict)
         })
     }
     
     
     func testRemoveDictionary() throws {
         let doc = createDocument("doc1")
-        let profile1 = DictionaryObject()
+        let profile1 = MutableDictionaryObject()
         profile1.setValue("Scott Tiger", forKey: "name")
         doc.setValue(profile1, forKey: "profile")
         XCTAssert(doc.dictionary(forKey: "profile") === profile1)
@@ -121,7 +121,7 @@ class DictionaryTest: CBLTestCase {
     
     
     func testEnumeratingKeys() throws {
-        var dict = DictionaryObject()
+        let dict = MutableDictionaryObject()
         for i in 0...19 {
             dict.setValue(i, forKey: "key\(i)")
         }
@@ -157,9 +157,9 @@ class DictionaryTest: CBLTestCase {
         try saveDocument(doc) { (d) in
             result = [:]
             count = 0
-            dict = doc.dictionary(forKey: "dict")!
-            for key in dict {
-                result[key] = dict.value(forKey: key)
+            let savedDict = d.dictionary(forKey: "dict")!
+            for key in savedDict {
+                result[key] = savedDict.value(forKey: key)
                 count = count + 1
             }
             XCTAssert(result == content)

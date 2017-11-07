@@ -12,18 +12,18 @@ import Foundation
 public struct Conflict {
     
     /// Mine version of the document.
-    public let mine: ReadOnlyDocument
+    public let mine: Document
     
     /// Theirs version of the document.
-    public let theirs: ReadOnlyDocument
+    public let theirs: Document
     
     /// Base or common anchester version of the document.
-    public let base: ReadOnlyDocument?
+    public let base: Document?
 
     init(impl: CBLConflict) {
-        mine = ReadOnlyDocument(impl.mine)
-        theirs = ReadOnlyDocument(impl.theirs)
-        base = impl.base.flatMap({ReadOnlyDocument($0)})
+        mine = Document(impl.mine)
+        theirs = Document(impl.theirs)
+        base = impl.base.flatMap({Document($0)})
     }
     
 }
@@ -39,6 +39,6 @@ public protocol ConflictResolver {
     ///
     /// - Parameter conflict: The conflict object.
     /// - Returns: The result document of the conflict resolution.
-    func resolve(conflict: Conflict) -> ReadOnlyDocument?
+    func resolve(conflict: Conflict) -> Document?
     
 }

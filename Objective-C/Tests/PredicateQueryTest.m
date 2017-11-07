@@ -178,7 +178,7 @@
 - (void) testAllDocsQuery {
     [self loadJSONResource: @"names_100"];
     uint64_t n = 0;
-    for (CBLDocument* doc in self.db.allDocuments) {
+    for (CBLMutableDocument* doc in self.db.allDocuments) {
         ++n;
         NSString* expectedID = [NSString stringWithFormat: @"doc-%03llu", n];
         AssertEqualObjects(doc.id, expectedID);
@@ -359,7 +359,7 @@
     // https://github.com/couchbase/couchbase-lite-ios/issues/1669
     for (int i = 0; i < 10; i++) {
         NSError* error;
-        CBLDocument* doc = [[CBLDocument alloc] init];
+        CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
         [doc setObject: @(1) forKey: @"number"];
         Assert([_db saveDocument: doc error:&error], @"Error when creating a document: %@", error);
     }
@@ -379,12 +379,12 @@
 - (void) failingTest13_Null {
     // https://github.com/couchbase/couchbase-lite-ios/issues/1670
     NSError* error;
-    CBLDocument* doc1 = [self.db documentWithID: @"doc1"];
+    CBLMutableDocument* doc1 = [[self.db documentWithID: @"doc1"] toMutable];
     [doc1 setObject: @"Scott" forKey: @"name"];
     [doc1 setObject: [NSNull null] forKey: @"address"];
     Assert([_db saveDocument: doc1 error: &error], @"Error when saving a document: %@", error);
     
-    CBLDocument* doc2 = [self.db documentWithID: @"doc2"];
+    CBLMutableDocument* doc2 = [[self.db documentWithID: @"doc2"] toMutable];
     [doc2 setObject: @"Tiger" forKey: @"name"];
     [doc2 setObject: @"123 1st ave." forKey: @"address"];
     [doc2 setObject: @(20) forKey: @"age"];

@@ -17,7 +17,7 @@
 
 @implementation DoNotResolve
 
-- (CBLReadOnlyDocument*) resolve: (CBLConflict*)conflict {
+- (CBLDocument*) resolve: (CBLConflict*)conflict {
     NSAssert(NO, @"Resolver should not have been called!");
     return nil;
 }
@@ -27,7 +27,7 @@
 
 @implementation TheirsWins
 
-- (CBLReadOnlyDocument*) resolve: (CBLConflict *)conflict {
+- (CBLDocument*) resolve: (CBLConflict *)conflict {
     return conflict.theirs;
 }
 
@@ -38,10 +38,10 @@
 
 @synthesize requireBaseRevision=_requireBaseRevision;
 
-- (CBLReadOnlyDocument*) resolve: (CBLConflict *)conflict {
+- (CBLDocument*) resolve: (CBLConflict *)conflict {
     if (_requireBaseRevision)
         NSAssert(conflict.base != nil, @"Missing base");
-    CBLDocument* resolved = [[CBLDocument alloc] init];
+    CBLMutableDocument* resolved = [[CBLMutableDocument alloc] init];
     for (NSString* key in conflict.base) {
         [resolved setObject: [conflict.base objectForKey: key] forKey: key];
     }
@@ -65,7 +65,7 @@
 
 @implementation GiveUp
 
-- (CBLReadOnlyDocument*) resolve: (CBLConflict *)conflict {
+- (CBLDocument*) resolve: (CBLConflict *)conflict {
     return nil;
 }
 
@@ -76,7 +76,7 @@
 
 @synthesize block=_block;
 
-- (instancetype) initWithBlock: (nullable CBLReadOnlyDocument* (^)(CBLConflict*))block {
+- (instancetype) initWithBlock: (nullable CBLDocument* (^)(CBLConflict*))block {
     self = [super init];
     if (self) {
         _block = block;
@@ -84,7 +84,7 @@
     return self;
 }
 
-- (CBLReadOnlyDocument*) resolve: (CBLConflict *)conflict {
+- (CBLDocument*) resolve: (CBLConflict *)conflict {
     return self.block(conflict);
 }
 
@@ -103,13 +103,14 @@
 }
 
 
-- (CBLDocument*) setupConflict {
+- (CBLMutableDocument*) setupConflict {
     // Setup a default database conflict resolver
-    CBLDocument* doc = [[CBLDocument alloc] initWithID: @"doc1"];
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc setObject: @"profile" forKey: @"type"];
     [doc setObject: @"Scott" forKey: @"name"];
     NSError* error;
-    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
+    CBLDocument* savedDoc = [_db saveDocument: doc error: &error];
+    Assert(savedDoc, @"Saving error: %@", error);
     
     // Force a conflict
     NSMutableDictionary *properties = [[doc toDictionary] mutableCopy];
@@ -118,13 +119,17 @@
     Assert(ok);
     
     // Change document in memory, so save will trigger a conflict
+    doc = [savedDoc toMutable];
     [doc setObject: @"Scott Pilgrim" forKey: @"name"];
     
     return doc;
 }
 
 
-- (BOOL) saveProperties: (NSDictionary*)props toDocWithID: (NSString*)docID error: (NSError**)error {
+- (BOOL) saveProperties: (NSDictionary*)props
+            toDocWithID: (NSString*)docID
+                  error: (NSError**)error
+{
     // Save to database:
     BOOL ok = [self.db inBatch: error do: ^{
         C4Slice docIDSlice = c4str([docID cStringUsingEncoding: NSASCIIStringEncoding]);
@@ -164,18 +169,20 @@
     self.conflictResolver = [TheirsWins new];
     [self reopenDB];
     
-    CBLDocument* doc1 = [self setupConflict];
-    Assert([_db saveDocument: doc1 error: &error], @"Saving error: %@", error);
-    AssertEqualObjects([doc1 objectForKey: @"name"], @"Scotty");
+    CBLMutableDocument* doc1 = [self setupConflict];
+    CBLDocument* savedDoc1 = [_db saveDocument: doc1 error: &error];
+    Assert(savedDoc1, @"Saving error: %@", error);
+    AssertEqualObjects([savedDoc1 objectForKey: @"name"], @"Scotty");
     
     // Get a new document with its own conflict resolver
     self.conflictResolver = [MergeThenTheirsWins new];
     [self reopenDB];
     
-    CBLDocument* doc2 = [[CBLDocument alloc] initWithID: @"doc2"];
+    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setObject: @"profile" forKey: @"type"];
     [doc2 setObject: @"Scott" forKey: @"name"];
-    Assert([_db saveDocument: doc2 error: &error], @"Saving error: %@", error);
+    CBLDocument* savedDoc2 = [_db saveDocument: doc2 error: &error];
+    Assert(savedDoc2, @"Saving error: %@", error);
     
     // Force a conflict again
     NSMutableDictionary* properties = [[doc2 toDictionary] mutableCopy];
@@ -185,15 +192,17 @@
     Assert(ok);
     
     // Save and make sure that the correct conflict resolver won
+    doc2 = [savedDoc2 toMutable];
     [doc2 setObject:@"biography" forKey: @"type"];
     [doc2 setObject: @(31) forKey: @"age"];
     
-    Assert([_db saveDocument: doc2 error: &error], @"Saving error: %@", error);
+    savedDoc2 = [_db saveDocument: doc2 error: &error];
+    Assert(savedDoc2, @"Saving error: %@", error);
     
-    AssertEqual([doc2 integerForKey: @"age"], 31);
-    AssertEqualObjects([doc2 stringForKey: @"type"], @"bio");
-    AssertEqualObjects([doc2 stringForKey: @"gender"], @"male");
-    AssertEqualObjects([doc2 stringForKey: @"name"], @"Scott");
+    AssertEqual([savedDoc2 integerForKey: @"age"], 31);
+    AssertEqualObjects([savedDoc2 stringForKey: @"type"], @"bio");
+    AssertEqualObjects([savedDoc2 stringForKey: @"gender"], @"male");
+    AssertEqualObjects([savedDoc2 stringForKey: @"name"], @"Scott");
 }
 
 
@@ -201,7 +210,7 @@
     self.conflictResolver = [GiveUp new];
     [self reopenDB];
     
-    CBLDocument* doc = [self setupConflict];
+    CBLMutableDocument* doc = [self setupConflict];
     NSError* error;
     AssertFalse([_db saveDocument: doc error: &error], @"Save should have failed!");
     AssertEqualObjects(error.domain, @"LiteCore");      //TODO: Should have CBL error domain/code
@@ -213,11 +222,13 @@
     self.conflictResolver = [DoNotResolve new];
     [self reopenDB];
     
-    CBLDocument* doc = [self setupConflict];
+    CBLMutableDocument* doc = [self setupConflict];
     NSError* error;
     Assert([_db deleteDocument: doc error: &error], @"Deletion error: %@", error);
-    AssertFalse(doc.isDeleted);
-    AssertEqualObjects([doc stringForKey: @"name"], @"Scotty");
+    
+    CBLDocument* savedDoc = [_db documentWithID: doc.id];
+    AssertFalse(savedDoc.isDeleted);
+    AssertEqualObjects([savedDoc stringForKey: @"name"], @"Scotty");
 }
 
 
@@ -225,7 +236,7 @@
     self.conflictResolver = nil;
     [self reopenDB];
     
-    CBLDocument* doc = [self setupConflict];
+    CBLMutableDocument* doc = [self setupConflict];
     NSError* error;
     Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
     AssertEqualObjects([doc stringForKey: @"name"], @"Scott Pilgrim");
@@ -236,7 +247,7 @@
     self.conflictResolver = nil;
     [self reopenDB];
     
-    CBLDocument* doc = [self setupConflict];
+    CBLMutableDocument* doc = [self setupConflict];
     
     // Add another revision to the conflict, so it'll have a higher generation:
     NSMutableDictionary *properties = [[doc toDictionary] mutableCopy];
@@ -244,14 +255,15 @@
     NSError* error;
     [self saveProperties:properties toDocWithID: doc.id error:&error];
     
-    Assert([_db saveDocument: doc error: &error], @"Saving error: %@", error);
-    AssertEqualObjects([doc stringForKey: @"name"], @"Scott of the Sahara");
+    CBLDocument* savedDoc = [_db saveDocument: doc error: &error];
+    Assert(savedDoc, @"Saving error: %@", error);
+    AssertEqualObjects([savedDoc stringForKey: @"name"], @"Scott of the Sahara");
 }
 
 
 - (void) testNoBase {
     self.conflictResolver = [[BlockResolver alloc] initWithBlock:
-                             ^CBLReadOnlyDocument* (CBLConflict* conflict)
+                             ^CBLDocument* (CBLConflict* conflict)
     {
         AssertEqualObjects([conflict.mine objectForKey:@"name"], @"Tiger");
         AssertEqualObjects([conflict.theirs objectForKey:@"name"], @"Daniel");
@@ -260,11 +272,11 @@
     }];
     [self reopenDB];
     
-    CBLDocument* doc1a = [[CBLDocument alloc] initWithID: @"doc1"];
+    CBLMutableDocument* doc1a = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1a setObject: @"Daniel" forKey: @"name"];
     [self saveDocument: doc1a];
     
-    CBLDocument* doc1b = [[CBLDocument alloc] initWithID: @"doc1"];
+    CBLMutableDocument* doc1b = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1b setObject: @"Tiger" forKey: @"name"];
     [self saveDocument: doc1b];
     
