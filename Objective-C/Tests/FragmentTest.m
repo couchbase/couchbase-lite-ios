@@ -482,7 +482,7 @@
     [doc setObject: @"value2" forKey: @"string2"];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
-        CBLMutableDocument* md = [d edit];
+        CBLMutableDocument* md = [d toMutable];
         md[@"string1"].value = @10;
         AssertEqualObjects(md[@"string1"].value, @10);
         AssertEqualObjects(md[@"string2"].value, @"value2");

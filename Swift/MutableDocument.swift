@@ -66,7 +66,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// Returns the same MutableDocument object.
     ///
     /// - Returns: The MutableDocument object.
-    public override func edit() -> MutableDocument {
+    public override func toMutable() -> MutableDocument {
         return self;
     }
     

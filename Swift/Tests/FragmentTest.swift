@@ -429,7 +429,7 @@ class FragmentTest: CBLTestCase {
         doc.setValue("value2", forKey: "string2")
         
         try saveDocument(doc, eval: { (d) in
-            let mDoc = d.edit()
+            let mDoc = d.toMutable()
             mDoc["string1"].value = 10
             XCTAssertEqual(mDoc["string1"].value as! Int, 10)
             XCTAssertEqual(mDoc["string2"].value as! String, "value2")

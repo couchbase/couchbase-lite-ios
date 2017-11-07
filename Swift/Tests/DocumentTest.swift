@@ -214,7 +214,7 @@ class DocumentTest: CBLTestCase {
         
         // Update:
         
-        let updatedDoc1b = doc1b!.edit()
+        let updatedDoc1b = doc1b!.toMutable()
         updatedDoc1b.setValue("Daniel Tiger", forKey: "name")
         let savedDoc1b = try saveDocument(updatedDoc1b)
         
@@ -577,7 +577,7 @@ class DocumentTest: CBLTestCase {
         XCTAssertTrue(savedDoc.value(forKey: "dict") as! DictionaryObject === savedDoc.dictionary(forKey: "dict")!)
         
         // Update:
-        doc = savedDoc.edit()
+        doc = savedDoc.toMutable()
         dict = doc.dictionary(forKey: "dict")!
         dict.setValue("Mountain View", forKey: "city")
         
@@ -634,7 +634,7 @@ class DocumentTest: CBLTestCase {
         XCTAssertTrue(savedDoc.array(forKey: "array")!.toArray() == ["item1", "item2", "item3"])
      
         // Update:
-        doc = savedDoc.edit()
+        doc = savedDoc.toMutable()
         array = doc.array(forKey: "array")!
         array.addValue("item4")
         array.addValue("item5")
@@ -779,7 +779,7 @@ class DocumentTest: CBLTestCase {
         var savedDoc = try saveDocument(doc)
         
         // Update:
-        doc = savedDoc.edit()
+        doc = savedDoc.toMutable()
         shipping = doc.dictionary(forKey: "addresses")!.dictionary(forKey: "shipping")!
         shipping.setValue("94042", forKey: "zip")
         savedDoc = try saveDocument(doc)
@@ -814,7 +814,7 @@ class DocumentTest: CBLTestCase {
         var savedDoc = try saveDocument(doc)
         
         // Update:
-        doc = savedDoc.edit()
+        doc = savedDoc.toMutable()
         address1 = doc.array(forKey: "addresses")!.dictionary(at: 0)!
         address1.setValue("2 Main street", forKey: "street")
         address1.setValue("94042", forKey: "zip")
@@ -855,7 +855,7 @@ class DocumentTest: CBLTestCase {
         
         var savedDoc = try saveDocument(doc)
         
-        doc = savedDoc.edit()
+        doc = savedDoc.toMutable()
         group1 = doc.array(forKey: "groups")!.array(at: 0)!
         group1.setValue("d", at: 0)
         group1.setValue("e", at: 1)
@@ -893,7 +893,7 @@ class DocumentTest: CBLTestCase {
         
         var savedDoc = try saveDocument(doc)
         
-        doc = savedDoc.edit()
+        doc = savedDoc.toMutable()
         member1 = doc.dictionary(forKey: "group1")!.array(forKey: "member")!
         member1.setValue("d", at: 0)
         member1.setValue("e", at: 1)
@@ -930,7 +930,7 @@ class DocumentTest: CBLTestCase {
         
         var savedDoc = try saveDocument(doc)
         
-        doc = savedDoc.edit()
+        doc = savedDoc.toMutable()
         let shipping = doc.dictionary(forKey: "shipping")!
         let billing = doc.dictionary(forKey: "billing")!
         
@@ -972,7 +972,7 @@ class DocumentTest: CBLTestCase {
         var savedDoc = try saveDocument(doc)
         
         // After save: both mobile and home are not independent to each other
-        doc = savedDoc.edit()
+        doc = savedDoc.toMutable()
         let mobile = doc.array(forKey: "mobile")!
         let home = doc.array(forKey: "home")!
         XCTAssert(mobile !== phones)
@@ -1279,7 +1279,7 @@ class DocumentTest: CBLTestCase {
         
         try reopenDB()
         
-        doc = db.getDocument("doc1")!.edit()
+        doc = db.getDocument("doc1")!.toMutable()
         doc.setValue("bar", forKey: "foo")
         savedDoc = try saveDocument(doc)
         

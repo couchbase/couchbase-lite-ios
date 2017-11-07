@@ -45,11 +45,11 @@
     // Create doc1 and doc2
     CBLMutableDocument *doc1 = [self createDocument: @"doc1"];
     [doc1 setObject: @"Scott" forKey: @"name"];
-    doc1 = [[self saveDocument: doc1] edit];
+    doc1 = [[self saveDocument: doc1] toMutable];
     
     CBLMutableDocument *doc2 = [self createDocument: @"doc2"];
     [doc2 setObject: @"Daniel" forKey: @"name"];
-    doc2 = [[self saveDocument: doc2] edit];
+    doc2 = [[self saveDocument: doc2] toMutable];
     
     // Expectation:
     XCTestExpectation* x = [self expectationWithDescription: @"document change"];

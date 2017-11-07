@@ -46,8 +46,8 @@ public class Document : DictionaryProtocol {
     /// Returns a mutable copy of the document.
     ///
     /// - Returns: The MutableDocument object.
-    public func edit() -> MutableDocument {
-        return MutableDocument(_impl.edit())
+    public func toMutable() -> MutableDocument {
+        return MutableDocument(_impl.toMutable())
     }
     
 

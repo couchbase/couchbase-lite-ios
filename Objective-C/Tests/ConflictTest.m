@@ -119,7 +119,7 @@
     Assert(ok);
     
     // Change document in memory, so save will trigger a conflict
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     [doc setObject: @"Scott Pilgrim" forKey: @"name"];
     
     return doc;
@@ -192,7 +192,7 @@
     Assert(ok);
     
     // Save and make sure that the correct conflict resolver won
-    doc2 = [savedDoc2 edit];
+    doc2 = [savedDoc2 toMutable];
     [doc2 setObject:@"biography" forKey: @"type"];
     [doc2 setObject: @(31) forKey: @"age"];
     

@@ -182,7 +182,7 @@
                              @"phones": @[@"650-234-0001", @"650-234-0002"]
                              };
     
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     [doc setDictionary: nuDict];
     AssertEqualObjects([doc toDictionary], nuDict);
     
@@ -249,7 +249,7 @@
     AssertEqualObjects([doc1a toDictionary], [doc1d toDictionary]);
     
     // Update:
-    CBLMutableDocument* updatedDoc1b = [doc1b edit];
+    CBLMutableDocument* updatedDoc1b = [doc1b toMutable];
     [updatedDoc1b setObject:@"Daniel Tiger" forKey: @"name"];
     doc1b = [self saveDocument: updatedDoc1b];
     
@@ -274,7 +274,7 @@
     }];
     
     // Update:
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     [doc setObject: @"string" forKey: @"string1"];
     [doc setObject: @"" forKey: @"string2"];
     
@@ -325,7 +325,7 @@
     }];
     
     // Update:
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     [doc setObject: @(0) forKey: @"number1"];
     [doc setObject: @(1) forKey: @"number2"];
     [doc setObject: @(1.1) forKey: @"number3"];
@@ -517,7 +517,7 @@
     }];
     
     // Update:
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     [doc setObject: @(NO) forKey: @"boolean1"];
     [doc setObject: @(YES) forKey: @"boolean2"];
     
@@ -567,7 +567,7 @@
     }];
     
     // Update:
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     NSDate* nuDate = [NSDate dateWithTimeInterval: 60.0 sinceDate: date];
     NSString* nuDateStr = [CBLJSON JSONObjectWithDate: nuDate];
     [doc setObject: nuDate forKey: @"date"];
@@ -664,7 +664,7 @@
     AssertEqualObjects([[savedDoc dictionaryForKey: @"dict"] toDictionary], [dict toDictionary]);
     
     // Update:
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     dict = [doc dictionaryForKey: @"dict"];
     [dict setObject: @"Mountain View" forKey: @"city"];
     
@@ -722,7 +722,7 @@
     AssertEqualObjects([[savedDoc arrayForKey: @"array"] toArray], (@[@"item1", @"item2", @"item3"]));
     
     // Update:
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     array = [doc arrayForKey: @"array"];
     [array addObject: @"item4"];
     [array addObject: @"item5"];
@@ -887,7 +887,7 @@
     
     // Update:
     CBLDocument* savedDoc = [self saveDocument: doc];
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     
     shipping = [[doc dictionaryForKey: @"addresses"] dictionaryForKey: @"shipping"];
     [shipping setObject: @"94042" forKey: @"zip"];
@@ -921,7 +921,7 @@
     [addresses addObject: address2];
     
     CBLDocument* savedDoc = [self saveDocument: doc];
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     
     address1 = [[doc arrayForKey: @"addresses"] dictionaryAtIndex: 0];
     [address1 setObject: @"2 Main street" forKey: @"street"];
@@ -965,7 +965,7 @@
     [groups addObject: group2];
     
     CBLDocument* savedDoc = [self saveDocument: doc];
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     
     group1 = [[doc arrayForKey: @"groups"] arrayAtIndex: 0];
     [group1 setObject: @"d" atIndex: 0];
@@ -1004,7 +1004,7 @@
     [doc setObject: group2 forKey: @"group2"];
     
     CBLDocument* savedDoc = [self saveDocument: doc];
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     
     member1 = [[doc dictionaryForKey: @"group1"] arrayForKey: @"member"];
     [member1 setObject: @"d" atIndex: 0];
@@ -1043,7 +1043,7 @@
     AssertEqualObjects([[doc dictionaryForKey: @"billing"] stringForKey: @"zip"], @"94042");
     
     CBLDocument* savedDoc = [self saveDocument: doc];
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     
     CBLMutableDictionary* shipping = [doc dictionaryForKey: @"shipping"];
     CBLMutableDictionary* billing = [doc dictionaryForKey: @"billing"];
@@ -1085,7 +1085,7 @@
                        (@[@"650-000-0001", @"650-000-0002", @"650-000-0003"]));
     
     CBLDocument* savedDoc = [self saveDocument: doc];
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     
     // After save: both mobile and home are not independent to each other
     CBLMutableArray* mobile = [doc arrayForKey: @"mobile"];
@@ -1160,7 +1160,7 @@
                                    @"zip" : @12345
                                    }
                            }];
-    doc = [[self saveDocument: doc] edit];
+    doc = [[self saveDocument: doc] toMutable];
     
     [doc removeObjectForKey: @"name"];
     [doc removeObjectForKey: @"weight"];
@@ -1447,7 +1447,7 @@
     
     [self reopenDB];
     
-    doc = [[_db documentWithID: @"doc1"] edit];
+    doc = [[_db documentWithID: @"doc1"] toMutable];
     [doc setObject: @"bar" forKey: @"foo"];
     savedDoc = [self saveDocument: doc];
     Assert([[savedDoc objectForKey: @"data"] isKindOfClass:[CBLBlob class]]);

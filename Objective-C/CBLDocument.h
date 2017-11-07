@@ -33,7 +33,7 @@
  
  @return The CBLMutableDocument object.
  */
-- (CBLMutableDocument*) edit;
+- (CBLMutableDocument*) toMutable;
 
 - (instancetype) init NS_UNAVAILABLE;
 

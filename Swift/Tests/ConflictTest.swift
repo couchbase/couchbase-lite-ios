@@ -70,7 +70,7 @@ class ConflictTest: CBLTestCase {
         try saveProperties(properties, docID: doc.id)
         
         // Change document in memory, so save will trigger a conflict
-        doc = savedDoc.edit()
+        doc = savedDoc.toMutable()
         doc.setValue("Scott Pilgrim", forKey: "name")
         return doc
     }
@@ -78,7 +78,7 @@ class ConflictTest: CBLTestCase {
     
     func saveProperties(_ props: Dictionary<String, Any>, docID: String) throws {
         // Save to database
-        let doc = db.getDocument(docID)!.edit()
+        let doc = db.getDocument(docID)!.toMutable()
         doc.setDictionary(props)
         try saveDocument(doc)
     }
@@ -113,7 +113,7 @@ class ConflictTest: CBLTestCase {
         properties["gender"] = "male"
         try saveProperties(properties, docID: savedDoc2.id)
         
-        doc2 = savedDoc2.edit()
+        doc2 = savedDoc2.toMutable()
         doc2.setValue("biography", forKey: "type")
         doc2.setValue(31, forKey: "age")
         savedDoc2 = try saveDocument(doc2)

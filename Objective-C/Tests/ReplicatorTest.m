@@ -226,11 +226,11 @@
     [self run: config errorCode: 0 errorDomain: nil];
 
     // Now make different changes in db and otherDB:
-    doc1 = [[self.db documentWithID: @"doc"] edit];
+    doc1 = [[self.db documentWithID: @"doc"] toMutable];
     [doc1 setObject: @"Hobbes" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
 
-    CBLMutableDocument* doc2 = [[otherDB documentWithID: @"doc"] edit];
+    CBLMutableDocument* doc2 = [[otherDB documentWithID: @"doc"] toMutable];
     Assert(doc2);
     [doc2 setObject: @"striped" forKey: @"pattern"];
     Assert([otherDB saveDocument: doc2 error: &error]);

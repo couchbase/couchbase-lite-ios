@@ -125,7 +125,7 @@
     CBLDocument* savedDoc = [self saveDocument: doc];
     
     // Update:
-    doc = [savedDoc edit];
+    doc = [savedDoc toMutable];
     array = [doc arrayForKey: @"array"];
     data = @[@"4", @"5", @"6"];
     [array setArray: data];
@@ -175,7 +175,7 @@
     // Save:
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: array forKey: @"array"];
-    doc = [[self saveDocument: doc] edit];
+    doc = [[self saveDocument: doc] toMutable];
     
     // Get an existing array:
     array = [doc arrayForKey: @"array"];
@@ -257,7 +257,7 @@
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: array forKey: @"array"];
-    doc = [[self saveDocument: doc] edit];
+    doc = [[self saveDocument: doc] toMutable];
     array = [doc arrayForKey: @"array"];
 
     // Get test data:
@@ -345,7 +345,7 @@
 - (void) testInsertObjectToExistingArray {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: [[CBLMutableArray alloc] init]  forKey: @"array"];
-    doc = [[self saveDocument: doc] edit];
+    doc = [[self saveDocument: doc] toMutable];
     
     CBLMutableArray* array = [doc arrayForKey: @"array"];
     AssertNotNil(array);
@@ -354,7 +354,7 @@
     doc = [[self saveArray: array onDocument: doc forKey: @"array" eval: ^(CBLArray* a) {
         AssertEqual (a.count, 1u);
         AssertEqualObjects([a objectAtIndex: 0], @"a");
-    }] edit];
+    }] toMutable];
     
     array = [doc arrayForKey: @"array"];
     [array insertObject:@"c" atIndex: 0];
@@ -362,7 +362,7 @@
         AssertEqual (a.count, 2u);
         AssertEqualObjects([a objectAtIndex: 0], @"c");
         AssertEqualObjects([a objectAtIndex: 1], @"a");
-    }] edit];
+    }] toMutable];
     
     array = [doc arrayForKey: @"array"];
     [array insertObject:@"d" atIndex: 1];
@@ -371,7 +371,7 @@
         AssertEqualObjects([a objectAtIndex: 0], @"c");
         AssertEqualObjects([a objectAtIndex: 1], @"d");
         AssertEqualObjects([a objectAtIndex: 2], @"a");
-    }] edit];
+    }] toMutable];
     
     array = [doc arrayForKey: @"array"];
     [array insertObject:@"e" atIndex: 2];
@@ -381,7 +381,7 @@
         AssertEqualObjects([a objectAtIndex: 1], @"d");
         AssertEqualObjects([a objectAtIndex: 2], @"e");
         AssertEqualObjects([a objectAtIndex: 3], @"a");
-    }] edit];
+    }] toMutable];
  
     array = [doc arrayForKey: @"array"];
     [array insertObject:@"f" atIndex: 4];
@@ -392,7 +392,7 @@
         AssertEqualObjects([a objectAtIndex: 2], @"e");
         AssertEqualObjects([a objectAtIndex: 3], @"a");
         AssertEqualObjects([a objectAtIndex: 4], @"f");
-    }] edit];
+    }] toMutable];
 }
 
 
@@ -431,7 +431,7 @@
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: array forKey: @"array"];
-    doc = [[self saveDocument: doc] edit];
+    doc = [[self saveDocument: doc] toMutable];
     array = [doc arrayForKey: @"array"];
     
     for (NSInteger i = array.count - 1; i >= 0; i--) {

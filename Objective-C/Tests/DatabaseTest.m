@@ -415,7 +415,7 @@
 - (void) testSaveDoc {
     // store doc
     NSString* docID = @"doc1";
-    CBLMutableDocument* doc = [[self generateDocument: docID] edit];
+    CBLMutableDocument* doc = [[self generateDocument: docID] toMutable];
     
     // update doc
     [doc setObject:@2 forKey:@"key"];
@@ -432,7 +432,7 @@
 - (void) testSaveDocInDifferentDBInstance {
     // store doc
     NSString* docID = @"doc1";
-    CBLMutableDocument* doc = [[self generateDocument: docID] edit];
+    CBLMutableDocument* doc = [[self generateDocument: docID] toMutable];
     
     // create db with default
     NSError* error;
@@ -456,7 +456,7 @@
 - (void) testSaveDocInDifferentDB {
     // store doc
     NSString* docID = @"doc1";
-    CBLMutableDocument* doc = [[self generateDocument: docID] edit];
+    CBLMutableDocument* doc = [[self generateDocument: docID] toMutable];
     
     // create db with default
     NSError* error;
@@ -480,7 +480,7 @@
 - (void) testSaveSameDocTwice {
     // store doc
     NSString* docID = @"doc1";
-    CBLMutableDocument* doc = [[self generateDocument: docID] edit];
+    CBLMutableDocument* doc = [[self generateDocument: docID] toMutable];
     
     // second store
     CBLDocument* savedDoc = [self saveDocument: doc];
@@ -859,7 +859,7 @@
     AssertEqualObjects(docID, doc.id);
     AssertEqualObjects(@(1), [doc objectForKey: @"key"]);
     
-    CBLMutableDocument* updatedDoc = [doc edit];
+    CBLMutableDocument* updatedDoc = [doc toMutable];
     [updatedDoc setObject:@(2) forKey: @"key"];
     [updatedDoc setObject: @"value" forKey: @"key1"];
 }
@@ -867,7 +867,7 @@
 
 - (void)testCloseThenAccessBlob {
     // store doc with blob
-    CBLMutableDocument* doc = [[self generateDocument: @"doc1"] edit];
+    CBLMutableDocument* doc = [[self generateDocument: @"doc1"] toMutable];
     CBLDocument* savedDoc = [self storeBlob: self.db
                                         doc: doc
                                     content: [@"12345" dataUsingEncoding: NSUTF8StringEncoding]];
@@ -949,7 +949,7 @@
     AssertEqualObjects(docID, doc.id);
     AssertEqualObjects(@(1), [doc objectForKey: @"key"]);
     
-    CBLMutableDocument* updatedDoc = [doc edit];
+    CBLMutableDocument* updatedDoc = [doc toMutable];
     [updatedDoc setObject: @(2) forKey: @"key"];
     [updatedDoc setObject: @"value" forKey: @"key1"];
 }
@@ -957,7 +957,7 @@
 
 - (void) testDeleteThenAccessBlob {
     // store doc with blob
-    CBLMutableDocument* doc = [[self generateDocument: @"doc1"] edit];
+    CBLMutableDocument* doc = [[self generateDocument: @"doc1"] toMutable];
     CBLDocument* savedDoc = [self storeBlob: self.db
                                         doc: doc
                                     content: [@"12345" dataUsingEncoding: NSUTF8StringEncoding]];
@@ -1186,7 +1186,7 @@
     [_db inBatch: &error do: ^{
         for (CBLDocument* doc in docs) {
             for (NSUInteger i = 0; i < 25; i++) {
-                CBLMutableDocument* mDoc = [doc edit];
+                CBLMutableDocument* mDoc = [doc toMutable];
                 [mDoc setObject: @(i) forKey: @"number"];
                 [self saveDocument: mDoc];
             }
@@ -1195,7 +1195,7 @@
     
     // Add each doc with a blob object:
     for (CBLDocument* doc in docs) {
-        CBLMutableDocument* mDoc = [[_db documentWithID: doc.id] edit];
+        CBLMutableDocument* mDoc = [[_db documentWithID: doc.id] toMutable];
         NSData* content = [doc.id dataUsingEncoding: NSUTF8StringEncoding];
         CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
         [mDoc setObject: blob forKey: @"blob"];

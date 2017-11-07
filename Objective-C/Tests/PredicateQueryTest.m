@@ -379,12 +379,12 @@
 - (void) failingTest13_Null {
     // https://github.com/couchbase/couchbase-lite-ios/issues/1670
     NSError* error;
-    CBLMutableDocument* doc1 = [[self.db documentWithID: @"doc1"] edit];
+    CBLMutableDocument* doc1 = [[self.db documentWithID: @"doc1"] toMutable];
     [doc1 setObject: @"Scott" forKey: @"name"];
     [doc1 setObject: [NSNull null] forKey: @"address"];
     Assert([_db saveDocument: doc1 error: &error], @"Error when saving a document: %@", error);
     
-    CBLMutableDocument* doc2 = [[self.db documentWithID: @"doc2"] edit];
+    CBLMutableDocument* doc2 = [[self.db documentWithID: @"doc2"] toMutable];
     [doc2 setObject: @"Tiger" forKey: @"name"];
     [doc2 setObject: @"123 1st ave." forKey: @"address"];
     [doc2 setObject: @(20) forKey: @"age"];

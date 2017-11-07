@@ -61,7 +61,7 @@ class NotificationTest: CBLTestCase {
         let listener3 = db.addChangeListener(documentID: "doc3", using: handler)
         
         // Update doc1:
-        doc1 = savedDoc1.edit()
+        doc1 = savedDoc1.toMutable()
         doc1.setValue("Scott Tiger", forKey: "name")
         try saveDocument(doc1)
         

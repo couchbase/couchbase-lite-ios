@@ -83,7 +83,7 @@ using namespace fleeceapi;
 }
 
 
-- (CBLMutableDocument*) edit {
+- (CBLMutableDocument*) toMutable {
     return [[CBLMutableDocument alloc] initWithDocument: self];
 }
 

@@ -86,12 +86,17 @@
 
 #pragma mark - Edit
 
+
 - (CBLMutableDocument*) mutableCopyWithZone:(NSZone *)zone {
-    return [[CBLMutableDocument alloc] initWithDocument: self];
+    // FIXME: Do the following when creating a new CBLMutableDocument
+    // 1. Assign _root and _data from the original CBLMutableDocument.
+    // 2. Copy _dict from the original CBLMutableDocument.
+    return self;
 }
 
-- (CBLMutableDocument*) edit {
-    return self;
+
+- (CBLMutableDocument*) toMutable {
+    return [self mutableCopy];
 }
 
 
