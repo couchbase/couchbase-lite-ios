@@ -53,7 +53,7 @@
     [doc setObject: @(num-i) forKey: @"number2"];
 
     NSError *error;
-    BOOL saved = [_db saveDocument: doc error: &error];
+    BOOL saved = [_db saveDocument: doc error: &error] != nil;
     Assert(saved, @"Couldn't save document: %@", error);
     return doc;
 }

@@ -168,7 +168,7 @@
                                                                      options: 0 error: &error];
                 Assert(dict, @"Couldn't parse line %llu of %@.json: %@", n, resourceName, error);
                 [doc setDictionary: dict];
-                BOOL saved = [_db saveDocument: doc error: &error];
+                BOOL saved = [_db saveDocument: doc error: &error] != nil;
                 Assert(saved, @"Couldn't save document: %@", error);
             }];
         }];

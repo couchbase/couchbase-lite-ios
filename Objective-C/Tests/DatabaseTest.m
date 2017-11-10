@@ -445,7 +445,7 @@
     // update doc & store it into different instance
     [doc setObject: @2 forKey: @"key"];
     [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
-        return [otherDB saveDocument: doc error: error2];
+        return [otherDB saveDocument: doc error: error2] != nil;
     }]; // forbidden
     
     // close otherDB
@@ -469,7 +469,7 @@
     // update doc & store it into different db
     [doc setObject: @2 forKey: @"key"];
     [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
-        return [otherDB saveDocument: doc error: error2];
+        return [otherDB saveDocument: doc error: error2] != nil;
     }]; // forbidden
     
     // delete otherDB
