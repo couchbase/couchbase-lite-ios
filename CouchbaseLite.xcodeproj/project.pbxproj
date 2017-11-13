@@ -6,6 +6,22 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		27BF031C1FB6290C003D5BB8 /* All */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 27BF03321FB6290C003D5BB8 /* Build configuration list for PBXAggregateTarget "All" */;
+			buildPhases = (
+			);
+			dependencies = (
+				27BF03341FB6292D003D5BB8 /* PBXTargetDependency */,
+				27BF03361FB62931003D5BB8 /* PBXTargetDependency */,
+				27BF03381FB62933003D5BB8 /* PBXTargetDependency */,
+			);
+			name = All;
+			productName = All;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		2704F1C91E395F3300A3B405 /* CBLConflictResolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 2704F1C71E395F3300A3B405 /* CBLConflictResolver.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2704F1CA1E395F3300A3B405 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */; };
@@ -594,6 +610,27 @@
 			proxyType = 2;
 			remoteGlobalIDString = 93FA3F481EE21A4D00D15CF5;
 			remoteInfo = "LiteCoreServ-iOS";
+		};
+		27BF03331FB6292D003D5BB8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 27B7E0F118F8FB4700044EBA;
+			remoteInfo = All;
+		};
+		27BF03351FB62931003D5BB8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9091E03434200464432 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9398D9111E03434200464432;
+			remoteInfo = "CBL ObjC";
+		};
+		27BF03371FB62933003D5BB8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9091E03434200464432 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 275F92731E4D30A4007FD5A2;
+			remoteInfo = "CBL Swift";
 		};
 		27DF7D831F424C840022F3DF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -2006,23 +2043,6 @@
 		};
 /* End PBXHeadersBuildPhase section */
 
-/* Begin PBXLegacyTarget section */
-		275FF65D1E428624005F90DD /* API Docs */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION)";
-			buildConfigurationList = 275FF65E1E428624005F90DD /* Build configuration list for PBXLegacyTarget "API Docs" */;
-			buildPhases = (
-			);
-			buildToolPath = Documentation/build_docs.sh;
-			buildWorkingDirectory = .;
-			dependencies = (
-			);
-			name = "API Docs";
-			passBuildSettingsInEnvironment = 1;
-			productName = "API Docs";
-		};
-/* End PBXLegacyTarget section */
-
 /* Begin PBXNativeTarget section */
 		275F92731E4D30A4007FD5A2 /* CBL Swift */ = {
 			isa = PBXNativeTarget;
@@ -2181,10 +2201,8 @@
 						DevelopmentTeam = N2Q372V7W2;
 						ProvisioningStyle = Automatic;
 					};
-					275FF65D1E428624005F90DD = {
-						CreatedOnToolsVersion = 8.2.1;
-						DevelopmentTeam = N2Q372V7W2;
-						ProvisioningStyle = Automatic;
+					27BF031C1FB6290C003D5BB8 = {
+						CreatedOnToolsVersion = 9.1;
 					};
 					938CF9ED1E442A3E00291631 = {
 						CreatedOnToolsVersion = 8.2.1;
@@ -2236,7 +2254,7 @@
 				938CFA051E442A3E00291631 /* CBL Objc Tests - iOS */,
 				275F927B1E4D30A4007FD5A2 /* CBL Swift Tests */,
 				275FF6121E3FE9DB005F90DD /* PerfTests-Mac */,
-				275FF65D1E428624005F90DD /* API Docs */,
+				27BF031C1FB6290C003D5BB8 /* All */,
 			);
 		};
 /* End PBXProject section */
@@ -2800,6 +2818,21 @@
 			target = 9398D9111E03434200464432 /* CBL ObjC */;
 			targetProxy = 275FF6261E3FECB1005F90DD /* PBXContainerItemProxy */;
 		};
+		27BF03341FB6292D003D5BB8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = All;
+			targetProxy = 27BF03331FB6292D003D5BB8 /* PBXContainerItemProxy */;
+		};
+		27BF03361FB62931003D5BB8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9398D9111E03434200464432 /* CBL ObjC */;
+			targetProxy = 27BF03351FB62931003D5BB8 /* PBXContainerItemProxy */;
+		};
+		27BF03381FB62933003D5BB8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 275F92731E4D30A4007FD5A2 /* CBL Swift */;
+			targetProxy = 27BF03371FB62933003D5BB8 /* PBXContainerItemProxy */;
+		};
 		9308F40E1E64B24700F53EE4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "LiteCore static";
@@ -3059,94 +3092,17 @@
 			};
 			name = Release;
 		};
-		275FF65F1E428624005F90DD /* Debug */ = {
+		27BF031D1FB6290C003D5BB8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUGGING_SYMBOLS = YES;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = N2Q372V7W2;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MTL_ENABLE_DEBUG_INFO = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = All;
 			};
 			name = Debug;
 		};
-		275FF6601E428624005F90DD /* Release */ = {
+		27BF031E1FB6290C003D5BB8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = N2Q372V7W2;
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = All;
 			};
 			name = Release;
 		};
@@ -3295,11 +3251,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		275FF65E1E428624005F90DD /* Build configuration list for PBXLegacyTarget "API Docs" */ = {
+		27BF03321FB6290C003D5BB8 /* Build configuration list for PBXAggregateTarget "All" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				275FF65F1E428624005F90DD /* Debug */,
-				275FF6601E428624005F90DD /* Release */,
+				27BF031D1FB6290C003D5BB8 /* Debug */,
+				27BF031E1FB6290C003D5BB8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
