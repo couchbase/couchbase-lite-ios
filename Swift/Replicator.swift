@@ -67,6 +67,7 @@ public final class Replicator {
     /// - Parameter config: The configuration.
     public init(config: ReplicatorConfiguration) {
         let c: CBLReplicatorConfiguration;
+        
         if let url = config.target as? URL {
             c = CBLReplicatorConfiguration(database: config.database._impl, targetURL: url)
         } else {
@@ -83,6 +84,10 @@ public final class Replicator {
         c.channels = config.channels
         c.documentIDs = config.documentIDs
         
+        #if os(iOS)
+        c.runInBackground = config.runInBackground
+        #endif
+        
         _impl = CBLReplicator(config: c);
         _config = config
     }
@@ -92,7 +97,6 @@ public final class Replicator {
     public var config: ReplicatorConfiguration {
         return _config
     }
-    
     
     
     /// The replicator's current status: its activity level and progress. Observable.

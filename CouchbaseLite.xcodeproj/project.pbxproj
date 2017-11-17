@@ -169,6 +169,12 @@
 		933F45F51EC29EF100863ECB /* MutableFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93765EA91EC17FEA005E4050 /* MutableFragment.swift */; };
 		933F45F61EC2A62000863ECB /* DocumentFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93765EAB1EC17FFE005E4050 /* DocumentFragment.swift */; };
 		933F45FA1EC2B47500863ECB /* DataConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933F45F91EC2B47500863ECB /* DataConverter.swift */; };
+		933FC1711F58B111004D0528 /* CBLReplicator+Backgrounding.h in Headers */ = {isa = PBXBuildFile; fileRef = 933FC16F1F58B111004D0528 /* CBLReplicator+Backgrounding.h */; };
+		933FC1721F58B111004D0528 /* CBLReplicator+Backgrounding.m in Sources */ = {isa = PBXBuildFile; fileRef = 933FC1701F58B111004D0528 /* CBLReplicator+Backgrounding.m */; };
+		933FC1791F58EFD6004D0528 /* CBLReplicator+Backgrounding.h in Headers */ = {isa = PBXBuildFile; fileRef = 933FC16F1F58B111004D0528 /* CBLReplicator+Backgrounding.h */; };
+		933FC17A1F58EFD9004D0528 /* CBLReplicator+Backgrounding.m in Sources */ = {isa = PBXBuildFile; fileRef = 933FC1701F58B111004D0528 /* CBLReplicator+Backgrounding.m */; };
+		9340F9E51F709A7200C347C4 /* MYBackgroundMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = 9340F9CE1F709A6E00C347C4 /* MYBackgroundMonitor.m */; };
+		9340F9E61F709A7300C347C4 /* MYBackgroundMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = 9340F9CE1F709A6E00C347C4 /* MYBackgroundMonitor.m */; };
 		934A27381F26A6F3003946A7 /* Database+PredicateQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934A27371F26A6F3003946A7 /* Database+PredicateQuery.swift */; };
 		934A278C1F30E5A5003946A7 /* CBLAggregateExpression.h in Headers */ = {isa = PBXBuildFile; fileRef = 934A278A1F30E5A5003946A7 /* CBLAggregateExpression.h */; };
 		934A278D1F30E5A5003946A7 /* CBLAggregateExpression.h in Headers */ = {isa = PBXBuildFile; fileRef = 934A278A1F30E5A5003946A7 /* CBLAggregateExpression.h */; };
@@ -580,6 +586,13 @@
 			remoteGlobalIDString = 27EF80F91917EEC600A327B9;
 			remoteInfo = "LiteCore static";
 		};
+		9340F9E21F709A6E00C347C4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9398D9311E0347B600464432 /* LiteCore.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 272AEC5B1F560FF600051F0A;
+			remoteInfo = cblite;
+		};
 		936483901E442F15008D08B3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9398D9091E03434200464432 /* Project object */;
@@ -812,6 +825,10 @@
 		933F1A991F39098400338C6A /* CBLQueryResultArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryResultArray.h; sourceTree = "<group>"; };
 		933F1A9A1F39098400338C6A /* CBLQueryResultArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryResultArray.m; sourceTree = "<group>"; };
 		933F45F91EC2B47500863ECB /* DataConverter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataConverter.swift; sourceTree = "<group>"; };
+		933FC16F1F58B111004D0528 /* CBLReplicator+Backgrounding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLReplicator+Backgrounding.h"; sourceTree = "<group>"; };
+		933FC1701F58B111004D0528 /* CBLReplicator+Backgrounding.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLReplicator+Backgrounding.m"; sourceTree = "<group>"; };
+		9340F9CE1F709A6E00C347C4 /* MYBackgroundMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MYBackgroundMonitor.m; sourceTree = "<group>"; };
+		9340F9E41F709A6E00C347C4 /* MYBackgroundMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MYBackgroundMonitor.h; sourceTree = "<group>"; };
 		9344A3611E44517B0091F581 /* CBL ObjC Tests - iOS App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests - iOS App.xcconfig"; sourceTree = "<group>"; };
 		9344A3621E44517B0091F581 /* CBL ObjC Tests - iOS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CBL ObjC Tests - iOS.xcconfig"; sourceTree = "<group>"; };
 		934A27371F26A6F3003946A7 /* Database+PredicateQuery.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Database+PredicateQuery.swift"; sourceTree = "<group>"; };
@@ -1079,6 +1096,8 @@
 			isa = PBXGroup;
 			children = (
 				937F01E51EFB280000060D64 /* CBLAuthenticator+Internal.h */,
+				933FC16F1F58B111004D0528 /* CBLReplicator+Backgrounding.h */,
+				933FC1701F58B111004D0528 /* CBLReplicator+Backgrounding.m */,
 				2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */,
 				93B41CC81F04730500A7F114 /* CBLReplicatorChange+Internal.h */,
 				2753AFF41EC39CA200C12E98 /* CBLWebSocket.mm */,
@@ -1266,6 +1285,8 @@
 				275FF6B71E47B2FC005F90DD /* ExceptionUtils.m */,
 				27B69A121F2A4B7400782145 /* MYAnonymousIdentity.h */,
 				27B69A131F2A4B7400782145 /* MYAnonymousIdentity.m */,
+				9340F9E41F709A6E00C347C4 /* MYBackgroundMonitor.h */,
+				9340F9CE1F709A6E00C347C4 /* MYBackgroundMonitor.m */,
 				934F4BE91E1EF19000F90659 /* MYErrorUtils.h */,
 				934F4BEA1E1EF19000F90659 /* MYErrorUtils.m */,
 				934F4BEB1E1EF19000F90659 /* MYLogging.h */,
@@ -1784,6 +1805,7 @@
 				937F01E71EFB280000060D64 /* CBLAuthenticator+Internal.h in Headers */,
 				93B41CCA1F04730500A7F114 /* CBLReplicatorChange+Internal.h in Headers */,
 				934A27AC1F30E641003946A7 /* CBLParameterExpression.h in Headers */,
+				933FC1791F58EFD6004D0528 /* CBLReplicator+Backgrounding.h in Headers */,
 				938E389E1F3A7A47006806C7 /* CBLCollationExpression.h in Headers */,
 				93B75C1A1E79EF5F0033B61B /* CBLQueryDataSource.h in Headers */,
 				937A69041F0731230058277F /* CBLQueryFunction.h in Headers */,
@@ -1802,6 +1824,7 @@
 			files = (
 				933207AE1E773CFB000D9993 /* CBLJSONCoding.h in Headers */,
 				933208141E77415E000D9993 /* CBLQueryExpression.h in Headers */,
+				933FC1711F58B111004D0528 /* CBLReplicator+Backgrounding.h in Headers */,
 				937A693C1F1065610058277F /* CBLQueryMeta.h in Headers */,
 				9383A5951F1EEFCD0083053D /* CBLQueryResult+Internal.h in Headers */,
 				934A27921F30E5CA003946A7 /* CBLBinaryExpression.h in Headers */,
@@ -2203,6 +2226,13 @@
 			remoteRef = 27F961951ED777EA0060F804 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		9340F9E31F709A6E00C347C4 /* cblite */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = cblite;
+			remoteRef = 9340F9E21F709A6E00C347C4 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		93765EE71EC4C874005E4050 /* litecorelog */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
@@ -2360,6 +2390,7 @@
 			files = (
 				93B503621E64B073002C4680 /* CBLBlob.mm in Sources */,
 				937F01E41EFB269300060D64 /* CBLAuthenticator.m in Sources */,
+				933FC17A1F58EFD9004D0528 /* CBLReplicator+Backgrounding.m in Sources */,
 				27BE3B561E4E93000012B74A /* PredicateQuery.swift in Sources */,
 				93B503761E64B0B7002C4680 /* CBLBlobStream.mm in Sources */,
 				9380D2711F0D8C1A007DD84A /* CBLQuerySelectResult.m in Sources */,
@@ -2395,6 +2426,7 @@
 				93E17F101ED3BA7800671CA1 /* CBLDocumentChange.m in Sources */,
 				93B503711E64B0A5002C4680 /* CBLParseDate.c in Sources */,
 				934A27A81F30E62F003946A7 /* CBLUnaryExpression.m in Sources */,
+				9340F9E61F709A7300C347C4 /* MYBackgroundMonitor.m in Sources */,
 				9381962C1EC15F430032CC51 /* CBLC4Document.mm in Sources */,
 				93C3984D1EC57688005A7A96 /* CBLQueryEnumerator.mm in Sources */,
 				93B41CB31F04706100A7F114 /* CBLReplicatorChange.m in Sources */,
@@ -2578,6 +2610,7 @@
 				934F4C5B1E1EF25E00F90659 /* Test.m in Sources */,
 				27B69A141F2A4C6D00782145 /* MYAnonymousIdentity.m in Sources */,
 				72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */,
+				933FC1721F58B111004D0528 /* CBLReplicator+Backgrounding.m in Sources */,
 				934A278E1F30E5A5003946A7 /* CBLAggregateExpression.m in Sources */,
 				934F4CAE1E241FB500F90659 /* CBLJSON.m in Sources */,
 				934F4CB31E241FB500F90659 /* CBLParseDate.c in Sources */,
@@ -2601,6 +2634,7 @@
 				934A279B1F30E5FA003946A7 /* CBLCompoundExpression.m in Sources */,
 				934F4CA81E241FB500F90659 /* CBLBase64.m in Sources */,
 				934A27AD1F30E641003946A7 /* CBLParameterExpression.m in Sources */,
+				9340F9E51F709A7200C347C4 /* MYBackgroundMonitor.m in Sources */,
 				275229C81E776BC100E630FA /* CBLReplicator.mm in Sources */,
 				72A87A061E2E0E70008466FF /* CBLBlobStream.mm in Sources */,
 				937A69051F0731230058277F /* CBLQueryFunction.m in Sources */,

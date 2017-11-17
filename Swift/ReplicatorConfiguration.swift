@@ -64,6 +64,23 @@ public struct ReplicatorConfiguration {
     /// and/or pulled.
     public var documentIDs: [String]?
     
+    #if os(iOS)
+    /// Allows the replicator to run when the app goes into the background.
+    /// The default value is NO which means that the replicator will suspend itself when the app
+    /// goes into the background, and will automatically resume when the app is brought into
+    /// the foreground. The replicator will also resume when the -start method is called; this
+    /// allows the replicator to be started or run when the app is already in the background.
+    /// The replicator will suspend itself or stop (for a non-continuous replicator) when the
+    /// replicator is inactive or the background task is expired.
+    ///
+    /// If the runInBackground property is set to YES, the replicator
+    /// will allow to continue running in the background without suspension; it is the
+    /// app's responsibility to manage the replicator running status when the app enters into the
+    /// background, and comes back to the foreground.
+    public var runInBackground: Bool
+    #endif
+    ///
+    
     /// Initialize a ReplicatorConfiguration with the given local database and remote database URL.
     ///
     /// - Parameters:
@@ -74,6 +91,10 @@ public struct ReplicatorConfiguration {
         self.target = targetURL
         self.replicatorType = .pushAndPull
         self.continuous = false
+        
+        #if os(iOS)
+        self.runInBackground = false
+        #endif
     }
     
     
@@ -87,6 +108,10 @@ public struct ReplicatorConfiguration {
         self.target = targetDatabase
         self.replicatorType = .pushAndPull
         self.continuous = false
+        
+        #if os(iOS)
+        self.runInBackground = false
+        #endif
     }
 }
 

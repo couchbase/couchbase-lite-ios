@@ -61,7 +61,7 @@ typedef struct {
 @property (readonly, copy, nonatomic) CBLReplicatorConfiguration* config;
 
 /** The replicator's current status: its activity level and progress. Observable. */
-@property (readonly, nonatomic) CBLReplicatorStatus* status;
+@property (atomic, readonly) CBLReplicatorStatus* status;
 
 /** Initializes a replicator with the given configuration. */
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config;
