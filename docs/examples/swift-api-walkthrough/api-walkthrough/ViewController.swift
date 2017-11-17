@@ -30,7 +30,7 @@ class ViewController: UIViewController {
         let dict: [String: Any] = ["type": "task",
                                    "owner": "todo",
                                    "createdAt": Date()]
-        let newTask = Document(dictionary: dict)
+        let newTask = MutableDocument(dictionary: dict)
         try? database.save(newTask)
         
         // mutate document
@@ -45,12 +45,12 @@ class ViewController: UIViewController {
         do {
             try database.inBatch {
                 for i in 0...10 {
-                    let doc = Document()
+                    let doc = MutableDocument()
                     doc.setValue("user", forKey: "type")
                     doc.setValue("user \(i)", forKey: "name")
                     doc.setBoolean(false, forKey: "admin")
                     try database.save(doc)
-                    print("saved user document \(doc.string(forKey: "name"))")
+                    print("saved user document \(doc.string(forKey: "name")!)")
                 }
             }
         } catch let error {
@@ -66,7 +66,7 @@ class ViewController: UIViewController {
         try? database.save(newTask)
         
         if let taskBlob = newTask.blob(forKey: "image") {
-            UIImage(data: taskBlob.content!)
+            let image = UIImage(data: taskBlob.content!)
         }
         
         // query
@@ -91,7 +91,7 @@ class ViewController: UIViewController {
         // Insert documents
         let tasks = ["buy groceries", "play chess", "book travels", "buy museum tickets"]
         for task in tasks {
-            let doc = Document()
+            let doc = MutableDocument()
             doc.setString("task", forKey: "type")
             doc.setString(task, forKey: "name")
             try? database.save(doc)
@@ -114,7 +114,7 @@ class ViewController: UIViewController {
         do {
             let ftsQueryResult = try ftsQuery.run()
             for row in ftsQueryResult {
-                print("document properties \(row.string(forKey: "_id"))")
+                print("document properties \(row.string(forKey: "_id")!)")
             }
         } catch let error {
             print(error.localizedDescription)
@@ -127,9 +127,9 @@ class ViewController: UIViewController {
          * `mine` is what's being saved.
          * 3. Read the document after the second save operation and verify its property is as expected.
          */
-        let theirs = Document("buzz")
+        let theirs = MutableDocument("buzz")
         theirs.setString("theirs", forKey: "status")
-        let mine = Document("buzz")
+        let mine = MutableDocument("buzz")
         mine.setString("mine", forKey: "status")
         do {
             try database.save(theirs)
@@ -139,7 +139,7 @@ class ViewController: UIViewController {
         }
         
         let conflictResolverResult = database.getDocument("buzz")
-        print("conflictResolverResult doc.status ::: \(conflictResolverResult?.string(forKey: "status"))")
+        print("conflictResolverResult doc.status ::: \(conflictResolverResult!.string(forKey: "status")!)")
         
         // replication
         /**
@@ -181,7 +181,7 @@ class ViewController: UIViewController {
                 return
             }
             
-            let document = Document()
+            let document = MutableDocument()
             document.setString("created on background thread", forKey: "status")
             try? database.save(document)
         }

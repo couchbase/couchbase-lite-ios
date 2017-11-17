@@ -30,8 +30,7 @@
     }
     
     // create document
-//    NSError* error;
-    CBLDocument* newTask = [[CBLDocument alloc] init];
+    CBLMutableDocument* newTask = [[CBLMutableDocument alloc] init];
     [newTask setObject:@"task-list" forKey:@"type"];
     [newTask setObject:@"todo" forKey:@"owner"];
     [newTask setObject:[NSDate date] forKey:@"createAt"];
@@ -47,10 +46,9 @@
     
     // database batch operation
     [database inBatch:&error do:^{
-        for (int i = 1; i <= 10; i++)
-        {
+        for (int i = 1; i <= 10; i++) {
             NSError* error;
-            CBLDocument *doc = [[CBLDocument alloc] init];
+            CBLMutableDocument *doc = [[CBLMutableDocument alloc] init];
             [doc setObject:@"user" forKey:@"type"];
             [doc setObject:[NSString stringWithFormat:@"user %d", i] forKey:@"name"];
             [doc setBoolean:@FALSE forKey:@"admin"];
@@ -66,7 +64,6 @@
     CBLBlob *blob = [[CBLBlob alloc] initWithContentType:@"image/jpg" data:data];
     [newTask setObject:blob forKey: @"avatar"];
     
-//    NSError* error;
     [database saveDocument: newTask error:&error];
     if (error) {
         NSLog(@"Cannot save document %@", error);
@@ -91,7 +88,7 @@
     // insert documents
     NSArray *tasks = @[@"buy groceries", @"play chess", @"book travels", @"buy museum tickets"];
     for (NSString* task in tasks) {
-        CBLDocument* doc = [[CBLDocument alloc] init];
+        CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
         [doc setObject: @"task" forKey: @"type"];
         [doc setObject: task forKey: @"name"];
         
@@ -115,9 +112,9 @@
                                      from:[CBLQueryDataSource database:database]
                                     where:where];
     
-    NSEnumerator* ftsQueryResult = [ftsQuery run:&error];
-    for (CBLFullTextQueryRow *row in ftsQueryResult) {
-        NSLog(@"document properties :: %@", [row.document toDictionary]);
+    NSEnumerator* results = [ftsQuery run:&error];
+    for (CBLQueryResult *row in results) {
+        NSLog(@"document properties :: %@", [row toDictionary]);
     }
     
     // create conflict
@@ -127,9 +124,9 @@
      * `mine` is what's being saved.
      * 3. Read the document after the second save operation and verify its property is as expected.
      */
-    CBLDocument* theirs = [[CBLDocument alloc] initWithID:@"buzz"];
+    CBLMutableDocument* theirs = [[CBLMutableDocument alloc] initWithID:@"buzz"];
     [theirs setObject:@"theirs" forKey:@"status"];
-    CBLDocument* mine = [[CBLDocument alloc] initWithID:@"buzz"];
+    CBLMutableDocument* mine = [[CBLMutableDocument alloc] initWithID:@"buzz"];
     [mine setObject:@"mine" forKey:@"status"];
     [database saveDocument:theirs error:nil];
     [database saveDocument:mine error:nil];
@@ -150,12 +147,5 @@
         }
     }];
 }
-
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
-
 
 @end

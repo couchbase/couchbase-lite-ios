@@ -10,11 +10,10 @@
 
 @implementation ExampleConflictResolver
 
-- (nullable CBLReadOnlyDocument*) resolve: (CBLConflict*)conflict {
-    CBLReadOnlyDocument* base = conflict.base;
-    CBLReadOnlyDocument* mine = conflict.mine;
-    CBLReadOnlyDocument* theirs = conflict.theirs;
-    
+- (nullable CBLDocument*) resolve: (CBLConflict*)conflict {
+    CBLDocument* base = conflict.base;
+    CBLDocument* mine = conflict.mine;
+    CBLDocument* theirs = conflict.theirs;
     return theirs;
 }
 

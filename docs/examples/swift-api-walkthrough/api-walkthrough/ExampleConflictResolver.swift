@@ -10,11 +10,10 @@ import Foundation
 import CouchbaseLiteSwift
 
 class ExampleConflictResolver: ConflictResolver {
-    func resolve(conflict: Conflict) -> ReadOnlyDocument? {
+    func resolve(conflict: Conflict) -> Document? {
         let base = conflict.base
         let mine = conflict.mine
         let theirs = conflict.theirs
-        
         return theirs
     }
 }
