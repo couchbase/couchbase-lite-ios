@@ -1,5 +1,5 @@
 //
-//  CBLLiveQueryChange.h
+//  CBLQueryChange.h
 //  CBL ObjC
 //
 //  Created by Pasin Suriyentrakorn on 6/22/17.
@@ -7,19 +7,19 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLLiveQuery;
+@class CBLQuery;
 @class CBLQueryResultSet;
 
 NS_ASSUME_NONNULL_BEGIN
 
 /** 
- CBLLiveQueryChange contains the information about the query result changes reported
+ CBLQueryChange contains the information about the query result changes reported
  by a live query object.
  */
-@interface CBLLiveQueryChange : NSObject
+@interface CBLQueryChange : NSObject
 
 /** The source live query object. */
-@property (nonatomic, readonly) CBLLiveQuery* query;
+@property (nonatomic, readonly) CBLQuery* query;
 
 /** The new query result. */
 @property (nonatomic, readonly, nullable) CBLQueryResultSet* rows;

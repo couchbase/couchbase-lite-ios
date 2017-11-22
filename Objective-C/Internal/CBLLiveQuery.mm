@@ -6,12 +6,13 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLLiveQuery+Internal.h"
-#import "CBLLiveQueryChange+Internal.h"
-#import "CBLChangeListener.h"
+#import "CBLLiveQuery.h"
+#import "CBLChangeListenerToken.h"
+#import "CBLLog.h"
+#import "CBLQuery.h"
+#import "CBLQueryChange+Internal.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQueryResultSet+Internal.h"
-#import "CBLLog.h"
 
 
 // Default value of CBLLiveQuery.updateInterval
@@ -19,23 +20,22 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 @implementation CBLLiveQuery
 {
-    CBLQuery* _query;
+    __weak CBLQuery* _query;
     NSTimeInterval _updateInterval;
     
-    bool _observing, _willUpdate;
+    BOOL _observing, _willUpdate;
     CFAbsoluteTime _lastUpdatedAt;
     CBLQueryResultSet* _rs;
-    id _dbChangeListener;
+    id _dbListenerToken;
     
-    NSMutableSet* _changeListeners;
+    NSMutableSet* _listenerTokens;
 }
 
 
 - (instancetype) initWithQuery: (CBLQuery*)query {
     self = [super init];
     if (self) {
-        _query = [query copy];
-        
+        _query = query;
         // Note: We could make the updateInternal property public in the future
         _updateInterval = kDefaultLiveQueryUpdateInterval;
     }
@@ -59,26 +59,28 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 
 - (void) start {
-    if (!_dbChangeListener) {
-        CBLDatabase* database = _query.database;
-        Assert(database);
+    if (!_dbListenerToken) {
+        CBLDatabase* db = _query.database;
+        Assert(db);
         
         __weak typeof(self) wSelf = self;
-        _dbChangeListener = [database addChangeListener:^(CBLDatabaseChange *change) {
+        _dbListenerToken = [db addChangeListener: ^(CBLDatabaseChange *change) {
             [wSelf databaseChanged: change];
         }];
     }
+    _observing = YES;
     _rs = nil;
     [self update];
 }
 
 
 - (void) stop {
-    if (_dbChangeListener) {
-        [_query.database removeChangeListener: _dbChangeListener];
-        _dbChangeListener = nil;
+    if (_dbListenerToken) {
+        [_query.database removeChangeListenerWithToken: _dbListenerToken];
+        _dbListenerToken = nil;
     }
     _willUpdate = NO; // cancels the delayed update started by -databaseChanged
+    _observing = NO;
 }
 
 
@@ -87,19 +89,26 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 }
 
 
-- (id<NSObject>) addChangeListener: (void (^)(CBLLiveQueryChange*))block {
-    if (!_changeListeners) {
-        _changeListeners = [NSMutableSet set];
+- (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
+                                           listener: (void (^)(CBLQueryChange*))listener
+{
+    if (!_listenerTokens) {
+        _listenerTokens = [NSMutableSet set];
     }
     
-    CBLChangeListener* listener = [[CBLChangeListener alloc] initWithBlock: block];
-    [_changeListeners addObject: listener];
-    return listener;
+    id token = [[CBLChangeListenerToken alloc] initWithListener: listener
+                                                          queue: queue];
+    [_listenerTokens addObject: token];
+    
+    if (!_observing)
+        [self start];
+    
+    return token;
 }
 
 
-- (void) removeChangeListener: (id<NSObject>)listener {
-    [_changeListeners removeObject: listener];
+- (void) removeChangeListenerWithToken: (id<NSObject>)listener {
+    [_listenerTokens removeObject: listener];
 }
 
 
@@ -136,12 +145,13 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 - (void) update {
     //TODO: Make this asynchronous (as in 1.x)
+    CBLQuery* strongQuery = _query;
     CBLLog(Query, @"%@: Querying...", self);
     NSError *error;
     CBLQueryResultSet* oldRs = _rs;
     CBLQueryResultSet* newRs;
     if (oldRs == nil)
-        newRs = (CBLQueryResultSet*) [_query run: &error];
+        newRs = (CBLQueryResultSet*) [strongQuery execute: &error];
     else
         newRs = [oldRs refresh: &error];
 
@@ -161,15 +171,18 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     }
     
     if (changed)
-        [self notifyChange: [[CBLLiveQueryChange alloc] initWithQuery: self
-                                                                 rows: newRs error: error]];
+        [self notifyChange: [[CBLQueryChange alloc] initWithQuery: strongQuery
+                                                             rows: newRs
+                                                            error: error]];
 }
 
 
-- (void) notifyChange: (CBLLiveQueryChange*)change {
-    for (CBLChangeListener* listener in _changeListeners) {
-        void (^block)(CBLLiveQueryChange*) = listener.block;
-        block(change);
+- (void) notifyChange: (CBLQueryChange*)change {
+    for (CBLChangeListenerToken* token in _listenerTokens) {
+        void (^listener)(CBLQueryChange*) = token.listener;
+        dispatch_async(token.queue, ^{
+            listener(change);
+        });
     }
 }
 

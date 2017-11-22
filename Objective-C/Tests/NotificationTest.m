@@ -18,14 +18,14 @@
 
 - (void) testDatabaseChange {
     XCTestExpectation* x = [self expectationWithDescription:@"change"];
-    id listener = [self.db addChangeListener: ^(CBLDatabaseChange* change) {
+    id token = [self.db addChangeListener: ^(CBLDatabaseChange* change) {
         AssertEqual(change.documentIDs.count, 10ul);
         [x fulfill];
     }];
-    AssertNotNil(listener);
+    AssertNotNil(token);
     
     __block NSError* error;
-    bool ok = [self.db inBatch: &error do: ^{
+    bool ok = [self.db inBatch: &error usingBlock: ^{
         for (unsigned i = 0; i < 10; i++) {
             CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: [NSString stringWithFormat: @"doc-%u", i]];
             [doc setObject: @"demo" forKey: @"type"];
@@ -37,7 +37,7 @@
     [self waitForExpectationsWithTimeout: 5 handler: NULL];
     
     // Remove listener:
-    [self.db removeChangeListener:listener];
+    [self.db removeChangeListenerWithToken: token];
 }
 
 
@@ -62,9 +62,9 @@
             [x fulfill];
     };
     
-    id listener1 = [_db addChangeListenerForDocumentID:@"doc1" usingBlock:block];
-    id listener2 = [_db addChangeListenerForDocumentID:@"doc2" usingBlock:block];
-    id listener3 = [_db addChangeListenerForDocumentID:@"doc3" usingBlock:block];
+    id listener1 = [_db addDocumentChangeListenerWithID: @"doc1" listener: block];
+    id listener2 = [_db addDocumentChangeListenerWithID: @"doc2" listener: block];
+    id listener3 = [_db addDocumentChangeListenerWithID: @"doc3" listener: block];
     
     // Update doc1
     [doc1 setObject: @"Scott Tiger" forKey: @"name"];
@@ -82,9 +82,9 @@
     [self waitForExpectationsWithTimeout: 5 handler: NULL];
     
     // Remove listeners:
-    [_db removeChangeListener:listener1];
-    [_db removeChangeListener:listener2];
-    [_db removeChangeListener:listener3];
+    [_db removeChangeListenerWithToken:listener1];
+    [_db removeChangeListenerWithToken:listener2];
+    [_db removeChangeListenerWithToken:listener3];
 }
 
 
@@ -100,9 +100,9 @@
         count++;
     };
    
-    id listener1 = [_db addChangeListenerForDocumentID:@"doc1" usingBlock:block];
-    id listener2 = [_db addChangeListenerForDocumentID:@"doc1" usingBlock:block];
-    id listener3 = [_db addChangeListenerForDocumentID:@"doc1" usingBlock:block];
+    id listener1 = [_db addDocumentChangeListenerWithID: @"doc1" listener: block];
+    id listener2 = [_db addDocumentChangeListenerWithID: @"doc1" listener: block];
+    id listener3 = [_db addDocumentChangeListenerWithID: @"doc1" listener: block];
     
     // Update doc1:
     [doc1 setObject: @"Scott Tiger" forKey: @"name"];
@@ -118,9 +118,9 @@
     [self waitForExpectationsWithTimeout: 5 handler: NULL];
     
     // Remove listeners:
-    [_db removeChangeListener:listener1];
-    [_db removeChangeListener:listener2];
-    [_db removeChangeListener:listener3];
+    [_db removeChangeListenerWithToken:listener1];
+    [_db removeChangeListenerWithToken:listener2];
+    [_db removeChangeListenerWithToken:listener3];
 }
 
 
@@ -135,7 +135,7 @@
         [x1 fulfill];
     };
     
-    id listener1 = [_db addChangeListenerForDocumentID:@"doc1" usingBlock:block];
+    id listener1 = [_db addDocumentChangeListenerWithID: @"doc1" listener: block];
     AssertNotNil(listener1);
     
     // Update doc1:
@@ -145,7 +145,7 @@
     [self waitForExpectationsWithTimeout: 5 handler: NULL];
     
     // Remove change listener:
-    [_db removeChangeListener:listener1];
+    [_db removeChangeListenerWithToken:listener1];
     
     // Update doc1 again:
     [doc1 setObject: @"Scott Tiger" forKey: @"name"];
@@ -160,7 +160,7 @@
     [self waitForExpectationsWithTimeout: 5 handler: NULL];
     
     // Remove again:
-    [_db removeChangeListener:listener1];
+    [_db removeChangeListenerWithToken:listener1];
 }
 
 

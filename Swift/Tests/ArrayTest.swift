@@ -37,7 +37,7 @@ class ArrayTest: CBLTestCase {
         XCTAssert(result == content)
         
         // Update:
-        array.remove(at: 1)
+        array.removeValue(at: 1)
         array.addValue(20)
         array.addValue(21)
         content = array.toArray()

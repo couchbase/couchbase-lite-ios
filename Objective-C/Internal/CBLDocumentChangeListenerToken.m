@@ -1,21 +1,23 @@
 //
-//  CBLDocumentChangeListener.m
+//  CBLDocumentChangeListenerToken.m
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 6/28/17.
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLDocumentChangeListener.h"
+#import "CBLDocumentChangeListenerToken.h"
 
-@implementation CBLDocumentChangeListener
+@implementation CBLDocumentChangeListenerToken
+
 
 @synthesize documentID=_documentID;
 
 - (instancetype) initWithDocumentID: (NSString*)documentID
-                          withBlock: (id)block
+                           listener: (id)listener
+                              queue: (dispatch_queue_t)queue
 {
-    self = [super initWithBlock:block];
+    self = [super initWithListener: listener queue: queue];
     if (self) {
         _documentID = documentID;
     }

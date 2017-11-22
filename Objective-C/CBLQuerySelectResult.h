@@ -14,6 +14,23 @@ NS_ASSUME_NONNULL_BEGIN
 /** A CBLQuerySelectResult represents a returning value in each query result row. */
 @interface CBLQuerySelectResult : NSObject
 
+/**
+ Creates a CBLQuerySelectResult for the given property name.
+
+ @param property The property name.
+ @return The CBLQuerySelectResult.
+ */
++ (instancetype) property: (NSString*)property;
+
+/**
+ Creates a CBLQuerySelectResult for the given property name and the alias name.
+ 
+ @param property The property name.
+ @param alias The alias name.
+ @return The CBLQuerySelectResult.
+ */
++ (instancetype) property: (NSString*)property as: (nullable NSString*)alias;
+
 /** 
  Creates a CBLQuerySelectResult for the given expression.
  @param expression The expression.

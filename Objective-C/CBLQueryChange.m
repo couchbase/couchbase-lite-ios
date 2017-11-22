@@ -6,15 +6,15 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLLiveQueryChange+Internal.h"
-#import "CBLLiveQuery.h"
+#import "CBLQueryChange+Internal.h"
+#import "CBLQuery.h"
 #import "CBLQueryResultSet.h"
 
-@implementation CBLLiveQueryChange
+@implementation CBLQueryChange
 
 @synthesize query=_query, rows=_rows, error=_error;
 
-- (instancetype) initWithQuery: (CBLLiveQuery*)query
+- (instancetype) initWithQuery: (CBLQuery*)query
                           rows: (CBLQueryResultSet*)rows
                          error: (NSError*)error {
     self = [super init];

@@ -12,6 +12,7 @@
 #import "CBLBlob.h"
 #import "CBLConflictResolver.h"
 #import "CBLDatabase.h"
+#import "CBLDatabaseConfiguration.h"
 #import "CBLDatabaseChange.h"
 #import "CBLMutableDocument.h"
 #import "CBLDocumentChange.h"
@@ -41,6 +42,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (bool) resolveConflictInDocument: (NSString*)docID
                      usingResolver: (nullable id<CBLConflictResolver>)resolver
                              error: (NSError**)outError;
+
+@end
+
+
+/// CBLDatabaseConfiguration:
+
+@interface CBLDatabaseConfiguration ()
+
++ (NSString*) defaultDirectory;
 
 @end
 

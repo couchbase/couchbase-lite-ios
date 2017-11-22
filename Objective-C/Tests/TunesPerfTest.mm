@@ -178,7 +178,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
 - (void) loadOneDocument {
     NSString* docID = [_tracks[4321] objectForKey: @"Persistent ID"];
     CBLMutableDocument* doc = [self.db documentWithID: docID];
-    __unused NSDictionary* properties = doc.toDictionary;
+    __unused NSDictionary* properties = doc.data;
 }
 
 
@@ -325,8 +325,8 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         NSError *error;
         _indexFTSBench.start();
         CBLQueryExpression* nameExpr = [CBLQueryExpression property: @"Name"];
-        CBLIndex *index = [CBLIndex ftsIndexOn: [CBLFTSIndexItem expression: nameExpr]
-                                       options: nil];
+        CBLIndex *index = [CBLIndex fullTextIndexWithItems: [CBLFullTextIndexItem expression: nameExpr]
+                                                   options: nil];
         Assert(([self.db createIndex: index withName: @"nameFTS" error: &error]),
                @"Full-text indexing failed: %@", error);
         _indexFTSBench.stop();

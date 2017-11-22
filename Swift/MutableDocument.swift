@@ -28,7 +28,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// into a database when you call the Database's save() method with the document object given.
     ///
     /// - Parameter id: The document ID.
-    public convenience init(_ id: String?) {
+    public convenience init(withID id: String?) {
         self.init(CBLMutableDocument(id: id))
     }
     
@@ -40,7 +40,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// Database's save() method with the document object given.
     ///
     /// - Parameter dictionary: The dictionary object.
-    public convenience init(dictionary: Dictionary<String, Any>?) {
+    public convenience init(withDictionary dictionary: Dictionary<String, Any>?) {
         self.init(CBLMutableDocument())
         setDictionary(dictionary)
     }
@@ -56,13 +56,14 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - id: The document ID.
     ///   - dictionary: The dictionary object.
-    public convenience init(_ id: String?, dictionary: Dictionary<String, Any>?) {
+    public convenience init(withID id: String?, dictionary: Dictionary<String, Any>?) {
         self.init(CBLMutableDocument(id: id))
         setDictionary(dictionary)
     }
     
     // MARK: Edit
     
+    // TODO: Implement copy
     /// Returns the same MutableDocument object.
     ///
     /// - Returns: The MutableDocument object.
@@ -74,57 +75,61 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     // MARK: Type Setters
     
     
-    /// Set an ArrayObject object for the given key. A nil value will be converted to an NSNull.
+    /// Set a value for the given key. Allowed value types are Array, Date, Dictionary,
+    /// Number types, NSNull, String, ArrayObject, Blob, DictionaryObject and nil.
+    /// The Arrays and Dictionaries must contain only the above types. A nil value will be
+    /// converted to an NSNull. An Date object will be converted to an ISO-8601 format string.
     ///
     /// - Parameters:
-    ///   - value: The ArrayObject object.
+    ///   - value: The value.
     ///   - key: The key.
     /// - Returns: The Document object.
-    @discardableResult public func setArray(_ value: ArrayObject?, forKey key: String) -> Self {
+    @discardableResult public func setValue(_ value: Any?, forKey key: String) -> Self {
+        docImpl.setValue(DataConverter.convertSETValue(value), forKey: key)
+        return self
+    }
+    
+    
+    /// Set a String value for the given key.
+    ///
+    /// - Parameters:
+    ///   - value: The String value.
+    ///   - key: The Document object.
+    /// - Returns: The Document object.
+    @discardableResult public func setString(_ value: String?, forKey key: String) -> Self {
+        return setValue(value, forKey:  key)
+    }
+    
+    
+    /// Set a Number value for the given key.
+    ///
+    /// - Parameters:
+    ///   - value: The number value.
+    ///   - key: The key.
+    /// - Returns: The Document object.
+    @discardableResult func setNumber(_ value: NSNumber?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     
     
-    /// Set a Blob object for the given key. A nil value will be converted to an NSNull.
+    /// Set an int value for the given key.
     ///
     /// - Parameters:
-    ///   - value: The Blob object
+    ///   - value: The int value.
     ///   - key: The key.
     /// - Returns: The Document object.
-    @discardableResult public func setBlob(_ value: Blob?, forKey key: String) -> Self {
+    @discardableResult public func setInt(_ value: Int, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     
     
-    /// Set a boolean value for the given key.
+    /// Set an int64 value for the given key.
     ///
     /// - Parameters:
-    ///   - value: The boolean value.
+    ///   - value: The int64 value.
     ///   - key: The key.
     /// - Returns: The Document object.
-    @discardableResult public func setBoolean(_ value: Bool, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a Date object for the given key. A nil value will be converted to an NSNull.
-    ///
-    /// - Parameters:
-    ///   - value: The Date object.
-    ///   - key: The key.
-    /// - Returns: The Document object.
-    @discardableResult public func setDate(_ value: Date?, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a DictionaryObject object for the given key. A nil value will be converted to an NSNull.
-    ///
-    /// - Parameters:
-    ///   - value: The DictionaryObject object.
-    ///   - key: The key.
-    /// - Returns: The Document object.
-    @discardableResult public func setDictionary(_ value: DictionaryObject?, forKey key: String) -> Self {
+    @discardableResult public func setInt64(_ value: Int64, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     
@@ -150,56 +155,63 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
         return setValue(value, forKey: key)
     }
     
-    
-    /// Set an int value for the given key.
+
+    /// Set a boolean value for the given key.
     ///
     /// - Parameters:
-    ///   - value: The integer value.
+    ///   - value: The boolean value.
     ///   - key: The key.
     /// - Returns: The Document object.
-    @discardableResult public func setInt(_ value: Int, forKey key: String) -> Self {
+    @discardableResult public func setBoolean(_ value: Bool, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     
     
-    /// Set an int64 value for the given key.
+    /// Set a Blob object for the given key. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
-    ///   - value: The int64 value.
+    ///   - value: The Blob object
     ///   - key: The key.
     /// - Returns: The Document object.
-    @discardableResult public func setInt64(_ value: Int64, forKey key: String) -> Self {
+    @discardableResult public func setBlob(_ value: Blob?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     
     
-    /// Set a String value for the given key.
+    /// Set a Date object for the given key. A nil value will be converted to an NSNull.
     ///
     /// - Parameters:
-    ///   - value: The String value.
-    ///   - key: The Document object.
-    /// - Returns: The Document object.
-    @discardableResult public func setString(_ value: String?, forKey key: String) -> Self {
-        return setValue(value, forKey:  key)
-    }
-    
-    
-    /// Set a value for the given key. Allowed value types are Array, Date, Dictionary,
-    /// Number types, NSNull, String, ArrayObject, Blob, DictionaryObject and nil.
-    /// The Arrays and Dictionaries must contain only the above types. A nil value will be
-    /// converted to an NSNull. An Date object will be converted to an ISO-8601 format string.
-    ///
-    /// - Parameters:
-    ///   - value: The value.
+    ///   - value: The Date object.
     ///   - key: The key.
     /// - Returns: The Document object.
-    @discardableResult public func setValue(_ value: Any?, forKey key: String) -> Self {
-        docImpl.setObject(DataConverter.convertSETValue(value), forKey: key)
-        return self
+    @discardableResult public func setDate(_ value: Date?, forKey key: String) -> Self {
+        return setValue(value, forKey: key)
     }
     
     
-    // MARK: Setting content with a Dictionary
+    /// Set an ArrayObject object for the given key. A nil value will be converted to an NSNull.
+    ///
+    /// - Parameters:
+    ///   - value: The ArrayObject object.
+    ///   - key: The key.
+    /// - Returns: The Document object.
+    @discardableResult public func setArray(_ value: ArrayObject?, forKey key: String) -> Self {
+        return setValue(value, forKey: key)
+    }
+    
+    
+    /// Set a DictionaryObject object for the given key. A nil value will be converted to an NSNull.
+    ///
+    /// - Parameters:
+    ///   - value: The DictionaryObject object.
+    ///   - key: The key.
+    /// - Returns: The Document object.
+    @discardableResult public func setDictionary(_ value: DictionaryObject?, forKey key: String) -> Self {
+        return setValue(value, forKey: key)
+    }
+
+    
+    // MARK: Data
     
     
     /// Set a dictionary as a content. Allowed value types are Array, Date, Dictionary,
@@ -223,8 +235,8 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     ///
     /// - Parameter key: The key.
     /// - Returns: The Document object.
-    @discardableResult public func remove(forKey key: String) -> Self {
-        docImpl.removeObject(forKey: key)
+    @discardableResult public func removeValue(forKey key: String) -> Self {
+        docImpl.removeValue(forKey: key)
         return self
     }
     
@@ -254,7 +266,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     
     // MARK: Operators
     
-    
+    // TODO: Review the behavior of the equal operator.
     /// Equal to operator for comparing two Documents object.
     public static func == (doc1: MutableDocument, doc: MutableDocument) -> Bool {
         return doc._impl === doc._impl

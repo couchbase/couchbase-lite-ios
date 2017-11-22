@@ -25,7 +25,7 @@ public class DataSource {
     
     let impl: CBLQueryDataSource
     
-    // TODO: Move to DatabaseSource when we support sub query.
+    // NOTE: Move to DatabaseSource when we support sub query.
     let database: Database
     
     init(impl: CBLQueryDataSource, database: Database) {

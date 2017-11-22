@@ -17,15 +17,39 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface CBLQueryMeta : NSObject
 
-/** An expression refering to the ID of the document. */
-@property (nonatomic, readonly) CBLQueryExpression* id;
+/**
+ Document ID expression.
 
-/** 
- An expression refering to the sequence number of the document.
- The sequence number indicates how recently the document has been changed. If one document's
- `sequence` is greater than another's, that means it was changed more recently.
+ @return The document ID expression.
  */
-@property (nonatomic, readonly) CBLQueryExpression* sequence;
++ (CBLQueryExpression*) id;
+
+/**
+ Document ID expression.
+
+ @param alias The data source alias name.
+ @return The document ID expression.
+ */
++ (CBLQueryExpression*) idFrom: (nullable NSString*)alias;
+
+/**
+ Sequence number expression. The sequence number indicates how recently
+ the document has been changed. If one document's `sequence` is greater
+ than another's, that means it was changed more recently.
+
+ @return The sequence number expression.
+ */
++ (CBLQueryExpression*) sequence;
+
+/**
+ Sequence number expression. The sequence number indicates how recently
+ the document has been changed. If one document's `sequence` is greater
+ than another's, that means it was changed more recently.
+
+ @param alias The data source alias name.
+ @return The sequence number expression.
+ */
++ (CBLQueryExpression*) sequenceFrom: (nullable NSString*)alias;
 
 @end
 

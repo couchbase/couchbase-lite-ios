@@ -7,7 +7,7 @@
 //
 
 #import "CBLCompoundExpression.h"
-#import "CBLQuery+Internal.h"
+#import "CBLQueryExpression+Internal.h"
 
 @implementation CBLCompoundExpression {
     NSArray* _expressions;
@@ -15,7 +15,9 @@
 }
 
 
-- (instancetype) initWithExpressions: (NSArray*)expressions type: (CBLCompoundExpType)type {
+- (instancetype) initWithExpressions: (NSArray*)expressions
+                                type: (CBLCompoundExpType)type
+{
     self = [super initWithNone];
     if (self) {
         _expressions = expressions;

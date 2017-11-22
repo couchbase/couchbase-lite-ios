@@ -9,7 +9,7 @@
 #import "CBLReplicatorConfiguration.h"
 #import "CBLAuthenticator+Internal.h"
 #import "CBLReplicator+Internal.h"
-#import "CBLDatabase.h"
+#import "CBLDatabase+Internal.h"
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
@@ -75,6 +75,12 @@
     c.channels = _channels;
     c.checkpointInterval = _checkpointInterval;
     return c;
+}
+
+- (id<CBLConflictResolver>) conflictResolver {
+    if (!_conflictResolver)
+        _conflictResolver = [[CBLDefaultConflictResolver alloc] init];
+    return _conflictResolver;
 }
 
 

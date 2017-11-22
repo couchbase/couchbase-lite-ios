@@ -45,7 +45,7 @@ namespace cbl {
 
 
 @implementation CBLQueryResultSet {
-    CBLQuery* _query;
+    __weak CBLQuery* _query;
     C4QueryEnumerator* _c4enum;
     cbl::QueryResultContext* _context;
     C4Error _error;

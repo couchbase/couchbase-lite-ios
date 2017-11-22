@@ -42,3 +42,23 @@ public protocol ConflictResolver {
     func resolve(conflict: Conflict) -> Document?
     
 }
+
+class BridgingConflictResolver: NSObject, CBLConflictResolver {
+    let _resovler: ConflictResolver
+    
+    init(resolver: ConflictResolver) {
+        _resovler = resolver
+    }
+    
+    public func resolve(_ conflict: CBLConflict) -> CBLDocument? {
+        let resolved = _resovler.resolve(conflict: Conflict(impl: conflict))
+        return resolved?._impl
+    }
+}
+
+// A placeholder for using default conflict resolver defined in Objective-C
+class DefaultConflictResolver: ConflictResolver {
+    func resolve(conflict: Conflict) -> Document? {
+        return nil;
+    }
+}

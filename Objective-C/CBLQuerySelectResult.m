@@ -7,13 +7,25 @@
 //
 
 #import "CBLQuerySelectResult.h"
-#import "CBLQuery+Internal.h"
+#import "CBLQueryExpression+Internal.h"
 #import "CBLPropertyExpression.h"
 
 @implementation CBLQuerySelectResult {
     CBLQueryExpression* _expression;
     NSString* _alias;
 }
+
++ (instancetype) property: (NSString*)property {
+    return [[self alloc] initWithExpression: [CBLQueryExpression property: property]
+                                         as: nil];
+}
+
+
++ (instancetype) property: (NSString*)property as: (nullable NSString*)alias {
+    return [[self alloc] initWithExpression: [CBLQueryExpression property: property]
+                                         as: alias];
+}
+
 
 + (instancetype) expression: (CBLQueryExpression*)expression {
     return [self expression: expression as: nil];

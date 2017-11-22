@@ -7,7 +7,7 @@
 //
 
 #import "CBLParameterExpression.h"
-#import "CBLQuery+Internal.h"
+#import "CBLQueryExpression+Internal.h"
 
 @implementation CBLParameterExpression {
     NSString* _name;

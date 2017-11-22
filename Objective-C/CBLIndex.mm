@@ -8,19 +8,22 @@
 
 #import "CBLIndex.h"
 #import "CBLIndex+Internal.h"
+#import "CBLQueryExpression.h"
 #import "CBLValueIndex.h"
-#import "CBLFTSIndex.h"
+#import "CBLFullTextIndex.h"
 
 @implementation CBLIndex
 
 
-+ (CBLIndex*) valueIndexOn: (NSArray<CBLValueIndexItem*>*)items {
++ (CBLValueIndex*) valueIndexWithItems: (NSArray<CBLValueIndexItem*>*)items {
     return [[CBLValueIndex alloc] initWithItems: items];
 }
 
 
-+ (CBLIndex*) ftsIndexOn: (CBLFTSIndexItem*)item options: (nullable CBLFTSIndexOptions*)options {
-    return [[CBLFTSIndex alloc] initWithItems: item options: options];
++ (CBLFullTextIndex*) fullTextIndexWithItems: (NSArray<CBLFullTextIndexItem*>*)items
+                             options: (nullable CBLFullTextIndexOptions*)options
+{
+    return [[CBLFullTextIndex alloc] initWithItems: items options: options];
 }
 
 
@@ -56,6 +59,13 @@
     return self;
 }
 
+
++ (CBLValueIndexItem*) property: (NSString*)property{
+    return [[CBLValueIndexItem alloc] initWithExpression:
+            [CBLQueryExpression property: property]];
+}
+
+
 + (CBLValueIndexItem*) expression: (CBLQueryExpression*)expression {
     return [[CBLValueIndexItem alloc] initWithExpression: expression];
 }
@@ -63,7 +73,7 @@
 @end
 
 
-@implementation CBLFTSIndexItem
+@implementation CBLFullTextIndexItem
             
 @synthesize expression=_expression;
 
@@ -75,14 +85,15 @@
     return self;
 }
 
-+ (CBLFTSIndexItem*) expression: (CBLQueryExpression*)expression {
-    return [[CBLFTSIndexItem alloc] initWithExpression: expression];
++ (CBLFullTextIndexItem*) property: (NSString*)property {
+    return [[CBLFullTextIndexItem alloc] initWithExpression:
+            [CBLQueryExpression property: property]];
 }
 
 @end
 
 
-@implementation CBLFTSIndexOptions
+@implementation CBLFullTextIndexOptions
 
 @synthesize locale=_locale, ignoreAccents=_ignoreAccents;
 

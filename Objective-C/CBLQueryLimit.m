@@ -8,6 +8,7 @@
 
 #import "CBLQueryLimit.h"
 #import "CBLQuery+Internal.h"
+#import "CBLQueryExpression+Internal.h"
 
 @implementation CBLQueryLimit
 

@@ -11,11 +11,11 @@ import CouchbaseLiteSwift
 
 
 class DatabaseTest: CBLTestCase {
-
+    
     func testProperties() throws {
         XCTAssertEqual(db.name, self.databaseName)
         XCTAssert(db.path!.contains(self.databaseName))
-        XCTAssert(Database.exists(self.databaseName, inDirectory: self.directory))
+        XCTAssert(Database.exists(withName: self.databaseName, inDirectory: self.directory))
     }
 
     func testCreateUntitledDocument() throws {
@@ -26,25 +26,25 @@ class DatabaseTest: CBLTestCase {
     }
     
     func testCreateNamedDocument() throws {
-        XCTAssertFalse(db.contains("doc1"))
+        XCTAssertFalse(db.containsDocument(withID: "doc1"))
 
-        let doc = MutableDocument("doc1")
+        let doc = MutableDocument(withID: "doc1")
         XCTAssertEqual(doc.id, "doc1")
         XCTAssertFalse(doc.isDeleted)
         XCTAssertTrue(doc.toDictionary() == [:] as [String: Any])
         
-        try db.save(doc)
+        try db.saveDocument(doc)
     }
 
     func testInBatch() throws {
         try db.inBatch {
             for i in 0...9{
-                let doc = MutableDocument("doc\(i)")
-                try db.save(doc)
+                let doc = MutableDocument(withID: "doc\(i)")
+                try db.saveDocument(doc)
             }
         }
         for i in 0...9 {
-            XCTAssert(db.contains("doc\(i)"))
+            XCTAssert(db.containsDocument(withID: "doc\(i)"))
         }
     }
     
@@ -66,23 +66,23 @@ class DatabaseTest: CBLTestCase {
         let dir = config.directory
         
         // Make sure no an existing database at the new location:
-        try Database.delete(dbName, inDirectory: dir)
+        try Database.delete(withName: dbName, inDirectory: dir)
         
         // Copy:
-        try Database.copy(fromPath: db.path!, toDatabase: dbName, config: config)
+        try Database.copy(fromPath: db.path!, toDatabase: dbName, withConfig: config)
         
         // Verify:
-        XCTAssert(Database.exists(dbName, inDirectory: dir))
+        XCTAssert(Database.exists(withName: dbName, inDirectory: dir))
         let nudb = try Database.init(name: dbName, config: config)
         XCTAssertEqual(nudb.count, 10)
         
         let query = Query
-            .select(SelectResult.expression(Expression.meta().id))
+            .select(SelectResult.expression(Meta.id))
             .from(DataSource.database(self.db))
-        let rs = try query.run()
+        let rs = try query.execute()
         for r in rs {
             let docID = r.string(at: 0)!
-            let doc = nudb.getDocument(docID)!
+            let doc = nudb.document(withID: docID)!
             XCTAssertEqual(doc.string(forKey: "name"), docID)
             
             let blob = doc.blob(forKey: "data")!
@@ -92,7 +92,7 @@ class DatabaseTest: CBLTestCase {
         
         // Clean up:
         try nudb.close()
-        try Database.delete(dbName, inDirectory: dir)
+        try Database.delete(withName: dbName, inDirectory: dir)
     }
     
     func testCreateIndex() throws {
@@ -103,16 +103,16 @@ class DatabaseTest: CBLTestCase {
         let fNameItem = ValueIndexItem.expression(Expression.property("firstName"))
         let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
         
-        let index1 = Index.valueIndex().on(fNameItem, lNameItem)
+        let index1 = Index.valueIndex(withItems: fNameItem, lNameItem)
         try db.createIndex(index1, withName: "index1")
         
         // Create FTS index:
-        let detailItem = FTSIndexItem.expression(Expression.property("detail"))
-        let index2 = Index.ftsIndex().on(detailItem)
+        let detailItem = FullTextIndexItem.property("detail")
+        let index2 = Index.fullTextIndex(withItems: detailItem)
         try db.createIndex(index2, withName: "index2")
         
-        let detailItem2 = FTSIndexItem.expression(Expression.property("es-detail"))
-        let index3 = Index.ftsIndex().on(detailItem2).locale("es").ignoreAccents(true)
+        let detailItem2 = FullTextIndexItem.property("es-detail")
+        let index3 = Index.fullTextIndex(withItems: detailItem2).locale("es").ignoreAccents(true)
         try db.createIndex(index3, withName: "index3")
         
         XCTAssertEqual(db.indexes.count, 3)
@@ -123,7 +123,7 @@ class DatabaseTest: CBLTestCase {
         let item = ValueIndexItem.expression(Expression.property("firstName"))
         
         // Create index with first name:
-        let index = Index.valueIndex().on(item)
+        let index = Index.valueIndex(withItems: item)
         try db.createIndex(index, withName: "myindex")
         
         // Call create index again:
@@ -136,12 +136,12 @@ class DatabaseTest: CBLTestCase {
     func failingTestCreateSameNameIndexes() throws {
         // Create value index with first name:
         let fNameItem = ValueIndexItem.expression(Expression.property("firstName"))
-        let fNameIndex = Index.valueIndex().on(fNameItem)
+        let fNameIndex = Index.valueIndex(withItems: fNameItem)
         try db.createIndex(fNameIndex, withName: "myindex")
         
         // Create value index with last name:
         let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
-        let lNameIndex = Index.valueIndex().on(lNameItem)
+        let lNameIndex = Index.valueIndex(withItems: lNameItem)
         try db.createIndex(lNameIndex, withName: "myindex")
         
         // Check:
@@ -149,8 +149,8 @@ class DatabaseTest: CBLTestCase {
         XCTAssertEqual(db.indexes, ["myindex"])
         
         // Create FTS index:
-        let detailItem = FTSIndexItem.expression(Expression.property("detail"))
-        let detailIndex = Index.ftsIndex().on(detailItem)
+        let detailItem = FullTextIndexItem.property("detail")
+        let detailIndex = Index.fullTextIndex(withItems: detailItem)
         try db.createIndex(detailIndex, withName: "myindex")
         
         // Check:
@@ -166,16 +166,16 @@ class DatabaseTest: CBLTestCase {
         let fNameItem = ValueIndexItem.expression(Expression.property("firstName"))
         let lNameItem = ValueIndexItem.expression(Expression.property("lastName"))
         
-        let index1 = Index.valueIndex().on(fNameItem, lNameItem)
+        let index1 = Index.valueIndex(withItems: fNameItem, lNameItem)
         try db.createIndex(index1, withName: "index1")
         
         // Create FTS index:
-        let detailItem = FTSIndexItem.expression(Expression.property("detail"))
-        let index2 = Index.ftsIndex().on(detailItem)
+        let detailItem = FullTextIndexItem.property("detail")
+        let index2 = Index.fullTextIndex(withItems: detailItem)
         try db.createIndex(index2, withName: "index2")
         
-        let detailItem2 = FTSIndexItem.expression(Expression.property("es-detail"))
-        let index3 = Index.ftsIndex().on(detailItem2).locale("es").ignoreAccents(true)
+        let detailItem2 = FullTextIndexItem.property("es-detail")
+        let index3 = Index.fullTextIndex(withItems: detailItem2).locale("es").ignoreAccents(true)
         try db.createIndex(index3, withName: "index3")
         
         XCTAssertEqual(db.indexes.count, 3)

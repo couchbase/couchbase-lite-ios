@@ -22,22 +22,64 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol CBLMutableFragment <CBLFragment>
 
 /** 
- Gets the value from or sets the value to the fragment object. The object types are CBLMutableArray,
- CBLBlob, CBLMutableDictionary, NSNumber, NSString, NSNull, or nil.
+ Gets value from or sets the value to the fragment object.
  */
 @property (nonatomic, nullable) NSObject* value;
 
-/** 
- Get the value as a CBLMutableArray, a mapping object of an array value.
- Returns nil if the value is nil, or the value is not an array.
+/**
+ Gets the value as string or sets the string value to the fragment object.
  */
-@property (nonatomic, readonly, nullable) CBLMutableArray* array;
+@property (nonatomic, nullable) NSString* string;
 
-/** 
- Get a property's value as a CBLMutableDictionary, a mapping object of a dictionary value.
- Returns nil if the value is nil, or the value is not a dictionary.
+/**
+ Gets the value as number or sets the number value to the fragment object.
  */
-@property (nonatomic, readonly, nullable) CBLMutableDictionary* dictionary;
+@property (nonatomic, nullable) NSNumber* number;
+
+/**
+ Gets the value as integer or sets the integer value to the fragment object.
+ */
+@property (nonatomic) NSInteger integerValue;
+
+/**
+ Gets the value as long long or sets the long long value to the fragment object.
+ */
+@property (nonatomic) long long longLongValue;
+
+/**
+ Gets the value as float or sets the float value to the fragment object.
+ */
+@property (nonatomic) float floatValue;
+
+/**
+ Gets the value as double or sets the double value to the fragment object.
+ */
+@property (nonatomic) double doubleValue;
+
+/**
+ Gets the value as boolean or sets the boolean value to the fragment object.
+ */
+@property (nonatomic) BOOL booleanValue;
+
+/**
+ Gets the value as date or sets the date value to the fragment object.
+ */
+@property (nonatomic, nullable) NSDate* date;
+
+/**
+ Gets the value as blob or sets the blob value to the fragment object.
+ */
+@property (nonatomic, nullable) CBLBlob* blob;
+
+/**
+ Gets the value as array or sets the array value to the fragment object.
+ */
+@property (nonatomic, nullable) CBLMutableArray* array;
+
+/**
+ Gets the value as dictionary or sets the dictionary value to the fragment object.
+ */
+@property (nonatomic, nullable) CBLMutableDictionary* dictionary;
 
 @end
 

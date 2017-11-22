@@ -28,7 +28,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLMutableDocument ()
 
-- (instancetype) initWithDocument: (CBLDocument*)doc;
+- (instancetype) initAsCopyWithDocument: (CBLDocument*)doc
+                                   dict: (nullable CBLDictionary*)dict;
 
 - (void) setEncodingError: (NSError*)error;
 
@@ -56,14 +57,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) NSUInteger generation;
 
-@property (nonatomic, readonly, nullable) FLDict data;
+@property (nonatomic, readonly, nullable) FLDict fleeceData;
 
-/*
-- (instancetype) initWithDatabase: (nullable CBLDatabase*)database
-                       documentID: (NSString*)documentID
-                            c4Doc: (nullable CBLC4Document*)c4Doc
-                       fleeceData: (nullable FLDict)data NS_DESIGNATED_INITIALIZER;
-*/
 
 - (instancetype) initWithDatabase: (nullable CBLDatabase*)database
                        documentID: (NSString*)documentID
@@ -72,6 +67,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
                         mustExist: (BOOL)mustExist
+                   includeDeleted: (BOOL)includeDeleted
                             error: (NSError**)outError;
 
 - (BOOL) selectConflictingRevision;

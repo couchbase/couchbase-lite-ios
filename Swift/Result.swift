@@ -32,43 +32,52 @@ public class Result : ArrayProtocol, DictionaryProtocol {
     }
     
     
-    /// The projecting result value at the given index as a readonly ArrayObject value.
-    /// Returns nil if the value is not an array.
+    /// The projecting result value at the given index.
     ///
     /// - Parameter index: The select result index.
-    /// - Returns: The ReadOnlyArrayObject or nil.
-    public func array(at index: Int) -> ArrayObject? {
-        return value(at: index) as? ArrayObject
+    /// - Returns: The value.
+    public func value(at index: Int) -> Any? {
+        return DataConverter.convertGETValue(impl.object(at: UInt(index)))
     }
     
     
-    /// The projecting result value at the given index as a Blob value.
-    /// Returns nil if the value is not a blob.
+    /// The projecting result value at the given index as a String value.
+    /// Returns nil if the value is not a string.
     ///
     /// - Parameter index: The select result index.
-    /// - Returns: The Blob value or nil.
-    public func blob(at index: Int) -> Blob? {
-        return impl.blob(at: UInt(index))
+    /// - Returns: The String object or nil.
+    public func string(at index: Int) -> String? {
+        return impl.string(at: UInt(index))
     }
     
     
-    /// The projecting result value at the given index as a Boolean value.
-    /// Returns true if the value is not null, and is either `true` or a nonzero number.
+    /// The projecting result value at the given index as a Number value.
+    /// Returns nil if the value is not a number.
     ///
     /// - Parameter index: The select result index.
-    /// - Returns: The Bool value.
-    public func boolean(at index: Int) -> Bool {
-        return impl.boolean(at: UInt(index))
+    /// - Returns: The Number value.
+    public func number(at index: Int) -> NSNumber? {
+        return impl.number(at: UInt(index))
     }
     
     
-    /// The projecting result value at the given index as a Date value.
-    /// Returns nil if the value is not a string and is not parseable as a date.
+    /// The projecting result value at the given index as an Int value.
+    /// Returns 0 if the value is not a numeric value.
     ///
     /// - Parameter index: The select result index.
-    /// - Returns: The Date value or nil.
-    public func date(at index: Int) -> Date? {
-        return impl.date(at: UInt(index))
+    /// - Returns: The Int value.
+    public func int(at index: Int) -> Int {
+        return impl.integer(at: UInt(index))
+    }
+    
+    
+    /// The projecting result value at the given index as an Int64 value.
+    /// Returns 0 if the value is not a numeric value.
+    ///
+    /// - Parameter index: The select result index.
+    /// - Returns: The Int value.
+    public func int64(at index: Int) -> Int64 {
+        return impl.longLong(at: UInt(index))
     }
     
     
@@ -91,23 +100,43 @@ public class Result : ArrayProtocol, DictionaryProtocol {
     }
     
     
-    /// The projecting result value at the given index as an Int value.
-    /// Returns 0 if the value is not a numeric value.
+    /// The projecting result value at the given index as a Boolean value.
+    /// Returns true if the value is not null, and is either `true` or a nonzero number.
     ///
     /// - Parameter index: The select result index.
-    /// - Returns: The Int value.
-    public func int(at index: Int) -> Int {
-        return impl.integer(at: UInt(index))
+    /// - Returns: The Bool value.
+    public func boolean(at index: Int) -> Bool {
+        return impl.boolean(at: UInt(index))
     }
     
     
-    /// The projecting result value at the given index as an Int65 value.
-    /// Returns 0 if the value is not a numeric value.
+    /// The projecting result value at the given index as a Blob value.
+    /// Returns nil if the value is not a blob.
     ///
     /// - Parameter index: The select result index.
-    /// - Returns: The Int64 value.
-    public func int64(at index: Int) -> Int64 {
-        return impl.longLong(at: UInt(index))
+    /// - Returns: The Blob value or nil.
+    public func blob(at index: Int) -> Blob? {
+        return impl.blob(at: UInt(index))
+    }
+    
+    
+    /// The projecting result value at the given index as a Date value.
+    /// Returns nil if the value is not a string and is not parseable as a date.
+    ///
+    /// - Parameter index: The select result index.
+    /// - Returns: The Date value or nil.
+    public func date(at index: Int) -> Date? {
+        return impl.date(at: UInt(index))
+    }
+    
+    
+    /// The projecting result value at the given index as a readonly ArrayObject value.
+    /// Returns nil if the value is not an array.
+    ///
+    /// - Parameter index: The select result index.
+    /// - Returns: The ReadOnlyArrayObject or nil.
+    public func array(at index: Int) -> ArrayObject? {
+        return value(at: index) as? ArrayObject
     }
     
     
@@ -121,25 +150,6 @@ public class Result : ArrayProtocol, DictionaryProtocol {
     }
     
     
-    /// The projecting result value at the given index as a String value.
-    /// Returns nil if the value is not a string.
-    ///
-    /// - Parameter index: The select result index.
-    /// - Returns: The String object or nil.
-    public func string(at index: Int) -> String? {
-        return impl.string(at: UInt(index))
-    }
-    
-    
-    /// The projecting result value at the given index.
-    ///
-    /// - Parameter index: The select result index.
-    /// - Returns: The value.
-    public func value(at index: Int) -> Any? {
-        return DataConverter.convertGETValue(impl.object(at: UInt(index)))
-    }
-    
-    
     /// All values as a JSON Array object. The values contained in the
     /// returned Array object are all JSON based values.
     ///
@@ -147,7 +157,6 @@ public class Result : ArrayProtocol, DictionaryProtocol {
     public func toArray() -> Array<Any> {
         return impl.toArray()
     }
-    
     
     // MARK: ReadOnlyArrayFragment
     
@@ -190,6 +199,16 @@ public class Result : ArrayProtocol, DictionaryProtocol {
     }
     
     
+    /// The projecting result value for the given key as a Number value.
+    /// Returns nil if the key doesn't exist, or the value is not a number.
+    ///
+    /// - Parameter key: The select result key.
+    /// - Returns: The Number value or nil.
+    public func number(forKey key: String) -> NSNumber? {
+        return impl.number(forKey: key)
+    }
+    
+    
     /// The projecting result value for the given key as an Int value.
     /// Returns 0 if the key doesn't exist, or the value is not a numeric value.
     ///
@@ -204,7 +223,7 @@ public class Result : ArrayProtocol, DictionaryProtocol {
     /// Returns 0 if the key doesn't exist, or the value is not a numeric value.
     ///
     /// - Parameter key: The select result key.
-    /// - Returns: The Int64 value.
+    /// - Returns: The Int value.
     public func int64(forKey key: String) -> Int64 {
         return impl.longLong(forKey: key)
     }
@@ -286,8 +305,8 @@ public class Result : ArrayProtocol, DictionaryProtocol {
     ///
     /// - Parameter key: The select result key.
     /// - Returns: True if exists, otherwise false.
-    public func contains(_ key: String) -> Bool {
-        return impl.containsObject(forKey: key)
+    public func contains(key: String) -> Bool {
+        return impl.containsValue(forKey: key)
     }
     
     

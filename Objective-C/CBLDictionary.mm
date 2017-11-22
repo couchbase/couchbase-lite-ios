@@ -129,44 +129,23 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     return obj;
 }
 
-
-- (nullable CBLArray*) arrayForKey: (NSString*)key {
-    return _getObject(_dict, key, [CBLArray class]);
-}
-
-
-- (nullable CBLBlob*) blobForKey: (NSString*)key {
-    return _getObject(_dict, key, [CBLBlob class]);
-}
-
-
-- (BOOL) booleanForKey: (NSString*)key {
-    return asBool(_get(_dict, key), _dict);
-}
-
-
-- (nullable NSDate*) dateForKey: (NSString*)key {
-    return asDate(_getObject(_dict, key, nil));
-}
-
-
-- (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
-    return _getObject(_dict, key, [CBLDictionary class]);
-}
-
-
 - (nullable id) objectForKey: (NSString*)key {
     return _getObject(_dict, key, nil);
 }
 
 
-- (double) doubleForKey: (NSString*)key {
-    return asDouble(_get(_dict, key), _dict);
+- (nullable id) valueForKey: (NSString*)key {
+    return _getObject(_dict, key, nil);
 }
 
 
-- (float) floatForKey: (NSString*)key {
-    return asFloat(_get(_dict, key), _dict);
+- (nullable NSString*) stringForKey: (NSString*)key {
+    return _getObject(_dict, key, [NSString class]);
+}
+
+
+- (nullable NSNumber*) numberForKey: (NSString*)key {
+    return _getObject(_dict, key, [NSNumber class]);
 }
 
 
@@ -180,25 +159,50 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 }
 
 
-- (nullable NSNumber*) numberForKey: (NSString*)key {
-    return _getObject(_dict, key, [NSNumber class]);
+- (float) floatForKey: (NSString*)key {
+    return asFloat(_get(_dict, key), _dict);
 }
 
 
-- (nullable NSString*) stringForKey: (NSString*)key {
-    return _getObject(_dict, key, [NSString class]);
+- (double) doubleForKey: (NSString*)key {
+    return asDouble(_get(_dict, key), _dict);
+}
+
+
+- (BOOL) booleanForKey: (NSString*)key {
+    return asBool(_get(_dict, key), _dict);
+}
+
+
+- (nullable NSDate*) dateForKey: (NSString*)key {
+    return asDate(_getObject(_dict, key, nil));
+}
+
+
+- (nullable CBLBlob*) blobForKey: (NSString*)key {
+    return _getObject(_dict, key, [CBLBlob class]);
+}
+
+
+- (nullable CBLArray*) arrayForKey: (NSString*)key {
+    return _getObject(_dict, key, [CBLArray class]);
+}
+
+
+- (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
+    return _getObject(_dict, key, [CBLDictionary class]);
 }
 
 
 #pragma mark - Check Existence
 
 
-- (BOOL) containsObjectForKey: (NSString*)key {
+- (BOOL) containsValueForKey: (NSString*)key {
     return !_get(_dict, key).isEmpty();
 }
 
 
-#pragma mark - Convert to NSDictionary
+#pragma mark - Data
 
 
 - (NSDictionary<NSString*,id>*) toDictionary {
@@ -207,6 +211,14 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
         result[i.nativeKey()] = [i.nativeValue() cbl_toPlainObject];
     }
     return result;
+}
+
+
+#pragma mark - Mutable
+
+
+- (CBLMutableDictionary*) toMutable {
+    return [self mutableCopy];
 }
 
 
@@ -225,7 +237,7 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
-    if (![self containsObjectForKey: key])
+    if (![self containsValueForKey: key])
         return nil;
     return [[CBLFragment alloc] initWithParent: self key: key];
 }

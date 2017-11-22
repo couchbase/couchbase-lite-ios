@@ -15,12 +15,3 @@
 @property (readonly, nonatomic) NSString* documentID;
 
 @end
-
-
-/** A protocol defining a document change listener. */
-@protocol CBLDocumentChangeListener <NSObject>
-
-/** A method to be called when the document has been changed. */
-- (void) documentDidChange: (CBLDocumentChange*)change;
-
-@end

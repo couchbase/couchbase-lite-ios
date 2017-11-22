@@ -17,15 +17,18 @@ import Foundation
 /// The Satisfies class represents the SATISFIES clause object in a quantified operator
 /// (ANY/ANY AND EVERY/EVERY <variable name> IN <expr> SATISFIES <expr>). The SATISFIES clause 
 /// is used for specifying an expression that will be used to evaluate each item in the array.
-public class Satisfies {
+public class ArrayExpressionSatisfies {
     
     /// Creates a complete quantified operator with the given satisfies expression.
     ///
     /// - Parameter expression: The satisfies expression used for evaluating each item in the array.
     /// - Returns: The quantified expression.
     public func satisfies(_ expression: Expression) -> Expression {
-        let impl = Satisfies.toImpl(type: self.type, variable: self.variable,
-                                    inExpression: self.inExpression, satisfies: expression)
+        let impl = ArrayExpressionSatisfies.toImpl(
+            type: self.type,
+            variable: self.variable,
+            inExpression: self.inExpression,
+            satisfies: expression)
         return Expression(impl)
     }
     
@@ -48,11 +51,11 @@ public class Satisfies {
         let satisfiesImpl = satisfies.impl
         switch type {
         case .any:
-            return CBLQueryExpression.any(variable, in: inImpl, satisfies: satisfiesImpl)
+            return CBLQueryArrayExpression.any(variable, in: inImpl, satisfies: satisfiesImpl)
         case .anyAndEvery:
-            return CBLQueryExpression.anyAndEvery(variable, in: inImpl, satisfies: satisfiesImpl)
+            return CBLQueryArrayExpression.anyAndEvery(variable, in: inImpl, satisfies: satisfiesImpl)
         case .every:
-            return CBLQueryExpression.every(variable, in: inImpl, satisfies: satisfiesImpl)
+            return CBLQueryArrayExpression.every(variable, in: inImpl, satisfies: satisfiesImpl)
         }
     }
     

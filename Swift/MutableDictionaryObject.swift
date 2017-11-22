@@ -15,35 +15,37 @@ protocol MutableDictionaryProtocol: DictionaryProtocol, MutableDictionaryFragmen
 
     // MARK: Type Setters
     
-    @discardableResult func setArray(_ value: ArrayObject?, forKey key: String) -> Self
+    @discardableResult func setValue(_ value: Any?, forKey key: String) -> Self
     
-    @discardableResult func setBlob(_ value: Blob?, forKey key: String) -> Self
+    @discardableResult func setString(_ value: String?, forKey key: String) -> Self
     
-    @discardableResult func setBoolean(_ value: Bool, forKey key: String) -> Self
-    
-    @discardableResult func setDate(_ value: Date?, forKey key: String) -> Self
-    
-    @discardableResult func setDictionary(_ value: DictionaryObject?, forKey key: String) -> Self
-    
-    @discardableResult func setDouble(_ value: Double, forKey key: String) -> Self
-    
-    @discardableResult func setFloat(_ value: Float, forKey key: String) -> Self
+    @discardableResult func setNumber(_ value: NSNumber?, forKey key: String) -> Self
     
     @discardableResult func setInt(_ value: Int, forKey key: String) -> Self
     
     @discardableResult func setInt64(_ value: Int64, forKey key: String) -> Self
     
-    @discardableResult func setString(_ value: String?, forKey key: String) -> Self
+    @discardableResult func setFloat(_ value: Float, forKey key: String) -> Self
     
-    @discardableResult func setValue(_ value: Any?, forKey key: String) -> Self
+    @discardableResult func setDouble(_ value: Double, forKey key: String) -> Self
     
-    // MARK: Setting content with a Dictionary
+    @discardableResult func setBoolean(_ value: Bool, forKey key: String) -> Self
+    
+    @discardableResult func setDate(_ value: Date?, forKey key: String) -> Self
+    
+    @discardableResult func setBlob(_ value: Blob?, forKey key: String) -> Self
+    
+    @discardableResult func setArray(_ value: ArrayObject?, forKey key: String) -> Self
+    
+    @discardableResult func setDictionary(_ value: DictionaryObject?, forKey key: String) -> Self
+    
+    // MARK: Data
     
     @discardableResult func setDictionary(_ dictionary: Dictionary<String, Any>?) -> Self
     
     // MARK: Removing Entries
     
-    @discardableResult func remove(forKey key: String) -> Self
+    @discardableResult func removeValue(forKey key: String) -> Self
     
     // MARK: Getting MutableDictionaryObject and MutableArrayObject
     
@@ -71,7 +73,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     /// The Arrays and Dictionaries must contain only the above types.
     ///
     /// - Parameter dictionary: the dictionary object.
-    public init(dictionary: Dictionary<String, Any>?) {
+    public init(withDictionary dictionary: Dictionary<String, Any>?) {
         super.init(CBLMutableDictionary())
         setDictionary(dictionary)
     }
@@ -80,80 +82,40 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     // MARK: Type Setters
     
     
-    /// Set an ArrayObject object for the given key. A nil value will be converted to an NSNull.
+    /// Set a value for the given key. Allowed value types are Array, Date, Dictionary,
+    /// Number types, NSNull, String, ArrayObject, Blob, DictionaryObject and nil.
+    /// The Arrays and Dictionaries must contain only the above types. A nil value will be
+    /// converted to an NSNull. An Date object will be converted to an ISO-8601 format string.
     ///
     /// - Parameters:
-    ///   - value: The ArrayObject object.
+    ///   - value: The value.
     ///   - key: The key.
     /// - Returns: The DictionaryObject object.
-    @discardableResult func setArray(_ value: ArrayObject?, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
+    @discardableResult public func setValue(_ value: Any?, forKey key: String) -> Self {
+        dictImpl.setObject(DataConverter.convertSETValue(value), forKey: key)
+        return self
     }
     
     
-    /// Set a Blob object for the given key. A nil value will be converted to an NSNull.
+    /// Set a String value for the given key.
     ///
     /// - Parameters:
-    ///   - value: The Blob object.
+    ///   - value: The String value.
     ///   - key: The key.
     /// - Returns: The DictionaryObject object.
-    @discardableResult func setBlob(_ value: Blob?, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
+    @discardableResult func setString(_ value: String?, forKey key: String) -> Self {
+        return setValue(value, forKey:  key)
     }
+
     
-    
-    /// Set a boolean value for the given key.
+    /// Set a Number value for the given key.
     ///
     /// - Parameters:
-    ///   - value: The boolean value.
-    ///   - key: The key.
+    ///   - value: The number value.
+    ///   - key: They key.
     /// - Returns: The DictionaryObject object.
-    @discardableResult func setBoolean(_ value: Bool, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a Date object for the given key. A nil value will be converted to an NSNull.
-    ///
-    /// - Parameters:
-    ///   - value: The Date object.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult func setDate(_ value: Date?, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a DictionaryObject object for the given key. A nil value will be converted to an NSNull.
-    ///
-    /// - Parameters:
-    ///   - value: The DictionaryObject object.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult func setDictionary(_ value: DictionaryObject?, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a double value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value:  The double value.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult func setDouble(_ value: Double, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
-    }
-    
-    
-    /// Set a float value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value: The float value.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult func setFloat(_ value: Float, forKey key: String) -> Self {
-        return setValue(value, forKey: key)
+    @discardableResult func setNumber(_ value: NSNumber?, forKey key: String) -> Self {
+        return setValue(value, forKey: key);
     }
     
     
@@ -179,34 +141,84 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     }
     
     
-    /// Set a String value for the given key.
+    /// Set a double value for the given key.
     ///
     /// - Parameters:
-    ///   - value: The String value.
+    ///   - value:  The double value.
     ///   - key: The key.
     /// - Returns: The DictionaryObject object.
-    @discardableResult func setString(_ value: String?, forKey key: String) -> Self {
-        return setValue(value, forKey:  key)
-    }
-
-
-    /// Set a value for the given key. Allowed value types are Array, Date, Dictionary,
-    /// Number types, NSNull, String, ArrayObject, Blob, DictionaryObject and nil.
-    /// The Arrays and Dictionaries must contain only the above types. A nil value will be
-    /// converted to an NSNull. An Date object will be converted to an ISO-8601 format string.
-    ///
-    /// - Parameters:
-    ///   - value: The value.
-    ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult public func setValue(_ value: Any?, forKey key: String) -> Self {
-        dictImpl.setObject(DataConverter.convertSETValue(value), forKey: key)
-        return self
+    @discardableResult func setDouble(_ value: Double, forKey key: String) -> Self {
+        return setValue(value, forKey: key)
     }
     
     
-    // MARK: Setting content with a Dictionary
+    /// Set a float value for the given key.
+    ///
+    /// - Parameters:
+    ///   - value: The float value.
+    ///   - key: The key.
+    /// - Returns: The DictionaryObject object.
+    @discardableResult func setFloat(_ value: Float, forKey key: String) -> Self {
+        return setValue(value, forKey: key)
+    }
+
     
+    /// Set a boolean value for the given key.
+    ///
+    /// - Parameters:
+    ///   - value: The boolean value.
+    ///   - key: The key.
+    /// - Returns: The DictionaryObject object.
+    @discardableResult func setBoolean(_ value: Bool, forKey key: String) -> Self {
+        return setValue(value, forKey: key)
+    }
+    
+    
+    /// Set a Date object for the given key. A nil value will be converted to an NSNull.
+    ///
+    /// - Parameters:
+    ///   - value: The Date object.
+    ///   - key: The key.
+    /// - Returns: The DictionaryObject object.
+    @discardableResult func setDate(_ value: Date?, forKey key: String) -> Self {
+        return setValue(value, forKey: key)
+    }
+    
+    
+    /// Set a Blob object for the given key. A nil value will be converted to an NSNull.
+    ///
+    /// - Parameters:
+    ///   - value: The Blob object.
+    ///   - key: The key.
+    /// - Returns: The DictionaryObject object.
+    @discardableResult func setBlob(_ value: Blob?, forKey key: String) -> Self {
+        return setValue(value, forKey: key)
+    }
+    
+    
+    /// Set an ArrayObject object for the given key. A nil value will be converted to an NSNull.
+    ///
+    /// - Parameters:
+    ///   - value: The ArrayObject object.
+    ///   - key: The key.
+    /// - Returns: The DictionaryObject object.
+    @discardableResult func setArray(_ value: ArrayObject?, forKey key: String) -> Self {
+        return setValue(value, forKey: key)
+    }
+    
+    
+    /// Set a DictionaryObject object for the given key. A nil value will be converted to an NSNull.
+    ///
+    /// - Parameters:
+    ///   - value: The DictionaryObject object.
+    ///   - key: The key.
+    /// - Returns: The DictionaryObject object.
+    @discardableResult func setDictionary(_ value: DictionaryObject?, forKey key: String) -> Self {
+        return setValue(value, forKey: key)
+    }
+
+    
+    // MARK: Data
     
     /// Set a dictionary as a content. Allowed value types are Array, Date, Dictionary,
     /// Number types, NSNull, String, ArrayObject, Blob, DictionaryObject. The Arrays and
@@ -229,8 +241,8 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     ///
     /// - Parameter key: The key.
     /// - Returns: The DictionaryObject object.
-    @discardableResult public func remove(forKey key: String) -> Self {
-        dictImpl.removeObject(forKey: key)
+    @discardableResult public func removeValue(forKey key: String) -> Self {
+        dictImpl.removeValue(forKey: key)
         return self
     }
     

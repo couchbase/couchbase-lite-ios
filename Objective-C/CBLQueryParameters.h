@@ -16,6 +16,69 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface CBLQueryParameters : NSObject
 
+/**
+ Set the value to the query parameter referenced by the given name. A query parameter
+ is defined by using the CBLQueryExpression's + parameterNamed: method.
+ 
+ @param value The object.
+ @pram name The parameter name.
+ */
+- (void) setValue: (nullable id)value forName: (NSString*)name;
+
+/**
+ Set the String value to the query parameter referenced by the given name. A query parameter
+ is defined by using the CBLQueryExpression's + parameterNamed: method.
+ 
+ @param value The String value.
+ @pram name The parameter name.
+ */
+- (void) setString: (nullable NSString*)value forName: (NSString*)name;
+
+/**
+ Set the NSNumber value to the query parameter referenced by the given name. A query parameter
+ is defined by using the CBLQueryExpression's + parameterNamed: method.
+ 
+ @param value The NSNumber value.
+ @pram name The parameter name.
+ */
+- (void) setNumber: (nullable NSNumber*)value forName: (NSString*)name;
+
+/**
+ Set the integer value to the query parameter referenced by the given name. A query parameter
+ is defined by using the CBLQueryExpression's + parameterNamed: method.
+ 
+ @param value The integer value.
+ @pram name The parameter name.
+ */
+- (void) setInteger: (NSInteger)value forName: (NSString*)name;
+
+/**
+ Set the long long value to the query parameter referenced by the given name. A query parameter
+ is defined by using the CBLQueryExpression's + parameterNamed: method.
+ 
+ @param value The long long value.
+ @pram name The parameter name.
+ */
+- (void) setLongLong: (long long)value forName: (NSString*)name;
+
+/**
+ Set the float value to the query parameter referenced by the given name. A query parameter
+ is defined by using the CBLQueryExpression's + parameterNamed: method.
+ 
+ @param value The float value.
+ @pram name The parameter name.
+ */
+- (void) setFloat: (float)value forName: (NSString*)name;
+
+/**
+ Set the double value to the query parameter referenced by the given name. A query parameter
+ is defined by using the CBLQueryExpression's + parameterNamed: method.
+ 
+ @param value The double value.
+ @pram name The parameter name.
+ */
+- (void) setDouble: (double)value forName: (NSString*)name;
+
 /** 
  Set the boolean value to the query parameter referenced by the given name. A query parameter
  is defined by using the CBLQueryExpression's + parameterNamed: method.
@@ -34,71 +97,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void) setDate: (nullable NSDate*)value forName: (NSString*)name;
 
-/** 
- Set the double value to the query parameter referenced by the given name. A query parameter
- is defined by using the CBLQueryExpression's + parameterNamed: method.
- 
- @param value The double value.
- @pram name The parameter name.
- */
-- (void) setDouble: (double)value forName: (NSString*)name;
 
-/** 
- Set the float value to the query parameter referenced by the given name. A query parameter
- is defined by using the CBLQueryExpression's + parameterNamed: method.
- 
- @param value The float value.
- @pram name The parameter name.
- */
-- (void) setFloat: (float)value forName: (NSString*)name;
 
-/** 
- Set the integer value to the query parameter referenced by the given name. A query parameter
- is defined by using the CBLQueryExpression's + parameterNamed: method.
- 
- @param value The integer value.
- @pram name The parameter name.
- */
-- (void) setInteger: (NSInteger)value forName: (NSString*)name;
 
-/**
- Set the long long value to the query parameter referenced by the given name. A query parameter
- is defined by using the CBLQueryExpression's + parameterNamed: method.
- 
- @param value The long long value.
- @pram name The parameter name.
- */
-- (void) setLongLong: (long long)value forName: (NSString*)name;
-
-/** 
- Set the NSNumber value to the query parameter referenced by the given name. A query parameter
- is defined by using the CBLQueryExpression's + parameterNamed: method.
- 
- @param value The NSNumber value.
- @pram name The parameter name.
- */
-- (void) setNumber: (nullable NSNumber*)value forName: (NSString*)name;
-
-/** 
- Set the value to the query parameter referenced by the given name. A query parameter
- is defined by using the CBLQueryExpression's + parameterNamed: method.
- 
- @param value The object.
- @pram name The parameter name.
- */
-- (void) setObject: (nullable id)value forName: (NSString*)name;
-
-/** 
- Set the String value to the query parameter referenced by the given name. A query parameter
- is defined by using the CBLQueryExpression's + parameterNamed: method.
- 
- @param value The String value.
- @pram name The parameter name.
- */
-- (void) setString: (nullable NSString*)value forName: (NSString*)name;
-
-/** Not available. */
-- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

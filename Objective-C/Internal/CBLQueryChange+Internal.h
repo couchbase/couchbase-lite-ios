@@ -1,19 +1,18 @@
 //
-//  CBLLiveQueryChange+Internal.h
+//  CBLQueryChange+Internal.h
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 6/22/17.
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLLiveQueryChange.h"
-@class CBLLiveQuery;
+#import "CBLQueryChange.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLLiveQueryChange ()
+@interface CBLQueryChange ()
 
-- (instancetype) initWithQuery: (CBLLiveQuery*)query
+- (instancetype) initWithQuery: (CBLQuery*)query
                           rows: (nullable CBLQueryResultSet*)rows
                          error: (nullable NSError*)error;
 

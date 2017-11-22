@@ -20,55 +20,42 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Type Setters
 
 /**
- Set a CBLArray object for the given key. A nil value will be converted to an NSNull.
+ Set a value for the given key. Allowed value types are CBLMutableArray, CBLBlob, CBLMutableDictionary,
+ NSArray, NSDate, NSDictionary, NSNumber, NSNull, NSString. The NSArrays and NSDictionaries must
+ contain only the above types. An NSDate value will be converted to an ISO-8601 format string.
+ A nil value will be converted an NSNull.
  
- @param value The CBLArray object.
+ @param value The value.
+ @param key The key.
  */
-- (void) setArray: (nullable CBLArray*)value forKey: (NSString*)key;
+- (void) setObject: (nullable id)value forKey: (NSString*)key;
 
-/** 
- Set a CBLBlob object for the given key. A nil value will be converted to an NSNull.
+/**
+ Set a value for the given key. Allowed value types are CBLMutableArray, CBLBlob, CBLMutableDictionary,
+ NSArray, NSDate, NSDictionary, NSNumber, NSNull, NSString. The NSArrays and NSDictionaries must
+ contain only the above types. An NSDate value will be converted to an ISO-8601 format string.
+ A nil value will be converted an NSNull.
  
- @param value The CBLBolb object.
+ @param value The value.
+ @param key The key.
  */
-- (void) setBlob: (nullable CBLBlob*)value forKey: (NSString*)key;
+- (void) setValue: (nullable id)value forKey: (NSString*)key;
 
-/** 
- Set a boolean value for the given key.
+/**
+ Set an String object for the given key. A nil value will be converted to an NSNull.
  
- @param value The boolean value.
+ @param value The String object.
  */
-- (void) setBoolean: (BOOL)value forKey: (NSString*)key;
+- (void) setString: (nullable NSString*)value forKey: (NSString*)key;
 
-/** 
- Set a Date object for the given key. A nil value will be converted to an NSNull.
+/**
+ Set an NSNumber object for the given key. A nil value will be converted to an NSNull.
  
- @param value The Date object.
+ @param value The NSNumber object.
  */
-- (void) setDate: (nullable NSDate*)value forKey: (NSString*)key;
+- (void) setNumber: (nullable NSNumber*)value forKey: (NSString*)key;
 
-/** 
- Set a CBLDictionary object for the given key. A nil value will be converted to an NSNull.
- 
- @param value The CBLDictionary object.
- */
-- (void) setDictionary: (nullable CBLDictionary*)value forKey: (NSString*)key;
-
-/** 
- Set a double value for the given key.
- 
- @param value The double value.
- */
-- (void) setDouble: (double)value forKey: (NSString*)key;
-
-/** 
- Set a float value for the given key.
- 
- @param value The float value.
- */
-- (void) setFloat: (float)value forKey: (NSString*)key;
-
-/** 
+/**
  Set an integer value for the given key.
  
  @param value The integer value.
@@ -82,42 +69,54 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void) setLongLong: (long long)value forKey: (NSString*)key;
 
-/** 
- Set an NSNumber object for the given key. A nil value will be converted to an NSNull.
+/**
+ Set a float value for the given key.
  
- @param value The NSNumber object.
+ @param value The float value.
  */
-- (void) setNumber: (nullable NSNumber*)value forKey: (NSString*)key;
+- (void) setFloat: (float)value forKey: (NSString*)key;
+
+/**
+ Set a double value for the given key.
+ 
+ @param value The double value.
+ */
+- (void) setDouble: (double)value forKey: (NSString*)key;
+
+/**
+ Set a boolean value for the given key.
+ 
+ @param value The boolean value.
+ */
+- (void) setBoolean: (BOOL)value forKey: (NSString*)key;
+
+/**
+ Set a Date object for the given key. A nil value will be converted to an NSNull.
+ 
+ @param value The Date object.
+ */
+- (void) setDate: (nullable NSDate*)value forKey: (NSString*)key;
 
 /** 
- Set an object value for the given key. Allowed value types are CBLMutableArray, CBLBlob, CBLMutableDictionary,
- NSArray, NSDate, NSDictionary, NSNumber, NSNull, NSString. The NSArrays and NSDictionaries must
- contain only the above types. An NSDate value will be converted to an ISO-8601 format string.
- A nil value will be converted an NSNull.
+ Set a CBLBlob object for the given key. A nil value will be converted to an NSNull.
  
- @param value The object value.
- @param key The key.
+ @param value The CBLBolb object.
  */
-- (void) setObject: (nullable id)value forKey: (NSString*)key;
+- (void) setBlob: (nullable CBLBlob*)value forKey: (NSString*)key;
+
+/**
+ Set a CBLArray object for the given key. A nil value will be converted to an NSNull.
+ 
+ @param value The CBLArray object.
+ */
+- (void) setArray: (nullable CBLArray*)value forKey: (NSString*)key;
 
 /** 
- Set an String object for the given key. A nil value will be converted to an NSNull.
+ Set a CBLDictionary object for the given key. A nil value will be converted to an NSNull.
  
- @param value The String object.
+ @param value The CBLDictionary object.
  */
-- (void) setString: (nullable NSString*)value forKey: (NSString*)key;
-
-#pragma mark - Setting content with an NSDictionary
-
-/** 
- Set a dictionary as a content. Allowed value types are CBLMutableArray, CBLBlob, CBLMutableDictionary,
- NSArray, NSDate, NSDictionary, NSNumber, NSNull, NSString. The NSArrays and NSDictionaries must
- contain only the above types. Setting the new dictionary content will replace the current data
- including the existing CBLMutableArray and CBLMutableDictionary objects.
- 
- @param dictionary The dictionary.
- */
-- (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary;
+- (void) setDictionary: (nullable CBLDictionary*)value forKey: (NSString*)key;
 
 #pragma mark - Removing Entries
 
@@ -126,7 +125,19 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param key The key.
  */
-- (void) removeObjectForKey: (NSString*)key;
+- (void) removeValueForKey: (NSString*)key;
+
+#pragma mark - Data
+
+/**
+ Set a dictionary as a content. Allowed value types are CBLMutableArray, CBLBlob, CBLMutableDictionary,
+ NSArray, NSDate, NSDictionary, NSNumber, NSNull, NSString. The NSArrays and NSDictionaries must
+ contain only the above types. Setting the new dictionary content will replace the current data
+ including the existing CBLMutableArray and CBLMutableDictionary objects.
+ 
+ @param dictionary The dictionary.
+ */
+- (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary;
 
 #pragma mark - Getting dictionary and array object
 

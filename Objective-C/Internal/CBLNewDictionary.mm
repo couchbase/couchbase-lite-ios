@@ -84,31 +84,6 @@ using namespace cbl;
 #pragma mark - Type Getters
 
 
-- (nullable CBLMutableArray*) arrayForKey: (NSString*)key {
-    return $castIf(CBLMutableArray, [self objectForKey: key]);
-}
-
-
-- (nullable CBLBlob*) blobForKey: (NSString*)key {
-    return $castIf(CBLBlob, _dict[key]);
-}
-
-
-- (BOOL) booleanForKey: (NSString*)key {
-    return asBool(_dict[key]);
-}
-
-
-- (nullable NSDate*) dateForKey: (NSString*)key {
-    return asDate(_dict[key]);
-}
-
-
-- (nullable CBLMutableDictionary*) dictionaryForKey: (NSString*)key {
-    return $castIf(CBLMutableDictionary, [self objectForKey: key]);
-}
-
-
 - (nullable id) objectForKey: (NSString*)key {
     id obj = _dict[key];
     id cblObj = [obj cbl_toCBLObject];
@@ -118,13 +93,18 @@ using namespace cbl;
 }
 
 
-- (double) doubleForKey: (NSString*)key {
-    return asDouble(_dict[key]);
+- (nullable id) valueForKey: (NSString*)key {
+    return [self objectForKey: key];
 }
 
 
-- (float) floatForKey: (NSString*)key {
-    return asFloat(_dict[key]);
+- (nullable NSString*) stringForKey: (NSString*)key {
+    return asString(_dict[key]);
+}
+
+
+- (nullable NSNumber*) numberForKey: (NSString*)key {
+    return asNumber(_dict[key]);
 }
 
 
@@ -138,20 +118,45 @@ using namespace cbl;
 }
 
 
-- (nullable NSNumber*) numberForKey: (NSString*)key {
-    return asNumber(_dict[key]);
+- (float) floatForKey: (NSString*)key {
+    return asFloat(_dict[key]);
 }
 
 
-- (nullable NSString*) stringForKey: (NSString*)key {
-    return asString(_dict[key]);
+- (double) doubleForKey: (NSString*)key {
+    return asDouble(_dict[key]);
+}
+
+
+- (BOOL) booleanForKey: (NSString*)key {
+    return asBool(_dict[key]);
+}
+
+
+- (nullable NSDate*) dateForKey: (NSString*)key {
+    return asDate(_dict[key]);
+}
+
+
+- (nullable CBLBlob*) blobForKey: (NSString*)key {
+    return $castIf(CBLBlob, _dict[key]);
+}
+
+
+- (nullable CBLMutableArray*) arrayForKey: (NSString*)key {
+    return $castIf(CBLMutableArray, [self objectForKey: key]);
+}
+
+
+- (nullable CBLMutableDictionary*) dictionaryForKey: (NSString*)key {
+    return $castIf(CBLMutableDictionary, [self objectForKey: key]);
 }
 
 
 #pragma mark - Check Existence
 
 
-- (BOOL) containsObjectForKey: (NSString*)key {
+- (BOOL) containsValueForKey: (NSString*)key {
     return _dict[key] != nil;
 }
 
@@ -209,7 +214,13 @@ using namespace cbl;
 }
 
 
+- (void) setValue: (nullable id)value forKey: (NSString*)key {
+    [self setObject: value forKey: key];
+}
+
+
 - (void) setObject: (nullable id)value forKey: (NSString*)key {
+    if (value == nil) value = [NSNull null]; // Store NSNull
     value = [value cbl_toCBLObject];
     id oldValue = _dict[key];
     if (value != oldValue && ![value isEqual: oldValue]) {
@@ -220,11 +231,11 @@ using namespace cbl;
 
 
 - (void) setString: (nullable NSString *)value forKey: (NSString *)key {
-    [self setObject: value forKey: key];
+    [self setValue: value forKey: key];
 }
 
 
-- (void) removeObjectForKey: (NSString *)key {
+- (void) removeValueForKey: (NSString *)key {
     if (_dict[key]) {
         [_dict removeObjectForKey: key];
         _changed = true;
@@ -247,6 +258,14 @@ using namespace cbl;
         result[key] = [obj cbl_toPlainObject];
     }];
     return result;
+}
+
+
+#pragma mark - Mutable
+
+
+- (CBLMutableDictionary*) toMutable {
+    return [self mutableCopy];
 }
 
 

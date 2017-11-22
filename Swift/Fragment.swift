@@ -17,15 +17,19 @@ protocol FragmentProtocol {
     
     var int: Int { get }
     
+    var int64: Int64 { get }
+    
     var float: Float { get }
     
     var double: Double { get }
     
+    var number: NSNumber? { get }
+    
     var boolean: Bool { get }
     
-    var blob: Blob? { get }
-    
     var date: Date? { get }
+    
+    var blob: Blob? { get }
     
     var array: ArrayObject? { get }
     
@@ -57,7 +61,7 @@ public class Fragment: FragmentProtocol, ArrayFragment, DictionaryFragment
     /// The value types are Blob, Array, Dictionary, Number, or String
     /// based on the underlying data type; or nil if the value is nil.
     public var value: Any? {
-        return DataConverter.convertGETValue(_impl.object)
+        return DataConverter.convertGETValue(_impl.value)
     }
     
     
@@ -68,11 +72,19 @@ public class Fragment: FragmentProtocol, ArrayFragment, DictionaryFragment
     }
     
     
-    /// Gets the value as an integer.
+    /// Gets the value as an int.
     /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
     /// Returns 0 if the value is nil or is not a numeric value.
     public var int: Int {
         return _impl.integerValue
+    }
+    
+    
+    /// Gets the value as an int64.
+    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    /// Returns 0 if the value is nil or is not a numeric value.
+    public var int64: Int64 {
+        return _impl.longLongValue
     }
     
     
@@ -92,17 +104,18 @@ public class Fragment: FragmentProtocol, ArrayFragment, DictionaryFragment
     }
     
     
+    /// Gets the value as a Number.
+    /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
+    /// Returns nil if the value is nil, or the value is not a Number.
+    public var number: NSNumber? {
+        return _impl.number
+    }
+    
+    
     /// Gets the value as a boolean.
     /// Returns true if the value is not nil nor NSNull, and is either `true` or a nonzero number.
     public var boolean: Bool {
         return _impl.booleanValue
-    }
-    
-    
-    /// Get the value as a Blob.
-    /// Returns nil if the value is nil, or the value is not a Blob.
-    public var blob: Blob? {
-        return _impl.blob
     }
     
     
@@ -114,6 +127,13 @@ public class Fragment: FragmentProtocol, ArrayFragment, DictionaryFragment
     /// without milliseconds.
     public var date: Date? {
         return _impl.date
+    }
+    
+    
+    /// Get the value as a Blob.
+    /// Returns nil if the value is nil, or the value is not a Blob.
+    public var blob: Blob? {
+        return _impl.blob
     }
     
     

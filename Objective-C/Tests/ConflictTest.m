@@ -131,7 +131,7 @@
                   error: (NSError**)error
 {
     // Save to database:
-    BOOL ok = [self.db inBatch: error do: ^{
+    BOOL ok = [self.db inBatch: error usingBlock: ^{
         C4Slice docIDSlice = c4str([docID cStringUsingEncoding: NSASCIIStringEncoding]);
         C4Document* tricky = c4doc_get(self.db.c4db, docIDSlice, true, NULL);
         
@@ -218,17 +218,17 @@
 }
 
 
-- (void) testDeletionConflict {
-    self.conflictResolver = [DoNotResolve new];
+- (void) testConflictDeletion {
+    self.conflictResolver = nil;
     [self reopenDB];
     
     CBLMutableDocument* doc = [self setupConflict];
     NSError* error;
-    Assert([_db deleteDocument: doc error: &error], @"Deletion error: %@", error);
+    Assert([_db deleteDocument: doc
+                         error: &error], @"Deletion error: %@", error);
     
     CBLDocument* savedDoc = [_db documentWithID: doc.id];
-    AssertFalse(savedDoc.isDeleted);
-    AssertEqualObjects([savedDoc stringForKey: @"name"], @"Scotty");
+    AssertNil(savedDoc);
 }
 
 

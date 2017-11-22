@@ -18,16 +18,13 @@
 #import "c4Observer.h"
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
-#import "CBLMutableDocument.h"
 #import "CBLDocument+Internal.h"
-#import "CBLDocumentChange.h"
-#import "CBLDocumentChangeListener.h"
+#import "CBLDocumentChangeListenerToken.h"
 #import "CBLDocumentFragment.h"
 #import "CBLEncryptionKey+Internal.h"
 #import "CBLIndex+Internal.h"
 #import "CBLQuery+Internal.h"
 #import "CBLMisc.h"
-#import "CBLPredicateQuery+Internal.h"
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
 
@@ -35,72 +32,16 @@ using namespace fleece;
 
 #define kDBExtension @"cblite2"
 
-
-@implementation CBLDatabaseConfiguration
-
-@synthesize directory=_directory;
-@synthesize conflictResolver = _conflictResolver;
-@synthesize encryptionKey=_encryptionKey;
-@synthesize fileProtection=_fileProtection;
-
-
-- (instancetype) init {
-    self = [super init];
-    if (self) {
-#if TARGET_OS_IPHONE
-        _fileProtection = NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication;
-#endif
-    }
-    return self;
-}
-
-
-- (instancetype) copyWithZone:(NSZone *)zone {
-    CBLDatabaseConfiguration* o = [[self.class alloc] init];
-    o.directory = _directory;
-    o.conflictResolver = _conflictResolver;
-    o.encryptionKey = _encryptionKey;
-    o.fileProtection = _fileProtection;
-    return o;
-}
-
-
-- (NSString*) directory {
-    if (!_directory)
-        _directory = defaultDirectory();
-    return _directory;
-}
-
-
-static NSString* defaultDirectory() {
-    NSSearchPathDirectory dirID = NSApplicationSupportDirectory;
-#if TARGET_OS_TV
-    dirID = NSCachesDirectory; // Apple TV only allows apps to store data in the Caches directory
-#endif
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(dirID, NSUserDomainMask, YES);
-    NSString* path = paths[0];
-#if !TARGET_OS_IPHONE
-    NSString* bundleID = [[NSBundle mainBundle] bundleIdentifier];
-    NSCAssert(bundleID, @"No bundle ID");
-    path = [path stringByAppendingPathComponent: bundleID];
-#endif
-    return [path stringByAppendingPathComponent: @"CouchbaseLite"];
-}
-
-
-@end
-
-
 @implementation CBLDatabase {
     NSString* _name;
     CBLDatabaseConfiguration* _config;
     CBLPredicateQuery* _allDocsQuery;
     
     C4DatabaseObserver* _dbObs;
-    NSMutableSet* _dbChangeListeners;
+    NSMutableSet* _dbListenerTokens;
     
     NSMutableDictionary* _docObs;
-    NSMutableDictionary* _docChangeListeners;
+    NSMutableDictionary* _docListenerTokens;
 }
 
 
@@ -207,7 +148,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 #pragma mark - CHECK DOCUMENT EXISTS
 
 
-- (BOOL) contains: (NSString*)docID {
+- (BOOL) containsDocumentWithID: (NSString*)docID {
     id doc = [self documentWithID: docID mustExist: YES error: nil];
     return doc != nil;
 }
@@ -241,7 +182,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 - (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error {
     if (![self prepareDocument: document error: error])
         return NO;
-        
+    
     if (!document.exists)
         return createError(kCBLStatusNotFound, error);
     
@@ -266,7 +207,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 #pragma mark - BATCH OPERATION
 
 
-- (BOOL) inBatch: (NSError**)outError do: (void (^)())block {
+- (BOOL) inBatch: (NSError**)outError usingBlock: (void (^)())block {
     [self mustBeOpen];
     
     C4Transaction transaction(_c4db);
@@ -308,7 +249,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
-- (BOOL) deleteDatabase: (NSError**)outError {
+- (BOOL) delete: (NSError**)outError {
     [self mustBeOpen];
     
     C4Error err;
@@ -364,7 +305,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 + (BOOL) copyFromPath: (NSString*)path
            toDatabase: (NSString*)name
-               config: (nullable CBLDatabaseConfiguration*)config
+           withConfig: (nullable CBLDatabaseConfiguration*)config
                 error: (NSError**)outError
 {
     NSString* toPathStr = databasePath(name, config.directory ?: defaultDirectory());
@@ -426,29 +367,42 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 #pragma mark - DOCUMENT CHANGES
 
 
-- (id<NSObject>) addChangeListener: (void (^)(CBLDatabaseChange*))block {
-    [self mustBeOpen];
-    
-    return [self addDatabaseChangeListener: block];
+- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLDatabaseChange*))listener {
+    return [self addChangeListenerWithQueue: nil listener: listener];
 }
 
 
-- (id<NSObject>) addChangeListenerForDocumentID: (NSString*)documentID
-                                     usingBlock: (void (^)(CBLDocumentChange*))block
+- (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
+                                           listener: (void (^)(CBLDatabaseChange*))listener
 {
     [self mustBeOpen];
-    
-    return [self addDocumentChangeListener: block documentID: documentID];
+    return [self addDatabaseChangeListener: listener queue: queue];
 }
 
 
-- (void) removeChangeListener: (id<NSObject>)listener {
+- (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
+                                                listener: (void (^)(CBLDocumentChange*))listener
+{
+    return [self addDocumentChangeListenerWithID: id queue: nil listener: listener];
+}
+
+
+- (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
+                                                   queue: (nullable dispatch_queue_t)queue
+                                                listener: (void (^)(CBLDocumentChange*))listener
+{
+    [self mustBeOpen];
+    return [self addDocumentChangeListenerWithDocumentID: id listener: listener queue: queue];
+}
+
+
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
     [self mustBeOpen];
     
-    if ([listener isKindOfClass: [CBLDocumentChangeListener class]])
-        [self removeDocumentChangeListener:listener];
+    if ([token isKindOfClass: [CBLDocumentChangeListenerToken class]])
+        [self removeDocumentChangeListenerWithToken: token];
     else
-        [self removeDatabaseChangeListener:listener];
+        [self removeDatabaseChangeListenerWithToken: token];
 }
 
 
@@ -559,6 +513,11 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
+static NSString* defaultDirectory() {
+    return [CBLDatabaseConfiguration defaultDirectory];
+}
+
+
 static NSString* databasePath(NSString* name, NSString* dir) {
     name = [[name stringByReplacingOccurrencesOfString: @"/" withString: @":"]
             stringByAppendingPathExtension: kDBExtension];
@@ -587,10 +546,10 @@ static BOOL setupDatabaseDirectory(NSString* dir,
             protection = NSFileProtectionCompleteUntilFirstUserAuthentication;
             break;
         default:
-            protection = NSFileProtectionCompleteUnlessOpen;
             break;
     }
-    attributes = @{NSFileProtectionKey: protection};
+    if (protection)
+        attributes = @{NSFileProtectionKey: protection};
 #endif
     
     NSError* error;
@@ -649,15 +608,16 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 }
 
 
-- (nullable CBLMutableDocument*) documentWithID: (NSString*)documentID
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID
                                mustExist: (bool)mustExist
                                    error: (NSError**)outError
 {
     [self mustBeOpen];
     
-    return [[CBLMutableDocument alloc] initWithDatabase: self
+    return [[CBLDocument alloc] initWithDatabase: self
                                       documentID: documentID
                                        mustExist: mustExist
+                                  includeDeleted: NO
                                            error: outError];
 }
 
@@ -675,25 +635,28 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 }
 
 
-- (id<NSObject>) addDatabaseChangeListener: (void (^)(CBLDatabaseChange*))block {
-    if (!_dbChangeListeners) {
-        _dbChangeListeners = [NSMutableSet set];
+- (id<CBLListenerToken>) addDatabaseChangeListener: (void (^)(CBLDatabaseChange*))listener
+                                             queue: (dispatch_queue_t)queue
+{
+    if (!_dbListenerTokens) {
+        _dbListenerTokens = [NSMutableSet set];
         _dbObs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
     }
     
-    CBLChangeListener* listener = [[CBLChangeListener alloc] initWithBlock: block];
-    [_dbChangeListeners addObject: listener];
-    return listener;
+    id token = [[CBLChangeListenerToken alloc] initWithListener: listener
+                                                          queue: queue];
+    [_dbListenerTokens addObject: token];
+    return token;
 }
 
 
-- (void) removeDatabaseChangeListener: (id<NSObject>)listener {
-    [_dbChangeListeners removeObject:listener];
+- (void) removeDatabaseChangeListenerWithToken: (id<CBLListenerToken>)token {
+    [_dbListenerTokens removeObject: token];
     
-    if (_dbChangeListeners.count == 0) {
+    if (_dbListenerTokens.count == 0) {
         c4dbobs_free(_dbObs);
         _dbObs = nil;
-        _dbChangeListeners = nil;
+        _dbListenerTokens = nil;
     }
 }
 
@@ -715,9 +678,11 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
             if(docIDs.count > 0) {
                 CBLDatabaseChange* change = [[CBLDatabaseChange alloc] initWithDocumentIDs: docIDs
                                                                                 isExternal: external];
-                for (CBLChangeListener* listener in _dbChangeListeners) {
-                    void (^block)(CBLDatabaseChange*) = listener.block;
-                    block(change);
+                for (CBLChangeListenerToken* token in _dbListenerTokens) {
+                    void (^listener)(CBLDatabaseChange*) = token.listener;
+                    dispatch_async(token.queue, ^{
+                        listener(change);
+                    });
                 }
                 docIDs = [NSMutableArray new];
             }
@@ -732,16 +697,17 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 }
 
 
-- (id<NSObject>) addDocumentChangeListener: (void (^)(CBLDocumentChange*))block
-                                documentID: (NSString*)documentID
+- (id<CBLListenerToken>) addDocumentChangeListenerWithDocumentID: documentID
+                                                        listener: (void (^)(CBLDocumentChange*))listener
+                                                           queue: (dispatch_queue_t)queue
 {
-    if (!_docChangeListeners)
-        _docChangeListeners = [NSMutableDictionary dictionary];
+    if (!_docListenerTokens)
+        _docListenerTokens = [NSMutableDictionary dictionary];
     
-    NSMutableSet* listeners = _docChangeListeners[documentID];
-    if (!listeners) {
-        listeners = [NSMutableSet set];
-        [_docChangeListeners setObject: listeners forKey: documentID];
+    NSMutableSet* tokens = _docListenerTokens[documentID];
+    if (!tokens) {
+        tokens = [NSMutableSet set];
+        [_docListenerTokens setObject: tokens forKey: documentID];
         
         CBLStringBytes bDocID(documentID);
         C4DocumentObserver* o =
@@ -752,18 +718,19 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
         [_docObs setObject: [NSValue valueWithPointer: o] forKey: documentID];
     }
     
-    id listener = [[CBLDocumentChangeListener alloc] initWithDocumentID: documentID
-                                                              withBlock: block];
-    [listeners addObject: listener];
-    return listener;
+    id token = [[CBLDocumentChangeListenerToken alloc] initWithDocumentID: documentID
+                                                                 listener: listener
+                                                                    queue: queue];
+    [tokens addObject: token];
+    return token;
 }
 
 
-- (void) removeDocumentChangeListener: (CBLDocumentChangeListener*)listener {
-    NSString* documentID = listener.documentID;
-    NSMutableSet* listeners = _docChangeListeners[documentID];
+- (void) removeDocumentChangeListenerWithToken: (CBLDocumentChangeListenerToken*)token {
+    NSString* documentID = token.documentID;
+    NSMutableSet* listeners = _docListenerTokens[documentID];
     if (listeners) {
-        [listeners removeObject: listener];
+        [listeners removeObject: token];
         if (listeners.count == 0) {
             NSValue* obsValue = [_docObs objectForKey: documentID];
             if (obsValue) {
@@ -771,7 +738,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
                 c4docobs_free(obs);
             }
             [_docObs removeObjectForKey: documentID];
-            [_docChangeListeners removeObjectForKey:documentID];
+            [_docListenerTokens removeObjectForKey:documentID];
         }
     }
 }
@@ -782,10 +749,12 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
         return;
     
     CBLDocumentChange* change = [[CBLDocumentChange alloc] initWithDocumentID: documentID];
-    NSSet* listeners = [_docChangeListeners objectForKey: documentID];
-    for (CBLDocumentChangeListener* listener in listeners) {
-        void (^block)(CBLDocumentChange*) = listener.block;
-        block(change);
+    NSSet* listeners = [_docListenerTokens objectForKey: documentID];
+    for (CBLDocumentChangeListenerToken* token in listeners) {
+        void (^listener)(CBLDocumentChange*) = token.listener;
+        dispatch_async(token.queue, ^{
+            listener(change);
+        });
     }
 }
 
@@ -793,7 +762,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 - (void) freeC4Observer {
     c4dbobs_free(_dbObs);
     _dbObs = nullptr;
-    _dbChangeListeners = nil;
+    _dbListenerTokens = nil;
     
     for (NSValue* obsValue in _docObs.allValues) {
         C4DocumentObserver* obs = (C4DocumentObserver*)obsValue.pointerValue;
@@ -801,7 +770,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
     }
     
     _docObs = nil;
-    _docChangeListeners = nil;
+    _docListenerTokens = nil;
 }
 
 
@@ -831,31 +800,25 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
     CBLDocument* current = [[CBLDocument alloc] initWithDatabase: database
                                                       documentID: document.id
                                                        mustExist: YES
+                                                  includeDeleted: YES
                                                            error: outError];
     if (!current)
         return nil;
     
     // Resolve conflict:
-    CBLDocument* resolved;
-    if (deletion) {
-        // Deletion always loses a conflict:
-        resolved = current;
-    } else {
-        // Call the conflict resolver:
-        CBLDocument* base = nil;
-        if (document.c4Doc)
-            base = [[CBLDocument alloc] initWithDatabase: database
-                                              documentID: document.id
-                                                   c4Doc: document.c4Doc];
-        
-        id<CBLConflictResolver> resolver = self.effectiveConflictResolver;
-        CBLConflict* conflict = [[CBLConflict alloc] initWithMine: document
-                                                           theirs: current
-                                                             base: base];
-        resolved = [resolver resolve: conflict];
-        if (resolved == nil)
-            convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
-    }
+    CBLDocument* base = nil;
+    if (document.c4Doc)
+        base = [[CBLDocument alloc] initWithDatabase: database
+                                          documentID: document.id
+                                               c4Doc: document.c4Doc];
+    
+    id<CBLConflictResolver> resolver = self.effectiveConflictResolver;
+    CBLConflict* conflict = [[CBLConflict alloc] initWithMine: document
+                                                       theirs: current
+                                                         base: base];
+    CBLDocument* resolved = [resolver resolve: conflict];
+    if (resolved == nil)
+        convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
     
     if (outCurrentDoc)
         *outCurrentDoc = current;
@@ -985,6 +948,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
     auto doc = [[CBLDocument alloc] initWithDatabase: self
                                           documentID: docID
                                            mustExist: YES
+                                      includeDeleted: YES
                                                error: outError];
     if (!doc)
         return false;
@@ -993,6 +957,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
     auto otherDoc = [[CBLDocument alloc] initWithDatabase: self
                                                documentID: docID
                                                 mustExist: YES
+                                           includeDeleted: YES
                                                     error: outError];
     if (!otherDoc || ![otherDoc selectConflictingRevision])
         return false;
@@ -1001,26 +966,20 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
     auto baseDoc = [[CBLDocument alloc] initWithDatabase: self
                                               documentID: docID
                                                mustExist: YES
+                                          includeDeleted: YES
                                                    error: outError];
-    if (![baseDoc selectCommonAncestorOfDoc: doc andDoc: otherDoc] || !baseDoc.data)
+    if (![baseDoc selectCommonAncestorOfDoc: doc andDoc: otherDoc] || ![baseDoc toDictionary])
         baseDoc = nil;
 
     // Call the conflict resolver:
-    CBLDocument* resolved;
-    if (otherDoc.isDeleted) {
-        resolved = doc;
-    } else if (doc.isDeleted) {
-        resolved = otherDoc;
-    } else {
-        if (!resolver)
-            resolver = self.effectiveConflictResolver;
-        auto conflict = [[CBLConflict alloc] initWithMine: doc theirs: otherDoc base: baseDoc];
-        CBLLog(Database, @"Resolving doc '%@' with %@ (mine=%@, theirs=%@, base=%@",
-               docID, resolver.class, doc.revID, otherDoc.revID, baseDoc.revID);
-        resolved = [resolver resolve: conflict];
-        if (!resolved)
-            return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
-    }
+    if (!resolver)
+        resolver = self.effectiveConflictResolver;
+    auto conflict = [[CBLConflict alloc] initWithMine: doc theirs: otherDoc base: baseDoc];
+    CBLLog(Database, @"Resolving doc '%@' with %@ (mine=%@, theirs=%@, base=%@",
+           docID, resolver.class, doc.revID, otherDoc.revID, baseDoc.revID);
+    CBLDocument* resolved = [resolver resolve: conflict];
+    if (!resolved)
+        return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
     
     // Figure out what revision to delete and what if anything to add:
     CBLStringBytes winningRevID, losingRevID;
@@ -1055,7 +1014,6 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 
     return t.commit() || convertError(t.error(), outError);
 }
-
 
 @end
 

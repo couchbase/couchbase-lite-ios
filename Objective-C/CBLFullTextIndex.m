@@ -6,21 +6,21 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLFTSIndex.h"
+#import "CBLFullTextIndex.h"
 #import "CBLIndex+Internal.h"
-#import "CBLQuery+Internal.h"
+#import "CBLQueryExpression+Internal.h"
 
-@implementation CBLFTSIndex {
-    CBLFTSIndexItem* _item;
-    CBLFTSIndexOptions* _options;
+@implementation CBLFullTextIndex {
+    NSArray<CBLFullTextIndexItem*>* _items;
+    CBLFullTextIndexOptions* _options;
 }
 
-- (instancetype) initWithItems: (CBLFTSIndexItem*)item
-                       options: (nullable CBLFTSIndexOptions*)options
+- (instancetype) initWithItems: (NSArray<CBLFullTextIndexItem*>*)items
+                       options: (nullable CBLFullTextIndexOptions*)options
 {
     self = [super init];
     if (self) {
-        _item = item;
+        _items = items;
         _options = options;
     }
     return self;
@@ -48,7 +48,11 @@
 
 
 - (id) indexItems {
-    return @[[_item.expression asJSON]];
+    NSMutableArray* json = [NSMutableArray arrayWithCapacity: _items.count];
+    for (CBLFullTextIndexItem* item in _items) {
+        [json addObject: [item.expression asJSON]];
+    }
+    return json;
 }
 
 @end

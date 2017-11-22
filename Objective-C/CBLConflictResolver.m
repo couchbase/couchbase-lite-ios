@@ -15,9 +15,18 @@
 @implementation CBLDefaultConflictResolver
 
 - (nullable CBLDocument*) resolve: (CBLConflict*)conflict {
-    // Default resolution algorithm is "most active wins", i.e. higher generation number.
+    // Default resolution algorithm:
+    // 1. DELETE always wins.
+    // 2. Most active wins (Higher generation number).
+    // 3. Higher RevID wins.
     CBLDocument *mine = conflict.mine, *theirs = conflict.theirs;
-    if (mine.generation >= theirs.generation)       // hope I die before I get old
+    if (theirs.isDeleted)
+        return theirs;
+    else if (mine.isDeleted)
+        return mine;
+    else if (mine.generation >= theirs.generation) // hope I die before I get old
+        return mine;
+    else if ([mine.revID compare: theirs.revID] > 0)
         return mine;
     else
         return theirs;
@@ -26,13 +35,9 @@
 @end
 
 
-
-
 @implementation CBLConflict
 
-
 @synthesize mine=_mine, theirs=_theirs, base=_base;
-
 
 - (instancetype) initWithMine: (CBLDocument*)mine
                        theirs: (CBLDocument*)theirs
@@ -46,6 +51,5 @@
     }
     return self;
 }
-
 
 @end

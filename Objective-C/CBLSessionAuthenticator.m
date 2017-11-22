@@ -16,13 +16,23 @@
 
 
 - (instancetype) initWithSessionID: (NSString*)sessionID
-                           expires: (nullable id)expires
+                      expireString: (nullable id)expires
+                        cookieName: (NSString*)cookieName
+{
+    return [self initWithSessionID: sessionID
+                        expireDate: [self convertExpires: expires]
+                        cookieName: cookieName];
+}
+
+
+- (instancetype) initWithSessionID: (NSString*)sessionID
+                        expireDate: (nullable NSDate*)expires
                         cookieName: (NSString*)cookieName
 {
     self = [super init];
     if (self) {
         _sessionID = sessionID;
-        _expires = [self convertExpires: expires];
+        _expires = expires;
         _cookieName = cookieName;
     }
     return self;
