@@ -446,20 +446,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
-#pragma mark - QUERIES:
-
-
-- (NSEnumerator<CBLMutableDocument*>*) allDocuments {
-    [self mustBeOpen];
-    
-    if (!_allDocsQuery) {
-        _allDocsQuery = [[CBLPredicateQuery alloc] initWithDatabase: self];
-        _allDocsQuery.orderBy = @[@"_id"];
-    }
-    auto e = [_allDocsQuery allDocuments: nullptr];
-    Assert(e, @"allDocuments failed?!");
-    return e;
-}
+#pragma mark - INTERNAL
 
 
 - (CBLPredicateQuery*) createQueryWhere: (nullable id)where {
@@ -469,9 +456,6 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     query.where = where;
     return query;
 }
-
-
-#pragma mark - INTERNAL
 
 
 - (C4BlobStore*) getBlobStore: (NSError**)outError {
