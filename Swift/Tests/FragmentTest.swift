@@ -358,13 +358,13 @@ class FragmentTest: CBLTestCase {
     }
     
     
-    func testDictionaryFragmentSetDictionary() throws {
+    func testDictionaryFragmentsetData() throws {
         let data: [String: Any] = ["name": "Jason",
                                    "address": [
                                     "street": "1 Main street",
                                     "phones": ["mobile": "650-123-4567"]]]
         let doc = createDocument("doc1")
-        let dict = MutableDictionaryObject(dictionary: data)
+        let dict = MutableDictionaryObject(withDictionary: data)
         doc["dict"].value = dict
         
         try saveDocument(doc, eval: { (d) in
@@ -423,7 +423,7 @@ class FragmentTest: CBLTestCase {
     }
     
     
-    func testNonDictionaryFragmentSetObject() throws {
+    func testNonDictionaryFragmentsetValue() throws {
         let doc = createDocument("doc1")
         doc.setValue("value1", forKey: "string1")
         doc.setValue("value2", forKey: "string2")
@@ -437,7 +437,7 @@ class FragmentTest: CBLTestCase {
     }
     
     
-    func testArrayFragmentSetDictionary() throws {
+    func testArrayFragmentsetData() throws {
         let data: [String: Any] = ["name": "Jason",
                                    "address": [
                                     "street": "1 Main street",
@@ -446,7 +446,7 @@ class FragmentTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc["array"].value = []
         
-        let dict = MutableDictionaryObject(dictionary: data)
+        let dict = MutableDictionaryObject(withDictionary: data)
         doc["array"].array!.addValue(dict)
         
         try saveDocument(doc, eval: { (d) in
@@ -515,7 +515,7 @@ class FragmentTest: CBLTestCase {
     }
     
     
-    func testNonExistingArrayFragmentSetObject() throws {
+    func testNonExistingArrayFragmentsetValue() throws {
         let doc = createDocument("doc1")
         doc["array"][0][0].value = 1
         doc["array"][0][1].value = false
@@ -530,7 +530,7 @@ class FragmentTest: CBLTestCase {
     }
     
     
-    func testOutOfRangeArrayFragmentSetObject() throws {
+    func testOutOfRangeArrayFragmentsetValue() throws {
         let doc = createDocument("doc1")
         doc["array"].value = []
         doc["array"].array?.addValue(["Jason", 5.5, true])

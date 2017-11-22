@@ -11,6 +11,15 @@ import Foundation
 /// SelectResult represents a signle return value of the query statement.
 public class SelectResult {
     
+    /// Creates a SelectResult object with the given property name.
+    ///
+    /// - Parameter property: The property name.
+    /// - Returns: The SelectResult.As object that you can give the alias name to
+    ///            the returned value.
+    public static func property(_ property: String) -> As {
+        return As(expression: Expression.property(property), alias: nil, from: nil)
+    }
+    
     /// Creates a SelectResult object with the given expression.
     ///
     /// - Parameter expression: The expression.

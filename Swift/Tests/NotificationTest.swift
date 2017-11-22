@@ -14,7 +14,7 @@ class NotificationTest: CBLTestCase {
     func testDatabaseChange() throws {
         let x = self.expectation(description: "change")
         
-        let listener = db.addChangeListener { (change) in
+        let token = db.addChangeListener { (change) in
             XCTAssertEqual(change.documentIDs.count, 10)
             x.fulfill()
         }
@@ -28,7 +28,7 @@ class NotificationTest: CBLTestCase {
         }
         waitForExpectations(timeout: 5, handler: nil)
         
-        db.removeChangeListener(listener)
+        db.removeChangeListener(withToken: token)
     }
     
     
@@ -56,9 +56,9 @@ class NotificationTest: CBLTestCase {
         }
         
         // Add change listeners:
-        let listener1 = db.addChangeListener(documentID: "doc1", using: handler)
-        let listener2 = db.addChangeListener(documentID: "doc2", using: handler)
-        let listener3 = db.addChangeListener(documentID: "doc3", using: handler)
+        let listener1 = db.addDocumentChangeListener(withID: "doc1", listener: handler)
+        let listener2 = db.addDocumentChangeListener(withID: "doc2", listener: handler)
+        let listener3 = db.addDocumentChangeListener(withID: "doc3", listener: handler)
         
         // Update doc1:
         doc1 = savedDoc1.toMutable()
@@ -66,7 +66,7 @@ class NotificationTest: CBLTestCase {
         try saveDocument(doc1)
         
         // Delete doc2:
-        try db.delete(savedDoc2)
+        try db.deleteDocument(savedDoc2)
         
         // Create doc3:
         let doc3 = createDocument("doc3")
@@ -75,9 +75,9 @@ class NotificationTest: CBLTestCase {
         
         waitForExpectations(timeout: 5, handler: nil)
         
-        db.removeChangeListener(listener1)
-        db.removeChangeListener(listener2)
-        db.removeChangeListener(listener3)
+        db.removeChangeListener(withToken: listener1)
+        db.removeChangeListener(withToken: listener2)
+        db.removeChangeListener(withToken: listener3)
     }
     
     
@@ -97,9 +97,9 @@ class NotificationTest: CBLTestCase {
         }
         
         // Add change listeners:
-        let listener1 = db.addChangeListener(documentID: "doc1", using: handler)
-        let listener2 = db.addChangeListener(documentID: "doc1", using: handler)
-        let listener3 = db.addChangeListener(documentID: "doc1", using: handler)
+        let listener1 = db.addDocumentChangeListener(withID: "doc1", listener: handler)
+        let listener2 = db.addDocumentChangeListener(withID: "doc1", listener: handler)
+        let listener3 = db.addDocumentChangeListener(withID: "doc1", listener: handler)
         
         // Update doc1:
         doc1.setValue("Scott Tiger", forKey: "name")
@@ -107,9 +107,9 @@ class NotificationTest: CBLTestCase {
         
         waitForExpectations(timeout: 5, handler: nil)
         
-        db.removeChangeListener(listener1)
-        db.removeChangeListener(listener2)
-        db.removeChangeListener(listener3)
+        db.removeChangeListener(withToken: listener1)
+        db.removeChangeListener(withToken: listener2)
+        db.removeChangeListener(withToken: listener3)
     }
     
     
@@ -121,7 +121,8 @@ class NotificationTest: CBLTestCase {
         let x1 = self.expectation(description: "change")
         
         // Add change listener:
-        let listener = db.addChangeListener(documentID: "doc1") { (change) in
+        
+        let token = db.addDocumentChangeListener(withID: "doc1") { (change) in
             x1.fulfill()
         }
         
@@ -132,7 +133,7 @@ class NotificationTest: CBLTestCase {
         waitForExpectations(timeout: 5, handler: nil)
         
         // Remove change listener:
-        db.removeChangeListener(listener)
+        db.removeChangeListener(withToken: token)
         
         doc1.setValue("Scott Tiger", forKey: "name")
         try saveDocument(doc1)
@@ -145,6 +146,6 @@ class NotificationTest: CBLTestCase {
         waitForExpectations(timeout: 5, handler: nil)
         
         // Remove again:
-        db.removeChangeListener(listener)
+        db.removeChangeListener(withToken: token)
     }
 }

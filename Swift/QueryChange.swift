@@ -9,12 +9,12 @@
 import Foundation
 
 
-/// LiveQueryChange contains the information about the query result changes reported
-/// by a live query object.
-public struct LiveQueryChange {
+/// QueryChange contains the information about the query result changes reported
+/// by a query object.
+public struct QueryChange {
     
     /// The source live query object.
-    public let query: LiveQuery
+    public let query: Query
     
     /// The new query result.
     public let rows: ResultSet?

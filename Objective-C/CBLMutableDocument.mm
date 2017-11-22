@@ -77,10 +77,15 @@
 }
 
 
-/* internal */ - (instancetype) initWithDocument: (CBLDocument*)doc {
-    return [self initWithDatabase: doc.database
-                       documentID: doc.id
-                            c4Doc: doc.c4Doc];
+/* internal */ - (instancetype) initAsCopyWithDocument: (CBLDocument*)doc
+                                                  dict: (nullable CBLDictionary*)dict
+{
+    self = [self initWithDatabase: doc.database documentID: doc.id c4Doc: doc.c4Doc];
+    if (self) {
+        if (dict)
+            _dict = [dict mutableCopy];
+    }
+    return self;
     
 }
 
@@ -88,53 +93,30 @@
 
 
 - (CBLMutableDocument*) mutableCopyWithZone:(NSZone *)zone {
-    // FIXME: Do the following when creating a new CBLMutableDocument
-    // 1. Assign _root and _data from the original CBLMutableDocument.
-    // 2. Copy _dict from the original CBLMutableDocument.
-    return self;
-}
-
-
-- (CBLMutableDocument*) toMutable {
-    return [self mutableCopy];
+    return [[CBLMutableDocument alloc] initAsCopyWithDocument: self dict: _dict];
 }
 
 
 #pragma mark - CBLMutableDictionary
 
 
-- (void) setArray: (nullable CBLArray *)value forKey: (NSString *)key {
-    [((CBLMutableDictionary*)_dict) setArray: value forKey: key];
+- (void) setObject: (nullable id)value forKey: (NSString*)key {
+    [((CBLMutableDictionary*)_dict) setObject: value forKey: key];
 }
 
 
-- (void) setBoolean: (BOOL)value forKey: (NSString *)key {
-    [((CBLMutableDictionary*)_dict) setBoolean: value forKey: key];
+- (void) setValue: (nullable id)value forKey: (NSString*)key {
+    [((CBLMutableDictionary*)_dict) setValue: value forKey: key];
 }
 
 
-- (void) setBlob: (nullable CBLBlob*)value forKey: (NSString *)key {
-    [((CBLMutableDictionary*)_dict) setBlob: value forKey: key];
+- (void) setString: (nullable NSString *)value forKey: (NSString *)key {
+    [((CBLMutableDictionary*)_dict) setString: value forKey: key];
 }
 
 
-- (void) setDate: (nullable NSDate *)value forKey: (NSString *)key {
-    [((CBLMutableDictionary*)_dict) setDate: value forKey: key];
-}
-
-
-- (void) setDictionary: (nullable CBLDictionary *)value forKey: (NSString *)key {
-    [((CBLMutableDictionary*)_dict) setDictionary: value forKey: key];
-}
-
-
-- (void) setDouble: (double)value forKey: (NSString *)key {
-    [((CBLMutableDictionary*)_dict) setDouble: value forKey: key];
-}
-
-
-- (void) setFloat: (float)value forKey: (NSString *)key {
-    [((CBLMutableDictionary*)_dict) setFloat: value forKey: key];
+- (void) setNumber: (nullable NSNumber*)value forKey: (NSString *)key {
+    [self setNumber: value forKey: key];
 }
 
 
@@ -148,23 +130,43 @@
 }
 
 
-- (void) setNumber: (nullable NSNumber*)value forKey: (NSString *)key {
-    [self setNumber: value forKey: key];
+- (void) setFloat: (float)value forKey: (NSString *)key {
+    [((CBLMutableDictionary*)_dict) setFloat: value forKey: key];
 }
 
 
-- (void) setObject: (nullable id)value forKey: (NSString*)key {
-    [((CBLMutableDictionary*)_dict) setObject: value forKey: key];
+- (void) setDouble: (double)value forKey: (NSString *)key {
+    [((CBLMutableDictionary*)_dict) setDouble: value forKey: key];
 }
 
 
-- (void) setString: (nullable NSString *)value forKey: (NSString *)key {
-    [((CBLMutableDictionary*)_dict) setString: value forKey: key];
+- (void) setBoolean: (BOOL)value forKey: (NSString *)key {
+    [((CBLMutableDictionary*)_dict) setBoolean: value forKey: key];
 }
 
 
-- (void) removeObjectForKey: (NSString *)key {
-    [((CBLMutableDictionary*)_dict) removeObjectForKey: key];
+- (void) setDate: (nullable NSDate *)value forKey: (NSString *)key {
+    [((CBLMutableDictionary*)_dict) setDate: value forKey: key];
+}
+
+
+- (void) setBlob: (nullable CBLBlob*)value forKey: (NSString *)key {
+    [((CBLMutableDictionary*)_dict) setBlob: value forKey: key];
+}
+
+
+- (void) setArray: (nullable CBLArray *)value forKey: (NSString *)key {
+    [((CBLMutableDictionary*)_dict) setArray: value forKey: key];
+}
+
+
+- (void) setDictionary: (nullable CBLDictionary *)value forKey: (NSString *)key {
+    [((CBLMutableDictionary*)_dict) setDictionary: value forKey: key];
+}
+
+
+- (void) removeValueForKey: (NSString *)key {
+    [((CBLMutableDictionary*)_dict) removeValueForKey: key];
 }
 
 

@@ -34,7 +34,7 @@
     NSError* error;
     NSString* path = db.path;
     Assert([[NSFileManager defaultManager] fileExistsAtPath: path]);
-    Assert([db deleteDatabase: &error]);
+    Assert([db delete: &error]);
     AssertNil(error);
     AssertFalse([[NSFileManager defaultManager] fileExistsAtPath: path]);
 }
@@ -137,21 +137,21 @@
 #endif
     AssertNotNil(config1.directory);
     Assert(config1.directory.length > 0);
-    AssertNil(config1.conflictResolver);
+    AssertNotNil(config1.conflictResolver);
     AssertNil(config1.encryptionKey);
     AssertNil(config1.encryptionKey);
 #if TARGET_OS_IPHONE
-    AssertEqual(config1.fileProtection, NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication);
+    AssertEqual(config1.fileProtection, 0);
 #endif
     
     // Default + Copy:
     CBLDatabaseConfiguration* config1a = [config1 copy];
     AssertNotNil(config1a.directory);
     Assert(config1a.directory.length > 0);
-    AssertNil(config1a.conflictResolver);
+    AssertNotNil(config1a.conflictResolver);
     AssertNil(config1a.encryptionKey);
 #if TARGET_OS_IPHONE
-    AssertEqual(config1a.fileProtection, NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication);
+    AssertEqual(config1a.fileProtection, 0);
 #endif
     
     // Custom:
@@ -197,10 +197,9 @@
     AssertNotNil(db.config);
     Assert(db.config != config);
     AssertEqualObjects(db.config.directory, config.directory);
-    AssertEqualObjects(db.config.conflictResolver, config.conflictResolver);
+    AssertNotNil(db.config.conflictResolver);
     AssertEqual(db.config.encryptionKey, config.encryptionKey);
     AssertEqual(db.config.fileProtection, config.fileProtection);
-    
 }
 
 
@@ -335,7 +334,7 @@
     
     // get doc from other DB.
     AssertEqual(1, (long)otherDB.count);
-    Assert([otherDB contains:docID]);
+    Assert([otherDB containsDocumentWithID:docID]);
     
     [self verifyGetDocument: otherDB docID: docID];
     
@@ -350,7 +349,7 @@
     
     // validate
     NSError* error;
-    BOOL success = [self.db inBatch: &error do: ^{
+    BOOL success = [self.db inBatch: &error usingBlock: ^{
         [self validateDocs: 10];
     }];
     Assert(success);
@@ -394,7 +393,7 @@
     [self generateDocument: docID];
     
     AssertEqual(1, (long)self.db.count);
-    Assert([self.db contains: docID]);
+    Assert([self.db containsDocumentWithID: docID]);
     
     [self verifyGetDocument: docID];
 }
@@ -406,7 +405,7 @@
     [self generateDocument: docID];
     
     AssertEqual(1, (long)self.db.count);
-    Assert([self.db contains: docID]);
+    Assert([self.db containsDocumentWithID: docID]);
     
     [self verifyGetDocument: docID];
 }
@@ -422,7 +421,7 @@
     [self saveDocument: doc];
     
     AssertEqual(1, (long)self.db.count);
-    Assert([self.db contains: docID]);
+    Assert([self.db containsDocumentWithID: docID]);
     
     // verify
     [self verifyGetDocument: docID value: 2];
@@ -492,7 +491,7 @@
 
 - (void) testSaveInBatch {
     NSError* error;
-    BOOL success = [self.db inBatch: &error do: ^{
+    BOOL success = [self.db inBatch: &error usingBlock: ^{
         // save 10 docs
         [self createDocs: 10];
     }];
@@ -553,62 +552,7 @@
     AssertEqual(0, (long)self.db.count);
     
     doc = [self.db documentWithID: docID];
-    AssertEqualObjects(docID, doc.id);
-    Assert(doc.isDeleted);
-    AssertEqual(2, (int)doc.sequence);
-    AssertNil([doc objectForKey: @"key"]);
-}
-
-
-- (void) testDeleteDocInDifferentDBInstance {
-    // store doc
-    NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument: docID];
-    
-    // create db with same name
-    NSError* error;
-    CBLDatabase* otherDB = [self openDBNamed: [self.db name] error: &error];
-    AssertNil(error);
-    AssertNotNil(otherDB);
-    Assert(otherDB != self.db);
-    Assert([otherDB contains:docID]);
-    AssertEqual(1, (long)otherDB.count);
-    
-    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
-        return [otherDB deleteDocument: doc error: error2];
-    }]; // forbidden
-
-    AssertEqual(1, (long)otherDB.count);
-    AssertEqual(1, (long)self.db.count);
-    
-    // close otherDB
-    [self closeDatabase: otherDB];
-}
-
-
-- (void) testDeleteDocInDifferentDB {
-    // store doc
-    NSString* docID = @"doc1";
-    CBLDocument* doc = [self generateDocument: docID];
-    
-    // create db with different name
-    NSError* error;
-    CBLDatabase* otherDB = [self openDBNamed: @"otherDB" error: &error];
-    AssertNil(error);
-    AssertNotNil(otherDB);
-    Assert(otherDB != self.db);
-    AssertFalse([otherDB contains: docID]);
-    AssertEqual(0, (long)otherDB.count);
-    
-    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
-        return [otherDB deleteDocument: doc error: error2];
-    }]; // forbidden
-    
-    AssertEqual(0, (long)otherDB.count);
-    AssertEqual(1, (long)self.db.count);
-    
-    // delete otherDB
-    [self deleteDatabase: otherDB];
+    AssertNil(doc);
 }
 
 
@@ -624,19 +568,15 @@
     AssertEqual(0, (long)self.db.count);
     
     doc = [self.db documentWithID: docID];
-    AssertNil([doc objectForKey: @"key"]);
-    AssertEqual(2, (int)doc.sequence);
-    Assert(doc.isDeleted);
+    AssertNil(doc);
     
     // second time deletion
-    Assert([self.db deleteDocument: doc error: &error]);
-    AssertNil(error);
-    AssertEqual(0, (long)self.db.count);
+    [self expectError: @"CouchbaseLite" code: 404 in: ^BOOL(NSError** err) {
+        return [self.db deleteDocument: doc error: err];
+    }];
     
     doc = [self.db documentWithID: docID];
-    AssertNil([doc objectForKey: @"key"]);
-    AssertEqual(3, (int)doc.sequence);
-    Assert(doc.isDeleted);
+    AssertNil(doc);
 }
 
 
@@ -645,7 +585,7 @@
     [self createDocs: 10];
     
     NSError* error;
-    BOOL success = [self.db inBatch: &error do: ^{
+    BOOL success = [self.db inBatch: &error usingBlock: ^{
         for(int i = 0; i < 10; i++){
             NSError* err;
             NSString* docID = [[NSString alloc] initWithFormat: @"doc_%03d", i];
@@ -723,7 +663,7 @@
     AssertNil(error);
     AssertNotNil(otherDB);
     Assert(otherDB != self.db);
-    Assert([otherDB contains:docID]);
+    Assert([otherDB containsDocumentWithID:docID]);
     AssertEqual(1, (long)otherDB.count);
     
     // purge document against other db instance
@@ -749,7 +689,7 @@
     AssertNil(error);
     AssertNotNil(otherDB);
     Assert(otherDB != self.db);
-    AssertFalse([otherDB contains: docID]);
+    AssertFalse([otherDB containsDocumentWithID: docID]);
     AssertEqual(0, (long)otherDB.count);
     
     // purge document against other db
@@ -778,7 +718,7 @@
     AssertEqual(0, (long)self.db.count);
     
     // Purge Doc second time
-    [self purgeDocAndVerify: doc1];
+    [self purgeDocAndVerify: doc];
     AssertEqual(0, (long)self.db.count);
 }
 
@@ -788,7 +728,7 @@
     [self createDocs: 10];
 
     NSError* error;
-    BOOL success = [self.db inBatch: &error do: ^{
+    BOOL success = [self.db inBatch: &error usingBlock: ^{
         for(int i = 0; i < 10; i++){
             //NSError* err;
             NSString* docID = [[NSString alloc] initWithFormat: @"doc_%03d", i];
@@ -902,7 +842,7 @@
 
 - (void) testCloseThenCallInBatch {
     NSError* error;
-    BOOL success = [self.db inBatch: &error do: ^{
+    BOOL success = [self.db inBatch: &error usingBlock: ^{
         [self expectError: @"LiteCore" code: 26 in: ^BOOL(NSError** error2) {
             return [self.db close: error2];
         }];
@@ -930,9 +870,9 @@
 
 - (void) testDeleteTwice {
     NSError* error;
-    Assert([self.db deleteDatabase: &error]);
+    Assert([self.db delete: &error]);
     [self expectException: @"NSInternalInconsistencyException" in: ^{
-        [self.db deleteDatabase: nil];
+        [self.db delete: nil];
     }];
 }
 
@@ -989,9 +929,9 @@
 
 - (void) testDeleteThenCallInBatch {
     NSError* error;
-    BOOL sucess = [self.db inBatch: &error do:^{
+    BOOL sucess = [self.db inBatch: &error usingBlock:^{
         [self expectError: @"LiteCore" code: 26 in: ^BOOL(NSError** error2) {
-            return [self.db deleteDatabase: error2];
+            return [self.db delete: error2];
         }];
         // 26 -> kC4ErrorTransactionNotClosed: Function cannot be called while in a transaction
     }];
@@ -1009,7 +949,7 @@
     
     // delete db
     [self expectError: @"LiteCore" code: 24 in: ^BOOL(NSError** error2) {
-        return [self.db deleteDatabase: error2];
+        return [self.db delete: error2];
     }];
     // 24 -> kC4ErrorBusy: Database is busy/locked
 }
@@ -1183,7 +1123,7 @@
     
     // Update each doc 25 times:
     NSError* error;
-    [_db inBatch: &error do: ^{
+    [_db inBatch: &error usingBlock: ^{
         for (CBLDocument* doc in docs) {
             for (NSUInteger i = 0; i < 25; i++) {
                 CBLMutableDocument* mDoc = [doc toMutable];
@@ -1215,7 +1155,7 @@
     for (CBLDocument* doc in docs) {
         CBLDocument* savedDoc = [_db documentWithID: doc.id];
         Assert([_db deleteDocument: savedDoc error: &error], @"Error when deleting doc: %@", error);
-        Assert([_db documentWithID: savedDoc.id].isDeleted);
+        AssertNil([_db documentWithID: doc.id]);
     }
     AssertEqual(_db.count, 0u);
     
@@ -1249,7 +1189,7 @@
     
     // Copy:
     NSError* error;
-    Assert([CBLDatabase copyFromPath: _db.path toDatabase: dbName config: config error: &error],
+    Assert([CBLDatabase copyFromPath: _db.path toDatabase: dbName withConfig: config error: &error],
            @"Error when copying the database: %@", error);
     
     // Verify:
@@ -1258,11 +1198,11 @@
     Assert(nudb, @"Cannot open the new database: %@", error);
     AssertEqual(nudb.count, 10u);
     
-    CBLQueryExpression* DOCID = [CBLQueryExpression meta].id;
+    CBLQueryExpression* DOCID = [CBLQueryMeta id];
     CBLQuerySelectResult* S_DOCID = [CBLQuerySelectResult expression: DOCID];
     CBLQuery* query = [CBLQuery select: @[S_DOCID]
                                   from: [CBLQueryDataSource database: nudb]];
-    CBLQueryResultSet* rs = [query run: &error];
+    CBLQueryResultSet* rs = [query execute: &error];
     
     for (CBLQueryResult* r in rs) {
         NSString* docID = [r stringAtIndex: 0];
@@ -1299,23 +1239,21 @@
     
     NSError* error;
     
-    CBLIndex* index1 = [CBLIndex valueIndexOn: @[fNameItem, lNameItem]];
+    CBLIndex* index1 = [CBLIndex valueIndexWithItems: @[fNameItem, lNameItem]];
     Assert([self.db createIndex: index1 withName: @"index1" error: &error],
            @"Error when creating value index: %@", error);
     
     // Create FTS index:
-    CBLQueryExpression* detail  = [CBLQueryExpression property: @"detail"];
-    CBLFTSIndexItem* detailItem = [CBLFTSIndexItem expression: detail];
-    CBLIndex* index2 = [CBLIndex ftsIndexOn: detailItem options: nil];
+    CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"detail"];
+    CBLIndex* index2 = [CBLIndex fullTextIndexWithItems: @[detailItem] options: nil];
     Assert([self.db createIndex: index2 withName: @"index2" error: &error],
            @"Error when creating FTS index without options: %@", error);
     
-    CBLQueryExpression* detail2 = [CBLQueryExpression property: @"es-detail"];
-    CBLFTSIndexItem* detailItem2 = [CBLFTSIndexItem expression: detail2];
-    CBLFTSIndexOptions* options = [[CBLFTSIndexOptions alloc] init];
+    CBLFullTextIndexItem* detailItem2 = [CBLFullTextIndexItem property: @"es-detail"];
+    CBLFullTextIndexOptions* options = [[CBLFullTextIndexOptions alloc] init];
     options.locale = @"es";
     options.ignoreAccents = YES;
-    CBLIndex* index3 = [CBLIndex ftsIndexOn: detailItem2 options: options];
+    CBLIndex* index3 = [CBLIndex fullTextIndexWithItems: @[detailItem2] options: options];
     Assert([self.db createIndex: index3 withName: @"index3" error: &error],
            @"Error when creating FTS index with options: %@", error);
     
@@ -1330,7 +1268,7 @@
     NSError* error;
     CBLValueIndexItem* item = [CBLValueIndexItem expression:
                                [CBLQueryExpression property: @"firstName"]];
-    CBLIndex* index = [CBLIndex valueIndexOn: @[item]];
+    CBLIndex* index = [CBLIndex valueIndexWithItems: @[item]];
     Assert([self.db createIndex: index withName: @"myindex" error: &error],
            @"Error when creating value index: %@", error);
     
@@ -1349,17 +1287,16 @@
     
     CBLQueryExpression* fName = [CBLQueryExpression property: @"firstName"];
     CBLQueryExpression* lName = [CBLQueryExpression property: @"lastName"];
-    CBLQueryExpression* detail  = [CBLQueryExpression property: @"detail"];
     
     // Create value index with first name:
     CBLValueIndexItem* fNameItem = [CBLValueIndexItem expression: fName];
-    CBLIndex* fNameIndex = [CBLIndex valueIndexOn: @[fNameItem]];
+    CBLIndex* fNameIndex = [CBLIndex valueIndexWithItems: @[fNameItem]];
     Assert([self.db createIndex: fNameIndex withName: @"myindex" error: &error],
            @"Error when creating value index: %@", error);
 
     // Create value index with last name:
     CBLValueIndexItem* lNameItem = [CBLValueIndexItem expression: lName];
-    CBLIndex* lNameIndex = [CBLIndex valueIndexOn: @[lNameItem]];
+    CBLIndex* lNameIndex = [CBLIndex valueIndexWithItems: @[lNameItem]];
     Assert([self.db createIndex: lNameIndex withName: @"myindex" error: &error],
            @"Error when creating value index: %@", error);
     
@@ -1369,8 +1306,8 @@
     AssertEqualObjects(names, (@[@"myindex"]));
     
     // Create FTS index:
-    CBLFTSIndexItem* detailItem = [CBLFTSIndexItem expression: detail];
-    CBLIndex* detailIndex = [CBLIndex ftsIndexOn: detailItem options: nil];
+    CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"detail"];
+    CBLIndex* detailIndex = [CBLIndex fullTextIndexWithItems: @[detailItem] options: nil];
     Assert([self.db createIndex: detailIndex withName: @"myindex" error: &error],
            @"Error when creating FTS index without options: %@", error);
     
@@ -1394,23 +1331,21 @@
     
     NSError* error;
     
-    CBLIndex* index1 = [CBLIndex valueIndexOn: @[fNameItem, lNameItem]];
+    CBLIndex* index1 = [CBLIndex valueIndexWithItems: @[fNameItem, lNameItem]];
     Assert([self.db createIndex: index1 withName: @"index1" error: &error],
            @"Error when creating value index: %@", error);
     
     // Create FTS index:
-    CBLQueryExpression* detail  = [CBLQueryExpression property: @"detail"];
-    CBLFTSIndexItem* detailItem = [CBLFTSIndexItem expression: detail];
-    CBLIndex* index2 = [CBLIndex ftsIndexOn: detailItem options: nil];
+    CBLFullTextIndexItem* detailItem = [CBLFullTextIndexItem property: @"detail"];
+    CBLIndex* index2 = [CBLIndex fullTextIndexWithItems: @[detailItem] options: nil];
     Assert([self.db createIndex: index2 withName: @"index2" error: &error],
            @"Error when creating FTS index without options: %@", error);
     
-    CBLQueryExpression* detail2 = [CBLQueryExpression property: @"es-detail"];
-    CBLFTSIndexItem* detail2Item = [CBLFTSIndexItem expression: detail2];
-    CBLFTSIndexOptions* options = [[CBLFTSIndexOptions alloc] init];
+    CBLFullTextIndexItem* detail2Item = [CBLFullTextIndexItem property: @"es-detail"];
+    CBLFullTextIndexOptions* options = [[CBLFullTextIndexOptions alloc] init];
     options.locale = @"es";
     options.ignoreAccents = YES;
-    CBLIndex* index3 = [CBLIndex ftsIndexOn: detail2Item options: options];
+    CBLIndex* index3 = [CBLIndex fullTextIndexWithItems: @[detail2Item] options: options];
     Assert([self.db createIndex: index3 withName: @"index3" error: &error],
            @"Error when creating FTS index with options: %@", error);
     

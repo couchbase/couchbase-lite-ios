@@ -7,69 +7,15 @@
 //
 
 #import <Foundation/Foundation.h>
+@class CBLDatabaseConfiguration;
 @class CBLDocument, CBLMutableDocument, CBLDocumentFragment;
 @class CBLDatabaseChange, CBLDocumentChange;
 @class CBLEncryptionKey;
 @class CBLIndex, CBLPredicateQuery;
-@protocol CBLConflictResolver, CBLDocumentChangeListener;
+@protocol CBLConflictResolver;
+@protocol CBLListenerToken;
 
 NS_ASSUME_NONNULL_BEGIN
-
-
-/** Configuration for opening a database. */
-@interface CBLDatabaseConfiguration : NSObject <NSCopying>
-
-/** 
- Path to the directory to store the database in. If the directory doesn't already exist it will
- be created when the database is opened. The default directory will be in Application Support.
- You won't usually need to change this. 
- */
-@property (nonatomic, copy, nullable) NSString* directory;
-
-
-/** 
- The conflict resolver for this database. The default value is nil, which means the default
- algorithm will be used, where the revision with more history wins.
- An individual document can override this for itself by setting its own property.
- */
-@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver;
-
-
-/** 
- A key to encrypt the database with. If the database does not exist and is being created, it
- will use this key, and the same key must be given every time it's opened.
- 
- * The primary form of key is an NSData object 32 bytes in length: this is interpreted as a raw
-   AES-256 key. To create a key, generate random data using a secure cryptographic randomizer
-   like SecRandomCopyBytes or CCRandomGenerateBytes.
- * Alternatively, the value may be an NSString containing a password. This will be run through
-   64,000 rounds of the PBKDF algorithm to securely convert it into an AES-256 key.
- * A default nil value, of course, means the database is unencrypted.
- */
-@property (nonatomic, nullable) CBLEncryptionKey* encryptionKey;
-
-
-/** 
- File protection/encryption options (iOS only.)
- Defaults to whatever file protection settings you've specified in your app's entitlements.
- Specifying a nonzero value here overrides those settings for the database files.
- If file protection is at the highest level, NSDataWritingFileProtectionCompleteUnlessOpen or
- NSDataWritingFileProtectionComplete, it will not be possible to read or write the database
- when the device is locked. This can make it impossible to run replications in the background
- or respond to push notifications. The default value is
- NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication which is the same default
- protection level as the iOS application data.
- */
-@property (nonatomic) NSDataWritingOptions fileProtection;
-
-
-/** 
- Initializes the CBLDatabaseConfiguration object.
- */
-- (instancetype) init;
-
-@end
-
 
 /**
  Log domain. The log domains here are tentative and subject to change.
@@ -166,7 +112,7 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  @param documentID The document ID.
  @return True if the database contains the document with the given ID, otherwise false.
  */
-- (BOOL) contains: (NSString*)documentID;
+- (BOOL) containsDocumentWithID: (NSString*)documentID;
 
 
 #pragma mark - Subscript
@@ -235,7 +181,7 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  @param block The block to execute a group of database operations.
  @return True on success, false on failure.
  */
-- (BOOL) inBatch: (NSError**)error do: (void (NS_NOESCAPE ^)(void))block;
+- (BOOL) inBatch: (NSError**)error usingBlock: (void (NS_NOESCAPE ^)(void))block;
 
 
 #pragma mark - Databaes Maintenance
@@ -255,7 +201,7 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  @param error On return, the error if any.
  @return True on success, false on failure.
  */
-- (BOOL) deleteDatabase: (NSError**)error;
+- (BOOL) delete: (NSError**)error;
 
 /**
  Compacts the database file by deleting unused attachment files and vacuuming 
@@ -312,7 +258,7 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  */
 + (BOOL) copyFromPath: (NSString*)path
            toDatabase: (NSString*)name
-               config: (nullable CBLDatabaseConfiguration*)config
+           withConfig: (nullable CBLDatabaseConfiguration*)config
                 error: (NSError**)error;
 
 #pragma mark - Logging
@@ -329,32 +275,56 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
 
 
 /** 
- Adds a database change listener block.
+ Adds a database change listener. Changes will be posted on the main queue.
  
- @param block The block to be executed when the change is received.
- @return An opaque object to act as the listener and for removing the listener
-         when calling the -removeChangeListener: method.
+ @param listener The listener to post the changes.
+ @return An opaque listener token object for removing the listener.
  */
-- (id<NSObject>) addChangeListener: (void (^)(CBLDatabaseChange*))block;
+- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLDatabaseChange*))listener;
+
+/**
+ Adds a database change listener with the dispatch queue on which changes
+ will be posted. If the dispatch queue is not specified, the changes will be
+ posted on the main queue.
+
+ @param queue The dispatch queue.
+ @param listener The listener to post changes.
+ @return An opaque listener token object for removing the listener.
+ */
+- (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
+                                           listener: (void (^)(CBLDatabaseChange*))listener;
 
 /** 
- Adds a document change listener block for the given document ID.
+ Adds a document change listener for the document with the given ID. Changes
+ will be posted on the main queue.
  
- @param documentID The document.
- @param block The block to be executed when the change is received.
- @return An opaque object to act as the listener and for removing the listener 
-         when calling the -removeChangeListener: method.
+ @param id The document ID.
+ @param listener The listener to post changes.
+ @return An opaque listener token object for removing the listener.
  */
-- (id<NSObject>) addChangeListenerForDocumentID: (NSString*)documentID
-                                     usingBlock: (void (^)(CBLDocumentChange*))block;
+- (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
+                                                listener: (void (^)(CBLDocumentChange*))listener;
 
-/** 
- Removes a change listener. The given change listener is the opaque object 
- returned by the -addChangeListener: or -addChangeListenerForDocumentID:usingBlock: method.
+
+/**
+ Adds a document change listener for the document with the given ID and the
+ dispatch queue on which changes will be posted. If the dispatch queue
+ is not specified, the changes will be posted on the main queue.
  
- @param listener The listener object to be removed.
+ @param id The document ID.
+ @param queue The dispatch queue.
+ @param listener The listener to post changes.
+ @return An opaque listener token object for removing the listener.
  */
-- (void) removeChangeListener: (id<NSObject>)listener;
+- (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
+                                                   queue: (nullable dispatch_queue_t)queue
+                                                listener: (void (^)(CBLDocumentChange*))listener;
+/** 
+ Removes a change listener with the given listener token.
+ 
+ @param token The listener token.
+ */
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
 
 
 #pragma mark - Index
@@ -385,27 +355,6 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  */
 - (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)error;
 
-
-#pragma mark - Querying
-
-
-/**
- Enumerates all documents in the database, ordered by document ID.
-
- @return All documents.
- */
-- (NSEnumerator<CBLMutableDocument*>*) allDocuments;
-
-/** 
- Compiles a database query, from any of several input formats.
- Once compiled, the query can be run many times with different parameter values.
- The rows will be sorted by ascending document ID, and no custom values are returned.
- 
- @param where The query specification. This can be an NSPredicate, or an NSString (interpreted
-              as an NSPredicate format string), or nil to return all documents.
- @return The CBLQuery.
- */
-- (CBLPredicateQuery*) createQueryWhere: (nullable id)where;
 
 @end
 

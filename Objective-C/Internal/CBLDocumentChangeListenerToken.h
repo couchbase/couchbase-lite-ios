@@ -1,5 +1,5 @@
 //
-//  CBLDocumentChangeListener.h
+//  CBLDocumentChangeListenerToken.h
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 6/28/17.
@@ -7,16 +7,17 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CBLChangeListener.h"
+#import "CBLChangeListenerToken.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLDocumentChangeListener : CBLChangeListener
+@interface CBLDocumentChangeListenerToken : CBLChangeListenerToken
 
 @property (nonatomic, readonly, copy) NSString* documentID;
 
 - (instancetype) initWithDocumentID: (NSString*)documentID
-                          withBlock: (id)block;
+                           listener: (id)listener
+                              queue: (nullable dispatch_queue_t)queue;
 
 @end
 

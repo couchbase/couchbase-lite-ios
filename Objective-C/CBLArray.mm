@@ -101,39 +101,23 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     return obj;
 }
 
-
-- (nullable CBLArray*) arrayAtIndex: (NSUInteger)index {
-    return _getObject(_array, index, [CBLArray class]);
+- (nullable id) objectAtIndex: (NSUInteger)index {
+    return _getObject(_array, index);
 }
 
 
-- (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
-    return _getObject(_array, index, [CBLBlob class]);
+- (nullable id) valueAtIndex: (NSUInteger)index {
+    return _getObject(_array, index);
 }
 
 
-- (BOOL) booleanAtIndex: (NSUInteger)index {
-    return asBool(_get(_array, index), _array);
+- (nullable NSString*) stringAtIndex: (NSUInteger)index {
+    return _getObject(_array, index, [NSString class]);
 }
 
 
-- (nullable NSDate*) dateAtIndex: (NSUInteger)index {
-    return asDate(_getObject(_array, index));
-}
-
-
-- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
-    return _getObject(_array, index, [CBLDictionary class]);
-}
-
-
-- (double) doubleAtIndex: (NSUInteger)index {
-    return asDouble(_get(_array, index), _array);
-}
-
-
-- (float) floatAtIndex: (NSUInteger)index {
-    return asFloat(_get(_array, index), _array);
+- (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
+    return _getObject(_array, index, [NSNumber class]);
 }
 
 
@@ -147,18 +131,38 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
 }
 
 
-- (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
-    return _getObject(_array, index, [NSNumber class]);
+- (float) floatAtIndex: (NSUInteger)index {
+    return asFloat(_get(_array, index), _array);
 }
 
 
-- (nullable NSString*) stringAtIndex: (NSUInteger)index {
-    return _getObject(_array, index, [NSString class]);
+- (double) doubleAtIndex: (NSUInteger)index {
+    return asDouble(_get(_array, index), _array);
 }
 
 
-- (nullable id) objectAtIndex: (NSUInteger)index {
-    return _getObject(_array, index);
+- (BOOL) booleanAtIndex: (NSUInteger)index {
+    return asBool(_get(_array, index), _array);
+}
+
+
+- (nullable NSDate*) dateAtIndex: (NSUInteger)index {
+    return asDate(_getObject(_array, index));
+}
+
+
+- (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
+    return _getObject(_array, index, [CBLBlob class]);
+}
+
+
+- (nullable CBLArray*) arrayAtIndex: (NSUInteger)index {
+    return _getObject(_array, index, [CBLArray class]);
+}
+
+
+- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
+    return _getObject(_array, index, [CBLDictionary class]);
 }
 
 
@@ -167,12 +171,23 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
 }
 
 
+#pragma mark - Data
+
+
 - (NSArray*) toArray {
     auto count = _array.count();
     NSMutableArray* result = [NSMutableArray arrayWithCapacity: count];
     for (NSUInteger i = 0; i < count; i++)
         [result addObject: [_getObject(_array, i) cbl_toPlainObject]];
     return result;
+}
+
+
+#pragma mark - Mutable
+
+
+- (CBLMutableArray*) toMutable {
+    return [self mutableCopy];
 }
 
 

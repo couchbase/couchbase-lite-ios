@@ -22,12 +22,38 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @protocol CBLFragment <NSObject>
 
+/**
+ Gets the value as an object.
+ The object types are CBLBlob, CBLArray, CBLDictionary, NSNumber, or NSString
+ based on the underlying data type; or nil if the value is nil.
+ */
+@property (nonatomic, readonly, nullable) NSObject* value;
+
+/**
+ Gets the value as a string.
+ Returns nil if the value is nil, or the value is not a string.
+ */
+@property (nonatomic, readonly, nullable) NSString* string;
+
+/**
+ Gets the value as a number.
+ Returns nil if the value is nil, or the value is not a number.
+ */
+@property (nonatomic, readonly, nullable) NSNumber* number;
+
 /** 
  Gets the value as an integer.
  Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
  Returns 0 if the value is nil or is not a numeric value.
  */
 @property (nonatomic, readonly) NSInteger integerValue;
+
+/**
+ Gets the value as a long long.
+ Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+ Returns 0 if the value is nil or is not a numeric value.
+ */
+@property (nonatomic, readonly) long long longLongValue;
 
 /** 
  Gets the value as a float.
@@ -48,25 +74,6 @@ NS_ASSUME_NONNULL_BEGIN
  Returns YES if the value is not nil nor NSNull, and is either `true` or a nonzero number.
  */
 @property (nonatomic, readonly) BOOL booleanValue;
-
-/** 
- Gets the value as an object.
- The object types are CBLBlob, CBLArray, CBLDictionary, NSNumber, or NSString
- based on the underlying data type; or nil if the value is nil.
- */
-@property (nonatomic, readonly, nullable) NSObject* object;
-
-/** 
- Gets the value as a string.
- Returns nil if the value is nil, or the value is not a string.
- */
-@property (nonatomic, readonly, nullable) NSString* string;
-
-/** 
- Gets the value as a number.
- Returns nil if the value is nil, or the value is not a number.
- */
-@property (nonatomic, readonly, nullable) NSNumber* number;
 
 /** 
  Gets the value as an NSDate.
@@ -95,11 +102,6 @@ NS_ASSUME_NONNULL_BEGIN
  Returns nil if the value is nil, or the value is not a dictionary.
  */
 @property (nonatomic, readonly, nullable) CBLDictionary* dictionary;
-
-/** 
- Same as getting the value as an object.
- */
-@property (nonatomic, readonly, nullable) NSObject* value;
 
 /** 
  Checks whether the value held by the fragment object exists or is nil value or not.

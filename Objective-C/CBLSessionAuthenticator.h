@@ -34,7 +34,11 @@ NS_ASSUME_NONNULL_BEGIN
  and cookie name.
  */
 - (instancetype) initWithSessionID: (NSString*)sessionID
-                           expires: (nullable id)expires
+                      expireString: (nullable id)expires
+                        cookieName: (NSString*)cookieName;
+
+- (instancetype) initWithSessionID: (NSString*)sessionID
+                        expireDate: (nullable NSDate*)expires
                         cookieName: (NSString*)cookieName;
 
 @end

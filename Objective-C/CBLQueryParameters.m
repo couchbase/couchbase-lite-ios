@@ -14,42 +14,7 @@
 }
 
 
-- (void) setBoolean: (BOOL)value forName: (NSString*)name {
-    [self setObject: @(value) forName: name];
-}
-
-
-- (void) setDate: (nullable NSDate*)value forName: (NSString*)name {
-    [self setObject: value forName: name];
-}
-
-
-- (void) setDouble: (double)value forName: (NSString*)name {
-    [self setObject: @(value) forName: name];
-}
-
-
-- (void) setFloat: (float)value forName: (NSString*)name {
-    [self setObject: @(value) forName: name];
-}
-
-
-- (void) setInteger: (NSInteger)value forName: (NSString*)name {
-    [self setObject: @(value) forName: name];
-}
-
-
-- (void) setLongLong: (long long)value forName: (NSString*)name {
-    [self setObject: @(value) forName: name];
-}
-
-
-- (void) setNumber: (nullable NSNumber*)value forName: (NSString*)name {
-    [self setObject: value forName: name];
-}
-
-
-- (void) setObject: (id)value forName: (NSString*)name {
+- (void) setValue: (id)value forName: (NSString*)name {
     if (!_params) {
         _params = [NSMutableDictionary dictionary];
     }
@@ -60,7 +25,42 @@
 
 
 - (void) setString: (nullable NSString*)value forName: (NSString*)name {
-    [self setObject: value forName: name];
+    [self setValue: value forName: name];
+}
+
+
+- (void) setNumber: (nullable NSNumber*)value forName: (NSString*)name {
+    [self setValue: value forName: name];
+}
+
+
+- (void) setInteger: (NSInteger)value forName: (NSString*)name {
+    [self setValue: @(value) forName: name];
+}
+
+
+- (void) setLongLong: (long long)value forName: (NSString*)name {
+    [self setValue: @(value) forName: name];
+}
+
+
+- (void) setFloat: (float)value forName: (NSString*)name {
+    [self setValue: @(value) forName: name];
+}
+
+
+- (void) setDouble: (double)value forName: (NSString*)name {
+    [self setValue: @(value) forName: name];
+}
+
+
+- (void) setBoolean: (BOOL)value forName: (NSString*)name {
+    [self setValue: @(value) forName: name];
+}
+
+
+- (void) setDate: (nullable NSDate*)value forName: (NSString*)name {
+    [self setValue: value forName: name];
 }
 
 

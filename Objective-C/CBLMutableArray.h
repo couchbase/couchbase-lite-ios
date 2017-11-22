@@ -19,22 +19,69 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Type Setters
 
-
-/** 
- Sets a CBLArray object at the given index. A nil value will be converted to an NSNull.
+/**
+ Sets an object at the given index. A nil value will be converted to an NSNull.
  
- @param value The CBLArray object.
+ @param value The value.
  @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) setArray: (nullable CBLArray*)value atIndex: (NSUInteger)index;
+- (void) setObject: (nullable id)value atIndex: (NSUInteger)index;
 
-/** 
- Sets a CBLBlob object at the given index. A nil value will be converted to an NSNull.
+/**
+ Sets a value at the given index. A nil value will be converted to an NSNull.
  
- @param value The CBLBlob object.
+ @param value The value.
  @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) setBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index;
+- (void) setValue: (nullable id)value atIndex: (NSUInteger)index;
+
+/**
+ Sets an String object at the given index. A nil value will be converted to an NSNull.
+ 
+ @param value The String object.
+ @param index The index. This value must not exceed the bounds of the array.
+ */
+- (void) setString: (nullable NSString*)value atIndex: (NSUInteger)index;
+
+/**
+ Sets an NSNumber object at the given index. A nil value will be converted to an NSNull.
+ 
+ @param value The NSNumber object.
+ @param index The index. This value must not exceed the bounds of the array.
+ */
+- (void) setNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index;
+
+/**
+ Sets an integer value at the given index.
+ 
+ @param value The integer value.
+ @param index The index. This value must not exceed the bounds of the array.
+ */
+- (void) setInteger: (NSInteger)value atIndex: (NSUInteger)index;
+
+/**
+ Sets a long long value at the given index.
+ 
+ @param value The long long value.
+ @param index The index. This value must not exceed the bounds of the array.
+ */
+- (void) setLongLong: (long long)value atIndex: (NSUInteger)index;
+
+/**
+ Sets a float value at the given index.
+ 
+ @param value The float value.
+ @param index The index. This value must not exceed the bounds of the array.
+ */
+- (void) setFloat: (float)value atIndex: (NSUInteger)index;
+
+/**
+ Sets a double value at the given index.
+ 
+ @param value The double value.
+ @param index The index. This value must not exceed the bounds of the array.
+ */
+- (void) setDouble: (double)value atIndex: (NSUInteger)index;
 
 /** 
  Sets a boolean value at the given index.
@@ -52,7 +99,23 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void) setDate: (nullable NSDate*)value atIndex: (NSUInteger)index;
 
-/** 
+/**
+ Sets a CBLBlob object at the given index. A nil value will be converted to an NSNull.
+ 
+ @param value The CBLBlob object.
+ @param index The index. This value must not exceed the bounds of the array.
+ */
+- (void) setBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index;
+
+/**
+ Sets a CBLArray object at the given index. A nil value will be converted to an NSNull.
+ 
+ @param value The CBLArray object.
+ @param index The index. This value must not exceed the bounds of the array.
+ */
+- (void) setArray: (nullable CBLArray*)value atIndex: (NSUInteger)index;
+
+/**
  Sets a CBLDictionary object at the given index. A nil value will be converted to an NSNull.
  
  @param value The CBLDictionary object.
@@ -60,114 +123,37 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void) setDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index;
 
-/** 
- Sets a double value at the given index.
- 
- @param value The double value.
- @param index The index. This value must not exceed the bounds of the array.
- */
-- (void) setDouble: (double)value atIndex: (NSUInteger)index;
-
-/** 
- Sets a float value at the given index.
- 
- @param value The float value.
- @param index The index. This value must not exceed the bounds of the array.
- */
-- (void) setFloat: (float)value atIndex: (NSUInteger)index;
-
-/** 
- Sets an integer value at the given index.
- 
- @param value The integer value.
- @param index The index. This value must not exceed the bounds of the array.
- */
-- (void) setInteger: (NSInteger)value atIndex: (NSUInteger)index;
-
-/**
- Sets a long long value at the given index.
- 
- @param value The long long value.
- @param index The index. This value must not exceed the bounds of the array.
- */
-- (void) setLongLong: (long long)value atIndex: (NSUInteger)index;
-
-/** 
- Sets an NSNumber object at the given index. A nil value will be converted to an NSNull.
- 
- @param value The NSNumber object.
- @param index The index. This value must not exceed the bounds of the array.
- */
-- (void) setNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index;
-
-/** 
- Sets an object at the given index. A nil value will be converted to an NSNull.
- 
- @param value The object.
- @param index The index. This value must not exceed the bounds of the array.
- */
-- (void) setObject: (nullable id)value atIndex: (NSUInteger)index;
-
-/** 
- Sets an String object at the given index. A nil value will be converted to an NSNull.
- 
- @param value The String object.
- @param index The index. This value must not exceed the bounds of the array.
- */
-- (void) setString: (nullable NSString*)value atIndex: (NSUInteger)index;
-
 #pragma mark - Type Appenders
 
-/** 
- Adds a CBLArray object to the end of the array. A nil value will be converted to an NSNull.
+/**
+ Adds a value to the end of the array. A nil value will be converted to an NSNull.
  
- @param value The CBLArray object.
+ @param value The value.
  */
-- (void) addArray: (nullable CBLArray*)value;
+- (void) addValue: (nullable id)value;
 
-/** 
- Adds a CBLBlob object to the end of the array. A nil value will be converted to an NSNull.
+/**
+ Adds an object to the end of the array. A nil value will be converted to an NSNull.
  
- @param value The CBLMutableArray object.
+ @param value The value.
  */
-- (void) addBlob: (nullable CBLBlob*)value;
+- (void) addObject: (nullable id)value;
 
-/** 
- Adds a boolean value to the end of the array.
+/**
+ Adds a String object to the end of the array. A nil value will be converted to an NSNull.
  
- @param value The boolean value.
+ @param value The String object.
  */
-- (void) addBoolean: (BOOL)value;
+- (void) addString: (nullable NSString*)value;
 
-/** 
- Adds a Date object to the end of the array. A nil value will be converted to an NSNull.
-
- @param value The Date object.
- */
-- (void) addDate: (nullable NSDate*)value;
-
-/** 
- Adds a CBLDictionary object to the end of the array. A nil value will be converted to an NSNull.
+/**
+ Adds an NSNumber object to the end of the array. A nil value will be converted to an NSNull.
  
- @param value The CBLDictionary object.
+ @param value The NSNumber object.
  */
-- (void) addDictionary: (nullable CBLDictionary*)value;
+- (void) addNumber: (nullable NSNumber*)value;
 
-/** 
- Adds a double value to the end of the array.
- 
- @param value The double value.
- */
-- (void) addDouble: (double)value;
-
-/** 
- Adds a float value to the end of the array.
- 
- @param value The float value.
- */
-- (void) addFloat: (float)value;
-
-/** 
+/**
  Adds an integer value to the end of the array.
  
  @param value The integer value.
@@ -181,88 +167,92 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void) addLongLong: (long long)value;
 
-/** 
- Adds an NSNumber object to the end of the array. A nil value will be converted to an NSNull.
+/**
+ Adds a float value to the end of the array.
  
- @param value The NSNumber object.
+ @param value The float value.
  */
-- (void) addNumber: (nullable NSNumber*)value;
+- (void) addFloat: (float)value;
+
+/**
+ Adds a double value to the end of the array.
+ 
+ @param value The double value.
+ */
+- (void) addDouble: (double)value;
+
+/**
+ Adds a boolean value to the end of the array.
+ 
+ @param value The boolean value.
+ */
+- (void) addBoolean: (BOOL)value;
+
+/**
+ Adds a Date object to the end of the array. A nil value will be converted to an NSNull.
+ 
+ @param value The Date object.
+ */
+- (void) addDate: (nullable NSDate*)value;
 
 /** 
- Adds an object to the end of the array. A nil value will be converted to an NSNull.
+ Adds a CBLBlob object to the end of the array. A nil value will be converted to an NSNull.
  
- @param value The object.
+ @param value The CBLMutableArray object.
  */
-- (void) addObject: (nullable id)value;
+- (void) addBlob: (nullable CBLBlob*)value;
+
+/**
+ Adds a CBLArray object to the end of the array. A nil value will be converted to an NSNull.
+ 
+ @param value The CBLArray object.
+ */
+- (void) addArray: (nullable CBLArray*)value;
 
 /** 
- Adds a String object to the end of the array. A nil value will be converted to an NSNull.
+ Adds a CBLDictionary object to the end of the array. A nil value will be converted to an NSNull.
  
- @param value The String object.
+ @param value The CBLDictionary object.
  */
-- (void) addString: (nullable NSString*)value;
-
+- (void) addDictionary: (nullable CBLDictionary*)value;
 
 #pragma mark - Type Inserters
 
-
-/** 
- Inserts a CBLArray object at the given index. A nil value will be converted to an NSNull.
+/**
+ Inserts a value at the given index. A nil value will be converted to an NSNull.
+ an NSNull object.
  
- @param value The CBLArray object.
+ @param value  The value.
  @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) insertArray: (nullable CBLArray*)value atIndex: (NSUInteger)index;
+- (void) insertValue: (nullable id)value atIndex: (NSUInteger)index;
 
-/** 
- Inserts a CBLBlob object at the given index. A nil value will be converted to an NSNull.
+/**
+ Inserts an object at the given index. A nil value will be converted to an NSNull.
+ an NSNull object.
  
- @param value The CBLBlob object.
+ @param value  The value.
  @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) insertBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index;
+- (void) insertObject: (nullable id)value atIndex: (NSUInteger)index;
 
-/** 
- Inserts a boolean value at the given index.
+/**
+ Inserts an String object at the given index. A nil value will be converted to an NSNull.
  
- @param value The boolean value.
+ @param value The String object.
  @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) insertBoolean: (BOOL)value atIndex: (NSUInteger)index;
+- (void) insertString: (nullable NSString*)value atIndex: (NSUInteger)index;
 
-/** 
- Inserts a Date object at the given index. A nil value will be converted to an NSNull.
+/**
+ Inserts an NSNumber object at the given index. A nil value will be converted to an NSNull.
  
- @param value The Date object.
+ @param value The NSNumber object.
  @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) insertDate: (nullable NSDate*)value atIndex: (NSUInteger)index;
+- (void) insertNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index;
 
-/** 
- Inserts a CBLDictionary object at the given index. A nil value will be converted to an NSNull.
- 
- @param value The CBLDictionary object.
- @param index The index. This value must not exceed the bounds of the array.
- */
-- (void) insertDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index;
-
-/** 
- Inserts a double value at the given index.
- 
- @param value The double value.
- @param index The index. This value must not exceed the bounds of the array.
- */
-- (void) insertDouble: (double)value atIndex: (NSUInteger)index;
-
-/** 
- Inserts a float value at the given index.
- 
- @param value The float value.
- @param index The index. This value must not exceed the bounds of the array.
- */
-- (void) insertFloat: (float)value atIndex: (NSUInteger)index;
-
-/** 
+/**
  Inserts an integer value at the given index.
  
  @param value The integer value.
@@ -278,42 +268,61 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void) insertLongLong: (long long)value atIndex: (NSUInteger)index;
 
-/** 
- Inserts an NSNumber object at the given index. A nil value will be converted to an NSNull.
+/**
+ Inserts a float value at the given index.
  
- @param value The NSNumber object.
+ @param value The float value.
  @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) insertNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index;
+- (void) insertFloat: (float)value atIndex: (NSUInteger)index;
 
-/** 
- Inserts an object at the given index. A nil value will be converted to an NSNull.
- an NSNull object.
+/**
+ Inserts a double value at the given index.
  
- @param object  The object.
+ @param value The double value.
  @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) insertObject: (nullable id)object atIndex: (NSUInteger)index;
+- (void) insertDouble: (double)value atIndex: (NSUInteger)index;
 
-/** 
- Inserts an String object at the given index. A nil value will be converted to an NSNull.
+/**
+ Inserts a boolean value at the given index.
  
- @param value The String object.
+ @param value The boolean value.
  @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) insertString: (nullable NSString*)value atIndex: (NSUInteger)index;
+- (void) insertBoolean: (BOOL)value atIndex: (NSUInteger)index;
 
-#pragma mark - Setting content with an NSArray
+/**
+ Inserts a Date object at the given index. A nil value will be converted to an NSNull.
+ 
+ @param value The Date object.
+ @param index The index. This value must not exceed the bounds of the array.
+ */
+- (void) insertDate: (nullable NSDate*)value atIndex: (NSUInteger)index;
 
 /** 
- Set an array as a content. Allowed value types are NSArray, NSDate, NSDictionary, NSNumber,
- NSNull, NSString, CBLMutableArray, CBLBlob, CBLMutableDictionary. The NSArrays and NSDictionaries must
- contain only the above types. Setting the new array content will replace the current data
- including the existing CBLMutableArray and CBLMutableDictionary objects.
+ Inserts a CBLBlob object at the given index. A nil value will be converted to an NSNull.
  
- @param array The array.
+ @param value The CBLBlob object.
+ @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) setArray: (nullable NSArray*)array;
+- (void) insertBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index;
+
+/** 
+ Inserts a CBLDictionary object at the given index. A nil value will be converted to an NSNull.
+ 
+ @param value The CBLDictionary object.
+ @param index The index. This value must not exceed the bounds of the array.
+ */
+- (void) insertDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index;
+
+/**
+ Inserts a CBLArray object at the given index. A nil value will be converted to an NSNull.
+ 
+ @param value The CBLArray object.
+ @param index The index. This value must not exceed the bounds of the array.
+ */
+- (void) insertArray: (nullable CBLArray*)value atIndex: (NSUInteger)index;
 
 #pragma mark - Removing Value
 
@@ -322,7 +331,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param index The index. This value must not exceed the bounds of the array.
  */
-- (void) removeObjectAtIndex: (NSUInteger)index;
+- (void) removeValueAtIndex: (NSUInteger)index;
 
 #pragma mark - Getting CBLMutableArray and CBLMutableDictionary
 
@@ -341,6 +350,18 @@ NS_ASSUME_NONNULL_BEGIN
  @return The CBLMutableDictionary object.
  */
 - (nullable CBLMutableDictionary*) dictionaryAtIndex: (NSUInteger)index;
+
+#pragma mark - Data
+
+/**
+ Set an array as a content. Allowed value types are NSArray, NSDate, NSDictionary, NSNumber,
+ NSNull, NSString, CBLMutableArray, CBLBlob, CBLMutableDictionary. The NSArrays and NSDictionaries must
+ contain only the above types. Setting the new array content will replace the current data
+ including the existing CBLMutableArray and CBLMutableDictionary objects.
+ 
+ @param array The array.
+ */
+- (void) setArray: (nullable NSArray*)array;
 
 #pragma mark - Subscript
 

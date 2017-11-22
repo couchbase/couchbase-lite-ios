@@ -7,9 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-@class CBLQuery;
 @class CBLQueryCollation;
-@class CBLQueryMeta;
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -38,25 +36,6 @@ NS_ASSUME_NONNULL_BEGIN
  @return The property expression.
  */
 + (CBLQueryExpression*) property: (NSString*)property from: (nullable NSString*)alias;
-
-#pragma mark - Meta:
-
-/** 
- Gets a CBLQueryMeta object, which is a factory object for creating metadata property
- expressions.
- 
- @return The CBLQueryMeta object.
- */
-+ (CBLQueryMeta*) meta;
-
-/** 
- Gets a CBLQueryMeta object for the given data source. The CBLQueryMeta object is a factory
- object for creating metadata property expressions.
- 
- @param alias The data source alias name.
- @return The CBLQueryMeta object.
- */
-+ (CBLQueryMeta*) metaFrom: (nullable NSString*)alias;
 
 #pragma mark - Parameter:
 
@@ -162,15 +141,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (CBLQueryExpression*) lessThan: (id)expression;
 
 /** 
- Creates a NOT less than expression that evaluates whether or not the current expression
- is not less than the given expression.
- 
- @param expression The expression to be compared with the current expression.
- @return The NOT less than expression.
- */
-- (CBLQueryExpression*) notLessThan: (id)expression;
-
-/** 
  Creates a less than or equal to expression that evaluates whether or not the current
  expression is less than or equal to the given expression.
  
@@ -178,15 +148,6 @@ NS_ASSUME_NONNULL_BEGIN
  @return The less than or equal to expression.
  */
 - (CBLQueryExpression*) lessThanOrEqualTo: (id)expression;
-
-/** 
- Creates a NOT less than or equal to expression that evaluates whether or not the current
- expression is not less than or equal to the given expression.
- 
- @param expression The expression to be compared with the current expression.
- @return The NOT less than or equal to expression.
- */
-- (CBLQueryExpression*) notLessThanOrEqualTo: (id)expression;
 
 /** 
  Creates a greater than expression that evaluates whether or not the current expression
@@ -198,15 +159,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (CBLQueryExpression*) greaterThan: (id)expression;
 
 /** 
- Creates a NOT greater than expression that evaluates whether or not the current expression
- is not greater than the given expression.
- 
- @param expression The expression to be compared with the current expression.
- @return The NOT greater than expression.
- */
-- (CBLQueryExpression*) notGreaterThan: (id)expression;
-
-/** 
  Creates a greater than or equal to expression that evaluates whether or not the current
  expression is greater than or equal to the given expression.
  
@@ -214,15 +166,6 @@ NS_ASSUME_NONNULL_BEGIN
  @return The greater than or equal to expression.
  */
 - (CBLQueryExpression*) greaterThanOrEqualTo: (id)expression;
-
-/** 
- Creates a NOT greater than or equal to expression that evaluates whether or not the current
- expression is not greater than or equal to the given expression.
- 
- @param expression The expression to be compared with the current expression.
- @return The NOT greater than or equal to expression.
- */
-- (CBLQueryExpression*) notGreaterThanOrEqualTo: (id)expression;
 
 /** 
  Creates an equal to expression that evaluates whether or not the current expression is equal
@@ -271,15 +214,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (CBLQueryExpression*) like: (id)expression;
 
-/** 
- Creates a NOT Like expression that evaluates whether or not the current expression is NOT LIKE
- the given expression.
- 
- @param expression The expression to be compared with the current expression.
- @return The NOT Like expression.
- */
-- (CBLQueryExpression*) notLike: (id)expression;
-
 #pragma mark - Regex operators:
 
 /** 
@@ -290,35 +224,6 @@ NS_ASSUME_NONNULL_BEGIN
  @return The regex match expression.
  */
 - (CBLQueryExpression*) regex: (id)expression;
-
-/** 
- Creates a regex NOT match expression that evaluates whether or not the current expression
- regex NOT matches the given expression.
- 
- @param expression The expression to be compared with the current expression.
- @return The regex NOT match expression.
- */
-- (CBLQueryExpression*) notRegex: (id)expression;
-
-#pragma mark - Fulltext search operators:
-
-/** 
- Creates a full text match expression that evaluates whether or not the current expression
- full text matches the given expression.
- 
- @param expression The expression to be compared with the current expression.
- @return The full text match expression.
- */
-- (CBLQueryExpression*) match: (id)expression;
-
-/** 
- Creates a full text NOT match expression that evaluates whether or not the current expression
- full text NOT matches the given expression.
- 
- @param expression The expression to be compared with the current expression.
- @return The full text NOT match expression.
- */
-- (CBLQueryExpression*) notMatch: (id)expression;
 
 #pragma mark - NULL check operators:
 
@@ -338,9 +243,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (CBLQueryExpression*) notNullOrMissing;
 
-#pragma mark - Is operators:
+#pragma mark - IS operators:
 
-/** 
+/**
  Creates an IS expression that evaluates whether or not the current expression is equal to
  the given expression.
  
@@ -349,7 +254,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (CBLQueryExpression*) is: (id)expression;
 
-/** 
+/**
  Creates an IS NOT expression that evaluates whether or not the current expression is not equal to
  the given expression.
  @param expression The expression to be compared with the current expression.
@@ -368,16 +273,6 @@ NS_ASSUME_NONNULL_BEGIN
  @return The between expression.
  */
 - (CBLQueryExpression*) between: (id)expression1 and: (id)expression2;
-
-/** 
- Creates a NOT between expression that evaluates whether or not the current expression is not
- between the given expressions inclusively.
- 
- @param expression1 The inclusive lower bound expression.
- @param expression2 The inclusive upper bound expression.
- @return The NOT between expression.
- */
-- (CBLQueryExpression*) notBetween: (id)expression1 and: (id)expression2;
 
 #pragma mark - Collection operators:
 
@@ -398,61 +293,6 @@ NS_ASSUME_NONNULL_BEGIN
  @return The IN exprssion.
  */
 - (CBLQueryExpression*) notIn: (NSArray*)expressions;
-
-#pragma mark - Quantified operators:
-
-/** 
- Creates a variable expression. The variable are used to represent each item in an array
- in the quantified operators (ANY/ANY AND EVERY/EVERY <variable name> IN <expr> SATISFIES <expr>)
- to evaluate expressions over an array.
- 
- @param name The variable name.
- @return The variable expression.
- */
-+ (CBLQueryExpression*) variableNamed: (NSString*)name;
-
-/** 
- Creates an ANY quantified operator (ANY <variable name> IN <expr> SATISFIES <expr>)
- to evaluate expressions over an array. The ANY operator returns TRUE
- if at least one of the items in the array satisfies the given satisfies expression.
- 
- @param variableName The variable name represent to an item in the array.
- @param inExpression The array expression that can be evaluated as an array.
- @param satisfies The expression to be evaluated with.
- @return The ANY quantifies operator.
- */
-+ (CBLQueryExpression*) any: (NSString*)variableName
-                         in: (id)inExpression
-                  satisfies: (CBLQueryExpression*)satisfies;
-
-/** 
- Creates an ANY AND EVERY quantified operator (ANY AND EVERY <variable name> IN <expr>
- SATISFIES <expr>) to evaluate expressions over an array. The ANY AND EVERY operator
- returns TRUE if the array is NOT empty, and at least one of the items in the array
- satisfies the given satisfies expression.
- 
- @param variableName The variable name represent to an item in the array.
- @param inExpression The array expression that can be evaluated as an array.
- @param satisfies The expression to be evaluated with.
- @return The ANY AND EVERY quantifies operator.
- */
-+ (CBLQueryExpression*) anyAndEvery: (NSString*)variableName
-                                 in: (id)inExpression
-                          satisfies: (CBLQueryExpression*)satisfies;
-
-/** 
- Creates an EVERY quantified operator (ANY <variable name> IN <expr> SATISFIES <expr>)
- to evaluate expressions over an array. The EVERY operator returns TRUE
- if the array is empty OR every item in the array satisfies the given satisfies expression.
- 
- @param variableName The variable name represent to an item in the array.
- @param inExpression The array expression that can be evaluated as an array.
- @param satisfies The expression to be evaluated with.
- @return The EVERY quantifies operator.
- */
-+ (CBLQueryExpression*) every: (NSString*)variableName
-                           in: (id)inExpression
-                    satisfies: (CBLQueryExpression*)satisfies;
 
 /** Not available. */
 - (instancetype) init NS_UNAVAILABLE;

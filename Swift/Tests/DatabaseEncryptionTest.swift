@@ -38,7 +38,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = try openSeekrit(password: nil)
         
         let doc = createDocument(nil, dictionary: ["answer": 42])
-        try seekrit!.save(doc)
+        try seekrit!.saveDocument(doc)
         try seekrit!.close()
         seekrit = nil
         
@@ -57,7 +57,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = try openSeekrit(password: "letmein")
         
         let doc = createDocument(nil, dictionary: ["answer": 42])
-        try seekrit!.save(doc)
+        try seekrit!.saveDocument(doc)
         try seekrit!.close()
         seekrit = nil
         
@@ -106,16 +106,16 @@ class DatabaseEncryptionTest: CBLTestCase {
         
         // Create a doc and then update it:
         let doc = createDocument(nil, dictionary: ["answer": 42])
-        try seekrit!.save(doc)
+        try seekrit!.saveDocument(doc)
         doc.setValue(84, forKey: "answer")
-        try seekrit!.save(doc)
+        try seekrit!.saveDocument(doc)
         
         // Compact:
         try seekrit!.compact()
         
         // Update the document again:
         doc.setValue(85, forKey: "answer")
-        try seekrit!.save(doc)
+        try seekrit!.saveDocument(doc)
         
         // Close and re-open:
         try seekrit!.close()
@@ -136,7 +136,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         let body = "This is a blob!".data(using: .utf8)!
         var blob = Blob(contentType: "text/plain", data: body)
         doc.setValue(blob, forKey: "blob")
-        try seekrit!.save(doc)
+        try seekrit!.saveDocument(doc)
         
         // Read content from the raw blob file:
         blob = doc.blob(forKey: "blob")!
@@ -154,7 +154,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         }
         
         // Check blob content:
-        let savedDoc = seekrit!.getDocument("att")!
+        let savedDoc = seekrit!.document(withID: "att")!
         XCTAssertNotNil(savedDoc)
         blob = savedDoc.blob(forKey: "blob")!
         XCTAssertNotNil(blob.digest)
@@ -184,7 +184,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         try seekrit!.inBatch {
             for i in 0...99 {
                 let doc = createDocument(nil, dictionary: ["seq": i])
-                try seekrit!.save(doc)
+                try seekrit!.saveDocument(doc)
             }
         }
         
@@ -201,7 +201,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = seekrit2
         
         // Check the document and its attachment
-        let doc = seekrit!.getDocument("att")!
+        let doc = seekrit!.document(withID: "att")!
         XCTAssertNotNil(doc)
         let blob = doc.blob(forKey: "blob")!
         XCTAssertNotNil(blob.digest)
@@ -216,7 +216,7 @@ class DatabaseEncryptionTest: CBLTestCase {
             .from(DataSource.database(seekrit!))
             .where(seq.notNullOrMissing())
             .orderBy(Ordering.expression(seq))
-        let rs = try query.run()
+        let rs = try query.execute()
         XCTAssertEqual(Array(rs).count, 100)
         
         var i = 0;

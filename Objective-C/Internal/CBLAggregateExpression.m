@@ -7,7 +7,7 @@
 //
 
 #import "CBLAggregateExpression.h"
-#import "CBLQuery+Internal.h"
+#import "CBLQueryExpression+Internal.h"
 
 @implementation CBLAggregateExpression
 

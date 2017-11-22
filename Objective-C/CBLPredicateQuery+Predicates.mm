@@ -156,8 +156,8 @@ typedef NS_OPTIONS(NSUInteger, CollationOptions) {
             if ([keyStr hasPrefix: @"rank("]) {
                 if (![keyStr hasSuffix: @")"])
                     return mkError(outError, @"Invalid rank sort descriptor"), nil;
-                NSString* keyPath = [keyStr substringWithRange: {5, [keyStr length] - 6}];
-                key = @[@"rank()", @[@".", keyPath]];
+                NSString* indexName = [keyStr substringWithRange: {5, [keyStr length] - 6}];
+                key = @[@"rank()", indexName];
             } else {
                 NSExpression* expr = [NSExpression expressionWithFormat: keyStr argumentArray: @[]];
                 key = [self encodeExpression: expr aggregate: true error: outError];
@@ -332,7 +332,11 @@ static id EncodeComparisonPredicate(NSComparisonPredicate* cp, NSError** outErro
     static NSString* const kModifiers[3] = {nil, @"EVERY", @"ANY"};
     NSString* mod = kModifiers[cp.comparisonPredicateModifier];
     if (mod == nil) {
-        NSExpression* lhs = EncodeExpression(leftExpression, outError);
+        id lhs;
+        if ([op isEqualToString: @"MATCH"])
+            lhs = leftExpression.keyPath;
+        else
+            lhs = EncodeExpression(leftExpression, outError);
         if (!lhs) return nil;
         updateOpForMissingOperand(lhs, opType, &op);
         return @[op, lhs, rhs];

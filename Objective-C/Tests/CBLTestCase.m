@@ -158,7 +158,7 @@
         NSString* contents = [self stringFromResource: resourceName ofType: @"json"];
         __block uint64_t n = 0;
         NSError *batchError;
-        BOOL ok = [self.db inBatch: &batchError do: ^{
+        BOOL ok = [self.db inBatch: &batchError usingBlock: ^{
             [contents enumerateLinesUsingBlock: ^(NSString *line, BOOL *stop) {
                 NSString* docID = [NSString stringWithFormat: @"doc-%03llu", ++n];
                 NSData* json = [line dataUsingEncoding: NSUTF8StringEncoding];

@@ -8,6 +8,7 @@
 
 #import "CBLQueryJoin.h"
 #import "CBLQuery+Internal.h"
+#import "CBLQueryExpression+Internal.h"
 
 #define kCBLInnerJoin       @"INNER"
 #define kCBLOuterJoin       @"OUTER"

@@ -9,6 +9,8 @@
 #pragma once
 #import "c4.h"
 #import "CBLIndex.h"
+#import "CBLFullTextIndex.h"
+#import "CBLValueIndex.h"
 @class CBLQueryExpression;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -23,6 +25,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+@interface CBLFullTextIndex ()
+
+- (instancetype) initWithItems: (NSArray<CBLFullTextIndexItem*>*)items
+                       options: (nullable CBLFullTextIndexOptions*)options;
+
+@end
+
+@interface CBLValueIndex ()
+
+- (instancetype) initWithItems: (NSArray<CBLValueIndexItem*>*)items;
+
+@end
+
 @interface CBLValueIndexItem ()
 
 @property (nonatomic, readonly) CBLQueryExpression* expression;
@@ -31,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface CBLFTSIndexItem ()
+@interface CBLFullTextIndexItem ()
 
 @property (nonatomic, readonly) CBLQueryExpression* expression;
 

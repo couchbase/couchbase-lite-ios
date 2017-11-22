@@ -9,7 +9,7 @@
 #import "CBLValueIndex.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLIndex+Internal.h"
-#import "CBLQuery+Internal.h"
+#import "CBLQueryExpression+Internal.h"
 
 @implementation CBLValueIndex {
     NSArray<CBLValueIndexItem*>* _items;

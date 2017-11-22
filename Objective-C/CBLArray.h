@@ -11,6 +11,8 @@
 @class CBLBlob;
 @class CBLDictionary;
 @class CBLArray;
+@class CBLMutableArray;
+
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -21,22 +23,82 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly) NSUInteger count;
 
 /**
- Gets value as a CBLArray, which is a mapping object of an array value.
- Returns nil if the value doesn't exists, or its value is not an array.
+ Gets value at the given index as an object. The object types are CBLBlob,
+ CBLArray, CBLDictionary, NSNumber, or NSString based on the underlying
+ data type; or nil if the value is nil.
  
  @param index The index.
- @return The CBLArray object or nil.
+ @return The object or nil.
  */
-- (nullable CBLArray*) arrayAtIndex: (NSUInteger)index;
+- (nullable id) objectAtIndex: (NSUInteger)index;
+
+/*
+ Gets value at the given index. The object types are CBLBlob,
+ CBLArray, CBLDictionary, NSNumber, or NSString based on the underlying
+ data type; or nil if the value is nil.
+ 
+ @param index The index.
+ @return The object or nil.
+ */
+- (nullable id) valueAtIndex: (NSUInteger)index;
 
 /**
- Get value at the given index as a CBLBlob.
- Returns nil if the value doesn't exist, or its value is not a CBLBlob.
+ Gets value at the given index as a string.
+ Returns nil if the value doesn't exist, or its value is not a string.
  
  @param index The index.
- @return The CBLBlob object or nil.
+ @return The NSString object or nil.
  */
-- (nullable CBLBlob*) blobAtIndex: (NSUInteger)index;
+- (nullable NSString*) stringAtIndex: (NSUInteger)index;
+
+/**
+ Gets value at the given index as a number.
+ Returns nil if the value doesn't exist, or its value is not a number.
+ 
+ @param index The index.
+ @return The NSNumber object or nil.
+ */
+- (nullable NSNumber*) numberAtIndex: (NSUInteger)index;
+
+/**
+ Gets value at the given index as an integer value.
+ Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+ Returns 0 if the value doesn't exist or does not have a numeric value.
+ 
+ @param index The index.
+ @return The integer value.
+ */
+- (NSInteger) integerAtIndex: (NSUInteger)index;
+
+/**
+ Gets value at the given index as a long long value.
+ Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+ Returns 0 if the value doesn't exist or does not have a numeric value.
+ 
+ @param index The index.
+ @return The long long value.
+ */
+- (long long) longLongAtIndex: (NSUInteger)index;
+
+/**
+ Gets value at the given index as a float value.
+ Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
+ Returns 0.0 if the value doesn't exist or does not have a numeric value.
+ 
+ @param index The index.
+ @return The float value.
+ */
+- (float) floatAtIndex: (NSUInteger)index;
+
+/**
+ Gets value at the given index as a double value.
+ Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
+ Returns 0.0 if the property doesn't exist or does not have a numeric value.
+ 
+ @param index The index.
+ @return The double value.
+ */
+- (double) doubleAtIndex: (NSUInteger)index;
 
 /** 
  Gets value at the given index as a boolean.
@@ -61,6 +123,24 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSDate*) dateAtIndex: (NSUInteger)index;
 
 /**
+ Get value at the given index as a CBLBlob.
+ Returns nil if the value doesn't exist, or its value is not a CBLBlob.
+ 
+ @param index The index.
+ @return The CBLBlob object or nil.
+ */
+- (nullable CBLBlob*) blobAtIndex: (NSUInteger)index;
+
+/**
+ Gets value as a CBLArray, which is a mapping object of an array value.
+ Returns nil if the value doesn't exists, or its value is not an array.
+ 
+ @param index The index.
+ @return The CBLArray object or nil.
+ */
+- (nullable CBLArray*) arrayAtIndex: (NSUInteger)index;
+
+/**
  Get value at the given index as a CBLDictionary, which is a mapping object of
  a dictionary value.
  Returns nil if the value doesn't exists, or its value is not a dictionary.
@@ -70,76 +150,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index;
 
+#pragma mark - Data
 
 /**
- Gets value at the given index as a float value.
- Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
- Returns 0.0 if the value doesn't exist or does not have a numeric value.
- 
- @param index The index.
- @return The float value.
- */
-- (float) floatAtIndex: (NSUInteger)index;
-
-/** 
- Gets value at the given index as a double value.
- Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
- Returns 0.0 if the property doesn't exist or does not have a numeric value.
- 
- @param index The index.
- @return The double value.
- */
-- (double) doubleAtIndex: (NSUInteger)index;
-
-/**
- Gets value at the given index as an integer value.
- Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
- Returns 0 if the value doesn't exist or does not have a numeric value.
- 
- @param index The index.
- @return The integer value.
- */
-- (NSInteger) integerAtIndex: (NSUInteger)index;
-
-/**
- Gets value at the given index as a long long value.
- Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
- Returns 0 if the value doesn't exist or does not have a numeric value.
- 
- @param index The index.
- @return The long long value.
- */
-- (long long) longLongAtIndex: (NSUInteger)index;
-
-/** 
- Gets value at the given index as a number.
- Returns nil if the value doesn't exist, or its value is not a number.
- 
- @param index The index.
- @return The NSNumber object or nil.
- */
-- (nullable NSNumber*) numberAtIndex: (NSUInteger)index;
-
-/**
- Gets value at the given index as an object. The object types are CBLBlob,
- CBLArray, CBLDictionary, NSNumber, or NSString based on the underlying
- data type; or nil if the value is nil.
- 
- @param index The index.
- @return The object or nil.
- */
-- (nullable id) objectAtIndex: (NSUInteger)index;
-
-/**
- Gets value at the given index as a string.
- Returns nil if the value doesn't exist, or its value is not a string.
- 
- @param index The index.
- @return The NSString object or nil.
- */
-- (nullable NSString*) stringAtIndex: (NSUInteger)index;
-
-/** 
  Gets content of the current object as an NSArray. The values contained in the returned
  NSArray object are all JSON based values.
  
@@ -153,6 +166,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLArray : NSObject <CBLArray>
 
 - (instancetype) init NS_UNAVAILABLE;
+
+- (CBLMutableArray*) toMutable;
 
 @end
 

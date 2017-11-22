@@ -26,7 +26,7 @@ using namespace fleeceapi;
 }
 
 
-@synthesize database=_database, id=_id, c4Doc=_c4Doc, data=_data;
+@synthesize database=_database, id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -47,6 +47,7 @@ using namespace fleeceapi;
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
                         mustExist: (BOOL)mustExist
+                   includeDeleted: (BOOL)includeDeleted
                             error: (NSError**)outError
 {
     self = [self initWithDatabase: database documentID: documentID c4Doc: nil];
@@ -59,6 +60,12 @@ using namespace fleeceapi;
             convertError(err, outError);
             return nil;
         }
+        
+        if (!includeDeleted && (doc->flags & kDocDeleted) != 0) {
+            c4doc_free(doc);
+            return nil;
+        }
+        
         [self setC4Doc: [CBLC4Document document: doc]];
     }
     return self;
@@ -83,8 +90,13 @@ using namespace fleeceapi;
 }
 
 
+- (CBLMutableDocument*) mutableCopyWithZone:(NSZone *)zone {
+    return [[CBLMutableDocument alloc] initAsCopyWithDocument: self dict: nil];
+}
+
+
 - (CBLMutableDocument*) toMutable {
-    return [[CBLMutableDocument alloc] initWithDocument: self];
+    return [self mutableCopy];
 }
 
 
@@ -110,8 +122,8 @@ using namespace fleeceapi;
 
 
 - (void) updateDictionary {
-    if (_data) {
-        _root.reset(new MRoot<id>(new cbl::DocContext(_database, _c4Doc), Dict(_data), self.isMutable));
+    if (_fleeceData) {
+        _root.reset(new MRoot<id>(new cbl::DocContext(_database, _c4Doc), Dict(_fleeceData), self.isMutable));
         _dict = _root->asNative();
     } else {
         // New document:
@@ -124,12 +136,12 @@ using namespace fleeceapi;
 
 - (void) setC4Doc: (CBLC4Document*)c4doc {
     _c4Doc = c4doc;
-    _data = nullptr;
+    _fleeceData = nullptr;
 
     if (c4doc) {
         C4Slice body = c4doc.selectedRev.body;
         if (body.size > 0)
-            _data = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
+            _fleeceData = FLValue_AsDict(FLValue_FromTrustedData({body.buf, body.size}));
     }
     [self updateDictionary];
 }
@@ -190,61 +202,81 @@ using namespace fleeceapi;
     return _dict.count;
 }
 
+
 - (NSArray*) keys {
     return _dict.keys;
 }
 
-- (nullable CBLArray *)arrayForKey:(nonnull NSString *)key {
-    return [_dict arrayForKey: key];
-}
-
-- (nullable CBLBlob *)blobForKey:(nonnull NSString *)key {
-    return [_dict blobForKey: key];
-}
-
-- (BOOL)booleanForKey:(nonnull NSString *)key {
-    return [_dict booleanForKey: key];
-}
-
-- (BOOL)containsObjectForKey:(nonnull NSString *)key {
-    return [_dict booleanForKey: key];
-}
-
-- (nullable NSDate *)dateForKey:(nonnull NSString *)key {
-    return [_dict dateForKey: key];
-}
-
-- (nullable CBLDictionary *)dictionaryForKey:(nonnull NSString *)key {
-    return [_dict dictionaryForKey: key];
-}
-
-- (double)doubleForKey:(nonnull NSString *)key {
-    return [_dict doubleForKey: key];
-}
-
-- (float)floatForKey:(nonnull NSString *)key {
-    return [_dict floatForKey: key];
-}
-
-- (NSInteger)integerForKey:(nonnull NSString *)key {
-    return [_dict integerForKey: key];
-}
-
-- (long long)longLongForKey:(nonnull NSString *)key {
-    return [_dict longLongForKey: key];
-}
-
-- (nullable NSNumber *)numberForKey:(nonnull NSString *)key {
-    return [_dict numberForKey: key];
-}
 
 - (nullable id)objectForKey:(nonnull NSString *)key {
     return [_dict objectForKey: key];
 }
 
+
+- (nullable id)valueForKey:(nonnull NSString *)key {
+    return [_dict valueForKey: key];
+}
+
+
 - (nullable NSString *)stringForKey:(nonnull NSString *)key {
     return [_dict stringForKey: key];
 }
+
+
+- (nullable NSNumber *)numberForKey:(nonnull NSString *)key {
+    return [_dict numberForKey: key];
+}
+
+
+- (NSInteger)integerForKey:(nonnull NSString *)key {
+    return [_dict integerForKey: key];
+}
+
+
+- (long long)longLongForKey:(nonnull NSString *)key {
+    return [_dict longLongForKey: key];
+}
+
+
+- (float)floatForKey:(nonnull NSString *)key {
+    return [_dict floatForKey: key];
+}
+
+
+- (double)doubleForKey:(nonnull NSString *)key {
+    return [_dict doubleForKey: key];
+}
+
+
+- (BOOL)booleanForKey:(nonnull NSString *)key {
+    return [_dict booleanForKey: key];
+}
+
+
+- (nullable NSDate *)dateForKey:(nonnull NSString *)key {
+    return [_dict dateForKey: key];
+}
+
+
+- (nullable CBLBlob *)blobForKey:(nonnull NSString *)key {
+    return [_dict blobForKey: key];
+}
+
+
+- (nullable CBLArray *)arrayForKey:(nonnull NSString *)key {
+    return [_dict arrayForKey: key];
+}
+
+
+- (nullable CBLDictionary *)dictionaryForKey:(nonnull NSString *)key {
+    return [_dict dictionaryForKey: key];
+}
+
+
+- (BOOL)containsValueForKey:(nonnull NSString *)key {
+    return [_dict booleanForKey: key];
+}
+
 
 - (CBLFragment *)objectForKeyedSubscript:(NSString *)key {
     return [_dict objectForKeyedSubscript: key];
@@ -257,7 +289,7 @@ using namespace fleeceapi;
     return [_dict countByEnumeratingWithState: state objects: buffer count: len];
 }
 
-- (nonnull NSDictionary<NSString *,id> *)toDictionary {
+- (NSDictionary<NSString *,id> *)toDictionary {
     return [_dict toDictionary];
 }
 

@@ -10,6 +10,7 @@
 @class CBLDatabase;
 @class CBLReplicatorChange;
 @class CBLReplicatorConfiguration;
+@protocol CBLListenerToken;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -80,21 +81,31 @@ typedef struct {
 - (void) stop;
 
 /** 
- Adds a replicator change listener block.
+ Adds a replicator change listener. Changes will be posted on the main queue.
  
- @param block The block to be executed when the change is received.
- @return An opaque object to act as the listener and for removing the listener
-         when calling the -removeChangeListener: method.
+ @param listener The listener to post the changes.
+ @return An opaque listener token object for removing the listener.
  */
-- (id<NSObject>) addChangeListener: (void (^)(CBLReplicatorChange*))block;
+- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLReplicatorChange*))listener;
+
+/**
+ Adds a replicator change listener with the dispatch queue on which changes
+ will be posted. If the dispatch queue is not specified, the changes will be
+ posted on the main queue.
+ 
+ @param queue The dispatch queue.
+ @param listener The listener to post changes.
+ @return An opaque listener token object for removing the listener.
+ */
+- (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
+                                           listener: (void (^)(CBLReplicatorChange*))listener;
 
 /** 
- Removes a change listener. The given change listener is the opaque object
- returned by the -addChangeListener: method.
+ Removes a change listener with the given listener token.
  
- @param listener The listener object to be removed.
+ @param token The listener token;
  */
-- (void) removeChangeListener: (id<NSObject>)listener;
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
 
 @end
 

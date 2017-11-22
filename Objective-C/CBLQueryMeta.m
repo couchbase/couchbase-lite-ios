@@ -16,34 +16,30 @@
 #define kCBLQueryMetaSequenceKeyPath @"_sequence"
 #define kCBLQueryMetaSequenceColumnName @"sequence"
 
-@implementation CBLQueryMeta {
-    NSString* _alias;
+@implementation CBLQueryMeta
+
+
++ (CBLQueryExpression*) id {
+    return [self idFrom: nil];
 }
 
 
-- (CBLQueryExpression*) id {
++ (CBLQueryExpression*) idFrom: (NSString *)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaIDKeyPath
                                                columnName: kCBLQueryMetaIDColumnName
-                                                     from: _alias];
+                                                     from: alias];
 }
 
 
-- (CBLQueryExpression*) sequence {
++ (CBLQueryExpression*) sequence {
+    return [self sequenceFrom: nil];
+}
+
+
++ (CBLQueryExpression*) sequenceFrom:(NSString *)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: kCBLQueryMetaSequenceKeyPath
                                                columnName: kCBLQueryMetaSequenceColumnName
-                                                     from: _alias];
-}
-
-
-#pragma mark - Internal
-
-
-- (instancetype) initWithFrom: (nullable NSString*)alias {
-    self = [super init];
-    if (self) {
-        _alias = alias;
-    }
-    return self;
+                                                     from: alias];
 }
 
 

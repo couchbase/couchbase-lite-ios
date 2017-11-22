@@ -23,7 +23,6 @@ public enum ReplicatorType: UInt8 {
 
 /// Replicator configuration.
 public struct ReplicatorConfiguration {
-    
     /// The local database to replicate with the target database.
     public let database: Database
     
@@ -39,8 +38,8 @@ public struct ReplicatorConfiguration {
     /// default value is false.
     public var continuous: Bool
     
-    /// The conflict resolver for this replicator. The default value is nil, which means the default
-    /// algorithm will be used, where the revision with more history wins.
+    /// The conflict resolver for this replicator. Setting nil means using the default
+    /// conflict resolver, where the revision with more history wins.
     public var conflictResolver: ConflictResolver?
     
     /// An Authenticator to authenticate with a remote server. Currently there are two types of
@@ -50,7 +49,6 @@ public struct ReplicatorConfiguration {
     /// If this property is non-null, the server is required to have this exact SSL/TLS certificate,
     /// or the connection will fail.
     public var pinnedServerCertificate: SecCertificate?
-    
     
     /// Extra HTTP headers to send in all requests to the remote target.
     public var headers: Dictionary<String, String>?
@@ -69,7 +67,7 @@ public struct ReplicatorConfiguration {
     /// - Parameters:
     ///   - database: The local database.
     ///   - targetURL: the target URL.
-    public init(database: Database, targetURL: URL) {
+    public init(withDatabase database: Database, targetURL: URL) {
         self.database = database
         self.target = targetURL
         self.replicatorType = .pushAndPull
@@ -82,11 +80,40 @@ public struct ReplicatorConfiguration {
     /// - Parameters:
     ///   - database: The local database.
     ///   - targetDatabase: The target database.
-    public init(database: Database, targetDatabase: Database) {
+    public init(withDatabase database: Database, targetDatabase: Database) {
         self.database = database
         self.target = targetDatabase
         self.replicatorType = .pushAndPull
         self.continuous = false
+    }
+    
+    // MARK: Internal
+    
+    var _conflictResolver: ConflictResolver?
+    
+    func toImpl() -> CBLReplicatorConfiguration {
+        let c: CBLReplicatorConfiguration;
+        if let url = self.target as? URL {
+            c = CBLReplicatorConfiguration(database: self.database._impl, targetURL: url)
+        } else {
+            let db = (self.target as! Database)._impl
+            c = CBLReplicatorConfiguration(database: self.database._impl, targetDatabase: db)
+        }
+        
+        if let r = self.conflictResolver, !(r is DefaultConflictResolver) {
+            c.conflictResolver = BridgingConflictResolver(resolver: r)
+        }
+        
+        c.continuous = self.continuous
+        c.replicatorType = CBLReplicatorType(rawValue: UInt32(self.replicatorType.rawValue))
+        c.conflictResolver = nil // TODO
+        c.authenticator = self.authenticator
+        c.pinnedServerCertificate = self.pinnedServerCertificate
+        c.headers = self.headers
+        c.channels = self.channels
+        c.documentIDs = self.documentIDs
+        
+        return c
     }
 }
 

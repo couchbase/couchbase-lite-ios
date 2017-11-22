@@ -16,11 +16,14 @@ public class Query {
     /// Returns the Parameters object used for setting values to the query parameters defined
     /// in the query. All parameters defined in the query must be given values
     /// before running the query, or the query will fail.
-    public var parameters: Parameters {
-        if params == nil {
-            params = Parameters(params: nil)
+    public var parameters: Parameters? {
+        get {
+            return self.params?.copy()
         }
-        return params!
+        set {
+            self.params = newValue?.copy()
+            applyParameters()
+        }
     }
     
     
@@ -44,7 +47,7 @@ public class Query {
     }
     
 
-    /// Runs the query. The returning an enumerator that returns result rows one at a time.
+    /// Executes the query. The returning an enumerator that returns result rows one at a time.
     /// You can run the query any number of times, and you can even have multiple enumerators active 
     /// at once.
     ///
@@ -53,10 +56,10 @@ public class Query {
     ///
     /// - Returns: The ResultSet object representing the query result.
     /// - Throws: An error on failure, or if the query is invalid.
-    public func run() throws -> ResultSet {
+    public func execute() throws -> ResultSet {
         prepareQuery()
         applyParameters()
-        return try ResultSet(impl: queryImpl!.run())
+        return try ResultSet(impl: queryImpl!.execute())
     }
     
     
@@ -79,12 +82,45 @@ public class Query {
     }
     
     
-    /// Returns a live query based on the current query.
+    /// Adds a query change listener. Changes will be posted on the main queue.
     ///
-    /// - Returns: a live query object.
-    public func toLive() -> LiveQuery {
+    /// - Parameter listener: The listener to post changes.
+    /// - Returns: An opaque listener token object for removing the listener.
+    @discardableResult public func addChangeListener(
+        _ listener: @escaping (QueryChange) -> Void) -> ListenerToken {
+        return self .addChangeListener(withQueue: nil, listener)
+    }
+    
+    
+    /// Adds a query change listener with the dispatch queue on which changes
+    /// will be posted. If the dispatch queue is not specified, the changes will be
+    /// posted on the main queue.
+    ///
+    /// - Parameters:
+    ///   - queue: The dispatch queue.
+    ///   - listener: The listener to post changes.
+    /// - Returns: An opaque listener token object for removing the listener.
+    @discardableResult public func addChangeListener(withQueue queue: DispatchQueue?,
+        _ listener: @escaping (QueryChange) -> Void) -> ListenerToken {
         prepareQuery()
-        return LiveQuery(database: database!, impl: queryImpl!.toLive(), params: params)
+        return self.queryImpl!.addChangeListener(with: queue, listener: { (change) in
+            let rows: ResultSet?;
+            if let rs = change.rows {
+                rows = ResultSet(impl: rs)
+            } else {
+                rows = nil;
+            }
+            listener(QueryChange(query: self, rows: rows, error: change.error))
+        })
+    }
+    
+    
+    /// Removes a change listener wih the given listener token.
+    ///
+    /// - Parameter token: The listener token.
+    public func removeChangeListener(withToken token: ListenerToken) {
+        prepareQuery()
+        self.queryImpl!.removeChangeListener(with: token)
     }
 
     // MARK: Internal
@@ -146,11 +182,8 @@ public class Query {
     }
     
     func applyParameters() {
-        if let p = self.params, let paramDict = p.params {
-            for (name, value) in paramDict {
-                queryImpl!.parameters.setObject(value, forName: name)
-            }
-        }
+        prepareQuery()
+        queryImpl!.parameters = self.params?.toImpl()
     }
 
     func copy(_ query: Query) {

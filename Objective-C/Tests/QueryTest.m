@@ -13,8 +13,8 @@
 #import "CBLQueryDataSource.h"
 #import "CBLQueryOrdering.h"
 
-#define kDOCID      [CBLQuerySelectResult expression: [CBLQueryExpression meta].id]
-#define kSEQUENCE   [CBLQuerySelectResult expression: [CBLQueryExpression meta].sequence]
+#define kDOCID      [CBLQuerySelectResult expression: [CBLQueryMeta id]]
+#define kSEQUENCE   [CBLQuerySelectResult expression: [CBLQueryMeta sequence]]
 
 @interface QueryTest : CBLTestCase
 
@@ -27,7 +27,7 @@
             randomAccess: (BOOL)randomAccess
                     test: (void (^)(uint64_t n, CBLQueryResult *result))block {
     NSError* error;
-    CBLQueryResultSet* rs = [q run: &error];
+    CBLQueryResultSet* rs = [q execute: &error];
     Assert(rs, @"Query failed: %@", error);
     uint64_t n = 0;
     for (CBLQueryResult *r in rs) {
@@ -62,7 +62,7 @@
 - (NSArray*)loadNumbers:(NSInteger)num {
     NSMutableArray* numbers = [NSMutableArray array];
     NSError *batchError;
-    BOOL ok = [self.db inBatch: &batchError do: ^{
+    BOOL ok = [self.db inBatch: &batchError usingBlock: ^{
         for (NSInteger i = 1; i <= num; i++) {
             CBLMutableDocument* doc = [self createDocNumbered: i of: num];
             [numbers addObject: [doc toDictionary]];
@@ -123,15 +123,10 @@
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
     NSArray* cases = @[
         @[[n1 lessThan: @(3)], @"number1 < 3"],
-        @[[n1 notLessThan: @(3)], @"number1 >= 3"],
         @[[n1 lessThanOrEqualTo: @(3)], @"number1 <= 3"],
-        @[[n1 notLessThanOrEqualTo: @(3)], @"number1 > 3"],
         @[[n1 greaterThan: @(6)], @"number1 > 6"],
-        @[[n1 notGreaterThan: @(6)], @"number1 <= 6"],
         @[[n1 greaterThanOrEqualTo: @(6)], @"number1 >= 6"],
-        @[[n1 notGreaterThanOrEqualTo: @(6)], @"number1 < 6"],
         @[[n1 equalTo: @(7)], @"number1 == 7"],
-        @[[n1 notEqualTo: @(7)], @"number1 != 7"]
     ];
     NSArray* numbers = [self loadNumbers: 10];
     [self runTestWithNumbers: numbers cases: cases];
@@ -232,11 +227,11 @@
     Assert(q);
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
                                     test: ^(uint64_t n, CBLQueryResult* r)
-    {
-        CBLDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
-        AssertEqualObjects(doc.id, doc1.id);
-        AssertEqualObjects([doc objectForKey: @"string"], @"string");
-    }];
+                        {
+                            CBLDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
+                            AssertEqualObjects(doc.id, doc1.id);
+                            AssertEqualObjects([doc objectForKey: @"string"], @"string");
+                        }];
     AssertEqual(numRows, 1u);
     
     q = [CBLQuery select: @[kDOCID]
@@ -245,11 +240,11 @@
     
     Assert(q);
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
-    {
-        CBLDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
-        AssertEqualObjects(doc.id, doc1.id);
-        AssertEqualObjects([doc objectForKey: @"string"], @"string");
-    }];
+               {
+                   CBLDocument* doc = [self.db documentWithID: [r objectAtIndex: 0]];
+                   AssertEqualObjects(doc.id, doc1.id);
+                   AssertEqualObjects([doc objectForKey: @"string"], @"string");
+               }];
     AssertEqual(numRows, 1u);
 }
 
@@ -332,17 +327,18 @@
 - (void) testWhereMatch {
     [self loadJSONResource: @"sentences"];
     
-    CBLQueryExpression* SENTENCE = [CBLQueryExpression property: @"sentence"];
-    CBLQuerySelectResult* S_SENTENCE = [CBLQuerySelectResult expression: SENTENCE];
+    CBLQueryFullTextExpression* SENTENCE = [CBLQueryFullTextExpression index: @"sentence"];
+    CBLQuerySelectResult* S_SENTENCE = [CBLQuerySelectResult property: @"sentence"];
     
     NSError* error;
-    CBLIndex* index = [CBLIndex ftsIndexOn: [CBLFTSIndexItem expression: SENTENCE] options: nil];
+    CBLIndex* index = [CBLIndex fullTextIndexWithItems: @[[CBLFullTextIndexItem property: @"sentence"]]
+                                               options: nil];
     Assert([self.db createIndex: index withName: @"sentence" error: &error],
            @"Error when creating the index: %@", error);
     
     
     CBLQueryExpression* where = [SENTENCE match: @"'Dummie woman'"];
-    CBLQueryOrdering* order = [[CBLQueryOrdering expression: [CBLQueryFunction rank: SENTENCE]]
+    CBLQueryOrdering* order = [[CBLQueryOrdering expression: [CBLQueryFullTextFunction rank: @"sentence"]]
                                descending];
     CBLQuery* q = [CBLQuery select: @[kDOCID, S_SENTENCE]
                               from: [CBLQueryDataSource database: self.db]
@@ -429,7 +425,7 @@
     [self saveDocument: joinme];
     
     CBLQuerySelectResult* MAIN_DOC_ID =
-        [CBLQuerySelectResult expression: [CBLQueryExpression metaFrom: @"main"].id];
+        [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"main"]];
     
     CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
                               equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
@@ -523,13 +519,15 @@
     CBLQueryExpression* PARAM_N1 = [CBLQueryExpression parameterNamed: @"num1"];
     CBLQueryExpression* PARAM_N2 = [CBLQueryExpression parameterNamed: @"num2"];
     
-    CBLQuery* q= [CBLQuery select: @[[CBLQuerySelectResult expression: NUMBER1]]
+    CBLQuery* q = [CBLQuery select: @[[CBLQuerySelectResult expression: NUMBER1]]
                              from: [CBLQueryDataSource database: self.db]
                             where: [NUMBER1 between: PARAM_N1 and: PARAM_N2]
                           orderBy: @[[CBLQueryOrdering expression: NUMBER1]]];
     
-    [q.parameters setObject: @(2) forName: @"num1"];
-    [q.parameters setObject: @(5) forName: @"num2"];
+    CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
+    [params setValue: @(2) forName: @"num1"];
+    [params setValue: @(5) forName: @"num2"];
+    q.parameters = params;
     
     NSArray* expectedNumbers = @[@2, @3, @4, @5];
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) {
@@ -543,8 +541,8 @@
 - (void) testMeta {
     [self loadNumbers: 5];
     
-    CBLQueryExpression* DOC_ID  = [CBLQueryExpression meta].id;
-    CBLQueryExpression* DOC_SEQ = [CBLQueryExpression meta].sequence;
+    CBLQueryExpression* DOC_ID  = [CBLQueryMeta id];
+    CBLQueryExpression* DOC_SEQ = [CBLQueryMeta sequence];
     CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1"];
     
     CBLQuerySelectResult* S_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
@@ -605,7 +603,10 @@
                   where: nil groupBy: nil having: nil
                 orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
                   limit: [CBLQueryLimit limit: [CBLQueryExpression parameterNamed: @"LIMIT_NUM"]]];
-    [q.parameters setObject: @3 forName: @"LIMIT_NUM"];
+    
+    CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
+    [params setValue: @3 forName: @"LIMIT_NUM"];
+    q.parameters = params;
     
     expectedNumbers = @[@1, @2, @3];
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
@@ -636,14 +637,17 @@
     }];
     AssertEqual(numRows, 5u);
     
-    q= [CBLQuery select: @[[CBLQuerySelectResult expression: NUMBER1]]
+    q = [CBLQuery select: @[[CBLQuerySelectResult expression: NUMBER1]]
                    from: [CBLQueryDataSource database: self.db]
                   where: nil groupBy: nil having: nil
                 orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
                   limit: [CBLQueryLimit limit: [CBLQueryExpression parameterNamed: @"LIMIT_NUM"]
                                        offset: [CBLQueryExpression parameterNamed:@"OFFSET_NUM"]]];
-    [q.parameters setObject: @3 forName: @"LIMIT_NUM"];
-    [q.parameters setObject: @5 forName: @"OFFSET_NUM"];
+    
+    CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
+    [params setValue: @3 forName: @"LIMIT_NUM"];
+    [params setValue: @5 forName: @"OFFSET_NUM"];
+    q.parameters = params;
     
     expectedNumbers = @[@6, @7, @8];
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
@@ -748,12 +752,12 @@
 - (void) testArrayFunctions {
     CBLMutableDocument* doc = [self createDocument:@"doc1"];
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
-    [array addObject: @"650-123-0001"];
-    [array addObject: @"650-123-0002"];
+    [array addValue: @"650-123-0001"];
+    [array addValue: @"650-123-0002"];
     [doc setObject: array forKey: @"array"];
     [self saveDocument: doc];
     
-    CBLQueryExpression* ARRAY_LENGTH = [CBLQueryFunction arrayLength:
+    CBLQueryExpression* ARRAY_LENGTH = [CBLQueryArrayFunction length:
                                         [CBLQueryExpression property: @"array"]];
     CBLQuery* q = [CBLQuery select: @[[CBLQuerySelectResult expression: ARRAY_LENGTH]]
                               from: [CBLQueryDataSource database: self.db]];
@@ -763,9 +767,9 @@
                         }];
     AssertEqual(numRows, 1u);
     
-    CBLQueryExpression* ARRAY_CONTAINS1 = [CBLQueryFunction arrayContains: [CBLQueryExpression property: @"array"]
+    CBLQueryExpression* ARRAY_CONTAINS1 = [CBLQueryArrayFunction contains: [CBLQueryExpression property: @"array"]
                                                                     value: @"650-123-0001"];
-    CBLQueryExpression* ARRAY_CONTAINS2 = [CBLQueryFunction arrayContains: [CBLQueryExpression property: @"array"]
+    CBLQueryExpression* ARRAY_CONTAINS2 = [CBLQueryArrayFunction contains: [CBLQueryExpression property: @"array"]
                                                                     value: @"650-123-0003"];
     q = [CBLQuery select: @[[CBLQuerySelectResult expression: ARRAY_CONTAINS1],
                             [CBLQuerySelectResult expression: ARRAY_CONTAINS2]]
@@ -834,7 +838,7 @@
                            [CBLQueryFunction trunc: p digits: 1]];
     
     int index = 0;
-    for (CBLQueryFunction *f in functions) {
+    for (CBLQueryExpression *f in functions) {
         CBLQuery* q = [CBLQuery select: @[[CBLQuerySelectResult expression: f]]
                                   from: [CBLQueryDataSource database: self.db]];
         
@@ -858,8 +862,8 @@
     CBLQueryExpression* p = [CBLQueryExpression property: @"greeting"];
     
     // Contains:
-    CBLQueryFunction* CONTAINS1 = [CBLQueryFunction contains: p substring: @"8"];
-    CBLQueryFunction* CONTAINS2 = [CBLQueryFunction contains: p substring: @"9"];
+    CBLQueryExpression* CONTAINS1 = [CBLQueryFunction contains: p substring: @"8"];
+    CBLQueryExpression* CONTAINS2 = [CBLQueryFunction contains: p substring: @"9"];
     CBLQuery* q = [CBLQuery select: @[[CBLQuerySelectResult expression: CONTAINS1],
                                       [CBLQuerySelectResult expression: CONTAINS2]]
                               from: [CBLQueryDataSource database: self.db]];
@@ -872,7 +876,7 @@
     AssertEqual(numRows, 1u);
     
     // Length:
-    CBLQueryFunction* LENGTH = [CBLQueryFunction length: p];
+    CBLQueryExpression* LENGTH = [CBLQueryFunction length: p];
     q = [CBLQuery select: @[[CBLQuerySelectResult expression: LENGTH]]
                     from: [CBLQueryDataSource database: self.db]];
     
@@ -883,11 +887,11 @@
     AssertEqual(numRows, 1u);
     
     // Lower, Ltrim, Rtrim, Trim, Upper:
-    CBLQueryFunction* LOWER = [CBLQueryFunction lower: p];
-    CBLQueryFunction* LTRIM = [CBLQueryFunction ltrim: p];
-    CBLQueryFunction* RTRIM = [CBLQueryFunction rtrim: p];
-    CBLQueryFunction* TRIM = [CBLQueryFunction trim: p];
-    CBLQueryFunction* UPPER = [CBLQueryFunction upper: p];
+    CBLQueryExpression* LOWER = [CBLQueryFunction lower: p];
+    CBLQueryExpression* LTRIM = [CBLQueryFunction ltrim: p];
+    CBLQueryExpression* RTRIM = [CBLQueryFunction rtrim: p];
+    CBLQueryExpression* TRIM = [CBLQueryFunction trim: p];
+    CBLQueryExpression* UPPER = [CBLQueryFunction upper: p];
     
     q = [CBLQuery select: @[[CBLQuerySelectResult expression: LOWER],
                             [CBLQuerySelectResult expression: LTRIM],
@@ -921,10 +925,10 @@
     CBLQueryExpression* NUM = [CBLQueryExpression property: @"number"];
     CBLQueryExpression* STR = [CBLQueryExpression property: @"string"];
     
-    CBLQueryFunction* ISARRAY = [CBLQueryFunction isArray: ARRAY];
-    CBLQueryFunction* ISDICT = [CBLQueryFunction isDictionary: DICT];
-    CBLQueryFunction* ISNUMBER = [CBLQueryFunction isNumber: NUM];
-    CBLQueryFunction* ISSTR = [CBLQueryFunction isString: STR];
+    CBLQueryExpression* ISARRAY = [CBLQueryFunction isArray: ARRAY];
+    CBLQueryExpression* ISDICT = [CBLQueryFunction isDictionary: DICT];
+    CBLQueryExpression* ISNUMBER = [CBLQueryFunction isNumber: NUM];
+    CBLQueryExpression* ISSTR = [CBLQueryFunction isString: STR];
     
     CBLQuery* q = [CBLQuery select: @[[CBLQuerySelectResult expression: ISARRAY],
                                       [CBLQuerySelectResult expression: ISDICT],
@@ -946,18 +950,18 @@
 - (void) testQuantifiedOperators {
     [self loadJSONResource: @"names_100"];
     
-    CBLQueryExpression* DOC_ID  = [CBLQueryExpression meta].id;
+    CBLQueryExpression* DOC_ID = [CBLQueryMeta id];
     CBLQuerySelectResult* S_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
     
     CBLQueryExpression* LIKES  = [CBLQueryExpression property: @"likes"];
-    CBLQueryExpression* VAR_LIKE = [CBLQueryExpression variableNamed: @"LIKE"];
+    CBLQueryExpression* VAR_LIKE = [CBLQueryArrayExpression variableNamed: @"LIKE"];
     
     // ANY:
     CBLQuery* q = [CBLQuery select: @[S_DOC_ID]
                               from: [CBLQueryDataSource database: self.db]
-                             where: [CBLQueryExpression any: @"LIKE"
-                                                         in: LIKES
-                                                  satisfies: [VAR_LIKE equalTo: @"climbing"]]];
+                             where: [CBLQueryArrayExpression any: @"LIKE"
+                                                              in: LIKES
+                                                       satisfies: [VAR_LIKE equalTo: @"climbing"]]];
     
     NSArray* expected = @[@"doc-017", @"doc-021", @"doc-023", @"doc-045", @"doc-060"];
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
@@ -969,9 +973,9 @@
     // EVERY:
     q = [CBLQuery select: @[S_DOC_ID]
                     from: [CBLQueryDataSource database: self.db]
-                   where: [CBLQueryExpression every: @"LIKE"
-                                                 in: LIKES
-                                          satisfies: [VAR_LIKE equalTo: @"taxes"]]];
+                   where: [CBLQueryArrayExpression every: @"LIKE"
+                                                      in: LIKES
+                                               satisfies: [VAR_LIKE equalTo: @"taxes"]]];
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
     {
         if (n == 1) {
@@ -983,9 +987,9 @@
     // ANY AND EVERY
     q = [CBLQuery select: @[S_DOC_ID]
                     from: [CBLQueryDataSource database: self.db]
-                   where: [CBLQueryExpression anyAndEvery: @"LIKE"
-                                                       in: LIKES
-                                                satisfies: [VAR_LIKE equalTo: @"taxes"]]];
+                   where: [CBLQueryArrayExpression anyAndEvery: @"LIKE"
+                                                            in: LIKES
+                                                     satisfies: [VAR_LIKE equalTo: @"taxes"]]];
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) { }];
     AssertEqual(numRows, 0u);
 }
@@ -1011,14 +1015,14 @@
         [self saveDocument: doc];
     }
     
-    CBLQueryExpression* DOC_ID  = [CBLQueryExpression meta].id;
+    CBLQueryExpression* DOC_ID  = [CBLQueryMeta id];
     CBLQuerySelectResult* S_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
     
     CBLQueryExpression* PATHS  = [CBLQueryExpression property: @"paths"];
-    CBLQueryExpression* VAR_PATH  = [CBLQueryExpression variableNamed: @"path.city"];
-    CBLQueryExpression* where = [CBLQueryExpression any: @"path"
-                                                     in: PATHS
-                                              satisfies: [VAR_PATH equalTo: @"San Francisco"]];
+    CBLQueryExpression* VAR_PATH  = [CBLQueryArrayExpression variableNamed: @"path.city"];
+    CBLQueryExpression* where = [CBLQueryArrayExpression any: @"path"
+                                                          in: PATHS
+                                                   satisfies: [VAR_PATH equalTo: @"San Francisco"]];
     
     CBLQuery* q = [CBLQuery select: @[S_DOC_ID]
                               from: [CBLQueryDataSource database: self.db]
@@ -1288,11 +1292,12 @@
     
     __block int count = 0;
     XCTestExpectation* x = [self expectationWithDescription: @"changes"];
-    CBLLiveQuery* q = [[CBLQuery select: @[kDOCID]
-                                   from: [CBLQueryDataSource database: self.db]
-                                  where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
-                                orderBy: @[[CBLQueryOrdering property: @"number1"]]] toLive];
-    id listener = [q addChangeListener:^(CBLLiveQueryChange* change) {
+    CBLQuery* q = [CBLQuery select: @[kDOCID]
+                              from: [CBLQueryDataSource database: self.db]
+                             where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
+                           orderBy: @[[CBLQueryOrdering property: @"number1"]]];
+    
+    id token = [q addChangeListener: ^(CBLQueryChange* change) {
         count++;
         AssertNotNil(change.query);
         AssertNil(change.error);
@@ -1307,17 +1312,15 @@
         }
     }];
     
-    [q start];
-    
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [self createDocNumbered: -1 of: 100];
     });
 
-    [self waitForExpectationsWithTimeout: 2.0 handler: ^(NSError *error) { }];
-    NSLog(@"Done!");
+    [self waitForExpectationsWithTimeout: 10.0 handler: ^(NSError *error) { }];
     
-    [q removeChangeListener: listener];
-    [q stop];
+    [q removeChangeListenerWithToken: token];
+    
+    
 }
 
 
@@ -1325,12 +1328,12 @@
     [self loadNumbers: 100];
     
     __block int count = 0;
-    CBLLiveQuery* q = [[CBLQuery select: @[]
-                                   from: [CBLQueryDataSource database: self.db]
-                                  where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
-                                orderBy: @[[CBLQueryOrdering property: @"number1"]]] toLive];
+    CBLQuery* q = [CBLQuery select: @[]
+                              from: [CBLQueryDataSource database: self.db]
+                             where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
+                           orderBy: @[[CBLQueryOrdering property: @"number1"]]];
     
-    id listener = [q addChangeListener:^(CBLLiveQueryChange* change) {
+    id token = [q addChangeListener:^(CBLQueryChange* change) {
         count++;
         AssertNotNil(change.query);
         AssertNil(change.error);
@@ -1341,8 +1344,6 @@
             XCTFail(@"Unexpected update from LiveQuery");
         }
     }];
-    
-    [q start];
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
@@ -1363,8 +1364,7 @@
     
     AssertEqual(count, 1);
     
-    [q removeChangeListener: listener];
-    [q stop];
+    [q removeChangeListenerWithToken: token];
 }
 
 @end
