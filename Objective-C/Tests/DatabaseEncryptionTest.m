@@ -125,14 +125,14 @@
     // Create a doc and then update it:
     CBLMutableDocument* doc = [self createDocument: nil dictionary: @{@"answer": @(42)}];
     Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
-    [doc setObject: @(84) forKey: @"answer"];
+    [doc setValue: @(84) forKey: @"answer"];
     Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
     
     // Compact:
     Assert([_seekrit compact: &error], @"Compaction failed: %@", error);
     
     // Update the document again:
-    [doc setObject: @(85) forKey: @"answer"];
+    [doc setValue: @(85) forKey: @"answer"];
     Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
     
     // Close and re-open:
@@ -158,7 +158,7 @@
     CBLMutableDocument* doc = [self createDocument: @"att"];
     NSData* body = [@"This is a blob!" dataUsingEncoding: NSUTF8StringEncoding];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: body];
-    [doc setObject: blob forKey: @"blob"];
+    [doc setValue: blob forKey: @"blob"];
     Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
     
     // Read content from the raw blob file:

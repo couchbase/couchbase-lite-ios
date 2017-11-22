@@ -37,7 +37,7 @@ public class Result : ArrayProtocol, DictionaryProtocol {
     /// - Parameter index: The select result index.
     /// - Returns: The value.
     public func value(at index: Int) -> Any? {
-        return DataConverter.convertGETValue(impl.object(at: UInt(index)))
+        return DataConverter.convertGETValue(impl.value(at: UInt(index)))
     }
     
     
@@ -185,7 +185,7 @@ public class Result : ArrayProtocol, DictionaryProtocol {
     /// - Parameter key: The select result key.
     /// - Returns: The value or nil.
     public func value(forKey key: String) -> Any? {
-        return DataConverter.convertGETValue(impl.object(forKey: key))
+        return DataConverter.convertGETValue(impl.value(forKey: key))
     }
     
     

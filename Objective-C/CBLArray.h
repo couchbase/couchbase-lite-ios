@@ -22,16 +22,6 @@ NS_ASSUME_NONNULL_BEGIN
 /** Gets a number of the items in the array. */
 @property (readonly) NSUInteger count;
 
-/**
- Gets value at the given index as an object. The object types are CBLBlob,
- CBLArray, CBLDictionary, NSNumber, or NSString based on the underlying
- data type; or nil if the value is nil.
- 
- @param index The index.
- @return The object or nil.
- */
-- (nullable id) objectAtIndex: (NSUInteger)index;
-
 /*
  Gets value at the given index. The object types are CBLBlob,
  CBLArray, CBLDictionary, NSNumber, or NSString based on the underlying

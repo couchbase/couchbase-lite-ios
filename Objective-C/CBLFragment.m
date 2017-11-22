@@ -38,9 +38,9 @@
 
 - (NSObject*) value {
     if (_key)
-        return [_parent objectForKey: _key];
+        return [_parent valueForKey: _key];
     else
-        return [_parent objectAtIndex: _index];
+        return [_parent valueAtIndex: _index];
 }
 
 

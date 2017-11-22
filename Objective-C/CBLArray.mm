@@ -101,10 +101,6 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     return obj;
 }
 
-- (nullable id) objectAtIndex: (NSUInteger)index {
-    return _getObject(_array, index);
-}
-
 
 - (nullable id) valueAtIndex: (NSUInteger)index {
     return _getObject(_array, index);
@@ -218,7 +214,7 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
     NSUInteger end = MIN((start + len), self.count);
     NSUInteger i = 0;
     for (NSUInteger index = start; index < end; index++) {
-        id v = [self objectAtIndex: index];
+        id v = [self valueAtIndex: index];
         buffer[i] = v;
         i++;
     }

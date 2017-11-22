@@ -134,12 +134,12 @@
 - (void) testPushDoc {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1 setObject: @"Tiger" forKey: @"name"];
+    [doc1 setValue: @"Tiger" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
-    [doc2 setObject: @"Cat" forKey: @"name"];
+    [doc2 setValue: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
     CBLReplicatorConfiguration* config = [self configForPush: YES pull: NO continuous: NO];
@@ -154,12 +154,12 @@
 - (void) testPushDocContinuous {
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1 setObject: @"Tiger" forKey: @"name"];
+    [doc1 setValue: @"Tiger" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
-    [doc2 setObject: @"Cat" forKey: @"name"];
+    [doc2 setValue: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
     CBLReplicatorConfiguration* config = [self configForPush: YES pull: NO continuous: YES];
@@ -176,12 +176,12 @@
     // For https://github.com/couchbase/couchbase-lite-core/issues/156
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1 setObject: @"Tiger" forKey: @"name"];
+    [doc1 setValue: @"Tiger" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
 
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
-    [doc2 setObject: @"Cat" forKey: @"name"];
+    [doc2 setValue: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
 
     CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO];
@@ -197,12 +197,12 @@
     // For https://github.com/couchbase/couchbase-lite-core/issues/156
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc1"];
-    [doc1 setObject: @"Tiger" forKey: @"name"];
+    [doc1 setValue: @"Tiger" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID:@"doc2"];
-    [doc2 setObject: @"Cat" forKey: @"name"];
+    [doc2 setValue: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
     CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: YES];
@@ -219,7 +219,7 @@
     // Create a document and push it to otherDB:
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
-    [doc1 setObject: @"Tiger" forKey: @"species"];
+    [doc1 setValue: @"Tiger" forKey: @"species"];
     Assert([self.db saveDocument: doc1 error: &error]);
 
     CBLReplicatorConfiguration* config = [self configForPush: YES pull: NO continuous: NO];
@@ -227,12 +227,12 @@
 
     // Now make different changes in db and otherDB:
     doc1 = [[self.db documentWithID: @"doc"] toMutable];
-    [doc1 setObject: @"Hobbes" forKey: @"name"];
+    [doc1 setValue: @"Hobbes" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
 
     CBLMutableDocument* doc2 = [[otherDB documentWithID: @"doc"] toMutable];
     Assert(doc2);
-    [doc2 setObject: @"striped" forKey: @"pattern"];
+    [doc2 setValue: @"striped" forKey: @"pattern"];
     Assert([otherDB saveDocument: doc2 error: &error]);
 
     // Pull from otherDB, creating a conflict to resolve:
@@ -258,15 +258,15 @@
     // revision for the resolver.
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc"];
-    [doc1 setObject: @"Tiger" forKey: @"species"];
+    [doc1 setValue: @"Tiger" forKey: @"species"];
     Assert([self.db saveDocument: doc1 error: &error]);
-    [doc1 setObject: @"Hobbes" forKey: @"name"];
+    [doc1 setValue: @"Hobbes" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
 
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc"];
-    [doc2 setObject: @"Tiger" forKey: @"species"];
+    [doc2 setValue: @"Tiger" forKey: @"species"];
     Assert([otherDB saveDocument: doc2 error: &error]);
-    [doc2 setObject: @"striped" forKey: @"pattern"];
+    [doc2 setValue: @"striped" forKey: @"pattern"];
     Assert([otherDB saveDocument: doc2 error: &error]);
 
     CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO];

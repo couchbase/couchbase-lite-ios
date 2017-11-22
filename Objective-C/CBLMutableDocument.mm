@@ -100,11 +100,6 @@
 #pragma mark - CBLMutableDictionary
 
 
-- (void) setObject: (nullable id)value forKey: (NSString*)key {
-    [((CBLMutableDictionary*)_dict) setObject: value forKey: key];
-}
-
-
 - (void) setValue: (nullable id)value forKey: (NSString*)key {
     [((CBLMutableDictionary*)_dict) setValue: value forKey: key];
 }

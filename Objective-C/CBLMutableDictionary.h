@@ -28,17 +28,6 @@ NS_ASSUME_NONNULL_BEGIN
  @param value The value.
  @param key The key.
  */
-- (void) setObject: (nullable id)value forKey: (NSString*)key;
-
-/**
- Set a value for the given key. Allowed value types are CBLMutableArray, CBLBlob, CBLMutableDictionary,
- NSArray, NSDate, NSDictionary, NSNumber, NSNull, NSString. The NSArrays and NSDictionaries must
- contain only the above types. An NSDate value will be converted to an ISO-8601 format string.
- A nil value will be converted an NSNull.
- 
- @param value The value.
- @param key The key.
- */
 - (void) setValue: (nullable id)value forKey: (NSString*)key;
 
 /**

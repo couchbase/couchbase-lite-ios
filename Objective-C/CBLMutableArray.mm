@@ -54,7 +54,7 @@
 }
 
 
-- (void) setObject: (id)value atIndex: (NSUInteger)index {
+- (void) setValue: (id)value atIndex: (NSUInteger)index {
     // NOTE: Java and C# allow storing a null value in an array; this gets saved in the document as
     // a JSON "null". But Cocoa doesn't allow this and throws an exception.
     // For cross-platform consistency we're allowing nil values on Apple platforms too,
@@ -68,204 +68,189 @@
 }
 
 
-- (void) setValue: (id)value atIndex: (NSUInteger)index {
-    [self setObject: value atIndex: index];
-}
-
-
 - (void) setString: (nullable NSString*)value atIndex: (NSUInteger)index {
-    [self setObject: value atIndex: index];
+    [self setValue: value atIndex: index];
 }
 
 
 - (void) setNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index {
-    [self setObject: value atIndex: index];
+    [self setValue: value atIndex: index];
 }
 
 
 - (void) setInteger: (NSInteger)value atIndex: (NSUInteger)index {
-    [self setObject: @(value) atIndex: index];
+    [self setValue: @(value) atIndex: index];
 }
 
 
 - (void) setLongLong: (long long)value atIndex: (NSUInteger)index {
-    [self setObject: @(value) atIndex: index];
+    [self setValue: @(value) atIndex: index];
 }
 
 
 - (void) setFloat: (float)value atIndex: (NSUInteger)index {
-    [self setObject: @(value) atIndex: index];
+    [self setValue: @(value) atIndex: index];
 }
 
 
 - (void) setDouble: (double)value atIndex: (NSUInteger)index {
-    [self setObject: @(value) atIndex: index];
+    [self setValue: @(value) atIndex: index];
 }
 
 
 - (void) setBoolean: (BOOL)value atIndex: (NSUInteger)index {
-    [self setObject: @(value) atIndex: index];
+    [self setValue: @(value) atIndex: index];
 }
 
 
 - (void) setDate: (nullable NSDate*)value atIndex: (NSUInteger)index {
-    [self setObject: value atIndex: index];
+    [self setValue: value atIndex: index];
 }
 
 
 - (void) setBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index {
-    [self setObject: value atIndex: index];
+    [self setValue: value atIndex: index];
 }
 
 
 - (void) setArray: (nullable CBLArray*)value atIndex: (NSUInteger)index {
-    [self setObject: value atIndex: index];
+    [self setValue: value atIndex: index];
 }
 
 
 - (void) setDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index {
-    [self setObject: value atIndex: index];
+    [self setValue: value atIndex: index];
 }
 
 
 #pragma mark - Type Appenders
 
 
-- (void) addObject: (id)value  {
-    // NOTE: nil conversion only for Apple platforms (see comment on -setObject:atIndex:)
+- (void) addValue: (id)value  {
+    // NOTE: nil conversion only for Apple platforms (see comment on -setValue:atIndex:)
     if (!value) value = [NSNull null];
     _array.append([value cbl_toCBLObject]);
 }
 
 
-- (void) addValue: (id)value  {
-    [self addObject: value];
-}
-
-
 - (void) addString: (nullable NSString*)value {
-    [self addObject: value];
+    [self addValue: value];
 }
 
 
 - (void) addNumber: (nullable NSNumber*)value {
-    [self addObject: value];
+    [self addValue: value];
 }
 
 
 - (void) addInteger: (NSInteger)value {
-    [self addObject: @(value)];
+    [self addValue: @(value)];
 }
 
 
 - (void) addLongLong: (long long)value {
-    [self addObject: @(value)];
+    [self addValue: @(value)];
 }
 
 
 - (void) addFloat: (float)value {
-    [self addObject: @(value)];
+    [self addValue: @(value)];
 }
 
 
 - (void) addDouble: (double)value {
-    [self addObject: @(value)];
+    [self addValue: @(value)];
 }
 
 
 - (void) addBoolean: (BOOL)value {
-    [self addObject: @(value)];
+    [self addValue: @(value)];
 }
 
 
 - (void) addDate: (nullable NSDate*)value {
-    [self addObject: value];
+    [self addValue: value];
 }
 
 
 - (void) addBlob: (nullable CBLBlob*)value {
-    [self addObject: value];
+    [self addValue: value];
 }
 
 
 - (void) addArray: (nullable CBLArray*)value {
-    [self addObject: value];
+    [self addValue: value];
 }
 
 
 - (void) addDictionary: (nullable CBLDictionary*)value {
-    [self addObject: value];
+    [self addValue: value];
 }
 
 
 #pragma mark - Type Inserters
 
 
-- (void) insertObject: (id)value atIndex: (NSUInteger)index {
-    // NOTE: nil conversion only for Apple platforms (see comment on -setObject:atIndex:)
+- (void) insertValue: (id)value atIndex: (NSUInteger)index {
+    // NOTE: nil conversion only for Apple platforms (see comment on -setValue:atIndex:)
     if (!value) value = [NSNull null];
     if (!_array.insert(index, [value cbl_toCBLObject]))
         throwRangeException(index);
 }
 
 
-- (void) insertValue: (id)value atIndex: (NSUInteger)index {
-    [self insertObject: value atIndex: index];
-}
-
-
 - (void) insertString: (nullable NSString*)value atIndex: (NSUInteger)index {
-    [self insertObject: value atIndex: index];
+    [self insertValue: value atIndex: index];
 }
 
 
 - (void) insertNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index {
-    [self insertObject: value atIndex: index];
+    [self insertValue: value atIndex: index];
 }
 
 
 - (void) insertInteger: (NSInteger)value atIndex: (NSUInteger)index {
-    [self insertObject: @(value) atIndex: index];
+    [self insertValue: @(value) atIndex: index];
 }
 
 
 - (void) insertLongLong: (long long)value atIndex: (NSUInteger)index {
-    [self insertObject: @(value) atIndex: index];
+    [self insertValue: @(value) atIndex: index];
 }
 
 
 - (void) insertFloat: (float)value atIndex: (NSUInteger)index {
-    [self insertObject: @(value) atIndex: index];
+    [self insertValue: @(value) atIndex: index];
 }
 
 
 - (void) insertDouble: (double)value atIndex: (NSUInteger)index {
-    [self insertObject: @(value) atIndex: index];
+    [self insertValue: @(value) atIndex: index];
 }
 
 
 - (void) insertBoolean: (BOOL)value atIndex: (NSUInteger)index {
-    [self insertObject: @(value) atIndex: index];
+    [self insertValue: @(value) atIndex: index];
 }
 
 
 - (void) insertDate: (nullable NSDate*)value atIndex: (NSUInteger)index {
-    [self insertObject: value atIndex: index];
+    [self insertValue: value atIndex: index];
 }
 
 
 - (void) insertBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index {
-    [self insertObject: value atIndex: index];
+    [self insertValue: value atIndex: index];
 }
 
 
 - (void) insertArray: (nullable CBLArray*)value atIndex: (NSUInteger)index {
-    [self insertObject: value atIndex: index];
+    [self insertValue: value atIndex: index];
 }
 
 
 - (void) insertDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index {
-    [self insertObject: value atIndex: index];
+    [self insertValue: value atIndex: index];
 }
 
 

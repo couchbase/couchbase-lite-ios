@@ -28,7 +28,7 @@
     bool ok = [self.db inBatch: &error usingBlock: ^{
         for (unsigned i = 0; i < 10; i++) {
             CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: [NSString stringWithFormat: @"doc-%u", i]];
-            [doc setObject: @"demo" forKey: @"type"];
+            [doc setValue: @"demo" forKey: @"type"];
             Assert([_db saveDocument: doc error: &error], @"Error saving: %@", error);
         }
     }];
@@ -44,11 +44,11 @@
 - (void) testDocumentChange {
     // Create doc1 and doc2
     CBLMutableDocument *doc1 = [self createDocument: @"doc1"];
-    [doc1 setObject: @"Scott" forKey: @"name"];
+    [doc1 setValue: @"Scott" forKey: @"name"];
     doc1 = [[self saveDocument: doc1] toMutable];
     
     CBLMutableDocument *doc2 = [self createDocument: @"doc2"];
-    [doc2 setObject: @"Daniel" forKey: @"name"];
+    [doc2 setValue: @"Daniel" forKey: @"name"];
     doc2 = [[self saveDocument: doc2] toMutable];
     
     // Expectation:
@@ -67,7 +67,7 @@
     id listener3 = [_db addDocumentChangeListenerWithID: @"doc3" listener: block];
     
     // Update doc1
-    [doc1 setObject: @"Scott Tiger" forKey: @"name"];
+    [doc1 setValue: @"Scott Tiger" forKey: @"name"];
     [self saveDocument: doc1];
     
     // Delete doc2
@@ -76,7 +76,7 @@
     
     // Create doc3
     CBLMutableDocument *doc3 = [self createDocument: @"doc3"];
-    [doc3 setObject: @"Jack" forKey: @"name"];
+    [doc3 setValue: @"Jack" forKey: @"name"];
     [self saveDocument: doc3];
     
     [self waitForExpectationsWithTimeout: 5 handler: NULL];
@@ -90,7 +90,7 @@
 
 - (void) testAddSameChangeListeners {
     CBLMutableDocument *doc1 = [self createDocument: @"doc1"];
-    [doc1 setObject: @"Scott" forKey: @"name"];
+    [doc1 setValue: @"Scott" forKey: @"name"];
     [self saveDocument: doc1];
     
     // Add change listeners:
@@ -105,7 +105,7 @@
     id listener3 = [_db addDocumentChangeListenerWithID: @"doc1" listener: block];
     
     // Update doc1:
-    [doc1 setObject: @"Scott Tiger" forKey: @"name"];
+    [doc1 setValue: @"Scott Tiger" forKey: @"name"];
     [self saveDocument: doc1];
     
     // Let's wait for 0.5 second to make sure that no more changes fired:
@@ -126,7 +126,7 @@
 
 - (void) testRemoveDocumentChangeListener {
     CBLMutableDocument *doc1 = [self createDocument: @"doc1"];
-    [doc1 setObject: @"Scott" forKey: @"name"];
+    [doc1 setValue: @"Scott" forKey: @"name"];
     [self saveDocument: doc1];
     
     // Add change listener:
@@ -139,7 +139,7 @@
     AssertNotNil(listener1);
     
     // Update doc1:
-    [doc1 setObject: @"Scott Tiger" forKey: @"name"];
+    [doc1 setValue: @"Scott Tiger" forKey: @"name"];
     [self saveDocument: doc1];
     
     [self waitForExpectationsWithTimeout: 5 handler: NULL];
@@ -148,7 +148,7 @@
     [_db removeChangeListenerWithToken:listener1];
     
     // Update doc1 again:
-    [doc1 setObject: @"Scott Tiger" forKey: @"name"];
+    [doc1 setValue: @"Scott Tiger" forKey: @"name"];
     [self saveDocument: doc1];
     
     // Let's wait for 0.5 seconds:

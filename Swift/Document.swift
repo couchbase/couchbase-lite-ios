@@ -74,7 +74,7 @@ public class Document : DictionaryProtocol {
     /// - Parameter key: The key.
     /// - Returns: The value or nil.
     public func value(forKey key: String) -> Any? {
-        return DataConverter.convertGETValue(_impl.object(forKey: key))
+        return DataConverter.convertGETValue(_impl.value(forKey: key))
     }
 
     

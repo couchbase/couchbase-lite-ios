@@ -50,13 +50,8 @@ using namespace fleeceapi;
 }
 
 
-- (nullable id) objectAtIndex: (NSUInteger)index {
-    return [self fleeceValueToObjectAtIndex: index];
-}
-
-
 - (nullable id) valueAtIndex: (NSUInteger)index {
-    return [self objectAtIndex: index];
+    return [self fleeceValueToObjectAtIndex: index];
 }
 
 
@@ -141,16 +136,11 @@ using namespace fleeceapi;
 }
 
 
-- (nullable id) objectForKey: (NSString*)key {
+- (nullable id) valueForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
-        return [self objectAtIndex: index];
+        return [self valueAtIndex: index];
     return nil;
-}
-
-
-- (nullable id) valueForKey: (NSString*)key {
-    return [self objectForKey: key];
 }
 
 

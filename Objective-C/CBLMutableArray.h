@@ -20,14 +20,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Type Setters
 
 /**
- Sets an object at the given index. A nil value will be converted to an NSNull.
- 
- @param value The value.
- @param index The index. This value must not exceed the bounds of the array.
- */
-- (void) setObject: (nullable id)value atIndex: (NSUInteger)index;
-
-/**
  Sets a value at the given index. A nil value will be converted to an NSNull.
  
  @param value The value.
@@ -133,13 +125,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) addValue: (nullable id)value;
 
 /**
- Adds an object to the end of the array. A nil value will be converted to an NSNull.
- 
- @param value The value.
- */
-- (void) addObject: (nullable id)value;
-
-/**
  Adds a String object to the end of the array. A nil value will be converted to an NSNull.
  
  @param value The String object.
@@ -226,15 +211,6 @@ NS_ASSUME_NONNULL_BEGIN
  @param index The index. This value must not exceed the bounds of the array.
  */
 - (void) insertValue: (nullable id)value atIndex: (NSUInteger)index;
-
-/**
- Inserts an object at the given index. A nil value will be converted to an NSNull.
- an NSNull object.
- 
- @param value  The value.
- @param index The index. This value must not exceed the bounds of the array.
- */
-- (void) insertObject: (nullable id)value atIndex: (NSUInteger)index;
 
 /**
  Inserts an String object at the given index. A nil value will be converted to an NSNull.

@@ -92,7 +92,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     ///   - key: The key.
     /// - Returns: The DictionaryObject object.
     @discardableResult public func setValue(_ value: Any?, forKey key: String) -> Self {
-        dictImpl.setObject(DataConverter.convertSETValue(value), forKey: key)
+        dictImpl.setValue(DataConverter.convertSETValue(value), forKey: key)
         return self
     }
     

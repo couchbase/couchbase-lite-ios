@@ -57,7 +57,7 @@ using namespace fleeceapi;
 #pragma mark - Type Setters
 
 
-- (void) setObject: (nullable id)value forKey: (NSString*)key {
+- (void) setValue: (nullable id)value forKey: (NSString*)key {
     CBLStringBytes keySlice(key);
     const MValue<id> &oldValue = _dict.get(keySlice);
     
@@ -70,63 +70,58 @@ using namespace fleeceapi;
 }
 
 
-- (void) setValue: (nullable id)value forKey: (NSString*)key {
-    [self setObject: value forKey: key];
-}
-
-
 - (void) setString: (nullable NSString *)value forKey: (NSString *)key {
-    [self setObject: value forKey: key];
+    [self setValue: value forKey: key];
 }
 
 
 - (void) setNumber: (nullable NSNumber*)value forKey: (NSString *)key {
-    [self setObject: value forKey: key];
+    [self setValue: value forKey: key];
 }
 
 
 - (void) setInteger: (NSInteger)value forKey: (NSString *)key {
-    [self setObject: @(value) forKey: key];
+    [self setValue: @(value) forKey: key];
 }
 
 
 - (void) setLongLong: (long long)value forKey: (NSString *)key {
-    [self setObject: @(value) forKey: key];
+    [self setValue: @(value) forKey: key];
 }
 
 
 - (void) setFloat: (float)value forKey: (NSString *)key {
-    [self setObject: @(value) forKey: key];
+    [self setValue: @(value) forKey: key];
 }
 
 
 - (void) setDouble: (double)value forKey: (NSString *)key {
-    [self setObject: @(value) forKey: key];
+    [self setValue: @(value) forKey: key];
 }
 
 
 - (void) setBoolean: (BOOL)value forKey: (NSString *)key {
-    [self setObject: @(value) forKey: key];
+    [self setValue: @(value) forKey: key];
 }
 
 
 - (void) setDate: (nullable NSDate *)value forKey: (NSString *)key {
-    [self setObject: value forKey: key];
+    [self setValue: value forKey: key];
 }
 
 
 - (void) setBlob: (nullable CBLBlob*)value forKey: (NSString *)key {
-    [self setObject: value forKey: key];
+    [self setValue: value forKey: key];
 }
 
 
 - (void) setArray: (nullable CBLArray *)value forKey: (NSString *)key {
-    [self setObject: value forKey: key];
+    [self setValue: value forKey: key];
 }
 
 
 - (void) setDictionary: (nullable CBLDictionary *)value forKey: (NSString *)key {
-    [self setObject: value forKey: key];
+    [self setValue: value forKey: key];
 }
 
 

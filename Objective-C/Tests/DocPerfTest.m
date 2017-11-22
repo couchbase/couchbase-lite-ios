@@ -28,7 +28,7 @@
     BOOL ok = [self.db inBatch: &error do: ^{
         for (unsigned i = 0; i < numRevisions; ++i) {
             @autoreleasepool {
-                [doc setObject: @(i) forKey: @"count"];
+                [doc setValue: @(i) forKey: @"count"];
                 NSError *error2;
                 Assert([self.db saveDocument: doc error: &error2], @"Save failed: %@", error2);
             }

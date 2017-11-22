@@ -51,7 +51,7 @@
 // helper method to save document
 - (CBLDocument*) generateDocument: (NSString*)docID {
     CBLMutableDocument* doc = [self createDocument: docID];
-    [doc setObject:@1 forKey:@"key"];
+    [doc setValue: @1 forKey:@"key"];
     
     CBLDocument* saveDoc = [self saveDocument: doc];
     AssertEqual(1, (long)self.db.count);
@@ -66,7 +66,7 @@
                    content: (NSData*)content
 {
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
-    [doc setObject: blob forKey: @"data"];
+    [doc setValue: blob forKey: @"data"];
     return [self saveDocument: doc];
 }
 
@@ -92,7 +92,7 @@
     AssertNotNil(doc);
     AssertEqualObjects(docID, doc.id);
     AssertFalse(doc.isDeleted);
-    AssertEqualObjects(@(value), [doc objectForKey: @"key"]);
+    AssertEqualObjects(@(value), [doc valueForKey: @"key"]);
 }
 
 
@@ -101,7 +101,7 @@
     NSMutableArray* docs = [NSMutableArray arrayWithCapacity: n];
     for(int i = 0; i < n; i++){
         CBLMutableDocument* doc = [self createDocument: [NSString stringWithFormat: @"doc_%03d", i]];
-        [doc setObject: @(i) forKey:@"key"];
+        [doc setValue: @(i) forKey:@"key"];
         [docs addObject: [self saveDocument: doc]];
     }
     AssertEqual(n, (long)self.db.count);
@@ -417,7 +417,7 @@
     CBLMutableDocument* doc = [[self generateDocument: docID] toMutable];
     
     // update doc
-    [doc setObject:@2 forKey:@"key"];
+    [doc setValue: @2 forKey:@"key"];
     [self saveDocument: doc];
     
     AssertEqual(1, (long)self.db.count);
@@ -442,7 +442,7 @@
     AssertEqual(1, (long)otherDB.count);
     
     // update doc & store it into different instance
-    [doc setObject: @2 forKey: @"key"];
+    [doc setValue: @2 forKey: @"key"];
     [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
         return [otherDB saveDocument: doc error: error2] != nil;
     }]; // forbidden
@@ -466,7 +466,7 @@
     AssertEqual(0, (long)otherDB.count);
     
     // update doc & store it into different db
-    [doc setObject: @2 forKey: @"key"];
+    [doc setValue: @2 forKey: @"key"];
     [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
         return [otherDB saveDocument: doc error: error2] != nil;
     }]; // forbidden
@@ -506,7 +506,7 @@
     [self closeDatabase: self.db];
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [doc setObject:@1 forKey:@"key"];
+    [doc setValue: @1 forKey:@"key"];
     
     [self expectException: @"NSInternalInconsistencyException" in: ^{
         [self.db saveDocument: doc error: nil];
@@ -519,7 +519,7 @@
     [self deleteDatabase: self.db];
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [doc setObject: @1 forKey: @"key"];
+    [doc setValue: @1 forKey: @"key"];
     
     [self expectException: @"NSInternalInconsistencyException" in: ^{
         [self.db saveDocument: doc error: nil];
@@ -532,7 +532,7 @@
 
 - (void) testDeletePreSaveDoc {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [doc setObject: @1 forKey: @"key"];
+    [doc setValue: @1 forKey: @"key"];
     
     [self expectError: @"CouchbaseLite" code: 404 in: ^BOOL(NSError** error) {
         return [self.db deleteDocument: doc error: error];
@@ -797,11 +797,11 @@
     
     // content should be accessible & modifiable without error
     AssertEqualObjects(docID, doc.id);
-    AssertEqualObjects(@(1), [doc objectForKey: @"key"]);
+    AssertEqualObjects(@(1), [doc valueForKey: @"key"]);
     
     CBLMutableDocument* updatedDoc = [doc toMutable];
-    [updatedDoc setObject:@(2) forKey: @"key"];
-    [updatedDoc setObject: @"value" forKey: @"key1"];
+    [updatedDoc setValue: @(2) forKey: @"key"];
+    [updatedDoc setValue: @"value" forKey: @"key1"];
 }
 
 
@@ -816,8 +816,8 @@
     [self closeDatabase: self.db];
     
     // content should be accessible & modifiable without error
-    Assert([[savedDoc objectForKey: @"data"] isKindOfClass: [CBLBlob class]]);
-    CBLBlob* blob = [savedDoc objectForKey: @"data"];
+    Assert([[savedDoc valueForKey: @"data"] isKindOfClass: [CBLBlob class]]);
+    CBLBlob* blob = [savedDoc valueForKey: @"data"];
     AssertEqual(blob.length, 5ull);
     AssertNil(blob.content);
 }
@@ -887,11 +887,11 @@
     
     // content should be accessible & modifiable without error
     AssertEqualObjects(docID, doc.id);
-    AssertEqualObjects(@(1), [doc objectForKey: @"key"]);
+    AssertEqualObjects(@(1), [doc valueForKey: @"key"]);
     
     CBLMutableDocument* updatedDoc = [doc toMutable];
-    [updatedDoc setObject: @(2) forKey: @"key"];
-    [updatedDoc setObject: @"value" forKey: @"key1"];
+    [updatedDoc setValue: @(2) forKey: @"key"];
+    [updatedDoc setValue: @"value" forKey: @"key1"];
 }
 
 
@@ -906,8 +906,8 @@
     [self deleteDatabase: self.db];
     
     // content should be accessible & modifiable without error
-    Assert([[savedDoc objectForKey: @"data"] isKindOfClass: [CBLBlob class]]);
-    CBLBlob* blob = [savedDoc objectForKey: @"data"];
+    Assert([[savedDoc valueForKey: @"data"] isKindOfClass: [CBLBlob class]]);
+    CBLBlob* blob = [savedDoc valueForKey: @"data"];
     AssertEqual(blob.length, 5ull);
     AssertNil(blob.content);
 }
@@ -1127,7 +1127,7 @@
         for (CBLDocument* doc in docs) {
             for (NSUInteger i = 0; i < 25; i++) {
                 CBLMutableDocument* mDoc = [doc toMutable];
-                [mDoc setObject: @(i) forKey: @"number"];
+                [mDoc setValue: @(i) forKey: @"number"];
                 [self saveDocument: mDoc];
             }
         }
@@ -1138,7 +1138,7 @@
         CBLMutableDocument* mDoc = [[_db documentWithID: doc.id] toMutable];
         NSData* content = [doc.id dataUsingEncoding: NSUTF8StringEncoding];
         CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
-        [mDoc setObject: blob forKey: @"blob"];
+        [mDoc setValue: blob forKey: @"blob"];
         [self saveDocument: mDoc];
     }
     
@@ -1171,11 +1171,11 @@
     for (NSUInteger i = 0; i < 10; i++) {
         NSString* docID = [NSString stringWithFormat: @"doc%lu", (unsigned long)i];
         CBLMutableDocument* doc = [self createDocument: docID];
-        [doc setObject: docID forKey: @"name"];
+        [doc setValue: docID forKey: @"name"];
         
         NSData* data = [docID dataUsingEncoding: NSUTF8StringEncoding];
         CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: data];
-        [doc setObject: blob forKey: @"data"];
+        [doc setValue: blob forKey: @"data"];
         
         [self saveDocument: doc];
     }

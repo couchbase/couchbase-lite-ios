@@ -203,7 +203,7 @@
             CBLDocument* doc = [self docForRow: row];
             AssertEqualObjects(doc.id, @"doc-009");
             AssertEqual(doc.sequence, 9llu);
-            AssertEqualObjects([[doc objectForKey: @"name"] objectForKey: @"first"], @"Claude");
+            AssertEqualObjects([[doc valueForKey: @"name"] valueForKey: @"first"], @"Claude");
         }];
         AssertEqual(numRows, 1llu);
         if (pass == 0)
@@ -347,7 +347,7 @@
     for (int i = 0; i < 10; i++) {
         NSError* error;
         CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
-        [doc setObject: @(1) forKey: @"number"];
+        [doc setValue: @(1) forKey: @"number"];
         Assert([_db saveDocument: doc error:&error], @"Error when creating a document: %@", error);
     }
     
@@ -367,14 +367,14 @@
     // https://github.com/couchbase/couchbase-lite-ios/issues/1670
     NSError* error;
     CBLMutableDocument* doc1 = [[self.db documentWithID: @"doc1"] toMutable];
-    [doc1 setObject: @"Scott" forKey: @"name"];
-    [doc1 setObject: [NSNull null] forKey: @"address"];
+    [doc1 setValue: @"Scott" forKey: @"name"];
+    [doc1 setValue: [NSNull null] forKey: @"address"];
     Assert([_db saveDocument: doc1 error: &error], @"Error when saving a document: %@", error);
     
     CBLMutableDocument* doc2 = [[self.db documentWithID: @"doc2"] toMutable];
-    [doc2 setObject: @"Tiger" forKey: @"name"];
-    [doc2 setObject: @"123 1st ave." forKey: @"address"];
-    [doc2 setObject: @(20) forKey: @"age"];
+    [doc2 setValue: @"Tiger" forKey: @"name"];
+    [doc2 setValue: @"123 1st ave." forKey: @"address"];
+    [doc2 setValue: @(20) forKey: @"age"];
     Assert([_db saveDocument: doc2 error: &error], @"Error when saving a document: %@", error);
     
     NSArray* tests = @[
@@ -411,7 +411,7 @@
     NSArray* expected = @[@"Marcy", @"Margaretta", @"Margrett", @"Marlen", @"Maryjo"];
     uint64_t numRows = [self verifyQuery: q test:^(uint64_t n, CBLQueryRow *row) {
         CBLDocument* doc = [self docForRow: row];
-        NSString* first = [[doc objectForKey: @"name"] objectForKey: @"first"];
+        NSString* first = [[doc valueForKey: @"name"] valueForKey: @"first"];
         AssertEqualObjects(first, expected[(NSUInteger)(n-1)]);
     }];
     AssertEqual((int)numRows, (int)expected.count);

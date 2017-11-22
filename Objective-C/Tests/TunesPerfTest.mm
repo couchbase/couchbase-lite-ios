@@ -156,7 +156,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
 
                 ++_documentCount;
                 /*NSLog(@"#%4u: %@ \"%@\"",
-                        count, [props objectForKey: @"Artist"], [props objectForKey: @"Name"]);*/
+                        count, [props valueForKey: @"Artist"], [props valueForKey: @"Name"]);*/
                 CBLMutableDocument* doc = [CBLMutableDocument documentWithID: documentID];
                 [doc setDictionary: props];
                 NSError* error;
@@ -176,7 +176,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
 
 
 - (void) loadOneDocument {
-    NSString* docID = [_tracks[4321] objectForKey: @"Persistent ID"];
+    NSString* docID = [_tracks[4321] valueForKey: @"Persistent ID"];
     CBLMutableDocument* doc = [self.db documentWithID: docID];
     __unused NSDictionary* properties = doc.data;
 }
@@ -191,7 +191,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         for (CBLMutableDocument* doc in self.db.allDocuments) {
             @autoreleasepool {
                 NSInteger playCount = [doc integerForKey: @"Play Count"];
-                [doc setObject: @(playCount + 1) forKey: @"Play Count"];
+                [doc setValue: @(playCount + 1) forKey: @"Play Count"];
                 Assert([self.db saveDocument: doc error: NULL], @"Save failed");
                 count++;
             }
@@ -216,7 +216,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
             @autoreleasepool {
                 NSString* artist = [doc stringForKey: @"Artist"];
                 if ([artist hasPrefix: @"The "]) {
-                    [doc setObject: [artist substringFromIndex: 4] forKey: @"Artist"];
+                    [doc setValue: [artist substringFromIndex: 4] forKey: @"Artist"];
                     Assert([self.db saveDocument: doc error: NULL], @"Save failed");
                     count++;
                 }

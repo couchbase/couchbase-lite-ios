@@ -15,9 +15,9 @@
 
 - (void) setValue: (NSObject*)value {
     if (_key)
-        [_parent setObject: value forKey: _key];
+        [_parent setValue: value forKey: _key];
     else
-        [_parent setObject: value atIndex: _index];
+        [_parent setValue: value atIndex: _index];
 }
 
 

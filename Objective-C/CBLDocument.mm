@@ -208,11 +208,6 @@ using namespace fleeceapi;
 }
 
 
-- (nullable id)objectForKey:(nonnull NSString *)key {
-    return [_dict objectForKey: key];
-}
-
-
 - (nullable id)valueForKey:(nonnull NSString *)key {
     return [_dict valueForKey: key];
 }

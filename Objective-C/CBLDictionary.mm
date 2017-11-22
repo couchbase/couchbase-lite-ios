@@ -129,10 +129,6 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
     return obj;
 }
 
-- (nullable id) objectForKey: (NSString*)key {
-    return _getObject(_dict, key, nil);
-}
-
 
 - (nullable id) valueForKey: (NSString*)key {
     return _getObject(_dict, key, nil);

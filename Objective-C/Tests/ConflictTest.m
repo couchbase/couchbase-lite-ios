@@ -43,18 +43,18 @@
         NSAssert(conflict.base != nil, @"Missing base");
     CBLMutableDocument* resolved = [[CBLMutableDocument alloc] init];
     for (NSString* key in conflict.base) {
-        [resolved setObject: [conflict.base objectForKey: key] forKey: key];
+        [resolved setValue: [conflict.base valueForKey: key] forKey: key];
     }
     
     NSMutableSet *changed = [NSMutableSet new];
     for (NSString* key in conflict.theirs) {
-        [resolved setObject: [conflict.theirs objectForKey: key] forKey: key];
+        [resolved setValue: [conflict.theirs valueForKey: key] forKey: key];
         [changed addObject: key];
     }
     
     for (NSString* key in conflict.mine) {
         if(![changed containsObject: key]) {
-            [resolved setObject: [conflict.mine objectForKey: key] forKey: key];
+            [resolved setValue: [conflict.mine valueForKey: key] forKey: key];
         }
     }
     return resolved;
@@ -106,8 +106,8 @@
 - (CBLMutableDocument*) setupConflict {
     // Setup a default database conflict resolver
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc setObject: @"profile" forKey: @"type"];
-    [doc setObject: @"Scott" forKey: @"name"];
+    [doc setValue: @"profile" forKey: @"type"];
+    [doc setValue: @"Scott" forKey: @"name"];
     NSError* error;
     CBLDocument* savedDoc = [_db saveDocument: doc error: &error];
     Assert(savedDoc, @"Saving error: %@", error);
@@ -120,7 +120,7 @@
     
     // Change document in memory, so save will trigger a conflict
     doc = [savedDoc toMutable];
-    [doc setObject: @"Scott Pilgrim" forKey: @"name"];
+    [doc setValue: @"Scott Pilgrim" forKey: @"name"];
     
     return doc;
 }
@@ -172,15 +172,15 @@
     CBLMutableDocument* doc1 = [self setupConflict];
     CBLDocument* savedDoc1 = [_db saveDocument: doc1 error: &error];
     Assert(savedDoc1, @"Saving error: %@", error);
-    AssertEqualObjects([savedDoc1 objectForKey: @"name"], @"Scotty");
+    AssertEqualObjects([savedDoc1 valueForKey: @"name"], @"Scotty");
     
     // Get a new document with its own conflict resolver
     self.conflictResolver = [MergeThenTheirsWins new];
     [self reopenDB];
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
-    [doc2 setObject: @"profile" forKey: @"type"];
-    [doc2 setObject: @"Scott" forKey: @"name"];
+    [doc2 setValue: @"profile" forKey: @"type"];
+    [doc2 setValue: @"Scott" forKey: @"name"];
     CBLDocument* savedDoc2 = [_db saveDocument: doc2 error: &error];
     Assert(savedDoc2, @"Saving error: %@", error);
     
@@ -193,8 +193,8 @@
     
     // Save and make sure that the correct conflict resolver won
     doc2 = [savedDoc2 toMutable];
-    [doc2 setObject:@"biography" forKey: @"type"];
-    [doc2 setObject: @(31) forKey: @"age"];
+    [doc2 setValue: @"biography" forKey: @"type"];
+    [doc2 setValue: @(31) forKey: @"age"];
     
     savedDoc2 = [_db saveDocument: doc2 error: &error];
     Assert(savedDoc2, @"Saving error: %@", error);
@@ -265,22 +265,22 @@
     self.conflictResolver = [[BlockResolver alloc] initWithBlock:
                              ^CBLDocument* (CBLConflict* conflict)
     {
-        AssertEqualObjects([conflict.mine objectForKey:@"name"], @"Tiger");
-        AssertEqualObjects([conflict.theirs objectForKey:@"name"], @"Daniel");
+        AssertEqualObjects([conflict.mine valueForKey: @"name"], @"Tiger");
+        AssertEqualObjects([conflict.theirs valueForKey: @"name"], @"Daniel");
         AssertNil(conflict.base);
         return conflict.mine;
     }];
     [self reopenDB];
     
     CBLMutableDocument* doc1a = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1a setObject: @"Daniel" forKey: @"name"];
+    [doc1a setValue: @"Daniel" forKey: @"name"];
     [self saveDocument: doc1a];
     
     CBLMutableDocument* doc1b = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1b setObject: @"Tiger" forKey: @"name"];
+    [doc1b setValue: @"Tiger" forKey: @"name"];
     [self saveDocument: doc1b];
     
-    AssertEqualObjects([doc1b objectForKey:@"name"], @"Tiger");
+    AssertEqualObjects([doc1b valueForKey:@"name"], @"Tiger");
 }
 
 

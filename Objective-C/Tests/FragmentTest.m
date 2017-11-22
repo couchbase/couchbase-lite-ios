@@ -133,7 +133,7 @@
 
 - (void) testGetFragmentFromInteger {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [doc setObject: @10 forKey: @"integer"];
+    [doc setValue: @(10) forKey: @"integer"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         CBLFragment* fragment = d[@"integer"];
         AssertNotNil(fragment);
@@ -156,7 +156,7 @@
 
 - (void) testGetFragmentFromFloat {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [doc setObject: @100.10 forKey: @"float"];
+    [doc setValue: @(100.10) forKey: @"float"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         CBLFragment* fragment = d[@"float"];
         AssertNotNil(fragment);
@@ -179,7 +179,7 @@
 
 - (void) testGetFragmentFromDouble {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [doc setObject: @(99.99) forKey: @"double"];
+    [doc setValue: @(99.99) forKey: @"double"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         CBLFragment* fragment = d[@"double"];
         AssertNotNil(fragment);
@@ -202,7 +202,7 @@
 
 - (void) testGetFragmentFromBoolean {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [doc setObject: @YES forKey: @"boolean"];
+    [doc setValue: @YES forKey: @"boolean"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         CBLFragment* fragment = d[@"boolean"];
         AssertNotNil(fragment);
@@ -227,7 +227,7 @@
 - (void) testGetFragmentFromDate {
     NSDate* date = [NSDate date];
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [doc setObject: date forKey: @"date"];
+    [doc setValue: date forKey: @"date"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         CBLFragment* fragment = d[@"date"];
         AssertNotNil(fragment);
@@ -253,7 +253,7 @@
 
 - (void) testGetFragmentFromString {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [doc setObject: @"hello world" forKey: @"string"];
+    [doc setValue: @"hello world" forKey: @"string"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         CBLFragment* fragment = d[@"string"];
         AssertNotNil(fragment);
@@ -390,9 +390,9 @@
 - (void) testDictionaryFragmentSetDictionary {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     CBLMutableDictionary *dict = [[CBLMutableDictionary alloc] init];
-    [dict setObject: @"Jason" forKey:@"name"];
-    [dict setObject: @{@"street": @"1 Main Street",
-                         @"phones": @{@"mobile": @"650-123-4567"}}
+    [dict setValue: @"Jason" forKey:@"name"];
+    [dict setValue: @{@"street": @"1 Main Street",
+                      @"phones": @{@"mobile": @"650-123-4567"}}
                forKey: @"address"];
     doc[@"dict"].value = dict;
     
@@ -456,8 +456,8 @@
 
 - (void) testNonDictionaryFragmentSetValue {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [doc setObject: @"value1" forKey: @"string1"];
-    [doc setObject: @"value2" forKey: @"string2"];
+    [doc setValue: @"value1" forKey: @"string1"];
+    [doc setValue: @"value2" forKey: @"string2"];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         CBLMutableDocument* md = [d toMutable];
@@ -472,13 +472,13 @@
     NSDate* date = [NSDate date];
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
-    Assert([[doc objectForKey: @"array"] isKindOfClass: [CBLMutableArray class]]);
+    Assert([[doc valueForKey: @"array"] isKindOfClass: [CBLMutableArray class]]);
     [doc[@"array"].array addValue: @"string"];
     [doc[@"array"].array addValue: @10];
     [doc[@"array"].array addValue: @10.10];
     [doc[@"array"].array addValue: @YES];
     [doc[@"array"].array addValue: date];
-    Assert([[doc objectForKey: @"array"] isKindOfClass: [CBLMutableArray class]]);
+    Assert([[doc valueForKey: @"array"] isKindOfClass: [CBLMutableArray class]]);
 
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertFalse(d[@"array"][-1].exists);
@@ -502,9 +502,9 @@
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
     CBLMutableDictionary *dict = [[CBLMutableDictionary alloc] init];
-    [dict setObject: @"Jason" forKey: @"name"];
-    [dict setObject: @{@"street": @"1 Main Street",@"phones": @{@"mobile": @"650-123-4567"}}
-               forKey: @"address"];
+    [dict setValue: @"Jason" forKey: @"name"];
+    [dict setValue: @{@"street": @"1 Main Street",@"phones": @{@"mobile": @"650-123-4567"}}
+            forKey: @"address"];
     [doc[@"array"].array addValue: dict];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
