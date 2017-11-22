@@ -34,7 +34,6 @@ public final class Replicator {
     /// Progress of a replicator. If `total` is zero, the progress is indeterminate; otherwise,
     /// dividing the two will produce a fraction that can be used to draw a progress bar.
     public struct Progress {
-        
         /// The total number of changes to be processed.
         public let completed: UInt64
         
@@ -45,7 +44,6 @@ public final class Replicator {
     
     /// Combined activity level and progress of a replicator.
     public struct Status {
-        
         /// The current activity level.
         public let activity: ActivityLevel
         
@@ -55,7 +53,7 @@ public final class Replicator {
         /// The current error if there is an error occurred.
         public let error: Error?
         
-        /* internal */ init(_ status: CBLReplicatorStatus) {
+        /* internal */ init(withStatus status: CBLReplicatorStatus) {
             activity = ActivityLevel(rawValue: UInt8(status.activity.rawValue))!
             progress = Progress(completed: status.progress.completed, total: status.progress.total)
             error = status.error
@@ -65,25 +63,8 @@ public final class Replicator {
     /// Initializes a replicator with the given configuration.
     ///
     /// - Parameter config: The configuration.
-    public init(config: ReplicatorConfiguration) {
-        let c: CBLReplicatorConfiguration;
-        if let url = config.target as? URL {
-            c = CBLReplicatorConfiguration(database: config.database._impl, targetURL: url)
-        } else {
-            let db = (config.target as! Database)._impl
-            c = CBLReplicatorConfiguration(database: config.database._impl, targetDatabase: db)
-        }
-        
-        c.continuous = config.continuous
-        c.replicatorType = CBLReplicatorType(rawValue: UInt32(config.replicatorType.rawValue))
-        c.conflictResolver = nil // TODO
-        c.authenticator = config.authenticator
-        c.pinnedServerCertificate = config.pinnedServerCertificate
-        c.headers = config.headers
-        c.channels = config.channels
-        c.documentIDs = config.documentIDs
-        
-        _impl = CBLReplicator(config: c);
+    public init(withConfig config: ReplicatorConfiguration) {
+        _impl = CBLReplicator(config: config.toImpl());
         _config = config
     }
     
@@ -97,7 +78,7 @@ public final class Replicator {
     
     /// The replicator's current status: its activity level and progress. Observable.
     public var status: Status {
-        return Status(_impl.status)
+        return Status(withStatus: _impl.status)
     }
     
     
@@ -116,25 +97,39 @@ public final class Replicator {
     }
     
     
-    /// Adds a replicator change listener block.
+    /// Adds a replicator change listener. Changes will be posted on the main queue.
     ///
-    /// - Parameter block: The block to be executed when the change is received.
-    /// - Returns: An opaque object to act as the listener and for removing the listener
-    ///            when calling the removeChangeListener() function.
-    @discardableResult
-    public func addChangeListener(_ block: @escaping (ReplicatorChange) -> Void) -> NSObjectProtocol {
+    /// - Parameter listener: The listener to post changes.
+    /// - Returns: An opaque listener token object for removing the listener.
+    @discardableResult public func addChangeListener(
+        _ listener: @escaping (ReplicatorChange) -> Void) -> ListenerToken {
         return _impl.addChangeListener({ [unowned self] change in
-            block(ReplicatorChange(replicator: self, status: Status(change.status)))
+            listener(ReplicatorChange(replicator: self, status: Status(withStatus: change.status)))
         })
     }
     
     
-    /// Removes a change listener. The given change listener is the opaque object
-    /// returned by the addChangeListener() method.
+    /// Adds a replicator change listener with the dispatch queue on which changes
+    /// will be posted. If the dispatch queue is not specified, the changes will be
+    /// posted on the main queue.
     ///
-    /// - Parameter listener: The listener object to be removed.
-    public func removeChangeListener(_ listener: NSObjectProtocol) {
-        _impl.removeChangeListener(listener)
+    /// - Parameters:
+    ///   - queue: The dispatch queue.
+    ///   - listener: The listener to post changes.
+    /// - Returns: An opaque listener token object for removing the listener.
+    @discardableResult public func addChangeListener(withQueue queue: DispatchQueue?,
+        _ listener: @escaping (ReplicatorChange) -> Void) -> ListenerToken {
+        return _impl.addChangeListener(with: queue, listener: { (change) in
+            listener(ReplicatorChange(replicator: self, status: Status(withStatus: change.status)))
+        })
+    }
+    
+    
+    /// Removes a change listener with the given listener token.
+    ///
+    /// - Parameter token: The listener token.
+    public func removeChangeListener(withToken token: ListenerToken) {
+        _impl.removeChangeListener(with: token)
     }
     
     

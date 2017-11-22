@@ -78,7 +78,7 @@ class ConflictTest: CBLTestCase {
     
     func saveProperties(_ props: Dictionary<String, Any>, docID: String) throws {
         // Save to database
-        let doc = db.getDocument(docID)!.toMutable()
+        let doc = db.document(withID: docID)!.toMutable()
         doc.setDictionary(props)
         try saveDocument(doc)
     }
@@ -139,17 +139,15 @@ class ConflictTest: CBLTestCase {
     
     
     func testDeletionConflict() throws {
-        self.conflictResolver = DoNotResolve()
+        self.conflictResolver = nil
         try reopenDB()
         
         let doc = try setupConflict()
-        try db.delete(doc)
+        try db.deleteDocument(doc)
         
-        let deletedDoc = self.db.getDocument(doc.id)!
-        XCTAssertFalse(deletedDoc.isDeleted)
-        XCTAssertEqual(deletedDoc.string(forKey: "name")!, "Scotty")
+        let deletedDoc = db.document(withID: doc.id)
+        XCTAssertNil (deletedDoc)
     }
-    
     
     func testConflictMineIsDeeper() throws {
         self.conflictResolver = nil

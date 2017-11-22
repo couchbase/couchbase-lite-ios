@@ -7,8 +7,9 @@
 //
 
 #import "CBLBinaryExpression.h"
-#import "CBLQuery+Internal.h"
 #import "CBLAggregateExpression.h"
+#import "CBLQueryExpression+Internal.h"
+
 
 @implementation CBLBinaryExpression {
     id _lhs;
@@ -89,7 +90,7 @@
             break;
     }
     
-    [json addObject: [self jsonValue:_lhs]];
+    [json addObject: [self jsonValue: _lhs]];
 
     if (_type == CBLBetweenBinaryExpType) {
         // "between"'s RHS is an aggregate of the min and max, but the min and max need to be

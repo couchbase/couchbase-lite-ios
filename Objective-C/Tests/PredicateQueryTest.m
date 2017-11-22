@@ -8,6 +8,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLDatabase+NSPredicate.h"
 #import "CBLPredicateQuery+Internal.h"
 #import "CBLJSON.h"
 
@@ -45,8 +46,7 @@
 - (void) testPredicates {
     // The query with the 'matches' operator requires there to be a FTS index on 'blurb':
     NSError* error;
-    CBLQueryExpression* blurb = [CBLQueryExpression property: @"blurb"];
-    CBLIndex* index = [CBLIndex ftsIndexOn: [CBLFTSIndexItem expression: blurb] options: nil];
+    CBLIndex* index = [CBLIndex fullTextIndexWithItems: @[[CBLFullTextIndexItem property: @"blurb"]] options: nil];
     Assert([_db createIndex: index withName: @"blurb" error: &error]);
     
     const struct {const char *pred; const char *json5;} kTests[] = {
@@ -56,7 +56,7 @@
         {"ANY children == 'Bobo'",  "{WHERE: ['ANY', 'X', ['.children'], ['=', ['?X'], 'Bobo']]}"},
         {"'Bobo' in children",      "{WHERE: ['ANY', 'X', ['.children'], ['=', ['?X'], 'Bobo']]}"},
         {"name in $NAMES",          "{WHERE: ['IN', ['.name'], ['$NAMES']]}"},
-        {"blurb matches 'N1QL SQLite'","{WHERE: ['MATCH', ['.blurb'], 'N1QL SQLite']}"},
+        {"blurb matches 'N1QL SQLite'","{WHERE: ['MATCH', 'blurb', 'N1QL SQLite']}"},
         {"fruit contains 'ran'",    "{WHERE: ['CONTAINS()', ['.fruit'], 'ran']}"},
         {"age between {13, 19}",    "{WHERE: ['BETWEEN', ['.age'], 13, 19]}"},
         {"coords[0] < 90",          "{WHERE: ['<', ['.coords[0]'], 90]}"},
@@ -175,19 +175,6 @@
 }
 
 
-- (void) testAllDocsQuery {
-    [self loadJSONResource: @"names_100"];
-    uint64_t n = 0;
-    for (CBLMutableDocument* doc in self.db.allDocuments) {
-        ++n;
-        NSString* expectedID = [NSString stringWithFormat: @"doc-%03llu", n];
-        AssertEqualObjects(doc.id, expectedID);
-        AssertEqual(doc.sequence, n);
-    }
-    AssertEqual(n, 100llu);
-}
-
-
 - (void) testPropertyQuery               {[self propertyQueryWithReopen: NO];}
 - (void) testPropertyQueryAfterReopen    {[self propertyQueryWithReopen: YES];}
 
@@ -199,7 +186,7 @@
     // Try a query involving a property. The first pass will be unindexed, the 2nd indexed.
     NSError *error;
     CBLQueryExpression* firstName = [CBLQueryExpression property: @"name.first"];
-    CBLIndex* index = [CBLIndex valueIndexOn: @[[CBLValueIndexItem expression: firstName]]];
+    CBLIndex* index = [CBLIndex valueIndexWithItems: @[[CBLValueIndexItem expression: firstName]]];
     
     for (int pass = 0; pass < 2; ++pass) {
         Log(@"---- Pass %d", pass);
@@ -251,8 +238,8 @@
 - (void) testFTS {
     [self loadJSONResource: @"sentences"];
     NSError* error;
-    CBLQueryExpression* sentence = [CBLQueryExpression property: @"sentence"];
-    CBLIndex* index = [CBLIndex ftsIndexOn: [CBLFTSIndexItem expression: sentence] options: nil];
+    
+    CBLIndex* index = [CBLIndex fullTextIndexWithItems: @[[CBLFullTextIndexItem property: @"sentence"]] options: nil];
     Assert([_db createIndex: index withName: @"sentence" error: &error]);
     
     CBLPredicateQuery *q = [self.db createQueryWhere: @"sentence matches 'Dummie woman'"];
@@ -370,7 +357,7 @@
     Assert(q);
     uint64_t numRows = [self verifyQuery: q test: ^(uint64_t n, CBLQueryRow *row) {
         CBLDocument* doc = [self docForRow: row];
-        AssertEqualObjects(doc.toDictionary, @{@"number": @(1)});
+        AssertEqualObjects([doc toDictionary], @{@"number": @(1)});
     }];
     AssertEqual(numRows, 1u);
 }

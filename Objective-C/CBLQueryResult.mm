@@ -50,38 +50,23 @@ using namespace fleeceapi;
 }
 
 
-- (nullable CBLArray*) arrayAtIndex: (NSUInteger)index {
-    return $castIf(CBLArray, [self fleeceValueToObjectAtIndex: index]);
+- (nullable id) objectAtIndex: (NSUInteger)index {
+    return [self fleeceValueToObjectAtIndex: index];
 }
 
 
-- (BOOL) booleanAtIndex: (NSUInteger)index {
-    return FLValue_AsBool([self fleeceValueAtIndex: index]);
+- (nullable id) valueAtIndex: (NSUInteger)index {
+    return [self objectAtIndex: index];
 }
 
 
-- (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
-    return $castIf(CBLBlob, [self fleeceValueToObjectAtIndex: index]);
+- (nullable NSString*) stringAtIndex: (NSUInteger)index {
+    return asString([self fleeceValueToObjectAtIndex: index]);
 }
 
 
-- (nullable NSDate*) dateAtIndex: (NSUInteger)index {
-    return asDate([self fleeceValueToObjectAtIndex: index]);
-}
-
-
-- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
-    return $castIf(CBLDictionary, [self fleeceValueToObjectAtIndex: index]);
-}
-
-
-- (float) floatAtIndex: (NSUInteger)index {
-    return FLValue_AsFloat([self fleeceValueAtIndex: index]);
-}
-
-
-- (double) doubleAtIndex: (NSUInteger)index {
-    return FLValue_AsDouble([self fleeceValueAtIndex: index]);
+- (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
+    return asNumber([self fleeceValueToObjectAtIndex: index]);
 }
 
 
@@ -95,18 +80,37 @@ using namespace fleeceapi;
 }
 
 
-- (nullable NSNumber*) numberAtIndex: (NSUInteger)index {
-    return asNumber([self fleeceValueToObjectAtIndex: index]);
+- (float) floatAtIndex: (NSUInteger)index {
+    return FLValue_AsFloat([self fleeceValueAtIndex: index]);
+}
+
+- (double) doubleAtIndex: (NSUInteger)index {
+    return FLValue_AsDouble([self fleeceValueAtIndex: index]);
 }
 
 
-- (nullable id) objectAtIndex: (NSUInteger)index {
-    return [self fleeceValueToObjectAtIndex: index];
+- (BOOL) booleanAtIndex: (NSUInteger)index {
+    return FLValue_AsBool([self fleeceValueAtIndex: index]);
 }
 
 
-- (nullable NSString*) stringAtIndex: (NSUInteger)index {
-    return asString([self fleeceValueToObjectAtIndex: index]);
+- (nullable NSDate*) dateAtIndex: (NSUInteger)index {
+    return asDate([self fleeceValueToObjectAtIndex: index]);
+}
+
+
+- (nullable CBLBlob*) blobAtIndex: (NSUInteger)index {
+    return $castIf(CBLBlob, [self fleeceValueToObjectAtIndex: index]);
+}
+
+
+- (nullable CBLArray*) arrayAtIndex: (NSUInteger)index {
+    return $castIf(CBLArray, [self fleeceValueToObjectAtIndex: index]);
+}
+
+
+- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
+    return $castIf(CBLDictionary, [self fleeceValueToObjectAtIndex: index]);
 }
 
 
@@ -137,59 +141,32 @@ using namespace fleeceapi;
 }
 
 
-- (nullable CBLArray*) arrayForKey: (NSString*)key {
+- (nullable id) objectForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
-        return [self arrayAtIndex: index];
+        return [self objectAtIndex: index];
     return nil;
 }
 
 
-- (nullable CBLBlob*) blobForKey: (NSString*)key {
+- (nullable id) valueForKey: (NSString*)key {
+    return [self objectForKey: key];
+}
+
+
+- (nullable NSString*) stringForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
-        return [self blobAtIndex: index];
+        return [self stringAtIndex: index];
     return nil;
 }
 
 
-- (BOOL) booleanForKey: (NSString*)key {
+- (nullable NSNumber*) numberForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
-        return [self booleanAtIndex: index];
-    return NO;
-}
-
-
-- (nullable NSDate*) dateForKey: (NSString*)key {
-    NSInteger index = [self indexForColumnName: key];
-    if (index >= 0)
-        return [self dateAtIndex: index];
+        return [self numberAtIndex: index];
     return nil;
-}
-
-
-- (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
-    NSInteger index = [self indexForColumnName: key];
-    if (index >= 0)
-        return [self dictionaryAtIndex: index];
-    return nil;
-}
-
-
-- (double) doubleForKey: (NSString*)key {
-    NSInteger index = [self indexForColumnName: key];
-    if (index >= 0)
-        return [self doubleAtIndex: index];
-    return 0.0;
-}
-
-
-- (float) floatForKey: (NSString*)key {
-    NSInteger index = [self indexForColumnName: key];
-    if (index >= 0)
-        return [self floatAtIndex: index];
-    return 0.0f;
 }
 
 
@@ -209,32 +186,63 @@ using namespace fleeceapi;
 }
 
 
-- (nullable NSNumber*) numberForKey: (NSString*)key {
+- (float) floatForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
-        return [self numberAtIndex: index];
+        return [self floatAtIndex: index];
+    return 0.0f;
+}
+
+
+- (double) doubleForKey: (NSString*)key {
+    NSInteger index = [self indexForColumnName: key];
+    if (index >= 0)
+        return [self doubleAtIndex: index];
+    return 0.0;
+}
+
+
+- (BOOL) booleanForKey: (NSString*)key {
+    NSInteger index = [self indexForColumnName: key];
+    if (index >= 0)
+        return [self booleanAtIndex: index];
+    return NO;
+}
+
+
+- (nullable NSDate*) dateForKey: (NSString*)key {
+    NSInteger index = [self indexForColumnName: key];
+    if (index >= 0)
+        return [self dateAtIndex: index];
     return nil;
 }
 
 
-- (nullable NSString*) stringForKey: (NSString*)key {
+- (nullable CBLBlob*) blobForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
-        return [self stringAtIndex: index];
+        return [self blobAtIndex: index];
     return nil;
 }
 
 
-- (id) objectForKey: (NSString*)key {
+- (nullable CBLArray*) arrayForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     if (index >= 0)
-        return [self objectAtIndex: index];
+        return [self arrayAtIndex: index];
     return nil;
 }
 
 
+- (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
+    NSInteger index = [self indexForColumnName: key];
+    if (index >= 0)
+        return [self dictionaryAtIndex: index];
+    return nil;
+}
 
-- (BOOL) containsObjectForKey: (NSString*)key {
+
+- (BOOL) containsValueForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
     return index > 0;
 }

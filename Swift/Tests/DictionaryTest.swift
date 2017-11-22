@@ -32,7 +32,7 @@ class DictionaryTest: CBLTestCase {
         let dict: [String: Any] = ["street": "1 Main street",
                                    "city": "Mountain View",
                                    "state": "CA"];
-        let address = MutableDictionaryObject(dictionary: dict)
+        let address = MutableDictionaryObject(withDictionary: dict)
         XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
         XCTAssertEqual(address.string(forKey: "city"), "Mountain View")
         XCTAssertEqual(address.string(forKey: "state"), "CA")
@@ -103,7 +103,7 @@ class DictionaryTest: CBLTestCase {
         XCTAssert(doc.dictionary(forKey: "profile") === profile1)
         
         // Remove profile
-        doc.remove(forKey: "profile")
+        doc.removeValue(forKey: "profile")
         XCTAssertNil(doc.value(forKey: "profile"))
         XCTAssertFalse(doc.contains("profile"))
         
@@ -137,7 +137,7 @@ class DictionaryTest: CBLTestCase {
         XCTAssertEqual(count, content.count)
         
         // Update:
-        dict.remove(forKey: "key2")
+        dict.removeValue(forKey: "key2")
         dict.setValue(20, forKey: "key20")
         dict.setValue(22, forKey: "key21")
         content = dict.toDictionary()

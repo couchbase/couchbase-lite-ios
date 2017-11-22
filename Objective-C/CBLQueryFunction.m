@@ -8,234 +8,268 @@
 
 #import "CBLQueryFunction.h"
 #import "CBLQuery+Internal.h"
+#import "CBLFunctionExpression.h"
 
 
-@implementation CBLQueryFunction {
-    NSString* _function;
-    NSArray* _params;
-}
+@implementation CBLQueryFunction
 
 #pragma mark - Aggregation
 
 
-+ (instancetype) avg: (id)expression {
-    return [[self alloc] initWithFunction: @"AVG()" params: @[expression]];
++ (CBLQueryExpression*) avg: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"AVG()"
+                                                    params: @[expression]];
 }
 
 
-+ (instancetype) count: (id)expression {
-    return [[self alloc] initWithFunction: @"COUNT()" params: @[expression]];
++ (CBLQueryExpression*) count: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"COUNT()"
+                                                    params: @[expression]];
 }
 
 
-+ (instancetype) min: (id)expression {
-    return [[self alloc] initWithFunction: @"MIN()" params: @[expression]];
++ (CBLQueryExpression*) min: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"MIN()"
+                                                    params: @[expression]];
 }
 
 
-+ (instancetype) max: (id)expression {
-    return [[self alloc] initWithFunction: @"MAX()" params: @[expression]];
++ (CBLQueryExpression*) max: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"MAX()"
+                                                    params: @[expression]];
 }
 
 
-+ (instancetype) sum: (id)expression {
-    return [[self alloc] initWithFunction: @"SUM()" params: @[expression]];
-}
-
-
-#pragma mark - Array
-
-
-+ (instancetype) arrayContains: (id)expression value: (nullable id)value {
-    if (!value)
-        value = [NSNull null]; // Apple platform specific
-    return [[self alloc] initWithFunction: @"ARRAY_CONTAINS()" params: @[expression, value]];
-}
-
-
-+ (instancetype) arrayLength: (id)expression {
-    return [[self alloc] initWithFunction: @"ARRAY_LENGTH()" params: @[expression]];
++ (CBLQueryExpression*) sum: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"SUM()"
+                                                    params: @[expression]];
 }
 
 
 #pragma mark - Math
 
-+ (instancetype) abs: (id)expression {
-    return [[self alloc] initWithFunction: @"ABS()" params: @[expression]];
+
++ (CBLQueryExpression*) abs: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"ABS()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) acos: (id)expression {
-    return [[self alloc] initWithFunction: @"ACOS()" params: @[expression]];
+
++ (CBLQueryExpression*) acos: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"ACOS()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) asin: (id)expression {
-    return [[self alloc] initWithFunction: @"ASIN()" params: @[expression]];
+
++ (CBLQueryExpression*) asin: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"ASIN()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) atan: (id)expression {
-    return [[self alloc] initWithFunction: @"ATAN()" params: @[expression]];
+
++ (CBLQueryExpression*) atan: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"ATAN()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) atan2: (id)x y: (id)y {
-    return [[self alloc] initWithFunction: @"ATAN2()" params: @[x, y]];
+
++ (CBLQueryExpression*) atan2: (id)x y: (id)y {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"ATAN2()"
+                                                    params: @[x, y]];
 }
 
-+ (instancetype) ceil: (id)expression {
-    return [[self alloc] initWithFunction: @"CEIL()" params: @[expression]];
+
++ (CBLQueryExpression*) ceil: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"CEIL()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) cos: (id)expression {
-    return [[self alloc] initWithFunction: @"COS()" params: @[expression]];
+
++ (CBLQueryExpression*) cos: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"COS()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) degrees: (id)expression {
-    return [[self alloc] initWithFunction: @"DEGREES()" params: @[expression]];
+
++ (CBLQueryExpression*) degrees: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"DEGREES()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) e {
-    return [[self alloc] initWithFunction: @"E()" params: nil];
+
++ (CBLQueryExpression*) e {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"E()"
+                                                    params: nil];
 }
 
-+ (instancetype) exp: (id)expression {
-    return [[self alloc] initWithFunction: @"EXP()" params: @[expression]];
+
++ (CBLQueryExpression*) exp: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"EXP()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) floor: (id)expression {
-    return [[self alloc] initWithFunction: @"FLOOR()" params: @[expression]];
+
++ (CBLQueryExpression*) floor: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"FLOOR()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) ln: (id)expression {
-    return [[self alloc] initWithFunction: @"LN()" params: @[expression]];
+
++ (CBLQueryExpression*) ln: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"LN()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) log: (id)expression {
-    return [[self alloc] initWithFunction: @"LOG()" params: @[expression]];
+
++ (CBLQueryExpression*) log: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"LOG()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) pi {
-    return [[self alloc] initWithFunction: @"PI()" params: nil];
+
++ (CBLQueryExpression*) pi {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"PI()"
+                                                    params: nil];
 }
 
-+ (instancetype) power: (id)base exponent: (id)exponent {
-    return [[self alloc] initWithFunction: @"POWER()" params: @[base, exponent]];
+
++ (CBLQueryExpression*) power: (id)base exponent: (id)exponent {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"POWER()"
+                                                    params: @[base, exponent]];
 }
 
-+ (instancetype) radians: (id)expression {
-    return [[self alloc] initWithFunction: @"RADIANS()" params: @[expression]];
+
++ (CBLQueryExpression*) radians: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"RADIANS()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) round: (id)expression {
-    return [[self alloc] initWithFunction: @"ROUND()" params: @[expression]];
+
++ (CBLQueryExpression*) round: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"ROUND()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) round: (id)expression digits: (NSInteger)digits {
-    return [[self alloc] initWithFunction: @"ROUND()" params: @[expression, @(digits)]];
+
++ (CBLQueryExpression*) round: (id)expression digits: (NSInteger)digits {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"ROUND()"
+                                                    params: @[expression, @(digits)]];
 }
 
-+ (instancetype) sign: (id)expression {
-    return [[self alloc] initWithFunction: @"SIGN()" params: @[expression]];
+
++ (CBLQueryExpression*) sign: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"SIGN()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) sin: (id)expression {
-    return [[self alloc] initWithFunction: @"SIN()" params: @[expression]];
+
++ (CBLQueryExpression*) sin: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"SIN()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) sqrt: (id)expression {
-    return [[self alloc] initWithFunction: @"SQRT()" params: @[expression]];
+
++ (CBLQueryExpression*) sqrt: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"SQRT()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) tan: (id)expression {
-    return [[self alloc] initWithFunction: @"TAN()" params: @[expression]];
+
++ (CBLQueryExpression*) tan: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"TAN()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) trunc: (id)expression {
-    return [[self alloc] initWithFunction: @"TRUNC()" params: @[expression]];
+
++ (CBLQueryExpression*) trunc: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"TRUNC()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) trunc: (id)expression digits: (NSInteger)digits {
-    return [[self alloc] initWithFunction: @"TRUNC()" params: @[expression, @(digits)]];
+
++ (CBLQueryExpression*) trunc: (id)expression digits: (NSInteger)digits {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"TRUNC()"
+                                                    params: @[expression,
+                                                              @(digits)]];
 }
+
 
 #pragma mark - String
 
-+ (instancetype) contains: (id)expression substring: (id)substring {
-    return [[self alloc] initWithFunction: @"CONTAINS()" params: @[expression, substring]];
+
++ (CBLQueryExpression*) contains: (id)expression substring: (id)substring {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"CONTAINS()"
+                                                    params: @[expression,
+                                                              substring]];
 }
 
-+ (instancetype) length: (id)expression {
-    return [[self alloc] initWithFunction: @"LENGTH()" params: @[expression]];
+
++ (CBLQueryExpression*) length: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"LENGTH()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) lower: (id)expression {
-    return [[self alloc] initWithFunction: @"LOWER()" params: @[expression]];
+
++ (CBLQueryExpression*) lower: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"LOWER()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) ltrim: (id)expression {
-    return [[self alloc] initWithFunction: @"LTRIM()" params: @[expression]];
+
++ (CBLQueryExpression*) ltrim: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"LTRIM()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) rtrim: (id)expression {
-    return [[self alloc] initWithFunction: @"RTRIM()" params: @[expression]];
+
++ (CBLQueryExpression*) rtrim: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"RTRIM()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) trim: (id)expression {
-    return [[self alloc] initWithFunction: @"TRIM()" params: @[expression]];
+
++ (CBLQueryExpression*) trim: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"TRIM()"
+                                                    params: @[expression]];
 }
 
-+ (instancetype) upper: (id)expression {
-    return [[self alloc] initWithFunction: @"UPPER()" params: @[expression]];
+
++ (CBLQueryExpression*) upper: (id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"UPPER()"
+                                                    params: @[expression]];
 }
+
 
 #pragma mark - Type
 
-+ (instancetype) isArray:(id)expression {
-    return [[self alloc] initWithFunction: @"ISARRAY()" params: @[expression]];
-}
 
-+ (instancetype) isBoolean:(id)expression {
-    return [[self alloc] initWithFunction: @"ISBOOLEAN()" params: @[expression]];
-}
-
-+ (instancetype) isNumber:(id)expression {
-    return [[self alloc] initWithFunction: @"ISNUMBER()" params: @[expression]];
-}
-
-+ (instancetype) isDictionary:(id)expression {
-    return [[self alloc] initWithFunction: @"ISOBJECT()" params: @[expression]];
-}
-
-+ (instancetype) isString:(id)expression {
-    return [[self alloc] initWithFunction: @"ISSTRING()" params: @[expression]];
-}
-
-#pragma mark - FTS
-
-+ (instancetype) rank: (CBLQueryExpression*)property {
-    return [[self alloc] initWithFunction: @"RANK()" params: @[property]];
-}
-
-#pragma mark - Internal
-
-
-- (instancetype) initWithFunction: (NSString*)function params: (nullable NSArray*)params {
-    self = [super initWithNone];
-    if (self) {
-        _function = function;
-        _params = params;
-    }
-    return self;
++ (CBLQueryExpression*) isArray:(id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"ISARRAY()"
+                                                    params: @[expression]];
 }
 
 
-- (id) asJSON {
-    NSMutableArray* json = [NSMutableArray arrayWithCapacity: _params.count + 1];
-    [json addObject: _function];
-    
-    for (id param in _params) {
-        [json addObject: [self jsonValue: param]];
-    }
-    
-    return json;
++ (CBLQueryExpression*) isBoolean:(id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"ISBOOLEAN()"
+                                                    params: @[expression]];
+}
+
+
++ (CBLQueryExpression*) isNumber:(id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"ISNUMBER()"
+                                                    params: @[expression]];
+}
+
+
++ (CBLQueryExpression*) isDictionary:(id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"ISOBJECT()"
+                                                    params: @[expression]];
+}
+
+
++ (CBLQueryExpression*) isString:(id)expression {
+    return [[CBLFunctionExpression alloc] initWithFunction: @"ISSTRING()"
+                                                    params: @[expression]];
 }
 
 

@@ -24,17 +24,6 @@ public class Expression {
     }
     
     
-    // MARK: Meta
-    
-    
-    ///  Get a Meta object which is a factory object for creating metadata property expressions.
-    ///
-    /// - Returns: A Meta object.
-    public static func meta() -> Meta {
-        return Meta()
-    }
-    
-    
     // MARK: Parameter
     
     
@@ -144,16 +133,6 @@ public class Expression {
     }
     
     
-    /// Creates a NOT less than expression that evaluates whether or not the current expression
-    /// is not less than the given expression.
-    ///
-    /// - Parameter expression: The expression to be compared with the current expression.
-    /// - Returns: A NOT less than expression.
-    public func notLessThan(_ expression: Any) -> Expression {
-        return Expression(self.impl.notLessThan(Expression.toImpl(expression)))
-    }
-    
-    
     /// Creates a less than or equal to expression that evaluates whether or not the current
     /// expression is less than or equal to the given expression.
     ///
@@ -163,17 +142,7 @@ public class Expression {
         return Expression(self.impl.lessThanOrEqual(to: Expression.toImpl(expression)))
     }
     
-    
-    /// Creates a NOT less than or equal to expression that evaluates whether or not the current
-    /// expression is not less than or equal to the given expression.
-    ///
-    /// - Parameter expression: The expression to be compared with the current expression.
-    /// - Returns: A NOT less than or equal to expression.
-    public func notLessThanOrEqualTo(_ expression: Any) -> Expression {
-        return Expression(self.impl.notLessThanOrEqual(to: Expression.toImpl(expression)))
-    }
-    
-    
+
     /// Creates a greater than expression that evaluates whether or not the current expression
     /// is greater than the given expression.
     ///
@@ -181,16 +150,6 @@ public class Expression {
     /// - Returns: A greater than expression.
     public func greaterThan(_ expression: Any) -> Expression {
         return Expression(self.impl.greaterThan(Expression.toImpl(expression)))
-    }
-    
-    
-    /// Creates a NOT greater than expression that evaluates whether or not the current expression
-    /// is not greater than the given expression.
-    ///
-    /// - Parameter expression: The expression to be compared with the current expression.
-    /// - Returns: A NOT greater than expression.
-    public func notGreaterThan(_ expression: Any) -> Expression {
-        return Expression(self.impl.notGreaterThan(Expression.toImpl(expression)))
     }
     
     
@@ -203,16 +162,6 @@ public class Expression {
         return Expression(self.impl.greaterThanOrEqual(to: Expression.toImpl(expression)))
     }
     
-    
-    /// Creates a NOT greater than or equal to expression that evaluates whether or not the current
-    /// expression is not greater than or equal to the given expression.
-    ///
-    /// - Parameter expression: The expression to be compared with the current expression.
-    /// - Returns: A NOT greater than or equal to expression.
-    public func notGreaterThanOrEqualTo(_ expression: Any) -> Expression {
-        return Expression(self.impl.notGreaterThanOrEqual(to: Expression.toImpl(expression)))
-    }
-
     
     /// Creates an equal to expression that evaluates whether or not the current expression is equal
     /// to the given expression.
@@ -270,16 +219,6 @@ public class Expression {
     }
     
     
-    /// Creates a NOT Like expression that evaluates whether or not the current expression is
-    /// NOT LIKE the given expression.
-    ///
-    /// - Parameter expression: The expression to be compared with the current expression.
-    /// - Returns: A NOT Like expression.
-    public func notLike(_ expression: Any) -> Expression {
-        return Expression(self.impl.notLike(Expression.toImpl(expression)))
-    }
-    
-    
     // MARK: Regex operators
 
     
@@ -292,39 +231,6 @@ public class Expression {
         return Expression(self.impl.regex(Expression.toImpl(expression)))
     }
 
-    
-    /// Creates a regex NOT match expression that evaluates whether or not the current expression
-    /// regex NOT matches the given expression.
-    ///
-    /// - Parameter expression: The expression to be compared with the current expression.
-    /// - Returns: A regex NOT match expression.
-    public func notRegex(_ expression: Any) -> Expression {
-        return Expression(self.impl.notRegex(Expression.toImpl(expression)))
-    }
-    
-    
-    // MARK: Full Text Search operators
-    
-    
-    /// Creates a full text match expression that evaluates whether or not the current expression
-    /// full text matches the given expression.
-    ///
-    /// - Parameter expression: The expression to be compared with the current expression.
-    /// - Returns: A full text match expression.
-    public func match(_ expression: Any) -> Expression {
-        return Expression(self.impl.match(Expression.toImpl(expression)))
-    }
-    
-    
-    /// Creates a full text NOT match expression that evaluates whether or not the current expression
-    /// full text NOT matches the given expression.
-    ///
-    /// - Parameter expression: The expression to be compared with the current expression.
-    /// - Returns: A full text NOT match expression.
-    public func notMatch(_ expression: Any) -> Expression {
-        return Expression(self.impl.notMatch(Expression.toImpl(expression)))
-    }
- 
     
     // MARK: NULL check operators.
     
@@ -347,9 +253,6 @@ public class Expression {
     }
     
     
-    // MARK: Is operators
-    
-    
     /// Creates an IS expression that evaluates whether or not the current expression is equal to
     /// the given expression.
     ///
@@ -369,7 +272,6 @@ public class Expression {
         return Expression(self.impl.isNot(to: Expression.toImpl(expression)))
     }
     
-    
     // MARK: Aggregate operators
     
     
@@ -385,19 +287,6 @@ public class Expression {
                                                    and: Expression.toImpl(expression2)))
     }
 
-    
-    /// Creates a NOT between expression that evaluates whether or not the current expression is not
-    /// between the given expressions inclusively.
-    ///
-    /// - Parameters:
-    ///   - expression1: The inclusive lower bound expression.
-    ///   - expression2: The inclusive upper bound expression.
-    /// - Returns: A NOT between expression.
-    public func notBetween(_ expression1: Any, and expression2: Any) -> Expression {
-        return Expression(self.impl.notBetween(Expression.toImpl(expression1),
-                                                      and: Expression.toImpl(expression2)))
-    }
-    
     
     // MARK: Collection operators:
     
@@ -428,62 +317,6 @@ public class Expression {
         }
         return Expression(self.impl.not(in: impls))
     }
-
-    
-    // MARK: Quantified operators:
-    
-
-    /// Creates a variable expression. The variable are used to represent each item in an array
-    /// in the quantified operators (ANY/ANY AND EVERY/EVERY <variable name> IN <expr> SATISFIES <expr>)
-    /// to evaluate expressions over an array.
-    ///
-    /// - Parameter name: The variable name.
-    /// - Returns: A variable expression.
-    public static func variable(_ name: String) -> Expression {
-        return Expression.init(CBLQueryExpression.variableNamed(name))
-    }
-    
-    
-    /// Creates an ANY Quantified operator (ANY <variable name> IN <expr> SATISFIES <expr>)
-    /// with the given variable name. The method returns an IN clause object that is used for
-    /// specifying an array object or an expression evaluated as an array object, each item of
-    /// which will be evaluated against the satisfies expression.
-    /// The ANY operator returns TRUE if at least one of the items in the array satisfies the given
-    /// satisfies expression.
-    ///
-    /// - Parameter variable: The variable name.
-    /// - Returns: An In object.
-    public static func any(_ variable: String) -> In {
-        return In(type: .any, variable: variable)
-    }
-
-    
-    /// Creates an ANY AND EVERY Quantified operator (ANY AND EVERY <variable name> IN <expr>
-    /// SATISFIES <expr>) with the given variable name. The method returns an IN clause object
-    /// that is used for specifying an array object or an expression evaluated as an array object,
-    /// each of which will be evaluated against the satisfies expression.
-    /// The ANY AND EVERY operator returns TRUE if the array is NOT empty, and at least one of
-    /// the items in the array satisfies the given satisfies expression.
-    ///
-    /// - Parameter variable: The variable name.
-    /// - Returns: An In object.
-    public static func anyAndEvery(_ variable: String) -> In {
-        return In(type: .anyAndEvery, variable: variable)
-    }
-    
-    
-    /// Creates an EVERY Quantified operator (EVERY <variable name> IN <expr> SATISFIES <expr>)
-    /// with the given variable name. The method returns an IN clause object
-    /// that is used for specifying an array object or an expression evaluated as an array object,
-    /// each of which will be evaluated against the satisfies expression.
-    /// The EVERY operator returns TRUE if the array is empty OR every item in the array
-    /// satisfies the given satisfies expression.
-    ///
-    /// - Parameter variable: The variable name.
-    /// - Returns: An In object.
-    public static func every(_ variable: String) -> In {
-        return In(type: .every, variable: variable)
-    }
     
     
     // MARK: Internal
@@ -511,28 +344,6 @@ public class Expression {
             impls.append(expr.impl)
         }
         return impls;
-    }
-    
-}
-
-/// A property expression.
-public class PropertyExpression: Expression {
-    
-    /// Specifies an alias name of the data source to query the data from.
-    ///
-    /// - Parameter alias: The alias name of the data source.
-    /// - Returns: The property Expression with the given data source alias name.
-    public func from(_ alias: String) -> Expression {
-        return Expression(CBLQueryExpression.property(property, from: alias))
-    }
-    
-    // Internal
-    
-    let property: String
-    
-    init(property: String) {
-        self.property = property
-        super.init(CBLQueryExpression.property(property))
     }
     
 }

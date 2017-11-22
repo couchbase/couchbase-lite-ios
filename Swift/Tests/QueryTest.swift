@@ -10,13 +10,13 @@ import XCTest
 import CouchbaseLiteSwift
 
 class QueryTest: CBLTestCase {
-    let kDOCID = SelectResult.expression(Expression.meta().id)
+    let kDOCID = SelectResult.expression(Meta.id)
     
-    let kSEQUENCE = SelectResult.expression(Expression.meta().sequence)
+    let kSEQUENCE = SelectResult.expression(Meta.sequence)
     
     func verifyQuery(_ query: Query, block: (UInt64, Result) throws ->Void) throws -> UInt64 {
         var n: UInt64 = 0
-        for row in try query.run() {
+        for row in try query.execute() {
             n += 1
             try block(n, row)
         }
@@ -51,7 +51,7 @@ class QueryTest: CBLTestCase {
             let w = c[0] as! Expression
             let q = Query.select(kDOCID).from(DataSource.database(db)).where(w)
             let rows = try verifyQuery(q, block: { (n, r) in
-                let doc = db.getDocument(r.string(at: 0)!)!
+                let doc = db.document(withID: r.string(at: 0)!)!
                 let props = doc.toDictionary()
                 let number1 = props["number1"] as! Int
                 if let index = result.index(where: {($0["number1"] as! Int) == number1}) {
@@ -69,7 +69,7 @@ class QueryTest: CBLTestCase {
         
         let q = Query.select(kDOCID).from(DataSource.database(db))
         let numRows = try verifyQuery(q) { (n, r) in
-            let doc = db.getDocument(r.string(at: 0)!)!
+            let doc = db.document(withID: r.string(at: 0)!)!
             let expectedID = String(format: "doc-%03llu", n);
             XCTAssertEqual(doc.id, expectedID);
             XCTAssertEqual(doc.sequence, n);
@@ -84,13 +84,9 @@ class QueryTest: CBLTestCase {
         let n1 = Expression.property("number1")
         let cases = [
             [n1.lessThan(3), "number1 < 3"],
-            [n1.notLessThan(3), "number1 >= 3"],
             [n1.lessThanOrEqualTo(3), "number1 <= 3"],
-            [n1.notLessThanOrEqualTo(3), "number1 > 3"],
             [n1.greaterThan(6), "number1 > 6"],
-            [n1.notGreaterThan(6), "number1 <= 6"],
             [n1.greaterThanOrEqualTo(6), "number1 >= 6"],
-            [n1.notGreaterThanOrEqualTo(6), "number1 < 6"],
             [n1.equalTo(7), "number1 == 7"],
             [n1.notEqualTo(7), "number1 != 7"],
         ]
@@ -182,7 +178,7 @@ class QueryTest: CBLTestCase {
         var q = Query.select(kDOCID).from(DataSource.database(db)).where(
             Expression.property("string").is("string"))
         var numRows = try verifyQuery(q) { (n, r) in
-            let doc = db.getDocument(r.string(at: 0)!)!
+            let doc = db.document(withID: r.string(at: 0)!)!
             XCTAssertEqual(doc.id, doc1.id);
             XCTAssertEqual(doc.string(forKey: "string")!, "string");
         }
@@ -191,7 +187,7 @@ class QueryTest: CBLTestCase {
         q = Query.select(kDOCID).from(DataSource.database(db)).where(
             Expression.property("string").isNot("string1"))
         numRows = try verifyQuery(q) { (n, r) in
-            let doc = db.getDocument(r.string(at: 0)!)!
+            let doc = db.document(withID: r.string(at: 0)!)!
             XCTAssertEqual(doc.id, doc1.id);
             XCTAssertEqual(doc.string(forKey: "string")!, "string");
         }
@@ -221,7 +217,7 @@ class QueryTest: CBLTestCase {
         
         var firstNames: [String] = []
         let numRows = try verifyQuery(q, block: { (n, r) in
-            let doc = db.getDocument(r.string(at: 0)!)!
+            let doc = db.document(withID: r.string(at: 0)!)!
             let v: String? = doc.dictionary(forKey: "name")?.string(forKey: "first")
             if let firstName = v {
                 firstNames.append(firstName)
@@ -239,7 +235,7 @@ class QueryTest: CBLTestCase {
         let o = Ordering.property("name.first")
         let q = Query.select(kDOCID).from(DataSource.database(db)).where(w).orderBy(o)
         let numRows = try verifyQuery(q, block: { (n, r) in
-            let doc = db.getDocument(r.string(at: 0)!)!
+            let doc = db.document(withID: r.string(at: 0)!)!
             let firstName = expected[Int(n)-1]
             XCTAssertEqual(doc.dictionary(forKey: "name")!.string(forKey: "first")!, firstName)
         })
@@ -260,7 +256,7 @@ class QueryTest: CBLTestCase {
         
         var firstNames: [String] = []
         let numRows = try verifyQuery(q, block: { (n, r) in
-            let doc = db.getDocument(r.string(at: 0)!)!
+            let doc = db.document(withID: r.string(at: 0)!)!
             let v: String? = doc.dictionary(forKey: "name")?.string(forKey: "first")
             if let firstName = v {
                 firstNames.append(firstName)
@@ -274,17 +270,16 @@ class QueryTest: CBLTestCase {
     func testWhereMatch() throws {
         try loadJSONResource(name: "sentences")
         
-        let index = Index.ftsIndex()
-            .on(FTSIndexItem.expression(Expression.property("sentence")))
+        let index = Index.fullTextIndex(withItems: FullTextIndexItem.property("sentence"))
             .locale(nil)
             .ignoreAccents(false)
         try db.createIndex(index, withName: "sentence")
         
-        let sentence = Expression.property("sentence")
-        let s_sentence = SelectResult.expression(sentence)
+        let sentence = FullTextExpression.index("sentence")
+        let s_sentence = SelectResult.property("sentence")
         
         let w = sentence.match("'Dummie woman'")
-        let o = Ordering.expression(Function.rank(sentence)).descending()
+        let o = Ordering.expression(FullTextFunction.rank("sentence")).descending()
         let q = Query.select(kDOCID, s_sentence).from(DataSource.database(db)).where(w).orderBy(o)
         let numRows = try verifyQuery(q) { (n, r) in
             
@@ -307,7 +302,7 @@ class QueryTest: CBLTestCase {
             let q = Query.select(kDOCID).from(DataSource.database(db)).orderBy(o)
             var firstNames: [String] = []
             let numRows = try verifyQuery(q, block: { (n, r) in
-                let doc = db.getDocument(r.string(at: 0)!)!
+                let doc = db.document(withID: r.string(at: 0)!)!
                 if let firstName = doc.dictionary(forKey: "name")?.string(forKey: "first") {
                     firstNames.append(firstName)
                 }
@@ -348,7 +343,7 @@ class QueryTest: CBLTestCase {
         doc.setValue(42, forKey: "theone")
         try saveDocument(doc)
         
-        let DOCID = SelectResult.expression(Expression.meta().id.from("main"))
+        let DOCID = SelectResult.expression(Meta.id.from("main"))
         
         let q = Query
             .select(DOCID)
@@ -359,7 +354,7 @@ class QueryTest: CBLTestCase {
                         .equalTo(Expression.property("theone").from("secondary"))))
         
         let numRow = try verifyQuery(q, block: { (n, r) in
-            let doc = db.getDocument(r.string(at: 0)!)!
+            let doc = db.document(withID: r.string(at: 0)!)!
             XCTAssertEqual(doc.int(forKey: "number1"), 42)
         })
         XCTAssertEqual(numRow, 1)
@@ -445,8 +440,10 @@ class QueryTest: CBLTestCase {
             .where(NUMBER1.between(PARAM_N1, and: PARAM_N2))
             .orderBy(Ordering.expression(NUMBER1))
         
-        q.parameters.setValue(2, forName: "num1")
-        q.parameters.setValue(5, forName: "num2")
+        var params = Parameters()
+        params.setValue(2, forName: "num1")
+        params.setValue(5, forName: "num2")
+        q.parameters = params
         
         let expectedNumbers = [2, 3, 4, 5]
         let numRow = try verifyQuery(q, block: { (n, r) in
@@ -460,8 +457,8 @@ class QueryTest: CBLTestCase {
     func testMeta() throws {
         try loadNumbers(5)
         
-        let DOC_ID  = Expression.meta().id
-        let DOC_SEQ = Expression.meta().sequence
+        let DOC_ID  = Meta.id
+        let DOC_SEQ = Meta.sequence
         let NUMBER1 = Expression.property("number1")
         
         let S_DOC_ID  = SelectResult.expression(DOC_ID)
@@ -521,7 +518,10 @@ class QueryTest: CBLTestCase {
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(NUMBER1))
             .limit(Expression.parameter("LIMIT_NUM"))
-        q.parameters.setValue(3, forName: "LIMIT_NUM")
+        
+        var params = Parameters()
+        params.setValue(3, forName: "LIMIT_NUM")
+        q.parameters = params
         
         expectedNumbers = [1, 2, 3]
         numRow = try verifyQuery(q, block: { (n, r) in
@@ -555,8 +555,11 @@ class QueryTest: CBLTestCase {
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(NUMBER1))
             .limit(Expression.parameter("LIMIT_NUM"), offset: Expression.parameter("OFFSET_NUM"))
-        q.parameters.setValue(3, forName: "LIMIT_NUM")
-        q.parameters.setValue(5, forName: "OFFSET_NUM")
+        
+        var params = Parameters()
+        params.setValue(3, forName: "LIMIT_NUM")
+        params.setValue(5, forName: "OFFSET_NUM")
+        q.parameters = params
         
         expectedNumbers = [6, 7, 8]
         numRow = try verifyQuery(q, block: { (n, r) in
@@ -645,14 +648,14 @@ class QueryTest: CBLTestCase {
     
     
     func testArrayFunctions() throws {
-        let doc = MutableDocument("doc1")
+        let doc = MutableDocument(withID: "doc1")
         let array = MutableArrayObject()
         array.addValue("650-123-0001")
         array.addValue("650-123-0002")
         doc.setValue(array, forKey: "array")
-        try self.db.save(doc)
+        try self.db.saveDocument(doc)
         
-        let ARRAY_LENGTH = Function.arrayLength(Expression.property("array"))
+        let ARRAY_LENGTH = ArrayFunction.length(Expression.property("array"))
         var q = Query
             .select(SelectResult.expression(ARRAY_LENGTH))
             .from(DataSource.database(db))
@@ -662,8 +665,8 @@ class QueryTest: CBLTestCase {
         })
         XCTAssertEqual(numRow, 1)
         
-        let ARRAY_CONTAINS1 = Function.arrayContains(Expression.property("array"), value: "650-123-0001")
-        let ARRAY_CONTAINS2 = Function.arrayContains(Expression.property("array"), value: "650-123-0003")
+        let ARRAY_CONTAINS1 = ArrayFunction.contains(Expression.property("array"), value: "650-123-0001")
+        let ARRAY_CONTAINS2 = ArrayFunction.contains(Expression.property("array"), value: "650-123-0003")
         q = Query
             .select(SelectResult.expression(ARRAY_CONTAINS1), SelectResult.expression(ARRAY_CONTAINS2))
             .from(DataSource.database(db))
@@ -677,9 +680,9 @@ class QueryTest: CBLTestCase {
     
     func testMathFunctions() throws {
         let num = 0.6
-        let doc = MutableDocument("doc1")
+        let doc = MutableDocument(withID: "doc1")
         doc.setValue(num, forKey: "number")
-        try db.save(doc)
+        try db.saveDocument(doc)
         
         let expectedValues = [0.6,
                               acos(num),
@@ -743,9 +746,9 @@ class QueryTest: CBLTestCase {
     
     func testStringFunctions() throws {
         let str = "  See you 18r  "
-        let doc = MutableDocument("doc1")
+        let doc = MutableDocument(withID: "doc1")
         doc.setValue(str, forKey: "greeting")
-        try db.save(doc)
+        try db.saveDocument(doc)
         
         let p = Expression.property("greeting")
         
@@ -800,12 +803,12 @@ class QueryTest: CBLTestCase {
     
     
     func testTypeFunctions() throws {
-        let doc = MutableDocument("doc1")
+        let doc = MutableDocument(withID: "doc1")
         doc.setValue(MutableArrayObject(array: ["a", "b"]), forKey: "array")
-        doc.setValue(MutableDictionaryObject(dictionary: ["foo": "bar"]), forKey: "dictionary")
+        doc.setValue(MutableDictionaryObject(withDictionary: ["foo": "bar"]), forKey: "dictionary")
         doc.setValue(3.14, forKey: "number")
         doc.setValue("string", forKey: "string")
-        try db.save(doc)
+        try db.saveDocument(doc)
         
         let ARRAY = Expression.property("array")
         let DICT = Expression.property("dictionary")
@@ -837,17 +840,17 @@ class QueryTest: CBLTestCase {
     func testQuantifiedOperators() throws {
         try loadJSONResource(name: "names_100")
         
-        let DOC_ID  = Expression.meta().id
+        let DOC_ID  = Meta.id
         let S_DOC_ID  = SelectResult.expression(DOC_ID)
         
         let LIKES = Expression.property("likes")
-        let VAR_LIKE = Expression.variable("LIKE")
+        let VAR_LIKE = ArrayExpression.variable("LIKE")
         
         // ANY:
         var q = Query
             .select(S_DOC_ID)
             .from(DataSource.database(db))
-            .where(Expression.any("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("climbing")))
+            .where(ArrayExpression.any("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("climbing")))
         
         let expected = ["doc-017", "doc-021", "doc-023", "doc-045", "doc-060"]
         var numRow = try verifyQuery(q, block: { (n, r) in
@@ -859,7 +862,7 @@ class QueryTest: CBLTestCase {
         q = Query
             .select(S_DOC_ID)
             .from(DataSource.database(db))
-            .where(Expression.every("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("taxes")))
+            .where(ArrayExpression.every("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("taxes")))
         
         numRow = try verifyQuery(q, block: { (n, r) in
             if n == 1 {
@@ -872,7 +875,7 @@ class QueryTest: CBLTestCase {
         q = Query
             .select(S_DOC_ID)
             .from(DataSource.database(db))
-            .where(Expression.anyAndEvery("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("taxes")))
+            .where(ArrayExpression.anyAndEvery("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("taxes")))
         
         numRow = try verifyQuery(q, block: { (n, r) in })
         XCTAssertEqual(numRow, 0)
@@ -1083,7 +1086,7 @@ class QueryTest: CBLTestCase {
             let numRow = try verifyQuery(q, block: { (n, r) in })
             XCTAssertEqual(numRow, 1)
             
-            try db.delete(savedDoc)
+            try db.deleteDocument(savedDoc)
         }
     }
     
@@ -1096,11 +1099,10 @@ class QueryTest: CBLTestCase {
             .from(DataSource.database(db))
             .where(Expression.property("number1").lessThan(10))
             .orderBy(Ordering.property("number1"))
-            .toLive()
         
         let x = expectation(description: "changes")
         
-        let listener = q.addChangeListener { (change) in
+        let token = q.addChangeListener { (change) in
             count = count + 1
             XCTAssertNotNil(change.query)
             XCTAssertNil(change.error)
@@ -1113,16 +1115,13 @@ class QueryTest: CBLTestCase {
             }
         }
         
-        q.start()
-        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             try! self.createDoc(numbered: -1, of: 100)
         }
         
         waitForExpectations(timeout: 2.0) { (error) in }
         
-        q.removeChangeListener(listener)
-        q.stop()
+        q.removeChangeListener(withToken: token)
     }
     
     
@@ -1134,9 +1133,8 @@ class QueryTest: CBLTestCase {
             .from(DataSource.database(db))
             .where(Expression.property("number1").lessThan(10))
             .orderBy(Ordering.property("number1"))
-            .toLive()
         
-        let listener = q.addChangeListener { (change) in
+        let token = q.addChangeListener { (change) in
             count = count + 1
             XCTAssertNotNil(change.query)
             XCTAssertNil(change.error)
@@ -1147,8 +1145,6 @@ class QueryTest: CBLTestCase {
                 XCTFail("Unexpected update from LiveQuery")
             }
         }
-        
-        q.start()
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             try! self.createDoc(numbered: 111, of: 100)
@@ -1163,8 +1159,7 @@ class QueryTest: CBLTestCase {
         
         XCTAssertEqual(count, 1)
         
-        q.removeChangeListener(listener)
-        q.stop()
+        q.removeChangeListener(withToken: token)
     }
     
 }

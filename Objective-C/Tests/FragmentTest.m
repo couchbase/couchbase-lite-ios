@@ -100,10 +100,8 @@
         AssertEqual(fragment.doubleValue, 0.0);
         AssertEqual(fragment.booleanValue, YES);
         AssertNil(fragment.array);
-        AssertNotNil(fragment.object);
         AssertNotNil(fragment.value);
         AssertNotNil(fragment.dictionary);
-        AssertEqual(fragment.dictionary, fragment.object);
         AssertEqual(fragment.dictionary, fragment.value);
         AssertEqualObjects([fragment.dictionary toDictionary], dict[@"address"]);
     }];
@@ -125,10 +123,8 @@
         AssertEqual(fragment.doubleValue, 0.0);
         AssertEqual(fragment.booleanValue, YES);
         AssertNil(fragment.dictionary);
-        AssertNotNil(fragment.object);
         AssertNotNil(fragment.value);
         AssertNotNil(fragment.array);
-        AssertEqual(fragment.array, fragment.object);
         AssertEqual(fragment.array, fragment.value);
         AssertEqualObjects([fragment.array toArray], dict[@"references"]);
     }];
@@ -147,9 +143,7 @@
         AssertNil(fragment.dictionary);
         AssertNil(fragment.array);
         AssertNotNil(fragment.number);
-        AssertNotNil(fragment.object);
         AssertNotNil(fragment.value);
-        AssertEqualObjects(fragment.number, fragment.object);
         AssertEqualObjects(fragment.number, fragment.value);
         AssertEqualObjects(fragment.number, @10);
         AssertEqual(fragment.integerValue, 10);
@@ -172,9 +166,7 @@
         AssertNil(fragment.dictionary);
         AssertNil(fragment.array);
         AssertNotNil(fragment.number);
-        AssertNotNil(fragment.object);
         AssertNotNil(fragment.value);
-        AssertEqualObjects(fragment.number, fragment.object);
         AssertEqualObjects(fragment.number, fragment.value);
         AssertEqualObjects(fragment.number, @100.10);
         AssertEqual(fragment.integerValue, 100);
@@ -196,10 +188,8 @@
         AssertNil(fragment.date); 
         AssertNil(fragment.dictionary); 
         AssertNil(fragment.array); 
-        AssertNotNil(fragment.number); 
-        AssertNotNil(fragment.object); 
-        AssertNotNil(fragment.value); 
-        AssertEqualObjects(fragment.number, fragment.object);
+        AssertNotNil(fragment.number);
+        AssertNotNil(fragment.value);
         AssertEqualObjects(fragment.number, fragment.value);
         AssertEqualObjects(fragment.number, @(99.99));
         AssertEqual(fragment.integerValue, 99);
@@ -222,9 +212,7 @@
         AssertNil(fragment.dictionary);
         AssertNil(fragment.array);
         AssertNotNil(fragment.number);
-        AssertNotNil(fragment.object);
         AssertNotNil(fragment.value);
-        AssertEqualObjects(fragment.number, fragment.object);
         AssertEqualObjects(fragment.number, fragment.value);
         AssertEqualObjects(fragment.number, @1);
         AssertEqual(fragment.integerValue, 1);
@@ -248,10 +236,8 @@
         AssertNotNil(fragment.date);
         AssertNil(fragment.dictionary); 
         AssertNil(fragment.array); 
-        AssertNil(fragment.number);    
-        AssertNotNil(fragment.object); 
-        AssertNotNil(fragment.value); 
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: fragment.date], fragment.object);
+        AssertNil(fragment.number);
+        AssertNotNil(fragment.value);
         AssertEqualObjects([CBLJSON JSONObjectWithDate: fragment.date], fragment.value);
         AssertEqualObjects([CBLJSON JSONObjectWithDate: fragment.date],
                            [CBLJSON JSONObjectWithDate: date]);
@@ -276,10 +262,8 @@
         AssertNil(fragment.date); 
         AssertNil(fragment.dictionary); 
         AssertNil(fragment.array); 
-        AssertNil(fragment.number);    
-        AssertNotNil(fragment.object); 
-        AssertNotNil(fragment.value); 
-        AssertEqualObjects(fragment.string, fragment.object);
+        AssertNil(fragment.number);
+        AssertNotNil(fragment.value);
         AssertEqualObjects(fragment.string, fragment.value);
         AssertEqualObjects(fragment.string, @"hello world");
         AssertEqual(fragment.integerValue, 0);
@@ -307,10 +291,8 @@
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);;
         AssertEqual(fragment.booleanValue, YES);
-        AssertNotNil(fragment.dictionary); 
-        AssertNotNil(fragment.object);    
-        AssertNotNil(fragment.value);    
-        AssertEqual(fragment.dictionary, fragment.object);
+        AssertNotNil(fragment.dictionary);
+        AssertNotNil(fragment.value);
         AssertEqual(fragment.dictionary, fragment.value);
         AssertEqualObjects([fragment.dictionary toDictionary], dict[@"address"][@"phones"]);
         AssertEqual(1, (int)[[fragment.dictionary toDictionary] count]);
@@ -331,8 +313,7 @@
         AssertNil(fragment.string);       
         AssertNil(fragment.date);       
         AssertNil(fragment.array);       
-        AssertNil(fragment.dictionary);       
-        AssertNil(fragment.object);          
+        AssertNil(fragment.dictionary);
         AssertNil(fragment.value);          
         AssertEqual(fragment.integerValue, 0);
         AssertEqual(fragment.floatValue, 0.0f);
@@ -356,10 +337,8 @@
         AssertEqual(fragment.floatValue, 0.0f);
         AssertEqual(fragment.doubleValue, 0.0);;
         AssertEqual(fragment.booleanValue, YES);
-        AssertNotNil(fragment.object); 
         AssertNotNil(fragment.value); 
         AssertNotNil(fragment.array);
-        AssertEqual(fragment.array, fragment.object);
         AssertEqual(fragment.array, fragment.value);
         AssertEqualObjects([fragment.array toArray], dict[@"nested-array"][1]);
         AssertEqual(3, (int)[fragment.array toArray].count);
@@ -376,7 +355,6 @@
         AssertNil(fragment.string); 
         AssertNil(fragment.date); 
         AssertNil(fragment.dictionary);
-        AssertNil(fragment.object);    
         AssertNil(fragment.value);    
         AssertNil(fragment.array);
         AssertEqual(fragment.integerValue, 0);
@@ -476,7 +454,7 @@
 }
 
 
-- (void) testNonDictionaryFragmentSetObject {
+- (void) testNonDictionaryFragmentSetValue {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @"value1" forKey: @"string1"];
     [doc setObject: @"value2" forKey: @"string2"];
@@ -495,11 +473,11 @@
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
     Assert([[doc objectForKey: @"array"] isKindOfClass: [CBLMutableArray class]]);
-    [doc[@"array"].array addObject: @"string"];
-    [doc[@"array"].array addObject: @10];
-    [doc[@"array"].array addObject: @10.10];
-    [doc[@"array"].array addObject: @YES];
-    [doc[@"array"].array addObject: date];
+    [doc[@"array"].array addValue: @"string"];
+    [doc[@"array"].array addValue: @10];
+    [doc[@"array"].array addValue: @10.10];
+    [doc[@"array"].array addValue: @YES];
+    [doc[@"array"].array addValue: date];
     Assert([[doc objectForKey: @"array"] isKindOfClass: [CBLMutableArray class]]);
 
     [self saveDocument: doc eval: ^(CBLDocument* d) {
@@ -527,7 +505,7 @@
     [dict setObject: @"Jason" forKey: @"name"];
     [dict setObject: @{@"street": @"1 Main Street",@"phones": @{@"mobile": @"650-123-4567"}}
                forKey: @"address"];
-    [doc[@"array"].array addObject: dict];
+    [doc[@"array"].array addValue: dict];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertFalse(d[@"array"][-1].exists);
@@ -545,8 +523,8 @@
 - (void) testArrayFragmentSetNSDictionary {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
-    [doc[@"array"].array addObject: @{@"name":@"Jason",
-                                      @"address": @{@"street": @"1 Main Street",
+    [doc[@"array"].array addValue: @{@"name":@"Jason",
+                                     @"address": @{@"street": @"1 Main Street",
                                                    @"phones": @{@"mobile": @"650-123-4567"}}}];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertFalse(d[@"array"][-1].exists);
@@ -565,10 +543,10 @@
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
-    [array addObject: @"Jason"];
-    [array addObject: @5.5];
-    [array addObject: @YES];
-    [doc[@"array"].array addObject:array];
+    [array addValue: @"Jason"];
+    [array addValue: @5.5];
+    [array addValue: @YES];
+    [doc[@"array"].array addValue:array];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects(d[@"array"][0][0].string, @"Jason");
@@ -581,7 +559,7 @@
 - (void) testArrayFragmentSetArray {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
-    [doc[@"array"].array addObject:@[@"Jason", @5.5, @YES]];
+    [doc[@"array"].array addValue:@[@"Jason", @5.5, @YES]];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects(d[@"array"][0][0].string, @"Jason");
@@ -609,7 +587,7 @@
 - (void) testOutOfRangeArrayFragmentSetObject {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     doc[@"array"].value = @[];
-    [doc[@"array"].array addObject:@[@"Jason", @5.5, @YES]];
+    [doc[@"array"].array addValue:@[@"Jason", @5.5, @YES]];
     doc[@"array"][0][3].value = @1;
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {

@@ -8,112 +8,6 @@
 
 import Foundation
 
-
-/// The encryption key, a raw AES-256 key data which has exactly 32 bytes in length
-/// or a password string. If the password string is given, it will be internally converted to a
-/// raw AES key using 64,000 rounds of PBKDF2 hashing.
-///
-/// - key: 32-byte AES-256 data key. To create a key, generate random data using a secure
-///        cryptographic randomizer like SecRandomCopyBytes or CCRandomGenerateBytes.
-/// - password: Password string that will be internally converted to a raw AES-256 key
-///             using 64,000 rounds of PBKDF2 hashing.
-public enum EncryptionKey {
-    case key (Data)
-    case password (String)
-    
-    var asObject: CBLEncryptionKey {
-        switch (self) {
-        case .key (let data):
-            return CBLEncryptionKey(key: data)
-        case .password(let pwd):
-            return CBLEncryptionKey(password: pwd)
-        }
-    }
-}
-
-
-/// Options for opening a database. All properties default to NO or nil.
-public struct DatabaseConfiguration {
-    
-    /// Initialize a DatabaseConfiguration with the default configuration.
-    public init() { }
-    
-    /// Path to the directory to store the database in. If the directory doesn't already exist it
-    /// will be created when the database is opened.
-    /// A nil value (the default) means to use the default directory, in Application Support. You
-    /// won't usually need to change this.
-    public var directory: String? {
-        get {
-            return _directory ?? CBLDatabaseConfiguration().directory
-        }
-        set {
-            _directory = newValue
-        }
-    }
-    
-    /// The conflict resolver for this database.
-    /// If nil, a default algorithm will be used, where the revision with more history wins.
-    /// An individual document can override this for itself by setting its own property.
-    public var conflictResolver: ConflictResolver?
-
-    /// A key to encrypt the database with. If the database does not exist and is being created, it
-    /// will use this key, and the same key must be given every time it's opened.
-    ///
-    /// * The primary form of key is a Data object 32 bytes in length: this is interpreted as a raw
-    ///   AES-256 key. To create a key, generate random data using a secure cryptographic randomizer
-    ///   like SecRandomCopyBytes or CCRandomGenerateBytes.
-    /// * Alternatively, the value may be a string containing a password. This will be run through
-    ///   64,000 rounds of the PBKDF algorithm to securely convert it into an AES-256 key.
-    /// * A default nil value, of course, means the database is unencrypted.
-    public var encryptionKey: EncryptionKey?
-    
-    /// File protection/encryption options (iOS only.)
-    /// Defaults to whatever file protection settings you've specified in your app's entitlements.
-    /// Specifying a nonzero value here overrides those settings for the database files.
-    /// If file protection is at the highest level, NSDataWritingFileProtectionCompleteUnlessOpen or
-    /// NSDataWritingFileProtectionComplete, it will not be possible to read or write the database
-    /// when the device is locked. This can make it impossible to run replications in the background
-    /// or respond to push notifications.
-    public var fileProtection: NSData.WritingOptions = []
-    
-    // MARK: Internal
-    
-    var _directory: String?
-    
-    func toImpl() -> CBLDatabaseConfiguration {
-        let config = CBLDatabaseConfiguration()
-        
-        if let dir = _directory {
-            config.directory = dir
-        }
-        
-        if let cr = self.conflictResolver {
-            config.conflictResolver = BridgingConflictResolver(resolver: cr)
-        }
-        
-        config.encryptionKey = self.encryptionKey?.asObject
-        
-        config.fileProtection = self.fileProtection
-        
-        return config
-    }
-    
-    class BridgingConflictResolver: NSObject, CBLConflictResolver {
-        let _resovler: ConflictResolver
-        
-        init(resolver: ConflictResolver) {
-            _resovler = resolver
-        }
-        
-        public func resolve(_ conflict: CBLConflict) -> CBLDocument? {
-            let resolved = _resovler.resolve(conflict: Conflict(impl: conflict))
-            return resolved?._impl
-        }
-    }
-    
-}
-
-
 /// Log domain. The log domains here are tentative and subject to change.
 public enum LogDomain: UInt8 {
     case all = 0
@@ -170,7 +64,7 @@ public final class Database {
     
     
     /// Gets a Document object with the given ID.
-    public func getDocument(_ id: String) -> Document? {
+    public func document(withID id: String) -> Document? {
         if let implDoc = _impl.document(withID: id) {
             return Document(implDoc)
         }
@@ -179,21 +73,15 @@ public final class Database {
     
     
     /// Checks whether the document of the given ID exists in the database or not.
-    public func contains(_ docID: String) -> Bool {
-        return _impl.contains(docID)
+    public func containsDocument(withID id: String) -> Bool {
+        return _impl.containsDocument(withID:id)
     }
     
     
     /// Gets document fragment object by the given document ID.
-    public subscript(id: String) -> DocumentFragment {
-        return DocumentFragment(_impl[id])
+    public subscript(key: String) -> DocumentFragment {
+        return DocumentFragment(_impl[key])
     }
-    
-    
-    
-    ///
-    /// - Parameter document: The document.
-    /// - Throws: An error on a failure.
     
     
     /// Saves the given mutable document to the database.
@@ -206,7 +94,7 @@ public final class Database {
     /// - Parameter document: The document.
     /// - Returns: The saved Document.
     /// - Throws: An error on a failure.
-    @discardableResult public func save(_ document: MutableDocument) throws -> Document {
+    @discardableResult public func saveDocument(_ document: MutableDocument) throws -> Document {
         let doc = try _impl.save(document._impl as! CBLMutableDocument)
         return Document(doc)
     }
@@ -220,7 +108,7 @@ public final class Database {
     ///
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
-    public func delete(_ document: Document) throws {
+    public func deleteDocument(_ document: Document) throws {
         try _impl.delete(document._impl)
     }
     
@@ -231,7 +119,7 @@ public final class Database {
     ///
     /// - Parameter document: The document.
     /// - Throws: An error on a failure.
-    public func purge(_ document: Document) throws {
+    public func purgeDocument(_ document: Document) throws {
         try _impl.purgeDocument(document._impl)
     }
     
@@ -242,9 +130,9 @@ public final class Database {
     ///
     /// - Parameter block: The block to be executed as a batch operations.
     /// - Throws: An error on a failure.
-    public func inBatch(_ block: () throws -> Void ) throws {
+    public func inBatch(using block: () throws -> Void ) throws {
         var caught: Error? = nil
-        try _impl.inBatch(do: {
+        try _impl.inBatch(usingBlock: {
             do {
                 try block()
             } catch let error {
@@ -257,17 +145,31 @@ public final class Database {
     }
     
     
-    /// Adds a database change listener block.
+    /// Adds a database change listener. Changes will be posted on the main queue.
     ///
-    /// - Parameter block: The block to be executed when the change is received.
-    /// - Returns: An opaque object to act as the listener and for removing the listener
-    ///            when calling the removeChangeListener() method.
-    @discardableResult public func addChangeListener(_ block: @escaping (DatabaseChange) -> Void)
-        -> NSObjectProtocol
+    /// - Parameter listener: The listener to post changes.
+    /// - Returns: An opaque listener token object for removing the listener.
+    @discardableResult public func addChangeListener(
+        _ listener: @escaping (DatabaseChange) -> Void) -> ListenerToken
     {
-        return _impl.addChangeListener({ (change) in
-            block(change)
-        })
+        return self.addChangeListener(withQueue: nil, listener: listener)
+    }
+    
+    
+    /// Adds a database change listener with the dispatch queue on which changes
+    /// will be posted. If the dispatch queue is not specified, the changes will be
+    /// posted on the main queue.
+    ///
+    /// - Parameters:
+    ///   - queue: The dispatch queue.
+    ///   - listener: The listener to post changes.
+    /// - Returns: An opaque listener token object for removing the listener.
+    @discardableResult  public func addChangeListener(withQueue queue: DispatchQueue?,
+        listener: @escaping (DatabaseChange) -> Void) -> ListenerToken
+    {
+        return _impl.addChangeListener(with: queue) { (change) in
+            listener(change)
+        }
     }
     
     
@@ -275,24 +177,39 @@ public final class Database {
     ///
     /// - Parameters:
     ///   - documentID: The document ID.
-    ///   - block: The block to be executed when the change is received.
-    /// - Returns: An opaque object to act as the listener and for removing the listener
-    ///            when calling the removeChangeListener() method.
-    public func addChangeListener(documentID: String,
-                                  using block: @escaping (DocumentChange) -> Void) -> NSObjectProtocol
+    ///   - listener: The listener to post changes.
+    /// - Returns: An opaque listener token object for removing the listener.
+    @discardableResult public func addDocumentChangeListener(withID id: String,
+        listener: @escaping (DocumentChange) -> Void) -> ListenerToken
     {
-        return _impl.addChangeListener(forDocumentID: documentID) { (change) in
-            block(change)
+        return self.addDocumentChangeListener(withID: id, queue: nil, listener: listener)
+    }
+    
+    
+    
+    /// Adds a document change listener for the document with the given ID and the
+    /// dispatch queue on which changes will be posted. If the dispatch queue
+    /// is not specified, the changes will be posted on the main queue.
+    ///
+    /// - Parameters:
+    ///   - id: The document ID.
+    ///   - queue: The dispatch queue.
+    ///   - listener: The listener to post changes.
+    /// - Returns: An opaque listener token object for removing the listener.
+    @discardableResult public func addDocumentChangeListener( withID id: String,
+        queue: DispatchQueue?, listener: @escaping (DocumentChange) -> Void) -> ListenerToken
+    {
+        return _impl.addDocumentChangeListener(withID: id, queue: queue) { (change) in
+            listener(change)
         }
     }
     
     
-    /// Removes a change listener. The given change listener is the opaque object 
-    /// returned by the addChangeListener() method.
+    /// Removes a change listener with the given listener token.
     ///
-    /// - Parameter listener: The listener object to be removed.
-    public func removeChangeListener(_ listener: NSObjectProtocol) {
-        _impl.removeChangeListener(listener)
+    /// - Parameter token: The listener token.
+    public func removeChangeListener(withToken token: ListenerToken) {
+        _impl.removeChangeListener(with: token)
     }
     
     
@@ -336,7 +253,7 @@ public final class Database {
     ///   - name: The database name.
     ///   - directory: The directory where the database is located at.
     /// - Throws: An error on a failure.
-    public class func delete(_ name: String, inDirectory directory: String? = nil) throws {
+    public class func delete(withName name: String, inDirectory directory: String? = nil) throws {
         try CBLDatabase.delete(name, inDirectory: directory)
     }
     
@@ -347,7 +264,7 @@ public final class Database {
     ///   - name: The database name.
     ///   - directory: The directory where the database is located at.
     /// - Returns: True if the database exists, otherwise false.
-    public class func exists(_ name: String, inDirectory directory: String? = nil) -> Bool {
+    public class func exists(withName name: String, inDirectory directory: String? = nil) -> Bool {
         return CBLDatabase.databaseExists(name, inDirectory: directory)
     }
     
@@ -363,9 +280,9 @@ public final class Database {
     ///   - config: The database configuration for the new database name.
     /// - Throws: An error on a failure.
     public class func copy(fromPath path: String, toDatabase name: String,
-                           config: DatabaseConfiguration?) throws
+                           withConfig config: DatabaseConfiguration?) throws
     {
-        try CBLDatabase.copy(fromPath: path, toDatabase: name, config: config?.toImpl())
+        try CBLDatabase.copy(fromPath: path, toDatabase: name, withConfig: config?.toImpl())
     }
     
     
@@ -390,8 +307,12 @@ public final class Database {
     
 }
 
+/// ListenerToken
+public typealias ListenerToken = CBLListenerToken
+
 /// DatabaseChange
 public typealias DatabaseChange = CBLDatabaseChange
 
 /// DocumentChange
 public typealias DocumentChange = CBLDocumentChange
+

@@ -7,7 +7,7 @@
 //
 
 #import "CBLUnaryExpression.h"
-#import "CBLQuery+Internal.h"
+#import "CBLQueryExpression+Internal.h"
 
 @implementation CBLUnaryExpression {
     CBLUnaryExpType _type;

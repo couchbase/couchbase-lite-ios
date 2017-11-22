@@ -93,7 +93,7 @@
     Assert(_seekrit, @"Failed to reopen encrypted db: %@", error);
     
     // Delete database:
-    Assert([_seekrit deleteDatabase: &error], @"Couldn't delete database: %@", error);
+    Assert([_seekrit delete: &error], @"Couldn't delete database: %@", error);
     
     // Re-create database:
     _seekrit = [self openSeekritWithPassword: nil error: &error];
@@ -211,7 +211,7 @@
     
     // Create some documents:
     NSError* error;
-    [_seekrit inBatch: &error do: ^{
+    [_seekrit inBatch: &error usingBlock: ^{
         for (unsigned i=0; i<100; i++) {
             CBLMutableDocument* doc = [self createDocument: nil dictionary: @{@"seq": @(i)}];
             [_seekrit saveDocument: doc error: nil];
@@ -245,7 +245,7 @@
                                   from: [CBLQueryDataSource database: _seekrit]
                                  where: [SEQ notNullOrMissing]
                                orderBy: @[[CBLQueryOrdering expression: SEQ]]];
-    CBLQueryResultSet* rs = [query run: &error];
+    CBLQueryResultSet* rs = [query execute: &error];
     Assert(rs, @"Error when running the query: %@", error);
     AssertEqual(rs.allObjects.count, 100u);
     

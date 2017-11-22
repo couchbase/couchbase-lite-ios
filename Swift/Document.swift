@@ -34,6 +34,7 @@ public class Document : DictionaryProtocol {
     }
     
     
+    // TODO: Review the equality behavior of the equal operator.
     /// Equal to operator for comparing two Document object.
     public static func == (doc1: Document, doc: Document) -> Bool {
         return doc._impl === doc._impl
@@ -64,28 +65,83 @@ public class Document : DictionaryProtocol {
     public var keys: Array<String> {
         return _impl.keys
     }
-
-
-    /// Get a property's value as a ArrayObject, which is a mapping object of an array value.
-    /// Returns nil if the property doesn't exists, or its value is not an array.
+    
+    
+    /// Gets a property's value. The value types are Blob, ArrayObject,
+    /// DictionaryObject, Number, or String based on the underlying data type; or nil
+    /// if the value is nil or the property doesn't exist.
     ///
     /// - Parameter key: The key.
-    /// - Returns: The ArrayObject object or nil.
-    public func array(forKey key: String) -> ArrayObject? {
-        return value(forKey: key) as? ArrayObject
+    /// - Returns: The value or nil.
+    public func value(forKey key: String) -> Any? {
+        return DataConverter.convertGETValue(_impl.object(forKey: key))
     }
 
-
-    /// Get a property's value as a Blob object.
-    /// Returns nil if the property doesn't exist, or its value is not a blob.
+    
+    ///  Gets a property's value as a string.
+    ///  Returns nil if the property doesn't exist, or its value is not a string.
     ///
     /// - Parameter key: The key.
-    /// - Returns: The Blob object or nil.
-    public func blob(forKey key: String) -> Blob? {
-        return _impl.blob(forKey: key)
+    /// - Returns: The String object or nil.
+    public func string(forKey key: String) -> String? {
+        return _impl.string(forKey: key)
     }
-
-
+    
+    
+    /// Get a property's value as an NSNumber object.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The NSNumber object.
+    public func number(forKey key: String) -> NSNumber? {
+        return _impl.number(forKey: key)
+    }
+    
+    
+    /// Gets a property's value as an int value.
+    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    /// Returns 0 if the property doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Int value.
+    public func int(forKey key: String) -> Int {
+        return _impl.integer(forKey: key)
+    }
+    
+    
+    /// Gets a property's value as an int64 value.
+    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    /// Returns 0 if the property doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Int64 value.
+    public func int64(forKey key: String) -> Int64 {
+        return _impl.longLong(forKey: key)
+    }
+    
+    
+    /// Gets a property's value as a float value.
+    /// Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
+    /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Float value.
+    public func float(forKey key: String) -> Float {
+        return _impl.float(forKey: key)
+    }
+    
+    
+    /// Gets a property's value as a double value.
+    /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
+    /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Double value.
+    public func double(forKey key: String) -> Double {
+        return _impl.double(forKey: key)
+    }
+    
+    
+    // TODO: Review the behavior of getting boolean value
     /// Gets a property's value as a boolean value.
     /// Returns true if the value exists, and is either `true` or a nonzero number.
     ///
@@ -94,8 +150,18 @@ public class Document : DictionaryProtocol {
     public func boolean(forKey key: String) -> Bool {
         return _impl.boolean(forKey: key)
     }
-
-
+    
+    
+    /// Get a property's value as a Blob object.
+    /// Returns nil if the property doesn't exist, or its value is not a blob.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The Blob object or nil.
+    public func blob(forKey key: String) -> Blob? {
+        return _impl.blob(forKey: key)
+    }
+    
+    
     /// Gets a property's value as a Date value.
     /// JSON does not directly support dates, so the actual property value must be a string, which is
     /// then parsed according to the ISO-8601 date format (the default used in JSON.)
@@ -107,6 +173,16 @@ public class Document : DictionaryProtocol {
     /// - Returns: The Date value or nil
     public func date(forKey key: String) -> Date? {
         return _impl.date(forKey: key)
+    }
+    
+
+    /// Get a property's value as a ArrayObject, which is a mapping object of an array value.
+    /// Returns nil if the property doesn't exists, or its value is not an array.
+    ///
+    /// - Parameter key: The key.
+    /// - Returns: The ArrayObject object or nil.
+    public func array(forKey key: String) -> ArrayObject? {
+        return value(forKey: key) as? ArrayObject
     }
 
 
@@ -121,79 +197,19 @@ public class Document : DictionaryProtocol {
     }
 
 
-    /// Gets a property's value as a float value.
-    /// Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
-    /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
-    ///
-    /// - Parameter key: The key.
-    /// - Returns: The Float value.
-    public func float(forKey key: String) -> Float {
-        return _impl.float(forKey: key)
-    }
-
-
-    /// Gets a property's value as a double value.
-    /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
-    /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
-    ///
-    /// - Parameter key: The key.
-    /// - Returns: The Double value.
-    public func double(forKey key: String) -> Double {
-        return _impl.double(forKey: key)
-    }
-
-
-    /// Gets a property's value as an int value.
-    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
-    /// Returns 0 if the property doesn't exist or does not have a numeric value.
-    ///
-    /// - Parameter key: The key.
-    /// - Returns: The Int value.
-    public func int(forKey key: String) -> Int {
-        return _impl.integer(forKey: key)
-    }
-
-
-    /// Gets a property's value as an int64 value.
-    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
-    /// Returns 0 if the property doesn't exist or does not have a numeric value.
-    ///
-    /// - Parameter key: The key.
-    /// - Returns: The Int64 value.
-    public func int64(forKey key: String) -> Int64 {
-        return _impl.longLong(forKey: key)
-    }
-
-
-    ///  Gets a property's value as a string.
-    ///  Returns nil if the property doesn't exist, or its value is not a string.
-    ///
-    /// - Parameter key: The key.
-    /// - Returns: The String object or nil.
-    public func string(forKey key: String) -> String? {
-        return _impl.string(forKey: key)
-    }
-
-    /// Gets a property's value. The value types are Blob, ArrayObject,
-    /// DictionaryObject, Number, or String based on the underlying data type; or nil
-    /// if the value is nil or the property doesn't exist.
-    ///
-    /// - Parameter key: The key.
-    /// - Returns: The value or nil.
-    public func value(forKey key: String) -> Any? {
-        return DataConverter.convertGETValue(_impl.object(forKey: key))
-    }
-
     /// Tests whether a property exists or not.
     /// This can be less expensive than value(forKey:), because it does not have to allocate an
     /// object for the property value.
     ///
     /// - Parameter key: The key.
     /// - Returns: True of the property exists, otherwise false.
-    public func contains(_ key: String) -> Bool {
-        return _impl.containsObject(forKey: key)
+    public func contains(key: String) -> Bool {
+        return _impl.containsValue(forKey: key)
     }
 
+    
+    // MARK: Data
+    
 
     /// Gets content of the document as a Dictionary. The values contained in the
     /// returned Dictionary object are all JSON based values.

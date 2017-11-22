@@ -12,13 +12,29 @@ import Foundation
 /// MutableFragmentProtocol provides read and write access to the data value
 /// wrapped by a fragment object.
 protocol MutableFragmentProtocol: FragmentProtocol {
-    
     var value: Any? { get set }
     
-    var array: MutableArrayObject? { get }
+    var string: String? { get set }
     
-    var dictionary: MutableDictionaryObject? { get }
+    var number: NSNumber? { get set }
     
+    var int: Int { get set }
+    
+    var int64: Int64 { get set }
+    
+    var float: Float { get set }
+    
+    var double: Double { get set }
+    
+    var boolean: Bool { get set }
+    
+    var date: Date? { get set }
+    
+    var blob: Blob? { get set }
+    
+    var array: MutableArrayObject? { get set }
+    
+    var dictionary: MutableDictionaryObject? { get set }
 }
 
 
@@ -41,15 +57,112 @@ protocol MutableDictionaryFragment {
 /// MutableFragment objects.
 public class MutableFragment: Fragment, MutableDictionaryFragment, MutableArrayFragment {
     
-    /// Gets the value from or sets the value to the fragment object. The object types are
-    /// ArrayObject, Blob, DictionaryObject, Number, String, NSNull, or nil
+    /// Gets the value from or sets the value to the fragment object.
     public override var value: Any? {
+        get {
+            return DataConverter.convertGETValue(fragmentImpl.value)
+        }
         set {
             fragmentImpl.value = (DataConverter.convertSETValue(newValue) as! NSObject)
         }
-        
+    }
+    
+    
+    /// Gets the value as string or sets the string value to the fragment object.
+    public override var string: String? {
         get {
-            return DataConverter.convertGETValue(fragmentImpl.value)
+            return fragmentImpl.string
+        }
+        set {
+            fragmentImpl.string = newValue
+        }
+    }
+    
+    
+    /// Gets the value as number or sets the number value to the fragment object.
+    public override var number: NSNumber? {
+        get {
+            return fragmentImpl.number
+        }
+        set {
+            fragmentImpl.number = newValue
+        }
+    }
+    
+    
+    /// Gets the value as integer or sets the integer value to the fragment object.
+    public override var int: Int {
+        get {
+            return fragmentImpl.integerValue
+        }
+        set {
+            fragmentImpl.integerValue = newValue
+        }
+    }
+    
+    
+    /// Gets the value as integer or sets the integer value to the fragment object.
+    public override var int64: Int64 {
+        get {
+            return fragmentImpl.longLongValue
+        }
+        set {
+            fragmentImpl.longLongValue = newValue
+        }
+    }
+    
+    
+    /// Gets the value as float or sets the float value to the fragment object.
+    public override var float: Float {
+        get {
+            return fragmentImpl.floatValue
+        }
+        set {
+            fragmentImpl.floatValue = newValue
+        }
+    }
+    
+    
+    /// Gets the value as double or sets the double value to the fragment object.
+    public override var double: Double {
+        get {
+            return fragmentImpl.doubleValue
+        }
+        set {
+            fragmentImpl.doubleValue = newValue
+        }
+    }
+    
+    
+    /// Gets the value as boolean or sets the boolean value to the fragment object.
+    public override var boolean: Bool {
+        get {
+            return fragmentImpl.booleanValue
+        }
+        set {
+            fragmentImpl.booleanValue = newValue
+        }
+    }
+    
+    
+    /// Gets the value as blob or sets the blob value to the fragment object.
+    public override var date: Date? {
+        get {
+            return fragmentImpl.date
+        }
+        set {
+            fragmentImpl.date = newValue
+        }
+    }
+    
+    
+    /// Gets the value as blob or sets the blob value to the fragment object.
+    public override var blob: Blob? {
+        get {
+            return fragmentImpl.blob
+        }
+        set {
+            fragmentImpl.blob = newValue
         }
     }
     
@@ -57,14 +170,24 @@ public class MutableFragment: Fragment, MutableDictionaryFragment, MutableArrayF
     /// Get the value as an MutableArrayObject object, a mapping object of an array value.
     /// Returns nil if the value is nil, or the value is not an array.
     public override var array: MutableArrayObject? {
-        return DataConverter.convertGETValue(fragmentImpl.array) as? MutableArrayObject
+        get {
+            return DataConverter.convertGETValue(fragmentImpl.array) as? MutableArrayObject
+        }
+        set {
+            fragmentImpl.array = (DataConverter.convertSETValue(newValue) as! CBLMutableArray)
+        }
     }
     
     
     /// Get a property's value as a MutableDictionaryObject object, a mapping object of
     /// a dictionary value. Returns nil if the value is nil, or the value is not a dictionary.
     public override var dictionary: MutableDictionaryObject? {
-        return DataConverter.convertGETValue(fragmentImpl.dictionary) as? MutableDictionaryObject
+        get {
+            return DataConverter.convertGETValue(fragmentImpl.dictionary) as? MutableDictionaryObject
+        }
+        set {
+            fragmentImpl.dictionary = (DataConverter.convertSETValue(newValue) as! CBLMutableDictionary)
+        }
     }
     
     

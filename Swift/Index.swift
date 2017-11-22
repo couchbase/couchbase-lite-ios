@@ -10,24 +10,27 @@ import Foundation
 
 
 /// Index represents an index which could be a value index for regular queries or
-/// full-text search (FTS) index for full-text queries (using the match operator).
+/// full-text index for full-text queries (using the match operator).
 public class Index {
     
-    /// Creates an ON operator used for specifying the items or properties to be indexed
-    /// in order to create a value index.
-    ///
-    /// - Returns: The ON operator.
-    public class func valueIndex() -> ValueIndexOn {
-        return ValueIndexOn();
+    /// Create a value index with the given index items. The index items are a list of
+    /// the properties or expressions to be indexed.
+    
+    /// - Parameter: items The index items.
+    /// - Returns: The ValueIndex.
+    public class func valueIndex(withItems items: ValueIndexItem...) -> ValueIndex {
+        return ValueIndex(items: items)
     }
     
     
-    /// Creates an ON operator used for specifying an item or a property to be indexed
-    /// in order to create a full-text search index.
+    /// Create a full-text index with the given index items. Typically
+    /// the index items are the properties that are used to perform the
+    /// match operation against with.
     ///
+    /// - Parameter: items The index items.
     /// - Returns: The ON operator.
-    public class func ftsIndex() -> FTSIndexOn {
-        return FTSIndexOn();
+    public class func fullTextIndex(withItems items: FullTextIndexItem...) -> FullTextIndex {
+        return FullTextIndex(items: items, ignoreAccents: nil, locale: nil)
     }
     
     // MARK: Internal
@@ -44,21 +47,6 @@ public class Index {
 // MARK: Value Index
 
 
-/// An ON operator for creating a value index.
-public class ValueIndexOn {
-    
-    /// Creates a value index with the given index items. The index items are a list of
-    /// the properties or expressions to be indexed.
-    ///
-    /// - Parameter items: The index items.
-    /// - Returns: The value index.
-    public func on(_ items: ValueIndexItem...) -> ValueIndex {
-        return ValueIndex(items: items)
-    }
-    
-}
-
-
 /// A value index for regular queries.
 public class ValueIndex: Index {
     
@@ -69,7 +57,7 @@ public class ValueIndex: Index {
         for item in items {
             cblItems.append(item.impl)
         }
-        super.init(impl: CBLIndex.valueIndex(on: cblItems))
+        super.init(impl: CBLIndex.valueIndex(with: cblItems))
     }
     
 }
@@ -77,6 +65,10 @@ public class ValueIndex: Index {
 
 /// Value Index Item.
 public class ValueIndexItem {
+    
+    public class func property(_ property: String) -> ValueIndexItem {
+        return ValueIndexItem(impl: CBLValueIndexItem.property(property))
+    }
     
     ///  Creates a value index item with the given expression.
     ///
@@ -99,23 +91,9 @@ public class ValueIndexItem {
 
 // MARK: FTS Index
 
-/// An ON operator for creating a full-text search index.
-public class FTSIndexOn {
-    
-    /// Creates a full-text search index with the given index item. The index item is the property
-    /// be indexed.
-    ///
-    /// - Parameter item: The index item.
-    /// - Returns: The full-text search index.
-    public func on(_ item: FTSIndexItem) -> FTSIndex {
-        return FTSIndex(item: item, ignoreAccents: nil, locale: nil)
-    }
-    
-}
-
 
 /// A full-text search index for full-text search query with the match operator.
-public class FTSIndex: Index {
+public class FullTextIndex: Index {
     
     /// Set to true ignore accents/diacritical marks. The default value is false.
     ///
@@ -124,8 +102,8 @@ public class FTSIndex: Index {
     public func ignoreAccents(_ ignoreAccents: Bool) -> Self {
         if ignoreAccents != self.ignoreAccents {
             self.ignoreAccents = ignoreAccents
-            let options = FTSIndex.options(ignoreAccents: self.ignoreAccents, locale: self.locale)
-            self.impl = CBLIndex.ftsIndex(on: item.impl, options: options)
+            let options = FullTextIndex.options(ignoreAccents: self.ignoreAccents, locale: self.locale)
+            self.impl = CBLIndex.fullTextIndex(with: self.items, options: options)
         }
         return self
     }
@@ -141,28 +119,33 @@ public class FTSIndex: Index {
     public func locale(_ locale: String?) -> Self {
         if locale != self.locale {
             self.locale = locale
-            let options = FTSIndex.options(ignoreAccents: self.ignoreAccents, locale: self.locale)
-            self.impl = CBLIndex.ftsIndex(on: item.impl, options: options)
+            let options = FullTextIndex.options(ignoreAccents: self.ignoreAccents,
+                                           locale: self.locale)
+            self.impl = CBLIndex.fullTextIndex(with: self.items, options: options)
         }
         return self
     }
     
     // MARK: Internal
     
-    let item: FTSIndexItem
+    var items: [CBLFullTextIndexItem]
     var ignoreAccents: Bool?
     var locale: String?
     
-    init(item: FTSIndexItem, ignoreAccents: Bool?, locale: String?) {
-        self.item = item
+    init(items: [FullTextIndexItem], ignoreAccents: Bool?, locale: String?) {
+        self.items = []
+        for item in items {
+            self.items.append(item.impl)
+        }
+        
         self.ignoreAccents = ignoreAccents
         self.locale = locale
-        let options = FTSIndex.options(ignoreAccents: self.ignoreAccents, locale: self.locale)
-        super.init(impl: CBLIndex.ftsIndex(on: item.impl, options: options))
+        let options = FullTextIndex.options(ignoreAccents: self.ignoreAccents, locale: self.locale)
+        super.init(impl: CBLIndex.fullTextIndex(with: self.items, options: options))
     }
     
-    class func options(ignoreAccents: Bool?, locale: String?) -> CBLFTSIndexOptions? {
-        let options = CBLFTSIndexOptions()
+    class func options(ignoreAccents: Bool?, locale: String?) -> CBLFullTextIndexOptions? {
+        let options = CBLFullTextIndexOptions()
         options.ignoreAccents = ignoreAccents ?? false
         options.locale = locale
         return options
@@ -172,22 +155,22 @@ public class FTSIndex: Index {
 
 
 /// Full-text search index item.
-public class FTSIndexItem {
+public class FullTextIndexItem {
     
     /// Creates a full-text search index item with the given expression.
     ///
     /// - Parameter expression: The expression to index. Typically a property expression used to
     ///                         perform the match operation against with.
     /// - Returns: The full-text index item.
-    public class func expression(_ expression: Expression) -> FTSIndexItem {
-        return FTSIndexItem(impl: CBLFTSIndexItem.expression(expression.impl))
+    public class func property(_ property: String) -> FullTextIndexItem {
+        return FullTextIndexItem(impl: CBLFullTextIndexItem.property(property))
     }
     
     // MARK: Internal
     
-    let impl: CBLFTSIndexItem
+    let impl: CBLFullTextIndexItem
     
-    init(impl: CBLFTSIndexItem) {
+    init(impl: CBLFullTextIndexItem) {
         self.impl = impl
     }
     

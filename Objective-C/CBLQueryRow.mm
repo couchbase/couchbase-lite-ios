@@ -83,10 +83,6 @@ using namespace cbl;
     return (NSInteger)FLValue_AsInt([self flValueAtIndex: index]);
 }
 
-- (long long) longLongAtIndex: (NSUInteger)index {
-    return FLValue_AsInt([self flValueAtIndex: index]);
-}
-
 - (float) floatAtIndex: (NSUInteger)index {
     return FLValue_AsFloat([self flValueAtIndex: index]);
 }
@@ -112,11 +108,9 @@ using namespace cbl;
 
 
 
-
 @implementation CBLFullTextQueryRow
 {
-    C4FullTextID _fullTextID;
-    C4FullTextTerm* _matches;
+    C4FullTextMatch* _matches;
 }
 
 @synthesize matchCount=_matchCount;
@@ -127,11 +121,10 @@ using namespace cbl;
 {
     self = [super initWithEnumerator: enumerator c4Enumerator: e];
     if (self) {
-        _fullTextID = e->fullTextID;
-        _matchCount = e->fullTextTermCount;
+        _matchCount = e->fullTextMatchCount;
         if (_matchCount > 0) {
-            _matches = new C4FullTextTerm[_matchCount];
-            memcpy(_matches, e->fullTextTerms, _matchCount * sizeof(C4FullTextTerm));
+            _matches = new C4FullTextMatch[_matchCount];
+            memcpy(_matches, e->fullTextMatches, _matchCount * sizeof(C4FullTextMatch));
         }
     }
     return self;
@@ -144,7 +137,7 @@ using namespace cbl;
 
 
 - (NSData*) fullTextUTF8Data {
-    return sliceResult2data(c4query_fullTextMatched(_enum.c4Query, _fullTextID, nullptr));
+    return sliceResult2data(c4query_fullTextMatched(_enum.c4Query, _matches, nullptr));
 }
 
 
@@ -156,7 +149,7 @@ using namespace cbl;
 
 - (NSUInteger) termIndexOfMatch: (NSUInteger)matchNumber {
     Assert(matchNumber < _matchCount);
-    return _matches[matchNumber].termIndex;
+    return _matches[matchNumber].term;
 }
 
 - (NSRange) textRangeOfMatch: (NSUInteger)matchNumber {

@@ -11,6 +11,7 @@
 #import "CBLQueryCollation.h"
 #import "CBLQueryDataSource.h"
 #import "CBLQueryFunction.h"
+#import "CBLQueryJSONEncoding.h"
 #import "CBLQueryJoin.h"
 #import "CBLQueryLimit.h"
 #import "CBLQueryMeta.h"
@@ -22,14 +23,6 @@
 
 
 NS_ASSUME_NONNULL_BEGIN
-
-@protocol CBLQueryJSONEncoding <NSObject>
-
-/** Encode as a JSON object. */
-- (id) asJSON;
-
-@end
-
 
 @interface CBLQuery () <NSCopying>
 
@@ -52,8 +45,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly, nullable) CBLQueryLimit* limit;
 
 @property (nonatomic, readonly) BOOL distinct;
-
-@property (nonatomic) CBLQueryParameters* parameters;
 
 /** Initializer. */
 - (instancetype) initWithSelect: (NSArray<CBLQuerySelectResult*>*)select
@@ -119,35 +110,11 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
-@interface CBLQueryExpression () <CBLQueryJSONEncoding>
-
-/** This constructor is for hiding the public -init: */
-- (instancetype) initWithNone;
-
-- (id) jsonValue: (id)value;
-
-@end
-
-
-@interface CBLQueryFunction () <CBLQueryJSONEncoding>
-
-- (instancetype) initWithFunction: (NSString*)function params: (nullable NSArray*)params;
-
-@end
-
-
 @interface CBLQueryParameters () <NSCopying>
 
 - (instancetype) initWithParameters: (nullable NSDictionary*)params;
 
 - (nullable NSData*) encodeAsJSON: (NSError**)outError;
-
-@end
-
-
-@interface CBLQueryMeta ()
-
-- (instancetype) initWithFrom: (nullable NSString*)alias;
 
 @end
 

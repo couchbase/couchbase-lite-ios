@@ -78,7 +78,7 @@
     
     XCTestExpectation *x = [self expectationWithDescription: @"Replicator Change"];
     __weak typeof(self) wSelf = self;
-    id listener = [repl addChangeListener: ^(CBLReplicatorChange* change) {
+    id token = [repl addChangeListener: ^(CBLReplicatorChange* change) {
         typeof(self) strongSelf = wSelf;
         [strongSelf verifyChange: change errorCode: errorCode errorDomain:errorDomain];
         if (config.continuous && change.status.activity == kCBLReplicatorIdle
@@ -92,7 +92,7 @@
     
     [repl start];
     [self waitForExpectations: @[x] timeout: 7.0];
-    [repl removeChangeListener: listener];
+    [repl removeChangeListenerWithToken: token];
 }
 
 
@@ -292,7 +292,7 @@
     for (id when in stopWhen) {
         XCTestExpectation* x = [self expectationWithDescription: @"Replicator Change"];
         __weak typeof(self) wSelf = self;
-        id listener = [r addChangeListener: ^(CBLReplicatorChange *change) {
+        id token = [r addChangeListener: ^(CBLReplicatorChange *change) {
             [wSelf verifyChange: change errorCode: 0 errorDomain: nil];
             if (change.status.activity == [when intValue]) {
                 NSLog(@"***** Stop Replicator ******");
@@ -305,7 +305,7 @@
         NSLog(@"***** Start Replicator ******");
         [r start];
         [self waitForExpectations: @[x] timeout: 5.0];
-        [r removeChangeListener: listener];
+        [r removeChangeListenerWithToken: token];
 
         // Add some delay:
         [NSThread sleepForTimeInterval: 0.1];

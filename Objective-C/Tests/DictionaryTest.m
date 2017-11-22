@@ -211,12 +211,12 @@
     [profile1 setObject: @"Scott Tiger" forKey: @"name"];
     [doc setObject: profile1 forKey: @"profile"];
     AssertEqualObjects([doc dictionaryForKey: @"profile"], profile1);
-    Assert([doc containsObjectForKey: @"profile"]);
+    Assert([doc containsValueForKey: @"profile"]);
     
     // Remove profile
-    [doc removeObjectForKey: @"profile"];
+    [doc removeValueForKey: @"profile"];
     AssertNil([doc objectForKey: @"profile"]);
-    AssertFalse([doc containsObjectForKey: @"profile"]);
+    AssertFalse([doc containsValueForKey: @"profile"]);
     
     // Profile1 should be now detached:
     [profile1 setObject: @(20) forKey: @"age"];
@@ -230,7 +230,7 @@
     CBLDocument* savedDoc = [self saveDocument: doc];
     
     AssertNil([savedDoc objectForKey: @"profile"]);
-    AssertFalse([savedDoc containsObjectForKey: @"profile"]);
+    AssertFalse([savedDoc containsValueForKey: @"profile"]);
 }
 
 

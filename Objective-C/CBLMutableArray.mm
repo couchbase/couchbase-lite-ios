@@ -60,7 +60,7 @@
     // For cross-platform consistency we're allowing nil values on Apple platforms too,
     // by translating them to an NSNull so they have the same behavior in the document.
     if (!value) value = [NSNull null];
-
+    
     if (cbl::valueWouldChange(value, _array.get(index), _array)) {
         if (!_array.set(index, [value cbl_toCBLObject]))
             throwRangeException(index);
@@ -68,38 +68,18 @@
 }
 
 
-- (void) setArray: (nullable CBLArray*)value atIndex: (NSUInteger)index {
+- (void) setValue: (id)value atIndex: (NSUInteger)index {
     [self setObject: value atIndex: index];
 }
 
 
-- (void) setBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index {
+- (void) setString: (nullable NSString*)value atIndex: (NSUInteger)index {
     [self setObject: value atIndex: index];
 }
 
 
-- (void) setBoolean: (BOOL)value atIndex: (NSUInteger)index {
-    [self setObject: @(value) atIndex: index];
-}
-
-
-- (void) setDate: (nullable NSDate*)value atIndex: (NSUInteger)index {
+- (void) setNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index {
     [self setObject: value atIndex: index];
-}
-
-
-- (void) setDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index {
-    [self setObject: value atIndex: index];
-}
-
-
-- (void) setDouble: (double)value atIndex: (NSUInteger)index {
-    [self setObject: @(value) atIndex: index];
-}
-
-
-- (void) setFloat: (float)value atIndex: (NSUInteger)index {
-    [self setObject: @(value) atIndex: index];
 }
 
 
@@ -113,12 +93,37 @@
 }
 
 
-- (void) setNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index {
+- (void) setFloat: (float)value atIndex: (NSUInteger)index {
+    [self setObject: @(value) atIndex: index];
+}
+
+
+- (void) setDouble: (double)value atIndex: (NSUInteger)index {
+    [self setObject: @(value) atIndex: index];
+}
+
+
+- (void) setBoolean: (BOOL)value atIndex: (NSUInteger)index {
+    [self setObject: @(value) atIndex: index];
+}
+
+
+- (void) setDate: (nullable NSDate*)value atIndex: (NSUInteger)index {
     [self setObject: value atIndex: index];
 }
 
 
-- (void) setString: (nullable NSString*)value atIndex: (NSUInteger)index {
+- (void) setBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index {
+    [self setObject: value atIndex: index];
+}
+
+
+- (void) setArray: (nullable CBLArray*)value atIndex: (NSUInteger)index {
+    [self setObject: value atIndex: index];
+}
+
+
+- (void) setDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index {
     [self setObject: value atIndex: index];
 }
 
@@ -133,38 +138,18 @@
 }
 
 
-- (void) addArray: (nullable CBLArray*)value {
+- (void) addValue: (id)value  {
     [self addObject: value];
 }
 
 
-- (void) addBlob: (nullable CBLBlob*)value {
+- (void) addString: (nullable NSString*)value {
     [self addObject: value];
 }
 
 
-- (void) addBoolean: (BOOL)value {
-    [self addObject: @(value)];
-}
-
-
-- (void) addDate: (nullable NSDate*)value {
+- (void) addNumber: (nullable NSNumber*)value {
     [self addObject: value];
-}
-
-
-- (void) addDictionary: (nullable CBLDictionary*)value {
-    [self addObject: value];
-}
-
-
-- (void) addDouble: (double)value {
-    [self addObject: @(value)];
-}
-
-
-- (void) addFloat: (float)value {
-    [self addObject: @(value)];
 }
 
 
@@ -178,12 +163,37 @@
 }
 
 
-- (void) addNumber: (nullable NSNumber*)value {
+- (void) addFloat: (float)value {
+    [self addObject: @(value)];
+}
+
+
+- (void) addDouble: (double)value {
+    [self addObject: @(value)];
+}
+
+
+- (void) addBoolean: (BOOL)value {
+    [self addObject: @(value)];
+}
+
+
+- (void) addDate: (nullable NSDate*)value {
     [self addObject: value];
 }
 
 
-- (void) addString: (nullable NSString*)value {
+- (void) addBlob: (nullable CBLBlob*)value {
+    [self addObject: value];
+}
+
+
+- (void) addArray: (nullable CBLArray*)value {
+    [self addObject: value];
+}
+
+
+- (void) addDictionary: (nullable CBLDictionary*)value {
     [self addObject: value];
 }
 
@@ -199,38 +209,18 @@
 }
 
 
-- (void) insertArray: (nullable CBLArray*)value atIndex: (NSUInteger)index {
+- (void) insertValue: (id)value atIndex: (NSUInteger)index {
     [self insertObject: value atIndex: index];
 }
 
 
-- (void) insertBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index {
+- (void) insertString: (nullable NSString*)value atIndex: (NSUInteger)index {
     [self insertObject: value atIndex: index];
 }
 
 
-- (void) insertBoolean: (BOOL)value atIndex: (NSUInteger)index {
-    [self insertObject: @(value) atIndex: index];
-}
-
-
-- (void) insertDate: (nullable NSDate*)value atIndex: (NSUInteger)index {
+- (void) insertNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index {
     [self insertObject: value atIndex: index];
-}
-
-
-- (void) insertDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index {
-    [self insertObject: value atIndex: index];
-}
-
-
-- (void) insertDouble: (double)value atIndex: (NSUInteger)index {
-    [self insertObject: @(value) atIndex: index];
-}
-
-
-- (void) insertFloat: (float)value atIndex: (NSUInteger)index {
-    [self insertObject: @(value) atIndex: index];
 }
 
 
@@ -244,12 +234,37 @@
 }
 
 
-- (void) insertNumber: (nullable NSNumber*)value atIndex: (NSUInteger)index {
+- (void) insertFloat: (float)value atIndex: (NSUInteger)index {
+    [self insertObject: @(value) atIndex: index];
+}
+
+
+- (void) insertDouble: (double)value atIndex: (NSUInteger)index {
+    [self insertObject: @(value) atIndex: index];
+}
+
+
+- (void) insertBoolean: (BOOL)value atIndex: (NSUInteger)index {
+    [self insertObject: @(value) atIndex: index];
+}
+
+
+- (void) insertDate: (nullable NSDate*)value atIndex: (NSUInteger)index {
     [self insertObject: value atIndex: index];
 }
 
 
-- (void) insertString: (nullable NSString*)value atIndex: (NSUInteger)index {
+- (void) insertBlob: (nullable CBLBlob*)value atIndex: (NSUInteger)index {
+    [self insertObject: value atIndex: index];
+}
+
+
+- (void) insertArray: (nullable CBLArray*)value atIndex: (NSUInteger)index {
+    [self insertObject: value atIndex: index];
+}
+
+
+- (void) insertDictionary: (nullable CBLDictionary*)value atIndex: (NSUInteger)index {
     [self insertObject: value atIndex: index];
 }
 
@@ -267,7 +282,7 @@
 #pragma mark - Remove value
 
 
-- (void) removeObjectAtIndex:(NSUInteger)index {
+- (void) removeValueAtIndex:(NSUInteger)index {
     if (!_array.remove(index))
         throwRangeException(index);
 }

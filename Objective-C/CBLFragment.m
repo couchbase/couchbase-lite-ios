@@ -36,11 +36,43 @@
 #pragma mark - GET
 
 
+- (NSObject*) value {
+    if (_key)
+        return [_parent objectForKey: _key];
+    else
+        return [_parent objectAtIndex: _index];
+}
+
+
+- (NSString*) string {
+    if (_key)
+        return [_parent stringForKey: _key];
+    else
+        return [_parent stringAtIndex: _index];
+}
+
+
+- (NSNumber*) number {
+    if (_key)
+        return [_parent numberForKey: _key];
+    else
+        return [_parent numberAtIndex: _index];
+}
+
+
 - (NSInteger) integerValue {
     if (_key)
         return [_parent integerForKey: _key];
     else
         return [_parent integerAtIndex: _index];
+}
+
+
+- (long long) longLongValue {
+    if (_key)
+        return [_parent longLongForKey: _key];
+    else
+        return [_parent longLongAtIndex: _index];
 }
 
 
@@ -65,27 +97,6 @@
         return [_parent booleanForKey: _key];
     else
         return [_parent booleanAtIndex: _index];
-}
-
-
-- (NSObject*) object {
-    return self.value;
-}
-
-
-- (NSString*) string {
-    if (_key)
-        return [_parent stringForKey: _key];
-    else
-        return [_parent stringAtIndex: _index];
-}
-
-
-- (NSNumber*) number {
-    if (_key)
-        return [_parent numberForKey: _key];
-    else
-        return [_parent numberAtIndex: _index];
 }
 
 
@@ -118,14 +129,6 @@
         return [(CBLDictionary*)_parent dictionaryForKey: _key];
     else
         return [(CBLArray*)_parent dictionaryAtIndex: _index];
-}
-
-
-- (NSObject*) value {
-    if (_key)
-        return [_parent objectForKey: _key];
-    else
-        return [_parent objectAtIndex: _index];
 }
 
 

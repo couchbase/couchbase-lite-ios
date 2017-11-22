@@ -61,7 +61,7 @@ class DocumentTest: CBLTestCase {
     
     
     func testCreateDocWithID() throws {
-        let doc1a = MutableDocument("doc1")
+        let doc1a = MutableDocument(withID: "doc1")
         XCTAssertNotNil(doc1a)
         XCTAssertEqual(doc1a.id, "doc1")
         XCTAssertFalse(doc1a.isDeleted)
@@ -75,12 +75,12 @@ class DocumentTest: CBLTestCase {
     
     
     func testCreateDocwithEmptyStringID() throws {
-        let doc1a = MutableDocument("")
+        let doc1a = MutableDocument(withID: "")
         XCTAssertNotNil(doc1a)
         
         var error: NSError? = nil
         do {
-            try db.save(doc1a)
+            try db.saveDocument(doc1a)
         } catch let err as NSError {
             error = err
         }
@@ -92,7 +92,7 @@ class DocumentTest: CBLTestCase {
     
     
     func testCreateDocWithNilID() throws {
-        let doc1a = MutableDocument(nil)
+        let doc1a = MutableDocument(withID: nil)
         XCTAssertNotNil(doc1a)
         XCTAssertTrue(doc1a.id.count > 0)
         XCTAssertFalse(doc1a.isDeleted)
@@ -113,7 +113,7 @@ class DocumentTest: CBLTestCase {
                                                "state": "CA"],
                                    "phones": ["650-123-0001", "650-123-0002"]]
         
-        let doc1a = MutableDocument("doc1", dictionary: dict)
+        let doc1a = MutableDocument(withID: "doc1", dictionary: dict)
         XCTAssertNotNil(doc1a)
         XCTAssertTrue(doc1a.id.count > 0)
         XCTAssertFalse(doc1a.isDeleted)
@@ -179,7 +179,7 @@ class DocumentTest: CBLTestCase {
         
         let anotherDb = try openDB(name: db.name)
         
-        let doc1b = anotherDb.getDocument("doc1")
+        let doc1b = anotherDb.document(withID: "doc1")
         XCTAssertNotNil(doc1b)
         XCTAssertTrue(doc1b !== doc1a)
         XCTAssertEqual(doc1b!.id, doc1a.id)
@@ -195,11 +195,11 @@ class DocumentTest: CBLTestCase {
         
         let savedDoc1a = try saveDocument(doc1a)
         
-        let doc1b = db.getDocument("doc1")
-        let doc1c = db.getDocument("doc1")
+        let doc1b = db.document(withID: "doc1")
+        let doc1c = db.document(withID: "doc1")
         
         let anotherDb = try openDB(name: db.name)
-        let doc1d = anotherDb.getDocument("doc1")
+        let doc1d = anotherDb.document(withID: "doc1")
         
         XCTAssertTrue(savedDoc1a !== doc1b)
         XCTAssertTrue(savedDoc1a !== doc1c)
@@ -564,7 +564,7 @@ class DocumentTest: CBLTestCase {
     }
     
     
-    func testSetDictionary() throws {
+    func testsetData() throws {
         var doc = createDocument("doc1")
         var dict = MutableDictionaryObject()
         dict.setValue("1 Main street", forKey: "street")
@@ -1041,11 +1041,11 @@ class DocumentTest: CBLTestCase {
         
         try saveDocument(doc)
         
-        doc.remove(forKey: "name")
-        doc.remove(forKey: "weight")
-        doc.remove(forKey: "age")
-        doc.remove(forKey: "active")
-        doc.dictionary(forKey: "address")?.remove(forKey: "city")
+        doc.removeValue(forKey: "name")
+        doc.removeValue(forKey: "weight")
+        doc.removeValue(forKey: "age")
+        doc.removeValue(forKey: "active")
+        doc.dictionary(forKey: "address")?.removeValue(forKey: "city")
         
         XCTAssertNil(doc.string(forKey: "name"))
         XCTAssertEqual(doc.float(forKey: "weight"), 0.0)
@@ -1074,8 +1074,8 @@ class DocumentTest: CBLTestCase {
         XCTAssert(address.toDictionary() == addressDict)
         
         // Remove the rest:
-        doc.remove(forKey: "type")
-        doc.remove(forKey: "address")
+        doc.removeValue(forKey: "type")
+        doc.removeValue(forKey: "address")
         XCTAssertNil(doc.value(forKey: "type"))
         XCTAssertNil(doc.value(forKey: "address"))
         XCTAssertFalse(doc.contains("type"))
@@ -1084,22 +1084,16 @@ class DocumentTest: CBLTestCase {
     }
     
     
-    func failingTestDeleteNewDocument() throws {
+    func testDeleteNewDocument() throws {
         let doc = createDocument("doc1")
         doc.setValue("Scott Tiger", forKey: "name")
         XCTAssertFalse(doc.isDeleted)
         
-        var error: NSError?
-        do {
-            try self.db.delete(doc)
-        } catch let err as NSError {
-            error = err
+        XCTAssertThrowsError(try self.db.deleteDocument(doc), "") { (e) in
+            let error = e as NSError
+            XCTAssertEqual(error.domain, "CouchbaseLite")
+            XCTAssertEqual(error.code, 404)
         }
-        
-        XCTAssertNotNil(error)
-        XCTAssertEqual(error!.code, 404)
-        XCTAssertFalse(doc.isDeleted)
-        XCTAssertEqual(doc.string(forKey: "name")!, "Scott Tiger")
     }
     
     
@@ -1109,15 +1103,12 @@ class DocumentTest: CBLTestCase {
         XCTAssertFalse(doc.isDeleted)
         
         // Save:
-        var savedDoc = try saveDocument(doc)
+        try saveDocument(doc)
         
         // Delete:
-        try self.db.delete(savedDoc)
-        
-        savedDoc = self.db.getDocument("doc1")!
-        XCTAssertNil(savedDoc.value(forKey: "name"))
-        XCTAssert(savedDoc.toDictionary() == [:] as [String: Any])
-        XCTAssert(savedDoc.isDeleted)
+        let savedDoc = self.db.document(withID: doc.id)!
+        try self.db.deleteDocument(savedDoc)
+        XCTAssertNil(self.db.document(withID: savedDoc.id))
     }
     
     
@@ -1127,18 +1118,15 @@ class DocumentTest: CBLTestCase {
                                 "state": "CA"]]
         
         let doc = createDocument("doc1", dictionary: dict)
-        var savedDoc = try saveDocument(doc)
+        let savedDoc = try saveDocument(doc)
         
         let address = savedDoc.dictionary(forKey: "address")!
         XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
         XCTAssertEqual(address.string(forKey: "city"), "Mountain View")
         XCTAssertEqual(address.string(forKey: "state"), "CA")
         
-        try self.db.delete(savedDoc)
-        
-        savedDoc = self.db.getDocument("doc1")!
-        XCTAssertNil(savedDoc.dictionary(forKey: "address"))
-        XCTAssert(savedDoc.toDictionary() == [:] as [String: Any])
+        try self.db.deleteDocument(savedDoc)
+        XCTAssertNil(self.db.document(withID: savedDoc.id))
         
         // The dictionary still has data:
         XCTAssertEqual(address.string(forKey: "street"), "1 Main street")
@@ -1154,9 +1142,9 @@ class DocumentTest: CBLTestCase {
         XCTAssertFalse(doc.isDeleted)
         
         // Purge before save:
-        try? self.db.purge(doc)
+        try? self.db.purgeDocument(doc)
         
-        XCTAssertThrowsError(try self.db.purge(doc), "") { (e) in
+        XCTAssertThrowsError(try self.db.purgeDocument(doc), "") { (e) in
             let error = e as NSError
             XCTAssertEqual(error.domain, "CouchbaseLite")
             XCTAssertEqual(error.code, 404)
@@ -1166,8 +1154,7 @@ class DocumentTest: CBLTestCase {
         let savedDoc = try saveDocument(doc)
         
         // Purge:
-        try self.db.purge(savedDoc)
-
+        try self.db.purgeDocument(savedDoc)
     }
     
     
@@ -1179,7 +1166,7 @@ class DocumentTest: CBLTestCase {
         
         try self.reopenDB()
         
-        let savedDoc = self.db.getDocument("doc1")!
+        let savedDoc = self.db.document(withID: "doc1")!
         XCTAssertEqual(savedDoc.string(forKey: "string"), "str")
         XCTAssert(savedDoc.toDictionary() == ["string": "str"] as [String: Any])
     }
@@ -1196,7 +1183,7 @@ class DocumentTest: CBLTestCase {
         try saveDocument(doc)
         try reopenDB()
         
-        let savedDoc = db.getDocument("doc1")!
+        let savedDoc = db.document(withID: "doc1")!
         XCTAssertEqual(savedDoc.string(forKey: "name"), "Jim")
         XCTAssert(savedDoc.value(forKey: "data") as? Blob != nil)
         
@@ -1279,7 +1266,7 @@ class DocumentTest: CBLTestCase {
         
         try reopenDB()
         
-        doc = db.getDocument("doc1")!.toMutable()
+        doc = db.document(withID: "doc1")!.toMutable()
         doc.setValue("bar", forKey: "foo")
         savedDoc = try saveDocument(doc)
         
@@ -1306,7 +1293,7 @@ class DocumentTest: CBLTestCase {
         
         // Update:
         
-        doc.remove(forKey: "key2")
+        doc.removeValue(forKey: "key2")
         doc.setValue(20, forKey: "key20")
         doc.setValue(21, forKey: "key21")
         content = doc.toDictionary()

@@ -27,14 +27,14 @@ class ReplicatorTest: CBLTestCase {
     
     
     func run(push: Bool, pull: Bool, expectedError: Int?) {
-        var config = ReplicatorConfiguration(database: db, targetDatabase: otherDB!)
+        var config = ReplicatorConfiguration(withDatabase: db, targetDatabase: otherDB!)
         config.replicatorType = push && pull ? .pushAndPull : (push ? .push : .pull)
         run(config: config, expectedError: expectedError)
     }
     
     
     func run(push: Bool, pull: Bool, url: URL, expectedError: Int?) {
-        var config = ReplicatorConfiguration(database: db, targetURL: url)
+        var config = ReplicatorConfiguration(withDatabase: db, targetURL: url)
         config.replicatorType = push && pull ? .pushAndPull : (push ? .push : .pull)
         run(config: config, expectedError: expectedError)
     }
@@ -42,8 +42,8 @@ class ReplicatorTest: CBLTestCase {
     
     func run(config: ReplicatorConfiguration, expectedError: Int?) {
         let x = self.expectation(description: "change")
-        let repl = Replicator(config: config);
-        let listener = repl.addChangeListener({ (change) in
+        let repl = Replicator(withConfig: config);
+        let token = repl.addChangeListener { (change) in
             let status = change.status
             if status.activity == .stopped {
                 if let err = expectedError {
@@ -53,11 +53,11 @@ class ReplicatorTest: CBLTestCase {
                 }
                 x.fulfill()
             }
-        })
+        }
         
         repl.start()
         wait(for: [x], timeout: 5.0)
-        repl.removeChangeListener(listener)
+        repl.removeChangeListener(withToken: token)
     }
     
     

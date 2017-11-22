@@ -8,16 +8,13 @@
 
 #import "CBLQueryExpression.h"
 #import "CBLQuery+Internal.h"
-
 #import "CBLAggregateExpression.h"
 #import "CBLBinaryExpression.h"
 #import "CBLCollationExpression.h"
 #import "CBLCompoundExpression.h"
 #import "CBLParameterExpression.h"
 #import "CBLPropertyExpression.h"
-#import "CBLQuantifiedExpression.h"
 #import "CBLUnaryExpression.h"
-#import "CBLVariableExpression.h"
 #import "CBLJSON.h"
 
 @implementation CBLQueryExpression
@@ -35,19 +32,6 @@
     return [[CBLPropertyExpression alloc] initWithKeyPath: property
                                                columnName: nil
                                                      from: alias];
-}
-
-
-#pragma mark - Meta:
-
-
-+ (CBLQueryMeta*) meta {
-    return [self metaFrom: nil];
-}
-
-
-+ (CBLQueryMeta*) metaFrom: (NSString*)alias {
-    return [[CBLQueryMeta alloc] initWithFrom: alias];
 }
 
 
@@ -134,20 +118,10 @@
 }
 
 
-- (CBLQueryExpression*) notLessThan: (id)expression {
-    return [self greaterThanOrEqualTo: expression];
-}
-
-
 - (CBLQueryExpression*) lessThanOrEqualTo: (id)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLLessThanOrEqualToBinaryExpType];
-}
-
-
-- (CBLQueryExpression*) notLessThanOrEqualTo: (id)expression {
-    return [self greaterThan: expression];
 }
 
 
@@ -158,20 +132,10 @@
 }
 
 
-- (CBLQueryExpression*) notGreaterThan: (id)expression {
-    return [self lessThanOrEqualTo: expression];
-}
-
-
 - (CBLQueryExpression*) greaterThanOrEqualTo: (id)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLGreaterThanOrEqualToBinaryExpType];
-}
-
-
-- (CBLQueryExpression*) notGreaterThanOrEqualTo: (id)expression {
-    return [self lessThan: expression];
 }
 
 
@@ -214,11 +178,6 @@
 }
 
 
-- (CBLQueryExpression*) notLike: (id)expression {
-    return [[self class] negated: [self like: expression]];
-}
-
-
 #pragma mark - Regex like operators:
 
 
@@ -226,26 +185,6 @@
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLRegexLikeBinaryExpType];
-}
-
-
-- (CBLQueryExpression*) notRegex: (id)expression {
-    return [[self class] negated: [self regex: expression]];
-}
-
-
-#pragma mark - Fulltext search operators:
-
-
-- (CBLQueryExpression*) match: (id)expression {
-    return [[CBLBinaryExpression alloc] initWithLeftExpression: self
-                                               rightExpression: expression
-                                                          type: CBLMatchesBinaryExpType];
-}
-
-
-- (CBLQueryExpression*) notMatch: (id)expression {
-    return [[self class] negated: [self match: expression]];
 }
 
 
@@ -263,7 +202,7 @@
 }
 
 
-#pragma mark - is operations:
+#pragma mark - IS operations:
 
 
 - (CBLQueryExpression*) is: (id)expression {
@@ -292,11 +231,6 @@
 }
 
 
-- (CBLQueryExpression*) notBetween: (id)exp1 and: (id)exp2 {
-    return [[self class] negated: [self between: exp1 and: exp2]];
-}
-
-
 #pragma mark - Collection operations:
 
 
@@ -311,47 +245,6 @@
 
 - (CBLQueryExpression*) notIn: (NSArray*)expressions {
     return [[self class] negated: [self in: expressions]];
-}
-
-
-#pragma mark - Quantified operations:
-
-
-+ (CBLQueryExpression*) variableNamed: (NSString*)name {
-    return [[CBLVariableExpression alloc] initWithVariableNamed: name];
-}
-
-
-+ (CBLQueryExpression*) any: (NSString*)variableName
-                         in: (id)inExpression
-                  satisfies: (CBLQueryExpression*)satisfies
-{
-    return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeAny
-                                                variable: variableName
-                                                      in: inExpression
-                                               satisfies: satisfies];
-}
-
-
-+ (CBLQueryExpression*) anyAndEvery: (NSString*)variableName
-                                 in: (id)inExpression
-                          satisfies: (CBLQueryExpression*)satisfies
-{
-    return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeAnyAndEvery
-                                                variable: variableName
-                                                      in: inExpression
-                                               satisfies: satisfies];
-}
-
-
-+ (CBLQueryExpression*) every: (NSString*)variableName
-                           in: (id)inExpression
-                    satisfies: (CBLQueryExpression*)satisfies
-{
-    return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeEvery
-                                                variable: variableName
-                                                      in: inExpression
-                                               satisfies: satisfies];
 }
 
 

@@ -7,7 +7,7 @@
 //
 
 #import "CBLPropertyExpression.h"
-#import "CBLQuery+Internal.h"
+#import "CBLQueryExpression+Internal.h"
 
 NSString* kCBLAllPropertiesName = @"";
 

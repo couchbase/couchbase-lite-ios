@@ -47,8 +47,8 @@ typedef enum {
 @property (nonatomic) BOOL continuous;
 
 /** 
- The conflict resolver for this replicator.
- The default value is nil, which means the local database's conflict resolver will be used.
+ The conflict resolver for this replicator. Setting nil means using the default
+ conflict resolver, where the revision with more history wins.
  */
 @property (nonatomic, nullable) id <CBLConflictResolver> conflictResolver;
 

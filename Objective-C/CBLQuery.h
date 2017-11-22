@@ -11,7 +11,8 @@
 @class CBLQuerySelectResult, CBLQueryDataSource, CBLQueryJoin, CBLQueryOrdering, CBLQueryGroupBy;
 @class CBLQueryLimit, CBLQueryExpression, CBLQueryParameters;
 @class CBLQueryResultSet;
-@class CBLLiveQuery;
+@class CBLQueryChange;
+@protocol CBLListenerToken;
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -28,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
  in the query. All parameters defined in the query must be given values
  before running the query, or the query will fail.
  */
-@property (nonatomic, readonly) CBLQueryParameters* parameters;
+@property (nonatomic, copy, nullable) CBLQueryParameters* parameters;
 
 // SELECT > FROM
 
@@ -428,14 +429,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /** 
- Checks whether the query is valid, recompiling it if necessary, without running it.
- 
- @param outError If an error occurs, it will be stored here if this parameter is non-NULL.
- @return YES if the query is valid, or NO if the query is not valid.
- */
-- (BOOL) check: (NSError**)outError;
-
-/** 
  Returns a string describing the implementation of the compiled query.
  This is intended to be read by a developer for purposes of optimizing the query, especially
  to add database indexes. It's not machine-readable and its format may change.
@@ -452,9 +445,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (nullable NSString*) explain: (NSError**)outError;
 
-
 /** 
- Runs the query. The returning an enumerator that returns result rows one at a time.
+ Executes the query. The returning an enumerator that returns result rows one at a time.
  You can run the query any number of times, and you can even have multiple enumerators active at
  once.
  The results come from a snapshot of the database taken at the moment -run: is called, so they
@@ -463,14 +455,35 @@ NS_ASSUME_NONNULL_BEGIN
  @param outError If an error occurs, it will be stored here if this parameter is non-NULL.
  @return An enumerator of the query result.
  */
-- (nullable CBLQueryResultSet*) run: (NSError**)outError;
+- (nullable CBLQueryResultSet*) execute: (NSError**)outError;
 
-/** 
- Returns a live query based on the current query.
+/**
+ Adds a query change listener. Changes will be posted on the main queue.
  
- @return A live query object.
+ @param listener The listener to post changes.
+ @return An opaque listener token object for removing the listener.
  */
-- (CBLLiveQuery*) toLive;
+- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLQueryChange*))listener;
+
+/**
+ Adds a query change listener with the dispatch queue on which changes
+ will be posted. If the dispatch queue is not specified, the changes will be
+ posted on the main queue.
+ 
+ @param queue The dispatch queue.
+ @param listener The listener to post changes.
+ @return An opaque listener token object for removing the listener.
+ */
+- (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
+                                           listener: (void (^)(CBLQueryChange*))listener;
+
+/**
+ Removes a change listener wih the given listener token.
+ 
+ @param token The listener token.
+ */
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
+
 
 - (instancetype) init NS_UNAVAILABLE;
 

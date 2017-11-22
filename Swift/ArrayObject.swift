@@ -25,6 +25,8 @@ protocol ArrayProtocol: ArrayFragment, Sequence {
     
     func double(at index: Int) -> Double
     
+    func number(at index: Int) -> NSNumber?
+    
     func boolean(at index: Int) -> Bool
     
     func blob(at index: Int) -> Blob?
@@ -47,27 +49,76 @@ public class ArrayObject: ArrayProtocol {
         return Int(_impl.count)
     }
     
-    
-    /// Gets the value at the given index as a ArrayObject value, which is a mapping object
-    /// of an array value.
-    /// Returns nil if the value doesn't exists, or its value is not an array.
+    /// Gets the value at the given index. The value types are Blob, ArrayObject,
+    /// DictionaryObject, Number, or String based on the underlying data type.
     ///
     /// - Parameter index: The index.
-    /// - Returns: The ArrayObject at the given index.
-    public func array(at index: Int) -> ArrayObject? {
-        return value(at: index) as? ArrayObject
+    /// - Returns: The value located at the index.
+    public func value(at index: Int) -> Any? {
+        return DataConverter.convertGETValue(_impl.value(at: UInt(index)))
+    }
+    
+    /// Gets the value at the given index as a string.
+    /// Returns nil if the value doesn't exist, or its value is not a string
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The String object.
+    public func string(at index: Int) -> String? {
+        return _impl.string(at: UInt(index))
     }
     
     
-    /// Get the Blob value at the given index.
-    /// Returns nil if the value doesn't exist, or its value is not a blob.
+    /// Gets value at the given index as a Number value.
     ///
     /// - Parameter index: The index.
-    /// - Returns: The Blob value located at the index.
-    public func blob(at index: Int) -> Blob? {
-        return _impl.blob(at: UInt(index))
+    /// - Returns: The number value located at the index.
+    public func number(at index: Int) -> NSNumber? {
+        return _impl.number(at: UInt(index))
     }
-
+    
+    
+    /// Gets value at the given index as an int value.
+    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    /// Returns 0 if the value doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The int value located at the index.
+    public func int(at index: Int) -> Int {
+        return _impl.integer(at: UInt(index))
+    }
+    
+    /// Gets value at the given index as an int64 value.
+    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+    /// Returns 0 if the value doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The int64 value located at the index.
+    public func int64(at index: Int) -> Int64 {
+        return _impl.longLong(at: UInt(index))
+    }
+    
+    
+    /// Gets the value at the given index as a float value.
+    /// Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
+    //// Returns 0.0 if the value doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The Float value located at the index.
+    public func float(at index: Int) -> Float {
+        return _impl.float(at: UInt(index))
+    }
+    
+    
+    /// Gets the value at the given index as a double value.
+    /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
+    /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The Double value located at the index.
+    public func double(at index: Int) -> Double {
+        return _impl.double(at: UInt(index))
+    }
+    
     
     /// Gets the value at the given index as a boolean value.
     /// Returns true if the value exists, and is either `true` or a nonzero number.
@@ -93,6 +144,27 @@ public class ArrayObject: ArrayProtocol {
     }
     
     
+    /// Get the Blob value at the given index.
+    /// Returns nil if the value doesn't exist, or its value is not a blob.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The Blob value located at the index.
+    public func blob(at index: Int) -> Blob? {
+        return _impl.blob(at: UInt(index))
+    }
+    
+    
+    /// Gets the value at the given index as a ArrayObject value, which is a mapping object
+    /// of an array value.
+    /// Returns nil if the value doesn't exists, or its value is not an array.
+    ///
+    /// - Parameter index: The index.
+    /// - Returns: The ArrayObject at the given index.
+    public func array(at index: Int) -> ArrayObject? {
+        return value(at: index) as? ArrayObject
+    }
+    
+    
     /// Get the value at the given index as a DictionaryObject value, which is a
     /// mapping object of a dictionary value.
     /// Returns nil if the value doesn't exists, or its value is not a dictionary.
@@ -103,70 +175,6 @@ public class ArrayObject: ArrayProtocol {
         return value(at: index) as? DictionaryObject
     }
 
-    
-    /// Gets the value at the given index as a float value.
-    /// Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
-    //// Returns 0.0 if the value doesn't exist or does not have a numeric value.
-    ///
-    /// - Parameter index: The index.
-    /// - Returns: The Float value located at the index.
-    public func float(at index: Int) -> Float {
-        return _impl.float(at: UInt(index))
-    }
-    
-    
-    /// Gets the value at the given index as a double value.
-    /// Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
-    /// Returns 0.0 if the property doesn't exist or does not have a numeric value.
-    ///
-    /// - Parameter index: The index.
-    /// - Returns: The Double value located at the index.
-    public func double(at index: Int) -> Double {
-        return _impl.double(at: UInt(index))
-    }
-    
-    
-    /// Gets value at the given index as an integer value.
-    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
-    /// Returns 0 if the value doesn't exist or does not have a numeric value.
-    ///
-    /// - Parameter index: The index.
-    /// - Returns: The integer value located at the index.
-    public func int(at index: Int) -> Int {
-        return _impl.integer(at: UInt(index))
-    }
-    
-    
-    /// Gets value at the given index as an integer value.
-    /// Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
-    /// Returns 0 if the value doesn't exist or does not have a numeric value.
-    ///
-    /// - Parameter index: The index.
-    /// - Returns: The integer value located at the index.
-    public func int64(at index: Int) -> Int64 {
-        return _impl.longLong(at: UInt(index))
-    }
-
-
-    /// Gets the value at the given index as a string.
-    /// Returns nil if the value doesn't exist, or its value is not a string
-    ///
-    /// - Parameter index: The index.
-    /// - Returns: The String object.
-    public func string(at index: Int) -> String? {
-        return _impl.string(at: UInt(index))
-    }
-    
-    
-    /// Gets the value at the given index. The value types are Blob, ArrayObject,
-    /// DictionaryObject, Number, or String based on the underlying data type.
-    ///
-    /// - Parameter index: The index.
-    /// - Returns: The value located at the index.
-    public func value(at index: Int) -> Any? {
-        return DataConverter.convertGETValue(_impl.object(at: UInt(index)))
-    }
-    
     
     /// Gets content of the current object as an Array object. The values contained in the
     /// returned Array object are all JSON based values.

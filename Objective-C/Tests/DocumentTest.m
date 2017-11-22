@@ -43,8 +43,8 @@
     
     // Array:
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
-    [array addObject: @"650-123-0001"];
-    [array addObject: @"650-123-0002"];
+    [array addValue: @"650-123-0001"];
+    [array addValue: @"650-123-0002"];
     [doc setObject: array forKey: @"array"];
     
     // Blob:
@@ -142,7 +142,7 @@
                            };
     
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"
-                                                            dictionary: dict];
+                                                          dictionary: dict];
     AssertNotNil(doc);
     AssertEqualObjects(doc.id, @"doc1");
     AssertFalse(doc.isDeleted);
@@ -706,9 +706,9 @@
 - (void) testSetArray {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
-    [array addObject: @"item1"];
-    [array addObject: @"item2"];
-    [array addObject: @"item3"];
+    [array addValue: @"item1"];
+    [array addValue: @"item2"];
+    [array addValue: @"item3"];
     [doc setObject: array forKey: @"array"];
     
     AssertEqual([doc objectForKey: @"array"], array);
@@ -724,8 +724,8 @@
     // Update:
     doc = [savedDoc toMutable];
     array = [doc arrayForKey: @"array"];
-    [array addObject: @"item4"];
-    [array addObject: @"item5"];
+    [array addValue: @"item4"];
+    [array addValue: @"item5"];
     
     savedDoc = [self saveDocument: doc];
     
@@ -770,16 +770,20 @@
 
 
 - (void) testSetNil {
-    // Note: As of Oct 2017 we've decided to change the behavior of storing nil into a CBLMutableDictionary
-    // to make it correspond to Cocoa idioms, i.e. it removes the value, instead of storing NSNull.
+    // Note:
+    // * As of Oct 2017, we've decided to change the behavior of storing nil into a CBLMutableDictionary
+    //   to make it correspond to Cocoa idioms, i.e. it removes the value, instead of storing NSNull.
+    // * As of Nov 2017, after API review, we've decided to revert the behavior to allow the API to
+    //   be the same across platform. This means that setting nil value will be converted to NSNull
+    //   instead of removing the value.
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setObject: @"something" forKey: @"nil"];
     [doc setObject: nil forKey: @"nil"];
     [doc setObject: [NSNull null] forKey: @"null"];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
-        AssertEqual([d objectForKey: @"nil"], nil);
+        AssertEqualObjects([d objectForKey: @"nil"], [NSNull null]);
         AssertEqualObjects([d objectForKey: @"null"], [NSNull null]);
-        AssertEqual(d.count, 1u);
+        AssertEqual(d.count, 2u);
     }];
 }
 
@@ -863,7 +867,7 @@
     Assert(members != nuMembers);
     
     // Update nuMembers:
-    [nuMembers addObject: @"g"];
+    [nuMembers addValue: @"g"];
     AssertEqual(nuMembers.count, 4u);
     AssertEqualObjects([nuMembers objectAtIndex: 3], @"g");
     AssertEqual(members.count, 3u);
@@ -912,13 +916,13 @@
     [address1 setObject: @"1 Main street" forKey: @"street"];
     [address1 setObject: @"Mountain View" forKey: @"city"];
     [address1 setObject: @"CA" forKey: @"state"];
-    [addresses addObject: address1];
+    [addresses addValue: address1];
     
     CBLMutableDictionary* address2 = [[CBLMutableDictionary alloc] init];
     [address2 setObject: @"1 Second street" forKey: @"street"];
     [address2 setObject: @"Palo Alto" forKey: @"city"];
     [address2 setObject: @"CA" forKey: @"state"];
-    [addresses addObject: address2];
+    [addresses addValue: address2];
     
     CBLDocument* savedDoc = [self saveDocument: doc];
     doc = [savedDoc toMutable];
@@ -953,16 +957,16 @@
     [doc setObject: groups forKey: @"groups"];
     
     CBLMutableArray* group1 = [[CBLMutableArray alloc] init];
-    [group1 addObject: @"a"];
-    [group1 addObject: @"b"];
-    [group1 addObject: @"c"];
-    [groups addObject: group1];
+    [group1 addValue: @"a"];
+    [group1 addValue: @"b"];
+    [group1 addValue: @"c"];
+    [groups addValue: group1];
     
     CBLMutableArray* group2 = [[CBLMutableArray alloc] init];
-    [group2 addObject: @(1)];
-    [group2 addObject: @(2)];
-    [group2 addObject: @(3)];
-    [groups addObject: group2];
+    [group2 addValue: @(1)];
+    [group2 addValue: @(2)];
+    [group2 addValue: @(3)];
+    [groups addValue: group2];
     
     CBLDocument* savedDoc = [self saveDocument: doc];
     doc = [savedDoc toMutable];
@@ -989,17 +993,17 @@
     
     CBLMutableDictionary* group1 = [[CBLMutableDictionary alloc] init];
     CBLMutableArray* member1 = [[CBLMutableArray alloc] init];
-    [member1 addObject: @"a"];
-    [member1 addObject: @"b"];
-    [member1 addObject: @"c"];
+    [member1 addValue: @"a"];
+    [member1 addValue: @"b"];
+    [member1 addValue: @"c"];
     [group1 setObject: member1 forKey: @"member"];
     [doc setObject: group1 forKey: @"group1"];
     
     CBLMutableDictionary* group2 = [[CBLMutableDictionary alloc] init];
     CBLMutableArray* member2 = [[CBLMutableArray alloc] init];
-    [member2 addObject: @(1)];
-    [member2 addObject: @(2)];
-    [member2 addObject: @(3)];
+    [member2 addValue: @(1)];
+    [member2 addValue: @(2)];
+    [member2 addValue: @(3)];
     [group2 setObject: member2 forKey: @"member"];
     [doc setObject: group2 forKey: @"group2"];
     
@@ -1068,8 +1072,8 @@
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     
     CBLMutableArray* phones = [[CBLMutableArray alloc] init];
-    [phones addObject: @"650-000-0001"];
-    [phones addObject: @"650-000-0002"];
+    [phones addValue: @"650-000-0001"];
+    [phones addValue: @"650-000-0002"];
     
     [doc setObject: phones forKey: @"mobile"];
     [doc setObject: phones forKey: @"home"];
@@ -1078,7 +1082,7 @@
     AssertEqual([doc objectForKey:@"home"], phones);
     
     // Update phones: both mobile and home should get the update
-    [phones addObject: @"650-000-0003"];
+    [phones addValue: @"650-000-0003"];
     AssertEqualObjects([[doc arrayForKey: @"mobile"] toArray],
                        (@[@"650-000-0001", @"650-000-0002", @"650-000-0003"]));
     AssertEqualObjects([[doc arrayForKey: @"home"] toArray],
@@ -1095,8 +1099,8 @@
     Assert(mobile != home);
     
     // Update mobile and home:
-    [mobile addObject: @"650-000-1234"];
-    [home addObject: @"650-000-5678"];
+    [mobile addValue: @"650-000-1234"];
+    [home addValue: @"650-000-5678"];
     
     // Save update:
     savedDoc = [self saveDocument: doc];
@@ -1108,7 +1112,7 @@
 }
 
 
-- (void) failingTestToDictionary {
+- (void) failingTestdata {
     CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
     [self populateData: doc1];
     // TODO: Should blob be serialized into JSON dictionary?
@@ -1139,11 +1143,11 @@
                                    }
                            }];
     
-    Assert([doc containsObjectForKey: @"type"]);
-    Assert([doc containsObjectForKey: @"name"]);
-    Assert([doc containsObjectForKey: @"age"]);
-    Assert([doc containsObjectForKey: @"address"]);
-    AssertFalse([doc containsObjectForKey: @"weight"]);
+    Assert([doc containsValueForKey: @"type"]);
+    Assert([doc containsValueForKey: @"name"]);
+    Assert([doc containsValueForKey: @"age"]);
+    Assert([doc containsValueForKey: @"address"]);
+    AssertFalse([doc containsValueForKey: @"weight"]);
 }
 
 
@@ -1162,11 +1166,11 @@
                            }];
     doc = [[self saveDocument: doc] toMutable];
     
-    [doc removeObjectForKey: @"name"];
-    [doc removeObjectForKey: @"weight"];
-    [doc removeObjectForKey: @"age"];
-    [doc removeObjectForKey: @"active"];
-    [[doc dictionaryForKey: @"address"] removeObjectForKey: @"city"];
+    [doc removeValueForKey: @"name"];
+    [doc removeValueForKey: @"weight"];
+    [doc removeValueForKey: @"age"];
+    [doc removeValueForKey: @"active"];
+    [[doc dictionaryForKey: @"address"] removeValueForKey: @"city"];
     
     AssertNil([doc stringForKey: @"name"]);
     AssertEqual([doc floatForKey: @"weight"], 0.0);
@@ -1180,11 +1184,11 @@
     AssertNil([doc objectForKey: @"active"]);
     AssertNil([[doc dictionaryForKey: @"address"] objectForKey: @"city"]);
     
-    AssertFalse([doc containsObjectForKey: @"name"]);
-    AssertFalse([doc containsObjectForKey: @"weight"]);
-    AssertFalse([doc containsObjectForKey: @"age"]);
-    AssertFalse([doc containsObjectForKey: @"active"]);
-    AssertFalse([[doc dictionaryForKey: @"address"] containsObjectForKey: @"city"]);
+    AssertFalse([doc containsValueForKey: @"name"]);
+    AssertFalse([doc containsValueForKey: @"weight"]);
+    AssertFalse([doc containsValueForKey: @"age"]);
+    AssertFalse([doc containsValueForKey: @"active"]);
+    AssertFalse([[doc dictionaryForKey: @"address"] containsValueForKey: @"city"]);
     
     CBLMutableDictionary* address = [doc dictionaryForKey: @"address"];
     AssertEqualObjects([doc toDictionary], (@{ @"type": @"profile",
@@ -1196,12 +1200,12 @@
     AssertEqualObjects([address toDictionary], (@{ @"street": @"1 milky way.", @"zip" : @12345 }));
     
     // Remove the rest:
-    [doc removeObjectForKey: @"type"];
-    [doc removeObjectForKey: @"address"];
+    [doc removeValueForKey: @"type"];
+    [doc removeValueForKey: @"address"];
     AssertNil([doc objectForKey: @"type"]);
     AssertNil([doc objectForKey: @"address"]);
-    AssertFalse([doc containsObjectForKey: @"type"]);
-    AssertFalse([doc containsObjectForKey: @"address"]);
+    AssertFalse([doc containsValueForKey: @"type"]);
+    AssertFalse([doc containsValueForKey: @"address"]);
     AssertEqualObjects([doc toDictionary], @{});
 }
 
@@ -1229,11 +1233,7 @@
     NSError* error;
     Assert([_db deleteDocument: savedDoc error: &error]);
     AssertNil(error);
-    
-    savedDoc = [_db documentWithID: doc.id];
-    AssertNil([savedDoc objectForKey: @"name"]);
-    AssertEqualObjects([savedDoc toDictionary], @{});
-    Assert(savedDoc.isDeleted);
+    AssertNil([_db documentWithID: doc.id]);
 }
 
 
@@ -1474,7 +1474,7 @@
     
     // Update:
     
-    [doc removeObjectForKey: @"key2"];
+    [doc removeValueForKey: @"key2"];
     [doc setObject: @(20) forKey: @"key20"];
     [doc setObject: @(21) forKey: @"key21"];
     content = [doc toDictionary];
@@ -1489,6 +1489,29 @@
         AssertEqualObjects(result, content);
         AssertEqual(count, content.count);
     }];
+}
+
+
+- (void) testToMutable {
+    NSData* content = [kDocumentTestBlob dataUsingEncoding:NSUTF8StringEncoding];
+    CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
+    
+    CBLMutableDocument* mDoc1 = [self createDocument: @"doc1"];
+    [mDoc1 setObject: data forKey: @"data"];
+    [mDoc1 setObject: @"Jim" forKey: @"name"];
+    [mDoc1 setInteger: 10 forKey: @"score"];
+    
+    CBLMutableDocument* mDoc2 = [mDoc1 toMutable];
+    Assert(mDoc1 != mDoc2);
+    AssertEqualObjects([mDoc2 blobForKey: @"data"].content, [mDoc1 blobForKey: @"data"].content);
+    AssertEqualObjects([mDoc2 stringForKey: @"name"], [mDoc1 stringForKey: @"name"]);
+    AssertEqual([mDoc2 integerForKey: @"score"], [mDoc1 integerForKey: @"score"]);
+    
+    CBLDocument* doc1 = [self saveDocument: mDoc1];
+    CBLMutableDocument* mDoc3 = [doc1 toMutable];
+    AssertEqualObjects([doc1 blobForKey: @"data"].content, [mDoc3 blobForKey: @"data"].content);
+    AssertEqualObjects([doc1 stringForKey: @"name"], [mDoc3 stringForKey: @"name"]);
+    AssertEqual([doc1 integerForKey: @"score"], [mDoc3 integerForKey: @"score"]);
 }
 
 

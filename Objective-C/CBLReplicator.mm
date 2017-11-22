@@ -10,7 +10,7 @@
 #import "CBLReplicatorChange+Internal.h"
 #import "CBLReplicatorConfiguration.h"
 
-#import "CBLChangeListener.h"
+#import "CBLChangeListenerToken.h"
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
@@ -63,7 +63,7 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     C4ReplicatorStatus _rawStatus;
     unsigned _retryCount;
     CBLReachability* _reachability;
-    NSMutableSet* _changeListeners;
+    NSMutableSet* _listenerTokens;
 }
 
 @synthesize config=_config;
@@ -248,19 +248,27 @@ static BOOL isPull(CBLReplicatorType type) {
 }
 
 
-- (id<NSObject>) addChangeListener: (void (^)(CBLReplicatorChange*))block {
-    if (!_changeListeners) {
-        _changeListeners = [NSMutableSet set];
-    }
-    
-    CBLChangeListener* listener = [[CBLChangeListener alloc] initWithBlock:block];
-    [_changeListeners addObject:listener];
-    return listener;
+- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLReplicatorChange*))listener {
+    return [self addChangeListenerWithQueue: nil listener: listener];
 }
 
 
-- (void) removeChangeListener: (id<NSObject>)listener {
-    [_changeListeners removeObject: listener];
+- (id<CBLListenerToken>) addChangeListenerWithQueue: (dispatch_queue_t)queue
+                                           listener: (void (^)(CBLReplicatorChange*))listener
+{
+    if (!_listenerTokens) {
+        _listenerTokens = [NSMutableSet set];
+    }
+    
+    id token = [[CBLChangeListenerToken alloc] initWithListener: listener
+                                                          queue: queue];
+    [_listenerTokens addObject: token];
+    return token;
+}
+
+
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
+    [_listenerTokens removeObject: token];
 }
 
 
@@ -294,9 +302,11 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     // Post change
     CBLReplicatorChange* change = [[CBLReplicatorChange alloc] initWithReplicator: self
                                                                            status: self.status];
-    for (CBLChangeListener* listener in _changeListeners) {
-        void (^block)(CBLReplicatorChange*) = listener.block;
-        block(change);
+    for (CBLChangeListenerToken* token in _listenerTokens) {
+        void (^listener)(CBLReplicatorChange*) = token.listener;
+        dispatch_async(token.queue, ^{
+            listener(change);
+        });
     }
     
     // If Stopped:

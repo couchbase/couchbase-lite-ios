@@ -9,9 +9,10 @@
 #import "CBLQuery.h"
 #import "CBLCoreBridge.h"
 #import "CBLDatabase+Internal.h"
-#import "CBLLiveQuery+Internal.h"
+#import "CBLLiveQuery.h"
 #import "CBLPropertyExpression.h"
 #import "CBLQuery+Internal.h"
+#import "CBLQueryExpression+Internal.h"
 #import "CBLQueryResultSet+Internal.h"
 #import "CBLStatus.h"
 #import "c4Query.h"
@@ -21,6 +22,7 @@
 {
     C4Query* _c4Query;
     NSDictionary* _columnNames;
+    CBLLiveQuery* _liveQuery;
 }
 
 @synthesize select=_select, from=_from, join=_join, where=_where, orderings=_orderings, limit=_limit;
@@ -56,6 +58,7 @@
 
 
 - (void) dealloc {
+    [_liveQuery stop];
     c4query_free(_c4Query);
 }
 
@@ -66,15 +69,16 @@
     return [NSString stringWithFormat: @"%@[json=%@]", self.class, desc];
 }
 
-
 #pragma mark - Parameters
 
-
 - (CBLQueryParameters*) parameters {
-    if (!_parameters) {
-        _parameters = [[CBLQueryParameters alloc] initWithParameters: nil];
-    }
-    return _parameters;
+    return [_parameters copy];
+}
+
+
+- (void) setParameters:(CBLQueryParameters *)parameters {
+    _parameters = [parameters copy];
+    [_liveQuery start];
 }
 
 
@@ -496,7 +500,7 @@
 }
 
 
-- (nullable CBLQueryResultSet*) run: (NSError**)outError {
+- (nullable CBLQueryResultSet*) execute: (NSError**)outError {
     if (!_c4Query && ![self check: outError])
         return nil;
     
@@ -520,8 +524,22 @@
 }
 
 
-- (CBLLiveQuery*) toLive {
-    return [[CBLLiveQuery alloc] initWithQuery: self];
+- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLQueryChange*))listener {
+    return [self addChangeListenerWithQueue: nil listener: listener];
+}
+
+
+- (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
+                                           listener: (void (^)(CBLQueryChange*))listener
+{
+    if (!_liveQuery)
+        _liveQuery = [[CBLLiveQuery alloc] initWithQuery: self];
+    return [_liveQuery addChangeListenerWithQueue: queue listener: listener]; // Auto-start
+}
+
+
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
+    [_liveQuery removeChangeListenerWithToken: token];
 }
 
 
@@ -638,15 +656,6 @@
     if (_distinct)
         json[@"DISTINCT"] = @(YES);
     
-    // SELECT:
-    if (_select.count > 0) {
-        NSMutableArray* selects = [NSMutableArray array];
-        for (CBLQuerySelectResult* select in _select) {
-            [selects addObject: [select asJSON]];
-        }
-        json[@"WHAT"] = selects;
-    }
-    
     // JOIN / FROM:
     NSMutableArray* from;
     NSDictionary* as = [_from asJSON];
@@ -663,6 +672,15 @@
     }
     if (from.count > 0)
         json[@"FROM"] = from;
+    
+    // SELECT:
+    NSMutableArray* selects = [NSMutableArray array];
+    for (CBLQuerySelectResult* select in _select) {
+        [selects addObject: [select asJSON]];
+    }
+    if (selects.count == 0) // Empty selects means SELECT *
+        [selects addObject: [[CBLQuerySelectResult allFrom: as[@"AS"]] asJSON]];
+    json[@"WHAT"] = selects;
     
     // WHERE:
     if (_where)

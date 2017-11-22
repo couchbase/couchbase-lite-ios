@@ -1,5 +1,5 @@
 //
-//  CBLFTSIndex.h
+//  CBLValueIndex.h
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 8/21/17.
@@ -11,10 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLFTSIndex : CBLIndex
-
-- (instancetype) initWithItems: (CBLFTSIndexItem*)item
-                       options: (nullable CBLFTSIndexOptions*)options;
+@interface CBLValueIndex : CBLIndex
 
 @end
 
