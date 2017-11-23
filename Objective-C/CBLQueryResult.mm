@@ -46,7 +46,9 @@ using namespace fleeceapi;
 
 
 - (NSUInteger) count {
-    return c4query_columnCount(_rs.c4Query);
+    CBL_LOCK(self) {
+        return c4query_columnCount(_rs.c4Query);
+    }
 }
 
 
