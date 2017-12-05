@@ -32,11 +32,6 @@ static constexpr NSTimeInterval kConnectTimeout = 15.0;
 static constexpr NSTimeInterval kIdleTimeout = 300.0;
 
 
-@interface CBLWebSocket ()
-@property (readwrite, atomic) NSString* protocol;
-@end
-
-
 @implementation CBLWebSocket
 {
     AllocedDict _options;
@@ -45,7 +40,6 @@ static constexpr NSTimeInterval kIdleTimeout = 300.0;
     NSURLSession* _session;
     NSURLSessionStreamTask *_task;
     NSString* _expectedAcceptHeader;
-    NSArray* _protocols;
     CBLHTTPLogic* _logic;
     NSString* _clientCertID;
     C4Socket* _c4socket;
@@ -54,8 +48,6 @@ static constexpr NSTimeInterval kIdleTimeout = 300.0;
     size_t _receivedBytesPending, _sentBytesPending;
     CFAbsoluteTime _lastReadTime;
 }
-
-@synthesize protocol=_protocol;
 
 
 #define Log(FMT, ...)        CBLLog(       WS, @"" FMT, ##__VA_ARGS__)
@@ -206,8 +198,10 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
     _logic[@"Upgrade"] = @"websocket";
     _logic[@"Sec-WebSocket-Version"] = @"13";
     _logic[@"Sec-WebSocket-Key"] = nonceKey;
-    if (_protocols)
-        _logic[@"Sec-WebSocket-Protocol"] = [_protocols componentsJoinedByString: @","];
+
+    slice protocols = _options[kC4SocketOptionWSProtocols].asString();
+    if (protocols)
+        _logic[@"Sec-WS-Protocols"] = protocols.asNSString();
 
     _task = [_session streamTaskWithHostName: (NSString*)_logic.URL.host
                                         port: _logic.port];
@@ -298,7 +292,6 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
         [self didCloseWithCode: kWebSocketCloseProtocolError
                         reason: @"Invalid 'Sec-WebSocket-Accept' header"];
     } else {
-        self.protocol = headers[@"Sec-WebSocket-Protocol"];
         // TODO: Check Sec-WebSocket-Extensions for unknown extensions
         // Now I can start the WebSocket protocol:
         [self connected: headers];
