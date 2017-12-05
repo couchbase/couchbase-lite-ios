@@ -113,7 +113,7 @@ FOUNDATION_EXTERN id CBLTextKey(NSString* text);
 /** Asynchronously updates the view's index. This method returns immediately, after scheduling a
     call to -updateIndex on a background thread; the onComplete callback block is called after 
     indexing finishes. */
-- (void) updateIndexAsync: (void (^)())onComplete;
+- (void) updateIndexAsync: (void (^)(void))onComplete;
 
 /** Deletes the view's persistent index. It will be regenerated on the next query. */
 - (void) deleteIndex;

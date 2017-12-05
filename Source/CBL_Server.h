@@ -18,7 +18,7 @@
 
 @property (readonly) NSDictionary *customHTTPHeaders;
 
-- (void) queue: (void(^)())block;
+- (void) queue: (void(^)(void))block;
 - (void) tellDatabaseManager: (void (^)(CBLManager*))block;
 - (void) tellDatabaseNamed: (NSString*)dbName to: (void (^)(CBLDatabase*))block;
 - (id) waitForDatabaseNamed: (NSString*)dbName to: (id (^)(CBLDatabase*))block;

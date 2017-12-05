@@ -41,7 +41,7 @@ typedef NSArray<CBLJSONDict*> EventArray;
 
 // Internal enumerator implementation whose -nextObject method just calls a block
 @interface CBLTimeSeriesEnumerator : NSEnumerator<CBLJSONDict*>
-- (id) initWithBlock: (CBLJSONDict*(^)())block;
+- (id) initWithBlock: (CBLJSONDict*(^)(void))block;
 @end
 
 
@@ -446,10 +446,10 @@ typedef NSArray<CBLJSONDict*> EventArray;
 // Internal enumerator implementation whose -nextObject method just calls a block
 @implementation CBLTimeSeriesEnumerator
 {
-    CBLJSONDict* (^_block)();
+    CBLJSONDict* (^_block)(void);
 }
 
-- (id) initWithBlock: (CBLJSONDict*(^)())block
+- (id) initWithBlock: (CBLJSONDict*(^)(void))block
 {
     self = [super init];
     if (self) {

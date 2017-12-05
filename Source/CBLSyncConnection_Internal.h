@@ -103,8 +103,8 @@ UsingLogDomain(Sync);
 - (void) updateState: (SyncState)state;
 - (BOOL) gotError: (BLIPResponse*)response;
 
-- (void) onSyncQueue: (void(^)())block;
-- (void) onDatabaseQueue: (void(^)())block;
+- (void) onSyncQueue: (void(^)(void))block;
+- (void) onDatabaseQueue: (void(^)(void))block;
 
 - (NSProgress*) addAttachmentProgressWithName: (NSString*)name
                                        length: (uint64_t)length

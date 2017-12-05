@@ -88,7 +88,7 @@ typedef NSUInteger CBLJSONWritingOptions;
 @end
 
 
-typedef void (^CBLOnMutateBlock)();
+typedef void (^CBLOnMutateBlock)(void);
 
 /** Protocol for classes whose instances can encode themselves as JSON.
     Such classes can be used directly as property types in CBLModel subclasses. */

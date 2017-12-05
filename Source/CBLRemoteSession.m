@@ -171,7 +171,7 @@ UsingLogDomain(Sync);
 }
 
 
-- (void) doAsync: (void (^)())block {
+- (void) doAsync: (void (^)(void))block {
     MYOnThread(_thread, block);
 }
 

@@ -194,13 +194,13 @@ typedef BOOL (^CBLFilterBlock) (CBLSavedRevision* revision, NSDictionary* __null
 /** Runs the block asynchronously on the database's dispatch queue or thread.
     Unlike the rest of the API, this can be called from any thread, and provides a limited form
     of multithreaded access to Couchbase Lite. */
-- (void) doAsync: (void (^)())block;
+- (void) doAsync: (void (^)(void))block;
 
 /** Runs the block _synchronously_ on the database's dispatch queue or thread: this method does
     not return until after the block has completed.
     Unlike the rest of the API, this can _only_ be called from other threads/queues:  If you call it
     from the same thread or dispatch queue that the database runs on, **it will deadlock!** */
-- (void) doSync: (void (^)())block;
+- (void) doSync: (void (^)(void))block;
 
 
 #pragma mark - REPLICATION:

@@ -77,7 +77,7 @@
     If the block returns kCBLStatusDBBusy, the block will also be retried after a short delay;
     if 10 retries all fail, the kCBLStatusDBBusy will be returned to the caller.
     Any exception raised by the block will be caught and treated as kCBLStatusException. */
-- (CBLStatus) inTransaction: (CBLStatus(^)())block;
+- (CBLStatus) inTransaction: (CBLStatus(^)(void))block;
 
 
 // DOCUMENTS:

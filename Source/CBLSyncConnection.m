@@ -124,12 +124,12 @@ NSString* const kSyncNestedProgressKey = @"CBLChildren";
 }
 
 
-- (void) onSyncQueue: (void(^)())block {
+- (void) onSyncQueue: (void(^)(void))block {
     dispatch_async(_syncQueue, block);
 }
 
 
-- (void) onDatabaseQueue: (void(^)())block {
+- (void) onDatabaseQueue: (void(^)(void))block {
 #ifdef TIME_DB_QUEUE
     CFAbsoluteTime scheduleTime = CFAbsoluteTimeGetCurrent();
     dispatch_async(_dbQueue, ^{

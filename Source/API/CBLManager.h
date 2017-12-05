@@ -175,7 +175,7 @@ typedef struct CBLManagerOptions {
 /** Runs the block asynchronously on the database manager's dispatch queue or thread.
     Unlike the rest of the API, this can be called from any thread, and provides a limited form
     of multithreaded access to Couchbase Lite. */
-- (void) doAsync: (void (^)())block;
+- (void) doAsync: (void (^)(void))block;
 
 /** Asynchronously dispatches a block to run on a background thread. The block will be given a
     CBLDatabase instance to use; <em>it must use that database instead of any CBL objects that are

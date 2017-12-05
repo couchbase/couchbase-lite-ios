@@ -136,14 +136,14 @@ static id<CBLFilterCompiler> sFilterCompiler;
 }
 
 
-static void catchInBlock(void (^block)()) {
+static void catchInBlock(void (^block)(void)) {
     @try {
         block();
     }catchAndReport(@"-[CBLDatabase doAsync:]");
 }
 
 
-- (void) doAsync: (void (^)())block {
+- (void) doAsync: (void (^)(void))block {
     block = ^{
         if (_isOpen)
             catchInBlock(block);
@@ -155,7 +155,7 @@ static void catchInBlock(void (^block)()) {
 }
 
 
-- (void) doSync: (void (^)())block {
+- (void) doSync: (void (^)(void))block {
     if (_dispatchQueue)
         dispatch_sync(_dispatchQueue, ^{catchInBlock(block);});
     else
@@ -163,7 +163,7 @@ static void catchInBlock(void (^block)()) {
 }
 
 
-- (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)())block {
+- (void) doAsyncAfterDelay: (NSTimeInterval)delay block: (void (^)(void))block {
     block = ^{
         if (_isOpen)
             catchInBlock(block);
@@ -178,7 +178,7 @@ static void catchInBlock(void (^block)()) {
 }
 
 
-- (BOOL) waitFor: (BOOL (^)())block {
+- (BOOL) waitFor: (BOOL (^)(void))block {
     if (_dispatchQueue) {
         Warn(@"-[CBLDatabase waitFor:] cannot be used with dispatch queues, only runloops");
         return NO;

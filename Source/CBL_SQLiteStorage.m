@@ -644,7 +644,7 @@ DefineLogDomain(SQL);
 // transaction, only its changes are rolled back, not any from the outer transaction.
 // (Also supports retrying the block if it fails with a SQLite "BUSY" error, but this shouldn't
 // occur anymore now that our hacked FMDB uses a mutex to enforce database locking.)
-- (CBLStatus) inTransaction: (CBLStatus(^)())block {
+- (CBLStatus) inTransaction: (CBLStatus(^)(void))block {
     CBLStatus status;
     int retries = 0;
     do {
@@ -677,7 +677,7 @@ DefineLogDomain(SQL);
 // only the outer one. There turns out to be significant overhead in a nested transaction, so in
 // cases where you just need to exclude other threads, and don't need to be able to roll back
 // the change you're making, this method is cheaper.
-- (CBLStatus) inOuterTransaction: (CBLStatus(^)())block {
+- (CBLStatus) inOuterTransaction: (CBLStatus(^)(void))block {
     if (!self.inTransaction)
         return [self inTransaction: block];
     // Instead of a nested transaction, just run the block and catch exceptions:
@@ -692,7 +692,7 @@ DefineLogDomain(SQL);
 }
 
 
-- (CBLStatus) withReadLock: (CBLStatus(^)())block {
+- (CBLStatus) withReadLock: (CBLStatus(^)(void))block {
     [_fmdb acquireReadLock];
     CBLStatus status;
     @try {
