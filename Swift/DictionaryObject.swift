@@ -46,7 +46,7 @@ protocol DictionaryProtocol: DictionaryFragment, Sequence {
 
 
 /// DictionaryObject provides readonly access to dictionary data.
-public class DictionaryObject: DictionaryProtocol {
+public class DictionaryObject: DictionaryProtocol, Equatable, Hashable {
     
     /// The number of entries in the dictionary.
     public var count: Int {
@@ -233,6 +233,22 @@ public class DictionaryObject: DictionaryProtocol {
     /// - Parameter key: The key.
     public subscript(key: String) -> Fragment {
         return Fragment(_impl[key])
+    }
+    
+    
+    // MARK: Equality
+    
+    
+    /// Equal to operator for comparing two Array objects.
+    public static func == (dict1: DictionaryObject, dict2: DictionaryObject) -> Bool {
+        return dict1._impl == dict2._impl
+    }
+    
+    
+    // MARK: Hashable
+    
+    public var hashValue: Int {
+        return _impl.hash;
     }
     
     

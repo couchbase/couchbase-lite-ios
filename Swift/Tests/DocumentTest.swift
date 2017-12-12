@@ -1309,4 +1309,107 @@ class DocumentTest: CBLTestCase {
             XCTAssertEqual(count, content.count)
         }
     }
+    
+    
+    func testEquality() throws {
+        let data1 = "data1".data(using: String.Encoding.utf8)!
+        let data2 = "data2".data(using: String.Encoding.utf8)!
+        
+        let doc1a = createDocument("doc1")
+        doc1a.setInt(42, forKey: "answer")
+        doc1a.setValue(["1", "2", "3"], forKey: "options")
+        doc1a.setBlob(Blob.init(contentType: "text/plain", data: data1), forKey: "attachment")
+        
+        let doc1b = createDocument("doc1")
+        doc1b.setInt(42, forKey: "answer")
+        doc1b.setValue(["1", "2", "3"], forKey: "options")
+        doc1b.setBlob(Blob.init(contentType: "text/plain", data: data1), forKey: "attachment")
+        
+        let doc1c = createDocument("doc1")
+        doc1c.setInt(42, forKey: "answer")
+        doc1c.setValue(["1", "2", "3"], forKey: "options")
+        doc1c.setString("This is a comment", forKey: "comment")
+        doc1c.setBlob(Blob.init(contentType: "text/plain", data: data2), forKey: "attachment")
+        
+        XCTAssert(doc1a == doc1a)
+        XCTAssert(doc1a == doc1b)
+        XCTAssert(doc1a != doc1c)
+        
+        XCTAssert(doc1b == doc1a)
+        XCTAssert(doc1b == doc1b)
+        XCTAssert(doc1b != doc1c)
+        
+        XCTAssert(doc1c != doc1a)
+        XCTAssert(doc1c != doc1b)
+        XCTAssert(doc1c == doc1c)
+        
+        let savedDoc = try saveDocument(doc1c)
+        XCTAssert(savedDoc == savedDoc)
+        XCTAssert(savedDoc == doc1c)
+        
+        let mDoc = savedDoc.toMutable()
+        XCTAssert(mDoc == savedDoc)
+        mDoc.setInt(50, forKey: "answer")
+        XCTAssert(mDoc != savedDoc)
+    }
+    
+    
+    func testEqualityDifferentDocID() throws {
+        let doc1 = createDocument("doc1")
+        doc1.setInt(42, forKey: "answer")
+        try saveDocument(doc1)
+        let sdoc1 = db.document(withID: "doc1")
+        XCTAssert(sdoc1 == doc1)
+        
+        let doc2 = createDocument("doc2")
+        doc2.setInt(42, forKey: "answer")
+        try saveDocument(doc2)
+        let sdoc2 = db.document(withID: "doc2")
+        XCTAssert(sdoc2 == doc2)
+        
+        XCTAssert(doc1 == doc1)
+        XCTAssert(doc1 != doc2)
+        
+        XCTAssert(doc2 != doc1)
+        XCTAssert(doc2 == doc2)
+        
+        XCTAssert(sdoc1 == sdoc1)
+        XCTAssert(sdoc1 != sdoc2)
+        
+        XCTAssert(sdoc2 != sdoc1)
+        XCTAssert(sdoc2 == sdoc2)
+    }
+    
+    
+    func testEqualityDifferentDB() throws {
+        let doc1a = createDocument("doc1")
+        doc1a.setInt(42, forKey: "answer")
+        
+        let otherDb = try openDB(name: "other")
+        let doc1b = createDocument("doc1")
+        doc1b.setInt(42, forKey: "answer")
+        
+        XCTAssert(doc1a == doc1b)
+        
+        var sdoc1a = try db.saveDocument(doc1a)
+        var sdoc1b = try otherDb.saveDocument(doc1b)
+        
+        XCTAssert(sdoc1a == doc1a)
+        XCTAssert(sdoc1b == doc1b)
+        
+        XCTAssert(doc1a != doc1b)
+        XCTAssert(sdoc1a != sdoc1b)
+        
+        sdoc1a = db.document(withID: "doc1")!
+        sdoc1b = otherDb.document(withID: "doc1")!
+        XCTAssert(sdoc1a != sdoc1b)
+        try otherDb.close()
+        
+        let sameDB = try openDB(name: db.name)
+        let anotherDoc1a = sameDB.document(withID: "doc1")
+        XCTAssert(sdoc1a == anotherDoc1a)
+        try sameDB.close()
+    }
+    
+    
 }

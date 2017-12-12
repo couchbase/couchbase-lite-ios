@@ -224,13 +224,49 @@ static id _getObject(MArray<id> &array, NSUInteger index, Class asClass =nil) {
 }
 
 
-#pragma mark - SUBSCRIPTING
+#pragma mark - Subscript
 
 
 - (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index {
     if (index >= _array.count())
         return nil;
     return [[CBLFragment alloc] initWithParent: self index: index];
+}
+
+
+#pragma mark - Equality
+
+
+- (BOOL) isEqual: (id)object {
+    if (self == object)
+        return YES;
+    
+    CBLArray* other = $castIf(CBLArray, object);
+    if (!other)
+        return NO;
+    
+    NSUInteger count = self.count;
+    if (count != other.count)
+        return NO;
+    
+    for (NSUInteger i = 0; i < count; i++) {
+        id value1 = [self valueAtIndex: i];
+        id value2 = [other valueAtIndex: i];
+        if (!(value1 == nil ? value2 == nil : [value1 isEqual: value2]))
+            return NO;
+    }
+    
+    return YES;
+}
+
+
+- (NSUInteger) hash {
+    NSUInteger hash = 0;
+    for (NSUInteger i = 0; i < self.count; i++) {
+        id value = [self valueAtIndex: i];
+        hash ^= (value ? [value hash] : 0);
+    }
+    return hash;
 }
 
 

@@ -1515,4 +1515,105 @@
 }
 
 
+- (void) testEquality {
+    NSData* data1 = [@"data1" dataUsingEncoding: NSUTF8StringEncoding];
+    NSData* data2 = [@"data2" dataUsingEncoding: NSUTF8StringEncoding];
+    
+    CBLMutableDocument* doc1a = [self createDocument: @"doc1"];
+    [doc1a setInteger: 42 forKey: @"answer"];
+    [doc1a setValue: @[@"1", @"2", @"3"] forKey: @"options"];
+    [doc1a setBlob: [[CBLBlob alloc] initWithContentType: @"text/plain" data: data1] forKey: @"attachment"];
+    
+    CBLMutableDocument* doc1b = [self createDocument: @"doc1"];
+    [doc1b setInteger: 42 forKey: @"answer"];
+    [doc1b setValue: @[@"1", @"2", @"3"] forKey: @"options"];
+    [doc1b setBlob: [[CBLBlob alloc] initWithContentType: @"text/plain" data: data1] forKey: @"attachment"];
+    
+    CBLMutableDocument* doc1c = [self createDocument: @"doc1"];
+    [doc1c setInteger: 41 forKey: @"answer1"];
+    [doc1c setValue: @[@"1", @"2"] forKey: @"options"];
+    [doc1c setBlob: [[CBLBlob alloc] initWithContentType: @"text/plain" data: data2] forKey: @"attachment"];
+    [doc1c setString: @"This is a comment" forKey: @"comment"];
+    
+    Assert([doc1a isEqual: doc1a]);
+    Assert([doc1a isEqual: doc1b]);
+    Assert(![doc1a isEqual: doc1c]);
+    
+    Assert([doc1b isEqual: doc1a]);
+    Assert([doc1b isEqual: doc1b]);
+    Assert(![doc1b isEqual: doc1c]);
+    
+    Assert(![doc1c isEqual: doc1a]);
+    Assert(![doc1c isEqual: doc1b]);
+    Assert([doc1c isEqual: doc1c]);
+    
+    CBLDocument* savedDoc = [self saveDocument: doc1c];
+    Assert([savedDoc isEqual: savedDoc]);
+    Assert([savedDoc isEqual: doc1c]);
+    
+    CBLMutableDocument* mDoc = [savedDoc toMutable];
+    Assert([mDoc isEqual: savedDoc]);
+    [mDoc setInteger: 50 forKey: @"answer"];
+    Assert(![mDoc isEqual: savedDoc]);
+}
+
+
+- (void) testEqualityDifferentDocID {
+    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
+    [doc1 setInteger: 42 forKey: @"answer"];
+    [self saveDocument: doc1];
+    CBLDocument* sdoc1 = [_db documentWithID: @"doc1"];
+    Assert([sdoc1 isEqual: doc1]);
+    
+    CBLMutableDocument* doc2 = [self createDocument: @"doc2"];
+    [doc2 setInteger: 42 forKey: @"answer"];
+    [self saveDocument: doc2];
+    CBLDocument* sdoc2 = [_db documentWithID: @"doc2"];
+    Assert([sdoc2 isEqual: doc2]);
+    
+    Assert([doc1 isEqual: doc1]);
+    Assert(![doc1 isEqual: doc2]);
+    
+    Assert(![doc2 isEqual: doc1]);
+    Assert([doc2 isEqual: doc2]);
+    
+    Assert([sdoc1 isEqual: sdoc1]);
+    Assert(![sdoc1 isEqual: sdoc2]);
+    
+    Assert(![sdoc2 isEqual: sdoc1]);
+    Assert([sdoc2 isEqual: sdoc2]);
+}
+
+
+- (void) testEqualityDifferentDB {
+    CBLMutableDocument* doc1a = [self createDocument: @"doc1"];
+    [doc1a setInteger: 42 forKey: @"answer"];
+    
+    CBLDatabase* otherDB = [self openDBNamed: @"other" error: nil];
+    CBLMutableDocument* doc1b = [self createDocument: @"doc1"];
+    [doc1b setInteger: 42 forKey: @"answer"];
+    
+    Assert([doc1a isEqual: doc1b]);
+    
+    CBLDocument* sdoc1a = [_db saveDocument: doc1a error: nil];
+    CBLDocument* sdoc1b = [otherDB saveDocument: doc1b error: nil];
+    
+    Assert([sdoc1a isEqual: doc1a]);
+    Assert([sdoc1b isEqual: doc1b]);
+    
+    Assert(![doc1a isEqual: doc1b]);
+    Assert(![sdoc1a isEqual: sdoc1b]);
+    
+    sdoc1a = [_db documentWithID: @"doc1"];
+    sdoc1b = [otherDB documentWithID: @"doc1"];
+    Assert(![sdoc1a isEqual: sdoc1b]);
+    [otherDB close: nil];
+    
+    CBLDatabase* sameDB = [_db copy];
+    CBLDocument* anotherDoc1a = [sameDB documentWithID: @"doc1"];
+    Assert([sdoc1a isEqual: anotherDoc1a]);
+    [sameDB close: nil];
+}
+
+
 @end

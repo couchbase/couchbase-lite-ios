@@ -229,13 +229,52 @@ static id _getObject(MDict<id> &dict, NSString* key, Class asClass =nil) {
 }
 
 
-#pragma mark - SUBSCRIPTING
+#pragma mark - Subscript
 
 
 - (CBLFragment*) objectForKeyedSubscript: (NSString*)key {
     if (![self containsValueForKey: key])
         return nil;
     return [[CBLFragment alloc] initWithParent: self key: key];
+}
+
+
+#pragma mark - Equality
+
+
+- (BOOL) isEqual: (id)object {
+    if (self == object)
+        return YES;
+    
+    id <CBLDictionary> other = $castIfProtocol(CBLDictionary, object);
+    if (!other)
+        return NO;
+    
+    if (self.count != other.count)
+        return NO;
+    
+    for (MDict<id>::iterator i(_dict); i; ++i) {
+        NSString* key = i.nativeKey();
+        id value = i.nativeValue();
+        if (value) {
+            if (![value isEqual: [other valueForKey: key]])
+                return NO;
+        } else {
+            if ([other valueForKey: key] || ![other containsValueForKey: key])
+                return NO;
+        }
+    }
+    
+    return YES;
+}
+
+
+- (NSUInteger) hash {
+    NSUInteger hash = 0;
+    for (MDict<id>::iterator i(_dict); i; ++i) {
+        hash += ([i.nativeKey() hash] ^ [i.nativeValue() hash]);
+    }
+    return hash;
 }
 
 

@@ -284,8 +284,42 @@ using namespace fleeceapi;
     return [_dict countByEnumeratingWithState: state objects: buffer count: len];
 }
 
+
 - (NSDictionary<NSString *,id> *)toDictionary {
     return [_dict toDictionary];
+}
+
+
+#pragma mark - Equality
+
+
+- (BOOL) isEqual: (id)object {
+    if (self == object)
+        return YES;
+    
+    CBLDocument* other = $castIf(CBLDocument, object);
+    if (!other)
+        return NO;
+    
+    if (![self.database isEqual: other.database]) {
+        if (self.database) {
+            if (!(other.database && [self.database.name isEqual: other.database.name]))
+                return NO;
+        } else {
+            if (other.database != nil)
+                return NO;
+        }
+    }
+    
+    if (![self.id isEqualToString: other.id])
+        return NO;
+    
+    return [_dict isEqual: other->_dict];
+}
+
+
+- (NSUInteger) hash {
+    return [self.database.name hash] ^  [self.id hash] ^ [_dict hash];
 }
 
 @end

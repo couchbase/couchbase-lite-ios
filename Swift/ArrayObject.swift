@@ -42,7 +42,7 @@ protocol ArrayProtocol: ArrayFragment, Sequence {
 
 
 /// ArrayObject provides readonly access to array data.
-public class ArrayObject: ArrayProtocol {
+public class ArrayObject: ArrayProtocol, Equatable, Hashable {
     
     /// Gets a number of the items in the array.
     public var count: Int {
@@ -214,6 +214,22 @@ public class ArrayObject: ArrayProtocol {
     /// - Parameter index: The Index.
     public subscript(index: Int) -> Fragment {
         return Fragment(_impl[UInt(index)])
+    }
+    
+    
+    // MARK: Equality
+    
+    
+    /// Equal to operator for comparing two Array objects.
+    public static func == (array1: ArrayObject, array2: ArrayObject) -> Bool {
+        return array1._impl == array2._impl
+    }
+    
+    
+    // MARK: Hashable
+    
+    public var hashValue: Int {
+        return _impl.hash;
     }
     
     

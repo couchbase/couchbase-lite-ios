@@ -280,13 +280,48 @@ using namespace cbl;
 }
 
 
-#pragma mark - SUBSCRIPTING
+#pragma mark - Subscript
 
 
 - (CBLMutableFragment*) objectForKeyedSubscript: (NSString*)key {
     return [[CBLMutableFragment alloc] initWithParent: self key: key];
 }
 
+
+- (BOOL) isEqual: (id)object {
+    if (self == object)
+        return YES;
+    
+    id <CBLDictionary> other = $castIfProtocol(CBLDictionary, object);
+    if (!other)
+        return NO;
+    
+    if (self.count != other.count)
+        return NO;
+    
+    for (NSString* key in _dict) {
+        id value = _dict[key];
+        if (value) {
+            if (![value isEqual: [other valueForKey: key]])
+                return NO;
+        } else {
+            if ([other valueForKey: key] || ![other containsValueForKey: key])
+                return NO;
+        }
+    }
+    
+    return YES;
+}
+
+
+- (NSUInteger) hash {
+    NSUInteger hash = 0;
+    for (NSString* key in _dict) {
+        id value = _dict[key];
+        hash += ([key hash] ^ [value hash]);
+    }
+    return hash;
+}
 
 #pragma mark - CBLConversion
 

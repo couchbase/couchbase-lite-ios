@@ -118,12 +118,6 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 }
 
 
-- (NSString*) description {
-    return [NSString stringWithFormat: @"%@[%@; %llu KB]",
-            self.class, _contentType, (_length + 512)/1024];
-}
-
-
 - (NSDictionary *)properties {
     if (_properties) {
         // Blob read from database;
@@ -200,6 +194,41 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         return content ? [[NSInputStream alloc] initWithData: content] : nil;
     }
 }
+
+
+#pragma mark - Equality
+
+
+- (BOOL) isEqual: (id)object {
+    if (self == object)
+        return YES;
+    
+    CBLBlob* other = $castIf(CBLBlob, object);
+    if (other) {
+        if (self.digest && other.digest)
+            return [self.digest isEqualToString: other.digest];
+        else
+            return [self.content isEqual: other.content];
+    }
+    return NO;
+}
+
+
+- (NSUInteger) hash {
+    return self.content.hash;
+}
+
+
+#pragma mark - Description
+
+
+- (NSString*) description {
+    return [NSString stringWithFormat: @"%@[%@; %llu KB]",
+            self.class, _contentType, (_length + 512)/1024];
+}
+
+
+#pragma mark - Internal
 
 
 - (BOOL) installInDatabase: (CBLDatabase *)db error:(NSError **)outError {

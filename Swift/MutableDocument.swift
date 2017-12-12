@@ -264,15 +264,6 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     }
     
     
-    // MARK: Operators
-    
-    // TODO: Review the behavior of the equal operator.
-    /// Equal to operator for comparing two Documents object.
-    public static func == (doc1: MutableDocument, doc: MutableDocument) -> Bool {
-        return doc._impl === doc._impl
-    }
-    
-    
     // MARK: Subscript
     
     

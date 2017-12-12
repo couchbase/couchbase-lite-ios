@@ -10,7 +10,7 @@ import Foundation
 
 
 /// Couchbase Lite document. The Document is immutable.
-public class Document : DictionaryProtocol {
+public class Document : DictionaryProtocol, Equatable, Hashable {
     
     /// The document's ID.
     public var id: String {
@@ -31,13 +31,6 @@ public class Document : DictionaryProtocol {
     /// Is the document deleted?
     public var isDeleted: Bool {
         return _impl.isDeleted
-    }
-    
-    
-    // TODO: Review the equality behavior of the equal operator.
-    /// Equal to operator for comparing two Document object.
-    public static func == (doc1: Document, doc: Document) -> Bool {
-        return doc._impl === doc._impl
     }
     
     
@@ -241,8 +234,24 @@ public class Document : DictionaryProtocol {
     public subscript(key: String) -> Fragment {
         return Fragment(_impl[key])
     }
-
-
+    
+    
+    // MARK: Equality
+    
+    
+    /// Equal to operator for comparing two Document objects.
+    public static func == (doc1: Document, doc2: Document) -> Bool {
+        return doc1._impl == doc2._impl
+    }
+    
+    
+    // MARK: Hashable
+    
+    public var hashValue: Int {
+        return _impl.hash;
+    }
+    
+    
     // MARK: Internal
     
     
