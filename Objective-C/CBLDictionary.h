@@ -154,7 +154,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** 
  Tests whether a property exists or not.
- This can be less expensive than -objectForKey:, because it does not have to allocate an
+ This can be less expensive than -valuetForKey:, because it does not have to allocate an
  NSObject for the property value.
  
  @param key The key.
@@ -165,7 +165,10 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Data
 
 /**
- Gets content of the current object as an NSDictionary.
+ Gets content of the current object as an NSDictionary. The value types of the
+ values contained in the returned NSArray object are CBLBlob, NSArray,
+ NSDictionary, NSNumber, NSNull, and NSString.
+ 
  @return The NSDictionary object representing the content of the current object.
  */
 - (NSDictionary<NSString*,id>*) toDictionary;

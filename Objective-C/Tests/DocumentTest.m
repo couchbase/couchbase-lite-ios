@@ -117,7 +117,7 @@
                            @"phones": @[@"650-123-0001", @"650-123-0002"]
                            };
     
-    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithDictionary: dict];
+    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithData: dict];
     AssertNotNil(doc);
     Assert(doc.id.length > 0);
     AssertFalse(doc.isDeleted);
@@ -142,7 +142,7 @@
                            };
     
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"
-                                                          dictionary: dict];
+                                                          data: dict];
     AssertNotNil(doc);
     AssertEqualObjects(doc.id, @"doc1");
     AssertFalse(doc.isDeleted);
@@ -167,7 +167,7 @@
                            };
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [doc setDictionary: dict];
+    [doc setData: dict];
     AssertEqualObjects([doc toDictionary], dict);
     
     CBLDocument* savedDoc = [self saveDocument: doc];
@@ -183,7 +183,7 @@
                              };
     
     doc = [savedDoc toMutable];
-    [doc setDictionary: nuDict];
+    [doc setData: nuDict];
     AssertEqualObjects([doc toDictionary], nuDict);
     
     savedDoc  = [self saveDocument: doc];
@@ -1135,7 +1135,7 @@
 
 - (void) testContainsKey {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [doc setDictionary: @{ @"type": @"profile",
+    [doc setData: @{ @"type": @"profile",
                            @"name": @"Jason",
                            @"age": @"30",
                            @"address": @{
@@ -1153,7 +1153,7 @@
 
 - (void) testRemoveKeys {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
-    [doc setDictionary: @{ @"type": @"profile",
+    [doc setData: @{ @"type": @"profile",
                            @"name": @"Jason",
                            @"weight": @130.5,
                            @"active": @YES,
@@ -1243,7 +1243,7 @@
                                    @"city": @"Mountain View",
                                    @"state": @"CA"}
                            };
-    CBLMutableDocument* doc = [self createDocument: @"doc1" dictionary: dict];
+    CBLMutableDocument* doc = [self createDocument: @"doc1" data: dict];
     CBLDocument* savedDoc = [self saveDocument: doc];
     
     CBLDictionary* address = [savedDoc dictionaryForKey: @"address"];
@@ -1265,7 +1265,7 @@
 - (void) testArrayAfterDeleteDocument {
     NSDictionary* dict = @{@"members": @[@"a", @"b", @"c"]};
     
-    CBLMutableDocument* doc = [self createDocument: @"doc1" dictionary: dict];
+    CBLMutableDocument* doc = [self createDocument: @"doc1" data: dict];
     CBLDocument* savedDoc = [self saveDocument: doc];
     
     CBLArray* members = [savedDoc arrayForKey: @"members"];

@@ -37,7 +37,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         
         seekrit = try openSeekrit(password: nil)
         
-        let doc = createDocument(nil, dictionary: ["answer": 42])
+        let doc = createDocument(nil, data: ["answer": 42])
         try seekrit!.saveDocument(doc)
         try seekrit!.close()
         seekrit = nil
@@ -56,7 +56,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         // Create encrypted database:
         seekrit = try openSeekrit(password: "letmein")
         
-        let doc = createDocument(nil, dictionary: ["answer": 42])
+        let doc = createDocument(nil, data: ["answer": 42])
         try seekrit!.saveDocument(doc)
         try seekrit!.close()
         seekrit = nil
@@ -105,7 +105,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = try openSeekrit(password: "letmein")
         
         // Create a doc and then update it:
-        let doc = createDocument(nil, dictionary: ["answer": 42])
+        let doc = createDocument(nil, data: ["answer": 42])
         try seekrit!.saveDocument(doc)
         doc.setValue(84, forKey: "answer")
         try seekrit!.saveDocument(doc)
@@ -183,7 +183,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         // Create some documents:
         try seekrit!.inBatch {
             for i in 0...99 {
-                let doc = createDocument(nil, dictionary: ["seq": i])
+                let doc = createDocument(nil, data: ["seq": i])
                 try seekrit!.saveDocument(doc)
             }
         }

@@ -19,7 +19,7 @@ class FragmentTest: CBLTestCase {
                                     ],
                                    "references": [["name": "Scott"], ["name": "Sam"]]]
         let doc = createDocument("doc1")
-        doc.setDictionary(dict)
+        doc.setData(dict)
         
         XCTAssertEqual(doc["name"].string!, "Jason")
         XCTAssertEqual(doc["address"]["street"].string!, "1 Main Street")
@@ -53,7 +53,7 @@ class FragmentTest: CBLTestCase {
                                     "street": "1 Main street",
                                     "city": "Mountain View",
                                     "state": "CA"]]
-        try saveDocument(createDocument("doc1", dictionary: dict))
+        try saveDocument(createDocument("doc1", data: dict))
         
         let doc = db["doc1"]
         XCTAssertNotNil(doc)
@@ -80,7 +80,7 @@ class FragmentTest: CBLTestCase {
                                     "street": "1 Main street",
                                     "city": "Mountain View",
                                     "state": "CA"]]
-        let doc = createDocument("doc1", dictionary: dict)
+        let doc = createDocument("doc1", data: dict)
         try saveDocument(doc) { (d) in
             let fragment = d["address"]
             XCTAssertNotNil(fragment)
@@ -103,7 +103,7 @@ class FragmentTest: CBLTestCase {
     
     func testGetFragmentFromArrayValue() throws {
         let dict: [String: Any] = ["references": [["name": "Scott"], ["name": "Sam"]]]
-        let doc = createDocument("doc1", dictionary: dict)
+        let doc = createDocument("doc1", data: dict)
         try saveDocument(doc, eval: { (d) in
             let fragment = d["references"]
             XCTAssertNotNil(fragment)
@@ -249,7 +249,7 @@ class FragmentTest: CBLTestCase {
         let dict: [String: Any] = ["address": [
                                     "street": "1 Main street",
                                     "phones": ["mobile": "650-123-4567"]]]
-        let doc = createDocument("doc1", dictionary: dict)
+        let doc = createDocument("doc1", data: dict)
         try saveDocument(doc, eval: { (d) in
             let fragment = d["address"]["phones"]
             XCTAssertNotNil(fragment)
@@ -275,7 +275,7 @@ class FragmentTest: CBLTestCase {
         let dict: [String: Any] = ["address": [
                                     "street": "1 Main street",
                                     "phones": ["mobile": "650-123-4567"]]]
-        let doc = createDocument("doc1", dictionary: dict)
+        let doc = createDocument("doc1", data: dict)
         try saveDocument(doc, eval: { (d) in
             let fragment = d["address"]["country"]
             XCTAssertNotNil(fragment)
@@ -296,7 +296,7 @@ class FragmentTest: CBLTestCase {
     
     func testGetNestedArrayFragments() throws {
         let dict: [String: Any] = ["nested-array": [[1, 2, 3], [4, 5, 6]]]
-        let doc = createDocument("doc1", dictionary: dict)
+        let doc = createDocument("doc1", data: dict)
         try saveDocument(doc, eval: { (d) in
             let fragment = d["nested-array"]
             XCTAssertNotNil(fragment)
@@ -318,7 +318,7 @@ class FragmentTest: CBLTestCase {
     
     func testGetNestedNonExistingArrayFragments() throws {
         let dict: [String: Any] = ["nested-array": [[1, 2, 3], [4, 5, 6]]]
-        let doc = createDocument("doc1", dictionary: dict)
+        let doc = createDocument("doc1", data: dict)
         try saveDocument(doc, eval: { (d) in
             let fragment = d["nested-array"][2]
             XCTAssertNotNil(fragment)
@@ -364,7 +364,7 @@ class FragmentTest: CBLTestCase {
                                     "street": "1 Main street",
                                     "phones": ["mobile": "650-123-4567"]]]
         let doc = createDocument("doc1")
-        let dict = MutableDictionaryObject(withDictionary: data)
+        let dict = MutableDictionaryObject(withData: data)
         doc["dict"].value = dict
         
         try saveDocument(doc, eval: { (d) in
@@ -377,7 +377,7 @@ class FragmentTest: CBLTestCase {
     
     func testDictionaryFragmentSetArray() throws {
         let doc = createDocument("doc1")
-        let array = MutableArrayObject(array: [0, 1, 2])
+        let array = MutableArrayObject(withData: [0, 1, 2])
         doc["array"].value = array
         
         try saveDocument(doc, eval: { (d) in
@@ -446,7 +446,7 @@ class FragmentTest: CBLTestCase {
         let doc = createDocument("doc1")
         doc["array"].value = []
         
-        let dict = MutableDictionaryObject(withDictionary: data)
+        let dict = MutableDictionaryObject(withData: data)
         doc["array"].array!.addValue(dict)
         
         try saveDocument(doc, eval: { (d) in

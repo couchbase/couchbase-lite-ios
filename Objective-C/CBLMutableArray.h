@@ -330,14 +330,13 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Data
 
 /**
- Set an array as a content. Allowed value types are NSArray, NSDate, NSDictionary, NSNumber,
- NSNull, NSString, CBLMutableArray, CBLBlob, CBLMutableDictionary. The NSArrays and NSDictionaries must
- contain only the above types. Setting the new array content will replace the current data
- including the existing CBLMutableArray and CBLMutableDictionary objects.
+ Set data for the array. Allowed value types are CBLArray, CBLBlob,
+ CBLDictionary, NSArray, NSDate, NSDictionary, NSNumber, NSNull, and
+ NSString. The NSArrays and NSDictionaries must contain only the above types.
  
- @param array The array.
+ @param data The data.
  */
-- (void) setArray: (nullable NSArray*)array;
+- (void) setData: (nullable NSArray*)data;
 
 #pragma mark - Subscript
 
@@ -364,13 +363,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) init;
 
 /** 
- Initialize a new CBLMutableArray object with an array content. Allowed value types are NSArray,
- NSDate, NSDictionary, NSNumber, NSNull, NSString, CBLMutableArray, CBLBlob, CBLMutableDictionary.
- The NSArrays and NSDictionaries must contain only the above types.
+ Initialize a new CBLMutableArray object with data. Allowed value types are
+ CBLArray, CBLBlob, CBLDictionary, NSArray, NSDate, NSDictionary,
+ NSNumber, NSNull, and NSString. The NSArrays and NSDictionaries must contain
+ only the above types.
  
- @param array The array object.
+ @param data The data.
  */
-- (instancetype) initWithArray: (NSArray*)array;
+- (instancetype) initWithData: (NSArray*)data;
 
 @end
 

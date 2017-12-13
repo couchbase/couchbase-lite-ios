@@ -150,10 +150,11 @@ public class Result : ArrayProtocol, DictionaryProtocol {
     }
     
     
-    /// All values as a JSON Array object. The values contained in the
-    /// returned Array object are all JSON based values.
+    /// Gets all values as an Array. The value types of the values contained
+    /// in the returned Array object are Array, Blob, Dictionary, Number types,
+    /// NSNull, and String.
     ///
-    /// - Returns: The JSON Array object.
+    /// - Returns: The Array representing all values.
     public func toArray() -> Array<Any> {
         return impl.toArray()
     }
@@ -310,10 +311,11 @@ public class Result : ArrayProtocol, DictionaryProtocol {
     }
     
     
-    /// All values as a JSON Dictionary object. The values contained in the
-    /// returned Dictionary object are all JSON based values.
+    /// Gets all values as a Dictionary. The value types of the values contained
+    /// in the returned Dictionary object are Array, Blob, Dictionary,
+    /// Number types, NSNull, and String.
     ///
-    /// - Returns: The JSON Dictionary object.
+    /// - Returns: The Dictionary representing all values.
     public func toDictionary() -> Dictionary<String, Any> {
         return impl.toDictionary()
     }

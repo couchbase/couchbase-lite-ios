@@ -57,21 +57,21 @@
 }
 
 
-- (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary {
+- (instancetype) initWithData: (nullable NSDictionary<NSString*,id>*)data {
     self = [self initWithID: nil];
     if (self) {
-        [self setDictionary: dictionary];
+        [self setData: data];
     }
     return self;
 }
 
 
 - (instancetype) initWithID: (nullable NSString*)documentID
-                 dictionary: (NSDictionary<NSString*,id>*)dictionary
+                 data: (nullable NSDictionary<NSString*,id>*)data
 {
     self = [self initWithID: documentID];
     if (self) {
-        [self setDictionary: dictionary];
+        [self setData: data];
     }
     return self;
 }
@@ -165,8 +165,8 @@
 }
 
 
-- (void) setDictionary: (NSDictionary<NSString *,id> *)dictionary {
-    [((CBLMutableDictionary*)_dict) setDictionary: dictionary];
+- (void) setData: (nullable NSDictionary<NSString *,id> *)data {
+    [((CBLMutableDictionary*)_dict) setData: data];
 }
 
 

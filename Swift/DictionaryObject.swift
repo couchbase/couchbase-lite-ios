@@ -204,11 +204,11 @@ public class DictionaryObject: DictionaryProtocol, Equatable, Hashable {
     // MARK: Data
     
     
-    /// Gets content of the current object as a Dictionary. The values contained in the
-    /// returned Dictionary object are all JSON based values.
+    /// Gets content of the current object as a Dictionary. The value types of
+    /// the values contained in the returned Dictionary object are Array, Blob,
+    /// Dictionary, Number types, NSNull, and String.
     ///
-    /// - Returns: The Dictionary object representing the content of the current object in the
-    ///            JSON format.
+    /// - Returns: The Dictionary representing the content of the current object.
     public func toDictionary() -> Dictionary<String, Any> {
         return _impl.toDictionary()
     }

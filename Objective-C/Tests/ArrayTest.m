@@ -98,7 +98,7 @@
 
 - (void) testCreateWithNSArray {
     NSArray* data = @[@"1", @"2", @"3"];
-    CBLMutableArray* array = [[CBLMutableArray alloc] initWithArray: data];
+    CBLMutableArray* array = [[CBLMutableArray alloc] initWithData: data];
     AssertEqual(array.count, data.count);
     AssertEqualObjects([array toArray], data);
     
@@ -114,7 +114,7 @@
 - (void) testSetNSArray {
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
     NSArray* data = @[@"1", @"2", @"3"];
-    [array setArray: data];
+    [array setData: data];
     
     AssertEqual(array.count, data.count);
     AssertEqualObjects([array toArray], data);
@@ -128,7 +128,7 @@
     doc = [savedDoc toMutable];
     array = [doc arrayForKey: @"array"];
     data = @[@"4", @"5", @"6"];
-    [array setArray: data];
+    [array setData: data];
     
     AssertEqual(array.count, data.count);
     AssertEqualObjects([array toArray], data);

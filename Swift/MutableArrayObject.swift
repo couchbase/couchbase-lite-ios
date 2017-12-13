@@ -93,7 +93,7 @@ protocol MutableArrayProtocol: ArrayProtocol, MutableArrayFragment {
     
     // MARK: Data
     
-    @discardableResult func setArray(_ array: Array<Any>?) -> Self
+    @discardableResult func setData(_ data: Array<Any>?) -> Self
     
     // MARK: Removing Value
     
@@ -112,20 +112,21 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     // MARK: Initializers
     
     
-    /// Initialize a new empty CBLMutableArray object.
+    /// Initialize a new empty MutableArrayObject.
     public init() {
         super.init(CBLMutableArray())
     }
     
     
-    /// Initialize a new ArrayObject object with an array content. Allowed value types are NSArray,
-    /// NSDate, NSDictionary, NSNumber, NSNull, NSString, ArrayObject, CBLBlob, DictionaryObject.
-    /// The NSArrays and NSDictionaries must contain only the above types.
+    /// Initialize a new MutableArrayObject object with the data. Allowed
+    /// value types are Array, ArrayObject, Blob, Date, Dictionary,
+    /// DictionaryObject, NSNull, Number types, and String.
+    /// The Arrays and Dictionaries must contain only the above types.
     ///
     /// - Parameter array: The array object.
-    public init(array: Array<Any>?) {
+    public init(withData data: Array<Any>?) {
         super.init(CBLMutableArray())
-        setArray(array)
+        setData(data)
     }
     
     
@@ -137,7 +138,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The value.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func setValue(_ value: Any?, at index: Int) -> Self {
         arrayImpl.setValue(DataConverter.convertSETValue(value), at: UInt(index))
         return self
@@ -149,7 +150,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The String object.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func setString(_ value: String?, at index: Int) -> Self {
         return setValue(value, at: index)
     }
@@ -160,7 +161,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The Number value.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult func setNumber(_ value: NSNumber?, at index: Int) -> Self {
         return setValue(value, at: index);
     }
@@ -171,7 +172,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The int value.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func setInt(_ value: Int, at index: Int) -> Self {
         return setValue(value, at: index)
     }
@@ -182,7 +183,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The int64 value.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func setInt64(_ value: Int64, at index: Int) -> Self {
         return setValue(value, at: index)
     }
@@ -193,7 +194,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The float value.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func setFloat(_ value: Float, at index: Int) -> Self {
         return setValue(value, at: index)
     }
@@ -204,7 +205,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The double value.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func setDouble(_ value: Double, at index: Int) -> Self {
         return setValue(value, at: index)
     }
@@ -215,7 +216,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The boolean value.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func setBoolean(_ value: Bool, at index: Int) -> Self {
         return setValue(value, at: index)
     }
@@ -226,7 +227,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The Date object.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func setDate(_ value: Date?, at index: Int) -> Self {
         return setValue(value, at: index)
     }
@@ -237,7 +238,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The Blob object.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func setBlob(_ value: Blob?, at index: Int) -> Self {
         return setValue(value, at: index)
     }
@@ -248,7 +249,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The ArrayObject object.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func setArray(_ value: ArrayObject?, at index: Int) -> Self {
         return setValue(value, at: index)
     }
@@ -259,7 +260,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The DictionaryObject object.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func setDictionary(_ value: DictionaryObject?, at index: Int) -> Self {
         return setValue(value, at: index)
     }
@@ -271,7 +272,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// Adds a value to the end of the array. A nil value will be converted to an NSNull.
     ///
     /// - Parameter value: The value.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func addValue(_ value: Any?) -> Self {
         arrayImpl.addValue(DataConverter.convertSETValue(value))
         return self
@@ -281,7 +282,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// Adds a String object to the end of the array. A nil value will be converted to an NSNull.
     ///
     /// - Parameter value: The String object.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func addString(_ value: String?) -> Self {
         return addValue(value)
     }
@@ -290,7 +291,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// Adds a Number value to the end of the array.
     ///
     /// - Parameter value: The Number value.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult func addNumber(_ value: NSNumber?) -> Self {
         return addValue(value)
     }
@@ -308,7 +309,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// Adds an int64 value to the end of the array.
     ///
     /// - Parameter value: The int64 value.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func addInt64(_ value: Int64) -> Self {
         return addValue(value)
     }
@@ -317,7 +318,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// Adds a float value to the end of the array.
     ///
     /// - Parameter value: The double value.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func addFloat(_ value: Float) -> Self {
         return addValue(value)
     }
@@ -326,7 +327,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// Adds a double value to the end of the array.
     ///
     /// - Parameter value: The double value.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func addDouble(_ value: Double) -> Self {
         return addValue(value)
     }
@@ -335,7 +336,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// Adds a boolean value to the end of the array.
     ///
     /// - Parameter value: The boolean value.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func addBoolean(_ value: Bool) -> Self {
         return addValue(value)
     }
@@ -344,7 +345,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// Adds a Date object to the end of the array. A nil value will be converted to an NSNull.
     ///
     /// - Parameter value: The Date object.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func addDate(_ value: Date?) -> Self {
         return addValue(value)
     }
@@ -353,7 +354,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// Adds a Blob object to the end of the array. A nil value will be converted to an NSNull.
     ///
     /// - Parameter value: The Blob object.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func addBlob(_ value: Blob?) -> Self {
         return addValue(value)
     }
@@ -361,7 +362,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// Adds an ArrayObject object to the end of the array. A nil value will be converted to an NSNull.
     ///
     /// - Parameter value: The ArrayObject object.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func addArray(_ value: ArrayObject?) -> Self {
         return addValue(value)
     }
@@ -370,7 +371,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// Adds a Dictionary object to the end of the array. A nil value will be converted to an NSNull.
     ///
     /// - Parameter value: The Dictionary object.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func addDictionary(_ value: DictionaryObject?) -> Self {
         return addValue(value)
     }
@@ -384,7 +385,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The value.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func insertValue(_ value: Any?, at index: Int) -> Self {
         arrayImpl.insertValue(DataConverter.convertSETValue(value), at: UInt(index))
         return self
@@ -396,7 +397,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The String object.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func insertString(_ value: String?, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
@@ -407,7 +408,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The number value.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult func insertNumber(_ value: NSNumber?, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
@@ -418,7 +419,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The int value.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func insertInt(_ value: Int, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
@@ -429,7 +430,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The int64 value.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func insertInt64(_ value: Int64, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
@@ -440,7 +441,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The float value.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func insertFloat(_ value: Float, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
@@ -451,7 +452,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The double value.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func insertDouble(_ value: Double, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
@@ -462,7 +463,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The boolean value.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func insertBoolean(_ value: Bool, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
@@ -473,7 +474,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The Date object.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func insertDate(_ value: Date?, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
@@ -484,7 +485,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The Blob object.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func insertBlob(_ value: Blob?, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
@@ -495,7 +496,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The ArrayObject object.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func insertArray(_ value: ArrayObject?, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
@@ -506,7 +507,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// - Parameters:
     ///   - value: The Dictionary object.
     ///   - index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func insertDictionary(_ value: DictionaryObject?, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
@@ -518,7 +519,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     /// Removes the object at the given index.
     ///
     /// - Parameter index: The index. This value must not exceed the bounds of the array.
-    /// - Returns: The ArrayObject object.
+    /// - Returns: The self object.
     @discardableResult public func removeValue(at index: Int) -> Self {
         arrayImpl.removeValue(at: UInt(index))
         return self
@@ -528,15 +529,14 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     // MARK: Data
     
 
-    /// Set an array as a content. Allowed value types are Array, Date, Dictionary, Number,
-    /// NSNull, String, ArrayObject, Blob, DictionaryObject. The Array and Dictionary must
-    /// contain only the above types. Setting the new array content will replace the current data
-    /// including the existing ArrayObject and DictionaryObject objects.
+    /// Set data for the array. Allowed value types are Array, ArrayObject,
+    /// Blob, Date, Dictionary, DictionaryObject, NSNull, Number types, and String.
+    /// The Arrays and Dictionaries must contain only the above types.
     ///
     /// - Parameter array: The array.
-    /// - Returns: The ArrayObject object.
-    @discardableResult public func setArray(_ array: Array<Any>?) -> Self {
-        arrayImpl.setArray(DataConverter.convertSETArray(array))
+    /// - Returns: The self object.
+    @discardableResult public func setData(_ data: Array<Any>?) -> Self {
+        arrayImpl.setData(DataConverter.convertSETArray(data))
         return self
     }
     

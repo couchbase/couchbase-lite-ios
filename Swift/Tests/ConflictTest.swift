@@ -79,7 +79,7 @@ class ConflictTest: CBLTestCase {
     func saveProperties(_ props: Dictionary<String, Any>, docID: String) throws {
         // Save to database
         let doc = db.document(withID: docID)!.toMutable()
-        doc.setDictionary(props)
+        doc.setData(props)
         try saveDocument(doc)
     }
     

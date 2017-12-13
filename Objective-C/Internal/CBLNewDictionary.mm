@@ -243,8 +243,8 @@ using namespace cbl;
 }
 
 
-- (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary {
-    _dict = [dictionary mutableCopy];
+- (void) setData: (nullable NSDictionary<NSString*,id>*)data {
+    _dict = [data mutableCopy];
     _changed = true;
 }
 

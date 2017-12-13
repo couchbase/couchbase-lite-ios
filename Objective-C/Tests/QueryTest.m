@@ -914,8 +914,8 @@
 
 - (void) testTypeFunctions {
     CBLMutableDocument* doc = [self createDocument:@"doc1"];
-    [doc setValue: [[CBLMutableArray alloc] initWithArray: @[@"a", @"b"]] forKey: @"array"];
-    [doc setValue: [[CBLMutableDictionary alloc] initWithDictionary: @{@"foo": @"bar"}] forKey: @"dictionary"];
+    [doc setValue: [[CBLMutableArray alloc] initWithData: @[@"a", @"b"]] forKey: @"array"];
+    [doc setValue: [[CBLMutableDictionary alloc] initWithData: @{@"foo": @"bar"}] forKey: @"dictionary"];
     [doc setValue: @(3.14) forKey: @"number"];
     [doc setValue: @"string" forKey: @"string"];
     [self saveDocument: doc];

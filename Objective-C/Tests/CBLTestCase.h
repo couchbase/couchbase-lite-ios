@@ -48,8 +48,8 @@ extern atomic_int gC4ExpectExceptions;
 /** Create a new document with the given document ID. */
 - (CBLMutableDocument*) createDocument: (NSString*)documentID;
 
-/** Create a new document with the given document ID and dictionary content. */
-- (CBLMutableDocument*) createDocument:(NSString *)documentID dictionary: (NSDictionary*)dictionary;
+/** Create a new document with the given document ID and data. */
+- (CBLMutableDocument*) createDocument:(NSString *)documentID data: (NSDictionary*)data;
 
 /** Save a document return a new instance of the document from the database. */
 - (CBLDocument*) saveDocument: (CBLMutableDocument*)document;

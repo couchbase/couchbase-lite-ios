@@ -143,10 +143,11 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Data
 
 /**
- Gets content of the current object as an NSArray. The values contained in the returned
- NSArray object are all JSON based values.
+ Gets content of the current object as an NSArray. The value types of the values
+ contained in the returned NSArray object are CBLBlob, NSArray, NSDictionary,
+ NSNumber, NSNull, and NSString.
  
- @return The NSArray object representing the content of the current object in the JSON format.
+ @return The NSArray object representing the content of the current object.
  */
 - (NSArray*) toArray;
 

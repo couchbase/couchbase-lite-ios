@@ -176,11 +176,11 @@ public class ArrayObject: ArrayProtocol, Equatable, Hashable {
     }
 
     
-    /// Gets content of the current object as an Array object. The values contained in the
-    /// returned Array object are all JSON based values.
+    /// Gets content of the current object as an Array. The value types of the values
+    /// contained in the returned Array object are Array, Blob, Dictionary,
+    /// Number types, NSNull, and String.
     ///
-    /// - Returns: The Array object representing the content of the current object in
-    ///            the JSON format.
+    /// - Returns: The Array representing the content of the current object.
     public func toArray() -> Array<Any> {
         return _impl.toArray()
     }

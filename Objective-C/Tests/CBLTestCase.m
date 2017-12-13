@@ -111,8 +111,8 @@
 }
 
 
-- (CBLMutableDocument*) createDocument:(NSString *)documentID dictionary:(NSDictionary *)dictionary {
-    return [[CBLMutableDocument alloc] initWithID: documentID dictionary: dictionary];
+- (CBLMutableDocument*) createDocument:(NSString *)documentID data:(NSDictionary *)data {
+    return [[CBLMutableDocument alloc] initWithID: documentID data: data];
 }
 
 
@@ -167,7 +167,7 @@
                 NSDictionary* dict = [NSJSONSerialization JSONObjectWithData: (NSData*)json
                                                                      options: 0 error: &error];
                 Assert(dict, @"Couldn't parse line %llu of %@.json: %@", n, resourceName, error);
-                [doc setDictionary: dict];
+                [doc setData: dict];
                 BOOL saved = [_db saveDocument: doc error: &error] != nil;
                 Assert(saved, @"Couldn't save document: %@", error);
             }];

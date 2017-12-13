@@ -119,14 +119,13 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Data
 
 /**
- Set a dictionary as a content. Allowed value types are CBLMutableArray, CBLBlob, CBLMutableDictionary,
- NSArray, NSDate, NSDictionary, NSNumber, NSNull, NSString. The NSArrays and NSDictionaries must
- contain only the above types. Setting the new dictionary content will replace the current data
- including the existing CBLMutableArray and CBLMutableDictionary objects.
+ Set data for the dictionary. Allowed value types are CBLArray, CBLBlob,
+ CBLDictionary, NSArray, NSDate, NSDictionary, NSNumber, NSNull, and NSString.
+ The NSArrays and NSDictionaries must contain only the above types.
  
- @param dictionary The dictionary.
+ @param data The data.
  */
-- (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary;
+- (void) setData: (nullable NSDictionary<NSString*,id>*)data;
 
 #pragma mark - Getting dictionary and array object
 
@@ -172,13 +171,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) init;
 
 /** 
- Initialzes a new CBLMutableDictionary object with dictionary content. Allowed value types are NSArray,
- NSDate, NSDictionary, NSNumber, NSNull, NSString, CBLMutableArray, CBLBlob, CBLMutableDictionary.
- The NSArrays and NSDictionaries must contain only the above types.
+ Initialzes a new CBLMutableDictionary object with data. Allowed value types are
+ CBLArray, CBLBlob, CBLDictionary, NSArray, NSDate, NSDictionary, NSNumber,
+ NSNull, and NSString. The NSArrays and NSDictionaries must contain only the
+ above types.
  
- @param dictionary The dictionary object.
+ @param data The data.
  */
-- (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary;
+- (instancetype) initWithData: (nullable NSDictionary<NSString*,id>*)data;
 
 @end
 

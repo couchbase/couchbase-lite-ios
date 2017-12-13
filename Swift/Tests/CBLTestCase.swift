@@ -67,8 +67,8 @@ class CBLTestCase: XCTestCase {
     }
     
     
-    func createDocument(_ id: String?, dictionary: [String:Any]) -> MutableDocument {
-        return MutableDocument(withID: id, dictionary: dictionary)
+    func createDocument(_ id: String?, data: [String:Any]) -> MutableDocument {
+        return MutableDocument(withID: id, data: data)
     }
     
     
@@ -107,7 +107,7 @@ class CBLTestCase: XCTestCase {
                     let json = line.data(using: String.Encoding.utf8, allowLossyConversion: false)
                     let dict = try! JSONSerialization.jsonObject(with: json!, options: []) as! [String:Any]
                     let docID = String(format: "doc-%03llu", n)
-                    let doc = MutableDocument(withID: docID, dictionary: dict)
+                    let doc = MutableDocument(withID: docID, data: dict)
                     try! self.db.saveDocument(doc)
                 })
             }

@@ -113,7 +113,7 @@ class DocumentTest: CBLTestCase {
                                                "state": "CA"],
                                    "phones": ["650-123-0001", "650-123-0002"]]
         
-        let doc1a = MutableDocument(withID: "doc1", dictionary: dict)
+        let doc1a = MutableDocument(withID: "doc1", data: dict)
         XCTAssertNotNil(doc1a)
         XCTAssertTrue(doc1a.id.count > 0)
         XCTAssertFalse(doc1a.isDeleted)
@@ -136,7 +136,7 @@ class DocumentTest: CBLTestCase {
                                    "phones": ["650-123-0001", "650-123-0002"]]
         
         let doc = createDocument("doc1")
-        doc.setDictionary(dict)
+        doc.setData(dict)
         XCTAssertTrue(doc.toDictionary() ==  dict)
         
         let nuDict: [String: Any] = ["name": "Daniel Tiger",
@@ -145,7 +145,7 @@ class DocumentTest: CBLTestCase {
                                                  "city": "Palo Alto",
                                                  "state": "CA"],
                                      "phones": ["650-234-0001", "650-234-0002"]]
-        doc.setDictionary(nuDict)
+        doc.setData(nuDict)
         XCTAssertTrue(doc.toDictionary() ==  nuDict)
         
         let savedDoc = try saveDocument(doc)
@@ -1017,7 +1017,7 @@ class DocumentTest: CBLTestCase {
                                    "name": "Jason",
                                    "age": "30",
                                    "address": ["street": "1 milky way."]]
-        doc.setDictionary(dict)
+        doc.setData(dict)
         XCTAssert(doc.contains("type"))
         XCTAssert(doc.contains("name"))
         XCTAssert(doc.contains("age"))
@@ -1037,7 +1037,7 @@ class DocumentTest: CBLTestCase {
                                     "street": "1 milky way.",
                                     "city": "galaxy city",
                                     "zip": 12345]]
-        doc.setDictionary(dict)
+        doc.setData(dict)
         
         try saveDocument(doc)
         
@@ -1117,7 +1117,7 @@ class DocumentTest: CBLTestCase {
                                 "city": "Mountain View",
                                 "state": "CA"]]
         
-        let doc = createDocument("doc1", dictionary: dict)
+        let doc = createDocument("doc1", data: dict)
         let savedDoc = try saveDocument(doc)
         
         let address = savedDoc.dictionary(forKey: "address")!

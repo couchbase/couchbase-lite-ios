@@ -804,8 +804,8 @@ class QueryTest: CBLTestCase {
     
     func testTypeFunctions() throws {
         let doc = MutableDocument(withID: "doc1")
-        doc.setValue(MutableArrayObject(array: ["a", "b"]), forKey: "array")
-        doc.setValue(MutableDictionaryObject(withDictionary: ["foo": "bar"]), forKey: "dictionary")
+        doc.setValue(MutableArrayObject(withData: ["a", "b"]), forKey: "array")
+        doc.setValue(MutableDictionaryObject(withData: ["foo": "bar"]), forKey: "dictionary")
         doc.setValue(3.14, forKey: "number")
         doc.setValue("string", forKey: "string")
         try db.saveDocument(doc)

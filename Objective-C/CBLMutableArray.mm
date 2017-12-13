@@ -30,10 +30,10 @@
 }
 
 
-- (instancetype) initWithArray: (NSArray*)array {
+- (instancetype) initWithData: (NSArray*)data {
     self = [self init];
     if (self) {
-        [self setArray: array];
+        [self setData: data];
     }
     return self;
 }
@@ -257,9 +257,9 @@
 #pragma mark - Set Content with an Array
 
 
-- (void) setArray:(nullable NSArray *)array {
+- (void) setData:(nullable NSArray *)data {
     _array.clear();
-    for (id obj in array)
+    for (id obj in data)
         _array.append([obj cbl_toCBLObject]);
 }
 

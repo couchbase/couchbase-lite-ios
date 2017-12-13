@@ -15,17 +15,18 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     // MARK: Initializers
     
     
-    /// Initializes a new Document object with a new random UUID. The created document will be
-    /// saved into a database when you call the Database's save() method with the document
-    /// object given.
+    /// Initializes a new MutableDocument object with a new random UUID.
+    /// The created document will be saved into a database when you call
+    /// the Database's save() method with the document object given.
     public convenience init() {
         self.init(CBLMutableDocument())
     }
 
     
-    /// Initializes a new Document object with the given ID. If a nil ID value is given,
-    /// the document will be created with a new random UUID. The created document will be saved
-    /// into a database when you call the Database's save() method with the document object given.
+    /// Initializes a new MutableDocument object with the given ID.
+    /// If a nil ID value is given, the document will be created with a new
+    /// random UUID. The created document will be saved into a database when
+    /// you call the Database's save() method with the document object given.
     ///
     /// - Parameter id: The document ID.
     public convenience init(withID id: String?) {
@@ -33,32 +34,34 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     }
     
     
-    /// Initializes a new Document object with a new random UUID and the dictionary as the content.
-    /// Allowed dictionary value types are Array, Date, Dictionary, Number, NSNull, String,
-    /// ArrayObject, Blob, DictionaryObject. The Arrays and Dictionaries must contain only
-    /// the above types. The created document will be saved into a database when you call the
+    /// Initializes a new MutableDocument object with a new random UUID and
+    /// the data. Allowed data value types are Array, ArrayObject, Blob, Date,
+    /// Dictionary, DictionaryObject, NSNull, Number types, and String.
+    /// The Arrays and Dictionaries must contain only the above types.
+    /// The created document will be saved into a database when you call the
     /// Database's save() method with the document object given.
     ///
-    /// - Parameter dictionary: The dictionary object.
-    public convenience init(withDictionary dictionary: Dictionary<String, Any>?) {
+    /// - Parameter data: The data.
+    public convenience init(withData data: Dictionary<String, Any>?) {
         self.init(CBLMutableDocument())
-        setDictionary(dictionary)
+        setData(data)
     }
     
     
-    /// Initializes a new Document object with a given ID and the dictionary as the content.
-    /// If a nil ID value is given, the document will be created with a new random UUID.
-    /// Allowed dictionary value types are Array, Date, Dictionary, Number, NSNull, String,
-    /// ArrayObject, Blob, DictionaryObject. The Arrays and Dictionaries must contain only
-    /// the above types. The created document will be saved into a database when you call the
+    /// Initializes a new MutableDocument object with a given ID and the data.
+    /// If a nil ID value is given, the document will be created with a new
+    /// random UUID. Allowed data value types are Array, ArrayObject, Blob, Date,
+    /// Dictionary, DictionaryObject, NSNull, Number types, and String.
+    /// The Arrays and Dictionaries must contain only the above types.
+    /// The created document will be saved into a database when you call the
     /// Database's save() method with the document object given.
     ///
     /// - Parameters:
     ///   - id: The document ID.
-    ///   - dictionary: The dictionary object.
-    public convenience init(withID id: String?, dictionary: Dictionary<String, Any>?) {
+    ///   - data: The dictionary object.
+    public convenience init(withID id: String?, data: Dictionary<String, Any>?) {
         self.init(CBLMutableDocument(id: id))
-        setDictionary(dictionary)
+        setData(data)
     }
     
     // MARK: Edit
@@ -83,7 +86,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - value: The value.
     ///   - key: The key.
-    /// - Returns: The Document object.
+    /// - Returns: The self object.
     @discardableResult public func setValue(_ value: Any?, forKey key: String) -> Self {
         docImpl.setValue(DataConverter.convertSETValue(value), forKey: key)
         return self
@@ -95,7 +98,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - value: The String value.
     ///   - key: The Document object.
-    /// - Returns: The Document object.
+    /// - Returns: The self object.
     @discardableResult public func setString(_ value: String?, forKey key: String) -> Self {
         return setValue(value, forKey:  key)
     }
@@ -106,7 +109,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - value: The number value.
     ///   - key: The key.
-    /// - Returns: The Document object.
+    /// - Returns: The self object.
     @discardableResult func setNumber(_ value: NSNumber?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -117,7 +120,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - value: The int value.
     ///   - key: The key.
-    /// - Returns: The Document object.
+    /// - Returns: The self object.
     @discardableResult public func setInt(_ value: Int, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -128,7 +131,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - value: The int64 value.
     ///   - key: The key.
-    /// - Returns: The Document object.
+    /// - Returns: The self object.
     @discardableResult public func setInt64(_ value: Int64, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -139,7 +142,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - value: The double value.
     ///   - key: The key.
-    /// - Returns: The Document object.
+    /// - Returns: The self object.
     @discardableResult public func setDouble(_ value: Double, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -150,7 +153,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - value: The float value.
     ///   - key: The key.
-    /// - Returns: The Document object.
+    /// - Returns: The self object.
     @discardableResult public func setFloat(_ value: Float, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -161,7 +164,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - value: The boolean value.
     ///   - key: The key.
-    /// - Returns: The Document object.
+    /// - Returns: The self object.
     @discardableResult public func setBoolean(_ value: Bool, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -172,7 +175,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - value: The Blob object
     ///   - key: The key.
-    /// - Returns: The Document object.
+    /// - Returns: The self object.
     @discardableResult public func setBlob(_ value: Blob?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -183,7 +186,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - value: The Date object.
     ///   - key: The key.
-    /// - Returns: The Document object.
+    /// - Returns: The self object.
     @discardableResult public func setDate(_ value: Date?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -194,7 +197,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - value: The ArrayObject object.
     ///   - key: The key.
-    /// - Returns: The Document object.
+    /// - Returns: The self object.
     @discardableResult public func setArray(_ value: ArrayObject?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -205,7 +208,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// - Parameters:
     ///   - value: The DictionaryObject object.
     ///   - key: The key.
-    /// - Returns: The Document object.
+    /// - Returns: The self object.
     @discardableResult public func setDictionary(_ value: DictionaryObject?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -213,17 +216,14 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     
     // MARK: Data
     
-    
-    /// Set a dictionary as a content. Allowed value types are Array, Date, Dictionary,
-    /// Number, NSNull, String, ArrayObject, Blob, DictionaryObject. The Arrays and
-    /// Dictionaries must contain only the above types. Setting the new dictionary content
-    /// will replace the current data including the existing ArrayObject and DictionaryObject
-    /// objects.
+    /// Set data for the document. Allowed value types are Array, ArrayObject,
+    /// Blob, Date, Dictionary, DictionaryObject, NSNull, Number types, and String.
+    /// The Arrays and Dictionaries must contain only the above types.
     ///
-    /// - Parameter dictionary: The dictionary.
-    /// - Returns: The Document object.
-    @discardableResult public func setDictionary(_ dictionary: Dictionary<String, Any>?) -> Self {
-        docImpl.setDictionary(DataConverter.convertSETDictionary(dictionary))
+    /// - Parameter data: The data.
+    /// - Returns: The self object.
+    @discardableResult public func setData(_ data: Dictionary<String, Any>?) -> Self {
+        docImpl.setData(DataConverter.convertSETDictionary(data))
         return self
     }
     
@@ -234,7 +234,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     /// Removes a given key and its value.
     ///
     /// - Parameter key: The key.
-    /// - Returns: The Document object.
+    /// - Returns: The self object.
     @discardableResult public func removeValue(forKey key: String) -> Self {
         docImpl.removeValue(forKey: key)
         return self

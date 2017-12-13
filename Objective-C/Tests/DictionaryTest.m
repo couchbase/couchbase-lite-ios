@@ -33,7 +33,7 @@
     NSDictionary* dict = @{@"street": @"1 Main street",
                            @"city": @"Mountain View",
                            @"state": @"CA"};
-    CBLMutableDictionary* address = [[CBLMutableDictionary alloc] initWithDictionary: dict];
+    CBLMutableDictionary* address = [[CBLMutableDictionary alloc] initWithData: dict];
     AssertEqualObjects([address valueForKey: @"street"], @"1 Main street");
     AssertEqualObjects([address valueForKey: @"city"], @"Mountain View");
     AssertEqualObjects([address valueForKey: @"state"], @"CA");
@@ -117,7 +117,7 @@
 - (void) testDictionaryArray {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     NSArray* data = @[@{@"name": @"1"}, @{@"name": @"2"}, @{@"name": @"3"}, @{@"name": @"4"}];
-    [doc setDictionary: @{@"dicts": data}];
+    [doc setData: @{@"dicts": data}];
     
     CBLMutableArray* dicts = [doc arrayForKey: @"dicts"];
     AssertEqual(dicts.count, 4u);

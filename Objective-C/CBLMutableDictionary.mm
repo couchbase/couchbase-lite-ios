@@ -35,10 +35,10 @@ using namespace fleeceapi;
 }
 
 
-- (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary {
+- (instancetype) initWithData: (nullable NSDictionary<NSString*,id>*)data {
     self = [self init];
     if (self) {
-        [self setDictionary: dictionary];
+        [self setData: data];
     }
     return self;
 }
@@ -132,10 +132,10 @@ using namespace fleeceapi;
 }
 
 
-- (void) setDictionary: (nullable NSDictionary<NSString*,id>*)dictionary {
+- (void) setData: (nullable NSDictionary<NSString*,id>*)data {
     _dict.clear();
     
-    [dictionary enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
+    [data enumerateKeysAndObjectsUsingBlock: ^(id key, id value, BOOL *stop) {
         CBLStringBytes keySlice(key);
         _dict.set(keySlice, [value cbl_toCBLObject]);
     }];

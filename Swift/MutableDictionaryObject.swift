@@ -41,7 +41,7 @@ protocol MutableDictionaryProtocol: DictionaryProtocol, MutableDictionaryFragmen
     
     // MARK: Data
     
-    @discardableResult func setDictionary(_ dictionary: Dictionary<String, Any>?) -> Self
+    @discardableResult func setData(_ data: Dictionary<String, Any>?) -> Self
     
     // MARK: Removing Entries
     
@@ -68,14 +68,15 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     }
     
     
-    /// Initialzes a new DictionaryObject object with dictionary content. Allowed value types are
-    /// Array, Date, Dictionary, Number, NSNull, String, ArrayObject, Blob, DictionaryObject.
+    /// Initialzes a new MutableDictionaryObject object with the data. Allowed
+    /// value types are Array, ArrayObject, Blob, Date, Dictionary,
+    /// DictionaryObject, NSNull, Number types, and String.
     /// The Arrays and Dictionaries must contain only the above types.
     ///
     /// - Parameter dictionary: the dictionary object.
-    public init(withDictionary dictionary: Dictionary<String, Any>?) {
+    public init(withData data: Dictionary<String, Any>?) {
         super.init(CBLMutableDictionary())
-        setDictionary(dictionary)
+        setData(data)
     }
     
     
@@ -90,7 +91,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     /// - Parameters:
     ///   - value: The value.
     ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
+    /// - Returns: The self object.
     @discardableResult public func setValue(_ value: Any?, forKey key: String) -> Self {
         dictImpl.setValue(DataConverter.convertSETValue(value), forKey: key)
         return self
@@ -102,7 +103,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     /// - Parameters:
     ///   - value: The String value.
     ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
+    /// - Returns: The self object.
     @discardableResult func setString(_ value: String?, forKey key: String) -> Self {
         return setValue(value, forKey:  key)
     }
@@ -113,7 +114,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     /// - Parameters:
     ///   - value: The number value.
     ///   - key: They key.
-    /// - Returns: The DictionaryObject object.
+    /// - Returns: The self object.
     @discardableResult func setNumber(_ value: NSNumber?, forKey key: String) -> Self {
         return setValue(value, forKey: key);
     }
@@ -124,7 +125,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     /// - Parameters:
     ///   - value: The int value.
     ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
+    /// - Returns: The self object.
     @discardableResult func setInt(_ value: Int, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -135,7 +136,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     /// - Parameters:
     ///   - value: The int64 value.
     ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
+    /// - Returns: The self object.
     @discardableResult func setInt64(_ value: Int64, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -146,7 +147,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     /// - Parameters:
     ///   - value:  The double value.
     ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
+    /// - Returns: The self object.
     @discardableResult func setDouble(_ value: Double, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -157,7 +158,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     /// - Parameters:
     ///   - value: The float value.
     ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
+    /// - Returns: The self object.
     @discardableResult func setFloat(_ value: Float, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -168,7 +169,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     /// - Parameters:
     ///   - value: The boolean value.
     ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
+    /// - Returns: The self object.
     @discardableResult func setBoolean(_ value: Bool, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -179,7 +180,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     /// - Parameters:
     ///   - value: The Date object.
     ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
+    /// - Returns: The self object.
     @discardableResult func setDate(_ value: Date?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -190,7 +191,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     /// - Parameters:
     ///   - value: The Blob object.
     ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
+    /// - Returns: The self object.
     @discardableResult func setBlob(_ value: Blob?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -201,7 +202,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     /// - Parameters:
     ///   - value: The ArrayObject object.
     ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
+    /// - Returns: The self object.
     @discardableResult func setArray(_ value: ArrayObject?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -212,7 +213,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     /// - Parameters:
     ///   - value: The DictionaryObject object.
     ///   - key: The key.
-    /// - Returns: The DictionaryObject object.
+    /// - Returns: The self object.
     @discardableResult func setDictionary(_ value: DictionaryObject?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
@@ -220,16 +221,14 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     
     // MARK: Data
     
-    /// Set a dictionary as a content. Allowed value types are Array, Date, Dictionary,
-    /// Number types, NSNull, String, ArrayObject, Blob, DictionaryObject. The Arrays and
-    /// Dictionaries must contain only the above types. Setting the new dictionary content
-    /// will replace the current data including the existing ArrayObject and DictionaryObject
-    /// objects.
+    /// Set data for the dictionary. Allowed value types are Array, ArrayObject,
+    /// Blob, Date, Dictionary, DictionaryObject, NSNull, Number types, and String.
+    /// The Arrays and Dictionaries must contain only the above types.
     ///
-    /// - Parameter dictionary: The dictionary.
-    /// - Returns: The DictionaryObject object.
-    @discardableResult public func setDictionary(_ dictionary: Dictionary<String, Any>?) -> Self {
-        dictImpl.setDictionary(DataConverter.convertSETDictionary(dictionary))
+    /// - Parameter data: The data.
+    /// - Returns: The self object.
+    @discardableResult public func setData(_ data: Dictionary<String, Any>?) -> Self {
+        dictImpl.setData(DataConverter.convertSETDictionary(data))
         return self
     }
     
@@ -240,7 +239,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     /// Removes a given key and its value from the dictionary.
     ///
     /// - Parameter key: The key.
-    /// - Returns: The DictionaryObject object.
+    /// - Returns: The self object.
     @discardableResult public func removeValue(forKey key: String) -> Self {
         dictImpl.removeValue(forKey: key)
         return self

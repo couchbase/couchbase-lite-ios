@@ -42,7 +42,7 @@
     _seekrit = [self openSeekritWithPassword: nil error: &error];
     Assert(_seekrit, @"Failed to create unencrypted db: %@", error);
     
-    CBLMutableDocument* doc = [self createDocument: nil dictionary: @{@"answer": @(42)}];
+    CBLMutableDocument* doc = [self createDocument: nil data: @{@"answer": @(42)}];
     Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
     [_seekrit close: nil];
     _seekrit = nil;
@@ -65,7 +65,7 @@
     _seekrit = [self openSeekritWithPassword: @"letmein" error: &error];
     Assert(_seekrit, @"Failed to reopen encrypted db: %@", error);
     
-    CBLMutableDocument* doc = [self createDocument: nil dictionary: @{@"answer": @(42)}];
+    CBLMutableDocument* doc = [self createDocument: nil data: @{@"answer": @(42)}];
     Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
     [_seekrit close: nil];
     _seekrit = nil;
@@ -123,7 +123,7 @@
     Assert(_seekrit, @"Failed to reopen encrypted db: %@", error);
     
     // Create a doc and then update it:
-    CBLMutableDocument* doc = [self createDocument: nil dictionary: @{@"answer": @(42)}];
+    CBLMutableDocument* doc = [self createDocument: nil data: @{@"answer": @(42)}];
     Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
     [doc setValue: @(84) forKey: @"answer"];
     Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
@@ -213,7 +213,7 @@
     NSError* error;
     [_seekrit inBatch: &error usingBlock: ^{
         for (unsigned i=0; i<100; i++) {
-            CBLMutableDocument* doc = [self createDocument: nil dictionary: @{@"seq": @(i)}];
+            CBLMutableDocument* doc = [self createDocument: nil data: @{@"seq": @(i)}];
             [_seekrit saveDocument: doc error: nil];
         }
     }];
