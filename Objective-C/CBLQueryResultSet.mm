@@ -95,18 +95,19 @@ namespace cbl {
     if (self.randomAccess)
         return nil;
     
-    __block id row;
-    [self.database withLock: ^{
+    CBLDatabase* strongDB = self.database;
+    Assert(strongDB, @"Database has been released.");
+    
+    CBL_LOCK(strongDB) {
+        id row = nil;
         if (c4queryenum_next(_c4enum, &_error)) {
             row = self.currentObject;
-        }
-    }];
-    
-    if (!row && _error.code)
-        CBLWarnError(Query, @"%@[%p] error: %d/%d", [self class], self, _error.domain, _error.code);
-    else
-        CBLLog(Query, @"End of query enumeration (%p)", _c4enum);
-    return row;
+        } else if (_error.code)
+            CBLWarnError(Query, @"%@[%p] error: %d/%d", [self class], self, _error.domain, _error.code);
+        else
+            CBLLog(Query, @"End of query enumeration (%p)", _c4enum);
+        return row;
+    }
 }
 
 
@@ -119,31 +120,31 @@ namespace cbl {
 
 // Called by CBLQueryResultsArray
 - (id) objectAtIndex: (NSUInteger)index {
-    __block BOOL success;
-    __block id result;
-    [self.database withLock: ^{
-        success = c4queryenum_seek(_c4enum, index, &_error);
-        if (success)
-            result = self.currentObject;
-    }];
+    CBLDatabase* strongDB = self.database;
+    Assert(strongDB, @"Database has been released.");
     
-    if (!success) {
-        NSString* message = sliceResult2string(c4error_getMessage(_error));
-        [NSException raise: NSInternalInconsistencyException
-                    format: @"CBLQueryEnumerator couldn't get a value: %@", message];
+    CBL_LOCK(strongDB) {
+        if (!c4queryenum_seek(_c4enum, index, &_error)) {
+            NSString* message = sliceResult2string(c4error_getMessage(_error));
+            [NSException raise: NSInternalInconsistencyException
+                        format: @"CBLQueryEnumerator couldn't get a value: %@", message];
+        }
+        return self.currentObject;
     }
-    return result;
 }
 
 
 - (NSArray*) allObjects {
-    __block NSInteger count = 0;
-    [self.database withLock: ^{
+    CBLDatabase* strongDB = self.database;
+    Assert(strongDB, @"Database has been released.");
+    
+    NSInteger count;
+    CBL_LOCK(strongDB) {
         count = (NSInteger)c4queryenum_getRowCount(_c4enum, nullptr);
-    }];
-     
+    }
+    
     if (count >= 0) {
-        self.randomAccess = YES;
+        _randomAccess = true;
         return [[CBLQueryResultArray alloc] initWithResultSet: self count: count];
     } else
         return super.allObjects;
@@ -164,12 +165,17 @@ namespace cbl {
     if (outError)
         *outError = nil;
     
-    __block C4Error c4error;
-    __block C4QueryEnumerator *newEnum;
-    [self.database withLock:^{
-        newEnum = c4queryenum_refresh(_c4enum, &c4error);
-    }];
+    CBLDatabase* strongDB = self.database;
+    if (!strongDB) {
+        CBLWarn(Query, @"Database has already been released.");
+        return nil;
+    }
     
+    C4Error c4error;
+    C4QueryEnumerator *newEnum;
+    CBL_LOCK(strongDB) {
+        newEnum = c4queryenum_refresh(_c4enum, &c4error);
+    }
     if (!newEnum) {
         if (c4error.code)
             convertError(c4error, outError);

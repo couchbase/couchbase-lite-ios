@@ -37,7 +37,6 @@ using namespace fleece;
     CBLDatabaseConfiguration* _config;
     CBLPredicateQuery* _allDocsQuery;
     
-    NSObject* _listenersMutex;
     C4DatabaseObserver* _dbObs;
     NSMutableSet* _dbListenerTokens;
     
@@ -102,8 +101,8 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
         if (![self open: outError])
             return nil;
         
-        _dispatchQueue = dispatch_queue_create("CBLDatabase", DISPATCH_QUEUE_SERIAL);
-        _listenersMutex = [NSObject new];
+        NSString* qName = $sprintf(@"Database <%@>", name);
+        _dispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         _replications = [NSMapTable strongToWeakObjectsMapTable];
         _activeReplications = [NSMutableSet new];
     }
@@ -150,9 +149,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (CBLDocument*) documentWithID: (NSString*)documentID {
-    CBL_LOCK(self) {
-        return [self documentWithID: documentID error: nil];
-    }
+    return [self documentWithID: documentID error: nil];
 }
 
 
@@ -160,9 +157,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) containsDocumentWithID: (NSString*)docID {
-    CBL_LOCK(self) {
-        return [self documentWithID: docID error: nil] != nil;
-    }
+    return [self documentWithID: docID error: nil] != nil;
 }
 
 
@@ -503,13 +498,6 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
-- (void) withLock: (void(^)(void))block {
-    CBL_LOCK(self) {
-        block();
-    }
-}
-
-
 - (C4BlobStore*) getBlobStore: (NSError**)outError {
     CBL_LOCK(self) {
         if (![self mustBeOpen: outError])
@@ -650,13 +638,15 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 - (nullable CBLDocument*) documentWithID: (NSString*)documentID
                                    error: (NSError**)outError
 {
-    [self mustBeOpen];
-    
-    return [[CBLDocument alloc] initWithDatabase: self
-                                      documentID: documentID
-                                       mustExist: YES
-                                  includeDeleted: NO
-                                           error: outError];
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        return [[CBLDocument alloc] initWithDatabase: self
+                                          documentID: documentID
+                                           mustExist: YES
+                                      includeDeleted: NO
+                                               error: outError];
+    }
 }
 
 
@@ -676,7 +666,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 - (id<CBLListenerToken>) addDatabaseChangeListener: (void (^)(CBLDatabaseChange*))listener
                                              queue: (dispatch_queue_t)queue
 {
-    CBL_LOCK(_listenersMutex) {
+    CBL_LOCK(self) {
         if (!_dbListenerTokens) {
             _dbListenerTokens = [NSMutableSet set];
             _dbObs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
@@ -693,7 +683,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 
 
 - (void) removeDatabaseChangeListenerWithToken: (id<CBLListenerToken>)token {
-    CBL_LOCK(_listenersMutex) {
+    CBL_LOCK(self) {
         [_dbListenerTokens removeObject: token];
         
         if (_dbListenerTokens.count == 0) {
@@ -706,13 +696,9 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 
 
 - (void) postDatabaseChanged {
-    NSMutableArray* allChanges;
-    
     CBL_LOCK(self) {
         if (!_dbObs || !_c4db || c4db_isInTransaction(_c4db))
             return;
-        
-        allChanges = [NSMutableArray array];
         
         const uint32_t kMaxChanges = 100u;
         C4DatabaseChange changes[kMaxChanges];
@@ -727,7 +713,12 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
                 if(docIDs.count > 0) {
                     CBLDatabaseChange* change = [[CBLDatabaseChange alloc] initWithDocumentIDs: docIDs
                                                                                     isExternal: external];
-                    [allChanges addObject: change];
+                    for (CBLChangeListenerToken* token in _dbListenerTokens) {
+                        void (^listener)(CBLDatabaseChange*) = token.listener;
+                        dispatch_async(token.queue, ^{
+                            listener(change);
+                        });
+                    }
                     docIDs = [NSMutableArray new];
                 }
             }
@@ -739,17 +730,6 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
             }
         } while(nChanges > 0);
     }
-    
-    CBL_LOCK(_listenersMutex) {
-        for (CBLDatabaseChange* change in allChanges) {
-            for (CBLChangeListenerToken* token in _dbListenerTokens) {
-                void (^listener)(CBLDatabaseChange*) = token.listener;
-                dispatch_async(token.queue, ^{
-                    listener(change);
-                });
-            }
-        }
-    }
 }
 
 
@@ -757,7 +737,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
                                                         listener: (void (^)(CBLDocumentChange*))listener
                                                            queue: (dispatch_queue_t)queue
 {
-    CBL_LOCK(_listenersMutex) {
+    CBL_LOCK(self) {
         if (!_docListenerTokens)
             _docListenerTokens = [NSMutableDictionary dictionary];
         
@@ -785,7 +765,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 
 
 - (void) removeDocumentChangeListenerWithToken: (CBLDocumentChangeListenerToken*)token {
-    CBL_LOCK(_listenersMutex) {
+    CBL_LOCK(self) {
         NSString* documentID = token.documentID;
         NSMutableSet* listeners = _docListenerTokens[documentID];
         if (listeners) {
@@ -808,9 +788,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
     CBL_LOCK(self) {
         if (!_docObs[documentID] || !_c4db ||  c4db_isInTransaction(_c4db))
             return;
-    }
-    
-    CBL_LOCK(_listenersMutex) {
+        
         CBLDocumentChange* change = [[CBLDocumentChange alloc] initWithDocumentID: documentID];
         NSSet* listeners = [_docListenerTokens objectForKey: documentID];
         for (CBLDocumentChangeListenerToken* token in listeners) {

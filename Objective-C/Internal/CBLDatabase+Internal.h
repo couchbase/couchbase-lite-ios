@@ -39,7 +39,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, nonatomic) FLSharedKeys sharedKeys;
 
-- (void) withLock: (void(^)(void))block;
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
 - (bool) resolveConflictInDocument: (NSString*)docID
                      usingResolver: (nullable id<CBLConflictResolver>)resolver

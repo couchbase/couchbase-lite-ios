@@ -7,8 +7,7 @@
 //
 
 
-#ifndef CBLLock_h
-#define CBLLock_h
+#pragma once
 
 #if CBL_THREADSAFE
     #if DEBUG
@@ -17,5 +16,3 @@
         #define CBL_LOCK(m) @synchronized(m)
     #endif
 #endif
-
-#endif /* CBLLock_h */
