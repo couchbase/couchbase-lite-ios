@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
 - (bool) resolveConflictInDocument: (NSString*)docID
-                     usingResolver: (nullable id<CBLConflictResolver>)resolver
+                     usingResolver: (id<CBLConflictResolver>)resolver
                              error: (NSError**)outError;
 
 @end

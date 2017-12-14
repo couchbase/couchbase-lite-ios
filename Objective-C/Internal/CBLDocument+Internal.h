@@ -33,6 +33,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) setEncodingError: (NSError*)error;
 
+/** For conflict resolver to know that the document is being deleted. */
+- (void) markAsDeleted;
+
 @end
 
 //////////////////
@@ -66,7 +69,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
-                        mustExist: (BOOL)mustExist
                    includeDeleted: (BOOL)includeDeleted
                             error: (NSError**)outError;
 

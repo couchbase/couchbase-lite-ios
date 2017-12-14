@@ -30,8 +30,8 @@
 @implementation CBLMutableDocument
 {
     NSError* _encodingError;
+    BOOL _isDeleted;
 }
-
 
 #pragma mark - Initializer
 
@@ -181,6 +181,16 @@
 
 - (NSUInteger) generation {
     return super.generation + !!self.changed;
+}
+
+
+- (void) markAsDeleted {
+    _isDeleted = YES;
+}
+
+
+- (BOOL) isDeleted {
+    return _isDeleted ? _isDeleted : super.isDeleted;
 }
 
 
