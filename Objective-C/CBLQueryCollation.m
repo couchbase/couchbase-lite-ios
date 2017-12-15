@@ -47,7 +47,11 @@
     self = [super init];
     if (self) {
         _unicode = unicode;
+        
+        if (_unicode && !locale)
+            locale = [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
         _locale = locale;
+        
         _ignoreCase = ignoreCase;
         _ignoreAccents = ignoreAccents;
     }
