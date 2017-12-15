@@ -30,12 +30,12 @@ class ViewController: UIViewController {
         let dict: [String: Any] = ["type": "task",
                                    "owner": "todo",
                                    "createdAt": Date()]
-        let newTask = MutableDocument(dictionary: dict)
-        try? database.save(newTask)
+        let newTask = MutableDocument(withData: dict)
+        try? database.saveDocument(newTask)
         
         // mutate document
         newTask.setValue("Apples", forKey:"name")
-        try? database.save(newTask)
+        try? database.saveDocument(newTask)
         
         // typed accessors
         newTask.setValue(Date(), forKey: "createdAt")
@@ -49,7 +49,7 @@ class ViewController: UIViewController {
                     doc.setValue("user", forKey: "type")
                     doc.setValue("user \(i)", forKey: "name")
                     doc.setBoolean(false, forKey: "admin")
-                    try database.save(doc)
+                    try database.saveDocument(doc)
                     print("saved user document \(doc.string(forKey: "name")!)")
                 }
             }
@@ -63,7 +63,7 @@ class ViewController: UIViewController {
         
         let blob = Blob(contentType: "image/jpg", data: imageData)
         newTask.setBlob(blob, forKey: "avatar")
-        try? database.save(newTask)
+        try? database.saveDocument(newTask)
         
         if let taskBlob = newTask.blob(forKey: "image") {
             let image = UIImage(data: taskBlob.content!)
@@ -79,7 +79,7 @@ class ViewController: UIViewController {
         )
         
         do {
-            let rows = try query.run()
+            let rows = try query.execute()
             for row in rows {
                 print("user name :: \(row.string(forKey: "name")!)")
             }
@@ -94,13 +94,12 @@ class ViewController: UIViewController {
             let doc = MutableDocument()
             doc.setString("task", forKey: "type")
             doc.setString(task, forKey: "name")
-            try? database.save(doc)
+            try? database.saveDocument(doc)
         }
         
         // Create index
         do {
-            let index = Index.ftsIndex()
-                .on(FTSIndexItem.expression(Expression.property("name")))
+            let index = Index.fullTextIndex(withItems: FullTextIndexItem.property("name"))
                 .locale(nil)
                 .ignoreAccents(false)
             try database.createIndex(index, withName: "name-idx")
@@ -108,11 +107,11 @@ class ViewController: UIViewController {
             print(error.localizedDescription)
         }
         
-        let whereClause = Expression.property("name").match("'buy'")
+        let whereClause = FullTextExpression.index("name").match("'buy'")
         let ftsQuery = Query.select().from(DataSource.database(database)).where(whereClause)
         
         do {
-            let ftsQueryResult = try ftsQuery.run()
+            let ftsQueryResult = try ftsQuery.execute()
             for row in ftsQueryResult {
                 print("document properties \(row.string(forKey: "_id")!)")
             }
@@ -127,18 +126,18 @@ class ViewController: UIViewController {
          * `mine` is what's being saved.
          * 3. Read the document after the second save operation and verify its property is as expected.
          */
-        let theirs = MutableDocument("buzz")
+        let theirs = MutableDocument(withID: "buzz")
         theirs.setString("theirs", forKey: "status")
-        let mine = MutableDocument("buzz")
+        let mine = MutableDocument(withID: "buzz")
         mine.setString("mine", forKey: "status")
         do {
-            try database.save(theirs)
-            try database.save(mine)
+            try database.saveDocument(theirs)
+            try database.saveDocument(mine)
         } catch let error {
             print(error.localizedDescription)
         }
         
-        let conflictResolverResult = database.getDocument("buzz")
+        let conflictResolverResult = database.document(withID: "buzz")
         print("conflictResolverResult doc.status ::: \(conflictResolverResult!.string(forKey: "status")!)")
         
         // replication
@@ -160,8 +159,8 @@ class ViewController: UIViewController {
          }
         */
         let url = URL(string: "blip://localhost:4984/db")!
-        let replConfig = ReplicatorConfiguration(database: database, targetURL: url)
-        let replication = Replicator(config: replConfig)
+        let replConfig = ReplicatorConfiguration(withDatabase: database, targetURL: url)
+        let replication = Replicator(withConfig: replConfig)
         replication.start()
         
         // replication change listener
@@ -183,7 +182,7 @@ class ViewController: UIViewController {
             
             let document = MutableDocument()
             document.setString("created on background thread", forKey: "status")
-            try? database.save(document)
+            try? database.saveDocument(document)
         }
         
         // travel sample examples
@@ -221,7 +220,7 @@ class ViewController: UIViewController {
                 .and(Expression.property("geo.alt").greaterThanOrEqualTo(300))
             )
         do {
-            for row in try query.run() {
+            for row in try query.execute() {
                 print("\(row.toDictionary()))")
             }
         } catch {
@@ -243,7 +242,7 @@ class ViewController: UIViewController {
         .join(
             Join.join(DataSource.database(database!).as("route"))
             .on(
-                Expression.meta().id.from("airline")
+                Meta.id.from("airline")
                 .equalTo(Expression.property("airlineid").from("route"))
             )
         )
@@ -253,7 +252,7 @@ class ViewController: UIViewController {
             .and(Expression.property("sourceairport").from("route").equalTo("RIX"))
         )
         do {
-            for row in try query.run() {
+            for row in try query.execute() {
                 print("\(row.toDictionary()))")
             }
         } catch {
@@ -278,7 +277,7 @@ class ViewController: UIViewController {
                 Expression.property("tz")
             )
         do {
-            for row in try query.run() {
+            for row in try query.execute() {
                 print("\(row.toDictionary()))")
             }
         } catch {

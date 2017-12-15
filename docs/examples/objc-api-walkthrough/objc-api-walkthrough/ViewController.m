@@ -31,26 +31,26 @@
     
     // create document
     CBLMutableDocument* newTask = [[CBLMutableDocument alloc] init];
-    [newTask setObject:@"task-list" forKey:@"type"];
-    [newTask setObject:@"todo" forKey:@"owner"];
-    [newTask setObject:[NSDate date] forKey:@"createAt"];
+    [newTask setValue:@"task-list" forKey:@"type"];
+    [newTask setValue:@"todo" forKey:@"owner"];
+    [newTask setValue:[NSDate date] forKey:@"createAt"];
     [database saveDocument: newTask error: &error];
     
     // mutate document
-    [newTask setObject:@"Apples" forKey:@"name"];
+    [newTask setValue:@"Apples" forKey:@"name"];
     [database saveDocument:newTask error:&error];
     
     // typed accessors
-    [newTask setObject:[NSDate date] forKey:@"createdAt"];
+    [newTask setValue:[NSDate date] forKey:@"createdAt"];
     NSDate* date = [newTask dateForKey:@"createdAt"];
     
     // database batch operation
-    [database inBatch:&error do:^{
+    [database inBatch:&error usingBlock:^{
         for (int i = 1; i <= 10; i++) {
             NSError* error;
             CBLMutableDocument *doc = [[CBLMutableDocument alloc] init];
-            [doc setObject:@"user" forKey:@"type"];
-            [doc setObject:[NSString stringWithFormat:@"user %d", i] forKey:@"name"];
+            [doc setValue:@"user" forKey:@"type"];
+            [doc setValue:[NSString stringWithFormat:@"user %d", i] forKey:@"name"];
             [doc setBoolean:@FALSE forKey:@"admin"];
             [database saveDocument:doc error:&error];
             NSLog(@"saved user document %@", [doc stringForKey:@"name"]);
@@ -62,7 +62,7 @@
     NSData *data = UIImageJPEGRepresentation(image, 1);
     
     CBLBlob *blob = [[CBLBlob alloc] initWithContentType:@"image/jpg" data:data];
-    [newTask setObject:blob forKey: @"avatar"];
+    [newTask setValue:blob forKey: @"avatar"];
     
     [database saveDocument: newTask error:&error];
     if (error) {
@@ -79,7 +79,7 @@
                                         [[CBLQueryExpression property:@"type"] equalTo:@"user"]
                                         andExpression: [[CBLQueryExpression property:@"admin"] equalTo:@FALSE]]];
     
-    NSEnumerator* rows = [query run:&error];
+    NSEnumerator* rows = [query execute:&error];
     for (CBLQueryRow *row in rows) {
         NSLog(@"user name :: %@", [row stringAtIndex:0]);
     }
@@ -89,8 +89,8 @@
     NSArray *tasks = @[@"buy groceries", @"play chess", @"book travels", @"buy museum tickets"];
     for (NSString* task in tasks) {
         CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
-        [doc setObject: @"task" forKey: @"type"];
-        [doc setObject: task forKey: @"name"];
+        [doc setValue: @"task" forKey: @"type"];
+        [doc setValue: task forKey: @"name"];
         
         NSError* error;
         [database saveDocument: newTask error:&error];
@@ -100,19 +100,18 @@
     }
     
     // create index
-    CBLQueryExpression* name = [CBLQueryExpression property: @"name"];
-    CBLIndex* index = [CBLIndex ftsIndexOn: [CBLFTSIndexItem expression: name] options: nil];
+    CBLIndex* index = [CBLIndex fullTextIndexWithItems : @[[CBLFullTextIndexItem property: @"name"]] options: nil];
     [database createIndex: index withName: @"name_idx" error: &error];
     if (error) {
         NSLog(@"Cannot create index %@", error);
     }
     
-    CBLQueryExpression* where = [[CBLQueryExpression property:@"name"] match:@"'buy'"];
+    CBLQueryExpression* where = [[CBLQueryFullTextExpression index:@"name_idx"] match:@"'buy'"];
     CBLQuery *ftsQuery = [CBLQuery select:@[]
                                      from:[CBLQueryDataSource database:database]
                                     where:where];
     
-    NSEnumerator* results = [ftsQuery run:&error];
+    NSEnumerator* results = [ftsQuery execute:&error];
     for (CBLQueryResult *row in results) {
         NSLog(@"document properties :: %@", [row toDictionary]);
     }
@@ -125,9 +124,9 @@
      * 3. Read the document after the second save operation and verify its property is as expected.
      */
     CBLMutableDocument* theirs = [[CBLMutableDocument alloc] initWithID:@"buzz"];
-    [theirs setObject:@"theirs" forKey:@"status"];
+    [theirs setValue:@"theirs" forKey:@"status"];
     CBLMutableDocument* mine = [[CBLMutableDocument alloc] initWithID:@"buzz"];
-    [mine setObject:@"mine" forKey:@"status"];
+    [mine setValue:@"mine" forKey:@"status"];
     [database saveDocument:theirs error:nil];
     [database saveDocument:mine error:nil];
     
