@@ -239,11 +239,11 @@ using namespace fleeceapi;
 
 
 - (NSDictionary<NSString*,id>*) toDictionary {
-    NSArray* values = [self toArray];
     NSMutableDictionary* dict = [NSMutableDictionary dictionary];
     for (NSString* name in _rs.columnNames) {
         NSInteger index = [self indexForColumnName: name];
-        dict[name] = values[index];
+        id value = [self valueAtIndex:index];
+        dict[name] = value ? value : [NSNull null];
     }
     return dict;
 }
