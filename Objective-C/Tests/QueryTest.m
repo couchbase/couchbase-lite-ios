@@ -1129,13 +1129,14 @@
           [CBLQueryCollation unicodeWithLocale: @"en" ignoreCase: YES ignoreAccents: NO],
           [CBLQueryCollation unicodeWithLocale: @"en" ignoreCase: YES ignoreAccents: YES]];
     
+    NSString* deviceLocale = [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
     NSArray* expected =
         @[
           @{@"UNICODE": @(NO),  @"LOCALE": [NSNull null] ,@"CASE": @(YES), @"DIAC": @(YES)},
           @{@"UNICODE": @(NO),  @"LOCALE": [NSNull null] ,@"CASE": @(NO) , @"DIAC": @(YES)},
-          @{@"UNICODE": @(YES), @"LOCALE": [NSNull null] ,@"CASE": @(YES), @"DIAC": @(YES)},
-          @{@"UNICODE": @(YES), @"LOCALE": [NSNull null] ,@"CASE": @(NO),  @"DIAC": @(YES)},
-          @{@"UNICODE": @(YES), @"LOCALE": [NSNull null] ,@"CASE": @(NO),  @"DIAC": @(NO)},
+          @{@"UNICODE": @(YES), @"LOCALE": deviceLocale  ,@"CASE": @(YES), @"DIAC": @(YES)},
+          @{@"UNICODE": @(YES), @"LOCALE": deviceLocale  ,@"CASE": @(NO),  @"DIAC": @(YES)},
+          @{@"UNICODE": @(YES), @"LOCALE": deviceLocale  ,@"CASE": @(NO),  @"DIAC": @(NO)},
           @{@"UNICODE": @(YES), @"LOCALE": @"en"         ,@"CASE": @(YES), @"DIAC": @(YES)},
           @{@"UNICODE": @(YES), @"LOCALE": @"en"         ,@"CASE": @(NO),  @"DIAC": @(YES)},
           @{@"UNICODE": @(YES), @"LOCALE": @"en"         ,@"CASE": @(NO),  @"DIAC": @(NO)}
