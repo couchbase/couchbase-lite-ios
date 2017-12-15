@@ -25,7 +25,7 @@
     CBLMutableDocument* doc = [CBLMutableDocument documentWithID: @"doc"];
     Assert(doc, @"Couldn't create doc");
     NSError *error;
-    BOOL ok = [self.db inBatch: &error do: ^{
+    BOOL ok = [self.db inBatch: &error usingBlock: ^{
         for (unsigned i = 0; i < numRevisions; ++i) {
             @autoreleasepool {
                 [doc setValue: @(i) forKey: @"count"];
