@@ -95,10 +95,10 @@ namespace cbl {
     if (self.randomAccess)
         return nil;
     
-    CBLDatabase* strongDB = self.database;
-    Assert(strongDB, @"Database has been released.");
-    
-    CBL_LOCK(strongDB) {
+    // TODO: We should make it strong reference instead:
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1983
+    CBLDatabase* db = self.database;
+    CBL_LOCK(db) {
         id row = nil;
         if (c4queryenum_next(_c4enum, &_error)) {
             row = self.currentObject;
@@ -120,10 +120,10 @@ namespace cbl {
 
 // Called by CBLQueryResultsArray
 - (id) objectAtIndex: (NSUInteger)index {
-    CBLDatabase* strongDB = self.database;
-    Assert(strongDB, @"Database has been released.");
-    
-    CBL_LOCK(strongDB) {
+    // TODO: We should make it strong reference instead:
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1983
+    CBLDatabase* db = self.database;
+    CBL_LOCK(db) {
         if (!c4queryenum_seek(_c4enum, index, &_error)) {
             NSString* message = sliceResult2string(c4error_getMessage(_error));
             [NSException raise: NSInternalInconsistencyException
@@ -135,11 +135,11 @@ namespace cbl {
 
 
 - (NSArray*) allObjects {
-    CBLDatabase* strongDB = self.database;
-    Assert(strongDB, @"Database has been released.");
-    
     NSInteger count;
-    CBL_LOCK(strongDB) {
+    // TODO: We should make it strong reference instead:
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1983
+    CBLDatabase* db = self.database;
+    CBL_LOCK(db) {
         count = (NSInteger)c4queryenum_getRowCount(_c4enum, nullptr);
     }
     
@@ -165,15 +165,12 @@ namespace cbl {
     if (outError)
         *outError = nil;
     
-    CBLDatabase* strongDB = self.database;
-    if (!strongDB) {
-        CBLWarn(Query, @"Database has already been released.");
-        return nil;
-    }
-    
     C4Error c4error;
     C4QueryEnumerator *newEnum;
-    CBL_LOCK(strongDB) {
+    // TODO: We should make it strong reference instead:
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1983
+    CBLDatabase* db = self.database;
+    CBL_LOCK(db) {
         newEnum = c4queryenum_refresh(_c4enum, &c4error);
     }
     if (!newEnum) {

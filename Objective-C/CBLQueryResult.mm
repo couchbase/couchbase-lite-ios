@@ -46,7 +46,10 @@ using namespace fleeceapi;
 
 
 - (NSUInteger) count {
-    CBL_LOCK(self) {
+    // TODO: We should make it strong reference instead:
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1983
+    CBLDatabase* db = _rs.database;
+    CBL_LOCK(db) {
         return c4query_columnCount(_rs.c4Query);
     }
 }

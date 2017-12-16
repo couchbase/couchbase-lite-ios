@@ -500,11 +500,9 @@
     if (![self check: outError])
         return nil;
     
-    NSString* result;
     CBL_LOCK(self.database) {
-        result = sliceResult2string(c4query_explain(_c4Query));
+        return sliceResult2string(c4query_explain(_c4Query));
     }
-    return result;
 }
 
 

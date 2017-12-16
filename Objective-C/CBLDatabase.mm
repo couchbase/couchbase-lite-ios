@@ -962,61 +962,72 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 #pragma mark - RESOLVING REPLICATED CONFLICTS:
 
 
-// Called inside the replicator's database transaction.
 - (bool) resolveConflictInDocument: (NSString*)docID
                      usingResolver: (id<CBLConflictResolver>)resolver
                              error: (NSError**)outError
 {
     CBLDocument* doc, *otherDoc, *baseDoc;
-    CBL_LOCK(self) {
-        // Open transaction to be able to see current uncommitted changes
-        // on the replicator's database (WAL Mode):
-        C4Transaction t(_c4db);
-        if (!t.begin())
-            return convertError(t.error(), outError);
-        
-        doc = [[CBLDocument alloc] initWithDatabase: self
-                                              documentID: docID
-                                          includeDeleted: YES
-                                                   error: outError];
-        if (!doc)
-            return false;
-        
-        // Read the conflicting remote revision:
-        otherDoc = [[CBLDocument alloc] initWithDatabase: self
-                                                   documentID: docID
-                                               includeDeleted: YES
-                                                        error: outError];
-        if (!otherDoc || ![otherDoc selectConflictingRevision])
-            return false;
-        
-        // Read the common ancestor revision (if it's available):
-        baseDoc = [[CBLDocument alloc] initWithDatabase: self
+    while (true) {
+        CBL_LOCK(self) {
+            // Open a transaction as a workaround to make sure that
+            // the replicator commits the current changes before we
+            // try to read the documents.
+            // https://github.com/couchbase/couchbase-lite-core/issues/322
+            C4Transaction t(_c4db);
+            if (!t.begin())
+                return convertError(t.error(), outError);
+            
+            doc = [[CBLDocument alloc] initWithDatabase: self
+                                             documentID: docID
+                                         includeDeleted: YES
+                                                  error: outError];
+            if (!doc)
+                return false;
+            
+            // Read the conflicting remote revision:
+            otherDoc = [[CBLDocument alloc] initWithDatabase: self
                                                   documentID: docID
                                               includeDeleted: YES
                                                        error: outError];
-        if (![baseDoc selectCommonAncestorOfDoc: doc andDoc: otherDoc] ||
-            ![baseDoc toDictionary]) {
-            baseDoc = nil;
+            if (!otherDoc || ![otherDoc selectConflictingRevision])
+                return false;
+            
+            // Read the common ancestor revision (if it's available):
+            baseDoc = [[CBLDocument alloc] initWithDatabase: self
+                                                 documentID: docID
+                                             includeDeleted: YES
+                                                      error: outError];
+            if (![baseDoc selectCommonAncestorOfDoc: doc andDoc: otherDoc] ||
+                ![baseDoc toDictionary]) {
+                baseDoc = nil;
+            }
+            
+            if (!t.commit())
+                return convertError(t.error(), outError);
         }
         
-        if (!t.commit())
-            return convertError(t.error(), outError);
+        // Call the conflict resolver:
+        auto conflict = [[CBLConflict alloc] initWithMine: doc
+                                                   theirs: otherDoc
+                                                     base: baseDoc];
+        CBLLog(Database, @"Resolving doc '%@' with %@ (mine=%@, theirs=%@, base=%@",
+               docID, resolver.class, doc.revID, otherDoc.revID, baseDoc.revID);
+        CBLDocument* resolved = [resolver resolve: conflict];
+        if (!resolved)
+            return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
+        
+        NSError* err;
+        BOOL success = [self saveResolvedDocument: resolved
+                                      forConflict: conflict
+                                            error: &err];
+        if ($equal(err.domain, @"LiteCore") && err.code == kC4ErrorConflict)
+            continue;
+        
+        if (outError)
+            *outError = err;
+        
+        return success;
     }
-    
-    // Call the conflict resolver:
-    auto conflict = [[CBLConflict alloc] initWithMine: doc
-                                               theirs: otherDoc
-                                                 base: baseDoc];
-    CBLLog(Database, @"Resolving doc '%@' with %@ (mine=%@, theirs=%@, base=%@",
-           docID, resolver.class, doc.revID, otherDoc.revID, baseDoc.revID);
-    CBLDocument* resolved = [resolver resolve: conflict];
-    if (!resolved)
-        return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
-    
-    return [self saveResolvedDocument: resolved
-                          forConflict: conflict
-                                error: outError];
 }
 
 
