@@ -28,6 +28,7 @@
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
 
+
 using namespace fleece;
 
 #define kDBExtension @"cblite2"
@@ -47,7 +48,7 @@ using namespace fleece;
 
 @synthesize name=_name;
 @synthesize c4db=_c4db, sharedKeys=_sharedKeys;
-@synthesize replications=_replications, activeReplications=_activeReplications;
+@synthesize replications=_replications, activeReplications=_activeReplications, liveQueries= _liveQueries;
 
 
 static const C4DatabaseConfig kDBConfig = {
@@ -101,6 +102,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
             return nil;
         _replications = [NSMapTable strongToWeakObjectsMapTable];
         _activeReplications = [NSMutableSet new];
+        _liveQueries = [NSMutableSet new];
     }
     return self;
 }
@@ -236,6 +238,10 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     
     CBLLog(Database, @"Closing %@ at path %@", self, self.path);
     
+    [self stopActiveReplications];
+    
+    [self stopLiveQueries];
+    
     _allDocsQuery = nil;
     
     C4Error err;
@@ -251,6 +257,10 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 - (BOOL) delete: (NSError**)outError {
     [self mustBeOpen];
+    
+    [self stopActiveReplications];
+    
+    [self stopLiveQueries];
     
     C4Error err;
     if (!c4db_delete(_c4db, &err))
@@ -496,6 +506,18 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     return YES;
 }
 
+- (void) stopActiveReplications {
+    // Stop all active replications
+    for (CBLReplicator* repl in _activeReplications) {
+        [repl stop];
+    }
+}
+
+-(void) stopLiveQueries {
+    for (CBLLiveQuery* query in _liveQueries) {
+        [query stop];
+    }
+}
 
 static NSString* defaultDirectory() {
     return [CBLDatabaseConfiguration defaultDirectory];
