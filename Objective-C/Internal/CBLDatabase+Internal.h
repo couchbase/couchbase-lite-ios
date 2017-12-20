@@ -33,6 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLDatabase ()
 
 @property (readonly, nonatomic, nullable) C4Database* c4db;
+@property (readonly, nonatomic) dispatch_queue_t dispatchQueue;
 @property (readonly, nonatomic) NSMapTable<NSURL*,CBLReplicator*>* replications;
 @property (readonly, nonatomic) NSMutableSet* activeReplications;
 
@@ -40,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
 - (bool) resolveConflictInDocument: (NSString*)docID
-                     usingResolver: (nullable id<CBLConflictResolver>)resolver
+                     usingResolver: (id<CBLConflictResolver>)resolver
                              error: (NSError**)outError;
 
 @end

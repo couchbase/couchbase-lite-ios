@@ -180,8 +180,12 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
         .callbackContext = (__bridge void*)self,
         // TODO: Add .validationFunc (public API TBD)
     };
+    
     C4Error err;
-    _repl = c4repl_new(_config.database.c4db, addr, dbName, otherDB.c4db, params, &err);
+    CBL_LOCK(_config.database) {
+        _repl = c4repl_new(_config.database.c4db, addr, dbName, otherDB.c4db, params, &err);
+    }
+    
     C4ReplicatorStatus status;
     if (_repl) {
         status = c4repl_getStatus(_repl);
