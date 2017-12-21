@@ -104,7 +104,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     ///   - value: The String value.
     ///   - key: The key.
     /// - Returns: The self object.
-    @discardableResult func setString(_ value: String?, forKey key: String) -> Self {
+    @discardableResult public func setString(_ value: String?, forKey key: String) -> Self {
         return setValue(value, forKey:  key)
     }
 
@@ -115,7 +115,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     ///   - value: The number value.
     ///   - key: They key.
     /// - Returns: The self object.
-    @discardableResult func setNumber(_ value: NSNumber?, forKey key: String) -> Self {
+    @discardableResult public func setNumber(_ value: NSNumber?, forKey key: String) -> Self {
         return setValue(value, forKey: key);
     }
     
@@ -126,7 +126,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     ///   - value: The int value.
     ///   - key: The key.
     /// - Returns: The self object.
-    @discardableResult func setInt(_ value: Int, forKey key: String) -> Self {
+    @discardableResult public func setInt(_ value: Int, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     
@@ -137,7 +137,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     ///   - value: The int64 value.
     ///   - key: The key.
     /// - Returns: The self object.
-    @discardableResult func setInt64(_ value: Int64, forKey key: String) -> Self {
+    @discardableResult public func setInt64(_ value: Int64, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     
@@ -148,7 +148,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     ///   - value:  The double value.
     ///   - key: The key.
     /// - Returns: The self object.
-    @discardableResult func setDouble(_ value: Double, forKey key: String) -> Self {
+    @discardableResult public func setDouble(_ value: Double, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     
@@ -159,7 +159,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     ///   - value: The float value.
     ///   - key: The key.
     /// - Returns: The self object.
-    @discardableResult func setFloat(_ value: Float, forKey key: String) -> Self {
+    @discardableResult public func setFloat(_ value: Float, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
 
@@ -170,7 +170,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     ///   - value: The boolean value.
     ///   - key: The key.
     /// - Returns: The self object.
-    @discardableResult func setBoolean(_ value: Bool, forKey key: String) -> Self {
+    @discardableResult public func setBoolean(_ value: Bool, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     
@@ -181,7 +181,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     ///   - value: The Date object.
     ///   - key: The key.
     /// - Returns: The self object.
-    @discardableResult func setDate(_ value: Date?, forKey key: String) -> Self {
+    @discardableResult public func setDate(_ value: Date?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     
@@ -192,7 +192,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     ///   - value: The Blob object.
     ///   - key: The key.
     /// - Returns: The self object.
-    @discardableResult func setBlob(_ value: Blob?, forKey key: String) -> Self {
+    @discardableResult public func setBlob(_ value: Blob?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     
@@ -203,7 +203,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     ///   - value: The ArrayObject object.
     ///   - key: The key.
     /// - Returns: The self object.
-    @discardableResult func setArray(_ value: ArrayObject?, forKey key: String) -> Self {
+    @discardableResult public func setArray(_ value: ArrayObject?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     
@@ -214,7 +214,7 @@ public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtoco
     ///   - value: The DictionaryObject object.
     ///   - key: The key.
     /// - Returns: The self object.
-    @discardableResult func setDictionary(_ value: DictionaryObject?, forKey key: String) -> Self {
+    @discardableResult public func setDictionary(_ value: DictionaryObject?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
 
