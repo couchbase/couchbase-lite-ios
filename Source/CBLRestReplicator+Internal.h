@@ -15,7 +15,7 @@
 @interface CBLRestReplicator ()
 {
     @protected
-    BOOL _running, _online, _active;
+    BOOL _running, _online;
     CBL_ReplicatorSettings* _settings;
     CBLDatabase* __weak _db;
     NSString* _lastSequence;
