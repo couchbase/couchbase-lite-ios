@@ -18,6 +18,7 @@ UsingLogDomain(Sync);
 
 
 @interface CBLRemoteSession () <NSURLSessionDataDelegate>
+@property (readwrite, atomic) BOOL closed;
 @end
 
 
@@ -33,7 +34,7 @@ UsingLogDomain(Sync);
     CBLCookieStorage* _cookieStorage;
 }
 
-@synthesize authorizer=_authorizer;
+@synthesize authorizer=_authorizer, closed=_closed;
 
 
 + (NSURLSessionConfiguration*) defaultConfiguration {
@@ -96,20 +97,23 @@ UsingLogDomain(Sync);
 
 
 - (void) close {
-    // Create a strong session in block to prevent race when _session
-    // is set to nil in the -URLSession:didBecomeInvalidWithError: method.
-    NSURLSession* session = _session;
+    if (self.closed)
+        return;
+    
     [_session.delegateQueue addOperationWithBlock: ^{
         // Do this on the queue so that it's properly ordered with the tasks being started in
         // the -startRequest method.
         LogTo(RemoteRequest, @"CBLRemoteSession closing");
-        [session finishTasksAndInvalidate];
+        [_session finishTasksAndInvalidate];
         _requestDelegate = nil;
     }];
 }
 
 
 - (void) startRequest: (CBLRemoteRequest*)request {
+    if (self.closed)
+        return;
+    
     request.session = self;
     request.delegate = _requestDelegate;
     if (_authorizer)
@@ -216,6 +220,11 @@ UsingLogDomain(Sync);
 
 - (void) URLSession:(NSURLSession *)session didBecomeInvalidWithError:(nullable NSError *)error {
     LogTo(RemoteRequest, @"CBLRemoteSession closed");
+    
+    // Mark as closed:
+    self.closed = YES;
+    
+    // Reset _requestIDs
     if (_requestIDs.count > 0)
         Warn(@"CBLRemoteSession closed but has leftover tasks: %@", _requestIDs.allValues);
     _requestIDs = nil;
