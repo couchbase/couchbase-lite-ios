@@ -110,7 +110,7 @@ public class MutableDocument : Document, MutableDictionaryProtocol {
     ///   - value: The number value.
     ///   - key: The key.
     /// - Returns: The self object.
-    @discardableResult func setNumber(_ value: NSNumber?, forKey key: String) -> Self {
+    @discardableResult public func setNumber(_ value: NSNumber?, forKey key: String) -> Self {
         return setValue(value, forKey: key)
     }
     
