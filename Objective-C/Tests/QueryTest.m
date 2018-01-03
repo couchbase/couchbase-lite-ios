@@ -1366,4 +1366,68 @@
     [q removeChangeListenerWithToken: token];
 }
 
+- (void) testCleanupOfLiveQueriesAfterDatabaseClose{
+    // add a live query to the DB
+    // XCTestExpectation* x = [self expectationWithDescription: @"Query Change"];
+    CBLQuery* q = [CBLQuery select: @[kDOCID]
+                              from: [CBLQueryDataSource database: self.db]];
+    
+    id token = [q addChangeListener: ^(CBLQueryChange* change) {
+       
+    }];
+    
+    // Confirm the addition of query
+    
+    AssertEqual(self.db.liveQueries.count,(unsigned long)1);
+    
+
+    // Close Database - This should trigger a stop of live query
+    NSError* error;
+    Assert([self.db close:&error]);
+    
+    
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
+    while (!self.db.liveQueries.count && timeout.timeIntervalSinceNow > 0.0) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
+            break;
+        
+    }
+    
+    AssertEqual(self.db.liveQueries.count,(unsigned long)0);
+
+    [q removeChangeListenerWithToken: token];
+    
+}
+
+- (void) testCleanupOfLiveQueriesAfterDatabaseDelete{
+    // add a live query to the DB
+    // XCTestExpectation* x = [self expectationWithDescription: @"Query Change"];
+    CBLQuery* q = [CBLQuery select: @[kDOCID]
+                              from: [CBLQueryDataSource database: self.db]];
+    
+    id token = [q addChangeListener: ^(CBLQueryChange* change) {
+        
+    }];
+    
+    // Confirm the addition of query    
+    AssertEqual(self.db.liveQueries.count,(unsigned long)1);
+
+    
+    // Close Database - This should trigger a stop of live query
+    NSError* error;
+    Assert([self.db delete:&error]);
+    
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
+    while (!self.db.liveQueries.count && timeout.timeIntervalSinceNow > 0.0) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
+            break;
+        
+    }
+    
+    AssertEqual(self.db.liveQueries.count,(unsigned long)0);
+    
+    [q removeChangeListenerWithToken: token];
+    
+}
+
 @end
