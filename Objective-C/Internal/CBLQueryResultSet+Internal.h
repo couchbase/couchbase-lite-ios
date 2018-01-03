@@ -19,7 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
                     enumerator: (C4QueryEnumerator*)e
                    columnNames: (NSDictionary*)columnNames;
 
-@property (nonatomic, weak, readonly) CBLDatabase* database;
+@property (nonatomic, readonly) CBLDatabase* database;
 @property (nonatomic, readonly) C4Query* c4Query;
 @property (nonatomic, readonly) NSDictionary* columnNames;
 

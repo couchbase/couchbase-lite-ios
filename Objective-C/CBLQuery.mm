@@ -81,7 +81,7 @@
 
 - (void) setParameters:(CBLQueryParameters *)parameters {
     _parameters = [parameters copy];
-    [_liveQuery start];
+    [_liveQuery queryParametersChanged];
 }
 
 

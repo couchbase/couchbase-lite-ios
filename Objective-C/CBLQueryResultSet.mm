@@ -50,7 +50,7 @@ namespace cbl {
 
 
 @implementation CBLQueryResultSet {
-    __weak CBLQuery* _query;
+    CBLQuery* _query;
     C4QueryEnumerator* _c4enum;
     cbl::QueryResultContext* _context;
     C4Error _error;
@@ -95,8 +95,6 @@ namespace cbl {
     if (self.randomAccess)
         return nil;
     
-    // TODO: We should make it strong reference instead:
-    // https://github.com/couchbase/couchbase-lite-ios/issues/1983
     CBLDatabase* db = self.database;
     CBL_LOCK(db) {
         id row = nil;
@@ -167,8 +165,7 @@ namespace cbl {
     
     C4Error c4error;
     C4QueryEnumerator *newEnum;
-    // TODO: We should make it strong reference instead:
-    // https://github.com/couchbase/couchbase-lite-ios/issues/1983
+    
     CBLDatabase* db = self.database;
     CBL_LOCK(db) {
         newEnum = c4queryenum_refresh(_c4enum, &c4error);

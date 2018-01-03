@@ -30,6 +30,10 @@ NS_ASSUME_NONNULL_BEGIN
 /** Stops observing database changes. */
 - (void) stop;
 
+/** Call this method to notify that the query parameters have been changed,
+    the CBLLiveQuery object will re-run the query if it's already started. */
+- (void) queryParametersChanged;
+
 /** 
  Adds a query change listener with the given dispatch queue on which the changes
  will be posted. If the dispatch queue is not specified, the changes will be
