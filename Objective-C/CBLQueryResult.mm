@@ -46,7 +46,10 @@ using namespace fleeceapi;
 
 
 - (NSUInteger) count {
-    return c4query_columnCount(_rs.c4Query);
+    CBLDatabase* db = _rs.database;
+    CBL_LOCK(db) {
+        return c4query_columnCount(_rs.c4Query);
+    }
 }
 
 
@@ -110,11 +113,10 @@ using namespace fleeceapi;
 
 
 - (NSArray*) toArray {
-    FLSharedKeys sk = [self database].sharedKeys;
-    
     NSMutableArray* array = [NSMutableArray array];
     for (NSUInteger i = 0; i < self.count; i++) {
-        [array addObject: FLValue_GetNSObject([self fleeceValueAtIndex: i], sk, nullptr)];
+        id obj = [[self fleeceValueToObjectAtIndex: i] cbl_toPlainObject];
+        [array addObject: obj ? obj : [NSNull null]];
     }
     return array;
 }
@@ -242,7 +244,7 @@ using namespace fleeceapi;
     NSMutableDictionary* dict = [NSMutableDictionary dictionary];
     for (NSString* name in _rs.columnNames) {
         NSInteger index = [self indexForColumnName: name];
-        id value = [self valueAtIndex:index];
+        id value = [[self valueAtIndex: index] cbl_toPlainObject];
         dict[name] = value ? value : [NSNull null];
     }
     return dict;

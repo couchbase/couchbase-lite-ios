@@ -46,7 +46,6 @@ using namespace fleeceapi;
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                        documentID: (NSString*)documentID
-                        mustExist: (BOOL)mustExist
                    includeDeleted: (BOOL)includeDeleted
                             error: (NSError**)outError
 {
@@ -55,7 +54,7 @@ using namespace fleeceapi;
         _database = database;
         CBLStringBytes docId(documentID);
         C4Error err;
-        auto doc = c4doc_get(database.c4db, docId, mustExist, &err);
+        auto doc = c4doc_get(database.c4db, docId, true, &err);
         if (!doc) {
             convertError(err, outError);
             return nil;

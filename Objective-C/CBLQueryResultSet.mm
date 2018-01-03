@@ -44,15 +44,20 @@ namespace cbl {
 }
 
 
+@interface CBLQueryResultSet()
+@property (atomic) BOOL randomAccess;
+@end
+
+
 @implementation CBLQueryResultSet {
-    __weak CBLQuery* _query;
+    CBLQuery* _query;
     C4QueryEnumerator* _c4enum;
     cbl::QueryResultContext* _context;
     C4Error _error;
-    bool _randomAccess;
 }
 
 @synthesize c4Query=_c4Query, columnNames=_columnNames;
+@synthesize randomAccess=_randomAccess;
 
 
 - (instancetype) initWithQuery: (CBLQuery*)query
@@ -87,17 +92,20 @@ namespace cbl {
 
 
 - (id) nextObject {
-    if (_randomAccess)
+    if (self.randomAccess)
         return nil;
     
-    id row = nil;
-    if (c4queryenum_next(_c4enum, &_error)) {
-        row = self.currentObject;
-    } else if (_error.code)
-        CBLWarnError(Query, @"%@[%p] error: %d/%d", [self class], self, _error.domain, _error.code);
-    else
-        CBLLog(Query, @"End of query enumeration (%p)", _c4enum);
-    return row;
+    CBLDatabase* db = self.database;
+    CBL_LOCK(db) {
+        id row = nil;
+        if (c4queryenum_next(_c4enum, &_error)) {
+            row = self.currentObject;
+        } else if (_error.code)
+            CBLWarnError(Query, @"%@[%p] error: %d/%d", [self class], self, _error.domain, _error.code);
+        else
+            CBLLog(Query, @"End of query enumeration (%p)", _c4enum);
+        return row;
+    }
 }
 
 
@@ -110,17 +118,29 @@ namespace cbl {
 
 // Called by CBLQueryResultsArray
 - (id) objectAtIndex: (NSUInteger)index {
-    if (!c4queryenum_seek(_c4enum, index, &_error)) {
-        NSString* message = sliceResult2string(c4error_getMessage(_error));
-        [NSException raise: NSInternalInconsistencyException
-                    format: @"CBLQueryEnumerator couldn't get a value: %@", message];
+    // TODO: We should make it strong reference instead:
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1983
+    CBLDatabase* db = self.database;
+    CBL_LOCK(db) {
+        if (!c4queryenum_seek(_c4enum, index, &_error)) {
+            NSString* message = sliceResult2string(c4error_getMessage(_error));
+            [NSException raise: NSInternalInconsistencyException
+                        format: @"CBLQueryEnumerator couldn't get a value: %@", message];
+        }
+        return self.currentObject;
     }
-    return self.currentObject;
 }
 
 
 - (NSArray*) allObjects {
-    NSInteger count = (NSInteger)c4queryenum_getRowCount(_c4enum, nullptr);
+    NSInteger count;
+    // TODO: We should make it strong reference instead:
+    // https://github.com/couchbase/couchbase-lite-ios/issues/1983
+    CBLDatabase* db = self.database;
+    CBL_LOCK(db) {
+        count = (NSInteger)c4queryenum_getRowCount(_c4enum, nullptr);
+    }
+    
     if (count >= 0) {
         _randomAccess = true;
         return [[CBLQueryResultArray alloc] initWithResultSet: self count: count];
@@ -144,7 +164,12 @@ namespace cbl {
         *outError = nil;
     
     C4Error c4error;
-    C4QueryEnumerator *newEnum = c4queryenum_refresh(_c4enum, &c4error);
+    C4QueryEnumerator *newEnum;
+    
+    CBLDatabase* db = self.database;
+    CBL_LOCK(db) {
+        newEnum = c4queryenum_refresh(_c4enum, &c4error);
+    }
     if (!newEnum) {
         if (c4error.code)
             convertError(c4error, outError);

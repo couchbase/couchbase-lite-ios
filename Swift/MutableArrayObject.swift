@@ -162,7 +162,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     ///   - value: The Number value.
     ///   - index: The index. This value must not exceed the bounds of the array.
     /// - Returns: The self object.
-    @discardableResult func setNumber(_ value: NSNumber?, at index: Int) -> Self {
+    @discardableResult public func setNumber(_ value: NSNumber?, at index: Int) -> Self {
         return setValue(value, at: index);
     }
     
@@ -292,7 +292,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     ///
     /// - Parameter value: The Number value.
     /// - Returns: The self object.
-    @discardableResult func addNumber(_ value: NSNumber?) -> Self {
+    @discardableResult public func addNumber(_ value: NSNumber?) -> Self {
         return addValue(value)
     }
     
@@ -409,7 +409,7 @@ public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     ///   - value: The number value.
     ///   - index: The index. This value must not exceed the bounds of the array.
     /// - Returns: The self object.
-    @discardableResult func insertNumber(_ value: NSNumber?, at index: Int) -> Self {
+    @discardableResult public func insertNumber(_ value: NSNumber?, at index: Int) -> Self {
         return insertValue(value, at: index)
     }
     

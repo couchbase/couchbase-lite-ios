@@ -46,13 +46,13 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
 @interface CBLDatabase : NSObject
 
 /** The database's name. */
-@property (readonly, nonatomic) NSString* name;
+@property (readonly, atomic) NSString* name;
 
 /** The database's path. If the database is closed or deleted, nil value will be returned. */
-@property (readonly, nonatomic, nullable) NSString* path;
+@property (readonly, atomic, nullable) NSString* path;
 
 /** The number of documents in the database. */
-@property (readonly, nonatomic) uint64_t count;
+@property (readonly, atomic) uint64_t count;
 
 /** 
  The database's configuration. If the configuration is not specify when initializing

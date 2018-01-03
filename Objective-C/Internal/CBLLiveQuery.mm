@@ -84,8 +84,17 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
         [strongQuery.database removeChangeListenerWithToken: _dbListenerToken];
         _dbListenerToken = nil;
     }
+    
     _willUpdate = NO; // cancels the delayed update started by -databaseChanged
     _observing = NO;
+    _listenerTokens = nil;
+    _rs = nil;
+}
+
+
+- (void) queryParametersChanged {
+    if (_dbListenerToken)
+        [self start];
 }
 
 
@@ -114,6 +123,8 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 - (void) removeChangeListenerWithToken: (id<NSObject>)listener {
     [_listenerTokens removeObject: listener];
+    if (_listenerTokens.count == 0)
+        [self stop];
 }
 
 

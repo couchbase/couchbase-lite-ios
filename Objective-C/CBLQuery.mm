@@ -59,7 +59,10 @@
 
 - (void) dealloc {
     [_liveQuery stop];
-    c4query_free(_c4Query);
+    
+    CBL_LOCK(self.database) {
+        c4query_free(_c4Query);
+    }
 }
 
 
@@ -78,7 +81,7 @@
 
 - (void) setParameters:(CBLQueryParameters *)parameters {
     _parameters = [parameters copy];
-    [_liveQuery start];
+    [_liveQuery queryParametersChanged];
 }
 
 
@@ -494,14 +497,17 @@
 
 
 - (NSString*) explain: (NSError**)outError {
-    if (!_c4Query && ![self check: outError])
+    if (![self check: outError])
         return nil;
-    return sliceResult2string(c4query_explain(_c4Query));
+    
+    CBL_LOCK(self.database) {
+        return sliceResult2string(c4query_explain(_c4Query));
+    }
 }
 
 
 - (nullable CBLQueryResultSet*) execute: (NSError**)outError {
-    if (!_c4Query && ![self check: outError])
+    if (![self check: outError])
         return nil;
     
     C4QueryOptions options = kC4DefaultQueryOptions;
@@ -510,7 +516,10 @@
         return nil;
     
     C4Error c4Err;
-    auto e = c4query_run(_c4Query, &options, {paramJSON.bytes, paramJSON.length}, &c4Err);
+    C4QueryEnumerator* e;
+    CBL_LOCK(self.database) {
+        e = c4query_run(_c4Query, &options, {paramJSON.bytes, paramJSON.length}, &c4Err);
+    }
     if (!e) {
         CBLWarnError(Query, @"CBLQuery failed: %d/%d", c4Err.domain, c4Err.code);
         convertError(c4Err, outError);
@@ -592,27 +601,37 @@
 
 
 - (BOOL) check: (NSError**)outError {
-    NSData* jsonData = [self encodeAsJSON: outError];
-    if (!jsonData)
-        return NO;
-    
-    if (!_columnNames) {
-        _columnNames = [self generateColumnNames: outError];
-        if (!_columnNames)
+    CBL_LOCK(self) {
+        if (_c4Query)
+            return YES;
+        
+        NSData* jsonData = [self encodeAsJSON: outError];
+        if (!jsonData)
             return NO;
+        
+        if (!_columnNames) {
+            _columnNames = [self generateColumnNames: outError];
+            if (!_columnNames)
+                return NO;
+        }
+        
+        CBLLog(Query, @"Query encoded as %.*s", (int)jsonData.length, (char*)jsonData.bytes);
+        
+        C4Error c4Err;
+        C4Query* query;
+        CBL_LOCK(self.database) {
+            query = c4query_new(self.database.c4db, {jsonData.bytes, jsonData.length}, &c4Err);
+        }
+        
+        if (!query) {
+            convertError(c4Err, outError);
+            return NO;
+        }
+        
+        assert(!_c4Query);
+        _c4Query = query;
+        return YES;
     }
-    
-    CBLLog(Query, @"Query encoded as %.*s", (int)jsonData.length, (char*)jsonData.bytes);
-    
-    C4Error c4Err;
-    auto query = c4query_new(self.database.c4db, {jsonData.bytes, jsonData.length}, &c4Err);
-    if (!query) {
-        convertError(c4Err, outError);
-        return NO;
-    }
-    c4query_free(_c4Query);
-    _c4Query = query;
-    return YES;
 }
 
 
@@ -718,7 +737,6 @@
     
     return json;
 }
-
 
 
 @end

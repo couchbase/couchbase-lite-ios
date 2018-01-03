@@ -1320,8 +1320,6 @@
     [self waitForExpectationsWithTimeout: 10.0 handler: ^(NSError *error) { }];
     
     [q removeChangeListenerWithToken: token];
-    
-    
 }
 
 

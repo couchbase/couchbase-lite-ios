@@ -28,7 +28,6 @@
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
 
-
 using namespace fleece;
 
 #define kDBExtension @"cblite2"
@@ -47,6 +46,7 @@ using namespace fleece;
 
 
 @synthesize name=_name;
+@synthesize dispatchQueue=_dispatchQueue;
 @synthesize c4db=_c4db, sharedKeys=_sharedKeys;
 @synthesize replications=_replications, activeReplications=_activeReplications;
 @synthesize liveQueries= _liveQueries;
@@ -61,7 +61,7 @@ static const C4DatabaseConfig kDBConfig = {
 
 static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
     CBLDatabase *db = (__bridge CBLDatabase *)context;
-    dispatch_async(dispatch_get_main_queue(), ^{        //TODO: Support other queues
+    dispatch_async(db.dispatchQueue, ^{
         [db postDatabaseChanged];
     });
 }
@@ -71,7 +71,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
                                 void *context)
 {
     CBLDatabase *db = (__bridge CBLDatabase *)context;
-    dispatch_async(dispatch_get_main_queue(), ^{        //TODO: Support other queues
+    dispatch_async(db.dispatchQueue, ^{
         [db postDocumentChanged: slice2string(docID)];
     });
 }
@@ -101,6 +101,9 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
         _config = config != nil? [config copy] : [CBLDatabaseConfiguration new];
         if (![self open: outError])
             return nil;
+        
+        NSString* qName = $sprintf(@"Database <%@>", name);
+        _dispatchQueue = dispatch_queue_create(qName.UTF8String, DISPATCH_QUEUE_SERIAL);
         _replications = [NSMapTable strongToWeakObjectsMapTable];
         _activeReplications = [NSMutableSet new];
         _liveQueries = [NSMutableSet new];
@@ -126,12 +129,16 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (NSString*) path {
-    return _c4db != nullptr ? sliceResult2FilesystemPath(c4db_getPath(_c4db)) : nil;
+    CBL_LOCK(self) {
+        return _c4db != nullptr ? sliceResult2FilesystemPath(c4db_getPath(_c4db)) : nil;
+    }
 }
 
 
 - (uint64_t) count {
-    return _c4db != nullptr ? c4db_getDocumentCount(_c4db) : 0;
+    CBL_LOCK(self) {
+        return _c4db != nullptr ? c4db_getDocumentCount(_c4db) : 0;
+    }
 }
 
 
@@ -144,7 +151,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (CBLDocument*) documentWithID: (NSString*)documentID {
-    return [self documentWithID: documentID mustExist: YES error: nil];
+    return [self documentWithID: documentID error: nil];
 }
 
 
@@ -152,8 +159,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) containsDocumentWithID: (NSString*)docID {
-    id doc = [self documentWithID: docID mustExist: YES error: nil];
-    return doc != nil;
+    return [self documentWithID: docID error: nil] != nil;
 }
 
 
@@ -169,41 +175,39 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (CBLDocument*) saveDocument: (CBLMutableDocument*)document error: (NSError**)error {
-    if (![self prepareDocument: document error: error])
-        return nil;
     return [self saveDocument: document asDeletion: NO error: error];
 }
 
 
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error {
-    if (![self prepareDocument: document error: error])
-        return NO;
     return [self saveDocument: document asDeletion: YES error: error] != nil;
 }
 
 
 - (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error {
-    if (![self prepareDocument: document error: error])
-        return NO;
-    
-    if (!document.exists)
-        return createError(kCBLStatusNotFound, error);
-    
-    C4Transaction transaction(self.c4db);
-    if (!transaction.begin())
-        return convertError(transaction.error(),  error);
-    
-    C4Error err;
-    if (c4doc_purgeRevision(document.c4Doc.rawDoc, C4Slice(), &err) >= 0) {
-        if (c4doc_save(document.c4Doc.rawDoc, 0, &err)) {
-            // Save succeeded; now commit:
-            if (!transaction.commit())
-                return convertError(transaction.error(), error);
-            
-            return YES;
+    CBL_LOCK(self) {
+        if (![self prepareDocument: document error: error])
+            return NO;
+        
+        if (!document.exists)
+            return createError(kCBLStatusNotFound, error);
+        
+        C4Transaction transaction(self.c4db);
+        if (!transaction.begin())
+            return convertError(transaction.error(),  error);
+        
+        C4Error err;
+        if (c4doc_purgeRevision(document.c4Doc.rawDoc, C4Slice(), &err) >= 0) {
+            if (c4doc_save(document.c4Doc.rawDoc, 0, &err)) {
+                // Save succeeded; now commit:
+                if (!transaction.commit())
+                    return convertError(transaction.error(), error);
+                
+                return YES;
+            }
         }
+        return convertError(err, error);
     }
-    return convertError(err, error);
 }
 
 
@@ -211,21 +215,24 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) inBatch: (NSError**)outError usingBlock: (void (^)())block {
-    [self mustBeOpen];
-    
-    C4Transaction transaction(_c4db);
-    if (outError)
-        *outError = nil;
-    
-    if (!transaction.begin())
-        return convertError(transaction.error(), outError);
-    
-    block();
-    
-    if (!transaction.commit())
-        return convertError(transaction.error(), outError);
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        C4Transaction transaction(_c4db);
+        if (outError)
+            *outError = nil;
+        
+        if (!transaction.begin())
+            return convertError(transaction.error(), outError);
+        
+        block();
+        
+        if (!transaction.commit())
+            return convertError(transaction.error(), outError);
+    }
     
     [self postDatabaseChanged];
+    
     return YES;
 }
 
@@ -234,65 +241,73 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (BOOL) close: (NSError**)outError {
-    if (_c4db == nullptr)
+    CBL_LOCK(self) {
+        if (_c4db == nullptr)
+            return YES;
+        
+        CBLLog(Database, @"Closing %@ at path %@", self, self.path);
+    
+        [self stopActiveReplications];
+    
+        [self stopLiveQueries];
+    
+        _allDocsQuery = nil;
+    
+        C4Error err;
+        if (!c4db_close(_c4db, &err))
+            return convertError(err, outError);
+    
+        [self freeC4Observer];
+        [self freeC4DB];
+    
         return YES;
-    
-    CBLLog(Database, @"Closing %@ at path %@", self, self.path);
-    
-    [self stopActiveReplications];
-    
-    [self stopLiveQueries];
-    
-    _allDocsQuery = nil;
-    
-    C4Error err;
-    if (!c4db_close(_c4db, &err))
-        return convertError(err, outError);
-    
-    [self freeC4Observer];
-    [self freeC4DB];
-    
-    return YES;
+    }
 }
 
 
 - (BOOL) delete: (NSError**)outError {
-    [self mustBeOpen];
-    
-    [self stopActiveReplications];
-    
-    [self stopLiveQueries];
-    
-    C4Error err;
-    if (!c4db_delete(_c4db, &err))
-        return convertError(err, outError);
-    
-    [self freeC4Observer];
-    [self freeC4DB];
-    
-    return YES;
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        [self stopActiveReplications];
+        
+        [self stopLiveQueries];
+        
+        C4Error err;
+        if (!c4db_delete(_c4db, &err))
+            return convertError(err, outError);
+        
+        [self freeC4Observer];
+        [self freeC4DB];
+        
+        return YES;
+    }
 }
 
 
 - (BOOL) compact: (NSError**)outError {
-    [self mustBeOpen];
-    
-    C4Error err;
-    if (!c4db_compact(_c4db, &err))
-        return convertError(err, outError);
-    return YES;
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        C4Error err;
+        if (!c4db_compact(_c4db, &err))
+            return convertError(err, outError);
+        return YES;
+    }
 }
 
 
 - (BOOL) setEncryptionKey: (nullable CBLEncryptionKey*)key error: (NSError**)outError {
-    [self mustBeOpen];
-    
-    C4Error err;
-    C4EncryptionKey encKey = c4EncryptionKey(key);
-    if (!c4db_rekey(_c4db, &encKey, &err))
-        return convertError(err, outError);
-    
-    return YES;
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        C4Error err;
+        C4EncryptionKey encKey = c4EncryptionKey(key);
+        if (!c4db_rekey(_c4db, &encKey, &err))
+            return convertError(err, outError);
+        
+        return YES;
+    }
 }
 
 
@@ -386,8 +401,11 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLDatabaseChange*))listener
 {
-    [self mustBeOpen];
-    return [self addDatabaseChangeListener: listener queue: queue];
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        return [self addDatabaseChangeListener: listener queue: queue];
+    }
 }
 
 
@@ -402,18 +420,23 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
                                                    queue: (nullable dispatch_queue_t)queue
                                                 listener: (void (^)(CBLDocumentChange*))listener
 {
-    [self mustBeOpen];
-    return [self addDocumentChangeListenerWithDocumentID: id listener: listener queue: queue];
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        return [self addDocumentChangeListenerWithDocumentID: id listener: listener queue: queue];
+    }
 }
 
 
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
-    [self mustBeOpen];
-    
-    if ([token isKindOfClass: [CBLDocumentChangeListenerToken class]])
-        [self removeDocumentChangeListenerWithToken: token];
-    else
-        [self removeDatabaseChangeListenerWithToken: token];
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        if ([token isKindOfClass: [CBLDocumentChangeListenerToken class]])
+            [self removeDocumentChangeListenerWithToken: token];
+        else
+            [self removeDatabaseChangeListenerWithToken: token];
+    }
 }
 
 
@@ -421,39 +444,45 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (NSArray<NSString*>*) indexes {
-    [self mustBeOpen];
-    
-    C4SliceResult data = c4db_getIndexes(_c4db, nullptr);
-    FLValue value = FLValue_FromTrustedData((FLSlice)data);
-    return FLValue_GetNSObject(value, _sharedKeys, nullptr);
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        C4SliceResult data = c4db_getIndexes(_c4db, nullptr);
+        FLValue value = FLValue_FromTrustedData((FLSlice)data);
+        return FLValue_GetNSObject(value, _sharedKeys, nullptr);
+    }
 }
 
 
 - (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)outError {
-    [self mustBeOpen];
-    
-    NSData* json = [NSJSONSerialization dataWithJSONObject: index.indexItems
-                                                   options: 0
-                                                     error: outError];
-    if (!json)
-        return NO;
-    
-    CBLStringBytes bName(name);
-    C4IndexType type = index.indexType;
-    C4IndexOptions options = index.indexOptions;
-    
-    C4Error c4err;
-    return c4db_createIndex(_c4db, bName, {json.bytes, json.length}, type, &options, &c4err) ||
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        NSData* json = [NSJSONSerialization dataWithJSONObject: index.indexItems
+                                                       options: 0
+                                                         error: outError];
+        if (!json)
+            return NO;
+        
+        CBLStringBytes bName(name);
+        C4IndexType type = index.indexType;
+        C4IndexOptions options = index.indexOptions;
+        
+        C4Error c4err;
+        return c4db_createIndex(_c4db, bName, {json.bytes, json.length}, type, &options, &c4err) ||
         convertError(c4err, outError);
+    }
 }
 
 
 - (BOOL)deleteIndexForName:(NSString *)name error:(NSError **)outError {
-    [self mustBeOpen];
-    
-    CBLStringBytes bName(name);
-    C4Error c4err;
-    return c4db_deleteIndex(_c4db, bName, &c4err) || convertError(c4err, outError);
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        CBLStringBytes bName(name);
+        C4Error c4err;
+        return c4db_deleteIndex(_c4db, bName, &c4err) || convertError(c4err, outError);
+    }
 }
 
 
@@ -461,22 +490,27 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (CBLPredicateQuery*) createQueryWhere: (nullable id)where {
-    [self mustBeOpen];
-    
-    auto query = [[CBLPredicateQuery alloc] initWithDatabase: self];
-    query.where = where;
-    return query;
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        auto query = [[CBLPredicateQuery alloc] initWithDatabase: self];
+        query.where = where;
+        return query;
+    }
 }
 
 
 - (C4BlobStore*) getBlobStore: (NSError**)outError {
-    if (![self mustBeOpen: outError])
-        return nil;
-    C4Error err;
-    C4BlobStore *blobStore = c4db_getBlobStore(_c4db, &err);
-    if (!blobStore)
-        convertError(err, outError);
-    return blobStore;
+    CBL_LOCK(self) {
+        if (![self mustBeOpen: outError])
+            return nil;
+        
+        C4Error err;
+        C4BlobStore *blobStore = c4db_getBlobStore(_c4db, &err);
+        if (!blobStore)
+            convertError(err, outError);
+        return blobStore;
+    }
 }
 
 
@@ -622,19 +656,20 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 
 
 - (nullable CBLDocument*) documentWithID: (NSString*)documentID
-                               mustExist: (bool)mustExist
                                    error: (NSError**)outError
 {
-    [self mustBeOpen];
-    
-    return [[CBLDocument alloc] initWithDatabase: self
-                                      documentID: documentID
-                                       mustExist: mustExist
-                                  includeDeleted: NO
-                                           error: outError];
+    CBL_LOCK(self) {
+        [self mustBeOpen];
+        
+        return [[CBLDocument alloc] initWithDatabase: self
+                                          documentID: documentID
+                                      includeDeleted: NO
+                                               error: outError];
+    }
 }
 
 
+// Must be called inside a lock
 - (BOOL) prepareDocument: (CBLDocument*)document error: (NSError**)error {
     [self mustBeOpen];
     
@@ -651,62 +686,70 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 - (id<CBLListenerToken>) addDatabaseChangeListener: (void (^)(CBLDatabaseChange*))listener
                                              queue: (dispatch_queue_t)queue
 {
-    if (!_dbListenerTokens) {
-        _dbListenerTokens = [NSMutableSet set];
-        _dbObs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
+    CBL_LOCK(self) {
+        if (!_dbListenerTokens) {
+            _dbListenerTokens = [NSMutableSet set];
+            _dbObs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
+        }
+        
+        id token = [[CBLChangeListenerToken alloc] initWithListener: listener
+                                                              queue: queue];
+        
+        
+        [_dbListenerTokens addObject: token];
+        return token;
     }
-    
-    id token = [[CBLChangeListenerToken alloc] initWithListener: listener
-                                                          queue: queue];
-    [_dbListenerTokens addObject: token];
-    return token;
 }
 
 
 - (void) removeDatabaseChangeListenerWithToken: (id<CBLListenerToken>)token {
-    [_dbListenerTokens removeObject: token];
-    
-    if (_dbListenerTokens.count == 0) {
-        c4dbobs_free(_dbObs);
-        _dbObs = nil;
-        _dbListenerTokens = nil;
+    CBL_LOCK(self) {
+        [_dbListenerTokens removeObject: token];
+        
+        if (_dbListenerTokens.count == 0) {
+            c4dbobs_free(_dbObs);
+            _dbObs = nil;
+            _dbListenerTokens = nil;
+        }
     }
 }
 
 
 - (void) postDatabaseChanged {
-    if (!_dbObs || !_c4db || c4db_isInTransaction(_c4db))
-        return;
-    
-    const uint32_t kMaxChanges = 100u;
-    C4DatabaseChange changes[kMaxChanges];
-    bool external = false;
-    uint32_t nChanges = 0u;
-    NSMutableArray* docIDs = [NSMutableArray new];
-    do {
-        // Read changes in batches of kMaxChanges:
-        bool newExternal;
-        nChanges = c4dbobs_getChanges(_dbObs, changes, kMaxChanges, &newExternal);
-        if (nChanges == 0 || external != newExternal || docIDs.count > 1000) {
-            if(docIDs.count > 0) {
-                CBLDatabaseChange* change = [[CBLDatabaseChange alloc] initWithDocumentIDs: docIDs
-                                                                                isExternal: external];
-                for (CBLChangeListenerToken* token in _dbListenerTokens) {
-                    void (^listener)(CBLDatabaseChange*) = token.listener;
-                    dispatch_async(token.queue, ^{
-                        listener(change);
-                    });
-                }
-                docIDs = [NSMutableArray new];
-            }
-        }
+    CBL_LOCK(self) {
+        if (!_dbObs || !_c4db || c4db_isInTransaction(_c4db))
+            return;
         
-        external = newExternal;
-        for(uint32_t i = 0; i < nChanges; i++) {
-            NSString *docID =slice2string(changes[i].docID);
-            [docIDs addObject: docID];
-        }
-    } while(nChanges > 0);
+        const uint32_t kMaxChanges = 100u;
+        C4DatabaseChange changes[kMaxChanges];
+        bool external = false;
+        uint32_t nChanges = 0u;
+        NSMutableArray* docIDs = [NSMutableArray new];
+        do {
+            // Read changes in batches of kMaxChanges:
+            bool newExternal;
+            nChanges = c4dbobs_getChanges(_dbObs, changes, kMaxChanges, &newExternal);
+            if (nChanges == 0 || external != newExternal || docIDs.count > 1000) {
+                if(docIDs.count > 0) {
+                    CBLDatabaseChange* change = [[CBLDatabaseChange alloc] initWithDocumentIDs: docIDs
+                                                                                    isExternal: external];
+                    for (CBLChangeListenerToken* token in _dbListenerTokens) {
+                        void (^listener)(CBLDatabaseChange*) = token.listener;
+                        dispatch_async(token.queue, ^{
+                            listener(change);
+                        });
+                    }
+                    docIDs = [NSMutableArray new];
+                }
+            }
+            
+            external = newExternal;
+            for(uint32_t i = 0; i < nChanges; i++) {
+                NSString *docID =slice2string(changes[i].docID);
+                [docIDs addObject: docID];
+            }
+        } while(nChanges > 0);
+    }
 }
 
 
@@ -714,60 +757,66 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
                                                         listener: (void (^)(CBLDocumentChange*))listener
                                                            queue: (dispatch_queue_t)queue
 {
-    if (!_docListenerTokens)
-        _docListenerTokens = [NSMutableDictionary dictionary];
-    
-    NSMutableSet* tokens = _docListenerTokens[documentID];
-    if (!tokens) {
-        tokens = [NSMutableSet set];
-        [_docListenerTokens setObject: tokens forKey: documentID];
+    CBL_LOCK(self) {
+        if (!_docListenerTokens)
+            _docListenerTokens = [NSMutableDictionary dictionary];
         
-        CBLStringBytes bDocID(documentID);
-        C4DocumentObserver* o =
-        c4docobs_create(_c4db, bDocID, docObserverCallback, (__bridge void *)self);
+        NSMutableSet* tokens = _docListenerTokens[documentID];
+        if (!tokens) {
+            tokens = [NSMutableSet set];
+            [_docListenerTokens setObject: tokens forKey: documentID];
+            
+            CBLStringBytes bDocID(documentID);
+            C4DocumentObserver* o =
+            c4docobs_create(_c4db, bDocID, docObserverCallback, (__bridge void *)self);
+            
+            if (!_docObs)
+                _docObs = [NSMutableDictionary dictionary];
+            [_docObs setObject: [NSValue valueWithPointer: o] forKey: documentID];
+        }
         
-        if (!_docObs)
-            _docObs = [NSMutableDictionary dictionary];
-        [_docObs setObject: [NSValue valueWithPointer: o] forKey: documentID];
+        id token = [[CBLDocumentChangeListenerToken alloc] initWithDocumentID: documentID
+                                                                     listener: listener
+                                                                        queue: queue];
+        [tokens addObject: token];
+        return token;
     }
-    
-    id token = [[CBLDocumentChangeListenerToken alloc] initWithDocumentID: documentID
-                                                                 listener: listener
-                                                                    queue: queue];
-    [tokens addObject: token];
-    return token;
 }
 
 
 - (void) removeDocumentChangeListenerWithToken: (CBLDocumentChangeListenerToken*)token {
-    NSString* documentID = token.documentID;
-    NSMutableSet* listeners = _docListenerTokens[documentID];
-    if (listeners) {
-        [listeners removeObject: token];
-        if (listeners.count == 0) {
-            NSValue* obsValue = [_docObs objectForKey: documentID];
-            if (obsValue) {
-                C4DocumentObserver* obs = (C4DocumentObserver*)obsValue.pointerValue;
-                c4docobs_free(obs);
+    CBL_LOCK(self) {
+        NSString* documentID = token.documentID;
+        NSMutableSet* listeners = _docListenerTokens[documentID];
+        if (listeners) {
+            [listeners removeObject: token];
+            if (listeners.count == 0) {
+                NSValue* obsValue = [_docObs objectForKey: documentID];
+                if (obsValue) {
+                    C4DocumentObserver* obs = (C4DocumentObserver*)obsValue.pointerValue;
+                    c4docobs_free(obs);
+                }
+                [_docObs removeObjectForKey: documentID];
+                [_docListenerTokens removeObjectForKey:documentID];
             }
-            [_docObs removeObjectForKey: documentID];
-            [_docListenerTokens removeObjectForKey:documentID];
         }
     }
 }
 
 
 - (void) postDocumentChanged: (NSString*)documentID {
-    if (!_docObs[documentID] || !_c4db ||  c4db_isInTransaction(_c4db))
-        return;
-    
-    CBLDocumentChange* change = [[CBLDocumentChange alloc] initWithDocumentID: documentID];
-    NSSet* listeners = [_docListenerTokens objectForKey: documentID];
-    for (CBLDocumentChangeListenerToken* token in listeners) {
-        void (^listener)(CBLDocumentChange*) = token.listener;
-        dispatch_async(token.queue, ^{
-            listener(change);
-        });
+    CBL_LOCK(self) {
+        if (!_docObs[documentID] || !_c4db ||  c4db_isInTransaction(_c4db))
+            return;
+        
+        CBLDocumentChange* change = [[CBLDocumentChange alloc] initWithDocumentID: documentID];
+        NSSet* listeners = [_docListenerTokens objectForKey: documentID];
+        for (CBLDocumentChangeListenerToken* token in listeners) {
+            void (^listener)(CBLDocumentChange*) = token.listener;
+            dispatch_async(token.queue, ^{
+                listener(change);
+            });
+        }
     }
 }
 
@@ -794,50 +843,6 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 
 
 #pragma mark - DOCUMENT SAVE AND CONFLICT RESOLUTION
-
-
-- (id<CBLConflictResolver>) effectiveConflictResolver {
-    return self.config.conflictResolver ?: [CBLDefaultConflictResolver new];
-}
-
-
-// "Pulls" from the database, merging the latest revision into the in-memory
-// properties, without saving.
-- (CBLDocument*) mergeDocument: (CBLDocument*)document
-                    asDeletion: (BOOL)deletion
-                       current: (CBLDocument**)outCurrentDoc
-                         error: (NSError**)outError
-{
-    // Read the current revision from the database:
-    auto database = self;
-    CBLDocument* current = [[CBLDocument alloc] initWithDatabase: database
-                                                      documentID: document.id
-                                                       mustExist: YES
-                                                  includeDeleted: YES
-                                                           error: outError];
-    if (!current)
-        return nil;
-    
-    // Resolve conflict:
-    CBLDocument* base = nil;
-    if (document.c4Doc)
-        base = [[CBLDocument alloc] initWithDatabase: database
-                                          documentID: document.id
-                                               c4Doc: document.c4Doc];
-    
-    id<CBLConflictResolver> resolver = self.effectiveConflictResolver;
-    CBLConflict* conflict = [[CBLConflict alloc] initWithMine: document
-                                                       theirs: current
-                                                         base: base];
-    CBLDocument* resolved = [resolver resolve: conflict];
-    if (resolved == nil)
-        convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
-    
-    if (outCurrentDoc)
-        *outCurrentDoc = current;
-    
-    return resolved;
-}
 
 
 // Lower-level save method. On conflict, returns YES but sets *outDoc to NULL.
@@ -872,7 +877,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
         *outDoc = c4doc_update(c4Doc, bodySlice, revFlags, &err);
     } else {
         CBLStringBytes docID(document.id);
-        *outDoc = c4doc_create(self.c4db, docID, data2slice(body), revFlags, &err);
+        *outDoc = c4doc_create(_c4db, docID, data2slice(body), revFlags, &err);
     }
     
     if (!*outDoc && !(err.domain == LiteCoreDomain && err.code == kC4ErrorConflict)) {
@@ -883,7 +888,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 }
 
 
-// The main save method.
+// Main save document
 - (CBLDocument*) saveDocument: (CBLDocument*)document
                    asDeletion: (BOOL)deletion
                         error: (NSError**)outError
@@ -893,59 +898,92 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
         return nil;
     }
     
-    // Begin a db transaction:
-    C4Transaction transaction(self.c4db);
-    if (!transaction.begin()) {
-        convertError(transaction.error(), outError);
-        return nil;
-    }
-    
     // Attempt to save. (On conflict, this will succeed but newDoc will be null.)
-    C4Document* newDoc;
-    if (![self saveDocument: document
-                       into: &newDoc
-                   withBase: nil
-                 asDeletion: deletion
-                      error: outError])
-        return nil;
-    
-    if (!newDoc) {
-        // There's been a conflict; first merge with the new saved revision:
-        CBLDocument* current;
-        CBLDocument* resolved = [self mergeDocument: document
-                                         asDeletion: deletion
-                                            current: &current
-                                              error: outError];
-        if (!resolved)
+    NSString* docID = document.id;
+    CBLDocument* doc = document, *baseDoc, *otherDoc;
+    C4Document* baseRev = nil, *newDoc = nil;
+    while (true) {
+        CBL_LOCK(self) {
+            if (![self prepareDocument: doc error: outError])
+                return nil;
+            
+            // Begin a db transaction:
+            C4Transaction transaction(_c4db);
+            if (!transaction.begin()) {
+                convertError(transaction.error(), outError);
+                return nil;
+            }
+            
+            if (![self saveDocument: doc into: &newDoc withBase: baseRev
+                         asDeletion: deletion error: outError])
+                return nil;
+            
+            if (newDoc) {
+                // Save succeeded; now commit the transaction:
+                if (!transaction.commit()) {
+                    c4doc_free(newDoc);
+                    convertError(transaction.error(), outError);
+                    return nil;
+                }
+                
+                auto newC4Doc = [CBLC4Document document: newDoc];
+                return [[CBLDocument alloc] initWithDatabase: self
+                                                  documentID: docID
+                                                       c4Doc: newC4Doc];
+            }
+            
+            // Save not succeeded as conflicting:
+            if (deletion && !doc.isDeleted) {
+                // Copy and mark as deleted:
+                CBLMutableDocument* deletedDoc = [doc toMutable];
+                [deletedDoc markAsDeleted];
+                doc = deletedDoc;
+            }
+            
+            if (doc.c4Doc)
+                baseDoc = [[CBLDocument alloc] initWithDatabase: self
+                                                     documentID: docID
+                                                          c4Doc: doc.c4Doc];
+            
+            otherDoc = [[CBLDocument alloc] initWithDatabase: self
+                                                  documentID: docID
+                                              includeDeleted: YES
+                                                       error: outError];
+            if (!otherDoc)
+                return nil;
+            
+            // Abort transaction:
+            if (!transaction.abort()) {
+                convertError(transaction.error(), outError);
+                return nil;
+            }
+        }
+        
+        // Resolve conflict:
+        id<CBLConflictResolver> resolver = self.config.conflictResolver;
+        CBLConflict* conflict = [[CBLConflict alloc] initWithMine: doc
+                                                           theirs: otherDoc
+                                                             base: baseDoc];
+        CBLDocument* resolved = [resolver resolve: conflict];
+        if (!resolved) {
+            convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
             return nil;
+        }
         
-        if (resolved == current)
-            return resolved;
-        
-        if (!resolved.database) // A newly created document
-            resolved.database = self;
-        
-        // Now save the merged properties:
-        if (![self saveDocument: resolved
-                           into: &newDoc
-                       withBase: current.c4Doc.rawDoc
-                     asDeletion: deletion
-                          error: outError])
-            return nil;
-        Assert(newDoc); // In a transaction we can't have a second conflict after merging!
+        CBL_LOCK(self) {
+            CBLDocument* current = [[CBLDocument alloc] initWithDatabase: self
+                                                              documentID: docID
+                                                          includeDeleted: YES
+                                                                   error: outError];
+            if ($equal(resolved.revID, current.revID))
+                return resolved; // Same as current
+            
+            // For saving:
+            doc = resolved;
+            baseRev = current.c4Doc.rawDoc;
+            deletion = resolved.isDeleted;
+        }
     }
-    
-    // Save succeeded; now commit the transaction:
-    if (!transaction.commit()) {
-        c4doc_free(newDoc);
-        convertError(transaction.error(), outError);
-        return nil;
-    }
-    
-    CBLC4Document* c4Doc = [CBLC4Document document: newDoc];
-    return [[CBLDocument alloc] initWithDatabase: self
-                                      documentID: document.id
-                                           c4Doc: c4Doc];
 }
 
 
@@ -954,78 +992,118 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 
 - (bool) resolveConflictInDocument: (NSString*)docID
                      usingResolver: (id<CBLConflictResolver>)resolver
-                             error: (NSError**)outError {
-    C4Transaction t(_c4db);
-    t.begin();
-
-    auto doc = [[CBLDocument alloc] initWithDatabase: self
-                                          documentID: docID
-                                           mustExist: YES
-                                      includeDeleted: YES
-                                               error: outError];
-    if (!doc)
-        return false;
-
-    // Read the conflicting remote revision:
-    auto otherDoc = [[CBLDocument alloc] initWithDatabase: self
-                                               documentID: docID
-                                                mustExist: YES
-                                           includeDeleted: YES
-                                                    error: outError];
-    if (!otherDoc || ![otherDoc selectConflictingRevision])
-        return false;
-
-    // Read the common ancestor revision (if it's available):
-    auto baseDoc = [[CBLDocument alloc] initWithDatabase: self
-                                              documentID: docID
-                                               mustExist: YES
-                                          includeDeleted: YES
-                                                   error: outError];
-    if (![baseDoc selectCommonAncestorOfDoc: doc andDoc: otherDoc] || ![baseDoc toDictionary])
-        baseDoc = nil;
-
-    // Call the conflict resolver:
-    if (!resolver)
-        resolver = self.effectiveConflictResolver;
-    auto conflict = [[CBLConflict alloc] initWithMine: doc theirs: otherDoc base: baseDoc];
-    CBLLog(Database, @"Resolving doc '%@' with %@ (mine=%@, theirs=%@, base=%@",
-           docID, resolver.class, doc.revID, otherDoc.revID, baseDoc.revID);
-    CBLDocument* resolved = [resolver resolve: conflict];
-    if (!resolved)
-        return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
-    
-    // Figure out what revision to delete and what if anything to add:
-    CBLStringBytes winningRevID, losingRevID;
-    NSData* mergedBody = nil;
-    if (resolved == otherDoc) {
-        winningRevID = otherDoc.revID;
-        losingRevID = doc.revID;
-    } else {
-        winningRevID = doc.revID;
-        losingRevID = otherDoc.revID;
-        if (resolved != doc) {
-            resolved.database = self;
-            mergedBody = [resolved encode: outError];
-            if (!mergedBody)
+                             error: (NSError**)outError
+{
+    CBLDocument* doc, *otherDoc, *baseDoc;
+    while (true) {
+        CBL_LOCK(self) {
+            // Open a transaction as a workaround to make sure that
+            // the replicator commits the current changes before we
+            // try to read the documents.
+            // https://github.com/couchbase/couchbase-lite-core/issues/322
+            C4Transaction t(_c4db);
+            if (!t.begin())
+                return convertError(t.error(), outError);
+            
+            doc = [[CBLDocument alloc] initWithDatabase: self
+                                             documentID: docID
+                                         includeDeleted: YES
+                                                  error: outError];
+            if (!doc)
                 return false;
+            
+            // Read the conflicting remote revision:
+            otherDoc = [[CBLDocument alloc] initWithDatabase: self
+                                                  documentID: docID
+                                              includeDeleted: YES
+                                                       error: outError];
+            if (!otherDoc || ![otherDoc selectConflictingRevision])
+                return false;
+            
+            // Read the common ancestor revision (if it's available):
+            baseDoc = [[CBLDocument alloc] initWithDatabase: self
+                                                 documentID: docID
+                                             includeDeleted: YES
+                                                      error: outError];
+            if (![baseDoc selectCommonAncestorOfDoc: doc andDoc: otherDoc] ||
+                ![baseDoc toDictionary]) {
+                baseDoc = nil;
+            }
+            
+            if (!t.commit())
+                return convertError(t.error(), outError);
         }
+        
+        // Call the conflict resolver:
+        auto conflict = [[CBLConflict alloc] initWithMine: doc
+                                                   theirs: otherDoc
+                                                     base: baseDoc];
+        CBLLog(Database, @"Resolving doc '%@' with %@ (mine=%@, theirs=%@, base=%@",
+               docID, resolver.class, doc.revID, otherDoc.revID, baseDoc.revID);
+        CBLDocument* resolved = [resolver resolve: conflict];
+        if (!resolved)
+            return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
+        
+        NSError* err;
+        BOOL success = [self saveResolvedDocument: resolved
+                                      forConflict: conflict
+                                            error: &err];
+        if ($equal(err.domain, @"LiteCore") && err.code == kC4ErrorConflict)
+            continue;
+        
+        if (outError)
+            *outError = err;
+        
+        return success;
     }
+}
 
-    // Tell LiteCore to do the resolution:
-    C4Document *rawDoc = doc.c4Doc.rawDoc;
-    C4Error c4err;
-    if (!c4doc_resolveConflict(rawDoc,
-                               winningRevID,
-                               losingRevID,
-                               data2slice(mergedBody),
-                               &c4err)
+
+- (BOOL) saveResolvedDocument: (CBLDocument*)resolved
+                  forConflict: (CBLConflict*)conflict
+                        error: (NSError**)outError
+{
+    CBL_LOCK(self) {
+        C4Transaction t(_c4db);
+        if (!t.begin())
+            return convertError(t.error(), outError);
+        
+        auto doc = conflict.mine;
+        auto otherDoc = conflict.theirs;
+        
+        // Figure out what revision to delete and what if anything to add:
+        CBLStringBytes winningRevID, losingRevID;
+        NSData* mergedBody = nil;
+        if (resolved == otherDoc) {
+            winningRevID = otherDoc.revID;
+            losingRevID = doc.revID;
+        } else {
+            winningRevID = doc.revID;
+            losingRevID = otherDoc.revID;
+            if (resolved != doc) {
+                resolved.database = self;
+                mergedBody = [resolved encode: outError];
+                if (!mergedBody)
+                    return false;
+            }
+        }
+        
+        // Tell LiteCore to do the resolution:
+        C4Document *rawDoc = doc.c4Doc.rawDoc;
+        C4Error c4err;
+        if (!c4doc_resolveConflict(rawDoc,
+                                   winningRevID,
+                                   losingRevID,
+                                   data2slice(mergedBody),
+                                   &c4err)
             || !c4doc_save(rawDoc, 0, &c4err)) {
-        return convertError(c4err, outError);
+            return convertError(c4err, outError);
+        }
+        CBLLog(Database, @"Conflict resolved as doc '%@' rev %.*s",
+               doc.id, (int)rawDoc->revID.size, rawDoc->revID.buf);
+        
+        return t.commit() || convertError(t.error(), outError);
     }
-    CBLLog(Database, @"Conflict resolved as doc '%@' rev %.*s",
-           docID, (int)rawDoc->revID.size, rawDoc->revID.buf);
-
-    return t.commit() || convertError(t.error(), outError);
 }
 
 @end
