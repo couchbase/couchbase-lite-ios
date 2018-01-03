@@ -24,7 +24,6 @@
 struct c4BlobStore;
 
 @class CBLBlobStream;
-@class CBLReplicator;
 
 NS_ASSUME_NONNULL_BEGIN
 

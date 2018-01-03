@@ -48,7 +48,8 @@ using namespace fleece;
 
 @synthesize name=_name;
 @synthesize c4db=_c4db, sharedKeys=_sharedKeys;
-@synthesize replications=_replications, activeReplications=_activeReplications, liveQueries= _liveQueries;
+@synthesize replications=_replications, activeReplications=_activeReplications;
+@synthesize liveQueries= _liveQueries;
 
 
 static const C4DatabaseConfig kDBConfig = {
@@ -508,13 +509,19 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 - (void) stopActiveReplications {
     // Stop all active replications
-    for (CBLReplicator* repl in _activeReplications) {
+    // Make a copy first to handle case when replicators remove themselves
+    // while being stopped
+    NSSet* copyOfActiveReplications = [_activeReplications copy];
+    for (CBLReplicator* repl in copyOfActiveReplications) {
         [repl stop];
     }
 }
 
 -(void) stopLiveQueries {
-    for (CBLLiveQuery* query in _liveQueries) {
+    // Make a copy first to handle case when live queries remove themselves
+    // while being stopped
+    NSSet* copyOfLiveQueries = [_liveQueries copy];
+    for (CBLLiveQuery* query in copyOfLiveQueries) {
         [query stop];
     }
 }
