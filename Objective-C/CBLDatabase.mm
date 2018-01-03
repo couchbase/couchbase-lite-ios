@@ -465,7 +465,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 
-- (BOOL)deleteIndexForName:(NSString *)name error:(NSError **)outError {
+- (BOOL) deleteIndexForName:(NSString *)name error:(NSError **)outError {
     CBL_LOCK(self) {
         [self mustBeOpen];
         
@@ -658,19 +658,17 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 - (id<CBLListenerToken>) addDatabaseChangeListener: (void (^)(CBLDatabaseChange*))listener
                                              queue: (dispatch_queue_t)queue
 {
-    CBL_LOCK(self) {
-        if (!_dbListenerTokens) {
-            _dbListenerTokens = [NSMutableSet set];
-            _dbObs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
-        }
-        
-        id token = [[CBLChangeListenerToken alloc] initWithListener: listener
-                                                              queue: queue];
-        
-        
-        [_dbListenerTokens addObject: token];
-        return token;
+    if (!_dbListenerTokens) {
+        _dbListenerTokens = [NSMutableSet set];
+        _dbObs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
     }
+    
+    id token = [[CBLChangeListenerToken alloc] initWithListener: listener
+                                                          queue: queue];
+    
+    
+    [_dbListenerTokens addObject: token];
+    return token;
 }
 
 
@@ -729,30 +727,28 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
                                                         listener: (void (^)(CBLDocumentChange*))listener
                                                            queue: (dispatch_queue_t)queue
 {
-    CBL_LOCK(self) {
-        if (!_docListenerTokens)
-            _docListenerTokens = [NSMutableDictionary dictionary];
+    if (!_docListenerTokens)
+        _docListenerTokens = [NSMutableDictionary dictionary];
+    
+    NSMutableSet* tokens = _docListenerTokens[documentID];
+    if (!tokens) {
+        tokens = [NSMutableSet set];
+        [_docListenerTokens setObject: tokens forKey: documentID];
         
-        NSMutableSet* tokens = _docListenerTokens[documentID];
-        if (!tokens) {
-            tokens = [NSMutableSet set];
-            [_docListenerTokens setObject: tokens forKey: documentID];
-            
-            CBLStringBytes bDocID(documentID);
-            C4DocumentObserver* o =
-            c4docobs_create(_c4db, bDocID, docObserverCallback, (__bridge void *)self);
-            
-            if (!_docObs)
-                _docObs = [NSMutableDictionary dictionary];
-            [_docObs setObject: [NSValue valueWithPointer: o] forKey: documentID];
-        }
+        CBLStringBytes bDocID(documentID);
+        C4DocumentObserver* o =
+        c4docobs_create(_c4db, bDocID, docObserverCallback, (__bridge void *)self);
         
-        id token = [[CBLDocumentChangeListenerToken alloc] initWithDocumentID: documentID
-                                                                     listener: listener
-                                                                        queue: queue];
-        [tokens addObject: token];
-        return token;
+        if (!_docObs)
+            _docObs = [NSMutableDictionary dictionary];
+        [_docObs setObject: [NSValue valueWithPointer: o] forKey: documentID];
     }
+    
+    id token = [[CBLDocumentChangeListenerToken alloc] initWithDocumentID: documentID
+                                                                 listener: listener
+                                                                    queue: queue];
+    [tokens addObject: token];
+    return token;
 }
 
 

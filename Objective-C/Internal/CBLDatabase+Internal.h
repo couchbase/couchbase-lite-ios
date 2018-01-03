@@ -100,6 +100,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLDatabaseChange ()
 
+/** check whether the changes are from the current database object or not. */
+@property (readonly, nonatomic) BOOL isExternal;
+
 - (instancetype) initWithDocumentIDs: (NSArray*)documentIDs isExternal: (BOOL)isExternal;
 
 @end

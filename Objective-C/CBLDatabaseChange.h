@@ -14,7 +14,4 @@
 /** The ID of the document that changed. */
 @property (readonly, nonatomic) NSArray* documentIDs;
 
-/** check whether the changes are from the current database object or not. */
-@property (readonly, nonatomic) BOOL isExternal;
-
 @end
