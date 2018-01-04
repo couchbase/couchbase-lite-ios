@@ -8,6 +8,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLReplicator+Internal.h"
+#import "CBLDatabase+Internal.h"
 #import "ConflictTest.h"
 
 
@@ -329,6 +330,67 @@
         }
     }
 }
+
+- (void) testCleanupOfActiveReplicationsAfterDatabaseClose{
+    // add a replicator to the DB
+    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: YES];
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+    
+    XCTestExpectation *x = [self expectationWithDescription: @"Replicator Close"];
+
+    // add observer to check if replicators are stopped on DB close
+    id token = [r addChangeListener: ^(CBLReplicatorChange* change) {
+        if (change.status.activity == kCBLReplicatorStopped) {
+            [x fulfill];
+        }
+    }];
+    
+    [r start];
+    AssertEqual(self.db.activeReplications.count,(unsigned long)1);
+    
+    // Close Database - This should trigger a replication stop which should be caught by
+    // replicator change listener
+    NSError* error;
+    [self.db close:&error];
+    
+    [self waitForExpectations: @[x] timeout: 7.0];
+    AssertEqual(self.db.activeReplications.count,(unsigned long)0);
+    
+    [r removeChangeListenerWithToken: token];
+    
+}
+
+- (void) testCleanupOfActiveReplicationsAfterDatabaseDelete{
+    // add a replicator to the DB
+    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: YES];
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+    
+    XCTestExpectation *x = [self expectationWithDescription: @"Replicator Close"];
+    
+    // add observer to check if replicators are stopped on DB close
+    id token = [r addChangeListener: ^(CBLReplicatorChange* change) {
+        if (change.status.activity == kCBLReplicatorStopped) {
+            [x fulfill];
+         }
+    }];
+    
+    [r start];
+    
+    // Confirm that one active replicator
+    AssertEqual(self.db.activeReplications.count,(unsigned long)1);
+    
+    // Close Database - This should trigger a replication stop which should be caught by listener
+    NSError* error;
+    
+    [self.db delete:&error];
+  
+    [self waitForExpectations: @[x] timeout: 7.0];
+    AssertEqual(self.db.activeReplications.count,(unsigned long)0);
+
+    [r removeChangeListenerWithToken: token];
+    
+}
+
 
 
 // These test are disabled because they require a password-protected database 'seekrit' to exist

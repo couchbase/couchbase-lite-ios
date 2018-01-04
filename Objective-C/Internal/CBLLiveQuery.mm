@@ -63,7 +63,10 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
         CBLDatabase* db = _query.database;
         Assert(db);
         
+        [db.liveQueries addObject:self];
+        
         __weak typeof(self) wSelf = self;
+
         _dbListenerToken = [db addChangeListener: ^(CBLDatabaseChange *change) {
             [wSelf databaseChanged: change];
         }];
@@ -76,7 +79,9 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
 
 - (void) stop {
     if (_dbListenerToken) {
-        [_query.database removeChangeListenerWithToken: _dbListenerToken];
+        CBLQuery* strongQuery = _query; // since we are accessing weak _query multiple times which can become nil
+        [strongQuery.database.liveQueries removeObject:self];
+        [strongQuery.database removeChangeListenerWithToken: _dbListenerToken];
         _dbListenerToken = nil;
     }
     

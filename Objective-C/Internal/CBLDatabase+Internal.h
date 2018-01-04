@@ -17,12 +17,13 @@
 #import "CBLMutableDocument.h"
 #import "CBLDocumentChange.h"
 #import "CBLJSONCoding.h"
+#import "CBLReplicator.h"
+#import "CBLLiveQuery.h"
 
 
 struct c4BlobStore;
 
 @class CBLBlobStream;
-@class CBLReplicator;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -35,8 +36,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic, nullable) C4Database* c4db;
 @property (readonly, nonatomic) dispatch_queue_t dispatchQueue;
 @property (readonly, nonatomic) NSMapTable<NSURL*,CBLReplicator*>* replications;
-@property (readonly, nonatomic) NSMutableSet* activeReplications;
-
+@property (readonly, nonatomic) NSMutableSet<CBLReplicator*>* activeReplications;
+@property (readonly, nonatomic) NSMutableSet<CBLLiveQuery*>* liveQueries;
 @property (readonly, nonatomic) FLSharedKeys sharedKeys;
 
 - (nullable struct c4BlobStore*) getBlobStore: (NSError**)outError;
