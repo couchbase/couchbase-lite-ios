@@ -136,8 +136,9 @@
                                        _rowReplaceAnimation == UITableViewRowAnimationNone)) {
         // No previous data, or no animations, so just slam the new data in:
         _rows = newRows;
-        [_tableView reloadData];
-        
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            [_tableView reloadData];
+        });
     } else {
         // Update the table myself with animation. First diff the old and new rows:
         CBLDiffItemComparator comparator = ^(CBLQueryRow *before, CBLQueryRow *after) {
@@ -156,17 +157,20 @@
             _rows[before] = newRows[after];
             [modPaths addObject: [NSIndexPath indexPathForRow: before inSection: 0]];
         }];
-        [_tableView reloadRowsAtIndexPaths: modPaths
-                          withRowAnimation: UITableViewRowAnimationNone];
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            [_tableView reloadRowsAtIndexPaths: modPaths
+                              withRowAnimation: UITableViewRowAnimationNone];
+            
+            // Update the data source:
+            _rows = newRows;
+            
+            // Now animate the row insertions/deletions/moves:
+            [diff animateTableView: _tableView
+                 deletionAnimation: _rowDeleteAnimation
+                  replaceAnimation: _rowReplaceAnimation
+                insertionAnimation: _rowInsertAnimation];
+        });
 
-        // Update the data source:
-        _rows = newRows;
-
-        // Now animate the row insertions/deletions/moves:
-        [diff animateTableView: _tableView
-             deletionAnimation: _rowDeleteAnimation
-              replaceAnimation: _rowReplaceAnimation
-            insertionAnimation: _rowInsertAnimation];
     }
 }
 
