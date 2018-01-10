@@ -189,7 +189,9 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     C4ReplicatorStatus status;
     if (_repl) {
         status = c4repl_getStatus(_repl);
-        [_config.database.activeReplications addObject: self];     // keeps me from being dealloced
+        CBL_LOCK(_config.database) {
+            [_config.database.activeReplications addObject: self];     // keeps me from being dealloced
+        }
     } else {
         status = {kC4Stopped, {}, err};
     }
@@ -317,7 +319,9 @@ static void statusChanged(C4Replicator *repl, C4ReplicatorStatus status, void *c
     if (c4Status.level == kC4Stopped) {
         // Stopped:
         [self clearRepl];
-        [_config.database.activeReplications removeObject: self];      // this is likely to dealloc me
+        CBL_LOCK(_config.database) {
+            [_config.database.activeReplications removeObject: self];      // this is likely to dealloc me
+        }
     }
 }
 
