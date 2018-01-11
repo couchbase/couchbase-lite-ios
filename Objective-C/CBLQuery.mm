@@ -75,12 +75,12 @@
 #pragma mark - Parameters
 
 - (CBLQueryParameters*) parameters {
-    return [_parameters copy];
+    return _parameters;
 }
 
 
-- (void) setParameters:(CBLQueryParameters *)parameters {
-    _parameters = [parameters copy];
+- (void) setParameters: (CBLQueryParameters *)parameters {
+    _parameters = parameters;
     [_liveQuery queryParametersChanged];
 }
 

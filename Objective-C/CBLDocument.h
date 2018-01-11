@@ -10,6 +10,8 @@
 #import "CBLDictionary.h"
 @class CBLMutableDocument;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /** A Couchbase Lite document. The CBLDocument is immutable. */
 @interface CBLDocument : NSObject <CBLDictionary>
 
@@ -37,5 +39,6 @@
 
 - (instancetype) init NS_UNAVAILABLE;
 
-
 @end
+
+NS_ASSUME_NONNULL_END

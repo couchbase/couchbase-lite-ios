@@ -45,28 +45,52 @@
 }
 
 
-- (CBLReplicatorConfiguration*) configForPush: (BOOL)push
-                                         pull: (BOOL)pull
-                                   continuous: (BOOL)continuous
+- (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
+                                            type: (CBLReplicatorType)type
+                                      continuous: (BOOL)continuous
 {
-    CBLReplicatorConfiguration* c = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
-                                                                          targetDatabase: otherDB];
-    c.replicatorType = push && pull ? kCBLPushAndPull : (push ? kCBLPush : kCBLPull);
-    c.continuous = continuous;
-    return c;
+    return [self configWithTarget: target
+                             type: type
+                       continuous: continuous
+                    authenticator: nil
+                 conflictResolver: nil];
 }
 
 
-- (CBLReplicatorConfiguration*) configForPush: (BOOL)push
-                                         pull: (BOOL)pull
-                                   continuous: (BOOL)continuous
-                                          url: (NSString*)url
+- (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
+                                            type: (CBLReplicatorType)type
+                                      continuous: (BOOL)continuous
+                                conflictResolver: (nullable id <CBLConflictResolver>)resolver
 {
-    NSURL* u = [NSURL URLWithString: url];
-    CBLReplicatorConfiguration* c = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
-                                                                               targetURL: u];
-    c.replicatorType = push && pull ? kCBLPushAndPull : (push ? kCBLPush : kCBLPull);
-    c.continuous = continuous;
+    return [self configWithTarget: target
+                             type: type
+                       continuous: continuous
+                    authenticator: nil
+                 conflictResolver: resolver];
+}
+
+
+- (CBLReplicatorConfiguration*) configWithTarget: (id<CBLEndpoint>)target
+                                            type: (CBLReplicatorType)type
+                                      continuous: (BOOL)continuous
+                                   authenticator: (CBLAuthenticator*)authenticator
+                                conflictResolver: (nullable id <CBLConflictResolver>)resolver
+{
+    CBLReplicatorConfiguration* c =
+    [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
+                                                  target: target
+                                                   block:
+     ^(CBLReplicatorConfigurationBuilder* builder) {
+         builder.replicatorType = type;
+         builder.continuous = continuous;
+         builder.authenticator = authenticator;
+         if (resolver)
+             builder.conflictResolver = resolver;
+     }];
+    
+    if (continuous)
+        c.checkpointInterval = 1.0; // For testing only
+    
     return c;
 }
 
@@ -119,15 +143,9 @@
 }
 
 
-- (void) testBadURL {
-    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO
-                                                         url: @"blxp://localhost/db"];
-    [self run: config errorCode: 15 errorDomain: @"LiteCore"];
-}
-
-
 - (void)testEmptyPush {
-    CBLReplicatorConfiguration* config = [self configForPush: YES pull: NO continuous: NO];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type :kCBLReplicatorPush continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
@@ -143,7 +161,8 @@
     [doc2 setValue: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
-    CBLReplicatorConfiguration* config = [self configForPush: YES pull: NO continuous: NO];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type :kCBLReplicatorPush continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(otherDB.count, 2u);
@@ -163,8 +182,8 @@
     [doc2 setValue: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
-    CBLReplicatorConfiguration* config = [self configForPush: YES pull: NO continuous: YES];
-    config.checkpointInterval = 1.0;
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type :kCBLReplicatorPush continuous: YES];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(otherDB.count, 2u);
@@ -185,7 +204,8 @@
     [doc2 setValue: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
 
-    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
 
     AssertEqual(self.db.count, 2u);
@@ -206,8 +226,8 @@
     [doc2 setValue: @"Cat" forKey: @"name"];
     Assert([otherDB saveDocument: doc2 error: &error]);
     
-    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: YES];
-    config.checkpointInterval = 1.0;
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: YES];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(self.db.count, 2u);
@@ -223,7 +243,8 @@
     [doc1 setValue: @"Tiger" forKey: @"species"];
     Assert([self.db saveDocument: doc1 error: &error]);
 
-    CBLReplicatorConfiguration* config = [self configForPush: YES pull: NO continuous: NO];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type :kCBLReplicatorPush continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
 
     // Now make different changes in db and otherDB:
@@ -237,10 +258,10 @@
     Assert([otherDB saveDocument: doc2 error: &error]);
 
     // Pull from otherDB, creating a conflict to resolve:
-    config = [self configForPush: NO pull: YES continuous: NO];
     MergeThenTheirsWins* resolver = [MergeThenTheirsWins new];
     resolver.requireBaseRevision = true;
-    config.conflictResolver = resolver;
+    config = [self configWithTarget: target type :kCBLReplicatorPull continuous: NO
+                   conflictResolver: resolver];
     [self run: config errorCode: 0 errorDomain: nil];
 
     // Check that it was resolved:
@@ -260,18 +281,22 @@
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc"];
     [doc1 setValue: @"Tiger" forKey: @"species"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    
+    doc1 = [[self.db saveDocument: doc1 error: &error] toMutable];
+    Assert(doc1);
     [doc1 setValue: @"Hobbes" forKey: @"name"];
     Assert([self.db saveDocument: doc1 error: &error]);
 
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc"];
     [doc2 setValue: @"Tiger" forKey: @"species"];
-    Assert([otherDB saveDocument: doc2 error: &error]);
+    doc2 = [[otherDB saveDocument: doc2 error: &error] toMutable];
+    Assert(doc2);
     [doc2 setValue: @"striped" forKey: @"pattern"];
     Assert([otherDB saveDocument: doc2 error: &error]);
 
-    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO];
-    config.conflictResolver = [MergeThenTheirsWins new];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: NO
+                      conflictResolver: [MergeThenTheirsWins new]];
     [self run: config errorCode: 0 errorDomain: nil];
 
     AssertEqual(self.db.count, 1u);
@@ -283,9 +308,8 @@
 
 
 - (void) testStopContinuousReplicator {
-    [CBLDatabase setLogLevel: kCBLLogLevelDebug domain: kCBLLogDomainReplicator];
-    
-    CBLReplicatorConfiguration* config = [self configForPush: YES pull: YES continuous: YES];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type :kCBLReplicatorPushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
 
     NSArray* stopWhen = @[@(kCBLReplicatorConnecting), @(kCBLReplicatorBusy),
@@ -331,9 +355,10 @@
     }
 }
 
-- (void) testCleanupOfActiveReplicationsAfterDatabaseClose{
+- (void) testCleanupOfActiveReplicationsAfterDatabaseClose {
     // add a replicator to the DB
-    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: YES];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
     XCTestExpectation *x = [self expectationWithDescription: @"Replicator Close"];
@@ -360,9 +385,10 @@
     
 }
 
-- (void) testCleanupOfActiveReplicationsAfterDatabaseDelete{
+- (void) testCleanupOfActiveReplicationsAfterDatabaseDelete {
     // add a replicator to the DB
-    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: YES];
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
     XCTestExpectation *x = [self expectationWithDescription: @"Replicator Close"];
@@ -388,49 +414,40 @@
     AssertEqual(self.db.activeReplications.count,(unsigned long)0);
 
     [r removeChangeListenerWithToken: token];
-    
 }
-
 
 
 // These test are disabled because they require a password-protected database 'seekrit' to exist
 // on localhost:4984, with a user 'pupshaw' whose password is 'frank'.
 
 - (void) dontTestAuthenticationFailure {
-    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO
-                                                         url: @"blip://localhost:4984/seekrit"];
+    id target = [[CBLURLEndpoint alloc] initWithHost: @"localhost" port: 4984 path: @"seekrit" secure: NO];
+    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: NO];
     [self run: config errorCode: 401 errorDomain: @"WebSocket"];
 }
 
 
-- (void) dontTestAuthenticatedPullHardcoded {
-    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO
-                                                         url: @"blip://pupshaw:frank@localhost:4984/seekrit"];
-    [self run: config errorCode: 0 errorDomain: nil];
-}
-
-
 - (void) dontTestAuthenticatedPull {
-    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO
-                                                         url: @"blip://localhost:4984/seekrit"];
-    config.authenticator = [[CBLBasicAuthenticator alloc] initWithUsername: @"pupshaw" password: @"frank"];
+    id target = [[CBLURLEndpoint alloc] initWithHost: @"localhost" port: 4984 path: @"seekrit" secure: NO];
+    id auth = [[CBLBasicAuthenticator alloc] initWithUsername: @"pupshaw" password: @"frank"];
+    id config = [self configWithTarget: target type :kCBLReplicatorPull
+                            continuous: NO authenticator: auth conflictResolver: nil];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
 
 - (void) dontTestMissingHost {
     timeout = 200;
-    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO
-                                                url: @"blip://foo.couchbase.com/db"];
-    config.continuous = YES;
+    id target = [[CBLURLEndpoint alloc] initWithHost: @"foo.couchbase.com" port: 0 path: @"db" secure: NO];
+    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: YES];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
 
 // This test assumes an SG is serving SSL at port 4994 with a self-signed cert.
 - (void) dontTestSelfSignedSSLFailure {
-    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO
-                                                         url: @"blips://localhost:4994/beer"];
+    id target = [[CBLURLEndpoint alloc] initWithHost: @"localhost" port: 4994 path: @"beer" secure: YES];
+    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: NO];
     [self run: config errorCode: kCFURLErrorServerCertificateHasUnknownRoot errorDomain: NSURLErrorDomain];
 }
 
@@ -442,9 +459,12 @@
     NSData* certData = [NSData dataWithContentsOfFile: path];
     SecCertificateRef cert = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
     Assert(cert);
-    CBLReplicatorConfiguration* config = [self configForPush: NO pull: YES continuous: NO
-                                                         url: @"blips://localhost:4994/beer"];
-    config.pinnedServerCertificate = cert;
+    
+    id target = [[CBLURLEndpoint alloc] initWithHost: @"localhost" port: 4994 path: @"beer" secure: YES];
+    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: NO];
+    config = [[CBLReplicatorConfiguration alloc] initWithConfig: config block: ^(CBLReplicatorConfigurationBuilder* builder) {
+        builder.pinnedServerCertificate = cert;
+    }];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 

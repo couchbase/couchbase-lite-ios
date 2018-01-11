@@ -107,7 +107,7 @@ protocol MutableArrayProtocol: ArrayProtocol, MutableArrayFragment {
 }
 
 /** MutableArrayObject provides access to array data. */
-public class MutableArrayObject: ArrayObject, MutableArrayProtocol {
+public final class MutableArrayObject: ArrayObject, MutableArrayProtocol {
     
     // MARK: Initializers
     

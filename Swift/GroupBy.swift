@@ -12,7 +12,7 @@ import Foundation
 /// A GroupBy represents the GROUP BY clause to group the query result.
 /// The GROUP BY clause is normally used with aggregate functions (AVG, COUNT, MAX, MIN, SUM)
 /// to aggregate the group of the values.
-public class GroupBy: Query, HavingRouter, OrderByRouter, LimitRouter {
+public final class GroupBy: Query, HavingRouter, OrderByRouter, LimitRouter {
     
     /// Creates and chain a Having object for filtering the aggregated values
     /// from the the GROUP BY clause.

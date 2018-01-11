@@ -23,10 +23,10 @@ public final class From: Query, JoinRouter, WhereRouter, GroupByRouter, OrderByR
     
     /// Creates and chains a Where object for specifying the WHERE clause of the query.
     ///
-    /// - Parameter whereExpression: The where expression.
+    /// - Parameter expression: The where expression.
     /// - Returns: The Where object that represents the WHERE clause of the query.
-    public func `where`(_ whereExpression: Expression) -> Where {
-        return Where(query: self, impl: whereExpression.impl)
+    public func `where`(_ expression: Expression) -> Where {
+        return Where(query: self, impl: expression.impl)
     }
     
     

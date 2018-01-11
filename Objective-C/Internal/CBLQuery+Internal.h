@@ -89,7 +89,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithType: (NSString*)type
                    dataSource: (CBLQueryDataSource*)dataSource
-                           on: (CBLQueryExpression*)expression;
+                           on: (nullable CBLQueryExpression*)expression;
 
 @end
 
@@ -110,9 +110,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
-@interface CBLQueryParameters () <NSCopying>
-
-- (instancetype) initWithParameters: (nullable NSDictionary*)params;
+@interface CBLQueryParameters ()
 
 - (nullable NSData*) encodeAsJSON: (NSError**)outError;
 

@@ -22,28 +22,28 @@
 }
 
 
-+ (instancetype) join: (CBLQueryDataSource*)dataSource on: (CBLQueryExpression*)expression {
++ (instancetype) join: (CBLQueryDataSource*)dataSource on: (nullable CBLQueryExpression*)expression {
     return [[self alloc] initWithType: kCBLInnerJoin dataSource: dataSource on: expression];
 }
 
 
-+ (instancetype) leftJoin: (CBLQueryDataSource*)dataSource on: (CBLQueryExpression*)expression {
++ (instancetype) leftJoin: (CBLQueryDataSource*)dataSource on: (nullable CBLQueryExpression*)expression {
     return [[self alloc] initWithType: kCBLLeftOuterJoin dataSource: dataSource on: expression];
 }
 
 
-+ (instancetype) leftOuterJoin: (CBLQueryDataSource*)dataSource on: (CBLQueryExpression*)expression {
++ (instancetype) leftOuterJoin: (CBLQueryDataSource*)dataSource on: (nullable CBLQueryExpression*)expression {
     return [[self alloc] initWithType: kCBLLeftOuterJoin dataSource: dataSource on: expression];
 }
 
 
-+ (instancetype) innerJoin: (CBLQueryDataSource*)dataSource on: (CBLQueryExpression*)expression {
++ (instancetype) innerJoin: (CBLQueryDataSource*)dataSource on: (nullable CBLQueryExpression*)expression {
     return [[self alloc] initWithType: kCBLInnerJoin dataSource: dataSource on: expression];
 }
 
 
-+ (instancetype) crossJoin: (CBLQueryDataSource*)dataSource on: (CBLQueryExpression*)expression {
-    return [[self alloc] initWithType: kCBLCrossJoin dataSource: dataSource on: expression];
++ (instancetype) crossJoin: (CBLQueryDataSource*)dataSource {
+    return [[self alloc] initWithType: kCBLCrossJoin dataSource: dataSource on: nil];
 }
 
 

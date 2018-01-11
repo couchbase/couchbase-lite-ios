@@ -25,6 +25,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** Base or common anchester version of the document. */
 @property (nonatomic, readonly, nullable) CBLDocument* base;
 
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 

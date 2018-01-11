@@ -240,37 +240,4 @@
 }
 
 
-#pragma mark - Type
-
-
-+ (CBLQueryExpression*) isArray:(id)expression {
-    return [[CBLFunctionExpression alloc] initWithFunction: @"ISARRAY()"
-                                                    params: @[expression]];
-}
-
-
-+ (CBLQueryExpression*) isBoolean:(id)expression {
-    return [[CBLFunctionExpression alloc] initWithFunction: @"ISBOOLEAN()"
-                                                    params: @[expression]];
-}
-
-
-+ (CBLQueryExpression*) isNumber:(id)expression {
-    return [[CBLFunctionExpression alloc] initWithFunction: @"ISNUMBER()"
-                                                    params: @[expression]];
-}
-
-
-+ (CBLQueryExpression*) isDictionary:(id)expression {
-    return [[CBLFunctionExpression alloc] initWithFunction: @"ISOBJECT()"
-                                                    params: @[expression]];
-}
-
-
-+ (CBLQueryExpression*) isString:(id)expression {
-    return [[CBLFunctionExpression alloc] initWithFunction: @"ISSTRING()"
-                                                    params: @[expression]];
-}
-
-
 @end

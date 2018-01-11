@@ -10,30 +10,25 @@
 #import "CBLAuthenticator+Internal.h"
 #import "CBLJSON.h"
 
+#define kDefaultCookieName @"SyncGatewaySession"
+
 @implementation CBLSessionAuthenticator
 
-@synthesize sessionID=_sessionID, expires=_expires, cookieName=_cookieName;
+@synthesize sessionID=_sessionID, cookieName=_cookieName;
 
 
-- (instancetype) initWithSessionID: (NSString*)sessionID
-                      expireString: (nullable id)expires
-                        cookieName: (NSString*)cookieName
-{
-    return [self initWithSessionID: sessionID
-                        expireDate: [self convertExpires: expires]
-                        cookieName: cookieName];
+- (instancetype) initWithSessionID: (NSString*)sessionID {
+    return [self initWithSessionID: sessionID cookieName: nil];
 }
 
 
 - (instancetype) initWithSessionID: (NSString*)sessionID
-                        expireDate: (nullable NSDate*)expires
-                        cookieName: (NSString*)cookieName
+                        cookieName: (nullable NSString*)cookieName
 {
-    self = [super init];
+    self = [super initWithNone];
     if (self) {
         _sessionID = sessionID;
-        _expires = expires;
-        _cookieName = cookieName;
+        _cookieName = cookieName ? cookieName : kDefaultCookieName;
     }
     return self;
 }
@@ -46,6 +41,7 @@
     
     if (cookieStr.length > 0)
         [cookieStr appendString: @"; "];
+    
     // TODO: How about expires?
     [cookieStr appendFormat: @"%@=%@", _cookieName, _sessionID];
     

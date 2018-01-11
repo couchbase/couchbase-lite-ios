@@ -8,23 +8,31 @@
 
 import Foundation
 
-public class PropertyExpression: Expression {
+public final class PropertyExpression: Expression {
     
     /// Specifies an alias name of the data source to query the data from.
     ///
     /// - Parameter alias: The alias name of the data source.
     /// - Returns: The property Expression with the given data source alias name.
-    public func from(_ alias: String) -> Expression {
-        return Expression(CBLQueryExpression.property(property, from: alias))
+    public func from(_ alias: String?) -> Expression {
+        if let prop = self.property {
+            return Expression(CBLQueryExpression.property(prop, from: alias))
+        } else {
+            return Expression(CBLQueryExpression.all(from: alias))
+        }
     }
     
     // Internal
     
-    let property: String
+    let property: String?
     
-    init(property: String) {
+    init(property: String?) {
         self.property = property
-        super.init(CBLQueryExpression.property(property))
+        if let prop = property {
+            super.init(CBLQueryExpression.property(prop))
+        } else {
+            super.init(CBLQueryExpression.all())
+        }
     }
     
 }

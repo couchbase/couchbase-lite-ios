@@ -36,7 +36,7 @@ public class Collation {
     
     
     /// ASCII collation compares two strings by using binary comparison.
-    public class ASCII: Collation {
+    public final class ASCII: Collation {
         
         /// Specifies whether the collation is case-sensitive or not. Case-insensitive
         /// collation will treat ASCII uppercase and lowercase letters as equivalent.
@@ -66,7 +66,7 @@ public class Collation {
     /// by using Unicode collation algorithm. If the locale is not specified, the collation is
     /// Unicode-aware but not localized; for example, accented Roman letters sort right after
     /// the base letter (This is implemented by using the "en_US" locale).
-    public class Unicode: Collation {
+    public final class Unicode: Collation {
         
         
         /// Specifies whether the collation is case-insenstive or not. Case-insensitive

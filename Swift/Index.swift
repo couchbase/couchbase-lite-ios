@@ -48,7 +48,7 @@ public class Index {
 
 
 /// A value index for regular queries.
-public class ValueIndex: Index {
+public final class ValueIndex: Index {
     
     // MARK: Internal
     
@@ -64,7 +64,7 @@ public class ValueIndex: Index {
 
 
 /// Value Index Item.
-public class ValueIndexItem {
+public final class ValueIndexItem {
     
     public class func property(_ property: String) -> ValueIndexItem {
         return ValueIndexItem(impl: CBLValueIndexItem.property(property))
@@ -93,7 +93,7 @@ public class ValueIndexItem {
 
 
 /// A full-text search index for full-text search query with the match operator.
-public class FullTextIndex: Index {
+public final class FullTextIndex: Index {
     
     /// Set to true ignore accents/diacritical marks. The default value is false.
     ///

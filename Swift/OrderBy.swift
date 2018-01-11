@@ -10,7 +10,7 @@ import Foundation
 
 
 /// An OrderBy represents an ORDER BY clause of the query statement.
-public class OrderBy: Query, LimitRouter {
+public final class OrderBy: Query, LimitRouter {
     
     /// Creates and chains a Limit object to limit the number query results.
     ///

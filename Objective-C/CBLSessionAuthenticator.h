@@ -12,16 +12,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /** 
- The CBLSessionAuthenticator class is an authenticator that will authenticate by using the
- session ID of the session created by a Sync Gateway.
+ The CBLSessionAuthenticator class is an authenticator that will authenticate
+ by using the session ID of the session created by a Sync Gateway.
  */
 @interface CBLSessionAuthenticator : CBLAuthenticator
 
 /** Session ID of the session created by a Sync Gateway. */
 @property (nonatomic, readonly, copy) NSString* sessionID;
-
-/** Session expiration date. */
-@property (nonatomic, readonly, copy, nullable) NSDate* expires;
 
 /** 
  Session cookie name that the session ID value will be set to when communicating
@@ -29,17 +26,29 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, readonly, copy) NSString* cookieName;
 
-/** 
- Initiallize the CBLSessionAuthenticator with the given session ID, expiration date,
- and cookie name.
+
+/**
+ Initializes with the Sync Gateway session ID and uses the default cookie name.
+
+ @param sessionID Sync Gateway session ID
+ @return The CBLSessionAuthenticator object.
+ */
+- (instancetype) initWithSessionID: (NSString*)sessionID;
+
+
+/**
+ Initializes with the session ID and the cookie name. If the given cookieName
+ is nil, the default cookie name will be used.
+
+ @param sessionID Sync Gateway session ID
+ @param cookieName The cookie name
+ @return The CBLSessionAuthenticator object.
  */
 - (instancetype) initWithSessionID: (NSString*)sessionID
-                      expireString: (nullable id)expires
-                        cookieName: (NSString*)cookieName;
+                        cookieName: (nullable NSString*)cookieName;
 
-- (instancetype) initWithSessionID: (NSString*)sessionID
-                        expireDate: (nullable NSDate*)expires
-                        cookieName: (NSString*)cookieName;
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

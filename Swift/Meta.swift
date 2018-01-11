@@ -11,7 +11,7 @@ import Foundation
 
 /// Meta is a factory class for creating the expressions that refer to
 /// the metadata properties of the document.
-public class Meta {
+public final class Meta {
     
     /// A metadata expression refering to the ID of the document.
     public static var id: MetaExpression {

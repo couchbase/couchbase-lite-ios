@@ -27,6 +27,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (CBLQueryLimit*) limit: (id)expression offset: (nullable id)expression;
 
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -77,9 +77,14 @@
 
 
 - (CBLDatabase*) openDBNamed: (NSString*)name error: (NSError**)error {
-    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
-    config.directory = self.directory;
-    config.conflictResolver = self.conflictResolver;
+    id config = [[CBLDatabaseConfiguration alloc] initWithBlock:
+                   ^(CBLDatabaseConfigurationBuilder *builder)
+    {
+        builder.directory = self.directory;
+        if (self.conflictResolver)
+            builder.conflictResolver = self.conflictResolver;
+    }];
+    
     return [[CBLDatabase alloc] initWithName: name config: config error: error];
 }
 

@@ -10,7 +10,7 @@ import Foundation
 
 
 /// DictionaryProtocol defines a set of methods for readonly accessing dictionary data.
-protocol DictionaryProtocol: DictionaryFragment, Sequence {
+protocol DictionaryProtocol: DictionaryFragment {
     var count: Int { get }
     
     var keys: Array<String> { get }
@@ -46,7 +46,7 @@ protocol DictionaryProtocol: DictionaryFragment, Sequence {
 
 
 /// DictionaryObject provides readonly access to dictionary data.
-public class DictionaryObject: DictionaryProtocol, Equatable, Hashable {
+public class DictionaryObject: DictionaryProtocol, Equatable, Hashable, Sequence {
     
     /// The number of entries in the dictionary.
     public var count: Int {

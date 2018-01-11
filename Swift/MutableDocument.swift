@@ -10,7 +10,7 @@ import Foundation
 
 
 /// A mutable version of the Document.
-public class MutableDocument : Document, MutableDictionaryProtocol {
+public final class MutableDocument : Document, MutableDictionaryProtocol {
     
     // MARK: Initializers
     

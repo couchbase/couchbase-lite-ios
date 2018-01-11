@@ -58,7 +58,7 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  The database's configuration. If the configuration is not specify when initializing
  the database, the default configuration will be returned.
  */
-@property (readonly, copy, nonatomic) CBLDatabaseConfiguration *config;
+@property (readonly, nonatomic) CBLDatabaseConfiguration *config;
 
 
 #pragma mark - Initializers
@@ -97,22 +97,10 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  Gets an existing CBLMutableDocument object with the given ID. If the document with the given ID
  doesn't exist in the database, the value returned will be nil.
  
- @param documentID The document ID.
+ @param id The document ID.
  @return The CBLMutableDocument object.
  */
-- (nullable CBLDocument*) documentWithID: (NSString*)documentID;
-
-
-#pragma mark - Check Document Exists
-
-
-/** 
- Checks whether the document of the given ID exists in the database or not.
- 
- @param documentID The document ID.
- @return True if the database contains the document with the given ID, otherwise false.
- */
-- (BOOL) containsDocumentWithID: (NSString*)documentID;
+- (nullable CBLDocument*) documentWithID: (NSString*)id;
 
 
 #pragma mark - Subscript

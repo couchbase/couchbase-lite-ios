@@ -55,7 +55,7 @@ protocol MutableDictionaryFragment {
 /// MutableFragment provides read and write access to data value. MutableFragment also provides
 /// subscript access by either key or index to the nested values which are wrapped by
 /// MutableFragment objects.
-public class MutableFragment: Fragment, MutableDictionaryFragment, MutableArrayFragment {
+public final class MutableFragment: Fragment, MutableDictionaryFragment, MutableArrayFragment {
     
     /// Gets the value from or sets the value to the fragment object.
     public override var value: Any? {

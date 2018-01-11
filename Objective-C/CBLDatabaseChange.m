@@ -11,11 +11,15 @@
 
 @implementation CBLDatabaseChange
 
-@synthesize documentIDs=_documentIDs, isExternal=_isExternal;
+@synthesize database=_database, documentIDs=_documentIDs, isExternal=_isExternal;
 
-- (instancetype) initWithDocumentIDs: (NSArray *)documentIDs isExternal: (BOOL)isExternal {
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                      documentIDs: (NSArray *)documentIDs
+                       isExternal: (BOOL)isExternal
+{
     self = [super init];
     if (self) {
+        _database = database;
         _documentIDs = documentIDs;
         _isExternal = isExternal;
     }

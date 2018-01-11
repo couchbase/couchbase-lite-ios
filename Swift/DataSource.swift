@@ -17,8 +17,8 @@ public class DataSource {
     ///
     /// - Parameter database: The database object.
     /// - Returns: The database data source.
-    public static func database(_ database: Database) -> DatabaseSource {
-        return DatabaseSource(impl: CBLQueryDataSource.database(database._impl), database: database)
+    public static func database(_ database: Database) -> DatabaseSourceAs {
+        return DatabaseSourceAs(impl: CBLQueryDataSource.database(database._impl), database: database)
     }
     
     // MARK: Internal
@@ -37,14 +37,14 @@ public class DataSource {
 
 /// A database data source. You could also create an alias data source by calling the as(alias)
 /// method with an alias name.
-public class DatabaseSource: DataSource {
+public final class DatabaseSourceAs: DataSource {
     
     /// Create an alias data source.
     ///
     /// - Parameter alias: The alias name.
     /// - Returns: The DataSource object.
     public func `as`(_ alias: String) -> DataSource {
-        return DatabaseSource(impl: CBLQueryDataSource.database(database._impl, as: alias),
+        return DataSource(impl: CBLQueryDataSource.database(database._impl, as: alias),
                               database: database)
     }
     

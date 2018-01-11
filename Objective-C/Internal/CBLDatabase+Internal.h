@@ -92,7 +92,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLDocumentChange ()
 
-- (instancetype) initWithDocumentID: (NSString*)documentID;
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                       documentID: (NSString*)documentID;
 
 @end
 
@@ -104,7 +105,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** check whether the changes are from the current database object or not. */
 @property (readonly, nonatomic) BOOL isExternal;
 
-- (instancetype) initWithDocumentIDs: (NSArray*)documentIDs isExternal: (BOOL)isExternal;
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                      documentIDs: (NSArray*)documentIDs
+                       isExternal: (BOOL)isExternal;
 
 @end
 

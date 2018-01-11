@@ -10,7 +10,7 @@ import Foundation
 
 
 /// ArrayProtocol defines a set of methods for readonly accessing array data.
-protocol ArrayProtocol: ArrayFragment, Sequence {
+protocol ArrayProtocol: ArrayFragment {
     var count: Int { get }
     
     func value(at index: Int) -> Any?
@@ -42,7 +42,7 @@ protocol ArrayProtocol: ArrayFragment, Sequence {
 
 
 /// ArrayObject provides readonly access to array data.
-public class ArrayObject: ArrayProtocol, Equatable, Hashable {
+public class ArrayObject: ArrayProtocol, Equatable, Hashable, Sequence {
     
     /// Gets a number of the items in the array.
     public var count: Int {

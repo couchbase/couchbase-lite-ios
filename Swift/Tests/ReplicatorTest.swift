@@ -11,7 +11,7 @@ import CouchbaseLiteSwift
 
 
 class ReplicatorTest: CBLTestCase {
-    var otherDB: Database?
+    var otherDB: Database!
     
     override func setUp() {
         super.setUp()
@@ -19,26 +19,18 @@ class ReplicatorTest: CBLTestCase {
         XCTAssertNotNil(otherDB)
     }
     
-    
     override func tearDown() {
-        try! otherDB?.close()
+        try! otherDB.close()
         super.tearDown()
     }
     
-    
-    func run(push: Bool, pull: Bool, expectedError: Int?) {
-        var config = ReplicatorConfiguration(withDatabase: db, targetDatabase: otherDB!)
-        config.replicatorType = push && pull ? .pushAndPull : (push ? .push : .pull)
+    func run(type: ReplicatorType, target: Endpoint, expectedError: Int?) {
+        let config = ReplicatorConfiguration
+            .Builder(withDatabase: self.db, target: target)
+            .setReplicatorType(type)
+            .build()
         run(config: config, expectedError: expectedError)
     }
-    
-    
-    func run(push: Bool, pull: Bool, url: URL, expectedError: Int?) {
-        var config = ReplicatorConfiguration(withDatabase: db, targetURL: url)
-        config.replicatorType = push && pull ? .pushAndPull : (push ? .push : .pull)
-        run(config: config, expectedError: expectedError)
-    }
-    
     
     func run(config: ReplicatorConfiguration, expectedError: Int?) {
         let x = self.expectation(description: "change")
@@ -60,8 +52,8 @@ class ReplicatorTest: CBLTestCase {
         repl.removeChangeListener(withToken: token)
     }
     
-    
     func testEmptyPush() {
-        run(push: true, pull: false, expectedError: nil)
+        let target = DatabaseEndpoint(withDatabase: otherDB)
+        run(type: .push, target: target, expectedError: nil)
     }
 }

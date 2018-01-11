@@ -17,7 +17,7 @@ public class SelectResult {
     /// - Returns: The SelectResult.As object that you can give the alias name to
     ///            the returned value.
     public static func property(_ property: String) -> As {
-        return As(expression: Expression.property(property), alias: nil, from: nil)
+        return As(expression: Expression.property(property), alias: nil)
     }
     
     /// Creates a SelectResult object with the given expression.
@@ -26,7 +26,7 @@ public class SelectResult {
     /// - Returns: The SelectResult.As object that you can give the alias name to
     ///            the returned value.
     public static func expression(_ expression: Expression) -> As {
-        return As(expression: expression, alias: nil, from: nil)
+        return As(expression: expression, alias: nil)
     }
     
     
@@ -35,7 +35,7 @@ public class SelectResult {
     ///
     /// - Returns: The SelectResult.From object that you can specify the data source alias name.
     public static func all() -> From {
-        return From(expression: nil, alias: nil, from: nil)
+        return From(expression: Expression.all(), alias: nil)
 
     }
     
@@ -49,12 +49,11 @@ public class SelectResult {
         ///
         /// - Parameter alias: The alias name.
         /// - Returns: The SelectResult object with the alias name specified.
-        public func `as`(_ alias: String) -> SelectResult {
-            return SelectResult(expression: self.expression, alias: alias, from: nil)
+        public func `as`(_ alias: String?) -> SelectResult {
+            return SelectResult(expression: self.expression, alias: alias)
         }
         
     }
-    
     
     /// SelectResult.From is a SelectResult that you can specify the data source alias name.
     public final class From: SelectResult {
@@ -63,33 +62,25 @@ public class SelectResult {
         ///
         /// - Parameter alias: The data source alias name.
         /// - Returns: The SelectResult object with the data source alias name specified.
-        public func from(_ alias: String) -> SelectResult {
-            return SelectResult(expression: nil, alias: nil, from: alias)
+        public func from(_ alias: String?) -> SelectResult {
+            return SelectResult(expression: Expression.all().from(alias), alias: nil)
         }
         
     }
     
     // MARK: Internal
     
-    let expression: Expression?
+    let expression: Expression
     
     let alias: String?
     
-    let from: String?
-    
     var impl: CBLQuerySelectResult {
-        if let expr = expression {
-            return CBLQuerySelectResult.expression(expr.impl, as: alias)
-        } else {
-            // expression == nil means SELECT *
-            return CBLQuerySelectResult.all(from: from)
-        }
+        return CBLQuerySelectResult.expression(expression.impl, as: alias)
     }
     
-    init(expression: Expression?, alias: String?, from: String?) {
+    init(expression: Expression, alias: String?) {
         self.expression = expression
         self.alias = alias
-        self.from = from
     }
     
     static func toImpl(results: [SelectResult]) -> [CBLQuerySelectResult] {

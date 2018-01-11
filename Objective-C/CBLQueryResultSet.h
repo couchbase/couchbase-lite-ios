@@ -15,4 +15,7 @@
  */
 @interface CBLQueryResultSet : NSEnumerator<CBLQueryResult*>
 
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
 @end

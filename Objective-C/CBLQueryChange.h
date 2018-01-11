@@ -27,6 +27,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** The error occurred when running the query. */
 @property (nonatomic, readonly, nullable) NSError* error;
 
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 NS_ASSUME_NONNULL_END

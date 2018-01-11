@@ -9,26 +9,28 @@
 #import "CBLDatabaseConfiguration.h"
 #import "CBLDatabase+Internal.h"
 
-@implementation CBLDatabaseConfiguration
+@interface CBLDatabaseConfigurationBuilder()
+- (instancetype) initWithConfig: (nullable CBLDatabaseConfiguration*)config;
+@end
+
+@implementation CBLDatabaseConfigurationBuilder
 
 @synthesize directory=_directory;
 @synthesize conflictResolver = _conflictResolver;
 @synthesize encryptionKey=_encryptionKey;
 @synthesize fileProtection=_fileProtection;
 
-
-- (instancetype) init {
-    return [super init];
-}
-
-
-- (instancetype) copyWithZone:(NSZone *)zone {
-    CBLDatabaseConfiguration* o = [[self.class alloc] init];
-    o.directory = _directory;
-    o.conflictResolver = _conflictResolver;
-    o.encryptionKey = _encryptionKey;
-    o.fileProtection = _fileProtection;
-    return o;
+- (instancetype) initWithConfig: (nullable CBLDatabaseConfiguration*)config {
+    self = [super init];
+    if (self) {
+        if (config) {
+            _directory = config.directory;
+            _conflictResolver = config.conflictResolver;
+            _encryptionKey = config.encryptionKey;
+            _fileProtection = config.fileProtection;
+        }
+    }
+    return self;
 }
 
 
@@ -43,6 +45,46 @@
     if (!_conflictResolver)
         _conflictResolver = [[CBLDefaultConflictResolver alloc] init];
     return _conflictResolver;
+}
+
+@end
+
+@implementation CBLDatabaseConfiguration
+
+@synthesize directory=_directory;
+@synthesize conflictResolver = _conflictResolver;
+@synthesize encryptionKey=_encryptionKey;
+@synthesize fileProtection=_fileProtection;
+
+
+- (instancetype) init {
+    return [self initWithConfig: nil block: nil];
+}
+
+
+- (instancetype) initWithBlock: (nullable void(^)(CBLDatabaseConfigurationBuilder* builder))block
+{
+    return [self initWithConfig: nil block: block];
+}
+
+
+- (instancetype) initWithConfig: (nullable CBLDatabaseConfiguration*)config
+                          block: (nullable void(^)(CBLDatabaseConfigurationBuilder* builder))block
+{
+    self = [super init];
+    if (self) {
+        CBLDatabaseConfigurationBuilder* builder =
+            [[CBLDatabaseConfigurationBuilder alloc] initWithConfig: config];
+        
+        if (block)
+            block(builder);
+        
+        _directory = builder.directory;
+        _conflictResolver = builder.conflictResolver;
+        _encryptionKey = builder.encryptionKey;
+        _fileProtection = builder.fileProtection;
+    }
+    return self;
 }
 
 
@@ -64,4 +106,6 @@
     return [path stringByAppendingPathComponent: @"CouchbaseLite"];
 }
 
+
 @end
+

@@ -440,10 +440,10 @@ class QueryTest: CBLTestCase {
             .where(NUMBER1.between(PARAM_N1, and: PARAM_N2))
             .orderBy(Ordering.expression(NUMBER1))
         
-        var params = Parameters()
-        params.setValue(2, forName: "num1")
-        params.setValue(5, forName: "num2")
-        q.parameters = params
+        q.parameters = Parameters.Builder()
+            .setValue(2, forName: "num1")
+            .setValue(5, forName: "num2")
+            .build()
         
         let expectedNumbers = [2, 3, 4, 5]
         let numRow = try verifyQuery(q, block: { (n, r) in
@@ -519,9 +519,9 @@ class QueryTest: CBLTestCase {
             .orderBy(Ordering.expression(NUMBER1))
             .limit(Expression.parameter("LIMIT_NUM"))
         
-        var params = Parameters()
-        params.setValue(3, forName: "LIMIT_NUM")
-        q.parameters = params
+        q.parameters = Parameters.Builder()
+            .setValue(3, forName: "LIMIT_NUM")
+            .build()
         
         expectedNumbers = [1, 2, 3]
         numRow = try verifyQuery(q, block: { (n, r) in
@@ -556,10 +556,10 @@ class QueryTest: CBLTestCase {
             .orderBy(Ordering.expression(NUMBER1))
             .limit(Expression.parameter("LIMIT_NUM"), offset: Expression.parameter("OFFSET_NUM"))
         
-        var params = Parameters()
-        params.setValue(3, forName: "LIMIT_NUM")
-        params.setValue(5, forName: "OFFSET_NUM")
-        q.parameters = params
+        q.parameters = Parameters.Builder()
+            .setValue(3, forName: "LIMIT_NUM")
+            .setValue(5, forName: "OFFSET_NUM")
+            .build()
         
         expectedNumbers = [6, 7, 8]
         numRow = try verifyQuery(q, block: { (n, r) in
@@ -797,41 +797,6 @@ class QueryTest: CBLTestCase {
             XCTAssertEqual(r.string(at: 2), "  See you 18r")
             XCTAssertEqual(r.string(at: 3), "See you 18r")
             XCTAssertEqual(r.string(at: 4), str.uppercased())
-        })
-        XCTAssertEqual(numRow, 1)
-    }
-    
-    
-    func testTypeFunctions() throws {
-        let doc = MutableDocument(withID: "doc1")
-        doc.setValue(MutableArrayObject(withData: ["a", "b"]), forKey: "array")
-        doc.setValue(MutableDictionaryObject(withData: ["foo": "bar"]), forKey: "dictionary")
-        doc.setValue(3.14, forKey: "number")
-        doc.setValue("string", forKey: "string")
-        try db.saveDocument(doc)
-        
-        let ARRAY = Expression.property("array")
-        let DICT = Expression.property("dictionary")
-        let NUM = Expression.property("number")
-        let STR = Expression.property("string")
-        
-        let ISARRAY = Function.isArray(ARRAY)
-        let ISDICT = Function.isDictionary(DICT)
-        let ISNUMBER = Function.isNumber(NUM)
-        let ISSTRING = Function.isString(STR)
-        
-        let q = Query
-            .select(SelectResult.expression(ISARRAY),
-                    SelectResult.expression(ISDICT),
-                    SelectResult.expression(ISNUMBER),
-                    SelectResult.expression(ISSTRING))
-            .from(DataSource.database(db))
-        
-        let numRow = try verifyQuery(q, block: { (n, r) in
-            XCTAssertEqual(r.boolean(at: 0), true)
-            XCTAssertEqual(r.boolean(at: 1), true)
-            XCTAssertEqual(r.boolean(at: 2), true)
-            XCTAssertEqual(r.boolean(at: 3), true)
         })
         XCTAssertEqual(numRow, 1)
     }
@@ -1126,7 +1091,7 @@ class QueryTest: CBLTestCase {
     
     
     func testLiveQueryNoUpdate() throws {
-        try loadNumbers(100);
+        try loadNumbers(100)
         var count = 0;
         let q = Query
             .select()
@@ -1161,5 +1126,4 @@ class QueryTest: CBLTestCase {
         
         q.removeChangeListener(withToken: token)
     }
-    
 }

@@ -36,6 +36,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (CBLQueryExpression*) length: (id)expression;
 
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 NS_ASSUME_NONNULL_END

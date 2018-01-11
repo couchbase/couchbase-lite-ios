@@ -16,14 +16,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface CBLQueryFullTextExpression : NSObject
 
-
 /**
  Creates a full-text expression with the given full-text index name.
 
- @param indexName The full-text index name.
+ @param name The full-text index name.
  @return The full-text expression.
  */
-+ (CBLQueryFullTextExpression*) index: (NSString*)indexName;
++ (CBLQueryFullTextExpression*) indexWithName: (NSString*)name;
 
 
 /**
@@ -33,6 +32,9 @@ NS_ASSUME_NONNULL_BEGIN
  @return The full-text match expression.
  */
 - (CBLQueryExpression*) match: (NSString*)text;
+
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

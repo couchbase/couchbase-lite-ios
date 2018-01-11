@@ -10,6 +10,8 @@
 #import "CBLDictionaryFragment.h"
 @class CBLDocument;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /** 
  CBLDocumentFragment provides access to a document object. CBLDocumentFragment also provides
  subscript access by either key or index to the data values of the document which are
@@ -23,4 +25,9 @@
 /** Gets the document from the document fragment object. */
 @property (nonatomic, readonly, nullable) CBLDocument* document;
 
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
+
+NS_ASSUME_NONNULL_END

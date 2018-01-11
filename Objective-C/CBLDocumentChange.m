@@ -11,11 +11,14 @@
 
 @implementation CBLDocumentChange
 
-@synthesize documentID=_documentID;
+@synthesize database=_database, documentID=_documentID;
 
-- (instancetype) initWithDocumentID: (NSString *)documentID {
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                       documentID: (NSString *)documentID
+{
     self = [super init];
     if (self) {
+        _database = database;
         _documentID = documentID;
     }
     return self;

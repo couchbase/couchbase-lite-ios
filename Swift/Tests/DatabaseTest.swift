@@ -26,7 +26,7 @@ class DatabaseTest: CBLTestCase {
     }
     
     func testCreateNamedDocument() throws {
-        XCTAssertFalse(db.containsDocument(withID: "doc1"))
+        XCTAssertNil(db.document(withID: "doc1"))
 
         let doc = MutableDocument(withID: "doc1")
         XCTAssertEqual(doc.id, "doc1")
@@ -43,8 +43,8 @@ class DatabaseTest: CBLTestCase {
                 try db.saveDocument(doc)
             }
         }
-        for i in 0...9 {
-            XCTAssert(db.containsDocument(withID: "doc\(i)"))
+        for _ in 0...9 {
+            XCTAssertNotNil(db.document(withID: "doc1"))
         }
     }
     

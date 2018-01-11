@@ -98,7 +98,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
     self = [super init];
     if (self) {
         _name = name;
-        _config = config != nil? [config copy] : [CBLDatabaseConfiguration new];
+        _config = config != nil ? config : [CBLDatabaseConfiguration new];
         if (![self open: outError])
             return nil;
         
@@ -143,7 +143,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (CBLDatabaseConfiguration*) config {
-    return [_config copy];
+    return _config;
 }
 
 
@@ -152,14 +152,6 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 - (CBLDocument*) documentWithID: (NSString*)documentID {
     return [self documentWithID: documentID error: nil];
-}
-
-
-#pragma mark - CHECK DOCUMENT EXISTS
-
-
-- (BOOL) containsDocumentWithID: (NSString*)docID {
-    return [self documentWithID: docID error: nil] != nil;
 }
 
 
@@ -175,12 +167,14 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 
 
 - (CBLDocument*) saveDocument: (CBLMutableDocument*)document error: (NSError**)error {
-    return [self saveDocument: document asDeletion: NO error: error];
+    CBLDocument* outDocument = nil;
+    [self saveDocument: document into: &outDocument asDeletion: NO error: error];
+    return outDocument;
 }
 
 
 - (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error {
-    return [self saveDocument: document asDeletion: YES error: error] != nil;
+    return [self saveDocument: document into: nil asDeletion: YES error: error];
 }
 
 
@@ -189,8 +183,12 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
         if (![self prepareDocument: document error: error])
             return NO;
         
-        if (!document.exists)
-            return createError(kCBLStatusNotFound, error);
+        if (!document.revID) {
+            NSString* mesg = @"Do not allow to purge a newly created document "
+                              "that has not been saved into the database.";
+            createError(kCBLStatusNotAllow, mesg, error);
+            return NO;
+        }
         
         C4Transaction transaction(self.c4db);
         if (!transaction.begin())
@@ -729,8 +727,10 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
             nChanges = c4dbobs_getChanges(_dbObs, changes, kMaxChanges, &newExternal);
             if (nChanges == 0 || external != newExternal || docIDs.count > 1000) {
                 if(docIDs.count > 0) {
-                    CBLDatabaseChange* change = [[CBLDatabaseChange alloc] initWithDocumentIDs: docIDs
-                                                                                    isExternal: external];
+                    CBLDatabaseChange* change =
+                        [[CBLDatabaseChange alloc] initWithDatabase: self
+                                                        documentIDs: docIDs
+                                                         isExternal: external];
                     for (CBLChangeListenerToken* token in _dbListenerTokens) {
                         void (^listener)(CBLDatabaseChange*) = token.listener;
                         dispatch_async(token.queue, ^{
@@ -805,7 +805,9 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
         if (!_docObs[documentID] || !_c4db ||  c4db_isInTransaction(_c4db))
             return;
         
-        CBLDocumentChange* change = [[CBLDocumentChange alloc] initWithDocumentID: documentID];
+        CBLDocumentChange* change =
+            [[CBLDocumentChange alloc] initWithDatabase: self
+                                             documentID: documentID];
         NSSet* listeners = [_docListenerTokens objectForKey: documentID];
         for (CBLDocumentChangeListenerToken* token in listeners) {
             void (^listener)(CBLDocumentChange*) = token.listener;
@@ -885,47 +887,77 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
 
 
 // Main save document
-- (CBLDocument*) saveDocument: (CBLDocument*)document
-                   asDeletion: (BOOL)deletion
-                        error: (NSError**)outError
+- (BOOL) saveDocument: (CBLDocument*)document
+                 into: (CBLDocument**)outDoc
+           asDeletion: (BOOL)deletion
+                error: (NSError**)outError
 {
-    if (deletion && !document.exists) {
-        createError(kCBLStatusNotFound, outError);
-        return nil;
+    if (document.isInvalidated) {
+        NSString* mesg = @"Do not allow to save or delete the MutableDocument "
+                          "that has already been used to save or delete.";
+        createError(kCBLStatusNotAllow, mesg, outError);
+        return NO;
+    }
+    
+    if (deletion && !document.revID) {
+        NSString* mesg = @"Do not allow to delete a newly created document "
+                          "that has not been saved into the database.";
+        createError(kCBLStatusNotAllow, mesg, outError);
+        return NO;
     }
     
     // Attempt to save. (On conflict, this will succeed but newDoc will be null.)
     NSString* docID = document.id;
     CBLDocument* doc = document, *baseDoc, *otherDoc;
     C4Document* baseRev = nil, *newDoc = nil;
+    
+    // Reset output document to nil:
+    if (outDoc) *outDoc = nil;
+    
     while (true) {
         CBL_LOCK(self) {
             if (![self prepareDocument: doc error: outError])
-                return nil;
+                return NO;
             
             // Begin a db transaction:
             C4Transaction transaction(_c4db);
             if (!transaction.begin()) {
-                convertError(transaction.error(), outError);
-                return nil;
+                return convertError(transaction.error(), outError);
+            }
+            
+            if (deletion) {
+                // Check existing, NO-OPS if the document doesn't exist:
+                CBLStringBytes bDocID(docID);
+                C4Error err;
+                auto curDoc = c4doc_get(_c4db, bDocID, true, &err);
+                if (!curDoc) {
+                    if (err.code == kC4ErrorNotFound) {
+                        [$castIf(CBLMutableDocument, document) markAsInvalidated];
+                        return YES;
+                    }
+                    return convertError(err, outError);
+                }
+                c4doc_free(curDoc);
             }
             
             if (![self saveDocument: doc into: &newDoc withBase: baseRev
                          asDeletion: deletion error: outError])
-                return nil;
+                return NO;
             
             if (newDoc) {
                 // Save succeeded; now commit the transaction:
                 if (!transaction.commit()) {
                     c4doc_free(newDoc);
-                    convertError(transaction.error(), outError);
-                    return nil;
+                    return convertError(transaction.error(), outError);
                 }
                 
+                [$castIf(CBLMutableDocument, document) markAsInvalidated];
                 auto newC4Doc = [CBLC4Document document: newDoc];
-                return [[CBLDocument alloc] initWithDatabase: self
-                                                  documentID: docID
-                                                       c4Doc: newC4Doc];
+                if (outDoc)
+                    *outDoc = [[CBLDocument alloc] initWithDatabase: self
+                                                         documentID: docID
+                                                              c4Doc: newC4Doc];
+                return YES;
             }
             
             // Save not succeeded as conflicting:
@@ -946,12 +978,11 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
                                               includeDeleted: YES
                                                        error: outError];
             if (!otherDoc)
-                return nil;
+                return NO;
             
             // Abort transaction:
             if (!transaction.abort()) {
-                convertError(transaction.error(), outError);
-                return nil;
+                return convertError(transaction.error(), outError);
             }
         }
         
@@ -962,8 +993,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
                                                              base: baseDoc];
         CBLDocument* resolved = [resolver resolve: conflict];
         if (!resolved) {
-            convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
-            return nil;
+            return convertError({LiteCoreDomain, kC4ErrorConflict}, outError);
         }
         
         CBL_LOCK(self) {
@@ -971,8 +1001,12 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
                                                               documentID: docID
                                                           includeDeleted: YES
                                                                    error: outError];
-            if ($equal(resolved.revID, current.revID))
-                return resolved; // Same as current
+            if ($equal(resolved.revID, current.revID)) {
+                [$castIf(CBLMutableDocument, document) markAsInvalidated];
+                if (outDoc)
+                    *outDoc = resolved; // Same as current
+                return YES;
+            }
             
             // For saving:
             doc = resolved;

@@ -11,31 +11,31 @@
 
 @interface CBLQueryFullTextExpression ()
 
-- (instancetype) initWithIndexName: (NSString*)indexName;
+- (instancetype) initWithIndexName: (NSString*)name;
 
 @end
 
 @implementation CBLQueryFullTextExpression {
-    NSString* _indexName;
+    NSString* _name;
 }
 
 
-- /* internal */ (instancetype) initWithIndexName: (NSString*)indexName {
+- /* internal */ (instancetype) initWithIndexName: (NSString*)name {
     self = [super init];
     if (self) {
-        _indexName = indexName;
+        _name = name;
     }
     return self;
 }
 
 
-+ (CBLQueryFullTextExpression*) index: (NSString*)indexName {
-    return [[self alloc] initWithIndexName: indexName];
++ (CBLQueryFullTextExpression*) indexWithName: (NSString*)name {
+    return [[self alloc] initWithIndexName: name];
 }
 
 
 - (CBLQueryExpression*) match: (NSString*)text {
-    return [[CBLFullTextMatchExpression alloc] initWithIndexName: _indexName
+    return [[CBLFullTextMatchExpression alloc] initWithIndexName: _name
                                                             text: text];
 }
 

@@ -27,6 +27,7 @@ using namespace fleeceapi;
 
 
 @synthesize database=_database, id=_id, c4Doc=_c4Doc, fleeceData=_fleeceData;
+@synthesize isInvalidated=_isInvalidated;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database

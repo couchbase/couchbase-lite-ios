@@ -21,7 +21,7 @@ import Foundation
 ///   an alias name specified or is not a property expression such as an aggregate function
 ///   expression (e.g. count(), avg(), min(), max(), sum() and etc). The number suffix
 ///   after the '$' character is a running number starting from one.
-public class Result : ArrayProtocol, DictionaryProtocol {
+public final class Result : ArrayProtocol, DictionaryProtocol, Sequence {
     
     // MARK: ReadOnlyArrayProtocol
     

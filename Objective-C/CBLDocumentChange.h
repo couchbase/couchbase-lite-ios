@@ -7,11 +7,18 @@
 //
 
 #import <Foundation/Foundation.h>
+@class CBLDatabase;
 
 /** Document change information  */
 @interface CBLDocumentChange : NSObject
 
+/** The database. */
+@property (readonly, nonatomic) CBLDatabase* database;
+
 /** The ID  of the document that changed. */
 @property (readonly, nonatomic) NSString* documentID;
+
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
 
 @end

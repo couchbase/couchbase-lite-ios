@@ -17,11 +17,7 @@ public class Query {
     /// in the query. All parameters defined in the query must be given values
     /// before running the query, or the query will fail.
     public var parameters: Parameters? {
-        get {
-            return self.params?.copy()
-        }
-        set {
-            self.params = newValue?.copy()
+        didSet {
             applyParameters()
         }
     }
@@ -183,7 +179,7 @@ public class Query {
     
     func applyParameters() {
         prepareQuery()
-        queryImpl!.parameters = self.params?.toImpl()
+        queryImpl!.parameters = self.parameters?.toImpl()
     }
 
     func copy(_ query: Query) {
@@ -197,10 +193,7 @@ public class Query {
         self.havingImpl = query.havingImpl
         self.orderingsImpl = query.orderingsImpl
         self.limitImpl = query.limitImpl
-        
-        if let queryParams = query.params {
-            self.params = queryParams.copy()
-        }
+        self.params = query.params
     }
     
 }

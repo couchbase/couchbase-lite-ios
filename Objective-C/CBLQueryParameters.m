@@ -9,18 +9,48 @@
 #import "CBLQueryParameters.h"
 #import "CBLQuery+Internal.h"
 
-@implementation CBLQueryParameters {
-    NSMutableDictionary* _params;
+@interface CBLQueryParametersBuilder()
+
+@property (readonly, nonatomic, nullable) NSDictionary* data;
+
+- (instancetype) initWithParameters: (nullable CBLQueryParameters*)parameters;
+
+@end
+
+@interface CBLQueryParameters()
+
+@property (readonly, nonatomic, nullable) NSDictionary* data;
+
+@end
+
+@implementation CBLQueryParametersBuilder {
+    NSMutableDictionary* _data;
+}
+
+- (instancetype) initWithParameters: (nullable CBLQueryParameters*)parameters
+{
+    self = [super init];
+    if (self) {
+        if (parameters.data)
+            _data = [NSMutableDictionary dictionaryWithDictionary: parameters.data];
+    }
+    return self;
+}
+
+
+- (NSDictionary*) data {
+    return _data;
 }
 
 
 - (void) setValue: (id)value forName: (NSString*)name {
-    if (!_params) {
-        _params = [NSMutableDictionary dictionary];
-    }
+    if (!_data)
+        _data = [NSMutableDictionary dictionary];
+    
     if (!value)
         value = [NSNull null]; // Only for Apple platform
-    _params[name] = value;
+    
+    _data[name] = value;
 }
 
 
@@ -63,29 +93,48 @@
     [self setValue: value forName: name];
 }
 
+@end
 
-#pragma mark - Internal
+
+@implementation CBLQueryParameters
+
+@synthesize data=_data;
+
+- (instancetype) initWithBlock: (nullable void(^)(CBLQueryParametersBuilder* builder))block
+{
+    return [self initWithParameters: nil block: block];
+}
 
 
-- (instancetype) initWithParameters: (nullable NSDictionary*)params {
+- (instancetype) initWithParameters: (nullable CBLQueryParameters*)parameters
+                              block: (nullable void(^)(CBLQueryParametersBuilder* builder))block
+{
     self = [super init];
     if (self) {
-        if (params) {
-            _params = [NSMutableDictionary dictionaryWithDictionary: params];
-        }
+        CBLQueryParametersBuilder* builder =
+        [[CBLQueryParametersBuilder alloc] initWithParameters: parameters];
+        
+        if (block)
+            block(builder);
+        
+        if (builder.data)
+            _data = [NSDictionary dictionaryWithDictionary: builder.data];
     }
     return self;
 }
 
 
-- (instancetype) copyWithZone:(NSZone *)zone {
-    return [[CBLQueryParameters alloc] initWithParameters: _params];
+- (nullable id) valueForName:(NSString *)name {
+    return [_data objectForKey: name];
 }
 
 
+#pragma mark - Internal
+
+
 - (nullable NSData*) encodeAsJSON: (NSError**)outError {
-    if (_params)
-        return [NSJSONSerialization dataWithJSONObject: _params options: 0 error: outError];
+    if (_data)
+        return [NSJSONSerialization dataWithJSONObject: _data options: 0 error: outError];
     else
         return nil;
 }

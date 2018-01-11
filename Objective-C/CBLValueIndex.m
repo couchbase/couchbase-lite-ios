@@ -16,7 +16,7 @@
 }
 
 - (instancetype) initWithItems: (NSArray<CBLValueIndexItem*>*)items {
-    self = [super init];
+    self = [super initWithNone];
     if (self) {
         _items = items;
     }

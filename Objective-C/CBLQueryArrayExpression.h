@@ -67,6 +67,9 @@ NS_ASSUME_NONNULL_BEGIN
                            in: (id)inExpression
                     satisfies: (CBLQueryExpression*)satisfies;
 
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 NS_ASSUME_NONNULL_END

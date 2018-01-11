@@ -608,11 +608,11 @@
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
     [doc setValue: blob forKey: @"blob"];
     
-    [self saveDocument: doc eval: ^(CBLDocument* d) {
+    doc = [[self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects(((CBLBlob*)[d valueForKey: @"blob"]).properties, blob.properties);
         AssertEqualObjects([d blobForKey: @"blob"].properties, blob.properties);
         AssertEqualObjects([d blobForKey: @"blob"].content, content);
-    }];
+    }] toMutable];
     
     // Update:
     

@@ -16,6 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 typedef enum {
     kCBLStatusForbidden = 403,
     kCBLStatusNotFound = 404,
+    kCBLStatusNotAllow = 405,
     
     // Non-HTTP error:
     kCBLStatusInvalidQuery = 490

@@ -227,14 +227,14 @@ class DocumentTest: CBLTestCase {
     
     
     func testSetString() throws {
-        let doc = createDocument("doc1")
+        var doc = createDocument("doc1")
         doc.setValue("", forKey: "string1")
         doc.setValue("string", forKey: "string2")
         
-        try saveDocument(doc) { (d) in
+        doc = try saveDocument(doc) { (d) in
             XCTAssertEqual(d.string(forKey: "string1"), "")
             XCTAssertEqual(d.string(forKey: "string2"), "string")
-        }
+        }.toMutable()
         
         // Update:
         
@@ -270,21 +270,21 @@ class DocumentTest: CBLTestCase {
     
     
     func testSetNumber() throws {
-        let doc = createDocument("doc1")
+        var doc = createDocument("doc1")
         doc.setValue(1, forKey: "number1")
         doc.setValue(0, forKey: "number2")
         doc.setValue(-1, forKey: "number3")
         doc.setValue(1.1, forKey: "number4")
         doc.setValue(12345678, forKey: "number5")
         
-        try saveDocument(doc, eval: { (d) in
+        doc = try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(doc.int(forKey: "number1"), 1)
             XCTAssertEqual(doc.int(forKey: "number2"), 0)
             XCTAssertEqual(doc.int(forKey: "number3"), -1)
             XCTAssertEqual(doc.float(forKey: "number4"), 1.1)
             XCTAssertEqual(doc.double(forKey: "number4"), 1.1)
             XCTAssertEqual(doc.int(forKey: "number5"), 12345678)
-        })
+        }).toMutable()
         
         // Update:
         
@@ -429,14 +429,14 @@ class DocumentTest: CBLTestCase {
     
     
     func testSetBoolean() throws {
-        let doc = createDocument("doc1")
+        var doc = createDocument("doc1")
         doc.setValue(true, forKey: "boolean1")
         doc.setValue(false, forKey: "boolean2")
         
-        try saveDocument(doc, eval: { (d) in
+        doc = try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.boolean(forKey: "boolean1"), true);
             XCTAssertEqual(d.boolean(forKey: "boolean2"), false);
-        })
+        }).toMutable()
         
         // Update:
         
@@ -472,17 +472,17 @@ class DocumentTest: CBLTestCase {
     
     
     func testSetDate() throws {
-        let doc = createDocument("doc1")
+        var doc = createDocument("doc1")
         let date = Date()
         let dateStr = jsonFromDate(date)
         XCTAssertTrue(dateStr.count > 0)
         doc.setValue(date, forKey: "date")
         
-        try saveDocument(doc, eval: { (d) in
+        doc = try saveDocument(doc, eval: { (d) in
             XCTAssertEqual(d.value(forKey: "date") as! String, dateStr);
             XCTAssertEqual(d.string(forKey: "date"), dateStr);
             XCTAssertEqual(jsonFromDate(d.date(forKey: "date")!), dateStr);
-        })
+        }).toMutable()
         
         // Update:
         
@@ -520,15 +520,15 @@ class DocumentTest: CBLTestCase {
     
     
     func testSetBlob() throws {
-        let doc = createDocument("doc1")
+        var doc = createDocument("doc1")
         let content = kTestBlob.data(using: .utf8)!
         let blob = Blob(contentType: "text/plain", data: content)
         doc.setValue(blob, forKey: "blob")
         
-        try saveDocument(doc, eval: { (d) in
+        doc = try saveDocument(doc, eval: { (d) in
             XCTAssertTrue(d.blob(forKey: "blob")!.properties == blob.properties)
             XCTAssertEqual(d.blob(forKey: "blob")!.content, content)
-        })
+        }).toMutable()
         
         // Update:
         
@@ -1092,7 +1092,7 @@ class DocumentTest: CBLTestCase {
         XCTAssertThrowsError(try self.db.deleteDocument(doc), "") { (e) in
             let error = e as NSError
             XCTAssertEqual(error.domain, "CouchbaseLite")
-            XCTAssertEqual(error.code, 404)
+            XCTAssertEqual(error.code, 405)
         }
     }
     
@@ -1107,6 +1107,10 @@ class DocumentTest: CBLTestCase {
         
         // Delete:
         let savedDoc = self.db.document(withID: doc.id)!
+        try self.db.deleteDocument(savedDoc)
+        XCTAssertNil(self.db.document(withID: savedDoc.id))
+        
+        // Delete again:
         try self.db.deleteDocument(savedDoc)
         XCTAssertNil(self.db.document(withID: savedDoc.id))
     }
@@ -1147,13 +1151,16 @@ class DocumentTest: CBLTestCase {
         XCTAssertThrowsError(try self.db.purgeDocument(doc), "") { (e) in
             let error = e as NSError
             XCTAssertEqual(error.domain, "CouchbaseLite")
-            XCTAssertEqual(error.code, 404)
+            XCTAssertEqual(error.code, 405)
         }
         
         // Save:
         let savedDoc = try saveDocument(doc)
         
         // Purge:
+        try self.db.purgeDocument(savedDoc)
+        
+        // Purge again:
         try self.db.purgeDocument(savedDoc)
     }
     
