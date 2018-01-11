@@ -167,7 +167,7 @@ extern "C" {
     if (!_disableOffsetAndLimit) {
 #endif
     q[@"OFFSET"] = @[@"ifmissing()", @[@"$opt_offset"], @0];
-    q[@"LIMIT"]  = @[@"ifmissing()", @[@"$opt_limit"],  @(-1)];
+    q[@"LIMIT"]  = @[@"ifmissing()", @[@"$opt_limit"],  @(INT64_MAX)];
 #if DEBUG
     }
 #endif
