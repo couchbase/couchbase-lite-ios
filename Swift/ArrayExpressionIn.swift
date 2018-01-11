@@ -13,7 +13,7 @@ import Foundation
 /// <variable name> IN <expr> SATISFIES <expr>). The IN clause is used for specifying an array
 /// object or an expression evaluated as an array object, each item of which will be evaluated
 /// against the satisfies expression.
-public class ArrayExpressionIn {
+public final class ArrayExpressionIn {
     
     /// Creates a Satisfies clause object with the given IN clause expression that could be an
     /// array object or an expression evaluated as an array object.

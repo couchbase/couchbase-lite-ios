@@ -11,7 +11,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-
 /**
  Full-text function.
  */
@@ -26,6 +25,9 @@ NS_ASSUME_NONNULL_BEGIN
  @return The full-text rank function.
  */
 + (CBLQueryExpression*) rank: (NSString*)indexName;
+
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

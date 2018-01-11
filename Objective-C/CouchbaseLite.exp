@@ -14,6 +14,8 @@
 .objc_class_name_CBLDatabase
 .objc_class_name_CBLDatabaseChange
 .objc_class_name_CBLDatabaseConfiguration
+.objc_class_name_CBLDatabaseConfigurationBuilder
+.objc_class_name_CBLDatabaseEndpoint
 .objc_class_name_CBLDictionary
 .objc_class_name_CBLDocument
 .objc_class_name_CBLDocumentChange
@@ -50,6 +52,8 @@
 .objc_class_name_CBLReplicator
 .objc_class_name_CBLReplicatorChange
 .objc_class_name_CBLReplicatorConfiguration
+.objc_class_name_CBLReplicatorConfigurationBuilder
 .objc_class_name_CBLSessionAuthenticator
+.objc_class_name_CBLURLEndpoint
 .objc_class_name_CBLValueIndex
 .objc_class_name_CBLValueIndexItem

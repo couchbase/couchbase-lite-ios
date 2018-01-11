@@ -327,7 +327,7 @@
 - (void) testWhereMatch {
     [self loadJSONResource: @"sentences"];
     
-    CBLQueryFullTextExpression* SENTENCE = [CBLQueryFullTextExpression index: @"sentence"];
+    CBLQueryFullTextExpression* SENTENCE = [CBLQueryFullTextExpression indexWithName: @"sentence"];
     CBLQuerySelectResult* S_SENTENCE = [CBLQuerySelectResult property: @"sentence"];
     
     NSError* error;
@@ -524,9 +524,13 @@
                             where: [NUMBER1 between: PARAM_N1 and: PARAM_N2]
                           orderBy: @[[CBLQueryOrdering expression: NUMBER1]]];
     
-    CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
-    [params setValue: @(2) forName: @"num1"];
-    [params setValue: @(5) forName: @"num2"];
+    CBLQueryParameters* params = [[CBLQueryParameters alloc] initWithBlock:
+                                  ^(CBLQueryParametersBuilder* builder)
+    {
+        [builder setValue: @(2) forName: @"num1"];
+        [builder setValue: @(5) forName: @"num2"];
+    }];
+    
     q.parameters = params;
     
     NSArray* expectedNumbers = @[@2, @3, @4, @5];
@@ -604,8 +608,11 @@
                 orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
                   limit: [CBLQueryLimit limit: [CBLQueryExpression parameterNamed: @"LIMIT_NUM"]]];
     
-    CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
-    [params setValue: @3 forName: @"LIMIT_NUM"];
+    CBLQueryParameters* params = [[CBLQueryParameters alloc] initWithBlock:
+                                  ^(CBLQueryParametersBuilder* builder)
+    {
+        [builder setValue: @3 forName: @"LIMIT_NUM"];
+    }];
     q.parameters = params;
     
     expectedNumbers = @[@1, @2, @3];
@@ -644,9 +651,12 @@
                   limit: [CBLQueryLimit limit: [CBLQueryExpression parameterNamed: @"LIMIT_NUM"]
                                        offset: [CBLQueryExpression parameterNamed:@"OFFSET_NUM"]]];
     
-    CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
-    [params setValue: @3 forName: @"LIMIT_NUM"];
-    [params setValue: @5 forName: @"OFFSET_NUM"];
+    CBLQueryParameters* params = [[CBLQueryParameters alloc] initWithBlock:
+                                  ^(CBLQueryParametersBuilder* builder)
+    {
+        [builder setValue: @3 forName: @"LIMIT_NUM"];
+        [builder setValue: @5 forName: @"OFFSET_NUM"];
+    }];
     q.parameters = params;
     
     expectedNumbers = @[@6, @7, @8];
@@ -908,41 +918,6 @@
                    AssertEqualObjects([r stringAtIndex: 3], @"See you 18r");
                    AssertEqualObjects([r stringAtIndex: 4], [str uppercaseString]);
                }];
-    AssertEqual(numRows, 1u);
-}
-
-
-- (void) testTypeFunctions {
-    CBLMutableDocument* doc = [self createDocument:@"doc1"];
-    [doc setValue: [[CBLMutableArray alloc] initWithData: @[@"a", @"b"]] forKey: @"array"];
-    [doc setValue: [[CBLMutableDictionary alloc] initWithData: @{@"foo": @"bar"}] forKey: @"dictionary"];
-    [doc setValue: @(3.14) forKey: @"number"];
-    [doc setValue: @"string" forKey: @"string"];
-    [self saveDocument: doc];
-    
-    CBLQueryExpression* ARRAY = [CBLQueryExpression property: @"array"];
-    CBLQueryExpression* DICT = [CBLQueryExpression property: @"dictionary"];
-    CBLQueryExpression* NUM = [CBLQueryExpression property: @"number"];
-    CBLQueryExpression* STR = [CBLQueryExpression property: @"string"];
-    
-    CBLQueryExpression* ISARRAY = [CBLQueryFunction isArray: ARRAY];
-    CBLQueryExpression* ISDICT = [CBLQueryFunction isDictionary: DICT];
-    CBLQueryExpression* ISNUMBER = [CBLQueryFunction isNumber: NUM];
-    CBLQueryExpression* ISSTR = [CBLQueryFunction isString: STR];
-    
-    CBLQuery* q = [CBLQuery select: @[[CBLQuerySelectResult expression: ISARRAY],
-                                      [CBLQuerySelectResult expression: ISDICT],
-                                      [CBLQuerySelectResult expression: ISNUMBER],
-                                      [CBLQuerySelectResult expression: ISSTR]]
-                    from: [CBLQueryDataSource database: self.db]];
-    
-    uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
-                        {
-                            AssertEqual([r booleanAtIndex: 0], YES);
-                            AssertEqual([r booleanAtIndex: 1], YES);
-                            AssertEqual([r booleanAtIndex: 2], YES);
-                            AssertEqual([r booleanAtIndex: 3], YES);
-                        }];
     AssertEqual(numRows, 1u);
 }
 
@@ -1366,8 +1341,8 @@
     [q removeChangeListenerWithToken: token];
 }
 
-- (void) testCleanupOfLiveQueriesAfterDatabaseClose{
-    // add a live query to the DB
+- (void) testLiveQueryCleanUpAfterCloseDatabase {
+    // Add a live query to the DB
     // XCTestExpectation* x = [self expectationWithDescription: @"Query Change"];
     CBLQuery* q = [CBLQuery select: @[kDOCID]
                               from: [CBLQueryDataSource database: self.db]];
@@ -1377,20 +1352,17 @@
     }];
     
     // Confirm the addition of query
-    
     AssertEqual(self.db.liveQueries.count,(unsigned long)1);
-    
 
     // Close Database - This should trigger a stop of live query
     NSError* error;
     Assert([self.db close:&error]);
     
-    
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
     while (!self.db.liveQueries.count && timeout.timeIntervalSinceNow > 0.0) {
-        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
             break;
-        
     }
     
     AssertEqual(self.db.liveQueries.count,(unsigned long)0);
@@ -1399,8 +1371,9 @@
     
 }
 
-- (void) testCleanupOfLiveQueriesAfterDatabaseDelete{
-    // add a live query to the DB
+
+- (void) testLiveQueryCleanUpAfterDeleteDatabase {
+    // Add a live query to the DB
     // XCTestExpectation* x = [self expectationWithDescription: @"Query Change"];
     CBLQuery* q = [CBLQuery select: @[kDOCID]
                               from: [CBLQueryDataSource database: self.db]];
@@ -1419,15 +1392,15 @@
     
     NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 2.0];
     while (!self.db.liveQueries.count && timeout.timeIntervalSinceNow > 0.0) {
-        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
             break;
-        
     }
     
     AssertEqual(self.db.liveQueries.count,(unsigned long)0);
     
     [q removeChangeListenerWithToken: token];
-    
 }
+
 
 @end

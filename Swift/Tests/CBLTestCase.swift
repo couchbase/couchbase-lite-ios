@@ -38,10 +38,11 @@ class CBLTestCase: XCTestCase {
     
     
     func openDB(name: String) throws -> Database {
-        var config = DatabaseConfiguration()
-        config.directory = directory
-        config.conflictResolver = conflictResolver
-        return try Database(name: name, config: config)
+        let builder = DatabaseConfiguration.Builder().setDirectory(self.directory)
+        if let resolver = self.conflictResolver {
+            builder.setConflictResolver(resolver)
+        }
+        return try Database(name: name, config: builder.build())
     }
     
     

@@ -10,123 +10,163 @@ import Foundation
 
 
 /// A Parameters object used for setting values to the query parameters defined in the query.
-public struct Parameters {
-    public init() { }
+public final class Parameters {
     
-    /// Set a boolean value to the query parameter referenced by the given name. A query parameter
-    /// is defined by using the Expression's parameter(_ name: String) function.
+    /// Gets a parameter's value.
     ///
-    /// - Parameters:
-    ///   - value: The boolean value.
-    ///   - name: The parameter name.
-    /// - Returns: The Parameters object.
-    @discardableResult public mutating func setBoolean(_ value: Bool, forName name: String) -> Parameters {
-        return setValue(value, forName: name)
+    /// - Parameter name: The parameter name.
+    /// - Returns: The parameter value.
+    public func value(forName name: String) -> Any? {
+        return self.params[name];
     }
     
-    
-    /// Set a date value to the query parameter referenced by the given name. A query parameter
-    /// is defined by using the Expression's parameter(_ name: String) function.
-    ///
-    /// - Parameters:
-    ///   - value: The date value.
-    ///   - name: The parameter name.
-    /// - Returns: The Parameters object.
-    @discardableResult  public mutating func setDate(_ value: Date?, forName name: String) -> Parameters {
-        return setValue(value, forName: name)
+    /// The builder for the Parameters.
+    public final class Builder {
+        
+        /// Initializes the Parameters's builder.
+        public init() {
+            self.params = [:]
+        }
+        
+        
+        /// Initializes the Parameters's builder with the given parameters.
+        ///
+        /// - Parameter parameters: The parameters.
+        public init(withParameters parameters: Parameters?) {
+            self.params = parameters != nil ? parameters!.params : [:]
+        }
+        
+        
+        /// Set a boolean value to the query parameter referenced by the given name. A query parameter
+        /// is defined by using the Expression's parameter(_ name: String) function.
+        ///
+        /// - Parameters:
+        ///   - value: The boolean value.
+        ///   - name: The parameter name.
+        /// - Returns: The Parameters object.
+        @discardableResult public func setBoolean(_ value: Bool, forName name: String) -> Self {
+            return setValue(value, forName: name)
+        }
+        
+        
+        /// Set a date value to the query parameter referenced by the given name. A query parameter
+        /// is defined by using the Expression's parameter(_ name: String) function.
+        ///
+        /// - Parameters:
+        ///   - value: The date value.
+        ///   - name: The parameter name.
+        /// - Returns: The Parameters object.
+        @discardableResult public func setDate(_ value: Date?, forName name: String) -> Self {
+            return setValue(value, forName: name)
+        }
+        
+        
+        /// Set a double value to the query parameter referenced by the given name. A query parameter
+        /// is defined by using the Expression's parameter(_ name: String) function.
+        ///
+        /// - Parameters:
+        ///   - value: The double value.
+        ///   - name: The parameter name.
+        /// - Returns: The Parameters object.
+        @discardableResult public func setDouble(_ value: Double, forName name: String) -> Self {
+            return setValue(value, forName: name)
+        }
+        
+        
+        /// Set a float value to the query parameter referenced by the given name. A query parameter
+        /// is defined by using the Expression's parameter(_ name: String) function.
+        ///
+        /// - Parameters:
+        ///   - value: The float value.
+        ///   - name: The parameter name.
+        /// - Returns: The Parameters object.
+        @discardableResult public func setFloat(_ value: Float, forName name: String) -> Self {
+            return setValue(value, forName: name)
+        }
+        
+        
+        /// Set an int value to the query parameter referenced by the given name. A query parameter
+        /// is defined by using the Expression's parameter(_ name: String) function.
+        ///
+        /// - Parameters:
+        ///   - value: The int value.
+        ///   - name: The parameter name.
+        /// - Returns: The Parameters object.
+        @discardableResult public func setInt(_ value: Int, forName name: String) -> Self {
+            return setValue(value, forName: name)
+        }
+        
+        
+        /// Set an int64 value to the query parameter referenced by the given name. A query parameter
+        /// is defined by using the Expression's parameter(_ name: String) function.
+        ///
+        /// - Parameters:
+        ///   - value: The int64 value.
+        ///   - name: The parameter name.
+        /// - Returns: The Parameters object.
+        @discardableResult public func setInt64(_ value: Int64, forName name: String) -> Self {
+            return setValue(value, forName: name)
+        }
+        
+        
+        /// Set a String value to the query parameter referenced by the given name. A query parameter
+        /// is defined by using the Expression's parameter(_ name: String) function.
+        ///
+        /// - Parameters:
+        ///   - value: The String value.
+        ///   - name: The parameter name.
+        /// - Returns: The Parameters object.
+        @discardableResult public func setString(_ value: String?, forName name: String) -> Self {
+            return setValue(value, forName: name)
+        }
+        
+        
+        /// Set a value to the query parameter referenced by the given name. A query parameter
+        /// is defined by using the Expression's parameter(_ name: String) function.
+        ///
+        /// - Parameters:
+        ///   - value: The value.
+        ///   - name: The parameter name.
+        /// - Returns: The Parameters object.
+        @discardableResult public func setValue(_ value: Any?, forName name: String) -> Self {
+            params[name] = value
+            return self
+        }
+        
+        
+        /// Build a Parameters object with the current parameters.
+        ///
+        /// - Returns: The Parameters object.
+        public func build() -> Parameters {
+            return Parameters(withBuilder: self)
+        }
+        
+        
+        // MARK: Internal
+        
+        
+        var params: Dictionary<String, Any>
     }
     
-    
-    /// Set a double value to the query parameter referenced by the given name. A query parameter
-    /// is defined by using the Expression's parameter(_ name: String) function.
-    ///
-    /// - Parameters:
-    ///   - value: The double value.
-    ///   - name: The parameter name.
-    /// - Returns: The Parameters object.
-    @discardableResult public mutating func setDouble(_ value: Double, forName name: String) -> Parameters {
-        return setValue(value, forName: name)
-    }
-    
-    
-    /// Set a float value to the query parameter referenced by the given name. A query parameter
-    /// is defined by using the Expression's parameter(_ name: String) function.
-    ///
-    /// - Parameters:
-    ///   - value: The float value.
-    ///   - name: The parameter name.
-    /// - Returns: The Parameters object.
-    @discardableResult public mutating func setFloat(_ value: Float, forName name: String) -> Parameters {
-        return setValue(value, forName: name)
-    }
-    
-    
-    /// Set an int value to the query parameter referenced by the given name. A query parameter
-    /// is defined by using the Expression's parameter(_ name: String) function.
-    ///
-    /// - Parameters:
-    ///   - value: The int value.
-    ///   - name: The parameter name.
-    /// - Returns: The Parameters object.
-    @discardableResult public mutating func setInt(_ value: Int, forName name: String) -> Parameters {
-        return setValue(value, forName: name)
-    }
-    
-    
-    /// Set an int64 value to the query parameter referenced by the given name. A query parameter
-    /// is defined by using the Expression's parameter(_ name: String) function.
-    ///
-    /// - Parameters:
-    ///   - value: The int64 value.
-    ///   - name: The parameter name.
-    /// - Returns: The Parameters object.
-    @discardableResult public mutating func setInt64(_ value: Int64, forName name: String) -> Parameters {
-        return setValue(value, forName: name)
-    }
-    
-    
-    /// Set a String value to the query parameter referenced by the given name. A query parameter
-    /// is defined by using the Expression's parameter(_ name: String) function.
-    ///
-    /// - Parameters:
-    ///   - value: The String value.
-    ///   - name: The parameter name.
-    /// - Returns: The Parameters object.
-    @discardableResult public mutating func setString(_ value: String?, forName name: String) -> Parameters {
-        return setValue(value, forName: name)
-    }
-
-    
-    /// Set a value to the query parameter referenced by the given name. A query parameter
-    /// is defined by using the Expression's parameter(_ name: String) function.
-    ///
-    /// - Parameters:
-    ///   - value: The value.
-    ///   - name: The parameter name.
-    /// - Returns: The Parameters object.
-    @discardableResult public mutating func setValue(_ value: Any?, forName name: String) -> Parameters {
-        params[name] = value
-        return self
-    }
     
     // MARK: Internal
     
-    var params: [String: Any] = [:]
     
-    init(params: Dictionary<String, Any>) {
-        self.params = params
+    let params: Dictionary<String, Any>
+    
+    
+    init(withBuilder builder:Builder) {
+        self.params = builder.params
     }
     
-    func copy() -> Parameters {
-        return Parameters(params: params)
-    }
     
     func toImpl() -> CBLQueryParameters {
-        let impl = CBLQueryParameters()
-        for (name, value) in self.params {
-            impl.setValue(value, forName: name)
+        let p = CBLQueryParameters { (builder) in
+            for (name, value) in self.params {
+                builder.setValue(value, forName: name)
+            }
         }
-        return impl
+        return p
     }
     
 }

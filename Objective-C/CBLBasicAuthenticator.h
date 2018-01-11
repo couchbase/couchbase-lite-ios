@@ -27,6 +27,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** Initializes the CBLBasicAuthenticator with the given username and password. */
 - (instancetype) initWithUsername: (NSString*)username password: (NSString*)password;
 
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 NS_ASSUME_NONNULL_END

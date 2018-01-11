@@ -59,13 +59,16 @@ typedef struct {
 @interface CBLReplicator : NSObject
 
 /** The replicator's configuration. */
-@property (readonly, copy, nonatomic) CBLReplicatorConfiguration* config;
+@property (readonly, nonatomic) CBLReplicatorConfiguration* config;
 
 /** The replicator's current status: its activity level and progress. Observable. */
 @property (readonly, nonatomic) CBLReplicatorStatus* status;
 
 /** Initializes a replicator with the given configuration. */
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config;
+
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
 
 /** 
  Starts the replicator. This method returns immediately; the replicator runs asynchronously

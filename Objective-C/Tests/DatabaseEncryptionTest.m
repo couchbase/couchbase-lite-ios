@@ -25,19 +25,18 @@
 
 
 - (CBLDatabase*) openSeekritWithPassword: (nullable NSString*)password error: (NSError**)error {
-    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
-    if (password)
-        config.encryptionKey = [[CBLEncryptionKey alloc] initWithPassword: password];
-    config.directory = self.directory;
+    CBLDatabaseConfiguration* config =
+        [[CBLDatabaseConfiguration alloc] initWithBlock:
+            ^(CBLDatabaseConfigurationBuilder* builder) {
+                if (password)
+                    builder.encryptionKey = [[CBLEncryptionKey alloc] initWithPassword: password];
+                builder.directory = self.directory;
+            }];
     return [[CBLDatabase alloc] initWithName: @"seekrit" config: config error: error];
 }
 
 
 - (void) testUnEncryptedDatabase {
-    // Create unencrypted database:
-    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
-    config.directory = self.directory;
-    
     NSError* error;
     _seekrit = [self openSeekritWithPassword: nil error: &error];
     Assert(_seekrit, @"Failed to create unencrypted db: %@", error);
@@ -124,14 +123,19 @@
     
     // Create a doc and then update it:
     CBLMutableDocument* doc = [self createDocument: nil data: @{@"answer": @(42)}];
-    Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
+    CBLDocument* savedDoc = [_seekrit saveDocument: doc error: &error];
+    Assert(savedDoc, @"Error when save a document: %@", error);
+    
+    doc = [savedDoc toMutable];
     [doc setValue: @(84) forKey: @"answer"];
-    Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
+    savedDoc = [_seekrit saveDocument: doc error: &error];
+    Assert(savedDoc, @"Error when save a document: %@", error);
     
     // Compact:
     Assert([_seekrit compact: &error], @"Compaction failed: %@", error);
     
     // Update the document again:
+    doc = [savedDoc toMutable];
     [doc setValue: @(85) forKey: @"answer"];
     Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
     

@@ -20,7 +20,7 @@ public enum EncryptionKey {
     case key (Data)
     case password (String)
     
-    var asObject: CBLEncryptionKey {
+    var impl: CBLEncryptionKey {
         switch (self) {
         case .key (let data):
             return CBLEncryptionKey(key: data)
@@ -31,79 +31,140 @@ public enum EncryptionKey {
 }
 
 
-/// Options for opening a database. All properties default to NO or nil.
-public struct DatabaseConfiguration {
+/// Configuration for opening a database.
+public final class DatabaseConfiguration {
     
-    /// Initialize a DatabaseConfiguration with the default configuration.
-    public init() { }
+    /// Path to the directory to store the database in.
+    public let directory: String
     
-    /// Path to the directory to store the database in. If the directory doesn't already exist it
-    /// will be created when the database is opened.
-    /// A nil value (the default) means to use the default directory, in Application Support. You
-    /// won't usually need to change this.
-    public var directory: String? {
-        get {
-            return _directory ?? CBLDatabaseConfiguration().directory
+    /// The conflict resolver for this database.
+    public let conflictResolver: ConflictResolver
+    
+    /// The key to encrypt the database with.
+    public let encryptionKey: EncryptionKey?
+    
+    /// The file protection options (iOS only.)
+    public let fileProtection: NSData.WritingOptions
+    
+    /// The builder for the DatabaseConfiguration.
+    public final class Builder {
+        
+        /// Initializes a DatabaseConfiguration's builder with default values.
+        public init() { }
+        
+        
+        /// Initializes a DatabaseConfiguration's builder with a configuration.
+        ///
+        /// - Parameter config: The configuration.
+        public init(config: DatabaseConfiguration?) {
+            if let c = config {
+                self.directory = c.directory
+                self.conflictResolver = c.conflictResolver
+                self.encryptionKey = c.encryptionKey
+                self.fileProtection = c.fileProtection
+            }
         }
-        set {
-            _directory = newValue
+        
+        
+        /// Sets path to the directory to store the database in. If the directory
+        /// doesn't already exist it will be created when the database is opened.
+        /// The default directory, in Application Support.
+        ///
+        /// - Parameter directory: The directory.
+        /// - Returns: The self object.
+        @discardableResult public func setDirectory(_ directory: String) -> Self {
+            self.directory = directory
+            return self
         }
+        
+        
+        /// Sets a custom conflict resolver used for solving the conflicts
+        /// when saving or deleting documents in the database. Without setting the
+        /// conflict resolver, CouchbaseLite will use the default conflict
+        /// resolver.
+        ///
+        /// - Parameter conflictResolver: The conflict resolver.
+        /// - Returns: The self object.
+        @discardableResult public func setConflictResolver(_ conflictResolver: ConflictResolver) -> Self {
+            self.conflictResolver = conflictResolver
+            return self
+        }
+        
+        
+        /// Sets a key to encrypt the database with. If the database does not
+        /// exist and is being created, it will use this key, and the same key
+        /// must be given every time it's opened. A default value is nil, which
+        /// means the database is unencrypted.
+        ///
+        /// - Parameter encryptionKey: The encryption key.
+        /// - Returns: The self object.
+        @discardableResult public func setEncryptionKey(_ encryptionKey: EncryptionKey?) -> Self {
+            self.encryptionKey = encryptionKey
+            return self
+        }
+        
+        
+        /// Sets file protection options (iOS only.) Defaults to
+        /// whatever file protection settings you've specified in your app's
+        /// entitlements. Specifying a nonzero value here overrides those settings
+        /// for the database files.
+        ///
+        /// If file protection is at the highest level, NSDataWritingFileProtectionCompleteUnlessOpen
+        /// or NSDataWritingFileProtectionComplete, it will not be possible to
+        /// read or write the database when the device is locked. This can make
+        /// it impossible to run replications in the background or respond to
+        /// push notifications.
+        ///
+        /// - Parameter fileProtection: The file protection options.
+        /// - Returns: The self object.
+        @discardableResult public func setFileProtection(_ fileProtection: NSData.WritingOptions) -> Self {
+            self.fileProtection = fileProtection
+            return self
+        }
+        
+        
+        /// Builds a database configuration object from the current settings.
+        ///
+        /// - Returns: The self object.
+        public func build() -> DatabaseConfiguration {
+            return DatabaseConfiguration(withBuilder: self)
+        }
+        
+        
+        // Mark: Internal
+        
+        var directory = CBLDatabaseConfiguration().directory
+        
+        var conflictResolver: ConflictResolver = DefaultConflictResolver()
+        
+        var encryptionKey: EncryptionKey?
+        
+        var fileProtection: NSData.WritingOptions = []
     }
     
-    
-    /// The conflict resolver for this replicator. Setting nil means using the default
-    /// conflict resolver, where the revision with more history wins.
-    public var conflictResolver: ConflictResolver? {
-        get {
-            return _conflictResolver ?? DefaultConflictResolver()
-        }
-        set {
-            _conflictResolver = newValue
-        }
-    }
-    
-    /// A key to encrypt the database with. If the database does not exist and is being created, it
-    /// will use this key, and the same key must be given every time it's opened.
-    ///
-    /// * The primary form of key is a Data object 32 bytes in length: this is interpreted as a raw
-    ///   AES-256 key. To create a key, generate random data using a secure cryptographic randomizer
-    ///   like SecRandomCopyBytes or CCRandomGenerateBytes.
-    /// * Alternatively, the value may be a string containing a password. This will be run through
-    ///   64,000 rounds of the PBKDF algorithm to securely convert it into an AES-256 key.
-    /// * A default nil value, of course, means the database is unencrypted.
-    public var encryptionKey: EncryptionKey?
-    
-    /// protection
-    /// File protection/encryption options (iOS only.)
-    /// Defaults to whatever file protection settings you've specified in your app's entitlements.
-    /// Specifying a nonzero value here overrides those settings for the database files.
-    /// If file protection is at the highest level, NSDataWritingFileProtectionCompleteUnlessOpen or
-    /// NSDataWritingFileProtectionComplete, it will not be possible to read or write the database
-    /// when the device is locked. This can make it impossible to run replications in the background
-    /// or respond to push notifications.
-    public var fileProtection: NSData.WritingOptions = []
     
     // MARK: Internal
     
-    var _directory: String?
     
-    var _conflictResolver: ConflictResolver?
+    init(withBuilder builder: Builder) {
+        self.directory = builder.directory
+        self.conflictResolver = builder.conflictResolver
+        self.encryptionKey = builder.encryptionKey
+        self.fileProtection = builder.fileProtection
+    }
+    
     
     func toImpl() -> CBLDatabaseConfiguration {
-        let c = CBLDatabaseConfiguration()
-        
-        if let dir = _directory {
-            c.directory = dir
+        let c = CBLDatabaseConfiguration.init { (builder) in
+            builder.directory = self.directory
+            if !(self.conflictResolver is DefaultConflictResolver) {
+                builder.conflictResolver =
+                    BridgingConflictResolver(resolver: self.conflictResolver)
+            }
+            builder.encryptionKey = self.encryptionKey?.impl
+            builder.fileProtection = self.fileProtection
         }
-        
-        if let r = self.conflictResolver, !(r is DefaultConflictResolver) {
-            c.conflictResolver = BridgingConflictResolver(resolver: r)
-        }
-        
-        c.encryptionKey = self.encryptionKey?.asObject
-        
-        c.fileProtection = self.fileProtection
-        
         return c
     }
+    
 }

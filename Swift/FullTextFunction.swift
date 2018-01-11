@@ -9,7 +9,7 @@
 import Foundation
 
 /// Full-text function.
-public class FullTextFunction {
+public final class FullTextFunction {
     
     /// Creates a full-text rank function with the given full-text index name.
     /// The rank function indicates how well the current query result matches

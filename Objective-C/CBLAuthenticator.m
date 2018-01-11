@@ -11,6 +11,10 @@
 
 @implementation CBLAuthenticator
 
+- (instancetype) initWithNone {
+    return [super init];
+}
+
 - (void) authenticate: (NSMutableDictionary*)options {
     // Subclass should implement this method
 }

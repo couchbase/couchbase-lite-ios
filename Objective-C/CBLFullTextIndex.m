@@ -18,7 +18,7 @@
 - (instancetype) initWithItems: (NSArray<CBLFullTextIndexItem*>*)items
                        options: (nullable CBLFullTextIndexOptions*)options
 {
-    self = [super init];
+    self = [super initWithNone];
     if (self) {
         _items = items;
         _options = options;

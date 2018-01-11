@@ -15,7 +15,7 @@
 
 
 - (instancetype) initWithUsername: (NSString*)username password: (NSString*)password {
-    self = [super init];
+    self = [super initWithNone];
     if (self) {
         _username = username;
         _password = password;

@@ -144,26 +144,19 @@
     AssertEqual(config1.fileProtection, 0);
 #endif
     
-    // Default + Copy:
-    CBLDatabaseConfiguration* config1a = [config1 copy];
-    AssertNotNil(config1a.directory);
-    Assert(config1a.directory.length > 0);
-    AssertNotNil(config1a.conflictResolver);
-    AssertNil(config1a.encryptionKey);
-#if TARGET_OS_IPHONE
-    AssertEqual(config1a.fileProtection, 0);
-#endif
-    
     // Custom:
     CBLEncryptionKey* key = [[CBLEncryptionKey alloc] initWithPassword: @"key"];
     DummyResolver *resolver = [DummyResolver new];
-    CBLDatabaseConfiguration* config2 = [[CBLDatabaseConfiguration alloc] init];
-    config2.directory = @"/tmp/mydb";
-    config2.conflictResolver = resolver;
-    config2.encryptionKey = key;
+    CBLDatabaseConfiguration* config2 =
+        [[CBLDatabaseConfiguration alloc] initWithBlock:
+            ^(CBLDatabaseConfigurationBuilder *builder) {
+                builder.directory = @"/tmp/mydb";
+                builder.conflictResolver = resolver;
+                builder.encryptionKey = key;
 #if TARGET_OS_IPHONE
-    config2.fileProtection = NSDataWritingFileProtectionComplete;
+                builder.fileProtection = NSDataWritingFileProtectionComplete;
 #endif
+            }];
     
     AssertEqualObjects(config2.directory, @"/tmp/mydb");
     AssertEqual(config2.conflictResolver, resolver);
@@ -171,53 +164,25 @@
 #if TARGET_OS_IPHONE
     AssertEqual(config2.fileProtection, NSDataWritingFileProtectionComplete);
 #endif
-    
-    // Custom + Copy:
-    CBLDatabaseConfiguration* config2a = [config2 copy];
-    AssertEqualObjects(config2a.directory, @"/tmp/mydb");
-    AssertEqual(config2a.conflictResolver, resolver);
-    AssertEqualObjects(config2a.encryptionKey, key);
-#if TARGET_OS_IPHONE
-    AssertEqual(config2a.fileProtection, NSDataWritingFileProtectionComplete);
-#endif
 }
 
 
 - (void) testGetSetConfiguration {
-    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
+    CBLDatabaseConfiguration* config =
+        [[CBLDatabaseConfiguration alloc] initWithBlock:
+            ^(CBLDatabaseConfigurationBuilder * _Nonnull builder) {
 #if !TARGET_OS_IPHONE
-    // MacOS needs directory as there is no bundle in mac unit test:
-    config.directory = _db.config.directory;
+                // MacOS needs directory as there is no bundle in mac unit test:
+                config.directory = _db.config.directory;
 #endif
-    
+    }];
+
     NSError* error;
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db"
                                                  config: config
                                                   error: &error];
     AssertNotNil(db.config);
-    Assert(db.config != config);
-    AssertEqualObjects(db.config.directory, config.directory);
-    AssertNotNil(db.config.conflictResolver);
-    AssertEqual(db.config.encryptionKey, config.encryptionKey);
-    AssertEqual(db.config.fileProtection, config.fileProtection);
-}
-
-
-- (void) testConfigurationIsCopiedWhenGetSet {
-    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
-#if !TARGET_OS_IPHONE
-    // MacOS needs directory as there is no bundle in mac unit test:
-    config.directory = _db.config.directory;
-#endif
-    
-    NSError* error;
-    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db"
-                                                 config: config
-                                                  error: &error];
-    config.conflictResolver = [DummyResolver new];
-    AssertNotNil(db.config);
-    Assert(db.config != config);
-    Assert(db.config.conflictResolver != config.conflictResolver);
+    Assert(db.config == config);
 }
 
 
@@ -286,8 +251,12 @@
     
     // create db with custom directory
     NSError* error;
-    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
-    config.directory = dir;
+    CBLDatabaseConfiguration* config =
+        [[CBLDatabaseConfiguration alloc] initWithBlock:
+            ^(CBLDatabaseConfigurationBuilder *builder) {
+                builder.directory = dir;
+            }];
+    
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNil(error);
     AssertNotNil(db, @"Couldn't open db: %@", error);
@@ -334,7 +303,7 @@
     
     // get doc from other DB.
     AssertEqual(1, (long)otherDB.count);
-    Assert([otherDB containsDocumentWithID:docID]);
+    AssertNotNil([otherDB documentWithID: docID]);
     
     [self verifyGetDocument: otherDB docID: docID];
     
@@ -393,7 +362,7 @@
     [self generateDocument: docID];
     
     AssertEqual(1, (long)self.db.count);
-    Assert([self.db containsDocumentWithID: docID]);
+    AssertNotNil([self.db documentWithID: docID]);
     
     [self verifyGetDocument: docID];
 }
@@ -405,7 +374,7 @@
     [self generateDocument: docID];
     
     AssertEqual(1, (long)self.db.count);
-    Assert([self.db containsDocumentWithID: docID]);
+    AssertNotNil([self.db documentWithID: docID]);
     
     [self verifyGetDocument: docID];
 }
@@ -421,7 +390,7 @@
     [self saveDocument: doc];
     
     AssertEqual(1, (long)self.db.count);
-    Assert([self.db containsDocumentWithID: docID]);
+    AssertNotNil([self.db documentWithID: docID]);
     
     // verify
     [self verifyGetDocument: docID value: 2];
@@ -534,7 +503,7 @@
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: @1 forKey: @"key"];
     
-    [self expectError: @"CouchbaseLite" code: 404 in: ^BOOL(NSError** error) {
+    [self expectError: @"CouchbaseLite" code: 405 in: ^BOOL(NSError** error) {
         return [self.db deleteDocument: doc error: error];
     }];
     AssertEqual(0, (long)self.db.count);
@@ -550,35 +519,45 @@
     Assert([self.db deleteDocument: doc error: &error]);
     AssertNil(error);
     AssertEqual(0, (long)self.db.count);
-    
-    doc = [self.db documentWithID: docID];
-    AssertNil(doc);
+    AssertNil([self.db documentWithID: docID]);
 }
 
 
 - (void) testDeleteSameDocTwice {
-    // store doc
+    // Store doc:
     NSString* docID = @"doc1";
     CBLDocument* doc = [self generateDocument:docID];
     
-    // first time deletion
+    // First time deletion:
     NSError* error;
     Assert([self.db deleteDocument: doc error: &error]);
     AssertNil(error);
     AssertEqual(0, (long)self.db.count);
+    AssertNil([self.db documentWithID: docID]);
     
-    doc = [self.db documentWithID: docID];
-    AssertNil(doc);
-    
-    // second time deletion
-    [self expectError: @"CouchbaseLite" code: 404 in: ^BOOL(NSError** err) {
-        return [self.db deleteDocument: doc error: err];
-    }];
-    
-    doc = [self.db documentWithID: docID];
-    AssertNil(doc);
+    // Second time deletion:
+    Assert([self.db deleteDocument: doc error: &error]);
+    AssertNil([self.db documentWithID: docID]);
 }
 
+
+- (void) testDeleteNonExistingDoc {
+    // Store doc:
+    NSString* docID = @"doc1";
+    CBLDocument* doc = [self generateDocument:docID];
+    
+    // Purge doc:
+    NSError* error;
+    Assert([self.db purgeDocument: doc error: &error]);
+    AssertEqual(0, (long)self.db.count);
+    AssertNil([self.db documentWithID: docID]);
+    
+    // Delete doc
+    Assert([self.db deleteDocument: doc error: &error]);
+    AssertNil(error);
+    AssertEqual(0, (long)self.db.count);
+    AssertNil([self.db documentWithID: docID]);
+}
 
 - (void) testDeleteDocInBatch {
     // save 10 docs
@@ -635,7 +614,7 @@
 - (void) testPurgePreSaveDoc {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     
-    [self expectError: @"CouchbaseLite" code: 404 in: ^BOOL(NSError** error) {
+    [self expectError: @"CouchbaseLite" code: 405 in: ^BOOL(NSError** error) {
         return [self.db purgeDocument: doc error: error];
     }];
     AssertEqual(0, (long)self.db.count);
@@ -663,7 +642,7 @@
     AssertNil(error);
     AssertNotNil(otherDB);
     Assert(otherDB != self.db);
-    Assert([otherDB containsDocumentWithID:docID]);
+    AssertNotNil([otherDB documentWithID: docID]);
     AssertEqual(1, (long)otherDB.count);
     
     // purge document against other db instance
@@ -689,7 +668,7 @@
     AssertNil(error);
     AssertNotNil(otherDB);
     Assert(otherDB != self.db);
-    AssertFalse([otherDB containsDocumentWithID: docID]);
+    AssertNil([otherDB documentWithID: docID]);
     AssertEqual(0, (long)otherDB.count);
     
     // purge document against other db
@@ -1002,8 +981,13 @@
     // create db with custom directory
     NSError* error;
     NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
-    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
-    config.directory = dir;
+    
+    CBLDatabaseConfiguration* config =
+        [[CBLDatabaseConfiguration alloc] initWithBlock:
+            ^(CBLDatabaseConfigurationBuilder *builder) {
+                builder.directory = dir;
+            }];
+    
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
     AssertNil(error);
@@ -1023,8 +1007,11 @@
     // create db with custom directory
     NSError* error;
     NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
-    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
-    config.directory = dir;
+    CBLDatabaseConfiguration* config =
+        [[CBLDatabaseConfiguration alloc] initWithBlock:
+            ^(CBLDatabaseConfigurationBuilder *builder) {
+                builder.directory = dir;
+            }];
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
     AssertNil(error);
@@ -1082,8 +1069,11 @@
     AssertFalse([CBLDatabase databaseExists:@"db" inDirectory:dir]);
     
     // create db with custom directory
-    CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
-    config.directory = dir;
+    CBLDatabaseConfiguration* config =
+        [[CBLDatabaseConfiguration alloc] initWithBlock:
+            ^(CBLDatabaseConfigurationBuilder *builder) {
+                builder.directory = dir;
+            }];
     CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"db" config: config error: &error];
     AssertNotNil(db);
     AssertNil(error);

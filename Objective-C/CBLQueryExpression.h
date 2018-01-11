@@ -37,6 +37,21 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (CBLQueryExpression*) property: (NSString*)property from: (nullable NSString*)alias;
 
+/**
+ Creates a * expression to express all properties.
+
+ @return The star expression.
+ */
++ (CBLQueryExpression*) all;
+
+/**
+ Creates a * expression to express all properties of the given datasource.
+
+ @param alias The data source alias name.
+ @return The star expression.
+ */
++ (CBLQueryExpression*) allFrom: (nullable NSString*)alias;
+
 #pragma mark - Parameter:
 
 /** 
@@ -46,20 +61,6 @@ NS_ASSUME_NONNULL_BEGIN
  @return The parameter expression.
  */
 + (CBLQueryExpression*) parameterNamed: (NSString*)name;
-
-#pragma mark - Collation:
-
-/**
- Creates a collate expression with the given Collation specification. Commonly
- the collate expression is used in the Order BY clause or the string comparison
- expression (e.g. equalTo or lessThan) to specify how the two strings are
- compared.
-
- @param collation The Collation object.
- @return The collate expression.
- */
-- (CBLQueryExpression*) collate: (CBLQueryCollation*)collation;
-
 
 #pragma mark - Unary operators:
 
@@ -80,14 +81,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (CBLQueryExpression*) not: (id)expression;
 
 #pragma mark - Arithmetic Operators:
-
-/** 
- Creates a concat expression to concatenate the current expression with the given expression.
- 
- @param expression The expression to be concatenated with.
- @return The concat expression.
- */
-- (CBLQueryExpression*) concat: (id)expression;
 
 /** 
  Creates a multiply expression to multiply the current expression by the given expression.
@@ -185,24 +178,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (CBLQueryExpression*) notEqualTo: (nullable id)expression;
 
-#pragma mark - Bitwise operators:
-
-/** 
- Creates a logical AND expression that performs logical AND operation with the current expression.
- 
- @param expression The expression to AND with the current expression.
- @return The logical AND expression.
- */
-- (CBLQueryExpression*) andExpression: (id)expression;
-
-/** 
- Creates a logical OR expression that performs logical OR operation with the current expression.
- 
- @param expression The expression to OR with the current expression.
- @return The logical OR Expression.
- */
-- (CBLQueryExpression*) orExpression: (id)expression;
-
 #pragma mark - Like operators:
 
 /** 
@@ -225,24 +200,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (CBLQueryExpression*) regex: (id)expression;
 
-#pragma mark - NULL check operators:
-
-/** 
- Creates an IS NULL OR MISSING expression that evaluates whether or not the current expression
- is null or missing.
- 
- @return The IS NULL OR MISSING expression.
- */
-- (CBLQueryExpression*) isNullOrMissing;
-
-/** 
- Creates an IS NOT NULL OR MISSING expression that evaluates whether or not the current expression
- is NOT null or missing.
- 
- @return The IS NOT NULL OR MISSING expression.
- */
-- (CBLQueryExpression*) notNullOrMissing;
-
 #pragma mark - IS operators:
 
 /**
@@ -261,6 +218,42 @@ NS_ASSUME_NONNULL_BEGIN
  @return The IS NOT expression.
  */
 - (CBLQueryExpression*) isNot: (id)expression;
+
+#pragma mark - NULL or MISSING check operators:
+
+/** 
+ Creates an IS NULL OR MISSING expression that evaluates whether or not the current expression
+ is null or missing.
+ 
+ @return The IS NULL OR MISSING expression.
+ */
+- (CBLQueryExpression*) isNullOrMissing;
+
+/** 
+ Creates an IS NOT NULL OR MISSING expression that evaluates whether or not the current expression
+ is NOT null or missing.
+ 
+ @return The IS NOT NULL OR MISSING expression.
+ */
+- (CBLQueryExpression*) notNullOrMissing;
+
+#pragma mark - Bitwise operators:
+
+/**
+ Creates a logical AND expression that performs logical AND operation with the current expression.
+ 
+ @param expression The expression to AND with the current expression.
+ @return The logical AND expression.
+ */
+- (CBLQueryExpression*) andExpression: (id)expression;
+
+/**
+ Creates a logical OR expression that performs logical OR operation with the current expression.
+ 
+ @param expression The expression to OR with the current expression.
+ @return The logical OR Expression.
+ */
+- (CBLQueryExpression*) orExpression: (id)expression;
 
 #pragma mark - Aggregate operators:
 
@@ -285,14 +278,18 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (CBLQueryExpression*) in: (NSArray*)expressions;
 
-/** 
- Creates a NOT IN expression that evaluates whether or not the current expression is not in the
- given expressions.
+#pragma mark - Collation:
+
+/**
+ Creates a collate expression with the given Collation specification. Commonly
+ the collate expression is used in the Order BY clause or the string comparison
+ expression (e.g. equalTo or lessThan) to specify how the two strings are
+ compared.
  
- @param expressions The expression array to be evaluated with.
- @return The IN exprssion.
+ @param collation The Collation object.
+ @return The collate expression.
  */
-- (CBLQueryExpression*) notIn: (NSArray*)expressions;
+- (CBLQueryExpression*) collate: (CBLQueryCollation*)collation;
 
 /** Not available. */
 - (instancetype) init NS_UNAVAILABLE;

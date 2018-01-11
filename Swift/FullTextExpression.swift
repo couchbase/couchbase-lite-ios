@@ -9,14 +9,14 @@
 import Foundation
 
 /// Full-text expression.
-public class FullTextExpression {
+public final class FullTextExpression {
     
     /// Creates a Full-text expression with the given full-text index name.
     ///
     /// - Parameter name: The full-text index name.
     /// - Returns: The FullTextExpression.
     public static func index(_ name: String) -> FullTextExpression {
-        return FullTextExpression(withIndexName: name)
+        return FullTextExpression(withName: name)
     }
     
     
@@ -25,17 +25,17 @@ public class FullTextExpression {
     /// - Parameter text: The search text.
     /// - Returns: The full-text match expression.
     public func match(_ text: String) -> Expression {
-        return Expression(CBLQueryFullTextExpression.index(self.indexName).match(text))
+        return Expression(CBLQueryFullTextExpression.index(withName: self.name).match(text))
     }
     
     
     // MARK: Internal
     
     
-    let indexName: String
+    let name: String
     
-    init(withIndexName indexName: String) {
-        self.indexName = indexName
+    init(withName name: String) {
+        self.name = name
     }
     
 }

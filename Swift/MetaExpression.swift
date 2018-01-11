@@ -9,7 +9,7 @@
 import Foundation
 
 /// A meta property expression.
-public class MetaExpression: Expression {
+public final class MetaExpression: Expression {
     
     /// Specifies an alias name of the data source to query the data from. */
     ///

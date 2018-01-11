@@ -338,42 +338,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (CBLQueryExpression*) upper:(id)expression;
 
-#pragma mark - Type
-
-/** 
- Creates a ISARRAY(expr) function that evaluates whether the given expression
- is an array value of not.
- @param expression The expression.
- @return The ISARRAY(expr) function.
- */
-+ (CBLQueryExpression*) isArray:(id)expression;
-
-/** 
- Creates a ISNUMBER(expr) function that evaluates whether the given expression
- is a numeric value of not.
- 
- @param expression The expression.
- @return The ISNUMBER(expr) function.
- */
-+ (CBLQueryExpression*) isNumber:(id)expression;
-
-/**
- Creates a ISDICTIONARY(expr) function that evaluates whether the given expression
- is a dictionary of not.
- 
- @param expression The expression.
- @return The ISDICTIONARY(expr) function.
- */
-+ (CBLQueryExpression*) isDictionary:(id)expression;
-
-/** 
- Creates a ISSTRING(expr) function that evaluates whether the given expression
- is a string of not.
- 
- @param expression The expression.
- @return The ISSTRING(expr) function.
- */
-+ (CBLQueryExpression*) isString:(id)expression;
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

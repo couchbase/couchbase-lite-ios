@@ -22,6 +22,8 @@
 
 extern atomic_int gC4ExpectExceptions;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface CBLTestCase : XCTestCase {
 @protected
     CBLDatabase* _db;
@@ -33,7 +35,7 @@ extern atomic_int gC4ExpectExceptions;
 
 /** Default conflict resolver set to the database configuration when (re)opening 
     the default test database (.db property) or when calling the -openDBNamed:error: mehtod. */
-@property (nonatomic) id <CBLConflictResolver> conflictResolver;
+@property (nonatomic, nullable) id <CBLConflictResolver> conflictResolver;
 
 /** Open a database with the given name for testing. Note that the database will be opened at 
     the temp directory to avoid no bundle id issue when running the unit tests on Mac. */
@@ -46,10 +48,10 @@ extern atomic_int gC4ExpectExceptions;
 - (CBLMutableDocument*) createDocument;
 
 /** Create a new document with the given document ID. */
-- (CBLMutableDocument*) createDocument: (NSString*)documentID;
+- (CBLMutableDocument*) createDocument: (nullable NSString*)documentID;
 
 /** Create a new document with the given document ID and data. */
-- (CBLMutableDocument*) createDocument:(NSString *)documentID data: (NSDictionary*)data;
+- (CBLMutableDocument*) createDocument:(nullable NSString *)documentID data: (NSDictionary*)data;
 
 /** Save a document return a new instance of the document from the database. */
 - (CBLDocument*) saveDocument: (CBLMutableDocument*)document;
@@ -79,3 +81,5 @@ extern atomic_int gC4ExpectExceptions;
 - (void) expectException: (NSString*)name in: (void (^) (void))block;
 
 @end
+
+NS_ASSUME_NONNULL_END

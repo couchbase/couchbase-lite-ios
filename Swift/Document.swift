@@ -10,7 +10,7 @@ import Foundation
 
 
 /// Couchbase Lite document. The Document is immutable.
-public class Document : DictionaryProtocol, Equatable, Hashable {
+public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     
     /// The document's ID.
     public var id: String {

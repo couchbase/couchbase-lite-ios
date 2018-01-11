@@ -24,6 +24,14 @@ public class Expression {
     }
     
     
+    /// Creates a star expression.
+    ///
+    /// - Returns: A star expression.
+    public static func all() -> PropertyExpression {
+        return PropertyExpression(property: "")
+    }
+    
+    
     // MARK: Parameter
     
     
@@ -33,21 +41,6 @@ public class Expression {
     /// - Returns:  A parameter expression.
     public static func parameter(_ name: String) -> Expression {
         return Expression(CBLQueryExpression.parameterNamed(name))
-    }
-    
-    
-    // MARK: Collation
-    
-    
-    /// Creates a Collate expression with the given Collation specification. Commonly
-    /// the collate expression is used in the Order BY clause or the string comparison
-    /// expression (e.g. equalTo or lessThan) to specify how the two strings are
-    /// compared.
-    ///
-    /// - Parameter collation: The collation object.
-    /// - Returns: A Collate expression.
-    public func collate(_ collation: Collation) -> Expression {
-        return Expression(self.impl.collate(collation.impl!))
     }
     
     
@@ -183,29 +176,6 @@ public class Expression {
     }
     
     
-    // MARK: Bitwise operators
-    
-    
-    /// Creates a logical AND expression that performs logical AND operation with the current
-    /// expression.
-    ///
-    /// - Parameter expression: The expression to AND with the current expression.
-    /// - Returns: A logical AND expression.
-    public func and(_ expression: Any) -> Expression {
-        return Expression(self.impl.andExpression(Expression.toImpl(expression)))
-    }
-    
-    
-    /// Creates a logical OR expression that performs logical OR operation with the current
-    /// expression.
-    ///
-    /// - Parameter expression: The expression to OR with the current expression.
-    /// - Returns: A logical OR Expression.
-    public func or(_ expression: Any) -> Expression {
-        return Expression(self.impl.orExpression(Expression.toImpl(expression)))
-    }
-    
-    
     // MARK: Like operators
 
     
@@ -232,6 +202,26 @@ public class Expression {
     }
 
     
+    /// Creates an IS expression that evaluates whether or not the current expression is equal to
+    /// the given expression.
+    ///
+    /// - Parameter expression: The expression to be compared with the current expression.
+    /// - Returns: An IS expression.
+    public func `is`(_ expression: Any) -> Expression {
+        return Expression(self.impl.is(Expression.toImpl(expression)))
+    }
+    
+    
+    /// Creates an IS NOT expression that evaluates whether or not the current expression is not
+    /// equal to the given expression.
+    ///
+    /// - Parameter expression: The expression to be compared with the current expression.
+    /// - Returns: An IS NOT expression.
+    public func isNot(_ expression: Any) -> Expression {
+        return Expression(self.impl.isNot(to: Expression.toImpl(expression)))
+    }
+    
+    
     // MARK: NULL check operators.
     
  
@@ -253,23 +243,26 @@ public class Expression {
     }
     
     
-    /// Creates an IS expression that evaluates whether or not the current expression is equal to
-    /// the given expression.
+    // MARK: Bitwise operators
+    
+    
+    /// Creates a logical AND expression that performs logical AND operation with the current
+    /// expression.
     ///
-    /// - Parameter expression: The expression to be compared with the current expression.
-    /// - Returns: An IS expression.
-    public func `is`(_ expression: Any) -> Expression {
-        return Expression(self.impl.is(Expression.toImpl(expression)))
+    /// - Parameter expression: The expression to AND with the current expression.
+    /// - Returns: A logical AND expression.
+    public func and(_ expression: Any) -> Expression {
+        return Expression(self.impl.andExpression(Expression.toImpl(expression)))
     }
     
     
-    /// Creates an IS NOT expression that evaluates whether or not the current expression is not
-    /// equal to the given expression.
+    /// Creates a logical OR expression that performs logical OR operation with the current
+    /// expression.
     ///
-    /// - Parameter expression: The expression to be compared with the current expression.
-    /// - Returns: An IS NOT expression.
-    public func isNot(_ expression: Any) -> Expression {
-        return Expression(self.impl.isNot(to: Expression.toImpl(expression)))
+    /// - Parameter expression: The expression to OR with the current expression.
+    /// - Returns: A logical OR Expression.
+    public func or(_ expression: Any) -> Expression {
+        return Expression(self.impl.orExpression(Expression.toImpl(expression)))
     }
     
     // MARK: Aggregate operators
@@ -281,7 +274,7 @@ public class Expression {
     /// - Parameters:
     ///   - expression1: The inclusive lower bound expression.
     ///   - expression2: The inclusive upper bound expression.
-    /// - Returns: <#return value description#>
+    /// - Returns: A BETWEEN expression.
     public func between(_ expression1: Any, and expression2: Any) -> Expression {
         return Expression(self.impl.between(Expression.toImpl(expression1),
                                                    and: Expression.toImpl(expression2)))
@@ -305,17 +298,18 @@ public class Expression {
     }
     
     
-    /// Creates a NOT IN expression that evaluates whether or not the current expression is not
-    /// in the given expressions.
+    // MARK: Collation
+    
+    
+    /// Creates a Collate expression with the given Collation specification. Commonly
+    /// the collate expression is used in the Order BY clause or the string comparison
+    /// expression (e.g. equalTo or lessThan) to specify how the two strings are
+    /// compared.
     ///
-    /// - Parameter expressions: The expression array to be evaluated with.
-    /// - Returns: An IN exprssion.
-    public func notIn(_ expressions:[Any]) -> Expression {
-        var impls: [Any] = []
-        for exp in expressions {
-            impls.append(Expression.toImpl(exp))
-        }
-        return Expression(self.impl.not(in: impls))
+    /// - Parameter collation: The collation object.
+    /// - Returns: A Collate expression.
+    public func collate(_ collation: Collation) -> Expression {
+        return Expression(self.impl.collate(collation.impl!))
     }
     
     

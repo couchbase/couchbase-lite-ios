@@ -19,4 +19,7 @@
 /** The changed status. */
 @property (nonatomic, readonly) CBLReplicatorStatus* status;
 
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
 @end

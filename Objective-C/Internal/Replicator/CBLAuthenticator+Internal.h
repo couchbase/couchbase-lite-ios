@@ -12,6 +12,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLAuthenticator ()
 
+- (instancetype) initWithNone;
+
 - (void) authenticate: (NSMutableDictionary*)options;
 
 @end

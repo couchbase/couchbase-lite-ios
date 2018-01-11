@@ -33,6 +33,7 @@
     BOOL _isDeleted;
 }
 
+
 #pragma mark - Initializer
 
 + (instancetype) document {
@@ -186,6 +187,11 @@
 
 - (void) markAsDeleted {
     _isDeleted = YES;
+}
+
+
+- (void) markAsInvalidated {
+    _isInvalidated = YES;
 }
 
 

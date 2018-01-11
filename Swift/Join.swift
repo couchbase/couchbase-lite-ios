@@ -17,8 +17,8 @@ public class Join {
     ///
     /// - Parameter datasource: The DataSource object of the JOIN clause.
     /// - Returns: The On object used for specifying join conditions.
-    public static func join(_ datasource: DataSource) -> On {
-        return On(datasource: datasource, type: .inner)
+    public static func join(_ datasource: DataSource) -> JoinOn {
+        return JoinOn(datasource: datasource, type: .inner)
     }
     
     
@@ -27,8 +27,8 @@ public class Join {
     ///
     /// - Parameter datasource: The DataSource object of the JOIN clause.
     /// - Returns: The On object used for specifying join conditions.
-    public static func leftJoin(_ datasource: DataSource) -> On {
-        return On(datasource: datasource, type: .leftOuter)
+    public static func leftJoin(_ datasource: DataSource) -> JoinOn {
+        return JoinOn(datasource: datasource, type: .leftOuter)
     }
     
     
@@ -37,8 +37,8 @@ public class Join {
     ///
     /// - Parameter datasource: The DataSource object of the JOIN clause.
     /// - Returns: The On object used for specifying join conditions.
-    public static func leftOuterJoin(_ datasource: DataSource) -> On {
-        return On(datasource: datasource, type: .leftOuter)
+    public static func leftOuterJoin(_ datasource: DataSource) -> JoinOn {
+        return JoinOn(datasource: datasource, type: .leftOuter)
     }
     
     
@@ -47,8 +47,8 @@ public class Join {
     ///
     /// - Parameter datasource: The DataSource object of the JOIN clause.
     /// - Returns: The On object used for specifying join conditions.
-    public static func innerJoin(_ datasource: DataSource) -> On {
-        return On(datasource: datasource, type: .inner)
+    public static func innerJoin(_ datasource: DataSource) -> JoinOn {
+        return JoinOn(datasource: datasource, type: .inner)
     }
     
     
@@ -57,8 +57,8 @@ public class Join {
     ///
     /// - Parameter datasource: The DataSource object of the JOIN clause.
     /// - Returns: The On object used for specifying join conditions.
-    public static func crossJoin(_ datasource: DataSource) -> On {
-        return On(datasource: datasource, type: .cross)
+    public static func crossJoin(_ datasource: DataSource) -> Join {
+        return Join(impl: CBLQueryJoin.cross(datasource.impl))
     }
     
     // MARK: Internal
@@ -86,7 +86,7 @@ public class Join {
 }
 
 /// On component used for specifying join conditions.
-public final class On : Join {
+public final class JoinOn : Join {
     
     let datasource: DataSource
     
@@ -108,8 +108,6 @@ public final class On : Join {
         switch self.type {
         case .leftOuter:
             impl = CBLQueryJoin.leftOuterJoin(datasource.impl, on: expression.impl)
-        case .cross:
-            impl = CBLQueryJoin.cross(datasource.impl, on: expression.impl)
         default:
             impl = CBLQueryJoin.innerJoin(datasource.impl, on: expression.impl)
         }

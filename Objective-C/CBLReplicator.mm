@@ -9,6 +9,8 @@
 #import "CBLReplicator+Internal.h"
 #import "CBLReplicatorChange+Internal.h"
 #import "CBLReplicatorConfiguration.h"
+#import "CBLURLEndpoint.h"
+#import "CBLDatabaseEndpoint.h"
 
 #import "CBLChangeListenerToken.h"
 #import "CBLCoreBridge.h"
@@ -82,7 +84,7 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     self = [super init];
     if (self) {
         NSParameterAssert(config.database != nil && config.target != nil);
-        _config = [config copy];
+        _config = config;
         _dispatchQueue = dispatch_get_main_queue();
     }
     return self;
@@ -90,7 +92,7 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
 
 
 - (CBLReplicatorConfiguration*) config {
-    return [_config copy];
+    return _config;
 }
 
 
@@ -143,21 +145,22 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     // Target:
     C4Address addr;
     CBLDatabase* otherDB;
-    NSURL* remoteURL = $castIf(NSURL, _config.target);
+    CBLURLEndpoint* remoteURL = $castIf(CBLURLEndpoint, _config.target);
     CBLStringBytes dbName(remoteURL.path.lastPathComponent);
-    CBLStringBytes scheme(remoteURL.scheme);
+    CBLStringBytes scheme(remoteURL.isSecure ? @"blips" : @"blip");
     CBLStringBytes host(remoteURL.host);
     CBLStringBytes path(remoteURL.path.stringByDeletingLastPathComponent);
     if (remoteURL) {
         // Fill out the C4Address:
+        NSUInteger port = remoteURL.port >= 0 ? remoteURL.port : 0;
         addr = {
             .scheme = scheme,
             .hostname = host,
-            .port = (uint16_t)remoteURL.port.shortValue,
+            .port = (uint16_t)port,
             .path = path
         };
     } else {
-        otherDB = _config.target;
+        otherDB = ((CBLDatabaseEndpoint*)_config.target).database;
         Assert(otherDB);
     }
 
@@ -209,12 +212,12 @@ static C4ReplicatorMode mkmode(BOOL active, BOOL continuous) {
 
 
 static BOOL isPush(CBLReplicatorType type) {
-    return type == kCBLPushAndPull || type == kCBLPush;
+    return type == kCBLReplicatorPushAndPull || type == kCBLReplicatorPush;
 }
 
 
 static BOOL isPull(CBLReplicatorType type) {
-    return type == kCBLPushAndPull || type == kCBLPull;
+    return type == kCBLReplicatorPushAndPull || type == kCBLReplicatorPull;
 }
 
 

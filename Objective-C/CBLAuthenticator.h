@@ -14,4 +14,8 @@
  CBLAuthenticator is not meant to be subclassed by applications.
  */
 @interface CBLAuthenticator : NSObject
+
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
 @end

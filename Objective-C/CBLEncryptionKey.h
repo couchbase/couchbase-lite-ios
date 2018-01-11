@@ -17,7 +17,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface CBLEncryptionKey : NSObject
 
-
 /**
  Initializes the encryption key with a raw AES-256 key data which has 32 bytes in length.
  To create a key, generate random data using a secure cryptographic randomizer like
@@ -37,6 +36,10 @@ NS_ASSUME_NONNULL_BEGIN
  @return The CBLEncryptionKey object.
  */
 - (instancetype) initWithPassword: (NSString*)password;
+
+
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

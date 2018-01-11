@@ -10,7 +10,7 @@ import Foundation
 
 
 /// Function provies array functions.
-public class ArrayFunction {
+public final class ArrayFunction {
     
     /// Creates an ARRAY_CONTAINS(expr, value) function that checks whether the given array
     /// expression contains the given value or not.

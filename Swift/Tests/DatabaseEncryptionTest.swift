@@ -22,19 +22,14 @@ class DatabaseEncryptionTest: CBLTestCase {
     }
     
     func openSeekrit(password: String?) throws -> Database {
-        var config = DatabaseConfiguration()
-        if let passwd = password {
-            config.encryptionKey = EncryptionKey.password(passwd)
-        }
-        config.directory = self.directory
+        let config = DatabaseConfiguration.Builder()
+            .setEncryptionKey(password != nil ? EncryptionKey.password(password!) : nil)
+            .setDirectory(self.directory)
+            .build()
         return try Database(name: "seekrit", config: config)
     }
     
     func testUnEncryptedDatabase() throws {
-        // Create unencrypted database:
-        var config = DatabaseConfiguration()
-        config.directory = self.directory
-        
         seekrit = try openSeekrit(password: nil)
         
         let doc = createDocument(nil, data: ["answer": 42])
@@ -105,10 +100,10 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = try openSeekrit(password: "letmein")
         
         // Create a doc and then update it:
-        let doc = createDocument(nil, data: ["answer": 42])
-        try seekrit!.saveDocument(doc)
+        var doc = createDocument(nil, data: ["answer": 42])
+        doc = try seekrit!.saveDocument(doc).toMutable()
         doc.setValue(84, forKey: "answer")
-        try seekrit!.saveDocument(doc)
+        doc = try seekrit!.saveDocument(doc).toMutable()
         
         // Compact:
         try seekrit!.compact()

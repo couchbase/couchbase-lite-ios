@@ -82,9 +82,9 @@ class NotificationTest: CBLTestCase {
     
     
     func testAddSameChangeListeners() throws {
-        let doc1 = createDocument("doc1")
+        var doc1 = createDocument("doc1")
         doc1.setValue("Scott", forKey: "name")
-        try saveDocument(doc1)
+        doc1 = try saveDocument(doc1).toMutable()
         
         let x = self.expectation(description: "Got all changes")
         
@@ -114,9 +114,9 @@ class NotificationTest: CBLTestCase {
     
     
     func testRemoveDocumentChangeListener() throws {
-        let doc1 = createDocument("doc1")
+        var doc1 = createDocument("doc1")
         doc1.setValue("Scott", forKey: "name")
-        try saveDocument(doc1)
+        doc1 = try saveDocument(doc1).toMutable()
         
         let x1 = self.expectation(description: "change")
         
@@ -128,7 +128,7 @@ class NotificationTest: CBLTestCase {
         
         // Update doc1:
         doc1.setValue("Scott Tiger", forKey: "name")
-        try saveDocument(doc1)
+        doc1 = try saveDocument(doc1).toMutable()
         
         waitForExpectations(timeout: 5, handler: nil)
         

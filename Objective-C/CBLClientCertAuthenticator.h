@@ -32,6 +32,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** The identity reference that will be presented during SSL/TLS authentication. */
 @property (readonly, atomic, nullable) SecIdentityRef identity;
 
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 NS_ASSUME_NONNULL_END

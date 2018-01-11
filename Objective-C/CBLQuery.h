@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
  in the query. All parameters defined in the query must be given values
  before running the query, or the query will fail.
  */
-@property (nonatomic, copy, nullable) CBLQueryParameters* parameters;
+@property (nonatomic, nullable) CBLQueryParameters* parameters;
 
 // SELECT > FROM
 
@@ -485,6 +485,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
 
 
+/** Not available */
 - (instancetype) init NS_UNAVAILABLE;
 
 @end

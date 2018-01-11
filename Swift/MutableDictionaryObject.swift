@@ -57,7 +57,7 @@ protocol MutableDictionaryProtocol: DictionaryProtocol, MutableDictionaryFragmen
 
 
 /// MutableDictionaryObject provides access to dictionary data.
-public class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtocol {
+public final class MutableDictionaryObject: DictionaryObject, MutableDictionaryProtocol {
     
     // MARK: Initializers
     

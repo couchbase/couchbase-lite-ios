@@ -10,7 +10,7 @@ import Foundation
 
 
 /// Function provies query functions.
-public class Function {
+public final class Function {
     
     // MARK: Aggregation
     
@@ -377,49 +377,6 @@ public class Function {
     /// - Returns: The UPPER(expr) function.
     public static func upper(_ expression: Any) -> Expression {
         return Expression(CBLQueryFunction.upper(Expression.toImpl(expression)))
-    }
-    
-    
-    // Mark: Type
-    
-    
-    /// Creates a ISARRAY(expr) function that evaluates whether the given expression
-    /// is an array value of not.
-    ///
-    /// - Parameter expression: The expression
-    /// - Returns: The ISARRAY(expr) function.
-    public static func isArray(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.isArray(Expression.toImpl(expression)))
-    }
-    
-    
-    /// Creates a ISNUMBER(expr) function that evaluates whether the given expression
-    /// is a numeric value of not.
-    ///
-    /// - Parameter expression: The expression
-    /// - Returns: The ISNUMBER(expr) function.
-    public static func isNumber(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.isNumber(Expression.toImpl(expression)))
-    }
-    
-    
-    /// Creates a ISDICTIONARY(expr) function that evaluates whether the given expression
-    /// is a dictionary of not.
-    ///
-    /// - Parameter expression: The expression.
-    /// - Returns: The ISDICTIONARY(expr) function.
-    public static func isDictionary(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.isDictionary(Expression.toImpl(expression)))
-    }
-    
-    
-    /// Creates a ISSTRING(expr) function that evaluates whether the given expression
-    /// is a string of not.
-    ///
-    /// - Parameter expression: The expression.
-    /// - Returns: The ISSTRING(expr) function.
-    public static func isString(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.isString(Expression.toImpl(expression)))
     }
     
 }

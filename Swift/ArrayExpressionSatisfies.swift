@@ -17,7 +17,7 @@ import Foundation
 /// The Satisfies class represents the SATISFIES clause object in a quantified operator
 /// (ANY/ANY AND EVERY/EVERY <variable name> IN <expr> SATISFIES <expr>). The SATISFIES clause 
 /// is used for specifying an expression that will be used to evaluate each item in the array.
-public class ArrayExpressionSatisfies {
+public final class ArrayExpressionSatisfies {
     
     /// Creates a complete quantified operator with the given satisfies expression.
     ///

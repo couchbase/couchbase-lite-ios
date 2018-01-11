@@ -36,6 +36,10 @@ NS_ASSUME_NONNULL_BEGIN
 /** For conflict resolver to know that the document is being deleted. */
 - (void) markAsDeleted;
 
+/** For making as invalidated. The invalidated document is not allowed
+    to save or delete. */
+- (void) markAsInvalidated;
+
 @end
 
 //////////////////
@@ -44,6 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
     @protected
     CBLDictionary* _dict;
+    BOOL _isInvalidated;
 }
 
 @property (nonatomic, nullable) CBLDatabase* database;
@@ -62,6 +67,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLDict fleeceData;
 
+@property (nonatomic, readonly) BOOL isInvalidated;
 
 - (instancetype) initWithDatabase: (nullable CBLDatabase*)database
                        documentID: (NSString*)documentID

@@ -28,10 +28,20 @@
 }
 
 
-+ (CBLQueryExpression*) property: (NSString*)property from:(NSString *)alias {
++ (CBLQueryExpression*) property: (NSString*)property from: (NSString *)alias {
     return [[CBLPropertyExpression alloc] initWithKeyPath: property
                                                columnName: nil
                                                      from: alias];
+}
+
+
++ (CBLQueryExpression*) all {
+    return [self allFrom: nil];
+}
+
+
++ (CBLQueryExpression*) allFrom: (NSString*)alias {
+    return [CBLPropertyExpression allFrom: alias];
 }
 
 
@@ -40,14 +50,6 @@
 
 + (CBLQueryExpression*) parameterNamed: (NSString*)name {
     return [[CBLParameterExpression alloc] initWithName: name];
-}
-
-
-#pragma mark - Collation:
-
-
-- (CBLQueryExpression*) collate: (CBLQueryCollation*)collation {
-    return [[CBLCollationExpression alloc] initWithOperand: self collation: collation];
 }
 
 
@@ -66,11 +68,6 @@
 
 
 #pragma mark - Arithmetic Operators:
-
-
-- (CBLQueryExpression*) concat: (id)expression {
-    Assert(NO, @"Unsupported operation");
-}
 
 
 - (CBLQueryExpression*) multiply: (id)expression {
@@ -153,21 +150,6 @@
 }
 
 
-#pragma mark - Bitwise operators:
-
-
-- (CBLQueryExpression*) andExpression: (id)expression {
-    return [[CBLCompoundExpression alloc] initWithExpressions: @[self, expression]
-                                                         type: CBLAndCompundExpType];
-}
-
-
-- (CBLQueryExpression*) orExpression: (id)expression {
-    return [[CBLCompoundExpression alloc] initWithExpressions: @[self, expression]
-                                                         type: CBLOrCompundExpType];
-}
-
-
 #pragma mark - Like operators:
 
 
@@ -188,20 +170,6 @@
 }
 
 
-#pragma mark - Null check operators:
-
-
-- (CBLQueryExpression*) isNullOrMissing {
-    return [[[CBLUnaryExpression alloc] initWithExpression: self type: CBLUnaryTypeNull] orExpression:
-            [[CBLUnaryExpression alloc] initWithExpression: self type: CBLUnaryTypeMissing]];
-}
-
-
-- (CBLQueryExpression*) notNullOrMissing {
-    return [[self class] negated: [self isNullOrMissing]];
-}
-
-
 #pragma mark - IS operations:
 
 
@@ -216,6 +184,35 @@
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLIsNotBinaryExpType];
+}
+
+
+#pragma mark - Null or Missing check operators:
+
+
+- (CBLQueryExpression*) isNullOrMissing {
+    return [[[CBLUnaryExpression alloc] initWithExpression: self type: CBLUnaryTypeNull] orExpression:
+            [[CBLUnaryExpression alloc] initWithExpression: self type: CBLUnaryTypeMissing]];
+}
+
+
+- (CBLQueryExpression*) notNullOrMissing {
+    return [[self class] negated: [self isNullOrMissing]];
+}
+
+
+#pragma mark - Bitwise operators:
+
+
+- (CBLQueryExpression*) andExpression: (id)expression {
+    return [[CBLCompoundExpression alloc] initWithExpressions: @[self, expression]
+                                                         type: CBLAndCompundExpType];
+}
+
+
+- (CBLQueryExpression*) orExpression: (id)expression {
+    return [[CBLCompoundExpression alloc] initWithExpressions: @[self, expression]
+                                                         type: CBLOrCompundExpType];
 }
 
 
@@ -243,8 +240,11 @@
 }
 
 
-- (CBLQueryExpression*) notIn: (NSArray*)expressions {
-    return [[self class] negated: [self in: expressions]];
+#pragma mark - Collation:
+
+
+- (CBLQueryExpression*) collate: (CBLQueryCollation*)collation {
+    return [[CBLCollationExpression alloc] initWithOperand: self collation: collation];
 }
 
 

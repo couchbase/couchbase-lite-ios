@@ -39,7 +39,7 @@ public final class Database {
     ///   - name: The name of the database. May NOT contain capital letters!
     ///   - config: The database options, or nil for the default options.
     /// - Throws: An error when the database cannot be opened.
-    public init(name: String, config: DatabaseConfiguration = DatabaseConfiguration()) throws {
+    public init(name: String, config: DatabaseConfiguration = DatabaseConfiguration.Builder().build()) throws {
         _config = config
         _impl = try CBLDatabase(name: name, config: _config.toImpl())
     }
@@ -69,12 +69,6 @@ public final class Database {
             return Document(implDoc)
         }
         return nil;
-    }
-    
-    
-    /// Checks whether the document of the given ID exists in the database or not.
-    public func containsDocument(withID id: String) -> Bool {
-        return _impl.containsDocument(withID:id)
     }
     
     
@@ -196,7 +190,7 @@ public final class Database {
     ///   - queue: The dispatch queue.
     ///   - listener: The listener to post changes.
     /// - Returns: An opaque listener token object for removing the listener.
-    @discardableResult public func addDocumentChangeListener( withID id: String,
+    @discardableResult public func addDocumentChangeListener(withID id: String,
         queue: DispatchQueue?, listener: @escaping (DocumentChange) -> Void) -> ListenerToken
     {
         return _impl.addDocumentChangeListener(withID: id, queue: queue) { (change) in
@@ -243,7 +237,7 @@ public final class Database {
     /// - Parameter key: The encryption key.
     /// - Throws: An error on a failure.
     public func setEncryptionKey(_ key: EncryptionKey?) throws {
-        try _impl.setEncryptionKey(key?.asObject)
+        try _impl.setEncryptionKey(key?.impl)
     }
     
 

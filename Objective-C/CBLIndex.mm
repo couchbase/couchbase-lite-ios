@@ -14,6 +14,10 @@
 
 @implementation CBLIndex
 
+- (instancetype) initWithNone {
+    return [super init];
+}
+
 
 + (CBLValueIndex*) valueIndexWithItems: (NSArray<CBLValueIndexItem*>*)items {
     return [[CBLValueIndex alloc] initWithItems: items];

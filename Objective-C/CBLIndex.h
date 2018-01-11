@@ -22,7 +22,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface CBLIndex : NSObject
 
-
 /**
  Create a value index with the given index items. The index items are a list of
  the properties or expressions to be indexed.
@@ -31,7 +30,6 @@ NS_ASSUME_NONNULL_BEGIN
  @return The value index.
  */
 + (CBLValueIndex*) valueIndexWithItems: (NSArray<CBLValueIndexItem*>*)items;
-
 
 /**
  Create a full-text search index with the given index item and options. Typically the index item is
@@ -45,6 +43,9 @@ NS_ASSUME_NONNULL_BEGIN
 + (CBLIndex*) fullTextIndexWithItems: (NSArray<CBLFullTextIndexItem*>*)items
                              options: (nullable CBLFullTextIndexOptions*)options;
 
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 
@@ -53,7 +54,6 @@ NS_ASSUME_NONNULL_BEGIN
  Value Index Item.
  */
 @interface CBLValueIndexItem: NSObject
-
 
 /**
  Creates a value index item with the given property name.
@@ -71,6 +71,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (CBLValueIndexItem*) expression: (CBLQueryExpression*)expression;
 
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
+
 @end
 
 
@@ -80,7 +83,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface CBLFullTextIndexItem: NSObject
 
-
 /**
  Creates a full-text search index item with the given expression.
 
@@ -88,6 +90,9 @@ NS_ASSUME_NONNULL_BEGIN
  @return The full-text search index item.
  */
 + (CBLFullTextIndexItem*) property: (NSString*)property;
+
+/** Not available */
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 
@@ -97,7 +102,6 @@ NS_ASSUME_NONNULL_BEGIN
  Options for creating a full-text index. All properties are set to false or nil by default.
  */
 @interface CBLFullTextIndexOptions: NSObject
-
 
 /**
  Set the true value to ignore accents/diacritical marks. The default value is false.

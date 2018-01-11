@@ -16,7 +16,7 @@
 
 
 - (instancetype) initWithIdentityID: (NSString*)identityID {
-    self = [super init];
+    self = [super initWithNone];
     if (self) {
         _identityID = [identityID copy];
         SecIdentityRef identity = MYFindIdentity(_identityID);
