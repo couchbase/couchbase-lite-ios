@@ -36,7 +36,7 @@
 
 - (NSString*) directory {
     if (!_directory)
-        _directory = [CBLDatabaseConfiguration defaultDirectory];
+        _directory = [CBLDatabaseConfigurationBuilder defaultDirectory];
     return _directory;
 }
 
@@ -47,7 +47,26 @@
     return _conflictResolver;
 }
 
+
+#pragma mark - Internal
+
+
++ (NSString*) defaultDirectory {
+    NSSearchPathDirectory dirID = NSApplicationSupportDirectory;
+#if TARGET_OS_TV
+    dirID = NSCachesDirectory; // Apple TV only allows apps to store data in the Caches directory
+#endif
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(dirID, NSUserDomainMask, YES);
+    NSString* path = paths[0];
+#if !TARGET_OS_IPHONE
+    NSString* bundleID = [[NSBundle mainBundle] bundleIdentifier];
+    path = [path stringByAppendingPathComponent: bundleID];
+#endif
+    return [path stringByAppendingPathComponent: @"CouchbaseLite"];
+}
+
 @end
+
 
 @implementation CBLDatabaseConfiguration
 
@@ -85,25 +104,6 @@
         _fileProtection = builder.fileProtection;
     }
     return self;
-}
-
-
-#pragma mark - Internal
-
-
-+ (NSString*) defaultDirectory {
-    NSSearchPathDirectory dirID = NSApplicationSupportDirectory;
-#if TARGET_OS_TV
-    dirID = NSCachesDirectory; // Apple TV only allows apps to store data in the Caches directory
-#endif
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(dirID, NSUserDomainMask, YES);
-    NSString* path = paths[0];
-#if !TARGET_OS_IPHONE
-    NSString* bundleID = [[NSBundle mainBundle] bundleIdentifier];
-    NSCAssert(bundleID, @"No bundle ID");
-    path = [path stringByAppendingPathComponent: bundleID];
-#endif
-    return [path stringByAppendingPathComponent: @"CouchbaseLite"];
 }
 
 

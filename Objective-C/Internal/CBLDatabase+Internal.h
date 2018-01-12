@@ -48,9 +48,10 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
-/// CBLDatabaseConfiguration:
+/// CBLDatabaseConfigurationBuilder:
 
-@interface CBLDatabaseConfiguration ()
+
+@interface CBLDatabaseConfigurationBuilder ()
 
 + (NSString*) defaultDirectory;
 

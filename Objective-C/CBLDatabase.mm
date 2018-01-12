@@ -559,7 +559,7 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
 }
 
 static NSString* defaultDirectory() {
-    return [CBLDatabaseConfiguration defaultDirectory];
+    return [CBLDatabaseConfigurationBuilder defaultDirectory];
 }
 
 

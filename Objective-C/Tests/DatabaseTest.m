@@ -130,15 +130,7 @@
 
 - (void) testCreateConfiguration {
     // Default:
-    CBLDatabaseConfiguration* config1 =
-        [[CBLDatabaseConfiguration alloc] initWithBlock:
-            ^(CBLDatabaseConfigurationBuilder * _Nonnull builder) {
-#if !TARGET_OS_IPHONE
-                // MacOS needs directory as there is no bundle in mac unit test:
-                builder.directory = @"/tmp";
-#endif
-            }];
-    
+    CBLDatabaseConfiguration* config1 = [[CBLDatabaseConfiguration alloc] init];
     AssertNotNil(config1.directory);
     Assert(config1.directory.length > 0);
     AssertNotNil(config1.conflictResolver);
