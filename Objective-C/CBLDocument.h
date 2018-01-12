@@ -13,7 +13,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /** A Couchbase Lite document. The CBLDocument is immutable. */
-@interface CBLDocument : NSObject <CBLDictionary>
+@interface CBLDocument : NSObject <CBLDictionary, NSMutableCopying>
 
 /** The document's ID. */
 @property (readonly, nonatomic) NSString* id;

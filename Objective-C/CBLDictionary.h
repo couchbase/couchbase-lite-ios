@@ -176,7 +176,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 /** CBLDictionary provides read access to dictionary data. */
-@interface CBLDictionary : NSObject <CBLDictionary>
+@interface CBLDictionary : NSObject <CBLDictionary, NSCopying, NSMutableCopying>
 
 - (instancetype) init NS_UNAVAILABLE;
 
