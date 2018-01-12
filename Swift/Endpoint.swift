@@ -96,7 +96,8 @@ public struct URLEndpoint: InternalEndpoint {
     // MARK: Internal
     
     func toImpl() -> CBLEndpoint {
-        return CBLURLEndpoint.init(host: self.host, port: (self.port ?? -1),
+        let port = self.port != nil ? Int(self.port!) : -1
+        return CBLURLEndpoint.init(host: self.host, port: port,
                                    path: self.path, secure: self.isSecure)
     }
     
