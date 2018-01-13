@@ -1126,4 +1126,71 @@ class QueryTest: CBLTestCase {
         
         q.removeChangeListener(withToken: token)
     }
+    
+    
+    func testResultSetEnumeration() throws {
+        try loadNumbers(5)
+        let q = Query
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+            .orderBy(Ordering.property("number1"))
+        
+        // Enumeration
+        var i = 0
+        var rs = try q.execute()
+        while let r = rs.next() {
+            XCTAssertEqual(r.string(at: 0), "doc\(i+1)")
+            i+=1
+        }
+        XCTAssertEqual(i, 5)
+        XCTAssertNil(rs.next())
+        XCTAssert(rs.allResults().isEmpty)
+        
+        // Fast enumeration:
+        i = 0
+        rs = try q.execute()
+        for r in rs {
+            XCTAssertEqual(r.string(at: 0), "doc\(i+1)")
+            i+=1
+        }
+        XCTAssertEqual(i, 5)
+        XCTAssertNil(rs.next())
+        XCTAssert(rs.allResults().isEmpty)
+    }
+    
+    
+    func testGetAllResults() throws {
+        try loadNumbers(5)
+        let q = Query
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+            .orderBy(Ordering.property("number1"))
+        
+        // Get all results:
+        var i = 0
+        var rs = try q.execute()
+        var results = rs.allResults()
+        for r in results {
+            XCTAssertEqual(r.string(at: 0), "doc\(i+1)")
+            i+=1
+        }
+        XCTAssertEqual(results.count, 5)
+        XCTAssertNil(rs.next())
+        XCTAssert(rs.allResults().isEmpty)
+        
+        // Partial enumerating then get all results:
+        i = 0
+        rs = try q.execute()
+        XCTAssertNotNil(rs.next())
+        XCTAssertNotNil(rs.next())
+        results = rs.allResults()
+        for r in results {
+            XCTAssertEqual(r.string(at: 0), "doc\(i+3)")
+            i+=1
+        }
+        XCTAssertEqual(results.count, 3)
+        XCTAssertNil(rs.next())
+        XCTAssert(rs.allResults().isEmpty)
+    }
+    
 }

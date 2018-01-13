@@ -26,6 +26,13 @@ public final class ResultSet : Sequence, IteratorProtocol {
         }
     }
     
+    /// All unenumerated results.
+    ///
+    /// - Returns: An array of all unenumerated Result objects.
+    public func allResults() -> [Result] {
+        return impl.allResults().map { Result(impl: $0) }
+    }
+    
     // MARK: Internal
     
     private let impl: CBLQueryResultSet

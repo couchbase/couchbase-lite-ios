@@ -45,7 +45,7 @@ namespace cbl {
 
 
 @interface CBLQueryResultSet()
-@property (atomic) BOOL randomAccess;
+@property (atomic) BOOL isAllEnumerated;
 @end
 
 
@@ -54,10 +54,11 @@ namespace cbl {
     C4QueryEnumerator* _c4enum;
     cbl::QueryResultContext* _context;
     C4Error _error;
+    BOOL _isAllEnumerated;
 }
 
 @synthesize c4Query=_c4Query, columnNames=_columnNames;
-@synthesize randomAccess=_randomAccess;
+@synthesize isAllEnumerated=_isAllEnumerated;
 
 
 - (instancetype) initWithQuery: (CBLQuery*)query
@@ -86,27 +87,37 @@ namespace cbl {
 }
 
 
+- (id) nextObject {
+    CBL_LOCK(self.database) {
+        if (_isAllEnumerated)
+            return nil;
+        
+        id row = nil;
+        if (c4queryenum_next(_c4enum, &_error)) {
+            row = self.currentObject;
+        } else if (_error.code) {
+            CBLWarnError(Query, @"%@[%p] error: %d/%d", [self class], self, _error.domain, _error.code);
+        } else {
+            _isAllEnumerated = YES;
+            CBLLog(Query, @"End of query enumeration (%p)", _c4enum);
+        }
+        return row;
+    }
+}
+
+
+- (NSArray*) allResults {
+    return [self allObjects];
+}
+
+
+#pragma mark - Internal
+
+
 - (CBLDatabase*) database {
     return _query.database;
 }
 
-
-- (id) nextObject {
-    if (self.randomAccess)
-        return nil;
-    
-    CBLDatabase* db = self.database;
-    CBL_LOCK(db) {
-        id row = nil;
-        if (c4queryenum_next(_c4enum, &_error)) {
-            row = self.currentObject;
-        } else if (_error.code)
-            CBLWarnError(Query, @"%@[%p] error: %d/%d", [self class], self, _error.domain, _error.code);
-        else
-            CBLLog(Query, @"End of query enumeration (%p)", _c4enum);
-        return row;
-    }
-}
 
 
 - (id) currentObject {
@@ -114,7 +125,6 @@ namespace cbl {
                                         c4Enumerator: _c4enum
                                              context: _context];
 }
-
 
 // Called by CBLQueryResultsArray
 - (id) objectAtIndex: (NSUInteger)index {
@@ -129,23 +139,6 @@ namespace cbl {
         }
         return self.currentObject;
     }
-}
-
-
-- (NSArray*) allObjects {
-    NSInteger count;
-    // TODO: We should make it strong reference instead:
-    // https://github.com/couchbase/couchbase-lite-ios/issues/1983
-    CBLDatabase* db = self.database;
-    CBL_LOCK(db) {
-        count = (NSInteger)c4queryenum_getRowCount(_c4enum, nullptr);
-    }
-    
-    if (count >= 0) {
-        _randomAccess = true;
-        return [[CBLQueryResultArray alloc] initWithResultSet: self count: count];
-    } else
-        return super.allObjects;
 }
 
 

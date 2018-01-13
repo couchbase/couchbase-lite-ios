@@ -1403,4 +1403,86 @@
 }
 
 
+- (void) testResultSetEnumeration {
+    [self loadNumbers: 5];
+    CBLQuery* q = [CBLQuery select: @[kDOCID]
+                              from: [CBLQueryDataSource database: self.db]
+                             where: nil
+                           orderBy: @[[CBLQueryOrdering property: @"number1"]]];
+    NSError* error;
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
+    
+    // Enumeration:
+    NSUInteger i = 0;
+    CBLQueryResult *r;
+    while ((r = [rs nextObject])) {
+        NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)(i+1)];
+        AssertEqualObjects([r valueAtIndex: 0], docID);
+        i++;
+    }
+    AssertEqual(i, 5u);
+    AssertNil([rs nextObject]);
+    AssertEqual([rs allObjects].count, 0u);
+    AssertEqual([rs allResults].count, 0u);
+    
+    // Fast enumeration:
+    i = 0;
+    rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
+
+    for (r in rs) {
+        NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)(i+1)];
+        AssertEqualObjects([r valueAtIndex: 0], docID);
+        i++;
+    }
+    AssertEqual(i, 5u);
+    AssertNil([rs nextObject]);
+    AssertEqual([rs allObjects].count, 0u);
+    AssertEqual([rs allResults].count, 0u);
+}
+
+
+- (void) testGetAllResults {
+    [self loadNumbers: 5];
+    CBLQuery* q = [CBLQuery select: @[kDOCID]
+                              from: [CBLQueryDataSource database: self.db]
+                             where: nil
+                           orderBy: @[[CBLQueryOrdering property: @"number1"]]];
+    
+    // Get all results:
+    NSError* error;
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
+
+    NSUInteger i = 0;
+    NSArray* results = [rs allResults];
+    for (CBLQueryResult* r in results) {
+        NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)(i+1)];
+        AssertEqualObjects([r valueAtIndex: 0], docID);
+    }
+    AssertEqual(results.count, 5u);
+    AssertNil([rs nextObject]);
+    AssertEqual([rs allObjects].count, 0u);
+    AssertEqual([rs allResults].count, 0u);
+    
+    // Partial enumerating then get all results:
+    rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
+    
+    AssertNotNil([rs nextObject]);
+    AssertNotNil([rs nextObject]);
+    
+    i = 0;
+    results = [rs allResults];
+    for (CBLQueryResult* r in results) {
+        NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)(i+3)];
+        AssertEqualObjects([r valueAtIndex: 0], docID);
+    }
+    AssertEqual(results.count, 3u);
+    AssertNil([rs nextObject]);
+    AssertEqual([rs allObjects].count, 0u);
+    AssertEqual([rs allResults].count, 0u);
+}
+
 @end

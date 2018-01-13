@@ -10,10 +10,18 @@
 @class CBLQueryResult;
 
 /** 
- CBLQueryResultSet is a result returned from a query. The CBLQueryResultSet is an NSEnumerator of
- the CBLQueryResult objects, each of which represent a single row in the query result.
+ CBLQueryResultSet is a result returned from a query. The CBLQueryResultSet is
+ an NSEnumerator of the CBLQueryResult objects, each of which represent
+ a single row in the query result.
  */
 @interface CBLQueryResultSet : NSEnumerator<CBLQueryResult*>
+
+/**
+ All unenumerated results.
+
+ @return An array of all unenumerated Result objects.
+ */
+- (NSArray<CBLQueryResult*>*) allResults;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
