@@ -33,7 +33,9 @@
     for (CBLQueryResult *r in rs) {
         block(++n, r);
     }
-
+    
+    rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
     NSArray* all = rs.allObjects;
     AssertEqual(all.count, n);
     if (randomAccess && n > 0) {
@@ -1460,6 +1462,7 @@
     for (CBLQueryResult* r in results) {
         NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)(i+1)];
         AssertEqualObjects([r valueAtIndex: 0], docID);
+        i++;
     }
     AssertEqual(results.count, 5u);
     AssertNil([rs nextObject]);
@@ -1478,6 +1481,7 @@
     for (CBLQueryResult* r in results) {
         NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)(i+3)];
         AssertEqualObjects([r valueAtIndex: 0], docID);
+        i++;
     }
     AssertEqual(results.count, 3u);
     AssertNil([rs nextObject]);
