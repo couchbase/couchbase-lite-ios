@@ -12,15 +12,13 @@
 @implementation CBLQueryArrayFunction
 
 
-+ (CBLQueryExpression*) contains: (id)expression value: (nullable id)value {
-    if (!value)
-        value = [NSNull null]; // Apple platform specific
++ (CBLQueryExpression*) contains: (id)expression value: (CBLQueryExpression*)value {
     return [[CBLFunctionExpression alloc] initWithFunction: @"ARRAY_CONTAINS()"
                                                     params: @[expression, value]];
 }
 
 
-+ (CBLQueryExpression*) length: (id)expression {
++ (CBLQueryExpression*) length: (CBLQueryExpression*)expression {
     return [[CBLFunctionExpression alloc] initWithFunction: @"ARRAY_LENGTH()"
                                                     params: @[expression]];
 }

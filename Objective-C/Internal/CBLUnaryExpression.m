@@ -11,11 +11,13 @@
 
 @implementation CBLUnaryExpression {
     CBLUnaryExpType _type;
-    id _operand;
+    CBLQueryExpression* _operand;
 }
 
 
-- (instancetype) initWithExpression: (id)operand type: (CBLUnaryExpType)type {
+- (instancetype) initWithExpression: (CBLQueryExpression*)operand
+                               type: (CBLUnaryExpType)type
+{
     self = [super initWithNone];
     if (self) {
         _operand = operand;
@@ -26,7 +28,7 @@
 
 
 - (id) asJSON {
-    id operand = [self jsonValue: _operand];
+    id operand = [_operand asJSON];
     
     switch (_type) {
         case CBLUnaryTypeMissing:

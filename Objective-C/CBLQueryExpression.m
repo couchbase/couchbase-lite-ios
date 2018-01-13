@@ -15,6 +15,7 @@
 #import "CBLParameterExpression.h"
 #import "CBLPropertyExpression.h"
 #import "CBLUnaryExpression.h"
+#import "CBLValueExpression.h"
 #import "CBLJSON.h"
 
 @implementation CBLQueryExpression
@@ -45,6 +46,54 @@
 }
 
 
+#pragma mark - Values:
+
+
++ (CBLQueryExpression*) value: (nullable id)value {
+    return [[CBLValueExpression alloc] initWithValue: value];
+}
+
+
++ (CBLQueryExpression*) string: (nullable NSString*)value {
+    return [self value: value];
+}
+
+
++ (CBLQueryExpression*) number: (nullable NSNumber*)value {
+    return [self value: value];
+}
+
+
++ (CBLQueryExpression*) integer: (NSInteger)value {
+    return [self value: @(value)];
+}
+
+
++ (CBLQueryExpression*) longLong: (long long)value {
+    return [self value: @(value)];
+}
+
+
++ (CBLQueryExpression*) float: (float)value {
+    return [self value: @(value)];
+}
+
+
++ (CBLQueryExpression*) double: (double)value {
+    return [self value: @(value)];
+}
+
+
++ (CBLQueryExpression*) boolean: (BOOL)value {
+    return [self value: @(value)];
+}
+
+
++ (CBLQueryExpression*) date: (nullable NSDate*)value {
+    return [self value: value];
+}
+
+
 #pragma mark - Parameter:
 
 
@@ -56,13 +105,13 @@
 #pragma mark - Unary operators:
 
 
-+ (CBLQueryExpression*) negated: (id)expression {
++ (CBLQueryExpression*) negated: (CBLQueryExpression*)expression {
     return [[CBLCompoundExpression alloc] initWithExpressions: @[expression]
                                                          type: CBLNotCompundExpType];
 }
 
 
-+ (CBLQueryExpression*) not: (id)expression {
++ (CBLQueryExpression*) not: (CBLQueryExpression*)expression {
     return [self negated: expression];
 }
 
@@ -70,35 +119,35 @@
 #pragma mark - Arithmetic Operators:
 
 
-- (CBLQueryExpression*) multiply: (id)expression {
+- (CBLQueryExpression*) multiply: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLMultiplyBinaryExpType];
 }
 
 
-- (CBLQueryExpression*) divide: (id)expression {
+- (CBLQueryExpression*) divide: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLDivideBinaryExpType];
 }
 
 
-- (CBLQueryExpression*) modulo: (id)expression {
+- (CBLQueryExpression*) modulo: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLModulusBinaryExpType];
 }
 
 
-- (CBLQueryExpression*) add: (id)expression {
+- (CBLQueryExpression*) add: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLAddBinaryExpType];
 }
 
 
-- (CBLQueryExpression*) subtract: (id)expression {
+- (CBLQueryExpression*) subtract: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLSubtractBinaryExpType];
@@ -108,42 +157,42 @@
 #pragma mark - Comparison operators:
 
 
-- (CBLQueryExpression*) lessThan: (id)expression {
+- (CBLQueryExpression*) lessThan: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLLessThanBinaryExpType];
 }
 
 
-- (CBLQueryExpression*) lessThanOrEqualTo: (id)expression {
+- (CBLQueryExpression*) lessThanOrEqualTo: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLLessThanOrEqualToBinaryExpType];
 }
 
 
-- (CBLQueryExpression*) greaterThan: (id)expression {
+- (CBLQueryExpression*) greaterThan: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLGreaterThanBinaryExpType];
 }
 
 
-- (CBLQueryExpression*) greaterThanOrEqualTo: (id)expression {
+- (CBLQueryExpression*) greaterThanOrEqualTo: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLGreaterThanOrEqualToBinaryExpType];
 }
 
 
-- (CBLQueryExpression*) equalTo: (id)expression {
+- (CBLQueryExpression*) equalTo: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLEqualToBinaryExpType];
 }
 
 
-- (CBLQueryExpression*) notEqualTo: (id)expression {
+- (CBLQueryExpression*) notEqualTo: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLNotEqualToBinaryExpType];
@@ -153,7 +202,7 @@
 #pragma mark - Like operators:
 
 
-- (CBLQueryExpression*) like: (id)expression {
+- (CBLQueryExpression*) like: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLLikeBinaryExpType];
@@ -163,7 +212,7 @@
 #pragma mark - Regex like operators:
 
 
-- (CBLQueryExpression*) regex: (id)expression {
+- (CBLQueryExpression*) regex: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLRegexLikeBinaryExpType];
@@ -173,14 +222,14 @@
 #pragma mark - IS operations:
 
 
-- (CBLQueryExpression*) is: (id)expression {
+- (CBLQueryExpression*) is: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLIsBinaryExpType];
 }
 
 
-- (CBLQueryExpression*) isNot: (id)expression {
+- (CBLQueryExpression*) isNot: (CBLQueryExpression*)expression {
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
                                                rightExpression: expression
                                                           type: CBLIsNotBinaryExpType];
@@ -204,13 +253,13 @@
 #pragma mark - Bitwise operators:
 
 
-- (CBLQueryExpression*) andExpression: (id)expression {
+- (CBLQueryExpression*) andExpression: (CBLQueryExpression*)expression {
     return [[CBLCompoundExpression alloc] initWithExpressions: @[self, expression]
                                                          type: CBLAndCompundExpType];
 }
 
 
-- (CBLQueryExpression*) orExpression: (id)expression {
+- (CBLQueryExpression*) orExpression: (CBLQueryExpression*)expression {
     return [[CBLCompoundExpression alloc] initWithExpressions: @[self, expression]
                                                          type: CBLOrCompundExpType];
 }
@@ -219,7 +268,7 @@
 #pragma mark - Aggregate operations:
 
 
-- (CBLQueryExpression*) between: (id)expression1 and: (id)expression2 {
+- (CBLQueryExpression*) between: (CBLQueryExpression*)expression1 and: (CBLQueryExpression*)expression2 {
     CBLQueryExpression* aggr =
         [[CBLAggregateExpression alloc] initWithExpressions: @[expression1, expression2]];
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
@@ -231,7 +280,7 @@
 #pragma mark - Collection operations:
 
 
-- (CBLQueryExpression*) in: (NSArray*)expressions {
+- (CBLQueryExpression*) in: (NSArray<CBLQueryExpression*>*)expressions {
     CBLQueryExpression* aggr =
         [[CBLAggregateExpression alloc] initWithExpressions: expressions];
     return [[CBLBinaryExpression alloc] initWithLeftExpression: self
@@ -261,14 +310,14 @@
     return [NSString stringWithFormat: @"%@[json=%@]", self.class, desc];
 }
 
-
+/*
 - (id) jsonValue: (id)value {
     if ([value isKindOfClass: [CBLQueryExpression class]])
         return [value asJSON];
     else
         return value;
 }
-
+*/
 
 - (id) asJSON {
     // Subclass needs to implement this method:

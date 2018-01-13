@@ -37,7 +37,7 @@ public final class GroupBy: Query, HavingRouter, OrderByRouter, LimitRouter {
     ///
     /// - Parameter limit: The limit expression.
     /// - Returns: The Limit object that represents the LIMIT clause of the query.
-    public func limit(_ limit: Any) -> Limit {
+    public func limit(_ limit: Expression) -> Limit {
         return self.limit(limit, offset: nil)
     }
     
@@ -49,8 +49,8 @@ public final class GroupBy: Query, HavingRouter, OrderByRouter, LimitRouter {
     ///   - limit: The limit expression.
     ///   - offset: The offset expression.
     /// - Returns: The Limit object that represents the LIMIT clause of the query.
-    public func limit(_ limit: Any, offset: Any?) -> Limit {
-        return Limit(query: self, impl: Limit.toImpl(limit: limit, offset: offset))
+    public func limit(_ limit: Expression, offset: Expression?) -> Limit {
+        return Limit(query: self, limit: limit, offset: offset)
     }
     
     

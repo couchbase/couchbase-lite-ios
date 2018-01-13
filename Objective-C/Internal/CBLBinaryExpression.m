@@ -12,13 +12,13 @@
 
 
 @implementation CBLBinaryExpression {
-    id _lhs;
-    id _rhs;
+    CBLQueryExpression* _lhs;
+    CBLQueryExpression* _rhs;
     CBLBinaryExpType _type;
 }
 
-- (instancetype) initWithLeftExpression:(id)lhs
-                        rightExpression:(id)rhs
+- (instancetype) initWithLeftExpression:(CBLQueryExpression*)lhs
+                        rightExpression:(CBLQueryExpression*)rhs
                                    type:(CBLBinaryExpType)type {
     self = [super initWithNone];
     if (self) {
@@ -90,16 +90,16 @@
             break;
     }
     
-    [json addObject: [self jsonValue: _lhs]];
+    [json addObject: [_lhs asJSON]];
 
     if (_type == CBLBetweenBinaryExpType) {
         // "between"'s RHS is an aggregate of the min and max, but the min and max need to be
         // written out as parameters to the BETWEEN operation:
-        NSArray* rangeExprs = ((CBLAggregateExpression*)_rhs).expressions;
-        [json addObject: [self jsonValue: rangeExprs[0]]];
-        [json addObject: [self jsonValue: rangeExprs[1]]];
+        NSArray<CBLQueryExpression*>* rangeExprs = ((CBLAggregateExpression*)_rhs).expressions;
+        [json addObject: [rangeExprs[0] asJSON] ];
+        [json addObject: [rangeExprs[1] asJSON]];
     } else
-        [json addObject:  [self jsonValue: _rhs]];
+        [json addObject:  [_rhs asJSON]];
     
     return json;
 }

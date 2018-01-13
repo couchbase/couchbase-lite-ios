@@ -123,7 +123,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nonatomic, readonly, nullable) id offset;
 
-- (instancetype) initWithLimit: (id)limit offset: (nullable id)offset;
+- (instancetype) initWithLimit: (CBLQueryExpression*)limit
+                        offset: (nullable CBLQueryExpression*)offset;
 
 @end
 

@@ -13,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLFullTextMatchExpression : CBLQueryExpression
 
-- (instancetype) initWithIndexName: (NSString*)indexName text: (NSString*)text;
+- (instancetype) initWithIndexName: (NSString*)indexName text: (NSString*)query;
 
 @end
 

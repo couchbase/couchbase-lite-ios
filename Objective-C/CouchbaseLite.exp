@@ -49,6 +49,7 @@
 .objc_class_name_CBLQueryResultSet
 .objc_class_name_CBLQueryRow
 .objc_class_name_CBLQuerySelectResult
+.objc_class_name_CBLQueryVariableExpression
 .objc_class_name_CBLReplicator
 .objc_class_name_CBLReplicatorChange
 .objc_class_name_CBLReplicatorConfiguration

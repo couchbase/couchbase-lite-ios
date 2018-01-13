@@ -10,12 +10,12 @@
 
 @implementation CBLFunctionExpression {
     NSString* _function;
-    NSArray* _params;
+    NSArray<CBLQueryExpression*>* _params;
 }
 
 
 - (instancetype) initWithFunction: (NSString*)function
-                           params: (nullable NSArray*)params {
+                           params: (nullable NSArray<CBLQueryExpression*>*)params {
     self = [super initWithNone];
     if (self) {
         _function = function;
@@ -29,8 +29,8 @@
     NSMutableArray* json = [NSMutableArray arrayWithCapacity: _params.count + 1];
     [json addObject: _function];
     
-    for (id param in _params) {
-        [json addObject: [self jsonValue: param]];
+    for (CBLQueryExpression* param in _params) {
+        [json addObject: [param asJSON]];
     }
     
     return json;

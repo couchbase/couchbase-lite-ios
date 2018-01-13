@@ -1015,7 +1015,6 @@
     [self expectError: @"LiteCore" code: 24 in: ^BOOL(NSError** error2) {
         return [CBLDatabase deleteDatabase: @"db" inDirectory: dir error: error2];
     }];
-    // 24 -> kC4ErrorBusy: Database is busy/locked
 }
 
 

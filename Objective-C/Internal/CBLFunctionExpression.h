@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLFunctionExpression : CBLQueryExpression
 
 - (instancetype) initWithFunction: (NSString*)function
-                           params: (nullable NSArray*)params;
+                           params: (nullable NSArray<CBLQueryExpression*>*)params;
 
 @end
 

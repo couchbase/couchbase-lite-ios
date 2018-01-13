@@ -10,14 +10,13 @@ import Foundation
 
 /// Array expression.
 public final class ArrayExpression {
-    /// Creates a variable expression. The variable are used to represent each item in an array
-    /// in the quantified operators (ANY/ANY AND EVERY/EVERY <variable name> IN <expr> SATISFIES <expr>)
-    /// to evaluate expressions over an array.
+    /// Creates a variable expression that represents an item in the array
+    /// expression (ANY/ANY AND EVERY/EVERY <variable> IN <expr> SATISFIES <expr>).
     ///
     /// - Parameter name: The variable name.
     /// - Returns: A variable expression.
-    public static func variable(_ name: String) -> Expression {
-        return Expression.init(CBLQueryArrayExpression.variableNamed(name))
+    public static func variable(_ name: String) -> VariableExpression {
+        return VariableExpression(name: name)
     }
     
     
@@ -28,9 +27,9 @@ public final class ArrayExpression {
     /// The ANY operator returns TRUE if at least one of the items in the array satisfies the given
     /// satisfies expression.
     ///
-    /// - Parameter variable: The variable name.
-    /// - Returns: An In object.
-    public static func any(_ variable: String) -> ArrayExpressionIn {
+    /// - Parameter variable: The variable expression.
+    /// - Returns: An IN expression.
+    public static func any(_ variable: VariableExpression) -> ArrayExpressionIn {
         return ArrayExpressionIn(type: .any, variable: variable)
     }
     
@@ -41,9 +40,9 @@ public final class ArrayExpression {
     /// The EVERY operator returns TRUE if the array is empty OR every item in the array
     /// satisfies the given satisfies expression.
     ///
-    /// - Parameter variable: The variable name.
-    /// - Returns: An In object.
-    public static func every(_ variable: String) -> ArrayExpressionIn {
+    /// - Parameter variable: The variable expression.
+    /// - Returns: An IN expression.
+    public static func every(_ variable: VariableExpression) -> ArrayExpressionIn {
         return ArrayExpressionIn(type: .every, variable: variable)
     }
     
@@ -54,9 +53,9 @@ public final class ArrayExpression {
     /// The ANY AND EVERY operator returns TRUE if the array is NOT empty, and at least one of
     /// the items in the array satisfies the given satisfies expression.
     ///
-    /// - Parameter variable: The variable name.
-    /// - Returns: An In object.
-    public static func anyAndEvery(_ variable: String) -> ArrayExpressionIn {
+    /// - Parameter variable: The variable expression.
+    /// - Returns: An IN object.
+    public static func anyAndEvery(_ variable: VariableExpression) -> ArrayExpressionIn {
         return ArrayExpressionIn(type: .anyAndEvery, variable: variable)
     }
 }

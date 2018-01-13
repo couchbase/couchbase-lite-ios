@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression.
  @return The AVG(expr) function.
  */
-+ (CBLQueryExpression*) avg: (id)expression;
++ (CBLQueryExpression*) avg: (CBLQueryExpression*)expression;
 
 /** 
  Creates a COUNT(expr) function expression that returns the count of all values
@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression.
  @return The COUNT(expr) function.
  */
-+ (CBLQueryExpression*) count: (id)expression;
++ (CBLQueryExpression*) count: (CBLQueryExpression*)expression;
 
 /** 
  Creates a MIN(expr) function expression that returns the minimum value
@@ -43,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression.
  @return The MIN(expr) function.
  */
-+ (CBLQueryExpression*) min: (id)expression;
++ (CBLQueryExpression*) min: (CBLQueryExpression*)expression;
 
 /** 
  Creates a MAX(expr) function expression that returns the maximum value
@@ -52,7 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression.
  @return The MAX(expr) function.
  */
-+ (CBLQueryExpression*) max: (id)expression;
++ (CBLQueryExpression*) max: (CBLQueryExpression*)expression;
 
 /** 
  Creates a SUM(expr) function expression that return the sum of all number values
@@ -61,7 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression.
  @return The SUM(expr) function.
  */
-+ (CBLQueryExpression*) sum: (id)expression;
++ (CBLQueryExpression*) sum: (CBLQueryExpression*)expression;
 
 #pragma mark - Math
 
@@ -72,7 +72,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The ABS(expr) function.
  */
-+ (CBLQueryExpression*) abs: (id)expression;
++ (CBLQueryExpression*) abs: (CBLQueryExpression*)expression;
 
 /** 
  Creates an ACOS(expr) function that returns the inverse cosine of the given numeric
@@ -81,7 +81,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The ACOS(expr) function.
  */
-+ (CBLQueryExpression*) acos: (id)expression;
++ (CBLQueryExpression*) acos: (CBLQueryExpression*)expression;
 
 /** 
  Creates an ASIN(expr) function that returns the inverse sin of the given numeric
@@ -90,7 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The ASIN(expr) function.
  */
-+ (CBLQueryExpression*) asin: (id)expression;
++ (CBLQueryExpression*) asin: (CBLQueryExpression*)expression;
 
 /** 
  Creates an ATAN(expr) function that returns the inverse tangent of the numeric
@@ -99,7 +99,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The ATAN(expr) function.
  */
-+ (CBLQueryExpression*) atan: (id)expression;
++ (CBLQueryExpression*) atan: (CBLQueryExpression*)expression;
 
 /** 
  Creates an ATAN2(X, Y) function that returns the arctangent of y/x.
@@ -108,7 +108,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param y The expression to evaluate as the Y coordinate.
  @return The ATAN2(X, Y) function.
  */
-+ (CBLQueryExpression*) atan2: (id)x y: (id)y;
++ (CBLQueryExpression*) atan2: (CBLQueryExpression*)x y: (CBLQueryExpression*)y;
 
 /** 
  Creates a CEIL(expr) function that returns the ceiling value of the given numeric
@@ -117,7 +117,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The CEIL(expr) function.
  */
-+ (CBLQueryExpression*) ceil: (id)expression;
++ (CBLQueryExpression*) ceil: (CBLQueryExpression*)expression;
 
 /** 
  Creates a COS(expr) function that returns the cosine of the given numeric expression.
@@ -125,7 +125,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The COS(expr) function.
  */
-+ (CBLQueryExpression*) cos: (id)expression;
++ (CBLQueryExpression*) cos: (CBLQueryExpression*)expression;
 
 /** 
  Creates a DEGREES(expr) function that returns the degrees value of the given radiants
@@ -134,7 +134,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression to evaluate as a radiants value.
  @return The DEGREES(expr) function.
  */
-+ (CBLQueryExpression*) degrees: (id)expression;
++ (CBLQueryExpression*) degrees: (CBLQueryExpression*)expression;
 
 /** 
  Creates a E() function that return the value of the mathemetical constant 'e'.
@@ -150,7 +150,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The EXP(expr) function.
  */
-+ (CBLQueryExpression*) exp: (id)expression;
++ (CBLQueryExpression*) exp: (CBLQueryExpression*)expression;
 
 /** 
  Creates a FLOOR(expr) function that returns the floor value of the given
@@ -159,7 +159,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The FLOOR(expr) function.
  */
-+ (CBLQueryExpression*) floor: (id)expression;
++ (CBLQueryExpression*) floor: (CBLQueryExpression*)expression;
 
 /** 
  Creates a LN(expr) function that returns the natural log of the given numeric expression.
@@ -167,7 +167,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The LN(expr) function.
  */
-+ (CBLQueryExpression*) ln: (id)expression;
++ (CBLQueryExpression*) ln: (CBLQueryExpression*)expression;
 
 /** 
  Creates a LOG(expr) function that returns the base 10 log of the given numeric expression.
@@ -175,7 +175,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  @return The LOG(expr) function.
  */
-+ (CBLQueryExpression*) log: (id)expression;
++ (CBLQueryExpression*) log: (CBLQueryExpression*)expression;
 
 /** 
  Creates a PI() function that returns the mathemetical constant Pi.
@@ -192,7 +192,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param exponent The exponent expression.
  @return The POWER(base, exponent) function.
  */
-+ (CBLQueryExpression*) power: (id)base exponent: (id)exponent;
++ (CBLQueryExpression*) power: (CBLQueryExpression*)base exponent: (CBLQueryExpression*)exponent;
 
 /** 
  Creates a RADIANS(expr) function that returns the radians value of the given degrees
@@ -201,7 +201,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression to evaluate as a degrees value.
  @return The RADIANS(expr) function.
  */
-+ (CBLQueryExpression*) radians: (id)expression;
++ (CBLQueryExpression*) radians: (CBLQueryExpression*)expression;
 
 /** 
  Creates a ROUND(expr) function that returns the rounded value of the given numeric
@@ -210,7 +210,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The ROUND(expr) function.
  */
-+ (CBLQueryExpression*) round: (id)expression;
++ (CBLQueryExpression*) round: (CBLQueryExpression*)expression;
 
 /** 
  Creates a ROUND(expr, digits) function that returns the rounded value to the given
@@ -220,7 +220,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param digits   The number of digits.
  @return The ROUND(expr, digits) function.
  */
-+ (CBLQueryExpression*) round: (id)expression digits: (NSInteger)digits;
++ (CBLQueryExpression*) round: (CBLQueryExpression*)expression digits: (CBLQueryExpression*)digits;
 
 /** 
  Creates a SIGN(expr) function that returns the sign (1: positive, -1: negative, 0: zero)
@@ -229,7 +229,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The SIGN(expr) function.
  */
-+ (CBLQueryExpression*) sign: (id)expression;
++ (CBLQueryExpression*) sign: (CBLQueryExpression*)expression;
 
 /** 
  Creates a SIN(expr) function that returns the sin of the given numeric expression.
@@ -237,7 +237,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The SIN(expr) function.
  */
-+ (CBLQueryExpression*) sin: (id)expression;
++ (CBLQueryExpression*) sin: (CBLQueryExpression*)expression;
 
 /** 
  Creates a SQRT(expr) function that returns the square root of the given numeric expression.
@@ -245,7 +245,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The SQRT(expr) function.
  */
-+ (CBLQueryExpression*) sqrt: (id)expression;
++ (CBLQueryExpression*) sqrt: (CBLQueryExpression*)expression;
 
 /** 
  Creates a TAN(expr) function that returns the tangent of the given numeric expression.
@@ -253,7 +253,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The TAN(expr) function.
  */
-+ (CBLQueryExpression*) tan: (id)expression;
++ (CBLQueryExpression*) tan: (CBLQueryExpression*)expression;
 
 /** 
  Creates a TRUNC(expr) function that truncates all of the digits after the decimal place
@@ -262,17 +262,17 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The numeric expression.
  @return The trunc function.
  */
-+ (CBLQueryExpression*) trunc: (id)expression;
++ (CBLQueryExpression*) trunc: (CBLQueryExpression*)expression;
 
 /** 
  Creates a TRUNC(expr, digits) function that truncates the number of the digits after
  the decimal place of the given numeric expression.
  
  @param expression The numeric expression.
- @param digits The number of digits to truncate.
+ @param digits The number of digits.
  @return The TRUNC(expr, digits) function.
  */
-+ (CBLQueryExpression*) trunc: (id)expression digits: (NSInteger)digits;
++ (CBLQueryExpression*) trunc: (CBLQueryExpression*)expression digits: (CBLQueryExpression*)digits;
 
 #pragma mark - String
 
@@ -284,7 +284,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param substring The substring expression.
  @return The CONTAINS(expr, substr) function.
  */
-+ (CBLQueryExpression*) contains: (id)expression substring: (id)substring;
++ (CBLQueryExpression*) contains: (CBLQueryExpression*)expression substring: (CBLQueryExpression*)substring;
 
 /** 
  Creates a LENGTH(expr) function that returns the length of the given string expression.
@@ -292,7 +292,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The string expression.
  @return The LENGTH(expr) function.
  */
-+ (CBLQueryExpression*) length: (id)expression;
++ (CBLQueryExpression*) length: (CBLQueryExpression*)expression;
 
 /** 
  Creates a LOWER(expr) function that returns the lowercase string of the given string
@@ -301,7 +301,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The string expression.
  @return The LOWER(expr) function.
  */
-+ (CBLQueryExpression*) lower:(id)expression;
++ (CBLQueryExpression*) lower:(CBLQueryExpression*)expression;
 
 /** 
  Creates a LTRIM(expr) function that removes the whitespace from the beginning of the
@@ -310,7 +310,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The string expression.
  @return The LTRIM(expr) function.
  */
-+ (CBLQueryExpression*) ltrim:(id)expression;
++ (CBLQueryExpression*) ltrim:(CBLQueryExpression*)expression;
 
 /** 
  Creates a RTRIM(expr) function that removes the whitespace from the end of the
@@ -319,7 +319,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The string expression.
  @return The RTRIM(expr) function.
  */
-+ (CBLQueryExpression*) rtrim:(id)expression;
++ (CBLQueryExpression*) rtrim:(CBLQueryExpression*)expression;
 
 /** 
  Creates a TRIM(expr) function that removes the whitespace from the beginning and '
@@ -328,7 +328,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The string expression.
  @return The TRIM(expr) function.
  */
-+ (CBLQueryExpression*) trim:(id)expression;
++ (CBLQueryExpression*) trim:(CBLQueryExpression*)expression;
 
 /** 
  Creates a UPPER(expr) function that returns the uppercase string of the given string expression.
@@ -336,7 +336,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The string expression.
  @return The UPPER(expr) function.
  */
-+ (CBLQueryExpression*) upper:(id)expression;
++ (CBLQueryExpression*) upper:(CBLQueryExpression*)expression;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

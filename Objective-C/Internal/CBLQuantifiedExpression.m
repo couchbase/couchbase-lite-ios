@@ -8,19 +8,20 @@
 
 #import "CBLQuantifiedExpression.h"
 #import "CBLQueryExpression+Internal.h"
+#import "CBLQueryVariableExpression+Internal.h"
 
 @implementation CBLQuantifiedExpression {
     CBLQuantifiedType _type;
-    NSString* _variable;
-    id _inExpression;
-    id _satisfies;
+    CBLQueryVariableExpression* _variable;
+    CBLQueryExpression* _inExpression;
+    CBLQueryExpression* _satisfies;
 }
 
 
 - (instancetype) initWithType: (CBLQuantifiedType)type
-                     variable: (NSString*)variable
-                           in: (id)inExpression
-                    satisfies: (id)satisfies
+                     variable: (CBLQueryVariableExpression*)variable
+                           in: (CBLQueryExpression*)inExpression
+                    satisfies: (CBLQueryExpression*)satisfies
 {
     self = [super initWithNone];
     if (self) {
@@ -50,9 +51,9 @@
             break;
     }
     
-    [json addObject: _variable];
-    [json addObject: [self jsonValue: _inExpression]];
-    [json addObject: [self jsonValue: _satisfies]];
+    [json addObject: _variable.name];
+    [json addObject: [_inExpression asJSON]];
+    [json addObject: [_satisfies asJSON]];
     
     return json;
 }

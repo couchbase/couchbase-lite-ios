@@ -22,10 +22,10 @@ public final class FullTextExpression {
     
     /// Creates a Full-text match expression with the given search text.
     ///
-    /// - Parameter text: The search text.
+    /// - Parameter text: The query string.
     /// - Returns: The full-text match expression.
-    public func match(_ text: String) -> Expression {
-        return Expression(CBLQueryFullTextExpression.index(withName: self.name).match(text))
+    public func match(_ query: String) -> Expression {
+        return Expression(CBLQueryFullTextExpression.index(withName: self.name).match(query))
     }
     
     

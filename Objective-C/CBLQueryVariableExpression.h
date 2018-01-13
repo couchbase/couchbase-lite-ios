@@ -1,5 +1,5 @@
 //
-//  CBLVariableExpression.h
+//  CBLQueryVariableExpression.h
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 8/1/17.
@@ -11,9 +11,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLVariableExpression : CBLQueryExpression
+@interface CBLQueryVariableExpression : CBLQueryExpression
 
-- (instancetype) initWithVariableNamed: (id)name;
+/** Not available. */
+- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

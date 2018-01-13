@@ -212,7 +212,8 @@
     
     for (NSUInteger i = 0; i < kNConcurrents; i++) {
         NSString* tag = [NSString stringWithFormat:@"Update%ld", (long)i];
-        CBLQueryExpression* expr = [[CBLQueryExpression property: @"tag"] equalTo: tag];
+        CBLQueryExpression* expr = [[CBLQueryExpression property: @"tag"]
+                                    equalTo: [CBLQueryExpression string: tag]];
         [self verifyWhere: expr test: ^(uint64_t n, CBLQueryRow *row) {
             count++;
         }];

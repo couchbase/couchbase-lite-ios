@@ -32,6 +32,91 @@ public class Expression {
     }
     
     
+    // MARK: Value
+    
+    
+    /// Creates a value expression. The supported value types are String,
+    /// NSNumber, int, int64, float, double, boolean, Date and null.
+    ///
+    /// - Parameter value: The value.
+    /// - Returns: The value expression.
+    public static func value(_ value: Any?) -> Expression {
+        return ValueExpression(value: value)
+    }
+    
+    
+    /// Creates a string expression.
+    ///
+    /// - Parameter value: The string value.
+    /// - Returns: The string expression.
+    public static func string(_ value: String?) -> Expression {
+        return ValueExpression(value: value)
+    }
+    
+    
+    /// Creates a number expression.
+    ///
+    /// - Parameter value: The number value.
+    /// - Returns: The number expression.
+    public static func number(_ value: NSNumber?) -> Expression {
+        return ValueExpression(value: value)
+    }
+    
+    
+    /// Creates an integer expression.
+    ///
+    /// - Parameter value: The integer value.
+    /// - Returns: The integer expression.
+    public static func int(_ value: Int) -> Expression {
+        return ValueExpression(value: value)
+    }
+    
+    
+    /// Creates a 64-bit integer expression.
+    ///
+    /// - Parameter value: The 64-bit integer value.
+    /// - Returns: The 64-bit integer expression.
+    public static func int64(_ value: Int64) -> Expression {
+        return ValueExpression(value: value)
+    }
+    
+    
+    /// Creates a float expression.
+    ///
+    /// - Parameter value: The float value.
+    /// - Returns: The float expression.
+    public static func float(_ value: Float) -> Expression {
+        return ValueExpression(value: value)
+    }
+    
+    
+    /// Creates a double expression.
+    ///
+    /// - Parameter value: The double value.
+    /// - Returns: The double expression.
+    public static func double(_ value: Double) -> Expression {
+        return ValueExpression(value: value)
+    }
+    
+    
+    /// Creates a boolean expression.
+    ///
+    /// - Parameter value: The boolean value.
+    /// - Returns: The boolean expression.
+    public static func boolean(_ value: Bool) -> Expression {
+        return ValueExpression(value: value)
+    }
+    
+    
+    /// Creates a date expression.
+    ///
+    /// - Parameter value: The date value.
+    /// - Returns: The date expression.
+    public static func date(_ value: Date?) -> Expression {
+        return ValueExpression(value: value)
+    }
+    
+    
     // MARK: Parameter
     
     
@@ -51,8 +136,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be negated.
     /// - Returns: A negated expression.
-    public static func negated(_ expression: Any) -> Expression {
-        return Expression(CBLQueryExpression.negated(toImpl(expression)))
+    public static func negated(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryExpression.negated(expression.impl))
     }
     
     
@@ -60,8 +145,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be negated.
     /// - Returns: A negated expression
-    public static func not(_ expression: Any) -> Expression {
-        return Expression(CBLQueryExpression.not(toImpl(expression)))
+    public static func not(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryExpression.not(expression.impl))
     }
     
     
@@ -72,8 +157,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be multipled by.
     /// - Returns: A multiply expression.
-    public func multiply(_ expression: Any) -> Expression {
-        return Expression(self.impl.multiply(Expression.toImpl(expression)))
+    public func multiply(_ expression: Expression) -> Expression {
+        return Expression(self.impl.multiply(expression.impl))
     }
     
     
@@ -81,8 +166,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be devided by.
     /// - Returns: A divide expression.
-    public func divide(_ expression: Any) -> Expression {
-        return Expression(self.impl.divide(Expression.toImpl(expression)))
+    public func divide(_ expression: Expression) -> Expression {
+        return Expression(self.impl.divide(expression.impl))
     }
     
     
@@ -90,8 +175,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be moduloed by.
     /// - Returns: A modulo expression.
-    public func modulo(_ expression: Any) -> Expression {
-        return Expression(self.impl.modulo(Expression.toImpl(expression)))
+    public func modulo(_ expression: Expression) -> Expression {
+        return Expression(self.impl.modulo(expression.impl))
     }
 
     
@@ -99,8 +184,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to add to the current expression.
     /// - Returns: An add expression.
-    public func add(_ expression: Any) -> Expression {
-        return Expression(self.impl.add(Expression.toImpl(expression)))
+    public func add(_ expression: Expression) -> Expression {
+        return Expression(self.impl.add(expression.impl))
     }
 
     
@@ -108,8 +193,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to substract from the current expression.
     /// - Returns: A subtract expression.
-    public func subtract(_ expression: Any) -> Expression {
-        return Expression(self.impl.subtract(Expression.toImpl(expression)))
+    public func subtract(_ expression: Expression) -> Expression {
+        return Expression(self.impl.subtract(expression.impl))
     }
     
     
@@ -121,8 +206,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be compared with the current expression.
     /// - Returns: A less than expression.
-    public func lessThan(_ expression: Any) -> Expression {
-        return Expression(self.impl.lessThan(Expression.toImpl(expression)))
+    public func lessThan(_ expression: Expression) -> Expression {
+        return Expression(self.impl.lessThan(expression.impl))
     }
     
     
@@ -131,8 +216,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be compared with the current expression.
     /// - Returns: A less than or equal to expression.
-    public func lessThanOrEqualTo(_ expression: Any) -> Expression {
-        return Expression(self.impl.lessThanOrEqual(to: Expression.toImpl(expression)))
+    public func lessThanOrEqualTo(_ expression: Expression) -> Expression {
+        return Expression(self.impl.lessThanOrEqual(to: expression.impl))
     }
     
 
@@ -141,8 +226,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be compared with the current expression.
     /// - Returns: A greater than expression.
-    public func greaterThan(_ expression: Any) -> Expression {
-        return Expression(self.impl.greaterThan(Expression.toImpl(expression)))
+    public func greaterThan(_ expression: Expression) -> Expression {
+        return Expression(self.impl.greaterThan(expression.impl))
     }
     
     
@@ -151,8 +236,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be compared with the current expression.
     /// - Returns: A greater than or equal to expression.
-    public func greaterThanOrEqualTo(_ expression: Any) -> Expression {
-        return Expression(self.impl.greaterThanOrEqual(to: Expression.toImpl(expression)))
+    public func greaterThanOrEqualTo(_ expression: Expression) -> Expression {
+        return Expression(self.impl.greaterThanOrEqual(to: expression.impl))
     }
     
     
@@ -161,8 +246,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be compared with the current expression.
     /// - Returns: An equal to expression.
-    public func equalTo(_ expression: Any) -> Expression {
-        return Expression(self.impl.equal(to: Expression.toImpl(expression)))
+    public func equalTo(_ expression: Expression) -> Expression {
+        return Expression(self.impl.equal(to: expression.impl))
     }
     
     
@@ -171,8 +256,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be compared with the current expression.
     /// - Returns: A NOT equal to expression.
-    public func notEqualTo(_ expression: Any) -> Expression {
-        return Expression(self.impl.notEqual(to: Expression.toImpl(expression)))
+    public func notEqualTo(_ expression: Expression) -> Expression {
+        return Expression(self.impl.notEqual(to: expression.impl))
     }
     
     
@@ -184,8 +269,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be compared with the current expression.
     /// - Returns: A Like expression.
-    public func like(_ expression: Any) -> Expression {
-        return Expression(self.impl.like(Expression.toImpl(expression)))
+    public func like(_ expression: Expression) -> Expression {
+        return Expression(self.impl.like(expression.impl))
     }
     
     
@@ -197,8 +282,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be compared with the current expression.
     /// - Returns: A regex match expression.
-    public func regex(_ expression: Any) -> Expression {
-        return Expression(self.impl.regex(Expression.toImpl(expression)))
+    public func regex(_ expression: Expression) -> Expression {
+        return Expression(self.impl.regex(expression.impl))
     }
 
     
@@ -207,8 +292,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be compared with the current expression.
     /// - Returns: An IS expression.
-    public func `is`(_ expression: Any) -> Expression {
-        return Expression(self.impl.is(Expression.toImpl(expression)))
+    public func `is`(_ expression: Expression) -> Expression {
+        return Expression(self.impl.is(expression.impl))
     }
     
     
@@ -217,8 +302,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to be compared with the current expression.
     /// - Returns: An IS NOT expression.
-    public func isNot(_ expression: Any) -> Expression {
-        return Expression(self.impl.isNot(to: Expression.toImpl(expression)))
+    public func isNot(_ expression: Expression) -> Expression {
+        return Expression(self.impl.isNot(expression.impl))
     }
     
     
@@ -251,8 +336,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to AND with the current expression.
     /// - Returns: A logical AND expression.
-    public func and(_ expression: Any) -> Expression {
-        return Expression(self.impl.andExpression(Expression.toImpl(expression)))
+    public func and(_ expression: Expression) -> Expression {
+        return Expression(self.impl.andExpression(expression.impl))
     }
     
     
@@ -261,8 +346,8 @@ public class Expression {
     ///
     /// - Parameter expression: The expression to OR with the current expression.
     /// - Returns: A logical OR Expression.
-    public func or(_ expression: Any) -> Expression {
-        return Expression(self.impl.orExpression(Expression.toImpl(expression)))
+    public func or(_ expression: Expression) -> Expression {
+        return Expression(self.impl.orExpression(expression.impl))
     }
     
     // MARK: Aggregate operators
@@ -275,9 +360,8 @@ public class Expression {
     ///   - expression1: The inclusive lower bound expression.
     ///   - expression2: The inclusive upper bound expression.
     /// - Returns: A BETWEEN expression.
-    public func between(_ expression1: Any, and expression2: Any) -> Expression {
-        return Expression(self.impl.between(Expression.toImpl(expression1),
-                                                   and: Expression.toImpl(expression2)))
+    public func between(_ expression1: Expression, and expression2: Expression) -> Expression {
+        return Expression(self.impl.between(expression1.impl, and: expression2.impl))
     }
 
     
@@ -289,12 +373,8 @@ public class Expression {
     ///
     /// - Parameter expressions: The expression array to be evaluated with.
     /// - Returns: An IN exprssion.
-    public func `in`(_ expressions: [Any]) -> Expression {
-        var impls: [Any] = []
-        for exp in expressions {
-            impls.append(Expression.toImpl(exp))
-        }
-        return Expression(self.impl.in(impls))
+    public func `in`(_ expressions: [Expression]) -> Expression {
+        return Expression(self.impl.in(expressions.map() { $0.impl }))
     }
     
     
@@ -322,6 +402,7 @@ public class Expression {
         self.impl = expression
     }
     
+    /*
     static func toImpl(_ expression: Any) -> Any {
         var exp: Any
         if let xexp = expression as? Expression {
@@ -331,15 +412,11 @@ public class Expression {
         }
         return exp
     }
+    */
     
     static func toImpl(expressions: [Expression]) -> [CBLQueryExpression] {
-        var impls: [CBLQueryExpression] = []
-        for expr in expressions {
-            impls.append(expr.impl)
-        }
-        return impls;
+        return expressions.map() { $0.impl }
     }
-    
 }
 
 

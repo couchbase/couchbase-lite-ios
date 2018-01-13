@@ -13,7 +13,7 @@
 
 @synthesize expressions=_expressions;
 
-- (instancetype) initWithExpressions: (NSArray*)expressions {
+- (instancetype) initWithExpressions: (NSArray<CBLQueryExpression*>*)expressions {
     self = [super initWithNone];
     if (self) {
         _expressions = expressions;
@@ -23,8 +23,8 @@
 
 - (id) asJSON {
     NSMutableArray *json = [NSMutableArray arrayWithObject: @"[]"];
-    for (id expr in _expressions) {
-        [json addObject: [self jsonValue: expr]];
+    for (CBLQueryExpression* expr in _expressions) {
+        [json addObject: [expr asJSON]];
     }
     return json;
 }

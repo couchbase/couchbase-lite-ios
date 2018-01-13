@@ -20,8 +20,8 @@ public final class Function {
     ///
     /// - Parameter expression: The expression.
     /// - Returns: The AVG(expr) function.
-    public static func avg(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.avg(Expression.toImpl(expression)))
+    public static func avg(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.avg(expression.impl))
     }
     
     
@@ -30,8 +30,8 @@ public final class Function {
     ///
     /// - Parameter expression: The expression.
     /// - Returns: The COUNT(expr) function.
-    public static func count(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.count(Expression.toImpl(expression)))
+    public static func count(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.count(expression.impl))
     }
     
     
@@ -40,8 +40,8 @@ public final class Function {
     ///
     /// - Parameter expression: The expression.
     /// - Returns: The MIN(expr) function.
-    public static func min(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.min(Expression.toImpl(expression)))
+    public static func min(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.min(expression.impl))
     }
     
     
@@ -50,8 +50,8 @@ public final class Function {
     ///
     /// - Parameter expression: The expression.
     /// - Returns: The MAX(expr) function.
-    public static func max(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.max(Expression.toImpl(expression)))
+    public static func max(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.max(expression.impl))
     }
     
     
@@ -60,8 +60,8 @@ public final class Function {
     ///
     /// - Parameter expression: The expression.
     /// - Returns: The SUM(expr) function.
-    public static func sum(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.sum(Expression.toImpl(expression)))
+    public static func sum(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.sum(expression.impl))
     }
     
     
@@ -73,8 +73,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The ABS(expr) function.
-    public static func abs(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.abs(Expression.toImpl(expression)))
+    public static func abs(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.abs(expression.impl))
     }
     
     
@@ -83,8 +83,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The ACOS(expr) function.
-    public static func acos(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.acos(Expression.toImpl(expression)))
+    public static func acos(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.acos(expression.impl))
     }
     
     
@@ -93,8 +93,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The ASIN(expr) function.
-    public static func asin(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.asin(Expression.toImpl(expression)))
+    public static func asin(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.asin(expression.impl))
     }
     
     
@@ -103,8 +103,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The ATAN(expr) function.
-    public static func atan(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.atan(Expression.toImpl(expression)))
+    public static func atan(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.atan(expression.impl))
     }
     
     
@@ -114,8 +114,8 @@ public final class Function {
     ///   - x: The expression to evaluate as the X coordinate.
     ///   - y: The expression to evaluate as the Y coordinate.
     /// - Returns: The ATAN2(X, Y) function.
-    public static func atan2(x: Any, y: Any) -> Expression {
-        return Expression(CBLQueryFunction.atan2(Expression.toImpl(x), y: Expression.toImpl(y)))
+    public static func atan2(x: Expression, y: Expression) -> Expression {
+        return Expression(CBLQueryFunction.atan2(x.impl, y: y.impl))
     }
     
     
@@ -124,8 +124,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The CEIL(expr) function.
-    public static func ceil(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.ceil(Expression.toImpl(expression)))
+    public static func ceil(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.ceil(expression.impl))
     }
     
 
@@ -133,8 +133,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The COS(expr) function.
-    public static func cos(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.cos(Expression.toImpl(expression)))
+    public static func cos(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.cos(expression.impl))
     }
     
     
@@ -143,8 +143,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression to evaluate as a radiants value.
     /// - Returns: The DEGREES(expr) function.
-    public static func degrees(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.degrees(Expression.toImpl(expression)))
+    public static func degrees(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.degrees(expression.impl))
     }
 
     
@@ -161,8 +161,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The EXP(expr) function.
-    public static func exp(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.exp(Expression.toImpl(expression)))
+    public static func exp(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.exp(expression.impl))
     }
     
     
@@ -170,8 +170,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The FLOOR(expr) function.
-    public static func floor(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.floor(Expression.toImpl(expression)))
+    public static func floor(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.floor(expression.impl))
     }
     
     
@@ -179,8 +179,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The LN(expr) function.
-    public static func ln(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.ln(Expression.toImpl(expression)))
+    public static func ln(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.ln(expression.impl))
     }
     
     
@@ -188,8 +188,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The LOG(expr) function.
-    public static func log(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.log(Expression.toImpl(expression)))
+    public static func log(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.log(expression.impl))
     }
 
     
@@ -208,9 +208,8 @@ public final class Function {
     ///   - base: The base expression.
     ///   - exponent: The exponent expression.
     /// - Returns: The POWER(base, exponent) function.
-    public static func power(base: Any, exponent: Any) -> Expression {
-        return Expression(CBLQueryFunction.power(
-            Expression.toImpl(base), exponent: Expression.toImpl(exponent)))
+    public static func power(base: Expression, exponent: Expression) -> Expression {
+        return Expression(CBLQueryFunction.power(base.impl, exponent: exponent.impl))
     }
     
     
@@ -219,8 +218,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression to evaluate as a degrees value.
     /// - Returns: The RADIANS(expr) function.
-    public static func radians(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.radians(Expression.toImpl(expression)))
+    public static func radians(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.radians(expression.impl))
     }
     
     
@@ -229,8 +228,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The ROUND(expr) function.
-    public static func round(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.round(Expression.toImpl(expression)))
+    public static func round(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.round(expression.impl))
     }
 
     
@@ -241,8 +240,8 @@ public final class Function {
     ///   - expression: The numeric expression.
     ///   - digits: The number of digits.
     /// - Returns: The ROUND(expr, digits) function.
-    public static func round(_ expression: Any, digits: Int) -> Expression {
-        return Expression(CBLQueryFunction.round(Expression.toImpl(expression), digits: digits))
+    public static func round(_ expression: Expression, digits: Expression) -> Expression {
+        return Expression(CBLQueryFunction.round(expression.impl, digits: digits.impl))
     }
     
     
@@ -251,8 +250,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The SIGN(expr) function.
-    public static func sign(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.sign(Expression.toImpl(expression)))
+    public static func sign(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.sign(expression.impl))
     }
     
     
@@ -260,8 +259,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The SIN(expr) function.
-    public static func sin(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.sin(Expression.toImpl(expression)))
+    public static func sin(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.sin(expression.impl))
     }
     
     
@@ -269,8 +268,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The SQRT(expr) function.
-    public static func sqrt(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.sqrt(Expression.toImpl(expression)))
+    public static func sqrt(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.sqrt(expression.impl))
     }
 
     
@@ -278,8 +277,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns:  The TAN(expr) function.
-    public static func tan(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.tan(Expression.toImpl(expression)))
+    public static func tan(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.tan(expression.impl))
     }
     
     
@@ -288,8 +287,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The trunc function.
-    public static func trunc(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.trunc(Expression.toImpl(expression)))
+    public static func trunc(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.trunc(expression.impl))
     }
     
     
@@ -300,8 +299,8 @@ public final class Function {
     ///   - expression: The numeric expression.
     ///   - digits: The number of digits to truncate.
     /// - Returns: The TRUNC(expr, digits) function.
-    public static func trunc(_ expression: Any, digits: Int) -> Expression {
-        return Expression(CBLQueryFunction.trunc(Expression.toImpl(expression), digits: digits))
+    public static func trunc(_ expression: Expression, digits: Expression) -> Expression {
+        return Expression(CBLQueryFunction.trunc(expression.impl, digits: digits.impl))
     }
     
     
@@ -315,9 +314,8 @@ public final class Function {
     ///   - expression: The string expression.
     ///   - substring: The substring expression.
     /// - Returns: The CONTAINS(expr, substr) function.
-    public static func contains(_ expression: Any, substring: Any) -> Expression {
-        return Expression(CBLQueryFunction.contains(Expression.toImpl(expression),
-                                                    substring: Expression.toImpl(substring)))
+    public static func contains(_ expression: Expression, substring: Expression) -> Expression {
+        return Expression(CBLQueryFunction.contains(expression.impl, substring: substring.impl))
     }
     
     
@@ -325,8 +323,8 @@ public final class Function {
     ///
     /// - Parameter expression: The string expression.
     /// - Returns: The LENGTH(expr) function.
-    public static func length(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.length(Expression.toImpl(expression)))
+    public static func length(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.length(expression.impl))
     }
     
     
@@ -335,8 +333,8 @@ public final class Function {
     ///
     /// - Parameter expression: The string expression.
     /// - Returns: The LOWER(expr) function.
-    public static func lower(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.lower(Expression.toImpl(expression)))
+    public static func lower(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.lower(expression.impl))
     }
     
     
@@ -345,8 +343,8 @@ public final class Function {
     ///
     /// - Parameter expression: The string expression.
     /// - Returns: The LTRIM(expr) function.
-    public static func ltrim(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.ltrim(Expression.toImpl(expression)))
+    public static func ltrim(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.ltrim(expression.impl))
     }
     
     
@@ -355,8 +353,8 @@ public final class Function {
     ///
     /// - Parameter expression: The string expression.
     /// - Returns: The RTRIM(expr) function.
-    public static func rtrim(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.rtrim(Expression.toImpl(expression)))
+    public static func rtrim(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.rtrim(expression.impl))
     }
     
     
@@ -365,8 +363,8 @@ public final class Function {
     ///
     /// - Parameter expression: The string expression.
     /// - Returns: The TRIM(expr) function.
-    public static func trim(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.trim(Expression.toImpl(expression)))
+    public static func trim(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.trim(expression.impl))
     }
     
     
@@ -375,8 +373,8 @@ public final class Function {
     ///
     /// - Parameter expression: The string expression.
     /// - Returns: The UPPER(expr) function.
-    public static func upper(_ expression: Any) -> Expression {
-        return Expression(CBLQueryFunction.upper(Expression.toImpl(expression)))
+    public static func upper(_ expression: Expression) -> Expression {
+        return Expression(CBLQueryFunction.upper(expression.impl))
     }
     
 }
