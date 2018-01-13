@@ -15,7 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** This constructor is for hiding the public -init: */
 - (instancetype) initWithNone;
 
-- (id) jsonValue: (id)value;
+// - (id) jsonValue: (id)value;
 
 @end
 

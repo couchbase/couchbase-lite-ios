@@ -33,7 +33,7 @@ public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {
     ///
     /// - Parameter limit: The limit Expression object or liternal value.
     /// - Returns: The Limit object.
-    public func limit(_ limit: Any) -> Limit {
+    public func limit(_ limit: Expression) -> Limit {
         return self.limit(limit, offset: nil)
     }
     
@@ -45,8 +45,8 @@ public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {
     ///   - limit: The limit Expression object or liternal value.
     ///   - offset: The offset Expression object or liternal value.
     /// - Returns: The Limit object.
-    public func limit(_ limit: Any, offset: Any?) -> Limit {
-        return Limit(query: self, impl: Limit.toImpl(limit: limit, offset: offset))
+    public func limit(_ limit: Expression, offset: Expression?) -> Limit {
+        return Limit(query: self, limit: limit, offset: offset)
     }
     
     

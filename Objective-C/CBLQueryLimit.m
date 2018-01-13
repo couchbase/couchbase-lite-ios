@@ -15,12 +15,14 @@
 @synthesize limit=_limit, offset=_offset;
 
 
-+ (CBLQueryLimit*) limit: (id)limit {
++ (CBLQueryLimit*) limit: (CBLQueryExpression*)limit {
     return [self limit: limit offset: nil];
 }
 
 
-+ (CBLQueryLimit*) limit: (id)limit offset: (nullable id)offset {
++ (CBLQueryLimit*) limit: (CBLQueryExpression*)limit
+                  offset: (nullable CBLQueryExpression*)offset
+{
     return [[self alloc] initWithLimit: limit offset: offset];
 }
 
@@ -28,7 +30,9 @@
 #pragma mark - Internal
 
 
-- (instancetype) initWithLimit: (id)limit offset: (nullable id)offset {
+- (instancetype) initWithLimit: (CBLQueryExpression*)limit
+                        offset: (nullable CBLQueryExpression*)offset
+{
     self = [super init];
     if (self) {
         _limit = limit;

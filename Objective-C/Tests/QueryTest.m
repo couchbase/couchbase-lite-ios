@@ -124,11 +124,11 @@
 - (void) testWhereComparison {
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
     NSArray* cases = @[
-        @[[n1 lessThan: @(3)], @"number1 < 3"],
-        @[[n1 lessThanOrEqualTo: @(3)], @"number1 <= 3"],
-        @[[n1 greaterThan: @(6)], @"number1 > 6"],
-        @[[n1 greaterThanOrEqualTo: @(6)], @"number1 >= 6"],
-        @[[n1 equalTo: @(7)], @"number1 == 7"],
+        @[[n1 lessThan: [CBLQueryExpression integer: 3]], @"number1 < 3"],
+        @[[n1 lessThanOrEqualTo: [CBLQueryExpression integer: 3]], @"number1 <= 3"],
+        @[[n1 greaterThan: [CBLQueryExpression integer: 6]], @"number1 > 6"],
+        @[[n1 greaterThanOrEqualTo: [CBLQueryExpression integer: 6]], @"number1 >= 6"],
+        @[[n1 equalTo: [CBLQueryExpression integer: 7]], @"number1 == 7"],
     ];
     NSArray* numbers = [self loadNumbers: 10];
     [self runTestWithNumbers: numbers cases: cases];
@@ -139,16 +139,16 @@
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
     CBLQueryExpression* n2 = [CBLQueryExpression property: @"number2"];
     NSArray* cases = @[
-        @[[[n1 multiply: @(2)] greaterThan: @(8)], @"(number1 * 2) > 8"],
-        @[[[n1 divide: @(2)] greaterThan: @(3)], @"(number1 / 2) > 3"],
-        @[[[n1 modulo: @(2)] equalTo: @(0)], @"modulus:by:(number1, 2) == 0"],
-        @[[[n1 add: @(5)] greaterThan: @(10)], @"(number1 + 5) > 10"],
-        @[[[n1 subtract: @(5)] greaterThan: @(0)], @"(number1 - 5) > 0"],
-        @[[[n1 multiply: n2] greaterThan: @(10)], @"(number1 * number2) > 10"],
-        @[[[n2 divide: n1] greaterThan: @(3)], @"(number2 / number1) > 3"],
-        @[[[n2 modulo: n1] equalTo: @(0)], @"modulus:by:(number2, number1) == 0"],
-        @[[[n1 add: n2] equalTo: @(10)], @"(number1 + number2) == 10"],
-        @[[[n1 subtract: n2] greaterThan: @(0)], @"(number1 - number2) > 0"]
+        @[[[n1 multiply: [CBLQueryExpression integer: 2]] greaterThan: [CBLQueryExpression integer: 8]], @"(number1 * 2) > 8"],
+        @[[[n1 divide: [CBLQueryExpression integer: 2]] greaterThan: [CBLQueryExpression integer: 3]], @"(number1 / 2) > 3"],
+        @[[[n1 modulo: [CBLQueryExpression integer: 2]] equalTo: [CBLQueryExpression integer: 0]], @"modulus:by:(number1, 2) == 0"],
+        @[[[n1 add: [CBLQueryExpression integer: 5]] greaterThan: [CBLQueryExpression integer: 10]], @"(number1 + 5) > 10"],
+        @[[[n1 subtract: [CBLQueryExpression integer: 5]] greaterThan: [CBLQueryExpression integer: 0]], @"(number1 - 5) > 0"],
+        @[[[n1 multiply: n2] greaterThan: [CBLQueryExpression integer: 10]], @"(number1 * number2) > 10"],
+        @[[[n2 divide: n1] greaterThan: [CBLQueryExpression integer: 3]], @"(number2 / number1) > 3"],
+        @[[[n2 modulo: n1] equalTo: [CBLQueryExpression integer: 0]], @"modulus:by:(number2, number1) == 0"],
+        @[[[n1 add: n2] equalTo: [CBLQueryExpression integer: 10]], @"(number1 + number2) == 10"],
+        @[[[n1 subtract: n2] greaterThan: [CBLQueryExpression integer: 0]], @"(number1 - number2) > 0"]
     ];
     NSArray* numbers = [self loadNumbers: 10];
     [self runTestWithNumbers: numbers cases: cases];
@@ -159,8 +159,8 @@
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
     CBLQueryExpression* n2 = [CBLQueryExpression property: @"number2"];
     NSArray* cases = @[
-        @[[[n1 greaterThan: @(3)] andExpression: [n2 greaterThan: @(3)]], @"number1 > 3 AND number2 > 3"],
-        @[[[n1 lessThan: @(3)] orExpression: [n2 lessThan: @(3)]], @"number1 < 3 OR number2 < 3"]
+        @[[[n1 greaterThan: [CBLQueryExpression integer: 3]] andExpression: [n2 greaterThan: [CBLQueryExpression integer: 3]]], @"number1 > 3 AND number2 > 3"],
+        @[[[n1 lessThan: [CBLQueryExpression integer: 3]] orExpression: [n2 lessThan: [CBLQueryExpression integer: 3]]], @"number1 < 3 OR number2 < 3"]
     ];
     NSArray* numbers = [self loadNumbers: 10];
     [self runTestWithNumbers: numbers cases: cases];
@@ -224,7 +224,7 @@
     
     CBLQuery* q = [CBLQuery select: @[kDOCID]
                               from: [CBLQueryDataSource database: self.db]
-                             where: [[CBLQueryExpression property: @"string"] is: @"string"]];
+                             where: [[CBLQueryExpression property: @"string"] is: [CBLQueryExpression string: @"string"]]];
     
     Assert(q);
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
@@ -238,7 +238,7 @@
     
     q = [CBLQuery select: @[kDOCID]
                     from: [CBLQueryDataSource database: self.db]
-                   where: [[CBLQueryExpression property: @"string"] isNot: @"string1"]];
+                   where: [[CBLQueryExpression property: @"string"] isNot: [CBLQueryExpression string: @"string1"]]];
     
     Assert(q);
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
@@ -254,7 +254,7 @@
 - (void) testWhereBetween {
     CBLQueryExpression* n1 = [CBLQueryExpression property: @"number1"];
     NSArray* cases = @[
-        @[[n1 between: @(3) and: @(7)], @"number1 BETWEEN {3,7}"]
+        @[[n1 between: [CBLQueryExpression integer: 3] and: [CBLQueryExpression integer: 7]], @"number1 BETWEEN {3,7}"]
     ];
     NSArray* numbers = [self loadNumbers: 10];
     [self runTestWithNumbers: numbers cases: cases];
@@ -265,10 +265,15 @@
     [self loadJSONResource: @"names_100"];
     
     NSArray* expected = @[@"Marcy", @"Margaretta", @"Margrett", @"Marlen", @"Maryjo"];
+    NSArray* names = @[[CBLQueryExpression string: @"Marcy"],
+                       [CBLQueryExpression string: @"Margaretta"],
+                       [CBLQueryExpression string: @"Margrett"],
+                       [CBLQueryExpression string: @"Marlen"],
+                       [CBLQueryExpression string: @"Maryjo"]];
     CBLQueryExpression* firstName = [CBLQueryExpression property: @"name.first"];
     CBLQuery* q = [CBLQuery select: @[kDOCID]
                               from: [CBLQueryDataSource database: self.db]
-                             where: [firstName in: expected]
+                             where: [firstName in: names]
                            orderBy: @[[CBLQuerySortOrder property: @"name.first"]]];
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
                                     test:^(uint64_t n, CBLQueryResult* r)
@@ -284,7 +289,7 @@
 - (void) testWhereLike {
     [self loadJSONResource: @"names_100"];
     
-    CBLQueryExpression* where = [[CBLQueryExpression property: @"name.first"] like: @"%Mar%"];
+    CBLQueryExpression* where = [[CBLQueryExpression property: @"name.first"] like: [CBLQueryExpression string: @"%Mar%"]];
     CBLQuery* q = [CBLQuery select: @[kDOCID]
                               from: [CBLQueryDataSource database: self.db]
                              where: where
@@ -306,7 +311,7 @@
 - (void) testWhereRegex {
     [self loadJSONResource: @"names_100"];
     
-    CBLQueryExpression* where = [[CBLQueryExpression property: @"name.first"] regex: @"^Mar.*"];
+    CBLQueryExpression* where = [[CBLQueryExpression property: @"name.first"] regex: [CBLQueryExpression string: @"^Mar.*"]];
     CBLQuery* q = [CBLQuery select: @[kDOCID]
                               from: [CBLQueryDataSource database: self.db]
                              where: where
@@ -455,7 +460,7 @@
     [self loadJSONResource: @"names_100"];
     
     CBLQueryExpression* STATE  = [CBLQueryExpression property: @"contact.address.state"];
-    CBLQueryExpression* COUNT  = [CBLQueryFunction count: @(1)];
+    CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
     CBLQueryExpression* ZIP    = [CBLQueryExpression property: @"contact.address.zip"];
     CBLQueryExpression* MAXZIP = [CBLQueryFunction max: ZIP];
     CBLQueryExpression* GENDER = [CBLQueryExpression property: @"gender"];
@@ -466,7 +471,7 @@
     
     CBLQuery* q = [CBLQuery select: results
                               from: [CBLQueryDataSource database: self.db]
-                             where: [GENDER equalTo: @"female"]
+                             where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
                            groupBy: @[STATE]
                             having: nil
                            orderBy: @[[CBLQueryOrdering expression: STATE]]
@@ -493,9 +498,9 @@
     
     q = [CBLQuery select: results
                     from: [CBLQueryDataSource database: self.db]
-                   where: [GENDER equalTo: @"female"]
+                   where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
                  groupBy: @[STATE]
-                  having: [COUNT greaterThan: @(1)]
+                  having: [COUNT greaterThan: [CBLQueryExpression integer: 1]]
                  orderBy: @[[CBLQueryOrdering expression: STATE]]
                    limit: nil];
     
@@ -594,7 +599,7 @@
                              from: [CBLQueryDataSource database: self.db]
                             where: nil groupBy: nil having: nil
                           orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
-                            limit: [CBLQueryLimit limit: @5]];
+                            limit: [CBLQueryLimit limit: [CBLQueryExpression integer: 5]]];
     
     NSArray* expectedNumbers = @[@1, @2, @3, @4, @5];
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
@@ -636,7 +641,8 @@
                              from: [CBLQueryDataSource database: self.db]
                             where: nil groupBy: nil having: nil
                           orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
-                            limit: [CBLQueryLimit limit: @5 offset: @3]];
+                            limit: [CBLQueryLimit limit: [CBLQueryExpression integer: 5]
+                                                 offset: [CBLQueryExpression integer: 3]]];
     
     NSArray* expectedNumbers = @[@4, @5, @6, @7, @8];
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
@@ -780,9 +786,9 @@
     AssertEqual(numRows, 1u);
     
     CBLQueryExpression* ARRAY_CONTAINS1 = [CBLQueryArrayFunction contains: [CBLQueryExpression property: @"array"]
-                                                                    value: @"650-123-0001"];
+                                                                    value: [CBLQueryExpression string: @"650-123-0001"]];
     CBLQueryExpression* ARRAY_CONTAINS2 = [CBLQueryArrayFunction contains: [CBLQueryExpression property: @"array"]
-                                                                    value: @"650-123-0003"];
+                                                                    value: [CBLQueryExpression string: @"650-123-0003"]];
     q = [CBLQuery select: @[[CBLQuerySelectResult expression: ARRAY_CONTAINS1],
                             [CBLQuerySelectResult expression: ARRAY_CONTAINS2]]
                     from: [CBLQueryDataSource database: self.db]];
@@ -830,7 +836,7 @@
                            [CBLQueryFunction acos: p],
                            [CBLQueryFunction asin: p],
                            [CBLQueryFunction atan: p],
-                           [CBLQueryFunction atan2: p y: @(90)],
+                           [CBLQueryFunction atan2: p y: [CBLQueryExpression integer: 90]],
                            [CBLQueryFunction ceil: p],
                            [CBLQueryFunction cos: p],
                            [CBLQueryFunction degrees: p],
@@ -838,16 +844,16 @@
                            [CBLQueryFunction floor: p],
                            [CBLQueryFunction ln: p],
                            [CBLQueryFunction log: p],
-                           [CBLQueryFunction power: p exponent: @(2)],
+                           [CBLQueryFunction power: p exponent: [CBLQueryExpression integer: 2]],
                            [CBLQueryFunction radians: p],
                            [CBLQueryFunction round: p],
-                           [CBLQueryFunction round: p digits: 1],
+                           [CBLQueryFunction round: p digits: [CBLQueryExpression integer: 1]],
                            [CBLQueryFunction sign: p],
                            [CBLQueryFunction sin: p],
                            [CBLQueryFunction sqrt: p],
                            [CBLQueryFunction tan: p],
                            [CBLQueryFunction trunc: p],
-                           [CBLQueryFunction trunc: p digits: 1]];
+                           [CBLQueryFunction trunc: p digits: [CBLQueryExpression integer: 1]]];
     
     int index = 0;
     for (CBLQueryExpression *f in functions) {
@@ -874,8 +880,8 @@
     CBLQueryExpression* p = [CBLQueryExpression property: @"greeting"];
     
     // Contains:
-    CBLQueryExpression* CONTAINS1 = [CBLQueryFunction contains: p substring: @"8"];
-    CBLQueryExpression* CONTAINS2 = [CBLQueryFunction contains: p substring: @"9"];
+    CBLQueryExpression* CONTAINS1 = [CBLQueryFunction contains: p substring: [CBLQueryExpression string: @"8"]];
+    CBLQueryExpression* CONTAINS2 = [CBLQueryFunction contains: p substring: [CBLQueryExpression string: @"9"]];
     CBLQuery* q = [CBLQuery select: @[[CBLQuerySelectResult expression: CONTAINS1],
                                       [CBLQuerySelectResult expression: CONTAINS2]]
                               from: [CBLQueryDataSource database: self.db]];
@@ -931,14 +937,17 @@
     CBLQuerySelectResult* S_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
     
     CBLQueryExpression* LIKES  = [CBLQueryExpression property: @"likes"];
-    CBLQueryExpression* VAR_LIKE = [CBLQueryArrayExpression variableNamed: @"LIKE"];
+    CBLQueryVariableExpression* LIKE = [CBLQueryArrayExpression variableWithName: @"LIKE"];
     
     // ANY:
     CBLQuery* q = [CBLQuery select: @[S_DOC_ID]
                               from: [CBLQueryDataSource database: self.db]
-                             where: [CBLQueryArrayExpression any: @"LIKE"
+                             where: [CBLQueryArrayExpression any: LIKE
                                                               in: LIKES
-                                                       satisfies: [VAR_LIKE equalTo: @"climbing"]]];
+                                                       satisfies: [LIKE equalTo: [CBLQueryExpression string: @"climbing"]]]];
+    
+    NSLog(@"%@", [q explain: nil]);
+    
     
     NSArray* expected = @[@"doc-017", @"doc-021", @"doc-023", @"doc-045", @"doc-060"];
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
@@ -950,9 +959,9 @@
     // EVERY:
     q = [CBLQuery select: @[S_DOC_ID]
                     from: [CBLQueryDataSource database: self.db]
-                   where: [CBLQueryArrayExpression every: @"LIKE"
+                   where: [CBLQueryArrayExpression every: LIKE
                                                       in: LIKES
-                                               satisfies: [VAR_LIKE equalTo: @"taxes"]]];
+                                               satisfies: [LIKE equalTo: [CBLQueryExpression string: @"taxes"]]]];
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
     {
         if (n == 1) {
@@ -964,9 +973,9 @@
     // ANY AND EVERY
     q = [CBLQuery select: @[S_DOC_ID]
                     from: [CBLQueryDataSource database: self.db]
-                   where: [CBLQueryArrayExpression anyAndEvery: @"LIKE"
+                   where: [CBLQueryArrayExpression anyAndEvery: LIKE
                                                             in: LIKES
-                                                     satisfies: [VAR_LIKE equalTo: @"taxes"]]];
+                                                     satisfies: [LIKE equalTo: [CBLQueryExpression string: @"taxes"]]]];
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) { }];
     AssertEqual(numRows, 0u);
 }
@@ -996,10 +1005,11 @@
     CBLQuerySelectResult* S_DOC_ID = [CBLQuerySelectResult expression: DOC_ID];
     
     CBLQueryExpression* PATHS  = [CBLQueryExpression property: @"paths"];
-    CBLQueryExpression* VAR_PATH  = [CBLQueryArrayExpression variableNamed: @"path.city"];
-    CBLQueryExpression* where = [CBLQueryArrayExpression any: @"path"
+    CBLQueryVariableExpression* PATH  = [CBLQueryArrayExpression variableWithName: @"path"];
+    CBLQueryVariableExpression* PATH_CITY  = [CBLQueryArrayExpression variableWithName: @"path.city"];
+    CBLQueryExpression* where = [CBLQueryArrayExpression any: PATH
                                                           in: PATHS
-                                                   satisfies: [VAR_PATH equalTo: @"San Francisco"]];
+                                                   satisfies: [PATH_CITY equalTo: [CBLQueryExpression string: @"San Francisco"]]];
     
     CBLQuery* q = [CBLQuery select: @[S_DOC_ID]
                               from: [CBLQueryDataSource database: self.db]
@@ -1248,8 +1258,8 @@
         
         CBLQueryExpression* VALUE = [CBLQueryExpression property: @"value"];
         CBLQueryExpression* comparison = [data[2] boolValue] ?
-            [[VALUE collate: data[3]] equalTo: data[1]] :
-            [[VALUE collate: data[3]] lessThan: data[1]];
+            [[VALUE collate: data[3]] equalTo: [CBLQueryExpression value: data[1]]] :
+            [[VALUE collate: data[3]] lessThan: [CBLQueryExpression value: data[1]]];
         
         // NSLog(@"Compare %@ and %@, result = %@", data[0], data[1], data[2]);
         
@@ -1272,7 +1282,7 @@
     XCTestExpectation* x = [self expectationWithDescription: @"changes"];
     CBLQuery* q = [CBLQuery select: @[kDOCID]
                               from: [CBLQueryDataSource database: self.db]
-                             where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
+                             where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
                            orderBy: @[[CBLQueryOrdering property: @"number1"]]];
     
     id token = [q addChangeListener: ^(CBLQueryChange* change) {
@@ -1306,7 +1316,7 @@
     __block int count = 0;
     CBLQuery* q = [CBLQuery select: @[]
                               from: [CBLQueryDataSource database: self.db]
-                             where: [[CBLQueryExpression property: @"number1"] lessThan: @(10)]
+                             where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
                            orderBy: @[[CBLQueryOrdering property: @"number1"]]];
     
     id token = [q addChangeListener:^(CBLQueryChange* change) {

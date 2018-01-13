@@ -83,12 +83,12 @@ class QueryTest: CBLTestCase {
     func testWhereComparison() throws {
         let n1 = Expression.property("number1")
         let cases = [
-            [n1.lessThan(3), "number1 < 3"],
-            [n1.lessThanOrEqualTo(3), "number1 <= 3"],
-            [n1.greaterThan(6), "number1 > 6"],
-            [n1.greaterThanOrEqualTo(6), "number1 >= 6"],
-            [n1.equalTo(7), "number1 == 7"],
-            [n1.notEqualTo(7), "number1 != 7"],
+            [n1.lessThan(Expression.int(3)), "number1 < 3"],
+            [n1.lessThanOrEqualTo(Expression.int(3)), "number1 <= 3"],
+            [n1.greaterThan(Expression.int(6)), "number1 > 6"],
+            [n1.greaterThanOrEqualTo(Expression.int(6)), "number1 >= 6"],
+            [n1.equalTo(Expression.int(7)), "number1 == 7"],
+            [n1.notEqualTo(Expression.int(7)), "number1 != 7"],
         ]
         let numbers = try loadNumbers(10)
         try runTestWithNumbers(numbers, cases: cases)
@@ -99,16 +99,16 @@ class QueryTest: CBLTestCase {
         let n1 = Expression.property("number1")
         let n2 = Expression.property("number2")
         let cases = [
-            [n1.multiply(2).greaterThan(8), "(number1 * 2) > 8"],
-            [n1.divide(2).greaterThan(3), "(number1 / 2) > 3"],
-            [n1.modulo(2).equalTo(0), "modulus:by:(number1, 2) == 0"],
-            [n1.add(5).greaterThan(10), "(number1 + 5) > 10"],
-            [n1.subtract(5).greaterThan(0), "(number1 - 5) > 0"],
-            [n1.multiply(n2).greaterThan(10), "(number1 * number2) > 10"],
-            [n2.divide(n1).greaterThan(3), "(number2 / number1) > 3"],
-            [n2.modulo(n1).equalTo(0), "modulus:by:(number2, number1) == 0"],
-            [n1.add(n2).equalTo(10), "(number1 + number2) == 10"],
-            [n1.subtract(n2).greaterThan(0), "(number1 - number2) > 0"]
+            [n1.multiply(Expression.int(2)).greaterThan(Expression.int(8)), "(number1 * 2) > 8"],
+            [n1.divide(Expression.int(2)).greaterThan(Expression.int(3)), "(number1 / 2) > 3"],
+            [n1.modulo(Expression.int(2)).equalTo(Expression.int(0)), "modulus:by:(number1, 2) == 0"],
+            [n1.add(Expression.int(5)).greaterThan(Expression.int(10)), "(number1 + 5) > 10"],
+            [n1.subtract(Expression.int(5)).greaterThan(Expression.int(0)), "(number1 - 5) > 0"],
+            [n1.multiply(n2).greaterThan(Expression.int(10)), "(number1 * number2) > 10"],
+            [n2.divide(n1).greaterThan(Expression.int(3)), "(number2 / number1) > 3"],
+            [n2.modulo(n1).equalTo(Expression.int(0)), "modulus:by:(number2, number1) == 0"],
+            [n1.add(n2).equalTo(Expression.int(10)), "(number1 + number2) == 10"],
+            [n1.subtract(n2).greaterThan(Expression.int(0)), "(number1 - number2) > 0"]
         ]
         let numbers = try loadNumbers(10)
         try runTestWithNumbers(numbers, cases: cases)
@@ -119,8 +119,8 @@ class QueryTest: CBLTestCase {
         let n1 = Expression.property("number1")
         let n2 = Expression.property("number2")
         let cases = [
-            [n1.greaterThan(3).and(n2.greaterThan(3)), "number1 > 3 AND number2 > 3"],
-            [n1.lessThan(3).or(n2.lessThan(3)), "number1 < 3 OR number2 < 3"]
+            [n1.greaterThan(Expression.int(3)).and(n2.greaterThan(Expression.int(3))), "number1 > 3 AND number2 > 3"],
+            [n1.lessThan(Expression.int(3)).or(n2.lessThan(Expression.int(3))), "number1 < 3 OR number2 < 3"]
         ]
         let numbers = try loadNumbers(10)
         try runTestWithNumbers(numbers, cases: cases)
@@ -176,7 +176,7 @@ class QueryTest: CBLTestCase {
         try saveDocument(doc1)
         
         var q = Query.select(kDOCID).from(DataSource.database(db)).where(
-            Expression.property("string").is("string"))
+            Expression.property("string").is(Expression.string("string")))
         var numRows = try verifyQuery(q) { (n, r) in
             let doc = db.document(withID: r.string(at: 0)!)!
             XCTAssertEqual(doc.id, doc1.id);
@@ -185,7 +185,7 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(numRows, 1);
         
         q = Query.select(kDOCID).from(DataSource.database(db)).where(
-            Expression.property("string").isNot("string1"))
+            Expression.property("string").isNot(Expression.string("string1")))
         numRows = try verifyQuery(q) { (n, r) in
             let doc = db.document(withID: r.string(at: 0)!)!
             XCTAssertEqual(doc.id, doc1.id);
@@ -198,7 +198,7 @@ class QueryTest: CBLTestCase {
     func testWhereBetween() throws {
         let n1 = Expression.property("number1")
         let cases = [
-            [n1.between(3, and: 7), "number1 BETWEEN {3, 7}"]
+            [n1.between(Expression.int(3), and: Expression.int(7)), "number1 BETWEEN {3, 7}"]
         ]
         let numbers = try loadNumbers(10)
         try runTestWithNumbers(numbers, cases: cases)
@@ -208,7 +208,7 @@ class QueryTest: CBLTestCase {
     func testWhereLike() throws {
         try loadJSONResource(name: "names_100")
         
-        let w = Expression.property("name.first").like("%Mar%")
+        let w = Expression.property("name.first").like(Expression.string("%Mar%"))
         let q = Query
             .select(kDOCID)
             .from(DataSource.database(db))
@@ -231,7 +231,8 @@ class QueryTest: CBLTestCase {
     func testWhereIn() throws {
         try loadJSONResource(name: "names_100")
         let expected = ["Marcy", "Margaretta", "Margrett", "Marlen", "Maryjo"]
-        let w = Expression.property("name.first").in(expected)
+        let names = expected.map() { Expression.string($0) }
+        let w = Expression.property("name.first").in(names)
         let o = Ordering.property("name.first")
         let q = Query.select(kDOCID).from(DataSource.database(db)).where(w).orderBy(o)
         let numRows = try verifyQuery(q, block: { (n, r) in
@@ -247,7 +248,7 @@ class QueryTest: CBLTestCase {
         // https://github.com/couchbase/couchbase-lite-ios/issues/1668
         try loadJSONResource(name: "names_100")
         
-        let w = Expression.property("name.first").regex("^Mar.*")
+        let w = Expression.property("name.first").regex(Expression.string("^Mar.*"))
         let q = Query
             .select(kDOCID)
             .from(DataSource.database(db))
@@ -369,7 +370,7 @@ class QueryTest: CBLTestCase {
         try loadJSONResource(name: "names_100")
         
         let STATE  = Expression.property("contact.address.state");
-        let COUNT  = Function.count(1)
+        let COUNT  = Function.count(Expression.int(1))
         let MAXZIP = Function.max(Expression.property("contact.address.zip"))
         let GENDER = Expression.property("gender")
         
@@ -380,7 +381,7 @@ class QueryTest: CBLTestCase {
         var q = Query
             .select(S_STATE, S_COUNT, S_MAXZIP)
             .from(DataSource.database(db))
-            .where(GENDER.equalTo("female"))
+            .where(GENDER.equalTo(Expression.string("female")))
             .groupBy(STATE)
             .orderBy(Ordering.expression(STATE))
         
@@ -406,9 +407,9 @@ class QueryTest: CBLTestCase {
         q = Query
             .select(S_STATE, S_COUNT, S_MAXZIP)
             .from(DataSource.database(db))
-            .where(GENDER.equalTo("female"))
+            .where(GENDER.equalTo(Expression.string("female")))
             .groupBy(STATE)
-            .having(COUNT.greaterThan(1))
+            .having(COUNT.greaterThan(Expression.int(1)))
             .orderBy(Ordering.expression(STATE))
         
         numRow = try verifyQuery(q, block: { (n, r) in
@@ -504,7 +505,7 @@ class QueryTest: CBLTestCase {
             .select(SelectResult.expression(NUMBER1))
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(NUMBER1))
-            .limit(5)
+            .limit(Expression.int(5))
         
         var expectedNumbers = [1, 2, 3, 4, 5]
         var numRow = try verifyQuery(q, block: { (n, row) in
@@ -541,7 +542,7 @@ class QueryTest: CBLTestCase {
             .select(SelectResult.expression(NUMBER1))
             .from(DataSource.database(db))
             .orderBy(Ordering.expression(NUMBER1))
-            .limit(5, offset: 3)
+            .limit(Expression.int(5), offset: Expression.int(3))
         
         var expectedNumbers = [4, 5, 6, 7, 8]
         var numRow = try verifyQuery(q, block: { (n, row) in
@@ -665,8 +666,8 @@ class QueryTest: CBLTestCase {
         })
         XCTAssertEqual(numRow, 1)
         
-        let ARRAY_CONTAINS1 = ArrayFunction.contains(Expression.property("array"), value: "650-123-0001")
-        let ARRAY_CONTAINS2 = ArrayFunction.contains(Expression.property("array"), value: "650-123-0003")
+        let ARRAY_CONTAINS1 = ArrayFunction.contains(Expression.property("array"), value: Expression.string("650-123-0001"))
+        let ARRAY_CONTAINS2 = ArrayFunction.contains(Expression.property("array"), value: Expression.string("650-123-0003"))
         q = Query
             .select(SelectResult.expression(ARRAY_CONTAINS1), SelectResult.expression(ARRAY_CONTAINS2))
             .from(DataSource.database(db))
@@ -711,7 +712,7 @@ class QueryTest: CBLTestCase {
                          Function.acos(p),
                          Function.asin(p),
                          Function.atan(p),
-                         Function.atan2(x: p, y: 90),
+                         Function.atan2(x: p, y: Expression.int(90)),
                          Function.ceil(p),
                          Function.cos(p),
                          Function.degrees(p),
@@ -719,16 +720,16 @@ class QueryTest: CBLTestCase {
                          Function.floor(p),
                          Function.ln(p),
                          Function.log(p),
-                         Function.power(base: p, exponent: 2),
+                         Function.power(base: p, exponent: Expression.int(2)),
                          Function.radians(p),
                          Function.round(p),
-                         Function.round(p, digits: 1),
+                         Function.round(p, digits: Expression.int(1)),
                          Function.sign(p),
                          Function.sin(p),
                          Function.sqrt(p),
                          Function.tan(p),
                          Function.trunc(p),
-                         Function.trunc(p, digits: 1)]
+                         Function.trunc(p, digits: Expression.int(1))]
         
         var index = 0
         for f in functions {
@@ -753,8 +754,8 @@ class QueryTest: CBLTestCase {
         let p = Expression.property("greeting")
         
         // Contains:
-        let CONTAINS1 = Function.contains(p, substring: "8")
-        let CONTAINS2 = Function.contains(p, substring: "9")
+        let CONTAINS1 = Function.contains(p, substring: Expression.string("8"))
+        let CONTAINS2 = Function.contains(p, substring: Expression.string("9"))
         var q = Query
             .select(SelectResult.expression(CONTAINS1), SelectResult.expression(CONTAINS2))
             .from(DataSource.database(db))
@@ -809,13 +810,13 @@ class QueryTest: CBLTestCase {
         let S_DOC_ID  = SelectResult.expression(DOC_ID)
         
         let LIKES = Expression.property("likes")
-        let VAR_LIKE = ArrayExpression.variable("LIKE")
+        let LIKE = ArrayExpression.variable("LIKE")
         
         // ANY:
         var q = Query
             .select(S_DOC_ID)
             .from(DataSource.database(db))
-            .where(ArrayExpression.any("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("climbing")))
+            .where(ArrayExpression.any(LIKE).in(LIKES).satisfies(LIKE.equalTo(Expression.string("climbing"))))
         
         let expected = ["doc-017", "doc-021", "doc-023", "doc-045", "doc-060"]
         var numRow = try verifyQuery(q, block: { (n, r) in
@@ -827,7 +828,7 @@ class QueryTest: CBLTestCase {
         q = Query
             .select(S_DOC_ID)
             .from(DataSource.database(db))
-            .where(ArrayExpression.every("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("taxes")))
+            .where(ArrayExpression.every(LIKE).in(LIKES).satisfies(LIKE.equalTo(Expression.string("taxes"))))
         
         numRow = try verifyQuery(q, block: { (n, r) in
             if n == 1 {
@@ -840,7 +841,7 @@ class QueryTest: CBLTestCase {
         q = Query
             .select(S_DOC_ID)
             .from(DataSource.database(db))
-            .where(ArrayExpression.anyAndEvery("LIKE").in(LIKES).satisfies(VAR_LIKE.equalTo("taxes")))
+            .where(ArrayExpression.anyAndEvery(LIKE).in(LIKES).satisfies(LIKE.equalTo(Expression.string("taxes"))))
         
         numRow = try verifyQuery(q, block: { (n, r) in })
         XCTAssertEqual(numRow, 0)
@@ -1044,8 +1045,8 @@ class QueryTest: CBLTestCase {
             
             let VALUE = Expression.property("value")
             let comparison = data.2 ?
-                VALUE.collate(data.3).equalTo(data.1) :
-                VALUE.collate(data.3).lessThan(data.1)
+                VALUE.collate(data.3).equalTo(Expression.string(data.1)) :
+                VALUE.collate(data.3).lessThan(Expression.string(data.1))
             
             let q = Query.select().from(DataSource.database(db)).where(comparison)
             let numRow = try verifyQuery(q, block: { (n, r) in })
@@ -1062,7 +1063,7 @@ class QueryTest: CBLTestCase {
         let q = Query
             .select()
             .from(DataSource.database(db))
-            .where(Expression.property("number1").lessThan(10))
+            .where(Expression.property("number1").lessThan(Expression.int(10)))
             .orderBy(Ordering.property("number1"))
         
         let x = expectation(description: "changes")
@@ -1096,7 +1097,7 @@ class QueryTest: CBLTestCase {
         let q = Query
             .select()
             .from(DataSource.database(db))
-            .where(Expression.property("number1").lessThan(10))
+            .where(Expression.property("number1").lessThan(Expression.int(10)))
             .orderBy(Ordering.property("number1"))
         
         let token = q.addChangeListener { (change) in

@@ -8,44 +8,44 @@
 
 #import "CBLQueryArrayExpression.h"
 #import "CBLQuantifiedExpression.h"
-#import "CBLVariableExpression.h"
+#import "CBLQueryVariableExpression+Internal.h"
 
 @implementation CBLQueryArrayExpression
 
 
-+ (CBLQueryExpression*) variableNamed: (NSString*)name {
-    return [[CBLVariableExpression alloc] initWithVariableNamed: name];
++ (CBLQueryVariableExpression*) variableWithName: (NSString*)name {
+    return [[CBLQueryVariableExpression alloc] initWithName: name];
 }
 
 
-+ (CBLQueryExpression*) any: (NSString*)variableName
-                         in: (id)inExpression
++ (CBLQueryExpression*) any: (CBLQueryVariableExpression*)variable
+                         in: (CBLQueryExpression*)inExpression
                   satisfies: (CBLQueryExpression*)satisfies
 {
     return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeAny
-                                                variable: variableName
+                                                variable: variable
                                                       in: inExpression
                                                satisfies: satisfies];
 }
 
 
-+ (CBLQueryExpression*) anyAndEvery: (NSString*)variableName
-                                 in: (id)inExpression
++ (CBLQueryExpression*) anyAndEvery: (CBLQueryVariableExpression*)variable
+                                 in: (CBLQueryExpression*)inExpression
                           satisfies: (CBLQueryExpression*)satisfies
 {
     return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeAnyAndEvery
-                                                variable: variableName
+                                                variable: variable
                                                       in: inExpression
                                                satisfies: satisfies];
 }
 
 
-+ (CBLQueryExpression*) every: (NSString*)variableName
-                           in: (id)inExpression
++ (CBLQueryExpression*) every: (CBLQueryVariableExpression*)variable
+                           in: (CBLQueryExpression*)inExpression
                     satisfies: (CBLQueryExpression*)satisfies
 {
     return [[CBLQuantifiedExpression alloc] initWithType: CBLQuantifiedTypeEvery
-                                                variable: variableName
+                                                variable: variable
                                                       in: inExpression
                                                satisfies: satisfies];
 }

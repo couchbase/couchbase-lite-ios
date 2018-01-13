@@ -35,27 +35,30 @@ public final class ArrayExpressionSatisfies {
     // MARK: Internal
     
     let type: QuantifiesType
-    let variable: String
-    let inExpression: Any
+    let variable: VariableExpression
+    let inExpression: Expression
     
-    init(type: QuantifiesType, variable: String, inExpression: Any) {
+    init(type: QuantifiesType, variable: VariableExpression, inExpression: Expression) {
         self.type = type
         self.variable = variable
         self.inExpression = inExpression
     }
     
-    static func toImpl(type: QuantifiesType, variable: String, inExpression: Any,
+    static func toImpl(type: QuantifiesType,
+                       variable: VariableExpression,
+                       inExpression: Expression,
                        satisfies: Expression) -> CBLQueryExpression
     {
-        let inImpl = Expression.toImpl(inExpression)
-        let satisfiesImpl = satisfies.impl
+        let v = variable.impl as! CBLQueryVariableExpression
+        let i = inExpression.impl
+        let s = satisfies.impl
         switch type {
         case .any:
-            return CBLQueryArrayExpression.any(variable, in: inImpl, satisfies: satisfiesImpl)
+            return CBLQueryArrayExpression.any(v, in: i, satisfies: s)
         case .anyAndEvery:
-            return CBLQueryArrayExpression.anyAndEvery(variable, in: inImpl, satisfies: satisfiesImpl)
+            return CBLQueryArrayExpression.anyAndEvery(v, in: i, satisfies: s)
         case .every:
-            return CBLQueryArrayExpression.every(variable, in: inImpl, satisfies: satisfiesImpl)
+            return CBLQueryArrayExpression.every(v, in: i, satisfies: s)
         }
     }
     

@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "CBLQueryExpression.h"
+@class CBLQueryVariableExpression;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -20,9 +21,9 @@ typedef NS_ENUM(NSInteger, CBLQuantifiedType) {
 @interface CBLQuantifiedExpression : CBLQueryExpression
 
 - (instancetype) initWithType: (CBLQuantifiedType)type
-                     variable: (NSString*)variable
-                           in: (id)inExpression
-                    satisfies: (id)satisfies;
+                     variable: (CBLQueryVariableExpression*)variable
+                           in: (CBLQueryExpression*)inExpression
+                    satisfies: (CBLQueryExpression*)satisfies;
 
 @end
 

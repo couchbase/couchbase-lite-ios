@@ -34,8 +34,8 @@ typedef NS_ENUM(NSInteger, CBLBinaryExpType) {
 
 @interface CBLBinaryExpression: CBLQueryExpression
 
-- (instancetype) initWithLeftExpression: (id)lhs
-                        rightExpression: (id)rhs
+- (instancetype) initWithLeftExpression: (CBLQueryExpression*)lhs
+                        rightExpression: (CBLQueryExpression*)rhs
                                    type: (CBLBinaryExpType)type;
 
 @end

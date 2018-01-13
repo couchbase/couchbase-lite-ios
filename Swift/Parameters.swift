@@ -43,7 +43,7 @@ public final class Parameters {
         /// - Parameters:
         ///   - value: The boolean value.
         ///   - name: The parameter name.
-        /// - Returns: The Parameters object.
+        /// - Returns: The self object.
         @discardableResult public func setBoolean(_ value: Bool, forName name: String) -> Self {
             return setValue(value, forName: name)
         }
@@ -55,7 +55,7 @@ public final class Parameters {
         /// - Parameters:
         ///   - value: The date value.
         ///   - name: The parameter name.
-        /// - Returns: The Parameters object.
+        /// - Returns: The self object.
         @discardableResult public func setDate(_ value: Date?, forName name: String) -> Self {
             return setValue(value, forName: name)
         }
@@ -67,7 +67,7 @@ public final class Parameters {
         /// - Parameters:
         ///   - value: The double value.
         ///   - name: The parameter name.
-        /// - Returns: The Parameters object.
+        /// - Returns: The self object.
         @discardableResult public func setDouble(_ value: Double, forName name: String) -> Self {
             return setValue(value, forName: name)
         }
@@ -79,7 +79,7 @@ public final class Parameters {
         /// - Parameters:
         ///   - value: The float value.
         ///   - name: The parameter name.
-        /// - Returns: The Parameters object.
+        /// - Returns: The self object.
         @discardableResult public func setFloat(_ value: Float, forName name: String) -> Self {
             return setValue(value, forName: name)
         }
@@ -91,7 +91,7 @@ public final class Parameters {
         /// - Parameters:
         ///   - value: The int value.
         ///   - name: The parameter name.
-        /// - Returns: The Parameters object.
+        /// - Returns: The self object.
         @discardableResult public func setInt(_ value: Int, forName name: String) -> Self {
             return setValue(value, forName: name)
         }
@@ -103,7 +103,7 @@ public final class Parameters {
         /// - Parameters:
         ///   - value: The int64 value.
         ///   - name: The parameter name.
-        /// - Returns: The Parameters object.
+        /// - Returns: The self object.
         @discardableResult public func setInt64(_ value: Int64, forName name: String) -> Self {
             return setValue(value, forName: name)
         }
@@ -115,7 +115,7 @@ public final class Parameters {
         /// - Parameters:
         ///   - value: The String value.
         ///   - name: The parameter name.
-        /// - Returns: The Parameters object.
+        /// - Returns: The self object.
         @discardableResult public func setString(_ value: String?, forName name: String) -> Self {
             return setValue(value, forName: name)
         }
@@ -127,7 +127,7 @@ public final class Parameters {
         /// - Parameters:
         ///   - value: The value.
         ///   - name: The parameter name.
-        /// - Returns: The Parameters object.
+        /// - Returns: The self object.
         @discardableResult public func setValue(_ value: Any?, forName name: String) -> Self {
             params[name] = value
             return self

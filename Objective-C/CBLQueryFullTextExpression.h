@@ -28,10 +28,10 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Creates a full-text match expression with the given search text.
 
- @param text The search text.
+ @param query The query string.
  @return The full-text match expression.
  */
-- (CBLQueryExpression*) match: (NSString*)text;
+- (CBLQueryExpression*) match: (NSString*)query;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

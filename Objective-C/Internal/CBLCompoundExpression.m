@@ -10,12 +10,12 @@
 #import "CBLQueryExpression+Internal.h"
 
 @implementation CBLCompoundExpression {
-    NSArray* _expressions;
+    NSArray<CBLQueryExpression*>* _expressions;
     CBLCompoundExpType _type;
 }
 
 
-- (instancetype) initWithExpressions: (NSArray*)expressions
+- (instancetype) initWithExpressions: (NSArray<CBLQueryExpression*>*)expressions
                                 type: (CBLCompoundExpType)type
 {
     self = [super initWithNone];
@@ -44,8 +44,8 @@
             break;
     }
     
-    for (id expr in _expressions) {
-        [json addObject: [self jsonValue: expr]];
+    for (CBLQueryExpression* expr in _expressions) {
+        [json addObject: [expr asJSON]];
     }
     
     return json;

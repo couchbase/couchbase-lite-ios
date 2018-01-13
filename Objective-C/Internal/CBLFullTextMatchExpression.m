@@ -11,22 +11,22 @@
 
 @implementation CBLFullTextMatchExpression {
     NSString* _indexName;
-    NSString* _text;
+    NSString* _query;
 }
 
-- (instancetype) initWithIndexName: (NSString*)indexName text: (NSString*)text
+- (instancetype) initWithIndexName: (NSString*)indexName text: (NSString*)query
 {
     self = [super initWithNone];
     if (self) {
         _indexName = indexName;
-        _text = text;
+        _query = query;
     }
     return self;
 }
 
 
 - (id) asJSON {
-    return @[@"MATCH", _indexName, _text];
+    return @[@"MATCH", _indexName, _query];
 }
 
 @end

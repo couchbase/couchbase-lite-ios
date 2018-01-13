@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 @class CBLQueryCollation;
-
+@class CBLVariableExpression;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -52,6 +52,82 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (CBLQueryExpression*) allFrom: (nullable NSString*)alias;
 
+#pragma mark - Value:
+
+/**
+ Creates a value expresion. The supported value types are NSString,
+ NSNumber, NSInteger, long long, float, double, boolean, NSDate and
+ null.
+
+ @param value The value.
+ @return The value expression.
+ */
++ (CBLQueryExpression*) value: (nullable id)value;
+
+/**
+ Creates a string expression.
+
+ @param value The string value.
+ @return The string expression.
+ */
++ (CBLQueryExpression*) string: (nullable NSString*)value;
+
+/**
+ Creates a number expression.
+
+ @param value The number value.
+ @return The number expression.
+ */
++ (CBLQueryExpression*) number: (nullable NSNumber*)value;
+
+/**
+ Creates an integer expression.
+
+ @param value The integer value.
+ @return The integer expression.
+ */
++ (CBLQueryExpression*) integer: (NSInteger)value;
+
+/**
+ Creates a long long expression.
+
+ @param value The long long value.
+ @return The long long expression.
+ */
++ (CBLQueryExpression*) longLong: (long long)value;
+
+/**
+ Creates a float expression.
+
+ @param value The float value.
+ @return The float expression.
+ */
++ (CBLQueryExpression*) float: (float)value;
+
+/**
+ Creates a double expression.
+
+ @param value The double value.
+ @return The double expression.
+ */
++ (CBLQueryExpression*) double: (double)value;
+
+/**
+ Creates a boolean expression.
+
+ @param value The boolean value.
+ @return The boolean expression.
+ */
++ (CBLQueryExpression*) boolean: (BOOL)value;
+
+/**
+ Creates a date expression.
+
+ @param value The date value.
+ @return The date expression.
+ */
++ (CBLQueryExpression*) date: (nullable NSDate*)value;
+
 #pragma mark - Parameter:
 
 /** 
@@ -70,7 +146,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be negated.
  @return The negated expression.
  */
-+ (CBLQueryExpression*) negated: (id)expression;
++ (CBLQueryExpression*) negated: (CBLQueryExpression*)expression;
 
 /**
  Creates a negated expression representing the negated result of the given expression.
@@ -78,7 +154,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be negated.
  @return The negated expression. 
  */
-+ (CBLQueryExpression*) not: (id)expression;
++ (CBLQueryExpression*) not: (CBLQueryExpression*)expression;
 
 #pragma mark - Arithmetic Operators:
 
@@ -88,7 +164,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be multipled by.
  @return The multiply expression.
  */
-- (CBLQueryExpression*) multiply: (id)expression;
+- (CBLQueryExpression*) multiply: (CBLQueryExpression*)expression;
 
 /** 
  Creates a divide expression to divide the current expression by the given expression.
@@ -96,7 +172,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be devided by.
  @return The divide expression.
  */
-- (CBLQueryExpression*) divide: (id)expression;
+- (CBLQueryExpression*) divide: (CBLQueryExpression*)expression;
 
 /** 
  Creates a modulo expression to modulo the current expression by the given expression.
@@ -104,7 +180,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be moduloed by.
  @return The modulo expression.
  */
-- (CBLQueryExpression*) modulo: (id)expression;
+- (CBLQueryExpression*) modulo: (CBLQueryExpression*)expression;
 
 /** 
  Creates an add expression to add the given expression to the current expression
@@ -112,7 +188,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to add to the current expression.
  @return  The add expression.
  */
-- (CBLQueryExpression*) add: (id)expression;
+- (CBLQueryExpression*) add: (CBLQueryExpression*)expression;
 
 /** 
  Creates a subtract expression to subtract the given expression from the current expression.
@@ -120,7 +196,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to substract from the current expression.
  @return The subtract expression.
  */
-- (CBLQueryExpression*) subtract: (id)expression;
+- (CBLQueryExpression*) subtract: (CBLQueryExpression*)expression;
 
 #pragma mark - Comparison operators:
 
@@ -131,7 +207,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be compared with the current expression.
  @return The less than expression.
  */
-- (CBLQueryExpression*) lessThan: (id)expression;
+- (CBLQueryExpression*) lessThan: (CBLQueryExpression*)expression;
 
 /** 
  Creates a less than or equal to expression that evaluates whether or not the current
@@ -140,7 +216,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be compared with the current expression.
  @return The less than or equal to expression.
  */
-- (CBLQueryExpression*) lessThanOrEqualTo: (id)expression;
+- (CBLQueryExpression*) lessThanOrEqualTo: (CBLQueryExpression*)expression;
 
 /** 
  Creates a greater than expression that evaluates whether or not the current expression
@@ -149,7 +225,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be compared with the current expression.
  @return The greater than expression.
  */
-- (CBLQueryExpression*) greaterThan: (id)expression;
+- (CBLQueryExpression*) greaterThan: (CBLQueryExpression*)expression;
 
 /** 
  Creates a greater than or equal to expression that evaluates whether or not the current
@@ -158,7 +234,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be compared with the current expression.
  @return The greater than or equal to expression.
  */
-- (CBLQueryExpression*) greaterThanOrEqualTo: (id)expression;
+- (CBLQueryExpression*) greaterThanOrEqualTo: (CBLQueryExpression*)expression;
 
 /** 
  Creates an equal to expression that evaluates whether or not the current expression is equal
@@ -167,7 +243,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be compared with the current expression.
  @return  The equal to expression.
  */
-- (CBLQueryExpression*) equalTo: (nullable id)expression;
+- (CBLQueryExpression*) equalTo: (CBLQueryExpression*)expression;
 
 /** 
  Creates a NOT equal to expression that evaluates whether or not the current expression
@@ -176,7 +252,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be compared with the current expression.
  @return The NOT equal to expression.
  */
-- (CBLQueryExpression*) notEqualTo: (nullable id)expression;
+- (CBLQueryExpression*) notEqualTo: (CBLQueryExpression*)expression;
 
 #pragma mark - Like operators:
 
@@ -187,7 +263,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be compared with the current expression.
  @return The Like expression.
  */
-- (CBLQueryExpression*) like: (id)expression;
+- (CBLQueryExpression*) like: (CBLQueryExpression*)expression;
 
 #pragma mark - Regex operators:
 
@@ -198,7 +274,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be compared with the current expression.
  @return The regex match expression.
  */
-- (CBLQueryExpression*) regex: (id)expression;
+- (CBLQueryExpression*) regex: (CBLQueryExpression*)expression;
 
 #pragma mark - IS operators:
 
@@ -209,7 +285,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be compared with the current expression.
  @return The IS expression.
  */
-- (CBLQueryExpression*) is: (id)expression;
+- (CBLQueryExpression*) is: (CBLQueryExpression*)expression;
 
 /**
  Creates an IS NOT expression that evaluates whether or not the current expression is not equal to
@@ -217,7 +293,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to be compared with the current expression.
  @return The IS NOT expression.
  */
-- (CBLQueryExpression*) isNot: (id)expression;
+- (CBLQueryExpression*) isNot: (CBLQueryExpression*)expression;
 
 #pragma mark - NULL or MISSING check operators:
 
@@ -245,7 +321,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to AND with the current expression.
  @return The logical AND expression.
  */
-- (CBLQueryExpression*) andExpression: (id)expression;
+- (CBLQueryExpression*) andExpression: (CBLQueryExpression*)expression;
 
 /**
  Creates a logical OR expression that performs logical OR operation with the current expression.
@@ -253,7 +329,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression The expression to OR with the current expression.
  @return The logical OR Expression.
  */
-- (CBLQueryExpression*) orExpression: (id)expression;
+- (CBLQueryExpression*) orExpression: (CBLQueryExpression*)expression;
 
 #pragma mark - Aggregate operators:
 
@@ -265,7 +341,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expression2 The inclusive upper bound expression.
  @return The between expression.
  */
-- (CBLQueryExpression*) between: (id)expression1 and: (id)expression2;
+- (CBLQueryExpression*) between: (CBLQueryExpression*)expression1 and: (CBLQueryExpression*)expression2;
 
 #pragma mark - Collection operators:
 
@@ -276,7 +352,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expressions The expression array to be evaluated with.
  @return The IN exprssion.
  */
-- (CBLQueryExpression*) in: (NSArray*)expressions;
+- (CBLQueryExpression*) in: (NSArray<CBLQueryExpression*>*)expressions;
 
 #pragma mark - Collation:
 
@@ -295,6 +371,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) init NS_UNAVAILABLE;
 
 @end
+
 
 
 NS_ASSUME_NONNULL_END

@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+@class CBLQueryExpression;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -19,13 +20,13 @@ NS_ASSUME_NONNULL_BEGIN
 /**
   Create a LIMIT component to limit the number of results to not more than the given limit value.
  */
-+ (CBLQueryLimit*) limit: (id)expression;
++ (CBLQueryLimit*) limit: (CBLQueryExpression*)expression;
 
 /** 
  Create a LIMIT component to skip the returned results for the given offset position
  and to limit the number of results to not more than the given limit value.
  */
-+ (CBLQueryLimit*) limit: (id)expression offset: (nullable id)expression;
++ (CBLQueryLimit*) limit: (CBLQueryExpression*)expression offset: (nullable CBLQueryExpression*)expression;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

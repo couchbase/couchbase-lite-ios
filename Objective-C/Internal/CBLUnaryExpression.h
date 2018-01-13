@@ -20,7 +20,8 @@ typedef NS_ENUM(NSInteger, CBLUnaryExpType) {
 
 @interface CBLUnaryExpression : CBLQueryExpression
 
-- (instancetype) initWithExpression: (id)operand type: (CBLUnaryExpType)type;
+- (instancetype) initWithExpression: (CBLQueryExpression*)operand
+                               type: (CBLUnaryExpType)type;
 
 @end
 
