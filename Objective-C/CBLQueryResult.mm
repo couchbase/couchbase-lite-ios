@@ -23,8 +23,9 @@ using namespace fleeceapi;
 
 @implementation CBLQueryResult {
     CBLQueryResultSet* _rs;
-    FLArrayIterator _columns;
     MContext* _context;
+    NSMutableArray<NSValue*>* _values;
+    uint64_t _missingColumns;
 }
 
 
@@ -35,8 +36,9 @@ using namespace fleeceapi;
     self = [super init];
     if (self) {
         _rs = rs;
-        _columns = e->columns;
         _context = context;
+        _missingColumns = e->missingColumns;
+        [self extractColumns: e->columns];
     }
     return self;
 }
@@ -236,7 +238,7 @@ using namespace fleeceapi;
 
 - (BOOL) containsValueForKey: (NSString*)key {
     NSInteger index = [self indexForColumnName: key];
-    return index > 0;
+    return index >= 0;
 }
 
 
@@ -244,8 +246,10 @@ using namespace fleeceapi;
     NSMutableDictionary* dict = [NSMutableDictionary dictionary];
     for (NSString* name in _rs.columnNames) {
         NSInteger index = [self indexForColumnName: name];
-        id value = [[self valueAtIndex: index] cbl_toPlainObject];
-        dict[name] = value ? value : [NSNull null];
+        if (index >= 0) {
+            id value = [[self valueAtIndex: index] cbl_toPlainObject];
+            dict[name] = value ? value : [NSNull null];
+        }
     }
     return dict;
 }
@@ -277,23 +281,39 @@ using namespace fleeceapi;
 }
 
 
+- (void) extractColumns: (FLArrayIterator)columns {
+    NSUInteger count = _rs.columnNames.count;
+    _values = [NSMutableArray arrayWithCapacity: count];
+    for (uint i = 0; i < count; i++) {
+        FLValue value = FLArrayIterator_GetValueAt(&columns, (uint32_t)i);
+        _values[i] = [NSValue valueWithPointer: value];
+    }
+}
+
+
 - (NSInteger) indexForColumnName: (NSString*)name {
-    NSNumber* index = [_rs.columnNames objectForKey: name];
-    return index ? index.integerValue : -1;
+    NSNumber* colIndex = [_rs.columnNames objectForKey: name];
+    if (!colIndex)
+        return -1;
+    
+    NSInteger index =  colIndex.integerValue;
+    BOOL hasValue = (_missingColumns & (1 << index)) == 0;
+    return hasValue ? index : -1;
 }
 
 
 - (id) fleeceValueToObjectAtIndex: (NSUInteger)index {
     FLValue value = [self fleeceValueAtIndex: index];
-    if (value == nullptr)
+    if (value == nullptr || FLValue_GetType(value) == kFLNull)
         return nil;
+    
     MRoot<id> root(_context, value, false);
     return root.asNative();
 }
 
 
 - (FLValue) fleeceValueAtIndex: (NSUInteger)index {
-    return FLArrayIterator_GetValueAt(&_columns, (uint32_t)index);
+    return (FLValue)[[_values objectAtIndex: index] pointerValue];
 }
 
 

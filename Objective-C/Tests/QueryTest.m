@@ -1499,4 +1499,38 @@
     AssertEqual([rs allResults].count, 0u);
 }
 
+
+- (void) testMissingValue {
+    CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
+    [doc1 setValue: @"Scott" forKey: @"name"];
+    [doc1 setValue: nil forKey: @"address"];
+    [self saveDocument: doc1];
+    
+    CBLQuery *q = [CBLQuery select: @[[CBLQuerySelectResult property: @"name"],
+                                      [CBLQuerySelectResult property: @"address"],
+                                      [CBLQuerySelectResult property: @"age"]]
+                              from: [CBLQueryDataSource database: self.db]];
+    
+    NSError* error;
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
+    
+    CBLQueryResult* r = [rs nextObject];
+    
+    // Array:
+    AssertEqual(r.count, 3u);
+    AssertEqualObjects([r stringAtIndex: 0], @"Scott");
+    AssertNil([r valueAtIndex: 1]);
+    AssertNil([r valueAtIndex: 2]);
+    AssertEqualObjects([r toArray], (@[@"Scott", [NSNull null], [NSNull null]]));
+    
+    // Dictionary:
+    AssertEqualObjects([r stringForKey: @"name"], @"Scott");
+    AssertNil([r stringForKey: @"address"]);
+    Assert([r containsValueForKey: @"address"]);
+    AssertNil([r stringForKey: @"age"]);
+    AssertFalse([r containsValueForKey: @"age"]);
+    AssertEqualObjects([r toDictionary], (@{@"name": @"Scott", @"address": [NSNull null]}));
+}
+
 @end

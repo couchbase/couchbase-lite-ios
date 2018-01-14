@@ -1194,4 +1194,42 @@ class QueryTest: CBLTestCase {
         XCTAssert(rs.allResults().isEmpty)
     }
     
+    
+    func testMissingValue() throws {
+        let doc1 = createDocument("doc1")
+        doc1.setValue("Scott", forKey: "name")
+        doc1.setValue(nil, forKey: "address")
+        try saveDocument(doc1)
+        
+        let q = Query
+            .select(SelectResult.property("name"),
+                    SelectResult.property("address"),
+                    SelectResult.property("age"))
+            .from(DataSource.database(db))
+        
+        let rs = try q.execute()
+        let r = rs.next()!
+        
+        // Array:
+        XCTAssertEqual(r.count, 3)
+        XCTAssertEqual(r.string(at: 0), "Scott")
+        XCTAssertNil(r.value(at: 1))
+        XCTAssertNil(r.value(at: 2))
+        let array = r.toArray()
+        XCTAssertEqual(array.count, 3)
+        XCTAssertEqual(array[0] as! String, "Scott")
+        XCTAssertEqual(array[1] as! NSNull, NSNull())
+        XCTAssertEqual(array[2] as! NSNull, NSNull())
+        
+        // Dictionary:
+        XCTAssertEqual(r.string(forKey: "name"), "Scott")
+        XCTAssertNil(r.value(forKey: "address"))
+        XCTAssertTrue(r.contains(key: "address"))
+        XCTAssertNil(r.value(forKey: "age"))
+        XCTAssertFalse(r.contains(key: "age"))
+        let dict = r.toDictionary()
+        XCTAssertEqual(dict.count, 2)
+        XCTAssertEqual(dict["name"] as! String, "Scott")
+        XCTAssertEqual(dict["address"] as! NSNull, NSNull())
+    }
 }

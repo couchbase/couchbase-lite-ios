@@ -106,8 +106,14 @@ namespace cbl {
 }
 
 
-- (NSArray*) allResults {
-    return [self allObjects];
+- (NSArray<CBLQueryResult*>*) allResults {
+    NSMutableArray* results = [NSMutableArray array];
+    CBLQueryResult* r;
+    while((r = [self nextObject])) {
+        [results addObject: r];
+    }
+    return results;
+    // return [self allObjects];
 }
 
 
