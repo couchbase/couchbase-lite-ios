@@ -24,8 +24,10 @@
         return theirs;
     else if (mine.isDeleted)
         return mine;
-    else if (mine.generation >= theirs.generation) // hope I die before I get old
+    else if (mine.generation > theirs.generation)
         return mine;
+    else if (mine.generation < theirs.generation)
+        return theirs;
     else if ([mine.revID compare: theirs.revID] > 0)
         return mine;
     else
