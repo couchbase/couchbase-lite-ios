@@ -24,7 +24,7 @@ using namespace fleeceapi;
 @implementation CBLQueryResult {
     CBLQueryResultSet* _rs;
     MContext* _context;
-    NSMutableArray<NSValue*>* _values;
+    NSArray<NSValue*>* _values;
     uint64_t _missingColumns;
 }
 
@@ -37,8 +37,8 @@ using namespace fleeceapi;
     if (self) {
         _rs = rs;
         _context = context;
+        _values = [self extractColumns: e->columns];
         _missingColumns = e->missingColumns;
-        [self extractColumns: e->columns];
     }
     return self;
 }
@@ -281,13 +281,14 @@ using namespace fleeceapi;
 }
 
 
-- (void) extractColumns: (FLArrayIterator)columns {
+- (NSArray*) extractColumns: (FLArrayIterator)columns {
     NSUInteger count = _rs.columnNames.count;
-    _values = [NSMutableArray arrayWithCapacity: count];
+    NSMutableArray* values = [NSMutableArray arrayWithCapacity: count];
     for (uint i = 0; i < count; i++) {
         FLValue value = FLArrayIterator_GetValueAt(&columns, (uint32_t)i);
-        _values[i] = [NSValue valueWithPointer: value];
+        values[i] = [NSValue valueWithPointer: value];
     }
+    return values;
 }
 
 
@@ -313,6 +314,11 @@ using namespace fleeceapi;
 
 
 - (FLValue) fleeceValueAtIndex: (NSUInteger)index {
+    NSUInteger count = _rs.columnNames.count;
+    if (index >= count)
+        [NSException raise: NSRangeException
+                    format: @"index %lu beyond bounds of %lu selected keys.",
+                            (unsigned long)index, (unsigned long)count];
     return (FLValue)[[_values objectAtIndex: index] pointerValue];
 }
 
