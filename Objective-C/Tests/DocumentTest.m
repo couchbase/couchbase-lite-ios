@@ -1293,13 +1293,15 @@
     AssertFalse(doc.isDeleted);
  
     // Purge before save:
-    NSError* error;
-    AssertFalse([_db purgeDocument: doc error: &error]);
+    [self expectException: @"NSInvalidArgumentException" in: ^{
+        [_db purgeDocument: doc error: nil];
+    }];
     
     // Save:
     CBLDocument* savedDoc = [self saveDocument: doc];
     
     // Purge:
+    NSError* error;
     Assert([_db purgeDocument: savedDoc error: &error], @"Purging error: %@", error);
 }
 
