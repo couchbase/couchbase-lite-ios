@@ -499,9 +499,10 @@
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: @1 forKey: @"key"];
     
-    [self expectError: @"CouchbaseLite" code: 405 in: ^BOOL(NSError** error) {
-        return [self.db deleteDocument: doc error: error];
+    [self expectException: @"NSInvalidArgumentException" in: ^{
+        [self.db deleteDocument: doc error: nil];
     }];
+    
     AssertEqual(0, (long)self.db.count);
 }
 
@@ -610,9 +611,10 @@
 - (void) testPurgePreSaveDoc {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     
-    [self expectError: @"CouchbaseLite" code: 405 in: ^BOOL(NSError** error) {
-        return [self.db purgeDocument: doc error: error];
+    [self expectException: @"NSInvalidArgumentException" in: ^{
+        [self.db purgeDocument: doc error: nil];
     }];
+    
     AssertEqual(0, (long)self.db.count);
 }
 

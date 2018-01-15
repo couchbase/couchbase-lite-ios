@@ -19,8 +19,7 @@ static bool toCFNetworkError(C4Error err, int *outCode);
 
 static NSDictionary* statusDesc = @{
     @(kCBLStatusForbidden) : @"forbidden",
-    @(kCBLStatusNotFound)  : @"not found",
-    @(kCBLStatusNotAllow)  : @"not allow",
+    @(kCBLStatusNotFound)  : @"not found"
 };
 
 

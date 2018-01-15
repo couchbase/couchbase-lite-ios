@@ -184,9 +184,9 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
             return NO;
         
         if (!document.revID) {
-            NSString* mesg = @"Do not allow to purge a newly created document "
-                              "that has not been saved into the database.";
-            createError(kCBLStatusNotAllow, mesg, error);
+            [NSException raise: NSInvalidArgumentException
+                        format: @"Do not allow to purge a newly created document "
+                                 "that has not been saved into the database."];
             return NO;
         }
         
@@ -893,16 +893,16 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
                 error: (NSError**)outError
 {
     if (document.isInvalidated) {
-        NSString* mesg = @"Do not allow to save or delete the MutableDocument "
-                          "that has already been used to save or delete.";
-        createError(kCBLStatusNotAllow, mesg, outError);
+        [NSException raise: NSInvalidArgumentException
+                    format: @"Do not allow to save or delete the MutableDocument "
+                             "that has already been used to save or delete."];
         return NO;
     }
     
     if (deletion && !document.revID) {
-        NSString* mesg = @"Do not allow to delete a newly created document "
-                          "that has not been saved into the database.";
-        createError(kCBLStatusNotAllow, mesg, outError);
+        [NSException raise: NSInvalidArgumentException
+                    format: @"Do not allow to delete a newly created document "
+                             "that has not been saved into the database."];
         return NO;
     }
     
