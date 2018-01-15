@@ -1084,19 +1084,6 @@ class DocumentTest: CBLTestCase {
     }
     
     
-    func testDeleteNewDocument() throws {
-        let doc = createDocument("doc1")
-        doc.setValue("Scott Tiger", forKey: "name")
-        XCTAssertFalse(doc.isDeleted)
-        
-        XCTAssertThrowsError(try self.db.deleteDocument(doc), "") { (e) in
-            let error = e as NSError
-            XCTAssertEqual(error.domain, "CouchbaseLite")
-            XCTAssertEqual(error.code, 405)
-        }
-    }
-    
-    
     func testDeleteDocument() throws {
         let doc = createDocument("doc1")
         doc.setValue("Scott Tiger", forKey: "name")
@@ -1144,15 +1131,6 @@ class DocumentTest: CBLTestCase {
         doc.setValue("profile", forKey: "type")
         doc.setValue("Scott", forKey: "name")
         XCTAssertFalse(doc.isDeleted)
-        
-        // Purge before save:
-        try? self.db.purgeDocument(doc)
-        
-        XCTAssertThrowsError(try self.db.purgeDocument(doc), "") { (e) in
-            let error = e as NSError
-            XCTAssertEqual(error.domain, "CouchbaseLite")
-            XCTAssertEqual(error.code, 405)
-        }
         
         // Save:
         let savedDoc = try saveDocument(doc)
