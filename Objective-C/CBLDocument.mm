@@ -208,78 +208,78 @@ using namespace fleeceapi;
 }
 
 
-- (nullable id)valueForKey:(nonnull NSString *)key {
+- (nullable id) valueForKey: (nonnull NSString*)key {
     return [_dict valueForKey: key];
 }
 
 
-- (nullable NSString *)stringForKey:(nonnull NSString *)key {
+- (nullable NSString*) stringForKey: (nonnull NSString*)key {
     return [_dict stringForKey: key];
 }
 
 
-- (nullable NSNumber *)numberForKey:(nonnull NSString *)key {
+- (nullable NSNumber*) numberForKey: (nonnull NSString*)key {
     return [_dict numberForKey: key];
 }
 
 
-- (NSInteger)integerForKey:(nonnull NSString *)key {
+- (NSInteger) integerForKey:(nonnull NSString*)key {
     return [_dict integerForKey: key];
 }
 
 
-- (long long)longLongForKey:(nonnull NSString *)key {
+- (long long) longLongForKey: (nonnull NSString*)key {
     return [_dict longLongForKey: key];
 }
 
 
-- (float)floatForKey:(nonnull NSString *)key {
+- (float) floatForKey: (nonnull NSString*)key {
     return [_dict floatForKey: key];
 }
 
 
-- (double)doubleForKey:(nonnull NSString *)key {
+- (double) doubleForKey: (nonnull NSString*)key {
     return [_dict doubleForKey: key];
 }
 
 
-- (BOOL)booleanForKey:(nonnull NSString *)key {
+- (BOOL) booleanForKey: (nonnull NSString*)key {
     return [_dict booleanForKey: key];
 }
 
 
-- (nullable NSDate *)dateForKey:(nonnull NSString *)key {
+- (nullable NSDate*) dateForKey: (nonnull NSString*)key {
     return [_dict dateForKey: key];
 }
 
 
-- (nullable CBLBlob *)blobForKey:(nonnull NSString *)key {
+- (nullable CBLBlob*) blobForKey: (nonnull NSString*)key {
     return [_dict blobForKey: key];
 }
 
 
-- (nullable CBLArray *)arrayForKey:(nonnull NSString *)key {
+- (nullable CBLArray*) arrayForKey: (nonnull NSString*)key {
     return [_dict arrayForKey: key];
 }
 
 
-- (nullable CBLDictionary *)dictionaryForKey:(nonnull NSString *)key {
+- (nullable CBLDictionary*) dictionaryForKey:(nonnull NSString*)key {
     return [_dict dictionaryForKey: key];
 }
 
 
-- (BOOL)containsValueForKey:(nonnull NSString *)key {
+- (BOOL) containsValueForKey: (nonnull NSString *)key {
     return [_dict booleanForKey: key];
 }
 
 
-- (CBLFragment *)objectForKeyedSubscript:(NSString *)key {
+- (CBLFragment *) objectForKeyedSubscript: (NSString *)key {
     return [_dict objectForKeyedSubscript: key];
 }
 
-- (NSUInteger)countByEnumeratingWithState:(nonnull NSFastEnumerationState *)state
-                                  objects:(id  _Nullable __unsafe_unretained * _Nonnull)buffer
-                                    count:(NSUInteger)len
+- (NSUInteger) countByEnumeratingWithState: (nonnull NSFastEnumerationState *)state
+                                   objects: (id  _Nullable __unsafe_unretained * _Nonnull)buffer
+                                     count: (NSUInteger)len
 {
     return [_dict countByEnumeratingWithState: state objects: buffer count: len];
 }

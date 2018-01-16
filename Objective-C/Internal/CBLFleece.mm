@@ -40,17 +40,29 @@ namespace cbl {
 namespace fleeceapi {
     using namespace cbl;
 
+    // Check whether the dictionary is the old attachment or not:
+    static bool isOldAttachment(Dict properties, DocContext *context) {
+        auto sk = context->sharedKeys();
+        if (properties.get(C4STR("digest"), sk) != nullptr &&
+            properties.get(C4STR("length"), sk) != nullptr &&
+            properties.get(C4STR("stub"), sk) != nullptr &&
+            properties.get(C4STR("revpos"), sk) != nullptr &&
+            properties.get(C4STR("content_type"), sk) != nullptr)
+            return true;
+        return false;
+    }
 
     // Instantiate an Objective-C object for a Fleece dictionary with an "@type" key. */
-    static id createSpecialObjectOfType(slice type, Dict properties, DocContext *context) {
-        if (type == C4STR(kC4ObjectType_Blob)) {
+    static id createSpecialObjectOfType(Dict properties, DocContext *context) {
+        auto sk = context->sharedKeys();
+        slice type = properties.get(C4STR(kC4ObjectTypeProperty), sk).asString();
+        if ((type && type == C4STR(kC4ObjectType_Blob)) || isOldAttachment(properties, context)) {
             return [[CBLBlob alloc] initWithDatabase: context->database()
                                           properties: context->toObject(properties)];
         }
         return nil;
     }
-
-
+    
     // These are the three MValue methods that have to be implemented in any specialization,
     // here specialized for <id>.
 
@@ -66,13 +78,10 @@ namespace fleeceapi {
             case kFLDict: {
                 cacheIt = true;
                 auto context = (DocContext*)parent->context();
-                auto sk = context->sharedKeys();
-                slice type = value.asDict().get(C4STR(kC4ObjectTypeProperty), sk).asString();
-                if (type) {
-                    id obj = createSpecialObjectOfType(type, value.asDict(), context);
-                    if (obj)
-                        return obj;
-                }
+                id obj = createSpecialObjectOfType(value.asDict(), context);
+                if (obj)
+                    return obj;
+                
                 Class c = parent->mutableChildren() ? [CBLMutableDictionary class]
                                                     : [CBLDictionary class];
                 return [[c alloc] initWithMValue: mv inParent: parent];
@@ -102,8 +111,6 @@ namespace fleeceapi {
             return _dictIter.keyAsNSString(sharedStrings);
         }
     }
-
-
 }
 
 

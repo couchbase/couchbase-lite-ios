@@ -386,6 +386,9 @@
 		938B36A5200745FF004485D8 /* CBLQueryResultArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 938B3690200745FE004485D8 /* CBLQueryResultArray.h */; };
 		938B36A6200745FF004485D8 /* CBLQueryResultArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 938B36A3200745FE004485D8 /* CBLQueryResultArray.m */; };
 		938B36A7200745FF004485D8 /* CBLQueryResultArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 938B36A3200745FE004485D8 /* CBLQueryResultArray.m */; };
+		938B3702200D7D1D004485D8 /* MigrationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 938B3701200D7D1D004485D8 /* MigrationTest.m */; };
+		938B370A200D87C3004485D8 /* databases in Resources */ = {isa = PBXBuildFile; fileRef = 938B3709200D87C3004485D8 /* databases */; };
+		938B370B200D87C3004485D8 /* databases in Resources */ = {isa = PBXBuildFile; fileRef = 938B3709200D87C3004485D8 /* databases */; };
 		938CDF161E807EEB002EE790 /* Query.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF151E807EEB002EE790 /* Query.swift */; };
 		938CDF181E807F08002EE790 /* Select.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF171E807F08002EE790 /* Select.swift */; };
 		938CDF1A1E807F14002EE790 /* From.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF191E807F14002EE790 /* From.swift */; };
@@ -1033,6 +1036,8 @@
 		9385F3021FC645AE00032037 /* ConcurrentTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConcurrentTest.m; sourceTree = "<group>"; };
 		938B3690200745FE004485D8 /* CBLQueryResultArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryResultArray.h; sourceTree = "<group>"; };
 		938B36A3200745FE004485D8 /* CBLQueryResultArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryResultArray.m; sourceTree = "<group>"; };
+		938B3701200D7D1D004485D8 /* MigrationTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MigrationTest.m; sourceTree = "<group>"; };
+		938B3709200D87C3004485D8 /* databases */ = {isa = PBXFileReference; lastKnownFileType = folder; path = databases; sourceTree = "<group>"; };
 		938CDF151E807EEB002EE790 /* Query.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Query.swift; sourceTree = "<group>"; };
 		938CDF171E807F08002EE790 /* Select.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Select.swift; sourceTree = "<group>"; };
 		938CDF191E807F14002EE790 /* From.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = From.swift; sourceTree = "<group>"; };
@@ -1608,6 +1613,7 @@
 		9390BB9F1F50B9FE00FB99C4 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				938B3709200D87C3004485D8 /* databases */,
 				27EF6A951E2AC609004748DF /* names_100.json */,
 				273ADF7C1E36B514001E977F /* sentences.json */,
 				276740E61EE9141C0036DE42 /* SelfSigned.cer */,
@@ -1725,6 +1731,7 @@
 				9352945E1E51708E005CE4E8 /* DictionaryTest.m */,
 				9378C59D1E269F14001BB196 /* DocumentTest.m */,
 				931C14691EAAF08C0094F9B2 /* FragmentTest.m */,
+				938B3701200D7D1D004485D8 /* MigrationTest.m */,
 				93384F8B1EB151C100976B41 /* MiscTest.m */,
 				72A87A0E1E32E858008466FF /* NotificationTest.m */,
 				27EF6A931E298E26004748DF /* PredicateQueryTest.m */,
@@ -2449,6 +2456,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				938D20DD1E834E7F00F40E15 /* sentences.json in Resources */,
+				938B370B200D87C3004485D8 /* databases in Resources */,
 				27BE3B521E4E916B0012B74A /* names_100.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2480,6 +2488,7 @@
 				275FF6091E3FC24D005F90DD /* iTunesMusicLibrary.json in Resources */,
 				273ADF7D1E36B514001E977F /* sentences.json in Resources */,
 				276740E71EE9141C0036DE42 /* SelfSigned.cer in Resources */,
+				938B370A200D87C3004485D8 /* databases in Resources */,
 				27EF6A971E2AC61B004748DF /* names_100.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2850,6 +2859,7 @@
 				93384F8C1EB151C100976B41 /* MiscTest.m in Sources */,
 				9378C5971E25B473001BB196 /* CBLTestCase.m in Sources */,
 				9378C5911E25B3F0001BB196 /* DatabaseTest.m in Sources */,
+				938B3702200D7D1D004485D8 /* MigrationTest.m in Sources */,
 				9378C59E1E269F14001BB196 /* DocumentTest.m in Sources */,
 				93384F741EB14ABA00976B41 /* ConflictTest.m in Sources */,
 				9352945F1E51708E005CE4E8 /* DictionaryTest.m in Sources */,
