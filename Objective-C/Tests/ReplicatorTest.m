@@ -11,6 +11,8 @@
 #import "CBLDatabase+Internal.h"
 #import "ConflictTest.h"
 
+#define kCBLEnableSyncGatewayTest NO
+#define kCBLSyncGatewayTestHost @"localhost"
 
 @interface ReplicatorTest : CBLTestCase
 @end
@@ -101,7 +103,7 @@
 {
     repl = [[CBLReplicator alloc] initWithConfig: config];
     
-    XCTestExpectation *x = [self expectationWithDescription: @"Replicator Change"];
+    XCTestExpectation* x = [self expectationWithDescription: @"Replicator Change"];
     __weak typeof(self) wSelf = self;
     id token = [repl addChangeListener: ^(CBLReplicatorChange* change) {
         typeof(self) strongSelf = wSelf;
@@ -116,7 +118,7 @@
     }];
     
     [repl start];
-    [self waitForExpectations: @[x] timeout: 7.0];
+    [self waitForExpectations: @[x] timeout: 10.0];
     [repl removeChangeListenerWithToken: token];
 }
 
@@ -143,9 +145,41 @@
 }
 
 
+- (void) eraseRemoteDB: (NSURL*)url {
+    // Post to /db/_flush is supported by Sync Gateway 1.1, but not by CouchDB
+    NSURLComponents* comp = [NSURLComponents componentsWithURL: url resolvingAgainstBaseURL: YES];
+    comp.port = ([url.scheme isEqualToString: @"http"]) ? @4985 : @4995;
+    comp.path = [comp.path stringByAppendingPathComponent: @"_flush"];
+    
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: comp.URL];
+    request.HTTPMethod = @"POST";
+    
+    XCTestExpectation* x = [self expectationWithDescription: @"Complete Request"];
+    NSURLSessionDataTask* task = [[NSURLSession sharedSession] dataTaskWithRequest: request
+                                                                 completionHandler:
+                                  ^(NSData *data, NSURLResponse *response, NSError *error)
+    {
+        NSLog(@"Deleting %@, status = %ld, error: = %@", url,
+              (long)((NSHTTPURLResponse*)response).statusCode, error);
+        if (!error)
+            [x fulfill];
+    }];
+    [task resume];
+    [self waitForExpectations: @[x] timeout: 10.0];
+}
+
+
+- (CBLURLEndpoint*) remoteEndpointWithName: (NSString*)dbName secure: (BOOL)secure {
+    return [[CBLURLEndpoint alloc] initWithHost: kCBLSyncGatewayTestHost
+                                           port: (secure ? 4994 : 4984)
+                                           path: dbName
+                                         secure: secure];
+}
+
+
 - (void)testEmptyPush {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id config = [self configWithTarget: target type :kCBLReplicatorPush continuous: NO];
+    id config = [self configWithTarget: target type: kCBLReplicatorPush continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
@@ -162,7 +196,7 @@
     Assert([otherDB saveDocument: doc2 error: &error]);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id config = [self configWithTarget: target type :kCBLReplicatorPush continuous: NO];
+    id config = [self configWithTarget: target type: kCBLReplicatorPush continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(otherDB.count, 2u);
@@ -183,7 +217,7 @@
     Assert([otherDB saveDocument: doc2 error: &error]);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id config = [self configWithTarget: target type :kCBLReplicatorPush continuous: YES];
+    id config = [self configWithTarget: target type: kCBLReplicatorPush continuous: YES];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(otherDB.count, 2u);
@@ -205,7 +239,7 @@
     Assert([otherDB saveDocument: doc2 error: &error]);
 
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: NO];
+    id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
 
     AssertEqual(self.db.count, 2u);
@@ -227,7 +261,7 @@
     Assert([otherDB saveDocument: doc2 error: &error]);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: YES];
+    id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: YES];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(self.db.count, 2u);
@@ -260,7 +294,7 @@
     // Pull from otherDB, creating a conflict to resolve:
     MergeThenTheirsWins* resolver = [MergeThenTheirsWins new];
     resolver.requireBaseRevision = true;
-    config = [self configWithTarget: target type :kCBLReplicatorPull continuous: NO
+    config = [self configWithTarget: target type: kCBLReplicatorPull continuous: NO
                    conflictResolver: resolver];
     [self run: config errorCode: 0 errorDomain: nil];
 
@@ -309,7 +343,7 @@
 
 - (void) testStopContinuousReplicator {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id config = [self configWithTarget: target type :kCBLReplicatorPushAndPull continuous: YES];
+    id config = [self configWithTarget: target type: kCBLReplicatorPushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
 
     NSArray* stopWhen = @[@(kCBLReplicatorConnecting), @(kCBLReplicatorBusy),
@@ -355,10 +389,11 @@
     }
 }
 
+
 - (void) testCleanupOfActiveReplicationsAfterDatabaseClose {
     // add a replicator to the DB
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: YES];
+    id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
     XCTestExpectation *x = [self expectationWithDescription: @"Replicator Close"];
@@ -385,10 +420,11 @@
     
 }
 
+
 - (void) testCleanupOfActiveReplicationsAfterDatabaseDelete {
     // add a replicator to the DB
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
-    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: YES];
+    id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
     XCTestExpectation *x = [self expectationWithDescription: @"Replicator Close"];
@@ -417,51 +453,131 @@
 }
 
 
-// These test are disabled because they require a password-protected database 'seekrit' to exist
-// on localhost:4984, with a user 'pupshaw' whose password is 'frank'.
+- (void) testPushBlob {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    NSData* data = [self dataFromResource: @"image" ofType: @"jpg"];
+    Assert(data);
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"image/jpg"
+                                                    data: data];
+    [doc1 setBlob: blob forKey: @"blob"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    AssertEqual(self.db.count, 1u);
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorPush continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(otherDB.count, 1u);
+    CBLDocument* savedDoc1 = [otherDB documentWithID: @"doc1"];
+    AssertEqualObjects([savedDoc1 blobForKey:@"blob"], blob);
+}
 
-- (void) dontTestAuthenticationFailure {
-    id target = [[CBLURLEndpoint alloc] initWithHost: @"localhost" port: 4984 path: @"seekrit" secure: NO];
-    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: NO];
+
+- (void) testPullBlob {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    NSData* data = [self dataFromResource: @"image" ofType: @"jpg"];
+    Assert(data);
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"image/jpg"
+                                                    data: data];
+    [doc1 setBlob: blob forKey: @"blob"];
+    Assert([otherDB saveDocument: doc1 error: &error]);
+    AssertEqual(otherDB.count, 1u);
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
+    id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: YES];
+    [self run: config errorCode: 0 errorDomain: nil];
+    
+    AssertEqual(self.db.count, 1u);
+    CBLDocument* savedDoc1 = [self.db documentWithID: @"doc1"];
+    AssertEqualObjects([savedDoc1 blobForKey:@"blob"], blob);
+}
+
+// The following tests are disabled by default as they require Sync Gateway.
+// To enable, set the kCBLEnableSyncGatewayTest to YES.
+// To start Sync Gateway, please follow the instructions in
+// <couchbase-lite-ios>/vendor/couchbase-lite-core/Replicator/tests/data/README.
+
+
+- (void) testAuthenticationFailure {
+    if (!kCBLEnableSyncGatewayTest)
+        return;
+    
+    id target = [self remoteEndpointWithName: @"seekrit" secure: NO];
+    id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: NO];
     [self run: config errorCode: 401 errorDomain: @"WebSocket"];
 }
 
 
-- (void) dontTestAuthenticatedPull {
-    id target = [[CBLURLEndpoint alloc] initWithHost: @"localhost" port: 4984 path: @"seekrit" secure: NO];
+- (void) testAuthenticatedPull {
+    if (!kCBLEnableSyncGatewayTest)
+        return;
+    
+    id target = [self remoteEndpointWithName: @"seekrit" secure: NO];
     id auth = [[CBLBasicAuthenticator alloc] initWithUsername: @"pupshaw" password: @"frank"];
-    id config = [self configWithTarget: target type :kCBLReplicatorPull
+    id config = [self configWithTarget: target type: kCBLReplicatorPull
                             continuous: NO authenticator: auth conflictResolver: nil];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
 
+- (void) failTestPushBlobToSyncGateway {
+    if (!kCBLEnableSyncGatewayTest)
+        return;
+    
+    [self eraseRemoteDB: [NSURL URLWithString: @"http://localhost:4984/scratch"]];
+    
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
+    NSData* data = [self dataFromResource: @"image" ofType: @"jpg"];
+    Assert(data);
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"image/jpg"
+                                                    data: data];
+    [doc1 setBlob: blob forKey: @"blob"];
+    Assert([self.db saveDocument: doc1 error: &error]);
+    AssertEqual(self.db.count, 1u);
+    
+    id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+    id config = [self configWithTarget: target type : kCBLReplicatorPush continuous: NO];
+    [self run: config errorCode: 0 errorDomain: nil];
+}
+
+
 - (void) dontTestMissingHost {
+    if (!kCBLEnableSyncGatewayTest)
+        return;
+    
     timeout = 200;
     id target = [[CBLURLEndpoint alloc] initWithHost: @"foo.couchbase.com" port: 0 path: @"db" secure: NO];
-    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: YES];
+    id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: YES];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
 
 // This test assumes an SG is serving SSL at port 4994 with a self-signed cert.
-- (void) dontTestSelfSignedSSLFailure {
-    id target = [[CBLURLEndpoint alloc] initWithHost: @"localhost" port: 4994 path: @"beer" secure: YES];
-    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: NO];
+- (void) testSelfSignedSSLFailure {
+    if (!kCBLEnableSyncGatewayTest)
+        return;
+    
+    id target = [self remoteEndpointWithName: @"beer" secure: YES];
+    id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: NO];
     [self run: config errorCode: kCFURLErrorServerCertificateHasUnknownRoot errorDomain: NSURLErrorDomain];
 }
 
 
 // This test assumes an SG is serving SSL at port 4994 with a self-signed cert equal to the one
 // stored in the test resource SelfSigned.cer. (This is the same cert used in the 1.x unit tests.)
-- (void) dontTestSelfSignedSSLPinned {
-    NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: @"SelfSigned" ofType: @"cer"];
-    NSData* certData = [NSData dataWithContentsOfFile: path];
+- (void) testSelfSignedSSLPinned {
+    if (!kCBLEnableSyncGatewayTest)
+        return;
+    
+    NSData* certData = [self dataFromResource: @"SelfSigned" ofType: @"cer"];
     SecCertificateRef cert = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
     Assert(cert);
     
-    id target = [[CBLURLEndpoint alloc] initWithHost: @"localhost" port: 4994 path: @"beer" secure: YES];
-    id config = [self configWithTarget: target type :kCBLReplicatorPull continuous: NO];
+    id target = [self remoteEndpointWithName: @"beer" secure: YES];
+    id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: NO];
     config = [[CBLReplicatorConfiguration alloc] initWithConfig: config block: ^(CBLReplicatorConfigurationBuilder* builder) {
         builder.pinnedServerCertificate = cert;
     }];
