@@ -248,6 +248,7 @@ public final class ReplicatorConfiguration {
                     BridgingConflictResolver(resolver: self.conflictResolver)
             }
             
+            builder.continuous = self.continuous
             builder.authenticator = self.authenticator
             builder.pinnedServerCertificate = self.pinnedServerCertificate
             builder.headers = self.headers
