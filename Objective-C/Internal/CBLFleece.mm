@@ -44,10 +44,9 @@ namespace fleeceapi {
     static bool isOldAttachment(Dict properties, DocContext *context) {
         auto sk = context->sharedKeys();
         if (properties.get(C4STR("digest"), sk) != nullptr &&
-            properties.get(C4STR("length"), sk) != nullptr &&
-            properties.get(C4STR("stub"), sk) != nullptr &&
             properties.get(C4STR("revpos"), sk) != nullptr &&
-            properties.get(C4STR("content_type"), sk) != nullptr)
+            properties.get(C4STR("stub"), sk) != nullptr &&
+            properties.get(C4STR("length"), sk) != nullptr)
             return true;
         return false;
     }
