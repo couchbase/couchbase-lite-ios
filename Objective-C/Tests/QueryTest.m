@@ -1289,7 +1289,7 @@
         count++;
         AssertNotNil(change.query);
         AssertNil(change.error);
-        NSArray<CBLQueryResult*>* rows = [change.rows allObjects];
+        NSArray<CBLQueryResult*>* rows = [change.results allObjects];
         if (count == 1) {
             AssertEqual(rows.count, 9u);
         } else {
@@ -1323,7 +1323,7 @@
         count++;
         AssertNotNil(change.query);
         AssertNil(change.error);
-        NSArray<CBLQueryResult*>* rows = [change.rows allObjects];
+        NSArray<CBLQueryResult*>* rows = [change.results allObjects];
         if (count == 1) {
             AssertEqual(rows.count, 9u);
         } else {

@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) CBLQuery* query;
 
 /** The new query result. */
-@property (nonatomic, readonly, nullable) CBLQueryResultSet* rows;
+@property (nonatomic, readonly, nullable) CBLQueryResultSet* results;
 
 /** The error occurred when running the query. */
 @property (nonatomic, readonly, nullable) NSError* error;

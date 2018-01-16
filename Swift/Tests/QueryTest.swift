@@ -1072,7 +1072,7 @@ class QueryTest: CBLTestCase {
             count = count + 1
             XCTAssertNotNil(change.query)
             XCTAssertNil(change.error)
-            let rows =  Array(change.rows!)
+            let rows =  Array(change.results!)
             if count == 1 {
                 XCTAssertEqual(rows.count, 9)
             } else {
@@ -1104,7 +1104,7 @@ class QueryTest: CBLTestCase {
             count = count + 1
             XCTAssertNotNil(change.query)
             XCTAssertNil(change.error)
-            let rows =  Array(change.rows!)
+            let rows =  Array(change.results!)
             if count == 1 {
                 XCTAssertEqual(rows.count, 9)
             } else {

@@ -13,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLQueryChange ()
 
 - (instancetype) initWithQuery: (CBLQuery*)query
-                          rows: (nullable CBLQueryResultSet*)rows
+                       results: (nullable CBLQueryResultSet*)results
                          error: (nullable NSError*)error;
 
 @end

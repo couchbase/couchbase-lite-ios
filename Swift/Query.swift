@@ -101,12 +101,12 @@ public class Query {
         prepareQuery()
         return self.queryImpl!.addChangeListener(with: queue, listener: { (change) in
             let rows: ResultSet?;
-            if let rs = change.rows {
+            if let rs = change.results {
                 rows = ResultSet(impl: rs)
             } else {
                 rows = nil;
             }
-            listener(QueryChange(query: self, rows: rows, error: change.error))
+            listener(QueryChange(query: self, results: rows, error: change.error))
         })
     }
     

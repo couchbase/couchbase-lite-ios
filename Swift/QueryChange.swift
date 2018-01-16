@@ -17,7 +17,7 @@ public struct QueryChange {
     public let query: Query
     
     /// The new query result.
-    public let rows: ResultSet?
+    public let results: ResultSet?
     
     /// The error occurred when running the query.
     public let error: Error?

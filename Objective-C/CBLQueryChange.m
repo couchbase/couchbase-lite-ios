@@ -12,15 +12,15 @@
 
 @implementation CBLQueryChange
 
-@synthesize query=_query, rows=_rows, error=_error;
+@synthesize query=_query, results=_results, error=_error;
 
 - (instancetype) initWithQuery: (CBLQuery*)query
-                          rows: (CBLQueryResultSet*)rows
+                       results: (CBLQueryResultSet*)results
                          error: (NSError*)error {
     self = [super init];
     if (self) {
         _query = query;
-        _rows = rows;
+        _results = results;
         _error = error;
     }
     return self;

@@ -192,7 +192,7 @@ static const NSTimeInterval kDefaultLiveQueryUpdateInterval = 0.2;
     
     if (changed)
         [self notifyChange: [[CBLQueryChange alloc] initWithQuery: strongQuery
-                                                             rows: newRs
+                                                          results: newRs
                                                             error: error]];
 }
 
