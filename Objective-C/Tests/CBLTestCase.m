@@ -138,7 +138,8 @@
 
 
 - (NSData*) dataFromResource: (NSString*)resourceName ofType: (NSString*)type {
-    NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: resourceName
+    NSString* res = [@"Support" stringByAppendingPathComponent: resourceName];
+    NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: res
                                                                        ofType: type];
     Assert(path, @"Missing test file %@.%@", resourceName, type);
     NSData* contents = [NSData dataWithContentsOfFile: path

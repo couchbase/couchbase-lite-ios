@@ -87,13 +87,15 @@ class CBLTestCase: XCTestCase {
     
     
     func dataFromResource(name: String, ofType: String) throws -> NSData {
-        let path = Bundle(for: type(of:self)).path(forResource: name, ofType: ofType)
+        let res = ("Support" as NSString).appendingPathComponent(name)
+        let path = Bundle(for: type(of:self)).path(forResource: res, ofType: ofType)
         return try! NSData(contentsOfFile: path!, options: [])
     }
 
     
     func stringFromResource(name: String, ofType: String) throws -> String {
-        let path = Bundle(for: type(of:self)).path(forResource: name, ofType: ofType)
+        let res = ("Support" as NSString).appendingPathComponent(name)
+        let path = Bundle(for: type(of:self)).path(forResource: res, ofType: ofType)
         return try String(contentsOfFile: path!, encoding: String.Encoding.utf8)
     }
 

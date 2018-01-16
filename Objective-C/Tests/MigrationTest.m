@@ -16,8 +16,7 @@
 
 
 - (NSString*) databasePath: (NSString*)fileName inDirectory: (NSString*)dir {
-    NSString *directory = [@"databases" stringByAppendingPathComponent:dir];
-    
+    NSString *directory = [@"Support/databases" stringByAppendingPathComponent:dir];
     NSString* path = [[NSBundle bundleForClass: [self class]] pathForResource: fileName
                                                                        ofType: nil
                                                                   inDirectory: directory];

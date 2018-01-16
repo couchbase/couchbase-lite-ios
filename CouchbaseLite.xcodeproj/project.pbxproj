@@ -27,7 +27,6 @@
 		2704F1CA1E395F3300A3B405 /* CBLConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */; };
 		272850A71E99CAA4009CA22F /* CBLReplicator+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */; };
 		272850A81E99CAA4009CA22F /* CBLReplicator+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */; };
-		273ADF7D1E36B514001E977F /* sentences.json in Resources */ = {isa = PBXBuildFile; fileRef = 273ADF7C1E36B514001E977F /* sentences.json */; };
 		273E55471F79AF5E000182F1 /* ConflictTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93384F731EB14ABA00976B41 /* ConflictTest.m */; };
 		273E555D1F79AF69000182F1 /* ArrayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DD9BA71EB419BB00E502A2 /* ArrayTest.m */; };
 		273E555E1F79AF79000182F1 /* MiscTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93384F8B1EB151C100976B41 /* MiscTest.m */; };
@@ -65,7 +64,6 @@
 		276740B81EE7381E0036DE42 /* CBLTrustCheck.h in Headers */ = {isa = PBXBuildFile; fileRef = 276740B51EE7381E0036DE42 /* CBLTrustCheck.h */; };
 		276740B91EE7381E0036DE42 /* CBLTrustCheck.m in Sources */ = {isa = PBXBuildFile; fileRef = 276740B61EE7381E0036DE42 /* CBLTrustCheck.m */; };
 		276740BA1EE7381E0036DE42 /* CBLTrustCheck.m in Sources */ = {isa = PBXBuildFile; fileRef = 276740B61EE7381E0036DE42 /* CBLTrustCheck.m */; };
-		276740E71EE9141C0036DE42 /* SelfSigned.cer in Resources */ = {isa = PBXBuildFile; fileRef = 276740E61EE9141C0036DE42 /* SelfSigned.cer */; };
 		27A8B5021EC5350A00BB4C07 /* CBLQueryEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */; };
 		27A8B5131EC5351000BB4C07 /* CBLQueryEnumerator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A8B5121EC5351000BB4C07 /* CBLQueryEnumerator.mm */; };
 		27B69A141F2A4C6D00782145 /* MYAnonymousIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 27B69A131F2A4B7400782145 /* MYAnonymousIdentity.m */; };
@@ -74,7 +72,6 @@
 		27BE3B4B1E4E46120012B74A /* CBLTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4A1E4E46120012B74A /* CBLTestCase.swift */; };
 		27BE3B4D1E4E51C80012B74A /* DatabaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */; };
 		27BE3B4F1E4E65EB0012B74A /* DocumentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */; };
-		27BE3B521E4E916B0012B74A /* names_100.json in Resources */ = {isa = PBXBuildFile; fileRef = 27EF6A951E2AC609004748DF /* names_100.json */; };
 		27BE3B541E4E92210012B74A /* Database+Query.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE3B531E4E92210012B74A /* Database+Query.swift */; };
 		27D721991F8E97F400AA4458 /* CBLFleece.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27D721971F8E97F400AA4458 /* CBLFleece.hh */; };
 		27D7219A1F8E97F400AA4458 /* CBLFleece.hh in Headers */ = {isa = PBXBuildFile; fileRef = 27D721971F8E97F400AA4458 /* CBLFleece.hh */; };
@@ -96,7 +93,6 @@
 		27E35A9C1E8C522200E103F9 /* CBLReplicator.h in Headers */ = {isa = PBXBuildFile; fileRef = 275229C51E776BC100E630FA /* CBLReplicator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27E35A9D1E8C539600E103F9 /* CBLReplicator.mm in Sources */ = {isa = PBXBuildFile; fileRef = 275229C61E776BC100E630FA /* CBLReplicator.mm */; };
 		27EF6A941E298E26004748DF /* PredicateQueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EF6A931E298E26004748DF /* PredicateQueryTest.m */; };
-		27EF6A971E2AC61B004748DF /* names_100.json in Resources */ = {isa = PBXBuildFile; fileRef = 27EF6A951E2AC609004748DF /* names_100.json */; };
 		27F961991ED8D9440060F804 /* CBLReachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F961971ED8D9440060F804 /* CBLReachability.h */; };
 		27F9619A1ED8D9440060F804 /* CBLReachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 27F961971ED8D9440060F804 /* CBLReachability.h */; };
 		27F9619B1ED8D9440060F804 /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F961981ED8D9440060F804 /* CBLReachability.m */; };
@@ -387,8 +383,6 @@
 		938B36A6200745FF004485D8 /* CBLQueryResultArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 938B36A3200745FE004485D8 /* CBLQueryResultArray.m */; };
 		938B36A7200745FF004485D8 /* CBLQueryResultArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 938B36A3200745FE004485D8 /* CBLQueryResultArray.m */; };
 		938B3702200D7D1D004485D8 /* MigrationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 938B3701200D7D1D004485D8 /* MigrationTest.m */; };
-		938B370A200D87C3004485D8 /* databases in Resources */ = {isa = PBXBuildFile; fileRef = 938B3709200D87C3004485D8 /* databases */; };
-		938B370B200D87C3004485D8 /* databases in Resources */ = {isa = PBXBuildFile; fileRef = 938B3709200D87C3004485D8 /* databases */; };
 		938CDF161E807EEB002EE790 /* Query.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF151E807EEB002EE790 /* Query.swift */; };
 		938CDF181E807F08002EE790 /* Select.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF171E807F08002EE790 /* Select.swift */; };
 		938CDF1A1E807F14002EE790 /* From.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938CDF191E807F14002EE790 /* From.swift */; };
@@ -402,7 +396,6 @@
 		938CFA2D1E442B4200291631 /* DocumentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C59D1E269F14001BB196 /* DocumentTest.m */; };
 		938CFA2E1E442B5300291631 /* CBLTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5961E25B473001BB196 /* CBLTestCase.m */; };
 		938CFA2F1E442B5700291631 /* DatabaseTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5901E25B3F0001BB196 /* DatabaseTest.m */; };
-		938D20DD1E834E7F00F40E15 /* sentences.json in Resources */ = {isa = PBXBuildFile; fileRef = 273ADF7C1E36B514001E977F /* sentences.json */; };
 		938E38811F3A5BB4006806C7 /* CBLQueryCollation.h in Headers */ = {isa = PBXBuildFile; fileRef = 938E387F1F3A5BB4006806C7 /* CBLQueryCollation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		938E38821F3A5BB4006806C7 /* CBLQueryCollation.h in Headers */ = {isa = PBXBuildFile; fileRef = 938E387F1F3A5BB4006806C7 /* CBLQueryCollation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		938E38831F3A5BB4006806C7 /* CBLQueryCollation.m in Sources */ = {isa = PBXBuildFile; fileRef = 938E38801F3A5BB4006806C7 /* CBLQueryCollation.m */; };
@@ -489,8 +482,6 @@
 		93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332082B1E774419000D9993 /* QueryTest.m */; };
 		93CD018F1E95546200AFB3FA /* ReplicatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */; };
 		93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9352945E1E51708E005CE4E8 /* DictionaryTest.m */; };
-		93CD01911E95546200AFB3FA /* names_100.json in Resources */ = {isa = PBXBuildFile; fileRef = 27EF6A951E2AC609004748DF /* names_100.json */; };
-		93CD01921E95546200AFB3FA /* sentences.json in Resources */ = {isa = PBXBuildFile; fileRef = 273ADF7C1E36B514001E977F /* sentences.json */; };
 		93CD024B1E9DA0AC00AFB3FA /* CBLC4Document.h in Headers */ = {isa = PBXBuildFile; fileRef = 93CD02491E9DA0AC00AFB3FA /* CBLC4Document.h */; };
 		93CD024C1E9DA0AC00AFB3FA /* CBLC4Document.mm in Sources */ = {isa = PBXBuildFile; fileRef = 93CD024A1E9DA0AC00AFB3FA /* CBLC4Document.mm */; };
 		93CD02661E9FFEC500AFB3FA /* CBLMutableArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 93CD02601E9FFEC500AFB3FA /* CBLMutableArray.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -522,6 +513,9 @@
 		93DD9BA81EB419BB00E502A2 /* ArrayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DD9BA71EB419BB00E502A2 /* ArrayTest.m */; };
 		93DECEB6200A6EAA00F44953 /* ValueExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DECEB5200A6EAA00F44953 /* ValueExpression.swift */; };
 		93DECEDF200A9BFC00F44953 /* VariableExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DECEDE200A9BFC00F44953 /* VariableExpression.swift */; };
+		93DECF3F200DBE5900F44953 /* Support in Resources */ = {isa = PBXBuildFile; fileRef = 93DECF3E200DBE5800F44953 /* Support */; };
+		93DECF40200DBE5900F44953 /* Support in Resources */ = {isa = PBXBuildFile; fileRef = 93DECF3E200DBE5800F44953 /* Support */; };
+		93DECF41200DBE6900F44953 /* Support in Resources */ = {isa = PBXBuildFile; fileRef = 93DECF3E200DBE5800F44953 /* Support */; };
 		93E17EED1ECF7D8600671CA1 /* ConflictResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EEC1ECF7D8600671CA1 /* ConflictResolver.swift */; };
 		93E17EEF1ECFA7B800671CA1 /* ConflictTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EEE1ECFA7B800671CA1 /* ConflictTest.swift */; };
 		93E17EF81ED3ABE200671CA1 /* CBLDocumentChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E17EF61ED3ABE200671CA1 /* CBLDocumentChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -795,7 +789,6 @@
 		2704F1C71E395F3300A3B405 /* CBLConflictResolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLConflictResolver.h; sourceTree = "<group>"; };
 		2704F1C81E395F3300A3B405 /* CBLConflictResolver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLConflictResolver.m; sourceTree = "<group>"; };
 		2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CBLReplicator+Internal.h"; path = "../CBLReplicator+Internal.h"; sourceTree = "<group>"; };
-		273ADF7C1E36B514001E977F /* sentences.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = sentences.json; sourceTree = "<group>"; };
 		275229C51E776BC100E630FA /* CBLReplicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReplicator.h; sourceTree = "<group>"; };
 		275229C61E776BC100E630FA /* CBLReplicator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLReplicator.mm; sourceTree = "<group>"; };
 		2753AFF11EC39CA200C12E98 /* CBLHTTPLogic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLHTTPLogic.h; sourceTree = "<group>"; };
@@ -825,7 +818,6 @@
 		275FF6BE1E48081B005F90DD /* CouchbaseLite.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = CouchbaseLite.exp; sourceTree = "<group>"; };
 		276740B51EE7381E0036DE42 /* CBLTrustCheck.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLTrustCheck.h; sourceTree = "<group>"; };
 		276740B61EE7381E0036DE42 /* CBLTrustCheck.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLTrustCheck.m; sourceTree = "<group>"; };
-		276740E61EE9141C0036DE42 /* SelfSigned.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = SelfSigned.cer; sourceTree = "<group>"; };
 		27A8B5011EC5350A00BB4C07 /* CBLQueryEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CBLQueryEnumerator.h; path = ../CBLQueryEnumerator.h; sourceTree = "<group>"; };
 		27A8B5121EC5351000BB4C07 /* CBLQueryEnumerator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLQueryEnumerator.mm; sourceTree = "<group>"; };
 		27B699FB1F2A449800782145 /* CBLClientCertAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLClientCertAuthenticator.h; sourceTree = "<group>"; };
@@ -845,7 +837,6 @@
 		27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReplicatorTest.m; sourceTree = "<group>"; };
 		27E35A911E8C4F4300E103F9 /* Replicator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Replicator.swift; sourceTree = "<group>"; };
 		27EF6A931E298E26004748DF /* PredicateQueryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PredicateQueryTest.m; sourceTree = "<group>"; };
-		27EF6A951E2AC609004748DF /* names_100.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = names_100.json; sourceTree = "<group>"; };
 		27F961971ED8D9440060F804 /* CBLReachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReachability.h; sourceTree = "<group>"; };
 		27F961981ED8D9440060F804 /* CBLReachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReachability.m; sourceTree = "<group>"; };
 		27FDBF411F02FE5C0087CC1C /* ConflictTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConflictTest.h; sourceTree = "<group>"; };
@@ -1037,7 +1028,6 @@
 		938B3690200745FE004485D8 /* CBLQueryResultArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryResultArray.h; sourceTree = "<group>"; };
 		938B36A3200745FE004485D8 /* CBLQueryResultArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryResultArray.m; sourceTree = "<group>"; };
 		938B3701200D7D1D004485D8 /* MigrationTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MigrationTest.m; sourceTree = "<group>"; };
-		938B3709200D87C3004485D8 /* databases */ = {isa = PBXFileReference; lastKnownFileType = folder; path = databases; sourceTree = "<group>"; };
 		938CDF151E807EEB002EE790 /* Query.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Query.swift; sourceTree = "<group>"; };
 		938CDF171E807F08002EE790 /* Select.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Select.swift; sourceTree = "<group>"; };
 		938CDF191E807F14002EE790 /* From.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = From.swift; sourceTree = "<group>"; };
@@ -1077,7 +1067,6 @@
 		93B41D631F0580E700A7F114 /* CBLQueryJoin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryJoin.m; sourceTree = "<group>"; };
 		93B41D791F05B38F00A7F114 /* JoinRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JoinRouter.swift; sourceTree = "<group>"; };
 		93B41D7C1F05B3A800A7F114 /* Join.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Join.swift; sourceTree = "<group>"; };
-		93BFCD951E0380A300E52F8A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		93BFCD9E1E0385EA00E52F8A /* CBLDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabase.h; sourceTree = "<group>"; };
 		93BFCD9F1E0385EA00E52F8A /* CBLDatabase.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLDatabase.mm; sourceTree = "<group>"; };
 		93C18E691FB638620029B567 /* DatabaseConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseConfiguration.swift; sourceTree = "<group>"; };
@@ -1108,6 +1097,7 @@
 		93DD9BA71EB419BB00E502A2 /* ArrayTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ArrayTest.m; sourceTree = "<group>"; };
 		93DECEB5200A6EAA00F44953 /* ValueExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValueExpression.swift; sourceTree = "<group>"; };
 		93DECEDE200A9BFC00F44953 /* VariableExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VariableExpression.swift; sourceTree = "<group>"; };
+		93DECF3E200DBE5800F44953 /* Support */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Support; sourceTree = "<group>"; };
 		93E17EEC1ECF7D8600671CA1 /* ConflictResolver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictResolver.swift; sourceTree = "<group>"; };
 		93E17EEE1ECFA7B800671CA1 /* ConflictTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictTest.swift; sourceTree = "<group>"; };
 		93E17EF61ED3ABE200671CA1 /* CBLDocumentChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDocumentChange.h; sourceTree = "<group>"; };
@@ -1610,18 +1600,6 @@
 			name = Query;
 			sourceTree = "<group>";
 		};
-		9390BB9F1F50B9FE00FB99C4 /* Support */ = {
-			isa = PBXGroup;
-			children = (
-				938B3709200D87C3004485D8 /* databases */,
-				27EF6A951E2AC609004748DF /* names_100.json */,
-				273ADF7C1E36B514001E977F /* sentences.json */,
-				276740E61EE9141C0036DE42 /* SelfSigned.cer */,
-				93BFCD951E0380A300E52F8A /* Info.plist */,
-			);
-			name = Support;
-			sourceTree = "<group>";
-		};
 		9398D9081E03434200464432 = {
 			isa = PBXGroup;
 			children = (
@@ -1737,9 +1715,9 @@
 				27EF6A931E298E26004748DF /* PredicateQueryTest.m */,
 				9332082B1E774419000D9993 /* QueryTest.m */,
 				27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */,
+				93DECF3E200DBE5800F44953 /* Support */,
 				936483AA1E4431C6008D08B3 /* iOS */,
 				275FF5FA1E3FBD3B005F90DD /* Performance */,
-				9390BB9F1F50B9FE00FB99C4 /* Support */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -2455,9 +2433,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				938D20DD1E834E7F00F40E15 /* sentences.json in Resources */,
-				938B370B200D87C3004485D8 /* databases in Resources */,
-				27BE3B521E4E916B0012B74A /* names_100.json in Resources */,
+				93DECF40200DBE5900F44953 /* Support in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2476,8 +2452,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				93CD01921E95546200AFB3FA /* sentences.json in Resources */,
-				93CD01911E95546200AFB3FA /* names_100.json in Resources */,
+				93DECF41200DBE6900F44953 /* Support in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2485,11 +2460,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				93DECF3F200DBE5900F44953 /* Support in Resources */,
 				275FF6091E3FC24D005F90DD /* iTunesMusicLibrary.json in Resources */,
-				273ADF7D1E36B514001E977F /* sentences.json in Resources */,
-				276740E71EE9141C0036DE42 /* SelfSigned.cer in Resources */,
-				938B370A200D87C3004485D8 /* databases in Resources */,
-				27EF6A971E2AC61B004748DF /* names_100.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
