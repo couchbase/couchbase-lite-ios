@@ -154,7 +154,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 /** CBLArray provides read access to array data. */
-@interface CBLArray : NSObject <CBLArray, NSMutableCopying>
+@interface CBLArray : NSObject <CBLArray, NSCopying, NSMutableCopying>
 
 - (instancetype) init NS_UNAVAILABLE;
 
