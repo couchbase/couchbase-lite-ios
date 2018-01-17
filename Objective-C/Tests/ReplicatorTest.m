@@ -532,7 +532,7 @@
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     NSData* data = [self dataFromResource: @"image" ofType: @"jpg"];
     Assert(data);
-    CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"image/jpg"
+    CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"image/jpeg"
                                                     data: data];
     [doc1 setBlob: blob forKey: @"blob"];
     Assert([self.db saveDocument: doc1 error: &error]);
