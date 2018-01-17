@@ -108,7 +108,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
 
         _length = asNumber(_properties[@"length"]).unsignedLongLongValue;
         _digest = asString(_properties[@"digest"]);
-        _contentType = asString(_properties[@"content-type"]);
+        _contentType = asString(_properties[@"content_type"]);
         if (!_digest) {
             C4Warn("Blob read from database has missing digest");
             _digest = @"";
@@ -126,7 +126,7 @@ static NSString* const kBlobType = @kC4ObjectType_Blob;
         // New blob:
         return $dict({@"digest", _digest},
                      {@"length", (_length ? @(_length) : nil)},
-                     {@"content-type", _contentType});
+                     {@"content_type", _contentType});
     }
 }
 
