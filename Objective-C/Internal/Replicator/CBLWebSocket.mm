@@ -47,6 +47,7 @@ static constexpr NSTimeInterval kIdleTimeout = 300.0;
     BOOL _receiving;
     size_t _receivedBytesPending, _sentBytesPending;
     CFAbsoluteTime _lastReadTime;
+    BOOL _requestedClose;
 }
 
 
@@ -377,6 +378,7 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 - (void) closeSocket {
     [_queue addOperationWithBlock: ^{
         CBLLog(WebSocket, @"CBLWebSocket closeSocket requested");
+        _requestedClose = YES;
         [self->_task closeWrite];
         [self->_task closeRead];
     }];
@@ -498,9 +500,16 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
         return;
     _task = nil;
 
+    // We sometimes get bogus(?) ENOTCONN errors after closing the socket.
+    if (_requestedClose && error.code == ENOTCONN
+                        && [error.domain isEqualToString: NSPOSIXErrorDomain]) {
+        CBLLog(WebSocket, @"CBLWebSocket ignoring %@", error);
+        error = nil;
+    }
+
     C4Error c4err;
     if (error) {
-        if (error.code ==kCFURLErrorCancelled && [error.domain isEqualToString: NSURLErrorDomain])
+        if (error.code == kCFURLErrorCancelled && [error.domain isEqualToString: NSURLErrorDomain])
             error = _authError;
         CBLLog(WebSocket, @"CBLWebSocket CLOSED WITH ERROR: %@ %ld \"%@\"",
             error.domain, (long)error.code, error.localizedFailureReason);
