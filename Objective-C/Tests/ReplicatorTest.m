@@ -8,6 +8,7 @@
 
 #import "CBLTestCase.h"
 #import "CBLReplicator+Internal.h"
+#import "CBLURLEndpoint+Internal.h"
 #import "CBLDatabase+Internal.h"
 #import "ConflictTest.h"
 #import "CollectionUtils.h"
@@ -66,22 +67,29 @@
     if (!port)
         port = secure ? 4994 : 4984;
 
-    return [[CBLURLEndpoint alloc] initWithHost: host
-                                           port: port
-                                           path: dbName
-                                         secure: secure];
+    NSURLComponents *comp = [NSURLComponents new];
+    comp.scheme = secure ? kCBLURLEndpointTLSScheme : kCBLURLEndpointScheme;
+    comp.host = host;
+    comp.port = @(port);
+    comp.path = [NSString stringWithFormat:@"/%@", dbName];
+    NSURL* url = comp.URL;
+    Assert(url);
+    return [[CBLURLEndpoint alloc] initWithURL: url];
 }
 
 
 - (BOOL) eraseRemoteEndpoint: (CBLURLEndpoint*)endpoint {
-    Assert([endpoint.path isEqualToString: @"scratch"], @"Only scratch db should be erased");
+    NSURL* endpointURL = endpoint.url;
+    
+    Assert([endpointURL.path isEqualToString: @"/scratch"], @"Only scratch db should be erased");
     NSURLComponents *comp = [NSURLComponents new];
-    comp.scheme = endpoint.secure ? @"https" : @"http";
-    comp.host = endpoint.host;
-    comp.port = @(endpoint.port + 1);   // assuming admin port is at usual offset
-    comp.path = [NSString stringWithFormat: @"/%@/_flush", endpoint.path];
+    comp.scheme = [endpointURL.scheme isEqualToString: kCBLURLEndpointTLSScheme] ? @"https" : @"http";
+    comp.host = endpointURL.host;
+    comp.port = @([endpointURL.port intValue] + 1);   // assuming admin port is at usual offset
+    comp.path = [NSString stringWithFormat: @"%@/_flush", endpointURL.path];
     NSURL* url = comp.URL;
-
+    Assert(url);
+    
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
     request.HTTPMethod = @"POST";
 
@@ -159,7 +167,7 @@
          builder.authenticator = authenticator;
          if (resolver)
              builder.conflictResolver = resolver;
-         if ($castIf(CBLURLEndpoint, target).secure && _pinServerCert)
+         if ([$castIf(CBLURLEndpoint, target).url.scheme isEqualToString: @"wss"] && _pinServerCert)
              builder.pinnedServerCertificate = self.secureServerCert;
      }];
     
@@ -585,7 +593,8 @@
     // considered transient, the replicator just stays offline and waits for a network change.
     // This causes the test to time out.
     timeout = 200;
-    id target = [[CBLURLEndpoint alloc] initWithHost: @"foo.couchbase.com" port: 0 path: @"db" secure: NO];
+    
+    id target = [[CBLURLEndpoint alloc] initWithURL:[NSURL URLWithString:@"ws://foo.couchbase.com/db"]];
     if (!target)
         return;
     id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: YES];

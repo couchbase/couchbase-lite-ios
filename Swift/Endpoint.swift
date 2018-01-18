@@ -42,63 +42,24 @@ public struct DatabaseEndpoint: InternalEndpoint {
 /// URL based replication target endpoint.
 public struct URLEndpoint: InternalEndpoint {
     
-    /// The URL host
-    public let host: String
+    /// The URL.
+    public let url: URL
     
-    /// The URL port
-    public let port: UInt?
-    
-    /// The URL path
-    public let path: String?
-    
-    /// A boolean value indicates whether the replication data will be sent over
-    /// secure channels.
-    public let isSecure: Bool
-    
-    /// Initializes with the host, and the secure flag.
+    /// Initializes with the given URL. The supported URL schemes are ws and wss
+    /// for transferring data over a secure connection.
     ///
-    /// - Parameters:
-    ///   - host: The URL host.
-    ///   - secure: The secure flag indicating whether the replication data will
-    ///             be sent over secure channels.
-    public init(withHost host: String, secure: Bool) {
-        self.init(withHost: host, port: nil, path: nil, secure: secure)
-    }
-    
-    /// Initializes with the host, the path, and the secure flag.
-    ///
-    /// - Parameters:
-    ///   - host: The URL host.
-    ///   - path: The URL path.
-    ///   - secure: The secure flag indicating whether the replication data will
-    ///             be sent over secure channels.
-    public init(withHost host: String, path: String?, secure: Bool) {
-        self.init(withHost: host, port: nil, path: path, secure: secure)
-    }
-    
-    
-    /// Initializes with the host, the port, the path, and the secure flag.
-    ///
-    /// - Parameters:
-    ///   - host: The URL host.
-    ///   - port: The URL port number. If the port is not present,
-    ///           set the value to nil.
-    ///   - path: The URL path.
-    ///   - secure: The secure flag indicating whether the replication data will
-    ///             be sent over secure channels.
-    public init(withHost host: String, port: UInt?, path: String?, secure: Bool) {
-        self.host = host
-        self.port = port
-        self.path = path
-        self.isSecure = secure
+    /// - Parameter url: The URL object.
+    public init(withURL url: URL) {
+        impl = CBLURLEndpoint(url: url)
+        self.url = url
     }
     
     // MARK: Internal
     
+    private let impl: CBLURLEndpoint
+    
     func toImpl() -> CBLEndpoint {
-        let port = self.port != nil ? Int(self.port!) : -1
-        return CBLURLEndpoint.init(host: self.host, port: port,
-                                   path: self.path, secure: self.isSecure)
+        return impl
     }
     
 }

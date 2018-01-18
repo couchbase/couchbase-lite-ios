@@ -9,7 +9,7 @@
 #import "CBLReplicator+Internal.h"
 #import "CBLReplicatorChange+Internal.h"
 #import "CBLReplicatorConfiguration.h"
-#import "CBLURLEndpoint+Internal.h"
+#import "CBLURLEndpoint.h"
 #import "CBLDatabaseEndpoint.h"
 
 #import "CBLChangeListenerToken.h"
@@ -145,14 +145,14 @@ static NSTimeInterval retryDelay(unsigned retryCount) {
     // Target:
     C4Address addr;
     CBLDatabase* otherDB;
-    CBLURLEndpoint* remoteURL = $castIf(CBLURLEndpoint, _config.target);
+    NSURL* remoteURL = $castIf(CBLURLEndpoint, _config.target).url;
     CBLStringBytes dbName(remoteURL.path.lastPathComponent);
-    CBLStringBytes scheme(remoteURL.isSecure ? @"blips" : @"blip");
+    CBLStringBytes scheme(remoteURL.scheme);
     CBLStringBytes host(remoteURL.host);
     CBLStringBytes path(remoteURL.path.stringByDeletingLastPathComponent);
     if (remoteURL) {
         // Fill out the C4Address:
-        NSUInteger port = remoteURL.port >= 0 ? remoteURL.port : 0;
+        NSUInteger port = [remoteURL.port unsignedIntegerValue];
         addr = {
             .scheme = scheme,
             .hostname = host,

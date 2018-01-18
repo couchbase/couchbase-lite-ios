@@ -16,6 +16,9 @@
  */
 @interface CBLDatabaseEndpoint : NSObject <CBLEndpoint>
 
+/** The database object. */
+@property (readonly, nonatomic) CBLDatabase* database;
+
 /**
  Initializes with the database object.
 
@@ -23,9 +26,6 @@
  @return The CBLDatabaseEndpoint object.
  */
 - (instancetype) initWithDatabase: (CBLDatabase*)database;
-
-/** The database object. */
-@property (readonly, nonatomic) CBLDatabase* database;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

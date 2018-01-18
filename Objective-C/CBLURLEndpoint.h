@@ -16,60 +16,17 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface CBLURLEndpoint : NSObject <CBLEndpoint>
 
+/** The URL object. */
+@property (readonly, nonatomic) NSURL* url;
+
 /**
- Initializes with the host and the secure flag.
+ Initializes with the given URL. The supported URL schemes are ws and wss for
+ transferring data over a secure connection.
  
- @param host The URL host.
- @param secure The secure flag indicating whether the replication data will be
-               sent over secure channels.
+ @param url The URL object.
  @return The CBLURLEndpoint object.
  */
-- (instancetype) initWithHost: (NSString*)host secure: (BOOL)secure;
-
-/**
- Initializes with the host, the path, and the secure flag.
-
- @param host The URL host.
- @param path The URL path.
- @param secure The secure flag indicating whether the replication data will be
-               sent over secure channels.
- @return The CBLURLEndpoint object.
- */
-- (instancetype) initWithHost: (NSString*)host
-                         path: (nullable NSString*)path
-                       secure: (BOOL)secure;
-
-
-/**
- Initializes with the host, the port, the path, and the secure flag.
-
- @param host The URL host.
- @param port The URL port number. If the port is not present,
-             set the value to -1.
- @param path The URL path.
- @param secure The secure flag indicating whether the replication data will be
-               sent over secure channels.
- @return The CBLURLEndpoint object.
- */
-- (instancetype) initWithHost: (NSString*)host
-                         port: (NSInteger)port
-                         path: (nullable NSString*)path
-                       secure: (BOOL)secure;
-
-/** The URL host. */
-@property (readonly, nonatomic) NSString* host;
-
-/** The URL port. */
-@property (readonly, nonatomic) NSInteger port;
-
-/** The URL path. */
-@property (readonly, nonatomic, nullable) NSString* path;
-
-/**
- A boolean value indicates whether the replication data will be sent over
- secure channels.
- */
-@property (readonly, nonatomic, getter=isSecure) BOOL secure;
+- (instancetype) initWithURL: (NSURL*)url;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
