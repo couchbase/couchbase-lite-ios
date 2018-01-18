@@ -364,7 +364,6 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
             CBLSetLogLevel(SQL, c4level);
             CBLSetLogLevel(Sync, c4level);
             CBLSetLogLevel(BLIP, c4level);
-            CBLSetLogLevel(Actor, c4level);
             CBLSetLogLevel(WebSocket, c4level);
             break;
         case kCBLLogDomainDatabase:
@@ -380,7 +379,6 @@ static void docObserverCallback(C4DocumentObserver* obs, C4Slice docID, C4Sequen
             break;
         case kCBLLogDomainNetwork:
             CBLSetLogLevel(BLIP, c4level);
-            CBLSetLogLevel(Actor, c4level);
             CBLSetLogLevel(WebSocket, c4level);
         default:
             break;
