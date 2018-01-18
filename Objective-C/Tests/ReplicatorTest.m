@@ -10,9 +10,8 @@
 #import "CBLReplicator+Internal.h"
 #import "CBLDatabase+Internal.h"
 #import "ConflictTest.h"
+#import "CollectionUtils.h"
 
-#define kCBLEnableSyncGatewayTest NO
-#define kCBLSyncGatewayTestHost @"localhost"
 
 @interface ReplicatorTest : CBLTestCase
 @end
@@ -24,6 +23,7 @@
     CBLReplicator* repl;
     NSTimeInterval timeout;
     BOOL _stopped;
+    BOOL _pinServerCert;
 }
 
 
@@ -31,6 +31,7 @@
     [super setUp];
 
     timeout = 5.0;
+    _pinServerCert = YES;
     NSError* error;
     otherDB = [self openDBNamed: @"otherdb" error: &error];
     AssertNil(error);
@@ -44,6 +45,76 @@
     otherDB = nil;
     repl = nil;
     [super tearDown];
+}
+
+
+/** Returns an endpoint for a Sync Gateway test database, or nil if SG tests are not enabled.
+    To enable these tests, set the hostname of the server in the environment variable
+    "CBL_TEST_HOST".
+    The port number defaults to 4984, or 4994 for SSL. To override these, set the environment
+    variables "CBL_TEST_PORT" and/or "CBL_TEST_PORT_SSL".
+    Note: On iOS, all endpoints will be SSL regardless of the `secure` flag. */
+- (CBLURLEndpoint*) remoteEndpointWithName: (NSString*)dbName secure: (BOOL)secure {
+    NSString* host = NSProcessInfo.processInfo.environment[@"CBL_TEST_HOST"];
+    if (!host) {
+        Log(@"NOTE: Skipping test: no CBL_TEST_HOST configured in environment");
+        return nil;
+    }
+
+    NSString* portKey = secure ? @"CBL_TEST_PORT_SSL" : @"CBL_TEST_PORT";
+    NSInteger port = NSProcessInfo.processInfo.environment[portKey].integerValue;
+    if (!port)
+        port = secure ? 4994 : 4984;
+
+    return [[CBLURLEndpoint alloc] initWithHost: host
+                                           port: port
+                                           path: dbName
+                                         secure: secure];
+}
+
+
+- (BOOL) eraseRemoteEndpoint: (CBLURLEndpoint*)endpoint {
+    Assert([endpoint.path isEqualToString: @"scratch"], @"Only scratch db should be erased");
+    NSURLComponents *comp = [NSURLComponents new];
+    comp.scheme = endpoint.secure ? @"https" : @"http";
+    comp.host = endpoint.host;
+    comp.port = @(endpoint.port + 1);   // assuming admin port is at usual offset
+    comp.path = [NSString stringWithFormat: @"/%@/_flush", endpoint.path];
+    NSURL* url = comp.URL;
+
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
+    request.HTTPMethod = @"POST";
+
+    __block NSError* error = nil;
+    __block NSInteger status = 0;
+    XCTestExpectation* x = [self expectationWithDescription: @"Complete Request"];
+    NSURLSessionDataTask* task = [[NSURLSession sharedSession] dataTaskWithRequest: request
+                                                                 completionHandler:
+                                  ^(NSData *data, NSURLResponse *response, NSError *err)
+    {
+        error = err;
+        status = ((NSHTTPURLResponse*)response).statusCode;
+        [x fulfill];
+    }];
+    [task resume];
+    [self waitForExpectations: @[x] timeout: timeout];
+    
+    if (error != nil || status >= 300) {
+        XCTFail(@"Failed to delete remote db; URL=<%@>, status=%ld, error=%@",
+                url, (long)status, error);
+        return NO;
+    } else {
+        Log(@"Erased remote database %@", url);
+        return YES;
+    }
+}
+
+
+- (SecCertificateRef) secureServerCert {
+    NSData* certData = [self dataFromResource: @"SelfSigned" ofType: @"cer"];
+    SecCertificateRef cert = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
+    Assert(cert);
+    return (SecCertificateRef)CFAutorelease(cert);
 }
 
 
@@ -88,6 +159,8 @@
          builder.authenticator = authenticator;
          if (resolver)
              builder.conflictResolver = resolver;
+         if ($castIf(CBLURLEndpoint, target).secure && _pinServerCert)
+             builder.pinnedServerCertificate = self.secureServerCert;
      }];
     
     if (continuous)
@@ -142,38 +215,6 @@
         } else
             AssertNil(s.error);
     }
-}
-
-
-- (void) eraseRemoteDB: (NSURL*)url {
-    // Post to /db/_flush is supported by Sync Gateway 1.1, but not by CouchDB
-    NSURLComponents* comp = [NSURLComponents componentsWithURL: url resolvingAgainstBaseURL: YES];
-    comp.port = ([url.scheme isEqualToString: @"http"]) ? @4985 : @4995;
-    comp.path = [comp.path stringByAppendingPathComponent: @"_flush"];
-    
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: comp.URL];
-    request.HTTPMethod = @"POST";
-    
-    XCTestExpectation* x = [self expectationWithDescription: @"Complete Request"];
-    NSURLSessionDataTask* task = [[NSURLSession sharedSession] dataTaskWithRequest: request
-                                                                 completionHandler:
-                                  ^(NSData *data, NSURLResponse *response, NSError *error)
-    {
-        NSLog(@"Deleting %@, status = %ld, error: = %@", url,
-              (long)((NSHTTPURLResponse*)response).statusCode, error);
-        if (!error)
-            [x fulfill];
-    }];
-    [task resume];
-    [self waitForExpectations: @[x] timeout: 10.0];
-}
-
-
-- (CBLURLEndpoint*) remoteEndpointWithName: (NSString*)dbName secure: (BOOL)secure {
-    return [[CBLURLEndpoint alloc] initWithHost: kCBLSyncGatewayTestHost
-                                           port: (secure ? 4994 : 4984)
-                                           path: dbName
-                                         secure: secure];
 }
 
 
@@ -501,20 +542,18 @@
 
 
 - (void) testAuthenticationFailure {
-    if (!kCBLEnableSyncGatewayTest)
-        return;
-    
     id target = [self remoteEndpointWithName: @"seekrit" secure: NO];
+    if (!target)
+        return;
     id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: NO];
     [self run: config errorCode: 401 errorDomain: @"WebSocket"];
 }
 
 
 - (void) testAuthenticatedPull {
-    if (!kCBLEnableSyncGatewayTest)
-        return;
-    
     id target = [self remoteEndpointWithName: @"seekrit" secure: NO];
+    if (!target)
+        return;
     id auth = [[CBLBasicAuthenticator alloc] initWithUsername: @"pupshaw" password: @"frank"];
     id config = [self configWithTarget: target type: kCBLReplicatorPull
                             continuous: NO authenticator: auth conflictResolver: nil];
@@ -522,12 +561,11 @@
 }
 
 
-- (void) failTestPushBlobToSyncGateway {
-    if (!kCBLEnableSyncGatewayTest)
+- (void) testPushBlobToSyncGateway {
+    id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+    if (!target)
         return;
-    
-    [self eraseRemoteDB: [NSURL URLWithString: @"http://localhost:4984/scratch"]];
-    
+
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     NSData* data = [self dataFromResource: @"image" ofType: @"jpg"];
@@ -537,50 +575,42 @@
     [doc1 setBlob: blob forKey: @"blob"];
     Assert([self.db saveDocument: doc1 error: &error]);
     AssertEqual(self.db.count, 1u);
-    
-    id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+
+    if (![self eraseRemoteEndpoint: target])
+        return;
     id config = [self configWithTarget: target type : kCBLReplicatorPush continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
 
 - (void) dontTestMissingHost {
-    if (!kCBLEnableSyncGatewayTest)
-        return;
-    
+    // Note: The replication doesn't fail with an error; because the unknown-host error is
+    // considered transient, the replicator just stays offline and waits for a network change.
+    // This causes the test to time out.
     timeout = 200;
     id target = [[CBLURLEndpoint alloc] initWithHost: @"foo.couchbase.com" port: 0 path: @"db" secure: NO];
+    if (!target)
+        return;
     id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: YES];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
 
-// This test assumes an SG is serving SSL at port 4994 with a self-signed cert.
 - (void) testSelfSignedSSLFailure {
-    if (!kCBLEnableSyncGatewayTest)
+    id target = [self remoteEndpointWithName: @"scratch" secure: YES];
+    if (!target)
         return;
-    
-    id target = [self remoteEndpointWithName: @"beer" secure: YES];
+    _pinServerCert = NO;    // without this, SSL handshake will fail
     id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: NO];
     [self run: config errorCode: kCFURLErrorServerCertificateHasUnknownRoot errorDomain: NSURLErrorDomain];
 }
 
 
-// This test assumes an SG is serving SSL at port 4994 with a self-signed cert equal to the one
-// stored in the test resource SelfSigned.cer. (This is the same cert used in the 1.x unit tests.)
 - (void) testSelfSignedSSLPinned {
-    if (!kCBLEnableSyncGatewayTest)
+    id target = [self remoteEndpointWithName: @"scratch" secure: YES];
+    if (!target)
         return;
-    
-    NSData* certData = [self dataFromResource: @"SelfSigned" ofType: @"cer"];
-    SecCertificateRef cert = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certData);
-    Assert(cert);
-    
-    id target = [self remoteEndpointWithName: @"beer" secure: YES];
     id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: NO];
-    config = [[CBLReplicatorConfiguration alloc] initWithConfig: config block: ^(CBLReplicatorConfigurationBuilder* builder) {
-        builder.pinnedServerCertificate = cert;
-    }];
     [self run: config errorCode: 0 errorDomain: nil];
 }
 
