@@ -535,11 +535,8 @@
     AssertEqualObjects([savedDoc1 blobForKey:@"blob"], blob);
 }
 
-// The following tests are disabled by default as they require Sync Gateway.
-// To enable, set the kCBLEnableSyncGatewayTest to YES.
-// To start Sync Gateway, please follow the instructions in
-// <couchbase-lite-ios>/vendor/couchbase-lite-core/Replicator/tests/data/README.
 
+#pragma mark - Sync Gateway Tests
 
 - (void) testAuthenticationFailure {
     id target = [self remoteEndpointWithName: @"seekrit" secure: NO];

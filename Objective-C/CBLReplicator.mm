@@ -9,7 +9,7 @@
 #import "CBLReplicator+Internal.h"
 #import "CBLReplicatorChange+Internal.h"
 #import "CBLReplicatorConfiguration.h"
-#import "CBLURLEndpoint.h"
+#import "CBLURLEndpoint+Internal.h"
 #import "CBLDatabaseEndpoint.h"
 
 #import "CBLChangeListenerToken.h"
@@ -233,7 +233,7 @@ static BOOL isPull(CBLReplicatorType type) {
     if (_reachability)
         return;
     
-    NSURL* remoteURL = $castIf(NSURL, _config.target);
+    NSURL* remoteURL = $castIf(CBLURLEndpoint, _config.target).url;
     if (!remoteURL)
         return;
     
