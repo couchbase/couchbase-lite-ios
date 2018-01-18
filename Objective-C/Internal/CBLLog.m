@@ -77,28 +77,28 @@ void CBLLog_Init() {
     kCBL_LogDomainDatabase = c4log_getDomain("Database", true);
     c4log_setLevel(kCBL_LogDomainDatabase, domainLevel);
     
-    kCBL_LogDomainDB = c4log_getDomain("DB", true);
+    kCBL_LogDomainDB = c4log_getDomain("DB", false);
     c4log_setLevel(kCBL_LogDomainDB, domainLevel);
     
-    kCBL_LogDomainQuery = c4log_getDomain("Query", true);
+    kCBL_LogDomainQuery = c4log_getDomain("Query", false);
     c4log_setLevel(kCBL_LogDomainQuery, domainLevel);
     
-    kCBL_LogDomainSQL = c4log_getDomain("SQL", true);
+    kCBL_LogDomainSQL = c4log_getDomain("SQL", false);
     c4log_setLevel(kCBL_LogDomainSQL, domainLevel);
     
-    kCBL_LogDomainSync = c4log_getDomain("Sync", true);
+    kCBL_LogDomainSync = c4log_getDomain("Sync", false);
     c4log_setLevel(kCBL_LogDomainSync, domainLevel);
     
-    kCBL_LogDomainBLIP = c4log_getDomain("BLIP", true);
+    kCBL_LogDomainBLIP = c4log_getDomain("BLIP", false);
     c4log_setLevel(kCBL_LogDomainBLIP, domainLevel);
     
-    kCBL_LogDomainActor = c4log_getDomain("Actor", true);
+    kCBL_LogDomainActor = c4log_getDomain("Actor", false);
     c4log_setLevel(kCBL_LogDomainActor, domainLevel);
     
-    kCBL_LogDomainWebSocket = c4log_getDomain("WebSocket", true);
+    kCBL_LogDomainWebSocket = c4log_getDomain("WS", false);
     c4log_setLevel(kCBL_LogDomainWebSocket, domainLevel);
     
-    kCBL_LogDomainWSMock = c4log_getDomain("WSMock", true);
+    kCBL_LogDomainWSMock = c4log_getDomain("WSMock", false);
     c4log_setLevel(kCBL_LogDomainWSMock, domainLevel);
 
     // Now map user defaults starting with CBLLog... to log levels:
