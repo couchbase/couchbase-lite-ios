@@ -327,9 +327,9 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         unsigned albumCount = 0;
         for (NSString* artistName in _artists) {
             @autoreleasepool {
-                auto params = [[CBLQueryParameters alloc] init];
-                [params setValue: artistName forName: @"ARTIST"];
-                query.parameters = params;
+                query.parameters = [[CBLQueryParameters alloc] initWithBlock:^(CBLQueryParametersBuilder *builder) {
+                    [builder setValue: artistName forName: @"ARTIST"];
+                }];
                 NSArray* albums = [self collectQueryResults: query];
                 albumCount += albums.count;
                 //NSLog(@"Albums by %@: '%@'", artist, [albums componentsJoinedByString: @"', '"]);
@@ -362,7 +362,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
                                               [CBLQuerySelectResult expression: artist],
                                               [CBLQuerySelectResult expression: album]]
                                       from: [CBLQueryDataSource database: self.db]
-                                     where: [[CBLQueryFullTextExpression index: @"name"] match: @"'Rock'"]
+                                     where: [[CBLQueryFullTextExpression indexWithName: @"name"] match: @"'Rock'"]
                                    orderBy: @[[CBLQueryOrdering expression: [artist collate: cd]],
                                               [CBLQueryOrdering expression: [album collate: cd]]]];
         VerboseLog(2, @"%@", [query explain: NULL]);

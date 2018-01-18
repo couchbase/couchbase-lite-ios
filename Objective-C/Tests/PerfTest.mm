@@ -29,9 +29,10 @@ static NSString* sResourceDir;
 
 
 + (CBLDatabaseConfiguration*) defaultConfig {
-    CBLDatabaseConfiguration* config = [CBLDatabaseConfiguration new];
-    config.directory = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
-    return config;
+    return [[CBLDatabaseConfiguration alloc] initWithBlock:
+            ^(CBLDatabaseConfigurationBuilder *builder) {
+                builder.directory = [NSTemporaryDirectory() stringByAppendingPathComponent: @"CouchbaseLite"];
+            }];
 }
 
 
