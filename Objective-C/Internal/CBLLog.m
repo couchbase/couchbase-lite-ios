@@ -7,17 +7,15 @@
 //
 
 #import "CBLLog.h"
+#import "CBLLog+Admin.h"
 #import "ExceptionUtils.h"
+#import "CBLDatabase.h"    // for CBLLogDomain
 
 
 C4LogDomain kCBL_LogDomainDatabase;
-C4LogDomain kCBL_LogDomainDB;
 C4LogDomain kCBL_LogDomainQuery;
-C4LogDomain kCBL_LogDomainSQL;
 C4LogDomain kCBL_LogDomainSync;
-C4LogDomain kCBL_LogDomainBLIP;
 C4LogDomain kCBL_LogDomainWebSocket;
-C4LogDomain kCBL_LogDomainWSMock;
 
 static const char* kLevelNames[6] = {"Debug", "Verbose", "Info", "WARNING", "ERROR", "none"};
 
@@ -62,6 +60,14 @@ static C4LogLevel string2level(NSString* value) {
 }
 
 
+static C4LogDomain setNamedLogDomainLevel(const char *domainName, C4LogLevel level) {
+    C4LogDomain domain = c4log_getDomain(domainName, false);
+    if (domain)
+        c4log_setLevel(domain, level);
+    return domain;
+}
+
+
 void CBLLog_Init() {
     // First set the default log level, and register the log callback:
     C4LogLevel defaultLevel = string2level([NSUserDefaults.standardUserDefaults objectForKey: @"CBLLogLevel"]);
@@ -73,29 +79,10 @@ void CBLLog_Init() {
     
     // TODO: Sync Lite and LiteCore log domains:
     
-    kCBL_LogDomainDatabase = c4log_getDomain("Database", true);
-    c4log_setLevel(kCBL_LogDomainDatabase, domainLevel);
-    
-    kCBL_LogDomainDB = c4log_getDomain("DB", false);
-    c4log_setLevel(kCBL_LogDomainDB, domainLevel);
-    
-    kCBL_LogDomainQuery = c4log_getDomain("Query", false);
-    c4log_setLevel(kCBL_LogDomainQuery, domainLevel);
-    
-    kCBL_LogDomainSQL = c4log_getDomain("SQL", false);
-    c4log_setLevel(kCBL_LogDomainSQL, domainLevel);
-    
-    kCBL_LogDomainSync = c4log_getDomain("Sync", false);
-    c4log_setLevel(kCBL_LogDomainSync, domainLevel);
-    
-    kCBL_LogDomainBLIP = c4log_getDomain("BLIP", false);
-    c4log_setLevel(kCBL_LogDomainBLIP, domainLevel);
-    
-    kCBL_LogDomainWebSocket = c4log_getDomain("WS", false);
-    c4log_setLevel(kCBL_LogDomainWebSocket, domainLevel);
-    
-    kCBL_LogDomainWSMock = c4log_getDomain("WSMock", false);
-    c4log_setLevel(kCBL_LogDomainWSMock, domainLevel);
+    kCBL_LogDomainDatabase  = setNamedLogDomainLevel("DB", domainLevel);
+    kCBL_LogDomainQuery     = setNamedLogDomainLevel("Query", domainLevel);
+    kCBL_LogDomainSync      = setNamedLogDomainLevel("Sync", domainLevel);
+    kCBL_LogDomainWebSocket = setNamedLogDomainLevel("WS", domainLevel);
 
     // Now map user defaults starting with CBLLog... to log levels:
     NSDictionary* defaults = [NSUserDefaults.standardUserDefaults dictionaryRepresentation];
@@ -109,5 +96,33 @@ void CBLLog_Init() {
             c4log_setLevel(domain, level);
             NSLog(@"CouchbaseLite logging to %s domain at level %s", domainName, kLevelNames[level]);
         }
+    }
+}
+
+
+void CBLLog_SetLevel(CBLLogDomain domain, CBLLogLevel level)  {
+    C4LogLevel c4level = (C4LogLevel)level;
+    switch (domain) {
+        case kCBLLogDomainAll:
+            c4log_setLevel(kCBL_LogDomainDatabase, c4level);
+            c4log_setLevel(kCBL_LogDomainQuery, c4level);
+            c4log_setLevel(kCBL_LogDomainSync, c4level);
+            setNamedLogDomainLevel("BLIP", c4level);
+            c4log_setLevel(kCBL_LogDomainWebSocket, c4level);
+            break;
+        case kCBLLogDomainDatabase:
+            c4log_setLevel(kCBL_LogDomainDatabase, c4level);
+            break;
+        case kCBLLogDomainQuery:
+            c4log_setLevel(kCBL_LogDomainQuery, c4level);
+            break;
+        case kCBLLogDomainReplicator:
+            c4log_setLevel(kCBL_LogDomainSync, c4level);
+            break;
+        case kCBLLogDomainNetwork:
+            setNamedLogDomainLevel("BLIP", c4level);
+            c4log_setLevel(kCBL_LogDomainWebSocket, c4level);
+        default:
+            break;
     }
 }

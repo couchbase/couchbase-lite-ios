@@ -51,11 +51,6 @@ static constexpr NSTimeInterval kIdleTimeout = 300.0;
 }
 
 
-#define Log(FMT, ...)        CBLLog(       WS, @"" FMT, ##__VA_ARGS__)
-#define LogVerbose(FMT, ...) CBLLogVerbose(WS, @"" FMT, ##__VA_ARGS__)
-#define Warn(FMT, ...)       CBLWarn(      WS, @"" FMT, ##__VA_ARGS__)
-
-
 + (void) registerWithC4 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
