@@ -22,6 +22,7 @@
 
 extern "C" {
 #import "MYAnonymousIdentity.h"
+#import "MYErrorUtils.h"
 }
 
 using namespace fleece;
@@ -43,7 +44,7 @@ static constexpr NSTimeInterval kIdleTimeout = 300.0;
     CBLHTTPLogic* _logic;
     NSString* _clientCertID;
     C4Socket* _c4socket;
-    NSError* _authError;
+    NSError* _cancelError;
     BOOL _receiving;
     size_t _receivedBytesPending, _sentBytesPending;
     CFAbsoluteTime _lastReadTime;
@@ -173,7 +174,7 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 
 - (void) _start {
     CBLLog(WebSocket, @"CBLWebSocket connecting to %@:%d...", _logic.URL.host, _logic.port);
-    _authError = nil;
+    _cancelError = nil;
 
     // Configure the nonce/key for the request:
     uint8_t nonceBytes[16];
@@ -346,9 +347,9 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
             [self didCloseWithError: error];
         else {
             self->_receivedBytesPending += data.length;
-            CBLLogVerbose(WebSocket, @"<<< received %zu bytes%s [now %zu pending]", (size_t)data.length,
-                       (atEOF ? " (EOF)" : ""), self->_receivedBytesPending);
-            if (data) {
+            CBLLogVerbose(WebSocket, @"<<< received %zu bytes%s [now %zu pending]",
+                          (size_t)data.length, (atEOF ? " (EOF)" : ""), self->_receivedBytesPending);
+            if (data.length > 0) {
                 auto socket = self->_c4socket;
                 dispatch_async(self->_c4Queue, ^{
                     c4socket_received(socket, {data.bytes, data.length});
@@ -356,11 +357,17 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
                 if (!atEOF && self->_receivedBytesPending < kMaxReceivedBytesPending)
                     [self receive];
             }
+            if (atEOF && !_requestedClose) {
+                // The peer has closed the socket, but I still have to close my side, else my
+                // -readClosedForStreamTask:... delegate method won't be called:
+                [self->_task closeRead];
+            }
         }
     }];
 }
 
 
+// callback from C4Socket
 - (void) completedReceive: (size_t)byteCount {
     [_queue addOperationWithBlock: ^{
         self->_receivedBytesPending -= byteCount;
@@ -411,7 +418,7 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
             CBLLog(WebSocket, @"    useCredential for trust: %@", credential);
             disposition = NSURLSessionAuthChallengeUseCredential;
         } else {
-            _authError = error;
+            _cancelError = error;
             CBLWarn(WebSocket, @"TLS handshake failed: %@: %@",
                  challenge.protectionSpace, error.localizedDescription);
             disposition = NSURLSessionAuthChallengeCancelAuthenticationChallenge;
@@ -438,18 +445,25 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
 }
 
 
-#if DEBUG
-- (void)URLSession:(NSURLSession *)session readClosedForStreamTask:(NSURLSessionStreamTask *)streamTask
+- (void)URLSession:(NSURLSession *)session readClosedForStreamTask:(NSURLSessionStreamTask *)task
 {
-    CBLLog(WebSocket, @"CBLWebSocket read stream closed");
+    [self streamClosed: NO];
 }
 
-
-- (void)URLSession:(NSURLSession *)session writeClosedForStreamTask:(NSURLSessionStreamTask *)streamTask
+- (void)URLSession:(NSURLSession *)session writeClosedForStreamTask:(NSURLSessionStreamTask *)task
 {
-    CBLLog(WebSocket, @"CBLWebSocket write stream closed");
+    [self streamClosed: YES];
 }
-#endif
+
+- (void) streamClosed: (BOOL)isWrite {
+    CBLLog(WebSocket, @"CBLWebSocket %s stream closed%s",
+           (isWrite ? "write" : "read"),
+           (_requestedClose ? "" : " unexpectedly"));
+    if (!_requestedClose) {
+        _cancelError = MYError(ECONNRESET, NSPOSIXErrorDomain, @"Network connection lost");
+        [_task cancel];
+    }
+}
 
 
 - (void)URLSession:(NSURLSession *)session
@@ -496,18 +510,16 @@ static void doCompletedReceive(C4Socket* s, size_t byteCount) {
     _task = nil;
 
     // We sometimes get bogus(?) ENOTCONN errors after closing the socket.
-    if (_requestedClose && error.code == ENOTCONN
-                        && [error.domain isEqualToString: NSPOSIXErrorDomain]) {
-        CBLLog(WebSocket, @"CBLWebSocket ignoring %@", error);
+    if (_requestedClose && [error my_hasDomain: NSPOSIXErrorDomain code: ENOTCONN]) {
+        CBLLog(WebSocket, @"CBLWebSocket ignoring %@", error.my_compactDescription);
         error = nil;
     }
 
     C4Error c4err;
     if (error) {
-        if (error.code == kCFURLErrorCancelled && [error.domain isEqualToString: NSURLErrorDomain])
-            error = _authError;
-        CBLLog(WebSocket, @"CBLWebSocket CLOSED WITH ERROR: %@ %ld \"%@\"",
-            error.domain, (long)error.code, error.localizedFailureReason);
+        if ([error my_hasDomain: NSURLErrorDomain code: kCFURLErrorCancelled] && _cancelError != nil)
+            error = _cancelError;
+        CBLLog(WebSocket, @"CBLWebSocket CLOSED WITH ERROR: %@", error.my_compactDescription);
         convertError(error, &c4err);
     } else {
         CBLLog(WebSocket, @"CBLWebSocket CLOSED");

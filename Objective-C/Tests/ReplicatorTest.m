@@ -226,6 +226,9 @@
 }
 
 
+#pragma mark - TESTS:
+
+
 - (void)testEmptyPush {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorPush continuous: NO];
@@ -546,6 +549,7 @@
 
 #pragma mark - Sync Gateway Tests
 
+
 - (void) testAuthenticationFailure {
     id target = [self remoteEndpointWithName: @"seekrit" secure: NO];
     if (!target)
@@ -618,6 +622,23 @@
         return;
     id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
+}
+
+
+- (void) dontTestContinuousPushNeverending {
+    // NOTE: This test never stops even after the replication goes idle.
+    // It can be used to test the response to connectivity issues like killing the remote server.
+    [CBLDatabase setLogLevel: kCBLLogLevelVerbose domain: kCBLLogDomainNetwork];
+    
+    id target = [self remoteEndpointWithName: @"scratch" secure: NO];
+    if (!target)
+        return;
+    id config = [self configWithTarget: target type: kCBLReplicatorPush continuous: YES];
+    repl = [[CBLReplicator alloc] initWithConfig: config];
+    [repl start];
+
+    XCTestExpectation* x = [self expectationWithDescription: @"When pigs fly"];
+    [self waitForExpectations: @[x] timeout: 1e20];
 }
 
 
