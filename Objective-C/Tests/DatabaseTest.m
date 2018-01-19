@@ -492,6 +492,27 @@
 }
 
 
+- (void) testSaveManyDocs {
+    [self createDocs: 1000];
+    AssertEqual(1000, (long)self.db.count);
+    [self validateDocs: 1000];
+    
+    // Clean up:
+    NSError* error;
+    Assert([self.db delete:&error]);
+    [self reopenDB];
+    
+    // Run in batch:
+    BOOL success = [self.db inBatch: &error usingBlock: ^{
+        // save 1000 docs
+        [self createDocs: 1000];
+    }];
+    Assert(success);
+    AssertEqual(1000, (long)self.db.count);
+    [self validateDocs: 1000];
+}
+
+
 #pragma mark - Delete Document
 
 
@@ -1364,5 +1385,6 @@
     Assert([self.db deleteIndexForName: @"index2" error: &error]);
     Assert([self.db deleteIndexForName: @"index3" error: &error]);
 }
+
 
 @end
