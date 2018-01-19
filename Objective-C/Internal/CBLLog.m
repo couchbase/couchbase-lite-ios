@@ -16,7 +16,6 @@ C4LogDomain kCBL_LogDomainQuery;
 C4LogDomain kCBL_LogDomainSQL;
 C4LogDomain kCBL_LogDomainSync;
 C4LogDomain kCBL_LogDomainBLIP;
-C4LogDomain kCBL_LogDomainActor;
 C4LogDomain kCBL_LogDomainWebSocket;
 C4LogDomain kCBL_LogDomainWSMock;
 
@@ -91,9 +90,6 @@ void CBLLog_Init() {
     
     kCBL_LogDomainBLIP = c4log_getDomain("BLIP", false);
     c4log_setLevel(kCBL_LogDomainBLIP, domainLevel);
-    
-    kCBL_LogDomainActor = c4log_getDomain("Actor", false);
-    c4log_setLevel(kCBL_LogDomainActor, domainLevel);
     
     kCBL_LogDomainWebSocket = c4log_getDomain("WS", false);
     c4log_setLevel(kCBL_LogDomainWebSocket, domainLevel);
