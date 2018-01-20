@@ -22,7 +22,7 @@ NSString* const kCBLURLEndpointTLSScheme = @"wss";
         if (!([url.scheme isEqualToString: kCBLURLEndpointScheme] ||
               [url.scheme isEqualToString: kCBLURLEndpointTLSScheme])) {
             [NSException raise: NSInvalidArgumentException
-                        format: @"The given URL has an unsupported URL scheme (%@). The suported URL schemes are %@ and %@",
+                        format: @"The URL parameter has an unsupported URL scheme (%@). The supported URL schemes are %@ and %@",
                                 url.scheme, kCBLURLEndpointScheme, kCBLURLEndpointTLSScheme];
         }
         _url = url;
