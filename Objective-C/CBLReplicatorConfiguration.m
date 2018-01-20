@@ -85,7 +85,7 @@
 @synthesize pinnedServerCertificate=_pinnedServerCertificate;
 @synthesize headers=_headers;
 @synthesize documentIDs=_documentIDs, channels=_channels;
-@synthesize checkpointInterval=_checkpointInterval;
+@synthesize checkpointInterval=_checkpointInterval, heartbeatInterval=_heartbeatInterval;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -167,10 +167,12 @@
     options[@kC4ReplicatorOptionDocIDs] = _documentIDs;
     options[@kC4ReplicatorOptionChannels] = _channels;
 
-    // Checkpoint Interval (no public api now):
+    // Checkpoint & heartbeat intervals (no public api now):
     if (_checkpointInterval > 0)
         options[@kC4ReplicatorCheckpointInterval] = @(_checkpointInterval);
-    
+    if (_heartbeatInterval > 0)
+        options[@kC4ReplicatorHeartbeatInterval] = @(_heartbeatInterval);
+
     return options;
 }
 

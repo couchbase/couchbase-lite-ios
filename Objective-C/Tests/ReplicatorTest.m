@@ -638,7 +638,7 @@
     [repl start];
 
     XCTestExpectation* x = [self expectationWithDescription: @"When pigs fly"];
-    [self waitForExpectations: @[x] timeout: 1e20];
+    [self waitForExpectations: @[x] timeout: 1e9];
 }
 
 

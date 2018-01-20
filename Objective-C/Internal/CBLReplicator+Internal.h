@@ -16,6 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLReplicatorConfiguration ()
 @property (readonly, nonatomic) NSDictionary* effectiveOptions;
 @property (nonatomic) NSTimeInterval checkpointInterval;
+@property (nonatomic) NSTimeInterval heartbeatInterval;
 @end
 
 
