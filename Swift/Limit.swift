@@ -14,11 +14,11 @@ public final class Limit: Query  {
     
     // MARK: Internal
     
-    init(query: Query, limit: Expression, offset: Expression?) {
+    init(query: Query, limit: ExpressionProtocol, offset: ExpressionProtocol?) {
         super.init()
         
         self.copy(query)
-        self.limitImpl = CBLQueryLimit(limit.impl, offset: offset != nil ? offset!.impl : nil)
+        self.limitImpl = CBLQueryLimit(limit.toImpl(), offset: offset != nil ? offset!.toImpl() : nil)
     }
     
 }

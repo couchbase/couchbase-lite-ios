@@ -16,6 +16,6 @@ protocol FromRouter {
     ///
     /// - Parameter dataSource: The DataSource object.
     /// - Returns: The From object that represent the FROM clause of the query.
-    func from(_ dataSource: DataSource) -> From
+    func from(_ dataSource: DataSourceProtocol) -> From
     
 }

@@ -16,6 +16,6 @@ protocol JoinRouter {
     ///
     /// - Parameter join: The join objects.
     /// - Returns: The Joins object.
-    func join(_ join: Join...) -> Joins
+    func join(_ join: JoinProtocol...) -> Joins
     
 }

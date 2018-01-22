@@ -17,7 +17,7 @@ protocol LimitRouter {
     ///
     /// - Parameter limit: The limit expression.
     /// - Returns: The Limit object that represents the LIMIT clause of the query.
-    func limit(_ limit: Expression) -> Limit
+    func limit(_ limit: ExpressionProtocol) -> Limit
     
     ///  Creates and chains a Limit object to skip the returned results for the given offset
     ///  position and to limit the number of results to not more than the given limit value.
@@ -26,6 +26,6 @@ protocol LimitRouter {
     ///   - limit: The limit expression.
     ///   - offset: The offset expression.
     /// - Returns: The Limit object that represents the LIMIT clause of the query.
-    func limit(_ limit: Expression, offset: Expression?) -> Limit
+    func limit(_ limit: ExpressionProtocol, offset: ExpressionProtocol?) -> Limit
     
 }

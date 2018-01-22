@@ -16,13 +16,13 @@ public final class Select: Query, FromRouter {
     ///
     /// - Parameter dataSource: The DataSource object.
     /// - Returns: The From object that represent the FROM clause of the query.
-    public func from(_ dataSource: DataSource) -> From {
-        return From(query: self, impl: dataSource.impl, database: dataSource.database);
+    public func from(_ dataSource: DataSourceProtocol) -> From {
+        return From(query: self,
+                    impl: dataSource.toImpl(),
+                    database: dataSource.source() as! Database);
     }
     
-    
     // MARK: Internal
-    
     
     init(impl: [CBLQuerySelectResult], distinct: Bool) {
         super.init()

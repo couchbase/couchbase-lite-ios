@@ -9,7 +9,7 @@
 import Foundation
 
 
-/// Function provies query functions.
+/// Function factory.
 public final class Function {
     
     // MARK: Aggregation
@@ -20,8 +20,8 @@ public final class Function {
     ///
     /// - Parameter expression: The expression.
     /// - Returns: The AVG(expr) function.
-    public static func avg(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.avg(expression.impl))
+    public static func avg(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.avg(expression.toImpl()))
     }
     
     
@@ -30,8 +30,8 @@ public final class Function {
     ///
     /// - Parameter expression: The expression.
     /// - Returns: The COUNT(expr) function.
-    public static func count(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.count(expression.impl))
+    public static func count(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.count(expression.toImpl()))
     }
     
     
@@ -40,8 +40,8 @@ public final class Function {
     ///
     /// - Parameter expression: The expression.
     /// - Returns: The MIN(expr) function.
-    public static func min(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.min(expression.impl))
+    public static func min(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.min(expression.toImpl()))
     }
     
     
@@ -50,8 +50,8 @@ public final class Function {
     ///
     /// - Parameter expression: The expression.
     /// - Returns: The MAX(expr) function.
-    public static func max(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.max(expression.impl))
+    public static func max(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.max(expression.toImpl()))
     }
     
     
@@ -60,8 +60,8 @@ public final class Function {
     ///
     /// - Parameter expression: The expression.
     /// - Returns: The SUM(expr) function.
-    public static func sum(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.sum(expression.impl))
+    public static func sum(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.sum(expression.toImpl()))
     }
     
     
@@ -73,8 +73,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The ABS(expr) function.
-    public static func abs(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.abs(expression.impl))
+    public static func abs(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.abs(expression.toImpl()))
     }
     
     
@@ -83,8 +83,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The ACOS(expr) function.
-    public static func acos(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.acos(expression.impl))
+    public static func acos(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.acos(expression.toImpl()))
     }
     
     
@@ -93,8 +93,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The ASIN(expr) function.
-    public static func asin(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.asin(expression.impl))
+    public static func asin(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.asin(expression.toImpl()))
     }
     
     
@@ -103,8 +103,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The ATAN(expr) function.
-    public static func atan(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.atan(expression.impl))
+    public static func atan(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.atan(expression.toImpl()))
     }
     
     
@@ -114,8 +114,8 @@ public final class Function {
     ///   - x: The expression to evaluate as the X coordinate.
     ///   - y: The expression to evaluate as the Y coordinate.
     /// - Returns: The ATAN2(X, Y) function.
-    public static func atan2(x: Expression, y: Expression) -> Expression {
-        return Expression(CBLQueryFunction.atan2(x.impl, y: y.impl))
+    public static func atan2(x: ExpressionProtocol, y: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.atan2(x.toImpl(), y: y.toImpl()))
     }
     
     
@@ -124,8 +124,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The CEIL(expr) function.
-    public static func ceil(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.ceil(expression.impl))
+    public static func ceil(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.ceil(expression.toImpl()))
     }
     
 
@@ -133,8 +133,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The COS(expr) function.
-    public static func cos(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.cos(expression.impl))
+    public static func cos(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.cos(expression.toImpl()))
     }
     
     
@@ -143,16 +143,16 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression to evaluate as a radiants value.
     /// - Returns: The DEGREES(expr) function.
-    public static func degrees(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.degrees(expression.impl))
+    public static func degrees(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.degrees(expression.toImpl()))
     }
 
     
     /// Creates a E() function that return the value of the mathemetical constant 'e'.
     ///
     /// - Returns: The E() constant function.
-    public static func e() -> Expression {
-        return Expression(CBLQueryFunction.e())
+    public static func e() -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.e())
     }
     
     
@@ -161,8 +161,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The EXP(expr) function.
-    public static func exp(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.exp(expression.impl))
+    public static func exp(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.exp(expression.toImpl()))
     }
     
     
@@ -170,8 +170,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The FLOOR(expr) function.
-    public static func floor(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.floor(expression.impl))
+    public static func floor(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.floor(expression.toImpl()))
     }
     
     
@@ -179,8 +179,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The LN(expr) function.
-    public static func ln(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.ln(expression.impl))
+    public static func ln(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.ln(expression.toImpl()))
     }
     
     
@@ -188,16 +188,16 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The LOG(expr) function.
-    public static func log(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.log(expression.impl))
+    public static func log(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.log(expression.toImpl()))
     }
 
     
     /// Creates a PI() function that returns the mathemetical constant Pi.
     ///
     /// - Returns: The PI() constant function.
-    public static func pi() -> Expression {
-        return Expression(CBLQueryFunction.pi())
+    public static func pi() -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.pi())
     }
 
     
@@ -208,8 +208,8 @@ public final class Function {
     ///   - base: The base expression.
     ///   - exponent: The exponent expression.
     /// - Returns: The POWER(base, exponent) function.
-    public static func power(base: Expression, exponent: Expression) -> Expression {
-        return Expression(CBLQueryFunction.power(base.impl, exponent: exponent.impl))
+    public static func power(base: ExpressionProtocol, exponent: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.power(base.toImpl(), exponent: exponent.toImpl()))
     }
     
     
@@ -218,8 +218,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression to evaluate as a degrees value.
     /// - Returns: The RADIANS(expr) function.
-    public static func radians(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.radians(expression.impl))
+    public static func radians(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.radians(expression.toImpl()))
     }
     
     
@@ -228,8 +228,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The ROUND(expr) function.
-    public static func round(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.round(expression.impl))
+    public static func round(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.round(expression.toImpl()))
     }
 
     
@@ -240,8 +240,8 @@ public final class Function {
     ///   - expression: The numeric expression.
     ///   - digits: The number of digits.
     /// - Returns: The ROUND(expr, digits) function.
-    public static func round(_ expression: Expression, digits: Expression) -> Expression {
-        return Expression(CBLQueryFunction.round(expression.impl, digits: digits.impl))
+    public static func round(_ expression: ExpressionProtocol, digits: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.round(expression.toImpl(), digits: digits.toImpl()))
     }
     
     
@@ -250,8 +250,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The SIGN(expr) function.
-    public static func sign(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.sign(expression.impl))
+    public static func sign(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.sign(expression.toImpl()))
     }
     
     
@@ -259,8 +259,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The SIN(expr) function.
-    public static func sin(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.sin(expression.impl))
+    public static func sin(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.sin(expression.toImpl()))
     }
     
     
@@ -268,8 +268,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The SQRT(expr) function.
-    public static func sqrt(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.sqrt(expression.impl))
+    public static func sqrt(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.sqrt(expression.toImpl()))
     }
 
     
@@ -277,8 +277,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns:  The TAN(expr) function.
-    public static func tan(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.tan(expression.impl))
+    public static func tan(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.tan(expression.toImpl()))
     }
     
     
@@ -287,8 +287,8 @@ public final class Function {
     ///
     /// - Parameter expression: The numeric expression.
     /// - Returns: The trunc function.
-    public static func trunc(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.trunc(expression.impl))
+    public static func trunc(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.trunc(expression.toImpl()))
     }
     
     
@@ -299,8 +299,8 @@ public final class Function {
     ///   - expression: The numeric expression.
     ///   - digits: The number of digits to truncate.
     /// - Returns: The TRUNC(expr, digits) function.
-    public static func trunc(_ expression: Expression, digits: Expression) -> Expression {
-        return Expression(CBLQueryFunction.trunc(expression.impl, digits: digits.impl))
+    public static func trunc(_ expression: ExpressionProtocol, digits: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.trunc(expression.toImpl(), digits: digits.toImpl()))
     }
     
     
@@ -314,8 +314,8 @@ public final class Function {
     ///   - expression: The string expression.
     ///   - substring: The substring expression.
     /// - Returns: The CONTAINS(expr, substr) function.
-    public static func contains(_ expression: Expression, substring: Expression) -> Expression {
-        return Expression(CBLQueryFunction.contains(expression.impl, substring: substring.impl))
+    public static func contains(_ expression: ExpressionProtocol, substring: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.contains(expression.toImpl(), substring: substring.toImpl()))
     }
     
     
@@ -323,8 +323,8 @@ public final class Function {
     ///
     /// - Parameter expression: The string expression.
     /// - Returns: The LENGTH(expr) function.
-    public static func length(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.length(expression.impl))
+    public static func length(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.length(expression.toImpl()))
     }
     
     
@@ -333,8 +333,8 @@ public final class Function {
     ///
     /// - Parameter expression: The string expression.
     /// - Returns: The LOWER(expr) function.
-    public static func lower(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.lower(expression.impl))
+    public static func lower(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.lower(expression.toImpl()))
     }
     
     
@@ -343,8 +343,8 @@ public final class Function {
     ///
     /// - Parameter expression: The string expression.
     /// - Returns: The LTRIM(expr) function.
-    public static func ltrim(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.ltrim(expression.impl))
+    public static func ltrim(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.ltrim(expression.toImpl()))
     }
     
     
@@ -353,8 +353,8 @@ public final class Function {
     ///
     /// - Parameter expression: The string expression.
     /// - Returns: The RTRIM(expr) function.
-    public static func rtrim(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.rtrim(expression.impl))
+    public static func rtrim(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.rtrim(expression.toImpl()))
     }
     
     
@@ -363,8 +363,8 @@ public final class Function {
     ///
     /// - Parameter expression: The string expression.
     /// - Returns: The TRIM(expr) function.
-    public static func trim(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.trim(expression.impl))
+    public static func trim(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.trim(expression.toImpl()))
     }
     
     
@@ -373,8 +373,8 @@ public final class Function {
     ///
     /// - Parameter expression: The string expression.
     /// - Returns: The UPPER(expr) function.
-    public static func upper(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryFunction.upper(expression.impl))
+    public static func upper(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFunction.upper(expression.toImpl()))
     }
     
 }

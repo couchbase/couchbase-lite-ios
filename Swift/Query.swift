@@ -28,8 +28,8 @@ public class Query {
     ///
     /// - Parameter results: The array of the SelectResult object for specifying the returned values.
     /// - Returns: A Select object.
-    public static func select(_ results: SelectResult...) -> Select {
-        return Select(impl: SelectResult.toImpl(results: results), distinct: false)
+    public static func select(_ results: SelectResultProtocol...) -> Select {
+        return Select(impl: QuerySelectResult.toImpl(results: results), distinct: false)
     }
     
     
@@ -38,8 +38,8 @@ public class Query {
     ///
     /// - Parameter results: The array of the SelectResult object for specifying the returned values.
     /// - Returns: A Select distinct object.
-    public static func selectDistinct(_ results: SelectResult...) -> Select {
-        return Select(impl: SelectResult.toImpl(results: results), distinct: true)
+    public static func selectDistinct(_ results: SelectResultProtocol...) -> Select {
+        return Select(impl: QuerySelectResult.toImpl(results: results), distinct: true)
     }
     
 

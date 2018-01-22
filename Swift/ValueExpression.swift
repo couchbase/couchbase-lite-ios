@@ -8,7 +8,8 @@
 
 import Foundation
 
-/* internal */ class ValueExpression: Expression {
+/// Value Expression.
+/* internal */ class ValueExpression: QueryExpression {
     init(value: Any?) {
         super.init(CBLQueryExpression.value(value))
     }

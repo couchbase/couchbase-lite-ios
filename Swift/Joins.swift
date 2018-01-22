@@ -16,8 +16,8 @@ public final class Joins: Query, WhereRouter, OrderByRouter, LimitRouter {
     ///
     /// - Parameter expression: The where expression.
     /// - Returns: The Where object that represents the WHERE clause of the query.
-    public func `where`(_ expression: Expression) -> Where {
-        return Where(query: self, impl: expression.impl)
+    public func `where`(_ expression: ExpressionProtocol) -> Where {
+        return Where(query: self, impl: expression.toImpl())
     }
     
     
@@ -25,8 +25,8 @@ public final class Joins: Query, WhereRouter, OrderByRouter, LimitRouter {
     ///
     /// - Parameter orderings: The Ordering objects.
     /// - Returns: The OrderBy object that represents the ORDER BY clause of the query.
-    public func orderBy(_ orderings: Ordering...) -> OrderBy {
-        return OrderBy(query: self, impl: Ordering.toImpl(orderings: orderings))
+    public func orderBy(_ orderings: OrderingProtocol...) -> OrderBy {
+        return OrderBy(query: self, impl: QueryOrdering.toImpl(orderings: orderings))
     }
     
     
@@ -34,7 +34,7 @@ public final class Joins: Query, WhereRouter, OrderByRouter, LimitRouter {
     ///
     /// - Parameter limit: The limit expression.
     /// - Returns: The Limit object that represents the LIMIT clause of the query.
-    public func limit(_ limit: Expression) -> Limit {
+    public func limit(_ limit: ExpressionProtocol) -> Limit {
         return self.limit(limit, offset: nil)
     }
     
@@ -46,7 +46,7 @@ public final class Joins: Query, WhereRouter, OrderByRouter, LimitRouter {
     ///   - limit: The limit expression.
     ///   - offset: The offset expression.
     /// - Returns: The Limit object that represents the LIMIT clause of the query.
-    public func limit(_ limit: Expression, offset: Expression?) -> Limit {
+    public func limit(_ limit: ExpressionProtocol, offset: ExpressionProtocol?) -> Limit {
         return Limit(query: self, limit: limit, offset: offset)
     }
     

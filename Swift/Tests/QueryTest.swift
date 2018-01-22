@@ -48,7 +48,7 @@ class QueryTest: CBLTestCase {
             var result = numbers.filter { pred.evaluate(with: $0) };
             let total = result.count
             
-            let w = c[0] as! Expression
+            let w = c[0] as! ExpressionProtocol
             let q = Query.select(kDOCID).from(DataSource.database(db)).where(w)
             let rows = try verifyQuery(q, block: { (n, r) in
                 let doc = db.document(withID: r.string(at: 0)!)!
@@ -156,7 +156,7 @@ class QueryTest: CBLTestCase {
         ]
         
         for test in tests {
-            let exp = test[0] as! Expression
+            let exp = test[0] as! ExpressionProtocol
             let expectedDocs = test[1] as! [Document]
             let q = Query.select(kDOCID).from(DataSource.database(db)).where(exp)
             let numRows = try verifyQuery(q, block: { (n, r) in
@@ -293,7 +293,7 @@ class QueryTest: CBLTestCase {
         try loadJSONResource(name: "names_100")
         
         for ascending in [true, false] {
-            var o: Ordering;
+            var o: OrderingProtocol;
             if (ascending) {
                 o = Ordering.expression(Expression.property("name.first")).ascending()
             } else {

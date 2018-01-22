@@ -20,18 +20,17 @@ public final class ArrayExpressionIn {
     ///
     /// - Parameter expression: The array object or the expression evaluated as an array object.
     /// - Returns: A Satisfies object.
-    public func `in`(_ expression: Expression) -> ArrayExpressionSatisfies {
+    public func `in`(_ expression: ExpressionProtocol) -> ArrayExpressionSatisfies {
         return ArrayExpressionSatisfies(type: self.type, variable: self.variable, inExpression: expression)
     }
     
-    
     // MARK: Internal
     
-    
     let type: QuantifiesType
-    let variable: VariableExpression
     
-    init(type: QuantifiesType, variable: VariableExpression) {
+    let variable: VariableExpressionProtocol
+    
+    init(type: QuantifiesType, variable: VariableExpressionProtocol) {
         self.type = type
         self.variable = variable
     }

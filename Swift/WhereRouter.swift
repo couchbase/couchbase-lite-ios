@@ -17,6 +17,6 @@ protocol WhereRouter {
     ///
     /// - Parameter where: The where expression.
     /// - Returns: The Where object.
-    func `where`(_ expression: Expression) -> Where
+    func `where`(_ expression: ExpressionProtocol) -> Where
     
 }

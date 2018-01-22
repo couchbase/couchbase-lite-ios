@@ -15,8 +15,8 @@ public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {
     ///
     /// - Parameter orderings: The ordering objects.
     /// - Returns: The OrderBy object.
-    public func orderBy(_ orderings: Ordering...) -> OrderBy {
-        return OrderBy(query: self, impl: Ordering.toImpl(orderings: orderings))
+    public func orderBy(_ orderings: OrderingProtocol...) -> OrderBy {
+        return OrderBy(query: self, impl: QueryOrdering.toImpl(orderings: orderings))
     }
     
     
@@ -24,8 +24,8 @@ public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {
     ///
     /// - Parameter expressions: The expression objects.
     /// - Returns: The GroupBy object.
-    public func groupBy(_ expressions: Expression...) -> GroupBy {
-        return GroupBy(query: self, impl: Expression.toImpl(expressions: expressions))
+    public func groupBy(_ expressions: ExpressionProtocol...) -> GroupBy {
+        return GroupBy(query: self, impl: QueryExpression.toImpl(expressions: expressions))
     }
     
     
@@ -33,7 +33,7 @@ public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {
     ///
     /// - Parameter limit: The limit Expression object or liternal value.
     /// - Returns: The Limit object.
-    public func limit(_ limit: Expression) -> Limit {
+    public func limit(_ limit: ExpressionProtocol) -> Limit {
         return self.limit(limit, offset: nil)
     }
     
@@ -45,7 +45,7 @@ public final class Where: Query, GroupByRouter, OrderByRouter, LimitRouter {
     ///   - limit: The limit Expression object or liternal value.
     ///   - offset: The offset Expression object or liternal value.
     /// - Returns: The Limit object.
-    public func limit(_ limit: Expression, offset: Expression?) -> Limit {
+    public func limit(_ limit: ExpressionProtocol, offset: ExpressionProtocol?) -> Limit {
         return Limit(query: self, limit: limit, offset: offset)
     }
     

@@ -8,7 +8,7 @@
 
 import Foundation
 
-/// Full-text function.
+/// Full-text function factory.
 public final class FullTextFunction {
     
     /// Creates a full-text rank function with the given full-text index name.
@@ -17,8 +17,8 @@ public final class FullTextFunction {
     ///
     /// - Parameter indexName: The index name.
     /// - Returns: The full-text rank function.
-    public static func rank(_ indexName: String) -> Expression {
-        return Expression(CBLQueryFullTextFunction.rank(indexName))
+    public static func rank(_ indexName: String) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryFullTextFunction.rank(indexName))
     }
     
 }

@@ -8,17 +8,25 @@
 
 import Foundation
 
-public final class PropertyExpression: Expression {
+
+/// Property expression.
+public protocol PropertyExpressionProtocol: ExpressionProtocol {
     
     /// Specifies an alias name of the data source to query the data from.
     ///
     /// - Parameter alias: The alias name of the data source.
-    /// - Returns: The property Expression with the given data source alias name.
-    public func from(_ alias: String?) -> Expression {
+    /// - Returns: The property expression with the given data source alias name.
+    func from(_ alias: String?) -> ExpressionProtocol
+    
+}
+
+/* internal */ class PropertyExpression: QueryExpression, PropertyExpressionProtocol {
+
+    public func from(_ alias: String?) -> ExpressionProtocol {
         if let prop = self.property {
-            return Expression(CBLQueryExpression.property(prop, from: alias))
+            return QueryExpression(CBLQueryExpression.property(prop, from: alias))
         } else {
-            return Expression(CBLQueryExpression.all(from: alias))
+            return QueryExpression(CBLQueryExpression.all(from: alias))
         }
     }
     

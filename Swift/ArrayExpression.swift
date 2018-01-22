@@ -15,7 +15,7 @@ public final class ArrayExpression {
     ///
     /// - Parameter name: The variable name.
     /// - Returns: A variable expression.
-    public static func variable(_ name: String) -> VariableExpression {
+    public static func variable(_ name: String) -> VariableExpressionProtocol {
         return VariableExpression(name: name)
     }
     
@@ -29,7 +29,7 @@ public final class ArrayExpression {
     ///
     /// - Parameter variable: The variable expression.
     /// - Returns: An IN expression.
-    public static func any(_ variable: VariableExpression) -> ArrayExpressionIn {
+    public static func any(_ variable: VariableExpressionProtocol) -> ArrayExpressionIn {
         return ArrayExpressionIn(type: .any, variable: variable)
     }
     
@@ -42,7 +42,7 @@ public final class ArrayExpression {
     ///
     /// - Parameter variable: The variable expression.
     /// - Returns: An IN expression.
-    public static func every(_ variable: VariableExpression) -> ArrayExpressionIn {
+    public static func every(_ variable: VariableExpressionProtocol) -> ArrayExpressionIn {
         return ArrayExpressionIn(type: .every, variable: variable)
     }
     
@@ -55,7 +55,7 @@ public final class ArrayExpression {
     ///
     /// - Parameter variable: The variable expression.
     /// - Returns: An IN object.
-    public static func anyAndEvery(_ variable: VariableExpression) -> ArrayExpressionIn {
+    public static func anyAndEvery(_ variable: VariableExpressionProtocol) -> ArrayExpressionIn {
         return ArrayExpressionIn(type: .anyAndEvery, variable: variable)
     }
 }

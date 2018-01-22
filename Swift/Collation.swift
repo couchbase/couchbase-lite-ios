@@ -8,13 +8,17 @@
 
 import Foundation
 
-
 /// Collation defines how strings are compared and is used when creating a COLLATE expression.
 /// The COLLATE expression can be used in the WHERE clause when comparing two strings or in the
-/// ORDER BY clause when specifying how the order of the query results. CouchbaseLite provides
-/// two types of the Collation, ASCII and Unicode. Without specifying the COLLATE expression
-/// Couchbase Lite will use the ASCII with case sensitive collation by default. 
-public class Collation {
+/// ORDER BY clause when specifying how the order of the query results.
+public protocol CollationProtocol {
+    
+}
+
+/// Collation factory. CouchbaseLite provides two types of the Collation,
+/// ASCII and Unicode. Without specifying the COLLATE expression. Couchbase Lite
+/// will use the ASCII with case sensitive collation by default.
+public final class Collation {
     
     /// Creates an ASCII collation that will compare two strings by using binary comparison.
     ///
@@ -22,7 +26,6 @@ public class Collation {
     static public func ascii() -> ASCII {
         return ASCII()
     }
-    
     
     /// Creates a Unicode collation that will compare two strings by using Unicode Collation
     /// Algorithm. If the locale is not specified, the collation is Unicode-aware but
@@ -34,9 +37,8 @@ public class Collation {
         return Unicode()
     }
     
-    
     /// ASCII collation compares two strings by using binary comparison.
-    public final class ASCII: Collation {
+    public final class ASCII: CollationProtocol {
         
         /// Specifies whether the collation is case-sensitive or not. Case-insensitive
         /// collation will treat ASCII uppercase and lowercase letters as equivalent.
@@ -48,17 +50,15 @@ public class Collation {
             return self
         }
         
-        
         // MARK: Internal
         
 
         var ignoreCase = false
         
         
-        override var impl: CBLQueryCollation {
+        func toImpl() -> CBLQueryCollation {
             return CBLQueryCollation.ascii(withIgnoreCase: ignoreCase)
         }
-        
     }
 
     
@@ -66,7 +66,7 @@ public class Collation {
     /// by using Unicode collation algorithm. If the locale is not specified, the collation is
     /// Unicode-aware but not localized; for example, accented Roman letters sort right after
     /// the base letter (This is implemented by using the "en_US" locale).
-    public final class Unicode: Collation {
+    public final class Unicode: CollationProtocol {
         
         
         /// Specifies whether the collation is case-insenstive or not. Case-insensitive
@@ -118,21 +118,27 @@ public class Collation {
         
         var locale: String?
         
-        override var impl: CBLQueryCollation {
+        func toImpl() -> CBLQueryCollation {
             return CBLQueryCollation.unicode(withLocale: locale,
                                              ignoreCase: ignoreCase,
                                              ignoreAccents: ignoreAccents)
         }
-        
     }
     
+}
+
+extension CollationProtocol {
     
-    // MARK: Internal
-    
-    
-    var impl: CBLQueryCollation? {
-        // Override by subclass
-        return nil
+    func toImpl() -> CBLQueryCollation {
+        if let o = self as? Collation.ASCII {
+            return o.toImpl()
+        }
+        
+        if let o = self as? Collation.Unicode {
+            return o.toImpl()
+        }
+        
+        fatalError("Unsupported collation.");
     }
     
 }

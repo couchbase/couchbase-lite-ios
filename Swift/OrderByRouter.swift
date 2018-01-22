@@ -16,5 +16,5 @@ protocol OrderByRouter {
     ///
     /// - Parameter orderings: The Ordering objects.
     /// - Returns: The OrderBy object that represents the ORDER BY clause of the query.
-    func orderBy(_ orderings: Ordering...) -> OrderBy
+    func orderBy(_ orderings: OrderingProtocol...) -> OrderBy
 }

@@ -8,14 +8,15 @@
 
 import Foundation
 
-
-/// Variable Expression used for expressing an array item
-/// in the ArrayExpression.
-public final class VariableExpression: Expression {
+/// Variable expression that expresses an array item in the ArrayExpression.
+public protocol VariableExpressionProtocol: ExpressionProtocol {
     
-    // MARK: Internal
+}
+
+/* internal */ class VariableExpression : QueryExpression, VariableExpressionProtocol {
     
     init(name: String) {
         super.init(CBLQueryArrayExpression.variable(withName: name))
     }
+    
 }

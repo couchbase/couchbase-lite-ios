@@ -23,35 +23,37 @@ public final class ArrayExpressionSatisfies {
     ///
     /// - Parameter expression: The satisfies expression used for evaluating each item in the array.
     /// - Returns: The quantified expression.
-    public func satisfies(_ expression: Expression) -> Expression {
+    public func satisfies(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         let impl = ArrayExpressionSatisfies.toImpl(
             type: self.type,
             variable: self.variable,
             inExpression: self.inExpression,
             satisfies: expression)
-        return Expression(impl)
+        return QueryExpression(impl)
     }
     
     // MARK: Internal
     
     let type: QuantifiesType
-    let variable: VariableExpression
-    let inExpression: Expression
     
-    init(type: QuantifiesType, variable: VariableExpression, inExpression: Expression) {
+    let variable: VariableExpressionProtocol
+    
+    let inExpression: ExpressionProtocol
+    
+    init(type: QuantifiesType, variable: VariableExpressionProtocol, inExpression: ExpressionProtocol) {
         self.type = type
         self.variable = variable
         self.inExpression = inExpression
     }
     
     static func toImpl(type: QuantifiesType,
-                       variable: VariableExpression,
-                       inExpression: Expression,
-                       satisfies: Expression) -> CBLQueryExpression
+                       variable: VariableExpressionProtocol,
+                       inExpression: ExpressionProtocol,
+                       satisfies: ExpressionProtocol) -> CBLQueryExpression
     {
-        let v = variable.impl as! CBLQueryVariableExpression
-        let i = inExpression.impl
-        let s = satisfies.impl
+        let v = variable.toImpl() as! CBLQueryVariableExpression
+        let i = inExpression.toImpl()
+        let s = satisfies.toImpl()
         switch type {
         case .any:
             return CBLQueryArrayExpression.any(v, in: i, satisfies: s)

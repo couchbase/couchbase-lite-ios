@@ -9,7 +9,7 @@
 import Foundation
 
 
-/// Function provies array functions.
+/// Array function factory.
 public final class ArrayFunction {
     
     /// Creates an ARRAY_CONTAINS(expr, value) function that checks whether the given array
@@ -19,8 +19,8 @@ public final class ArrayFunction {
     ///   - expression: The expression that evaluates to an array.
     ///   - value: The value to search for in the given array expression.
     /// - Returns: The ARRAY_CONTAINS(expr, value) function.
-    public static func contains(_ expression: Expression, value: Expression) -> Expression {
-        return Expression(CBLQueryArrayFunction.contains(expression.impl, value: value.impl))
+    public static func contains(_ expression: ExpressionProtocol, value: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryArrayFunction.contains(expression.toImpl(), value: value.toImpl()))
     }
     
     
@@ -29,8 +29,8 @@ public final class ArrayFunction {
     ///
     /// - Parameter expression: The expression that evaluates to an array.
     /// - Returns: The ARRAY_LENGTH(expr) function.
-    public static func length(_ expression: Expression) -> Expression {
-        return Expression(CBLQueryArrayFunction.length(expression.impl))
+    public static func length(_ expression: ExpressionProtocol) -> ExpressionProtocol {
+        return QueryExpression(CBLQueryArrayFunction.length(expression.toImpl()))
     }
     
 }

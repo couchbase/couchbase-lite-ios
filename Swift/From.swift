@@ -16,8 +16,8 @@ public final class From: Query, JoinRouter, WhereRouter, GroupByRouter, OrderByR
     ///
     /// - Parameter joins: The Join objects.
     /// - Returns: The Joins object that represents the JOIN clause of the query.
-    public func join(_ joins: Join...) -> Joins {
-        return Joins(query: self, impl: Join.toImpl(joins: joins))
+    public func join(_ joins: JoinProtocol...) -> Joins {
+        return Joins(query: self, impl: QueryJoin.toImpl(joins: joins))
     }
     
     
@@ -25,8 +25,8 @@ public final class From: Query, JoinRouter, WhereRouter, GroupByRouter, OrderByR
     ///
     /// - Parameter expression: The where expression.
     /// - Returns: The Where object that represents the WHERE clause of the query.
-    public func `where`(_ expression: Expression) -> Where {
-        return Where(query: self, impl: expression.impl)
+    public func `where`(_ expression: ExpressionProtocol) -> Where {
+        return Where(query: self, impl: expression.toImpl())
     }
     
     
@@ -34,8 +34,8 @@ public final class From: Query, JoinRouter, WhereRouter, GroupByRouter, OrderByR
     ///
     /// - Parameter expressions: The group by expression.
     /// - Returns: The GroupBy object that represents the GROUP BY clause of the query.
-    public func groupBy(_ expressions: Expression...) -> GroupBy {
-        return GroupBy(query: self, impl: Expression.toImpl(expressions: expressions))
+    public func groupBy(_ expressions: ExpressionProtocol...) -> GroupBy {
+        return GroupBy(query: self, impl: QueryExpression.toImpl(expressions: expressions))
     }
     
     
@@ -43,8 +43,8 @@ public final class From: Query, JoinRouter, WhereRouter, GroupByRouter, OrderByR
     ///
     /// - Parameter orderings: The Ordering objects.
     /// - Returns: The OrderBy object that represents the ORDER BY clause of the query.
-    public func orderBy(_ orderings: Ordering...) -> OrderBy {
-        return OrderBy(query: self, impl: Ordering.toImpl(orderings: orderings))
+    public func orderBy(_ orderings: OrderingProtocol...) -> OrderBy {
+        return OrderBy(query: self, impl: QueryOrdering.toImpl(orderings: orderings))
     }
     
     
@@ -52,7 +52,7 @@ public final class From: Query, JoinRouter, WhereRouter, GroupByRouter, OrderByR
     ///
     /// - Parameter limit: The limit expression.
     /// - Returns: The Limit object that represents the LIMIT clause of the query.
-    public func limit(_ limit: Expression) -> Limit {
+    public func limit(_ limit: ExpressionProtocol) -> Limit {
         return self.limit(limit, offset: nil)
     }
     
@@ -64,7 +64,7 @@ public final class From: Query, JoinRouter, WhereRouter, GroupByRouter, OrderByR
     ///   - limit: The limit expression.
     ///   - offset: The offset expression.
     /// - Returns: The Limit object that represents the LIMIT clause of the query.
-    public func limit(_ limit: Expression, offset: Expression?) -> Limit {
+    public func limit(_ limit: ExpressionProtocol, offset: ExpressionProtocol?) -> Limit {
         return Limit(query: self, limit: limit, offset: offset)
     }
     

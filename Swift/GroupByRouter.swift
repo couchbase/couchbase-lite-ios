@@ -15,6 +15,6 @@ protocol GroupByRouter {
     ///
     /// - Parameter expressions: The group by expression.
     /// - Returns: The GroupBy object that represents the GROUP BY clause of the query.
-    func groupBy(_ expressions: Expression...) -> GroupBy
+    func groupBy(_ expressions: ExpressionProtocol...) -> GroupBy
     
 }

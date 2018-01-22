@@ -17,6 +17,6 @@ protocol HavingRouter {
     ///
     /// - Parameter expression: The expression.
     /// - Returns: The Having object that represents the HAVING clause of the query.
-    func having(_ expression: Expression) -> Having
+    func having(_ expression: ExpressionProtocol) -> Having
     
 }

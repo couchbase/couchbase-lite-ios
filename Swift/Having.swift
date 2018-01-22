@@ -17,8 +17,8 @@ public final class Having: Query, OrderByRouter, LimitRouter {
     ///
     /// - Parameter orderings: The Ordering objects.
     /// - Returns: The OrderBy object that represents the ORDER BY clause of the query.
-    public func orderBy(_ orderings: Ordering...) -> OrderBy {
-        return OrderBy(query: self, impl: Ordering.toImpl(orderings: orderings))
+    public func orderBy(_ orderings: OrderingProtocol...) -> OrderBy {
+        return OrderBy(query: self, impl: QueryOrdering.toImpl(orderings: orderings))
     }
     
     
@@ -26,7 +26,7 @@ public final class Having: Query, OrderByRouter, LimitRouter {
     ///
     /// - Parameter limit: The limit expression.
     /// - Returns: The Limit object that represents the LIMIT clause of the query.
-    public func limit(_ limit: Expression) -> Limit {
+    public func limit(_ limit: ExpressionProtocol) -> Limit {
         return self.limit(limit, offset: nil)
     }
     
@@ -38,7 +38,7 @@ public final class Having: Query, OrderByRouter, LimitRouter {
     ///   - limit: The limit expression.
     ///   - offset: The offset expression.
     /// - Returns: The Limit object that represents the LIMIT clause of the query.
-    public func limit(_ limit: Expression, offset: Expression?) -> Limit {
+    public func limit(_ limit: ExpressionProtocol, offset: ExpressionProtocol?) -> Limit {
         return Limit(query: self, limit: limit, offset: offset)
     }
     

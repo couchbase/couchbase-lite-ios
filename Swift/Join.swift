@@ -8,8 +8,23 @@
 
 import Foundation
 
+/// Join component representing a JOIN clause in the query statement.
+public protocol JoinProtocol {
+    
+}
 
-/// A Join component representing a single JOIN clause in the query statement.
+/// Join ON clause used for specifying join conditions.
+public protocol JoinOnProtocol: JoinProtocol {
+    
+    /// Specify join conditions from the given expression.
+    ///
+    /// - Parameter expression: The Expression object specifying the join conditions.
+    /// - Returns: The Join object that represents a single JOIN clause of the query.
+    func on(_ expression: ExpressionProtocol) -> JoinProtocol
+    
+}
+
+/// Join factory.
 public class Join {
     
     /// Create a JOIN (same as INNER JOIN) component with the given data source.
@@ -17,7 +32,7 @@ public class Join {
     ///
     /// - Parameter datasource: The DataSource object of the JOIN clause.
     /// - Returns: The On object used for specifying join conditions.
-    public static func join(_ datasource: DataSource) -> JoinOn {
+    public static func join(_ datasource: DataSourceProtocol) -> JoinOnProtocol {
         return JoinOn(datasource: datasource, type: .inner)
     }
     
@@ -27,7 +42,7 @@ public class Join {
     ///
     /// - Parameter datasource: The DataSource object of the JOIN clause.
     /// - Returns: The On object used for specifying join conditions.
-    public static func leftJoin(_ datasource: DataSource) -> JoinOn {
+    public static func leftJoin(_ datasource: DataSourceProtocol) -> JoinOnProtocol {
         return JoinOn(datasource: datasource, type: .leftOuter)
     }
     
@@ -37,7 +52,7 @@ public class Join {
     ///
     /// - Parameter datasource: The DataSource object of the JOIN clause.
     /// - Returns: The On object used for specifying join conditions.
-    public static func leftOuterJoin(_ datasource: DataSource) -> JoinOn {
+    public static func leftOuterJoin(_ datasource: DataSourceProtocol) -> JoinOnProtocol {
         return JoinOn(datasource: datasource, type: .leftOuter)
     }
     
@@ -47,7 +62,7 @@ public class Join {
     ///
     /// - Parameter datasource: The DataSource object of the JOIN clause.
     /// - Returns: The On object used for specifying join conditions.
-    public static func innerJoin(_ datasource: DataSource) -> JoinOn {
+    public static func innerJoin(_ datasource: DataSourceProtocol) -> JoinOnProtocol {
         return JoinOn(datasource: datasource, type: .inner)
     }
     
@@ -57,61 +72,79 @@ public class Join {
     ///
     /// - Parameter datasource: The DataSource object of the JOIN clause.
     /// - Returns: The On object used for specifying join conditions.
-    public static func crossJoin(_ datasource: DataSource) -> Join {
-        return Join(impl: CBLQueryJoin.cross(datasource.impl))
+    public static func crossJoin(_ datasource: DataSourceProtocol) -> JoinProtocol {
+        return QueryJoin(impl: CBLQueryJoin.cross(datasource.toImpl()))
     }
+}
+
+/* internal */ enum JoinType {
+    case inner, leftOuter
+}
+
+/* internal */ class QueryJoin: JoinProtocol {
     
-    // MARK: Internal
+    let impl: CBLQueryJoin
     
-    let impl: CBLQueryJoin?
-    
-    init(impl: CBLQueryJoin?) {
+    init(impl: CBLQueryJoin) {
         self.impl = impl
     }
     
-    static func toImpl(joins: [Join]) -> [CBLQueryJoin] {
+    func toImpl() -> CBLQueryJoin {
+        return self.impl
+    }
+    
+    static func toImpl(joins: [JoinProtocol]) -> [CBLQueryJoin] {
         var joinsImpl: [CBLQueryJoin] = []
         for o in joins {
-            if let impl = o.impl {
-                joinsImpl.append(impl)
-            }
+            joinsImpl.append(o.toImpl())
         }
         return joinsImpl;
     }
     
 }
 
-/* internal */ enum JoinType {
-    case inner, leftOuter, cross
-}
-
-/// On component used for specifying join conditions.
-public final class JoinOn : Join {
+/* internal */ class JoinOn : QueryJoin, JoinOnProtocol {
     
-    let datasource: DataSource
+    let datasource: DataSourceProtocol
     
     let type: JoinType
     
-    init(datasource: DataSource, type: JoinType) {
+    init(datasource: DataSourceProtocol, type: JoinType) {
         self.datasource = datasource
         self.type = type
-        super.init(impl: nil)
+        
+        let impl: CBLQueryJoin;
+        switch self.type {
+        case .leftOuter:
+            impl = CBLQueryJoin.leftOuterJoin(datasource.toImpl(), on: nil)
+        default:
+            impl = CBLQueryJoin.innerJoin(datasource.toImpl(), on: nil)
+        }
+        super.init(impl: impl)
     }
-    
     
     /// Specify join conditions from the given expression.
     ///
     /// - Parameter expression: The Expression object specifying the join conditions.
     /// - Returns: The Join object that represents a single JOIN clause of the query.
-    public func on(_ expression: Expression) -> Join {
+    public func on(_ expression: ExpressionProtocol) -> JoinProtocol {
         let impl: CBLQueryJoin;
         switch self.type {
         case .leftOuter:
-            impl = CBLQueryJoin.leftOuterJoin(datasource.impl, on: expression.impl)
+            impl = CBLQueryJoin.leftOuterJoin(datasource.toImpl(), on: expression.toImpl())
         default:
-            impl = CBLQueryJoin.innerJoin(datasource.impl, on: expression.impl)
+            impl = CBLQueryJoin.innerJoin(datasource.toImpl(), on: expression.toImpl())
         }
-        return Join(impl: impl)
+        return QueryJoin(impl: impl)
     }
     
+}
+
+extension JoinProtocol {
+    func toImpl() -> CBLQueryJoin {
+        if let o = self as? QueryJoin {
+            return o.toImpl()
+        }
+        fatalError("Unsupported join.")
+    }
 }

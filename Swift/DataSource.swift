@@ -10,22 +10,37 @@ import Foundation
 
 
 /// A query data source. used for specifiying the data source for your query.
+public protocol DataSourceProtocol {
+    
+}
+
+/// A query data source with the aliasing function.
+public protocol DataSourceAs: DataSourceProtocol {
+    /// Create an alias data source.
+    ///
+    /// - Parameter alias: The alias name.
+    /// - Returns: The DataSource object.
+    func `as`(_ alias: String) -> DataSourceProtocol
+}
+
+/// A query data source factory.
 /// The current data source supported is the database.
-public class DataSource {
+public final class DataSource {
     
     /// Create a database data source.
     ///
     /// - Parameter database: The database object.
     /// - Returns: The database data source.
-    public static func database(_ database: Database) -> DatabaseSourceAs {
-        return DatabaseSourceAs(impl: CBLQueryDataSource.database(database._impl), database: database)
+    public static func database(_ database: Database) -> DataSourceAs {
+        return DatabaseSourceAs(impl: CBLQueryDataSource.database(database._impl),
+                                database: database)
     }
+}
+
+/* internal */ class DatabaseSource: DataSourceProtocol {
     
-    // MARK: Internal
+    private let impl: CBLQueryDataSource
     
-    let impl: CBLQueryDataSource
-    
-    // NOTE: Move to DatabaseSource when we support sub query.
     let database: Database
     
     init(impl: CBLQueryDataSource, database: Database) {
@@ -33,19 +48,39 @@ public class DataSource {
         self.database = database
     }
     
+    func toImpl() -> CBLQueryDataSource {
+        return self.impl
+    }
+    
+    func source() -> Any {
+        return self.database
+    }
+    
 }
 
-/// A database data source. You could also create an alias data source by calling the as(alias)
-/// method with an alias name.
-public final class DatabaseSourceAs: DataSource {
+/* internal */ class DatabaseSourceAs: DatabaseSource, DataSourceAs {
+
+    public func `as`(_ alias: String) -> DataSourceProtocol {
+        return DatabaseSource(impl: CBLQueryDataSource.database(self.database._impl, as: alias),
+                              database: self.database)
+    }
     
-    /// Create an alias data source.
-    ///
-    /// - Parameter alias: The alias name.
-    /// - Returns: The DataSource object.
-    public func `as`(_ alias: String) -> DataSource {
-        return DataSource(impl: CBLQueryDataSource.database(database._impl, as: alias),
-                              database: database)
+}
+
+extension DataSourceProtocol {
+    
+    func toImpl() -> CBLQueryDataSource {
+        if let o = self as? DatabaseSource {
+            return o.toImpl()
+        }
+        fatalError("Unsupported Data Source");
+    }
+    
+    func source() -> Any {
+        if let o = self as? DatabaseSource {
+            return o.source()
+        }
+        fatalError("Unsupported data source.");
     }
     
 }

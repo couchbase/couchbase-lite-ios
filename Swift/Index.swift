@@ -74,8 +74,8 @@ public final class ValueIndexItem {
     ///
     /// - Parameter expression: The expression to index. Typically a property expression.
     /// - Returns: The value index item.
-    public class func expression(_ expression: Expression) -> ValueIndexItem {
-        return ValueIndexItem(impl: CBLValueIndexItem.expression(expression.impl))
+    public class func expression(_ expression: ExpressionProtocol) -> ValueIndexItem {
+        return ValueIndexItem(impl: CBLValueIndexItem.expression(expression.toImpl()))
     }
     
     // MARK: Internal
