@@ -21,4 +21,9 @@
     return self;
 }
 
+
+- (NSString*) description {
+    return [NSString stringWithFormat: @"DB[%@]", _database.name];
+}
+
 @end
