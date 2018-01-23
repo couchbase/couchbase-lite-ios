@@ -538,8 +538,7 @@ static NSString* defaultDirectory() {
 static NSString* databasePath(NSString* name, NSString* dir) {
     name = [[name stringByReplacingOccurrencesOfString: @"/" withString: @":"]
             stringByAppendingPathExtension: kDBExtension];
-    NSString* path = [dir stringByAppendingPathComponent: name];
-    return path.stringByStandardizingPath;
+    return [dir stringByAppendingPathComponent: name];
 }
 
 
