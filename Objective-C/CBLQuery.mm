@@ -72,16 +72,22 @@
     return [NSString stringWithFormat: @"%@[json=%@]", self.class, desc];
 }
 
+
 #pragma mark - Parameters
 
+
 - (CBLQueryParameters*) parameters {
-    return _parameters;
+    CBL_LOCK(self) {
+        return _parameters;
+    }
 }
 
 
 - (void) setParameters: (CBLQueryParameters *)parameters {
-    _parameters = parameters;
-    [_liveQuery queryParametersChanged];
+    CBL_LOCK(self) {
+        _parameters = parameters;
+        [_liveQuery queryParametersChanged];
+    }
 }
 
 
@@ -541,14 +547,18 @@
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLQueryChange*))listener
 {
-    if (!_liveQuery)
-        _liveQuery = [[CBLLiveQuery alloc] initWithQuery: self];
-    return [_liveQuery addChangeListenerWithQueue: queue listener: listener]; // Auto-start
+    CBL_LOCK(self) {
+        if (!_liveQuery)
+            _liveQuery = [[CBLLiveQuery alloc] initWithQuery: self];
+        return [_liveQuery addChangeListenerWithQueue: queue listener: listener]; // Auto-start
+    }
 }
 
 
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
-    [_liveQuery removeChangeListenerWithToken: token];
+    CBL_LOCK(self) {
+        [_liveQuery removeChangeListenerWithToken: token];
+    }
 }
 
 

@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
  in the query. All parameters defined in the query must be given values
  before running the query, or the query will fail.
  */
-@property (nonatomic, nullable) CBLQueryParameters* parameters;
+@property (atomic, nullable) CBLQueryParameters* parameters;
 
 // SELECT > FROM
 
