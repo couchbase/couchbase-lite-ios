@@ -45,9 +45,16 @@
     Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
     [_seekrit close: nil];
     _seekrit = nil;
+
     
+#ifdef COUCHBASE_ENTERPRISE
+    static const int expectedError = CBLErrorUnreadableDatabase;
+#else
+    static const int expectedError = CBLErrorUnsupported;
+#endif
+
     // Try to reopen with password (fails):
-    [self expectError: CBLErrorDomain code: CBLErrorNotADatabaseFile in: ^BOOL(NSError **err) {
+    [self expectError: CBLErrorDomain code: expectedError in: ^BOOL(NSError **err) {
         return [self openSeekritWithPassword: @"wrong" error: err] != nil;
     }];
     
@@ -56,6 +63,19 @@
     Assert(_seekrit, @"Failed to reopen encrypted db: %@", error);
     AssertEqual(_seekrit.count, 1u);
 }
+
+
+#ifndef COUCHBASE_ENTERPRISE
+
+
+- (void) testEncryptionUnavailable {
+    [self expectError: CBLErrorDomain code: 28 in: ^BOOL(NSError **err) {
+        return [self openSeekritWithPassword: @"abc123" error: err] != nil;
+    }];
+}
+
+
+#else
 
 
 - (void) testEncryptedDatabase {
@@ -70,12 +90,12 @@
     _seekrit = nil;
     
     // Reopen without password (fails):
-    [self expectError: CBLErrorDomain code: CBLErrorNotADatabaseFile in: ^BOOL(NSError ** err) {
+    [self expectError: CBLErrorDomain code: CBLErrorUnreadableDatabase in: ^BOOL(NSError ** err) {
         return [self openSeekritWithPassword: nil error: err] != nil;
     }];
     
     // Reopen with wrong password (fails):
-    [self expectError: CBLErrorDomain code: CBLErrorNotADatabaseFile in: ^BOOL(NSError ** err) {
+    [self expectError: CBLErrorDomain code: CBLErrorUnreadableDatabase in: ^BOOL(NSError ** err) {
         return [self openSeekritWithPassword: @"wrong" error: err] != nil;
     }];
     
@@ -109,7 +129,7 @@
     _seekrit = nil;
     
     // Make sure old password doesn't work:
-    [self expectError: CBLErrorDomain code: CBLErrorNotADatabaseFile in: ^BOOL(NSError ** err) {
+    [self expectError: CBLErrorDomain code: CBLErrorUnreadableDatabase in: ^BOOL(NSError ** err) {
         return [self openSeekritWithPassword: @"letmein" error: err] != nil;
     }];
 }
@@ -259,5 +279,8 @@
     }
 }
 
+#endif // COUCHBASE_ENTERPRISE
+
 
 @end
+

@@ -38,7 +38,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = nil
         
         // Try to reopen with password (fails):
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotADatabaseFile) {
+        expectError(domain: CBLErrorDomain, code: CBLErrorUnreadableDatabase) {
             try _ = self.openSeekrit(password: "wrong")
         }
         
@@ -57,12 +57,12 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = nil
         
         // Reopen without password (fails):
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotADatabaseFile) {
+        expectError(domain: CBLErrorDomain, code: CBLErrorUnreadableDatabase) {
             try _ = self.openSeekrit(password: nil)
         }
         
         // Reopen with wrong password (fails):
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotADatabaseFile) {
+        expectError(domain: CBLErrorDomain, code: CBLErrorUnreadableDatabase) {
             try _ = self.openSeekrit(password: "wrong")
         }
         
@@ -90,7 +90,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         seekrit = nil
         
         // Make sure old password doesn't work:
-        expectError(domain: CBLErrorDomain, code: CBLErrorNotADatabaseFile) {
+        expectError(domain: CBLErrorDomain, code: CBLErrorUnreadableDatabase) {
             try _ = self.openSeekrit(password: "letmein")
         }
     }

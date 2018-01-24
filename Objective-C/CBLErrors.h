@@ -42,7 +42,7 @@ NS_ERROR_ENUM(CBLErrorDomain) {
     CBLErrorTransactionNotClosed,   // Database can't be closed while a transaction is open
     CBLErrorIndexBusy,              // (unused)
     CBLErrorUnsupported,            // Operation not supported in this database
-    CBLErrorNotADatabaseFile,       // File is not a database, or encryption key is wrong
+    CBLErrorUnreadableDatabase,     // File is not a database, or encryption key is wrong
     CBLErrorWrongFormat, /*30*/     // Database exists but not in the format/storage requested
     CBLErrorCrypto,                 // Encryption/decryption error
     CBLErrorInvalidQuery,           // Invalid query
