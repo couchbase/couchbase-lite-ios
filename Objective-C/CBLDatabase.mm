@@ -645,8 +645,8 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
     if (!document.database) {
         document.database = self;
     } else if (document.database != self) {
-        return createError(kCBLStatusForbidden,
-                           @"The document is from the different database.", error);
+        return createError(CBLErrorInvalidParameter,
+                           @"The document is from a different database.", error);
     }
     return YES;
 }
@@ -1049,7 +1049,7 @@ static C4EncryptionKey c4EncryptionKey(CBLEncryptionKey* key) {
         BOOL success = [self saveResolvedDocument: resolved
                                       forConflict: conflict
                                             error: &err];
-        if ($equal(err.domain, @"LiteCore") && err.code == kC4ErrorConflict)
+        if ($equal(err.domain, CBLErrorDomain) && err.code == CBLErrorConflict)
             continue;
         
         if (outError)

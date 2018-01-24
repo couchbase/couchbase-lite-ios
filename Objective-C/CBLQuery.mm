@@ -661,7 +661,7 @@
         
         if ([map objectForKey: name]) {
             NSString* desc = [NSString stringWithFormat: @"Duplicate select result named %@", name];
-            createError(kCBLStatusInvalidQuery, desc, outError);
+            createError(CBLErrorInvalidQuery, desc, outError);
             return nil;
         }
         

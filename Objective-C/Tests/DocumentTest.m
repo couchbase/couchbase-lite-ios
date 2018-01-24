@@ -88,8 +88,8 @@
     
     NSError *error;
     AssertFalse([_db saveDocument: doc error: &error]);
-    AssertEqual(error.code, 38); // Invalid docID
-    AssertEqualObjects(error.domain, @"LiteCore");
+    AssertEqual(error.code, CBLErrorBadDocID);
+    AssertEqualObjects(error.domain, CBLErrorDomain);
 }
 
 

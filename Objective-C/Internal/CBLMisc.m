@@ -62,8 +62,5 @@ BOOL CBLIsFileExistsError( NSError* error ) {
     NSString* domain = error.domain;
     NSInteger code = error.code;
     return ($equal(domain, NSPOSIXErrorDomain) && code == EEXIST)
-#ifndef GNUSTEP
-    || ($equal(domain, NSCocoaErrorDomain) && code == NSFileWriteFileExistsError)
-#endif
-    ;
+        || ($equal(domain, NSCocoaErrorDomain) && code == NSFileWriteFileExistsError);
 }

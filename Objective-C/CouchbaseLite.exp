@@ -58,3 +58,8 @@
 .objc_class_name_CBLURLEndpoint
 .objc_class_name_CBLValueIndex
 .objc_class_name_CBLValueIndexItem
+
+# NSString constants:
+_CBLErrorDomain
+_kCBLAllPropertiesName
+

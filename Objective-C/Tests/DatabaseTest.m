@@ -234,7 +234,7 @@
 
 - (void) testCreateWithEmptyDBNames {
     // create db with default configuration
-    [self expectError: @"LiteCore" code: 30 in: ^BOOL(NSError** error) {
+    [self expectError: CBLErrorDomain code: CBLErrorWrongFormat in: ^BOOL(NSError** error) {
         return [self openDBNamed: @"" error: error] != nil;
     }];
 }
@@ -408,7 +408,7 @@
     
     // update doc & store it into different instance
     [doc setValue: @2 forKey: @"key"];
-    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** error2) {
         return [otherDB saveDocument: doc error: error2] != nil;
     }]; // forbidden
     
@@ -432,7 +432,7 @@
     
     // update doc & store it into different db
     [doc setValue: @2 forKey: @"key"];
-    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** error2) {
         return [otherDB saveDocument: doc error: error2] != nil;
     }]; // forbidden
     
@@ -665,7 +665,7 @@
     AssertEqual(1, (long)otherDB.count);
     
     // purge document against other db instance
-    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** error2) {
         return [otherDB purgeDocument: doc error: error2];
     }]; // forbidden
     AssertEqual(1, (long)otherDB.count);
@@ -691,7 +691,7 @@
     AssertEqual(0, (long)otherDB.count);
     
     // purge document against other db
-    [self expectError: @"CouchbaseLite" code: 403 in: ^BOOL(NSError** error2) {
+    [self expectError: CBLErrorDomain code: CBLErrorInvalidParameter in: ^BOOL(NSError** error2) {
         return [otherDB purgeDocument: doc error: error2];
     }]; // forbidden
     
@@ -841,7 +841,7 @@
 - (void) testCloseThenCallInBatch {
     NSError* error;
     BOOL success = [self.db inBatch: &error usingBlock: ^{
-        [self expectError: @"LiteCore" code: 26 in: ^BOOL(NSError** error2) {
+        [self expectError: CBLErrorDomain code: CBLErrorTransactionNotClosed in: ^BOOL(NSError** error2) {
             return [self.db close: error2];
         }];
         // 26 -> kC4ErrorTransactionNotClosed
@@ -928,7 +928,7 @@
 - (void) testDeleteThenCallInBatch {
     NSError* error;
     BOOL sucess = [self.db inBatch: &error usingBlock:^{
-        [self expectError: @"LiteCore" code: 26 in: ^BOOL(NSError** error2) {
+        [self expectError: CBLErrorDomain code: CBLErrorTransactionNotClosed in: ^BOOL(NSError** error2) {
             return [self.db delete: error2];
         }];
         // 26 -> kC4ErrorTransactionNotClosed: Function cannot be called while in a transaction
@@ -946,7 +946,7 @@
     AssertNotNil(otherDB);
     
     // delete db
-    [self expectError: @"LiteCore" code: 24 in: ^BOOL(NSError** error2) {
+    [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** error2) {
         return [self.db delete: error2];
     }];
     // 24 -> kC4ErrorBusy: Database is busy/locked
@@ -989,7 +989,7 @@
     
     // delete db with nil directory
     // 24 -> kC4ErrorBusy: Database is busy/locked
-    [self expectError: @"LiteCore" code: 24 in: ^BOOL(NSError** error2) {
+    [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** error2) {
         return [CBLDatabase deleteDatabase: @"db" inDirectory: nil error: error2];
     }];
 }
@@ -1035,7 +1035,7 @@
     AssertNotNil(db);
     AssertNil(error);
     
-    [self expectError: @"LiteCore" code: 24 in: ^BOOL(NSError** error2) {
+    [self expectError: CBLErrorDomain code: CBLErrorBusy in: ^BOOL(NSError** error2) {
         return [CBLDatabase deleteDatabase: @"db" inDirectory: dir error: error2];
     }];
 }
