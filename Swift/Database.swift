@@ -36,7 +36,7 @@ public final class Database {
     /// If the database does not yet exist, it will be created, unless the `readOnly` option is used.
     ///
     /// - Parameters:
-    ///   - name: The name of the database. May NOT contain capital letters!
+    ///   - name: The name of the database.
     ///   - config: The database options, or nil for the default options.
     /// - Throws: An error when the database cannot be opened.
     public init(name: String, config: DatabaseConfiguration = DatabaseConfiguration.Builder().build()) throws {

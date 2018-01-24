@@ -68,7 +68,7 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  Initializes a database object with a given name and the default database configuration.
  If the database does not yet exist, it will be created.
  
- @param name The name of the database. May NOT contain capital letters!
+ @param name The name of the database.
  @param error On return, the error if any.
  */
 - (nullable instancetype) initWithName: (NSString*)name
@@ -78,7 +78,7 @@ typedef NS_ENUM(uint32_t, CBLLogLevel) {
  Initializes a Couchbase Lite database with a given name and database configuration.
  If the database does not yet exist, it will be created.
  
- @param name The name of the database. May NOT contain capital letters!
+ @param name The name of the database.
  @param config The database configuration, or nil for the default configuration.
  @param error On return, the error if any.
  */
