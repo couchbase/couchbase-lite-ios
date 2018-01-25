@@ -9,7 +9,7 @@
 #import "CBLPropertyExpression.h"
 #import "CBLQueryExpression+Internal.h"
 
-NSString* kCBLAllPropertiesName = @"";
+NSString* const kCBLAllPropertiesName = @"";
 
 @implementation CBLPropertyExpression
 

@@ -8,6 +8,7 @@
 
 #import "ConflictTest.h"
 #import "CBLDatabase+Internal.h"
+#import "CBLErrors.h"
 
 #include "c4.h"
 #include "c4Document+Fleece.h"
@@ -213,8 +214,8 @@
     CBLMutableDocument* doc = [self setupConflict];
     NSError* error;
     AssertFalse([_db saveDocument: doc error: &error], @"Save should have failed!");
-    AssertEqualObjects(error.domain, @"LiteCore");      //TODO: Should have CBL error domain/code
-    AssertEqual(error.code, kC4ErrorConflict);
+    AssertEqualObjects(error.domain, CBLErrorDomain);
+    AssertEqual(error.code, CBLErrorConflict);
 }
 
 

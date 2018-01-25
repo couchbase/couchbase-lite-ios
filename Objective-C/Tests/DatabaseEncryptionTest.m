@@ -47,7 +47,7 @@
     _seekrit = nil;
     
     // Try to reopen with password (fails):
-    [self expectError: @"LiteCore" code: 29 in: ^BOOL(NSError **err) {
+    [self expectError: CBLErrorDomain code: CBLErrorNotADatabaseFile in: ^BOOL(NSError **err) {
         return [self openSeekritWithPassword: @"wrong" error: err] != nil;
     }];
     
@@ -70,12 +70,12 @@
     _seekrit = nil;
     
     // Reopen without password (fails):
-    [self expectError: @"LiteCore" code: 29 in: ^BOOL(NSError ** err) {
+    [self expectError: CBLErrorDomain code: CBLErrorNotADatabaseFile in: ^BOOL(NSError ** err) {
         return [self openSeekritWithPassword: nil error: err] != nil;
     }];
     
     // Reopen with wrong password (fails):
-    [self expectError: @"LiteCore" code: 29 in: ^BOOL(NSError ** err) {
+    [self expectError: CBLErrorDomain code: CBLErrorNotADatabaseFile in: ^BOOL(NSError ** err) {
         return [self openSeekritWithPassword: @"wrong" error: err] != nil;
     }];
     
@@ -109,7 +109,7 @@
     _seekrit = nil;
     
     // Make sure old password doesn't work:
-    [self expectError: @"LiteCore" code: 29 in: ^BOOL(NSError ** err) {
+    [self expectError: CBLErrorDomain code: CBLErrorNotADatabaseFile in: ^BOOL(NSError ** err) {
         return [self openSeekritWithPassword: @"letmein" error: err] != nil;
     }];
 }

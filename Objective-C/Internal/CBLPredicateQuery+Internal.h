@@ -8,6 +8,7 @@
 
 #import "CBLPredicateQuery.h"
 #import "CBLQueryRow.h"
+#import "CBLErrors.h"
 #import "c4.h"
 @class CBLQueryEnumerator;
 
@@ -15,9 +16,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 
-#define kBadQuerySpecError -1
-#define CBLErrorDomain @"CouchbaseLite"
-#define mkError(ERR, FMT, ...)  MYReturnError(ERR, kBadQuerySpecError, CBLErrorDomain, \
+#define mkError(ERR, FMT, ...)  MYReturnError(ERR, CBLErrorInvalidQuery, CBLErrorDomain, \
                                               FMT, ## __VA_ARGS__)
 
 /** Used by CBLQueryEnumerator) */

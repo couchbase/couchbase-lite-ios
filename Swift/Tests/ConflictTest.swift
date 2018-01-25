@@ -132,8 +132,8 @@ class ConflictTest: CBLTestCase {
         let doc = try setupConflict()
         XCTAssertThrowsError(try saveDocument(doc), "") { (e) in
             let error = e as NSError
-            XCTAssertEqual(error.domain, "LiteCore")
-            XCTAssertEqual(error.code, 14)
+            XCTAssertEqual(error.domain, CBLErrorDomain)
+            XCTAssertEqual(error.code, CBLErrorConflict)
         }
     }
     

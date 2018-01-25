@@ -87,7 +87,7 @@ class DocumentTest: CBLTestCase {
         
         XCTAssertNotNil(error)
         XCTAssertEqual(error!.code, 38)
-        XCTAssertEqual(error!.domain, "LiteCore")
+        XCTAssertEqual(error!.domain, CBLErrorDomain)
     }
     
     

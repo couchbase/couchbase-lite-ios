@@ -555,7 +555,7 @@
     if (!target)
         return;
     id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: NO];
-    [self run: config errorCode: 401 errorDomain: @"WebSocket"];
+    [self run: config errorCode: CBLErrorHTTPAuthRequired errorDomain: CBLErrorDomain];
 }
 
 
