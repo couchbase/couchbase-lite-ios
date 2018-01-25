@@ -34,7 +34,7 @@ class ReplicatorTest: CBLTestCase {
     
     func run(config: ReplicatorConfiguration, expectedError: Int?) {
         let x = self.expectation(description: "change")
-        let repl = Replicator(withConfig: config);
+        let repl = Replicator(withConfig: config)
         let token = repl.addChangeListener { (change) in
             let status = change.status
             if status.activity == .stopped {
@@ -56,4 +56,5 @@ class ReplicatorTest: CBLTestCase {
         let target = DatabaseEndpoint(withDatabase: otherDB)
         run(type: .push, target: target, expectedError: nil)
     }
+    
 }

@@ -212,6 +212,7 @@ public final class Database {
     /// - Throws: An error on a failure.
     public func close() throws {
         try _impl.close()
+        stopActiveQueries()
     }
     
     
@@ -220,6 +221,7 @@ public final class Database {
     /// - Throws: An error on a failure.
     public func delete() throws {
         try _impl.delete()
+        stopActiveQueries()
     }
     
     
@@ -247,7 +249,7 @@ public final class Database {
     ///   - name: The database name.
     ///   - directory: The directory where the database is located at.
     /// - Throws: An error on a failure.
-    public class func delete(withName name: String, inDirectory directory: String? = nil) throws {
+    public static func delete(withName name: String, inDirectory directory: String? = nil) throws {
         try CBLDatabase.delete(name, inDirectory: directory)
     }
     
@@ -258,7 +260,7 @@ public final class Database {
     ///   - name: The database name.
     ///   - directory: The directory where the database is located at.
     /// - Returns: True if the database exists, otherwise false.
-    public class func exists(withName name: String, inDirectory directory: String? = nil) -> Bool {
+    public static func exists(withName name: String, inDirectory directory: String? = nil) -> Bool {
         return CBLDatabase.databaseExists(name, inDirectory: directory)
     }
     
@@ -273,7 +275,7 @@ public final class Database {
     ///   - name: The name of the new database to be created.
     ///   - config: The database configuration for the new database name.
     /// - Throws: An error on a failure.
-    public class func copy(fromPath path: String, toDatabase name: String,
+    public static func copy(fromPath path: String, toDatabase name: String,
                            withConfig config: DatabaseConfiguration?) throws
     {
         try CBLDatabase.copy(fromPath: path, toDatabase: name, withConfig: config?.toImpl())
@@ -294,11 +296,52 @@ public final class Database {
     
     // MARK: Internal
     
+    
+    func addReplicator(_ replicator: Replicator) {
+        _lock.lock()
+        _activeReplicators.add(replicator)
+        _lock.unlock()
+    }
+    
+    
+    func removeReplicator(_ replicator: Replicator) {
+        _lock.lock()
+        _activeReplicators.remove(replicator)
+        _lock.unlock()
+    }
+    
+    
+    func addQuery(_ query: Query) {
+        _lock.lock()
+        _activeQueries.add(query)
+        _lock.unlock()
+    }
+    
+    
+    func removeQuery(_ query: Query) {
+        _lock.lock()
+        _activeQueries.remove(query)
+        _lock.unlock()
+    }
+    
+    
+    private func stopActiveQueries() {
+        _lock.lock()
+        for query in _activeQueries.allObjects {
+            (query as! Query).stop()
+        }
+        _lock.unlock()
+    }
+    
+    private let _config: DatabaseConfiguration
+    
+    private var _lock = NSRecursiveLock()
+    
+    private let _activeReplicators = NSMutableSet()
+    
+    private let _activeQueries = NSMutableSet()
 
-    let _impl : CBLDatabase
-    
-    let _config: DatabaseConfiguration
-    
+    let _impl: CBLDatabase
 }
 
 /// ListenerToken

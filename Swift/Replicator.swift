@@ -64,8 +64,8 @@ public final class Replicator {
     ///
     /// - Parameter config: The configuration.
     public init(withConfig config: ReplicatorConfiguration) {
-        _impl = CBLReplicator(config: config.toImpl());
         _config = config
+        _impl = CBLReplicator(config: config.toImpl());
     }
     
     
@@ -85,6 +85,7 @@ public final class Replicator {
     /// Starts the replicator. This method returns immediately; the replicator runs asynchronously
     /// and will report its progress throuh the replicator change notification.
     public func start() {
+        registerActiveReplicator()
         _impl.start()
     }
     
@@ -133,18 +134,39 @@ public final class Replicator {
     }
     
     
-    // MARK: Private
+    // MARK: Internal
+    
+    
+    func registerActiveReplicator() {
+        _lock.lock()
+        if _listenerToken == nil {
+            _config.database.addReplicator(self)
+            _listenerToken = _impl.addChangeListener({ (change) in
+                if change.status.activity == kCBLReplicatorStopped {
+                    self.unregisterActiveReplicator()
+                }
+            })
+        }
+        _lock.unlock()
+    }
+    
+    
+    func unregisterActiveReplicator() {
+        _lock.lock()
+        if let token = _listenerToken {
+            _impl.removeChangeListener(with: token)
+            _config.database.removeReplicator(self)
+            _listenerToken = nil
+        }
+        _lock.unlock()
+    }
     
     
     private let _impl: CBLReplicator
     
     private let _config: ReplicatorConfiguration
     
+    private var _listenerToken: ListenerToken?
     
-    // MARK: deinit
-    
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
+    private let _lock = NSLock()
 }

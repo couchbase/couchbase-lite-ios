@@ -53,7 +53,6 @@ public class Query {
     /// - Returns: The ResultSet object representing the query result.
     /// - Throws: An error on failure, or if the query is invalid.
     public func execute() throws -> ResultSet {
-        prepareQuery()
         applyParameters()
         return try ResultSet(impl: queryImpl!.execute())
     }
@@ -84,7 +83,7 @@ public class Query {
     /// - Returns: An opaque listener token object for removing the listener.
     @discardableResult public func addChangeListener(
         _ listener: @escaping (QueryChange) -> Void) -> ListenerToken {
-        return self .addChangeListener(withQueue: nil, listener)
+        return self.addChangeListener(withQueue: nil, listener)
     }
     
     
@@ -98,8 +97,13 @@ public class Query {
     /// - Returns: An opaque listener token object for removing the listener.
     @discardableResult public func addChangeListener(withQueue queue: DispatchQueue?,
         _ listener: @escaping (QueryChange) -> Void) -> ListenerToken {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
+        
         prepareQuery()
-        return self.queryImpl!.addChangeListener(with: queue, listener: { (change) in
+        let token = self.queryImpl!.addChangeListener(with: queue, listener: { (change) in
             let rows: ResultSet?;
             if let rs = change.results {
                 rows = ResultSet(impl: rs)
@@ -108,6 +112,13 @@ public class Query {
             }
             listener(QueryChange(query: self, results: rows, error: change.error))
         })
+        
+        if tokens.count == 0 {
+            database!.addQuery(self)
+        }
+        
+        tokens.add(token)
+        return token
     }
     
     
@@ -115,8 +126,15 @@ public class Query {
     ///
     /// - Parameter token: The listener token.
     public func removeChangeListener(withToken token: ListenerToken) {
+        lock.lock()
         prepareQuery()
-        self.queryImpl!.removeChangeListener(with: token)
+        queryImpl!.removeChangeListener(with: token)
+        tokens.remove(token)
+        
+        if tokens.count == 0 {
+            database!.removeQuery(self)
+        }
+        lock.unlock()
     }
 
     // MARK: Internal
@@ -143,11 +161,18 @@ public class Query {
     
     var queryImpl: CBLQuery?
     
-    var params: Parameters?
+    var tokens = NSMutableSet()
+    
+    var lock = NSRecursiveLock()
     
     init() { }
     
     func prepareQuery() {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
+        
         if queryImpl != nil {
             return
         }
@@ -178,8 +203,17 @@ public class Query {
     }
     
     func applyParameters() {
+        lock.lock()
         prepareQuery()
         queryImpl!.parameters = self.parameters?.toImpl()
+        lock.unlock()
+    }
+    
+    func stop() {
+        lock.lock()
+        database!.removeQuery(self)
+        tokens.removeAllObjects()
+        lock.unlock()
     }
 
     func copy(_ query: Query) {
@@ -193,7 +227,6 @@ public class Query {
         self.havingImpl = query.havingImpl
         self.orderingsImpl = query.orderingsImpl
         self.limitImpl = query.limitImpl
-        self.params = query.params
     }
     
 }
