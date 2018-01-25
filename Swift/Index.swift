@@ -30,7 +30,7 @@ public class Index {
     /// - Parameter: items The index items.
     /// - Returns: The ON operator.
     public class func fullTextIndex(withItems items: FullTextIndexItem...) -> FullTextIndex {
-        return FullTextIndex(items: items, ignoreAccents: nil, locale: nil)
+        return FullTextIndex(items: items)
     }
     
     // MARK: Internal
@@ -102,25 +102,24 @@ public final class FullTextIndex: Index {
     public func ignoreAccents(_ ignoreAccents: Bool) -> Self {
         if ignoreAccents != self.ignoreAccents {
             self.ignoreAccents = ignoreAccents
-            let options = FullTextIndex.options(ignoreAccents: self.ignoreAccents, locale: self.locale)
+            let options = FullTextIndex.options(ignoreAccents: self.ignoreAccents, language: self.language)
             self.impl = CBLIndex.fullTextIndex(with: self.items, options: options)
         }
         return self
     }
     
     
-    /// The locale code which is an ISO-639 language code plus, optionally, an underscore
-    /// and an ISO-3166 country code: "en", "en_US", "fr_CA", etc. Setting the locale code affects
-    /// how word breaks and word stems are parsed. Setting nil value to use current locale and
-    /// setting "" to disable stemming. The default value is nil.
+    /// The language code which is an ISO-639 language code such as "en", "fr", etc.
+    /// Setting the language code affects how word breaks and word stems are parsed.
+    /// Without setting the language code, the current locale's language will be used.
+    /// Setting nil value or "" value to disable the language features.
     ///
     /// - Parameter locale: The locale code.
     /// - Returns: The FTSIndex instance.
-    public func locale(_ locale: String?) -> Self {
-        if locale != self.locale {
-            self.locale = locale
-            let options = FullTextIndex.options(ignoreAccents: self.ignoreAccents,
-                                           locale: self.locale)
+    public func language(_ language: String?) -> Self {
+        if language != self.language {
+            self.language = language
+            let options = FullTextIndex.options(ignoreAccents: self.ignoreAccents, language: self.language)
             self.impl = CBLIndex.fullTextIndex(with: self.items, options: options)
         }
         return self
@@ -129,25 +128,23 @@ public final class FullTextIndex: Index {
     // MARK: Internal
     
     var items: [CBLFullTextIndexItem]
-    var ignoreAccents: Bool?
-    var locale: String?
+    var ignoreAccents: Bool = false
+    var language: String? =  Locale.current.languageCode
     
-    init(items: [FullTextIndexItem], ignoreAccents: Bool?, locale: String?) {
+    init(items: [FullTextIndexItem]) {
         self.items = []
         for item in items {
             self.items.append(item.impl)
         }
         
-        self.ignoreAccents = ignoreAccents
-        self.locale = locale
-        let options = FullTextIndex.options(ignoreAccents: self.ignoreAccents, locale: self.locale)
+        let options = FullTextIndex.options(ignoreAccents: self.ignoreAccents, language: self.language)
         super.init(impl: CBLIndex.fullTextIndex(with: self.items, options: options))
     }
     
-    class func options(ignoreAccents: Bool?, locale: String?) -> CBLFullTextIndexOptions? {
+    static func options(ignoreAccents: Bool, language: String?) -> CBLFullTextIndexOptions? {
         let options = CBLFullTextIndexOptions()
-        options.ignoreAccents = ignoreAccents ?? false
-        options.locale = locale
+        options.ignoreAccents = ignoreAccents
+        options.language = language
         return options
     }
 

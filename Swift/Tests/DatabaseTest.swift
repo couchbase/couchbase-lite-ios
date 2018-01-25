@@ -112,7 +112,7 @@ class DatabaseTest: CBLTestCase {
         try db.createIndex(index2, withName: "index2")
         
         let detailItem2 = FullTextIndexItem.property("es-detail")
-        let index3 = Index.fullTextIndex(withItems: detailItem2).locale("es").ignoreAccents(true)
+        let index3 = Index.fullTextIndex(withItems: detailItem2).language("es").ignoreAccents(true)
         try db.createIndex(index3, withName: "index3")
         
         XCTAssertEqual(db.indexes.count, 3)
@@ -175,7 +175,7 @@ class DatabaseTest: CBLTestCase {
         try db.createIndex(index2, withName: "index2")
         
         let detailItem2 = FullTextIndexItem.property("es-detail")
-        let index3 = Index.fullTextIndex(withItems: detailItem2).locale("es").ignoreAccents(true)
+        let index3 = Index.fullTextIndex(withItems: detailItem2).language("es").ignoreAccents(true)
         try db.createIndex(index3, withName: "index3")
         
         XCTAssertEqual(db.indexes.count, 3)

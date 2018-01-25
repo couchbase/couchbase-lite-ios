@@ -110,12 +110,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /**
- The locale code which is an ISO-639 language code plus, optionally, an underscore and an ISO-3166
- country code: "en", "en_US", "fr_CA", etc. Setting the locale code affects how word breaks and
- word stems are parsed. Setting nil value to use current locale and setting "" to disable stemming.
- The default value is nil.
+ The language code which is an ISO-639 language such as "en", "fr", etc.
+ Setting the language code affects how word breaks and word stems are parsed.
+ Without setting the value, the current locale's language will be used. Setting
+ a nil or "" value to disable the language features.
  */
-@property (nonatomic, copy, nullable) NSString* locale;
+@property (nonatomic, copy, nullable) NSString* language;
 
 - (instancetype) init;
 

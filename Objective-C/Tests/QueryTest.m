@@ -338,8 +338,9 @@
     CBLQuerySelectResult* S_SENTENCE = [CBLQuerySelectResult property: @"sentence"];
     
     NSError* error;
+    CBLFullTextIndexOptions* options = [[CBLFullTextIndexOptions alloc] init];
     CBLIndex* index = [CBLIndex fullTextIndexWithItems: @[[CBLFullTextIndexItem property: @"sentence"]]
-                                               options: nil];
+                                               options: options];
     Assert([self.db createIndex: index withName: @"sentence" error: &error],
            @"Error when creating the index: %@", error);
     
@@ -1116,7 +1117,7 @@
           [CBLQueryCollation unicodeWithLocale: @"en" ignoreCase: YES ignoreAccents: NO],
           [CBLQueryCollation unicodeWithLocale: @"en" ignoreCase: YES ignoreAccents: YES]];
     
-    NSString* deviceLocale = [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
+    NSString* deviceLocale = [NSLocale currentLocale].localeIdentifier;
     NSArray* expected =
         @[
           @{@"UNICODE": @(NO),  @"LOCALE": [NSNull null] ,@"CASE": @(YES), @"DIAC": @(YES)},

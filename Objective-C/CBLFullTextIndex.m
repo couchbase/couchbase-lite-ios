@@ -33,16 +33,11 @@
 
 
 - (C4IndexOptions) indexOptions {
-    NSString* locale = _options.locale;
-    if (!locale)
-        locale = [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
-    
     C4IndexOptions c4options = { };
-    c4options.language = locale.UTF8String;
-    if (_options)
+    if (_options) {
+        c4options.language = _options.language.UTF8String;
         c4options.ignoreDiacritics = _options.ignoreAccents;
-    else
-        c4options.ignoreDiacritics = [locale isEqualToString: @"en"];
+    }
     return c4options;
 }
 

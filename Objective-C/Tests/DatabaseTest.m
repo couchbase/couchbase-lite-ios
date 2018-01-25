@@ -1259,7 +1259,7 @@
     
     CBLFullTextIndexItem* detailItem2 = [CBLFullTextIndexItem property: @"es-detail"];
     CBLFullTextIndexOptions* options = [[CBLFullTextIndexOptions alloc] init];
-    options.locale = @"es";
+    options.language = @"es";
     options.ignoreAccents = YES;
     CBLIndex* index3 = [CBLIndex fullTextIndexWithItems: @[detailItem2] options: options];
     Assert([self.db createIndex: index3 withName: @"index3" error: &error],
@@ -1351,7 +1351,7 @@
     
     CBLFullTextIndexItem* detail2Item = [CBLFullTextIndexItem property: @"es-detail"];
     CBLFullTextIndexOptions* options = [[CBLFullTextIndexOptions alloc] init];
-    options.locale = @"es";
+    options.language = @"es";
     options.ignoreAccents = YES;
     CBLIndex* index3 = [CBLIndex fullTextIndexWithItems: @[detail2Item] options: options];
     Assert([self.db createIndex: index3 withName: @"index3" error: &error],

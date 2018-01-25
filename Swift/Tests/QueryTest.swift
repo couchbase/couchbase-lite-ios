@@ -272,7 +272,7 @@ class QueryTest: CBLTestCase {
         try loadJSONResource(name: "sentences")
         
         let index = Index.fullTextIndex(withItems: FullTextIndexItem.property("sentence"))
-            .locale(nil)
+            .language(nil)
             .ignoreAccents(false)
         try db.createIndex(index, withName: "sentence")
         

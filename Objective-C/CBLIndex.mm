@@ -99,10 +99,14 @@
 
 @implementation CBLFullTextIndexOptions
 
-@synthesize locale=_locale, ignoreAccents=_ignoreAccents;
+@synthesize language=_language, ignoreAccents=_ignoreAccents;
 
 - (instancetype) init {
-    return [super init];
+    self = [super init];
+    if (self) {
+        _language = [[NSLocale currentLocale] objectForKey: NSLocaleLanguageCode];
+    }
+    return self;
 }
 
 @end
