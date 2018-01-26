@@ -195,6 +195,9 @@ class ViewController: UIViewController {
         selectOverviewQuery()
         joinQuery()
         groupByQuery()
+        inOperatorQuery()
+        inOperatorSatisfiesQuery()
+        metaDocIDQuery()
     }
 
     func loadTravelSample() {
@@ -203,6 +206,23 @@ class ViewController: UIViewController {
         do {
             let destinationPath = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("CouchbaseLite").appendingPathComponent("mini-travel-sample.cblite2").path
             try fileManager.copyItem(atPath: dbPath, toPath: destinationPath)
+        } catch let error {
+            print(error.localizedDescription)
+        }
+    }
+    
+    func metaDocIDQuery() {
+        let query = Query.select(
+            SelectResult.expression(Expression.meta().id)
+        )
+        .from(DataSource.database(database!))
+        .where(
+            Expression.property("type").equalTo("airport")
+        )
+        do {
+            for row in try query.run() {
+                print("document ID \(row.string(forKey: "id")))")
+            }
         } catch let error {
             print(error.localizedDescription)
         }
@@ -260,10 +280,9 @@ class ViewController: UIViewController {
         }
     }
     
-    // missing the count
-    // see https://developer.couchbase.com/documentation/server/4.6/n1ql/n1ql-language-reference/selectintro.html
     func groupByQuery() {
         let query = Query.select(
+                SelectResult.expression(Function.count("*")),
                 SelectResult.expression(Expression.property("country")),
                 SelectResult.expression(Expression.property("tz"))
             )
@@ -284,12 +303,42 @@ class ViewController: UIViewController {
             
         }
     }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    
+    func inOperatorQuery() {
+        let countries = ["France", "United States"]
+        let query = Query.select(
+                SelectResult.expression(Expression.property("name"))
+            )
+            .from(DataSource.database(database!))
+            .where(
+                Expression.property("country").in(countries)
+                .and(Expression.property("type").equalTo("airline"))
+            )
+        do {
+            for row in try query.run() {
+                print("\(row.toDictionary())")
+            }
+        } catch let error {
+            print(error.localizedDescription)
+        }
     }
 
-
+    func inOperatorSatisfiesQuery() {
+        let query = Query.select(
+                SelectResult.expression(Expression.property("sourceairport"))
+            )
+            .from(DataSource.database(database!))
+            .where(
+                Expression.any("FLIGHT_VAR").in(Expression.property("schedule"))
+                    .satisfies(Expression.variable("FLIGHT_VAR.flight").equalTo("AF103"))
+        )
+        do {
+            for row in try query.run() {
+                print("\(row.toDictionary())")
+            }
+        } catch let error {
+            print(error.localizedDescription)
+        }
+    }
 }
 
