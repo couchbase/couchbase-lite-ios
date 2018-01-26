@@ -77,6 +77,18 @@
     NSLog(@"%@", saved);
 }
 
+- (void) dontTestMutability {
+    NSError *error;
+    CBLMutableDocument *newTask = [[CBLMutableDocument alloc] init];
+    CBLDatabase *database = self.db;
+    
+    // <doc>
+    // newTask is a MutableDocument
+    [newTask setString:@"apples" forKey:@"name"];
+    [database saveDocument:newTask error:&error];
+    // </doc>
+}
+
 - (void) dontTestTypedAcessors {
     CBLMutableDocument *newTask = [[CBLMutableDocument alloc] init];
     
@@ -425,9 +437,11 @@
     // </doc>
 }
 
-- (void) dontTestEnableReplicatorLog {
+- (void) dontTestEnableReplicatorLogging {
     // <doc>
+    // Replicator
     [CBLDatabase setLogLevel:kCBLLogLevelVerbose domain:kCBLLogDomainReplicator];
+    // Network
     [CBLDatabase setLogLevel:kCBLLogLevelVerbose domain:kCBLLogDomainNetwork];
     // </doc>
 }

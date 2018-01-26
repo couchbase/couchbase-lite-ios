@@ -522,6 +522,7 @@
 		93DECF41200DBE6900F44953 /* Support in Resources */ = {isa = PBXBuildFile; fileRef = 93DECF3E200DBE5800F44953 /* Support */; };
 		93DED01D201AEFE400F44953 /* SampleCodeTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DED01C201AEFE400F44953 /* SampleCodeTest.m */; };
 		93DED01E201AEFE400F44953 /* SampleCodeTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DED01C201AEFE400F44953 /* SampleCodeTest.m */; };
+		93DED032201B14DB00F44953 /* SampleCodeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DED030201B120500F44953 /* SampleCodeTest.swift */; };
 		93E17EED1ECF7D8600671CA1 /* ConflictResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EEC1ECF7D8600671CA1 /* ConflictResolver.swift */; };
 		93E17EEF1ECFA7B800671CA1 /* ConflictTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EEE1ECFA7B800671CA1 /* ConflictTest.swift */; };
 		93E17EF81ED3ABE200671CA1 /* CBLDocumentChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E17EF61ED3ABE200671CA1 /* CBLDocumentChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1107,6 +1108,7 @@
 		93DECEDE200A9BFC00F44953 /* VariableExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VariableExpression.swift; sourceTree = "<group>"; };
 		93DECF3E200DBE5800F44953 /* Support */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Support; sourceTree = "<group>"; };
 		93DED01C201AEFE400F44953 /* SampleCodeTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SampleCodeTest.m; sourceTree = "<group>"; };
+		93DED030201B120500F44953 /* SampleCodeTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleCodeTest.swift; sourceTree = "<group>"; };
 		93E17EEC1ECF7D8600671CA1 /* ConflictResolver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictResolver.swift; sourceTree = "<group>"; };
 		93E17EEE1ECFA7B800671CA1 /* ConflictTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConflictTest.swift; sourceTree = "<group>"; };
 		93E17EF61ED3ABE200671CA1 /* CBLDocumentChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDocumentChange.h; sourceTree = "<group>"; };
@@ -1265,6 +1267,7 @@
 				93A91C6B1E81CE4D003D01A2 /* QueryTest.swift */,
 				93EC43831FB53F6A00D54BB4 /* PredicateQueryTest.swift */,
 				93DB80021ED8FE5100C4F845 /* ReplicatorTest.swift */,
+				93DED030201B120500F44953 /* SampleCodeTest.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -2709,6 +2712,7 @@
 				93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */,
 				93A91C6C1E81CE4D003D01A2 /* QueryTest.swift in Sources */,
 				93C3985F1EC66A89005A7A96 /* DictionaryTest.swift in Sources */,
+				93DED032201B14DB00F44953 /* SampleCodeTest.swift in Sources */,
 				27BE3B4B1E4E46120012B74A /* CBLTestCase.swift in Sources */,
 				934C2CD81F4FBFE20010316F /* DatabaseEncryptionTest.swift in Sources */,
 			);
