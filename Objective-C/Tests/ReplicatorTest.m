@@ -667,4 +667,31 @@
 }
 
 
+- (void) testStopReplicatorAfterOffline {
+    timeout = 200;
+    
+    id target = [[CBLURLEndpoint alloc] initWithURL:[NSURL URLWithString:@"ws://foo.couchbase.com/db"]];
+    if (!target)
+        return;
+    id config = [self configWithTarget: target type: kCBLReplicatorPull continuous: YES];
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+    
+    XCTestExpectation* x1 = [self expectationWithDescription: @"Offline"];
+    XCTestExpectation* x2 = [self expectationWithDescription: @"Stopped"];
+    id token = [r addChangeListener: ^(CBLReplicatorChange* change) {
+        if (change.status.activity == kCBLReplicatorOffline) {
+            [x1 fulfill];
+            [change.replicator stop];
+        }
+        
+        if (change.status.activity == kCBLReplicatorStopped) {
+            [x2 fulfill];
+        }
+    }];
+    
+    [r start];
+    [self waitForExpectations: @[x1, x2] timeout: 10.0];
+    [repl removeChangeListenerWithToken: token];
+}
+
 @end
