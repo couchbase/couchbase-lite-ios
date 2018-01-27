@@ -169,6 +169,12 @@
 - (void) loadJSONResource: (NSString*)resourceName {
     @autoreleasepool {
         NSString* contents = [self stringFromResource: resourceName ofType: @"json"];
+        return [self loadJSONString: contents named: resourceName];
+    }
+}
+
+- (void) loadJSONString: (NSString*)contents named: (NSString*)resourceName {
+    @autoreleasepool {
         __block uint64_t n = 0;
         NSError *batchError;
         BOOL ok = [self.db inBatch: &batchError usingBlock: ^{
@@ -185,7 +191,7 @@
                 Assert(saved, @"Couldn't save document: %@", error);
             }];
         }];
-        Assert(ok, @"loadJSONResource failed: %@", batchError);
+        Assert(ok, @"loadJSONString failed: %@", batchError);
     }
 }
 

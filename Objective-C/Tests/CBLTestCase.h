@@ -78,9 +78,13 @@ NS_ASSUME_NONNULL_BEGIN
 /** Reads a bundle resource file into an NSString. */
 - (NSString*) stringFromResource: (NSString*)resourceName ofType: (NSString*)type;
 
-/** Loads the database with documents read from a JSON resource file in the test bundle.
-    Each line of the file should be a complete JSON object, which will become a document.
+/** Loads the database with documents read from a multiline JSON string.
+    Each line of the string should be a complete JSON object, which will become a document.
     The document IDs will be of the form "doc-#" where "#" is the line number, starting at 1. */
+- (void) loadJSONString: (NSString*)contents named: (NSString*)resourceName;
+
+/** Loads the database with documents read from a JSON resource file in the test bundle,
+    using -loadJSONString:named:.*/
 - (void) loadJSONResource: (NSString*)resourceName;
 
 /** Utility to check a failure case. This method asserts that the block returns NO, and that

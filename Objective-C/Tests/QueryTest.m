@@ -1607,4 +1607,53 @@
     AssertEqualObjects([r toDictionary], (@{@"name": @"Scott", @"address": [NSNull null]}));
 }
 
+
+- (void) testForumJoin {
+    [self loadJSONString:
+     @"{\"id\":\"ecc:102\",\"type\":\"category\",\"items\":[\"eci:742\",\"eci:743\",\"eci:744\"],\"name\":\"Skills\"}\n"
+      "{\"id\":\"eci:742\",\"type\":\"item\",\"chinese\":\"技术\",\"english\":\"technique\",\"pinyin\":\"jìshù\"}\n"
+      "{\"id\":\"eci:743\",\"type\":\"item\",\"chinese\":\"技术\",\"english\":\"skill\",\"pinyin\":\"jìqiǎo\"}"
+                   named: @"forum.json"];
+
+
+    CBLQuerySelectResult* ITEM_DOC_ID =
+    [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"itemDS"] as:@"ITEMID"];
+
+
+    CBLQuerySelectResult* CATEGORY_DOC_ID =
+    [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"categoryDS"] as:@"CATEGORYID"];
+
+    CBLQueryExpression* ITEMID  = [CBLQueryExpression property:@"id" from: @"itemDS"];
+
+    CBLQueryExpression* CATEGORYITEMS  = [CBLQueryExpression property: @"items" from:@"categoryDS"] ;
+    CBLQueryVariableExpression* CATEGORYITEMVAR = [CBLQueryArrayExpression variableWithName: @"item"];
+
+    CBLQueryExpression* on = [CBLQueryArrayExpression
+                              any: CATEGORYITEMVAR
+                              in: CATEGORYITEMS
+                              satisfies: [CATEGORYITEMVAR equalTo: ITEMID]];
+
+
+    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"itemDS"]
+                                         on: on];
+    CBLQuery* q = [CBLQueryBuilder select: @[ITEM_DOC_ID, CATEGORY_DOC_ID]
+                              from: [CBLQueryDataSource database: self.db as: @"categoryDS"]
+                              join: @[join]];
+    Assert(q);
+    NSError* error;
+
+    NSLog(@"%@",[q explain:nil]);
+
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs);
+
+    int i = 0;
+    for (CBLQueryResult* r in rs) {
+        NSLog(@" %@",[r toDictionary]);
+        i++;
+    }
+    AssertEqual(i, 2);
+}
+
+
 @end
